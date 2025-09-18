@@ -5,7 +5,7 @@ Ziel: Angebotsreduktion und langfristige Wertsteigerung.
 
 ## Status (Legende)
 - 🟢 erledigt (Code + Tests abgeschlossen)
-- 🔵 offen (Struktur vorhanden, aber noch nicht umgesetzt oder getestet)
+- 🔵 offen (Struktur vorhanden, aber noch nicht umgesetzt oder vollständig getestet)
 - 🔴 Fehler/Debug
 
 ## Aktueller Statusbaum
@@ -19,6 +19,8 @@ Ziel: Angebotsreduktion und langfristige Wertsteigerung.
     │   ├── 🟢 solidity/
     │   │   ├── 🟢 contracts/InfernoToken.sol
     │   │   ├── 🟢 tests/InfernoToken.test.js
+    │   │   ├── 🔵 contracts/Presale.sol      (Contract vorhanden, Deployment-Tests OK, weitere Tests offen)
+    │   │   ├── 🔵 tests/Presale.test.js      (erste Deployment-Tests grün, restliche Tests offen)
     │   │   └── 🔵 scripts/deploy.js
     │   ├── 🔵 rust/{contracts,tests}
     │   ├── 🔵 cpp/{contracts,tests}
@@ -30,9 +32,7 @@ Ziel: Angebotsreduktion und langfristige Wertsteigerung.
 ## Dokumentation
 - Siehe [WHITEPAPER](WHITEPAPER.md).
 
-## Nächste Schritte
-1. Presale Contract + Tests
-2. Vesting Contract + Tests
-3. BuybackVault + Strategy + Tests
-4. CI/Infra (GitHub Actions, Docker)
-5. Multichain-Erweiterungen (Rust, C++, Java)
+## Letzte Aktionen
+- Presale Contract (languages/solidity/contracts/Presale.sol) hinzugefügt und Deployment-Tests ausgeführt (siehe logs).
+- Presale-Tests: Deployment-Checks bestehen (2/??). Weitere Presale-Tests (purchase, caps, refunds, reentrancy) noch offen.
+
