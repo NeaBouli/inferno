@@ -2,3 +2,4 @@
 2025-09-18 21:52 | ARCHITEKT | DOCS | README.md + WHITEPAPER.md erstellt | Status: LOCAL
 2025-09-18 21:59 | ARCHITEKT | DOCS | README.md Statusbaum aktualisiert | Status: LOCAL | basiert auf Commit 4fd752b
 2025-09-18 22:06 | ARCHITEKT | GIT | Upstream für main gesetzt + Push ausgeführt | Status: PUSHED | SHA: 151425e
+2025-09-18 22:17 | ARCHITEKT | CHORE | Hilfsskripte nach scripts/admin/ verschoben | Status: LOCAL | Basis-SHA: 545e3c9
