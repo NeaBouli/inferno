@@ -23,3 +23,4 @@
 2025-09-19 01:08 | ARCHITEKT | GIT | Presale artifacts pushed | Status: PUSHED | SHA: 4681920
 2025-09-19 01:21 | ARCHITEKT | PRESALE | Presale contract + initial tests staged for push | Status: LOCAL | Base-SHA: d64524a
 2025-09-19 01:21 | ARCHITEKT | GIT | Presale artifacts pushed | Status: PUSHED | SHA: c999272
+2025-09-19 10:41 | ARCHITEKT | TESTS | Presale.test.js buy() calls korrigiert | Status: PUSHED | SHA: 1fb8bd8
