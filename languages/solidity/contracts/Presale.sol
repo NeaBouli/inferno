@@ -15,179 +15,288 @@ import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol
 contract Presale is Ownable, Pausable, ReentrancyGuard {
     using SafeERC20 for IERC20;
 
+    /// @dev All token math is performed with the InfernoToken base unit (9 decimals).
     uint256 private constant TOKEN_UNIT = 1e9;
 
-    // Errors aligned with test expectations
-    error Presale__ZeroAddress();
-    error Presale__InvalidTimeRange();
-    error Presale__TokenPriceZero();
-    error Presale__NotStarted();
-    error Presale__SaleEnded();
-    error Presale__SaleFinalized();
-    error Presale__RefundsActive();
-    error Presale__RefundsNotActive();
-    error Presale__HardCapExceeded();
-    error Presale__WalletCapExceeded();
-    error Presale__ZeroPurchase();
-    error Presale__InsufficientTokenInventory();
-    error Presale__NothingToWithdraw();
-    error Presale__NothingToSweep();
-    error Presale__FinalizationNotAllowed();
-    error Presale__AlreadyFinalized();
-    error Presale__AlreadyRefunding();
-    error Presale__NotFinalized();
-    error Presale__NoContribution();
-    error Presale__InsufficientRefundLiquidity();
-    error Presale__EthTransferFailed();
-    error Presale__Unauthorized();
+    error ZeroAddress();
+    error InvalidTimeRange();
+    error TokenPriceZero();
+    error SaleNotStarted();
+    error SaleEnded();
+    error SaleFinalized();
+    error RefundsActive();
+    error RefundsNotActive();
+    error HardCapExceeded();
+    error WalletCapExceeded();
+    error NoTokenOutput();
+    error InsufficientTokenBalance();
+    error NothingToWithdraw();
+    error NothingToSweep();
+    error FinalizationNotAllowed();
+    error AlreadyFinalized();
+    error AlreadyRefunding();
+    error NotFinalized();
+    error NoContribution();
+    error InsufficientRefundLiquidity();
+    error EthTransferFailed();
 
     IERC20 public immutable token;
     address payable public immutable treasury;
-    uint256 public immutable tokenPrice;
+    uint256 public immutable tokenPriceWei;
     uint64 public immutable startTime;
     uint64 public immutable endTime;
-    uint256 public immutable hardCap;
-    uint256 public immutable walletCap;
+    uint256 public immutable hardCapWei;
+    uint256 public immutable walletCapWei;
 
-    uint256 private _totalRaised;
-    uint256 private _tokensSold;
+    uint256 public raisedWei;
+    uint256 public soldTokens;
     bool public isFinalized;
-    bool private _refundsEnabled;
+    bool public isRefunding;
 
-    mapping(address => uint256) private _contributions;
+    mapping(address => uint256) public contributedWei;
 
-    event TokensPurchased(address indexed purchaser, address indexed beneficiary, uint256 paidWei, uint256 tokensOut);
+    event TokensPurchased(address indexed purchaser, uint256 paidWei, uint256 tokensOut);
     event EthWithdrawn(address indexed treasury, uint256 amount);
     event UnsoldTokensSwept(address indexed treasury, uint256 amount);
     event Finalized(uint256 timestamp);
     event RefundsEnabled(uint256 timestamp);
     event RefundClaimed(address indexed buyer, uint256 refundedWei, uint256 tokensReturned);
 
+    /**
+     * @param token_ Presale token address.
+     * @param treasury_ Treasury receiving raised ETH and unsold tokens.
+     * @param tokenPriceWei_ Token price denominated in wei per Inferno base unit.
+     * @param startTime_ Timestamp when purchases become available.
+     * @param endTime_ Timestamp when purchases stop being accepted.
+     * @param hardCapWei_ Maximum total wei to raise. Set to zero to disable the cap.
+     * @param walletCapWei_ Maximum wei per wallet. Set to zero to disable the cap.
+     */
     constructor(
         IERC20 token_,
         address payable treasury_,
-        uint256 tokenPrice_,
+        uint256 tokenPriceWei_,
         uint64 startTime_,
         uint64 endTime_,
-        uint256 hardCap_,
-        uint256 walletCap_
+        uint256 hardCapWei_,
+        uint256 walletCapWei_
     ) Ownable(msg.sender) {
-        if (address(token_) == address(0) || treasury_ == address(0)) revert Presale__ZeroAddress();
-        if (tokenPrice_ == 0) revert Presale__TokenPriceZero();
-        if (startTime_ >= endTime_) revert Presale__InvalidTimeRange();
+        if (address(token_) == address(0) || treasury_ == address(0)) {
+            revert ZeroAddress();
+        }
+        if (tokenPriceWei_ == 0) {
+            revert TokenPriceZero();
+        }
+        if (startTime_ >= endTime_) {
+            revert InvalidTimeRange();
+        }
 
         token = token_;
         treasury = treasury_;
-        tokenPrice = tokenPrice_;
+        tokenPriceWei = tokenPriceWei_;
         startTime = startTime_;
         endTime = endTime_;
-        hardCap = hardCap_;
-        walletCap = walletCap_;
+        hardCapWei = hardCapWei_;
+        walletCapWei = walletCapWei_;
     }
 
-    function purchase(address beneficiary) external payable nonReentrant whenNotPaused {
-        if (isFinalized) revert Presale__SaleFinalized();
-        if (_refundsEnabled) revert Presale__RefundsActive();
-        if (block.timestamp < startTime) revert Presale__NotStarted();
-        if (block.timestamp > endTime) revert Presale__SaleEnded();
+    /**
+     * @notice Compatibility getter — returns token price in wei per base unit.
+     *         Tests may call tokenPrice() or tokenPriceWei().
+     */
+    function tokenPrice() external view returns (uint256) {
+        return tokenPriceWei;
+    }
+
+    /**
+     * @notice Purchase presale tokens for the caller (convenience).
+     */
+    function buy() external payable nonReentrant whenNotPaused {
+        _buyTo(msg.sender);
+    }
+
+    /**
+     * @notice Purchase presale tokens to a given recipient (API expected by tests).
+     */
+    function buy(address recipient) external payable nonReentrant whenNotPaused {
+        _buyTo(recipient);
+    }
+
+    /**
+     * @dev Internal unified buy implementation (recipient-specified).
+     */
+    function _buyTo(address recipient) internal {
+        if (isFinalized) {
+            revert SaleFinalized();
+        }
+        if (isRefunding) {
+            revert RefundsActive();
+        }
+        if (block.timestamp < startTime) {
+            revert SaleNotStarted();
+        }
+        if (block.timestamp > endTime) {
+            revert SaleEnded();
+        }
 
         uint256 weiAmount = msg.value;
-        uint256 tokensOut = (weiAmount * TOKEN_UNIT) / tokenPrice;
-        if (tokensOut == 0) revert Presale__ZeroPurchase();
+        uint256 tokensOut = (weiAmount * TOKEN_UNIT) / tokenPriceWei;
+        if (tokensOut == 0) {
+            revert NoTokenOutput();
+        }
 
-        uint256 newContribution = _contributions[msg.sender] + weiAmount;
-        if (walletCap != 0 && newContribution > walletCap) revert Presale__WalletCapExceeded();
+        uint256 newContribution = contributedWei[msg.sender] + weiAmount;
+        if (walletCapWei != 0 && newContribution > walletCapWei) {
+            revert WalletCapExceeded();
+        }
 
-        uint256 newRaised = _totalRaised + weiAmount;
-        if (hardCap != 0 && newRaised > hardCap) revert Presale__HardCapExceeded();
+        uint256 newRaised = raisedWei + weiAmount;
+        if (hardCapWei != 0 && newRaised > hardCapWei) {
+            revert HardCapExceeded();
+        }
 
         uint256 availableTokens = token.balanceOf(address(this));
-        if (availableTokens < tokensOut) revert Presale__InsufficientTokenInventory();
+        if (availableTokens < tokensOut) {
+            revert InsufficientTokenBalance();
+        }
 
-        _contributions[msg.sender] = newContribution;
-        _totalRaised = newRaised;
-        _tokensSold += tokensOut;
+        contributedWei[msg.sender] = newContribution;
+        raisedWei = newRaised;
+        soldTokens += tokensOut;
 
-        token.safeTransfer(beneficiary, tokensOut);
+        token.safeTransfer(recipient, tokensOut);
 
-        emit TokensPurchased(msg.sender, beneficiary, weiAmount, tokensOut);
+        emit TokensPurchased(recipient, weiAmount, tokensOut);
     }
 
-    // Views for tests
-    function totalRaised() external view returns (uint256) { return _totalRaised; }
-    function tokensSold() external view returns (uint256) { return _tokensSold; }
-    function contributionOf(address account) external view returns (uint256) { return _contributions[account]; }
-    function refundsEnabled() external view returns (bool) { return _refundsEnabled; }
-    function isPaused() external view returns (bool) { return paused(); }
-
+    /**
+     * @notice Withdraw accumulated ETH to the treasury.
+     * @dev Only callable after finalization and while refunds are disabled.
+     */
     function withdrawETH() external onlyOwner nonReentrant {
-        if (!isFinalized) revert Presale__NotFinalized();
-        if (_refundsEnabled) revert Presale__RefundsActive();
+        if (!isFinalized) {
+            revert NotFinalized();
+        }
+        if (isRefunding) {
+            revert RefundsActive();
+        }
 
         uint256 balance = address(this).balance;
-        if (balance == 0) revert Presale__NothingToWithdraw();
+        if (balance == 0) {
+            revert NothingToWithdraw();
+        }
 
         (bool success, ) = treasury.call{value: balance}("");
-        if (!success) revert Presale__EthTransferFailed();
+        if (!success) {
+            revert EthTransferFailed();
+        }
 
         emit EthWithdrawn(treasury, balance);
     }
 
+    /**
+     * @notice Transfer remaining tokens back to the treasury after the sale concludes.
+     */
     function sweepUnsoldTokens() external onlyOwner nonReentrant {
-        if (!isFinalized) revert Presale__NotFinalized();
-        if (block.timestamp <= endTime) revert Presale__FinalizationNotAllowed();
+        if (!isFinalized) {
+            revert NotFinalized();
+        }
+        if (block.timestamp <= endTime) {
+            revert FinalizationNotAllowed();
+        }
 
         uint256 balance = token.balanceOf(address(this));
-        if (balance == 0) revert Presale__NothingToSweep();
+        if (balance == 0) {
+            revert NothingToSweep();
+        }
 
         token.safeTransfer(treasury, balance);
 
         emit UnsoldTokensSwept(treasury, balance);
     }
 
-    function pause() external onlyOwner { _pause(); }
+    /**
+     * @notice Pause new purchases.
+     */
+    function pause() external onlyOwner {
+        _pause();
+    }
+
+    /**
+     * @notice Resume new purchases.
+     */
     function unpause() external onlyOwner {
-        if (_refundsEnabled) revert Presale__RefundsActive();
+        if (isRefunding) {
+            revert RefundsActive();
+        }
         _unpause();
     }
 
+    /**
+     * @notice Mark the sale as finalized.
+     */
     function finalize() external onlyOwner nonReentrant {
-        if (isFinalized) revert Presale__AlreadyFinalized();
-        if (_refundsEnabled) revert Presale__RefundsActive();
-        if (block.timestamp < endTime && (hardCap == 0 || _totalRaised < hardCap))
-            revert Presale__FinalizationNotAllowed();
+        if (isFinalized) {
+            revert AlreadyFinalized();
+        }
+        if (isRefunding) {
+            revert RefundsActive();
+        }
+        if (block.timestamp < endTime && (hardCapWei == 0 || raisedWei < hardCapWei)) {
+            revert FinalizationNotAllowed();
+        }
 
         isFinalized = true;
+
         emit Finalized(block.timestamp);
     }
 
+    /**
+     * @notice Enable refunds for buyers.
+     */
     function enableRefunds() external onlyOwner nonReentrant {
-        if (isFinalized) revert Presale__SaleFinalized();
-        if (_refundsEnabled) revert Presale__AlreadyRefunding();
+        if (isFinalized) {
+            revert SaleFinalized();
+        }
+        if (isRefunding) {
+            revert AlreadyRefunding();
+        }
 
-        _refundsEnabled = true;
+        isRefunding = true;
         _pause();
+
         emit RefundsEnabled(block.timestamp);
     }
 
+    /**
+     * @notice Claim an ETH refund by returning purchased tokens.
+     * @dev Buyers must approve the contract to pull the required token amount beforehand.
+     */
     function claimRefund() external nonReentrant {
-        if (!_refundsEnabled) revert Presale__RefundsNotActive();
+        if (!isRefunding) {
+            revert RefundsNotActive();
+        }
 
-        uint256 contribution = _contributions[msg.sender];
-        if (contribution == 0) revert Presale__NoContribution();
+        uint256 contribution = contributedWei[msg.sender];
+        if (contribution == 0) {
+            revert NoContribution();
+        }
 
-        uint256 tokensToReturn = (contribution * TOKEN_UNIT) / tokenPrice;
+        uint256 tokensToReturn = (contribution * TOKEN_UNIT) / tokenPriceWei;
 
-        _contributions[msg.sender] = 0;
-        _totalRaised -= contribution;
-        _tokensSold -= tokensToReturn;
+        contributedWei[msg.sender] = 0;
+        raisedWei -= contribution;
+        soldTokens -= tokensToReturn;
 
         token.safeTransferFrom(msg.sender, address(this), tokensToReturn);
 
-        if (address(this).balance < contribution) revert Presale__InsufficientRefundLiquidity();
+        if (address(this).balance < contribution) {
+            revert InsufficientRefundLiquidity();
+        }
 
         (bool success, ) = msg.sender.call{value: contribution}("");
-        if (!success) revert Presale__EthTransferFailed();
+        if (!success) {
+            revert EthTransferFailed();
+        }
 
         emit RefundClaimed(msg.sender, contribution, tokensToReturn);
     }
