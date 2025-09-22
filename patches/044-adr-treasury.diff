@@ -1,0 +1,55 @@
+*** Begin Patch
+diff --git a/arch/decisions/ADR-021-treasury-management.md b/arch/decisions/ADR-021-treasury-management.md
+new file mode 100644
+--- /dev/null
++++ b/arch/decisions/ADR-021-treasury-management.md
+@@
++# ADR-021: Treasury Management (Split & Multi-Sig)
++
++## Status
++✅ Accepted
++
++## Kontext
++Das Inferno-Treasury sammelt Mittel aus:
++- Presale Einnahmen
++- PoolFee-Anteilen
++- Buyback Vault Splits
++
++Diese Mittel müssen sicher und transparent verwaltet werden.
++
++Alternative Ansätze:
++- **Single Treasury Wallet**:
++  - Vorteil: sehr einfach
++  - Nachteil: hohes Risiko bei Kompromittierung
++- **DAO-only Treasury**:
++  - Vorteil: dezentral
++  - Nachteil: zu früh, geringe Beteiligung, Angriffsrisiken
++
++## Entscheidung
++Inferno setzt auf ein Treasury-Management mit:
++- **Split in mehrere Wallets**:
++  - Ops (laufende Kosten, Entwickler)
++  - Reserve (Langfristige Rücklagen)
++  - Marketing (Wachstum, Partnerschaften)
++- **Multi-Sig Kontrolle**:
++  - Mehrere Schlüsselträger (z. B. 3 von 5)
++  - Guardian-Integration möglich
++
++## Konsequenzen
++- ✅ Höhere Sicherheit durch Multi-Sig
++- ✅ Transparenz durch Split-Architektur
++- ⚠️ Mehr Koordinationsaufwand
++- ⚠️ Komplexere Verwaltung in CI/CD & Runbooks
++
++## Nächste Schritte
++- Treasury-Contracts in `contracts/governance/` spezifizieren
++- Runbook-Eintrag für Treasury-Flows erstellen
++- Planung Übergang zu DAO-Governance
+diff --git a/logs/project.log b/logs/project.log
+index 897d42d..cd15141 100644
+--- a/logs/project.log
++++ b/logs/project.log
+@@
+ [2025-09-23 06:30] arch ADR – ADR-020 Monitoring & Alerts dokumentiert
++[2025-09-23 07:00] arch ADR – ADR-021 Treasury Management dokumentiert
+*** End Patch
