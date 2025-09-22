@@ -1,0 +1,57 @@
+*** Begin Patch
+diff --git a/docs/perf/PERF_NOTES.md b/docs/perf/PERF_NOTES.md
+new file mode 100644
+--- /dev/null
++++ b/docs/perf/PERF_NOTES.md
+@@
++# ⚡ Performance Notes – Inferno
++
++## Kritische Funktionen (Gas-Kosten)
++- **InfernoToken.transfer()** → enthält zusätzliche Burn-/Fee-Logik.
++- **Presale.buyTokens()** → ETH → IFR Conversion + Treasury-Transfer.
++- **Vesting.release()** → Berechnet vestedAmount → kann teuer bei langen Duration sein.
++- **BurnReserve.burn()** → relativ günstig (nur _burn).
++- **BuybackVault.buyback()** → zusätzliche Logik (Split Burn/Treasury).
++
++## Erwartete Gas-Benchmarks (Stand v1, grobe Schätzung)
++- Token Transfer mit Fees: ~55k Gas
++- Presale Kauf: ~80k Gas
++- Vesting Release: ~60k Gas
++- BurnReserve Burn: ~45k Gas
++- BuybackVault Buyback: ~75k Gas
++
++## Optimierungs-Roadmap
++1. **Batching** → Mehrere Transfers in einem Call zusammenfassen.
++2. **Events minimieren** → Nur kritische Events loggen.
++3. **Storage optimieren** → Variablen packing (uint64/uint32).
++4. **Inline-Functions** → bei häufig genutzten internen Funktionen.
++5. **Solidity Versions-Features** → ab 0.8.x integrierte Checks nutzen.
++
++## Ziel
++- Gas-Reduktion um 15–20% in v2.
++- Performance-Tests automatisieren in CI.
+diff --git a/package.json b/package.json
+index 18b2c1f..48fdb5c 100644
+--- a/package.json
++++ b/package.json
+@@
+     "deploy": "hardhat run scripts/deploy.js --network hardhat",
+     "coverage": "hardhat coverage",
+-    "gas": "hardhat test"
++    "gas": "hardhat test",
++    "bench": "REPORT_GAS=true hardhat test"
+   },
+   "devDependencies": {
+     "@nomicfoundation/hardhat-toolbox": "^3.0.0",
+     "hardhat": "^2.19.0",
+     "hardhat-gas-reporter": "^1.0.9",
+     "solidity-coverage": "^0.8.2"
+   },
+diff --git a/logs/project.log b/logs/project.log
+index 2d99f45..9f9d1d5 100644
+--- a/logs/project.log
++++ b/logs/project.log
+@@
+ [2025-09-22 19:30] legal COMPLIANCE – Disclaimer, KYC/AML & Regulatory Notes erstellt
++[2025-09-22 20:00] perf BASE – Performance Notes + Benchmark Script erstellt
+*** End Patch
