@@ -1,0 +1,49 @@
+*** Begin Patch
+diff --git a/arch/decisions/ADR-016-compliance-folder.md b/arch/decisions/ADR-016-compliance-folder.md
+new file mode 100644
+--- /dev/null
++++ b/arch/decisions/ADR-016-compliance-folder.md
+@@
++# ADR-016: Compliance-Ordner + rechtliche Hinweise im Repo
++
++## Status
++✅ Accepted
++
++## Kontext
++Inferno unterliegt regulatorischen Anforderungen und muss Transparenz bieten:
++- Presale-Disclaimer
++- Rechtliche Hinweise zu Tokenomics
++- Hinweise zu KYC/AML
++
++Alternative Ansätze:
++- **Nur Website**:
++  - Vorteil: leicht zugänglich
++  - Nachteil: keine Versionierung, Änderungen nicht nachvollziehbar
++- **Externe Tools (Google Drive, Notion, etc.)**:
++  - Vorteil: einfache Zusammenarbeit
++  - Nachteil: keine enge Integration ins Repo, kein Git-Log
++
++## Entscheidung
++Inferno führt einen eigenen **Compliance-Ordner im Repo (`docs/compliance/`)**:
++- Alle rechtlich relevanten Dokumente liegen dort
++- Änderungen sind versioniert und transparent nachvollziehbar
++- Grundlage für Audits & Investor-Checks
++
++## Konsequenzen
++- ✅ Höhere Glaubwürdigkeit gegenüber Investoren
++- ✅ Einfache Pflege durch Git-Versionierung
++- ⚠️ Zusätzlicher Aufwand für die Pflege
++- ⚠️ Sensible Themen erfordern sorgfältige Formulierung
++
++## Nächste Schritte
++- Erste Dokumente: Disclaimer.md, Terms.md
++- Juristische Prüfung für spezifische Jurisdiktionen
++- Verknüpfung mit Whitepaper (Rechtliche Hinweise)
+diff --git a/logs/project.log b/logs/project.log
+index 3c20d71..add21df 100644
+--- a/logs/project.log
++++ b/logs/project.log
+@@
+ [2025-09-23 04:00] arch ADR – ADR-015 Security Audits vor Mainnet Deployment dokumentiert
++[2025-09-23 04:30] arch ADR – ADR-016 Compliance-Ordner + rechtliche Hinweise dokumentiert
+*** End Patch
