@@ -1,0 +1,48 @@
+*** Begin Patch
+diff --git a/arch/decisions/ADR-024-legal-token-sale.md b/arch/decisions/ADR-024-legal-token-sale.md
+new file mode 100644
+--- /dev/null
++++ b/arch/decisions/ADR-024-legal-token-sale.md
+@@
++# ADR-024: Legal Jurisdictions & Token Sale Framework
++
++## Status
++✅ Accepted
++
++## Kontext
++Der Token Sale von Inferno unterliegt regulatorischen Anforderungen.
++Besonders wichtig: EU (MiCA), USA (SEC), internationale KYC/AML-Standards.
++
++Alternative Ansätze:
++- **Keine Regulierung beachten**:
++  - Vorteil: schneller Launch
++  - Nachteil: hohes rechtliches Risiko, Gefahr von Delistings
++- **Nur Offshore-Jurisdiktionen (BVI, Cayman, etc.)**:
++  - Vorteil: niedrige regulatorische Hürden
++  - Nachteil: geringere Seriosität, eingeschränkter Zugang zu Investoren
++
++## Entscheidung
++Inferno setzt auf einen **regulierten Token Sale Framework**:
++- Primäre Orientierung an **EU-Recht (MiCA)**
++- Ergänzung durch **KYC/AML-Pflichten** für Investoren
++- Veröffentlichung von **Disclaimer & Terms** im Repo (`docs/compliance/`)
++- Ausschluss von Jurisdiktionen mit hohen Risiken (z. B. USA)
++
++## Konsequenzen
++- ✅ Höhere Glaubwürdigkeit bei Investoren
++- ✅ Rechtssicherheit in EU-Märkten
++- ⚠️ Eingeschränkter Zugang zu Investoren in bestimmten Ländern
++- ⚠️ Höherer juristischer Aufwand (Beratung, Dokumentation)
++
++## Nächste Schritte
++- Rechtliche Beratung in EU-Ländern sichern
++- Terms & Disclaimer in `docs/compliance/` finalisieren
++- Whitepaper um rechtliche Hinweise ergänzen
+diff --git a/logs/project.log b/logs/project.log
+index 4ed9c29..ef45da8 100644
+--- a/logs/project.log
++++ b/logs/project.log
+@@
+ [2025-09-23 08:00] arch ADR – ADR-023 DAO Transition Strategy dokumentiert
++[2025-09-23 08:30] arch ADR – ADR-024 Legal Jurisdictions & Token Sale Framework dokumentiert
+*** End Patch
