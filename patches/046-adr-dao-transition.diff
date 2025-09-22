@@ -1,0 +1,47 @@
+*** Begin Patch
+diff --git a/arch/decisions/ADR-023-dao-transition.md b/arch/decisions/ADR-023-dao-transition.md
+new file mode 100644
+--- /dev/null
++++ b/arch/decisions/ADR-023-dao-transition.md
+@@
++# ADR-023: DAO Transition Strategy
++
++## Status
++✅ Accepted
++
++## Kontext
++Inferno startet mit **Timelock + Guardian-Multisig** als Governance-Modell.
++Ziel: Übergang zu einer **vollwertigen DAO**, sobald Community und Token-Distribution reif genug sind.
++
++Alternative Ansätze:
++- **Sofortige DAO**:
++  - Vorteil: maximale Dezentralisierung
++  - Nachteil: geringe Beteiligung, Gefahr von Governance-Angriffen
++- **Dauerhaftes Multisig**:
++  - Vorteil: stabil, einfach
++  - Nachteil: kein echtes DeFi, wenig Vertrauen
++
++## Entscheidung
++Inferno führt einen **phasenweisen Übergang** durch:
++1. Phase 1: Guardian-Multisig + Timelock (Launch)
++2. Phase 2: Teilweise On-Chain Abstimmungen (Advisory Votes)
++3. Phase 3: Vollständige DAO (On-Chain Governance, Treasury-Kontrolle)
++
++## Konsequenzen
++- ✅ Transparenter Dezentralisierungsfahrplan
++- ✅ Steigendes Vertrauen bei Community & Investoren
++- ⚠️ Komplexer Übergang (mehrere Governance-Systeme parallel)
++- ⚠️ Risiko geringer DAO-Beteiligung
++
++## Nächste Schritte
++- Governance-Parameter (Voting Power, Quorum) definieren
++- Advisory Voting Tools evaluieren (Snapshot, Tally)
++- Whitepaper-Update zur DAO Roadmap
+diff --git a/logs/project.log b/logs/project.log
+index 2efeb31..4ed9c29 100644
+--- a/logs/project.log
++++ b/logs/project.log
+@@
+ [2025-09-23 07:30] arch ADR – ADR-022 Investor Relations Transparency dokumentiert
++[2025-09-23 08:00] arch ADR – ADR-023 DAO Transition Strategy dokumentiert
+*** End Patch
