@@ -1,0 +1,124 @@
+*** Begin Patch
+diff --git a/contracts/token/InfernoToken.sol b/contracts/token/InfernoToken.sol
+new file mode 100644
+--- /dev/null
++++ b/contracts/token/InfernoToken.sol
+@@
++// SPDX-License-Identifier: MIT
++pragma solidity ^0.8.20;
++
++import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
++import "@openzeppelin/contracts/access/Ownable.sol";
++
++/**
++ * @title Inferno Token (IFR)
++ * @notice Deflationärer ERC20-Token mit Burn-Mechanismen und FeeExempt-Option
++ */
++contract InfernoToken is ERC20, Ownable {
++    uint8 private constant DECIMALS = 9;
++    uint256 private constant INITIAL_SUPPLY = 1_000_000_000 * 10**uint256(DECIMALS);
++
++    // Gebühren
++    uint256 public constant SENDER_BURN_FEE = 200;     // 2.0% (Basis 10000)
++    uint256 public constant RECIPIENT_BURN_FEE = 50;   // 0.5%
++    uint256 public constant POOL_FEE = 100;            // 1.0%
++    uint256 private constant FEE_DENOMINATOR = 10000;
++
++    // FeeExempt-Liste
++    mapping(address => bool) public isFeeExempt;
++
++    // Treasury-Adresse (empfängt PoolFees)
++    address public treasury;
++
++    event FeeExemptSet(address indexed account, bool isExempt);
++    event TreasuryUpdated(address indexed newTreasury);
++
++    constructor(address _treasury) ERC20("Inferno Token", "IFR") {
++        require(_treasury != address(0), "Treasury required");
++        treasury = _treasury;
++        _mint(msg.sender, INITIAL_SUPPLY);
++    }
++
++    function decimals() public pure override returns (uint8) {
++        return DECIMALS;
++    }
++
++    function setFeeExempt(address account, bool exempt) external onlyOwner {
++        isFeeExempt[account] = exempt;
++        emit FeeExemptSet(account, exempt);
++    }
++
++    function setTreasury(address _treasury) external onlyOwner {
++        require(_treasury != address(0), "Invalid address");
++        treasury = _treasury;
++        emit TreasuryUpdated(_treasury);
++    }
++
++    function _transfer(address sender, address recipient, uint256 amount) internal override {
++        if (isFeeExempt[sender] || isFeeExempt[recipient]) {
++            super._transfer(sender, recipient, amount);
++            return;
++        }
++
++        // Berechnung der Gebühren
++        uint256 senderBurn = (amount * SENDER_BURN_FEE) / FEE_DENOMINATOR;
++        uint256 recipientBurn = (amount * RECIPIENT_BURN_FEE) / FEE_DENOMINATOR;
++        uint256 poolFee = (amount * POOL_FEE) / FEE_DENOMINATOR;
++
++        uint256 totalFees = senderBurn + recipientBurn + poolFee;
++        uint256 sendAmount = amount - totalFees;
++
++        require(sendAmount > 0, "Amount too small after fees");
++
++        // Gebühren verteilen
++        if (senderBurn > 0) {
++            _burn(sender, senderBurn);
++        }
++        if (recipientBurn > 0) {
++            _burn(sender, recipientBurn);
++        }
++        if (poolFee > 0 && treasury != address(0)) {
++            super._transfer(sender, treasury, poolFee);
++        }
++
++        // Restbetrag an Empfänger
++        super._transfer(sender, recipient, sendAmount);
++    }
++}
+diff --git a/testing/InfernoToken.test.js b/testing/InfernoToken.test.js
+new file mode 100644
+--- /dev/null
++++ b/testing/InfernoToken.test.js
+@@
++const { expect } = require("chai");
++
++describe("InfernoToken", function () {
++  let InfernoToken, token, owner, addr1;
++
++  beforeEach(async function () {
++    [owner, addr1, treasury] = await ethers.getSigners();
++    InfernoToken = await ethers.getContractFactory("InfernoToken");
++    token = await InfernoToken.deploy(treasury.address);
++    await token.deployed();
++  });
++
++  it("Deployment: should set correct name, symbol, decimals", async function () {
++    expect(await token.name()).to.equal("Inferno Token");
++    expect(await token.symbol()).to.equal("IFR");
++    expect(await token.decimals()).to.equal(9);
++  });
++
++  it("Deployment: should assign total supply to owner", async function () {
++    const totalSupply = await token.totalSupply();
++    const ownerBalance = await token.balanceOf(owner.address);
++    expect(ownerBalance).to.equal(totalSupply);
++  });
++});
+diff --git a/logs/project.log b/logs/project.log
+index a80f2d7..77e5221 100644
+--- a/logs/project.log
++++ b/logs/project.log
+@@
+ [2025-09-22 10:30] pm STATUS – Bootstrap abgeschlossen, Projektstruktur & Whitepaper v1 online
++[2025-09-22 11:00] dev TOKEN – InfernoToken.sol Grundgerüst erstellt (ERC20 + Fees + FeeExempt)
+*** End Patch
