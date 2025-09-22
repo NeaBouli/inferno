@@ -1,0 +1,48 @@
+*** Begin Patch
+diff --git a/arch/decisions/ADR-010-deployment-hardhat.md b/arch/decisions/ADR-010-deployment-hardhat.md
+new file mode 100644
+--- /dev/null
++++ b/arch/decisions/ADR-010-deployment-hardhat.md
+@@
++# ADR-010: Deployment mit Hardhat Scripts statt Foundry oder Remix
++
++## Status
++✅ Accepted
++
++## Kontext
++Inferno benötigt ein **Deployment-Framework**, das:
++- Reproduzierbare Deployments erlaubt
++- Mit CI/CD integrierbar ist
++- Netzwerke wie Hardhat, Sepolia, Mainnet unterstützt
++
++Alternative Ansätze:
++- **Foundry (Forge Scripts)**:
++  - Vorteil: sehr schnell, modernes Tooling
++  - Nachteil: anderes Ökosystem, weniger JS/TS-Integration
++- **Remix**:
++  - Vorteil: schnell für Prototypen
++  - Nachteil: manuell, keine CI/CD-Fähigkeit
++
++## Entscheidung
++Inferno setzt auf **Hardhat Deployment Scripts**:
++- JavaScript-basierte Scripts (`scripts/*.js`)
++- Volle Integration mit Hardhat Config & Plugins
++- Wiederverwendbar für lokale Tests, Testnet & Mainnet
++
++## Konsequenzen
++- ✅ Einfache Erweiterung (Full-Stack Deployment)
++- ✅ Gute Integration mit GitHub Actions
++- ⚠️ Weniger Performance als Foundry Scripts
++- ⚠️ Deployment-Prozess hängt von Node.js Toolchain ab
++
++## Nächste Schritte
++- Full-Stack Deployment Script fertigstellen
++- CI-Integration: automatisiertes Testnet Deployment
+diff --git a/logs/project.log b/logs/project.log
+index f7e4e0a..005aa5c 100644
+--- a/logs/project.log
++++ b/logs/project.log
+@@
+ [2025-09-23 01:00] arch ADR – ADR-009 Unit Testing mit Hardhat/Chai dokumentiert
++[2025-09-23 01:30] arch ADR – ADR-010 Deployment mit Hardhat Scripts dokumentiert
+*** End Patch
