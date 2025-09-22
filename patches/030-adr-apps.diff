@@ -1,0 +1,47 @@
+*** Begin Patch
+diff --git a/arch/decisions/ADR-007-admin-vs-investor-apps.md b/arch/decisions/ADR-007-admin-vs-investor-apps.md
+new file mode 100644
+--- /dev/null
++++ b/arch/decisions/ADR-007-admin-vs-investor-apps.md
+@@
++# ADR-007: Admin Console + Investor Web getrennt statt Monolith
++
++## Status
++✅ Accepted
++
++## Kontext
++Inferno hat zwei sehr unterschiedliche Nutzergruppen:
++- **Admins**: benötigen Zugriff auf Governance, Treasury, Presale-Management.
++- **Investoren**: brauchen einfaches Web-Frontend für Token-Käufe, Vesting-Abfragen, Portfolio.
++
++Alternative Ansätze:
++- **Monolithische App**:
++  - Vorteil: Nur ein Codebase, weniger Wartung.
++  - Nachteil: Vermischung von Security-Critical (Admin) und Investor-UX.
++- **Mobile-Only Investor App**:
++  - Vorteil: Investoren-freundlich.
++  - Nachteil: Admin-UX schwach, keine klare Trennung.
++
++## Entscheidung
++Inferno setzt auf **zwei separate Apps**:
++- **Admin Console**: Fokus auf Sicherheit (2FA, restriktiver Zugriff).
++- **Investor Web**: Fokus auf Usability (leichtgewichtig, mobilfreundlich).
++
++## Konsequenzen
++- ✅ Bessere Sicherheit durch klare Trennung
++- ✅ UX optimiert für beide Gruppen
++- ⚠️ Mehr Wartungsaufwand (zwei Codebases)
++- ⚠️ Zusätzliche DevOps-Komplexität (Deployment beider Apps)
++
++## Nächste Schritte
++- Frontend-Framework wählen (z. B. React + Tailwind).
++- Gemeinsame Komponenten in ein UI-Library-Modul auslagern.
++- CI/CD-Pipeline für beide Apps aufsetzen.
+diff --git a/logs/project.log b/logs/project.log
+index 3ad2d26..ec19d60 100644
+--- a/logs/project.log
++++ b/logs/project.log
+@@
+ [2025-09-22 23:30] arch ADR – ADR-006 Indexer statt Off-Chain Cronjobs dokumentiert
++[2025-09-23 00:00] arch ADR – ADR-007 Admin Console + Investor Web getrennt dokumentiert
+*** End Patch
