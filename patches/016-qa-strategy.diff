@@ -1,0 +1,96 @@
+*** Begin Patch
+diff --git a/hardhat.config.js b/hardhat.config.js
+index 5a6f420..fb1f81d 100644
+--- a/hardhat.config.js
++++ b/hardhat.config.js
+@@
+ require("@nomicfoundation/hardhat-toolbox");
+ require("dotenv").config();
+ require("./tasks/simulate.js");
++require("hardhat-gas-reporter");
++require("solidity-coverage");
+ 
+ /** @type import('hardhat/config').HardhatUserConfig */
+ module.exports = {
+   solidity: "0.8.20",
+   networks: {
+     hardhat: {},
+     sepolia: {
+       url: process.env.SEPOLIA_RPC_URL || "",
+       accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : []
+     }
+-  }
++  },
++  gasReporter: {
++    enabled: true,
++    currency: "USD",
++    coinmarketcap: process.env.CMC_API_KEY || null
++  }
+ };
+diff --git a/package.json b/package.json
+index f3c6b9e..18b2c1f 100644
+--- a/package.json
++++ b/package.json
+@@
+   "scripts": {
+     "compile": "hardhat compile",
+     "test": "hardhat test",
+-    "deploy": "hardhat run scripts/deploy.js --network hardhat"
++    "deploy": "hardhat run scripts/deploy.js --network hardhat",
++    "coverage": "hardhat coverage",
++    "gas": "hardhat test"
+   },
+   "devDependencies": {
+     "@nomicfoundation/hardhat-toolbox": "^3.0.0",
+-    "hardhat": "^2.19.0"
++    "hardhat": "^2.19.0",
++    "hardhat-gas-reporter": "^1.0.9",
++    "solidity-coverage": "^0.8.2"
+   },
+   "dependencies": {
+     "@openzeppelin/contracts": "^5.0.0"
+   }
+ }
+diff --git a/testing/QA_STRATEGY.md b/testing/QA_STRATEGY.md
+new file mode 100644
+--- /dev/null
++++ b/testing/QA_STRATEGY.md
+@@
++# 🔍 QA-Teststrategie – Inferno
++
++## Testpyramide
++- **Unit Tests** → Einzelne Contracts (InfernoToken, Presale, Vesting, BurnReserve, Buyback, Governance).
++- **Integration Tests** → Zusammenspiel mehrerer Komponenten (z.B. Presale + Token, Vesting + Token).
++- **End-to-End Tests** → Vollständige User-Stories (Investor kauft Tokens → Vesting → Burn).
++
++## Qualitätsziele
++- **Coverage**: ≥ 90%
++- **Gas-Effizienz**: Jeder Commit wird auf Gasverbrauch geprüft
++- **Deterministische Tests**: Keine Abhängigkeit von externen APIs oder Netzwerken
++
++## Tools
++- `hardhat-gas-reporter` → Gas-Analyse bei jedem Testlauf
++- `solidity-coverage` → Coverage-Berichte
++- CI integriert → Compile + Test + Coverage + Gas
++
++## Fokusbereiche
++1. **Fee-Logik**: SenderBurn, RecipientBurn, PoolFee, FeeExempt.
++2. **Presale**: ETH-Flow, Token-Verteilung, Caps.
++3. **Vesting**: Linearität, Cliff, Release.
++4. **BurnReserve**: Token-Burn sicher & transparent.
++5. **BuybackVault**: Split-Mechanismus Burn/Treasury.
++6. **Governance**: Timelock-Delays, Guardian-Multisig Threshold.
++
++## Roadmap
++1. Unit Tests erweitern → 100% Coverage
++2. Integration Tests → reale Szenarien
++3. Gas-Optimierung → Reports tracken
++4. CI erweitern → Coverage Badge im README
+diff --git a/logs/project.log b/logs/project.log
+index 54b1349..b3ff605 100644
+--- a/logs/project.log
++++ b/logs/project.log
+@@
+ [2025-09-22 16:30] dev SIM – Simulation-Tasks erstellt (Presale, Vesting, Buyback)
++[2025-09-22 17:00] qa STRATEGY – QA-Teststrategie dokumentiert (Coverage + GasReports + CI-Integration)
+*** End Patch
