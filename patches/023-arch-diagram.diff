@@ -1,0 +1,38 @@
+*** Begin Patch
+diff --git a/arch/diagrams/contracts.mmd b/arch/diagrams/contracts.mmd
+new file mode 100644
+--- /dev/null
++++ b/arch/diagrams/contracts.mmd
+@@
++```mermaid
++graph TD
++
++    A[InfernoToken] --> B[Presale]
++    A --> C[VestingSimple]
++    A --> D[BurnReserve]
++    A --> E[BuybackVault]
++
++    B -->|ETH Flow| T[Treasury Wallet]
++    B -->|IFR Flow| I[Investor]
++
++    C -->|Release Tokens| I
++    D -->|Burn Supply| A
++    E -->|Split Burn/Treasury| D
++    E --> T
++
++    F[GovernanceTimelock] --> A
++    F --> B
++    F --> C
++    F --> D
++    F --> E
++
++    G[GuardianMultisig] --> F
++```
+diff --git a/logs/project.log b/logs/project.log
+index 9f9d1d5..a2c6dfd 100644
+--- a/logs/project.log
++++ b/logs/project.log
+@@
+ [2025-09-22 20:00] perf BASE – Performance Notes + Benchmark Script erstellt
++[2025-09-22 20:30] arch DIAGRAM – Contract-Architekturdiagramm (Mermaid) erstellt
+*** End Patch
