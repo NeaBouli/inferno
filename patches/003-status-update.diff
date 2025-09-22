@@ -1,0 +1,49 @@
+*** Begin Patch
+diff --git a/docs/README.md b/docs/README.md
+index 2bda09f..5ff3b5c 100644
+--- a/docs/README.md
++++ b/docs/README.md
+@@
+-## Statusbaum (Initial – alles offen)
++## Statusbaum (Update – Bootstrap erledigt)
+inferno
+-├── 🔵 contracts/
+-│ ├── 🔵 token/
+-│ ├── 🔵 presale/
+-│ ├── 🔵 vesting/
+-│ ├── 🔵 burnreserve/
+-│ ├── 🔵 buyback/
+-│ └── 🔵 governance/
+-├── 🔵 abi/
+-├── 🔵 deployments/
+-├── 🔵 indexer/
+-├── 🔵 backend/
+-├── 🔵 apps/
+-├── 🔵 infra/
+-├── 🔵 testing/
+-├── 🔵 arch/
+-└── 🟢 logs/
++├── 🔵 contracts/
++│ ├── 🔵 token/
++│ ├── 🔵 presale/
++│ ├── 🔵 vesting/
++│ ├── 🔵 burnreserve/
++│ ├── 🔵 buyback/
++│ └── 🔵 governance/
++├── 🔵 abi/
++├── 🔵 deployments/
++├── 🔵 indexer/
++├── 🔵 backend/
++├── 🔵 apps/
++├── 🔵 infra/
++├── 🔵 testing/
++├── 🔵 arch/
++└── 🟢 logs/ (Bootstrap abgeschlossen)
+diff --git a/logs/project.log b/logs/project.log
+index 9a9c9c3..a80f2d7 100644
+--- a/logs/project.log
++++ b/logs/project.log
+@@
+[2025-09-22 10:00] architect INIT – bootstrap – leere Architekturstruktur erstellt & gepusht
++[2025-09-22 10:30] pm STATUS – Bootstrap abgeschlossen, Projektstruktur & Whitepaper v1 online
+*** End Patch
