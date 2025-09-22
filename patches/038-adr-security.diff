@@ -1,0 +1,53 @@
+*** Begin Patch
+diff --git a/arch/decisions/ADR-015-security-audits.md b/arch/decisions/ADR-015-security-audits.md
+new file mode 100644
+--- /dev/null
++++ b/arch/decisions/ADR-015-security-audits.md
+@@
++# ADR-015: Security Audits verpflichtend vor Mainnet Deployment
++
++## Status
++✅ Accepted
++
++## Kontext
++Die Smart Contracts von Inferno enthalten komplexe Mechanismen:
++- Gebühren (SenderBurn, RecipientBurn, PoolFee)
++- Presale mit Treasury-Flow
++- Vesting-Mechanismus
++- Buyback-Vault
++- Governance (Timelock + Multisig)
++
++Fehler oder Angriffe könnten zu **totalem Kapitalverlust** führen.
++
++Alternative Ansätze:
++- **Nur interne Tests**:
++  - Vorteil: schnell, günstig
++  - Nachteil: hohes Risiko, keine externe Validierung
++- **Nur Bug-Bounty ohne Audit**:
++  - Vorteil: Community-getrieben
++  - Nachteil: keine formale Bestätigung, geringer Investorenschutz
++
++## Entscheidung
++Vor jedem Mainnet Deployment werden **verpflichtend externe Security Audits** durchgeführt:
++- Mindestens zwei unabhängige Firmen
++- Fokus auf Reentrancy, Overflow/Underflow, Access Control, Gas-Optimierungen
++- Veröffentlichung der Reports in `docs/security/`
++
++## Konsequenzen
++- ✅ Höchste Sicherheit & Vertrauen für Investoren
++- ✅ Nachvollziehbarkeit durch öffentliche Audit-Reports
++- ⚠️ Höhere Kosten
++- ⚠️ Verzögerung im Launch-Zeitplan
++
++## Nächste Schritte
++- Anbieter evaluieren (z. B. OpenZeppelin, CertiK, Trail of Bits)
++- Security-Review in CI/CD Pipeline vorbereiten
++- Bug-Bounty ergänzend starten
+diff --git a/logs/project.log b/logs/project.log
+index b22c853..3c20d71 100644
+--- a/logs/project.log
++++ b/logs/project.log
+@@
+ [2025-09-23 03:30] arch ADR – ADR-014 Logs als Single Source of Truth dokumentiert
++[2025-09-23 04:00] arch ADR – ADR-015 Security Audits vor Mainnet Deployment dokumentiert
+*** End Patch
