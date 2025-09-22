@@ -1,0 +1,85 @@
+*** Begin Patch
+diff --git a/contracts/burnreserve/BurnReserve.sol b/contracts/burnreserve/BurnReserve.sol
+new file mode 100644
+--- /dev/null
++++ b/contracts/burnreserve/BurnReserve.sol
+@@
++// SPDX-License-Identifier: MIT
++pragma solidity ^0.8.20;
++
++import "@openzeppelin/contracts/access/Ownable.sol";
++import "../token/InfernoToken.sol";
++
++/**
++ * @title BurnReserve
++ * @notice Hält IFR-Token und kann sie dauerhaft verbrennen
++ */
++contract BurnReserve is Ownable {
++    InfernoToken public token;
++
++    event TokensDeposited(address indexed from, uint256 amount);
++    event TokensBurned(uint256 amount);
++
++    constructor(address _token) {
++        require(_token != address(0), "Token required");
++        token = InfernoToken(_token);
++
++        // FeeExempt setzen
++        token.setFeeExempt(address(this), true);
++    }
++
++    function deposit(uint256 amount) external {
++        require(amount > 0, "Amount required");
++        token.transferFrom(msg.sender, address(this), amount);
++        emit TokensDeposited(msg.sender, amount);
++    }
++
++    function burn(uint256 amount) external onlyOwner {
++        require(amount > 0, "Amount required");
++        require(token.balanceOf(address(this)) >= amount, "Not enough balance");
++        token._burn(address(this), amount);
++        emit TokensBurned(amount);
++    }
++}
+diff --git a/testing/BurnReserve.test.js b/testing/BurnReserve.test.js
+new file mode 100644
+--- /dev/null
++++ b/testing/BurnReserve.test.js
+@@
++const { expect } = require("chai");
++
++describe("BurnReserve", function () {
++  let InfernoToken, BurnReserve, token, burnreserve, owner, addr1, treasury;
++
++  beforeEach(async function () {
++    [owner, addr1, treasury] = await ethers.getSigners();
++
++    InfernoToken = await ethers.getContractFactory("InfernoToken");
++    token = await InfernoToken.deploy(treasury.address);
++    await token.deployed();
++
++    BurnReserve = await ethers.getContractFactory("BurnReserve");
++    burnreserve = await BurnReserve.deploy(token.address);
++    await burnreserve.deployed();
++
++    // Owner genehmigt BurnReserve, Tokens zu ziehen
++    await token.connect(owner).approve(burnreserve.address, ethers.constants.MaxUint256);
++  });
++
++  it("Deployment: should set correct token", async function () {
++    expect(await burnreserve.token()).to.equal(token.address);
++  });
++
++  it("Deposit: should accept tokens", async function () {
++    await expect(() => burnreserve.connect(owner).deposit(1000))
++      .to.changeTokenBalances(token, [owner, burnreserve], [-1000, 1000]);
++  });
++});
+diff --git a/logs/project.log b/logs/project.log
+index 32efc3b..7b5e9e2 100644
+--- a/logs/project.log
++++ b/logs/project.log
+@@
+ [2025-09-22 12:00] dev VESTING – VestingSimple.sol Grundgerüst erstellt (linear, Cliff, FeeExempt)
++[2025-09-22 12:30] dev BURNRESERVE – BurnReserve.sol Grundgerüst erstellt (Token-Holding, On-Chain-Burn)
+*** End Patch
