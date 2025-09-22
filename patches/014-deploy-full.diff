@@ -1,0 +1,78 @@
+*** Begin Patch
+diff --git a/scripts/deploy-full.js b/scripts/deploy-full.js
+new file mode 100644
+--- /dev/null
++++ b/scripts/deploy-full.js
+@@
++async function main() {
++  const [deployer, treasury, guardian1, guardian2] = await ethers.getSigners();
++  console.log("Deploying all contracts with deployer:", deployer.address);
++
++  // Token
++  const InfernoToken = await ethers.getContractFactory("InfernoToken");
++  const token = await InfernoToken.deploy(treasury.address);
++  await token.deployed();
++  console.log("InfernoToken deployed:", token.address);
++
++  // Presale
++  const Presale = await ethers.getContractFactory("Presale");
++  const presale = await Presale.deploy(token.address, treasury.address, 1000);
++  await presale.deployed();
++  console.log("Presale deployed:", presale.address);
++  await token.setFeeExempt(presale.address, true);
++
++  // Vesting (example: 5min Cliff, 1h Duration)
++  const now = Math.floor(Date.now() / 1000);
++  const VestingSimple = await ethers.getContractFactory("VestingSimple");
++  const vesting = await VestingSimple.deploy(token.address, deployer.address, now, 300, 3600);
++  await vesting.deployed();
++  console.log("VestingSimple deployed:", vesting.address);
++  await token.setFeeExempt(vesting.address, true);
++
++  // BurnReserve
++  const BurnReserve = await ethers.getContractFactory("BurnReserve");
++  const burnreserve = await BurnReserve.deploy(token.address);
++  await burnreserve.deployed();
++  console.log("BurnReserve deployed:", burnreserve.address);
++  await token.setFeeExempt(burnreserve.address, true);
++
++  // BuybackVault
++  const BuybackVault = await ethers.getContractFactory("BuybackVault");
++  const buyback = await BuybackVault.deploy(token.address, burnreserve.address, treasury.address, 5000);
++  await buyback.deployed();
++  console.log("BuybackVault deployed:", buyback.address);
++  await token.setFeeExempt(buyback.address, true);
++
++  // Governance: Timelock
++  const GovernanceTimelock = await ethers.getContractFactory("GovernanceTimelock");
++  const timelock = await GovernanceTimelock.deploy(
++    60,
++    [deployer.address],
++    [deployer.address],
++    deployer.address
++  );
++  await timelock.deployed();
++  console.log("GovernanceTimelock deployed:", timelock.address);
++
++  // Governance: GuardianMultisig (2 of 3)
++  const GuardianMultisig = await ethers.getContractFactory("GuardianMultisig");
++  const guardian = await GuardianMultisig.deploy(
++    [deployer.address, guardian1.address, guardian2.address],
++    2
++  );
++  await guardian.deployed();
++  console.log("GuardianMultisig deployed:", guardian.address);
++}
++
++main().catch((error) => {
++  console.error(error);
++  process.exitCode = 1;
++});
+diff --git a/logs/project.log b/logs/project.log
+index 64d5d08..1183e2b 100644
+--- a/logs/project.log
++++ b/logs/project.log
+@@
+ [2025-09-22 15:30] qa E2E – End-to-End Test-Suite erstellt (Presale → Token → Vesting → BurnReserve)
++[2025-09-22 16:00] dev DEPLOY – Full-Stack Deployment-Skript erstellt (Token, Presale, Vesting, BurnReserve, Buyback, Governance)
+*** End Patch
