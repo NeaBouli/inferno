@@ -1,0 +1,46 @@
+*** Begin Patch
+diff --git a/arch/decisions/ADR-001-erc20-token.md b/arch/decisions/ADR-001-erc20-token.md
+new file mode 100644
+--- /dev/null
++++ b/arch/decisions/ADR-001-erc20-token.md
+@@
++# ADR-001: ERC-20 Token mit Fee-Mechanik
++
++## Status
++✅ Accepted
++
++## Kontext
++Das Projekt Inferno benötigt einen **deflationären Token** mit folgenden Eigenschaften:
++- Deflation durch **Transaktionsgebühren** (Burn, PoolFee).
++- **Kompatibilität** mit bestehender Wallet- und Exchange-Infrastruktur.
++- Erweiterbarkeit (Presale, Vesting, Buyback, Governance).
++
++Alternative Ansätze:
++- **Eigene Chain (Kaspa L1)**: Nicht möglich, da Kaspa kein Smart-Contract-Support bietet.
++- **Layer-2 (Kasplex, WASM)**: Noch unreif, zu hohes Risiko für Launch.
++- **Non-EVM Chain**: Bringt starke Integrationshürden (Wallets, Bridges).
++
++## Entscheidung
++Wir setzen auf einen **ERC-20 Standard-Token** mit integrierter Fee-Mechanik:
++- SenderBurn (2.0%)
++- RecipientBurn (0.5%)
++- PoolFee (1.0%)
++
++Zusätzlich werden FeeExempt-Adressen unterstützt (Presale, Vesting, Reserve).
++
++## Konsequenzen
++- ✅ Sofortige Integration mit EVM-Ökosystem (Wallets, Exchanges, Bridges).
++- ✅ Deflation ist nativ im Token integriert.
++- ⚠️ Höhere Gas-Kosten pro Transfer.
++- ⚠️ Abhängigkeit von Ethereum-Netzwerk (Gebühren, Skalierung).
++
++## Nächste Schritte
++- Rollout weiterer ADRs für Presale, Governance, Multichain.
+diff --git a/logs/project.log b/logs/project.log
+index a2c6dfd..5f6f6a3 100644
+--- a/logs/project.log
++++ b/logs/project.log
+@@
+ [2025-09-22 20:30] arch DIAGRAM – Contract-Architekturdiagramm (Mermaid) erstellt
++[2025-09-22 21:00] arch ADR – ADR-001 ERC-20 Token mit Fee-Mechanik dokumentiert
+*** End Patch
