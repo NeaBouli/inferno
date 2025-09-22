@@ -1,0 +1,55 @@
+*** Begin Patch
+diff --git a/arch/decisions/ADR-025-multichain-indexing.md b/arch/decisions/ADR-025-multichain-indexing.md
+new file mode 100644
+--- /dev/null
++++ b/arch/decisions/ADR-025-multichain-indexing.md
+@@
++# ADR-025: Multichain Indexing
++
++## Status
++✅ Accepted
++
++## Kontext
++Inferno soll langfristig auf mehreren Chains laufen:
++- Ethereum (ERC-20 Main Deployment)
++- Solana (Wrapped IFR)
++- Kaspa L2 (zukünftig)
++
++Für Investoren und Admins ist eine konsistente Sicht auf Events notwendig:
++- Total Supply
++- Burn Events
++- Buyback-Aktivitäten
++- Treasury-Bewegungen
++
++Alternative Ansätze:
++- **Pro Chain separater Indexer**:
++  - Vorteil: isoliert, einfach zu starten
++  - Nachteil: fragmentiert, kein Gesamtüberblick
++- **Explorer-APIs (Etherscan, Solscan, etc.)**:
++  - Vorteil: keine eigene Infrastruktur
++  - Nachteil: unzuverlässig, limitiert, keine Kontrolle
++
++## Entscheidung
++Inferno implementiert einen **Multichain Indexer**:
++- Liest Events aller relevanten Chains
++- Normalisiert Daten in einer gemeinsamen Datenbank
++- Einheitliche API für Backend & Investor Web
++
++## Konsequenzen
++- ✅ Einheitliche Sicht für Investoren & Admins
++- ✅ Bessere Transparenz über gesamtes Ökosystem
++- ⚠️ Höherer DevOps- und Entwicklungsaufwand
++- ⚠️ Potenzielles Latenzproblem bei Chains mit schwachen APIs
++
++## Nächste Schritte
++- Datenmodell für Multichain Events definieren
++- Indexer-Module pro Chain entwickeln
++- CI/CD Setup für Multichain Deployment
+diff --git a/logs/project.log b/logs/project.log
+index ef45da8..f8446a0 100644
+--- a/logs/project.log
++++ b/logs/project.log
+@@
+ [2025-09-23 08:30] arch ADR – ADR-024 Legal Jurisdictions & Token Sale Framework dokumentiert
++[2025-09-23 09:00] arch ADR – ADR-025 Multichain Indexing dokumentiert
+*** End Patch
