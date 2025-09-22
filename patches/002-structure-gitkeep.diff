@@ -1,0 +1,158 @@
+*** Begin Patch
+diff --git a/arch/decisions/.gitkeep b/arch/decisions/.gitkeep
+new file mode 100644
+--- /dev/null
++++ b/arch/decisions/.gitkeep
+@@
++
+diff --git a/arch/diagrams/.gitkeep b/arch/diagrams/.gitkeep
+new file mode 100644
+--- /dev/null
++++ b/arch/diagrams/.gitkeep
+@@
++
+diff --git a/docs/compliance/.gitkeep b/docs/compliance/.gitkeep
+new file mode 100644
+--- /dev/null
++++ b/docs/compliance/.gitkeep
+@@
++
+diff --git a/docs/perf/.gitkeep b/docs/perf/.gitkeep
+new file mode 100644
+--- /dev/null
++++ b/docs/perf/.gitkeep
+@@
++
+diff --git a/docs/runbooks/.gitkeep b/docs/runbooks/.gitkeep
+new file mode 100644
+--- /dev/null
++++ b/docs/runbooks/.gitkeep
+@@
++
+diff --git a/docs/security/.gitkeep b/docs/security/.gitkeep
+new file mode 100644
+--- /dev/null
++++ b/docs/security/.gitkeep
+@@
++
+diff --git a/contracts/token/.gitkeep b/contracts/token/.gitkeep
+new file mode 100644
+--- /dev/null
++++ b/contracts/token/.gitkeep
+@@
++
+diff --git a/contracts/presale/.gitkeep b/contracts/presale/.gitkeep
+new file mode 100644
+--- /dev/null
++++ b/contracts/presale/.gitkeep
+@@
++
+diff --git a/contracts/vesting/.gitkeep b/contracts/vesting/.gitkeep
+new file mode 100644
+--- /dev/null
++++ b/contracts/vesting/.gitkeep
+@@
++
+diff --git a/contracts/burnreserve/.gitkeep b/contracts/burnreserve/.gitkeep
+new file mode 100644
+--- /dev/null
++++ b/contracts/burnreserve/.gitkeep
+@@
++
+diff --git a/contracts/buyback/.gitkeep b/contracts/buyback/.gitkeep
+new file mode 100644
+--- /dev/null
++++ b/contracts/buyback/.gitkeep
+@@
++
+diff --git a/contracts/governance/.gitkeep b/contracts/governance/.gitkeep
+new file mode 100644
+--- /dev/null
++++ b/contracts/governance/.gitkeep
+@@
++
+diff --git a/abi/.gitkeep b/abi/.gitkeep
+new file mode 100644
+--- /dev/null
++++ b/abi/.gitkeep
+@@
++
+diff --git a/deployments/.gitkeep b/deployments/.gitkeep
+new file mode 100644
+--- /dev/null
++++ b/deployments/.gitkeep
+@@
++
+diff --git a/indexer/src/.gitkeep b/indexer/src/.gitkeep
+new file mode 100644
+--- /dev/null
++++ b/indexer/src/.gitkeep
+@@
++
+diff --git a/indexer/config/.gitkeep b/indexer/config/.gitkeep
+new file mode 100644
+--- /dev/null
++++ b/indexer/config/.gitkeep
+@@
++
+diff --git a/indexer/db/.gitkeep b/indexer/db/.gitkeep
+new file mode 100644
+--- /dev/null
++++ b/indexer/db/.gitkeep
+@@
++
+diff --git a/backend/src/.gitkeep b/backend/src/.gitkeep
+new file mode 100644
+--- /dev/null
++++ b/backend/src/.gitkeep
+@@
++
+diff --git a/backend/openapi/.gitkeep b/backend/openapi/.gitkeep
+new file mode 100644
+--- /dev/null
++++ b/backend/openapi/.gitkeep
+@@
++
+diff --git a/backend/config/.gitkeep b/backend/config/.gitkeep
+new file mode 100644
+--- /dev/null
++++ b/backend/config/.gitkeep
+@@
++
+diff --git a/apps/admin-console/.gitkeep b/apps/admin-console/.gitkeep
+new file mode 100644
+--- /dev/null
++++ b/apps/admin-console/.gitkeep
+@@
++
+diff --git a/apps/investor-web/.gitkeep b/apps/investor-web/.gitkeep
+new file mode 100644
+--- /dev/null
++++ b/apps/investor-web/.gitkeep
+@@
++
+diff --git a/infra/ci/.gitkeep b/infra/ci/.gitkeep
+new file mode 100644
+--- /dev/null
++++ b/infra/ci/.gitkeep
+@@
++
+diff --git a/infra/docker/.gitkeep b/infra/docker/.gitkeep
+new file mode 100644
+--- /dev/null
++++ b/infra/docker/.gitkeep
+@@
++
+diff --git a/infra/k8s/.gitkeep b/infra/k8s/.gitkeep
+new file mode 100644
+--- /dev/null
++++ b/infra/k8s/.gitkeep
+@@
++
+diff --git a/testing/.gitkeep b/testing/.gitkeep
+new file mode 100644
+--- /dev/null
++++ b/testing/.gitkeep
+@@
++
+*** End Patch
