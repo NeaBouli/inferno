@@ -1,0 +1,66 @@
+*** Begin Patch
+diff --git a/package.json b/package.json
+new file mode 100644
+--- /dev/null
++++ b/package.json
+@@
++{
++  "name": "inferno",
++  "version": "1.0.0",
++  "description": "Inferno Blockchain System – Smart Contracts & Tests",
++  "main": "hardhat.config.js",
++  "scripts": {
++    "compile": "hardhat compile",
++    "test": "hardhat test",
++    "deploy": "hardhat run scripts/deploy.js --network hardhat"
++  },
++  "devDependencies": {
++    "@nomicfoundation/hardhat-toolbox": "^3.0.0",
++    "hardhat": "^2.19.0"
++  },
++  "dependencies": {
++    "@openzeppelin/contracts": "^5.0.0"
++  }
++}
+diff --git a/hardhat.config.js b/hardhat.config.js
+new file mode 100644
+--- /dev/null
++++ b/hardhat.config.js
+@@
++require("@nomicfoundation/hardhat-toolbox");
++
++/** @type import('hardhat/config').HardhatUserConfig */
++module.exports = {
++  solidity: "0.8.20",
++  networks: {
++    hardhat: {}
++    // später: goerli, sepolia, mainnet
++  }
++};
+diff --git a/scripts/deploy.js b/scripts/deploy.js
+new file mode 100644
+--- /dev/null
++++ b/scripts/deploy.js
+@@
++async function main() {
++  const [deployer] = await ethers.getSigners();
++  console.log("Deploying contracts with:", deployer.address);
++
++  const InfernoToken = await ethers.getContractFactory("InfernoToken");
++  const token = await InfernoToken.deploy(deployer.address);
++  await token.deployed();
++  console.log("InfernoToken deployed to:", token.address);
++}
++
++main().catch((error) => {
++  console.error(error);
++  process.exitCode = 1;
++});
+diff --git a/logs/project.log b/logs/project.log
+index 0c5ce0a..3fa1e16 100644
+--- a/logs/project.log
++++ b/logs/project.log
+@@
+ [2025-09-22 13:30] dev GOVERNANCE – GovernanceTimelock + GuardianMultisig Grundgerüst erstellt (TimelockController, M-of-N)
++[2025-09-22 14:00] dev DEVOPS – Hardhat-Setup erstellt (config, package.json, deploy script)
+*** End Patch
