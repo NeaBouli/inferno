@@ -1,0 +1,48 @@
+*** Begin Patch
+diff --git a/arch/decisions/ADR-011-docker-vs-k8s.md b/arch/decisions/ADR-011-docker-vs-k8s.md
+new file mode 100644
+--- /dev/null
++++ b/arch/decisions/ADR-011-docker-vs-k8s.md
+@@
++# ADR-011: Docker-Compose für Dev statt Kubernetes-first
++
++## Status
++✅ Accepted
++
++## Kontext
++Inferno benötigt eine lokale DevOps-Orchestrierung für:
++- Hardhat Tests
++- Indexer
++- Backend Services
++
++Alternative Ansätze:
++- **Kubernetes-first**:
++  - Vorteil: production-ready Skalierung
++  - Nachteil: zu komplex für lokale Entwicklung, hoher Setup-Aufwand
++- **Nur Bare Metal (lokal laufen lassen)**:
++  - Vorteil: minimal
++  - Nachteil: keine Portabilität, fehlende Reproduzierbarkeit
++
++## Entscheidung
++Inferno startet mit **Docker-Compose für Development**:
++- Einfache lokale Container-Orchestrierung
++- Leichtgewichtiger Workflow für Developer
++- Build & Test in Container reproduzierbar
++
++## Konsequenzen
++- ✅ Developer können mit einem Befehl starten (`docker compose up`)
++- ✅ Portabilität zwischen Dev-Umgebungen
++- ⚠️ Kein direkter Übergang zu Production-Scaling
++- ⚠️ Spätere Migration auf Kubernetes nötig
++
++## Nächste Schritte
++- Compose-Files für Indexer & Backend erweitern
++- Kubernetes Manifeste in `infra/k8s/` vorbereiten für Production
+diff --git a/logs/project.log b/logs/project.log
+index 005aa5c..220fd86 100644
+--- a/logs/project.log
++++ b/logs/project.log
+@@
+ [2025-09-23 01:30] arch ADR – ADR-010 Deployment mit Hardhat Scripts dokumentiert
++[2025-09-23 02:00] arch ADR – ADR-011 Docker-Compose für Dev statt Kubernetes-first dokumentiert
+*** End Patch
