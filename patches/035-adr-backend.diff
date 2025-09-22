@@ -1,0 +1,50 @@
+*** Begin Patch
+diff --git a/arch/decisions/ADR-012-backend-microservices.md b/arch/decisions/ADR-012-backend-microservices.md
+new file mode 100644
+--- /dev/null
++++ b/arch/decisions/ADR-012-backend-microservices.md
+@@
++# ADR-012: Backend als Microservices statt Monolith
++
++## Status
++✅ Accepted
++
++## Kontext
++Das Inferno-Backend muss mehrere Rollen erfüllen:
++- Indexer-Daten bereitstellen
++- Investor-Web-API bedienen
++- Admin-Console-API sichern
++
++Alternative Ansätze:
++- **Monolithisches Backend**:
++  - Vorteil: Einfacher Start, weniger Services
++  - Nachteil: Schwer erweiterbar, jede Änderung betrifft das ganze System
++- **Serverless-only**:
++  - Vorteil: Skalierung automatisch
++  - Nachteil: Starke Abhängigkeit von externen Providern, teils hohe Kosten
++
++## Entscheidung
++Inferno setzt auf **Microservices**:
++- Indexer-Service
++- Investor-API
++- Admin-API
++- Gemeinsame Auth/Shared Modules
++
++## Konsequenzen
++- ✅ Klare Trennung der Verantwortlichkeiten
++- ✅ Skalierbarkeit pro Service
++- ⚠️ Höherer DevOps-Aufwand (Kommunikation, Orchestrierung)
++- ⚠️ Mehr Komplexität bei lokalen Tests
++
++## Nächste Schritte
++- API-Schnittstellen in `backend/openapi/` spezifizieren
++- Docker-Compose Services für lokale Entwicklung hinzufügen
++- CI/CD-Pipeline für Microservices aufsetzen
+diff --git a/logs/project.log b/logs/project.log
+index 220fd86..0c85e7b 100644
+--- a/logs/project.log
++++ b/logs/project.log
+@@
+ [2025-09-23 02:00] arch ADR – ADR-011 Docker-Compose für Dev statt Kubernetes-first dokumentiert
++[2025-09-23 02:30] arch ADR – ADR-012 Backend als Microservices statt Monolith dokumentiert
+*** End Patch
