@@ -1,0 +1,54 @@
+*** Begin Patch
+diff --git a/arch/decisions/ADR-020-monitoring-alerts.md b/arch/decisions/ADR-020-monitoring-alerts.md
+new file mode 100644
+--- /dev/null
++++ b/arch/decisions/ADR-020-monitoring-alerts.md
+@@
++# ADR-020: Monitoring & Alerts
++
++## Status
++✅ Accepted
++
++## Kontext
++Die Inferno-Plattform beinhaltet kritische Mechanismen:
++- Presale Caps
++- Vesting Releases
++- Buyback-Events
++- Treasury-Bewegungen
++- Governance Votes
++
++Fehler oder Angriffe müssen **sofort erkannt** werden.
++
++Alternative Ansätze:
++- **Nur Logs**:
++  - Vorteil: minimaler Aufwand
++  - Nachteil: keine proaktive Alarmierung, manuelle Auswertung
++- **Externe SaaS-Monitoring (z. B. Datadog, New Relic)**:
++  - Vorteil: viele Features
++  - Nachteil: Kosten, externe Abhängigkeit, weniger Kontrolle
++
++## Entscheidung
++Inferno implementiert ein **Monitoring- & Alert-System**:
++- Metriken: Prometheus
++- Visualisierung: Grafana Dashboards
++- Alerts: Alertmanager → Slack/Telegram/Webhooks
++- Fokus auf Smart Contract Events & Infrastruktur (Node, Indexer, Backend)
++
++## Konsequenzen
++- ✅ Proaktive Alarmierung bei kritischen Events
++- ✅ Transparenz für DevOps & Community (teilweise Dashboards öffentlich)
++- ⚠️ DevOps-Aufwand für Setup & Wartung
++- ⚠️ Gefahr von False Positives → gutes Tuning nötig
++
++## Nächste Schritte
++- Prometheus + Grafana Setup in `infra/`
++- Definition kritischer Metriken (z. B. Treasury Outflow > X ETH)
++- Alerts ins Runbook aufnehmen
+diff --git a/logs/project.log b/logs/project.log
+index dce2c75..897d42d 100644
+--- a/logs/project.log
++++ b/logs/project.log
+@@
+ [2025-09-23 06:00] arch ADR – ADR-019 Threat Models & Security-Dokumentation dokumentiert
++[2025-09-23 06:30] arch ADR – ADR-020 Monitoring & Alerts dokumentiert
+*** End Patch
