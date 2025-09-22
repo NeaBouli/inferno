@@ -1,0 +1,47 @@
+*** Begin Patch
+diff --git a/arch/decisions/ADR-018-runbooks-in-repo.md b/arch/decisions/ADR-018-runbooks-in-repo.md
+new file mode 100644
+--- /dev/null
++++ b/arch/decisions/ADR-018-runbooks-in-repo.md
+@@
++# ADR-018: Runbooks im Repo statt externe Confluence-Wiki
++
++## Status
++✅ Accepted
++
++## Kontext
++Inferno benötigt **klare Betriebsanleitungen (Runbooks)** für:
++- Incident Response (z. B. kritische Bugs, Angriffe)
++- Routineaufgaben (Deployments, Backups, Monitoring)
++
++Alternative Ansätze:
++- **Externes Wiki (Confluence, Notion, etc.)**:
++  - Vorteil: Viele Features
++  - Nachteil: Kein Git-Log, getrennt vom Code, Gefahr der Veraltung
++- **Ad-hoc Anleitungen in README-Files**:
++  - Vorteil: Schnell
++  - Nachteil: Unübersichtlich, fragmentiert
++
++## Entscheidung
++Inferno führt einen eigenen Ordner `docs/runbooks/`:
++- Alle Runbooks werden versioniert im Repo gepflegt
++- Immer synchron mit Code und Infrastruktur
++- Einheitliche Struktur für Entwickler und DevOps
++
++## Konsequenzen
++- ✅ Transparenz und Versionierung
++- ✅ Bessere Zusammenarbeit zwischen Dev & Ops
++- ⚠️ Weniger Komfort als ein dediziertes Wiki
++- ⚠️ Zusätzliche Pflege notwendig
++
++## Nächste Schritte
++- Erste Runbooks erstellen (Deployment, Incident Response)
++- Integration mit CI/CD (z. B. automatisch verlinkte Runbooks bei Pipeline-Fails)
+diff --git a/logs/project.log b/logs/project.log
+index 928ca6e..3820ed8 100644
+--- a/logs/project.log
++++ b/logs/project.log
+@@
+ [2025-09-23 05:00] arch ADR – ADR-017 Performance-Benchmarks mit Gas Reporter dokumentiert
++[2025-09-23 05:30] arch ADR – ADR-018 Runbooks im Repo statt externe Wiki dokumentiert
+*** End Patch
