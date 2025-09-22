@@ -1,0 +1,159 @@
+*** Begin Patch
+diff --git a/contracts/governance/GovernanceTimelock.sol b/contracts/governance/GovernanceTimelock.sol
+new file mode 100644
+--- /dev/null
++++ b/contracts/governance/GovernanceTimelock.sol
+@@
++// SPDX-License-Identifier: MIT
++pragma solidity ^0.8.20;
++
++import "@openzeppelin/contracts/governance/TimelockController.sol";
++
++/**
++ * @title GovernanceTimelock
++ * @notice Thin wrapper um OZ TimelockController.
++ *  - proposers dürfen Vorschläge einreichen
++ *  - executors dürfen geplante Operationen ausführen
++ *  - admin kann Rollen verwalten (typisch: auf Timelock selbst umstellen)
++ */
++contract GovernanceTimelock is TimelockController {
++    constructor(
++        uint256 minDelay,
++        address[] memory proposers,
++        address[] memory executors,
++        address admin
++    ) TimelockController(minDelay, proposers, executors, admin) {}
++}
+diff --git a/contracts/governance/GuardianMultisig.sol b/contracts/governance/GuardianMultisig.sol
+new file mode 100644
+--- /dev/null
++++ b/contracts/governance/GuardianMultisig.sol
+@@
++// SPDX-License-Identifier: MIT
++pragma solidity ^0.8.20;
++
++/**
++ * @title GuardianMultisig
++ * @notice Sehr einfache M-von-N Multisig zum Absichern kritischer Admin-Calls (Guardian).
++ *  - Owner ist der Contract selbst; Ausführung nur wenn genügend Signaturen (off-chain approvals) abgegeben wurden.
++ *  - Minimalistischer Ansatz: Approvals per Adresse, Reset nach Ausführung.
++ *  - Für produktiven Einsatz später gegen Gnosis Safe / OZ Governor austauschen.
++ */
++contract GuardianMultisig {
++    event Executed(bytes32 indexed txId, address target, uint256 value, bytes data);
++    event Approved(bytes32 indexed txId, address indexed approver);
++    event Revoked(bytes32 indexed txId, address indexed approver);
++
++    address[] public guardians;
++    mapping(address => bool) public isGuardian;
++    uint256 public threshold; // erforderliche Anzahl Approvals
++
++    // txId => approver => approved
++    mapping(bytes32 => mapping(address => bool)) public approved;
++    // txId => count
++    mapping(bytes32 => uint256) public approvalCount;
++
++    modifier onlyGuardian() {
++        require(isGuardian[msg.sender], "not guardian");
++        _;
++    }
++
++    constructor(address[] memory _guardians, uint256 _threshold) {
++        require(_guardians.length > 0, "no guardians");
++        require(_threshold > 0 && _threshold <= _guardians.length, "bad threshold");
++        for (uint256 i = 0; i < _guardians.length; i++) {
++            address g = _guardians[i];
++            require(g != address(0), "zero guardian");
++            require(!isGuardian[g], "dup guardian");
++            isGuardian[g] = true;
++            guardians.push(g);
++        }
++        threshold = _threshold;
++    }
++
++    function txHash(address target, uint256 value, bytes calldata data) public pure returns (bytes32) {
++        return keccak256(abi.encode(target, value, data));
++    }
++
++    function approve(address target, uint256 value, bytes calldata data) external onlyGuardian {
++        bytes32 id = txHash(target, value, data);
++        require(!approved[id][msg.sender], "already approved");
++        approved[id][msg.sender] = true;
++        approvalCount[id] += 1;
++        emit Approved(id, msg.sender);
++    }
++
++    function revoke(address target, uint256 value, bytes calldata data) external onlyGuardian {
++        bytes32 id = txHash(target, value, data);
++        require(approved[id][msg.sender], "not approved");
++        approved[id][msg.sender] = false;
++        approvalCount[id] -= 1;
++        emit Revoked(id, msg.sender);
++    }
++
++    function execute(address target, uint256 value, bytes calldata data) external onlyGuardian returns (bytes memory) {
++        bytes32 id = txHash(target, value, data);
++        require(approvalCount[id] >= threshold, "not enough approvals");
++        // reset approvals to prevent replay
++        approvalCount[id] = 0;
++        for (uint256 i = 0; i < guardians.length; i++) {
++            if (approved[id][guardians[i]]) {
++                approved[id][guardians[i]] = false;
++            }
++        }
++        (bool ok, bytes memory res) = target.call{value: value}(data);
++        require(ok, "call failed");
++        emit Executed(id, target, value, data);
++        return res;
++    }
++
++    // View helpers
++    function guardiansList() external view returns (address[] memory) {
++        return guardians;
++    }
++}
+diff --git a/testing/Governance.test.js b/testing/Governance.test.js
+new file mode 100644
+--- /dev/null
++++ b/testing/Governance.test.js
+@@
++const { expect } = require("chai");
++
++describe("Governance core", function () {
++  let Timelock, Guardian, timelock, guardian, owner, a1, a2, a3;
++
++  beforeEach(async function () {
++    [owner, a1, a2, a3] = await ethers.getSigners();
++
++    Timelock = await ethers.getContractFactory("GovernanceTimelock");
++    timelock = await Timelock.deploy(
++      60,                               // minDelay 60s (demo)
++      [owner.address],                  // proposers
++      [owner.address],                  // executors
++      owner.address                     // admin
++    );
++    await timelock.deployed();
++
++    Guardian = await ethers.getContractFactory("GuardianMultisig");
++    guardian = await Guardian.deploy([owner.address, a1.address, a2.address], 2);
++    await guardian.deployed();
++  });
++
++  it("Timelock: has minDelay and roles", async function () {
++    expect(await timelock.getMinDelay()).to.equal(60);
++  });
++
++  it("Guardian: threshold set and guardians listed", async function () {
++    expect(await guardian.threshold()).to.equal(2);
++    const list = await guardian.guardiansList();
++    expect(list.length).to.equal(3);
++  });
++});
+diff --git a/logs/project.log b/logs/project.log
+index 40f3c1a..0c5ce0a 100644
+--- a/logs/project.log
++++ b/logs/project.log
+@@
+ [2025-09-22 13:00] dev BUYBACK – BuybackVault.sol Grundgerüst erstellt (ETH-Deposit, Split Burn/Treasury, FeeExempt)
++[2025-09-22 13:30] dev GOVERNANCE – GovernanceTimelock + GuardianMultisig Grundgerüst erstellt (TimelockController, M-of-N)
+*** End Patch
