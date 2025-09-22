@@ -1,0 +1,66 @@
+*** Begin Patch
+diff --git a/hardhat.config.js b/hardhat.config.js
+index 892b4f5..5a6f420 100644
+--- a/hardhat.config.js
++++ b/hardhat.config.js
+@@
+ require("@nomicfoundation/hardhat-toolbox");
+ require("dotenv").config();
++require("./tasks/simulate.js");
+ 
+ /** @type import('hardhat/config').HardhatUserConfig */
+ module.exports = {
+diff --git a/tasks/simulate.js b/tasks/simulate.js
+new file mode 100644
+--- /dev/null
++++ b/tasks/simulate.js
+@@
++const { task } = require("hardhat/config");
++const { ethers } = require("hardhat");
++
++task("simulate:presale", "Simulate token purchase in Presale")
++  .addParam("presale", "Presale contract address")
++  .addParam("amount", "ETH amount in wei")
++  .setAction(async (args) => {
++    const [investor] = await ethers.getSigners();
++    const presale = await ethers.getContractAt("Presale", args.presale);
++    console.log(`Buying tokens with ${args.amount} wei...`);
++    const tx = await presale.connect(investor).buyTokens({ value: args.amount });
++    await tx.wait();
++    console.log("✅ Presale purchase simulated");
++  });
++
++task("simulate:vesting", "Simulate token release from VestingSimple")
++  .addParam("vesting", "Vesting contract address")
++  .setAction(async (args) => {
++    const [beneficiary] = await ethers.getSigners();
++    const vesting = await ethers.getContractAt("VestingSimple", args.vesting);
++    console.log("Releasing vested tokens...");
++    try {
++      const tx = await vesting.connect(beneficiary).release();
++      await tx.wait();
++      console.log("✅ Tokens released");
++    } catch (e) {
++      console.error("⚠️ Release failed:", e.message);
++    }
++  });
++
++task("simulate:buyback", "Simulate buyback in BuybackVault")
++  .addParam("vault", "BuybackVault contract address")
++  .addParam("amount", "Token amount to buyback")
++  .setAction(async (args) => {
++    const [owner] = await ethers.getSigners();
++    const vault = await ethers.getContractAt("BuybackVault", args.vault);
++    console.log(`Executing buyback for ${args.amount} tokens...`);
++    const tx = await vault.connect(owner).buyback(args.amount);
++    await tx.wait();
++    console.log("✅ Buyback executed");
++  });
+diff --git a/logs/project.log b/logs/project.log
+index 1183e2b..54b1349 100644
+--- a/logs/project.log
++++ b/logs/project.log
+@@
+ [2025-09-22 16:00] dev DEPLOY – Full-Stack Deployment-Skript erstellt (Token, Presale, Vesting, BurnReserve, Buyback, Governance)
++[2025-09-22 16:30] dev SIM – Simulation-Tasks erstellt (Presale, Vesting, Buyback)
+*** End Patch
