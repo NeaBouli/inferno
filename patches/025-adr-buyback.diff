@@ -1,0 +1,49 @@
+*** Begin Patch
+diff --git a/arch/decisions/ADR-002-buyback-vault.md b/arch/decisions/ADR-002-buyback-vault.md
+new file mode 100644
+--- /dev/null
++++ b/arch/decisions/ADR-002-buyback-vault.md
+@@
++# ADR-002: Buyback-Vault statt reiner Burn-Mechanik
++
++## Status
++✅ Accepted
++
++## Kontext
++Das Ziel von Inferno ist eine **kontrollierte Deflation**:
++- Token sollen über **Burns** dauerhaft aus dem Umlauf entfernt werden.
++- Gleichzeitig soll das **Treasury liquide** bleiben, um Entwicklung & Marketing zu finanzieren.
++
++Alternative Ansätze:
++- **Nur Burn-Mechanik**: 
++  - Vorteil: maximal deflationär
++  - Nachteil: Treasury wird nicht gefüllt → keine laufende Finanzierung
++- **Nur Treasury-Zufluss**:
++  - Vorteil: Treasury bleibt stark
++  - Nachteil: keine direkte deflationäre Wirkung
++
++## Entscheidung
++Inferno implementiert einen **BuybackVault**:
++- ETH/USDC fließen ins Vault
++- Vault kauft IFR zurück am Markt
++- Gekaufte IFR werden **gesplittet**:
++  - Teil wird verbrannt → Deflation
++  - Teil geht ins Treasury → Finanzierung
++
++## Konsequenzen
++- ✅ Balance zwischen Deflation und Treasury-Liquidität
++- ✅ Stabilisierung des Token-Preises durch aktiven Rückkauf
++- ⚠️ Erhöhte Contract-Komplexität
++- ⚠️ Buyback-Logik muss transparent & auditierbar sein
++
++## Nächste Schritte
++- Governance-Parameter definieren (Split-Ratio, Trigger-Kriterien)
++- Integration in Simulation-Testsuite
+diff --git a/logs/project.log b/logs/project.log
+index 5f6f6a3..1d8c4a8 100644
+--- a/logs/project.log
++++ b/logs/project.log
+@@
+ [2025-09-22 21:00] arch ADR – ADR-001 ERC-20 Token mit Fee-Mechanik dokumentiert
++[2025-09-22 21:30] arch ADR – ADR-002 Buyback-Vault statt reiner Burn-Mechanik dokumentiert
+*** End Patch
