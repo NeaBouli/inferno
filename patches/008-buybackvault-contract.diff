@@ -1,0 +1,122 @@
+*** Begin Patch
+diff --git a/contracts/buyback/BuybackVault.sol b/contracts/buyback/BuybackVault.sol
+new file mode 100644
+--- /dev/null
++++ b/contracts/buyback/BuybackVault.sol
+@@
++// SPDX-License-Identifier: MIT
++pragma solidity ^0.8.20;
++
++import "@openzeppelin/contracts/access/Ownable.sol";
++import "../token/InfernoToken.sol";
++import "../burnreserve/BurnReserve.sol";
++
++/**
++ * @title BuybackVault
++ * @notice Nutzt ETH, um IFR zurückzukaufen und aufzuteilen (Burn/Treasury)
++ */
++contract BuybackVault is Ownable {
++    InfernoToken public token;
++    BurnReserve public burnReserve;
++    address public treasury;
++
++    uint256 public splitRatio; // % für Burn (Basis 10000)
++
++    event ETHDeposited(address indexed from, uint256 amount);
++    event SplitRatioUpdated(uint256 newRatio);
++    event BuybackExecuted(uint256 tokens, uint256 burnPart, uint256 treasuryPart);
++
++    constructor(address _token, address _burnReserve, address _treasury, uint256 _splitRatio) {
++        require(_token != address(0), "Token required");
++        require(_burnReserve != address(0), "BurnReserve required");
++        require(_treasury != address(0), "Treasury required");
++        require(_splitRatio <= 10000, "Invalid split");
++
++        token = InfernoToken(_token);
++        burnReserve = BurnReserve(_burnReserve);
++        treasury = _treasury;
++        splitRatio = _splitRatio;
++
++        // FeeExempt
++        token.setFeeExempt(address(this), true);
++    }
++
++    receive() external payable {
++        emit ETHDeposited(msg.sender, msg.value);
++    }
++
++    function setSplitRatio(uint256 _splitRatio) external onlyOwner {
++        require(_splitRatio <= 10000, "Invalid split");
++        splitRatio = _splitRatio;
++        emit SplitRatioUpdated(_splitRatio);
++    }
++
++    /**
++     * @dev Stub: Buyback simuliert nur einen Transfer von Token an diesen Contract.
++     * In Realität würde hier ein DEX-Swap stattfinden.
++     */
++    function buyback(uint256 amount) external onlyOwner {
++        require(amount > 0, "Amount required");
++        require(token.balanceOf(owner()) >= amount, "Not enough tokens with owner");
++
++        token.transferFrom(owner(), address(this), amount);
++
++        uint256 burnPart = (amount * splitRatio) / 10000;
++        uint256 treasuryPart = amount - burnPart;
++
++        if (burnPart > 0) {
++            token.transfer(address(burnReserve), burnPart);
++        }
++        if (treasuryPart > 0) {
++            token.transfer(treasury, treasuryPart);
++        }
++
++        emit BuybackExecuted(amount, burnPart, treasuryPart);
++    }
++}
+diff --git a/testing/BuybackVault.test.js b/testing/BuybackVault.test.js
+new file mode 100644
+--- /dev/null
++++ b/testing/BuybackVault.test.js
+@@
++const { expect } = require("chai");
++
++describe("BuybackVault", function () {
++  let InfernoToken, BurnReserve, BuybackVault, token, burnreserve, buyback, owner, treasury;
++
++  beforeEach(async function () {
++    [owner, , treasury] = await ethers.getSigners();
++
++    InfernoToken = await ethers.getContractFactory("InfernoToken");
++    token = await InfernoToken.deploy(treasury.address);
++    await token.deployed();
++
++    BurnReserve = await ethers.getContractFactory("BurnReserve");
++    burnreserve = await BurnReserve.deploy(token.address);
++    await burnreserve.deployed();
++
++    BuybackVault = await ethers.getContractFactory("BuybackVault");
++    buyback = await BuybackVault.deploy(token.address, burnreserve.address, treasury.address, 5000);
++    await buyback.deployed();
++
++    // Owner genehmigt Vault, Tokens zu ziehen
++    await token.connect(owner).approve(buyback.address, ethers.constants.MaxUint256);
++  });
++
++  it("Deployment: should set split ratio", async function () {
++    expect(await buyback.splitRatio()).to.equal(5000);
++  });
++
++  it("SplitRatio: should allow owner to update", async function () {
++    await buyback.setSplitRatio(8000);
++    expect(await buyback.splitRatio()).to.equal(8000);
++  });
++});
+diff --git a/logs/project.log b/logs/project.log
+index 7b5e9e2..40f3c1a 100644
+--- a/logs/project.log
++++ b/logs/project.log
+@@
+ [2025-09-22 12:30] dev BURNRESERVE – BurnReserve.sol Grundgerüst erstellt (Token-Holding, On-Chain-Burn)
++[2025-09-22 13:00] dev BUYBACK – BuybackVault.sol Grundgerüst erstellt (ETH-Deposit, Split Burn/Treasury, FeeExempt)
+*** End Patch
