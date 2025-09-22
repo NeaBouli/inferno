@@ -1,0 +1,58 @@
+*** Begin Patch
+diff --git a/.env.example b/.env.example
+new file mode 100644
+--- /dev/null
++++ b/.env.example
+@@
++# Sepolia Testnet Konfiguration
++SEPOLIA_RPC_URL=https://sepolia.infura.io/v3/YOUR_PROJECT_ID
++PRIVATE_KEY=0xYOUR_PRIVATE_KEY
+diff --git a/hardhat.config.js b/hardhat.config.js
+index 1a2c5a4..892b4f5 100644
+--- a/hardhat.config.js
++++ b/hardhat.config.js
+@@
+ require("@nomicfoundation/hardhat-toolbox");
++require("dotenv").config();
+ 
+ /** @type import('hardhat/config').HardhatUserConfig */
+ module.exports = {
+   solidity: "0.8.20",
+   networks: {
+-    hardhat: {}
+-    // später: goerli, sepolia, mainnet
++    hardhat: {},
++    sepolia: {
++      url: process.env.SEPOLIA_RPC_URL || "",
++      accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : []
++    }
+   }
+ };
+diff --git a/scripts/deploy-sepolia.js b/scripts/deploy-sepolia.js
+new file mode 100644
+--- /dev/null
++++ b/scripts/deploy-sepolia.js
+@@
++async function main() {
++  const [deployer] = await ethers.getSigners();
++  console.log("Deploying contracts with:", deployer.address);
++
++  const InfernoToken = await ethers.getContractFactory("InfernoToken");
++  const token = await InfernoToken.deploy(deployer.address);
++  await token.deployed();
++
++  console.log("InfernoToken deployed to Sepolia:", token.address);
++}
++
++main().catch((error) => {
++  console.error(error);
++  process.exitCode = 1;
++});
+diff --git a/logs/project.log b/logs/project.log
+index 6e505fb..83c1f19 100644
+--- a/logs/project.log
++++ b/logs/project.log
+@@
+ [2025-09-22 14:30] dev CI – GitHub Actions Workflow erstellt (compile + test)
++[2025-09-22 15:00] dev DEPLOY – Sepolia Deployment-Skript erstellt (InfernoToken)
+*** End Patch
