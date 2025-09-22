@@ -1,0 +1,107 @@
+*** Begin Patch
+diff --git a/contracts/presale/Presale.sol b/contracts/presale/Presale.sol
+new file mode 100644
+--- /dev/null
++++ b/contracts/presale/Presale.sol
+@@
++// SPDX-License-Identifier: MIT
++pragma solidity ^0.8.20;
++
++import "@openzeppelin/contracts/access/Ownable.sol";
++import "../token/InfernoToken.sol";
++
++/**
++ * @title Presale Contract
++ * @notice Verkauf von InfernoToken (IFR) gegen ETH zum Fixpreis
++ */
++contract Presale is Ownable {
++    InfernoToken public token;
++    address public treasury;
++
++    uint256 public tokenPrice; // Preis in Wei pro Token (mit Decimals berücksichtigt)
++    uint256 public tokensSold;
++
++    event TokensPurchased(address indexed buyer, uint256 ethSpent, uint256 tokensBought);
++    event TokenPriceUpdated(uint256 newPrice);
++
++    constructor(address _token, address _treasury, uint256 _tokenPrice) {
++        require(_token != address(0), "Token required");
++        require(_treasury != address(0), "Treasury required");
++        require(_tokenPrice > 0, "Invalid price");
++
++        token = InfernoToken(_token);
++        treasury = _treasury;
++        tokenPrice = _tokenPrice;
++
++        // Presale ist FeeExempt
++        token.setFeeExempt(address(this), true);
++    }
++
++    function setTokenPrice(uint256 _price) external onlyOwner {
++        require(_price > 0, "Invalid price");
++        tokenPrice = _price;
++        emit TokenPriceUpdated(_price);
++    }
++
++    function buyTokens() external payable {
++        require(msg.value > 0, "ETH required");
++
++        uint256 amount = (msg.value * (10 ** token.decimals())) / tokenPrice;
++        require(token.balanceOf(owner()) >= amount, "Not enough tokens");
++
++        // Transfer ETH an Treasury
++        (bool sent, ) = treasury.call{value: msg.value}("");
++        require(sent, "ETH transfer failed");
++
++        // Tokens an Käufer
++        token.transferFrom(owner(), msg.sender, amount);
++
++        tokensSold += amount;
++        emit TokensPurchased(msg.sender, msg.value, amount);
++    }
++}
+diff --git a/testing/Presale.test.js b/testing/Presale.test.js
+new file mode 100644
+--- /dev/null
++++ b/testing/Presale.test.js
+@@
++const { expect } = require("chai");
++
++describe("Presale", function () {
++  let InfernoToken, Presale, token, presale, owner, addr1, treasury;
++
++  beforeEach(async function () {
++    [owner, addr1, treasury] = await ethers.getSigners();
++
++    InfernoToken = await ethers.getContractFactory("InfernoToken");
++    token = await InfernoToken.deploy(treasury.address);
++    await token.deployed();
++
++    Presale = await ethers.getContractFactory("Presale");
++    presale = await Presale.deploy(token.address, treasury.address, 1000); // Demo Preis
++    await presale.deployed();
++
++    // Owner genehmigt Presale, Tokens zu ziehen
++    await token.connect(owner).approve(presale.address, ethers.constants.MaxUint256);
++  });
++
++  it("Deployment: should set token, treasury and price", async function () {
++    expect(await presale.token()).to.equal(token.address);
++    expect(await presale.treasury()).to.equal(treasury.address);
++    expect(await presale.tokenPrice()).to.equal(1000);
++  });
++
++  it("BuyTokens: should transfer ETH to treasury and tokens to buyer", async function () {
++    const ethAmount = ethers.utils.parseEther("1");
++    await expect(() => presale.connect(addr1).buyTokens({ value: ethAmount }))
++      .to.changeEtherBalances([addr1, treasury], [ethAmount.mul(-1), ethAmount]);
++  });
++});
+diff --git a/logs/project.log b/logs/project.log
+index 77e5221..8029cf6 100644
+--- a/logs/project.log
++++ b/logs/project.log
+@@
+ [2025-09-22 11:00] dev TOKEN – InfernoToken.sol Grundgerüst erstellt (ERC20 + Fees + FeeExempt)
++[2025-09-22 11:30] dev PRESALE – Presale.sol Grundgerüst erstellt (ETH→IFR, Treasury-Flow, FeeExempt)
+*** End Patch
