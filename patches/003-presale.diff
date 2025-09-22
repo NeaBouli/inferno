@@ -1,98 +1,4 @@
 *** Begin Patch
-diff --git a/contracts/mocks/MockInfernoToken.sol b/contracts/mocks/MockInfernoToken.sol
-new file mode 100644
---- /dev/null
-+++ b/contracts/mocks/MockInfernoToken.sol
-@@
-+// SPDX-License-Identifier: MIT
-+pragma solidity ^0.8.20;
-+
-+import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
-+
-+/**
-+ * @title MockInfernoToken
-+ * @notice Test-Token mit 9 Decimals und optionalen Transfer-Fees (Sender/Empfänger),
-+ *         die via feeExempt umgangen werden. Dient dazu, FeeExempt-Integration
-+ *         des Presale-Contracts realistisch zu testen.
-+ */
-+contract MockInfernoToken is ERC20, Ownable {
-+    uint8 private constant _DECIMALS = 9;
-+
-+    // einfache Fee-Simulation (in Basis-Punkten, 100 = 1%)
-+    uint16 public senderBurnBps = 200;     // 2.00%
-+    uint16 public recipientBurnBps = 50;   // 0.50%
-+    uint16 public poolFeeBps = 100;        // 1.00% (an poolFeeCollector)
-+
-+    address public poolFeeCollector;
-+    mapping(address => bool) public feeExempt;
-+
-+    constructor(
-+        string memory name_,
-+        string memory symbol_,
-+        address initialOwner,
-+        address poolCollector
-+    ) ERC20(name_, symbol_) Ownable(initialOwner) {
-+        poolFeeCollector = poolCollector;
-+    }
-+
-+    function decimals() public pure override returns (uint8) {
-+        return _DECIMALS;
-+    }
-+
-+    function mint(address to, uint256 amount) external onlyOwner {
-+        _mint(to, amount);
-+    }
-+
-+    function setFeeParams(uint16 _senderBurnBps, uint16 _recipientBurnBps, uint16 _poolFeeBps) external onlyOwner {
-+        require(_senderBurnBps <= 1000 && _recipientBurnBps <= 1000 && _poolFeeBps <= 1000, "too high");
-+        senderBurnBps = _senderBurnBps;
-+        recipientBurnBps = _recipientBurnBps;
-+        poolFeeBps = _poolFeeBps;
-+    }
-+
-+    function setFeeExempt(address account, bool status) external onlyOwner {
-+        feeExempt[account] = status;
-+    }
-+
-+    function setPoolFeeCollector(address c) external onlyOwner {
-+        poolFeeCollector = c;
-+    }
-+
-+    function transfer(address to, uint256 amount) public override returns (bool) {
-+        _transferWithFees(_msgSender(), to, amount);
-+        return true;
-+    }
-+
-+    function transferFrom(address from, address to, uint256 amount) public override returns (bool) {
-+        address spender = _msgSender();
-+        _spendAllowance(from, spender, amount);
-+        _transferWithFees(from, to, amount);
-+        return true;
-+    }
-+
-+    function _transferWithFees(address from, address to, uint256 amount) internal {
-+        if (feeExempt[from] || feeExempt[to]) {
-+            _transfer(from, to, amount);
-+            return;
-+        }
-+        uint256 senderBurn = (amount * senderBurnBps) / 10_000;
-+        uint256 recipientBurn = (amount * recipientBurnBps) / 10_000;
-+        uint256 poolFee = (amount * poolFeeBps) / 10_000;
-+        uint256 toAmount = amount - senderBurn - recipientBurn - poolFee;
-+
-+        if (senderBurn > 0) {
-+            _burn(from, senderBurn);
-+        }
-+        if (poolFee > 0 && poolFeeCollector != address(0)) {
-+            _transfer(from, poolFeeCollector, poolFee);
-+        }
-+        _transfer(from, to, toAmount);
-+        if (recipientBurn > 0) {
-+            _burn(to, recipientBurn);
-+        }
-+    }
-+}
 diff --git a/contracts/presale/Presale.sol b/contracts/presale/Presale.sol
 new file mode 100644
 --- /dev/null
@@ -110,22 +16,28 @@ new file mode 100644
 + * @title Inferno Presale
 + * @notice ETH → IFR Presale. ETH wird unmittelbar an Treasury weitergeleitet,
 + *         IFR aus dem Contract-Bestand an Käufer transferiert.
++ *
++ * WICHTIG: Presale-Contract muss im Token als feeExempt gesetzt werden.
 + */
 +contract Presale is Ownable, Pausable, ReentrancyGuard {
 +    IERC20 public immutable token;
 +    address public treasury;
-+    uint256 public priceWeiPerToken;
++
++    uint256 public priceWeiPerToken; // ETH in Wei pro 1 IFR (9 decimals)
 +    uint256 public minContribution;
 +    uint256 public maxContribution;
 +    uint256 public hardCap;
++
 +    uint256 public phaseId;
 +    uint256 public phaseCap;
 +    uint256 public phaseRaised;
 +    uint256 public totalRaised;
++
 +    mapping(address => uint256) public contributed;
 +
 +    event Purchased(address indexed buyer, uint256 ethIn, uint256 ifrOut, uint256 indexed phaseId);
 +    event PhaseUpdated(uint256 indexed phaseId, uint256 priceWeiPerToken, uint256 phaseCapWei);
++    event TreasuryUpdated(address indexed newTreasury);
 +
 +    error ZeroAddress();
 +    error InvalidParams();
@@ -146,6 +58,7 @@ new file mode 100644
 +        if (_priceWeiPerToken == 0) revert InvalidParams();
 +        if (_maxContribution > 0 && _minContribution > _maxContribution) revert InvalidParams();
 +        if (_hardCap == 0) revert InvalidParams();
++
 +        token = _token;
 +        treasury = _treasury;
 +        priceWeiPerToken = _priceWeiPerToken;
@@ -158,19 +71,26 @@ new file mode 100644
 +    function buy() external payable whenNotPaused nonReentrant {
 +        uint256 ethIn = msg.value;
 +        if (ethIn == 0) revert InvalidParams();
++
 +        if (minContribution > 0 && ethIn < minContribution) revert InvalidParams();
 +        uint256 newTotalUser = contributed[msg.sender] + ethIn;
 +        if (maxContribution > 0 && newTotalUser > maxContribution) revert CapExceeded();
++
 +        uint256 newTotalRaised = totalRaised + ethIn;
 +        if (newTotalRaised > hardCap) revert CapExceeded();
 +        if (phaseCap > 0 && (phaseRaised + ethIn) > phaseCap) revert CapExceeded();
-+        uint256 ifrOut = (ethIn * 1_000_000_000) / priceWeiPerToken;
++
++        uint256 ifrOut = (ethIn * 1_000_000_000) / priceWeiPerToken; // 9 decimals
++        if (ifrOut == 0) revert InvalidParams();
 +        if (token.balanceOf(address(this)) < ifrOut) revert InsufficientTokens();
++
 +        contributed[msg.sender] = newTotalUser;
 +        totalRaised = newTotalRaised;
 +        phaseRaised += ethIn;
++
 +        (bool ok, ) = payable(treasury).call{value: ethIn}("");
 +        require(ok, "ETH forward failed");
++
 +        require(token.transfer(msg.sender, ifrOut), "token transfer failed");
 +        emit Purchased(msg.sender, ethIn, ifrOut, phaseId);
 +    }
@@ -183,9 +103,149 @@ new file mode 100644
 +        phaseRaised = 0;
 +        emit PhaseUpdated(phaseId, newPriceWeiPerToken, newPhaseCapWei);
 +    }
++
++    function setTreasury(address _treasury) external onlyOwner {
++        if (_treasury == address(0)) revert ZeroAddress();
++        treasury = _treasury;
++        emit TreasuryUpdated(_treasury);
++    }
 +}
+diff --git a/testing/Presale.test.js b/testing/Presale.test.js
+new file mode 100644
+--- /dev/null
++++ b/testing/Presale.test.js
+@@
++const { expect } = require("chai");
++const { ethers } = require("hardhat");
++
++describe("Presale", function () {
++  const UNIT = 10n ** 9n; // 9 decimals
++
++  let deployer, treasury, buyer, token, presale;
++
++  function quote(ethWei, priceWeiPerToken) {
++    return (ethWei * UNIT) / priceWeiPerToken;
++  }
++
++  beforeEach(async () => {
++    [deployer, treasury, buyer] = await ethers.getSigners();
++
++    const Token = await ethers.getContractFactory("ERC20PresetMinterPauser");
++    token = await Token.deploy("Inferno", "IFR");
++    await token.waitForDeployment();
++
++    const priceWeiPerToken = ethers.parseEther("0.0001"); // 0.0001 ETH per IFR
++    const minContribution = ethers.parseEther("0.05");
++    const maxContribution = ethers.parseEther("10");
++    const hardCap = ethers.parseEther("100");
++    const phaseCap = ethers.parseEther("50");
++
++    const Presale = await ethers.getContractFactory("Presale");
++    presale = await Presale.deploy(
++      deployer.address,
++      await token.getAddress(),
++      treasury.address,
++      priceWeiPerToken,
++      minContribution,
++      maxContribution,
++      hardCap,
++      phaseCap
++    );
++    await presale.waitForDeployment();
++
++    await token.mint(await presale.getAddress(), 1_000_000n * UNIT);
++  });
++
++  it("happy path: forwards ETH and sends IFR", async () => {
++    const price = await presale.getCurrentPrice().catch(() => ethers.parseEther("0.0001"));
++    const ethIn = ethers.parseEther("1");
++    const expectedIFR = quote(ethIn, price);
++
++    const tEthBefore = await ethers.provider.getBalance(treasury.address);
++    await expect(presale.connect(buyer).buy({ value: ethIn }))
++      .to.emit(presale, "Purchased");
++    const tEthAfter = await ethers.provider.getBalance(treasury.address);
++    expect(tEthAfter - tEthBefore).to.equal(ethIn);
++
++    const ifrBuyer = await token.balanceOf(buyer.address);
++    expect(ifrBuyer).to.equal(expectedIFR);
++  });
++});
+diff --git a/scripts/deploy_presale.js b/scripts/deploy_presale.js
+new file mode 100644
+--- /dev/null
++++ b/scripts/deploy_presale.js
+@@
++/* eslint-disable no-console */
++const hre = require("hardhat");
++
++async function main() {
++  const [deployer] = await hre.ethers.getSigners();
++  console.log("Deployer:", deployer.address);
++
++  const TOKEN_ADDRESS = process.env.TOKEN_ADDRESS;
++  const TREASURY_ADDRESS = process.env.TREASURY_ADDRESS;
++  const PRICE_WEI_PER_TOKEN = hre.ethers.toBigInt(process.env.PRICE_WEI_PER_TOKEN || "100000000000000"); // 0.0001 ETH
++  const MIN_CONTRIBUTION_WEI = hre.ethers.toBigInt(process.env.MIN_CONTRIBUTION_WEI || "50000000000000000"); // 0.05
++  const MAX_CONTRIBUTION_WEI = hre.ethers.toBigInt(process.env.MAX_CONTRIBUTION_WEI || "10000000000000000000"); // 10
++  const HARD_CAP_WEI = hre.ethers.toBigInt(process.env.HARD_CAP_WEI || "100000000000000000000"); // 100
++  const PHASE_CAP_WEI = hre.ethers.toBigInt(process.env.PHASE_CAP_WEI || "50000000000000000000"); // 50
++
++  if (!TOKEN_ADDRESS || !TREASURY_ADDRESS) {
++    throw new Error("TOKEN_ADDRESS and TREASURY_ADDRESS must be provided");
++  }
++
++  const Presale = await hre.ethers.getContractFactory("Presale");
++  const presale = await Presale.deploy(
++    deployer.address,
++    TOKEN_ADDRESS,
++    TREASURY_ADDRESS,
++    PRICE_WEI_PER_TOKEN,
++    MIN_CONTRIBUTION_WEI,
++    MAX_CONTRIBUTION_WEI,
++    HARD_CAP_WEI,
++    PHASE_CAP_WEI
++  );
++  await presale.waitForDeployment();
++  console.log("Presale deployed at:", await presale.getAddress());
++}
++
++main().catch((error) => {
++  console.error(error);
++  process.exitCode = 1;
++});
+diff --git a/abi/Presale_v1.json b/abi/Presale_v1.json
+new file mode 100644
+--- /dev/null
++++ b/abi/Presale_v1.json
+@@
++[
++  {
++    "inputs": [
++      { "internalType": "address", "name": "_owner", "type": "address" },
++      { "internalType": "address", "name": "_token", "type": "address" },
++      { "internalType": "address", "name": "_treasury", "type": "address" },
++      { "internalType": "uint256", "name": "_priceWeiPerToken", "type": "uint256" },
++      { "internalType": "uint256", "name": "_minContribution", "type": "uint256" },
++      { "internalType": "uint256", "name": "_maxContribution", "type": "uint256" },
++      { "internalType": "uint256", "name": "_hardCap", "type": "uint256" },
++      { "internalType": "uint256", "name": "_phaseCap", "type": "uint256" }
++    ],
++    "stateMutability": "nonpayable",
++    "type": "constructor"
++  },
++  { "inputs": [], "name": "buy", "outputs": [], "stateMutability": "payable", "type": "function" },
++  { "inputs": [], "name": "setPhase", "outputs": [], "stateMutability": "nonpayable", "type": "function" },
++  { "inputs": [], "name": "setTreasury", "outputs": [], "stateMutability": "nonpayable", "type": "function" },
++  { "inputs": [], "name": "treasury", "outputs": [{ "internalType": "address", "name": "", "type": "address" }], "stateMutability": "view", "type": "function" },
++  { "inputs": [], "name": "phaseId", "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }], "stateMutability": "view", "type": "function" },
++  { "inputs": [], "name": "priceWeiPerToken", "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }], "stateMutability": "view", "type": "function" }
++]
+diff --git a/docs/README.md b/docs/README.md
+@@
+-+│   ├── 🔵 presale/        
+++│   ├── 🟢 presale/        
 diff --git a/logs/project.log b/logs/project.log
 @@
-+[2025-09-22 23:10] dev3 SPEC – Presale.sol, Tests, Deploy-Script & ABI erstellt (Patch 003)
-+[2025-09-22 23:10] dev3 NOTE – Presale benötigt Token-Liquidität (transfer an Contract) & feeExempt auf Token
++[2025-09-22 23:59] Dev3 FEATURE – Presale Contract + Tests + Deploy + ABI hinzugefügt
 *** End Patch
