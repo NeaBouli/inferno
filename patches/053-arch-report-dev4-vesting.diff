@@ -1,0 +1,7 @@
+*** Begin Patch
+diff --git a/logs/project.log b/logs/project.log
+--- a/logs/project.log
++++ b/logs/project.log
+@@
++[2025-09-23 13:05] architect ARCH-REPORT – Dev4 Abschluss – Vesting Contract (Patch 004) vollständig implementiert, getestet (5/5 grün) und dokumentiert. README-Statusbaum aktualisiert (Vesting 🔵 → 🟢).
+*** End Patch
