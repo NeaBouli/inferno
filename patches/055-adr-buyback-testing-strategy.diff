@@ -1,0 +1,47 @@
+diff --git a/arch/decisions/ADR-006-buyback-testing-strategy.md b/arch/decisions/ADR-006-buyback-testing-strategy.md
+new file mode 100644
+--- /dev/null
++++ b/arch/decisions/ADR-006-buyback-testing-strategy.md
+@@
++# ADR-006: Testing-Strategie für BuybackVault
++
++## Status
++✅ Accepted (2025-09-23)
++
++## Kontext
++Der BuybackVault benötigt Integration mit einem DEX-Router (z. B. UniswapV2).  
++Für die Tests stellt sich die Frage, ob direkt ein Mainnet-Fork (realistische Liquidität/Slippage) oder
++zunächst ein Mock-Router eingesetzt werden soll.
++
++## Entscheidung
++- **Phase 1 (Patch 005 – jetzt):**  
++  Tests verwenden einen **Mock-Router** mit deterministischem Verhalten.  
++  Ziel: Funktionalität (Events, Parameter, Verteilung Burn/Treasury) stabil prüfen.  
++
++- **Phase 2 (später, QA):**  
++  Erweiterte Tests mit **Hardhat Mainnet-Fork** (Infura/Alchemy RPC).  
++  Ziel: Slippage, Routing, Gas-Kosten realitätsnah verifizieren.  
++  Nur in separaten QA-Patches, nicht im Standard-CI.  
++
++## Begründung
++- Mock-Tests sind leichtgewichtig, deterministisch und CI-freundlich.  
++- Fork-Tests sind realistisch, aber schwergewichtig und abhängig von externen RPC-Providern.  
++- Durch Trennung in zwei Phasen bleibt die Entwicklung schnell und die QA dennoch aussagekräftig.  
++
++## Konsequenzen
++- Dev5 implementiert BuybackVault-Tests zunächst **nur mit Mock-Router**.  
++- QA/DevOps liefern später Fork-Test-Patches mit RPC-Keys (Secrets).  
++- CI bleibt stabil, ohne externe Abhängigkeiten.  
++
++## Alternativen
++- **Nur Mock-Tests:** zu wenig realistisch.  
++- **Nur Fork-Tests:** zu schwergewichtig und unpraktikabel in CI.  
++
++## Anhang
++- Betroffene Module: `contracts/buyback/BuybackVault.sol`, `testing/BuybackVault.test.js`  
++- Abhängigkeiten: Governance, Token, BurnReserve, DEX-Router (Mock/Fork)  
+diff --git a/logs/project.log b/logs/project.log
+--- a/logs/project.log
++++ b/logs/project.log
+@@
++[2025-09-23 14:35] architect ADR – ADR-006 Buyback-Testing-Strategie dokumentiert (Phase 1 Mock, Phase 2 Fork)
