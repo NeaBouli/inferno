@@ -1,0 +1,34 @@
+*** Begin Patch
+diff --git a/test/BuybackVault.test.js b/test/BuybackVault.test.js
+--- a/test/BuybackVault.test.js
++++ b/test/BuybackVault.test.js
+@@
+-  const RATE_IFR_PER_ETH = ethers.parseEther("1000"); // 1 ETH -> 1000 IFR
++  const RATE_IFR_PER_ETH = ethers.utils.parseEther("1000"); // 1 ETH -> 1000 IFR
+@@
+-    await expect(Vault.connect(user).depositETH({ value: ethers.parseEther("2") }))
+-      .to.emit(Vault, "Deposited")
+-      .withArgs(await user.getAddress(), ethers.parseEther("2"));
+-    expect(await ethers.provider.getBalance(await Vault.getAddress())).to.equal(ethers.parseEther("2"));
++    await expect(Vault.connect(user).depositETH({ value: ethers.utils.parseEther("2") }))
++      .to.emit(Vault, "Deposited")
++      .withArgs(await user.getAddress(), ethers.utils.parseEther("2"));
++    expect(await ethers.provider.getBalance(await Vault.getAddress())).to.equal(ethers.utils.parseEther("2"));
+@@
+-    await Vault.connect(user).depositETH({ value: ethers.parseEther("1") });
++    await Vault.connect(user).depositETH({ value: ethers.utils.parseEther("1") });
+@@
+-    const totalOut = ethers.parseEther("1000");
++    const totalOut = ethers.utils.parseEther("1000");
+@@
+-    await Vault.depositETH({ value: ethers.parseEther("1") });
++    await Vault.depositETH({ value: ethers.utils.parseEther("1") });
+@@
+-    await Vault.depositETH({ value: ethers.parseEther("1") });
+-    await Router.setRate(ethers.parseEther("900"));
++    await Vault.depositETH({ value: ethers.utils.parseEther("1") });
++    await Router.setRate(ethers.utils.parseEther("900"));
+@@
+-    await Vault.depositETH({ value: ethers.parseEther("1") });
++    await Vault.depositETH({ value: ethers.utils.parseEther("1") });
+*** End Patch
