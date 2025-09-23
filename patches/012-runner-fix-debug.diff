@@ -1,0 +1,39 @@
+*** Begin Patch
+diff --git a/scripts/test_all.sh b/scripts/test_all.sh
+old mode 100755
+new mode 100755
+--- a/scripts/test_all.sh
++++ b/scripts/test_all.sh
+@@
+-echo "🧪 Running ALL Hardhat tests..."
+-
+-cd "$(dirname "$0")/.."
+-npx hardhat test
+-
+-echo "✅ All tests completed."
++set -x
++echo "🧪 Running ALL Hardhat tests..."
++
++cd "$(dirname "$0")/.."
++git rev-parse HEAD
++npx hardhat test
++
++echo "✅ All tests completed."
+diff --git a/scripts/test_buyback.sh b/scripts/test_buyback.sh
+old mode 100755
+new mode 100755
+--- a/scripts/test_buyback.sh
++++ b/scripts/test_buyback.sh
+@@
+-# Nur die BuybackVault Tests starten (im Verzeichnis /test)
+-npx hardhat test test/BuybackVault.test.js
+-
+-echo "✅ BuybackVault tests completed."
+-exit 0
++set -x
++# Nur die BuybackVault Tests starten (im Verzeichnis /test)
++git rev-parse HEAD
++npx hardhat test test/BuybackVault.test.js
++
++echo "✅ BuybackVault tests completed."
+*** End Patch
