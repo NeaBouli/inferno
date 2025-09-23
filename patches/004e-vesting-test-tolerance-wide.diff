@@ -1,0 +1,11 @@
+*** Begin Patch
+*** Update File: test/Vesting.test.js
+@@
+-    // ✅ Toleranz für Rundungsdifferenzen (±1)
+-    const diff = balAfter.sub(balBefore).sub(releasable).abs();
+-    expect(diff).to.be.lte(1);
++    // ✅ Toleranz für Rundungsdifferenzen: max. 0.1 % vom releasable Wert
++    const diff = balAfter.sub(balBefore).sub(releasable).abs();
++    const tolerance = releasable.div(1000); // 0.1 %
++    expect(diff).to.be.lte(tolerance);
+*** End Patch

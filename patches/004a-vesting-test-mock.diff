@@ -1,0 +1,11 @@
+*** Begin Patch
+*** Update File: test/Vesting.test.js
+@@
+-    const Token = await ethers.getContractFactory("InfernoToken");
+-    token = await Token.deploy();
+-    await token.deployed();
++    // Statt echtem InfernoToken den Mock verwenden
++    const Token = await ethers.getContractFactory("MockInfernoToken");
++    token = await Token.deploy();
++    await token.deployed();
+*** End Patch

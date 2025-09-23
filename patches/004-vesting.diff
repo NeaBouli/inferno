@@ -1,0 +1,486 @@
+*** Begin Patch
+*** Add File: contracts/vesting/Vesting.sol
++// SPDX-License-Identifier: MIT
++pragma solidity ^0.8.20;
++
++/**
++ * @title Vesting
++ * @notice Linear Token-Vesting mit Cliff, pausierbar durch Guardian.
++ * @dev Erwartet, dass der Vesting-Contract im Token als fee-exempt gesetzt wird,
++ *      damit bei Releases keine Burn-/Pool-Gebühren anfallen.
++ *
++ * Features:
++ * - Cliff (Sperrfrist) vor erster Freigabe
++ * - Lineare Freigabe über die Gesamtdauer
++ * - Schutz gegen Rundungsfehler: Am Ende wird der vollständige Rest freigegeben
++ * - Nur Beneficiary darf release() aufrufen
++ * - Guardian (Governance) kann pausieren/fortsetzen
++ */
++interface IERC20 {
++    function transfer(address to, uint256 amount) external returns (bool);
++    function balanceOf(address account) external view returns (uint256);
++}
++
++contract Vesting {
++    /// @notice Token, der freigegeben wird
++    IERC20 public immutable token;
++    /// @notice Empfänger der Freigaben
++    address public immutable beneficiary;
++    /// @notice Startzeitpunkt (Sekunden seit Unix-Epoch)
++    uint256 public immutable start;
++    /// @notice Cliff-Dauer in Sekunden
++    uint256 public immutable cliffDuration;
++    /// @notice Gesamt-Dauer des Vestings in Sekunden
++    uint256 public immutable duration;
++    /// @notice Gesamtmenge, die über die Laufzeit freigegeben werden soll
++    uint256 public immutable totalAllocation;
++    /// @notice Bisher freigegebene Summe
++    uint256 public released;
++    /// @notice Governance/Guardian-Adresse (darf pausieren)
++    address public immutable guardian;
++    /// @notice Pausen-Flag
++    bool public paused;
++
++    event Released(address indexed beneficiary, uint256 amount);
++    event Paused(address indexed guardian);
++    event Unpaused(address indexed guardian);
++
++    error NotBeneficiary();
++    error BeforeCliff();
++    error NothingToRelease();
++    error OnlyGuardian();
++    error IsPaused();
++
++    /**
++     * @param _token            Address des ERC20-Tokens
++     * @param _beneficiary      Begünstigte Adresse
++     * @param _cliffDuration    Cliff in Sekunden (z.B. 90 Tage = 90*24*3600)
++     * @param _duration         Gesamtdauer in Sekunden (muss > _cliffDuration)
++     * @param _totalAllocation  Gesamtmenge, die linear freigegeben wird
++     * @param _guardian         Governance/Guardian-Adresse
++     */
++    constructor(
++        address _token,
++        address _beneficiary,
++        uint256 _cliffDuration,
++        uint256 _duration,
++        uint256 _totalAllocation,
++        address _guardian
++    ) {
++        require(_token != address(0), "token=0");
++        require(_beneficiary != address(0), "beneficiary=0");
++        require(_guardian != address(0), "guardian=0");
++        require(_duration > 0, "duration=0");
++        require(_duration >= _cliffDuration, "duration<cliff");
++        require(_totalAllocation > 0, "allocation=0");
++
++        token = IERC20(_token);
++        beneficiary = _beneficiary;
++        start = block.timestamp;
++        cliffDuration = _cliffDuration;
++        duration = _duration;
++        totalAllocation = _totalAllocation;
++        guardian = _guardian;
++    }
++
++    /// @notice Nur Guardian
++    modifier onlyGuardian() {
++        if (msg.sender != guardian) revert OnlyGuardian();
++        _;
++    }
++
++    /// @notice Nur Beneficiary
++    modifier onlyBeneficiary() {
++        if (msg.sender != beneficiary) revert NotBeneficiary();
++        _;
++    }
++
++    /// @notice Pausiert das Vesting (nur Guardian)
++    function pause() external onlyGuardian {
++        if (!paused) {
++            paused = true;
++            emit Paused(msg.sender);
++        }
++    }
++
++    /// @notice Setzt das Vesting fort (nur Guardian)
++    function unpause() external onlyGuardian {
++        if (paused) {
++            paused = false;
++            emit Unpaused(msg.sender);
++        }
++    }
++
++    /**
++     * @notice Gibt die aktuell fälligen Tokens frei.
++     * @dev Nur Beneficiary darf aufrufen. Respektiert Pause-Zustand.
++     */
++    function release() external onlyBeneficiary {
++        if (paused) revert IsPaused();
++        uint256 amt = releasableAmount();
++        if (amt == 0) revert NothingToRelease();
++        released += amt;
++        // Transfer; erwartet, dass Contract bereits ausreichend Tokens hält
++        require(token.transfer(beneficiary, amt), "transfer failed");
++        emit Released(beneficiary, amt);
++    }
++
++    /**
++     * @notice Liefert die Menge, die aktuell zusätzlich freigegeben werden kann.
++     */
++    function releasableAmount() public view returns (uint256) {
++        uint256 vested = vestedAmount();
++        if (vested <= released) return 0;
++        return vested - released;
++    }
++
++    /**
++     * @notice Liefert die bis jetzt insgesamt "verdiente" Menge (inkl. bereits freigegebener).
++     * @dev Lineare Freigabe: totalAllocation * elapsed / duration
++     *      Bei Ende der Laufzeit wird exakt totalAllocation zurückgegeben (Restschutz).
++     */
++    function vestedAmount() public view returns (uint256) {
++        uint256 elapsed = block.timestamp - start;
++        if (elapsed < cliffDuration) {
++            return 0;
++        }
++        if (elapsed >= duration) {
++            return totalAllocation;
++        }
++        // Multiplikation vor Division minimiert Rundungsfehler
++        return (totalAllocation * elapsed) / duration;
++    }
++
++    /**
++     * @notice Liefert Start, Cliff, Dauer als Tuple.
++     */
++    function vestingSchedule()
++        external
++        view
++        returns (uint256 _start, uint256 _cliff, uint256 _duration)
++    {
++        return (start, cliffDuration, duration);
++    }
++}
++
+*** End Patch
+*** Add File: testing/Vesting.test.js
++const { expect } = require("chai");
++const { ethers } = require("hardhat");
++
++/**
++ * Vesting Tests
++ * Annahmen:
++ * - Es existiert ein IFR-Token mit 9 Decimals und Fee-Mechanik.
++ * - Der Vesting-Contract wird als fee-exempt gesetzt, damit keine Gebühren beim Release anfallen.
++ *
++ * Hinweis: Falls euer Token anders heißt, bitte den Contract-Namen unten anpassen.
++ */
++
++describe("Vesting", function () {
++  let deployer, beneficiary, guardian, other;
++  let token, vesting;
++
++  const DECIMALS = 9n;
++  const toUnits = (n) => ethers.parseUnits(n.toString(), Number(DECIMALS));
++
++  const CLIFF = 90 * 24 * 3600;       // 90 Tage
++  const DURATION = 365 * 24 * 3600;   // 12 Monate ~ 365 Tage
++  const ALLOCATION = toUnits(1_000_000); // 1,000,000 IFR
++
++  beforeEach(async () => {
++    [deployer, beneficiary, guardian, other] = await ethers.getSigners();
++
++    // Falls euer Token anders deklariert ist, hier anpassen:
++    const Token = await ethers.getContractFactory("InfernoToken");
++    token = await Token.deploy();
++    await token.waitForDeployment();
++
++    // Deployer mints/funded enough tokens to itself if needed
++    // Falls euer Token keinen Mint hat, bitte sicherstellen, dass deployer genügend besitzt.
++    // Hier beispielhaft: ensure supply or transfer
++    // (Wenn euer Token bereits initial Supply hat, kann dieser Schritt entfallen.)
++
++    // Vesting deployen
++    const Vesting = await ethers.getContractFactory("Vesting");
++    vesting = await Vesting.deploy(
++      await token.getAddress(),
++      beneficiary.address,
++      CLIFF,
++      DURATION,
++      ALLOCATION,
++      guardian.address
++    );
++    await vesting.waitForDeployment();
++
++    // Fee-Exempt setzen (wichtig gegen Burn-Abzüge)
++    if (typeof token.setFeeExempt === "function") {
++      await (await token.setFeeExempt(await vesting.getAddress(), true)).wait();
++    }
++
++    // Vesting mit Tokens befüllen
++    await (await token.transfer(await vesting.getAddress(), ALLOCATION)).wait();
++  });
++
++  async function increaseTime(seconds) {
++    await ethers.provider.send("evm_increaseTime", [seconds]);
++    await ethers.provider.send("evm_mine", []);
++  }
++
++  it("verhindert Release vor Cliff", async () => {
++    await expect(vesting.connect(beneficiary).release()).to.be.reverted;
++    // Exaktes Revert-Reason kann je nach Zeitpunkt variieren (BeforeCliff / NothingToRelease)
++  });
++
++  it("releast linear nach dem Cliff", async () => {
++    await increaseTime(CLIFF + 30 * 24 * 3600); // 90 Tage + 30 Tage
++    const elapsed = CLIFF + 30 * 24 * 3600;
++    const expectedVested = (ALLOCATION * BigInt(elapsed)) / BigInt(DURATION);
++
++    const releasable = await vesting.releasableAmount();
++    // leichte Rundungsabweichungen sind möglich, sollte aber <= expected sein
++    expect(releasable).to.be.gt(0);
++    // Release
++    const balBefore = await token.balanceOf(beneficiary.address);
++    await expect(vesting.connect(beneficiary).release()).to.emit(vesting, "Released");
++    const balAfter = await token.balanceOf(beneficiary.address);
++    expect(balAfter - balBefore).to.equal(releasable);
++  });
++
++  it("gibt alles am Ende frei (Restschutz)", async () => {
++    await increaseTime(DURATION + 1);
++    const releasable = await vesting.releasableAmount();
++    expect(releasable).to.equal(ALLOCATION); // nichts wurde bisher freigegeben
++    await expect(vesting.connect(beneficiary).release()).to.emit(vesting, "Released")
++      .withArgs(beneficiary.address, ALLOCATION);
++    // Nach vollständigem Release sollte Contract-Balance 0 sein
++    const contractBal = await token.balanceOf(await vesting.getAddress());
++    expect(contractBal).to.equal(0n);
++  });
++
++  it("nur Beneficiary darf release() aufrufen", async () => {
++    await increaseTime(DURATION + 1);
++    await expect(vesting.connect(other).release()).to.be.reverted;
++  });
++
++  it("Guardian kann pausieren und fortsetzen", async () => {
++    await increaseTime(DURATION / 2);
++    await expect(vesting.connect(guardian).pause()).to.emit(vesting, "Paused");
++    await expect(vesting.connect(beneficiary).release()).to.be.reverted;
++    await expect(vesting.connect(guardian).unpause()).to.emit(vesting, "Unpaused");
++    await expect(vesting.connect(beneficiary).release()).to.emit(vesting, "Released");
++  });
++});
++
+*** End Patch
+*** Add File: scripts/deploy_vesting.js
++/**
++ * Deployment Script für Vesting
++ *
++ * Aufruf (Hardhat):
++ *   npx hardhat run scripts/deploy_vesting.js --network <network>
++ *
++ * Erforderliche ENV/Parameter (hier hart codiert als Beispiel; ggf. .env verwenden):
++ *   - TOKEN_ADDRESS: Adresse des IFR-Tokens
++ *   - BENEFICIARY:   Empfänger-Adresse
++ *   - CLIFF_SECS:    z.B. 90*24*3600
++ *   - DURATION_SECS: z.B. 365*24*3600
++ *   - AMOUNT:        Gesamtmenge (inkl. Decimals)
++ *   - GUARDIAN:      Governance/Guardian-Adresse
++ *
++ * Ablauf:
++ *   1) Vesting deployen (start = block.timestamp)
++ *   2) Token fee-exempt für Vesting setzen (falls Funktion vorhanden)
++ *   3) Tokens an Vesting transferieren
++ */
++const { ethers } = require("hardhat");
++
++async function main() {
++  const TOKEN_ADDRESS = process.env.TOKEN_ADDRESS;
++  const BENEFICIARY   = process.env.BENEFICIARY;
++  const CLIFF_SECS    = parseInt(process.env.CLIFF_SECS || String(90 * 24 * 3600));
++  const DURATION_SECS = parseInt(process.env.DURATION_SECS || String(365 * 24 * 3600));
++  const AMOUNT        = BigInt(process.env.AMOUNT || "1000000000000"); // Beispiel mit 9 Decimals: 1,000,000,000,000 = 1,000,000 * 10^6 o.ä. -> an Projekt-Decimals anpassen
++  const GUARDIAN      = process.env.GUARDIAN;
++
++  if (!TOKEN_ADDRESS || !BENEFICIARY || !GUARDIAN) {
++    throw new Error("Bitte TOKEN_ADDRESS, BENEFICIARY und GUARDIAN in ENV setzen.");
++  }
++
++  const [deployer] = await ethers.getSigners();
++  console.log("Deployer:", deployer.address);
++
++  const Vesting = await ethers.getContractFactory("Vesting");
++  const vesting = await Vesting.deploy(
++    TOKEN_ADDRESS,
++    BENEFICIARY,
++    CLIFF_SECS,
++    DURATION_SECS,
++    AMOUNT,
++    GUARDIAN
++  );
++  await vesting.waitForDeployment();
++  const vestingAddress = await vesting.getAddress();
++  console.log("Vesting deployed at:", vestingAddress);
++
++  // Token-Handle
++  const token = await ethers.getContractAt("InfernoToken", TOKEN_ADDRESS);
++
++  // Fee-Exempt setzen, falls verfügbar
++  if (typeof token.setFeeExempt === "function") {
++    const tx = await token.setFeeExempt(vestingAddress, true);
++    await tx.wait();
++    console.log("FeeExempt gesetzt:", vestingAddress);
++  } else {
++    console.log("Hinweis: Token hat keine setFeeExempt(address,bool). Bitte manuell sicherstellen.");
++  }
++
++  // Tokens an Vesting senden
++  const tx2 = await token.transfer(vestingAddress, AMOUNT);
++  await tx2.wait();
++  console.log("Funding done:", AMOUNT.toString());
++}
++
++main().catch((e) => {
++  console.error(e);
++  process.exit(1);
++});
++
+*** End Patch
+*** Add File: abi/Vesting_v1.json
++[
++  {
++    "type": "constructor",
++    "inputs": [
++      {"name":"_token","type":"address"},
++      {"name":"_beneficiary","type":"address"},
++      {"name":"_cliffDuration","type":"uint256"},
++      {"name":"_duration","type":"uint256"},
++      {"name":"_totalAllocation","type":"uint256"},
++      {"name":"_guardian","type":"address"}
++    ]
++  },
++  {
++    "type": "function",
++    "name": "release",
++    "stateMutability": "nonpayable",
++    "inputs": [],
++    "outputs": []
++  },
++  {
++    "type": "function",
++    "name": "releasableAmount",
++    "stateMutability": "view",
++    "inputs": [],
++    "outputs": [{"name":"","type":"uint256"}]
++  },
++  {
++    "type": "function",
++    "name": "vestingSchedule",
++    "stateMutability": "view",
++    "inputs": [],
++    "outputs": [
++      {"name":"_start","type":"uint256"},
++      {"name":"_cliff","type":"uint256"},
++      {"name":"_duration","type":"uint256"}
++    ]
++  },
++  {
++    "type": "function",
++    "name": "pause",
++    "stateMutability": "nonpayable",
++    "inputs": [],
++    "outputs": []
++  },
++  {
++    "type": "function",
++    "name": "unpause",
++    "stateMutability": "nonpayable",
++    "inputs": [],
++    "outputs": []
++  },
++  {
++    "type": "function",
++    "name": "beneficiary",
++    "stateMutability": "view",
++    "inputs": [],
++    "outputs": [{"name":"","type":"address"}]
++  },
++  {
++    "type": "function",
++    "name": "guardian",
++    "stateMutability": "view",
++    "inputs": [],
++    "outputs": [{"name":"","type":"address"}]
++  },
++  {
++    "type": "function",
++    "name": "token",
++    "stateMutability": "view",
++    "inputs": [],
++    "outputs": [{"name":"","type":"address"}]
++  },
++  {
++    "type": "function",
++    "name": "released",
++    "stateMutability": "view",
++    "inputs": [],
++    "outputs": [{"name":"","type":"uint256"}]
++  },
++  {
++    "type": "event",
++    "name": "Released",
++    "inputs": [
++      {"name":"beneficiary","type":"address","indexed":true},
++      {"name":"amount","type":"uint256","indexed":false}
++    ],
++    "anonymous": false
++  },
++  {
++    "type": "event",
++    "name": "Paused",
++    "inputs": [
++      {"name":"guardian","type":"address","indexed":true}
++    ],
++    "anonymous": false
++  },
++  {
++    "type": "event",
++    "name": "Unpaused",
++    "inputs": [
++      {"name":"guardian","type":"address","indexed":true}
++    ],
++    "anonymous": false
++  }
++]
++
+*** End Patch
+*** Update File: logs/project.log
+@@
++[2025-09-22 23:15] dev4 VESTING – Vesting.sol, Tests, Deploy-Script & ABI hinzugefügt; fee-exempt Hinweis integriert; README-Status aktualisiert
++
+*** End Patch
+*** Update File: docs/README.md
+@@
+- inferno
+- ├── 🔵 contracts/
+- │   ├── 🔵 token/
+- │   ├── 🔵 presale/
+- │   ├── 🔵 vesting/
+- │   ├── 🔵 burnreserve/
+- │   ├── 🔵 buyback/
+- │   └── 🔵 governance/
++ inferno
++ ├── 📗 contracts/
++ │   ├── 🔵 token/
++ │   ├── 🟢 presale/
++ │   ├── 🟢 vesting/
++ │   ├── 🔵 burnreserve/
++ │   ├── 🔵 buyback/
++ │   └── 🔵 governance/
+  ├── 📘 docs/
+  │   └── WHITEPAPER.md
+  ├── 📘 scripts/
+  ├── 📘 testing/
+  ├── arch/
+*** End Patch
