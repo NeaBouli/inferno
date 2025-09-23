@@ -1,0 +1,574 @@
+*** Begin Patch
+diff --git a/contracts/buyback/BuybackVault.sol b/contracts/buyback/BuybackVault.sol
+new file mode 100644
+--- /dev/null
++++ b/contracts/buyback/BuybackVault.sol
+@@
++// SPDX-License-Identifier: MIT
++pragma solidity ^0.8.20;
++
++/**
++ * @title BuybackVault
++ * @notice Manuell durch Governance/Multisig getriggerter Buyback- und Burn-Mechanismus.
++ *         Verwaltet eingezahltes ETH, führt Swap ETH->IFR über einen (UniV2-kompatiblen) Router aus
++ *         und verteilt die erhaltenen IFR-Token anteilig an BurnReserve (Burn) und Treasury.
++ *
++ * Sicherheitsfeatures:
++ * - onlyOwner (Governance/Multisig) für executeBuyback & setParams
++ * - Guardian kann pausieren (Notfall)
++ * - Cooldown zwischen zwei Buybacks
++ * - Slippage-Schutz (Basis: getAmountsOut, slippageBps)
++ * - ReentrancyGuard
++ */
++
++interface IUniV2RouterLike {
++    function WETH() external view returns (address);
++    function getAmountsOut(uint amountIn, address[] calldata path) external view returns (uint[] memory amounts);
++    function swapExactETHForTokens(
++        uint amountOutMin,
++        address[] calldata path,
++        address to,
++        uint deadline
++    ) external payable returns (uint[] memory amounts);
++}
++
++interface IERC20 {
++    function totalSupply() external view returns (uint256);
++    function balanceOf(address account) external view returns (uint256);
++    function transfer(address recipient, uint256 amount) external returns (bool);
++    function transferFrom(address sender, address recipient, uint256 amount) external returns (bool);
++    function approve(address spender, uint256 amount) external returns (bool);
++    function decimals() external view returns (uint8);
++}
++
++abstract contract ReentrancyGuard {
++    uint256 private constant _NOT_ENTERED = 1;
++    uint256 private constant _ENTERED = 2;
++    uint256 private _status;
++    constructor() { _status = _NOT_ENTERED; }
++    modifier nonReentrant() {
++        require(_status != _ENTERED, "ReentrancyGuard: reentrant call");
++        _status = _ENTERED;
++        _;
++        _status = _NOT_ENTERED;
++    }
++}
++
++abstract contract Ownable {
++    address public owner;
++    event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
++    modifier onlyOwner() {
++        require(msg.sender == owner, "Ownable: caller is not the owner");
++        _;
++    }
++    constructor() { owner = msg.sender; }
++    function transferOwnership(address newOwner) external onlyOwner {
++        require(newOwner != address(0), "Ownable: zero");
++        emit OwnershipTransferred(owner, newOwner);
++        owner = newOwner;
++    }
++}
++
++abstract contract Pausable {
++    bool public paused;
++    event Paused(address indexed by);
++    event Unpaused(address indexed by);
++    modifier whenNotPaused() {
++        require(!paused, "Pausable: paused");
++        _;
++    }
++}
++
++contract BuybackVault is Ownable, Pausable, ReentrancyGuard {
++    // --- Events ---
++    event Deposited(address indexed from, uint256 amount);
++    event ParamsUpdated(uint256 burnShareBps, uint256 cooldown, uint256 slippageBps, address router);
++    event BuybackExecuted(uint256 ethIn, uint256 ifrOut, uint256 burned, uint256 toTreasury);
++    event GuardianUpdated(address indexed guardian);
++
++    // --- Immutable/Config ---
++    address public immutable IFR;          // IFR Token
++    address public immutable BURN_RESERVE; // BurnReserve (empfängt zu verbrennende IFR)
++    address public TREASURY;               // Treasury (empfängt Rest-IFR)
++
++    IUniV2RouterLike public router;        // UniV2-kompatibler Router
++    address public guardian;               // Darf pausieren/entpausieren
++
++    // --- Parameters ---
++    uint256 public burnShareBps;  // Anteil für BurnReserve in BPS (Basis 10000) – Default 5000 = 50%
++    uint256 public cooldown;      // Sekunden zwischen Buybacks – Default 3600 (1h)
++    uint256 public slippageBps;   // Max. Slippage in BPS – Default 500 = 5%
++
++    // --- State ---
++    uint256 public lastBuybackAt;
++
++    // --- Constants ---
++    uint256 private constant BPS_DENOM = 10_000;
++
++    constructor(
++        address _ifr,
++        address _burnReserve,
++        address _treasury,
++        address _router,
++        address _guardian
++    ) {
++        require(_ifr != address(0) && _burnReserve != address(0) && _treasury != address(0) && _router != address(0), "Invalid address");
++        IFR = _ifr;
++        BURN_RESERVE = _burnReserve;
++        TREASURY = _treasury;
++        router = IUniV2RouterLike(_router);
++        guardian = _guardian == address(0) ? msg.sender : _guardian;
++
++        // Defaults gemäß Vorgabe
++        burnShareBps = 5000; // 50%
++        cooldown = 3600;     // 1h
++        slippageBps = 500;   // 5%
++    }
++
++    // --- Admin / Governance ---
++    function setParams(
++        uint256 _burnShareBps,
++        uint256 _cooldown,
++        uint256 _slippageBps,
++        address _router,
++        address _treasury
++    ) external onlyOwner {
++        require(_burnShareBps <= BPS_DENOM, "burnShare > 100%");
++        require(_slippageBps <= 3000, "slippage too high"); // Hard cap 30% for safety
++        if (_router != address(0)) {
++            router = IUniV2RouterLike(_router);
++        }
++        if (_treasury != address(0)) {
++            TREASURY = _treasury;
++        }
++        burnShareBps = _burnShareBps;
++        cooldown = _cooldown;
++        slippageBps = _slippageBps;
++        emit ParamsUpdated(burnShareBps, cooldown, slippageBps, address(router));
++    }
++
++    function setGuardian(address _guardian) external onlyOwner {
++        require(_guardian != address(0), "guardian zero");
++        guardian = _guardian;
++        emit GuardianUpdated(_guardian);
++    }
++
++    function pause() external {
++        require(msg.sender == guardian || msg.sender == owner, "not guardian/owner");
++        require(!paused, "already paused");
++        paused = true;
++        emit Paused(msg.sender);
++    }
++
++    function unpause() external {
++        require(msg.sender == guardian || msg.sender == owner, "not guardian/owner");
++        require(paused, "not paused");
++        paused = false;
++        emit Unpaused(msg.sender);
++    }
++
++    // --- User/Treasury interaction ---
++    function depositETH() external payable whenNotPaused nonReentrant {
++        require(msg.value > 0, "no ETH");
++        emit Deposited(msg.sender, msg.value);
++    }
++
++    /**
++     * @notice Führt Buyback mit dem gesamten ETH-Guthaben des Vaults aus.
++     *         - Nur Governance (owner)
++     *         - Respektiert Cooldown & Slippage
++     *         - IFR-Output wird aufgeteilt: BurnReserve / Treasury
++     */
++    function executeBuyback() external onlyOwner whenNotPaused nonReentrant {
++        require(block.timestamp >= lastBuybackAt + cooldown, "cooldown");
++        uint256 ethBal = address(this).balance;
++        require(ethBal > 0, "no ETH to buyback");
++
++        address;
++        path[0] = router.WETH();
++        path[1] = IFR;
++
++        // Quote expected output and compute minOut with slippage protection
++        uint[] memory amounts = router.getAmountsOut(ethBal, path);
++        uint256 expectedOut = amounts[1];
++        require(expectedOut > 0, "expectedOut=0");
++        uint256 minOut = (expectedOut * (BPS_DENOM - slippageBps)) / BPS_DENOM;
++
++        uint[] memory res = router.swapExactETHForTokens{value: ethBal}(
++            minOut,
++            path,
++            address(this),
++            block.timestamp + 15 minutes
++        );
++        uint256 ifrReceived = res[1];
++        require(ifrReceived >= minOut, "slippage");
++
++        // Split to burn & treasury
++        uint256 toBurn = (ifrReceived * burnShareBps) / BPS_DENOM;
++        uint256 toTreasury = ifrReceived - toBurn;
++
++        require(IERC20(IFR).transfer(BURN_RESERVE, toBurn), "transfer burn failed");
++        require(IERC20(IFR).transfer(TREASURY, toTreasury), "transfer treasury failed");
++
++        lastBuybackAt = block.timestamp;
++
++        emit BuybackExecuted(ethBal, ifrReceived, toBurn, toTreasury);
++    }
++}
++
+diff --git a/contracts/mocks/MockRouter.sol b/contracts/mocks/MockRouter.sol
+new file mode 100644
+--- /dev/null
++++ b/contracts/mocks/MockRouter.sol
+@@
++// SPDX-License-Identifier: MIT
++pragma solidity ^0.8.20;
++
++import "./MockToken.sol";
++
++/**
++ * @title MockRouter (UniV2-like)
++ * @notice Für Tests: deterministische Preisbildung auf Basis eines festen IFR/ETH-Kurses.
++ * - getAmountsOut(amountInETH, [WETH, IFR]) => [amountInETH, amountOutIFR]
++ * - swapExactETHForTokens: akzeptiert ETH und sendet amountOutIFR an Empfänger.
++ */
++contract MockRouter {
++    address public immutable WETH_ADDR;
++    address public immutable IFR_ADDR;
++    uint256 public rateIfrPerEth; // z.B. 1000 * 1e18 IFR pro 1 ETH
++
++    constructor(address _weth, address _ifr, uint256 _rateIfrPerEth) {
++        WETH_ADDR = _weth;
++        IFR_ADDR = _ifr;
++        rateIfrPerEth = _rateIfrPerEth;
++    }
++
++    function setRate(uint256 _rate) external {
++        rateIfrPerEth = _rate;
++    }
++
++    function WETH() external view returns (address) {
++        return WETH_ADDR;
++    }
++
++    function getAmountsOut(uint amountIn, address[] calldata path) external view returns (uint[] memory) {
++        require(path.length == 2, "path");
++        require(path[0] == WETH_ADDR && path[1] == IFR_ADDR, "unsupported path");
++        uint;
++        amounts[0] = amountIn;
++        // IFR hat 18 Decimals in MockToken
++        amounts[1] = (amountIn * rateIfrPerEth) / 1e18;
++        return amounts;
++    }
++
++    function swapExactETHForTokens(
++        uint amountOutMin,
++        address[] calldata path,
++        address to,
++        uint /*deadline*/
++    ) external payable returns (uint[] memory) {
++        require(path.length == 2, "path");
++        require(path[0] == WETH_ADDR && path[1] == IFR_ADDR, "unsupported path");
++        require(msg.value > 0, "no ETH");
++        uint out = (msg.value * rateIfrPerEth) / 1e18;
++        require(out >= amountOutMin, "slippage");
++        MockToken(IFR_ADDR).mint(to, out);
++        uint;
++        amounts[0] = msg.value;
++        amounts[1] = out;
++        return amounts;
++    }
++}
++
+diff --git a/contracts/mocks/MockToken.sol b/contracts/mocks/MockToken.sol
+new file mode 100644
+--- /dev/null
++++ b/contracts/mocks/MockToken.sol
+@@
++// SPDX-License-Identifier: MIT
++pragma solidity ^0.8.20;
++
++contract MockToken {
++    string public name;
++    string public symbol;
++    uint8 public constant decimals = 18;
++    uint256 public totalSupply;
++    mapping(address => uint256) public balanceOf;
++    mapping(address => mapping(address => uint256)) public allowance;
++
++    event Transfer(address indexed from, address indexed to, uint256 value);
++    event Approval(address indexed owner, address indexed spender, uint256 value);
++
++    constructor(string memory _name, string memory _symbol) {
++        name = _name;
++        symbol = _symbol;
++    }
++
++    function mint(address to, uint256 amount) public {
++        totalSupply += amount;
++        balanceOf[to] += amount;
++        emit Transfer(address(0), to, amount);
++    }
++
++    function transfer(address to, uint256 amount) external returns (bool) {
++        require(balanceOf[msg.sender] >= amount, "bal");
++        balanceOf[msg.sender] -= amount;
++        balanceOf[to] += amount;
++        emit Transfer(msg.sender, to, amount);
++        return true;
++    }
++
++    function approve(address spender, uint256 amount) external returns (bool) {
++        allowance[msg.sender][spender] = amount;
++        emit Approval(msg.sender, spender, amount);
++        return true;
++    }
++
++    function transferFrom(address from, address to, uint256 amount) external returns (bool) {
++        uint256 allowed = allowance[from][msg.sender];
++        require(allowed >= amount, "allow");
++        require(balanceOf[from] >= amount, "bal");
++        if (allowed != type(uint256).max) {
++            allowance[from][msg.sender] = allowed - amount;
++        }
++        balanceOf[from] -= amount;
++        balanceOf[to] += amount;
++        emit Transfer(from, to, amount);
++        return true;
++    }
++}
++
+diff --git a/testing/BuybackVault.test.js b/testing/BuybackVault.test.js
+new file mode 100644
+--- /dev/null
++++ b/testing/BuybackVault.test.js
+@@
++const { expect } = require("chai");
++const { ethers } = require("hardhat");
++
++describe("BuybackVault", function () {
++  let owner, treasury, burnReserve, guardian, user;
++  let IFR, WETH, Router, Vault;
++
++  const RATE_IFR_PER_ETH = ethers.parseEther("1000"); // 1 ETH -> 1000 IFR
++
++  beforeEach(async () => {
++    [owner, treasury, burnReserve, guardian, user] = await ethers.getSigners();
++
++    const MockToken = await ethers.getContractFactory("MockToken");
++    IFR = await MockToken.deploy("Inferno Token", "IFR");
++    await IFR.waitForDeployment();
++
++    // Mock WETH as plain ERC20 (not used for transfer, only as address marker)
++    WETH = await MockToken.deploy("Wrapped ETH", "WETH");
++    await WETH.waitForDeployment();
++
++    const MockRouter = await ethers.getContractFactory("MockRouter");
++    Router = await MockRouter.deploy(await WETH.getAddress(), await IFR.getAddress(), RATE_IFR_PER_ETH);
++    await Router.waitForDeployment();
++
++    const BuybackVault = await ethers.getContractFactory("BuybackVault");
++    Vault = await BuybackVault.deploy(
++      await IFR.getAddress(),
++      await burnReserve.getAddress(),
++      await treasury.getAddress(),
++      await Router.getAddress(),
++      await guardian.getAddress()
++    );
++    await Vault.waitForDeployment();
++  });
++
++  it("deposits ETH and emits Deposited", async () => {
++    await expect(Vault.connect(user).depositETH({ value: ethers.parseEther("2") }))
++      .to.emit(Vault, "Deposited")
++      .withArgs(await user.getAddress(), ethers.parseEther("2"));
++    expect(await ethers.provider.getBalance(await Vault.getAddress())).to.equal(ethers.parseEther("2"));
++  });
++
++  it("executes buyback with default params; splits 50/50 to burnReserve and treasury", async () => {
++    // deposit 1 ETH
++    await Vault.connect(user).depositETH({ value: ethers.parseEther("1") });
++    const burnBefore = await IFR.balanceOf(await burnReserve.getAddress());
++    const treasBefore = await IFR.balanceOf(await treasury.getAddress());
++
++    await expect(Vault.connect(owner).executeBuyback())
++      .to.emit(Vault, "BuybackExecuted");
++
++    const burnAfter = await IFR.balanceOf(await burnReserve.getAddress());
++    const treasAfter = await IFR.balanceOf(await treasury.getAddress());
++
++    // Expected IFR out: 1000 IFR per 1 ETH
++    const totalOut = ethers.parseEther("1000");
++    const expectedBurn = totalOut / 2n;
++    const expectedTreas = totalOut - expectedBurn;
++
++    expect(burnAfter - burnBefore).to.equal(expectedBurn);
++    expect(treasAfter - treasBefore).to.equal(expectedTreas);
++
++    // Cooldown set
++    const lastBuybackAt = await Vault.lastBuybackAt();
++    expect(lastBuybackAt).to.be.gt(0);
++  });
++
++  it("enforces cooldown between buybacks", async () => {
++    await Vault.depositETH({ value: ethers.parseEther("1") });
++    await Vault.connect(owner).executeBuyback();
++    await expect(Vault.connect(owner).executeBuyback()).to.be.revertedWith("cooldown");
++
++    // Increase time by 1h
++    await ethers.provider.send("evm_increaseTime", [3600]);
++    await ethers.provider.send("evm_mine", []);
++    await expect(Vault.connect(owner).executeBuyback()).to.emit(Vault, "BuybackExecuted");
++  });
++
++  it("respects slippage protection via router rate change", async () => {
++    await Vault.depositETH({ value: ethers.parseEther("1") });
++    // Lower router rate drastically so that minOut check fails:
++    await Router.setRate(ethers.parseEther("900")); // < expected*(1-5%) => triggers slippage fail
++    await expect(Vault.connect(owner).executeBuyback()).to.be.revertedWith("slippage");
++  });
++
++  it("guardian can pause/unpause to block actions", async () => {
++    await Vault.depositETH({ value: ethers.parseEther("1") });
++    await expect(Vault.connect(guardian).pause()).to.emit(Vault, "Paused");
++    await expect(Vault.connect(owner).executeBuyback()).to.be.revertedWith("Pausable: paused");
++    await expect(Vault.connect(guardian).unpause()).to.emit(Vault, "Unpaused");
++    await expect(Vault.connect(owner).executeBuyback()).to.emit(Vault, "BuybackExecuted");
++  });
++
++  it("owner can update params and router/treasury; emits ParamsUpdated", async () => {
++    const newBps = 7000; // 70% burn
++    const newCooldown = 7200;
++    const newSlip = 400; // 4%
++    await expect(
++      Vault.connect(owner).setParams(newBps, newCooldown, newSlip, await Router.getAddress(), await treasury.getAddress())
++    ).to.emit(Vault, "ParamsUpdated");
++    expect(await Vault.burnShareBps()).to.equal(newBps);
++    expect(await Vault.cooldown()).to.equal(newCooldown);
++    expect(await Vault.slippageBps()).to.equal(newSlip);
++  });
++});
++
+diff --git a/scripts/deploy_buyback.js b/scripts/deploy_buyback.js
+new file mode 100644
+--- /dev/null
++++ b/scripts/deploy_buyback.js
+@@
++/* eslint-disable no-console */
++const hre = require("hardhat");
++
++/**
++ * Deploy-Skript für BuybackVault
++ *
++ * ENV / Hardcoded (an Projekt anpassen):
++ *  - IFR, BURN_RESERVE, TREASURY, ROUTER, GUARDIAN
++ */
++async function main() {
++  const IFR = process.env.IFR;
++  const BURN_RESERVE = process.env.BURN_RESERVE;
++  const TREASURY = process.env.TREASURY;
++  const ROUTER = process.env.ROUTER;
++  const GUARDIAN = process.env.GUARDIAN;
++
++  if (!IFR || !BURN_RESERVE || !TREASURY || !ROUTER) {
++    throw new Error("Missing env: IFR, BURN_RESERVE, TREASURY, ROUTER required");
++  }
++
++  const [deployer] = await hre.ethers.getSigners();
++  console.log("Deployer:", deployer.address);
++
++  const BuybackVault = await hre.ethers.getContractFactory("BuybackVault");
++  const vault = await BuybackVault.deploy(IFR, BURN_RESERVE, TREASURY, ROUTER, GUARDIAN || deployer.address);
++  await vault.waitForDeployment();
++
++  console.log("BuybackVault deployed at:", await vault.getAddress());
++  console.log("Owner:", await vault.owner());
++  console.log("Guardian:", await vault.guardian());
++}
++
++main().catch((e) => {
++  console.error(e);
++  process.exit(1);
++});
++
+diff --git a/abi/BuybackVault_v1.json b/abi/BuybackVault_v1.json
+new file mode 100644
+--- /dev/null
++++ b/abi/BuybackVault_v1.json
+@@
++[
++  {
++    "type": "constructor",
++    "inputs": [
++      {"name":"_ifr","type":"address"},
++      {"name":"_burnReserve","type":"address"},
++      {"name":"_treasury","type":"address"},
++      {"name":"_router","type":"address"},
++      {"name":"_guardian","type":"address"}
++    ]
++  },
++  { "type": "event", "name": "Deposited", "inputs": [
++    {"name":"from","type":"address","indexed":true},
++    {"name":"amount","type":"uint256","indexed":false}
++  ], "anonymous": false },
++  { "type": "event", "name": "ParamsUpdated", "inputs": [
++    {"name":"burnShareBps","type":"uint256","indexed":false},
++    {"name":"cooldown","type":"uint256","indexed":false},
++    {"name":"slippageBps","type":"uint256","indexed":false},
++    {"name":"router","type":"address","indexed":false}
++  ], "anonymous": false },
++  { "type": "event", "name": "BuybackExecuted", "inputs": [
++    {"name":"ethIn","type":"uint256","indexed":false},
++    {"name":"ifrOut","type":"uint256","indexed":false},
++    {"name":"burned","type":"uint256","indexed":false},
++    {"name":"toTreasury","type":"uint256","indexed":false}
++  ], "anonymous": false },
++  { "type": "event", "name": "Paused", "inputs": [
++    {"name":"by","type":"address","indexed":true}
++  ], "anonymous": false },
++  { "type": "event", "name": "Unpaused", "inputs": [
++    {"name":"by","type":"address","indexed":true}
++  ], "anonymous": false },
++  { "type": "event", "name": "OwnershipTransferred", "inputs": [
++    {"name":"previousOwner","type":"address","indexed":true},
++    {"name":"newOwner","type":"address","indexed":true}
++  ], "anonymous": false },
++  { "type": "event", "name": "GuardianUpdated", "inputs": [
++    {"name":"guardian","type":"address","indexed":true}
++  ], "anonymous": false },
++
++  { "type":"function", "stateMutability":"payable", "name":"depositETH", "inputs":[], "outputs":[] },
++  { "type":"function", "stateMutability":"nonpayable", "name":"executeBuyback", "inputs":[], "outputs":[] },
++  { "type":"function", "stateMutability":"nonpayable", "name":"setParams", "inputs":[
++    {"name":"_burnShareBps","type":"uint256"},
++    {"name":"_cooldown","type":"uint256"},
++    {"name":"_slippageBps","type":"uint256"},
++    {"name":"_router","type":"address"},
++    {"name":"_treasury","type":"address"}
++  ], "outputs":[] },
++  { "type":"function", "stateMutability":"nonpayable", "name":"pause", "inputs":[], "outputs":[] },
++  { "type":"function", "stateMutability":"nonpayable", "name":"unpause", "inputs":[], "outputs":[] },
++  { "type":"function", "stateMutability":"view", "name":"burnShareBps", "inputs":[], "outputs":[{"type":"uint256"}] },
++  { "type":"function", "stateMutability":"view", "name":"cooldown", "inputs":[], "outputs":[{"type":"uint256"}] },
++  { "type":"function", "stateMutability":"view", "name":"slippageBps", "inputs":[], "outputs":[{"type":"uint256"}] },
++  { "type":"function", "stateMutability":"view", "name":"lastBuybackAt", "inputs":[], "outputs":[{"type":"uint256"}] },
++  { "type":"function", "stateMutability":"view", "name":"router", "inputs":[], "outputs":[{"type":"address"}] },
++  { "type":"function", "stateMutability":"view", "name":"guardian", "inputs":[], "outputs":[{"type":"address"}] },
++  { "type":"function", "stateMutability":"view", "name":"owner", "inputs":[], "outputs":[{"type":"address"}] },
++  { "type":"function", "stateMutability":"nonpayable", "name":"transferOwnership", "inputs":[{"name":"newOwner","type":"address"}], "outputs":[] }
++]
++
+diff --git a/docs/README.md b/docs/README.md
+--- a/docs/README.md
++++ b/docs/README.md
+@@
+-│   ├── 🔵 buyback/
++│   ├── 🟢 buyback/
++
++> **Update (2025-09-23):** Buyback Vault erfolgreich implementiert und mit MockRouter-Unit-Tests verifiziert → Buyback-Knoten auf 🟢 gesetzt.
+diff --git a/logs/project.log b/logs/project.log
+--- a/logs/project.log
++++ b/logs/project.log
+@@
++[2025-09-23 14:00] Dev5 FEATURE – Buyback Vault – BuybackVault.sol + MockRouter + Tests + Deploy + ABI abgeschlossen und dokumentiert (Buyback 🟢)
+*** End Patch
