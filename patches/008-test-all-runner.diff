@@ -1,0 +1,16 @@
+*** Begin Patch
+diff --git a/scripts/test_all.sh b/scripts/test_all.sh
+new file mode 100755
+--- /dev/null
++++ b/scripts/test_all.sh
+@@
++#!/usr/bin/env bash
++set -e
++
++echo "🧪 Running ALL Hardhat tests..."
++
++cd "$(dirname "$0")/.."
++npx hardhat test
++
++echo "✅ All tests completed."
+*** End Patch
