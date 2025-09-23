@@ -1,0 +1,45 @@
+*** Begin Patch
+diff --git a/arch/decisions/ADR-005-buyback-strategy.md b/arch/decisions/ADR-005-buyback-strategy.md
+new file mode 100644
+--- /dev/null
++++ b/arch/decisions/ADR-005-buyback-strategy.md
+@@
++# ADR-005: Buyback-Strategie – Manuell vs. Keeper, Burn-Anteil
++
++## Status
++✅ Accepted (2025-09-23)
++
++## Kontext
++Der BuybackVault soll Treasury-Mittel nutzen, um IFR-Token zurückzukaufen und deflationär zu vernichten.
++Es gab die Frage, ob Buybacks automatisch (z. B. über Keeper/Automation) oder manuell durch Governance
++ausgelöst werden sollen, und ob der Burn-Anteil bei 50 % oder 100 % liegen soll.
++
++## Entscheidung
++- **Trigger:** Buybacks werden zunächst **nur manuell durch Governance/Multisig** ausgelöst.
++- **Burn-Anteil (burnShare):** Default = **50 %** (50 % Burn / 50 % Treasury).
++- **Parameter:** burnShare, cooldown und slippage sind **parametrisierbar durch Governance**.
++
++## Begründung
++- **Manueller Trigger** reduziert Komplexität und Angriffsfläche in der Frühphase.
++- **50 % Burn** ist ein ausgewogenes Modell zwischen Deflation und Treasury-Liquidität.
++- Governance behält volle Flexibilität: später kann burnShare erhöht oder Keeper-Automatisierung
++per Upgrade/Strategiewechsel eingeführt werden.
++
++## Konsequenzen
++- Der Contract-Entwurf für den BuybackVault muss diese Parameter als veränderbar implementieren.
++- Eine modulare Architektur (Strategy-Pattern) erlaubt späteres Upgrade auf Keeper-basierte Automatisierung.
++- Treasury bleibt liquide genug für CEX-Listings, Marketing und Betrieb.
++
++## Alternativen
++- **Keeper-kompatibel ab Start:** Verworfen wegen höherer Komplexität und externer Abhängigkeiten.
++- **100 % Burn ab Start:** Verworfen wegen fehlender Treasury-Liquidität in der Frühphase.
++
++## Anhang
++- Betroffene Module: `contracts/buyback/BuybackVault.sol`, `abi/BuybackVault_v1.json`
++- Abhängigkeiten: Governance (Param-Updates), BurnReserve, Token
+diff --git a/logs/project.log b/logs/project.log
+--- a/logs/project.log
++++ b/logs/project.log
+@@
++[2025-09-23 14:15] architect ADR – ADR-005 Buyback-Strategie dokumentiert (manuell, 50% BurnShare Default)
+*** End Patch
