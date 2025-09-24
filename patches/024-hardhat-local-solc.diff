@@ -53,4 +53,27 @@ new file mode 100755
 +npx hardhat test test/BuybackVault.test.js --show-stack-traces
 +
 +echo "✅ BuybackVault tests completed."
+diff --git a/docs/README.md b/docs/README.md
+index 3f5e3d1..b7f2e29 100644
+--- a/docs/README.md
++++ b/docs/README.md
+@@
+ ## Testing
+ 
+ To run tests locally:
+ 
+ ```bash
+ npx hardhat test
++## Offline Compiler Setup (solc-select)
++
++In restricted environments (no outbound HTTP), Hardhat cannot auto-download the Solidity compiler.
++Install and use a local compiler with solc-select:
++
++bash +# install solc-select +pip3 install solc-select + +# install Solidity 0.8.20 +solc-select install 0.8.20 + +# set default version +solc-select use 0.8.20 + +# verify installation +solc --version +# expected: 0.8.20+commit... +
++
++After this, Hardhat will use the local solc instead of downloading.
++
++Run the dedicated BuybackVault test script:
++
++bash +./scripts/test_buyback.sh +
 *** End Patch
