@@ -1,0 +1,70 @@
+*** Begin Patch
+diff --git a/arch/decisions/ADR-102-holdscore.md b/arch/decisions/ADR-102-holdscore.md
+new file mode 100644
+--- /dev/null
++++ b/arch/decisions/ADR-102-holdscore.md
+@@
++# ADR-102: HoldScore Fee-Reduktion
++
++## Status
++Proposed (🔵) – dokumentiert, noch nicht implementiert
++
++## Kontext
++Der Inferno-Token ($IFR) soll **Langzeit-Halter** durch reduzierte Fees belohnen.  
++Ziel: Halteanreiz schaffen, ohne Inflation oder Rewards.
++
++## Entscheidung
++- **Mechanismus:**
++  - Jede Wallet erhält beim letzten **Incoming Transfer** einen `lastIncomingTimestamp`.
++  - Ab diesem Zeitpunkt wächst eine **Fee-Reduktion linear** bis zum Maximalwert.
++  - Bei **jedem Outgoing Transfer** wird die Fee-Reduktion zurückgesetzt.
++- **Parameter (Governance-gesteuert):**
++  - `MaxReduction` (z. B. 50 %)
++  - `FullHoldDuration` (z. B. 180 Tage bis volle Reduktion)
++  - Reset-Regeln (vollständig bei Outgoing Transfer)
++- **Formel:**
++  ```
++  effectiveFee = baseFee * (1 - min(HoldDuration / FullHoldDuration, 1) * MaxReduction)
++  ```
++- **Events:**
++  - `HoldScoreUpdated(address wallet, uint256 daysHeld, uint256 reductionPct)`
++
++## Konsequenzen
++- Belohnt loyale Halter mit geringeren Gebühren.
++- Verhindert Abuse durch Reset bei Outgoing Transfers.
++- Verstärkt die Attraktivität von IFR ohne neue Inflation.
++
++## Offene Punkte
++- Wie sollen Self-Transfers zwischen eigenen Wallets behandelt werden?  
++- Wie wird HoldScore im Investor-UI angezeigt?  
++- Soll Governance `FullHoldDuration` dynamisch anpassen dürfen?
+diff --git a/docs/README.md b/docs/README.md
+--- a/docs/README.md
++++ b/docs/README.md
+@@
+ │   ├── 🔵 buyback/
+ │   ├── 🔵 governance/
+ │   ├── 🔵 discountminter/
++│   ├── 🔵 holdscore/
+ │   └── 🔵 …
+diff --git a/docs/WHITEPAPER.md b/docs/WHITEPAPER.md
+--- a/docs/WHITEPAPER.md
++++ b/docs/WHITEPAPER.md
+@@
+ Ergebnis: deflationärer Supply.
++
++### 2.4 HoldScore Mechanismus (geplant)
++Wallets, die IFR über längere Zeit halten, zahlen weniger Burn-Fees:
++- Bis zu 50 % Reduktion nach 180 Tagen Hold
++- Linearer Anstieg pro Tag bis Maximalwert
++- Reset bei Outgoing Transfer
++- Keine neuen Token werden gemintet → deflationäres Modell bleibt erhalten
++
++Dies stärkt die Bindung der Community und erhöht den Anreiz zum langfristigen Halten.
+diff --git a/logs/project.log b/logs/project.log
+--- a/logs/project.log
++++ b/logs/project.log
+@@
+ [2025-09-24 16:10] Arch SPEC – ADR-101 DiscountMinter dokumentiert, README/Whitepaper/Statusbaum aktualisiert (🔵)
++[2025-09-24 16:25] Arch SPEC – ADR-102 HoldScore dokumentiert, README/Whitepaper/Statusbaum aktualisiert (🔵)
+*** End Patch
