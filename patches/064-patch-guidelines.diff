@@ -1,0 +1,105 @@
+*** Begin Patch
+diff --git a/docs/PATCH-GUIDELINES.md b/docs/PATCH-GUIDELINES.md
+new file mode 100644
+--- /dev/null
++++ b/docs/PATCH-GUIDELINES.md
+@@
++# 📑 Patch Guidelines – Inferno Projekt
++
++## 🎯 Zweck
++Dieses Dokument definiert die **verbindlichen Regeln für alle Developer-Patches**, damit der CoreDev die Patches per Copy/Paste in die Konsole einspielen kann.
++
++Alle Patches müssen **EOF-fertig** sein und folgende Struktur haben:
++
++---
++
++## 📌 Format eines gültigen Patches
++
++```bash
++cat > patches/NNN-title.diff <<'EOF'
++*** Begin Patch
++diff --git a/<file> b/<file>
++--- a/<file>
+++++ b/<file>
++@@
++<Patch-Inhalt>
++*** End Patch
++EOF
++
++git apply patches/NNN-title.diff
++git add .
++git commit -m "<commit message>"
++git push origin main
++```
++
++**Wichtig:**
++- `NNN` ist die laufende Patchnummer (z. B. 003, 004, 051 …).
++- `title` ist eine kurze Beschreibung (z. B. `presale`, `vesting`, `arch-report`).
++- Jeder Patch muss **eigenständig und abschließbar** sein.
++
++---
++
++## 📌 Pflichtinhalte eines Feature-Patches
++
++1. **Code-Artefakte**
++   - Contract, Test, Script, ABI oder Doku-Datei
++2. **Statusbaum-Update**
++   - `docs/README.md`: Knoten von 🔵 auf 🟢 (oder 🔴 bei Fehlern)
++3. **Log-Eintrag**
++   - `logs/project.log`: Datum, Dev, Aktion, Status
++4. **Commit-Message**
++   - Klare Beschreibung, z. B.: `"feat: add Presale contract + tests (Patch 003)"`
++
++---
++
++## 📌 Statusfarben
++
++- 🟢 **Erledigt** – Code + Tests abgeschlossen
++- 🔵 **Offen** – Struktur vorhanden, Implementierung oder Tests fehlen
++- 🔴 **Fehler/Debug** – Implementiert, aber Tests gescheitert oder offen
++
++---
++
++## 📌 Beispiel – Feature-Patch
++
++```bash
++cat > patches/003-presale.diff <<'EOF'
++*** Begin Patch
++diff --git a/contracts/presale/Presale.sol b/contracts/presale/Presale.sol
++new file mode 100644
++--- /dev/null
+++++ b/contracts/presale/Presale.sol
++@@
++// Solidity-Code hier …
++*** End Patch
++EOF
++
++git apply patches/003-presale.diff
++git add .
++git commit -m "feat: add Presale contract (Patch 003)"
++git push origin main
++```
++
++---
++
++## 📌 Beispiel – Statusupdate im Patch
++
++```diff
++diff --git a/docs/README.md b/docs/README.md
++--- a/docs/README.md
+++++ b/docs/README.md
++@@
++-│   ├── 🔵 presale/
+++│   ├── 🟢 presale/
++
++> **Update (2025-09-23):** Presale Contract erfolgreich implementiert und getestet → Presale-Knoten auf 🟢 gesetzt.
++```
++
++---
++
++## ✅ Fazit
++
++Diese Richtlinien sind für **alle Developer verbindlich**.
++Nur so bleibt das Projekt Inferno konsistent, sauber dokumentiert und leicht wartbar.
++
+*** End Patch
