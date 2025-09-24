@@ -34,7 +34,7 @@ contract MockRouter {
     function getAmountsOut(uint amountIn, address[] calldata path) external view returns (uint[] memory amounts) {
         require(path.length == 2, "path");
         require(path[0] == WETH_ADDR && path[1] == IFR_ADDR, "unsupported path");
-        amounts = new uint;
+        amounts = new uint ;
         amounts[0] = amountIn;
         amounts[1] = amountIn * rateIfrPerEth / 1e18;
     }
@@ -57,10 +57,9 @@ contract MockRouter {
         uint /*deadline*/
     ) external payable returns (uint[] memory amounts) {
         require(path.length == 2, "path");
-        require(path[0] == WETH_ADDR && path[1] == IFR_ADDR, "unsupported path");
+        require(path[0] == WETH_ADDR && path[path.length - 1] == IFR_ADDR, "unsupported path");
         require(msg.value > 0, "no ETH");
 
-        // Ausgangsmenge IFR nach Quote
         uint out = msg.value * rateIfrPerEth / 1e18;
 
         // Optional künstliche Slippage für genau diesen Swap
@@ -74,7 +73,7 @@ contract MockRouter {
         // Mint IFR direkt an den Empfänger (unser MockToken erlaubt das)
         IMintableERC20(IFR_ADDR).mint(to, out);
 
-        amounts = new uint;
+        amounts = new uint ;
         amounts[0] = msg.value;
         amounts[1] = out;
     }
