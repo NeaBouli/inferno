@@ -1,0 +1,72 @@
+*** Begin Patch
+diff --git a/arch/decisions/ADR-101-discountminter.md b/arch/decisions/ADR-101-discountminter.md
+new file mode 100644
+--- /dev/null
++++ b/arch/decisions/ADR-101-discountminter.md
+@@
++# ADR-101: Cross-Chain DiscountMinter
++
++## Status
++Proposed (🔵) – dokumentiert, noch nicht implementiert
++
++## Kontext
++Das Inferno-Projekt soll Käufern, die IFR mit **KAS** erwerben, einen dynamischen Rabatt bieten.  
++Ziel: Cross-Chain Adoption fördern, Early-Adopter belohnen, aber Missbrauch verhindern.
++
++## Entscheidung
++- **Rabatt-Mechanismus:**
++  - Max. 50 % Rabatt auf IFR-Käufe.
++  - Rabatt steigt mit Kaufvolumen, aber gedeckelt durch Wallet-Limit + Epoche-Budget.
++  - Bonus-IFR (Rabattanteil) wird automatisch in Vesting/Lock gelegt.
++- **Cross-Chain-Validierung:**
++  - Relayer-Quorum (M-of-N) bestätigt KAS-Zahlungen.
++  - Orakel liefern TWAP-Preisfeed.
++  - Replay-Schutz für eingereichte Attestationen.
++- **Governance-Parameter:**
++  - `Dmax` (max. Rabatt)
++  - `EpochLength`, `EpochBudget`
++  - `BonusLockDuration`
++  - Relayer Keys
++  - Oracle-Quellen
++
++## Konsequenzen
++- Käufer erhalten IFR günstiger, aber nur im Rahmen fairer Limits.
++- Bonus-IFR ist gesperrt → verhindert sofortiges Dumping.
++- Relayer/Oracle erhöhen die Komplexität, aber sichern Cross-Chain Integrität.
++
++## Offene Punkte
++- Welche Relayer-Infrastruktur wird genutzt? (Eigenes Set oder externe Provider)
++- Governance: DAO-gestützt oder Multi-Sig in der ersten Phase?
++- Integration ins Investor-UI (Anzeige Rabatt + Status).
+diff --git a/docs/README.md b/docs/README.md
+--- a/docs/README.md
++++ b/docs/README.md
+@@
+ │   ├── 🔵 burnreserve/
+ │   ├── 🔵 buyback/
+ │   ├── 🔵 governance/
++│   ├── 🔵 discountminter/
+ │   └── 🔵 …
+diff --git a/docs/WHITEPAPER.md b/docs/WHITEPAPER.md
+--- a/docs/WHITEPAPER.md
++++ b/docs/WHITEPAPER.md
+@@
+ ## 3. Verteilungslogik
+ ### 3.1 Presale
+ Fixer Tokenpreis (TOKEN_PRICE). ETH → Token Swap direkt im Presale-Contract. Treasury erhält ETH gebührenfrei. Presale ist FeeExempt.
++
++### 3.2 Cross-Chain DiscountMinter (geplant)
++Käufe mit KAS können rabattiert IFR erhalten:
++- Max. 50 % Rabatt
++- Rabatt skaliert mit Kaufvolumen (Wallet-Limit, Epoche-Budget)
++- Bonus-IFR wird automatisch in Lock/Vesting gesperrt
++- Cross-Chain-Absicherung: Relayer-Quorum, Orakel (TWAP), Replay-Schutz
++
++Damit wird die Adoption des IFR-Token über die Kaspa-Chain hinaus gefördert.
+diff --git a/logs/project.log b/logs/project.log
+--- a/logs/project.log
++++ b/logs/project.log
+@@
+ [2025-09-24 12:40] Arch REPORT – Dev4 Vesting Contract abgeschlossen (Patch 004, Status 🟢)
++[2025-09-24 16:10] Arch SPEC – ADR-101 DiscountMinter dokumentiert, README/Whitepaper/Statusbaum aktualisiert (🔵)
+*** End Patch
