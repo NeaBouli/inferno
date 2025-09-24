@@ -1,0 +1,71 @@
+*** Begin Patch
+diff --git a/docs/WHITEPAPER_EN.md b/docs/WHITEPAPER_EN.md
+new file mode 100644
+--- /dev/null
++++ b/docs/WHITEPAPER_EN.md
+@@
++# 🔥 Inferno Whitepaper (English Version)
++
++## Vision & Goal
++Inferno ($IFR) is a **deflationary multichain token** designed to reduce supply continuously through burn mechanisms while ensuring transparent governance and adoption across chains.
++
++## Tokenomics
++- **Total Supply:** 1 billion IFR  
++- **Fees:**  
++  - SenderBurn: 2.0 %  
++  - RecipientBurn: 0.5 %  
++  - PoolFee: 1.0 %  
++- **FeeExempt mechanism** for specific contracts (Presale, Vesting, Treasury).
++
++## Core Components
++### Token Core
++ERC20-based with custom burn logic and fee exemptions.
++
++### Presale
++- Fixed price sale  
++- ETH → IFR swap (Treasury receives ETH directly)  
++- FeeExempt  
++
++### Vesting
++- Linear release with cliff  
++- Protects investors and team allocations from immediate dumping  
++- Guardian (pause/unpause)  
++
++### BurnReserve
++- Holds tokens that are later permanently burned  
++- Supports long-term deflationary mechanics  
++
++### Buyback Vault
++- Manually triggered by Governance  
++- Buys back IFR using ETH  
++- Configurable split between BurnReserve and Treasury  
++- Slippage protection & cooldown  
++
++### Governance
++- Guardian Multi-Sig for initial control  
++- Timelock mechanism  
++- Transition to DAO governance planned  
++
++## Planned Extensions
++### DiscountMinter (ADR-101)
++- Cross-chain purchases with Kaspa (KAS)  
++- Up to 50 % discount  
++- Bonus IFR locked/vested to prevent dumping  
++- Relayer quorum + Oracle TWAP for security  
++
++### HoldScore (ADR-102)
++- Wallets that hold IFR longer pay reduced burn fees  
++- Up to 50 % fee reduction after 180 days  
++- Reset on outgoing transfer (prevents abuse)  
++
++## Roadmap
++1. Bootstrap → Core Modules (Token, Presale, Vesting, Buyback)  
++2. Governance Setup (Guardian, Timelock, DAO transition)  
++3. Extensions (DiscountMinter, HoldScore)  
++4. Multichain expansion (Kasplex L2, bridges)  
++
++---
++
++📌 This is the official **English reference version**.  
++For full technical details and logs, refer to the **German documentation** (`docs/WHITEPAPER.md` and `logs/project.log`).  
+*** End Patch
