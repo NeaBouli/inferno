@@ -1,0 +1,28 @@
+*** Begin Patch
+diff --git a/docs/README.md b/docs/README.md
+--- a/docs/README.md
++++ b/docs/README.md
+@@
+ ## 📌 Status-Legende
+-- 🟢 erledigt (Code + Tests abgeschlossen)
+-- 🔵 offen (Struktur vorhanden, aber noch nicht umgesetzt oder vollständig getestet)
+-- 🔴 Fehler/Debug
++- 🟢 erledigt → Code + Tests abgeschlossen, stabil
++- 🔵 offen → noch nicht implementiert oder in Arbeit
++- 🔴 Fehler/Debug → Code implementiert, aber Tests fehlerhaft oder nie grün gelaufen
+@@
+ │   ├── 🔵 vesting/
+-│   ├── 🔵 burnreserve/
+-│   ├── 🔵 buyback/   (implementiert, Tests offen)
++│   ├── 🔵 burnreserve/
++│   ├── 🔴 buyback/   (implementiert, Tests fehlerhaft/nicht bestanden)
+ │   ├── 🔵 governance/
+ │   ├── 🔵 discountminter/
+ │   └── 🔵 holdscore/
+diff --git a/logs/project.log b/logs/project.log
+--- a/logs/project.log
++++ b/logs/project.log
+@@
+-[2025-09-24 17:00] Dev5 REPORT – BuybackVault implementiert (mit Dev5A Fixes), Tests nie erfolgreich ausgeführt → Status 🔵
++[2025-09-24 17:00] Dev5 REPORT – BuybackVault implementiert (mit Dev5A Fixes), Tests nie erfolgreich ausgeführt → Status 🔴
+*** End Patch
