@@ -1,0 +1,10 @@
+*** Begin Patch
+diff --git a/logs/project.log b/logs/project.log
+--- a/logs/project.log
++++ b/logs/project.log
+@@
+ [2025-09-24 17:00] Dev5 REPORT – BuybackVault implementiert (mit Dev5A Fixes), Tests nie erfolgreich ausgeführt → Status 🔴
+ [2025-09-24 17:15] Arch SPEC – Status-Legende aktualisiert, BuybackVault auf 🔴 gesetzt
++[2025-09-24 17:45] Arch DOCS – Root README.md durch zweisprachige Version (DE+EN) ersetzt, Hinweis auf deutsche Unterstrukturen
++[2025-09-24 17:50] Arch DOCS – Englisches Whitepaper (docs/WHITEPAPER_EN.md) ergänzt und in Quick Links verlinkt
+*** End Patch
