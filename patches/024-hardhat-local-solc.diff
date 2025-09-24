@@ -76,4 +76,11 @@ index 3f5e3d1..b7f2e29 100644
 +Run the dedicated BuybackVault test script:
 +
 +bash +./scripts/test_buyback.sh +
+diff --git a/logs/project.log b/logs/project.log
+index 1c1a2b4..f39a2cd 100644
+--- a/logs/project.log
++++ b/logs/project.log
+@@
+[2025-09-23 10:00] arch ADR – ADR-027 Projektzusammenfassung & Abschluss der Architekturphase dokumentiert
++[2025-09-24 23:30] dev5a TOOLING – Offline solc-select workaround added (Patch 024)
 *** End Patch
