@@ -1,0 +1,56 @@
+*** Begin Patch
+diff --git a/hardhat.config.js b/hardhat.config.js
+index e69de29..b1f7b30 100644
+--- a/hardhat.config.js
++++ b/hardhat.config.js
+@@
+-require("@nomicfoundation/hardhat-toolbox");
+-
+-module.exports = {
+-  solidity: "0.8.20",
+-};
++require("@nomicfoundation/hardhat-toolbox");
++
++module.exports = {
++  solidity: {
++    compilers: [
++      {
++        version: "0.8.20",
++        settings: {
++          optimizer: {
++            enabled: true,
++            runs: 200,
++          },
++        },
++      },
++    ],
++  },
++  paths: {
++    artifacts: "./artifacts",
++    cache: "./cache",
++  },
++  networks: {
++    hardhat: {
++      allowUnlimitedContractSize: true,
++    },
++  },
++};
+diff --git a/scripts/test_buyback.sh b/scripts/test_buyback.sh
+new file mode 100755
+--- /dev/null
++++ b/scripts/test_buyback.sh
+@@
++#!/bin/bash
++set -e
++
++echo "🧹 Cleaning artifacts..."
++npx hardhat clean
++
++echo "🛠️ Compiling with local solc 0.8.20..."
++npx hardhat compile --show-stack-traces
++
++echo "🧪 Running BuybackVault tests..."
++npx hardhat test test/BuybackVault.test.js --show-stack-traces
++
++echo "✅ BuybackVault tests completed."
+*** End Patch
