@@ -1,0 +1,8 @@
+*** Begin Patch
+diff --git a/logs/project.log b/logs/project.log
+--- a/logs/project.log
++++ b/logs/project.log
+@@
+ [2025-09-25 09:30] dev SPECIALIST – Root-README.md successfully overwritten (Fix for failed patches 066–072)
++[2025-09-25 12:00] arch DOCS – CHANGELOG.md erstellt: vollständige Projektchronologie (Patch 070)
+*** End Patch
