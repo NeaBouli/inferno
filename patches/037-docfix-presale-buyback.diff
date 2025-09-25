@@ -1,0 +1,44 @@
+*** Begin Patch
+diff --git a/docs/README.md b/docs/README.md
+--- a/docs/README.md
++++ b/docs/README.md
+@@
+ ## 📌 Repository-Struktur
+ 
+inferno
+├── contracts/ (Smart Contracts)
+-│ ├── token/ 🔵
+-│ ├── presale/ 🟢
+-│ ├── vesting/ 🟢
+-│ ├── burnreserve/ 🔵
+-│ ├── buyback/ 🔴 (implementiert, Tests fehlerhaft)
+-│ └── governance/ 🔵
++│ ├── token/ 🔵
++│ ├── presale/ 🔵 (Datei vorhanden, aber leer – Implementierung fehlt)
++│ ├── vesting/ 🟢
++│ ├── burnreserve/ 🔵
++│ ├── buyback/ 🔵 (Vertrag fehlt, Tests existieren nur als Platzhalter)
++│ └── governance/ 🔵
+├── scripts/ 📘 Utility & Deployment Scripts
+├── abi/ 📘 Compiled ABIs
+├── testing/ 📘 QA & Unit Tests
+@@
+
+📝 Status-Updates (Changelog)
+[2025-09-23] Presale Contract implementiert, getestet, dokumentiert → Presale 🟢
+
+[2025-09-23] Vesting Contract implementiert, getestet, dokumentiert → Vesting 🟢
+-- [2025-09-24] BuybackVault implementiert, Tests fehlerhaft → Buyback 🔴
++- [2025-09-24] BuybackVault Tests erstellt, aber Vertrag fehlt → Buyback bleibt 🔵
+
+[2025-09-25] Root-README.md überschrieben (zweisprachig) → Dokumentation aktualisiert
+
+[2025-09-25] Baumdarstellung in docs/README.md final als fenced block gesetzt (Patch DocFix)
++- [2025-09-25] Presale & Buyback in README/Status korrigiert: Presale-Datei leer, Buyback-Vertrag nicht vorhanden (Patch 037)
+diff --git a/logs/project.log b/logs/project.log
+--- a/logs/project.log
++++ b/logs/project.log
+@@
+[2025-09-25 16:24] DocFix1 DOCS – WHITEPAPER_EN.md (EN) befüllt
++[2025-09-25 16:40] DocFix2 DOCS – README & Log korrigiert: Presale/Buyback von 🟢/🔴 → 🔵 gesetzt, Status an Realität angepasst
+*** End Patch
