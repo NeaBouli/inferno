@@ -1,0 +1,153 @@
+*** Begin Patch
+diff --git a/docs/PATCH-GUIDELINES.md b/docs/PATCH-GUIDELINES.md
+new file mode 100644
+--- /dev/null
++++ b/docs/PATCH-GUIDELINES.md
+@@
++# 📦 Patch-Vorgaben & Struktur (verbindlich für alle Devs)
++
++Damit das Projekt **Inferno** konsistent und fehlerfrei gepflegt wird, gelten für **alle Developer-Patches** feste Regeln. Diese haben sich bewährt und werden fortgeführt.
++
++---
++
++## 1. Patch-Format (Grundmuster)
++
++Alle Patches müssen **EOF-fertige Here-Doc Dateien** sein, die der CoreDev/Admin **1:1 in die Konsole kopieren** kann.
++
++Beispiel:
++```bash
++cat > patches/NNN-title.diff <<'EOF'
++*** Begin Patch
++diff --git a/<ziel-datei> b/<ziel-datei>
++--- a/<ziel-datei>
+++++ b/<ziel-datei>
++@@
++-<alter inhalt>
+++<neuer inhalt>
++*** End Patch
++EOF
++
++git apply patches/NNN-title.diff
++git add .
++git commit -m "<scope>: <kurze beschreibung> (Patch NNN)"
++git push origin main
++```
++
++---
++
++## 2. Namenskonvention
++
++* **Dateiname:** `patches/NNN-title.diff`
++  * `NNN` = fortlaufende Patchnummer (dreistellig, mit führenden Nullen)
++  * `title` = kurz, prägnant, ohne Leerzeichen (`presale-tests`, `vesting-status`, `buyback-router-fix`)
++
++* **Commit-Message:** `<scope>: <beschreibung> (Patch NNN)`
++  * Beispiel: `feat: add Vesting contract (Patch 004)`
++  * Beispiel: `fix: Buyback MockRouter array init (Patch 022)`
++
++---
++
++## 3. Patch-Inhalt
++
++Jeder Patch **muss vollständig sein**. Dazu gehören:
++
++1. **Feature-/Fix-Code**
++   * Contracts (`contracts/...`)
++   * Scripts (`scripts/...`)
++   * Tests (`testing/...`)
++   * ABIs (`abi/...`)
++
++2. **Statuspflege**
++   * `docs/README.md` → Statusbaum updaten (🔵 → 🟢 oder 🔴)
++   * `logs/project.log` → Zeitstempel + Eintrag, was erledigt wurde
++
++3. **Doku/Reports (optional)**
++   * Größere Änderungen: Report in `docs/reports/`
++   * Architekturentscheidungen: ADR in `arch/decisions/`
++
++---
++
++## 4. Statusfarben-Regel
++
++* 🟢 erledigt → Code implementiert, Tests **grün**, dokumentiert
++* 🔵 offen → Code fehlt oder in Arbeit
++* 🔴 Fehler/Debug → Code implementiert, **Tests rot** oder nicht ausgeführt
++* 📘 dokumentarisch → Nur Text/Doku, kein Code
++
++---
++
++## 5. Beispiel – Feature Patch (Presale)
++
++```bash
++cat > patches/003-presale.diff <<'EOF'
++*** Begin Patch
++diff --git a/contracts/presale/Presale.sol b/contracts/presale/Presale.sol
++new file mode 100644
++--- /dev/null
+++++ b/contracts/presale/Presale.sol
++@@
+++// SPDX-License-Identifier: MIT
+++pragma solidity ^0.8.20;
+++
+++import "../token/InfernoToken.sol";
+++
+++contract Presale {
+++    // Presale logic hier ...
+++}
++*** End Patch
++EOF
++
++git apply patches/003-presale.diff
++git add .
++git commit -m "feat: add Presale contract (Patch 003)"
++git push origin main
++```
++
++Im selben Patch zusätzlich:
++* `testing/Presale.test.js`
++* `scripts/deploy_presale.js`
++* `abi/Presale_v1.json`
++* `docs/README.md` → Presale-Knoten 🔵 → 🟢
++* `logs/project.log` → Eintrag mit Zeitstempel
++
++---
++
++## 6. Beispiel – Status-Update (nur README + Log)
++
++```bash
++cat > patches/003-presale-status-update.diff <<'EOF'
++*** Begin Patch
++diff --git a/docs/README.md b/docs/README.md
++--- a/docs/README.md
+++++ b/docs/README.md
++@@
++-│   ├── 🔵 presale/
+++│   ├── 🟢 presale/
+++
+++> **Update (2025-09-23):** Presale Contract erfolgreich implementiert und getestet → Presale-Knoten auf 🟢 gesetzt.
++diff --git a/logs/project.log b/logs/project.log
++--- a/logs/project.log
+++++ b/logs/project.log
++@@
+++[2025-09-23 11:45] Dev3 FEATURE – Presale Contract – Presale.sol + Tests + Deploy + ABI abgeschlossen und dokumentiert (Presale 🟢)
++*** End Patch
++EOF
++
++git apply patches/003-presale-status-update.diff
++git add .
++git commit -m "docs: update Presale status in README + log (Patch 003)"
++git push origin main
++```
++
++---
++
++## 7. Zusammenfassung Patch-Vorgaben
++
++* Jeder Patch = **abgeschlossenes Paket** (kein WIP!)
++* Immer **Logs & README aktualisieren**
++* Immer **Here-Doc/EOF-Struktur** für Copy-Paste
++* Klarer Commit-Message-Style (scope + Patchnummer)
++* Tests müssen grün sein → sonst Status 🔴
++
++---
+*** End Patch
