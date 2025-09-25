@@ -43,3 +43,4 @@ Code kopieren
 - [2025-09-23] Vesting Contract erfolgreich implementiert, getestet und dokumentiert → Vesting-Knoten auf 🟢 gesetzt.  
 - [2025-09-24] BuybackVault Contract implementiert, aber Tests fehlerhaft → Buyback-Knoten auf 🔴 gesetzt.  
 - [2025-09-25] Root-README.md erfolgreich überschrieben (zweisprachig) → Dokumentation aktualisiert.  
+- [2025-09-25] Baumdarstellung in docs/README.md auf fenced code block umgestellt (Patch 034).  
