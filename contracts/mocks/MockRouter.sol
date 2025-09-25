@@ -12,7 +12,7 @@ contract MockRouter {
     address public immutable IFR_ADDR;
 
     uint256 public rateIfrPerEth;       // IFR per 1 ETH (scaled with 1e18)
-    uint256 public slippageBpsNextSwap; // Optional: artificial slippage for the NEXT swap only
+    uint256 public slippageBpsNextSwap; // artificial slippage (BPS) for the NEXT swap only
 
     constructor(address _weth, address _ifr, uint256 _rateIfrPerEth) {
         WETH_ADDR = _weth;
@@ -27,7 +27,7 @@ contract MockRouter {
     function getAmountsOut(uint256 amountIn, address[] calldata path) external view returns (uint256[] memory amounts) {
         require(path.length == 2, "path");
         require(path[0] == WETH_ADDR && path[1] == IFR_ADDR, "unsupported path");
-        amounts = new uint256 ;
+        amounts = new uint256;
         amounts[0] = amountIn;
         amounts[1] = (amountIn * rateIfrPerEth) / 1e18;
     }
@@ -52,6 +52,8 @@ contract MockRouter {
         require(msg.value > 0, "no ETH");
 
         uint256 out = (msg.value * rateIfrPerEth) / 1e18;
+
+        // optional one-shot slippage
         if (slippageBpsNextSwap > 0) {
             out = (out * (10_000 - slippageBpsNextSwap)) / 10_000;
             slippageBpsNextSwap = 0;
@@ -61,7 +63,7 @@ contract MockRouter {
 
         IMintableERC20(IFR_ADDR).mint(to, out);
 
-        amounts = new uint256 ;
+        amounts = new uint256;
         amounts[0] = msg.value;
         amounts[1] = out;
     }
