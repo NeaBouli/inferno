@@ -11,11 +11,8 @@ contract MockRouter {
     address public immutable WETH_ADDR;
     address public immutable IFR_ADDR;
 
-    // IFR pro 1 ETH, skaliert mit 1e18 (z.B. 1000e18 = 1000 IFR / ETH)
-    uint256 public rateIfrPerEth;
-
-    // Optional: künstliche Slippage nur für den NÄCHSTEN Swap (in BPS, 10000 = 100%)
-    uint256 public slippageBpsNextSwap;
+    uint256 public rateIfrPerEth;       // IFR per 1 ETH (scaled with 1e18)
+    uint256 public slippageBpsNextSwap; // Optional: artificial slippage for the NEXT swap only
 
     constructor(address _weth, address _ifr, uint256 _rateIfrPerEth) {
         WETH_ADDR = _weth;
