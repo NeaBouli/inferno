@@ -11,8 +11,11 @@ contract MockRouter {
     address public immutable WETH_ADDR;
     address public immutable IFR_ADDR;
 
-    uint256 public rateIfrPerEth;       // IFR per 1 ETH (scaled with 1e18)
-    uint256 public slippageBpsNextSwap; // artificial slippage (BPS) for the NEXT swap only
+    // IFR pro 1 ETH, skaliert mit 1e18 (z.B. 1000e18 = 1000 IFR / ETH)
+    uint256 public rateIfrPerEth;
+
+    // Optional: künstliche Slippage nur für den nächsten Swap (in BPS, 10000 = 100%)
+    uint256 public slippageBpsNextSwap;
 
     constructor(address _weth, address _ifr, uint256 _rateIfrPerEth) {
         WETH_ADDR = _weth;
@@ -24,11 +27,13 @@ contract MockRouter {
         return WETH_ADDR;
     }
 
-    function getAmountsOut(uint256 amountIn, address[] calldata path) external view returns (uint256[] memory amounts) {
+    function getAmountsOut(uint256 amountIn, address[] calldata path) external view returns 
+(uint256[] memory amounts) {
         require(path.length == 2, "path");
         require(path[0] == WETH_ADDR && path[1] == IFR_ADDR, "unsupported path");
-        amounts = new uint256 ;
-        amounts[0] = amountIn ;
+
+        amounts = new uint256 ; // ✅ Array mit Länge 2
+        amounts[0] = amountIn;
         amounts[1] = (amountIn * rateIfrPerEth) / 1e18;
     }
 
@@ -53,18 +58,20 @@ contract MockRouter {
 
         uint256 out = (msg.value * rateIfrPerEth) / 1e18;
 
-        // optional one-shot slippage
+        // Optional künstliche Slippage für genau diesen Swap
         if (slippageBpsNextSwap > 0) {
             out = (out * (10_000 - slippageBpsNextSwap)) / 10_000;
-            slippageBpsNextSwap = 0;
+            slippageBpsNextSwap = 0; // reset
         }
 
         require(out >= amountOutMin, "slippage");
 
+        // Mint IFR direkt an den Empfänger (unser MockToken erlaubt das)
         IMintableERC20(IFR_ADDR).mint(to, out);
 
-        amounts = new uint256 ;
+        amounts = new uint256 ; // ✅ Array mit Länge 2
         amounts[0] = msg.value;
         amounts[1] = out;
     }
 }
+
