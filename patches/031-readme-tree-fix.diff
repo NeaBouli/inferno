@@ -1,0 +1,31 @@
+*** Begin Patch
+diff --git a/docs/README.md b/docs/README.md
+--- a/docs/README.md
++++ b/docs/README.md
+@@
+- inferno
+- ├── contracts/
+- │   ├── 🔵 token/
+- │   ├── 🟢 presale/
+- │   ├── 🟢 vesting/
+- │   ├── 🔴 buyback/
+- │   └── 🔵 governance/
+- └── …
++```
++inferno
++├── contracts/
++│   ├── 🔵 token/
++│   ├── 🟢 presale/
++│   ├── 🟢 vesting/
++│   ├── 🔴 buyback/
++│   └── 🔵 governance/
++└── …
++```
++
++> **Update (2025-09-25):** Baumdarstellung in `docs/README.md` korrigiert → Anzeige auf GitHub jetzt monospaced und korrekt.
+diff --git a/logs/project.log b/logs/project.log
+--- a/logs/project.log
++++ b/logs/project.log
+@@
++[2025-09-25 13:10] Main DEVA DOCS – Baumdarstellung in docs/README.md korrigiert (Patch 031)
+*** End Patch
