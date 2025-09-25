@@ -27,8 +27,8 @@ contract MockRouter {
     function getAmountsOut(uint256 amountIn, address[] calldata path) external view returns (uint256[] memory amounts) {
         require(path.length == 2, "path");
         require(path[0] == WETH_ADDR && path[1] == IFR_ADDR, "unsupported path");
-        amounts = new uint256;
-        amounts[0] = amountIn;
+        amounts = new uint256 ;
+        amounts[0] = amountIn ;
         amounts[1] = (amountIn * rateIfrPerEth) / 1e18;
     }
 
@@ -63,7 +63,7 @@ contract MockRouter {
 
         IMintableERC20(IFR_ADDR).mint(to, out);
 
-        amounts = new uint256;
+        amounts = new uint256 ;
         amounts[0] = msg.value;
         amounts[1] = out;
     }
