@@ -1,0 +1,67 @@
+*** Begin Patch
+diff --git a/docs/reports/dev5-buybackvault.md b/docs/reports/dev5-buybackvault.md
+new file mode 100644
+--- /dev/null
++++ b/docs/reports/dev5-buybackvault.md
+@@
++# 📝 Arbeitsbericht – Developer Auftrag Nr. 5 (BuybackVault)
++
++## 1. Auftrag
++Implementierung eines **BuybackVault Contracts**, der ETH in IFR zurückkauft, die Tokens nach Burn/Treasury-Split verteilt und durch Governance manuell getriggert wird.  
++Anforderungen: Guardian-/Owner-Kontrolle, Pausable, Cooldown, Slippage-Schutz, Unit-Tests mit Mocks, Deploy-Artefakte und Dokumentation.
++
++---
++
++## 2. Arbeitsschritte Dev5
++- **Patch 005:** BuybackVault.sol initial implementiert (Guardian, Pausable, Slippage, Cooldown, Split).  
++- **Patch 006:** Test Runner Skript `test_buyback.sh` (anfangs leer).  
++- **Patch 007–016:** Test-Infrastruktur angepasst, globaler Runner `test_all.sh` angelegt. Tests mehrfach neu erstellt, da zwischendurch leer.  
++- **Patch 018:** Fix für Ethers v5 (`ethers.utils.parseEther`).  
++- **Patch 019:** MockToken.sol erstellt.  
++- **Patch 020–022:** MockRouter.sol mit Quote/Swap + Slippage, aber Fehler in Array-Init (`new uint;`).  
++
++---
++
++## 3. Arbeitsschritte Dev5A
++- **Patch 023:** Slippage-Test angepasst, konnte nicht laufen.  
++- **Commit e9e1bb4:** BuybackVault finalisiert (198 Zeilen), MockRouter gefixt (`new uint `).  
++- **Patch 024:** Offline-Compiler-Workaround (`solc-select`), neues `test_buyback.sh`, README-Ergänzung, project.log Eintrag.  
++- **Patch 025–027:** Test Runner Scripts befüllt (`test_buyback.sh`, `test_all.sh`) + Dokumentation ergänzt.  
++
++---
++
++## 4. Aktueller Status
++- **Contracts:** BuybackVault, MockToken, MockRouter vorhanden und kompiliert.  
++- **Dokumentation:** README & project.log angepasst, solc-select-Anleitung enthalten.  
++- **Tests:** BuybackVault.test.js geschrieben, aber **nie erfolgreich ausgeführt**.  
++- **Runner-Skripte:** vorhanden, jetzt mit Inhalt.  
++
++---
++
++## 5. Offenes Problem
++- Tests konnten aufgrund von Compiler/Hardhat-Setup und später leeren Skripten **nie grün laufen**.  
++- Aktuell ist unklar, ob Fehler noch in Tests oder im Contract liegen.  
++
++---
++
++## 6. Empfehlung für Nachfolger
++1. `solc 0.8.20` lokal installieren:
++   ```bash
++   pip3 install solc-select
++   solc-select install 0.8.20
++   solc-select use 0.8.20
++   ```
++2. Tests starten:
++   ```bash
++   ./scripts/test_buyback.sh
++   ```
++3. Bei Fehlern Stacktrace dokumentieren und gezielt nachbessern.  
++
++---
++
++## 7. Zusammenfassung
++- Dev5: Implementierung BuybackVault + Mocks, Tests scheiterten.  
++- Dev5A: Router-Fix, Offline-Setup, Testskripte ergänzt.  
++- Stand: BuybackVault auf 🔴, da **kein erfolgreicher Testlauf**.  
++- Nächster Schritt: Tests lokal/CI laufen lassen und Debugging abschließen.  
+*** End Patch
