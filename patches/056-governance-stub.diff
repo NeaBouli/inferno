@@ -1,0 +1,51 @@
+*** Begin Patch
+diff --git a/contracts/governance/Governance.sol b/contracts/governance/Governance.sol
+new file mode 100644
+--- /dev/null
++++ b/contracts/governance/Governance.sol
+@@
++// SPDX-License-Identifier: MIT
++pragma solidity ^0.8.20;
++
++/// @title Governance (Stub)
++/// @notice Placeholder for governance logic (voting, delegation, quorum).
++/// @dev Marked as 📘 documentarisch – no logic yet.
++contract Governance {
++    address public admin;
++
++    event Placeholder(address indexed by);
++
++    constructor() {
++        admin = msg.sender;
++    }
++
++    function poke() external {
++        emit Placeholder(msg.sender);
++    }
++}
+diff --git a/docs/README.md b/docs/README.md
+--- a/docs/README.md
++++ b/docs/README.md
+@@
+ 
+ ---
+ 
++### Governance 📘
++- `contracts/governance/Governance.sol` stubbed
++- Status: 📘 dokumentarisch
++
+diff --git a/docs/CHANGELOG.md b/docs/CHANGELOG.md
+--- a/docs/CHANGELOG.md
++++ b/docs/CHANGELOG.md
+@@
+ ## 2025-09-26
+ - [10:45] DebugDev FIX – MockRouter array allocation corrected, BuybackVault compilation passes (Patch 046)
+ - [13:30] DebugDev TEST – Hardhat offline compile fixed, BuybackVault tests executed
++- [17:30] Dev6 INIT – Governance stub contract angelegt (📘)
+diff --git a/logs/project.log b/logs/project.log
+--- a/logs/project.log
++++ b/logs/project.log
+@@
+ [2025-09-26 13:30] DebugDev TEST – Hardhat offline compile fixed, BuybackVault tests executed
++[2025-09-26 17:30] Dev6 INIT – Governance.sol stub created, status 📘
+*** End Patch
