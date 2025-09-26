@@ -1,0 +1,125 @@
+diff --git a/.gitignore b/.gitignore
+new file mode 100644
+index 0000000..c2658d7
+--- /dev/null
++++ b/.gitignore
+@@ -0,0 +1 @@
++node_modules/
+diff --git a/contracts/mocks/MockRouter.sol b/contracts/mocks/MockRouter.sol
+index e751398..37a6395 100644
+--- a/contracts/mocks/MockRouter.sol
++++ b/contracts/mocks/MockRouter.sol
+@@ -24,7 +24,7 @@ contract MockRouter {
+-        amounts = new uint256 (2); // ✅ Array mit Länge 2
++        amounts = new uint256 ; // ✅ Array mit Länge 2
+         amounts[0] = amountIn;
+         amounts[1] = (amountIn * rateIfrPerEth) / 1e18;
+     }
+@@ -60,7 +60,7 @@ contract MockRouter {
+-        amounts = new uint256 (2); // ✅ Array mit Länge 2
++        amounts = new uint256 ; // ✅ Array mit Länge 2
+         amounts[0] = msg.value;
+         amounts[1] = out;
+     }
+diff --git a/contracts/presale/Presale.sol b/contracts/presale/Presale.sol
+new file mode 100644
+index 0000000..8b82efc
+--- /dev/null
++++ b/contracts/presale/Presale.sol
+@@ -0,0 +1,3 @@
++// SPDX-License-Identifier: MIT
++pragma solidity ^0.8.20;
++
+diff --git a/hardhat.config.js b/hardhat.config.js
+index 705f87f..691176a 100644
+--- a/hardhat.config.js
++++ b/hardhat.config.js
+@@ -1,10 +1,37 @@
+ require("@nomiclabs/hardhat-ethers");
+ require("@nomiclabs/hardhat-waffle");
+ 
++const { subtask } = require("hardhat/config");
++const { TASK_COMPILE_SOLIDITY_GET_SOLC_BUILD } = require("hardhat/builtin-tasks/task-names");
++const solc = require("solc");
++
++const SOLC_VERSION = "0.8.26";
++const SOLC_LONG_VERSION = solc.version();
++const solcPath = require.resolve("solc/soljson.js");
++
+ /** @type import('hardhat/config').HardhatUserConfig */
+ module.exports = {
+-  solidity: "0.8.20",
++  solidity: {
++    compilers: [
++      {
++        version: SOLC_VERSION,
++      },
++    ],
++  },
+   networks: {
+     hardhat: {},
+   },
+ };
++
++subtask(TASK_COMPILE_SOLIDITY_GET_SOLC_BUILD, async (args, hre, runSuper) => {
++  if (args.solcVersion === SOLC_VERSION) {
++    return {
++      compilerPath: solcPath,
++      isSolcJs: true,
++      version: SOLC_VERSION,
++      longVersion: SOLC_LONG_VERSION,
++    };
++  }
++
++  return runSuper(args);
++});
+diff --git a/package.json b/package.json
+index ed8e66b..ee2a7e4 100644
+--- a/package.json
++++ b/package.json
+@@ -7,7 +7,8 @@
+     "ethereum-waffle": "^4.0.10",
+     "ethers": "^5.8.0",
+-    "hardhat": "^2.26.3"
++    "hardhat": "^2.26.3",
++    "solc": "0.8.26"
+   },
+   "dependencies": {
+     "@openzeppelin/contracts": "^5.4.0"
+diff --git a/test/BuybackVault.test.js b/test/BuybackVault.test.js
+index 7c273cf..15af51b 100644
+--- a/test/BuybackVault.test.js
++++ b/test/BuybackVault.test.js
+@@ -14,11 +14,11 @@ describe("BuybackVault", function () {
+ 
+     const MockToken = await ethers.getContractFactory("MockToken");
+     IFR = await MockToken.deploy("Inferno Token", "IFR");
+-    await IFR.waitForDeployment();
++    await IFR.deployed();
+ 
+     WETH = await MockToken.deploy("Wrapped ETH", "WETH");
+-    await WETH.waitForDeployment();
++    await WETH.deployed();
+ 
+     const MockRouter = await ethers.getContractFactory("MockRouter");
+-    Router = await MockRouter.deploy(await WETH.getAddress(), await IFR.getAddress(), RATE_IFR_PER_ETH);
+-    await Router.waitForDeployment();
++    Router = await MockRouter.deploy(WETH.address, IFR.address, RATE_IFR_PER_ETH);
++    await Router.deployed();
+ 
+     const BuybackVault = await ethers.getContractFactory("BuybackVault");
+-    Vault = await BuybackVault.deploy(await IFR.getAddress(), await burnReserve.getAddress(), await treasury.getAddress(), await Router.getAddress(), await guardian.getAddress());
+-    await Vault.waitForDeployment();
++    Vault = await BuybackVault.deploy(IFR.address, await burnReserve.getAddress(), await treasury.getAddress(), Router.address, await guardian.getAddress());
++    await Vault.deployed();
+   });
+diff --git a/logs/project.log b/logs/project.log
+index 5c9856f..dd81ef9 100644
+--- a/logs/project.log
++++ b/logs/project.log
+@@ -8,6 +8,8 @@
+ [2025-09-25 16:24] DocFix1 DOCS – WHITEPAPER_EN.md (EN) befüllt
+ [2025-09-25 16:45] DocFix1 DOCS – README Baum erneut überschrieben und bestätigt
+ [2025-09-26 10:45] DebugDev FIX – MockRouter array allocation corrected, BuybackVault compilation passes (Patch 046)
++[2025-09-26 13:30] DebugDev TEST – Hardhat offline compile fixed, BuybackVault tests executed
++

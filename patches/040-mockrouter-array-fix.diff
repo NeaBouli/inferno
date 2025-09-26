@@ -1,0 +1,29 @@
+*** Begin Patch
+diff --git a/contracts/mocks/MockRouter.sol b/contracts/mocks/MockRouter.sol
+index 79aa32e..dcb63fa 100644
+--- a/contracts/mocks/MockRouter.sol
++++ b/contracts/mocks/MockRouter.sol
+@@ -34,10 +34,12 @@ contract MockRouter {
+     function getAmountsOut(uint amountIn, address[] calldata path) external view returns (uint[] memory amounts) {
+         require(path.length == 2, "path");
+         require(path[0] == WETH_ADDR && path[1] == IFR_ADDR, "unsupported path");
+-        amounts = new uint ;
+-        amounts[0] = amountIn;
+-        amounts[1] = amountIn * rateIfrPerEth / 1e18;
++        amounts = new uint256 ;
++        amounts[0] = amountIn;
++        amounts[1] = (amountIn * rateIfrPerEth) / 1e18;
+     }
+ 
+     // Rate anpassen (für Tests)
+@@ -65,8 +67,10 @@ contract MockRouter {
+ 
+-        amounts = new uint ;
+-        amounts[0] = msg.value;
+-        amounts[1] = out;
++        amounts = new uint256 ;
++        amounts[0] = msg.value;
++        amounts[1] = out;
+     }
+ }
+*** End Patch
