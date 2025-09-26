@@ -42,3 +42,8 @@ inferno
 - [2025-09-24] BuybackVault implementiert, Tests fehlerhaft → Buyback 🔴
 - [2025-09-25] Root-README.md überschrieben (zweisprachig) → Dokumentation aktualisiert
 - [2025-09-25] Baumdarstellung in docs/README.md final als fenced block gesetzt (Patch DocFix)
+
+---
+
+### 🔧 Known Issues
+Siehe **docs/KNOWN-ISSUES.md** für den aktuellen Stand (z. B. MockRouter-Array-Initialisierung & Hardhat-Tooling).
