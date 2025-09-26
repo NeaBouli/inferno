@@ -1,0 +1,50 @@
+*** Begin Patch
+diff --git a/apps/README.md b/apps/README.md
+new file mode 100644
+--- /dev/null
++++ b/apps/README.md
+@@
++# 📘 Inferno Apps
++
++Dieser Ordner enthält zukünftige Frontend-dApps (z. B. React/Next.js), 
++die auf die Inferno Smart Contracts zugreifen.
++
++Status: 📘 dokumentarisch – noch keine Implementierung.
++
+diff --git a/indexer/README.md b/indexer/README.md
+new file mode 100644
+--- /dev/null
++++ b/indexer/README.md
+@@
++# 📘 Inferno Indexer
++
++Dieser Ordner ist für Offchain-Indexer gedacht, 
++die Blockchain-Events verarbeiten und in Datenbanken ablegen.
++
++Status: 📘 dokumentarisch – noch keine Implementierung.
++
+diff --git a/docs/README.md b/docs/README.md
+--- a/docs/README.md
++++ b/docs/README.md
+@@
+ - `contracts/governance/Governance.sol` stubbed
+ - Status: 📘 dokumentarisch
++
++### Apps / Indexer 📘
++- `apps/` Ordner für dApp-Frontends (React/Next.js)
++- `indexer/` Ordner für Event-Indexer (Offchain Services)
++- Status: 📘 dokumentarisch
++
+diff --git a/docs/CHANGELOG.md b/docs/CHANGELOG.md
+--- a/docs/CHANGELOG.md
++++ b/docs/CHANGELOG.md
+@@
+ - [17:30] Dev6 INIT – Governance stub contract angelegt (📘)
++- [18:00] Dev7 INIT – Indexer & Apps Struktur erstellt (📘)
+diff --git a/logs/project.log b/logs/project.log
+--- a/logs/project.log
++++ b/logs/project.log
+@@
+ [2025-09-26 17:30] Dev6 INIT – Governance.sol stub created, status 📘
++[2025-09-26 18:00] Dev7 INIT – Indexer + Apps Struktur erstellt, status 📘
+*** End Patch
