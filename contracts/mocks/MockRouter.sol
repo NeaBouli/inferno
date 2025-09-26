@@ -27,15 +27,19 @@ contract MockRouter {
         return WETH_ADDR;
     }
 
-    function getAmountsOut(uint256 amountIn, address[] calldata path) external view returns 
-(uint256[] memory amounts) {
-        require(path.length == 2, "path");
-        require(path[0] == WETH_ADDR && path[1] == IFR_ADDR, "unsupported path");
+function WETH() external view returns (address) {
+    return WETH_ADDR;
+}
 
-        amounts = new uint256 ; // ✅ Array mit Länge 2
-        amounts[0] = amountIn;
-        amounts[1] = (amountIn * rateIfrPerEth) / 1e18;
-    }
+function getAmountsOut(uint256 amountIn, address[] calldata path) external view returns
+(uint256[] memory amounts) {
+    require(path.length == 2, "path");
+    require(path[0] == WETH_ADDR && path[1] == IFR_ADDR, "unsupported path");
+
+    amounts = new uint256 ; // ✅ Array mit Länge 2
+    amounts[0] = amountIn;
+    amounts[1] = (amountIn * rateIfrPerEth) / 1e18;
+}
 
     function setRate(uint256 _rate) external {
         rateIfrPerEth = _rate;
