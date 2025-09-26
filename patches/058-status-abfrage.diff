@@ -1,0 +1,35 @@
+*** Begin Patch
+diff --git a/docs/README.md b/docs/README.md
+--- a/docs/README.md
++++ b/docs/README.md
+@@
+ inferno
+ ├── contracts/
+ │   ├── 🟢 token/
+ │   ├── 🟢 presale/
+ │   ├── 🟢 vesting/
+ │   ├── 🟢 burnreserve/
+-│   ├── 🔴 buyback/
+-│   └── 📘 governance/
++│   ├── 🔴 buyback/         (BuybackVault offen, Tests fehlerhaft)
++│   └── 📘 governance/      (Stub Governance.sol)
++├── apps/                  (📘 neu)
++├── indexer/               (📘 neu)
+ ├── backend/               (🔵 offen)
+ ├── docs/
+ │   ├── README.md
+ │   ├── CHANGELOG.md
+ │   ├── WHITEPAPER.md
+ │   └── WHITEPAPER_EN.md
+ ├── logs/
+ │   └── project.log
+ ├── scripts/
+ │   └── cleanup.sh
+ └── patches/
+diff --git a/logs/project.log b/logs/project.log
+--- a/logs/project.log
++++ b/logs/project.log
+@@
+ [2025-09-26 18:00] Dev7 INIT – Indexer + Apps Struktur erstellt, status 📘
++[2025-09-26 18:30] System STATUS – Projektbaum aktualisiert (Patch 058)
+*** End Patch
