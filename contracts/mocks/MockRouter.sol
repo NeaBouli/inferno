@@ -32,7 +32,7 @@ contract MockRouter {
         require(path.length == 2, "path");
         require(path[0] == WETH_ADDR && path[1] == IFR_ADDR, "unsupported path");
 
-        amounts = new uint256 (2); // ✅ Array mit Länge 2
+        amounts = new uint256 ; // ✅ Array mit Länge 2
         amounts[0] = amountIn;
         amounts[1] = (amountIn * rateIfrPerEth) / 1e18;
     }
@@ -69,7 +69,7 @@ contract MockRouter {
         // Mint IFR direkt an den Empfänger (unser MockToken erlaubt das)
         IMintableERC20(IFR_ADDR).mint(to, out);
 
-        amounts = new uint256 (2); // ✅ Array mit Länge 2
+        amounts = new uint256 ; // ✅ Array mit Länge 2
         amounts[0] = msg.value;
         amounts[1] = out;
     }
