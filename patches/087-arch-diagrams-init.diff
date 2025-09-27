@@ -1,0 +1,54 @@
+*** Begin Patch
+diff --git a/arch/diagrams/README.md b/arch/diagrams/README.md
+new file mode 100644
+--- /dev/null
++++ b/arch/diagrams/README.md
+@@
++# 📘 Inferno Architektur-Diagramme
++
++Dieser Ordner enthält Architektur-Diagramme für das Inferno-Projekt.  
++Formate:
++- Mermaid (`.mmd`)
++- PlantUML (`.puml`)
++- PNG / SVG
++
++Status: 📘 dokumentarisch – noch keine Implementierung.
++
+diff --git a/arch/diagrams/system.mmd b/arch/diagrams/system.mmd
+new file mode 100644
+--- /dev/null
++++ b/arch/diagrams/system.mmd
+@@
++%% 📘 Beispiel: Mermaid Diagramm
++graph TD
++    A[User] -->|interagiert| B[dApp Frontend]
++    B --> C[Smart Contracts]
++    C --> D[(Blockchain)]
++    C --> E[Offchain Indexer]
++    E --> F[(Database)]
++
+diff --git a/docs/README.md b/docs/README.md
+--- a/docs/README.md
++++ b/docs/README.md
+@@
+ ### Kubernetes 📘
+ - `k8s/` Ordner für Deployments (Manifeste)
+ - Status: 📘 dokumentarisch
++
++### Architektur-Diagramme 📘
++- `arch/diagrams/` für System- und Architekturdiagramme
++- Status: 📘 dokumentarisch
++
+diff --git a/docs/CHANGELOG.md b/docs/CHANGELOG.md
+--- a/docs/CHANGELOG.md
++++ b/docs/CHANGELOG.md
+@@
+ - [00:25] Dev36 INIT – Kubernetes Struktur erstellt (📘)
++- [00:30] Dev37 INIT – Architektur-Diagramme Struktur erstellt (📘)
+diff --git a/logs/project.log b/logs/project.log
+--- a/logs/project.log
++++ b/logs/project.log
+@@
+ [2025-09-27 00:25] Dev36 INIT – Kubernetes Struktur erstellt, status 📘
++[2025-09-27 00:30] Dev37 INIT – Architektur-Diagramme Struktur erstellt, status 📘
+*** End Patch
