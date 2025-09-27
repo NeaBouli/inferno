@@ -1,0 +1,52 @@
+*** Begin Patch
+diff --git a/ci/README.md b/ci/README.md
+new file mode 100644
+--- /dev/null
++++ b/ci/README.md
+@@
++# 📘 Inferno CI/CD
++
++Dieser Ordner ist für Continuous Integration & Deployment gedacht.  
++
++- Geplant: Linting & Static Analysis  
++- Geplant: Unit- & Integration-Tests  
++- Geplant: Coverage Reports  
++- Geplant: Deployments (z. B. auf Testnet/Mainnet oder Docker/K8s)  
++
++Status: 📘 dokumentarisch – noch keine Implementierung.
++
+diff --git a/ci/pipeline.md b/ci/pipeline.md
+new file mode 100644
+--- /dev/null
++++ b/ci/pipeline.md
+@@
++# 📘 Inferno CI/CD Pipeline (Platzhalter)
++
++Hier entsteht die Pipeline-Definition (z. B. GitHub Actions, GitLab CI).  
++Aktuell nur ein Placeholder-Dokument.
++
+diff --git a/docs/README.md b/docs/README.md
+--- a/docs/README.md
++++ b/docs/README.md
+@@
+ ### Testing 📘
+ - `testing/` Ordner für QA-Pläne und Teststrategien
+ - Status: 📘 dokumentarisch
++
++### CI/CD 📘
++- `ci/` Ordner für Pipeline-Definitionen (z. B. GitHub Actions, GitLab CI)
++- Status: 📘 dokumentarisch
++
+diff --git a/docs/CHANGELOG.md b/docs/CHANGELOG.md
+--- a/docs/CHANGELOG.md
++++ b/docs/CHANGELOG.md
+@@
+ - [23:45] Dev29 INIT – Testing Struktur erstellt (📘)
++- [23:55] Dev30 INIT – CI/CD Struktur erstellt (📘)
+diff --git a/logs/project.log b/logs/project.log
+--- a/logs/project.log
++++ b/logs/project.log
+@@
+ [2025-09-26 23:45] Dev29 INIT – Testing Struktur erstellt, status 📘
++[2025-09-26 23:55] Dev30 INIT – CI/CD Struktur erstellt, status 📘
+*** End Patch
