@@ -1,0 +1,40 @@
+*** Begin Patch
+diff --git a/k8s/README.md b/k8s/README.md
+new file mode 100644
+--- /dev/null
++++ b/k8s/README.md
+@@
++# 📘 Inferno Kubernetes
++
++Dieser Ordner ist für Kubernetes-Deployments vorgesehen.  
++Geplant sind u. a.:
++- YAML-Manifeste für Deployments, Services und ConfigMaps
++- Helm-Charts für komplexere Setups
++
++Status: 📘 dokumentarisch – noch keine Implementierung.
++
+diff --git a/docs/README.md b/docs/README.md
+--- a/docs/README.md
++++ b/docs/README.md
+@@
+ ### Docker 📘
+ - `docker/` Ordner für Containerisierung (Dockerfile, Compose)
+ - Status: 📘 dokumentarisch
++
++### Kubernetes 📘
++- `k8s/` Ordner für K8s-Deployments (YAML, Helm-Charts)
++- Status: 📘 dokumentarisch
++
+diff --git a/docs/CHANGELOG.md b/docs/CHANGELOG.md
+--- a/docs/CHANGELOG.md
++++ b/docs/CHANGELOG.md
+@@
+ - [22:30] Dev16 INIT – Docker Struktur erstellt (📘)
++- [23:00] Dev17 INIT – Kubernetes Struktur erstellt (📘)
+diff --git a/logs/project.log b/logs/project.log
+--- a/logs/project.log
++++ b/logs/project.log
+@@
+ [2025-09-26 22:30] Dev16 INIT – Docker Struktur erstellt, status 📘
++[2025-09-26 23:00] Dev17 INIT – Kubernetes Struktur erstellt, status 📘
+*** End Patch
