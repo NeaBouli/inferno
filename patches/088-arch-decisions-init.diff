@@ -1,0 +1,62 @@
+*** Begin Patch
+diff --git a/arch/decisions/README.md b/arch/decisions/README.md
+new file mode 100644
+--- /dev/null
++++ b/arch/decisions/README.md
+@@
++# 📘 Inferno Architecture Decisions (ADR)
++
++In diesem Ordner werden alle **Architecture Decision Records (ADR)** dokumentiert.  
++Jede Entscheidung wird als Markdown-Datei (`NNNN-title.md`) abgelegt.  
++
++Empfohlenes Format nach Michael Nygard:
++- Titel
++- Kontext
++- Entscheidung
++- Konsequenzen
++
++Status: 📘 dokumentarisch – noch keine Implementierung.
++
+diff --git a/arch/decisions/0001-record-architecture-decisions.md b/arch/decisions/0001-record-architecture-decisions.md
+new file mode 100644
+--- /dev/null
++++ b/arch/decisions/0001-record-architecture-decisions.md
+@@
++# ADR 0001: Record architecture decisions
++
++## Kontext
++Wir benötigen eine einheitliche Methode, um Architekturentscheidungen im Projekt Inferno festzuhalten.
++
++## Entscheidung
++Wir verwenden **Architecture Decision Records (ADR)** nach dem Vorschlag von Michael Nygard.
++
++## Konsequenzen
++- Jede relevante Architekturentscheidung wird als ADR dokumentiert.
++- Die Dateien werden im Ordner `arch/decisions/` abgelegt.
++- Einheitliche Nachvollziehbarkeit für alle Contributor.
++
+diff --git a/docs/README.md b/docs/README.md
+--- a/docs/README.md
++++ b/docs/README.md
+@@
+ ### Architektur-Diagramme 📘
+ - `arch/diagrams/` für System- und Architekturdiagramme
+ - Status: 📘 dokumentarisch
++
++### Architektur-Entscheidungen 📘
++- `arch/decisions/` für Architecture Decision Records (ADR)
++- Status: 📘 dokumentarisch
++
+diff --git a/docs/CHANGELOG.md b/docs/CHANGELOG.md
+--- a/docs/CHANGELOG.md
++++ b/docs/CHANGELOG.md
+@@
+ - [00:30] Dev37 INIT – Architektur-Diagramme Struktur erstellt (📘)
++- [00:35] Dev38 INIT – Architektur-Entscheidungen (ADR) Struktur erstellt (📘)
+diff --git a/logs/project.log b/logs/project.log
+--- a/logs/project.log
++++ b/logs/project.log
+@@
+ [2025-09-27 00:30] Dev37 INIT – Architektur-Diagramme Struktur erstellt, status 📘
++[2025-09-27 00:35] Dev38 INIT – Architektur-Entscheidungen (ADR) Struktur erstellt, status 📘
+*** End Patch
