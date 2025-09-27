@@ -1,0 +1,45 @@
+*** Begin Patch
+diff --git a/SECURITY.md b/SECURITY.md
+new file mode 100644
+--- /dev/null
++++ b/SECURITY.md
+@@
++# 📘 Security Policy – Inferno Project
++
++### Supported Versions
++Nur die **aktuelle Mainline-Version** des Repositories wird aktiv gewartet.  
++Ältere Releases können bekannte Sicherheitslücken enthalten.
++
++### Reporting a Vulnerability
++- Bitte Schwachstellen **vertraulich melden** (z. B. via GitHub Security Advisory oder E-Mail).  
++- Keine Disclosure in öffentlichen Issues oder Pull Requests.  
++- Das Team wird innerhalb von **14 Tagen** reagieren.
++
++### Status
++📘 dokumentarisch – Stub-Datei, noch keine spezifischen Kontakte/Prozesse.
++
+diff --git a/docs/README.md b/docs/README.md
+--- a/docs/README.md
++++ b/docs/README.md
+@@
+ ### Code of Conduct 📘
+ - `CODE_OF_CONDUCT.md` im Root enthält den Verhaltenskodex (Contributor Covenant v2.1 Stub)
+ - Status: 📘 dokumentarisch
++
++### Security Policy 📘
++- `SECURITY.md` im Root beschreibt die Sicherheitsrichtlinien (Stub)
++- Status: 📘 dokumentarisch
++
+diff --git a/docs/CHANGELOG.md b/docs/CHANGELOG.md
+--- a/docs/CHANGELOG.md
++++ b/docs/CHANGELOG.md
+@@
+ - [01:05] Dev44 INIT – Code of Conduct Stub erstellt (📘)
++- [01:10] Dev45 INIT – Security Policy Stub erstellt (📘)
+diff --git a/logs/project.log b/logs/project.log
+--- a/logs/project.log
++++ b/logs/project.log
+@@
+ [2025-09-27 01:05] Dev44 INIT – Code of Conduct Stub erstellt, status 📘
++[2025-09-27 01:10] Dev45 INIT – Security Policy Stub erstellt, status 📘
+*** End Patch
