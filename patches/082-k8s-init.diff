@@ -1,0 +1,63 @@
+*** Begin Patch
+diff --git a/k8s/README.md b/k8s/README.md
+new file mode 100644
+--- /dev/null
++++ b/k8s/README.md
+@@
++# 📘 Inferno Kubernetes
++
++Dieser Ordner ist für Kubernetes-Manifeste gedacht.  
++
++- Geplant: Deployments für Backend/Indexer  
++- Geplant: Services und Ingress  
++- Geplant: ConfigMaps und Secrets  
++
++Status: 📘 dokumentarisch – noch keine Implementierung.
++
+diff --git a/k8s/deployment.yaml b/k8s/deployment.yaml
+new file mode 100644
+--- /dev/null
++++ b/k8s/deployment.yaml
+@@
++# 📘 Placeholder Deployment
++#
++# Dies ist nur eine Dummy-Datei.  
++# Zukünftige Schritte:
++# - Deployment für Hardhat/Backend definieren
++# - Service/Ingress hinzufügen
++
++apiVersion: v1
++kind: Pod
++metadata:
++  name: inferno-placeholder
++spec:
++  containers:
++    - name: placeholder
++      image: alpine:3.18
++      command: ["echo", "Inferno Kubernetes placeholder"]
++
+diff --git a/docs/README.md b/docs/README.md
+--- a/docs/README.md
++++ b/docs/README.md
+@@
+ ### Docker 📘
+ - `docker/` Ordner für Container-Builds (Hardhat, Backend, Indexer)
+ - Status: 📘 dokumentarisch
++
++### Kubernetes 📘
++- `k8s/` Ordner für K8s-Manifeste (Deployments, Services, Ingress)
++- Status: 📘 dokumentarisch
++
+diff --git a/docs/CHANGELOG.md b/docs/CHANGELOG.md
+--- a/docs/CHANGELOG.md
++++ b/docs/CHANGELOG.md
+@@
+ - [23:59] Dev31 INIT – Docker Struktur erstellt (📘)
++- [00:05] Dev32 INIT – Kubernetes Struktur erstellt (📘)
+diff --git a/logs/project.log b/logs/project.log
+--- a/logs/project.log
++++ b/logs/project.log
+@@
+ [2025-09-26 23:59] Dev31 INIT – Docker Struktur erstellt, status 📘
++[2025-09-27 00:05] Dev32 INIT – Kubernetes Struktur erstellt, status 📘
+*** End Patch
