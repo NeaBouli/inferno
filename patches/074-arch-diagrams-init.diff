@@ -1,0 +1,42 @@
+*** Begin Patch
+diff --git a/arch/diagrams/README.md b/arch/diagrams/README.md
+new file mode 100644
+--- /dev/null
++++ b/arch/diagrams/README.md
+@@
++# 📘 Architektur-Diagramme
++
++In diesem Ordner werden zukünftig alle Architektur-Diagramme abgelegt:  
++- UML-Klassendiagramme  
++- Sequenzdiagramme  
++- Komponenten- und Systemübersichten  
++- Mermaid/PlantUML-Skripte  
++- PNG/SVG/Exporte  
++
++Status: 📘 dokumentarisch – noch keine Implementierung.
++
+diff --git a/docs/README.md b/docs/README.md
+--- a/docs/README.md
++++ b/docs/README.md
+@@
+ ### Testing 📘
+ - `testing/` Ordner für Unit-, Integration- und End-to-End-Tests
+ - Status: 📘 dokumentarisch
++
++### Architektur-Diagramme 📘
++- `arch/diagrams/` Ordner für UML/PlantUML/Mermaid und Exporte
++- Status: 📘 dokumentarisch
++
+diff --git a/docs/CHANGELOG.md b/docs/CHANGELOG.md
+--- a/docs/CHANGELOG.md
++++ b/docs/CHANGELOG.md
+@@
+ - [21:30] Dev23 INIT – Testing Struktur erstellt (📘)
++- [22:00] Dev24 INIT – Architektur-Diagramme Struktur erstellt (📘)
+diff --git a/logs/project.log b/logs/project.log
+--- a/logs/project.log
++++ b/logs/project.log
+@@
+ [2025-09-26 21:30] Dev23 INIT – Testing Struktur erstellt, status 📘
++[2025-09-26 22:00] Dev24 INIT – Architektur-Diagramme Struktur erstellt, status 📘
+*** End Patch
