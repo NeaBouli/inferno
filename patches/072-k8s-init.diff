@@ -1,0 +1,38 @@
+*** Begin Patch
+diff --git a/k8s/README.md b/k8s/README.md
+new file mode 100644
+--- /dev/null
++++ b/k8s/README.md
+@@
++# 📘 Inferno Kubernetes (K8s)
++
++Dieser Ordner ist für Kubernetes-Manifeste vorgesehen.  
++Hier werden später Deployments, Services, Ingress und andere YAML-Dateien abgelegt.  
++
++Status: 📘 dokumentarisch – noch keine Implementierung.
++
+diff --git a/docs/README.md b/docs/README.md
+--- a/docs/README.md
++++ b/docs/README.md
+@@
+ ### CI/CD 📘
+ - `ci/` Ordner für Build- und Deployment-Pipelines
+ - Status: 📘 dokumentarisch
++
++### Kubernetes 📘
++- `k8s/` Ordner für Kubernetes-Manifeste (Deployments, Services, Ingress)
++- Status: 📘 dokumentarisch
++
+diff --git a/docs/CHANGELOG.md b/docs/CHANGELOG.md
+--- a/docs/CHANGELOG.md
++++ b/docs/CHANGELOG.md
+@@
+ - [20:30] Dev21 INIT – CI/CD Struktur erstellt (📘)
++- [21:00] Dev22 INIT – Kubernetes Struktur erstellt (📘)
+diff --git a/logs/project.log b/logs/project.log
+--- a/logs/project.log
++++ b/logs/project.log
+@@
+ [2025-09-26 20:30] Dev21 INIT – CI/CD Struktur erstellt, status 📘
++[2025-09-26 21:00] Dev22 INIT – Kubernetes Struktur erstellt, status 📘
+*** End Patch
