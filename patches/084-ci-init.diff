@@ -1,0 +1,70 @@
+*** Begin Patch
+diff --git a/ci/README.md b/ci/README.md
+new file mode 100644
+--- /dev/null
++++ b/ci/README.md
+@@
++# 📘 Inferno CI/CD
++
++Dieser Ordner ist für CI/CD-Pipelines vorgesehen (z. B. GitHub Actions, GitLab CI).  
++
++Geplante Inhalte:
++- 🔹 Linting, Tests & Builds bei jedem Commit
++- 🔹 Automatische Deployments (Testnet/Mainnet)
++- 🔹 Sicherheitsprüfungen (Slither, npm audit)
++
++Status: 📘 dokumentarisch – noch keine Implementierung.
++
+diff --git a/ci/github-actions.yml b/ci/github-actions.yml
+new file mode 100644
+--- /dev/null
++++ b/ci/github-actions.yml
+@@
++# 📘 Placeholder für GitHub Actions Workflow
++# Geplante Schritte:
++# - Install dependencies
++# - Run Hardhat tests
++# - Deploy to testnet/mainnet
++
++name: Inferno CI Pipeline
++
++on:
++  push:
++    branches: [ "main" ]
++  pull_request:
++    branches: [ "main" ]
++
++jobs:
++  build:
++    runs-on: ubuntu-latest
++    steps:
++      - name: Checkout repo
++        uses: actions/checkout@v3
++      - name: Placeholder
++        run: echo "CI/CD Pipeline noch nicht implementiert."
++
+diff --git a/docs/README.md b/docs/README.md
+--- a/docs/README.md
++++ b/docs/README.md
+@@
+ ### Testing 📘
+ - `testing/` Ordner für QA/Tests (Integration, Load, Audits)
+ - Status: 📘 dokumentarisch
++
++### CI/CD 📘
++- `ci/` Ordner für Pipelines (GitHub Actions, GitLab CI)
++- Status: 📘 dokumentarisch
++
+diff --git a/docs/CHANGELOG.md b/docs/CHANGELOG.md
+--- a/docs/CHANGELOG.md
++++ b/docs/CHANGELOG.md
+@@
+ - [00:10] Dev33 INIT – Testing Struktur erstellt (📘)
++- [00:15] Dev34 INIT – CI/CD Struktur erstellt (📘)
+diff --git a/logs/project.log b/logs/project.log
+--- a/logs/project.log
++++ b/logs/project.log
+@@
+ [2025-09-27 00:10] Dev33 INIT – Testing Struktur erstellt, status 📘
++[2025-09-27 00:15] Dev34 INIT – CI/CD Struktur erstellt, status 📘
+*** End Patch
