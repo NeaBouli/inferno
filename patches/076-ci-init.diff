@@ -1,0 +1,68 @@
+*** Begin Patch
+diff --git a/ci/README.md b/ci/README.md
+new file mode 100644
+--- /dev/null
++++ b/ci/README.md
+@@
++# 📘 CI/CD – Continuous Integration & Deployment
++
++Dieser Ordner enthält Konfigurationen und Skripte 
++für Continuous Integration (CI) und Continuous Deployment (CD).  
++
++- Geplant: GitHub Actions für Build, Tests und Deployments  
++- Später: Erweiterung um Docker/K8s-Pipelines  
++
++Status: 📘 dokumentarisch – noch keine Implementierung.
++
+diff --git a/.github/workflows/ci.yml b/.github/workflows/ci.yml
+new file mode 100644
+--- /dev/null
++++ b/.github/workflows/ci.yml
+@@
++# 📘 Dummy CI Workflow
++#
++# Dieser Workflow ist ein Platzhalter und führt aktuell keine echten Jobs aus.
++# Später soll er Hardhat-Tests, Linting und Deployment-Skripte triggern.
++#
++name: Inferno CI
++
++on:
++  push:
++    branches:
++      - main
++  pull_request:
++    branches:
++      - main
++
++jobs:
++  dummy:
++    runs-on: ubuntu-latest
++    steps:
++      - name: Dummy Step
++        run: echo "CI/CD Placeholder – to be implemented"
++
+diff --git a/docs/README.md b/docs/README.md
+--- a/docs/README.md
++++ b/docs/README.md
+@@
+ ### Architektur-Entscheidungen 📘
+ - `arch/decisions/` Ordner für Architecture Decision Records (ADR)
+ - Status: 📘 dokumentarisch
++
++### CI/CD 📘
++- `ci/` Ordner für Build-/Deploy-Pipelines (z. B. GitHub Actions, Docker, K8s)
++- Status: 📘 dokumentarisch
++
+diff --git a/docs/CHANGELOG.md b/docs/CHANGELOG.md
+--- a/docs/CHANGELOG.md
++++ b/docs/CHANGELOG.md
+@@
+ - [22:30] Dev25 INIT – Architektur-Entscheidungen Struktur erstellt (📘)
++- [23:00] Dev26 INIT – CI/CD Struktur erstellt (📘)
+diff --git a/logs/project.log b/logs/project.log
+--- a/logs/project.log
++++ b/logs/project.log
+@@
+ [2025-09-26 22:30] Dev25 INIT – Architektur-Entscheidungen Struktur erstellt, status 📘
++[2025-09-26 23:00] Dev26 INIT – CI/CD Struktur erstellt, status 📘
+*** End Patch
