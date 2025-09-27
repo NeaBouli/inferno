@@ -1,0 +1,53 @@
+*** Begin Patch
+diff --git a/CONTRIBUTING.md b/CONTRIBUTING.md
+new file mode 100644
+--- /dev/null
++++ b/CONTRIBUTING.md
+@@
++# 📘 Inferno Contributing Guide
++
++Willkommen beim Inferno-Projekt!  
++Diese Datei beschreibt die Regeln für Beiträge (Contributing).
++
++## Workflow
++- Alle Änderungen werden als **Patch-Dateien** (`patches/*.diff`) vorbereitet.
++- Patches werden mit `git apply` eingespielt, getestet und dann committed.
++- Direkte Änderungen auf `main` sind nicht erlaubt (protected branch).
++
++## Commit-Nachrichten
++- Format: `type: description (Patch NNN)`
++- Beispiel: `docs: update README tree (Patch 034)`
++- Types: `feat`, `fix`, `docs`, `chore`, `test`, `refactor`
++
++## Pull Requests
++- PRs sind willkommen, müssen aber dem Patch-Workflow entsprechen.
++- Jeder PR sollte im Titel die Patch-Nummer enthalten.
++
++## Status
++📘 dokumentarisch – erste Version, noch unvollständig.
++
+diff --git a/docs/README.md b/docs/README.md
+--- a/docs/README.md
++++ b/docs/README.md
+@@
+ ### Architektur-Entscheidungen 📘
+ - `arch/decisions/` für Architecture Decision Records (ADR)
+ - Status: 📘 dokumentarisch
++
++### Contributing 📘
++- `CONTRIBUTING.md` im Root beschreibt Regeln für Contributor
++- Status: 📘 dokumentarisch
++
+diff --git a/docs/CHANGELOG.md b/docs/CHANGELOG.md
+--- a/docs/CHANGELOG.md
++++ b/docs/CHANGELOG.md
+@@
+ - [00:35] Dev38 INIT – Architektur-Entscheidungen (ADR) Struktur erstellt (📘)
++- [00:40] Dev39 INIT – Contributing Guide (Stub) erstellt (📘)
+diff --git a/logs/project.log b/logs/project.log
+--- a/logs/project.log
++++ b/logs/project.log
+@@
+ [2025-09-27 00:35] Dev38 INIT – Architektur-Entscheidungen (ADR) Struktur erstellt, status 📘
++[2025-09-27 00:40] Dev39 INIT – Contributing Guide (Stub) erstellt, status 📘
+*** End Patch
