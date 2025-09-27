@@ -1,0 +1,59 @@
+*** Begin Patch
+diff --git a/docker/README.md b/docker/README.md
+new file mode 100644
+--- /dev/null
++++ b/docker/README.md
+@@
++# 📘 Inferno Docker
++
++Dieser Ordner ist für Docker-Setups vorgesehen.  
++Geplante Inhalte:
++- 🔹 Dockerfile für Hardhat/Node.js Umgebung
++- 🔹 docker-compose.yml für lokale Netzwerke/Services
++
++Status: 📘 dokumentarisch – noch keine Implementierung.
++
+diff --git a/docker/Dockerfile b/docker/Dockerfile
+new file mode 100644
+--- /dev/null
++++ b/docker/Dockerfile
+@@
++# 📘 Placeholder Dockerfile
++
++FROM node:18-alpine
++WORKDIR /app
++
++# Dependencies kopieren
++COPY package*.json ./
++RUN npm install
++
++# Projekt kopieren
++COPY . .
++
++CMD [ "npm", "test" ]
++
+diff --git a/docs/README.md b/docs/README.md
+--- a/docs/README.md
++++ b/docs/README.md
+@@
+ ### CI/CD 📘
+ - `ci/` Ordner für Pipelines (GitHub Actions, GitLab CI)
+ - Status: 📘 dokumentarisch
++
++### Docker 📘
++- `docker/` Ordner für Containerisierung
++- Status: 📘 dokumentarisch
++
+diff --git a/docs/CHANGELOG.md b/docs/CHANGELOG.md
+--- a/docs/CHANGELOG.md
++++ b/docs/CHANGELOG.md
+@@
+ - [00:15] Dev34 INIT – CI/CD Struktur erstellt (📘)
++- [00:20] Dev35 INIT – Docker Struktur erstellt (📘)
+diff --git a/logs/project.log b/logs/project.log
+--- a/logs/project.log
++++ b/logs/project.log
+@@
+ [2025-09-27 00:15] Dev34 INIT – CI/CD Struktur erstellt, status 📘
++[2025-09-27 00:20] Dev35 INIT – Docker Struktur erstellt, status 📘
+*** End Patch
