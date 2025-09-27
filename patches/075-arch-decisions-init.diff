@@ -1,0 +1,48 @@
+*** Begin Patch
+diff --git a/arch/decisions/README.md b/arch/decisions/README.md
+new file mode 100644
+--- /dev/null
++++ b/arch/decisions/README.md
+@@
++# 📘 Architektur-Entscheidungen (ADR)
++
++In diesem Ordner werden alle **Architecture Decision Records (ADR)** abgelegt.  
++Jede Entscheidung wird als eigene Markdown-Datei gespeichert, z. B.:  
++- `ADR-001-compiler-version.md`  
++- `ADR-002-deployment-strategy.md`  
++- usw.  
++
++Ein ADR enthält:  
++- **Titel & Nummer**  
++- **Kontext** (Problemstellung)  
++- **Entscheidung**  
++- **Alternativen**  
++- **Konsequenzen**  
++
++Status: 📘 dokumentarisch – noch keine Einträge.
++
+diff --git a/docs/README.md b/docs/README.md
+--- a/docs/README.md
++++ b/docs/README.md
+@@
+ ### Architektur-Diagramme 📘
+ - `arch/diagrams/` Ordner für UML/PlantUML/Mermaid und Exporte
+ - Status: 📘 dokumentarisch
++
++### Architektur-Entscheidungen 📘
++- `arch/decisions/` Ordner für Architecture Decision Records (ADR)
++- Status: 📘 dokumentarisch
++
+diff --git a/docs/CHANGELOG.md b/docs/CHANGELOG.md
+--- a/docs/CHANGELOG.md
++++ b/docs/CHANGELOG.md
+@@
+ - [22:00] Dev24 INIT – Architektur-Diagramme Struktur erstellt (📘)
++- [22:30] Dev25 INIT – Architektur-Entscheidungen Struktur erstellt (📘)
+diff --git a/logs/project.log b/logs/project.log
+--- a/logs/project.log
++++ b/logs/project.log
+@@
+ [2025-09-26 22:00] Dev24 INIT – Architektur-Diagramme Struktur erstellt, status 📘
++[2025-09-26 22:30] Dev25 INIT – Architektur-Entscheidungen Struktur erstellt, status 📘
+*** End Patch
