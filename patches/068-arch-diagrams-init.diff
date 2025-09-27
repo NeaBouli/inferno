@@ -1,0 +1,41 @@
+*** Begin Patch
+diff --git a/arch/diagrams/README.md b/arch/diagrams/README.md
+new file mode 100644
+--- /dev/null
++++ b/arch/diagrams/README.md
+@@
++# 📘 Inferno Architektur-Diagramme
++
++Dieser Ordner enthält Architekturdiagramme des Projekts.  
++Mögliche Formate:
++- Mermaid (`.md`)
++- PlantUML (`.puml`)
++- PNG / SVG Exporte
++
++Status: 📘 dokumentarisch – noch keine Diagramme erstellt.
++
+diff --git a/docs/README.md b/docs/README.md
+--- a/docs/README.md
++++ b/docs/README.md
+@@
+ ### Kubernetes 📘
+ - `k8s/` Ordner für K8s-Deployments (YAML, Helm-Charts)
+ - Status: 📘 dokumentarisch
++
++### Architektur-Diagramme 📘
++- `arch/diagrams/` Ordner für Projekt-Visualisierungen (Mermaid, PlantUML, PNGs)
++- Status: 📘 dokumentarisch
++
+diff --git a/docs/CHANGELOG.md b/docs/CHANGELOG.md
+--- a/docs/CHANGELOG.md
++++ b/docs/CHANGELOG.md
+@@
+ - [23:00] Dev17 INIT – Kubernetes Struktur erstellt (📘)
++- [23:15] Dev18 INIT – Architektur-Diagramme Struktur erstellt (📘)
+diff --git a/logs/project.log b/logs/project.log
+--- a/logs/project.log
++++ b/logs/project.log
+@@
+ [2025-09-26 23:00] Dev17 INIT – Kubernetes Struktur erstellt, status 📘
++[2025-09-26 23:15] Dev18 INIT – Architektur-Diagramme Struktur erstellt, status 📘
+*** End Patch
