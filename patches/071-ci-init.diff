@@ -1,0 +1,37 @@
+*** Begin Patch
+diff --git a/ci/README.md b/ci/README.md
+new file mode 100644
+--- /dev/null
++++ b/ci/README.md
+@@
++# 📘 Inferno CI/CD
++
++Dieser Ordner ist für Continuous Integration / Continuous Deployment vorgesehen.  
++Hier werden später GitHub Actions, Docker-Builds oder andere Pipelines abgelegt.  
++
++Status: 📘 dokumentarisch – noch keine Implementierung.
++
+diff --git a/docs/README.md b/docs/README.md
+--- a/docs/README.md
++++ b/docs/README.md
+@@
+ - `patches/` Ordner für Patches
+ - Status: 📘 dokumentarisch
++
++### CI/CD 📘
++- `ci/` Ordner für Build- und Deployment-Pipelines
++- Status: 📘 dokumentarisch
++
+diff --git a/docs/CHANGELOG.md b/docs/CHANGELOG.md
+--- a/docs/CHANGELOG.md
++++ b/docs/CHANGELOG.md
+@@
+ - [20:00] Dev20 INIT – Patches Struktur erstellt (📘)
++- [20:30] Dev21 INIT – CI/CD Struktur erstellt (📘)
+diff --git a/logs/project.log b/logs/project.log
+--- a/logs/project.log
++++ b/logs/project.log
+@@
+ [2025-09-26 20:00] Dev20 INIT – Patches Struktur erstellt, status 📘
++[2025-09-26 20:30] Dev21 INIT – CI/CD Struktur erstellt, status 📘
+*** End Patch
