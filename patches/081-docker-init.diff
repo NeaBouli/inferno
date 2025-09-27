@@ -1,0 +1,57 @@
+*** Begin Patch
+diff --git a/docker/README.md b/docker/README.md
+new file mode 100644
+--- /dev/null
++++ b/docker/README.md
+@@
++# 📘 Inferno Docker
++
++Dieser Ordner ist für Container-Builds gedacht.  
++
++- Geplant: Dockerfile für Hardhat-Umgebung  
++- Geplant: Dockerfile für Backend/Indexer  
++- Geplant: docker-compose Setup für lokale Entwicklung  
++
++Status: 📘 dokumentarisch – noch keine Implementierung.
++
+diff --git a/docker/Dockerfile b/docker/Dockerfile
+new file mode 100644
+--- /dev/null
++++ b/docker/Dockerfile
+@@
++# 📘 Placeholder Dockerfile
++#
++# Dies ist nur eine Dummy-Datei.  
++# Zukünftige Schritte:
++# - Node.js Base-Image definieren
++# - Abhängigkeiten installieren
++# - Hardhat/Backend starten
++
++FROM alpine:3.18
++CMD ["echo", "Inferno Dockerfile placeholder"]
++
+diff --git a/docs/README.md b/docs/README.md
+--- a/docs/README.md
++++ b/docs/README.md
+@@
+ ### CI/CD 📘
+ - `ci/` Ordner für Pipeline-Definitionen (z. B. GitHub Actions, GitLab CI)
+ - Status: 📘 dokumentarisch
++
++### Docker 📘
++- `docker/` Ordner für Container-Builds (Hardhat, Backend, Indexer)
++- Status: 📘 dokumentarisch
++
+diff --git a/docs/CHANGELOG.md b/docs/CHANGELOG.md
+--- a/docs/CHANGELOG.md
++++ b/docs/CHANGELOG.md
+@@
+ - [23:55] Dev30 INIT – CI/CD Struktur erstellt (📘)
++- [23:59] Dev31 INIT – Docker Struktur erstellt (📘)
+diff --git a/logs/project.log b/logs/project.log
+--- a/logs/project.log
++++ b/logs/project.log
+@@
+ [2025-09-26 23:55] Dev30 INIT – CI/CD Struktur erstellt, status 📘
++[2025-09-26 23:59] Dev31 INIT – Docker Struktur erstellt, status 📘
+*** End Patch
