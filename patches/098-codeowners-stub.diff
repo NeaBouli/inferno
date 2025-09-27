@@ -1,0 +1,43 @@
+*** Begin Patch
+diff --git a/.github/CODEOWNERS b/.github/CODEOWNERS
+new file mode 100644
+--- /dev/null
++++ b/.github/CODEOWNERS
+@@
++# 📘 Inferno CODEOWNERS Stub
++#
++# Diese Datei legt fest, welche Personen/Teams
++# automatisch als Reviewer für bestimmte Dateien/Ordner
++# vorgeschlagen werden.
++#
++# Beispiel (noch nicht aktiv):
++#   *       @repo-admin
++#   /docs/  @doc-team
++#
++# Status: 📘 dokumentarisch – noch keine Regeln aktiv
++
+diff --git a/docs/README.md b/docs/README.md
+--- a/docs/README.md
++++ b/docs/README.md
+@@
+ ### Funding 📘
+ - `.github/FUNDING.yml` definiert Sponsoring-Möglichkeiten (Stub)
+ - Status: 📘 dokumentarisch
++
++### Codeowners 📘
++- `.github/CODEOWNERS` Stub-Datei für Maintainer-Zuständigkeiten
++- Status: 📘 dokumentarisch
++
+diff --git a/docs/CHANGELOG.md b/docs/CHANGELOG.md
+--- a/docs/CHANGELOG.md
++++ b/docs/CHANGELOG.md
+@@
+ - [01:20] Dev47 INIT – Funding Stub erstellt (📘)
++- [01:25] Dev48 INIT – CODEOWNERS Stub erstellt (📘)
+diff --git a/logs/project.log b/logs/project.log
+--- a/logs/project.log
++++ b/logs/project.log
+@@
+ [2025-09-27 01:20] Dev47 INIT – Funding Stub erstellt, status 📘
++[2025-09-27 01:25] Dev48 INIT – CODEOWNERS Stub erstellt, status 📘
+*** End Patch
