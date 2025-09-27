@@ -1,0 +1,37 @@
+*** Begin Patch
+diff --git a/testing/README.md b/testing/README.md
+new file mode 100644
+--- /dev/null
++++ b/testing/README.md
+@@
++# 📘 Inferno Testing
++
++Dieser Ordner ist für übergreifende Tests vorgesehen, 
++z. B. Integrationstests, Testdaten oder QA-Dokumentation.
++
++Status: 📘 dokumentarisch – noch keine Implementierung.
++
+diff --git a/docs/README.md b/docs/README.md
+--- a/docs/README.md
++++ b/docs/README.md
+@@
+ - `infra/` Ordner für Infrastruktur (Docker, K8s, CI/CD)
+ - Status: 📘 dokumentarisch
++
++### Testing 📘
++- `testing/` Ordner für übergreifende Tests und QA
++- Status: 📘 dokumentarisch
++
+diff --git a/docs/CHANGELOG.md b/docs/CHANGELOG.md
+--- a/docs/CHANGELOG.md
++++ b/docs/CHANGELOG.md
+@@
+ - [19:00] Dev9 INIT – Infra Struktur erstellt (📘)
++- [19:30] Dev10 INIT – Testing Struktur erstellt (📘)
+diff --git a/logs/project.log b/logs/project.log
+--- a/logs/project.log
++++ b/logs/project.log
+@@
+ [2025-09-26 19:00] Dev9 INIT – Infra Struktur erstellt, status 📘
++[2025-09-26 19:30] Dev10 INIT – Testing Struktur erstellt, status 📘
+*** End Patch
