@@ -1,0 +1,39 @@
+*** Begin Patch
+diff --git a/testing/README.md b/testing/README.md
+new file mode 100644
+--- /dev/null
++++ b/testing/README.md
+@@
++# 📘 Inferno Testing
++
++Dieser Ordner ist für dedizierte QA- und Test-Skripte vorgesehen, 
++die unabhängig von Hardhat-Unit-Tests laufen können.  
++Beispiele: Integrationstests, E2E, Security Audits.
++
++Status: 📘 dokumentarisch – noch keine Implementierung.
++
+diff --git a/docs/README.md b/docs/README.md
+--- a/docs/README.md
++++ b/docs/README.md
+@@
+ ### Kubernetes 📘
+ - `k8s/` Ordner für Kubernetes-Manifeste (Deployment, Services, Ingress)
+ - Status: 📘 dokumentarisch
++
++### Testing 📘
++- `testing/` Ordner für QA- und Test-Skripte (Integration/E2E)
++- Status: 📘 dokumentarisch
++
+diff --git a/docs/CHANGELOG.md b/docs/CHANGELOG.md
+--- a/docs/CHANGELOG.md
++++ b/docs/CHANGELOG.md
+@@
+ - [21:00] Dev13 INIT – Kubernetes Struktur erstellt (📘)
++- [21:30] Dev14 INIT – Testing Struktur erstellt (📘)
+diff --git a/logs/project.log b/logs/project.log
+--- a/logs/project.log
++++ b/logs/project.log
+@@
+ [2025-09-26 21:00] Dev13 INIT – Kubernetes Struktur erstellt, status 📘
++[2025-09-26 21:30] Dev14 INIT – Testing Struktur erstellt, status 📘
+*** End Patch
