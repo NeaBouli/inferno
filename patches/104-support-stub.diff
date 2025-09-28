@@ -1,0 +1,42 @@
+*** Begin Patch
+diff --git a/.github/SUPPORT.md b/.github/SUPPORT.md
+new file mode 100644
+--- /dev/null
++++ b/.github/SUPPORT.md
+@@
++# 📘 Inferno Support Guidelines (Stub)
++
++## Hilfe erhalten
++- Für technische Fragen oder Bug-Reports bitte ein GitHub **Issue** eröffnen.
++- Allgemeine Diskussionen können zukünftig über **GitHub Discussions** oder ein Community-Forum geführt werden.
++
++## Einschränkungen
++Da sich das Projekt in der Entwicklungsphase befindet, kann Support nicht garantiert werden.
++
++Status: 📘 dokumentarisch – noch keine Prozesse definiert.
++
+diff --git a/docs/README.md b/docs/README.md
+--- a/docs/README.md
++++ b/docs/README.md
+@@
+ ### Security 📘
+ - `.github/SECURITY.md` Stub-Datei für Sicherheitsrichtlinien
+ - Status: 📘 dokumentarisch
++
++### Support 📘
++- `.github/SUPPORT.md` Stub-Datei für Hilfe- und Support-Hinweise
++- Status: 📘 dokumentarisch
++
+diff --git a/docs/CHANGELOG.md b/docs/CHANGELOG.md
+--- a/docs/CHANGELOG.md
++++ b/docs/CHANGELOG.md
+@@
+ - [01:50] Dev53 INIT – SECURITY.md Stub erstellt (📘)
++- [01:55] Dev54 INIT – SUPPORT.md Stub erstellt (📘)
+diff --git a/logs/project.log b/logs/project.log
+--- a/logs/project.log
++++ b/logs/project.log
+@@
+ [2025-09-27 01:50] Dev53 INIT – SECURITY.md Stub erstellt, status 📘
++[2025-09-27 01:55] Dev54 INIT – SUPPORT.md Stub erstellt, status 📘
+*** End Patch
