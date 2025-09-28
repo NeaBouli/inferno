@@ -1,0 +1,44 @@
+*** Begin Patch
+diff --git a/.github/SUPPORT.md b/.github/SUPPORT.md
+new file mode 100644
+--- /dev/null
++++ b/.github/SUPPORT.md
+@@
++# 📘 Support-Richtlinien (Stub)
++
++## Wo finde ich Hilfe?
++- **GitHub Issues:** Für Bugs und Funktionsanfragen
++- **Discussions / Foren:** Für allgemeine Fragen (Platzhalter)
++- **Community-Channels:** Discord / Telegram (Platzhalter)
++
++## Hinweis
++- Sicherheitsprobleme bitte **nicht** hier posten → siehe [SECURITY.md](SECURITY.md).
++- Diese Datei ist ein Stub und enthält nur Platzhalter.
++
++Status: 📘 dokumentarisch.
++
+diff --git a/docs/README.md b/docs/README.md
+--- a/docs/README.md
++++ b/docs/README.md
+@@
+ ### Security 📘
+ - `.github/SECURITY.md` Stub-Datei für Sicherheitsrichtlinien & Responsible Disclosure
+ - Status: 📘 dokumentarisch
++
++### Support 📘
++- `.github/SUPPORT.md` Stub-Datei für Support- und Hilfekanäle
++- Status: 📘 dokumentarisch
++
+diff --git a/docs/CHANGELOG.md b/docs/CHANGELOG.md
+--- a/docs/CHANGELOG.md
++++ b/docs/CHANGELOG.md
+@@
+ - [02:15] Dev58 INIT – SECURITY.md Stub erstellt (📘)
++- [02:20] Dev59 INIT – SUPPORT.md Stub erstellt (📘)
+diff --git a/logs/project.log b/logs/project.log
+--- a/logs/project.log
++++ b/logs/project.log
+@@
+ [2025-09-27 02:15] Dev58 INIT – SECURITY.md Stub erstellt, status 📘
++[2025-09-27 02:20] Dev59 INIT – SUPPORT.md Stub erstellt, status 📘
+*** End Patch
