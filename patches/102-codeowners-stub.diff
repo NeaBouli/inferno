@@ -1,0 +1,40 @@
+*** Begin Patch
+diff --git a/.github/CODEOWNERS b/.github/CODEOWNERS
+new file mode 100644
+--- /dev/null
++++ b/.github/CODEOWNERS
+@@
++# 📘 Inferno CODEOWNERS (Stub)
++#
++# Diese Datei definiert Zuständigkeiten für Dateien/Ordner.
++# Aktuell ist kein Team/Owner eingetragen.
++#
++# Beispiel (zukünftig):
++# *       @inferno-core-team
++# docs/*  @doc-team
++
+diff --git a/docs/README.md b/docs/README.md
+--- a/docs/README.md
++++ b/docs/README.md
+@@
+ ### Funding 📘
+ - `.github/FUNDING.yml` Stub-Datei für GitHub Sponsors
+ - Status: 📘 dokumentarisch
++
++### Codeowners 📘
++- `.github/CODEOWNERS` Stub-Datei für Zuständigkeiten
++- Status: 📘 dokumentarisch
++
+diff --git a/docs/CHANGELOG.md b/docs/CHANGELOG.md
+--- a/docs/CHANGELOG.md
++++ b/docs/CHANGELOG.md
+@@
+ - [01:40] Dev51 INIT – FUNDING.yml Stub erstellt (📘)
++- [01:45] Dev52 INIT – CODEOWNERS Stub erstellt (📘)
+diff --git a/logs/project.log b/logs/project.log
+--- a/logs/project.log
++++ b/logs/project.log
+@@
+ [2025-09-27 01:40] Dev51 INIT – FUNDING.yml Stub erstellt, status 📘
++[2025-09-27 01:45] Dev52 INIT – CODEOWNERS Stub erstellt, status 📘
+*** End Patch
