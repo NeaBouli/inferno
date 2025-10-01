@@ -1,0 +1,42 @@
+*** Begin Patch
+diff --git a/.github/CODEOWNERS b/.github/CODEOWNERS
+new file mode 100644
+--- /dev/null
++++ b/.github/CODEOWNERS
+@@
++# 📘 CODEOWNERS Stub
++#
++# Diese Datei definiert die Code-Besitzer für bestimmte Pfade.
++# GitHub weist automatisch Reviewer zu, wenn Änderungen an
++# entsprechenden Dateien oder Ordnern vorgenommen werden.
++#
++# Beispiel (später anpassen):
++# *       @repo-maintainer
++#
++# Status: 📘 dokumentarisch – noch keine Implementierung.
++
+diff --git a/docs/README.md b/docs/README.md
+--- a/docs/README.md
++++ b/docs/README.md
+@@
+ ### Support 📘
+ - `SUPPORT.md` Stub-Datei für Support-Richtlinien
+ - Status: 📘 dokumentarisch
++
++### CODEOWNERS 📘
++- `.github/CODEOWNERS` Stub-Datei für automatische Reviewer-Zuweisung
++- Status: 📘 dokumentarisch
++
+diff --git a/docs/CHANGELOG.md b/docs/CHANGELOG.md
+--- a/docs/CHANGELOG.md
++++ b/docs/CHANGELOG.md
+@@
+ - [03:20] Dev71 INIT – SUPPORT.md Stub erstellt (📘)
++- [03:25] Dev72 INIT – CODEOWNERS Stub erstellt (📘)
+diff --git a/logs/project.log b/logs/project.log
+--- a/logs/project.log
++++ b/logs/project.log
+@@
+ [2025-09-27 03:20] Dev71 INIT – SUPPORT.md Stub erstellt, status 📘
++[2025-09-27 03:25] Dev72 INIT – CODEOWNERS Stub erstellt, status 📘
+*** End Patch
