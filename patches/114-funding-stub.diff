@@ -1,0 +1,55 @@
+*** Begin Patch
+diff --git a/.github/FUNDING.yml b/.github/FUNDING.yml
+new file mode 100644
+--- /dev/null
++++ b/.github/FUNDING.yml
+@@
++# 📘 Inferno FUNDING Stub
++#
++# Diese Datei definiert mögliche Finanzierungsquellen für das Projekt.
++# Aktuell nur Platzhalter – kann später mit echten Links ersetzt werden.
++#
++# Unterstützte Plattformen:
++# - github: [benutzername]
++# - patreon: [benutzername]
++# - open_collective: [projektname]
++# - ko_fi: [benutzername]
++# - tidelift: [paketname]
++# - community_bridge: [projektname]
++# - liberapay: [benutzername]
++# - issuehunt: [benutzername]
++# - otechie: [benutzername]
++# - custom: [eigener Link]
++
++github: []
++patreon: []
++open_collective: []
++custom: []
++
++Status: 📘 dokumentarisch – Stub.
++
+diff --git a/docs/README.md b/docs/README.md
+--- a/docs/README.md
++++ b/docs/README.md
+@@
+ ### SUPPORT 📘
+ - `.github/SUPPORT.md` Stub-Datei für Support- und Hilferichtlinien
+ - Status: 📘 dokumentarisch
++
++### FUNDING 📘
++- `.github/FUNDING.yml` Stub-Datei für Sponsoring- und Finanzierungslinks
++- Status: 📘 dokumentarisch
++
+diff --git a/docs/CHANGELOG.md b/docs/CHANGELOG.md
+--- a/docs/CHANGELOG.md
++++ b/docs/CHANGELOG.md
+@@
+ - [02:40] Dev63 INIT – SUPPORT.md Stub erstellt (📘)
++- [02:45] Dev64 INIT – FUNDING.yml Stub erstellt (📘)
+diff --git a/logs/project.log b/logs/project.log
+--- a/logs/project.log
++++ b/logs/project.log
+@@
+ [2025-09-27 02:40] Dev63 INIT – SUPPORT.md Stub erstellt, status 📘
++[2025-09-27 02:45] Dev64 INIT – FUNDING.yml Stub erstellt, status 📘
+*** End Patch
