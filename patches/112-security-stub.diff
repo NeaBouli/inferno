@@ -1,0 +1,46 @@
+*** Begin Patch
+diff --git a/.github/SECURITY.md b/.github/SECURITY.md
+new file mode 100644
+--- /dev/null
++++ b/.github/SECURITY.md
+@@
++# 📘 Inferno Security Policy (Stub)
++
++## Reporting a Vulnerability
++Bitte melden Sie sicherheitsrelevante Probleme **nicht** öffentlich,
++sondern direkt an das Maintainer-Team (Kontakt wird später ergänzt).
++
++## Supported Versions
++- Aktuell: keine offiziellen Releases, Projekt im Entwicklungsstatus.
++
++## Patching Policy
++- Sicherheits-Patches werden dokumentiert und über Patches/CHANGELOG
++  nachvollziehbar gehalten.
++
++Status: 📘 dokumentarisch – Stub.
++
+diff --git a/docs/README.md b/docs/README.md
+--- a/docs/README.md
++++ b/docs/README.md
+@@
+ ### CODEOWNERS 📘
+ - `.github/CODEOWNERS` Stub-Datei für spätere Maintainer-Zuordnung
+ - Status: 📘 dokumentarisch
++
++### SECURITY 📘
++- `.github/SECURITY.md` Stub-Datei für Sicherheitsrichtlinien
++- Status: 📘 dokumentarisch
++
+diff --git a/docs/CHANGELOG.md b/docs/CHANGELOG.md
+--- a/docs/CHANGELOG.md
++++ b/docs/CHANGELOG.md
+@@
+ - [02:30] Dev61 INIT – CODEOWNERS Stub erstellt (📘)
++- [02:35] Dev62 INIT – SECURITY.md Stub erstellt (📘)
+diff --git a/logs/project.log b/logs/project.log
+--- a/logs/project.log
++++ b/logs/project.log
+@@
+ [2025-09-27 02:30] Dev61 INIT – CODEOWNERS Stub erstellt, status 📘
++[2025-09-27 02:35] Dev62 INIT – SECURITY.md Stub erstellt, status 📘
+*** End Patch
