@@ -1,0 +1,42 @@
+*** Begin Patch
+diff --git a/.github/CODEOWNERS b/.github/CODEOWNERS
+new file mode 100644
+--- /dev/null
++++ b/.github/CODEOWNERS
+@@
++# 📘 Inferno CODEOWNERS Stub
++#
++# Diese Datei definiert die Verantwortlichen (Code Owner) für bestimmte Bereiche im Repo.  
++# Pull Requests in betroffene Bereiche müssen von den entsprechenden Ownern reviewed werden.  
++#
++# Aktuell nur Stub – die Regeln werden später ergänzt.
++
++# Beispiel (Platzhalter):
++# *       @username1 @username2
++# docs/*  @doc-maintainer
++
+diff --git a/docs/README.md b/docs/README.md
+--- a/docs/README.md
++++ b/docs/README.md
+@@
+ ### SUPPORT 📘
+ - `.github/SUPPORT.md` Stub-Datei für Hilfe und Support
+ - Status: 📘 dokumentarisch
++
++### CODEOWNERS 📘
++- `.github/CODEOWNERS` Stub-Datei für Verantwortlichkeiten
++- Status: 📘 dokumentarisch
++
+diff --git a/docs/CHANGELOG.md b/docs/CHANGELOG.md
+--- a/docs/CHANGELOG.md
++++ b/docs/CHANGELOG.md
+@@
+ - [03:00] Dev67 INIT – SUPPORT.md Stub erstellt (📘)
++- [03:05] Dev68 INIT – CODEOWNERS Stub erstellt (📘)
+diff --git a/logs/project.log b/logs/project.log
+--- a/logs/project.log
++++ b/logs/project.log
+@@
+ [2025-09-27 03:00] Dev67 INIT – SUPPORT.md Stub erstellt, status 📘
++[2025-09-27 03:05] Dev68 INIT – CODEOWNERS Stub erstellt, status 📘
+*** End Patch
