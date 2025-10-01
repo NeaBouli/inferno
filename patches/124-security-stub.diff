@@ -1,0 +1,42 @@
+*** Begin Patch
+diff --git a/SECURITY.md b/SECURITY.md
+new file mode 100644
+--- /dev/null
++++ b/SECURITY.md
+@@
++# 📘 Inferno Security Policy
++ 
++Diese Datei beschreibt die Sicherheitsrichtlinien für das Projekt.  
++Aktuell dient sie nur als Stub.
++
++## Hinweise
++- Bitte noch keine Sicherheitslücken über Issues melden.
++- Später hier: offizieller Meldeweg (E-Mail/PGP), Reaktionszeiten, Patch-Zyklen.
++
++Status: 📘 dokumentarisch
++
+diff --git a/docs/README.md b/docs/README.md
+--- a/docs/README.md
++++ b/docs/README.md
+@@
+ ### Funding 📘
+ - `.github/FUNDING.yml` Stub-Datei für Sponsoring-Links (GitHub Sponsors etc.)
+ - Status: 📘 dokumentarisch
++
++### Security 📘
++- `SECURITY.md` Stub-Datei mit Hinweisen zum Umgang mit Schwachstellen
++- Status: 📘 dokumentarisch
++
+diff --git a/docs/CHANGELOG.md b/docs/CHANGELOG.md
+--- a/docs/CHANGELOG.md
++++ b/docs/CHANGELOG.md
+@@
+ - [03:30] Dev73 INIT – FUNDING.yml Stub erstellt (📘)
++- [03:35] Dev74 INIT – SECURITY.md Stub erstellt (📘)
+diff --git a/logs/project.log b/logs/project.log
+--- a/logs/project.log
++++ b/logs/project.log
+@@
+ [2025-09-27 03:30] Dev73 INIT – FUNDING.yml Stub erstellt, status 📘
++[2025-09-27 03:35] Dev74 INIT – SECURITY.md Stub erstellt, status 📘
+*** End Patch
