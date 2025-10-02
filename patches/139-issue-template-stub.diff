@@ -1,0 +1,60 @@
+*** Begin Patch
+diff --git a/.github/ISSUE_TEMPLATE/bug_report.md b/.github/ISSUE_TEMPLATE/bug_report.md
+new file mode 100644
+--- /dev/null
++++ b/.github/ISSUE_TEMPLATE/bug_report.md
+@@
++# 🐛 Bug Report (Stub)
++
++## Beschreibung
++<!-- Kurze Beschreibung des Bugs -->
++
++## Schritte zum Reproduzieren
++1. 
++2. 
++3. 
++
++## Erwartetes Verhalten
++
++## Tatsächliches Verhalten
++
++## Umgebung
++- OS: 
++- Node/Hardhat Version: 
++- Commit: 
++
++---
++📘 Status: Stub – kann später erweitert/verfeinert werden.
++
+diff --git a/.github/ISSUE_TEMPLATE/feature_request.md b/.github/ISSUE_TEMPLATE/feature_request.md
+new file mode 100644
+--- /dev/null
++++ b/.github/ISSUE_TEMPLATE/feature_request.md
+@@
++# ✨ Feature Request (Stub)
++
++## Beschreibung
++<!-- Welche Funktionalität wird gewünscht? -->
++
++## Motivation & Kontext
++
++## Mögliche Umsetzung
++
++## Alternative Lösungen
++
++---
++📘 Status: Stub – kann später erweitert/verfeinert werden.
++
+diff --git a/docs/CHANGELOG.md b/docs/CHANGELOG.md
+--- a/docs/CHANGELOG.md
++++ b/docs/CHANGELOG.md
+@@
+ - [23:20] Dev88 INIT – PULL_REQUEST_TEMPLATE.md Stub erstellt (📘)
++- [23:30] Dev89 INIT – ISSUE_TEMPLATE Stubs erstellt (📘)
+diff --git a/logs/project.log b/logs/project.log
+--- a/logs/project.log
++++ b/logs/project.log
+@@
+ [2025-10-02 23:20] Dev88 INIT – PULL_REQUEST_TEMPLATE.md Stub erstellt, status 📘
++[2025-10-02 23:30] Dev89 INIT – ISSUE_TEMPLATE Stubs erstellt, status 📘
+*** End Patch
