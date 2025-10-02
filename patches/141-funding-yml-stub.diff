@@ -1,0 +1,31 @@
+*** Begin Patch
+diff --git a/.github/FUNDING.yml b/.github/FUNDING.yml
+new file mode 100644
+--- /dev/null
++++ b/.github/FUNDING.yml
+@@
++# 💰 Funding (Stub)
++
++# GitHub Sponsors:
++github: [ "PLACEHOLDER" ]
++
++# Alternative Plattformen:
++patreon: PLACEHOLDER
++open_collective: PLACEHOLDER
++custom: [ "https://example.com/donate" ]
++
++# Status: 📘 Stub – Funding-Links müssen definiert werden.
++
+diff --git a/docs/CHANGELOG.md b/docs/CHANGELOG.md
+--- a/docs/CHANGELOG.md
++++ b/docs/CHANGELOG.md
+@@
+ - [23:40] Dev90 INIT – SECURITY.md Stub erstellt (📘)
++- [23:50] Dev91 INIT – FUNDING.yml Stub erstellt (📘)
+diff --git a/logs/project.log b/logs/project.log
+--- a/logs/project.log
++++ b/logs/project.log
+@@
+ [2025-10-02 23:40] Dev90 INIT – SECURITY.md Stub erstellt, status 📘
++[2025-10-02 23:50] Dev91 INIT – FUNDING.yml Stub erstellt, status 📘
+*** End Patch
