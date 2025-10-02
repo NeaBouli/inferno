@@ -1,0 +1,42 @@
+*** Begin Patch
+diff --git a/SECURITY.md b/SECURITY.md
+new file mode 100644
+--- /dev/null
++++ b/SECURITY.md
+@@
++# 📘 Inferno Security Policy
++
++Dieser Stub definiert die Grundlage für Sicherheitsrichtlinien.
++
++## 🔐 Meldung von Schwachstellen
++- Bitte melden Sie Sicherheitsprobleme **nicht öffentlich**.
++- Nutzen Sie zukünftig das geplante Responsible Disclosure Programm (z. B. security@inferno.org).
++
++## 🚧 Status
++- 📘 dokumentarisch – noch keine echten Regeln oder Prozesse definiert.
++
+diff --git a/docs/README.md b/docs/README.md
+--- a/docs/README.md
++++ b/docs/README.md
+@@
+ ### CODEOWNERS 📘
+ - `.github/CODEOWNERS` Stub-Datei für Verantwortlichkeiten
+ - Status: 📘 dokumentarisch
++
++### SECURITY 📘
++- `SECURITY.md` Stub-Datei für Sicherheitsrichtlinien
++- Status: 📘 dokumentarisch
++
+diff --git a/docs/CHANGELOG.md b/docs/CHANGELOG.md
+--- a/docs/CHANGELOG.md
++++ b/docs/CHANGELOG.md
+@@
+ - [04:10] Dev81 INIT – CODEOWNERS Stub erstellt (📘)
++- [04:15] Dev82 INIT – SECURITY.md Stub erstellt (📘)
+diff --git a/logs/project.log b/logs/project.log
+--- a/logs/project.log
++++ b/logs/project.log
+@@
+ [2025-09-27 04:10] Dev81 INIT – CODEOWNERS Stub erstellt, status 📘
++[2025-09-27 04:15] Dev82 INIT – SECURITY.md Stub erstellt, status 📘
+*** End Patch
