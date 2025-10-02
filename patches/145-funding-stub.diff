@@ -1,0 +1,35 @@
+*** Begin Patch
+diff --git a/.github/FUNDING.yml b/.github/FUNDING.yml
+new file mode 100644
+--- /dev/null
++++ b/.github/FUNDING.yml
+@@
++# 💰 Funding Config (Stub)
++#
++# Diese Datei ermöglicht Sponsoring-Links auf GitHub.
++# Aktuell sind nur Platzhalter eingetragen.
++#
++# Offizielle Sponsoring-Optionen werden in späteren Patches ergänzt.
++
++github: ["inferno-project"]   # Platzhalter
++patreon: ""                   # Platzhalter
++open_collective: ""           # Platzhalter
++ko_fi: ""                     # Platzhalter
++custom: []                    # Eigene Links können hier später ergänzt werden
++
++---
++Status: 📘 Stub – Sponsorship-Konfiguration vorbereitet
++
+diff --git a/docs/CHANGELOG.md b/docs/CHANGELOG.md
+--- a/docs/CHANGELOG.md
++++ b/docs/CHANGELOG.md
+@@
+ - [00:05] Dev94 INIT – Security Policy Stub erstellt (📘)
++- [00:10] Dev95 INIT – Funding Stub erstellt (📘)
+diff --git a/logs/project.log b/logs/project.log
+--- a/logs/project.log
++++ b/logs/project.log
+@@
+ [2025-10-03 00:05] Dev94 INIT – Security Policy Stub erstellt, status 📘
++[2025-10-03 00:10] Dev95 INIT – Funding Stub erstellt, status 📘
+*** End Patch
