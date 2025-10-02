@@ -1,0 +1,35 @@
+*** Begin Patch
+diff --git a/SECURITY.md b/SECURITY.md
+new file mode 100644
+--- /dev/null
++++ b/SECURITY.md
+@@
++# 🔒 Sicherheitsrichtlinie (Stub)
++
++Dies ist die Sicherheitsrichtlinie für das **Inferno Projekt**.
++
++## Melden von Sicherheitslücken
++- Bitte keine Sicherheitsprobleme öffentlich im Issue-Tracker posten.
++- Stattdessen **privat melden** per E-Mail: [security@inferno.dev] (Platzhalter).
++- Das Team wird versuchen, innerhalb von 7 Tagen zu antworten.
++
++## Unterstützte Versionen
++- Hauptentwicklungszweig `main` wird aktiv gepflegt.
++- Tags/Releases werden ggf. später hier dokumentiert.
++
++---
++Status: 📘 Stub – weitere Details (z. B. PGP Keys, SLAs) folgen in späteren Patches.
++
+diff --git a/docs/CHANGELOG.md b/docs/CHANGELOG.md
+--- a/docs/CHANGELOG.md
++++ b/docs/CHANGELOG.md
+@@
+ - [23:58] Dev93 INIT – Dependabot Config Stub erstellt (📘)
++- [00:05] Dev94 INIT – Security Policy Stub erstellt (📘)
+diff --git a/logs/project.log b/logs/project.log
+--- a/logs/project.log
++++ b/logs/project.log
+@@
+ [2025-10-02 23:58] Dev93 INIT – Dependabot Config Stub erstellt, status 📘
++[2025-10-03 00:05] Dev94 INIT – Security Policy Stub erstellt, status 📘
+*** End Patch
