@@ -1,0 +1,44 @@
+*** Begin Patch
+diff --git a/.github/CODEOWNERS b/.github/CODEOWNERS
+new file mode 100644
+--- /dev/null
++++ b/.github/CODEOWNERS
+@@
++# 📘 Inferno CODEOWNERS
++#
++# Diese Datei definiert die Code-Verantwortlichkeiten (Reviewer/Approver).
++# Aktuell nur ein Stub – keine echten Zuweisungen.
++#
++# Beispiel (später zu befüllen):
++# /contracts/   @SmartContractDev
++# /docs/        @DocMaintainer
++
++* @repo-owner
++
++Status: 📘 dokumentarisch
++
+diff --git a/docs/README.md b/docs/README.md
+--- a/docs/README.md
++++ b/docs/README.md
+@@
+ ### Backers 📘
+ - `BACKERS.md` Stub-Datei für Unterstützer
+ - Status: 📘 dokumentarisch
++
++### CODEOWNERS 📘
++- `.github/CODEOWNERS` Stub-Datei für Verantwortlichkeiten
++- Status: 📘 dokumentarisch
++
+diff --git a/docs/CHANGELOG.md b/docs/CHANGELOG.md
+--- a/docs/CHANGELOG.md
++++ b/docs/CHANGELOG.md
+@@
+ - [04:05] Dev80 INIT – BACKERS.md Stub erstellt (📘)
++- [04:10] Dev81 INIT – CODEOWNERS Stub erstellt (📘)
+diff --git a/logs/project.log b/logs/project.log
+--- a/logs/project.log
++++ b/logs/project.log
+@@
+ [2025-09-27 04:05] Dev80 INIT – BACKERS.md Stub erstellt, status 📘
++[2025-09-27 04:10] Dev81 INIT – CODEOWNERS Stub erstellt, status 📘
+*** End Patch
