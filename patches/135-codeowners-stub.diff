@@ -1,0 +1,40 @@
+*** Begin Patch
+diff --git a/.github/CODEOWNERS b/.github/CODEOWNERS
+new file mode 100644
+--- /dev/null
++++ b/.github/CODEOWNERS
+@@
++# 📘 Inferno CODEOWNERS
++# Dieses File ist ein Stub und wird später mit den zuständigen Entwicklern/Gruppen befüllt.
++#
++# Beispiel-Syntax:
++# *       @global-owner1 @global-owner2
++# /docs/  @docs-team
++#
++# Status: 📘 dokumentarisch – noch keine Implementierung.
++
+diff --git a/docs/README.md b/docs/README.md
+--- a/docs/README.md
++++ b/docs/README.md
+@@
+ ### SUPPORT 📘
+ - `SUPPORT.md` Stub-Datei für Support-Informationen
+ - Status: 📘 dokumentarisch
++
++### CODEOWNERS 📘
++- `.github/CODEOWNERS` Stub-Datei für Code-Review- und Owner-Regeln
++- Status: 📘 dokumentarisch
++
+diff --git a/docs/CHANGELOG.md b/docs/CHANGELOG.md
+--- a/docs/CHANGELOG.md
++++ b/docs/CHANGELOG.md
+@@
+ - [04:25] Dev84 INIT – SUPPORT.md Stub erstellt (📘)
++- [04:30] Dev85 INIT – CODEOWNERS Stub erstellt (📘)
+diff --git a/logs/project.log b/logs/project.log
+--- a/logs/project.log
++++ b/logs/project.log
+@@
+ [2025-09-27 04:25] Dev84 INIT – SUPPORT.md Stub erstellt, status 📘
++[2025-09-27 04:30] Dev85 INIT – CODEOWNERS Stub erstellt, status 📘
+*** End Patch
