@@ -1,0 +1,44 @@
+*** Begin Patch
+diff --git a/FUNDING.md b/FUNDING.md
+new file mode 100644
+--- /dev/null
++++ b/FUNDING.md
+@@
++# 📘 Funding – Inferno
++
++Dieses Dokument beschreibt mögliche Finanzierungs- und Sponsoring-Optionen für das Projekt.  
++Aktuell dient es nur als Stub.
++
++## Geplante Inhalte
++- GitHub Sponsors
++- Open Collective
++- Grants und Förderungen
++- Community Contributions
++
++Status: 📘 dokumentarisch
++
+diff --git a/docs/README.md b/docs/README.md
+--- a/docs/README.md
++++ b/docs/README.md
+@@
+ ### Security 📘
+ - `SECURITY.md` Stub-Datei mit Sicherheitsrichtlinien
+ - Status: 📘 dokumentarisch
++
++### Funding 📘
++- `FUNDING.md` Stub-Datei mit Finanzierungsinformationen
++- Status: 📘 dokumentarisch
++
+diff --git a/docs/CHANGELOG.md b/docs/CHANGELOG.md
+--- a/docs/CHANGELOG.md
++++ b/docs/CHANGELOG.md
+@@
+ - [03:55] Dev78 INIT – SECURITY.md Stub erstellt (📘)
++- [04:00] Dev79 INIT – FUNDING.md Stub erstellt (📘)
+diff --git a/logs/project.log b/logs/project.log
+--- a/logs/project.log
++++ b/logs/project.log
+@@
+ [2025-09-27 03:55] Dev78 INIT – SECURITY.md Stub erstellt, status 📘
++[2025-09-27 04:00] Dev79 INIT – FUNDING.md Stub erstellt, status 📘
+*** End Patch
