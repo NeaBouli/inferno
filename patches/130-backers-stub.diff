@@ -1,0 +1,43 @@
+*** Begin Patch
+diff --git a/BACKERS.md b/BACKERS.md
+new file mode 100644
+--- /dev/null
++++ b/BACKERS.md
+@@
++# 📘 Backers – Inferno
++
++Dieses Dokument dient als Übersicht für Unterstützer, Sponsoren und Community-Contributors.  
++Aktuell nur als Stub vorhanden.
++
++## Geplante Inhalte
++- Community-Backers
++- Sponsoren
++- Institutionelle Unterstützer
++
++Status: 📘 dokumentarisch
++
+diff --git a/docs/README.md b/docs/README.md
+--- a/docs/README.md
++++ b/docs/README.md
+@@
+ ### Funding 📘
+ - `FUNDING.md` Stub-Datei mit Finanzierungsinformationen
+ - Status: 📘 dokumentarisch
++
++### Backers 📘
++- `BACKERS.md` Stub-Datei für Unterstützer
++- Status: 📘 dokumentarisch
++
+diff --git a/docs/CHANGELOG.md b/docs/CHANGELOG.md
+--- a/docs/CHANGELOG.md
++++ b/docs/CHANGELOG.md
+@@
+ - [04:00] Dev79 INIT – FUNDING.md Stub erstellt (📘)
++- [04:05] Dev80 INIT – BACKERS.md Stub erstellt (📘)
+diff --git a/logs/project.log b/logs/project.log
+--- a/logs/project.log
++++ b/logs/project.log
+@@
+ [2025-09-27 04:00] Dev79 INIT – FUNDING.md Stub erstellt, status 📘
++[2025-09-27 04:05] Dev80 INIT – BACKERS.md Stub erstellt, status 📘
+*** End Patch
