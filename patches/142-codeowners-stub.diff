@@ -1,0 +1,33 @@
+*** Begin Patch
+diff --git a/.github/CODEOWNERS b/.github/CODEOWNERS
+new file mode 100644
+--- /dev/null
++++ b/.github/CODEOWNERS
+@@
++# 👥 CODEOWNERS (Stub)
++#
++# Dieses File definiert Verantwortlichkeiten für bestimmte Dateien/Ordner.
++# Jeder Commit in diesen Bereichen muss durch die angegebenen Owner reviewed werden.
++#
++# Syntax:  <path>   <owner>
++#
++# Beispiele:
++# *       @PLACEHOLDER
++# /docs/  @PLACEHOLDER
++# /apps/  @PLACEHOLDER
++#
++# Status: 📘 Stub – muss mit echten Usernamen/Teams befüllt werden.
++
+diff --git a/docs/CHANGELOG.md b/docs/CHANGELOG.md
+--- a/docs/CHANGELOG.md
++++ b/docs/CHANGELOG.md
+@@
+ - [23:50] Dev91 INIT – FUNDING.yml Stub erstellt (📘)
++- [23:55] Dev92 INIT – CODEOWNERS Stub erstellt (📘)
+diff --git a/logs/project.log b/logs/project.log
+--- a/logs/project.log
++++ b/logs/project.log
+@@
+ [2025-10-02 23:50] Dev91 INIT – FUNDING.yml Stub erstellt, status 📘
++[2025-10-02 23:55] Dev92 INIT – CODEOWNERS Stub erstellt, status 📘
+*** End Patch
