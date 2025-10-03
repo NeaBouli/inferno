@@ -1,0 +1,39 @@
+*** Begin Patch
+diff --git a/SECURITY.md b/SECURITY.md
+new file mode 100644
+--- /dev/null
++++ b/SECURITY.md
+@@
++# 🔐 Security Policy (Stub)
++
++## Supported Versions
++
++Aktuell wird nur der **main**-Branch aktiv gepflegt.  
++Andere Branches oder Forks erhalten keine Sicherheitsupdates.
++
++## Reporting a Vulnerability
++
++Falls Sie eine Sicherheitslücke finden:
++
++- Bitte öffnen Sie **kein öffentliches Issue**
++- Kontaktieren Sie das Projektteam direkt per E-Mail oder privatem Kanal
++- Geben Sie möglichst viele Details (Contract, Testfall, erwartetes Verhalten)
++
++Wir werden die Meldung so schnell wie möglich prüfen und priorisiert behandeln.
++
++---
++Status: 📘 Stub – SECURITY.md vorbereitet
++
+diff --git a/docs/CHANGELOG.md b/docs/CHANGELOG.md
+--- a/docs/CHANGELOG.md
++++ b/docs/CHANGELOG.md
+@@
+ - [00:20] Dev97 INIT – Pull Request Template erstellt (📘)
++- [00:25] Dev98 INIT – SECURITY.md Stub erstellt (📘)
+diff --git a/logs/project.log b/logs/project.log
+--- a/logs/project.log
++++ b/logs/project.log
+@@
+ [2025-10-03 00:20] Dev97 INIT – Pull Request Template erstellt, status 📘
++[2025-10-03 00:25] Dev98 INIT – SECURITY.md Stub erstellt, status 📘
+*** End Patch
