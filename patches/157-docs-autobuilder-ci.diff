@@ -1,0 +1,55 @@
+*** Begin Patch
+diff --git a/.github/workflows/docs-autobuild.yml b/.github/workflows/docs-autobuild.yml
+new file mode 100644
+--- /dev/null
++++ b/.github/workflows/docs-autobuild.yml
+@@
++name: 📘 Docs Autobuild
++
++on:
++  push:
++    branches: [ "main" ]
++
++jobs:
++  build-docs:
++    runs-on: ubuntu-latest
++    steps:
++      - name: Checkout repo
++        uses: actions/checkout@v4
++
++      - name: Setup Node.js
++        uses: actions/setup-node@v4
++        with:
++          node-version: 22
++
++      - name: Install dependencies
++        run: npm ci
++
++      - name: Run docs autobuilder
++        run: node scripts/docs-autobuild.js
++
++      - name: Commit changes if any
++        run: |
++          git config user.name "InfernoBot"
++          git config user.email "bot@inferno.local"
++          git add docs/_autogen || true
++          if ! git diff --cached --quiet; then
++            git commit -m "chore: auto-update docs index (CI Autobuild)"
++            git push
++          else
++            echo "✅ No doc changes detected."
++          fi
++
+diff --git a/docs/CHANGELOG.md b/docs/CHANGELOG.md
+--- a/docs/CHANGELOG.md
++++ b/docs/CHANGELOG.md
+@@
+ - [23:15] Dev106 INIT – Docs Autobuilder script erstellt (Patch 156)
++- [23:45] Dev107 INIT – Docs Autobuilder CI-Workflow eingerichtet (Patch 157)
+diff --git a/logs/project.log b/logs/project.log
+--- a/logs/project.log
++++ b/logs/project.log
+@@
+ [2025-10-05 23:15] Dev106 INIT – Docs Autobuilder Script erstellt (✅ lokal getestet)
++[2025-10-05 23:45] Dev107 INIT – Docs Autobuilder CI-Workflow aktiviert (📘)
+*** End Patch
