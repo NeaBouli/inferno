@@ -1,0 +1,52 @@
+*** Begin Patch
+diff --git a/docs/risk/README.md b/docs/risk/README.md
+new file mode 100644
+--- /dev/null
++++ b/docs/risk/README.md
+@@
++# ⚠️ Inferno Risk Register
++
++Dieser Bereich dient der Verwaltung und Bewertung aller projektrelevanten Risiken.  
++Jeder Eintrag beschreibt ein Risiko, seine Eintrittswahrscheinlichkeit, Auswirkung,  
++Verantwortlichkeit und den Status der Gegenmaßnahmen.
++
++---
++
++## 📁 Struktur
++
++```
++docs/risk/
++├── README.md
++├── risk-register.md
++└── mitigations/
++    ├── 2025-10-liquidity-pool-risk.md
++    ├── 2025-10-presale-smartcontract-risk.md
++    └── README.md
++```
++
++---
++
++## 📋 Vorlage: Risk Register Eintrag
++
++| ID | Risiko | Kategorie | Wahrscheinlichkeit | Auswirkung | Risiko-Level | Maßnahme | Verantwortlich | Status |
++|----|---------|------------|--------------------|-------------|---------------|-----------|----------------|---------|
++| R-001 | Smart-Contract-Exploit im BuybackVault | Technisch | Mittel | Hoch | 🔴 Hoch | Audit + Tests | Dev4 | Offen |
++| R-002 | Verzögerung im Presale | Operativ | Niedrig | Mittel | 🟡 Mittel | Automatisches Fallback-Skript | Dev2 | Geschlossen |
++
++---
++
++_Status: 📘 Dokumentarisch – Risk Register vorbereitet_
++
+diff --git a/docs/CHANGELOG.md b/docs/CHANGELOG.md
+--- a/docs/CHANGELOG.md
++++ b/docs/CHANGELOG.md
+@@
+ - [01:00] Dev102 INIT – Audit-Ordner + Template erstellt (📘)
++- [01:15] Dev103 INIT – Risk Register + Template erstellt (📘)
+diff --git a/logs/project.log b/logs/project.log
+--- a/logs/project.log
++++ b/logs/project.log
+@@
+ [2025-10-05 01:00] Dev102 INIT – Audit-Ordner + Template erstellt, status 📘
++[2025-10-05 01:15] Dev103 INIT – Risk Register + Template erstellt, status 📘
+*** End Patch
