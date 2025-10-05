@@ -1,0 +1,68 @@
+*** Begin Patch
+diff --git a/.github/workflows/release-announce.yml b/.github/workflows/release-announce.yml
+new file mode 100644
+--- /dev/null
++++ b/.github/workflows/release-announce.yml
+@@
++# 🚀 Inferno Release Notes Auto-Publisher
++
++name: Release Notes AutoPublisher
++
++on:
++  release:
++    types: [published]
++
++jobs:
++  announce-release:
++    runs-on: ubuntu-latest
++    steps:
++      - name: Checkout repository
++        uses: actions/checkout@v4
++
++      - name: Extract release info
++        id: extract
++        run: |
++          TAG=${GITHUB_REF_NAME}
++          FILE="docs/releases/release-${TAG}.md"
++          TITLE=$(head -n 1 $FILE | sed 's/# //')
++          SUMMARY=$(grep -m1 '###' $FILE | sed 's/### //')
++          echo "tag=$TAG" >> $GITHUB_OUTPUT
++          echo "title=$TITLE" >> $GITHUB_OUTPUT
++          echo "summary=$SUMMARY" >> $GITHUB_OUTPUT
++
++      - name: Post to Discord
++        if: env.DISCORD_WEBHOOK != ''
++        env:
++          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
++        run: |
++          curl -H "Content-Type: application/json" \
++          -X POST \
++          -d "{\"content\":\"🔥 **New Inferno Release:** ${{ steps.extract.outputs.title }}\\n📦 Tag: ${{ steps.extract.outputs.tag }}\\n${{ steps.extract.outputs.summary }}\\n🔗 <https://github.com/${{ github.repository }}/releases/tag/${{ steps.extract.outputs.tag }}>\"}" \
++          $DISCORD_WEBHOOK
++
++      - name: Post to Twitter/X
++        if: env.TWITTER_BEARER_TOKEN != ''
++        env:
++          TWITTER_BEARER_TOKEN: ${{ secrets.TWITTER_BEARER_TOKEN }}
++        run: |
++          TWEET="🔥 Inferno Release ${{ steps.extract.outputs.tag }} now live! 🚀"
++          TWEET="$TWEET\n${{ steps.extract.outputs.summary }}"
++          TWEET="$TWEET\nhttps://github.com/${{ github.repository }}/releases/tag/${{ steps.extract.outputs.tag }}"
++          curl -X POST "https://api.x.com/2/tweets" \
++            -H "Authorization: Bearer $TWITTER_BEARER_TOKEN" \
++            -H "Content-type: application/json" \
++            -d "{\"text\":\"$TWEET\"}"
++
+diff --git a/docs/CHANGELOG.md b/docs/CHANGELOG.md
+--- a/docs/CHANGELOG.md
++++ b/docs/CHANGELOG.md
+@@
+ - [00:10] Dev109 INIT – ReleaseDocs Generator CI hinzugefügt (Patch 159)
++- [00:30] Dev110 INIT – Release Notes AutoPublisher (Twitter/X + Discord) hinzugefügt (Patch 160)
+diff --git a/logs/project.log b/logs/project.log
+--- a/logs/project.log
++++ b/logs/project.log
+@@
+ [2025-10-06 00:10] Dev109 INIT – ReleaseDocs Generator Workflow implementiert (📘)
++[2025-10-06 00:30] Dev110 INIT – Release Notes AutoPublisher Workflow integriert (📘)
+*** End Patch
