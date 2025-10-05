@@ -1,0 +1,87 @@
+*** Begin Patch
+diff --git a/.github/SECURITY.md b/.github/SECURITY.md
+new file mode 100644
+--- /dev/null
++++ b/.github/SECURITY.md
+@@
++# 🔐 Inferno Security Policy
++
++Diese Datei definiert das Verfahren zum verantwortungsvollen Umgang mit Schwachstellen
++im **Inferno ($IFR)** Ökosystem.
++
++---
++
++## 🧩 1. Ziel und Geltungsbereich
++
++Diese Richtlinie gilt für alle Code-Komponenten, Repositories, Smart Contracts,
++dApps, Indexer und Infrastruktur-Services unter der Marke **Inferno**.
++
++---
++
++## 🚨 2. Melden von Sicherheitslücken
++
++- Bitte melde Schwachstellen **nicht öffentlich** über Issues oder Pull Requests.  
++- Verwende stattdessen die folgende Kontaktadresse:
++
++  📧 security@inferno-token.io  
++
++- GPG-Fingerabdruck (wird veröffentlicht, sobald der Audit live geht).
++- Alternativ: Direktkontakt über [https://inferno-token.io/security](https://inferno-token.io/security)
++
++Wir bestätigen den Eingang innerhalb von **72 Stunden** und melden innerhalb von **7 Tagen** eine erste Einschätzung zurück.
++
++---
++
++## 🧮 3. Richtlinien zur verantwortungsvollen Offenlegung
++
++1. Greife keine realen Benutzer, Konten oder Vermögenswerte an.  
++2. Vermeide jegliche Veröffentlichung vor der Fehlerbehebung („Coordinated Disclosure“).  
++3. Melde reproduzierbare Beweise oder Proof-of-Concepts in geschützter Form.  
++4. Verwende kein Social Engineering oder Phishing.  
++
++Für kritische Smart-Contract-Fehler (< High Severity) kann eine Belohnung (Bug Bounty) nach Audit Einführung gezahlt werden.
++
++---
++
++## 🧠 4. Audit & Review Prozess
++
++Sämtliche Smart-Contracts durchlaufen eine interne und externe Prüfung bevor Deployment auf Mainnet.  
++Externe Auditoren (aktuell in Auswahl) erhalten Zugriff über signierte NDAs und dedizierte Repositories.
++
++Audit Berichte werden nach Abschluss öffentlich in `/docs/audits/` veröffentlicht.
++
++---
++
++## 🧯 5. Sicherheitsziele und Prävention
++
++- Verwendung aktueller OpenZeppelin Versionen (≥ 5.4.0)  
++- Keine Low-Level `call` Operations ohne Checks  
++- Unit-Tests mit Hardhat und Foundry (zukünftig)  
++- CI/CD mit automatischer Static Analysis („Mythril“, „Slither“)  
++- Regelmäßige Dependencies-Scans (`npm audit`, `hardhat compile --show-stack-traces`)
++
++---
++
++## 📅 6. Version und Kontakt
++
++- **Version:** v1.0 (2025-10-05)  
++- **Maintainer:** Inferno Core Team  
++- **Kontakt:** security@inferno-token.io  
++
++---
++
++_Status: 🟢 Produktiv – Security Policy aktiviert _
++
+diff --git a/docs/CHANGELOG.md b/docs/CHANGELOG.md
+--- a/docs/CHANGELOG.md
++++ b/docs/CHANGELOG.md
+@@
+ - [00:35] Dev100 INIT – Funding Konfig Stub erstellt (📘)
++- [00:45] Dev101 INIT – Security Policy produktiv erstellt (🟢)
+diff --git a/logs/project.log b/logs/project.log
+--- a/logs/project.log
++++ b/logs/project.log
+@@
+ [2025-10-03 00:35] Dev100 INIT – Funding Konfiguration Stub erstellt, status 📘
++[2025-10-05 00:45] Dev101 INIT – Security Policy produktiv erstellt, status 🟢
+*** End Patch
