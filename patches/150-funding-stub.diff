@@ -1,0 +1,29 @@
+*** Begin Patch
+diff --git a/.github/FUNDING.yml b/.github/FUNDING.yml
+new file mode 100644
+--- /dev/null
++++ b/.github/FUNDING.yml
+@@
++# 📘 Inferno Funding Stub
++# Diese Datei legt spätere Funding-Links fest (z. B. GitHub Sponsors, Ko-fi usw.)
++# Aktuell keine aktiven Einträge – nur Stub.
++
++#github: NeaBouli
++#ko_fi: NeaBouli
++#custom: ["https://inferno-token.io/donate"]
++
++status: 📘 Stub – Funding Konfiguration vorbereitet
++
+diff --git a/docs/CHANGELOG.md b/docs/CHANGELOG.md
+--- a/docs/CHANGELOG.md
++++ b/docs/CHANGELOG.md
+@@
+ - [00:30] Dev99 INIT – CODE_OF_CONDUCT.md Stub erstellt (📘)
++- [00:35] Dev100 INIT – Funding Konfig Stub erstellt (📘)
+diff --git a/logs/project.log b/logs/project.log
+--- a/logs/project.log
++++ b/logs/project.log
+@@
+ [2025-10-03 00:30] Dev99 INIT – CODE_OF_CONDUCT.md Stub erstellt, status 📘
++[2025-10-03 00:35] Dev100 INIT – Funding Konfiguration Stub erstellt, status 📘
+*** End Patch
