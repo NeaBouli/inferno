@@ -1,0 +1,107 @@
+*** Begin Patch
+diff --git a/scripts/status-notifier.js b/scripts/status-notifier.js
+new file mode 100755
+--- /dev/null
++++ b/scripts/status-notifier.js
+@@
++#!/usr/bin/env node
++/**
++ * Inferno Status Notifier
++ * Sends notifications to Discord + Email on repo events.
++ */
++
++import fs from "fs";
++import nodemailer from "nodemailer";
++import fetch from "node-fetch";
++
++// === CONFIG ===
++const DISCORD_WEBHOOK = process.env.DISCORD_WEBHOOK_URL;
++const EMAIL_TO = process.env.NOTIFY_EMAIL_TO;
++const EMAIL_FROM = process.env.NOTIFY_EMAIL_FROM || "inferno@system.local";
++const EMAIL_PASS = process.env.NOTIFY_EMAIL_PASS || "";
++
++const LATEST_LOG = fs.readFileSync("logs/project.log", "utf8").split("\n").slice(-5).join("\n");
++
++const message = `🔥 Inferno Repo Update Detected
++
++**Timestamp:** ${new Date().toISOString()}
++**Event:** ${process.env.GITHUB_EVENT_NAME || "manual run"}
++
++\`\`\`
++${LATEST_LOG}
++\`\`\`
++`;
++
++// === Discord Notify ===
++async function notifyDiscord() {
++  if (!DISCORD_WEBHOOK) return console.warn("⚠️  No Discord webhook set.");
++  await fetch(DISCORD_WEBHOOK, {
++    method: "POST",
++    headers: { "Content-Type": "application/json" },
++    body: JSON.stringify({ content: message }),
++  });
++  console.log("✅ Sent Discord notification.");
++}
++
++// === Email Notify ===
++async function notifyEmail() {
++  if (!EMAIL_TO || !EMAIL_PASS) return console.warn("⚠️  No email credentials set.");
++  const t = nodemailer.createTransport({
++    service: "gmail",
++    auth: { user: EMAIL_FROM, pass: EMAIL_PASS },
++  });
++  await t.sendMail({
++    from: EMAIL_FROM,
++    to: EMAIL_TO,
++    subject: "Inferno Repo Update",
++    text: message,
++  });
++  console.log("✅ Sent Email notification.");
++}
++
++await Promise.all([notifyDiscord(), notifyEmail()]);
++
+diff --git a/.github/workflows/status-notifier.yml b/.github/workflows/status-notifier.yml
+new file mode 100644
+--- /dev/null
++++ b/.github/workflows/status-notifier.yml
+@@
++name: Status Notifier
++
++on:
++  push:
++    branches: [main]
++  workflow_run:
++    workflows: ["README Auto-Sync", "Docs AutoBuilder"]
++    types: [completed]
++
++jobs:
++  notify:
++    runs-on: ubuntu-latest
++    steps:
++      - uses: actions/checkout@v4
++      - name: Setup Node
++        uses: actions/setup-node@v4
++        with:
++          node-version: 22
++      - name: Run Notifier
++        run: node scripts/status-notifier.js
++        env:
++          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
++          NOTIFY_EMAIL_TO: ${{ secrets.NOTIFY_EMAIL_TO }}
++          NOTIFY_EMAIL_FROM: ${{ secrets.NOTIFY_EMAIL_FROM }}
++          NOTIFY_EMAIL_PASS: ${{ secrets.NOTIFY_EMAIL_PASS }}
++
+diff --git a/docs/CHANGELOG.md b/docs/CHANGELOG.md
+--- a/docs/CHANGELOG.md
++++ b/docs/CHANGELOG.md
+@@
+ - [01:10] Dev112 INIT – README Status Auto-Sync Script + Workflow (Patch 162)
++- [01:40] Dev113 INIT – Status Notifier (Discord + Email) hinzugefügt (Patch 163)
+diff --git a/logs/project.log b/logs/project.log
+--- a/logs/project.log
++++ b/logs/project.log
+@@
+ [2025-10-06 01:10] Dev112 INIT – README Auto-Sync Script & Workflow integriert (📘)
++[2025-10-06 01:40] Dev113 INIT – Status Notifier Script & Workflow integriert (📘)
+*** End Patch
