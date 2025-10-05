@@ -1,0 +1,121 @@
+*** Begin Patch
+diff --git a/scripts/docs-dashboard.js b/scripts/docs-dashboard.js
+new file mode 100755
+--- /dev/null
++++ b/scripts/docs-dashboard.js
+@@
++#!/usr/bin/env node
++/**
++ * Inferno Docs Summary Dashboard Generator
++ * Scans docs/, logs/, patches/ for status markers and outputs HTML dashboard.
++ */
++
++import fs from "fs";
++import path from "path";
++
++const ROOT = process.cwd();
++const DOCS = path.join(ROOT, "docs");
++const LOGS = path.join(ROOT, "logs");
++const PATCHES = path.join(ROOT, "patches");
++const OUTPUT = path.join(DOCS, "dashboard.html");
++
++function collectFiles(dir, ext = [".md", ".log"]) {
++  const result = [];
++  for (const f of fs.readdirSync(dir)) {
++    const full = path.join(dir, f);
++    const stat = fs.statSync(full);
++    if (stat.isDirectory()) result.push(...collectFiles(full, ext));
++    else if (ext.includes(path.extname(full))) result.push(full);
++  }
++  return result;
++}
++
++function parseStatus(file) {
++  const text = fs.readFileSync(file, "utf8");
++  if (text.includes("🟢")) return "🟢 done";
++  if (text.includes("🔵")) return "🔵 open";
++  if (text.includes("🔴")) return "🔴 error";
++  if (text.includes("📘")) return "📘 doc";
++  return "⚪ unknown";
++}
++
++const files = [
++  ...collectFiles(DOCS),
++  ...collectFiles(LOGS, [".log"]),
++  ...collectFiles(PATCHES, [".diff"]),
++];
++
++const rows = files.map(f => {
++  const status = parseStatus(f);
++  const rel = path.relative(ROOT, f);
++  return `<tr><td>${rel}</td><td>${status}</td></tr>`;
++});
++
++const html = `<!DOCTYPE html>
++<html lang="en">
++<head>
++<meta charset="UTF-8"/>
++<title>Inferno Docs Dashboard</title>
++<style>
++body{font-family:sans-serif;background:#111;color:#eee;padding:20px;}
++table{width:100%;border-collapse:collapse;}
++td,th{border-bottom:1px solid #333;padding:6px;}
++th{text-align:left;background:#222;}
++</style>
++</head>
++<body>
++<h1>📊 Inferno Docs Dashboard</h1>
++<table>
++<tr><th>File</th><th>Status</th></tr>
++${rows.join("\n")}
++</table>
++<p>Generated ${new Date().toISOString()}</p>
++</body>
++</html>`;
++
++fs.writeFileSync(OUTPUT, html);
++console.log(`✅ Dashboard generated at ${OUTPUT}`);
++
+diff --git a/.github/workflows/docs-dashboard.yml b/.github/workflows/docs-dashboard.yml
+new file mode 100644
+--- /dev/null
++++ b/.github/workflows/docs-dashboard.yml
+@@
++name: Docs Dashboard Auto-Builder
++
++on:
++  push:
++    branches: [main]
++
++jobs:
++  build-dashboard:
++    runs-on: ubuntu-latest
++    steps:
++      - uses: actions/checkout@v4
++      - name: Setup Node
++        uses: actions/setup-node@v4
++        with:
++          node-version: 22
++      - name: Generate docs dashboard
++        run: node scripts/docs-dashboard.js
++      - name: Commit updated dashboard
++        run: |
++          git config user.name "inferno-bot"
++          git config user.email "bot@inferno.system"
++          git add docs/dashboard.html
++          git commit -m "auto: update docs dashboard"
++          git push
++
+diff --git a/docs/CHANGELOG.md b/docs/CHANGELOG.md
+--- a/docs/CHANGELOG.md
++++ b/docs/CHANGELOG.md
+@@
+ - [00:30] Dev110 INIT – Release Notes AutoPublisher (Twitter/X + Discord) hinzugefügt (Patch 160)
++- [00:50] Dev111 INIT – Docs Dashboard Auto-Builder hinzugefügt (Patch 161)
+diff --git a/logs/project.log b/logs/project.log
+--- a/logs/project.log
++++ b/logs/project.log
+@@
+ [2025-10-06 00:30] Dev110 INIT – Release Notes AutoPublisher Workflow integriert (📘)
++[2025-10-06 00:50] Dev111 INIT – Docs Dashboard Generator & Workflow integriert (📘)
+*** End Patch
