@@ -1,0 +1,85 @@
+*** Begin Patch
+diff --git a/docs/audits/README.md b/docs/audits/README.md
+new file mode 100644
+--- /dev/null
++++ b/docs/audits/README.md
+@@
++# 🧾 Inferno Audit Reports
++
++Dieser Ordner enthält Audit- und Sicherheitsberichte aller geprüften Smart-Contracts.  
++Jeder Bericht wird als eigenständige Markdown-Datei mit Metadaten im Kopfbereich geführt.
++
++---
++
++## 📁 Struktur
++
++```
++docs/audits/
++├── 2025-10-InfernoCoreAudit.md
++├── 2025-11-PresaleAudit.md
++└── README.md
++```
++
++---
++
++## 📋 Vorlage (Template)
++
++### Audit Report Template
++
++```markdown
++---
++title: "<ContractName> Audit Report"
++auditor: "<Firma/Team>"
++date: "YYYY-MM-DD"
++version: "vX.Y"
++scope:
++  - "<Pfad/zum/Contract.sol>"
++  - "<weitere Komponenten>"
++severity_summary:
++  critical: 0
++  high: 0
++  medium: 0
++  low: 0
++  info: 0
++---
++
++## 🔍 Zusammenfassung
++
++Kurze Beschreibung des geprüften Smart-Contracts und seiner Funktion.
++
++## 🧠 Methodik
++
++- Manuelle Code-Review  
++- Static-Analysis-Tools (z. B. Slither, Mythril)  
++- Unit-Test-Verifikation  
++- Simulation kritischer Pfade  
++
++## 🛠 Findings
++
++| Schweregrad | Beschreibung | Status | Empfehlung |
++|-------------|--------------|--------|-------------|
++| High | Beispiel: Reentrancy-Risk in withdraw() | Gefixt | Verwende ReentrancyGuard |
++| Low | Kommentar-Fehler | Offen | — |
++
++## ✅ Fazit
++
++Alle identifizierten Probleme wurden vor Deployment behoben.  
++Audit-Team empfiehlt Deployment auf Mainnet.
++
++---
++
++_Status: 📘 Dokumentarisch – Vorlage erstellt_
++
+diff --git a/docs/CHANGELOG.md b/docs/CHANGELOG.md
+--- a/docs/CHANGELOG.md
++++ b/docs/CHANGELOG.md
+@@
+ - [00:45] Dev101 INIT – Security Policy produktiv erstellt (🟢)
++- [01:00] Dev102 INIT – Audit-Ordner + Template erstellt (📘)
+diff --git a/logs/project.log b/logs/project.log
+--- a/logs/project.log
++++ b/logs/project.log
+@@
+ [2025-10-05 00:45] Dev101 INIT – Security Policy produktiv erstellt, status 🟢
++[2025-10-05 01:00] Dev102 INIT – Audit-Ordner + Template erstellt, status 📘
+*** End Patch
