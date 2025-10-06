@@ -1,0 +1,58 @@
+*** Begin Patch
+diff --git a/audit/README.md b/audit/README.md
+new file mode 100644
+--- /dev/null
++++ b/audit/README.md
+@@
++# 🧩 Inferno Audit & Compliance Matrix
++
++Dieser Bereich dokumentiert alle sicherheits-, qualitäts- und compliance-relevanten Prüfungen 
++für das Inferno-Projekt.  
++
++## 🔍 Audit-Checklist (Smart Contracts)
++| Modul | Beschreibung | Letztes Audit | Status |
++|:------|:--------------|:---------------|:-------|
++| Token Core | Supply / Fees / Burn | – | 🔵 offen |
++| Presale | Preislogik / Fee Exempt | ✅ intern | 🟢 geprüft |
++| Vesting | Vesting / Burn Integration | ✅ intern | 🟢 geprüft |
++| Buyback Vault | Router / Distribution | 🚧 | 🔴 fehlerhaft |
++
++## 🧱 Compliance-Matrix
++| Standard | Relevanz | Maßnahmen | Status |
++|:----------|:-----------|:------------|:-------|
++| OWASP Top 10 | Web / API Security | Linter + Pentest geplant | 🔵 offen |
++| ISO 27001 | Informationssicherheit | Backup + Access Policy | 📘 Dokumentiert |
++| GDPR | Datensparsamkeit / Consent | Kein Tracking / Opt-In | 🟢 konform |
++| NIST 800-53 | Smart Contract Risiken | Autom. Audit via CI | 🔵 geplant |
++
++## 🔐 Audit-Protokolle
++- Interne Audits werden unter `/audit/reports/` gespeichert.  
++- Externe Audits (Certik, Hacken u. a.) werden hier nachgereicht.
++
++Status: 📘 dokumentarisch – Grundstruktur erstellt.
++
+diff --git a/docs/README.md b/docs/README.md
+--- a/docs/README.md
++++ b/docs/README.md
+@@
+ - `indexer/` Ordner für Event-Indexer (Offchain Services)
+ - Status: 📘 dokumentarisch
++
++### Audit & Compliance 📘
++- `audit/` Ordner für Sicherheits-, Qualitäts- und Compliance-Dokumentation  
++- Enthält Checklisten und Matrix nach Standards (OWASP, ISO, NIST, GDPR)
++- Status: 📘 dokumentarisch
++
+diff --git a/docs/CHANGELOG.md b/docs/CHANGELOG.md
+--- a/docs/CHANGELOG.md
++++ b/docs/CHANGELOG.md
+@@
+ - [20:30] Dev122 INIT – SECURITY.md hinzugefügt (📘)
++- [21:00] Dev123 INIT – Audit Checklist & Compliance Matrix erstellt (📘)
+diff --git a/logs/project.log b/logs/project.log
+--- a/logs/project.log
++++ b/logs/project.log
+@@
+ [2025-10-05 20:30] Dev122 INIT – SECURITY.md hinzugefügt (📘)
++[2025-10-05 21:00] Dev123 INIT – Audit Checklist & Compliance Matrix erstellt (📘)
+*** End Patch
