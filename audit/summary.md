@@ -1,14 +1,9 @@
-# 🧾 Inferno Audit Summary
+# 🧾 Audit Summary
 
-Generated: 2025-10-06T14:20:50.123Z
+_Last updated: 2025-10-06 16:38:46_
 
-## 📄 contracts/token-audit.md
-
-```
-# Inferno Token Contract Audit
-
-**Scope:** InfernoToken.sol  
-**Auditor:** DebugDev  
-**Findings:**  
-```
+- [token-audit.md](token-audit.md)
+- [hook-second.md](hook-second.md)
+- [hook-test.md](hook-test.md)
+- [test-audit.md](test-audit.md)
 
