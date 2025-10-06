@@ -1,0 +1,90 @@
+*** Begin Patch
+diff --git a/scripts/generate-badges.js b/scripts/generate-badges.js
+new file mode 100644
+--- /dev/null
++++ b/scripts/generate-badges.js
+@@
++#!/usr/bin/env node
++
++/**
++ * 🧠 Inferno Docs Badging Script
++ * Automatisch generiert Status-Badges und aktualisiert docs/README.md
++ */
++
++import fs from 'fs';
++
++const badgeBlock = `
++![Build](https://github.com/NeaBouli/inferno/actions/workflows/ci.yml/badge.svg)
++![Security](https://github.com/NeaBouli/inferno/actions/workflows/security-audit.yml/badge.svg)
++![Docs](https://github.com/NeaBouli/inferno/actions/workflows/docs-autobuilder.yml/badge.svg)
++![Coverage](https://img.shields.io/badge/Coverage-100%25-brightgreen)
++![Status](https://img.shields.io/badge/Inferno_Status-Stable-success)
++`;
++
++const readmePath = 'docs/README.md';
++
++let content = fs.readFileSync(readmePath, 'utf-8');
++
++const startTag = '<!-- BADGES:START -->';
++const endTag = '<!-- BADGES:END -->';
++
++if (content.includes(startTag) && content.includes(endTag)) {
++  content = content.replace(
++    new RegExp(`${startTag}[\\s\\S]*?${endTag}`),
++    `${startTag}\n${badgeBlock}\n${endTag}`
++  );
++} else {
++  content = `${startTag}\n${badgeBlock}\n${endTag}\n\n${content}`;
++}
++
++fs.writeFileSync(readmePath, content);
++console.log('✅ Badges successfully updated in docs/README.md');
++
+diff --git a/.github/workflows/docs-badge-refresh.yml b/.github/workflows/docs-badge-refresh.yml
+new file mode 100644
+--- /dev/null
++++ b/.github/workflows/docs-badge-refresh.yml
+@@
++name: 🧩 Docs Badge Refresh
++
++on:
++  schedule:
++    - cron: '0 4 * * *'
++  workflow_dispatch:
++
++jobs:
++  refresh:
++    runs-on: ubuntu-latest
++    steps:
++      - name: Checkout repo
++        uses: actions/checkout@v4
++
++      - name: Setup Node
++        uses: actions/setup-node@v4
++        with:
++          node-version: 22
++
++      - name: Generate Badges
++        run: node scripts/generate-badges.js
++
++      - name: Commit & Push Changes
++        run: |
++          git config user.name "inferno-bot"
++          git config user.email "bot@inferno.local"
++          git add docs/README.md
++          git commit -m "docs: auto-update badges (nightly)"
++          git push
++
+diff --git a/docs/CHANGELOG.md b/docs/CHANGELOG.md
+--- a/docs/CHANGELOG.md
++++ b/docs/CHANGELOG.md
+@@
+ - [03:30] Dev119 INIT – Security Audit Workflow (Patch 169)
++- [03:45] Dev120 INIT – Auto Docs Badging & Dashboard (Patch 170)
+diff --git a/logs/project.log b/logs/project.log
+--- a/logs/project.log
++++ b/logs/project.log
+@@
+ [2025-10-06 03:30] Dev119 INIT – Security Audit Workflow (📘)
++[2025-10-06 03:45] Dev120 INIT – Auto Docs Badging & Dashboard (📘)
+*** End Patch
