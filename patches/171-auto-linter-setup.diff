@@ -1,0 +1,102 @@
+*** Begin Patch
+diff --git a/.eslintrc.json b/.eslintrc.json
+new file mode 100644
+--- /dev/null
++++ b/.eslintrc.json
+@@
++{
++  "env": { "es2021": true, "node": true },
++  "extends": ["eslint:recommended", "plugin:prettier/recommended"],
++  "parserOptions": { "ecmaVersion": "latest", "sourceType": "module" },
++  "rules": {
++    "no-unused-vars": ["warn"],
++    "semi": ["error", "always"],
++    "quotes": ["error", "double"]
++  }
++}
++
+diff --git a/.prettierrc.json b/.prettierrc.json
+new file mode 100644
+--- /dev/null
++++ b/.prettierrc.json
+@@
++{
++  "printWidth": 100,
++  "tabWidth": 2,
++  "singleQuote": false,
++  "trailingComma": "all",
++  "semi": true
++}
++
+diff --git a/.solhint.json b/.solhint.json
+new file mode 100644
+--- /dev/null
++++ b/.solhint.json
+@@
++{
++  "extends": "solhint:recommended",
++  "rules": {
++    "compiler-version": ["error", "^0.8.20"],
++    "func-visibility": ["warn", { "ignoreConstructors": true }]
++  }
++}
++
+diff --git a/package.json b/package.json
+--- a/package.json
++++ b/package.json
+@@
+   "dependencies": {
+     "@openzeppelin/contracts": "^5.4.0"
+   }
++,
++  "scripts": {
++    "lint": "eslint . --ext .js,.ts && solhint 'contracts/**/*.sol'",
++    "format": "prettier --write ."
++  },
++  "devDependencies": {
++    "eslint": "^8.57.0",
++    "eslint-plugin-prettier": "^5.2.1",
++    "prettier": "^3.3.3",
++    "solhint": "^3.6.3"
++  }
+diff --git a/.github/workflows/linter.yml b/.github/workflows/linter.yml
+new file mode 100644
+--- /dev/null
++++ b/.github/workflows/linter.yml
+@@
++name: 🧹 Code Linter & Prettier
++
++on:
++  push:
++    branches: [main]
++  pull_request:
++    branches: [main]
++
++jobs:
++  lint:
++    runs-on: ubuntu-latest
++    steps:
++      - uses: actions/checkout@v4
++      - uses: actions/setup-node@v4
++        with:
++          node-version: 22
++      - name: Install deps
++        run: npm install
++      - name: Run ESLint & Solhint
++        run: npm run lint
++      - name: Check formatting
++        run: npm run format -- --check
++
+diff --git a/docs/CHANGELOG.md b/docs/CHANGELOG.md
+--- a/docs/CHANGELOG.md
++++ b/docs/CHANGELOG.md
+@@
+ - [03:45] Dev120 INIT – Auto Docs Badging & Dashboard (Patch 170)
++- [04:00] Dev121 INIT – Auto Linter & Prettier Enforcement (Patch 171)
+diff --git a/logs/project.log b/logs/project.log
+--- a/logs/project.log
++++ b/logs/project.log
+@@
+ [2025-10-06 03:45] Dev120 INIT – Auto Docs Badging & Dashboard (📘)
++[2025-10-06 04:00] Dev121 INIT – Auto Linter & Prettier Enforcement (📘)
+*** End Patch
