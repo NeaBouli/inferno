@@ -1,0 +1,65 @@
+*** Begin Patch
+diff --git a/scripts/docs-autofixer.js b/scripts/docs-autofixer.js
+new file mode 100755
+--- /dev/null
++++ b/scripts/docs-autofixer.js
+@@
++#!/usr/bin/env node
++/**
++ * Inferno Docs AutoFixer
++ * ----------------------
++ * Scans /docs for empty Markdown files and auto-fills them with a placeholder.
++ */
++
++const fs = require("fs");
++const path = require("path");
++
++const DOCS_DIR = path.join(__dirname, "..", "docs");
++const LOG_DIR = path.join(__dirname, "..", "logs");
++const LOG_FILE = path.join(LOG_DIR, "docs-autofixer.log");
++
++if (!fs.existsSync(LOG_DIR)) fs.mkdirSync(LOG_DIR, { recursive: true });
++
++function log(msg) {
++  fs.appendFileSync(LOG_FILE, `[${new Date().toISOString()}] ${msg}\n`);
++}
++
++function listMarkdownFiles(dir, base = "") {
++  const entries = fs.readdirSync(dir, { withFileTypes: true });
++  let files = [];
++  for (const e of entries) {
++    const full = path.join(dir, e.name);
++    const rel = path.join(base, e.name);
++    if (e.isDirectory()) files = files.concat(listMarkdownFiles(full, rel));
++    else if (e.name.endsWith(".md")) files.push(rel);
++  }
++  return files;
++}
++
++console.log("🩹 Running Docs AutoFixer...");
++
++const files = listMarkdownFiles(DOCS_DIR);
++let fixed = 0;
++
++for (const rel of files) {
++  const abs = path.join(DOCS_DIR, rel);
++  const content = fs.readFileSync(abs, "utf8").trim();
++
++  if (content.length === 0) {
++    const title = "# " + path.basename(rel);
++    const placeholder = `> 🧩 Auto-generated placeholder – to be completed by documentation team.\n`;
++    fs.writeFileSync(abs, `${title}\n\n${placeholder}`);
++    console.log(`🧩 Fixed empty file: ${rel}`);
++    log(`Fixed empty file: ${rel}`);
++    fixed++;
++  }
++}
++
++if (fixed === 0) {
++  console.log("✅ No empty files found.");
++  log("No empty files found.");
++} else {
++  console.log(`✅ Fixed ${fixed} files.`);
++  log(`Fixed ${fixed} files.`);
++}
+*** End Patch

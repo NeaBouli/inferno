@@ -8,4 +8,5 @@
 - [WHITEPAPER.md](WHITEPAPER.md)
 - [WHITEPAPER_EN.md](WHITEPAPER_EN.md)
 - [_autogen/tree.md](_autogen/tree.md)
+- [_index.md](_index.md)
 - [reports/dev5-buybackvault.md](reports/dev5-buybackvault.md)
