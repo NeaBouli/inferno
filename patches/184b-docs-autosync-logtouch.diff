@@ -1,0 +1,9 @@
+*** Begin Patch
+diff --git a/scripts/docs-autosync-hook.sh b/scripts/docs-autosync-hook.sh
+--- a/scripts/docs-autosync-hook.sh
++++ b/scripts/docs-autosync-hook.sh
+@@
+ mkdir -p "$LOG_DIR"
++touch "$LOG_FILE"
+ echo "[`date -Iseconds`] <0001f9e9> Running Docs AutoSync Hook..." >> "$LOG_FILE"
+*** End Patch
