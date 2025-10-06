@@ -1,0 +1,79 @@
+*** Begin Patch
+diff --git a/scripts/audit-autogen.js b/scripts/audit-autogen.js
+new file mode 100755
+--- /dev/null
++++ b/scripts/audit-autogen.js
+@@
++#!/usr/bin/env node
++/**
++ * 🛠️ Inferno Audit Automation Script
++ * Aggregates all audit markdown files into audit/summary.md
++ */
++
++const fs = require("fs");
++const path = require("path");
++
++const root = path.join(__dirname, "..", "audit");
++const output = path.join(root, "summary.md");
++
++function collectFiles(dir) {
++  let results = [];
++  const list = fs.readdirSync(dir);
++  for (const file of list) {
++    const fullPath = path.join(dir, file);
++    const stat = fs.statSync(fullPath);
++    if (stat && stat.isDirectory()) {
++      results = results.concat(collectFiles(fullPath));
++    } else if (file.endsWith(".md")) {
++      results.push(fullPath);
++    }
++  }
++  return results;
++}
++
++function generateSummary() {
++  const files = collectFiles(root);
++  let outputContent = "# 🧾 Inferno Audit Summary\n\n";
++  outputContent += `Generated: ${new Date().toISOString()}\n\n`;
++
++  for (const f of files) {
++    const rel = path.relative(root, f);
++    const content = fs.readFileSync(f, "utf8");
++    const lines = content.split("\n").slice(0, 5).join("\n");
++    outputContent += `## 📄 ${rel}\n\n`;
++    outputContent += "```\n" + lines + "\n```\n\n";
++  }
++
++  fs.writeFileSync(output, outputContent);
++  console.log(`✅ Audit summary generated: ${output}`);
++}
++
++generateSummary();
++
+diff --git a/docs/README.md b/docs/README.md
+--- a/docs/README.md
++++ b/docs/README.md
+@@
+ ### Audit Reports 📘
+ - `audit/reports/` enthält interne & externe Prüfberichte  
+ - Benennung nach Datum, Typ und Version  
+ - Status: 📘 dokumentarisch
++
++### Audit Automation Script 🛠️
++- `scripts/audit-autogen.js` sammelt alle Audit-Markdowns und erzeugt `audit/summary.md`
++- Wird manuell oder über CI/CD ausgeführt  
++- Status: 🛠️ aktiv
++
+diff --git a/docs/CHANGELOG.md b/docs/CHANGELOG.md
+--- a/docs/CHANGELOG.md
++++ b/docs/CHANGELOG.md
+@@
+ - [21:30] Dev124 INIT – Audit Reports Stub erstellt (📘)
++- [21:45] Dev125 INIT – Audit Automation Script erstellt (🛠️)
+diff --git a/logs/project.log b/logs/project.log
+--- a/logs/project.log
++++ b/logs/project.log
+@@
+ [2025-10-05 21:30] Dev124 INIT – Audit Reports Stub erstellt (📘)
++[2025-10-05 21:45] Dev125 INIT – Audit Automation Script erstellt (🛠️)
+*** End Patch
