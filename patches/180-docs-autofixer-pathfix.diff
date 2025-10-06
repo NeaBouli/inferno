@@ -1,0 +1,69 @@
+*** Begin Patch
+diff --git a/scripts/docs-autofixer.js b/scripts/docs-autofixer.js
+--- a/scripts/docs-autofixer.js
++++ b/scripts/docs-autofixer.js
+@@
+-const DOCS_DIR = path.join(__dirname, "..", "docs");
++const ROOT_DIRS = [
++  path.join(__dirname, "..", "docs"),
++  path.join(__dirname, "..", "reports"),
++  path.join(__dirname, "..") // Root for CHANGELOG.md etc.
++];
+@@
+-console.log("🩹 Running Docs AutoFixer...");
+-
+-const files = listMarkdownFiles(DOCS_DIR);
+-let fixed = 0;
+-
+-for (const rel of files) {
+-  const abs = path.join(DOCS_DIR, rel);
+-  const content = fs.readFileSync(abs, "utf8").trim();
+-
+-  if (content.length === 0) {
+-    const title = "# " + path.basename(rel);
+-    const placeholder = `> 🧩 Auto-generated placeholder – to be completed by documentation team.\n`;
+-    fs.writeFileSync(abs, `${title}\n\n${placeholder}`);
+-    console.log(`🧩 Fixed empty file: ${rel}`);
+-    log(`Fixed empty file: ${rel}`);
+-    fixed++;
+-  }
+-}
+-
+-if (fixed === 0) {
+-  console.log("✅ No empty files found.");
+-  log("No empty files found.");
+-} else {
+-  console.log(`✅ Fixed ${fixed} files.`);
+-  log(`Fixed ${fixed} files.`);
+-}
++console.log("🩹 Running Docs AutoFixer (multi-path mode)...");
++
++let fixed = 0;
++
++for (const targetDir of ROOT_DIRS) {
++  if (!fs.existsSync(targetDir)) continue;
++  const files = listMarkdownFiles(targetDir);
++
++  for (const rel of files) {
++    const abs = path.join(targetDir, rel);
++    const content = fs.readFileSync(abs, "utf8").trim();
++
++    if (content.length === 0) {
++      const title = "# " + path.basename(rel);
++      const placeholder = `> 🧩 Auto-generated placeholder – to be completed by documentation team.\n`;
++      fs.writeFileSync(abs, `${title}\n\n${placeholder}`);
++      console.log(`🧩 Fixed empty file: ${abs}`);
++      log(`Fixed empty file: ${abs}`);
++      fixed++;
++    }
++  }
++}
++
++if (fixed === 0) {
++  console.log("✅ No empty files found in any scanned directories.");
++  log("No empty files found in any scanned directories.");
++} else {
++  console.log(`✅ Fixed ${fixed} empty Markdown files across all paths.`);
++  log(`Fixed ${fixed} empty Markdown files across all paths.`);
++}
+*** End Patch
