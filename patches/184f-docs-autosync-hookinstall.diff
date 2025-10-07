@@ -1,0 +1,29 @@
+*** Begin Patch
+diff --git a/scripts/install-autosync-hook.sh b/scripts/install-autosync-hook.sh
+new file mode 100755
+--- /dev/null
++++ b/scripts/install-autosync-hook.sh
+@@
++#!/bin/bash
++# 🚀 Inferno – Hook Installer (macOS Safe)
++
++ROOT_DIR="/Users/test/Desktop/inferno"
++HOOK_SRC="$ROOT_DIR/scripts/docs-autosync-hook.sh"
++HOOK_DST="$ROOT_DIR/.git/hooks/pre-commit"
++
++echo "🔗 Installing Docs AutoSync Hook..."
++
++if [ ! -f "$HOOK_SRC" ]; then
++  echo "❌ Hook script not found at $HOOK_SRC"
++  exit 1
++fi
++
++chmod +x "$HOOK_SRC"
++mkdir -p "$(dirname "$HOOK_DST")"
++ln -sf "$HOOK_SRC" "$HOOK_DST"
++
++chmod +x "$HOOK_DST"
++
++echo "✅ Hook installed successfully!"
++echo "Hook path: $HOOK_DST"
+*** End Patch
