@@ -1,0 +1,18 @@
+*** Begin Patch
+diff --git a/scripts/docs-watchdog.js b/scripts/docs-watchdog.js
+--- a/scripts/docs-watchdog.js
++++ b/scripts/docs-watchdog.js
+@@
+ if (outdated.length === 0) {
+-  console.log("✅ All docs fresh — no action required.");
+-  fs.appendFileSync(logFile, `[${new Date().toISOString()}] ✅ All docs fresh\n`);
+-  process.exit(0);
++  console.log("✅ All docs fresh — no action required.");
++  try {
++    fs.appendFileSync(logFile, `[${new Date().toISOString()}] ✅ All docs fresh\n`);
++  } catch {
++    fs.mkdirSync(path.dirname(logFile), { recursive: true });
++    fs.writeFileSync(logFile, `[${new Date().toISOString()}] ✅ Log initialized (fresh)\n`);
++  }
++  process.exit(0);
+*** End Patch
