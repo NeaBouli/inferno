@@ -1,0 +1,25 @@
+*** Begin Patch
+diff --git a/scripts/docs-autosync-alias.sh b/scripts/docs-autosync-alias.sh
+new file mode 100755
+--- /dev/null
++++ b/scripts/docs-autosync-alias.sh
+@@
++#!/bin/bash
++# 🪶 Inferno Docs AutoSync (manual alias version)
++
++ROOT_DIR="/Users/test/Desktop/inferno"
++LOG_DIR="$ROOT_DIR/logs"
++LOG_FILE="$LOG_DIR/docs-autosync.log"
++
++mkdir -p "$LOG_DIR"
++touch "$LOG_FILE"
++
++echo "[`date -Iseconds`] <0001f9e9> Running Docs AutoSync (alias mode)..." | tee -a "$LOG_FILE"
++
++# Run main orchestrator
++node "$ROOT_DIR/scripts/docs-autosync.js" >> "$LOG_FILE" 2>&1
++
++echo "[`date -Iseconds`] ✅ Docs AutoSync completed (alias mode)." | tee -a "$LOG_FILE"
++
++exit 0
+*** End Patch
