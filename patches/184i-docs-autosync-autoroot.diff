@@ -1,0 +1,25 @@
+*** Begin Patch
+diff --git a/scripts/docs-autosync-alias.sh b/scripts/docs-autosync-alias.sh
+--- a/scripts/docs-autosync-alias.sh
++++ b/scripts/docs-autosync-alias.sh
+@@
+ #!/bin/bash
+ # 🪶 Inferno Docs AutoSync (manual alias version)
+ 
+-ROOT_DIR="/Users/test/Desktop/inferno"
+-LOG_DIR="$ROOT_DIR/logs"
+-LOG_FILE="$LOG_DIR/docs-autosync.log"
++SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
++ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
++LOG_DIR="$ROOT_DIR/logs"
++LOG_FILE="$LOG_DIR/docs-autosync.log"
+ 
+ echo "🪶 Starting Docs AutoSync alias..."
+ 
+ # ensure log dir
+ mkdir -p "$LOG_DIR"
+ if [ ! -f "$LOG_FILE" ]; then
+   echo "🆕 Creating log file at $LOG_FILE"
+   touch "$LOG_FILE"
+ fi
+*** End Patch
