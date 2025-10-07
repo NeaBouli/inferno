@@ -1,0 +1,54 @@
+*** Begin Patch
+diff --git a/scripts/docs-watchdog.js b/scripts/docs-watchdog.js
+new file mode 100755
+--- /dev/null
++++ b/scripts/docs-watchdog.js
+@@
++#!/usr/bin/env node
++/**
++ * 🕒 Inferno Docs Integrity Watchdog
++ * Checks whether key documentation files are older than 24h
++ * and triggers AutoSync if necessary.
++ */
++import fs from "fs";
++import path from "path";
++import { execSync } from "child_process";
++
++const root = process.cwd();
++const logDir = path.join(root, "logs");
++const logFile = path.join(logDir, "docs-watchdog.log");
++fs.mkdirSync(logDir, { recursive: true });
++
++const dirs = ["docs", "reports", "logs"];
++const cutoff = Date.now() - 24 * 60 * 60 * 1000; // 24h
++let outdated = [];
++
++for (const d of dirs) {
++  const full = path.join(root, d);
++  if (!fs.existsSync(full)) continue;
++  for (const f of fs.readdirSync(full)) {
++    if (!f.endsWith(".md")) continue;
++    const file = path.join(full, f);
++    const mtime = fs.statSync(file).mtimeMs;
++    if (mtime < cutoff) outdated.push(file);
++  }
++}
++
++if (outdated.length === 0) {
++  console.log("✅ All docs fresh — no action required.");
++  fs.appendFileSync(logFile, `[${new Date().toISOString()}] ✅ All docs fresh\n`);
++  process.exit(0);
++}
++
++console.log(`⚠️  Found ${outdated.length} outdated files:`);
++outdated.forEach(f => console.log(" -", f));
++fs.appendFileSync(logFile, `[${new Date().toISOString()}] ⚠️ Outdated docs detected: ${outdated.length}\n`);
++
++try {
++  console.log("🔁 Triggering AutoSync...");
++  execSync("node scripts/docs-autosync.js", { stdio: "inherit" });
++  fs.appendFileSync(logFile, `[${new Date().toISOString()}] ✅ AutoSync triggered automatically\n`);
++} catch (err) {
++  fs.appendFileSync(logFile, `[${new Date().toISOString()}] ❌ AutoSync failed: ${err.message}\n`);
++}
+*** End Patch
