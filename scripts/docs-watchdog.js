@@ -1,0 +1,58 @@
+#!/usr/bin/env node
+/**
+ * 🔒 Inferno Docs Watchdog
+ * Prüft, ob Dokumentationsdateien älter als 24h sind
+ * und schreibt immer ein Logfile.
+ */
+
+import fs from "fs";
+import path from "path";
+
+const root = process.cwd();
+const logDir = path.join(root, "logs");
+const logFile = path.join(logDir, "docs-watchdog.log");
+
+// 🟡 Init
+console.log("[Watchdog] 🟡 Initialized at", new Date().toISOString());
+try {
+  fs.mkdirSync(logDir, { recursive: true });
+  console.log("[Watchdog] 📁 Log directory ready:", logDir);
+} catch (err) {
+  console.error("[Watchdog] ❌ Failed to create log dir:", err.message);
+}
+
+const dirs = ["docs", "reports", "logs"];
+const cutoff = Date.now() - 24 * 60 * 60 * 1000; // 24h
+let outdated = [];
+
+for (const d of dirs) {
+  const fullPath = path.join(root, d);
+  if (!fs.existsSync(fullPath)) continue;
+  const files = fs.readdirSync(fullPath);
+  for (const f of files) {
+    const p = path.join(fullPath, f);
+    const stat = fs.statSync(p);
+    if (stat.isFile() && stat.mtimeMs < cutoff) {
+      outdated.push(p);
+    }
+  }
+}
+
+if (outdated.length === 0) {
+  console.log("✅ All docs fresh — no action required.");
+  fs.appendFileSync(
+    logFile,
+    `[${new Date().toISOString()}] ✅ All docs fresh — no outdated files\n`
+  );
+  process.exit(0);
+}
+
+console.log("[Watchdog] ⚠️ Outdated files found:", outdated.length);
+for (const f of outdated) console.log(" -", f);
+
+fs.appendFileSync(
+  logFile,
+  `[${new Date().toISOString()}] ⚠️ Outdated ${outdated.length} files\n`
+);
+
+console.log("[Watchdog] 🧾 Log written:", logFile);
