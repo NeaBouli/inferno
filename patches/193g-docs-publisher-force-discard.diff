@@ -1,0 +1,24 @@
+*** Begin Patch
+diff --git a/scripts/docs-publisher.js b/scripts/docs-publisher.js
+old mode 100755
+new mode 100755
+@@
+   try {
+     console.log("🧹 Preparing safe branch switch...");
+     // Entferne Logs komplett aus dem Index
+     execSync("git rm --cached -r logs || true", { stdio: "ignore" });
+     execSync("git rm --cached -r reports || true", { stdio: "ignore" });
+     execSync("git add .gitignore || true", { stdio: "ignore" });
+     // Force-Reset Arbeitsverzeichnis (safe)
+-    execSync("git restore --staged .", { stdio: "ignore" });
+-    execSync("git reset --hard", { stdio: "ignore" });
+-    // Jetzt Branchwechsel ohne Blockade
+-    execSync("git checkout gh-pages || git checkout -b gh-pages", { stdio: "inherit" });
++    execSync("git restore --staged .", { stdio: "ignore" });
++    execSync("git restore logs/ || true", { stdio: "ignore" });
++    execSync("git restore reports/ || true", { stdio: "ignore" });
++    execSync("git restore package.json || true", { stdio: "ignore" });
++    execSync("git reset --hard", { stdio: "ignore" });
++    console.log("🔄 Switching to gh-pages ...");
++    execSync("git checkout gh-pages || git checkout -b gh-pages", { stdio: "inherit" });
+*** End Patch
