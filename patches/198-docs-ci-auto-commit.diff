@@ -1,0 +1,22 @@
+*** Begin Patch
+diff --git a/.github/workflows/docs-validator.yml b/.github/workflows/docs-validator.yml
+@@
+       - name: ✅ Display Report Summary
+         run: |
+           echo "---- Validation Report ----"
+           cat reports/docs-validation-report.md
++
++      - name: 🧠 Generate CI Status Report
++        run: |
++          chmod +x scripts/docs-ci-status.js
++          node scripts/docs-ci-status.js
++
++      - name: 💾 Commit & Push CI Status Report
++        if: github.ref == 'refs/heads/main'
++        run: |
++          git config --global user.name "inferno-bot"
++          git config --global user.email "inferno-ci@users.noreply.github.com"
++          git add reports/docs-ci-status.md
++          git commit -m "ci: update CI status report [auto]" || echo "no changes"
++          git push origin main || echo "push skipped"
+*** End Patch
