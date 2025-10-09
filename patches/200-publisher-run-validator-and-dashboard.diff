@@ -1,0 +1,43 @@
+*** Begin Patch
+diff --git a/scripts/docs-publisher.js b/scripts/docs-publisher.js
+old mode 100755
+new mode 100755
+@@
+   for (const d of docsDirs) {
+     const src = path.join(root, d);
+     if (!fs.existsSync(src)) {
+       logLine(`⚠️ Missing folder: ${src}`);
+       continue;
+     }
+     const dest = path.join(siteDir, d);
+     fs.cpSync(src, dest, { recursive: true });
+     logLine(`✅ Copied: ${d}`);
+   }
+ 
++  // --- Pre-publish: generate reports & dashboard ---
++  try {
++    logLine(`[${ts()}] 🧪 Running docs validator...`);
++    execSync("node scripts/docs-validator.js", { stdio: "inherit" });
++  } catch (e) {
++    logLine(`[${ts()}] ⚠️ validator run failed: ${e?.message || e}`);
++  }
++  try {
++    logLine(`[${ts()}] 🧠 Generating CI status...`);
++    execSync("node scripts/docs-ci-status.js", { stdio: "inherit" });
++  } catch (e) {
++    logLine(`[${ts()}] ⚠️ ci-status run failed: ${e?.message || e}`);
++  }
++  try {
++    logLine(`[${ts()}] 📊 Building docs dashboard...`);
++    execSync("node scripts/docs-dashboard.js", { stdio: "inherit" });
++  } catch (e) {
++    logLine(`[${ts()}] ⚠️ dashboard build failed: ${e?.message || e}`);
++  }
++
+   const indexFile = path.join(siteDir, "index.html");
+   fs.writeFileSync(
+     indexFile,
+     `<html><head><meta charset="utf-8"><title>Inferno Docs Portal</title></head><body><h1>🔥 Inferno Docs</h1><p>Generated ${ts()}</p></body></html>`
+   );
+   logLine(`🧾 Created index: ${indexFile}`);
+*** End Patch
