@@ -1,0 +1,39 @@
+*** Begin Patch
+diff --git a/scripts/docs-publisher.js b/scripts/docs-publisher.js
+old mode 100755
+new mode 100755
+@@
+   let commitHash = "unknown";
+   try { commitHash = execSync("git rev-parse --short HEAD").toString().trim(); } catch {}
+-  // --- Safe Git Checkout ---
+-  try {
+-    execSync("git restore --staged .", { stdio: "ignore" });
+-    execSync("git reset HEAD .", { stdio: "ignore" });
+-    execSync("git checkout -- logs/project.log || true", { stdio: "ignore" });
+-    execSync("git checkout -- logs/docs-publisher.log || true", { stdio: "ignore" });
+-    execSync("git add .", { stdio: "ignore" });
+-  } catch (e) {
+-    console.error("⚠️  Pre-checkout cleanup failed:", e.message);
+-  }
+-
+-  // Jetzt gefahrloser Checkout
+-  execSync("git checkout gh-pages || git checkout -b gh-pages", { stdio: "inherit" });
++  // --- Atomic Safe Checkout ---
++  try {
++    console.log("🧹  Cleaning working tree before gh-pages switch...");
++    // Verwerfe Änderungen an Logs & package.json
++    execSync("git restore --staged .", { stdio: "ignore" });
++    execSync("git reset --hard", { stdio: "ignore" });
++    execSync("git checkout -- logs/ || true", { stdio: "ignore" });
++    execSync("git checkout -- package.json || true", { stdio: "ignore" });
++    execSync("git clean -fd", { stdio: "ignore" });
++  } catch (e) {
++    console.error("⚠️  Cleanup before checkout failed:", e?.message || e);
++  }
++
++  try {
++    execSync("git checkout gh-pages || git checkout -b gh-pages", { stdio: "inherit" });
++  } catch (e) {
++    console.error("⚠️  Branch switch warning:", e?.message || e);
++  }
+*** End Patch
