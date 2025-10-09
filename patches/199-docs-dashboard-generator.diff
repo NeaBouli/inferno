@@ -1,0 +1,84 @@
+*** Begin Patch
+diff --git a/scripts/docs-dashboard.js b/scripts/docs-dashboard.js
+new file mode 100755
+--- /dev/null
++++ b/scripts/docs-dashboard.js
+@@
++#!/usr/bin/env node
++/**
++ * 🧩 Inferno Docs Integrity Dashboard
++ * Generiert eine HTML-Statusübersicht basierend auf dem letzten CI- und Validator-Report.
++ * Ausgabe: reports/docs-dashboard.html
++ */
++
++import fs from "fs";
++import path from "path";
++
++const root = process.cwd();
++const ts = () => new Date().toISOString();
++
++const reportFile = path.join(root, "reports/docs-validation-report.md");
++const statusFile = path.join(root, "reports/docs-ci-status.md");
++const dashboardFile = path.join(root, "reports/docs-dashboard.html");
++
++function readSection(file) {
++  try {
++    return fs.readFileSync(file, "utf8");
++  } catch {
++    return null;
++  }
++}
++
++const report = readSection(reportFile);
++const status = readSection(statusFile);
++
++const reportStatus = report && report.includes("❌") ? "❌ Fehler" : "✅ OK";
++const ciStatus = status && status.includes("❌") ? "❌ Fehler" : "✅ OK";
++
++const html = `<!DOCTYPE html>
++<html lang="de">
++<head>
++  <meta charset="utf-8">
++  <title>Inferno Docs Dashboard</title>
++  <style>
++    body { font-family: Arial, sans-serif; margin: 2em; background: #111; color: #eee; }
++    h1 { color: #ff4500; }
++    .ok { color: #00ff88; }
++    .fail { color: #ff3355; }
++    pre { background: #222; padding: 1em; border-radius: 8px; overflow-x: auto; }
++    .box { margin-top: 2em; border: 1px solid #333; border-radius: 8px; padding: 1em; }
++  </style>
++</head>
++<body>
++  <h1>🔥 Inferno Documentation Integrity Dashboard</h1>
++  <p><b>Stand:</b> ${ts()}</p>
++
++  <div class="box">
++    <h2>📋 Validierungsstatus</h2>
++    <p>Status: <span class="${reportStatus.includes('OK') ? 'ok' : 'fail'}">${reportStatus}</span></p>
++  </div>
++
++  <div class="box">
++    <h2>🧠 CI-Status</h2>
++    <p>Status: <span class="${ciStatus.includes('OK') ? 'ok' : 'fail'}">${ciStatus}</span></p>
++  </div>
++
++  <div class="box">
++    <h2>🧾 Auszug aus Validation Report</h2>
++    <pre>${report ? report.slice(0, 800).replace(/</g,"&lt;") : "Kein Report gefunden."}</pre>
++  </div>
++
++  <div class="box">
++    <h2>📊 CI Status Report</h2>
++    <pre>${status ? status.replace(/</g,"&lt;") : "Kein CI-Status gefunden."}</pre>
++  </div>
++
++  <footer style="margin-top:3em;font-size:0.9em;color:#888">
++    <p>Inferno Docs System &copy; ${new Date().getFullYear()} — auto-generated dashboard</p>
++  </footer>
++</body>
++</html>`;
++
++fs.writeFileSync(dashboardFile, html, "utf8");
++console.log(`✅ Docs Dashboard generated → ${dashboardFile}`);
+*** End Patch
