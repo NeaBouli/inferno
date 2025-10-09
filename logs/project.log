@@ -1,51 +1,31 @@
-[2025-09-23 23:15] Dev4 FEATURE – Vesting Contract – Vesting.sol + Tests + Deploy + ABI abgeschlossen und dokumentiert (Vesting 🟢)
-[2025-09-25 09:30] dev SPECIALIST – Root-README.md successfully overwritten (Fix for failed patches 066–072)
-[2025-09-25 12:34] Main DEVA DOCS – Patch-Guidelines – Regeln als PATCH-GUIDELINES.md eingeführt (Patch 030)
-[2025-09-25 14:55] Main DEVA DOCS – docs/README.md überschrieben, Baum als fenced block (Patch 034)
-[2025-09-25 16:20] DocFix1 DOCS – README Baum als sanitized fenced block gesetzt
-[2025-09-25 16:22] DocFix1 DOCS – WHITEPAPER.md (DE) befüllt
-[2025-09-25 16:24] DocFix1 DOCS – WHITEPAPER_EN.md (EN) befüllt
-[2025-09-25 16:45] DocFix1 DOCS – README Baum erneut überschrieben und bestätigt
-[2025-09-26 17:10] Main DEVA DOCS – Known Issues dokumentiert (BBV-001/BBV-002); BuybackVault bleibt 🔴
-[2025-10-08T08:12:44.555Z] Docs Consolidator run complete → /Users/test/Desktop/inferno/reports/monthly/docs-monthly-report-2025-10.md
-[2025-10-09T08:01:34.625Z] Docs Publisher executed
-[2025-10-09T09:58:00Z] ✅ gh-pages deployed (commit abc1234) TMP=/var/folders/...inferno-site-XXXXXX
-[2025-10-09T09:12:43.760Z] 📁 Created temporary site directory: /var/folders/mp/vsm4q2710jdcphlnjzb2bv5m0000gn/T/inferno-site-khnLzV/_site
+[2025-10-09T13:44:06.592Z] ✅ gh-pages deployed (commit 520a0c1a) TMP=/var/folders/mp/vsm4q2710jdcphlnjzb2bv5m0000gn/T/inferno-site-YnMev2
+[2025-10-09T14:00:53.911Z] Docs Validator executed → /Users/test/Desktop/inferno/reports/docs-validation-report.md
+[2025-10-09T14:05:13.005Z] Docs Validator executed → /Users/test/Desktop/inferno/reports/docs-validation-report.md
+[2025-10-09T14:07:50.533Z] [HOOK] 🚀 Running Docs Validator before commit...
+[2025-10-09T14:07:50.623Z] Docs Validator executed → /Users/test/Desktop/inferno/reports/docs-validation-report.md
+[2025-10-09T14:07:50.628Z] [HOOK] ✅ Docs validation passed. Commit allowed.
+[2025-10-09T14:10:25.801Z] [HOOK] 🚀 Running Docs Validator before commit...
+[2025-10-09T14:10:25.897Z] Docs Validator executed → /Users/test/Desktop/inferno/reports/docs-validation-report.md
+[2025-10-09T14:10:25.902Z] [HOOK] ✅ Docs validation passed. Commit allowed.
+[2025-10-09T14:11:56.963Z] [HOOK] 🚀 Running Docs Validator before commit...
+[2025-10-09T14:11:57.050Z] Docs Validator executed → /Users/test/Desktop/inferno/reports/docs-validation-report.md
+[2025-10-09T14:11:57.055Z] [HOOK] ✅ Docs validation passed. Commit allowed.
+[2025-10-09T14:16:46.785Z] CI Status Reporter executed (✅) → /Users/test/Desktop/inferno/reports/docs-ci-status.md
+[2025-10-09T14:19:20.552Z] [HOOK] 🚀 Running Docs Validator before commit...
+[2025-10-09T14:19:20.643Z] Docs Validator executed → /Users/test/Desktop/inferno/reports/docs-validation-report.md
+[2025-10-09T14:19:20.665Z] [HOOK] ✅ Docs validation passed. Commit allowed.
+[2025-10-09T14:21:47.423Z] [HOOK] 🚀 Running Docs Validator before commit...
+[2025-10-09T14:21:47.511Z] Docs Validator executed → /Users/test/Desktop/inferno/reports/docs-validation-report.md
+[2025-10-09T14:21:47.541Z] [HOOK] ✅ Docs validation passed. Commit allowed.
+[2025-10-09T19:19:19.160Z] [HOOK] 🚀 Running Docs Validator before commit...
+[2025-10-09T19:19:19.402Z] Docs Validator executed → /Users/test/Desktop/inferno/reports/docs-validation-report.md
+[2025-10-09T19:19:19.407Z] [HOOK] ✅ Docs validation passed. Commit allowed.
+[2025-10-09T19:22:04.446Z] 📁 Created temporary site directory: /var/folders/mp/vsm4q2710jdcphlnjzb2bv5m0000gn/T/inferno-site-OVMc60/_site
 ✅ Copied: docs
 ✅ Copied: reports
 ✅ Copied: logs
-🧾 Created index: /var/folders/mp/vsm4q2710jdcphlnjzb2bv5m0000gn/T/inferno-site-khnLzV/_site/index.html
-[2025-10-09T09:12:44.053Z] ❌ Error: Command failed: git checkout gh-pages || git checkout -b gh-pages
-[2025-10-09T09:13:26.478Z] 📁 Created temporary site directory: /var/folders/mp/vsm4q2710jdcphlnjzb2bv5m0000gn/T/inferno-site-pZ0pb0/_site
-✅ Copied: docs
-✅ Copied: reports
-✅ Copied: logs
-🧾 Created index: /var/folders/mp/vsm4q2710jdcphlnjzb2bv5m0000gn/T/inferno-site-pZ0pb0/_site/index.html
-[2025-10-09T09:13:26.747Z] ❌ Error: Command failed: git checkout gh-pages || git checkout -b gh-pages
-[2025-10-09T12:39:05.802Z] 📁 Created temporary site directory: /var/folders/mp/vsm4q2710jdcphlnjzb2bv5m0000gn/T/inferno-site-V5YkGp/_site
-✅ Copied: docs
-✅ Copied: reports
-✅ Copied: logs
-🧾 Created index: /var/folders/mp/vsm4q2710jdcphlnjzb2bv5m0000gn/T/inferno-site-V5YkGp/_site/index.html
-[2025-10-09T12:39:06.814Z] ❌ Error: Command failed: git checkout gh-pages || git checkout -b gh-pages
-[2025-10-09T12:42:10.452Z] 📁 Created temporary site directory: /var/folders/mp/vsm4q2710jdcphlnjzb2bv5m0000gn/T/inferno-site-5xCKAv/_site
-✅ Copied: docs
-✅ Copied: reports
-✅ Copied: logs
-🧾 Created index: /var/folders/mp/vsm4q2710jdcphlnjzb2bv5m0000gn/T/inferno-site-5xCKAv/_site/index.html
-[2025-10-09T12:42:10.745Z] ❌ Error: Command failed: git checkout gh-pages || git checkout -b gh-pages
-[2025-10-09T13:41:37.119Z] 📁 Created temporary site directory: /var/folders/mp/vsm4q2710jdcphlnjzb2bv5m0000gn/T/inferno-site-0jMbJo/_site
-✅ Copied: docs
-✅ Copied: reports
-✅ Copied: logs
-🧾 Created index: /var/folders/mp/vsm4q2710jdcphlnjzb2bv5m0000gn/T/inferno-site-0jMbJo/_site/index.html
-[2025-10-09T13:41:37.468Z] ❌ Error: Command failed: git checkout gh-pages || git checkout -b gh-pages
-[2025-10-09T13:42:44.917Z] 📁 Created temporary site directory: /var/folders/mp/vsm4q2710jdcphlnjzb2bv5m0000gn/T/inferno-site-Rd3MV0/_site
-✅ Copied: docs
-✅ Copied: reports
-✅ Copied: logs
-🧾 Created index: /var/folders/mp/vsm4q2710jdcphlnjzb2bv5m0000gn/T/inferno-site-Rd3MV0/_site/index.html
-[2025-10-09T13:42:45.146Z] ❌ Error: Command failed: git checkout gh-pages || git checkout -b gh-pages
-[2025-10-09T13:43:41.909Z] 📁 Created temporary site directory: /var/folders/mp/vsm4q2710jdcphlnjzb2bv5m0000gn/T/inferno-site-YnMev2/_site
+🧾 Created index: /var/folders/mp/vsm4q2710jdcphlnjzb2bv5m0000gn/T/inferno-site-OVMc60/_site/index.html
+[2025-10-09T19:22:04.991Z] ❌ Error: Command failed: git checkout gh-pages || git checkout -b gh-pages
+[2025-10-09T19:46:12.096Z] 📁 Created temporary site directory: /var/folders/mp/vsm4q2710jdcphlnjzb2bv5m0000gn/T/inferno-site-sDTGwr/_site
 ✅ Copied: docs
 ✅ Copied: reports
