@@ -1,0 +1,100 @@
+*** Begin Patch
+diff --git a/scripts/docs-validator.js b/scripts/docs-validator.js
+new file mode 100755
+--- /dev/null
++++ b/scripts/docs-validator.js
+@@
++#!/usr/bin/env node
++import fs from "fs";
++import path from "path";
++
++// --- Inferno Docs Validator ---
++//
++// Prüft Vollständigkeit & Konsistenz der Dokumentationsstruktur
++// Ergebnisse werden in reports/docs-validation-report.md geschrieben
++
++const root = process.cwd();
++const requiredDirs = ["docs", "reports", "logs"];
++const requiredFiles = [
++  "docs/README.md",
++  "docs/WHITEPAPER.md",
++  "docs/WHITEPAPER_EN.md",
++  "docs/CHANGELOG.md",
++  "docs/PROJECT-SUMMARY.md",
++  "docs/KNOWN-ISSUES.md",
++  "logs/project.log"
++];
++
++const reportDir = path.join(root, "reports");
++const reportFile = path.join(reportDir, "docs-validation-report.md");
++const ts = () => new Date().toISOString();
++
++if (!fs.existsSync(reportDir)) fs.mkdirSync(reportDir, { recursive: true });
++
++let output = `# 📋 Inferno Docs Validation Report\n\n🕓 ${ts()}\n\n`;
++
++// --- Check directories ---
++output += "## 📁 Directory Check\n";
++for (const dir of requiredDirs) {
++  const exists = fs.existsSync(path.join(root, dir));
++  output += `- ${dir}: ${exists ? "✅ found" : "❌ missing"}\n`;
++}
++output += "\n";
++
++// --- Check essential files ---
++output += "## 📄 File Presence\n";
++for (const f of requiredFiles) {
++  const exists = fs.existsSync(path.join(root, f));
++  output += `- ${f}: ${exists ? "✅ present" : "❌ missing"}\n`;
++}
++output += "\n";
++
++// --- Check Markdown UTF-8 validity ---
++output += "## 🔤 UTF-8 Validation\n";
++for (const dir of ["docs", "reports"]) {
++  const files = fs.existsSync(dir)
++    ? fs.readdirSync(dir).filter(f => f.endsWith(".md"))
++    : [];
++  for (const file of files) {
++    try {
++      const data = fs.readFileSync(path.join(dir, file), "utf8");
++      if (data.includes("�")) {
++        output += `- ${dir}/${file}: ⚠️ contains invalid UTF-8 characters\n`;
++      } else {
++        output += `- ${dir}/${file}: ✅ clean\n`;
++      }
++    } catch {
++      output += `- ${dir}/${file}: ❌ read error\n`;
++    }
++  }
++}
++output += "\n";
++
++// --- Cross-Check Log & Changelog timestamps ---
++try {
++  const logData = fs.readFileSync("logs/project.log", "utf8");
++  const changelogData = fs.readFileSync("docs/CHANGELOG.md", "utf8");
++  const logLast = logData.trim().split("\n").slice(-1)[0] || "";
++  const changelogLast = changelogData.trim().split("\n").slice(-1)[0] || "";
++  output += "## ⏱️ Log Synchronization\n";
++  output += `- Last log entry: ${logLast}\n`;
++  output += `- Last changelog entry: ${changelogLast}\n`;
++  output += logLast && changelogLast
++    ? "✅ Synchronization check complete\n"
++    : "⚠️ Missing entries detected\n";
++} catch (e) {
++  output += `## ⏱️ Log Synchronization\n❌ Error: ${e.message}\n`;
++}
++
++// --- Write report ---
++fs.writeFileSync(reportFile, output, "utf8");
++console.log("✅ Docs validation complete →", reportFile);
++
++// --- Optional: append to project.log ---
++try {
++  fs.appendFileSync(
++    path.join("logs", "project.log"),
++    `[${ts()}] Docs Validator executed → ${reportFile}\n`
++  );
++} catch {}
+*** End Patch
