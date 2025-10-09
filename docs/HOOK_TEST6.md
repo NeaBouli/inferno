@@ -1,1 +1,0 @@
-- [x] Hook Log Test 6
