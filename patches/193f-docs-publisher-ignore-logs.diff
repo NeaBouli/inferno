@@ -1,0 +1,51 @@
+*** Begin Patch
+diff --git a/.gitignore b/.gitignore
+new file mode 100644
+--- /dev/null
++++ b/.gitignore
+@@
++# Inferno project ignores
++logs/*.log
++logs/**/*.log
++reports/**/*.md
++_site/
++node_modules/
++
+diff --git a/scripts/docs-publisher.js b/scripts/docs-publisher.js
+old mode 100755
+new mode 100755
+@@
+   let commitHash = "unknown";
+   try { commitHash = execSync("git rev-parse --short HEAD").toString().trim(); } catch {}
+-  try {
+-    console.log("🧹  Cleaning working tree before gh-pages switch...");
+-    // Verwerfe Änderungen an Logs & package.json
+-    execSync("git restore --staged .", { stdio: "ignore" });
+-    execSync("git reset --hard", { stdio: "ignore" });
+-    execSync("git checkout -- logs/ || true", { stdio: "ignore" });
+-    execSync("git checkout -- package.json || true", { stdio: "ignore" });
+-    execSync("git clean -fd", { stdio: "ignore" });
+-  } catch (e) {
+-    console.error("⚠️  Cleanup before checkout failed:", e?.message || e);
+-  }
+-
+-  try {
+-    execSync("git checkout gh-pages || git checkout -b gh-pages", { stdio: "inherit" });
+-  } catch (e) {
+-    console.error("⚠️  Branch switch warning:", e?.message || e);
+-  }
++  try {
++    console.log("🧹 Preparing safe branch switch...");
++    // Entferne Logs komplett aus dem Index
++    execSync("git rm --cached -r logs || true", { stdio: "ignore" });
++    execSync("git rm --cached -r reports || true", { stdio: "ignore" });
++    execSync("git add .gitignore || true", { stdio: "ignore" });
++    // Force-Reset Arbeitsverzeichnis (safe)
++    execSync("git restore --staged .", { stdio: "ignore" });
++    execSync("git reset --hard", { stdio: "ignore" });
++    // Jetzt Branchwechsel ohne Blockade
++    execSync("git checkout gh-pages || git checkout -b gh-pages", { stdio: "inherit" });
++  } catch (e) {
++    logLine(`[${ts()}] ⚠️ Git cleanup/checkout issue: ${e?.message || e}`);
++  }
+*** End Patch
