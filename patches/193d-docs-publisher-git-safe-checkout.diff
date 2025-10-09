@@ -1,0 +1,28 @@
+*** Begin Patch
+diff --git a/scripts/docs-publisher.js b/scripts/docs-publisher.js
+old mode 100755
+new mode 100755
+@@
+   fs.writeFileSync(
+     indexFile,
+     `<html><head><meta charset="utf-8"><title>Inferno Docs Portal</title></head><body><h1>🔥 Inferno Docs</h1><p>Generated ${ts()}</p></body></html>`
+   );
+   logLine(`🧾 Created index: ${indexFile}`);
+
+   let commitHash = "unknown";
+   try { commitHash = execSync("git rev-parse --short HEAD").toString().trim(); } catch {}
+-  execSync("git checkout gh-pages || git checkout -b gh-pages", { stdio: "inherit" });
++  // --- Safe Git Checkout ---
++  try {
++    execSync("git restore --staged .", { stdio: "ignore" });
++    execSync("git reset HEAD .", { stdio: "ignore" });
++    execSync("git checkout -- logs/project.log || true", { stdio: "ignore" });
++    execSync("git checkout -- logs/docs-publisher.log || true", { stdio: "ignore" });
++    execSync("git add .", { stdio: "ignore" });
++  } catch (e) {
++    console.error("⚠️  Pre-checkout cleanup failed:", e.message);
++  }
++
++  // Jetzt gefahrloser Checkout
++  execSync("git checkout gh-pages || git checkout -b gh-pages", { stdio: "inherit" });
+*** End Patch
