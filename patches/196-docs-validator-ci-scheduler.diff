@@ -1,0 +1,54 @@
+*** Begin Patch
+diff --git a/.github/workflows/docs-validator.yml b/.github/workflows/docs-validator.yml
+new file mode 100644
+--- /dev/null
++++ b/.github/workflows/docs-validator.yml
+@@
++# 🧩 Inferno Docs Validator CI Workflow
++# Läuft automatisch bei jedem Push und Pull Request
++# Führt scripts/docs-validator.js aus und erzeugt einen CI-Report
++
++name: Docs Validator CI
++
++on:
++  push:
++    branches: [ "main" ]
++  pull_request:
++    branches: [ "main" ]
++
++jobs:
++  validate-docs:
++    name: 🧪 Validate Documentation
++    runs-on: ubuntu-latest
++
++    steps:
++      - name: ⬇️ Checkout Repository
++        uses: actions/checkout@v4
++
++      - name: ⚙️ Setup Node.js
++        uses: actions/setup-node@v4
++        with:
++          node-version: 22
++
++      - name: 📦 Install Dependencies
++        run: |
++          npm init -y
++          echo '{ "type": "module" }' > package.json
++
++      - name: 🧩 Run Docs Validator
++        run: |
++          mkdir -p reports logs
++          chmod +x scripts/docs-validator.js
++          node scripts/docs-validator.js
++
++      - name: 📤 Upload Validation Report
++        uses: actions/upload-artifact@v4
++        with:
++          name: docs-validation-report
++          path: reports/docs-validation-report.md
++
++      - name: ✅ Display Report Summary
++        run: |
++          echo "---- Validation Report ----"
++          cat reports/docs-validation-report.md
+*** End Patch
