@@ -1,0 +1,76 @@
+*** Begin Patch
+diff --git a/scripts/docs-publisher.js b/scripts/docs-publisher.js
+index e69de29..a1b2cd3 100755
+--- a/scripts/docs-publisher.js
++++ b/scripts/docs-publisher.js
+@@
+ #!/usr/bin/env node
+ import fs from "fs";
+ import path from "path";
+ import os from "os";
+ import { execSync } from "child_process";
+
+ const root = process.cwd();
+ const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "inferno-site-"));
+ const siteDir = path.join(tmpDir, "_site");
+ const docsDirs = ["docs", "reports", "logs"];
+
+ fs.mkdirSync(siteDir, { recursive: true });
+ console.log("📁 Created temporary site directory:", siteDir);
+
+ for (const d of docsDirs) {
+   const src = path.join(root, d);
+   if (!fs.existsSync(src)) {
+     console.log("⚠️ Missing folder:", src);
+     continue;
+   }
+   const dest = path.join(siteDir, d);
+   fs.cpSync(src, dest, { recursive: true });
+   console.log("✅ Copied:", d);
+ }
+
+ const indexFile = path.join(siteDir, "index.html");
+ fs.writeFileSync(
+   indexFile,
+   `<html><head><meta charset="utf-8"><title>Inferno Docs Portal</title></head><body><h1>🔥 Inferno Docs</h1><p>Generated ${new Date().toISOString()}</p></body></html>`
+ );
+ console.log("🧾 Created:", indexFile);
+
+ try {
+   console.log("🚀 Preparing deployment...");
+   execSync(`git checkout gh-pages || git checkout -b gh-pages`, { stdio: "inherit" });
+   execSync(`rm -rf *`, { stdio: "inherit" });
+   execSync(`cp -r ${siteDir}/* .`, { stdio: "inherit" });
+   execSync(`git add .`, { stdio: "inherit" });
+   execSync(`git commit -m "docs: publish to gh-pages [auto]" || true`, { stdio: "inherit" });
+   execSync(`git push origin gh-pages --force`, { stdio: "inherit" });
+   execSync(`git checkout main`, { stdio: "inherit" });
+   console.log("✅ Docs successfully published to GitHub Pages.");
++
++  // --- Final Logging ---
++  const logDir = path.join(root, "logs");
++  if (!fs.existsSync(logDir)) fs.mkdirSync(logDir, { recursive: true });
++
++  let commitHash = "unknown";
++  try {
++    commitHash = execSync("git rev-parse --short HEAD").toString().trim();
++  } catch {
++    commitHash = "no-commit";
++  }
++
++  const timestamp = new Date().toISOString();
++  const msg = `[${timestamp}] ✅ gh-pages deployed (commit ${commitHash}) TMP=${tmpDir}\n`;
++
++  // Write to both logs
++  fs.appendFileSync(path.join(logDir, "project.log"), msg);
++  fs.appendFileSync(path.join(logDir, "docs-publisher.log"), msg);
++
++  console.log("🪵 Logged deployment:", msg.trim());
+ } catch (err) {
+   console.error("❌ Publish failed:", err.message);
+ }
+
+-const logDir = path.join(root, "logs");
+-if (!fs.existsSync(logDir)) fs.mkdirSync(logDir, { recursive: true });
+-fs.appendFileSync(path.join(logDir, "project.log"), `[${new Date().toISOString()}] Docs Publisher executed\n`);
+*** End Patch
