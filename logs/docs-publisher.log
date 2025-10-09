@@ -1,7 +1,0 @@
-[2025-10-09T09:12:43.739Z] 🪵 Publisher init created log file
-[2025-10-09T09:12:43.760Z] 📁 Created temporary site directory: /var/folders/mp/vsm4q2710jdcphlnjzb2bv5m0000gn/T/inferno-site-khnLzV/_site
-✅ Copied: docs
-✅ Copied: reports
-✅ Copied: logs
-🧾 Created index: /var/folders/mp/vsm4q2710jdcphlnjzb2bv5m0000gn/T/inferno-site-khnLzV/_site/index.html
-[2025-10-09T09:12:44.053Z] ❌ Error: Command failed: git checkout gh-pages || git checkout -b gh-pages
