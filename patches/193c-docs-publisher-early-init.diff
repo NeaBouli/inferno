@@ -1,0 +1,56 @@
+*** Begin Patch
+diff --git a/scripts/docs-publisher.js b/scripts/docs-publisher.js
+old mode 100755
+new mode 100755
+@@
+ import { execSync } from "child_process";
+ 
+ const root = process.cwd();
+ const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "inferno-site-"));
+ const siteDir = path.join(tmpDir, "_site");
+ const docsDirs = ["docs", "reports", "logs"];
+@@
+ const logDir = path.join(root, "logs");
+ if (!fs.existsSync(logDir)) fs.mkdirSync(logDir, { recursive: true });
+-
+-const projectLog = path.join(logDir, "project.log");
+-const publisherLog = path.join(logDir, "docs-publisher.log");
+-
+-function logLine(line) {
+-  const entry = line + "\n";
+-  try { fs.appendFileSync(projectLog, entry); } catch {}
+-  try { fs.appendFileSync(publisherLog, entry); } catch {}
+-  console.log(line);
+-}
++// --- Early Init Logger ---
++const projectLog = path.join(logDir, "project.log");
++const publisherLog = path.join(logDir, "docs-publisher.log");
++const ts = () => new Date().toISOString();
++
++try {
++  if (!fs.existsSync(publisherLog)) {
++    fs.writeFileSync(publisherLog, `[${ts()}] 🪵 Publisher init created log file\n`);
++  } else {
++    fs.appendFileSync(publisherLog, `[${ts()}] 🪵 Publisher restarted\n`);
++  }
++} catch (e) {
++  console.error("⚠️ Failed to init publisher log:", e?.message || e);
++}
++
++function logLine(line) {
++  const entry = line + "\n";
++  try { fs.appendFileSync(projectLog, entry); } catch (e) { console.error("⚠️ project.log write:", e?.message); }
++  try { fs.appendFileSync(publisherLog, entry); } catch (e) { console.error("⚠️ publisher.log write:", e?.message); }
++  console.log(line);
++}
++
++process.on("uncaughtException", (err) => {
++  const msg = `[${ts()}] 💥 Uncaught Exception: ${err?.message || err}`;
++  logLine(msg);
++});
++
++process.on("unhandledRejection", (reason) => {
++  const msg = `[${ts()}] 💥 Unhandled Rejection: ${reason}`;
++  logLine(msg);
++});
+*** End Patch
