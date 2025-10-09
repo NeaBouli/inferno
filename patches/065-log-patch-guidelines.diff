@@ -1,7 +1,0 @@
-*** Begin Patch
-diff --git a/logs/project.log b/logs/project.log
---- a/logs/project.log
-+++ b/logs/project.log
-@@
-+[2025-09-24 20:45] ArchDoc1 DOCS – PATCH-GUIDELINES.md erstellt und ins Repo aufgenommen (Patch 064)
-*** End Patch

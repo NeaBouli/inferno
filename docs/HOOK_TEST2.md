@@ -1,1 +1,0 @@
-- [x] Hook Logging Test

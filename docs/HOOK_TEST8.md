@@ -1,2 +1,0 @@
-- [x] Hook Log Test 8
-- [x] Hook Log Test 8
