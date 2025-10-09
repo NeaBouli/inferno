@@ -1,0 +1,69 @@
+*** Begin Patch
+diff --git a/scripts/docs-publisher.js b/scripts/docs-publisher.js
+old mode 100755
+new mode 100755
+@@
+ const logDir = path.join(root, "logs");
+ if (!fs.existsSync(logDir)) fs.mkdirSync(logDir, { recursive: true });
+
+-function logLine(line) {
+-  fs.appendFileSync(path.join(logDir, "project.log"), line + "\n");
+-  fs.appendFileSync(path.join(logDir, "docs-publisher.log"), line + "\n");
+-}
+-
+-const ts = () => new Date().toISOString();
+-let commitHash = "unknown";
+-try { commitHash = execSync("git rev-parse --short HEAD").toString().trim(); } catch {}
+-
+-try {
+-  console.log("🚀 Deploying to gh-pages...");
++// --- Improved Logging System ---
++const projectLog = path.join(logDir, "project.log");
++const publisherLog = path.join(logDir, "docs-publisher.log");
++
++function logLine(line) {
++  const entry = line + "\n";
++  try { fs.appendFileSync(projectLog, entry); } catch {}
++  try { fs.appendFileSync(publisherLog, entry); } catch {}
++  console.log(line);
++}
++
++const ts = () => new Date().toISOString();
++let commitHash = "unknown";
++try {
++  commitHash = execSync("git rev-parse --short HEAD").toString().trim();
++} catch {
++  commitHash = "no-commit";
++}
++
++logLine(`[${ts()}] 🧩 Docs Publisher started on branch ${prevBranch}`);
++
++try {
++  console.log("🚀 Deploying to gh-pages...");
+@@
+   const okMsg = `[${ts()}] ✅ gh-pages deployed (commit ${commitHash}) TMP=${tmpDir}`;
+   logLine(okMsg);
+   console.log("🪵 Logged deployment:", okMsg);
+ } catch (err) {
+-  const failMsg = `[${ts()}] ❌ gh-pages deploy failed: ${String(err.message)} TMP=${tmpDir}`;
+-  logLine(failMsg);
+-  console.error(failMsg);
+-} finally {
+-  try {
+-    execSync(`git checkout ${prevBranch}`, { stdio: "inherit" });
+-  } catch (e) {
+-    console.error(`⚠️ Failed to restore branch '${prevBranch}':`, e?.message || e);
+-  }
+-}
++  const failMsg = `[${ts()}] ❌ gh-pages deploy failed: ${String(err.message)} TMP=${tmpDir}`;
++  logLine(failMsg);
++  try { execSync(`git checkout ${prevBranch}`, { stdio: "inherit" }); } catch {}
++  logLine(`[${ts()}] ⚠️ Publisher recovered to branch ${prevBranch}`);
++  process.exitCode = 1;
++}
++
++// Always ensure logs exist even if script exits early
++if (!fs.existsSync(publisherLog)) {
++  try { fs.writeFileSync(publisherLog, `[${ts()}] ⚠️ Publisher created empty log (init)\n`); } catch {}
++}
+*** End Patch
