@@ -10,3 +10,9 @@
 [2025-10-08T08:12:44.555Z] Docs Consolidator run complete → /Users/test/Desktop/inferno/reports/monthly/docs-monthly-report-2025-10.md
 [2025-10-09T08:01:34.625Z] Docs Publisher executed
 [2025-10-09T09:58:00Z] ✅ gh-pages deployed (commit abc1234) TMP=/var/folders/...inferno-site-XXXXXX
+[2025-10-09T09:12:43.760Z] 📁 Created temporary site directory: /var/folders/mp/vsm4q2710jdcphlnjzb2bv5m0000gn/T/inferno-site-khnLzV/_site
+✅ Copied: docs
+✅ Copied: reports
+✅ Copied: logs
+🧾 Created index: /var/folders/mp/vsm4q2710jdcphlnjzb2bv5m0000gn/T/inferno-site-khnLzV/_site/index.html
+[2025-10-09T09:12:44.053Z] ❌ Error: Command failed: git checkout gh-pages || git checkout -b gh-pages
