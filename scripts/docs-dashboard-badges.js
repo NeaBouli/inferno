@@ -1,4 +1,3 @@
-> scripts/docs-dashboard-badges.js <<'EOF'
 #!/usr/bin/env node
 /**
  * 🧩 Inferno Docs Dashboard Badges Injector
@@ -70,12 +69,9 @@ let html = fs.readFileSync(dashboardPath, "utf8");
 // 🧱 Badge-Leiste erstellen
 const bar = `
 <div style="margin-top:10px; display:flex; gap:10px; flex-wrap:wrap;">
-  <img src="https://img.shields.io/badge/Inferno%20Docs-Passing-brightgreen?style=for-the-badge" 
-alt="Docs Status"/>
-  <img src="https://img.shields.io/badge/Last%20Update-${new 
-Date().toISOString().split("T")[0]}-blue?style=for-the-badge" alt="Last Update"/>
-  <img src="https://img.shields.io/badge/Deployed%20to-gh--pages-orange?style=for-the-badge" 
-alt="Deployment"/>
+  <img src="https://img.shields.io/badge/Inferno%20Docs-Passing-brightgreen?style=for-the-badge" alt="Docs Status"/>
+  <img src="https://img.shields.io/badge/Last%20Update-${new Date().toISOString().split("T")[0]}-blue?style=for-the-badge" alt="Last Update"/>
+  <img src="https://img.shields.io/badge/Deployed%20to-gh--pages-orange?style=for-the-badge" alt="Deployment"/>
 </div>`;
 
 // Nach dem ersten <h1> oder <body> einfügen
