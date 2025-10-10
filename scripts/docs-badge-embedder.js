@@ -1,0 +1,43 @@
+#!/usr/bin/env node
+/**
+ * 🪶 Inferno Docs Badge Embedder
+ * Fügt das Build-Badge automatisch in README.md und Landing-Page ein.
+ */
+import fs from "fs";
+import path from "path";
+
+const root = process.cwd();
+const readme = path.join(root, "README.md");
+const indexHtml = path.join(root, "docs", "index.html");
+const badgeRel = "reports/build-status.svg";
+
+const badgeMd = `![Inferno Docs Build Status](${badgeRel})`;
+
+// → README aktualisieren
+if (fs.existsSync(readme)) {
+  let text = fs.readFileSync(readme, "utf8");
+  if (!text.includes(badgeRel)) {
+    text = text.replace(/^# [^\n]+/m, m => `${m}\n\n${badgeMd}`);
+    fs.writeFileSync(readme, text, "utf8");
+    console.log("✅ Badge in README eingefügt");
+  } else {
+    console.log("ℹ️ Badge bereits in README");
+  }
+}
+
+// → Landing-Page aktualisieren
+if (fs.existsSync(indexHtml)) {
+  let html = fs.readFileSync(indexHtml, "utf8");
+  if (!html.includes(badgeRel)) {
+    const inject = `<div style="position:absolute;top:10px;right:10px;">
+      <img src="${badgeRel}" alt="Docs Status">
+    </div>`;
+    html = html.replace(/<body[^>]*>/, m => `${m}\n${inject}`);
+    fs.writeFileSync(indexHtml, html, "utf8");
+    console.log("✅ Badge in Landing-Page eingebettet");
+  } else {
+    console.log("ℹ️ Badge bereits in Landing-Page");
+  }
+}
+
+console.log("🏁 Badge Embedder fertig");
