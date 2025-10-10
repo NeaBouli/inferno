@@ -68,6 +68,8 @@ try {
   logLine(`🧩 Docs footer generator executed.`);
   execSync("node scripts/docs-sitemap-meta-generator.js", { stdio: "inherit" });
   logLine(`🧭 Docs sitemap & meta generator executed.`);
+  execSync("node scripts/docs-badge-generator.js", { stdio: "inherit" });
+  logLine(`🏷️ Docs integrity badges generated.`);
 } catch (err) {
   logLine(`[${ts()}] ❌ Error: ${err.message}`);
 }
