@@ -1,0 +1,14 @@
+*** Begin Patch
+diff --git a/scripts/docs-publisher.js b/scripts/docs-publisher.js
+@@
+   execSync("node scripts/docs-footer-generator.js", { stdio: "inherit" });
+   logLine(`<0001f9e9> Docs footer generator executed.`);
++
++  // 🟢 FIX B: Dashboard-Badges jetzt ausführen, bevor der Branch gewechselt wird
++  try {
++    execSync("node scripts/docs-dashboard-badges.js", { stdio: "inherit" });
++    logLine(`<0001f9ea> Docs dashboard badges executed (pre-checkout).`);
++  } catch (err) {
++    console.error("⚠️  Dashboard badges failed (pre-checkout):", err.message);
++  }
+*** End Patch
