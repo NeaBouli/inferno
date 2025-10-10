@@ -40,7 +40,7 @@ bar += "</div>\\n<!-- BADGE-END -->";
 
 // Nach dem ersten <h1> oder <body> einfügen
 if (html.includes("<h1")) {
-  html = html.replace(/<h1[^>]*>[^<]*<\\/h1>/, m => m + "\\n" + bar);
+  html = html.replace(/<h1[^>]*>[^<]*</h1>/, m => m + "\\n" + bar);
 } else if (html.includes("<body")) {
   html = html.replace(/<body[^>]*>/, "$&\\n" + bar);
 } else {
