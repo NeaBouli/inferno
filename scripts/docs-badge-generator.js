@@ -1,0 +1,49 @@
+#!/usr/bin/env node
+/**
+ * 🟢 Inferno Docs Build Badge Generator
+ * Erstellt ein SVG-Badge basierend auf dem letzten Validation-Report.
+ */
+import fs from "fs";
+import path from "path";
+import { execSync } from "child_process";
+
+const root = process.cwd();
+const reportsDir = path.join(root, "reports");
+const output = path.join(reportsDir, "build-status.svg");
+
+let status = "passing";
+let color = "#4c1"; // grün
+
+const reportFile = path.join(reportsDir, "docs-validation-report.md");
+if (fs.existsSync(reportFile)) {
+  const txt = fs.readFileSync(reportFile, "utf8");
+  if (txt.includes("❌")) {
+    status = "failing";
+    color = "#e05d44"; // rot
+  }
+}
+
+let commit = "unknown";
+try { commit = execSync("git rev-parse --short HEAD").toString().trim(); } catch {}
+
+const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="160" height="20">
+  <linearGradient id="b" x2="0" y2="100%">
+    <stop offset="0" stop-color="#bbb" stop-opacity=".1"/>
+    <stop offset="1" stop-opacity=".1"/>
+  </linearGradient>
+  <mask id="a"><rect width="160" height="20" rx="3" fill="#fff"/></mask>
+  <g mask="url(#a)">
+    <rect width="80" height="20" fill="#555"/>
+    <rect x="80" width="80" height="20" fill="${color}"/>
+    <rect width="160" height="20" fill="url(#b)"/>
+  </g>
+  <g fill="#fff" text-anchor="middle"
+     font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11">
+    <text x="40" y="15">docs</text>
+    <text x="120" y="15">${status}</text>
+  </g>
+  <text x="80" y="35" font-size="8" fill="#ccc">${commit}</text>
+</svg>`;
+
+fs.writeFileSync(output, svg, "utf8");
+console.log(`✅ Build badge generated → ${output}`);
