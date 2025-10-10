@@ -64,6 +64,8 @@ try {
   execSync(`git checkout ${prevBranch}`, { stdio: "inherit" });
 
   logLine(`[${ts()}] ✅ gh-pages deployed (commit ${commitHash}) TMP=${tmpDir}`);
+  execSync("node scripts/docs-footer-generator.js", { stdio: "inherit" });
+  logLine(`🧩 Docs footer generator executed.`);
 } catch (err) {
   logLine(`[${ts()}] ❌ Error: ${err.message}`);
 }

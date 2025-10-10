@@ -1,0 +1,51 @@
+#!/usr/bin/env node
+/**
+ * 🧩 Inferno Docs Footer Generator
+ * Fügt am Ende aller HTML-Dokumente einen standardisierten Footer mit Build-Infos ein.
+ */
+import fs from "fs";
+import path from "path";
+import { execSync } from "child_process";
+
+const root = process.cwd();
+const docsDir = path.join(root, "docs");
+const reportsDir = path.join(root, "reports");
+
+function ts() {
+  return new Date().toISOString();
+}
+
+let commit = "unknown";
+try {
+  commit = execSync("git rev-parse --short HEAD").toString().trim();
+} catch {}
+
+const badgeRel = "reports/build-status.svg";
+const footer = `
+<footer style="margin-top:40px;padding:10px 0;border-top:1px solid #444;
+  font-size:0.9em;color:#aaa;text-align:center;">
+  <div>Inferno Docs — Build Time ${ts()}  |  Commit <a href="https://github.com/NeaBouli/inferno/commit/${commit}" target="_blank">${commit}</a></div>
+  <div style="margin-top:8px;"><img src="${badgeRel}" alt="build badge" height="20"/></div>
+</footer>`;
+
+function injectFooter(file) {
+  const html = fs.readFileSync(file, "utf8");
+  if (!html.includes("<footer") && html.includes("</body>")) {
+    const newHtml = html.replace(/<\/body>/, `${footer}\n</body>`);
+    fs.writeFileSync(file, newHtml, "utf8");
+    console.log(`✅ Footer injected → ${path.basename(file)}`);
+  }
+}
+
+function walk(dir) {
+  for (const e of fs.readdirSync(dir)) {
+    const full = path.join(dir, e);
+    if (fs.statSync(full).isDirectory()) walk(full);
+    else if (e.endsWith(".html")) injectFooter(full);
+  }
+}
+
+if (fs.existsSync(docsDir)) walk(docsDir);
+if (fs.existsSync(reportsDir)) walk(reportsDir);
+
+console.log("🏁 Docs Footer Generator fertig");
