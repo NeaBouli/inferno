@@ -42,7 +42,7 @@ bar += "</div>\\n<!-- BADGE-END -->";
 if (html.includes("<h1")) {
   html = html.replace(/<h1[^>]*>[^<]*</h1>/, m => m + "\\n" + bar);
 } else if (html.includes("<body")) {
-  html = html.replace(/<body[^>]*>/, "$&\\n" + bar);
+ html = html.replace(/<h1[^>]*>[^<]*<\/h1>/, (m) => m + "\n" + bar);
 } else {
   html = bar + "\\n" + html;
 }
