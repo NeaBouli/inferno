@@ -10,15 +10,20 @@ diff --git a/scripts/docs-dashboard-badges.js b/scripts/docs-dashboard-badges.js
 +let dashboardPath = path.join(root, "reports", "docs-dashboard.html");
 +if (!fs.existsSync(dashboardPath)) {
 +  const tmpBase = "/var/folders/mp";
-+  const tmpCandidates = fs.readdirSync(tmpBase).filter(d => d.includes("inferno-site"));
 +  let found = null;
-+  for (const dir of tmpCandidates) {
-+    const p = path.join(tmpBase, dir, "_site", "reports", "docs-dashboard.html");
-+    if (fs.existsSync(p)) {
-+      found = p;
-+      break;
++  try {
++    const tmpCandidates = fs.readdirSync(tmpBase).filter(d => d.includes("inferno-site"));
++    for (const dir of tmpCandidates) {
++      const candidate = path.join(tmpBase, dir, "_site", "reports", "docs-dashboard.html");
++      if (fs.existsSync(candidate)) {
++        found = candidate;
++        break;
++      }
 +    }
++  } catch (err) {
++    console.error("⚠️ Temp search failed:", err.message);
 +  }
++
 +  if (found) {
 +    console.log(`⚙️  Using fallback dashboard path: ${found}`);
 +    dashboardPath = found;
