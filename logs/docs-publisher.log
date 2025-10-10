@@ -1,16 +1,4 @@
-[2025-10-09T19:46:12.093Z] 🪵 Publisher init created log file
-[2025-10-09T19:46:12.096Z] 📁 Created temporary site directory: /var/folders/mp/vsm4q2710jdcphlnjzb2bv5m0000gn/T/inferno-site-sDTGwr/_site
-✅ Copied: docs
-✅ Copied: reports
-[2025-10-09T19:46:50.928Z] ❌ Error: Command failed: git push origin gh-pages --force
-[2025-10-09T20:04:24.119Z] 🪵 Publisher init created log file
-[2025-10-09T20:04:24.128Z] 📁 Created temporary site directory: /var/folders/mp/vsm4q2710jdcphlnjzb2bv5m0000gn/T/inferno-site-Wd0sCM/_site
-✅ Copied: docs
-✅ Copied: reports
-✅ Copied: logs
-[2025-10-09T20:04:24.681Z] 🧪 Running docs validator...
-[2025-10-09T20:04:24.835Z] ❌ Error: Command failed: node scripts/docs-validator.js
-[2025-10-09T20:07:47.439Z] 🪵 Publisher init created log file
-[2025-10-09T20:07:47.448Z] 📁 Created temporary site directory: /var/folders/mp/vsm4q2710jdcphlnjzb2bv5m0000gn/T/inferno-site-NQF00l/_site
+[2025-10-10T07:28:44.875Z] 🪵 Publisher init created log file
+[2025-10-10T07:28:44.877Z] 📁 Created temporary site directory: /var/folders/mp/vsm4q2710jdcphlnjzb2bv5m0000gn/T/inferno-site-cYtqMJ/_site
 ✅ Copied: docs
 ✅ Copied: reports
