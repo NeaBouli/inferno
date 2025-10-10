@@ -1,6 +1,6 @@
-[2025-10-10T23:30:43.090Z] ✅ gh-pages deployed (commit 6047441c) TMP=/var/folders/mp/vsm4q2710jdcphlnjzb2bv5m0000gn/T/inferno-site-ZphHUn
+[2025-10-10T23:32:51.850Z] ✅ gh-pages deployed (commit c0fb1f95) TMP=/var/folders/mp/vsm4q2710jdcphlnjzb2bv5m0000gn/T/inferno-site-AxLO85
 🧩 Docs footer generator executed.
-[2025-10-10T23:30:43.411Z] ❌ Error: Command failed: node scripts/docs-dashboard-badges.js
-[2025-10-10T23:32:30.823Z] 📁 Created temporary site directory: /var/folders/mp/vsm4q2710jdcphlnjzb2bv5m0000gn/T/inferno-site-AxLO85/_site
+[2025-10-10T23:32:52.189Z] ❌ Error: Command failed: node scripts/docs-dashboard-badges.js
+[2025-10-10T23:45:55.021Z] 📁 Created temporary site directory: /var/folders/mp/vsm4q2710jdcphlnjzb2bv5m0000gn/T/inferno-site-bpIYTA/_site
 ✅ Copied: docs
 ✅ Copied: reports
