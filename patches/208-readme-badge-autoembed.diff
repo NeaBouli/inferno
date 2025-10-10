@@ -1,0 +1,41 @@
+*** Begin Patch
+diff --git a/scripts/docs-badge-embedder.js b/scripts/docs-badge-embedder.js
+new file mode 100755
+--- /dev/null
++++ b/scripts/docs-badge-embedder.js
+@@
++#!/usr/bin/env node
++/**
++ * 🧩 Inferno README Badge Auto-Embedder
++ * Fügt generierte Badge-Zeile automatisch in README.md ein.
++ */
++
++import fs from "fs";
++import path from "path";
++
++const root = process.cwd();
++const readme = path.join(root, "README.md");
++
++const badgeLine =
++  "![Build](reports/build-status.svg) ![Validator](reports/validator-status.svg) ![CI](reports/ci-status.svg)";
++
++if (!fs.existsSync(readme)) {
++  console.error("❌ README.md not found.");
++  process.exit(1);
++}
++
++let content = fs.readFileSync(readme, "utf8");
++
++if (content.includes("![Build](")) {
++  // Replace existing badge line
++  content = content.replace(/^.*!\[Build\].*\n/, badgeLine + "\n");
++  console.log("🔄 Updated existing badge line in README.md");
++} else {
++  // Insert after title (first line starting with #)
++  content = content.replace(/^#.*\n/, match => match + badgeLine + "\n");
++  console.log("➕ Added badge line to README.md");
++}
++
++fs.writeFileSync(readme, content, "utf8");
++console.log("✅ README badges updated successfully");
+*** End Patch

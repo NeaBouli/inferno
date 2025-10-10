@@ -70,6 +70,8 @@ try {
   logLine(`🧭 Docs sitemap & meta generator executed.`);
   execSync("node scripts/docs-badge-generator.js", { stdio: "inherit" });
   logLine(`🏷️ Docs integrity badges generated.`);
+  execSync("node scripts/docs-badge-embedder.js", { stdio: "inherit" });
+  logLine(`🧩 README badge embedder executed.`);
 } catch (err) {
   logLine(`[${ts()}] ❌ Error: ${err.message}`);
 }
