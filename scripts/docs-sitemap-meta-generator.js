@@ -1,0 +1,47 @@
+#!/usr/bin/env node
+/**
+ * 🧭 Inferno Docs Sitemap & Meta Generator
+ * Erstellt automatisch sitemap.xml und meta.json für alle HTML-Dokumente unter docs/ und reports/.
+ */
+import fs from "fs";
+import path from "path";
+
+const root = process.cwd();
+const baseUrl = "https://NeaBouli.github.io/inferno";
+const docsDir = path.join(root, "docs");
+const reportsDir = path.join(root, "reports");
+const outSitemap = path.join(root, "docs", "sitemap.xml");
+const outMeta = path.join(root, "docs", "meta.json");
+
+function collectFiles(dir, base) {
+  const files = [];
+  for (const f of fs.readdirSync(dir)) {
+    const full = path.join(dir, f);
+    if (fs.statSync(full).isDirectory()) files.push(...collectFiles(full, path.join(base, f)));
+    else if (f.endsWith(".html") || f.endsWith(".md")) {
+      const st = fs.statSync(full);
+      files.push({
+        path: path.join(base, f),
+        mtime: st.mtime.toISOString(),
+        size: st.size
+      });
+    }
+  }
+  return files;
+}
+
+const allDocs = [];
+if (fs.existsSync(docsDir)) allDocs.push(...collectFiles(docsDir, "docs"));
+if (fs.existsSync(reportsDir)) allDocs.push(...collectFiles(reportsDir, "reports"));
+
+// Sitemap XML
+const sitemap = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${allDocs
+  .map(d => `  <url><loc>${baseUrl}/${d.path.replace(/ /g, "%20")}</loc><lastmod>${d.mtime}</lastmod></url>`)
+  .join("\n")}\n</urlset>`;
+
+fs.writeFileSync(outSitemap, sitemap, "utf8");
+
+// Meta JSON
+fs.writeFileSync(outMeta, JSON.stringify(allDocs, null, 2), "utf8");
+
+console.log(`✅ Sitemap & Meta generated → ${outSitemap}, ${outMeta}`);
