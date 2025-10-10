@@ -66,6 +66,8 @@ try {
   logLine(`[${ts()}] ✅ gh-pages deployed (commit ${commitHash}) TMP=${tmpDir}`);
   execSync("node scripts/docs-footer-generator.js", { stdio: "inherit" });
   logLine(`🧩 Docs footer generator executed.`);
+  execSync("node scripts/docs-sitemap-meta-generator.js", { stdio: "inherit" });
+  logLine(`🧭 Docs sitemap & meta generator executed.`);
 } catch (err) {
   logLine(`[${ts()}] ❌ Error: ${err.message}`);
 }
