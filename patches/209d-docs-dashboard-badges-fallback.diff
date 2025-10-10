@@ -1,0 +1,27 @@
+*** Begin Patch
+diff --git a/scripts/docs-dashboard-badges.js b/scripts/docs-dashboard-badges.js
+@@
+ const dashboardPath = path.join(root, "reports", "docs-dashboard.html");
+ if (!fs.existsSync(dashboardPath)) {
+-  console.error(`❌ Dashboard not found: ${dashboardPath}`);
+-  process.exit(1);
++  // Fallback: try temporary _site dashboard
++  const tmpPattern = "/inferno-site-";
++  const tmpDirs = fs.readdirSync("/var/folders/mp").filter(d => d.startsWith("vsm4") || d.startsWith("inferno-site"));
++  let fallback = null;
++  for (const d of tmpDirs) {
++    const p = path.join("/var/folders/mp", d, "_site", "reports", "docs-dashboard.html");
++    if (fs.existsSync(p)) {
++      fallback = p;
++      break;
++    }
++  }
++  if (fallback) {
++    console.log(`⚙️  Using fallback dashboard path: ${fallback}`);
++  } else {
++    console.error(`❌ Dashboard not found in reports or temp directories.`);
++    process.exit(1);
++  }
++  dashboardPath = fallback;
+ }
+*** End Patch
