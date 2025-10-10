@@ -1,18 +1,6 @@
-[2025-10-10T22:55:31.520Z] ✅ gh-pages deployed (commit eb948239) TMP=/var/folders/mp/vsm4q2710jdcphlnjzb2bv5m0000gn/T/inferno-site-uhSf7a
+[2025-10-10T23:05:45.971Z] ✅ gh-pages deployed (commit 94def5ba) TMP=/var/folders/mp/vsm4q2710jdcphlnjzb2bv5m0000gn/T/inferno-site-iy8Xv0
 🧩 Docs footer generator executed.
-[2025-10-10T22:55:32.798Z] ❌ Error: Command failed: node scripts/docs-dashboard-badges.js
-[2025-10-10T22:58:06.069Z] 📁 Created temporary site directory: /var/folders/mp/vsm4q2710jdcphlnjzb2bv5m0000gn/T/inferno-site-2UsYyx/_site
-✅ Copied: docs
-✅ Copied: reports
-✅ Copied: logs
-🧾 Created index: /var/folders/mp/vsm4q2710jdcphlnjzb2bv5m0000gn/T/inferno-site-2UsYyx/_site/index.html
-[2025-10-10T22:58:06.758Z] ❌ Error: Command failed: git checkout gh-pages || git checkout -b gh-pages
-[2025-10-10T23:03:42.430Z] 📁 Created temporary site directory: /var/folders/mp/vsm4q2710jdcphlnjzb2bv5m0000gn/T/inferno-site-LjivpE/_site
-✅ Copied: docs
-✅ Copied: reports
-✅ Copied: logs
-🧾 Created index: /var/folders/mp/vsm4q2710jdcphlnjzb2bv5m0000gn/T/inferno-site-LjivpE/_site/index.html
-[2025-10-10T23:03:43.593Z] ❌ Error: Command failed: git checkout gh-pages || git checkout -b gh-pages
-[2025-10-10T23:05:08.257Z] 📁 Created temporary site directory: /var/folders/mp/vsm4q2710jdcphlnjzb2bv5m0000gn/T/inferno-site-iy8Xv0/_site
+[2025-10-10T23:05:46.737Z] ❌ Error: Command failed: node scripts/docs-dashboard-badges.js
+[2025-10-10T23:08:51.171Z] 📁 Created temporary site directory: /var/folders/mp/vsm4q2710jdcphlnjzb2bv5m0000gn/T/inferno-site-MKjARr/_site
 ✅ Copied: docs
 ✅ Copied: reports
