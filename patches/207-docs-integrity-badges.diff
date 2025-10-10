@@ -1,0 +1,42 @@
+*** Begin Patch
+diff --git a/scripts/docs-badge-generator.js b/scripts/docs-badge-generator.js
+new file mode 100755
+--- /dev/null
++++ b/scripts/docs-badge-generator.js
+@@
++#!/usr/bin/env node
++/**
++ * 🏷️ Inferno Docs Integrity Badges Generator
++ * Erstellt einfache SVG-Badges (Build, Validation, CI) zur Anzeige des Status.
++ */
++
++import fs from "fs";
++import path from "path";
++
++const root = process.cwd();
++const reportsDir = path.join(root, "reports");
++if (!fs.existsSync(reportsDir)) fs.mkdirSync(reportsDir, { recursive: true });
++
++function makeBadge(label, status, color) {
++  return `<svg xmlns="http://www.w3.org/2000/svg" width="150" height="20">
++  <rect width="150" height="20" fill="#555"/>
++  <rect x="70" width="80" height="20" fill="${color}"/>
++  <text x="35" y="14" fill="#fff" font-family="Verdana" font-size="11" text-anchor="middle">${label}</text>
++  <text x="110" y="14" fill="#fff" font-family="Verdana" font-size="11" text-anchor="middle">${status}</text>
++</svg>`;
++}
++
++const badges = [
++  { file: "build-status.svg", label: "Build", status: "passing", color: "#4c1" },
++  { file: "validator-status.svg", label: "Validator", status: "clean", color: "#4c1" },
++  { file: "ci-status.svg", label: "CI", status: "ok", color: "#007ec6" },
++];
++
++for (const b of badges) {
++  const svg = makeBadge(b.label, b.status, b.color);
++  fs.writeFileSync(path.join(reportsDir, b.file), svg, "utf8");
++  console.log(`✅ Badge created: ${b.file}`);
++}
++
++console.log(`🏷️ All integrity badges generated in ${reportsDir}`);
+*** End Patch
