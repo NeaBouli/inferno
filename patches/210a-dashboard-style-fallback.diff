@@ -1,0 +1,47 @@
+*** Begin Patch
+diff --git a/scripts/docs-dashboard-style.js b/scripts/docs-dashboard-style.js
+@@
+-console.log("🎨  Applying Docs Dashboard Theme...");
+-
+-// Dashboard suchen
+-let dashboardPath = path.join(root, "reports", "docs-dashboard.html");
+-if (!fs.existsSync(dashboardPath)) {
+-  console.error("❌  Dashboard not found:", dashboardPath);
+-  process.exit(1);
+-}
++console.log("🎨  Applying Docs Dashboard Theme...");
++
++// Dashboard suchen + Fallback in macOS Temp (ähnlich wie badges.js)
++let dashboardPath = path.join(root, "reports", "docs-dashboard.html");
++if (!fs.existsSync(dashboardPath)) {
++  const tmpBase = "/var/folders/mp";
++  let found = null;
++  try {
++    const subfolders = fs.readdirSync(tmpBase).filter(f => !f.startsWith('.'));
++    for (const sub of subfolders) {
++      const subPath = path.join(tmpBase, sub, 'T');
++      if (fs.existsSync(subPath)) {
++        const tmpDirs = fs.readdirSync(subPath).filter(d => d.includes('inferno-site'));
++        for (const dir of tmpDirs) {
++          const candidate = path.join(subPath, dir, '_site', 'reports', 'docs-dashboard.html');
++          if (fs.existsSync(candidate)) {
++            found = candidate;
++            break;
++          }
++        }
++      }
++      if (found) break;
++    }
++  } catch (err) {
++    console.error("⚠️  Temp search failed:", err.message);
++  }
++
++  if (found) {
++    console.log(`⚙️  Using fallback dashboard path: ${found}`);
++    dashboardPath = found;
++  } else {
++    console.error("❌  Dashboard not found anywhere.");
++    process.exit(1);
++  }
++}
+*** End Patch
