@@ -3,6 +3,7 @@
  * 🧩 Inferno Docs Dashboard Theme & Style Injector
  *
  * Fügt Dark/Light Theme, Logo und responsive Styles ins Dashboard ein.
+ * Enthält Fallback-Suchlogik für macOS-Temp-Verzeichnisse.
  */
 
 import fs from "fs";
@@ -15,11 +16,38 @@ const root = path.resolve(__dirname, "..");
 
 console.log("🎨  Applying Docs Dashboard Theme...");
 
-// Dashboard suchen
+// Dashboard suchen + Fallback für macOS TMP-Pfade
 let dashboardPath = path.join(root, "reports", "docs-dashboard.html");
 if (!fs.existsSync(dashboardPath)) {
-  console.error("❌  Dashboard not found:", dashboardPath);
-  process.exit(1);
+  const tmpBase = "/var/folders/mp";
+  let found = null;
+  try {
+    const subfolders = fs.readdirSync(tmpBase).filter(f => !f.startsWith('.'));
+    for (const sub of subfolders) {
+      const subPath = path.join(tmpBase, sub, 'T');
+      if (fs.existsSync(subPath)) {
+        const tmpDirs = fs.readdirSync(subPath).filter(d => d.includes('inferno-site'));
+        for (const dir of tmpDirs) {
+          const candidate = path.join(subPath, dir, '_site', 'reports', 'docs-dashboard.html');
+          if (fs.existsSync(candidate)) {
+            found = candidate;
+            break;
+          }
+        }
+      }
+      if (found) break;
+    }
+  } catch (err) {
+    console.error("⚠️  Temp search failed:", err.message);
+  }
+
+  if (found) {
+    console.log(`⚙️  Using fallback dashboard path: ${found}`);
+    dashboardPath = found;
+  } else {
+    console.error("❌  Dashboard not found anywhere.");
+    process.exit(1);
+  }
 }
 
 let html = fs.readFileSync(dashboardPath, "utf8");
@@ -73,10 +101,9 @@ const styleBlock = `
 </style>
 `;
 
-// Logo und Styles vor </head> einsetzen
+// Styles & Logo einfügen
 html = html.replace("</head>", `${styleBlock}</head>`);
 
-// Logo-Header vor <h1> einfügen (wenn vorhanden)
 const logoTag = `<img src="https://raw.githubusercontent.com/NeaBouli/inferno/main/assets/logo.png" alt="Inferno Logo" class="inferno-logo"/>`;
 if (html.includes("<h1")) {
   html = html.replace(/<h1[^>]*>/, `${logoTag}\n$&`);
