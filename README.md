@@ -141,15 +141,37 @@ Step 8/9  Distribute tokens (200M+150M+150M+100M, 400M stays with deployer)
 Step 9/9  Remove deployer feeExempt
 ```
 
+### LP Pairing (Uniswap V2)
+
+After deployment, create the IFR/ETH liquidity pool:
+
+```bash
+npx hardhat run scripts/create-lp.js --network sepolia
+```
+
+The script performs 4 steps:
+1. Pre-flight checks (ETH balance, IFR balance, Router reachable)
+2. Set deployer feeExempt + approve Router
+3. `addLiquidityETH` (400M IFR + ETH, 2% slippage tolerance)
+4. Update BuybackVault router via `setParams()`
+
+Configure via `.env`:
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `UNISWAP_V2_ROUTER` | `0xC532a74256D3Db42D0Bf7a0400fEFDbad7694008` | Uniswap V2 Router02 (Sepolia) |
+| `LP_IFR_AMOUNT` | `400000000` | IFR amount for LP (400M) |
+| `LP_ETH_AMOUNT` | `0.01` | ETH amount for LP |
+
 ### Post-Deploy Checklist
 
-After deployment, complete these steps manually:
-
-1. **Pair LP** — Add 400M IFR + ETH to Uniswap to create the liquidity pair
-2. **Set Router** — Call `BuybackVault.setParams()` with real Uniswap V2 Router address
-3. **Set Addresses** — Update treasury address if placeholder was used
-4. **Transfer Ownership** — `InfernoToken.transferOwnership(governance.address)` to enable timelock governance
-5. **Verify on Etherscan** — `npx hardhat verify --network sepolia <address> <constructor-args>`
+| # | Step | Status |
+|---|------|--------|
+| 1 | Deploy 6 contracts | Done |
+| 2 | Verify on Etherscan | Done (6/6) |
+| 3 | Pair LP (Uniswap V2) | `scripts/create-lp.js` |
+| 4 | Set Addresses — Update treasury if placeholder was used | Pending |
+| 5 | Transfer Ownership — `InfernoToken.transferOwnership(governance.address)` | Pending |
 
 ## Tech Stack
 
