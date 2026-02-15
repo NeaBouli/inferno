@@ -97,12 +97,59 @@ npx hardhat test
 
 ## Deploy
 
+### Prerequisites
+
+1. Copy `.env.example` to `.env` and fill in values:
+
 ```bash
-# Testnet (Sepolia)
+cp .env.example .env
+```
+
+2. Required `.env` variables:
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `SEPOLIA_RPC_URL` | Yes | Alchemy/Infura Sepolia endpoint |
+| `DEPLOYER_PRIVATE_KEY` | Yes | Wallet private key (needs ~0.1 ETH for gas) |
+| `TREASURY_ADDRESS` | No | Treasury multisig (defaults to deployer) |
+| `COMMUNITY_ADDRESS` | No | Community wallet (defaults to deployer) |
+| `TEAM_BENEFICIARY` | No | Vesting beneficiary (defaults to deployer) |
+
+### Dry Run (local)
+
+```bash
+npx hardhat run scripts/deploy-testnet.js
+```
+
+### Testnet (Sepolia)
+
+```bash
 npx hardhat run scripts/deploy-testnet.js --network sepolia
 ```
 
-The deploy script runs 9 steps: Token, LiquidityReserve, Vesting, BuybackVault+BurnReserve, Governance, feeExempt wiring, token distribution, deployer exemption removal.
+### Deploy Script (9 Steps)
+
+```
+Step 1/9  Deploy InfernoToken (1B IFR minted to deployer)
+Step 2/9  Deploy LiquidityReserve (6mo lock, 50M/quarter)
+Step 3/9  Deploy Vesting (12mo cliff, 36mo linear, 150M IFR)
+Step 4/9  Deploy BurnReserve + BuybackVault (60-day activation)
+Step 5/9  (BurnReserve already deployed in step 4)
+Step 6/9  Deploy Governance (48h timelock delay)
+Step 7/9  Set feeExempt for all contracts + deployer (temporary)
+Step 8/9  Distribute tokens (200M+150M+150M+100M, 400M stays with deployer)
+Step 9/9  Remove deployer feeExempt
+```
+
+### Post-Deploy Checklist
+
+After deployment, complete these steps manually:
+
+1. **Pair LP** — Add 400M IFR + ETH to Uniswap to create the liquidity pair
+2. **Set Router** — Call `BuybackVault.setParams()` with real Uniswap V2 Router address
+3. **Set Addresses** — Update treasury address if placeholder was used
+4. **Transfer Ownership** — `InfernoToken.transferOwnership(governance.address)` to enable timelock governance
+5. **Verify on Etherscan** — `npx hardhat verify --network sepolia <address> <constructor-args>`
 
 ## Tech Stack
 
