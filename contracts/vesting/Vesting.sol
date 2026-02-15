@@ -96,7 +96,9 @@ contract Vesting {
         if (elapsed >= duration) {
             return totalAllocation;
         }
-        return (totalAllocation * elapsed) / duration;
+        uint256 vestingElapsed = elapsed - cliffDuration;
+        uint256 vestingDuration = duration - cliffDuration;
+        return (totalAllocation * vestingElapsed) / vestingDuration;
     }
 
     function vestingSchedule()

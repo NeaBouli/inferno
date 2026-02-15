@@ -8,9 +8,9 @@ describe("Vesting", function () {
   const DECIMALS = 9;
   const toUnits = (n) => ethers.utils.parseUnits(n.toString(), DECIMALS);
 
-  const CLIFF = 90 * 24 * 3600;       // 90 Tage
-  const DURATION = 365 * 24 * 3600;   // 12 Monate
-  const ALLOCATION = toUnits(1_000_000); // 1 Mio. IFR
+  const CLIFF = 90 * 24 * 3600;       // 90 days
+  const DURATION = 365 * 24 * 3600;   // 365 days total (90d cliff + 275d linear)
+  const ALLOCATION = toUnits(1_000_000); // 1M IFR
 
   beforeEach(async () => {
     [deployer, beneficiary, guardian, other] = await ethers.getSigners();
@@ -42,19 +42,50 @@ describe("Vesting", function () {
     await expect(vesting.connect(beneficiary).release()).to.be.reverted;
   });
 
+  it("~0% vested at cliff end (post-cliff formula)", async () => {
+    // Advance to cliff. Block timestamp may be 1s past cliff due to mining.
+    await increaseTime(CLIFF);
+    const vested = await vesting.vestedAmount();
+    // Post-cliff: vestingElapsed is ~0-1s, so vested should be negligible
+    // Max 1 second of vesting: ALLOCATION / vestingDuration ≈ 42 units
+    const oneSecondVesting = ALLOCATION.div(DURATION - CLIFF);
+    expect(vested).to.be.lte(oneSecondVesting.mul(2)); // allow 2s tolerance
+  });
+
   it("releast linear nach dem Cliff", async () => {
-    await increaseTime(CLIFF + 30 * 24 * 3600);
+    // Advance to cliff + 30 days
+    const extraDays = 30 * 24 * 3600;
+    await increaseTime(CLIFF + extraDays);
+
     const releasable = await vesting.releasableAmount();
     expect(releasable).to.be.gt(0);
+
+    // Post-cliff formula: vested = (ALLOCATION * 30d) / (DURATION - CLIFF)
+    const vestingDuration = DURATION - CLIFF;
+    const expected = ALLOCATION.mul(extraDays).div(vestingDuration);
+
+    // Allow 0.5% tolerance for block timestamp rounding
+    const tolerance = expected.div(200);
+    expect(releasable.sub(expected).abs()).to.be.lte(tolerance);
 
     const balBefore = await token.balanceOf(beneficiary.address);
     await expect(vesting.connect(beneficiary).release()).to.emit(vesting, "Released");
     const balAfter = await token.balanceOf(beneficiary.address);
+    // Released amount may be slightly more than queried releasable (1 block later)
+    expect(balAfter.sub(balBefore)).to.be.gte(releasable);
+  });
 
-    // ✅ Toleranz: max. 0.1 % Abweichung erlaubt
-    const diff = balAfter.sub(balBefore).sub(releasable).abs();
-    const tolerance = releasable.div(1000); // 0.1 %
-    expect(diff).to.be.lte(tolerance);
+  it("50% vested at midpoint of linear phase", async () => {
+    const vestingDuration = DURATION - CLIFF;
+    const halfVesting = vestingDuration / 2;
+    await increaseTime(CLIFF + halfVesting);
+
+    const vested = await vesting.vestedAmount();
+    const expected = ALLOCATION.div(2);
+
+    // 0.5% tolerance
+    const tolerance = expected.div(200);
+    expect(vested.sub(expected).abs()).to.be.lte(tolerance);
   });
 
   it("gibt alles am Ende frei", async () => {

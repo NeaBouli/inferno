@@ -31,6 +31,7 @@ contract BuybackVault {
     uint256 public cooldown = 3600;       // 1 hour
     uint256 public slippageBps = 500;     // 5 %
     uint256 public lastBuybackAt;
+    uint256 public immutable activationTime;
 
     bool public paused;
 
@@ -58,7 +59,8 @@ contract BuybackVault {
         address _burnReserve,
         address _treasury,
         address _router,
-        address _guardian
+        address _guardian,
+        uint256 _activationDelay
     ) {
         owner = msg.sender;
         token = IERC20(_token);
@@ -66,6 +68,7 @@ contract BuybackVault {
         treasury = _treasury;
         router = IRouter(_router);
         guardian = _guardian;
+        activationTime = block.timestamp + _activationDelay;
     }
 
     function pause() external onlyGuardian {
@@ -93,6 +96,7 @@ contract BuybackVault {
 
     function executeBuyback() external onlyOwner {
         require(!paused, "Pausable: paused");
+        require(block.timestamp >= activationTime, "not active yet");
         require(block.timestamp >= lastBuybackAt + cooldown, "cooldown");
 
         lastBuybackAt = block.timestamp;
