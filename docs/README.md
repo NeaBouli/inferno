@@ -105,6 +105,7 @@ inferno/
 
 | Datum | Aenderung |
 |-------|-----------|
+| 2026-02-15 | Slither Audit bestanden, 15 Fixes applied, Deploy Dry-Run erfolgreich |
 | 2026-02-15 | Governance.sol implementiert (150 LOC, 36 Tests) |
 | 2026-02-15 | CFLM-Migration: LiquidityReserve neu, Vesting-Formel fix, BuybackVault Activation Delay, Presale entfernt |
 | 2026-02-15 | BurnReserve implementiert (86 LOC, 21 Tests) |
@@ -116,14 +117,60 @@ inferno/
 
 ---
 
+## Deploy
+
+### Vorbereitung
+
+```bash
+cp .env.example .env
+# .env mit echten Werten fuellen (RPC URL, Private Key, Adressen)
+```
+
+### Dry-Run (lokal)
+
+```bash
+npx hardhat run scripts/deploy-testnet.js
+```
+
+### Testnet (Sepolia)
+
+```bash
+npx hardhat run scripts/deploy-testnet.js --network sepolia
+```
+
+### Deploy-Ablauf (9 Steps)
+
+```
+Step 1/9  InfernoToken deployen (1B IFR an Deployer)
+Step 2/9  LiquidityReserve deployen (6mo Lock, 50M/Quartal)
+Step 3/9  Vesting deployen (12mo Cliff, 36mo linear, 150M)
+Step 4/9  BurnReserve + BuybackVault deployen (60d Aktivierung)
+Step 5/9  (BurnReserve bereits in Step 4)
+Step 6/9  Governance deployen (48h Timelock)
+Step 7/9  feeExempt setzen (alle Contracts + Deployer temporaer)
+Step 8/9  Tokens verteilen (200M+150M+150M+100M, 400M bei Deployer)
+Step 9/9  Deployer feeExempt entfernen
+```
+
+### Post-Deploy Checklist
+
+| # | Schritt | Befehl |
+|---|---------|--------|
+| 1 | LP erstellen | 400M IFR + ETH auf Uniswap pairen |
+| 2 | Router setzen | `BuybackVault.setParams(5000, 3600, 500, ROUTER_ADDR, TREASURY_ADDR)` |
+| 3 | Ownership transferieren | `InfernoToken.transferOwnership(governance.address)` |
+| 4 | Etherscan verifizieren | `npx hardhat verify --network sepolia <address> <args>` |
+
+---
+
 ## Offene Punkte
 
-| # | Aufgabe | Prioritaet |
-|---|---------|------------|
-| 1 | Uniswap LP Pairing (400M IFR + ETH) | Vor Launch |
-| 2 | Uniswap Router auf BuybackVault setzen | Vor Launch |
-| 3 | Treasury/Community/Team Adressen setzen | Vor Launch |
-| 4 | token.transferOwnership(governance) | Vor Launch |
-| 5 | Etherscan Verifikation | Nach Deploy |
-| 6 | Security Audit (Slither/MythX) | **Erledigt** (Slither v0.11.5) |
-| 7 | Gas-Optimierung | Optional |
+| # | Aufgabe | Prioritaet | Status |
+|---|---------|------------|--------|
+| 1 | Testnet Deploy (Sepolia) | Naechster Schritt | **Bereit** (Dry-Run bestanden) |
+| 2 | Uniswap LP Pairing | Vor Launch | Offen |
+| 3 | Router/Adressen setzen | Vor Launch | Offen |
+| 4 | Ownership → Governance | Vor Launch | Offen |
+| 5 | Etherscan Verifikation | Nach Deploy | Offen |
+| 6 | Security Audit (Slither) | Empfohlen | **Erledigt** (v0.11.5, 0 High/Critical) |
+| 7 | Gas-Optimierung | Optional | Offen |
