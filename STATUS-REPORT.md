@@ -1,9 +1,26 @@
-# INFERNO ($IFR) — Vollstaendiger Projekt-Statusbericht
+# INFERNO ($IFR) — Finaler Projekt-Statusbericht
 
-**Datum:** 2026-02-15
+**Datum:** 2026-02-16
 **Branch:** `main`
-**Letzter Commit:** `c9b0b988` — feat: implement Governance timelock contract with 36 tests
+**Letzter Commit:** `010df972` — feat: verify all 6 contracts on Etherscan Sepolia
 **Modell:** Community Fair Launch (CFLM) — kein Presale
+**Status:** Deployed + Verified auf Sepolia Testnet
+
+---
+
+## Sepolia Deployment
+
+**Deployer:** `0x5Ecc668eab04C5bee81b5c7242e1077c946dE406`
+**Network:** Sepolia (Chain ID: 11155111)
+
+| # | Contract | Adresse | Etherscan |
+|---|----------|---------|-----------|
+| 1 | **InfernoToken** | `0x3Bd71947F288d1dd8B21129B1bE4FF16EDd5d1F4` | [Verified](https://sepolia.etherscan.io/address/0x3Bd71947F288d1dd8B21129B1bE4FF16EDd5d1F4#code) |
+| 2 | **LiquidityReserve** | `0xF7E90D0d17f8232365186AA085D26eaEfAf011aF` | [Verified](https://sepolia.etherscan.io/address/0xF7E90D0d17f8232365186AA085D26eaEfAf011aF#code) |
+| 3 | **Vesting** | `0xa710f9FE7bf42981E60BE2Fbe7D87Fb3541a3F8B` | [Verified](https://sepolia.etherscan.io/address/0xa710f9FE7bf42981E60BE2Fbe7D87Fb3541a3F8B#code) |
+| 4 | **BuybackVault** | `0xC8ABb9039BEd24f4dBf5Cff09699877D81f0D63C` | [Verified](https://sepolia.etherscan.io/address/0xC8ABb9039BEd24f4dBf5Cff09699877D81f0D63C#code) |
+| 5 | **BurnReserve** | `0x6D4582FCac792FD3880e252fC0a585A0c1823e80` | [Verified](https://sepolia.etherscan.io/address/0x6D4582FCac792FD3880e252fC0a585A0c1823e80#code) |
+| 6 | **Governance** | `0x6050b22E4EAF3f414d1155fBaF30B868E0107017` | [Verified](https://sepolia.etherscan.io/address/0x6050b22E4EAF3f414d1155fBaF30B868E0107017#code) |
 
 ---
 
@@ -12,8 +29,10 @@
 | Check | Status |
 |-------|--------|
 | `npx hardhat compile` | **PASS** — 0 Errors, 0 Warnings |
-| `npx hardhat test` | **125/125 PASS** (35s) |
-| Git | Clean — `main` synced mit `origin/main` |
+| `npx hardhat test` | **125/125 PASS** (24s) |
+| Slither Audit | **PASS** — 0 High/Critical, 15 Fixes applied, 36 akzeptiert |
+| Sepolia Deploy | **PASS** — 6/6 Contracts live |
+| Etherscan Verify | **PASS** — 6/6 Contracts verified |
 
 ---
 
@@ -23,7 +42,7 @@
 |---|----------|-------|-----|-------------|
 | 1 | **InfernoToken** | `contracts/token/InfernoToken.sol` | 76 | ERC20 + ERC20Burnable + Ownable, 9 Decimals, Fee-on-Transfer |
 | 2 | **LiquidityReserve** | `contracts/liquidity/LiquidityReserve.sol` | 139 | Strategic Reserve, 6mo Lock, gestaffelte Freigabe (50M/Quartal) |
-| 3 | **BuybackVault** | `contracts/buyback/BuybackVault.sol` | 148 | ETH→IFR Buyback, Slippage, Cooldown, 60d Aktivierungssperre |
+| 3 | **BuybackVault** | `contracts/buyback/BuybackVault.sol` | 152 | ETH→IFR Buyback, Slippage, Cooldown, 60d Aktivierungssperre |
 | 4 | **BurnReserve** | `contracts/burnreserve/BurnReserve.sol` | 86 | Permanent Burn, totalBurned Tracking, Owner+Guardian Auth |
 | 5 | **Vesting** | `contracts/vesting/Vesting.sol` | 111 | Post-Cliff Linear Vesting (12mo Cliff, 36mo linear), Guardian Pause |
 | 6 | **Governance** | `contracts/governance/Governance.sol` | 150 | Timelock Governor, Propose/Execute/Cancel, Guardian Emergency Cancel |
@@ -36,13 +55,7 @@
 | MockRouter | `contracts/mocks/MockRouter.sol` | 79 | Uniswap V2 Router Mock |
 | MockInfernoToken | `contracts/mocks/MockInfernoToken.sol` | 14 | IFR Mock ohne Fees (9 Decimals) |
 
-### Entfernt (CFLM-Migration)
-
-| Contract | Grund |
-|----------|-------|
-| ~~Presale.sol~~ | Nicht kompatibel mit Fair Launch |
-
-**Solidity gesamt: 710 LOC** | **Tests gesamt: 1,334 LOC** | **Deploy Script: 232 LOC**
+**Solidity gesamt: 714 LOC** | **Tests gesamt: 1,334 LOC** | **Deploy Script: 232 LOC**
 
 ---
 
@@ -72,7 +85,7 @@
 
 ## Contract-Funktionen
 
-### InfernoToken
+### InfernoToken — [Etherscan](https://sepolia.etherscan.io/address/0x3Bd71947F288d1dd8B21129B1bE4FF16EDd5d1F4#code)
 
 | Funktion | Sichtbarkeit | Beschreibung |
 |----------|-------------|-------------|
@@ -84,7 +97,7 @@
 | `_update(from, to, value)` | internal override | Fee-on-Transfer Logik |
 | `burn(uint256)` | public (ERC20Burnable) | Tokens verbrennen |
 
-### LiquidityReserve
+### LiquidityReserve — [Etherscan](https://sepolia.etherscan.io/address/0xF7E90D0d17f8232365186AA085D26eaEfAf011aF#code)
 
 | Funktion | Sichtbarkeit | Beschreibung |
 |----------|-------------|-------------|
@@ -97,8 +110,6 @@
 | `setGuardian(address)` | external onlyOwner | Guardian aendern |
 | `pause()` / `unpause()` | external onlyGuardian | Pausieren |
 
-**Defaults:** lockEnd=deploy+180d, maxWithdrawPerPeriod=50M, periodDuration=90d
-
 **Freigabe-Schema:**
 ```
 Monat 0-6:   Gesperrt
@@ -108,30 +119,7 @@ Monat 12-15: Periode 3 → max 50M IFR
 Monat 15-18: Periode 4 → max 50M IFR (200M komplett)
 ```
 
-### BuybackVault
-
-| Funktion | Sichtbarkeit | Beschreibung |
-|----------|-------------|-------------|
-| `constructor(token, burnReserve, treasury, router, guardian, activationDelay)` | — | Initialisierung mit Aktivierungssperre |
-| `depositETH()` | external payable | ETH einzahlen + Quote speichern |
-| `executeBuyback()` | external onlyOwner | ETH → IFR swappen (nach Aktivierung) |
-| `setParams(burnBps, cooldown, slippage, router, treasury)` | external onlyOwner | Parameter aendern |
-| `pause()` / `unpause()` | external onlyGuardian | Pausieren |
-
-**Defaults:** burnShareBps=5000 (50%), cooldown=3600s, slippageBps=500 (5%), **activationDelay=60d**
-
-### BurnReserve
-
-| Funktion | Sichtbarkeit | Beschreibung |
-|----------|-------------|-------------|
-| `constructor(address _token, address _guardian)` | — | Initialisierung |
-| `deposit(uint256 amount)` | external | Tokens via transferFrom einzahlen |
-| `burn(uint256 amount)` | external onlyOwnerOrGuardian | Bestimmte Menge verbrennen |
-| `burnAll()` | external onlyOwnerOrGuardian | Gesamten Bestand verbrennen |
-| `pendingBurn()` | external view | Tokens im Bestand anzeigen |
-| `setGuardian(address)` | external onlyOwner | Guardian aendern |
-
-### Vesting
+### Vesting — [Etherscan](https://sepolia.etherscan.io/address/0xa710f9FE7bf42981E60BE2Fbe7D87Fb3541a3F8B#code)
 
 | Funktion | Sichtbarkeit | Beschreibung |
 |----------|-------------|-------------|
@@ -152,7 +140,30 @@ Monat 36:            66.6% vested
 Monat 48:            100% vested
 ```
 
-### Governance (NEU)
+### BuybackVault — [Etherscan](https://sepolia.etherscan.io/address/0xC8ABb9039BEd24f4dBf5Cff09699877D81f0D63C#code)
+
+| Funktion | Sichtbarkeit | Beschreibung |
+|----------|-------------|-------------|
+| `constructor(token, burnReserve, treasury, router, guardian, activationDelay)` | — | Initialisierung mit Aktivierungssperre |
+| `depositETH()` | external payable | ETH einzahlen + Quote speichern |
+| `executeBuyback()` | external onlyOwner | ETH → IFR swappen (nach Aktivierung) |
+| `setParams(burnBps, cooldown, slippage, router, treasury)` | external onlyOwner | Parameter aendern |
+| `pause()` / `unpause()` | external onlyGuardian | Pausieren |
+
+**Defaults:** burnShareBps=5000 (50%), cooldown=3600s, slippageBps=500 (5%), **activationDelay=60d**
+
+### BurnReserve — [Etherscan](https://sepolia.etherscan.io/address/0x6D4582FCac792FD3880e252fC0a585A0c1823e80#code)
+
+| Funktion | Sichtbarkeit | Beschreibung |
+|----------|-------------|-------------|
+| `constructor(address _token, address _guardian)` | — | Initialisierung |
+| `deposit(uint256 amount)` | external | Tokens via transferFrom einzahlen |
+| `burn(uint256 amount)` | external onlyOwnerOrGuardian | Bestimmte Menge verbrennen |
+| `burnAll()` | external onlyOwnerOrGuardian | Gesamten Bestand verbrennen |
+| `pendingBurn()` | external view | Tokens im Bestand anzeigen |
+| `setGuardian(address)` | external onlyOwner | Guardian aendern |
+
+### Governance — [Etherscan](https://sepolia.etherscan.io/address/0x6050b22E4EAF3f414d1155fBaF30B868E0107017#code)
 
 | Funktion | Sichtbarkeit | Beschreibung |
 |----------|-------------|-------------|
@@ -175,14 +186,6 @@ Monat 48:            100% vested
 Selbst-Governance:
   setDelay() nur via eigenen Timelock (propose → delay → execute)
   Verhindert sofortige Delay-Aenderungen
-```
-
-**Vorgesehener Einsatz:**
-```
-InfernoToken.transferOwnership(governance.address)
-→ Alle Parameter-Aenderungen (Fee Rates, FeeExempt, PoolFeeReceiver)
-  muessen durch 48h Timelock gehen
-→ Guardian kann als Notbremse Proposals canceln
 ```
 
 ---
@@ -247,7 +250,7 @@ InfernoToken.transferOwnership(governance.address)
 | Access Control | 1 | Nur Beneficiary |
 | Pause | 1 | Guardian Pause/Unpause |
 
-### Governance.test.js (36 Tests) — NEU
+### Governance.test.js (36 Tests)
 
 | Kategorie | Tests | Prueft |
 |-----------|-------|--------|
@@ -264,6 +267,28 @@ InfernoToken.transferOwnership(governance.address)
 
 ---
 
+## Security Audit (Slither v0.11.5)
+
+| Metrik | Wert |
+|--------|------|
+| High/Critical | **0** |
+| Initiale Findings | 51 |
+| Behoben | 15 |
+| Akzeptiert (False Positives) | 36 |
+
+### Behobene Findings
+
+| Fix | Contract | Beschreibung |
+|-----|----------|-------------|
+| missing-zero-check (4) | BuybackVault | `require != address(0)` in Constructor + setParams |
+| reentrancy-benign (2) | BurnReserve | CEI Pattern — State vor externem Call |
+| immutable-states (5) | BurnReserve, BuybackVault, LiquidityReserve | `owner`, `burnReserve`, `guardian` als immutable |
+| unindexed-event (4) | BuybackVault, LiquidityReserve | `indexed` auf Pause/Unpause Events |
+
+Vollstaendiger Report: `docs/SECURITY-AUDIT.md`
+
+---
+
 ## Deploy Script (`scripts/deploy-testnet.js`) — CFLM
 
 ### Ablauf (9 Steps)
@@ -276,11 +301,11 @@ Step 4/9  Deploy BurnReserve + BuybackVault (60d Aktivierung)
 Step 5/9  (BurnReserve bereits in Step 4 deployt)
 Step 6/9  Deploy Governance (48h Delay, Guardian = Deployer)
 Step 7/9  Set feeExempt: Vesting, LiquidityReserve, Treasury, BuybackVault, BurnReserve, Deployer
-Step 8/9  Distribute: 200M→Reserve, 150M→Vesting, 150M→Treasury, 100M→Community, 400M bleibt bei Deployer
+Step 8/9  Distribute: 200M→Reserve, 150M→Vesting, 150M→Treasury, 100M→Community, 400M bei Deployer
 Step 9/9  Remove Deployer feeExempt
 ```
 
-### FeeExempt-Wiring (CFLM)
+### FeeExempt-Wiring
 
 | Contract/Adresse | Exempt | Wiring |
 |------------------|--------|--------|
@@ -290,27 +315,6 @@ Step 9/9  Remove Deployer feeExempt
 | BuybackVault | Ja | burnReserve → BurnReserve.address |
 | BurnReserve | Ja | — |
 | Deployer | **Ja → Nein** | Temporaer, wird in Step 9 entfernt |
-
-### Post-Deploy: Governance Ownership Transfer
-
-```
-Nach erfolgreichem Deploy:
-  token.transferOwnership(governance.address)
-  → Alle Owner-Funktionen nur noch via 48h Timelock
-  → Guardian als Notbremse
-```
-
-### Umgebungsvariablen (.env)
-
-```
-SEPOLIA_RPC_URL=https://eth-sepolia.g.alchemy.com/v2/YOUR_KEY
-DEPLOYER_PRIVATE_KEY=0xYOUR_PRIVATE_KEY
-
-# Optional: Adressen (default = deployer als Placeholder)
-TREASURY_ADDRESS=0x...
-COMMUNITY_ADDRESS=0x...
-TEAM_BENEFICIARY=0x...
-```
 
 ---
 
@@ -324,13 +328,21 @@ TEAM_BENEFICIARY=0x...
 | OpenZeppelin Contracts | v5 |
 | Chai | ^4.x |
 | Waffle | @nomiclabs/hardhat-waffle |
-| Netzwerk | Sepolia (konfiguriert) |
+| hardhat-verify | @nomicfoundation/hardhat-verify v2 |
+| Slither | v0.11.5 |
+| Netzwerk | Sepolia (konfiguriert + deployed) |
 
 ---
 
-## Git History (relevante Commits)
+## Git History
 
 ```
+010df972 feat: verify all 6 contracts on Etherscan Sepolia
+52d6cd12 docs: add Sepolia deployment addresses and update docs
+da91d695 docs: add deploy instructions, update .env.example for CFLM, dry-run verified
+10c3de1e fix: apply Slither audit fixes (15 findings) + add security audit report
+531f020d docs: update README.md and docs/README.md to current state
+ee2ce8a1 docs: update status report with Governance contract (125 tests)
 c9b0b988 feat: implement Governance timelock contract with 36 tests
 5463f7ce docs: update status report for CFLM migration
 753835c8 feat: migrate to Community Fair Launch Model (CFLM)
@@ -339,10 +351,7 @@ b8220b2e feat: add BurnReserve to deploy script and wire into BuybackVault
 16f9801e feat: implement BurnReserve contract with ERC20Burnable support
 f79a43cb chore: lock dependencies (hardhat v2, chai v4, dotenv)
 de88510b feat: add testnet deploy script with full contract setup
-ff070c9e docs: update README with full contract overview and setup instructions
-d3f8dd3d feat: implement Presale contract with TOKEN_PRICE for 9 decimals
 8582a196 feat: implement InfernoToken with fee-on-transfer (9 decimals)
-047fc0fa chore: remove node_modules from git tracking, add .gitignore rules
 ```
 
 ---
@@ -384,15 +393,20 @@ d3f8dd3d feat: implement Presale contract with TOKEN_PRICE for 9 decimals
 
 ---
 
-## Aenderungen gegenueber vorherigem Report
+## Erledigte Meilensteine
 
-| Aenderung | Alt | Neu |
-|-----------|-----|-----|
-| Governance.sol | Offen (Phase 2) | **Implementiert (150 LOC, 36 Tests)** |
-| Deploy Script | 8 Steps | **9 Steps (inkl. Governance Deploy)** |
-| Solidity LOC | 669 | **710** (+41) |
-| Test LOC | 1,014 | **1,334** (+320) |
-| Tests | 89 | **125** (+36) |
+| # | Meilenstein | Status |
+|---|-------------|--------|
+| 1 | InfernoToken implementiert (76 LOC, 21 Tests) | Erledigt |
+| 2 | BuybackVault implementiert (152 LOC, 9 Tests) | Erledigt |
+| 3 | BurnReserve implementiert (86 LOC, 21 Tests) | Erledigt |
+| 4 | Vesting implementiert (111 LOC, 7 Tests) | Erledigt |
+| 5 | LiquidityReserve implementiert (139 LOC, 28 Tests) | Erledigt |
+| 6 | Governance implementiert (150 LOC, 36 Tests) | Erledigt |
+| 7 | CFLM Migration (Presale entfernt, neue Allokation) | Erledigt |
+| 8 | Slither Security Audit (0 High/Critical) | Erledigt |
+| 9 | Testnet Deploy (Sepolia, 6 Contracts) | Erledigt |
+| 10 | Etherscan Verification (6/6) | Erledigt |
 
 ---
 
@@ -406,9 +420,7 @@ d3f8dd3d feat: implement Presale contract with TOKEN_PRICE for 9 decimals
 | 4 | Community Wallet Adresse setzen | Vor Launch | Offen |
 | 5 | Team Beneficiary Adresse fuer Vesting setzen | Vor Launch | Offen |
 | 6 | `token.transferOwnership(governance.address)` nach Setup | Vor Launch | Offen |
-| 7 | Contracts auf Etherscan verifizieren | Nach Deploy | Offen |
-| 8 | Security Audit (Slither/MythX) | Empfohlen | **Erledigt** (Slither v0.11.5) |
-| 9 | Gas-Optimierung pruefen | Optional | Offen |
+| 7 | Gas-Optimierung pruefen | Optional | Offen |
 
 ---
 
@@ -416,8 +428,10 @@ d3f8dd3d feat: implement Presale contract with TOKEN_PRICE for 9 decimals
 
 | Datei | Beschreibung |
 |-------|-------------|
-| `README.md` | Projekt-Uebersicht, Setup, Architektur |
+| `README.md` | Projekt-Uebersicht, Setup, Deploy-Anleitung, Architektur |
 | `STATUS-REPORT.md` | Dieses Dokument |
+| `docs/README.md` | Projektstatus, Module, Changelog |
+| `docs/DEPLOYMENTS.md` | Sepolia Contract-Adressen + Etherscan Links |
 | `docs/FAIR-LAUNCH-MIGRATION.md` | CFLM Migrationsplan und Architektur-Analyse |
 | `docs/SECURITY-AUDIT.md` | Slither Audit Report (51→36 Findings, 15 behoben) |
 | `.env.example` | Umgebungsvariablen-Template |
@@ -426,4 +440,4 @@ d3f8dd3d feat: implement Presale contract with TOKEN_PRICE for 9 decimals
 
 ## Fazit
 
-Alle 6 Hauptcontracts sind **vollstaendig implementiert, kompiliert und getestet**. Slither Security Audit bestanden (0 High/Critical, 15 Findings behoben, 36 akzeptiert). Die Governance mit 48h Timelock ist bereit als Protocol Owner eingesetzt zu werden. 125 Tests bestehen fehlerfrei (710 LOC Solidity, 1,334 LOC Tests). Das Deploy Script verteilt den Supply gemaess der CFLM-Allokation (40/20/15/15/10) mit Governance-Deploy, vollstaendiger feeExempt-Konfiguration und automatischer Deployer-Exemption-Entfernung. Das Projekt ist **testnet-ready**.
+Alle 6 Hauptcontracts sind **vollstaendig implementiert, getestet, auditiert, deployed und auf Etherscan verifiziert**. Slither Security Audit bestanden (0 High/Critical). 125 Tests bestehen fehlerfrei (714 LOC Solidity, 1,334 LOC Tests). Token-Supply ist gemaess CFLM-Allokation (40/20/15/15/10) verteilt, feeExempt korrekt konfiguriert, Deployer-Exemption entfernt. Governance mit 48h Timelock bereit fuer Ownership-Transfer. Das Projekt ist **live auf Sepolia** und bereit fuer die naechste Phase (LP Pairing + Mainnet).
