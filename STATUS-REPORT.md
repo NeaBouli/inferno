@@ -2,7 +2,7 @@
 
 **Datum:** 2026-02-15
 **Branch:** `main`
-**Letzter Commit:** `753835c8` — feat: migrate to Community Fair Launch Model (CFLM)
+**Letzter Commit:** `c9b0b988` — feat: implement Governance timelock contract with 36 tests
 **Modell:** Community Fair Launch (CFLM) — kein Presale
 
 ---
@@ -12,7 +12,7 @@
 | Check | Status |
 |-------|--------|
 | `npx hardhat compile` | **PASS** — 0 Errors, 0 Warnings |
-| `npx hardhat test` | **89/89 PASS** (16s) |
+| `npx hardhat test` | **125/125 PASS** (35s) |
 | Git | Clean — `main` synced mit `origin/main` |
 
 ---
@@ -26,6 +26,7 @@
 | 3 | **BuybackVault** | `contracts/buyback/BuybackVault.sol` | 148 | ETH→IFR Buyback, Slippage, Cooldown, 60d Aktivierungssperre |
 | 4 | **BurnReserve** | `contracts/burnreserve/BurnReserve.sol` | 86 | Permanent Burn, totalBurned Tracking, Owner+Guardian Auth |
 | 5 | **Vesting** | `contracts/vesting/Vesting.sol` | 111 | Post-Cliff Linear Vesting (12mo Cliff, 36mo linear), Guardian Pause |
+| 6 | **Governance** | `contracts/governance/Governance.sol` | 150 | Timelock Governor, Propose/Execute/Cancel, Guardian Emergency Cancel |
 
 ### Mocks (nur Tests)
 
@@ -41,7 +42,7 @@
 |----------|-------|
 | ~~Presale.sol~~ | Nicht kompatibel mit Fair Launch |
 
-**Solidity gesamt: 669 LOC** | **Tests gesamt: 1,014 LOC** | **Deploy Script: 211 LOC**
+**Solidity gesamt: 710 LOC** | **Tests gesamt: 1,334 LOC** | **Deploy Script: 232 LOC**
 
 ---
 
@@ -83,7 +84,7 @@
 | `_update(from, to, value)` | internal override | Fee-on-Transfer Logik |
 | `burn(uint256)` | public (ERC20Burnable) | Tokens verbrennen |
 
-### LiquidityReserve (NEU)
+### LiquidityReserve
 
 | Funktion | Sichtbarkeit | Beschreibung |
 |----------|-------------|-------------|
@@ -107,7 +108,7 @@ Monat 12-15: Periode 3 → max 50M IFR
 Monat 15-18: Periode 4 → max 50M IFR (200M komplett)
 ```
 
-### BuybackVault (AKTUALISIERT)
+### BuybackVault
 
 | Funktion | Sichtbarkeit | Beschreibung |
 |----------|-------------|-------------|
@@ -130,7 +131,7 @@ Monat 15-18: Periode 4 → max 50M IFR (200M komplett)
 | `pendingBurn()` | external view | Tokens im Bestand anzeigen |
 | `setGuardian(address)` | external onlyOwner | Guardian aendern |
 
-### Vesting (AKTUALISIERT)
+### Vesting
 
 | Funktion | Sichtbarkeit | Beschreibung |
 |----------|-------------|-------------|
@@ -151,6 +152,39 @@ Monat 36:            66.6% vested
 Monat 48:            100% vested
 ```
 
+### Governance (NEU)
+
+| Funktion | Sichtbarkeit | Beschreibung |
+|----------|-------------|-------------|
+| `constructor(uint256 _delay, address _guardian)` | — | Initialisierung (Delay 1h–30d) |
+| `propose(address target, bytes data)` | external onlyOwner | Proposal erstellen (eta = now + delay) |
+| `execute(uint256 proposalId)` | external onlyOwner | Proposal ausfuehren (nach eta) |
+| `cancel(uint256 proposalId)` | external onlyOwnerOrGuardian | Proposal abbrechen |
+| `setDelay(uint256 _delay)` | external onlySelf | Delay aendern (nur via eigenen Timelock) |
+| `setGuardian(address _guardian)` | external onlyOwner | Guardian aendern |
+| `setOwner(address _owner)` | external onlyOwner | Ownership uebertragen |
+| `getProposal(uint256 proposalId)` | external view | Vollstaendige Proposal-Details |
+
+**Governance-Modell:**
+```
+1. Owner erstellt Proposal → propose(target, data)
+2. Timelock-Delay (min 1h, max 30d, default 48h)
+3. Nach eta → execute(proposalId) → target.call(data)
+4. Guardian kann jederzeit canceln → cancel(proposalId)
+
+Selbst-Governance:
+  setDelay() nur via eigenen Timelock (propose → delay → execute)
+  Verhindert sofortige Delay-Aenderungen
+```
+
+**Vorgesehener Einsatz:**
+```
+InfernoToken.transferOwnership(governance.address)
+→ Alle Parameter-Aenderungen (Fee Rates, FeeExempt, PoolFeeReceiver)
+  muessen durch 48h Timelock gehen
+→ Guardian kann als Notbremse Proposals canceln
+```
+
 ---
 
 ## Test-Abdeckung
@@ -166,7 +200,7 @@ Monat 48:            100% vested
 | Mint/Burn bypass | 1 | Minting ohne Fees |
 | Edge Cases | 4 | 1 Unit Transfer, Zero Fees, Updated Rates |
 
-### LiquidityReserve.test.js (28 Tests) — NEU
+### LiquidityReserve.test.js (28 Tests)
 
 | Kategorie | Tests | Prueft |
 |-----------|-------|--------|
@@ -178,7 +212,7 @@ Monat 48:            100% vested
 | setMaxWithdrawPerPeriod() | 3 | Update + Event, Non-Owner, Zero |
 | setGuardian() | 3 | Update + Event, Non-Owner, Zero Address |
 
-### BuybackVault.test.js (9 Tests) — AKTUALISIERT
+### BuybackVault.test.js (9 Tests)
 
 | Kategorie | Tests | Prueft |
 |-----------|-------|--------|
@@ -201,7 +235,7 @@ Monat 48:            100% vested
 | pendingBurn() | 2 | Balance-Anzeige, Reduktion nach Burn |
 | setGuardian() | 3 | Update + Event, Not Owner, Zero Address |
 
-### Vesting.test.js (7 Tests) — AKTUALISIERT
+### Vesting.test.js (7 Tests)
 
 | Kategorie | Tests | Prueft |
 |-----------|-------|--------|
@@ -213,23 +247,37 @@ Monat 48:            100% vested
 | Access Control | 1 | Nur Beneficiary |
 | Pause | 1 | Guardian Pause/Unpause |
 
-**Gesamt: 89 Tests, alle bestanden**
+### Governance.test.js (36 Tests) — NEU
+
+| Kategorie | Tests | Prueft |
+|-----------|-------|--------|
+| Deployment | 6 | Owner, Guardian, Delay, MIN/MAX_DELAY Bounds, Zero-Address Guard |
+| propose() | 5 | Korrekte eta, ProposalCreated Event, proposalCount, Non-Owner, Zero Target |
+| execute() | 7 | Nach Delay, Too Early, Already Executed, Cancelled, Non-Owner, Not Found, Target Revert |
+| cancel() | 5 | Owner Cancel, Guardian Cancel, Unauthorized, Already Executed, Already Cancelled |
+| setDelay() via timelock | 3 | Self-Governance Update, Direct Call Revert, Invalid Delay Revert |
+| setGuardian() | 3 | Update + Event, Non-Owner, Zero Address |
+| setOwner() | 3 | Transfer + Event, Non-Owner, Zero Address |
+| Integration | 4 | Fee Rates via Timelock, FeeExempt via Timelock, PoolFeeReceiver via Timelock, Direct Calls Revert |
+
+**Gesamt: 125 Tests, alle bestanden**
 
 ---
 
 ## Deploy Script (`scripts/deploy-testnet.js`) — CFLM
 
-### Ablauf (8 Steps)
+### Ablauf (9 Steps)
 
 ```
-Step 1/8  Deploy InfernoToken (poolFeeReceiver = deployer)
-Step 2/8  Deploy LiquidityReserve (6mo Lock, 50M/Quartal)
-Step 3/8  Deploy Vesting (12mo Cliff, 36mo linear, 150M IFR)
-Step 4/8  Deploy BurnReserve + BuybackVault (60d Aktivierung)
-Step 5/8  (BurnReserve bereits in Step 4 deployt)
-Step 6/8  Set feeExempt: Vesting, LiquidityReserve, Treasury, BuybackVault, BurnReserve, Deployer
-Step 7/8  Distribute: 200M→Reserve, 150M→Vesting, 150M→Treasury, 100M→Community, 400M bleibt bei Deployer
-Step 8/8  Remove Deployer feeExempt
+Step 1/9  Deploy InfernoToken (poolFeeReceiver = deployer)
+Step 2/9  Deploy LiquidityReserve (6mo Lock, 50M/Quartal)
+Step 3/9  Deploy Vesting (12mo Cliff, 36mo linear, 150M IFR)
+Step 4/9  Deploy BurnReserve + BuybackVault (60d Aktivierung)
+Step 5/9  (BurnReserve bereits in Step 4 deployt)
+Step 6/9  Deploy Governance (48h Delay, Guardian = Deployer)
+Step 7/9  Set feeExempt: Vesting, LiquidityReserve, Treasury, BuybackVault, BurnReserve, Deployer
+Step 8/9  Distribute: 200M→Reserve, 150M→Vesting, 150M→Treasury, 100M→Community, 400M bleibt bei Deployer
+Step 9/9  Remove Deployer feeExempt
 ```
 
 ### FeeExempt-Wiring (CFLM)
@@ -241,7 +289,16 @@ Step 8/8  Remove Deployer feeExempt
 | Treasury | Ja | — |
 | BuybackVault | Ja | burnReserve → BurnReserve.address |
 | BurnReserve | Ja | — |
-| Deployer | **Ja → Nein** | Temporaer, wird in Step 8 entfernt |
+| Deployer | **Ja → Nein** | Temporaer, wird in Step 9 entfernt |
+
+### Post-Deploy: Governance Ownership Transfer
+
+```
+Nach erfolgreichem Deploy:
+  token.transferOwnership(governance.address)
+  → Alle Owner-Funktionen nur noch via 48h Timelock
+  → Guardian als Notbremse
+```
 
 ### Umgebungsvariablen (.env)
 
@@ -274,6 +331,8 @@ TEAM_BENEFICIARY=0x...
 ## Git History (relevante Commits)
 
 ```
+c9b0b988 feat: implement Governance timelock contract with 36 tests
+5463f7ce docs: update status report for CFLM migration
 753835c8 feat: migrate to Community Fair Launch Model (CFLM)
 5e7be945 docs: add full project status report
 b8220b2e feat: add BurnReserve to deploy script and wire into BuybackVault
@@ -299,6 +358,16 @@ d3f8dd3d feat: implement Presale contract with TOKEN_PRICE for 9 decimals
          ├── 150M → [Treasury Multisig]
          └── 100M → [Community Wallet]
 
+    [Governance] (48h Timelock)
+         |
+    Owner von InfernoToken (nach Transfer)
+         |
+    propose() → 48h Delay → execute()
+         |
+    setFeeRates(), setFeeExempt(), setPoolFeeReceiver()
+         |
+    Guardian kann Proposals canceln
+
     [BuybackVault] (aktiviert nach 60 Tagen)
          |
     ETH Einzahlung → DEX Swap → IFR
@@ -319,14 +388,11 @@ d3f8dd3d feat: implement Presale contract with TOKEN_PRICE for 9 decimals
 
 | Aenderung | Alt | Neu |
 |-----------|-----|-----|
-| Modell | Presale | **CFLM (Fair Launch)** |
-| Presale.sol | Vorhanden (127 LOC, 24 Tests) | **Geloescht** |
-| LiquidityReserve.sol | — | **Neu (139 LOC, 28 Tests)** |
-| Vesting Formel | `(alloc * elapsed) / duration` | **`(alloc * (elapsed-cliff)) / (duration-cliff)`** |
-| BuybackVault | Sofort aktiv | **60-Tage-Aktivierungssperre** |
-| Token Distribution | 20% Presale, 10% Vesting, 70% Deployer | **40% DEX, 20% Reserve, 15% Team, 15% Treasury, 10% Community** |
-| Deployer feeExempt | Dauerhaft | **Wird nach Distribution entfernt** |
-| Tests | 78 | **89** |
+| Governance.sol | Offen (Phase 2) | **Implementiert (150 LOC, 36 Tests)** |
+| Deploy Script | 8 Steps | **9 Steps (inkl. Governance Deploy)** |
+| Solidity LOC | 669 | **710** (+41) |
+| Test LOC | 1,014 | **1,334** (+320) |
+| Tests | 89 | **125** (+36) |
 
 ---
 
@@ -339,9 +405,9 @@ d3f8dd3d feat: implement Presale contract with TOKEN_PRICE for 9 decimals
 | 3 | Treasury Multisig Adresse setzen | Vor Launch | Offen |
 | 4 | Community Wallet Adresse setzen | Vor Launch | Offen |
 | 5 | Team Beneficiary Adresse fuer Vesting setzen | Vor Launch | Offen |
-| 6 | Contracts auf Etherscan verifizieren | Nach Deploy | Offen |
-| 7 | Security Audit (Slither/MythX) | Empfohlen | Offen |
-| 8 | Governance Contract implementieren | Phase 2 | Offen |
+| 6 | `token.transferOwnership(governance.address)` nach Setup | Vor Launch | Offen |
+| 7 | Contracts auf Etherscan verifizieren | Nach Deploy | Offen |
+| 8 | Security Audit (Slither/MythX) | Empfohlen | Offen |
 | 9 | Gas-Optimierung pruefen | Optional | Offen |
 
 ---
@@ -359,4 +425,4 @@ d3f8dd3d feat: implement Presale contract with TOKEN_PRICE for 9 decimals
 
 ## Fazit
 
-Alle 5 Hauptcontracts sind **vollstaendig implementiert, kompiliert und getestet**. Die Migration von Presale zu CFLM ist abgeschlossen. 89 Tests bestehen fehlerfrei. Das Deploy Script verteilt den Supply gemaess der CFLM-Allokation (40/20/15/15/10) mit vollstaendiger feeExempt-Konfiguration und automatischer Deployer-Exemption-Entfernung. Das Projekt ist **testnet-ready**.
+Alle 6 Hauptcontracts sind **vollstaendig implementiert, kompiliert und getestet**. Die Governance mit 48h Timelock ist bereit als Protocol Owner eingesetzt zu werden. 125 Tests bestehen fehlerfrei (710 LOC Solidity, 1,334 LOC Tests). Das Deploy Script verteilt den Supply gemaess der CFLM-Allokation (40/20/15/15/10) mit Governance-Deploy, vollstaendiger feeExempt-Konfiguration und automatischer Deployer-Exemption-Entfernung. Das Projekt ist **testnet-ready**.
