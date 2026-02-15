@@ -1,0 +1,65 @@
+# Inferno ($IFR) — Deployments
+
+## Sepolia Testnet
+
+**Datum:** 2026-02-16
+**Deployer:** `0x5Ecc668eab04C5bee81b5c7242e1077c946dE406`
+**Network:** Sepolia (Chain ID: 11155111)
+
+### Contract Addresses
+
+| # | Contract | Address | Verified |
+|---|----------|---------|----------|
+| 1 | **InfernoToken** | `0x3Bd71947F288d1dd8B21129B1bE4FF16EDd5d1F4` | Pending |
+| 2 | **LiquidityReserve** | `0xF7E90D0d17f8232365186AA085D26eaEfAf011aF` | Pending |
+| 3 | **Vesting** | `0xa710f9FE7bf42981E60BE2Fbe7D87Fb3541a3F8B` | Pending |
+| 4 | **BuybackVault** | `0xC8ABb9039BEd24f4dBf5Cff09699877D81f0D63C` | Pending |
+| 5 | **BurnReserve** | `0x6D4582FCac792FD3880e252fC0a585A0c1823e80` | Pending |
+| 6 | **Governance** | `0x6050b22E4EAF3f414d1155fBaF30B868E0107017` | Pending |
+
+### Constructor Arguments
+
+| Contract | Arguments |
+|----------|-----------|
+| InfernoToken | `deployer` (poolFeeReceiver) |
+| LiquidityReserve | `token, 15552000 (180d), 50000000000000000 (50M*1e9), 7776000 (90d), deployer (guardian)` |
+| Vesting | `token, deployer (beneficiary), 31536000 (365d), 126144000 (4*365d), 150000000000000000 (150M*1e9), deployer (guardian)` |
+| BurnReserve | `token, deployer (guardian)` |
+| BuybackVault | `token, burnReserve, deployer (treasury), deployer (router), deployer (guardian), 5184000 (60d)` |
+| Governance | `172800 (48h), deployer (guardian)` |
+
+### Token Distribution
+
+| Recipient | Amount | Address |
+|-----------|--------|---------|
+| DEX Liquidity | 400,000,000 IFR (40%) | Deployer |
+| Liquidity Reserve | 200,000,000 IFR (20%) | `0xF7E90D0d17f8232365186AA085D26eaEfAf011aF` |
+| Team Vesting | 150,000,000 IFR (15%) | `0xa710f9FE7bf42981E60BE2Fbe7D87Fb3541a3F8B` |
+| Treasury | 150,000,000 IFR (15%) | Deployer (placeholder) |
+| Community | 100,000,000 IFR (10%) | Deployer (placeholder) |
+
+### Configuration
+
+| Setting | Value |
+|---------|-------|
+| FeeExempt | Vesting, LiquidityReserve, Treasury, BuybackVault, BurnReserve |
+| Deployer FeeExempt | Removed |
+| LiquidityReserve Lock | 180 days |
+| Vesting Cliff | 12 months |
+| Vesting Duration | 48 months (12mo cliff + 36mo linear) |
+| BuybackVault Activation | 60 days |
+| Governance Delay | 48 hours |
+| BuybackVault Router | Deployer (placeholder — update via setParams) |
+
+### Post-Deploy Status
+
+| Step | Status |
+|------|--------|
+| Contract Deploy | Done |
+| feeExempt Wiring | Done |
+| Token Distribution | Done |
+| Deployer Exemption Removed | Done |
+| Etherscan Verification | Pending |
+| Uniswap LP Pairing | Pending |
+| Router on BuybackVault | Pending |
+| Ownership to Governance | Pending |
