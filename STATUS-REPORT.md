@@ -407,7 +407,7 @@ d3f8dd3d feat: implement Presale contract with TOKEN_PRICE for 9 decimals
 | 5 | Team Beneficiary Adresse fuer Vesting setzen | Vor Launch | Offen |
 | 6 | `token.transferOwnership(governance.address)` nach Setup | Vor Launch | Offen |
 | 7 | Contracts auf Etherscan verifizieren | Nach Deploy | Offen |
-| 8 | Security Audit (Slither/MythX) | Empfohlen | Offen |
+| 8 | Security Audit (Slither/MythX) | Empfohlen | **Erledigt** (Slither v0.11.5) |
 | 9 | Gas-Optimierung pruefen | Optional | Offen |
 
 ---
@@ -419,10 +419,11 @@ d3f8dd3d feat: implement Presale contract with TOKEN_PRICE for 9 decimals
 | `README.md` | Projekt-Uebersicht, Setup, Architektur |
 | `STATUS-REPORT.md` | Dieses Dokument |
 | `docs/FAIR-LAUNCH-MIGRATION.md` | CFLM Migrationsplan und Architektur-Analyse |
+| `docs/SECURITY-AUDIT.md` | Slither Audit Report (51→36 Findings, 15 behoben) |
 | `.env.example` | Umgebungsvariablen-Template |
 
 ---
 
 ## Fazit
 
-Alle 6 Hauptcontracts sind **vollstaendig implementiert, kompiliert und getestet**. Die Governance mit 48h Timelock ist bereit als Protocol Owner eingesetzt zu werden. 125 Tests bestehen fehlerfrei (710 LOC Solidity, 1,334 LOC Tests). Das Deploy Script verteilt den Supply gemaess der CFLM-Allokation (40/20/15/15/10) mit Governance-Deploy, vollstaendiger feeExempt-Konfiguration und automatischer Deployer-Exemption-Entfernung. Das Projekt ist **testnet-ready**.
+Alle 6 Hauptcontracts sind **vollstaendig implementiert, kompiliert und getestet**. Slither Security Audit bestanden (0 High/Critical, 15 Findings behoben, 36 akzeptiert). Die Governance mit 48h Timelock ist bereit als Protocol Owner eingesetzt zu werden. 125 Tests bestehen fehlerfrei (710 LOC Solidity, 1,334 LOC Tests). Das Deploy Script verteilt den Supply gemaess der CFLM-Allokation (40/20/15/15/10) mit Governance-Deploy, vollstaendiger feeExempt-Konfiguration und automatischer Deployer-Exemption-Entfernung. Das Projekt ist **testnet-ready**.

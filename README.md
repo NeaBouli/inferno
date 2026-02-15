@@ -121,3 +121,4 @@ The deploy script runs 9 steps: Token, LiquidityReserve, Vesting, BuybackVault+B
 | `STATUS-REPORT.md` | Full project status with all contract details |
 | `docs/FAIR-LAUNCH-MIGRATION.md` | CFLM migration plan and architecture analysis |
 | `docs/README.md` | Project structure and module status |
+| `docs/SECURITY-AUDIT.md` | Slither audit report (0 high/critical) |

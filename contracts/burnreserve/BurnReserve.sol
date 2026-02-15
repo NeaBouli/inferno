@@ -15,7 +15,7 @@ interface IERC20Burnable {
 ///         Tokens sent here via transfer (from BuybackVault etc.) accumulate
 ///         until guardian or owner triggers burn(), reducing totalSupply.
 contract BurnReserve {
-    address public owner;
+    address public immutable owner;
     address public guardian;
     IERC20 public immutable token;
 
@@ -55,8 +55,8 @@ contract BurnReserve {
         require(amount > 0, "amount=0");
         require(amount <= token.balanceOf(address(this)), "exceeds balance");
 
-        IERC20Burnable(address(token)).burn(amount);
         totalBurned += amount;
+        IERC20Burnable(address(token)).burn(amount);
 
         emit Burned(amount, totalBurned);
     }
@@ -66,8 +66,8 @@ contract BurnReserve {
         uint256 bal = token.balanceOf(address(this));
         require(bal > 0, "nothing to burn");
 
-        IERC20Burnable(address(token)).burn(bal);
         totalBurned += bal;
+        IERC20Burnable(address(token)).burn(bal);
 
         emit Burned(bal, totalBurned);
     }
