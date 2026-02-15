@@ -60,6 +60,6 @@
 | Token Distribution | Done |
 | Deployer Exemption Removed | Done |
 | Etherscan Verification | **Done** (6/6 verified) |
-| Uniswap LP Pairing | Pending |
-| Router on BuybackVault | Pending |
+| Uniswap LP Pairing | **Script bereit** (`scripts/create-lp.js`) |
+| Router on BuybackVault | In LP Script integriert |
 | Ownership to Governance | Pending |
