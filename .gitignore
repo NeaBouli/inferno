@@ -1,2 +1,5 @@
+node_modules/
+artifacts/
+cache/
 logs/*.log
 logs/**/*.log
