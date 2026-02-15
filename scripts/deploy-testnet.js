@@ -16,7 +16,7 @@ async function main() {
   // 1. Deploy InfernoToken
   //    poolFeeReceiver = deployer (can be changed later)
   // ──────────────────────────────────────────────────────────────
-  console.log("\n[1/6] Deploying InfernoToken...");
+  console.log("\n[1/7] Deploying InfernoToken...");
   const InfernoToken = await ethers.getContractFactory("InfernoToken");
   const token = await InfernoToken.deploy(deployer.address);
   await token.deployed();
@@ -28,7 +28,7 @@ async function main() {
   // 2. Deploy Presale
   //    TOKEN_PRICE = 0.0001 ETH per 1 IFR  →  1 ETH = 10,000 IFR
   // ──────────────────────────────────────────────────────────────
-  console.log("\n[2/6] Deploying Presale...");
+  console.log("\n[2/7] Deploying Presale...");
   const TOKEN_PRICE = process.env.TOKEN_PRICE || ethers.utils.parseUnits("0.0001", "ether");
   const HARD_CAP = process.env.HARD_CAP || ethers.utils.parseEther("100");
   const PER_WALLET_CAP = process.env.PER_WALLET_CAP || ethers.utils.parseEther("10");
@@ -55,28 +55,42 @@ async function main() {
   console.log(`  Window:        ${new Date(startTime * 1000).toISOString()} → ${new Date(endTime * 1000).toISOString()}`);
 
   // ──────────────────────────────────────────────────────────────
-  // 3. Deploy BuybackVault
-  //    burnReserve = deployer, treasury = deployer (change later)
-  //    router = zero address placeholder (set real router later)
+  // 3. Deploy BurnReserve
+  //    guardian = deployer
   // ──────────────────────────────────────────────────────────────
-  console.log("\n[3/6] Deploying BuybackVault...");
+  console.log("\n[3/7] Deploying BurnReserve...");
+  const BurnReserve = await ethers.getContractFactory("BurnReserve");
+  const burnReserve = await BurnReserve.deploy(
+    token.address,
+    deployer.address     // guardian
+  );
+  await burnReserve.deployed();
+  console.log(`  BurnReserve:   ${burnReserve.address}`);
+
+  // ──────────────────────────────────────────────────────────────
+  // 4. Deploy BuybackVault
+  //    burnReserve = BurnReserve contract, treasury = deployer (change later)
+  //    router = deployer placeholder (set real router later)
+  // ──────────────────────────────────────────────────────────────
+  console.log("\n[4/7] Deploying BuybackVault...");
   const BuybackVault = await ethers.getContractFactory("BuybackVault");
   const vault = await BuybackVault.deploy(
     token.address,
-    deployer.address,    // burnReserve (placeholder)
+    burnReserve.address, // burnReserve (real address)
     deployer.address,    // treasury (placeholder)
     deployer.address,    // router (placeholder — set real router via setParams)
     deployer.address     // guardian
   );
   await vault.deployed();
   console.log(`  BuybackVault:  ${vault.address}`);
-  console.log(`  (!) Router, BurnReserve, Treasury are set to deployer — update via setParams()`);
+  console.log(`  BurnReserve:   ${burnReserve.address} (wired)`);
+  console.log(`  (!) Router, Treasury are set to deployer — update via setParams()`);
 
   // ──────────────────────────────────────────────────────────────
-  // 4. Deploy Vesting
+  // 5. Deploy Vesting
   //    beneficiary = deployer, 90d cliff, 365d duration, 100M IFR
   // ──────────────────────────────────────────────────────────────
-  console.log("\n[4/6] Deploying Vesting...");
+  console.log("\n[5/7] Deploying Vesting...");
   const cliffDays = process.env.VESTING_CLIFF_DAYS || 90;
   const durationDays = process.env.VESTING_DURATION_DAYS || 365;
   const VESTING_ALLOCATION = ethers.utils.parseUnits("100000000", 9); // 100M IFR
@@ -97,13 +111,14 @@ async function main() {
   console.log(`  Allocation:    ${ethers.utils.formatUnits(VESTING_ALLOCATION, 9)} IFR`);
 
   // ──────────────────────────────────────────────────────────────
-  // 5. Set FeeExempt for all contracts
+  // 6. Set FeeExempt for all contracts
   // ──────────────────────────────────────────────────────────────
-  console.log("\n[5/6] Setting feeExempt...");
+  console.log("\n[6/7] Setting feeExempt...");
   const exemptAddresses = [
     { name: "Presale", addr: presale.address },
     { name: "Vesting", addr: vesting.address },
     { name: "BuybackVault", addr: vault.address },
+    { name: "BurnReserve", addr: burnReserve.address },
     { name: "Deployer", addr: deployer.address },
   ];
 
@@ -114,9 +129,9 @@ async function main() {
   }
 
   // ──────────────────────────────────────────────────────────────
-  // 6. Fund Presale + Vesting with tokens
+  // 7. Fund Presale + Vesting with tokens
   // ──────────────────────────────────────────────────────────────
-  console.log("\n[6/6] Funding contracts with IFR...");
+  console.log("\n[7/7] Funding contracts with IFR...");
   const PRESALE_ALLOCATION = ethers.utils.parseUnits("200000000", 9); // 200M IFR
 
   let tx = await token.transfer(presale.address, PRESALE_ALLOCATION);
@@ -139,6 +154,7 @@ async function main() {
   console.log(`
   InfernoToken:  ${token.address}
   Presale:       ${presale.address}
+  BurnReserve:   ${burnReserve.address}
   BuybackVault:  ${vault.address}
   Vesting:       ${vesting.address}
 
@@ -147,11 +163,14 @@ async function main() {
     Vesting:     100,000,000 IFR  (10%)
     Deployer:    ${ethers.utils.formatUnits(deployerBal, 9)} IFR  (70%)
 
-  FeeExempt: Presale, Vesting, BuybackVault, Deployer
+  FeeExempt: Presale, Vesting, BuybackVault, BurnReserve, Deployer
+
+  Wiring:
+    BuybackVault → BurnReserve:  ${burnReserve.address}
 
   NEXT STEPS:
     1. Set real Uniswap router on BuybackVault via setParams()
-    2. Set real treasury + burnReserve addresses
+    2. Set real treasury address on BuybackVault via setParams()
     3. Set real beneficiary for Vesting (redeploy if needed)
     4. Remove deployer from feeExempt when setup is done
     5. Verify contracts on Etherscan
