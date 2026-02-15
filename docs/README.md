@@ -34,6 +34,7 @@ inferno/
 │   ├── WHITEPAPER_EN.md                Whitepaper (EN)
 │   ├── CHANGELOG.md                    Aenderungsprotokoll
 │   ├── KNOWN-ISSUES.md                 Bekannte Probleme
+│   ├── SECURITY-AUDIT.md               Slither Audit Report
 │   ├── PATCH-GUIDELINES.md             Patch-Richtlinien
 │   └── PROJECT-SUMMARY.md             Projektzusammenfassung
 ├── STATUS-REPORT.md                    Vollstaendiger Statusbericht
@@ -124,5 +125,5 @@ inferno/
 | 3 | Treasury/Community/Team Adressen setzen | Vor Launch |
 | 4 | token.transferOwnership(governance) | Vor Launch |
 | 5 | Etherscan Verifikation | Nach Deploy |
-| 6 | Security Audit (Slither/MythX) | Empfohlen |
+| 6 | Security Audit (Slither/MythX) | **Erledigt** (Slither v0.11.5) |
 | 7 | Gas-Optimierung | Optional |

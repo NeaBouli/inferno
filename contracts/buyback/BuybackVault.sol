@@ -19,11 +19,11 @@ interface IRouter {
 }
 
 contract BuybackVault {
-    address public owner;
-    address public guardian;
+    address public immutable owner;
+    address public immutable guardian;
 
     IERC20 public immutable token;
-    address public burnReserve;
+    address public immutable burnReserve;
     address public treasury;
     IRouter public router;
 
@@ -40,8 +40,8 @@ contract BuybackVault {
 
     event Deposited(address indexed sender, uint256 amount);
     event BuybackExecuted(uint256 ethSpent, uint256 burnAmount, uint256 treasuryAmount);
-    event Paused(address account);
-    event Unpaused(address account);
+    event Paused(address indexed account);
+    event Unpaused(address indexed account);
     event ParamsUpdated(uint256 burnShareBps, uint256 cooldown, uint256 slippageBps);
 
     modifier onlyOwner() {
@@ -62,6 +62,10 @@ contract BuybackVault {
         address _guardian,
         uint256 _activationDelay
     ) {
+        require(_burnReserve != address(0), "burnReserve=0");
+        require(_treasury != address(0), "treasury=0");
+        require(_guardian != address(0), "guardian=0");
+
         owner = msg.sender;
         token = IERC20(_token);
         burnReserve = _burnReserve;
@@ -136,6 +140,8 @@ contract BuybackVault {
         address _router,
         address _treasury
     ) external onlyOwner {
+        require(_treasury != address(0), "treasury=0");
+
         burnShareBps = _burnShareBps;
         cooldown = _cooldown;
         slippageBps = _slippageBps;
