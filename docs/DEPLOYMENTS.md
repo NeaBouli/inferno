@@ -10,12 +10,12 @@
 
 | # | Contract | Address | Verified |
 |---|----------|---------|----------|
-| 1 | **InfernoToken** | `0x3Bd71947F288d1dd8B21129B1bE4FF16EDd5d1F4` | Pending |
-| 2 | **LiquidityReserve** | `0xF7E90D0d17f8232365186AA085D26eaEfAf011aF` | Pending |
-| 3 | **Vesting** | `0xa710f9FE7bf42981E60BE2Fbe7D87Fb3541a3F8B` | Pending |
-| 4 | **BuybackVault** | `0xC8ABb9039BEd24f4dBf5Cff09699877D81f0D63C` | Pending |
-| 5 | **BurnReserve** | `0x6D4582FCac792FD3880e252fC0a585A0c1823e80` | Pending |
-| 6 | **Governance** | `0x6050b22E4EAF3f414d1155fBaF30B868E0107017` | Pending |
+| 1 | **InfernoToken** | [`0x3Bd71947F288d1dd8B21129B1bE4FF16EDd5d1F4`](https://sepolia.etherscan.io/address/0x3Bd71947F288d1dd8B21129B1bE4FF16EDd5d1F4#code) | Verified |
+| 2 | **LiquidityReserve** | [`0xF7E90D0d17f8232365186AA085D26eaEfAf011aF`](https://sepolia.etherscan.io/address/0xF7E90D0d17f8232365186AA085D26eaEfAf011aF#code) | Verified |
+| 3 | **Vesting** | [`0xa710f9FE7bf42981E60BE2Fbe7D87Fb3541a3F8B`](https://sepolia.etherscan.io/address/0xa710f9FE7bf42981E60BE2Fbe7D87Fb3541a3F8B#code) | Verified |
+| 4 | **BuybackVault** | [`0xC8ABb9039BEd24f4dBf5Cff09699877D81f0D63C`](https://sepolia.etherscan.io/address/0xC8ABb9039BEd24f4dBf5Cff09699877D81f0D63C#code) | Verified |
+| 5 | **BurnReserve** | [`0x6D4582FCac792FD3880e252fC0a585A0c1823e80`](https://sepolia.etherscan.io/address/0x6D4582FCac792FD3880e252fC0a585A0c1823e80#code) | Verified |
+| 6 | **Governance** | [`0x6050b22E4EAF3f414d1155fBaF30B868E0107017`](https://sepolia.etherscan.io/address/0x6050b22E4EAF3f414d1155fBaF30B868E0107017#code) | Verified |
 
 ### Constructor Arguments
 
@@ -59,7 +59,7 @@
 | feeExempt Wiring | Done |
 | Token Distribution | Done |
 | Deployer Exemption Removed | Done |
-| Etherscan Verification | Pending |
+| Etherscan Verification | **Done** (6/6 verified) |
 | Uniswap LP Pairing | Pending |
 | Router on BuybackVault | Pending |
 | Ownership to Governance | Pending |

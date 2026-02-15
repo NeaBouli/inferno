@@ -172,6 +172,6 @@ Step 9/9  Deployer feeExempt entfernen
 | 2 | Uniswap LP Pairing | Vor Launch | Offen |
 | 3 | Router/Adressen setzen | Vor Launch | Offen |
 | 4 | Ownership → Governance | Vor Launch | Offen |
-| 5 | Etherscan Verifikation | Nach Deploy | Offen |
+| 5 | Etherscan Verifikation | Nach Deploy | **Erledigt** (6/6 verified) |
 | 6 | Security Audit (Slither) | Empfohlen | **Erledigt** (v0.11.5, 0 High/Critical) |
 | 7 | Gas-Optimierung | Optional | Offen |
