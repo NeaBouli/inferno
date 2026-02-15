@@ -6,6 +6,21 @@ describe("BuybackVault", function () {
   let IFR, WETH, Router, Vault;
 
   const RATE_IFR_PER_ETH = ethers.utils.parseEther("1000"); // 1 ETH -> 1000 IFR
+  const ACTIVATION_DELAY = 0; // 0 for most tests (immediate)
+
+  async function deployVault(activationDelay) {
+    const BuybackVault = await ethers.getContractFactory("BuybackVault");
+    const vault = await BuybackVault.deploy(
+      IFR.address,
+      burnReserve.address,
+      treasury.address,
+      Router.address,
+      guardian.address,
+      activationDelay
+    );
+    await vault.deployed();
+    return vault;
+  }
 
   beforeEach(async () => {
     [owner, treasury, burnReserve, guardian, user] = await ethers.getSigners();
@@ -22,15 +37,7 @@ describe("BuybackVault", function () {
     Router = await MockRouter.deploy(WETH.address, IFR.address, RATE_IFR_PER_ETH);
     await Router.deployed();
 
-    const BuybackVault = await ethers.getContractFactory("BuybackVault");
-    Vault = await BuybackVault.deploy(
-      IFR.address,
-      burnReserve.address,
-      treasury.address,
-      Router.address,
-      guardian.address
-    );
-    await Vault.deployed();
+    Vault = await deployVault(ACTIVATION_DELAY);
   });
 
   it("deposits ETH and emits Deposited", async () => {
@@ -107,5 +114,36 @@ describe("BuybackVault", function () {
     expect(await Vault.burnShareBps()).to.equal(newBps);
     expect(await Vault.cooldown()).to.equal(newCooldown);
     expect(await Vault.slippageBps()).to.equal(newSlip);
+  });
+
+  describe("Activation delay (60 days)", () => {
+    const SIXTY_DAYS = 60 * 86400;
+
+    it("reverts executeBuyback before activation time", async () => {
+      const delayedVault = await deployVault(SIXTY_DAYS);
+      await delayedVault.connect(user).depositETH({ value: ethers.utils.parseEther("1") });
+
+      await expect(
+        delayedVault.connect(owner).executeBuyback()
+      ).to.be.revertedWith("not active yet");
+    });
+
+    it("allows executeBuyback after activation time", async () => {
+      const delayedVault = await deployVault(SIXTY_DAYS);
+      await delayedVault.connect(user).depositETH({ value: ethers.utils.parseEther("1") });
+
+      await ethers.provider.send("evm_increaseTime", [SIXTY_DAYS]);
+      await ethers.provider.send("evm_mine", []);
+
+      await expect(
+        delayedVault.connect(owner).executeBuyback()
+      ).to.emit(delayedVault, "BuybackExecuted");
+    });
+
+    it("stores activationTime correctly", async () => {
+      const delayedVault = await deployVault(SIXTY_DAYS);
+      const activationTime = await delayedVault.activationTime();
+      expect(activationTime).to.be.gt(0);
+    });
   });
 });
