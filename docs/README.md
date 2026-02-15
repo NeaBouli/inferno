@@ -35,6 +35,7 @@ inferno/
 │   ├── CHANGELOG.md                    Aenderungsprotokoll
 │   ├── KNOWN-ISSUES.md                 Bekannte Probleme
 │   ├── SECURITY-AUDIT.md               Slither Audit Report
+│   ├── DEPLOYMENTS.md                  Sepolia Contract-Adressen
 │   ├── PATCH-GUIDELINES.md             Patch-Richtlinien
 │   └── PROJECT-SUMMARY.md             Projektzusammenfassung
 ├── STATUS-REPORT.md                    Vollstaendiger Statusbericht
@@ -167,7 +168,7 @@ Step 9/9  Deployer feeExempt entfernen
 
 | # | Aufgabe | Prioritaet | Status |
 |---|---------|------------|--------|
-| 1 | Testnet Deploy (Sepolia) | Naechster Schritt | **Bereit** (Dry-Run bestanden) |
+| 1 | Testnet Deploy (Sepolia) | Naechster Schritt | **Erledigt** (6 Contracts live) |
 | 2 | Uniswap LP Pairing | Vor Launch | Offen |
 | 3 | Router/Adressen setzen | Vor Launch | Offen |
 | 4 | Ownership → Governance | Vor Launch | Offen |
