@@ -32,7 +32,7 @@
 
 | Recipient | Amount | Address |
 |-----------|--------|---------|
-| DEX Liquidity | 400,000,000 IFR (40%) | Deployer |
+| DEX Liquidity | 400,000,000 IFR (40%) | LP Pair [`0x2252e8bBDE0E50CD372748aC233A99C08627d9c7`](https://sepolia.etherscan.io/address/0x2252e8bBDE0E50CD372748aC233A99C08627d9c7) |
 | Liquidity Reserve | 200,000,000 IFR (20%) | `0xF7E90D0d17f8232365186AA085D26eaEfAf011aF` |
 | Team Vesting | 150,000,000 IFR (15%) | `0xa710f9FE7bf42981E60BE2Fbe7D87Fb3541a3F8B` |
 | Treasury | 150,000,000 IFR (15%) | Deployer (placeholder) |
@@ -49,7 +49,21 @@
 | Vesting Duration | 48 months (12mo cliff + 36mo linear) |
 | BuybackVault Activation | 60 days |
 | Governance Delay | 48 hours |
-| BuybackVault Router | Deployer (placeholder — update via setParams) |
+| BuybackVault Router | [`0xC532a74256D3Db42D0Bf7a0400fEFDbad7694008`](https://sepolia.etherscan.io/address/0xC532a74256D3Db42D0Bf7a0400fEFDbad7694008) (Uniswap V2 Router02) |
+
+### Uniswap V2 LP Pair
+
+| Detail | Value |
+|--------|-------|
+| LP Pair | [`0x2252e8bBDE0E50CD372748aC233A99C08627d9c7`](https://sepolia.etherscan.io/address/0x2252e8bBDE0E50CD372748aC233A99C08627d9c7) |
+| Router | [`0xC532a74256D3Db42D0Bf7a0400fEFDbad7694008`](https://sepolia.etherscan.io/address/0xC532a74256D3Db42D0Bf7a0400fEFDbad7694008) |
+| Factory | `0x7E0987E5b3a30e3f2828572Bb659A548460a3003` |
+| WETH | `0x7b79995e5f793A07Bc00c21412e50Ecae098E7f9` |
+| IFR in Pool | 400,000,000 IFR |
+| ETH in Pool | 0.01 ETH |
+| LP Tokens | 0.0632 |
+| Initial Price | 1 ETH = 40,000,000,000 IFR |
+| TX | `0xa664857d32598cf971c8ea69174615b6ed0444ebab770c3a6c928d3ac6139685` |
 
 ### Post-Deploy Status
 
@@ -60,6 +74,6 @@
 | Token Distribution | Done |
 | Deployer Exemption Removed | Done |
 | Etherscan Verification | **Done** (6/6 verified) |
-| Uniswap LP Pairing | **Script bereit** (`scripts/create-lp.js`) |
-| Router on BuybackVault | In LP Script integriert |
+| Uniswap LP Pairing | **Done** — [`0x2252e8bBDE0E50CD372748aC233A99C08627d9c7`](https://sepolia.etherscan.io/address/0x2252e8bBDE0E50CD372748aC233A99C08627d9c7) |
+| Router on BuybackVault | **Done** — `0xC532a74256D3Db42D0Bf7a0400fEFDbad7694008` |
 | Ownership to Governance | Pending |
