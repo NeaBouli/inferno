@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/infernologo.jpg" alt="Inferno Logo" width="200" />
+</p>
+
 # Inferno – Projektstatus & Struktur
 
 ## Legende

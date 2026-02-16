@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/assets/infernologo.jpg" alt="Inferno Logo" width="200" />
+</p>
+
 # Inferno ($IFR)
 
 Deflationary ERC20 token with fee-on-transfer burn mechanics, buyback system, and timelock governance.
