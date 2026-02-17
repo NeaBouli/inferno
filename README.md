@@ -176,7 +176,7 @@ Configure via `.env`:
 | 3 | Pair LP (Uniswap V2) | **Done** — [`0x2252e8b...`](https://sepolia.etherscan.io/address/0x2252e8bBDE0E50CD372748aC233A99C08627d9c7) |
 | 4 | Update BuybackVault Router | **Done** — Uniswap V2 Router02 |
 | 5 | Set Addresses — Update treasury if placeholder was used | Pending |
-| 6 | Transfer Ownership — `InfernoToken.transferOwnership(governance.address)` | Pending |
+| 6 | Transfer Ownership — `InfernoToken.transferOwnership(governance.address)` | **Done** |
 
 ## Tech Stack
 

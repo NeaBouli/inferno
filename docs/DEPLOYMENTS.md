@@ -76,4 +76,4 @@
 | Etherscan Verification | **Done** (6/6 verified) |
 | Uniswap LP Pairing | **Done** — [`0x2252e8bBDE0E50CD372748aC233A99C08627d9c7`](https://sepolia.etherscan.io/address/0x2252e8bBDE0E50CD372748aC233A99C08627d9c7) |
 | Router on BuybackVault | **Done** — `0xC532a74256D3Db42D0Bf7a0400fEFDbad7694008` |
-| Ownership to Governance | Pending |
+| Ownership to Governance | **Done** — TX `0xa69bf285...d5762e1b` |
