@@ -32,6 +32,8 @@ inferno/
 ├── scripts/
 │   ├── deploy-testnet.js               [x] 232 LOC (9-Step CFLM Deploy)
 │   └── create-lp.js                    [x] 4-Step LP Pairing + Router Update
+├── apps/
+│   └── dashboard/                      [x] React + Vite Frontend (Phase 1)
 ├── docs/
 │   ├── README.md                       Dieses Dokument
 │   ├── FAIR-LAUNCH-MIGRATION.md        CFLM Migrationsplan
