@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/assets/infernologo.jpg" alt="Inferno Logo" width="200" />
+  <img src="docs/assets/ifr_logo_400x400.jpg" alt="Inferno $IFR" width="200" />
 </p>
 
 # Inferno ($IFR)
