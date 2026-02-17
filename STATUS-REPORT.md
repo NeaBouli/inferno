@@ -1,10 +1,11 @@
 # INFERNO ($IFR) — Finaler Projekt-Statusbericht
 
-**Datum:** 2026-02-16
+**Datum:** 2026-02-17
 **Branch:** `main`
-**Letzter Commit:** `010df972` — feat: verify all 6 contracts on Etherscan Sepolia
+**Letzter Commit:** `309a63e6` — feat: LP pairing complete on Sepolia (IFR/ETH Uniswap V2)
 **Modell:** Community Fair Launch (CFLM) — kein Presale
-**Status:** Deployed + Verified auf Sepolia Testnet
+**Ticker:** $IFR
+**Status:** Deployed + Verified + LP Live auf Sepolia Testnet
 
 ---
 
@@ -33,6 +34,8 @@
 | Slither Audit | **PASS** — 0 High/Critical, 15 Fixes applied, 36 akzeptiert |
 | Sepolia Deploy | **PASS** — 6/6 Contracts live |
 | Etherscan Verify | **PASS** — 6/6 Contracts verified |
+| Uniswap LP Pairing | **PASS** — 400M IFR + 0.01 ETH paired |
+| BuybackVault Router | **PASS** — Uniswap V2 Router02 gesetzt |
 
 ---
 
@@ -337,6 +340,10 @@ Step 9/9  Remove Deployer feeExempt
 ## Git History
 
 ```
+309a63e6 feat: LP pairing complete on Sepolia (IFR/ETH Uniswap V2)
+60ecb9e7 docs: add Inferno logo to README and docs
+c6fa3cad feat: add Uniswap V2 LP pairing script for Sepolia
+9b482aae docs: final status report with Sepolia addresses and Etherscan links
 010df972 feat: verify all 6 contracts on Etherscan Sepolia
 52d6cd12 docs: add Sepolia deployment addresses and update docs
 da91d695 docs: add deploy instructions, update .env.example for CFLM, dry-run verified
@@ -407,6 +414,9 @@ de88510b feat: add testnet deploy script with full contract setup
 | 8 | Slither Security Audit (0 High/Critical) | Erledigt |
 | 9 | Testnet Deploy (Sepolia, 6 Contracts) | Erledigt |
 | 10 | Etherscan Verification (6/6) | Erledigt |
+| 11 | LP Pairing Script erstellt (create-lp.js) | Erledigt |
+| 12 | Uniswap V2 LP Pairing (400M IFR + 0.01 ETH) | Erledigt |
+| 13 | BuybackVault Router auf Uniswap V2 gesetzt | Erledigt |
 
 ---
 
@@ -414,13 +424,16 @@ de88510b feat: add testnet deploy script with full contract setup
 
 | # | Aufgabe | Prioritaet | Status |
 |---|---------|------------|--------|
-| 1 | 400M IFR + ETH auf Uniswap pairen (LP erstellen) | Vor Launch | Offen |
-| 2 | Uniswap Router auf BuybackVault setzen (`setParams()`) | Vor Launch | Offen |
+| 1 | ~~400M IFR + ETH auf Uniswap pairen (LP erstellen)~~ | Vor Launch | **Erledigt** |
+| 2 | ~~Uniswap Router auf BuybackVault setzen (`setParams()`)~~ | Vor Launch | **Erledigt** |
 | 3 | Treasury Multisig Adresse setzen | Vor Launch | Offen |
 | 4 | Community Wallet Adresse setzen | Vor Launch | Offen |
 | 5 | Team Beneficiary Adresse fuer Vesting setzen | Vor Launch | Offen |
 | 6 | `token.transferOwnership(governance.address)` nach Setup | Vor Launch | Offen |
-| 7 | Gas-Optimierung pruefen | Optional | Offen |
+| 7 | Mainnet Deploy vorbereiten (neue .env, echte Adressen) | Vor Launch | Offen |
+| 8 | Professionelles Security Audit (extern) | Empfohlen | Offen |
+| 9 | LP Token Lock / Burn (Rug-Pull-Schutz) | Empfohlen | Offen |
+| 10 | Gas-Optimierung pruefen | Optional | Offen |
 
 ---
 
@@ -440,4 +453,40 @@ de88510b feat: add testnet deploy script with full contract setup
 
 ## Fazit
 
-Alle 6 Hauptcontracts sind **vollstaendig implementiert, getestet, auditiert, deployed und auf Etherscan verifiziert**. Slither Security Audit bestanden (0 High/Critical). 125 Tests bestehen fehlerfrei (714 LOC Solidity, 1,334 LOC Tests). Token-Supply ist gemaess CFLM-Allokation (40/20/15/15/10) verteilt, feeExempt korrekt konfiguriert, Deployer-Exemption entfernt. Governance mit 48h Timelock bereit fuer Ownership-Transfer. Das Projekt ist **live auf Sepolia** und bereit fuer die naechste Phase (LP Pairing + Mainnet).
+Alle 6 Hauptcontracts sind **vollstaendig implementiert, getestet, auditiert, deployed und auf Etherscan verifiziert**. Slither Security Audit bestanden (0 High/Critical). 125 Tests bestehen fehlerfrei (714 LOC Solidity, 1,334 LOC Tests). Token-Supply ist gemaess CFLM-Allokation (40/20/15/15/10) verteilt, feeExempt korrekt konfiguriert, Deployer-Exemption entfernt. LP Pair live auf Uniswap V2 (Sepolia). BuybackVault Router korrekt gesetzt. Governance mit 48h Timelock bereit fuer Ownership-Transfer.
+
+---
+
+## Finaler Gesamtstatus
+
+| Bereich | Status | Details |
+|---------|--------|---------|
+| **Smart Contracts** | DONE | 6 Contracts, 714 LOC Solidity, kompiliert ohne Errors/Warnings |
+| **Tests** | DONE | 125/125 bestanden, 1,334 LOC Tests |
+| **Security Audit (Slither)** | DONE | 0 High/Critical, 15 Fixes applied |
+| **Sepolia Deploy** | DONE | 6/6 Contracts live |
+| **Etherscan Verification** | DONE | 6/6 verified mit Quellcode |
+| **LP Pairing (Uniswap V2)** | DONE | 400M IFR + 0.01 ETH, Pair: `0x2252e8bB...` |
+| **BuybackVault Router** | DONE | Uniswap V2 Router02 gesetzt |
+| **Ownership Transfer** | OFFEN | `token.transferOwnership(governance.address)` |
+| **Treasury/Community Adressen** | OFFEN | Aktuell Deployer als Placeholder |
+| **Professionelles Audit (extern)** | OFFEN | Empfohlen vor Mainnet |
+| **LP Token Lock** | OFFEN | Empfohlen als Rug-Pull-Schutz |
+| **Mainnet Deploy** | OFFEN | Neue .env mit echten Adressen + ausreichend ETH |
+
+### Mainnet Readiness — Was fehlt noch?
+
+| # | Schritt | Kategorie | Aufwand |
+|---|---------|-----------|---------|
+| 1 | Treasury Multisig erstellen (z.B. Gnosis Safe) | Infrastruktur | Mittel |
+| 2 | Community Wallet Adresse festlegen | Infrastruktur | Gering |
+| 3 | Team Beneficiary Adresse fuer Vesting festlegen | Infrastruktur | Gering |
+| 4 | `token.transferOwnership(governance.address)` | On-Chain | Gering |
+| 5 | Professionelles Security Audit (CertiK, Trail of Bits, o.ae.) | Sicherheit | Hoch |
+| 6 | LP Tokens locken oder burnen (Vertrauen) | On-Chain | Gering |
+| 7 | Mainnet .env vorbereiten (RPC, echte Keys, echte Adressen) | Konfiguration | Gering |
+| 8 | Mainnet Deploy ausfuehren (deploy-testnet.js anpassen) | On-Chain | Mittel |
+| 9 | Mainnet LP Pairing (400M IFR + ETH, realer Preis festlegen) | On-Chain | Mittel |
+| 10 | Mainnet Etherscan Verification | On-Chain | Gering |
+| 11 | Frontend / dApp (optional, Phase 2) | Entwicklung | Hoch |
+| 12 | Community Marketing + Launch-Ankuendigung | Marketing | Mittel |
