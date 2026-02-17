@@ -185,5 +185,5 @@ npx hardhat run scripts/create-lp.js --network sepolia
 | 3 | Security Audit (Slither) | Empfohlen | **Erledigt** (v0.11.5, 0 High/Critical) |
 | 4 | Uniswap LP Pairing | Vor Launch | **Erledigt** (`0x2252e8bB...`) |
 | 5 | Router/Adressen setzen | Vor Launch | **Erledigt** (Uniswap V2 Router02) |
-| 6 | Ownership → Governance | Vor Launch | Offen |
+| 6 | Ownership → Governance | Vor Launch | **Erledigt** |
 | 7 | Gas-Optimierung | Optional | Offen |

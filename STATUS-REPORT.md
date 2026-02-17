@@ -417,6 +417,7 @@ de88510b feat: add testnet deploy script with full contract setup
 | 11 | LP Pairing Script erstellt (create-lp.js) | Erledigt |
 | 12 | Uniswap V2 LP Pairing (400M IFR + 0.01 ETH) | Erledigt |
 | 13 | BuybackVault Router auf Uniswap V2 gesetzt | Erledigt |
+| 14 | Ownership Transfer zu Governance | Erledigt |
 
 ---
 
@@ -429,7 +430,7 @@ de88510b feat: add testnet deploy script with full contract setup
 | 3 | Treasury Multisig Adresse setzen | Vor Launch | Offen |
 | 4 | Community Wallet Adresse setzen | Vor Launch | Offen |
 | 5 | Team Beneficiary Adresse fuer Vesting setzen | Vor Launch | Offen |
-| 6 | `token.transferOwnership(governance.address)` nach Setup | Vor Launch | Offen |
+| 6 | ~~`token.transferOwnership(governance.address)` nach Setup~~ | Vor Launch | **Erledigt** |
 | 7 | Mainnet Deploy vorbereiten (neue .env, echte Adressen) | Vor Launch | Offen |
 | 8 | Professionelles Security Audit (extern) | Empfohlen | Offen |
 | 9 | LP Token Lock / Burn (Rug-Pull-Schutz) | Empfohlen | Offen |
@@ -468,7 +469,7 @@ Alle 6 Hauptcontracts sind **vollstaendig implementiert, getestet, auditiert, de
 | **Etherscan Verification** | DONE | 6/6 verified mit Quellcode |
 | **LP Pairing (Uniswap V2)** | DONE | 400M IFR + 0.01 ETH, Pair: `0x2252e8bB...` |
 | **BuybackVault Router** | DONE | Uniswap V2 Router02 gesetzt |
-| **Ownership Transfer** | OFFEN | `token.transferOwnership(governance.address)` |
+| **Ownership Transfer** | DONE | `token.transferOwnership(governance.address)` — TX `0xa69bf285...` |
 | **Treasury/Community Adressen** | OFFEN | Aktuell Deployer als Placeholder |
 | **Professionelles Audit (extern)** | OFFEN | Empfohlen vor Mainnet |
 | **LP Token Lock** | OFFEN | Empfohlen als Rug-Pull-Schutz |
