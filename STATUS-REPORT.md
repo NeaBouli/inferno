@@ -2,10 +2,10 @@
 
 **Datum:** 2026-02-17
 **Branch:** `main`
-**Letzter Commit:** `309a63e6` — feat: LP pairing complete on Sepolia (IFR/ETH Uniswap V2)
+**Letzter Commit:** `6bc98656` — feat: transfer InfernoToken ownership to Governance on Sepolia
 **Modell:** Community Fair Launch (CFLM) — kein Presale
 **Ticker:** $IFR
-**Status:** Deployed + Verified + LP Live auf Sepolia Testnet
+**Status:** Deployed + Verified + LP Live + Governance Active auf Sepolia Testnet
 
 ---
 
@@ -36,6 +36,7 @@
 | Etherscan Verify | **PASS** — 6/6 Contracts verified |
 | Uniswap LP Pairing | **PASS** — 400M IFR + 0.01 ETH paired |
 | BuybackVault Router | **PASS** — Uniswap V2 Router02 gesetzt |
+| Ownership Transfer | **PASS** — InfernoToken.owner() = Governance |
 
 ---
 
@@ -340,6 +341,8 @@ Step 9/9  Remove Deployer feeExempt
 ## Git History
 
 ```
+6bc98656 feat: transfer InfernoToken ownership to Governance on Sepolia
+0eaac813 docs: update logo to IFR branding + final status report
 309a63e6 feat: LP pairing complete on Sepolia (IFR/ETH Uniswap V2)
 60ecb9e7 docs: add Inferno logo to README and docs
 c6fa3cad feat: add Uniswap V2 LP pairing script for Sepolia
@@ -454,7 +457,7 @@ de88510b feat: add testnet deploy script with full contract setup
 
 ## Fazit
 
-Alle 6 Hauptcontracts sind **vollstaendig implementiert, getestet, auditiert, deployed und auf Etherscan verifiziert**. Slither Security Audit bestanden (0 High/Critical). 125 Tests bestehen fehlerfrei (714 LOC Solidity, 1,334 LOC Tests). Token-Supply ist gemaess CFLM-Allokation (40/20/15/15/10) verteilt, feeExempt korrekt konfiguriert, Deployer-Exemption entfernt. LP Pair live auf Uniswap V2 (Sepolia). BuybackVault Router korrekt gesetzt. Governance mit 48h Timelock bereit fuer Ownership-Transfer.
+Alle 6 Hauptcontracts sind **vollstaendig implementiert, getestet, auditiert, deployed und auf Etherscan verifiziert**. Slither Security Audit bestanden (0 High/Critical). 125 Tests bestehen fehlerfrei (714 LOC Solidity, 1,334 LOC Tests). Token-Supply ist gemaess CFLM-Allokation (40/20/15/15/10) verteilt, feeExempt korrekt konfiguriert, Deployer-Exemption entfernt. LP Pair live auf Uniswap V2 (Sepolia). BuybackVault Router korrekt gesetzt. **Ownership Transfer abgeschlossen** — InfernoToken wird jetzt durch Governance (48h Timelock) kontrolliert. Das Projekt ist **vollstaendig operativ auf Sepolia** und bereit fuer die Mainnet-Vorbereitung.
 
 ---
 
@@ -482,7 +485,7 @@ Alle 6 Hauptcontracts sind **vollstaendig implementiert, getestet, auditiert, de
 | 1 | Treasury Multisig erstellen (z.B. Gnosis Safe) | Infrastruktur | Mittel |
 | 2 | Community Wallet Adresse festlegen | Infrastruktur | Gering |
 | 3 | Team Beneficiary Adresse fuer Vesting festlegen | Infrastruktur | Gering |
-| 4 | `token.transferOwnership(governance.address)` | On-Chain | Gering |
+| 4 | ~~`token.transferOwnership(governance.address)`~~ | ~~On-Chain~~ | **Erledigt** |
 | 5 | Professionelles Security Audit (CertiK, Trail of Bits, o.ae.) | Sicherheit | Hoch |
 | 6 | LP Tokens locken oder burnen (Vertrauen) | On-Chain | Gering |
 | 7 | Mainnet .env vorbereiten (RPC, echte Keys, echte Adressen) | Konfiguration | Gering |
