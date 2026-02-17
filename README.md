@@ -178,6 +178,19 @@ Configure via `.env`:
 | 5 | Set Addresses — Update treasury if placeholder was used | Pending |
 | 6 | Transfer Ownership — `InfernoToken.transferOwnership(governance.address)` | **Done** |
 
+## Dashboard
+
+React frontend for interacting with the Inferno contracts on Sepolia.
+
+```bash
+cd apps/dashboard
+npm install
+npm run dev
+# Open http://localhost:5173
+```
+
+Features: Token Overview (live supply, burn stats, fees), Transfer with fee preview, Governance info, Contract addresses with Etherscan links.
+
 ## Tech Stack
 
 | Component | Version |
@@ -186,6 +199,7 @@ Configure via `.env`:
 | Hardhat | ^2.x |
 | OpenZeppelin Contracts | v5 |
 | ethers.js | ^5.x (Waffle/Chai) |
+| React | ^18.x (Vite) |
 | Network | Sepolia (configured) |
 
 ## Documentation

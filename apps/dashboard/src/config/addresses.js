@@ -1,0 +1,14 @@
+export const ADDRESSES = {
+  InfernoToken: "0x3Bd71947F288d1dd8B21129B1bE4FF16EDd5d1F4",
+  LiquidityReserve: "0xF7E90D0d17f8232365186AA085D26eaEfAf011aF",
+  Vesting: "0xa710f9FE7bf42981E60BE2Fbe7D87Fb3541a3F8B",
+  BuybackVault: "0xC8ABb9039BEd24f4dBf5Cff09699877D81f0D63C",
+  BurnReserve: "0x6D4582FCac792FD3880e252fC0a585A0c1823e80",
+  Governance: "0x6050b22E4EAF3f414d1155fBaF30B868E0107017",
+  LPPair: "0x2252e8bBDE0E50CD372748aC233A99C08627d9c7",
+};
+
+export const SEPOLIA_CHAIN_ID = 11155111;
+export const MAINNET_CHAIN_ID = 1;
+
+export const ETHERSCAN_BASE = "https://sepolia.etherscan.io/address/";
