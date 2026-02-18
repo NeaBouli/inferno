@@ -32,7 +32,8 @@ inferno/
 ├── scripts/
 │   ├── deploy-testnet.js               [x] 232 LOC (9-Step CFLM Deploy)
 │   ├── create-lp.js                    [x] 4-Step LP Pairing + Router Update
-│   └── test-transfer.js               [x] Live Fee-on-Transfer Verification
+│   ├── test-transfer.js               [x] Live Fee-on-Transfer Verification
+│   └── sepolia-smoke-test.js          [x] Full Protocol Smoke Test (11 Checks)
 ├── apps/
 │   └── dashboard/                      [x] React + Vite Frontend (Phase 1 + Phase 2)
 ├── docs/
@@ -114,6 +115,7 @@ inferno/
 
 | Datum | Aenderung |
 |-------|-----------|
+| 2026-02-18 | Sepolia Smoke Test (11/11 PASS): Fee Transfer, Burn, Governance Proposal, Contract State |
 | 2026-02-18 | Live Fee-on-Transfer Verification Script (test-transfer.js), ALL CHECKS PASSED |
 | 2026-02-18 | Dashboard Phase 2: Vollstaendige Governance UI (Proposals, Create, Execute, Cancel) |
 | 2026-02-16 | LP Pairing Script erstellt (create-lp.js), Router-Update integriert |
@@ -193,4 +195,5 @@ npx hardhat run scripts/create-lp.js --network sepolia
 | 6 | Ownership → Governance | Vor Launch | **Erledigt** |
 | 7 | Dashboard Phase 2 (Governance UI) | Nach Deploy | **Erledigt** |
 | 8 | Live Fee Verification (Sepolia) | Nach Deploy | **Erledigt** (ALL CHECKS PASSED) |
-| 9 | Gas-Optimierung | Optional | Offen |
+| 9 | Sepolia Smoke Test (Full Protocol) | Nach Deploy | **Erledigt** (11/11 PASS) |
+| 10 | Gas-Optimierung | Optional | Offen |

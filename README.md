@@ -181,6 +181,20 @@ Sends 1000 IFR to a random address and verifies:
 - 1% pool fee (10 IFR) to poolFeeReceiver
 - Handles sender==poolFeeReceiver overlap correctly
 
+### Sepolia Smoke Test
+
+Full protocol verification (fee transfer, burn, governance, contract state):
+
+```bash
+npx hardhat run scripts/sepolia-smoke-test.js --network sepolia
+```
+
+Tests all 4 areas in a single run:
+1. **Fee Transfer** — 10,000 IFR transfer with full fee verification
+2. **Burn Verification** — totalSupply vs initial supply, burn rate
+3. **Governance** — Creates a test proposal, verifies ETA and status
+4. **Contract State** — Ownership chain, timelock delay, activation/lock timers
+
 ### Post-Deploy Checklist
 
 | # | Step | Status |
