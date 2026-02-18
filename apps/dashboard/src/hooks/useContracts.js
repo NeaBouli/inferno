@@ -10,7 +10,7 @@ import {
   VestingABI,
 } from "../config/abis";
 
-const SEPOLIA_RPC = "https://rpc.sepolia.org";
+const SEPOLIA_RPC = import.meta.env.VITE_SEPOLIA_RPC_URL || "https://rpc.sepolia.org";
 
 function getReadProvider() {
   return new ethers.providers.JsonRpcProvider(SEPOLIA_RPC);
