@@ -167,6 +167,20 @@ Configure via `.env`:
 | `LP_IFR_AMOUNT` | `400000000` | IFR amount for LP (400M) |
 | `LP_ETH_AMOUNT` | `0.01` | ETH amount for LP |
 
+### Live Fee Verification
+
+Verify deflation mechanics on Sepolia with a real transfer:
+
+```bash
+npx hardhat run scripts/test-transfer.js --network sepolia
+```
+
+Sends 1000 IFR to a random address and verifies:
+- Recipient receives 96.5% (965 IFR)
+- 2.5% burned (25 IFR) — totalSupply decreases
+- 1% pool fee (10 IFR) to poolFeeReceiver
+- Handles sender==poolFeeReceiver overlap correctly
+
 ### Post-Deploy Checklist
 
 | # | Step | Status |
