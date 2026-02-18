@@ -31,7 +31,8 @@ inferno/
 │   └── Governance.test.js              [x] 320 LOC
 ├── scripts/
 │   ├── deploy-testnet.js               [x] 232 LOC (9-Step CFLM Deploy)
-│   └── create-lp.js                    [x] 4-Step LP Pairing + Router Update
+│   ├── create-lp.js                    [x] 4-Step LP Pairing + Router Update
+│   └── test-transfer.js               [x] Live Fee-on-Transfer Verification
 ├── apps/
 │   └── dashboard/                      [x] React + Vite Frontend (Phase 1 + Phase 2)
 ├── docs/
@@ -113,6 +114,7 @@ inferno/
 
 | Datum | Aenderung |
 |-------|-----------|
+| 2026-02-18 | Live Fee-on-Transfer Verification Script (test-transfer.js), ALL CHECKS PASSED |
 | 2026-02-18 | Dashboard Phase 2: Vollstaendige Governance UI (Proposals, Create, Execute, Cancel) |
 | 2026-02-16 | LP Pairing Script erstellt (create-lp.js), Router-Update integriert |
 | 2026-02-15 | Slither Audit bestanden, 15 Fixes applied, Deploy Dry-Run erfolgreich |
@@ -190,4 +192,5 @@ npx hardhat run scripts/create-lp.js --network sepolia
 | 5 | Router/Adressen setzen | Vor Launch | **Erledigt** (Uniswap V2 Router02) |
 | 6 | Ownership → Governance | Vor Launch | **Erledigt** |
 | 7 | Dashboard Phase 2 (Governance UI) | Nach Deploy | **Erledigt** |
-| 8 | Gas-Optimierung | Optional | Offen |
+| 8 | Live Fee Verification (Sepolia) | Nach Deploy | **Erledigt** (ALL CHECKS PASSED) |
+| 9 | Gas-Optimierung | Optional | Offen |
