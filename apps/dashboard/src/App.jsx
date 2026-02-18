@@ -22,10 +22,8 @@ export default function App() {
       <main className="main">
         <TokenOverview contracts={contracts} account={account} />
         <Transfer contracts={contracts} account={account} signer={signer} />
-        <div className="two-col">
-          <Governance contracts={contracts} />
-          <Contracts />
-        </div>
+        <Governance contracts={contracts} account={account} signer={signer} />
+        <Contracts />
       </main>
       <footer className="footer">
         Inferno ($IFR) &mdash; Community Fair Launch Model

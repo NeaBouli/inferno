@@ -21,6 +21,9 @@ export const GovernanceABI = [
   "function delay() view returns (uint256)",
   "function owner() view returns (address)",
   "function guardian() view returns (address)",
+  "function propose(address target, bytes data) returns (uint256)",
+  "function execute(uint256 proposalId)",
+  "function cancel(uint256 proposalId)",
 ];
 
 export const BurnReserveABI = [

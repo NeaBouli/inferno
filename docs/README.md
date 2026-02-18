@@ -33,7 +33,7 @@ inferno/
 │   ├── deploy-testnet.js               [x] 232 LOC (9-Step CFLM Deploy)
 │   └── create-lp.js                    [x] 4-Step LP Pairing + Router Update
 ├── apps/
-│   └── dashboard/                      [x] React + Vite Frontend (Phase 1)
+│   └── dashboard/                      [x] React + Vite Frontend (Phase 1 + Phase 2)
 ├── docs/
 │   ├── README.md                       Dieses Dokument
 │   ├── FAIR-LAUNCH-MIGRATION.md        CFLM Migrationsplan
@@ -113,6 +113,7 @@ inferno/
 
 | Datum | Aenderung |
 |-------|-----------|
+| 2026-02-18 | Dashboard Phase 2: Vollstaendige Governance UI (Proposals, Create, Execute, Cancel) |
 | 2026-02-16 | LP Pairing Script erstellt (create-lp.js), Router-Update integriert |
 | 2026-02-15 | Slither Audit bestanden, 15 Fixes applied, Deploy Dry-Run erfolgreich |
 | 2026-02-15 | Governance.sol implementiert (150 LOC, 36 Tests) |
@@ -188,4 +189,5 @@ npx hardhat run scripts/create-lp.js --network sepolia
 | 4 | Uniswap LP Pairing | Vor Launch | **Erledigt** (`0x2252e8bB...`) |
 | 5 | Router/Adressen setzen | Vor Launch | **Erledigt** (Uniswap V2 Router02) |
 | 6 | Ownership → Governance | Vor Launch | **Erledigt** |
-| 7 | Gas-Optimierung | Optional | Offen |
+| 7 | Dashboard Phase 2 (Governance UI) | Nach Deploy | **Erledigt** |
+| 8 | Gas-Optimierung | Optional | Offen |
