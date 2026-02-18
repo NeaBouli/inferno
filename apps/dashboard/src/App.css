@@ -326,6 +326,173 @@ body {
   color: var(--red);
 }
 
+/* ── Governance ──────────────────────────────────────── */
+.gov-card { grid-column: 1 / -1; }
+
+.gov-info {
+  background: var(--bg-input);
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+}
+
+.gov-info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+.gov-info-row:last-child { border-bottom: none; }
+
+.gov-info-label {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.gov-info-value { font-size: 0.9rem; }
+.gov-info-value.mono { font-family: monospace; font-size: 0.85rem; }
+
+.gov-you-badge {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  background: rgba(0, 200, 83, 0.2);
+  color: var(--green);
+  text-transform: uppercase;
+}
+
+/* ── Proposals List ──────────────────────────────────── */
+.gov-proposals {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.gov-proposal {
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px 16px;
+  border-left: 3px solid var(--border);
+}
+
+.gov-proposal.gov-status-pending { border-left-color: var(--yellow); }
+.gov-proposal.gov-status-ready { border-left-color: var(--green); }
+.gov-proposal.gov-status-executed { border-left-color: var(--text-muted); }
+.gov-proposal.gov-status-cancelled { border-left-color: var(--red); }
+
+.gov-proposal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.gov-proposal-id {
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--text);
+}
+
+.gov-status-badge {
+  padding: 2px 10px;
+  border-radius: 12px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.gov-status-badge.gov-status-pending { background: rgba(255, 214, 0, 0.15); color: var(--yellow); }
+.gov-status-badge.gov-status-ready { background: rgba(0, 200, 83, 0.15); color: var(--green); }
+.gov-status-badge.gov-status-executed { background: rgba(136, 136, 136, 0.15); color: var(--text-muted); }
+.gov-status-badge.gov-status-cancelled { background: rgba(255, 23, 68, 0.15); color: var(--red); }
+
+.gov-proposal-details {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.gov-detail {
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+  font-size: 0.85rem;
+}
+
+.gov-detail-label {
+  min-width: 50px;
+  color: var(--text-muted);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  flex-shrink: 0;
+}
+
+.gov-detail-value { word-break: break-all; }
+.gov-detail-value.mono { font-family: monospace; font-size: 0.8rem; }
+
+.gov-countdown { color: var(--yellow); font-size: 0.8rem; }
+
+.gov-proposal-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255,255,255,0.05);
+}
+
+.btn-execute {
+  background: rgba(0, 200, 83, 0.15);
+  border-color: var(--green);
+  color: var(--green);
+}
+
+.btn-execute:hover { background: rgba(0, 200, 83, 0.3); }
+
+.btn-cancel {
+  background: rgba(255, 23, 68, 0.15);
+  border-color: var(--red);
+  color: var(--red);
+}
+
+.btn-cancel:hover { background: rgba(255, 23, 68, 0.3); }
+
+/* ── Create Proposal ─────────────────────────────────── */
+.gov-create {
+  margin-top: 8px;
+}
+
+.gov-mode-tabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.btn-active {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: rgba(255, 69, 0, 0.1);
+}
+
+select.input {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23888' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 30px;
+  cursor: pointer;
+}
+
 /* ── Misc ─────────────────────────────────────────────── */
 .muted { color: var(--text-muted); font-size: 0.8rem; margin-top: 8px; }
 

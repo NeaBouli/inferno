@@ -189,7 +189,15 @@ npm run dev
 # Open http://localhost:5173
 ```
 
-Features: Token Overview (live supply, burn stats, fees), Transfer with fee preview, Governance info, Contract addresses with Etherscan links.
+### Features
+
+**Phase 1:** Token Overview (live supply, burn stats, fees), Transfer with fee preview, Contract addresses with Etherscan links.
+
+**Phase 2 (Governance UI):**
+- Proposals list with color-coded status (Pending/Ready/Executed/Cancelled) and ETA countdown
+- Create proposals via template (setFeeRates, setFeeExempt, setPoolFeeReceiver) or manual calldata
+- Execute/Cancel buttons with role-based visibility (Owner/Guardian)
+- Info box: Owner, Guardian, Timelock Delay, Contract address
 
 ## Tech Stack
 
