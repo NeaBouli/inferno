@@ -1,0 +1,1133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Inferno ($IFR) — The Deflationary Utility Token</title>
+  <meta name="description" content="Deflationary ERC-20 utility token with fee-on-transfer burn mechanics. Lock IFR to unlock lifetime access across partner products.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg: #0a0a0a;
+      --bg-card: #111113;
+      --bg-card-hover: #1a1a1d;
+      --border: #222225;
+      --text: #e8e8ed;
+      --text-muted: #8a8a96;
+      --accent: #ff4500;
+      --accent-dim: rgba(255, 69, 0, 0.15);
+      --accent-glow: rgba(255, 69, 0, 0.3);
+      --green: #22c55e;
+      --radius: 12px;
+      --radius-sm: 8px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── NAV ─────────────────────────────────────── */
+
+    nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      background: rgba(10, 10, 10, 0.85);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      transition: box-shadow 0.3s;
+    }
+
+    nav.scrolled { box-shadow: 0 2px 24px rgba(0,0,0,0.5); }
+
+    .nav-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 64px;
+    }
+
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      color: var(--text);
+      font-weight: 700;
+      font-size: 18px;
+    }
+
+    .nav-logo img {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+    }
+
+    .nav-links { display: flex; gap: 28px; list-style: none; }
+    .nav-links a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--text); }
+
+    .nav-toggle { display: none; background: none; border: none; color: var(--text); cursor: pointer; }
+
+    /* ── SHARED ───────────────────────────────────── */
+
+    .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+    section { padding: 100px 0; }
+
+    .section-label {
+      text-transform: uppercase;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      color: var(--accent);
+      margin-bottom: 12px;
+    }
+
+    .section-title {
+      font-size: clamp(28px, 4vw, 40px);
+      font-weight: 800;
+      line-height: 1.15;
+      margin-bottom: 20px;
+    }
+
+    .section-desc {
+      font-size: 17px;
+      color: var(--text-muted);
+      max-width: 640px;
+      line-height: 1.7;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 24px;
+      border-radius: var(--radius-sm);
+      font-size: 15px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.2s;
+      cursor: pointer;
+      border: none;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+    }
+    .btn-primary:hover { background: #e63e00; transform: translateY(-1px); }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    .btn-secondary:hover { border-color: var(--text-muted); background: var(--bg-card); }
+
+    /* ── FADE-IN ANIMATION ────────────────────────── */
+
+    .reveal {
+      opacity: 0;
+      transform: translateY(32px);
+      transition: opacity 0.7s ease, transform 0.7s ease;
+    }
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* ── HERO ─────────────────────────────────────── */
+
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding-top: 64px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: -200px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 800px;
+      height: 800px;
+      background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
+      opacity: 0.25;
+      pointer-events: none;
+    }
+
+    .hero-logo {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      margin: 0 auto 32px;
+      border: 3px solid var(--accent);
+      box-shadow: 0 0 60px var(--accent-glow);
+    }
+
+    .hero h1 {
+      font-size: clamp(40px, 6vw, 72px);
+      font-weight: 800;
+      letter-spacing: -1px;
+      margin-bottom: 16px;
+    }
+
+    .hero h1 span { color: var(--accent); }
+
+    .hero-tagline {
+      font-size: clamp(18px, 2.5vw, 24px);
+      color: var(--text-muted);
+      font-weight: 300;
+      margin-bottom: 8px;
+    }
+
+    .hero-subtitle {
+      font-size: 16px;
+      color: var(--text-muted);
+      font-weight: 400;
+      margin-bottom: 40px;
+      opacity: 0.7;
+    }
+
+    .hero-buttons { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+
+    /* ── WHAT IS INFERNO ──────────────────────────── */
+
+    .what-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 60px;
+      align-items: center;
+      margin-top: 48px;
+    }
+
+    .what-text p { color: var(--text-muted); font-size: 17px; margin-bottom: 16px; line-height: 1.8; }
+    .what-text strong { color: var(--text); }
+
+    .what-stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .stat-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      text-align: center;
+    }
+
+    .stat-value {
+      font-size: 28px;
+      font-weight: 800;
+      color: var(--accent);
+      margin-bottom: 4px;
+    }
+
+    .stat-label { font-size: 13px; color: var(--text-muted); font-weight: 500; }
+
+    /* ── HOW IT WORKS ─────────────────────────────── */
+
+    #how { background: var(--bg-card); }
+
+    .how-cards {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+      margin-top: 48px;
+    }
+
+    .how-card {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 36px 28px;
+      text-align: center;
+      transition: border-color 0.3s, transform 0.3s;
+    }
+
+    .how-card:hover { border-color: var(--accent); transform: translateY(-4px); }
+
+    .how-icon {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: var(--accent-dim);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 20px;
+      font-size: 24px;
+    }
+
+    .how-card h3 { font-size: 20px; font-weight: 700; margin-bottom: 12px; }
+    .how-card p { color: var(--text-muted); font-size: 15px; line-height: 1.6; }
+
+    .flow-diagram {
+      margin-top: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0;
+      flex-wrap: wrap;
+    }
+
+    .flow-step {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .flow-box {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 14px 24px;
+      font-weight: 600;
+      font-size: 14px;
+      white-space: nowrap;
+    }
+
+    .flow-box.active { border-color: var(--accent); color: var(--accent); }
+
+    .flow-arrow {
+      color: var(--text-muted);
+      font-size: 20px;
+      padding: 0 4px;
+    }
+
+    /* ── TOKENOMICS ───────────────────────────────── */
+
+    .tokenomics-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 48px;
+      margin-top: 48px;
+    }
+
+    .fee-structure {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 32px;
+    }
+
+    .fee-structure h3 { font-size: 18px; font-weight: 700; margin-bottom: 20px; }
+
+    .fee-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .fee-row:last-child { border-bottom: none; }
+    .fee-label { color: var(--text-muted); font-size: 15px; }
+    .fee-value { font-weight: 700; font-size: 15px; }
+    .fee-value.burn { color: var(--accent); }
+    .fee-value.total { color: var(--accent); font-size: 18px; }
+
+    .allocation { margin-top: 0; }
+    .allocation h3 { font-size: 18px; font-weight: 700; margin-bottom: 20px; }
+
+    .alloc-bar-wrap { margin-bottom: 16px; }
+
+    .alloc-meta {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 6px;
+      font-size: 14px;
+    }
+
+    .alloc-name { font-weight: 500; }
+    .alloc-pct { color: var(--text-muted); }
+
+    .alloc-bar {
+      height: 8px;
+      background: var(--border);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .alloc-fill {
+      height: 100%;
+      border-radius: 4px;
+      background: var(--accent);
+      transition: width 1.2s ease;
+      width: 0;
+    }
+
+    .alloc-fill.visible { /* widths set inline */ }
+
+    .fair-launch-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 24px;
+      padding: 10px 18px;
+      background: var(--accent-dim);
+      border: 1px solid rgba(255, 69, 0, 0.3);
+      border-radius: var(--radius-sm);
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--accent);
+    }
+
+    /* ── ECOSYSTEM ────────────────────────────────── */
+
+    #ecosystem { background: var(--bg-card); }
+
+    .eco-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+      margin-top: 48px;
+    }
+
+    .eco-card {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 32px;
+      transition: border-color 0.3s;
+    }
+
+    .eco-card:hover { border-color: var(--accent); }
+    .eco-card.placeholder { opacity: 0.5; border-style: dashed; }
+    .eco-card.placeholder:hover { opacity: 0.7; }
+
+    .eco-tag {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--accent);
+      background: var(--accent-dim);
+      padding: 4px 10px;
+      border-radius: 4px;
+      margin-bottom: 16px;
+    }
+
+    .eco-card h3 { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
+    .eco-card p { color: var(--text-muted); font-size: 14px; line-height: 1.6; }
+
+    .eco-cta {
+      margin-top: 40px;
+      text-align: center;
+    }
+
+    /* ── ARCHITECTURE ─────────────────────────────── */
+
+    .arch-layers {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      margin-top: 48px;
+      max-width: 720px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .arch-layer {
+      border: 1px solid var(--border);
+      padding: 28px 32px;
+      position: relative;
+    }
+
+    .arch-layer:first-child { border-radius: var(--radius) var(--radius) 0 0; }
+    .arch-layer:last-child { border-radius: 0 0 var(--radius) var(--radius); }
+    .arch-layer + .arch-layer { border-top: none; }
+
+    .arch-layer-tag {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      margin-bottom: 8px;
+    }
+
+    .arch-layer:nth-child(1) { background: rgba(255, 69, 0, 0.06); }
+    .arch-layer:nth-child(1) .arch-layer-tag { color: var(--accent); }
+
+    .arch-layer:nth-child(2) { background: rgba(100, 100, 255, 0.04); }
+    .arch-layer:nth-child(2) .arch-layer-tag { color: #818cf8; }
+
+    .arch-layer:nth-child(3) { background: rgba(34, 197, 94, 0.04); }
+    .arch-layer:nth-child(3) .arch-layer-tag { color: var(--green); }
+
+    .arch-layer h3 { font-size: 17px; font-weight: 700; margin-bottom: 4px; }
+    .arch-layer p { color: var(--text-muted); font-size: 14px; }
+
+    .arch-connector {
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 20px;
+      padding: 2px 0;
+    }
+
+    .arch-note {
+      margin-top: 32px;
+      text-align: center;
+      display: flex;
+      gap: 32px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .arch-note span {
+      font-size: 13px;
+      color: var(--text-muted);
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .arch-note span::before {
+      content: '';
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--accent);
+    }
+
+    /* ── SECURITY ─────────────────────────────────── */
+
+    #security { background: var(--bg-card); }
+
+    .trust-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      margin-top: 48px;
+    }
+
+    .trust-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+    }
+
+    .trust-check {
+      flex-shrink: 0;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: rgba(34, 197, 94, 0.12);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--green);
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .trust-item h4 { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+    .trust-item p { font-size: 13px; color: var(--text-muted); line-height: 1.5; }
+
+    /* ── ROADMAP ──────────────────────────────────── */
+
+    .roadmap-track {
+      max-width: 640px;
+      margin: 48px auto 0;
+      position: relative;
+    }
+
+    .roadmap-track::before {
+      content: '';
+      position: absolute;
+      left: 15px;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background: var(--border);
+    }
+
+    .roadmap-item {
+      display: flex;
+      gap: 24px;
+      align-items: flex-start;
+      padding-bottom: 32px;
+      position: relative;
+    }
+
+    .roadmap-dot {
+      flex-shrink: 0;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: 2px solid var(--border);
+      background: var(--bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      z-index: 1;
+    }
+
+    .roadmap-dot.done {
+      background: var(--green);
+      border-color: var(--green);
+      color: #fff;
+    }
+
+    .roadmap-dot.current {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+      box-shadow: 0 0 16px var(--accent-glow);
+    }
+
+    .roadmap-body h4 { font-size: 16px; font-weight: 700; margin-bottom: 2px; }
+    .roadmap-body p { font-size: 14px; color: var(--text-muted); }
+    .roadmap-body .badge-done {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--green);
+      margin-left: 8px;
+    }
+
+    /* ── FOOTER ───────────────────────────────────── */
+
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 48px 0;
+      text-align: center;
+    }
+
+    .footer-links {
+      display: flex;
+      justify-content: center;
+      gap: 32px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+
+    .footer-links a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+
+    .footer-links a:hover { color: var(--text); }
+
+    .footer-brand {
+      font-size: 14px;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+
+    .footer-brand span { color: var(--accent); font-weight: 600; }
+
+    .footer-copy { font-size: 12px; color: #555; }
+
+    /* ── RESPONSIVE ───────────────────────────────── */
+
+    @media (max-width: 900px) {
+      .what-grid { grid-template-columns: 1fr; gap: 40px; }
+      .how-cards { grid-template-columns: 1fr; }
+      .tokenomics-grid { grid-template-columns: 1fr; }
+      .eco-grid { grid-template-columns: 1fr; }
+      .trust-grid { grid-template-columns: 1fr; }
+      .arch-note { flex-direction: column; align-items: center; gap: 12px; }
+    }
+
+    @media (max-width: 640px) {
+      section { padding: 72px 0; }
+      .nav-links { display: none; }
+      .nav-links.open {
+        display: flex;
+        flex-direction: column;
+        position: absolute;
+        top: 64px;
+        left: 0;
+        right: 0;
+        background: var(--bg);
+        border-bottom: 1px solid var(--border);
+        padding: 16px 24px;
+        gap: 16px;
+      }
+      .nav-toggle { display: block; font-size: 24px; }
+      .what-stats { grid-template-columns: 1fr 1fr; }
+      .flow-diagram { flex-direction: column; }
+      .flow-arrow { transform: rotate(90deg); }
+      .hero-logo { width: 88px; height: 88px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── NAV ────────────────────────────────────────── -->
+<nav id="navbar">
+  <div class="nav-inner">
+    <a href="#" class="nav-logo">
+      <img src="assets/ifr_logo_400x400.jpg" alt="IFR">
+      Inferno
+    </a>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="#about">About</a></li>
+      <li><a href="#how">How It Works</a></li>
+      <li><a href="#tokenomics">Tokenomics</a></li>
+      <li><a href="#ecosystem">Ecosystem</a></li>
+      <li><a href="#architecture">Architecture</a></li>
+      <li><a href="#security">Security</a></li>
+      <li><a href="#roadmap">Roadmap</a></li>
+    </ul>
+    <button class="nav-toggle" id="navToggle" aria-label="Toggle menu">&#9776;</button>
+  </div>
+</nav>
+
+<!-- ── HERO ───────────────────────────────────────── -->
+<section class="hero" id="hero">
+  <div class="container">
+    <img src="assets/ifr_logo_400x400.jpg" alt="Inferno Logo" class="hero-logo">
+    <h1>Inferno <span>($IFR)</span></h1>
+    <p class="hero-tagline">The Deflationary Utility Token</p>
+    <p class="hero-subtitle">Lock. Use. Benefit. Across Every Product.</p>
+    <div class="hero-buttons">
+      <a href="https://github.com/NeaBouli/inferno" class="btn btn-primary" target="_blank" rel="noopener">View on GitHub</a>
+      <a href="https://github.com/NeaBouli/inferno/wiki" class="btn btn-secondary" target="_blank" rel="noopener">Read the Docs</a>
+    </div>
+  </div>
+</section>
+
+<!-- ── WHAT IS INFERNO ────────────────────────────── -->
+<section id="about">
+  <div class="container">
+    <div class="what-grid">
+      <div class="what-text reveal">
+        <p class="section-label">What is Inferno</p>
+        <h2 class="section-title">A token that gets scarcer with every transaction</h2>
+        <p>
+          Inferno ($IFR) is a <strong>deflationary ERC-20 token</strong> built on Ethereum. Every transfer
+          automatically burns 2.5% of the amount, permanently reducing the total supply. An additional 1%
+          goes to the protocol pool.
+        </p>
+        <p>
+          Beyond its deflationary mechanics, IFR serves as a <strong>universal utility lock</strong>. Users lock
+          IFR tokens to gain lifetime access to premium features across an ecosystem of partner products &mdash;
+          no subscriptions, no recurring fees.
+        </p>
+        <p>
+          Built on the <strong>Community Fair Launch Model</strong>: no presale, no VC rounds, no insider advantages.
+          100% transparent, on-chain distribution from day one.
+        </p>
+      </div>
+      <div class="what-stats reveal">
+        <div class="stat-card">
+          <div class="stat-value">2.5%</div>
+          <div class="stat-label">Burned per transfer</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">1B</div>
+          <div class="stat-label">Initial supply</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">7</div>
+          <div class="stat-label">Smart contracts</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">154</div>
+          <div class="stat-label">Unit tests passing</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── HOW IT WORKS ───────────────────────────────── -->
+<section id="how">
+  <div class="container">
+    <div class="reveal" style="text-align:center">
+      <p class="section-label">How It Works</p>
+      <h2 class="section-title">Three steps to lifetime access</h2>
+    </div>
+    <div class="how-cards">
+      <div class="how-card reveal">
+        <div class="how-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ff4500" stroke-width="2" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        </div>
+        <h3>Lock</h3>
+        <p>Lock IFR tokens into the on-chain lock contract. Your tokens are held securely, with no admin backdoors. You retain full withdrawal rights at all times.</p>
+      </div>
+      <div class="how-card reveal">
+        <div class="how-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ff4500" stroke-width="2" stroke-linecap="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+        </div>
+        <h3>Use</h3>
+        <p>Partner products query the lock contract to verify your status. While your tokens are locked, you enjoy premium features across all integrated applications.</p>
+      </div>
+      <div class="how-card reveal">
+        <div class="how-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ff4500" stroke-width="2" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/><line x1="12" y1="11" x2="12" y2="3"/></svg>
+        </div>
+        <h3>Unlock</h3>
+        <p>Withdraw your tokens at any time. Access reverts to the standard plan. No penalties, no lock-up periods, no friction. Your tokens, your choice.</p>
+      </div>
+    </div>
+    <div class="flow-diagram reveal">
+      <div class="flow-step">
+        <div class="flow-box active">Lock IFR</div>
+        <span class="flow-arrow">&rarr;</span>
+      </div>
+      <div class="flow-step">
+        <div class="flow-box">Lifetime Active</div>
+        <span class="flow-arrow">&rarr;</span>
+      </div>
+      <div class="flow-step">
+        <div class="flow-box">Unlock</div>
+        <span class="flow-arrow">&rarr;</span>
+      </div>
+      <div class="flow-step">
+        <div class="flow-box">Standard Plan</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── TOKENOMICS ─────────────────────────────────── -->
+<section id="tokenomics">
+  <div class="container">
+    <div class="reveal">
+      <p class="section-label">Tokenomics</p>
+      <h2 class="section-title">Designed to be deflationary by default</h2>
+      <p class="section-desc">Every transfer burns tokens permanently. The supply only goes down. No inflation, no minting after launch.</p>
+    </div>
+    <div class="tokenomics-grid">
+      <div class="fee-structure reveal">
+        <h3>Fee Structure (per transfer)</h3>
+        <div class="fee-row">
+          <span class="fee-label">Sender Burn</span>
+          <span class="fee-value burn">2.0%</span>
+        </div>
+        <div class="fee-row">
+          <span class="fee-label">Recipient Burn</span>
+          <span class="fee-value burn">0.5%</span>
+        </div>
+        <div class="fee-row">
+          <span class="fee-label">Pool Fee</span>
+          <span class="fee-value">1.0%</span>
+        </div>
+        <div class="fee-row">
+          <span class="fee-label">Total Fee</span>
+          <span class="fee-value total">3.5%</span>
+        </div>
+        <div class="fee-row">
+          <span class="fee-label">Permanently Burned</span>
+          <span class="fee-value burn">2.5%</span>
+        </div>
+        <div class="fee-row">
+          <span class="fee-label">Max Fee Cap</span>
+          <span class="fee-value">5.0%</span>
+        </div>
+        <div class="fair-launch-badge">
+          Fair Launch &mdash; No Presale, No VC, Community First
+        </div>
+      </div>
+      <div class="allocation reveal">
+        <h3>Token Allocation</h3>
+        <div class="alloc-bar-wrap">
+          <div class="alloc-meta"><span class="alloc-name">DEX Liquidity</span><span class="alloc-pct">40% &mdash; 400M IFR</span></div>
+          <div class="alloc-bar"><div class="alloc-fill" data-width="40"></div></div>
+        </div>
+        <div class="alloc-bar-wrap">
+          <div class="alloc-meta"><span class="alloc-name">Liquidity Reserve</span><span class="alloc-pct">20% &mdash; 200M IFR</span></div>
+          <div class="alloc-bar"><div class="alloc-fill" data-width="20"></div></div>
+        </div>
+        <div class="alloc-bar-wrap">
+          <div class="alloc-meta"><span class="alloc-name">Team (Vested)</span><span class="alloc-pct">15% &mdash; 150M IFR</span></div>
+          <div class="alloc-bar"><div class="alloc-fill" data-width="15"></div></div>
+        </div>
+        <div class="alloc-bar-wrap">
+          <div class="alloc-meta"><span class="alloc-name">Treasury</span><span class="alloc-pct">15% &mdash; 150M IFR</span></div>
+          <div class="alloc-bar"><div class="alloc-fill" data-width="15"></div></div>
+        </div>
+        <div class="alloc-bar-wrap">
+          <div class="alloc-meta"><span class="alloc-name">Community / Ecosystem</span><span class="alloc-pct">10% &mdash; 100M IFR</span></div>
+          <div class="alloc-bar"><div class="alloc-fill" data-width="10"></div></div>
+        </div>
+        <p style="margin-top: 24px; font-size: 13px; color: var(--text-muted);">
+          Team tokens are vested over 48 months with a 12-month cliff. Liquidity reserve has a 6-month lock with staged quarterly releases.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── ECOSYSTEM ──────────────────────────────────── -->
+<section id="ecosystem">
+  <div class="container">
+    <div class="reveal" style="text-align:center">
+      <p class="section-label">Ecosystem</p>
+      <h2 class="section-title">One Token. Many Products.</h2>
+      <p class="section-desc" style="margin: 0 auto;">Lock IFR once and unlock premium features across every integrated product. Each partner queries the same on-chain lock contract.</p>
+    </div>
+    <div class="eco-grid">
+      <div class="eco-card reveal">
+        <span class="eco-tag">Launch Partner</span>
+        <h3>SecureCall</h3>
+        <p>Privacy-first communication platform. Lock IFR for lifetime premium access: encrypted calls, advanced routing, and priority support.</p>
+      </div>
+      <div class="eco-card placeholder reveal">
+        <span class="eco-tag">Coming Soon</span>
+        <h3>Partner #2</h3>
+        <p>New integrations are being developed. Any product can query the IFRLock contract to offer premium tiers to token holders.</p>
+      </div>
+      <div class="eco-card placeholder reveal">
+        <span class="eco-tag">Coming Soon</span>
+        <h3>Partner #3</h3>
+        <p>The ecosystem is open and permissionless. Build your product, integrate the resolver, and tap into the IFR holder base.</p>
+      </div>
+    </div>
+    <div class="eco-cta reveal">
+      <a href="https://github.com/NeaBouli/inferno/wiki" class="btn btn-secondary" target="_blank" rel="noopener">Integrate Your Product &rarr;</a>
+    </div>
+  </div>
+</section>
+
+<!-- ── ARCHITECTURE ───────────────────────────────── -->
+<section id="architecture">
+  <div class="container">
+    <div class="reveal" style="text-align:center">
+      <p class="section-label">Architecture</p>
+      <h2 class="section-title">Decoupled by design</h2>
+      <p class="section-desc" style="margin: 0 auto;">Three independent layers keep concerns separated. The on-chain truth layer knows nothing about apps. Apps know nothing about each other.</p>
+    </div>
+    <div class="arch-layers reveal">
+      <div class="arch-layer">
+        <p class="arch-layer-tag">Truth Layer &mdash; On-Chain</p>
+        <h3>IFR Lock Contract</h3>
+        <p>Immutable Solidity contract on Ethereum. Stores lock amounts and timestamps. Exposes <code>isLocked(user, minAmount)</code> for external queries. No app logic, no user IDs.</p>
+      </div>
+      <div class="arch-layer">
+        <p class="arch-layer-tag">Bridge Layer &mdash; Stateless</p>
+        <h3>License Resolver</h3>
+        <p>Stateless middleware that translates wallet queries into license checks. Maps wallet addresses to product entitlements. Privacy-neutral: no personal data stored.</p>
+      </div>
+      <div class="arch-layer">
+        <p class="arch-layer-tag">Service Layer &mdash; Off-Chain</p>
+        <h3>Partner Applications</h3>
+        <p>Any product can integrate via the resolver API. Each app independently decides what lock amount qualifies for premium access. Fully decoupled and permissionless.</p>
+      </div>
+    </div>
+    <div class="arch-note reveal">
+      <span>Decoupled</span>
+      <span>Privacy-neutral</span>
+      <span>Multi-App</span>
+      <span>Permissionless</span>
+    </div>
+  </div>
+</section>
+
+<!-- ── SECURITY & TRUST ──────────────────────────── -->
+<section id="security">
+  <div class="container">
+    <div class="reveal" style="text-align:center">
+      <p class="section-label">Security &amp; Trust</p>
+      <h2 class="section-title">Built to be verified, not trusted</h2>
+    </div>
+    <div class="trust-grid">
+      <div class="trust-item reveal">
+        <div class="trust-check">&check;</div>
+        <div>
+          <h4>Open Source</h4>
+          <p>All smart contracts are fully open source on GitHub. Verify every line of code yourself.</p>
+        </div>
+      </div>
+      <div class="trust-item reveal">
+        <div class="trust-check">&check;</div>
+        <div>
+          <h4>154 Unit Tests</h4>
+          <p>Comprehensive test suite covering all contracts: deployment, edge cases, access control, integrations.</p>
+        </div>
+      </div>
+      <div class="trust-item reveal">
+        <div class="trust-check">&check;</div>
+        <div>
+          <h4>Security Audit</h4>
+          <p>Slither static analysis: 0 high/critical findings. 15 fixes applied, 36 accepted informational.</p>
+        </div>
+      </div>
+      <div class="trust-item reveal">
+        <div class="trust-check">&check;</div>
+        <div>
+          <h4>Timelock Governance</h4>
+          <p>48-hour mandatory delay on all parameter changes. Guardian emergency cancel. No single admin control.</p>
+        </div>
+      </div>
+      <div class="trust-item reveal">
+        <div class="trust-check">&check;</div>
+        <div>
+          <h4>Fair Launch</h4>
+          <p>No presale, no private rounds. Team tokens vested over 48 months with 12-month cliff. Liquidity locked for 6 months.</p>
+        </div>
+      </div>
+      <div class="trust-item reveal">
+        <div class="trust-check">&check;</div>
+        <div>
+          <h4>Testnet Verified</h4>
+          <p>All 7 contracts deployed and verified on Sepolia. Full protocol smoke test passed: fees, burns, governance lifecycle.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── ROADMAP ────────────────────────────────────── -->
+<section id="roadmap">
+  <div class="container">
+    <div class="reveal" style="text-align:center">
+      <p class="section-label">Roadmap</p>
+      <h2 class="section-title">From code to ecosystem</h2>
+    </div>
+    <div class="roadmap-track reveal">
+      <div class="roadmap-item">
+        <div class="roadmap-dot done">&check;</div>
+        <div class="roadmap-body">
+          <h4>Phase 1 &mdash; Contract Development <span class="badge-done">Complete</span></h4>
+          <p>7 smart contracts, 154 tests, Slither audit. Full CFLM architecture implemented.</p>
+        </div>
+      </div>
+      <div class="roadmap-item">
+        <div class="roadmap-dot done">&check;</div>
+        <div class="roadmap-body">
+          <h4>Phase 2 &mdash; Testnet Deployment <span class="badge-done">Complete</span></h4>
+          <p>Deployed and verified on Sepolia. LP paired, governance active, ownership transferred.</p>
+        </div>
+      </div>
+      <div class="roadmap-item">
+        <div class="roadmap-dot done">&check;</div>
+        <div class="roadmap-body">
+          <h4>Phase 3 &mdash; Security Audit <span class="badge-done">Complete</span></h4>
+          <p>Slither analysis passed. 0 high/critical findings. Governance lifecycle fully verified on-chain.</p>
+        </div>
+      </div>
+      <div class="roadmap-item">
+        <div class="roadmap-dot current">4</div>
+        <div class="roadmap-body">
+          <h4>Phase 4 &mdash; Mainnet Launch</h4>
+          <p>Treasury multisig setup, mainnet deployment, LP pairing, Etherscan verification.</p>
+        </div>
+      </div>
+      <div class="roadmap-item">
+        <div class="roadmap-dot">5</div>
+        <div class="roadmap-body">
+          <h4>Phase 5 &mdash; Partner Integrations</h4>
+          <p>SecureCall integration, license resolver deployment, developer documentation and SDK.</p>
+        </div>
+      </div>
+      <div class="roadmap-item">
+        <div class="roadmap-dot">6</div>
+        <div class="roadmap-body">
+          <h4>Phase 6 &mdash; Multi-Chain Expansion</h4>
+          <p>Bridge to L2 networks, cross-chain lock verification, expanded partner ecosystem.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── FOOTER ─────────────────────────────────────── -->
+<footer>
+  <div class="container">
+    <div class="footer-links">
+      <a href="https://github.com/NeaBouli/inferno" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://github.com/NeaBouli/inferno/wiki" target="_blank" rel="noopener">Documentation</a>
+      <a href="https://sepolia.etherscan.io/address/0x3Bd71947F288d1dd8B21129B1bE4FF16EDd5d1F4#code" target="_blank" rel="noopener">Etherscan (Sepolia)</a>
+      <a href="https://sepolia.etherscan.io/address/0x6050b22E4EAF3f414d1155fBaF30B868E0107017#code" target="_blank" rel="noopener">Governance</a>
+    </div>
+    <p class="footer-brand"><span>Inferno ($IFR)</span> &mdash; Community Fair Launch Model</p>
+    <p class="footer-copy">&copy; 2026 Inferno Protocol. All rights reserved.</p>
+  </div>
+</footer>
+
+<!-- ── JS ─────────────────────────────────────────── -->
+<script>
+  // Nav scroll effect
+  const nav = document.getElementById('navbar');
+  window.addEventListener('scroll', () => {
+    nav.classList.toggle('scrolled', window.scrollY > 32);
+  });
+
+  // Mobile nav toggle
+  document.getElementById('navToggle').addEventListener('click', () => {
+    document.getElementById('navLinks').classList.toggle('open');
+  });
+
+  // Close mobile nav on link click
+  document.querySelectorAll('.nav-links a').forEach(a => {
+    a.addEventListener('click', () => {
+      document.getElementById('navLinks').classList.remove('open');
+    });
+  });
+
+  // Scroll reveal
+  const reveals = document.querySelectorAll('.reveal');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+        // Animate allocation bars
+        entry.target.querySelectorAll('.alloc-fill').forEach(bar => {
+          bar.style.width = bar.dataset.width + '%';
+        });
+      }
+    });
+  }, { threshold: 0.15 });
+
+  reveals.forEach(el => observer.observe(el));
+
+  // Trigger allocation bars on section reveal
+  const allocObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.querySelectorAll('.alloc-fill').forEach(bar => {
+          bar.style.width = bar.dataset.width + '%';
+        });
+      }
+    });
+  }, { threshold: 0.3 });
+
+  document.querySelectorAll('.allocation').forEach(el => allocObserver.observe(el));
+</script>
+
+</body>
+</html>
