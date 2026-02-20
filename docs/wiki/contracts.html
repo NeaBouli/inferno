@@ -1,0 +1,1811 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Contracts - Inferno Documentation</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #0a0a0a;
+            color: #e8e8ed;
+            line-height: 1.7;
+            min-height: 100vh;
+        }
+
+        /* ── Layout ───────────────────────────────────────────── */
+        .layout {
+            display: grid;
+            grid-template-columns: 240px 1fr;
+            min-height: 100vh;
+        }
+
+        /* ── Sidebar ──────────────────────────────────────────── */
+        .sidebar {
+            background: #111113;
+            border-right: 1px solid #222225;
+            padding: 32px 20px;
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            overflow-y: auto;
+        }
+
+        .sidebar-brand {
+            font-size: 22px;
+            font-weight: 700;
+            color: #ff4500;
+            letter-spacing: 2px;
+            margin-bottom: 4px;
+        }
+
+        .sidebar-subtitle {
+            font-size: 12px;
+            color: #8a8a96;
+            margin-bottom: 32px;
+            letter-spacing: 0.5px;
+        }
+
+        .sidebar nav {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .sidebar nav a {
+            display: block;
+            padding: 10px 14px;
+            color: #8a8a96;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            border-radius: 8px;
+            transition: all 0.15s ease;
+        }
+
+        .sidebar nav a:hover {
+            color: #e8e8ed;
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        .sidebar nav a.active {
+            color: #ff4500;
+            background: rgba(255, 69, 0, 0.08);
+        }
+
+        .sidebar nav .divider {
+            height: 1px;
+            background: #222225;
+            margin: 12px 0;
+        }
+
+        /* ── Main Content ─────────────────────────────────────── */
+        .main {
+            padding: 48px 56px 80px;
+            max-width: 960px;
+        }
+
+        .page-title {
+            font-size: 36px;
+            font-weight: 700;
+            color: #e8e8ed;
+            margin-bottom: 8px;
+        }
+
+        .page-description {
+            font-size: 16px;
+            color: #8a8a96;
+            margin-bottom: 40px;
+            max-width: 640px;
+        }
+
+        /* ── Contract Sections ────────────────────────────────── */
+        .contract-section {
+            margin-bottom: 56px;
+        }
+
+        .contract-header {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 8px;
+        }
+
+        .contract-header h2 {
+            font-size: 24px;
+            font-weight: 700;
+            color: #e8e8ed;
+        }
+
+        .contract-badge {
+            font-size: 11px;
+            font-weight: 600;
+            padding: 3px 10px;
+            border-radius: 100px;
+            background: rgba(255, 69, 0, 0.12);
+            color: #ff4500;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        .contract-path {
+            font-size: 13px;
+            color: #8a8a96;
+            margin-bottom: 16px;
+            font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+        }
+
+        .contract-description {
+            font-size: 15px;
+            color: #e8e8ed;
+            margin-bottom: 24px;
+            line-height: 1.7;
+        }
+
+        .contract-description strong {
+            color: #ff4500;
+        }
+
+        /* ── Sub-headings ─────────────────────────────────────── */
+        h3 {
+            font-size: 16px;
+            font-weight: 600;
+            color: #e8e8ed;
+            margin-bottom: 12px;
+            margin-top: 28px;
+        }
+
+        h3:first-of-type {
+            margin-top: 0;
+        }
+
+        /* ── Tables ───────────────────────────────────────────── */
+        .table-wrap {
+            overflow-x: auto;
+            margin-bottom: 20px;
+            border-radius: 10px;
+            border: 1px solid #222225;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        thead th {
+            background: #18181b;
+            color: #8a8a96;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 11px;
+            letter-spacing: 0.7px;
+            padding: 12px 16px;
+            text-align: left;
+            border-bottom: 1px solid #222225;
+        }
+
+        tbody td {
+            padding: 10px 16px;
+            border-bottom: 1px solid #1a1a1d;
+            vertical-align: top;
+        }
+
+        tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        tbody tr:hover {
+            background: rgba(255, 255, 255, 0.015);
+        }
+
+        td code, th code {
+            font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+            font-size: 12px;
+            background: #1a1a1d;
+            padding: 2px 6px;
+            border-radius: 4px;
+            color: #ff4500;
+        }
+
+        td .access-tag {
+            font-size: 11px;
+            font-weight: 600;
+            padding: 2px 8px;
+            border-radius: 100px;
+            display: inline-block;
+        }
+
+        .access-owner {
+            background: rgba(255, 69, 0, 0.12);
+            color: #ff4500;
+        }
+
+        .access-guardian {
+            background: rgba(59, 130, 246, 0.12);
+            color: #60a5fa;
+        }
+
+        .access-beneficiary {
+            background: rgba(34, 197, 94, 0.12);
+            color: #22c55e;
+        }
+
+        .access-public {
+            background: rgba(138, 138, 150, 0.12);
+            color: #8a8a96;
+        }
+
+        .access-self {
+            background: rgba(168, 85, 247, 0.12);
+            color: #a855f7;
+        }
+
+        .access-ownerguardian {
+            background: rgba(234, 179, 8, 0.12);
+            color: #eab308;
+        }
+
+        /* ── Code Blocks ──────────────────────────────────────── */
+        .code-block {
+            background: #1a1a1d;
+            border: 1px solid #222225;
+            border-radius: 10px;
+            overflow-x: auto;
+            margin-bottom: 20px;
+        }
+
+        .code-block-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 16px;
+            background: #18181b;
+            border-bottom: 1px solid #222225;
+            font-size: 12px;
+            color: #8a8a96;
+            font-weight: 600;
+        }
+
+        .code-block pre {
+            padding: 16px;
+            margin: 0;
+            font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+            font-size: 13px;
+            line-height: 1.6;
+            color: #e8e8ed;
+            white-space: pre;
+            overflow-x: auto;
+        }
+
+        .code-block pre .comment { color: #6a6a76; }
+        .code-block pre .keyword { color: #c084fc; }
+        .code-block pre .string { color: #22c55e; }
+        .code-block pre .function { color: #60a5fa; }
+        .code-block pre .number { color: #f59e0b; }
+        .code-block pre .const { color: #ff4500; }
+
+        /* ── Info Boxes ───────────────────────────────────────── */
+        .info-box {
+            padding: 14px 18px;
+            border-radius: 8px;
+            font-size: 13px;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+
+        .info-box.note {
+            background: rgba(59, 130, 246, 0.08);
+            border-left: 3px solid #60a5fa;
+            color: #93c5fd;
+        }
+
+        .info-box.warning {
+            background: rgba(234, 179, 8, 0.08);
+            border-left: 3px solid #eab308;
+            color: #fde68a;
+        }
+
+        .info-box strong {
+            font-weight: 600;
+        }
+
+        /* ── Dividers ─────────────────────────────────────────── */
+        .section-divider {
+            height: 1px;
+            background: #222225;
+            margin: 48px 0;
+        }
+
+        /* ── Table of Contents ────────────────────────────────── */
+        .toc {
+            background: #111113;
+            border: 1px solid #222225;
+            border-radius: 10px;
+            padding: 24px 28px;
+            margin-bottom: 40px;
+        }
+
+        .toc h3 {
+            font-size: 14px;
+            font-weight: 600;
+            color: #8a8a96;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 14px;
+            margin-top: 0;
+        }
+
+        .toc ol {
+            list-style: none;
+            counter-reset: toc;
+        }
+
+        .toc ol li {
+            counter-increment: toc;
+            margin-bottom: 6px;
+        }
+
+        .toc ol li a {
+            color: #e8e8ed;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 4px 0;
+            transition: color 0.15s;
+        }
+
+        .toc ol li a::before {
+            content: counter(toc) ".";
+            color: #ff4500;
+            font-weight: 600;
+            min-width: 20px;
+        }
+
+        .toc ol li a:hover {
+            color: #ff4500;
+        }
+
+        .toc ol li a .toc-path {
+            color: #8a8a96;
+            font-size: 12px;
+            font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+            margin-left: auto;
+        }
+
+        /* ── Responsive ───────────────────────────────────────── */
+        @media (max-width: 768px) {
+            .layout {
+                grid-template-columns: 1fr;
+            }
+
+            .sidebar {
+                position: relative;
+                height: auto;
+                border-right: none;
+                border-bottom: 1px solid #222225;
+                padding: 20px;
+            }
+
+            .sidebar nav {
+                flex-direction: row;
+                flex-wrap: wrap;
+                gap: 4px;
+            }
+
+            .sidebar nav a {
+                padding: 6px 12px;
+                font-size: 13px;
+            }
+
+            .sidebar nav .divider {
+                display: none;
+            }
+
+            .main {
+                padding: 28px 20px 60px;
+            }
+
+            .page-title {
+                font-size: 28px;
+            }
+
+            .toc ol li a .toc-path {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="layout">
+
+    <!-- ── Sidebar ──────────────────────────────────────────── -->
+    <aside class="sidebar">
+        <div class="sidebar-brand">INFERNO</div>
+        <div class="sidebar-subtitle">Documentation</div>
+        <nav>
+            <a href="index.html">Home</a>
+            <a href="contracts.html" class="active">Smart Contracts</a>
+            <a href="tokenomics.html">Tokenomics</a>
+            <a href="lock-mechanism.html">Lock Mechanism</a>
+            <a href="governance.html">Governance</a>
+            <a href="security.html">Security</a>
+            <a href="deployment.html">Deployment</a>
+            <a href="integration.html">Integration Guide</a>
+            <div class="divider"></div>
+            <a href="../index.html">Back to Website</a>
+        </nav>
+    </aside>
+
+    <!-- ── Main Content ─────────────────────────────────────── -->
+    <main class="main">
+
+        <h1 class="page-title">Smart Contracts</h1>
+        <p class="page-description">
+            Complete reference for all 7 Inferno protocol contracts. Includes constructor parameters, public functions,
+            events, access control, and ethers.js usage examples.
+        </p>
+
+        <!-- ── Table of Contents ─────────────────────────────── -->
+        <div class="toc">
+            <h3>Contracts</h3>
+            <ol>
+                <li><a href="#inferno-token">InfernoToken <span class="toc-path">contracts/token/InfernoToken.sol</span></a></li>
+                <li><a href="#liquidity-reserve">LiquidityReserve <span class="toc-path">contracts/liquidity/LiquidityReserve.sol</span></a></li>
+                <li><a href="#vesting">Vesting <span class="toc-path">contracts/vesting/Vesting.sol</span></a></li>
+                <li><a href="#buyback-vault">BuybackVault <span class="toc-path">contracts/buyback/BuybackVault.sol</span></a></li>
+                <li><a href="#burn-reserve">BurnReserve <span class="toc-path">contracts/burnreserve/BurnReserve.sol</span></a></li>
+                <li><a href="#governance">Governance <span class="toc-path">contracts/governance/Governance.sol</span></a></li>
+                <li><a href="#ifr-lock">IFRLock <span class="toc-path">contracts/lock/IFRLock.sol</span></a></li>
+            </ol>
+        </div>
+
+        <!-- ════════════════════════════════════════════════════ -->
+        <!-- 1. InfernoToken                                      -->
+        <!-- ════════════════════════════════════════════════════ -->
+        <div class="contract-section" id="inferno-token">
+            <div class="contract-header">
+                <h2>InfernoToken</h2>
+                <span class="contract-badge">ERC-20</span>
+            </div>
+            <div class="contract-path">contracts/token/InfernoToken.sol</div>
+
+            <p class="contract-description">
+                The core ERC-20 token of the Inferno protocol. Inherits from OpenZeppelin's
+                <strong>ERC20</strong>, <strong>ERC20Burnable</strong>, and <strong>Ownable</strong>.
+                Uses <strong>9 decimals</strong> (not the standard 18) and a total supply of <strong>1 billion IFR</strong>.
+                Implements a fee-on-transfer mechanism: every non-exempt transfer deducts a sender burn fee,
+                a recipient burn fee, and a pool fee. The combined fee rate is capped at 5%. Default rates
+                are 2.0% sender burn, 0.5% recipient burn, and 1.0% pool fee (3.5% total).
+            </p>
+
+            <div class="info-box note">
+                <strong>Note:</strong> Mint and burn operations (transfers from/to <code>address(0)</code>) bypass fee logic.
+                Addresses marked as <code>feeExempt</code> also bypass fees entirely.
+            </div>
+
+            <h3>Constructor</h3>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>_poolFeeReceiver</code></td>
+                            <td><code>address</code></td>
+                            <td>Address that receives the pool fee portion of each transfer. Cannot be <code>address(0)</code>.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3>State Variables</h3>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr><th>Variable</th><th>Type</th><th>Default</th><th>Description</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>senderBurnBps</code></td>
+                            <td><code>uint256</code></td>
+                            <td>200 (2.0%)</td>
+                            <td>Basis points burned from sender on each transfer</td>
+                        </tr>
+                        <tr>
+                            <td><code>recipientBurnBps</code></td>
+                            <td><code>uint256</code></td>
+                            <td>50 (0.5%)</td>
+                            <td>Basis points burned from recipient portion on each transfer</td>
+                        </tr>
+                        <tr>
+                            <td><code>poolFeeBps</code></td>
+                            <td><code>uint256</code></td>
+                            <td>100 (1.0%)</td>
+                            <td>Basis points sent to poolFeeReceiver on each transfer</td>
+                        </tr>
+                        <tr>
+                            <td><code>poolFeeReceiver</code></td>
+                            <td><code>address</code></td>
+                            <td>--</td>
+                            <td>Address receiving pool fees</td>
+                        </tr>
+                        <tr>
+                            <td><code>feeExempt</code></td>
+                            <td><code>mapping(address =&gt; bool)</code></td>
+                            <td>--</td>
+                            <td>Addresses exempt from transfer fees</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3>Functions</h3>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr><th>Function</th><th>Parameters</th><th>Returns</th><th>Access</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>decimals()</code></td>
+                            <td>--</td>
+                            <td><code>uint8</code> (always 9)</td>
+                            <td><span class="access-tag access-public">Public</span></td>
+                        </tr>
+                        <tr>
+                            <td><code>setFeeExempt(address, bool)</code></td>
+                            <td><code>account</code>, <code>exempt</code></td>
+                            <td>--</td>
+                            <td><span class="access-tag access-owner">Owner</span></td>
+                        </tr>
+                        <tr>
+                            <td><code>setPoolFeeReceiver(address)</code></td>
+                            <td><code>receiver</code> (non-zero)</td>
+                            <td>--</td>
+                            <td><span class="access-tag access-owner">Owner</span></td>
+                        </tr>
+                        <tr>
+                            <td><code>setFeeRates(uint256, uint256, uint256)</code></td>
+                            <td><code>_senderBurnBps</code>, <code>_recipientBurnBps</code>, <code>_poolFeeBps</code></td>
+                            <td>--</td>
+                            <td><span class="access-tag access-owner">Owner</span></td>
+                        </tr>
+                        <tr>
+                            <td><code>burn(uint256)</code></td>
+                            <td><code>amount</code></td>
+                            <td>--</td>
+                            <td><span class="access-tag access-public">Public</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="info-box warning">
+                <strong>Fee cap:</strong> <code>setFeeRates</code> enforces <code>senderBurnBps + recipientBurnBps + poolFeeBps &lt;= 500</code> (5% maximum total fee).
+            </div>
+
+            <h3>Internal Functions</h3>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr><th>Function</th><th>Description</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>_update(from, to, value)</code></td>
+                            <td>
+                                Overrides ERC20._update to implement fee-on-transfer. On non-exempt transfers:
+                                calculates <code>burnSender</code>, <code>burnRecipient</code>, and <code>poolFee</code>;
+                                sends <code>netAmount</code> to recipient, <code>poolFee</code> to poolFeeReceiver,
+                                and burns <code>totalBurn</code> (sender + recipient burn) via transfer to address(0).
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3>Events</h3>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr><th>Event</th><th>Parameters</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>FeeExemptUpdated</code></td>
+                            <td><code>address indexed account</code>, <code>bool exempt</code></td>
+                        </tr>
+                        <tr>
+                            <td><code>PoolFeeReceiverUpdated</code></td>
+                            <td><code>address indexed receiver</code></td>
+                        </tr>
+                        <tr>
+                            <td><code>FeesUpdated</code></td>
+                            <td><code>uint256 senderBurnBps</code>, <code>uint256 recipientBurnBps</code>, <code>uint256 poolFeeBps</code></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3>ethers.js Example</h3>
+            <div class="code-block">
+                <div class="code-block-header">JavaScript (ethers v5)</div>
+<pre><span class="keyword">const</span> { ethers } = <span class="function">require</span>(<span class="string">"ethers"</span>);
+
+<span class="keyword">const</span> <span class="const">TOKEN_ADDR</span> = <span class="string">"0x3Bd71947F288d1dd8B21129B1bE4FF16EDd5d1F4"</span>;
+<span class="keyword">const</span> abi = [
+  <span class="string">"function decimals() view returns (uint8)"</span>,
+  <span class="string">"function balanceOf(address) view returns (uint256)"</span>,
+  <span class="string">"function senderBurnBps() view returns (uint256)"</span>,
+  <span class="string">"function recipientBurnBps() view returns (uint256)"</span>,
+  <span class="string">"function poolFeeBps() view returns (uint256)"</span>,
+  <span class="string">"function feeExempt(address) view returns (bool)"</span>,
+  <span class="string">"function transfer(address to, uint256 amount) returns (bool)"</span>,
+  <span class="string">"function setFeeExempt(address account, bool exempt)"</span>,
+];
+
+<span class="keyword">const</span> provider = <span class="keyword">new</span> ethers.providers.<span class="function">JsonRpcProvider</span>(RPC_URL);
+<span class="keyword">const</span> token = <span class="keyword">new</span> ethers.<span class="function">Contract</span>(<span class="const">TOKEN_ADDR</span>, abi, provider);
+
+<span class="comment">// Read fee rates</span>
+<span class="keyword">const</span> senderBurn = <span class="keyword">await</span> token.<span class="function">senderBurnBps</span>();   <span class="comment">// 200 = 2.0%</span>
+<span class="keyword">const</span> recipBurn  = <span class="keyword">await</span> token.<span class="function">recipientBurnBps</span>(); <span class="comment">// 50  = 0.5%</span>
+<span class="keyword">const</span> poolFee   = <span class="keyword">await</span> token.<span class="function">poolFeeBps</span>();       <span class="comment">// 100 = 1.0%</span>
+
+<span class="comment">// Calculate net transfer amount (for 1000 IFR)</span>
+<span class="keyword">const</span> amount = ethers.utils.<span class="function">parseUnits</span>(<span class="string">"1000"</span>, <span class="number">9</span>);
+<span class="keyword">const</span> totalFee = amount.mul(senderBurn.add(recipBurn).add(poolFee)).div(<span class="number">10000</span>);
+<span class="keyword">const</span> netAmount = amount.sub(totalFee);
+console.<span class="function">log</span>(<span class="string">"Net received:"</span>, ethers.utils.<span class="function">formatUnits</span>(netAmount, <span class="number">9</span>), <span class="string">"IFR"</span>);
+
+<span class="comment">// Transfer tokens (signer required)</span>
+<span class="keyword">const</span> signer = provider.<span class="function">getSigner</span>();
+<span class="keyword">const</span> tokenWithSigner = token.<span class="function">connect</span>(signer);
+<span class="keyword">await</span> tokenWithSigner.<span class="function">transfer</span>(recipientAddr, amount);</pre>
+            </div>
+        </div>
+
+        <div class="section-divider"></div>
+
+        <!-- ════════════════════════════════════════════════════ -->
+        <!-- 2. LiquidityReserve                                  -->
+        <!-- ════════════════════════════════════════════════════ -->
+        <div class="contract-section" id="liquidity-reserve">
+            <div class="contract-header">
+                <h2>LiquidityReserve</h2>
+                <span class="contract-badge">Reserve</span>
+            </div>
+            <div class="contract-path">contracts/liquidity/LiquidityReserve.sol</div>
+
+            <p class="contract-description">
+                Holds <strong>200M IFR</strong> as a strategic liquidity reserve with a time-lock and staged withdrawal
+                mechanism. Tokens are locked for an initial lock period (6 months in production). After the lock expires,
+                withdrawals are rate-limited to a maximum amount per period (e.g. 50M per quarter) to prevent supply shocks.
+                Includes a guardian role for emergency pause/unpause.
+            </p>
+
+            <h3>Constructor</h3>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>_token</code></td>
+                            <td><code>address</code></td>
+                            <td>Address of the IFR token contract</td>
+                        </tr>
+                        <tr>
+                            <td><code>_lockDuration</code></td>
+                            <td><code>uint256</code></td>
+                            <td>Duration in seconds before first withdrawal is allowed</td>
+                        </tr>
+                        <tr>
+                            <td><code>_maxWithdrawPerPeriod</code></td>
+                            <td><code>uint256</code></td>
+                            <td>Maximum tokens withdrawable per period (raw units, 9 decimals)</td>
+                        </tr>
+                        <tr>
+                            <td><code>_periodDuration</code></td>
+                            <td><code>uint256</code></td>
+                            <td>Duration of each withdrawal period in seconds</td>
+                        </tr>
+                        <tr>
+                            <td><code>_guardian</code></td>
+                            <td><code>address</code></td>
+                            <td>Guardian address for emergency pause/unpause</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3>Functions</h3>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr><th>Function</th><th>Parameters</th><th>Returns</th><th>Access</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>withdraw(address, uint256)</code></td>
+                            <td><code>to</code>, <code>amount</code></td>
+                            <td>--</td>
+                            <td><span class="access-tag access-owner">Owner</span></td>
+                        </tr>
+                        <tr>
+                            <td><code>availableToWithdraw()</code></td>
+                            <td>--</td>
+                            <td><code>uint256</code></td>
+                            <td><span class="access-tag access-public">Public</span></td>
+                        </tr>
+                        <tr>
+                            <td><code>currentPeriod()</code></td>
+                            <td>--</td>
+                            <td><code>uint256</code></td>
+                            <td><span class="access-tag access-public">Public</span></td>
+                        </tr>
+                        <tr>
+                            <td><code>pendingBalance()</code></td>
+                            <td>--</td>
+                            <td><code>uint256</code></td>
+                            <td><span class="access-tag access-public">Public</span></td>
+                        </tr>
+                        <tr>
+                            <td><code>setMaxWithdrawPerPeriod(uint256)</code></td>
+                            <td><code>_max</code></td>
+                            <td>--</td>
+                            <td><span class="access-tag access-owner">Owner</span></td>
+                        </tr>
+                        <tr>
+                            <td><code>setGuardian(address)</code></td>
+                            <td><code>_guardian</code></td>
+                            <td>--</td>
+                            <td><span class="access-tag access-owner">Owner</span></td>
+                        </tr>
+                        <tr>
+                            <td><code>pause()</code></td>
+                            <td>--</td>
+                            <td>--</td>
+                            <td><span class="access-tag access-guardian">Guardian</span></td>
+                        </tr>
+                        <tr>
+                            <td><code>unpause()</code></td>
+                            <td>--</td>
+                            <td>--</td>
+                            <td><span class="access-tag access-guardian">Guardian</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3>Events</h3>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr><th>Event</th><th>Parameters</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>Withdrawn</code></td>
+                            <td><code>address indexed to</code>, <code>uint256 amount</code></td>
+                        </tr>
+                        <tr>
+                            <td><code>MaxWithdrawPerPeriodUpdated</code></td>
+                            <td><code>uint256 newMax</code></td>
+                        </tr>
+                        <tr>
+                            <td><code>GuardianUpdated</code></td>
+                            <td><code>address indexed newGuardian</code></td>
+                        </tr>
+                        <tr>
+                            <td><code>Paused</code></td>
+                            <td><code>address indexed account</code></td>
+                        </tr>
+                        <tr>
+                            <td><code>Unpaused</code></td>
+                            <td><code>address indexed account</code></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3>ethers.js Example</h3>
+            <div class="code-block">
+                <div class="code-block-header">JavaScript (ethers v5)</div>
+<pre><span class="keyword">const</span> <span class="const">RESERVE_ADDR</span> = <span class="string">"0xF7E90D0d17f8232365186AA085D26eaEfAf011aF"</span>;
+<span class="keyword">const</span> abi = [
+  <span class="string">"function lockEnd() view returns (uint256)"</span>,
+  <span class="string">"function currentPeriod() view returns (uint256)"</span>,
+  <span class="string">"function availableToWithdraw() view returns (uint256)"</span>,
+  <span class="string">"function pendingBalance() view returns (uint256)"</span>,
+  <span class="string">"function withdraw(address to, uint256 amount)"</span>,
+  <span class="string">"function paused() view returns (bool)"</span>,
+];
+
+<span class="keyword">const</span> reserve = <span class="keyword">new</span> ethers.<span class="function">Contract</span>(<span class="const">RESERVE_ADDR</span>, abi, provider);
+
+<span class="comment">// Check lock status</span>
+<span class="keyword">const</span> lockEnd = <span class="keyword">await</span> reserve.<span class="function">lockEnd</span>();
+<span class="keyword">const</span> now = Math.<span class="function">floor</span>(Date.<span class="function">now</span>() / <span class="number">1000</span>);
+console.<span class="function">log</span>(<span class="string">"Locked:"</span>, now < lockEnd.<span class="function">toNumber</span>());
+
+<span class="comment">// Check available withdrawal</span>
+<span class="keyword">const</span> available = <span class="keyword">await</span> reserve.<span class="function">availableToWithdraw</span>();
+console.<span class="function">log</span>(<span class="string">"Available:"</span>, ethers.utils.<span class="function">formatUnits</span>(available, <span class="number">9</span>), <span class="string">"IFR"</span>);
+
+<span class="comment">// Withdraw (owner only, via governance proposal)</span>
+<span class="keyword">const</span> amount = ethers.utils.<span class="function">parseUnits</span>(<span class="string">"10000000"</span>, <span class="number">9</span>); <span class="comment">// 10M IFR</span>
+<span class="keyword">await</span> reserve.<span class="function">connect</span>(owner).<span class="function">withdraw</span>(treasuryAddr, amount);</pre>
+            </div>
+        </div>
+
+        <div class="section-divider"></div>
+
+        <!-- ════════════════════════════════════════════════════ -->
+        <!-- 3. Vesting                                           -->
+        <!-- ════════════════════════════════════════════════════ -->
+        <div class="contract-section" id="vesting">
+            <div class="contract-header">
+                <h2>Vesting</h2>
+                <span class="contract-badge">Vesting</span>
+            </div>
+            <div class="contract-path">contracts/vesting/Vesting.sol</div>
+
+            <p class="contract-description">
+                Linear vesting contract for <strong>150M IFR</strong> team allocation. Implements a
+                <strong>12-month cliff</strong> followed by <strong>36-month linear vesting</strong>.
+                No tokens are releasable before the cliff. After the cliff, tokens vest linearly based on
+                elapsed time. The beneficiary calls <code>release()</code> to claim vested tokens.
+                A guardian can pause releases for emergency situations.
+            </p>
+
+            <div class="info-box note">
+                <strong>Vesting formula:</strong>
+                <code>vestedAmount = totalAllocation * (elapsed - cliffDuration) / (duration - cliffDuration)</code>
+                <br>Returns 0 before cliff, and totalAllocation after full duration.
+            </div>
+
+            <h3>Constructor</h3>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>_token</code></td>
+                            <td><code>address</code></td>
+                            <td>Address of the IFR token contract</td>
+                        </tr>
+                        <tr>
+                            <td><code>_beneficiary</code></td>
+                            <td><code>address</code></td>
+                            <td>Address that can claim vested tokens</td>
+                        </tr>
+                        <tr>
+                            <td><code>_cliffDuration</code></td>
+                            <td><code>uint256</code></td>
+                            <td>Cliff period in seconds (e.g. 365 days for 12 months)</td>
+                        </tr>
+                        <tr>
+                            <td><code>_duration</code></td>
+                            <td><code>uint256</code></td>
+                            <td>Total vesting duration in seconds (must be >= cliffDuration)</td>
+                        </tr>
+                        <tr>
+                            <td><code>_totalAllocation</code></td>
+                            <td><code>uint256</code></td>
+                            <td>Total tokens to vest (raw units, 9 decimals)</td>
+                        </tr>
+                        <tr>
+                            <td><code>_guardian</code></td>
+                            <td><code>address</code></td>
+                            <td>Guardian address for emergency pause/unpause</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3>Functions</h3>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr><th>Function</th><th>Parameters</th><th>Returns</th><th>Access</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>release()</code></td>
+                            <td>--</td>
+                            <td>--</td>
+                            <td><span class="access-tag access-beneficiary">Beneficiary</span></td>
+                        </tr>
+                        <tr>
+                            <td><code>releasableAmount()</code></td>
+                            <td>--</td>
+                            <td><code>uint256</code></td>
+                            <td><span class="access-tag access-public">Public</span></td>
+                        </tr>
+                        <tr>
+                            <td><code>vestedAmount()</code></td>
+                            <td>--</td>
+                            <td><code>uint256</code></td>
+                            <td><span class="access-tag access-public">Public</span></td>
+                        </tr>
+                        <tr>
+                            <td><code>vestingSchedule()</code></td>
+                            <td>--</td>
+                            <td><code>(uint256 _start, uint256 _cliff, uint256 _duration)</code></td>
+                            <td><span class="access-tag access-public">Public</span></td>
+                        </tr>
+                        <tr>
+                            <td><code>pause()</code></td>
+                            <td>--</td>
+                            <td>--</td>
+                            <td><span class="access-tag access-guardian">Guardian</span></td>
+                        </tr>
+                        <tr>
+                            <td><code>unpause()</code></td>
+                            <td>--</td>
+                            <td>--</td>
+                            <td><span class="access-tag access-guardian">Guardian</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3>Events</h3>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr><th>Event</th><th>Parameters</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>Released</code></td>
+                            <td><code>address indexed beneficiary</code>, <code>uint256 amount</code></td>
+                        </tr>
+                        <tr>
+                            <td><code>Paused</code></td>
+                            <td><code>address indexed guardian</code></td>
+                        </tr>
+                        <tr>
+                            <td><code>Unpaused</code></td>
+                            <td><code>address indexed guardian</code></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3>Custom Errors</h3>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr><th>Error</th><th>Description</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><code>NotBeneficiary()</code></td><td>Caller is not the beneficiary</td></tr>
+                        <tr><td><code>NothingToRelease()</code></td><td>No tokens available to release</td></tr>
+                        <tr><td><code>OnlyGuardian()</code></td><td>Caller is not the guardian</td></tr>
+                        <tr><td><code>IsPaused()</code></td><td>Contract is paused</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3>ethers.js Example</h3>
+            <div class="code-block">
+                <div class="code-block-header">JavaScript (ethers v5)</div>
+<pre><span class="keyword">const</span> <span class="const">VESTING_ADDR</span> = <span class="string">"0xa710f9FE7bf42981E60BE2Fbe7D87Fb3541a3F8B"</span>;
+<span class="keyword">const</span> abi = [
+  <span class="string">"function beneficiary() view returns (address)"</span>,
+  <span class="string">"function vestedAmount() view returns (uint256)"</span>,
+  <span class="string">"function releasableAmount() view returns (uint256)"</span>,
+  <span class="string">"function released() view returns (uint256)"</span>,
+  <span class="string">"function vestingSchedule() view returns (uint256, uint256, uint256)"</span>,
+  <span class="string">"function release()"</span>,
+];
+
+<span class="keyword">const</span> vesting = <span class="keyword">new</span> ethers.<span class="function">Contract</span>(<span class="const">VESTING_ADDR</span>, abi, provider);
+
+<span class="comment">// Check vesting progress</span>
+<span class="keyword">const</span> [start, cliff, duration] = <span class="keyword">await</span> vesting.<span class="function">vestingSchedule</span>();
+<span class="keyword">const</span> vested = <span class="keyword">await</span> vesting.<span class="function">vestedAmount</span>();
+<span class="keyword">const</span> releasable = <span class="keyword">await</span> vesting.<span class="function">releasableAmount</span>();
+<span class="keyword">const</span> released = <span class="keyword">await</span> vesting.<span class="function">released</span>();
+
+console.<span class="function">log</span>(<span class="string">"Vested:"</span>, ethers.utils.<span class="function">formatUnits</span>(vested, <span class="number">9</span>), <span class="string">"IFR"</span>);
+console.<span class="function">log</span>(<span class="string">"Releasable:"</span>, ethers.utils.<span class="function">formatUnits</span>(releasable, <span class="number">9</span>), <span class="string">"IFR"</span>);
+console.<span class="function">log</span>(<span class="string">"Released:"</span>, ethers.utils.<span class="function">formatUnits</span>(released, <span class="number">9</span>), <span class="string">"IFR"</span>);
+
+<span class="comment">// Release vested tokens (beneficiary only)</span>
+<span class="keyword">await</span> vesting.<span class="function">connect</span>(beneficiarySigner).<span class="function">release</span>();</pre>
+            </div>
+        </div>
+
+        <div class="section-divider"></div>
+
+        <!-- ════════════════════════════════════════════════════ -->
+        <!-- 4. BuybackVault                                      -->
+        <!-- ════════════════════════════════════════════════════ -->
+        <div class="contract-section" id="buyback-vault">
+            <div class="contract-header">
+                <h2>BuybackVault</h2>
+                <span class="contract-badge">Buyback</span>
+            </div>
+            <div class="contract-path">contracts/buyback/BuybackVault.sol</div>
+
+            <p class="contract-description">
+                Accepts ETH deposits and uses them to buy IFR tokens on Uniswap V2. Purchased tokens are
+                split 50/50 between the <strong>BurnReserve</strong> (permanent burn) and the <strong>treasury</strong>.
+                Features a configurable <strong>activation delay</strong> (60 days in production), a <strong>cooldown</strong>
+                between buybacks (default 1 hour), and <strong>slippage protection</strong> (default 5%) using
+                price quotes recorded at deposit time.
+            </p>
+
+            <h3>Constructor</h3>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>_token</code></td>
+                            <td><code>address</code></td>
+                            <td>Address of the IFR token contract</td>
+                        </tr>
+                        <tr>
+                            <td><code>_burnReserve</code></td>
+                            <td><code>address</code></td>
+                            <td>BurnReserve contract address (receives burn share)</td>
+                        </tr>
+                        <tr>
+                            <td><code>_treasury</code></td>
+                            <td><code>address</code></td>
+                            <td>Treasury address (receives treasury share)</td>
+                        </tr>
+                        <tr>
+                            <td><code>_router</code></td>
+                            <td><code>address</code></td>
+                            <td>Uniswap V2 Router address for swap execution</td>
+                        </tr>
+                        <tr>
+                            <td><code>_guardian</code></td>
+                            <td><code>address</code></td>
+                            <td>Guardian address for emergency pause/unpause</td>
+                        </tr>
+                        <tr>
+                            <td><code>_activationDelay</code></td>
+                            <td><code>uint256</code></td>
+                            <td>Seconds before buybacks can execute (from deploy time)</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3>State Variables</h3>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr><th>Variable</th><th>Type</th><th>Default</th><th>Description</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>burnShareBps</code></td>
+                            <td><code>uint256</code></td>
+                            <td>5000 (50%)</td>
+                            <td>Percentage of purchased IFR sent to BurnReserve</td>
+                        </tr>
+                        <tr>
+                            <td><code>cooldown</code></td>
+                            <td><code>uint256</code></td>
+                            <td>3600 (1 hour)</td>
+                            <td>Minimum seconds between buyback executions</td>
+                        </tr>
+                        <tr>
+                            <td><code>slippageBps</code></td>
+                            <td><code>uint256</code></td>
+                            <td>500 (5%)</td>
+                            <td>Maximum allowed slippage for swaps</td>
+                        </tr>
+                        <tr>
+                            <td><code>pendingExpectedOut</code></td>
+                            <td><code>uint256</code></td>
+                            <td>0</td>
+                            <td>Accumulated expected output from deposits (for slippage calc)</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3>Functions</h3>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr><th>Function</th><th>Parameters</th><th>Returns</th><th>Access</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>depositETH()</code></td>
+                            <td>-- (payable, sends ETH via <code>msg.value</code>)</td>
+                            <td>--</td>
+                            <td><span class="access-tag access-public">Public</span></td>
+                        </tr>
+                        <tr>
+                            <td><code>executeBuyback()</code></td>
+                            <td>--</td>
+                            <td>--</td>
+                            <td><span class="access-tag access-owner">Owner</span></td>
+                        </tr>
+                        <tr>
+                            <td><code>setParams(uint256, uint256, uint256, address, address)</code></td>
+                            <td><code>_burnShareBps</code>, <code>_cooldown</code>, <code>_slippageBps</code>, <code>_router</code>, <code>_treasury</code></td>
+                            <td>--</td>
+                            <td><span class="access-tag access-owner">Owner</span></td>
+                        </tr>
+                        <tr>
+                            <td><code>pause()</code></td>
+                            <td>--</td>
+                            <td>--</td>
+                            <td><span class="access-tag access-guardian">Guardian</span></td>
+                        </tr>
+                        <tr>
+                            <td><code>unpause()</code></td>
+                            <td>--</td>
+                            <td>--</td>
+                            <td><span class="access-tag access-guardian">Guardian</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3>Events</h3>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr><th>Event</th><th>Parameters</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>Deposited</code></td>
+                            <td><code>address indexed sender</code>, <code>uint256 amount</code></td>
+                        </tr>
+                        <tr>
+                            <td><code>BuybackExecuted</code></td>
+                            <td><code>uint256 ethSpent</code>, <code>uint256 burnAmount</code>, <code>uint256 treasuryAmount</code></td>
+                        </tr>
+                        <tr>
+                            <td><code>Paused</code></td>
+                            <td><code>address indexed account</code></td>
+                        </tr>
+                        <tr>
+                            <td><code>Unpaused</code></td>
+                            <td><code>address indexed account</code></td>
+                        </tr>
+                        <tr>
+                            <td><code>ParamsUpdated</code></td>
+                            <td><code>uint256 burnShareBps</code>, <code>uint256 cooldown</code>, <code>uint256 slippageBps</code></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3>ethers.js Example</h3>
+            <div class="code-block">
+                <div class="code-block-header">JavaScript (ethers v5)</div>
+<pre><span class="keyword">const</span> <span class="const">VAULT_ADDR</span> = <span class="string">"0xC8ABb9039BEd24f4dBf5Cff09699877D81f0D63C"</span>;
+<span class="keyword">const</span> abi = [
+  <span class="string">"function depositETH() payable"</span>,
+  <span class="string">"function executeBuyback()"</span>,
+  <span class="string">"function activationTime() view returns (uint256)"</span>,
+  <span class="string">"function lastBuybackAt() view returns (uint256)"</span>,
+  <span class="string">"function cooldown() view returns (uint256)"</span>,
+  <span class="string">"function pendingExpectedOut() view returns (uint256)"</span>,
+  <span class="string">"function paused() view returns (bool)"</span>,
+];
+
+<span class="keyword">const</span> vault = <span class="keyword">new</span> ethers.<span class="function">Contract</span>(<span class="const">VAULT_ADDR</span>, abi, provider);
+
+<span class="comment">// Deposit ETH for future buyback</span>
+<span class="keyword">await</span> vault.<span class="function">connect</span>(signer).<span class="function">depositETH</span>({
+  value: ethers.utils.<span class="function">parseEther</span>(<span class="string">"0.5"</span>),
+});
+
+<span class="comment">// Check if buyback is ready</span>
+<span class="keyword">const</span> activation = <span class="keyword">await</span> vault.<span class="function">activationTime</span>();
+<span class="keyword">const</span> lastBuyback = <span class="keyword">await</span> vault.<span class="function">lastBuybackAt</span>();
+<span class="keyword">const</span> cd = <span class="keyword">await</span> vault.<span class="function">cooldown</span>();
+<span class="keyword">const</span> now = Math.<span class="function">floor</span>(Date.<span class="function">now</span>() / <span class="number">1000</span>);
+
+<span class="keyword">const</span> isActive = now >= activation.<span class="function">toNumber</span>();
+<span class="keyword">const</span> cooldownPassed = now >= lastBuyback.<span class="function">add</span>(cd).<span class="function">toNumber</span>();
+console.<span class="function">log</span>(<span class="string">"Ready:"</span>, isActive && cooldownPassed);
+
+<span class="comment">// Execute buyback (owner only)</span>
+<span class="keyword">await</span> vault.<span class="function">connect</span>(owner).<span class="function">executeBuyback</span>();</pre>
+            </div>
+        </div>
+
+        <div class="section-divider"></div>
+
+        <!-- ════════════════════════════════════════════════════ -->
+        <!-- 5. BurnReserve                                       -->
+        <!-- ════════════════════════════════════════════════════ -->
+        <div class="contract-section" id="burn-reserve">
+            <div class="contract-header">
+                <h2>BurnReserve</h2>
+                <span class="contract-badge">Deflationary</span>
+            </div>
+            <div class="contract-path">contracts/burnreserve/BurnReserve.sol</div>
+
+            <p class="contract-description">
+                Permanent token burning contract with on-chain tracking. Tokens are deposited via
+                <code>deposit()</code> (requires prior approval) or sent directly from BuybackVault.
+                The owner or guardian can then call <code>burn()</code> or <code>burnAll()</code> to permanently
+                destroy the tokens, reducing the total supply. Tracks cumulative <code>totalBurned</code> for transparency.
+            </p>
+
+            <h3>Constructor</h3>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>_token</code></td>
+                            <td><code>address</code></td>
+                            <td>Address of the IFR token contract</td>
+                        </tr>
+                        <tr>
+                            <td><code>_guardian</code></td>
+                            <td><code>address</code></td>
+                            <td>Guardian address (can trigger burns alongside owner)</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3>Functions</h3>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr><th>Function</th><th>Parameters</th><th>Returns</th><th>Access</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>deposit(uint256)</code></td>
+                            <td><code>amount</code></td>
+                            <td>--</td>
+                            <td><span class="access-tag access-public">Public</span></td>
+                        </tr>
+                        <tr>
+                            <td><code>burn(uint256)</code></td>
+                            <td><code>amount</code></td>
+                            <td>--</td>
+                            <td><span class="access-tag access-ownerguardian">Owner | Guardian</span></td>
+                        </tr>
+                        <tr>
+                            <td><code>burnAll()</code></td>
+                            <td>--</td>
+                            <td>--</td>
+                            <td><span class="access-tag access-ownerguardian">Owner | Guardian</span></td>
+                        </tr>
+                        <tr>
+                            <td><code>pendingBurn()</code></td>
+                            <td>--</td>
+                            <td><code>uint256</code></td>
+                            <td><span class="access-tag access-public">Public</span></td>
+                        </tr>
+                        <tr>
+                            <td><code>setGuardian(address)</code></td>
+                            <td><code>_guardian</code></td>
+                            <td>--</td>
+                            <td><span class="access-tag access-owner">Owner</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3>Events</h3>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr><th>Event</th><th>Parameters</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>Deposited</code></td>
+                            <td><code>address indexed from</code>, <code>uint256 amount</code></td>
+                        </tr>
+                        <tr>
+                            <td><code>Burned</code></td>
+                            <td><code>uint256 amount</code>, <code>uint256 newTotalBurned</code></td>
+                        </tr>
+                        <tr>
+                            <td><code>GuardianUpdated</code></td>
+                            <td><code>address indexed newGuardian</code></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3>ethers.js Example</h3>
+            <div class="code-block">
+                <div class="code-block-header">JavaScript (ethers v5)</div>
+<pre><span class="keyword">const</span> <span class="const">BURN_ADDR</span> = <span class="string">"0x6D4582FCac792FD3880e252fC0a585A0c1823e80"</span>;
+<span class="keyword">const</span> abi = [
+  <span class="string">"function pendingBurn() view returns (uint256)"</span>,
+  <span class="string">"function totalBurned() view returns (uint256)"</span>,
+  <span class="string">"function deposit(uint256 amount)"</span>,
+  <span class="string">"function burn(uint256 amount)"</span>,
+  <span class="string">"function burnAll()"</span>,
+];
+
+<span class="keyword">const</span> burnReserve = <span class="keyword">new</span> ethers.<span class="function">Contract</span>(<span class="const">BURN_ADDR</span>, abi, provider);
+
+<span class="comment">// Check burn stats</span>
+<span class="keyword">const</span> pending = <span class="keyword">await</span> burnReserve.<span class="function">pendingBurn</span>();
+<span class="keyword">const</span> totalBurned = <span class="keyword">await</span> burnReserve.<span class="function">totalBurned</span>();
+console.<span class="function">log</span>(<span class="string">"Pending burn:"</span>, ethers.utils.<span class="function">formatUnits</span>(pending, <span class="number">9</span>));
+console.<span class="function">log</span>(<span class="string">"Total burned:"</span>, ethers.utils.<span class="function">formatUnits</span>(totalBurned, <span class="number">9</span>));
+
+<span class="comment">// Deposit tokens (requires prior token.approve())</span>
+<span class="keyword">const</span> amount = ethers.utils.<span class="function">parseUnits</span>(<span class="string">"100000"</span>, <span class="number">9</span>);
+<span class="keyword">await</span> token.<span class="function">connect</span>(signer).<span class="function">approve</span>(<span class="const">BURN_ADDR</span>, amount);
+<span class="keyword">await</span> burnReserve.<span class="function">connect</span>(signer).<span class="function">deposit</span>(amount);
+
+<span class="comment">// Burn all pending tokens (owner or guardian)</span>
+<span class="keyword">await</span> burnReserve.<span class="function">connect</span>(owner).<span class="function">burnAll</span>();</pre>
+            </div>
+        </div>
+
+        <div class="section-divider"></div>
+
+        <!-- ════════════════════════════════════════════════════ -->
+        <!-- 6. Governance                                        -->
+        <!-- ════════════════════════════════════════════════════ -->
+        <div class="contract-section" id="governance">
+            <div class="contract-header">
+                <h2>Governance</h2>
+                <span class="contract-badge">Timelock</span>
+            </div>
+            <div class="contract-path">contracts/governance/Governance.sol</div>
+
+            <p class="contract-description">
+                Timelock-based governor for the Inferno protocol with a <strong>48-hour delay</strong>.
+                All protocol contracts have their ownership transferred to this contract, ensuring that
+                parameter changes (fee rates, treasury address, etc.) go through the timelock.
+                The owner proposes parameter changes; after the delay passes, the owner can execute them.
+                The guardian (or owner) can cancel pending proposals for emergency response.
+                The delay itself can only be changed via a governance proposal (self-call).
+            </p>
+
+            <div class="info-box warning">
+                <strong>Security:</strong> The <code>setDelay</code> function uses the <code>onlySelf</code> modifier,
+                meaning it can only be called by the Governance contract itself -- i.e., through a proposal that targets
+                this contract. Delay must be between <code>MIN_DELAY</code> (1 hour) and <code>MAX_DELAY</code> (30 days).
+            </div>
+
+            <h3>Constructor</h3>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>_delay</code></td>
+                            <td><code>uint256</code></td>
+                            <td>Timelock delay in seconds (must be between 1 hour and 30 days)</td>
+                        </tr>
+                        <tr>
+                            <td><code>_guardian</code></td>
+                            <td><code>address</code></td>
+                            <td>Guardian address for proposal cancellation</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3>Proposal Struct</h3>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr><th>Field</th><th>Type</th><th>Description</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>target</code></td>
+                            <td><code>address</code></td>
+                            <td>Contract address to call</td>
+                        </tr>
+                        <tr>
+                            <td><code>data</code></td>
+                            <td><code>bytes</code></td>
+                            <td>Encoded function call data</td>
+                        </tr>
+                        <tr>
+                            <td><code>eta</code></td>
+                            <td><code>uint256</code></td>
+                            <td>Earliest execution time (block.timestamp + delay)</td>
+                        </tr>
+                        <tr>
+                            <td><code>executed</code></td>
+                            <td><code>bool</code></td>
+                            <td>Whether the proposal has been executed</td>
+                        </tr>
+                        <tr>
+                            <td><code>cancelled</code></td>
+                            <td><code>bool</code></td>
+                            <td>Whether the proposal has been cancelled</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3>Functions</h3>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr><th>Function</th><th>Parameters</th><th>Returns</th><th>Access</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>propose(address, bytes)</code></td>
+                            <td><code>target</code>, <code>data</code></td>
+                            <td><code>uint256 proposalId</code></td>
+                            <td><span class="access-tag access-owner">Owner</span></td>
+                        </tr>
+                        <tr>
+                            <td><code>execute(uint256)</code></td>
+                            <td><code>proposalId</code></td>
+                            <td>--</td>
+                            <td><span class="access-tag access-owner">Owner</span></td>
+                        </tr>
+                        <tr>
+                            <td><code>cancel(uint256)</code></td>
+                            <td><code>proposalId</code></td>
+                            <td>--</td>
+                            <td><span class="access-tag access-ownerguardian">Owner | Guardian</span></td>
+                        </tr>
+                        <tr>
+                            <td><code>setDelay(uint256)</code></td>
+                            <td><code>_delay</code></td>
+                            <td>--</td>
+                            <td><span class="access-tag access-self">Self Only</span></td>
+                        </tr>
+                        <tr>
+                            <td><code>setGuardian(address)</code></td>
+                            <td><code>_guardian</code></td>
+                            <td>--</td>
+                            <td><span class="access-tag access-owner">Owner</span></td>
+                        </tr>
+                        <tr>
+                            <td><code>setOwner(address)</code></td>
+                            <td><code>_owner</code></td>
+                            <td>--</td>
+                            <td><span class="access-tag access-owner">Owner</span></td>
+                        </tr>
+                        <tr>
+                            <td><code>getProposal(uint256)</code></td>
+                            <td><code>proposalId</code></td>
+                            <td><code>(address, bytes, uint256, bool, bool)</code></td>
+                            <td><span class="access-tag access-public">Public</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3>Events</h3>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr><th>Event</th><th>Parameters</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>ProposalCreated</code></td>
+                            <td><code>uint256 indexed id</code>, <code>address target</code>, <code>bytes data</code>, <code>uint256 eta</code></td>
+                        </tr>
+                        <tr>
+                            <td><code>ProposalExecuted</code></td>
+                            <td><code>uint256 indexed id</code></td>
+                        </tr>
+                        <tr>
+                            <td><code>ProposalCancelled</code></td>
+                            <td><code>uint256 indexed id</code></td>
+                        </tr>
+                        <tr>
+                            <td><code>DelayUpdated</code></td>
+                            <td><code>uint256 oldDelay</code>, <code>uint256 newDelay</code></td>
+                        </tr>
+                        <tr>
+                            <td><code>GuardianUpdated</code></td>
+                            <td><code>address indexed oldGuardian</code>, <code>address indexed newGuardian</code></td>
+                        </tr>
+                        <tr>
+                            <td><code>OwnerUpdated</code></td>
+                            <td><code>address indexed oldOwner</code>, <code>address indexed newOwner</code></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3>ethers.js Example</h3>
+            <div class="code-block">
+                <div class="code-block-header">JavaScript (ethers v5)</div>
+<pre><span class="keyword">const</span> <span class="const">GOV_ADDR</span> = <span class="string">"0x6050b22E4EAF3f414d1155fBaF30B868e0107017"</span>;
+<span class="keyword">const</span> <span class="const">TOKEN_ADDR</span> = <span class="string">"0x3Bd71947F288d1dd8B21129B1bE4FF16EDd5d1F4"</span>;
+
+<span class="keyword">const</span> govAbi = [
+  <span class="string">"function propose(address target, bytes data) returns (uint256)"</span>,
+  <span class="string">"function execute(uint256 proposalId)"</span>,
+  <span class="string">"function cancel(uint256 proposalId)"</span>,
+  <span class="string">"function getProposal(uint256) view returns (address, bytes, uint256, bool, bool)"</span>,
+  <span class="string">"function delay() view returns (uint256)"</span>,
+  <span class="string">"function proposalCount() view returns (uint256)"</span>,
+];
+
+<span class="keyword">const</span> gov = <span class="keyword">new</span> ethers.<span class="function">Contract</span>(<span class="const">GOV_ADDR</span>, govAbi, provider);
+
+<span class="comment">// Create a proposal to update fee rates on InfernoToken</span>
+<span class="keyword">const</span> iface = <span class="keyword">new</span> ethers.utils.<span class="function">Interface</span>([
+  <span class="string">"function setFeeRates(uint256, uint256, uint256)"</span>,
+]);
+<span class="keyword">const</span> calldata = iface.<span class="function">encodeFunctionData</span>(<span class="string">"setFeeRates"</span>, [<span class="number">150</span>, <span class="number">50</span>, <span class="number">100</span>]);
+
+<span class="keyword">const</span> tx = <span class="keyword">await</span> gov.<span class="function">connect</span>(owner).<span class="function">propose</span>(<span class="const">TOKEN_ADDR</span>, calldata);
+<span class="keyword">const</span> receipt = <span class="keyword">await</span> tx.<span class="function">wait</span>();
+<span class="keyword">const</span> proposalId = receipt.events[<span class="number">0</span>].args.id;
+
+<span class="comment">// After delay has passed, execute</span>
+<span class="keyword">await</span> gov.<span class="function">connect</span>(owner).<span class="function">execute</span>(proposalId);
+
+<span class="comment">// Read a proposal</span>
+<span class="keyword">const</span> [target, data, eta, executed, cancelled] =
+  <span class="keyword">await</span> gov.<span class="function">getProposal</span>(proposalId);</pre>
+            </div>
+        </div>
+
+        <div class="section-divider"></div>
+
+        <!-- ════════════════════════════════════════════════════ -->
+        <!-- 7. IFRLock                                           -->
+        <!-- ════════════════════════════════════════════════════ -->
+        <div class="contract-section" id="ifr-lock">
+            <div class="contract-header">
+                <h2>IFRLock</h2>
+                <span class="contract-badge">Lock</span>
+            </div>
+            <div class="contract-path">contracts/lock/IFRLock.sol</div>
+
+            <p class="contract-description">
+                Generic token lock contract designed for multi-application use. Users lock IFR tokens
+                (with an optional <code>lockType</code> tag) and external resolvers query <code>isLocked()</code>
+                to gate access to features (e.g. premium content, voting weight, staking tiers).
+                Inherits OpenZeppelin's <strong>ReentrancyGuard</strong> and <strong>Pausable</strong>.
+                No rewards or vesting -- purely a lock/unlock mechanism with on-chain queryability.
+            </p>
+
+            <div class="info-box warning">
+                <strong>Important:</strong> This contract <strong>must</strong> be set as <code>feeExempt</code>
+                on InfernoToken to prevent fee deductions on lock/unlock transfers. Otherwise, users will lose
+                tokens to fees when locking and unlocking.
+            </div>
+
+            <h3>Constructor</h3>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>_token</code></td>
+                            <td><code>address</code></td>
+                            <td>Address of the IFR token contract</td>
+                        </tr>
+                        <tr>
+                            <td><code>_guardian</code></td>
+                            <td><code>address</code></td>
+                            <td>Guardian address for pause/unpause and guardian updates</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3>LockData Struct</h3>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr><th>Field</th><th>Type</th><th>Description</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>amount</code></td>
+                            <td><code>uint256</code></td>
+                            <td>Total IFR locked by the user</td>
+                        </tr>
+                        <tr>
+                            <td><code>lockedAt</code></td>
+                            <td><code>uint256</code></td>
+                            <td>Timestamp of last lock/increase</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3>Functions</h3>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr><th>Function</th><th>Parameters</th><th>Returns</th><th>Access</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>lock(uint256)</code></td>
+                            <td><code>amount</code></td>
+                            <td>--</td>
+                            <td><span class="access-tag access-public">Public</span></td>
+                        </tr>
+                        <tr>
+                            <td><code>lockWithType(uint256, bytes32)</code></td>
+                            <td><code>amount</code>, <code>lockType</code></td>
+                            <td>--</td>
+                            <td><span class="access-tag access-public">Public</span></td>
+                        </tr>
+                        <tr>
+                            <td><code>unlock()</code></td>
+                            <td>--</td>
+                            <td>--</td>
+                            <td><span class="access-tag access-public">Public</span></td>
+                        </tr>
+                        <tr>
+                            <td><code>lockedBalance(address)</code></td>
+                            <td><code>user</code></td>
+                            <td><code>uint256</code></td>
+                            <td><span class="access-tag access-public">Public</span></td>
+                        </tr>
+                        <tr>
+                            <td><code>isLocked(address, uint256)</code></td>
+                            <td><code>user</code>, <code>minAmount</code></td>
+                            <td><code>bool</code></td>
+                            <td><span class="access-tag access-public">Public</span></td>
+                        </tr>
+                        <tr>
+                            <td><code>lockInfo(address)</code></td>
+                            <td><code>user</code></td>
+                            <td><code>(uint256 amount, uint256 lockedAt)</code></td>
+                            <td><span class="access-tag access-public">Public</span></td>
+                        </tr>
+                        <tr>
+                            <td><code>pause()</code></td>
+                            <td>--</td>
+                            <td>--</td>
+                            <td><span class="access-tag access-guardian">Guardian</span></td>
+                        </tr>
+                        <tr>
+                            <td><code>unpause()</code></td>
+                            <td>--</td>
+                            <td>--</td>
+                            <td><span class="access-tag access-guardian">Guardian</span></td>
+                        </tr>
+                        <tr>
+                            <td><code>setGuardian(address)</code></td>
+                            <td><code>_guardian</code></td>
+                            <td>--</td>
+                            <td><span class="access-tag access-guardian">Guardian</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="info-box note">
+                <strong>Reentrancy protection:</strong> Both <code>lock()</code> / <code>lockWithType()</code> (via internal <code>_lock</code>)
+                and <code>unlock()</code> use OpenZeppelin's <code>nonReentrant</code> modifier. Locking is also gated by <code>whenNotPaused</code>,
+                but <code>unlock()</code> always remains available even when paused so users can recover their funds.
+            </div>
+
+            <h3>Events</h3>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr><th>Event</th><th>Parameters</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>Locked</code></td>
+                            <td><code>address indexed user</code>, <code>uint256 amount</code>, <code>bytes32 indexed lockType</code></td>
+                        </tr>
+                        <tr>
+                            <td><code>Unlocked</code></td>
+                            <td><code>address indexed user</code>, <code>uint256 amount</code></td>
+                        </tr>
+                        <tr>
+                            <td><code>GuardianUpdated</code></td>
+                            <td><code>address indexed oldGuardian</code>, <code>address indexed newGuardian</code></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3>ethers.js Example</h3>
+            <div class="code-block">
+                <div class="code-block-header">JavaScript (ethers v5)</div>
+<pre><span class="keyword">const</span> <span class="const">LOCK_ADDR</span> = <span class="string">"0x..."</span>; <span class="comment">// IFRLock deployment address</span>
+<span class="keyword">const</span> <span class="const">TOKEN_ADDR</span> = <span class="string">"0x3Bd71947F288d1dd8B21129B1bE4FF16EDd5d1F4"</span>;
+
+<span class="keyword">const</span> lockAbi = [
+  <span class="string">"function lock(uint256 amount)"</span>,
+  <span class="string">"function lockWithType(uint256 amount, bytes32 lockType)"</span>,
+  <span class="string">"function unlock()"</span>,
+  <span class="string">"function lockedBalance(address) view returns (uint256)"</span>,
+  <span class="string">"function isLocked(address, uint256) view returns (bool)"</span>,
+  <span class="string">"function lockInfo(address) view returns (uint256, uint256)"</span>,
+  <span class="string">"function totalLocked() view returns (uint256)"</span>,
+];
+
+<span class="keyword">const</span> tokenAbi = [
+  <span class="string">"function approve(address spender, uint256 amount) returns (bool)"</span>,
+];
+
+<span class="keyword">const</span> lockContract = <span class="keyword">new</span> ethers.<span class="function">Contract</span>(<span class="const">LOCK_ADDR</span>, lockAbi, provider);
+<span class="keyword">const</span> token = <span class="keyword">new</span> ethers.<span class="function">Contract</span>(<span class="const">TOKEN_ADDR</span>, tokenAbi, provider);
+
+<span class="comment">// Approve and lock 10,000 IFR</span>
+<span class="keyword">const</span> amount = ethers.utils.<span class="function">parseUnits</span>(<span class="string">"10000"</span>, <span class="number">9</span>);
+<span class="keyword">await</span> token.<span class="function">connect</span>(signer).<span class="function">approve</span>(<span class="const">LOCK_ADDR</span>, amount);
+<span class="keyword">await</span> lockContract.<span class="function">connect</span>(signer).<span class="function">lock</span>(amount);
+
+<span class="comment">// Lock with a specific type (e.g. "premium" access)</span>
+<span class="keyword">const</span> lockType = ethers.utils.<span class="function">id</span>(<span class="string">"premium"</span>); <span class="comment">// keccak256("premium")</span>
+<span class="keyword">await</span> lockContract.<span class="function">connect</span>(signer).<span class="function">lockWithType</span>(amount, lockType);
+
+<span class="comment">// Check if user qualifies (has >= 5000 IFR locked)</span>
+<span class="keyword">const</span> minRequired = ethers.utils.<span class="function">parseUnits</span>(<span class="string">"5000"</span>, <span class="number">9</span>);
+<span class="keyword">const</span> qualifies = <span class="keyword">await</span> lockContract.<span class="function">isLocked</span>(userAddr, minRequired);
+console.<span class="function">log</span>(<span class="string">"Qualifies:"</span>, qualifies);
+
+<span class="comment">// Get lock details</span>
+<span class="keyword">const</span> [lockedAmt, lockedAt] = <span class="keyword">await</span> lockContract.<span class="function">lockInfo</span>(userAddr);
+console.<span class="function">log</span>(<span class="string">"Locked:"</span>, ethers.utils.<span class="function">formatUnits</span>(lockedAmt, <span class="number">9</span>), <span class="string">"IFR"</span>);
+console.<span class="function">log</span>(<span class="string">"Since:"</span>, <span class="keyword">new</span> <span class="function">Date</span>(lockedAt.<span class="function">toNumber</span>() * <span class="number">1000</span>));
+
+<span class="comment">// Unlock all tokens</span>
+<span class="keyword">await</span> lockContract.<span class="function">connect</span>(signer).<span class="function">unlock</span>();</pre>
+            </div>
+        </div>
+
+        <div class="section-divider"></div>
+
+        <!-- ── Footer ─────────────────────────────────────────── -->
+        <div style="text-align: center; padding: 32px 0 0; color: #8a8a96; font-size: 13px;">
+            <p>Inferno Protocol &mdash; Solidity 0.8.20 &bull; OpenZeppelin v5 &bull; Hardhat v2</p>
+            <p style="margin-top: 6px;">All contracts verified on <a href="https://sepolia.etherscan.io" style="color: #ff4500; text-decoration: none;">Sepolia Etherscan</a></p>
+        </div>
+
+    </main>
+</div>
+
+</body>
+</html>

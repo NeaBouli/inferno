@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Deployment &mdash; Inferno ($IFR) Documentation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    /* ============================================================
+       Inferno Wiki — Shared Styles (copy into every wiki page)
+       ============================================================ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #0a0a0a;
+      --card:     #111113;
+      --border:   #222225;
+      --text:     #e8e8ed;
+      --muted:    #8a8a96;
+      --accent:   #ff4500;
+      --green:    #22c55e;
+      --sidebar-w: 240px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    /* ---------- Layout (CSS Grid) ---------- */
+    .layout {
+      display: grid;
+      grid-template-columns: var(--sidebar-w) 1fr;
+      min-height: 100vh;
+    }
+
+    /* ---------- Sidebar ---------- */
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: var(--sidebar-w);
+      height: 100vh;
+      background: var(--card);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      padding: 24px 0;
+      overflow-y: auto;
+      z-index: 100;
+      transition: transform 0.3s ease;
+    }
+
+    .sidebar-logo {
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: 3px;
+      color: var(--accent);
+      padding: 0 24px 4px;
+      text-decoration: none;
+      display: block;
+    }
+
+    .sidebar-subtitle {
+      font-size: 12px;
+      color: var(--muted);
+      padding: 0 24px 24px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .sidebar-nav {
+      list-style: none;
+      padding: 16px 0;
+      flex: 1;
+    }
+
+    .sidebar-nav a {
+      display: block;
+      padding: 10px 24px;
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      transition: color 0.2s, background 0.2s, border-left 0.2s;
+      border-left: 3px solid transparent;
+    }
+
+    .sidebar-nav a:hover {
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .sidebar-nav a.active {
+      color: var(--accent);
+      border-left-color: var(--accent);
+      background: rgba(255, 69, 0, 0.06);
+    }
+
+    .sidebar-nav .nav-divider {
+      height: 1px;
+      background: var(--border);
+      margin: 12px 24px;
+    }
+
+    .sidebar-nav .nav-back a {
+      font-size: 13px;
+      color: var(--muted);
+      opacity: 0.7;
+    }
+
+    .sidebar-nav .nav-back a:hover {
+      opacity: 1;
+      color: var(--text);
+    }
+
+    /* ---------- Hamburger (mobile) ---------- */
+    .hamburger {
+      display: none;
+      position: fixed;
+      top: 16px;
+      left: 16px;
+      z-index: 200;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 12px;
+      cursor: pointer;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .hamburger span {
+      display: block;
+      width: 22px;
+      height: 2px;
+      background: var(--text);
+      border-radius: 2px;
+      transition: transform 0.3s, opacity 0.3s;
+    }
+
+    .hamburger.open span:nth-child(1) { transform: rotate(45deg) translate(5px, 5px); }
+    .hamburger.open span:nth-child(2) { opacity: 0; }
+    .hamburger.open span:nth-child(3) { transform: rotate(-45deg) translate(5px, -5px); }
+
+    .sidebar-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.6);
+      z-index: 90;
+    }
+
+    /* ---------- Main content ---------- */
+    .main {
+      grid-column: 2;
+      padding: 48px 56px;
+      max-width: 960px;
+    }
+
+    .main h1 {
+      font-size: 32px;
+      font-weight: 800;
+      margin-bottom: 8px;
+      color: var(--text);
+    }
+
+    .main h1 .accent {
+      color: var(--accent);
+    }
+
+    .main h2 {
+      font-size: 22px;
+      font-weight: 700;
+      margin: 40px 0 16px;
+      color: var(--text);
+    }
+
+    .main h3 {
+      font-size: 18px;
+      font-weight: 600;
+      margin: 32px 0 12px;
+      color: var(--text);
+    }
+
+    .main p {
+      color: var(--muted);
+      margin-bottom: 16px;
+      font-size: 15px;
+      max-width: 680px;
+    }
+
+    .main a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    .main a:hover {
+      text-decoration: underline;
+    }
+
+    .subtitle {
+      font-size: 16px;
+      color: var(--muted);
+      margin-bottom: 32px;
+    }
+
+    /* ---------- Code blocks ---------- */
+    pre {
+      background: #1a1a1d;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px 20px;
+      overflow-x: auto;
+      font-size: 13px;
+      line-height: 1.7;
+      margin: 16px 0;
+    }
+
+    code {
+      font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+      font-size: 13px;
+    }
+
+    p code, li code, td code {
+      background: rgba(255, 255, 255, 0.06);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 13px;
+    }
+
+    /* ---------- Tables ---------- */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0;
+      font-size: 14px;
+    }
+
+    th, td {
+      text-align: left;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    th {
+      color: var(--muted);
+      font-weight: 600;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    td { color: var(--text); }
+
+    tr:hover td { background: rgba(255, 255, 255, 0.02); }
+
+    /* ---------- Lists ---------- */
+    .main ul, .main ol {
+      padding-left: 24px;
+      margin-bottom: 16px;
+    }
+
+    .main li {
+      color: var(--muted);
+      font-size: 14px;
+      margin-bottom: 6px;
+    }
+
+    /* ---------- Callout ---------- */
+    .callout {
+      background: rgba(255, 69, 0, 0.06);
+      border-left: 3px solid var(--accent);
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 20px 0;
+    }
+
+    .callout p {
+      color: var(--text);
+      margin: 0;
+      font-size: 14px;
+    }
+
+    .callout-info {
+      background: rgba(34, 197, 94, 0.06);
+      border-left-color: var(--green);
+    }
+
+    /* ---------- Steps ---------- */
+    .step {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px 24px;
+      margin: 12px 0;
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+    }
+
+    .step-number {
+      background: var(--accent);
+      color: #fff;
+      font-weight: 700;
+      font-size: 14px;
+      min-width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .step-content {
+      flex: 1;
+    }
+
+    .step-title {
+      font-weight: 600;
+      font-size: 15px;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+
+    .step-desc {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    /* ---------- Status badges ---------- */
+    .badge {
+      display: inline-block;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 3px 10px;
+      border-radius: 20px;
+      letter-spacing: 0.3px;
+    }
+
+    .badge-verified {
+      background: rgba(34, 197, 94, 0.12);
+      color: var(--green);
+    }
+
+    .badge-pending {
+      background: rgba(255, 165, 0, 0.12);
+      color: #ffa500;
+    }
+
+    .badge-done {
+      background: rgba(34, 197, 94, 0.12);
+      color: var(--green);
+    }
+
+    /* ---------- Mono address ---------- */
+    .addr {
+      font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+      font-size: 13px;
+    }
+
+    /* ---------- Table responsive wrapper ---------- */
+    .table-wrap {
+      overflow-x: auto;
+      margin: 16px 0;
+    }
+
+    /* ---------- Footer ---------- */
+    .wiki-footer {
+      margin-top: 64px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    /* ---------- Responsive ---------- */
+    @media (max-width: 768px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        transform: translateX(-100%);
+      }
+
+      .sidebar.open {
+        transform: translateX(0);
+      }
+
+      .sidebar-overlay.open {
+        display: block;
+      }
+
+      .hamburger {
+        display: flex;
+      }
+
+      .main {
+        grid-column: 1;
+        padding: 72px 20px 40px;
+      }
+
+      .step {
+        flex-direction: column;
+        gap: 8px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .main h1 {
+        font-size: 26px;
+      }
+    }
+    /* ============================================================
+       End Shared Styles
+       ============================================================ */
+  </style>
+</head>
+<body>
+
+  <!-- Hamburger button (mobile only) -->
+  <button class="hamburger" id="hamburger" aria-label="Toggle navigation">
+    <span></span>
+    <span></span>
+    <span></span>
+  </button>
+
+  <!-- Overlay (mobile only) -->
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <div class="layout">
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <a href="index.html" class="sidebar-logo">INFERNO</a>
+      <div class="sidebar-subtitle">Documentation</div>
+      <ul class="sidebar-nav">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="contracts.html">Smart Contracts</a></li>
+        <li><a href="tokenomics.html">Tokenomics</a></li>
+        <li><a href="lock-mechanism.html">Lock Mechanism</a></li>
+        <li><a href="governance.html">Governance</a></li>
+        <li><a href="security.html">Security</a></li>
+        <li><a href="deployment.html" class="active">Deployment</a></li>
+        <li><a href="integration.html">Integration Guide</a></li>
+        <li><div class="nav-divider"></div></li>
+        <li class="nav-back"><a href="../index.html">&larr; Back to Website</a></li>
+      </ul>
+    </aside>
+
+    <!-- Main content -->
+    <main class="main">
+
+      <h1>Deployment <span class="accent">&amp; Addresses</span></h1>
+      <p class="subtitle">
+        Contract addresses, deployment order, constructor arguments, and post-deploy verification for the Inferno protocol.
+      </p>
+
+      <!-- ==================== Section 1: Sepolia Addresses ==================== -->
+      <h2>1. Sepolia Contract Addresses</h2>
+      <p>
+        All contracts are deployed and verified on the Sepolia testnet. Click any address to view it on Etherscan.
+      </p>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Contract</th>
+              <th>Address</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>InfernoToken</td>
+              <td><a href="https://sepolia.etherscan.io/address/0x3Bd71947F288d1dd8B21129B1bE4FF16EDd5d1F4" class="addr" target="_blank" rel="noopener">0x3Bd71947F288d1dd8B21129B1bE4FF16EDd5d1F4</a></td>
+              <td><span class="badge badge-verified">Verified</span></td>
+            </tr>
+            <tr>
+              <td>LiquidityReserve</td>
+              <td><a href="https://sepolia.etherscan.io/address/0xF7E90D0d17f8232365186AA085D26eaEfAf011aF" class="addr" target="_blank" rel="noopener">0xF7E90D0d17f8232365186AA085D26eaEfAf011aF</a></td>
+              <td><span class="badge badge-verified">Verified</span></td>
+            </tr>
+            <tr>
+              <td>Vesting</td>
+              <td><a href="https://sepolia.etherscan.io/address/0xa710f9FE7bf42981E60BE2Fbe7D87Fb3541a3F8B" class="addr" target="_blank" rel="noopener">0xa710f9FE7bf42981E60BE2Fbe7D87Fb3541a3F8B</a></td>
+              <td><span class="badge badge-verified">Verified</span></td>
+            </tr>
+            <tr>
+              <td>BuybackVault</td>
+              <td><a href="https://sepolia.etherscan.io/address/0xC8ABb9039BEd24f4dBf5Cff09699877D81f0D63C" class="addr" target="_blank" rel="noopener">0xC8ABb9039BEd24f4dBf5Cff09699877D81f0D63C</a></td>
+              <td><span class="badge badge-verified">Verified</span></td>
+            </tr>
+            <tr>
+              <td>BurnReserve</td>
+              <td><a href="https://sepolia.etherscan.io/address/0x6D4582FCac792FD3880e252fC0a585A0c1823e80" class="addr" target="_blank" rel="noopener">0x6D4582FCac792FD3880e252fC0a585A0c1823e80</a></td>
+              <td><span class="badge badge-verified">Verified</span></td>
+            </tr>
+            <tr>
+              <td>Governance</td>
+              <td><a href="https://sepolia.etherscan.io/address/0x6050b22E4EAF3f414d1155fBaF30B868E0107017" class="addr" target="_blank" rel="noopener">0x6050b22E4EAF3f414d1155fBaF30B868E0107017</a></td>
+              <td><span class="badge badge-verified">Verified</span></td>
+            </tr>
+            <tr>
+              <td>IFRLock</td>
+              <td><a href="https://sepolia.etherscan.io/address/0x0Cab0A9440643128540222acC6eF5028736675d3" class="addr" target="_blank" rel="noopener">0x0Cab0A9440643128540222acC6eF5028736675d3</a></td>
+              <td><span class="badge badge-verified">Verified</span></td>
+            </tr>
+            <tr>
+              <td>LP Pair</td>
+              <td><a href="https://sepolia.etherscan.io/address/0x2252e8bBDE0E50CD372748aC233A99C08627d9c7" class="addr" target="_blank" rel="noopener">0x2252e8bBDE0E50CD372748aC233A99C08627d9c7</a></td>
+              <td>&mdash;</td>
+            </tr>
+            <tr>
+              <td>Uniswap V2 Router</td>
+              <td><a href="https://sepolia.etherscan.io/address/0xC532a74256D3Db42D0Bf7a0400fEFDbad7694008" class="addr" target="_blank" rel="noopener">0xC532a74256D3Db42D0Bf7a0400fEFDbad7694008</a></td>
+              <td>&mdash;</td>
+            </tr>
+            <tr>
+              <td>Deployer</td>
+              <td><a href="https://sepolia.etherscan.io/address/0x5Ecc668eab04C5bee81b5c7242e1077c946dE406" class="addr" target="_blank" rel="noopener">0x5Ecc668eab04C5bee81b5c7242e1077c946dE406</a></td>
+              <td>&mdash;</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- ==================== Section 2: Mainnet Addresses ==================== -->
+      <h2>2. Mainnet Addresses</h2>
+
+      <div class="callout">
+        <p>
+          <strong>Mainnet deployment pending.</strong> Addresses will be published here after launch.
+        </p>
+      </div>
+
+      <!-- ==================== Section 3: Deployment Order ==================== -->
+      <h2>3. Deployment Order (9-Step CFLM)</h2>
+      <p>
+        The Inferno protocol follows a strict 9-step Community Fair Launch Model (CFLM) deployment sequence. Each step must complete before the next begins.
+      </p>
+
+      <div class="step">
+        <div class="step-number">1</div>
+        <div class="step-content">
+          <div class="step-title">Deploy InfernoToken</div>
+          <div class="step-desc"><code>poolFeeReceiver = deployer</code> &mdash; 1,000,000,000 IFR (1B) minted to deployer wallet.</div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-number">2</div>
+        <div class="step-content">
+          <div class="step-title">Deploy LiquidityReserve</div>
+          <div class="step-desc">6-month lock period, 50M IFR per quarter release schedule.</div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-number">3</div>
+        <div class="step-content">
+          <div class="step-title">Deploy Vesting</div>
+          <div class="step-desc">12-month cliff, 36-month linear vesting, 150M IFR total allocation.</div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-number">4</div>
+        <div class="step-content">
+          <div class="step-title">Deploy BurnReserve &amp; BuybackVault</div>
+          <div class="step-desc">BurnReserve for permanent token burns. BuybackVault with 60-day activation delay.</div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-number">5</div>
+        <div class="step-content">
+          <div class="step-title">(BurnReserve already deployed in Step 4)</div>
+          <div class="step-desc">Both contracts deployed together in the previous step for atomic consistency.</div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-number">6</div>
+        <div class="step-content">
+          <div class="step-title">Deploy Governance</div>
+          <div class="step-desc">48-hour timelock for all governance proposals. Guardian set to deployer initially.</div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-number">7</div>
+        <div class="step-content">
+          <div class="step-title">Set feeExempt for all contracts + deployer</div>
+          <div class="step-desc">Temporarily exempt all protocol contracts and deployer from transfer fees to enable distribution.</div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-number">8</div>
+        <div class="step-content">
+          <div class="step-title">Distribute tokens</div>
+          <div class="step-desc">
+            200M &rarr; LiquidityReserve &bull;
+            150M &rarr; Vesting &bull;
+            150M &rarr; Treasury &bull;
+            100M &rarr; Community &bull;
+            400M remains with deployer for LP pairing.
+          </div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-number">9</div>
+        <div class="step-content">
+          <div class="step-title">Remove deployer feeExempt</div>
+          <div class="step-desc">Deployer fee exemption is revoked. All transfers now subject to the standard fee structure.</div>
+        </div>
+      </div>
+
+      <!-- ==================== Section 4: Post-Deploy Steps ==================== -->
+      <h2>4. Post-Deploy Steps</h2>
+      <p>
+        After the 9-step deployment, the following operations complete the protocol setup.
+      </p>
+
+      <h3>LP Pairing</h3>
+      <pre><code>npx hardhat run scripts/create-lp.js --network sepolia</code></pre>
+      <p>
+        Creates the IFR/WETH liquidity pair on Uniswap V2, adds initial liquidity from the 400M IFR allocation.
+      </p>
+
+      <h3>Ownership Transfer</h3>
+      <pre><code>token.transferOwnership(governance.address)</code></pre>
+      <p>
+        Transfers InfernoToken ownership to the Governance contract. After this, the deployer has no direct control over the token.
+      </p>
+
+      <h3>IFRLock Deploy</h3>
+      <pre><code>npx hardhat run scripts/deploy-lock.js --network sepolia</code></pre>
+      <p>
+        Deploys the IFRLock contract for the token locking mechanism.
+      </p>
+
+      <h3>Set IFRLock feeExempt via Governance</h3>
+      <p>
+        A governance proposal must be created and executed to set the IFRLock contract as fee-exempt, since ownership has already been transferred.
+      </p>
+
+      <!-- ==================== Section 5: Constructor Arguments ==================== -->
+      <h2>5. Constructor Arguments</h2>
+      <p>
+        These are the exact constructor parameters used for the Sepolia deployment. All token amounts use 9 decimals.
+      </p>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Contract</th>
+              <th>Constructor Parameters</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>InfernoToken</strong></td>
+              <td><code>deployer</code> (poolFeeReceiver)</td>
+            </tr>
+            <tr>
+              <td><strong>LiquidityReserve</strong></td>
+              <td>
+                <code>token</code>,
+                <code>15552000</code> (180 days),
+                <code>50000000000000000</code> (50M &times; 1e9),
+                <code>7776000</code> (90 days),
+                <code>deployer</code> (guardian)
+              </td>
+            </tr>
+            <tr>
+              <td><strong>Vesting</strong></td>
+              <td>
+                <code>token</code>,
+                <code>deployer</code> (beneficiary),
+                <code>31536000</code> (365 days),
+                <code>126144000</code> (4 &times; 365 days),
+                <code>150000000000000000</code> (150M &times; 1e9),
+                <code>deployer</code> (guardian)
+              </td>
+            </tr>
+            <tr>
+              <td><strong>BurnReserve</strong></td>
+              <td>
+                <code>token</code>,
+                <code>deployer</code> (guardian)
+              </td>
+            </tr>
+            <tr>
+              <td><strong>BuybackVault</strong></td>
+              <td>
+                <code>token</code>,
+                <code>burnReserve</code>,
+                <code>deployer</code> (treasury),
+                <code>deployer</code> (router placeholder),
+                <code>deployer</code> (guardian),
+                <code>5184000</code> (60 days)
+              </td>
+            </tr>
+            <tr>
+              <td><strong>Governance</strong></td>
+              <td>
+                <code>172800</code> (48 hours),
+                <code>deployer</code> (guardian)
+              </td>
+            </tr>
+            <tr>
+              <td><strong>IFRLock</strong></td>
+              <td>
+                <code>token</code>,
+                <code>deployer</code> (guardian)
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout callout-info">
+        <p>
+          <strong>Note:</strong> On mainnet, the <code>deployer</code> placeholder addresses (treasury, router, beneficiary) will be replaced with the actual multisig and protocol addresses.
+        </p>
+      </div>
+
+      <!-- ==================== Section 6: Etherscan Verification ==================== -->
+      <h2>6. Etherscan Verification</h2>
+      <p>
+        All contracts should be verified on Etherscan after deployment. Use the Hardhat verify plugin with the exact constructor arguments used during deployment.
+      </p>
+
+      <pre><code>npx hardhat verify --network sepolia CONTRACT_ADDRESS CONSTRUCTOR_ARGS...</code></pre>
+
+      <p>Example for InfernoToken:</p>
+      <pre><code>npx hardhat verify --network sepolia \
+  0x3Bd71947F288d1dd8B21129B1bE4FF16EDd5d1F4 \
+  0x5Ecc668eab04C5bee81b5c7242e1077c946dE406</code></pre>
+
+      <p>Example for Governance:</p>
+      <pre><code>npx hardhat verify --network sepolia \
+  0x6050b22E4EAF3f414d1155fBaF30B868E0107017 \
+  172800 \
+  0x5Ecc668eab04C5bee81b5c7242e1077c946dE406</code></pre>
+
+      <div class="callout">
+        <p>
+          <strong>Tip:</strong> If verification fails with "Already Verified", the contract source is already published. You can check by visiting the contract address on Etherscan.
+        </p>
+      </div>
+
+      <!-- ==================== Section 7: Post-Deploy Checklist ==================== -->
+      <h2>7. Post-Deploy Checklist</h2>
+      <p>
+        Current status of all deployment and post-deployment tasks for the Sepolia testnet.
+      </p>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Task</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Deploy 7 contracts</td>
+              <td><span class="badge badge-done">Done</span></td>
+            </tr>
+            <tr>
+              <td>Etherscan verification (7/7)</td>
+              <td><span class="badge badge-done">Done</span></td>
+            </tr>
+            <tr>
+              <td>LP pairing (Uniswap V2)</td>
+              <td><span class="badge badge-done">Done</span></td>
+            </tr>
+            <tr>
+              <td>BuybackVault router set</td>
+              <td><span class="badge badge-done">Done</span></td>
+            </tr>
+            <tr>
+              <td>Ownership transferred to Governance</td>
+              <td><span class="badge badge-done">Done</span></td>
+            </tr>
+            <tr>
+              <td>Governance Proposal #0 executed</td>
+              <td><span class="badge badge-done">Done</span></td>
+            </tr>
+            <tr>
+              <td>IFRLock deployed + Proposal #1 created</td>
+              <td><span class="badge badge-done">Done</span></td>
+            </tr>
+            <tr>
+              <td>Set treasury/community addresses</td>
+              <td><span class="badge badge-pending">Pending</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Footer -->
+      <footer class="wiki-footer">
+        Inferno ($IFR) &mdash; Community Fair Launch Model &mdash; Documentation v1.0
+      </footer>
+
+    </main>
+  </div>
+
+  <!-- Mobile sidebar toggle script -->
+  <script>
+    (function () {
+      var hamburger = document.getElementById('hamburger');
+      var sidebar = document.getElementById('sidebar');
+      var overlay = document.getElementById('sidebarOverlay');
+
+      function toggleSidebar() {
+        var isOpen = sidebar.classList.toggle('open');
+        hamburger.classList.toggle('open', isOpen);
+        overlay.classList.toggle('open', isOpen);
+        document.body.style.overflow = isOpen ? 'hidden' : '';
+      }
+
+      hamburger.addEventListener('click', toggleSidebar);
+      overlay.addEventListener('click', toggleSidebar);
+    })();
+  </script>
+
+</body>
+</html>
