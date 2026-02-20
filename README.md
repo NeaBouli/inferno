@@ -17,6 +17,7 @@ Built on the **Community Fair Launch Model (CFLM)** — no presale, fair distrib
 | 4 | **BuybackVault** | `contracts/buyback/BuybackVault.sol` | ETH deposit + automated DEX buyback, 50/50 split to burn reserve + treasury, 60-day activation delay |
 | 5 | **BurnReserve** | `contracts/burnreserve/BurnReserve.sol` | Permanent token burn with totalBurned tracking, owner + guardian auth |
 | 6 | **Governance** | `contracts/governance/Governance.sol` | Timelock governor (propose/execute/cancel), 48h default delay, guardian emergency cancel |
+| 7 | **IFRLock** | `contracts/lock/IFRLock.sol` | Generic token lock, isLocked() query for external resolvers, ReentrancyGuard, multi-app lockType |
 
 ## Token Economics
 
@@ -42,7 +43,7 @@ Built on the **Community Fair Launch Model (CFLM)** — no presale, fair distrib
 
 ### Fee Exempt
 
-Vesting, LiquidityReserve, Treasury, BuybackVault, BurnReserve — deployer exemption is removed after distribution.
+Vesting, LiquidityReserve, Treasury, BuybackVault, BurnReserve, IFRLock — deployer exemption is removed after distribution.
 
 ## Setup
 
@@ -54,7 +55,7 @@ npx hardhat test
 
 ## Test Suite
 
-125 tests across 6 test files:
+154 tests across 7 test files:
 
 | Suite | Tests | Covers |
 |-------|-------|--------|
@@ -64,6 +65,7 @@ npx hardhat test
 | **BuybackVault** | 9 | Deposit, buyback split, cooldown, slippage, 60-day activation |
 | **BurnReserve** | 21 | Deposit, burn, burnAll, totalBurned tracking, guardian auth |
 | **Governance** | 36 | Propose, execute, cancel, self-governance delay, integration with InfernoToken |
+| **IFRLock** | 29 | Lock, unlock, re-lock, isLocked query, lockType, fee-exempt, pause, multi-user |
 
 ## Architecture
 
