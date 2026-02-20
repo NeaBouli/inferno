@@ -40,7 +40,7 @@ inferno/
 ├── apps/
 │   └── dashboard/                      [x] React + Vite Frontend (Phase 1 + Phase 2)
 ├── docs/
-│   ├── README.md                       Dieses Dokument
+│   ├── DOCS.md                         Dieses Dokument
 │   ├── FAIR-LAUNCH-MIGRATION.md        CFLM Migrationsplan
 │   ├── WHITEPAPER.md                   Whitepaper (DE)
 │   ├── WHITEPAPER_EN.md                Whitepaper (EN)

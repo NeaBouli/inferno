@@ -449,7 +449,7 @@ de88510b feat: add testnet deploy script with full contract setup
 |-------|-------------|
 | `README.md` | Projekt-Uebersicht, Setup, Deploy-Anleitung, Architektur |
 | `STATUS-REPORT.md` | Dieses Dokument |
-| `docs/README.md` | Projektstatus, Module, Changelog |
+| `docs/DOCS.md` | Projektstatus, Module, Changelog |
 | `docs/DEPLOYMENTS.md` | Sepolia Contract-Adressen + Etherscan Links |
 | `docs/FAIR-LAUNCH-MIGRATION.md` | CFLM Migrationsplan und Architektur-Analyse |
 | `docs/SECURITY-AUDIT.md` | Slither Audit Report (51→36 Findings, 15 behoben) |
