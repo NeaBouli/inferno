@@ -195,6 +195,19 @@ Tests all 4 areas in a single run:
 3. **Governance** — Creates a test proposal, verifies ETA and status
 4. **Contract State** — Ownership chain, timelock delay, activation/lock timers
 
+### Execute Governance Proposal
+
+Check status and execute a governance proposal after the timelock has elapsed:
+
+```bash
+npx hardhat run scripts/execute-proposal.js --network sepolia
+```
+
+The script:
+1. Reads Proposal #0 status (target, calldata, ETA, executed/cancelled)
+2. If ETA reached: executes `governance.execute(0)` and verifies the result
+3. If ETA not reached: displays countdown with remaining time
+
 ### Post-Deploy Checklist
 
 | # | Step | Status |
@@ -205,6 +218,7 @@ Tests all 4 areas in a single run:
 | 4 | Update BuybackVault Router | **Done** — Uniswap V2 Router02 |
 | 5 | Set Addresses — Update treasury if placeholder was used | Pending |
 | 6 | Transfer Ownership — `InfernoToken.transferOwnership(governance.address)` | **Done** |
+| 7 | Governance Proposal #0 — `setFeeExempt` via 48h Timelock | **Done** — [`0x13ff46d8...`](https://sepolia.etherscan.io/tx/0x13ff46d8a113f25b9ab0037ee06d6108c62d0f16e25d28799e4f45a8cbbe982d) |
 
 ## Dashboard
 

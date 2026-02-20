@@ -1,8 +1,8 @@
 # INFERNO ($IFR) — Finaler Projekt-Statusbericht
 
-**Datum:** 2026-02-17
+**Datum:** 2026-02-20
 **Branch:** `main`
-**Letzter Commit:** `6bc98656` — feat: transfer InfernoToken ownership to Governance on Sepolia
+**Letzter Commit:** `55b38a3e` — feat: add Sepolia smoke test
 **Modell:** Community Fair Launch (CFLM) — kein Presale
 **Ticker:** $IFR
 **Status:** Deployed + Verified + LP Live + Governance Active auf Sepolia Testnet
@@ -37,6 +37,7 @@
 | Uniswap LP Pairing | **PASS** — 400M IFR + 0.01 ETH paired |
 | BuybackVault Router | **PASS** — Uniswap V2 Router02 gesetzt |
 | Ownership Transfer | **PASS** — InfernoToken.owner() = Governance |
+| Governance Proposal #0 | **PASS** — setFeeExempt via 48h Timelock executed |
 
 ---
 
@@ -421,6 +422,7 @@ de88510b feat: add testnet deploy script with full contract setup
 | 12 | Uniswap V2 LP Pairing (400M IFR + 0.01 ETH) | Erledigt |
 | 13 | BuybackVault Router auf Uniswap V2 gesetzt | Erledigt |
 | 14 | Ownership Transfer zu Governance | Erledigt |
+| 15 | Governance Lifecycle Test (Proposal #0 executed) | Erledigt |
 
 ---
 
@@ -473,6 +475,7 @@ Alle 6 Hauptcontracts sind **vollstaendig implementiert, getestet, auditiert, de
 | **LP Pairing (Uniswap V2)** | DONE | 400M IFR + 0.01 ETH, Pair: `0x2252e8bB...` |
 | **BuybackVault Router** | DONE | Uniswap V2 Router02 gesetzt |
 | **Ownership Transfer** | DONE | `token.transferOwnership(governance.address)` — TX `0xa69bf285...` |
+| **Governance Proposal #0** | DONE | `setFeeExempt` via 48h Timelock — TX `0x13ff46d8...` |
 | **Treasury/Community Adressen** | OFFEN | Aktuell Deployer als Placeholder |
 | **Professionelles Audit (extern)** | OFFEN | Empfohlen vor Mainnet |
 | **LP Token Lock** | OFFEN | Empfohlen als Rug-Pull-Schutz |
