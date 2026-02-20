@@ -7,6 +7,8 @@
 Deflationary ERC20 token with fee-on-transfer burn mechanics, buyback system, and timelock governance.
 Built on the **Community Fair Launch Model (CFLM)** — no presale, fair distribution from day one.
 
+**[Website](https://neabouli.github.io/inferno/)** | **[X / Twitter](https://x.com/IFRtoken)** | **[Etherscan (Sepolia)](https://sepolia.etherscan.io/address/0x3Bd71947F288d1dd8B21129B1bE4FF16EDd5d1F4#code)**
+
 ## Contracts
 
 | # | Contract | Path | Description |
