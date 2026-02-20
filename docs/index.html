@@ -169,20 +169,23 @@
       padding-top: 64px;
       position: relative;
       overflow: hidden;
+      background: url('assets/banner.jpeg') center center / cover no-repeat;
     }
 
     .hero::before {
       content: '';
       position: absolute;
-      top: -200px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 800px;
-      height: 800px;
-      background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
-      opacity: 0.25;
+      inset: 0;
+      background: linear-gradient(
+        180deg,
+        rgba(10, 10, 10, 0.55) 0%,
+        rgba(10, 10, 10, 0.7) 50%,
+        rgba(10, 10, 10, 0.95) 100%
+      );
       pointer-events: none;
     }
+
+    .hero .container { position: relative; z-index: 1; }
 
     .hero-logo {
       width: 120px;
@@ -190,7 +193,7 @@
       border-radius: 50%;
       margin: 0 auto 32px;
       border: 3px solid var(--accent);
-      box-shadow: 0 0 60px var(--accent-glow);
+      box-shadow: 0 0 60px var(--accent-glow), 0 0 120px rgba(0, 210, 200, 0.15);
     }
 
     .hero h1 {
