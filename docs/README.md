@@ -21,6 +21,7 @@ inferno/
 │   ├── buyback/BuybackVault.sol        [x] 148 LOC, 9 Tests
 │   ├── burnreserve/BurnReserve.sol     [x] 86 LOC, 21 Tests
 │   ├── governance/Governance.sol       [x] 150 LOC, 36 Tests
+│   ├── lock/IFRLock.sol               [x] 127 LOC, 29 Tests
 │   └── mocks/                          MockToken, MockRouter, MockInfernoToken
 ├── test/
 │   ├── InfernoToken.test.js            [x] 258 LOC
@@ -28,7 +29,8 @@ inferno/
 │   ├── Vesting.test.js                 [x] 112 LOC
 │   ├── BuybackVault.test.js            [x] 149 LOC
 │   ├── BurnReserve.test.js             [x] 212 LOC
-│   └── Governance.test.js              [x] 320 LOC
+│   ├── Governance.test.js              [x] 320 LOC
+│   └── IFRLock.test.js                [x] 363 LOC
 ├── scripts/
 │   ├── deploy-testnet.js               [x] 232 LOC (9-Step CFLM Deploy)
 │   ├── create-lp.js                    [x] 4-Step LP Pairing + Router Update
@@ -93,6 +95,12 @@ inferno/
 - **Beschreibung:** Timelock Governor fuer alle Protokoll-Parameter
 - **Features:** propose/execute/cancel, Delay 1h–30d (default 48h), Guardian Emergency Cancel, Self-Governance (setDelay via eigenen Timelock), Integration mit InfernoToken (transferOwnership)
 
+### 7. IFRLock — [x] FERTIG
+- **Pfad:** `contracts/lock/IFRLock.sol`
+- **Tests:** 29 (IFRLock.test.js)
+- **Beschreibung:** Generic IFR Token Lock ohne Rewards/Vesting
+- **Features:** lock(amount), lockWithType(amount, lockType), unlock(), isLocked(user, minAmount), lockInfo(), ReentrancyGuard, Emergency Pause (nur lock), Guardian Auth, Multi-App lockType Tag
+
 ### Entfernt
 - ~~Presale.sol~~ — Entfernt bei CFLM-Migration (kein Presale im Fair Launch Modell)
 
@@ -102,10 +110,10 @@ inferno/
 
 | Metrik | Wert |
 |--------|------|
-| Contracts | 6 (+ 3 Mocks) |
-| Solidity LOC | 710 |
-| Tests | 125 (alle bestanden) |
-| Test LOC | 1,334 |
+| Contracts | 7 (+ 3 Mocks) |
+| Solidity LOC | 837 |
+| Tests | 154 (alle bestanden) |
+| Test LOC | 1,697 |
 | Deploy Script | 232 LOC, 9 Steps |
 | Modell | CFLM (Community Fair Launch) |
 | Compiler | 0 Errors, 0 Warnings |
@@ -116,6 +124,7 @@ inferno/
 
 | Datum | Aenderung |
 |-------|-----------|
+| 2026-02-20 | IFRLock Contract implementiert (127 LOC, 29 Tests): Generic Token Lock, ReentrancyGuard, Pause, Multi-App lockType |
 | 2026-02-20 | Governance Proposal #0 executed: setFeeExempt via 48h Timelock — Full Governance Lifecycle verified |
 | 2026-02-18 | Sepolia Smoke Test (11/11 PASS): Fee Transfer, Burn, Governance Proposal, Contract State |
 | 2026-02-18 | Live Fee-on-Transfer Verification Script (test-transfer.js), ALL CHECKS PASSED |
