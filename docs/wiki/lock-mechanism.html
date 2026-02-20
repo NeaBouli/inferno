@@ -1,0 +1,943 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lock Mechanism &mdash; Inferno ($IFR) Documentation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    /* ============================================================
+       Inferno Wiki — Shared Styles (copy into every wiki page)
+       ============================================================ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #0a0a0a;
+      --card:     #111113;
+      --border:   #222225;
+      --text:     #e8e8ed;
+      --muted:    #8a8a96;
+      --accent:   #ff4500;
+      --green:    #22c55e;
+      --sidebar-w: 240px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    /* ---------- Layout (CSS Grid) ---------- */
+    .layout {
+      display: grid;
+      grid-template-columns: var(--sidebar-w) 1fr;
+      min-height: 100vh;
+    }
+
+    /* ---------- Sidebar ---------- */
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: var(--sidebar-w);
+      height: 100vh;
+      background: var(--card);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      padding: 24px 0;
+      overflow-y: auto;
+      z-index: 100;
+      transition: transform 0.3s ease;
+    }
+
+    .sidebar-logo {
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: 3px;
+      color: var(--accent);
+      padding: 0 24px 4px;
+      text-decoration: none;
+      display: block;
+    }
+
+    .sidebar-sub {
+      font-size: 12px;
+      color: var(--muted);
+      padding: 0 24px 24px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .sidebar-nav {
+      list-style: none;
+      padding: 16px 0;
+      flex: 1;
+    }
+
+    .sidebar-nav a {
+      display: block;
+      padding: 10px 24px;
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      transition: color 0.2s, background 0.2s, border-left 0.2s;
+      border-left: 3px solid transparent;
+    }
+
+    .sidebar-nav a:hover {
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .sidebar-nav a.active {
+      color: var(--accent);
+      border-left-color: var(--accent);
+      background: rgba(255, 69, 0, 0.06);
+    }
+
+    .sidebar-nav .nav-divider {
+      height: 1px;
+      background: var(--border);
+      margin: 12px 24px;
+    }
+
+    .sidebar-nav .nav-back a {
+      font-size: 13px;
+      color: var(--muted);
+      opacity: 0.7;
+    }
+
+    .sidebar-nav .nav-back a:hover {
+      opacity: 1;
+      color: var(--text);
+    }
+
+    /* ---------- Hamburger (mobile) ---------- */
+    .hamburger {
+      display: none;
+      position: fixed;
+      top: 16px;
+      left: 16px;
+      z-index: 200;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 12px;
+      cursor: pointer;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .hamburger span {
+      display: block;
+      width: 22px;
+      height: 2px;
+      background: var(--text);
+      border-radius: 2px;
+      transition: transform 0.3s, opacity 0.3s;
+    }
+
+    .hamburger.open span:nth-child(1) { transform: rotate(45deg) translate(5px, 5px); }
+    .hamburger.open span:nth-child(2) { opacity: 0; }
+    .hamburger.open span:nth-child(3) { transform: rotate(-45deg) translate(5px, -5px); }
+
+    .sidebar-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.6);
+      z-index: 90;
+    }
+
+    /* ---------- Main content ---------- */
+    .main {
+      grid-column: 2;
+      padding: 48px 56px;
+      max-width: 960px;
+    }
+
+    .main h1 {
+      font-size: 32px;
+      font-weight: 800;
+      margin-bottom: 8px;
+      color: var(--text);
+    }
+
+    .main h1 .accent {
+      color: var(--accent);
+    }
+
+    .main h2 {
+      font-size: 22px;
+      font-weight: 700;
+      margin: 40px 0 16px;
+      color: var(--text);
+    }
+
+    .main h3 {
+      font-size: 18px;
+      font-weight: 600;
+      margin: 32px 0 12px;
+      color: var(--text);
+    }
+
+    .main p {
+      color: var(--muted);
+      margin-bottom: 16px;
+      font-size: 15px;
+      max-width: 680px;
+    }
+
+    .main a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    .main a:hover {
+      text-decoration: underline;
+    }
+
+    .subtitle {
+      font-size: 16px;
+      color: var(--muted);
+      margin-bottom: 32px;
+    }
+
+    /* ---------- Code blocks ---------- */
+    pre {
+      background: #1a1a1d;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px 20px;
+      overflow-x: auto;
+      font-size: 13px;
+      line-height: 1.7;
+      margin: 16px 0;
+      color: var(--text);
+    }
+
+    code {
+      font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+      font-size: 13px;
+      color: var(--text);
+    }
+
+    p code, li code, td code {
+      background: rgba(255, 255, 255, 0.06);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 13px;
+    }
+
+    /* ---------- Tables ---------- */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0;
+      font-size: 14px;
+    }
+
+    th, td {
+      text-align: left;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    th {
+      color: var(--muted);
+      font-weight: 600;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    td { color: var(--text); }
+
+    tr:hover td { background: rgba(255, 255, 255, 0.02); }
+
+    /* ---------- Lists ---------- */
+    .main ul, .main ol {
+      padding-left: 24px;
+      margin-bottom: 16px;
+    }
+
+    .main li {
+      color: var(--muted);
+      font-size: 14px;
+      margin-bottom: 6px;
+    }
+
+    /* ---------- Callout ---------- */
+    .callout {
+      background: rgba(255, 69, 0, 0.06);
+      border-left: 3px solid var(--accent);
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 20px 0;
+    }
+
+    .callout p {
+      color: var(--text);
+      margin: 0;
+      font-size: 14px;
+    }
+
+    .callout-green {
+      background: rgba(34, 197, 94, 0.06);
+      border-left: 3px solid var(--green);
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 20px 0;
+    }
+
+    .callout-green p {
+      color: var(--text);
+      margin: 0;
+      font-size: 14px;
+    }
+
+    /* ---------- Flow diagram ---------- */
+    .flow-diagram {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      margin: 24px 0;
+      overflow-x: auto;
+      padding: 8px 0;
+    }
+
+    .flow-step {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 18px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+      white-space: nowrap;
+      text-align: center;
+      min-width: 120px;
+    }
+
+    .flow-step.active {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .flow-step.green {
+      border-color: var(--green);
+      color: var(--green);
+    }
+
+    .flow-arrow {
+      color: var(--muted);
+      font-size: 18px;
+      padding: 0 8px;
+      flex-shrink: 0;
+    }
+
+    /* ---------- Architecture diagram ---------- */
+    .arch-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      margin: 24px 0;
+      max-width: 560px;
+    }
+
+    .arch-layer {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px 24px;
+    }
+
+    .arch-layer-label {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--accent);
+      margin-bottom: 6px;
+    }
+
+    .arch-layer-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+
+    .arch-layer-desc {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .arch-connector {
+      display: flex;
+      justify-content: center;
+      padding: 4px 0;
+      color: var(--muted);
+      font-size: 20px;
+    }
+
+    /* ---------- Step list ---------- */
+    .step-list {
+      list-style: none;
+      padding-left: 0;
+      counter-reset: step-counter;
+      margin: 16px 0;
+    }
+
+    .step-list li {
+      counter-increment: step-counter;
+      position: relative;
+      padding-left: 40px;
+      margin-bottom: 16px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .step-list li::before {
+      content: counter(step-counter);
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: rgba(255, 69, 0, 0.12);
+      color: var(--accent);
+      font-size: 13px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
+    }
+
+    /* ---------- Contract badge ---------- */
+    .contract-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 16px;
+      margin: 8px 0 16px;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 13px;
+      color: var(--text);
+      word-break: break-all;
+    }
+
+    .contract-badge .label {
+      color: var(--muted);
+      font-family: 'Inter', sans-serif;
+      font-weight: 600;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      white-space: nowrap;
+    }
+
+    /* ---------- Fee comparison ---------- */
+    .fee-compare {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin: 20px 0;
+    }
+
+    .fee-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+    }
+
+    .fee-card.bad {
+      border-color: #ef4444;
+    }
+
+    .fee-card.good {
+      border-color: var(--green);
+    }
+
+    .fee-card-title {
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+
+    .fee-card.bad .fee-card-title {
+      color: #ef4444;
+    }
+
+    .fee-card.good .fee-card-title {
+      color: var(--green);
+    }
+
+    .fee-card p {
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 8px;
+      max-width: none;
+    }
+
+    .fee-card code {
+      font-size: 12px;
+    }
+
+    /* ---------- Footer ---------- */
+    .wiki-footer {
+      margin-top: 64px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    /* ---------- Responsive ---------- */
+    @media (max-width: 768px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        transform: translateX(-100%);
+      }
+
+      .sidebar.open {
+        transform: translateX(0);
+      }
+
+      .sidebar-overlay.open {
+        display: block;
+      }
+
+      .hamburger {
+        display: flex;
+      }
+
+      .main {
+        grid-column: 1;
+        padding: 72px 20px 40px;
+      }
+
+      .flow-diagram {
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .flow-arrow {
+        padding: 0 4px;
+      }
+
+      .fee-compare {
+        grid-template-columns: 1fr;
+      }
+
+      .arch-stack {
+        max-width: 100%;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .main h1 {
+        font-size: 26px;
+      }
+    }
+    /* ============================================================
+       End Shared Styles
+       ============================================================ */
+  </style>
+</head>
+<body>
+
+  <!-- Hamburger button (mobile only) -->
+  <button class="hamburger" id="hamburger" aria-label="Toggle navigation">
+    <span></span>
+    <span></span>
+    <span></span>
+  </button>
+
+  <!-- Overlay (mobile only) -->
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <div class="layout">
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <a href="index.html" class="sidebar-logo">INFERNO</a>
+      <div class="sidebar-sub">Documentation</div>
+      <ul class="sidebar-nav">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="contracts.html">Smart Contracts</a></li>
+        <li><a href="tokenomics.html">Tokenomics</a></li>
+        <li><a href="lock-mechanism.html" class="active">Lock Mechanism</a></li>
+        <li><a href="governance.html">Governance</a></li>
+        <li><a href="security.html">Security</a></li>
+        <li><a href="deployment.html">Deployment</a></li>
+        <li><a href="integration.html">Integration Guide</a></li>
+        <li><div class="nav-divider"></div></li>
+        <li class="nav-back"><a href="../index.html">&larr; Back to Website</a></li>
+      </ul>
+    </aside>
+
+    <!-- Main content -->
+    <main class="main">
+
+      <h1>IFR <span class="accent">Lock Mechanism</span></h1>
+      <p class="subtitle">
+        Generic token lock for proving commitment &mdash; no rewards, no vesting, no app logic. Lock IFR, gain premium access.
+      </p>
+
+      <!-- ======================================== -->
+      <!-- 1. Overview -->
+      <!-- ======================================== -->
+      <h2>1. Overview</h2>
+      <p>
+        <strong>IFRLock</strong> is a generic token lock contract. It has no rewards system, no vesting schedule, and no embedded application logic. Users lock IFR tokens to prove commitment, and external applications query <code>isLocked()</code> to gate premium access.
+      </p>
+      <p>
+        The contract acts as a neutral truth layer &mdash; it stores locked amounts and exposes read functions. What those locks <em>mean</em> is entirely up to the applications consuming them.
+      </p>
+
+      <div class="contract-badge">
+        <span class="label">Sepolia</span>
+        0x0Cab0A9440643128540222acC6eF5028736675d3
+      </div>
+
+      <div class="callout">
+        <p>
+          <strong>Important:</strong> IFRLock must be set as <code>feeExempt</code> on InfernoToken. Without this, fee deductions cause balance mismatches that prevent unlocking. See <a href="#fee-exempt">Section 8</a> for details.
+        </p>
+      </div>
+
+      <!-- ======================================== -->
+      <!-- 2. How the Lock Works -->
+      <!-- ======================================== -->
+      <h2>2. How the Lock Works</h2>
+      <p>
+        The lock flow is straightforward: approve, lock, query, unlock. Here is the step-by-step process:
+      </p>
+
+      <ol class="step-list">
+        <li>
+          <strong>Approve</strong> &mdash; User approves IFRLock to spend their IFR tokens.<br>
+          <code>token.approve(lockAddress, amount)</code>
+        </li>
+        <li>
+          <strong>Lock</strong> &mdash; User calls <code>lock(amount)</code>. Tokens transfer from user to contract. A <code>LockData</code> struct is stored on-chain.
+        </li>
+        <li>
+          <strong>Record</strong> &mdash; Contract records the lock: <code>amount</code> (accumulates across multiple lock calls) and <code>lockedAt</code> (block timestamp of the first lock).
+        </li>
+        <li>
+          <strong>Query</strong> &mdash; Applications call <code>isLocked(user, minAmount)</code> to check whether the user qualifies for premium access.
+        </li>
+        <li>
+          <strong>Unlock</strong> &mdash; User calls <code>unlock()</code>. All locked tokens are returned to the user. The <code>LockData</code> struct is deleted.
+        </li>
+      </ol>
+
+      <h3>Visual Flow</h3>
+      <div class="flow-diagram">
+        <div class="flow-step">Approve</div>
+        <div class="flow-arrow">&rarr;</div>
+        <div class="flow-step active">Lock IFR</div>
+        <div class="flow-arrow">&rarr;</div>
+        <div class="flow-step green">isLocked = true</div>
+        <div class="flow-arrow">&rarr;</div>
+        <div class="flow-step green">Premium Active</div>
+        <div class="flow-arrow">&rarr;</div>
+        <div class="flow-step">Unlock</div>
+        <div class="flow-arrow">&rarr;</div>
+        <div class="flow-step">Standard Plan</div>
+      </div>
+
+      <!-- ======================================== -->
+      <!-- 3. Key Functions -->
+      <!-- ======================================== -->
+      <h2>3. Key Functions</h2>
+      <p>
+        All public and external functions exposed by IFRLock:
+      </p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Function</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>lock(uint256 amount)</code></td>
+            <td>Lock IFR tokens (requires prior approval). Accumulates on multiple calls &mdash; calling lock twice adds to the existing balance.</td>
+          </tr>
+          <tr>
+            <td><code>lockWithType(uint256 amount, bytes32 lockType)</code></td>
+            <td>Lock with an app-specific tag. Functionally identical to <code>lock()</code> but stores a <code>lockType</code> for resolver metadata.</td>
+          </tr>
+          <tr>
+            <td><code>unlock()</code></td>
+            <td>Withdraw all locked IFR back to the caller. Deletes the <code>LockData</code> struct entirely.</td>
+          </tr>
+          <tr>
+            <td><code>isLocked(address user, uint256 minAmount) &rarr; bool</code></td>
+            <td>Central query function for resolvers. Returns <code>true</code> if the user has at least <code>minAmount</code> locked.</td>
+          </tr>
+          <tr>
+            <td><code>lockedBalance(address user) &rarr; uint256</code></td>
+            <td>Returns the total locked amount for a given user.</td>
+          </tr>
+          <tr>
+            <td><code>lockInfo(address user) &rarr; (uint256, uint256)</code></td>
+            <td>Returns full lock details: <code>(amount, lockedAt)</code> timestamp pair.</td>
+          </tr>
+          <tr>
+            <td><code>totalLocked() &rarr; uint256</code></td>
+            <td>Returns the total IFR locked across all users in the contract.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- ======================================== -->
+      <!-- 4. Multi-App Concept -->
+      <!-- ======================================== -->
+      <h2>4. Multi-App Concept</h2>
+      <p>
+        The <code>lockType</code> parameter (<code>bytes32</code>) allows different applications to tag locks with an identifier. This is purely metadata &mdash; the contract itself does not enforce any logic based on the lock type.
+      </p>
+
+      <h3>Example Lock Types</h3>
+<pre><code>// App-specific lock type tags
+bytes32 securecallPremium = keccak256("securecall_premium");
+bytes32 app2Pro           = keccak256("app2_pro");
+bytes32 daoMembership     = keccak256("dao_membership");
+
+// Lock with type
+lock.lockWithType(amount, securecallPremium);</code></pre>
+
+      <p>
+        Key principle: <strong>one user, one lock amount</strong>. The locked balance is shared across all applications querying the same IFRLock contract. If a user locks 10,000 IFR for SecureCall premium, an app requiring 5,000 IFR for its pro tier will also see that user as qualified.
+      </p>
+
+      <div class="callout">
+        <p>
+          <strong>Design note:</strong> Lock types are metadata hints for off-chain resolvers. The on-chain contract treats all locks identically &mdash; <code>isLocked()</code> checks amount only, regardless of lock type.
+        </p>
+      </div>
+
+      <!-- ======================================== -->
+      <!-- 5. Resolver Architecture (3-Layer) -->
+      <!-- ======================================== -->
+      <h2>5. Resolver Architecture</h2>
+      <p>
+        The IFR Lock system follows a three-layer architecture that cleanly separates concerns between on-chain truth, stateless bridging, and off-chain application logic.
+      </p>
+
+      <div class="arch-stack">
+        <!-- Layer 1: Truth -->
+        <div class="arch-layer">
+          <div class="arch-layer-label">Layer 1 &mdash; Truth Layer (On-Chain)</div>
+          <div class="arch-layer-title">IFRLock Contract</div>
+          <div class="arch-layer-desc">
+            Stores locked amounts. Exposes <code>isLocked()</code> and <code>lockedBalance()</code>. Contains no application logic, no user IDs, no access control decisions. Pure data.
+          </div>
+        </div>
+
+        <div class="arch-connector">&darr;</div>
+
+        <!-- Layer 2: Bridge -->
+        <div class="arch-layer">
+          <div class="arch-layer-label">Layer 2 &mdash; Bridge Layer (Stateless)</div>
+          <div class="arch-layer-title">License Resolver Service</div>
+          <div class="arch-layer-desc">
+            Maps wallet addresses to product entitlements. Queries <code>isLocked()</code> on each request &mdash; fully stateless, no database. Privacy-neutral: knows wallets but not identities.
+          </div>
+        </div>
+
+        <div class="arch-connector">&darr;</div>
+
+        <!-- Layer 3: Service -->
+        <div class="arch-layer">
+          <div class="arch-layer-label">Layer 3 &mdash; Service Layer (Off-Chain)</div>
+          <div class="arch-layer-title">Partner Applications</div>
+          <div class="arch-layer-desc">
+            Each app decides its own minimum lock amount for premium features. Queries the resolver API. Fully decoupled from the contract &mdash; can change thresholds without any on-chain transaction.
+          </div>
+        </div>
+      </div>
+
+      <p>
+        This architecture ensures that the on-chain layer remains minimal and auditable, while applications retain full flexibility over their business logic.
+      </p>
+
+      <!-- ======================================== -->
+      <!-- 6. Code Examples -->
+      <!-- ======================================== -->
+      <h2>6. Code Examples</h2>
+      <p>
+        Complete ethers.js v5 examples for interacting with the IFRLock contract. IFR uses 9 decimals (not 18).
+      </p>
+
+      <h3>Connect to IFRLock</h3>
+<pre><code>const { ethers } = require("ethers");
+
+const LOCK_ADDRESS = "0x0Cab0A9440643128540222acC6eF5028736675d3";
+
+const LOCK_ABI = [
+  "function lock(uint256 amount) external",
+  "function lockWithType(uint256 amount, bytes32 lockType) external",
+  "function unlock() external",
+  "function isLocked(address user, uint256 minAmount) view returns (bool)",
+  "function lockedBalance(address user) view returns (uint256)",
+  "function lockInfo(address user) view returns (uint256 amount, uint256 lockedAt)",
+  "function totalLocked() view returns (uint256)"
+];
+
+const provider = new ethers.providers.JsonRpcProvider(RPC_URL);
+const signer = new ethers.Wallet(PRIVATE_KEY, provider);
+const lock = new ethers.Contract(LOCK_ADDRESS, LOCK_ABI, signer);</code></pre>
+
+      <h3>Lock 10,000 IFR</h3>
+<pre><code>// IFR uses 9 decimals
+const amount = ethers.utils.parseUnits("10000", 9);
+
+// Step 1: Approve IFRLock to spend tokens
+const token = new ethers.Contract(TOKEN_ADDRESS, TOKEN_ABI, signer);
+const approveTx = await token.approve(LOCK_ADDRESS, amount);
+await approveTx.wait();
+console.log("Approved:", approveTx.hash);
+
+// Step 2: Lock tokens
+const lockTx = await lock.lock(amount);
+await lockTx.wait();
+console.log("Locked:", lockTx.hash);</code></pre>
+
+      <h3>Check Lock Status</h3>
+<pre><code>const userAddress = "0x...";
+const minRequired = ethers.utils.parseUnits("5000", 9);
+
+// Check if user qualifies for premium (>= 5000 IFR locked)
+const isActive = await lock.isLocked(userAddress, minRequired);
+console.log("Premium active:", isActive);
+
+// Get exact locked balance
+const balance = await lock.lockedBalance(userAddress);
+console.log("Locked balance:", ethers.utils.formatUnits(balance, 9), "IFR");
+
+// Get full lock info
+const [lockedAmount, lockedAt] = await lock.lockInfo(userAddress);
+console.log("Amount:", ethers.utils.formatUnits(lockedAmount, 9), "IFR");
+console.log("Locked at:", new Date(lockedAt.toNumber() * 1000).toISOString());</code></pre>
+
+      <h3>Unlock All Tokens</h3>
+<pre><code>const unlockTx = await lock.unlock();
+await unlockTx.wait();
+console.log("Unlocked:", unlockTx.hash);
+
+// Verify: balance should be 0
+const remaining = await lock.lockedBalance(signer.address);
+console.log("Remaining locked:", ethers.utils.formatUnits(remaining, 9), "IFR");</code></pre>
+
+      <!-- ======================================== -->
+      <!-- 7. Security Notes -->
+      <!-- ======================================== -->
+      <h2>7. Security Notes</h2>
+      <ul>
+        <li><strong>ReentrancyGuard</strong> is applied to both <code>lock()</code> and <code>unlock()</code> functions, preventing reentrancy attacks.</li>
+        <li><strong>No admin force-unlock:</strong> No administrator, guardian, or governance proposal can force-unlock user funds. Only the user who locked can call <code>unlock()</code>.</li>
+        <li><strong>Emergency pause:</strong> The guardian can pause the contract, but this only affects <code>lock()</code>. The <code>unlock()</code> function is always available, even when paused &mdash; users can always withdraw their tokens.</li>
+        <li><strong>feeExempt requirement:</strong> The IFRLock contract must be set as <code>feeExempt</code> on InfernoToken. Without this, fee deductions during transfer cause a balance mismatch that breaks unlock. See <a href="#fee-exempt">Section 8</a>.</li>
+        <li><strong>Guardian scope:</strong> The guardian can pause new locks but cannot touch, move, or redirect locked funds under any circumstance.</li>
+      </ul>
+
+      <div class="callout-green">
+        <p>
+          <strong>Key guarantee:</strong> Users retain full custody of their locked tokens at all times. The contract is a vault with a single key &mdash; the user's wallet.
+        </p>
+      </div>
+
+      <!-- ======================================== -->
+      <!-- 8. feeExempt Requirement -->
+      <!-- ======================================== -->
+      <h2 id="fee-exempt">8. feeExempt Requirement</h2>
+      <p>
+        InfernoToken applies a 3.5% fee on transfers. If IFRLock is not marked as <code>feeExempt</code>, this fee is deducted when tokens move in and out of the contract &mdash; causing a critical accounting mismatch.
+      </p>
+
+      <div class="fee-compare">
+        <div class="fee-card bad">
+          <div class="fee-card-title">Without feeExempt</div>
+          <p>User locks <code>5,000 IFR</code></p>
+          <p>3.5% fee deducted on transfer in</p>
+          <p>Contract receives <code>~4,825 IFR</code></p>
+          <p>User calls <code>unlock()</code> &mdash; contract tries to send <code>5,000 IFR</code></p>
+          <p><strong>Transaction reverts.</strong> Contract only holds 4,825 but owes 5,000.</p>
+        </div>
+        <div class="fee-card good">
+          <div class="fee-card-title">With feeExempt</div>
+          <p>User locks <code>5,000 IFR</code></p>
+          <p>No fee deducted (exempt)</p>
+          <p>Contract receives <code>5,000 IFR</code></p>
+          <p>User calls <code>unlock()</code> &mdash; contract sends <code>5,000 IFR</code></p>
+          <p><strong>Perfect round-trip.</strong> Full amount returned.</p>
+        </div>
+      </div>
+
+      <p>
+        Setting <code>feeExempt</code> requires a Governance proposal with a 48-hour timelock. This is a one-time configuration step during deployment.
+      </p>
+
+<pre><code>// Governance proposal to set IFRLock as feeExempt
+// This is executed via the 48h timelock governance process
+await governance.propose(
+  tokenAddress,                                    // target
+  0,                                               // value
+  encodeFunctionData("setFeeExempt", [LOCK_ADDRESS, true]),  // calldata
+  "Set IFRLock as feeExempt for correct lock/unlock accounting"
+);</code></pre>
+
+      <!-- Footer -->
+      <footer class="wiki-footer">
+        Inferno ($IFR) &mdash; Community Fair Launch Model &mdash; Documentation v1.0
+      </footer>
+
+    </main>
+  </div>
+
+  <!-- Mobile sidebar toggle script -->
+  <script>
+    (function () {
+      var hamburger = document.getElementById('hamburger');
+      var sidebar = document.getElementById('sidebar');
+      var overlay = document.getElementById('sidebarOverlay');
+
+      function toggleSidebar() {
+        var isOpen = sidebar.classList.toggle('open');
+        hamburger.classList.toggle('open', isOpen);
+        overlay.classList.toggle('open', isOpen);
+        document.body.style.overflow = isOpen ? 'hidden' : '';
+      }
+
+      hamburger.addEventListener('click', toggleSidebar);
+      overlay.addEventListener('click', toggleSidebar);
+    })();
+  </script>
+
+</body>
+</html>

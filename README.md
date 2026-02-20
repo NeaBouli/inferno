@@ -212,6 +212,20 @@ The script:
 2. If ETA reached: executes `governance.execute(0)` and verifies the result
 3. If ETA not reached: displays countdown with remaining time
 
+### Deploy & Test IFRLock
+
+Deploy the IFRLock contract and create a Governance proposal for feeExempt:
+
+```bash
+npx hardhat run scripts/deploy-lock.js --network sepolia
+```
+
+Test lock, isLocked, lockInfo, and unlock on Sepolia:
+
+```bash
+npx hardhat run scripts/test-lock.js --network sepolia
+```
+
 ### Post-Deploy Checklist
 
 | # | Step | Status |
@@ -223,6 +237,8 @@ The script:
 | 5 | Set Addresses — Update treasury if placeholder was used | Pending |
 | 6 | Transfer Ownership — `InfernoToken.transferOwnership(governance.address)` | **Done** |
 | 7 | Governance Proposal #0 — `setFeeExempt` via 48h Timelock | **Done** — [`0x13ff46d8...`](https://sepolia.etherscan.io/tx/0x13ff46d8a113f25b9ab0037ee06d6108c62d0f16e25d28799e4f45a8cbbe982d) |
+| 8 | Deploy IFRLock | **Done** — [`0x0Cab0A94...`](https://sepolia.etherscan.io/address/0x0Cab0A9440643128540222acC6eF5028736675d3) |
+| 9 | Governance Proposal #1 — `setFeeExempt(IFRLock)` | **Pending** — ETA 2026-02-22 21:15 CET |
 
 ## Dashboard
 
@@ -265,3 +281,4 @@ npm run dev
 | `docs/DOCS.md` | Project structure and module status |
 | `docs/SECURITY-AUDIT.md` | Slither audit report (0 high/critical) |
 | `docs/DEPLOYMENTS.md` | Deployed contract addresses (Sepolia) |
+| `docs/wiki/` | [Full Documentation Wiki](https://neabouli.github.io/inferno/wiki/) (8 pages) |

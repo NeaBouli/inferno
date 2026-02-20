@@ -36,7 +36,9 @@ inferno/
 │   ├── create-lp.js                    [x] 4-Step LP Pairing + Router Update
 │   ├── test-transfer.js               [x] Live Fee-on-Transfer Verification
 │   ├── sepolia-smoke-test.js          [x] Full Protocol Smoke Test (11 Checks)
-│   └── execute-proposal.js           [x] Governance Proposal Executor (Status/ETA/Execute/Verify)
+│   ├── execute-proposal.js           [x] Governance Proposal Executor (Status/ETA/Execute/Verify)
+│   ├── deploy-lock.js                [x] IFRLock Deploy + Governance Proposal
+│   └── test-lock.js                  [x] IFRLock Live Test (Lock/Unlock/isLocked)
 ├── apps/
 │   └── dashboard/                      [x] React + Vite Frontend (Phase 1 + Phase 2)
 ├── docs/
@@ -49,7 +51,8 @@ inferno/
 │   ├── SECURITY-AUDIT.md               Slither Audit Report
 │   ├── DEPLOYMENTS.md                  Sepolia Contract-Adressen
 │   ├── PATCH-GUIDELINES.md             Patch-Richtlinien
-│   └── PROJECT-SUMMARY.md             Projektzusammenfassung
+│   ├── PROJECT-SUMMARY.md             Projektzusammenfassung
+│   └── wiki/                          [x] 8 HTML-Seiten (Contracts, Tokenomics, Lock, Governance, Security, Deploy, Integration)
 ├── STATUS-REPORT.md                    Vollstaendiger Statusbericht
 └── README.md                           Projekt-Uebersicht
 ```

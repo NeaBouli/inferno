@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Integration Guide — Inferno ($IFR) Documentation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    /* ============================================================
+       Inferno Wiki — Shared Styles (copy into every wiki page)
+       ============================================================ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #0a0a0a;
+      --card:     #111113;
+      --border:   #222225;
+      --text:     #e8e8ed;
+      --muted:    #8a8a96;
+      --accent:   #ff4500;
+      --green:    #22c55e;
+      --sidebar-w: 240px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    /* ---------- Layout (CSS Grid) ---------- */
+    .layout {
+      display: grid;
+      grid-template-columns: var(--sidebar-w) 1fr;
+      min-height: 100vh;
+    }
+
+    /* ---------- Sidebar ---------- */
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: var(--sidebar-w);
+      height: 100vh;
+      background: var(--card);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      padding: 24px 0;
+      overflow-y: auto;
+      z-index: 100;
+      transition: transform 0.3s ease;
+    }
+
+    .sidebar-logo {
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: 3px;
+      color: var(--accent);
+      padding: 0 24px 4px;
+      text-decoration: none;
+      display: block;
+    }
+
+    .sidebar-subtitle {
+      font-size: 12px;
+      color: var(--muted);
+      padding: 0 24px 24px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .sidebar-nav {
+      list-style: none;
+      padding: 16px 0;
+      flex: 1;
+    }
+
+    .sidebar-nav a {
+      display: block;
+      padding: 10px 24px;
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      transition: color 0.2s, background 0.2s, border-left 0.2s;
+      border-left: 3px solid transparent;
+    }
+
+    .sidebar-nav a:hover {
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .sidebar-nav a.active {
+      color: var(--accent);
+      border-left-color: var(--accent);
+      background: rgba(255, 69, 0, 0.06);
+    }
+
+    .sidebar-nav .nav-divider {
+      height: 1px;
+      background: var(--border);
+      margin: 12px 24px;
+    }
+
+    .sidebar-nav .nav-back a {
+      font-size: 13px;
+      color: var(--muted);
+      opacity: 0.7;
+    }
+
+    .sidebar-nav .nav-back a:hover {
+      opacity: 1;
+      color: var(--text);
+    }
+
+    /* ---------- Hamburger (mobile) ---------- */
+    .hamburger {
+      display: none;
+      position: fixed;
+      top: 16px;
+      left: 16px;
+      z-index: 200;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 12px;
+      cursor: pointer;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .hamburger span {
+      display: block;
+      width: 22px;
+      height: 2px;
+      background: var(--text);
+      border-radius: 2px;
+      transition: transform 0.3s, opacity 0.3s;
+    }
+
+    .hamburger.open span:nth-child(1) { transform: rotate(45deg) translate(5px, 5px); }
+    .hamburger.open span:nth-child(2) { opacity: 0; }
+    .hamburger.open span:nth-child(3) { transform: rotate(-45deg) translate(5px, -5px); }
+
+    .sidebar-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.6);
+      z-index: 90;
+    }
+
+    /* ---------- Main content ---------- */
+    .main {
+      grid-column: 2;
+      padding: 48px 56px;
+      max-width: 960px;
+    }
+
+    .main h1 {
+      font-size: 32px;
+      font-weight: 800;
+      margin-bottom: 8px;
+      color: var(--text);
+    }
+
+    .main h1 .accent {
+      color: var(--accent);
+    }
+
+    .main h2 {
+      font-size: 22px;
+      font-weight: 700;
+      margin: 40px 0 16px;
+      color: var(--text);
+    }
+
+    .main h3 {
+      font-size: 18px;
+      font-weight: 600;
+      margin: 32px 0 12px;
+      color: var(--text);
+    }
+
+    .main p {
+      color: var(--muted);
+      margin-bottom: 16px;
+      font-size: 15px;
+      max-width: 680px;
+    }
+
+    .main a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    .main a:hover {
+      text-decoration: underline;
+    }
+
+    .subtitle {
+      font-size: 16px;
+      color: var(--muted);
+      margin-bottom: 32px;
+    }
+
+    /* ---------- Code blocks ---------- */
+    pre {
+      background: #1a1a1d;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      overflow-x: auto;
+      font-size: 13px;
+      line-height: 1.7;
+      margin: 16px 0;
+    }
+
+    code {
+      font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+      font-size: 13px;
+      color: var(--text);
+    }
+
+    p code, li code {
+      background: rgba(255, 255, 255, 0.06);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 13px;
+    }
+
+    .code-label {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    /* ---------- Tables ---------- */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0;
+      font-size: 14px;
+    }
+
+    th, td {
+      text-align: left;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    th {
+      color: var(--muted);
+      font-weight: 600;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    td { color: var(--text); }
+
+    tr:hover td { background: rgba(255, 255, 255, 0.02); }
+
+    /* ---------- Lists ---------- */
+    .main ul, .main ol {
+      padding-left: 24px;
+      margin-bottom: 16px;
+    }
+
+    .main li {
+      color: var(--muted);
+      font-size: 14px;
+      margin-bottom: 6px;
+    }
+
+    /* ---------- Callout ---------- */
+    .callout {
+      background: rgba(255, 69, 0, 0.06);
+      border-left: 3px solid var(--accent);
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 20px 0;
+    }
+
+    .callout p {
+      color: var(--text);
+      margin: 0;
+      font-size: 14px;
+    }
+
+    .callout-green {
+      background: rgba(34, 197, 94, 0.06);
+      border-left-color: var(--green);
+    }
+
+    .callout-green p {
+      color: var(--text);
+    }
+
+    /* ---------- Architecture diagram ---------- */
+    .arch-diagram {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0;
+      margin: 24px 0 32px;
+      flex-wrap: wrap;
+    }
+
+    .arch-box {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 20px 28px;
+      text-align: center;
+      min-width: 160px;
+    }
+
+    .arch-box-label {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .arch-box-sub {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    .arch-box.accent-border {
+      border-color: var(--accent);
+    }
+
+    .arch-arrow {
+      font-size: 24px;
+      color: var(--muted);
+      padding: 0 16px;
+    }
+
+    /* ---------- Checklist ---------- */
+    .checklist {
+      list-style: none;
+      padding-left: 0;
+    }
+
+    .checklist li {
+      padding: 8px 0;
+      font-size: 14px;
+      color: var(--muted);
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+    }
+
+    .checklist .do {
+      color: var(--green);
+      font-weight: 700;
+      min-width: 52px;
+    }
+
+    .checklist .dont {
+      color: var(--accent);
+      font-weight: 700;
+      min-width: 52px;
+    }
+
+    /* ---------- Step number ---------- */
+    .step-num {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      background: var(--accent);
+      color: #fff;
+      font-size: 13px;
+      font-weight: 700;
+      border-radius: 50%;
+      margin-right: 10px;
+      flex-shrink: 0;
+    }
+
+    /* ---------- Footer ---------- */
+    .wiki-footer {
+      margin-top: 64px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    /* ---------- Responsive ---------- */
+    @media (max-width: 768px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        transform: translateX(-100%);
+      }
+
+      .sidebar.open {
+        transform: translateX(0);
+      }
+
+      .sidebar-overlay.open {
+        display: block;
+      }
+
+      .hamburger {
+        display: flex;
+      }
+
+      .main {
+        grid-column: 1;
+        padding: 72px 20px 40px;
+      }
+
+      .arch-diagram {
+        flex-direction: column;
+      }
+
+      .arch-arrow {
+        transform: rotate(90deg);
+        padding: 8px 0;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .main h1 {
+        font-size: 26px;
+      }
+    }
+    /* ============================================================
+       End Shared Styles
+       ============================================================ */
+  </style>
+</head>
+<body>
+
+  <!-- Hamburger button (mobile only) -->
+  <button class="hamburger" id="hamburger" aria-label="Toggle navigation">
+    <span></span>
+    <span></span>
+    <span></span>
+  </button>
+
+  <!-- Overlay (mobile only) -->
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <div class="layout">
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <a href="index.html" class="sidebar-logo">INFERNO</a>
+      <div class="sidebar-subtitle">Documentation</div>
+      <ul class="sidebar-nav">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="contracts.html">Smart Contracts</a></li>
+        <li><a href="tokenomics.html">Tokenomics</a></li>
+        <li><a href="lock-mechanism.html">Lock Mechanism</a></li>
+        <li><a href="governance.html">Governance</a></li>
+        <li><a href="security.html">Security</a></li>
+        <li><a href="deployment.html">Deployment</a></li>
+        <li><a href="integration.html" class="active">Integration Guide</a></li>
+        <li><div class="nav-divider"></div></li>
+        <li class="nav-back"><a href="../index.html">&larr; Back to Website</a></li>
+      </ul>
+    </aside>
+
+    <!-- Main content -->
+    <main class="main">
+
+      <h1>Developer <span class="accent">Integration Guide</span></h1>
+      <p class="subtitle">
+        How to integrate IFR Lock into your product &mdash; permissionless, on-chain license gating for any application.
+      </p>
+
+      <!-- ============================================================
+           Section 1: Overview
+           ============================================================ -->
+      <h2>1. Overview: How to Integrate IFR Lock Into Your Product</h2>
+      <p>
+        Any product can use IFR Lock to offer premium tiers to its users. The contract is <strong style="color: var(--text);">fully permissionless</strong> &mdash; no approval, API key, or partnership is required. Your product simply queries the on-chain lock status of a wallet and gates features accordingly.
+      </p>
+      <p>
+        Your product decides the minimum lock amount for premium access. The user locks IFR tokens on-chain, and your application checks whether the lock meets your threshold.
+      </p>
+
+      <div class="callout-green callout">
+        <p>
+          <strong>Integration in 3 steps:</strong> (1) Set up a resolver that reads from the IFRLock contract, (2) query <code>isLocked()</code> for each user wallet, (3) gate features based on the boolean result.
+        </p>
+      </div>
+
+      <!-- ============================================================
+           Section 2: Architecture Overview
+           ============================================================ -->
+      <h2>2. Architecture Overview</h2>
+      <p>
+        The integration follows a simple three-layer architecture. Your application talks to a lightweight resolver (your backend), which queries the IFRLock contract on Ethereum.
+      </p>
+
+      <div class="arch-diagram">
+        <div class="arch-box">
+          <div class="arch-box-label">Your App</div>
+          <div class="arch-box-sub">Frontend / Backend</div>
+        </div>
+        <div class="arch-arrow">&rarr;</div>
+        <div class="arch-box">
+          <div class="arch-box-label">License Resolver</div>
+          <div class="arch-box-sub">Your API server</div>
+        </div>
+        <div class="arch-arrow">&rarr;</div>
+        <div class="arch-box accent-border">
+          <div class="arch-box-label">IFRLock</div>
+          <div class="arch-box-sub">On Ethereum</div>
+        </div>
+      </div>
+
+      <p>
+        The resolver maps wallet addresses to license status. It is stateless &mdash; it queries on demand and does not persist user data. You own and operate the resolver, giving you full control over caching, rate limiting, and minimum lock thresholds.
+      </p>
+
+      <!-- ============================================================
+           Section 3: ABI Reference
+           ============================================================ -->
+      <h2>3. Step 1: ABI Reference</h2>
+      <p>
+        You only need the read functions from the IFRLock contract. Here is the minimal ABI for integration:
+      </p>
+
+      <span class="code-label">Minimal ABI (read-only)</span>
+      <pre><code>const IFR_LOCK_ABI = [
+  "function isLocked(address user, uint256 minAmount) view returns (bool)",
+  "function lockedBalance(address user) view returns (uint256)",
+  "function lockInfo(address user) view returns (uint256 amount, uint256 lockedAt)",
+  "function totalLocked() view returns (uint256)"
+];</code></pre>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Network</th>
+            <th>Contract Address</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Sepolia (testnet)</td>
+            <td><code>0x0Cab0A9440643128540222acC6eF5028736675d3</code></td>
+          </tr>
+          <tr>
+            <td>Mainnet</td>
+            <td><code>TBD</code></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- ============================================================
+           Section 4: Set Up Your Resolver
+           ============================================================ -->
+      <h2>4. Step 2: Set Up Your Resolver</h2>
+      <p>
+        The resolver is a simple Express server that queries the IFRLock contract and returns a JSON response. Deploy this on your own infrastructure.
+      </p>
+
+      <span class="code-label">Node.js / Express &mdash; resolver.js</span>
+      <pre><code>const { ethers } = require("ethers");
+const express = require("express");
+
+const LOCK_ADDRESS = "0x0Cab0A9440643128540222acC6eF5028736675d3";
+const LOCK_ABI = [
+  "function isLocked(address user, uint256 minAmount) view returns (bool)",
+  "function lockedBalance(address user) view returns (uint256)",
+];
+const MIN_LOCK = ethers.utils.parseUnits("5000", 9); // 5000 IFR minimum
+
+const provider = new ethers.providers.JsonRpcProvider(process.env.RPC_URL);
+const lock = new ethers.Contract(LOCK_ADDRESS, LOCK_ABI, provider);
+
+const app = express();
+
+app.get("/api/license/:wallet", async (req, res) =&gt; {
+  try {
+    const wallet = req.params.wallet;
+    const isPremium = await lock.isLocked(wallet, MIN_LOCK);
+    const balance = await lock.lockedBalance(wallet);
+    res.json({
+      wallet,
+      premium: isPremium,
+      lockedAmount: ethers.utils.formatUnits(balance, 9),
+      minRequired: "5000",
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.listen(3000);</code></pre>
+
+      <div class="callout">
+        <p>
+          <strong>Note:</strong> The resolver uses ethers v5 syntax. IFR uses 9 decimals (not 18), so always use <code>parseUnits(value, 9)</code> and <code>formatUnits(value, 9)</code>.
+        </p>
+      </div>
+
+      <!-- ============================================================
+           Section 5: Gate Features in Your App
+           ============================================================ -->
+      <h2>5. Step 3: Gate Features in Your App</h2>
+      <p>
+        On the frontend, call your resolver endpoint and use the response to enable or disable premium features.
+      </p>
+
+      <span class="code-label">Frontend &mdash; feature gating</span>
+      <pre><code>// Frontend example
+async function checkPremium(walletAddress) {
+  const res = await fetch(`/api/license/${walletAddress}`);
+  const data = await res.json();
+  if (data.premium) {
+    // Enable premium features
+    showPremiumUI();
+  } else {
+    // Show standard plan + prompt to lock IFR
+    showUpgradePrompt(data.minRequired);
+  }
+}</code></pre>
+
+      <p>
+        The resolver returns a simple JSON object. The <code>premium</code> field is a boolean &mdash; <code>true</code> if the user has at least the minimum amount locked, <code>false</code> otherwise. Your frontend logic is entirely up to you.
+      </p>
+
+      <!-- ============================================================
+           Section 6: Lock/Unlock UI (Optional)
+           ============================================================ -->
+      <h2>6. Step 4: Lock/Unlock UI (Optional)</h2>
+      <p>
+        If you want to let users lock IFR directly from your application (instead of directing them to the Inferno dashboard), you can integrate the lock flow with a connected wallet such as MetaMask.
+      </p>
+
+      <span class="code-label">Lock flow &mdash; approve + lock</span>
+      <pre><code>// Requires user's connected wallet (e.g., MetaMask)
+const TOKEN_ADDRESS = "0x3Bd71947F288d1dd8B21129B1bE4FF16EDd5d1F4";
+const TOKEN_ABI = ["function approve(address spender, uint256 amount) returns (bool)"];
+
+async function lockIFR(signer, amount) {
+  const token = new ethers.Contract(TOKEN_ADDRESS, TOKEN_ABI, signer);
+  const lock = new ethers.Contract(LOCK_ADDRESS, LOCK_ABI_FULL, signer);
+
+  const parsedAmount = ethers.utils.parseUnits(amount, 9);
+
+  // Step 1: Approve
+  const approveTx = await token.approve(LOCK_ADDRESS, parsedAmount);
+  await approveTx.wait();
+
+  // Step 2: Lock
+  const lockTx = await lock.lock(parsedAmount);
+  await lockTx.wait();
+
+  return true;
+}</code></pre>
+
+      <div class="callout">
+        <p>
+          <strong>Important:</strong> The lock flow requires two transactions: (1) approve the IFRLock contract to spend tokens, then (2) call <code>lock()</code>. Both must be signed by the user's wallet.
+        </p>
+      </div>
+
+      <!-- ============================================================
+           Section 7: Using lockType for Multi-App
+           ============================================================ -->
+      <h2>7. Using lockType for Multi-App</h2>
+      <p>
+        If you want to tag locks with your application's identifier, use <code>lockWithType()</code>. This is useful for analytics and distinguishing which app prompted the lock.
+      </p>
+
+      <span class="code-label">lockType &mdash; application tagging</span>
+      <pre><code>// Lock with your app's specific tag
+const lockType = ethers.utils.id("myapp_premium"); // bytes32 hash
+await lock.lockWithType(amount, lockType);</code></pre>
+
+      <div class="callout-green callout">
+        <p>
+          <strong>Note:</strong> <code>lockType</code> is metadata only &mdash; it does not affect <code>isLocked()</code> queries. One user has one lock balance, shared across all apps. The tag is for your own tracking purposes.
+        </p>
+      </div>
+
+      <!-- ============================================================
+           Section 8: Privacy Checklist
+           ============================================================ -->
+      <h2>8. Privacy Checklist</h2>
+      <p>
+        Integrating with on-chain data requires care around user privacy. Follow these guidelines:
+      </p>
+
+      <ul class="checklist">
+        <li><span class="do">DO</span> Query only <code>isLocked()</code> (boolean) &mdash; minimum data exposure</li>
+        <li><span class="do">DO</span> Use your own RPC endpoint (not a public one)</li>
+        <li><span class="do">DO</span> Cache results with a short TTL (e.g., 5 minutes)</li>
+        <li><span class="dont">DON'T</span> Store wallet addresses linked to user identities</li>
+        <li><span class="dont">DON'T</span> Log lock amounts or transaction details</li>
+        <li><span class="dont">DON'T</span> Track lock/unlock patterns across users</li>
+      </ul>
+
+      <p>
+        The resolver should be <strong style="color: var(--text);">stateless</strong> &mdash; query on demand, don't persist. If you need caching, use an in-memory store with a short TTL and no personal identifiers.
+      </p>
+
+      <!-- ============================================================
+           Section 9: Choosing Your Minimum Lock Amount
+           ============================================================ -->
+      <h2>9. Choosing Your Minimum Lock Amount</h2>
+      <p>
+        The minimum lock amount is entirely your decision. It lives in your resolver, not on-chain, so you can change it at any time without a contract interaction.
+      </p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Tier</th>
+            <th>Lock Amount</th>
+            <th>Use Case</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Basic</td>
+            <td><strong style="color: var(--text);">1,000 IFR</strong></td>
+            <td>Low barrier, broad access, community features</td>
+          </tr>
+          <tr>
+            <td>Standard</td>
+            <td><strong style="color: var(--text);">5,000 IFR</strong></td>
+            <td>Premium features, moderate commitment</td>
+          </tr>
+          <tr>
+            <td>Enterprise</td>
+            <td><strong style="color: var(--text);">25,000 IFR</strong></td>
+            <td>High-value access, strong holder commitment</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p>
+        Consider the value of your premium features when setting the threshold. A higher minimum means fewer premium users but stronger commitment. A lower minimum increases accessibility. You can also implement multiple tiers by checking against different thresholds.
+      </p>
+
+      <!-- ============================================================
+           Section 10: Testing on Sepolia
+           ============================================================ -->
+      <h2>10. Testing on Sepolia</h2>
+      <p>
+        Before going live, test your integration on the Sepolia testnet. You will need Sepolia ETH (from a faucet) and test IFR tokens (contact the team or swap on Uniswap Sepolia).
+      </p>
+
+      <span class="code-label">Foundry (cast) &mdash; query lock status</span>
+      <pre><code># Get Sepolia ETH from a faucet
+# Get test IFR tokens (contact the team or use Uniswap Sepolia)
+
+# Query lock status directly
+cast call 0x0Cab0A9440643128540222acC6eF5028736675d3 \
+  "isLocked(address,uint256)(bool)" \
+  YOUR_WALLET_ADDRESS \
+  5000000000000  # 5000 * 1e9</code></pre>
+
+      <div class="callout">
+        <p>
+          <strong>Tip:</strong> The <code>cast</code> command is part of the <a href="https://getfoundry.sh/" target="_blank" rel="noopener">Foundry</a> toolkit. It lets you call read functions directly from the command line without writing any code. Replace <code>YOUR_WALLET_ADDRESS</code> with an actual Sepolia address.
+        </p>
+      </div>
+
+      <h3>Quick Reference</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Resource</th>
+            <th>Link / Value</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>IFRLock (Sepolia)</td>
+            <td><code>0x0Cab0A9440643128540222acC6eF5028736675d3</code></td>
+          </tr>
+          <tr>
+            <td>InfernoToken (Sepolia)</td>
+            <td><code>0x3Bd71947F288d1dd8B21129B1bE4FF16EDd5d1F4</code></td>
+          </tr>
+          <tr>
+            <td>Token Decimals</td>
+            <td><code>9</code></td>
+          </tr>
+          <tr>
+            <td>Ticker</td>
+            <td><code>$IFR</code></td>
+          </tr>
+          <tr>
+            <td>Ethers.js version</td>
+            <td>v5 (CommonJS)</td>
+          </tr>
+          <tr>
+            <td>Uniswap Router (Sepolia)</td>
+            <td><code>0xC532a74256D3Db42D0Bf7a0400fEFDbad7694008</code></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- Footer -->
+      <footer class="wiki-footer">
+        Inferno ($IFR) &mdash; Community Fair Launch Model &mdash; Developer Integration Guide
+      </footer>
+
+    </main>
+  </div>
+
+  <!-- Mobile sidebar toggle script -->
+  <script>
+    (function () {
+      var hamburger = document.getElementById('hamburger');
+      var sidebar = document.getElementById('sidebar');
+      var overlay = document.getElementById('sidebarOverlay');
+
+      function toggleSidebar() {
+        var isOpen = sidebar.classList.toggle('open');
+        hamburger.classList.toggle('open', isOpen);
+        overlay.classList.toggle('open', isOpen);
+        document.body.style.overflow = isOpen ? 'hidden' : '';
+      }
+
+      hamburger.addEventListener('click', toggleSidebar);
+      overlay.addEventListener('click', toggleSidebar);
+    })();
+  </script>
+
+</body>
+</html>

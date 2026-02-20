@@ -1,0 +1,1075 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tokenomics Deep Dive &mdash; Inferno ($IFR) Documentation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    /* ============================================================
+       Inferno Wiki — Shared Styles (copy into every wiki page)
+       ============================================================ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #0a0a0a;
+      --card:     #111113;
+      --border:   #222225;
+      --text:     #e8e8ed;
+      --muted:    #8a8a96;
+      --accent:   #ff4500;
+      --green:    #22c55e;
+      --sidebar-w: 240px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    /* ---------- Layout (CSS Grid) ---------- */
+    .layout {
+      display: grid;
+      grid-template-columns: var(--sidebar-w) 1fr;
+      min-height: 100vh;
+    }
+
+    /* ---------- Sidebar ---------- */
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: var(--sidebar-w);
+      height: 100vh;
+      background: var(--card);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      padding: 24px 0;
+      overflow-y: auto;
+      z-index: 100;
+      transition: transform 0.3s ease;
+    }
+
+    .sidebar-logo {
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: 3px;
+      color: var(--accent);
+      padding: 0 24px 4px;
+      text-decoration: none;
+      display: block;
+    }
+
+    .sidebar-subtitle {
+      font-size: 12px;
+      color: var(--muted);
+      padding: 0 24px 24px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .sidebar-nav {
+      list-style: none;
+      padding: 16px 0;
+      flex: 1;
+    }
+
+    .sidebar-nav a {
+      display: block;
+      padding: 10px 24px;
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      transition: color 0.2s, background 0.2s, border-left 0.2s;
+      border-left: 3px solid transparent;
+    }
+
+    .sidebar-nav a:hover {
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .sidebar-nav a.active {
+      color: var(--accent);
+      border-left-color: var(--accent);
+      background: rgba(255, 69, 0, 0.06);
+    }
+
+    .sidebar-nav .nav-divider {
+      height: 1px;
+      background: var(--border);
+      margin: 12px 24px;
+    }
+
+    .sidebar-nav .nav-back a {
+      font-size: 13px;
+      color: var(--muted);
+      opacity: 0.7;
+    }
+
+    .sidebar-nav .nav-back a:hover {
+      opacity: 1;
+      color: var(--text);
+    }
+
+    /* ---------- Hamburger (mobile) ---------- */
+    .hamburger {
+      display: none;
+      position: fixed;
+      top: 16px;
+      left: 16px;
+      z-index: 200;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 12px;
+      cursor: pointer;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .hamburger span {
+      display: block;
+      width: 22px;
+      height: 2px;
+      background: var(--text);
+      border-radius: 2px;
+      transition: transform 0.3s, opacity 0.3s;
+    }
+
+    .hamburger.open span:nth-child(1) { transform: rotate(45deg) translate(5px, 5px); }
+    .hamburger.open span:nth-child(2) { opacity: 0; }
+    .hamburger.open span:nth-child(3) { transform: rotate(-45deg) translate(5px, -5px); }
+
+    .sidebar-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.6);
+      z-index: 90;
+    }
+
+    /* ---------- Main content ---------- */
+    .main {
+      grid-column: 2;
+      padding: 48px 56px;
+      max-width: 960px;
+    }
+
+    .main h1 {
+      font-size: 32px;
+      font-weight: 800;
+      margin-bottom: 8px;
+      color: var(--text);
+    }
+
+    .main h1 .accent {
+      color: var(--accent);
+    }
+
+    .main h2 {
+      font-size: 22px;
+      font-weight: 700;
+      margin: 40px 0 16px;
+      color: var(--text);
+    }
+
+    .main h3 {
+      font-size: 18px;
+      font-weight: 600;
+      margin: 32px 0 12px;
+      color: var(--text);
+    }
+
+    .main p {
+      color: var(--muted);
+      margin-bottom: 16px;
+      font-size: 15px;
+      max-width: 680px;
+    }
+
+    .main a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    .main a:hover {
+      text-decoration: underline;
+    }
+
+    .subtitle {
+      font-size: 16px;
+      color: var(--muted);
+      margin-bottom: 32px;
+    }
+
+    /* ---------- Code blocks ---------- */
+    pre {
+      background: #1a1a1d;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px 20px;
+      overflow-x: auto;
+      font-size: 13px;
+      line-height: 1.7;
+      margin: 16px 0;
+      color: var(--text);
+    }
+
+    code {
+      font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+      font-size: 13px;
+      color: var(--text);
+    }
+
+    p code, li code, td code {
+      background: rgba(255, 255, 255, 0.06);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 13px;
+    }
+
+    /* ---------- Tables ---------- */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0;
+      font-size: 14px;
+    }
+
+    th, td {
+      text-align: left;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    th {
+      color: var(--muted);
+      font-weight: 600;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    td { color: var(--text); }
+
+    tr:hover td { background: rgba(255, 255, 255, 0.02); }
+
+    /* ---------- Lists ---------- */
+    .main ul, .main ol {
+      padding-left: 24px;
+      margin-bottom: 16px;
+    }
+
+    .main li {
+      color: var(--muted);
+      font-size: 14px;
+      margin-bottom: 6px;
+    }
+
+    /* ---------- Callout ---------- */
+    .callout {
+      background: rgba(255, 69, 0, 0.06);
+      border-left: 3px solid var(--accent);
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 20px 0;
+    }
+
+    .callout p {
+      color: var(--text);
+      margin: 0;
+      font-size: 14px;
+    }
+
+    .callout-green {
+      background: rgba(34, 197, 94, 0.06);
+      border-left-color: var(--green);
+    }
+
+    /* ---------- Stats bar ---------- */
+    .stats-bar {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 16px;
+      margin: 24px 0 48px;
+    }
+
+    .stat-item {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px 24px;
+      text-align: center;
+    }
+
+    .stat-value {
+      font-size: 28px;
+      font-weight: 800;
+      color: var(--accent);
+      display: block;
+    }
+
+    .stat-label {
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 4px;
+      display: block;
+    }
+
+    /* ---------- Allocation bar chart ---------- */
+    .alloc-chart {
+      margin: 24px 0;
+    }
+
+    .alloc-row {
+      display: flex;
+      align-items: center;
+      margin-bottom: 12px;
+      gap: 12px;
+    }
+
+    .alloc-label {
+      width: 160px;
+      flex-shrink: 0;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text);
+      text-align: right;
+    }
+
+    .alloc-bar-track {
+      flex: 1;
+      height: 28px;
+      background: rgba(255, 255, 255, 0.04);
+      border-radius: 6px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .alloc-bar-fill {
+      height: 100%;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      padding-left: 10px;
+      font-size: 12px;
+      font-weight: 700;
+      color: #fff;
+      min-width: fit-content;
+    }
+
+    .alloc-amount {
+      width: 80px;
+      flex-shrink: 0;
+      font-size: 13px;
+      color: var(--muted);
+      text-align: right;
+    }
+
+    /* ---------- Section card (used for fee example) ---------- */
+    .example-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      margin: 20px 0;
+    }
+
+    .example-card h4 {
+      font-size: 15px;
+      font-weight: 700;
+      margin-bottom: 16px;
+      color: var(--text);
+    }
+
+    .example-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 14px;
+    }
+
+    .example-row:last-child {
+      border-bottom: none;
+    }
+
+    .example-row .label {
+      color: var(--muted);
+    }
+
+    .example-row .value {
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .example-row .value.accent {
+      color: var(--accent);
+    }
+
+    .example-row .value.green {
+      color: var(--green);
+    }
+
+    /* ---------- Exempt list ---------- */
+    .exempt-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 12px;
+      margin: 16px 0;
+    }
+
+    .exempt-item {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px 18px;
+    }
+
+    .exempt-item .name {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+
+    .exempt-item .reason {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    /* ---------- Footer ---------- */
+    .wiki-footer {
+      margin-top: 64px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    /* ---------- Responsive ---------- */
+    @media (max-width: 768px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        transform: translateX(-100%);
+      }
+
+      .sidebar.open {
+        transform: translateX(0);
+      }
+
+      .sidebar-overlay.open {
+        display: block;
+      }
+
+      .hamburger {
+        display: flex;
+      }
+
+      .main {
+        grid-column: 1;
+        padding: 72px 20px 40px;
+      }
+
+      .stats-bar {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .alloc-label {
+        width: 100px;
+        font-size: 12px;
+      }
+
+      .alloc-amount {
+        display: none;
+      }
+
+      .exempt-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .stats-bar {
+        grid-template-columns: 1fr;
+      }
+
+      .main h1 {
+        font-size: 26px;
+      }
+
+      .alloc-row {
+        flex-wrap: wrap;
+      }
+
+      .alloc-label {
+        width: 100%;
+        text-align: left;
+      }
+    }
+    /* ============================================================
+       End Shared Styles
+       ============================================================ */
+  </style>
+</head>
+<body>
+
+  <!-- Hamburger button (mobile only) -->
+  <button class="hamburger" id="hamburger" aria-label="Toggle navigation">
+    <span></span>
+    <span></span>
+    <span></span>
+  </button>
+
+  <!-- Overlay (mobile only) -->
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <div class="layout">
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <a href="index.html" class="sidebar-logo">INFERNO</a>
+      <div class="sidebar-subtitle">Documentation</div>
+      <ul class="sidebar-nav">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="contracts.html">Smart Contracts</a></li>
+        <li><a href="tokenomics.html" class="active">Tokenomics</a></li>
+        <li><a href="lock-mechanism.html">Lock Mechanism</a></li>
+        <li><a href="governance.html">Governance</a></li>
+        <li><a href="security.html">Security</a></li>
+        <li><a href="deployment.html">Deployment</a></li>
+        <li><a href="integration.html">Integration Guide</a></li>
+        <li><div class="nav-divider"></div></li>
+        <li class="nav-back"><a href="../index.html">&larr; Back to Website</a></li>
+      </ul>
+    </aside>
+
+    <!-- Main content -->
+    <main class="main">
+
+      <h1>Tokenomics <span class="accent">Deep Dive</span></h1>
+      <p class="subtitle">
+        Complete breakdown of $IFR fee mechanics, deflation model, token allocation, fair launch design, and fee-exempt addresses.
+      </p>
+
+      <!-- Quick stats -->
+      <div class="stats-bar">
+        <div class="stat-item">
+          <span class="stat-value">1B</span>
+          <span class="stat-label">Initial Supply</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-value">3.5%</span>
+          <span class="stat-label">Default Fee</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-value">2.5%</span>
+          <span class="stat-label">Burn per Transfer</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-value">9</span>
+          <span class="stat-label">Decimals</span>
+        </div>
+      </div>
+
+      <!-- ============================================================
+           Section 1: Fee-on-Transfer Mechanics
+           ============================================================ -->
+      <h2 id="fee-mechanics">1. Fee-on-Transfer Mechanics</h2>
+      <p>
+        Every standard ERC-20 transfer of $IFR triggers an automatic fee mechanism built directly into the token's <code>_update</code> function. This is not an external router or wrapper &mdash; the fee logic lives inside the token contract itself, making it impossible to bypass on any DEX or wallet transfer.
+      </p>
+      <p>
+        Fees are only applied on <strong>normal transfers</strong> between non-exempt addresses. Minting (from <code>address(0)</code>) and burning (to <code>address(0)</code>) are excluded. If either the sender or the recipient is marked as <code>feeExempt</code>, the entire fee is waived.
+      </p>
+
+      <h3>Fee Breakdown</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Fee Type</th>
+            <th>Rate</th>
+            <th>Basis Points</th>
+            <th>Destination</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Sender Burn</td>
+            <td>2.0%</td>
+            <td><code>200 bps</code></td>
+            <td><code>address(0)</code> &mdash; permanently burned</td>
+          </tr>
+          <tr>
+            <td>Recipient Burn</td>
+            <td>0.5%</td>
+            <td><code>50 bps</code></td>
+            <td><code>address(0)</code> &mdash; permanently burned</td>
+          </tr>
+          <tr>
+            <td>Pool Fee</td>
+            <td>1.0%</td>
+            <td><code>100 bps</code></td>
+            <td><code>poolFeeReceiver</code> &mdash; protocol wallet</td>
+          </tr>
+          <tr>
+            <td><strong>Total</strong></td>
+            <td><strong>3.5%</strong></td>
+            <td><strong><code>350 bps</code></strong></td>
+            <td>&mdash;</td>
+          </tr>
+          <tr>
+            <td>Max Cap (governance limit)</td>
+            <td>5.0%</td>
+            <td><code>500 bps</code></td>
+            <td>Sum of all three cannot exceed this</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>Calculation Example</h3>
+      <div class="example-card">
+        <h4>Sending 10,000 IFR</h4>
+        <div class="example-row">
+          <span class="label">Transfer Amount</span>
+          <span class="value">10,000 IFR</span>
+        </div>
+        <div class="example-row">
+          <span class="label">Sender Burn (2.0%)</span>
+          <span class="value accent">- 200 IFR</span>
+        </div>
+        <div class="example-row">
+          <span class="label">Recipient Burn (0.5%)</span>
+          <span class="value accent">- 50 IFR</span>
+        </div>
+        <div class="example-row">
+          <span class="label">Pool Fee (1.0%)</span>
+          <span class="value">- 100 IFR</span>
+        </div>
+        <div class="example-row">
+          <span class="label">Net Received by Recipient</span>
+          <span class="value green">9,650 IFR</span>
+        </div>
+        <div class="example-row">
+          <span class="label">Total Burned (supply reduction)</span>
+          <span class="value accent">250 IFR</span>
+        </div>
+        <div class="example-row">
+          <span class="label">Pool Fee Receiver gets</span>
+          <span class="value">100 IFR</span>
+        </div>
+      </div>
+
+      <h3>Contract Logic</h3>
+      <p>
+        The fee mechanism is implemented by overriding OpenZeppelin's <code>_update</code> internal function. All fee calculations use basis points (1 bps = 0.01%) for precision with integer arithmetic.
+      </p>
+<pre><code>function _update(address from, address to, uint256 value) internal override {
+    // Only apply fees on normal transfers (not mint/burn)
+    // and when neither party is exempt
+    if (from != address(0) && to != address(0)
+        && !feeExempt[from] && !feeExempt[to])
+    {
+        uint256 burnSender    = (value * senderBurnBps)    / 10_000;
+        uint256 burnRecipient = (value * recipientBurnBps) / 10_000;
+        uint256 poolFee       = (value * poolFeeBps)       / 10_000;
+        uint256 totalBurn     = burnSender + burnRecipient;
+        uint256 netAmount     = value - totalBurn - poolFee;
+
+        // Net amount to recipient
+        super._update(from, to, netAmount);
+        // Pool fee to receiver
+        super._update(from, poolFeeReceiver, poolFee);
+        // Burn &mdash; tokens go to address(0), totalSupply decreases
+        super._update(from, address(0), totalBurn);
+    } else {
+        super._update(from, to, value);
+    }
+}</code></pre>
+
+      <div class="callout">
+        <p>
+          <strong>Important:</strong> If <em>either</em> the sender or the recipient is <code>feeExempt</code>, the entire transfer proceeds without any fees. Both parties must be non-exempt for fees to apply.
+        </p>
+      </div>
+
+      <!-- ============================================================
+           Section 2: Deflation Model
+           ============================================================ -->
+      <h2 id="deflation-model">2. Deflation Model</h2>
+      <p>
+        Inferno is a <strong>purely deflationary</strong> token. There is no minting function beyond the initial supply creation in the constructor. Every taxed transfer permanently removes tokens from circulation by sending them to <code>address(0)</code>, which decreases <code>totalSupply</code>.
+      </p>
+
+      <h3>Key Properties</h3>
+      <ul>
+        <li><strong>Initial supply:</strong> 1,000,000,000 IFR (1 billion)</li>
+        <li><strong>Burn rate per transfer:</strong> 2.5% of the transferred amount (2.0% sender burn + 0.5% recipient burn)</li>
+        <li><strong>No minting function exists</strong> &mdash; supply can only decrease, never increase</li>
+        <li><strong>Pool fee (1.0%)</strong> goes to <code>poolFeeReceiver</code> and does <em>not</em> reduce supply</li>
+        <li><strong>Burn rate is volume-dependent</strong>, not time-dependent &mdash; more trading = faster deflation</li>
+      </ul>
+
+      <h3>Projected Supply Scenarios</h3>
+      <p>
+        The following table illustrates how supply decreases based on cumulative transfer volume. These are simplified examples assuming uniform transfer sizes and no fee-exempt transfers.
+      </p>
+      <table>
+        <thead>
+          <tr>
+            <th>Scenario</th>
+            <th>Transfer Volume</th>
+            <th>Approx. Burned</th>
+            <th>Remaining Supply</th>
+            <th>% Deflation</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>1,000 transfers of 10,000 IFR</td>
+            <td>10,000,000 IFR</td>
+            <td>250,000 IFR</td>
+            <td>999,750,000 IFR</td>
+            <td>0.025%</td>
+          </tr>
+          <tr>
+            <td>10,000 transfers of 10,000 IFR</td>
+            <td>100,000,000 IFR</td>
+            <td>2,500,000 IFR</td>
+            <td>997,500,000 IFR</td>
+            <td>0.25%</td>
+          </tr>
+          <tr>
+            <td>100,000 transfers of 10,000 IFR</td>
+            <td>1,000,000,000 IFR</td>
+            <td>25,000,000 IFR</td>
+            <td>975,000,000 IFR</td>
+            <td>2.5%</td>
+          </tr>
+          <tr>
+            <td>1M transfers of 10,000 IFR</td>
+            <td>10,000,000,000 IFR</td>
+            <td>250,000,000 IFR</td>
+            <td>750,000,000 IFR</td>
+            <td>25%</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="callout callout-green">
+        <p>
+          <strong>Key Insight:</strong> The deflation rate is entirely driven by transfer volume, not by the passage of time. High trading activity on DEXes accelerates token burns. During low-activity periods, the supply remains stable. This creates a natural correlation between usage and scarcity.
+        </p>
+      </div>
+
+      <h3>Fee Governance</h3>
+      <p>
+        The owner (Governance contract with 48-hour timelock) can adjust the three fee rates via <code>setFeeRates()</code>. The hard cap of <strong>500 bps (5%)</strong> is enforced on-chain &mdash; the sum of all three rates can never exceed this limit, even through governance action.
+      </p>
+<pre><code>function setFeeRates(
+    uint256 _senderBurnBps,
+    uint256 _recipientBurnBps,
+    uint256 _poolFeeBps
+) external onlyOwner {
+    require(_senderBurnBps + _recipientBurnBps + _poolFeeBps <= 500, "fees>5%");
+    senderBurnBps    = _senderBurnBps;
+    recipientBurnBps = _recipientBurnBps;
+    poolFeeBps       = _poolFeeBps;
+}</code></pre>
+
+      <!-- ============================================================
+           Section 3: Token Allocation
+           ============================================================ -->
+      <h2 id="allocation">3. Token Allocation</h2>
+      <p>
+        The total initial supply of 1,000,000,000 IFR is distributed across five categories at deployment. All allocations are executed in the deploy script &mdash; there is no ongoing emission or inflation mechanism.
+      </p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Category</th>
+            <th>Percentage</th>
+            <th>Amount (IFR)</th>
+            <th>Unlock Schedule</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>DEX Liquidity</td>
+            <td>40%</td>
+            <td>400,000,000</td>
+            <td>Immediately paired on Uniswap V2</td>
+          </tr>
+          <tr>
+            <td>Liquidity Reserve</td>
+            <td>20%</td>
+            <td>200,000,000</td>
+            <td>6-month lock, then 50M per quarter</td>
+          </tr>
+          <tr>
+            <td>Team Vesting</td>
+            <td>15%</td>
+            <td>150,000,000</td>
+            <td>12-month cliff, then linear over 36 months</td>
+          </tr>
+          <tr>
+            <td>Treasury</td>
+            <td>15%</td>
+            <td>150,000,000</td>
+            <td>Available to multisig (Gnosis Safe)</td>
+          </tr>
+          <tr>
+            <td>Community</td>
+            <td>10%</td>
+            <td>100,000,000</td>
+            <td>Available to community wallet</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>Allocation Visualization</h3>
+      <div class="alloc-chart">
+        <div class="alloc-row">
+          <span class="alloc-label">DEX Liquidity</span>
+          <div class="alloc-bar-track">
+            <div class="alloc-bar-fill" style="width: 40%; background: linear-gradient(90deg, #ff4500, #ff6b35);">40%</div>
+          </div>
+          <span class="alloc-amount">400M IFR</span>
+        </div>
+        <div class="alloc-row">
+          <span class="alloc-label">Liquidity Reserve</span>
+          <div class="alloc-bar-track">
+            <div class="alloc-bar-fill" style="width: 20%; background: linear-gradient(90deg, #3b82f6, #60a5fa);">20%</div>
+          </div>
+          <span class="alloc-amount">200M IFR</span>
+        </div>
+        <div class="alloc-row">
+          <span class="alloc-label">Team Vesting</span>
+          <div class="alloc-bar-track">
+            <div class="alloc-bar-fill" style="width: 15%; background: linear-gradient(90deg, #a855f7, #c084fc);">15%</div>
+          </div>
+          <span class="alloc-amount">150M IFR</span>
+        </div>
+        <div class="alloc-row">
+          <span class="alloc-label">Treasury</span>
+          <div class="alloc-bar-track">
+            <div class="alloc-bar-fill" style="width: 15%; background: linear-gradient(90deg, #22c55e, #4ade80);">15%</div>
+          </div>
+          <span class="alloc-amount">150M IFR</span>
+        </div>
+        <div class="alloc-row">
+          <span class="alloc-label">Community</span>
+          <div class="alloc-bar-track">
+            <div class="alloc-bar-fill" style="width: 10%; background: linear-gradient(90deg, #eab308, #facc15);">10%</div>
+          </div>
+          <span class="alloc-amount">100M IFR</span>
+        </div>
+      </div>
+
+      <h3>Unlock Schedule Details</h3>
+
+      <p><strong>DEX Liquidity (40% &mdash; 400M IFR)</strong></p>
+      <ul>
+        <li>Immediately paired with ETH on Uniswap V2 at deployment</li>
+        <li>LP tokens held by the deployer (to be locked or burned)</li>
+        <li>Provides initial trading liquidity for the market</li>
+      </ul>
+
+      <p><strong>Liquidity Reserve (20% &mdash; 200M IFR)</strong></p>
+      <ul>
+        <li>Locked in the LiquidityReserve contract for 6 months minimum</li>
+        <li>After the lock period: 50M IFR released per quarter (4 quarters to fully unlock)</li>
+        <li>Purpose: supplemental liquidity, market-making, or strategic partnerships</li>
+      </ul>
+
+      <p><strong>Team Vesting (15% &mdash; 150M IFR)</strong></p>
+      <ul>
+        <li>Locked in the Vesting contract with a <strong>12-month cliff</strong></li>
+        <li>After the cliff: linear vesting over 36 months</li>
+        <li>Total vesting period: 48 months (4 years)</li>
+        <li>Prevents team dumps and aligns long-term incentives</li>
+      </ul>
+
+      <p><strong>Treasury (15% &mdash; 150M IFR)</strong></p>
+      <ul>
+        <li>Controlled by a Gnosis Safe multisig wallet</li>
+        <li>Available for ecosystem development, audits, marketing, and partnerships</li>
+        <li>All spends require multisig approval</li>
+      </ul>
+
+      <p><strong>Community (10% &mdash; 100M IFR)</strong></p>
+      <ul>
+        <li>Available to the community wallet</li>
+        <li>Used for airdrops, rewards, community incentives, and grants</li>
+      </ul>
+
+      <!-- ============================================================
+           Section 4: Fair Launch Model (CFLM)
+           ============================================================ -->
+      <h2 id="fair-launch">4. Fair Launch Model (CFLM)</h2>
+      <p>
+        Inferno uses a <strong>Community Fair Launch Model (CFLM)</strong>, which guarantees that no individual or group receives preferential access to tokens before public trading begins.
+      </p>
+
+      <h3>Core Principles</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Principle</th>
+            <th>Implementation</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>No presale</td>
+            <td>Zero tokens sold before Uniswap listing</td>
+          </tr>
+          <tr>
+            <td>No private rounds</td>
+            <td>No seed, private, or strategic investor allocations</td>
+          </tr>
+          <tr>
+            <td>No VC allocations</td>
+            <td>No venture capital or institutional pre-purchase agreements</td>
+          </tr>
+          <tr>
+            <td>Transparent distribution</td>
+            <td>All token transfers executed via the public deploy script on-chain</td>
+          </tr>
+          <tr>
+            <td>Deployer exemption removed</td>
+            <td>Deployer's <code>feeExempt</code> status is explicitly revoked after distribution</td>
+          </tr>
+          <tr>
+            <td>Team tokens vested</td>
+            <td>15% allocation locked for 48 months (12-month cliff + 36-month linear)</td>
+          </tr>
+          <tr>
+            <td>Liquidity locked</td>
+            <td>Reserve tokens locked for a minimum of 6 months</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>How It Works</h3>
+      <ol>
+        <li>The deploy script mints the entire 1B IFR supply to the deployer</li>
+        <li>The deployer distributes tokens to all allocation contracts (Vesting, LiquidityReserve, Treasury, Community wallet)</li>
+        <li>40% is paired with ETH on Uniswap V2, creating the initial liquidity pool</li>
+        <li>The deployer's <code>feeExempt</code> status is <strong>removed</strong> so the deployer is subject to the same fees as everyone else</li>
+        <li>Ownership of InfernoToken (and all admin functions) is transferred to the Governance contract with its 48-hour timelock</li>
+        <li>From this point, no single entity has privileged access to the token</li>
+      </ol>
+
+      <div class="callout">
+        <p>
+          <strong>Verification:</strong> Every step of the CFLM deployment is fully verifiable on-chain. All contract source code is verified on Etherscan, and the deploy script is open source in the project repository.
+        </p>
+      </div>
+
+      <!-- ============================================================
+           Section 5: Fee Exempt Addresses
+           ============================================================ -->
+      <h2 id="fee-exempt">5. Fee Exempt Addresses</h2>
+      <p>
+        Certain protocol contracts are marked as <code>feeExempt</code> to ensure that internal protocol operations (vesting releases, reserve unlocks, buyback executions, burns) are not taxed. Without these exemptions, protocol mechanisms would lose tokens to fees on every internal transfer, breaking the intended allocation math.
+      </p>
+
+      <h3>Exempt Contracts</h3>
+      <div class="exempt-grid">
+        <div class="exempt-item">
+          <div class="name">Vesting</div>
+          <div class="reason">Team token releases must deliver the exact vested amount without fee deductions</div>
+        </div>
+        <div class="exempt-item">
+          <div class="name">LiquidityReserve</div>
+          <div class="reason">Reserve unlocks should transfer the full quarterly allocation to the target</div>
+        </div>
+        <div class="exempt-item">
+          <div class="name">Treasury</div>
+          <div class="reason">Treasury disbursements to fund development and operations must not be taxed</div>
+        </div>
+        <div class="exempt-item">
+          <div class="name">BuybackVault</div>
+          <div class="reason">Buyback operations purchase IFR from the market &mdash; fees would reduce effectiveness</div>
+        </div>
+        <div class="exempt-item">
+          <div class="name">BurnReserve</div>
+          <div class="reason">Tokens held for scheduled burns should not lose value to transfer fees</div>
+        </div>
+        <div class="exempt-item">
+          <div class="name">IFRLock</div>
+          <div class="reason">Users locking and unlocking tokens should not be penalized by fees on lock/unlock operations</div>
+        </div>
+      </div>
+
+      <h3>Exemption Rules</h3>
+      <ul>
+        <li>If <strong>either</strong> the sender or recipient is <code>feeExempt</code>, the entire transfer is fee-free</li>
+        <li>Exemptions are set via <code>setFeeExempt(address, bool)</code> by the owner (Governance contract)</li>
+        <li>The <strong>deployer's exemption is explicitly removed</strong> after the initial distribution to prevent any privileged fee-free trading</li>
+        <li>Adding or removing exemptions requires a governance proposal with 48-hour timelock</li>
+      </ul>
+
+<pre><code>// Setting fee exemption (onlyOwner = Governance contract)
+function setFeeExempt(address account, bool exempt) external onlyOwner {
+    feeExempt[account] = exempt;
+    emit FeeExemptUpdated(account, exempt);
+}
+
+// Fee check in _update:
+// Both sender AND recipient must be non-exempt for fees to apply
+if (from != address(0) && to != address(0)
+    && !feeExempt[from] && !feeExempt[to])
+{
+    // ... apply fees
+}</code></pre>
+
+      <div class="callout callout-green">
+        <p>
+          <strong>Security Note:</strong> The fee exemption mapping is controlled exclusively by the Governance contract (owner). No single EOA can grant or revoke exemptions. Any change requires a proposal, a 48-hour waiting period, and execution &mdash; giving the community time to review and react.
+        </p>
+      </div>
+
+      <!-- Footer -->
+      <footer class="wiki-footer">
+        Inferno ($IFR) &mdash; Community Fair Launch Model &mdash; Documentation v1.0
+      </footer>
+
+    </main>
+  </div>
+
+  <!-- Mobile sidebar toggle script -->
+  <script>
+    (function () {
+      var hamburger = document.getElementById('hamburger');
+      var sidebar = document.getElementById('sidebar');
+      var overlay = document.getElementById('sidebarOverlay');
+
+      function toggleSidebar() {
+        var isOpen = sidebar.classList.toggle('open');
+        hamburger.classList.toggle('open', isOpen);
+        overlay.classList.toggle('open', isOpen);
+        document.body.style.overflow = isOpen ? 'hidden' : '';
+      }
+
+      hamburger.addEventListener('click', toggleSidebar);
+      overlay.addEventListener('click', toggleSidebar);
+    })();
+  </script>
+
+</body>
+</html>
