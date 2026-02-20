@@ -260,6 +260,6 @@ npm run dev
 |------|-------------|
 | `STATUS-REPORT.md` | Full project status with all contract details |
 | `docs/FAIR-LAUNCH-MIGRATION.md` | CFLM migration plan and architecture analysis |
-| `docs/README.md` | Project structure and module status |
+| `docs/DOCS.md` | Project structure and module status |
 | `docs/SECURITY-AUDIT.md` | Slither audit report (0 high/critical) |
 | `docs/DEPLOYMENTS.md` | Deployed contract addresses (Sepolia) |
