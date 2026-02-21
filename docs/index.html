@@ -193,12 +193,13 @@
       margin-left: auto;
       margin-right: auto;
       margin-bottom: 32px;
-      width: 140px;
-      height: 140px;
-      border-radius: 50%;
-      border: 3px solid var(--accent);
-      box-shadow: 0 0 60px var(--accent-glow), 0 0 120px rgba(255, 69, 0, 0.15);
-      object-fit: cover;
+      width: 160px;
+      height: 160px;
+      border: none;
+      border-radius: 0;
+      box-shadow: none;
+      background: transparent;
+      object-fit: contain;
     }
 
     .hero h1 {
@@ -836,7 +837,7 @@
       .what-stats { grid-template-columns: 1fr 1fr; }
       .flow-diagram { flex-direction: column; }
       .flow-arrow { transform: rotate(90deg); }
-      .hero-logo { width: 100px; height: 100px; }
+      .hero-logo { width: 120px; height: 120px; }
       .token-symbol { width: 60px; height: 60px; }
     }
   </style>
@@ -1032,8 +1033,12 @@
           <div class="alloc-bar"><div class="alloc-fill" data-width="15"></div></div>
         </div>
         <div class="alloc-bar-wrap">
-          <div class="alloc-meta"><span class="alloc-name">Community / Ecosystem</span><span class="alloc-pct">10% &mdash; 100M IFR</span></div>
-          <div class="alloc-bar"><div class="alloc-fill" data-width="10"></div></div>
+          <div class="alloc-meta"><span class="alloc-name">Community &amp; Grants</span><span class="alloc-pct">6% &mdash; 60M IFR</span></div>
+          <div class="alloc-bar"><div class="alloc-fill" data-width="6"></div></div>
+        </div>
+        <div class="alloc-bar-wrap">
+          <div class="alloc-meta"><span class="alloc-name">Partner Ecosystem</span><span class="alloc-pct">4% &mdash; 40M IFR</span></div>
+          <div class="alloc-bar"><div class="alloc-fill" data-width="4"></div></div>
         </div>
         <p style="margin-top: 24px; font-size: 13px; color: var(--text-muted);">
           Team tokens are vested over 48 months with a 12-month cliff. Liquidity reserve has a 6-month lock with staged quarterly releases.
@@ -1083,7 +1088,7 @@
       <div class="partner-step">
         <div class="partner-step-num">1</div>
         <h3>Register</h3>
-        <p>Apply as partner, receive IFR allocation and integration support from the Inferno team.</p>
+        <p>Apply as partner, receive milestone-based IFR allocation from the Partner Ecosystem Pool (40M IFR) and integration support.</p>
       </div>
       <div class="partner-step">
         <div class="partner-step-num">2</div>
@@ -1095,6 +1100,11 @@
         <h3>Launch</h3>
         <p>Your users lock IFR for lifetime premium access. No subscriptions, no recurring fees.</p>
       </div>
+    </div>
+
+    <div class="reveal" style="margin-top: 40px; padding: 28px; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius);">
+      <h3 style="font-size: 18px; margin-bottom: 12px;">Partner Token Allocation</h3>
+      <p style="color: var(--text-muted); font-size: 15px; line-height: 1.7;">Partners receive IFR token allocations from the dedicated Partner Ecosystem Pool (40M IFR). Allocations are milestone-based and vested &mdash; no instant dumps. Tiers: Launch Partners receive up to 5M IFR (0.5%), Tier 1 Partners up to 2M IFR, Tier 2 up to 1M IFR, and new integrations start at 500K IFR. All partner tokens vest linearly over 6&ndash;12 months and are tied to integration milestones (live integration, minimum active lock users). Once DAO governance launches in Phase 4, partner-held tokens grant proportional voting rights in protocol decisions.</p>
     </div>
 
     <div class="partner-code reveal">
@@ -1249,7 +1259,7 @@ if (isLocked) {
 
       <div class="faq-item">
         <button class="faq-question"><span>How can partners integrate IFR?</span><span class="faq-icon">+</span></button>
-        <div class="faq-answer"><div class="faq-answer-inner">Integration is designed to be simple &mdash; any developer can add IFR verification in under 30 minutes. The core is one function call: <code style="background:rgba(255,255,255,0.06);padding:2px 6px;border-radius:4px;">isLocked(walletAddress, minimumAmount)</code> which returns true or false. No complex APIs, no user databases, no wallet storage needed. Partners benefit from token allocation from the Ecosystem pool, revenue sharing, prominent listing on the Inferno website, and access to a growing user base. Privacy by design: the partner app never stores wallets and never makes blockchain calls directly. Everything goes through a stateless resolver. Full integration guide with code examples available in our Developer Documentation.</div></div>
+        <div class="faq-answer"><div class="faq-answer-inner">Integration is designed to be simple &mdash; any developer can add IFR verification in under 30 minutes. The core is one function call: <code style="background:rgba(255,255,255,0.06);padding:2px 6px;border-radius:4px;">isLocked(walletAddress, minimumAmount)</code> which returns true or false. No complex APIs, no user databases, no wallet storage needed. Partners benefit from token allocation from the Partner Ecosystem Pool (40M IFR, 4% of supply). Allocations are vested and milestone-based to ensure long-term alignment. Partners also receive revenue sharing, prominent listing on the Inferno website, and access to a growing user base. Privacy by design: the partner app never stores wallets and never makes blockchain calls directly. Everything goes through a stateless resolver. Full integration guide with code examples available in our Developer Documentation.</div></div>
       </div>
 
       <div class="faq-item">
