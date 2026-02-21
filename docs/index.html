@@ -7,6 +7,7 @@
   <meta name="description" content="Deflationary ERC-20 utility token with fee-on-transfer burn mechanics. Lock IFR to unlock lifetime access across partner products.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="icon" type="image/png" href="assets/token.png">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
@@ -196,9 +197,8 @@
       height: 140px;
       border-radius: 50%;
       border: 3px solid var(--accent);
-      box-shadow: 0 0 60px var(--accent-glow), 0 0 120px rgba(0, 210, 200, 0.15);
+      box-shadow: 0 0 60px var(--accent-glow), 0 0 120px rgba(255, 69, 0, 0.15);
       object-fit: cover;
-      background: #000;
     }
 
     .hero h1 {
@@ -334,6 +334,15 @@
     }
 
     /* ── TOKENOMICS ───────────────────────────────── */
+
+    .token-symbol {
+      display: block;
+      margin: 0 auto 20px;
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      box-shadow: 0 0 40px var(--accent-glow);
+    }
 
     .tokenomics-grid {
       display: grid;
@@ -827,7 +836,8 @@
       .what-stats { grid-template-columns: 1fr 1fr; }
       .flow-diagram { flex-direction: column; }
       .flow-arrow { transform: rotate(90deg); }
-      .hero-logo { width: 100px; height: 100px; padding: 6px; }
+      .hero-logo { width: 100px; height: 100px; }
+      .token-symbol { width: 60px; height: 60px; }
     }
   </style>
 </head>
@@ -968,6 +978,7 @@
   <div class="container">
     <div class="reveal">
       <p class="section-label">Tokenomics</p>
+      <img src="assets/token.png" alt="IFR Token" class="token-symbol">
       <h2 class="section-title">Designed to be deflationary by default</h2>
       <p class="section-desc">Every transfer burns tokens permanently. The supply only goes down. No inflation, no minting after launch.</p>
     </div>
