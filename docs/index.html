@@ -913,7 +913,7 @@
           <div class="stat-label">Initial supply</div>
         </div>
         <div class="stat-card">
-          <div class="stat-value">7</div>
+          <div class="stat-value">8</div>
           <div class="stat-label">Smart contracts</div>
         </div>
         <div class="stat-card">
@@ -1104,8 +1104,8 @@
     </div>
 
     <div class="reveal" style="margin-top: 40px; padding: 28px; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius);">
-      <h3 style="font-size: 18px; margin-bottom: 12px;">Partner Token Allocation</h3>
-      <p style="color: var(--text-muted); font-size: 15px; line-height: 1.7;">Partners receive IFR token allocations from the dedicated Partner Ecosystem Pool (40M IFR). Allocations are milestone-based and vested &mdash; no instant dumps. Tiers: Launch Partners receive up to 5M IFR (0.5%), Tier 1 Partners up to 2M IFR, Tier 2 up to 1M IFR, and new integrations start at 500K IFR. All partner tokens vest linearly over 6&ndash;12 months and are tied to integration milestones (live integration, minimum active lock users). Once DAO governance launches in Phase 4, partner-held tokens grant proportional voting rights in protocol decisions.</p>
+      <h3 style="font-size: 18px; margin-bottom: 12px;">Partner Token Allocation &amp; DAO Voting</h3>
+      <p style="color: var(--text-muted); font-size: 15px; line-height: 1.7;">Every approved partner receives IFR tokens from the Partner Ecosystem Pool (40M IFR, 4% of supply). Allocations are milestone-based and vested: Launch Partners up to 5M IFR, Tier 1 up to 2M IFR, Tier 2 up to 1M IFR, new integrations start at 500K IFR. All partner tokens vest over 6&ndash;12 months. When DAO governance launches in Phase 4, partner-held tokens grant proportional voting rights in protocol decisions &mdash; partners become stakeholders with real influence.</p>
     </div>
 
     <div class="partner-code reveal">
@@ -1138,7 +1138,7 @@ if (isLocked) {
       <div class="arch-layer">
         <p class="arch-layer-tag">Truth Layer &mdash; On-Chain</p>
         <h3>IFR Lock Contract</h3>
-        <p>Immutable Solidity contract on Ethereum. Stores lock amounts and timestamps. Exposes <code>isLocked(user, minAmount)</code> for external queries. No app logic, no user IDs.</p>
+        <p>Audited Solidity contract on Ethereum. Stores lock amounts and timestamps. Exposes <code>isLocked(user, minAmount)</code> for external queries. No app logic, no user IDs.</p>
       </div>
       <div class="arch-layer">
         <p class="arch-layer-tag">Bridge Layer &mdash; Stateless</p>
@@ -1178,7 +1178,7 @@ if (isLocked) {
       <div class="trust-item reveal">
         <div class="trust-check">&check;</div>
         <div>
-          <h4>154 Unit Tests</h4>
+          <h4>154+ Unit Tests</h4>
           <p>Comprehensive test suite covering all contracts: deployment, edge cases, access control, integrations.</p>
         </div>
       </div>
@@ -1289,7 +1289,7 @@ if (isLocked) {
         <div class="roadmap-dot done">&check;</div>
         <div class="roadmap-body">
           <h4>Phase 1 &mdash; Foundation <span class="badge-done">Complete</span></h4>
-          <p>Smart Contract Development (7 contracts, 154 tests). Security Audit (Slither, 0 high/critical). Testnet Deployment (Sepolia, all verified).</p>
+          <p>Smart Contract Development (8 contracts, 154 tests). Security Audit (Slither, 0 high/critical). Testnet Deployment (Sepolia, all verified).</p>
         </div>
       </div>
       <div class="roadmap-item">
@@ -1310,7 +1310,7 @@ if (isLocked) {
         <div class="roadmap-dot">4</div>
         <div class="roadmap-body">
           <h4>Phase 4 &mdash; Decentralization</h4>
-          <p>DAO Governance Migration. Community Proposals. Governance Multisig Transition. Protocol Revenue Sharing.</p>
+          <p>DAO Governance Migration. Community Proposals. Partner Voting Rights. Governance Multisig Transition. Protocol Revenue Sharing.</p>
         </div>
       </div>
       <div class="roadmap-item">

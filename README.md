@@ -4,293 +4,75 @@
 
 # Inferno ($IFR)
 
-Deflationary ERC20 token with fee-on-transfer burn mechanics, buyback system, and timelock governance.
-Built on the **Community Fair Launch Model (CFLM)** — no presale, fair distribution from day one.
+**The Deflationary Utility Token**
 
-**[Website](https://neabouli.github.io/inferno/)** | **[Wiki](https://neabouli.github.io/inferno/wiki/)** | **[X / Twitter](https://x.com/IFRtoken)** | **[Etherscan (Sepolia)](https://sepolia.etherscan.io/address/0x3Bd71947F288d1dd8B21129B1bE4FF16EDd5d1F4#code)**
+[Website](https://neabouli.github.io/inferno/) · [Documentation](https://neabouli.github.io/inferno/wiki/) · [X / Twitter](https://x.com/IFRtoken) · [Etherscan (Sepolia)](https://sepolia.etherscan.io/address/0x3Bd71947F288d1dd8B21129B1bE4FF16EDd5d1F4#code)
 
-## Contracts
+---
 
-| # | Contract | Path | Description |
-|---|----------|------|-------------|
-| 1 | **InfernoToken** | `contracts/token/InfernoToken.sol` | ERC20 (9 decimals), 1B supply, fee-on-transfer: 2% sender burn + 0.5% recipient burn + 1% pool fee |
-| 2 | **LiquidityReserve** | `contracts/liquidity/LiquidityReserve.sol` | Strategic reserve with 6-month lock and staged withdrawal (50M IFR per quarter) |
-| 3 | **Vesting** | `contracts/vesting/Vesting.sol` | Post-cliff linear vesting (12mo cliff, 36mo linear), guardian pause |
-| 4 | **BuybackVault** | `contracts/buyback/BuybackVault.sol` | ETH deposit + automated DEX buyback, 50/50 split to burn reserve + treasury, 60-day activation delay |
-| 5 | **BurnReserve** | `contracts/burnreserve/BurnReserve.sol` | Permanent token burn with totalBurned tracking, owner + guardian auth |
-| 6 | **Governance** | `contracts/governance/Governance.sol` | Timelock governor (propose/execute/cancel), 48h default delay, guardian emergency cancel |
-| 7 | **IFRLock** | `contracts/lock/IFRLock.sol` | Generic token lock, isLocked() query for external resolvers, ReentrancyGuard, multi-app lockType |
+## What is Inferno?
 
-## Token Economics
+Inferno (IFR) is a deflationary ERC-20 utility token on Ethereum. Every transfer burns 2.5% permanently, reducing total supply over time. Users lock IFR tokens on-chain to unlock lifetime premium access to partner products — no subscriptions, no recurring payments.
 
-| Parameter | Value |
-|-----------|-------|
-| Name / Symbol | Inferno / IFR |
-| Decimals | 9 |
-| Total Supply | 1,000,000,000 IFR |
-| Sender Burn | 2.0% (200 bps) |
-| Recipient Burn | 0.5% (50 bps) |
-| Pool Fee | 1.0% (100 bps) |
-| Max Fee Cap | 5.0% (500 bps) |
+**Community Fair Launch Model** — No presale, no VC, no insider allocations.
 
-### Token Distribution (CFLM)
+## Key Features
 
-| Recipient | Amount | Share | Mechanism |
-|-----------|--------|-------|-----------|
-| DEX Liquidity | 400,000,000 IFR | 40% | Deployer pairs with ETH on Uniswap |
-| Liquidity Reserve | 200,000,000 IFR | 20% | LiquidityReserve.sol (6mo lock, 50M/quarter) |
-| Team Vesting | 150,000,000 IFR | 15% | Vesting.sol (12mo cliff + 36mo linear) |
-| Treasury | 150,000,000 IFR | 15% | Direct to multisig address |
-| Community & Grants | 60,000,000 IFR | 6% | Community grants, bug bounties, ecosystem development |
-| Partner Ecosystem | 40,000,000 IFR | 4% | Milestone-based partner allocations (vested 6-12mo) |
+- **Deflationary**: 2.5% burned per transfer (2% sender + 0.5% recipient). 1% pool fee. Hard cap: 5% max.
+- **Utility Lock**: Lock IFR → lifetime premium access across partner products → unlock anytime.
+- **Timelock Governance**: 48-hour delay on all changes. Guardian cancel. No instant admin access.
+- **No Mint Function**: Supply can only decrease, never increase.
+- **Fair Launch**: No presale, no VC. Transparent allocation from day one.
 
-### Fee Exempt
+## Token Allocation
 
-Vesting, LiquidityReserve, Treasury, BuybackVault, BurnReserve, IFRLock — deployer exemption is removed after distribution.
+| Allocation | Share | Amount |
+|-----------|-------|--------|
+| DEX Liquidity | 40% | 400M IFR |
+| Liquidity Reserve | 20% | 200M IFR |
+| Team (Vested) | 15% | 150M IFR |
+| Treasury | 15% | 150M IFR |
+| Community & Grants | 6% | 60M IFR |
+| Partner Ecosystem | 4% | 40M IFR |
 
-## Setup
+Team tokens: 48-month vesting, 12-month cliff. Liquidity reserve: 6-month lock.
 
-```bash
-npm install
-npx hardhat compile
-npx hardhat test
-```
+## Smart Contracts (8)
 
-## Test Suite
-
-154 tests across 7 test files:
-
-| Suite | Tests | Covers |
-|-------|-------|--------|
-| **InfernoToken** | 21 | Deployment, fee math, exemptions, owner functions, edge cases |
-| **LiquidityReserve** | 28 | Lock period, staged withdrawal, pause, period limits |
-| **Vesting** | 7 | Cliff, post-cliff linear release, beneficiary access, guardian pause |
-| **BuybackVault** | 9 | Deposit, buyback split, cooldown, slippage, 60-day activation |
-| **BurnReserve** | 21 | Deposit, burn, burnAll, totalBurned tracking, guardian auth |
-| **Governance** | 36 | Propose, execute, cancel, self-governance delay, integration with InfernoToken |
-| **IFRLock** | 29 | Lock, unlock, re-lock, isLocked query, lockType, fee-exempt, pause, multi-user |
-
-## Architecture
-
-```
-    [Deployer] -- 1B IFR minted
-         |
-         +-- 400M --> DEX Liquidity (paired with ETH)
-         +-- 200M --> [LiquidityReserve] (6mo lock, 50M/quarter)
-         +-- 150M --> [Vesting] (12mo cliff, 36mo linear)
-         +-- 150M --> [Treasury Multisig]
-         +-- 100M --> [Community Wallet]
-
-    [Governance] (48h Timelock)
-         |
-    Owner of InfernoToken (after transferOwnership)
-         |
-    propose() --> 48h delay --> execute()
-         |
-    setFeeRates(), setFeeExempt(), setPoolFeeReceiver()
-    Guardian can cancel proposals
-
-    [BuybackVault] (active after 60 days)
-         |
-    ETH deposit --> DEX swap --> IFR
-         |                        |
-    50% --> [BurnReserve]    50% --> [Treasury]
-         |
-    burn() --> totalSupply decreases
-
-    [InfernoToken] -- every transfer:
-       2.0% sender burn (totalSupply decreases)
-       0.5% recipient burn (totalSupply decreases)
-       1.0% pool fee --> poolFeeReceiver
-```
-
-## Deploy
-
-### Prerequisites
-
-1. Copy `.env.example` to `.env` and fill in values:
-
-```bash
-cp .env.example .env
-```
-
-2. Required `.env` variables:
-
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `SEPOLIA_RPC_URL` | Yes | Alchemy/Infura Sepolia endpoint |
-| `DEPLOYER_PRIVATE_KEY` | Yes | Wallet private key (needs ~0.1 ETH for gas) |
-| `TREASURY_ADDRESS` | No | Treasury multisig (defaults to deployer) |
-| `COMMUNITY_ADDRESS` | No | Community wallet (defaults to deployer) |
-| `TEAM_BENEFICIARY` | No | Vesting beneficiary (defaults to deployer) |
-
-### Dry Run (local)
-
-```bash
-npx hardhat run scripts/deploy-testnet.js
-```
-
-### Testnet (Sepolia)
-
-```bash
-npx hardhat run scripts/deploy-testnet.js --network sepolia
-```
-
-### Deploy Script (9 Steps)
-
-```
-Step 1/9  Deploy InfernoToken (1B IFR minted to deployer)
-Step 2/9  Deploy LiquidityReserve (6mo lock, 50M/quarter)
-Step 3/9  Deploy Vesting (12mo cliff, 36mo linear, 150M IFR)
-Step 4/9  Deploy BurnReserve + BuybackVault (60-day activation)
-Step 5/9  (BurnReserve already deployed in step 4)
-Step 6/9  Deploy Governance (48h timelock delay)
-Step 7/9  Set feeExempt for all contracts + deployer (temporary)
-Step 8/9  Distribute tokens (200M+150M+150M+100M, 400M stays with deployer)
-Step 9/9  Remove deployer feeExempt
-```
-
-### LP Pairing (Uniswap V2)
-
-After deployment, create the IFR/ETH liquidity pool:
-
-```bash
-npx hardhat run scripts/create-lp.js --network sepolia
-```
-
-The script performs 4 steps:
-1. Pre-flight checks (ETH balance, IFR balance, Router reachable)
-2. Set deployer feeExempt + approve Router
-3. `addLiquidityETH` (400M IFR + ETH, 2% slippage tolerance)
-4. Update BuybackVault router via `setParams()`
-
-Configure via `.env`:
-
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `UNISWAP_V2_ROUTER` | `0xC532a74256D3Db42D0Bf7a0400fEFDbad7694008` | Uniswap V2 Router02 (Sepolia) |
-| `LP_IFR_AMOUNT` | `400000000` | IFR amount for LP (400M) |
-| `LP_ETH_AMOUNT` | `0.01` | ETH amount for LP |
-
-### Live Fee Verification
-
-Verify deflation mechanics on Sepolia with a real transfer:
-
-```bash
-npx hardhat run scripts/test-transfer.js --network sepolia
-```
-
-Sends 1000 IFR to a random address and verifies:
-- Recipient receives 96.5% (965 IFR)
-- 2.5% burned (25 IFR) — totalSupply decreases
-- 1% pool fee (10 IFR) to poolFeeReceiver
-- Handles sender==poolFeeReceiver overlap correctly
-
-### Sepolia Smoke Test
-
-Full protocol verification (fee transfer, burn, governance, contract state):
-
-```bash
-npx hardhat run scripts/sepolia-smoke-test.js --network sepolia
-```
-
-Tests all 4 areas in a single run:
-1. **Fee Transfer** — 10,000 IFR transfer with full fee verification
-2. **Burn Verification** — totalSupply vs initial supply, burn rate
-3. **Governance** — Creates a test proposal, verifies ETA and status
-4. **Contract State** — Ownership chain, timelock delay, activation/lock timers
-
-### Execute Governance Proposal
-
-Check status and execute a governance proposal after the timelock has elapsed:
-
-```bash
-npx hardhat run scripts/execute-proposal.js --network sepolia
-```
-
-The script:
-1. Reads Proposal #0 status (target, calldata, ETA, executed/cancelled)
-2. If ETA reached: executes `governance.execute(0)` and verifies the result
-3. If ETA not reached: displays countdown with remaining time
-
-### Deploy & Test IFRLock
-
-Deploy the IFRLock contract and create a Governance proposal for feeExempt:
-
-```bash
-npx hardhat run scripts/deploy-lock.js --network sepolia
-```
-
-Test lock, isLocked, lockInfo, and unlock on Sepolia:
-
-```bash
-npx hardhat run scripts/test-lock.js --network sepolia
-```
-
-### Post-Deploy Checklist
-
-| # | Step | Status |
-|---|------|--------|
-| 1 | Deploy 6 contracts | Done |
-| 2 | Verify on Etherscan | Done (6/6) |
-| 3 | Pair LP (Uniswap V2) | **Done** — [`0x2252e8b...`](https://sepolia.etherscan.io/address/0x2252e8bBDE0E50CD372748aC233A99C08627d9c7) |
-| 4 | Update BuybackVault Router | **Done** — Uniswap V2 Router02 |
-| 5 | Set Addresses — Update treasury if placeholder was used | Pending |
-| 6 | Transfer Ownership — `InfernoToken.transferOwnership(governance.address)` | **Done** |
-| 7 | Governance Proposal #0 — `setFeeExempt` via 48h Timelock | **Done** — [`0x13ff46d8...`](https://sepolia.etherscan.io/tx/0x13ff46d8a113f25b9ab0037ee06d6108c62d0f16e25d28799e4f45a8cbbe982d) |
-| 8 | Deploy IFRLock | **Done** — [`0x0Cab0A94...`](https://sepolia.etherscan.io/address/0x0Cab0A9440643128540222acC6eF5028736675d3) |
-| 9 | Governance Proposal #1 — `setFeeExempt(IFRLock)` | **Pending** — ETA 2026-02-22 21:15 CET |
-
-## Dashboard
-
-React frontend for interacting with the Inferno contracts on Sepolia.
-
-```bash
-cd apps/dashboard
-npm install
-npm run dev
-# Open http://localhost:5173
-```
-
-### Features
-
-**Phase 1:** Token Overview (live supply, burn stats, fees), Transfer with fee preview, Contract addresses with Etherscan links.
-
-**Phase 2 (Governance UI):**
-- Proposals list with color-coded status (Pending/Ready/Executed/Cancelled) and ETA countdown
-- Create proposals via template (setFeeRates, setFeeExempt, setPoolFeeReceiver) or manual calldata
-- Execute/Cancel buttons with role-based visibility (Owner/Guardian)
-- Info box: Owner, Guardian, Timelock Delay, Contract address
+| Contract | Sepolia Address |
+|----------|----------------|
+| InfernoToken | `0x3Bd71947F288d1dd8B21129B1bE4FF16EDd5d1F4` |
+| LiquidityReserve | `0xF7E90D0d17f8232365186AA085D26eaEfAf011aF` |
+| Vesting | `0xa710f9FE7bf42981E60BE2Fbe7D87Fb3541a3F8B` |
+| BuybackVault | `0xC8ABb9039BEd24f4dBf5Cff09699877D81f0D63C` |
+| BurnReserve | `0x6D4582FCac792FD3880e252fC0a585A0c1823e80` |
+| Governance | `0x6050b22E4EAF3f414d1155fBaF30B868E0107017` |
+| IFRLock | `0x0Cab0A9440643128540222acC6eF5028736675d3` |
+| LP Pair (IFR/WETH) | `0x2252e8bBDE0E50CD372748aC233A99C08627d9c7` |
 
 ## Partner Ecosystem
 
-IFR Lock enables permissionless integration for any product. Lock IFR once, unlock premium access across every integrated partner.
+Partners receive IFR token allocations from the Partner Ecosystem Pool (40M IFR) with milestone-based vesting. Token holdings grant future DAO voting rights.
 
-| Partner | Status | Description |
-|---------|--------|-------------|
-| **[SecureCall](https://neabouli.github.io/stealth/)** | Launch Partner | Privacy-first communication platform. Lock IFR for lifetime premium access. |
-| Partner #2 | Coming Soon | Open for integration. Any product can query `isLocked()`. |
+**Launch Partner:** [SecureCall](https://neabouli.github.io/stealth/) — Privacy-first communication platform.
 
-**Integrate your product:** See the [Integration Guide](https://neabouli.github.io/inferno/wiki/integration.html) for step-by-step instructions.
+[Integration Guide →](https://neabouli.github.io/inferno/wiki/integration.html)
 
-## Tech Stack
+## Testing & Security
 
-| Component | Version |
-|-----------|---------|
-| Solidity | 0.8.20 |
-| Hardhat | ^2.x |
-| OpenZeppelin Contracts | v5 |
-| ethers.js | ^5.x (Waffle/Chai) |
-| React | ^18.x (Vite) |
-| Network | Sepolia (configured) |
+- 154+ unit tests across 8 contracts — all passing
+- Slither security audit: 0 high/critical findings
+- Full Sepolia testnet deployment with verified contracts
+- Governance lifecycle tested: propose → 48h wait → execute
 
 ## Documentation
 
-| File | Description |
-|------|-------------|
-| `STATUS-REPORT.md` | Full project status with all contract details |
-| `docs/FAIR-LAUNCH-MIGRATION.md` | CFLM migration plan and architecture analysis |
-| `docs/DOCS.md` | Project structure and module status |
-| `docs/SECURITY-AUDIT.md` | Slither audit report (0 high/critical) |
-| `docs/DEPLOYMENTS.md` | Deployed contract addresses (Sepolia) |
-| `docs/wiki/` | [Full Documentation Wiki](https://neabouli.github.io/inferno/wiki/) (8 pages) |
+- [Landing Page](https://neabouli.github.io/inferno/)
+- [Technical Wiki](https://neabouli.github.io/inferno/wiki/)
+- [Contracts Reference](https://neabouli.github.io/inferno/wiki/contracts.html)
+- [Integration Guide](https://neabouli.github.io/inferno/wiki/integration.html)
+- [Security Audit](https://neabouli.github.io/inferno/wiki/security.html)
+
+## License
+
+© 2026 Inferno Protocol. All rights reserved.
