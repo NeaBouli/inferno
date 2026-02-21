@@ -192,11 +192,14 @@
       margin-left: auto;
       margin-right: auto;
       margin-bottom: 32px;
-      width: 120px;
-      height: 120px;
+      width: 140px;
+      height: 140px;
       border-radius: 50%;
       border: 3px solid var(--accent);
       box-shadow: 0 0 60px var(--accent-glow), 0 0 120px rgba(0, 210, 200, 0.15);
+      object-fit: contain;
+      padding: 8px;
+      background-color: #1a1a2e;
     }
 
     .hero h1 {
@@ -825,7 +828,7 @@
       .what-stats { grid-template-columns: 1fr 1fr; }
       .flow-diagram { flex-direction: column; }
       .flow-arrow { transform: rotate(90deg); }
-      .hero-logo { width: 88px; height: 88px; }
+      .hero-logo { width: 100px; height: 100px; padding: 6px; }
     }
   </style>
 </head>
@@ -1041,6 +1044,7 @@
     <div class="eco-grid">
       <a href="https://neabouli.github.io/stealth/" class="eco-card reveal" target="_blank" rel="noopener" style="text-decoration: none; color: inherit;">
         <span class="eco-tag">Launch Partner</span>
+        <img src="assets/securecall_logo.png" alt="SecureCall" style="width: 60px; height: 60px; border-radius: 12px; margin-bottom: 12px; object-fit: contain; display: block;">
         <h3>SecureCall</h3>
         <p>Privacy-first communication platform. Lock IFR for lifetime premium access: encrypted calls, advanced routing, and priority support.</p>
       </a>
