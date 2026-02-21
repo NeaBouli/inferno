@@ -818,6 +818,134 @@ cast call 0x0Cab0A9440643128540222acC6eF5028736675d3 \
         </tbody>
       </table>
 
+      <!-- ============================================================
+           Section 11: Partner Benefits
+           ============================================================ -->
+      <h2>11. Partner Benefits</h2>
+      <p>
+        Partners who integrate IFR Lock into their products gain access to a range of benefits designed to support growth and alignment with the Inferno ecosystem.
+      </p>
+
+      <ul>
+        <li><strong style="color: var(--text);">Token Allocation:</strong> Receive an IFR allocation for your user base</li>
+        <li><strong style="color: var(--text);">Revenue Share:</strong> Earn a percentage of lock-related protocol fees</li>
+        <li><strong style="color: var(--text);">Co-Marketing:</strong> Joint announcements, featured on the Inferno website</li>
+        <li><strong style="color: var(--text);">Technical Support:</strong> Direct integration support from the Inferno team</li>
+        <li><strong style="color: var(--text);">Early Access:</strong> Priority access to new features and protocol upgrades</li>
+      </ul>
+
+      <!-- ============================================================
+           Section 12: Full Integration Example
+           ============================================================ -->
+      <h2>12. Full Integration Example</h2>
+      <p>
+        Below is a complete ethers.js v5 example showing the full resolver flow &mdash; from contract setup to querying lock status, balance, and lock details for a given wallet.
+      </p>
+
+      <span class="code-label">Full resolver flow &mdash; ethers.js v5</span>
+      <pre><code>const { ethers } = require("ethers");
+
+const LOCK_ADDR = "0x0Cab0A9440643128540222acC6eF5028736675d3";
+const LOCK_ABI = [
+  "function isLocked(address user, uint256 minAmount) view returns (bool)",
+  "function lockedBalance(address user) view returns (uint256)",
+  "function lockInfo(address user) view returns (uint256 amount, uint256 lockedAt)",
+];
+
+const provider = new ethers.providers.JsonRpcProvider(process.env.RPC_URL);
+const lock = new ethers.Contract(LOCK_ADDR, LOCK_ABI, provider);
+
+async function checkLicense(wallet) {
+  const minLock = ethers.utils.parseUnits("5000", 9); // 5000 IFR (9 decimals)
+  const premium = await lock.isLocked(wallet, minLock);
+  const balance = await lock.lockedBalance(wallet);
+  const [amount, lockedAt] = await lock.lockInfo(wallet);
+  return {
+    premium,
+    lockedAmount: ethers.utils.formatUnits(balance, 9),
+    lockedSince: new Date(lockedAt.toNumber() * 1000).toISOString(),
+  };
+}</code></pre>
+
+      <div class="callout-green callout">
+        <p>
+          <strong>Tip:</strong> This example combines all three read functions into a single helper. In production, consider batching calls with <code>Promise.all()</code> or a multicall contract for better RPC efficiency.
+        </p>
+      </div>
+
+      <!-- ============================================================
+           Section 13: Privacy & Compliance
+           ============================================================ -->
+      <h2>13. Privacy &amp; Compliance</h2>
+      <p>
+        When integrating on-chain data into your product, ensure your implementation meets privacy and compliance requirements. Use the following checklist as a guide.
+      </p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Category</th>
+            <th>Requirement</th>
+            <th>Implementation</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Data Minimization</td>
+            <td>Only query boolean lock status</td>
+            <td>Use <code>isLocked()</code> not <code>lockedBalance()</code></td>
+          </tr>
+          <tr>
+            <td>No PII Storage</td>
+            <td>Don't link wallets to identities</td>
+            <td>Stateless resolver, no database</td>
+          </tr>
+          <tr>
+            <td>RPC Security</td>
+            <td>Use private RPC endpoint</td>
+            <td>Alchemy/Infura with API key</td>
+          </tr>
+          <tr>
+            <td>Caching</td>
+            <td>Short TTL, no persistent store</td>
+            <td>In-memory cache, 5min TTL max</td>
+          </tr>
+          <tr>
+            <td>Audit Trail</td>
+            <td>Log access decisions, not amounts</td>
+            <td>Log <code>premium=true/false</code> only</td>
+          </tr>
+          <tr>
+            <td>GDPR</td>
+            <td>No personal data processed</td>
+            <td>Wallet addresses are pseudonymous</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- ============================================================
+           Section 14: Partner Onboarding Flow
+           ============================================================ -->
+      <h2>14. Partner Onboarding Flow</h2>
+      <p>
+        The partner onboarding process is designed to get you integrated quickly and smoothly. Follow these steps to go from application to live integration.
+      </p>
+
+      <ol>
+        <li><strong style="color: var(--text);">Application</strong> &mdash; Contact the Inferno team with your product description and user base size</li>
+        <li><strong style="color: var(--text);">Technical Review</strong> &mdash; We assess integration feasibility and determine the minimum lock amount</li>
+        <li><strong style="color: var(--text);">Token Allocation</strong> &mdash; Partners receive an IFR allocation for initial user onboarding</li>
+        <li><strong style="color: var(--text);">Integration</strong> &mdash; Implement the resolver using the code examples above (typically 1-2 days)</li>
+        <li><strong style="color: var(--text);">Testing</strong> &mdash; Verify on Sepolia testnet before going live</li>
+        <li><strong style="color: var(--text);">Launch</strong> &mdash; Go live on mainnet, joint announcement, featured on the Inferno ecosystem page</li>
+      </ol>
+
+      <div class="callout-green callout">
+        <p>
+          <strong>Ready to integrate?</strong> The entire process from application to live integration typically takes less than a week. Most of the time is spent on your side implementing and testing the resolver.
+        </p>
+      </div>
+
       <!-- Footer -->
       <footer class="wiki-footer">
         Inferno ($IFR) &mdash; Community Fair Launch Model &mdash; Developer Integration Guide

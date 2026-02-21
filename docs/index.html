@@ -626,6 +626,135 @@
       margin-left: 8px;
     }
 
+    /* ── FAQ ──────────────────────────────────────── */
+
+    .faq-list { max-width: 720px; margin: 48px auto 0; }
+
+    .faq-item {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      margin-bottom: 12px;
+      overflow: hidden;
+      transition: border-color 0.3s;
+    }
+
+    .faq-item:hover { border-color: rgba(255, 69, 0, 0.3); }
+
+    .faq-question {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 24px;
+      background: none;
+      border: none;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 15px;
+      font-weight: 600;
+      text-align: left;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .faq-question:hover { background: rgba(255, 255, 255, 0.02); }
+
+    .faq-icon {
+      flex-shrink: 0;
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      color: var(--accent);
+      transition: transform 0.3s;
+    }
+
+    .faq-item.open .faq-icon { transform: rotate(45deg); }
+
+    .faq-answer {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.35s ease, padding 0.35s ease;
+    }
+
+    .faq-item.open .faq-answer {
+      max-height: 300px;
+    }
+
+    .faq-answer-inner {
+      padding: 0 24px 20px;
+      font-size: 14px;
+      color: var(--text-muted);
+      line-height: 1.7;
+    }
+
+    /* ── PARTNER STEPS ───────────────────────────────── */
+
+    .partner-steps {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+      margin-top: 48px;
+    }
+
+    .partner-step {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 32px;
+      text-align: center;
+      transition: border-color 0.3s;
+    }
+
+    .partner-step:hover { border-color: var(--accent); }
+
+    .partner-step-num {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: var(--accent);
+      color: #fff;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      font-weight: 800;
+      margin-bottom: 16px;
+    }
+
+    .partner-step h3 { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
+    .partner-step p { color: var(--text-muted); font-size: 14px; line-height: 1.6; }
+
+    .partner-code {
+      margin-top: 40px;
+      background: #1a1a1d;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+
+    .partner-code-header {
+      padding: 12px 20px;
+      border-bottom: 1px solid var(--border);
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .partner-code pre {
+      padding: 20px;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 13px;
+      line-height: 1.7;
+      color: var(--text);
+      overflow-x: auto;
+      margin: 0;
+    }
+
     /* ── FOOTER ───────────────────────────────────── */
 
     footer {
@@ -670,6 +799,7 @@
       .tokenomics-grid { grid-template-columns: 1fr; }
       .eco-grid { grid-template-columns: 1fr; }
       .trust-grid { grid-template-columns: 1fr; }
+      .partner-steps { grid-template-columns: 1fr; }
       .arch-note { flex-direction: column; align-items: center; gap: 12px; }
     }
 
@@ -702,7 +832,7 @@
 <nav id="navbar">
   <div class="nav-inner">
     <a href="#" class="nav-logo">
-      <img src="assets/ifr_logo_400x400.jpg" alt="IFR">
+      <img src="assets/ifr_logo.png" alt="IFR">
       Inferno
     </a>
     <ul class="nav-links" id="navLinks">
@@ -712,6 +842,7 @@
       <li><a href="#ecosystem">Ecosystem</a></li>
       <li><a href="#architecture">Architecture</a></li>
       <li><a href="#security">Security</a></li>
+      <li><a href="#faq">FAQ</a></li>
       <li><a href="#roadmap">Roadmap</a></li>
       <li><a href="https://x.com/IFRtoken" target="_blank" rel="noopener">X</a></li>
     </ul>
@@ -722,7 +853,7 @@
 <!-- ── HERO ───────────────────────────────────────── -->
 <section class="hero" id="hero">
   <div class="container">
-    <img src="assets/ifr_logo_400x400.jpg" alt="Inferno Logo" class="hero-logo">
+    <img src="assets/ifr_logo.png" alt="Inferno Logo" class="hero-logo">
     <h1>Inferno <span>($IFR)</span></h1>
     <p class="hero-tagline">The Deflationary Utility Token</p>
     <p class="hero-subtitle">Lock. Use. Benefit. Across Every Product.</p>
@@ -924,6 +1055,46 @@
     <div class="eco-cta reveal">
       <a href="wiki/integration.html" class="btn btn-secondary">Integrate Your Product &rarr;</a>
     </div>
+
+    <!-- Partner Integration Steps -->
+    <div class="reveal" style="text-align:center; margin-top: 80px;">
+      <h3 style="font-size: 22px; font-weight: 700; margin-bottom: 8px;">Integrate IFR into Your Product</h3>
+      <p style="color: var(--text-muted); font-size: 15px;">Three steps to lifetime access for your users.</p>
+    </div>
+
+    <div class="partner-steps reveal">
+      <div class="partner-step">
+        <div class="partner-step-num">1</div>
+        <h3>Register</h3>
+        <p>Apply as partner, receive IFR allocation and integration support from the Inferno team.</p>
+      </div>
+      <div class="partner-step">
+        <div class="partner-step-num">2</div>
+        <h3>Integrate</h3>
+        <p>Add our verification snippet to your backend. Five lines of code &mdash; that&rsquo;s it.</p>
+      </div>
+      <div class="partner-step">
+        <div class="partner-step-num">3</div>
+        <h3>Launch</h3>
+        <p>Your users lock IFR for lifetime premium access. No subscriptions, no recurring fees.</p>
+      </div>
+    </div>
+
+    <div class="partner-code reveal">
+      <div class="partner-code-header">JavaScript &mdash; Verify IFR Lock Status</div>
+<pre>// Verify IFR lock status (ethers.js v5)
+const ifrLock = new ethers.Contract(LOCK_ADDR, LOCK_ABI, provider);
+const minAmount = ethers.utils.parseUnits("5000", 9);
+
+const isLocked = await ifrLock.isLocked(userWallet, minAmount);
+if (isLocked) {
+  grantLifetimeAccess(user);
+}</pre>
+    </div>
+
+    <div class="eco-cta reveal" style="margin-top: 32px;">
+      <a href="wiki/integration.html" class="btn btn-primary">Become a Partner &rarr;</a>
+    </div>
   </div>
 </section>
 
@@ -1015,6 +1186,69 @@
   </div>
 </section>
 
+<!-- ── FAQ ────────────────────────────────────────── -->
+<section id="faq">
+  <div class="container">
+    <div class="reveal" style="text-align:center">
+      <p class="section-label">FAQ</p>
+      <h2 class="section-title">Frequently Asked Questions</h2>
+    </div>
+    <div class="faq-list reveal">
+
+      <div class="faq-item">
+        <button class="faq-question"><span>What is Inferno (IFR)?</span><span class="faq-icon">+</span></button>
+        <div class="faq-answer"><div class="faq-answer-inner">Deflationary ERC-20 utility token. Every transfer burns 2.5% permanently. Lock IFR to unlock lifetime access to partner products.</div></div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question"><span>How does the fee-on-transfer work?</span><span class="faq-icon">+</span></button>
+        <div class="faq-answer"><div class="faq-answer-inner">2% Sender Burn + 0.5% Recipient Burn + 1% Pool Fee = 3.5% total. 2.5% is permanently burned (totalSupply decreases), 1% is collected by the protocol pool. Hard cap: 5% max &mdash; enforced on-chain.</div></div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question"><span>What is the IFR Lock mechanism?</span><span class="faq-icon">+</span></button>
+        <div class="faq-answer"><div class="faq-answer-inner">Lock IFR tokens on-chain &rarr; any integrated product can verify your lock status via <code style="background:rgba(255,255,255,0.06);padding:2px 6px;border-radius:4px;">isLocked()</code> &rarr; lifetime/premium access while locked &rarr; unlock anytime, access reverts. No staking, no yield &mdash; pure utility lock.</div></div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question"><span>Who controls Governance?</span><span class="faq-icon">+</span></button>
+        <div class="faq-answer"><div class="faq-answer-inner">No instant admin access. Every change requires a 48-hour timelock. A Guardian can cancel malicious proposals. No token voting (prevents whale manipulation). Future DAO governance is planned as a Phase 4 upgrade.</div></div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question"><span>Can new tokens be minted?</span><span class="faq-icon">+</span></button>
+        <div class="faq-answer"><div class="faq-answer-inner">No. There is no mint function in the contract. No inflation, ever. Strictly deflationary &mdash; total supply can only decrease through burns.</div></div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question"><span>Why no automatic buybacks?</span><span class="faq-icon">+</span></button>
+        <div class="faq-answer"><div class="faq-answer-inner">Auto-buybacks increase MEV/sandwich attack risk and create procyclical sell pressure. Inferno&rsquo;s buybacks are real, on-chain, and transparent &mdash; but controlled. Guarded automation is planned as a future upgrade.</div></div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question"><span>Can all tokens eventually be burned?</span><span class="faq-icon">+</span></button>
+        <div class="faq-answer"><div class="faq-answer-inner">Theoretically yes, practically no. Burns are percentage-based (asymptotic &mdash; always 2.5% of the remaining amount). Governance can adjust fee rates. Locked tokens don&rsquo;t generate burns since they aren&rsquo;t transferred.</div></div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question"><span>How can partners integrate IFR?</span><span class="faq-icon">+</span></button>
+        <div class="faq-answer"><div class="faq-answer-inner">Any product can query <code style="background:rgba(255,255,255,0.06);padding:2px 6px;border-radius:4px;">isLocked(wallet, minAmount)</code> to verify lock status. No wallet storage needed, no app logic on-chain. Drop-in integration with our resolver. Partner benefits: token allocation, revenue share, co-marketing.</div></div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question"><span>Is Inferno a DAO?</span><span class="faq-icon">+</span></button>
+        <div class="faq-answer"><div class="faq-answer-inner">Not yet. Currently: timelocked admin governance with Guardian safety net. DAO governance is on the roadmap as a Phase 4 upgrade &mdash; security over speed. The transition path: Admin &rarr; Multisig &rarr; DAO.</div></div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question"><span>What makes IFR different from other tokens?</span><span class="faq-icon">+</span></button>
+        <div class="faq-answer"><div class="faq-answer-inner">Real utility (not just trading). Real deflation (every transfer). Real lock mechanism (not staking/yield). Real governance (timelock, no instant changes). No presale, no VC &mdash; Community Fair Launch from day one.</div></div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
 <!-- ── ROADMAP ────────────────────────────────────── -->
 <section id="roadmap">
   <div class="container">
@@ -1026,43 +1260,36 @@
       <div class="roadmap-item">
         <div class="roadmap-dot done">&check;</div>
         <div class="roadmap-body">
-          <h4>Phase 1 &mdash; Contract Development <span class="badge-done">Complete</span></h4>
-          <p>7 smart contracts, 154 tests, Slither audit. Full CFLM architecture implemented.</p>
+          <h4>Phase 1 &mdash; Foundation <span class="badge-done">Complete</span></h4>
+          <p>Smart Contract Development (7 contracts, 154 tests). Security Audit (Slither, 0 high/critical). Testnet Deployment (Sepolia, all verified).</p>
         </div>
       </div>
       <div class="roadmap-item">
-        <div class="roadmap-dot done">&check;</div>
+        <div class="roadmap-dot current">2</div>
         <div class="roadmap-body">
-          <h4>Phase 2 &mdash; Testnet Deployment <span class="badge-done">Complete</span></h4>
-          <p>Deployed and verified on Sepolia. LP paired, governance active, ownership transferred.</p>
+          <h4>Phase 2 &mdash; Launch</h4>
+          <p>Mainnet Deployment. LP Pairing &amp; Lock. Dashboard Launch. First Partner Integration (SecureCall).</p>
         </div>
       </div>
       <div class="roadmap-item">
-        <div class="roadmap-dot done">&check;</div>
+        <div class="roadmap-dot">3</div>
         <div class="roadmap-body">
-          <h4>Phase 3 &mdash; Security Audit <span class="badge-done">Complete</span></h4>
-          <p>Slither analysis passed. 0 high/critical findings. Governance lifecycle fully verified on-chain.</p>
+          <h4>Phase 3 &mdash; Growth</h4>
+          <p>Partner Ecosystem Expansion. Guarded Buyback Automation. Multi-Chain Expansion (L2s). Developer SDK &amp; Documentation.</p>
         </div>
       </div>
       <div class="roadmap-item">
-        <div class="roadmap-dot current">4</div>
+        <div class="roadmap-dot">4</div>
         <div class="roadmap-body">
-          <h4>Phase 4 &mdash; Mainnet Launch</h4>
-          <p>Treasury multisig setup, mainnet deployment, LP pairing, Etherscan verification.</p>
+          <h4>Phase 4 &mdash; Decentralization</h4>
+          <p>DAO Governance Migration. Community Proposals. Governance Multisig Transition. Protocol Revenue Sharing.</p>
         </div>
       </div>
       <div class="roadmap-item">
         <div class="roadmap-dot">5</div>
         <div class="roadmap-body">
-          <h4>Phase 5 &mdash; Partner Integrations</h4>
-          <p>SecureCall integration, license resolver deployment, developer documentation and SDK.</p>
-        </div>
-      </div>
-      <div class="roadmap-item">
-        <div class="roadmap-dot">6</div>
-        <div class="roadmap-body">
-          <h4>Phase 6 &mdash; Multi-Chain Expansion</h4>
-          <p>Bridge to L2 networks, cross-chain lock verification, expanded partner ecosystem.</p>
+          <h4>Phase 5 &mdash; Scale</h4>
+          <p>Cross-Chain Bridges. Advanced Lock Types (tiered, time-based). Partner Self-Service Portal. Ecosystem Fund.</p>
         </div>
       </div>
     </div>
@@ -1132,6 +1359,16 @@
   }, { threshold: 0.3 });
 
   document.querySelectorAll('.allocation').forEach(el => allocObserver.observe(el));
+
+  // FAQ accordion
+  document.querySelectorAll('.faq-question').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const item = btn.parentElement;
+      const wasOpen = item.classList.contains('open');
+      document.querySelectorAll('.faq-item.open').forEach(i => i.classList.remove('open'));
+      if (!wasOpen) item.classList.add('open');
+    });
+  });
 </script>
 
 </body>

@@ -867,6 +867,100 @@ await governance.execute(proposalId);</code></pre>
         </tbody>
       </table>
 
+      <!-- ========== 11. Future DAO Governance ========== -->
+      <h2>11. Future DAO Governance</h2>
+
+      <h3>Transition Path</h3>
+      <p>
+        Governance will evolve in clearly defined phases, each building on the trust and battle-testing of the previous one:
+      </p>
+
+      <div class="flow-diagram">
+        <div class="flow-box state-executed">Phase 3 (Current)<br><small>Admin + Timelock</small></div>
+        <div class="flow-arrow">&rarr;</div>
+        <div class="flow-box state-pending">Phase 4<br><small>Multisig Governance</small></div>
+        <div class="flow-arrow">&rarr;</div>
+        <div class="flow-box">Phase 5<br><small>Full DAO</small></div>
+      </div>
+
+      <ol>
+        <li>
+          <strong>Current: Admin + Timelock</strong> &mdash;
+          Single owner with 48h mandatory delay. Guardian safety net. Fast iteration, security-first approach.
+        </li>
+        <li>
+          <strong>Phase 4: Multisig Governance</strong> &mdash;
+          Gnosis Safe multisig replaces single owner. Multiple signers required for proposals. Same timelock protection.
+        </li>
+        <li>
+          <strong>Phase 5: Full DAO</strong> &mdash;
+          Token-weighted or lock-weighted voting. Community proposals. On-chain quorum requirements. Fully decentralized.
+        </li>
+      </ol>
+
+      <h3>Why Not DAO from Day One?</h3>
+      <ul>
+        <li><strong>Security over speed:</strong> Early-stage protocols need fast response to vulnerabilities</li>
+        <li><strong>Whale manipulation:</strong> Token voting without safeguards enables hostile governance</li>
+        <li><strong>Community maturity:</strong> DAO governance requires an engaged, informed token holder base</li>
+        <li><strong>Iterative decentralization:</strong> Gradual transition builds trust and battle-tests each layer</li>
+        <li><strong>No rushing:</strong> &ldquo;Move fast and break things&rdquo; does not apply to financial protocols</li>
+      </ul>
+
+      <h3>What Changes with DAO</h3>
+      <p>
+        Each governance model unlocks different capabilities. The table below compares what each phase enables:
+      </p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Capability</th>
+            <th>Admin+Timelock</th>
+            <th>Multisig</th>
+            <th>Full DAO</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Fee Rate Changes</td>
+            <td>Owner only</td>
+            <td>3/5 signers</td>
+            <td>Community vote</td>
+          </tr>
+          <tr>
+            <td>Guardian Updates</td>
+            <td>Owner only</td>
+            <td>3/5 signers</td>
+            <td>Community vote</td>
+          </tr>
+          <tr>
+            <td>Emergency Cancel</td>
+            <td>Guardian</td>
+            <td>Any signer</td>
+            <td>Guardian + vote</td>
+          </tr>
+          <tr>
+            <td>Delay Changes</td>
+            <td>Self-governance</td>
+            <td>Self-governance</td>
+            <td>Community vote</td>
+          </tr>
+          <tr>
+            <td>New Partners</td>
+            <td>Team decision</td>
+            <td>Multisig vote</td>
+            <td>Community proposal</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="callout">
+        <p>
+          <strong>Security &gt; Speed:</strong> Every governance transition is irreversible. We will only move to the next phase when the current model has been battle-tested and the community is ready.
+        </p>
+      </div>
+
       <!-- Footer -->
       <footer class="wiki-footer">
         Inferno ($IFR) &mdash; Community Fair Launch Model &mdash; Documentation v1.0
