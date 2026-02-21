@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/assets/ifr_logo_400x400.jpg" alt="Inferno $IFR" width="200" />
+  <img src="docs/assets/ifr_logo.png" alt="Inferno $IFR" width="200" />
 </p>
 
 # Inferno ($IFR)
@@ -260,6 +260,17 @@ npm run dev
 - Create proposals via template (setFeeRates, setFeeExempt, setPoolFeeReceiver) or manual calldata
 - Execute/Cancel buttons with role-based visibility (Owner/Guardian)
 - Info box: Owner, Guardian, Timelock Delay, Contract address
+
+## Partner Ecosystem
+
+IFR Lock enables permissionless integration for any product. Lock IFR once, unlock premium access across every integrated partner.
+
+| Partner | Status | Description |
+|---------|--------|-------------|
+| **[SecureCall](https://neabouli.github.io/stealth/)** | Launch Partner | Privacy-first communication platform. Lock IFR for lifetime premium access. |
+| Partner #2 | Coming Soon | Open for integration. Any product can query `isLocked()`. |
+
+**Integrate your product:** See the [Integration Guide](https://neabouli.github.io/inferno/wiki/integration.html) for step-by-step instructions.
 
 ## Tech Stack
 
