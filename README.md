@@ -41,7 +41,8 @@ Built on the **Community Fair Launch Model (CFLM)** — no presale, fair distrib
 | Liquidity Reserve | 200,000,000 IFR | 20% | LiquidityReserve.sol (6mo lock, 50M/quarter) |
 | Team Vesting | 150,000,000 IFR | 15% | Vesting.sol (12mo cliff + 36mo linear) |
 | Treasury | 150,000,000 IFR | 15% | Direct to multisig address |
-| Community/Ecosystem | 100,000,000 IFR | 10% | Direct to community wallet |
+| Community & Grants | 60,000,000 IFR | 6% | Community grants, bug bounties, ecosystem development |
+| Partner Ecosystem | 40,000,000 IFR | 4% | Milestone-based partner allocations (vested 6-12mo) |
 
 ### Fee Exempt
 

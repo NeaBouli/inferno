@@ -795,7 +795,7 @@
            ============================================================ -->
       <h2 id="allocation">3. Token Allocation</h2>
       <p>
-        The total initial supply of 1,000,000,000 IFR is distributed across five categories at deployment. All allocations are executed in the deploy script &mdash; there is no ongoing emission or inflation mechanism.
+        The total initial supply of 1,000,000,000 IFR is distributed across six categories at deployment. All allocations are executed in the deploy script &mdash; there is no ongoing emission or inflation mechanism.
       </p>
 
       <table>
@@ -833,10 +833,16 @@
             <td>Available to multisig (Gnosis Safe)</td>
           </tr>
           <tr>
-            <td>Community</td>
-            <td>10%</td>
-            <td>100,000,000</td>
-            <td>Available to community wallet</td>
+            <td>Community &amp; Grants</td>
+            <td>6%</td>
+            <td>60,000,000</td>
+            <td>Community grants, bug bounties, ecosystem development</td>
+          </tr>
+          <tr>
+            <td>Partner Ecosystem</td>
+            <td>4%</td>
+            <td>40,000,000</td>
+            <td>Milestone-based partner allocations (vested 6&ndash;12 months)</td>
           </tr>
         </tbody>
       </table>
@@ -872,11 +878,18 @@
           <span class="alloc-amount">150M IFR</span>
         </div>
         <div class="alloc-row">
-          <span class="alloc-label">Community</span>
+          <span class="alloc-label">Community &amp; Grants</span>
           <div class="alloc-bar-track">
-            <div class="alloc-bar-fill" style="width: 10%; background: linear-gradient(90deg, #eab308, #facc15);">10%</div>
+            <div class="alloc-bar-fill" style="width: 6%; background: linear-gradient(90deg, #eab308, #facc15);">6%</div>
           </div>
-          <span class="alloc-amount">100M IFR</span>
+          <span class="alloc-amount">60M IFR</span>
+        </div>
+        <div class="alloc-row">
+          <span class="alloc-label">Partner Ecosystem</span>
+          <div class="alloc-bar-track">
+            <div class="alloc-bar-fill" style="width: 4%; background: linear-gradient(90deg, #f97316, #fb923c);">4%</div>
+          </div>
+          <span class="alloc-amount">40M IFR</span>
         </div>
       </div>
 
@@ -911,10 +924,18 @@
         <li>All spends require multisig approval</li>
       </ul>
 
-      <p><strong>Community (10% &mdash; 100M IFR)</strong></p>
+      <p><strong>Community &amp; Grants (6% &mdash; 60M IFR)</strong></p>
       <ul>
         <li>Available to the community wallet</li>
-        <li>Used for airdrops, rewards, community incentives, and grants</li>
+        <li>Used for airdrops, rewards, community incentives, bug bounties, and grants</li>
+      </ul>
+
+      <p><strong>Partner Ecosystem (4% &mdash; 40M IFR)</strong></p>
+      <ul>
+        <li>Dedicated pool for ecosystem partner token allocations</li>
+        <li>Milestone-based: tokens unlock as partners hit integration targets (live integration, user thresholds)</li>
+        <li>Four tiers: Launch Partner (up to 5M IFR), Tier 1 (up to 2M), Tier 2 (up to 1M), Tier 3 (up to 500K)</li>
+        <li>All allocations vest linearly over 6&ndash;12 months &mdash; no instant dumps</li>
       </ul>
 
       <!-- ============================================================
