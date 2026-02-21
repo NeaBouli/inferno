@@ -113,7 +113,7 @@ inferno/
 
 | Metrik | Wert |
 |--------|------|
-| Contracts | 7 (+ 3 Mocks) |
+| Contracts | 8 (+ 3 Mocks) |
 | Solidity LOC | 837 |
 | Tests | 154 (alle bestanden) |
 | Test LOC | 1,697 |
