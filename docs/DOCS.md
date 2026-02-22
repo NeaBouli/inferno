@@ -127,6 +127,7 @@ inferno/
 
 | Datum | Aenderung |
 |-------|-----------|
+| 2026-02-22 | Governance Proposal #1 executed: setFeeExempt(IFRLock, true) — Full Lock/Unlock Cycle verified (8/8) |
 | 2026-02-20 | IFRLock Contract implementiert (127 LOC, 29 Tests): Generic Token Lock, ReentrancyGuard, Pause, Multi-App lockType |
 | 2026-02-20 | Governance Proposal #0 executed: setFeeExempt via 48h Timelock — Full Governance Lifecycle verified |
 | 2026-02-18 | Sepolia Smoke Test (11/11 PASS): Fee Transfer, Burn, Governance Proposal, Contract State |
@@ -212,4 +213,5 @@ npx hardhat run scripts/create-lp.js --network sepolia
 | 8 | Live Fee Verification (Sepolia) | Nach Deploy | **Erledigt** (ALL CHECKS PASSED) |
 | 9 | Sepolia Smoke Test (Full Protocol) | Nach Deploy | **Erledigt** (11/11 PASS) |
 | 10 | Governance Lifecycle (Proposal #0) | Nach Deploy | **Erledigt** (setFeeExempt via Timelock) |
-| 11 | Gas-Optimierung | Optional | Offen |
+| 11 | Governance Proposal #1 (IFRLock feeExempt) | Nach Deploy | **Erledigt** (8/8 Lock/Unlock Tests) |
+| 12 | Gas-Optimierung | Optional | Offen |

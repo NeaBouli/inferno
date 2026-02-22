@@ -30,19 +30,12 @@ Inferno ($IFR) ist ein **deflationärer ERC-20 Utility-Token** auf Ethereum. Jed
 - **Wiki** — 8 HTML-Seiten mit technischer Dokumentation
 - **Governance Lifecycle** komplett getestet: Proposal #0 (setFeeExempt) erfolgreich via 48h Timelock ausgeführt
 - **Fee-on-Transfer** live verifiziert: 10.000 IFR Transfer → 9.650 IFR empfangen, 250 IFR gebrannt
-- **IFRLock Contract** deployed und teilweise getestet (Lock: ✅, Unlock: wartet auf Proposal #1)
+- **IFRLock Contract** deployed und vollständig getestet (Lock + Unlock: 8/8 Checks bestanden)
+- **Governance Proposal #1** executed — `setFeeExempt(IFRLock, true)` via 48h Timelock ([TX](https://sepolia.etherscan.io/tx/0x211b794970abe147b3ab2f3c92bb79b3b3c5a72bc8be8cfb7e1d00fd4253a909))
 
-### Was UNMITTELBAR ansteht
+### Nächste Schritte
 
-**⚠️ ZEITKRITISCH — 22.02.2026 nach 21:15 CET:**
-
-```bash
-cd /Users/gio/Desktop/Inferno
-npx hardhat run scripts/execute-proposal.js --network sepolia
-npx hardhat run scripts/test-lock.js --network sepolia
-```
-
-Governance Proposal #1 (`setFeeExempt(IFRLock, true)`) hat eine 48h-ETA bis 22.02.2026 21:15 CET. Danach muss das Proposal executed und der vollständige Lock/Unlock-Cycle getestet werden.
+Alle Sepolia-Milestones sind abgeschlossen. Der Fokus liegt jetzt auf den organisatorischen Mainnet-Vorbereitungen (Multisig, Adressen, Audit).
 
 ---
 
@@ -198,18 +191,11 @@ Governance Proposal #1 (`setFeeExempt(IFRLock, true)`) hat eine 48h-ETA bis 22.0
 
 ### Zusammenfassung
 
-#### Sofort (22.02.2026)
+#### Erledigt (22.02.2026)
 
-1. **Governance Proposal #1 ausführen** (nach 21:15 CET):
-   ```bash
-   cd /Users/gio/Desktop/Inferno
-   npx hardhat run scripts/execute-proposal.js --network sepolia
-   ```
-2. **Vollständiger Lock/Unlock-Test**:
-   ```bash
-   npx hardhat run scripts/test-lock.js --network sepolia
-   ```
-3. **GitHub Pages Cache prüfen** — Hard Refresh (Cmd+Shift+R) auf der Live-Seite, verifizieren dass alle Updates (FAQ lang, 8 Contracts, 6%/4% Split, Partner Box) sichtbar sind
+1. ~~**Governance Proposal #1 ausführen**~~ — **Done** ([TX](https://sepolia.etherscan.io/tx/0x211b794970abe147b3ab2f3c92bb79b3b3c5a72bc8be8cfb7e1d00fd4253a909))
+2. ~~**Vollständiger Lock/Unlock-Test**~~ — **Done** (8/8 Checks bestanden)
+3. **GitHub Pages Cache prüfen** — Hard Refresh (Cmd+Shift+R) auf der Live-Seite
 
 #### Vor Mainnet (organisatorisch, kein Code)
 
@@ -250,9 +236,9 @@ cd /Users/gio/Desktop/Inferno
 git commit --allow-empty -m "trigger pages rebuild" && git push
 ```
 
-#### IFRLock Unlock-Test unvollständig
+#### IFRLock Unlock-Test — Erledigt
 
-Lock (5000 IFR) und isLocked-Queries sind bestanden. Der **Unlock-Test wartet** auf Governance Proposal #1 (`setFeeExempt(IFRLock, true)`). Ohne feeExempt werden beim Unlock Fees abgezogen und die Balance stimmt nicht. **Lösung:** Proposal #1 am 22.02. nach 21:15 CET ausführen.
+Lock/Unlock-Cycle vollständig getestet (8/8 Checks). Governance Proposal #1 wurde am 22.02.2026 executed. `feeExempt(IFRLock) = true` verifiziert. Stale Lock aus Pre-feeExempt-Phase wurde automatisch bereinigt (175 IFR Deficit top-up).
 
 #### BurnReserve nie live getestet
 
@@ -369,32 +355,19 @@ npx hardhat verify --network sepolia <CONTRACT_ADDR> <CONSTRUCTOR_ARGS>
 
 ## 8. Nächster konkreter Schritt
 
-**Überlegung:** Der neue Chat muss mit EINER klaren, ausführbaren Aktion starten. Die zeitkritischste Aufgabe ist die Governance-Execution.
+**Überlegung:** Der neue Chat muss wissen, dass alle Sepolia-Milestones abgeschlossen sind und was als nächstes kommt.
 
 ### Zusammenfassung
 
-**Am 22.02.2026 nach 21:15 CET** im Terminal ausführen:
+**Alle Sepolia-Milestones sind abgeschlossen** (Stand: 22.02.2026).
 
-```bash
-cd /Users/gio/Desktop/Inferno
-npx hardhat run scripts/execute-proposal.js --network sepolia
-```
+Governance Proposal #1 wurde executed ([TX](https://sepolia.etherscan.io/tx/0x211b794970abe147b3ab2f3c92bb79b3b3c5a72bc8be8cfb7e1d00fd4253a909)), IFRLock Lock/Unlock-Cycle vollständig verifiziert (8/8 Checks).
 
-**Erwartetes Ergebnis:** Governance Proposal #1 (`setFeeExempt(IFRLock, true)`) wird ausgeführt. Danach:
-
-```bash
-npx hardhat run scripts/test-lock.js --network sepolia
-```
-
-**Erwartetes Ergebnis:** Vollständiger Lock/Unlock-Cycle:
-- Lock 5000 IFR ✅ (bereits bestanden)
-- isLocked(5000) = true ✅ (bereits bestanden)
-- isLocked(10000) = false ✅ (bereits bestanden)
-- **Unlock** → IFR zurück an User (NEU — wartet auf feeExempt)
-- isLocked = false nach Unlock
-- Balance korrekt zurück
-
-**Danach:** GitHub Pages Live-Seite mit Hard Refresh prüfen. Wenn alle Cache-Probleme gelöst sind, Fokus auf die organisatorischen Mainnet-Vorbereitungen (Multisig, Adressen, Kapital).
+**Nächster Fokus:** Organisatorische Mainnet-Vorbereitungen:
+1. Treasury Multisig erstellen (Gnosis Safe)
+2. Community Wallet + Team Beneficiary Adressen festlegen
+3. Externer Security Audit (empfohlen)
+4. Mainnet Deployment
 
 ---
 

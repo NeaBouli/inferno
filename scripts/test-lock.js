@@ -65,6 +65,29 @@ async function main() {
 
   const lockAmount = parse("5000");
 
+  // ── Step 0b: Clear stale lock if exists (from pre-feeExempt test) ──
+  const existingLock = await lock.lockedBalance(deployer.address);
+  if (existingLock.gt(0)) {
+    hr("0b. CLEARING STALE LOCK");
+    console.log(`  Existing lock: ${fmt(existingLock)} IFR`);
+    const contractBal0 = await token.balanceOf(ADDRESSES.lock);
+    console.log(`  Contract holds: ${fmt(contractBal0)} IFR`);
+    const deficit = existingLock.sub(contractBal0);
+    if (deficit.gt(0)) {
+      console.log(`  Deficit: ${fmt(deficit)} IFR — topping up (fee-free since IFRLock is exempt)...`);
+      const topUpTx = await token.transfer(ADDRESSES.lock, deficit);
+      await topUpTx.wait();
+      const contractBal0b = await token.balanceOf(ADDRESSES.lock);
+      console.log(`  Contract now holds: ${fmt(contractBal0b)} IFR`);
+    }
+    console.log(`  Unlocking stale position...`);
+    const clearTx = await lock.unlock();
+    await clearTx.wait();
+    const clearedBal = await lock.lockedBalance(deployer.address);
+    console.log(`  lockedBalance after clear: ${fmt(clearedBal)} IFR`);
+    console.log(`  Stale lock cleared. Proceeding with fresh test.\n`);
+  }
+
   // ── Step 1: Lock 5000 IFR ─────────────────────────────────
   hr("1. LOCK 5000 IFR");
 
