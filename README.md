@@ -52,7 +52,7 @@ Team tokens: 48-month vesting, 12-month cliff. Liquidity reserve: 6-month lock.
 
 ## Partner Ecosystem
 
-Partners receive IFR token allocations from the Partner Ecosystem Pool (40M IFR) with milestone-based vesting. Token holdings grant future DAO voting rights.
+Partner rewards are driven by user engagement: when a user locks IFR for a creator's product, the creator earns 10-20% from the Partner Ecosystem Pool (40M IFR), vested over 6-12 months. Token holdings grant future DAO voting rights.
 
 **Launch Partner:** [SecureCall](https://neabouli.github.io/stealth/) — Privacy-first communication platform.
 
