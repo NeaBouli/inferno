@@ -48,7 +48,7 @@ Team tokens: 48-month vesting, 12-month cliff. Liquidity reserve: 6-month lock.
 | BurnReserve | `0x6D4582FCac792FD3880e252fC0a585A0c1823e80` |
 | Governance | `0x6050b22E4EAF3f414d1155fBaF30B868E0107017` |
 | IFRLock | `0x0Cab0A9440643128540222acC6eF5028736675d3` |
-| PartnerVault | *Pending Sepolia deploy* |
+| PartnerVault | `0x6EF04c6abeb53335B6c2dD2964da97DB677AF090` |
 | LP Pair (IFR/WETH) | `0x2252e8bBDE0E50CD372748aC233A99C08627d9c7` |
 
 ## Partner Ecosystem
