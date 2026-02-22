@@ -868,20 +868,65 @@ await governance.execute(proposalId);</code></pre>
         </tbody>
       </table>
 
-      <!-- ========== 11. Future DAO Governance ========== -->
-      <h2>11. Future DAO Governance</h2>
+      <!-- ========== 11. Current Governance Model ========== -->
+      <h2>11. Current Governance Model</h2>
+      <p>
+        Inferno currently operates under an <strong>Admin + Timelock</strong> governance model. This is a deliberate choice for the early phase of the protocol.
+      </p>
 
-      <h3>Transition Path</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Property</th>
+            <th>Current State</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Model</td>
+            <td><strong>Single Admin + 48h Timelock</strong></td>
+          </tr>
+          <tr>
+            <td>Token Voting</td>
+            <td>No &mdash; not implemented yet</td>
+          </tr>
+          <tr>
+            <td>DAO</td>
+            <td>No &mdash; planned for future phase</td>
+          </tr>
+          <tr>
+            <td>Who can propose</td>
+            <td>Owner (deployer EOA) only</td>
+          </tr>
+          <tr>
+            <td>Safety mechanism</td>
+            <td>Guardian can cancel any pending proposal</td>
+          </tr>
+          <tr>
+            <td>Transparency</td>
+            <td>All proposals and executions are on-chain events with 48h public review window</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="callout">
+        <p>
+          <strong>Important:</strong> Inferno is <strong>not a DAO</strong> today. The current governance is admin-controlled with a mandatory timelock. This is intentional &mdash; see below for the rationale and roadmap.
+        </p>
+      </div>
+
+      <!-- ========== 12. Future: Governance Roadmap ========== -->
+      <h2>12. Future: Governance Roadmap</h2>
       <p>
         Governance will evolve in clearly defined phases, each building on the trust and battle-testing of the previous one:
       </p>
 
       <div class="flow-diagram">
-        <div class="flow-box state-executed">Phase 3 (Current)<br><small>Admin + Timelock</small></div>
+        <div class="flow-box state-executed">Current<br><small>Admin + Timelock</small></div>
         <div class="flow-arrow">&rarr;</div>
-        <div class="flow-box state-pending">Phase 4<br><small>Multisig Governance</small></div>
+        <div class="flow-box state-pending">Next<br><small>Multisig Governance</small></div>
         <div class="flow-arrow">&rarr;</div>
-        <div class="flow-box">Phase 5<br><small>Full DAO</small></div>
+        <div class="flow-box">Future<br><small>Full DAO</small></div>
       </div>
 
       <ol>
@@ -890,36 +935,36 @@ await governance.execute(proposalId);</code></pre>
           Single owner with 48h mandatory delay. Guardian safety net. Fast iteration, security-first approach.
         </li>
         <li>
-          <strong>Phase 4: Multisig Governance</strong> &mdash;
+          <strong>Next: Multisig Governance</strong> &mdash;
           Gnosis Safe multisig replaces single owner. Multiple signers required for proposals. Same timelock protection.
         </li>
         <li>
-          <strong>Phase 5: Full DAO</strong> &mdash;
-          Token-weighted or lock-weighted voting. Community proposals. On-chain quorum requirements. Fully decentralized.
+          <strong>Future: Full DAO</strong> &mdash;
+          Lock-weighted voting (IFRLock balances as voting power). Community proposals. On-chain quorum requirements. Partner tokens grant additional voting rights.
         </li>
       </ol>
 
       <h3>Why Not DAO from Day One?</h3>
       <ul>
         <li><strong>Security over speed:</strong> Early-stage protocols need fast response to vulnerabilities</li>
-        <li><strong>Whale manipulation:</strong> Token voting without safeguards enables hostile governance</li>
+        <li><strong>Whale manipulation:</strong> Token voting without safeguards enables hostile governance takeovers</li>
+        <li><strong>Flash-loan attacks:</strong> Without lock-weighted voting, attackers can borrow tokens to swing votes</li>
         <li><strong>Community maturity:</strong> DAO governance requires an engaged, informed token holder base</li>
         <li><strong>Iterative decentralization:</strong> Gradual transition builds trust and battle-tests each layer</li>
-        <li><strong>No rushing:</strong> &ldquo;Move fast and break things&rdquo; does not apply to financial protocols</li>
       </ul>
 
-      <h3>What Changes with DAO</h3>
+      <h3>Capability Comparison</h3>
       <p>
-        Each governance model unlocks different capabilities. The table below compares what each phase enables:
+        Each governance model unlocks different capabilities:
       </p>
 
       <table>
         <thead>
           <tr>
             <th>Capability</th>
-            <th>Admin+Timelock</th>
-            <th>Multisig</th>
-            <th>Full DAO</th>
+            <th>Admin+Timelock (now)</th>
+            <th>Multisig (next)</th>
+            <th>Full DAO (future)</th>
           </tr>
         </thead>
         <tbody>
@@ -948,22 +993,28 @@ await governance.execute(proposalId);</code></pre>
             <td>Community vote</td>
           </tr>
           <tr>
-            <td>New Partners</td>
+            <td>Partner Onboarding</td>
             <td>Team decision</td>
             <td>Multisig vote</td>
             <td>Community proposal</td>
           </tr>
+          <tr>
+            <td>Token Voting</td>
+            <td>Not available</td>
+            <td>Not available</td>
+            <td>Lock-weighted</td>
+          </tr>
         </tbody>
       </table>
 
-      <h3>Partner Governance</h3>
+      <h3>Partner Voting Rights (DAO Phase)</h3>
       <p>
-        Partner voting power is proportional to their vested and unlocked IFR holdings from the Partner Ecosystem Pool (4%, 40M IFR). Allocations are earned through milestones, ensuring that governance influence reflects real ecosystem contribution.
+        In the DAO phase, voting power will be derived from <strong>locked IFR balances</strong> (via IFRLock), not freely tradable tokens. This prevents flash-loan governance attacks. Partner tokens earned through the PartnerVault also grant voting rights, ensuring that governance influence reflects real ecosystem contribution.
       </p>
 
       <div class="callout">
         <p>
-          <strong>Security &gt; Speed:</strong> Every governance transition is irreversible. We will only move to the next phase when the current model has been battle-tested and the community is ready.
+          <strong>Security &gt; Speed:</strong> Every governance transition is irreversible. We will only move to the next phase when the current model has been battle-tested and the community is ready. There is no timeline pressure.
         </p>
       </div>
 

@@ -80,9 +80,9 @@ Alle Sepolia-Milestones sind abgeschlossen. Der Fokus liegt jetzt auf den organi
 
 #### Partner Token Allocation mit Milestone-Based Vesting
 - 4% (40M IFR) reserviert für Partner Ecosystem Pool
-- Tiers: Launch Partner 5M / Tier 1: 2M / Tier 2: 1M / Tier 3: 500K IFR
-- Alle gevestet (6-12 Monate), an Meilensteine gebunden
-- Partner-Tokens geben zukünftige DAO-Stimmrechte
+- Verteilung über Lock-triggered Creator Rewards: User lockt IFR → Creator bekommt X% (RewardBps 10-20%) aus Pool, gevestet 6-12 Monate
+- Per-Partner Cap + Annual Emission Cap verhindern Pool-Erschöpfung
+- Partner-Tokens geben zukünftige DAO-Stimmrechte (Phase 4+)
 
 ---
 

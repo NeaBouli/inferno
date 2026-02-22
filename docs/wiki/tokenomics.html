@@ -932,10 +932,11 @@
 
       <p><strong>Partner Ecosystem (4% &mdash; 40M IFR)</strong></p>
       <ul>
-        <li>Dedicated pool for ecosystem partner token allocations</li>
-        <li>Milestone-based: tokens unlock as partners hit integration targets (live integration, user thresholds)</li>
-        <li>Four tiers: Launch Partner (up to 5M IFR), Tier 1 (up to 2M), Tier 2 (up to 1M), Tier 3 (up to 500K)</li>
-        <li>All allocations vest linearly over 6&ndash;12 months &mdash; no instant dumps</li>
+        <li>Dedicated pool managed by the PartnerVault contract (planned)</li>
+        <li>Primary distribution via <strong>lock-triggered Creator Rewards</strong>: when a user locks IFR for a creator's product, the creator earns a percentage (RewardBps) from the pool, vested over 6&ndash;12 months</li>
+        <li>Hard cap per partner and annual emission cap to prevent pool exhaustion</li>
+        <li>All allocations vest linearly &mdash; no instant dumps</li>
+        <li>Partner tokens grant DAO voting rights in Phase 4+</li>
       </ul>
 
       <!-- ============================================================
@@ -1063,6 +1064,134 @@ if (from != address(0) && to != address(0)
       <div class="callout callout-green">
         <p>
           <strong>Security Note:</strong> The fee exemption mapping is controlled exclusively by the Governance contract (owner). No single EOA can grant or revoke exemptions. Any change requires a proposal, a 48-hour waiting period, and execution &mdash; giving the community time to review and react.
+        </p>
+      </div>
+
+      <!-- ============================================================
+           Section 6: PartnerVault & Creator Rewards
+           ============================================================ -->
+      <h2 id="partner-vault">6. PartnerVault &amp; Creator Rewards</h2>
+      <p>
+        The Partner Ecosystem Pool (4%, 40M IFR) is distributed through the <strong>PartnerVault</strong> contract (planned). Instead of fixed tier-based grants, partner rewards are driven by actual user engagement via lock-triggered Creator Rewards.
+      </p>
+
+      <h3>Lock-triggered Creator Rewards</h3>
+      <p>
+        When a user locks IFR for premium access to a creator's product, the creator earns a reward from the Partner Pool:
+      </p>
+
+      <div class="example-card">
+        <h4>Reward Example (15% RewardBps)</h4>
+        <div class="example-row">
+          <span class="label">User locks</span>
+          <span class="value">1,000 IFR</span>
+        </div>
+        <div class="example-row">
+          <span class="label">Creator reward (15%)</span>
+          <span class="value green">150 IFR (vested)</span>
+        </div>
+        <div class="example-row">
+          <span class="label">Net IFR removed from circulation</span>
+          <span class="value accent">850 IFR</span>
+        </div>
+      </div>
+
+      <p>
+        This model is <strong>inherently deflationary</strong>: the reward is always smaller than the locked amount, so every lock-triggered reward results in a net reduction of circulating supply.
+      </p>
+
+      <h3>PartnerVault Design</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Property</th>
+            <th>Value</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Pool Size</td>
+            <td>40,000,000 IFR (4% of supply)</td>
+          </tr>
+          <tr>
+            <td>Distribution Trigger</td>
+            <td>User lock events via IFRLock</td>
+          </tr>
+          <tr>
+            <td>Reward Rate (RewardBps)</td>
+            <td>10&ndash;20% of locked amount (configurable via governance)</td>
+          </tr>
+          <tr>
+            <td>Vesting Period</td>
+            <td>6&ndash;12 months linear</td>
+          </tr>
+          <tr>
+            <td>Per-Partner Cap</td>
+            <td>Hard cap (TBD via governance)</td>
+          </tr>
+          <tr>
+            <td>Annual Emission Cap</td>
+            <td>Prevents pool exhaustion in a single year</td>
+          </tr>
+          <tr>
+            <td>Claim Mechanism</td>
+            <td>Permissionless <code>claim()</code> by partner beneficiary</td>
+          </tr>
+          <tr>
+            <td>Fee Exempt</td>
+            <td>Required (internal protocol transfers)</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="callout callout-green">
+        <p>
+          <strong>Key difference from old model:</strong> Previous documentation listed fixed tier grants (5M / 2M / 1M / 500K IFR per partner). These numbers were replaced with the lock-triggered reward model because fixed grants become disproportionate at scale &mdash; at $0.50/IFR, a 5M grant would be $2.5M, which is unsustainable for early-stage creator partnerships.
+        </p>
+      </div>
+
+      <!-- ============================================================
+           Section 7: Bootstrap Pricing (Phase 0)
+           ============================================================ -->
+      <h2 id="bootstrap-pricing">7. Bootstrap Pricing (Phase 0)</h2>
+      <p>
+        In the initial bootstrap phase, all pricing is <strong>token-denominated</strong>. There is no USD pricing, no oracle, and no TWAP &mdash; this is a deliberate design decision for a zero-capital launch.
+      </p>
+
+      <h3>How It Works</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Phase</th>
+            <th>Pricing Model</th>
+            <th>Requirements</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Phase 0 (Current)</strong></td>
+            <td>Fixed IFR amount (e.g. 1,000 IFR for Lifetime)</td>
+            <td>No oracle, no USD, fully on-chain</td>
+          </tr>
+          <tr>
+            <td><strong>Phase 2+ (Future)</strong></td>
+            <td>USD-based via TWAP + ETH/USD oracle</td>
+            <td>&ge; 250K USD liquidity, price floor at 40% of launch price</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>Why Token-Denominated?</h3>
+      <ul>
+        <li><strong>Zero capital required</strong> &mdash; no initial liquidity needed for price feeds</li>
+        <li><strong>Manipulation-resistant</strong> &mdash; no oracle to exploit, no flash loan attacks on pricing</li>
+        <li><strong>Fully on-chain</strong> &mdash; the lock amount is a simple <code>uint256</code>, verifiable by any contract</li>
+        <li><strong>Automatic adjustment</strong> &mdash; as IFR price increases, the USD-equivalent cost rises naturally, reducing token emission pressure</li>
+      </ul>
+
+      <div class="callout">
+        <p>
+          <strong>Transition to Phase 2:</strong> USD-based pricing will only be activated once sufficient DEX liquidity exists (&ge; 250K USD). Until then, token-denominated pricing ensures the protocol functions without external dependencies.
         </p>
       </div>
 
