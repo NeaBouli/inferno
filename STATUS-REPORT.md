@@ -306,7 +306,7 @@ Step 4/9  Deploy BurnReserve + BuybackVault (60d Aktivierung)
 Step 5/9  (BurnReserve bereits in Step 4 deployt)
 Step 6/9  Deploy Governance (48h Delay, Guardian = Deployer)
 Step 7/9  Set feeExempt: Vesting, LiquidityReserve, Treasury, BuybackVault, BurnReserve, Deployer
-Step 8/9  Distribute: 200M→Reserve, 150M→Vesting, 150M→Treasury, 100M→Community, 400M bei Deployer
+Step 8/9  Distribute: 200M→Reserve, 150M→Vesting, 150M→Treasury, 60M→Community, 40M→PartnerVault, 400M bei Deployer
 Step 9/9  Remove Deployer feeExempt
 ```
 
@@ -376,7 +376,8 @@ de88510b feat: add testnet deploy script with full contract setup
          ├── 200M → [LiquidityReserve] (6mo Lock, 50M/Quartal)
          ├── 150M → [Vesting] (12mo Cliff, 36mo linear)
          ├── 150M → [Treasury Multisig]
-         └── 100M → [Community Wallet]
+         ├── 60M  → [Community & Grants Wallet]
+         └── 40M  → [PartnerVault]
 
     [Governance] (48h Timelock)
          |

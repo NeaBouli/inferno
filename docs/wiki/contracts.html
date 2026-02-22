@@ -460,7 +460,7 @@
 
         <h1 class="page-title">Smart Contracts</h1>
         <p class="page-description">
-            Complete reference for all 7 Inferno protocol contracts. Includes constructor parameters, public functions,
+            Complete reference for all 8 Inferno protocol components. Includes constructor parameters, public functions,
             events, access control, and ethers.js usage examples.
         </p>
 
@@ -475,6 +475,7 @@
                 <li><a href="#burn-reserve">BurnReserve <span class="toc-path">contracts/burnreserve/BurnReserve.sol</span></a></li>
                 <li><a href="#governance">Governance <span class="toc-path">contracts/governance/Governance.sol</span></a></li>
                 <li><a href="#ifr-lock">IFRLock <span class="toc-path">contracts/lock/IFRLock.sol</span></a></li>
+                <li><a href="#lp-pair">LP Pair (IFR/WETH) <span class="toc-path">Uniswap V2 Factory</span></a></li>
             </ol>
         </div>
 
@@ -1794,6 +1795,104 @@ console.<span class="function">log</span>(<span class="string">"Since:"</span>, 
 
 <span class="comment">// Unlock all tokens</span>
 <span class="keyword">await</span> lockContract.<span class="function">connect</span>(signer).<span class="function">unlock</span>();</pre>
+            </div>
+        </div>
+
+        <div class="section-divider"></div>
+
+        <!-- ════════════════════════════════════════════════════ -->
+        <!-- 8. LP Pair                                            -->
+        <!-- ════════════════════════════════════════════════════ -->
+        <div class="contract-section" id="lp-pair">
+            <div class="contract-header">
+                <h2>LP Pair (IFR/WETH)</h2>
+                <span class="contract-badge">Uniswap V2</span>
+            </div>
+            <div class="contract-path">Created by Uniswap V2 Factory</div>
+
+            <p class="contract-description">
+                The IFR/WETH liquidity pair on Uniswap V2. This is not a custom contract but a standard
+                <strong>UniswapV2Pair</strong> created by the factory during the LP pairing step. It holds
+                <strong>400M IFR</strong> (40% of total supply) paired with ETH, providing the primary
+                trading market for the token.
+            </p>
+
+            <div class="info-box note">
+                <strong>Note:</strong> The LP Pair is a standard Uniswap V2 contract, not an Inferno-authored contract.
+                It is included here as the 8th protocol component because it holds a significant portion of
+                the token supply and is critical infrastructure for the protocol.
+            </div>
+
+            <h3>Addresses</h3>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr><th>Component</th><th>Address</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>LP Pair</td>
+                            <td><code>0x2252e8bBDE0E50CD372748aC233A99C08627d9c7</code></td>
+                        </tr>
+                        <tr>
+                            <td>Uniswap V2 Router</td>
+                            <td><code>0xC532a74256D3Db42D0Bf7a0400fEFDbad7694008</code></td>
+                        </tr>
+                        <tr>
+                            <td>Uniswap V2 Factory</td>
+                            <td><code>0x7E0987E5b3a30e3f2828572Bb659A548460a3003</code></td>
+                        </tr>
+                        <tr>
+                            <td>WETH</td>
+                            <td><code>0x7b79995e5f793A07Bc00c21412e50Ecae098E7f9</code></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3>Pool Details</h3>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr><th>Property</th><th>Value</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>IFR in Pool</td>
+                            <td>400,000,000 IFR (40% of supply)</td>
+                        </tr>
+                        <tr>
+                            <td>ETH in Pool</td>
+                            <td>0.01 ETH (Sepolia testnet)</td>
+                        </tr>
+                        <tr>
+                            <td>LP Tokens</td>
+                            <td>Held by deployer (to be locked/burned on mainnet)</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3>ethers.js Example</h3>
+            <div class="code-block">
+                <div class="code-block-header">JavaScript (ethers v5)</div>
+<pre><span class="keyword">const</span> <span class="const">PAIR_ADDR</span> = <span class="string">"0x2252e8bBDE0E50CD372748aC233A99C08627d9c7"</span>;
+<span class="keyword">const</span> pairAbi = [
+  <span class="string">"function getReserves() view returns (uint112, uint112, uint32)"</span>,
+  <span class="string">"function token0() view returns (address)"</span>,
+  <span class="string">"function token1() view returns (address)"</span>,
+  <span class="string">"function totalSupply() view returns (uint256)"</span>,
+];
+
+<span class="keyword">const</span> pair = <span class="keyword">new</span> ethers.<span class="function">Contract</span>(<span class="const">PAIR_ADDR</span>, pairAbi, provider);
+
+<span class="comment">// Read reserves</span>
+<span class="keyword">const</span> [reserve0, reserve1] = <span class="keyword">await</span> pair.<span class="function">getReserves</span>();
+<span class="keyword">const</span> token0 = <span class="keyword">await</span> pair.<span class="function">token0</span>();
+
+console.<span class="function">log</span>(<span class="string">"Token0:"</span>, token0);
+console.<span class="function">log</span>(<span class="string">"Reserve0:"</span>, reserve0.toString());
+console.<span class="function">log</span>(<span class="string">"Reserve1:"</span>, reserve1.toString());</pre>
             </div>
         </div>
 
