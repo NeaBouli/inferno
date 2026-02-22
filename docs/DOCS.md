@@ -22,6 +22,7 @@ inferno/
 │   ├── burnreserve/BurnReserve.sol     [x] 86 LOC, 21 Tests
 │   ├── governance/Governance.sol       [x] 150 LOC, 36 Tests
 │   ├── lock/IFRLock.sol               [x] 127 LOC, 29 Tests
+│   ├── partner/PartnerVault.sol       [x] 290 LOC, 67 Tests
 │   └── mocks/                          MockToken, MockRouter, MockInfernoToken
 ├── test/
 │   ├── InfernoToken.test.js            [x] 258 LOC
@@ -30,7 +31,8 @@ inferno/
 │   ├── BuybackVault.test.js            [x] 149 LOC
 │   ├── BurnReserve.test.js             [x] 212 LOC
 │   ├── Governance.test.js              [x] 320 LOC
-│   └── IFRLock.test.js                [x] 363 LOC
+│   ├── IFRLock.test.js                [x] 363 LOC
+│   └── PartnerVault.test.js           [x] 480 LOC
 ├── scripts/
 │   ├── deploy-testnet.js               [x] 232 LOC (9-Step CFLM Deploy)
 │   ├── create-lp.js                    [x] 4-Step LP Pairing + Router Update
@@ -104,6 +106,12 @@ inferno/
 - **Beschreibung:** Generic IFR Token Lock ohne Rewards/Vesting
 - **Features:** lock(amount), lockWithType(amount, lockType), unlock(), isLocked(user, minAmount), lockInfo(), ReentrancyGuard, Emergency Pause (nur lock), Guardian Auth, Multi-App lockType Tag
 
+### 8. PartnerVault — [x] FERTIG
+- **Pfad:** `contracts/partner/PartnerVault.sol`
+- **Tests:** 67 (PartnerVault.test.js)
+- **Beschreibung:** Partner Ecosystem Pool (40M IFR) mit Milestone-Unlocking + Lock-triggered Creator Rewards
+- **Features:** createPartner, activatePartner, recordMilestone, recordLockReward (lockAmount × rewardBps), claim (linear Vesting mit Cliff), finalizeMilestones, SafeERC20, ReentrancyGuard, Pausable, Guardian Auth, Governance-kontrollierte Parameter (rewardBps 5-25%, annualEmissionCap, partnerCap) mit min/max Bounds, Annual Cap Reset
+
 ### Entfernt
 - ~~Presale.sol~~ — Entfernt bei CFLM-Migration (kein Presale im Fair Launch Modell)
 
@@ -113,10 +121,10 @@ inferno/
 
 | Metrik | Wert |
 |--------|------|
-| Contracts | 8 (+ 3 Mocks) |
-| Solidity LOC | 837 |
-| Tests | 154 (alle bestanden) |
-| Test LOC | 1,697 |
+| Contracts | 9 (+ 3 Mocks) |
+| Solidity LOC | 1,127 |
+| Tests | 221 (alle bestanden) |
+| Test LOC | 2,177 |
 | Deploy Script | 232 LOC, 9 Steps |
 | Modell | CFLM (Community Fair Launch) |
 | Compiler | 0 Errors, 0 Warnings |
@@ -127,6 +135,7 @@ inferno/
 
 | Datum | Aenderung |
 |-------|-----------|
+| 2026-02-23 | PartnerVault.sol implementiert (290 LOC, 67 Tests): Milestone-Unlocking + Lock-triggered Creator Rewards, SafeERC20, Governance-Parameter |
 | 2026-02-23 | 6 Doku-Inkonsistenzen gefixt: PartnerVault, Creator Rewards, Bootstrap Pricing, Governance Trennung, alte Tier-Zahlen ersetzt |
 | 2026-02-22 | Governance Proposal #1 executed: setFeeExempt(IFRLock, true) — Full Lock/Unlock Cycle verified (8/8) |
 | 2026-02-20 | IFRLock Contract implementiert (127 LOC, 29 Tests): Generic Token Lock, ReentrancyGuard, Pause, Multi-App lockType |
@@ -204,7 +213,7 @@ npx hardhat run scripts/create-lp.js --network sepolia
 
 | # | Aufgabe | Prioritaet | Status |
 |---|---------|------------|--------|
-| 1 | Testnet Deploy (Sepolia) | Naechster Schritt | **Erledigt** (8 Contracts live) |
+| 1 | Testnet Deploy (Sepolia) | Naechster Schritt | **Erledigt** (8 Contracts live, PartnerVault pending) |
 | 2 | Etherscan Verifikation | Nach Deploy | **Erledigt** (7/7 verified) |
 | 3 | Security Audit (Slither) | Empfohlen | **Erledigt** (v0.11.5, 0 High/Critical) |
 | 4 | Uniswap LP Pairing | Vor Launch | **Erledigt** (`0x2252e8bB...`) |
