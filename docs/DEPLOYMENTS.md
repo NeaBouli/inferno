@@ -17,6 +17,7 @@
 | 5 | **BurnReserve** | [`0x6D4582FCac792FD3880e252fC0a585A0c1823e80`](https://sepolia.etherscan.io/address/0x6D4582FCac792FD3880e252fC0a585A0c1823e80#code) | Verified |
 | 6 | **Governance** | [`0x6050b22E4EAF3f414d1155fBaF30B868E0107017`](https://sepolia.etherscan.io/address/0x6050b22E4EAF3f414d1155fBaF30B868E0107017#code) | Verified |
 | 7 | **IFRLock** | [`0x0Cab0A9440643128540222acC6eF5028736675d3`](https://sepolia.etherscan.io/address/0x0Cab0A9440643128540222acC6eF5028736675d3#code) | Verified |
+| 8 | **PartnerVault** | [`0x6EF04c6abeb53335B6c2dD2964da97DB677AF090`](https://sepolia.etherscan.io/address/0x6EF04c6abeb53335B6c2dD2964da97DB677AF090#code) | Verified |
 
 ### Constructor Arguments
 
@@ -29,6 +30,7 @@
 | BuybackVault | `token, burnReserve, deployer (treasury), deployer (router), deployer (guardian), 5184000 (60d)` |
 | Governance | `172800 (48h), deployer (guardian)` |
 | IFRLock | `token, deployer (guardian)` |
+| PartnerVault | `token, governance (admin), deployer (guardian), 1500 (rewardBps), 4000000000000000 (4M*1e9 annualCap)` |
 
 ### Token Distribution
 
@@ -38,13 +40,14 @@
 | Liquidity Reserve | 200,000,000 IFR (20%) | `0xF7E90D0d17f8232365186AA085D26eaEfAf011aF` |
 | Team Vesting | 150,000,000 IFR (15%) | `0xa710f9FE7bf42981E60BE2Fbe7D87Fb3541a3F8B` |
 | Treasury | 150,000,000 IFR (15%) | Deployer (placeholder) |
-| Community | 100,000,000 IFR (10%) | Deployer (placeholder) |
+| Community & Grants | 60,000,000 IFR (6%) | Deployer (placeholder) |
+| Partner Ecosystem | 40,000,000 IFR (4%) | [`0x6EF04c6abeb53335B6c2dD2964da97DB677AF090`](https://sepolia.etherscan.io/address/0x6EF04c6abeb53335B6c2dD2964da97DB677AF090) (PartnerVault) |
 
 ### Configuration
 
 | Setting | Value |
 |---------|-------|
-| FeeExempt | Vesting, LiquidityReserve, Treasury, BuybackVault, BurnReserve, IFRLock |
+| FeeExempt | Vesting, LiquidityReserve, Treasury, BuybackVault, BurnReserve, IFRLock, PartnerVault (pending Proposal #2) |
 | Deployer FeeExempt | Removed |
 | LiquidityReserve Lock | 180 days |
 | Vesting Cliff | 12 months |
@@ -73,6 +76,7 @@
 |---|--------|--------|-----|-----|--------|
 | 0 | `setFeeExempt(0xA4A1ea...6A36f90, true)` | InfernoToken | 2026-02-20 10:14 CET | [`0x13ff46d8...cbbe982d`](https://sepolia.etherscan.io/tx/0x13ff46d8a113f25b9ab0037ee06d6108c62d0f16e25d28799e4f45a8cbbe982d) | Executed |
 | 1 | `setFeeExempt(IFRLock, true)` | InfernoToken | 2026-02-22 21:15 CET | [`0x211b7949...4253a909`](https://sepolia.etherscan.io/tx/0x211b794970abe147b3ab2f3c92bb79b3b3c5a72bc8be8cfb7e1d00fd4253a909) | Executed |
+| 2 | `setFeeExempt(PartnerVault, true)` | InfernoToken | 2026-02-25 00:39 CET | [`0x40e19cbf...2ed5c145`](https://sepolia.etherscan.io/tx/0x40e19cbf1aeb8310bdf6a7961773a62d70329d6488966c3e65ea86ba2ed5c145) | Pending |
 
 ### Post-Deploy Status
 
@@ -82,7 +86,7 @@
 | feeExempt Wiring | Done |
 | Token Distribution | Done |
 | Deployer Exemption Removed | Done |
-| Etherscan Verification | **Done** (7/7 verified) |
+| Etherscan Verification | **Done** (8/8 verified) |
 | Uniswap LP Pairing | **Done** — [`0x2252e8bBDE0E50CD372748aC233A99C08627d9c7`](https://sepolia.etherscan.io/address/0x2252e8bBDE0E50CD372748aC233A99C08627d9c7) |
 | Router on BuybackVault | **Done** — `0xC532a74256D3Db42D0Bf7a0400fEFDbad7694008` |
 | Ownership to Governance | **Done** — TX `0xa69bf285...d5762e1b` |
@@ -90,3 +94,6 @@
 | IFRLock Deployed + Verified | **Done** — [`0x0Cab0A94...`](https://sepolia.etherscan.io/address/0x0Cab0A9440643128540222acC6eF5028736675d3) |
 | IFRLock Live Test | **Done** — 8/8 passed (full lock/unlock cycle) |
 | Governance Proposal #1 | **Done** — setFeeExempt(IFRLock, true), TX [`0x211b7949...`](https://sepolia.etherscan.io/tx/0x211b794970abe147b3ab2f3c92bb79b3b3c5a72bc8be8cfb7e1d00fd4253a909) |
+| PartnerVault Deployed + Verified | **Done** — [`0x6EF04c6a...`](https://sepolia.etherscan.io/address/0x6EF04c6abeb53335B6c2dD2964da97DB677AF090) |
+| PartnerVault Funded | **Done** — 38.6M IFR (40M - 1.4M fees; top-up after Proposal #2) |
+| Governance Proposal #2 | **Pending** — setFeeExempt(PartnerVault, true), ETA 25.2.2026 00:39 CET |
