@@ -127,6 +127,7 @@ inferno/
 
 | Datum | Aenderung |
 |-------|-----------|
+| 2026-02-23 | 6 Doku-Inkonsistenzen gefixt: PartnerVault, Creator Rewards, Bootstrap Pricing, Governance Trennung, alte Tier-Zahlen ersetzt |
 | 2026-02-22 | Governance Proposal #1 executed: setFeeExempt(IFRLock, true) — Full Lock/Unlock Cycle verified (8/8) |
 | 2026-02-20 | IFRLock Contract implementiert (127 LOC, 29 Tests): Generic Token Lock, ReentrancyGuard, Pause, Multi-App lockType |
 | 2026-02-20 | Governance Proposal #0 executed: setFeeExempt via 48h Timelock — Full Governance Lifecycle verified |
@@ -177,7 +178,7 @@ Step 4/9  BurnReserve + BuybackVault deployen (60d Aktivierung)
 Step 5/9  (BurnReserve bereits in Step 4)
 Step 6/9  Governance deployen (48h Timelock)
 Step 7/9  feeExempt setzen (alle Contracts + Deployer temporaer)
-Step 8/9  Tokens verteilen (200M+150M+150M+100M, 400M bei Deployer)
+Step 8/9  Tokens verteilen (200M+150M+150M+60M+40M, 400M bei Deployer)
 Step 9/9  Deployer feeExempt entfernen
 ```
 
@@ -191,8 +192,8 @@ npx hardhat run scripts/create-lp.js --network sepolia
 
 | # | Schritt | Status |
 |---|---------|--------|
-| 1 | Contracts deployen | **Erledigt** (6/6) |
-| 2 | Etherscan verifizieren | **Erledigt** (6/6) |
+| 1 | Contracts deployen | **Erledigt** (8/8) |
+| 2 | Etherscan verifizieren | **Erledigt** (7/7) |
 | 3 | LP erstellen | **Erledigt** (`0x2252e8bBDE0E50CD372748aC233A99C08627d9c7`) |
 | 4 | Ownership transferieren | **Erledigt** |
 | 5 | Governance Proposal #0 ausfuehren | **Erledigt** (setFeeExempt via 48h Timelock) |
@@ -203,8 +204,8 @@ npx hardhat run scripts/create-lp.js --network sepolia
 
 | # | Aufgabe | Prioritaet | Status |
 |---|---------|------------|--------|
-| 1 | Testnet Deploy (Sepolia) | Naechster Schritt | **Erledigt** (6 Contracts live) |
-| 2 | Etherscan Verifikation | Nach Deploy | **Erledigt** (6/6 verified) |
+| 1 | Testnet Deploy (Sepolia) | Naechster Schritt | **Erledigt** (8 Contracts live) |
+| 2 | Etherscan Verifikation | Nach Deploy | **Erledigt** (7/7 verified) |
 | 3 | Security Audit (Slither) | Empfohlen | **Erledigt** (v0.11.5, 0 High/Critical) |
 | 4 | Uniswap LP Pairing | Vor Launch | **Erledigt** (`0x2252e8bB...`) |
 | 5 | Router/Adressen setzen | Vor Launch | **Erledigt** (Uniswap V2 Router02) |
@@ -215,3 +216,4 @@ npx hardhat run scripts/create-lp.js --network sepolia
 | 10 | Governance Lifecycle (Proposal #0) | Nach Deploy | **Erledigt** (setFeeExempt via Timelock) |
 | 11 | Governance Proposal #1 (IFRLock feeExempt) | Nach Deploy | **Erledigt** (8/8 Lock/Unlock Tests) |
 | 12 | Gas-Optimierung | Optional | Offen |
+| 13 | Doku-Inkonsistenzen (6 Tickets) | Hoch | **Erledigt** (PartnerVault, Creator Rewards, Bootstrap Pricing) |
