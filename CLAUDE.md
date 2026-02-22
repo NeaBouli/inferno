@@ -22,8 +22,8 @@ Inferno ($IFR) ist ein **deflationärer ERC-20 Utility-Token** auf Ethereum. Jed
 
 ### Was ist abgeschlossen
 
-- **8 Smart Contracts** entwickelt, getestet, auf Sepolia deployed und verifiziert
-- **154 Unit Tests** — alle bestehen (35s Laufzeit)
+- **9 Smart Contracts** entwickelt und getestet (8 auf Sepolia deployed und verifiziert, PartnerVault pending deploy)
+- **221 Unit Tests** — alle bestehen
 - **Slither Security Audit** — 0 High/Critical Findings
 - **React Dashboard** (Phase 1 + 2) — Token Overview, Transfer, Governance UI
 - **GitHub Pages Landing Page** — 9 Sektionen, Dark Theme, responsive
@@ -101,8 +101,10 @@ Alle Sepolia-Milestones sind abgeschlossen. Der Fokus liegt jetzt auf den organi
 │   ├── Governance.sol            # 48h Timelock + Guardian
 │   ├── LiquidityReserve.sol      # LP Token Lock mit Rate Limits
 │   ├── Vesting.sol               # 48mo Vesting, 12mo Cliff
-│   └── lock/
-│       └── IFRLock.sol           # Utility Lock Contract (127 LOC)
+│   ├── lock/
+│   │   └── IFRLock.sol           # Utility Lock Contract (127 LOC)
+│   └── partner/
+│       └── PartnerVault.sol      # Partner Ecosystem Pool (290 LOC)
 │
 ├── test/                         # Hardhat Test Suite
 │   ├── InfernoToken.test.js      # 21 Tests
@@ -111,7 +113,8 @@ Alle Sepolia-Milestones sind abgeschlossen. Der Fokus liegt jetzt auf den organi
 │   ├── BuybackVault.test.js      # 9 Tests
 │   ├── Vesting.test.js           # 7 Tests
 │   ├── LiquidityReserve.test.js  # 28 Tests
-│   └── IFRLock.test.js           # 29 Tests (+ 3 multi-user)
+│   ├── IFRLock.test.js           # 29 Tests
+│   └── PartnerVault.test.js      # 67 Tests
 │
 ├── scripts/                      # Deploy & Test Scripts
 │   ├── deploy-testnet.js         # Hauptdeploy (6 Contracts + LP)
@@ -141,7 +144,7 @@ Alle Sepolia-Milestones sind abgeschlossen. Der Fokus liegt jetzt auf den organi
 │   │   └── securecall_logo.png   # SecureCall Partner Logo
 │   └── wiki/                     # Technische Wiki (8 HTML-Seiten)
 │       ├── index.html            # Wiki Home + Navigation
-│       ├── contracts.html        # Alle 8 Contracts dokumentiert
+│       ├── contracts.html        # Alle 9 Contracts dokumentiert
 │       ├── tokenomics.html       # Fee-Mechanik, Deflation, Allocation
 │       ├── lock-mechanism.html   # IFRLock System + Resolver
 │       ├── governance.html       # Timelock, Proposals, DAO-Zukunft
@@ -304,7 +307,7 @@ Vesting (12-Monat Cliff), LiquidityReserve (6-Monat Lock), BuybackVault (60-Tag 
 #### Testing
 
 ```bash
-npx hardhat test                    # Alle 154 Tests
+npx hardhat test                    # Alle 221 Tests
 npx hardhat test test/IFRLock.test.js  # Einzelner Test
 ```
 

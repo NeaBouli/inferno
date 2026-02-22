@@ -460,7 +460,7 @@
 
         <h1 class="page-title">Smart Contracts</h1>
         <p class="page-description">
-            Complete reference for all 8 Inferno protocol components. Includes constructor parameters, public functions,
+            Complete reference for all 9 Inferno protocol components. Includes constructor parameters, public functions,
             events, access control, and ethers.js usage examples.
         </p>
 
@@ -475,6 +475,7 @@
                 <li><a href="#burn-reserve">BurnReserve <span class="toc-path">contracts/burnreserve/BurnReserve.sol</span></a></li>
                 <li><a href="#governance">Governance <span class="toc-path">contracts/governance/Governance.sol</span></a></li>
                 <li><a href="#ifr-lock">IFRLock <span class="toc-path">contracts/lock/IFRLock.sol</span></a></li>
+                <li><a href="#partner-vault">PartnerVault <span class="toc-path">contracts/partner/PartnerVault.sol</span></a></li>
                 <li><a href="#lp-pair">LP Pair (IFR/WETH) <span class="toc-path">Uniswap V2 Factory</span></a></li>
             </ol>
         </div>
@@ -1801,7 +1802,81 @@ console.<span class="function">log</span>(<span class="string">"Since:"</span>, 
         <div class="section-divider"></div>
 
         <!-- ════════════════════════════════════════════════════ -->
-        <!-- 8. LP Pair                                            -->
+        <!-- 8. PartnerVault                                       -->
+        <!-- ════════════════════════════════════════════════════ -->
+        <div class="contract-section" id="partner-vault">
+            <div class="contract-header">
+                <h2>PartnerVault</h2>
+                <span class="contract-badge">Partner Ecosystem</span>
+            </div>
+            <div class="contract-path">contracts/partner/PartnerVault.sol</div>
+
+            <p>
+                Manages the 40M IFR Partner Ecosystem Pool (4% of total supply). Two mechanisms:
+                <strong>milestone-based unlocking</strong> (governance records milestones that unlock IFR allocations) and
+                <strong>lock-triggered creator rewards</strong> (when a user locks IFR for a partner's product, the partner accrues
+                a reward of <code>lockAmount &times; rewardBps / 10000</code> from the pool).
+                Rewards vest linearly over 6&ndash;12 months with optional cliff.
+            </p>
+
+            <h3>Constructor</h3>
+            <div class="table-wrap">
+            <table>
+                <thead><tr><th>Parameter</th><th>Type</th><th>Description</th></tr></thead>
+                <tbody>
+                    <tr><td><code>_ifrToken</code></td><td>address</td><td>InfernoToken address</td></tr>
+                    <tr><td><code>_admin</code></td><td>address</td><td>Governance Timelock address</td></tr>
+                    <tr><td><code>_guardian</code></td><td>address</td><td>Emergency pause authority</td></tr>
+                    <tr><td><code>_rewardBps</code></td><td>uint256</td><td>Creator reward rate in bps (500&ndash;2500 = 5&ndash;25%)</td></tr>
+                    <tr><td><code>_annualEmissionCap</code></td><td>uint256</td><td>Max IFR distributable per year (1M&ndash;10M)</td></tr>
+                </tbody>
+            </table>
+            </div>
+
+            <h3>Admin Functions (Governance only)</h3>
+            <div class="table-wrap">
+            <table>
+                <thead><tr><th>Function</th><th>Description</th></tr></thead>
+                <tbody>
+                    <tr><td><code>createPartner(partnerId, beneficiary, maxAllocation, vestingDuration, cliff, tier)</code></td><td>Register a new partner with allocation cap and vesting schedule</td></tr>
+                    <tr><td><code>activatePartner(partnerId)</code></td><td>Activate a partner to start earning rewards</td></tr>
+                    <tr><td><code>recordMilestone(partnerId, milestoneId, unlockAmount)</code></td><td>Record milestone completion, unlock IFR allocation</td></tr>
+                    <tr><td><code>recordLockReward(partnerId, lockAmount)</code></td><td>Record a user lock &rarr; creator reward (lockAmount &times; rewardBps / 10000)</td></tr>
+                    <tr><td><code>setRewardBps(newBps)</code></td><td>Update reward rate (500&ndash;2500 bps)</td></tr>
+                    <tr><td><code>setAnnualEmissionCap(newCap)</code></td><td>Update annual emission cap (1M&ndash;10M IFR)</td></tr>
+                    <tr><td><code>setPartnerBeneficiary(partnerId, newBeneficiary)</code></td><td>Change partner payout address</td></tr>
+                    <tr><td><code>setPartnerAllocation(partnerId, newMax)</code></td><td>Adjust partner allocation cap</td></tr>
+                    <tr><td><code>finalizeMilestones(partnerId)</code></td><td>Lock milestones &mdash; no further milestone unlocks</td></tr>
+                </tbody>
+            </table>
+            </div>
+
+            <h3>Permissionless Functions</h3>
+            <div class="table-wrap">
+            <table>
+                <thead><tr><th>Function</th><th>Description</th></tr></thead>
+                <tbody>
+                    <tr><td><code>claim(partnerId)</code></td><td>Transfer vested IFR to partner beneficiary (ReentrancyGuard)</td></tr>
+                    <tr><td><code>claimable(partnerId)</code></td><td>View: currently claimable amount</td></tr>
+                    <tr><td><code>vestedAmount(partnerId)</code></td><td>View: total vested so far</td></tr>
+                    <tr><td><code>partners(partnerId)</code></td><td>View: full partner data struct</td></tr>
+                    <tr><td><code>pendingBalance()</code></td><td>View: IFR balance held by vault</td></tr>
+                </tbody>
+            </table>
+            </div>
+
+            <h3>Key Design</h3>
+            <ul>
+                <li><strong>MUST be feeExempt</strong> on InfernoToken for correct claim transfers</li>
+                <li>Governance-controlled parameters with enforced min/max bounds</li>
+                <li>Annual emission cap resets every 365 days</li>
+                <li>Milestone replay protection via <code>milestoneDone</code> mapping</li>
+                <li>SafeERC20 for all token transfers</li>
+            </ul>
+        </div>
+
+        <!-- ════════════════════════════════════════════════════ -->
+        <!-- 9. LP Pair                                            -->
         <!-- ════════════════════════════════════════════════════ -->
         <div class="contract-section" id="lp-pair">
             <div class="contract-header">
