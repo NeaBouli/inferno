@@ -44,7 +44,7 @@
 
 | Setting | Value |
 |---------|-------|
-| FeeExempt | Vesting, LiquidityReserve, Treasury, BuybackVault, BurnReserve, IFRLock (Proposal #1 pending) |
+| FeeExempt | Vesting, LiquidityReserve, Treasury, BuybackVault, BurnReserve, IFRLock |
 | Deployer FeeExempt | Removed |
 | LiquidityReserve Lock | 180 days |
 | Vesting Cliff | 12 months |
@@ -72,7 +72,7 @@
 | # | Action | Target | ETA | TX | Status |
 |---|--------|--------|-----|-----|--------|
 | 0 | `setFeeExempt(0xA4A1ea...6A36f90, true)` | InfernoToken | 2026-02-20 10:14 CET | [`0x13ff46d8...cbbe982d`](https://sepolia.etherscan.io/tx/0x13ff46d8a113f25b9ab0037ee06d6108c62d0f16e25d28799e4f45a8cbbe982d) | Executed |
-| 1 | `setFeeExempt(IFRLock, true)` | InfernoToken | 2026-02-22 21:15 CET | — | Pending (ETA 22.02.) |
+| 1 | `setFeeExempt(IFRLock, true)` | InfernoToken | 2026-02-22 21:15 CET | [`0x211b7949...4253a909`](https://sepolia.etherscan.io/tx/0x211b794970abe147b3ab2f3c92bb79b3b3c5a72bc8be8cfb7e1d00fd4253a909) | Executed |
 
 ### Post-Deploy Status
 
@@ -88,5 +88,5 @@
 | Ownership to Governance | **Done** — TX `0xa69bf285...d5762e1b` |
 | Governance Proposal #0 Executed | **Done** — TX [`0x13ff46d8...cbbe982d`](https://sepolia.etherscan.io/tx/0x13ff46d8a113f25b9ab0037ee06d6108c62d0f16e25d28799e4f45a8cbbe982d) |
 | IFRLock Deployed + Verified | **Done** — [`0x0Cab0A94...`](https://sepolia.etherscan.io/address/0x0Cab0A9440643128540222acC6eF5028736675d3) |
-| IFRLock Live Test | **Done** — 5/5 passed (unlock pending feeExempt) |
-| Governance Proposal #1 | **Pending** — setFeeExempt(IFRLock, true), ETA 2026-02-22 21:15 CET |
+| IFRLock Live Test | **Done** — 8/8 passed (full lock/unlock cycle) |
+| Governance Proposal #1 | **Done** — setFeeExempt(IFRLock, true), TX [`0x211b7949...`](https://sepolia.etherscan.io/tx/0x211b794970abe147b3ab2f3c92bb79b3b3c5a72bc8be8cfb7e1d00fd4253a909) |

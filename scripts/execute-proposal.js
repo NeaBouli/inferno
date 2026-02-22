@@ -16,7 +16,7 @@ const ADDRESSES = {
   governance: "0x6050b22E4EAF3f414d1155fBaF30B868E0107017",
 };
 
-const PROPOSAL_ID = 0;
+const PROPOSAL_ID = 1;
 
 function hr(title) {
   console.log("\n" + "=".repeat(60));
