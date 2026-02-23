@@ -111,6 +111,9 @@ inferno/
 - **Tests:** 67 (PartnerVault.test.js)
 - **Beschreibung:** Partner Ecosystem Pool (40M IFR) mit Milestone-Unlocking + Lock-triggered Creator Rewards
 - **Features:** createPartner, activatePartner, recordMilestone, recordLockReward (lockAmount × rewardBps), claim (linear Vesting mit Cliff), finalizeMilestones, SafeERC20, ReentrancyGuard, Pausable, Guardian Auth, Governance-kontrollierte Parameter (rewardBps 5-25%, annualEmissionCap, partnerCap) mit min/max Bounds, Annual Cap Reset
+- **Sepolia:** rewardBps=1500 (15%), annualCap=4M IFR, Adresse: `0x6EF04c6abeb53335B6c2dD2964da97DB677AF090`
+- **Mainnet-Empfehlung:** rewardBps=1000 (10%), annualCap=4M IFR, partnerCap=100K IFR/Partner (skalierbar fuer 500-1000+ Partner)
+- **KRITISCH:** feeExempt MUSS VOR dem 40M Transfer gesetzt werden (Sepolia-Lesson: 1.4M IFR Fee-Verlust)
 
 ### Entfernt
 - ~~Presale.sol~~ — Entfernt bei CFLM-Migration (kein Presale im Fair Launch Modell)

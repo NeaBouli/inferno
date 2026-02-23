@@ -607,13 +607,26 @@
       <div class="step">
         <div class="step-number">7</div>
         <div class="step-content">
-          <div class="step-title">Set feeExempt for all contracts + deployer</div>
-          <div class="step-desc">Temporarily exempt all protocol contracts and deployer from transfer fees to enable distribution.</div>
+          <div class="step-title">Deploy PartnerVault</div>
+          <div class="step-desc">
+            Mainnet params: <code>rewardBps=1000</code> (10%), <code>annualEmissionCap=4M IFR</code>, admin=Governance, guardian=deployer.
+          </div>
         </div>
       </div>
 
       <div class="step">
         <div class="step-number">8</div>
+        <div class="step-content">
+          <div class="step-title">Set feeExempt for all contracts + deployer</div>
+          <div class="step-desc">
+            Exempt all protocol contracts <strong>including PartnerVault</strong> and deployer from transfer fees.
+            <strong style="color: #f97316;">CRITICAL:</strong> PartnerVault must be feeExempt BEFORE any IFR transfer to it &mdash; otherwise ~3.5% of the 40M transfer is lost to fees (1.4M IFR on Sepolia).
+          </div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-number">9</div>
         <div class="step-content">
           <div class="step-title">Distribute tokens</div>
           <div class="step-desc">
@@ -621,14 +634,14 @@
             150M &rarr; Vesting &bull;
             150M &rarr; Treasury &bull;
             60M &rarr; Community &amp; Grants &bull;
-            40M &rarr; Partner Ecosystem (PartnerVault) &bull;
+            40M &rarr; PartnerVault (fee-free after Step 8) &bull;
             400M remains with deployer for LP pairing.
           </div>
         </div>
       </div>
 
       <div class="step">
-        <div class="step-number">9</div>
+        <div class="step-number">10</div>
         <div class="step-content">
           <div class="step-title">Remove deployer feeExempt</div>
           <div class="step-desc">Deployer fee exemption is revoked. All transfers now subject to the standard fee structure.</div>
