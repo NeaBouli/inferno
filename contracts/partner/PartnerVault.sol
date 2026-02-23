@@ -6,6 +6,11 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/utils/Pausable.sol";
 
+/// @notice Minimal interface for querying IFRLock total locked amount
+interface IIFRLock {
+    function totalLocked() external view returns (uint256);
+}
+
 /// @title PartnerVault
 /// @notice Manages the 40M IFR Partner Ecosystem Pool.
 ///         Two mechanisms: milestone-based unlocking + lock-triggered creator rewards.
@@ -21,6 +26,7 @@ contract PartnerVault is ReentrancyGuard, Pausable {
     address public guardian;
 
     uint256 public constant PARTNER_POOL = 40_000_000 * 10 ** 9;
+    uint256 public constant TOTAL_SUPPLY = 1_000_000_000 * 10 ** 9;
 
     // Governance-controlled parameters with bounds
     uint256 public rewardBps;
@@ -31,12 +37,21 @@ contract PartnerVault is ReentrancyGuard, Pausable {
     uint256 public constant MIN_ANNUAL_CAP = 1_000_000 * 10 ** 9;
     uint256 public constant MAX_ANNUAL_CAP = 10_000_000 * 10 ** 9;
 
+    // Algo throttle: IFRLock reference for lock-ratio scaling
+    IIFRLock public ifrLock;
+
     // Global accounting
     uint256 public totalAllocated;
     uint256 public totalRewarded;
     uint256 public totalClaimed;
     uint256 public yearStart;
     uint256 public yearlyEmitted;
+
+    // Feature A: Authorized caller whitelist
+    mapping(address => bool) public authorizedCaller;
+
+    // Feature B: Anti-double-count (wallet → partnerId → already rewarded)
+    mapping(address => mapping(bytes32 => bool)) public walletRewardClaimed;
 
     struct Partner {
         address beneficiary;
@@ -73,6 +88,7 @@ contract PartnerVault is ReentrancyGuard, Pausable {
     );
     event LockRewardRecorded(
         bytes32 indexed partnerId,
+        address indexed wallet,
         uint256 lockAmount,
         uint256 reward
     );
@@ -96,11 +112,21 @@ contract PartnerVault is ReentrancyGuard, Pausable {
     event MilestonesFinalized(bytes32 indexed partnerId);
     event AdminUpdated(address indexed oldAdmin, address indexed newAdmin);
     event GuardianUpdated(address indexed oldGuardian, address indexed newGuardian);
+    event AuthorizedCallerUpdated(address indexed caller, bool status);
+    event IFRLockUpdated(address indexed oldLock, address indexed newLock);
 
     // ── Modifiers ───────────────────────────────────────────
 
     modifier onlyAdmin() {
         require(msg.sender == admin, "not admin");
+        _;
+    }
+
+    modifier onlyAuthorized() {
+        require(
+            msg.sender == admin || authorizedCaller[msg.sender],
+            "not authorized"
+        );
         _;
     }
 
@@ -215,19 +241,28 @@ contract PartnerVault is ReentrancyGuard, Pausable {
 
     function recordLockReward(
         bytes32 partnerId,
-        uint256 lockAmount
-    ) external onlyAdmin {
+        uint256 lockAmount,
+        address wallet
+    ) external onlyAuthorized {
         Partner storage p = _partners[partnerId];
         require(p.active, "not active");
         require(lockAmount > 0, "amount=0");
+        require(wallet != address(0), "wallet=0");
+        require(
+            !walletRewardClaimed[wallet][partnerId],
+            "already rewarded"
+        );
 
-        uint256 reward = (lockAmount * rewardBps) / 10_000;
+        uint256 effectiveBps = _effectiveRewardBps();
+        uint256 reward = (lockAmount * effectiveBps) / 10_000;
         require(reward > 0, "reward=0");
         require(
             p.unlockedTotal + p.rewardAccrued + reward <= p.maxAllocation,
             "exceeds allocation"
         );
         require(_checkAnnualCap(reward), "exceeds annual cap");
+
+        walletRewardClaimed[wallet][partnerId] = true;
 
         if (p.vestingStart == 0) {
             p.vestingStart = uint32(block.timestamp);
@@ -236,7 +271,7 @@ contract PartnerVault is ReentrancyGuard, Pausable {
         totalRewarded += reward;
         yearlyEmitted += reward;
 
-        emit LockRewardRecorded(partnerId, lockAmount, reward);
+        emit LockRewardRecorded(partnerId, wallet, lockAmount, reward);
     }
 
     function setRewardBps(uint256 newBps) external onlyAdmin {
@@ -294,6 +329,21 @@ contract PartnerVault is ReentrancyGuard, Pausable {
         require(!p.milestonesFinal, "already final");
         p.milestonesFinal = true;
         emit MilestonesFinalized(partnerId);
+    }
+
+    function setAuthorizedCaller(
+        address caller,
+        bool status
+    ) external onlyAdmin {
+        require(caller != address(0), "caller=0");
+        authorizedCaller[caller] = status;
+        emit AuthorizedCallerUpdated(caller, status);
+    }
+
+    function setIFRLock(address _ifrLock) external onlyAdmin {
+        address old = address(ifrLock);
+        ifrLock = IIFRLock(_ifrLock);
+        emit IFRLockUpdated(old, _ifrLock);
     }
 
     function setAdmin(address newAdmin) external onlyAdmin {
@@ -418,5 +468,24 @@ contract PartnerVault is ReentrancyGuard, Pausable {
             yearlyEmitted = 0;
         }
         return (yearlyEmitted + amount) <= annualEmissionCap;
+    }
+
+    /// @notice Returns effective reward BPS, scaled down by lock ratio when ifrLock is set.
+    ///         lockRatio < 1% → full rewardBps
+    ///         lockRatio ≥ 50% → MIN_REWARD_BPS (floor)
+    ///         Between: linear interpolation
+    function _effectiveRewardBps() internal view returns (uint256) {
+        if (address(ifrLock) == address(0)) return rewardBps;
+
+        uint256 locked = ifrLock.totalLocked();
+        uint256 lockRatio = (locked * 10_000) / TOTAL_SUPPLY; // bps
+
+        if (lockRatio < 100) return rewardBps;          // < 1%: full rate
+        if (lockRatio >= 5000) return MIN_REWARD_BPS;    // ≥ 50%: floor
+
+        // Linear interpolation: rewardBps → MIN_REWARD_BPS over [1%, 50%]
+        uint256 drop = ((rewardBps - MIN_REWARD_BPS) * (lockRatio - 100)) /
+            (5000 - 100);
+        return rewardBps - drop;
     }
 }

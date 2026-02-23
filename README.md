@@ -58,6 +58,9 @@ Lock-triggered Creator Rewards: when users lock IFR for a partner's product, the
 - Policy target: 10-20%
 - Annual emission: default 4M IFR (bounds: 1-10M IFR)
 - Vesting: 6-12 months
+- Authorized caller whitelist for automated reward recording
+- Anti-double-count: each wallet can only be rewarded once per partner
+- Algorithmic emission throttle: reward rate scales down as more IFR is locked (1% → 50% lock ratio)
 
 Token holdings grant future DAO voting rights.
 
@@ -67,7 +70,7 @@ Token holdings grant future DAO voting rights.
 
 ## Testing & Security
 
-- 221 unit tests across 9 contracts — all passing
+- 243 unit tests across 9 contracts — all passing
 - Slither security audit: 0 high/critical findings
 - Full Sepolia testnet deployment with verified contracts
 - Governance lifecycle tested: propose → 48h wait → execute

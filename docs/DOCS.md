@@ -22,7 +22,7 @@ inferno/
 │   ├── burnreserve/BurnReserve.sol     [x] 86 LOC, 21 Tests
 │   ├── governance/Governance.sol       [x] 150 LOC, 36 Tests
 │   ├── lock/IFRLock.sol               [x] 127 LOC, 29 Tests
-│   ├── partner/PartnerVault.sol       [x] 290 LOC, 67 Tests
+│   ├── partner/PartnerVault.sol       [x] 491 LOC, 89 Tests
 │   └── mocks/                          MockToken, MockRouter, MockInfernoToken
 ├── test/
 │   ├── InfernoToken.test.js            [x] 258 LOC
@@ -111,9 +111,9 @@ inferno/
 
 ### 8. PartnerVault — [x] FERTIG
 - **Pfad:** `contracts/partner/PartnerVault.sol`
-- **Tests:** 67 (PartnerVault.test.js)
+- **Tests:** 89 (PartnerVault.test.js)
 - **Beschreibung:** Partner Ecosystem Pool (40M IFR) mit Milestone-Unlocking + Lock-triggered Creator Rewards
-- **Features:** createPartner, activatePartner, recordMilestone, recordLockReward (lockAmount × rewardBps), claim (linear Vesting mit Cliff), finalizeMilestones, SafeERC20, ReentrancyGuard, Pausable, Guardian Auth, Governance-kontrollierte Parameter (rewardBps 5-25%, annualEmissionCap, partnerCap) mit min/max Bounds, Annual Cap Reset
+- **Features:** createPartner, activatePartner, recordMilestone, recordLockReward (lockAmount × effectiveBps, wallet), claim (linear Vesting mit Cliff), finalizeMilestones, SafeERC20, ReentrancyGuard, Pausable, Guardian Auth, Governance-kontrollierte Parameter (rewardBps 5-25%, annualEmissionCap, partnerCap) mit min/max Bounds, Annual Cap Reset, authorizedCaller Whitelist, Anti-Double-Count (wallet→partner), Algo Emission Throttle (lockRatio-basierte BPS-Skalierung via IIFRLock)
 - **Sepolia:** rewardBps=1500 (15%), annualCap=4M IFR, Adresse: `0x6EF04c6abeb53335B6c2dD2964da97DB677AF090`
 - **Mainnet-Empfehlung:** rewardBps=1000 (10%), annualCap=4M IFR, partnerCap=100K IFR/Partner (skalierbar fuer 500-1000+ Partner)
 - **KRITISCH:** feeExempt MUSS VOR dem 40M Transfer gesetzt werden (Sepolia-Lesson: 1.4M IFR Fee-Verlust)
@@ -129,7 +129,7 @@ inferno/
 |--------|------|
 | Contracts | 9 (+ 3 Mocks) |
 | Solidity LOC | 1,127 |
-| Tests | 221 (alle bestanden) |
+| Tests | 243 (alle bestanden) |
 | Test LOC | 2,177 |
 | Deploy Script | 232 LOC, 9 Steps |
 | Modell | CFLM (Community Fair Launch) |
@@ -141,8 +141,9 @@ inferno/
 
 | Datum | Aenderung |
 |-------|-----------|
+| 2026-02-23 | PartnerVault Upgrade: authorizedCaller Whitelist, Anti-Double-Count, Algo Emission Throttle (89 Tests) |
 | 2026-02-23 | Benefits Network: Backend (Express + Prisma, 8 Tests) + Frontend (Next.js 14 PWA, wagmi v2) |
-| 2026-02-23 | PartnerVault.sol implementiert (290 LOC, 67 Tests): Milestone-Unlocking + Lock-triggered Creator Rewards, SafeERC20, Governance-Parameter |
+| 2026-02-23 | PartnerVault.sol implementiert (491 LOC, 89 Tests): Milestone-Unlocking + Lock-triggered Creator Rewards, SafeERC20, Governance-Parameter |
 | 2026-02-23 | 6 Doku-Inkonsistenzen gefixt: PartnerVault, Creator Rewards, Bootstrap Pricing, Governance Trennung, alte Tier-Zahlen ersetzt |
 | 2026-02-22 | Governance Proposal #1 executed: setFeeExempt(IFRLock, true) — Full Lock/Unlock Cycle verified (8/8) |
 | 2026-02-20 | IFRLock Contract implementiert (127 LOC, 29 Tests): Generic Token Lock, ReentrancyGuard, Pause, Multi-App lockType |
