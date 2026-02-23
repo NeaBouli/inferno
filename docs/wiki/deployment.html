@@ -551,9 +551,9 @@
       </div>
 
       <!-- ==================== Section 3: Deployment Order ==================== -->
-      <h2>3. Deployment Order (9-Step CFLM)</h2>
+      <h2>3. Deployment Order (10-Step CFLM)</h2>
       <p>
-        The Inferno protocol follows a strict 9-step Community Fair Launch Model (CFLM) deployment sequence. Each step must complete before the next begins.
+        The Inferno protocol follows a strict 10-step Community Fair Launch Model (CFLM) deployment sequence. Each step must complete before the next begins.
       </p>
 
       <div class="step">
@@ -651,7 +651,7 @@
       <!-- ==================== Section 4: Post-Deploy Steps ==================== -->
       <h2>4. Post-Deploy Steps</h2>
       <p>
-        After the 9-step deployment, the following operations complete the protocol setup.
+        After the 10-step deployment, the following operations complete the protocol setup.
       </p>
 
       <h3>LP Pairing</h3>
@@ -669,12 +669,7 @@
       <h3>IFRLock Deploy</h3>
       <pre><code>npx hardhat run scripts/deploy-lock.js --network sepolia</code></pre>
       <p>
-        Deploys the IFRLock contract for the token locking mechanism.
-      </p>
-
-      <h3>Set IFRLock feeExempt via Governance</h3>
-      <p>
-        A governance proposal must be created and executed to set the IFRLock contract as fee-exempt, since ownership has already been transferred.
+        IFRLock is a core protocol component deployed as part of the standard sequence. Its <code>feeExempt</code> status must be set via Governance proposal after ownership transfer to the Timelock. Without fee exemption, <code>unlock()</code> will fail because transfer fees cause the contract to hold fewer tokens than recorded.
       </p>
 
       <!-- ==================== Section 5: Constructor Arguments ==================== -->
@@ -804,7 +799,7 @@
               <td><span class="badge badge-done">Done</span></td>
             </tr>
             <tr>
-              <td>Etherscan verification (7/7)</td>
+              <td>Etherscan verification (8/8)</td>
               <td><span class="badge badge-done">Done</span></td>
             </tr>
             <tr>
