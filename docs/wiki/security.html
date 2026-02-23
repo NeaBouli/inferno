@@ -787,12 +787,12 @@
       <h2><span class="section-num">5.</span> Trust Model</h2>
 
       <p>
-        Inferno is designed so that no single administrator has unilateral control over the protocol. Multiple safeguards are layered to protect token holders and ensure transparent governance.
+        Inferno is designed so that no admin can make instant changes &mdash; all actions require a 48-hour public timelock delay and can be cancelled by the Guardian. Multiple safeguards are layered to protect token holders and ensure transparent governance.
       </p>
 
       <div class="callout">
         <p>
-          <strong>Key principle:</strong> No single admin has unilateral control. All sensitive operations are gated by a 48-hour timelock via Governance.
+          <strong>Key principle:</strong> No admin can make instant changes. All sensitive operations are gated by a 48-hour timelock via Governance, publicly visible on-chain, and cancellable by the Guardian.
         </p>
       </div>
 
@@ -829,9 +829,9 @@
               <td>Professional penetration test recommended before mainnet</td>
             </tr>
             <tr>
-              <td>Governance owner is currently a single EOA (deployer)</td>
+              <td>Governance owner is currently a single EOA (deployer) &mdash; testnet configuration</td>
               <td>Single point of failure for proposal creation</td>
-              <td>Should be replaced with a multisig (Gnosis Safe) for mainnet</td>
+              <td>For mainnet, the owner role will be transferred to a multisig (recommended: 4-of-7 Gnosis Safe), with DAO governance planned for Phase 4</td>
             </tr>
             <tr>
               <td>No formal verification of mathematical properties</td>

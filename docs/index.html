@@ -1106,7 +1106,7 @@
 
     <div class="reveal" style="margin-top: 40px; padding: 28px; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius);">
       <h3 style="font-size: 18px; margin-bottom: 12px;">Partner Token Allocation &amp; DAO Voting</h3>
-      <p style="color: var(--text-muted); font-size: 15px; line-height: 1.7;">Partner rewards are driven by real user engagement: when a user locks IFR for a creator's product, the creator earns a percentage (10&ndash;20%) from the Partner Ecosystem Pool (40M IFR, 4% of supply). Rewards vest over 6&ndash;12 months with per-partner and annual emission caps. This lock-triggered model is inherently deflationary &mdash; more IFR is locked than distributed. When DAO governance launches in Phase 4, partner-held tokens grant proportional voting rights in protocol decisions &mdash; partners become stakeholders with real influence.</p>
+      <p style="color: var(--text-muted); font-size: 15px; line-height: 1.7;">Partner rewards are driven by real user engagement: when a user locks IFR for a creator's product, the creator earns a percentage (policy target 10&ndash;20%, hard bounds 5&ndash;25%) from the Partner Ecosystem Pool (40M IFR, 4% of supply). Rewards vest over 6&ndash;12 months with per-partner and annual emission caps. This lock-triggered model is inherently deflationary &mdash; more IFR is locked than distributed. When DAO governance launches in Phase 4, partner-held tokens grant proportional voting rights in protocol decisions &mdash; partners become stakeholders with real influence.</p>
     </div>
 
     <div class="partner-code reveal">
@@ -1194,7 +1194,7 @@ if (isLocked) {
         <div class="trust-check">&check;</div>
         <div>
           <h4>Timelock Governance</h4>
-          <p>48-hour mandatory delay on all parameter changes. Guardian emergency cancel. No single admin control.</p>
+          <p>No instant admin changes &mdash; every action requires a 48-hour public delay. Guardian emergency cancel.</p>
         </div>
       </div>
       <div class="trust-item reveal">
@@ -1266,7 +1266,7 @@ if (isLocked) {
 
       <div class="faq-item">
         <button class="faq-question"><span>How do partners earn IFR?</span><span class="faq-icon">+</span></button>
-        <div class="faq-answer"><div class="faq-answer-inner">Partners earn IFR through lock-triggered Creator Rewards, managed by the PartnerVault smart contract. When a user locks IFR to unlock premium access to a partner's product, the partner automatically earns a percentage (10&ndash;25%, set by governance) of the locked amount from the Partner Ecosystem Pool (40M IFR). These rewards vest linearly over 6&ndash;12 months &mdash; no instant payouts, ensuring long-term alignment. Each partner has a per-partner allocation cap, and total yearly emissions are hard-capped at 4M IFR to prevent pool exhaustion. The model is inherently deflationary: more IFR gets locked by users than is distributed to partners. Partners can track and claim their vested rewards directly on-chain through the PartnerVault contract.</div></div>
+        <div class="faq-answer"><div class="faq-answer-inner">Partners earn IFR through lock-triggered Creator Rewards. When a user locks IFR tokens for a partner's product, the partner accrues a percentage of the lock amount from the Partner Ecosystem Pool (40M IFR). The reward rate has hard bounds of 5&ndash;25% enforced by the smart contract, with a governance policy target of 10&ndash;20%. Annual emissions default to 4M IFR with contract-enforced bounds of 1&ndash;10M IFR. All rewards vest over 6&ndash;12 months. Per-partner allocations are capped to prevent concentration.</div></div>
       </div>
 
       <div class="faq-item">

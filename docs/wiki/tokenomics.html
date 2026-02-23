@@ -1119,7 +1119,7 @@ if (from != address(0) && to != address(0)
           </tr>
           <tr>
             <td>Reward Rate (RewardBps)</td>
-            <td>10&ndash;20% of locked amount (configurable via governance)</td>
+            <td>Hard bounds (contract-enforced): 5&ndash;25% (MIN_REWARD_BPS=500, MAX_REWARD_BPS=2500). Policy target (governance recommendation): 10&ndash;20%. Changeable via governance proposal (48h timelock).</td>
           </tr>
           <tr>
             <td>Vesting Period</td>
@@ -1127,11 +1127,11 @@ if (from != address(0) && to != address(0)
           </tr>
           <tr>
             <td>Per-Partner Cap</td>
-            <td>Hard cap (TBD via governance)</td>
+            <td>Hard cap (configurable via governance)</td>
           </tr>
           <tr>
             <td>Annual Emission Cap</td>
-            <td>Prevents pool exhaustion in a single year</td>
+            <td>Default: 4,000,000 IFR/year (10% of pool). Hard bounds (contract-enforced): 1,000,000&ndash;10,000,000 IFR. Resets annually; governance can adjust within bounds.</td>
           </tr>
           <tr>
             <td>Claim Mechanism</td>
