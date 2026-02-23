@@ -42,7 +42,10 @@ inferno/
 │   ├── deploy-lock.js                [x] IFRLock Deploy + Governance Proposal
 │   └── test-lock.js                  [x] IFRLock Live Test (Lock/Unlock/isLocked)
 ├── apps/
-│   └── dashboard/                      [x] React + Vite Frontend (Phase 1 + Phase 2)
+│   ├── dashboard/                      [x] React + Vite Frontend (Phase 1 + Phase 2)
+│   └── benefits-network/
+│       ├── backend/                   [x] Express + Prisma + SQLite (8 Tests)
+│       └── frontend/                  [x] Next.js 14 + Tailwind + wagmi v2 (PWA)
 ├── docs/
 │   ├── DOCS.md                         Dieses Dokument
 │   ├── FAIR-LAUNCH-MIGRATION.md        CFLM Migrationsplan
@@ -138,6 +141,7 @@ inferno/
 
 | Datum | Aenderung |
 |-------|-----------|
+| 2026-02-23 | Benefits Network: Backend (Express + Prisma, 8 Tests) + Frontend (Next.js 14 PWA, wagmi v2) |
 | 2026-02-23 | PartnerVault.sol implementiert (290 LOC, 67 Tests): Milestone-Unlocking + Lock-triggered Creator Rewards, SafeERC20, Governance-Parameter |
 | 2026-02-23 | 6 Doku-Inkonsistenzen gefixt: PartnerVault, Creator Rewards, Bootstrap Pricing, Governance Trennung, alte Tier-Zahlen ersetzt |
 | 2026-02-22 | Governance Proposal #1 executed: setFeeExempt(IFRLock, true) — Full Lock/Unlock Cycle verified (8/8) |

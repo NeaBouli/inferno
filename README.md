@@ -66,6 +66,17 @@ Partner rewards are driven by user engagement: when a user locks IFR for a creat
 - Full Sepolia testnet deployment with verified contracts
 - Governance lifecycle tested: propose → 48h wait → execute
 
+## Benefits Network
+
+The IFR Benefits Network lets any business verify on-chain IFR lock status to grant discounts and premium access. QR-based flow — no accounts, no subscriptions.
+
+| Component | Path | Stack |
+|-----------|------|-------|
+| Backend | `apps/benefits-network/backend/` | Express + Prisma + SQLite + ethers v5 |
+| Frontend | `apps/benefits-network/frontend/` | Next.js 14 + Tailwind + wagmi v2 (PWA) |
+
+**Routes:** `/b/:businessId` (merchant console) · `/r/:sessionId` (customer verification)
+
 ## Documentation
 
 - [Landing Page](https://neabouli.github.io/inferno/)
