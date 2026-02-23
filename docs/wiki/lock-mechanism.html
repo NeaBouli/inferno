@@ -308,23 +308,23 @@
     .flow-diagram {
       display: flex;
       align-items: center;
-      gap: 0;
+      flex-wrap: wrap;
+      gap: 6px;
       margin: 24px 0;
-      overflow-x: auto;
       padding: 8px 0;
+      max-width: 100%;
     }
 
     .flow-step {
       background: var(--card);
       border: 1px solid var(--border);
       border-radius: 8px;
-      padding: 12px 18px;
+      padding: 12px 14px;
       font-size: 13px;
       font-weight: 600;
       color: var(--text);
       white-space: nowrap;
       text-align: center;
-      min-width: 120px;
     }
 
     .flow-step.active {
