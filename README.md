@@ -61,7 +61,7 @@ Partner rewards are driven by user engagement: when a user locks IFR for a creat
 
 ## Testing & Security
 
-- 221+ unit tests across 9 contracts — all passing
+- 221 unit tests across 9 contracts — all passing
 - Slither security audit: 0 high/critical findings
 - Full Sepolia testnet deployment with verified contracts
 - Governance lifecycle tested: propose → 48h wait → execute
