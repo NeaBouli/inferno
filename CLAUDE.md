@@ -26,6 +26,9 @@ Inferno ($IFR) ist ein **deflationärer ERC-20 Utility-Token** auf Ethereum. Jed
 - **221 Unit Tests** — alle bestehen
 - **Slither Security Audit** — 0 High/Critical Findings
 - **React Dashboard** (Phase 1 + 2) — Token Overview, Transfer, Governance UI
+- **Benefits Network Backend** — Express + Prisma + SQLite + ethers v5 (22 Dateien, 1.097 LOC, 8/8 Tests)
+- **Benefits Network Frontend** — Next.js 14 + Tailwind + wagmi v2, PWA (24 Dateien, 975 LOC, 7/7 Acceptance)
+- **Benefits Network E2E Test** — 13/13 Checks (alle API-Endpoints, Proxy, PWA, Auth, State Machine)
 - **GitHub Pages Landing Page** — 9 Sektionen, Dark Theme, responsive
 - **Wiki** — 8 HTML-Seiten mit technischer Dokumentation
 - **Governance Lifecycle** komplett getestet: Proposal #0 (setFeeExempt) erfolgreich via 48h Timelock ausgeführt
@@ -35,7 +38,12 @@ Inferno ($IFR) ist ein **deflationärer ERC-20 Utility-Token** auf Ethereum. Jed
 
 ### Nächste Schritte
 
-Alle Sepolia-Milestones sind abgeschlossen. Der Fokus liegt jetzt auf den organisatorischen Mainnet-Vorbereitungen (Multisig, Adressen, Audit).
+1. **Governance Proposal #2 ausführen** — ETA: **25.02.2026 00:39 CET** (`setFeeExempt(PartnerVault, true)`)
+   ```bash
+   npx hardhat run scripts/execute-proposal.js --network sepolia
+   ```
+2. **PartnerVault 1.4M IFR Top-up** — Danach fehlende IFR nachschicken (Sepolia Fee-Verlust)
+3. Organisatorische Mainnet-Vorbereitungen (Multisig, Adressen, Audit)
 
 ---
 
@@ -132,12 +140,21 @@ Alle Sepolia-Milestones sind abgeschlossen. Der Fokus liegt jetzt auf den organi
 │   └── test-lock.js              # Live Lock/Unlock Test
 │
 ├── apps/
-│   └── dashboard/                # React + Vite + ethers.js v5
-│       ├── src/
-│       │   ├── components/       # Header, TokenOverview, Transfer, Governance
-│       │   └── config.js         # Contract-Adressen + ABIs
-│       ├── .env                  # VITE_SEPOLIA_RPC_URL (Alchemy)
-│       └── package.json
+│   ├── dashboard/                # React + Vite + ethers.js v5
+│   │   ├── src/
+│   │   │   ├── components/       # Header, TokenOverview, Transfer, Governance
+│   │   │   └── config.js         # Contract-Adressen + ABIs
+│   │   ├── .env                  # VITE_SEPOLIA_RPC_URL (Alchemy)
+│   │   └── package.json
+│   └── benefits-network/         # IFR Benefits Network (Discount Verification)
+│       ├── backend/              # Express + Prisma + SQLite (Port 3001)
+│       │   ├── src/              # Routes, Services, Middleware
+│       │   ├── prisma/           # Schema (Business, Session, AuditLog)
+│       │   └── tests/            # 8 Tests (attest.test.ts)
+│       └── frontend/             # Next.js 14 + Tailwind + wagmi v2 (Port 3000)
+│           ├── src/app/          # /b/[businessId] (Merchant), /r/[sessionId] (Customer)
+│           ├── src/lib/          # API client, wagmi config
+│           └── public/           # PWA manifest, service worker, icons
 │
 ├── docs/                         # GitHub Pages (Source: main/docs)
 │   ├── index.html                # Landing Page (~1300 LOC, Single-File)
@@ -367,15 +384,15 @@ npx hardhat verify --network sepolia <CONTRACT_ADDR> <CONSTRUCTOR_ARGS>
 
 ### Zusammenfassung
 
-**Alle Sepolia-Milestones sind abgeschlossen** (Stand: 22.02.2026).
+**Stand: 23.02.2026** — Benefits Network (Backend + Frontend) fertig, E2E-getestet (13/13).
 
-Governance Proposal #1 wurde executed ([TX](https://sepolia.etherscan.io/tx/0x211b794970abe147b3ab2f3c92bb79b3b3c5a72bc8be8cfb7e1d00fd4253a909)), IFRLock Lock/Unlock-Cycle vollständig verifiziert (8/8 Checks).
-
-**Nächster Fokus:** Organisatorische Mainnet-Vorbereitungen:
-1. Treasury Multisig erstellen (Gnosis Safe)
-2. Community Wallet + Team Beneficiary Adressen festlegen
-3. Externer Security Audit (empfohlen)
-4. Mainnet Deployment
+**Nächster Schritt:**
+1. **Governance Proposal #2** ausführen — ETA: **25.02.2026 00:39 CET**
+   ```bash
+   npx hardhat run scripts/execute-proposal.js --network sepolia
+   ```
+2. PartnerVault 1.4M IFR Top-up (Sepolia Fee-Verlust nachholen)
+3. Organisatorische Mainnet-Vorbereitungen (Multisig, Adressen, Audit)
 
 ---
 
@@ -393,11 +410,15 @@ Governance Proposal #1 wurde executed ([TX](https://sepolia.etherscan.io/tx/0x21
 | SecureCall (Partner) | https://neabouli.github.io/stealth/ |
 | SecureCall Repo | https://github.com/NeaBouli/stealth |
 | Dashboard | `cd apps/dashboard && npm run dev` → http://localhost:5173 |
+| Benefits Network Backend | `cd apps/benefits-network/backend && npm run dev` → http://localhost:3001 |
+| Benefits Network Frontend | `cd apps/benefits-network/frontend && npm run dev` → http://localhost:3000 |
 
 ## Anhang: Commit-Historie (Session-Highlights)
 
 | Commit | Beschreibung |
 |--------|-------------|
+| `e8ea0a45` | feat: Benefits Network frontend — Next.js 14 PWA with wagmi v2 |
+| `a9a54218` | feat: Benefits Network backend — Express + Prisma + ethers v5 |
 | `45560512` | fix: wiki index Quick Stats 7→8 |
 | `25964ae9` | fix: correct contract count 7→8 in testnet section |
 | `ea2acc47` | feat: audit fix — rewrite README, fix contract count to 8 |
