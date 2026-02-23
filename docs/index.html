@@ -1089,7 +1089,7 @@
       <div class="partner-step">
         <div class="partner-step-num">1</div>
         <h3>Register</h3>
-        <p>Apply as partner, receive milestone-based IFR allocation from the Partner Ecosystem Pool (40M IFR) and integration support.</p>
+        <p>Register as a partner through Governance. Receive a PartnerVault allocation with lock-triggered Creator Rewards and integration support.</p>
       </div>
       <div class="partner-step">
         <div class="partner-step-num">2</div>
@@ -1261,6 +1261,11 @@ if (isLocked) {
       <div class="faq-item">
         <button class="faq-question"><span>How can partners integrate IFR?</span><span class="faq-icon">+</span></button>
         <div class="faq-answer"><div class="faq-answer-inner">Integration is designed to be simple &mdash; any developer can add IFR verification in under 30 minutes. The core is one function call: <code style="background:rgba(255,255,255,0.06);padding:2px 6px;border-radius:4px;">isLocked(walletAddress, minimumAmount)</code> which returns true or false. No complex APIs, no user databases, no wallet storage needed. Partners benefit from token allocation from the Partner Ecosystem Pool (40M IFR, 4% of supply). Allocations are vested and milestone-based to ensure long-term alignment. Partners also receive revenue sharing, prominent listing on the Inferno website, and access to a growing user base. Privacy by design: the partner app never stores wallets and never makes blockchain calls directly. Everything goes through a stateless resolver. Full integration guide with code examples available in our Developer Documentation.</div></div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question"><span>How do partners earn IFR?</span><span class="faq-icon">+</span></button>
+        <div class="faq-answer"><div class="faq-answer-inner">Partners earn IFR through lock-triggered Creator Rewards, managed by the PartnerVault smart contract. When a user locks IFR to unlock premium access to a partner's product, the partner automatically earns a percentage (10&ndash;25%, set by governance) of the locked amount from the Partner Ecosystem Pool (40M IFR). These rewards vest linearly over 6&ndash;12 months &mdash; no instant payouts, ensuring long-term alignment. Each partner has a per-partner allocation cap, and total yearly emissions are hard-capped at 4M IFR to prevent pool exhaustion. The model is inherently deflationary: more IFR gets locked by users than is distributed to partners. Partners can track and claim their vested rewards directly on-chain through the PartnerVault contract.</div></div>
       </div>
 
       <div class="faq-item">

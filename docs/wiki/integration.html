@@ -828,57 +828,79 @@ cast call 0x0Cab0A9440643128540222acC6eF5028736675d3 \
       </p>
 
       <ul>
-        <li><strong style="color: var(--text);">Token Allocation:</strong> Milestone-based IFR allocation from the Partner Ecosystem Pool (see tiers below)</li>
+        <li><strong style="color: var(--text);">Creator Rewards:</strong> Earn IFR when users lock tokens for your product &mdash; managed by the PartnerVault contract</li>
         <li><strong style="color: var(--text);">Revenue Share:</strong> Earn a percentage of lock-related protocol fees</li>
         <li><strong style="color: var(--text);">Co-Marketing:</strong> Joint announcements, featured on the Inferno website</li>
         <li><strong style="color: var(--text);">Technical Support:</strong> Direct integration support from the Inferno team</li>
         <li><strong style="color: var(--text);">Early Access:</strong> Priority access to new features and protocol upgrades</li>
       </ul>
 
-      <h3>Token Allocation Tiers</h3>
+      <h3>Lock-triggered Creator Rewards</h3>
+      <p>
+        Partner rewards are driven by real user engagement through the <strong>PartnerVault</strong> smart contract. When a user locks IFR for a creator's product, the creator earns a percentage of the locked amount from the Partner Ecosystem Pool.
+      </p>
       <table>
         <thead>
           <tr>
-            <th>Tier</th>
-            <th>Allocation</th>
-            <th>Requirement</th>
-            <th>Vesting</th>
+            <th>Parameter</th>
+            <th>Value</th>
+            <th>Description</th>
           </tr>
         </thead>
         <tbody>
           <tr>
-            <td><strong>Launch Partner</strong></td>
-            <td>Up to 5M IFR (0.5%)</td>
-            <td>Founding ecosystem partner with co-development commitment</td>
-            <td>12-month linear</td>
+            <td><strong>RewardBps</strong></td>
+            <td>10&ndash;25% (governance-controlled)</td>
+            <td>Percentage of each lock amount credited to the creator</td>
           </tr>
           <tr>
-            <td><strong>Tier 1</strong></td>
-            <td>Up to 2M IFR (0.2%)</td>
-            <td>5,000+ active lock users</td>
-            <td>12-month linear</td>
+            <td><strong>Annual Emission Cap</strong></td>
+            <td>4M IFR / year</td>
+            <td>Hard cap on total yearly rewards to prevent pool exhaustion</td>
           </tr>
           <tr>
-            <td><strong>Tier 2</strong></td>
-            <td>Up to 1M IFR (0.1%)</td>
-            <td>1,000+ active lock users</td>
-            <td>6-month linear</td>
+            <td><strong>Per-Partner Cap</strong></td>
+            <td>Configurable per partner</td>
+            <td>Maximum allocation per partner (governance-controlled)</td>
           </tr>
           <tr>
-            <td><strong>Tier 3</strong></td>
-            <td>Up to 500K IFR (0.05%)</td>
-            <td>New integrations</td>
-            <td>6-month linear</td>
+            <td><strong>Vesting</strong></td>
+            <td>6&ndash;12 months linear</td>
+            <td>Rewards vest linearly with optional cliff &mdash; no instant dumps</td>
           </tr>
         </tbody>
       </table>
 
+      <h4>How It Works</h4>
+      <ol>
+        <li><strong>Partner Registration:</strong> Governance creates a partner entry in PartnerVault with a beneficiary address, max allocation, and vesting schedule.</li>
+        <li><strong>User Locks IFR:</strong> When a user locks IFR for the partner's product via IFRLock, the lock event is recorded.</li>
+        <li><strong>Reward Accrual:</strong> <code>recordLockReward(partnerId, lockAmount)</code> credits the partner with <code>lockAmount &times; rewardBps / 10000</code> IFR from the pool.</li>
+        <li><strong>Vested Claiming:</strong> Partners call <code>claim(partnerId)</code> to withdraw vested rewards. Linear vesting ensures long-term alignment.</li>
+      </ol>
+
       <p>
-        All allocations are milestone-based: tokens unlock progressively as integration milestones are met (live integration, minimum user thresholds, sustained activity). This ensures partners are aligned with long-term ecosystem growth, not short-term token speculation.
+        <strong>Total Partner Pool:</strong> 40M IFR (4% of total supply), managed by the PartnerVault contract on-chain. The remaining 60M IFR (6%) is reserved for community grants, bug bounties, and ecosystem development.
       </p>
-      <p>
-        <strong>Total Partner Pool:</strong> 40M IFR (4% of total supply). The remaining 60M IFR (6%) is reserved for community grants, bug bounties, and ecosystem development.
-      </p>
+
+      <h4>PartnerVault Integration (ethers.js v5)</h4>
+      <span class="code-label">Query partner rewards and claim</span>
+      <pre><code>const VAULT_ADDR = "0x6EF04c6abeb53335B6c2dD2964da97DB677AF090";
+const VAULT_ABI = [
+  "function claimable(uint256 partnerId) view returns (uint256)",
+  "function partners(uint256 partnerId) view returns (address,uint256,uint256,uint256,uint256,uint256,uint256,uint256,bool,bool,string)",
+  "function claim(uint256 partnerId)",
+];
+
+const vault = new ethers.Contract(VAULT_ADDR, VAULT_ABI, provider);
+
+// Check claimable amount for partner #0
+const amount = await vault.claimable(0);
+console.log("Claimable:", ethers.utils.formatUnits(amount, 9), "IFR");
+
+// Claim vested rewards (requires signer)
+const vaultSigner = vault.connect(signer);
+await vaultSigner.claim(0);</code></pre>
 
       <!-- ============================================================
            Section 12: Full Integration Example

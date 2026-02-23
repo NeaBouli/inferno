@@ -78,11 +78,16 @@ Alle Sepolia-Milestones sind abgeschlossen. Der Fokus liegt jetzt auf den organi
 3. **Service Layer** (Partner Apps): Plan-basierte Features (MONTHLY oder LIFETIME)
 - **Keine Wallet-Speicherung in Apps**, keine On-Chain-Calls vom Client, kein Token-Narrativ im User-Flow
 
-#### Partner Token Allocation mit Milestone-Based Vesting
-- 4% (40M IFR) reserviert für Partner Ecosystem Pool
-- Verteilung über Lock-triggered Creator Rewards: User lockt IFR → Creator bekommt X% (RewardBps 10-20%) aus Pool, gevestet 6-12 Monate
+#### Partner Token Allocation mit Lock-triggered Creator Rewards
+- 4% (40M IFR) reserviert für Partner Ecosystem Pool, verwaltet durch PartnerVault.sol
+- Verteilung über Lock-triggered Creator Rewards: User lockt IFR → Creator bekommt RewardBps% aus Pool, gevestet 6-12 Monate
 - Per-Partner Cap + Annual Emission Cap verhindern Pool-Erschöpfung
 - Partner-Tokens geben zukünftige DAO-Stimmrechte (Phase 4+)
+- **Sepolia-Parameter (Test):** rewardBps=1500 (15%), annualCap=4M, partnerCap=nicht im Constructor
+- **Mainnet-Empfehlung:** rewardBps=1000 (10%), annualCap=4M IFR, partnerCap=100K IFR/Partner
+  - 10% statt 15% → skalierbar für 500-1000+ Partner ohne Pool-Erschöpfung
+  - 100K/Partner statt unbegrenzt → 400 Partner bei Vollausschöpfung
+- **KRITISCH Mainnet-Deploy:** feeExempt MUSS VOR dem 40M Transfer gesetzt werden (Step 7, nicht Post-Deploy). Auf Sepolia gingen 1.4M IFR durch Fees verloren.
 
 ---
 
