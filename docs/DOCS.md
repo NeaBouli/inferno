@@ -58,6 +58,7 @@ inferno/
 │   ├── DEPLOYMENTS.md                  Sepolia Contract-Adressen
 │   ├── GOVERNANCE_CONSTITUTION.md     Governance Constitution v1.0 (Hard Bounds, Rollen, Upgrade-Pfad)
 │   ├── BUSINESS_ONBOARDING.md         Business Onboarding Guide (Benefits Network Setup & Go-Live)
+│   ├── PARTNER_INTEGRATION_SPEC.md    Technische Partner-Integration Spec (IFRLock + PartnerVault ABI, Rewards, Algo Throttle)
 │   ├── PATCH-GUIDELINES.md             Patch-Richtlinien
 │   ├── PROJECT-SUMMARY.md             Projektzusammenfassung
 │   └── wiki/                          [x] 8 HTML-Seiten (Contracts, Tokenomics, Lock, Governance, Security, Deploy, Integration)
@@ -144,6 +145,7 @@ inferno/
 
 | Datum | Aenderung |
 |-------|-----------|
+| 2026-02-24 | Partner Integration Spec: IFRLock + PartnerVault ABI, Reward Mechanics, Algo Throttle, AuthorizedCaller, Checklisten |
 | 2026-02-24 | Governance Constitution v1.0 + Business Onboarding Guide erstellt |
 | 2026-02-24 | Governance Dashboard: React 18 + Vite + TS + Tailwind (Overview, Partners, Timelock Queue, Calldata Generator) |
 | 2026-02-23 | PartnerVault Upgrade: authorizedCaller Whitelist, Anti-Double-Count, Algo Emission Throttle (89 Tests) |
