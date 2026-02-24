@@ -98,6 +98,21 @@ Read-only governance dashboard for monitoring PartnerVault, proposals, and gener
 
 **Start:** `cd apps/governance-dashboard && npm run dev` → http://localhost:5174
 
+## AI Copilot
+
+Embedded chat widget with RAG knowledge base — helps users, partners, and developers understand IFR.
+
+| Component | Path | Stack |
+|-----------|------|-------|
+| Frontend | `apps/ai-copilot/` | React 18 + Vite + TypeScript + Tailwind |
+| Backend | `apps/ai-copilot/server/` | Express API proxy → Anthropic Claude Haiku 4.5 |
+
+**Modes:** Customer · Partner · Developer
+
+**Safety:** Automatic seed phrase / private key detection, instant warnings, source citation tags.
+
+**Start:** `cd apps/ai-copilot && npm install && cp .env.example .env && npm run dev` → http://localhost:5175
+
 ## Documentation
 
 - [Landing Page](https://neabouli.github.io/inferno/)

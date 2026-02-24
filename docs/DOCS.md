@@ -44,6 +44,7 @@ inferno/
 ├── apps/
 │   ├── dashboard/                      [x] React + Vite Frontend (Phase 1 + Phase 2)
 │   ├── governance-dashboard/          [x] React + Vite + TS + Tailwind (Overview, Partners, Timelock, Calldata)
+│   ├── ai-copilot/                   [x] React + Vite + TS + Tailwind + Express (3 Modi, RAG, Safety Guards)
 │   └── benefits-network/
 │       ├── backend/                   [x] Express + Prisma + SQLite (8 Tests)
 │       └── frontend/                  [x] Next.js 14 + Tailwind + wagmi v2 (PWA)
@@ -151,6 +152,7 @@ inferno/
 
 | Datum | Aenderung |
 |-------|-----------|
+| 2026-02-24 | IFR AI Copilot: React 18 + Vite + TS + Tailwind, Express API Proxy, Claude Haiku 4.5, 3 Modi (Customer/Partner/Developer), RAG Knowledge Base, Safety Guards |
 | 2026-02-24 | Testnet E2E Guide: 8-Schritt Sepolia-Walkthrough (MetaMask, Lock, Benefits Network QR-Flow, Governance Dashboard, PartnerVault Rewards) |
 | 2026-02-24 | SDK Quickstart v1.0: ethers.js v5, wagmi v2, Python (web3.py), Tier System, Wallet Signature Verification, Go-Live Checkliste |
 | 2026-02-24 | Creator Gateway Spec v0.1: YouTube Hybrid Model B, Docker Quickstart, Entitlement Rules Engine, API Endpoints |
