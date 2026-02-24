@@ -43,6 +43,7 @@ inferno/
 │   └── test-lock.js                  [x] IFRLock Live Test (Lock/Unlock/isLocked)
 ├── apps/
 │   ├── dashboard/                      [x] React + Vite Frontend (Phase 1 + Phase 2)
+│   ├── governance-dashboard/          [x] React + Vite + TS + Tailwind (Overview, Partners, Timelock, Calldata)
 │   └── benefits-network/
 │       ├── backend/                   [x] Express + Prisma + SQLite (8 Tests)
 │       └── frontend/                  [x] Next.js 14 + Tailwind + wagmi v2 (PWA)
@@ -141,6 +142,7 @@ inferno/
 
 | Datum | Aenderung |
 |-------|-----------|
+| 2026-02-24 | Governance Dashboard: React 18 + Vite + TS + Tailwind (Overview, Partners, Timelock Queue, Calldata Generator) |
 | 2026-02-23 | PartnerVault Upgrade: authorizedCaller Whitelist, Anti-Double-Count, Algo Emission Throttle (89 Tests) |
 | 2026-02-23 | Benefits Network: Backend (Express + Prisma, 8 Tests) + Frontend (Next.js 14 PWA, wagmi v2) |
 | 2026-02-23 | PartnerVault.sol implementiert (491 LOC, 89 Tests): Milestone-Unlocking + Lock-triggered Creator Rewards, SafeERC20, Governance-Parameter |

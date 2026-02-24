@@ -86,6 +86,18 @@ The IFR Benefits Network lets any business verify on-chain IFR lock status to gr
 
 **Routes:** `/b/:businessId` (merchant console) · `/r/:sessionId` (customer verification)
 
+## Governance Dashboard
+
+Read-only governance dashboard for monitoring PartnerVault, proposals, and generating calldata.
+
+| Component | Path | Stack |
+|-----------|------|-------|
+| Dashboard | `apps/governance-dashboard/` | React 18 + Vite + TypeScript + Tailwind + ethers v5 |
+
+**Tabs:** Overview · Partners · Timelock Queue · Calldata Generator
+
+**Start:** `cd apps/governance-dashboard && npm run dev` → http://localhost:5174
+
 ## Documentation
 
 - [Landing Page](https://neabouli.github.io/inferno/)
