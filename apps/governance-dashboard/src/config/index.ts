@@ -1,4 +1,4 @@
-export { ADDRESSES, SEPOLIA_CHAIN_ID, ETHERSCAN_BASE } from "./addresses";
+export { ADDRESSES, SEPOLIA_CHAIN_ID, ETHERSCAN_BASE, DEPLOY_BLOCK } from "./addresses";
 export {
   InfernoTokenABI,
   IFRLockABI,
