@@ -59,6 +59,9 @@ inferno/
 │   ├── GOVERNANCE_CONSTITUTION.md     Governance Constitution v1.0 (Hard Bounds, Rollen, Upgrade-Pfad)
 │   ├── BUSINESS_ONBOARDING.md         Business Onboarding Guide (Benefits Network Setup & Go-Live)
 │   ├── PARTNER_INTEGRATION_SPEC.md    Technische Partner-Integration Spec (IFRLock + PartnerVault ABI, Rewards, Algo Throttle)
+│   ├── MAINNET_CHECKLIST.md           Deployment Checkliste (3 Phasen)
+│   ├── AUDIT_BRIEF.md                 Security Audit Brief + Scope
+│   ├── MULTISIG_SETUP.md              Gnosis Safe 4-of-7 Setup Guide
 │   ├── PATCH-GUIDELINES.md             Patch-Richtlinien
 │   ├── PROJECT-SUMMARY.md             Projektzusammenfassung
 │   └── wiki/                          [x] 8 HTML-Seiten (Contracts, Tokenomics, Lock, Governance, Security, Deploy, Integration)
@@ -145,6 +148,7 @@ inferno/
 
 | Datum | Aenderung |
 |-------|-----------|
+| 2026-02-24 | Mainnet-Vorbereitung: MAINNET_CHECKLIST.md, AUDIT_BRIEF.md, MULTISIG_SETUP.md |
 | 2026-02-24 | Partner Integration Spec: IFRLock + PartnerVault ABI, Reward Mechanics, Algo Throttle, AuthorizedCaller, Checklisten |
 | 2026-02-24 | Governance Constitution v1.0 + Business Onboarding Guide erstellt |
 | 2026-02-24 | Governance Dashboard: React 18 + Vite + TS + Tailwind (Overview, Partners, Timelock Queue, Calldata Generator) |
