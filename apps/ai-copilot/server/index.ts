@@ -40,8 +40,19 @@ app.post("/api/chat", async (req, res) => {
       })
     });
 
-    const data = await response.json() as { content?: { text?: string }[] };
-    const text = data.content?.[0]?.text || "Sorry, I couldn't process that.";
+    const data = await response.json() as Record<string, unknown>;
+    console.log("Anthropic response status:", response.status);
+    console.log("Anthropic response:", JSON.stringify(data).slice(0, 500));
+
+    if (!response.ok) {
+      const errMsg = (data as { error?: { message?: string } }).error?.message || "Unknown API error";
+      console.error("Anthropic API error:", errMsg);
+      res.status(500).json({ reply: `API error: ${errMsg}` });
+      return;
+    }
+
+    const content = data.content as { text?: string }[] | undefined;
+    const text = content?.[0]?.text || "Sorry, I couldn't process that.";
     res.json({ reply: text });
   } catch (err) {
     console.error("Anthropic API error:", err);
