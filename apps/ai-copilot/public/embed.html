@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>IFR Copilot — Embed Example</title>
+</head>
+<body>
+  <h1>IFR Copilot Embed Example</h1>
+  <p>Add this snippet to any HTML page to embed the IFR Copilot widget:</p>
+
+  <pre style="background:#1a1a1a;color:#fff;padding:16px;border-radius:8px;">
+&lt;!-- IFR Copilot Widget --&gt;
+&lt;script&gt;
+  (function() {
+    var iframe = document.createElement('iframe');
+    iframe.src = 'https://ifr-copilot.yourdomain.com';
+    iframe.style.cssText = 'position:fixed;bottom:20px;right:20px;width:400px;height:600px;border:none;z-index:9999;border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,0.4)';
+    document.body.appendChild(iframe);
+  })();
+&lt;/script&gt;
+  </pre>
+
+  <p>Replace <code>ifr-copilot.yourdomain.com</code> with your deployed URL.</p>
+</body>
+</html>
