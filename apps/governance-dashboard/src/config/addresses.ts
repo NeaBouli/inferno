@@ -8,3 +8,4 @@ export const ADDRESSES = {
 
 export const SEPOLIA_CHAIN_ID = 11155111;
 export const ETHERSCAN_BASE = "https://sepolia.etherscan.io";
+export const DEPLOY_BLOCK = 10325688;

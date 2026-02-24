@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { BigNumber } from "ethers";
 import { Contracts } from "../hooks/useContracts";
 import { formatIFR, shortenAddress, shortenBytes32, formatTimestamp } from "../utils/format";
-import { ETHERSCAN_BASE } from "../config";
+import { ETHERSCAN_BASE, DEPLOY_BLOCK } from "../config";
 
 interface PartnerRow {
   id: string;
@@ -31,7 +31,7 @@ export default function Partners({ contracts }: { contracts: Contracts }) {
       try {
         // Fetch PartnerCreated events from block 0
         const filter = contracts.partnerVault.filters.PartnerCreated();
-        const events = await contracts.partnerVault.queryFilter(filter, 0, "latest");
+        const events = await contracts.partnerVault.queryFilter(filter, DEPLOY_BLOCK, "latest");
 
         const rows: PartnerRow[] = [];
         for (const ev of events) {
