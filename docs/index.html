@@ -1139,7 +1139,7 @@ if (isLocked) {
       <div class="arch-layer">
         <p class="arch-layer-tag">Truth Layer &mdash; On-Chain</p>
         <h3>IFR Lock Contract</h3>
-        <p>Audited Solidity contract on Ethereum. Stores lock amounts and timestamps. Exposes <code>isLocked(user, minAmount)</code> for external queries. No app logic, no user IDs.</p>
+        <p>Open-source Solidity contract on Ethereum, static analysis verified. Stores lock amounts and timestamps. Exposes <code>isLocked(user, minAmount)</code> for external queries. No app logic, no user IDs.</p>
       </div>
       <div class="arch-layer">
         <p class="arch-layer-tag">Bridge Layer &mdash; Stateless</p>
@@ -1187,7 +1187,7 @@ if (isLocked) {
         <div class="trust-check">&check;</div>
         <div>
           <h4>Security Audit</h4>
-          <p>Slither static analysis: 0 high/critical findings. 15 fixes applied, 36 accepted informational.</p>
+          <p>Slither static analysis: 0 high/critical findings. 15 fixes applied, 36 accepted informational. Third-party audit recommended before mainnet.</p>
         </div>
       </div>
       <div class="trust-item reveal">
@@ -1208,7 +1208,7 @@ if (isLocked) {
         <div class="trust-check">&check;</div>
         <div>
           <h4>Testnet Verified</h4>
-          <p>All 9 on-chain components deployed and verified on Sepolia. LP Pair created via Uniswap V2 factory. Full protocol smoke test passed: fees, burns, governance lifecycle.</p>
+          <p>All 9 on-chain components (8 repo contracts + 1 Uniswap V2 LP Pair) deployed and verified on Sepolia. Full protocol smoke test passed: fees, burns, governance lifecycle.</p>
         </div>
       </div>
     </div>
@@ -1246,7 +1246,7 @@ if (isLocked) {
 
       <div class="faq-item">
         <button class="faq-question"><span>Can new tokens be minted?</span><span class="faq-icon">+</span></button>
-        <div class="faq-answer"><div class="faq-answer-inner">No &mdash; and this is one of the strongest guarantees in the Inferno protocol. There is no mint function in the smart contract. This means no one &mdash; not the team, not governance, not any admin &mdash; can ever create new IFR tokens. The initial supply of 1,000,000,000 IFR is the maximum that will ever exist. From here, the supply can only go down through burns, never up. This is verified in the open-source code and confirmed by the security audit.</div></div>
+        <div class="faq-answer"><div class="faq-answer-inner">No &mdash; and this is one of the strongest guarantees in the Inferno protocol. There is no mint function in the smart contract. This means no one &mdash; not the team, not governance, not any admin &mdash; can ever create new IFR tokens. The initial supply of 1,000,000,000 IFR is the maximum that will ever exist. From here, the supply can only go down through burns, never up. This is verified in the open-source code and confirmed by Slither static analysis (0 high/critical findings).</div></div>
       </div>
 
       <div class="faq-item">
