@@ -1,0 +1,10 @@
+export const ADDRESSES = {
+  InfernoToken: "0x3Bd71947F288d1dd8B21129B1bE4FF16EDd5d1F4",
+  IFRLock: "0x0Cab0A9440643128540222acC6eF5028736675d3",
+  PartnerVault: "0x6EF04c6abeb53335B6c2dD2964da97DB677AF090",
+  Governance: "0x6050b22E4EAF3f414d1155fBaF30B868E0107017",
+  LPPair: "0x2252e8bBDE0E50CD372748aC233A99C08627d9c7",
+} as const;
+
+export const SEPOLIA_CHAIN_ID = 11155111;
+export const ETHERSCAN_BASE = "https://sepolia.etherscan.io";
