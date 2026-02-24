@@ -50,8 +50,8 @@ inferno/
 ├── docs/
 │   ├── DOCS.md                         Dieses Dokument
 │   ├── FAIR-LAUNCH-MIGRATION.md        CFLM Migrationsplan
-│   ├── WHITEPAPER.md                   Whitepaper (DE)
-│   ├── WHITEPAPER_EN.md                Whitepaper (EN)
+│   ├── WHITEPAPER.md                   Project Whitepaper v1.0 (Partner & Investoren, non-technical)
+│   ├── WHITEPAPER_EN.md                Whitepaper (EN, veraltet)
 │   ├── CHANGELOG.md                    Aenderungsprotokoll
 │   ├── KNOWN-ISSUES.md                 Bekannte Probleme
 │   ├── SECURITY-AUDIT.md               Slither Audit Report
@@ -148,6 +148,7 @@ inferno/
 
 | Datum | Aenderung |
 |-------|-----------|
+| 2026-02-24 | WHITEPAPER.md v1.0: Komplett neu geschrieben als non-technical One-Pager fuer Partner & Investoren |
 | 2026-02-24 | Mainnet-Vorbereitung: MAINNET_CHECKLIST.md, AUDIT_BRIEF.md, MULTISIG_SETUP.md |
 | 2026-02-24 | Partner Integration Spec: IFRLock + PartnerVault ABI, Reward Mechanics, Algo Throttle, AuthorizedCaller, Checklisten |
 | 2026-02-24 | Governance Constitution v1.0 + Business Onboarding Guide erstellt |
