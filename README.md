@@ -113,6 +113,7 @@ Read-only governance dashboard for monitoring PartnerVault, proposals, and gener
 - [Multisig Setup Guide](docs/MULTISIG_SETUP.md) — Gnosis Safe, Signer-Struktur, Ownership Transfer
 - [Whitepaper / One-Pager](docs/WHITEPAPER.md) — Projekt-Uebersicht fuer Partner & Investoren
 - [Creator Gateway Spec](docs/CREATOR_GATEWAY.md) — YouTube Hybrid Model, Docker Quickstart, Entitlement Engine
+- [SDK / Developer Quickstart](docs/SDK_QUICKSTART.md) — ethers.js, wagmi, Python, Tier System, Wallet Verification
 
 ## License
 

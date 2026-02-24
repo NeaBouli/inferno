@@ -63,6 +63,7 @@ inferno/
 │   ├── AUDIT_BRIEF.md                 Security Audit Brief + Scope
 │   ├── MULTISIG_SETUP.md              Gnosis Safe 4-of-7 Setup Guide
 │   ├── CREATOR_GATEWAY.md             Creator Gateway Spec v0.1 (YouTube Hybrid, Docker, Entitlement Engine)
+│   ├── SDK_QUICKSTART.md              Developer Quickstart v1.0 (ethers.js, wagmi, Python, Tier System)
 │   ├── PATCH-GUIDELINES.md             Patch-Richtlinien
 │   ├── PROJECT-SUMMARY.md             Projektzusammenfassung
 │   └── wiki/                          [x] 8 HTML-Seiten (Contracts, Tokenomics, Lock, Governance, Security, Deploy, Integration)
@@ -149,6 +150,7 @@ inferno/
 
 | Datum | Aenderung |
 |-------|-----------|
+| 2026-02-24 | SDK Quickstart v1.0: ethers.js v5, wagmi v2, Python (web3.py), Tier System, Wallet Signature Verification, Go-Live Checkliste |
 | 2026-02-24 | Creator Gateway Spec v0.1: YouTube Hybrid Model B, Docker Quickstart, Entitlement Rules Engine, API Endpoints |
 | 2026-02-24 | WHITEPAPER.md v1.0: Komplett neu geschrieben als non-technical One-Pager fuer Partner & Investoren |
 | 2026-02-24 | Mainnet-Vorbereitung: MAINNET_CHECKLIST.md, AUDIT_BRIEF.md, MULTISIG_SETUP.md |
