@@ -105,6 +105,8 @@ Read-only governance dashboard for monitoring PartnerVault, proposals, and gener
 - [Contracts Reference](https://neabouli.github.io/inferno/wiki/contracts.html)
 - [Integration Guide](https://neabouli.github.io/inferno/wiki/integration.html)
 - [Security Audit](https://neabouli.github.io/inferno/wiki/security.html)
+- [Governance Constitution](docs/GOVERNANCE_CONSTITUTION.md) — Hard bounds, Rollen, Upgrade-Pfad
+- [Business Onboarding](docs/BUSINESS_ONBOARDING.md) — Benefits Network Setup & Go-Live Checkliste
 
 ## License
 
