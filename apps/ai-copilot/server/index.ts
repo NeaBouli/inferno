@@ -1,3 +1,4 @@
+import "dotenv/config";
 import express from "express";
 import cors from "cors";
 import { SYSTEM_PROMPTS } from "../src/context/system-prompts.js";
