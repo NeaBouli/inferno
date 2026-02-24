@@ -112,6 +112,7 @@ Read-only governance dashboard for monitoring PartnerVault, proposals, and gener
 - [Security Audit Brief](docs/AUDIT_BRIEF.md) — Scope, Pruefbereiche, Auditor-Empfehlungen
 - [Multisig Setup Guide](docs/MULTISIG_SETUP.md) — Gnosis Safe, Signer-Struktur, Ownership Transfer
 - [Whitepaper / One-Pager](docs/WHITEPAPER.md) — Projekt-Uebersicht fuer Partner & Investoren
+- [Creator Gateway Spec](docs/CREATOR_GATEWAY.md) — YouTube Hybrid Model, Docker Quickstart, Entitlement Engine
 
 ## License
 

@@ -62,6 +62,7 @@ inferno/
 │   ├── MAINNET_CHECKLIST.md           Deployment Checkliste (3 Phasen)
 │   ├── AUDIT_BRIEF.md                 Security Audit Brief + Scope
 │   ├── MULTISIG_SETUP.md              Gnosis Safe 4-of-7 Setup Guide
+│   ├── CREATOR_GATEWAY.md             Creator Gateway Spec v0.1 (YouTube Hybrid, Docker, Entitlement Engine)
 │   ├── PATCH-GUIDELINES.md             Patch-Richtlinien
 │   ├── PROJECT-SUMMARY.md             Projektzusammenfassung
 │   └── wiki/                          [x] 8 HTML-Seiten (Contracts, Tokenomics, Lock, Governance, Security, Deploy, Integration)
@@ -148,6 +149,7 @@ inferno/
 
 | Datum | Aenderung |
 |-------|-----------|
+| 2026-02-24 | Creator Gateway Spec v0.1: YouTube Hybrid Model B, Docker Quickstart, Entitlement Rules Engine, API Endpoints |
 | 2026-02-24 | WHITEPAPER.md v1.0: Komplett neu geschrieben als non-technical One-Pager fuer Partner & Investoren |
 | 2026-02-24 | Mainnet-Vorbereitung: MAINNET_CHECKLIST.md, AUDIT_BRIEF.md, MULTISIG_SETUP.md |
 | 2026-02-24 | Partner Integration Spec: IFRLock + PartnerVault ABI, Reward Mechanics, Algo Throttle, AuthorizedCaller, Checklisten |
