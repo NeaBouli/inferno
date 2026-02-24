@@ -38,5 +38,5 @@ VITE_SEPOLIA_RPC_URL=https://eth-sepolia.g.alchemy.com/v2/YOUR_KEY
 |----------|----------------|
 | InfernoToken | `0x3Bd71947F288d1dd8B21129B1bE4FF16EDd5d1F4` |
 | IFRLock | `0x0Cab0A9440643128540222acC6eF5028736675d3` |
-| PartnerVault | `0x6EF04c6abeb53335B6c2dD2964da97DB677AF090` |
+| PartnerVault | `0x5F12C0bC616e9Ca347D48C33266aA8fe98490A39` |
 | Governance | `0x6050b22E4EAF3f414d1155fBaF30B868E0107017` |
