@@ -865,6 +865,24 @@ await governance.execute(proposalId);</code></pre>
               <span class="address">TX: 0x211b7949...4253a909</span>
             </td>
           </tr>
+          <tr>
+            <td><strong>#2</strong></td>
+            <td><code>setFeeExempt(old PartnerVault, true)</code></td>
+            <td><span style="color: #ef4444; font-weight: 600;">Cancelled</span></td>
+            <td>
+              Cancelled &mdash; old PartnerVault replaced by v2<br>
+              <span class="address">TX: 0xaa829332...</span>
+            </td>
+          </tr>
+          <tr>
+            <td><strong>#3</strong></td>
+            <td><code>setFeeExempt(0x5F12...490A39, true)</code></td>
+            <td><span style="color: #f59e0b; font-weight: 600;">Pending</span></td>
+            <td>
+              ETA: 2026-02-26 08:41 CET<br>
+              <span class="address">New PartnerVault (v2)</span>
+            </td>
+          </tr>
         </tbody>
       </table>
 
@@ -1015,6 +1033,61 @@ await governance.execute(proposalId);</code></pre>
       <div class="callout">
         <p>
           <strong>Security &gt; Speed:</strong> Every governance transition is irreversible. We will only move to the next phase when the current model has been battle-tested and the community is ready. There is no timeline pressure.
+        </p>
+      </div>
+
+      <!-- ========== 13. PartnerVault Governance Features ========== -->
+      <h2>13. PartnerVault Governance Features</h2>
+      <p>
+        The PartnerVault contract introduces additional governance-controlled mechanisms beyond basic parameter changes.
+      </p>
+
+      <h3>AuthorizedCaller Whitelist</h3>
+      <p>
+        By default, only the admin (Governance Timelock) can call <code>recordLockReward()</code>.
+        To enable automated reward recording, governance can whitelist backend wallets via
+        <code>setAuthorizedCaller(address, true)</code>. These callers can record lock rewards
+        but cannot change any other parameters.
+      </p>
+
+      <h3>Algorithmic Emission Throttle</h3>
+      <p>
+        When <code>setIFRLock(address)</code> is configured, the effective reward rate scales down
+        automatically as more IFR is locked globally:
+      </p>
+      <ul>
+        <li>Lock ratio &lt; 1% &rarr; full <code>rewardBps</code></li>
+        <li>Lock ratio &ge; 50% &rarr; <code>MIN_REWARD_BPS</code> (500 = 5%)</li>
+        <li>Between 1%&ndash;50% &rarr; linear interpolation</li>
+      </ul>
+      <p>
+        This prevents pool exhaustion in high-adoption scenarios while maintaining attractive rewards during early growth.
+      </p>
+
+      <h3>Anti-Double-Count</h3>
+      <p>
+        Each <code>(wallet, partnerId)</code> pair can only be rewarded once, enforced by the
+        <code>walletRewardClaimed</code> mapping. This prevents gaming via repeated lock/unlock cycles.
+      </p>
+
+      <!-- ========== 14. Governance Dashboard ========== -->
+      <h2>14. Governance Dashboard</h2>
+      <p>
+        A read-only React dashboard for on-chain governance monitoring is available at
+        <code>apps/governance-dashboard/</code>. Run locally:
+      </p>
+      <pre><code>cd apps/governance-dashboard && npm run dev</code></pre>
+      <p>
+        Tabs: <strong>Overview</strong> (PartnerVault stats, algo throttle curve) &bull;
+        <strong>Partners</strong> (event-based table) &bull;
+        <strong>Timelock Queue</strong> (proposals with countdown) &bull;
+        <strong>Calldata Generator</strong> (encode governance calls).
+      </p>
+
+      <div class="callout callout-green">
+        <p>
+          <strong>Governance Constitution:</strong> Hard bounds, roles, upgrade path, and transparency rules
+          are documented in <a href="https://github.com/NeaBouli/inferno/blob/main/docs/GOVERNANCE_CONSTITUTION.md">GOVERNANCE_CONSTITUTION.md</a>.
         </p>
       </div>
 

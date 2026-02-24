@@ -1841,9 +1841,11 @@ console.<span class="function">log</span>(<span class="string">"Since:"</span>, 
                     <tr><td><code>createPartner(partnerId, beneficiary, maxAllocation, vestingDuration, cliff, tier)</code></td><td>Register a new partner with allocation cap and vesting schedule</td></tr>
                     <tr><td><code>activatePartner(partnerId)</code></td><td>Activate a partner to start earning rewards</td></tr>
                     <tr><td><code>recordMilestone(partnerId, milestoneId, unlockAmount)</code></td><td>Record milestone completion, unlock IFR allocation</td></tr>
-                    <tr><td><code>recordLockReward(partnerId, lockAmount)</code></td><td>Record a user lock &rarr; creator reward (lockAmount &times; rewardBps / 10000)</td></tr>
+                    <tr><td><code>recordLockReward(partnerId, lockAmount, wallet)</code></td><td>Record a user lock &rarr; creator reward (lockAmount &times; effectiveBps / 10000). Anti-double-count per wallet.</td></tr>
                     <tr><td><code>setRewardBps(newBps)</code></td><td>Update reward rate (500&ndash;2500 bps)</td></tr>
                     <tr><td><code>setAnnualEmissionCap(newCap)</code></td><td>Update annual emission cap (1M&ndash;10M IFR)</td></tr>
+                    <tr><td><code>setAuthorizedCaller(caller, status)</code></td><td>Whitelist an address (e.g. backend wallet) to call <code>recordLockReward</code></td></tr>
+                    <tr><td><code>setIFRLock(ifrLockAddress)</code></td><td>Set IFRLock reference for algorithmic emission throttle</td></tr>
                     <tr><td><code>setPartnerBeneficiary(partnerId, newBeneficiary)</code></td><td>Change partner payout address</td></tr>
                     <tr><td><code>setPartnerAllocation(partnerId, newMax)</code></td><td>Adjust partner allocation cap</td></tr>
                     <tr><td><code>finalizeMilestones(partnerId)</code></td><td>Lock milestones &mdash; no further milestone unlocks</td></tr>
@@ -1861,6 +1863,8 @@ console.<span class="function">log</span>(<span class="string">"Since:"</span>, 
                     <tr><td><code>vestedAmount(partnerId)</code></td><td>View: total vested so far</td></tr>
                     <tr><td><code>partners(partnerId)</code></td><td>View: full partner data struct</td></tr>
                     <tr><td><code>pendingBalance()</code></td><td>View: IFR balance held by vault</td></tr>
+                    <tr><td><code>walletRewardClaimed(wallet, partnerId)</code></td><td>View: whether a wallet has been rewarded for a partner</td></tr>
+                    <tr><td><code>authorizedCaller(address)</code></td><td>View: whether an address is whitelisted for recordLockReward</td></tr>
                 </tbody>
             </table>
             </div>
@@ -1871,6 +1875,9 @@ console.<span class="function">log</span>(<span class="string">"Since:"</span>, 
                 <li>Governance-controlled parameters with enforced min/max bounds</li>
                 <li>Annual emission cap resets every 365 days</li>
                 <li>Milestone replay protection via <code>milestoneDone</code> mapping</li>
+                <li><strong>AuthorizedCaller whitelist:</strong> <code>recordLockReward</code> callable by admin OR whitelisted backend wallet</li>
+                <li><strong>Anti-double-count:</strong> each <code>(wallet, partnerId)</code> pair can only be rewarded once</li>
+                <li><strong>Algorithmic emission throttle:</strong> reward rate scales from <code>rewardBps</code> down to <code>MIN_REWARD_BPS</code> (500) as global lock ratio rises from 1% to 50%</li>
                 <li>SafeERC20 for all token transfers</li>
             </ul>
         </div>
