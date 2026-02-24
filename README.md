@@ -108,6 +108,9 @@ Read-only governance dashboard for monitoring PartnerVault, proposals, and gener
 - [Governance Constitution](docs/GOVERNANCE_CONSTITUTION.md) — Hard bounds, Rollen, Upgrade-Pfad
 - [Business Onboarding](docs/BUSINESS_ONBOARDING.md) — Benefits Network Setup & Go-Live Checkliste
 - [Partner Integration Spec](docs/PARTNER_INTEGRATION_SPEC.md) — Technische Spec: IFRLock + PartnerVault ABI, Rewards, Algo Throttle
+- [Mainnet Checklist](docs/MAINNET_CHECKLIST.md) — Deployment-Reihenfolge, Verification, Post-Deploy
+- [Security Audit Brief](docs/AUDIT_BRIEF.md) — Scope, Pruefbereiche, Auditor-Empfehlungen
+- [Multisig Setup Guide](docs/MULTISIG_SETUP.md) — Gnosis Safe, Signer-Struktur, Ownership Transfer
 
 ## License
 
