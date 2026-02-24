@@ -29,13 +29,19 @@ export default function Partners({ contracts }: { contracts: Contracts }) {
     let cancelled = false;
     async function load() {
       try {
-        // Fetch PartnerCreated events from block 0
-        const filter = contracts.partnerVault.filters.PartnerCreated();
-        const events = await contracts.partnerVault.queryFilter(filter, DEPLOY_BLOCK, "latest");
+        // Try event-based discovery; falls back to empty state if RPC rejects range query
+        let partnerIds: string[] = [];
+        try {
+          const filter = contracts.partnerVault.filters.PartnerCreated();
+          const events = await contracts.partnerVault.queryFilter(filter, DEPLOY_BLOCK, "latest");
+          partnerIds = events.map((ev) => ev.args!.partnerId as string);
+        } catch {
+          // Alchemy free tier rejects large block ranges — graceful fallback
+          partnerIds = [];
+        }
 
         const rows: PartnerRow[] = [];
-        for (const ev of events) {
-          const partnerId = ev.args!.partnerId as string;
+        for (const partnerId of partnerIds) {
           const [info, claimable] = await Promise.all([
             contracts.partnerVault.partners(partnerId),
             contracts.partnerVault.claimable(partnerId),
