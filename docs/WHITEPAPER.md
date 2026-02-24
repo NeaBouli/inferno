@@ -1,79 +1,183 @@
-# 🔥 Inferno – Whitepaper (DE)
+# Inferno ($IFR) — Project Whitepaper v1.0
 
-## Kurzfassung
-Inferno ($IFR) ist ein deflationärer Token auf einer EVM-kompatiblen Chain. Die Angebotsreduktion erfolgt über Gebühren-Burns bei Transfers sowie einen on-chain Buyback-Mechanismus, der Mittel aus dem Treasury nutzt, um IFR am Markt zurückzukaufen und (anteilig) zu verbrennen. Governance (Multi-Sig/DAO) steuert Parameter sicher über Timelocks.
+## Executive Summary
+IFR ist ein deflationaerer ERC-20 Utility Token auf Ethereum.
+Kernidee: Nutzer sperren IFR-Token einmalig und erhalten dafuer
+dauerhaften Premium-Zugang zu Partner-Produkten — keine Abonnements,
+keine wiederkehrenden Zahlungen. Jeder Transfer verbrennt automatisch
+2.5% der Tokens permanent. Das Angebot sinkt mit jeder Transaktion.
 
-## 1. Motivation & Ziel
-- **Deflation:** Planbare, transparente Reduktion des zirkulierenden Angebots.
-- **Sichtbarkeit:** On-chain nachvollziehbare Burns & Buybacks.
-- **Sicherheit:** Klare Rollen (Governor/Guardian), Pausable, Param-Kontrolle.
+3 Saetze fuer jeden:
+- Fuer Nutzer: Lock once, access forever.
+- Fuer Partner: Acquire loyal users who have real skin in the game.
+- Fuer das Protokoll: More utility = more locking = less supply = more scarcity.
 
-## 2. Token-Spezifikation
-- **Name/Ticker:** Inferno / IFR  
-- **Decimals:** 9  
-- **Gesamtangebot:** 1.000.000.000 IFR (fixed)  
-- **Chain:** EVM-kompatible L2/Sidechain (Kasplex/Kaspa EVM in Planung)  
-- **Quelle der Wahrheit:** On-chain Verträge & Events.
+---
 
-## 3. Gebühren- & Burn-Mechanik
-- **Transfer Fees (Standard):**  
-  - SenderBurn: **2.0%**  
-  - RecipientBurn: **0.5%**  
-  - PoolFee: **1.0%** (für Buyback/Treasury)  
-- **FeeExempt:** Adressen wie Presale, Vesting, Treasury können ausgenommen werden.  
-- **Invarianten:** Summe der Anteile ≤ max. Fee-Budget; Rundungen deterministisch.  
-- **Events:** `FeesApplied(senderBurn, recipientBurn, poolFee)` + `Transfer`.
+## 1. Das Problem
 
-## 4. Presale (Fixpreis)
-- **Funktion:** ETH ➜ IFR zum fixen `TOKEN_PRICE`.  
-- **Eigenschaften:** Caps/Phasen optional; Reentrancy-Schutz; Pausable.  
-- **FeeExempt:** Tokenauslieferung ohne Gebührenreduktion.  
-- **Treasury:** Erhält ETH direkt, Presale verwahrt keine Mittel langfristig.
+Abonnement-Muedigkeit: Nutzer zahlen monatlich fuer Dutzende Services.
+Churning: Plattformen verlieren Nutzer sobald Zahlungen ausbleiben.
+Keine echte Bindung: Nutzer haben keinen wirtschaftlichen Anreiz zu bleiben.
+Token ohne Nutzen: Die meisten Crypto-Token haben keine echte Verwendung.
 
-## 5. Vesting
-- **Modell:** Cliff + lineare Freigabe; `release()` durch Begünstigte.  
-- **FeeExempt:** Vesting-Transfers sind gebührenfrei.  
-- **Rundungen:** deterministisch; Tests decken Randfälle ab.  
-- **Events:** `Released(beneficiary, amount)`.
+---
 
-## 6. BurnReserve
-- **Aufgabe:** Verwahrt/brennt endgültig.  
-- **Steuerung:** Nur Governance (Timelock/Multi-Sig).  
-- **Event:** `Burned(amount, caller)`.
+## 2. Die Loesung: Lock-to-Access
 
-## 7. Buyback-Vault & Strategie
-- **Vault:** Nimmt ETH/Mittel an, `execute()` führt Rückkauf via DEX (z. B. UniswapV2) durch.  
-- **Strategie-Parameter:**  
-  - Slippage-Limit (Default **5%**, änderbar)  
-  - Cooldown (min. **1h**)  
-  - Burn/Treasury-Split (Default **50/50**, 0–100% möglich)  
-- **Events:** `BuybackExecuted(ethIn, ifrOut, burned, toTreasury)`.  
-- **Rollen:** Governor (Parameter), Guardian (Pause).  
-- **Sicherheit:** Reentrancy-Schutz, Router-Quotenprüfung, Fail-Safes.
+Inferno fuehrt ein neues Zugriffsmodell ein:
 
-## 8. Governance
-- **Rollen:** Governor (Multi-Sig/DAO), Guardian (Notfall-Pause).  
-- **Timelock:** Parameteränderungen mit Verzögerung & On-chain-Nachweis.  
-- **Upgrades:** Strategiewechsel (Vault ↔ Strategie).  
-- **Prozesse:** ADRs dokumentieren jede relevante Änderung.
+Statt monatlich zu zahlen → einmalig IFR sperren (Lock).
+Gesperrte Token bleiben Eigentum des Nutzers.
+Solange gesperrt → automatischer Premium-Zugang zu allen Partner-Produkten.
+Entsperren jederzeit moeglich → Zugang endet, Token zurueck.
 
-## 9. Sicherheit & Tests
-- **Tooling:** Slither, Mythril, Echidna/Fuzz, Gas-Reports.  
-- **Invarianten:** Gebühren-Summe, FeeExempt-Listen, Vesting-Rundungen.  
-- **Integration:** Fork-Tests mit DEX-Router; Buyback-Dry-Runs.  
-- **Audits:** Drittanbieter-Audits empfohlen vor Launch.
+Analogie: Wie eine Kaution. Du gibst das Geld nicht aus — du hinterlegst es.
+Und solange die Kaution liegt, bist du drin.
 
-## 10. Roadmap & Meilensteine
-- **MS-1:** Token-Core + Presale + Vesting (ABIs stabil)  
-- **MS-2:** Governance aktiv (Timelock/Rollen)  
-- **MS-3:** Indexer + Backend v1 live (Staging)  
-- **MS-4:** Buyback-Vault integriert, Dry-Run bestanden (**aktuell: Tests 🔴**)  
-- **MS-5:** Public Launch (Explorer, Observability, Compliance-Hinweise)
+---
 
-## 11. Compliance & Hinweise
-- Dieses Dokument ist **keine Anlageberatung**.  
-- Rechts-/Steuerprüfung der Presale-Flows und UI-Texte je Jurisdiktion empfohlen.  
-- Geo-Fencing/KYC optional je nach Markt.
+## 3. Deflationaere Mechanik
 
-## 12. Zusammenfassung
-Inferno kombiniert planbaren **Fee-Burn** mit einem **aktiven Buyback** unter Governance-Kontrolle. Ziel ist ein langfristig deflationäres, transparentes Token-Ökosystem mit sauberer Parametrisierung und Sicherheits-Gates.
+Jeder IFR-Transfer verbrennt automatisch Token:
+- 2.0% vom Sender verbrannt (permanent)
+- 0.5% vom Empfaenger verbrannt (permanent)
+- 1.0% ins Protokoll-Pool
+- Gesamt: 3.5% pro Transfer, davon 2.5% echter permanenter Burn
+
+Maximale Fee: 5% (im Smart Contract erzwungen, unveraenderbar)
+Neues Minting: Unmoeglich (kein Mint im Contract)
+Ergebnis: Das Angebot kann nur sinken, niemals steigen.
+
+Beispiel:
+Sendest du 10.000 IFR → Empfaenger erhaelt 9.650 IFR.
+250 IFR sind fuer immer vernichtet. 100 IFR ins Pool.
+
+---
+
+## 4. Token-Oekonomie
+
+Gesamtangebot: 1.000.000.000 IFR (1 Milliarde, einmalig, kein Minting)
+
+| Kategorie | % | Menge | Zweck |
+|-----------|---|-------|-------|
+| DEX Liquidity | 40% | 400M | Handel & Liquiditaet |
+| Liquidity Reserve | 20% | 200M | Gestaffelter Release (6 Monate Lock) |
+| Team (Vested) | 15% | 150M | 48 Monate Vesting, 12 Monate Cliff |
+| Treasury | 15% | 150M | Protokoll-Entwicklung |
+| Community & Grants | 6% | 60M | Ecosystem-Aufbau |
+| Partner Ecosystem | 4% | 40M | PartnerVault (Lock-triggered Rewards) |
+
+Fair Launch: Kein Presale, keine VC-Runden, keine Insider-Vorteile.
+
+---
+
+## 5. Partner Ecosystem
+
+### Wie Partner IFR verdienen
+Wenn ein Nutzer IFR fuer das Produkt eines Partners sperrt:
+1. Partner erhaelt automatisch einen Prozentsatz des gesperrten Betrags
+2. Reward-Rate: 10–20% (Policy-Ziel), Hard-Bounds 5–25%
+3. Rewards vesten linear ueber 6–12 Monate
+4. Jaehrliches Emissions-Limit: 4M IFR (Bounds: 1–10M)
+
+Warum deflationaer: Nutzer sperren immer mehr IFR als Partner erhalten.
+Bei 15% Reward: 1.000 IFR gesperrt → 150 IFR Reward → netto 850 IFR mehr gebunden.
+
+### IFR Benefits Network
+Jedes Business (online oder offline) kann IFR-Lock als Zugangssystem nutzen:
+- Haendler: kein Crypto-Wissen noetig, nur Browser
+- Kunde: scannt QR → verbindet Wallet → signiert → fertig
+- System prueft on-chain ob Kunde IFR gesperrt hat
+
+Beispiel-Tiers (empfohlen, frei konfigurierbar):
+- Bronze: 1.000 IFR gesperrt → 5% Rabatt
+- Silver: 2.500 IFR → 10% Rabatt
+- Gold: 5.000 IFR → 15% Rabatt
+- Platinum: 10.000 IFR → 20% Rabatt
+
+---
+
+## 6. Governance
+
+Wie Aenderungen am Protokoll funktionieren:
+- Kein sofortiger Admin-Zugriff (niemand kann sofort etwas aendern)
+- Jede Aenderung: 48-Stunden oeffentliche Wartezeit (Timelock)
+- Guardian-Rolle kann jede Aenderung in den 48h stoppen
+- Kein Token-Voting (Schutz vor Whale-Manipulation)
+
+Upgrade-Pfad:
+- Heute: Timelock-Governance (Single Admin, Testnet)
+- Phase 2: Multisig (4-of-7 Gnosis Safe)
+- Phase 4: DAO mit Community-Voting
+
+---
+
+## 7. Technische Architektur
+
+3 Schichten, sauber getrennt:
+
+**On-Chain (Truth Layer)**
+IFRLock Contract auf Ethereum: speichert wer wie viel IFR gesperrt hat.
+Einzige Wahrheitsquelle. Kein App-Wissen, keine User-IDs.
+
+**Bridge Layer (Stateless)**
+License Resolver: uebersetzt Wallet-Abfragen in Zugangs-Checks.
+Datenschutz-neutral: keine personenbezogenen Daten gespeichert.
+
+**Off-Chain (Partner Apps)**
+Jede App entscheidet selbst welcher Lock-Betrag fuer Premium-Zugang gilt.
+Integration: 5 Zeilen Code. Vollstaendig entkoppelt.
+
+---
+
+## 8. Sicherheit
+
+- Open Source: Alle Smart Contracts oeffentlich auf GitHub
+- Slither Static Analysis: 0 High/Critical Findings
+- 243 Unit Tests (alle bestehen)
+- Third-party Audit: empfohlen vor Mainnet-Deployment
+- Timelock: 48h Pflicht-Wartezeit auf alle Aenderungen
+- Kein Minting: technisch unmoeglich nach Launch
+
+---
+
+## 9. Roadmap
+
+| Phase | Status | Inhalt |
+|-------|--------|--------|
+| Phase 0 — Bootstrap | Aktiv | Sepolia Testnet, alle Contracts live |
+| Phase 1 — Launch | Geplant | Mainnet, LP, erste Partner |
+| Phase 2 — Multisig | Geplant | Governance zu Multisig |
+| Phase 3 — Growth | Geplant | Ecosystem-Expansion, Benefits Network |
+| Phase 4 — DAO | Langfristig | Community-Governance |
+
+---
+
+## 10. Fuer Partner: Warum IFR?
+
+- Echte Nutzerbindung: Nutzer mit gesperrten Token wandern nicht ab
+- Kein Subscription-Management: Lock on-chain, kein Backend noetig
+- Token-Incentives: Partner erhalten IFR aus dem 40M Partner-Pool
+- Einfache Integration: isLocked() — ein API-Call
+- Datenschutz: Keine Wallet-Daten gespeichert
+- Permissionless: Jeder kann integrieren
+
+Interesse? → docs/PARTNER_INTEGRATION_SPEC.md
+
+---
+
+## 11. Kontakt & Links
+
+| | |
+|-|-|
+| GitHub | https://github.com/NeaBouli/inferno |
+| Website | https://neabouli.github.io/inferno/ |
+| Docs | https://neabouli.github.io/inferno/wiki/ |
+| X / Twitter | https://x.com/IFRtoken |
+| Sepolia Token | 0x3Bd71947F288d1dd8B21129B1bE4FF16EDd5d1F4 |
+| Sepolia Governance | 0x6050b22E4EAF3f414d1155fBaF30B868E0107017 |
+
+---
+*Inferno ($IFR) — Community Fair Launch Model*
+*Stand: Februar 2026 | Version 1.0 | Vertraulich — nur fuer Partner & Investoren*

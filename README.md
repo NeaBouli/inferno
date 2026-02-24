@@ -111,6 +111,7 @@ Read-only governance dashboard for monitoring PartnerVault, proposals, and gener
 - [Mainnet Checklist](docs/MAINNET_CHECKLIST.md) — Deployment-Reihenfolge, Verification, Post-Deploy
 - [Security Audit Brief](docs/AUDIT_BRIEF.md) — Scope, Pruefbereiche, Auditor-Empfehlungen
 - [Multisig Setup Guide](docs/MULTISIG_SETUP.md) — Gnosis Safe, Signer-Struktur, Ownership Transfer
+- [Whitepaper / One-Pager](docs/WHITEPAPER.md) — Projekt-Uebersicht fuer Partner & Investoren
 
 ## License
 
