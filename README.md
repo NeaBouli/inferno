@@ -76,47 +76,40 @@ Token holdings grant future DAO voting rights.
 - Full Sepolia testnet deployment with verified contracts
 - Governance lifecycle tested: propose → 48h wait → execute
 
-## Dashboard
+## Applications
+
+| App | Path | Port | Stack |
+|-----|------|------|-------|
+| Token Dashboard | `apps/dashboard/` | 5173 | React 18 + Vite + ethers v5 |
+| Governance Dashboard | `apps/governance-dashboard/` | 5174 | React 18 + Vite + TypeScript + Tailwind + ethers v5 |
+| AI Copilot | `apps/ai-copilot/` | 5175 | React 18 + Vite + TypeScript + Tailwind + Express |
+| Points Backend | `apps/points-backend/` | 3004 | Express + Prisma + SQLite + ethers v5 + siwe + jose |
+| Benefits Network Backend | `apps/benefits-network/backend/` | 3001 | Express + Prisma + SQLite + ethers v5 |
+| Benefits Network Frontend | `apps/benefits-network/frontend/` | 3000 | Next.js 14 + Tailwind + wagmi v2 (PWA) |
+
+### Token Dashboard
 
 Read-only token dashboard for monitoring balances, transfers, and contract status.
 
-| Component | Path | Stack |
-|-----------|------|-------|
-| Dashboard | `apps/dashboard/` | React 18 + Vite + ethers v5 |
-
 **Start:** `cd apps/dashboard && npm install && npm run dev` → http://localhost:5173
 
-## Benefits Network
+### Benefits Network
 
 The IFR Benefits Network lets any business verify on-chain IFR lock status to grant discounts and premium access. QR-based flow — no accounts, no subscriptions.
 
-| Component | Path | Stack |
-|-----------|------|-------|
-| Backend | `apps/benefits-network/backend/` | Express + Prisma + SQLite + ethers v5 |
-| Frontend | `apps/benefits-network/frontend/` | Next.js 14 + Tailwind + wagmi v2 (PWA) |
-
 **Routes:** `/b/:businessId` (merchant console) · `/r/:sessionId` (customer verification)
 
-## Governance Dashboard
+### Governance Dashboard
 
 Read-only governance dashboard for monitoring PartnerVault, proposals, and generating calldata.
-
-| Component | Path | Stack |
-|-----------|------|-------|
-| Dashboard | `apps/governance-dashboard/` | React 18 + Vite + TypeScript + Tailwind + ethers v5 |
 
 **Tabs:** Overview · Partners · Timelock Queue · Calldata Generator
 
 **Start:** `cd apps/governance-dashboard && npm run dev` → http://localhost:5174
 
-## AI Copilot
+### AI Copilot
 
 Embedded chat widget with RAG knowledge base — helps users, partners, and developers understand IFR.
-
-| Component | Path | Stack |
-|-----------|------|-------|
-| Frontend | `apps/ai-copilot/` | React 18 + Vite + TypeScript + Tailwind |
-| Backend | `apps/ai-copilot/server/` | Express API proxy → Anthropic Claude Haiku 4.5 |
 
 **Modes:** Customer · Partner · Developer
 
@@ -124,21 +117,17 @@ Embedded chat widget with RAG knowledge base — helps users, partners, and deve
 
 **Start:** `cd apps/ai-copilot && npm install && cp .env.example .env && npm run dev` → http://localhost:5175
 
-## Points Backend
+### Points Backend
 
 SIWE authentication, points tracking, and EIP-712 signed voucher issuance for protocol fee discounts.
 
-| Component | Path | Stack |
-|-----------|------|-------|
-| Backend | `apps/points-backend/` | Express + Prisma + SQLite + ethers v5 + siwe + jose |
+**IFR Points are not a token** — no transfer value, no monetary promise. Points only reduce the protocol fee on a single swap (via EIP-712 discount voucher).
 
 **Endpoints:** `/auth/siwe/*` (SIWE auth) · `/points/*` (events + balance) · `/voucher/issue` (EIP-712 voucher)
 
 **Anti-Sybil:** Rate limiting per IP + per wallet + global daily caps.
 
 **Start:** `cd apps/points-backend && npm install && npx prisma migrate dev --name init && npm run dev` → http://localhost:3004
-
-> **IFR Points are not a token.** They have no transfer value, no monetary promise, and only reduce the protocol fee on a single swap.
 
 ## Documentation
 
