@@ -999,6 +999,64 @@
         </p>
       </div>
 
+      <!-- ========== On-Chain Audit ========== -->
+      <h2>On-Chain Audit (Sepolia Testnet)</h2>
+      <p>
+        Alle Werte sind live auf Sepolia verifizierbar.
+        Script: <code>npx hardhat run scripts/onchain-audit.js --network sepolia</code>
+      </p>
+
+      <h3>Contract Ownership</h3>
+      <table>
+        <thead><tr><th>Contract</th><th>Owner</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td>InfernoToken</td><td>Governance (Timelock)</td><td style="color:var(--green);">OK</td></tr>
+          <tr><td>IFRLock</td><td>admin-Pattern</td><td style="color:var(--green);">OK</td></tr>
+          <tr><td>PartnerVault</td><td>Governance (Timelock)</td><td style="color:var(--green);">OK</td></tr>
+          <tr><td>FeeRouterV1</td><td>Governance (Timelock)</td><td style="color:var(--green);">OK</td></tr>
+          <tr><td>LiquidityReserve</td><td>Deployer</td><td style="color:#f59e0b;">Testnet</td></tr>
+          <tr><td>BuybackVault</td><td>Deployer</td><td style="color:#f59e0b;">Testnet</td></tr>
+          <tr><td>BurnReserve</td><td>Deployer</td><td style="color:#f59e0b;">Testnet</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Token Supply Verteilung</h3>
+      <table>
+        <thead><tr><th>Wallet</th><th>IFR</th><th>%</th></tr></thead>
+        <tbody>
+          <tr><td>LP Pair</td><td>400,000,000</td><td>40.08%</td></tr>
+          <tr><td>LiquidityReserve</td><td>200,000,000</td><td>20.04%</td></tr>
+          <tr><td>Vesting (Team, 4 Jahre)</td><td>150,000,000</td><td>15.03%</td></tr>
+          <tr><td>Deployer (Treasury+Community)</td><td>170,787,995</td><td>17.11%</td></tr>
+          <tr><td>PartnerVault</td><td>38,600,000</td><td>3.86%</td></tr>
+          <tr><td>Verbrannt (Deflation)</td><td>2,000,425</td><td>0.20%</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Vesting (Team)</h3>
+      <ul>
+        <li>Balance: 150,000,000 IFR (15%)</li>
+        <li>Cliff: 365 Tage (bis ca. Januar 2027)</li>
+        <li>Duration: 1,460 Tage (4 Jahre linear)</li>
+        <li>Released: 0 IFR</li>
+      </ul>
+
+      <h3>Deflation (Live)</h3>
+      <p>
+        Seit Deploy wurden <strong>2,000,425 IFR permanent verbrannt</strong>
+        (0.20% des Supply). Deflation funktioniert on-chain nachweisbar.
+      </p>
+
+      <div class="callout">
+        <p>
+          <strong>TODOs vor Mainnet:</strong>
+          LP Tokens locken/burnen,
+          LiquidityReserve/BuybackVault/BurnReserve Ownership &rarr; Governance.
+          Details: <a href="../TRANSPARENCY.md">TRANSPARENCY.md</a> |
+          <a href="../MAINNET_CHECKLIST.md">Mainnet Checklist</a>
+        </p>
+      </div>
+
       <!-- Footer -->
       <footer class="wiki-footer">
         Inferno ($IFR) &mdash; Community Fair Launch Model &mdash; Documentation v1.0

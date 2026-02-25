@@ -159,6 +159,7 @@ SIWE authentication, points tracking, and EIP-712 signed voucher issuance for pr
 - [Coverage Report](docs/COVERAGE_REPORT.md) — Solidity Coverage (99% Stmts, 85% Branch)
 - [Patch Guidelines](docs/PATCH-GUIDELINES.md) — Patch-Prozess, Severity, Versionierung
 - [Contributing Guide](docs/CONTRIBUTING.md) — Bug Reports, Code Standards, Git Konventionen
+- [Transparency Report](docs/TRANSPARENCY.md) — On-Chain Audit (8 Checks), Supply-Verteilung, Vesting, LP Status
 - [Project Summary](docs/PROJECT-SUMMARY.md) — Komplett-Uebersicht (10 Contracts, 330 Tests, 7 Apps)
 
 ## Development
