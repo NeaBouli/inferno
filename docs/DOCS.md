@@ -15,15 +15,15 @@
 ```
 inferno/
 ├── contracts/
-│   ├── token/InfernoToken.sol          [x] 76 LOC, 21 Tests
-│   ├── liquidity/LiquidityReserve.sol  [x] 139 LOC, 28 Tests
+│   ├── token/InfernoToken.sol          [x] 76 LOC, 22 Tests
+│   ├── liquidity/LiquidityReserve.sol  [x] 139 LOC, 30 Tests
 │   ├── vesting/Vesting.sol             [x] 111 LOC, 7 Tests
 │   ├── buyback/BuybackVault.sol        [x] 148 LOC, 9 Tests
 │   ├── burnreserve/BurnReserve.sol     [x] 86 LOC, 21 Tests
 │   ├── governance/Governance.sol       [x] 150 LOC, 36 Tests
 │   ├── lock/IFRLock.sol               [x] 127 LOC, 29 Tests
 │   ├── partner/PartnerVault.sol       [x] 491 LOC, 89 Tests
-│   ├── FeeRouterV1.sol               [x] 165 LOC, 13 Tests
+│   ├── FeeRouterV1.sol               [x] 165 LOC, 33 Tests
 │   └── mocks/                          MockToken, MockRouter, MockInfernoToken, MockAdapter
 ├── test/
 │   ├── InfernoToken.test.js            [x] 258 LOC
@@ -34,7 +34,7 @@ inferno/
 │   ├── Governance.test.js              [x] 320 LOC
 │   ├── IFRLock.test.js                [x] 363 LOC
 │   ├── PartnerVault.test.js           [x] 480 LOC
-│   └── FeeRouterV1.test.js           [x] 225 LOC
+│   └── FeeRouterV1.test.js           [x] 500 LOC
 ├── scripts/
 │   ├── deploy-testnet.js               [x] 232 LOC (9-Step CFLM Deploy)
 │   ├── create-lp.js                    [x] 4-Step LP Pairing + Router Update
@@ -56,7 +56,7 @@ inferno/
 │   ├── governance-dashboard/          [x] React + Vite + TS + Tailwind (Overview, Partners, Timelock, Calldata)
 │   ├── ai-copilot/                   [x] React + Vite + TS + Tailwind + Express (3 Modi, RAG, Safety Guards)
 │   ├── points-backend/               [x] Express + Prisma + SQLite + siwe + jose (SIWE Auth, Points, EIP-712 Voucher, 20 Tests)
-│   ├── creator-gateway/              [x] Express + ethers v5 + googleapis + JWT (YouTube x IFR Lock Bridge, Port 3005, 14 Tests)
+│   ├── creator-gateway/              [x] Express + ethers v5 + googleapis + JWT (YouTube x IFR Lock Bridge, Port 3005, 20 Tests)
 │   └── benefits-network/
 │       ├── backend/                   [x] Express + Prisma + SQLite (8 Tests)
 │       └── frontend/                  [x] Next.js 14 + Tailwind + wagmi v2 (PWA)
@@ -87,7 +87,7 @@ inferno/
 │   ├── PATCH-GUIDELINES.md             Patch-Richtlinien v1.0 (6 Schritte, Versionierung, Notfall-Patches)
 │   ├── COVERAGE_REPORT.md             Solidity Coverage Report (95% Stmts, 81% Branch, 95% Funcs, 96% Lines)
 │   ├── BENEFITS_NETWORK_TEST.md       Benefits Network E2E Test Guide (Test-Flow, API, Lock Tiers, Fehler)
-│   ├── PROJECT-SUMMARY.md             Komplett-Uebersicht (10 Contracts, 298 Tests, 7 Apps, CI/CD)
+│   ├── PROJECT-SUMMARY.md             Komplett-Uebersicht (10 Contracts, 324 Tests, 7 Apps, CI/CD)
 │   └── wiki/                          [x] 9 HTML-Seiten (Contracts, Tokenomics, Lock, Governance, Security, Deploy, Integration, AI Copilot)
 ├── STATUS-REPORT.md                    Vollstaendiger Statusbericht
 └── README.md                           Projekt-Uebersicht
@@ -99,13 +99,13 @@ inferno/
 
 ### 1. InfernoToken — [x] FERTIG
 - **Pfad:** `contracts/token/InfernoToken.sol`
-- **Tests:** 21 (InfernoToken.test.js)
+- **Tests:** 22 (InfernoToken.test.js)
 - **Beschreibung:** ERC20 + ERC20Burnable + Ownable, 9 Decimals, 1B Supply
 - **Features:** Fee-on-Transfer (2% Sender Burn, 0.5% Recipient Burn, 1% Pool Fee), Fee Exemption, Owner-Functions (setFeeRates, setFeeExempt, setPoolFeeReceiver), Max 5% Fee Cap
 
 ### 2. LiquidityReserve — [x] FERTIG
 - **Pfad:** `contracts/liquidity/LiquidityReserve.sol`
-- **Tests:** 28 (LiquidityReserve.test.js)
+- **Tests:** 30 (LiquidityReserve.test.js)
 - **Beschreibung:** Strategic Reserve fuer 200M IFR
 - **Features:** 6-Monats-Lock, gestaffelte Freigabe (50M pro Quartal), Perioden-Tracking, Guardian Pause, Owner-Withdraw nach Lock
 
@@ -149,7 +149,7 @@ inferno/
 - **Mainnet-Empfehlung:** rewardBps=1000 (10%), annualCap=4M IFR, partnerCap=100K IFR/Partner (skalierbar fuer 500-1000+ Partner)
 - **KRITISCH:** feeExempt MUSS VOR dem 40M Transfer gesetzt werden (Sepolia-Lesson: 1.4M IFR Fee-Verlust)
 
-### 9. FeeRouterV1 (`contracts/FeeRouterV1.sol`) — 165 LOC, 13 Tests
+### 9. FeeRouterV1 (`contracts/FeeRouterV1.sol`) — 165 LOC, 33 Tests
 - **Zweck:** Protocol fee routing mit EIP-712 signierte Discount-Voucher
 - **Features:** swapWithFee (adapter-basiert), DiscountVoucher (EIP-712 signiert), Replay-Protection (nonce), Whitelisted Adapters, Governance-steuerbare Fee (0-25 bps), Pause
 - **Sepolia:** protocolFeeBps=5 (0.05%), FEE_CAP_BPS=25 (0.25%), Adresse: `0x499289C8Ef49769F4FcFF3ca86D4BD7b55B49aa4`
@@ -166,7 +166,7 @@ inferno/
 |--------|------|
 | Contracts | 10 (+ 4 Mocks) |
 | Solidity LOC | 1,292 |
-| Tests | 256 (alle bestanden) |
+| Tests | 276 (alle bestanden) |
 | Test LOC | 2,402 |
 | Deploy Script | 232 LOC, 9 Steps |
 | Modell | CFLM (Community Fair Launch) |
@@ -183,12 +183,17 @@ inferno/
 | 2026-02-25 | Benefits Network E2E Test: Script + Test Guide (docs/BENEFITS_NETWORK_TEST.md) |
 | 2026-02-25 | Governance Wiki: Proposal Details erweitert (Targets, Reasons, Proposer) + Governance Learnings Sektion |
 | 2026-02-25 | Solidity Coverage: solidity-coverage installiert, Report generiert (95% Stmts, 81% Branch) |
-| 2026-02-25 | PROJECT-SUMMARY.md: Komplett neu geschrieben (10 Contracts, 298 Tests, 7 Apps, Coverage, CI/CD, Token-Metriken) |
+| 2026-02-25 | PROJECT-SUMMARY.md: Komplett neu geschrieben (10 Contracts, 324 Tests, 7 Apps, Coverage, CI/CD, Token-Metriken) |
 | 2026-02-25 | Creator Gateway Tests: 14 Tests (lock-checker, entitlement OR/AND, auth routes) mit Jest + ts-jest + supertest |
 | 2026-02-25 | Dashboard: ProtocolStats Komponente (IFRLock totalLocked, PartnerVault Balance, FeeRouter Fee, Reward Rate, Auto-refresh 30s) |
 | 2026-02-25 | PATCH-GUIDELINES.md v1.0: 6-Schritt Prozess, Severity-Matrix, Smart Contract Patch Rules, Versionierung, Notfall-Patches |
 | 2026-02-25 | GitHub Actions CI: Creator Gateway (tsc+jest), Points Backend (prisma+tsc+jest), AI Copilot (tsc+build) |
 | 2026-02-25 | Deployment Wiki: Proposal #3 Info-Box mit Scripts + 1.4M IFR Top-up Step |
+| 2026-02-26 | FeeRouterV1 Tests: 13 → 33 (isVoucherValid, setVoucherSigner, setFeeCollector, receive(), access control, signer rotation) |
+| 2026-02-26 | Creator Gateway YouTube Mock Tests: 6 Tests (isMember mock, fail-closed, API errors) — Gesamt: 20 Tests |
+| 2026-02-26 | Wiki Security: solidity-coverage Tabelle hinzugefuegt (pro Contract), FeeRouterV1 Test-Suite Zeile |
+| 2026-02-26 | Mainnet Checklist v1.1: FeeRouter Schritt, Status-Summary, Sepolia-Meilensteine, korrekte Test-Zahlen |
+| 2026-02-26 | Test-Counts synchronisiert: 276 Contract Tests (InfernoToken 22, LiquidityReserve 30, FeeRouterV1 33), 324 Gesamt |
 | 2026-02-26 | Governance Constitution v1.0 erweitert (Artikel 1-7, FeeRouterV1 Parameter, Multisig Struktur, Verbotene Aktionen) |
 | 2026-02-26 | Business Onboarding SOP erweitert (6 Schritte, Hosted + Self-Hosted, Tier-Konfiguration, Kassenpersonal Training, FAQ) |
 | 2026-02-26 | YouTube Integration Guide: Hybrid Model B, Creator Gateway Setup, Entitlement Config, Monetarisierung, Roadmap |

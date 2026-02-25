@@ -1,6 +1,6 @@
 # IFR Smart Contract — Test Coverage Report
 
-Stand: 26. Februar 2026 | 256 Tests passing | solidity-coverage
+Stand: 26. Februar 2026 | 276 Tests passing | solidity-coverage
 
 ## Zusammenfassung
 
@@ -72,4 +72,4 @@ npx hardhat coverage
 ```
 
 ---
-*Generiert mit solidity-coverage | 256 Tests | Solidity 0.8.20*
+*Generiert mit solidity-coverage | 276 Tests | Solidity 0.8.20*

@@ -71,7 +71,7 @@ Token holdings grant future DAO voting rights.
 
 ## Testing & Security
 
-- 256 unit tests (contracts) + 14 unit tests (Creator Gateway) — all passing
+- 276 unit tests (contracts) + 20 unit tests (Creator Gateway) — all passing
 - GitHub Actions CI: Creator Gateway, Points Backend, AI Copilot
 - Slither security audit: 0 high/critical findings
 - Full Sepolia testnet deployment with verified contracts
@@ -158,7 +158,7 @@ SIWE authentication, points tracking, and EIP-712 signed voucher issuance for pr
 - [Benefits Network Test Guide](docs/BENEFITS_NETWORK_TEST.md) — E2E Test, API Endpoints, Lock Tiers
 - [Coverage Report](docs/COVERAGE_REPORT.md) — Solidity Coverage (95% Stmts, 81% Branch)
 - [Patch Guidelines](docs/PATCH-GUIDELINES.md) — Patch-Prozess, Severity, Versionierung
-- [Project Summary](docs/PROJECT-SUMMARY.md) — Komplett-Uebersicht (10 Contracts, 298 Tests, 7 Apps)
+- [Project Summary](docs/PROJECT-SUMMARY.md) — Komplett-Uebersicht (10 Contracts, 324 Tests, 7 Apps)
 
 ## Development
 
