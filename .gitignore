@@ -2,5 +2,9 @@ node_modules/
 artifacts/
 cache/
 .env
+.env.local
+.env*.local
+*.pem
+*.key
 logs/*.log
 logs/**/*.log

@@ -1016,6 +1016,11 @@
         <div class="fair-launch-badge">
           Fair Launch &mdash; No Presale, No VC, Community First
         </div>
+        <div class="reveal" style="margin-top:20px;padding:20px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);max-width:700px;margin-left:auto;margin-right:auto;text-align:center;">
+          <strong style="color:var(--accent);">No Presale. No VC. No IDO.</strong>
+          <span style="color:var(--text-muted);margin-left:12px;">Direct Uniswap V2 listing. Team tokens vested 4 years.</span>
+          <a href="FAIR_LAUNCH.md" style="color:var(--accent);margin-left:8px;">→ Fair Launch Statement</a>
+        </div>
         <div class="reveal" style="margin-top:32px;padding:24px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);">
           <p style="text-align:center;font-size:13px;color:var(--text-muted);margin-bottom:16px;text-transform:uppercase;letter-spacing:0.05em;">Every Transfer Burns IFR Permanently</p>
           <div style="display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;font-size:14px;">
@@ -1526,6 +1531,21 @@ if (isLocked) {
       <div class="faq-item">
         <button class="faq-question"><span>What happens at mainnet launch?</span><span class="faq-icon">+</span></button>
         <div class="faq-answer"><div class="faq-answer-inner">Before mainnet deployment, several critical steps must be completed: A professional third-party security audit by an established firm (Code4rena, Sherlock, or Cyfrin). A Gnosis Safe 4-of-7 multisig will be set up for treasury management. All contract parameters will be finalized and governance-approved. The deployment itself includes all 10 contracts, Uniswap V2 LP creation, Etherscan verification, and ownership transfer to the Governance timelock.<br><br>The Sepolia testnet deployment will remain active in parallel so developers and partners can continue testing. A public announcement will precede the mainnet launch. LP tokens will be locked or burned to prevent rug pulls. The full checklist is publicly available in the project documentation.</div></div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question"><span>Why does IFR have a 3.5% transfer fee?</span><span class="faq-icon">+</span></button>
+        <div class="faq-answer"><div class="faq-answer-inner">The transfer fee is the engine of the deflation mechanism: 2.5% is permanently burned (supply decreases with every transfer) and 1.0% flows into the BuybackVault (strengthening liquidity). IFR is not a trading token &mdash; users lock IFR once and use the benefits permanently. Transfers are rare, not daily. For frequent transfers (DEX Router, Lock Contract, Partner Vaults) fee-exempt status applies, meaning zero fees on protocol-internal operations.</div></div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question"><span>Can I buy IFR on a centralized exchange (CEX)?</span><span class="faq-icon">+</span></button>
+        <div class="faq-answer"><div class="faq-answer-inner">Currently (testnet phase): only via Uniswap V2 on Sepolia. Fee-on-transfer tokens have elevated requirements for CEX listings &mdash; this is known and part of the mainnet roadmap. The primary use case is Lock-to-Access, not short-term trading. CEX outreach is planned for Phase 2+ after mainnet and audit.</div></div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question"><span>What does fee-exempt mean?</span><span class="faq-icon">+</span></button>
+        <div class="faq-answer"><div class="faq-answer-inner">Certain addresses are excluded from the transfer fee: IFR Lock Contract, LiquidityReserve, BuybackVault, BurnReserve, and PartnerVault. This ensures that internal protocol transfers (lock, unlock, reward payouts) do not incur fees. The list is on-chain transparent and can only be changed via Governance proposals with a 48-hour timelock delay. See the full list in the <a href="TRANSPARENCY.md" style="color:#ff4500;">Transparency Report</a>.</div></div>
       </div>
 
     </div>
