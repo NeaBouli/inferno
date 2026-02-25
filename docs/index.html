@@ -1465,6 +1465,31 @@ if (isLocked) {
         <div class="faq-answer"><div class="faq-answer-inner">IFR is designed to be as safe and transparent as possible, but as with all crypto assets, you should understand what you are doing before investing.<br><br>What makes IFR safer than most tokens: All smart contracts are fully open source &mdash; anyone can verify the code. No admin can change your locked tokens or take your funds. No new tokens can ever be minted &mdash; supply only goes down. Every governance change requires a 48-hour public waiting period &mdash; no surprises. A Guardian role can cancel any suspicious governance proposal within 48 hours.<br><br>What you should know before using IFR: Every transfer burns 2.5% permanently &mdash; factor this into your calculations. Locking tokens means they are in a smart contract, not in your wallet &mdash; they are still yours, but act accordingly. The token is currently on Sepolia testnet &mdash; mainnet deployment is upcoming. Always buy from verified sources and verify the official contract address before any transaction.<br><br>When in doubt: start small, verify everything, and only lock what you are comfortable with.</div></div>
       </div>
 
+      <div class="faq-item">
+        <button class="faq-question"><span>What is the FeeRouter?</span><span class="faq-icon">+</span></button>
+        <div class="faq-answer"><div class="faq-answer-inner">The FeeRouter is a smart contract that processes protocol fees on IFR swaps. The default fee is 0.05% (5 basis points) &mdash; significantly cheaper than standard DEX fees. With an IFR Points voucher, this fee can be reduced all the way to 0%.<br><br>The FeeRouter supports whitelisted adapters for different DEX integrations and uses EIP-712 signed vouchers for discount verification. The fee collector address and protocol fee rate are governance-controlled parameters with a hard cap of 0.25% (25 bps) enforced by the smart contract. The contract includes pause functionality for emergencies and replay protection to prevent voucher reuse.</div></div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question"><span>What are IFR Points?</span><span class="faq-icon">+</span></button>
+        <div class="faq-answer"><div class="faq-answer-inner">IFR Points are reward points earned through real actions in the IFR ecosystem &mdash; such as setting up your wallet, importing the IFR token, or completing the lock guide. Once you reach 100 points, you receive a one-time discount voucher for the FeeRouter that reduces or eliminates the protocol fee on a single swap.<br><br>Important: IFR Points are NOT a token. They are not transferable, have no trading value, and cannot be sold or exchanged. Points exist solely as an off-chain loyalty mechanism to reward genuine engagement. Each voucher is EIP-712 signed, single-use, and tied to your wallet address. Daily earning limits and anti-sybil measures prevent abuse.</div></div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question"><span>What is the Creator Gateway?</span><span class="faq-icon">+</span></button>
+        <div class="faq-answer"><div class="faq-answer-inner">The Creator Gateway is an open-source bridge for content creators. It enables YouTube creators to make their premium content accessible to both YouTube members and IFR token lockers simultaneously &mdash; using Hybrid Model B (OR logic). If a user is either a YouTube member or has IFR locked, they get access.<br><br>Creators also earn PartnerVault rewards for every fan who locks IFR for their content. The gateway handles YouTube OAuth, JWT authentication, and entitlement verification. It is fully self-hostable via Docker and requires no blockchain knowledge from the creator &mdash; just a YouTube channel and a partner registration.</div></div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question"><span>How secure is the protocol?</span><span class="faq-icon">+</span></button>
+        <div class="faq-answer"><div class="faq-answer-inner">The IFR protocol has been tested and verified through multiple layers of security analysis. Slither static analysis found 0 high or critical findings across all 9 contracts. An independent ChatGPT audit scored 7 out of 7 areas as PASS. There are 276 automated smart contract tests covering 99% of all code statements and 85% of all code branches.<br><br>All contracts use battle-tested OpenZeppelin v5 base contracts. The governance timelock enforces a 48-hour delay on all parameter changes. A Guardian role can emergency-cancel suspicious proposals. A professional third-party audit (Code4rena, Sherlock, or Cyfrin) is planned before mainnet launch.</div></div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question"><span>What happens at mainnet launch?</span><span class="faq-icon">+</span></button>
+        <div class="faq-answer"><div class="faq-answer-inner">Before mainnet deployment, several critical steps must be completed: A professional third-party security audit by an established firm (Code4rena, Sherlock, or Cyfrin). A Gnosis Safe 4-of-7 multisig will be set up for treasury management. All contract parameters will be finalized and governance-approved. The deployment itself includes all 10 contracts, Uniswap V2 LP creation, Etherscan verification, and ownership transfer to the Governance timelock.<br><br>The Sepolia testnet deployment will remain active in parallel so developers and partners can continue testing. A public announcement will precede the mainnet launch. LP tokens will be locked or burned to prevent rug pulls. The full checklist is publicly available in the project documentation.</div></div>
+      </div>
+
     </div>
   </div>
 </section>

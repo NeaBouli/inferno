@@ -88,7 +88,8 @@ inferno/
 │   ├── COVERAGE_REPORT.md             Solidity Coverage Report (99% Stmts, 85% Branch, 97% Funcs, 99% Lines)
 │   ├── BENEFITS_NETWORK_TEST.md       Benefits Network E2E Test Guide (Test-Flow, API, Lock Tiers, Fehler)
 │   ├── PROJECT-SUMMARY.md             Komplett-Uebersicht (10 Contracts, 330 Tests, 7 Apps, CI/CD)
-│   └── wiki/                          [x] 9 HTML-Seiten (Contracts, Tokenomics, Lock, Governance, Security, Deploy, Integration, AI Copilot)
+│   ├── CONTRIBUTING.md                Contributing Guide v1.0 (Bug Reports, Code Standards, Git Konventionen)
+│   └── wiki/                          [x] 10 HTML-Seiten (Contracts, Tokenomics, Lock, Governance, Security, Deploy, Integration, AI Copilot, FAQ)
 ├── STATUS-REPORT.md                    Vollstaendiger Statusbericht
 └── README.md                           Projekt-Uebersicht
 ```
@@ -198,6 +199,9 @@ inferno/
 | 2026-02-26 | Benefits Network CI Workflow: .github/workflows/benefits-network.yml (test-backend + test-frontend) |
 | 2026-02-26 | Creator Gateway access.test.ts: 6 Access-Route Tests (auth 401, granted/denied, YouTube detect, no-wallet) — 26 Tests gesamt |
 | 2026-02-26 | gov-queue Task Fix: queryFilter → getProposal() Loop (zeigt Status PENDING/READY/EXECUTED/CANCELLED) |
+| 2026-02-26 | Landing Page FAQ: 5 neue Eintraege (FeeRouter, Points, Creator Gateway, Security, Mainnet Launch) — 24 FAQ gesamt |
+| 2026-02-26 | Wiki FAQ Seite: docs/wiki/faq.html — 30 Q&A in 6 Sektionen, Sidebar in allen 10 Wiki-Seiten aktualisiert |
+| 2026-02-26 | CONTRIBUTING.md: Contributing Guide v1.0 (Bug Reports, Code Standards, Git Konventionen, Review Prozess) |
 | 2026-02-26 | Governance Constitution v1.0 erweitert (Artikel 1-7, FeeRouterV1 Parameter, Multisig Struktur, Verbotene Aktionen) |
 | 2026-02-26 | Business Onboarding SOP erweitert (6 Schritte, Hosted + Self-Hosted, Tier-Konfiguration, Kassenpersonal Training, FAQ) |
 | 2026-02-26 | YouTube Integration Guide: Hybrid Model B, Creator Gateway Setup, Entitlement Config, Monetarisierung, Roadmap |

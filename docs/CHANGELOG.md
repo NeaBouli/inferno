@@ -13,6 +13,9 @@ All notable changes to the Inferno ($IFR) project.
 - MAINNET_CHECKLIST.md v1.1: FeeRouter Deploy-Schritt, Sepolia Status Summary, korrekte Test-Zahlen
 - Benefits Network CI: `.github/workflows/benefits-network.yml` (test-backend + test-frontend)
 - COVERAGE_REPORT.md: vollstaendig neu mit aktuellen Coverage-Werten
+- Landing Page FAQ: 5 neue Eintraege (FeeRouter, Points, Creator Gateway, Security, Mainnet Launch)
+- Wiki FAQ Seite: `docs/wiki/faq.html` — 30 Q&A in 6 Sektionen (Allgemein, Token/Lock, Partner, FeeRouter/Points, Governance, Security)
+- CONTRIBUTING.md: Contributing Guide v1.0 (Bug Reports, Code Standards, Git Konventionen, Review Prozess)
 
 ### Changed
 - Coverage aktualisiert: 95%/81% → 99%/85% (ueber 5 Dateien)

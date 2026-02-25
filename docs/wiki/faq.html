@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FAQ &mdash; Inferno ($IFR) Documentation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    /* ============================================================
+       Inferno Wiki — Shared Styles (copy into every wiki page)
+       ============================================================ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #0a0a0a;
+      --card:     #111113;
+      --border:   #222225;
+      --text:     #e8e8ed;
+      --muted:    #8a8a96;
+      --accent:   #ff4500;
+      --green:    #22c55e;
+      --sidebar-w: 240px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    /* ---------- Layout (CSS Grid) ---------- */
+    .layout {
+      display: grid;
+      grid-template-columns: var(--sidebar-w) 1fr;
+      min-height: 100vh;
+    }
+
+    /* ---------- Sidebar ---------- */
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: var(--sidebar-w);
+      height: 100vh;
+      background: var(--card);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      padding: 24px 0;
+      overflow-y: auto;
+      z-index: 100;
+      transition: transform 0.3s ease;
+    }
+
+    .sidebar-logo {
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: 3px;
+      color: var(--accent);
+      padding: 0 24px 4px;
+      text-decoration: none;
+      display: block;
+    }
+
+    .sidebar-subtitle {
+      font-size: 12px;
+      color: var(--muted);
+      padding: 0 24px 24px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .sidebar-nav {
+      list-style: none;
+      padding: 16px 0;
+      flex: 1;
+    }
+
+    .sidebar-nav li {}
+
+    .sidebar-nav a {
+      display: block;
+      padding: 10px 24px;
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      transition: color 0.2s, background 0.2s, border-left 0.2s;
+      border-left: 3px solid transparent;
+    }
+
+    .sidebar-nav a:hover {
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .sidebar-nav a.active {
+      color: var(--accent);
+      border-left-color: var(--accent);
+      background: rgba(255, 69, 0, 0.06);
+    }
+
+    .sidebar-nav .nav-divider {
+      height: 1px;
+      background: var(--border);
+      margin: 12px 24px;
+    }
+
+    .sidebar-nav .nav-back a {
+      font-size: 13px;
+      color: var(--muted);
+      opacity: 0.7;
+    }
+
+    .sidebar-nav .nav-back a:hover {
+      opacity: 1;
+      color: var(--text);
+    }
+
+    /* ---------- Hamburger (mobile) ---------- */
+    .hamburger {
+      display: none;
+      position: fixed;
+      top: 16px;
+      left: 16px;
+      z-index: 200;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 12px;
+      cursor: pointer;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .hamburger span {
+      display: block;
+      width: 22px;
+      height: 2px;
+      background: var(--text);
+      border-radius: 2px;
+      transition: transform 0.3s, opacity 0.3s;
+    }
+
+    .hamburger.open span:nth-child(1) { transform: rotate(45deg) translate(5px, 5px); }
+    .hamburger.open span:nth-child(2) { opacity: 0; }
+    .hamburger.open span:nth-child(3) { transform: rotate(-45deg) translate(5px, -5px); }
+
+    .sidebar-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.6);
+      z-index: 90;
+    }
+
+    /* ---------- Main content ---------- */
+    .main {
+      grid-column: 2;
+      padding: 48px 56px;
+      max-width: 960px;
+    }
+
+    .main h1 {
+      font-size: 32px;
+      font-weight: 800;
+      margin-bottom: 8px;
+      color: var(--text);
+    }
+
+    .main h1 .accent {
+      color: var(--accent);
+    }
+
+    .main h2 {
+      font-size: 22px;
+      font-weight: 700;
+      margin: 40px 0 16px;
+      color: var(--text);
+    }
+
+    .main h3 {
+      font-size: 18px;
+      font-weight: 600;
+      margin: 32px 0 12px;
+      color: var(--text);
+    }
+
+    .main p {
+      color: var(--muted);
+      margin-bottom: 16px;
+      font-size: 15px;
+      max-width: 680px;
+    }
+
+    .main a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    .main a:hover {
+      text-decoration: underline;
+    }
+
+    .subtitle {
+      font-size: 16px;
+      color: var(--muted);
+      margin-bottom: 32px;
+    }
+
+    /* ---------- Code blocks ---------- */
+    pre {
+      background: #1a1a1d;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px 20px;
+      overflow-x: auto;
+      font-size: 13px;
+      line-height: 1.7;
+      margin: 16px 0;
+      color: var(--text);
+    }
+
+    code {
+      font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+      font-size: 13px;
+      color: var(--text);
+    }
+
+    p code, li code, td code {
+      background: rgba(255, 255, 255, 0.06);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 13px;
+    }
+
+    /* ---------- Tables ---------- */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0;
+      font-size: 14px;
+    }
+
+    th, td {
+      text-align: left;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    th {
+      color: var(--muted);
+      font-weight: 600;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    td { color: var(--text); }
+
+    tr:hover td { background: rgba(255, 255, 255, 0.02); }
+
+    /* ---------- Lists ---------- */
+    .main ul, .main ol {
+      padding-left: 24px;
+      margin-bottom: 16px;
+    }
+
+    .main li {
+      color: var(--muted);
+      font-size: 14px;
+      margin-bottom: 6px;
+    }
+
+    /* ---------- Callout ---------- */
+    .callout {
+      background: rgba(255, 69, 0, 0.06);
+      border-left: 3px solid var(--accent);
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 20px 0;
+    }
+
+    .callout p {
+      color: var(--text);
+      margin: 0;
+      font-size: 14px;
+    }
+
+    .callout-green {
+      background: rgba(34, 197, 94, 0.06);
+      border-left-color: var(--green);
+    }
+
+    /* ---------- FAQ specific ---------- */
+    .faq-section {
+      margin-bottom: 12px;
+    }
+
+    .faq-item {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      margin-bottom: 8px;
+      overflow: hidden;
+    }
+
+    .faq-q {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+      padding: 14px 20px;
+      background: var(--card);
+      border: none;
+      color: var(--text);
+      font-size: 14px;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      text-align: left;
+      transition: background 0.2s;
+    }
+
+    .faq-q:hover {
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    .faq-q .icon {
+      font-size: 18px;
+      color: var(--muted);
+      transition: transform 0.3s;
+      flex-shrink: 0;
+      margin-left: 16px;
+    }
+
+    .faq-q.open .icon {
+      transform: rotate(45deg);
+    }
+
+    .faq-a {
+      display: none;
+      padding: 0 20px 16px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.7;
+      background: var(--card);
+    }
+
+    .faq-a.open {
+      display: block;
+    }
+
+    /* ---------- Address ---------- */
+    .address {
+      font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+      font-size: 12px;
+      color: var(--muted);
+      word-break: break-all;
+    }
+
+    /* ---------- Footer ---------- */
+    .wiki-footer {
+      margin-top: 64px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    /* ---------- Responsive ---------- */
+    @media (max-width: 768px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        transform: translateX(-100%);
+      }
+
+      .sidebar.open {
+        transform: translateX(0);
+      }
+
+      .sidebar-overlay.open {
+        display: block;
+      }
+
+      .hamburger {
+        display: flex;
+      }
+
+      .main {
+        grid-column: 1;
+        padding: 72px 20px 40px;
+      }
+
+      table {
+        font-size: 13px;
+      }
+
+      th, td {
+        padding: 10px 12px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .main h1 {
+        font-size: 26px;
+      }
+    }
+    /* ============================================================
+       End Shared Styles
+       ============================================================ */
+  </style>
+  <link rel="icon" type="image/png" href="../assets/token.png">
+</head>
+<body>
+
+  <!-- Hamburger button (mobile only) -->
+  <button class="hamburger" id="hamburger" aria-label="Toggle navigation">
+    <span></span>
+    <span></span>
+    <span></span>
+  </button>
+
+  <!-- Overlay (mobile only) -->
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <div class="layout">
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <a href="index.html" class="sidebar-logo">INFERNO</a>
+      <div class="sidebar-subtitle">Documentation</div>
+      <ul class="sidebar-nav">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="contracts.html">Smart Contracts</a></li>
+        <li><a href="tokenomics.html">Tokenomics</a></li>
+        <li><a href="lock-mechanism.html">Lock Mechanism</a></li>
+        <li><a href="governance.html">Governance</a></li>
+        <li><a href="security.html">Security</a></li>
+        <li><a href="deployment.html">Deployment</a></li>
+        <li><a href="integration.html">Integration Guide</a></li>
+        <li><a href="agent.html">AI Copilot</a></li>
+        <li><a href="faq.html" class="active">FAQ</a></li>
+        <li><div class="nav-divider"></div></li>
+        <li class="nav-back"><a href="../index.html">&larr; Back to Website</a></li>
+      </ul>
+    </aside>
+
+    <!-- Main content -->
+    <main class="main">
+
+      <h1><span class="accent">FAQ</span></h1>
+      <p class="subtitle">
+        Frequently asked questions about the Inferno protocol, IFR token, locking, governance, and security.
+      </p>
+
+      <!-- ========== 1. General ========== -->
+      <h2>1. General</h2>
+
+      <div class="faq-section">
+        <div class="faq-item">
+          <button class="faq-q"><span>What is Inferno ($IFR)?</span><span class="icon">+</span></button>
+          <div class="faq-a">Inferno is a deflationary ERC-20 token on Ethereum with a fee-on-transfer mechanism. Every transfer permanently burns 2.5% and routes 1% to a pool fee receiver. The token powers a lock-to-access model where users lock IFR to gain premium features in partner products.</div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q"><span>What does deflationary mean?</span><span class="icon">+</span></button>
+          <div class="faq-a">Deflationary means the total supply decreases over time. Every IFR transfer burns 2.5% permanently &mdash; those tokens are sent to the zero address and can never be recovered. There is no mint function, so supply can only go down. Starting from 1 billion IFR, the circulating supply shrinks with every transaction.</div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q"><span>What is the difference between Lock and Staking?</span><span class="icon">+</span></button>
+          <div class="faq-a">Locking means your tokens are held in a smart contract to prove commitment &mdash; you can unlock at any time with no penalties or cooldown. There are no yield rewards for locking. Staking typically involves earning rewards over time and may have lock-up periods. IFR uses locking for access verification, not yield generation.</div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q"><span>Why 9 decimals instead of 18?</span><span class="icon">+</span></button>
+          <div class="faq-a">IFR uses 9 decimals as a deliberate design choice for the token's intended use case. This provides sufficient precision for fee calculations and lock amounts while keeping numbers more human-readable. One IFR equals 1,000,000,000 base units (1e9).</div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q"><span>Is there a presale or VC backing?</span><span class="icon">+</span></button>
+          <div class="faq-a">No. Inferno follows a Community Fair Launch Model (CFLM) &mdash; no presale, no venture capital, no seed round. All 1 billion IFR tokens are distributed at deployment: 40% to DEX liquidity, 20% to the liquidity reserve, 15% to the team (vested over 36 months with a 12-month cliff), 15% to treasury, 6% to community grants, and 4% to the partner ecosystem.</div>
+        </div>
+      </div>
+
+      <!-- ========== 2. Token & Lock ========== -->
+      <h2>2. Token &amp; Lock</h2>
+
+      <div class="faq-section">
+        <div class="faq-item">
+          <button class="faq-q"><span>How do I add IFR to MetaMask?</span><span class="icon">+</span></button>
+          <div class="faq-a">Open MetaMask, click &ldquo;Import Tokens&rdquo;, and paste the IFR contract address. Set decimals to 9. Make sure you are connected to the correct network (Sepolia for testnet, Ethereum mainnet after launch). The official contract address is published in the project documentation.</div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q"><span>How do I lock IFR tokens?</span><span class="icon">+</span></button>
+          <div class="faq-a">Call the <code>lock(amount, lockType)</code> function on the IFRLock contract. The lockType is a string tag identifying which partner product you are locking for. You can also use the Token Dashboard which provides a graphical interface for locking. Your tokens move from your wallet into the contract and can be unlocked at any time.</div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q"><span>What happens with my locked tokens?</span><span class="icon">+</span></button>
+          <div class="faq-a">Your tokens are held in the IFRLock smart contract. No one &mdash; not the team, not governance, not any admin &mdash; can access or move them. They remain yours. Partner products verify your lock on-chain via <code>isLocked(wallet, minAmount)</code> and grant access based on the result.</div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q"><span>Can I unlock at any time?</span><span class="icon">+</span></button>
+          <div class="faq-a">Yes. There is no lock-up period, no cooldown, and no penalty for unlocking. Call <code>unlock()</code> and your full locked amount returns to your wallet instantly. The IFRLock contract is fee-exempt, so no transfer fees are deducted during lock or unlock operations.</div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q"><span>What is the minimum lock amount?</span><span class="icon">+</span></button>
+          <div class="faq-a">The minimum lock amount depends on the partner product. Each partner sets their own tier requirement. Typical tiers are 500, 1,000, 5,000, or 10,000 IFR. The IFRLock contract itself has no hardcoded minimum &mdash; it accepts any non-zero amount.</div>
+        </div>
+      </div>
+
+      <!-- ========== 3. Partners & Benefits ========== -->
+      <h2>3. Partners &amp; Benefits</h2>
+
+      <div class="faq-section">
+        <div class="faq-item">
+          <button class="faq-q"><span>How does the Benefits Network work?</span><span class="icon">+</span></button>
+          <div class="faq-a">The Benefits Network connects IFR lockers with partner businesses. Users lock IFR tokens, and partner products check the lock status on-chain to grant premium access. Partners earn Creator Rewards from the PartnerVault for each locking user. It is a two-sided marketplace built on verifiable on-chain data.</div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q"><span>What are the tier requirements?</span><span class="icon">+</span></button>
+          <div class="faq-a">Each partner defines their own tiers. A typical structure might be: Basic (500 IFR), Standard (1,000 IFR), Premium (5,000 IFR), VIP (10,000 IFR). The partner calls <code>isLocked(wallet, minAmount)</code> with the tier threshold and grants features accordingly.</div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q"><span>How is the lock status verified?</span><span class="icon">+</span></button>
+          <div class="faq-a">Partners call the read-only function <code>isLocked(walletAddress, minimumAmount)</code> on the IFRLock contract. It returns true or false. This is a single on-chain call with no API keys, no user databases, and no privacy concerns. The partner never needs to store wallet addresses.</div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q"><span>How do I become a partner?</span><span class="icon">+</span></button>
+          <div class="faq-a">Partners register through the onboarding process described in the Business Onboarding documentation. After registration, a governance proposal adds the partner to the PartnerVault. Partner tiers range from Launch Partners (up to 5M IFR allocation) to Tier 3 (500K IFR). All allocations are milestone-based and vested.</div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q"><span>What are Creator Rewards?</span><span class="icon">+</span></button>
+          <div class="faq-a">When a user locks IFR for a partner's product, the partner earns a percentage of the lock amount from the Partner Ecosystem Pool (40M IFR). The reward rate is governance-controlled with hard bounds of 5&ndash;25% (policy target 10&ndash;20%). Rewards vest over 6&ndash;12 months. The system is designed to always remove more IFR from circulation than it distributes.</div>
+        </div>
+      </div>
+
+      <!-- ========== 4. FeeRouter & Points ========== -->
+      <h2>4. FeeRouter &amp; Points</h2>
+
+      <div class="faq-section">
+        <div class="faq-item">
+          <button class="faq-q"><span>What is the FeeRouter?</span><span class="icon">+</span></button>
+          <div class="faq-a">The FeeRouter is a smart contract that processes protocol fees on IFR swaps. The default fee is 0.05% (5 basis points) &mdash; significantly lower than standard DEX fees. It supports EIP-712 signed vouchers for fee discounts and has a governance-enforced hard cap of 0.25% (25 bps).</div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q"><span>What are IFR Points?</span><span class="icon">+</span></button>
+          <div class="faq-a">IFR Points are off-chain loyalty rewards earned through real actions in the ecosystem (wallet setup, token import, lock guide). At 100 points, you receive a one-time discount voucher for the FeeRouter. Points are NOT a token &mdash; they are not transferable, have no trading value, and cannot be sold.</div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q"><span>How do I earn points?</span><span class="icon">+</span></button>
+          <div class="faq-a">Points are awarded for five event types: wallet connection, token import, completing the lock guide, first lock, and referral. Each event type has a daily limit to prevent abuse. Points are tracked off-chain in the Points Backend using SIWE (Sign-In with Ethereum) authentication.</div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q"><span>What can I do with points?</span><span class="icon">+</span></button>
+          <div class="faq-a">Points can be redeemed for a one-time protocol fee discount voucher when you reach 100 points. The voucher is EIP-712 signed, tied to your wallet address, and valid for a single FeeRouter swap. There are no other current uses for points &mdash; and there are no promises of future uses.</div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q"><span>Are IFR Points a token?</span><span class="icon">+</span></button>
+          <div class="faq-a">No. IFR Points are purely off-chain data stored in a database. They exist on no blockchain, cannot be transferred between wallets, have zero monetary value, and are not tradeable. They serve one purpose: qualifying for a single-use protocol fee discount. This is intentional to avoid regulatory ambiguity.</div>
+        </div>
+      </div>
+
+      <!-- ========== 5. Governance ========== -->
+      <h2>5. Governance</h2>
+
+      <div class="faq-section">
+        <div class="faq-item">
+          <button class="faq-q"><span>How does governance work?</span><span class="icon">+</span></button>
+          <div class="faq-a">The Governance contract is a timelock governor. The owner creates proposals (encoded function calls on target contracts). Each proposal must wait the full delay period (default 48 hours) before it can be executed. This gives the community time to review and the Guardian time to cancel if needed.</div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q"><span>What is the Timelock?</span><span class="icon">+</span></button>
+          <div class="faq-a">The timelock is a mandatory waiting period between proposal creation and execution. The default delay is 48 hours, configurable between 1 hour and 30 days via self-governance (the Governance contract must propose a change to itself). This prevents instant parameter changes and gives stakeholders time to react.</div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q"><span>Who can create proposals?</span><span class="icon">+</span></button>
+          <div class="faq-a">Currently, only the Governance owner can create proposals. The governance model follows a phased approach: Phase 0 (single EOA), Phase 1&ndash;3 (multisig with increasing signers), Phase 4 (full DAO with token-weighted voting). Each phase increases decentralization while maintaining operational capability.</div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q"><span>What can be changed through governance?</span><span class="icon">+</span></button>
+          <div class="faq-a">Governance can change fee rates (sender burn, recipient burn, pool fee), fee exemptions, the pool fee receiver, guardian address, timelock delay, PartnerVault parameters (reward rate, emission cap, authorized callers), and FeeRouter parameters (protocol fee, voucher signer, fee collector). All changes require the full timelock delay.</div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q"><span>What CANNOT be changed?</span><span class="icon">+</span></button>
+          <div class="faq-a">The total supply (no mint function exists), the 9-decimal precision, the maximum fee cap (5% hardcoded), the FeeRouter fee cap (0.25% hardcoded), and the token name/symbol. These are immutable by design &mdash; no governance proposal, no admin action, and no upgrade can modify them.</div>
+        </div>
+      </div>
+
+      <!-- ========== 6. Security ========== -->
+      <h2>6. Security</h2>
+
+      <div class="faq-section">
+        <div class="faq-item">
+          <button class="faq-q"><span>Has the protocol been audited?</span><span class="icon">+</span></button>
+          <div class="faq-a">The protocol has undergone Slither static analysis (0 high/critical findings), an independent ChatGPT audit (7/7 PASS), and has 276 automated tests with 99% statement coverage. A professional third-party audit by an established firm is planned before mainnet launch.</div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q"><span>What happens if a bug is found?</span><span class="icon">+</span></button>
+          <div class="faq-a">The project has a Responsible Disclosure policy documented in SECURITY_POLICY.md. Critical bugs should be reported privately via GitHub Security Advisory. The Guardian can pause contracts and cancel governance proposals in emergencies. The patch process follows a documented 6-step procedure with severity classification.</div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q"><span>Is my lock safe?</span><span class="icon">+</span></button>
+          <div class="faq-a">The IFRLock contract uses OpenZeppelin's ReentrancyGuard and Pausable patterns. Your locked tokens cannot be accessed by any admin, team member, or governance action. The contract is fee-exempt, so the exact amount you lock is the exact amount you get back when unlocking. Only your wallet can call <code>unlock()</code>.</div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q"><span>Can the team access my tokens?</span><span class="icon">+</span></button>
+          <div class="faq-a">No. After ownership transfer to the Governance contract, the deployer has no direct control over any protocol contract. Locked tokens are controlled solely by the locking wallet. The Governance contract can change parameters (fees, exemptions) but cannot move user funds. There is no upgrade proxy &mdash; contracts are immutable once deployed.</div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q"><span>What is the Guardian?</span><span class="icon">+</span></button>
+          <div class="faq-a">The Guardian is a separate role from the owner, designed for emergency response. The Guardian can cancel any pending governance proposal before execution and can pause contracts via the Pausable pattern. The Guardian cannot create proposals, execute proposals, or access user funds. It is a safety mechanism, not an admin backdoor.</div>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <footer class="wiki-footer">
+        Inferno ($IFR) &mdash; Community Fair Launch Model &mdash; Documentation v1.0
+      </footer>
+
+    </main>
+  </div>
+
+  <!-- FAQ toggle script -->
+  <script>
+    (function () {
+      var questions = document.querySelectorAll('.faq-q');
+      questions.forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          var answer = btn.nextElementSibling;
+          var isOpen = btn.classList.toggle('open');
+          answer.classList.toggle('open', isOpen);
+          btn.querySelector('.icon').textContent = isOpen ? '\u2212' : '+';
+        });
+      });
+    })();
+  </script>
+
+  <!-- Mobile sidebar toggle script -->
+  <script>
+    (function () {
+      var hamburger = document.getElementById('hamburger');
+      var sidebar = document.getElementById('sidebar');
+      var overlay = document.getElementById('sidebarOverlay');
+
+      function toggleSidebar() {
+        var isOpen = sidebar.classList.toggle('open');
+        hamburger.classList.toggle('open', isOpen);
+        overlay.classList.toggle('open', isOpen);
+        document.body.style.overflow = isOpen ? 'hidden' : '';
+      }
+
+      hamburger.addEventListener('click', toggleSidebar);
+      overlay.addEventListener('click', toggleSidebar);
+    })();
+  </script>
+
+<!-- IFR AI Copilot Widget -->
+<script>
+(function() {
+  if (window.location.hostname === 'localhost') return;
+  var iframe = document.createElement('iframe');
+  iframe.src = 'https://ifr-copilot.vercel.app';
+  iframe.id = 'ifr-copilot-widget';
+  iframe.style.cssText = 'position:fixed;bottom:24px;right:24px;width:420px;height:640px;border:none;z-index:9999;border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,0.5);display:none;';
+  document.body.appendChild(iframe);
+  var btn = document.createElement('button');
+  btn.innerHTML = '\uD83D\uDD25 AI Copilot';
+  btn.id = 'ifr-copilot-btn';
+  btn.style.cssText = 'position:fixed;bottom:24px;right:24px;background:#C0392B;color:#fff;border:none;padding:12px 20px;border-radius:50px;font-size:14px;font-weight:bold;cursor:pointer;z-index:10000;box-shadow:0 4px 16px rgba(192,57,43,0.4);transition:transform 0.2s;';
+  btn.onmouseover = function() { btn.style.transform = 'scale(1.05)'; };
+  btn.onmouseout = function() { btn.style.transform = 'scale(1)'; };
+  btn.onclick = function() {
+    var open = iframe.style.display === 'block';
+    iframe.style.display = open ? 'none' : 'block';
+    btn.innerHTML = open ? '\uD83D\uDD25 AI Copilot' : '\u2715 Close';
+    btn.style.bottom = open ? '24px' : '680px';
+  };
+  document.body.appendChild(btn);
+})();
+</script>
+
+</body>
+</html>
