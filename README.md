@@ -113,6 +113,20 @@ Embedded chat widget with RAG knowledge base — helps users, partners, and deve
 
 **Start:** `cd apps/ai-copilot && npm install && cp .env.example .env && npm run dev` → http://localhost:5175
 
+## Points Backend
+
+SIWE authentication, points tracking, and EIP-712 signed voucher issuance for protocol fee discounts.
+
+| Component | Path | Stack |
+|-----------|------|-------|
+| Backend | `apps/points-backend/` | Express + Prisma + SQLite + ethers v5 + siwe + jose |
+
+**Endpoints:** `/auth/siwe/*` (SIWE auth) · `/points/*` (events + balance) · `/voucher/issue` (EIP-712 voucher)
+
+**Anti-Sybil:** Rate limiting per IP + per wallet + global daily caps.
+
+**Start:** `cd apps/points-backend && npm install && npx prisma migrate dev --name init && npm run dev` → http://localhost:3004
+
 ## Documentation
 
 - [Landing Page](https://neabouli.github.io/inferno/)
