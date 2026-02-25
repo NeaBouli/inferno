@@ -477,6 +477,7 @@
                 <li><a href="#governance">Governance <span class="toc-path">contracts/governance/Governance.sol</span></a></li>
                 <li><a href="#ifr-lock">IFRLock <span class="toc-path">contracts/lock/IFRLock.sol</span></a></li>
                 <li><a href="#partner-vault">PartnerVault <span class="toc-path">contracts/partner/PartnerVault.sol</span></a></li>
+                <li><a href="#fee-router">FeeRouterV1 <span class="toc-path">contracts/FeeRouterV1.sol</span></a></li>
                 <li><a href="#lp-pair">LP Pair (IFR/WETH) <span class="toc-path">Uniswap V2 Factory</span></a></li>
             </ol>
         </div>
@@ -1884,7 +1885,69 @@ console.<span class="function">log</span>(<span class="string">"Since:"</span>, 
         </div>
 
         <!-- ════════════════════════════════════════════════════ -->
-        <!-- 9. LP Pair                                            -->
+        <!-- 9. FeeRouterV1                                        -->
+        <!-- ════════════════════════════════════════════════════ -->
+        <div class="contract-section" id="fee-router">
+            <div class="contract-header">
+                <h2>FeeRouterV1</h2>
+                <span class="contract-badge">165 LOC</span>
+            </div>
+            <div class="contract-path">contracts/FeeRouterV1.sol</div>
+
+            <p>Handles protocol-level fees on IFR swaps. Accepts optional EIP-712
+            discount vouchers issued by the Points Backend.</p>
+
+            <h3>Deployment (Sepolia)</h3>
+            <p><code>0x499289C8Ef49769F4FcFF3ca86D4BD7b55B49aa4</code>
+            &mdash; <a href="https://sepolia.etherscan.io/address/0x499289C8Ef49769F4FcFF3ca86D4BD7b55B49aa4" target="_blank" style="color:#ff4500;">Etherscan</a></p>
+
+            <h3>Key Parameters</h3>
+            <table>
+                <thead><tr><th>Parameter</th><th>Value</th><th>Governance</th></tr></thead>
+                <tbody>
+                    <tr><td><code>protocolFeeBps</code></td><td>5 (0.05%)</td><td><code>setFeeBps()</code> &mdash; max 25</td></tr>
+                    <tr><td><code>FEE_CAP_BPS</code></td><td>25 (0.25%)</td><td>Hard-coded, immutable</td></tr>
+                    <tr><td><code>voucherSigner</code></td><td>Points Backend Wallet</td><td><code>setVoucherSigner()</code></td></tr>
+                    <tr><td><code>paused</code></td><td>false</td><td><code>setPaused()</code></td></tr>
+                </tbody>
+            </table>
+
+            <h3>Core Functions</h3>
+            <table>
+                <thead><tr><th>Function</th><th>Description</th></tr></thead>
+                <tbody>
+                    <tr><td><code>swapWithFee(adapter, data, voucher, sig, useVoucher)</code></td><td>Swap with optional discount</td></tr>
+                    <tr><td><code>isVoucherValid(voucher, sig)</code></td><td>Off-chain voucher check</td></tr>
+                    <tr><td><code>setFeeBps(uint16)</code></td><td>Change protocol fee (Governance)</td></tr>
+                    <tr><td><code>setAdapter(address, bool)</code></td><td>Whitelist adapter (Governance)</td></tr>
+                    <tr><td><code>setVoucherSigner(address)</code></td><td>Rotate signer (Governance)</td></tr>
+                    <tr><td><code>setPaused(bool)</code></td><td>Emergency pause (Governance)</td></tr>
+                </tbody>
+            </table>
+
+            <h3>EIP-712 Voucher Struct</h3>
+<pre>DiscountVoucher {
+  address user
+  uint16  discountBps
+  uint32  maxUses
+  uint64  expiry
+  uint256 nonce
+}</pre>
+
+            <h3>Key Design Points</h3>
+            <ul>
+                <li><strong>Replay protection:</strong> <code>usedNonces[user][nonce] = true</code> after voucher use</li>
+                <li><strong>Fee cap:</strong> <code>FEE_CAP_BPS = 25</code> is immutable &mdash; governance cannot exceed 0.25%</li>
+                <li><strong>Adapter whitelist:</strong> only governance-approved adapters can receive swap calls</li>
+                <li><strong>Pause:</strong> governance can halt all swaps in emergency</li>
+                <li>Owned by Governance timelock</li>
+            </ul>
+        </div>
+
+        <div class="section-divider"></div>
+
+        <!-- ════════════════════════════════════════════════════ -->
+        <!-- 10. LP Pair                                           -->
         <!-- ════════════════════════════════════════════════════ -->
         <div class="contract-section" id="lp-pair">
             <div class="contract-header">

@@ -864,6 +864,46 @@
         </p>
       </div>
 
+      <!-- ═══════════════════════════════════════════════════ -->
+      <!--  FeeRouter & Points Backend — Threat Model          -->
+      <!-- ═══════════════════════════════════════════════════ -->
+
+      <h2 id="feerouter-security">FeeRouter &amp; Points Backend &mdash; Threat Model</h2>
+
+      <h3>FeeRouter Threats</h3>
+      <table>
+        <thead><tr><th>Attack</th><th>Mitigation</th></tr></thead>
+        <tbody>
+          <tr><td>Voucher Replay</td><td><code>usedNonces[wallet][nonce] = true</code> (on-chain)</td></tr>
+          <tr><td>Expired Voucher</td><td><code>block.timestamp &gt; expiry</code> check</td></tr>
+          <tr><td>Falscher Signer</td><td><code>ECDSA.recover == voucherSigner</code></td></tr>
+          <tr><td>Discount &gt; Fee</td><td>Clamp: <code>max(fee - discount, 0)</code></td></tr>
+          <tr><td>Arbitrary Adapter</td><td><code>whitelistedAdapters</code> mapping</td></tr>
+          <tr><td>Signer kompromittiert</td><td><code>pause()</code> + <code>setVoucherSigner()</code> via Governance</td></tr>
+          <tr><td>Fee ueber Cap</td><td><code>FEE_CAP_BPS = 25</code> hard-coded</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Points Backend Threats</h3>
+      <table>
+        <thead><tr><th>Attack</th><th>Mitigation</th></tr></thead>
+        <tbody>
+          <tr><td>Bot farmt Punkte</td><td>Daily limits + rate limiting + SIWE</td></tr>
+          <tr><td>Voucher farming</td><td>1 Voucher/Wallet/Tag + Expiry 7 Tage</td></tr>
+          <tr><td>SIWE Replay</td><td>Nonce pro Session, einmalig</td></tr>
+          <tr><td>JWT Faelschung</td><td>JWT_SECRET server-only, nie exposed</td></tr>
+          <tr><td>Sybil Wallets</td><td>Optional: min IFR Lock als Skin-in-game</td></tr>
+        </tbody>
+      </table>
+
+      <div class="callout">
+        <p>
+          <strong>Important:</strong> IFR Points are not a token &mdash;
+          no transfer value, no tradability, no monetary promise.
+          They only reduce the protocol fee on a single swap.
+        </p>
+      </div>
+
       <!-- Footer -->
       <footer class="wiki-footer">
         Inferno ($IFR) &mdash; Community Fair Launch Model &mdash; Documentation v1.0
