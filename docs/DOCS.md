@@ -72,6 +72,7 @@ inferno/
 │   ├── TESTNET_GUIDE.md               Sepolia E2E Guide (Lock, Benefits Network, Governance, PartnerVault, FeeRouter)
 │   ├── CHATGPT_AUDIT_PROMPT_V2.md    Independent Audit Checklist (7 Pruefbereiche A-G)
 │   ├── E2E_FLOW.md                    Points → Voucher → FeeRouter End-to-End Flow
+│   ├── YOUTUBE_INTEGRATION.md         YouTube × IFR Hybrid Model B, Creator Gateway, Entitlement Config
 │   ├── PATCH-GUIDELINES.md             Patch-Richtlinien
 │   ├── PROJECT-SUMMARY.md             Projektzusammenfassung
 │   └── wiki/                          [x] 9 HTML-Seiten (Contracts, Tokenomics, Lock, Governance, Security, Deploy, Integration, AI Copilot)
@@ -164,6 +165,11 @@ inferno/
 
 | Datum | Aenderung |
 |-------|-----------|
+| 2026-02-26 | Governance Constitution v1.0 erweitert (Artikel 1-7, FeeRouterV1 Parameter, Multisig Struktur, Verbotene Aktionen) |
+| 2026-02-26 | Business Onboarding SOP erweitert (6 Schritte, Hosted + Self-Hosted, Tier-Konfiguration, Kassenpersonal Training, FAQ) |
+| 2026-02-26 | YouTube Integration Guide: Hybrid Model B, Creator Gateway Setup, Entitlement Config, Monetarisierung, Roadmap |
+| 2026-02-26 | Lock-Mechanism Wiki: Lock Economics, Creator Rewards Mechanismus, isLocked() Verification, Anti-Gaming Sektion |
+| 2026-02-26 | AI Copilot Deploy Guide korrigiert: Two-App Approach (Vercel Frontend + Railway Backend) |
 | 2026-02-25 | FeeRouterV1: EIP-712 Voucher, Protocol Fee Routing, Whitelisted Adapters, Pause, 13 Tests, Sepolia deployed + verified |
 | 2026-02-25 | Points Backend: SIWE Auth, Points Events, EIP-712 Voucher Issuance, Anti-Sybil Rate Limiting, 20 Tests |
 | 2026-02-24 | IFR AI Copilot: React 18 + Vite + TS + Tailwind, Express API Proxy, Claude Haiku 4.5, 3 Modi (Customer/Partner/Developer), RAG Knowledge Base, Safety Guards |
