@@ -2,6 +2,7 @@ require("@nomiclabs/hardhat-ethers");
 require("@nomiclabs/hardhat-waffle");
 require("@nomicfoundation/hardhat-verify");
 require("dotenv").config();
+require("./tasks/admin");
 
 /** @type import('hardhat/config').HardhatUserConfig */
 module.exports = {

@@ -1,0 +1,9 @@
+version: '3.8'
+services:
+  creator-gateway:
+    build: .
+    ports:
+      - "3005:3005"
+    env_file:
+      - .env
+    restart: unless-stopped

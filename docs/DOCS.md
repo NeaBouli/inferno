@@ -44,11 +44,14 @@ inferno/
 │   ├── deploy-lock.js                [x] IFRLock Deploy + Governance Proposal
 │   ├── test-lock.js                  [x] IFRLock Live Test (Lock/Unlock/isLocked)
 │   └── deploy-feerouter.js           [x] FeeRouterV1 Deploy + Verify
+├── tasks/
+│   └── admin.js                       [x] Hardhat CLI Tasks (lock-check, vault-status, feerouter-status, token-stats, gov-queue)
 ├── apps/
 │   ├── dashboard/                      [x] React + Vite Frontend (Phase 1 + Phase 2)
 │   ├── governance-dashboard/          [x] React + Vite + TS + Tailwind (Overview, Partners, Timelock, Calldata)
 │   ├── ai-copilot/                   [x] React + Vite + TS + Tailwind + Express (3 Modi, RAG, Safety Guards)
 │   ├── points-backend/               [x] Express + Prisma + SQLite + siwe + jose (SIWE Auth, Points, EIP-712 Voucher, 20 Tests)
+│   ├── creator-gateway/              [x] Express + ethers v5 + googleapis + JWT (YouTube x IFR Lock Bridge, Port 3005)
 │   └── benefits-network/
 │       ├── backend/                   [x] Express + Prisma + SQLite (8 Tests)
 │       └── frontend/                  [x] Next.js 14 + Tailwind + wagmi v2 (PWA)
@@ -75,6 +78,7 @@ inferno/
 │   ├── YOUTUBE_INTEGRATION.md         YouTube × IFR Hybrid Model B, Creator Gateway, Entitlement Config
 │   ├── SECURITY_POLICY.md             Responsible Disclosure, Bug Bounty, Scope, Known Design Decisions
 │   ├── TOKENOMICS_MODEL.md            Deflationskurve, Allocation, PartnerVault Emission, Lock Economics, FeeRouter Fee
+│   ├── PARTNER_REWARDS_SPEC.md        Reward-Formel, Vesting, Anti-Gaming, Partner-Typen (A/B/C), Onboarding
 │   ├── PATCH-GUIDELINES.md             Patch-Richtlinien
 │   ├── PROJECT-SUMMARY.md             Projektzusammenfassung
 │   └── wiki/                          [x] 9 HTML-Seiten (Contracts, Tokenomics, Lock, Governance, Security, Deploy, Integration, AI Copilot)
@@ -171,6 +175,11 @@ inferno/
 | 2026-02-26 | Business Onboarding SOP erweitert (6 Schritte, Hosted + Self-Hosted, Tier-Konfiguration, Kassenpersonal Training, FAQ) |
 | 2026-02-26 | YouTube Integration Guide: Hybrid Model B, Creator Gateway Setup, Entitlement Config, Monetarisierung, Roadmap |
 | 2026-02-26 | Lock-Mechanism Wiki: Lock Economics, Creator Rewards Mechanismus, isLocked() Verification, Anti-Gaming Sektion |
+| 2026-02-26 | Creator Gateway App: Express + ethers v5 + googleapis + JWT, YouTube x IFR Lock Bridge (14 files, Port 3005) |
+| 2026-02-26 | Governance Wiki: Phase 4 DAO Roadmap (Token-Voting, Quorum, Milestones) |
+| 2026-02-26 | Landing Page: Partner Directory Sektion (3 Placeholder-Slots: Business, Creator, Developer) |
+| 2026-02-26 | Partner Rewards Spec: Reward-Formel, Vesting, Anti-Gaming, 3 Partner-Typen, Onboarding Flow |
+| 2026-02-26 | Hardhat Admin Tasks: lock-check, vault-status, feerouter-status, token-stats, gov-queue (tasks/admin.js) |
 | 2026-02-26 | Security Policy: Responsible Disclosure, Bug Bounty Framework, Scope, Known Design Decisions |
 | 2026-02-26 | Tokenomics Model: Deflationskurve, Allocation, PartnerVault Emission, Lock Economics, FeeRouter Fee |
 | 2026-02-26 | Integration Wiki: Creator Gateway, Points Backend API, FeeRouter Integration (Sektionen 15-17) |
