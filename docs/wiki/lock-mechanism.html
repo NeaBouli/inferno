@@ -914,6 +914,95 @@ await governance.propose(
   "Set IFRLock as feeExempt for correct lock/unlock accounting"
 );</code></pre>
 
+      <!-- ======================================== -->
+      <!-- 9. Lock Economics -->
+      <!-- ======================================== -->
+      <h2>9. Lock Economics</h2>
+      <p>
+        The IFR Lock mechanism is a <strong>Refundable Deposit Model</strong>, not staking.
+        Key distinctions:
+      </p>
+      <ul>
+        <li><strong>No yield / no APY:</strong> Locking IFR does not generate rewards for the locker. There is no staking, no slashing, no impermanent loss.</li>
+        <li><strong>Purpose:</strong> Locking grants tier-based access to partner products (Benefits Network, Creator content, premium features).</li>
+        <li><strong>Refundable:</strong> Users can call <code>unlock()</code> at any time to retrieve their full locked amount.</li>
+        <li><strong>Minimum lock:</strong> 1,000 IFR (Bronze Tier). Higher tiers at 2,500 / 5,000 / 10,000 IFR.</li>
+      </ul>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Tier</th><th>Minimum Lock</th><th>Typical Benefit</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Bronze</td><td>1,000 IFR</td><td>5&ndash;10% discount</td></tr>
+            <tr><td>Silver</td><td>2,500 IFR</td><td>10&ndash;15% discount</td></tr>
+            <tr><td>Gold</td><td>5,000 IFR</td><td>15&ndash;20% discount</td></tr>
+            <tr><td>Platinum</td><td>10,000 IFR</td><td>20&ndash;25% discount</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- ======================================== -->
+      <!-- 10. Lock & Creator Rewards -->
+      <!-- ======================================== -->
+      <h2>10. Lock &amp; Creator Rewards Mechanism</h2>
+      <p>
+        When a user locks IFR for a registered partner/creator, the PartnerVault records a
+        one-time reward from the 40M Partner Ecosystem Pool:
+      </p>
+      <ol>
+        <li><strong>User A</strong> locks 10,000 IFR &rarr; Gold Tier</li>
+        <li><strong>Creator B</strong> is registered with <code>rewardBps = 1500</code> (15%)</li>
+        <li>PartnerVault: <code>recordLockReward(creatorB, 10000e9, userA)</code></li>
+        <li>Creator B earns: 10,000 &times; 15% = <strong>1,500 IFR</strong> from the Partner Pool</li>
+        <li>Net deflation effect: 10,000 locked &minus; 1,500 rewarded = 8,500 IFR effectively removed from circulation</li>
+        <li>Reward vesting: 1,500 IFR over 6&ndash;12 months (milestone-based)</li>
+      </ol>
+
+      <div class="callout-green">
+        <p>
+          <strong>Important:</strong> The reward comes from the dedicated 40M Partner Pool &mdash; not from the user's locked tokens.
+          The user's full 10,000 IFR remains locked and is fully refundable via <code>unlock()</code>.
+        </p>
+      </div>
+
+      <!-- ======================================== -->
+      <!-- 11. isLocked() Verification -->
+      <!-- ======================================== -->
+      <h2>11. isLocked() Verification</h2>
+      <p>
+        Partners and businesses verify lock status with a single on-chain read call:
+      </p>
+
+<pre><code>const { ethers } = require("ethers");
+const provider = new ethers.JsonRpcProvider(RPC_URL);
+
+const ifrLock = new ethers.Contract(IFRLOCK_ADDRESS, [
+  "function isLocked(address user, uint256 minAmount) view returns (bool)"
+], provider);
+
+// Check if wallet has at least 1,000 IFR locked (9 decimals)
+const minAmount = ethers.parseUnits("1000", 9);
+const locked = await ifrLock.isLocked(walletAddress, minAmount);
+// Returns: true or false</code></pre>
+
+      <p>
+        This is a <strong>view function</strong> &mdash; no gas cost, no transaction, instant response.
+        Any frontend, backend, or smart contract can call it permissionlessly.
+      </p>
+
+      <!-- ======================================== -->
+      <!-- 12. Anti-Gaming -->
+      <!-- ======================================== -->
+      <h2>12. Anti-Gaming</h2>
+      <ul>
+        <li><strong>No flashloan attacks:</strong> Lock is persistent (stored in contract state), not per-transaction. A flashloan cannot fake a lock status because <code>isLocked()</code> reads stored balances, not transient ones.</li>
+        <li><strong>authorizedCaller pattern:</strong> Only whitelisted addresses (set via Governance) can call <code>recordLockReward()</code>. Random contracts cannot trigger rewards.</li>
+        <li><strong>Anti-double-count:</strong> <code>walletRewardClaimed[wallet][partnerId]</code> mapping ensures each wallet can only be rewarded once per partner. Re-locking after unlock does not generate a second reward.</li>
+        <li><strong>Algorithmic throttle:</strong> As more IFR is locked protocol-wide, the effective reward rate decreases automatically (1% &rarr; 50% lock ratio scales reward from <code>rewardBps</code> down to <code>MIN_REWARD_BPS</code>).</li>
+      </ul>
+
       <!-- Footer -->
       <footer class="wiki-footer">
         Inferno ($IFR) &mdash; Community Fair Launch Model &mdash; Documentation v1.0

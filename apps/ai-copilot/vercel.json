@@ -1,11 +1,9 @@
 {
   "version": 2,
-  "builds": [
-    { "src": "server/index.ts", "use": "@vercel/node" },
-    { "src": "package.json", "use": "@vercel/static-build", "config": { "distDir": "dist" } }
-  ],
-  "routes": [
-    { "src": "/api/(.*)", "dest": "server/index.ts" },
-    { "src": "/(.*)", "dest": "dist/$1" }
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "framework": "vite",
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "https://ifr-copilot-api.railway.app/api/$1" }
   ]
 }
