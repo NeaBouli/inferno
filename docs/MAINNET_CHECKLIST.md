@@ -2,6 +2,37 @@
 
 > **Status:** Pre-Mainnet | **Sepolia:** 10 Contracts deployed + verified | **Tests:** 276 Contract + 26 Creator Gateway + 20 Points + 8 Benefits = 330 Total | **Coverage:** 99% Stmts, 85% Branch
 
+## KRITISCH — Vor jedem Public Launch
+
+Diese Punkte muessen ZWINGEND vor Mainnet erledigt sein:
+
+### LP Token Lock (HOECHSTE PRIORITAET)
+- [ ] LP Tokens via Unicrypt (https://app.unicrypt.network) locken
+  - Mindest-Lock-Dauer: 12 Monate
+  - Oder: LP Tokens permanent burnen (0x000...dEaD)
+- [ ] LP Lock Transaction auf Etherscan verifizieren
+- [ ] LP Lock Beweis in TRANSPARENCY.md eintragen
+- [ ] LP Lock Link auf Landing Page + Wiki
+
+### Ownership Transfer → Governance
+- [ ] LiquidityReserve.transferOwnership(timelockAddress)
+- [ ] BuybackVault.transferOwnership(timelockAddress)
+- [ ] BurnReserve.transferOwnership(timelockAddress)
+- [ ] Alle 3 via Governance Proposals (je 48h Timelock)
+- [ ] Etherscan-Verifizierung fuer alle 3
+
+### Deployer Wallet
+- [ ] Deployer Wallet Treasury-Anteil an Governance Treasury transferieren
+- [ ] Community-Anteil an Community Multisig transferieren
+- [ ] Deployer Wallet auf Minimum reduzieren (nur Gas)
+
+### Aktueller Stand (26.02.2026)
+- 14/20 Punkte abgeschlossen (Testnet-Phase)
+- 3 kritische Mainnet-Punkte identifiziert (LP Lock, Ownership, Deployer)
+- Keine Mainnet-Deployment ohne LP Lock + Ownership Transfer
+
+---
+
 ## Sepolia Testnet — Abgeschlossen
 
 | Meilenstein | Status |
