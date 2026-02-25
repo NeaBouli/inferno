@@ -84,6 +84,7 @@ Token holdings grant future DAO voting rights.
 | Governance Dashboard | `apps/governance-dashboard/` | 5174 | React 18 + Vite + TypeScript + Tailwind + ethers v5 |
 | AI Copilot | `apps/ai-copilot/` | 5175 | React 18 + Vite + TypeScript + Tailwind + Express |
 | Points Backend | `apps/points-backend/` | 3004 | Express + Prisma + SQLite + ethers v5 + siwe + jose |
+| Creator Gateway | `apps/creator-gateway/` | 3005 | Express + ethers v5 + googleapis + JWT |
 | Benefits Network Backend | `apps/benefits-network/backend/` | 3001 | Express + Prisma + SQLite + ethers v5 |
 | Benefits Network Frontend | `apps/benefits-network/frontend/` | 3000 | Next.js 14 + Tailwind + wagmi v2 (PWA) |
 
@@ -152,6 +153,19 @@ SIWE authentication, points tracking, and EIP-712 signed voucher issuance for pr
 - [YouTube Integration Guide](docs/YOUTUBE_INTEGRATION.md) — Hybrid Model B, Creator Gateway, Entitlement Config
 - [Security Policy](docs/SECURITY_POLICY.md) — Responsible Disclosure, Bug Bounty, Scope
 - [Tokenomics Model](docs/TOKENOMICS_MODEL.md) — Deflationskurve, Emission Model, Lock Economics
+- [Partner Rewards Spec](docs/PARTNER_REWARDS_SPEC.md) — Reward-Formel, Vesting, Anti-Gaming, Partner-Typen
+
+## Development
+
+### Hardhat Admin Tasks
+
+```bash
+npx hardhat lock-check --wallet 0x... --network sepolia
+npx hardhat vault-status --network sepolia
+npx hardhat feerouter-status --network sepolia
+npx hardhat token-stats --network sepolia
+npx hardhat gov-queue --network sepolia
+```
 
 ## License
 
