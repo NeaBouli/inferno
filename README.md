@@ -144,7 +144,9 @@ SIWE authentication, points tracking, and EIP-712 signed voucher issuance for pr
 - [Whitepaper / One-Pager](docs/WHITEPAPER.md) — Projekt-Uebersicht fuer Partner & Investoren
 - [Creator Gateway Spec](docs/CREATOR_GATEWAY.md) — YouTube Hybrid Model, Docker Quickstart, Entitlement Engine
 - [SDK / Developer Quickstart](docs/SDK_QUICKSTART.md) — ethers.js, wagmi, Python, Tier System, Wallet Verification
-- [Testnet E2E Guide](docs/TESTNET_GUIDE.md) — Full Lock/Benefit/Governance Flow auf Sepolia
+- [Testnet E2E Guide](docs/TESTNET_GUIDE.md) — Full Lock/Benefit/Governance/FeeRouter Flow auf Sepolia
+- [Changelog](docs/CHANGELOG.md) — Alle Aenderungen chronologisch
+- [ChatGPT Audit Prompt](docs/CHATGPT_AUDIT_PROMPT_V2.md) — Independent Audit Checklist (7 Pruefbereiche)
 
 ## License
 

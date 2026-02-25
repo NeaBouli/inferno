@@ -72,9 +72,17 @@ export default function IFRCopilot() {
     setIsLoading(true);
 
     try {
+      // Optional: pass wallet info for points tracking
+      const walletAddress = (window as Record<string, unknown>).__IFR_WALLET_ADDRESS as string | undefined;
+      const authToken = (window as Record<string, unknown>).__IFR_AUTH_TOKEN as string | undefined;
+
+      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      if (walletAddress) headers["x-wallet-address"] = walletAddress;
+      if (authToken) headers["x-auth-token"] = authToken;
+
       const response = await fetch("/api/chat", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify({
           mode,
           messages: newMessages.map((m) => ({

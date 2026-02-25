@@ -13,6 +13,7 @@ integration on Sepolia before mainnet.
 | IFRLock | `0x0Cab0A9440643128540222acC6eF5028736675d3` | [View](https://sepolia.etherscan.io/address/0x0Cab0A9440643128540222acC6eF5028736675d3) |
 | PartnerVault | `0x5F12C0bC616e9Ca347D48C33266aA8fe98490A39` | [View](https://sepolia.etherscan.io/address/0x5F12C0bC616e9Ca347D48C33266aA8fe98490A39) |
 | Governance | `0x6050b22E4EAF3f414d1155fBaF30B868E0107017` | [View](https://sepolia.etherscan.io/address/0x6050b22E4EAF3f414d1155fBaF30B868E0107017) |
+| FeeRouterV1 | `0x499289C8Ef49769F4FcFF3ca86D4BD7b55B49aa4` | [View](https://sepolia.etherscan.io/address/0x499289C8Ef49769F4FcFF3ca86D4BD7b55B49aa4) |
 
 Network: **Sepolia Testnet** | Chain ID: **11155111** | Token Decimals: **9**
 
@@ -180,7 +181,67 @@ npx hardhat run scripts/record-lock-reward.js --network sepolia
 
 ---
 
-## Schritt 8: Full Smoke Test (automatisiert)
+## Schritt 8: FeeRouter testen
+
+### FeeRouter Contract
+- Adresse: `0x499289C8Ef49769F4FcFF3ca86D4BD7b55B49aa4`
+- Etherscan: [View](https://sepolia.etherscan.io/address/0x499289C8Ef49769F4FcFF3ca86D4BD7b55B49aa4)
+
+### Protocol Fee pruefen:
+```javascript
+const { ethers } = require("ethers");
+
+const provider = new ethers.providers.JsonRpcProvider(process.env.SEPOLIA_RPC);
+const feeRouter = new ethers.Contract(
+  "0x499289C8Ef49769F4FcFF3ca86D4BD7b55B49aa4",
+  [
+    "function protocolFeeBps() view returns (uint16)",
+    "function FEE_CAP_BPS() view returns (uint16)",
+    "function paused() view returns (bool)",
+    "function feeCollector() view returns (address)",
+    "function voucherSigner() view returns (address)",
+  ],
+  provider
+);
+
+const feeBps = await feeRouter.protocolFeeBps();
+const cap = await feeRouter.FEE_CAP_BPS();
+const isPaused = await feeRouter.paused();
+
+console.log("Protocol Fee:", feeBps.toString(), "bps (", (feeBps / 100).toFixed(2), "%)");
+console.log("Fee Cap:", cap.toString(), "bps (", (cap / 100).toFixed(2), "%)");
+console.log("Paused:", isPaused);
+```
+
+### Erwartete Werte:
+| Parameter | Wert | Bedeutung |
+|-----------|------|-----------|
+| protocolFeeBps | 5 | 0.05% Protocol Fee |
+| FEE_CAP_BPS | 25 | 0.25% Hard Cap (nicht ueberschreitbar) |
+| paused | false | Router aktiv |
+
+### EIP-712 Voucher verifizieren:
+```javascript
+// Pruefe ob ein Voucher gueltig ist (ohne ihn einzuloesen)
+const isValid = await feeRouter.isVoucherValid(
+  "0xDEINE_WALLET_ADRESSE", // user
+  1,                         // nonce
+  10,                        // discountBps (0.10%)
+  Math.floor(Date.now() / 1000) + 3600 // deadline (1h)
+);
+console.log("Voucher valid:", isValid);
+```
+
+### Governance-Aenderungen (via Calldata Generator):
+Im Governance Dashboard (`http://localhost:5174`) → Calldata Generator:
+- `FeeRouter: setFeeBps(uint16)` — Protocol Fee aendern (0-25 bps)
+- `FeeRouter: setAdapter(address, bool)` — Adapter whitelisten
+- `FeeRouter: setVoucherSigner(address)` — Voucher-Signer aendern
+- `FeeRouter: setPaused(bool)` — Notfall-Pause
+
+---
+
+## Schritt 9: Full Smoke Test (automatisiert)
 ```bash
 cd /Users/gio/Desktop/Inferno
 npx hardhat test --network sepolia --grep "smoke"

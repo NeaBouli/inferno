@@ -8,6 +8,48 @@ app.use(cors());
 app.use(express.json());
 
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
+const POINTS_BACKEND_URL = process.env.POINTS_BACKEND_URL || "http://localhost:3004";
+
+// Detect guide-completion in AI responses
+function detectGuideCompletion(userMessage: string, assistantReply: string): string | null {
+  const msg = userMessage.toLowerCase();
+  const reply = assistantReply.toLowerCase();
+
+  if (msg.includes("wallet") && (reply.includes("step") || reply.includes("done") || reply.includes("complete"))) {
+    return "guide_wallet_setup";
+  }
+  if ((msg.includes("add") || msg.includes("import")) && msg.includes("token")) {
+    return "guide_add_token";
+  }
+  if (msg.includes("lock") && reply.includes("success")) {
+    return "guide_lock";
+  }
+  if (msg.includes("business") || msg.includes("partner") || msg.includes("onboarding")) {
+    return "partner_onboarding";
+  }
+  return null;
+}
+
+// Send points event to Points Backend (fire-and-forget)
+async function recordPointsEvent(
+  walletAddress: string,
+  eventType: string,
+  authToken: string
+): Promise<void> {
+  try {
+    await fetch(`${POINTS_BACKEND_URL}/points/event`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${authToken}`,
+      },
+      body: JSON.stringify({ type: eventType }),
+    });
+  } catch (err) {
+    // Points failures are non-critical — chat continues
+    console.log("Points event failed (non-critical):", err);
+  }
+}
 
 app.post("/api/chat", async (req, res) => {
   if (!ANTHROPIC_API_KEY) {
@@ -53,6 +95,20 @@ app.post("/api/chat", async (req, res) => {
 
     const content = data.content as { text?: string }[] | undefined;
     const text = content?.[0]?.text || "Sorry, I couldn't process that.";
+
+    // Optional: record points for guide completion
+    const walletAddress = req.headers["x-wallet-address"] as string;
+    const authToken = req.headers["x-auth-token"] as string;
+    if (walletAddress && authToken) {
+      const guideEvent = detectGuideCompletion(
+        messages[messages.length - 1]?.content || "",
+        text
+      );
+      if (guideEvent) {
+        recordPointsEvent(walletAddress, guideEvent, authToken); // fire-and-forget
+      }
+    }
+
     res.json({ reply: text });
   } catch (err) {
     console.error("Anthropic API error:", err);
