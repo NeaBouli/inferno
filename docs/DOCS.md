@@ -23,7 +23,8 @@ inferno/
 │   ├── governance/Governance.sol       [x] 150 LOC, 36 Tests
 │   ├── lock/IFRLock.sol               [x] 127 LOC, 29 Tests
 │   ├── partner/PartnerVault.sol       [x] 491 LOC, 89 Tests
-│   └── mocks/                          MockToken, MockRouter, MockInfernoToken
+│   ├── FeeRouterV1.sol               [x] 165 LOC, 13 Tests
+│   └── mocks/                          MockToken, MockRouter, MockInfernoToken, MockAdapter
 ├── test/
 │   ├── InfernoToken.test.js            [x] 258 LOC
 │   ├── LiquidityReserve.test.js        [x] 283 LOC
@@ -32,7 +33,8 @@ inferno/
 │   ├── BurnReserve.test.js             [x] 212 LOC
 │   ├── Governance.test.js              [x] 320 LOC
 │   ├── IFRLock.test.js                [x] 363 LOC
-│   └── PartnerVault.test.js           [x] 480 LOC
+│   ├── PartnerVault.test.js           [x] 480 LOC
+│   └── FeeRouterV1.test.js           [x] 225 LOC
 ├── scripts/
 │   ├── deploy-testnet.js               [x] 232 LOC (9-Step CFLM Deploy)
 │   ├── create-lp.js                    [x] 4-Step LP Pairing + Router Update
@@ -40,7 +42,8 @@ inferno/
 │   ├── sepolia-smoke-test.js          [x] Full Protocol Smoke Test (11 Checks)
 │   ├── execute-proposal.js           [x] Governance Proposal Executor (Status/ETA/Execute/Verify)
 │   ├── deploy-lock.js                [x] IFRLock Deploy + Governance Proposal
-│   └── test-lock.js                  [x] IFRLock Live Test (Lock/Unlock/isLocked)
+│   ├── test-lock.js                  [x] IFRLock Live Test (Lock/Unlock/isLocked)
+│   └── deploy-feerouter.js           [x] FeeRouterV1 Deploy + Verify
 ├── apps/
 │   ├── dashboard/                      [x] React + Vite Frontend (Phase 1 + Phase 2)
 │   ├── governance-dashboard/          [x] React + Vite + TS + Tailwind (Overview, Partners, Timelock, Calldata)
@@ -130,6 +133,12 @@ inferno/
 - **Mainnet-Empfehlung:** rewardBps=1000 (10%), annualCap=4M IFR, partnerCap=100K IFR/Partner (skalierbar fuer 500-1000+ Partner)
 - **KRITISCH:** feeExempt MUSS VOR dem 40M Transfer gesetzt werden (Sepolia-Lesson: 1.4M IFR Fee-Verlust)
 
+### 9. FeeRouterV1 (`contracts/FeeRouterV1.sol`) — 165 LOC, 13 Tests
+- **Zweck:** Protocol fee routing mit EIP-712 signierte Discount-Voucher
+- **Features:** swapWithFee (adapter-basiert), DiscountVoucher (EIP-712 signiert), Replay-Protection (nonce), Whitelisted Adapters, Governance-steuerbare Fee (0-25 bps), Pause
+- **Sepolia:** protocolFeeBps=5 (0.05%), FEE_CAP_BPS=25 (0.25%), Adresse: `0x499289C8Ef49769F4FcFF3ca86D4BD7b55B49aa4`
+- **Integration:** Points Backend signiert Voucher via EIP-712, FeeRouterV1 validiert on-chain
+
 ### Entfernt
 - ~~Presale.sol~~ — Entfernt bei CFLM-Migration (kein Presale im Fair Launch Modell)
 
@@ -139,10 +148,10 @@ inferno/
 
 | Metrik | Wert |
 |--------|------|
-| Contracts | 9 (+ 3 Mocks) |
-| Solidity LOC | 1,127 |
-| Tests | 243 (alle bestanden) |
-| Test LOC | 2,177 |
+| Contracts | 10 (+ 4 Mocks) |
+| Solidity LOC | 1,292 |
+| Tests | 256 (alle bestanden) |
+| Test LOC | 2,402 |
 | Deploy Script | 232 LOC, 9 Steps |
 | Modell | CFLM (Community Fair Launch) |
 | Compiler | 0 Errors, 0 Warnings |
@@ -153,6 +162,7 @@ inferno/
 
 | Datum | Aenderung |
 |-------|-----------|
+| 2026-02-25 | FeeRouterV1: EIP-712 Voucher, Protocol Fee Routing, Whitelisted Adapters, Pause, 13 Tests, Sepolia deployed + verified |
 | 2026-02-25 | Points Backend: SIWE Auth, Points Events, EIP-712 Voucher Issuance, Anti-Sybil Rate Limiting, 20 Tests |
 | 2026-02-24 | IFR AI Copilot: React 18 + Vite + TS + Tailwind, Express API Proxy, Claude Haiku 4.5, 3 Modi (Customer/Partner/Developer), RAG Knowledge Base, Safety Guards |
 | 2026-02-24 | Testnet E2E Guide: 8-Schritt Sepolia-Walkthrough (MetaMask, Lock, Benefits Network QR-Flow, Governance Dashboard, PartnerVault Rewards) |

@@ -37,7 +37,7 @@ Inferno (IFR) is a deflationary ERC-20 utility token on Ethereum. Every transfer
 
 Team tokens: 48-month vesting, 12-month cliff. Liquidity reserve: 6-month lock.
 
-## Smart Contracts (9)
+## Smart Contracts (10)
 
 | Contract | Sepolia Address |
 |----------|----------------|
@@ -49,6 +49,7 @@ Team tokens: 48-month vesting, 12-month cliff. Liquidity reserve: 6-month lock.
 | Governance | `0x6050b22E4EAF3f414d1155fBaF30B868E0107017` |
 | IFRLock | `0x0Cab0A9440643128540222acC6eF5028736675d3` |
 | PartnerVault | `0x5F12C0bC616e9Ca347D48C33266aA8fe98490A39` |
+| FeeRouterV1 | `0x499289C8Ef49769F4FcFF3ca86D4BD7b55B49aa4` |
 | LP Pair (IFR/WETH) | `0x2252e8bBDE0E50CD372748aC233A99C08627d9c7` |
 
 ## Partner Ecosystem
@@ -70,7 +71,7 @@ Token holdings grant future DAO voting rights.
 
 ## Testing & Security
 
-- 243 unit tests across 9 contracts — all passing
+- 256 unit tests across 10 contracts — all passing
 - Slither security audit: 0 high/critical findings
 - Full Sepolia testnet deployment with verified contracts
 - Governance lifecycle tested: propose → 48h wait → execute
