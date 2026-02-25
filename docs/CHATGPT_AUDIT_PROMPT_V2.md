@@ -78,7 +78,7 @@ Pruefe ob:
 Pruefe ob folgende ALTE Adressen NIRGENDS mehr auftauchen:
 - `0x6EF0...6A36f90` (alte PartnerVault v1)
 - `0xA4A1ea...6A36f90` (alte Test-Adresse)
-- Alle "9 contracts" / "243 tests" / "8 repo" Referenzen entfernt
+- Alle "9 contracts" / "256 tests" / "243 tests" / "8 repo" Referenzen entfernt
 
 ### G) Apps-Sektion
 Pruefe ob alle Apps korrekt dokumentiert sind:
