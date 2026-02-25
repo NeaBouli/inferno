@@ -14,6 +14,8 @@ interface Stats {
   totalClaimed: BigNumber;
   ifrLockAddr: string;
   partnerPool: BigNumber;
+  feeRouterBps: number;
+  feeRouterPaused: boolean;
 }
 
 function ProgressBar({ value, max, label, color }: { value: BigNumber; max: BigNumber; label: string; color: string }) {
@@ -54,6 +56,8 @@ export default function Overview({ contracts }: { contracts: Contracts }) {
           totalClaimed,
           ifrLockAddr,
           partnerPool,
+          feeRouterBps,
+          feeRouterPaused,
         ] = await Promise.all([
           contracts.token.totalSupply(),
           contracts.ifrLock.totalLocked(),
@@ -65,6 +69,8 @@ export default function Overview({ contracts }: { contracts: Contracts }) {
           contracts.partnerVault.totalClaimed(),
           contracts.partnerVault.ifrLock(),
           contracts.partnerVault.PARTNER_POOL(),
+          contracts.feeRouter.protocolFeeBps(),
+          contracts.feeRouter.paused(),
         ]);
         if (!cancelled) {
           setStats({
@@ -78,6 +84,8 @@ export default function Overview({ contracts }: { contracts: Contracts }) {
             totalClaimed,
             ifrLockAddr,
             partnerPool,
+            feeRouterBps: feeRouterBps,
+            feeRouterPaused: feeRouterPaused,
           });
         }
       } catch (e: unknown) {
@@ -152,6 +160,21 @@ export default function Overview({ contracts }: { contracts: Contracts }) {
           <MiniStat label="Total Allocated" value={formatIFR(stats.totalAllocated)} />
           <MiniStat label="Total Claimed" value={formatIFR(stats.totalClaimed)} />
           <MiniStat label="Annual Cap" value={formatIFR(stats.annualEmissionCap)} />
+        </div>
+      </div>
+
+      {/* FeeRouter Stats */}
+      <div className="bg-ifr-card border border-ifr-border rounded-lg p-5 space-y-3">
+        <h2 className="text-sm font-semibold text-gray-300 uppercase tracking-wide">FeeRouter</h2>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+          <MiniStat label="Protocol Fee" value={bpsToPercent(stats.feeRouterBps)} />
+          <MiniStat label="Fee Cap" value="0.25% (25 bps)" />
+          <div>
+            <div className="text-xs text-ifr-muted">Status</div>
+            <div className={`text-sm font-medium ${stats.feeRouterPaused ? "text-ifr-red" : "text-ifr-green"}`}>
+              {stats.feeRouterPaused ? "Paused" : "Active"}
+            </div>
+          </div>
         </div>
       </div>
     </div>

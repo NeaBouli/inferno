@@ -444,6 +444,7 @@
         <li><a href="security.html">Security</a></li>
         <li><a href="deployment.html">Deployment</a></li>
         <li><a href="integration.html">Integration Guide</a></li>
+        <li><a href="agent.html">AI Copilot</a></li>
         <li><div class="nav-divider"></div></li>
         <li class="nav-back"><a href="../index.html">&larr; Back to Website</a></li>
       </ul>
@@ -539,6 +540,12 @@
           <div class="card-desc">How to integrate IFR Lock into your product</div>
         </a>
 
+        <a href="agent.html" class="card">
+          <div class="card-icon">&#x1f916;</div>
+          <div class="card-title">AI Copilot</div>
+          <div class="card-desc">Embedded AI assistant, points system, fee discounts</div>
+        </a>
+
       </div>
 
       <!-- Footer -->
@@ -567,6 +574,31 @@
       overlay.addEventListener('click', toggleSidebar);
     })();
   </script>
+
+<!-- IFR AI Copilot Widget -->
+<script>
+(function() {
+  if (window.location.hostname === 'localhost') return;
+  var iframe = document.createElement('iframe');
+  iframe.src = 'https://ifr-copilot.vercel.app';
+  iframe.id = 'ifr-copilot-widget';
+  iframe.style.cssText = 'position:fixed;bottom:24px;right:24px;width:420px;height:640px;border:none;z-index:9999;border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,0.5);display:none;';
+  document.body.appendChild(iframe);
+  var btn = document.createElement('button');
+  btn.innerHTML = '\uD83D\uDD25 AI Copilot';
+  btn.id = 'ifr-copilot-btn';
+  btn.style.cssText = 'position:fixed;bottom:24px;right:24px;background:#C0392B;color:#fff;border:none;padding:12px 20px;border-radius:50px;font-size:14px;font-weight:bold;cursor:pointer;z-index:10000;box-shadow:0 4px 16px rgba(192,57,43,0.4);transition:transform 0.2s;';
+  btn.onmouseover = function() { btn.style.transform = 'scale(1.05)'; };
+  btn.onmouseout = function() { btn.style.transform = 'scale(1)'; };
+  btn.onclick = function() {
+    var open = iframe.style.display === 'block';
+    iframe.style.display = open ? 'none' : 'block';
+    btn.innerHTML = open ? '\uD83D\uDD25 AI Copilot' : '\u2715 Close';
+    btn.style.bottom = open ? '24px' : '680px';
+  };
+  document.body.appendChild(btn);
+})();
+</script>
 
 </body>
 </html>

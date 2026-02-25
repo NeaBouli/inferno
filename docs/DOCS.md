@@ -72,7 +72,7 @@ inferno/
 │   ├── TESTNET_GUIDE.md               Sepolia E2E Guide (Lock, Benefits Network, Governance, PartnerVault)
 │   ├── PATCH-GUIDELINES.md             Patch-Richtlinien
 │   ├── PROJECT-SUMMARY.md             Projektzusammenfassung
-│   └── wiki/                          [x] 8 HTML-Seiten (Contracts, Tokenomics, Lock, Governance, Security, Deploy, Integration)
+│   └── wiki/                          [x] 9 HTML-Seiten (Contracts, Tokenomics, Lock, Governance, Security, Deploy, Integration, AI Copilot)
 ├── STATUS-REPORT.md                    Vollstaendiger Statusbericht
 └── README.md                           Projekt-Uebersicht
 ```

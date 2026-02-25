@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Copilot &amp; Points &mdash; Inferno ($IFR) Documentation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    /* ============================================================
+       Inferno Wiki — Shared Styles (copy into every wiki page)
+       ============================================================ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #0a0a0a;
+      --card:     #111113;
+      --border:   #222225;
+      --text:     #e8e8ed;
+      --muted:    #8a8a96;
+      --accent:   #ff4500;
+      --green:    #22c55e;
+      --sidebar-w: 240px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    /* ---------- Layout (CSS Grid) ---------- */
+    .layout {
+      display: grid;
+      grid-template-columns: var(--sidebar-w) 1fr;
+      min-height: 100vh;
+    }
+
+    /* ---------- Sidebar ---------- */
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: var(--sidebar-w);
+      height: 100vh;
+      background: var(--card);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      padding: 24px 0;
+      overflow-y: auto;
+      z-index: 100;
+      transition: transform 0.3s ease;
+    }
+
+    .sidebar-logo {
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: 3px;
+      color: var(--accent);
+      padding: 0 24px 4px;
+      text-decoration: none;
+      display: block;
+    }
+
+    .sidebar-subtitle {
+      font-size: 12px;
+      color: var(--muted);
+      padding: 0 24px 24px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .sidebar-nav {
+      list-style: none;
+      padding: 16px 0;
+      flex: 1;
+    }
+
+    .sidebar-nav li {}
+
+    .sidebar-nav a {
+      display: block;
+      padding: 10px 24px;
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      transition: color 0.2s, background 0.2s, border-left 0.2s;
+      border-left: 3px solid transparent;
+    }
+
+    .sidebar-nav a:hover {
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .sidebar-nav a.active {
+      color: var(--accent);
+      border-left-color: var(--accent);
+      background: rgba(255, 69, 0, 0.06);
+    }
+
+    .sidebar-nav .nav-divider {
+      height: 1px;
+      background: var(--border);
+      margin: 12px 24px;
+    }
+
+    .sidebar-nav .nav-back a {
+      font-size: 13px;
+      color: var(--muted);
+      opacity: 0.7;
+    }
+
+    .sidebar-nav .nav-back a:hover {
+      opacity: 1;
+      color: var(--text);
+    }
+
+    /* ---------- Hamburger (mobile) ---------- */
+    .hamburger {
+      display: none;
+      position: fixed;
+      top: 16px;
+      left: 16px;
+      z-index: 200;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 12px;
+      cursor: pointer;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .hamburger span {
+      display: block;
+      width: 22px;
+      height: 2px;
+      background: var(--text);
+      border-radius: 2px;
+      transition: transform 0.3s, opacity 0.3s;
+    }
+
+    .hamburger.open span:nth-child(1) { transform: rotate(45deg) translate(5px, 5px); }
+    .hamburger.open span:nth-child(2) { opacity: 0; }
+    .hamburger.open span:nth-child(3) { transform: rotate(-45deg) translate(5px, -5px); }
+
+    .sidebar-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.6);
+      z-index: 90;
+    }
+
+    /* ---------- Main content ---------- */
+    .main {
+      grid-column: 2;
+      padding: 48px 56px;
+      max-width: 960px;
+    }
+
+    .main h1 {
+      font-size: 32px;
+      font-weight: 800;
+      margin-bottom: 8px;
+      color: var(--text);
+    }
+
+    .main h1 .accent {
+      color: var(--accent);
+    }
+
+    .main h2 {
+      font-size: 22px;
+      font-weight: 700;
+      margin: 40px 0 16px;
+      color: var(--text);
+    }
+
+    .main h3 {
+      font-size: 18px;
+      font-weight: 600;
+      margin: 32px 0 12px;
+      color: var(--text);
+    }
+
+    .main p {
+      color: var(--muted);
+      margin-bottom: 16px;
+      font-size: 15px;
+      max-width: 680px;
+    }
+
+    .main a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    .main a:hover {
+      text-decoration: underline;
+    }
+
+    .subtitle {
+      font-size: 16px;
+      color: var(--muted);
+      margin-bottom: 32px;
+    }
+
+    /* ---------- Code blocks ---------- */
+    pre {
+      background: #1a1a1d;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px 20px;
+      overflow-x: auto;
+      font-size: 13px;
+      line-height: 1.7;
+      margin: 16px 0;
+      color: var(--text);
+    }
+
+    code {
+      font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+      font-size: 13px;
+      color: var(--text);
+    }
+
+    p code, li code, td code {
+      background: rgba(255, 255, 255, 0.06);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 13px;
+    }
+
+    /* ---------- Tables ---------- */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0;
+      font-size: 14px;
+    }
+
+    th, td {
+      text-align: left;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    th {
+      color: var(--muted);
+      font-weight: 600;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    td { color: var(--text); }
+
+    tr:hover td { background: rgba(255, 255, 255, 0.02); }
+
+    /* ---------- Lists ---------- */
+    .main ul, .main ol {
+      padding-left: 24px;
+      margin-bottom: 16px;
+    }
+
+    .main li {
+      color: var(--muted);
+      font-size: 14px;
+      margin-bottom: 6px;
+    }
+
+    /* ---------- Callout ---------- */
+    .callout {
+      background: rgba(255, 69, 0, 0.06);
+      border-left: 3px solid var(--accent);
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 20px 0;
+    }
+
+    .callout p {
+      color: var(--text);
+      margin: 0;
+      font-size: 14px;
+    }
+
+    .callout-green {
+      background: rgba(34, 197, 94, 0.06);
+      border-left-color: var(--green);
+    }
+
+    /* ---------- Flow Diagram ---------- */
+    .flow-diagram {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      margin: 24px 0 32px;
+      padding: 24px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow-x: auto;
+    }
+
+    .flow-box {
+      background: #1a1a1d;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 18px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text);
+      text-align: center;
+      white-space: nowrap;
+    }
+
+    .flow-box.state-pending {
+      border-color: #f59e0b;
+      color: #f59e0b;
+    }
+
+    .flow-box.state-executable {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .flow-box.state-executed {
+      border-color: var(--green);
+      color: var(--green);
+    }
+
+    .flow-box.state-cancelled {
+      border-color: #ef4444;
+      color: #ef4444;
+    }
+
+    .flow-box.action {
+      background: rgba(255, 69, 0, 0.08);
+      border-color: var(--accent);
+      color: var(--text);
+    }
+
+    .flow-arrow {
+      color: var(--muted);
+      font-size: 18px;
+      font-weight: 700;
+      user-select: none;
+    }
+
+    .flow-branch {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 8px;
+      padding-top: 12px;
+      border-top: 1px dashed var(--border);
+    }
+
+    .flow-label {
+      font-size: 12px;
+      color: var(--muted);
+      font-style: italic;
+      white-space: nowrap;
+    }
+
+    /* ---------- State Legend ---------- */
+    .state-legend {
+      display: flex;
+      gap: 24px;
+      flex-wrap: wrap;
+      margin: 12px 0 24px;
+    }
+
+    .state-legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .state-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    .state-dot.pending { background: #f59e0b; }
+    .state-dot.executable { background: var(--accent); }
+    .state-dot.executed { background: var(--green); }
+    .state-dot.cancelled { background: #ef4444; }
+
+    /* ---------- Address ---------- */
+    .address {
+      font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+      font-size: 12px;
+      color: var(--muted);
+      word-break: break-all;
+    }
+
+    /* ---------- Footer ---------- */
+    .wiki-footer {
+      margin-top: 64px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    /* ---------- Responsive ---------- */
+    @media (max-width: 768px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        transform: translateX(-100%);
+      }
+
+      .sidebar.open {
+        transform: translateX(0);
+      }
+
+      .sidebar-overlay.open {
+        display: block;
+      }
+
+      .hamburger {
+        display: flex;
+      }
+
+      .main {
+        grid-column: 1;
+        padding: 72px 20px 40px;
+      }
+
+      .flow-diagram {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .flow-arrow {
+        text-align: center;
+        transform: rotate(90deg);
+      }
+
+      .flow-branch {
+        flex-direction: column;
+      }
+
+      table {
+        font-size: 13px;
+      }
+
+      th, td {
+        padding: 10px 12px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .main h1 {
+        font-size: 26px;
+      }
+
+      .state-legend {
+        flex-direction: column;
+        gap: 8px;
+      }
+    }
+    /* ============================================================
+       End Shared Styles
+       ============================================================ */
+  </style>
+  <link rel="icon" type="image/png" href="../assets/token.png">
+</head>
+<body>
+
+  <!-- Hamburger button (mobile only) -->
+  <button class="hamburger" id="hamburger" aria-label="Toggle navigation">
+    <span></span>
+    <span></span>
+    <span></span>
+  </button>
+
+  <!-- Overlay (mobile only) -->
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <div class="layout">
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <a href="index.html" class="sidebar-logo">INFERNO</a>
+      <div class="sidebar-subtitle">Documentation</div>
+      <ul class="sidebar-nav">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="contracts.html">Smart Contracts</a></li>
+        <li><a href="tokenomics.html">Tokenomics</a></li>
+        <li><a href="lock-mechanism.html">Lock Mechanism</a></li>
+        <li><a href="governance.html">Governance</a></li>
+        <li><a href="security.html">Security</a></li>
+        <li><a href="deployment.html">Deployment</a></li>
+        <li><a href="integration.html">Integration Guide</a></li>
+        <li><a href="agent.html" class="active">AI Copilot</a></li>
+        <li><div class="nav-divider"></div></li>
+        <li class="nav-back"><a href="../index.html">&larr; Back to Website</a></li>
+      </ul>
+    </aside>
+
+    <!-- Main content -->
+    <main class="main">
+
+      <h1><span class="accent">AI Copilot</span> &amp; Points</h1>
+      <p class="subtitle">
+        Embedded AI assistant and on-chain points system &mdash; contextual help for holders, partners, and developers, plus fee discounts earned through real usage.
+      </p>
+
+      <!-- ========== 1. IFR AI Copilot ========== -->
+      <h2 class="section-title">1. IFR AI Copilot</h2>
+      <p>
+        The IFR AI Copilot is an embedded AI assistant available on the Inferno website. It provides contextual, role-aware guidance to every user type &mdash; from first-time token holders to integration developers. The copilot is powered by <strong>Claude Haiku 4.5</strong> and answers exclusively from the curated <code>IFR_KNOWLEDGE</code> base.
+      </p>
+      <p>
+        The copilot appears as a floating widget in the bottom-right corner of every page. It understands the Inferno protocol, token mechanics, lock system, governance, and partner integrations &mdash; and adapts its responses based on the selected mode.
+      </p>
+
+      <div class="callout callout-green">
+        <p>
+          <strong>Always available:</strong> The AI Copilot widget is embedded on every page of the Inferno website and documentation wiki. Click the button in the bottom-right corner to open it.
+        </p>
+      </div>
+
+      <!-- ========== 2. Three Modes ========== -->
+      <h2 class="section-title">2. Three Modes</h2>
+      <p>
+        The copilot operates in three distinct modes, each tailored to a specific audience. Users can switch modes at any time within the chat interface.
+      </p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Mode</th>
+            <th>Audience</th>
+            <th>Focus Areas</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Customer</strong></td>
+            <td>IFR Holders</td>
+            <td>Wallet setup, locking IFR, tier benefits, unlock process, fee mechanics</td>
+          </tr>
+          <tr>
+            <td><strong>Partner</strong></td>
+            <td>Businesses</td>
+            <td>Benefits Network onboarding, QR-flow integration, Docker deployment, PartnerVault</td>
+          </tr>
+          <tr>
+            <td><strong>Developer</strong></td>
+            <td>Developers</td>
+            <td>SDK usage, ethers.js / wagmi integration, Python examples, PartnerVault contract API</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="callout">
+        <p>
+          <strong>Example:</strong> A holder in <em>Customer</em> mode asking "How do I lock my tokens?" gets a step-by-step wallet guide. A developer asking the same question in <em>Developer</em> mode gets the <code>IFRLock.lock()</code> function signature, ABI snippet, and ethers.js example code.
+        </p>
+      </div>
+
+      <!-- ========== 3. Safety Rules ========== -->
+      <h2 class="section-title">3. Safety Rules</h2>
+      <p>
+        The AI Copilot enforces strict safety rules to protect users from phishing, social engineering, and misinformation:
+      </p>
+
+      <ul>
+        <li><strong>Never asks for seed phrase or private key</strong> &mdash; under no circumstances will the copilot request sensitive credentials</li>
+        <li><strong>Seed phrase warning</strong> &mdash; if a user mentions or pastes anything resembling a seed phrase, the copilot immediately displays a warning and refuses to process it</li>
+        <li><strong>Source citation</strong> &mdash; every answer includes a <code>Source: ...</code> reference pointing to the specific documentation page or contract</li>
+        <li><strong>Knowledge-bound</strong> &mdash; the copilot only answers from <code>IFR_KNOWLEDGE</code>; it will not hallucinate information about features, prices, or timelines that are not in the knowledge base</li>
+        <li><strong>No financial advice</strong> &mdash; the copilot does not provide price predictions, investment advice, or trading recommendations</li>
+      </ul>
+
+      <div class="callout">
+        <p>
+          <strong>Security:</strong> The copilot runs in a sandboxed iframe with no access to the user's wallet, private keys, or browser storage. It is a read-only assistant that cannot initiate transactions.
+        </p>
+      </div>
+
+      <!-- ========== 4. Points System (IFR Points) ========== -->
+      <h2 class="section-title">4. Points System (IFR Points)</h2>
+      <p>
+        IFR Points are earned through <strong>real on-chain actions</strong>, not through chatting with the copilot. Points track genuine protocol engagement and unlock fee discounts when thresholds are reached.
+      </p>
+
+      <h3>Earning Points</h3>
+      <p>
+        Each qualifying action earns a fixed number of points, subject to daily limits to prevent abuse:
+      </p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Action</th>
+            <th>Points</th>
+            <th>Daily Limit</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>wallet_connect</code></td>
+            <td>10</td>
+            <td>1</td>
+          </tr>
+          <tr>
+            <td><code>guide_wallet_setup</code></td>
+            <td>20</td>
+            <td>1</td>
+          </tr>
+          <tr>
+            <td><code>guide_add_token</code></td>
+            <td>20</td>
+            <td>1</td>
+          </tr>
+          <tr>
+            <td><code>guide_lock</code></td>
+            <td>30</td>
+            <td>1</td>
+          </tr>
+          <tr>
+            <td><code>partner_onboarding</code></td>
+            <td>50</td>
+            <td>1</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>Discount Voucher</h3>
+      <p>
+        When a wallet accumulates <strong>100 points</strong>, a <strong>Discount Voucher</strong> is automatically issued:
+      </p>
+      <ul>
+        <li><strong>Discount:</strong> 15 bps (0.15%) reduction on the IFR Protocol Fee</li>
+        <li><strong>Validity:</strong> 7 days from issuance</li>
+        <li><strong>Usage:</strong> Single use &mdash; consumed on the next qualifying transaction</li>
+      </ul>
+
+      <div class="callout callout-green">
+        <p>
+          <strong>Example:</strong> A user connects their wallet (10 pts), completes wallet setup (20 pts), adds the IFR token (20 pts), locks IFR (30 pts), and completes partner onboarding (50 pts) = <strong>130 points</strong>. They receive a Discount Voucher after reaching 100 points.
+        </p>
+      </div>
+
+      <!-- ========== 5. Fee Discount (FeeRouter) ========== -->
+      <h2 class="section-title">5. Fee Discount (FeeRouter)</h2>
+      <p>
+        The Discount Voucher applies <strong>only</strong> to the IFR Protocol Fee. It does not affect Uniswap trading fees, gas costs, or the burn mechanism.
+      </p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Parameter</th>
+            <th>Value</th>
+            <th>Notes</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Default Protocol Fee</td>
+            <td><strong>5 bps</strong> (0.05%)</td>
+            <td>Applied on FeeRouter transactions</td>
+          </tr>
+          <tr>
+            <td>Voucher Discount</td>
+            <td><strong>up to 15 bps</strong></td>
+            <td>Fee drops to 0 when discount exceeds fee</td>
+          </tr>
+          <tr>
+            <td>Hard Cap (MAX_PROTOCOL_FEE)</td>
+            <td><strong>25 bps</strong> (0.25%)</td>
+            <td>Enforced in contract &mdash; cannot be exceeded even via governance</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="callout">
+        <p>
+          <strong>Important:</strong> The Protocol Fee (FeeRouter) is separate from the InfernoToken transfer fee (2% sender burn + 0.5% recipient burn + 1% pool fee = 3.5%). The Discount Voucher does <strong>not</strong> reduce the token transfer fee &mdash; only the Protocol Fee charged by the FeeRouter.
+        </p>
+      </div>
+
+      <!-- ========== 6. Points Are Not a Token ========== -->
+      <h2 class="section-title">6. Important: Points Are Not a Token</h2>
+      <p>
+        IFR Points are an internal tracking mechanism, not a financial instrument. This distinction is critical:
+      </p>
+
+      <ul>
+        <li><strong>Not transferable</strong> &mdash; points are bound to the wallet that earned them and cannot be sent to another address</li>
+        <li><strong>No trading value</strong> &mdash; points cannot be bought, sold, or exchanged on any marketplace or DEX</li>
+        <li><strong>No promise of future rewards</strong> &mdash; points do not represent any claim on future tokens, airdrops, or financial value</li>
+        <li><strong>Single purpose</strong> &mdash; the only utility of points is earning a Discount Voucher on the IFR Protocol Fee</li>
+      </ul>
+
+      <div class="callout">
+        <p>
+          <strong>Legal clarity:</strong> IFR Points are explicitly <strong>not</strong> a token, security, or financial product. They are a usage-tracking mechanism that grants a temporary fee discount. No secondary market, no speculative value, no tokenization.
+        </p>
+      </div>
+
+      <!-- ========== 7. Anti-Sybil Protection ========== -->
+      <h2 class="section-title">7. Anti-Sybil Protection</h2>
+      <p>
+        The points system implements multiple layers of protection against Sybil attacks and automated farming:
+      </p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Mechanism</th>
+            <th>Rule</th>
+            <th>Purpose</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Voucher limit</td>
+            <td>Max 1 voucher per wallet per day</td>
+            <td>Prevents voucher farming from a single wallet</td>
+          </tr>
+          <tr>
+            <td>Daily caps</td>
+            <td>Each event type limited to 1x per day</td>
+            <td>Prevents repeated action spam</td>
+          </tr>
+          <tr>
+            <td>Rate limiting</td>
+            <td>60 requests per minute per IP</td>
+            <td>Prevents automated bot flooding</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p>
+        Combined with the fact that points require <strong>real on-chain actions</strong> (wallet connection, token locking, partner onboarding), the cost of Sybil attacks is significantly higher than the value of the discount obtained.
+      </p>
+
+      <div class="callout callout-green">
+        <p>
+          <strong>Design principle:</strong> The points system is intentionally low-value and high-friction for attackers. A 15 bps fee discount on a single transaction is not economically viable to farm at scale, especially when each qualifying action requires on-chain gas costs and real protocol interaction.
+        </p>
+      </div>
+
+      <!-- Footer -->
+      <footer class="wiki-footer">
+        Inferno ($IFR) &mdash; Community Fair Launch Model &mdash; Documentation v1.0
+      </footer>
+
+    </main>
+  </div>
+
+  <!-- Mobile sidebar toggle script -->
+  <script>
+    (function () {
+      var hamburger = document.getElementById('hamburger');
+      var sidebar = document.getElementById('sidebar');
+      var overlay = document.getElementById('sidebarOverlay');
+
+      function toggleSidebar() {
+        var isOpen = sidebar.classList.toggle('open');
+        hamburger.classList.toggle('open', isOpen);
+        overlay.classList.toggle('open', isOpen);
+        document.body.style.overflow = isOpen ? 'hidden' : '';
+      }
+
+      hamburger.addEventListener('click', toggleSidebar);
+      overlay.addEventListener('click', toggleSidebar);
+    })();
+  </script>
+
+<!-- IFR AI Copilot Widget -->
+<script>
+(function() {
+  if (window.location.hostname === 'localhost') return;
+  var iframe = document.createElement('iframe');
+  iframe.src = 'https://ifr-copilot.vercel.app';
+  iframe.id = 'ifr-copilot-widget';
+  iframe.style.cssText = 'position:fixed;bottom:24px;right:24px;width:420px;height:640px;border:none;z-index:9999;border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,0.5);display:none;';
+  document.body.appendChild(iframe);
+  var btn = document.createElement('button');
+  btn.innerHTML = '\uD83D\uDD25 AI Copilot';
+  btn.id = 'ifr-copilot-btn';
+  btn.style.cssText = 'position:fixed;bottom:24px;right:24px;background:#C0392B;color:#fff;border:none;padding:12px 20px;border-radius:50px;font-size:14px;font-weight:bold;cursor:pointer;z-index:10000;box-shadow:0 4px 16px rgba(192,57,43,0.4);transition:transform 0.2s;';
+  btn.onmouseover = function() { btn.style.transform = 'scale(1.05)'; };
+  btn.onmouseout = function() { btn.style.transform = 'scale(1)'; };
+  btn.onclick = function() {
+    var open = iframe.style.display === 'block';
+    iframe.style.display = open ? 'none' : 'block';
+    btn.innerHTML = open ? '\uD83D\uDD25 AI Copilot' : '\u2715 Close';
+    btn.style.bottom = open ? '24px' : '680px';
+  };
+  document.body.appendChild(btn);
+})();
+</script>
+
+</body>
+</html>
