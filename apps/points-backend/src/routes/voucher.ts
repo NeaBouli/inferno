@@ -70,9 +70,10 @@ router.post("/issue", requireAuth, async (req: AuthRequest, res: Response) => {
       },
     });
 
+    console.log(`[VOUCHER] wallet=${wallet} issued=true discount=${voucherData.discountBps}bps nonce=${nonce.slice(0, 8)}...`);
     res.json({ voucher: voucherData, signature });
   } catch (err) {
-    console.error("Voucher signing error:", err);
+    console.error(`[VOUCHER] wallet=${wallet} issued=false error=${err}`);
     res.status(500).json({ error: "Failed to issue voucher" });
   }
 });

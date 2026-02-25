@@ -520,6 +520,26 @@
           <button class="faq-q"><span>What is the minimum lock amount?</span><span class="icon">+</span></button>
           <div class="faq-a">The minimum lock amount depends on the partner product. Each partner sets their own tier requirement. Typical tiers are 500, 1,000, 5,000, or 10,000 IFR. The IFRLock contract itself has no hardcoded minimum &mdash; it accepts any non-zero amount.</div>
         </div>
+
+        <div class="faq-item">
+          <button class="faq-q"><span>Why is there a 3.5% transfer fee?</span><span class="icon">+</span></button>
+          <div class="faq-a">The transfer fee powers the deflation mechanism: 2.5% is permanently burned (supply decreases with every transfer) and 1.0% flows into the BuybackVault (strengthens liquidity). IFR is not a trading token &mdash; users lock once and use benefits permanently. Transfers are rare (buy, lock, unlock), not daily. For protocol-internal operations (Lock, Unlock, Rewards), fee-exempt status applies &mdash; zero fees.</div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q"><span>Which addresses are fee-exempt?</span><span class="icon">+</span></button>
+          <div class="faq-a">IFRLock, LiquidityReserve, BuybackVault, BurnReserve, and PartnerVault are fee-exempt. This ensures internal protocol transfers (lock, unlock, reward payouts) incur no fees. The exemption list is on-chain transparent and only changeable via Governance proposals with a 48-hour timelock. The full status is documented in the <a href="../TRANSPARENCY.md">Transparency Report</a>.</div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q"><span>How does the BuybackVault work?</span><span class="icon">+</span></button>
+          <div class="faq-a">The BuybackVault collects the 1% pool fee from every transfer. After a 60-day activation delay, it uses Uniswap V2 to buy back IFR with accumulated ETH. 50% of bought-back tokens are burned permanently, 50% go to the treasury. This creates additional buy pressure and deflation. The vault has a cooldown period between buybacks and a 5% maximum slippage setting.</div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q"><span>Is IFR compatible with DEX trading?</span><span class="icon">+</span></button>
+          <div class="faq-a">Yes. IFR works on Uniswap V2. Users should set slippage to at least 4% (3.5% fee + AMM slippage). The FeeRouter contract provides optimized routing with correct parameters. Fee-on-transfer tokens are fully DEX-compatible but require CEX coordination for centralized listings, which is planned for Phase 2+ after mainnet.</div>
+        </div>
       </div>
 
       <!-- ========== 3. Partners & Benefits ========== -->

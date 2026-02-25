@@ -5,22 +5,32 @@ import "@openzeppelin/contracts/utils/cryptography/EIP712.sol";
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
+/// @title FeeRouterV1
+/// @notice Protocol fee router with EIP-712 discount vouchers for the Inferno ecosystem.
+///         Routes swaps through whitelisted adapters and charges a configurable protocol fee.
+///         Users can present signed vouchers to reduce or eliminate the fee.
 contract FeeRouterV1 is EIP712 {
 
     // === STATE ===
+    /// @notice Governance address (can update parameters)
     address public governance;
+    /// @notice Address that receives protocol fees
     address public feeCollector;
+    /// @notice Signer address for EIP-712 discount vouchers
     address public voucherSigner;
 
-    uint16 public protocolFeeBps = 5;        // 0.05% default
-    uint16 public constant FEE_CAP_BPS = 25; // 0.25% hard cap
+    /// @notice Protocol fee in basis points (default 5 = 0.05%)
+    uint16 public protocolFeeBps = 5;
+    /// @notice Hard cap on protocol fee (25 bps = 0.25%)
+    uint16 public constant FEE_CAP_BPS = 25;
 
+    /// @notice Emergency pause flag
     bool public paused;
 
-    // Replay protection
+    /// @notice Replay protection: tracks used nonces per user
     mapping(address => mapping(uint256 => bool)) public usedNonces;
 
-    // Whitelisted swap adapters
+    /// @notice Whitelisted swap adapter contracts
     mapping(address => bool) public whitelistedAdapters;
 
     // === EIP-712 ===
@@ -28,6 +38,7 @@ contract FeeRouterV1 is EIP712 {
         "DiscountVoucher(address user,uint16 discountBps,uint32 maxUses,uint64 expiry,uint256 nonce)"
     );
 
+    /// @notice Discount voucher structure for EIP-712 typed signing
     struct DiscountVoucher {
         address user;
         uint16 discountBps;
@@ -44,6 +55,9 @@ contract FeeRouterV1 is EIP712 {
     event Paused(bool status);
 
     // === CONSTRUCTOR ===
+    /// @param _governance Address with governance privileges
+    /// @param _feeCollector Address that receives collected fees
+    /// @param _voucherSigner Address that signs valid discount vouchers
     constructor(
         address _governance,
         address _feeCollector,
@@ -65,7 +79,14 @@ contract FeeRouterV1 is EIP712 {
         _;
     }
 
-    // === CORE: swap mit optionalem Voucher ===
+    // === CORE ===
+
+    /// @notice Execute a swap through a whitelisted adapter with optional voucher discount
+    /// @param adapter Address of the whitelisted swap adapter
+    /// @param swapData Encoded calldata forwarded to the adapter
+    /// @param voucher EIP-712 discount voucher (ignored if useVoucher is false)
+    /// @param voucherSig Signature over the voucher (ignored if useVoucher is false)
+    /// @param useVoucher Whether to apply the discount voucher
     function swapWithFee(
         address adapter,
         bytes calldata swapData,
@@ -97,6 +118,8 @@ contract FeeRouterV1 is EIP712 {
     }
 
     // === VOUCHER LOGIC ===
+
+    /// @dev Validate and consume a discount voucher, returning the effective fee
     function _applyVoucher(
         DiscountVoucher calldata voucher,
         bytes calldata sig
@@ -131,7 +154,13 @@ contract FeeRouterV1 is EIP712 {
         return protocolFeeBps - voucher.discountBps;
     }
 
-    // === VIEW: Voucher validieren (off-chain check) ===
+    // === VIEW ===
+
+    /// @notice Validate a voucher off-chain without consuming it
+    /// @param voucher The discount voucher to validate
+    /// @param sig The EIP-712 signature over the voucher
+    /// @return valid Whether the voucher is valid
+    /// @return reason Human-readable reason if invalid
     function isVoucherValid(
         DiscountVoucher calldata voucher,
         bytes calldata sig
@@ -157,30 +186,43 @@ contract FeeRouterV1 is EIP712 {
     }
 
     // === GOVERNANCE ===
+
+    /// @notice Update the protocol fee rate
+    /// @param newBps New fee in basis points (must be <= FEE_CAP_BPS)
     function setFeeBps(uint16 newBps) external onlyGovernance {
         require(newBps <= FEE_CAP_BPS, "Exceeds fee cap");
         emit FeeBpsUpdated(protocolFeeBps, newBps);
         protocolFeeBps = newBps;
     }
 
+    /// @notice Whitelist or remove a swap adapter
+    /// @param adapter Address of the swap adapter contract
+    /// @param status True to whitelist, false to remove
     function setAdapter(address adapter, bool status) external onlyGovernance {
         whitelistedAdapters[adapter] = status;
         emit AdapterWhitelisted(adapter, status);
     }
 
+    /// @notice Update the voucher signer address (key rotation)
+    /// @param newSigner Address of the new voucher signer
     function setVoucherSigner(address newSigner) external onlyGovernance {
         voucherSigner = newSigner;
     }
 
+    /// @notice Emergency pause/unpause the router
+    /// @param _paused True to pause, false to unpause
     function setPaused(bool _paused) external onlyGovernance {
         paused = _paused;
         emit Paused(_paused);
     }
 
+    /// @notice Update the fee collector address
+    /// @param newCollector Address of the new fee collector
     function setFeeCollector(address newCollector) external onlyGovernance {
         feeCollector = newCollector;
     }
 
     // === RECEIVE ETH ===
+    /// @notice Allows the contract to receive ETH directly
     receive() external payable {}
 }

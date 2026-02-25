@@ -96,6 +96,10 @@ inferno/
 │   ├── TRANSPARENCY.md               On-Chain Transparency Report (8 Checks, Supply, Vesting, LP, Mainnet TODOs)
 │   ├── ONE-PAGER.md                  Investor One-Pager (Key Numbers, Produkte, Technologie, Vor-Mainnet)
 │   ├── CHATGPT_AUDIT_PROMPT_V3.md   Independent Audit V3 (8 Pruefbereiche: Transparency, LP Lock, Konsistenz, Scripts)
+│   ├── FEE_DESIGN.md                Fee Design v1.0 (Warum 3.5%, Fee-Exempt, CEX-Strategie, MEV/Slippage)
+│   ├── FAIR_LAUNCH.md               Fair Launch Statement (No Presale, No VC, Allocation Vergleich, On-Chain Beweise)
+│   ├── OFFCHAIN_SECURITY.md         Off-Chain Security (VoucherSigner, JWT, SIWE, Rate Limiting, Secrets Checkliste)
+│   ├── AUDIT_SUBMISSION.md          Audit Submission Prep (Code4rena/Sherlock, 9 Contracts, 1520 SLOC, Known Issues)
 │   └── wiki/                          [x] 11 HTML-Seiten (+Transparency)
 ├── STATUS-REPORT.md                    Vollstaendiger Statusbericht
 └── README.md                           Projekt-Uebersicht
@@ -222,6 +226,16 @@ inferno/
 | 2026-02-26 | ONE-PAGER.md: Investor One-Pager (Key Numbers, Produkte, Technologie, Vor-Mainnet Checklist) |
 | 2026-02-26 | CHATGPT_AUDIT_PROMPT_V3.md: 8 Pruefbereiche (Transparency, LP Lock, Konsistenz, Ownership, One-Pager, Wiki, Scripts, Sicherheitsversprechen) |
 | 2026-02-26 | Coverage Final: 98.89% Stmts, 84.65% Branch (unveraendert, bestaetigt) |
+| 2026-02-26 | FEE_DESIGN.md: Fee Design v1.0 (Warum 3.5%, Fee-Exempt Adressen, CEX-Strategie, MEV/Slippage) |
+| 2026-02-26 | Landing Page FAQ: 3 neue Eintraege (Why 3.5%, CEX, Fee-Exempt) — 27 FAQ gesamt |
+| 2026-02-26 | Wiki FAQ: 5 neue Fee-Fragen (3.5% Why, Fee-Exempt, BuybackVault, DEX-Kompatibilitaet, BPS) — 35 Q&A gesamt |
+| 2026-02-26 | FAIR_LAUNCH.md: Fair Launch Statement (No Presale, No VC, Allocation Vergleich, On-Chain Beweise) |
+| 2026-02-26 | Landing Page: Fair Launch Detail Box (No Presale, No VC, No IDO + Link zu FAIR_LAUNCH.md) |
+| 2026-02-26 | OFFCHAIN_SECURITY.md: Off-Chain Security (VoucherSigner Key Management, JWT, SIWE, Rate Limiting, Secrets) |
+| 2026-02-26 | .gitignore erweitert: .env.local, .env*.local, *.pem, *.key |
+| 2026-02-26 | Points Backend: Voucher Issuance Logging ([VOUCHER] wallet, issued, discount, nonce) |
+| 2026-02-26 | AUDIT_SUBMISSION.md: Audit Prep (Code4rena/Sherlock, 9 Contracts, 1520 SLOC, Known Issues, Checklist) |
+| 2026-02-26 | FeeRouterV1.sol: NatSpec Kommentare fuer alle public/external Functions (contract, constructor, 8 Functions) |
 | 2026-02-26 | Governance Constitution v1.0 erweitert (Artikel 1-7, FeeRouterV1 Parameter, Multisig Struktur, Verbotene Aktionen) |
 | 2026-02-26 | Business Onboarding SOP erweitert (6 Schritte, Hosted + Self-Hosted, Tier-Konfiguration, Kassenpersonal Training, FAQ) |
 | 2026-02-26 | YouTube Integration Guide: Hybrid Model B, Creator Gateway Setup, Entitlement Config, Monetarisierung, Roadmap |

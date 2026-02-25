@@ -37,6 +37,12 @@ Inferno (IFR) is a deflationary ERC-20 utility token on Ethereum. Every transfer
 
 Team tokens: 48-month vesting, 12-month cliff. Liquidity reserve: 6-month lock.
 
+## Fair Launch
+
+No presale, no VC, no IDO. Direct Uniswap V2 listing.
+Team allocation (15%) is locked in a vesting contract for 4 years
+with a 1-year cliff. See [Fair Launch Statement](docs/FAIR_LAUNCH.md).
+
 ## Smart Contracts (10)
 
 | Contract | Sepolia Address |
@@ -161,6 +167,10 @@ SIWE authentication, points tracking, and EIP-712 signed voucher issuance for pr
 - [Patch Guidelines](docs/PATCH-GUIDELINES.md) — Patch-Prozess, Severity, Versionierung
 - [Contributing Guide](docs/CONTRIBUTING.md) — Bug Reports, Code Standards, Git Konventionen
 - [Transparency Report](docs/TRANSPARENCY.md) — On-Chain Audit (8 Checks), Supply-Verteilung, Vesting, LP Status
+- [Fair Launch Statement](docs/FAIR_LAUNCH.md) — No Presale, No VC, Team Allocation Vergleich, On-Chain Beweise
+- [Fee Design](docs/FEE_DESIGN.md) — Warum 3.5%, Fee-Exempt Adressen, CEX-Strategie, MEV/Slippage
+- [Off-Chain Security](docs/OFFCHAIN_SECURITY.md) — VoucherSigner Key Management, JWT, SIWE, Rate Limiting
+- [Audit Submission](docs/AUDIT_SUBMISSION.md) — Code4rena/Sherlock Prep (9 Contracts, 1520 SLOC, Scope, Known Issues)
 - [Project Summary](docs/PROJECT-SUMMARY.md) — Komplett-Uebersicht (10 Contracts, 330 Tests, 7 Apps)
 
 ## Development
