@@ -79,9 +79,12 @@ task("token-stats", "Show IFRToken stats")
   .setAction(async (args, hre) => {
     const token = await hre.ethers.getContractAt("InfernoToken", process.env.TOKEN_ADDRESS);
     const supply = await token.totalSupply();
-    const burnFee = await token.burnFeeBps();
+    const senderBurn = await token.senderBurnBps();
+    const recipientBurn = await token.recipientBurnBps();
     const poolFee = await token.poolFeeBps();
     console.log(`totalSupply: ${hre.ethers.utils.formatUnits(supply, 9)} IFR`);
-    console.log(`burnFeeBps: ${burnFee} (${burnFee / 100}%)`);
+    console.log(`senderBurnBps: ${senderBurn} (${senderBurn / 100}%)`);
+    console.log(`recipientBurnBps: ${recipientBurn} (${recipientBurn / 100}%)`);
     console.log(`poolFeeBps: ${poolFee} (${poolFee / 100}%)`);
+    console.log(`totalFeeBps: ${Number(senderBurn) + Number(recipientBurn) + Number(poolFee)} (${(Number(senderBurn) + Number(recipientBurn) + Number(poolFee)) / 100}%)`);
   });

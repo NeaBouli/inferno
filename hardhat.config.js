@@ -1,6 +1,7 @@
 require("@nomiclabs/hardhat-ethers");
 require("@nomiclabs/hardhat-waffle");
 require("@nomicfoundation/hardhat-verify");
+require("solidity-coverage");
 require("dotenv").config();
 require("./tasks/admin");
 
