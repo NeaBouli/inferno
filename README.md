@@ -150,6 +150,8 @@ SIWE authentication, points tracking, and EIP-712 signed voucher issuance for pr
 - [ChatGPT Audit Prompt](docs/CHATGPT_AUDIT_PROMPT_V2.md) — Independent Audit Checklist (7 Pruefbereiche)
 - [E2E Flow: Points → Voucher → FeeRouter](docs/E2E_FLOW.md) — Vollstaendiger End-to-End Flow
 - [YouTube Integration Guide](docs/YOUTUBE_INTEGRATION.md) — Hybrid Model B, Creator Gateway, Entitlement Config
+- [Security Policy](docs/SECURITY_POLICY.md) — Responsible Disclosure, Bug Bounty, Scope
+- [Tokenomics Model](docs/TOKENOMICS_MODEL.md) — Deflationskurve, Emission Model, Lock Economics
 
 ## License
 

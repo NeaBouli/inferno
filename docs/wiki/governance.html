@@ -887,6 +887,13 @@ await governance.execute(proposalId);</code></pre>
         </tbody>
       </table>
 
+      <div class="info-box note" style="margin-top:16px;">
+        <strong>Why was Proposal #2 cancelled?</strong>
+        PartnerVault v1 was replaced by v2 (added authorizedCaller whitelist, anti-double-count mapping,
+        and algorithmic emission throttle). Proposal #2 targeted the old v1 address and was cancelled
+        via Guardian. Proposal #3 was created for the new PartnerVault v2 address (<code>0x5F12...490A39</code>).
+      </div>
+
       <!-- ========== 11. Current Governance Model ========== -->
       <h2>11. Current Governance Model</h2>
       <p>
