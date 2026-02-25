@@ -491,7 +491,48 @@ event AnnualCapUpdated(uint256 oldCap, uint256 newCap);
 
 ---
 
-## 12. Testing on Sepolia
+## 12. FeeRouterV1 ABI
+
+### Minimal ABI (ethers v5 human-readable)
+
+```javascript
+const FEE_ROUTER_ABI = [
+  "function protocolFeeBps() view returns (uint16)",
+  "function FEE_CAP_BPS() view returns (uint16)",
+  "function paused() view returns (bool)",
+  "function feeCollector() view returns (address)",
+  "function voucherSigner() view returns (address)",
+  "function usedNonces(address, uint256) view returns (bool)",
+  "function whitelistedAdapters(address) view returns (bool)",
+  "function isVoucherValid(tuple(address user, uint16 discountBps, uint32 maxUses, uint64 expiry, uint256 nonce), bytes) view returns (bool, string)",
+  "function swapWithFee(address, bytes, tuple(address user, uint16 discountBps, uint32 maxUses, uint64 expiry, uint256 nonce), bytes, bool) payable",
+  "function setFeeBps(uint16) external",
+  "function setAdapter(address, bool) external",
+  "function setVoucherSigner(address) external",
+  "function setPaused(bool) external",
+  "function setFeeCollector(address) external"
+];
+```
+
+### Events
+
+```solidity
+event VoucherUsed(address indexed user, uint256 indexed nonce, uint16 discountBps);
+event FeeCharged(address indexed user, uint256 feeAmount);
+event FeeBpsUpdated(uint16 oldBps, uint16 newBps);
+event AdapterWhitelisted(address indexed adapter, bool status);
+event Paused(bool status);
+```
+
+### Sepolia Address
+
+| Contract | Address |
+|----------|---------|
+| FeeRouterV1 | `0x499289C8Ef49769F4FcFF3ca86D4BD7b55B49aa4` |
+
+---
+
+## 13. Testing on Sepolia
 
 ### Prerequisites
 - Sepolia ETH (from faucet)
@@ -506,6 +547,7 @@ event AnnualCapUpdated(uint256 oldCap, uint256 newCap);
 | IFRLock | `0x0Cab0A9440643128540222acC6eF5028736675d3` |
 | PartnerVault | `0x5F12C0bC616e9Ca347D48C33266aA8fe98490A39` |
 | Governance | `0x6050b22E4EAF3f414d1155fBaF30B868E0107017` |
+| FeeRouterV1 | `0x499289C8Ef49769F4FcFF3ca86D4BD7b55B49aa4` |
 | Uniswap V2 Router | `0xC532a74256D3Db42D0Bf7a0400fEFDbad7694008` |
 | LP Pair (IFR/WETH) | `0x2252e8bBDE0E50CD372748aC233A99C08627d9c7` |
 
@@ -533,7 +575,7 @@ cast call 0x5F12C0bC616e9Ca347D48C33266aA8fe98490A39 \
 
 ---
 
-## 13. Checklist
+## 14. Checklist
 
 ### For Lock Integration (read-only, permissionless)
 - [ ] Resolver queries `isLocked(wallet, minAmount)` — returns bool
