@@ -1019,6 +1019,124 @@ async function checkLicense(wallet) {
         </div>
       </div>
 
+      <!-- ======================================== -->
+      <!-- 15. Creator Gateway Integration -->
+      <!-- ======================================== -->
+      <h2>15. Creator Gateway Integration</h2>
+      <p>
+        The <strong>Creator Gateway</strong> enables YouTube creators and content platforms to gate premium content
+        behind an IFR Lock &mdash; as an alternative (or addition) to traditional memberships.
+      </p>
+      <ul>
+        <li><strong>Hybrid Model B:</strong> Users access premium content via YouTube Membership OR IFR Lock (OR logic)</li>
+        <li><strong>Docker Setup:</strong> Self-hosted gateway with Google OAuth + IFRLock bridge</li>
+        <li><strong>Entitlement Engine:</strong> Configurable rules (JSON) for access control</li>
+      </ul>
+
+<pre><code>// Entitlement Config Example (config/entitlements.json)
+{
+  "premium": {
+    "logic": "OR",
+    "conditions": [
+      { "type": "youtube_member", "tier": "any" },
+      { "type": "ifr_lock", "minIFR": 5000 }
+    ]
+  }
+}</code></pre>
+
+      <div style="margin-top:16px;padding:16px 20px;background:#1a1a2a;border:1px solid #333;border-radius:8px;">
+        <strong style="color:#e74c3c;">Full Spec:</strong>
+        <a href="../CREATOR_GATEWAY.md" style="color:#e74c3c;text-decoration:underline;margin-left:4px;">CREATOR_GATEWAY.md</a> &bull;
+        <a href="../YOUTUBE_INTEGRATION.md" style="color:#e74c3c;text-decoration:underline;margin-left:4px;">YOUTUBE_INTEGRATION.md</a>
+      </div>
+
+      <!-- ======================================== -->
+      <!-- 16. Points Backend Integration -->
+      <!-- ======================================== -->
+      <h2>16. Points Backend Integration</h2>
+      <p>
+        The IFR Points Backend provides off-chain points tracking and EIP-712 discount voucher issuance.
+        Points reduce the protocol fee on swaps via FeeRouterV1.
+      </p>
+
+      <h3>API Endpoints</h3>
+      <table>
+        <thead><tr><th>Endpoint</th><th>Method</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code>/auth/siwe/nonce</code></td><td>GET</td><td>Get SIWE nonce</td></tr>
+          <tr><td><code>/auth/siwe/verify</code></td><td>POST</td><td>Verify SIWE signature &rarr; JWT</td></tr>
+          <tr><td><code>/points/balance</code></td><td>GET</td><td>Get wallet points balance</td></tr>
+          <tr><td><code>/points/event</code></td><td>POST</td><td>Record points event</td></tr>
+          <tr><td><code>/voucher/issue</code></td><td>POST</td><td>Issue EIP-712 discount voucher</td></tr>
+        </tbody>
+      </table>
+
+      <h3>SIWE Authentication Flow</h3>
+      <ol>
+        <li>Frontend calls <code>GET /auth/siwe/nonce</code></li>
+        <li>User signs SIWE message with wallet</li>
+        <li>Frontend sends signature to <code>POST /auth/siwe/verify</code></li>
+        <li>Backend returns JWT (24h expiry)</li>
+        <li>All subsequent calls use <code>Authorization: Bearer {jwt}</code></li>
+      </ol>
+
+      <h3>Voucher &rarr; FeeRouter Flow</h3>
+      <ol>
+        <li>User accumulates points (guide completion, lock events, referrals)</li>
+        <li>Frontend calls <code>POST /voucher/issue</code> with JWT</li>
+        <li>Backend signs EIP-712 <code>DiscountVoucher</code> struct</li>
+        <li>Frontend passes voucher to <code>FeeRouterV1.swapWithFee()</code></li>
+        <li>On-chain: discount applied, nonce consumed (replay-protected)</li>
+      </ol>
+
+      <div style="margin-top:16px;padding:16px 20px;background:#1a1a2a;border:1px solid #333;border-radius:8px;">
+        <strong style="color:#e74c3c;">Full E2E Flow:</strong>
+        <a href="../E2E_FLOW.md" style="color:#e74c3c;text-decoration:underline;margin-left:4px;">E2E_FLOW.md</a>
+      </div>
+
+      <!-- ======================================== -->
+      <!-- 17. FeeRouter Integration -->
+      <!-- ======================================== -->
+      <h2>17. FeeRouter Integration</h2>
+      <p>
+        FeeRouterV1 routes swaps through whitelisted adapters with an optional protocol fee,
+        discountable via EIP-712 signed vouchers.
+      </p>
+
+      <h3>Key Functions</h3>
+<pre><code>// Execute swap with protocol fee (+ optional discount voucher)
+function swapWithFee(
+    address adapter,      // whitelisted swap adapter
+    bytes calldata data,  // adapter-specific swap calldata
+    address tokenIn,      // input token
+    uint256 amountIn,     // input amount
+    DiscountVoucher calldata voucher  // EIP-712 voucher (or empty)
+) external payable;
+
+// Voucher Struct (EIP-712)
+struct DiscountVoucher {
+    address user;         // beneficiary
+    uint256 discountBps;  // discount in basis points
+    uint256 nonce;        // replay protection
+    uint256 deadline;     // expiry timestamp
+    bytes signature;      // EIP-712 signature from voucherSigner
+}
+
+// Off-chain voucher validation
+function isVoucherValid(DiscountVoucher calldata voucher)
+    external view returns (bool);</code></pre>
+
+      <h3>Sepolia Deployment</h3>
+      <table>
+        <thead><tr><th>Parameter</th><th>Value</th></tr></thead>
+        <tbody>
+          <tr><td>Address</td><td><code>0x499289C8Ef49769F4FcFF3ca86D4BD7b55B49aa4</code></td></tr>
+          <tr><td>protocolFeeBps</td><td>5 (0.05%)</td></tr>
+          <tr><td>FEE_CAP_BPS</td><td>25 (0.25%) &mdash; hard cap</td></tr>
+          <tr><td>EIP-712 Domain</td><td>name=&quot;InfernoFeeRouter&quot;, version=&quot;1&quot;, chainId=11155111</td></tr>
+        </tbody>
+      </table>
+
       <!-- Footer -->
       <footer class="wiki-footer">
         Inferno ($IFR) &mdash; Community Fair Launch Model &mdash; Developer Integration Guide

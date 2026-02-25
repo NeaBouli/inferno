@@ -73,6 +73,8 @@ inferno/
 │   ├── CHATGPT_AUDIT_PROMPT_V2.md    Independent Audit Checklist (7 Pruefbereiche A-G)
 │   ├── E2E_FLOW.md                    Points → Voucher → FeeRouter End-to-End Flow
 │   ├── YOUTUBE_INTEGRATION.md         YouTube × IFR Hybrid Model B, Creator Gateway, Entitlement Config
+│   ├── SECURITY_POLICY.md             Responsible Disclosure, Bug Bounty, Scope, Known Design Decisions
+│   ├── TOKENOMICS_MODEL.md            Deflationskurve, Allocation, PartnerVault Emission, Lock Economics, FeeRouter Fee
 │   ├── PATCH-GUIDELINES.md             Patch-Richtlinien
 │   ├── PROJECT-SUMMARY.md             Projektzusammenfassung
 │   └── wiki/                          [x] 9 HTML-Seiten (Contracts, Tokenomics, Lock, Governance, Security, Deploy, Integration, AI Copilot)
@@ -169,6 +171,10 @@ inferno/
 | 2026-02-26 | Business Onboarding SOP erweitert (6 Schritte, Hosted + Self-Hosted, Tier-Konfiguration, Kassenpersonal Training, FAQ) |
 | 2026-02-26 | YouTube Integration Guide: Hybrid Model B, Creator Gateway Setup, Entitlement Config, Monetarisierung, Roadmap |
 | 2026-02-26 | Lock-Mechanism Wiki: Lock Economics, Creator Rewards Mechanismus, isLocked() Verification, Anti-Gaming Sektion |
+| 2026-02-26 | Security Policy: Responsible Disclosure, Bug Bounty Framework, Scope, Known Design Decisions |
+| 2026-02-26 | Tokenomics Model: Deflationskurve, Allocation, PartnerVault Emission, Lock Economics, FeeRouter Fee |
+| 2026-02-26 | Integration Wiki: Creator Gateway, Points Backend API, FeeRouter Integration (Sektionen 15-17) |
+| 2026-02-26 | Governance Wiki: Proposal #2 Cancellation Erklärung hinzugefügt |
 | 2026-02-26 | AI Copilot Deploy Guide korrigiert: Two-App Approach (Vercel Frontend + Railway Backend) |
 | 2026-02-25 | FeeRouterV1: EIP-712 Voucher, Protocol Fee Routing, Whitelisted Adapters, Pause, 13 Tests, Sepolia deployed + verified |
 | 2026-02-25 | Points Backend: SIWE Auth, Points Events, EIP-712 Voucher Issuance, Anti-Sybil Rate Limiting, 20 Tests |
