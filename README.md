@@ -149,7 +149,8 @@ SIWE authentication, points tracking, and EIP-712 signed voucher issuance for pr
 - [SDK / Developer Quickstart](docs/SDK_QUICKSTART.md) — ethers.js, wagmi, Python, Tier System, Wallet Verification
 - [Testnet E2E Guide](docs/TESTNET_GUIDE.md) — Full Lock/Benefit/Governance/FeeRouter Flow auf Sepolia
 - [Changelog](docs/CHANGELOG.md) — Alle Aenderungen chronologisch
-- [ChatGPT Audit Prompt](docs/CHATGPT_AUDIT_PROMPT_V2.md) — Independent Audit Checklist (7 Pruefbereiche)
+- [ChatGPT Audit Prompt V3](docs/CHATGPT_AUDIT_PROMPT_V3.md) — Independent Audit Checklist (8 Pruefbereiche)
+- [Investor One-Pager](docs/ONE-PAGER.md) — Key Numbers, Produkte, Technologie, Vor-Mainnet Checklist
 - [E2E Flow: Points → Voucher → FeeRouter](docs/E2E_FLOW.md) — Vollstaendiger End-to-End Flow
 - [YouTube Integration Guide](docs/YOUTUBE_INTEGRATION.md) — Hybrid Model B, Creator Gateway, Entitlement Config
 - [Security Policy](docs/SECURITY_POLICY.md) — Responsible Disclosure, Bug Bounty, Scope
@@ -172,6 +173,22 @@ npx hardhat vault-status --network sepolia
 npx hardhat feerouter-status --network sepolia
 npx hardhat token-stats --network sepolia
 npx hardhat gov-queue --network sepolia
+```
+
+### Mainnet Preparation Scripts
+
+```bash
+# On-chain audit (8 checks)
+npx hardhat run scripts/onchain-audit.js --network sepolia
+
+# Propose ownership transfer (dry run)
+npx hardhat run scripts/propose-ownership-transfer.js --network sepolia
+
+# Execute ownership transfer (after 48h timelock)
+PROP_RESERVE=4 PROP_BUYBACK=5 PROP_BURN=6 npx hardhat run scripts/execute-ownership-transfer.js --network sepolia
+
+# Burn LP tokens (dry run)
+npx hardhat run scripts/burn-lp-tokens.js --network sepolia
 ```
 
 ## License

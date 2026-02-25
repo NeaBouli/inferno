@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Transparency &mdash; Inferno ($IFR) Documentation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    /* ============================================================
+       Inferno Wiki — Shared Styles (copy into every wiki page)
+       ============================================================ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #0a0a0a;
+      --card:     #111113;
+      --border:   #222225;
+      --text:     #e8e8ed;
+      --muted:    #8a8a96;
+      --accent:   #ff4500;
+      --green:    #22c55e;
+      --sidebar-w: 240px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    /* ---------- Layout (CSS Grid) ---------- */
+    .layout {
+      display: grid;
+      grid-template-columns: var(--sidebar-w) 1fr;
+      min-height: 100vh;
+    }
+
+    /* ---------- Sidebar ---------- */
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: var(--sidebar-w);
+      height: 100vh;
+      background: var(--card);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      padding: 24px 0;
+      overflow-y: auto;
+      z-index: 100;
+      transition: transform 0.3s ease;
+    }
+
+    .sidebar-logo {
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: 3px;
+      color: var(--accent);
+      padding: 0 24px 4px;
+      text-decoration: none;
+      display: block;
+    }
+
+    .sidebar-subtitle {
+      font-size: 12px;
+      color: var(--muted);
+      padding: 0 24px 24px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .sidebar-nav {
+      list-style: none;
+      padding: 16px 0;
+      flex: 1;
+    }
+
+    .sidebar-nav li {}
+
+    .sidebar-nav a {
+      display: block;
+      padding: 10px 24px;
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      transition: color 0.2s, background 0.2s, border-left 0.2s;
+      border-left: 3px solid transparent;
+    }
+
+    .sidebar-nav a:hover {
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .sidebar-nav a.active {
+      color: var(--accent);
+      border-left-color: var(--accent);
+      background: rgba(255, 69, 0, 0.06);
+    }
+
+    .sidebar-nav .nav-divider {
+      height: 1px;
+      background: var(--border);
+      margin: 12px 24px;
+    }
+
+    .sidebar-nav .nav-back a {
+      font-size: 13px;
+      color: var(--muted);
+      opacity: 0.7;
+    }
+
+    .sidebar-nav .nav-back a:hover {
+      opacity: 1;
+      color: var(--text);
+    }
+
+    /* ---------- Hamburger (mobile) ---------- */
+    .hamburger {
+      display: none;
+      position: fixed;
+      top: 16px;
+      left: 16px;
+      z-index: 200;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 12px;
+      cursor: pointer;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .hamburger span {
+      display: block;
+      width: 22px;
+      height: 2px;
+      background: var(--text);
+      border-radius: 2px;
+      transition: transform 0.3s, opacity 0.3s;
+    }
+
+    .hamburger.open span:nth-child(1) { transform: rotate(45deg) translate(5px, 5px); }
+    .hamburger.open span:nth-child(2) { opacity: 0; }
+    .hamburger.open span:nth-child(3) { transform: rotate(-45deg) translate(5px, -5px); }
+
+    .sidebar-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.6);
+      z-index: 90;
+    }
+
+    /* ---------- Main content ---------- */
+    .main {
+      grid-column: 2;
+      padding: 48px 56px;
+      max-width: 960px;
+    }
+
+    .main h1 {
+      font-size: 32px;
+      font-weight: 800;
+      margin-bottom: 8px;
+      color: var(--text);
+    }
+
+    .main h1 .accent {
+      color: var(--accent);
+    }
+
+    .main h2 {
+      font-size: 22px;
+      font-weight: 700;
+      margin: 40px 0 16px;
+      color: var(--text);
+    }
+
+    .main h3 {
+      font-size: 18px;
+      font-weight: 600;
+      margin: 32px 0 12px;
+      color: var(--text);
+    }
+
+    .main p {
+      color: var(--muted);
+      margin-bottom: 16px;
+      font-size: 15px;
+      max-width: 680px;
+    }
+
+    .main a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    .main a:hover {
+      text-decoration: underline;
+    }
+
+    .subtitle {
+      font-size: 16px;
+      color: var(--muted);
+      margin-bottom: 32px;
+    }
+
+    /* ---------- Code blocks ---------- */
+    pre {
+      background: #1a1a1d;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px 20px;
+      overflow-x: auto;
+      font-size: 13px;
+      line-height: 1.7;
+      margin: 16px 0;
+      color: var(--text);
+    }
+
+    code {
+      font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+      font-size: 13px;
+      color: var(--text);
+    }
+
+    p code, li code, td code {
+      background: rgba(255, 255, 255, 0.06);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 13px;
+    }
+
+    /* ---------- Tables ---------- */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0;
+      font-size: 14px;
+    }
+
+    th, td {
+      text-align: left;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    th {
+      color: var(--muted);
+      font-weight: 600;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    td { color: var(--text); }
+
+    tr:hover td { background: rgba(255, 255, 255, 0.02); }
+
+    /* ---------- Lists ---------- */
+    .main ul, .main ol {
+      padding-left: 24px;
+      margin-bottom: 16px;
+    }
+
+    .main li {
+      color: var(--muted);
+      font-size: 14px;
+      margin-bottom: 6px;
+    }
+
+    /* ---------- Callout ---------- */
+    .callout {
+      background: rgba(255, 69, 0, 0.06);
+      border-left: 3px solid var(--accent);
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 20px 0;
+    }
+
+    .callout p {
+      color: var(--text);
+      margin: 0;
+      font-size: 14px;
+    }
+
+    .callout-green {
+      background: rgba(34, 197, 94, 0.06);
+      border-left-color: var(--green);
+    }
+
+    .callout-yellow {
+      background: rgba(245, 158, 11, 0.06);
+      border-left-color: #f59e0b;
+    }
+
+    /* ---------- Status Badge ---------- */
+    .status-ok {
+      color: var(--green);
+      font-weight: 600;
+    }
+
+    .status-testnet {
+      color: #f59e0b;
+      font-weight: 600;
+    }
+
+    .status-pending {
+      color: #f59e0b;
+      font-weight: 600;
+    }
+
+    /* ---------- Address ---------- */
+    .address {
+      font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+      font-size: 12px;
+      color: var(--muted);
+      word-break: break-all;
+    }
+
+    /* ---------- Footer ---------- */
+    .wiki-footer {
+      margin-top: 64px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    /* ---------- Responsive ---------- */
+    @media (max-width: 768px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        transform: translateX(-100%);
+      }
+
+      .sidebar.open {
+        transform: translateX(0);
+      }
+
+      .sidebar-overlay.open {
+        display: block;
+      }
+
+      .hamburger {
+        display: flex;
+      }
+
+      .main {
+        grid-column: 1;
+        padding: 72px 20px 40px;
+      }
+
+      table {
+        font-size: 13px;
+      }
+
+      th, td {
+        padding: 10px 12px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .main h1 {
+        font-size: 26px;
+      }
+    }
+    /* ============================================================
+       End Shared Styles
+       ============================================================ */
+  </style>
+  <link rel="icon" type="image/png" href="../assets/token.png">
+</head>
+<body>
+
+  <button class="hamburger" id="hamburger" aria-label="Toggle navigation">
+    <span></span>
+    <span></span>
+    <span></span>
+  </button>
+
+  <!-- Overlay (mobile only) -->
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <div class="layout">
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <a href="index.html" class="sidebar-logo">INFERNO</a>
+      <div class="sidebar-subtitle">Documentation</div>
+      <ul class="sidebar-nav">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="contracts.html">Smart Contracts</a></li>
+        <li><a href="tokenomics.html">Tokenomics</a></li>
+        <li><a href="lock-mechanism.html">Lock Mechanism</a></li>
+        <li><a href="governance.html">Governance</a></li>
+        <li><a href="security.html">Security</a></li>
+        <li><a href="deployment.html">Deployment</a></li>
+        <li><a href="integration.html">Integration Guide</a></li>
+        <li><a href="agent.html">AI Copilot</a></li>
+        <li><a href="faq.html">FAQ</a></li>
+        <li><a href="transparency.html" class="active">Transparency</a></li>
+        <li><div class="nav-divider"></div></li>
+        <li class="nav-back"><a href="../index.html">&larr; Back to Website</a></li>
+      </ul>
+    </aside>
+
+    <!-- Main content -->
+    <main class="main">
+
+      <h1><span class="accent">On-Chain</span> Transparency Report</h1>
+      <p class="subtitle">
+        Every number is verifiable on Etherscan. No hidden wallets, no insider deals. All data sourced from Sepolia testnet via <code>scripts/onchain-audit.js</code>.
+      </p>
+
+      <div class="callout-green callout">
+        <p><strong>Verify yourself:</strong> Clone the repo and run <code>npx hardhat run scripts/onchain-audit.js --network sepolia</code> to reproduce all 8 checks independently.</p>
+      </div>
+
+      <!-- ========== CHECK 1: Contract Ownership ========== -->
+      <h2>CHECK 1: Contract Ownership</h2>
+      <p>Who controls each contract? Governance (Timelock) ownership means no single person can make instant changes &mdash; all modifications require a 48-hour delay.</p>
+
+      <table>
+        <thead>
+          <tr><th>Contract</th><th>Owner</th><th>Status</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>InfernoToken</td>
+            <td class="address"><a href="https://sepolia.etherscan.io/address/0x6050b22E4EAF3f414d1155fBaF30B868E0107017">0x6050...0017</a> (Governance)</td>
+            <td><span class="status-ok">OK</span></td>
+          </tr>
+          <tr>
+            <td>IFRLock</td>
+            <td>admin-Pattern (no Ownable)</td>
+            <td><span class="status-ok">OK</span></td>
+          </tr>
+          <tr>
+            <td>PartnerVault</td>
+            <td>admin-Pattern (Governance)</td>
+            <td><span class="status-ok">OK</span></td>
+          </tr>
+          <tr>
+            <td>FeeRouterV1</td>
+            <td>admin-Pattern (Governance)</td>
+            <td><span class="status-ok">OK</span></td>
+          </tr>
+          <tr>
+            <td>LiquidityReserve</td>
+            <td class="address"><a href="https://sepolia.etherscan.io/address/0x5Ecc668eab04C5bee81b5c7242e1077c946dE406">0x5Ecc...E406</a> (Deployer)</td>
+            <td><span class="status-testnet">Testnet</span></td>
+          </tr>
+          <tr>
+            <td>BuybackVault</td>
+            <td class="address"><a href="https://sepolia.etherscan.io/address/0x5Ecc668eab04C5bee81b5c7242e1077c946dE406">0x5Ecc...E406</a> (Deployer)</td>
+            <td><span class="status-testnet">Testnet</span></td>
+          </tr>
+          <tr>
+            <td>BurnReserve</td>
+            <td class="address"><a href="https://sepolia.etherscan.io/address/0x5Ecc668eab04C5bee81b5c7242e1077c946dE406">0x5Ecc...E406</a> (Deployer)</td>
+            <td><span class="status-testnet">Testnet</span></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="callout callout-yellow">
+        <p><strong>Testnet Note:</strong> LiquidityReserve, BuybackVault, and BurnReserve are still owned by the Deployer on testnet. Before mainnet, all three will be transferred to Governance via proposals.</p>
+      </div>
+
+      <!-- ========== CHECK 2: LP Token Ownership ========== -->
+      <h2>CHECK 2: LP Token Ownership</h2>
+      <p>Liquidity Pool tokens determine who can remove liquidity. On mainnet, these will be permanently burned.</p>
+
+      <table>
+        <thead>
+          <tr><th>Metric</th><th>Value</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>LP Total Supply</td><td><code>63,245,553,203,367,586</code></td></tr>
+          <tr><td>Deployer LP Balance</td><td>~100%</td></tr>
+          <tr><td>Burned LP (0xdead)</td><td>0</td></tr>
+        </tbody>
+      </table>
+
+      <div class="callout callout-yellow">
+        <p><strong>Before Mainnet:</strong> LP Tokens will be permanently burned (sent to <code>0x000...dEaD</code>) using <code>scripts/burn-lp-tokens.js</code>. This locks liquidity forever.</p>
+      </div>
+
+      <!-- ========== CHECK 3: Vesting Contract ========== -->
+      <h2>CHECK 3: Vesting Contract</h2>
+      <p>150M IFR (15% of supply) are locked in the Vesting contract with a 12-month cliff and 4-year linear release. No tokens can be withdrawn early.</p>
+
+      <table>
+        <thead>
+          <tr><th>Parameter</th><th>Value</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Address</td>
+            <td class="address"><a href="https://sepolia.etherscan.io/address/0xa710f9FE7bf42981E60BE2Fbe7D87Fb3541a3F8B">0xa710...3F8B</a></td>
+          </tr>
+          <tr><td>IFR Balance</td><td>150,000,000 IFR (15%)</td></tr>
+          <tr><td>Beneficiary</td><td>Deployer (Team)</td></tr>
+          <tr><td>Cliff</td><td>365 days</td></tr>
+          <tr><td>Duration</td><td>1,460 days (4 years)</td></tr>
+          <tr><td>Released</td><td>0 IFR</td></tr>
+          <tr><td>Releasable Now</td><td>0 IFR (cliff not reached)</td></tr>
+          <tr><td>Paused</td><td>false</td></tr>
+        </tbody>
+      </table>
+
+      <!-- ========== CHECK 4: LiquidityReserve ========== -->
+      <h2>CHECK 4: LiquidityReserve</h2>
+      <p>200M IFR (20%) held in reserve for future liquidity needs. 6-month lock with staged 50M/quarter release.</p>
+
+      <table>
+        <thead>
+          <tr><th>Parameter</th><th>Value</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Address</td>
+            <td class="address"><a href="https://sepolia.etherscan.io/address/0xF7E90D0d17f8232365186AA085D26eaEfAf011aF">0xF7E9...11aF</a></td>
+          </tr>
+          <tr><td>IFR Balance</td><td>200,000,000 IFR (20%)</td></tr>
+        </tbody>
+      </table>
+
+      <!-- ========== CHECK 5: BuybackVault ========== -->
+      <h2>CHECK 5: BuybackVault</h2>
+      <p>Collects 1% pool fees from transfers. After 60-day activation, buys back IFR from Uniswap and burns 50%.</p>
+
+      <table>
+        <thead>
+          <tr><th>Parameter</th><th>Value</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Address</td>
+            <td class="address"><a href="https://sepolia.etherscan.io/address/0xC8ABb9039BEd24f4dBf5Cff09699877D81f0D63C">0xC8AB...63C</a></td>
+          </tr>
+          <tr><td>IFR Balance</td><td>0 IFR (testnet)</td></tr>
+          <tr><td>Router</td><td>Uniswap V2 Router02</td></tr>
+          <tr><td>Slippage</td><td>5%</td></tr>
+          <tr><td>Burn Share</td><td>50%</td></tr>
+          <tr><td>Activation</td><td>60 days after deploy</td></tr>
+          <tr><td>Paused</td><td>false</td></tr>
+        </tbody>
+      </table>
+
+      <!-- ========== CHECK 6: FeeExempt Status ========== -->
+      <h2>CHECK 6: FeeExempt Status</h2>
+      <p>Contracts that handle IFR internally must be fee-exempt to prevent unexpected token loss during transfers.</p>
+
+      <table>
+        <thead>
+          <tr><th>Contract</th><th>feeExempt</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>InfernoToken</td><td><span class="status-ok">true</span></td></tr>
+          <tr><td>IFRLock</td><td><span class="status-ok">true</span></td></tr>
+          <tr><td>LiquidityReserve</td><td><span class="status-ok">true</span></td></tr>
+          <tr><td>BuybackVault</td><td><span class="status-ok">true</span></td></tr>
+          <tr><td>BurnReserve</td><td><span class="status-ok">true</span></td></tr>
+          <tr><td>Governance</td><td>false (no IFR held)</td></tr>
+          <tr><td>PartnerVault v2</td><td><span class="status-pending">Proposal #3 pending</span></td></tr>
+          <tr><td>FeeRouterV1</td><td>Planned after Proposal #3</td></tr>
+          <tr><td>LP Pair</td><td>false (fee applies to swaps)</td></tr>
+        </tbody>
+      </table>
+
+      <!-- ========== CHECK 7: PartnerVault ========== -->
+      <h2>CHECK 7: PartnerVault</h2>
+      <p>40M IFR (4%) allocated for partner ecosystem rewards. Governance-controlled, milestone-based, with algorithmic emission throttle.</p>
+
+      <table>
+        <thead>
+          <tr><th>Parameter</th><th>Value</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Address</td>
+            <td class="address"><a href="https://sepolia.etherscan.io/address/0x5F12C0bC616e9Ca347D48C33266aA8fe98490A39">0x5F12...0A39</a></td>
+          </tr>
+          <tr><td>IFR Balance</td><td>38,600,000 IFR (3.86%)</td></tr>
+          <tr><td>Admin</td><td>Governance (Timelock)</td></tr>
+          <tr><td>Reward Rate</td><td>1,500 bps (15%)</td></tr>
+          <tr><td>Annual Emission Cap</td><td>4,000,000 IFR</td></tr>
+          <tr><td>Total Rewarded</td><td>0 IFR</td></tr>
+          <tr><td>Algo Throttle</td><td>OFF (activates with first partner)</td></tr>
+        </tbody>
+      </table>
+
+      <!-- ========== CHECK 8: Token Supply Distribution ========== -->
+      <h2>CHECK 8: Token Supply Distribution</h2>
+      <p>Complete breakdown of where every IFR token is held. Totals are slightly below 1B due to permanent burns.</p>
+
+      <table>
+        <thead>
+          <tr><th>Wallet</th><th>IFR</th><th>%</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>Total Supply</strong></td><td><strong>997,999,575 IFR</strong></td><td><strong>100%</strong></td></tr>
+          <tr><td>LP Pair</td><td>400,000,000 IFR</td><td>40.08%</td></tr>
+          <tr><td>LiquidityReserve</td><td>200,000,000 IFR</td><td>20.04%</td></tr>
+          <tr><td>Vesting (Team)</td><td>150,000,000 IFR</td><td>15.03%</td></tr>
+          <tr><td>Deployer (Treasury + Community)</td><td>170,787,995 IFR</td><td>17.11%</td></tr>
+          <tr><td>PartnerVault</td><td>38,600,000 IFR</td><td>3.86%</td></tr>
+          <tr><td>Burned (since deploy)</td><td>2,000,425 IFR</td><td>0.20%</td></tr>
+        </tbody>
+      </table>
+
+      <div class="callout-green callout">
+        <p><strong>Deflation confirmed:</strong> 2,000,425+ IFR have been permanently burned since deployment. This number increases with every transfer. Supply can only decrease &mdash; there is no mint function.</p>
+      </div>
+
+      <!-- ========== TODOs Before Mainnet ========== -->
+      <h2>Known TODOs Before Mainnet</h2>
+      <p>These items are actively tracked in <a href="../MAINNET_CHECKLIST.md">MAINNET_CHECKLIST.md</a> and must be completed before any public launch.</p>
+
+      <table>
+        <thead>
+          <tr><th>#</th><th>Action</th><th>Priority</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>1</td><td>LP Tokens lock/burn (Unicrypt or 0xdead)</td><td><span style="color:#ef4444;font-weight:600;">Critical</span></td></tr>
+          <tr><td>2</td><td>LiquidityReserve ownership &rarr; Governance</td><td><span style="color:#f59e0b;font-weight:600;">High</span></td></tr>
+          <tr><td>3</td><td>BuybackVault ownership &rarr; Governance</td><td><span style="color:#f59e0b;font-weight:600;">High</span></td></tr>
+          <tr><td>4</td><td>BurnReserve ownership &rarr; Governance</td><td><span style="color:#f59e0b;font-weight:600;">High</span></td></tr>
+          <tr><td>5</td><td>PartnerVault feeExempt (Proposal #3)</td><td><span class="status-pending">Pending</span></td></tr>
+          <tr><td>6</td><td>Third-party Security Audit</td><td><span style="color:#ef4444;font-weight:600;">Critical</span></td></tr>
+          <tr><td>7</td><td>Gnosis Safe 4-of-7 Multisig</td><td><span style="color:#f59e0b;font-weight:600;">High</span></td></tr>
+        </tbody>
+      </table>
+
+      <!-- ========== Verify ========== -->
+      <h2>How to Verify</h2>
+      <p>All data in this report can be independently verified:</p>
+
+      <pre><code>git clone https://github.com/NeaBouli/inferno
+cd inferno
+npm install
+cp .env.example .env
+# Add your Sepolia RPC_URL to .env
+npx hardhat run scripts/onchain-audit.js --network sepolia</code></pre>
+
+      <p>Or verify directly on Etherscan:</p>
+      <ul>
+        <li><a href="https://sepolia.etherscan.io/address/0x3Bd71947F288d1dd8B21129B1bE4FF16EDd5d1F4#readContract">InfernoToken &mdash; Read Contract</a></li>
+        <li><a href="https://sepolia.etherscan.io/address/0xa710f9FE7bf42981E60BE2Fbe7D87Fb3541a3F8B">Vesting Contract</a></li>
+        <li><a href="https://sepolia.etherscan.io/address/0x6050b22E4EAF3f414d1155fBaF30B868E0107017">Governance (Timelock)</a></li>
+        <li><a href="https://sepolia.etherscan.io/address/0x5F12C0bC616e9Ca347D48C33266aA8fe98490A39">PartnerVault v2</a></li>
+        <li><a href="https://sepolia.etherscan.io/address/0x2252e8bBDE0E50CD372748aC233A99C08627d9c7">LP Pair (IFR/WETH)</a></li>
+      </ul>
+
+      <p style="margin-top:32px;font-size:13px;color:var(--muted);font-style:italic;">
+        All data from Sepolia testnet &mdash; mainnet values will be updated after mainnet deployment. Stand: Februar 2026 | Version 1.0
+      </p>
+
+      <!-- Footer -->
+      <footer class="wiki-footer">
+        Inferno ($IFR) &mdash; Community Fair Launch Model &mdash; Documentation v1.0
+      </footer>
+
+    </main>
+  </div>
+
+  <!-- Mobile sidebar toggle script -->
+  <script>
+    (function () {
+      var hamburger = document.getElementById('hamburger');
+      var sidebar = document.getElementById('sidebar');
+      var overlay = document.getElementById('sidebarOverlay');
+
+      function toggleSidebar() {
+        var isOpen = sidebar.classList.toggle('open');
+        hamburger.classList.toggle('open', isOpen);
+        overlay.classList.toggle('open', isOpen);
+        document.body.style.overflow = isOpen ? 'hidden' : '';
+      }
+
+      hamburger.addEventListener('click', toggleSidebar);
+      overlay.addEventListener('click', toggleSidebar);
+    })();
+  </script>
+
+<!-- IFR AI Copilot Widget -->
+<script>
+(function() {
+  if (window.location.hostname === 'localhost') return;
+  var iframe = document.createElement('iframe');
+  iframe.src = 'https://ifr-copilot.vercel.app';
+  iframe.id = 'ifr-copilot-widget';
+  iframe.style.cssText = 'position:fixed;bottom:24px;right:24px;width:420px;height:640px;border:none;z-index:9999;border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,0.5);display:none;';
+  document.body.appendChild(iframe);
+  var btn = document.createElement('button');
+  btn.innerHTML = '\uD83D\uDD25 AI Copilot';
+  btn.id = 'ifr-copilot-btn';
+  btn.style.cssText = 'position:fixed;bottom:24px;right:24px;background:#C0392B;color:#fff;border:none;padding:12px 20px;border-radius:50px;font-size:14px;font-weight:bold;cursor:pointer;z-index:10000;box-shadow:0 4px 16px rgba(192,57,43,0.4);transition:transform 0.2s;';
+  btn.onmouseover = function() { btn.style.transform = 'scale(1.05)'; };
+  btn.onmouseout = function() { btn.style.transform = 'scale(1)'; };
+  btn.onclick = function() {
+    var open = iframe.style.display === 'block';
+    iframe.style.display = open ? 'none' : 'block';
+    btn.innerHTML = open ? '\uD83D\uDD25 AI Copilot' : '\u2715 Close';
+    btn.style.bottom = open ? '24px' : '680px';
+  };
+  document.body.appendChild(btn);
+})();
+</script>
+
+</body>
+</html>

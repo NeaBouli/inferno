@@ -43,7 +43,11 @@ inferno/
 │   ├── execute-proposal.js           [x] Governance Proposal Executor (Status/ETA/Execute/Verify)
 │   ├── deploy-lock.js                [x] IFRLock Deploy + Governance Proposal
 │   ├── test-lock.js                  [x] IFRLock Live Test (Lock/Unlock/isLocked)
-│   └── deploy-feerouter.js           [x] FeeRouterV1 Deploy + Verify
+│   ├── deploy-feerouter.js           [x] FeeRouterV1 Deploy + Verify
+│   ├── onchain-audit.js             [x] 8-Check On-Chain Audit (Ownership, LP, Vesting, Supply, FeeExempt)
+│   ├── propose-ownership-transfer.js [x] Ownership Transfer Proposals (3 Contracts, DRY RUN Schutz)
+│   ├── execute-ownership-transfer.js [x] Ownership Transfer Executor (nach 48h Timelock)
+│   └── burn-lp-tokens.js            [x] LP Token Burn → 0xdead (DRY RUN Schutz, irreversibel)
 ├── tasks/
 │   └── admin.js                       [x] Hardhat CLI Tasks (lock-check, vault-status, feerouter-status, token-stats, gov-queue)
 ├── .github/
@@ -90,7 +94,9 @@ inferno/
 │   ├── PROJECT-SUMMARY.md             Komplett-Uebersicht (10 Contracts, 330 Tests, 7 Apps, CI/CD)
 │   ├── CONTRIBUTING.md                Contributing Guide v1.0 (Bug Reports, Code Standards, Git Konventionen)
 │   ├── TRANSPARENCY.md               On-Chain Transparency Report (8 Checks, Supply, Vesting, LP, Mainnet TODOs)
-│   └── wiki/                          [x] 10 HTML-Seiten (Contracts, Tokenomics, Lock, Governance, Security, Deploy, Integration, AI Copilot, FAQ)
+│   ├── ONE-PAGER.md                  Investor One-Pager (Key Numbers, Produkte, Technologie, Vor-Mainnet)
+│   ├── CHATGPT_AUDIT_PROMPT_V3.md   Independent Audit V3 (8 Pruefbereiche: Transparency, LP Lock, Konsistenz, Scripts)
+│   └── wiki/                          [x] 11 HTML-Seiten (+Transparency)
 ├── STATUS-REPORT.md                    Vollstaendiger Statusbericht
 └── README.md                           Projekt-Uebersicht
 ```
@@ -207,6 +213,15 @@ inferno/
 | 2026-02-26 | MAINNET_CHECKLIST.md: Kritische LP Lock + Ownership Transfer Sektion, Deployer Wallet Reduktion |
 | 2026-02-26 | Wiki Security: On-Chain Audit Sektion (Ownership-Tabelle, Supply-Verteilung, Vesting, Deflation) |
 | 2026-02-26 | Landing Page: On-Chain Transparency Sektion (4 Stat-Cards: Vesting, Burned, Governance, Tests) |
+| 2026-02-26 | propose-ownership-transfer.js: 3 Ownership Transfer Proposals (Reserve, Buyback, Burn → Governance) mit DRY RUN |
+| 2026-02-26 | execute-ownership-transfer.js: Ownership Transfer Executor (nach 48h Timelock, Status-Check) |
+| 2026-02-26 | burn-lp-tokens.js: LP Token Burn → 0xdead (DRY RUN Schutz, 3s Countdown, irreversibel) |
+| 2026-02-26 | Wiki transparency.html: On-Chain Transparency Report (8 Checks, Etherscan Links, TODOs, Verify-Anleitung) |
+| 2026-02-26 | Sidebar: transparency.html in allen 11 Wiki-Seiten verlinkt |
+| 2026-02-26 | WHITEPAPER.md: Sektion 9 (On-Chain Transparency) + Test-Count 276→330, Sektionen 10-12 renummeriert |
+| 2026-02-26 | ONE-PAGER.md: Investor One-Pager (Key Numbers, Produkte, Technologie, Vor-Mainnet Checklist) |
+| 2026-02-26 | CHATGPT_AUDIT_PROMPT_V3.md: 8 Pruefbereiche (Transparency, LP Lock, Konsistenz, Ownership, One-Pager, Wiki, Scripts, Sicherheitsversprechen) |
+| 2026-02-26 | Coverage Final: 98.89% Stmts, 84.65% Branch (unveraendert, bestaetigt) |
 | 2026-02-26 | Governance Constitution v1.0 erweitert (Artikel 1-7, FeeRouterV1 Parameter, Multisig Struktur, Verbotene Aktionen) |
 | 2026-02-26 | Business Onboarding SOP erweitert (6 Schritte, Hosted + Self-Hosted, Tier-Konfiguration, Kassenpersonal Training, FAQ) |
 | 2026-02-26 | YouTube Integration Guide: Hybrid Model B, Creator Gateway Setup, Entitlement Config, Monetarisierung, Roadmap |
