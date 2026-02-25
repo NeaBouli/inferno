@@ -8,14 +8,20 @@ All notable changes to the Inferno ($IFR) project.
 
 ### Added
 - FeeRouterV1 Tests: 13 → 33 (isVoucherValid 6 branches, setVoucherSigner, setFeeCollector, receive(), access control, signer rotation)
-- Creator Gateway: youtube-checker.test.ts (6 YouTube mock tests) — 20 Tests gesamt
+- Creator Gateway: youtube-checker.test.ts (6 YouTube mock tests) + access.test.ts (6 Access-Route Tests) — 26 Tests gesamt
 - Wiki security.html: solidity-coverage Tabelle (pro Contract), FeeRouterV1 Zeile in Test-Suite-Tabelle
 - MAINNET_CHECKLIST.md v1.1: FeeRouter Deploy-Schritt, Sepolia Status Summary, korrekte Test-Zahlen
+- Benefits Network CI: `.github/workflows/benefits-network.yml` (test-backend + test-frontend)
+- COVERAGE_REPORT.md: vollstaendig neu mit aktuellen Coverage-Werten
 
 ### Changed
-- Test-Counts synchronisiert: 276 Contract Tests, 324 Gesamt (ueber 10 Dateien)
+- Coverage aktualisiert: 95%/81% → 99%/85% (ueber 5 Dateien)
+- Test-Counts synchronisiert: 276 Contract Tests, 330 Gesamt (ueber 10 Dateien)
 - WHITEPAPER.md, AUDIT_BRIEF.md: 243 → 276 Tests
 - CHATGPT_AUDIT_PROMPT_V2.md: alte Referenzen aktualisiert
+
+### Fixed
+- gov-queue Task: queryFilter → getProposal() Loop (Alchemy-kompatibel, zeigt Status)
 
 ---
 

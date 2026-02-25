@@ -85,9 +85,9 @@ inferno/
 │   ├── TOKENOMICS_MODEL.md            Deflationskurve, Allocation, PartnerVault Emission, Lock Economics, FeeRouter Fee
 │   ├── PARTNER_REWARDS_SPEC.md        Reward-Formel, Vesting, Anti-Gaming, Partner-Typen (A/B/C), Onboarding
 │   ├── PATCH-GUIDELINES.md             Patch-Richtlinien v1.0 (6 Schritte, Versionierung, Notfall-Patches)
-│   ├── COVERAGE_REPORT.md             Solidity Coverage Report (95% Stmts, 81% Branch, 95% Funcs, 96% Lines)
+│   ├── COVERAGE_REPORT.md             Solidity Coverage Report (99% Stmts, 85% Branch, 97% Funcs, 99% Lines)
 │   ├── BENEFITS_NETWORK_TEST.md       Benefits Network E2E Test Guide (Test-Flow, API, Lock Tiers, Fehler)
-│   ├── PROJECT-SUMMARY.md             Komplett-Uebersicht (10 Contracts, 324 Tests, 7 Apps, CI/CD)
+│   ├── PROJECT-SUMMARY.md             Komplett-Uebersicht (10 Contracts, 330 Tests, 7 Apps, CI/CD)
 │   └── wiki/                          [x] 9 HTML-Seiten (Contracts, Tokenomics, Lock, Governance, Security, Deploy, Integration, AI Copilot)
 ├── STATUS-REPORT.md                    Vollstaendiger Statusbericht
 └── README.md                           Projekt-Uebersicht
@@ -182,7 +182,7 @@ inferno/
 | 2026-02-25 | token-stats Task Fix: burnFeeBps → senderBurnBps + recipientBurnBps + totalFeeBps |
 | 2026-02-25 | Benefits Network E2E Test: Script + Test Guide (docs/BENEFITS_NETWORK_TEST.md) |
 | 2026-02-25 | Governance Wiki: Proposal Details erweitert (Targets, Reasons, Proposer) + Governance Learnings Sektion |
-| 2026-02-25 | Solidity Coverage: solidity-coverage installiert, Report generiert (95% Stmts, 81% Branch) |
+| 2026-02-25 | Solidity Coverage: solidity-coverage installiert, Report generiert (99% Stmts, 85% Branch) |
 | 2026-02-25 | PROJECT-SUMMARY.md: Komplett neu geschrieben (10 Contracts, 324 Tests, 7 Apps, Coverage, CI/CD, Token-Metriken) |
 | 2026-02-25 | Creator Gateway Tests: 14 Tests (lock-checker, entitlement OR/AND, auth routes) mit Jest + ts-jest + supertest |
 | 2026-02-25 | Dashboard: ProtocolStats Komponente (IFRLock totalLocked, PartnerVault Balance, FeeRouter Fee, Reward Rate, Auto-refresh 30s) |
@@ -190,10 +190,14 @@ inferno/
 | 2026-02-25 | GitHub Actions CI: Creator Gateway (tsc+jest), Points Backend (prisma+tsc+jest), AI Copilot (tsc+build) |
 | 2026-02-25 | Deployment Wiki: Proposal #3 Info-Box mit Scripts + 1.4M IFR Top-up Step |
 | 2026-02-26 | FeeRouterV1 Tests: 13 → 33 (isVoucherValid, setVoucherSigner, setFeeCollector, receive(), access control, signer rotation) |
-| 2026-02-26 | Creator Gateway YouTube Mock Tests: 6 Tests (isMember mock, fail-closed, API errors) — Gesamt: 20 Tests |
+| 2026-02-26 | Creator Gateway YouTube Mock Tests: 6 Tests (isMember mock, fail-closed, API errors) — Gesamt: 26 Tests |
 | 2026-02-26 | Wiki Security: solidity-coverage Tabelle hinzugefuegt (pro Contract), FeeRouterV1 Test-Suite Zeile |
 | 2026-02-26 | Mainnet Checklist v1.1: FeeRouter Schritt, Status-Summary, Sepolia-Meilensteine, korrekte Test-Zahlen |
-| 2026-02-26 | Test-Counts synchronisiert: 276 Contract Tests (InfernoToken 22, LiquidityReserve 30, FeeRouterV1 33), 324 Gesamt |
+| 2026-02-26 | Test-Counts synchronisiert: 276 Contract Tests (InfernoToken 22, LiquidityReserve 30, FeeRouterV1 33), 330 Gesamt |
+| 2026-02-26 | Coverage aktualisiert: 95%/81% → 99%/85% Stmts/Branch (FeeRouterV1 100%/96%), alle Docs synchronisiert |
+| 2026-02-26 | Benefits Network CI Workflow: .github/workflows/benefits-network.yml (test-backend + test-frontend) |
+| 2026-02-26 | Creator Gateway access.test.ts: 6 Access-Route Tests (auth 401, granted/denied, YouTube detect, no-wallet) — 26 Tests gesamt |
+| 2026-02-26 | gov-queue Task Fix: queryFilter → getProposal() Loop (zeigt Status PENDING/READY/EXECUTED/CANCELLED) |
 | 2026-02-26 | Governance Constitution v1.0 erweitert (Artikel 1-7, FeeRouterV1 Parameter, Multisig Struktur, Verbotene Aktionen) |
 | 2026-02-26 | Business Onboarding SOP erweitert (6 Schritte, Hosted + Self-Hosted, Tier-Konfiguration, Kassenpersonal Training, FAQ) |
 | 2026-02-26 | YouTube Integration Guide: Hybrid Model B, Creator Gateway Setup, Entitlement Config, Monetarisierung, Roadmap |

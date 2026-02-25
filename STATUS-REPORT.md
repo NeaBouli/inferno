@@ -5,7 +5,7 @@
 **Letzter Commit:** `991ac9d2` — fix: consistency check — stale test counts
 **Modell:** Community Fair Launch (CFLM) — kein Presale
 **Ticker:** $IFR
-**Status:** 10 On-Chain Components deployed + verified auf Sepolia | 324 Tests | 7 Apps
+**Status:** 10 On-Chain Components deployed + verified auf Sepolia | 330 Tests | 7 Apps
 
 ---
 
@@ -36,10 +36,10 @@
 | Bereich | Tests | Framework |
 |---------|-------|-----------|
 | **Smart Contracts** | **276** | Hardhat + Chai + Waffle |
-| Creator Gateway | 20 | Jest + ts-jest + supertest |
+| Creator Gateway | 26 | Jest + ts-jest + supertest |
 | Points Backend | 20 | Jest |
 | Benefits Network | 8 | Jest |
-| **Gesamt** | **324** | |
+| **Gesamt** | **330** | |
 
 ### Contract Tests (276 — 9 Suites)
 
@@ -59,10 +59,10 @@
 
 | Metrik | Wert |
 |--------|------|
-| Statements | 95.01% |
-| Branches | 80.92% |
-| Functions | 94.78% |
-| Lines | 96.41% |
+| Statements | 98.89% |
+| Branches | 84.65% |
+| Functions | 97.39% |
+| Lines | 98.60% |
 
 ---
 
@@ -123,7 +123,7 @@
 | Check | Status |
 |-------|--------|
 | Slither v0.11.5 | **PASS** — 0 High/Critical, 15 Fixes, 36 akzeptiert |
-| solidity-coverage | **95% Stmts, 81% Branch** |
+| solidity-coverage | **99% Stmts, 85% Branch** |
 | 276 Contract Tests | **PASS** — 0 Failures |
 | Governance Lifecycle | **PASS** — Proposal #0 + #1 executed via 48h Timelock |
 | Third-party Audit | **Offen** — empfohlen vor Mainnet |
@@ -134,7 +134,7 @@
 
 | Workflow | Trigger | Steps |
 |----------|---------|-------|
-| Creator Gateway CI | Push/PR to `apps/creator-gateway/` | tsc + jest (20 tests) |
+| Creator Gateway CI | Push/PR to `apps/creator-gateway/` | tsc + jest (26 tests) |
 | Points Backend CI | Push/PR to `apps/points-backend/` | prisma generate + tsc + jest (20 tests) |
 | AI Copilot CI | Push/PR to `apps/ai-copilot/` | tsc + build |
 

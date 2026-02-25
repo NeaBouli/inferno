@@ -6,10 +6,10 @@ Stand: 26. Februar 2026 | 276 Tests passing | solidity-coverage
 
 | Metrik | Wert |
 |--------|------|
-| **Statements** | **95.01%** |
-| **Branches** | **80.92%** |
-| **Functions** | **94.78%** |
-| **Lines** | **96.41%** |
+| **Statements** | **98.89%** |
+| **Branches** | **84.65%** |
+| **Functions** | **97.39%** |
+| **Lines** | **98.60%** |
 
 ## Coverage pro Contract
 
@@ -23,7 +23,7 @@ Stand: 26. Februar 2026 | 276 Tests passing | solidity-coverage
 | Governance.sol | 100% | 97.92% | 100% | 100% | OK |
 | IFRLock.sol | 100% | 85.71% | 100% | 100% | OK |
 | PartnerVault.sol | 98.31% | 84.51% | 100% | 99.33% | OK |
-| FeeRouterV1.sol | 67.44% | 62% | 72.73% | 78.43% | Verbesserungsbedarf |
+| FeeRouterV1.sol | 100% | 96% | 100% | 100% | OK |
 
 ### Mocks (nicht sicherheitsrelevant)
 
@@ -42,11 +42,6 @@ Stand: 26. Februar 2026 | 276 Tests passing | solidity-coverage
 
 ## Schwach abgedeckte Bereiche
 
-### FeeRouterV1.sol (67.44% Stmts, 62% Branch)
-- Uncovered Lines: 130, 131, 137, 141, 145, 156, 172, 181
-- Fehlend: swapWithFee() Edge-Cases (Adapter-Interaktion, Slippage-Pfade, Voucher-Ablauf)
-- **Empfehlung:** 5-8 zusaetzliche Tests fuer Adapter-Integration und Voucher-Validation
-
 ### BuybackVault.sol (61.76% Branch)
 - Alle Statements + Functions 100%, aber Branch-Coverage niedrig
 - Fehlend: Edge-Cases in executeBuyback() (Slippage, Cooldown-Overlap, Treasury-Split-Pfade)
@@ -58,10 +53,9 @@ Stand: 26. Februar 2026 | 276 Tests passing | solidity-coverage
 
 ## Naechste Schritte
 
-1. **FeeRouterV1 Tests erweitern** — Prioritaet Hoch (sicherheitskritisch)
-2. **BuybackVault Branch-Tests** — Prioritaet Mittel
-3. **Vesting Grenzwert-Tests** — Prioritaet Niedrig
-4. **Coverage nach Fixes erneut laufen lassen**
+1. **BuybackVault Branch-Tests** — Prioritaet Mittel
+2. **Vesting Grenzwert-Tests** — Prioritaet Niedrig
+3. **Coverage nach Fixes erneut laufen lassen**
 
 ## Coverage generieren
 
