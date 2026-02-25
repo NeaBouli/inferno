@@ -843,7 +843,11 @@
             </tr>
             <tr>
               <td>Governance Proposal #3 (setFeeExempt new PartnerVault)</td>
-              <td><span class="badge badge-pending">Pending &mdash; ETA 26.02.2026</span></td>
+              <td><span class="badge badge-pending">Pending &mdash; ETA 26.02.2026 08:41 CET</span></td>
+            </tr>
+            <tr>
+              <td>1.4M IFR Top-up to PartnerVault v2</td>
+              <td><span class="badge badge-pending">Pending &mdash; after Proposal #3</span></td>
             </tr>
             <tr>
               <td>Set treasury/community addresses</td>
@@ -851,6 +855,15 @@
             </tr>
           </tbody>
         </table>
+
+        <div class="info-box warning" style="margin-top: 20px;">
+          <strong>Proposal #3 — Execution Scripts Ready</strong><br>
+          <code>setFeeExempt(PartnerVault v2, true)</code> wird ab 26.02.2026 08:41 CET executable.<br>
+          Nach Execution: 1.4M IFR Top-up an PartnerVault v2 (<code>0x5F12...0A39</code>).<br><br>
+          <strong>Scripts:</strong><br>
+          <code>npx hardhat run scripts/execute-proposal.js --network sepolia</code><br>
+          <code>npx hardhat run scripts/topup-partnervault.js --network sepolia</code>
+        </div>
       </div>
 
       <!-- Footer -->

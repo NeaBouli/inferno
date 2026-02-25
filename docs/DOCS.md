@@ -46,12 +46,17 @@ inferno/
 │   └── deploy-feerouter.js           [x] FeeRouterV1 Deploy + Verify
 ├── tasks/
 │   └── admin.js                       [x] Hardhat CLI Tasks (lock-check, vault-status, feerouter-status, token-stats, gov-queue)
+├── .github/
+│   └── workflows/
+│       ├── creator-gateway.yml       [x] CI: tsc + jest
+│       ├── points-backend.yml        [x] CI: prisma generate + tsc + jest
+│       └── ai-copilot.yml           [x] CI: tsc + build
 ├── apps/
 │   ├── dashboard/                      [x] React + Vite Frontend (Phase 1 + Phase 2)
 │   ├── governance-dashboard/          [x] React + Vite + TS + Tailwind (Overview, Partners, Timelock, Calldata)
 │   ├── ai-copilot/                   [x] React + Vite + TS + Tailwind + Express (3 Modi, RAG, Safety Guards)
 │   ├── points-backend/               [x] Express + Prisma + SQLite + siwe + jose (SIWE Auth, Points, EIP-712 Voucher, 20 Tests)
-│   ├── creator-gateway/              [x] Express + ethers v5 + googleapis + JWT (YouTube x IFR Lock Bridge, Port 3005)
+│   ├── creator-gateway/              [x] Express + ethers v5 + googleapis + JWT (YouTube x IFR Lock Bridge, Port 3005, 14 Tests)
 │   └── benefits-network/
 │       ├── backend/                   [x] Express + Prisma + SQLite (8 Tests)
 │       └── frontend/                  [x] Next.js 14 + Tailwind + wagmi v2 (PWA)
@@ -79,7 +84,7 @@ inferno/
 │   ├── SECURITY_POLICY.md             Responsible Disclosure, Bug Bounty, Scope, Known Design Decisions
 │   ├── TOKENOMICS_MODEL.md            Deflationskurve, Allocation, PartnerVault Emission, Lock Economics, FeeRouter Fee
 │   ├── PARTNER_REWARDS_SPEC.md        Reward-Formel, Vesting, Anti-Gaming, Partner-Typen (A/B/C), Onboarding
-│   ├── PATCH-GUIDELINES.md             Patch-Richtlinien
+│   ├── PATCH-GUIDELINES.md             Patch-Richtlinien v1.0 (6 Schritte, Versionierung, Notfall-Patches)
 │   ├── PROJECT-SUMMARY.md             Projektzusammenfassung
 │   └── wiki/                          [x] 9 HTML-Seiten (Contracts, Tokenomics, Lock, Governance, Security, Deploy, Integration, AI Copilot)
 ├── STATUS-REPORT.md                    Vollstaendiger Statusbericht
@@ -171,6 +176,11 @@ inferno/
 
 | Datum | Aenderung |
 |-------|-----------|
+| 2026-02-25 | Creator Gateway Tests: 14 Tests (lock-checker, entitlement OR/AND, auth routes) mit Jest + ts-jest + supertest |
+| 2026-02-25 | Dashboard: ProtocolStats Komponente (IFRLock totalLocked, PartnerVault Balance, FeeRouter Fee, Reward Rate, Auto-refresh 30s) |
+| 2026-02-25 | PATCH-GUIDELINES.md v1.0: 6-Schritt Prozess, Severity-Matrix, Smart Contract Patch Rules, Versionierung, Notfall-Patches |
+| 2026-02-25 | GitHub Actions CI: Creator Gateway (tsc+jest), Points Backend (prisma+tsc+jest), AI Copilot (tsc+build) |
+| 2026-02-25 | Deployment Wiki: Proposal #3 Info-Box mit Scripts + 1.4M IFR Top-up Step |
 | 2026-02-26 | Governance Constitution v1.0 erweitert (Artikel 1-7, FeeRouterV1 Parameter, Multisig Struktur, Verbotene Aktionen) |
 | 2026-02-26 | Business Onboarding SOP erweitert (6 Schritte, Hosted + Self-Hosted, Tier-Konfiguration, Kassenpersonal Training, FAQ) |
 | 2026-02-26 | YouTube Integration Guide: Hybrid Model B, Creator Gateway Setup, Entitlement Config, Monetarisierung, Roadmap |

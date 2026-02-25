@@ -71,7 +71,8 @@ Token holdings grant future DAO voting rights.
 
 ## Testing & Security
 
-- 256 unit tests across 10 contracts — all passing
+- 256 unit tests (contracts) + 14 unit tests (Creator Gateway) — all passing
+- GitHub Actions CI: Creator Gateway, Points Backend, AI Copilot
 - Slither security audit: 0 high/critical findings
 - Full Sepolia testnet deployment with verified contracts
 - Governance lifecycle tested: propose → 48h wait → execute

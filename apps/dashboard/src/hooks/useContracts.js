@@ -8,6 +8,9 @@ import {
   BuybackVaultABI,
   LiquidityReserveABI,
   VestingABI,
+  IFRLockABI,
+  PartnerVaultABI,
+  FeeRouterABI,
 } from "../config/abis";
 
 const SEPOLIA_RPC = import.meta.env.VITE_SEPOLIA_RPC_URL || "https://rpc.sepolia.org";
@@ -27,6 +30,9 @@ export function useContracts(signer) {
       buybackVault: new ethers.Contract(ADDRESSES.BuybackVault, BuybackVaultABI, signerOrProvider),
       liquidityReserve: new ethers.Contract(ADDRESSES.LiquidityReserve, LiquidityReserveABI, signerOrProvider),
       vesting: new ethers.Contract(ADDRESSES.Vesting, VestingABI, signerOrProvider),
+      ifrLock: new ethers.Contract(ADDRESSES.IFRLock, IFRLockABI, signerOrProvider),
+      partnerVault: new ethers.Contract(ADDRESSES.PartnerVault, PartnerVaultABI, signerOrProvider),
+      feeRouter: new ethers.Contract(ADDRESSES.FeeRouter, FeeRouterABI, signerOrProvider),
     };
   }, [signer]);
 }

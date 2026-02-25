@@ -1,5 +1,6 @@
 import Header from "./components/Header";
 import TokenOverview from "./components/TokenOverview";
+import ProtocolStats from "./components/ProtocolStats";
 import Transfer from "./components/Transfer";
 import Governance from "./components/Governance";
 import Contracts from "./components/Contracts";
@@ -21,12 +22,13 @@ export default function App() {
       />
       <main className="main">
         <TokenOverview contracts={contracts} account={account} />
+        <ProtocolStats contracts={contracts} />
         <Transfer contracts={contracts} account={account} signer={signer} />
         <Governance contracts={contracts} account={account} signer={signer} />
         <Contracts />
       </main>
       <footer className="footer">
-        Inferno ($IFR) &mdash; Community Fair Launch Model
+        Inferno ($IFR) &mdash; Community Fair Launch Model &mdash; Sepolia Testnet
       </footer>
     </div>
   );

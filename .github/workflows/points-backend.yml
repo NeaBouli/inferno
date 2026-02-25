@@ -1,0 +1,35 @@
+name: Points Backend CI
+
+on:
+  push:
+    paths:
+      - 'apps/points-backend/**'
+  pull_request:
+    paths:
+      - 'apps/points-backend/**'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/points-backend
+    env:
+      DATABASE_URL: file:./test.db
+      JWT_SECRET: test-secret-32-chars-minimum-here
+      VOUCHER_SIGNER_PRIVATE_KEY: "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"
+      FEE_ROUTER_ADDRESS: "0x499289C8Ef49769F4FcFF3ca86D4BD7b55B49aa4"
+      CHAIN_ID: "11155111"
+      PORT: "3004"
+      ADMIN_SECRET: "test-admin-secret"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: apps/points-backend/package-lock.json
+      - run: npm ci
+      - run: npx prisma generate
+      - run: npx tsc --noEmit
+      - run: npm test
