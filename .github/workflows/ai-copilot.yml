@@ -1,0 +1,28 @@
+name: AI Copilot CI
+
+on:
+  push:
+    paths:
+      - 'apps/ai-copilot/**'
+  pull_request:
+    paths:
+      - 'apps/ai-copilot/**'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/ai-copilot
+    env:
+      ANTHROPIC_API_KEY: "placeholder-not-used-in-build"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: apps/ai-copilot/package-lock.json
+      - run: npm ci
+      - run: npx tsc --noEmit
+      - run: npm run build

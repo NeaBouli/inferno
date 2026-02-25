@@ -60,3 +60,23 @@ export const VestingABI = [
   "function totalAllocation() view returns (uint256)",
   "function paused() view returns (bool)",
 ];
+
+export const IFRLockABI = [
+  "function isLocked(address wallet, uint256 minAmount) view returns (bool)",
+  "function lockedAmount(address wallet) view returns (uint256)",
+  "function totalLocked() view returns (uint256)",
+  "function lockType(address wallet) view returns (bytes32)",
+];
+
+export const PartnerVaultABI = [
+  "function rewardBps() view returns (uint256)",
+  "function totalRewarded() view returns (uint256)",
+  "function annualEmissionCap() view returns (uint256)",
+  "function partnerCount() view returns (uint256)",
+];
+
+export const FeeRouterABI = [
+  "function protocolFeeBps() view returns (uint256)",
+  "function paused() view returns (bool)",
+  "function voucherSigner() view returns (address)",
+];
