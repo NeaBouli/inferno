@@ -526,7 +526,7 @@
           <span class="stat-label">High / Critical</span>
         </div>
         <div class="stat-item">
-          <span class="stat-value">256</span>
+          <span class="stat-value">276</span>
           <span class="stat-label">Tests Passing</span>
         </div>
         <div class="stat-item">
@@ -603,12 +603,12 @@
       <h2><span class="section-num">2.</span> Test Coverage</h2>
 
       <p>
-        The project maintains <strong>256 tests</strong> across <strong>9 test suites</strong>, all passing. Tests cover deployment, core logic, edge cases, access control, pause mechanisms, and cross-contract integration.
+        The project maintains <strong>276 tests</strong> across <strong>9 test suites</strong>, all passing. Tests cover deployment, core logic, edge cases, access control, pause mechanisms, and cross-contract integration.
       </p>
 
       <div class="callout callout-green">
         <p>
-          <strong>256 / 256 tests passing</strong> &mdash; 9 test suites, 0 failures.
+          <strong>276 / 276 tests passing</strong> &mdash; 9 test suites, 0 failures.
         </p>
       </div>
 
@@ -624,12 +624,12 @@
           <tbody>
             <tr>
               <td><strong>InfernoToken</strong></td>
-              <td>21</td>
+              <td>22</td>
               <td>Deployment, fee math, exemptions, owner functions, edge cases</td>
             </tr>
             <tr>
               <td><strong>LiquidityReserve</strong></td>
-              <td>28</td>
+              <td>30</td>
               <td>Lock period, staged withdrawal, pause, period limits</td>
             </tr>
             <tr>
@@ -662,6 +662,11 @@
               <td>89</td>
               <td>Partners, milestones, rewards, vesting, claims, authorizedCaller, anti-double-count, algo throttle, annual cap, bounds</td>
             </tr>
+            <tr>
+              <td><strong>FeeRouterV1</strong></td>
+              <td>33</td>
+              <td>Deployment, fee charging, voucher discount, voucher validation (isVoucherValid), replay protection, signer rotation, fee collector, access control, pause, receive ETH</td>
+            </tr>
           </tbody>
         </table>
       </div>
@@ -669,6 +674,95 @@
       <p>Run the full test suite:</p>
 
       <pre><code>npx hardhat test</code></pre>
+
+      <h3>Solidity Coverage (solidity-coverage)</h3>
+
+      <p>
+        Code coverage measured with <code>solidity-coverage</code>. Overall: <strong>95% statements</strong>, <strong>81% branches</strong>, <strong>95% functions</strong>, <strong>96% lines</strong>.
+      </p>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Contract</th>
+              <th>Stmts</th>
+              <th>Branch</th>
+              <th>Funcs</th>
+              <th>Lines</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>InfernoToken</strong></td>
+              <td>100%</td>
+              <td>92.86%</td>
+              <td>100%</td>
+              <td>100%</td>
+            </tr>
+            <tr>
+              <td><strong>LiquidityReserve</strong></td>
+              <td>100%</td>
+              <td>86.67%</td>
+              <td>100%</td>
+              <td>100%</td>
+            </tr>
+            <tr>
+              <td><strong>Vesting</strong></td>
+              <td>96.55%</td>
+              <td>69.44%</td>
+              <td>88.89%</td>
+              <td>97.5%</td>
+            </tr>
+            <tr>
+              <td><strong>BuybackVault</strong></td>
+              <td>100%</td>
+              <td>61.76%</td>
+              <td>100%</td>
+              <td>100%</td>
+            </tr>
+            <tr>
+              <td><strong>BurnReserve</strong></td>
+              <td>100%</td>
+              <td>100%</td>
+              <td>100%</td>
+              <td>100%</td>
+            </tr>
+            <tr>
+              <td><strong>Governance</strong></td>
+              <td>100%</td>
+              <td>97.92%</td>
+              <td>100%</td>
+              <td>100%</td>
+            </tr>
+            <tr>
+              <td><strong>IFRLock</strong></td>
+              <td>100%</td>
+              <td>85.71%</td>
+              <td>100%</td>
+              <td>100%</td>
+            </tr>
+            <tr>
+              <td><strong>PartnerVault</strong></td>
+              <td>98.31%</td>
+              <td>84.51%</td>
+              <td>100%</td>
+              <td>99.33%</td>
+            </tr>
+            <tr>
+              <td><strong>FeeRouterV1</strong></td>
+              <td>67.44%</td>
+              <td>62%</td>
+              <td>72.73%</td>
+              <td>78.43%</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p>
+        Full coverage report: <a href="https://github.com/neabouli/inferno/blob/main/docs/COVERAGE_REPORT.md">COVERAGE_REPORT.md</a>
+      </p>
 
       <!-- ============================================================
            3. Reentrancy Protection

@@ -1,12 +1,32 @@
 # Inferno ($IFR) — Mainnet Deployment Checklist
 
+> **Status:** Pre-Mainnet | **Sepolia:** 10 Contracts deployed + verified | **Tests:** 277 Contract + 20 Creator Gateway + 20 Points + 8 Benefits = 325 Total | **Coverage:** 95% Stmts, 81% Branch
+
+## Sepolia Testnet — Abgeschlossen
+
+| Meilenstein | Status |
+|-------------|--------|
+| 10 Contracts deployed + verified | Done |
+| Uniswap V2 LP Pair live | Done |
+| Ownership an Governance transferiert | Done |
+| Governance Proposals #0, #1 executed | Done |
+| Governance Proposal #2 cancelled (v1 deprecated) | Done |
+| Governance Proposal #3 pending (PartnerVault v2 feeExempt) | Pending |
+| Full Lock/Unlock Cycle verified (8/8) | Done |
+| Slither Audit: 0 high/critical | Done |
+| solidity-coverage: 95% Stmts, 81% Branch | Done |
+
+---
+
 ## Phase 0: Vor dem Deployment (Vorbereitung)
 
 ### Security
+- [x] Slither Audit abgeschlossen (0 high/critical, 15 Fixes applied)
+- [x] solidity-coverage Report generiert (95% Stmts, 81% Branch)
 - [ ] Third-party Security Audit abgeschlossen (empfohlen: Code4rena, Sherlock, oder Cyfrin)
 - [ ] Alle Audit-Findings behoben und re-verified
 - [ ] Slither nochmals laufen lassen auf finalem Code
-- [ ] npx hardhat test — alle 243 Tests bestehen
+- [ ] npx hardhat test — alle Tests bestehen
 - [ ] Code Freeze: kein Commit nach Audit-Abschluss ohne Re-Audit
 
 ### Multisig Setup (MUSS vor Deployment fertig sein)
@@ -31,6 +51,7 @@
 - [ ] Timelock delay = 172800 (48h)
 - [ ] Team Vesting: 150M IFR, 48 Monate, 12 Monate Cliff
 - [ ] Liquidity Reserve: 200M IFR, 6 Monate Lock
+- [ ] FeeRouterV1: protocolFeeBps = 5, FEE_CAP_BPS = 25
 
 ---
 
@@ -61,6 +82,12 @@
   - rewardBps = 1500
   - annualEmissionCap = 4_000_000 * 10**9
   - Adresse: [PARTNERVAULT_ADDRESS]
+  - Etherscan verifizieren
+- [ ] FeeRouterV1.sol deployen
+  - governance = GOVERNANCE_ADDRESS
+  - feeCollector = Treasury Multisig
+  - voucherSigner = Points Backend Signer
+  - Adresse: [FEEROUTER_ADDRESS]
   - Etherscan verifizieren
 
 ### Schritt 3 — Vesting & Reserve
@@ -96,7 +123,12 @@
 - [ ] LP Tokens gesperrt (Liquiditaets-Lock-Service, min. 6 Monate)
 - [ ] LP Pair Adresse notiert: [LP_PAIR_ADDRESS]
 
-### Schritt 7 — Ownership Transfer zu Multisig
+### Schritt 7 — FeeRouter Setup
+- [ ] Swap-Adapter deployen und whitelisten (setAdapter)
+- [ ] Voucher Signer Adresse setzen (Points Backend Key)
+- [ ] Test-Swap mit Voucher Discount verifizieren
+
+### Schritt 8 — Ownership Transfer zu Multisig
 - [ ] InfernoToken Ownership → Governance
 - [ ] Governance Owner → MULTISIG_ADDRESS
 - [ ] Guardian → GUARDIAN_ADDRESS
@@ -108,7 +140,7 @@
 
 ## Phase 2: Post-Deployment Verification
 
-- [ ] Alle 9 Contract-Adressen in docs/wiki/deployment.html aktualisiert
+- [ ] Alle 10 Contract-Adressen in docs/wiki/deployment.html aktualisiert
 - [ ] Landing Page Etherscan-Links aktualisiert
 - [ ] README Contract-Adressen aktualisiert
 - [ ] docs/DEPLOYMENTS.md Mainnet-Sektion hinzugefuegt
@@ -119,8 +151,10 @@
   - [ ] Unlock: IFR entsperren funktioniert
   - [ ] Governance: Proposal → 48h → Execute
   - [ ] PartnerVault: claim() funktioniert
+  - [ ] FeeRouter: swapWithFee mit/ohne Voucher funktioniert
 - [ ] Benefits Network Backend: IFRLOCK_ADDRESS auf Mainnet gesetzt
 - [ ] Governance Dashboard: alle Adressen auf Mainnet gesetzt
+- [ ] Points Backend: voucherSigner + FeeRouter Adresse auf Mainnet
 
 ---
-*Stand: Februar 2026 | v1.0*
+*Stand: Februar 2026 | v1.1*

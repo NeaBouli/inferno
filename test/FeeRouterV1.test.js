@@ -262,4 +262,272 @@ describe("FeeRouterV1", function () {
       )
     ).to.be.revertedWith("FeeRouter paused");
   });
+
+  // --- Test 13: setVoucherSigner governance ---
+  it("governance can set voucher signer", async function () {
+    await router.connect(governance).setVoucherSigner(userB.address);
+    expect(await router.voucherSigner()).to.equal(userB.address);
+  });
+
+  // --- Test 14: setVoucherSigner non-governance ---
+  it("non-governance cannot set voucher signer", async function () {
+    await expect(router.connect(userA).setVoucherSigner(userB.address))
+      .to.be.revertedWith("Not governance");
+  });
+
+  // --- Test 15: setFeeCollector governance ---
+  it("governance can set fee collector", async function () {
+    await router.connect(governance).setFeeCollector(userB.address);
+    expect(await router.feeCollector()).to.equal(userB.address);
+  });
+
+  // --- Test 16: setFeeCollector non-governance ---
+  it("non-governance cannot set fee collector", async function () {
+    await expect(router.connect(userA).setFeeCollector(userB.address))
+      .to.be.revertedWith("Not governance");
+  });
+
+  // --- Test 17: setPaused non-governance ---
+  it("non-governance cannot set paused", async function () {
+    await expect(router.connect(userA).setPaused(true))
+      .to.be.revertedWith("Not governance");
+  });
+
+  // --- Test 18: setFeeBps at exact cap ---
+  it("setFeeBps at exact cap (25) succeeds", async function () {
+    await router.connect(governance).setFeeBps(25);
+    expect(await router.protocolFeeBps()).to.equal(25);
+  });
+
+  // --- Test 19: setAdapter emits event ---
+  it("setAdapter emits AdapterWhitelisted event", async function () {
+    await expect(router.connect(governance).setAdapter(userB.address, true))
+      .to.emit(router, "AdapterWhitelisted").withArgs(userB.address, true);
+  });
+
+  // --- Test 20: voucher not for sender ---
+  it("reverts voucher not for sender", async function () {
+    const expiry = await blockTimestamp() + 3600;
+    const voucher = {
+      user: userB.address, // voucher is for userB
+      discountBps: 3,
+      maxUses: 1,
+      expiry,
+      nonce: 500,
+    };
+
+    const sig = await signVoucher(voucherSigner, voucher, router.address);
+
+    // userA tries to use userB's voucher
+    await expect(
+      router.connect(userA).swapWithFee(
+        adapter.address, "0x", voucher, sig, true,
+        { value: ethers.utils.parseEther("1") }
+      )
+    ).to.be.revertedWith("Voucher not for sender");
+  });
+
+  // --- Test 21: discount exceeds fee ---
+  it("reverts when discount exceeds protocol fee", async function () {
+    const expiry = await blockTimestamp() + 3600;
+    const voucher = {
+      user: userA.address,
+      discountBps: 6, // 6 > protocolFeeBps (5)
+      maxUses: 1,
+      expiry,
+      nonce: 600,
+    };
+
+    const sig = await signVoucher(voucherSigner, voucher, router.address);
+
+    await expect(
+      router.connect(userA).swapWithFee(
+        adapter.address, "0x", voucher, sig, true,
+        { value: ethers.utils.parseEther("1") }
+      )
+    ).to.be.revertedWith("Discount exceeds fee");
+  });
+
+  // --- Test 22: receive() accepts ETH ---
+  it("contract can receive ETH via receive()", async function () {
+    const amount = ethers.utils.parseEther("0.1");
+    await userA.sendTransaction({ to: router.address, value: amount });
+    expect(await ethers.provider.getBalance(router.address)).to.equal(amount);
+  });
+
+  // --- Test 23: swapWithFee with value=0 ---
+  it("swapWithFee with value=0 charges no fee", async function () {
+    const collectorBefore = await ethers.provider.getBalance(feeCollector.address);
+
+    await router.connect(userA).swapWithFee(
+      adapter.address, "0x", emptyVoucher(), "0x", false,
+      { value: 0 }
+    );
+
+    const collectorAfter = await ethers.provider.getBalance(feeCollector.address);
+    expect(collectorAfter.sub(collectorBefore)).to.equal(0);
+  });
+
+  // --- Test 24: setPaused emits event ---
+  it("setPaused emits Paused event", async function () {
+    await expect(router.connect(governance).setPaused(true))
+      .to.emit(router, "Paused").withArgs(true);
+  });
+
+  // --- isVoucherValid tests ---
+  describe("isVoucherValid", function () {
+    // --- Test 25: valid voucher ---
+    it("returns (true, Valid) for valid voucher", async function () {
+      const expiry = await blockTimestamp() + 3600;
+      const voucher = {
+        user: userA.address,
+        discountBps: 3,
+        maxUses: 1,
+        expiry,
+        nonce: 700,
+      };
+
+      const sig = await signVoucher(voucherSigner, voucher, router.address);
+      const [valid, reason] = await router.connect(userA).isVoucherValid(voucher, sig);
+      expect(valid).to.equal(true);
+      expect(reason).to.equal("Valid");
+    });
+
+    // --- Test 26: wrong user ---
+    it("returns (false, Wrong user) for wrong caller", async function () {
+      const expiry = await blockTimestamp() + 3600;
+      const voucher = {
+        user: userB.address,
+        discountBps: 3,
+        maxUses: 1,
+        expiry,
+        nonce: 701,
+      };
+
+      const sig = await signVoucher(voucherSigner, voucher, router.address);
+      const [valid, reason] = await router.connect(userA).isVoucherValid(voucher, sig);
+      expect(valid).to.equal(false);
+      expect(reason).to.equal("Wrong user");
+    });
+
+    // --- Test 27: expired ---
+    it("returns (false, Expired) for expired voucher", async function () {
+      const voucher = {
+        user: userA.address,
+        discountBps: 3,
+        maxUses: 1,
+        expiry: 1, // way in the past
+        nonce: 702,
+      };
+
+      const sig = await signVoucher(voucherSigner, voucher, router.address);
+      const [valid, reason] = await router.connect(userA).isVoucherValid(voucher, sig);
+      expect(valid).to.equal(false);
+      expect(reason).to.equal("Expired");
+    });
+
+    // --- Test 28: used nonce ---
+    it("returns (false, Used) for used nonce", async function () {
+      const expiry = await blockTimestamp() + 3600;
+      const voucher = {
+        user: userA.address,
+        discountBps: 3,
+        maxUses: 1,
+        expiry,
+        nonce: 703,
+      };
+
+      const sig = await signVoucher(voucherSigner, voucher, router.address);
+
+      // Use the voucher first
+      await router.connect(userA).swapWithFee(
+        adapter.address, "0x", voucher, sig, true,
+        { value: ethers.utils.parseEther("1") }
+      );
+
+      // Now check validity — nonce is used
+      const [valid, reason] = await router.connect(userA).isVoucherValid(voucher, sig);
+      expect(valid).to.equal(false);
+      expect(reason).to.equal("Used");
+    });
+
+    // --- Test 29: discount too high ---
+    it("returns (false, Discount too high) for discount > fee", async function () {
+      const expiry = await blockTimestamp() + 3600;
+      const voucher = {
+        user: userA.address,
+        discountBps: 10, // > protocolFeeBps (5)
+        maxUses: 1,
+        expiry,
+        nonce: 704,
+      };
+
+      const sig = await signVoucher(voucherSigner, voucher, router.address);
+      const [valid, reason] = await router.connect(userA).isVoucherValid(voucher, sig);
+      expect(valid).to.equal(false);
+      expect(reason).to.equal("Discount too high");
+    });
+
+    // --- Test 30: invalid signature ---
+    it("returns (false, Invalid signature) for wrong signer", async function () {
+      const expiry = await blockTimestamp() + 3600;
+      const voucher = {
+        user: userA.address,
+        discountBps: 3,
+        maxUses: 1,
+        expiry,
+        nonce: 705,
+      };
+
+      // Sign with wrong key
+      const badSig = await signVoucher(userB, voucher, router.address);
+      const [valid, reason] = await router.connect(userA).isVoucherValid(voucher, badSig);
+      expect(valid).to.equal(false);
+      expect(reason).to.equal("Invalid signature");
+    });
+  });
+
+  // --- Test 31: voucher with new signer after rotation ---
+  it("voucher works with rotated signer", async function () {
+    // Rotate signer to userB
+    await router.connect(governance).setVoucherSigner(userB.address);
+
+    const expiry = await blockTimestamp() + 3600;
+    const voucher = {
+      user: userA.address,
+      discountBps: 3,
+      maxUses: 1,
+      expiry,
+      nonce: 800,
+    };
+
+    // Sign with new signer (userB)
+    const sig = await signVoucher(userB, voucher, router.address);
+
+    await expect(
+      router.connect(userA).swapWithFee(
+        adapter.address, "0x", voucher, sig, true,
+        { value: ethers.utils.parseEther("1") }
+      )
+    ).to.emit(router, "VoucherUsed");
+  });
+
+  // --- Test 32: fee collector receives after rotation ---
+  it("fee goes to new collector after setFeeCollector", async function () {
+    await router.connect(governance).setFeeCollector(userB.address);
+
+    const swapAmount = ethers.utils.parseEther("1");
+    const feeBps = await router.protocolFeeBps();
+    const expectedFee = swapAmount.mul(feeBps).div(10000);
+
+    const collectorBefore = await ethers.provider.getBalance(userB.address);
+
+    await router.connect(userA).swapWithFee(
+      adapter.address, "0x", emptyVoucher(), "0x", false,
+      { value: swapAmount }
+    );
+
+    const collectorAfter = await ethers.provider.getBalance(userB.address);
+    expect(collectorAfter.sub(collectorBefore)).to.equal(expectedFee);
+  });
 });

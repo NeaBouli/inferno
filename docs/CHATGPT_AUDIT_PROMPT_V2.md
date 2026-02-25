@@ -13,7 +13,7 @@ Du bist ein unabhaengiger Auditor fuer das Inferno ($IFR) Projekt. Pruefe ALLE g
 - **Token:** Inferno ($IFR), ERC-20, 9 Decimals, 1B Supply, deflationary (2.5% burn + 1% pool fee)
 - **Modell:** Community Fair Launch (CFLM) — kein Presale, kein VC
 - **On-Chain Components:** 10 (9 Repo-Contracts + 1 Uniswap V2 LP Pair)
-- **Tests:** 256 (9 Test-Dateien), alle bestanden
+- **Tests:** 276 (9 Test-Dateien), alle bestanden
 - **Contracts:**
   1. InfernoToken — `0x3Bd71947F288d1dd8B21129B1bE4FF16EDd5d1F4`
   2. LiquidityReserve — `0xF7E90D0d17f8232365186AA085D26eaEfAf011aF`
@@ -35,7 +35,7 @@ Du bist ein unabhaengiger Auditor fuer das Inferno ($IFR) Projekt. Pruefe ALLE g
 Pruefe in ALLEN Dateien ob folgende Zahlen konsistent sind:
 - "10 on-chain components" (nicht 9, nicht 8)
 - "9 repo contracts" (nicht 8)
-- "256 tests" (nicht 243, nicht 154)
+- "276 tests" (nicht 256, nicht 243)
 - "9 test suites" (nicht 8, nicht 7)
 - Token Allocation: 40/20/15/15/6/4 (summe = 100%)
 - Contract-Adressen stimmen ueberall ueberein
