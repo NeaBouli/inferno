@@ -4,7 +4,22 @@ All notable changes to the Inferno ($IFR) project.
 
 ---
 
-## [Unreleased] — 2026-02-24/25
+## [Unreleased] — 2026-02-26
+
+### Added
+- FeeRouterV1 Tests: 13 → 33 (isVoucherValid 6 branches, setVoucherSigner, setFeeCollector, receive(), access control, signer rotation)
+- Creator Gateway: youtube-checker.test.ts (6 YouTube mock tests) — 20 Tests gesamt
+- Wiki security.html: solidity-coverage Tabelle (pro Contract), FeeRouterV1 Zeile in Test-Suite-Tabelle
+- MAINNET_CHECKLIST.md v1.1: FeeRouter Deploy-Schritt, Sepolia Status Summary, korrekte Test-Zahlen
+
+### Changed
+- Test-Counts synchronisiert: 276 Contract Tests, 324 Gesamt (ueber 10 Dateien)
+- WHITEPAPER.md, AUDIT_BRIEF.md: 243 → 276 Tests
+- CHATGPT_AUDIT_PROMPT_V2.md: alte Referenzen aktualisiert
+
+---
+
+## [0.9.0] — 2026-02-24/25
 
 ### Added
 - PartnerVault v2 deployed auf Sepolia (`0x5F12C0bC616e9Ca347D48C33266aA8fe98490A39`)

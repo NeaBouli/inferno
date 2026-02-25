@@ -135,7 +135,7 @@ Integration: 5 Zeilen Code. Vollstaendig entkoppelt.
 
 - Open Source: Alle Smart Contracts oeffentlich auf GitHub
 - Slither Static Analysis: 0 High/Critical Findings
-- 243 Unit Tests (alle bestehen)
+- 276 Unit Tests (alle bestehen)
 - Third-party Audit: empfohlen vor Mainnet-Deployment
 - Timelock: 48h Pflicht-Wartezeit auf alle Aenderungen
 - Kein Minting: technisch unmoeglich nach Launch
