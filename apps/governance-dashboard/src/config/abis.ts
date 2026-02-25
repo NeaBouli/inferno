@@ -68,6 +68,21 @@ export const PartnerVaultABI = [
   "event IFRLockUpdated(address indexed oldLock, address indexed newLock)",
 ];
 
+export const FeeRouterABI = [
+  "function protocolFeeBps() view returns (uint16)",
+  "function FEE_CAP_BPS() view returns (uint16)",
+  "function paused() view returns (bool)",
+  "function governance() view returns (address)",
+  "function feeCollector() view returns (address)",
+  "function voucherSigner() view returns (address)",
+  "function whitelistedAdapters(address) view returns (bool)",
+  "function setFeeBps(uint16 newBps)",
+  "function setAdapter(address adapter, bool status)",
+  "function setVoucherSigner(address newSigner)",
+  "function setPaused(bool _paused)",
+  "function setFeeCollector(address newCollector)",
+];
+
 export const GovernanceABI = [
   "function proposalCount() view returns (uint256)",
   "function getProposal(uint256) view returns (address target, bytes data, uint256 eta, bool executed, bool cancelled)",

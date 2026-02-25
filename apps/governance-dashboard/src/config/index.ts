@@ -4,4 +4,5 @@ export {
   IFRLockABI,
   PartnerVaultABI,
   GovernanceABI,
+  FeeRouterABI,
 } from "./abis";

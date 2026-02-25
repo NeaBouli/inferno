@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { ethers } from "ethers";
 import { ADDRESSES } from "../config";
-import { PartnerVaultABI } from "../config/abis";
+import { PartnerVaultABI, FeeRouterABI } from "../config/abis";
 
 interface FnDef {
   label: string;
@@ -75,6 +75,40 @@ const FUNCTIONS: FnDef[] = [
       { name: "unlockAmount", type: "uint256", placeholder: "100000000000000", hint: "Raw (9 dec). 100K = 100000000000000" },
     ],
   },
+  // --- FeeRouter ---
+  {
+    label: "FeeRouter: setFeeBps(uint16)",
+    target: ADDRESSES.FeeRouter,
+    sig: "setFeeBps(uint16)",
+    params: [
+      { name: "newBps", type: "uint16", placeholder: "5", hint: "0-25 bps. Default 5 (0.05%). Cap 25 (0.25%)" },
+    ],
+  },
+  {
+    label: "FeeRouter: setAdapter(address, bool)",
+    target: ADDRESSES.FeeRouter,
+    sig: "setAdapter(address,bool)",
+    params: [
+      { name: "adapter", type: "address", placeholder: "0x..." },
+      { name: "status", type: "bool", placeholder: "true", hint: "true = whitelist, false = remove" },
+    ],
+  },
+  {
+    label: "FeeRouter: setVoucherSigner(address)",
+    target: ADDRESSES.FeeRouter,
+    sig: "setVoucherSigner(address)",
+    params: [
+      { name: "newSigner", type: "address", placeholder: "0x..." },
+    ],
+  },
+  {
+    label: "FeeRouter: setPaused(bool)",
+    target: ADDRESSES.FeeRouter,
+    sig: "setPaused(bool)",
+    params: [
+      { name: "_paused", type: "bool", placeholder: "true", hint: "true = pause, false = unpause" },
+    ],
+  },
 ];
 
 export default function CalldataGenerator() {
@@ -101,7 +135,8 @@ export default function CalldataGenerator() {
     setError("");
     setResult(null);
     try {
-      const iface = new ethers.utils.Interface(PartnerVaultABI);
+      const abi = fn.target === ADDRESSES.FeeRouter ? FeeRouterABI : PartnerVaultABI;
+      const iface = new ethers.utils.Interface(abi);
       const args = fn.params.map((p) => {
         const raw = values[p.name]?.trim() || "";
         if (!raw) throw new Error(`Missing: ${p.name}`);

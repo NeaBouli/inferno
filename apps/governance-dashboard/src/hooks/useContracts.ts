@@ -6,6 +6,7 @@ import {
   IFRLockABI,
   PartnerVaultABI,
   GovernanceABI,
+  FeeRouterABI,
 } from "../config";
 
 const RPC_URL =
@@ -22,6 +23,7 @@ export interface Contracts {
   ifrLock: ethers.Contract;
   partnerVault: ethers.Contract;
   governance: ethers.Contract;
+  feeRouter: ethers.Contract;
 }
 
 export function useContracts(): Contracts {
@@ -33,6 +35,7 @@ export function useContracts(): Contracts {
       ifrLock: new ethers.Contract(ADDRESSES.IFRLock, IFRLockABI, provider),
       partnerVault: new ethers.Contract(ADDRESSES.PartnerVault, PartnerVaultABI, provider),
       governance: new ethers.Contract(ADDRESSES.Governance, GovernanceABI, provider),
+      feeRouter: new ethers.Contract(ADDRESSES.FeeRouter, FeeRouterABI, provider),
     };
   }, []);
 }

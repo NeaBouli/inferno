@@ -30,7 +30,7 @@ Inferno ($IFR) ist ein **deflationärer ERC-20 Utility-Token** auf Ethereum. Jed
 - **Benefits Network Frontend** — Next.js 14 + Tailwind + wagmi v2, PWA (24 Dateien, 975 LOC, 7/7 Acceptance)
 - **Benefits Network E2E Test** — 13/13 Checks (alle API-Endpoints, Proxy, PWA, Auth, State Machine)
 - **GitHub Pages Landing Page** — 9 Sektionen, Dark Theme, responsive
-- **Wiki** — 8 HTML-Seiten mit technischer Dokumentation
+- **Wiki** — 9 HTML-Seiten mit technischer Dokumentation
 - **Governance Lifecycle** komplett getestet: Proposal #0 (setFeeExempt) erfolgreich via 48h Timelock ausgeführt
 - **Fee-on-Transfer** live verifiziert: 10.000 IFR Transfer → 9.650 IFR empfangen, 250 IFR gebrannt
 - **IFRLock Contract** deployed und vollständig getestet (Lock + Unlock: 8/8 Checks bestanden)
@@ -164,7 +164,7 @@ Inferno ($IFR) ist ein **deflationärer ERC-20 Utility-Token** auf Ethereum. Jed
 │   │   ├── ifr_logo.png          # Aktuelles Logo (ifr_400x400.png)
 │   │   ├── banner.jpeg           # Hero Banner (1500x500)
 │   │   └── securecall_logo.png   # SecureCall Partner Logo
-│   └── wiki/                     # Technische Wiki (8 HTML-Seiten)
+│   └── wiki/                     # Technische Wiki (9 HTML-Seiten)
 │       ├── index.html            # Wiki Home + Navigation
 │       ├── contracts.html        # Alle 9 Contracts dokumentiert
 │       ├── tokenomics.html       # Fee-Mechanik, Deflation, Allocation
@@ -172,7 +172,8 @@ Inferno ($IFR) ist ein **deflationärer ERC-20 Utility-Token** auf Ethereum. Jed
 │       ├── governance.html       # Timelock, Proposals, DAO-Zukunft
 │       ├── security.html         # Audit, Tests, Access Control
 │       ├── deployment.html       # Adressen, Checklist, Verify
-│       └── integration.html      # Developer Guide, Partner Tiers
+│       ├── integration.html      # Developer Guide, Partner Tiers
+│       └── agent.html            # AI Copilot + Points System
 │
 ├── abi/                          # Contract ABIs (JSON)
 ├── audit/                        # Slither Audit Reports
