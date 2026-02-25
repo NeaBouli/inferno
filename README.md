@@ -155,6 +155,10 @@ SIWE authentication, points tracking, and EIP-712 signed voucher issuance for pr
 - [Security Policy](docs/SECURITY_POLICY.md) — Responsible Disclosure, Bug Bounty, Scope
 - [Tokenomics Model](docs/TOKENOMICS_MODEL.md) — Deflationskurve, Emission Model, Lock Economics
 - [Partner Rewards Spec](docs/PARTNER_REWARDS_SPEC.md) — Reward-Formel, Vesting, Anti-Gaming, Partner-Typen
+- [Benefits Network Test Guide](docs/BENEFITS_NETWORK_TEST.md) — E2E Test, API Endpoints, Lock Tiers
+- [Coverage Report](docs/COVERAGE_REPORT.md) — Solidity Coverage (95% Stmts, 81% Branch)
+- [Patch Guidelines](docs/PATCH-GUIDELINES.md) — Patch-Prozess, Severity, Versionierung
+- [Project Summary](docs/PROJECT-SUMMARY.md) — Komplett-Uebersicht (10 Contracts, 298 Tests, 7 Apps)
 
 ## Development
 

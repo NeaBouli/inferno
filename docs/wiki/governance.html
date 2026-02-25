@@ -854,6 +854,8 @@ await governance.execute(proposalId);</code></pre>
             <td><span style="color: var(--green); font-weight: 600;">Executed</span></td>
             <td>
               Executed 2026-02-20<br>
+              Target: InfernoToken &mdash; Fee exemption for DEX Router<br>
+              Proposed by: Deployer (<code>0x5Ecc...dE406</code>)<br>
               <span class="address">TX: 0x13ff46d8...</span>
             </td>
           </tr>
@@ -863,15 +865,19 @@ await governance.execute(proposalId);</code></pre>
             <td><span style="color: var(--green); font-weight: 600;">Executed</span></td>
             <td>
               Executed 2026-02-22<br>
+              Target: InfernoToken &mdash; Fee exemption for IFRLock (required for unlock())<br>
+              Proposed by: Deployer (<code>0x5Ecc...dE406</code>)<br>
               <span class="address">TX: 0x211b7949...4253a909</span>
             </td>
           </tr>
           <tr>
             <td><strong>#2</strong></td>
-            <td><code>setFeeExempt(old PartnerVault, true)</code></td>
+            <td><code>setFeeExempt(0x6EF04c...7AF090, true)</code></td>
             <td><span style="color: #ef4444; font-weight: 600;">Cancelled</span></td>
             <td>
-              Cancelled &mdash; old PartnerVault replaced by v2<br>
+              Cancelled via Guardian<br>
+              Target: InfernoToken &mdash; Fee exemption for PartnerVault v1 (deprecated)<br>
+              Reason: PartnerVault v1 replaced by v2 with upgraded features<br>
               <span class="address">TX: 0xaa829332...</span>
             </td>
           </tr>
@@ -881,7 +887,9 @@ await governance.execute(proposalId);</code></pre>
             <td><span style="color: #f59e0b; font-weight: 600;">Pending</span></td>
             <td>
               ETA: 2026-02-26 08:41 CET<br>
-              <span class="address">New PartnerVault (v2)</span>
+              Target: InfernoToken &mdash; Fee exemption for PartnerVault v2<br>
+              After execution: 1.4M IFR top-up to PartnerVault v2<br>
+              <span class="address">New PartnerVault (v2) &mdash; <code>0x5F12C0bC...490A39</code></span>
             </td>
           </tr>
         </tbody>
@@ -893,6 +901,15 @@ await governance.execute(proposalId);</code></pre>
         and algorithmic emission throttle). Proposal #2 targeted the old v1 address and was cancelled
         via Guardian. Proposal #3 was created for the new PartnerVault v2 address (<code>0x5F12...490A39</code>).
       </div>
+
+      <h3 style="margin-top:24px;">Governance Learnings (Sepolia)</h3>
+      <ul>
+        <li><strong>Contract upgrades invalidate pending proposals.</strong> When PartnerVault v1 was replaced by v2, Proposal #2 became obsolete. Always cancel outdated proposals before creating new ones for the replacement address.</li>
+        <li><strong>Guardian cancel is faster than waiting.</strong> Instead of waiting 48h for an outdated proposal to expire, the Guardian can cancel immediately. This prevents accidental execution of proposals targeting deprecated contracts.</li>
+        <li><strong>feeExempt must be set before funding.</strong> Transferring 40M IFR to PartnerVault v1 <em>before</em> setting feeExempt resulted in a 1.4M IFR fee deduction. On mainnet: always set feeExempt first, fund second.</li>
+        <li><strong>Include version info in proposal descriptions.</strong> On-chain proposals have no description field &mdash; document the target contract version off-chain (GitHub Issue, wiki, CHANGELOG) to avoid confusion between v1/v2 addresses.</li>
+        <li><strong>48h delay is sufficient for testnet operations.</strong> The delay provides enough time for review while not blocking rapid iteration. For mainnet, consider increasing to 72h for critical parameter changes.</li>
+      </ul>
 
       <!-- ========== 11. Current Governance Model ========== -->
       <h2>11. Current Governance Model</h2>

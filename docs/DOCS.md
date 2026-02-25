@@ -85,7 +85,9 @@ inferno/
 │   ├── TOKENOMICS_MODEL.md            Deflationskurve, Allocation, PartnerVault Emission, Lock Economics, FeeRouter Fee
 │   ├── PARTNER_REWARDS_SPEC.md        Reward-Formel, Vesting, Anti-Gaming, Partner-Typen (A/B/C), Onboarding
 │   ├── PATCH-GUIDELINES.md             Patch-Richtlinien v1.0 (6 Schritte, Versionierung, Notfall-Patches)
-│   ├── PROJECT-SUMMARY.md             Projektzusammenfassung
+│   ├── COVERAGE_REPORT.md             Solidity Coverage Report (95% Stmts, 81% Branch, 95% Funcs, 96% Lines)
+│   ├── BENEFITS_NETWORK_TEST.md       Benefits Network E2E Test Guide (Test-Flow, API, Lock Tiers, Fehler)
+│   ├── PROJECT-SUMMARY.md             Komplett-Uebersicht (10 Contracts, 298 Tests, 7 Apps, CI/CD)
 │   └── wiki/                          [x] 9 HTML-Seiten (Contracts, Tokenomics, Lock, Governance, Security, Deploy, Integration, AI Copilot)
 ├── STATUS-REPORT.md                    Vollstaendiger Statusbericht
 └── README.md                           Projekt-Uebersicht
@@ -176,6 +178,12 @@ inferno/
 
 | Datum | Aenderung |
 |-------|-----------|
+| 2026-02-25 | .env.example: Deployed Contract Addresses hinzugefuegt (TOKEN, GOVERNANCE, IFRLOCK, PARTNERVAULT, FEEROUTER) |
+| 2026-02-25 | token-stats Task Fix: burnFeeBps → senderBurnBps + recipientBurnBps + totalFeeBps |
+| 2026-02-25 | Benefits Network E2E Test: Script + Test Guide (docs/BENEFITS_NETWORK_TEST.md) |
+| 2026-02-25 | Governance Wiki: Proposal Details erweitert (Targets, Reasons, Proposer) + Governance Learnings Sektion |
+| 2026-02-25 | Solidity Coverage: solidity-coverage installiert, Report generiert (95% Stmts, 81% Branch) |
+| 2026-02-25 | PROJECT-SUMMARY.md: Komplett neu geschrieben (10 Contracts, 298 Tests, 7 Apps, Coverage, CI/CD, Token-Metriken) |
 | 2026-02-25 | Creator Gateway Tests: 14 Tests (lock-checker, entitlement OR/AND, auth routes) mit Jest + ts-jest + supertest |
 | 2026-02-25 | Dashboard: ProtocolStats Komponente (IFRLock totalLocked, PartnerVault Balance, FeeRouter Fee, Reward Rate, Auto-refresh 30s) |
 | 2026-02-25 | PATCH-GUIDELINES.md v1.0: 6-Schritt Prozess, Severity-Matrix, Smart Contract Patch Rules, Versionierung, Notfall-Patches |
