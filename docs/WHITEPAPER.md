@@ -135,14 +135,35 @@ Integration: 5 Zeilen Code. Vollstaendig entkoppelt.
 
 - Open Source: Alle Smart Contracts oeffentlich auf GitHub
 - Slither Static Analysis: 0 High/Critical Findings
-- 276 Unit Tests (alle bestehen)
+- 330 Tests (276 Contract + 54 App), alle bestehen, 99% Statement Coverage
 - Third-party Audit: empfohlen vor Mainnet-Deployment
 - Timelock: 48h Pflicht-Wartezeit auf alle Aenderungen
 - Kein Minting: technisch unmoeglich nach Launch
 
 ---
 
-## 9. Roadmap
+## 9. On-Chain Transparency (Stand: Februar 2026)
+
+### Token Supply Verteilung (verifiziert)
+- LP Pair: 400,000,000 IFR (40.08%)
+- LiquidityReserve: 200,000,000 IFR (20.04%)
+- Team Vesting: 150,000,000 IFR (15.03%) — 4 Jahre, 0 released
+- Treasury/Community: 170,787,995 IFR (17.11%)
+- PartnerVault: 38,600,000 IFR (3.86%)
+- Verbrannt: 2,000,425+ IFR (0.20%+) — steigt mit jedem Transfer
+
+### Deflation in Aktion
+Seit Deployment wurden 2,000,425+ IFR permanent vernichtet.
+Bei 276 automatisierten Tests wurden reale Transfers durchgeführt —
+jeder davon hat die Deflationsmechanik on-chain bestätigt.
+
+### Verifikation
+Alle Werte sind über scripts/onchain-audit.js direkt prüfbar.
+Kein Trust notwendig — nur Code und Chain.
+
+---
+
+## 10. Roadmap
 
 | Phase | Status | Inhalt |
 |-------|--------|--------|
@@ -154,7 +175,7 @@ Integration: 5 Zeilen Code. Vollstaendig entkoppelt.
 
 ---
 
-## 10. Fuer Partner: Warum IFR?
+## 11. Fuer Partner: Warum IFR?
 
 - Echte Nutzerbindung: Nutzer mit gesperrten Token wandern nicht ab
 - Kein Subscription-Management: Lock on-chain, kein Backend noetig
@@ -167,7 +188,7 @@ Interesse? → docs/PARTNER_INTEGRATION_SPEC.md
 
 ---
 
-## 11. Kontakt & Links
+## 12. Kontakt & Links
 
 | | |
 |-|-|
