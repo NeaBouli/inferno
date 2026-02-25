@@ -69,7 +69,8 @@ inferno/
 │   ├── MULTISIG_SETUP.md              Gnosis Safe 4-of-7 Setup Guide
 │   ├── CREATOR_GATEWAY.md             Creator Gateway Spec v0.1 (YouTube Hybrid, Docker, Entitlement Engine)
 │   ├── SDK_QUICKSTART.md              Developer Quickstart v1.0 (ethers.js, wagmi, Python, Tier System)
-│   ├── TESTNET_GUIDE.md               Sepolia E2E Guide (Lock, Benefits Network, Governance, PartnerVault)
+│   ├── TESTNET_GUIDE.md               Sepolia E2E Guide (Lock, Benefits Network, Governance, PartnerVault, FeeRouter)
+│   ├── CHATGPT_AUDIT_PROMPT_V2.md    Independent Audit Checklist (7 Pruefbereiche A-G)
 │   ├── PATCH-GUIDELINES.md             Patch-Richtlinien
 │   ├── PROJECT-SUMMARY.md             Projektzusammenfassung
 │   └── wiki/                          [x] 9 HTML-Seiten (Contracts, Tokenomics, Lock, Governance, Security, Deploy, Integration, AI Copilot)
