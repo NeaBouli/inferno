@@ -147,6 +147,7 @@ SIWE authentication, points tracking, and EIP-712 signed voucher issuance for pr
 - [Testnet E2E Guide](docs/TESTNET_GUIDE.md) — Full Lock/Benefit/Governance/FeeRouter Flow auf Sepolia
 - [Changelog](docs/CHANGELOG.md) — Alle Aenderungen chronologisch
 - [ChatGPT Audit Prompt](docs/CHATGPT_AUDIT_PROMPT_V2.md) — Independent Audit Checklist (7 Pruefbereiche)
+- [E2E Flow: Points → Voucher → FeeRouter](docs/E2E_FLOW.md) — Vollstaendiger End-to-End Flow
 
 ## License
 

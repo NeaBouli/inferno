@@ -71,6 +71,7 @@ inferno/
 │   ├── SDK_QUICKSTART.md              Developer Quickstart v1.0 (ethers.js, wagmi, Python, Tier System)
 │   ├── TESTNET_GUIDE.md               Sepolia E2E Guide (Lock, Benefits Network, Governance, PartnerVault, FeeRouter)
 │   ├── CHATGPT_AUDIT_PROMPT_V2.md    Independent Audit Checklist (7 Pruefbereiche A-G)
+│   ├── E2E_FLOW.md                    Points → Voucher → FeeRouter End-to-End Flow
 │   ├── PATCH-GUIDELINES.md             Patch-Richtlinien
 │   ├── PROJECT-SUMMARY.md             Projektzusammenfassung
 │   └── wiki/                          [x] 9 HTML-Seiten (Contracts, Tokenomics, Lock, Governance, Security, Deploy, Integration, AI Copilot)

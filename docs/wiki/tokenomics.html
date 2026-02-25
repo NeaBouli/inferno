@@ -1196,6 +1196,65 @@ if (from != address(0) && to != address(0)
         </p>
       </div>
 
+      <!-- ═══════════════════════════════════════════════════ -->
+      <!--  Section 7: Protocol Fee & FeeRouter                -->
+      <!-- ═══════════════════════════════════════════════════ -->
+
+      <h2 id="feerouter">7. Protocol Fee &amp; FeeRouter</h2>
+      <p>
+        The FeeRouterV1 contract handles protocol-level fees on IFR swaps.
+        These are <strong>separate</strong> from the token's built-in transfer fees (2.5% burn + 1% pool fee).
+      </p>
+
+      <h3>Fee Structure</h3>
+      <table>
+        <thead><tr><th>Parameter</th><th>Value</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td><code>protocolFeeBps</code></td><td>5 bps (0.05%)</td><td>Default, governance-adjustable</td></tr>
+          <tr><td><code>FEE_CAP_BPS</code></td><td>25 bps (0.25%)</td><td>Hard cap, contract-enforced</td></tr>
+          <tr><td>Fee target</td><td><code>feeCollector</code> address</td><td>Set by governance</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Discount Vouchers (IFR Points)</h3>
+      <p>
+        Users earn points through verified actions in the IFR ecosystem.
+        Points can be redeemed for a signed EIP-712 discount voucher,
+        applied against the protocol fee at swap time.
+      </p>
+
+      <table>
+        <thead><tr><th>Action</th><th>Points</th></tr></thead>
+        <tbody>
+          <tr><td>Wallet Connect (SIWE)</td><td>10</td></tr>
+          <tr><td>Complete Wallet Setup Guide</td><td>20</td></tr>
+          <tr><td>Add IFR Token (Decimals verified)</td><td>20</td></tr>
+          <tr><td>Complete Lock Guide</td><td>30</td></tr>
+          <tr><td>Partner Onboarding</td><td>50</td></tr>
+        </tbody>
+      </table>
+
+      <div class="callout">
+        <p>
+          <strong>Voucher threshold:</strong> 100 points &rarr;
+          15 bps discount on protocol fee, valid 7 days, single-use.
+        </p>
+      </div>
+
+      <div class="callout callout-green">
+        <p>
+          <strong>Important:</strong> IFR Points are not a token.
+          They have no transfer value and no monetary promise.
+          They only reduce the protocol fee on a single swap.
+        </p>
+      </div>
+
+      <h3>Contract Address (Sepolia)</h3>
+      <p>
+        <code>0x499289C8Ef49769F4FcFF3ca86D4BD7b55B49aa4</code>
+        &mdash; <a href="https://sepolia.etherscan.io/address/0x499289C8Ef49769F4FcFF3ca86D4BD7b55B49aa4" target="_blank">Etherscan</a>
+      </p>
+
       <!-- Footer -->
       <footer class="wiki-footer">
         Inferno ($IFR) &mdash; Community Fair Launch Model &mdash; Documentation v1.0
