@@ -1,6 +1,6 @@
 # Inferno ($IFR) — Mainnet Deployment Checklist
 
-> **Status:** Pre-Mainnet | **Sepolia:** 10 Contracts deployed + verified | **Tests:** 277 Contract + 20 Creator Gateway + 20 Points + 8 Benefits = 325 Total | **Coverage:** 95% Stmts, 81% Branch
+> **Status:** Pre-Mainnet | **Sepolia:** 10 Contracts deployed + verified | **Tests:** 276 Contract + 26 Creator Gateway + 20 Points + 8 Benefits = 330 Total | **Coverage:** 99% Stmts, 85% Branch
 
 ## Sepolia Testnet — Abgeschlossen
 
@@ -14,7 +14,7 @@
 | Governance Proposal #3 pending (PartnerVault v2 feeExempt) | Pending |
 | Full Lock/Unlock Cycle verified (8/8) | Done |
 | Slither Audit: 0 high/critical | Done |
-| solidity-coverage: 95% Stmts, 81% Branch | Done |
+| solidity-coverage: 99% Stmts, 85% Branch | Done |
 
 ---
 
@@ -22,7 +22,7 @@
 
 ### Security
 - [x] Slither Audit abgeschlossen (0 high/critical, 15 Fixes applied)
-- [x] solidity-coverage Report generiert (95% Stmts, 81% Branch)
+- [x] solidity-coverage Report generiert (99% Stmts, 85% Branch)
 - [ ] Third-party Security Audit abgeschlossen (empfohlen: Code4rena, Sherlock, oder Cyfrin)
 - [ ] Alle Audit-Findings behoben und re-verified
 - [ ] Slither nochmals laufen lassen auf finalem Code

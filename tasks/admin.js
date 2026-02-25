@@ -63,14 +63,21 @@ task("feerouter-pause", "Pause/unpause FeeRouterV1")
   });
 
 // === GOVERNANCE ===
-task("gov-queue", "Show all queued governance proposals")
+task("gov-queue", "Show all governance proposals with status")
   .setAction(async (args, hre) => {
     const gov = await hre.ethers.getContractAt("Governance", process.env.GOVERNANCE_ADDRESS);
-    const filter = gov.filters.ProposalCreated();
-    const events = await gov.queryFilter(filter, 0, "latest");
-    console.log(`Found ${events.length} proposals:`);
-    for (const e of events) {
-      console.log(`- ID: ${e.args.proposalId.toString()} | ETA: ${new Date(e.args.eta.toNumber() * 1000).toISOString()}`);
+    const count = await gov.proposalCount();
+    console.log(`Total proposals: ${count}\n`);
+    for (let i = 0; i < count; i++) {
+      const [target, data, eta, executed, cancelled] = await gov.getProposal(i);
+      const etaDate = new Date(eta.toNumber() * 1000);
+      const now = Date.now();
+      let status = "PENDING";
+      if (executed) status = "EXECUTED";
+      else if (cancelled) status = "CANCELLED";
+      else if (now >= eta.toNumber() * 1000) status = "READY";
+      const fnSig = data.slice(0, 10);
+      console.log(`#${i} | ${status} | ETA: ${etaDate.toISOString()} | Target: ${target} | Selector: ${fnSig}`);
     }
   });
 
