@@ -243,8 +243,8 @@ npx hardhat run scripts/create-lp.js --network sepolia
 
 | # | Schritt | Status |
 |---|---------|--------|
-| 1 | Contracts deployen | **Erledigt** (8/8) |
-| 2 | Etherscan verifizieren | **Erledigt** (7/7) |
+| 1 | Contracts deployen | **Erledigt** (9/9) |
+| 2 | Etherscan verifizieren | **Erledigt** (9/9) |
 | 3 | LP erstellen | **Erledigt** (`0x2252e8bBDE0E50CD372748aC233A99C08627d9c7`) |
 | 4 | Ownership transferieren | **Erledigt** |
 | 5 | Governance Proposal #0 ausfuehren | **Erledigt** (setFeeExempt via 48h Timelock) |
@@ -255,8 +255,8 @@ npx hardhat run scripts/create-lp.js --network sepolia
 
 | # | Aufgabe | Prioritaet | Status |
 |---|---------|------------|--------|
-| 1 | Testnet Deploy (Sepolia) | Naechster Schritt | **Erledigt** (8 Contracts live, PartnerVault pending) |
-| 2 | Etherscan Verifikation | Nach Deploy | **Erledigt** (7/7 verified) |
+| 1 | Testnet Deploy (Sepolia) | Naechster Schritt | **Erledigt** (9 Contracts live + LP Pair) |
+| 2 | Etherscan Verifikation | Nach Deploy | **Erledigt** (9/9 verified) |
 | 3 | Security Audit (Slither) | Empfohlen | **Erledigt** (v0.11.5, 0 High/Critical) |
 | 4 | Uniswap LP Pairing | Vor Launch | **Erledigt** (`0x2252e8bB...`) |
 | 5 | Router/Adressen setzen | Vor Launch | **Erledigt** (Uniswap V2 Router02) |

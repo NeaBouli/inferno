@@ -76,6 +76,16 @@ Token holdings grant future DAO voting rights.
 - Full Sepolia testnet deployment with verified contracts
 - Governance lifecycle tested: propose → 48h wait → execute
 
+## Dashboard
+
+Read-only token dashboard for monitoring balances, transfers, and contract status.
+
+| Component | Path | Stack |
+|-----------|------|-------|
+| Dashboard | `apps/dashboard/` | React 18 + Vite + ethers v5 |
+
+**Start:** `cd apps/dashboard && npm install && npm run dev` → http://localhost:5173
+
 ## Benefits Network
 
 The IFR Benefits Network lets any business verify on-chain IFR lock status to grant discounts and premium access. QR-based flow — no accounts, no subscriptions.
@@ -127,6 +137,8 @@ SIWE authentication, points tracking, and EIP-712 signed voucher issuance for pr
 **Anti-Sybil:** Rate limiting per IP + per wallet + global daily caps.
 
 **Start:** `cd apps/points-backend && npm install && npx prisma migrate dev --name init && npm run dev` → http://localhost:3004
+
+> **IFR Points are not a token.** They have no transfer value, no monetary promise, and only reduce the protocol fee on a single swap.
 
 ## Documentation
 
