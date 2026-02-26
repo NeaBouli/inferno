@@ -109,4 +109,110 @@ describe("Vesting", function () {
     await expect(vesting.connect(guardian).unpause()).to.emit(vesting, "Unpaused");
     await expect(vesting.connect(beneficiary).release()).to.emit(vesting, "Released");
   });
+
+  // ── Constructor Validation ──────────────────────────────────
+
+  describe("Constructor validation", () => {
+    it("reverts if token is zero address", async () => {
+      const Vesting = await ethers.getContractFactory("Vesting");
+      await expect(
+        Vesting.deploy(ethers.constants.AddressZero, beneficiary.address, CLIFF, DURATION, ALLOCATION, guardian.address)
+      ).to.be.revertedWith("token=0");
+    });
+
+    it("reverts if beneficiary is zero address", async () => {
+      const Vesting = await ethers.getContractFactory("Vesting");
+      await expect(
+        Vesting.deploy(token.address, ethers.constants.AddressZero, CLIFF, DURATION, ALLOCATION, guardian.address)
+      ).to.be.revertedWith("beneficiary=0");
+    });
+
+    it("reverts if guardian is zero address", async () => {
+      const Vesting = await ethers.getContractFactory("Vesting");
+      await expect(
+        Vesting.deploy(token.address, beneficiary.address, CLIFF, DURATION, ALLOCATION, ethers.constants.AddressZero)
+      ).to.be.revertedWith("guardian=0");
+    });
+
+    it("reverts if duration < cliff", async () => {
+      const Vesting = await ethers.getContractFactory("Vesting");
+      await expect(
+        Vesting.deploy(token.address, beneficiary.address, DURATION, CLIFF, ALLOCATION, guardian.address)
+      ).to.be.revertedWith("duration<cliff");
+    });
+
+    it("reverts if allocation is zero", async () => {
+      const Vesting = await ethers.getContractFactory("Vesting");
+      await expect(
+        Vesting.deploy(token.address, beneficiary.address, CLIFF, DURATION, 0, guardian.address)
+      ).to.be.revertedWith("allocation=0");
+    });
+  });
+
+  // ── Guardian Access ─────────────────────────────────────────
+
+  describe("Guardian access", () => {
+    it("non-guardian cannot pause", async () => {
+      await expect(vesting.connect(other).pause()).to.be.reverted;
+    });
+
+    it("non-guardian cannot unpause", async () => {
+      await expect(vesting.connect(other).unpause()).to.be.reverted;
+    });
+
+    it("pause when already paused is no-op (no event)", async () => {
+      await vesting.connect(guardian).pause();
+      const tx = await vesting.connect(guardian).pause();
+      const receipt = await tx.wait();
+      // No Paused event emitted on second call
+      expect(receipt.events?.filter(e => e.event === "Paused") || []).to.have.length(0);
+    });
+
+    it("unpause when already unpaused is no-op (no event)", async () => {
+      const tx = await vesting.connect(guardian).unpause();
+      const receipt = await tx.wait();
+      expect(receipt.events?.filter(e => e.event === "Unpaused") || []).to.have.length(0);
+    });
+  });
+
+  // ── Release Edge Cases ──────────────────────────────────────
+
+  describe("Release edge cases", () => {
+    it("release when paused reverts with IsPaused", async () => {
+      await increaseTime(DURATION / 2);
+      await vesting.connect(guardian).pause();
+      await expect(vesting.connect(beneficiary).release()).to.be.reverted;
+    });
+
+    it("releasableAmount returns 0 when nothing vested yet", async () => {
+      expect(await vesting.releasableAmount()).to.equal(0);
+    });
+
+    it("releasableAmount returns 0 after full release", async () => {
+      await increaseTime(DURATION + 1);
+      await vesting.connect(beneficiary).release();
+      expect(await vesting.releasableAmount()).to.equal(0);
+    });
+
+    it("vestingSchedule returns correct values", async () => {
+      const [s, c, d] = await vesting.vestingSchedule();
+      expect(c).to.equal(CLIFF);
+      expect(d).to.equal(DURATION);
+      expect(s).to.be.gt(0);
+    });
+
+    it("multiple partial releases work correctly", async () => {
+      // First release at cliff + 30d
+      await increaseTime(CLIFF + 30 * 86400);
+      await vesting.connect(beneficiary).release();
+      const released1 = await vesting.released();
+      expect(released1).to.be.gt(0);
+
+      // Second release 30d later
+      await increaseTime(30 * 86400);
+      await vesting.connect(beneficiary).release();
+      const released2 = await vesting.released();
+      expect(released2).to.be.gt(released1);
+    });
+  });
 });

@@ -68,6 +68,20 @@ describe("LiquidityReserve", function () {
         LR.deploy(token.address, 0, MAX_PER_PERIOD, PERIOD_DURATION, guardian.address)
       ).to.be.revertedWith("lockDuration=0");
     });
+
+    it("reverts if periodDuration is zero", async () => {
+      const LR = await ethers.getContractFactory("LiquidityReserve");
+      await expect(
+        LR.deploy(token.address, LOCK_DURATION, MAX_PER_PERIOD, 0, guardian.address)
+      ).to.be.revertedWith("periodDuration=0");
+    });
+
+    it("reverts if maxWithdrawPerPeriod is zero", async () => {
+      const LR = await ethers.getContractFactory("LiquidityReserve");
+      await expect(
+        LR.deploy(token.address, LOCK_DURATION, 0, PERIOD_DURATION, guardian.address)
+      ).to.be.revertedWith("maxWithdraw=0");
+    });
   });
 
   describe("Lock period", () => {
@@ -257,6 +271,42 @@ describe("LiquidityReserve", function () {
       await expect(
         reserve.setMaxWithdrawPerPeriod(0)
       ).to.be.revertedWith("maxWithdraw=0");
+    });
+  });
+
+  describe("Pause edge cases", () => {
+    it("reverts pause when already paused", async () => {
+      await reserve.connect(guardian).pause();
+      await expect(reserve.connect(guardian).pause()).to.be.revertedWith("already paused");
+    });
+
+    it("reverts unpause when not paused", async () => {
+      await expect(reserve.connect(guardian).unpause()).to.be.revertedWith("not paused");
+    });
+
+    it("non-guardian cannot unpause", async () => {
+      await reserve.connect(guardian).pause();
+      await expect(reserve.connect(user).unpause()).to.be.revertedWith("not guardian");
+    });
+  });
+
+  describe("availableToWithdraw edge cases", () => {
+    it("returns balance when balance < periodRemaining", async () => {
+      // Deploy reserve with very small balance
+      const LR = await ethers.getContractFactory("LiquidityReserve");
+      const smallReserve = await LR.deploy(token.address, 1, MAX_PER_PERIOD, PERIOD_DURATION, guardian.address);
+      await smallReserve.deployed();
+      await token.setFeeExempt(smallReserve.address, true);
+
+      const smallAmount = ethers.utils.parseUnits("100", 9);
+      await token.transfer(smallReserve.address, smallAmount);
+
+      // Advance past lock
+      await ethers.provider.send("evm_increaseTime", [2]);
+      await ethers.provider.send("evm_mine", []);
+
+      // Balance (100) < periodRemaining (50M), so returns balance
+      expect(await smallReserve.availableToWithdraw()).to.equal(smallAmount);
     });
   });
 

@@ -360,4 +360,106 @@ describe("IFRLock", function () {
       expect(await lock.totalLocked()).to.equal(amountB);
     });
   });
+
+  // ── Edge Cases ──────────────────────────────────────────────
+
+  describe("Edge Cases", () => {
+    it("lock with 1 wei (minimum possible amount)", async () => {
+      await token.connect(userA).approve(lock.address, 1);
+      await expect(lock.connect(userA).lock(1))
+        .to.emit(lock, "Locked")
+        .withArgs(userA.address, 1, ethers.constants.HashZero);
+      expect(await lock.lockedBalance(userA.address)).to.equal(1);
+    });
+
+    it("lock with max balance succeeds", async () => {
+      const balance = await token.balanceOf(userA.address);
+      await token.connect(userA).approve(lock.address, balance);
+      await lock.connect(userA).lock(balance);
+      expect(await lock.lockedBalance(userA.address)).to.equal(balance);
+      expect(await token.balanceOf(userA.address)).to.equal(0);
+    });
+
+    it("lock exceeding balance reverts", async () => {
+      const balance = await token.balanceOf(userA.address);
+      const tooMuch = balance.add(1);
+      await token.connect(userA).approve(lock.address, tooMuch);
+      await expect(lock.connect(userA).lock(tooMuch)).to.be.reverted;
+    });
+
+    it("unlock returns exact locked amount (fee-exempt round trip)", async () => {
+      const amount = parse("12345");
+      const balBefore = await token.balanceOf(userA.address);
+
+      await token.connect(userA).approve(lock.address, amount);
+      await lock.connect(userA).lock(amount);
+      await lock.connect(userA).unlock();
+
+      expect(await token.balanceOf(userA.address)).to.equal(balBefore);
+    });
+
+    it("multiple lock-unlock cycles work correctly", async () => {
+      const amount = parse("5000");
+      await token.connect(userA).approve(lock.address, amount.mul(3));
+
+      // Cycle 1
+      await lock.connect(userA).lock(amount);
+      await lock.connect(userA).unlock();
+      expect(await lock.lockedBalance(userA.address)).to.equal(0);
+
+      // Cycle 2
+      await lock.connect(userA).lock(amount);
+      await lock.connect(userA).unlock();
+      expect(await lock.lockedBalance(userA.address)).to.equal(0);
+
+      // Cycle 3
+      await lock.connect(userA).lock(amount);
+      expect(await lock.lockedBalance(userA.address)).to.equal(amount);
+    });
+
+    it("isLocked boundary: exact amount returns true", async () => {
+      const amount = parse("10000");
+      await token.connect(userA).approve(lock.address, amount);
+      await lock.connect(userA).lock(amount);
+
+      expect(await lock.isLocked(userA.address, amount)).to.equal(true);
+      expect(await lock.isLocked(userA.address, amount.add(1))).to.equal(false);
+    });
+
+    it("totalLocked tracks across multiple users and unlocks", async () => {
+      const amountA = parse("10000");
+      const amountB = parse("20000");
+
+      await token.connect(userA).approve(lock.address, amountA);
+      await token.connect(userB).approve(lock.address, amountB);
+
+      await lock.connect(userA).lock(amountA);
+      expect(await lock.totalLocked()).to.equal(amountA);
+
+      await lock.connect(userB).lock(amountB);
+      expect(await lock.totalLocked()).to.equal(amountA.add(amountB));
+
+      await lock.connect(userA).unlock();
+      expect(await lock.totalLocked()).to.equal(amountB);
+
+      await lock.connect(userB).unlock();
+      expect(await lock.totalLocked()).to.equal(0);
+    });
+
+    it("lockInfo resets after unlock", async () => {
+      const amount = parse("10000");
+      await token.connect(userA).approve(lock.address, amount);
+      await lock.connect(userA).lock(amount);
+
+      const infoBefore = await lock.lockInfo(userA.address);
+      expect(infoBefore.amount).to.equal(amount);
+      expect(infoBefore.lockedAt).to.be.gt(0);
+
+      await lock.connect(userA).unlock();
+
+      const infoAfter = await lock.lockInfo(userA.address);
+      expect(infoAfter.amount).to.equal(0);
+      expect(infoAfter.lockedAt).to.equal(0);
+    });
+  });
 });

@@ -1,7 +1,9 @@
 import "dotenv/config";
 import express from "express";
 import cors from "cors";
+import { resolve } from "path";
 import { SYSTEM_PROMPTS } from "../src/context/system-prompts.js";
+import { loadWikiDocs, buildSystemPrompt, WikiDoc } from "./wiki-rag.js";
 
 const app = express();
 app.use(cors());
@@ -9,6 +11,16 @@ app.use(express.json());
 
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
 const POINTS_BACKEND_URL = process.env.POINTS_BACKEND_URL || "http://localhost:3004";
+
+// Load wiki docs for RAG at startup
+const WIKI_DIR = resolve(__dirname, "../../../docs/wiki");
+let wikiDocs: WikiDoc[] = [];
+try {
+  wikiDocs = loadWikiDocs(WIKI_DIR);
+  console.log(`Wiki RAG loaded: ${wikiDocs.length} documents`);
+} catch (err) {
+  console.warn("Wiki RAG failed to load (non-critical):", err);
+}
 
 // Detect guide-completion in AI responses
 function detectGuideCompletion(userMessage: string, assistantReply: string): string | null {
@@ -64,7 +76,8 @@ app.post("/api/chat", async (req, res) => {
     return;
   }
 
-  const systemPrompt = SYSTEM_PROMPTS[mode] || SYSTEM_PROMPTS.customer;
+  const basePrompt = SYSTEM_PROMPTS[mode] || SYSTEM_PROMPTS.customer;
+  const systemPrompt = buildSystemPrompt(basePrompt, mode || "customer", wikiDocs);
 
   try {
     const response = await fetch("https://api.anthropic.com/v1/messages", {

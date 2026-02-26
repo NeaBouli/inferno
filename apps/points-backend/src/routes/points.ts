@@ -2,11 +2,12 @@ import { Router, Response } from "express";
 import { prisma } from "../db";
 import { AuthRequest, requireAuth } from "../middleware/auth";
 import { POINTS_CONFIG } from "../config/points";
+import { requireCaptcha } from "../middleware/captcha";
 
 const router = Router();
 
-/** POST /points/event — record a points event */
-router.post("/event", requireAuth, async (req: AuthRequest, res: Response) => {
+/** POST /points/event — record a points event (captcha-protected) */
+router.post("/event", requireAuth, requireCaptcha, async (req: AuthRequest, res: Response) => {
   const wallet = req.wallet!;
   const { type, proofRef } = req.body;
 
