@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-02-26T07:32:55.935Z",
+  "timestamp": "2026-02-26T07:52:32.244Z",
   "network": "sepolia",
   "token": {
     "supply": "997999575",
@@ -10,7 +10,7 @@
   },
   "distribution": {
     "lp": "400000000",
-    "vault": "38600000",
+    "vault": "40000000",
     "reserve": "200000000",
     "vesting": "150000000"
   },
