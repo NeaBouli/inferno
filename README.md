@@ -187,6 +187,8 @@ SIWE authentication, points tracking, and EIP-712 signed voucher issuance for pr
 - [Lighthouse Report](docs/LIGHTHOUSE_REPORT.md) — SEO-Optimierungen (OG, Twitter Card, Meta Tags, Sitemap, robots.txt)
 - [AI Copilot Test Results](docs/COPILOT_TEST_RESULTS.md) — RAG-System Test (6 Fragen, 3 Modi, Safety Guards)
 - [Roadmap v0.2.0](docs/ROADMAP_v0.2.0.md) — Mainnet-Ready Milestones (Audit, Multisig, Deploy, Post-Launch)
+- [ChatGPT Audit V4 Results](docs/CHATGPT_AUDIT_V4_RESULTS.md) — Audit V4 Self-Check (8/8 PASS)
+- [GitHub Setup](docs/GITHUB_SETUP.md) — Repository Settings (Discussions, Topics, Pages)
 
 ## Development
 
