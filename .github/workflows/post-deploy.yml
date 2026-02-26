@@ -1,0 +1,41 @@
+name: Post-Deploy Stats Update
+
+on:
+  push:
+    paths:
+      - 'scripts/deploy-*.js'
+      - 'scripts/execute-*.js'
+    branches:
+      - main
+
+jobs:
+  update-after-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - run: npm ci
+
+      - name: Wait for chain finality
+        run: sleep 30
+
+      - name: Update stats after deploy
+        run: npx hardhat run scripts/update-stats.js --network sepolia
+        env:
+          SEPOLIA_RPC_URL: ${{ secrets.SEPOLIA_RPC_URL }}
+          PRIVATE_KEY: ${{ secrets.DEPLOYER_PRIVATE_KEY }}
+
+      - name: Commit stats
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add docs/stats.json docs/TRANSPARENCY.md STATUS-REPORT.md
+          git diff --staged --quiet || git commit -m "chore: post-deploy stats update [skip ci]"
+          git push

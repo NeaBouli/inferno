@@ -1,0 +1,26 @@
+{
+  "timestamp": "2026-02-26T07:32:55.935Z",
+  "network": "sepolia",
+  "token": {
+    "supply": "997999575",
+    "supplyFormatted": "997.999.575",
+    "burned": "2000425",
+    "burnedFormatted": "2.000.425",
+    "burnedPct": "0.20"
+  },
+  "distribution": {
+    "lp": "400000000",
+    "vault": "38600000",
+    "reserve": "200000000",
+    "vesting": "150000000"
+  },
+  "partnerVault": {
+    "rewardBps": 1500,
+    "totalRewarded": "0",
+    "annualCap": "4000000"
+  },
+  "feeRouter": {
+    "protocolFeeBps": 5,
+    "paused": false
+  }
+}

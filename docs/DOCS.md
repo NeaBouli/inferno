@@ -44,6 +44,7 @@ inferno/
 │   ├── deploy-lock.js                [x] IFRLock Deploy + Governance Proposal
 │   ├── test-lock.js                  [x] IFRLock Live Test (Lock/Unlock/isLocked)
 │   ├── deploy-feerouter.js           [x] FeeRouterV1 Deploy + Verify
+│   ├── update-stats.js              [x] Auto-Update On-Chain Stats → docs/stats.json + TRANSPARENCY.md + index.html
 │   ├── onchain-audit.js             [x] 8-Check On-Chain Audit (Ownership, LP, Vesting, Supply, FeeExempt)
 │   ├── propose-ownership-transfer.js [x] Ownership Transfer Proposals (3 Contracts, DRY RUN Schutz)
 │   ├── execute-ownership-transfer.js [x] Ownership Transfer Executor (nach 48h Timelock)
@@ -59,7 +60,9 @@ inferno/
 │   └── workflows/
 │       ├── creator-gateway.yml       [x] CI: tsc + jest
 │       ├── points-backend.yml        [x] CI: prisma generate + tsc + jest
-│       └── ai-copilot.yml           [x] CI: tsc + build
+│       ├── ai-copilot.yml           [x] CI: tsc + build
+│       ├── update-stats.yml         [x] Cron: taeglich 06:00 UTC On-Chain Stats Update
+│       └── post-deploy.yml          [x] Trigger: nach deploy/execute Script Push
 ├── apps/
 │   ├── dashboard/                      [x] React + Vite Frontend (Phase 1 + Phase 2)
 │   ├── governance-dashboard/          [x] React + Vite + TS + Tailwind (Overview, Partners, Timelock, Calldata)
@@ -111,6 +114,7 @@ inferno/
 │   ├── PAGE_UPDATE_CHECKLIST.md    Welche Dateien bei welchem Event aktualisiert werden muessen
 │   ├── DASHBOARD_TEST_RESULTS.md   Dashboard Build-Ergebnisse (0 Errors, 198 Modules)
 │   ├── BENEFITS_E2E_RESULTS.md     Benefits Network E2E Checkliste (Backend, API, Sepolia)
+│   ├── stats.json                   Auto-generierte On-Chain Stats (via update-stats.js)
 │   └── wiki/                          [x] 13 HTML-Seiten (index, contracts, tokenomics, lock, governance, security, deployment, integration, agent, faq, transparency, fair-launch, fee-design)
 ├── STATUS-REPORT.md                    Vollstaendiger Statusbericht
 └── README.md                           Projekt-Uebersicht
@@ -212,6 +216,12 @@ inferno/
 | 2026-02-25 | PATCH-GUIDELINES.md v1.0: 6-Schritt Prozess, Severity-Matrix, Smart Contract Patch Rules, Versionierung, Notfall-Patches |
 | 2026-02-25 | GitHub Actions CI: Creator Gateway (tsc+jest), Points Backend (prisma+tsc+jest), AI Copilot (tsc+build) |
 | 2026-02-25 | Deployment Wiki: Proposal #3 Info-Box mit Scripts + 1.4M IFR Top-up Step |
+| 2026-02-26 | update-stats.js: Auto-Update Script (Sepolia → stats.json + TRANSPARENCY.md + STATUS-REPORT.md + index.html) |
+| 2026-02-26 | GitHub Actions: update-stats.yml (daily cron 06:00 UTC) + post-deploy.yml (trigger nach deploy/execute push) |
+| 2026-02-26 | Wiki index.html: Stats Cards erweitert (330 Tests, 99% Coverage, 2M+ Burned, 13 Wiki Pages, 48h Timelock) |
+| 2026-02-26 | MULTISIG_SETUP.md v2.0: 3 Phasen (2-of-3 → 3-of-5 → 4-of-7), Guardian Multisig, Wallet-Anforderungen, Kosten, Checkliste |
+| 2026-02-26 | Coverage Final: 98.89% Stmts, 84.65% Branch, 97.39% Funcs, 98.60% Lines (unveraendert) |
+| 2026-02-26 | PROJECT-SUMMARY.md: FeeRouterV1 Coverage 100%/96% erledigt, Proposals #4-#6 aktualisiert |
 | 2026-02-26 | CHATGPT_AUDIT_V3_RESULTS.md: Vollstaendige Ergebnisse mit Methodik (8/8 PASS, 1 Finding) |
 | 2026-02-26 | WHITEPAPER.md: CFLM Section (Vergleich UNI/AAVE/COMP), Fee Design erweitert (Lock>Transfer, Fee-Exempt, CEX) |
 | 2026-02-26 | RAILWAY_ENV.md: Points Backend Railway Deploy Guide (Env Vars, CLI, Health Check) |

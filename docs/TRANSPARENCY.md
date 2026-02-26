@@ -123,12 +123,12 @@ Admin ist Governance — kein Deployer-Zugriff moeglich.
 
 | Wallet | IFR | % |
 |--------|-----|---|
-| Total Supply | 997,999,575 IFR | 100% |
+| Total Supply | 997.999.575 IFR | 100% |
 | LP Pair | 400,000,000 IFR | 40.08% |
 | LiquidityReserve | 200,000,000 IFR | 20.04% |
 | Vesting (Team) | 150,000,000 IFR | 15.03% |
 | Deployer (Treasury+Community) | 170,787,995 IFR | 17.11% |
-| PartnerVault | 38,600,000 IFR | 3.86% |
+| PartnerVault | 38.600.000 IFR | 3.86% |
 | Verbrannt (seit Deploy) | 2,000,425 IFR | 0.20% |
 
 2,000,425 IFR wurden seit dem Deploy permanent verbrannt.
