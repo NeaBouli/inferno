@@ -5,20 +5,21 @@ Inferno ($IFR) ist ein deflationaerer ERC-20 Utility Token auf Ethereum.
 Kern-Mechanismen: Fee-on-Transfer (2.5% Burn + 1% Pool), On-chain Lock fuer
 Lifetime-Access, Milestone-basierter PartnerVault, 48h Timelock Governance.
 
-## Audit-Scope (8 Contracts)
+## Audit-Scope (9 Contracts)
 
 | Contract | LOC | Kritikalitaet | Schwerpunkt |
 |----------|-----|---------------|-------------|
-| InfernoToken.sol | 76 | HOCH | Fee-on-Transfer, Burn, feeExempt |
-| IFRLock.sol | 127 | HOCH | Lock/Unlock, isLocked, totalLocked |
-| PartnerVault.sol | 491 | HOCH | Rewards, Vesting, authorizedCaller, anti-double-count, algo throttle |
+| PartnerVault.sol | 549 | HOCH | Rewards, Vesting, authorizedCaller, anti-double-count, algo throttle |
+| FeeRouterV1.sol | 228 | HOCH | EIP-712 Voucher, Protocol Fee, Replay-Protection |
+| BuybackVault.sol | 175 | HOCH | ETH→IFR swap, Slippage, Cooldown |
 | Governance.sol | 150 | HOCH | Timelock, propose/execute/cancel, Guardian |
-| BuybackVault.sol | 154 | MITTEL | ETH→IFR swap, Slippage, Cooldown |
-| BurnReserve.sol | 86 | MITTEL | Token-Verwahrung, Burn-Mechanismus |
-| Vesting.sol | 111 | MITTEL | Cliff, lineare Freigabe, Beneficiary |
-| LiquidityReserve.sol | 139 | NIEDRIG | Staged Release, Lock |
+| LiquidityReserve.sol | 151 | MITTEL | Staged Release, Lock |
+| Vesting.sol | 132 | MITTEL | Cliff, lineare Freigabe, Beneficiary |
+| IFRLock.sol | 127 | HOCH | Lock/Unlock, isLocked, totalLocked |
+| InfernoToken.sol | 93 | HOCH | Fee-on-Transfer, Burn, feeExempt |
+| BurnReserve.sol | 92 | MITTEL | Token-Verwahrung, Burn-Mechanismus |
 
-**Total:** 1,334 LOC Solidity (+ 3 Mock Contracts fuer Tests)
+**Total:** 1,697 LOC Solidity (+ 4 Mock Contracts fuer Tests)
 
 ## Tech Stack
 - Solidity 0.8.20
@@ -74,7 +75,7 @@ Lifetime-Access, Milestone-basierter PartnerVault, 48h Timelock Governance.
 ## Repository
 - GitHub: https://github.com/NeaBouli/inferno
 - Branch: `main`
-- Sepolia Deployment: alle 8 Contracts deployed + verified
+- Sepolia Deployment: alle 9 Contracts deployed + verified (+ 1 LP Pair)
 
 ---
 *Stand: Februar 2026*

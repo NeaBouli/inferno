@@ -38,10 +38,10 @@ Inferno v0.1.0 marks the **first tagged release** of the protocol. All 10 smart 
 - 32 Creator Gateway tests (Jest)
 - 35 Points Backend tests
 - Slither static analysis: 0 high/critical findings
-- Branch coverage: 85%+
+- Branch coverage: 91% (99% statements)
 
 **Documentation:**
-- 13 wiki pages (HTML, GitHub Pages)
+- 14 wiki pages (HTML, GitHub Pages)
 - 30+ doc files (specs, guides, checklists)
 - Landing page with tokenomics, FAQ, roadmap
 - ChatGPT Audit V3: 12/12 PASS

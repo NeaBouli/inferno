@@ -36,13 +36,21 @@ Stand: 26. Februar 2026
 | Font Preconnect | OK (googleapis + gstatic) |
 | Responsive Design | OK (CSS media queries) |
 
+### Crawling & Indexing
+
+| Datei | Status |
+|-------|--------|
+| `robots.txt` | Erstellt (Allow: /, Sitemap-Link) |
+| `sitemap.xml` | Aktualisiert (15 URLs: Landing + 14 Wiki-Seiten) |
+| `canonical` | Gesetzt (https://neabouli.github.io/inferno/) |
+| `robots` meta | Gesetzt (index, follow) |
+
 ### Empfohlene naechste Schritte
 
 1. **Performance**: Lazy-load Bilder unterhalb des Folds (z.B. Partner-Logos)
-2. **Accessibility**: Alt-Texte fuer dekorative Bilder pruefen
-3. **PWA**: `manifest.json` + Service Worker fuer Offline-Support
-4. **Structured Data**: JSON-LD fuer Crypto Token Schema (schema.org)
-5. **Image Optimization**: WebP-Varianten der PNG-Assets
+2. **PWA**: `manifest.json` + Service Worker fuer Offline-Support
+3. **Structured Data**: JSON-LD fuer Crypto Token Schema (schema.org)
+4. **Image Optimization**: WebP-Varianten der PNG-Assets
 
 ### Lighthouse Score Schaetzung (pre-run)
 

@@ -173,7 +173,7 @@ SIWE authentication, points tracking, and EIP-712 signed voucher issuance for pr
 - [Fair Launch Statement](docs/FAIR_LAUNCH.md) — No Presale, No VC, Team Allocation Vergleich, On-Chain Beweise
 - [Fee Design](docs/FEE_DESIGN.md) — Warum 3.5%, Fee-Exempt Adressen, CEX-Strategie, MEV/Slippage
 - [Off-Chain Security](docs/OFFCHAIN_SECURITY.md) — VoucherSigner Key Management, JWT, SIWE, Rate Limiting
-- [Audit Submission](docs/AUDIT_SUBMISSION.md) — Code4rena/Sherlock Prep (9 Contracts, 1520 SLOC, Scope, Known Issues)
+- [Audit Submission](docs/AUDIT_SUBMISSION.md) — Code4rena/Sherlock Prep (9 Contracts, 1697 SLOC, Scope, Known Issues)
 - [Press Kit](docs/PRESS_KIT.md) — Key Facts, Token-Allokation, Roadmap, Links
 - [GitHub Secrets Guide](docs/GITHUB_SECRETS.md) — Required Secrets fuer GitHub Actions CI/CD
 - [ChatGPT Audit V3 Results](docs/CHATGPT_AUDIT_V3_RESULTS.md) — Audit V3 Ergebnisse (12/12 Self-Check PASS)
@@ -184,7 +184,9 @@ SIWE authentication, points tracking, and EIP-712 signed voucher issuance for pr
 - [Deployment Stats](docs/stats.json) — Auto-generierte On-Chain Stats (via update-stats.js)
 - [Project Summary](docs/PROJECT-SUMMARY.md) — Komplett-Uebersicht (10 Contracts, 396 Tests, 7 Apps)
 - [Release Notes v0.1.0](docs/RELEASE_NOTES_v0.1.0.md) — Erster getaggter Release (Sepolia Testnet)
-- [Lighthouse Report](docs/LIGHTHOUSE_REPORT.md) — SEO-Optimierungen (OG, Twitter Card, Meta Tags)
+- [Lighthouse Report](docs/LIGHTHOUSE_REPORT.md) — SEO-Optimierungen (OG, Twitter Card, Meta Tags, Sitemap, robots.txt)
+- [AI Copilot Test Results](docs/COPILOT_TEST_RESULTS.md) — RAG-System Test (6 Fragen, 3 Modi, Safety Guards)
+- [Roadmap v0.2.0](docs/ROADMAP_v0.2.0.md) — Mainnet-Ready Milestones (Audit, Multisig, Deploy, Post-Launch)
 
 ## Development
 

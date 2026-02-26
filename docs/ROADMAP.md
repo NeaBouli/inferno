@@ -24,7 +24,7 @@
 
 ## Phase 3: Ecosystem (Q1-Q2 2026) — IN PROGRESS
 
-- [x] PartnerVault (491 LOC, 89 tests, milestone unlocking + creator rewards)
+- [x] PartnerVault (549 LOC, 95 tests, milestone unlocking + creator rewards)
 - [x] FeeRouterV1 (EIP-712 vouchers, protocol fee routing)
 - [x] Benefits Network (QR-based lock verification, merchant console)
 - [x] Creator Gateway (YouTube x IFR Lock Bridge)
@@ -33,7 +33,7 @@
 - [x] Partner Directory (static HTML, filter by type/status)
 - [x] Lock UI in Token Dashboard (lock/unlock, tier display)
 - [x] Proposal Alerts in Governance Dashboard
-- [x] 13 wiki pages, transparency report, audit prep
+- [x] 14 wiki pages, transparency report, audit prep
 - [ ] Ownership Transfer Proposals #4-#6 execute (Reserve, Buyback, Burn)
 - [ ] LP Token Lock/Burn
 - [ ] Professional security audit (Codearena/Sherlock)

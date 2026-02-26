@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://neabouli.github.io/inferno/</loc><lastmod>2026-02-26</lastmod><priority>1.0</priority></url>
+  <url><loc>https://neabouli.github.io/inferno/wiki/</loc><lastmod>2026-02-26</lastmod><priority>0.9</priority></url>
+  <url><loc>https://neabouli.github.io/inferno/wiki/contracts.html</loc><lastmod>2026-02-26</lastmod><priority>0.8</priority></url>
+  <url><loc>https://neabouli.github.io/inferno/wiki/tokenomics.html</loc><lastmod>2026-02-26</lastmod><priority>0.8</priority></url>
+  <url><loc>https://neabouli.github.io/inferno/wiki/lock-mechanism.html</loc><lastmod>2026-02-26</lastmod><priority>0.8</priority></url>
+  <url><loc>https://neabouli.github.io/inferno/wiki/governance.html</loc><lastmod>2026-02-26</lastmod><priority>0.8</priority></url>
+  <url><loc>https://neabouli.github.io/inferno/wiki/security.html</loc><lastmod>2026-02-26</lastmod><priority>0.8</priority></url>
+  <url><loc>https://neabouli.github.io/inferno/wiki/deployment.html</loc><lastmod>2026-02-26</lastmod><priority>0.7</priority></url>
+  <url><loc>https://neabouli.github.io/inferno/wiki/integration.html</loc><lastmod>2026-02-26</lastmod><priority>0.8</priority></url>
+  <url><loc>https://neabouli.github.io/inferno/wiki/transparency.html</loc><lastmod>2026-02-26</lastmod><priority>0.7</priority></url>
+  <url><loc>https://neabouli.github.io/inferno/wiki/fair-launch.html</loc><lastmod>2026-02-26</lastmod><priority>0.7</priority></url>
+  <url><loc>https://neabouli.github.io/inferno/wiki/fee-design.html</loc><lastmod>2026-02-26</lastmod><priority>0.7</priority></url>
+  <url><loc>https://neabouli.github.io/inferno/wiki/faq.html</loc><lastmod>2026-02-26</lastmod><priority>0.8</priority></url>
+  <url><loc>https://neabouli.github.io/inferno/wiki/roadmap.html</loc><lastmod>2026-02-26</lastmod><priority>0.7</priority></url>
+  <url><loc>https://neabouli.github.io/inferno/wiki/agent.html</loc><lastmod>2026-02-26</lastmod><priority>0.6</priority></url>
+</urlset>
