@@ -21,19 +21,36 @@ All notable changes to the Inferno ($IFR) project.
 - Creator Gateway SIWE Tests: siwe.test.ts (6 tests — nonce, verify, validation)
 - PartnerVault Integration Tests: 6 full lifecycle tests (create→claim, multi-partner, authorizedCaller, anti-double-count, finalize, guardian)
 - ChatGPT Audit V4 Prompt: docs/CHATGPT_AUDIT_PROMPT_V4.md (8 Self-Checks: A-H)
+- ChatGPT Audit V4 Results: docs/CHATGPT_AUDIT_V4_RESULTS.md (8/8 PASS)
+- docs/ROADMAP_v0.2.0.md — Mainnet-Ready Milestones (Audit, Multisig, Deploy, Post-Launch)
+- docs/COPILOT_TEST_RESULTS.md — AI Copilot RAG Test (6 Fragen, 3 Modi, Safety Guards)
+- docs/LIGHTHOUSE_REPORT.md — SEO Audit (OG, Twitter Card, robots, sitemap)
+- docs/GITHUB_SETUP.md — Repository Setup (Discussions, Topics, Pages)
+- docs/sitemap.xml — 15 URLs (Landing + 14 Wiki-Seiten)
+- docs/robots.txt — Crawler-Steuerung (Allow: /, Sitemap-Link)
+- .env.example fuer: dashboard, governance-dashboard, ai-copilot/server, benefits-network/frontend
+- GitHub Discussions aktiviert + 8 Topics gesetzt (ethereum, defi, erc20, solidity, web3, token, hardhat, typescript)
+- GitHub Release v0.1.0 erstellt (gh release create)
 
 ### Changed
 - 276 → 321 Contract Tests (+45: IFRLock +8, BuybackVault +11, Vesting +14, LiquidityReserve +6, PartnerVault +6)
 - 330 → 396 Gesamt-Tests (321 Contract + 32 Creator Gateway + 35 Points Backend + 8 Benefits Network)
-- Branch Coverage: 85% → 91%
+- Branch Coverage: 85% → 91% (BuybackVault 62→94%, Vesting 69→97%, LiquidityReserve 87→97%)
+- Coverage Final: 99.45% Stmts, 90.79% Branch, 98.26% Funcs, 99% Lines
+- SLOC: 1520 → 1697 (real wc -l gemessen, alle Contracts)
 - Wiki: 13 → 14 pages (roadmap.html added to all sidebars)
 - Voucher issuance now requires lock proof (Bronze+ tier)
 - Points event recording now requires captcha (Cloudflare Turnstile)
 - Zahlen-Sync: alle Docs auf 321/396/91% aktualisiert (16+ Dateien)
+- AUDIT_BRIEF.md: 8 → 9 Contracts, LOC aktualisiert
+- DEPLOYMENTS.md: Proposal #2 cancelled, #3 executed, 9/9 verified
 
 ### Fixed
 - Creator Gateway wallet auth: SIWE signature verification instead of trust-all
+- Creator Gateway open handles: setInterval.unref() in auth.ts nonce cleanup
 - Stale test counts across all docs (STATUS-REPORT, PROJECT-SUMMARY, COVERAGE_REPORT, WHITEPAPER, ONE-PAGER, PRESS_KIT, AUDIT_BRIEF, AUDIT_SUBMISSION, TESTNET_GUIDE, wiki/security.html, index.html)
+- Stale LOC counts in DOCS.md (76→93, 139→151, 111→132, 148→175, 86→92, 491→549, 165→228)
+- PartnerVault test count: 89 → 95 in DOCS.md, ROADMAP.md
 
 ---
 

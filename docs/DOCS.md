@@ -125,6 +125,8 @@ inferno/
 │   ├── LIGHTHOUSE_REPORT.md           SEO-Optimierungen (OG, Twitter Card, Meta Tags, Sitemap, robots.txt)
 │   ├── COPILOT_TEST_RESULTS.md        AI Copilot RAG Test (6 Fragen, 3 Modi, Safety Guards)
 │   ├── ROADMAP_v0.2.0.md             Mainnet-Ready Milestones (Audit, Multisig, Deploy, Post-Launch)
+│   ├── CHATGPT_AUDIT_V4_RESULTS.md    Audit V4 Ergebnisse (8/8 PASS)
+│   ├── GITHUB_SETUP.md               Repository Setup (Discussions, Topics, Pages)
 │   ├── robots.txt                     Crawler-Steuerung (Allow: /, Sitemap-Link)
 │   ├── sitemap.xml                    15 URLs (Landing + 14 Wiki-Seiten)
 │   └── wiki/                          [x] 14 HTML-Seiten (index, contracts, tokenomics, lock, governance, security, deployment, integration, agent, faq, transparency, fair-launch, fee-design, roadmap)
