@@ -128,7 +128,7 @@ Admin ist Governance — kein Deployer-Zugriff moeglich.
 | LiquidityReserve | 200,000,000 IFR | 20.04% |
 | Vesting (Team) | 150,000,000 IFR | 15.03% |
 | Deployer (Treasury+Community) | 169,387,995 IFR | 16.97% |
-| PartnerVault | 40,000,000 IFR | 4.01% |
+| PartnerVault | 40.000.000 IFR | 4.01% |
 | Verbrannt (seit Deploy) | 2,000,425 IFR | 0.20% |
 
 2,000,425 IFR wurden seit dem Deploy permanent verbrannt.

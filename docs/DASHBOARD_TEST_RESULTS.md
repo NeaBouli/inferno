@@ -9,7 +9,7 @@
 
 ## Live Stats (Sepolia)
 - [ ] totalSupply angezeigt (997,999,575 IFR)
-- [ ] PartnerVault Balance (38.6M IFR)
+- [ ] PartnerVault Balance (40M IFR)
 - [ ] FeeRouter protocolFeeBps (5 bps)
 - [ ] Auto-refresh alle 30s
 - [ ] Error handling bei RPC-Fehler
