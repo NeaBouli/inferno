@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useContracts } from "./hooks/useContracts";
 import Header from "./components/Header";
+import ProposalAlert from "./components/ProposalAlert";
 import Overview from "./components/Overview";
 import Partners from "./components/Partners";
 import TimelockQueue from "./components/TimelockQueue";
@@ -34,6 +35,7 @@ export default function App() {
         </div>
       </nav>
       <main className="flex-1 max-w-7xl mx-auto w-full px-4 py-6">
+        <ProposalAlert contracts={contracts} />
         {tab === "Overview" && <Overview contracts={contracts} />}
         {tab === "Partners" && <Partners contracts={contracts} />}
         {tab === "Timelock Queue" && <TimelockQueue contracts={contracts} />}
