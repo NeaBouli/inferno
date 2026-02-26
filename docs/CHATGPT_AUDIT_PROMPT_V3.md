@@ -52,5 +52,27 @@ Prüfe Landing Page + Wiki:
 - Testnet-Status klar kommuniziert?
 - "Kein Audit = kein Mainnet" Commitment vorhanden?
 
+## I) PRESS_KIT.md vorhanden und korrekt
+URL: https://github.com/NeaBouli/inferno/blob/main/docs/PRESS_KIT.md
+- Ist er professionell und korrekt?
+- Key Facts stimmen mit on-chain ueberein?
+- Keine uebertriebenen Claims?
+
+## J) ROADMAP.md realistisch
+URL: https://github.com/NeaBouli/inferno/blob/main/docs/ROADMAP.md
+- Q2 2026 Audit vor Mainnet — realistisch?
+- Keine unrealistischen Versprechen?
+- Klar als "geplant" markiert?
+
+## K) v0.1.0 Tag gesetzt
+- git tag v0.1.0 vorhanden?
+- CHANGELOG.md hat v0.1.0 Eintrag?
+
+## L) GitHub Templates vollstaendig
+- Bug Report Template?
+- Feature Request Template?
+- Security Advisory Hinweis?
+- PR Template?
+
 ---
-Gesamtergebnis: X/8 PASS
+Gesamtergebnis: X/12 PASS

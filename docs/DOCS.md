@@ -115,6 +115,8 @@ inferno/
 │   ├── PAGE_UPDATE_CHECKLIST.md    Welche Dateien bei welchem Event aktualisiert werden muessen
 │   ├── DASHBOARD_TEST_RESULTS.md   Dashboard Build-Ergebnisse (0 Errors, 198 Modules)
 │   ├── BENEFITS_E2E_RESULTS.md     Benefits Network E2E Checkliste (Backend, API, Sepolia)
+│   ├── PRESS_KIT.md                 Press Kit (Key Facts, Token-Allokation, Roadmap, Links)
+│   ├── GITHUB_SECRETS.md            GitHub Actions Secrets Dokumentation
 │   ├── ROADMAP.md                   6-Phasen Roadmap (Foundation → DAO)
 │   ├── stats.json                   Auto-generierte On-Chain Stats (via update-stats.js)
 │   └── wiki/                          [x] 13 HTML-Seiten (index, contracts, tokenomics, lock, governance, security, deployment, integration, agent, faq, transparency, fair-launch, fee-design)
@@ -207,6 +209,14 @@ inferno/
 
 | Datum | Aenderung |
 |-------|-----------|
+| 2026-02-26 | PRESS_KIT.md: Press Kit (112 Zeilen, Key Facts, Token-Allokation, Roadmap, Links, Medien) |
+| 2026-02-26 | GITHUB_SECRETS.md: GitHub Actions Secrets Dokumentation (Pflicht + Optional, Workflows, Environments) |
+| 2026-02-26 | CHANGELOG v0.1.0: [Unreleased] → [v0.1.0], git tag v0.1.0 erstellt |
+| 2026-02-26 | Benefits Network E2E Test v2: Health OK, Business + Session erstellt, Route-Korrekturen dokumentiert |
+| 2026-02-26 | Points Backend: .dockerignore erstellt, Dockerfile + railway.json verifiziert |
+| 2026-02-26 | AI Copilot: server/Dockerfile erstellt, VERCEL_ENV.md Deploy Steps hinzugefuegt |
+| 2026-02-26 | Consistency Check: 7/7 bestanden (Test-Zahlen, 40M, Proposal #3, Wiki 13, .env, keine Keys) |
+| 2026-02-26 | ChatGPT Audit V3: 8 → 12 Checks erweitert (PRESS_KIT, ROADMAP, v0.1.0, GitHub Templates), 12/12 PASS |
 | 2026-02-26 | LockPanel.jsx: Lock/Unlock UI im Token Dashboard (Approve, Lock, Unlock, Tier-Anzeige, Balance, TX-Links) |
 | 2026-02-26 | Partner Directory: apps/partner-directory/index.html (SecureCall + 3 Slots, Filter, CTA, Landing Page Nav-Link) |
 | 2026-02-26 | ProposalAlert.tsx: Notification-Banner im Governance Dashboard (Pending/Ready Proposals, Countdown, Dismiss) |
