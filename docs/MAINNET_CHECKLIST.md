@@ -1,6 +1,6 @@
 # Inferno ($IFR) — Mainnet Deployment Checklist
 
-> **Status:** Pre-Mainnet | **Sepolia:** 10 Contracts deployed + verified | **Tests:** 276 Contract + 26 Creator Gateway + 20 Points + 8 Benefits = 330 Total | **Coverage:** 99% Stmts, 85% Branch
+> **Status:** Pre-Mainnet | **Sepolia:** 10 Contracts deployed + verified | **Tests:** 321 Contract + 32 Creator Gateway + 35 Points + 8 Benefits = 396 Total | **Coverage:** 99% Stmts, 91% Branch
 
 ## KRITISCH — Vor jedem Public Launch
 

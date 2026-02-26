@@ -188,7 +188,7 @@ Integration: 5 Zeilen Code. Vollstaendig entkoppelt.
 
 - Open Source: Alle Smart Contracts oeffentlich auf GitHub
 - Slither Static Analysis: 0 High/Critical Findings
-- 330 Tests (276 Contract + 54 App), alle bestehen, 99% Statement Coverage
+- 396 Tests (321 Contract + 75 App), alle bestehen, 99% Statement Coverage
 - Third-party Audit: empfohlen vor Mainnet-Deployment
 - Timelock: 48h Pflicht-Wartezeit auf alle Aenderungen
 - Kein Minting: technisch unmoeglich nach Launch
@@ -207,7 +207,7 @@ Integration: 5 Zeilen Code. Vollstaendig entkoppelt.
 
 ### Deflation in Aktion
 Seit Deployment wurden 2,000,425+ IFR permanent vernichtet.
-Bei 276 automatisierten Tests wurden reale Transfers durchgeführt —
+Bei 321 automatisierten Tests wurden reale Transfers durchgeführt —
 jeder davon hat die Deflationsmechanik on-chain bestätigt.
 
 ### Verifikation

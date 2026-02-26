@@ -77,7 +77,7 @@ Token holdings grant future DAO voting rights.
 
 ## Testing & Security
 
-- 315 unit tests (contracts) + 26 unit tests (Creator Gateway) — all passing
+- 321 unit tests (contracts) + 32 unit tests (Creator Gateway) + 35 unit tests (Points Backend) + 8 unit tests (Benefits Network) — all passing
 - Branch coverage: 90%+ (99% statements)
 - GitHub Actions CI: Creator Gateway, Points Backend, AI Copilot
 - Slither security audit: 0 high/critical findings
@@ -158,6 +158,7 @@ SIWE authentication, points tracking, and EIP-712 signed voucher issuance for pr
 - [Testnet E2E Guide](docs/TESTNET_GUIDE.md) — Full Lock/Benefit/Governance/FeeRouter Flow auf Sepolia
 - [Changelog](docs/CHANGELOG.md) — Alle Aenderungen chronologisch
 - [ChatGPT Audit Prompt V3](docs/CHATGPT_AUDIT_PROMPT_V3.md) — Independent Audit Checklist (12 Pruefbereiche)
+- [ChatGPT Audit Prompt V4](docs/CHATGPT_AUDIT_PROMPT_V4.md) — Anti-Sybil, SIWE, Integration, Zahlen-Konsistenz (8 Self-Checks)
 - [Investor One-Pager](docs/ONE-PAGER.md) — Key Numbers, Produkte, Technologie, Vor-Mainnet Checklist
 - [E2E Flow: Points → Voucher → FeeRouter](docs/E2E_FLOW.md) — Vollstaendiger End-to-End Flow
 - [YouTube Integration Guide](docs/YOUTUBE_INTEGRATION.md) — Hybrid Model B, Creator Gateway, Entitlement Config
@@ -165,7 +166,7 @@ SIWE authentication, points tracking, and EIP-712 signed voucher issuance for pr
 - [Tokenomics Model](docs/TOKENOMICS_MODEL.md) — Deflationskurve, Emission Model, Lock Economics
 - [Partner Rewards Spec](docs/PARTNER_REWARDS_SPEC.md) — Reward-Formel, Vesting, Anti-Gaming, Partner-Typen
 - [Benefits Network Test Guide](docs/BENEFITS_NETWORK_TEST.md) — E2E Test, API Endpoints, Lock Tiers
-- [Coverage Report](docs/COVERAGE_REPORT.md) — Solidity Coverage (99% Stmts, 85% Branch)
+- [Coverage Report](docs/COVERAGE_REPORT.md) — Solidity Coverage (99% Stmts, 91% Branch)
 - [Patch Guidelines](docs/PATCH-GUIDELINES.md) — Patch-Prozess, Severity, Versionierung
 - [Contributing Guide](docs/CONTRIBUTING.md) — Bug Reports, Code Standards, Git Konventionen
 - [Transparency Report](docs/TRANSPARENCY.md) — On-Chain Audit (8 Checks), Supply-Verteilung, Vesting, LP Status
@@ -181,7 +182,7 @@ SIWE authentication, points tracking, and EIP-712 signed voucher issuance for pr
 - [Roadmap](docs/ROADMAP.md) — 6-Phasen Roadmap (Foundation → Governance → Ecosystem → Mainnet → Growth → DAO)
 - [Page Update Checklist](docs/PAGE_UPDATE_CHECKLIST.md) — Welche Dateien bei welchem Event aktualisiert werden muessen
 - [Deployment Stats](docs/stats.json) — Auto-generierte On-Chain Stats (via update-stats.js)
-- [Project Summary](docs/PROJECT-SUMMARY.md) — Komplett-Uebersicht (10 Contracts, 330 Tests, 7 Apps)
+- [Project Summary](docs/PROJECT-SUMMARY.md) — Komplett-Uebersicht (10 Contracts, 396 Tests, 7 Apps)
 - [Release Notes v0.1.0](docs/RELEASE_NOTES_v0.1.0.md) — Erster getaggter Release (Sepolia Testnet)
 - [Lighthouse Report](docs/LIGHTHOUSE_REPORT.md) — SEO-Optimierungen (OG, Twitter Card, Meta Tags)
 

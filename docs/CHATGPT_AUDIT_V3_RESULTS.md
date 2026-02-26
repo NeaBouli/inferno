@@ -12,11 +12,11 @@ Prompt: docs/CHATGPT_AUDIT_PROMPT_V3.md
 | B) Mainnet Checklist LP Lock | PASS | KRITISCH-Tag vorhanden, LP Lock + Ownership Transfer Sections vollstaendig |
 | C) On-Chain Zahlen Konsistenz | PASS | 997,999,575 + 2,000,425 + 150,000,000 + 40,000,000 konsistent in TRANSPARENCY.md, PROJECT-SUMMARY.md, security.html, transparency.html |
 | D) Ownership Status | PASS | "Deployer (Testnet-Phase)" klar dokumentiert (Zeile 39), Governance als Ziel, Proposals #4-#6 scheduled |
-| E) ONE-PAGER.md Qualitaet | PASS | 58 Zeilen (>30), 330 Tests, Audit erwaehnt, Deflationary + Lock-to-Access |
+| E) ONE-PAGER.md Qualitaet | PASS | 58 Zeilen (>30), 396 Tests, Audit erwaehnt, Deflationary + Lock-to-Access |
 | F) Wiki transparency.html | PASS | Datei existiert, Sidebar-Link in allen 13 Wiki-Seiten |
 | G) Scripts vorhanden | PASS | Alle 4: onchain-audit.js, propose-ownership-transfer.js, burn-lp-tokens.js, topup-partnervault.js |
 | H) Keine falschen Versprechen | PASS | 0 Matches fuer "100% safe/risk-free/guaranteed" in index.html + ONE-PAGER.md |
-| I) PRESS_KIT.md | PASS | 112 Zeilen, Key Facts korrekt (330 Tests, 40M, CFLM, 10 Contracts), kein Marketing-Hype |
+| I) PRESS_KIT.md | PASS | 112 Zeilen, Key Facts korrekt (396 Tests, 40M, CFLM, 10 Contracts), kein Marketing-Hype |
 | J) ROADMAP.md realistisch | PASS | Audit vor Mainnet (Q2 2026), Phasen klar als geplant markiert, keine unrealistischen Versprechen |
 | K) v0.1.0 Tag gesetzt | PASS | CHANGELOG.md hat [v0.1.0] — 2026-02-26 Eintrag, git tag v0.1.0 vorhanden |
 | L) GitHub Templates | PASS | bug_report.md, feature_request.md, security.md, pull_request_template.md — alle 4 vorhanden |

@@ -60,7 +60,7 @@ Commit-Prefixe:
 Fuer Solidity-Aenderungen gilt:
 1. Neue Contract-Version deployen (niemals in-place patchen)
 2. Governance Proposal fuer Migration (48h Timelock)
-3. Tests: `npx hardhat test` (alle 276+ muessen gruen sein)
+3. Tests: `npx hardhat test` (alle 321+ muessen gruen sein)
 4. Coverage: `npx hardhat coverage` (>80% Branch Coverage)
 5. Dokumentation aktualisieren
 

@@ -17,15 +17,23 @@ All notable changes to the Inferno ($IFR) project.
 - Wiki roadmap.html (14th wiki page, 6 phases with status badges)
 - Dead link checker script (scripts/check-links.js)
 - Lighthouse meta tags: OG + Twitter Card on landing page
+- Points Backend Anti-Sybil Tests: lockProof.test.ts (9 tests), captcha.test.ts (6 tests)
+- Creator Gateway SIWE Tests: siwe.test.ts (6 tests — nonce, verify, validation)
+- PartnerVault Integration Tests: 6 full lifecycle tests (create→claim, multi-partner, authorizedCaller, anti-double-count, finalize, guardian)
+- ChatGPT Audit V4 Prompt: docs/CHATGPT_AUDIT_PROMPT_V4.md (8 Self-Checks: A-H)
 
 ### Changed
-- 29 → 37 IFRLock tests (edge cases)
+- 276 → 321 Contract Tests (+45: IFRLock +8, BuybackVault +11, Vesting +14, LiquidityReserve +6, PartnerVault +6)
+- 330 → 396 Gesamt-Tests (321 Contract + 32 Creator Gateway + 35 Points Backend + 8 Benefits Network)
+- Branch Coverage: 85% → 91%
 - Wiki: 13 → 14 pages (roadmap.html added to all sidebars)
 - Voucher issuance now requires lock proof (Bronze+ tier)
 - Points event recording now requires captcha (Cloudflare Turnstile)
+- Zahlen-Sync: alle Docs auf 321/396/91% aktualisiert (16+ Dateien)
 
 ### Fixed
 - Creator Gateway wallet auth: SIWE signature verification instead of trust-all
+- Stale test counts across all docs (STATUS-REPORT, PROJECT-SUMMARY, COVERAGE_REPORT, WHITEPAPER, ONE-PAGER, PRESS_KIT, AUDIT_BRIEF, AUDIT_SUBMISSION, TESTNET_GUIDE, wiki/security.html, index.html)
 
 ---
 

@@ -5,7 +5,7 @@
 **Letzter Commit:** `991ac9d2` — fix: consistency check — stale test counts
 **Modell:** Community Fair Launch (CFLM) — kein Presale
 **Ticker:** $IFR
-**Status:** 10 On-Chain Components deployed + verified auf Sepolia | 330 Tests | 7 Apps
+**Status:** 10 On-Chain Components deployed + verified auf Sepolia | 396 Tests | 7 Apps
 
 ---
 
@@ -35,24 +35,24 @@
 
 | Bereich | Tests | Framework |
 |---------|-------|-----------|
-| **Smart Contracts** | **276** | Hardhat + Chai + Waffle |
-| Creator Gateway | 26 | Jest + ts-jest + supertest |
-| Points Backend | 20 | Jest |
+| **Smart Contracts** | **321** | Hardhat + Chai + Waffle |
+| Creator Gateway | 32 | Jest + ts-jest + supertest |
+| Points Backend | 35 | tsx runner |
 | Benefits Network | 8 | Jest |
-| **Gesamt** | **330** | |
+| **Gesamt** | **396** | |
 
-### Contract Tests (276 — 9 Suites)
+### Contract Tests (321 — 9 Suites)
 
 | Suite | Tests | Beschreibung |
 |-------|-------|-------------|
 | InfernoToken | 22 | Deployment, fee math, exemptions, owner functions, edge cases |
-| LiquidityReserve | 30 | Lock period, staged withdrawal, pause, period limits |
-| Vesting | 7 | Cliff, linear release, access control, pause |
-| BuybackVault | 9 | Deposit, buyback split, cooldown, slippage, activation delay |
+| LiquidityReserve | 36 | Lock period, staged withdrawal, pause, period limits, edge cases |
+| Vesting | 21 | Cliff, linear release, access control, pause, constructor, edge cases |
+| BuybackVault | 20 | Deposit, buyback split, cooldown, slippage, activation delay, edge cases |
 | BurnReserve | 21 | Deposit, burn, burnAll, tracking, guardian auth |
 | Governance | 36 | Propose, execute, cancel, self-governance, integration |
-| IFRLock | 29 | Lock, unlock, re-lock, isLocked, lockType, fee-exempt, pause |
-| PartnerVault | 89 | Partners, milestones, rewards, vesting, claims, authorizedCaller, anti-double-count, algo throttle |
+| IFRLock | 37 | Lock, unlock, re-lock, isLocked, lockType, fee-exempt, pause, edge cases |
+| PartnerVault | 95 | Partners, milestones, rewards, vesting, claims, authorizedCaller, anti-double-count, algo throttle, integration |
 | FeeRouterV1 | 33 | Fee charging, voucher discount, isVoucherValid (6 branches), replay protection, signer rotation, access control |
 
 ### Solidity Coverage (solidity-coverage)
@@ -60,7 +60,7 @@
 | Metrik | Wert |
 |--------|------|
 | Statements | 98.89% |
-| Branches | 84.65% |
+| Branches | 91% |
 | Functions | 97.39% |
 | Lines | 98.60% |
 
@@ -123,8 +123,8 @@
 | Check | Status |
 |-------|--------|
 | Slither v0.11.5 | **PASS** — 0 High/Critical, 15 Fixes, 36 akzeptiert |
-| solidity-coverage | **99% Stmts, 85% Branch** |
-| 276 Contract Tests | **PASS** — 0 Failures |
+| solidity-coverage | **99% Stmts, 91% Branch** |
+| 321 Contract Tests | **PASS** — 0 Failures |
 | Governance Lifecycle | **PASS** — Proposal #0 + #1 executed via 48h Timelock |
 | Third-party Audit | **Offen** — empfohlen vor Mainnet |
 

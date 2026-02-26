@@ -1038,4 +1038,151 @@ describe("PartnerVault", function () {
       expect(secondReward).to.be.gt(throttledReward);
     });
   });
+
+  // ── Integration Tests ─────────────────────────────────────
+
+  describe("Integration: full lifecycle", () => {
+    it("create → activate → milestone → lockReward → vest → claim", async () => {
+      // 1. Create and activate partner
+      await createAndActivate(PID_A, beneficiaryA.address, MAX_ALLOC);
+      const p0 = await vault.partners(PID_A);
+      expect(p0.active).to.equal(true);
+      expect(p0.unlockedTotal).to.equal(0);
+      expect(p0.rewardAccrued).to.equal(0);
+
+      // 2. Record milestone (500K unlocked)
+      const milestoneAmount = parse("500000");
+      await vault.recordMilestone(PID_A, MS_1, milestoneAmount);
+
+      // 3. Record lock reward (10K lock → 1.5K reward at 15%)
+      const lockAmount = parse("10000");
+      await vault.recordLockReward(PID_A, lockAmount, userA.address);
+      const p1 = await vault.partners(PID_A);
+      const expectedReward = lockAmount.mul(REWARD_BPS).div(10000);
+      expect(p1.rewardAccrued).to.equal(expectedReward);
+      expect(p1.unlockedTotal.add(p1.rewardAccrued)).to.equal(milestoneAmount.add(expectedReward));
+
+      // 4. Advance past cliff + half vesting
+      await advanceTime(CLIFF + VESTING / 2);
+
+      // 5. Claim — beneficiary receives partial vesting
+      const balBefore = await token.balanceOf(beneficiaryA.address);
+      await vault.claim(PID_A);
+      const balAfter = await token.balanceOf(beneficiaryA.address);
+      expect(balAfter.sub(balBefore)).to.be.gt(0);
+
+      // 6. Advance past full vesting
+      await advanceTime(VESTING);
+      await vault.claim(PID_A);
+      const totalClaimed = await vault.totalClaimed();
+      expect(totalClaimed).to.be.gt(0);
+    });
+
+    it("two partners, independent vesting timelines", async () => {
+      await createAndActivate(PID_A, beneficiaryA.address, MAX_ALLOC);
+      await createAndActivate(PID_B, beneficiaryB.address, MAX_ALLOC);
+
+      // Milestone for partner A now
+      await vault.recordMilestone(PID_A, MS_1, parse("200000"));
+
+      // Advance 90 days, then milestone for partner B
+      await advanceTime(90 * DAY);
+      await vault.recordMilestone(PID_B, MS_1, parse("300000"));
+
+      // Advance past A's full vesting but B still mid-vesting
+      // A started at t=0, needs CLIFF + VESTING = 210d total.
+      // We already advanced 90d, so 120d more covers A fully.
+      // B started at t=90d, needs 210d total. At t=210d, B has 120d = still in vesting.
+      await advanceTime(120 * DAY);
+
+      // A should be fully claimable (210d > CLIFF+VESTING)
+      const claimableA = await vault.claimable(PID_A);
+      expect(claimableA).to.equal(parse("200000"));
+
+      // B still mid-vesting (only 120d into 210d = CLIFF+VESTING)
+      const claimableB = await vault.claimable(PID_B);
+      expect(claimableB).to.be.lt(parse("300000"));
+      expect(claimableB).to.be.gt(0);
+    });
+
+    it("authorizedCaller records reward, beneficiary claims", async () => {
+      await createAndActivate(PID_A, beneficiaryA.address, MAX_ALLOC);
+      await vault.recordMilestone(PID_A, MS_1, parse("100000"));
+
+      // Set userA as authorized caller
+      await vault.setAuthorizedCaller(userA.address, true);
+
+      // Authorized caller records lock reward
+      await vault.connect(userA).recordLockReward(PID_A, parse("5000"), beneficiaryB.address);
+
+      // Advance past vesting
+      await advanceTime(VESTING + CLIFF);
+
+      // Claim as anyone (permissionless)
+      const balBefore = await token.balanceOf(beneficiaryA.address);
+      await vault.connect(userA).claim(PID_A);
+      const balAfter = await token.balanceOf(beneficiaryA.address);
+      expect(balAfter.sub(balBefore)).to.be.gt(0);
+    });
+
+    it("milestone + lock reward + anti-double-count + claim", async () => {
+      await createAndActivate(PID_A, beneficiaryA.address, MAX_ALLOC);
+
+      // Milestone
+      await vault.recordMilestone(PID_A, MS_1, parse("50000"));
+
+      // Lock reward from userA
+      await vault.recordLockReward(PID_A, parse("2000"), userA.address);
+
+      // Same wallet + same partner → reverts
+      await expect(
+        vault.recordLockReward(PID_A, parse("2000"), userA.address)
+      ).to.be.revertedWith("already rewarded");
+
+      // Same wallet + different partner → OK
+      await createAndActivate(PID_B, beneficiaryB.address, MAX_ALLOC);
+      await vault.recordMilestone(PID_B, MS_1, parse("50000"));
+      await vault.recordLockReward(PID_B, parse("2000"), userA.address);
+
+      // Advance and claim both
+      await advanceTime(VESTING + CLIFF);
+      await vault.claim(PID_A);
+      await vault.claim(PID_B);
+
+      const totalClaimed = await vault.totalClaimed();
+      expect(totalClaimed).to.be.gt(0);
+    });
+
+    it("finalize milestones, then only lock rewards add to earned", async () => {
+      await createAndActivate(PID_A, beneficiaryA.address, MAX_ALLOC);
+      await vault.recordMilestone(PID_A, MS_1, parse("100000"));
+      await vault.finalizeMilestones(PID_A);
+
+      // Further milestones blocked
+      await expect(
+        vault.recordMilestone(PID_A, MS_2, parse("50000"))
+      ).to.be.revertedWith("milestones final");
+
+      // Lock rewards still work
+      await vault.recordLockReward(PID_A, parse("5000"), userA.address);
+      const p = await vault.partners(PID_A);
+      const expectedReward = parse("5000").mul(REWARD_BPS).div(10000);
+      expect(p.unlockedTotal.add(p.rewardAccrued)).to.equal(parse("100000").add(expectedReward));
+    });
+
+    it("guardian pause blocks claim, unpause resumes", async () => {
+      await createAndActivate(PID_A, beneficiaryA.address, MAX_ALLOC);
+      await vault.recordMilestone(PID_A, MS_1, parse("100000"));
+      await advanceTime(VESTING + CLIFF);
+
+      // Pause
+      await vault.connect(guardian).pause();
+      await expect(vault.claim(PID_A)).to.be.reverted;
+
+      // Unpause
+      await vault.connect(guardian).unpause();
+      await vault.claim(PID_A);
+      expect(await vault.totalClaimed()).to.be.gt(0);
+    });
+  });
 });
