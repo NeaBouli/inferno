@@ -16,12 +16,12 @@
 inferno/
 ├── contracts/
 │   ├── token/InfernoToken.sol          [x] 76 LOC, 22 Tests
-│   ├── liquidity/LiquidityReserve.sol  [x] 139 LOC, 30 Tests
-│   ├── vesting/Vesting.sol             [x] 111 LOC, 7 Tests
-│   ├── buyback/BuybackVault.sol        [x] 148 LOC, 9 Tests
+│   ├── liquidity/LiquidityReserve.sol  [x] 139 LOC, 36 Tests
+│   ├── vesting/Vesting.sol             [x] 111 LOC, 21 Tests
+│   ├── buyback/BuybackVault.sol        [x] 148 LOC, 20 Tests
 │   ├── burnreserve/BurnReserve.sol     [x] 86 LOC, 21 Tests
 │   ├── governance/Governance.sol       [x] 150 LOC, 36 Tests
-│   ├── lock/IFRLock.sol               [x] 127 LOC, 29 Tests
+│   ├── lock/IFRLock.sol               [x] 127 LOC, 37 Tests
 │   ├── partner/PartnerVault.sol       [x] 491 LOC, 89 Tests
 │   ├── FeeRouterV1.sol               [x] 165 LOC, 33 Tests
 │   └── mocks/                          MockToken, MockRouter, MockInfernoToken, MockAdapter
@@ -48,7 +48,8 @@ inferno/
 │   ├── onchain-audit.js             [x] 8-Check On-Chain Audit (Ownership, LP, Vesting, Supply, FeeExempt)
 │   ├── propose-ownership-transfer.js [x] Ownership Transfer Proposals (3 Contracts, DRY RUN Schutz)
 │   ├── execute-ownership-transfer.js [x] Ownership Transfer Executor (nach 48h Timelock)
-│   └── burn-lp-tokens.js            [x] LP Token Burn → 0xdead (DRY RUN Schutz, irreversibel)
+│   ├── burn-lp-tokens.js            [x] LP Token Burn → 0xdead (DRY RUN Schutz, irreversibel)
+│   └── check-links.js              [x] Dead Link Checker (interne Links in docs/)
 ├── tasks/
 │   └── admin.js                       [x] Hardhat CLI Tasks (lock-check, vault-status, feerouter-status, token-stats, gov-queue)
 ├── .github/
@@ -98,7 +99,7 @@ inferno/
 │   ├── TOKENOMICS_MODEL.md            Deflationskurve, Allocation, PartnerVault Emission, Lock Economics, FeeRouter Fee
 │   ├── PARTNER_REWARDS_SPEC.md        Reward-Formel, Vesting, Anti-Gaming, Partner-Typen (A/B/C), Onboarding
 │   ├── PATCH-GUIDELINES.md             Patch-Richtlinien v1.0 (6 Schritte, Versionierung, Notfall-Patches)
-│   ├── COVERAGE_REPORT.md             Solidity Coverage Report (99% Stmts, 85% Branch, 97% Funcs, 99% Lines)
+│   ├── COVERAGE_REPORT.md             Solidity Coverage Report (99% Stmts, 91% Branch, 98% Funcs, 99% Lines)
 │   ├── BENEFITS_NETWORK_TEST.md       Benefits Network E2E Test Guide (Test-Flow, API, Lock Tiers, Fehler)
 │   ├── PROJECT-SUMMARY.md             Komplett-Uebersicht (10 Contracts, 330 Tests, 7 Apps, CI/CD)
 │   ├── CONTRIBUTING.md                Contributing Guide v1.0 (Bug Reports, Code Standards, Git Konventionen)
@@ -109,7 +110,7 @@ inferno/
 │   ├── FAIR_LAUNCH.md               Fair Launch Statement (No Presale, No VC, Allocation Vergleich, On-Chain Beweise)
 │   ├── OFFCHAIN_SECURITY.md         Off-Chain Security (VoucherSigner, JWT, SIWE, Rate Limiting, Secrets Checkliste)
 │   ├── AUDIT_SUBMISSION.md          Audit Submission Prep (Code4rena/Sherlock, 9 Contracts, 1520 SLOC, Known Issues)
-│   ├── CHATGPT_AUDIT_V3_RESULTS.md Audit V3 Ergebnisse (8/8 PASS, Methodik, Findings)
+│   ├── CHATGPT_AUDIT_V3_RESULTS.md Audit V3 Ergebnisse (12/12 PASS, Methodik, Findings)
 │   ├── RAILWAY_ENV.md               Points Backend Railway Deploy (Env Vars, CLI Setup, Health Check)
 │   ├── VERCEL_ENV.md                AI Copilot Vercel + Railway Deploy (Two-App, Proxy, Env Vars)
 │   ├── PAGE_UPDATE_CHECKLIST.md    Welche Dateien bei welchem Event aktualisiert werden muessen
@@ -119,7 +120,9 @@ inferno/
 │   ├── GITHUB_SECRETS.md            GitHub Actions Secrets Dokumentation
 │   ├── ROADMAP.md                   6-Phasen Roadmap (Foundation → DAO)
 │   ├── stats.json                   Auto-generierte On-Chain Stats (via update-stats.js)
-│   └── wiki/                          [x] 13 HTML-Seiten (index, contracts, tokenomics, lock, governance, security, deployment, integration, agent, faq, transparency, fair-launch, fee-design)
+│   ├── RELEASE_NOTES_v0.1.0.md        Erster getaggter Release (Sepolia Testnet)
+│   ├── LIGHTHOUSE_REPORT.md           SEO-Optimierungen (OG, Twitter Card, Meta Tags)
+│   └── wiki/                          [x] 14 HTML-Seiten (index, contracts, tokenomics, lock, governance, security, deployment, integration, agent, faq, transparency, fair-launch, fee-design, roadmap)
 ├── STATUS-REPORT.md                    Vollstaendiger Statusbericht
 └── README.md                           Projekt-Uebersicht
 ```
@@ -136,20 +139,20 @@ inferno/
 
 ### 2. LiquidityReserve — [x] FERTIG
 - **Pfad:** `contracts/liquidity/LiquidityReserve.sol`
-- **Tests:** 30 (LiquidityReserve.test.js)
+- **Tests:** 36 (LiquidityReserve.test.js)
 - **Beschreibung:** Strategic Reserve fuer 200M IFR
 - **Features:** 6-Monats-Lock, gestaffelte Freigabe (50M pro Quartal), Perioden-Tracking, Guardian Pause, Owner-Withdraw nach Lock
 
 ### 3. Vesting — [x] FERTIG
 - **Pfad:** `contracts/vesting/Vesting.sol`
-- **Tests:** 7 (Vesting.test.js)
+- **Tests:** 21 (Vesting.test.js)
 - **Beschreibung:** Team Vesting fuer 150M IFR
 - **Features:** Post-Cliff-Formel (12mo Cliff, 36mo linear), Guardian Pause, Beneficiary Release
 - **Formel:** `(totalAllocation * (elapsed - cliff)) / (duration - cliff)`
 
 ### 4. BuybackVault — [x] FERTIG
 - **Pfad:** `contracts/buyback/BuybackVault.sol`
-- **Tests:** 9 (BuybackVault.test.js)
+- **Tests:** 20 (BuybackVault.test.js)
 - **Beschreibung:** ETH-zu-IFR Buyback mit automatischem Split
 - **Features:** 50/50 Split (BurnReserve + Treasury), Cooldown (1h), Slippage Protection (5%), 60-Tage-Aktivierungssperre, Guardian Pause
 
@@ -167,7 +170,7 @@ inferno/
 
 ### 7. IFRLock — [x] FERTIG
 - **Pfad:** `contracts/lock/IFRLock.sol`
-- **Tests:** 29 (IFRLock.test.js)
+- **Tests:** 37 (IFRLock.test.js)
 - **Beschreibung:** Generic IFR Token Lock ohne Rewards/Vesting
 - **Features:** lock(amount), lockWithType(amount, lockType), unlock(), isLocked(user, minAmount), lockInfo(), ReentrancyGuard, Emergency Pause (nur lock), Guardian Auth, Multi-App lockType Tag
 
@@ -197,7 +200,8 @@ inferno/
 |--------|------|
 | Contracts | 10 (+ 4 Mocks) |
 | Solidity LOC | 1,292 |
-| Tests | 276 (alle bestanden) |
+| Tests | 315 (alle bestanden) |
+| Branch Coverage | 91% |
 | Test LOC | 2,402 |
 | Deploy Script | 232 LOC, 9 Steps |
 | Modell | CFLM (Community Fair Launch) |
@@ -248,6 +252,17 @@ inferno/
 | 2026-02-26 | DASHBOARD_TEST_RESULTS.md: Build OK (0 Errors, 198 Modules, Bundle Sizes) |
 | 2026-02-26 | BENEFITS_E2E_RESULTS.md: E2E Checkliste (Backend Health, API, Sepolia Integration) |
 | 2026-02-26 | Governance Proposals #4-#6 scheduled: LiquidityReserve/BuybackVault/BurnReserve Ownership → Governance (ETA 28.02.) |
+| 2026-02-26 | Wiki RAG: wiki-rag.ts, mode-spezifische System Prompts, 14 Wiki-Seiten als RAG-Kontext |
+| 2026-02-26 | Voucher validate endpoint: GET /voucher/validate/:nonce (Status, Expiry, Usage) |
+| 2026-02-26 | Anti-Sybil: lockProof.ts + captcha.ts Middleware, Voucher braucht Lock, Points braucht Captcha |
+| 2026-02-26 | Creator Gateway SIWE: siwe-Paket, Nonce/Verify Flow, JWT-Ausgabe nach SIWE-Verifikation |
+| 2026-02-26 | Branch Coverage: 85% → 91% (BuybackVault 62→94%, Vesting 69→97%, LiquidityReserve 87→97%) |
+| 2026-02-26 | IFRLock Edge Case Tests: +8 Tests (1-wei, max balance, boundary, cycle, lockInfo reset) |
+| 2026-02-26 | Release Notes v0.1.0: docs/RELEASE_NOTES_v0.1.0.md |
+| 2026-02-26 | Wiki roadmap.html: 14. Wiki-Seite, Sidebar in allen 14 Seiten aktualisiert |
+| 2026-02-26 | Dead Link Check: scripts/check-links.js (283 Links, 3 gefixt, 0 broken) |
+| 2026-02-26 | Lighthouse Meta Tags: OG + Twitter Card + robots + theme-color + canonical auf Landing Page |
+| 2026-02-26 | Test-Counts: 276 → 315 Contract Tests (BuybackVault +11, Vesting +14, LiquidityReserve +6, IFRLock +8) |
 | 2026-02-26 | AI Copilot TS Fix: IFRCopilot.tsx window cast (as unknown as Record) — Build 0 Errors |
 | 2026-02-26 | FeeRouterV1 Tests: 13 → 33 (isVoucherValid, setVoucherSigner, setFeeCollector, receive(), access control, signer rotation) |
 | 2026-02-26 | Creator Gateway YouTube Mock Tests: 6 Tests (isMember mock, fail-closed, API errors) — Gesamt: 26 Tests |

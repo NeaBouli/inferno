@@ -116,6 +116,74 @@ describe("BuybackVault", function () {
     expect(await Vault.slippageBps()).to.equal(newSlip);
   });
 
+  // ── Branch Coverage Tests ──────────────────────────────────
+
+  describe("Constructor validation", () => {
+    it("reverts if burnReserve is zero address", async () => {
+      const BuybackVault = await ethers.getContractFactory("BuybackVault");
+      await expect(
+        BuybackVault.deploy(IFR.address, ethers.constants.AddressZero, treasury.address, Router.address, guardian.address, 0)
+      ).to.be.revertedWith("burnReserve=0");
+    });
+
+    it("reverts if treasury is zero address", async () => {
+      const BuybackVault = await ethers.getContractFactory("BuybackVault");
+      await expect(
+        BuybackVault.deploy(IFR.address, burnReserve.address, ethers.constants.AddressZero, Router.address, guardian.address, 0)
+      ).to.be.revertedWith("treasury=0");
+    });
+
+    it("reverts if guardian is zero address", async () => {
+      const BuybackVault = await ethers.getContractFactory("BuybackVault");
+      await expect(
+        BuybackVault.deploy(IFR.address, burnReserve.address, treasury.address, Router.address, ethers.constants.AddressZero, 0)
+      ).to.be.revertedWith("guardian=0");
+    });
+  });
+
+  describe("Access control", () => {
+    it("non-owner cannot call executeBuyback", async () => {
+      await expect(Vault.connect(user).executeBuyback()).to.be.revertedWith("not owner");
+    });
+
+    it("non-owner cannot call setParams", async () => {
+      await expect(
+        Vault.connect(user).setParams(5000, 3600, 500, Router.address, treasury.address)
+      ).to.be.revertedWith("not owner");
+    });
+
+    it("non-guardian cannot pause", async () => {
+      await expect(Vault.connect(user).pause()).to.be.revertedWith("not guardian");
+    });
+
+    it("non-guardian cannot unpause", async () => {
+      await expect(Vault.connect(user).unpause()).to.be.revertedWith("not guardian");
+    });
+  });
+
+  describe("Edge cases", () => {
+    it("depositETH reverts with zero ETH", async () => {
+      await expect(Vault.connect(user).depositETH({ value: 0 })).to.be.revertedWith("no ETH");
+    });
+
+    it("executeBuyback with zero balance emits event with zero amounts", async () => {
+      await expect(Vault.connect(owner).executeBuyback())
+        .to.emit(Vault, "BuybackExecuted")
+        .withArgs(0, 0, 0);
+    });
+
+    it("can receive ETH directly via receive()", async () => {
+      await owner.sendTransaction({ to: Vault.address, value: ethers.utils.parseEther("1") });
+      expect(await ethers.provider.getBalance(Vault.address)).to.equal(ethers.utils.parseEther("1"));
+    });
+
+    it("setParams reverts if treasury is zero", async () => {
+      await expect(
+        Vault.connect(owner).setParams(5000, 3600, 500, Router.address, ethers.constants.AddressZero)
+      ).to.be.revertedWith("treasury=0");
+    });
+  });
+
   describe("Activation delay (60 days)", () => {
     const SIXTY_DAYS = 60 * 86400;
 

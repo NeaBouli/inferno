@@ -7,11 +7,25 @@ All notable changes to the Inferno ($IFR) project.
 ## [Unreleased]
 
 ### Added
-- (kommende Aenderungen hier)
+- AI Copilot Wiki RAG: wiki-rag.ts loads all wiki docs, builds mode-specific system prompts
+- Voucher validate endpoint: GET /voucher/validate/:nonce (status, expiry, usage check)
+- Anti-Sybil middleware: lockProof.ts (on-chain IFR lock verification, 5min cache)
+- Anti-Sybil middleware: captcha.ts (Cloudflare Turnstile, dev-bypass)
+- Creator Gateway SIWE: nonce + verify flow (replaces placeholder wallet auth)
+- IFRLock edge case tests: +8 tests (1-wei lock, max balance, boundary checks, cycle tests)
+- Release Notes v0.1.0 (docs/RELEASE_NOTES_v0.1.0.md)
+- Wiki roadmap.html (14th wiki page, 6 phases with status badges)
+- Dead link checker script (scripts/check-links.js)
+- Lighthouse meta tags: OG + Twitter Card on landing page
 
 ### Changed
+- 29 → 37 IFRLock tests (edge cases)
+- Wiki: 13 → 14 pages (roadmap.html added to all sidebars)
+- Voucher issuance now requires lock proof (Bronze+ tier)
+- Points event recording now requires captcha (Cloudflare Turnstile)
 
 ### Fixed
+- Creator Gateway wallet auth: SIWE signature verification instead of trust-all
 
 ---
 
