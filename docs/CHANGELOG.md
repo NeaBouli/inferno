@@ -84,6 +84,16 @@ All notable changes to the Inferno ($IFR) project.
 - .github/ISSUE_TEMPLATE/ — Bug Report, Feature Request, Security Templates
 - .github/pull_request_template.md — PR Template
 - .github/workflows/benefits-network.yml — Benefits Network CI
+- .github/workflows/update-stats.yml — taeglich 06:00 UTC On-Chain Stats
+- .github/workflows/post-deploy.yml — nach Deploy/Execute Script Push
+- scripts/update-stats.js — On-Chain Stats Auto-Update (stats.json + TRANSPARENCY.md + index.html)
+- apps/partner-directory/index.html — Partner Directory (SecureCall + 3 Slots, Filter, CTA)
+- apps/dashboard/src/components/LockPanel — Lock/Unlock UI (Approve, Lock, Unlock, Tier)
+- apps/governance-dashboard/src/components/ProposalAlert — Notification-Banner (Pending/Ready)
+- docs/ROADMAP.md — 6-Phasen Roadmap (Foundation → DAO)
+- docs/PRESS_KIT.md — Press Kit (Key Facts, Token-Allokation, Links)
+- docs/GITHUB_SECRETS.md — GitHub Actions Secrets Dokumentation
+- docs/DEPLOYMENTS.md — Deployment Registry (10 Contracts, Constructor Args, Proposals)
 - FeeRouterV1 Tests: 13 → 33 (isVoucherValid 6 branches, setVoucherSigner, setFeeCollector, receive(), access control, signer rotation)
 - Creator Gateway: youtube-checker.test.ts (6 YouTube mock tests) + access.test.ts (6 Access-Route Tests) — 26 Tests gesamt
 - Wiki security.html: solidity-coverage Tabelle (pro Contract), FeeRouterV1 Zeile in Test-Suite-Tabelle
