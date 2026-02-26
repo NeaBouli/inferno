@@ -156,7 +156,7 @@ SIWE authentication, points tracking, and EIP-712 signed voucher issuance for pr
 - [SDK / Developer Quickstart](docs/SDK_QUICKSTART.md) — ethers.js, wagmi, Python, Tier System, Wallet Verification
 - [Testnet E2E Guide](docs/TESTNET_GUIDE.md) — Full Lock/Benefit/Governance/FeeRouter Flow auf Sepolia
 - [Changelog](docs/CHANGELOG.md) — Alle Aenderungen chronologisch
-- [ChatGPT Audit Prompt V3](docs/CHATGPT_AUDIT_PROMPT_V3.md) — Independent Audit Checklist (8 Pruefbereiche)
+- [ChatGPT Audit Prompt V3](docs/CHATGPT_AUDIT_PROMPT_V3.md) — Independent Audit Checklist (12 Pruefbereiche)
 - [Investor One-Pager](docs/ONE-PAGER.md) — Key Numbers, Produkte, Technologie, Vor-Mainnet Checklist
 - [E2E Flow: Points → Voucher → FeeRouter](docs/E2E_FLOW.md) — Vollstaendiger End-to-End Flow
 - [YouTube Integration Guide](docs/YOUTUBE_INTEGRATION.md) — Hybrid Model B, Creator Gateway, Entitlement Config
@@ -172,7 +172,9 @@ SIWE authentication, points tracking, and EIP-712 signed voucher issuance for pr
 - [Fee Design](docs/FEE_DESIGN.md) — Warum 3.5%, Fee-Exempt Adressen, CEX-Strategie, MEV/Slippage
 - [Off-Chain Security](docs/OFFCHAIN_SECURITY.md) — VoucherSigner Key Management, JWT, SIWE, Rate Limiting
 - [Audit Submission](docs/AUDIT_SUBMISSION.md) — Code4rena/Sherlock Prep (9 Contracts, 1520 SLOC, Scope, Known Issues)
-- [ChatGPT Audit V3 Results](docs/CHATGPT_AUDIT_V3_RESULTS.md) — Audit V3 Ergebnisse (8/8 Self-Check PASS)
+- [Press Kit](docs/PRESS_KIT.md) — Key Facts, Token-Allokation, Roadmap, Links
+- [GitHub Secrets Guide](docs/GITHUB_SECRETS.md) — Required Secrets fuer GitHub Actions CI/CD
+- [ChatGPT Audit V3 Results](docs/CHATGPT_AUDIT_V3_RESULTS.md) — Audit V3 Ergebnisse (12/12 Self-Check PASS)
 - [Railway Env Guide](docs/RAILWAY_ENV.md) — Points Backend Railway Deploy (Env Vars, CLI Setup)
 - [Vercel Env Guide](docs/VERCEL_ENV.md) — AI Copilot Vercel + Railway Deploy (Two-App, Proxy Config)
 - [Roadmap](docs/ROADMAP.md) — 6-Phasen Roadmap (Foundation → Governance → Ecosystem → Mainnet → Growth → DAO)

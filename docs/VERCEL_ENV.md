@@ -83,5 +83,34 @@ curl https://ifr-copilot.vercel.app
 - Vercel Rewrites leiten `/api/*` an Railway weiter
 - CORS auf Backend korrekt konfiguriert fuer Vercel Domain
 
+## Deploy Steps
+
+### Frontend (Vercel)
+```bash
+vercel login
+cd apps/ai-copilot
+vercel --prod
+# Env Var setzen: VITE_API_URL=https://ifr-copilot-api.railway.app
+```
+
+### Backend (Railway)
+```bash
+railway login
+cd apps/ai-copilot/server
+railway up
+# Env Vars: ANTHROPIC_API_KEY, PORT=3003
+```
+
+### Server Dockerfile
+```dockerfile
+FROM node:20-alpine
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci --production
+COPY dist ./dist/
+EXPOSE 3003
+CMD ["node", "dist/server.js"]
+```
+
 ---
 *Siehe auch: apps/ai-copilot/DEPLOY_CORRECTED.md*

@@ -4,7 +4,18 @@ All notable changes to the Inferno ($IFR) project.
 
 ---
 
-## [Unreleased] — 2026-02-26
+## [Unreleased]
+
+### Added
+- (kommende Aenderungen hier)
+
+### Changed
+
+### Fixed
+
+---
+
+## [v0.1.0] — 2026-02-26
 
 ### Added
 - docs/TRANSPARENCY.md — vollstaendiger On-Chain Audit Report (8 Checks)
