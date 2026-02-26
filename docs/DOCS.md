@@ -22,7 +22,7 @@ inferno/
 │   ├── burnreserve/BurnReserve.sol     [x] 86 LOC, 21 Tests
 │   ├── governance/Governance.sol       [x] 150 LOC, 36 Tests
 │   ├── lock/IFRLock.sol               [x] 127 LOC, 37 Tests
-│   ├── partner/PartnerVault.sol       [x] 491 LOC, 89 Tests
+│   ├── partner/PartnerVault.sol       [x] 491 LOC, 95 Tests
 │   ├── FeeRouterV1.sol               [x] 165 LOC, 33 Tests
 │   └── mocks/                          MockToken, MockRouter, MockInfernoToken, MockAdapter
 ├── test/
@@ -69,8 +69,8 @@ inferno/
 │   ├── governance-dashboard/          [x] React + Vite + TS + Tailwind (Overview, Partners, Timelock, Calldata, ProposalAlert)
 │   ├── partner-directory/             [x] Static HTML (Partner Cards, Filter, CTA)
 │   ├── ai-copilot/                   [x] React + Vite + TS + Tailwind + Express (3 Modi, RAG, Safety Guards)
-│   ├── points-backend/               [x] Express + Prisma + SQLite + siwe + jose (SIWE Auth, Points, EIP-712 Voucher, 20 Tests)
-│   ├── creator-gateway/              [x] Express + ethers v5 + googleapis + JWT (YouTube x IFR Lock Bridge, Port 3005, 20 Tests)
+│   ├── points-backend/               [x] Express + Prisma + SQLite + siwe + jose (SIWE Auth, Points, EIP-712 Voucher, 35 Tests)
+│   ├── creator-gateway/              [x] Express + ethers v5 + googleapis + JWT (YouTube x IFR Lock Bridge, Port 3005, 32 Tests)
 │   └── benefits-network/
 │       ├── backend/                   [x] Express + Prisma + SQLite (8 Tests)
 │       └── frontend/                  [x] Next.js 14 + Tailwind + wagmi v2 (PWA)
@@ -101,7 +101,7 @@ inferno/
 │   ├── PATCH-GUIDELINES.md             Patch-Richtlinien v1.0 (6 Schritte, Versionierung, Notfall-Patches)
 │   ├── COVERAGE_REPORT.md             Solidity Coverage Report (99% Stmts, 91% Branch, 98% Funcs, 99% Lines)
 │   ├── BENEFITS_NETWORK_TEST.md       Benefits Network E2E Test Guide (Test-Flow, API, Lock Tiers, Fehler)
-│   ├── PROJECT-SUMMARY.md             Komplett-Uebersicht (10 Contracts, 330 Tests, 7 Apps, CI/CD)
+│   ├── PROJECT-SUMMARY.md             Komplett-Uebersicht (10 Contracts, 396 Tests, 7 Apps, CI/CD)
 │   ├── CONTRIBUTING.md                Contributing Guide v1.0 (Bug Reports, Code Standards, Git Konventionen)
 │   ├── TRANSPARENCY.md               On-Chain Transparency Report (8 Checks, Supply, Vesting, LP, Mainnet TODOs)
 │   ├── ONE-PAGER.md                  Investor One-Pager (Key Numbers, Produkte, Technologie, Vor-Mainnet)
@@ -111,6 +111,7 @@ inferno/
 │   ├── OFFCHAIN_SECURITY.md         Off-Chain Security (VoucherSigner, JWT, SIWE, Rate Limiting, Secrets Checkliste)
 │   ├── AUDIT_SUBMISSION.md          Audit Submission Prep (Code4rena/Sherlock, 9 Contracts, 1520 SLOC, Known Issues)
 │   ├── CHATGPT_AUDIT_V3_RESULTS.md Audit V3 Ergebnisse (12/12 PASS, Methodik, Findings)
+│   ├── CHATGPT_AUDIT_PROMPT_V4.md Independent Audit V4 (8 Self-Checks: Anti-Sybil, SIWE, Integration, Zahlen, RAG, Voucher, CHANGELOG, Deployment)
 │   ├── RAILWAY_ENV.md               Points Backend Railway Deploy (Env Vars, CLI Setup, Health Check)
 │   ├── VERCEL_ENV.md                AI Copilot Vercel + Railway Deploy (Two-App, Proxy, Env Vars)
 │   ├── PAGE_UPDATE_CHECKLIST.md    Welche Dateien bei welchem Event aktualisiert werden muessen
@@ -200,7 +201,7 @@ inferno/
 |--------|------|
 | Contracts | 10 (+ 4 Mocks) |
 | Solidity LOC | 1,292 |
-| Tests | 315 (alle bestanden) |
+| Tests | 321 (alle bestanden) |
 | Branch Coverage | 91% |
 | Test LOC | 2,402 |
 | Deploy Script | 232 LOC, 9 Steps |

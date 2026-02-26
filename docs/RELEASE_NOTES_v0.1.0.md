@@ -8,7 +8,7 @@
 
 ## Highlights
 
-Inferno v0.1.0 marks the **first tagged release** of the protocol. All 10 smart contracts are deployed and verified on Sepolia testnet. The full application stack (8 apps) is operational. 330+ tests pass across all components.
+Inferno v0.1.0 marks the **first tagged release** of the protocol. All 10 smart contracts are deployed and verified on Sepolia testnet. The full application stack (8 apps) is operational. 396 tests pass across all components.
 
 ### What's Included
 
@@ -34,9 +34,9 @@ Inferno v0.1.0 marks the **first tagged release** of the protocol. All 10 smart 
 - Benefits Network (QR verification, Next.js PWA)
 
 **Testing:**
-- 276 contract tests (Hardhat + Chai)
-- 26 Creator Gateway tests (Jest)
-- 20+ Points Backend tests
+- 321 contract tests (Hardhat + Chai)
+- 32 Creator Gateway tests (Jest)
+- 35 Points Backend tests
 - Slither static analysis: 0 high/critical findings
 - Branch coverage: 85%+
 

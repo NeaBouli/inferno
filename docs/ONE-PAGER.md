@@ -15,7 +15,7 @@ Partner-Benefits, Creator-Content und Protocol-Discounts zu erhalten.
 | Team Vesting | 150M IFR, 4 Jahre, Cliff 1 Jahr |
 | LP Liquidity | 400M IFR (40%) |
 | Protocol Fee | 0.05% (5 bps) |
-| Smart Contract Tests | 330 (99% Coverage) |
+| Smart Contract Tests | 396 (99% Coverage) |
 
 ## Tokenomics
 
@@ -37,7 +37,7 @@ Deflationary + Utility:
 
 - Blockchain: Ethereum (Mainnet geplant, Sepolia Testnet aktiv)
 - Contracts: Solidity 0.8.20, OpenZeppelin
-- Security: Slither 0 High/Critical, 330 Tests, 99% Coverage
+- Security: Slither 0 High/Critical, 396 Tests, 99% Coverage
 - Governance: 48h Timelock, Guardian Cancel, Roadmap zu 4-of-7 Multisig
 
 ## Vor Mainnet

@@ -249,7 +249,7 @@ npx hardhat test --network sepolia --grep "smoke"
 npx hardhat test --network sepolia
 ```
 
-Erwartetes Ergebnis: **276 tests passing**
+Erwartetes Ergebnis: **321 tests passing**
 
 ---
 
