@@ -20,16 +20,16 @@ Folgende Contracts sind im Audit-Scope:
 
 | Contract | Pfad | SLOC | Priorität |
 |----------|------|------|-----------|
-| PartnerVault | contracts/partner/PartnerVault.sol | 491 | Hoch |
-| FeeRouterV1 | contracts/FeeRouterV1.sol | 186 | Hoch |
-| BuybackVault | contracts/buyback/BuybackVault.sol | 154 | Hoch |
+| PartnerVault | contracts/partner/PartnerVault.sol | 549 | Hoch |
+| FeeRouterV1 | contracts/FeeRouterV1.sol | 228 | Hoch |
+| BuybackVault | contracts/buyback/BuybackVault.sol | 175 | Hoch |
 | Governance | contracts/governance/Governance.sol | 150 | Mittel |
-| LiquidityReserve | contracts/liquidity/LiquidityReserve.sol | 139 | Mittel |
+| LiquidityReserve | contracts/liquidity/LiquidityReserve.sol | 151 | Mittel |
 | IFRLock | contracts/lock/IFRLock.sol | 127 | Hoch |
-| Vesting | contracts/vesting/Vesting.sol | 111 | Mittel |
-| BurnReserve | contracts/burnreserve/BurnReserve.sol | 86 | Niedrig |
-| InfernoToken | contracts/token/InfernoToken.sol | 76 | Hoch |
-| **Gesamt** | | **1520** | |
+| Vesting | contracts/vesting/Vesting.sol | 132 | Mittel |
+| BurnReserve | contracts/burnreserve/BurnReserve.sol | 92 | Niedrig |
+| InfernoToken | contracts/token/InfernoToken.sol | 93 | Hoch |
+| **Gesamt** | | **1697** | |
 
 ## Out of Scope
 

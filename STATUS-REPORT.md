@@ -59,10 +59,10 @@
 
 | Metrik | Wert |
 |--------|------|
-| Statements | 98.89% |
+| Statements | 99.45% |
 | Branches | 91% |
-| Functions | 97.39% |
-| Lines | 98.60% |
+| Functions | 98.26% |
+| Lines | 99% |
 
 ---
 

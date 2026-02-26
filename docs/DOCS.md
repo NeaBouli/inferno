@@ -15,15 +15,15 @@
 ```
 inferno/
 ├── contracts/
-│   ├── token/InfernoToken.sol          [x] 76 LOC, 22 Tests
-│   ├── liquidity/LiquidityReserve.sol  [x] 139 LOC, 36 Tests
-│   ├── vesting/Vesting.sol             [x] 111 LOC, 21 Tests
-│   ├── buyback/BuybackVault.sol        [x] 148 LOC, 20 Tests
-│   ├── burnreserve/BurnReserve.sol     [x] 86 LOC, 21 Tests
+│   ├── token/InfernoToken.sol          [x] 93 LOC, 22 Tests
+│   ├── liquidity/LiquidityReserve.sol  [x] 151 LOC, 36 Tests
+│   ├── vesting/Vesting.sol             [x] 132 LOC, 21 Tests
+│   ├── buyback/BuybackVault.sol        [x] 175 LOC, 20 Tests
+│   ├── burnreserve/BurnReserve.sol     [x] 92 LOC, 21 Tests
 │   ├── governance/Governance.sol       [x] 150 LOC, 36 Tests
 │   ├── lock/IFRLock.sol               [x] 127 LOC, 37 Tests
-│   ├── partner/PartnerVault.sol       [x] 491 LOC, 95 Tests
-│   ├── FeeRouterV1.sol               [x] 165 LOC, 33 Tests
+│   ├── partner/PartnerVault.sol       [x] 549 LOC, 95 Tests
+│   ├── FeeRouterV1.sol               [x] 228 LOC, 33 Tests
 │   └── mocks/                          MockToken, MockRouter, MockInfernoToken, MockAdapter
 ├── test/
 │   ├── InfernoToken.test.js            [x] 258 LOC
@@ -99,7 +99,7 @@ inferno/
 │   ├── TOKENOMICS_MODEL.md            Deflationskurve, Allocation, PartnerVault Emission, Lock Economics, FeeRouter Fee
 │   ├── PARTNER_REWARDS_SPEC.md        Reward-Formel, Vesting, Anti-Gaming, Partner-Typen (A/B/C), Onboarding
 │   ├── PATCH-GUIDELINES.md             Patch-Richtlinien v1.0 (6 Schritte, Versionierung, Notfall-Patches)
-│   ├── COVERAGE_REPORT.md             Solidity Coverage Report (99% Stmts, 91% Branch, 98% Funcs, 99% Lines)
+│   ├── COVERAGE_REPORT.md             Solidity Coverage Report (99% Stmts, 91% Branch, 98% Funcs, 99% Lines, Final Run)
 │   ├── BENEFITS_NETWORK_TEST.md       Benefits Network E2E Test Guide (Test-Flow, API, Lock Tiers, Fehler)
 │   ├── PROJECT-SUMMARY.md             Komplett-Uebersicht (10 Contracts, 396 Tests, 7 Apps, CI/CD)
 │   ├── CONTRIBUTING.md                Contributing Guide v1.0 (Bug Reports, Code Standards, Git Konventionen)
@@ -109,7 +109,7 @@ inferno/
 │   ├── FEE_DESIGN.md                Fee Design v1.0 (Warum 3.5%, Fee-Exempt, CEX-Strategie, MEV/Slippage)
 │   ├── FAIR_LAUNCH.md               Fair Launch Statement (No Presale, No VC, Allocation Vergleich, On-Chain Beweise)
 │   ├── OFFCHAIN_SECURITY.md         Off-Chain Security (VoucherSigner, JWT, SIWE, Rate Limiting, Secrets Checkliste)
-│   ├── AUDIT_SUBMISSION.md          Audit Submission Prep (Code4rena/Sherlock, 9 Contracts, 1520 SLOC, Known Issues)
+│   ├── AUDIT_SUBMISSION.md          Audit Submission Prep (Code4rena/Sherlock, 9 Contracts, 1697 SLOC, Known Issues)
 │   ├── CHATGPT_AUDIT_V3_RESULTS.md Audit V3 Ergebnisse (12/12 PASS, Methodik, Findings)
 │   ├── CHATGPT_AUDIT_PROMPT_V4.md Independent Audit V4 (8 Self-Checks: Anti-Sybil, SIWE, Integration, Zahlen, RAG, Voucher, CHANGELOG, Deployment)
 │   ├── RAILWAY_ENV.md               Points Backend Railway Deploy (Env Vars, CLI Setup, Health Check)
@@ -122,7 +122,11 @@ inferno/
 │   ├── ROADMAP.md                   6-Phasen Roadmap (Foundation → DAO)
 │   ├── stats.json                   Auto-generierte On-Chain Stats (via update-stats.js)
 │   ├── RELEASE_NOTES_v0.1.0.md        Erster getaggter Release (Sepolia Testnet)
-│   ├── LIGHTHOUSE_REPORT.md           SEO-Optimierungen (OG, Twitter Card, Meta Tags)
+│   ├── LIGHTHOUSE_REPORT.md           SEO-Optimierungen (OG, Twitter Card, Meta Tags, Sitemap, robots.txt)
+│   ├── COPILOT_TEST_RESULTS.md        AI Copilot RAG Test (6 Fragen, 3 Modi, Safety Guards)
+│   ├── ROADMAP_v0.2.0.md             Mainnet-Ready Milestones (Audit, Multisig, Deploy, Post-Launch)
+│   ├── robots.txt                     Crawler-Steuerung (Allow: /, Sitemap-Link)
+│   ├── sitemap.xml                    15 URLs (Landing + 14 Wiki-Seiten)
 │   └── wiki/                          [x] 14 HTML-Seiten (index, contracts, tokenomics, lock, governance, security, deployment, integration, agent, faq, transparency, fair-launch, fee-design, roadmap)
 ├── STATUS-REPORT.md                    Vollstaendiger Statusbericht
 └── README.md                           Projekt-Uebersicht
@@ -177,14 +181,14 @@ inferno/
 
 ### 8. PartnerVault — [x] FERTIG
 - **Pfad:** `contracts/partner/PartnerVault.sol`
-- **Tests:** 89 (PartnerVault.test.js)
+- **Tests:** 95 (PartnerVault.test.js)
 - **Beschreibung:** Partner Ecosystem Pool (40M IFR) mit Milestone-Unlocking + Lock-triggered Creator Rewards
 - **Features:** createPartner, activatePartner, recordMilestone, recordLockReward (lockAmount × effectiveBps, wallet), claim (linear Vesting mit Cliff), finalizeMilestones, SafeERC20, ReentrancyGuard, Pausable, Guardian Auth, Governance-kontrollierte Parameter (rewardBps 5-25%, annualEmissionCap, partnerCap) mit min/max Bounds, Annual Cap Reset, authorizedCaller Whitelist, Anti-Double-Count (wallet→partner), Algo Emission Throttle (lockRatio-basierte BPS-Skalierung via IIFRLock)
 - **Sepolia:** rewardBps=1500 (15%), annualCap=4M IFR, Adresse: `0x5F12C0bC616e9Ca347D48C33266aA8fe98490A39`
 - **Mainnet-Empfehlung:** rewardBps=1000 (10%), annualCap=4M IFR, partnerCap=100K IFR/Partner (skalierbar fuer 500-1000+ Partner)
 - **KRITISCH:** feeExempt MUSS VOR dem 40M Transfer gesetzt werden (Sepolia-Lesson: 1.4M IFR Fee-Verlust)
 
-### 9. FeeRouterV1 (`contracts/FeeRouterV1.sol`) — 165 LOC, 33 Tests
+### 9. FeeRouterV1 (`contracts/FeeRouterV1.sol`) — 228 LOC, 33 Tests
 - **Zweck:** Protocol fee routing mit EIP-712 signierte Discount-Voucher
 - **Features:** swapWithFee (adapter-basiert), DiscountVoucher (EIP-712 signiert), Replay-Protection (nonce), Whitelisted Adapters, Governance-steuerbare Fee (0-25 bps), Pause
 - **Sepolia:** protocolFeeBps=5 (0.05%), FEE_CAP_BPS=25 (0.25%), Adresse: `0x499289C8Ef49769F4FcFF3ca86D4BD7b55B49aa4`
@@ -200,7 +204,7 @@ inferno/
 | Metrik | Wert |
 |--------|------|
 | Contracts | 10 (+ 4 Mocks) |
-| Solidity LOC | 1,292 |
+| Solidity LOC | 1,697 |
 | Tests | 321 (alle bestanden) |
 | Branch Coverage | 91% |
 | Test LOC | 2,402 |
@@ -298,7 +302,7 @@ inferno/
 | 2026-02-26 | OFFCHAIN_SECURITY.md: Off-Chain Security (VoucherSigner Key Management, JWT, SIWE, Rate Limiting, Secrets) |
 | 2026-02-26 | .gitignore erweitert: .env.local, .env*.local, *.pem, *.key |
 | 2026-02-26 | Points Backend: Voucher Issuance Logging ([VOUCHER] wallet, issued, discount, nonce) |
-| 2026-02-26 | AUDIT_SUBMISSION.md: Audit Prep (Code4rena/Sherlock, 9 Contracts, 1520 SLOC, Known Issues, Checklist) |
+| 2026-02-26 | AUDIT_SUBMISSION.md: Audit Prep (Code4rena/Sherlock, 9 Contracts, 1697 SLOC, Known Issues, Checklist) |
 | 2026-02-26 | CHATGPT_AUDIT_V3_RESULTS.md: Audit Ergebnisse Platzhalter, Self-Check 8/8 PASS |
 | 2026-02-26 | NatSpec: InfernoToken.sol (14 Tags), Vesting.sol (19), BuybackVault.sol (19), PartnerVault.sol (61), BurnReserve.sol (12), LiquidityReserve.sol (19) |
 | 2026-02-26 | Wiki fair-launch.html: Fair Launch Wiki (Allocation, Vergleich, On-Chain Proof, Vesting Details) |
@@ -333,9 +337,9 @@ inferno/
 | 2026-02-24 | Partner Integration Spec: IFRLock + PartnerVault ABI, Reward Mechanics, Algo Throttle, AuthorizedCaller, Checklisten |
 | 2026-02-24 | Governance Constitution v1.0 + Business Onboarding Guide erstellt |
 | 2026-02-24 | Governance Dashboard: React 18 + Vite + TS + Tailwind (Overview, Partners, Timelock Queue, Calldata Generator) |
-| 2026-02-23 | PartnerVault Upgrade: authorizedCaller Whitelist, Anti-Double-Count, Algo Emission Throttle (89 Tests) |
+| 2026-02-23 | PartnerVault Upgrade: authorizedCaller Whitelist, Anti-Double-Count, Algo Emission Throttle (95 Tests) |
 | 2026-02-23 | Benefits Network: Backend (Express + Prisma, 8 Tests) + Frontend (Next.js 14 PWA, wagmi v2) |
-| 2026-02-23 | PartnerVault.sol implementiert (491 LOC, 89 Tests): Milestone-Unlocking + Lock-triggered Creator Rewards, SafeERC20, Governance-Parameter |
+| 2026-02-23 | PartnerVault.sol implementiert (549 LOC, 95 Tests): Milestone-Unlocking + Lock-triggered Creator Rewards, SafeERC20, Governance-Parameter |
 | 2026-02-23 | 6 Doku-Inkonsistenzen gefixt: PartnerVault, Creator Rewards, Bootstrap Pricing, Governance Trennung, alte Tier-Zahlen ersetzt |
 | 2026-02-22 | Governance Proposal #1 executed: setFeeExempt(IFRLock, true) — Full Lock/Unlock Cycle verified (8/8) |
 | 2026-02-20 | IFRLock Contract implementiert (127 LOC, 29 Tests): Generic Token Lock, ReentrancyGuard, Pause, Multi-App lockType |

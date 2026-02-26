@@ -44,7 +44,7 @@ All notable changes to the Inferno ($IFR) project.
 - docs/FAIR_LAUNCH.md — Fair Launch Statement mit Allocation-Vergleich
 - docs/FEE_DESIGN.md — Fee-Mechanismus Erklaerung + CEX-Strategie
 - docs/OFFCHAIN_SECURITY.md — Off-chain Security Hardening Guide
-- docs/AUDIT_SUBMISSION.md — Code4rena/Sherlock Submission Prep (1520 SLOC)
+- docs/AUDIT_SUBMISSION.md — Code4rena/Sherlock Submission Prep (1697 SLOC)
 - docs/ONE-PAGER.md — Investor One-Pager
 - docs/CONTRIBUTING.md — Contribution Guide
 - docs/SECURITY_POLICY.md — Responsible Disclosure + Bug Bounty

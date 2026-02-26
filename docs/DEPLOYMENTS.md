@@ -49,7 +49,7 @@
 
 | Setting | Value |
 |---------|-------|
-| FeeExempt | Vesting, LiquidityReserve, Treasury, BuybackVault, BurnReserve, IFRLock, PartnerVault (pending Proposal #2) |
+| FeeExempt | Vesting, LiquidityReserve, Treasury, BuybackVault, BurnReserve, IFRLock, PartnerVault |
 | Deployer FeeExempt | Removed |
 | LiquidityReserve Lock | 180 days |
 | Vesting Cliff | 12 months |
@@ -78,7 +78,8 @@
 |---|--------|--------|-----|-----|--------|
 | 0 | `setFeeExempt(0xA4A1ea...6A36f90, true)` | InfernoToken | 2026-02-20 10:14 CET | [`0x13ff46d8...cbbe982d`](https://sepolia.etherscan.io/tx/0x13ff46d8a113f25b9ab0037ee06d6108c62d0f16e25d28799e4f45a8cbbe982d) | Executed |
 | 1 | `setFeeExempt(IFRLock, true)` | InfernoToken | 2026-02-22 21:15 CET | [`0x211b7949...4253a909`](https://sepolia.etherscan.io/tx/0x211b794970abe147b3ab2f3c92bb79b3b3c5a72bc8be8cfb7e1d00fd4253a909) | Executed |
-| 2 | `setFeeExempt(PartnerVault, true)` | InfernoToken | 2026-02-25 00:39 CET | [`0x40e19cbf...2ed5c145`](https://sepolia.etherscan.io/tx/0x40e19cbf1aeb8310bdf6a7961773a62d70329d6488966c3e65ea86ba2ed5c145) | Pending |
+| 2 | `setFeeExempt(PartnerVault v1, true)` | InfernoToken | — | — | Cancelled (v1 deprecated) |
+| 3 | `setFeeExempt(PartnerVault v2, true)` | InfernoToken | 2026-02-26 | [`0x3f28690a...57de6e8`](https://sepolia.etherscan.io/tx/0x3f28690a57de6e8) | Executed |
 
 ### Post-Deploy Status
 
@@ -88,7 +89,7 @@
 | feeExempt Wiring | Done |
 | Token Distribution | Done |
 | Deployer Exemption Removed | Done |
-| Etherscan Verification | **Done** (8/8 verified) |
+| Etherscan Verification | **Done** (9/9 verified) |
 | Uniswap LP Pairing | **Done** — [`0x2252e8bBDE0E50CD372748aC233A99C08627d9c7`](https://sepolia.etherscan.io/address/0x2252e8bBDE0E50CD372748aC233A99C08627d9c7) |
 | Router on BuybackVault | **Done** — `0xC532a74256D3Db42D0Bf7a0400fEFDbad7694008` |
 | Ownership to Governance | **Done** — TX `0xa69bf285...d5762e1b` |

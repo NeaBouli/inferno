@@ -14,12 +14,13 @@ const oauth2Client = new google.auth.OAuth2(
 
 // In-memory nonce store with 10-minute TTL
 const nonceStore = new Map<string, number>();
-setInterval(() => {
+const nonceCleanupInterval = setInterval(() => {
   const now = Date.now();
   for (const [nonce, ts] of nonceStore) {
     if (now - ts > 10 * 60 * 1000) nonceStore.delete(nonce);
   }
 }, 60_000);
+nonceCleanupInterval.unref();
 
 // Step 1: Google OAuth redirect
 router.get('/google', (req, res) => {

@@ -45,7 +45,7 @@ Diese Punkte muessen ZWINGEND vor Mainnet erledigt sein:
 | Governance Proposal #3 executed (PartnerVault v2 feeExempt) + 1.4M Top-up | Done |
 | Full Lock/Unlock Cycle verified (8/8) | Done |
 | Slither Audit: 0 high/critical | Done |
-| solidity-coverage: 99% Stmts, 85% Branch | Done |
+| solidity-coverage: 99% Stmts, 91% Branch | Done |
 
 ---
 
@@ -53,7 +53,7 @@ Diese Punkte muessen ZWINGEND vor Mainnet erledigt sein:
 
 ### Security
 - [x] Slither Audit abgeschlossen (0 high/critical, 15 Fixes applied)
-- [x] solidity-coverage Report generiert (99% Stmts, 85% Branch)
+- [x] solidity-coverage Report generiert (99% Stmts, 91% Branch)
 - [ ] Third-party Security Audit abgeschlossen (empfohlen: Code4rena, Sherlock, oder Cyfrin)
 - [ ] Alle Audit-Findings behoben und re-verified
 - [ ] Slither nochmals laufen lassen auf finalem Code
