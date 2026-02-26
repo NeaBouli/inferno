@@ -53,6 +53,35 @@ Beispiel:
 Sendest du 10.000 IFR → Empfaenger erhaelt 9.650 IFR.
 250 IFR sind fuer immer vernichtet. 100 IFR ins Pool.
 
+### Kern-Prinzip: Lock > Transfer
+
+Die Fee-Struktur ist bewusst so gestaltet, dass Halten und Sperren (Lock)
+belohnt wird, waehrend haeufiges Transferieren bestraft wird:
+
+- **Locken = 0% Fee**: IFRLock, LiquidityReserve, BuybackVault, BurnReserve
+  und PartnerVault sind feeExempt. Lock/Unlock-Operationen kosten keine Fees.
+- **Transferieren = 3.5% Fee**: Jeder normale Transfer verbrennt Token.
+- **Ergebnis**: Wer IFR sperrt und haelt, verliert nichts. Wer staendig
+  tradet, verliert bei jedem Transfer 3.5%.
+
+### Fee-Exempt Adressen
+
+| Contract | feeExempt | Warum |
+|----------|-----------|-------|
+| IFRLock | Ja | Lock/Unlock ohne Verlust |
+| LiquidityReserve | Ja | Staged Release ohne Burn |
+| BuybackVault | Ja | ETH→IFR Swap ohne Doppel-Burn |
+| BurnReserve | Ja | Deposit ohne Zusatz-Burn |
+| PartnerVault | Ja | Reward-Auszahlung ohne Verlust |
+| FeeRouterV1 | Geplant | Fee-Routing ohne Komplikation |
+
+### CEX-Kompatibilitaet
+
+Fee-on-Transfer ist mit zentralen Boersen (CEX) kompatibel, erfordert aber
+Anpassung: CEX muss den tatsaechlich empfangenen Betrag pruefen
+(balanceOf nach Transfer), nicht den gesendeten Betrag.
+Integration-Guide: docs/wiki/fee-design.html
+
 ---
 
 ## 4. Token-Oekonomie
@@ -68,7 +97,31 @@ Gesamtangebot: 1.000.000.000 IFR (1 Milliarde, einmalig, kein Minting)
 | Community & Grants | 6% | 60M | Ecosystem-Aufbau |
 | Partner Ecosystem | 4% | 40M | PartnerVault (Lock-triggered Rewards) |
 
+### Community Fair Launch Model (CFLM)
+
 Fair Launch: Kein Presale, keine VC-Runden, keine Insider-Vorteile.
+
+Warum? Die meisten Token-Projekte verkaufen frueh an VCs und Insider —
+die dann zum Launch sofort verkaufen (Dump). Inferno macht das Gegenteil:
+
+- **Kein Presale**: Kein Token wurde vor dem oeffentlichen Launch verkauft
+- **Kein Seed / Private Round**: Keine Sonder-Konditionen fuer Frueh-Investoren
+- **Kein VC-Anteil**: Keine Venture Capital Firmen mit Vorzugs-Token
+- **100% on-chain verteilt**: Alle Allocations sichtbar, alle Vesting-Perioden erzwungen durch Smart Contracts
+
+Vergleich mit anderen Projekten:
+
+| Projekt | Presale? | VC-Anteil | Community-Anteil |
+|---------|----------|-----------|------------------|
+| Uniswap (UNI) | Nein | 18% | 60% |
+| Aave (AAVE) | Ja | 23% | 77% |
+| Compound (COMP) | Ja | 24% | 42% |
+| **Inferno (IFR)** | **Nein** | **0%** | **46% (40% DEX + 6% Grants)** |
+
+Team-Token (15%) sind durch einen 4-Jahres-Vesting-Contract gesichert
+mit 12 Monaten Cliff. Bis Januar 2027 kann kein einziger Team-Token
+freigegeben werden. Verifizierbar:
+https://sepolia.etherscan.io/address/0xa710f9FE7bf42981E60BE2Fbe7D87Fb3541a3F8B
 
 ---
 
