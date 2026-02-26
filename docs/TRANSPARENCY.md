@@ -15,13 +15,13 @@ Alle Angaben sind on-chain verifizierbar. Script:
 | IFRLock | admin-Pattern (kein Ownable) | OK |
 | PartnerVault | admin-Pattern (Governance) | OK |
 | FeeRouterV1 | admin-Pattern (Governance) | OK |
-| LiquidityReserve | 0x5Ecc668eab04C5bee81b5c7242e1077c946dE406 (Deployer) | Testnet |
-| BuybackVault | 0x5Ecc668eab04C5bee81b5c7242e1077c946dE406 (Deployer) | Testnet |
-| BurnReserve | 0x5Ecc668eab04C5bee81b5c7242e1077c946dE406 (Deployer) | Testnet |
+| LiquidityReserve | 0x5Ecc668eab04C5bee81b5c7242e1077c946dE406 (Deployer) | ⏳ Proposal #4 scheduled (ETA: 28.02.2026 ~08:07 CET) |
+| BuybackVault | 0x5Ecc668eab04C5bee81b5c7242e1077c946dE406 (Deployer) | ⏳ Proposal #5 scheduled (ETA: 28.02.2026 ~08:07 CET) |
+| BurnReserve | 0x5Ecc668eab04C5bee81b5c7242e1077c946dE406 (Deployer) | ⏳ Proposal #6 scheduled (ETA: 28.02.2026 ~08:07 CET) |
 
-> LiquidityReserve, BuybackVault, BurnReserve sind auf Testnet noch
-> beim Deployer. Vor Mainnet werden alle drei via Governance Proposal
-> an den Timelock uebertragen.
+> LiquidityReserve, BuybackVault, BurnReserve Ownership Transfer
+> Proposals sind scheduled. Nach 48h Timelock werden alle drei
+> an den Governance Contract uebertragen.
 
 **Verifizieren:**
 https://sepolia.etherscan.io/address/0x3Bd71947F288d1dd8B21129B1bE4FF16EDd5d1F4#readContract
@@ -141,9 +141,9 @@ Deflation funktioniert on-chain nachweisbar.
 | # | Action | Prioritaet |
 |---|--------|-----------|
 | 1 | LP Tokens locken/burnen (Unicrypt oder 0xdead) | Kritisch |
-| 2 | LiquidityReserve Ownership an Governance | Hoch |
-| 3 | BuybackVault Ownership an Governance | Hoch |
-| 4 | BurnReserve Ownership an Governance | Hoch |
+| 2 | LiquidityReserve Ownership an Governance | ⏳ Proposal #4 (ETA 28.02.) |
+| 3 | BuybackVault Ownership an Governance | ⏳ Proposal #5 (ETA 28.02.) |
+| 4 | BurnReserve Ownership an Governance | ⏳ Proposal #6 (ETA 28.02.) |
 | 5 | PartnerVault feeExempt setzen (Proposal #3) | Pending |
 | 6 | Third-party Security Audit | Kritisch |
 | 7 | Gnosis Safe 4-of-7 Multisig | Hoch |

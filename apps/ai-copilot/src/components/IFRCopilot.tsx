@@ -73,8 +73,8 @@ export default function IFRCopilot() {
 
     try {
       // Optional: pass wallet info for points tracking
-      const walletAddress = (window as Record<string, unknown>).__IFR_WALLET_ADDRESS as string | undefined;
-      const authToken = (window as Record<string, unknown>).__IFR_AUTH_TOKEN as string | undefined;
+      const walletAddress = (window as unknown as Record<string, unknown>).__IFR_WALLET_ADDRESS as string | undefined;
+      const authToken = (window as unknown as Record<string, unknown>).__IFR_AUTH_TOKEN as string | undefined;
 
       const headers: Record<string, string> = { "Content-Type": "application/json" };
       if (walletAddress) headers["x-wallet-address"] = walletAddress;

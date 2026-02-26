@@ -105,7 +105,12 @@ inferno/
 │   ├── FAIR_LAUNCH.md               Fair Launch Statement (No Presale, No VC, Allocation Vergleich, On-Chain Beweise)
 │   ├── OFFCHAIN_SECURITY.md         Off-Chain Security (VoucherSigner, JWT, SIWE, Rate Limiting, Secrets Checkliste)
 │   ├── AUDIT_SUBMISSION.md          Audit Submission Prep (Code4rena/Sherlock, 9 Contracts, 1520 SLOC, Known Issues)
-│   ├── CHATGPT_AUDIT_V3_RESULTS.md Audit V3 Ergebnisse Platzhalter (8/8 Self-Check PASS)
+│   ├── CHATGPT_AUDIT_V3_RESULTS.md Audit V3 Ergebnisse (8/8 PASS, Methodik, Findings)
+│   ├── RAILWAY_ENV.md               Points Backend Railway Deploy (Env Vars, CLI Setup, Health Check)
+│   ├── VERCEL_ENV.md                AI Copilot Vercel + Railway Deploy (Two-App, Proxy, Env Vars)
+│   ├── PAGE_UPDATE_CHECKLIST.md    Welche Dateien bei welchem Event aktualisiert werden muessen
+│   ├── DASHBOARD_TEST_RESULTS.md   Dashboard Build-Ergebnisse (0 Errors, 198 Modules)
+│   ├── BENEFITS_E2E_RESULTS.md     Benefits Network E2E Checkliste (Backend, API, Sepolia)
 │   └── wiki/                          [x] 13 HTML-Seiten (index, contracts, tokenomics, lock, governance, security, deployment, integration, agent, faq, transparency, fair-launch, fee-design)
 ├── STATUS-REPORT.md                    Vollstaendiger Statusbericht
 └── README.md                           Projekt-Uebersicht
@@ -207,6 +212,15 @@ inferno/
 | 2026-02-25 | PATCH-GUIDELINES.md v1.0: 6-Schritt Prozess, Severity-Matrix, Smart Contract Patch Rules, Versionierung, Notfall-Patches |
 | 2026-02-25 | GitHub Actions CI: Creator Gateway (tsc+jest), Points Backend (prisma+tsc+jest), AI Copilot (tsc+build) |
 | 2026-02-25 | Deployment Wiki: Proposal #3 Info-Box mit Scripts + 1.4M IFR Top-up Step |
+| 2026-02-26 | CHATGPT_AUDIT_V3_RESULTS.md: Vollstaendige Ergebnisse mit Methodik (8/8 PASS, 1 Finding) |
+| 2026-02-26 | WHITEPAPER.md: CFLM Section (Vergleich UNI/AAVE/COMP), Fee Design erweitert (Lock>Transfer, Fee-Exempt, CEX) |
+| 2026-02-26 | RAILWAY_ENV.md: Points Backend Railway Deploy Guide (Env Vars, CLI, Health Check) |
+| 2026-02-26 | VERCEL_ENV.md: AI Copilot Vercel + Railway Deploy (Two-App, Proxy Config, Env Vars) |
+| 2026-02-26 | PAGE_UPDATE_CHECKLIST.md: Comprehensive Update-Matrix (7 Event-Typen, alle betroffenen Dateien) |
+| 2026-02-26 | DASHBOARD_TEST_RESULTS.md: Build OK (0 Errors, 198 Modules, Bundle Sizes) |
+| 2026-02-26 | BENEFITS_E2E_RESULTS.md: E2E Checkliste (Backend Health, API, Sepolia Integration) |
+| 2026-02-26 | Governance Proposals #4-#6 scheduled: LiquidityReserve/BuybackVault/BurnReserve Ownership → Governance (ETA 28.02.) |
+| 2026-02-26 | AI Copilot TS Fix: IFRCopilot.tsx window cast (as unknown as Record) — Build 0 Errors |
 | 2026-02-26 | FeeRouterV1 Tests: 13 → 33 (isVoucherValid, setVoucherSigner, setFeeCollector, receive(), access control, signer rotation) |
 | 2026-02-26 | Creator Gateway YouTube Mock Tests: 6 Tests (isMember mock, fail-closed, API errors) — Gesamt: 26 Tests |
 | 2026-02-26 | Wiki Security: solidity-coverage Tabelle hinzugefuegt (pro Contract), FeeRouterV1 Test-Suite Zeile |

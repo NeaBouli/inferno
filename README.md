@@ -172,6 +172,9 @@ SIWE authentication, points tracking, and EIP-712 signed voucher issuance for pr
 - [Off-Chain Security](docs/OFFCHAIN_SECURITY.md) — VoucherSigner Key Management, JWT, SIWE, Rate Limiting
 - [Audit Submission](docs/AUDIT_SUBMISSION.md) — Code4rena/Sherlock Prep (9 Contracts, 1520 SLOC, Scope, Known Issues)
 - [ChatGPT Audit V3 Results](docs/CHATGPT_AUDIT_V3_RESULTS.md) — Audit V3 Ergebnisse (8/8 Self-Check PASS)
+- [Railway Env Guide](docs/RAILWAY_ENV.md) — Points Backend Railway Deploy (Env Vars, CLI Setup)
+- [Vercel Env Guide](docs/VERCEL_ENV.md) — AI Copilot Vercel + Railway Deploy (Two-App, Proxy Config)
+- [Page Update Checklist](docs/PAGE_UPDATE_CHECKLIST.md) — Welche Dateien bei welchem Event aktualisiert werden muessen
 - [Project Summary](docs/PROJECT-SUMMARY.md) — Komplett-Uebersicht (10 Contracts, 330 Tests, 7 Apps)
 
 ## Development
