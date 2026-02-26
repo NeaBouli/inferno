@@ -1,0 +1,39 @@
+name: Update On-Chain Stats
+
+on:
+  schedule:
+    # Täglich um 06:00 UTC
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+    # Manuell auslösbar
+
+jobs:
+  update-stats:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - run: npm ci
+
+      - name: Update on-chain stats
+        run: npx hardhat run scripts/update-stats.js --network sepolia
+        env:
+          SEPOLIA_RPC_URL: ${{ secrets.SEPOLIA_RPC_URL }}
+          PRIVATE_KEY: ${{ secrets.DEPLOYER_PRIVATE_KEY }}
+
+      - name: Commit updated stats
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add docs/stats.json docs/TRANSPARENCY.md STATUS-REPORT.md docs/index.html
+          git diff --staged --quiet || git commit -m "chore: auto-update on-chain stats [skip ci]"
+          git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

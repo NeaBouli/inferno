@@ -175,6 +175,7 @@ SIWE authentication, points tracking, and EIP-712 signed voucher issuance for pr
 - [Railway Env Guide](docs/RAILWAY_ENV.md) — Points Backend Railway Deploy (Env Vars, CLI Setup)
 - [Vercel Env Guide](docs/VERCEL_ENV.md) — AI Copilot Vercel + Railway Deploy (Two-App, Proxy Config)
 - [Page Update Checklist](docs/PAGE_UPDATE_CHECKLIST.md) — Welche Dateien bei welchem Event aktualisiert werden muessen
+- [Deployment Stats](docs/stats.json) — Auto-generierte On-Chain Stats (via update-stats.js)
 - [Project Summary](docs/PROJECT-SUMMARY.md) — Komplett-Uebersicht (10 Contracts, 330 Tests, 7 Apps)
 
 ## Development

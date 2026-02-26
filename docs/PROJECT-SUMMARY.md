@@ -95,9 +95,8 @@ Ownership: Transferiert an Governance (Timelock, 48h Delay)
 
 ## Naechste Schritte (Priorisiert)
 
-1. **Proposal #3 executen** + 1.4M IFR Top-up (ETA 26.02. 08:41 CET)
-2. **FeeRouterV1 Tests erweitern** (Coverage: 67% → Ziel: 90%+)
-3. **Third-party Security Audit** beauftragen
+1. **Proposals #4-#6 executen** — Ownership Transfer (ETA 28.02. ~08:07 CET)
+2. **Third-party Security Audit** beauftragen (FeeRouterV1 Coverage: 100%/96% — erledigt)
 4. **Multisig einrichten** (Gnosis Safe 4-of-7)
 5. **Community + Team Adressen** festlegen
 6. **LP Token Lock/Burn**
