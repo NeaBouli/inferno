@@ -63,9 +63,11 @@ export const VestingABI = [
 
 export const IFRLockABI = [
   "function isLocked(address wallet, uint256 minAmount) view returns (bool)",
-  "function lockedAmount(address wallet) view returns (uint256)",
+  "function lockedBalance(address wallet) view returns (uint256)",
   "function totalLocked() view returns (uint256)",
-  "function lockType(address wallet) view returns (bytes32)",
+  "function lockInfo(address user) view returns (uint256 amount, uint256 lockedAt)",
+  "function lock(uint256 amount)",
+  "function unlock()",
 ];
 
 export const PartnerVaultABI = [

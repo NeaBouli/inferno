@@ -64,8 +64,9 @@ inferno/
 │       ├── update-stats.yml         [x] Cron: taeglich 06:00 UTC On-Chain Stats Update
 │       └── post-deploy.yml          [x] Trigger: nach deploy/execute Script Push
 ├── apps/
-│   ├── dashboard/                      [x] React + Vite Frontend (Phase 1 + Phase 2)
-│   ├── governance-dashboard/          [x] React + Vite + TS + Tailwind (Overview, Partners, Timelock, Calldata)
+│   ├── dashboard/                      [x] React + Vite Frontend (Phase 1 + Phase 2 + LockPanel)
+│   ├── governance-dashboard/          [x] React + Vite + TS + Tailwind (Overview, Partners, Timelock, Calldata, ProposalAlert)
+│   ├── partner-directory/             [x] Static HTML (Partner Cards, Filter, CTA)
 │   ├── ai-copilot/                   [x] React + Vite + TS + Tailwind + Express (3 Modi, RAG, Safety Guards)
 │   ├── points-backend/               [x] Express + Prisma + SQLite + siwe + jose (SIWE Auth, Points, EIP-712 Voucher, 20 Tests)
 │   ├── creator-gateway/              [x] Express + ethers v5 + googleapis + JWT (YouTube x IFR Lock Bridge, Port 3005, 20 Tests)
@@ -114,6 +115,7 @@ inferno/
 │   ├── PAGE_UPDATE_CHECKLIST.md    Welche Dateien bei welchem Event aktualisiert werden muessen
 │   ├── DASHBOARD_TEST_RESULTS.md   Dashboard Build-Ergebnisse (0 Errors, 198 Modules)
 │   ├── BENEFITS_E2E_RESULTS.md     Benefits Network E2E Checkliste (Backend, API, Sepolia)
+│   ├── ROADMAP.md                   6-Phasen Roadmap (Foundation → DAO)
 │   ├── stats.json                   Auto-generierte On-Chain Stats (via update-stats.js)
 │   └── wiki/                          [x] 13 HTML-Seiten (index, contracts, tokenomics, lock, governance, security, deployment, integration, agent, faq, transparency, fair-launch, fee-design)
 ├── STATUS-REPORT.md                    Vollstaendiger Statusbericht
@@ -205,6 +207,12 @@ inferno/
 
 | Datum | Aenderung |
 |-------|-----------|
+| 2026-02-26 | LockPanel.jsx: Lock/Unlock UI im Token Dashboard (Approve, Lock, Unlock, Tier-Anzeige, Balance, TX-Links) |
+| 2026-02-26 | Partner Directory: apps/partner-directory/index.html (SecureCall + 3 Slots, Filter, CTA, Landing Page Nav-Link) |
+| 2026-02-26 | ProposalAlert.tsx: Notification-Banner im Governance Dashboard (Pending/Ready Proposals, Countdown, Dismiss) |
+| 2026-02-26 | ROADMAP.md: 6-Phasen Roadmap (Foundation → Governance → Ecosystem → Mainnet → Growth → DAO) |
+| 2026-02-26 | Landing Page: Roadmap Phase 3/5 korrigiert (Multi-Chain entfernt, Full Roadmap Link) |
+| 2026-02-26 | IFRLock ABI: lock() + unlock() Write-Functions hinzugefuegt (Dashboard) |
 | 2026-02-25 | .env.example: Deployed Contract Addresses hinzugefuegt (TOKEN, GOVERNANCE, IFRLOCK, PARTNERVAULT, FEEROUTER) |
 | 2026-02-25 | token-stats Task Fix: burnFeeBps → senderBurnBps + recipientBurnBps + totalFeeBps |
 | 2026-02-25 | Benefits Network E2E Test: Script + Test Guide (docs/BENEFITS_NETWORK_TEST.md) |

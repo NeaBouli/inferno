@@ -92,12 +92,13 @@ Token holdings grant future DAO voting rights.
 | AI Copilot | `apps/ai-copilot/` | 5175 | React 18 + Vite + TypeScript + Tailwind + Express |
 | Points Backend | `apps/points-backend/` | 3004 | Express + Prisma + SQLite + ethers v5 + siwe + jose |
 | Creator Gateway | `apps/creator-gateway/` | 3005 | Express + ethers v5 + googleapis + JWT |
+| Partner Directory | `apps/partner-directory/` | — | Static HTML (filter + cards) |
 | Benefits Network Backend | `apps/benefits-network/backend/` | 3001 | Express + Prisma + SQLite + ethers v5 |
 | Benefits Network Frontend | `apps/benefits-network/frontend/` | 3000 | Next.js 14 + Tailwind + wagmi v2 (PWA) |
 
 ### Token Dashboard
 
-Read-only token dashboard for monitoring balances, transfers, and contract status.
+Token dashboard for monitoring balances, transfers, lock management, and contract status.
 
 **Start:** `cd apps/dashboard && npm install && npm run dev` → http://localhost:5173
 
@@ -174,6 +175,7 @@ SIWE authentication, points tracking, and EIP-712 signed voucher issuance for pr
 - [ChatGPT Audit V3 Results](docs/CHATGPT_AUDIT_V3_RESULTS.md) — Audit V3 Ergebnisse (8/8 Self-Check PASS)
 - [Railway Env Guide](docs/RAILWAY_ENV.md) — Points Backend Railway Deploy (Env Vars, CLI Setup)
 - [Vercel Env Guide](docs/VERCEL_ENV.md) — AI Copilot Vercel + Railway Deploy (Two-App, Proxy Config)
+- [Roadmap](docs/ROADMAP.md) — 6-Phasen Roadmap (Foundation → Governance → Ecosystem → Mainnet → Growth → DAO)
 - [Page Update Checklist](docs/PAGE_UPDATE_CHECKLIST.md) — Welche Dateien bei welchem Event aktualisiert werden muessen
 - [Deployment Stats](docs/stats.json) — Auto-generierte On-Chain Stats (via update-stats.js)
 - [Project Summary](docs/PROJECT-SUMMARY.md) — Komplett-Uebersicht (10 Contracts, 330 Tests, 7 Apps)

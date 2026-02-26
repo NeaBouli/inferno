@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Partner Directory — Inferno ($IFR)</title>
+  <meta name="description" content="Browse verified IFR partner integrations. Lock IFR to unlock lifetime premium access across partner products.">
+  <link rel="icon" type="image/png" href="../../docs/assets/token.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg: #0a0a0a;
+      --bg-card: #111113;
+      --bg-card-hover: #1a1a1d;
+      --border: #222225;
+      --text: #e8e8ed;
+      --text-muted: #8a8a96;
+      --accent: #ff4500;
+      --accent-dim: rgba(255, 69, 0, 0.15);
+      --green: #22c55e;
+      --blue: #3b82f6;
+      --purple: #a855f7;
+      --yellow: #eab308;
+      --radius: 12px;
+      --radius-sm: 8px;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── NAV ─────────────────────────────── */
+    .nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(10, 10, 10, 0.9);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 60px;
+    }
+
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      color: var(--text);
+      font-weight: 700;
+      font-size: 17px;
+    }
+
+    .nav-logo img { width: 28px; height: 28px; border-radius: 6px; }
+
+    .nav-links { display: flex; gap: 20px; list-style: none; }
+
+    .nav-links a {
+      text-decoration: none;
+      color: var(--text-muted);
+      font-size: 14px;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+
+    .nav-links a:hover { color: var(--text); }
+
+    /* ── HERO ─────────────────────────────── */
+    .hero {
+      text-align: center;
+      padding: 80px 24px 48px;
+      max-width: 700px;
+      margin: 0 auto;
+    }
+
+    .hero h1 {
+      font-size: 2.4rem;
+      font-weight: 800;
+      margin-bottom: 12px;
+      background: linear-gradient(135deg, var(--text), var(--accent));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero p {
+      color: var(--text-muted);
+      font-size: 1.05rem;
+      max-width: 500px;
+      margin: 0 auto;
+    }
+
+    /* ── FILTERS ──────────────────────────── */
+    .filters {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      padding: 0 24px 40px;
+      flex-wrap: wrap;
+    }
+
+    .filter-btn {
+      padding: 8px 20px;
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      background: transparent;
+      color: var(--text-muted);
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: inherit;
+    }
+
+    .filter-btn:hover { border-color: var(--accent); color: var(--text); }
+
+    .filter-btn.active {
+      background: var(--accent-dim);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    /* ── GRID ─────────────────────────────── */
+    .grid {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 24px 60px;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 20px;
+    }
+
+    /* ── CARD ─────────────────────────────── */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px;
+      transition: border-color 0.2s, transform 0.2s;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .card:hover { border-color: rgba(255, 69, 0, 0.3); transform: translateY(-2px); }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 16px;
+    }
+
+    .card-logo {
+      width: 48px;
+      height: 48px;
+      border-radius: 10px;
+      object-fit: cover;
+      background: var(--bg-card-hover);
+    }
+
+    .card-logo-placeholder {
+      width: 48px;
+      height: 48px;
+      border-radius: 10px;
+      background: var(--bg-card-hover);
+      border: 1px dashed var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      color: var(--text-muted);
+    }
+
+    .card-title { font-size: 1.15rem; font-weight: 700; }
+    .card-category { font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+
+    .card-desc {
+      color: var(--text-muted);
+      font-size: 14px;
+      flex: 1;
+      margin-bottom: 16px;
+    }
+
+    .card-meta {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+
+    .meta-tag {
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .tag-tier { background: rgba(234, 179, 8, 0.15); color: var(--yellow); }
+    .tag-status-live { background: rgba(34, 197, 94, 0.15); color: var(--green); }
+    .tag-status-soon { background: rgba(168, 85, 247, 0.15); color: var(--purple); }
+    .tag-type { background: rgba(59, 130, 246, 0.15); color: var(--blue); }
+
+    .card-link {
+      display: inline-block;
+      padding: 10px 0;
+      color: var(--accent);
+      font-size: 14px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: opacity 0.2s;
+    }
+
+    .card-link:hover { opacity: 0.8; }
+
+    /* ── CTA ──────────────────────────────── */
+    .cta {
+      text-align: center;
+      padding: 60px 24px 80px;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .cta h2 {
+      font-size: 1.8rem;
+      font-weight: 800;
+      margin-bottom: 12px;
+    }
+
+    .cta p { color: var(--text-muted); margin-bottom: 24px; }
+
+    .cta-btn {
+      display: inline-block;
+      padding: 14px 32px;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-size: 15px;
+      font-weight: 600;
+      text-decoration: none;
+      cursor: pointer;
+      transition: opacity 0.2s;
+      font-family: inherit;
+    }
+
+    .cta-btn:hover { opacity: 0.9; }
+
+    /* ── FOOTER ───────────────────────────── */
+    .footer {
+      text-align: center;
+      padding: 20px;
+      border-top: 1px solid var(--border);
+      color: var(--text-muted);
+      font-size: 13px;
+    }
+
+    .footer a { color: var(--accent); text-decoration: none; }
+
+    /* ── RESPONSIVE ───────────────────────── */
+    @media (max-width: 600px) {
+      .hero h1 { font-size: 1.8rem; }
+      .grid { grid-template-columns: 1fr; }
+      .nav-links { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── NAV ────────────────────────────────── -->
+<header class="nav">
+  <div class="nav-inner">
+    <a href="../../docs/index.html" class="nav-logo">
+      <img src="../../docs/assets/token.png" alt="IFR">
+      Inferno
+    </a>
+    <ul class="nav-links">
+      <li><a href="../../docs/index.html">Home</a></li>
+      <li><a href="../../docs/wiki/">Wiki</a></li>
+      <li><a href="../../docs/wiki/integration.html">Integrate</a></li>
+      <li><a href="https://sepolia.etherscan.io/address/0x3Bd71947F288d1dd8B21129B1bE4FF16EDd5d1F4" target="_blank" rel="noopener">Etherscan</a></li>
+    </ul>
+  </div>
+</header>
+
+<!-- ── HERO ───────────────────────────────── -->
+<section class="hero">
+  <h1>Partner Directory</h1>
+  <p>Products and platforms that accept IFR Lock for premium access. Lock once, use everywhere.</p>
+</section>
+
+<!-- ── FILTERS ────────────────────────────── -->
+<div class="filters">
+  <button class="filter-btn active" data-filter="all">All</button>
+  <button class="filter-btn" data-filter="live">Live</button>
+  <button class="filter-btn" data-filter="coming-soon">Coming Soon</button>
+  <button class="filter-btn" data-filter="business">Business</button>
+  <button class="filter-btn" data-filter="creator">Creator</button>
+  <button class="filter-btn" data-filter="developer">Developer</button>
+</div>
+
+<!-- ── PARTNER GRID ──────────────────────── -->
+<div class="grid" id="partnerGrid">
+
+  <!-- SecureCall — Launch Partner -->
+  <div class="card" data-type="business" data-status="live">
+    <div class="card-header">
+      <img src="../../docs/assets/securecall_logo.png" alt="SecureCall" class="card-logo">
+      <div>
+        <div class="card-title">SecureCall</div>
+        <div class="card-category">Launch Partner</div>
+      </div>
+    </div>
+    <p class="card-desc">Privacy-first communication platform. Lock 5,000 IFR for lifetime Gold access — encrypted calls, secure messaging, no monthly fees.</p>
+    <div class="card-meta">
+      <span class="meta-tag tag-status-live">Live</span>
+      <span class="meta-tag tag-tier">Gold — 5,000 IFR</span>
+      <span class="meta-tag tag-type">Business</span>
+    </div>
+    <a href="https://neabouli.github.io/stealth/" class="card-link" target="_blank" rel="noopener">Visit SecureCall &rarr;</a>
+  </div>
+
+  <!-- Business Slot -->
+  <div class="card" data-type="business" data-status="coming-soon">
+    <div class="card-header">
+      <div class="card-logo-placeholder">B</div>
+      <div>
+        <div class="card-title">Business Partner Slot</div>
+        <div class="card-category">Open Application</div>
+      </div>
+    </div>
+    <p class="card-desc">SaaS, subscription services, or enterprise tools — replace recurring payments with a one-time IFR lock. Up to 2M IFR allocation.</p>
+    <div class="card-meta">
+      <span class="meta-tag tag-status-soon">Coming Soon</span>
+      <span class="meta-tag tag-tier">Tier 1 — 2M IFR</span>
+      <span class="meta-tag tag-type">Business</span>
+    </div>
+    <a href="../../docs/PARTNER_INTEGRATION_SPEC.md" class="card-link">Integration Spec &rarr;</a>
+  </div>
+
+  <!-- Creator Slot -->
+  <div class="card" data-type="creator" data-status="coming-soon">
+    <div class="card-header">
+      <div class="card-logo-placeholder">C</div>
+      <div>
+        <div class="card-title">Creator Partner Slot</div>
+        <div class="card-category">Open Application</div>
+      </div>
+    </div>
+    <p class="card-desc">YouTube creators, course platforms, digital content — gate premium content with IFR Lock. Earn creator rewards from the 40M Partner Pool.</p>
+    <div class="card-meta">
+      <span class="meta-tag tag-status-soon">Coming Soon</span>
+      <span class="meta-tag tag-tier">Tier 2 — 1M IFR</span>
+      <span class="meta-tag tag-type">Creator</span>
+    </div>
+    <a href="../../docs/CREATOR_GATEWAY.md" class="card-link">Creator Gateway Spec &rarr;</a>
+  </div>
+
+  <!-- Developer Slot -->
+  <div class="card" data-type="developer" data-status="coming-soon">
+    <div class="card-header">
+      <div class="card-logo-placeholder">D</div>
+      <div>
+        <div class="card-title">Developer Tool Slot</div>
+        <div class="card-category">Open Application</div>
+      </div>
+    </div>
+    <p class="card-desc">APIs, SDKs, dev tools — offer premium features via IFR Lock. Query isLocked() on-chain and unlock instantly for verified users.</p>
+    <div class="card-meta">
+      <span class="meta-tag tag-status-soon">Coming Soon</span>
+      <span class="meta-tag tag-tier">Tier 3 — 500K IFR</span>
+      <span class="meta-tag tag-type">Developer</span>
+    </div>
+    <a href="../../docs/SDK_QUICKSTART.md" class="card-link">SDK Quickstart &rarr;</a>
+  </div>
+
+</div>
+
+<!-- ── CTA ────────────────────────────────── -->
+<section class="cta">
+  <h2>Become a Partner</h2>
+  <p>Integrate IFR Lock into your product and earn milestone-based rewards from the 40M IFR Partner Ecosystem Pool. Vesting 6-12 months, DAO voting rights in Phase 4.</p>
+  <a href="../../docs/PARTNER_INTEGRATION_SPEC.md" class="cta-btn">Read Integration Spec</a>
+</section>
+
+<!-- ── FOOTER ─────────────────────────────── -->
+<footer class="footer">
+  Inferno ($IFR) &mdash; <a href="../../docs/index.html">Home</a> &middot; <a href="../../docs/wiki/">Wiki</a> &middot; <a href="https://x.com/IFRtoken" target="_blank" rel="noopener">X / Twitter</a>
+</footer>
+
+<script>
+  // Filter logic
+  const grid = document.getElementById('partnerGrid');
+  const cards = grid.querySelectorAll('.card');
+  const filterBtns = document.querySelectorAll('.filter-btn');
+
+  filterBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      filterBtns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+
+      const filter = btn.dataset.filter;
+      cards.forEach(card => {
+        if (filter === 'all') {
+          card.style.display = '';
+        } else if (filter === 'live' || filter === 'coming-soon') {
+          card.style.display = card.dataset.status === filter ? '' : 'none';
+        } else {
+          card.style.display = card.dataset.type === filter ? '' : 'none';
+        }
+      });
+    });
+  });
+</script>
+</body>
+</html>
