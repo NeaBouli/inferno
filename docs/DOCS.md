@@ -51,6 +51,11 @@ inferno/
 ├── tasks/
 │   └── admin.js                       [x] Hardhat CLI Tasks (lock-check, vault-status, feerouter-status, token-stats, gov-queue)
 ├── .github/
+│   ├── ISSUE_TEMPLATE/
+│   │   ├── bug_report.md             [x] Bug Report Template
+│   │   ├── feature_request.md        [x] Feature Request Template
+│   │   └── security.md              [x] Security Advisory Redirect
+│   ├── pull_request_template.md      [x] PR Template mit Checkliste
 │   └── workflows/
 │       ├── creator-gateway.yml       [x] CI: tsc + jest
 │       ├── points-backend.yml        [x] CI: prisma generate + tsc + jest
@@ -100,7 +105,8 @@ inferno/
 │   ├── FAIR_LAUNCH.md               Fair Launch Statement (No Presale, No VC, Allocation Vergleich, On-Chain Beweise)
 │   ├── OFFCHAIN_SECURITY.md         Off-Chain Security (VoucherSigner, JWT, SIWE, Rate Limiting, Secrets Checkliste)
 │   ├── AUDIT_SUBMISSION.md          Audit Submission Prep (Code4rena/Sherlock, 9 Contracts, 1520 SLOC, Known Issues)
-│   └── wiki/                          [x] 11 HTML-Seiten (+Transparency)
+│   ├── CHATGPT_AUDIT_V3_RESULTS.md Audit V3 Ergebnisse Platzhalter (8/8 Self-Check PASS)
+│   └── wiki/                          [x] 13 HTML-Seiten (index, contracts, tokenomics, lock, governance, security, deployment, integration, agent, faq, transparency, fair-launch, fee-design)
 ├── STATUS-REPORT.md                    Vollstaendiger Statusbericht
 └── README.md                           Projekt-Uebersicht
 ```
@@ -235,6 +241,14 @@ inferno/
 | 2026-02-26 | .gitignore erweitert: .env.local, .env*.local, *.pem, *.key |
 | 2026-02-26 | Points Backend: Voucher Issuance Logging ([VOUCHER] wallet, issued, discount, nonce) |
 | 2026-02-26 | AUDIT_SUBMISSION.md: Audit Prep (Code4rena/Sherlock, 9 Contracts, 1520 SLOC, Known Issues, Checklist) |
+| 2026-02-26 | CHATGPT_AUDIT_V3_RESULTS.md: Audit Ergebnisse Platzhalter, Self-Check 8/8 PASS |
+| 2026-02-26 | NatSpec: InfernoToken.sol (14 Tags), Vesting.sol (19), BuybackVault.sol (19), PartnerVault.sol (61), BurnReserve.sol (12), LiquidityReserve.sol (19) |
+| 2026-02-26 | Wiki fair-launch.html: Fair Launch Wiki (Allocation, Vergleich, On-Chain Proof, Vesting Details) |
+| 2026-02-26 | Wiki fee-design.html: Fee Design Wiki (Warum 3.5%, Fee-Exempt, CEX, Slippage Guide) |
+| 2026-02-26 | Wiki Sidebar: 13 Seiten (fair-launch + fee-design in allen Wiki-Seiten verlinkt) |
+| 2026-02-26 | .github/ISSUE_TEMPLATE/: Bug Report, Feature Request, Security Templates |
+| 2026-02-26 | .github/pull_request_template.md: PR Template mit Checkliste |
+| 2026-02-26 | CHANGELOG.md: Vollstaendiger [Unreleased] Eintrag (26.02.2026) mit Added/Changed/Fixed/Security |
 | 2026-02-26 | FeeRouterV1.sol: NatSpec Kommentare fuer alle public/external Functions (contract, constructor, 8 Functions) |
 | 2026-02-26 | Governance Constitution v1.0 erweitert (Artikel 1-7, FeeRouterV1 Parameter, Multisig Struktur, Verbotene Aktionen) |
 | 2026-02-26 | Business Onboarding SOP erweitert (6 Schritte, Hosted + Self-Hosted, Tier-Konfiguration, Kassenpersonal Training, FAQ) |

@@ -45,6 +45,12 @@ contract LiquidityReserve {
         _;
     }
 
+    /// @notice Deploy LiquidityReserve with time-lock and staged withdrawal
+    /// @param _token IFR token address
+    /// @param _lockDuration Lock period in seconds (e.g. 180 days)
+    /// @param _maxWithdrawPerPeriod Max tokens withdrawable per period
+    /// @param _periodDuration Period length in seconds (e.g. 90 days)
+    /// @param _guardian Address that can pause/unpause withdrawals
     constructor(
         address _token,
         uint256 _lockDuration,
@@ -67,6 +73,8 @@ contract LiquidityReserve {
     }
 
     /// @notice Withdraw tokens after lock period, respecting per-period limit
+    /// @param to Recipient address
+    /// @param amount Amount of IFR tokens to withdraw
     function withdraw(address to, uint256 amount) external onlyOwner whenNotPaused {
         require(block.timestamp >= lockEnd, "locked");
         require(amount > 0, "amount=0");
@@ -112,6 +120,7 @@ contract LiquidityReserve {
     }
 
     /// @notice Update max withdraw per period
+    /// @param _max New maximum per-period withdrawal amount
     function setMaxWithdrawPerPeriod(uint256 _max) external onlyOwner {
         require(_max > 0, "maxWithdraw=0");
         maxWithdrawPerPeriod = _max;
@@ -119,18 +128,21 @@ contract LiquidityReserve {
     }
 
     /// @notice Update guardian address
+    /// @param _guardian New guardian address
     function setGuardian(address _guardian) external onlyOwner {
         require(_guardian != address(0), "guardian=0");
         guardian = _guardian;
         emit GuardianUpdated(_guardian);
     }
 
+    /// @notice Pause withdrawals (guardian only)
     function pause() external onlyGuardian {
         require(!paused, "already paused");
         paused = true;
         emit Paused(msg.sender);
     }
 
+    /// @notice Unpause withdrawals (guardian only)
     function unpause() external onlyGuardian {
         require(paused, "not paused");
         paused = false;

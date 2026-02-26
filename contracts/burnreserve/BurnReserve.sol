@@ -35,6 +35,9 @@ contract BurnReserve {
         _;
     }
 
+    /// @notice Deploy BurnReserve
+    /// @param _token IFR token address (must support burn via ERC20Burnable)
+    /// @param _guardian Address that can trigger burns alongside owner
     constructor(address _token, address _guardian) {
         require(_token != address(0), "token=0");
         require(_guardian != address(0), "guardian=0");
@@ -44,6 +47,7 @@ contract BurnReserve {
     }
 
     /// @notice Deposit tokens via transferFrom (requires prior approval)
+    /// @param amount Amount of IFR tokens to deposit
     function deposit(uint256 amount) external {
         require(amount > 0, "amount=0");
         require(token.transferFrom(msg.sender, address(this), amount), "transfer failed");
@@ -51,6 +55,7 @@ contract BurnReserve {
     }
 
     /// @notice Burn tokens held by this contract (reduces totalSupply)
+    /// @param amount Amount of IFR tokens to burn
     function burn(uint256 amount) external onlyOwnerOrGuardian {
         require(amount > 0, "amount=0");
         require(amount <= token.balanceOf(address(this)), "exceeds balance");
@@ -78,6 +83,7 @@ contract BurnReserve {
     }
 
     /// @notice Update guardian address
+    /// @param _guardian New guardian address
     function setGuardian(address _guardian) external onlyOwner {
         require(_guardian != address(0), "guardian=0");
         guardian = _guardian;

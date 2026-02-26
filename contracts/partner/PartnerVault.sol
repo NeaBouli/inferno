@@ -137,6 +137,12 @@ contract PartnerVault is ReentrancyGuard, Pausable {
 
     // ── Constructor ─────────────────────────────────────────
 
+    /// @notice Deploy PartnerVault with governance parameters
+    /// @param _ifrToken IFR token address
+    /// @param _admin Governance timelock address (admin role)
+    /// @param _guardian Emergency pause address
+    /// @param _rewardBps Lock reward rate in basis points (bounds: 500-2500)
+    /// @param _annualEmissionCap Maximum annual reward emission in IFR tokens
     constructor(
         address _ifrToken,
         address _admin,
@@ -167,6 +173,13 @@ contract PartnerVault is ReentrancyGuard, Pausable {
 
     // ── Admin Functions (Governance) ────────────────────────
 
+    /// @notice Register a new partner with allocation, vesting schedule, and tier
+    /// @param partnerId Unique identifier for the partner
+    /// @param beneficiary Address that will receive vested tokens
+    /// @param maxAllocation Maximum IFR allocation for this partner
+    /// @param vestingDuration Total vesting period in seconds (180-365 days)
+    /// @param cliff Cliff period in seconds (must be <= vestingDuration)
+    /// @param tier Partner tier (Launch=0, Tier1=1, Tier2=2, Tier3=3)
     function createPartner(
         bytes32 partnerId,
         address beneficiary,
@@ -207,6 +220,8 @@ contract PartnerVault is ReentrancyGuard, Pausable {
         );
     }
 
+    /// @notice Activate a partner to enable milestone recording and reward accrual
+    /// @param partnerId Partner to activate
     function activatePartner(bytes32 partnerId) external onlyAdmin {
         Partner storage p = _partners[partnerId];
         require(p.beneficiary != address(0), "not found");
@@ -215,6 +230,10 @@ contract PartnerVault is ReentrancyGuard, Pausable {
         emit PartnerActivated(partnerId);
     }
 
+    /// @notice Record a completed milestone, unlocking tokens for the partner
+    /// @param partnerId Partner that completed the milestone
+    /// @param milestoneId Unique identifier for the milestone
+    /// @param unlockAmount Amount of IFR to unlock
     function recordMilestone(
         bytes32 partnerId,
         bytes32 milestoneId,
@@ -239,6 +258,10 @@ contract PartnerVault is ReentrancyGuard, Pausable {
         emit MilestoneRecorded(partnerId, milestoneId, unlockAmount);
     }
 
+    /// @notice Record a lock-triggered creator reward for a partner. Anti-double-count per wallet.
+    /// @param partnerId Partner receiving the reward
+    /// @param lockAmount Amount of IFR the user locked (reward = lockAmount * effectiveBps / 10000)
+    /// @param wallet User wallet that triggered the lock (each wallet counted once per partner)
     function recordLockReward(
         bytes32 partnerId,
         uint256 lockAmount,
@@ -274,6 +297,8 @@ contract PartnerVault is ReentrancyGuard, Pausable {
         emit LockRewardRecorded(partnerId, wallet, lockAmount, reward);
     }
 
+    /// @notice Update the base reward rate (bounds: MIN_REWARD_BPS to MAX_REWARD_BPS)
+    /// @param newBps New reward rate in basis points
     function setRewardBps(uint256 newBps) external onlyAdmin {
         require(
             newBps >= MIN_REWARD_BPS && newBps <= MAX_REWARD_BPS,
@@ -284,6 +309,8 @@ contract PartnerVault is ReentrancyGuard, Pausable {
         emit RewardBpsUpdated(old, newBps);
     }
 
+    /// @notice Update the annual emission cap (bounds: MIN_ANNUAL_CAP to MAX_ANNUAL_CAP)
+    /// @param newCap New annual cap in IFR tokens
     function setAnnualEmissionCap(uint256 newCap) external onlyAdmin {
         require(
             newCap >= MIN_ANNUAL_CAP && newCap <= MAX_ANNUAL_CAP,
@@ -294,6 +321,9 @@ contract PartnerVault is ReentrancyGuard, Pausable {
         emit AnnualCapUpdated(old, newCap);
     }
 
+    /// @notice Update a partner's beneficiary address
+    /// @param partnerId Partner to update
+    /// @param newBeneficiary New beneficiary address
     function setPartnerBeneficiary(
         bytes32 partnerId,
         address newBeneficiary
@@ -306,6 +336,9 @@ contract PartnerVault is ReentrancyGuard, Pausable {
         emit BeneficiaryUpdated(partnerId, old, newBeneficiary);
     }
 
+    /// @notice Update a partner's maximum allocation (must not go below earned amount)
+    /// @param partnerId Partner to update
+    /// @param newMax New maximum allocation in IFR tokens
     function setPartnerAllocation(
         bytes32 partnerId,
         uint256 newMax
@@ -323,6 +356,8 @@ contract PartnerVault is ReentrancyGuard, Pausable {
         emit AllocationUpdated(partnerId, oldMax, newMax);
     }
 
+    /// @notice Finalize milestones for a partner (no more milestone unlocks possible)
+    /// @param partnerId Partner to finalize
     function finalizeMilestones(bytes32 partnerId) external onlyAdmin {
         Partner storage p = _partners[partnerId];
         require(p.beneficiary != address(0), "not found");
@@ -331,6 +366,9 @@ contract PartnerVault is ReentrancyGuard, Pausable {
         emit MilestonesFinalized(partnerId);
     }
 
+    /// @notice Whitelist or remove an authorized caller for recordLockReward
+    /// @param caller Address to authorize or revoke
+    /// @param status True to authorize, false to revoke
     function setAuthorizedCaller(
         address caller,
         bool status
@@ -340,12 +378,16 @@ contract PartnerVault is ReentrancyGuard, Pausable {
         emit AuthorizedCallerUpdated(caller, status);
     }
 
+    /// @notice Set the IFRLock contract reference for algorithmic emission throttle
+    /// @param _ifrLock IFRLock contract address (or address(0) to disable throttle)
     function setIFRLock(address _ifrLock) external onlyAdmin {
         address old = address(ifrLock);
         ifrLock = IIFRLock(_ifrLock);
         emit IFRLockUpdated(old, _ifrLock);
     }
 
+    /// @notice Transfer admin role to a new address
+    /// @param newAdmin New admin (governance timelock) address
     function setAdmin(address newAdmin) external onlyAdmin {
         require(newAdmin != address(0), "admin=0");
         address old = admin;
@@ -353,6 +395,8 @@ contract PartnerVault is ReentrancyGuard, Pausable {
         emit AdminUpdated(old, newAdmin);
     }
 
+    /// @notice Transfer guardian role to a new address (guardian only)
+    /// @param newGuardian New guardian address
     function setGuardian(address newGuardian) external onlyGuardian {
         require(newGuardian != address(0), "guardian=0");
         address old = guardian;
@@ -360,16 +404,20 @@ contract PartnerVault is ReentrancyGuard, Pausable {
         emit GuardianUpdated(old, newGuardian);
     }
 
+    /// @notice Emergency pause (guardian only)
     function pause() external onlyGuardian {
         _pause();
     }
 
+    /// @notice Unpause (guardian only)
     function unpause() external onlyGuardian {
         _unpause();
     }
 
     // ── Permissionless Functions ─────────────────────────────
 
+    /// @notice Claim vested tokens for a partner. Transfers claimable amount to beneficiary.
+    /// @param partnerId Partner to claim for
     function claim(bytes32 partnerId) external nonReentrant whenNotPaused {
         Partner storage p = _partners[partnerId];
         require(p.active, "not active");
@@ -389,6 +437,9 @@ contract PartnerVault is ReentrancyGuard, Pausable {
 
     // ── View Functions ──────────────────────────────────────
 
+    /// @notice Amount currently claimable for a partner (vested minus claimed)
+    /// @param partnerId Partner to query
+    /// @return Claimable amount in IFR tokens
     function claimable(bytes32 partnerId) external view returns (uint256) {
         Partner storage p = _partners[partnerId];
         if (!p.active) return 0;
@@ -398,12 +449,17 @@ contract PartnerVault is ReentrancyGuard, Pausable {
         return vested - p.claimedTotal;
     }
 
+    /// @notice Total vested amount for a partner (based on vesting schedule)
+    /// @param partnerId Partner to query
+    /// @return Vested amount in IFR tokens
     function vestedAmount(bytes32 partnerId) external view returns (uint256) {
         Partner storage p = _partners[partnerId];
         uint256 totalEarned = p.unlockedTotal + p.rewardAccrued;
         return _vestedAmount(p, totalEarned);
     }
 
+    /// @notice Get full partner details
+    /// @param partnerId Partner to query
     function partners(
         bytes32 partnerId
     )
@@ -439,6 +495,8 @@ contract PartnerVault is ReentrancyGuard, Pausable {
         );
     }
 
+    /// @notice IFR token balance held by this contract
+    /// @return Balance in IFR tokens
     function pendingBalance() external view returns (uint256) {
         return ifrToken.balanceOf(address(this));
     }

@@ -6,6 +6,9 @@ interface IERC20 {
     function balanceOf(address account) external view returns (uint256);
 }
 
+/// @title Vesting
+/// @notice Linear vesting with cliff for team token allocation.
+///         12-month cliff, then 36-month linear release. Guardian can pause.
 contract Vesting {
     IERC20 public immutable token;
     address public immutable beneficiary;
@@ -26,6 +29,13 @@ contract Vesting {
     error OnlyGuardian();
     error IsPaused();
 
+    /// @notice Deploy vesting contract. Start time is set to block.timestamp.
+    /// @param _token IFR token address
+    /// @param _beneficiary Address that can claim vested tokens
+    /// @param _cliffDuration Cliff period in seconds (e.g. 365 days)
+    /// @param _duration Total vesting duration in seconds (e.g. 1460 days)
+    /// @param _totalAllocation Total tokens to vest (in token units with 9 decimals)
+    /// @param _guardian Address that can pause/unpause releases
     constructor(
         address _token,
         address _beneficiary,
@@ -59,6 +69,7 @@ contract Vesting {
         _;
     }
 
+    /// @notice Pause token releases (guardian only)
     function pause() external onlyGuardian {
         if (!paused) {
             paused = true;
@@ -66,6 +77,7 @@ contract Vesting {
         }
     }
 
+    /// @notice Unpause token releases (guardian only)
     function unpause() external onlyGuardian {
         if (paused) {
             paused = false;
@@ -73,6 +85,7 @@ contract Vesting {
         }
     }
 
+    /// @notice Release vested tokens to beneficiary. Reverts if paused or nothing to release.
     function release() external onlyBeneficiary {
         if (paused) revert IsPaused();
         uint256 amt = releasableAmount();
@@ -82,12 +95,16 @@ contract Vesting {
         emit Released(beneficiary, amt);
     }
 
+    /// @notice Amount of tokens currently available to release
+    /// @return Releasable token amount (vested minus already released)
     function releasableAmount() public view returns (uint256) {
         uint256 vested = vestedAmount();
         if (vested <= released) return 0;
         return vested - released;
     }
 
+    /// @notice Total amount vested so far (0 before cliff, linear after, full after duration)
+    /// @return Vested token amount
     function vestedAmount() public view returns (uint256) {
         uint256 elapsed = block.timestamp - start;
         if (elapsed < cliffDuration) {
@@ -101,6 +118,10 @@ contract Vesting {
         return (totalAllocation * vestingElapsed) / vestingDuration;
     }
 
+    /// @notice Returns the vesting schedule parameters
+    /// @return _start Vesting start timestamp
+    /// @return _cliff Cliff duration in seconds
+    /// @return _duration Total vesting duration in seconds
     function vestingSchedule()
         external
         view

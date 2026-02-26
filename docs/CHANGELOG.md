@@ -7,24 +7,64 @@ All notable changes to the Inferno ($IFR) project.
 ## [Unreleased] — 2026-02-26
 
 ### Added
+- docs/TRANSPARENCY.md — vollstaendiger On-Chain Audit Report (8 Checks)
+- docs/FAIR_LAUNCH.md — Fair Launch Statement mit Allocation-Vergleich
+- docs/FEE_DESIGN.md — Fee-Mechanismus Erklaerung + CEX-Strategie
+- docs/OFFCHAIN_SECURITY.md — Off-chain Security Hardening Guide
+- docs/AUDIT_SUBMISSION.md — Code4rena/Sherlock Submission Prep (1520 SLOC)
+- docs/ONE-PAGER.md — Investor One-Pager
+- docs/CONTRIBUTING.md — Contribution Guide
+- docs/SECURITY_POLICY.md — Responsible Disclosure + Bug Bounty
+- docs/TOKENOMICS_MODEL.md — Deflationskurve + Emission Simulation
+- docs/GOVERNANCE_CONSTITUTION.md — Governance Constitution v1.0
+- docs/BUSINESS_ONBOARDING.md — Business Onboarding SOP
+- docs/YOUTUBE_INTEGRATION.md — YouTube Hybrid Model B Guide
+- docs/PARTNER_REWARDS_SPEC.md — Partner Rewards Specification
+- docs/CHATGPT_AUDIT_PROMPT_V3.md — Audit V3 Prompt (8 Bereiche)
+- docs/CHATGPT_AUDIT_V3_RESULTS.md — Audit V3 Ergebnisse (Platzhalter)
+- docs/wiki/faq.html — FAQ Wiki (30 Q&A, 6 Sektionen)
+- docs/wiki/transparency.html — On-Chain Transparency Wiki
+- docs/wiki/fair-launch.html — Fair Launch Wiki
+- docs/wiki/fee-design.html — Fee Design Wiki
+- apps/creator-gateway/ — Creator Gateway App (OAuth + IFRLock Bridge)
+- scripts/onchain-audit.js — On-Chain Audit Script (8 Checks)
+- scripts/propose-ownership-transfer.js — Governance Proposal Script
+- scripts/burn-lp-tokens.js — LP Token Burn Script (DRY RUN Schutz)
+- scripts/topup-partnervault.js — PartnerVault Top-up Script
+- .github/ISSUE_TEMPLATE/ — Bug Report, Feature Request, Security Templates
+- .github/pull_request_template.md — PR Template
+- .github/workflows/benefits-network.yml — Benefits Network CI
 - FeeRouterV1 Tests: 13 → 33 (isVoucherValid 6 branches, setVoucherSigner, setFeeCollector, receive(), access control, signer rotation)
 - Creator Gateway: youtube-checker.test.ts (6 YouTube mock tests) + access.test.ts (6 Access-Route Tests) — 26 Tests gesamt
 - Wiki security.html: solidity-coverage Tabelle (pro Contract), FeeRouterV1 Zeile in Test-Suite-Tabelle
 - MAINNET_CHECKLIST.md v1.1: FeeRouter Deploy-Schritt, Sepolia Status Summary, korrekte Test-Zahlen
-- Benefits Network CI: `.github/workflows/benefits-network.yml` (test-backend + test-frontend)
 - COVERAGE_REPORT.md: vollstaendig neu mit aktuellen Coverage-Werten
-- Landing Page FAQ: 5 neue Eintraege (FeeRouter, Points, Creator Gateway, Security, Mainnet Launch)
-- Wiki FAQ Seite: `docs/wiki/faq.html` — 30 Q&A in 6 Sektionen (Allgemein, Token/Lock, Partner, FeeRouter/Points, Governance, Security)
-- CONTRIBUTING.md: Contributing Guide v1.0 (Bug Reports, Code Standards, Git Konventionen, Review Prozess)
+- Landing Page FAQ: 5 + 3 neue Eintraege (FeeRouter, Points, Creator Gateway, Security, Mainnet, Fee 3.5%, CEX, Fee-Exempt)
 
 ### Changed
-- Coverage aktualisiert: 95%/81% → 99%/85% (ueber 5 Dateien)
-- Test-Counts synchronisiert: 276 Contract Tests, 330 Gesamt (ueber 10 Dateien)
-- WHITEPAPER.md, AUDIT_BRIEF.md: 243 → 276 Tests
+- 256 → 276 Contract Tests (FeeRouterV1 Branch Coverage: 13 → 33 Tests)
+- 298 → 330 Gesamt-Tests (Creator Gateway: 20 → 26 Tests)
+- Coverage: 95%/81% → 99%/85% Statements/Branch
+- Wiki: 9 → 13 Seiten (faq, transparency, fair-launch, fee-design)
+- MAINNET_CHECKLIST.md: LP Lock + Ownership Transfer als KRITISCH
+- README.md: Fair Launch Sektion, Apps Tabelle, alle neuen Docs
+- FeeRouterV1.sol: NatSpec fuer alle public Functions
+- InfernoToken.sol, IFRLock.sol, PartnerVault.sol, Vesting.sol, BuybackVault.sol, BurnReserve.sol, LiquidityReserve.sol: NatSpec ergaenzt
+- WHITEPAPER.md, AUDIT_BRIEF.md: Test-Zahlen 243 → 276 aktualisiert
 - CHATGPT_AUDIT_PROMPT_V2.md: alte Referenzen aktualisiert
 
 ### Fixed
+- STATUS-REPORT.md: vollstaendig neu (125 → 330 Tests, 6 → 10 Contracts)
+- WHITEPAPER.md: Test-Zahlen 276 → 330 aktualisiert
+- contracts.html: "8th protocol component" → "10th on-chain component"
+- deployment.html: FeeRouterV1 in Deployment-Tabelle ergaenzt
 - gov-queue Task: queryFilter → getProposal() Loop (Alchemy-kompatibel, zeigt Status)
+
+### Security
+- OFFCHAIN_SECURITY.md: VoucherSigner Key Management dokumentiert
+- .gitignore: erweitert (*.pem, *.key, .env*.local)
+- Points Backend: Voucher Logging hinzugefuegt
+- FeeRouterV1: NatSpec + isVoucherValid Branch Coverage verbessert
 
 ---
 

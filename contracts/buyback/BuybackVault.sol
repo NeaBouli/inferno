@@ -18,6 +18,9 @@ interface IRouter {
     ) external payable returns (uint256[] memory);
 }
 
+/// @title BuybackVault
+/// @notice Receives ETH (from pool fees), swaps to IFR via Uniswap V2, splits 50/50 between
+///         burn reserve and treasury. 60-day activation delay. Owner-only execution with cooldown.
 contract BuybackVault {
     address public immutable owner;
     address public immutable guardian;
@@ -54,6 +57,13 @@ contract BuybackVault {
         _;
     }
 
+    /// @notice Deploy BuybackVault with activation delay
+    /// @param _token IFR token address
+    /// @param _burnReserve BurnReserve contract address (receives burn share)
+    /// @param _treasury Treasury address (receives remaining share)
+    /// @param _router Uniswap V2 router address
+    /// @param _guardian Address that can pause/unpause
+    /// @param _activationDelay Seconds until buyback execution is allowed
     constructor(
         address _token,
         address _burnReserve,
@@ -75,16 +85,19 @@ contract BuybackVault {
         activationTime = block.timestamp + _activationDelay;
     }
 
+    /// @notice Pause buyback execution (guardian only)
     function pause() external onlyGuardian {
         paused = true;
         emit Paused(msg.sender);
     }
 
+    /// @notice Unpause buyback execution (guardian only)
     function unpause() external onlyGuardian {
         paused = false;
         emit Unpaused(msg.sender);
     }
 
+    /// @notice Deposit ETH for future buyback. Records expected output at current price.
     function depositETH() external payable {
         require(msg.value > 0, "no ETH");
 
@@ -98,6 +111,7 @@ contract BuybackVault {
         emit Deposited(msg.sender, msg.value);
     }
 
+    /// @notice Execute buyback: swap all ETH to IFR, split between burn reserve and treasury
     function executeBuyback() external onlyOwner {
         require(!paused, "Pausable: paused");
         require(block.timestamp >= activationTime, "not active yet");
@@ -133,6 +147,12 @@ contract BuybackVault {
         emit BuybackExecuted(ethBal, burnAmount, treasuryAmount);
     }
 
+    /// @notice Update vault parameters (owner only)
+    /// @param _burnShareBps Percentage sent to burn reserve (in bps, default 5000 = 50%)
+    /// @param _cooldown Minimum seconds between buybacks (default 3600)
+    /// @param _slippageBps Maximum slippage tolerance (in bps, default 500 = 5%)
+    /// @param _router Uniswap V2 router address
+    /// @param _treasury Treasury address
     function setParams(
         uint256 _burnShareBps,
         uint256 _cooldown,
@@ -150,5 +170,6 @@ contract BuybackVault {
         emit ParamsUpdated(_burnShareBps, _cooldown, _slippageBps);
     }
 
+    /// @notice Allows the contract to receive ETH directly
     receive() external payable {}
 }
