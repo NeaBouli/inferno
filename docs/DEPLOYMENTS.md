@@ -97,5 +97,5 @@
 | IFRLock Live Test | **Done** — 8/8 passed (full lock/unlock cycle) |
 | Governance Proposal #1 | **Done** — setFeeExempt(IFRLock, true), TX [`0x211b7949...`](https://sepolia.etherscan.io/tx/0x211b794970abe147b3ab2f3c92bb79b3b3c5a72bc8be8cfb7e1d00fd4253a909) |
 | PartnerVault Deployed + Verified | **Done** — [`0x5F12C0bC...`](https://sepolia.etherscan.io/address/0x5F12C0bC616e9Ca347D48C33266aA8fe98490A39) |
-| PartnerVault Funded | **Done** — 38.6M IFR (40M - 1.4M fees; top-up after Proposal #2) |
-| Governance Proposal #2 | **Pending** — setFeeExempt(PartnerVault, true), ETA 25.2.2026 00:39 CET |
+| PartnerVault Funded | **Done** — 40M IFR (38.6M initial + 1.4M top-up after Proposal #3) |
+| Governance Proposal #3 | **Executed** — setFeeExempt(PartnerVault v2, true), TX 0x3f28690a...57de6e8 |

@@ -201,8 +201,8 @@ Integration: 5 Zeilen Code. Vollstaendig entkoppelt.
 - LP Pair: 400,000,000 IFR (40.08%)
 - LiquidityReserve: 200,000,000 IFR (20.04%)
 - Team Vesting: 150,000,000 IFR (15.03%) — 4 Jahre, 0 released
-- Treasury/Community: 170,787,995 IFR (17.11%)
-- PartnerVault: 38,600,000 IFR (3.86%)
+- Treasury/Community: 169,387,995 IFR (16.97%)
+- PartnerVault: 40,000,000 IFR (4.01%)
 - Verbrannt: 2,000,425+ IFR (0.20%+) — steigt mit jedem Transfer
 
 ### Deflation in Aktion

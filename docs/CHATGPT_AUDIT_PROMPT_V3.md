@@ -21,7 +21,7 @@ Prüfe: TRANSPARENCY.md vs security.html vs PROJECT-SUMMARY.md
 - Supply: 997,999,575 IFR (nach Burn)
 - Verbrannt: 2,000,425 IFR
 - Vesting: 150M, 4 Jahre, 0 released
-- PartnerVault: 38.6M IFR
+- PartnerVault: 40M IFR
 
 ## D) Ownership Status klar kommuniziert
 - Ist klar dokumentiert welche Contracts beim Deployer sind?

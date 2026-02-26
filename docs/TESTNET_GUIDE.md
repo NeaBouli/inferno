@@ -156,7 +156,7 @@ npm run dev
 
 Was du siehst:
 - **Overview Tab**: PartnerVault Balance, RewardBps 15%, TotalSupply
-- **Timelock Queue**: Proposal #3 (Pending, Countdown)
+- **Timelock Queue**: Proposals #4-#6 (Pending, Ownership Transfer)
 - **Calldata Generator**: Governance-Proposals erstellen
 
 ---

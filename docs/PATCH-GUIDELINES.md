@@ -64,7 +64,7 @@ Fuer Solidity-Aenderungen IMMER:
 **Beispiel:** PartnerVault v1 → v2
 - Proposal #2 (alte Adresse) → cancelled
 - Neue v2 deployed + verified
-- Proposal #3 (neue Adresse) → pending execution
+- Proposal #3 (neue Adresse) → executed (26.02.2026)
 
 ### Schritt 6: Dokumentation
 
