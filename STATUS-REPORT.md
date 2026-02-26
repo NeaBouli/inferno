@@ -114,7 +114,7 @@
 | 0 | setFeeExempt(DEX Router) | **Executed** (2026-02-20) |
 | 1 | setFeeExempt(IFRLock) | **Executed** (2026-02-22) |
 | 2 | setFeeExempt(PartnerVault v1) | **Cancelled** (v1 deprecated) |
-| 3 | setFeeExempt(PartnerVault v2) | **Pending** — ETA 26.02.2026 08:41 CET |
+| 3 | setFeeExempt(PartnerVault v2) | **Executed** (2026-02-26) — TX 0x3f28690a...57de6e8 |
 
 ---
 
@@ -153,7 +153,7 @@
 
 | # | Aufgabe | Status |
 |---|---------|--------|
-| 1 | Proposal #3 executen (ETA 26.02. 08:41 CET) + 1.4M IFR Top-up | Pending |
+| 1 | Proposal #3 executed + 1.4M IFR Top-up (26.02.2026) | **Erledigt** |
 | 2 | Third-party Security Audit beauftragen | Offen |
 | 3 | Multisig einrichten (Gnosis Safe 4-of-7) | Offen |
 | 4 | Community + Team Adressen festlegen | Offen |

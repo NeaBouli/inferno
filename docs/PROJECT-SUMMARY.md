@@ -77,7 +77,7 @@ Ownership: Transferiert an Governance (Timelock, 48h Delay)
 | 0 | setFeeExempt(DEX Router) | Executed (2026-02-20) |
 | 1 | setFeeExempt(IFRLock) | Executed (2026-02-22) |
 | 2 | setFeeExempt(PartnerVault v1) | Cancelled (v1 deprecated) |
-| 3 | setFeeExempt(PartnerVault v2) | Pending — ETA 26.02.2026 08:41 CET |
+| 3 | setFeeExempt(PartnerVault v2) | Executed (26.02.2026) — TX 0x3f28690a...57de6e8 |
 
 ## Token-Metriken (Sepolia, Live)
 

@@ -98,8 +98,8 @@ Activation-Datum stellt sicher dass kein vorzeitiger Buyback moeglich ist.
 | LiquidityReserve | true |
 | BuybackVault | true |
 | BurnReserve | true |
-| PartnerVault v2 | Proposal #3 pending (26.02.2026 08:41 CET) |
-| FeeRouterV1 | Geplant nach Proposal #3 |
+| PartnerVault v2 | true (executed 26.02.2026, TX 0x3f28690a...57de6e8) |
+| FeeRouterV1 | Geplant (naechster Proposal) |
 
 ---
 
@@ -108,7 +108,7 @@ Activation-Datum stellt sicher dass kein vorzeitiger Buyback moeglich ist.
 | Parameter | Wert |
 |-----------|------|
 | Adresse | 0x5F12C0bC616e9Ca347D48C33266aA8fe98490A39 |
-| IFR Balance | 38,600,000 IFR (3.86%) |
+| IFR Balance | 40,000,000 IFR (4.0%) |
 | Admin | Governance (Timelock) |
 | rewardBps | 1,500 (15%) |
 | annualEmissionCap | 4,000,000 IFR |
@@ -127,8 +127,8 @@ Admin ist Governance — kein Deployer-Zugriff moeglich.
 | LP Pair | 400,000,000 IFR | 40.08% |
 | LiquidityReserve | 200,000,000 IFR | 20.04% |
 | Vesting (Team) | 150,000,000 IFR | 15.03% |
-| Deployer (Treasury+Community) | 170,787,995 IFR | 17.11% |
-| PartnerVault | 38.600.000 IFR | 3.86% |
+| Deployer (Treasury+Community) | 169,387,995 IFR | 16.97% |
+| PartnerVault | 40,000,000 IFR | 4.01% |
 | Verbrannt (seit Deploy) | 2,000,425 IFR | 0.20% |
 
 2,000,425 IFR wurden seit dem Deploy permanent verbrannt.
@@ -144,7 +144,7 @@ Deflation funktioniert on-chain nachweisbar.
 | 2 | LiquidityReserve Ownership an Governance | ⏳ Proposal #4 (ETA 28.02.) |
 | 3 | BuybackVault Ownership an Governance | ⏳ Proposal #5 (ETA 28.02.) |
 | 4 | BurnReserve Ownership an Governance | ⏳ Proposal #6 (ETA 28.02.) |
-| 5 | PartnerVault feeExempt setzen (Proposal #3) | Pending |
+| 5 | PartnerVault feeExempt setzen (Proposal #3) | Erledigt (26.02.2026) |
 | 6 | Third-party Security Audit | Kritisch |
 | 7 | Gnosis Safe 4-of-7 Multisig | Hoch |
 

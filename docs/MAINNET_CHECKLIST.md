@@ -42,7 +42,7 @@ Diese Punkte muessen ZWINGEND vor Mainnet erledigt sein:
 | Ownership an Governance transferiert | Done |
 | Governance Proposals #0, #1 executed | Done |
 | Governance Proposal #2 cancelled (v1 deprecated) | Done |
-| Governance Proposal #3 pending (PartnerVault v2 feeExempt) | Pending |
+| Governance Proposal #3 executed (PartnerVault v2 feeExempt) + 1.4M Top-up | Done |
 | Full Lock/Unlock Cycle verified (8/8) | Done |
 | Slither Audit: 0 high/critical | Done |
 | solidity-coverage: 99% Stmts, 85% Branch | Done |
