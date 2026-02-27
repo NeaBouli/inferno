@@ -71,7 +71,7 @@ Lock-triggered Creator Rewards: when users lock IFR for a partner's product, the
 
 Token holdings grant future DAO voting rights.
 
-**Launch Partner:** [SecureCall](https://neabouli.github.io/stealth/) — Privacy-first communication platform.
+The ecosystem is open and permissionless. Any product can integrate IFR Lock.
 
 [Integration Guide →](https://neabouli.github.io/inferno/wiki/integration.html)
 

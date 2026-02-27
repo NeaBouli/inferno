@@ -59,7 +59,7 @@ v0.2.0 ist der **Mainnet-Ready Release**. Alle Voraussetzungen fuer ein sicheres
 |---|---------|--------|
 | 1 | Bug Bounty Programm starten (5% Treasury) | Offen |
 | 2 | CoinGecko / CMC Listing beantragen | Offen |
-| 3 | Partner Onboarding: SecureCall als Launch Partner | Offen |
+| 3 | Partner Onboarding: Erste Partner-Integration | Offen |
 | 4 | Dashboard: Mainnet Support hinzufuegen | Offen |
 | 5 | DEPLOYMENTS.md: Mainnet Adressen eintragen | Offen |
 

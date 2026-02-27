@@ -731,15 +731,15 @@
 
       <h3>Example Lock Types</h3>
 <pre><code>// App-specific lock type tags
-bytes32 securecallPremium = keccak256("securecall_premium");
-bytes32 app2Pro           = keccak256("app2_pro");
-bytes32 daoMembership     = keccak256("dao_membership");
+bytes32 partnerPremium = keccak256("partner_premium");
+bytes32 app2Pro        = keccak256("app2_pro");
+bytes32 daoMembership  = keccak256("dao_membership");
 
 // Lock with type
-lock.lockWithType(amount, securecallPremium);</code></pre>
+lock.lockWithType(amount, partnerPremium);</code></pre>
 
       <p>
-        Key principle: <strong>one user, one lock amount</strong>. The locked balance is shared across all applications querying the same IFRLock contract. If a user locks 10,000 IFR for SecureCall premium, an app requiring 5,000 IFR for its pro tier will also see that user as qualified.
+        Key principle: <strong>one user, one lock amount</strong>. The locked balance is shared across all applications querying the same IFRLock contract. If a user locks 10,000 IFR for one partner's premium tier, an app requiring 5,000 IFR for its pro tier will also see that user as qualified.
       </p>
 
       <div class="callout">

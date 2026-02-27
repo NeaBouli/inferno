@@ -16,7 +16,7 @@
 
 ### Zusammenfassung
 
-Inferno ($IFR) ist ein **deflationärer ERC-20 Utility-Token** auf Ethereum. Jeder Transfer verbrennt 2.5% permanent (2% Sender + 0.5% Recipient), plus 1% Pool Fee. Der Token dient als **universeller Utility-Lock**: Nutzer locken IFR on-chain, und Partner-Produkte (z.B. SecureCall) verifizieren den Lock-Status, um Lifetime/Premium-Zugang zu gewähren.
+Inferno ($IFR) ist ein **deflationärer ERC-20 Utility-Token** auf Ethereum. Jeder Transfer verbrennt 2.5% permanent (2% Sender + 0.5% Recipient), plus 1% Pool Fee. Der Token dient als **universeller Utility-Lock**: Nutzer locken IFR on-chain, und Partner-Produkte verifizieren den Lock-Status, um Lifetime/Premium-Zugang zu gewähren.
 
 **Phase:** Testnet-Deployment abgeschlossen, Mainnet-Launch steht bevor.
 
@@ -163,7 +163,7 @@ Inferno ($IFR) ist ein **deflationärer ERC-20 Utility-Token** auf Ethereum. Jed
 │   ├── assets/
 │   │   ├── ifr_logo.png          # Aktuelles Logo (ifr_400x400.png)
 │   │   ├── banner.jpeg           # Hero Banner (1500x500)
-│   │   └── securecall_logo.png   # SecureCall Partner Logo
+│   │   └── securecall_logo.png   # Partner Logo (legacy)
 │   └── wiki/                     # Technische Wiki (9 HTML-Seiten)
 │       ├── index.html            # Wiki Home + Navigation
 │       ├── contracts.html        # Alle 9 Contracts dokumentiert
@@ -242,7 +242,7 @@ Inferno ($IFR) ist ein **deflationärer ERC-20 Utility-Token** auf Ethereum. Jed
 #### Nach Launch
 
 14. **Partner-Onboarding-Prozess** definieren
-15. **License Resolver** für SecureCall implementieren
+15. **License Resolver** für Partner implementieren
 16. **Guarded Buyback Automation** (Phase 3)
 17. **DAO Governance Migration** (Phase 4)
 
@@ -408,8 +408,7 @@ npx hardhat verify --network sepolia <CONTRACT_ADDR> <CONSTRUCTOR_ARGS>
 | InfernoToken (Etherscan) | https://sepolia.etherscan.io/address/0x3Bd71947F288d1dd8B21129B1bE4FF16EDd5d1F4#code |
 | Governance (Etherscan) | https://sepolia.etherscan.io/address/0x6050b22E4EAF3f414d1155fBaF30B868e0107017#code |
 | IFRLock (Etherscan) | https://sepolia.etherscan.io/address/0x0Cab0A9440643128540222acC6eF5028736675d3 |
-| SecureCall (Partner) | https://neabouli.github.io/stealth/ |
-| SecureCall Repo | https://github.com/NeaBouli/stealth |
+| Partner Integration Guide | https://neabouli.github.io/inferno/wiki/integration.html |
 | Dashboard | `cd apps/dashboard && npm run dev` → http://localhost:5173 |
 | Benefits Network Backend | `cd apps/benefits-network/backend && npm run dev` → http://localhost:3001 |
 | Benefits Network Frontend | `cd apps/benefits-network/frontend && npm run dev` → http://localhost:3000 |

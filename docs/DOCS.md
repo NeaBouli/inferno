@@ -229,7 +229,7 @@ inferno/
 | 2026-02-26 | Consistency Check: 7/7 bestanden (Test-Zahlen, 40M, Proposal #3, Wiki 13, .env, keine Keys) |
 | 2026-02-26 | ChatGPT Audit V3: 8 → 12 Checks erweitert (PRESS_KIT, ROADMAP, v0.1.0, GitHub Templates), 12/12 PASS |
 | 2026-02-26 | LockPanel.jsx: Lock/Unlock UI im Token Dashboard (Approve, Lock, Unlock, Tier-Anzeige, Balance, TX-Links) |
-| 2026-02-26 | Partner Directory: apps/partner-directory/index.html (SecureCall + 3 Slots, Filter, CTA, Landing Page Nav-Link) |
+| 2026-02-26 | Partner Directory: apps/partner-directory/index.html (4 Integration Slots, Filter, CTA, Landing Page Nav-Link) |
 | 2026-02-26 | ProposalAlert.tsx: Notification-Banner im Governance Dashboard (Pending/Ready Proposals, Countdown, Dismiss) |
 | 2026-02-26 | ROADMAP.md: 6-Phasen Roadmap (Foundation → Governance → Ecosystem → Mainnet → Growth → DAO) |
 | 2026-02-26 | Landing Page: Roadmap Phase 3/5 korrigiert (Multi-Chain entfernt, Full Roadmap Link) |
