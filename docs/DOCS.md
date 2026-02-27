@@ -67,7 +67,7 @@ inferno/
 ├── apps/
 │   ├── dashboard/                      [x] React + Vite Frontend (Phase 1 + Phase 2 + LockPanel)
 │   ├── governance-dashboard/          [x] React + Vite + TS + Tailwind (Overview, Partners, Timelock, Calldata, ProposalAlert)
-│   ├── partner-directory/             [x] Static HTML (Partner Cards, Filter, CTA)
+│   ├── partner-directory/             [entfernt] Durch offenes Oekosystem-Modell ersetzt
 │   ├── ai-copilot/                   [x] React + Vite + TS + Tailwind + Express (3 Modi, RAG, Safety Guards)
 │   ├── points-backend/               [x] Express + Prisma + SQLite + siwe + jose (SIWE Auth, Points, EIP-712 Voucher, 35 Tests)
 │   ├── creator-gateway/              [x] Express + ethers v5 + googleapis + JWT (YouTube x IFR Lock Bridge, Port 3005, 32 Tests)
@@ -229,7 +229,7 @@ inferno/
 | 2026-02-26 | Consistency Check: 7/7 bestanden (Test-Zahlen, 40M, Proposal #3, Wiki 13, .env, keine Keys) |
 | 2026-02-26 | ChatGPT Audit V3: 8 → 12 Checks erweitert (PRESS_KIT, ROADMAP, v0.1.0, GitHub Templates), 12/12 PASS |
 | 2026-02-26 | LockPanel.jsx: Lock/Unlock UI im Token Dashboard (Approve, Lock, Unlock, Tier-Anzeige, Balance, TX-Links) |
-| 2026-02-26 | Partner Directory: apps/partner-directory/index.html (4 Integration Slots, Filter, CTA, Landing Page Nav-Link) |
+| 2026-02-26 | Partner Directory: erstellt, spaeter entfernt (offenes Oekosystem-Modell) |
 | 2026-02-26 | ProposalAlert.tsx: Notification-Banner im Governance Dashboard (Pending/Ready Proposals, Countdown, Dismiss) |
 | 2026-02-26 | ROADMAP.md: 6-Phasen Roadmap (Foundation → Governance → Ecosystem → Mainnet → Growth → DAO) |
 | 2026-02-26 | Landing Page: Roadmap Phase 3/5 korrigiert (Multi-Chain entfernt, Full Roadmap Link) |
