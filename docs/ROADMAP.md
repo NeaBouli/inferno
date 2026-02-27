@@ -47,7 +47,7 @@
 - [ ] Etherscan verification (mainnet)
 - [ ] Ownership transfer to Governance (mainnet)
 - [ ] Dashboard + governance dashboard switched to mainnet
-- [ ] SecureCall launch partner integration live
+- [ ] First partner integrations live
 - [ ] CoinGecko / CoinMarketCap listing
 
 ## Phase 5: Growth & DAO (Q3 2026 - Q1 2027)

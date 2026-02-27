@@ -108,7 +108,7 @@ struct Partner {
 `bytes32 partnerId` — deterministic identifier, typically `keccak256(abi.encodePacked("partner_name"))`.
 
 ```javascript
-const partnerId = ethers.utils.id("securecall"); // bytes32
+const partnerId = ethers.utils.id("my_partner"); // bytes32
 ```
 
 ### Admin Functions (via Governance Timelock)
@@ -372,7 +372,7 @@ const vault = new ethers.Contract(
   provider
 );
 
-const partnerId = ethers.utils.id("securecall");
+const partnerId = ethers.utils.id("my_partner");
 
 // Get partner info
 const info = await vault.partners(partnerId);
@@ -569,7 +569,7 @@ cast call 0x0Cab0A9440643128540222acC6eF5028736675d3 \
 # Check partner claimable
 cast call 0x5F12C0bC616e9Ca347D48C33266aA8fe98490A39 \
   "claimable(bytes32)(uint256)" \
-  $(cast keccak "securecall") \
+  $(cast keccak "my_partner") \
   --rpc-url $SEPOLIA_RPC_URL
 ```
 

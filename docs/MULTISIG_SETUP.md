@@ -13,7 +13,7 @@ Ziel: Kein einzelner Key kann das Protokoll kontrollieren.
 - **Signer-Profile:**
   - 2x Gruender/Core-Team (Hardware Wallets)
   - 2x Trusted Community Members
-  - 2x Partner-Vertreter (z.B. SecureCall)
+  - 2x Partner-Vertreter
   - 1x Reserve-Signer (Cold Storage)
 
 ### Guardian Multisig (Emergency Cancel)

@@ -52,7 +52,7 @@ Nutzer sperren IFR-Token im IFRLock-Contract → erhalten lebenslangen Premium-Z
 |------|-----------|-----------------|
 | Bronze | 1,000 IFR | Basis-Features |
 | Silver | 2,500 IFR | Erweiterte Features |
-| Gold | 5,000 IFR | Premium-Zugang (z.B. SecureCall) |
+| Gold | 5,000 IFR | Premium-Zugang |
 | Platinum | 10,000 IFR | Vollzugang + Priority Support |
 
 ## Partner Ecosystem
@@ -61,7 +61,7 @@ Nutzer sperren IFR-Token im IFRLock-Contract → erhalten lebenslangen Premium-Z
 - Lock-triggered Creator Rewards (Algo-basiert)
 - Milestone-basierte Freigabe + Vesting
 - Partner-Token = DAO Voting Rights (Phase 4)
-- **Launch Partner:** SecureCall — Privacy-first Kommunikation
+- Offen fuer alle Produkte — permissionless Integration
 
 ## Governance
 

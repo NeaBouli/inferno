@@ -87,7 +87,7 @@ All notable changes to the Inferno ($IFR) project.
 - .github/workflows/update-stats.yml — taeglich 06:00 UTC On-Chain Stats
 - .github/workflows/post-deploy.yml — nach Deploy/Execute Script Push
 - scripts/update-stats.js — On-Chain Stats Auto-Update (stats.json + TRANSPARENCY.md + index.html)
-- apps/partner-directory/index.html — Partner Directory (SecureCall + 3 Slots, Filter, CTA)
+- apps/partner-directory/index.html — Partner Directory (4 Integration Slots, Filter, CTA)
 - apps/dashboard/src/components/LockPanel — Lock/Unlock UI (Approve, Lock, Unlock, Tier)
 - apps/governance-dashboard/src/components/ProposalAlert — Notification-Banner (Pending/Ready)
 - docs/ROADMAP.md — 6-Phasen Roadmap (Foundation → DAO)
