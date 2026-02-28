@@ -1,6 +1,6 @@
 # Inferno ($IFR) — Mainnet Deployment Checklist
 
-> **Status:** Pre-Mainnet | **Sepolia:** 10 Contracts deployed + verified | **Tests:** 321 Contract + 32 Creator Gateway + 35 Points + 8 Benefits = 396 Total | **Coverage:** 99% Stmts, 91% Branch
+> **Status:** Pre-Mainnet | **Sepolia:** 10 Contracts deployed + verified | **Tests:** 339 Contract + 32 Creator Gateway + 35 Points + 8 Benefits = 414 Total | **Coverage:** 99% Stmts, 91% Branch
 
 ## KRITISCH — Vor jedem Public Launch
 
@@ -45,6 +45,9 @@ Diese Punkte muessen ZWINGEND vor Mainnet erledigt sein:
 | Full Lock/Unlock Cycle verified (8/8) | Done |
 | Slither Audit: 0 high/critical | Done |
 | solidity-coverage: 99% Stmts, 91% Branch | Done |
+| LiquidityReserve/BuybackVault/BurnReserve v2 redeployed (transferOwnership) | Done |
+| Ownership v2 → Governance (direct transfer) | Done |
+| feeExempt Proposals #7-9 queued (ETA 2026-03-02) | Pending |
 
 ---
 

@@ -11,10 +11,10 @@
 | # | Contract | Address | Verified |
 |---|----------|---------|----------|
 | 1 | **InfernoToken** | [`0x3Bd71947F288d1dd8B21129B1bE4FF16EDd5d1F4`](https://sepolia.etherscan.io/address/0x3Bd71947F288d1dd8B21129B1bE4FF16EDd5d1F4#code) | Verified |
-| 2 | **LiquidityReserve** | [`0xF7E90D0d17f8232365186AA085D26eaEfAf011aF`](https://sepolia.etherscan.io/address/0xF7E90D0d17f8232365186AA085D26eaEfAf011aF#code) | Verified |
+| 2 | **LiquidityReserve** | [`0x344720eA0cd1654e2bDB41ecC1cCb11eD60f1957`](https://sepolia.etherscan.io/address/0x344720eA0cd1654e2bDB41ecC1cCb11eD60f1957#code) | Verified |
 | 3 | **Vesting** | [`0xa710f9FE7bf42981E60BE2Fbe7D87Fb3541a3F8B`](https://sepolia.etherscan.io/address/0xa710f9FE7bf42981E60BE2Fbe7D87Fb3541a3F8B#code) | Verified |
-| 4 | **BuybackVault** | [`0xC8ABb9039BEd24f4dBf5Cff09699877D81f0D63C`](https://sepolia.etherscan.io/address/0xC8ABb9039BEd24f4dBf5Cff09699877D81f0D63C#code) | Verified |
-| 5 | **BurnReserve** | [`0x6D4582FCac792FD3880e252fC0a585A0c1823e80`](https://sepolia.etherscan.io/address/0x6D4582FCac792FD3880e252fC0a585A0c1823e80#code) | Verified |
+| 4 | **BuybackVault** | [`0x2E61b720c220ce85dA24b05a476903Ec709Cb68c`](https://sepolia.etherscan.io/address/0x2E61b720c220ce85dA24b05a476903Ec709Cb68c#code) | Verified |
+| 5 | **BurnReserve** | [`0xB9FbE5dB44EEce77A69C8F09e9E0eE2E4F745D75`](https://sepolia.etherscan.io/address/0xB9FbE5dB44EEce77A69C8F09e9E0eE2E4F745D75#code) | Verified |
 | 6 | **Governance** | [`0x6050b22E4EAF3f414d1155fBaF30B868E0107017`](https://sepolia.etherscan.io/address/0x6050b22E4EAF3f414d1155fBaF30B868E0107017#code) | Verified |
 | 7 | **IFRLock** | [`0x0Cab0A9440643128540222acC6eF5028736675d3`](https://sepolia.etherscan.io/address/0x0Cab0A9440643128540222acC6eF5028736675d3#code) | Verified |
 | 8 | **PartnerVault** | [`0x5F12C0bC616e9Ca347D48C33266aA8fe98490A39`](https://sepolia.etherscan.io/address/0x5F12C0bC616e9Ca347D48C33266aA8fe98490A39#code) | Verified |
@@ -39,7 +39,7 @@
 | Recipient | Amount | Address |
 |-----------|--------|---------|
 | DEX Liquidity | 400,000,000 IFR (40%) | LP Pair [`0x2252e8bBDE0E50CD372748aC233A99C08627d9c7`](https://sepolia.etherscan.io/address/0x2252e8bBDE0E50CD372748aC233A99C08627d9c7) |
-| Liquidity Reserve | 200,000,000 IFR (20%) | `0xF7E90D0d17f8232365186AA085D26eaEfAf011aF` |
+| Liquidity Reserve | 200,000,000 IFR (20%) | `0x344720eA0cd1654e2bDB41ecC1cCb11eD60f1957` (v2) |
 | Team Vesting | 150,000,000 IFR (15%) | `0xa710f9FE7bf42981E60BE2Fbe7D87Fb3541a3F8B` |
 | Treasury | 150,000,000 IFR (15%) | Deployer (placeholder) |
 | Community & Grants | 60,000,000 IFR (6%) | Deployer (placeholder) |
@@ -83,6 +83,9 @@
 | 4 | `transferOwnership(Governance)` | LiquidityReserve | 2026-02-28 | — | Cancelled (contract upgraded, re-deploy needed) |
 | 5 | `transferOwnership(Governance)` | BuybackVault | 2026-02-28 | — | Cancelled (contract upgraded, re-deploy needed) |
 | 6 | `transferOwnership(Governance)` | BurnReserve | 2026-02-28 | — | Cancelled (contract upgraded, re-deploy needed) |
+| 7 | `setFeeExempt(LiquidityReserve v2, true)` | InfernoToken | 2026-03-02 | [`0xfc74d2b5...9b9dcb53`](https://sepolia.etherscan.io/tx/0xfc74d2b5f64c20123e1b42ebb483655196d2dd1730a65a249801254b9b9dcb53) | Pending |
+| 8 | `setFeeExempt(BuybackVault v2, true)` | InfernoToken | 2026-03-02 | [`0x3e1aa0c3...bfd1cc67`](https://sepolia.etherscan.io/tx/0x3e1aa0c3c9cbe8f45b35f9c43ed3915a2ce1f5155cf46875446f3dd6bfd1cc67) | Pending |
+| 9 | `setFeeExempt(BurnReserve v2, true)` | InfernoToken | 2026-03-02 | [`0x5ef8fda1...15a24f91`](https://sepolia.etherscan.io/tx/0x5ef8fda12a1fb39ac48476aaf706597ab50853246a672fac0ab5daec15a24f91) | Pending |
 
 ### Post-Deploy Status
 
@@ -96,7 +99,8 @@
 | Uniswap LP Pairing | **Done** — [`0x2252e8bBDE0E50CD372748aC233A99C08627d9c7`](https://sepolia.etherscan.io/address/0x2252e8bBDE0E50CD372748aC233A99C08627d9c7) |
 | Router on BuybackVault | **Done** — `0xC532a74256D3Db42D0Bf7a0400fEFDbad7694008` |
 | InfernoToken Ownership to Governance | **Done** — TX `0xa69bf285...d5762e1b` |
-| LiquidityReserve/BuybackVault/BurnReserve Ownership | **Transferable** — `transferOwnership()` added. Sepolia instances still owned by deployer (pre-upgrade). Mainnet: transfer to Governance post-deploy. |
+| LiquidityReserve/BuybackVault/BurnReserve v2 Deployed | **Done** — Redeployed with `transferOwnership()`. Ownership transferred to Governance. |
+| feeExempt Proposals #7-9 | **Pending** — ETA 2026-03-02 (48h timelock) |
 | Governance Proposal #0 Executed | **Done** — TX [`0x13ff46d8...cbbe982d`](https://sepolia.etherscan.io/tx/0x13ff46d8a113f25b9ab0037ee06d6108c62d0f16e25d28799e4f45a8cbbe982d) |
 | IFRLock Deployed + Verified | **Done** — [`0x0Cab0A94...`](https://sepolia.etherscan.io/address/0x0Cab0A9440643128540222acC6eF5028736675d3) |
 | IFRLock Live Test | **Done** — 8/8 passed (full lock/unlock cycle) |
