@@ -80,9 +80,9 @@
 | 1 | `setFeeExempt(IFRLock, true)` | InfernoToken | 2026-02-22 21:15 CET | [`0x211b7949...4253a909`](https://sepolia.etherscan.io/tx/0x211b794970abe147b3ab2f3c92bb79b3b3c5a72bc8be8cfb7e1d00fd4253a909) | Executed |
 | 2 | `setFeeExempt(PartnerVault v1, true)` | InfernoToken | — | — | Cancelled (v1 deprecated) |
 | 3 | `setFeeExempt(PartnerVault v2, true)` | InfernoToken | 2026-02-26 | [`0x3f28690a...57de6e8`](https://sepolia.etherscan.io/tx/0x3f28690a57de6e8) | Executed |
-| 4 | `transferOwnership(Governance)` | LiquidityReserve | 2026-02-28 | — | Cancelled (immutable owner) |
-| 5 | `transferOwnership(Governance)` | BuybackVault | 2026-02-28 | — | Cancelled (immutable owner) |
-| 6 | `transferOwnership(Governance)` | BurnReserve | 2026-02-28 | — | Cancelled (immutable owner) |
+| 4 | `transferOwnership(Governance)` | LiquidityReserve | 2026-02-28 | — | Cancelled (contract upgraded, re-deploy needed) |
+| 5 | `transferOwnership(Governance)` | BuybackVault | 2026-02-28 | — | Cancelled (contract upgraded, re-deploy needed) |
+| 6 | `transferOwnership(Governance)` | BurnReserve | 2026-02-28 | — | Cancelled (contract upgraded, re-deploy needed) |
 
 ### Post-Deploy Status
 
@@ -96,7 +96,7 @@
 | Uniswap LP Pairing | **Done** — [`0x2252e8bBDE0E50CD372748aC233A99C08627d9c7`](https://sepolia.etherscan.io/address/0x2252e8bBDE0E50CD372748aC233A99C08627d9c7) |
 | Router on BuybackVault | **Done** — `0xC532a74256D3Db42D0Bf7a0400fEFDbad7694008` |
 | InfernoToken Ownership to Governance | **Done** — TX `0xa69bf285...d5762e1b` |
-| LiquidityReserve/BuybackVault/BurnReserve Ownership | **Immutable** — `owner` is `immutable` in these contracts, set to deployer at deploy time. For mainnet: deploy with Governance as constructor owner. |
+| LiquidityReserve/BuybackVault/BurnReserve Ownership | **Transferable** — `transferOwnership()` added. Sepolia instances still owned by deployer (pre-upgrade). Mainnet: transfer to Governance post-deploy. |
 | Governance Proposal #0 Executed | **Done** — TX [`0x13ff46d8...cbbe982d`](https://sepolia.etherscan.io/tx/0x13ff46d8a113f25b9ab0037ee06d6108c62d0f16e25d28799e4f45a8cbbe982d) |
 | IFRLock Deployed + Verified | **Done** — [`0x0Cab0A94...`](https://sepolia.etherscan.io/address/0x0Cab0A9440643128540222acC6eF5028736675d3) |
 | IFRLock Live Test | **Done** — 8/8 passed (full lock/unlock cycle) |

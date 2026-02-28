@@ -207,7 +207,7 @@ inferno/
 |--------|------|
 | Contracts | 10 (+ 4 Mocks) |
 | Solidity LOC | 1,697 |
-| Tests | 321 (alle bestanden) |
+| Tests | 339 (alle bestanden) |
 | Branch Coverage | 91% |
 | Test LOC | 2,402 |
 | Deploy Script | 232 LOC, 9 Steps |

@@ -10,7 +10,7 @@ interface IERC20 {
 /// @notice Holds IFR tokens as strategic liquidity reserve with time-lock
 ///         and staged withdrawal (max per period) to prevent supply shock.
 contract LiquidityReserve {
-    address public immutable owner;
+    address public owner;
     address public guardian;
     IERC20 public immutable token;
 
@@ -29,6 +29,7 @@ contract LiquidityReserve {
     event GuardianUpdated(address indexed newGuardian);
     event Paused(address indexed account);
     event Unpaused(address indexed account);
+    event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
 
     modifier onlyOwner() {
         require(msg.sender == owner, "not owner");
@@ -147,5 +148,14 @@ contract LiquidityReserve {
         require(paused, "not paused");
         paused = false;
         emit Unpaused(msg.sender);
+    }
+
+    /// @notice Transfer ownership to a new address
+    /// @param newOwner Address of the new owner
+    function transferOwnership(address newOwner) external onlyOwner {
+        require(newOwner != address(0), "newOwner=0");
+        address old = owner;
+        owner = newOwner;
+        emit OwnershipTransferred(old, newOwner);
     }
 }
