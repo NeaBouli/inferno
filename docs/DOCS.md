@@ -16,10 +16,10 @@
 inferno/
 ├── contracts/
 │   ├── token/InfernoToken.sol          [x] 93 LOC, 22 Tests
-│   ├── liquidity/LiquidityReserve.sol  [x] 151 LOC, 36 Tests
+│   ├── liquidity/LiquidityReserve.sol  [x] 151 LOC, 42 Tests
 │   ├── vesting/Vesting.sol             [x] 132 LOC, 21 Tests
-│   ├── buyback/BuybackVault.sol        [x] 175 LOC, 20 Tests
-│   ├── burnreserve/BurnReserve.sol     [x] 92 LOC, 21 Tests
+│   ├── buyback/BuybackVault.sol        [x] 175 LOC, 26 Tests
+│   ├── burnreserve/BurnReserve.sol     [x] 92 LOC, 27 Tests
 │   ├── governance/Governance.sol       [x] 150 LOC, 36 Tests
 │   ├── lock/IFRLock.sol               [x] 127 LOC, 37 Tests
 │   ├── partner/PartnerVault.sol       [x] 549 LOC, 95 Tests
@@ -48,6 +48,7 @@ inferno/
 │   ├── onchain-audit.js             [x] 8-Check On-Chain Audit (Ownership, LP, Vesting, Supply, FeeExempt)
 │   ├── propose-ownership-transfer.js [x] Ownership Transfer Proposals (3 Contracts, DRY RUN Schutz)
 │   ├── execute-ownership-transfer.js [x] Ownership Transfer Executor (nach 48h Timelock)
+│   ├── redeploy-reserves.js         [x] Redeploy LiquidityReserve/BuybackVault/BurnReserve (transferOwnership Upgrade)
 │   ├── burn-lp-tokens.js            [x] LP Token Burn → 0xdead (DRY RUN Schutz, irreversibel)
 │   └── check-links.js              [x] Dead Link Checker (interne Links in docs/)
 ├── tasks/
@@ -146,9 +147,9 @@ inferno/
 
 ### 2. LiquidityReserve — [x] FERTIG
 - **Pfad:** `contracts/liquidity/LiquidityReserve.sol`
-- **Tests:** 36 (LiquidityReserve.test.js)
+- **Tests:** 42 (LiquidityReserve.test.js)
 - **Beschreibung:** Strategic Reserve fuer 200M IFR
-- **Features:** 6-Monats-Lock, gestaffelte Freigabe (50M pro Quartal), Perioden-Tracking, Guardian Pause, Owner-Withdraw nach Lock
+- **Features:** 6-Monats-Lock, gestaffelte Freigabe (50M pro Quartal), Perioden-Tracking, Guardian Pause, Owner-Withdraw nach Lock, transferOwnership
 
 ### 3. Vesting — [x] FERTIG
 - **Pfad:** `contracts/vesting/Vesting.sol`
@@ -159,15 +160,15 @@ inferno/
 
 ### 4. BuybackVault — [x] FERTIG
 - **Pfad:** `contracts/buyback/BuybackVault.sol`
-- **Tests:** 20 (BuybackVault.test.js)
+- **Tests:** 26 (BuybackVault.test.js)
 - **Beschreibung:** ETH-zu-IFR Buyback mit automatischem Split
-- **Features:** 50/50 Split (BurnReserve + Treasury), Cooldown (1h), Slippage Protection (5%), 60-Tage-Aktivierungssperre, Guardian Pause
+- **Features:** 50/50 Split (BurnReserve + Treasury), Cooldown (1h), Slippage Protection (5%), 60-Tage-Aktivierungssperre, Guardian Pause, transferOwnership
 
 ### 5. BurnReserve — [x] FERTIG
 - **Pfad:** `contracts/burnreserve/BurnReserve.sol`
-- **Tests:** 21 (BurnReserve.test.js)
+- **Tests:** 27 (BurnReserve.test.js)
 - **Beschreibung:** Permanentes Token-Burning mit Tracking
-- **Features:** deposit(), burn(), burnAll(), totalBurned-Zaehler, ERC20Burnable (totalSupply sinkt), Owner + Guardian Auth
+- **Features:** deposit(), burn(), burnAll(), totalBurned-Zaehler, ERC20Burnable (totalSupply sinkt), Owner + Guardian Auth, transferOwnership
 
 ### 6. Governance — [x] FERTIG
 - **Pfad:** `contracts/governance/Governance.sol`
@@ -220,6 +221,8 @@ inferno/
 
 | Datum | Aenderung |
 |-------|-----------|
+| 2026-02-28 | Redeploy: LiquidityReserve/BuybackVault/BurnReserve v2 auf Sepolia (transferOwnership Upgrade), Ownership → Governance, feeExempt Proposals #7-9 queued |
+| 2026-02-28 | transferOwnership: +18 Tests (LR 36→42, BV 20→26, BR 21→27), immutable owner → mutable + transferOwnership() |
 | 2026-02-26 | PRESS_KIT.md: Press Kit (112 Zeilen, Key Facts, Token-Allokation, Roadmap, Links, Medien) |
 | 2026-02-26 | GITHUB_SECRETS.md: GitHub Actions Secrets Dokumentation (Pflicht + Optional, Workflows, Environments) |
 | 2026-02-26 | CHANGELOG v0.1.0: [Unreleased] → [v0.1.0], git tag v0.1.0 erstellt |

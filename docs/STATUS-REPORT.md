@@ -1,8 +1,7 @@
 # IFR Project Status Report
 
-**Stand:** 26. Februar 2026
+**Stand:** 28. Februar 2026
 **Branch:** `main`
-**Letzter Commit:** `991ac9d2` — fix: consistency check — stale test counts
 **Modell:** Community Fair Launch (CFLM) — kein Presale
 **Ticker:** $IFR
 **Status:** 10 On-Chain Components deployed + verified auf Sepolia | 414 Tests | 7 Apps
@@ -16,10 +15,10 @@
 | # | Contract | Adresse | Status |
 |---|----------|---------|--------|
 | 1 | InfernoToken | `0x3Bd71947F288d1dd8B21129B1bE4FF16EDd5d1F4` | Verified |
-| 2 | LiquidityReserve | `0xF7E90D0d17f8232365186AA085D26eaEfAf011aF` | Verified |
+| 2 | LiquidityReserve (v2) | `0x344720eA0cd1654e2bDB41ecC1cCb11eD60f1957` | Verified |
 | 3 | Vesting | `0xa710f9FE7bf42981E60BE2Fbe7D87Fb3541a3F8B` | Verified |
-| 4 | BuybackVault | `0xC8ABb9039BEd24f4dBf5Cff09699877D81f0D63C` | Verified |
-| 5 | BurnReserve | `0x6D4582FCac792FD3880e252fC0a585A0c1823e80` | Verified |
+| 4 | BuybackVault (v2) | `0x2E61b720c220ce85dA24b05a476903Ec709Cb68c` | Verified |
+| 5 | BurnReserve (v2) | `0xB9FbE5dB44EEce77A69C8F09e9E0eE2E4F745D75` | Verified |
 | 6 | Governance | `0x6050b22E4EAF3f414d1155fBaF30B868E0107017` | Verified |
 | 7 | IFRLock | `0x0Cab0A9440643128540222acC6eF5028736675d3` | Verified |
 | 8 | PartnerVault (v2) | `0x5F12C0bC616e9Ca347D48C33266aA8fe98490A39` | Verified |
@@ -27,7 +26,7 @@
 | 10 | LP Pair (IFR/WETH) | `0x2252e8bBDE0E50CD372748aC233A99C08627d9c7` | Factory |
 
 **Deployer:** `0x5Ecc668eab04C5bee81b5c7242e1077c946dE406`
-**Ownership:** InfernoToken → Governance. LiquidityReserve, BuybackVault, BurnReserve → Deployer (transferOwnership hinzugefuegt, Sepolia-Instanzen pre-upgrade). Mainnet: alle 4 an Governance transferieren.
+**Ownership:** InfernoToken, LiquidityReserve (v2), BuybackVault (v2), BurnReserve (v2) → Governance. Alle 4 Core-Contracts unter Governance-Kontrolle.
 
 ---
 
@@ -118,6 +117,9 @@
 | 4 | transferOwnership(LiquidityReserve) | **Cancelled** (immutable owner) |
 | 5 | transferOwnership(BuybackVault) | **Cancelled** (immutable owner) |
 | 6 | transferOwnership(BurnReserve) | **Cancelled** (immutable owner) |
+| 7 | setFeeExempt(LiquidityReserve v2) | **Pending** (ETA 2026-03-02) |
+| 8 | setFeeExempt(BuybackVault v2) | **Pending** (ETA 2026-03-02) |
+| 9 | setFeeExempt(BurnReserve v2) | **Pending** (ETA 2026-03-02) |
 
 ---
 
