@@ -15,7 +15,7 @@ interface IERC20Burnable {
 ///         Tokens sent here via transfer (from BuybackVault etc.) accumulate
 ///         until guardian or owner triggers burn(), reducing totalSupply.
 contract BurnReserve {
-    address public immutable owner;
+    address public owner;
     address public guardian;
     IERC20 public immutable token;
 
@@ -24,6 +24,7 @@ contract BurnReserve {
     event Deposited(address indexed from, uint256 amount);
     event Burned(uint256 amount, uint256 newTotalBurned);
     event GuardianUpdated(address indexed newGuardian);
+    event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
 
     modifier onlyOwnerOrGuardian() {
         require(msg.sender == owner || msg.sender == guardian, "not authorized");
@@ -88,5 +89,14 @@ contract BurnReserve {
         require(_guardian != address(0), "guardian=0");
         guardian = _guardian;
         emit GuardianUpdated(_guardian);
+    }
+
+    /// @notice Transfer ownership to a new address
+    /// @param newOwner Address of the new owner
+    function transferOwnership(address newOwner) external onlyOwner {
+        require(newOwner != address(0), "newOwner=0");
+        address old = owner;
+        owner = newOwner;
+        emit OwnershipTransferred(old, newOwner);
     }
 }

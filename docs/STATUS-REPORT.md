@@ -5,7 +5,7 @@
 **Letzter Commit:** `991ac9d2` — fix: consistency check — stale test counts
 **Modell:** Community Fair Launch (CFLM) — kein Presale
 **Ticker:** $IFR
-**Status:** 10 On-Chain Components deployed + verified auf Sepolia | 396 Tests | 7 Apps
+**Status:** 10 On-Chain Components deployed + verified auf Sepolia | 414 Tests | 7 Apps
 
 ---
 
@@ -27,7 +27,7 @@
 | 10 | LP Pair (IFR/WETH) | `0x2252e8bBDE0E50CD372748aC233A99C08627d9c7` | Factory |
 
 **Deployer:** `0x5Ecc668eab04C5bee81b5c7242e1077c946dE406`
-**Ownership:** InfernoToken → Governance. LiquidityReserve, BuybackVault, BurnReserve → Deployer (immutable owner, fuer Mainnet: Governance als Constructor-Owner deployen).
+**Ownership:** InfernoToken → Governance. LiquidityReserve, BuybackVault, BurnReserve → Deployer (transferOwnership hinzugefuegt, Sepolia-Instanzen pre-upgrade). Mainnet: alle 4 an Governance transferieren.
 
 ---
 
@@ -35,21 +35,21 @@
 
 | Bereich | Tests | Framework |
 |---------|-------|-----------|
-| **Smart Contracts** | **321** | Hardhat + Chai + Waffle |
+| **Smart Contracts** | **339** | Hardhat + Chai + Waffle |
 | Creator Gateway | 32 | Jest + ts-jest + supertest |
 | Points Backend | 35 | tsx runner |
 | Benefits Network | 8 | Jest |
-| **Gesamt** | **396** | |
+| **Gesamt** | **414** | |
 
-### Contract Tests (321 — 9 Suites)
+### Contract Tests (339 — 9 Suites)
 
 | Suite | Tests | Beschreibung |
 |-------|-------|-------------|
 | InfernoToken | 22 | Deployment, fee math, exemptions, owner functions, edge cases |
-| LiquidityReserve | 36 | Lock period, staged withdrawal, pause, period limits, edge cases |
+| LiquidityReserve | 42 | Lock period, staged withdrawal, pause, period limits, transferOwnership, edge cases |
 | Vesting | 21 | Cliff, linear release, access control, pause, constructor, edge cases |
-| BuybackVault | 20 | Deposit, buyback split, cooldown, slippage, activation delay, edge cases |
-| BurnReserve | 21 | Deposit, burn, burnAll, tracking, guardian auth |
+| BuybackVault | 26 | Deposit, buyback split, cooldown, slippage, activation delay, transferOwnership, edge cases |
+| BurnReserve | 27 | Deposit, burn, burnAll, tracking, guardian auth, transferOwnership |
 | Governance | 36 | Propose, execute, cancel, self-governance, integration |
 | IFRLock | 37 | Lock, unlock, re-lock, isLocked, lockType, fee-exempt, pause, edge cases |
 | PartnerVault | 95 | Partners, milestones, rewards, vesting, claims, authorizedCaller, anti-double-count, algo throttle, integration |
@@ -127,7 +127,7 @@
 |-------|--------|
 | Slither v0.11.5 | **PASS** — 0 High/Critical, 15 Fixes, 36 akzeptiert |
 | solidity-coverage | **99% Stmts, 91% Branch** |
-| 321 Contract Tests | **PASS** — 0 Failures |
+| 339 Contract Tests | **PASS** — 0 Failures |
 | Governance Lifecycle | **PASS** — Proposal #0 + #1 executed via 48h Timelock |
 | Third-party Audit | **Offen** — empfohlen vor Mainnet |
 

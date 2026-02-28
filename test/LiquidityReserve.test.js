@@ -330,4 +330,43 @@ describe("LiquidityReserve", function () {
       ).to.be.revertedWith("guardian=0");
     });
   });
+
+  describe("transferOwnership", function () {
+    it("owner can transfer ownership", async () => {
+      await reserve.transferOwnership(user.address);
+      expect(await reserve.owner()).to.equal(user.address);
+    });
+
+    it("emits OwnershipTransferred event", async () => {
+      await expect(reserve.transferOwnership(user.address))
+        .to.emit(reserve, "OwnershipTransferred")
+        .withArgs(owner.address, user.address);
+    });
+
+    it("new owner can call onlyOwner functions", async () => {
+      await reserve.transferOwnership(user.address);
+      await expect(
+        reserve.connect(user).setGuardian(recipient.address)
+      ).to.emit(reserve, "GuardianUpdated").withArgs(recipient.address);
+    });
+
+    it("old owner is rejected after transfer", async () => {
+      await reserve.transferOwnership(user.address);
+      await expect(
+        reserve.setGuardian(recipient.address)
+      ).to.be.revertedWith("not owner");
+    });
+
+    it("reverts for non-owner", async () => {
+      await expect(
+        reserve.connect(user).transferOwnership(user.address)
+      ).to.be.revertedWith("not owner");
+    });
+
+    it("reverts with zero address", async () => {
+      await expect(
+        reserve.transferOwnership(ethers.constants.AddressZero)
+      ).to.be.revertedWith("newOwner=0");
+    });
+  });
 });

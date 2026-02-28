@@ -22,7 +22,7 @@ interface IRouter {
 /// @notice Receives ETH (from pool fees), swaps to IFR via Uniswap V2, splits 50/50 between
 ///         burn reserve and treasury. 60-day activation delay. Owner-only execution with cooldown.
 contract BuybackVault {
-    address public immutable owner;
+    address public owner;
     address public immutable guardian;
 
     IERC20 public immutable token;
@@ -46,6 +46,7 @@ contract BuybackVault {
     event Paused(address indexed account);
     event Unpaused(address indexed account);
     event ParamsUpdated(uint256 burnShareBps, uint256 cooldown, uint256 slippageBps);
+    event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
 
     modifier onlyOwner() {
         require(msg.sender == owner, "not owner");
@@ -168,6 +169,15 @@ contract BuybackVault {
         router = IRouter(_router);
         treasury = _treasury;
         emit ParamsUpdated(_burnShareBps, _cooldown, _slippageBps);
+    }
+
+    /// @notice Transfer ownership to a new address
+    /// @param newOwner Address of the new owner
+    function transferOwnership(address newOwner) external onlyOwner {
+        require(newOwner != address(0), "newOwner=0");
+        address old = owner;
+        owner = newOwner;
+        emit OwnershipTransferred(old, newOwner);
     }
 
     /// @notice Allows the contract to receive ETH directly

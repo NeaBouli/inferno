@@ -209,4 +209,43 @@ describe("BurnReserve", function () {
       ).to.be.revertedWith("guardian=0");
     });
   });
+
+  describe("transferOwnership", function () {
+    it("owner can transfer ownership", async () => {
+      await burnReserve.transferOwnership(user.address);
+      expect(await burnReserve.owner()).to.equal(user.address);
+    });
+
+    it("emits OwnershipTransferred event", async () => {
+      await expect(burnReserve.transferOwnership(user.address))
+        .to.emit(burnReserve, "OwnershipTransferred")
+        .withArgs(owner.address, user.address);
+    });
+
+    it("new owner can call onlyOwner functions", async () => {
+      await burnReserve.transferOwnership(user.address);
+      await expect(
+        burnReserve.connect(user).setGuardian(guardian.address)
+      ).to.emit(burnReserve, "GuardianUpdated").withArgs(guardian.address);
+    });
+
+    it("old owner is rejected after transfer", async () => {
+      await burnReserve.transferOwnership(user.address);
+      await expect(
+        burnReserve.setGuardian(user.address)
+      ).to.be.revertedWith("not owner");
+    });
+
+    it("reverts for non-owner", async () => {
+      await expect(
+        burnReserve.connect(user).transferOwnership(user.address)
+      ).to.be.revertedWith("not owner");
+    });
+
+    it("reverts with zero address", async () => {
+      await expect(
+        burnReserve.transferOwnership(ethers.constants.AddressZero)
+      ).to.be.revertedWith("newOwner=0");
+    });
+  });
 });

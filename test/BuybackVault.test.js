@@ -214,4 +214,43 @@ describe("BuybackVault", function () {
       expect(activationTime).to.be.gt(0);
     });
   });
+
+  describe("transferOwnership", function () {
+    it("owner can transfer ownership", async () => {
+      await Vault.transferOwnership(user.address);
+      expect(await Vault.owner()).to.equal(user.address);
+    });
+
+    it("emits OwnershipTransferred event", async () => {
+      await expect(Vault.transferOwnership(user.address))
+        .to.emit(Vault, "OwnershipTransferred")
+        .withArgs(owner.address, user.address);
+    });
+
+    it("new owner can call onlyOwner functions", async () => {
+      await Vault.transferOwnership(user.address);
+      await expect(
+        Vault.connect(user).setParams(5000, 3600, 500, Router.address, treasury.address)
+      ).to.emit(Vault, "ParamsUpdated");
+    });
+
+    it("old owner is rejected after transfer", async () => {
+      await Vault.transferOwnership(user.address);
+      await expect(
+        Vault.setParams(5000, 3600, 500, Router.address, treasury.address)
+      ).to.be.revertedWith("not owner");
+    });
+
+    it("reverts for non-owner", async () => {
+      await expect(
+        Vault.connect(user).transferOwnership(user.address)
+      ).to.be.revertedWith("not owner");
+    });
+
+    it("reverts with zero address", async () => {
+      await expect(
+        Vault.transferOwnership(ethers.constants.AddressZero)
+      ).to.be.revertedWith("newOwner=0");
+    });
+  });
 });
