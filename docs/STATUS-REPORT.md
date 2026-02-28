@@ -27,7 +27,7 @@
 | 10 | LP Pair (IFR/WETH) | `0x2252e8bBDE0E50CD372748aC233A99C08627d9c7` | Factory |
 
 **Deployer:** `0x5Ecc668eab04C5bee81b5c7242e1077c946dE406`
-**Ownership:** Transferiert an Governance (Timelock, 48h Delay)
+**Ownership:** InfernoToken → Governance. LiquidityReserve, BuybackVault, BurnReserve → Deployer (immutable owner, fuer Mainnet: Governance als Constructor-Owner deployen).
 
 ---
 
@@ -115,6 +115,9 @@
 | 1 | setFeeExempt(IFRLock) | **Executed** (2026-02-22) |
 | 2 | setFeeExempt(PartnerVault v1) | **Cancelled** (v1 deprecated) |
 | 3 | setFeeExempt(PartnerVault v2) | **Executed** (2026-02-26) — TX 0x3f28690a...57de6e8 |
+| 4 | transferOwnership(LiquidityReserve) | **Cancelled** (immutable owner) |
+| 5 | transferOwnership(BuybackVault) | **Cancelled** (immutable owner) |
+| 6 | transferOwnership(BurnReserve) | **Cancelled** (immutable owner) |
 
 ---
 

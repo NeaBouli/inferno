@@ -15,11 +15,9 @@ Diese Punkte muessen ZWINGEND vor Mainnet erledigt sein:
 - [ ] LP Lock Link auf Landing Page + Wiki
 
 ### Ownership Transfer → Governance
-- [ ] LiquidityReserve.transferOwnership(timelockAddress)
-- [ ] BuybackVault.transferOwnership(timelockAddress)
-- [ ] BurnReserve.transferOwnership(timelockAddress)
-- [ ] Alle 3 via Governance Proposals (je 48h Timelock)
-- [ ] Etherscan-Verifizierung fuer alle 3
+- ⚠️ LiquidityReserve, BuybackVault, BurnReserve haben `immutable owner` — kein `transferOwnership` moeglich
+- [ ] **Mainnet:** Diese 3 Contracts mit Governance-Adresse als Constructor-Owner deployen
+- [ ] InfernoToken.transferOwnership(timelockAddress) — wie auf Sepolia
 
 ### Deployer Wallet
 - [ ] Deployer Wallet Treasury-Anteil an Governance Treasury transferieren
