@@ -236,7 +236,7 @@ Inferno ($IFR) ist ein **deflationärer ERC-20 Utility-Token** auf Ethereum. Jed
 
 10. **Mainnet Deployment** — gleiche Scripts wie Sepolia
 11. **LP Pairing** auf Uniswap V2
-12. **Ownership Transfer** an Governance
+12. **Ownership Transfer** — InfernoToken an Governance (LiquidityReserve/BuybackVault/BurnReserve: immutable owner, mit Governance als Constructor-Owner deployen)
 13. **Contract Verification** auf Etherscan
 
 #### Nach Launch
