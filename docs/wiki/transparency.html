@@ -461,25 +461,25 @@
             <td><span class="status-ok">OK</span></td>
           </tr>
           <tr>
-            <td>LiquidityReserve</td>
-            <td class="address"><a href="https://sepolia.etherscan.io/address/0x5Ecc668eab04C5bee81b5c7242e1077c946dE406">0x5Ecc...E406</a> (Deployer)</td>
-            <td><span class="status-pending">Proposal #4 (ETA 28.02.)</span></td>
+            <td>LiquidityReserve v2</td>
+            <td class="address"><a href="https://sepolia.etherscan.io/address/0x6050b22E4EAF3f414d1155fBaF30B868E0107017">0x6050...0017</a> (Governance)</td>
+            <td><span class="status-ok">OK</span></td>
           </tr>
           <tr>
-            <td>BuybackVault</td>
-            <td class="address"><a href="https://sepolia.etherscan.io/address/0x5Ecc668eab04C5bee81b5c7242e1077c946dE406">0x5Ecc...E406</a> (Deployer)</td>
-            <td><span class="status-pending">Proposal #5 (ETA 28.02.)</span></td>
+            <td>BuybackVault v2</td>
+            <td class="address"><a href="https://sepolia.etherscan.io/address/0x6050b22E4EAF3f414d1155fBaF30B868E0107017">0x6050...0017</a> (Governance)</td>
+            <td><span class="status-ok">OK</span></td>
           </tr>
           <tr>
-            <td>BurnReserve</td>
-            <td class="address"><a href="https://sepolia.etherscan.io/address/0x5Ecc668eab04C5bee81b5c7242e1077c946dE406">0x5Ecc...E406</a> (Deployer)</td>
-            <td><span class="status-pending">Proposal #6 (ETA 28.02.)</span></td>
+            <td>BurnReserve v2</td>
+            <td class="address"><a href="https://sepolia.etherscan.io/address/0x6050b22E4EAF3f414d1155fBaF30B868E0107017">0x6050...0017</a> (Governance)</td>
+            <td><span class="status-ok">OK</span></td>
           </tr>
         </tbody>
       </table>
 
-      <div class="callout callout-yellow">
-        <p><strong>Ownership Transfer Scheduled:</strong> Governance Proposals #4, #5, #6 have been submitted. After the 48-hour timelock (ETA: 28 Feb 2026 ~08:07 CET), LiquidityReserve, BuybackVault, and BurnReserve ownership will transfer to the Governance contract.</p>
+      <div class="callout callout-green">
+        <p><strong>Ownership Transfer Complete:</strong> Proposals #4&ndash;#6 were cancelled (v1 contracts had immutable owner). Contracts were redeployed as v2 with <code>transferOwnership()</code>, ownership transferred to Governance, and Proposals #7&ndash;#9 (feeExempt) executed on 2026-03-02.</p>
       </div>
 
       <!-- ========== CHECK 2: LP Token Ownership ========== -->
