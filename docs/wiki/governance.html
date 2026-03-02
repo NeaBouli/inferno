@@ -897,6 +897,54 @@ await governance.execute(proposalId);</code></pre>
               <span class="address">TX: <code>0x3f28690a04345700cc847bb495efc7bf50c98456be3d10ebf3926237f57de6e8</code></span>
             </td>
           </tr>
+          <tr>
+            <td><strong>#4</strong></td>
+            <td><code>transferOwnership(Governance)</code></td>
+            <td><span style="color: #ef4444; font-weight: 600;">Cancelled</span></td>
+            <td>Target: LiquidityReserve (v1) &mdash; immutable owner, cannot transfer. v2 redeployed instead.</td>
+          </tr>
+          <tr>
+            <td><strong>#5</strong></td>
+            <td><code>transferOwnership(Governance)</code></td>
+            <td><span style="color: #ef4444; font-weight: 600;">Cancelled</span></td>
+            <td>Target: BuybackVault (v1) &mdash; immutable owner, cannot transfer. v2 redeployed instead.</td>
+          </tr>
+          <tr>
+            <td><strong>#6</strong></td>
+            <td><code>transferOwnership(Governance)</code></td>
+            <td><span style="color: #ef4444; font-weight: 600;">Cancelled</span></td>
+            <td>Target: BurnReserve (v1) &mdash; immutable owner, cannot transfer. v2 redeployed instead.</td>
+          </tr>
+          <tr>
+            <td><strong>#7</strong></td>
+            <td><code>setFeeExempt(0x3447...1957, true)</code></td>
+            <td><span style="color: #22c55e; font-weight: 600;">Executed</span></td>
+            <td>
+              Executed: 2026-03-02<br>
+              Target: InfernoToken &mdash; Fee exemption for LiquidityReserve v2<br>
+              <span class="address">TX: <code>0x7b54a77571fdcdd0961f100e45cc53621360cfacc80d8fdb8fe161e7937c8a25</code></span>
+            </td>
+          </tr>
+          <tr>
+            <td><strong>#8</strong></td>
+            <td><code>setFeeExempt(0x2E61...b68c, true)</code></td>
+            <td><span style="color: #22c55e; font-weight: 600;">Executed</span></td>
+            <td>
+              Executed: 2026-03-02<br>
+              Target: InfernoToken &mdash; Fee exemption for BuybackVault v2<br>
+              <span class="address">TX: <code>0xd43d40aa9dd88c3277c0272fc823fcc7445e2b7204d11e49f58c3bda997e686e</code></span>
+            </td>
+          </tr>
+          <tr>
+            <td><strong>#9</strong></td>
+            <td><code>setFeeExempt(0xB9Fb...D75, true)</code></td>
+            <td><span style="color: #22c55e; font-weight: 600;">Executed</span></td>
+            <td>
+              Executed: 2026-03-02<br>
+              Target: InfernoToken &mdash; Fee exemption for BurnReserve v2<br>
+              <span class="address">TX: <code>0x9d51bf49d8727c46db0491cedcb60a98979d94f4699623798189454dfb48bc18</code></span>
+            </td>
+          </tr>
         </tbody>
       </table>
 
