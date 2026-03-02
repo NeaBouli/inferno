@@ -47,7 +47,7 @@ Diese Punkte muessen ZWINGEND vor Mainnet erledigt sein:
 | solidity-coverage: 99% Stmts, 91% Branch | Done |
 | LiquidityReserve/BuybackVault/BurnReserve v2 redeployed (transferOwnership) | Done |
 | Ownership v2 → Governance (direct transfer) | Done |
-| feeExempt Proposals #7-9 queued (ETA 2026-03-02) | Pending |
+| feeExempt Proposals #7-9 executed (2026-03-02) | Done |
 
 ---
 
