@@ -1,0 +1,107 @@
+[
+  {
+    "path": "docs/CHANGELOG.md",
+    "mtime": "2025-10-10T23:50:05.971Z",
+    "size": 0
+  },
+  {
+    "path": "docs/HOOK_TEST.md",
+    "mtime": "2025-10-10T23:50:05.971Z",
+    "size": 21
+  },
+  {
+    "path": "docs/HOOK_TEST2.md",
+    "mtime": "2025-10-10T23:50:05.972Z",
+    "size": 24
+  },
+  {
+    "path": "docs/HOOK_TEST3.md",
+    "mtime": "2025-10-10T23:50:05.969Z",
+    "size": 42
+  },
+  {
+    "path": "docs/HOOK_TEST4.md",
+    "mtime": "2025-10-10T23:50:05.981Z",
+    "size": 21
+  },
+  {
+    "path": "docs/HOOK_TEST5.md",
+    "mtime": "2025-10-10T23:50:05.977Z",
+    "size": 22
+  },
+  {
+    "path": "docs/HOOK_TEST6.md",
+    "mtime": "2025-10-10T23:50:05.971Z",
+    "size": 22
+  },
+  {
+    "path": "docs/HOOK_TEST7.md",
+    "mtime": "2025-10-10T23:50:05.970Z",
+    "size": 22
+  },
+  {
+    "path": "docs/HOOK_TEST8.md",
+    "mtime": "2025-10-10T23:50:05.976Z",
+    "size": 44
+  },
+  {
+    "path": "docs/KNOWN-ISSUES.md",
+    "mtime": "2025-10-10T23:50:05.976Z",
+    "size": 1572
+  },
+  {
+    "path": "docs/PATCH-GUIDELINES.md",
+    "mtime": "2025-10-10T23:50:05.980Z",
+    "size": 0
+  },
+  {
+    "path": "docs/PROJECT-SUMMARY.md",
+    "mtime": "2025-10-10T23:50:05.969Z",
+    "size": 0
+  },
+  {
+    "path": "docs/README.md",
+    "mtime": "2025-10-10T23:50:05.977Z",
+    "size": 2064
+  },
+  {
+    "path": "docs/WHITEPAPER.md",
+    "mtime": "2025-10-10T23:50:05.982Z",
+    "size": 3918
+  },
+  {
+    "path": "docs/WHITEPAPER_EN.md",
+    "mtime": "2025-10-10T23:50:05.969Z",
+    "size": 3738
+  },
+  {
+    "path": "docs/_autogen/tree.md",
+    "mtime": "2025-10-10T23:50:05.967Z",
+    "size": 405
+  },
+  {
+    "path": "docs/_index.md",
+    "mtime": "2025-10-10T23:50:05.979Z",
+    "size": 416
+  },
+  {
+    "path": "docs/reports/dev5-buybackvault.md",
+    "mtime": "2025-10-10T23:50:05.980Z",
+    "size": 0
+  },
+  {
+    "path": "reports/docs-status.md",
+    "mtime": "2025-10-10T23:50:05.988Z",
+    "size": 800
+  },
+  {
+    "path": "reports/docs-watchdog-report.md",
+    "mtime": "2025-10-10T23:50:05.987Z",
+    "size": 68
+  },
+  {
+    "path": "reports/monthly/docs-monthly-report-2025-10.md",
+    "mtime": "2025-10-10T23:50:05.989Z",
+    "size": 2987
+  }
+]

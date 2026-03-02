@@ -936,7 +936,7 @@
           <div class="stat-label">Initial supply</div>
         </div>
         <div class="stat-card">
-          <div class="stat-value">10</div>
+          <div class="stat-value">13</div>
           <div class="stat-label">On-chain components</div>
         </div>
         <div class="stat-card">
@@ -1397,7 +1397,7 @@ if (isLocked) {
         <div class="trust-check">&check;</div>
         <div>
           <h4>Testnet Verified</h4>
-          <p>All 10 on-chain components (9 repo contracts + 1 Uniswap V2 LP Pair) deployed and verified on Sepolia. Full protocol smoke test passed: fees, burns, governance lifecycle.</p>
+          <p>All 13 on-chain components (9 repo contracts + 3 v2 upgrades + 1 Uniswap V2 LP Pair) deployed and verified on Sepolia. Full protocol smoke test passed: fees, burns, governance lifecycle.</p>
         </div>
       </div>
     </div>
@@ -1548,12 +1548,12 @@ if (isLocked) {
 
       <div class="faq-item">
         <button class="faq-question"><span>How secure is the protocol?</span><span class="faq-icon">+</span></button>
-        <div class="faq-answer"><div class="faq-answer-inner">The IFR protocol has been tested and verified through multiple layers of security analysis. Slither static analysis found 0 high or critical findings across all 9 contracts. An independent ChatGPT audit scored 7 out of 7 areas as PASS. There are 321 automated smart contract tests covering 99% of all code statements and 91% of all code branches.<br><br>All contracts use battle-tested OpenZeppelin v5 base contracts. The governance timelock enforces a 48-hour delay on all parameter changes. A Guardian role can emergency-cancel suspicious proposals. A professional third-party audit (Code4rena, Sherlock, or Cyfrin) is planned before mainnet launch.</div></div>
+        <div class="faq-answer"><div class="faq-answer-inner">The IFR protocol has been tested and verified through multiple layers of security analysis. Slither static analysis found 0 high or critical findings across all 9 contracts. An independent ChatGPT audit scored 7 out of 7 areas as PASS. There are 339 automated smart contract tests covering 99% of all code statements and 91% of all code branches.<br><br>All contracts use battle-tested OpenZeppelin v5 base contracts. The governance timelock enforces a 48-hour delay on all parameter changes. A Guardian role can emergency-cancel suspicious proposals. A professional third-party audit (Code4rena, Sherlock, or Cyfrin) is planned before mainnet launch.</div></div>
       </div>
 
       <div class="faq-item">
         <button class="faq-question"><span>What happens at mainnet launch?</span><span class="faq-icon">+</span></button>
-        <div class="faq-answer"><div class="faq-answer-inner">Before mainnet deployment, several critical steps must be completed: A professional third-party security audit by an established firm (Code4rena, Sherlock, or Cyfrin). A Gnosis Safe 4-of-7 multisig will be set up for treasury management. All contract parameters will be finalized and governance-approved. The deployment itself includes all 10 contracts, Uniswap V2 LP creation, Etherscan verification, and ownership transfer to the Governance timelock.<br><br>The Sepolia testnet deployment will remain active in parallel so developers and partners can continue testing. A public announcement will precede the mainnet launch. LP tokens will be locked or burned to prevent rug pulls. The full checklist is publicly available in the project documentation.</div></div>
+        <div class="faq-answer"><div class="faq-answer-inner">Before mainnet deployment, several critical steps must be completed: A professional third-party security audit by an established firm (Code4rena, Sherlock, or Cyfrin). A Gnosis Safe 4-of-7 multisig will be set up for treasury management. All contract parameters will be finalized and governance-approved. The deployment itself includes all contracts, Uniswap V2 LP creation, Etherscan verification, and ownership transfer to the Governance timelock.<br><br>The Sepolia testnet deployment will remain active in parallel so developers and partners can continue testing. A public announcement will precede the mainnet launch. LP tokens will be locked or burned to prevent rug pulls. The full checklist is publicly available in the project documentation.</div></div>
       </div>
 
       <div class="faq-item">
@@ -1587,7 +1587,7 @@ if (isLocked) {
         <div class="roadmap-dot done">&check;</div>
         <div class="roadmap-body">
           <h4>Phase 1 &mdash; Foundation <span class="badge-done">Complete</span></h4>
-          <p>Smart Contract Development (10 contracts, 339 tests). Security Audit (Slither, 0 high/critical). Testnet Deployment (Sepolia, all verified). Governance Dashboard deployed.</p>
+          <p>Smart Contract Development (13 contracts, 339 tests). Security Audit (Slither, 0 high/critical). Testnet Deployment (Sepolia, all verified). Governance Dashboard deployed.</p>
         </div>
       </div>
       <div class="roadmap-item">

@@ -4,13 +4,13 @@
 **Branch:** `main`
 **Modell:** Community Fair Launch (CFLM) — kein Presale
 **Ticker:** $IFR
-**Status:** 10 On-Chain Components deployed + verified auf Sepolia | 414 Tests | 7 Apps
+**Status:** 13 On-Chain Components deployed + verified auf Sepolia | 414 Tests | 7 Apps
 
 ---
 
 ## On-Chain (Sepolia Testnet)
 
-10 on-chain components (9 repo contracts + 1 Uniswap V2 LP Pair). Alle verified auf Etherscan. Ownership an Governance (48h Timelock) transferiert.
+13 on-chain components (9 repo contracts + 3 v2 upgrades + 1 Uniswap V2 LP Pair). Alle verified auf Etherscan. Ownership an Governance (48h Timelock) transferiert.
 
 | # | Contract | Adresse | Status |
 |---|----------|---------|--------|
@@ -163,7 +163,7 @@
 | 3 | Multisig einrichten (Gnosis Safe 4-of-7) | Offen |
 | 4 | Community + Team Adressen festlegen | Offen |
 | 5 | LP Token Lock/Burn | Offen |
-| 6 | Mainnet Deployment (10 Contracts + LP + Verify + Ownership Transfer) | Offen |
+| 6 | Mainnet Deployment (Contracts + LP + Verify + Ownership Transfer) | Offen |
 
 ---
 
