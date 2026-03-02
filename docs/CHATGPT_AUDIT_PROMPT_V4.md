@@ -1,6 +1,6 @@
 # ChatGPT Independent Audit Prompt — V4
 
-Stand: 26. Februar 2026 | 10 Contracts | 396 Tests | 91% Branch Coverage
+Stand: 03. Maerz 2026 | 13 Contracts | 414 Tests | 91% Branch Coverage
 
 ## Anleitung
 
@@ -58,11 +58,11 @@ Pruefe ob folgende Zahlen in allen Docs konsistent sind:
 
 | Metrik | Soll-Wert |
 |--------|-----------|
-| Contract Tests | 321 |
+| Contract Tests | 339 |
 | Creator Gateway Tests | 32 |
 | Points Backend Tests | 35 |
 | Benefits Network Tests | 8 |
-| Gesamt Tests | 396 |
+| Gesamt Tests | 414 |
 | Branch Coverage | 91% |
 
 **Dateien zu pruefen:**
@@ -112,8 +112,8 @@ Pruefe ob `apps/points-backend/src/routes/voucher.ts` einen GET `/validate/:nonc
 Pruefe ob `docs/CHANGELOG.md` im [Unreleased] Abschnitt die aktuellen Zahlen enthaelt:
 
 **PASS-Kriterien:**
-- Contract Test Zaehler erwaehnt (276 → 321 oder 315 → 321)
-- Gesamt-Tests erwaehnt (369 oder 396)
+- Contract Test Zaehler erwaehnt (276 → 339 oder 321 → 339)
+- Gesamt-Tests erwaehnt (396 oder 414)
 - Branch Coverage erwaehnt (91%)
 - Neue Dateien aufgelistet (lockProof.ts, captcha.ts, siwe.test.ts)
 
@@ -121,7 +121,7 @@ Pruefe ob `docs/CHANGELOG.md` im [Unreleased] Abschnitt die aktuellen Zahlen ent
 
 ## Self-Check H: Sepolia Deployment vollstaendig
 
-Pruefe ob `docs/DEPLOYMENTS.md` und `README.md` alle 10 On-Chain Components listen:
+Pruefe ob `docs/DEPLOYMENTS.md` und `README.md` alle 13 On-Chain Components listen:
 
 **PASS-Kriterien:**
 - 10 Adressen gelistet (InfernoToken, LiquidityReserve, Vesting, BuybackVault, BurnReserve, Governance, IFRLock, PartnerVault, FeeRouterV1, LP Pair)

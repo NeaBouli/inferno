@@ -14,13 +14,13 @@
 
 - [x] Governance contract (48h timelock, propose/execute/cancel)
 - [x] IFRLock contract (lock/unlock, isLocked(), multi-app lockType)
-- [x] Sepolia deployment (10 contracts, all verified)
+- [x] Sepolia deployment (13 contracts, all verified)
 - [x] Uniswap V2 LP pairing (IFR/WETH)
 - [x] Ownership transfer to Governance
 - [x] Governance Proposals #0-#3 executed
 - [x] Token Dashboard (React 18 + Vite)
 - [x] Governance Dashboard (React 18 + TS + Tailwind)
-- [x] 321 contract tests, 396 total tests (99% coverage)
+- [x] 339 contract tests, 414 total tests (99% coverage)
 
 ## Phase 3: Ecosystem (Q1-Q2 2026) — IN PROGRESS
 
@@ -34,7 +34,7 @@
 - [x] Lock UI in Token Dashboard (lock/unlock, tier display)
 - [x] Proposal Alerts in Governance Dashboard
 - [x] 14 wiki pages, transparency report, audit prep
-- [ ] Ownership Transfer Proposals #4-#6 execute (Reserve, Buyback, Burn)
+- [x] Ownership Transfer (v2 redeploy + Proposals #7-#9 executed)
 - [ ] LP Token Lock/Burn
 - [ ] Professional security audit (Codearena/Sherlock)
 
@@ -42,7 +42,7 @@
 
 - [ ] Treasury Multisig (Gnosis Safe, 2-of-3 initial)
 - [ ] Community wallet + team beneficiary addresses finalized
-- [ ] Mainnet deploy (10 contracts)
+- [ ] Mainnet deploy (13 contracts)
 - [ ] Mainnet LP pairing + LP burn
 - [ ] Etherscan verification (mainnet)
 - [ ] Ownership transfer to Governance (mainnet)

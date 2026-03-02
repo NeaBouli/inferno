@@ -8,11 +8,11 @@
 
 ## Highlights
 
-Inferno v0.1.0 marks the **first tagged release** of the protocol. All 10 smart contracts are deployed and verified on Sepolia testnet. The full application stack (8 apps) is operational. 396 tests pass across all components.
+Inferno v0.1.0 marks the **first tagged release** of the protocol. All 13 smart contracts are deployed and verified on Sepolia testnet. The full application stack (8 apps) is operational. 414 tests pass across all components.
 
 ### What's Included
 
-**10 Smart Contracts** — all deployed and verified on Sepolia:
+**13 Smart Contracts** — all deployed and verified on Sepolia:
 - InfernoToken (ERC-20, 9 decimals, fee-on-transfer)
 - LiquidityReserve (6-month lock, staged release)
 - Vesting (12-month cliff + 36-month linear)
@@ -34,7 +34,7 @@ Inferno v0.1.0 marks the **first tagged release** of the protocol. All 10 smart 
 - Benefits Network (QR verification, Next.js PWA)
 
 **Testing:**
-- 321 contract tests (Hardhat + Chai)
+- 339 contract tests (Hardhat + Chai)
 - 32 Creator Gateway tests (Jest)
 - 35 Points Backend tests
 - Slither static analysis: 0 high/critical findings
@@ -51,7 +51,8 @@ Inferno v0.1.0 marks the **first tagged release** of the protocol. All 10 smart 
 - Proposal #0: `setFeeExempt` — executed
 - Proposal #1: `setFeeExempt(IFRLock)` — executed
 - Proposal #3: `setFeeExempt(PartnerVault v2)` — executed
-- Proposals #4-#6: Ownership transfer — scheduled
+- Proposals #4-#6: Cancelled (v1 immutable owner, v2 redeployed)
+- Proposals #7-#9: Executed (v2 feeExempt, 2026-03-02)
 
 ### Known Limitations
 

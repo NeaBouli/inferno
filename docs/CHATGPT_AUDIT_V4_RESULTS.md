@@ -14,11 +14,11 @@ Pruefung: Dateien vorhanden, grep auf Schluesselwoerter, Zahlen-Konsistenz.
 | A | Anti-Sybil Middleware | PASS | lockProof.ts (isLocked, fail-closed) + captcha.ts (Turnstile, CAPTCHA_SECRET) |
 | B | Creator Gateway SIWE | PASS | siwe/nonce, siwe/verify, SiweMessage, generateNonce, chainId Check |
 | C | PartnerVault Integration | PASS | 6 Integration Tests (full lifecycle), 109 it() Calls gesamt |
-| D | Test-Zahlen Konsistenz | PASS | 18 Treffer fuer 321/396/91%, 0 stale (276/330/369/85%) |
+| D | Test-Zahlen Konsistenz | PASS | 18 Treffer fuer 339/414/91%, 0 stale (276/321/330/369/85%) |
 | E | AI Copilot Wiki RAG | PASS | wiki-rag.ts, loadWikiDocs(), buildSystemPrompt(), 3 Modi |
 | F | EIP-712 Voucher Validate | PASS | GET /voucher/validate/:nonce, expired/redeemed Check |
-| G | CHANGELOG aktuell | PASS | 321, 396, 91%, lockProof, captcha, siwe alle dokumentiert |
-| H | Sepolia Deployment | PASS | 17 Adress-Matches in DEPLOYMENTS.md (alle 10 Contracts) |
+| G | CHANGELOG aktuell | PASS | 339, 414, 91%, lockProof, captcha, siwe alle dokumentiert |
+| H | Sepolia Deployment | PASS | 17 Adress-Matches in DEPLOYMENTS.md (alle 13 Contracts) |
 
 ## Gesamtergebnis: 8/8 PASS
 
@@ -45,7 +45,7 @@ Pruefung: Dateien vorhanden, grep auf Schluesselwoerter, Zahlen-Konsistenz.
   - create → activate → milestone → lockReward → vest → claim
 
 ### Check D — Zahlen
-- 321/396/91% in: README.md, STATUS-REPORT.md, PROJECT-SUMMARY.md, ONE-PAGER.md, PRESS_KIT.md
+- 339/414/91% in: README.md, STATUS-REPORT.md, PROJECT-SUMMARY.md, ONE-PAGER.md, PRESS_KIT.md
 - 0 stale Zahlen (276/330/369/85%) in den geprueften Dateien
 
 ### Check E — Wiki RAG
@@ -60,13 +60,13 @@ Pruefung: Dateien vorhanden, grep auf Schluesselwoerter, Zahlen-Konsistenz.
 
 ### Check G — CHANGELOG
 - docs/CHANGELOG.md [Unreleased] enthaelt:
-  - 321/396/91% Zahlen
+  - 339/414/91% Zahlen
   - lockProof.ts, captcha.ts
   - SIWE nonce/verify
   - PartnerVault Integration Tests
 
 ### Check H — Deployments
-- docs/DEPLOYMENTS.md enthaelt alle 10 Adressen:
+- docs/DEPLOYMENTS.md enthaelt alle 13 Adressen:
   - 0x3Bd (InfernoToken), 0xF7E9 (LiquidityReserve), 0xa710 (Vesting)
   - 0xC8AB (BuybackVault), 0x6D45 (BurnReserve), 0x6050 (Governance)
   - 0x0Cab (IFRLock), 0x5F12 (PartnerVault), 0x499 (FeeRouterV1)
