@@ -83,9 +83,9 @@
 | 4 | `transferOwnership(Governance)` | LiquidityReserve | 2026-02-28 | — | Cancelled (contract upgraded, re-deploy needed) |
 | 5 | `transferOwnership(Governance)` | BuybackVault | 2026-02-28 | — | Cancelled (contract upgraded, re-deploy needed) |
 | 6 | `transferOwnership(Governance)` | BurnReserve | 2026-02-28 | — | Cancelled (contract upgraded, re-deploy needed) |
-| 7 | `setFeeExempt(LiquidityReserve v2, true)` | InfernoToken | 2026-03-02 | [`0xfc74d2b5...9b9dcb53`](https://sepolia.etherscan.io/tx/0xfc74d2b5f64c20123e1b42ebb483655196d2dd1730a65a249801254b9b9dcb53) | Pending |
-| 8 | `setFeeExempt(BuybackVault v2, true)` | InfernoToken | 2026-03-02 | [`0x3e1aa0c3...bfd1cc67`](https://sepolia.etherscan.io/tx/0x3e1aa0c3c9cbe8f45b35f9c43ed3915a2ce1f5155cf46875446f3dd6bfd1cc67) | Pending |
-| 9 | `setFeeExempt(BurnReserve v2, true)` | InfernoToken | 2026-03-02 | [`0x5ef8fda1...15a24f91`](https://sepolia.etherscan.io/tx/0x5ef8fda12a1fb39ac48476aaf706597ab50853246a672fac0ab5daec15a24f91) | Pending |
+| 7 | `setFeeExempt(LiquidityReserve v2, true)` | InfernoToken | 2026-03-02 | [`0x7b54a775...37c8a25`](https://sepolia.etherscan.io/tx/0x7b54a77571fdcdd0961f100e45cc53621360cfacc80d8fdb8fe161e7937c8a25) | Executed |
+| 8 | `setFeeExempt(BuybackVault v2, true)` | InfernoToken | 2026-03-02 | [`0xd43d40aa...7e686e`](https://sepolia.etherscan.io/tx/0xd43d40aa9dd88c3277c0272fc823fcc7445e2b7204d11e49f58c3bda997e686e) | Executed |
+| 9 | `setFeeExempt(BurnReserve v2, true)` | InfernoToken | 2026-03-02 | [`0x9d51bf49...48bc18`](https://sepolia.etherscan.io/tx/0x9d51bf49d8727c46db0491cedcb60a98979d94f4699623798189454dfb48bc18) | Executed |
 
 ### Post-Deploy Status
 
@@ -100,7 +100,7 @@
 | Router on BuybackVault | **Done** — `0xC532a74256D3Db42D0Bf7a0400fEFDbad7694008` |
 | InfernoToken Ownership to Governance | **Done** — TX `0xa69bf285...d5762e1b` |
 | LiquidityReserve/BuybackVault/BurnReserve v2 Deployed | **Done** — Redeployed with `transferOwnership()`. Ownership transferred to Governance. |
-| feeExempt Proposals #7-9 | **Pending** — ETA 2026-03-02 (48h timelock) |
+| feeExempt Proposals #7-9 Executed | **Done** — LiquidityReserve v2, BuybackVault v2, BurnReserve v2 |
 | Governance Proposal #0 Executed | **Done** — TX [`0x13ff46d8...cbbe982d`](https://sepolia.etherscan.io/tx/0x13ff46d8a113f25b9ab0037ee06d6108c62d0f16e25d28799e4f45a8cbbe982d) |
 | IFRLock Deployed + Verified | **Done** — [`0x0Cab0A94...`](https://sepolia.etherscan.io/address/0x0Cab0A9440643128540222acC6eF5028736675d3) |
 | IFRLock Live Test | **Done** — 8/8 passed (full lock/unlock cycle) |

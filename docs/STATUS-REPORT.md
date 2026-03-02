@@ -117,9 +117,9 @@
 | 4 | transferOwnership(LiquidityReserve) | **Cancelled** (immutable owner) |
 | 5 | transferOwnership(BuybackVault) | **Cancelled** (immutable owner) |
 | 6 | transferOwnership(BurnReserve) | **Cancelled** (immutable owner) |
-| 7 | setFeeExempt(LiquidityReserve v2) | **Pending** (ETA 2026-03-02) |
-| 8 | setFeeExempt(BuybackVault v2) | **Pending** (ETA 2026-03-02) |
-| 9 | setFeeExempt(BurnReserve v2) | **Pending** (ETA 2026-03-02) |
+| 7 | setFeeExempt(LiquidityReserve v2) | **Executed** (2026-03-02) |
+| 8 | setFeeExempt(BuybackVault v2) | **Executed** (2026-03-02) |
+| 9 | setFeeExempt(BurnReserve v2) | **Executed** (2026-03-02) |
 
 ---
 
