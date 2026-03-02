@@ -1,6 +1,6 @@
 # Inferno ($IFR) — On-Chain Transparency Report
 
-Stand: 26. Februar 2026 | Netzwerk: Sepolia Testnet
+Stand: 03. Maerz 2026 | Netzwerk: Sepolia Testnet
 
 Alle Angaben sind on-chain verifizierbar. Script:
 `npx hardhat run scripts/onchain-audit.js --network sepolia`
@@ -15,13 +15,13 @@ Alle Angaben sind on-chain verifizierbar. Script:
 | IFRLock | admin-Pattern (kein Ownable) | OK |
 | PartnerVault | admin-Pattern (Governance) | OK |
 | FeeRouterV1 | admin-Pattern (Governance) | OK |
-| LiquidityReserve | 0x5Ecc668eab04C5bee81b5c7242e1077c946dE406 (Deployer) | ⏳ Proposal #4 scheduled (ETA: 28.02.2026 ~08:07 CET) |
-| BuybackVault | 0x5Ecc668eab04C5bee81b5c7242e1077c946dE406 (Deployer) | ⏳ Proposal #5 scheduled (ETA: 28.02.2026 ~08:07 CET) |
-| BurnReserve | 0x5Ecc668eab04C5bee81b5c7242e1077c946dE406 (Deployer) | ⏳ Proposal #6 scheduled (ETA: 28.02.2026 ~08:07 CET) |
+| LiquidityReserve (v2) | 0x6050b22E4EAF3f414d1155fBaF30B868E0107017 (Governance) | OK — redeployed with transferOwnership, ownership transferred |
+| BuybackVault (v2) | 0x6050b22E4EAF3f414d1155fBaF30B868E0107017 (Governance) | OK — redeployed with transferOwnership, ownership transferred |
+| BurnReserve (v2) | 0x6050b22E4EAF3f414d1155fBaF30B868E0107017 (Governance) | OK — redeployed with transferOwnership, ownership transferred |
 
-> LiquidityReserve, BuybackVault, BurnReserve Ownership Transfer
-> Proposals sind scheduled. Nach 48h Timelock werden alle drei
-> an den Governance Contract uebertragen.
+> Alle Contracts unter Governance-Kontrolle. v1 Proposals #4-6 cancelled
+> (immutable owner). v2 Contracts redeployed (28.02.2026), Ownership
+> direkt bei Deploy an Governance transferiert. feeExempt via Proposals #7-9 (03.03.2026).
 
 **Verifizieren:**
 https://sepolia.etherscan.io/address/0x3Bd71947F288d1dd8B21129B1bE4FF16EDd5d1F4#readContract
@@ -67,10 +67,12 @@ https://sepolia.etherscan.io/address/0xa710f9FE7bf42981E60BE2Fbe7D87Fb3541a3F8B
 
 | Metrik | Wert |
 |--------|------|
-| Adresse | 0xF7E90D0d17f8232365186AA085D26eaEfAf011aF |
-| IFR Balance | 200,000,000 IFR (20% des Supply) |
+| Adresse (v1) | 0xF7E90D0d17f8232365186AA085D26eaEfAf011aF |
+| Adresse (v2) | 0x344720eA0cd1654e2bDB41ecC1cCb11eD60f1957 |
+| v1 IFR Balance | 200,000,000 IFR (20% des Supply, locked) |
+| v2 IFR Balance | 0 IFR (neu deployed, unfunded) |
 
-200M IFR (20%) korrekt in der Reserve.
+200M IFR (20%) in v1 Reserve (locked). v2 wurde mit transferOwnership redeployed.
 
 ---
 
@@ -78,7 +80,7 @@ https://sepolia.etherscan.io/address/0xa710f9FE7bf42981E60BE2Fbe7D87Fb3541a3F8B
 
 | Parameter | Wert |
 |-----------|------|
-| Adresse | 0xC8ABb9039BEd24f4dBf5Cff09699877D81f0D63C |
+| Adresse (v2) | 0x2E61b720c220ce85dA24b05a476903Ec709Cb68c |
 | IFR Balance | 0 IFR (Testnet) |
 | Router | Uniswap V2 Router02 |
 | Slippage | 5% |
@@ -99,7 +101,9 @@ Activation-Datum stellt sicher dass kein vorzeitiger Buyback moeglich ist.
 | BuybackVault | true |
 | BurnReserve | true |
 | PartnerVault v2 | true (executed 26.02.2026, TX 0x3f28690a...57de6e8) |
-| FeeRouterV1 | Geplant (naechster Proposal) |
+| LiquidityReserve v2 | true (executed 03.03.2026, Proposal #7) |
+| BuybackVault v2 | true (executed 03.03.2026, Proposal #8) |
+| BurnReserve v2 | true (executed 03.03.2026, Proposal #9) |
 
 ---
 
@@ -141,12 +145,13 @@ Deflation funktioniert on-chain nachweisbar.
 | # | Action | Prioritaet |
 |---|--------|-----------|
 | 1 | LP Tokens locken/burnen (Unicrypt oder 0xdead) | Kritisch |
-| 2 | LiquidityReserve Ownership an Governance | ⏳ Proposal #4 (ETA 28.02.) |
-| 3 | BuybackVault Ownership an Governance | ⏳ Proposal #5 (ETA 28.02.) |
-| 4 | BurnReserve Ownership an Governance | ⏳ Proposal #6 (ETA 28.02.) |
+| 2 | LiquidityReserve Ownership an Governance | Erledigt (v2 redeployed, 28.02.2026) |
+| 3 | BuybackVault Ownership an Governance | Erledigt (v2 redeployed, 28.02.2026) |
+| 4 | BurnReserve Ownership an Governance | Erledigt (v2 redeployed, 28.02.2026) |
 | 5 | PartnerVault feeExempt setzen (Proposal #3) | Erledigt (26.02.2026) |
-| 6 | Third-party Security Audit | Kritisch |
-| 7 | Gnosis Safe 4-of-7 Multisig | Hoch |
+| 6 | feeExempt v2 Contracts (Proposals #7-9) | Erledigt (03.03.2026) |
+| 7 | Third-party Security Audit | Kritisch |
+| 8 | Gnosis Safe 4-of-7 Multisig | Hoch |
 
 ---
 
@@ -165,4 +170,4 @@ npx hardhat run scripts/onchain-audit.js --network sepolia
 nach Mainnet-Deploy aktualisiert.*
 
 ---
-*Stand: 26. Februar 2026 | Version 1.0*
+*Stand: 03. Maerz 2026 | Version 1.1*
