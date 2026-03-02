@@ -71,7 +71,7 @@
 | "396" in 16 Scope-Dateien | 0 Treffer |
 | "10 on-chain/contracts" in 16 Scope-Dateien | 0 Treffer |
 
-**Hinweis:** Stale Werte (321/396/10) existieren noch in sekundaeren Docs ausserhalb des Scopes (WHITEPAPER.md, PRESS_KIT.md, ONE-PAGER.md, PROJECT-SUMMARY.md, CONTRIBUTING.md, COVERAGE_REPORT.md, AUDIT_BRIEF.md, AUDIT_SUBMISSION.md, TESTNET_GUIDE.md, ROADMAP.md). Diese sind historische oder sekundaere Dokumente und waren nicht Teil dieser Pruefung.
+**Update 2026-03-03:** Alle sekundaeren Docs wurden ebenfalls aktualisiert (commit: docs: update secondary docs). Nur CHANGELOG.md behaelt historische Zahlen (Transitions).
 
 ## Dateien geaendert
 
