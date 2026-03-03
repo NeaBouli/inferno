@@ -311,3 +311,20 @@ All protocol parameter changes flow through the 48h timelock. The guardian (sepa
 ---
 
 *This audit was conducted by Claude Opus 4.6 (Anthropic) and represents a best-effort review. It is NOT a substitute for a professional security audit by a specialized firm. A professional audit is strongly recommended before mainnet deployment.*
+
+---
+
+## Community Audit
+
+This audit was conducted internally by Claude Opus 4.6.
+**Community review is explicitly encouraged.**
+
+### How to Contribute
+- Open a GitHub Issue: [Security Audit Finding template](https://github.com/NeaBouli/inferno/issues/new?template=security-audit.md)
+- Review the contracts in `/contracts/`
+- Reference known issues in this document (W1-W12) to avoid duplicates
+- See [SECURITY.md](../SECURITY.md) for full disclosure policy
+
+### Known Warnings (W1-W12)
+All 12 warnings are documented above.
+Fixes for W1, W2 (Multisig migration) are planned before mainnet.

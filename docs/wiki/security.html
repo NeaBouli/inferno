@@ -603,9 +603,78 @@
       </div>
 
       <!-- ============================================================
-           2. Test Coverage
+           2. Claude Security Audit (Internal)
            ============================================================ -->
-      <h2><span class="section-num">2.</span> Test Coverage</h2>
+      <h2><span class="section-num">2.</span> Claude Security Audit (Internal)</h2>
+
+      <p>
+        All 9 contracts (1727 SLOC) were reviewed line-by-line by <strong>Claude Opus 4.6</strong> across 10 check categories:
+        reentrancy, access control, integer overflow, front-running, DoS, centralization, fee edge cases, timelock bypass, feeExempt manipulation, and owner privileges.
+      </p>
+
+      <div class="callout callout-green">
+        <p>
+          <strong>Result:</strong> 0 FAIL &mdash; 12 WARN &mdash; 78 PASS &mdash;
+          <a href="https://github.com/NeaBouli/inferno/blob/main/docs/SECURITY_AUDIT_CLAUDE.md">Full Report</a>
+        </p>
+      </div>
+
+      <h3>Top Findings (Medium)</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>#</th><th>Contract</th><th>Finding</th><th>Status</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>W1</td>
+              <td>Governance</td>
+              <td><code>setOwner()</code> bypasses timelock &mdash; immediate ownership transfer</td>
+              <td>Multisig planned</td>
+            </tr>
+            <tr>
+              <td>W2</td>
+              <td>Governance</td>
+              <td>Single owner key = single point of failure</td>
+              <td>Multisig planned</td>
+            </tr>
+            <tr>
+              <td>W3</td>
+              <td>BuybackVault</td>
+              <td><code>setParams</code> has no bounds on burnShareBps, slippageBps, cooldown</td>
+              <td>Fix in v3</td>
+            </tr>
+            <tr>
+              <td>W4</td>
+              <td>BuybackVault</td>
+              <td>Uniswap swap MEV-vulnerable (sandwich within slippage tolerance)</td>
+              <td>Flashbots on mainnet</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Community Audit Box -->
+      <div class="callout" style="border-left-color: #e67e22; background: rgba(230,126,34,0.08); margin-top: 30px;">
+        <p style="margin-bottom: 8px;">
+          <strong>Community Audit Open</strong>
+        </p>
+        <p style="margin-bottom: 10px;">
+          All contracts are open source. Security findings welcome via GitHub Issues.
+        </p>
+        <p>
+          <a href="https://github.com/NeaBouli/inferno/issues/new?template=security-audit.md" style="color: #e67e22; font-weight: 600;">Submit a Finding</a>
+          &nbsp;|&nbsp;
+          <a href="https://github.com/NeaBouli/inferno/blob/main/docs/SECURITY_AUDIT_CLAUDE.md" style="color: #e67e22; font-weight: 600;">Read Internal Audit</a>
+          &nbsp;|&nbsp;
+          <a href="https://github.com/NeaBouli/inferno/blob/main/SECURITY.md" style="color: #e67e22; font-weight: 600;">Security Policy</a>
+        </p>
+      </div>
+
+      <!-- ============================================================
+           3. Test Coverage
+           ============================================================ -->
+      <h2><span class="section-num">3.</span> Test Coverage</h2>
 
       <p>
         The project maintains <strong>339 tests</strong> across <strong>9 test suites</strong>, all passing. Tests cover deployment, core logic, edge cases, access control, pause mechanisms, and cross-contract integration.
@@ -770,9 +839,9 @@
       </p>
 
       <!-- ============================================================
-           3. Reentrancy Protection
+           4. Reentrancy Protection
            ============================================================ -->
-      <h2><span class="section-num">3.</span> Reentrancy Protection</h2>
+      <h2><span class="section-num">4.</span> Reentrancy Protection</h2>
 
       <p>
         Every contract that performs external calls is protected against reentrancy attacks through one of two mechanisms: OpenZeppelin's <code>ReentrancyGuard</code> modifier or the Checks-Effects-Interactions (CEI) pattern.
@@ -815,7 +884,7 @@
       <!-- ============================================================
            4. Access Control Matrix
            ============================================================ -->
-      <h2><span class="section-num">4.</span> Access Control Matrix</h2>
+      <h2><span class="section-num">5.</span> Access Control Matrix</h2>
 
       <p>
         The following matrix shows which roles can call which functions on each contract. <strong>Owner</strong> refers to the contract owner (Governance after ownership transfer), <strong>Guardian</strong> is the emergency role, <strong>Anyone</strong> means any external address, and <strong>Self</strong> means the contract calling itself via a governance proposal.
@@ -889,7 +958,7 @@
       <!-- ============================================================
            5. Trust Model
            ============================================================ -->
-      <h2><span class="section-num">5.</span> Trust Model</h2>
+      <h2><span class="section-num">6.</span> Trust Model</h2>
 
       <p>
         Inferno is designed so that no admin can make instant changes &mdash; all actions require a 48-hour public timelock delay and can be cancelled by the Guardian. Multiple safeguards are layered to protect token holders and ensure transparent governance.
@@ -912,7 +981,7 @@
       <!-- ============================================================
            6. Known Limitations
            ============================================================ -->
-      <h2><span class="section-num">6.</span> Known Limitations</h2>
+      <h2><span class="section-num">7.</span> Known Limitations</h2>
 
       <p>
         While the Inferno contracts have been thoroughly tested and analyzed, the following limitations should be understood by users, integrators, and auditors.
