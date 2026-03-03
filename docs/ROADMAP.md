@@ -13,10 +13,10 @@
 - [x] PartnerVault (549 LOC, 95 tests, milestone unlocking + creator rewards)
 - [x] FeeRouterV1 (EIP-712 vouchers, protocol fee routing)
 - [x] v2 upgrades: LiquidityReserve, BuybackVault, BurnReserve (transferOwnership)
-- [x] 13 on-chain components deployed on Sepolia (9 repo + 3 v2 + LP Pair)
+- [x] 14 on-chain components deployed on Sepolia (9 repo + 3 v2 + LP Pair + BootstrapVault)
 
 ### Testing & Security
-- [x] 339 contract tests, 414 total (+ 32 Creator Gateway + 35 Points + 8 Benefits)
+- [x] 361 contract tests, 436 total (+ 32 Creator Gateway + 35 Points + 8 Benefits)
 - [x] 91% branch coverage, 99% statement coverage
 - [x] Slither static analysis: 0 high/critical findings
 - [x] Claude Security Audit: 0 FAIL, 12 WARN, 78 PASS
@@ -53,7 +53,7 @@
 - [ ] Governance owner → Multisig
 - [ ] Community wallet + team beneficiary addresses finalized
 - [ ] Professional security audit (Code4rena / Sherlock)
-- [ ] Mainnet deploy (all 13 contracts)
+- [ ] Mainnet deploy (all 14 contracts)
 - [ ] Mainnet Uniswap V2 LP pairing (IFR/WETH)
 - [ ] Etherscan verification (mainnet)
 - [ ] Mainnet ownership transfer to Governance

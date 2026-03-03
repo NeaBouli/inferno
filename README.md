@@ -43,7 +43,7 @@ No presale, no VC, no IDO. Direct Uniswap V2 listing.
 Team allocation (15%) is locked in a vesting contract for 4 years
 with a 1-year cliff. See [Fair Launch Statement](docs/FAIR_LAUNCH.md).
 
-## Smart Contracts (13)
+## Smart Contracts (14)
 
 | Contract | Sepolia Address |
 |----------|----------------|
@@ -77,7 +77,7 @@ The ecosystem is open and permissionless. Any product can integrate IFR Lock.
 
 ## Testing & Security
 
-- 414 tests total: 339 contract tests + 32 Creator Gateway + 35 Points Backend + 8 Benefits Network — all passing
+- 436 tests total: 361 contract tests + 32 Creator Gateway + 35 Points Backend + 8 Benefits Network — all passing
 - Branch coverage: 91% (99% statements)
 - GitHub Actions CI: Creator Gateway, Points Backend, AI Copilot
 - Slither security audit: 0 high/critical findings
@@ -190,7 +190,7 @@ SIWE authentication, points tracking, and EIP-712 signed voucher issuance for pr
 - [Roadmap](docs/ROADMAP.md) — 6-Phasen Roadmap (Foundation → Governance → Ecosystem → Mainnet → Growth → DAO)
 - [Page Update Checklist](docs/PAGE_UPDATE_CHECKLIST.md) — Welche Dateien bei welchem Event aktualisiert werden muessen
 - [Deployment Stats](docs/stats.json) — Auto-generierte On-Chain Stats (via update-stats.js)
-- [Project Summary](docs/PROJECT-SUMMARY.md) — Komplett-Uebersicht (13 Contracts, 414 Tests, 7 Apps)
+- [Project Summary](docs/PROJECT-SUMMARY.md) — Komplett-Uebersicht (14 Contracts, 436 Tests, 7 Apps)
 - [Release Notes v0.1.0](docs/RELEASE_NOTES_v0.1.0.md) — Erster getaggter Release (Sepolia Testnet)
 - [Lighthouse Report](docs/LIGHTHOUSE_REPORT.md) — SEO-Optimierungen (OG, Twitter Card, Meta Tags, Sitemap, robots.txt)
 - [AI Copilot Test Results](docs/COPILOT_TEST_RESULTS.md) — RAG-System Test (6 Fragen, 3 Modi, Safety Guards)

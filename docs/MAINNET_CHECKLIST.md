@@ -1,6 +1,6 @@
 # Inferno ($IFR) — Mainnet Deployment Checklist
 
-> **Status:** Pre-Mainnet | **Sepolia:** 13 Contracts deployed + verified | **Tests:** 339 Contract + 32 Creator Gateway + 35 Points + 8 Benefits = 414 Total | **Coverage:** 99% Stmts, 91% Branch
+> **Status:** Pre-Mainnet | **Sepolia:** 14 Contracts deployed + verified | **Tests:** 361 Contract + 32 Creator Gateway + 35 Points + 8 Benefits = 436 Total | **Coverage:** 99% Stmts, 91% Branch
 
 ## KRITISCH — Vor jedem Public Launch
 
@@ -36,7 +36,7 @@ Diese Punkte muessen ZWINGEND vor Mainnet erledigt sein:
 
 | Meilenstein | Status |
 |-------------|--------|
-| 13 Contracts deployed + verified | Done |
+| 14 Contracts deployed + verified | Done |
 | Uniswap V2 LP Pair live | Done |
 | Ownership an Governance transferiert | Done |
 | Governance Proposals #0, #1 executed | Done |
