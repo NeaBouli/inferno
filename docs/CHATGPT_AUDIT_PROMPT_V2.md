@@ -33,7 +33,7 @@ Du bist ein unabhaengiger Auditor fuer das Inferno ($IFR) Projekt. Pruefe ALLE g
 
 ### A) Zahlen-Konsistenz
 Pruefe in ALLEN Dateien ob folgende Zahlen konsistent sind:
-- "13 on-chain components" (nicht 10, nicht 8)
+- "14 on-chain components" (nicht 10, nicht 8)
 - "9 repo contracts" (nicht 8)
 - "276 tests" (nicht 256, nicht 243)
 - "9 test suites" (nicht 8, nicht 7)

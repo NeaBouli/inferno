@@ -268,8 +268,8 @@ Team.Finance integration
 ## Status Tracking
 
 - [x] Spec approved
-- [ ] Contract implemented (BootstrapVault.sol)
-- [ ] Tests written (min. 20)
+- [x] Contract implemented (BootstrapVault.sol) — commit 2ce8b6b5
+- [x] Tests written (22/22 passing) — commit 2ce8b6b5
 - [ ] Audit updated
 - [ ] Sepolia testnet deploy
 - [ ] Landing Page bootstrap banner

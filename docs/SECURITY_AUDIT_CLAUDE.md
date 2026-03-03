@@ -293,7 +293,7 @@ All protocol parameter changes flow through the 48h timelock. The guardian (sepa
 7. **SafeERC20** used in PartnerVault for all token transfers.
 8. **ReentrancyGuard** on IFRLock and PartnerVault (the two contracts with user-facing token operations).
 9. **CEI pattern** consistently followed across all contracts.
-10. **91% branch coverage** with 339 tests across 9 contracts.
+10. **91% branch coverage** with 361 tests across 9 contracts.
 
 ---
 

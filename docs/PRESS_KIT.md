@@ -16,8 +16,8 @@ Inferno ($IFR) ist ein deflationaerer ERC-20 Utility-Token auf Ethereum. Nutzer 
 | Initiale Supply | 1,000,000,000 IFR |
 | Aktuelle Supply | ~997,999,575 IFR |
 | Verbrannt | ~2,000,425 IFR (0.2%) |
-| Smart Contracts | 13 (alle verified) |
-| Tests | 414 (99% Coverage) |
+| Smart Contracts | 14 (alle verified) |
+| Tests | 436 (99% Coverage) |
 | Netzwerk | Sepolia Testnet (Pre-Mainnet) |
 | Launch-Modell | Community Fair Launch (CFLM) |
 | Mint-Funktion | Keine — Supply kann nur sinken |
@@ -77,7 +77,7 @@ Nutzer sperren IFR-Token im IFRLock-Contract → erhalten lebenslangen Premium-Z
 |------------|-------|
 | Contracts | Solidity 0.8.20, OpenZeppelin v5 |
 | Framework | Hardhat v2, ethers v5 |
-| Tests | Chai v4, 414 Tests, 99% Coverage |
+| Tests | Chai v4, 436 Tests, 99% Coverage |
 | Dashboard | React 18 + Vite + ethers v5 |
 | Governance UI | React 18 + TypeScript + Tailwind |
 | AI Copilot | Claude Haiku 4.5 + RAG |
@@ -85,7 +85,7 @@ Nutzer sperren IFR-Token im IFRLock-Contract → erhalten lebenslangen Premium-Z
 
 ## Roadmap (Kurzfassung)
 
-- **Q1 2026:** Testnet, 414 Tests, alle Apps live
+- **Q1 2026:** Testnet, 436 Tests, alle Apps live
 - **Q2 2026:** Security Audit, Mainnet Deploy, erste Partner
 - **Q3 2026:** 10+ Partner, Creator Gateway MVP, Apps live
 - **Q4 2026:** Community Governance, CEX Outreach
