@@ -270,7 +270,7 @@ Team.Finance integration
 - [x] Spec approved
 - [x] Contract implemented (BootstrapVault.sol) — commit 2ce8b6b5
 - [x] Tests written (22/22 passing) — commit 2ce8b6b5
-- [ ] Audit updated
+- [x] Audit updated (SECURITY_AUDIT_CLAUDE.md) — 2026-03-03
 - [ ] Sepolia testnet deploy
 - [ ] Landing Page bootstrap banner
 - [ ] Wiki bootstrap page
