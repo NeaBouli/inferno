@@ -884,6 +884,7 @@
       <li><a href="#security">Security</a></li>
       <li><a href="#faq">FAQ</a></li>
       <li><a href="#roadmap">Roadmap</a></li>
+      <li><a href="#contracts">Contracts</a></li>
       <li><a href="https://x.com/IFRtoken" target="_blank" rel="noopener">X</a></li>
     </ul>
     <button class="nav-toggle" id="navToggle" aria-label="Toggle menu">&#9776;</button>
@@ -1270,9 +1271,9 @@ if (isLocked) {
   <div class="container">
     <div class="reveal" style="text-align:center;">
       <p class="section-label">Ecosystem</p>
-      <h2 class="section-title">Partner Directory</h2>
+      <h2 class="section-title">Ecosystem</h2>
       <p class="section-desc" style="margin:0 auto;max-width:600px;">
-        Businesses and creators accepting IFR Lock for exclusive benefits.
+        Partners and creators integrating IFR Lock for premium access and exclusive benefits.
       </p>
     </div>
     <div style="display:flex;flex-wrap:wrap;gap:24px;justify-content:center;margin-top:40px;" class="reveal">
@@ -1632,6 +1633,94 @@ if (isLocked) {
   </div>
 </section>
 
+<!-- ── CONTRACT INFO ──────────────────────────────── -->
+<section id="contracts" style="padding: 80px 0;">
+  <div class="container">
+    <div class="reveal" style="text-align:center;">
+      <p class="section-label">On-Chain</p>
+      <h2 class="section-title">Contract Addresses</h2>
+      <p class="section-desc" style="margin:0 auto;max-width:600px;">
+        All contracts are deployed on Sepolia testnet, verified on Etherscan, and owned by the Governance timelock.
+      </p>
+    </div>
+    <div class="reveal" style="max-width:720px;margin:40px auto 0;display:flex;flex-direction:column;gap:8px;">
+      <div class="contract-row" style="display:flex;align-items:center;justify-content:space-between;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;">
+        <div><span style="color:var(--text-muted);font-size:13px;">InfernoToken</span></div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <code style="font-size:12px;color:var(--accent);word-break:break-all;">0x3Bd71947F288d1dd8B21129B1bE4FF16EDd5d1F4</code>
+          <button class="copy-btn" data-addr="0x3Bd71947F288d1dd8B21129B1bE4FF16EDd5d1F4" title="Copy address" style="background:none;border:1px solid var(--border);border-radius:4px;padding:4px 8px;cursor:pointer;color:var(--text-muted);font-size:12px;">Copy</button>
+        </div>
+      </div>
+      <div class="contract-row" style="display:flex;align-items:center;justify-content:space-between;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;">
+        <div><span style="color:var(--text-muted);font-size:13px;">LiquidityReserve</span></div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <code style="font-size:12px;color:var(--accent);word-break:break-all;">0x344720eA0cd1654e2bDB41ecC1cCb11eD60f1957</code>
+          <button class="copy-btn" data-addr="0x344720eA0cd1654e2bDB41ecC1cCb11eD60f1957" title="Copy address" style="background:none;border:1px solid var(--border);border-radius:4px;padding:4px 8px;cursor:pointer;color:var(--text-muted);font-size:12px;">Copy</button>
+        </div>
+      </div>
+      <div class="contract-row" style="display:flex;align-items:center;justify-content:space-between;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;">
+        <div><span style="color:var(--text-muted);font-size:13px;">Vesting</span></div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <code style="font-size:12px;color:var(--accent);word-break:break-all;">0xa710f9FE7bf42981E60BE2Fbe7D87Fb3541a3F8B</code>
+          <button class="copy-btn" data-addr="0xa710f9FE7bf42981E60BE2Fbe7D87Fb3541a3F8B" title="Copy address" style="background:none;border:1px solid var(--border);border-radius:4px;padding:4px 8px;cursor:pointer;color:var(--text-muted);font-size:12px;">Copy</button>
+        </div>
+      </div>
+      <div class="contract-row" style="display:flex;align-items:center;justify-content:space-between;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;">
+        <div><span style="color:var(--text-muted);font-size:13px;">BuybackVault</span></div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <code style="font-size:12px;color:var(--accent);word-break:break-all;">0x2E61b720c220ce85dA24b05a476903Ec709Cb68c</code>
+          <button class="copy-btn" data-addr="0x2E61b720c220ce85dA24b05a476903Ec709Cb68c" title="Copy address" style="background:none;border:1px solid var(--border);border-radius:4px;padding:4px 8px;cursor:pointer;color:var(--text-muted);font-size:12px;">Copy</button>
+        </div>
+      </div>
+      <div class="contract-row" style="display:flex;align-items:center;justify-content:space-between;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;">
+        <div><span style="color:var(--text-muted);font-size:13px;">BurnReserve</span></div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <code style="font-size:12px;color:var(--accent);word-break:break-all;">0xB9FbE5dB44EEce77A69C8F09e9E0eE2E4F745D75</code>
+          <button class="copy-btn" data-addr="0xB9FbE5dB44EEce77A69C8F09e9E0eE2E4F745D75" title="Copy address" style="background:none;border:1px solid var(--border);border-radius:4px;padding:4px 8px;cursor:pointer;color:var(--text-muted);font-size:12px;">Copy</button>
+        </div>
+      </div>
+      <div class="contract-row" style="display:flex;align-items:center;justify-content:space-between;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;">
+        <div><span style="color:var(--text-muted);font-size:13px;">Governance</span></div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <code style="font-size:12px;color:var(--accent);word-break:break-all;">0x6050b22E4EAF3f414d1155fBaF30B868E0107017</code>
+          <button class="copy-btn" data-addr="0x6050b22E4EAF3f414d1155fBaF30B868E0107017" title="Copy address" style="background:none;border:1px solid var(--border);border-radius:4px;padding:4px 8px;cursor:pointer;color:var(--text-muted);font-size:12px;">Copy</button>
+        </div>
+      </div>
+      <div class="contract-row" style="display:flex;align-items:center;justify-content:space-between;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;">
+        <div><span style="color:var(--text-muted);font-size:13px;">IFRLock</span></div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <code style="font-size:12px;color:var(--accent);word-break:break-all;">0x0Cab0A9440643128540222acC6eF5028736675d3</code>
+          <button class="copy-btn" data-addr="0x0Cab0A9440643128540222acC6eF5028736675d3" title="Copy address" style="background:none;border:1px solid var(--border);border-radius:4px;padding:4px 8px;cursor:pointer;color:var(--text-muted);font-size:12px;">Copy</button>
+        </div>
+      </div>
+      <div class="contract-row" style="display:flex;align-items:center;justify-content:space-between;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;">
+        <div><span style="color:var(--text-muted);font-size:13px;">PartnerVault</span></div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <code style="font-size:12px;color:var(--accent);word-break:break-all;">0x5F12C0bC616e9Ca347D48C33266aA8fe98490A39</code>
+          <button class="copy-btn" data-addr="0x5F12C0bC616e9Ca347D48C33266aA8fe98490A39" title="Copy address" style="background:none;border:1px solid var(--border);border-radius:4px;padding:4px 8px;cursor:pointer;color:var(--text-muted);font-size:12px;">Copy</button>
+        </div>
+      </div>
+      <div class="contract-row" style="display:flex;align-items:center;justify-content:space-between;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;">
+        <div><span style="color:var(--text-muted);font-size:13px;">FeeRouterV1</span></div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <code style="font-size:12px;color:var(--accent);word-break:break-all;">0x499289C8Ef49769F4FcFF3ca86D4BD7b55B49aa4</code>
+          <button class="copy-btn" data-addr="0x499289C8Ef49769F4FcFF3ca86D4BD7b55B49aa4" title="Copy address" style="background:none;border:1px solid var(--border);border-radius:4px;padding:4px 8px;cursor:pointer;color:var(--text-muted);font-size:12px;">Copy</button>
+        </div>
+      </div>
+      <div class="contract-row" style="display:flex;align-items:center;justify-content:space-between;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;">
+        <div><span style="color:var(--text-muted);font-size:13px;">LP Pair (IFR/WETH)</span></div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <code style="font-size:12px;color:var(--accent);word-break:break-all;">0x2252e8bBDE0E50CD372748aC233A99C08627d9c7</code>
+          <button class="copy-btn" data-addr="0x2252e8bBDE0E50CD372748aC233A99C08627d9c7" title="Copy address" style="background:none;border:1px solid var(--border);border-radius:4px;padding:4px 8px;cursor:pointer;color:var(--text-muted);font-size:12px;">Copy</button>
+        </div>
+      </div>
+    </div>
+    <p class="reveal" style="text-align:center;margin-top:20px;">
+      <a href="https://sepolia.etherscan.io/address/0x3Bd71947F288d1dd8B21129B1bE4FF16EDd5d1F4#code" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:none;font-size:14px;font-weight:600;">View on Etherscan &rarr;</a>
+    </p>
+  </div>
+</section>
+
 <!-- ── FOOTER ─────────────────────────────────────── -->
 <footer>
   <div class="container">
@@ -1731,6 +1820,19 @@ if (isLocked) {
   };
   document.body.appendChild(btn);
 })();
+</script>
+
+<script>
+  // Copy-to-clipboard for contract addresses
+  document.querySelectorAll('.copy-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var addr = this.getAttribute('data-addr');
+      navigator.clipboard.writeText(addr).then(function() {
+        btn.textContent = 'Copied!';
+        setTimeout(function() { btn.textContent = 'Copy'; }, 1500);
+      });
+    });
+  });
 </script>
 
 </body>

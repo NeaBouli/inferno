@@ -45,5 +45,63 @@ Gesetzt via `gh api repos/NeaBouli/inferno/topics`:
 - [ ] Branch Protection Rules (empfohlen fuer Mainnet)
 - [ ] Required Reviews (empfohlen fuer Mainnet)
 
+## Branch Protection Rules (empfohlen)
+
+Vor Mainnet sollte `main` geschuetzt werden:
+
+```bash
+gh api repos/NeaBouli/inferno/branches/main/protection -X PUT \
+  -H "Accept: application/vnd.github+json" \
+  --input - <<'EOF'
+{
+  "required_status_checks": {
+    "strict": true,
+    "contexts": ["test"]
+  },
+  "enforce_admins": false,
+  "required_pull_request_reviews": {
+    "required_approving_review_count": 1,
+    "dismiss_stale_reviews": true
+  },
+  "restrictions": null
+}
+EOF
+```
+
+### Empfohlene Einstellungen
+
+| Regel | Wert | Grund |
+|-------|------|-------|
+| Require PR reviews | 1 Approval | Vier-Augen-Prinzip |
+| Dismiss stale reviews | true | Bei neuen Pushes erneut reviewen |
+| Require status checks | `test` | CI muss gruen sein |
+| Require up-to-date | true | Branch muss aktuell sein |
+| Enforce admins | false | Owner kann im Notfall direkt pushen |
+| Allow force push | false | History schuetzen |
+| Allow deletions | false | Branch nicht loeschbar |
+
+### Manuell via GitHub UI
+
+1. Settings → Branches → Add branch protection rule
+2. Branch name pattern: `main`
+3. Haken setzen: Require pull request, Require status checks, Require linear history
+4. Save changes
+
+## Git Author Konfiguration
+
+Fuer konsistente Commit-Metadaten:
+
+```bash
+# Lokal (nur dieses Repo)
+git config user.name "IFR Protocol"
+git config user.email "noreply@inferno-protocol.xyz"
+
+# Verifizieren
+git config user.name   # → IFR Protocol
+git config user.email  # → noreply@inferno-protocol.xyz
+```
+
+Alle zukuenftigen Commits in diesem Repo verwenden dann `IFR Protocol <noreply@inferno-protocol.xyz>` als Author.
+
 ---
 *Inferno ($IFR) — GitHub Repository Setup*
