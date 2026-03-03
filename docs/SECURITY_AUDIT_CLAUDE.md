@@ -2,7 +2,8 @@
 
 **Auditor:** Claude Opus 4.6 (Anthropic)
 **Date:** 2026-03-03
-**Scope:** 9 contracts, 1414 SLOC, Solidity 0.8.20
+**Scope:** 10 contracts, 1892 SLOC, Solidity 0.8.20
+**Extended:** 2026-03-03 — BootstrapVault.sol added
 **Method:** Line-by-line manual review, 10 check categories (A-J)
 **Severity:** PASS (no issue) | WARN (design risk, low/informational) | FAIL (critical/high)
 
@@ -206,6 +207,29 @@ function setFeeCollector(address newCollector) external onlyGovernance {
 
 ---
 
+## 10. BootstrapVault.sol (165 LOC)
+
+| Check | Result | Details |
+|-------|--------|---------|
+| A) Reentrancy | PASS | All three state-changing functions (`contribute`, `finalise`, `claim`) use `nonReentrant` (OZ ReentrancyGuard). `finalised = true` set before external calls in `finalise()` (line 137). `claimed[msg.sender] = true` set before `token.transfer()` in `claim()` (line 187). CEI pattern throughout. |
+| B) Access Control | PASS | No owner. No admin. No guardian. `contribute()`: public (parameterized by time window + min/max). `finalise()`: public (after endTime). `claim()`: public (after finalisation, contributor-only). Most permissionless contract in the protocol. |
+| C) Overflow | PASS | `ifrAllocation * 2` (line 146): realistic max ~10^27, safe. `contributions[msg.sender] * ifrAllocation` (line 188): max ~10^18 * 10^27 = 10^45, within uint256. Pro-rata rounding: negligible at minContribution = 0.01 ETH. |
+| D) Front-running | WARN | `addLiquidityETH` uses `amountTokenMin=0, amountETHMin=0` (lines 155-156). Correct for initial LP creation, but exploitable if IFR/WETH pair already exists with manipulated ratio. No on-chain check that pair is fresh. |
+| E) DoS | PASS | No loops. `contributors` array grows unboundedly but is never iterated (push-only, O(1)). |
+| F) Centralization | PASS | No admin functions. All parameters immutable at deploy. No pause mechanism. Most decentralized contract in the protocol. |
+| G) Fee Edge Cases | WARN | Contract MUST be feeExempt. Without it, `transferFrom(ifrSource, ..., ifrAllocation * 2)` delivers fewer tokens — LP creation receives less IFR, claim balance is short, last claimers fail. Additionally: no emergency refund if `finalise()` is permanently blocked (e.g., ifrSource revokes approval). Contributor ETH locked forever. Documented as pre-deploy requirement in spec. |
+| H) Timelock Bypass | PASS | N/A — no timelock, no admin functions. |
+| I) feeExempt | PASS | N/A — doesn't control feeExempt. Dependency on Governance proposal documented in spec. |
+| J) Owner Privileges | PASS | No owner. No admin. No privileged functions. All parameters immutable. Zero admin surface. |
+
+**Design Highlights:**
+- Zero admin surface — no owner, no guardian, no pause, no emergency functions. True trustlessness.
+- `finalised = true` before any external calls eliminates re-finalisation vector.
+- 0 ETH edge case handled gracefully: `finalise()` emits event and returns, no LP created, no claims needed.
+- Pro-rata dust (rounding loss) is negligible but permanently locked in contract — no sweep function.
+
+---
+
 ## Summary
 
 | Contract | LOC | PASS | WARN | FAIL |
@@ -219,9 +243,10 @@ function setFeeCollector(address newCollector) external onlyGovernance {
 | BurnReserve | 102 | 10 | 0 | 0 |
 | PartnerVault | 549 | 10 | 0 | 0 |
 | FeeRouterV1 | 228 | 8 | 2 | 0 |
-| **Total** | **1727** | **78** | **12** | **0** |
+| BootstrapVault | 165 | 8 | 2 | 0 |
+| **Total** | **1892** | **86** | **14** | **0** |
 
-### Result: 0 FAIL / 12 WARN / 78 PASS
+### Result: 0 FAIL / 14 WARN / 86 PASS
 
 ---
 
@@ -235,6 +260,7 @@ function setFeeCollector(address newCollector) external onlyGovernance {
 | W2 | Governance | F | Single owner key controls all proposals. Key compromise = protocol compromise. | Gnosis Safe 2-of-3 minimum. Then 4-of-7 for mainnet. |
 | W3 | BuybackVault | C | `setParams` has no bounds on `burnShareBps`, `slippageBps`, `cooldown`. Invalid values cause DoS. | Add validation: `burnShareBps <= 10000`, `slippageBps <= 5000`, `cooldown >= 60`, `_router != address(0)`. |
 | W4 | BuybackVault | D | Uniswap swap in `executeBuyback` is MEV-vulnerable. Sandwich attacks extract value within slippage tolerance. | Use private mempool (Flashbots Protect) for buyback transactions on mainnet. |
+| W13 | BootstrapVault | D | `addLiquidityETH` with `amountTokenMin=0` exploitable if IFR/WETH pair pre-exists with manipulated ratio. No on-chain check. | Add `require(getPair(ifrToken, weth) == address(0), "pair exists")` before LP creation. Or verify pair freshness off-chain as pre-deploy step. |
 
 ### Low / Informational
 
@@ -248,6 +274,7 @@ function setFeeCollector(address newCollector) external onlyGovernance {
 | W10 | FeeRouterV1 | J | `setVoucherSigner` and `setFeeCollector` accept `address(0)`. | Add zero-address checks. Low risk: governance-only, 48h timelock. |
 | W11 | FeeRouterV1 | A | No `nonReentrant` on `swapWithFee`. Adapter and feeCollector are external calls. | Low risk: nonce consumed before calls, no state to exploit. |
 | W12 | BuybackVault | F | Mutable router — if changed to malicious contract, swaps could be manipulated. | Mitigated by slippage protection + 48h timelock on `setParams`. |
+| W14 | BootstrapVault | G | No emergency refund. If `finalise()` is permanently blocked (ifrSource approval revoked, IFR paused), contributor ETH locked forever. By design (trustless) but liveness risk. | Consider time-delayed `refund()`: if endTime + 30 days passed and !finalised, contributors can withdraw ETH. |
 
 ---
 
@@ -266,6 +293,7 @@ No shortcut exists. **PASS**
 ### Governance as Single Point of Control
 Governance owns: InfernoToken, LiquidityReserve v2, BuybackVault v2, BurnReserve v2.
 Governance is admin of: PartnerVault, FeeRouterV1.
+BootstrapVault has no owner — fully permissionless. Governance interaction limited to `setFeeExempt(BootstrapVault, true)` via InfernoToken.
 
 All protocol parameter changes flow through the 48h timelock. The guardian (separate key) can cancel malicious proposals but cannot propose or execute.
 
@@ -293,7 +321,7 @@ All protocol parameter changes flow through the 48h timelock. The guardian (sepa
 7. **SafeERC20** used in PartnerVault for all token transfers.
 8. **ReentrancyGuard** on IFRLock and PartnerVault (the two contracts with user-facing token operations).
 9. **CEI pattern** consistently followed across all contracts.
-10. **91% branch coverage** with 361 tests across 9 contracts.
+10. **91% branch coverage** with 361 tests across 10 contracts.
 
 ---
 
@@ -322,9 +350,10 @@ This audit was conducted internally by Claude Opus 4.6.
 ### How to Contribute
 - Open a GitHub Issue: [Security Audit Finding template](https://github.com/NeaBouli/inferno/issues/new?template=security-audit.md)
 - Review the contracts in `/contracts/`
-- Reference known issues in this document (W1-W12) to avoid duplicates
+- Reference known issues in this document (W1-W14) to avoid duplicates
 - See [SECURITY.md](../SECURITY.md) for full disclosure policy
 
-### Known Warnings (W1-W12)
-All 12 warnings are documented above.
+### Known Warnings (W1-W14)
+All 14 warnings are documented above.
 Fixes for W1, W2 (Multisig migration) are planned before mainnet.
+W13 (pair pre-existence) mitigated by pre-deploy verification. W14 (no refund) is a design trade-off (trustlessness vs. liveness).
