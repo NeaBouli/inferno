@@ -18,7 +18,7 @@ inferno/
 │   ├── token/InfernoToken.sol          [x] 93 LOC, 22 Tests
 │   ├── liquidity/LiquidityReserve.sol  [x] 151 LOC, 42 Tests
 │   ├── vesting/Vesting.sol             [x] 132 LOC, 21 Tests
-│   ├── buyback/BuybackVault.sol        [x] 175 LOC, 26 Tests
+│   ├── buyback/BuybackVault.sol        [x] 173 LOC, 26 Tests
 │   ├── burnreserve/BurnReserve.sol     [x] 92 LOC, 27 Tests
 │   ├── governance/Governance.sol       [x] 150 LOC, 36 Tests
 │   ├── lock/IFRLock.sol               [x] 127 LOC, 37 Tests

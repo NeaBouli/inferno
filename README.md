@@ -89,7 +89,7 @@ The ecosystem is open and permissionless. Any product can integrate IFR Lock.
 - Branch coverage: 91% (99% statements)
 - GitHub Actions CI: Creator Gateway, Points Backend, AI Copilot
 - Slither security audit: 0 high/critical findings
-- Claude security audit: 0 FAIL, 12 WARN, 78 PASS ([full report](docs/SECURITY_AUDIT_CLAUDE.md))
+- Claude security audit: 0 FAIL, 20 WARN (1 fixed), 81 PASS ([full report](docs/SECURITY_AUDIT_CLAUDE.md))
 - Full Sepolia testnet deployment with verified contracts
 - Governance lifecycle tested: propose → 48h wait → execute
 
@@ -97,7 +97,7 @@ The ecosystem is open and permissionless. Any product can integrate IFR Lock.
 
 All smart contracts are open source and community review is explicitly encouraged.
 
-- **Internal Audit:** [docs/SECURITY_AUDIT_CLAUDE.md](docs/SECURITY_AUDIT_CLAUDE.md) — 0 FAIL, 12 WARN, 78 PASS
+- **Internal Audit:** [docs/SECURITY_AUDIT_CLAUDE.md](docs/SECURITY_AUDIT_CLAUDE.md) — 0 FAIL, 20 WARN (1 fixed), 81 PASS
 - **Submit a Finding:** [GitHub Issues → Security Audit Template](https://github.com/NeaBouli/inferno/issues/new?template=security-audit.md)
 - **Security Policy:** [SECURITY.md](SECURITY.md)
 
@@ -204,6 +204,7 @@ SIWE authentication, points tracking, and EIP-712 signed voucher issuance for pr
 - [AI Copilot Test Results](docs/COPILOT_TEST_RESULTS.md) — RAG-System Test (6 Fragen, 3 Modi, Safety Guards)
 - [Roadmap v0.2.0](docs/ROADMAP_v0.2.0.md) — Mainnet-Ready Milestones (Audit, Multisig, Deploy, Post-Launch)
 - [ChatGPT Audit V4 Results](docs/CHATGPT_AUDIT_V4_RESULTS.md) — Audit V4 Self-Check (8/8 PASS)
+- [ChatGPT Audit V5 Results](docs/CHATGPT_AUDIT_V5_RESULTS.md) — Cross-Audit: W15-W21 (7 neue Findings, W16 gefixt)
 - [GitHub Setup](docs/GITHUB_SETUP.md) — Repository Settings (Discussions, Topics, Pages)
 
 ## Development

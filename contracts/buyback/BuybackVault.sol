@@ -38,9 +38,6 @@ contract BuybackVault {
 
     bool public paused;
 
-    // Accumulated expected output from deposits (quote at deposit time)
-    uint256 public pendingExpectedOut;
-
     event Deposited(address indexed sender, uint256 amount);
     event BuybackExecuted(uint256 ethSpent, uint256 burnAmount, uint256 treasuryAmount);
     event Paused(address indexed account);
@@ -98,17 +95,9 @@ contract BuybackVault {
         emit Unpaused(msg.sender);
     }
 
-    /// @notice Deposit ETH for future buyback. Records expected output at current price.
+    /// @notice Deposit ETH for future buyback.
     function depositETH() external payable {
         require(msg.value > 0, "no ETH");
-
-        address[] memory path = new address[](2);
-        path[0] = router.WETH();
-        path[1] = address(token);
-
-        uint256[] memory amounts = router.getAmountsOut(msg.value, path);
-        pendingExpectedOut += amounts[1];
-
         emit Deposited(msg.sender, msg.value);
     }
 
@@ -122,17 +111,16 @@ contract BuybackVault {
 
         uint256 ethBal = address(this).balance;
         if (ethBal == 0) {
-            pendingExpectedOut = 0;
             emit BuybackExecuted(0, 0, 0);
             return;
         }
 
-        uint256 minOut = (pendingExpectedOut * (10_000 - slippageBps)) / 10_000;
-        pendingExpectedOut = 0;
-
         address[] memory path = new address[](2);
         path[0] = router.WETH();
         path[1] = address(token);
+
+        uint256[] memory expectedAmounts = router.getAmountsOut(ethBal, path);
+        uint256 minOut = (expectedAmounts[1] * (10_000 - slippageBps)) / 10_000;
 
         uint256[] memory amounts = router.swapExactETHForTokens{value: ethBal}(
             minOut, path, address(this), block.timestamp

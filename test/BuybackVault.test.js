@@ -84,11 +84,11 @@ describe("BuybackVault", function () {
     await expect(Vault.connect(owner).executeBuyback()).to.emit(Vault, "BuybackExecuted");
   });
 
-  it("respects slippage protection via router rate change", async () => {
+  it("respects slippage protection when swap output deviates from quote", async () => {
     await Vault.depositETH({ value: ethers.utils.parseEther("1") });
 
-    // Rate senken -> erwartetes Out fällt unter minOut (5% Slippage), daher revert
-    await Router.setRate(ethers.utils.parseEther("900"));
+    // Künstliche Slippage 6% — übersteigt die 5% Toleranz, daher revert
+    await Router.setSlippageBpsNextSwap(600);
     await expect(Vault.connect(owner).executeBuyback()).to.be.revertedWith("slippage");
   });
 
