@@ -19,6 +19,7 @@
 | 7 | **IFRLock** | [`0x0Cab0A9440643128540222acC6eF5028736675d3`](https://sepolia.etherscan.io/address/0x0Cab0A9440643128540222acC6eF5028736675d3#code) | Verified |
 | 8 | **PartnerVault** | [`0x5F12C0bC616e9Ca347D48C33266aA8fe98490A39`](https://sepolia.etherscan.io/address/0x5F12C0bC616e9Ca347D48C33266aA8fe98490A39#code) | Verified |
 | 9 | **FeeRouterV1** | [`0x499289C8Ef49769F4FcFF3ca86D4BD7b55B49aa4`](https://sepolia.etherscan.io/address/0x499289C8Ef49769F4FcFF3ca86D4BD7b55B49aa4#code) | Verified |
+| 10 | **BootstrapVault** | [`0xE0E8F76e4fb38B2e367Aee043a2C02b8D1c7c037`](https://sepolia.etherscan.io/address/0xE0E8F76e4fb38B2e367Aee043a2C02b8D1c7c037#code) | Verified |
 
 ### Constructor Arguments
 
@@ -33,6 +34,7 @@
 | IFRLock | `token, deployer (guardian)` |
 | PartnerVault | `token, governance (admin), deployer (guardian), 1500 (rewardBps), 4000000000000000 (4M*1e9 annualCap)` |
 | FeeRouterV1 | `governance, deployer (feeCollector), deployer (voucherSigner)` |
+| BootstrapVault | `token, LiquidityReserve v2 (ifrSource), router, address(0) (TF locker disabled), 1772604468 (startTime), 7776000 (90d), 100000000000000000 (100M*1e9), 10000000000000000 (0.01 ETH), 2000000000000000000 (2 ETH), 31536000 (365d)` |
 
 ### Token Distribution
 
@@ -95,7 +97,7 @@
 | feeExempt Wiring | Done |
 | Token Distribution | Done |
 | Deployer Exemption Removed | Done |
-| Etherscan Verification | **Done** (9/9 verified) |
+| Etherscan Verification | **Done** (10/10 verified) |
 | Uniswap LP Pairing | **Done** — [`0x2252e8bBDE0E50CD372748aC233A99C08627d9c7`](https://sepolia.etherscan.io/address/0x2252e8bBDE0E50CD372748aC233A99C08627d9c7) |
 | Router on BuybackVault | **Done** — `0xC532a74256D3Db42D0Bf7a0400fEFDbad7694008` |
 | InfernoToken Ownership to Governance | **Done** — TX `0xa69bf285...d5762e1b` |
@@ -108,3 +110,4 @@
 | PartnerVault Deployed + Verified | **Done** — [`0x5F12C0bC...`](https://sepolia.etherscan.io/address/0x5F12C0bC616e9Ca347D48C33266aA8fe98490A39) |
 | PartnerVault Funded | **Done** — 40M IFR (38.6M initial + 1.4M top-up after Proposal #3) |
 | Governance Proposal #3 | **Executed** — setFeeExempt(PartnerVault v2, true), TX 0x3f28690a...57de6e8 |
+| BootstrapVault Deployed + Verified | **Done** — [`0xE0E8F76e...`](https://sepolia.etherscan.io/address/0xE0E8F76e4fb38B2e367Aee043a2C02b8D1c7c037) — 2026-03-04 |
