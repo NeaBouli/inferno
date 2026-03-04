@@ -1,9 +1,10 @@
 # Security Audit — Inferno ($IFR) Smart Contracts
 
 **Auditor:** Claude Opus 4.6 (Anthropic)
-**Date:** 2026-03-03
-**Scope:** 10 contracts, 1892 SLOC, Solidity 0.8.20
+**Date:** 2026-03-04
+**Scope:** 10 contracts, 1880 SLOC, Solidity 0.8.20
 **Extended:** 2026-03-03 — BootstrapVault.sol added
+**Extended:** 2026-03-04 — W15-W21 from ChatGPT Audit V5, W16 fixed
 **Method:** Line-by-line manual review, 10 check categories (A-J)
 **Severity:** PASS (no issue) | WARN (design risk, low/informational) | FAIL (critical/high)
 
@@ -114,7 +115,7 @@
 
 ---
 
-## 6. BuybackVault.sol (185 LOC)
+## 6. BuybackVault.sol (173 LOC)
 
 | Check | Result | Details |
 |-------|--------|---------|
@@ -236,17 +237,18 @@ function setFeeCollector(address newCollector) external onlyGovernance {
 |----------|-----|------|------|------|
 | InfernoToken | 93 | 9 | 1 | 0 |
 | IFRLock | 127 | 10 | 0 | 0 |
-| Governance | 150 | 7 | 3 | 0 |
-| Vesting | 132 | 9 | 1 | 0 |
+| Governance | 150 | 6 | 4 | 0 |
+| Vesting | 132 | 8 | 2 | 0 |
 | LiquidityReserve | 161 | 10 | 0 | 0 |
-| BuybackVault | 185 | 5 | 5 | 0 |
+| BuybackVault | 173 | 5 | 5 | 0 |
 | BurnReserve | 102 | 10 | 0 | 0 |
 | PartnerVault | 549 | 10 | 0 | 0 |
-| FeeRouterV1 | 228 | 8 | 2 | 0 |
-| BootstrapVault | 165 | 8 | 2 | 0 |
-| **Total** | **1892** | **86** | **14** | **0** |
+| FeeRouterV1 | 228 | 6 | 4 | 0 |
+| BootstrapVault | 165 | 7 | 3 | 0 |
+| System-wide | — | 0 | 1 | 0 |
+| **Total** | **1880** | **81** | **20** | **0** |
 
-### Result: 0 FAIL / 14 WARN / 86 PASS
+### Result: 0 FAIL / 20 WARN (1 fixed) / 81 PASS
 
 ---
 
@@ -261,6 +263,11 @@ function setFeeCollector(address newCollector) external onlyGovernance {
 | W3 | BuybackVault | C | `setParams` has no bounds on `burnShareBps`, `slippageBps`, `cooldown`. Invalid values cause DoS. | Add validation: `burnShareBps <= 10000`, `slippageBps <= 5000`, `cooldown >= 60`, `_router != address(0)`. |
 | W4 | BuybackVault | D | Uniswap swap in `executeBuyback` is MEV-vulnerable. Sandwich attacks extract value within slippage tolerance. | Use private mempool (Flashbots Protect) for buyback transactions on mainnet. |
 | W13 | BootstrapVault | D | `addLiquidityETH` with `amountTokenMin=0` exploitable if IFR/WETH pair pre-exists with manipulated ratio. No on-chain check. | Add `require(getPair(ifrToken, weth) == address(0), "pair exists")` before LP creation. Or verify pair freshness off-chain as pre-deploy step. |
+| W15 | Governance | B | `setGuardian()` is not timelocked — owner can replace guardian immediately, removing the cancel safeguard before executing a malicious proposal. | Route setGuardian through the timelock (`onlySelf`) like `setDelay()`. |
+| W16 | BuybackVault | E | ~~`pendingExpectedOut` accumulated at deposit time could be manipulated to force DoS on `executeBuyback()`.~~ **FIXED** — minOut now computed fresh via `getAmountsOut()` at execution time. | Fixed in commit (W16 fix). |
+| W17 | BootstrapVault | G | LP tokens locked with `withdrawer=address(this)` but contract has no `unlockLP()` function. LP tokens are permanently stranded after lock period expires. | Accept (LP remains locked forever = stronger trust guarantee) or add governance-gated `reclaimLP()`. |
+| W18 | Vesting | F | `guardian` is immutable — cannot be rotated. If guardian key is compromised, attacker can permanently pause releases. | Accept for v1 (already deployed). Consider `setGuardian` in v2. |
+| W21 | System-wide | F | `feeExempt` is an operational dependency (not enforced in contract constructors). If a Governance proposal revokes feeExempt on IFRLock or PartnerVault, user funds become trapped (unlock/claim returns less than locked). | Document as governance invariant. Consider on-chain enforcement: IFRLock constructor could `require(token.isFeeExempt(address(this)))`. |
 
 ### Low / Informational
 
@@ -275,6 +282,8 @@ function setFeeCollector(address newCollector) external onlyGovernance {
 | W11 | FeeRouterV1 | A | No `nonReentrant` on `swapWithFee`. Adapter and feeCollector are external calls. | Low risk: nonce consumed before calls, no state to exploit. |
 | W12 | BuybackVault | F | Mutable router — if changed to malicious contract, swaps could be manipulated. | Mitigated by slippage protection + 48h timelock on `setParams`. |
 | W14 | BootstrapVault | G | No emergency refund. If `finalise()` is permanently blocked (ifrSource approval revoked, IFR paused), contributor ETH locked forever. By design (trustless) but liveness risk. | Consider time-delayed `refund()`: if endTime + 30 days passed and !finalised, contributors can withdraw ETH. |
+| W19 | FeeRouterV1 | J | `maxUses` field in Voucher struct is defined but never enforced — vouchers are single-use via nonce, making maxUses misleading. | Remove `maxUses` from struct or enforce it. Low risk: nonce-based replay protection works correctly. |
+| W20 | FeeRouterV1 | A | `token.transfer()` used instead of SafeERC20 in potential future token-handling paths. Currently ETH-only, but if IFR transfers are added, non-reverting tokens could cause silent failures. | Use SafeERC20 consistently. Informational — no current IFR transfer paths in FeeRouterV1. |
 
 ---
 
@@ -306,7 +315,7 @@ All protocol parameter changes flow through the 48h timelock. The guardian (sepa
 
 ### Flash Loan / Price Manipulation Vectors
 - **PartnerVault algo throttle:** Reads `ifrLock.totalLocked()`. A flash-lock (lock in same tx, trigger reward, unlock) could manipulate the reading. However, `recordLockReward` is `onlyAuthorized` and the anti-double-count prevents the same wallet from earning twice. Flash-locks would only REDUCE rewards (higher lock ratio = lower BPS), not increase them. **Not exploitable.**
-- **BuybackVault swap:** Uses Uniswap price. Flash loan attacks could manipulate the pool price. Mitigated by `slippageBps` and the `pendingExpectedOut` quote-at-deposit mechanism. **Low risk with slippage protection.**
+- **BuybackVault swap:** Uses Uniswap price. Flash loan attacks could manipulate the pool price. Mitigated by `slippageBps` with fresh `getAmountsOut()` quote at execution time (W16 fix removed the vulnerable `pendingExpectedOut` pattern). **Low risk with slippage protection.**
 
 ---
 
@@ -329,12 +338,14 @@ All protocol parameter changes flow through the 48h timelock. The guardian (sepa
 
 1. **CRITICAL:** Migrate Governance owner to Gnosis Safe multisig
 2. **HIGH:** Professional third-party audit (Code4rena, Sherlock, or equivalent)
-3. **MEDIUM:** Add bounds validation to BuybackVault.setParams
-4. **MEDIUM:** Add zero-address checks to FeeRouterV1 setters
-5. **LOW:** Decide on Vesting feeExempt status (intentional deflation contribution vs. team token loss)
-6. **LOW:** Consider ReentrancyGuard on BuybackVault.executeBuyback for defense in depth
-7. **INFO:** LP tokens should be burned or locked before mainnet (already planned)
-8. **INFO:** Use Flashbots Protect for buyback transactions to avoid MEV
+3. ~~**HIGH:** BuybackVault `pendingExpectedOut` DoS (W16)~~ — **FIXED**
+4. **MEDIUM:** Add bounds validation to BuybackVault.setParams
+5. **MEDIUM:** Add zero-address checks to FeeRouterV1 setters
+6. **MEDIUM:** Route Governance.setGuardian through timelock (W15)
+7. **LOW:** Decide on Vesting feeExempt status (intentional deflation contribution vs. team token loss)
+8. **LOW:** Consider ReentrancyGuard on BuybackVault.executeBuyback for defense in depth
+9. **INFO:** LP tokens should be burned or locked before mainnet (already planned)
+10. **INFO:** Use Flashbots Protect for buyback transactions to avoid MEV
 
 ---
 
@@ -353,7 +364,8 @@ This audit was conducted internally by Claude Opus 4.6.
 - Reference known issues in this document (W1-W14) to avoid duplicates
 - See [SECURITY.md](../SECURITY.md) for full disclosure policy
 
-### Known Warnings (W1-W14)
-All 14 warnings are documented above.
+### Known Warnings (W1-W21)
+All 20 warnings are documented above. W16 (`pendingExpectedOut` DoS) has been fixed.
 Fixes for W1, W2 (Multisig migration) are planned before mainnet.
 W13 (pair pre-existence) mitigated by pre-deploy verification. W14 (no refund) is a design trade-off (trustlessness vs. liveness).
+W15-W21 added 2026-03-04 based on ChatGPT Audit V5 cross-check.

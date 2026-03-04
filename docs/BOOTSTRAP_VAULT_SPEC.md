@@ -171,6 +171,7 @@ event EmergencyTriggered(address indexed caller, string reason); // governance o
 - Team.Finance integration: if locker fails, fallback needed
 - LiquidityReserve must approve BootstrapVault before finalise()
 - Uniswap V2 pair must not exist before finalise() (or addLiquidity handles it)
+- **W17:** LP tokens locked with `withdrawer=address(this)` but contract has no `unlockLP()` function — LP tokens are permanently stranded after lock period expires. Accepted as stronger trust guarantee (LP permanently locked = rug-proof).
 
 ---
 
