@@ -37,10 +37,21 @@ router.get('/google', (req, res) => {
 router.get('/google/callback', async (req, res) => {
   const { code, state: walletAddress } = req.query as Record<string, string>;
   try {
+    // Validate wallet address from OAuth state parameter
+    let validatedWallet: string | undefined;
+    if (walletAddress) {
+      try {
+        validatedWallet = ethers.utils.getAddress(walletAddress);
+      } catch {
+        res.status(400).json({ error: 'Invalid wallet address in OAuth state' });
+        return;
+      }
+    }
+
     const { tokens } = await oauth2Client.getToken(code);
     const token = jwt.sign(
       {
-        walletAddress: walletAddress || undefined,
+        walletAddress: validatedWallet,
         youtubeAccessToken: tokens.access_token,
       },
       CONFIG.jwtSecret,

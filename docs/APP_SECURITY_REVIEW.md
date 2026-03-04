@@ -14,7 +14,7 @@
 | CRITICAL | 2 | 2 (+2 bonus: Points Backend JWT + FeeRouter address) |
 | HIGH | 5 | 5 |
 | MEDIUM | 3 | 3 |
-| LOW | 2 | 0 (documented) |
+| LOW | 2 | 2 |
 | **Total** | **12** | **12** |
 
 ---
@@ -184,11 +184,11 @@
 | App | Creator Gateway |
 | File | `apps/creator-gateway/src/services/lock-checker.ts:22,31` |
 | Category | Code Quality |
-| Status | Documented |
+| Status | **FIXED** |
 
 **Description:** Both `isLocked()` and `lockedBalance()` catch all errors silently, returning `false` / `'0'`. While this is fail-closed (secure), it makes debugging difficult. RPC failures, wrong addresses, and ABI mismatches all produce the same silent failure.
 
-**Recommendation:** Add `console.error()` in catch blocks for observability.
+**Fix:** Added `console.error('LockChecker.<method> failed:', err.message)` in both catch blocks for observability. Still fail-closed.
 
 ---
 
@@ -199,11 +199,11 @@
 | App | Creator Gateway |
 | File | `apps/creator-gateway/src/routes/auth.ts:27,37` |
 | Category | Input Validation |
-| Status | Documented |
+| Status | **FIXED** |
 
 **Description:** The `walletAddress` is passed via OAuth `state` parameter without validation. The callback trusts the returned state value and embeds it in a JWT. While this doesn't enable authentication bypass (the wallet address is informational, not authoritative), it could lead to confusion if a tampered state is returned.
 
-**Recommendation:** Validate with `ethers.utils.getAddress()` in the callback, or use a signed state token.
+**Fix:** Added `ethers.utils.getAddress()` validation in the Google OAuth callback. Invalid wallet addresses return 400 before token issuance.
 
 ---
 
