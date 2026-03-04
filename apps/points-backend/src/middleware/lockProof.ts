@@ -22,7 +22,7 @@ const CACHE_TTL = 5 * 60 * 1000;
  */
 export async function requireLockProof(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
   // Allow bypassing lock proof in test environments (no RPC available)
-  if (process.env.SKIP_LOCK_PROOF === "true") {
+  if (process.env.SKIP_LOCK_PROOF === "true" && process.env.NODE_ENV !== "production") {
     next();
     return;
   }

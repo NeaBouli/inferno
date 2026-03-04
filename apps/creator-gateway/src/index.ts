@@ -11,7 +11,7 @@ const app = express();
 app.use(cors({
   origin: (process.env.ALLOWED_ORIGINS || 'http://localhost:3005').split(','),
 }));
-app.use(express.json());
+app.use(express.json({ limit: '10kb' }));
 app.use(rateLimit({ windowMs: 60_000, max: 60 }));
 
 app.use('/auth', authRouter);

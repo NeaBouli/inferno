@@ -12,7 +12,7 @@ const app = express();
 app.use(cors({
   origin: (process.env.ALLOWED_ORIGINS || 'http://localhost:3000,http://localhost:3001').split(','),
 }));
-app.use(express.json());
+app.use(express.json({ limit: '10kb' }));
 
 // Mount routes
 app.use('/api/admin', adminRoutes);

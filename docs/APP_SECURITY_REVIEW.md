@@ -254,15 +254,184 @@
 
 ---
 
+## Delta Review (2026-03-04, second pass)
+
+### Summary
+
+| Severity | Count | Fixed |
+|----------|-------|-------|
+| CRITICAL | 1 | 1 |
+| MEDIUM | 5 | 5 |
+| LOW | 7 | 2 (5 documented) |
+| **Total** | **13** | **8** |
+
+---
+
+### DF1 — CRITICAL: Live Anthropic API key in `.env` (not in `.gitignore`)
+
+| Field | Value |
+|-------|-------|
+| App | AI Copilot |
+| File | `apps/ai-copilot/.env` + `apps/ai-copilot/.gitignore` |
+| Status | **FIXED** |
+
+**Fix:** Added `.env` and `.env.*` to `apps/ai-copilot/.gitignore`. Key must be rotated at console.anthropic.com.
+
+---
+
+### DF2 — MEDIUM: Missing `express.json()` body size limit (Points Backend)
+
+| Field | Value |
+|-------|-------|
+| App | Points Backend |
+| File | `apps/points-backend/src/index.ts:15` |
+| Status | **FIXED** |
+
+**Fix:** Added `express.json({ limit: '10kb' })`.
+
+---
+
+### DF3 — MEDIUM: Missing `express.json()` body size limit (Benefits Network)
+
+| Field | Value |
+|-------|-------|
+| App | Benefits Network |
+| File | `apps/benefits-network/backend/src/index.ts:15` |
+| Status | **FIXED** |
+
+**Fix:** Added `express.json({ limit: '10kb' })`.
+
+---
+
+### DF4 — MEDIUM: `SKIP_LOCK_PROOF` bypass not guarded against production
+
+| Field | Value |
+|-------|-------|
+| App | Points Backend |
+| File | `apps/points-backend/src/middleware/lockProof.ts:25` |
+| Status | **FIXED** |
+
+**Fix:** Added `&& process.env.NODE_ENV !== "production"` guard.
+
+---
+
+### DF5 — MEDIUM: Anthropic API errors forwarded to client
+
+| Field | Value |
+|-------|-------|
+| App | AI Copilot |
+| File | `apps/ai-copilot/server/index.ts:112` |
+| Status | **FIXED** |
+
+**Fix:** Replaced `API error: ${errMsg}` with generic "AI service temporarily unavailable" message.
+
+---
+
+### DF6 — MEDIUM: Unvalidated `x-wallet-address` header for points spoofing
+
+| Field | Value |
+|-------|-------|
+| App | AI Copilot |
+| File | `apps/ai-copilot/server/index.ts:120-129` |
+| Status | Documented |
+
+**Description:** Points backend uses JWT wallet, not header wallet, so actual risk is low. The `detectGuideCompletion` heuristic can fire for arbitrary conversations but points are attributed to JWT wallet.
+
+---
+
+### DF7 — LOW: Missing `express.json()` body size limit (Creator Gateway)
+
+| Field | Value |
+|-------|-------|
+| App | Creator Gateway |
+| File | `apps/creator-gateway/src/index.ts:14` |
+| Status | **FIXED** |
+
+**Fix:** Added `express.json({ limit: '10kb' })`.
+
+---
+
+### DF8 — LOW: Verbose Anthropic response logging in production
+
+| Field | Value |
+|-------|-------|
+| App | AI Copilot |
+| File | `apps/ai-copilot/server/index.ts:106-107` |
+| Status | **FIXED** |
+
+**Fix:** Wrapped behind `NODE_ENV !== "production"` guard.
+
+---
+
+### DF9 — LOW: Voucher validation leaks wallet addresses
+
+| Field | Value |
+|-------|-------|
+| App | Points Backend |
+| File | `apps/points-backend/src/routes/voucher.ts:83-116` |
+| Status | Documented |
+
+**Description:** `GET /voucher/validate/:nonce` returns wallet address. Nonces are 256-bit random (not guessable). By design for partner validation.
+
+---
+
+### DF10 — LOW: Benefits Network redeem endpoint unauthenticated
+
+| Field | Value |
+|-------|-------|
+| App | Benefits Network |
+| File | `apps/benefits-network/backend/src/routes/sessions.ts:52` |
+| Status | Documented |
+
+**Description:** `POST /api/sessions/:id/redeem` requires no auth. Session IDs (CUIDs) have timestamp component. Add HMAC token or adminAuth for mainnet.
+
+---
+
+### DF11 — LOW: Session status endpoint leaks wallet address
+
+| Field | Value |
+|-------|-------|
+| App | Benefits Network |
+| File | `apps/benefits-network/backend/src/routes/sessions.ts:33` |
+| Status | Documented |
+
+**Description:** `GET /api/sessions/:id` exposes `recoveredAddress`. Needed for QR-flow polling.
+
+---
+
+### DF12 — LOW: `dangerouslySetInnerHTML` in Benefits Frontend layout
+
+| Field | Value |
+|-------|-------|
+| App | Benefits Network Frontend |
+| File | `apps/benefits-network/frontend/src/app/layout.tsx:28` |
+| Status | Documented |
+
+**Description:** Static literal only (no user input). Safe but flagged as pattern warning.
+
+---
+
+### DF13 — LOW: No authentication on AI Copilot chat endpoint
+
+| Field | Value |
+|-------|-------|
+| App | AI Copilot |
+| File | `apps/ai-copilot/server/index.ts:68` |
+| Status | Documented |
+
+**Description:** `POST /api/chat` has no auth. Add per-IP rate limiting (e.g., 20 req/min) before mainnet.
+
+---
+
 ## Recommendations for Mainnet
 
-1. **Remove legacy `/auth/wallet` endpoint** — SIWE is the correct auth flow
-2. **Use `crypto.timingSafeEqual` for admin secrets** (F8)
-3. **Add message length limits to AI Copilot** (F9)
-4. **Set `ALLOWED_ORIGINS` env var** in all production deployments
-5. **Set `JWT_SECRET` env var** with cryptographically random 32+ byte secret
-6. **Add structured logging** (e.g., winston/pino) for production observability
-7. **Add health check auth** — `/health` endpoints are unauthenticated (acceptable for monitoring but should not leak sensitive state)
+1. **Rotate Anthropic API key** — key was in unprotected `.env` (DF1)
+2. **Remove legacy `/auth/wallet` endpoint** — SIWE is the correct auth flow
+3. **Set `ALLOWED_ORIGINS` env var** in all production deployments
+4. **Set `JWT_SECRET` env var** with cryptographically random 32+ byte secret
+5. **Add authentication to Benefits Network redeem** (DF10)
+6. **Add per-IP rate limiting to AI Copilot** `/api/chat` (DF13)
+7. **Add structured logging** (e.g., winston/pino) for production observability
 
 ---
 
