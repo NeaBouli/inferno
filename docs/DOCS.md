@@ -50,6 +50,7 @@ inferno/
 │   ├── execute-ownership-transfer.js [x] Ownership Transfer Executor (nach 48h Timelock)
 │   ├── redeploy-reserves.js         [x] Redeploy LiquidityReserve/BuybackVault/BurnReserve (transferOwnership Upgrade)
 │   ├── burn-lp-tokens.js            [x] LP Token Burn → 0xdead (DRY RUN Schutz, irreversibel)
+│   ├── deploy-mainnet.js           [x] Unified Mainnet Deploy (9 Contracts, 12 Steps, DRY RUN kompatibel)
 │   └── check-links.js              [x] Dead Link Checker (interne Links in docs/)
 ├── tasks/
 │   └── admin.js                       [x] Hardhat CLI Tasks (lock-check, vault-status, feerouter-status, token-stats, gov-queue)
@@ -385,6 +386,19 @@ npx hardhat run scripts/deploy-testnet.js
 
 ```bash
 npx hardhat run scripts/deploy-testnet.js --network sepolia
+```
+
+### Mainnet — Dry-Run (lokal)
+
+```bash
+npx hardhat run scripts/deploy-mainnet.js --network hardhat
+```
+
+### Mainnet — Live
+
+```bash
+# Env vars MUESSEN gesetzt sein: TREASURY_ADDRESS, COMMUNITY_ADDRESS, TEAM_BENEFICIARY, VOUCHER_SIGNER_ADDRESS
+npx hardhat run scripts/deploy-mainnet.js --network mainnet
 ```
 
 ### Deploy-Ablauf (9 Steps)
