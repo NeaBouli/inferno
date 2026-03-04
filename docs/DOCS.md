@@ -71,9 +71,9 @@ inferno/
 │   ├── partner-directory/             [entfernt] Durch offenes Oekosystem-Modell ersetzt
 │   ├── ai-copilot/                   [x] React + Vite + TS + Tailwind + Express (3 Modi, RAG, Safety Guards)
 │   ├── points-backend/               [x] Express + Prisma + SQLite + siwe + jose (SIWE Auth, Points, EIP-712 Voucher, 35 Tests)
-│   ├── creator-gateway/              [x] Express + ethers v5 + googleapis + JWT (YouTube x IFR Lock Bridge, Port 3005, 32 Tests)
+│   ├── creator-gateway/              [x] Express + ethers v5 + googleapis + JWT (YouTube x IFR Lock Bridge, Port 3005, 41 Tests)
 │   └── benefits-network/
-│       ├── backend/                   [x] Express + Prisma + SQLite (8 Tests)
+│       ├── backend/                   [x] Express + Prisma + SQLite (16 Tests)
 │       └── frontend/                  [x] Next.js 14 + Tailwind + wagmi v2 (PWA)
 ├── docs/
 │   ├── DOCS.md                         Dieses Dokument
@@ -102,7 +102,7 @@ inferno/
 │   ├── PATCH-GUIDELINES.md             Patch-Richtlinien v1.0 (6 Schritte, Versionierung, Notfall-Patches)
 │   ├── COVERAGE_REPORT.md             Solidity Coverage Report (99% Stmts, 91% Branch, 98% Funcs, 99% Lines, Final Run)
 │   ├── BENEFITS_NETWORK_TEST.md       Benefits Network E2E Test Guide (Test-Flow, API, Lock Tiers, Fehler)
-│   ├── PROJECT-SUMMARY.md             Komplett-Uebersicht (14 Contracts, 436 Tests, 7 Apps, CI/CD)
+│   ├── PROJECT-SUMMARY.md             Komplett-Uebersicht (14 Contracts, 453 Tests, 7 Apps, CI/CD)
 │   ├── CONTRIBUTING.md                Contributing Guide v1.0 (Bug Reports, Code Standards, Git Konventionen)
 │   ├── TRANSPARENCY.md               On-Chain Transparency Report (8 Checks, Supply, Vesting, LP, Mainnet TODOs)
 │   ├── ONE-PAGER.md                  Investor One-Pager (Key Numbers, Produkte, Technologie, Vor-Mainnet)
@@ -128,6 +128,7 @@ inferno/
 │   ├── ROADMAP_v0.2.0.md             Mainnet-Ready Milestones (Audit, Multisig, Deploy, Post-Launch)
 │   ├── CHATGPT_AUDIT_V4_RESULTS.md    Audit V4 Ergebnisse (8/8 PASS)
 │   ├── GITHUB_SETUP.md               Repository Setup (Discussions, Topics, Pages)
+│   ├── APP_SECURITY_REVIEW.md        App Security Review (12 Findings, 7 Fixed: CORS, JWT, ABI, Wallet)
 │   ├── robots.txt                     Crawler-Steuerung (Allow: /, Sitemap-Link)
 │   ├── sitemap.xml                    15 URLs (Landing + 14 Wiki-Seiten)
 │   └── wiki/                          [x] 14 HTML-Seiten (index, contracts, tokenomics, lock, governance, security, deployment, integration, agent, faq, transparency, fair-launch, fee-design, roadmap)

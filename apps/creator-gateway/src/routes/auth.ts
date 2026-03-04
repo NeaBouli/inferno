@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { ethers } from 'ethers';
 import { google } from 'googleapis';
 import jwt from 'jsonwebtoken';
 import { SiweMessage, generateNonce } from 'siwe';
@@ -96,19 +97,28 @@ router.post('/siwe/verify', async (req, res) => {
   }
 });
 
-// Legacy wallet-only auth (kept for backward compat, uses SIWE in production)
+// Legacy wallet-only auth (deprecated — use /auth/siwe/verify in production)
 router.post('/wallet', (req, res) => {
   const { walletAddress } = req.body;
   if (!walletAddress) {
     res.status(400).json({ error: 'walletAddress required' });
     return;
   }
+  // Validate address format
+  let checksumAddress: string;
+  try {
+    checksumAddress = ethers.utils.getAddress(walletAddress);
+  } catch {
+    res.status(400).json({ error: 'Invalid wallet address' });
+    return;
+  }
+  res.setHeader('X-Deprecated', 'Use /auth/siwe/verify instead');
   const token = jwt.sign(
-    { walletAddress },
+    { walletAddress: checksumAddress },
     CONFIG.jwtSecret,
     { expiresIn: `${CONFIG.jwtExpiryHours}h` }
   );
-  res.json({ token });
+  res.json({ token, deprecated: true, useInstead: '/auth/siwe/verify' });
 });
 
 export default router;

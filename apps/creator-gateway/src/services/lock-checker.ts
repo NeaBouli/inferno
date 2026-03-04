@@ -3,7 +3,7 @@ import { CONFIG } from '../config';
 
 const IFRLOCK_ABI = [
   'function isLocked(address wallet, uint256 minAmount) view returns (bool)',
-  'function lockedAmount(address wallet) view returns (uint256)',
+  'function lockedBalance(address wallet) view returns (uint256)',
 ];
 
 export class LockChecker {
@@ -24,9 +24,9 @@ export class LockChecker {
     }
   }
 
-  async lockedAmount(walletAddress: string): Promise<string> {
+  async lockedBalance(walletAddress: string): Promise<string> {
     try {
-      const raw = await this.contract.lockedAmount(walletAddress);
+      const raw = await this.contract.lockedBalance(walletAddress);
       return ethers.utils.formatUnits(raw, CONFIG.decimals);
     } catch {
       return '0';

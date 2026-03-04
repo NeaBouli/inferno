@@ -6,7 +6,9 @@ import { SYSTEM_PROMPTS } from "../src/context/system-prompts.js";
 import { loadWikiDocs, buildSystemPrompt, WikiDoc } from "./wiki-rag.js";
 
 const app = express();
-app.use(cors());
+app.use(cors({
+  origin: (process.env.ALLOWED_ORIGINS || 'http://localhost:5175,http://localhost:3003').split(','),
+}));
 app.use(express.json());
 
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
