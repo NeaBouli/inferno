@@ -9,7 +9,9 @@ import voucherRoutes from "./routes/voucher";
 const app = express();
 const PORT = parseInt(process.env.PORT || "3004", 10);
 
-app.use(cors());
+app.use(cors({
+  origin: (process.env.ALLOWED_ORIGINS || 'http://localhost:3004').split(','),
+}));
 app.use(express.json());
 app.use(generalRateLimit);
 

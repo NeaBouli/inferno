@@ -8,7 +8,9 @@ import accessRouter from './routes/access';
 
 const app = express();
 
-app.use(cors());
+app.use(cors({
+  origin: (process.env.ALLOWED_ORIGINS || 'http://localhost:3005').split(','),
+}));
 app.use(express.json());
 app.use(rateLimit({ windowMs: 60_000, max: 60 }));
 

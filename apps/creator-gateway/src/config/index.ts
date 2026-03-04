@@ -3,7 +3,11 @@ export const CONFIG = {
   rpcUrl: process.env.RPC_URL || '',
   ifrLockAddress: process.env.IFRLOCK_ADDRESS || '0x0Cab0A9440643128540222acC6eF5028736675d3',
   chainId: parseInt(process.env.CHAIN_ID || '11155111'),
-  jwtSecret: process.env.JWT_SECRET || 'change-me',
+  jwtSecret: process.env.JWT_SECRET || (() => {
+    if (process.env.NODE_ENV === 'production') throw new Error('JWT_SECRET is required in production');
+    console.warn('WARNING: JWT_SECRET not set — using insecure default (dev only)');
+    return 'dev-only-not-for-production';
+  })(),
   jwtExpiryHours: 24,
   google: {
     clientId: process.env.GOOGLE_CLIENT_ID || '',

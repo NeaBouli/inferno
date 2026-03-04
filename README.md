@@ -85,11 +85,12 @@ The ecosystem is open and permissionless. Any product can integrate IFR Lock.
 
 ## Testing & Security
 
-- 436 tests total: 361 contract tests + 32 Creator Gateway + 35 Points Backend + 8 Benefits Network — all passing
+- 453 tests total: 361 contract tests + 41 Creator Gateway + 35 Points Backend + 16 Benefits Network — all passing
 - Branch coverage: 91% (99% statements)
 - GitHub Actions CI: Creator Gateway, Points Backend, AI Copilot
 - Slither security audit: 0 high/critical findings
 - Claude security audit: 0 FAIL, 20 WARN (1 fixed), 81 PASS ([full report](docs/SECURITY_AUDIT_CLAUDE.md))
+- App security review: 12 findings (2 CRITICAL, 5 HIGH — all fixed) ([full report](docs/APP_SECURITY_REVIEW.md))
 - Full Sepolia testnet deployment with verified contracts
 - Governance lifecycle tested: propose → 48h wait → execute
 
@@ -206,6 +207,7 @@ SIWE authentication, points tracking, and EIP-712 signed voucher issuance for pr
 - [ChatGPT Audit V4 Results](docs/CHATGPT_AUDIT_V4_RESULTS.md) — Audit V4 Self-Check (8/8 PASS)
 - [ChatGPT Audit V5 Results](docs/CHATGPT_AUDIT_V5_RESULTS.md) — Cross-Audit: W15-W21 (7 neue Findings, W16 gefixt)
 - [GitHub Setup](docs/GITHUB_SETUP.md) — Repository Settings (Discussions, Topics, Pages)
+- [App Security Review](docs/APP_SECURITY_REVIEW.md) — Full App Review (12 Findings, 7 Fixed: CORS, JWT, ABI, Wallet Validation)
 
 ## Development
 

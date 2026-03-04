@@ -11,7 +11,7 @@ jest.mock('ethers', () => {
       },
       Contract: jest.fn().mockImplementation(() => ({
         isLocked: jest.fn(),
-        lockedAmount: jest.fn(),
+        lockedBalance: jest.fn(),
       })),
       utils: actual.ethers.utils,
     },
@@ -40,10 +40,10 @@ describe('LockChecker', () => {
     expect(result).toBe(false);
   });
 
-  test('returns 0 on lockedAmount RPC error', async () => {
+  test('returns 0 on lockedBalance RPC error', async () => {
     const checker = new LockChecker();
-    (checker as any).contract.lockedAmount = jest.fn().mockRejectedValue(new Error('RPC'));
-    const amount = await checker.lockedAmount('0x1234567890123456789012345678901234567890');
+    (checker as any).contract.lockedBalance = jest.fn().mockRejectedValue(new Error('RPC'));
+    const amount = await checker.lockedBalance('0x1234567890123456789012345678901234567890');
     expect(amount).toBe('0');
   });
 });
