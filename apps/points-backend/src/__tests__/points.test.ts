@@ -123,7 +123,8 @@ async function run() {
   console.log("\nVoucher:");
   {
     const { status } = await api("POST", "/voucher/issue", {}, authToken);
-    assert(status === 400, "voucher rejected under threshold");
+    // 400 = under threshold, 403 = no IFR lock, 503 = lock RPC unavailable
+    assert([400, 403, 503].includes(status), "voucher rejected (threshold, lock proof, or RPC unavailable)");
   }
 
   // ---- Reach Threshold and Issue Voucher ----

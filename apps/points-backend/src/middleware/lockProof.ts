@@ -21,6 +21,12 @@ const CACHE_TTL = 5 * 60 * 1000;
  * Used on sensitive endpoints like voucher redemption to prevent Sybil attacks.
  */
 export async function requireLockProof(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
+  // Allow bypassing lock proof in test environments (no RPC available)
+  if (process.env.SKIP_LOCK_PROOF === "true") {
+    next();
+    return;
+  }
+
   const wallet = req.wallet;
   if (!wallet) {
     res.status(401).json({ error: "Authorization required" });
