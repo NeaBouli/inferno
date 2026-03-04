@@ -103,13 +103,15 @@ app.post("/api/chat", async (req, res) => {
     });
 
     const data = await response.json() as Record<string, unknown>;
-    console.log("Anthropic response status:", response.status);
-    console.log("Anthropic response:", JSON.stringify(data).slice(0, 500));
+    if (process.env.NODE_ENV !== "production") {
+      console.log("Anthropic response status:", response.status);
+      console.log("Anthropic response:", JSON.stringify(data).slice(0, 500));
+    }
 
     if (!response.ok) {
       const errMsg = (data as { error?: { message?: string } }).error?.message || "Unknown API error";
       console.error("Anthropic API error:", errMsg);
-      res.status(500).json({ reply: `API error: ${errMsg}` });
+      res.status(500).json({ reply: "AI service temporarily unavailable. Please try again." });
       return;
     }
 
