@@ -224,6 +224,12 @@ npx hardhat gov-queue --network sepolia
 ### Mainnet Preparation Scripts
 
 ```bash
+# Mainnet deploy — DRY RUN (all 9 contracts, 12 steps)
+npx hardhat run scripts/deploy-mainnet.js --network hardhat
+
+# Mainnet deploy — LIVE (requires env vars: TREASURY_ADDRESS, COMMUNITY_ADDRESS, TEAM_BENEFICIARY, VOUCHER_SIGNER_ADDRESS)
+npx hardhat run scripts/deploy-mainnet.js --network mainnet
+
 # On-chain audit (8 checks)
 npx hardhat run scripts/onchain-audit.js --network sepolia
 
