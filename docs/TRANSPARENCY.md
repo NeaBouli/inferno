@@ -151,7 +151,20 @@ Deflation funktioniert on-chain nachweisbar.
 | 5 | PartnerVault feeExempt setzen (Proposal #3) | Erledigt (26.02.2026) |
 | 6 | feeExempt v2 Contracts (Proposals #7-9) | Erledigt (03.03.2026) |
 | 7 | Third-party Security Audit | Kritisch |
-| 8 | Gnosis Safe 4-of-7 Multisig | Hoch |
+| 8 | Gnosis Safe 4-of-7 Multisig | Erledigt (Phase 0: 1-of-1, 04.03.2026) |
+
+---
+
+## Gnosis Safe Multisig
+
+| Detail | Wert |
+|--------|------|
+| Address | [`0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b`](https://etherscan.io/address/0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b) |
+| Network | Ethereum Mainnet |
+| Threshold | 1-of-1 (Phase 0 — expand to 2-of-3 before mainnet) |
+| Safe URL | [app.safe.global](https://app.safe.global/home?safe=eth:0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b) |
+| Status | Active |
+| Deployed | 2026-03-04 |
 
 ---
 

@@ -58,6 +58,14 @@ with a 1-year cliff. See [Fair Launch Statement](docs/FAIR_LAUNCH.md).
 | FeeRouterV1 | `0x499289C8Ef49769F4FcFF3ca86D4BD7b55B49aa4` |
 | LP Pair (IFR/WETH) | `0x2252e8bBDE0E50CD372748aC233A99C08627d9c7` |
 
+### Gnosis Safe (Mainnet)
+
+| Role | Address |
+|------|---------|
+| Treasury Multisig | [`0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b`](https://app.safe.global/home?safe=eth:0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b) |
+
+Threshold: 1-of-1 (Phase 0). Will be expanded to 2-of-3 before mainnet.
+
 ## Partner Ecosystem
 
 Lock-triggered Creator Rewards: when users lock IFR for a partner's product, the partner earns a percentage from the 40M Partner Ecosystem Pool.

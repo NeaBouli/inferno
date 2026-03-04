@@ -111,3 +111,15 @@
 | PartnerVault Funded | **Done** — 40M IFR (38.6M initial + 1.4M top-up after Proposal #3) |
 | Governance Proposal #3 | **Executed** — setFeeExempt(PartnerVault v2, true), TX 0x3f28690a...57de6e8 |
 | BootstrapVault Deployed + Verified | **Done** — [`0xE0E8F76e...`](https://sepolia.etherscan.io/address/0xE0E8F76e4fb38B2e367Aee043a2C02b8D1c7c037) — 2026-03-04 |
+
+---
+
+## Gnosis Safe (Mainnet)
+
+| Detail | Wert |
+|--------|------|
+| Address | [`0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b`](https://etherscan.io/address/0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b) |
+| Network | Ethereum Mainnet |
+| Threshold | 1-of-1 (Phase 0 — expand to 2-of-3 before mainnet) |
+| Deployed | 2026-03-04 |
+| Safe URL | [app.safe.global](https://app.safe.global/home?safe=eth:0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b) |
