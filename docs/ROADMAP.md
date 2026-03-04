@@ -16,7 +16,7 @@
 - [x] 14 on-chain components deployed on Sepolia (9 repo + 3 v2 + LP Pair + BootstrapVault)
 
 ### Testing & Security
-- [x] 361 contract tests, 436 total (+ 32 Creator Gateway + 35 Points + 8 Benefits)
+- [x] 367 contract tests, 444 total (+ 41 Creator Gateway + 20 Points + 16 Benefits)
 - [x] 91% branch coverage, 99% statement coverage
 - [x] Slither static analysis: 0 high/critical findings
 - [x] Claude Security Audit: 0 FAIL, 12 WARN, 78 PASS

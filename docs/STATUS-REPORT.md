@@ -34,13 +34,13 @@
 
 | Bereich | Tests | Framework |
 |---------|-------|-----------|
-| **Smart Contracts** | **361** | Hardhat + Chai + Waffle |
-| Creator Gateway | 32 | Jest + ts-jest + supertest |
-| Points Backend | 35 | tsx runner |
-| Benefits Network | 8 | Jest |
-| **Gesamt** | **436** | |
+| **Smart Contracts** | **367** | Hardhat + Chai + Waffle |
+| Creator Gateway | 41 | Jest + ts-jest + supertest |
+| Points Backend | 20 | tsx runner |
+| Benefits Network | 16 | Jest |
+| **Gesamt** | **444** | |
 
-### Contract Tests (361 — 10 Suites)
+### Contract Tests (367 — 10 Suites)
 
 | Suite | Tests | Beschreibung |
 |-------|-------|-------------|
@@ -129,7 +129,7 @@
 |-------|--------|
 | Slither v0.11.5 | **PASS** — 0 High/Critical, 15 Fixes, 36 akzeptiert |
 | solidity-coverage | **99% Stmts, 91% Branch** |
-| 361 Contract Tests | **PASS** — 0 Failures |
+| 367 Contract Tests | **PASS** — 0 Failures |
 | Governance Lifecycle | **PASS** — Proposal #0 + #1 executed via 48h Timelock |
 | Third-party Audit | **Offen** — empfohlen vor Mainnet |
 
