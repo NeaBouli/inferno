@@ -17,7 +17,7 @@ inferno/
 ├── contracts/
 │   ├── token/InfernoToken.sol          [x] 93 LOC, 22 Tests
 │   ├── liquidity/LiquidityReserve.sol  [x] 151 LOC, 42 Tests
-│   ├── vesting/Vesting.sol             [x] 132 LOC, 21 Tests
+│   ├── vesting/Vesting.sol             [x] 132 LOC, 27 Tests
 │   ├── buyback/BuybackVault.sol        [x] 173 LOC, 26 Tests
 │   ├── burnreserve/BurnReserve.sol     [x] 92 LOC, 27 Tests
 │   ├── governance/Governance.sol       [x] 150 LOC, 36 Tests
@@ -102,7 +102,7 @@ inferno/
 │   ├── PATCH-GUIDELINES.md             Patch-Richtlinien v1.0 (6 Schritte, Versionierung, Notfall-Patches)
 │   ├── COVERAGE_REPORT.md             Solidity Coverage Report (99% Stmts, 91% Branch, 98% Funcs, 99% Lines, Final Run)
 │   ├── BENEFITS_NETWORK_TEST.md       Benefits Network E2E Test Guide (Test-Flow, API, Lock Tiers, Fehler)
-│   ├── PROJECT-SUMMARY.md             Komplett-Uebersicht (14 Contracts, 453 Tests, 7 Apps, CI/CD)
+│   ├── PROJECT-SUMMARY.md             Komplett-Uebersicht (14 Contracts, 459 Tests, 7 Apps, CI/CD)
 │   ├── CONTRIBUTING.md                Contributing Guide v1.0 (Bug Reports, Code Standards, Git Konventionen)
 │   ├── TRANSPARENCY.md               On-Chain Transparency Report (8 Checks, Supply, Vesting, LP, Mainnet TODOs)
 │   ├── ONE-PAGER.md                  Investor One-Pager (Key Numbers, Produkte, Technologie, Vor-Mainnet)
@@ -154,7 +154,7 @@ inferno/
 
 ### 3. Vesting — [x] FERTIG
 - **Pfad:** `contracts/vesting/Vesting.sol`
-- **Tests:** 21 (Vesting.test.js)
+- **Tests:** 27 (Vesting.test.js)
 - **Beschreibung:** Team Vesting fuer 150M IFR
 - **Features:** Post-Cliff-Formel (12mo Cliff, 36mo linear), Guardian Pause, Beneficiary Release
 - **Formel:** `(totalAllocation * (elapsed - cliff)) / (duration - cliff)`
@@ -209,7 +209,7 @@ inferno/
 |--------|------|
 | Contracts | 10 (+ 4 Mocks) |
 | Solidity LOC | 1,697 |
-| Tests | 361 (alle bestanden) |
+| Tests | 367 (alle bestanden) |
 | Branch Coverage | 91% |
 | Test LOC | 2,402 |
 | Deploy Script | 232 LOC, 9 Steps |

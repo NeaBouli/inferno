@@ -13,9 +13,9 @@
 |----------|-------|-------|
 | CRITICAL | 2 | 2 (+2 bonus: Points Backend JWT + FeeRouter address) |
 | HIGH | 5 | 5 |
-| MEDIUM | 3 | 0 (documented) |
+| MEDIUM | 3 | 3 |
 | LOW | 2 | 0 (documented) |
-| **Total** | **12** | **9** |
+| **Total** | **12** | **12** |
 
 ---
 
@@ -137,13 +137,13 @@
 | App | Benefits Network |
 | File | `apps/benefits-network/backend/src/middleware/auth.ts:12` |
 | Category | Authentication |
-| Status | Documented |
+| Status | **FIXED** |
 
 **Description:** Admin secret comparison uses `token !== config.ADMIN_SECRET` (string equality) instead of `crypto.timingSafeEqual()`. Theoretically vulnerable to timing-based side-channel attacks to recover the admin secret character by character.
 
 **Impact:** Low in practice — requires thousands of precisely-timed requests. The rate limiter (50 req/hr on admin routes) makes exploitation impractical.
 
-**Recommendation:** Replace with `crypto.timingSafeEqual(Buffer.from(token), Buffer.from(config.ADMIN_SECRET))` before mainnet.
+**Fix:** Replaced with `crypto.timingSafeEqual(Buffer.from(token), Buffer.from(secret))` with length check guard (different-length buffers are rejected before comparison).
 
 ---
 
@@ -154,11 +154,11 @@
 | App | AI Copilot |
 | File | `apps/ai-copilot/server/index.ts:72` |
 | Category | Input Validation |
-| Status | Documented |
+| Status | **FIXED** |
 
 **Description:** The `messages` array is passed to the Anthropic API without size validation. An attacker could send extremely large payloads to cause high API costs or memory issues.
 
-**Recommendation:** Add `express.json({ limit: '50kb' })` and validate `messages.length <= 20`.
+**Fix:** Added `express.json({ limit: '50kb' })` body size limit and `messages.length > 20` validation with 400 response.
 
 ---
 
@@ -169,9 +169,11 @@
 | App | Smart Contracts |
 | File | `contracts/vesting/Vesting.sol` |
 | Category | Access Control |
-| Status | Documented (from ChatGPT Audit V5, W18) |
+| Status | **FIXED** |
 
-**Description:** Guardian address is immutable — cannot be rotated. If compromised, attacker can permanently pause releases (DoS on beneficiary). Cross-referenced from W18.
+**Description:** Guardian address was immutable — could not be rotated. If compromised, attacker could permanently pause releases (DoS on beneficiary). Cross-referenced from W18.
+
+**Fix:** Removed `immutable` from guardian. Added `transferGuardian(address newGuardian)` function with `onlyGuardian` modifier, zero-address check, and `GuardianTransferred` event. +6 tests.
 
 ---
 
