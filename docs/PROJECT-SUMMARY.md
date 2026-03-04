@@ -27,11 +27,11 @@ Ownership: Transferiert an Governance (Timelock, 48h Delay)
 
 | Bereich | Tests | Framework |
 |---------|-------|-----------|
-| Smart Contracts | 361 | Hardhat + Chai + Waffle |
+| Smart Contracts | 367 | Hardhat + Chai + Waffle |
 | Creator Gateway | 41 | Jest + ts-jest + supertest |
 | Points Backend | 35 | tsx runner |
 | Benefits Network | 16 | Jest |
-| **Gesamt** | **453** | |
+| **Gesamt** | **459** | |
 
 ### Solidity Coverage (solidity-coverage)
 

@@ -175,6 +175,41 @@ describe("Vesting", function () {
     });
   });
 
+  // ── transferGuardian ───────────────────────────────────────
+
+  describe("transferGuardian", () => {
+    it("guardian can transfer guardianship", async () => {
+      await vesting.connect(guardian).transferGuardian(other.address);
+      expect(await vesting.guardian()).to.equal(other.address);
+    });
+
+    it("emits GuardianTransferred event", async () => {
+      await expect(vesting.connect(guardian).transferGuardian(other.address))
+        .to.emit(vesting, "GuardianTransferred")
+        .withArgs(guardian.address, other.address);
+    });
+
+    it("new guardian can pause", async () => {
+      await vesting.connect(guardian).transferGuardian(other.address);
+      await expect(vesting.connect(other).pause()).to.emit(vesting, "Paused");
+    });
+
+    it("old guardian cannot pause after transfer", async () => {
+      await vesting.connect(guardian).transferGuardian(other.address);
+      await expect(vesting.connect(guardian).pause()).to.be.reverted;
+    });
+
+    it("non-guardian cannot transfer", async () => {
+      await expect(vesting.connect(other).transferGuardian(other.address)).to.be.reverted;
+    });
+
+    it("reverts with zero address", async () => {
+      await expect(
+        vesting.connect(guardian).transferGuardian(ethers.constants.AddressZero)
+      ).to.be.revertedWith("newGuardian=0");
+    });
+  });
+
   // ── Release Edge Cases ──────────────────────────────────────
 
   describe("Release edge cases", () => {

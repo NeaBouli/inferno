@@ -85,7 +85,7 @@ The ecosystem is open and permissionless. Any product can integrate IFR Lock.
 
 ## Testing & Security
 
-- 453 tests total: 361 contract tests + 41 Creator Gateway + 35 Points Backend + 16 Benefits Network — all passing
+- 459 tests total: 367 contract tests + 41 Creator Gateway + 35 Points Backend + 16 Benefits Network — all passing
 - Branch coverage: 91% (99% statements)
 - GitHub Actions CI: Creator Gateway, Points Backend, AI Copilot
 - Slither security audit: 0 high/critical findings

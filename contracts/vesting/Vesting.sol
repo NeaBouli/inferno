@@ -17,12 +17,13 @@ contract Vesting {
     uint256 public immutable duration;
     uint256 public immutable totalAllocation;
     uint256 public released;
-    address public immutable guardian;
+    address public guardian;
     bool public paused;
 
     event Released(address indexed beneficiary, uint256 amount);
     event Paused(address indexed guardian);
     event Unpaused(address indexed guardian);
+    event GuardianTransferred(address indexed previousGuardian, address indexed newGuardian);
 
     error NotBeneficiary();
     error NothingToRelease();
@@ -67,6 +68,15 @@ contract Vesting {
     modifier onlyBeneficiary() {
         if (msg.sender != beneficiary) revert NotBeneficiary();
         _;
+    }
+
+    /// @notice Transfer guardian role to a new address (guardian only)
+    /// @param newGuardian Address of the new guardian
+    function transferGuardian(address newGuardian) external onlyGuardian {
+        require(newGuardian != address(0), "newGuardian=0");
+        address old = guardian;
+        guardian = newGuardian;
+        emit GuardianTransferred(old, newGuardian);
     }
 
     /// @notice Pause token releases (guardian only)

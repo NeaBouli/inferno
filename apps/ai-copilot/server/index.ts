@@ -9,7 +9,7 @@ const app = express();
 app.use(cors({
   origin: (process.env.ALLOWED_ORIGINS || 'http://localhost:5175,http://localhost:3003').split(','),
 }));
-app.use(express.json());
+app.use(express.json({ limit: '50kb' }));
 
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
 const POINTS_BACKEND_URL = process.env.POINTS_BACKEND_URL || "http://localhost:3004";
@@ -75,6 +75,11 @@ app.post("/api/chat", async (req, res) => {
 
   if (!messages || !Array.isArray(messages)) {
     res.status(400).json({ reply: "Invalid request: messages required." });
+    return;
+  }
+
+  if (messages.length > 20) {
+    res.status(400).json({ reply: "Too many messages (max 20)." });
     return;
   }
 
