@@ -49,7 +49,7 @@
 
 ### Must Have
 - [ ] LP Token lock/burn (Unicrypt, 12 months minimum)
-- [ ] Gnosis Safe Multisig (2-of-3 initial signers)
+- [x] Gnosis Safe Multisig deployed (1-of-1, expand to 2-of-3 before mainnet) — `0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b`
 - [ ] Governance owner → Multisig
 - [ ] Community wallet + team beneficiary addresses finalized
 - [ ] Professional security audit (Code4rena / Sherlock)

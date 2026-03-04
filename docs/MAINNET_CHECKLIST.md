@@ -63,10 +63,10 @@ Diese Punkte muessen ZWINGEND vor Mainnet erledigt sein:
 - [ ] Code Freeze: kein Commit nach Audit-Abschluss ohne Re-Audit
 
 ### Multisig Setup (MUSS vor Deployment fertig sein)
-- [ ] Gnosis Safe erstellt: https://safe.global
-- [ ] Empfohlen: 4-of-7 Signers
+- [x] Gnosis Safe erstellt: https://safe.global
+- [ ] Empfohlen: 4-of-7 Signers (aktuell 1-of-1, Phase 0)
 - [ ] Alle Signers haben Hardware Wallets (Ledger/Trezor)
-- [ ] Multisig-Adresse notiert: [MULTISIG_ADDRESS]
+- [x] Multisig-Adresse notiert: `0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b`
 - [ ] Guardian-Multisig erstellt (separates Safe, 2-of-3 empfohlen)
 - [ ] Guardian-Adresse notiert: [GUARDIAN_ADDRESS]
 - [ ] Test-Transaktion auf Sepolia mit Multisig erfolgreich
