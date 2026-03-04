@@ -272,8 +272,8 @@ Team.Finance integration
 - [x] Tests written (22/22 passing) — commit 2ce8b6b5
 - [x] Audit updated (SECURITY_AUDIT_CLAUDE.md) — 2026-03-03
 - [x] Sepolia testnet deploy — [`0xE0E8F76e4fb38B2e367Aee043a2C02b8D1c7c037`](https://sepolia.etherscan.io/address/0xE0E8F76e4fb38B2e367Aee043a2C02b8D1c7c037) — 2026-03-04
-- [ ] Landing Page bootstrap banner
-- [ ] Wiki bootstrap page
+- [x] Landing Page bootstrap banner — 2026-03-04
+- [x] Wiki bootstrap page — docs/wiki/bootstrap.html — 2026-03-04
 - [ ] Juicebox project created
 - [ ] Mainnet deploy
 
