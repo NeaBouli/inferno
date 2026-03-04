@@ -34,9 +34,9 @@ Inferno v0.1.0 marks the **first tagged release** of the protocol. All 14 smart 
 - Benefits Network (QR verification, Next.js PWA)
 
 **Testing:**
-- 361 contract tests (Hardhat + Chai)
-- 32 Creator Gateway tests (Jest)
-- 35 Points Backend tests
+- 367 contract tests (Hardhat + Chai)
+- 41 Creator Gateway tests (Jest)
+- 20 Points Backend tests
 - Slither static analysis: 0 high/critical findings
 - Branch coverage: 91% (99% statements)
 
