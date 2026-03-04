@@ -1,7 +1,11 @@
 import { Request, Response, NextFunction } from "express";
 import * as jose from "jose";
 
-const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || "dev-secret");
+const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || (() => {
+  if (process.env.NODE_ENV === "production") throw new Error("JWT_SECRET is required in production");
+  console.warn("WARNING: JWT_SECRET not set — using insecure default (dev only)");
+  return "dev-only-not-for-production";
+})());
 
 export interface AuthRequest extends Request {
   wallet?: string;

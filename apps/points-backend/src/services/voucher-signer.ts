@@ -1,7 +1,10 @@
 import { ethers } from "ethers";
 
 const CHAIN_ID = parseInt(process.env.CHAIN_ID || "11155111", 10);
-const FEE_ROUTER_ADDRESS = process.env.FEE_ROUTER_ADDRESS || ethers.constants.AddressZero;
+const FEE_ROUTER_ADDRESS = process.env.FEE_ROUTER_ADDRESS || (() => {
+  if (process.env.NODE_ENV === "production") throw new Error("FEE_ROUTER_ADDRESS is required in production");
+  return ethers.constants.AddressZero;
+})();
 
 const domain = {
   name: "InfernoFeeRouter",

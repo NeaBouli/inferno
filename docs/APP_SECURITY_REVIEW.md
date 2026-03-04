@@ -11,11 +11,11 @@
 
 | Severity | Count | Fixed |
 |----------|-------|-------|
-| CRITICAL | 2 | 2 |
+| CRITICAL | 2 | 2 (+2 bonus: Points Backend JWT + FeeRouter address) |
 | HIGH | 5 | 5 |
 | MEDIUM | 3 | 0 (documented) |
 | LOW | 2 | 0 (documented) |
-| **Total** | **12** | **7** |
+| **Total** | **12** | **9** |
 
 ---
 
@@ -51,7 +51,7 @@
 
 **Impact:** Full authentication bypass in production if `JWT_SECRET` is not configured.
 
-**Fix:** Added startup validation — throws error in production if `JWT_SECRET` is not set. In development, logs a warning and uses a clearly-marked dev-only default.
+**Fix:** Added startup validation — throws error in production if `JWT_SECRET` is not set. In development, logs a warning and uses a clearly-marked dev-only default. Same fix applied to Points Backend (`apps/points-backend/src/middleware/auth.ts:4`) which had `"dev-secret"` default.
 
 ---
 
