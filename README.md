@@ -16,6 +16,8 @@ Inferno (IFR) is a deflationary ERC-20 utility token on Ethereum. Every transfer
 
 **Community Fair Launch Model** — No presale, no VC, no insider allocations.
 
+> Inferno Protocol is fully open source and community-owned. No single entity controls the protocol. All contracts are verified on Ethereum Mainnet, governed by a 48-hour timelock, and protected by Gnosis Safe multisig. The protocol lives on-chain — permanently.
+
 ## Key Features
 
 - **Deflationary**: 2.5% burned per transfer (2% sender + 0.5% recipient). 1% pool fee. Hard cap: 5% max.
