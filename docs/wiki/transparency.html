@@ -448,40 +448,50 @@
             <td><span class="status-ok">OK</span></td>
           </tr>
           <tr>
-            <td>IFRLock</td>
-            <td>admin-Pattern (no Ownable)</td>
+            <td>LiquidityReserve</td>
+            <td class="address"><a href="https://etherscan.io/address/0xc43d48E7FDA576C5022d0670B652A622E8caD041">0xc43d...d041</a> (Governance)</td>
+            <td><span class="status-ok">OK</span></td>
+          </tr>
+          <tr>
+            <td>BurnReserve</td>
+            <td class="address"><a href="https://etherscan.io/address/0xc43d48E7FDA576C5022d0670B652A622E8caD041">0xc43d...d041</a> (Governance)</td>
+            <td><span class="status-ok">OK</span></td>
+          </tr>
+          <tr>
+            <td>BuybackVault</td>
+            <td class="address"><a href="https://etherscan.io/address/0xc43d48E7FDA576C5022d0670B652A622E8caD041">0xc43d...d041</a> (Governance)</td>
             <td><span class="status-ok">OK</span></td>
           </tr>
           <tr>
             <td>PartnerVault</td>
-            <td>admin-Pattern (Governance)</td>
+            <td>admin &rarr; Governance (set at deploy)</td>
             <td><span class="status-ok">OK</span></td>
           </tr>
           <tr>
             <td>FeeRouterV1</td>
-            <td>admin-Pattern (Governance)</td>
+            <td>governance() &rarr; Governance (immutable)</td>
             <td><span class="status-ok">OK</span></td>
           </tr>
           <tr>
-            <td>LiquidityReserve v2</td>
-            <td class="address"><a href="https://etherscan.io/address/0xc43d48E7FDA576C5022d0670B652A622E8caD041">0xc43d...d041</a> (Governance)</td>
+            <td>IFRLock</td>
+            <td>guardian &rarr; Deployer (emergency pause only)</td>
             <td><span class="status-ok">OK</span></td>
           </tr>
           <tr>
-            <td>BuybackVault v2</td>
-            <td class="address"><a href="https://etherscan.io/address/0xc43d48E7FDA576C5022d0670B652A622E8caD041">0xc43d...d041</a> (Governance)</td>
+            <td>Vesting</td>
+            <td>guardian &rarr; Deployer (emergency pause only)</td>
             <td><span class="status-ok">OK</span></td>
           </tr>
           <tr>
-            <td>BurnReserve v2</td>
-            <td class="address"><a href="https://etherscan.io/address/0xc43d48E7FDA576C5022d0670B652A622E8caD041">0xc43d...d041</a> (Governance)</td>
-            <td><span class="status-ok">OK</span></td>
+            <td>Governance</td>
+            <td>owner &rarr; Deployer (pending transfer to Gnosis Safe)</td>
+            <td><span class="status-pending">Pending</span></td>
           </tr>
         </tbody>
       </table>
 
       <div class="callout callout-green">
-        <p><strong>Ownership Transfer Complete:</strong> Proposals #4&ndash;#6 were cancelled (v1 contracts had immutable owner). Contracts were redeployed as v2 with <code>transferOwnership()</code>, ownership transferred to Governance, and Proposals #7&ndash;#9 (feeExempt) executed on 2026-03-02.</p>
+        <p><strong>Ownership Transfer Complete (2026-03-05):</strong> All 4 ownable contracts (InfernoToken, LiquidityReserve, BurnReserve, BuybackVault) transferred to Governance via <code>transferOwnership()</code>. PartnerVault admin was set to Governance at deploy. FeeRouterV1 governance is immutable. IFRLock and Vesting use guardian role (emergency pause only). Governance owner will be transferred to Gnosis Safe as a separate step.</p>
       </div>
 
       <!-- ========== CHECK 2: LP Token Ownership ========== -->
@@ -647,7 +657,7 @@
           <tr><td>5</td><td>Gnosis Safe deployed (1-of-1)</td><td><span class="status-ok">Done</span></td></tr>
           <tr><td>6</td><td>LP Pairing (IFR/ETH, Uniswap V2)</td><td><span style="color:#f59e0b;font-weight:600;">Pending</span></td></tr>
           <tr><td>7</td><td>LP Token lock/burn</td><td><span style="color:#ef4444;font-weight:600;">Critical</span></td></tr>
-          <tr><td>8</td><td>Ownership transfer &rarr; Governance</td><td><span style="color:#f59e0b;font-weight:600;">Pending</span></td></tr>
+          <tr><td>8</td><td>Ownership transfer &rarr; Governance</td><td><span class="status-ok">Done (05.03.2026)</span></td></tr>
           <tr><td>9</td><td>Multisig expand (1-of-1 &rarr; 4-of-7)</td><td><span style="color:#f59e0b;font-weight:600;">Pending</span></td></tr>
         </tbody>
       </table>

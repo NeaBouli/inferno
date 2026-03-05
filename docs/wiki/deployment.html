@@ -854,7 +854,7 @@
               <td><span class="badge badge-done">Done</span></td>
             </tr>
             <tr>
-              <td>Ownership transferred to Governance</td>
+              <td>Ownership transferred to Governance (Sepolia)</td>
               <td><span class="badge badge-done">Done</span></td>
             </tr>
             <tr>
@@ -898,6 +898,91 @@
           1.4M IFR Top-up completed — PartnerVault now holds 40,000,000 IFR (4%).<br>
           TX: <code>0x3f28690a...57de6e8</code>
         </div>
+      </div>
+
+      <!-- ==================== Section 8: Mainnet Ownership Status ==================== -->
+      <h2>8. Mainnet Ownership Status</h2>
+      <p>
+        All ownable contracts were transferred to the Governance Timelock on 2026-03-05. Parameter changes now require a 48-hour governance proposal process.
+      </p>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Contract</th>
+              <th>Role</th>
+              <th>Controller</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>InfernoToken</td>
+              <td><code>owner()</code></td>
+              <td>Governance</td>
+              <td><span class="badge badge-done">Done</span></td>
+            </tr>
+            <tr>
+              <td>LiquidityReserve</td>
+              <td><code>owner()</code></td>
+              <td>Governance</td>
+              <td><span class="badge badge-done">Done</span></td>
+            </tr>
+            <tr>
+              <td>BurnReserve</td>
+              <td><code>owner()</code></td>
+              <td>Governance</td>
+              <td><span class="badge badge-done">Done</span></td>
+            </tr>
+            <tr>
+              <td>BuybackVault</td>
+              <td><code>owner()</code></td>
+              <td>Governance</td>
+              <td><span class="badge badge-done">Done</span></td>
+            </tr>
+            <tr>
+              <td>PartnerVault</td>
+              <td><code>admin()</code></td>
+              <td>Governance</td>
+              <td><span class="badge badge-done">Done</span></td>
+            </tr>
+            <tr>
+              <td>FeeRouterV1</td>
+              <td><code>governance()</code></td>
+              <td>Governance (immutable)</td>
+              <td><span class="badge badge-done">Done</span></td>
+            </tr>
+            <tr>
+              <td>IFRLock</td>
+              <td><code>guardian()</code></td>
+              <td>Deployer (emergency pause only)</td>
+              <td>&mdash;</td>
+            </tr>
+            <tr>
+              <td>Vesting</td>
+              <td><code>guardian()</code></td>
+              <td>Deployer (emergency pause only)</td>
+              <td>&mdash;</td>
+            </tr>
+            <tr>
+              <td>Governance</td>
+              <td><code>owner()</code></td>
+              <td>Deployer &rarr; Gnosis Safe (pending)</td>
+              <td><span class="badge badge-pending">Pending</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout callout-info">
+        <p>
+          <strong>Transfer Transactions (2026-03-05):</strong><br>
+          InfernoToken: <a href="https://etherscan.io/tx/0x0fc4684cfec94ecd3573344f892928c8d52c2074d5833b01e6e1c83616ed5e76" target="_blank" rel="noopener"><code>0x0fc468...ed5e76</code></a><br>
+          LiquidityReserve: <a href="https://etherscan.io/tx/0x34650ee45d111dc3b8ea5eb72b0b7753aada03977f0d17e37d05c07f6d12c7d4" target="_blank" rel="noopener"><code>0x34650e...12c7d4</code></a><br>
+          BurnReserve: <a href="https://etherscan.io/tx/0x757d519b303f1e775ada75fcdfcaa1b86218e76e13d2750e224e448ab0ca5b1a" target="_blank" rel="noopener"><code>0x757d51...a5b1a</code></a><br>
+          BuybackVault: <a href="https://etherscan.io/tx/0xcd03786978f402c768d3b270770211019918b5a232eb9884ab0f2bcdafea3971" target="_blank" rel="noopener"><code>0xcd0378...a3971</code></a>
+        </p>
       </div>
 
       <!-- Footer -->
