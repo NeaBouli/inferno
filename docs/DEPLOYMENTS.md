@@ -1,6 +1,6 @@
 # Inferno ($IFR) — Deployments
 
-## Sepolia Testnet
+## Sepolia Testnet (Historical)
 
 **Datum:** 2026-02-16
 **Deployer:** `0x5Ecc668eab04C5bee81b5c7242e1077c946dE406`
@@ -34,7 +34,7 @@
 | IFRLock | `token, deployer (guardian)` |
 | PartnerVault | `token, governance (admin), deployer (guardian), 1500 (rewardBps), 4000000000000000 (4M*1e9 annualCap)` |
 | FeeRouterV1 | `governance, deployer (feeCollector), deployer (voucherSigner)` |
-| BootstrapVault | `token, LiquidityReserve v2 (ifrSource), router, address(0) (TF locker disabled), 1772604468 (startTime), 7776000 (90d), 100000000000000000 (100M*1e9), 10000000000000000 (0.01 ETH), 2000000000000000000 (2 ETH), 31536000 (365d)` |
+| BootstrapVault | `token, LiquidityReserve v2 (ifrSource), router, address(0) (TF locker disabled), 1772604468 (startTime), 7776000 (90d), 400000000000000000 (400M*1e9), 10000000000000000 (0.01 ETH), 2000000000000000000 (2 ETH), 31536000 (365d)` |
 
 ### Token Distribution
 
@@ -181,7 +181,7 @@
 
 ## Gnosis Safe (Mainnet)
 
-| Detail | Wert |
+| Detail | Value |
 |--------|------|
 | Address | [`0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b`](https://etherscan.io/address/0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b) |
 | Network | Ethereum Mainnet |
