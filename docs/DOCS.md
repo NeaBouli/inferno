@@ -134,7 +134,7 @@ inferno/
 │   ├── APP_SECURITY_REVIEW.md        App Security Review (12 Findings, 7 Fixed: CORS, JWT, ABI, Wallet)
 │   ├── robots.txt                     Crawler-Steuerung (Allow: /, Sitemap-Link)
 │   ├── sitemap.xml                    15 URLs (Landing + 14 Wiki-Seiten)
-│   └── wiki/                          [x] 17 HTML-Seiten (index, contracts, tokenomics, lock, governance, security, deployment, integration, bootstrap, agent, faq, transparency, fair-launch, fee-design, roadmap, testnet, multisig)
+│   └── wiki/                          [x] 18 HTML-Seiten (index, contracts, tokenomics, lock, governance, security, deployment, integration, bootstrap, agent, faq, transparency, fair-launch, fee-design, vesting, roadmap, testnet, multisig)
 ├── STATUS-REPORT.md                    Vollstaendiger Statusbericht
 └── README.md                           Projekt-Uebersicht
 ```
