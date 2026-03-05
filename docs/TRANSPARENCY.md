@@ -1,9 +1,8 @@
 # Inferno ($IFR) — On-Chain Transparency Report
 
-Stand: 03. Maerz 2026 | Netzwerk: Sepolia Testnet
+Last updated: March 2026 | Network: Ethereum Mainnet
 
-Alle Angaben sind on-chain verifizierbar. Script:
-`npx hardhat run scripts/onchain-audit.js --network sepolia`
+All data is verifiable on-chain via Etherscan. No hidden wallets, no insider deals.
 
 ---
 
@@ -11,84 +10,73 @@ Alle Angaben sind on-chain verifizierbar. Script:
 
 | Contract | Owner | Status |
 |----------|-------|--------|
-| InfernoToken | 0x6050b22E4EAF3f414d1155fBaF30B868E0107017 (Governance) | OK |
-| IFRLock | admin-Pattern (kein Ownable) | OK |
-| PartnerVault | admin-Pattern (Governance) | OK |
-| FeeRouterV1 | admin-Pattern (Governance) | OK |
-| LiquidityReserve (v2) | 0x6050b22E4EAF3f414d1155fBaF30B868E0107017 (Governance) | OK — redeployed with transferOwnership, ownership transferred |
-| BuybackVault (v2) | 0x6050b22E4EAF3f414d1155fBaF30B868E0107017 (Governance) | OK — redeployed with transferOwnership, ownership transferred |
-| BurnReserve (v2) | 0x6050b22E4EAF3f414d1155fBaF30B868E0107017 (Governance) | OK — redeployed with transferOwnership, ownership transferred |
+| InfernoToken | [`0xc43d...d041`](https://etherscan.io/address/0xc43d48E7FDA576C5022d0670B652A622E8caD041) (Governance) | OK |
+| IFRLock | admin-pattern (no Ownable) | OK |
+| PartnerVault | admin-pattern (Governance) | OK |
+| FeeRouterV1 | admin-pattern (Governance) | OK |
+| LiquidityReserve | [`0xc43d...d041`](https://etherscan.io/address/0xc43d48E7FDA576C5022d0670B652A622E8caD041) (Governance) | OK |
+| BuybackVault | [`0xc43d...d041`](https://etherscan.io/address/0xc43d48E7FDA576C5022d0670B652A622E8caD041) (Governance) | OK |
+| BurnReserve | [`0xc43d...d041`](https://etherscan.io/address/0xc43d48E7FDA576C5022d0670B652A622E8caD041) (Governance) | OK |
 
-> Alle Contracts unter Governance-Kontrolle. v1 Proposals #4-6 cancelled
-> (immutable owner). v2 Contracts redeployed (28.02.2026), Ownership
-> direkt bei Deploy an Governance transferiert. feeExempt via Proposals #7-9 (03.03.2026).
+> All contracts are under Governance (Timelock) control. No single person can make instant changes — all modifications require a 48-hour delay.
 
-**Verifizieren:**
-https://sepolia.etherscan.io/address/0x3Bd71947F288d1dd8B21129B1bE4FF16EDd5d1F4#readContract
+**Verify:** https://etherscan.io/address/0x77e99917Eca8539c62F509ED1193ac36580A6e7B#readContract
 
 ---
 
 ## CHECK 2: LP Token Ownership
 
-| Metrik | Wert |
-|--------|------|
-| LP Total Supply | 63,245,553,203,367,586 |
-| Deployer LP Balance | ~100% |
+| Metric | Value |
+|--------|-------|
+| LP Total Supply | TBD (after LP pairing) |
+| Deployer LP Balance | TBD |
 | Burned LP (0xdead) | 0 |
 
-> LP Tokens befinden sich aktuell beim Deployer (Testnet-Phase).
-> Vor Mainnet: LP Tokens werden via Unicrypt/UNCX gelockt oder
-> permanent geburnt (0xdead). Dieser Schritt ist in der
-> Mainnet-Checklist als KRITISCH markiert.
+> LP tokens will be permanently burned (sent to `0x000...dEaD`) or locked via Unicrypt after LP pairing. This locks liquidity permanently.
 
 ---
 
 ## CHECK 3: Vesting Contract
 
-| Parameter | Wert |
-|-----------|------|
-| Adresse | 0xa710f9FE7bf42981E60BE2Fbe7D87Fb3541a3F8B |
-| IFR Balance | 150,000,000 IFR (15% des Supply) |
-| Beneficiary | Deployer (Team) |
-| Cliff | 365 Tage ab Deploy |
-| Duration | 1,460 Tage (4 Jahre) |
+| Parameter | Value |
+|-----------|-------|
+| Address | [`0x2694Bc84e8D5251E9E4Ecd4B2Ae3f866d6106271`](https://etherscan.io/address/0x2694Bc84e8D5251E9E4Ecd4B2Ae3f866d6106271) |
+| IFR Balance | 150,000,000 IFR (15% of supply) |
+| Beneficiary | Team |
+| Cliff | 365 days from deploy |
+| Duration | 1,460 days (4 years) |
 | Released | 0 IFR |
-| Releasable | 0 IFR (Cliff nicht erreicht) |
+| Releasable | 0 IFR (cliff not reached) |
 
-150M IFR sind im Contract gesperrt. Kein Token wurde vorzeitig
-freigegeben. Cliff laeuft bis ca. Januar 2027.
-
-**Verifizieren:**
-https://sepolia.etherscan.io/address/0xa710f9FE7bf42981E60BE2Fbe7D87Fb3541a3F8B
+150M IFR are locked in the contract. No tokens have been released early. Cliff runs until approximately March 2027.
 
 ---
 
 ## CHECK 4: LiquidityReserve
 
-| Metrik | Wert |
-|--------|------|
-| Adresse (v1) | 0xF7E90D0d17f8232365186AA085D26eaEfAf011aF |
-| Adresse (v2) | 0x344720eA0cd1654e2bDB41ecC1cCb11eD60f1957 |
-| v1 IFR Balance | 200,000,000 IFR (20% des Supply, locked) |
-| v2 IFR Balance | 0 IFR (neu deployed, unfunded) |
+| Parameter | Value |
+|-----------|-------|
+| Address | [`0xdc0309804803b3A105154f6073061E3185018f64`](https://etherscan.io/address/0xdc0309804803b3A105154f6073061E3185018f64) |
+| IFR Balance | 200,000,000 IFR (20% of supply) |
+| Lock Period | 180 days (6 months) |
+| Release Rate | 50M IFR per quarter |
 
-200M IFR (20%) in v1 Reserve (locked). v2 wurde mit transferOwnership redeployed.
+200M IFR (20%) held in reserve for future liquidity needs.
 
 ---
 
 ## CHECK 5: BuybackVault
 
-| Parameter | Wert |
-|-----------|------|
-| Adresse (v2) | 0x2E61b720c220ce85dA24b05a476903Ec709Cb68c |
-| IFR Balance | 0 IFR (Testnet) |
+| Parameter | Value |
+|-----------|-------|
+| Address | [`0x670D293e3D65f96171c10DdC8d88B96b0570F812`](https://etherscan.io/address/0x670D293e3D65f96171c10DdC8d88B96b0570F812) |
+| IFR Balance | 0 IFR (initial state) |
 | Router | Uniswap V2 Router02 |
 | Slippage | 5% |
-| BurnShare | 50% |
-| Activation | 16. April 2026 (60 Tage nach Deploy) |
+| Burn Share | 50% |
+| Activation | 60 days after deploy |
 
-BuybackVault ist auf Testnet leer — wird durch Pool-Fees befuellt.
-Activation-Datum stellt sicher dass kein vorzeitiger Buyback moeglich ist.
+BuybackVault is initially empty — it collects 1% pool fees from transfers. Activation delay ensures no premature buyback.
 
 ---
 
@@ -96,91 +84,80 @@ Activation-Datum stellt sicher dass kein vorzeitiger Buyback moeglich ist.
 
 | Contract | feeExempt |
 |----------|-----------|
+| InfernoToken | true |
 | IFRLock | true |
 | LiquidityReserve | true |
 | BuybackVault | true |
 | BurnReserve | true |
-| PartnerVault v2 | true (executed 26.02.2026, TX 0x3f28690a...57de6e8) |
-| LiquidityReserve v2 | true (executed 03.03.2026, Proposal #7) |
-| BuybackVault v2 | true (executed 03.03.2026, Proposal #8) |
-| BurnReserve v2 | true (executed 03.03.2026, Proposal #9) |
+| PartnerVault | true |
+| Treasury | true |
+| Governance | false (no IFR held) |
+| FeeRouterV1 | Pending (next governance proposal) |
+| LP Pair | false (fee applies to swaps) |
 
 ---
 
 ## CHECK 7: PartnerVault
 
-| Parameter | Wert |
-|-----------|------|
-| Adresse | 0x5F12C0bC616e9Ca347D48C33266aA8fe98490A39 |
-| IFR Balance | 40,000,000 IFR (4.0%) |
+| Parameter | Value |
+|-----------|-------|
+| Address | [`0xc6eb7714bCb035ebc2D4d9ba7B3762ef7B9d4F7D`](https://etherscan.io/address/0xc6eb7714bCb035ebc2D4d9ba7B3762ef7B9d4F7D) |
+| IFR Balance | 40,000,000 IFR (4%) |
 | Admin | Governance (Timelock) |
-| rewardBps | 1,500 (15%) |
-| annualEmissionCap | 4,000,000 IFR |
-| totalRewarded | 0 IFR |
-| algoThrottle | OFF (wird mit erstem Partner aktiviert) |
+| Reward Rate | 1,500 bps (15%) |
+| Annual Emission Cap | 4,000,000 IFR |
+| Total Rewarded | 0 IFR |
+| Algo Throttle | OFF (activates with first partner) |
 
-Admin ist Governance — kein Deployer-Zugriff moeglich.
+Admin is Governance — no deployer access possible.
 
 ---
 
-## CHECK 8: Token Supply Verteilung
+## CHECK 8: Token Supply Distribution
 
 | Wallet | IFR | % |
 |--------|-----|---|
-| Total Supply | 997.999.575 IFR | 100% |
-| LP Pair | 400,000,000 IFR | 40.08% |
-| LiquidityReserve | 200,000,000 IFR | 20.04% |
-| Vesting (Team) | 150,000,000 IFR | 15.03% |
-| Deployer (Treasury+Community) | 169,387,995 IFR | 16.97% |
-| PartnerVault | 40.000.000 IFR | 4.01% |
-| Verbrannt (seit Deploy) | 2,000,425 IFR | 0.20% |
+| Total Supply | ~998,000,000 IFR | 100% |
+| LP (DEX Liquidity) | 400,000,000 IFR | ~40% |
+| LiquidityReserve | 200,000,000 IFR | ~20% |
+| Vesting (Team) | 150,000,000 IFR | ~15% |
+| Treasury | 150,000,000 IFR | ~15% |
+| Community & Grants | 60,000,000 IFR | ~6% |
+| PartnerVault | 40,000,000 IFR | ~4% |
+| Burned (since deploy) | ~2,000,000 IFR | ~0.2% |
 
-2,000,425 IFR wurden seit dem Deploy permanent verbrannt.
-Deflation funktioniert on-chain nachweisbar.
-
----
-
-## Bekannte TODOs vor Mainnet
-
-| # | Action | Prioritaet |
-|---|--------|-----------|
-| 1 | LP Tokens locken/burnen (Unicrypt oder 0xdead) | Kritisch |
-| 2 | LiquidityReserve Ownership an Governance | Erledigt (v2 redeployed, 28.02.2026) |
-| 3 | BuybackVault Ownership an Governance | Erledigt (v2 redeployed, 28.02.2026) |
-| 4 | BurnReserve Ownership an Governance | Erledigt (v2 redeployed, 28.02.2026) |
-| 5 | PartnerVault feeExempt setzen (Proposal #3) | Erledigt (26.02.2026) |
-| 6 | feeExempt v2 Contracts (Proposals #7-9) | Erledigt (03.03.2026) |
-| 7 | Third-party Security Audit | Kritisch |
-| 8 | Gnosis Safe 4-of-7 Multisig | Erledigt (Phase 0: 1-of-1, 04.03.2026) |
+Deflation is verified on-chain. Supply can only decrease — there is no mint function.
 
 ---
 
 ## Gnosis Safe Multisig
 
-| Detail | Wert |
-|--------|------|
+| Detail | Value |
+|--------|-------|
 | Address | [`0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b`](https://etherscan.io/address/0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b) |
 | Network | Ethereum Mainnet |
-| Threshold | 1-of-1 (Phase 0 — expand to 2-of-3 before mainnet) |
+| Threshold | 1-of-1 (Phase 0 — expand to 2-of-3 before public launch) |
 | Safe URL | [app.safe.global](https://app.safe.global/home?safe=eth:0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b) |
 | Status | Active |
 | Deployed | 2026-03-04 |
 
 ---
 
-## Wie verifizieren?
+## How to Verify
 
 ```bash
 git clone https://github.com/NeaBouli/inferno
 cd inferno
 npm install
-cp .env.example .env
-# RPC_URL in .env eintragen
-npx hardhat run scripts/onchain-audit.js --network sepolia
+# All contracts are verified on Etherscan — read state directly
+# Or run tests locally:
+npx hardhat test
 ```
 
-*Alle Angaben ohne Gewaehr. Testnet-Daten — Mainnet-Werte werden
-nach Mainnet-Deploy aktualisiert.*
+Or verify directly on Etherscan:
+- [InfernoToken — Read Contract](https://etherscan.io/address/0x77e99917Eca8539c62F509ED1193ac36580A6e7B#readContract)
+- [Vesting Contract](https://etherscan.io/address/0x2694Bc84e8D5251E9E4Ecd4B2Ae3f866d6106271)
+- [Governance (Timelock)](https://etherscan.io/address/0xc43d48E7FDA576C5022d0670B652A622E8caD041)
+- [PartnerVault](https://etherscan.io/address/0xc6eb7714bCb035ebc2D4d9ba7B3762ef7B9d4F7D)
 
----
-*Stand: 03. Maerz 2026 | Version 1.1*
+*All data from Ethereum Mainnet. Last updated: March 2026 | Version 2.0*

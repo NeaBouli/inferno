@@ -6,7 +6,7 @@
 
 **The Deflationary Utility Token**
 
-[Website](https://neabouli.github.io/inferno/) · [Documentation](https://neabouli.github.io/inferno/wiki/) · [X / Twitter](https://x.com/IFRtoken) · [Etherscan](https://etherscan.io/address/0x77e99917Eca8539c62F509ED1193ac36580A6e7B#code)
+[Website](https://ifrunit.tech/) · [Documentation](https://ifrunit.tech/wiki/) · [X / Twitter](https://x.com/IFRtoken) · [Etherscan](https://etherscan.io/address/0x77e99917Eca8539c62F509ED1193ac36580A6e7B#code)
 
 ---
 
@@ -80,7 +80,7 @@ Token holdings grant future DAO voting rights.
 
 The ecosystem is open and permissionless. Any product can integrate IFR Lock.
 
-[Integration Guide →](https://neabouli.github.io/inferno/wiki/integration.html)
+[Integration Guide →](https://ifrunit.tech/wiki/integration.html)
 
 ## Testing & Security
 
@@ -157,62 +157,63 @@ SIWE authentication, points tracking, and EIP-712 signed voucher issuance for pr
 
 ## Documentation
 
-- [Landing Page](https://neabouli.github.io/inferno/)
-- [Technical Wiki](https://neabouli.github.io/inferno/wiki/)
-- [Contracts Reference](https://neabouli.github.io/inferno/wiki/contracts.html)
-- [Integration Guide](https://neabouli.github.io/inferno/wiki/integration.html)
-- [Security Audit](https://neabouli.github.io/inferno/wiki/security.html)
-- [Governance Constitution](docs/GOVERNANCE_CONSTITUTION.md) — Hard bounds, Rollen, Upgrade-Pfad
-- [Business Onboarding](docs/BUSINESS_ONBOARDING.md) — Benefits Network Setup & Go-Live Checkliste
-- [Partner Integration Spec](docs/PARTNER_INTEGRATION_SPEC.md) — Technische Spec: IFRLock + PartnerVault ABI, Rewards, Algo Throttle
-- [Mainnet Checklist](docs/MAINNET_CHECKLIST.md) — Deployment-Reihenfolge, Verification, Post-Deploy
-- [Security Audit Brief](docs/AUDIT_BRIEF.md) — Scope, Pruefbereiche, Auditor-Empfehlungen
-- [Multisig Setup Guide](docs/MULTISIG_SETUP.md) — Gnosis Safe, Signer-Struktur, Ownership Transfer
-- [Whitepaper / One-Pager](docs/WHITEPAPER.md) — Projekt-Uebersicht fuer Partner & Investoren
+- [Landing Page](https://ifrunit.tech/)
+- [Technical Wiki](https://ifrunit.tech/wiki/)
+- [Contracts Reference](https://ifrunit.tech/wiki/contracts.html)
+- [Integration Guide](https://ifrunit.tech/wiki/integration.html)
+- [Security Audit](https://ifrunit.tech/wiki/security.html)
+- [Governance Constitution](docs/GOVERNANCE_CONSTITUTION.md) — Hard bounds, roles, upgrade path
+- [Business Onboarding](docs/BUSINESS_ONBOARDING.md) — Benefits Network setup & go-live checklist
+- [Partner Integration Spec](docs/PARTNER_INTEGRATION_SPEC.md) — Technical spec: IFRLock + PartnerVault ABI, Rewards, Algo Throttle
+- [Mainnet Checklist](docs/MAINNET_CHECKLIST.md) — Deployment order, verification, post-deploy
+- [Security Audit Brief](docs/AUDIT_BRIEF.md) — Scope, audit areas, auditor recommendations
+- [Multisig Setup Guide](docs/MULTISIG_SETUP.md) — Gnosis Safe, signer structure, ownership transfer
+- [Whitepaper / One-Pager](docs/WHITEPAPER.md) — Project overview for partners & investors
 - [Creator Gateway Spec](docs/CREATOR_GATEWAY.md) — YouTube Hybrid Model, Docker Quickstart, Entitlement Engine
 - [SDK / Developer Quickstart](docs/SDK_QUICKSTART.md) — ethers.js, wagmi, Python, Tier System, Wallet Verification
-- [Testnet E2E Guide](docs/TESTNET_GUIDE.md) — Full Lock/Benefit/Governance/FeeRouter Flow auf Sepolia
-- [Changelog](docs/CHANGELOG.md) — Alle Aenderungen chronologisch
-- [ChatGPT Audit Prompt V3](docs/CHATGPT_AUDIT_PROMPT_V3.md) — Independent Audit Checklist (12 Pruefbereiche)
-- [ChatGPT Audit Prompt V4](docs/CHATGPT_AUDIT_PROMPT_V4.md) — Anti-Sybil, SIWE, Integration, Zahlen-Konsistenz (8 Self-Checks)
-- [Investor One-Pager](docs/ONE-PAGER.md) — Key Numbers, Produkte, Technologie, Vor-Mainnet Checklist
-- [E2E Flow: Points → Voucher → FeeRouter](docs/E2E_FLOW.md) — Vollstaendiger End-to-End Flow
+- [Testnet E2E Guide](docs/TESTNET_GUIDE.md) — Full Lock/Benefit/Governance/FeeRouter flow on Sepolia
+- [Changelog](docs/CHANGELOG.md) — All changes chronologically
+- [ChatGPT Audit Prompt V3](docs/CHATGPT_AUDIT_PROMPT_V3.md) — Independent audit checklist (12 audit areas)
+- [ChatGPT Audit Prompt V4](docs/CHATGPT_AUDIT_PROMPT_V4.md) — Anti-Sybil, SIWE, Integration, number consistency (8 self-checks)
+- [Investor One-Pager](docs/ONE-PAGER.md) — Key numbers, products, technology, pre-mainnet checklist
+- [E2E Flow: Points → Voucher → FeeRouter](docs/E2E_FLOW.md) — Complete end-to-end flow
 - [YouTube Integration Guide](docs/YOUTUBE_INTEGRATION.md) — Hybrid Model B, Creator Gateway, Entitlement Config
 - [Security Policy](docs/SECURITY_POLICY.md) — Responsible Disclosure, Bug Bounty, Scope
-- [Tokenomics Model](docs/TOKENOMICS_MODEL.md) — Deflationskurve, Emission Model, Lock Economics
-- [Partner Rewards Spec](docs/PARTNER_REWARDS_SPEC.md) — Reward-Formel, Vesting, Anti-Gaming, Partner-Typen
-- [Benefits Network Test Guide](docs/BENEFITS_NETWORK_TEST.md) — E2E Test, API Endpoints, Lock Tiers
-- [Coverage Report](docs/COVERAGE_REPORT.md) — Solidity Coverage (99% Stmts, 91% Branch)
-- [Patch Guidelines](docs/PATCH-GUIDELINES.md) — Patch-Prozess, Severity, Versionierung
-- [Contributing Guide](docs/CONTRIBUTING.md) — Bug Reports, Code Standards, Git Konventionen
-- [Transparency Report](docs/TRANSPARENCY.md) — On-Chain Audit (8 Checks), Supply-Verteilung, Vesting, LP Status
-- [Fair Launch Statement](docs/FAIR_LAUNCH.md) — No Presale, No VC, Team Allocation Vergleich, On-Chain Beweise
-- [Fee Design](docs/FEE_DESIGN.md) — Warum 3.5%, Fee-Exempt Adressen, CEX-Strategie, MEV/Slippage
-- [Off-Chain Security](docs/OFFCHAIN_SECURITY.md) — VoucherSigner Key Management, JWT, SIWE, Rate Limiting
-- [Audit Submission](docs/AUDIT_SUBMISSION.md) — Code4rena/Sherlock Prep (9 Contracts, 1697 SLOC, Scope, Known Issues)
-- [Press Kit](docs/PRESS_KIT.md) — Key Facts, Token-Allokation, Roadmap, Links
-- [GitHub Secrets Guide](docs/GITHUB_SECRETS.md) — Required Secrets fuer GitHub Actions CI/CD
-- [ChatGPT Audit V3 Results](docs/CHATGPT_AUDIT_V3_RESULTS.md) — Audit V3 Ergebnisse (12/12 Self-Check PASS)
-- [Railway Env Guide](docs/RAILWAY_ENV.md) — Points Backend Railway Deploy (Env Vars, CLI Setup)
-- [Vercel Env Guide](docs/VERCEL_ENV.md) — AI Copilot Vercel + Railway Deploy (Two-App, Proxy Config)
-- [Roadmap](docs/ROADMAP.md) — 6-Phasen Roadmap (Foundation → Governance → Ecosystem → Mainnet → Growth → DAO)
-- [Page Update Checklist](docs/PAGE_UPDATE_CHECKLIST.md) — Welche Dateien bei welchem Event aktualisiert werden muessen
-- [Deployment Stats](docs/stats.json) — Auto-generierte On-Chain Stats (via update-stats.js)
-- [Project Summary](docs/PROJECT-SUMMARY.md) — Komplett-Uebersicht (14 Contracts, 436 Tests, 7 Apps)
-- [Release Notes v0.1.0](docs/RELEASE_NOTES_v0.1.0.md) — Erster getaggter Release (Sepolia Testnet)
-- [Lighthouse Report](docs/LIGHTHOUSE_REPORT.md) — SEO-Optimierungen (OG, Twitter Card, Meta Tags, Sitemap, robots.txt)
-- [AI Copilot Test Results](docs/COPILOT_TEST_RESULTS.md) — RAG-System Test (6 Fragen, 3 Modi, Safety Guards)
-- [Roadmap v0.2.0](docs/ROADMAP_v0.2.0.md) — Mainnet-Ready Milestones (Audit, Multisig, Deploy, Post-Launch)
-- [ChatGPT Audit V4 Results](docs/CHATGPT_AUDIT_V4_RESULTS.md) — Audit V4 Self-Check (8/8 PASS)
-- [ChatGPT Audit V5 Results](docs/CHATGPT_AUDIT_V5_RESULTS.md) — Cross-Audit: W15-W21 (7 neue Findings, W16 gefixt)
-- [GitHub Setup](docs/GITHUB_SETUP.md) — Repository Settings (Discussions, Topics, Pages)
-- [App Security Review](docs/APP_SECURITY_REVIEW.md) — Full App Review (12 Findings, 7 Fixed: CORS, JWT, ABI, Wallet Validation)
+- [Tokenomics Model](docs/TOKENOMICS_MODEL.md) — Deflation curve, emission model, lock economics
+- [Partner Rewards Spec](docs/PARTNER_REWARDS_SPEC.md) — Reward formula, vesting, anti-gaming, partner types
+- [Benefits Network Test Guide](docs/BENEFITS_NETWORK_TEST.md) — E2E test, API endpoints, lock tiers
+- [Coverage Report](docs/COVERAGE_REPORT.md) — Solidity coverage (99% Stmts, 91% Branch)
+- [Patch Guidelines](docs/PATCH-GUIDELINES.md) — Patch process, severity, versioning
+- [Contributing Guide](docs/CONTRIBUTING.md) — Bug reports, code standards, git conventions
+- [Transparency Report](docs/TRANSPARENCY.md) — On-chain audit (8 checks), supply distribution, vesting, LP status
+- [Fair Launch Statement](docs/FAIR_LAUNCH.md) — No presale, no VC, team allocation comparison, on-chain evidence
+- [Fee Design](docs/FEE_DESIGN.md) — Why 3.5%, fee-exempt addresses, CEX strategy, MEV/slippage
+- [Off-Chain Security](docs/OFFCHAIN_SECURITY.md) — VoucherSigner key management, JWT, SIWE, rate limiting
+- [Audit Submission](docs/AUDIT_SUBMISSION.md) — Code4rena/Sherlock prep (9 contracts, 1697 SLOC, scope, known issues)
+- [Press Kit](docs/PRESS_KIT.md) — Key facts, token allocation, roadmap, links
+- [GitHub Secrets Guide](docs/GITHUB_SECRETS.md) — Required secrets for GitHub Actions CI/CD
+- [ChatGPT Audit V3 Results](docs/CHATGPT_AUDIT_V3_RESULTS.md) — Audit V3 results (12/12 self-check PASS)
+- [Railway Env Guide](docs/RAILWAY_ENV.md) — Points Backend Railway deploy (env vars, CLI setup)
+- [Vercel Env Guide](docs/VERCEL_ENV.md) — AI Copilot Vercel + Railway deploy (two-app, proxy config)
+- [Roadmap](docs/ROADMAP.md) — 6-phase roadmap (Foundation → Governance → Ecosystem → Mainnet → Growth → DAO)
+- [Page Update Checklist](docs/PAGE_UPDATE_CHECKLIST.md) — Which files to update for each event
+- [Deployment Stats](docs/stats.json) — Auto-generated on-chain stats (via update-stats.js)
+- [Project Summary](docs/PROJECT-SUMMARY.md) — Complete overview (9 mainnet contracts, 444 tests, 7 apps)
+- [Release Notes v0.1.0](docs/RELEASE_NOTES_v0.1.0.md) — First tagged release (Sepolia testnet)
+- [Lighthouse Report](docs/LIGHTHOUSE_REPORT.md) — SEO optimizations (OG, Twitter Card, meta tags, sitemap, robots.txt)
+- [AI Copilot Test Results](docs/COPILOT_TEST_RESULTS.md) — RAG system test (6 questions, 3 modes, safety guards)
+- [Roadmap v0.2.0](docs/ROADMAP_v0.2.0.md) — Mainnet-ready milestones (audit, multisig, deploy, post-launch)
+- [ChatGPT Audit V4 Results](docs/CHATGPT_AUDIT_V4_RESULTS.md) — Audit V4 self-check (8/8 PASS)
+- [ChatGPT Audit V5 Results](docs/CHATGPT_AUDIT_V5_RESULTS.md) — Cross-audit: W15-W21 (7 new findings, W16 fixed)
+- [GitHub Setup](docs/GITHUB_SETUP.md) — Repository settings (Discussions, Topics, Pages)
+- [App Security Review](docs/APP_SECURITY_REVIEW.md) — Full app review (12 findings, 7 fixed: CORS, JWT, ABI, wallet validation)
 
 ## Development
 
 ### Hardhat Admin Tasks
 
 ```bash
+# Sepolia (historical/testing) — use --network mainnet for production
 npx hardhat lock-check --wallet 0x... --network sepolia
 npx hardhat vault-status --network sepolia
 npx hardhat feerouter-status --network sepolia
@@ -229,16 +230,16 @@ npx hardhat run scripts/deploy-mainnet.js --network hardhat
 # Mainnet deploy — LIVE (requires env vars: TREASURY_ADDRESS, COMMUNITY_ADDRESS, TEAM_BENEFICIARY, VOUCHER_SIGNER_ADDRESS)
 npx hardhat run scripts/deploy-mainnet.js --network mainnet
 
-# On-chain audit (8 checks)
+# On-chain audit (8 checks) — use --network mainnet for production
 npx hardhat run scripts/onchain-audit.js --network sepolia
 
-# Propose ownership transfer (dry run)
+# Propose ownership transfer (historical/testing)
 npx hardhat run scripts/propose-ownership-transfer.js --network sepolia
 
-# Execute ownership transfer (after 48h timelock)
+# Execute ownership transfer (after 48h timelock, historical/testing)
 PROP_RESERVE=4 PROP_BUYBACK=5 PROP_BURN=6 npx hardhat run scripts/execute-ownership-transfer.js --network sepolia
 
-# Burn LP tokens (dry run)
+# Burn LP tokens (historical/testing)
 npx hardhat run scripts/burn-lp-tokens.js --network sepolia
 ```
 
