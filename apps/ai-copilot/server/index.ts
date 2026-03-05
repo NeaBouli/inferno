@@ -1,9 +1,13 @@
 import "dotenv/config";
 import express from "express";
 import cors from "cors";
-import { resolve } from "path";
+import { resolve, dirname } from "path";
+import { fileURLToPath } from "url";
 import { SYSTEM_PROMPTS } from "../src/context/system-prompts.js";
 import { loadWikiDocs, buildSystemPrompt, WikiDoc } from "./wiki-rag.js";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const app = express();
 app.use(cors({
