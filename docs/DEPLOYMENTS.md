@@ -198,10 +198,18 @@ All ownable contracts transferred to Governance (48h Timelock). Parameter change
 | Vesting | `guardian()` | Deployer (emergency pause only) |
 | Governance | `owner()` | Deployer (pending transfer to Gnosis Safe) |
 
+### Governance Proposals (Mainnet)
+
+| # | Action | Target | TX | ETA | Status |
+|---|--------|--------|-----|-----|--------|
+| 0 | `setFeeExempt(BootstrapVault, true)` | InfernoToken | [`0xb5a38ba2...8191ac`](https://etherscan.io/tx/0xb5a38ba2a5d3a65b80358709e70446b894ad9c3a7663474591dacf5b598191ac) | 2026-03-07 20:12 CET | Pending (48h Timelock) |
+
 ### NEXT STEPS (Mainnet)
 
 | Step | Status |
 |------|--------|
+| BootstrapVault deployed + verified | **Done** (2026-03-05) |
+| feeExempt(BootstrapVault) Proposal #0 | **Submitted** — ETA 2026-03-07 20:12 CET |
 | Create Uniswap V2 LP (400M IFR + ETH) | Pending |
 | Lock LP Tokens (min 12 months) | Pending |
 | Transfer InfernoToken Ownership to Governance | **Done** (2026-03-05) |
