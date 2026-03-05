@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Fee Design &mdash; Inferno ($IFR) Documentation</title>
+  <title>Multisig Policy &mdash; Inferno ($IFR) Documentation</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -213,32 +213,6 @@
       margin-bottom: 32px;
     }
 
-    /* ---------- Code blocks ---------- */
-    pre {
-      background: #1a1a1d;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 16px 20px;
-      overflow-x: auto;
-      font-size: 13px;
-      line-height: 1.7;
-      margin: 16px 0;
-      color: var(--text);
-    }
-
-    code {
-      font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
-      font-size: 13px;
-      color: var(--text);
-    }
-
-    p code, li code, td code {
-      background: rgba(255, 255, 255, 0.06);
-      padding: 2px 6px;
-      border-radius: 4px;
-      font-size: 13px;
-    }
-
     /* ---------- Tables ---------- */
     table {
       width: 100%;
@@ -256,9 +230,9 @@
     th {
       color: var(--muted);
       font-weight: 600;
-      font-size: 13px;
+      font-size: 12px;
       text-transform: uppercase;
-      letter-spacing: 1px;
+      letter-spacing: 0.5px;
     }
 
     td { color: var(--text); }
@@ -297,12 +271,58 @@
       border-left-color: var(--green);
     }
 
-    /* ---------- Address ---------- */
-    .address {
+    /* ---------- Phase cards ---------- */
+    .phase-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px 28px;
+      margin: 20px 0;
+    }
+
+    .phase-card h3 {
+      margin: 0 0 8px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .phase-badge {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 999px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .badge-done { background: rgba(34,197,94,0.15); color: var(--green); }
+    .badge-progress { background: rgba(255,69,0,0.15); color: var(--accent); }
+    .badge-planned { background: rgba(138,138,150,0.15); color: var(--muted); }
+
+    /* ---------- Code ---------- */
+    pre {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px 20px;
+      overflow-x: auto;
+      font-size: 13px;
+      line-height: 1.7;
+      margin: 16px 0;
+    }
+
+    code {
       font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
-      font-size: 12px;
-      color: var(--muted);
-      word-break: break-all;
+      font-size: 13px;
+    }
+
+    p code, li code, td code {
+      background: rgba(255, 255, 255, 0.06);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 13px;
     }
 
     /* ---------- Footer ---------- */
@@ -393,10 +413,10 @@
         <li><a href="faq.html">FAQ</a></li>
         <li><a href="transparency.html">Transparency</a></li>
         <li><a href="fair-launch.html">Fair Launch</a></li>
-        <li><a href="fee-design.html" class="active">Fee Design</a></li>
+        <li><a href="fee-design.html">Fee Design</a></li>
         <li><a href="roadmap.html">Roadmap</a></li>
         <li><a href="testnet.html">Testnet</a></li>
-        <li><a href="multisig.html">Multisig Policy</a></li>
+        <li><a href="multisig.html" class="active">Multisig Policy</a></li>
         <li><div class="nav-divider"></div></li>
         <li class="nav-back"><a href="../index.html">&larr; Back to Website</a></li>
       </ul>
@@ -405,153 +425,210 @@
     <!-- Main content -->
     <main class="main">
 
-      <h1><span class="accent">Fee Design</span></h1>
+      <h1><span class="accent">Multisig Policy</span></h1>
       <p class="subtitle">
-        Why 3.5%? How fees power deflation and the buyback mechanism.
+        Gnosis Safe configuration, threshold roadmap, signer policy, and project continuity guarantees.
       </p>
 
-      <!-- ========== Core Principle ========== -->
-      <h2>Core Principle: Lock &gt; Transfer</h2>
+      <div class="callout">
+        <p><strong>Gnosis Safe:</strong> <a href="https://app.safe.global/home?safe=eth:0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b" target="_blank" rel="noopener"><code>0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b</code></a> &mdash; currently 1-of-1, expanding to 2-of-3 at Bootstrap Event.</p>
+      </div>
 
-      <p>IFR is not a trading token. The model is based on:</p>
-      <ol>
-        <li>Buy once</li>
-        <li>Lock once</li>
-        <li>Use benefits permanently</li>
-      </ol>
+      <!-- Why Multisig -->
+      <h2>Why Multisig?</h2>
+      <p>
+        A single private key controlling a protocol is a single point of failure. If that key is lost, stolen, or compromised, the entire protocol is at risk. A multisig wallet requires multiple independent signers to approve any transaction, eliminating this risk.
+      </p>
+      <ul>
+        <li><strong>No single point of failure</strong> &mdash; no one person can unilaterally change the protocol</li>
+        <li><strong>Key loss protection</strong> &mdash; losing one key does not lock the treasury</li>
+        <li><strong>Compromise resilience</strong> &mdash; an attacker needs multiple keys, not just one</li>
+        <li><strong>Transparent</strong> &mdash; all multisig transactions are on-chain and publicly visible</li>
+      </ul>
 
-      <p>Transfers happen rarely &mdash; when buying, when locking, when unlocking. Not daily. That is why 3.5% is sustainable and intentional.</p>
+      <!-- Threshold Policy -->
+      <h2>Threshold Policy</h2>
+      <p>
+        The multisig threshold increases as the protocol matures. More signers = more decentralization = more security.
+      </p>
 
-      <!-- ========== Fee Breakdown ========== -->
-      <h2>Fee Breakdown</h2>
+      <div class="phase-card">
+        <h3>Phase 0: Mainnet Deploy <span class="phase-badge badge-done">Current</span></h3>
+        <p style="color:var(--muted);margin:0;">1-of-1 &mdash; Single deployer. Required for rapid deployment and initial configuration.</p>
+      </div>
 
+      <div class="phase-card">
+        <h3>Phase 1: Bootstrap Event <span class="phase-badge badge-progress">Next</span></h3>
+        <p style="color:var(--muted);margin:0;">2-of-3 &mdash; Three independent signers. No single person can act alone. One key loss is survivable.</p>
+      </div>
+
+      <div class="phase-card">
+        <h3>Phase 2: Ecosystem Growth <span class="phase-badge badge-planned">Planned</span></h3>
+        <p style="color:var(--muted);margin:0;">3-of-5 &mdash; Five signers from diverse backgrounds. Supermajority required for every action.</p>
+      </div>
+
+      <div class="phase-card">
+        <h3>Phase 3: DAO Transition <span class="phase-badge badge-planned">Planned</span></h3>
+        <p style="color:var(--muted);margin:0;">4-of-7 &rarr; 5-of-9 &mdash; Final multisig configuration before full DAO governance transition.</p>
+      </div>
+
+      <!-- What Signers Can Do -->
+      <h2>What Signers Can Do</h2>
       <table>
         <thead>
           <tr>
-            <th>Fee</th>
-            <th>Destination</th>
-            <th>Purpose</th>
+            <th>Action</th>
+            <th>Mechanism</th>
           </tr>
         </thead>
         <tbody>
           <tr>
-            <td>2.0%</td>
-            <td>Burn (sender side)</td>
-            <td>Permanent deflation</td>
+            <td>Submit governance proposals</td>
+            <td>Via Governance contract (<code>propose()</code>)</td>
           </tr>
           <tr>
-            <td>0.5%</td>
-            <td>Burn (recipient side)</td>
-            <td>Permanent deflation</td>
+            <td>Execute proposals after 48h</td>
+            <td>Via Governance contract (<code>execute()</code>)</td>
           </tr>
           <tr>
-            <td>1.0%</td>
-            <td>BuybackVault</td>
-            <td>Liquidity strengthening</td>
+            <td>Cancel malicious proposals</td>
+            <td>Guardian role (<code>cancel()</code>)</td>
           </tr>
           <tr>
-            <td><strong>3.5%</strong></td>
-            <td><strong>Total</strong></td>
-            <td><strong>2.5% burned + 1% buyback</strong></td>
+            <td>Emergency pause (IFRLock)</td>
+            <td>Guardian role (<code>pause()</code>)</td>
+          </tr>
+          <tr>
+            <td>Transfer Governance admin</td>
+            <td>Only current admin can transfer</td>
           </tr>
         </tbody>
       </table>
 
-      <div class="callout">
-        <p><strong>Hard cap:</strong> Total fees can never exceed 5% (500 bps). This is enforced in the smart contract via <code>MAX_FEE_BPS</code> and cannot be changed by any governance action.</p>
-      </div>
-
-      <!-- ========== Fee-Exempt Addresses ========== -->
-      <h2>Fee-Exempt Addresses</h2>
-
-      <p>Protocol-internal transfers incur zero fees. These addresses are fee-exempt:</p>
-
+      <!-- What Signers Cannot Do -->
+      <h2>What Signers Cannot Do</h2>
       <table>
         <thead>
           <tr>
-            <th>Address</th>
-            <th>Why Exempt?</th>
+            <th>Restriction</th>
+            <th>Reason</th>
           </tr>
         </thead>
         <tbody>
           <tr>
-            <td>IFRLock</td>
-            <td>Lock/Unlock must be fee-free (users get back exactly what they locked)</td>
+            <td>Directly access token supply</td>
+            <td>No mint function exists. Supply can only decrease.</td>
+          </tr>
+          <tr>
+            <td>Bypass 48-hour timelock</td>
+            <td>Hardcoded in Governance contract. Not configurable.</td>
+          </tr>
+          <tr>
+            <td>Change fee above 5%</td>
+            <td>Hard cap enforced in InfernoToken contract.</td>
+          </tr>
+          <tr>
+            <td>Move locked user tokens</td>
+            <td>IFRLock only allows the original depositor to withdraw.</td>
+          </tr>
+          <tr>
+            <td>Execute instantly</td>
+            <td>Every change is public for 48 hours before execution.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- Who Can Become a Signer -->
+      <h2>Who Can Become a Signer?</h2>
+      <p>
+        Signer selection is transparent and community-driven. Candidates are evaluated based on:
+      </p>
+      <ul>
+        <li><strong>Technical competence</strong> &mdash; ability to verify and understand governance proposals</li>
+        <li><strong>Independence</strong> &mdash; no two signers should share organizational affiliations</li>
+        <li><strong>Track record</strong> &mdash; verifiable on-chain history and community presence</li>
+        <li><strong>Hardware wallet</strong> &mdash; all signers must use hardware wallets (Ledger/Trezor)</li>
+      </ul>
+      <p>
+        Signer additions and removals are on-chain transactions visible to everyone. The community can verify the current signer set at any time via the <a href="https://app.safe.global/home?safe=eth:0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b" target="_blank" rel="noopener">Gnosis Safe interface</a>.
+      </p>
+
+      <!-- On-Chain Verification -->
+      <h2>On-Chain Verification</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Contract</th>
+            <th>Role</th>
+            <th>Controlled By</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>InfernoToken</td>
+            <td><code>owner()</code></td>
+            <td>Governance (timelock)</td>
           </tr>
           <tr>
             <td>LiquidityReserve</td>
-            <td>Internal protocol transfers</td>
+            <td><code>owner()</code></td>
+            <td>Governance (timelock)</td>
           </tr>
           <tr>
             <td>BuybackVault</td>
-            <td>Buyback logic without loss</td>
+            <td><code>owner()</code></td>
+            <td>Governance (timelock)</td>
           </tr>
           <tr>
             <td>BurnReserve</td>
-            <td>Burn mechanism</td>
+            <td><code>owner()</code></td>
+            <td>Governance (timelock)</td>
+          </tr>
+          <tr>
+            <td>Governance</td>
+            <td><code>admin()</code></td>
+            <td>Deployer (pending &rarr; Multisig)</td>
           </tr>
           <tr>
             <td>PartnerVault</td>
-            <td>Reward payouts (after Governance Proposal #3)</td>
+            <td><code>admin()</code></td>
+            <td>Governance (immutable)</td>
           </tr>
           <tr>
-            <td>DEX Router</td>
-            <td>Uniswap V2 swaps without double-fee</td>
+            <td>IFRLock</td>
+            <td><code>guardian()</code></td>
+            <td>Deployer (pause-only)</td>
+          </tr>
+          <tr>
+            <td>Vesting</td>
+            <td><code>guardian()</code></td>
+            <td>Deployer (revoke-only)</td>
+          </tr>
+          <tr>
+            <td>FeeRouterV1</td>
+            <td><code>governance()</code></td>
+            <td>Governance (immutable)</td>
           </tr>
         </tbody>
       </table>
 
-      <p>All exempt addresses are on-chain transparent and only changeable via Governance proposals with a 48-hour timelock.</p>
-
-      <!-- ========== CEX Strategy ========== -->
-      <h2>CEX Listing Strategy</h2>
-
-      <p>Fee-on-transfer tokens have elevated CEX requirements:</p>
-
+      <!-- Project Continuity -->
+      <h2>Project Continuity</h2>
+      <p>
+        Inferno Protocol is designed to outlive any single contributor, company, or team. The protocol is permanently decentralized infrastructure:
+      </p>
       <ul>
-        <li><strong>Transparency:</strong> Fee mechanism fully documented (check)</li>
-        <li><strong>No hidden fees:</strong> Everything on-chain (check)</li>
-        <li><strong>Exchange coordination:</strong> CEX wallets can be made fee-exempt via governance</li>
+        <li><strong>Open source</strong> &mdash; all code lives on <a href="https://github.com/NeaBouli/inferno">GitHub</a>. Anyone can fork, audit, or continue development.</li>
+        <li><strong>Verified on-chain</strong> &mdash; all 10 contracts are verified on <a href="https://etherscan.io/address/0x77e99917Eca8539c62F509ED1193ac36580A6e7B#code">Etherscan</a>. The bytecode is public and immutable.</li>
+        <li><strong>Governance protects</strong> &mdash; the 48-hour timelock prevents single-actor mistakes. Every change is publicly visible before execution.</li>
+        <li><strong>Multisig prevents failure</strong> &mdash; no single key loss can freeze the protocol. Threshold increases over time.</li>
+        <li><strong>Community can continue</strong> &mdash; if the original team disappears, anyone with the contracts, ABI, and governance access can operate the protocol.</li>
+        <li><strong>No off-chain dependencies</strong> &mdash; the core protocol (token, lock, governance, fees) runs entirely on Ethereum. No servers required.</li>
       </ul>
-
-      <table>
-        <thead>
-          <tr>
-            <th>Phase</th>
-            <th>Listing Type</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Phase 0</td>
-            <td>DEX only (Uniswap V2)</td>
-          </tr>
-          <tr>
-            <td>Phase 2+</td>
-            <td>CEX outreach after mainnet &amp; audit</td>
-          </tr>
-        </tbody>
-      </table>
-
-      <!-- ========== MEV & Slippage ========== -->
-      <h2>MEV &amp; Slippage Guide</h2>
-
-      <p>When trading IFR on Uniswap V2:</p>
 
       <div class="callout-green callout">
-        <p><strong>Recommended slippage:</strong> Set to at least <strong>4%</strong> (3.5% fee + AMM slippage). Lower values may cause transactions to revert.</p>
+        <p>Inferno Protocol is fully open source and community-owned. No single entity controls the protocol. All contracts are verified on Ethereum Mainnet, governed by a 48-hour timelock, and protected by Gnosis Safe multisig. The protocol lives on-chain &mdash; permanently.</p>
       </div>
-
-      <pre><code>// Recommended Uniswap V2 settings for IFR
-Slippage Tolerance: 4.0% (minimum)
-Transaction Deadline: 20 minutes
-Gas: Standard</code></pre>
-
-      <ul>
-        <li>The FeeRouter contract provides optimized routing with correct parameters</li>
-        <li>Alternatively, use the Governance Dashboard for direct swaps</li>
-        <li>Fee-on-transfer is fully DEX-compatible but requires correct slippage settings</li>
-      </ul>
 
       <!-- Footer -->
       <footer class="wiki-footer">
