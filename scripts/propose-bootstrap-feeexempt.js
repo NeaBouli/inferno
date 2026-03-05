@@ -49,16 +49,9 @@ async function main() {
   console.log(`  Gas Used: ${receipt.gasUsed.toString()}`);
 
   // ── Read proposal details ──────────────────────────────────
-  // Find proposal ID from ProposalCreated event
-  const proposalEvent = receipt.events?.find(e => e.event === "ProposalCreated");
-  let proposalId;
-  if (proposalEvent) {
-    proposalId = proposalEvent.args.proposalId.toNumber();
-  } else {
-    // Fallback: read proposalCount - 1
-    const count = await governance.proposalCount();
-    proposalId = count.toNumber() - 1;
-  }
+  // Read proposal ID from proposalCount (event parsing unreliable with some ABIs)
+  const count = await governance.proposalCount();
+  const proposalId = count.toNumber() - 1;
 
   const proposal = await governance.getProposal(proposalId);
   const etaDate = new Date(proposal.eta.toNumber() * 1000);
