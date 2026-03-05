@@ -133,6 +133,7 @@
 | 7 | **FeeRouterV1** | [`0x4807B77B2E25cD055DA42B09BA4d0aF9e580C60a`](https://etherscan.io/address/0x4807B77B2E25cD055DA42B09BA4d0aF9e580C60a#code) | Verified |
 | 8 | **Vesting** | [`0x2694Bc84e8D5251E9E4Ecd4B2Ae3f866d6106271`](https://etherscan.io/address/0x2694Bc84e8D5251E9E4Ecd4B2Ae3f866d6106271#code) | Verified |
 | 9 | **LiquidityReserve** | [`0xdc0309804803b3A105154f6073061E3185018f64`](https://etherscan.io/address/0xdc0309804803b3A105154f6073061E3185018f64#code) | Verified |
+| 10 | **BootstrapVault** | [`0xA820540936d18e1377C39dd9445E5b36F3F1261a`](https://etherscan.io/address/0xA820540936d18e1377C39dd9445E5b36F3F1261a#code) | Verified |
 
 ### Token Distribution (CFLM)
 
@@ -162,8 +163,8 @@
 
 | Step | Status |
 |------|--------|
-| 9 Contracts Deployed | Done (2026-03-05) |
-| Etherscan Verification | Done (9/9 verified) |
+| 10 Contracts Deployed | Done (2026-03-05) |
+| Etherscan Verification | Done (10/10 verified) |
 | feeExempt Wiring | Done |
 | Token Distribution (CFLM) | Done |
 | Deployer Exemption Removed | Done |
