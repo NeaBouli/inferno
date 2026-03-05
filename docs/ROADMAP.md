@@ -72,7 +72,7 @@
 
 ## Phase 3: Growth (Q2-Q3 2026)
 
-- [ ] Partner Ecosystem expansion (Tier 1-3 onboarding open)
+- [ ] Partner Ecosystem expansion (permissionless integration)
 - [ ] Creator Gateway live (YouTube monetization bridge)
 - [ ] Benefits Network live (merchant onboarding)
 - [ ] Guarded buyback automation (BuybackVault activation after 60 days)
