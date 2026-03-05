@@ -1,116 +1,77 @@
-# AI Copilot — Vercel Environment Variables
+# AI Copilot — Railway Deployment
 
-Stand: 26. Februar 2026
+Stand: 05. Maerz 2026
 
-## Architektur: Two-App Deployment
+## Architektur: Single-App Deployment (Railway)
 
-| Komponente | Plattform | Zweck |
-|-----------|-----------|-------|
-| Frontend (React) | Vercel | Statische SPA, CDN |
-| Backend (Express) | Railway | API, Anthropic Proxy |
+| Komponente | Plattform | URL |
+|-----------|-----------|-----|
+| Full App (Frontend + Backend) | Railway | https://ifr-ai-copilot-production.up.railway.app |
 
-## Vercel (Frontend) Variablen
-
-| Variable | Beispiel | Beschreibung |
-|----------|---------|-------------|
-| `VITE_API_URL` | `https://ifr-copilot-api.railway.app` | Backend API URL (nur fuer Produktion) |
-
-## Railway (Backend) Variablen
+## Railway Environment Variables
 
 | Variable | Beispiel | Beschreibung |
 |----------|---------|-------------|
 | `ANTHROPIC_API_KEY` | `sk-ant-...` | Claude API Key |
-| `POINTS_BACKEND_URL` | `https://ifr-points.railway.app` | Points Backend URL |
-| `PORT` | `3003` | Server Port |
+| `NODE_ENV` | `production` | Environment |
+| `PORT` | `3000` | Server Port |
+| `ALLOWED_ORIGINS` | `https://ifrunit.tech,...` | CORS Origins (comma-separated) |
 
-## Vercel Setup
+## Deploy Steps
 
 ```bash
-# 1. Vercel CLI
-npm i -g vercel && vercel login
+cd apps/ai-copilot
+
+# 1. Railway CLI
+railway login
 
 # 2. Projekt initialisieren
-cd apps/ai-copilot
-vercel
+railway init
+# Name: ifr-ai-copilot
 
-# 3. Settings:
-#    Root Directory: apps/ai-copilot
-#    Framework: Vite
-#    Build Command: npm run build
-#    Output Directory: dist
+# 3. Env Vars setzen
+railway variables set ANTHROPIC_API_KEY=sk-ant-...
+railway variables set NODE_ENV=production
+railway variables set PORT=3000
 
-# 4. Env setzen
-vercel env add VITE_API_URL
-# → Wert: https://ifr-copilot-api.railway.app
+# 4. Deploy
+railway up
 
-# 5. Deploy
-vercel --prod
+# 5. Domain zuweisen
+railway domain
 ```
 
-## Proxy-Konfiguration
+## CORS
 
-**Lokal (vite.config.ts):**
-```typescript
-proxy: {
-  "/api": "http://localhost:3003"
-}
-```
-
-**Produktion (vercel.json):**
-```json
-{
-  "rewrites": [
-    { "source": "/api/(.*)", "destination": "https://ifr-copilot-api.railway.app/api/$1" }
-  ]
-}
-```
+Backend erlaubt folgende Origins (Fallback wenn `ALLOWED_ORIGINS` nicht gesetzt):
+- `https://ifrunit.tech`
+- `https://www.ifrunit.tech`
+- `https://neabouli.github.io`
+- `http://localhost:5175` (local dev)
+- `http://localhost:3003` (local dev)
 
 ## Health Check
 
 ```bash
-# Backend:
-curl https://ifr-copilot-api.railway.app/api/health
+curl https://ifr-ai-copilot-production.up.railway.app/api/health
 # → { "status": "ok", "apiKeySet": true }
-
-# Frontend:
-curl https://ifr-copilot.vercel.app
-# → HTML (React SPA)
 ```
 
 ## Sicherheit
 
-- `ANTHROPIC_API_KEY` **NIEMALS** im Frontend exponieren (nur Backend!)
-- Vercel Rewrites leiten `/api/*` an Railway weiter
-- CORS auf Backend korrekt konfiguriert fuer Vercel Domain
+- `ANTHROPIC_API_KEY` nur auf Railway (Backend) — niemals im Frontend
+- CORS auf Production Origins beschraenkt
+- Widget wird als iframe in Landing Page + Wiki eingebettet
 
-## Deploy Steps
+## Widget-Integration
 
-### Frontend (Vercel)
-```bash
-vercel login
-cd apps/ai-copilot
-vercel --prod
-# Env Var setzen: VITE_API_URL=https://ifr-copilot-api.railway.app
-```
+Der Copilot ist als iframe-Widget in allen Seiten eingebettet:
+- `docs/index.html` (Landing Page)
+- `docs/wiki/*.html` (alle 16 Wiki-Seiten)
 
-### Backend (Railway)
-```bash
-railway login
-cd apps/ai-copilot/server
-railway up
-# Env Vars: ANTHROPIC_API_KEY, PORT=3003
-```
-
-### Server Dockerfile
-```dockerfile
-FROM node:20-alpine
-WORKDIR /app
-COPY package*.json ./
-RUN npm ci --production
-COPY dist ./dist/
-EXPOSE 3003
-CMD ["node", "dist/server.js"]
+```javascript
+iframe.src = 'https://ifr-ai-copilot-production.up.railway.app';
 ```
 
 ---
-*Siehe auch: apps/ai-copilot/DEPLOY_CORRECTED.md*
+*Alte Two-App-Architektur (Vercel Frontend + Railway Backend) wurde durch Single-App Railway Deploy ersetzt.*

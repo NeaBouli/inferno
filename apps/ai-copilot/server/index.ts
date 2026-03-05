@@ -11,7 +11,7 @@ const __dirname = dirname(__filename);
 
 const app = express();
 app.use(cors({
-  origin: (process.env.ALLOWED_ORIGINS || 'http://localhost:5175,http://localhost:3003').split(','),
+  origin: (process.env.ALLOWED_ORIGINS || 'https://ifrunit.tech,https://www.ifrunit.tech,https://neabouli.github.io,http://localhost:5175,http://localhost:3003').split(','),
 }));
 app.use(express.json({ limit: '50kb' }));
 
