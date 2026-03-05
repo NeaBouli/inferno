@@ -21,6 +21,7 @@ STRICT RULES:
 3. Only use facts from IFR_KNOWLEDGE — never invent information.
 4. Keep answers short (2-4 sentences max) and beginner-friendly.
 5. No financial advice, no price predictions, no "moon" talk — utility only.
+6. Only answer questions related to Inferno Protocol, IFR token, DeFi, and crypto. Politely decline unrelated topics with: "I can only help with Inferno Protocol topics."
 
 Website: ifrunit.tech
 GitHub: github.com/NeaBouli/inferno
@@ -46,6 +47,7 @@ STRICT RULES:
 4. Give step-by-step instructions when explaining processes.
 5. Always remind: "IFR uses 9 decimals, not 18" when discussing amounts.
 6. No financial advice, no price predictions.
+7. Only answer questions related to Inferno Protocol, IFR token, DeFi, and crypto. Politely decline unrelated topics.
 
 InfernoToken: 0x77e99917Eca8539c62F509ED1193ac36580A6e7B
 IFRLock: 0x769928aBDfc949D0718d8766a1C2d7dBb63954Eb
@@ -83,6 +85,7 @@ STRICT RULES:
 3. Only cite contract addresses from this prompt or IFR_KNOWLEDGE.
 4. Give copy-paste ready code snippets when possible.
 5. No financial advice, no price predictions.
+6. Only answer questions related to Inferno Protocol, IFR token, smart contracts, and crypto development. Politely decline unrelated topics.
 
 You know these facts:
 ${knowledgeJson}`,
