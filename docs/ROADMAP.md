@@ -45,19 +45,19 @@
 
 ---
 
-## Phase 2: Mainnet Launch (Q2 2026) — NEXT
+## Phase 2: Mainnet Launch (Q1 2026) — IN PROGRESS
 
 ### Must Have
-- [ ] LP Token lock/burn (Unicrypt, 12 months minimum)
-- [x] Gnosis Safe Multisig deployed (1-of-1, expand to 2-of-3 before mainnet) — `0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b`
-- [ ] Governance owner → Multisig
-- [ ] Community wallet + team beneficiary addresses finalized
-- [ ] Professional security audit (Code4rena / Sherlock)
-- [ ] Mainnet deploy (all 14 contracts)
+- [x] Gnosis Safe Multisig deployed (1-of-1) — `0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b`
+- [x] Mainnet deploy (9 contracts, all verified on Etherscan)
+- [x] Token distribution complete (1B IFR, CFLM)
+- [x] Mainnet feeExempt configuration (8 addresses set, deployer removed)
+- [x] Etherscan verification (mainnet, all 9 contracts)
 - [ ] Mainnet Uniswap V2 LP pairing (IFR/WETH)
-- [ ] Etherscan verification (mainnet)
+- [ ] LP Token lock/burn (Unicrypt, 12 months minimum)
 - [ ] Mainnet ownership transfer to Governance
-- [ ] Mainnet feeExempt configuration
+- [ ] Governance owner → Multisig (expand 1-of-1 → 4-of-7)
+- [ ] Community wallet + team beneficiary addresses finalized
 
 ### Should Have
 - [ ] Apps deployed (Railway / Vercel)
@@ -107,8 +107,8 @@
 
 ## Current Focus
 
-**Phase 2 preparation** — LP token lock, multisig setup, professional audit, mainnet deployment.
-See [Mainnet Checklist](MAINNET_CHECKLIST.md) for detailed steps.
+**Phase 2 completion** — mainnet contracts deployed and verified (March 2026). Next: LP pairing, LP lock, ownership transfer to Gnosis Safe multisig.
+See [Mainnet Checklist](MAINNET_CHECKLIST.md) for detailed progress.
 
 ---
-*Last updated: 03 March 2026*
+*Last updated: 05 March 2026*

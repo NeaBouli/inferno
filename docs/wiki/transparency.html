@@ -415,6 +415,7 @@
         <li><a href="fair-launch.html">Fair Launch</a></li>
         <li><a href="fee-design.html">Fee Design</a></li>
         <li><a href="roadmap.html">Roadmap</a></li>
+        <li><a href="testnet.html">Testnet</a></li>
         <li><div class="nav-divider"></div></li>
         <li class="nav-back"><a href="../index.html">&larr; Back to Website</a></li>
       </ul>
@@ -425,11 +426,11 @@
 
       <h1><span class="accent">On-Chain</span> Transparency Report</h1>
       <p class="subtitle">
-        Every number is verifiable on Etherscan. No hidden wallets, no insider deals. All data sourced from Sepolia testnet via <code>scripts/onchain-audit.js</code>.
+        Every number is verifiable on Etherscan. No hidden wallets, no insider deals. All data sourced from Ethereum Mainnet.
       </p>
 
       <div class="callout-green callout">
-        <p><strong>Verify yourself:</strong> Clone the repo and run <code>npx hardhat run scripts/onchain-audit.js --network sepolia</code> to reproduce all 8 checks independently.</p>
+        <p><strong>Verify yourself:</strong> All contracts are verified on <a href="https://etherscan.io/address/0x77e99917Eca8539c62F509ED1193ac36580A6e7B#code" target="_blank" rel="noopener">Etherscan</a>. Read contract state directly to verify every claim below.</p>
       </div>
 
       <!-- ========== CHECK 1: Contract Ownership ========== -->
@@ -443,7 +444,7 @@
         <tbody>
           <tr>
             <td>InfernoToken</td>
-            <td class="address"><a href="https://sepolia.etherscan.io/address/0x6050b22E4EAF3f414d1155fBaF30B868E0107017">0x6050...0017</a> (Governance)</td>
+            <td class="address"><a href="https://etherscan.io/address/0xc43d48E7FDA576C5022d0670B652A622E8caD041">0xc43d...d041</a> (Governance)</td>
             <td><span class="status-ok">OK</span></td>
           </tr>
           <tr>
@@ -463,17 +464,17 @@
           </tr>
           <tr>
             <td>LiquidityReserve v2</td>
-            <td class="address"><a href="https://sepolia.etherscan.io/address/0x6050b22E4EAF3f414d1155fBaF30B868E0107017">0x6050...0017</a> (Governance)</td>
+            <td class="address"><a href="https://etherscan.io/address/0xc43d48E7FDA576C5022d0670B652A622E8caD041">0xc43d...d041</a> (Governance)</td>
             <td><span class="status-ok">OK</span></td>
           </tr>
           <tr>
             <td>BuybackVault v2</td>
-            <td class="address"><a href="https://sepolia.etherscan.io/address/0x6050b22E4EAF3f414d1155fBaF30B868E0107017">0x6050...0017</a> (Governance)</td>
+            <td class="address"><a href="https://etherscan.io/address/0xc43d48E7FDA576C5022d0670B652A622E8caD041">0xc43d...d041</a> (Governance)</td>
             <td><span class="status-ok">OK</span></td>
           </tr>
           <tr>
             <td>BurnReserve v2</td>
-            <td class="address"><a href="https://sepolia.etherscan.io/address/0x6050b22E4EAF3f414d1155fBaF30B868E0107017">0x6050...0017</a> (Governance)</td>
+            <td class="address"><a href="https://etherscan.io/address/0xc43d48E7FDA576C5022d0670B652A622E8caD041">0xc43d...d041</a> (Governance)</td>
             <td><span class="status-ok">OK</span></td>
           </tr>
         </tbody>
@@ -499,7 +500,7 @@
       </table>
 
       <div class="callout callout-yellow">
-        <p><strong>Before Mainnet:</strong> LP Tokens will be permanently burned (sent to <code>0x000...dEaD</code>) using <code>scripts/burn-lp-tokens.js</code>. This locks liquidity forever.</p>
+        <p><strong>Planned:</strong> LP Tokens will be permanently burned (sent to <code>0x000...dEaD</code>) or locked via Unicrypt after LP pairing. This locks liquidity permanently.</p>
       </div>
 
       <!-- ========== CHECK 3: Vesting Contract ========== -->
@@ -513,7 +514,7 @@
         <tbody>
           <tr>
             <td>Address</td>
-            <td class="address"><a href="https://sepolia.etherscan.io/address/0xa710f9FE7bf42981E60BE2Fbe7D87Fb3541a3F8B">0xa710...3F8B</a></td>
+            <td class="address"><a href="https://etherscan.io/address/0x2694Bc84e8D5251E9E4Ecd4B2Ae3f866d6106271">0x2694...6271</a></td>
           </tr>
           <tr><td>IFR Balance</td><td>150,000,000 IFR (15%)</td></tr>
           <tr><td>Beneficiary</td><td>Deployer (Team)</td></tr>
@@ -536,7 +537,7 @@
         <tbody>
           <tr>
             <td>Address</td>
-            <td class="address"><a href="https://sepolia.etherscan.io/address/0xF7E90D0d17f8232365186AA085D26eaEfAf011aF">0xF7E9...11aF</a></td>
+            <td class="address"><a href="https://etherscan.io/address/0xdc0309804803b3A105154f6073061E3185018f64">0xdc03...f64</a></td>
           </tr>
           <tr><td>IFR Balance</td><td>200,000,000 IFR (20%)</td></tr>
         </tbody>
@@ -553,7 +554,7 @@
         <tbody>
           <tr>
             <td>Address</td>
-            <td class="address"><a href="https://sepolia.etherscan.io/address/0xC8ABb9039BEd24f4dBf5Cff09699877D81f0D63C">0xC8AB...63C</a></td>
+            <td class="address"><a href="https://etherscan.io/address/0x670D293e3D65f96171c10DdC8d88B96b0570F812">0x670D...F812</a></td>
           </tr>
           <tr><td>IFR Balance</td><td>0 IFR (testnet)</td></tr>
           <tr><td>Router</td><td>Uniswap V2 Router02</td></tr>
@@ -596,7 +597,7 @@
         <tbody>
           <tr>
             <td>Address</td>
-            <td class="address"><a href="https://sepolia.etherscan.io/address/0x5F12C0bC616e9Ca347D48C33266aA8fe98490A39">0x5F12...0A39</a></td>
+            <td class="address"><a href="https://etherscan.io/address/0xc6eb7714bCb035ebc2D4d9ba7B3762ef7B9d4F7D">0xc6eb...7B9d</a></td>
           </tr>
           <tr><td>IFR Balance</td><td>40,000,000 IFR (4.01%)</td></tr>
           <tr><td>Admin</td><td>Governance (Timelock)</td></tr>
@@ -630,22 +631,24 @@
         <p><strong>Deflation confirmed:</strong> 2,000,425+ IFR have been permanently burned since deployment. This number increases with every transfer. Supply can only decrease &mdash; there is no mint function.</p>
       </div>
 
-      <!-- ========== TODOs Before Mainnet ========== -->
-      <h2>Known TODOs Before Mainnet</h2>
-      <p>These items are actively tracked in <a href="../MAINNET_CHECKLIST.md">MAINNET_CHECKLIST.md</a> and must be completed before any public launch.</p>
+      <!-- ========== Post-Deployment Status ========== -->
+      <h2>Post-Deployment Status</h2>
+      <p>Mainnet deployed on 2026-03-05. Remaining items tracked in <a href="../MAINNET_CHECKLIST.md">MAINNET_CHECKLIST.md</a>.</p>
 
       <table>
         <thead>
-          <tr><th>#</th><th>Action</th><th>Priority</th></tr>
+          <tr><th>#</th><th>Action</th><th>Status</th></tr>
         </thead>
         <tbody>
-          <tr><td>1</td><td>LP Tokens lock/burn (Unicrypt or 0xdead)</td><td><span style="color:#ef4444;font-weight:600;">Critical</span></td></tr>
-          <tr><td>2</td><td>LiquidityReserve ownership &rarr; Governance</td><td><span style="color:#f59e0b;font-weight:600;">High</span></td></tr>
-          <tr><td>3</td><td>BuybackVault ownership &rarr; Governance</td><td><span style="color:#f59e0b;font-weight:600;">High</span></td></tr>
-          <tr><td>4</td><td>BurnReserve ownership &rarr; Governance</td><td><span style="color:#f59e0b;font-weight:600;">High</span></td></tr>
-          <tr><td>5</td><td>PartnerVault feeExempt (Proposal #3)</td><td><span class="status-ok">Done (26.02.2026)</span></td></tr>
-          <tr><td>6</td><td>Third-party Security Audit</td><td><span style="color:#ef4444;font-weight:600;">Critical</span></td></tr>
-          <tr><td>7</td><td>Gnosis Safe 4-of-7 Multisig</td><td><span style="color:#f59e0b;font-weight:600;">High</span></td></tr>
+          <tr><td>1</td><td>Mainnet deploy (9 contracts)</td><td><span class="status-ok">Done (05.03.2026)</span></td></tr>
+          <tr><td>2</td><td>Etherscan verification (all 9)</td><td><span class="status-ok">Done (05.03.2026)</span></td></tr>
+          <tr><td>3</td><td>Token distribution (1B IFR, CFLM)</td><td><span class="status-ok">Done (05.03.2026)</span></td></tr>
+          <tr><td>4</td><td>Fee exemptions (8 addresses)</td><td><span class="status-ok">Done (05.03.2026)</span></td></tr>
+          <tr><td>5</td><td>Gnosis Safe deployed (1-of-1)</td><td><span class="status-ok">Done</span></td></tr>
+          <tr><td>6</td><td>LP Pairing (IFR/ETH, Uniswap V2)</td><td><span style="color:#f59e0b;font-weight:600;">Pending</span></td></tr>
+          <tr><td>7</td><td>LP Token lock/burn</td><td><span style="color:#ef4444;font-weight:600;">Critical</span></td></tr>
+          <tr><td>8</td><td>Ownership transfer &rarr; Governance</td><td><span style="color:#f59e0b;font-weight:600;">Pending</span></td></tr>
+          <tr><td>9</td><td>Multisig expand (1-of-1 &rarr; 4-of-7)</td><td><span style="color:#f59e0b;font-weight:600;">Pending</span></td></tr>
         </tbody>
       </table>
 
@@ -656,21 +659,21 @@
       <pre><code>git clone https://github.com/NeaBouli/inferno
 cd inferno
 npm install
-cp .env.example .env
-# Add your Sepolia RPC_URL to .env
-npx hardhat run scripts/onchain-audit.js --network sepolia</code></pre>
+# All contracts are verified on Etherscan — read state directly
+# Or run tests locally:
+npx hardhat test</code></pre>
 
       <p>Or verify directly on Etherscan:</p>
       <ul>
-        <li><a href="https://sepolia.etherscan.io/address/0x3Bd71947F288d1dd8B21129B1bE4FF16EDd5d1F4#readContract">InfernoToken &mdash; Read Contract</a></li>
-        <li><a href="https://sepolia.etherscan.io/address/0xa710f9FE7bf42981E60BE2Fbe7D87Fb3541a3F8B">Vesting Contract</a></li>
-        <li><a href="https://sepolia.etherscan.io/address/0x6050b22E4EAF3f414d1155fBaF30B868E0107017">Governance (Timelock)</a></li>
-        <li><a href="https://sepolia.etherscan.io/address/0x5F12C0bC616e9Ca347D48C33266aA8fe98490A39">PartnerVault v2</a></li>
-        <li><a href="https://sepolia.etherscan.io/address/0x2252e8bBDE0E50CD372748aC233A99C08627d9c7">LP Pair (IFR/WETH)</a></li>
+        <li><a href="https://etherscan.io/address/0x77e99917Eca8539c62F509ED1193ac36580A6e7B#readContract">InfernoToken &mdash; Read Contract</a></li>
+        <li><a href="https://etherscan.io/address/0x2694Bc84e8D5251E9E4Ecd4B2Ae3f866d6106271">Vesting Contract</a></li>
+        <li><a href="https://etherscan.io/address/0xc43d48E7FDA576C5022d0670B652A622E8caD041">Governance (Timelock)</a></li>
+        <li><a href="https://etherscan.io/address/0xc6eb7714bCb035ebc2D4d9ba7B3762ef7B9d4F7D">PartnerVault v2</a></li>
+        <li><a href="https://etherscan.io/address/0x77e99917Eca8539c62F509ED1193ac36580A6e7B">LP Pair (IFR/WETH)</a></li>
       </ul>
 
       <p style="margin-top:32px;font-size:13px;color:var(--muted);font-style:italic;">
-        All data from Sepolia testnet &mdash; mainnet values will be updated after mainnet deployment. Stand: Februar 2026 | Version 1.0
+        All data from Ethereum Mainnet. Last updated: March 2026 | Version 2.0
       </p>
 
       <!-- Footer -->
