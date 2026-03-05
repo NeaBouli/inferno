@@ -461,7 +461,7 @@
           </tr>
           <tr>
             <td>FeeRouterV1</td>
-            <td class="address"><a href="https://sepolia.etherscan.io/address/0xE0E8F76e4fb38B2e367Aee043a2C02b8D1c7c037#code" target="_blank" rel="noopener">0xE0E8F76e4fb38B2e367Aee043a2C02b8D1c7c037</a></td>
+            <td class="address"><a href="https://sepolia.etherscan.io/address/0x499289C8Ef49769F4FcFF3ca86D4BD7b55B49aa4#code" target="_blank" rel="noopener">0x499289C8Ef49769F4FcFF3ca86D4BD7b55B49aa4</a></td>
           </tr>
           <tr>
             <td>LP Pair (IFR/WETH)</td>
@@ -592,37 +592,14 @@ npm run dev
     })();
   </script>
 
-<!-- IFR AI Copilot Widget -->
-<button id="ifr-copilot-btn" onclick="toggleCopilot()"
-  style="position:fixed;bottom:24px;right:24px;z-index:10000;
-  background:#C0392B;color:#fff;border:none;padding:12px 20px;
-  border-radius:50px;font-size:14px;font-weight:bold;cursor:pointer;
-  box-shadow:0 4px 16px rgba(192,57,43,0.4);transition:transform 0.2s;"
-  onmouseover="this.style.transform='scale(1.05)'"
-  onmouseout="this.style.transform='scale(1)'">&#x1f525; AI Copilot</button>
-
-<div id="ifr-copilot-window"
-  style="display:none;position:fixed;bottom:90px;right:24px;
-  z-index:9998;width:400px;height:600px;
-  border-radius:16px;overflow:hidden;
-  box-shadow:0 8px 32px rgba(0,0,0,0.5);">
-  <iframe
-    src="https://ifr-ai-copilot-production.up.railway.app"
-    style="border:none;width:100%;height:100%;"
-    allow="clipboard-write">
-  </iframe>
-</div>
-
-<script>
-function toggleCopilot() {
-  if (window.location.hostname === 'localhost') return;
-  var win = document.getElementById('ifr-copilot-window');
-  var btn = document.getElementById('ifr-copilot-btn');
-  var open = win.style.display === 'block';
-  win.style.display = open ? 'none' : 'block';
-  btn.innerHTML = open ? '&#x1f525; AI Copilot' : '&#x2715; Close';
-}
-</script>
+<!-- IFR Copilot Widget -->
+<style>
+#ifr-btn { position:fixed; bottom:24px; right:24px; z-index:99999; width:60px; height:60px; border-radius:50%; background:#ff6600; border:none; cursor:pointer; font-size:28px; box-shadow:0 4px 20px rgba(255,102,0,0.5); }
+#ifr-panel { display:none; position:fixed; bottom:100px; right:24px; z-index:99998; width:400px; height:580px; border-radius:16px; overflow:hidden; box-shadow:0 8px 40px rgba(0,0,0,0.5); background:#1a1a1a; }
+#ifr-panel iframe { width:100%; height:100%; border:none; }
+</style>
+<button id="ifr-btn" onclick="var p=document.getElementById('ifr-panel');p.style.display=p.style.display==='block'?'none':'block';">&#x1f525;</button>
+<div id="ifr-panel"><iframe src="https://ifr-ai-copilot-production.up.railway.app" allow="clipboard-write"></iframe></div>
 
 </body>
 </html>
