@@ -14,11 +14,11 @@ These items MUST be completed before public launch:
 - [ ] Record LP lock proof in TRANSPARENCY.md
 - [ ] Add LP lock link to landing page + wiki
 
-### Ownership Transfer → Governance
-- [ ] InfernoToken.transferOwnership(timelockAddress)
-- [ ] LiquidityReserve.transferOwnership(timelockAddress)
-- [ ] BuybackVault.transferOwnership(timelockAddress)
-- [ ] BurnReserve.transferOwnership(timelockAddress)
+### Ownership Transfer → Governance (Done 2026-03-05)
+- [x] InfernoToken.transferOwnership(Governance) — [TX](https://etherscan.io/tx/0x...)
+- [x] LiquidityReserve.transferOwnership(Governance)
+- [x] BuybackVault.transferOwnership(Governance)
+- [x] BurnReserve.transferOwnership(Governance)
 
 ### Deployer Wallet
 - [ ] Transfer deployer wallet treasury share to Governance Treasury
@@ -29,7 +29,10 @@ These items MUST be completed before public launch:
 - Mainnet Deploy: 9/9 contracts deployed + verified
 - Token Distribution: 1B IFR correctly distributed (CFLM)
 - Fee Exemptions: 8 addresses set, deployer removed
-- OPEN: LP Pairing, LP Lock, Ownership Transfer, Multisig expansion
+- Ownership Transfer: Done (2026-03-05, 4 contracts → Governance)
+- BootstrapVault: Deployed + verified (`0xA820540936d18e1377C39dd9445E5b36F3F1261a`)
+- Governance Proposal #0: feeExempt(BootstrapVault), ETA 07.03.2026
+- OPEN: LP Pairing, LP Lock, Multisig expansion
 
 ---
 
@@ -164,11 +167,14 @@ These items MUST be completed before public launch:
 - [ ] Verify test swap with voucher discount
 
 ### Step 8 — Ownership Transfer to Multisig
-- [ ] InfernoToken Ownership → Governance
+- [x] InfernoToken Ownership → Governance (Done 2026-03-05)
+- [x] LiquidityReserve Ownership → Governance (Done 2026-03-05)
+- [x] BuybackVault Ownership → Governance (Done 2026-03-05)
+- [x] BurnReserve Ownership → Governance (Done 2026-03-05)
 - [ ] Governance Owner → MULTISIG_ADDRESS
 - [ ] Guardian → GUARDIAN_ADDRESS
-- [ ] Remove deployer feeExempt
-- [ ] Deployer has no more admin rights
+- [x] Remove deployer feeExempt (Done 2026-03-05)
+- [ ] Deployer has no more admin rights (pending Governance owner → Multisig)
 - [ ] Test proposal with multisig successful
 
 ---

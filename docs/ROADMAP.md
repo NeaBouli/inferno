@@ -53,9 +53,11 @@
 - [x] Token distribution complete (1B IFR, CFLM)
 - [x] Mainnet feeExempt configuration (8 addresses set, deployer removed)
 - [x] Etherscan verification (mainnet, all 9 contracts)
+- [x] Ownership transfer to Governance (InfernoToken, LiquidityReserve, BuybackVault, BurnReserve)
+- [x] BootstrapVault deployed + verified (`0xA820540936d18e1377C39dd9445E5b36F3F1261a`)
+- [x] Governance Proposal #0 submitted (feeExempt BootstrapVault, ETA 07.03.2026)
 - [ ] Mainnet Uniswap V2 LP pairing (IFR/WETH)
 - [ ] LP Token lock/burn (Unicrypt, 12 months minimum)
-- [ ] Mainnet ownership transfer to Governance
 - [ ] Governance owner → Multisig (expand 1-of-1 → 4-of-7)
 - [ ] Community wallet + team beneficiary addresses finalized
 
@@ -107,7 +109,7 @@
 
 ## Current Focus
 
-**Phase 2 completion** — mainnet contracts deployed and verified (March 2026). Next: LP pairing, LP lock, ownership transfer to Gnosis Safe multisig.
+**Phase 2 completion** — mainnet contracts deployed, verified, and ownership transferred to Governance (March 2026). Next: LP pairing, LP lock, Governance owner → Multisig.
 See [Mainnet Checklist](MAINNET_CHECKLIST.md) for detailed progress.
 
 ---
