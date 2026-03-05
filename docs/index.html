@@ -1406,7 +1406,7 @@ if (isLocked) {
         <div class="trust-check">&check;</div>
         <div>
           <h4>Testnet Verified</h4>
-          <p>All 14 on-chain components (9 repo contracts + 3 v2 upgrades + 1 LP Pair + 1 BootstrapVault) deployed and verified on Sepolia. Full protocol smoke test passed: fees, burns, governance lifecycle.</p>
+          <p>All 9 core contracts deployed and verified on Ethereum Mainnet. Full protocol smoke test passed on Sepolia: fees, burns, governance lifecycle.</p>
         </div>
       </div>
       <div class="trust-item reveal">
@@ -1546,7 +1546,7 @@ if (isLocked) {
 
       <div class="faq-item">
         <button class="faq-question"><span>I am new to crypto. Is IFR safe to use?</span><span class="faq-icon">+</span></button>
-        <div class="faq-answer"><div class="faq-answer-inner">IFR is designed to be as safe and transparent as possible, but as with all crypto assets, you should understand what you are doing before investing.<br><br>What makes IFR safer than most tokens: All smart contracts are fully open source &mdash; anyone can verify the code. No admin can change your locked tokens or take your funds. No new tokens can ever be minted &mdash; supply only goes down. Every governance change requires a 48-hour public waiting period &mdash; no surprises. A Guardian role can cancel any suspicious governance proposal within 48 hours.<br><br>What you should know before using IFR: Every transfer burns 2.5% permanently &mdash; factor this into your calculations. Locking tokens means they are in a smart contract, not in your wallet &mdash; they are still yours, but act accordingly. The token is currently on Sepolia testnet &mdash; mainnet deployment is upcoming. Always buy from verified sources and verify the official contract address before any transaction.<br><br>When in doubt: start small, verify everything, and only lock what you are comfortable with.</div></div>
+        <div class="faq-answer"><div class="faq-answer-inner">IFR is designed to be as safe and transparent as possible, but as with all crypto assets, you should understand what you are doing before investing.<br><br>What makes IFR safer than most tokens: All smart contracts are fully open source &mdash; anyone can verify the code. No admin can change your locked tokens or take your funds. No new tokens can ever be minted &mdash; supply only goes down. Every governance change requires a 48-hour public waiting period &mdash; no surprises. A Guardian role can cancel any suspicious governance proposal within 48 hours.<br><br>What you should know before using IFR: Every transfer burns 2.5% permanently &mdash; factor this into your calculations. Locking tokens means they are in a smart contract, not in your wallet &mdash; they are still yours, but act accordingly. The token is live on Ethereum Mainnet with all 9 contracts verified on Etherscan. Always buy from verified sources and verify the official contract address before any transaction.<br><br>When in doubt: start small, verify everything, and only lock what you are comfortable with.</div></div>
       </div>
 
       <div class="faq-item">
@@ -1581,7 +1581,7 @@ if (isLocked) {
 
       <div class="faq-item">
         <button class="faq-question"><span>Can I buy IFR on a centralized exchange (CEX)?</span><span class="faq-icon">+</span></button>
-        <div class="faq-answer"><div class="faq-answer-inner">Currently (testnet phase): only via Uniswap V2 on Sepolia. Fee-on-transfer tokens have elevated requirements for CEX listings &mdash; this is known and part of the mainnet roadmap. The primary use case is Lock-to-Access, not short-term trading. CEX outreach is planned for Phase 2+ after mainnet and audit.</div></div>
+        <div class="faq-answer"><div class="faq-answer-inner">Available via Uniswap V2 on Ethereum Mainnet. Fee-on-transfer tokens have elevated requirements for CEX listings &mdash; this is known and part of the growth roadmap. The primary use case is Lock-to-Access, not short-term trading. CEX outreach is planned for Phase 2+ after audit completion.</div></div>
       </div>
 
       <div class="faq-item">
@@ -1605,7 +1605,7 @@ if (isLocked) {
         <div class="roadmap-dot done">&check;</div>
         <div class="roadmap-body">
           <h4>Phase 1 &mdash; Foundation <span class="badge-done">Complete</span></h4>
-          <p>Smart Contract Development (14 contracts, 367 tests). Security Audit (Slither, 0 high/critical). Testnet Deployment (Sepolia, all verified). Governance Dashboard deployed.</p>
+          <p>Smart Contract Development (9 contracts, 367 tests). Security Audit (Slither, 0 high/critical). Mainnet Deployment (9/9 verified). Governance Dashboard deployed.</p>
         </div>
       </div>
       <div class="roadmap-item">
@@ -1648,12 +1648,12 @@ if (isLocked) {
       <p class="section-label">On-Chain</p>
       <h2 class="section-title">Contract Addresses</h2>
       <p class="section-desc" style="margin:0 auto;max-width:600px;">
-        All contracts are deployed on Sepolia testnet, verified on Etherscan, and owned by the Governance timelock.
+        All contracts are deployed on Ethereum Mainnet, verified on Etherscan, and owned by the Governance timelock.
       </p>
     </div>
     <div style="display:flex; gap:0.75rem; flex-wrap:wrap; margin-bottom:1.5rem; justify-content:center; margin-top:24px;">
-      <span style="background:#1a1a1a; border:1px solid #333; border-radius:8px; padding:0.4rem 0.9rem; font-size:0.85rem; color:#888;">Network: <strong style="color:#fff;">Ethereum Sepolia Testnet</strong></span>
-      <span style="background:#1a1a1a; border:1px solid #ff6b35; border-radius:8px; padding:0.4rem 0.9rem; font-size:0.85rem; color:#888;">Chain ID: <strong style="color:#ff6b35;">11155111</strong></span>
+      <span style="background:#1a1a1a; border:1px solid #333; border-radius:8px; padding:0.4rem 0.9rem; font-size:0.85rem; color:#888;">Network: <strong style="color:#fff;">Ethereum Mainnet</strong></span>
+      <span style="background:#1a1a1a; border:1px solid #ff6b35; border-radius:8px; padding:0.4rem 0.9rem; font-size:0.85rem; color:#888;">Chain ID: <strong style="color:#ff6b35;">1</strong></span>
       <span style="background:#1a1a1a; border:1px solid #333; border-radius:8px; padding:0.4rem 0.9rem; font-size:0.85rem; color:#888;">Symbol: <strong style="color:#fff;">$IFR</strong></span>
       <span style="background:#1a1a1a; border:1px solid #333; border-radius:8px; padding:0.4rem 0.9rem; font-size:0.85rem; color:#888;">Decimals: <strong style="color:#fff;">9</strong></span>
     </div>
@@ -1661,76 +1661,71 @@ if (isLocked) {
       <div class="contract-row" style="display:flex;align-items:center;justify-content:space-between;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;">
         <div><span style="color:var(--text-muted);font-size:13px;">InfernoToken</span></div>
         <div style="display:flex;align-items:center;gap:8px;">
-          <code style="font-size:12px;color:var(--accent);word-break:break-all;">0x3Bd71947F288d1dd8B21129B1bE4FF16EDd5d1F4</code>
-          <button class="copy-btn" data-addr="0x3Bd71947F288d1dd8B21129B1bE4FF16EDd5d1F4" title="Copy address" style="background:none;border:1px solid var(--border);border-radius:4px;padding:4px 8px;cursor:pointer;color:var(--text-muted);font-size:12px;">Copy</button>
+          <code style="font-size:12px;color:var(--accent);word-break:break-all;">0x77e99917Eca8539c62F509ED1193ac36580A6e7B</code>
+          <button class="copy-btn" data-addr="0x77e99917Eca8539c62F509ED1193ac36580A6e7B" title="Copy address" style="background:none;border:1px solid var(--border);border-radius:4px;padding:4px 8px;cursor:pointer;color:var(--text-muted);font-size:12px;">Copy</button>
         </div>
       </div>
       <div class="contract-row" style="display:flex;align-items:center;justify-content:space-between;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;">
         <div><span style="color:var(--text-muted);font-size:13px;">LiquidityReserve</span></div>
         <div style="display:flex;align-items:center;gap:8px;">
-          <code style="font-size:12px;color:var(--accent);word-break:break-all;">0x344720eA0cd1654e2bDB41ecC1cCb11eD60f1957</code>
-          <button class="copy-btn" data-addr="0x344720eA0cd1654e2bDB41ecC1cCb11eD60f1957" title="Copy address" style="background:none;border:1px solid var(--border);border-radius:4px;padding:4px 8px;cursor:pointer;color:var(--text-muted);font-size:12px;">Copy</button>
+          <code style="font-size:12px;color:var(--accent);word-break:break-all;">0xdc0309804803b3A105154f6073061E3185018f64</code>
+          <button class="copy-btn" data-addr="0xdc0309804803b3A105154f6073061E3185018f64" title="Copy address" style="background:none;border:1px solid var(--border);border-radius:4px;padding:4px 8px;cursor:pointer;color:var(--text-muted);font-size:12px;">Copy</button>
         </div>
       </div>
       <div class="contract-row" style="display:flex;align-items:center;justify-content:space-between;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;">
         <div><span style="color:var(--text-muted);font-size:13px;">Vesting</span></div>
         <div style="display:flex;align-items:center;gap:8px;">
-          <code style="font-size:12px;color:var(--accent);word-break:break-all;">0xa710f9FE7bf42981E60BE2Fbe7D87Fb3541a3F8B</code>
-          <button class="copy-btn" data-addr="0xa710f9FE7bf42981E60BE2Fbe7D87Fb3541a3F8B" title="Copy address" style="background:none;border:1px solid var(--border);border-radius:4px;padding:4px 8px;cursor:pointer;color:var(--text-muted);font-size:12px;">Copy</button>
+          <code style="font-size:12px;color:var(--accent);word-break:break-all;">0x2694Bc84e8D5251E9E4Ecd4B2Ae3f866d6106271</code>
+          <button class="copy-btn" data-addr="0x2694Bc84e8D5251E9E4Ecd4B2Ae3f866d6106271" title="Copy address" style="background:none;border:1px solid var(--border);border-radius:4px;padding:4px 8px;cursor:pointer;color:var(--text-muted);font-size:12px;">Copy</button>
         </div>
       </div>
       <div class="contract-row" style="display:flex;align-items:center;justify-content:space-between;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;">
         <div><span style="color:var(--text-muted);font-size:13px;">BuybackVault</span></div>
         <div style="display:flex;align-items:center;gap:8px;">
-          <code style="font-size:12px;color:var(--accent);word-break:break-all;">0x2E61b720c220ce85dA24b05a476903Ec709Cb68c</code>
-          <button class="copy-btn" data-addr="0x2E61b720c220ce85dA24b05a476903Ec709Cb68c" title="Copy address" style="background:none;border:1px solid var(--border);border-radius:4px;padding:4px 8px;cursor:pointer;color:var(--text-muted);font-size:12px;">Copy</button>
+          <code style="font-size:12px;color:var(--accent);word-break:break-all;">0x670D293e3D65f96171c10DdC8d88B96b0570F812</code>
+          <button class="copy-btn" data-addr="0x670D293e3D65f96171c10DdC8d88B96b0570F812" title="Copy address" style="background:none;border:1px solid var(--border);border-radius:4px;padding:4px 8px;cursor:pointer;color:var(--text-muted);font-size:12px;">Copy</button>
         </div>
       </div>
       <div class="contract-row" style="display:flex;align-items:center;justify-content:space-between;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;">
         <div><span style="color:var(--text-muted);font-size:13px;">BurnReserve</span></div>
         <div style="display:flex;align-items:center;gap:8px;">
-          <code style="font-size:12px;color:var(--accent);word-break:break-all;">0xB9FbE5dB44EEce77A69C8F09e9E0eE2E4F745D75</code>
-          <button class="copy-btn" data-addr="0xB9FbE5dB44EEce77A69C8F09e9E0eE2E4F745D75" title="Copy address" style="background:none;border:1px solid var(--border);border-radius:4px;padding:4px 8px;cursor:pointer;color:var(--text-muted);font-size:12px;">Copy</button>
+          <code style="font-size:12px;color:var(--accent);word-break:break-all;">0xaA1496133B6c274190A2113410B501C5802b6fCF</code>
+          <button class="copy-btn" data-addr="0xaA1496133B6c274190A2113410B501C5802b6fCF" title="Copy address" style="background:none;border:1px solid var(--border);border-radius:4px;padding:4px 8px;cursor:pointer;color:var(--text-muted);font-size:12px;">Copy</button>
         </div>
       </div>
       <div class="contract-row" style="display:flex;align-items:center;justify-content:space-between;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;">
         <div><span style="color:var(--text-muted);font-size:13px;">Governance</span></div>
         <div style="display:flex;align-items:center;gap:8px;">
-          <code style="font-size:12px;color:var(--accent);word-break:break-all;">0x6050b22E4EAF3f414d1155fBaF30B868E0107017</code>
-          <button class="copy-btn" data-addr="0x6050b22E4EAF3f414d1155fBaF30B868E0107017" title="Copy address" style="background:none;border:1px solid var(--border);border-radius:4px;padding:4px 8px;cursor:pointer;color:var(--text-muted);font-size:12px;">Copy</button>
+          <code style="font-size:12px;color:var(--accent);word-break:break-all;">0xc43d48E7FDA576C5022d0670B652A622E8caD041</code>
+          <button class="copy-btn" data-addr="0xc43d48E7FDA576C5022d0670B652A622E8caD041" title="Copy address" style="background:none;border:1px solid var(--border);border-radius:4px;padding:4px 8px;cursor:pointer;color:var(--text-muted);font-size:12px;">Copy</button>
         </div>
       </div>
       <div class="contract-row" style="display:flex;align-items:center;justify-content:space-between;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;">
         <div><span style="color:var(--text-muted);font-size:13px;">IFRLock</span></div>
         <div style="display:flex;align-items:center;gap:8px;">
-          <code style="font-size:12px;color:var(--accent);word-break:break-all;">0x0Cab0A9440643128540222acC6eF5028736675d3</code>
-          <button class="copy-btn" data-addr="0x0Cab0A9440643128540222acC6eF5028736675d3" title="Copy address" style="background:none;border:1px solid var(--border);border-radius:4px;padding:4px 8px;cursor:pointer;color:var(--text-muted);font-size:12px;">Copy</button>
+          <code style="font-size:12px;color:var(--accent);word-break:break-all;">0x769928aBDfc949D0718d8766a1C2d7dBb63954Eb</code>
+          <button class="copy-btn" data-addr="0x769928aBDfc949D0718d8766a1C2d7dBb63954Eb" title="Copy address" style="background:none;border:1px solid var(--border);border-radius:4px;padding:4px 8px;cursor:pointer;color:var(--text-muted);font-size:12px;">Copy</button>
         </div>
       </div>
       <div class="contract-row" style="display:flex;align-items:center;justify-content:space-between;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;">
         <div><span style="color:var(--text-muted);font-size:13px;">PartnerVault</span></div>
         <div style="display:flex;align-items:center;gap:8px;">
-          <code style="font-size:12px;color:var(--accent);word-break:break-all;">0x5F12C0bC616e9Ca347D48C33266aA8fe98490A39</code>
-          <button class="copy-btn" data-addr="0x5F12C0bC616e9Ca347D48C33266aA8fe98490A39" title="Copy address" style="background:none;border:1px solid var(--border);border-radius:4px;padding:4px 8px;cursor:pointer;color:var(--text-muted);font-size:12px;">Copy</button>
+          <code style="font-size:12px;color:var(--accent);word-break:break-all;">0xc6eb7714bCb035ebc2D4d9ba7B3762ef7B9d4F7D</code>
+          <button class="copy-btn" data-addr="0xc6eb7714bCb035ebc2D4d9ba7B3762ef7B9d4F7D" title="Copy address" style="background:none;border:1px solid var(--border);border-radius:4px;padding:4px 8px;cursor:pointer;color:var(--text-muted);font-size:12px;">Copy</button>
         </div>
       </div>
       <div class="contract-row" style="display:flex;align-items:center;justify-content:space-between;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;">
         <div><span style="color:var(--text-muted);font-size:13px;">FeeRouterV1</span></div>
         <div style="display:flex;align-items:center;gap:8px;">
-          <code style="font-size:12px;color:var(--accent);word-break:break-all;">0x499289C8Ef49769F4FcFF3ca86D4BD7b55B49aa4</code>
-          <button class="copy-btn" data-addr="0x499289C8Ef49769F4FcFF3ca86D4BD7b55B49aa4" title="Copy address" style="background:none;border:1px solid var(--border);border-radius:4px;padding:4px 8px;cursor:pointer;color:var(--text-muted);font-size:12px;">Copy</button>
+          <code style="font-size:12px;color:var(--accent);word-break:break-all;">0x4807B77B2E25cD055DA42B09BA4d0aF9e580C60a</code>
+          <button class="copy-btn" data-addr="0x4807B77B2E25cD055DA42B09BA4d0aF9e580C60a" title="Copy address" style="background:none;border:1px solid var(--border);border-radius:4px;padding:4px 8px;cursor:pointer;color:var(--text-muted);font-size:12px;">Copy</button>
         </div>
       </div>
       <div class="contract-row" style="display:flex;align-items:center;justify-content:space-between;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;">
-        <div><span style="color:var(--text-muted);font-size:13px;">LP Pair (IFR/WETH)</span></div>
-        <div style="display:flex;align-items:center;gap:8px;">
-          <code style="font-size:12px;color:var(--accent);word-break:break-all;">0x2252e8bBDE0E50CD372748aC233A99C08627d9c7</code>
-          <button class="copy-btn" data-addr="0x2252e8bBDE0E50CD372748aC233A99C08627d9c7" title="Copy address" style="background:none;border:1px solid var(--border);border-radius:4px;padding:4px 8px;cursor:pointer;color:var(--text-muted);font-size:12px;">Copy</button>
-        </div>
       </div>
     </div>
     <p class="reveal" style="text-align:center;margin-top:20px;">
-      <a href="https://sepolia.etherscan.io/address/0x3Bd71947F288d1dd8B21129B1bE4FF16EDd5d1F4#code" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:none;font-size:14px;font-weight:600;">View on Etherscan &rarr;</a>
+      <a href="https://etherscan.io/address/0x77e99917Eca8539c62F509ED1193ac36580A6e7B#code" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:none;font-size:14px;font-weight:600;">View on Etherscan &rarr;</a>
     </p>
   </div>
 </section>
@@ -1742,8 +1737,8 @@ if (isLocked) {
       <a href="https://github.com/NeaBouli/inferno" target="_blank" rel="noopener">GitHub</a>
       <a href="https://x.com/IFRtoken" target="_blank" rel="noopener">X / Twitter</a>
       <a href="wiki/index.html">Documentation</a>
-      <a href="https://sepolia.etherscan.io/address/0x3Bd71947F288d1dd8B21129B1bE4FF16EDd5d1F4#code" target="_blank" rel="noopener">Etherscan (Sepolia)</a>
-      <a href="https://sepolia.etherscan.io/address/0x6050b22E4EAF3f414d1155fBaF30B868E0107017#code" target="_blank" rel="noopener">Governance</a>
+      <a href="https://etherscan.io/address/0x77e99917Eca8539c62F509ED1193ac36580A6e7B#code" target="_blank" rel="noopener">Etherscan</a>
+      <a href="https://etherscan.io/address/0xc43d48E7FDA576C5022d0670B652A622E8caD041#code" target="_blank" rel="noopener">Governance</a>
     </div>
     <p class="footer-brand"><span>Inferno ($IFR)</span> &mdash; Community Fair Launch Model</p>
     <p class="footer-copy">&copy; 2026 Inferno Protocol. All rights reserved.</p>
