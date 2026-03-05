@@ -1,18 +1,18 @@
 # Points Backend — Railway Environment Variables
 
-Stand: 26. Februar 2026
+As of: March 2026
 
-## Erforderliche Variablen
+## Required Variables
 
-| Variable | Beispiel | Beschreibung |
+| Variable | Example | Description |
 |----------|---------|-------------|
-| `DATABASE_URL` | `file:./prod.db` | SQLite Pfad (Railway: `file:./prod.db`) |
-| `JWT_SECRET` | `<random 32+ chars>` | Signatur fuer SIWE JWT Token |
-| `VOUCHER_SIGNER_PRIVATE_KEY` | `0x...` | EIP-712 Voucher Signatur (Deployer Key) |
-| `FEE_ROUTER_ADDRESS` | `0x499289C8Ef49769F4FcFF3ca86D4BD7b55B49aa4` | FeeRouterV1 Contract |
-| `CHAIN_ID` | `11155111` | Sepolia Testnet (1 fuer Mainnet) |
-| `PORT` | `3004` | Server Port |
-| `ADMIN_SECRET` | `<secure secret>` | Admin API Auth |
+| `DATABASE_URL` | `file:./prod.db` | SQLite path (Railway: `file:./prod.db`) |
+| `JWT_SECRET` | `<random 32+ chars>` | Signature for SIWE JWT token |
+| `VOUCHER_SIGNER_PRIVATE_KEY` | `0x...` | EIP-712 voucher signature (Deployer Key) |
+| `FEE_ROUTER_ADDRESS` | `0x4807B77B2E25cD055DA42B09BA4d0aF9e580C60a` | FeeRouterV1 Contract (Mainnet) |
+| `CHAIN_ID` | `1` | Ethereum Mainnet (11155111 for Sepolia) |
+| `PORT` | `3004` | Server port |
+| `ADMIN_SECRET` | `<secure secret>` | Admin API auth |
 
 ## Railway Setup
 
@@ -20,16 +20,16 @@ Stand: 26. Februar 2026
 # 1. Railway CLI
 npm i -g @railway/cli && railway login
 
-# 2. Link Projekt
+# 2. Link project
 cd apps/points-backend
 railway link
 
-# 3. Env setzen
+# 3. Set env variables
 railway variables set DATABASE_URL="file:./prod.db"
 railway variables set JWT_SECRET="$(openssl rand -hex 32)"
-railway variables set CHAIN_ID="11155111"
+railway variables set CHAIN_ID="1"
 railway variables set PORT="3004"
-# VOUCHER_SIGNER_PRIVATE_KEY und ADMIN_SECRET manuell setzen
+# VOUCHER_SIGNER_PRIVATE_KEY and ADMIN_SECRET must be set manually
 
 # 4. Deploy
 railway up
@@ -39,14 +39,14 @@ railway up
 
 ```bash
 curl https://<railway-url>/health
-# → { "status": "ok" }
+# -> { "status": "ok" }
 ```
 
-## Sicherheit
+## Security
 
-- `VOUCHER_SIGNER_PRIVATE_KEY` **NIEMALS** committen
-- `JWT_SECRET` muss unique pro Environment sein
-- `ADMIN_SECRET` fuer Admin-only Endpoints
+- `VOUCHER_SIGNER_PRIVATE_KEY` **NEVER** commit
+- `JWT_SECRET` must be unique per environment
+- `ADMIN_SECRET` for admin-only endpoints
 
 ---
-*Siehe auch: apps/points-backend/DEPLOY.md*
+*See also: apps/points-backend/DEPLOY.md*

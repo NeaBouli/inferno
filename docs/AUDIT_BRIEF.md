@@ -1,81 +1,83 @@
 # Inferno ($IFR) — Security Audit Brief
 
-## Projekt-Uebersicht
-Inferno ($IFR) ist ein deflationaerer ERC-20 Utility Token auf Ethereum.
-Kern-Mechanismen: Fee-on-Transfer (2.5% Burn + 1% Pool), On-chain Lock fuer
-Lifetime-Access, Milestone-basierter PartnerVault, 48h Timelock Governance.
+## Project Overview
+Inferno ($IFR) is a deflationary ERC-20 utility token on Ethereum.
+Core mechanisms: Fee-on-Transfer (2.5% Burn + 1% Pool), On-chain Lock for
+Lifetime Access, Milestone-based PartnerVault, 48h Timelock Governance.
 
-## Audit-Scope (9 Contracts)
+**Status:** Mainnet deployed and verified (2026-03-05).
 
-| Contract | LOC | Kritikalitaet | Schwerpunkt |
-|----------|-----|---------------|-------------|
-| PartnerVault.sol | 549 | HOCH | Rewards, Vesting, authorizedCaller, anti-double-count, algo throttle |
-| FeeRouterV1.sol | 228 | HOCH | EIP-712 Voucher, Protocol Fee, Replay-Protection |
-| BuybackVault.sol | 175 | HOCH | ETH→IFR swap, Slippage, Cooldown |
-| Governance.sol | 150 | HOCH | Timelock, propose/execute/cancel, Guardian |
-| LiquidityReserve.sol | 151 | MITTEL | Staged Release, Lock |
-| Vesting.sol | 132 | MITTEL | Cliff, lineare Freigabe, Beneficiary |
-| IFRLock.sol | 127 | HOCH | Lock/Unlock, isLocked, totalLocked |
-| InfernoToken.sol | 93 | HOCH | Fee-on-Transfer, Burn, feeExempt |
-| BurnReserve.sol | 92 | MITTEL | Token-Verwahrung, Burn-Mechanismus |
+## Audit Scope (9 Contracts)
 
-**Total:** 1,697 LOC Solidity (+ 4 Mock Contracts fuer Tests)
+| Contract | LOC | Criticality | Focus |
+|----------|-----|-------------|-------|
+| PartnerVault.sol | 549 | HIGH | Rewards, Vesting, authorizedCaller, anti-double-count, algo throttle |
+| FeeRouterV1.sol | 228 | HIGH | EIP-712 Voucher, Protocol Fee, Replay Protection |
+| BuybackVault.sol | 175 | HIGH | ETH→IFR swap, Slippage, Cooldown |
+| Governance.sol | 150 | HIGH | Timelock, propose/execute/cancel, Guardian |
+| LiquidityReserve.sol | 151 | MEDIUM | Staged Release, Lock |
+| Vesting.sol | 132 | MEDIUM | Cliff, linear release, Beneficiary |
+| IFRLock.sol | 127 | HIGH | Lock/Unlock, isLocked, totalLocked |
+| InfernoToken.sol | 93 | HIGH | Fee-on-Transfer, Burn, feeExempt |
+| BurnReserve.sol | 92 | MEDIUM | Token custody, Burn mechanism |
+
+**Total:** 1,697 LOC Solidity (+ 4 Mock Contracts for tests)
 
 ## Tech Stack
 - Solidity 0.8.20
 - OpenZeppelin v5 (ERC20, Ownable, ReentrancyGuard, Pausable, SafeERC20)
 - Hardhat v2
 - ethers v5
-- 361 Unit Tests (Chai v4 + Waffle)
+- 444 Tests (Chai v4 + Waffle)
 
-## Bekannte Design-Entscheidungen (kein Finding erwartet)
-- 9 Decimals (nicht 18) — bewusste Entscheidung
-- Kein Mint nach Deployment — by design
-- Single EOA Owner auf Testnet — wird Multisig auf Mainnet
-- Kein Token-Voting — Flash-Loan-Schutz
+## Known Design Decisions (no finding expected)
+- 9 Decimals (not 18) — intentional decision
+- No Mint after deployment — by design
+- Mainnet deployed with Gnosis Safe multisig
+- No Token Voting — Flash Loan protection
 - authorizedCaller in PartnerVault — Verify Backend Wallet
-- Fee-on-Transfer bricht naive DeFi-Integrationen — dokumentiert
+- Fee-on-Transfer breaks naive DeFi integrations — documented
 
-## Priorisierte Pruefbereiche
-1. Fee-on-Transfer Bypass-Moeglichkeiten
-2. Reentrancy in PartnerVault.claim() und IFRLock.unlock()
-3. Integer Overflow/Underflow in Reward-Berechnungen (_effectiveRewardBps)
-4. Governance: Proposal-Replay, Guardian-Missbrauch, setDelay-Manipulation
-5. Anti-double-count Mapping Bypass (walletRewardClaimed)
-6. Algo Throttle Manipulation via totalLocked
-7. Annual Emission Cap Reset Timing (yearStart + 365 days)
-8. Vesting Cliff/Duration Edge Cases
-9. SafeERC20 Verwendung konsistent
+## Prioritized Audit Areas
+1. Fee-on-Transfer bypass possibilities
+2. Reentrancy in PartnerVault.claim() and IFRLock.unlock()
+3. Integer Overflow/Underflow in reward calculations (_effectiveRewardBps)
+4. Governance: Proposal replay, Guardian abuse, setDelay manipulation
+5. Anti-double-count mapping bypass (walletRewardClaimed)
+6. Algo Throttle manipulation via totalLocked
+7. Annual Emission Cap reset timing (yearStart + 365 days)
+8. Vesting Cliff/Duration edge cases
+9. Consistent SafeERC20 usage
 
-## Bisherige Analyse
+## Previous Analysis
 - Slither v0.11.5: 0 high/critical findings
-- 15 Fixes applied, 36 accepted informational
-- ChatGPT independent Audit: 15/15 PASS
+- 15 fixes applied, 36 accepted informational
+- ChatGPT independent audit: 15/15 PASS
 
-## Empfohlene Auditoren
-- **Code4rena** (Contest-Format, breit, kostenguenstig)
-- **Sherlock** (Contest + Coverage)
-- **Spearbit** (Boutique, hohe Qualitaet)
-- **Cyfrin** (Spezialist DeFi, gut fuer kleinere Projekte)
+## Recommended Auditors
+- **Code4rena** (contest format, broad, cost-effective)
+- **Sherlock** (contest + coverage)
+- **Spearbit** (boutique, high quality)
+- **Cyfrin** (DeFi specialist, good for smaller projects)
 
-## Deliverables erwartet
-- [ ] Vollstaendiger Audit-Report (PDF)
+## Expected Deliverables
+- [ ] Complete audit report (PDF)
 - [ ] Findings: Critical / High / Medium / Low / Informational
-- [ ] Empfehlungen fuer alle Findings
-- [ ] Re-Audit nach Fix-Implementierung
-- [ ] Oeffentlicher Report fuer Community
+- [ ] Recommendations for all findings
+- [ ] Re-audit after fix implementation
+- [ ] Public report for community
 
-## Zeitplan-Empfehlung
-- Audit-Anfrage: sofort nach Code-Freeze
-- Audit-Dauer: 2-4 Wochen
-- Fix-Phase: 1-2 Wochen
-- Re-Audit: 1 Woche
-- Mainnet-Deploy: nach Re-Audit-Freigabe
+## Timeline Recommendation
+- Audit request: immediately after code freeze
+- Audit duration: 2-4 weeks
+- Fix phase: 1-2 weeks
+- Re-audit: 1 week
+- Post-audit: LP creation and full decentralization
 
 ## Repository
 - GitHub: https://github.com/NeaBouli/inferno
 - Branch: `main`
-- Sepolia Deployment: alle 9 Contracts deployed + verified (+ 1 LP Pair)
+- Mainnet deployment: all 9 contracts deployed + verified (+ 1 LP Pair)
 
 ---
-*Stand: Februar 2026*
+*As of: March 2026*

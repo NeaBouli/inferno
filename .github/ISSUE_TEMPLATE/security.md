@@ -1,17 +1,17 @@
 ---
 name: Security Vulnerability
-about: NICHT FÜR SICHERHEITSLÜCKEN VERWENDEN — nutze GitHub Security Advisories
+about: DO NOT USE THIS FOR SECURITY VULNERABILITIES — use GitHub Security Advisories
 title: ''
 labels: ''
 assignees: ''
 ---
 
-⚠️ SICHERHEITSLÜCKEN BITTE NICHT HIER MELDEN ⚠️
+WARNING: PLEASE DO NOT REPORT SECURITY VULNERABILITIES HERE
 
-Für Security-Issues nutze bitte:
+For security issues, please use:
 https://github.com/NeaBouli/inferno/security/advisories/new
 
-Warum? Öffentliche Issues können Angreifer informieren bevor
-ein Fix deployed ist.
+Why? Public issues can inform attackers before
+a fix is deployed.
 
-Für allgemeine Security-Fragen: GitHub Discussions
+For general security questions: GitHub Discussions

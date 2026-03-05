@@ -1,86 +1,86 @@
 # Page Update Checklist
 
-Welche Dateien bei welchem Event aktualisiert werden muessen.
+Which files need to be updated for each type of event.
 
 ---
 
-## Nach jedem Commit
+## After Every Commit
 
-| Datei | Was aktualisieren |
-|-------|-------------------|
-| `README.md` | Test-Anzahl, Contract-Anzahl, neue Features |
-| `docs/DOCS.md` | Chronik-Eintrag, Dateistruktur, Module, Test-Anzahl |
-| `docs/CHANGELOG.md` | [Unreleased] Section ergaenzen |
+| File | What to Update |
+|------|----------------|
+| `README.md` | Test count, contract count, new features |
+| `docs/DOCS.md` | Chronicle entry, file structure, modules, test count |
+| `docs/CHANGELOG.md` | Add to [Unreleased] section |
 
-## Nach Contract-Aenderung
+## After Contract Changes
 
-| Datei | Was aktualisieren |
-|-------|-------------------|
-| `README.md` | Contract-Liste, Architektur-Beschreibung |
-| `docs/DOCS.md` | Modul-Status, LOC, Test-Anzahl |
-| `docs/index.html` | Stats (Contract-Anzahl, Test-Anzahl) |
-| `docs/wiki/contracts.html` | Contract-Beschreibung, Funktionen |
-| `docs/wiki/security.html` | Slither Findings, Test Coverage |
-| `docs/TRANSPARENCY.md` | On-Chain Checks aktualisieren |
-| `docs/wiki/transparency.html` | HTML-Version synchronisieren |
-| `docs/WHITEPAPER.md` | Architektur-Section, Sicherheit |
+| File | What to Update |
+|------|----------------|
+| `README.md` | Contract list, architecture description |
+| `docs/DOCS.md` | Module status, LOC, test count |
+| `docs/index.html` | Stats (contract count, test count) |
+| `docs/wiki/contracts.html` | Contract description, functions |
+| `docs/wiki/security.html` | Slither findings, test coverage |
+| `docs/TRANSPARENCY.md` | Update on-chain checks |
+| `docs/wiki/transparency.html` | Sync HTML version |
+| `docs/WHITEPAPER.md` | Architecture section, security |
 
-## Nach Governance-Aktion
+## After Governance Actions
 
-| Datei | Was aktualisieren |
-|-------|-------------------|
-| `docs/TRANSPARENCY.md` | Proposal Status (Pending → Executed) |
-| `docs/wiki/transparency.html` | Status-Badges aktualisieren |
-| `docs/wiki/governance.html` | Proposal-Liste ergaenzen |
-| `CLAUDE.md` | Governance Proposals Tabelle |
-| `docs/DEPLOYMENTS.md` | Neue Adressen falls relevant |
+| File | What to Update |
+|------|----------------|
+| `docs/TRANSPARENCY.md` | Proposal status (Pending -> Executed) |
+| `docs/wiki/transparency.html` | Update status badges |
+| `docs/wiki/governance.html` | Add to proposal list |
+| `CLAUDE.md` | Governance proposals table |
+| `docs/DEPLOYMENTS.md` | New addresses if relevant |
 
-## Nach Test-Aenderung
+## After Test Changes
 
-| Datei | Was aktualisieren |
-|-------|-------------------|
-| `README.md` | Test-Anzahl |
-| `docs/DOCS.md` | Test-Anzahl pro Datei + Gesamt |
-| `docs/index.html` | Stats-Bereich (X tests) |
-| `docs/WHITEPAPER.md` | Sicherheit-Section |
-| `docs/ONE-PAGER.md` | Key Numbers |
+| File | What to Update |
+|------|----------------|
+| `README.md` | Test count |
+| `docs/DOCS.md` | Test count per file + total |
+| `docs/index.html` | Stats section (X tests) |
+| `docs/WHITEPAPER.md` | Security section |
+| `docs/ONE-PAGER.md` | Key numbers |
 
-## Nach App-Aenderung (Dashboard/Copilot/Points/Benefits)
+## After App Changes (Dashboard/Copilot/Points/Benefits)
 
-| Datei | Was aktualisieren |
-|-------|-------------------|
-| `docs/DOCS.md` | App-Status, Dateistruktur |
-| `docs/DASHBOARD_TEST_RESULTS.md` | Build-Ergebnisse |
-| `docs/BENEFITS_E2E_RESULTS.md` | E2E-Ergebnisse |
-| `README.md` | App-Erwaehnungen |
+| File | What to Update |
+|------|----------------|
+| `docs/DOCS.md` | App status, file structure |
+| `docs/DASHBOARD_TEST_RESULTS.md` | Build results |
+| `docs/BENEFITS_E2E_RESULTS.md` | E2E results |
+| `README.md` | App mentions |
 
-## Nach On-Chain Event (Deploy, Transfer, Burn)
+## After On-Chain Events (Deploy, Transfer, Burn)
 
-| Datei | Was aktualisieren |
-|-------|-------------------|
-| `docs/TRANSPARENCY.md` | Zahlen aktualisieren (Supply, Burned, Balances) |
-| `docs/wiki/transparency.html` | HTML-Version synchronisieren |
-| `docs/DEPLOYMENTS.md` | Neue Contract-Adressen |
-| `docs/ONE-PAGER.md` | Key Numbers |
-| `docs/PROJECT-SUMMARY.md` | Zahlen aktualisieren |
+| File | What to Update |
+|------|----------------|
+| `docs/TRANSPARENCY.md` | Update numbers (supply, burned, balances) |
+| `docs/wiki/transparency.html` | Sync HTML version |
+| `docs/DEPLOYMENTS.md` | New contract addresses |
+| `docs/ONE-PAGER.md` | Key numbers |
+| `docs/PROJECT-SUMMARY.md` | Update numbers |
 
-## Nach Wiki-Seite hinzufuegen
+## After Adding Wiki Pages
 
-| Datei | Was aktualisieren |
-|-------|-------------------|
-| Alle `docs/wiki/*.html` | Sidebar-Links ergaenzen |
-| `docs/wiki/index.html` | Quick Stats (Seiten-Anzahl) |
-| `docs/DOCS.md` | Wiki-Seiten-Anzahl, Dateistruktur |
+| File | What to Update |
+|------|----------------|
+| All `docs/wiki/*.html` | Add sidebar links |
+| `docs/wiki/index.html` | Quick Stats (page count) |
+| `docs/DOCS.md` | Wiki page count, file structure |
 
-## Nach Deploy (Sepolia oder Mainnet)
+## After Deploy (Sepolia or Mainnet)
 
-| Datei | Was aktualisieren |
-|-------|-------------------|
-| `docs/DEPLOYMENTS.md` | Alle Adressen + Constructor Args |
-| `docs/TRANSPARENCY.md` | Kompletter On-Chain Audit |
-| `CLAUDE.md` | Adress-Tabelle |
-| `docs/MAINNET_CHECKLIST.md` | Status aktualisieren |
-| `docs/index.html` | Contract-Adressen (wenn angezeigt) |
+| File | What to Update |
+|------|----------------|
+| `docs/DEPLOYMENTS.md` | All addresses + constructor args |
+| `docs/TRANSPARENCY.md` | Complete on-chain audit |
+| `CLAUDE.md` | Address table |
+| `docs/MAINNET_CHECKLIST.md` | Update status |
+| `docs/index.html` | Contract addresses (if displayed) |
 
 ---
-*Stand: 26. Februar 2026*
+*As of: March 2026*

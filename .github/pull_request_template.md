@@ -1,24 +1,24 @@
-## Beschreibung
-Was wurde geändert und warum?
+## Description
+What was changed and why?
 
-## Art der Änderung
-- [ ] Bug Fix
-- [ ] Neues Feature
-- [ ] Dokumentation
+## Type of Change
+- [ ] Bug fix
+- [ ] New feature
+- [ ] Documentation
 - [ ] Refactoring
 - [ ] Tests
 
-## Checkliste
-- [ ] Tests hinzugefügt/aktualisiert
-- [ ] npx hardhat test → alle Tests grün
-- [ ] Dokumentation aktualisiert
-- [ ] CHANGELOG.md Eintrag
-- [ ] Kein force-push / rebase
-- [ ] Keine Co-authored-by Zeilen
+## Checklist
+- [ ] Tests added/updated
+- [ ] npx hardhat test → all tests green
+- [ ] Documentation updated
+- [ ] CHANGELOG.md entry
+- [ ] No force-push / rebase
+- [ ] No Co-authored-by lines
 
-## Smart Contract Änderungen (falls zutreffend)
-- [ ] Slither läuft ohne neue High/Critical Findings
-- [ ] Coverage nicht gesunken
-- [ ] Governance Proposal vorbereitet (falls nötig)
+## Smart Contract Changes (if applicable)
+- [ ] Slither runs without new High/Critical findings
+- [ ] Coverage not decreased
+- [ ] Governance Proposal prepared (if needed)
 
-## Screenshots (falls UI-Änderungen)
+## Screenshots (if UI changes)

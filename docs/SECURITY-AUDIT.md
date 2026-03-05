@@ -1,32 +1,32 @@
 # Security Audit Report — Slither Static Analysis
 
-**Datum:** 2026-02-15
+**Date:** 2026-02-15
 **Tool:** Slither v0.11.5
 **Solidity:** 0.8.20
-**Scope:** Alle 6 Hauptcontracts (Mocks ausgeschlossen)
+**Scope:** All 6 initial contracts (mocks excluded)
 
 ---
 
-## Ergebnis
+## Result
 
-| Metrik | Wert |
-|--------|------|
-| Detektoren | 101 |
-| Initiale Findings | 51 |
-| Behoben | 15 |
-| Verbleibend | 36 (alle akzeptiert — False Positives / By Design) |
+| Metric | Value |
+|--------|-------|
+| Detectors | 101 |
+| Initial Findings | 51 |
+| Fixed | 15 |
+| Remaining | 36 (all accepted — false positives / by design) |
 | High Severity | 0 |
 | Critical Vulnerabilities | 0 |
 
 ---
 
-## Behobene Findings (15)
+## Fixed Findings (15)
 
 ### 1. missing-zero-check (4 Findings) — BuybackVault
 
-**Problem:** Constructor und setParams() ohne Zero-Address-Validierung fuer burnReserve, treasury, guardian.
+**Problem:** Constructor and setParams() without zero-address validation for burnReserve, treasury, guardian.
 
-**Fix:** `require != address(0)` Checks ergaenzt.
+**Fix:** Added `require != address(0)` checks.
 
 ```solidity
 // Constructor
@@ -40,38 +40,38 @@ require(_treasury != address(0), "treasury=0");
 
 ### 2. reentrancy-benign (2 Findings) — BurnReserve
 
-**Problem:** `totalBurned` wurde nach externem `IERC20Burnable.burn()` Call geschrieben. Verstoesst gegen Checks-Effects-Interactions (CEI) Pattern.
+**Problem:** `totalBurned` was written after external `IERC20Burnable.burn()` call. Violates Checks-Effects-Interactions (CEI) pattern.
 
-**Fix:** State-Update vor externem Call:
+**Fix:** State update before external call:
 
 ```solidity
-// Vorher:
+// Before:
 IERC20Burnable(address(token)).burn(amount);
-totalBurned += amount;  // State nach externem Call
+totalBurned += amount;  // State after external call
 
-// Nachher:
-totalBurned += amount;  // State VOR externem Call
+// After:
+totalBurned += amount;  // State BEFORE external call
 IERC20Burnable(address(token)).burn(amount);
 ```
 
 ### 3. immutable-states (5 Findings) — BurnReserve, BuybackVault, LiquidityReserve
 
-**Problem:** `owner`, `burnReserve`, `guardian` werden nur im Constructor gesetzt aber nicht als `immutable` deklariert.
+**Problem:** `owner`, `burnReserve`, `guardian` are only set in the constructor but not declared as `immutable`.
 
-**Fix:** `immutable` ergaenzt fuer:
+**Fix:** Added `immutable` for:
 - `BurnReserve.owner`
 - `BuybackVault.owner`
 - `BuybackVault.guardian`
 - `BuybackVault.burnReserve`
 - `LiquidityReserve.owner`
 
-**Gas-Ersparnis:** ~2,100 Gas pro SLOAD (immutable wird in Bytecode eingebettet statt Storage-Read).
+**Gas Savings:** ~2,100 gas per SLOAD (immutable is embedded in bytecode instead of storage read).
 
 ### 4. unindexed-event-address (4 Findings) — BuybackVault, LiquidityReserve
 
-**Problem:** Pause/Unpause Events ohne `indexed` Keyword auf Address-Parameter.
+**Problem:** Pause/Unpause events without `indexed` keyword on address parameters.
 
-**Fix:** `indexed` ergaenzt:
+**Fix:** Added `indexed`:
 
 ```solidity
 event Paused(address indexed account);
@@ -80,47 +80,47 @@ event Unpaused(address indexed account);
 
 ---
 
-## Akzeptierte Findings (36) — False Positives / By Design
+## Accepted Findings (36) — False Positives / By Design
 
 ### incorrect-equality (3)
 
-| Contract | Code | Bewertung |
-|----------|------|-----------|
-| BuybackVault | `ethBal == 0` | Korrekt — Early-Return bei leerem Vault |
-| LiquidityReserve | `period == lastWithdrawPeriod` | Korrekt — Perioden-Vergleich |
-| Vesting | `amt == 0` | Korrekt — Nichts zum Releasen |
+| Contract | Code | Assessment |
+|----------|------|------------|
+| BuybackVault | `ethBal == 0` | Correct — early return on empty vault |
+| LiquidityReserve | `period == lastWithdrawPeriod` | Correct — period comparison |
+| Vesting | `amt == 0` | Correct — nothing to release |
 
-**Begruendung:** Strict Equality auf Balance/Counter ist sicher. Slither warnt vor `== 0` weil es bei Token-Balances durch Rounding manipulierbar sein kann — hier nicht zutreffend, da interne Counter verglichen werden.
+**Rationale:** Strict equality on balance/counter is safe. Slither warns about `== 0` because it can be manipulable via rounding on token balances — not applicable here since internal counters are compared.
 
 ### reentrancy-events (7)
 
-Events nach externen Calls. Kein Sicherheitsrisiko — Events sind rein informativ und koennen nicht fuer Reentrancy-Angriffe missbraucht werden.
+Events after external calls. No security risk — events are purely informational and cannot be exploited for reentrancy attacks.
 
 ### timestamp (10)
 
-Alle Timelock/Vesting/Lock Contracts nutzen `block.timestamp` fuer Zeitvergleiche. Dies ist by design und die einzig sinnvolle Methode fuer on-chain Zeitsteuerung. Miner-Manipulation (±15s) ist irrelevant bei Delays von Stunden/Tagen.
+All Timelock/Vesting/Lock contracts use `block.timestamp` for time comparisons. This is by design and the only sensible method for on-chain time control. Miner manipulation (+/-15s) is irrelevant with delays of hours/days.
 
 ### low-level-calls (1)
 
-`Governance.execute()` nutzt `target.call(data)`. Dies ist das Standard-Pattern fuer Timelock-Governors (OpenZeppelin TimelockController nutzt dasselbe Pattern).
+`Governance.execute()` uses `target.call(data)`. This is the standard pattern for Timelock governors (OpenZeppelin TimelockController uses the same pattern).
 
 ### missing-inheritance (1)
 
-Slither schlaegt vor, BurnReserve solle IERC20Burnable implementieren. BurnReserve ist aber kein Token — es nutzt IERC20Burnable als Interface fuer externe Calls.
+Slither suggests BurnReserve should implement IERC20Burnable. However, BurnReserve is not a token — it uses IERC20Burnable as an interface for external calls.
 
 ### naming-convention (15)
 
-Underscore-Prefix (`_param`) ist gaengige Solidity-Konvention fuer Constructor/Function-Parameter zur Unterscheidung von State Variables. Kein Sicherheitsrisiko.
+Underscore prefix (`_param`) is a common Solidity convention for constructor/function parameters to distinguish them from state variables. No security risk.
 
 ---
 
-## Nicht abgedeckt durch Slither
+## Not Covered by Slither
 
-Slither ist ein statischer Analyzer. Folgende Aspekte erfordern zusaetzliche Pruefung:
+Slither is a static analyzer. The following aspects require additional review:
 
-| Bereich | Tool | Status |
-|---------|------|--------|
-| Formale Verifikation | Certora / Halmos | Offen |
-| Fuzz Testing | Foundry / Echidna | Offen |
-| Manuelle Code Review | Externer Auditor | Empfohlen vor Mainnet |
-| Gas Profiling | Hardhat Gas Reporter | Offen |
+| Area | Tool | Status |
+|------|------|--------|
+| Formal Verification | Certora / Halmos | Open |
+| Fuzz Testing | Foundry / Echidna | Open |
+| Manual Code Review | External Auditor | Recommended |
+| Gas Profiling | Hardhat Gas Reporter | Open |

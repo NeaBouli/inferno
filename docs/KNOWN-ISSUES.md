@@ -1,54 +1,52 @@
-# 🔧 Known Issues
+# Known Issues
 
-## BBV-001 — Hardhat Compile schlägt fehl in `MockRouter.sol`
-**Fehlerbild:**  
+## BBV-001 -- Hardhat Compile fails in `MockRouter.sol`
+
+**Status: RESOLVED**
+
+**Symptom:**
 TypeError: Contract or array type expected.
 --> contracts/mocks/MockRouter.sol:35:19:
 |
 35 | amounts = new uint256 (2);
 | ^^^^^^^^^^^
 
-markdown
-Code kopieren
+**Cause:**
+Array allocation in Solidity must use **brackets AND square brackets**:
+`new uint256[](2)`
+If square brackets are missing or there is a space between the type and brackets (`new uint256 (2)`), the compiler fails.
 
-**Ursache:**  
-Die Array-Allokation muss in Solidity mit **Klammern UND eckigen Klammern** erfolgen:  
-`new uint256`  
-Wenn eckige Klammern fehlen oder ein Leerzeichen zwischen Typ und Klammern steht (`new uint256 (2)`), schlägt der Compiler fehl.
-
-**Fix-Schritte (prüfen & korrigieren):**
-1. Datei öffnen:
+**Fix steps (check & correct):**
+1. Open file:
    - `contracts/mocks/MockRouter.sol`
-2. Sicherstellen, dass beide Stellen exakt so aussehen:
+2. Ensure both locations look exactly like this:
    ```solidity
-   amounts = new uint256;
-in getAmountsOut(...)
+   amounts = new uint256[](2);
+   ```
+   in `getAmountsOut(...)`
+   in `swapExactETHForTokens(...)`
 
-in swapExactETHForTokens(...)
+3. Clean cache & recompile:
+   ```bash
+   npx hardhat clean && npx hardhat compile
+   ```
 
-Cache bereinigen & neu kompilieren:
+**Note:**
+If the editor or copy/paste swallows the `[]` brackets, type them manually.
 
-bash
-Code kopieren
-npx hardhat clean && npx hardhat compile
-Hinweis:
-Wenn der Editor oder Copy/Paste die []-Klammern verschluckt, bitte manuell tippen.
-Zur Verifikation:
+For verification:
+```bash
+grep -n "new uint256" contracts/mocks/MockRouter.sol
+# Expected: no matches without [].
+grep -n "new uint256\[\]" contracts/mocks/MockRouter.sol
+# Expected: matches (at least 2x), e.g. "new uint256[](2)"
+```
 
-bash
-Code kopieren
-grep -n "new uint256" -n contracts/mocks/MockRouter.sol
-# Erwartet: keine Treffer ohne [].
-grep -n "new uint256\\[\\]" contracts/mocks/MockRouter.sol
-# Erwartet: Treffer (mind. 2x), z.B. "new uint256"
-BBV-002 — BuybackVault-Tests 🔴
-Status: BuybackVault bleibt vorerst 🔴 (Blocker BBV-001).
-Nächste Schritte: Nach Behebung von BBV-001 Tests erneut laufen lassen:
+## BBV-002 -- BuybackVault Tests
 
-bash
-Code kopieren
-npx hardhat test test/BuybackVault.test.js
-Tooling-Hinweise
-Offline-Compile via solc-JS ist im Projekt vorbereitet.
+**Status: RESOLVED** -- Fixed after BBV-001 resolution. All 26 BuybackVault tests passing.
 
-Achte darauf, dass node_modules/ nicht eingecheckt wird (siehe .gitignore).
+## Tooling Notes
+
+- Offline compile via solc-JS is prepared in the project.
+- Ensure that `node_modules/` is not checked in (see `.gitignore`).

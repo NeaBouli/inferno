@@ -2,39 +2,39 @@
 
 ## Responsible Disclosure
 
-Wir nehmen Sicherheit ernst. Wenn du eine Schwachstelle findest,
-bitte folge diesem Prozess — nicht öffentlich posten bevor wir
-reagiert haben.
+We take security seriously. If you find a vulnerability,
+please follow this process — do not post publicly before we
+have responded.
 
-### Meldung
+### Reporting
 - **GitHub:** https://github.com/NeaBouli/inferno/security/advisories
-- **Zeitrahmen:** Wir antworten innerhalb 48h
-- **Sprache:** Deutsch oder Englisch
+- **Response Time:** We respond within 48h
+- **Language:** English or German
 
-### Was wir brauchen:
-- Beschreibung der Schwachstelle
-- Reproduktions-Schritte
-- Potenzielle Auswirkung
-- Optional: Vorgeschlagener Fix
+### What we need:
+- Description of the vulnerability
+- Reproduction steps
+- Potential impact
+- Optional: Suggested fix
 
-## Bug Bounty Framework (Testnet Phase)
+## Bug Bounty Framework
 
-Während der Testnet-Phase zahlen wir **keine monetären Bounties**,
-aber wir erkennen Finder öffentlich an:
+During the testnet phase, we did not pay monetary bounties.
+Now that mainnet is deployed (2026-03-05), the following applies:
 
-| Schweregrad | Beispiele | Anerkennung |
-|-------------|-----------|-------------|
-| Critical | Drain von Locked Tokens, Mint-Bug | Hall of Fame + NFT |
-| High | Governance Bypass, Replay-Angriff | Hall of Fame |
-| Medium | Parameter-Manipulation, DoS | Hall of Fame |
-| Low | Info-Leak, Minor Logic Error | GitHub Credit |
+| Severity | Examples | Recognition |
+|----------|----------|-------------|
+| Critical | Drain of locked tokens, mint bug | Hall of Fame + NFT |
+| High | Governance bypass, replay attack | Hall of Fame |
+| Medium | Parameter manipulation, DoS | Hall of Fame |
+| Low | Info leak, minor logic error | GitHub Credit |
 
-**Mainnet Bug Bounty:** Nach Mainnet-Launch geplant (Details folgen).
-Ziel: 5-10% eines definierten Treasury-Budgets für kritische Findings.
+**Mainnet Bug Bounty:** Active post-launch (details to follow).
+Target: 5-10% of a defined treasury budget for critical findings.
 
 ## Scope
 
-### In Scope (Testnet Sepolia):
+### In Scope (Mainnet + Sepolia):
 - contracts/token/InfernoToken.sol
 - contracts/lock/IFRLock.sol
 - contracts/partner/PartnerVault.sol
@@ -45,32 +45,33 @@ Ziel: 5-10% eines definierten Treasury-Budgets für kritische Findings.
 
 ### Out of Scope:
 - Third-party contracts (Uniswap V2, OpenZeppelin)
-- Frontend UI bugs ohne Security-Relevanz
-- Gas-Optimierungen
-- Known issues (siehe AUDIT_BRIEF.md)
+- Frontend UI bugs without security relevance
+- Gas optimizations
+- Known issues (see AUDIT_BRIEF.md)
 
-## Known Design Decisions (kein Bug)
+## Known Design Decisions (Not a Bug)
 
-| Thema | Entscheidung | Begründung |
-|-------|-------------|------------|
-| 9 Decimals | Absichtlich (nicht 18) | IFR-spezifisch |
-| Kein Mint | Supply fix bei Deployment | Deflationary by design |
-| Single EOA Testnet | Phase 0 Bootstrap | Multisig Phase 1+ |
-| No Oracle | Phase 0 Pricing | USD-Pricing Phase 2+ |
-| rewardBps 1500 | 15% default | Governance-änderbar |
+| Topic | Decision | Rationale |
+|-------|----------|-----------|
+| 9 Decimals | Intentional (not 18) | IFR-specific |
+| No Mint | Supply fixed at deployment | Deflationary by design |
+| Single EOA Testnet | Phase 0 bootstrap | Multisig Phase 1+ |
+| No Oracle | Phase 0 pricing | USD pricing Phase 2+ |
+| rewardBps 1500 | 15% default | Governance-adjustable |
 
 ## Security Audit Status
 
-| Audit-Typ | Status | Ergebnis |
-|-----------|--------|---------|
-| Slither Static Analysis | Abgeschlossen | 0 High/Critical |
-| ChatGPT Independent Audit | 7/7 PASS | Keine kritischen Findings |
-| Professional Audit | Geplant vor Mainnet | Code4rena / Sherlock |
+| Audit Type | Status | Result |
+|------------|--------|--------|
+| Slither Static Analysis | Completed | 0 High/Critical |
+| ChatGPT Independent Audit | 7/7 PASS | No critical findings |
+| Professional Audit | Recommended | Code4rena / Sherlock |
+| Contract Tests | 444 total | All passing |
 
-## Kontakt
+## Contact
 
-Für dringende Security-Issues: GitHub Security Advisory (privat)
-Für allgemeine Fragen: GitHub Issues (öffentlich)
+For urgent security issues: GitHub Security Advisory (private)
+For general questions: GitHub Issues (public)
 
 ---
-*Stand: Februar 2026 | Version 1.0*
+*As of: March 2026 | Version 1.1*

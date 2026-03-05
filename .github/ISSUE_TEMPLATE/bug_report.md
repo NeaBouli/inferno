@@ -1,28 +1,28 @@
 ---
 name: Bug Report
-about: Melde einen Bug im IFR Protokoll oder in den Apps
+about: Report a bug in the IFR protocol or apps
 title: '[BUG] '
 labels: bug
 assignees: ''
 ---
 
-## Bug Beschreibung
-Klare Beschreibung was nicht funktioniert.
+## Bug Description
+Clear description of what is not working.
 
-## Reproduktions-Schritte
-1. Gehe zu '...'
-2. Klicke auf '...'
-3. Erwartetes Ergebnis: ...
-4. Tatsächliches Ergebnis: ...
+## Steps to Reproduce
+1. Go to '...'
+2. Click on '...'
+3. Expected result: ...
+4. Actual result: ...
 
 ## Environment
 - Network: [ ] Sepolia [ ] Mainnet
 - App: [ ] Dashboard [ ] Governance [ ] Benefits Network [ ] AI Copilot [ ] Points Backend
 - Browser/Node Version:
-- Wallet: [ ] MetaMask [ ] WalletConnect [ ] Andere
+- Wallet: [ ] MetaMask [ ] WalletConnect [ ] Other
 
 ## Logs / Screenshots
-Falls vorhanden
+If available
 
 ## Severity
 - [ ] Critical (Funds at Risk)

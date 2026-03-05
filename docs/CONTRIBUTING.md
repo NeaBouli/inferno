@@ -1,81 +1,81 @@
 # Contributing to Inferno ($IFR)
 
-## Willkommen
+## Welcome
 
-Inferno ist ein Open-Source-Projekt. Contributions sind willkommen —
-von Bug-Reports bis zu Feature-Requests und Code-Beitraegen.
+Inferno is an open-source project. Contributions are welcome —
+from bug reports to feature requests and code contributions.
 
-## Wie du beitragen kannst
+## How to Contribute
 
 ### Bug Reports
 1. GitHub Issues: https://github.com/NeaBouli/inferno/issues
-2. Template verwenden (Bug Report)
-3. Reproduktions-Schritte angeben
-4. Environment: Node.js Version, OS, Network (Sepolia/Mainnet)
+2. Use the Bug Report template
+3. Provide reproduction steps
+4. Environment: Node.js version, OS, Network (Sepolia/Mainnet)
 
 ### Feature Requests
 1. GitHub Issues: Feature Request Template
-2. Problem beschreiben (nicht nur die Loesung)
-3. Use Case erklaeren
+2. Describe the problem (not just the solution)
+3. Explain the use case
 
 ### Code Contributions
-1. Fork des Repos
-2. Branch: `feat/kurze-beschreibung` oder `fix/issue-nummer`
-3. Tests schreiben (TDD bevorzugt)
-4. Alle bestehenden Tests muessen gruen bleiben: `npx hardhat test`
-5. Pull Request mit Beschreibung
+1. Fork the repo
+2. Branch: `feat/short-description` or `fix/issue-number`
+3. Write tests (TDD preferred)
+4. All existing tests must pass: `npx hardhat test`
+5. Open a Pull Request with a description
 
 ## Code Standards
 
 ### Solidity
 - Pragma: `^0.8.20`
-- OpenZeppelin v5 fuer Standard-Patterns
-- NatDoc Kommentare fuer alle public Functions
-- Keine magic numbers — Konstanten verwenden
-- Slither muss 0 High/Critical zeigen
+- OpenZeppelin v5 for standard patterns
+- NatDoc comments for all public functions
+- No magic numbers — use constants
+- Slither must show 0 High/Critical findings
 
 ### TypeScript/JavaScript
-- TypeScript bevorzugt
+- TypeScript preferred
 - Strict Mode
-- Keine `any` types (ausser unvermeidbar)
-- Jest fuer Tests
+- No `any` types (unless unavoidable)
+- Jest for tests
 
-### Git Konventionen (STRIKT)
+### Git Conventions (STRICT)
 
-Commit-Prefixe:
-- `feat:` neues Feature
-- `fix:` Bugfix
-- `docs:` nur Dokumentation
-- `test:` nur Tests
-- `ops:` Operations (Deploy, Governance)
-- `refactor:` Refactoring
+Commit prefixes:
+- `feat:` new feature
+- `fix:` bugfix
+- `docs:` documentation only
+- `test:` tests only
+- `ops:` operations (deploy, governance)
+- `refactor:` refactoring
 
-**VERBOTEN:**
-- Kein force-push auf main
-- Kein rebase auf gepushte Commits
-- Keine `--amend` auf gepushte Commits
+**FORBIDDEN:**
+- No force-push to main
+- No rebase on pushed commits
+- No `--amend` on pushed commits
 
-## Smart Contract Aenderungen
+## Smart Contract Changes
 
-Fuer Solidity-Aenderungen gilt:
-1. Neue Contract-Version deployen (niemals in-place patchen)
-2. Governance Proposal fuer Migration (48h Timelock)
-3. Tests: `npx hardhat test` (alle 361+ muessen gruen sein)
+For Solidity changes:
+1. Deploy a new contract version (never patch in-place)
+2. Governance Proposal for migration (48h Timelock)
+3. Tests: `npx hardhat test` (all 444 must pass)
 4. Coverage: `npx hardhat coverage` (>80% Branch Coverage)
-5. Dokumentation aktualisieren
+5. Update documentation
 
-## Review Prozess
+## Review Process
 
-- PRs werden innerhalb 48h reviewed
-- Bei Security-relevanten Aenderungen: extra Pruefzeit
-- Mainnet-relevante Aenderungen: zwei Reviews erforderlich
+- PRs are reviewed within 48h
+- Security-relevant changes: extra review time
+- Mainnet-relevant changes: two reviews required
 
-## Verhaltenskodex
+## Code of Conduct
 
-- Respektvolle Kommunikation
-- Keine Spam-Issues
-- Keine unsolicited DMs an Maintainer
-- Security-Issues: privat via GitHub Security Advisory
+- Respectful communication
+- No spam issues
+- No unsolicited DMs to maintainers
+- Security issues: report privately via GitHub Security Advisory
 
 ## Links
 
@@ -84,4 +84,4 @@ Fuer Solidity-Aenderungen gilt:
 - Security: [docs/SECURITY_POLICY.md](SECURITY_POLICY.md)
 
 ---
-*Version 1.0 | Februar 2026*
+*Version 1.0 | March 2026*

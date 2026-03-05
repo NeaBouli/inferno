@@ -1,105 +1,105 @@
 # Business Onboarding SOP — IFR Benefits Network
 
-Standard Operating Procedure für die Aufnahme neuer Partner-Businesses
-in das IFR Benefits Network.
+Standard Operating Procedure for onboarding new partner businesses
+into the IFR Benefits Network.
 
-## Übersicht
-Das IFR Benefits Network ermöglicht Businesses, IFR-Token-Inhabern
-exklusive Rabatte und Benefits anzubieten — verifiziert durch
-On-Chain-Lock-Status, ohne Crypto-Kenntnisse beim Kassenpersonal.
+## Overview
+The IFR Benefits Network enables businesses to offer exclusive
+discounts and benefits to IFR token holders — verified through
+on-chain lock status, without requiring crypto knowledge from cashier staff.
 
-## Schritt 1: Erstkontakt & Eignung
+## Step 1: Initial Contact & Eligibility
 
-### Mindestanforderungen
-- [ ] Legales Business mit Gewerbeanmeldung
-- [ ] Bereitschaft zur IFR-Lock-Anforderung für Kunden (mind. 1.000 IFR)
-- [ ] Technische Basis: Smartphone oder Tablet für QR-Scanner
-- [ ] Akzeptanz der IFR Partner Terms of Service
+### Minimum Requirements
+- [ ] Legal business with business registration
+- [ ] Willingness to set IFR lock requirements for customers (min. 1,000 IFR)
+- [ ] Technical basis: smartphone or tablet for QR scanner
+- [ ] Acceptance of the IFR Partner Terms of Service
 
-### Ausschlusskriterien
-- Glücksspiel, Tabak, Waffen
-- Businesses ohne physischen/digitalen Standort
-- Bereits gesperrte/gemeldete Entities
+### Exclusion Criteria
+- Gambling, tobacco, weapons
+- Businesses without a physical/digital location
+- Already blocked/reported entities
 
-## Schritt 2: Technisches Setup
+## Step 2: Technical Setup
 
-### Option A: Hosted Solution (empfohlen)
-1. Business erhält Zugang zum IFR Partner Dashboard
-2. Registrierung: Name, Logo, Discount %, Required Lock
-3. QR-Code wird generiert (eindeutige businessId)
-4. Kassenpersonal öffnet Scanner-URL auf Smartphone
-5. Fertig — kein technisches Wissen nötig
+### Option A: Hosted Solution (recommended)
+1. Business receives access to the IFR Partner Dashboard
+2. Registration: name, logo, discount %, required lock
+3. QR code is generated (unique businessId)
+4. Cashier staff opens scanner URL on smartphone
+5. Done — no technical knowledge required
 
-### Option B: Self-Hosted (für Developer)
-1. Docker Image klonen: `git clone https://github.com/NeaBouli/inferno`
+### Option B: Self-Hosted (for developers)
+1. Clone Docker image: `git clone https://github.com/NeaBouli/inferno`
 2. `cd apps/benefits-network && cp .env.example .env`
-3. RPC URL + Contract Adressen konfigurieren
+3. Configure RPC URL + contract addresses
 4. `docker-compose up -d`
-5. Eigene businessId anlegen via Admin API
+5. Create your own businessId via Admin API
 
-## Schritt 3: Tier-Konfiguration
+## Step 3: Tier Configuration
 
-| Tier | Mindest-Lock | Empfohlener Rabatt |
-|------|-------------|-------------------|
-| Bronze | 1.000 IFR | 5–10% |
-| Silver | 2.500 IFR | 10–15% |
-| Gold | 5.000 IFR | 15–20% |
-| Platinum | 10.000 IFR | 20–25% |
+| Tier | Minimum Lock | Recommended Discount |
+|------|-------------|---------------------|
+| Bronze | 1,000 IFR | 5–10% |
+| Silver | 2,500 IFR | 10–15% |
+| Gold | 5,000 IFR | 15–20% |
+| Platinum | 10,000 IFR | 20–25% |
 
-Business wählt: Welches Tier (oder mehrere) akzeptiert werden.
-Empfehlung: Mindestens Bronze anbieten (niedrigste Hürde für Kunden).
+Business chooses: which tier(s) to accept.
+Recommendation: offer at least Bronze (lowest barrier for customers).
 
-## Schritt 4: Kassenpersonal Training (5 Minuten)
+## Step 4: Cashier Staff Training (5 Minutes)
 
-### Der QR-Flow (3 Schritte):
-1. **Business öffnet** Scanner-URL auf Tablet/Smartphone
-2. **Kunde scannt** QR-Code mit seiner Wallet-App
-3. **Bildschirm zeigt**: APPROVED (grün) oder DENIED (rot)
-4. **Optional**: "Einlösen" klicken → Status REDEEMED
+### The QR Flow (3 Steps):
+1. **Business opens** scanner URL on tablet/smartphone
+2. **Customer scans** QR code with their wallet app
+3. **Screen shows**: APPROVED (green) or DENIED (red)
+4. **Optional**: click "Redeem" → status REDEEMED
 
-### Was Kassenpersonal NICHT braucht:
-- Keine Crypto-Kenntnisse
-- Kein MetaMask/Wallet
-- Kein Verständnis von Blockchain
-- Kein Internet-Banking-Zugang
+### What Cashier Staff Does NOT Need:
+- No crypto knowledge
+- No MetaMask/wallet
+- No understanding of blockchain
+- No internet banking access
 
-## Schritt 5: Go-Live Checkliste
+## Step 5: Go-Live Checklist
 
-- [ ] businessId erstellt und verifiziert
-- [ ] QR-Code auf Smartphone/Tablet gespeichert
-- [ ] Test-Scan mit eigenem Wallet durchgeführt (Sepolia zuerst)
-- [ ] Kassenpersonal briefed (5-Minuten-Training)
-- [ ] Discount in POS/Kasse konfiguriert
-- [ ] IFR Partner Badge auf Website/Schaufenster angebracht
-- [ ] Eintrag im IFR Partner Directory bestätigt
+- [ ] businessId created and verified
+- [ ] QR code saved on smartphone/tablet
+- [ ] Test scan performed with own wallet
+- [ ] Cashier staff briefed (5-minute training)
+- [ ] Discount configured in POS/register
+- [ ] IFR Partner badge placed on website/storefront
+- [ ] Entry in IFR Partner Directory confirmed
 
-## Schritt 6: Laufender Betrieb
+## Step 6: Ongoing Operations
 
-### Monatliche Checks:
-- QR-Code noch aktiv? (Test-Scan)
-- Discount-Bedingungen noch passend?
-- Neue Tier-Optionen verfügbar?
+### Monthly Checks:
+- QR code still active? (test scan)
+- Discount conditions still appropriate?
+- New tier options available?
 
-### Support-Kanäle:
-- Technisch: GitHub Issues → https://github.com/NeaBouli/inferno/issues
-- Allgemein: Partner-Dokumentation → docs/PARTNER_INTEGRATION_SPEC.md
+### Support Channels:
+- Technical: GitHub Issues → https://github.com/NeaBouli/inferno/issues
+- General: Partner documentation → docs/PARTNER_INTEGRATION_SPEC.md
 
-## FAQ für Businesses
+## FAQ for Businesses
 
-**Kostet das Programm etwas?**
-Nein — das IFR Benefits Network ist kostenlos für Partner.
-Businesses zahlen nur für ihr eigenes Hosting (Option B).
+**Does the program cost anything?**
+No — the IFR Benefits Network is free for partners.
+Businesses only pay for their own hosting (Option B).
 
-**Was wenn ein Kunde seinen Lock aufhebt?**
-Der nächste Scan zeigt DENIED automatisch — kein manueller Eingriff nötig.
+**What if a customer removes their lock?**
+The next scan automatically shows DENIED — no manual intervention required.
 
-**Können wir selbst entscheiden welches Tier wir akzeptieren?**
-Ja — jedes Business konfiguriert eigenständig Tier und Rabatt.
+**Can we choose which tier we accept?**
+Yes — each business independently configures tier and discount.
 
-**Ist die Kundenverifizierung DSGVO-konform?**
-Ja — es werden keine persönlichen Daten gespeichert.
-Nur: Wallet-Adresse (öffentlich on-chain), Lock-Status (öffentlich on-chain),
-Zeitstempel der Verifizierung (temporär, 60s TTL).
+**Is the customer verification GDPR-compliant?**
+Yes — no personal data is stored.
+Only: wallet address (public on-chain), lock status (public on-chain),
+verification timestamp (temporary, 60s TTL).
 
 ---
-*Stand: Februar 2026 | Version 1.0*
+*As of: March 2026 | Version 1.0*

@@ -1,27 +1,27 @@
 # GitHub Repository Setup
 
-Stand: 26. Februar 2026
+As of: 26 February 2026
 
 ## Discussions
 
-GitHub Discussions aktiviert via `gh api repos/NeaBouli/inferno -X PATCH -f has_discussions=true`.
+GitHub Discussions enabled via `gh api repos/NeaBouli/inferno -X PATCH -f has_discussions=true`.
 
-### Empfohlene Kategorien
+### Recommended Categories
 
-| Kategorie | Zweck |
-|-----------|-------|
-| Ideas | Feature Requests |
-| Q&A | Fragen zum Protokoll |
-| Announcements | Projekt-Updates |
-| Show and tell | Community Integrationen |
-| Partners | Partner Onboarding Fragen |
+| Category | Purpose |
+|----------|---------|
+| Ideas | Feature requests |
+| Q&A | Questions about the protocol |
+| Announcements | Project updates |
+| Show and tell | Community integrations |
+| Partners | Partner onboarding questions |
 
-Kategorien unter: https://github.com/NeaBouli/inferno/discussions/categories
+Categories at: https://github.com/NeaBouli/inferno/discussions/categories
 
 ## GitHub Pages
 
-| Setting | Wert |
-|---------|------|
+| Setting | Value |
+|---------|-------|
 | Source | Deploy from branch |
 | Branch | main |
 | Folder | /docs |
@@ -29,25 +29,25 @@ Kategorien unter: https://github.com/NeaBouli/inferno/discussions/categories
 
 ## Topics
 
-Gesetzt via `gh api repos/NeaBouli/inferno/topics`:
+Set via `gh api repos/NeaBouli/inferno/topics`:
 - ethereum, defi, erc20, solidity, web3, token, hardhat, typescript
 
-## Repository Settings Checkliste
+## Repository Settings Checklist
 
-- [x] Discussions aktiviert
-- [x] Pages aktiviert (docs/)
-- [x] Topics gesetzt (8 Tags)
+- [x] Discussions enabled
+- [x] Pages enabled (docs/)
+- [x] Topics set (8 tags)
 - [x] Issue Templates (.github/ISSUE_TEMPLATE/)
 - [x] PR Template (.github/pull_request_template.md)
-- [x] Security Advisories (privat)
-- [x] Secret Scanning aktiviert
-- [x] Push Protection aktiviert
-- [ ] Branch Protection Rules (empfohlen fuer Mainnet)
-- [ ] Required Reviews (empfohlen fuer Mainnet)
+- [x] Security Advisories (private)
+- [x] Secret Scanning enabled
+- [x] Push Protection enabled
+- [ ] Branch Protection Rules (recommended)
+- [ ] Required Reviews (recommended)
 
-## Branch Protection Rules (empfohlen)
+## Branch Protection Rules (recommended)
 
-Vor Mainnet sollte `main` geschuetzt werden:
+The `main` branch should be protected:
 
 ```bash
 gh api repos/NeaBouli/inferno/branches/main/protection -X PUT \
@@ -68,40 +68,40 @@ gh api repos/NeaBouli/inferno/branches/main/protection -X PUT \
 EOF
 ```
 
-### Empfohlene Einstellungen
+### Recommended Settings
 
-| Regel | Wert | Grund |
-|-------|------|-------|
-| Require PR reviews | 1 Approval | Vier-Augen-Prinzip |
-| Dismiss stale reviews | true | Bei neuen Pushes erneut reviewen |
-| Require status checks | `test` | CI muss gruen sein |
-| Require up-to-date | true | Branch muss aktuell sein |
-| Enforce admins | false | Owner kann im Notfall direkt pushen |
-| Allow force push | false | History schuetzen |
-| Allow deletions | false | Branch nicht loeschbar |
+| Rule | Value | Reason |
+|------|-------|--------|
+| Require PR reviews | 1 approval | Four-eyes principle |
+| Dismiss stale reviews | true | Re-review on new pushes |
+| Require status checks | `test` | CI must pass |
+| Require up-to-date | true | Branch must be current |
+| Enforce admins | false | Owner can push directly in emergencies |
+| Allow force push | false | Protect history |
+| Allow deletions | false | Branch cannot be deleted |
 
-### Manuell via GitHub UI
+### Manual via GitHub UI
 
 1. Settings → Branches → Add branch protection rule
 2. Branch name pattern: `main`
-3. Haken setzen: Require pull request, Require status checks, Require linear history
+3. Check boxes: Require pull request, Require status checks, Require linear history
 4. Save changes
 
-## Git Author Konfiguration
+## Git Author Configuration
 
-Fuer konsistente Commit-Metadaten:
+For consistent commit metadata:
 
 ```bash
-# Lokal (nur dieses Repo)
+# Local (this repo only)
 git config user.name "IFR Protocol"
 git config user.email "noreply@inferno-protocol.xyz"
 
-# Verifizieren
+# Verify
 git config user.name   # → IFR Protocol
 git config user.email  # → noreply@inferno-protocol.xyz
 ```
 
-Alle zukuenftigen Commits in diesem Repo verwenden dann `IFR Protocol <noreply@inferno-protocol.xyz>` als Author.
+All future commits in this repo will then use `IFR Protocol <noreply@inferno-protocol.xyz>` as the author.
 
 ---
 *Inferno ($IFR) — GitHub Repository Setup*

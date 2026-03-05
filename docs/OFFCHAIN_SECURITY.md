@@ -1,77 +1,77 @@
 # Off-Chain Security — IFR Ecosystem
 
-## Übersicht der Off-Chain Komponenten
+## Overview of Off-Chain Components
 
-| App | Kritische Assets | Risiko |
-|-----|-----------------|--------|
-| Points Backend | VoucherSigner Private Key | Hoch |
-| AI Copilot | ANTHROPIC_API_KEY | Mittel |
-| Creator Gateway | JWT_SECRET, Google OAuth | Mittel |
-| Benefits Network | Admin Secret | Mittel |
+| App | Critical Assets | Risk |
+|-----|-----------------|------|
+| Points Backend | VoucherSigner Private Key | High |
+| AI Copilot | ANTHROPIC_API_KEY | Medium |
+| Creator Gateway | JWT_SECRET, Google OAuth | Medium |
+| Benefits Network | Admin Secret | Medium |
 
-## VoucherSigner Key Management (KRITISCH)
+## VoucherSigner Key Management (CRITICAL)
 
-Der VoucherSigner Key signiert EIP-712 Voucher für FeeRouter.
-Kompromittierter Key → beliebige Voucher möglich.
+The VoucherSigner Key signs EIP-712 vouchers for FeeRouter.
+A compromised key allows arbitrary voucher creation.
 
-### Schutzmaßnahmen:
-- Key NUR in Railway/Render Environment Variables
-- NIEMALS in .env Dateien committed (→ .gitignore!)
-- Key Rotation via Governance: setVoucherSigner(newKey)
-- Monitoring: Alert bei >100 Vouchers/Tag
+### Protective Measures:
+- Key ONLY in Railway/Render environment variables
+- NEVER committed in .env files (-> .gitignore!)
+- Key rotation via Governance: setVoucherSigner(newKey)
+- Monitoring: Alert on >100 vouchers/day
 
-### Key Rotation Prozess:
-1. Neuen Key generieren
-2. Points Backend updaten (neuer Signer)
+### Key Rotation Process:
+1. Generate new key
+2. Update Points Backend (new signer)
 3. Governance Proposal: setVoucherSigner(newKey)
-4. 48h Timelock → Execute
-5. Alten Key deaktivieren
+4. 48h Timelock -> Execute
+5. Deactivate old key
 
 ## JWT Secrets
 
-Alle JWT Secrets müssen:
-- Mindestens 32 Zeichen
-- Kryptographisch zufällig (kein Passwort!)
-- Unterschiedlich pro App
-- Regelmäßig rotiert (alle 90 Tage)
+All JWT secrets must:
+- Be at least 32 characters
+- Be cryptographically random (not a password!)
+- Be different per app
+- Be rotated regularly (every 90 days)
 
-Generieren: `openssl rand -hex 32`
+Generate: `openssl rand -hex 32`
 
 ## SIWE (Sign-In With Ethereum)
 
-Points Backend + Benefits Network verwenden SIWE:
-- Nonce ist einmalig (Replay-Schutz)
-- Nonce Expiry: 10 Minuten
-- Chain ID Prüfung: 11155111 (Sepolia) / 1 (Mainnet)
-- Domain Binding: verhindert Phishing-Signatur-Reuse
+Points Backend + Benefits Network use SIWE:
+- Nonce is one-time use (replay protection)
+- Nonce Expiry: 10 minutes
+- Chain ID check: 11155111 (Sepolia) / 1 (Mainnet)
+- Domain binding: prevents phishing signature reuse
 
 ## Rate Limiting
 
-| App | Limit | Schutz gegen |
-|-----|-------|-------------|
-| Points Backend | 60 req/min/IP | Bot-Farming |
-| SIWE Auth | 5 req/hour/IP | Brute-Force |
+| App | Limit | Protects Against |
+|-----|-------|------------------|
+| Points Backend | 60 req/min/IP | Bot farming |
+| SIWE Auth | 5 req/hour/IP | Brute force |
 | Voucher Issuance | 1/wallet/day | Sybil |
-| AI Copilot | 60 req/min/IP | API-Missbrauch |
+| AI Copilot | 60 req/min/IP | API abuse |
 | Creator Gateway | 60 req/min/IP | Scraping |
 
 ## Admin Endpoints
 
-Alle Admin-Endpoints müssen:
-- ADMIN_SECRET Header-Auth (mindestens 32 Zeichen)
-- Nie öffentlich erreichbar (IP-Whitelist oder VPN)
-- Logging aller Aktionen mit Timestamp
+All admin endpoints must:
+- Use ADMIN_SECRET header auth (at least 32 characters)
+- Never be publicly accessible (IP whitelist or VPN)
+- Log all actions with timestamp
 
-## Secrets Checkliste (vor Mainnet)
+## Secrets Checklist (Mainnet)
 
-- [ ] VoucherSigner Key: Hardware Wallet oder HSM
-- [ ] Alle JWT Secrets: 32+ Zeichen, zufällig
-- [ ] ANTHROPIC_API_KEY: nur in Vercel Env
-- [ ] Google OAuth Credentials: Scope minimal halten
-- [ ] ADMIN_SECRET: 32+ Zeichen, nie im Code
-- [ ] Rate Limits: auf Mainnet-Last anpassen
-- [ ] Monitoring: Alert bei Anomalien
-- [ ] Key Rotation: Prozess dokumentiert
+- [ ] VoucherSigner Key: Hardware Wallet or HSM
+- [ ] All JWT Secrets: 32+ characters, random
+- [ ] ANTHROPIC_API_KEY: only in Vercel env
+- [ ] Google OAuth Credentials: keep scope minimal
+- [ ] ADMIN_SECRET: 32+ characters, never in code
+- [ ] Rate Limits: adjust for mainnet load
+- [ ] Monitoring: alert on anomalies
+- [ ] Key Rotation: process documented
 
 ---
-*Version 1.0 | Februar 2026*
+*Version 1.0 | March 2026*

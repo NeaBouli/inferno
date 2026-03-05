@@ -1,101 +1,102 @@
 # Partner Rewards Specification — IFR PartnerVault
 
-## Uebersicht
-Partner (Creator, Businesses, Developers) erhalten IFR-Rewards
-wenn User IFR-Token sperren und auf den Partner verweisen.
+## Overview
+Partners (creators, businesses, developers) receive IFR rewards
+when users lock IFR tokens and reference the partner.
 
-## Reward-Mechanismus
+## Reward Mechanism
 
-### Formel
+### Formula
 Reward = LockAmount x rewardBps / 10000
 
-### Beispiel (rewardBps = 1500 = 15%):
-- User sperrt: 10,000 IFR
-- Partner Reward: 10,000 x 15% = 1,500 IFR
-- Netto-Effekt: 10,000 gesperrt, 1,500 ausgezahlt
-- Deflation: 8,500 IFR netto deflationary
+### Example (rewardBps = 1500 = 15%):
+- User locks: 10,000 IFR
+- Partner reward: 10,000 x 15% = 1,500 IFR
+- Net effect: 10,000 locked, 1,500 paid out
+- Deflation: 8,500 IFR net deflationary
 
-### Wichtige Invariante:
-**Reward IMMER < Lock** — garantiert Netto-Deflation
-- Bei rewardBps 1500 (15%): 10,000 lock -> 1,500 reward
-- Bei rewardBps 2500 (25%): 10,000 lock -> 2,500 reward
-- Nie 1:1 oder 2x — waere inflationaer
+### Key Invariant:
+**Reward ALWAYS < Lock** — guarantees net deflation
+- At rewardBps 1500 (15%): 10,000 lock -> 1,500 reward
+- At rewardBps 2500 (25%): 10,000 lock -> 2,500 reward
+- Never 1:1 or 2x — that would be inflationary
 
-## Parameter
+## Parameters
 
-| Parameter | Wert | Governance-Grenzen |
-|-----------|------|-------------------|
+| Parameter | Value | Governance Bounds |
+|-----------|-------|-------------------|
 | rewardBps | 1500 (15%) | 500-2500 bps (5-25%) |
 | annualEmissionCap | 4,000,000 IFR | 1M-10M IFR |
-| vestingDuration | 180 Tage (6 Monate) | Gov-aenderbar |
-| maxVestingDuration | 365 Tage (12 Monate) | Gov-aenderbar |
+| vestingDuration | 180 days (6 months) | Gov-adjustable |
+| maxVestingDuration | 365 days (12 months) | Gov-adjustable |
 
-## PartnerPool Nachhaltigkeit
+## Partner Pool Sustainability
 
-| Jahr | Emission | Pool Rest |
-|------|----------|-----------|
+| Year | Emission | Pool Remaining |
+|------|----------|----------------|
 | 1 | 4,000,000 | 36,000,000 |
 | 2 | 4,000,000 | 32,000,000 |
 | 5 | 4,000,000 | 20,000,000 |
 | 10 | 4,000,000 | 0 |
 
-*Pool reicht 10 Jahre bei konstantem Cap.*
-*Algorithmic Throttle verlaengert Laufzeit automatisch.*
+*Pool lasts 10 years at constant cap.*
+*Algorithmic throttle extends duration automatically.*
 
 ## Vesting
 
-- Rewards werden NICHT sofort ausgezahlt
-- Linear vested ueber 6-12 Monate
-- Claim via PartnerVault.claim() (permissionless nach Vesting)
-- Teilauszahlung moeglich (claimable = vested - already claimed)
+- Rewards are NOT paid out immediately
+- Linearly vested over 6-12 months
+- Claim via PartnerVault.claim() (permissionless after vesting)
+- Partial withdrawal possible (claimable = vested - already claimed)
 
 ## Anti-Gaming
 
 ### authorizedCaller:
-Nur whitelisted Backend-Wallets koennen recordLockReward() aufrufen.
-Verhindert: Unbefugte Reward-Manipulation.
+Only whitelisted backend wallets can call recordLockReward().
+Prevents: Unauthorized reward manipulation.
 
 ### Anti-double-count:
 ```solidity
 mapping(address => mapping(bytes32 => bool)) public rewardClaimed;
 ```
-Verhindert: Doppelte Rewards fuer denselben Lock-Event.
+Prevents: Double rewards for the same lock event.
 
 ### Algorithmic Throttle (optional):
-Bei hohem Lock-Ratio (>30%) sinkt effektiver rewardBps automatisch.
-Verhindert: Emission-Explosion bei ploetzlich hohem Lock-Volumen.
+At high lock ratio (>30%), effective rewardBps decreases automatically.
+Prevents: Emission explosion during sudden high lock volume.
 
-## Partner-Typen
+## Partner Types
 
 ### Type A: Business Partner
-- Akzeptiert IFR-Lock fuer Kunden-Rabatte
-- Reward: Anteil des Lock-Betrags der Kunden
-- Beispiel: Cafe akzeptiert Bronze Tier -> 1,000 IFR Lock -> 150 IFR Reward
+- Accepts IFR lock for customer discounts
+- Reward: Share of customers' lock amounts
+- Example: Cafe accepts Bronze Tier -> 1,000 IFR Lock -> 150 IFR Reward
 
 ### Type B: Creator Partner
-- YouTube/Content Creator mit Hybrid-Zugang
-- Reward: Anteil des Lock-Betrags der Fans
-- Beispiel: 100 Fans x 5,000 IFR = 500,000 IFR Lock -> 75,000 IFR Reward (6 Mon.)
+- YouTube/content creator with hybrid access
+- Reward: Share of fans' lock amounts
+- Example: 100 fans x 5,000 IFR = 500,000 IFR Lock -> 75,000 IFR Reward (6 mo.)
 
 ### Type C: Developer Partner
-- Integriert IFR-Lock in eigene App/Plattform
-- Reward: Anteil der Lock-Events ueber SDK
-- Beispiel: App mit 1,000 Usern x 2,500 IFR = 2,500,000 IFR Lock -> 375,000 IFR Reward
+- Integrates IFR lock into their own app/platform
+- Reward: Share of lock events via SDK
+- Example: App with 1,000 users x 2,500 IFR = 2,500,000 IFR Lock -> 375,000 IFR Reward
 
 ## Onboarding
 
-1. Partner-Antrag via GitHub Issue oder direkten Kontakt
+1. Partner application via GitHub Issue or direct contact
 2. Governance Proposal: createPartner(beneficiary, maxAlloc)
 3. 48h Timelock -> Execute
-4. Partner ist aktiv: authorizedCaller kann recordLockReward() aufrufen
-5. Erster Lock-Event -> Reward beginnt zu vesten
+4. Partner is active: authorizedCaller can call recordLockReward()
+5. First lock event -> Reward begins vesting
 
 ## Links
 - PartnerVault Contract: contracts/partner/PartnerVault.sol
-- Deployment: 0x5F12C0bC616e9Ca347D48C33266aA8fe98490A39 (Sepolia)
+- Mainnet Deployment: `0xc6eb7714bCb035ebc2D4d9ba7B3762ef7B9d4F7D`
+- Sepolia Deployment: `0x5F12C0bC616e9Ca347D48C33266aA8fe98490A39`
 - Business Onboarding: docs/BUSINESS_ONBOARDING.md
 - Creator Setup: docs/YOUTUBE_INTEGRATION.md
 - Developer SDK: docs/SDK_QUICKSTART.md
 
 ---
-*Stand: Februar 2026 | Version 1.0*
+*As of: March 2026 | Version 1.1*

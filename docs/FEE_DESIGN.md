@@ -1,52 +1,52 @@
-# IFR Fee Design — Warum 3.5%?
+# IFR Fee Design -- Why 3.5%?
 
-## Kernprinzip: Lock > Transfer
+## Core Principle: Lock > Transfer
 
-IFR ist kein Trading-Token. Das Modell basiert auf:
-1. Einmalig kaufen
-2. Einmalig locken
-3. Dauerhaft Benefits nutzen
+IFR is not a trading token. The model is based on:
+1. Buy once
+2. Lock once
+3. Use benefits permanently
 
-Transfers passieren selten — beim Kauf, beim Lock, beim Unlock.
-Nicht täglich. Daher ist 3.5% tragbar.
+Transfers happen rarely -- when buying, when locking, when unlocking.
+Not daily. Therefore 3.5% is bearable.
 
-## Fee-Aufteilung
+## Fee Breakdown
 
-| Fee | Wohin | Zweck |
-|-----|-------|-------|
-| 2.5% | Burn (permanent) | Deflation — Supply sinkt |
-| 1.0% | BuybackVault | Liquidität stärken |
-| Gesamt | 3.5% | Automatisch, kein Governance |
+| Fee | Destination | Purpose |
+|-----|-------------|---------|
+| 2.5% | Burn (permanent) | Deflation -- supply decreases |
+| 1.0% | BuybackVault | Strengthen liquidity |
+| Total | 3.5% | Automatic, no governance required |
 
-## Fee-Exempt Adressen
+## Fee-Exempt Addresses
 
-| Adresse | Warum exempt? |
-|---------|--------------|
-| IFRLock | Lock/Unlock soll keine Fee kosten |
-| LiquidityReserve | Interne Protokoll-Transfers |
-| BuybackVault | Buyback-Logik ohne Verlust |
-| BurnReserve | Burn-Mechanismus |
-| PartnerVault | Reward-Auszahlung (nach Proposal #3) |
-| DEX Router | Uniswap V2 Swap ohne Double-Fee |
+| Address | Why exempt? |
+|---------|-------------|
+| IFRLock | Lock/Unlock should not incur fees |
+| LiquidityReserve | Internal protocol transfers |
+| BuybackVault | Buyback logic without loss |
+| BurnReserve | Burn mechanism |
+| PartnerVault | Reward payouts (after Proposal #3) |
+| DEX Router | Uniswap V2 swap without double-fee |
 
-Alle Exempt-Adressen: on-chain transparent, nur via Governance änderbar.
+All exempt addresses: transparent on-chain, changeable only via Governance.
 
-## CEX-Listing Strategie
+## CEX Listing Strategy
 
-Fee-on-transfer Tokens haben erhöhte CEX-Anforderungen:
-- Transparenz über Fee-Mechanismus (check)
-- Kein "hidden fee" (check — alles on-chain)
-- Koordination mit Exchange über Fee-Exempt
+Fee-on-transfer tokens have increased CEX requirements:
+- Transparency about fee mechanism (check)
+- No "hidden fee" (check -- everything on-chain)
+- Coordination with exchange about fee-exempt
 
 Phase 0: DEX-only (Uniswap V2)
-Phase 2+: CEX-Outreach nach Mainnet und Audit
+Phase 2+: CEX outreach after mainnet and audit
 
 ## MEV & Slippage
 
-Bei Uniswap V2 Swaps:
-- Slippage-Einstellung mindestens 4% empfohlen (3.5% Fee + AMM Slippage)
-- Alternativ: direkt über IFR Governance Dashboard kaufen
-- FeeRouter übernimmt Routing mit korrekten Parametern
+For Uniswap V2 swaps:
+- Slippage setting at least 4% recommended (3.5% fee + AMM slippage)
+- Alternatively: buy directly via IFR Governance Dashboard
+- FeeRouter handles routing with correct parameters
 
 ---
-*Version 1.0 | Februar 2026*
+*Version 1.0 | March 2026 | Mainnet Live*

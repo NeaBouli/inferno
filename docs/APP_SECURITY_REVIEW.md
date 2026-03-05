@@ -383,7 +383,7 @@
 | File | `apps/benefits-network/backend/src/routes/sessions.ts:52` |
 | Status | Documented |
 
-**Description:** `POST /api/sessions/:id/redeem` requires no auth. Session IDs (CUIDs) have timestamp component. Add HMAC token or adminAuth for mainnet.
+**Description:** `POST /api/sessions/:id/redeem` requires no auth. Session IDs (CUIDs) have timestamp component. Add HMAC token or adminAuth for production.
 
 ---
 
@@ -419,11 +419,11 @@
 | File | `apps/ai-copilot/server/index.ts:68` |
 | Status | Documented |
 
-**Description:** `POST /api/chat` has no auth. Add per-IP rate limiting (e.g., 20 req/min) before mainnet.
+**Description:** `POST /api/chat` has no auth. Add per-IP rate limiting (e.g., 20 req/min) for production.
 
 ---
 
-## Recommendations for Mainnet
+## Recommendations for Production
 
 1. **Rotate Anthropic API key** — key was in unprotected `.env` (DF1)
 2. **Remove legacy `/auth/wallet` endpoint** — SIWE is the correct auth flow

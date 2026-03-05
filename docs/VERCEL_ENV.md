@@ -1,21 +1,21 @@
 # AI Copilot — Railway Deployment
 
-Stand: 05. Maerz 2026
+As of: March 2026
 
-## Architektur: Single-App Deployment (Railway)
+## Architecture: Single-App Deployment (Railway)
 
-| Komponente | Plattform | URL |
-|-----------|-----------|-----|
+| Component | Platform | URL |
+|-----------|----------|-----|
 | Full App (Frontend + Backend) | Railway | https://ifr-ai-copilot-production.up.railway.app |
 
 ## Railway Environment Variables
 
-| Variable | Beispiel | Beschreibung |
+| Variable | Example | Description |
 |----------|---------|-------------|
 | `ANTHROPIC_API_KEY` | `sk-ant-...` | Claude API Key |
 | `NODE_ENV` | `production` | Environment |
-| `PORT` | `3000` | Server Port |
-| `ALLOWED_ORIGINS` | `https://ifrunit.tech,...` | CORS Origins (comma-separated) |
+| `PORT` | `3000` | Server port |
+| `ALLOWED_ORIGINS` | `https://ifrunit.tech,...` | CORS origins (comma-separated) |
 
 ## Deploy Steps
 
@@ -25,11 +25,11 @@ cd apps/ai-copilot
 # 1. Railway CLI
 railway login
 
-# 2. Projekt initialisieren
+# 2. Initialize project
 railway init
 # Name: ifr-ai-copilot
 
-# 3. Env Vars setzen
+# 3. Set env vars
 railway variables set ANTHROPIC_API_KEY=sk-ant-...
 railway variables set NODE_ENV=production
 railway variables set PORT=3000
@@ -37,13 +37,13 @@ railway variables set PORT=3000
 # 4. Deploy
 railway up
 
-# 5. Domain zuweisen
+# 5. Assign domain
 railway domain
 ```
 
 ## CORS
 
-Backend erlaubt folgende Origins (Fallback wenn `ALLOWED_ORIGINS` nicht gesetzt):
+Backend allows the following origins (fallback when `ALLOWED_ORIGINS` is not set):
 - `https://ifrunit.tech`
 - `https://www.ifrunit.tech`
 - `https://neabouli.github.io`
@@ -54,24 +54,24 @@ Backend erlaubt folgende Origins (Fallback wenn `ALLOWED_ORIGINS` nicht gesetzt)
 
 ```bash
 curl https://ifr-ai-copilot-production.up.railway.app/api/health
-# → { "status": "ok", "apiKeySet": true }
+# -> { "status": "ok", "apiKeySet": true }
 ```
 
-## Sicherheit
+## Security
 
-- `ANTHROPIC_API_KEY` nur auf Railway (Backend) — niemals im Frontend
-- CORS auf Production Origins beschraenkt
-- Widget wird als iframe in Landing Page + Wiki eingebettet
+- `ANTHROPIC_API_KEY` only on Railway (backend) — never in the frontend
+- CORS restricted to production origins
+- Widget is embedded as iframe in landing page + wiki
 
-## Widget-Integration
+## Widget Integration
 
-Der Copilot ist als iframe-Widget in allen Seiten eingebettet:
+The Copilot is embedded as an iframe widget in all pages:
 - `docs/index.html` (Landing Page)
-- `docs/wiki/*.html` (alle 16 Wiki-Seiten)
+- `docs/wiki/*.html` (all 16 wiki pages)
 
 ```javascript
 iframe.src = 'https://ifr-ai-copilot-production.up.railway.app';
 ```
 
 ---
-*Alte Two-App-Architektur (Vercel Frontend + Railway Backend) wurde durch Single-App Railway Deploy ersetzt.*
+*The old two-app architecture (Vercel Frontend + Railway Backend) was replaced by a single-app Railway deployment.*

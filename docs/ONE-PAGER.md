@@ -1,51 +1,53 @@
-# Inferno ($IFR) — Investor One-Pager
+# Inferno ($IFR) -- Investor One-Pager
 
-## Was ist Inferno?
-Inferno ist ein deflationäres ERC-20 Utility-Token auf Ethereum mit
-einem Lock-to-Access Modell. User sperren IFR-Token um Zugang zu
-Partner-Benefits, Creator-Content und Protocol-Discounts zu erhalten.
+## What is Inferno?
+Inferno is a deflationary ERC-20 utility token on Ethereum with
+a lock-to-access model. Users lock IFR tokens to gain access to
+partner benefits, creator content, and protocol discounts.
 
-## Key Numbers (Sepolia Testnet, Feb 2026)
+## Key Numbers (Ethereum Mainnet, March 2026)
 
-| Metrik | Wert |
-|--------|------|
-| Total Supply | 1,000,000,000 IFR (fix, kein Mint) |
-| Bereits verbrannt | 2,000,425+ IFR |
-| Burn Rate | 2.5% pro Transfer |
-| Team Vesting | 150M IFR, 4 Jahre, Cliff 1 Jahr |
+| Metric | Value |
+|--------|-------|
+| Total Supply | 1,000,000,000 IFR (fixed, no mint) |
+| Burn Rate | 2.5% per transfer |
+| Team Vesting | 150M IFR, 4 years, 1 year cliff |
 | LP Liquidity | 400M IFR (40%) |
 | Protocol Fee | 0.05% (5 bps) |
-| Smart Contract Tests | 436 (99% Coverage) |
+| Smart Contract Tests | 444 (99% coverage) |
+| On-Chain Components | 10 deployed + verified on mainnet |
 
 ## Tokenomics
 
 Deflationary + Utility:
-- Jeder Transfer verbrennt 2.5% permanent
-- 1% geht in BuybackVault (Liquidität stärken)
-- Lock → Tier-Zugang (kein Yield, kein Risiko)
-- PartnerVault zahlt Creator-Rewards aus (15% des Lock-Betrags)
+- Every transfer permanently burns 2.5%
+- 1% goes to BuybackVault (strengthens liquidity)
+- Lock -> tier access (no yield, no risk)
+- PartnerVault pays creator rewards (10% of lock amount)
 
-## Produkte
+## Products
 
-1. **Benefits Network** — QR-basierte Rabatt-Verifizierung für Businesses
-2. **Creator Gateway** — YouTube × IFR Lock Hybrid-Zugang
-3. **AI Copilot** — Guided Onboarding (3 Modi: User/Partner/Developer)
-4. **Points System** — Protocol-Fee-Discounts via EIP-712 Voucher
-5. **Governance Dashboard** — On-Chain Proposal Management
+1. **Benefits Network** -- QR-based discount verification for businesses
+2. **Creator Gateway** -- YouTube x IFR Lock hybrid access
+3. **AI Copilot** -- Guided onboarding (3 modes: User/Partner/Developer)
+4. **Points System** -- Protocol fee discounts via EIP-712 voucher
+5. **Governance Dashboard** -- On-chain proposal management
 
-## Technologie
+## Technology
 
-- Blockchain: Ethereum (Mainnet geplant, Sepolia Testnet aktiv)
-- Contracts: Solidity 0.8.20, OpenZeppelin
-- Security: Slither 0 High/Critical, 436 Tests, 99% Coverage
-- Governance: 48h Timelock, Guardian Cancel, Roadmap zu 4-of-7 Multisig
+- Blockchain: Ethereum Mainnet (deployed 2026-03-05)
+- Contracts: Solidity 0.8.20, OpenZeppelin v5
+- Security: Slither 0 High/Critical, 444 tests, 99% coverage
+- Governance: 48h Timelock, Guardian Cancel, Gnosis Safe Multisig
 
-## Vor Mainnet
+## Post-Launch Roadmap
 
-- [ ] Third-party Security Audit (Code4rena / Sherlock)
-- [ ] LP Tokens locken/burnen (Unicrypt)
-- [ ] Ownership Transfer → Governance (alle Contracts)
-- [ ] 4-of-7 Gnosis Safe Multisig
+- [x] Mainnet deployment (9 contracts, all verified)
+- [x] Gnosis Safe Multisig deployed
+- [ ] Governance Proposal #0 execution (ETA 2026-03-07)
+- [ ] Uniswap V2 LP creation + LP lock
+- [ ] Ownership transfer -> Governance
+- [ ] Third-party security audit (Code4rena / Sherlock)
 
 ## Links
 
@@ -55,4 +57,4 @@ Deflationary + Utility:
 - Wiki: https://neabouli.github.io/inferno/wiki/
 
 ---
-*Testnet Phase | Februar 2026 | Keine Anlageberatung*
+*Mainnet Live | March 2026 | Not financial advice*

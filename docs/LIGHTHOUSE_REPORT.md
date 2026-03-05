@@ -1,13 +1,13 @@
-# Lighthouse Optimierung — Landing Page
+# Lighthouse Optimization — Landing Page
 
-Stand: 26. Februar 2026
+As of: 26 February 2026
 
-## Durchgefuehrte Optimierungen
+## Optimizations Performed
 
 ### SEO (Open Graph + Twitter Card)
 
-| Meta Tag | Wert |
-|----------|------|
+| Meta Tag | Value |
+|----------|-------|
 | `og:title` | Inferno ($IFR) — The Deflationary Utility Token |
 | `og:description` | Lock IFR to unlock lifetime premium access. 2.5% burned per transfer. Community Fair Launch. |
 | `og:type` | website |
@@ -23,9 +23,9 @@ Stand: 26. Februar 2026
 | `theme-color` | #ff4500 |
 | `canonical` | https://neabouli.github.io/inferno/ |
 
-### Bereits vorhanden
+### Already Present
 
-| Optimierung | Status |
+| Optimization | Status |
 |-------------|--------|
 | `<meta charset="UTF-8">` | OK |
 | `<meta name="viewport">` | OK |
@@ -38,30 +38,30 @@ Stand: 26. Februar 2026
 
 ### Crawling & Indexing
 
-| Datei | Status |
-|-------|--------|
-| `robots.txt` | Erstellt (Allow: /, Sitemap-Link) |
-| `sitemap.xml` | Aktualisiert (15 URLs: Landing + 14 Wiki-Seiten) |
-| `canonical` | Gesetzt (https://neabouli.github.io/inferno/) |
-| `robots` meta | Gesetzt (index, follow) |
+| File | Status |
+|------|--------|
+| `robots.txt` | Created (Allow: /, sitemap link) |
+| `sitemap.xml` | Updated (15 URLs: landing + 14 wiki pages) |
+| `canonical` | Set (https://neabouli.github.io/inferno/) |
+| `robots` meta | Set (index, follow) |
 
-### Empfohlene naechste Schritte
+### Recommended Next Steps
 
-1. **Performance**: Lazy-load Bilder unterhalb des Folds (z.B. Partner-Logos)
-2. **PWA**: `manifest.json` + Service Worker fuer Offline-Support
-3. **Structured Data**: JSON-LD fuer Crypto Token Schema (schema.org)
-4. **Image Optimization**: WebP-Varianten der PNG-Assets
+1. **Performance**: Lazy-load images below the fold (e.g., partner logos)
+2. **PWA**: `manifest.json` + service worker for offline support
+3. **Structured Data**: JSON-LD for Crypto Token Schema (schema.org)
+4. **Image Optimization**: WebP variants of PNG assets
 
-### Lighthouse Score Schaetzung (pre-run)
+### Lighthouse Score Estimate (pre-run)
 
-| Kategorie | Erwartung |
-|-----------|-----------|
+| Category | Expectation |
+|----------|-------------|
 | Performance | 85-95 |
 | Accessibility | 80-90 |
 | Best Practices | 90-100 |
 | SEO | 95-100 |
 
-*Tatsaechliche Lighthouse Scores nach Deploy ueber Chrome DevTools verifizieren.*
+*Verify actual Lighthouse scores after deploy via Chrome DevTools.*
 
 ---
-*Datei: docs/index.html*
+*File: docs/index.html*

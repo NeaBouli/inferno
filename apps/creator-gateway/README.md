@@ -2,14 +2,14 @@
 
 YouTube x IFR Lock Bridge — Hybrid Model B
 
-## Was ist das?
-Open-source Bridge fuer Creator, die YouTube Membership UND IFR Lock
-als Zugangsvoraussetzung fuer Premium-Content anbieten wollen.
+## What Is This?
+Open-source bridge for creators who want to offer YouTube Membership AND IFR Lock
+as access requirements for premium content.
 
 ## Quick Start
 ```bash
 cp .env.example .env
-# .env konfigurieren
+# Configure .env
 npm install
 npm run dev
 # -> http://localhost:3005
@@ -22,12 +22,12 @@ docker-compose up -d
 
 ## API Endpoints
 - GET /health — Status
-- GET /auth/google?wallet=0x... — Google OAuth Start
-- GET /auth/google/callback — OAuth Callback -> JWT
-- POST /auth/wallet — Wallet-only Auth -> JWT
-- GET /access/check — Entitlement Check (Auth required)
+- GET /auth/google?wallet=0x... — Google OAuth start
+- GET /auth/google/callback — OAuth callback -> JWT
+- POST /auth/wallet — Wallet-only auth -> JWT
+- GET /access/check — Entitlement check (auth required)
 
 ## Entitlement Logic
 - OR: YouTube Member OR IFR Lock >= minIFR
 - AND: YouTube Member AND IFR Lock >= minIFR
-- Konfigurierbar via src/services/entitlement.ts
+- Configurable via src/services/entitlement.ts
