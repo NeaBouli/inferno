@@ -1,9 +1,9 @@
 # 🔥 Inferno ($IFR) — Vollständige Projekt-Übergabe
 
-> **Erstellt:** 22.02.2026
+> **Erstellt:** 22.02.2026 | **Aktualisiert:** 05.03.2026
 > **Zweck:** Nahtlose Weiterarbeit in einem neuen Chat ohne Vorwissen
 > **Sprache des Entwicklers:** Deutsch (Code & Docs auf Englisch)
-> **Lokaler Projektpfad:** `/Users/gio/Desktop/Inferno`
+> **Lokaler Projektpfath:** `/Users/gio/Desktop/Inferno`
 > **GitHub:** https://github.com/NeaBouli/inferno
 > **Live-Seite:** https://neabouli.github.io/inferno/
 > **Wiki:** https://neabouli.github.io/inferno/wiki/
@@ -12,38 +12,79 @@
 
 ## 1. Projektstatus
 
-**Überlegung:** Ein neuer Assistent muss sofort verstehen: Was ist Inferno, wie weit ist es, was funktioniert bereits live, und was steht unmittelbar an. Die kritischste Information ist der Deployment-Status und die nächste auszuführende Aktion.
-
-### Zusammenfassung
-
 Inferno ($IFR) ist ein **deflationärer ERC-20 Utility-Token** auf Ethereum. Jeder Transfer verbrennt 2.5% permanent (2% Sender + 0.5% Recipient), plus 1% Pool Fee. Der Token dient als **universeller Utility-Lock**: Nutzer locken IFR on-chain, und Partner-Produkte verifizieren den Lock-Status, um Lifetime/Premium-Zugang zu gewähren.
 
-**Phase:** Testnet-Deployment abgeschlossen, Mainnet-Launch steht bevor.
+**Phase:** MAINNET DEPLOYED (05.03.2026) — 10 Contracts deployed + verified, Ownership transferred to Governance.
 
-### Was ist abgeschlossen
+## Aktueller Stand (05.03.2026)
 
-- **9 Smart Contracts** entwickelt und getestet (8 auf Sepolia deployed und verifiziert, PartnerVault pending deploy)
-- **221 Unit Tests** — alle bestehen
-- **Slither Security Audit** — 0 High/Critical Findings
-- **React Dashboard** (Phase 1 + 2) — Token Overview, Transfer, Governance UI
-- **Benefits Network Backend** — Express + Prisma + SQLite + ethers v5 (22 Dateien, 1.097 LOC, 8/8 Tests)
-- **Benefits Network Frontend** — Next.js 14 + Tailwind + wagmi v2, PWA (24 Dateien, 975 LOC, 7/7 Acceptance)
-- **Benefits Network E2E Test** — 13/13 Checks (alle API-Endpoints, Proxy, PWA, Auth, State Machine)
-- **GitHub Pages Landing Page** — 9 Sektionen, Dark Theme, responsive
-- **Wiki** — 9 HTML-Seiten mit technischer Dokumentation
-- **Governance Lifecycle** komplett getestet: Proposal #0 (setFeeExempt) erfolgreich via 48h Timelock ausgeführt
-- **Fee-on-Transfer** live verifiziert: 10.000 IFR Transfer → 9.650 IFR empfangen, 250 IFR gebrannt
-- **IFRLock Contract** deployed und vollständig getestet (Lock + Unlock: 8/8 Checks bestanden)
-- **Governance Proposal #1** executed — `setFeeExempt(IFRLock, true)` via 48h Timelock ([TX](https://sepolia.etherscan.io/tx/0x211b794970abe147b3ab2f3c92bb79b3b3c5a72bc8be8cfb7e1d00fd4253a909))
+### Deployed Mainnet Contracts (10 total, alle verifiziert)
 
-### Nächste Schritte
+| Contract | Adresse | Ownership |
+|----------|---------|-----------|
+| InfernoToken | `0x77e99917Eca8539c62F509ED1193ac36580A6e7B` | owner→Governance |
+| Governance | `0xc43d48E7FDA576C5022d0670B652A622E8caD041` | owner→Deployer (→Gnosis Safe pending) |
+| IFRLock | `0x769928aBDfc949D0718d8766a1C2d7dBb63954Eb` | guardian→Deployer (emergency only) |
+| BurnReserve | `0xaA1496133B6c274190A2113410B501C5802b6fCF` | owner→Governance |
+| BuybackVault | `0x670D293e3D65f96171c10DdC8d88B96b0570F812` | owner→Governance |
+| PartnerVault | `0xc6eb7714bCb035ebc2D4d9ba7B3762ef7B9d4F7D` | admin→Governance |
+| FeeRouterV1 | `0x4807B77B2E25cD055DA42B09BA4d0aF9e580C60a` | governance (immutable) |
+| Vesting | `0x2694Bc84e8D5251E9E4Ecd4B2Ae3f866d6106271` | guardian→Deployer (emergency only) |
+| LiquidityReserve | `0xdc0309804803b3A105154f6073061E3185018f64` | owner→Governance |
+| BootstrapVault | `0xA820540936d18e1377C39dd9445E5b36F3F1261a` | keine Ownership (immutable params) |
 
-1. **Governance Proposal #2 ausführen** — ETA: **25.02.2026 00:39 CET** (`setFeeExempt(PartnerVault, true)`)
-   ```bash
-   npx hardhat run scripts/execute-proposal.js --network sepolia
-   ```
-2. **PartnerVault 1.4M IFR Top-up** — Danach fehlende IFR nachschicken (Sepolia Fee-Verlust)
-3. Organisatorische Mainnet-Vorbereitungen (Multisig, Adressen, Audit)
+**Weitere Adressen:**
+- Deployer: `0x6b36687b0cd4386fb14cf565B67D7862110Fed67`
+- Treasury: `0xC8f4B45fA0C4727E9b27c13Af3d000C922a2ac9c`
+- Community: `0x61aF4E72C77b58F4b50964Ee93d420750Cd9857E`
+- Gnosis Safe: `0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b` (1-of-1, →2-of-3 pending)
+- Uniswap V2 Router: `0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D`
+
+### Governance Proposals (Mainnet)
+
+| # | Action | ETA | Status |
+|---|--------|-----|--------|
+| 0 | `setFeeExempt(BootstrapVault, true)` | 07.03.2026 20:12 CET | Pending (48h Timelock) |
+
+### Offene TODOs (geordnet nach Priorität)
+
+**ZEITKRITISCH:**
+- 17) Proposal #0 ausführen: **07.03.2026 20:12 CET**
+- 18) LiquidityReserve approve 200M IFR → BootstrapVault
+- 19) Governance owner → Gnosis Safe (nach 2-of-3)
+
+**VOR BOOTSTRAP ANKÜNDIGUNG:**
+- 6) 2-of-3 Multisig (warte auf 2 Wallet-Adressen)
+- 10) Roadmap Wiki + Landing neu schreiben
+- 15) Multisig-Policy Wiki-Seite
+- 16) Project Continuity + Schutzschild-Satz
+- 22) Coin-Animation Landing Page
+
+**NACH BOOTSTRAP START:**
+- 20) Bootstrap Ankündigung (X/GitHub/Landing/Wiki/Juicebox)
+- 7) Juicebox (nach finalem Audit)
+- 9) Wiki RAG Fix
+- 13) Live Token Stats Etherscan API
+
+**NACH BOOTSTRAP FINALISE / LP LIVE:**
+- 12) WalletConnect Landing Page
+- 14) Token Logo CMC/CG/Trust Wallet einreichen
+- 21) CoinGecko + CMC Listing bewerben
+- 23) Repo-Maintainer rekrutieren
+
+### Philosophie
+
+- Inferno ist eine **PLATTFORM** — Community integriert sich selbst
+- Kein "Partner Onboarding", kein "Apply to join"
+- No team ETH in LP — Bootstrap sammelt Community ETH
+- On-chain truth layer: IFRLock ist kanonische Quelle
+
+### Tests & Coverage
+
+- **367 Contract Tests**, 41 Creator Gateway, 20 Points Backend, 16 Benefits Network = **444 total**
+- **Solidity Coverage**: 99.45% Stmts, 91% Branch, 98.26% Funcs, 99% Lines
+- **Wiki**: 16 HTML pages
+- **CI**: 5 Workflows (creator-gateway, points-backend, ai-copilot, benefits-network, docs-validator)
 
 ---
 
@@ -101,186 +142,101 @@ Inferno ($IFR) ist ein **deflationärer ERC-20 Utility-Token** auf Ethereum. Jed
 
 ## 3. Aktuelle Dateistruktur
 
-**Überlegung:** Der neue Assistent muss wissen wo was liegt, welche Dateien die "echte" Arbeit enthalten und welche Legacy sind. Besonders wichtig: die Contract-Dateien, Test-Dateien, Deploy-Scripts und die docs/-Struktur.
-
-### Zusammenfassung
+### Contracts (10 Solidity Contracts + 4 Mocks)
 
 ```
-/Users/gio/Desktop/Inferno/
-├── contracts/                    # Solidity Smart Contracts
-│   ├── InfernoToken.sol          # ERC-20 mit Fee-on-Transfer (Kern)
-│   ├── BurnReserve.sol           # Strukturiertes Token-Burning
-│   ├── BuybackVault.sol          # ETH→IFR Buyback via Uniswap V2
-│   ├── Governance.sol            # 48h Timelock + Guardian
-│   ├── LiquidityReserve.sol      # LP Token Lock mit Rate Limits
-│   ├── Vesting.sol               # 48mo Vesting, 12mo Cliff
-│   ├── lock/
-│   │   └── IFRLock.sol           # Utility Lock Contract (127 LOC)
-│   └── partner/
-│       └── PartnerVault.sol      # Partner Ecosystem Pool (290 LOC)
-│
-├── test/                         # Hardhat Test Suite
-│   ├── InfernoToken.test.js      # 21 Tests
-│   ├── Governance.test.js        # 36 Tests
-│   ├── BurnReserve.test.js       # 21 Tests
-│   ├── BuybackVault.test.js      # 9 Tests
-│   ├── Vesting.test.js           # 7 Tests
-│   ├── LiquidityReserve.test.js  # 28 Tests
-│   ├── IFRLock.test.js           # 29 Tests
-│   └── PartnerVault.test.js      # 67 Tests
-│
-├── scripts/                      # Deploy & Test Scripts
-│   ├── deploy-testnet.js         # Hauptdeploy (6 Contracts + LP)
-│   ├── deploy-lock.js            # IFRLock Deploy + Governance Proposal
-│   ├── create-lp.js              # Uniswap V2 LP Pair Creation
-│   ├── transfer-ownership.js     # Ownership → Governance Contract
-│   ├── test-transfer.js          # Live Fee Verification
-│   ├── sepolia-smoke-test.js     # 11-Punkt Smoke Test
-│   ├── execute-proposal.js       # Governance Proposal Execution
-│   └── test-lock.js              # Live Lock/Unlock Test
-│
-├── apps/
-│   ├── dashboard/                # React + Vite + ethers.js v5
-│   │   ├── src/
-│   │   │   ├── components/       # Header, TokenOverview, Transfer, Governance
-│   │   │   └── config.js         # Contract-Adressen + ABIs
-│   │   ├── .env                  # VITE_SEPOLIA_RPC_URL (Alchemy)
-│   │   └── package.json
-│   └── benefits-network/         # IFR Benefits Network (Discount Verification)
-│       ├── backend/              # Express + Prisma + SQLite (Port 3001)
-│       │   ├── src/              # Routes, Services, Middleware
-│       │   ├── prisma/           # Schema (Business, Session, AuditLog)
-│       │   └── tests/            # 8 Tests (attest.test.ts)
-│       └── frontend/             # Next.js 14 + Tailwind + wagmi v2 (Port 3000)
-│           ├── src/app/          # /b/[businessId] (Merchant), /r/[sessionId] (Customer)
-│           ├── src/lib/          # API client, wagmi config
-│           └── public/           # PWA manifest, service worker, icons
-│
-├── docs/                         # GitHub Pages (Source: main/docs)
-│   ├── index.html                # Landing Page (~1300 LOC, Single-File)
-│   ├── .nojekyll                 # Verhindert Jekyll-Processing
-│   ├── DOCS.md                   # Alte Docs-Übersicht (umbenannt von README.md)
-│   ├── assets/
-│   │   ├── ifr_logo.png          # Aktuelles Logo (ifr_400x400.png)
-│   │   ├── banner.jpeg           # Hero Banner (1500x500)
-│   │   └── securecall_logo.png   # Partner Logo (legacy)
-│   └── wiki/                     # Technische Wiki (9 HTML-Seiten)
-│       ├── index.html            # Wiki Home + Navigation
-│       ├── contracts.html        # Alle 9 Contracts dokumentiert
-│       ├── tokenomics.html       # Fee-Mechanik, Deflation, Allocation
-│       ├── lock-mechanism.html   # IFRLock System + Resolver
-│       ├── governance.html       # Timelock, Proposals, DAO-Zukunft
-│       ├── security.html         # Audit, Tests, Access Control
-│       ├── deployment.html       # Adressen, Checklist, Verify
-│       ├── integration.html      # Developer Guide, Partner Tiers
-│       └── agent.html            # AI Copilot + Points System
-│
-├── abi/                          # Contract ABIs (JSON)
-├── audit/                        # Slither Audit Reports
-├── arch/                         # Architektur-Diagramme
-├── hardhat.config.js             # Hardhat Config (Sepolia + Alchemy RPC)
-├── .env                          # SEPOLIA_PRIVATE_KEY, SEPOLIA_RPC_URL, ETHERSCAN_API_KEY
-├── README.md                     # Projekt-Übersicht (neu geschrieben 22.02.2026)
-├── STATUS-REPORT.md              # Detaillierter Status
-│
-├── backend/                      # [Legacy — nicht aktiv]
-├── indexer/                      # [Legacy — nicht aktiv]
-├── infra/                        # [Legacy — nicht aktiv]
-├── patches/                      # [Legacy — nicht aktiv]
-├── testing/                      # [Legacy — nicht aktiv]
-├── logs/                         # [Legacy — Deployment-Logs]
-└── reports/                      # [Legacy — alte Reports]
+contracts/
+├── token/InfernoToken.sol          # ERC-20 mit Fee-on-Transfer
+├── governance/Governance.sol       # 48h Timelock + Guardian
+├── lock/IFRLock.sol                # Utility Lock Contract
+├── partner/PartnerVault.sol        # Partner Ecosystem Pool
+├── liquidity/LiquidityReserve.sol  # LP Token Lock mit Rate Limits
+├── burnreserve/BurnReserve.sol     # Strukturiertes Token-Burning
+├── buyback/BuybackVault.sol        # ETH→IFR Buyback via Uniswap V2
+├── vesting/Vesting.sol             # 48mo Vesting, 12mo Cliff
+├── bootstrap/BootstrapVault.sol    # Community Bootstrap (LP Creation)
+├── FeeRouterV1.sol                 # Fee-Routing + Voucher System
+└── mocks/                          # MockToken, MockRouter, MockInfernoToken, MockAdapter
 ```
 
-### Deployed Contracts (Sepolia Testnet — alle verifiziert)
+### Scripts (Mainnet + Sepolia)
 
-| Contract | Adresse |
-|----------|---------|
-| InfernoToken | `0x3Bd71947F288d1dd8B21129B1bE4FF16EDd5d1F4` |
-| LiquidityReserve | `0xF7E90D0d17f8232365186AA085D26eaEfAf011aF` |
-| Vesting | `0xa710f9FE7bf42981E60BE2Fbe7D87Fb3541a3F8B` |
-| BuybackVault | `0xC8ABb9039BEd24f4dBf5Cff09699877D81f0D63C` |
-| BurnReserve | `0x6D4582FCac792FD3880e252fC0a585A0c1823e80` |
-| Governance | `0x6050b22E4EAF3f414d1155fBaF30B868e0107017` |
-| IFRLock | `0x0Cab0A9440643128540222acC6eF5028736675d3` |
-| LP Pair (IFR/WETH) | `0x2252e8bBDE0E50CD372748aC233A99C08627d9c7` |
+```
+scripts/
+├── deploy-bootstrap-mainnet.js     # BootstrapVault Mainnet Deploy
+├── create-lp-mainnet.js            # Uniswap V2 LP Creation (Mainnet)
+├── transfer-ownership-mainnet.js   # Ownership → Governance (Mainnet)
+├── check-ownership.js              # Read-only Ownership Check
+├── check-balances.js               # Deployer ETH/IFR Balance Check
+├── propose-bootstrap-feeexempt.js  # Governance Proposal: feeExempt(BootstrapVault)
+├── execute-proposal.js             # Governance Proposal Execution
+├── deploy-testnet.js               # Sepolia Deploy
+├── deploy-bootstrap-vault.js       # Sepolia BootstrapVault Deploy
+├── deploy-lock.js                  # IFRLock Deploy
+├── create-lp.js                    # Sepolia LP Creation
+└── ...                             # Weitere Sepolia Scripts
+```
 
-**Token-Owner:** Governance Contract (0x6050...)
-**Governance-Owner:** Deployer Wallet
-**Uniswap V2 Router:** `0xC532a74256D3Db42D0Bf7a0400fEFDbad7694008`
+### Apps (7 total)
+
+```
+apps/
+├── dashboard/                      # Port 5173, React 18 + Vite + ethers v5
+├── governance-dashboard/           # Port 5174, React 18 + Vite + TS + Tailwind
+├── ai-copilot/                     # Port 5175/3003, React 18 + Vite + Express
+├── points-backend/                 # Port 3004, Express + Prisma + SQLite + siwe
+├── creator-gateway/                # Port 3005, Express + ethers v5 + googleapis
+├── benefits-network/backend/       # Port 3001, Express + Prisma + SQLite
+└── benefits-network/frontend/      # Port 3000, Next.js 14 + wagmi v2
+```
+
+### Wiki (16 HTML Pages)
+
+```
+docs/wiki/
+├── index.html, contracts.html, tokenomics.html, lock-mechanism.html
+├── governance.html, security.html, deployment.html, integration.html
+├── bootstrap.html, agent.html, faq.html, transparency.html
+├── fair-launch.html, fee-design.html, roadmap.html, testnet.html
+```
+
+### Key Files
+
+- `README.md` — Projekt-Übersicht
+- `docs/index.html` — Landing Page (GitHub Pages)
+- `docs/DEPLOYMENTS.md` — Sepolia + Mainnet Adressen + Governance Proposals
+- `docs/DOCS.md` — Projekt-Struktur (10 Contracts, 367 Tests)
+- `docs/APP_SECURITY_REVIEW.md` — Security Review (20/25 fixed, 5 documented)
+- `docs/WHITEPAPER.md` — v1.0 + CFLM + Fee Design
+- `.github/workflows/` — 5 CI Workflows
+- `.env.mainnet` — Mainnet RPC + Deployer Key (NICHT committed)
 
 ---
 
-## 4. Offene TODOs
+## 4. Erledigte Meilensteine
 
-**Überlegung:** Der neue Assistent muss zwischen SOFORT-Aufgaben und LANGFRISTIG unterscheiden können. Die zeitkritische Governance-Execution muss ganz oben stehen.
-
-### Zusammenfassung
-
-#### Erledigt (22.02.2026)
-
-1. ~~**Governance Proposal #1 ausführen**~~ — **Done** ([TX](https://sepolia.etherscan.io/tx/0x211b794970abe147b3ab2f3c92bb79b3b3c5a72bc8be8cfb7e1d00fd4253a909))
-2. ~~**Vollständiger Lock/Unlock-Test**~~ — **Done** (8/8 Checks bestanden)
-3. **GitHub Pages Cache prüfen** — Hard Refresh (Cmd+Shift+R) auf der Live-Seite
-
-#### Vor Mainnet (organisatorisch, kein Code)
-
-4. **Treasury Multisig** erstellen (Gnosis Safe)
-5. **Community Wallet** Adresse festlegen
-6. **Team Beneficiary** Adresse für Vesting festlegen
-7. **Mainnet .env** vorbereiten (neuer RPC, neue Wallet, echte Adressen)
-8. **LP Token Lock/Burn Strategie** entscheiden (Rug-Pull-Schutz)
-9. **(Empfohlen)** Externer Security Audit (CertiK, Trail of Bits, OpenZeppelin) — 5k-50k USD, 2-6 Wochen
-
-#### Mainnet Deploy
-
-10. **Mainnet Deployment** — gleiche Scripts wie Sepolia
-11. **LP Pairing** auf Uniswap V2
-12. **Ownership Transfer** — alle 4 Contracts (InfernoToken, LiquidityReserve, BuybackVault, BurnReserve) an Governance via transferOwnership()
-13. **Contract Verification** auf Etherscan
-
-#### Nach Launch
-
-14. **Partner-Onboarding-Prozess** definieren
-15. **License Resolver** für Partner implementieren
-16. **Guarded Buyback Automation** (Phase 3)
-17. **DAO Governance Migration** (Phase 4)
+- **Mainnet Deployment** — 10 Contracts deployed + verified (05.03.2026)
+- **Ownership Transfer** — 4 Contracts (InfernoToken, LiquidityReserve, BurnReserve, BuybackVault) → Governance
+- **BootstrapVault** deployed + verified, feeExempt Proposal submitted
+- **Sepolia Testnet** — Full lifecycle getestet (Governance, IFRLock, Fee-on-Transfer, PartnerVault)
+- **Security Review** — 20/25 Findings fixed, 5 documented (APP_SECURITY_REVIEW.md)
+- **AI Copilot** — Railway deployed, 3-Mode System (chat/learn/quiz)
+- **444 Tests** — All passing
 
 ---
 
-## 5. Bekannte Probleme & Bugs
+## 5. Bekannte Probleme & technische Hinweise
 
-**Überlegung:** Kritisch sind vor allem die Dinge die auf der Live-Seite falsch angezeigt werden (CDN-Cache), der nicht abgeschlossene Unlock-Test, und die Legacy-Ordner im Repo.
-
-### Zusammenfassung
-
-#### GitHub Pages CDN-Cache (nicht-blockierend)
-
-Die `docs/index.html` ist lokal korrekt (verifiziert per grep), aber GitHub Pages liefert teilweise noch alte Versionen aus. **Lösung:** Hard Refresh (Cmd+Shift+R) oder warten. Falls nach 24h immer noch alt:
-```bash
-cd /Users/gio/Desktop/Inferno
-git commit --allow-empty -m "trigger pages rebuild" && git push
-```
-
-#### IFRLock Unlock-Test — Erledigt
-
-Lock/Unlock-Cycle vollständig getestet (8/8 Checks). Governance Proposal #1 wurde am 22.02.2026 executed. `feeExempt(IFRLock) = true` verifiziert. Stale Lock aus Pre-feeExempt-Phase wurde automatisch bereinigt (175 IFR Deficit top-up).
-
-#### BurnReserve nie live getestet
-
-Der `poolFeeReceiver` zeigt noch auf den Deployer, nicht auf die BurnReserve. `BurnReserve.burn()` wurde nie on-chain aufgerufen. Unit Tests bestehen, aber kein Sepolia-Live-Test.
+#### ethers v5 + Alchemy Bug
+- Alchemy returns `to=""` for contract creation TXs — ethers v5 Formatter rejects this
+- Fix: Monkey-patch `Formatter.prototype.transactionResponse` → convert `to=""` to `to=null`
+- Applied in `scripts/deploy-mainnet-continue.js` und `scripts/deploy-bootstrap-mainnet.js`
 
 #### Legacy-Ordner im Repository
+`backend/`, `indexer/`, `infra/`, `patches/`, `testing/`, `logs/`, `reports/` — Legacy-Artefakte, kein aktiver Code.
 
-`backend/`, `indexer/`, `infra/`, `patches/`, `testing/`, `logs/`, `reports/` sind Legacy-Artefakte aus einer früheren Projektphase. Sie enthalten keinen aktiven Code, blähen aber das Repo auf. **Empfehlung:** Aufräumen nach Mainnet-Launch.
-
-#### node_modules war im Repo
-
-Wurde aus dem Git-Tracking entfernt (`git rm -r --cached`), ist aber historisch in älteren Commits noch vorhanden. Betrifft nur Repo-Größe, nicht Funktionalität.
-
-#### Zeitgebundene Contracts nicht live testbar
-
-Vesting (12-Monat Cliff), LiquidityReserve (6-Monat Lock), BuybackVault (60-Tag Activation) können auf Sepolia nicht vollständig getestet werden ohne Monate zu warten. Unit Tests decken die Logik ab.
+#### Zeitgebundene Contracts
+Vesting (12-Monat Cliff), LiquidityReserve (6-Monat Lock), BuybackVault (60-Tag Activation) — Unit Tests decken die Logik ab.
 
 ---
 
@@ -312,11 +268,11 @@ Vesting (12-Monat Cliff), LiquidityReserve (6-Monat Lock), BuybackVault (60-Tag 
 
 #### Entwicklungsumgebung
 
-- **Framework:** Hardhat (Solidity ^0.8.20, OpenZeppelin v5)
-- **Network:** Sepolia Testnet (Alchemy RPC)
+- **Framework:** Hardhat v2 (Solidity ^0.8.20, OpenZeppelin v5, Chai v4)
+- **Network:** Ethereum Mainnet + Sepolia Testnet (Alchemy RPC)
 - **Frontend:** React + Vite + ethers.js v5
-- **Node:** Version in package.json definiert
-- **Config:** `.env` Datei im Root (NICHT committed)
+- **CJS-only** (Hardhat v2), kein ESM
+- **Config:** `.env` (Sepolia) + `.env.mainnet` (Mainnet) — NICHT committed
 
 #### Solidity-Konventionen
 
@@ -330,7 +286,7 @@ Vesting (12-Monat Cliff), LiquidityReserve (6-Monat Lock), BuybackVault (60-Tag 
 #### Testing
 
 ```bash
-npx hardhat test                    # Alle 221 Tests
+npx hardhat test                    # Alle 367 Contract Tests
 npx hardhat test test/IFRLock.test.js  # Einzelner Test
 ```
 
@@ -381,19 +337,16 @@ npx hardhat verify --network sepolia <CONTRACT_ADDR> <CONSTRUCTOR_ARGS>
 
 ## 8. Nächster konkreter Schritt
 
-**Überlegung:** Der neue Chat muss wissen, dass alle Sepolia-Milestones abgeschlossen sind und was als nächstes kommt.
-
-### Zusammenfassung
-
-**Stand: 23.02.2026** — Benefits Network (Backend + Frontend) fertig, E2E-getestet (13/13).
+**Stand: 05.03.2026** — Mainnet deployed, Ownership transferred, BootstrapVault deployed.
 
 **Nächster Schritt:**
-1. **Governance Proposal #2** ausführen — ETA: **25.02.2026 00:39 CET**
+1. **Governance Proposal #0 ausführen** — ETA: **07.03.2026 20:12 CET**
    ```bash
-   npx hardhat run scripts/execute-proposal.js --network sepolia
+   PROPOSAL_ID=0 npx hardhat run scripts/execute-proposal.js --network mainnet
    ```
-2. PartnerVault 1.4M IFR Top-up (Sepolia Fee-Verlust nachholen)
-3. Organisatorische Mainnet-Vorbereitungen (Multisig, Adressen, Audit)
+2. LiquidityReserve approve 200M IFR → BootstrapVault
+3. 2-of-3 Multisig aufsetzen (warte auf Wallet-Adressen)
+4. Governance owner → Gnosis Safe transferieren
 
 ---
 
@@ -405,27 +358,9 @@ npx hardhat verify --network sepolia <CONTRACT_ADDR> <CONSTRUCTOR_ARGS>
 | Landing Page | https://neabouli.github.io/inferno/ |
 | Wiki | https://neabouli.github.io/inferno/wiki/ |
 | X / Twitter | https://x.com/IFRtoken |
-| InfernoToken (Etherscan) | https://sepolia.etherscan.io/address/0x3Bd71947F288d1dd8B21129B1bE4FF16EDd5d1F4#code |
-| Governance (Etherscan) | https://sepolia.etherscan.io/address/0x6050b22E4EAF3f414d1155fBaF30B868e0107017#code |
-| IFRLock (Etherscan) | https://sepolia.etherscan.io/address/0x0Cab0A9440643128540222acC6eF5028736675d3 |
-| Partner Integration Guide | https://neabouli.github.io/inferno/wiki/integration.html |
-| Dashboard | `cd apps/dashboard && npm run dev` → http://localhost:5173 |
-| Benefits Network Backend | `cd apps/benefits-network/backend && npm run dev` → http://localhost:3001 |
-| Benefits Network Frontend | `cd apps/benefits-network/frontend && npm run dev` → http://localhost:3000 |
-
-## Anhang: Commit-Historie (Session-Highlights)
-
-| Commit | Beschreibung |
-|--------|-------------|
-| `e8ea0a45` | feat: Benefits Network frontend — Next.js 14 PWA with wagmi v2 |
-| `a9a54218` | feat: Benefits Network backend — Express + Prisma + ethers v5 |
-| `45560512` | fix: wiki index Quick Stats 7→8 |
-| `25964ae9` | fix: correct contract count 7→8 in testnet section |
-| `ea2acc47` | feat: audit fix — rewrite README, fix contract count to 8 |
-| `0ccd74b0` | feat: deploy IFRLock on Sepolia, add live tests, create wiki |
-| `2a92d475` | feat: implement IFRLock contract with 29 tests (154 total) |
-| `9303439d` | feat: add GitHub Pages landing page |
-| `2bd80909` | feat: execute Governance Proposal #0 — setFeeExempt via Timelock |
-| `55b38a3e` | feat: add Sepolia smoke test — 11/11 checks passed |
-| `4da1bdbd` | feat: add React dashboard (Phase 1) |
-| `2954854f` | feat: add Governance UI (Dashboard Phase 2) |
+| InfernoToken (Mainnet) | https://etherscan.io/address/0x77e99917Eca8539c62F509ED1193ac36580A6e7B#code |
+| Governance (Mainnet) | https://etherscan.io/address/0xc43d48E7FDA576C5022d0670B652A622E8caD041#code |
+| IFRLock (Mainnet) | https://etherscan.io/address/0x769928aBDfc949D0718d8766a1C2d7dBb63954Eb#code |
+| BootstrapVault (Mainnet) | https://etherscan.io/address/0xA820540936d18e1377C39dd9445E5b36F3F1261a#code |
+| Gnosis Safe | https://app.safe.global/home?safe=eth:0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b |
+| AI Copilot (Railway) | https://ifr-ai-copilot-production.up.railway.app |
