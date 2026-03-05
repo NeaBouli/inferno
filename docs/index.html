@@ -457,35 +457,6 @@
     .allocation { margin-top: 0; }
     .allocation h3 { font-size: 18px; font-weight: 700; margin-bottom: 20px; }
 
-    .alloc-bar-wrap { margin-bottom: 16px; }
-
-    .alloc-meta {
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 6px;
-      font-size: 14px;
-    }
-
-    .alloc-name { font-weight: 500; }
-    .alloc-pct { color: var(--text-muted); }
-
-    .alloc-bar {
-      height: 8px;
-      background: var(--border);
-      border-radius: 4px;
-      overflow: hidden;
-    }
-
-    .alloc-fill {
-      height: 100%;
-      border-radius: 4px;
-      background: var(--accent);
-      transition: width 1.2s ease;
-      width: 0;
-    }
-
-    .alloc-fill.visible { /* widths set inline */ }
-
     .fair-launch-badge {
       display: inline-flex;
       align-items: center;
@@ -1131,98 +1102,27 @@
           </div>
         </div>
       </div>
-      <div class="allocation reveal">
-        <h3>Token Allocation</h3>
-        <div class="alloc-bar-wrap">
-          <div class="alloc-meta"><span class="alloc-name">DEX Liquidity</span><span class="alloc-pct">40% &mdash; 400M IFR</span></div>
-          <div class="alloc-bar"><div class="alloc-fill" data-width="40"></div></div>
+      <div class="allocation reveal" id="live-distribution">
+        <h3>Live Token Distribution</h3>
+        <p style="font-size:12px;color:var(--text-muted);margin-bottom:20px;">Real-time on-chain data &mdash; refreshes every 60s</p>
+        <div style="display:flex;flex-wrap:wrap;gap:32px;align-items:center;justify-content:center;">
+          <div style="position:relative;width:240px;height:240px;flex-shrink:0;">
+            <canvas id="dist-donut" width="480" height="480" style="width:240px;height:240px;"></canvas>
+            <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;">
+              <div id="donut-supply" style="font-size:20px;font-weight:700;color:#fff;">---</div>
+              <div style="font-size:11px;color:var(--text-muted);">Current Supply</div>
+            </div>
+          </div>
+          <div id="dist-legend" style="display:flex;flex-direction:column;gap:10px;min-width:220px;">
+            <div style="font-size:13px;color:var(--text-muted);">Loading on-chain data&hellip;</div>
+          </div>
         </div>
-        <div class="alloc-bar-wrap">
-          <div class="alloc-meta"><span class="alloc-name">Liquidity Reserve</span><span class="alloc-pct">20% &mdash; 200M IFR</span></div>
-          <div class="alloc-bar"><div class="alloc-fill" data-width="20"></div></div>
-        </div>
-        <div class="alloc-bar-wrap">
-          <div class="alloc-meta"><span class="alloc-name">Team (Vested)</span><span class="alloc-pct">15% &mdash; 150M IFR</span></div>
-          <div class="alloc-bar"><div class="alloc-fill" data-width="15"></div></div>
-        </div>
-        <div class="alloc-bar-wrap">
-          <div class="alloc-meta"><span class="alloc-name">Treasury</span><span class="alloc-pct">15% &mdash; 150M IFR</span></div>
-          <div class="alloc-bar"><div class="alloc-fill" data-width="15"></div></div>
-        </div>
-        <div class="alloc-bar-wrap">
-          <div class="alloc-meta"><span class="alloc-name">Community &amp; Grants</span><span class="alloc-pct">6% &mdash; 60M IFR</span></div>
-          <div class="alloc-bar"><div class="alloc-fill" data-width="6"></div></div>
-        </div>
-        <div class="alloc-bar-wrap">
-          <div class="alloc-meta"><span class="alloc-name">Partner Ecosystem</span><span class="alloc-pct">4% &mdash; 40M IFR</span></div>
-          <div class="alloc-bar"><div class="alloc-fill" data-width="4"></div></div>
-        </div>
-        <p style="margin-top: 24px; font-size: 13px; color: var(--text-muted);">
-          Team tokens are vested over 48 months with a 12-month cliff. Liquidity reserve has a 6-month lock with staged quarterly releases.
-        </p>
       </div>
     </div>
 
-    <div class="reveal" style="margin-top:48px;">
-      <h3 style="text-align:center;font-size:18px;margin-bottom:32px;color:var(--text-muted);">
-        Token Distribution &mdash; Visual
-      </h3>
-      <div style="display:flex;flex-wrap:wrap;gap:32px;align-items:center;justify-content:center;">
-
-        <!-- SVG Donut Chart -->
-        <svg width="260" height="260" viewBox="0 0 260 260" style="flex-shrink:0;">
-          <circle cx="130" cy="130" r="100" fill="none" stroke="#1a1a1a" stroke-width="48"/>
-          <!-- DEX Liquidity 40% -->
-          <circle cx="130" cy="130" r="100" fill="none" stroke="#C0392B" stroke-width="48"
-            stroke-dasharray="251.3 628.3" stroke-dashoffset="0" opacity="0.95"/>
-          <!-- Liquidity Reserve 20% -->
-          <circle cx="130" cy="130" r="100" fill="none" stroke="#E74C3C" stroke-width="48"
-            stroke-dasharray="125.7 628.3" stroke-dashoffset="-251.3" opacity="0.85"/>
-          <!-- Team 15% -->
-          <circle cx="130" cy="130" r="100" fill="none" stroke="#922B21" stroke-width="48"
-            stroke-dasharray="94.2 628.3" stroke-dashoffset="-377.0" opacity="0.9"/>
-          <!-- Treasury 15% -->
-          <circle cx="130" cy="130" r="100" fill="none" stroke="#641E16" stroke-width="48"
-            stroke-dasharray="94.2 628.3" stroke-dashoffset="-471.2" opacity="0.9"/>
-          <!-- Community 6% -->
-          <circle cx="130" cy="130" r="100" fill="none" stroke="#F1948A" stroke-width="48"
-            stroke-dasharray="37.7 628.3" stroke-dashoffset="-565.4" opacity="0.9"/>
-          <!-- Partner 4% -->
-          <circle cx="130" cy="130" r="100" fill="none" stroke="#FAD7A0" stroke-width="48"
-            stroke-dasharray="25.1 628.3" stroke-dashoffset="-603.1" opacity="0.9"/>
-          <!-- Center Text -->
-          <text x="130" y="122" text-anchor="middle" fill="#ffffff" font-size="22" font-weight="bold" font-family="Arial">1B</text>
-          <text x="130" y="144" text-anchor="middle" fill="#888888" font-size="11" font-family="Arial">IFR Total</text>
-        </svg>
-
-        <!-- Legend -->
-        <div style="display:flex;flex-direction:column;gap:12px;min-width:200px;">
-          <div style="display:flex;align-items:center;gap:12px;">
-            <div style="width:14px;height:14px;border-radius:3px;background:#C0392B;flex-shrink:0;"></div>
-            <span style="font-size:14px;color:var(--text-muted);">DEX Liquidity <strong style="color:#fff;">40%</strong> &mdash; 400M</span>
-          </div>
-          <div style="display:flex;align-items:center;gap:12px;">
-            <div style="width:14px;height:14px;border-radius:3px;background:#E74C3C;flex-shrink:0;"></div>
-            <span style="font-size:14px;color:var(--text-muted);">Liquidity Reserve <strong style="color:#fff;">20%</strong> &mdash; 200M</span>
-          </div>
-          <div style="display:flex;align-items:center;gap:12px;">
-            <div style="width:14px;height:14px;border-radius:3px;background:#922B21;flex-shrink:0;"></div>
-            <span style="font-size:14px;color:var(--text-muted);">Team (Vested) <strong style="color:#fff;">15%</strong> &mdash; 150M</span>
-          </div>
-          <div style="display:flex;align-items:center;gap:12px;">
-            <div style="width:14px;height:14px;border-radius:3px;background:#641E16;flex-shrink:0;"></div>
-            <span style="font-size:14px;color:var(--text-muted);">Treasury <strong style="color:#fff;">15%</strong> &mdash; 150M</span>
-          </div>
-          <div style="display:flex;align-items:center;gap:12px;">
-            <div style="width:14px;height:14px;border-radius:3px;background:#F1948A;flex-shrink:0;"></div>
-            <span style="font-size:14px;color:var(--text-muted);">Community &amp; Grants <strong style="color:#fff;">6%</strong> &mdash; 60M</span>
-          </div>
-          <div style="display:flex;align-items:center;gap:12px;">
-            <div style="width:14px;height:14px;border-radius:3px;background:#FAD7A0;flex-shrink:0;"></div>
-            <span style="font-size:14px;color:var(--text-muted);">Partner Ecosystem <strong style="color:#fff;">4%</strong> &mdash; 40M</span>
-          </div>
-        </div>
-      </div>
+    <div class="reveal" style="margin-top:24px;">
+      <div id="dist-metrics" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;"></div>
+      <p id="dist-updated" style="font-size:11px;color:var(--text-muted);margin-top:16px;text-align:center;"></p>
     </div>
 
   </div>
@@ -1843,28 +1743,11 @@ if (isLocked) {
     entries.forEach(entry => {
       if (entry.isIntersecting) {
         entry.target.classList.add('visible');
-        // Animate allocation bars
-        entry.target.querySelectorAll('.alloc-fill').forEach(bar => {
-          bar.style.width = bar.dataset.width + '%';
-        });
       }
     });
   }, { threshold: 0.15 });
 
   reveals.forEach(el => observer.observe(el));
-
-  // Trigger allocation bars on section reveal
-  const allocObserver = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        entry.target.querySelectorAll('.alloc-fill').forEach(bar => {
-          bar.style.width = bar.dataset.width + '%';
-        });
-      }
-    });
-  }, { threshold: 0.3 });
-
-  document.querySelectorAll('.allocation').forEach(el => allocObserver.observe(el));
 
   // FAQ accordion
   document.querySelectorAll('.faq-question').forEach(btn => {
@@ -1937,6 +1820,183 @@ if (isLocked) {
       });
     });
   });
+</script>
+
+<!-- Live Token Distribution Chart -->
+<script>
+(function() {
+  var RPCS = [
+    'https://cloudflare-eth.com',
+    'https://eth.llamarpc.com',
+    'https://rpc.ankr.com/eth'
+  ];
+  var TOKEN = '0x77e99917Eca8539c62F509ED1193ac36580A6e7B';
+  var INITIAL = 1000000000;
+  var ADDRS = {
+    locked:    '0x769928aBDfc949D0718d8766a1C2d7dBb63954Eb',
+    buyback:   '0x670D293e3D65f96171c10DdC8d88B96b0570F812',
+    bootstrap: '0xA820540936d18e1377C39dd9445E5b36F3F1261a',
+    liqRes:    '0xdc0309804803b3A105154f6073061E3185018f64',
+    vesting:   '0x2694Bc84e8D5251E9E4Ecd4B2Ae3f866d6106271'
+  };
+  var CATS = [
+    { key: 'burned',      label: 'Burned',            color: '#ff4500' },
+    { key: 'locked',      label: 'Locked (IFRLock)',   color: '#ff8c00' },
+    { key: 'vesting',     label: 'Vesting',            color: '#C0392B' },
+    { key: 'liqRes',      label: 'Liquidity Reserve',  color: '#922B21' },
+    { key: 'buyback',     label: 'Buyback Vault',      color: '#E74C3C' },
+    { key: 'bootstrap',   label: 'Bootstrap Vault',    color: '#F39C12' },
+    { key: 'circulating', label: 'Circulating',        color: '#555'    }
+  ];
+  var rpcIdx = 0;
+
+  function rpcCall(to, data) {
+    var url = RPCS[rpcIdx];
+    return fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ jsonrpc: '2.0', method: 'eth_call', params: [{ to: to, data: data }, 'latest'], id: 1 })
+    }).then(function(r) { return r.json(); }).then(function(j) {
+      if (j.error) throw new Error(j.error.message);
+      return j.result;
+    });
+  }
+
+  function pad(addr) {
+    return addr.toLowerCase().replace('0x', '').padStart(64, '0');
+  }
+
+  function hexToNum(hex) {
+    if (!hex || hex === '0x') return 0;
+    var big = BigInt(hex);
+    return Number(big / 1000000n) / 1000;
+  }
+
+  function fetchData() {
+    var keys = Object.keys(ADDRS);
+    var calls = [rpcCall(TOKEN, '0x18160ddd')];
+    keys.forEach(function(k) {
+      calls.push(rpcCall(TOKEN, '0x70a08231' + pad(ADDRS[k])));
+    });
+    return Promise.all(calls).then(function(results) {
+      var totalSupply = hexToNum(results[0]);
+      var balances = {};
+      keys.forEach(function(k, i) { balances[k] = hexToNum(results[i + 1]); });
+      var burned = Math.max(0, INITIAL - totalSupply);
+      var protocolSum = 0;
+      keys.forEach(function(k) { protocolSum += balances[k]; });
+      var circulating = Math.max(0, totalSupply - protocolSum);
+      return {
+        totalSupply: totalSupply,
+        burned: burned,
+        locked: balances.locked,
+        vesting: balances.vesting,
+        liqRes: balances.liqRes,
+        buyback: balances.buyback,
+        bootstrap: balances.bootstrap,
+        circulating: circulating
+      };
+    });
+  }
+
+  function drawDonut(canvas, data) {
+    var ctx = canvas.getContext('2d');
+    var w = canvas.width;
+    var h = canvas.height;
+    var cx = w / 2;
+    var cy = h / 2;
+    var outerR = Math.min(w, h) / 2 - 10;
+    var innerR = outerR * 0.62;
+    var gap = 0.015;
+
+    ctx.clearRect(0, 0, w, h);
+
+    ctx.beginPath();
+    ctx.arc(cx, cy, outerR, 0, Math.PI * 2);
+    ctx.arc(cx, cy, innerR, Math.PI * 2, 0, true);
+    ctx.closePath();
+    ctx.fillStyle = '#1a1a1a';
+    ctx.fill();
+
+    var angle = -Math.PI / 2;
+    CATS.forEach(function(cat) {
+      var val = data[cat.key] || 0;
+      var slice = (val / INITIAL) * Math.PI * 2;
+      if (slice < 0.005) return;
+      var s = angle + gap / 2;
+      var e = angle + slice - gap / 2;
+      ctx.beginPath();
+      ctx.arc(cx, cy, outerR, s, e);
+      ctx.arc(cx, cy, innerR, e, s, true);
+      ctx.closePath();
+      ctx.fillStyle = cat.color;
+      ctx.fill();
+      angle += slice;
+    });
+  }
+
+  function fmt(n) {
+    if (n >= 1e6) return (n / 1e6).toFixed(1) + 'M';
+    if (n >= 1e3) return (n / 1e3).toFixed(1) + 'K';
+    return n.toFixed(0);
+  }
+
+  function pct(n) {
+    return ((n / INITIAL) * 100).toFixed(2) + '%';
+  }
+
+  function renderLegend(data) {
+    var el = document.getElementById('dist-legend');
+    if (!el) return;
+    el.innerHTML = CATS.map(function(cat) {
+      var val = data[cat.key] || 0;
+      return '<div style="display:flex;align-items:center;gap:12px;">' +
+        '<div style="width:14px;height:14px;border-radius:3px;background:' + cat.color + ';flex-shrink:0;"></div>' +
+        '<span style="font-size:14px;color:#8a8a96;">' + cat.label +
+        ' <strong style="color:#fff;">' + pct(val) + '</strong> &mdash; ' + fmt(val) + '</span></div>';
+    }).join('');
+  }
+
+  function renderMetrics(data) {
+    var el = document.getElementById('dist-metrics');
+    if (!el) return;
+    var items = [
+      { label: 'Total Burned',    value: fmt(data.burned),      sub: pct(data.burned) + ' of initial supply', color: '#ff4500' },
+      { label: 'Currently Locked', value: fmt(data.locked),     sub: 'in IFRLock contract',                    color: '#ff8c00' },
+      { label: 'Current Supply',   value: fmt(data.totalSupply), sub: 'of 1B initial',                         color: '#fff'    },
+      { label: 'Circulating',      value: fmt(data.circulating), sub: 'free supply',                           color: '#888'    }
+    ];
+    el.innerHTML = items.map(function(m) {
+      return '<div style="background:#111113;border:1px solid #222225;border-radius:8px;padding:16px;text-align:center;">' +
+        '<div style="font-size:11px;color:#8a8a96;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px;">' + m.label + '</div>' +
+        '<div style="font-size:22px;font-weight:700;color:' + m.color + ';">' + m.value + '</div>' +
+        '<div style="font-size:11px;color:#8a8a96;margin-top:2px;">' + m.sub + '</div></div>';
+    }).join('');
+  }
+
+  function update() {
+    fetchData().then(function(data) {
+      var canvas = document.getElementById('dist-donut');
+      if (!canvas) return;
+      drawDonut(canvas, data);
+      var supplyEl = document.getElementById('donut-supply');
+      if (supplyEl) supplyEl.textContent = fmt(data.totalSupply);
+      renderLegend(data);
+      renderMetrics(data);
+      var updEl = document.getElementById('dist-updated');
+      if (updEl) updEl.textContent = 'Last updated: ' + new Date().toLocaleTimeString() + ' \u2014 auto-refreshes every 60s';
+    }).catch(function(err) {
+      console.error('Live distribution error:', err);
+      rpcIdx = (rpcIdx + 1) % RPCS.length;
+      var legend = document.getElementById('dist-legend');
+      if (legend) legend.innerHTML = '<div style="font-size:13px;color:#ff4500;">Loading on-chain data\u2026 retrying</div>';
+      setTimeout(update, 5000);
+    });
+  }
+
+  update();
+  setInterval(update, 60000);
+})();
 </script>
 
 </body>
