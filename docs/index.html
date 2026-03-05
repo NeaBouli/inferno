@@ -1916,6 +1916,8 @@ if (isLocked) {
     vesting:    '0x2694Bc84e8D5251E9E4Ecd4B2Ae3f866d6106271',
     bootstrap:  '0xA820540936d18e1377C39dd9445E5b36F3F1261a',
     partner:    '0xc6eb7714bCb035ebc2D4d9ba7B3762ef7B9d4F7D',
+    treasury:   '0xC8f4B45fA0C4727E9b27c13Af3d000C922a2ac9c',
+    community:  '0x61aF4E72C77b58F4b50964Ee93d420750Cd9857E',
     deployer:   '0x6b36687b0cd4386fb14cf565B67D7862110Fed67',
     dead:       '0x000000000000000000000000000000000000dEaD',
     governance: '0xc43d48E7FDA576C5022d0670B652A622E8caD041'
@@ -1928,6 +1930,8 @@ if (isLocked) {
     { key: 'buyback',     label: 'Buyback Vault',      color: '#E74C3C' },
     { key: 'bootstrap',   label: 'Bootstrap Vault',    color: '#F39C12' },
     { key: 'partner',     label: 'Partner Vault',      color: '#457B9D' },
+    { key: 'treasury',    label: 'Treasury',            color: '#9B59B6' },
+    { key: 'community',   label: 'Community',           color: '#1ABC9C' },
     { key: 'circulating', label: 'Circulating',        color: '#555'    }
   ];
   var rpcIdx = 0;
@@ -1974,7 +1978,8 @@ if (isLocked) {
 
       // Circulating = totalSupply minus ALL known protocol/team wallets
       var knownSum = b.burnRes + b.locked + b.buyback + b.liqRes + b.vesting +
-                     b.bootstrap + b.partner + b.deployer + b.dead + b.governance;
+                     b.bootstrap + b.partner + b.treasury + b.community +
+                     b.deployer + b.dead + b.governance;
       var circulating = Math.max(0, totalSupply - knownSum);
 
       return {
@@ -1987,6 +1992,8 @@ if (isLocked) {
         buyback: b.buyback,
         bootstrap: b.bootstrap,
         partner: b.partner,
+        treasury: b.treasury,
+        community: b.community,
         circulating: circulating
       };
     });
