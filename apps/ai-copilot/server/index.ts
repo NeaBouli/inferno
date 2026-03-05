@@ -18,6 +18,63 @@ app.use(express.json({ limit: '50kb' }));
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
 const POINTS_BACKEND_URL = process.env.POINTS_BACKEND_URL || "http://localhost:3004";
 
+// ── Anti-Abuse: In-memory rate limiter ──────────────────────────────
+const rateBuckets = new Map<string, { minute: number[]; hour: number[] }>();
+const MINUTE_LIMIT = 5;
+const HOUR_LIMIT = 20;
+const MAX_MESSAGE_LENGTH = 500;
+
+function cleanBuckets(): void {
+  const now = Date.now();
+  for (const [ip, bucket] of rateBuckets) {
+    bucket.minute = bucket.minute.filter(t => now - t < 60_000);
+    bucket.hour = bucket.hour.filter(t => now - t < 3_600_000);
+    if (bucket.minute.length === 0 && bucket.hour.length === 0) {
+      rateBuckets.delete(ip);
+    }
+  }
+}
+// Clean stale entries every 5 minutes
+setInterval(cleanBuckets, 300_000);
+
+function checkRateLimit(ip: string): string | null {
+  const now = Date.now();
+  if (!rateBuckets.has(ip)) {
+    rateBuckets.set(ip, { minute: [], hour: [] });
+  }
+  const bucket = rateBuckets.get(ip)!;
+  bucket.minute = bucket.minute.filter(t => now - t < 60_000);
+  bucket.hour = bucket.hour.filter(t => now - t < 3_600_000);
+
+  if (bucket.minute.length >= MINUTE_LIMIT) {
+    return "Slow down! Max 5 messages per minute.";
+  }
+  if (bucket.hour.length >= HOUR_LIMIT) {
+    return "Too many requests. Please try again in an hour.";
+  }
+  bucket.minute.push(now);
+  bucket.hour.push(now);
+  return null;
+}
+
+// ── Cost tracking ───────────────────────────────────────────────────
+let dailyCostEstimate = 0;
+let lastCostReset = new Date().toDateString();
+
+function trackCost(inputTokens: number, outputTokens: number): void {
+  const today = new Date().toDateString();
+  if (today !== lastCostReset) {
+    dailyCostEstimate = 0;
+    lastCostReset = today;
+  }
+  // Haiku 4.5 pricing: $1/M input, $5/M output
+  const cost = (inputTokens / 1_000_000) * 1 + (outputTokens / 1_000_000) * 5;
+  dailyCostEstimate += cost;
+  if (dailyCostEstimate > 1.0) {
+    console.warn(`[COST WARNING] Daily estimate: $${dailyCostEstimate.toFixed(4)}`);
+  }
+}
+
 // Load wiki docs for RAG at startup
 const WIKI_DIR = resolve(__dirname, "../../../docs/wiki");
 let wikiDocs: WikiDoc[] = [];
@@ -192,7 +249,8 @@ body {
 </div>
 <div id="messages"></div>
 <div id="input-area">
-  <input id="input" type="text" placeholder="Ask about IFR..." onkeydown="if(event.key==='Enter'&&!event.shiftKey)send()">
+  <input id="input" type="text" maxlength="500" placeholder="Ask about IFR..." onkeydown="if(event.key==='Enter'&&!event.shiftKey)send()" oninput="document.getElementById('charcount').textContent=this.value.length+'/500'">
+  <span id="charcount" style="color:#666;font-size:11px;align-self:center;">0/500</span>
   <button id="send-btn" onclick="send()">&#x27A4;</button>
 </div>
 <script>
@@ -238,7 +296,13 @@ async function send() {
   var input = document.getElementById('input');
   var text = input.value.trim();
   if (!text) return;
+  if (text.length > 500) { alert('Max 500 characters.'); return; }
+  if (histories[currentMode].length >= 40) {
+    alert('Conversation too long. Please switch tabs or reload to start fresh.');
+    return;
+  }
   input.value = '';
+  document.getElementById('charcount').textContent = '0/500';
 
   histories[currentMode].push({ role: 'user', content: text });
   renderMessages();
@@ -283,6 +347,15 @@ app.post("/api/chat", async (req, res) => {
     return;
   }
 
+  // Rate limit check
+  const clientIp = (req.headers["x-forwarded-for"] as string)?.split(",")[0]?.trim()
+    || req.socket.remoteAddress || "unknown";
+  const rateLimitMsg = checkRateLimit(clientIp);
+  if (rateLimitMsg) {
+    res.status(429).json({ reply: rateLimitMsg });
+    return;
+  }
+
   const { mode, messages } = req.body;
 
   if (!messages || !Array.isArray(messages)) {
@@ -291,7 +364,14 @@ app.post("/api/chat", async (req, res) => {
   }
 
   if (messages.length > 20) {
-    res.status(400).json({ reply: "Too many messages (max 20)." });
+    res.status(400).json({ reply: "Conversation too long (max 20 messages). Please start a new conversation." });
+    return;
+  }
+
+  // Validate last user message length
+  const lastMsg = messages[messages.length - 1];
+  if (lastMsg?.role === "user" && typeof lastMsg.content === "string" && lastMsg.content.length > MAX_MESSAGE_LENGTH) {
+    res.status(400).json({ reply: `Message too long (max ${MAX_MESSAGE_LENGTH} characters).` });
     return;
   }
 
@@ -308,7 +388,7 @@ app.post("/api/chat", async (req, res) => {
       },
       body: JSON.stringify({
         model: "claude-haiku-4-5-20251001",
-        max_tokens: 1024,
+        max_tokens: 500,
         system: systemPrompt,
         messages
       })
@@ -329,6 +409,13 @@ app.post("/api/chat", async (req, res) => {
 
     const content = data.content as { text?: string }[] | undefined;
     const text = content?.[0]?.text || "Sorry, I couldn't process that.";
+
+    // Cost tracking
+    const usage = data.usage as { input_tokens?: number; output_tokens?: number } | undefined;
+    if (usage) {
+      trackCost(usage.input_tokens || 0, usage.output_tokens || 0);
+      console.log(`[API] ip=${clientIp} mode=${mode || "explorer"} in=${usage.input_tokens} out=${usage.output_tokens} cost_today=$${dailyCostEstimate.toFixed(4)}`);
+    }
 
     // Optional: record points for guide completion
     const walletAddress = req.headers["x-wallet-address"] as string;
