@@ -96,8 +96,12 @@ ${wikiContext}
 function selectDocsForMode(mode: string, docs: WikiDoc[]): WikiDoc[] {
   // Priority pages per mode
   const priorities: Record<string, string[]> = {
-    customer: ["tokenomics", "lock-mechanism", "faq", "fair-launch", "fee-design"],
-    partner: ["integration", "contracts", "lock-mechanism", "governance", "tokenomics"],
+    explorer: ["tokenomics", "faq", "fair-launch", "fee-design", "bootstrap"],
+    user: ["lock-mechanism", "tokenomics", "faq", "integration", "fair-launch"],
+    dev: ["contracts", "integration", "deployment", "security", "governance"],
+    // Backwards compatibility
+    customer: ["tokenomics", "faq", "fair-launch", "fee-design", "bootstrap"],
+    partner: ["lock-mechanism", "tokenomics", "faq", "integration", "fair-launch"],
     developer: ["contracts", "integration", "deployment", "security", "governance"],
   };
 

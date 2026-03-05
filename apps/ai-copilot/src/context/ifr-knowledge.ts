@@ -1,10 +1,15 @@
 export const IFR_KNOWLEDGE = {
   contracts: {
-    token: "0x3Bd71947F288d1dd8B21129B1bE4FF16EDd5d1F4",
-    ifrLock: "0x0Cab0A9440643128540222acC6eF5028736675d3",
-    partnerVault: "0x5F12C0bC616e9Ca347D48C33266aA8fe98490A39",
-    governance: "0x6050b22E4EAF3f414d1155fBaF30B868E0107017",
-    network: "Sepolia Testnet (Chain ID: 11155111)",
+    token: "0x77e99917Eca8539c62F509ED1193ac36580A6e7B",
+    ifrLock: "0x769928aBDfc949D0718d8766a1C2d7dBb63954Eb",
+    partnerVault: "0xc6eb7714bCb035ebc2D4d9ba7B3762ef7B9d4F7D",
+    governance: "0xc43d48E7FDA576C5022d0670B652A622E8caD041",
+    burnReserve: "0xaA1496133B6c274190A2113410B501C5802b6fCF",
+    buybackVault: "0x670D293e3D65f96171c10DdC8d88B96b0570F812",
+    feeRouter: "0x4807B77B2E25cD055DA42B09BA4d0aF9e580C60a",
+    vesting: "0x2694Bc84e8D5251E9E4Ecd4B2Ae3f866d6106271",
+    liquidityReserve: "0xdc0309804803b3A105154f6073061E3185018f64",
+    network: "Ethereum Mainnet (Chain ID: 1)",
     decimals: 9
   },
   tokenomics: {
@@ -37,9 +42,9 @@ export const IFR_KNOWLEDGE = {
   },
   links: {
     github: "https://github.com/NeaBouli/inferno",
-    website: "https://neabouli.github.io/inferno/",
-    wiki: "https://neabouli.github.io/inferno/wiki/",
-    etherscan: "https://sepolia.etherscan.io/address/0x3Bd71947F288d1dd8B21129B1bE4FF16EDd5d1F4"
+    website: "https://ifrunit.tech",
+    wiki: "https://ifrunit.tech/wiki/",
+    etherscan: "https://etherscan.io/address/0x77e99917Eca8539c62F509ED1193ac36580A6e7B"
   },
   safety: {
     neverAsk: ["seed phrase", "private key", "mnemonic", "secret recovery"],

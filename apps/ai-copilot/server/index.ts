@@ -79,7 +79,7 @@ app.get("/", (_req, res) => {
 <style>
 * { margin:0; padding:0; box-sizing:border-box; }
 body {
-  font-family: -apple-system, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   background: #0d0d0d;
   color: #fff;
   height: 100vh;
@@ -87,15 +87,36 @@ body {
   flex-direction: column;
 }
 #header {
-  padding: 12px 16px;
+  padding: 10px 16px;
   background: #1a1a1a;
   border-bottom: 1px solid #333;
-  display: flex;
-  align-items: center;
-  gap: 8px;
   font-weight: 600;
   font-size: 14px;
 }
+#header-top {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+}
+#tabs {
+  display: flex;
+  gap: 4px;
+}
+.tab {
+  padding: 6px 14px;
+  border-radius: 20px;
+  border: 1px solid #444;
+  background: transparent;
+  color: #999;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.tab:hover { border-color: #666; color: #ccc; }
+.tab.active-explorer { background: #ff6600; color: #fff; border-color: #ff6600; }
+.tab.active-user { background: #9b59b6; color: #fff; border-color: #9b59b6; }
+.tab.active-dev { background: #2ecc71; color: #fff; border-color: #2ecc71; }
 #messages {
   flex: 1;
   overflow-y: auto;
@@ -108,16 +129,18 @@ body {
   max-width: 85%;
   padding: 10px 14px;
   border-radius: 12px;
-  font-size: 14px;
+  font-size: 13px;
   line-height: 1.5;
   word-wrap: break-word;
+  white-space: pre-wrap;
 }
 .msg.user {
-  background: #ff6600;
-  color: white;
   align-self: flex-end;
   border-bottom-right-radius: 4px;
 }
+.msg.user.explorer { background: #ff6600; color: #fff; }
+.msg.user.usermode { background: #9b59b6; color: #fff; }
+.msg.user.dev { background: #2ecc71; color: #fff; }
 .msg.bot {
   background: #1e1e1e;
   color: #e0e0e0;
@@ -125,10 +148,7 @@ body {
   border-bottom-left-radius: 4px;
   border: 1px solid #333;
 }
-.msg.bot.thinking {
-  color: #666;
-  font-style: italic;
-}
+.msg.bot.thinking { color: #666; font-style: italic; }
 #input-area {
   padding: 12px;
   background: #1a1a1a;
@@ -147,8 +167,7 @@ body {
   outline: none;
 }
 #input:focus { border-color: #ff6600; }
-#send {
-  background: #ff6600;
+#send-btn {
   border: none;
   border-radius: 8px;
   padding: 10px 16px;
@@ -156,74 +175,103 @@ body {
   cursor: pointer;
   font-size: 16px;
 }
-#send:hover { background: #e55a00; }
+#send-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 </style>
 </head>
 <body>
 <div id="header">
-  &#x1f525; IFR Copilot
-  <span style="color:#ff6600;font-size:11px;margin-left:auto;">
-    Powered by Inferno Protocol
-  </span>
-</div>
-<div id="messages">
-  <div class="msg bot">
-    Hi! I'm the IFR Copilot. Ask me anything about
-    Inferno Protocol, the $IFR token, locking mechanisms,
-    or the Bootstrap Event. &#x1f525;
+  <div id="header-top">
+    <span>&#x1f525; IFR Copilot</span>
+    <span style="color:#ff6600;font-size:11px;margin-left:auto;">Inferno Protocol</span>
+  </div>
+  <div id="tabs">
+    <button class="tab active-explorer" onclick="switchMode('explorer')" id="tab-explorer">&#x1f525; Explorer</button>
+    <button class="tab" onclick="switchMode('user')" id="tab-user">&#x1f48e; User</button>
+    <button class="tab" onclick="switchMode('dev')" id="tab-dev">&#x2699;&#xfe0f; Dev</button>
   </div>
 </div>
+<div id="messages"></div>
 <div id="input-area">
-  <input id="input" type="text"
-    placeholder="Ask about IFR..."
-    onkeydown="if(event.key==='Enter')send()">
-  <button id="send" onclick="send()">&#x27A4;</button>
+  <input id="input" type="text" placeholder="Ask about IFR..." onkeydown="if(event.key==='Enter'&&!event.shiftKey)send()">
+  <button id="send-btn" onclick="send()">&#x27A4;</button>
 </div>
 <script>
-var chatHistory = [];
+var currentMode = 'explorer';
+var histories = { explorer: [], user: [], dev: [] };
+var welcomes = {
+  explorer: "Welcome! I'm the IFR Copilot. &#x1f525;\\n\\nI can help you understand Inferno Protocol \\u2014 a deflationary utility token on Ethereum. Ask me about:\\n\\n\\u2022 What is $IFR?\\n\\u2022 How does Lock-to-Access work?\\n\\u2022 The Bootstrap Event\\n\\u2022 Fair Launch model",
+  user: "Hey! &#x1f48e; Ready to help you get the most out of your IFR tokens.\\n\\nI can assist with:\\n\\u2022 Locking IFR for benefits\\n\\u2022 Understanding your tier (Bronze/Silver/Gold/Platinum)\\n\\u2022 Partner discounts \\u0026 Benefits Network\\n\\u2022 Step-by-step guides",
+  dev: "Dev mode active. &#x2699;&#xfe0f;\\n\\n9 verified mainnet contracts \\u2022 444 tests \\u2022 99% coverage\\n\\nI can help with:\\n\\u2022 Contract addresses \\u0026 ABIs\\n\\u2022 Integration (ethers.js v5, 9 decimals)\\n\\u2022 Governance \\u0026 Timelock\\n\\u2022 Security audit results"
+};
+var modeColors = { explorer: '#ff6600', user: '#9b59b6', dev: '#2ecc71' };
+
+function switchMode(mode) {
+  currentMode = mode;
+  document.querySelectorAll('.tab').forEach(function(t) { t.className = 'tab'; });
+  var activeClass = mode === 'user' ? 'active-user' : mode === 'dev' ? 'active-dev' : 'active-explorer';
+  document.getElementById('tab-' + mode).classList.add(activeClass);
+  document.getElementById('send-btn').style.background = modeColors[mode];
+  renderMessages();
+  document.getElementById('input').focus();
+}
+
+function renderMessages() {
+  var container = document.getElementById('messages');
+  container.innerHTML = '<div class="msg bot">' + welcomes[currentMode] + '</div>';
+  var history = histories[currentMode];
+  for (var i = 0; i < history.length; i++) {
+    var m = history[i];
+    var div = document.createElement('div');
+    if (m.role === 'user') {
+      div.className = 'msg user ' + (currentMode === 'user' ? 'usermode' : currentMode);
+      div.textContent = m.content;
+    } else {
+      div.className = 'msg bot';
+      div.textContent = m.content;
+    }
+    container.appendChild(div);
+  }
+  container.scrollTop = container.scrollHeight;
+}
+
 async function send() {
   var input = document.getElementById('input');
-  var messages = document.getElementById('messages');
   var text = input.value.trim();
   if (!text) return;
-
-  var userDiv = document.createElement('div');
-  userDiv.className = 'msg user';
-  userDiv.textContent = text;
-  messages.appendChild(userDiv);
   input.value = '';
 
-  chatHistory.push({role: 'user', content: text});
+  histories[currentMode].push({ role: 'user', content: text });
+  renderMessages();
 
   var thinking = document.createElement('div');
   thinking.className = 'msg bot thinking';
   thinking.textContent = 'Thinking...';
-  messages.appendChild(thinking);
-  messages.scrollTop = messages.scrollHeight;
+  var container = document.getElementById('messages');
+  container.appendChild(thinking);
+  container.scrollTop = container.scrollHeight;
+
+  var sendBtn = document.getElementById('send-btn');
+  sendBtn.disabled = true;
 
   try {
     var res = await fetch('/api/chat', {
       method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({ messages: chatHistory, mode: 'customer' })
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ messages: histories[currentMode], mode: currentMode })
     });
     var data = await res.json();
-    thinking.remove();
-    var reply = data.reply || 'Sorry, try again.';
-    chatHistory.push({role: 'assistant', content: reply});
-    var botDiv = document.createElement('div');
-    botDiv.className = 'msg bot';
-    botDiv.textContent = reply;
-    messages.appendChild(botDiv);
+    var reply = data.reply || 'Sorry, please try again.';
+    histories[currentMode].push({ role: 'assistant', content: reply });
   } catch(e) {
-    thinking.remove();
-    var errDiv = document.createElement('div');
-    errDiv.className = 'msg bot';
-    errDiv.textContent = 'Connection error. Please try again.';
-    messages.appendChild(errDiv);
+    histories[currentMode].push({ role: 'assistant', content: 'Connection error. Please try again.' });
   }
-  messages.scrollTop = messages.scrollHeight;
+
+  sendBtn.disabled = false;
+  renderMessages();
 }
+
+// Init
+switchMode('explorer');
 </script>
 </body>
 </html>`);
