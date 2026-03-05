@@ -1,48 +1,77 @@
-# Inferno ($IFR) — Projekt-Zusammenfassung
+# Inferno ($IFR) — Project Summary
 
-Stand: 26. Februar 2026
+Last updated: March 2026
 
-## Projekt-Status: TESTNET-BEREIT
+## Project Status: MAINNET DEPLOYED
 
-Alle Smart Contracts deployed, verified, und operational auf Sepolia. Ownership an Governance transferiert. Landing Page, Wiki, Dashboard, und 6 Apps live.
+All 9 smart contracts deployed, verified, and operational on Ethereum Mainnet (2026-03-05). BootstrapVault deployed on Sepolia. Landing page, wiki (16 pages), dashboard, and 7 apps live.
 
-## On-Chain Komponenten (10)
+## On-Chain Contracts (10)
 
-| # | Contract | Adresse (Sepolia) | Status |
-|---|----------|-------------------|--------|
-| 1 | InfernoToken | `0x3Bd71947F288d1dd8B21129B1bE4FF16EDd5d1F4` | Verified |
-| 2 | LiquidityReserve | `0xF7E90D0d17f8232365186AA085D26eaEfAf011aF` | Verified |
-| 3 | Vesting | `0xa710f9FE7bf42981E60BE2Fbe7D87Fb3541a3F8B` | Verified |
-| 4 | BuybackVault | `0xC8ABb9039BEd24f4dBf5Cff09699877D81f0D63C` | Verified |
-| 5 | BurnReserve | `0x6D4582FCac792FD3880e252fC0a585A0c1823e80` | Verified |
-| 6 | Governance | `0x6050b22E4EAF3f414d1155fBaF30B868E0107017` | Verified |
-| 7 | IFRLock | `0x0Cab0A9440643128540222acC6eF5028736675d3` | Verified |
-| 8 | PartnerVault (v2) | `0x5F12C0bC616e9Ca347D48C33266aA8fe98490A39` | Verified |
-| 9 | FeeRouterV1 | `0x499289C8Ef49769F4FcFF3ca86D4BD7b55B49aa4` | Verified |
-| 10 | LP Pair (IFR/WETH) | `0x2252e8bBDE0E50CD372748aC233A99C08627d9c7` | Factory |
+### Mainnet (9)
 
-Ownership: Transferiert an Governance (Timelock, 48h Delay)
+| # | Contract | Address | Status |
+|---|----------|---------|--------|
+| 1 | InfernoToken | [`0x77e99917Eca8539c62F509ED1193ac36580A6e7B`](https://etherscan.io/address/0x77e99917Eca8539c62F509ED1193ac36580A6e7B#code) | Verified |
+| 2 | Governance | [`0xc43d48E7FDA576C5022d0670B652A622E8caD041`](https://etherscan.io/address/0xc43d48E7FDA576C5022d0670B652A622E8caD041#code) | Verified |
+| 3 | IFRLock | [`0x769928aBDfc949D0718d8766a1C2d7dBb63954Eb`](https://etherscan.io/address/0x769928aBDfc949D0718d8766a1C2d7dBb63954Eb#code) | Verified |
+| 4 | BurnReserve | [`0xaA1496133B6c274190A2113410B501C5802b6fCF`](https://etherscan.io/address/0xaA1496133B6c274190A2113410B501C5802b6fCF#code) | Verified |
+| 5 | BuybackVault | [`0x670D293e3D65f96171c10DdC8d88B96b0570F812`](https://etherscan.io/address/0x670D293e3D65f96171c10DdC8d88B96b0570F812#code) | Verified |
+| 6 | PartnerVault | [`0xc6eb7714bCb035ebc2D4d9ba7B3762ef7B9d4F7D`](https://etherscan.io/address/0xc6eb7714bCb035ebc2D4d9ba7B3762ef7B9d4F7D#code) | Verified |
+| 7 | FeeRouterV1 | [`0x4807B77B2E25cD055DA42B09BA4d0aF9e580C60a`](https://etherscan.io/address/0x4807B77B2E25cD055DA42B09BA4d0aF9e580C60a#code) | Verified |
+| 8 | Vesting | [`0x2694Bc84e8D5251E9E4Ecd4B2Ae3f866d6106271`](https://etherscan.io/address/0x2694Bc84e8D5251E9E4Ecd4B2Ae3f866d6106271#code) | Verified |
+| 9 | LiquidityReserve | [`0xdc0309804803b3A105154f6073061E3185018f64`](https://etherscan.io/address/0xdc0309804803b3A105154f6073061E3185018f64#code) | Verified |
 
-## Test-Abdeckung
+### Sepolia (Testnet)
 
-| Bereich | Tests | Framework |
-|---------|-------|-----------|
+| # | Contract | Address | Status |
+|---|----------|---------|--------|
+| 10 | BootstrapVault | [`0xE0E8F76e4fb38B2e367Aee043a2C02b8D1c7c037`](https://sepolia.etherscan.io/address/0xE0E8F76e4fb38B2e367Aee043a2C02b8D1c7c037#code) | Verified |
+
+### Gnosis Safe (Mainnet)
+
+| Role | Address |
+|------|---------|
+| Treasury Multisig | [`0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b`](https://app.safe.global/home?safe=eth:0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b) |
+
+Threshold: 1-of-1 (Phase 0). Will be expanded to 2-of-3 before public launch.
+
+## Test Coverage
+
+| Area | Tests | Framework |
+|------|-------|-----------|
 | Smart Contracts | 367 | Hardhat + Chai + Waffle |
 | Creator Gateway | 41 | Jest + ts-jest + supertest |
 | Points Backend | 20 | tsx runner |
 | Benefits Network | 16 | Jest |
-| **Gesamt** | **444** | |
+| **Total** | **444** | |
 
 ### Solidity Coverage (solidity-coverage)
 
-| Metrik | Wert |
-|--------|------|
+| Metric | Value |
+|--------|-------|
 | Statements | 99.45% |
 | Branches | 91% |
 | Functions | 98.26% |
 | Lines | 99% |
 
-## Implementierte Apps (7)
+### Contract Test Breakdown
+
+| Contract | Tests |
+|----------|-------|
+| InfernoToken | 22 |
+| LiquidityReserve | 42 |
+| Vesting | 27 |
+| BuybackVault | 26 |
+| BurnReserve | 27 |
+| Governance | 36 |
+| IFRLock | 37 |
+| PartnerVault | 95 |
+| FeeRouterV1 | 33 |
+| BootstrapVault | 22 |
+| **Total** | **367** |
+
+## Applications (7)
 
 | # | App | Port | Stack | Status |
 |---|-----|------|-------|--------|
@@ -62,29 +91,19 @@ Ownership: Transferiert an Governance (Timelock, 48h Delay)
 | Points Backend CI | Push/PR to `apps/points-backend/` | prisma generate + tsc + jest |
 | AI Copilot CI | Push/PR to `apps/ai-copilot/` | tsc + build |
 
-## Dokumentation
+## Documentation
 
-- **44 Dokumente** (Markdown + HTML Wiki)
-- Landing Page (GitHub Pages): `docs/index.html`
-- Wiki: 9 HTML-Seiten (`docs/wiki/`)
-- Technische Docs: 24 Markdown-Dateien (`docs/*.md`)
-- App-spezifische Docs: Deploy Guides, READMEs
+- **16 wiki pages** (HTML, `docs/wiki/`)
+- **40+ technical docs** (Markdown, `docs/*.md`)
+- Landing page (GitHub Pages): `docs/index.html`
+- Domain: [ifrunit.tech](https://ifrunit.tech)
 
-## Governance History
+## Token Metrics (Mainnet)
 
-| # | Action | Status |
-|---|--------|--------|
-| 0 | setFeeExempt(DEX Router) | Executed (2026-02-20) |
-| 1 | setFeeExempt(IFRLock) | Executed (2026-02-22) |
-| 2 | setFeeExempt(PartnerVault v1) | Cancelled (v1 deprecated) |
-| 3 | setFeeExempt(PartnerVault v2) | Executed (26.02.2026) — TX 0x3f28690a...57de6e8 |
-
-## Token-Metriken (Sepolia, Live)
-
-| Metrik | Wert |
-|--------|------|
-| Total Supply | 997,999,575 IFR (von 1,000,000,000) |
-| Verbrannt | ~2,000,425 IFR (~0.2%) |
+| Metric | Value |
+|--------|-------|
+| Total Supply | ~998,000,000 IFR (from 1,000,000,000) |
+| Burned | ~2,000,000 IFR (~0.2%) |
 | Sender Burn Fee | 2.0% (200 bps) |
 | Recipient Burn Fee | 0.5% (50 bps) |
 | Pool Fee | 1.0% (100 bps) |
@@ -93,14 +112,14 @@ Ownership: Transferiert an Governance (Timelock, 48h Delay)
 | PartnerVault Reward Rate | 15% (1500 bps) |
 | PartnerVault Annual Cap | 4,000,000 IFR |
 
-## Naechste Schritte (Priorisiert)
+## Remaining Steps
 
-1. **Proposals #4-#6 executen** — Ownership Transfer (ETA 28.02. ~08:07 CET)
-2. **Third-party Security Audit** beauftragen (FeeRouterV1 Coverage: 100%/96% — erledigt)
-4. **Multisig einrichten** (Gnosis Safe 4-of-7)
-5. **Community + Team Adressen** festlegen
-6. **LP Token Lock/Burn**
-7. **Mainnet Deployment** (alle 9 Contracts + LP + Verify + Ownership Transfer)
+1. **LP Pairing** — Create Uniswap V2 LP (400M IFR + ETH)
+2. **LP Token Lock/Burn** — Lock via Unicrypt or burn to 0xdead
+3. **Ownership Transfer** — InfernoToken → Governance → Multisig
+4. **Multisig Expansion** — 1-of-1 → 2-of-3
+5. **Third-party Security Audit** — Code4rena, Sherlock, or Cyfrin
+6. **FeeRouter Setup** — Deploy swap adapter, set voucher signer
 
 ---
-*Automatisch generiert | Inferno Protocol | Februar 2026*
+*Inferno Protocol | March 2026*
