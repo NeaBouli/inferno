@@ -146,6 +146,7 @@ app.get("/api/health", (_req, res) => {
   res.json({ status: "ok", apiKeySet: !!ANTHROPIC_API_KEY });
 });
 
-app.listen(3003, () => {
-  console.log("IFR Copilot API on :3003");
+const PORT = parseInt(process.env.PORT || "3003", 10);
+app.listen(PORT, () => {
+  console.log(`IFR Copilot API on :${PORT}`);
 });
