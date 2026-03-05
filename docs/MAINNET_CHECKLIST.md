@@ -1,6 +1,6 @@
 # Inferno ($IFR) — Mainnet Deployment Checklist
 
-> **Status:** Pre-Mainnet | **Sepolia:** 14 Contracts deployed + verified | **Tests:** 367 Contract + 41 Creator Gateway + 20 Points + 16 Benefits = 444 Total | **Coverage:** 99% Stmts, 91% Branch
+> **Status:** Mainnet Deployed (2026-03-05) | **Mainnet:** 9 Contracts deployed + verified | **Tests:** 367 Contract + 41 Creator Gateway + 20 Points + 16 Benefits = 444 Total | **Coverage:** 99% Stmts, 91% Branch
 
 ## KRITISCH — Vor jedem Public Launch
 
@@ -25,10 +25,11 @@ Diese Punkte muessen ZWINGEND vor Mainnet erledigt sein:
 - [ ] Community-Anteil an Community Multisig transferieren
 - [ ] Deployer Wallet auf Minimum reduzieren (nur Gas)
 
-### Aktueller Stand (26.02.2026)
-- 14/20 Punkte abgeschlossen (Testnet-Phase)
-- 3 kritische Mainnet-Punkte identifiziert (LP Lock, Ownership, Deployer)
-- Keine Mainnet-Deployment ohne LP Lock + Ownership Transfer
+### Aktueller Stand (05.03.2026)
+- Mainnet Deploy: 9/9 Contracts deployed + verified
+- Token Distribution: 1B IFR korrekt verteilt (CFLM)
+- Fee Exemptions: 8 Adressen gesetzt, Deployer entfernt
+- OFFEN: LP Pairing, LP Lock, Ownership Transfer, Multisig
 
 ---
 
@@ -91,64 +92,65 @@ Diese Punkte muessen ZWINGEND vor Mainnet erledigt sein:
 ## Phase 1: Deployment (Reihenfolge einhalten!)
 
 ### Schritt 1 — Core Contracts deployen
-- [ ] InfernoToken.sol deployen
-  - Adresse notieren: [TOKEN_ADDRESS]
-  - Etherscan verifizieren
-- [ ] Governance (Timelock) deployen
+- [x] InfernoToken.sol deployen
+  - Adresse: `0x77e99917Eca8539c62F509ED1193ac36580A6e7B`
+  - Etherscan verifiziert
+- [x] Governance (Timelock) deployen
   - admin = Deployer (temporaer, wird zu Multisig)
   - delay = 172800 (48h)
-  - Adresse: [GOVERNANCE_ADDRESS]
-  - Etherscan verifizieren
+  - Adresse: `0xc43d48E7FDA576C5022d0670B652A622E8caD041`
+  - Etherscan verifiziert
 
 ### Schritt 2 — Utility Contracts deployen
-- [ ] IFRLock.sol deployen (ifrToken = TOKEN_ADDRESS)
-  - Adresse: [IFRLOCK_ADDRESS]
-  - Etherscan verifizieren
-- [ ] BurnReserve.sol deployen
-  - Adresse: [BURNRESERVE_ADDRESS]
-  - Etherscan verifizieren
-- [ ] BuybackVault.sol deployen
-  - Adresse: [BUYBACKVAULT_ADDRESS]
-  - Etherscan verifizieren
-- [ ] PartnerVault.sol deployen
-  - admin = GOVERNANCE_ADDRESS
+- [x] IFRLock.sol deployen
+  - Adresse: `0x769928aBDfc949D0718d8766a1C2d7dBb63954Eb`
+  - Etherscan verifiziert
+- [x] BurnReserve.sol deployen
+  - Adresse: `0xaA1496133B6c274190A2113410B501C5802b6fCF`
+  - Etherscan verifiziert
+- [x] BuybackVault.sol deployen
+  - Adresse: `0x670D293e3D65f96171c10DdC8d88B96b0570F812`
+  - Etherscan verifiziert
+- [x] PartnerVault.sol deployen
+  - admin = Governance
   - rewardBps = 1500
   - annualEmissionCap = 4_000_000 * 10**9
-  - Adresse: [PARTNERVAULT_ADDRESS]
-  - Etherscan verifizieren
-- [ ] FeeRouterV1.sol deployen
-  - governance = GOVERNANCE_ADDRESS
-  - feeCollector = Treasury Multisig
-  - voucherSigner = Points Backend Signer
-  - Adresse: [FEEROUTER_ADDRESS]
-  - Etherscan verifizieren
+  - Adresse: `0xc6eb7714bCb035ebc2D4d9ba7B3762ef7B9d4F7D`
+  - Etherscan verifiziert
+- [x] FeeRouterV1.sol deployen
+  - governance = Governance
+  - feeCollector = Treasury
+  - voucherSigner = `0x17F8DD6dECCb3ff5d95691982B85A87d7d9872d4`
+  - Adresse: `0x4807B77B2E25cD055DA42B09BA4d0aF9e580C60a`
+  - Etherscan verifiziert
 
 ### Schritt 3 — Vesting & Reserve
-- [ ] Vesting.sol deployen (beneficiary = Team-Adresse)
-  - Adresse: [VESTING_ADDRESS]
-  - Etherscan verifizieren
-- [ ] LiquidityReserve.sol deployen
-  - Adresse: [LIQUIDITYRESERVE_ADDRESS]
-  - Etherscan verifizieren
+- [x] Vesting.sol deployen (beneficiary = `0x04FABC52c51d1F8ced6974E7C25a34249b1E6239`)
+  - Adresse: `0x2694Bc84e8D5251E9E4Ecd4B2Ae3f866d6106271`
+  - Etherscan verifiziert
+- [x] LiquidityReserve.sol deployen
+  - Adresse: `0xdc0309804803b3A105154f6073061E3185018f64`
+  - Etherscan verifiziert
 
 ### Schritt 4 — Fee Exemptions setzen (VOR Token-Verteilung!)
-- [ ] setFeeExempt(Vesting, true)
-- [ ] setFeeExempt(LiquidityReserve, true)
-- [ ] setFeeExempt(BuybackVault, true)
-- [ ] setFeeExempt(BurnReserve, true)
-- [ ] setFeeExempt(IFRLock, true)
-- [ ] setFeeExempt(PartnerVault, true)
-- [ ] KRITISCH: Alle Exemptions MUESSEN vor Token-Transfers gesetzt sein (Sepolia-Lesson: 1.4M IFR Verlust)
+- [x] setFeeExempt(Vesting, true)
+- [x] setFeeExempt(LiquidityReserve, true)
+- [x] setFeeExempt(BuybackVault, true)
+- [x] setFeeExempt(BurnReserve, true)
+- [x] setFeeExempt(IFRLock, true)
+- [x] setFeeExempt(PartnerVault, true)
+- [x] setFeeExempt(Treasury, true)
+- [x] KRITISCH: Alle Exemptions VOR Token-Transfers gesetzt (Sepolia-Lesson angewendet)
 
 ### Schritt 5 — Token-Verteilung (KRITISCH)
-- [ ] 400M IFR → DEX Liquidity Wallet (fuer LP)
-- [ ] 200M IFR → LiquidityReserve Contract
-- [ ] 150M IFR → Vesting Contract
-- [ ] 150M IFR → Treasury Multisig
-- [ ] 60M IFR → Community & Grants Wallet
-- [ ] 40M IFR → PartnerVault Contract
-- [ ] Gesamtcheck: 400+200+150+150+60+40 = 1,000,000,000
-- [ ] Deployer-Balance danach: 0 IFR
+- [x] 400M IFR → Deployer (fuer LP Pairing)
+- [x] 200M IFR → LiquidityReserve Contract
+- [x] 150M IFR → Vesting Contract
+- [x] 150M IFR → Treasury (`0xC8f4B45fA0C4727E9b27c13Af3d000C922a2ac9c`)
+- [x] 60M IFR → Community & Grants (`0x61aF4E72C77b58F4b50964Ee93d420750Cd9857E`)
+- [x] 40M IFR → PartnerVault Contract
+- [x] Gesamtcheck: 400+200+150+150+60+40 = 1,000,000,000
+- [x] Deployer feeExempt entfernt
 
 ### Schritt 6 — Uniswap V2 LP
 - [ ] DEX Liquidity Wallet genehmigt Router fuer 400M IFR
@@ -190,4 +192,4 @@ Diese Punkte muessen ZWINGEND vor Mainnet erledigt sein:
 - [ ] Points Backend: voucherSigner + FeeRouter Adresse auf Mainnet
 
 ---
-*Stand: Februar 2026 | v1.1*
+*Stand: Maerz 2026 | v1.2 — Mainnet Deployed*

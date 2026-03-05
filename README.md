@@ -6,7 +6,7 @@
 
 **The Deflationary Utility Token**
 
-[Website](https://neabouli.github.io/inferno/) · [Documentation](https://neabouli.github.io/inferno/wiki/) · [X / Twitter](https://x.com/IFRtoken) · [Etherscan (Sepolia)](https://sepolia.etherscan.io/address/0x3Bd71947F288d1dd8B21129B1bE4FF16EDd5d1F4#code)
+[Website](https://neabouli.github.io/inferno/) · [Documentation](https://neabouli.github.io/inferno/wiki/) · [X / Twitter](https://x.com/IFRtoken) · [Etherscan](https://etherscan.io/address/0x77e99917Eca8539c62F509ED1193ac36580A6e7B#code)
 
 ---
 
@@ -43,20 +43,19 @@ No presale, no VC, no IDO. Direct Uniswap V2 listing.
 Team allocation (15%) is locked in a vesting contract for 4 years
 with a 1-year cliff. See [Fair Launch Statement](docs/FAIR_LAUNCH.md).
 
-## Smart Contracts (14)
+## Smart Contracts (9 Mainnet)
 
-| Contract | Sepolia Address |
+| Contract | Mainnet Address |
 |----------|----------------|
-| InfernoToken | `0x3Bd71947F288d1dd8B21129B1bE4FF16EDd5d1F4` |
-| LiquidityReserve | `0x344720eA0cd1654e2bDB41ecC1cCb11eD60f1957` |
-| Vesting | `0xa710f9FE7bf42981E60BE2Fbe7D87Fb3541a3F8B` |
-| BuybackVault | `0x2E61b720c220ce85dA24b05a476903Ec709Cb68c` |
-| BurnReserve | `0xB9FbE5dB44EEce77A69C8F09e9E0eE2E4F745D75` |
-| Governance | `0x6050b22E4EAF3f414d1155fBaF30B868E0107017` |
-| IFRLock | `0x0Cab0A9440643128540222acC6eF5028736675d3` |
-| PartnerVault | `0x5F12C0bC616e9Ca347D48C33266aA8fe98490A39` |
-| FeeRouterV1 | `0x499289C8Ef49769F4FcFF3ca86D4BD7b55B49aa4` |
-| LP Pair (IFR/WETH) | `0x2252e8bBDE0E50CD372748aC233A99C08627d9c7` |
+| InfernoToken | [`0x77e99917Eca8539c62F509ED1193ac36580A6e7B`](https://etherscan.io/address/0x77e99917Eca8539c62F509ED1193ac36580A6e7B#code) |
+| Governance | [`0xc43d48E7FDA576C5022d0670B652A622E8caD041`](https://etherscan.io/address/0xc43d48E7FDA576C5022d0670B652A622E8caD041#code) |
+| IFRLock | [`0x769928aBDfc949D0718d8766a1C2d7dBb63954Eb`](https://etherscan.io/address/0x769928aBDfc949D0718d8766a1C2d7dBb63954Eb#code) |
+| BurnReserve | [`0xaA1496133B6c274190A2113410B501C5802b6fCF`](https://etherscan.io/address/0xaA1496133B6c274190A2113410B501C5802b6fCF#code) |
+| BuybackVault | [`0x670D293e3D65f96171c10DdC8d88B96b0570F812`](https://etherscan.io/address/0x670D293e3D65f96171c10DdC8d88B96b0570F812#code) |
+| PartnerVault | [`0xc6eb7714bCb035ebc2D4d9ba7B3762ef7B9d4F7D`](https://etherscan.io/address/0xc6eb7714bCb035ebc2D4d9ba7B3762ef7B9d4F7D#code) |
+| FeeRouterV1 | [`0x4807B77B2E25cD055DA42B09BA4d0aF9e580C60a`](https://etherscan.io/address/0x4807B77B2E25cD055DA42B09BA4d0aF9e580C60a#code) |
+| Vesting | [`0x2694Bc84e8D5251E9E4Ecd4B2Ae3f866d6106271`](https://etherscan.io/address/0x2694Bc84e8D5251E9E4Ecd4B2Ae3f866d6106271#code) |
+| LiquidityReserve | [`0xdc0309804803b3A105154f6073061E3185018f64`](https://etherscan.io/address/0xdc0309804803b3A105154f6073061E3185018f64#code) |
 
 ### Gnosis Safe (Mainnet)
 

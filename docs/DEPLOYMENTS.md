@@ -114,6 +114,71 @@
 
 ---
 
+## Ethereum Mainnet
+
+**Datum:** 2026-03-05
+**Deployer:** `0x6b36687b0cd4386fb14cf565B67D7862110Fed67`
+**Network:** Ethereum Mainnet (Chain ID: 1)
+
+### Contract Addresses
+
+| # | Contract | Address | Verified |
+|---|----------|---------|----------|
+| 1 | **InfernoToken** | [`0x77e99917Eca8539c62F509ED1193ac36580A6e7B`](https://etherscan.io/address/0x77e99917Eca8539c62F509ED1193ac36580A6e7B#code) | Verified |
+| 2 | **Governance** | [`0xc43d48E7FDA576C5022d0670B652A622E8caD041`](https://etherscan.io/address/0xc43d48E7FDA576C5022d0670B652A622E8caD041#code) | Verified |
+| 3 | **IFRLock** | [`0x769928aBDfc949D0718d8766a1C2d7dBb63954Eb`](https://etherscan.io/address/0x769928aBDfc949D0718d8766a1C2d7dBb63954Eb#code) | Verified |
+| 4 | **BurnReserve** | [`0xaA1496133B6c274190A2113410B501C5802b6fCF`](https://etherscan.io/address/0xaA1496133B6c274190A2113410B501C5802b6fCF#code) | Verified |
+| 5 | **BuybackVault** | [`0x670D293e3D65f96171c10DdC8d88B96b0570F812`](https://etherscan.io/address/0x670D293e3D65f96171c10DdC8d88B96b0570F812#code) | Verified |
+| 6 | **PartnerVault** | [`0xc6eb7714bCb035ebc2D4d9ba7B3762ef7B9d4F7D`](https://etherscan.io/address/0xc6eb7714bCb035ebc2D4d9ba7B3762ef7B9d4F7D#code) | Verified |
+| 7 | **FeeRouterV1** | [`0x4807B77B2E25cD055DA42B09BA4d0aF9e580C60a`](https://etherscan.io/address/0x4807B77B2E25cD055DA42B09BA4d0aF9e580C60a#code) | Verified |
+| 8 | **Vesting** | [`0x2694Bc84e8D5251E9E4Ecd4B2Ae3f866d6106271`](https://etherscan.io/address/0x2694Bc84e8D5251E9E4Ecd4B2Ae3f866d6106271#code) | Verified |
+| 9 | **LiquidityReserve** | [`0xdc0309804803b3A105154f6073061E3185018f64`](https://etherscan.io/address/0xdc0309804803b3A105154f6073061E3185018f64#code) | Verified |
+
+### Token Distribution (CFLM)
+
+| Recipient | Amount | Address |
+|-----------|--------|---------|
+| DEX Liquidity | 400,000,000 IFR (40%) | Deployer (for LP pairing) |
+| Liquidity Reserve | 200,000,000 IFR (20%) | [`0xdc0309804803b3A105154f6073061E3185018f64`](https://etherscan.io/address/0xdc0309804803b3A105154f6073061E3185018f64) |
+| Team Vesting | 150,000,000 IFR (15%) | [`0x2694Bc84e8D5251E9E4Ecd4B2Ae3f866d6106271`](https://etherscan.io/address/0x2694Bc84e8D5251E9E4Ecd4B2Ae3f866d6106271) |
+| Treasury | 150,000,000 IFR (15%) | [`0xC8f4B45fA0C4727E9b27c13Af3d000C922a2ac9c`](https://etherscan.io/address/0xC8f4B45fA0C4727E9b27c13Af3d000C922a2ac9c) |
+| Community & Grants | 60,000,000 IFR (6%) | [`0x61aF4E72C77b58F4b50964Ee93d420750Cd9857E`](https://etherscan.io/address/0x61aF4E72C77b58F4b50964Ee93d420750Cd9857E) |
+| Partner Ecosystem | 40,000,000 IFR (4%) | [`0xc6eb7714bCb035ebc2D4d9ba7B3762ef7B9d4F7D`](https://etherscan.io/address/0xc6eb7714bCb035ebc2D4d9ba7B3762ef7B9d4F7D) (PartnerVault) |
+
+### Configuration
+
+| Setting | Value |
+|---------|-------|
+| FeeExempt | Vesting, LiquidityReserve, BuybackVault, BurnReserve, IFRLock, PartnerVault, Treasury |
+| Deployer FeeExempt | Removed |
+| LiquidityReserve Lock | 180 days |
+| Vesting Cliff | 12 months |
+| Vesting Duration | 48 months (12mo cliff + 36mo linear) |
+| BuybackVault Activation | 60 days |
+| Governance Delay | 48 hours |
+| Uniswap V2 Router | [`0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D`](https://etherscan.io/address/0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D) |
+
+### Post-Deploy Status
+
+| Step | Status |
+|------|--------|
+| 9 Contracts Deployed | Done (2026-03-05) |
+| Etherscan Verification | Done (9/9 verified) |
+| feeExempt Wiring | Done |
+| Token Distribution (CFLM) | Done |
+| Deployer Exemption Removed | Done |
+
+### NEXT STEPS (Mainnet)
+
+| Step | Status |
+|------|--------|
+| Create Uniswap V2 LP (400M IFR + ETH) | Pending |
+| Lock LP Tokens (min 12 months) | Pending |
+| Transfer InfernoToken Ownership to Governance | Pending |
+| Transfer Governance Owner to Multisig | Pending |
+
+---
+
 ## Gnosis Safe (Mainnet)
 
 | Detail | Wert |
