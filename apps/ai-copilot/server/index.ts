@@ -69,6 +69,166 @@ async function recordPointsEvent(
   }
 }
 
+app.get("/", (_req, res) => {
+  res.send(`<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>IFR Copilot</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  font-family: -apple-system, sans-serif;
+  background: #0d0d0d;
+  color: #fff;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+#header {
+  padding: 12px 16px;
+  background: #1a1a1a;
+  border-bottom: 1px solid #333;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  font-size: 14px;
+}
+#messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.msg {
+  max-width: 85%;
+  padding: 10px 14px;
+  border-radius: 12px;
+  font-size: 14px;
+  line-height: 1.5;
+  word-wrap: break-word;
+}
+.msg.user {
+  background: #ff6600;
+  color: white;
+  align-self: flex-end;
+  border-bottom-right-radius: 4px;
+}
+.msg.bot {
+  background: #1e1e1e;
+  color: #e0e0e0;
+  align-self: flex-start;
+  border-bottom-left-radius: 4px;
+  border: 1px solid #333;
+}
+.msg.bot.thinking {
+  color: #666;
+  font-style: italic;
+}
+#input-area {
+  padding: 12px;
+  background: #1a1a1a;
+  border-top: 1px solid #333;
+  display: flex;
+  gap: 8px;
+}
+#input {
+  flex: 1;
+  background: #2a2a2a;
+  border: 1px solid #444;
+  border-radius: 8px;
+  padding: 10px 14px;
+  color: white;
+  font-size: 14px;
+  outline: none;
+}
+#input:focus { border-color: #ff6600; }
+#send {
+  background: #ff6600;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 16px;
+  color: white;
+  cursor: pointer;
+  font-size: 16px;
+}
+#send:hover { background: #e55a00; }
+</style>
+</head>
+<body>
+<div id="header">
+  &#x1f525; IFR Copilot
+  <span style="color:#ff6600;font-size:11px;margin-left:auto;">
+    Powered by Inferno Protocol
+  </span>
+</div>
+<div id="messages">
+  <div class="msg bot">
+    Hi! I'm the IFR Copilot. Ask me anything about
+    Inferno Protocol, the $IFR token, locking mechanisms,
+    or the Bootstrap Event. &#x1f525;
+  </div>
+</div>
+<div id="input-area">
+  <input id="input" type="text"
+    placeholder="Ask about IFR..."
+    onkeydown="if(event.key==='Enter')send()">
+  <button id="send" onclick="send()">&#x27A4;</button>
+</div>
+<script>
+var chatHistory = [];
+async function send() {
+  var input = document.getElementById('input');
+  var messages = document.getElementById('messages');
+  var text = input.value.trim();
+  if (!text) return;
+
+  var userDiv = document.createElement('div');
+  userDiv.className = 'msg user';
+  userDiv.textContent = text;
+  messages.appendChild(userDiv);
+  input.value = '';
+
+  chatHistory.push({role: 'user', content: text});
+
+  var thinking = document.createElement('div');
+  thinking.className = 'msg bot thinking';
+  thinking.textContent = 'Thinking...';
+  messages.appendChild(thinking);
+  messages.scrollTop = messages.scrollHeight;
+
+  try {
+    var res = await fetch('/api/chat', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ messages: chatHistory, mode: 'customer' })
+    });
+    var data = await res.json();
+    thinking.remove();
+    var reply = data.reply || 'Sorry, try again.';
+    chatHistory.push({role: 'assistant', content: reply});
+    var botDiv = document.createElement('div');
+    botDiv.className = 'msg bot';
+    botDiv.textContent = reply;
+    messages.appendChild(botDiv);
+  } catch(e) {
+    thinking.remove();
+    var errDiv = document.createElement('div');
+    errDiv.className = 'msg bot';
+    errDiv.textContent = 'Connection error. Please try again.';
+    messages.appendChild(errDiv);
+  }
+  messages.scrollTop = messages.scrollHeight;
+}
+</script>
+</body>
+</html>`);
+});
+
 app.post("/api/chat", async (req, res) => {
   if (!ANTHROPIC_API_KEY) {
     res.status(500).json({ reply: "ANTHROPIC_API_KEY not configured." });
