@@ -210,19 +210,75 @@
 
     .hero .container { position: relative; z-index: 1; }
 
-    .hero-logo {
+    /* ---------- Coin animation ---------- */
+    .coin-container {
       width: 150px;
       height: 150px;
-      display: block;
-      margin-left: auto;
-      margin-right: auto;
-      margin-bottom: 32px;
-      border: 3px solid #ff4500;
+      perspective: 600px;
+      cursor: pointer;
+      margin: 0 auto 32px;
+    }
+
+    .coin {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      transform-style: preserve-3d;
+      animation: coinSpin 4s ease-in-out infinite;
+    }
+
+    .coin-face, .coin-back {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      backface-visibility: hidden;
       border-radius: 50%;
+      overflow: hidden;
+      border: 3px solid #ff4500;
       background-color: #0d0d1a;
+      box-shadow: 0 0 40px rgba(255, 69, 0, 0.3), 0 0 80px rgba(255, 69, 0, 0.1);
+    }
+
+    .coin-face img, .coin-back img {
+      width: 100%;
+      height: 100%;
       object-fit: contain;
       padding: 10px;
-      box-shadow: 0 0 40px rgba(255, 69, 0, 0.3), 0 0 80px rgba(255, 69, 0, 0.1);
+    }
+
+    .coin-back {
+      transform: rotateY(180deg);
+    }
+
+    @keyframes coinSpin {
+      0%   { transform: rotateY(0deg) rotateX(10deg); }
+      25%  { transform: rotateY(180deg) rotateX(5deg); }
+      50%  { transform: rotateY(360deg) rotateX(10deg); }
+      75%  { transform: rotateY(540deg) rotateX(5deg); }
+      100% { transform: rotateY(720deg) rotateX(10deg); }
+    }
+
+    .coin-container:hover .coin {
+      animation: coinSpinFast 0.8s linear infinite;
+    }
+
+    @keyframes coinSpinFast {
+      0%   { transform: rotateY(0deg) rotateX(15deg); }
+      100% { transform: rotateY(360deg) rotateX(15deg); }
+    }
+
+    .coin-shadow {
+      width: 100px;
+      height: 10px;
+      background: radial-gradient(ellipse, rgba(255, 69, 0, 0.2) 0%, transparent 70%);
+      margin: 8px auto 0;
+      animation: shadowPulse 4s ease-in-out infinite;
+    }
+
+    @keyframes shadowPulse {
+      0%, 100% { transform: scaleX(1); opacity: 0.3; }
+      25%, 75% { transform: scaleX(0.7); opacity: 0.15; }
+      50%      { transform: scaleX(0.5); opacity: 0.1; }
     }
 
     .hero h1 {
@@ -860,7 +916,7 @@
       .what-stats { grid-template-columns: 1fr 1fr; }
       .flow-diagram { flex-direction: column; }
       .flow-arrow { transform: rotate(90deg); }
-      .hero-logo { width: 120px; height: 120px; }
+      .coin-container { width: 120px; height: 120px; }
       .token-symbol { width: 60px; height: 60px; }
     }
   </style>
@@ -902,7 +958,17 @@
 <!-- ── HERO ───────────────────────────────────────── -->
 <section class="hero" id="hero">
   <div class="container">
-    <img src="assets/ifr_logo.png" alt="Inferno Logo" class="hero-logo">
+    <div class="coin-container">
+      <div class="coin">
+        <div class="coin-face">
+          <img src="assets/ifr_logo.png" alt="Inferno Logo">
+        </div>
+        <div class="coin-back">
+          <img src="assets/ifr_icon_256.png" alt="IFR Token">
+        </div>
+      </div>
+      <div class="coin-shadow"></div>
+    </div>
     <h1>Inferno <span>($IFR)</span></h1>
     <p class="hero-tagline">The Deflationary Utility Token</p>
     <p class="hero-subtitle">Lock. Use. Benefit. Across Every Product.</p>
