@@ -168,13 +168,45 @@
 | Token Distribution (CFLM) | Done |
 | Deployer Exemption Removed | Done |
 
+### Ownership Transfer (2026-03-05)
+
+All ownable contracts transferred to Governance (48h Timelock). Parameter changes now require `propose()` + 48h wait + `execute()`.
+
+| Contract | Method | TX Hash | Gas |
+|----------|--------|---------|-----|
+| InfernoToken | `transferOwnership()` | [`0x0fc4684c...16ed5e76`](https://etherscan.io/tx/0x0fc4684cfec94ecd3573344f892928c8d52c2074d5833b01e6e1c83616ed5e76) | 29,108 |
+| LiquidityReserve | `transferOwnership()` | [`0x34650ee4...6d12c7d4`](https://etherscan.io/tx/0x34650ee45d111dc3b8ea5eb72b0b7753aada03977f0d17e37d05c07f6d12c7d4) | 28,916 |
+| BurnReserve | `transferOwnership()` | [`0x757d519b...0ca5b1a`](https://etherscan.io/tx/0x757d519b303f1e775ada75fcdfcaa1b86218e76e13d2750e224e448ab0ca5b1a) | 28,916 |
+| BuybackVault | `transferOwnership()` | [`0xcd037869...afea3971`](https://etherscan.io/tx/0xcd03786978f402c768d3b270770211019918b5a232eb9884ab0f2bcdafea3971) | 28,894 |
+| PartnerVault | `setAdmin()` | Already Governance at deploy | — |
+| FeeRouterV1 | `governance()` | Immutable at deploy | — |
+
+**Total Gas Used:** 115,834
+
+### Ownership Status (Post-Transfer)
+
+| Contract | Role | Controller |
+|----------|------|------------|
+| InfernoToken | `owner()` | Governance |
+| LiquidityReserve | `owner()` | Governance |
+| BurnReserve | `owner()` | Governance |
+| BuybackVault | `owner()` | Governance |
+| PartnerVault | `admin()` | Governance |
+| FeeRouterV1 | `governance()` | Governance (immutable) |
+| IFRLock | `guardian()` | Deployer (emergency pause only) |
+| Vesting | `guardian()` | Deployer (emergency pause only) |
+| Governance | `owner()` | Deployer (pending transfer to Gnosis Safe) |
+
 ### NEXT STEPS (Mainnet)
 
 | Step | Status |
 |------|--------|
 | Create Uniswap V2 LP (400M IFR + ETH) | Pending |
 | Lock LP Tokens (min 12 months) | Pending |
-| Transfer InfernoToken Ownership to Governance | Pending |
+| Transfer InfernoToken Ownership to Governance | **Done** (2026-03-05) |
+| Transfer LiquidityReserve Ownership to Governance | **Done** (2026-03-05) |
+| Transfer BurnReserve Ownership to Governance | **Done** (2026-03-05) |
+| Transfer BuybackVault Ownership to Governance | **Done** (2026-03-05) |
 | Transfer Governance Owner to Multisig | Pending |
 
 ---
