@@ -1985,20 +1985,16 @@ console.<span class="function">log</span>(<span class="string">"Since:"</span>, 
                     </thead>
                     <tbody>
                         <tr>
-                            <td>LP Pair</td>
+                            <td>LP Pair (Mainnet)</td>
+                            <td><code>TBD &mdash; pending LP creation on Uniswap V2</code></td>
+                        </tr>
+                        <tr>
+                            <td>Uniswap V2 Router (Mainnet)</td>
+                            <td><code>0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D</code></td>
+                        </tr>
+                        <tr>
+                            <td>LP Pair (Sepolia)</td>
                             <td><code>0x2252e8bBDE0E50CD372748aC233A99C08627d9c7</code></td>
-                        </tr>
-                        <tr>
-                            <td>Uniswap V2 Router</td>
-                            <td><code>0xC532a74256D3Db42D0Bf7a0400fEFDbad7694008</code></td>
-                        </tr>
-                        <tr>
-                            <td>Uniswap V2 Factory</td>
-                            <td><code>0x7E0987E5b3a30e3f2828572Bb659A548460a3003</code></td>
-                        </tr>
-                        <tr>
-                            <td>WETH</td>
-                            <td><code>0x7b79995e5f793A07Bc00c21412e50Ecae098E7f9</code></td>
                         </tr>
                     </tbody>
                 </table>
@@ -2017,11 +2013,11 @@ console.<span class="function">log</span>(<span class="string">"Since:"</span>, 
                         </tr>
                         <tr>
                             <td>ETH in Pool</td>
-                            <td>0.01 ETH (Sepolia testnet)</td>
+                            <td>TBD after mainnet LP creation</td>
                         </tr>
                         <tr>
                             <td>LP Tokens</td>
-                            <td>Held by deployer (to be locked/burned on mainnet)</td>
+                            <td>Will be locked (min 12 months via Unicrypt)</td>
                         </tr>
                     </tbody>
                 </table>
@@ -2061,37 +2057,14 @@ console.<span class="function">log</span>(<span class="string">"Reserve1:"</span
     </main>
 </div>
 
-<!-- IFR AI Copilot Widget -->
-<button id="ifr-copilot-btn" onclick="toggleCopilot()"
-  style="position:fixed;bottom:24px;right:24px;z-index:10000;
-  background:#C0392B;color:#fff;border:none;padding:12px 20px;
-  border-radius:50px;font-size:14px;font-weight:bold;cursor:pointer;
-  box-shadow:0 4px 16px rgba(192,57,43,0.4);transition:transform 0.2s;"
-  onmouseover="this.style.transform='scale(1.05)'"
-  onmouseout="this.style.transform='scale(1)'">&#x1f525; AI Copilot</button>
-
-<div id="ifr-copilot-window"
-  style="display:none;position:fixed;bottom:90px;right:24px;
-  z-index:9998;width:400px;height:600px;
-  border-radius:16px;overflow:hidden;
-  box-shadow:0 8px 32px rgba(0,0,0,0.5);">
-  <iframe
-    src="https://ifr-ai-copilot-production.up.railway.app"
-    style="border:none;width:100%;height:100%;"
-    allow="clipboard-write">
-  </iframe>
-</div>
-
-<script>
-function toggleCopilot() {
-  if (window.location.hostname === 'localhost') return;
-  var win = document.getElementById('ifr-copilot-window');
-  var btn = document.getElementById('ifr-copilot-btn');
-  var open = win.style.display === 'block';
-  win.style.display = open ? 'none' : 'block';
-  btn.innerHTML = open ? '&#x1f525; AI Copilot' : '&#x2715; Close';
-}
-</script>
+<!-- IFR Copilot Widget -->
+<style>
+#ifr-btn { position:fixed; bottom:24px; right:24px; z-index:99999; width:60px; height:60px; border-radius:50%; background:#ff6600; border:none; cursor:pointer; font-size:28px; box-shadow:0 4px 20px rgba(255,102,0,0.5); }
+#ifr-panel { display:none; position:fixed; bottom:100px; right:24px; z-index:99998; width:400px; height:580px; border-radius:16px; overflow:hidden; box-shadow:0 8px 40px rgba(0,0,0,0.5); background:#1a1a1a; }
+#ifr-panel iframe { width:100%; height:100%; border:none; }
+</style>
+<button id="ifr-btn" onclick="var p=document.getElementById('ifr-panel');p.style.display=p.style.display==='block'?'none':'block';">&#x1f525;</button>
+<div id="ifr-panel"><iframe src="https://ifr-ai-copilot-production.up.railway.app" allow="clipboard-write"></iframe></div>
 
 </body>
 </html>

@@ -643,7 +643,7 @@
       <div class="faq-section">
         <div class="faq-item">
           <button class="faq-q"><span>Has the protocol been audited?</span><span class="icon">+</span></button>
-          <div class="faq-a">The protocol has undergone Slither static analysis (0 high/critical findings), an independent ChatGPT audit (7/7 PASS), and has 361 automated tests with 99% statement coverage. A professional third-party audit by an established firm is planned before mainnet launch.</div>
+          <div class="faq-a">The protocol has undergone Slither static analysis (0 high/critical findings), a Claude security audit (0 FAIL, 21 WARN, 81 PASS), and has 444 automated tests with 99% statement coverage. All 9 contracts are deployed and verified on Ethereum Mainnet. A professional third-party audit is planned as the next security milestone.</div>
         </div>
 
         <div class="faq-item">
@@ -709,37 +709,14 @@
     })();
   </script>
 
-<!-- IFR AI Copilot Widget -->
-<button id="ifr-copilot-btn" onclick="toggleCopilot()"
-  style="position:fixed;bottom:24px;right:24px;z-index:10000;
-  background:#C0392B;color:#fff;border:none;padding:12px 20px;
-  border-radius:50px;font-size:14px;font-weight:bold;cursor:pointer;
-  box-shadow:0 4px 16px rgba(192,57,43,0.4);transition:transform 0.2s;"
-  onmouseover="this.style.transform='scale(1.05)'"
-  onmouseout="this.style.transform='scale(1)'">&#x1f525; AI Copilot</button>
-
-<div id="ifr-copilot-window"
-  style="display:none;position:fixed;bottom:90px;right:24px;
-  z-index:9998;width:400px;height:600px;
-  border-radius:16px;overflow:hidden;
-  box-shadow:0 8px 32px rgba(0,0,0,0.5);">
-  <iframe
-    src="https://ifr-ai-copilot-production.up.railway.app"
-    style="border:none;width:100%;height:100%;"
-    allow="clipboard-write">
-  </iframe>
-</div>
-
-<script>
-function toggleCopilot() {
-  if (window.location.hostname === 'localhost') return;
-  var win = document.getElementById('ifr-copilot-window');
-  var btn = document.getElementById('ifr-copilot-btn');
-  var open = win.style.display === 'block';
-  win.style.display = open ? 'none' : 'block';
-  btn.innerHTML = open ? '&#x1f525; AI Copilot' : '&#x2715; Close';
-}
-</script>
+<!-- IFR Copilot Widget -->
+<style>
+#ifr-btn { position:fixed; bottom:24px; right:24px; z-index:99999; width:60px; height:60px; border-radius:50%; background:#ff6600; border:none; cursor:pointer; font-size:28px; box-shadow:0 4px 20px rgba(255,102,0,0.5); }
+#ifr-panel { display:none; position:fixed; bottom:100px; right:24px; z-index:99998; width:400px; height:580px; border-radius:16px; overflow:hidden; box-shadow:0 8px 40px rgba(0,0,0,0.5); background:#1a1a1a; }
+#ifr-panel iframe { width:100%; height:100%; border:none; }
+</style>
+<button id="ifr-btn" onclick="var p=document.getElementById('ifr-panel');p.style.display=p.style.display==='block'?'none':'block';">&#x1f525;</button>
+<div id="ifr-panel"><iframe src="https://ifr-ai-copilot-production.up.railway.app" allow="clipboard-write"></iframe></div>
 
 </body>
 </html>
