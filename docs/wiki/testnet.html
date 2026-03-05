@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Fee Design &mdash; Inferno ($IFR) Documentation</title>
+  <title>Testnet &mdash; Inferno ($IFR) Documentation</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -297,6 +297,11 @@
       border-left-color: var(--green);
     }
 
+    .callout-yellow {
+      background: rgba(245, 158, 11, 0.06);
+      border-left-color: #f59e0b;
+    }
+
     /* ---------- Address ---------- */
     .address {
       font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
@@ -393,9 +398,9 @@
         <li><a href="faq.html">FAQ</a></li>
         <li><a href="transparency.html">Transparency</a></li>
         <li><a href="fair-launch.html">Fair Launch</a></li>
-        <li><a href="fee-design.html" class="active">Fee Design</a></li>
+        <li><a href="fee-design.html">Fee Design</a></li>
         <li><a href="roadmap.html">Roadmap</a></li>
-        <li><a href="testnet.html">Testnet</a></li>
+        <li><a href="testnet.html" class="active">Testnet</a></li>
         <li><div class="nav-divider"></div></li>
         <li class="nav-back"><a href="../index.html">&larr; Back to Website</a></li>
       </ul>
@@ -404,153 +409,161 @@
     <!-- Main content -->
     <main class="main">
 
-      <h1><span class="accent">Fee Design</span></h1>
+      <h1><span class="accent">Testnet</span> (Sepolia)</h1>
       <p class="subtitle">
-        Why 3.5%? How fees power deflation and the buyback mechanism.
+        All Sepolia testnet contract addresses, faucet links, and developer instructions for testing the Inferno protocol.
       </p>
 
-      <!-- ========== Core Principle ========== -->
-      <h2>Core Principle: Lock &gt; Transfer</h2>
-
-      <p>IFR is not a trading token. The model is based on:</p>
-      <ol>
-        <li>Buy once</li>
-        <li>Lock once</li>
-        <li>Use benefits permanently</li>
-      </ol>
-
-      <p>Transfers happen rarely &mdash; when buying, when locking, when unlocking. Not daily. That is why 3.5% is sustainable and intentional.</p>
-
-      <!-- ========== Fee Breakdown ========== -->
-      <h2>Fee Breakdown</h2>
-
-      <table>
-        <thead>
-          <tr>
-            <th>Fee</th>
-            <th>Destination</th>
-            <th>Purpose</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>2.0%</td>
-            <td>Burn (sender side)</td>
-            <td>Permanent deflation</td>
-          </tr>
-          <tr>
-            <td>0.5%</td>
-            <td>Burn (recipient side)</td>
-            <td>Permanent deflation</td>
-          </tr>
-          <tr>
-            <td>1.0%</td>
-            <td>BuybackVault</td>
-            <td>Liquidity strengthening</td>
-          </tr>
-          <tr>
-            <td><strong>3.5%</strong></td>
-            <td><strong>Total</strong></td>
-            <td><strong>2.5% burned + 1% buyback</strong></td>
-          </tr>
-        </tbody>
-      </table>
-
       <div class="callout">
-        <p><strong>Hard cap:</strong> Total fees can never exceed 5% (500 bps). This is enforced in the smart contract via <code>MAX_FEE_BPS</code> and cannot be changed by any governance action.</p>
+        <p><strong>Note:</strong> Mainnet contracts are deployed and verified. This page preserves Sepolia testnet addresses for developers and community auditors who want to test without real funds.</p>
       </div>
 
-      <!-- ========== Fee-Exempt Addresses ========== -->
-      <h2>Fee-Exempt Addresses</h2>
-
-      <p>Protocol-internal transfers incur zero fees. These addresses are fee-exempt:</p>
+      <!-- ========== Sepolia Contracts ========== -->
+      <h2>Sepolia Contract Addresses</h2>
+      <p>All contracts are deployed and verified on Sepolia Etherscan. These are the original testnet deployments used during development.</p>
 
       <table>
         <thead>
-          <tr>
-            <th>Address</th>
-            <th>Why Exempt?</th>
-          </tr>
+          <tr><th>Contract</th><th>Sepolia Address</th></tr>
         </thead>
         <tbody>
+          <tr>
+            <td>InfernoToken</td>
+            <td class="address"><a href="https://sepolia.etherscan.io/address/0x3Bd71947F288d1dd8B21129B1bE4FF16EDd5d1F4#code" target="_blank" rel="noopener">0x3Bd71947F288d1dd8B21129B1bE4FF16EDd5d1F4</a></td>
+          </tr>
+          <tr>
+            <td>Governance</td>
+            <td class="address"><a href="https://sepolia.etherscan.io/address/0x6050b22E4EAF3f414d1155fBaF30B868E0107017#code" target="_blank" rel="noopener">0x6050b22E4EAF3f414d1155fBaF30B868E0107017</a></td>
+          </tr>
           <tr>
             <td>IFRLock</td>
-            <td>Lock/Unlock must be fee-free (users get back exactly what they locked)</td>
+            <td class="address"><a href="https://sepolia.etherscan.io/address/0x0Cab0A9440643128540222acC6eF5028736675d3#code" target="_blank" rel="noopener">0x0Cab0A9440643128540222acC6eF5028736675d3</a></td>
           </tr>
           <tr>
-            <td>LiquidityReserve</td>
-            <td>Internal protocol transfers</td>
+            <td>LiquidityReserve (v2)</td>
+            <td class="address"><a href="https://sepolia.etherscan.io/address/0xF7E90D0d17f8232365186AA085D26eaEfAf011aF#code" target="_blank" rel="noopener">0xF7E90D0d17f8232365186AA085D26eaEfAf011aF</a></td>
           </tr>
           <tr>
-            <td>BuybackVault</td>
-            <td>Buyback logic without loss</td>
+            <td>Vesting</td>
+            <td class="address"><a href="https://sepolia.etherscan.io/address/0xa710f9FE7bf42981E60BE2Fbe7D87Fb3541a3F8B#code" target="_blank" rel="noopener">0xa710f9FE7bf42981E60BE2Fbe7D87Fb3541a3F8B</a></td>
           </tr>
           <tr>
-            <td>BurnReserve</td>
-            <td>Burn mechanism</td>
+            <td>BuybackVault (v2)</td>
+            <td class="address"><a href="https://sepolia.etherscan.io/address/0xC8ABb9039BEd24f4dBf5Cff09699877D81f0D63C#code" target="_blank" rel="noopener">0xC8ABb9039BEd24f4dBf5Cff09699877D81f0D63C</a></td>
           </tr>
           <tr>
-            <td>PartnerVault</td>
-            <td>Reward payouts (after Governance Proposal #3)</td>
+            <td>BurnReserve (v2)</td>
+            <td class="address"><a href="https://sepolia.etherscan.io/address/0x6D4582FCac792FD3880e252fC0a585A0c1823e80#code" target="_blank" rel="noopener">0x6D4582FCac792FD3880e252fC0a585A0c1823e80</a></td>
           </tr>
           <tr>
-            <td>DEX Router</td>
-            <td>Uniswap V2 swaps without double-fee</td>
+            <td>PartnerVault (v2)</td>
+            <td class="address"><a href="https://sepolia.etherscan.io/address/0x5F12C0bC616e9Ca347D48C33266aA8fe98490A39#code" target="_blank" rel="noopener">0x5F12C0bC616e9Ca347D48C33266aA8fe98490A39</a></td>
+          </tr>
+          <tr>
+            <td>FeeRouterV1</td>
+            <td class="address"><a href="https://sepolia.etherscan.io/address/0xE0E8F76e4fb38B2e367Aee043a2C02b8D1c7c037#code" target="_blank" rel="noopener">0xE0E8F76e4fb38B2e367Aee043a2C02b8D1c7c037</a></td>
+          </tr>
+          <tr>
+            <td>LP Pair (IFR/WETH)</td>
+            <td class="address"><a href="https://sepolia.etherscan.io/address/0x2252e8bBDE0E50CD372748aC233A99C08627d9c7" target="_blank" rel="noopener">0x2252e8bBDE0E50CD372748aC233A99C08627d9c7</a></td>
+          </tr>
+          <tr>
+            <td>BootstrapVault</td>
+            <td class="address"><a href="https://sepolia.etherscan.io/address/0xE0E8F76e4fb38B2e367Aee043a2C02b8D1c7c037#code" target="_blank" rel="noopener">0xE0E8F76e4fb38B2e367Aee043a2C02b8D1c7c037</a></td>
           </tr>
         </tbody>
       </table>
 
-      <p>All exempt addresses are on-chain transparent and only changeable via Governance proposals with a 48-hour timelock.</p>
-
-      <!-- ========== CEX Strategy ========== -->
-      <h2>CEX Listing Strategy</h2>
-
-      <p>Fee-on-transfer tokens have elevated CEX requirements:</p>
-
-      <ul>
-        <li><strong>Transparency:</strong> Fee mechanism fully documented (check)</li>
-        <li><strong>No hidden fees:</strong> Everything on-chain (check)</li>
-        <li><strong>Exchange coordination:</strong> CEX wallets can be made fee-exempt via governance</li>
-      </ul>
-
+      <h3>Infrastructure</h3>
       <table>
         <thead>
-          <tr>
-            <th>Phase</th>
-            <th>Listing Type</th>
-          </tr>
+          <tr><th>Component</th><th>Sepolia Address</th></tr>
         </thead>
         <tbody>
           <tr>
-            <td>Phase 0</td>
-            <td>DEX only (Uniswap V2)</td>
+            <td>Deployer</td>
+            <td class="address">0x5Ecc668eab04C5bee81b5c7242e1077c946dE406</td>
           </tr>
           <tr>
-            <td>Phase 2+</td>
-            <td>CEX outreach after mainnet &amp; audit</td>
+            <td>Uniswap V2 Router</td>
+            <td class="address"><a href="https://sepolia.etherscan.io/address/0xC532a74256D3Db42D0Bf7a0400fEFDbad7694008" target="_blank" rel="noopener">0xC532a74256D3Db42D0Bf7a0400fEFDbad7694008</a></td>
           </tr>
         </tbody>
       </table>
 
-      <!-- ========== MEV & Slippage ========== -->
-      <h2>MEV &amp; Slippage Guide</h2>
+      <!-- ========== Governance Proposals ========== -->
+      <h2>Governance Proposals (Sepolia)</h2>
+      <p>10 governance proposals were executed on Sepolia to validate the full lifecycle: propose &rarr; 48h wait &rarr; execute.</p>
 
-      <p>When trading IFR on Uniswap V2:</p>
+      <table>
+        <thead>
+          <tr><th>#</th><th>Action</th><th>Status</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>0</td><td>setFeeExempt (test)</td><td>Executed</td></tr>
+          <tr><td>1</td><td>setFeeExempt(IFRLock, true)</td><td>Executed</td></tr>
+          <tr><td>2</td><td>Cancelled (v1 deprecated)</td><td>Cancelled</td></tr>
+          <tr><td>3</td><td>setFeeExempt(PartnerVault v2, true) + top-up</td><td>Executed</td></tr>
+          <tr><td>4&ndash;6</td><td>transferOwnership (cancelled, v1 immutable)</td><td>Cancelled</td></tr>
+          <tr><td>7&ndash;9</td><td>setFeeExempt(LR v2, BV v2, BR v2)</td><td>Executed</td></tr>
+        </tbody>
+      </table>
+
+      <!-- ========== Getting Started ========== -->
+      <h2>Getting Started with Testnet</h2>
+
+      <h3>1. Get Sepolia ETH</h3>
+      <p>You need Sepolia ETH for gas fees. Use one of these faucets:</p>
+      <ul>
+        <li><a href="https://sepoliafaucet.com" target="_blank" rel="noopener">sepoliafaucet.com</a> (Alchemy)</li>
+        <li><a href="https://faucets.chain.link/sepolia" target="_blank" rel="noopener">Chainlink Faucet</a></li>
+        <li><a href="https://www.infura.io/faucet/sepolia" target="_blank" rel="noopener">Infura Faucet</a></li>
+      </ul>
+
+      <h3>2. Add Sepolia IFR to MetaMask</h3>
+      <p>Add the token manually in MetaMask:</p>
+      <ul>
+        <li><strong>Network:</strong> Sepolia (Chain ID: 11155111)</li>
+        <li><strong>Token Address:</strong> <code>0x3Bd71947F288d1dd8B21129B1bE4FF16EDd5d1F4</code></li>
+        <li><strong>Symbol:</strong> IFR</li>
+        <li><strong>Decimals:</strong> 9</li>
+      </ul>
+
+      <h3>3. Interact with Contracts</h3>
+      <p>All contracts are verified on Sepolia Etherscan &mdash; you can read and write directly from the "Read Contract" and "Write Contract" tabs.</p>
+
+<pre><code># Clone the repo
+git clone https://github.com/NeaBouli/inferno
+cd inferno
+npm install
+
+# Copy .env and add your Sepolia RPC URL
+cp .env.example .env
+
+# Run all tests locally (no network needed)
+npx hardhat test
+
+# Run live smoke test on Sepolia
+npx hardhat run scripts/sepolia-smoke-test.js --network sepolia</code></pre>
+
+      <h3>4. Run the Dashboard Locally</h3>
+<pre><code>cd apps/dashboard
+npm install
+npm run dev
+# Opens at http://localhost:5173
+# Connect MetaMask to Sepolia</code></pre>
+
+      <!-- ========== Community Audit ========== -->
+      <h2>Community Audit</h2>
+      <p>
+        All smart contracts are open source. Security findings are welcome via
+        <a href="https://github.com/NeaBouli/inferno/issues/new?template=security-audit.md" target="_blank" rel="noopener">GitHub Issues</a>.
+        The testnet deployment allows anyone to verify contract behavior without risking real funds.
+      </p>
 
       <div class="callout-green callout">
-        <p><strong>Recommended slippage:</strong> Set to at least <strong>4%</strong> (3.5% fee + AMM slippage). Lower values may cause transactions to revert.</p>
+        <p><strong>Mainnet contracts</strong> are listed on the <a href="deployment.html">Deployment</a> page. For production addresses, see the main <a href="../index.html#contracts">landing page</a>.</p>
       </div>
-
-      <pre><code>// Recommended Uniswap V2 settings for IFR
-Slippage Tolerance: 4.0% (minimum)
-Transaction Deadline: 20 minutes
-Gas: Standard</code></pre>
-
-      <ul>
-        <li>The FeeRouter contract provides optimized routing with correct parameters</li>
-        <li>Alternatively, use the Governance Dashboard for direct swaps</li>
-        <li>Fee-on-transfer is fully DEX-compatible but requires correct slippage settings</li>
-      </ul>
 
       <!-- Footer -->
       <footer class="wiki-footer">
