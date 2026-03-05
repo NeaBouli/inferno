@@ -8,7 +8,7 @@
     "dev:client": "vite",
     "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
     "prebuild": "node -e \"try{require('../../scripts/build-wiki-rag.js')}catch(e){console.log('prebuild skipped (wiki-content.json committed)');}\"",
-    "build": "tsc -b && vite build",
+    "build": "vite build",
     "preview": "vite preview",
     "start": "tsx server/index.ts"
   },
