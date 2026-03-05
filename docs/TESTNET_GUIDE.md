@@ -1,7 +1,8 @@
 # IFR Testnet Integration Guide — Sepolia
 
 Step-by-step guide for partners and developers to test the full IFR
-integration on Sepolia before mainnet.
+integration on Sepolia. Mainnet was deployed on 2026-03-05 — see
+[DEPLOYMENTS.md](DEPLOYMENTS.md) for mainnet addresses.
 
 ---
 
@@ -19,61 +20,61 @@ Network: **Sepolia Testnet** | Chain ID: **11155111** | Token Decimals: **9**
 
 ---
 
-## Voraussetzungen
+## Prerequisites
 
-- [ ] MetaMask installiert (oder anderes EIP-1193 Wallet)
-- [ ] Sepolia ETH vorhanden (Faucet: https://sepoliafaucet.com)
-- [ ] Node.js >= 18 installiert
-- [ ] Repo geklont: `git clone https://github.com/NeaBouli/inferno`
+- [ ] MetaMask installed (or another EIP-1193 wallet)
+- [ ] Sepolia ETH available (Faucet: https://sepoliafaucet.com)
+- [ ] Node.js >= 18 installed
+- [ ] Repo cloned: `git clone https://github.com/NeaBouli/inferno`
 - [ ] Dependencies: `npm install`
-- [ ] `.env` konfiguriert (siehe `.env.example`)
+- [ ] `.env` configured (see `.env.example`)
 
 ---
 
-## Schritt 1: IFR Token zu MetaMask hinzufuegen
+## Step 1: Add IFR Token to MetaMask
 
-1. MetaMask oeffnen → "Import Token"
+1. Open MetaMask -> "Import Token"
 2. Token Contract Address: `0x3Bd71947F288d1dd8B21129B1bE4FF16EDd5d1F4`
 3. Symbol: `IFR`
-4. **Decimals: 9** — kritisch, nicht 18!
-5. "Save" → IFR erscheint in deiner Wallet
+4. **Decimals: 9** — critical, not 18!
+5. "Save" -> IFR appears in your wallet
 
-**Falsche Decimals (18 statt 9) = alle Betraege um Faktor 10^9 falsch.**
+**Wrong decimals (18 instead of 9) = all amounts off by a factor of 10^9.**
 
 ---
 
-## Schritt 2: Test-IFR erhalten
+## Step 2: Obtain Test IFR
 
 Option A — Script:
 ```bash
 cd /Users/gio/Desktop/Inferno
 npx hardhat run scripts/mint-test-tokens.js --network sepolia
-# Sendet Test-IFR an deine Wallet (nur Testnet)
+# Sends test IFR to your wallet (testnet only)
 ```
 
-Option B — direkt via Etherscan:
-1. IFRToken auf Sepolia Etherscan oeffnen
-2. "Write Contract" → connect wallet
-3. `transfer()` vom Deployer (falls du Zugriff hast)
+Option B — Directly via Etherscan:
+1. Open IFRToken on Sepolia Etherscan
+2. "Write Contract" -> connect wallet
+3. `transfer()` from deployer (if you have access)
 
 ---
 
-## Schritt 3: IFR sperren (Lock)
+## Step 3: Lock IFR
 
 ### Via Script:
 ```bash
-# Sperre 5.000 IFR (Gold Tier)
+# Lock 5,000 IFR (Gold Tier)
 npx hardhat run scripts/lock-tokens.js --network sepolia
-# Script fragt: Betrag? → 5000
+# Script asks: Amount? -> 5000
 ```
 
-### Via Etherscan (manuell):
-1. IFRLock Contract → "Write Contract"
-2. Funktion: `lock(uint256 amount)`
-3. Amount: `5000000000000` (= 5.000 IFR x 10^9)
-4. Transaktion bestaetigen
+### Via Etherscan (manual):
+1. IFRLock Contract -> "Write Contract"
+2. Function: `lock(uint256 amount)`
+3. Amount: `5000000000000` (= 5,000 IFR x 10^9)
+4. Confirm transaction
 
-### Verifikation:
+### Verification:
 ```bash
 npx hardhat run scripts/check-lock.js --network sepolia
 # Output: Locked: 5000.0 IFR | isLocked(5000): true
@@ -81,9 +82,9 @@ npx hardhat run scripts/check-lock.js --network sepolia
 
 ---
 
-## Schritt 4: Lock-Status pruefen (isLocked)
+## Step 4: Check Lock Status (isLocked)
 ```javascript
-// check-lock.js (oder direkt in Node REPL)
+// check-lock.js (or directly in Node REPL)
 const { ethers } = require("ethers");
 
 const provider = new ethers.providers.JsonRpcProvider(process.env.SEPOLIA_RPC);
@@ -94,7 +95,7 @@ const ifrLock = new ethers.Contract(
   provider
 );
 
-const wallet = "0xDEINE_WALLET_ADRESSE";
+const wallet = "0xYOUR_WALLET_ADDRESS";
 const amount = ethers.utils.parseUnits("5000", 9);
 
 const locked = await ifrLock.isLocked(wallet, amount);
@@ -106,25 +107,25 @@ console.log("Total locked:", ethers.utils.formatUnits(total, 9), "IFR");
 
 ---
 
-## Schritt 5: Benefits Network testen (QR-Flow)
+## Step 5: Test Benefits Network (QR Flow)
 
-### Backend starten:
+### Start backend:
 ```bash
 cd apps/benefits-network/backend
 cp .env.example .env
 # .env: CHAIN_ID=11155111, IFRLOCK_ADDRESS=0x0Cab0A..., RPC_URL=SEPOLIA_RPC
 npm install && npm run dev
-# Backend laeuft auf Port 3001
+# Backend runs on port 3001
 ```
 
-### Frontend starten:
+### Start frontend:
 ```bash
 cd apps/benefits-network/frontend
 npm install && npm run dev
-# Frontend laeuft auf Port 3000
+# Frontend runs on port 3000
 ```
 
-### Test-Business anlegen:
+### Create test business:
 ```bash
 curl -X POST http://localhost:3001/api/admin/businesses \
   -H "Authorization: Bearer test-secret" \
@@ -135,59 +136,59 @@ curl -X POST http://localhost:3001/api/admin/businesses \
     "requiredLockIFR": 1000,
     "tierLabel": "Bronze"
   }'
-# → gibt businessId zurueck
+# -> returns businessId
 ```
 
-### QR-Flow testen:
+### Test QR flow:
 1. Browser: `http://localhost:3000/b/{businessId}`
-2. "Verifikation starten" → QR-Code erscheint
-3. Handy: QR scannen → WalletConnect → signieren
-4. Merchant sieht: **APPROVED** (gruener Screen)
-5. "Einloesen" klicken → Status: REDEEMED
+2. "Start verification" -> QR code appears
+3. Phone: Scan QR -> WalletConnect -> sign
+4. Merchant sees: **APPROVED** (green screen)
+5. Click "Redeem" -> Status: REDEEMED
 
 ---
 
-## Schritt 6: Governance Dashboard testen
+## Step 6: Test Governance Dashboard
 ```bash
 cd apps/governance-dashboard
 npm run dev
-# Dashboard laeuft auf http://localhost:5174
+# Dashboard runs at http://localhost:5174
 ```
 
-Was du siehst:
-- **Overview Tab**: PartnerVault Balance, RewardBps 15%, TotalSupply
+What you see:
+- **Overview Tab**: PartnerVault balance, RewardBps 15%, TotalSupply
 - **Timelock Queue**: Proposals #4-#6 (Pending, Ownership Transfer)
-- **Calldata Generator**: Governance-Proposals erstellen
+- **Calldata Generator**: Create governance proposals
 
 ---
 
-## Schritt 7: Partner Lock Reward testen (PartnerVault)
+## Step 7: Test Partner Lock Reward (PartnerVault)
 
-Dieser Schritt setzt voraus, dass:
-- PartnerVault feeExempt ist (nach Proposal #3)
-- Ein Partner in PartnerVault registered ist (via Governance)
+This step requires:
+- PartnerVault is feeExempt (after Proposal #3)
+- A partner is registered in PartnerVault (via Governance)
 
 ```bash
-# Partner registrieren (Governance Proposal noetig)
+# Register partner (Governance Proposal required)
 npx hardhat run scripts/propose-create-partner.js --network sepolia
 
-# Nach 48h executen:
+# Execute after 48h:
 npx hardhat run scripts/execute-proposal.js --network sepolia
 
-# Lock Reward aufzeichnen (als authorizedCaller):
+# Record lock reward (as authorizedCaller):
 npx hardhat run scripts/record-lock-reward.js --network sepolia
 # Args: partnerId, lockAmount, userWallet
 ```
 
 ---
 
-## Schritt 8: FeeRouter testen
+## Step 8: Test FeeRouter
 
 ### FeeRouter Contract
-- Adresse: `0x499289C8Ef49769F4FcFF3ca86D4BD7b55B49aa4`
+- Address: `0x499289C8Ef49769F4FcFF3ca86D4BD7b55B49aa4`
 - Etherscan: [View](https://sepolia.etherscan.io/address/0x499289C8Ef49769F4FcFF3ca86D4BD7b55B49aa4)
 
-### Protocol Fee pruefen:
+### Check protocol fee:
 ```javascript
 const { ethers } = require("ethers");
 
@@ -213,65 +214,66 @@ console.log("Fee Cap:", cap.toString(), "bps (", (cap / 100).toFixed(2), "%)");
 console.log("Paused:", isPaused);
 ```
 
-### Erwartete Werte:
-| Parameter | Wert | Bedeutung |
-|-----------|------|-----------|
-| protocolFeeBps | 5 | 0.05% Protocol Fee |
-| FEE_CAP_BPS | 25 | 0.25% Hard Cap (nicht ueberschreitbar) |
-| paused | false | Router aktiv |
+### Expected values:
+| Parameter | Value | Meaning |
+|-----------|-------|---------|
+| protocolFeeBps | 5 | 0.05% protocol fee |
+| FEE_CAP_BPS | 25 | 0.25% hard cap (cannot be exceeded) |
+| paused | false | Router active |
 
-### EIP-712 Voucher verifizieren:
+### Verify EIP-712 voucher:
 ```javascript
-// Pruefe ob ein Voucher gueltig ist (ohne ihn einzuloesen)
+// Check if a voucher is valid (without redeeming it)
 const isValid = await feeRouter.isVoucherValid(
-  "0xDEINE_WALLET_ADRESSE", // user
-  1,                         // nonce
-  10,                        // discountBps (0.10%)
+  "0xYOUR_WALLET_ADDRESS", // user
+  1,                        // nonce
+  10,                       // discountBps (0.10%)
   Math.floor(Date.now() / 1000) + 3600 // deadline (1h)
 );
 console.log("Voucher valid:", isValid);
 ```
 
-### Governance-Aenderungen (via Calldata Generator):
-Im Governance Dashboard (`http://localhost:5174`) → Calldata Generator:
-- `FeeRouter: setFeeBps(uint16)` — Protocol Fee aendern (0-25 bps)
-- `FeeRouter: setAdapter(address, bool)` — Adapter whitelisten
-- `FeeRouter: setVoucherSigner(address)` — Voucher-Signer aendern
-- `FeeRouter: setPaused(bool)` — Notfall-Pause
+### Governance changes (via Calldata Generator):
+In the Governance Dashboard (`http://localhost:5174`) -> Calldata Generator:
+- `FeeRouter: setFeeBps(uint16)` — Change protocol fee (0-25 bps)
+- `FeeRouter: setAdapter(address, bool)` — Whitelist adapter
+- `FeeRouter: setVoucherSigner(address)` — Change voucher signer
+- `FeeRouter: setPaused(bool)` — Emergency pause
 
 ---
 
-## Schritt 9: Full Smoke Test (automatisiert)
+## Step 9: Full Smoke Test (automated)
 ```bash
 cd /Users/gio/Desktop/Inferno
 npx hardhat test --network sepolia --grep "smoke"
-# Oder alle Tests:
-npx hardhat test --network sepolia
+# Or all tests:
+npx hardhat test
 ```
 
-Erwartetes Ergebnis: **361 tests passing**
+Expected result: **444 tests passing**
 
 ---
 
-## Haeufige Fehler
+## Common Errors
 
-| Fehler | Ursache | Loesung |
-|--------|---------|--------|
-| "insufficient funds" | Kein Sepolia ETH | Faucet: sepoliafaucet.com |
-| Falscher Token-Betrag | Decimals 18 statt 9 | Immer `parseUnits(x, 9)` |
-| "execution reverted" | feeExempt nicht gesetzt | Proposal #3 erst executen |
-| "Not authorized" | Kein authorizedCaller | setAuthorizedCaller via Governance |
-| RPC timeout | Alchemy Free Tier | Eigenen RPC Key nutzen |
-| MetaMask "wrong network" | Nicht auf Sepolia | Netzwerk wechseln (Chain ID 11155111) |
-
----
-
-## Naechste Schritte nach erfolgreichem Test
-
-- [ ] Mainnet Checklist durchgehen: [MAINNET_CHECKLIST.md](MAINNET_CHECKLIST.md)
-- [ ] Security Audit beauftragen: [AUDIT_BRIEF.md](AUDIT_BRIEF.md)
-- [ ] Multisig einrichten: [MULTISIG_SETUP.md](MULTISIG_SETUP.md)
-- [ ] Partner Integration: [PARTNER_INTEGRATION_SPEC.md](PARTNER_INTEGRATION_SPEC.md)
+| Error | Cause | Solution |
+|-------|-------|---------|
+| "insufficient funds" | No Sepolia ETH | Faucet: sepoliafaucet.com |
+| Wrong token amount | Decimals 18 instead of 9 | Always use `parseUnits(x, 9)` |
+| "execution reverted" | feeExempt not set | Execute Proposal #3 first |
+| "Not authorized" | Not an authorizedCaller | setAuthorizedCaller via Governance |
+| RPC timeout | Alchemy Free Tier | Use your own RPC key |
+| MetaMask "wrong network" | Not on Sepolia | Switch network (Chain ID 11155111) |
 
 ---
-*Stand: Februar 2026 | Sepolia Testnet Guide v1.0*
+
+## Next Steps After Successful Test
+
+Mainnet is deployed (2026-03-05). See:
+- [ ] Mainnet deployment details: [DEPLOYMENTS.md](DEPLOYMENTS.md)
+- [ ] Security audit: [AUDIT_BRIEF.md](AUDIT_BRIEF.md)
+- [ ] Multisig setup: [MULTISIG_SETUP.md](MULTISIG_SETUP.md)
+- [ ] Partner integration: [PARTNER_INTEGRATION_SPEC.md](PARTNER_INTEGRATION_SPEC.md)
+
+---
+*As of: March 2026 | Sepolia Testnet Guide v1.1*

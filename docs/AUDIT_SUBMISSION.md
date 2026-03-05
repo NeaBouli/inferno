@@ -1,97 +1,95 @@
 # Audit Submission — Inferno ($IFR)
 
-Dieses Dokument bereitet die Submission für Code4rena oder
-Sherlock vor. Auditoren finden hier alle relevanten Informationen.
+This document prepares the submission for Code4rena or
+Sherlock. Auditors will find all relevant information here.
 
-## Projekt-Übersicht
+## Project Overview
 
-| Parameter | Wert |
-|-----------|------|
-| Projekt | Inferno ($IFR) |
-| Netzwerk | Ethereum (Sepolia Testnet) |
-| Sprache | Solidity 0.8.20 |
+| Parameter | Value |
+|-----------|-------|
+| Project | Inferno ($IFR) |
+| Network | Ethereum Mainnet (deployed 2026-03-05) |
+| Language | Solidity 0.8.20 |
 | Framework | Hardhat |
-| Bibliotheken | OpenZeppelin 5.x |
-| Tests | 361 (99% Statement Coverage) |
+| Libraries | OpenZeppelin 5.x |
+| Tests | 444 (99% Statement Coverage) |
 
-## Audit-Scope (In Scope)
+## Audit Scope (In Scope)
 
-Folgende Contracts sind im Audit-Scope:
+The following contracts are in audit scope:
 
-| Contract | Pfad | SLOC | Priorität |
-|----------|------|------|-----------|
-| PartnerVault | contracts/partner/PartnerVault.sol | 549 | Hoch |
-| FeeRouterV1 | contracts/FeeRouterV1.sol | 228 | Hoch |
-| BuybackVault | contracts/buyback/BuybackVault.sol | 175 | Hoch |
-| Governance | contracts/governance/Governance.sol | 150 | Mittel |
-| LiquidityReserve | contracts/liquidity/LiquidityReserve.sol | 151 | Mittel |
-| IFRLock | contracts/lock/IFRLock.sol | 127 | Hoch |
-| Vesting | contracts/vesting/Vesting.sol | 132 | Mittel |
-| BurnReserve | contracts/burnreserve/BurnReserve.sol | 92 | Niedrig |
-| InfernoToken | contracts/token/InfernoToken.sol | 93 | Hoch |
-| **Gesamt** | | **1697** | |
+| Contract | Path | SLOC | Priority |
+|----------|------|------|----------|
+| PartnerVault | contracts/partner/PartnerVault.sol | 549 | High |
+| FeeRouterV1 | contracts/FeeRouterV1.sol | 228 | High |
+| BuybackVault | contracts/buyback/BuybackVault.sol | 175 | High |
+| Governance | contracts/governance/Governance.sol | 150 | Medium |
+| LiquidityReserve | contracts/liquidity/LiquidityReserve.sol | 151 | Medium |
+| IFRLock | contracts/lock/IFRLock.sol | 127 | High |
+| Vesting | contracts/vesting/Vesting.sol | 132 | Medium |
+| BurnReserve | contracts/burnreserve/BurnReserve.sol | 92 | Low |
+| InfernoToken | contracts/token/InfernoToken.sol | 93 | High |
+| **Total** | | **1697** | |
 
 ## Out of Scope
 
-- OpenZeppelin Basis-Contracts (ERC20, Ownable, ReentrancyGuard, Pausable)
+- OpenZeppelin base contracts (ERC20, Ownable, ReentrancyGuard, Pausable)
 - Uniswap V2 Contracts (Router, Factory, Pair)
-- Test-Mocks (MockToken, MockRouter, MockAdapter, MockInfernoToken)
-- Off-chain Apps (Points Backend, AI Copilot, Creator Gateway, Benefits Network)
+- Test mocks (MockToken, MockRouter, MockAdapter, MockInfernoToken)
+- Off-chain apps (Points Backend, AI Copilot, Creator Gateway, Benefits Network)
 
-## Bekannte Issues (kein Finding)
+## Known Issues (not a finding)
 
-| Issue | Begründung |
-|-------|------------|
-| Single EOA Testnet | Phase 0 Bootstrap — Multisig Phase 1+ |
-| LP nicht gelockt | Testnet-Phase — Mainnet: burn zu 0xdead |
-| Reserve/Buyback/Burn Owner = Deployer | Testnet — Mainnet: Governance |
-| 9 Decimals | Absichtlich — IFR-spezifisch |
-| Keine Oracle | Phase 0 — USD-Pricing Phase 2+ |
-| Fee-on-transfer bricht naive Integrationen | Dokumentiert — Partner müssen balanceOf prüfen |
+| Issue | Justification |
+|-------|---------------|
+| LP not yet locked | Post-deploy — Mainnet: burn to 0xdead or Unicrypt lock |
+| 9 Decimals | Intentional — IFR-specific |
+| No Oracle | Phase 0 — USD pricing Phase 2+ |
+| Fee-on-transfer breaks naive integrations | Documented — partners must check balanceOf |
 
-## Kritische Funktionen (Fokus für Auditoren)
+## Critical Functions (Focus for Auditors)
 
 ### InfernoToken._update()
-Fee-on-transfer Logik. Kritisch: korrekte Fee-Berechnung,
-kein Rounding-Exploit, Fee-Exempt korrekt geprüft.
+Fee-on-transfer logic. Critical: correct fee calculation,
+no rounding exploit, fee-exempt correctly checked.
 
 ### IFRLock.lock() / unlock()
-Token-Custody. Kritisch: kein Drain möglich,
-korrekte Balance-Buchführung, Reentrancy.
+Token custody. Critical: no drain possible,
+correct balance bookkeeping, reentrancy.
 
 ### PartnerVault.recordLockReward()
-Emission-Logik. Kritisch: authorizedCaller,
+Emission logic. Critical: authorizedCaller,
 anti-double-count, annualEmissionCap.
 
 ### FeeRouterV1.swapWithFee()
-EIP-712 Voucher + Fee-Routing. Kritisch:
-Replay-Schutz, Signer-Verifikation, Discount-Clamp.
+EIP-712 Voucher + Fee Routing. Critical:
+replay protection, signer verification, discount clamp.
 
 ### Governance.propose() / execute()
-Timelock-Logik. Kritisch: ETA-Berechnung,
-doppelte Ausführung, Cancel-Logik.
+Timelock logic. Critical: ETA calculation,
+double execution, cancel logic.
 
 ## Code4rena Submission Checklist
 
-- [x] GitHub Repo public
-- [x] README vollständig
-- [x] Hardhat Tests laufen: `npx hardhat test`
-- [x] Coverage Report: `npx hardhat coverage`
-- [x] NatSpec Kommentare für alle public Functions
-- [x] Known Issues dokumentiert (oben)
-- [x] Deployment Adressen verifiziert (Etherscan)
-- [ ] Contest Duration: 7-14 Tage empfohlen
-- [ ] Prize Pool: mind. $15,000 für seriöse Auditoren
+- [x] GitHub repo public
+- [x] README complete
+- [x] Hardhat tests run: `npx hardhat test`
+- [x] Coverage report: `npx hardhat coverage`
+- [x] NatSpec comments for all public functions
+- [x] Known issues documented (above)
+- [x] Deployment addresses verified (Etherscan)
+- [ ] Contest duration: 7-14 days recommended
+- [ ] Prize pool: minimum $15,000 for serious auditors
 
-## Bug Bounty (nach Audit)
+## Bug Bounty (post-audit)
 
-Geplant: 5% des Treasury für kritische Mainnet-Findings.
+Planned: 5% of Treasury for critical mainnet findings.
 Details: docs/SECURITY_POLICY.md
 
-## Kontakt
+## Contact
 
 GitHub: https://github.com/NeaBouli/inferno
-Security: GitHub Security Advisories (privat)
+Security: GitHub Security Advisories (private)
 
 ---
-*Version 1.0 | Februar 2026*
+*Version 1.1 | March 2026*

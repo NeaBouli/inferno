@@ -1,14 +1,14 @@
 # IFR Creator Gateway — Technical Specification
 
-## Konzept
-Der IFR Creator Gateway ist eine Open-Source Bridge, die Creators ermoeglicht,
-ihre eigene Verifikations-Infrastruktur zu betreiben.
+## Concept
+The IFR Creator Gateway is an open-source bridge that enables creators
+to operate their own verification infrastructure.
 
-IFR bleibt reiner On-Chain Truth Layer.
-Creators betreiben eigene Server (Docker, selbst gehostet).
-Kein zentraler IFR-Server der Google-IDs oder persoenliche Daten speichert.
+IFR remains a pure on-chain truth layer.
+Creators operate their own servers (Docker, self-hosted).
+No central IFR server that stores Google IDs or personal data.
 
-## Architektur
+## Architecture
 
 ```
 User → [OAuth / WalletConnect] → Creator Gateway (Docker)
@@ -20,40 +20,40 @@ User → [OAuth / WalletConnect] → Creator Gateway (Docker)
                     [Discord Role / Private Content / API Access]
 ```
 
-## Repository-Struktur (geplant)
+## Repository Structure (planned)
 
 ```
-IFR-Creator-Gateway/ (separates GitHub Repo)
+IFR-Creator-Gateway/ (separate GitHub repo)
 ├── docker-compose.yml
 ├── .env.example
 ├── src/
-│   ├── oauth/          # Google OAuth Handler
-│   ├── wallet/         # WalletConnect + signMessage Verifier
+│   ├── oauth/          # Google OAuth handler
+│   ├── wallet/         # WalletConnect + signMessage verifier
 │   ├── lock/           # IFRLock on-chain check (ethers v5)
-│   ├── entitlement/    # Entitlement Engine (Rules-Engine)
-│   ├── api/            # REST API fuer Creator-Apps
-│   └── dashboard/      # Einfaches Web-Dashboard
+│   ├── entitlement/    # Entitlement Engine (rules engine)
+│   ├── api/            # REST API for creator apps
+│   └── dashboard/      # Simple web dashboard
 └── README.md
 ```
 
-## Hybrid Modell B — YouTube Integration
+## Hybrid Model B — YouTube Integration
 
-Zugang = YouTube Membership ODER IFR Lock (Creator waehlt)
+Access = YouTube Membership OR IFR Lock (creator chooses)
 
 Flow:
-1. User oeffnet Creator Gateway URL
-2. Login: Google OAuth (YouTube Membership Check) + Wallet Connect
-3. User signiert Message (Wallet-Ownership-Proof)
-4. Gateway prueft:
+1. User opens Creator Gateway URL
+2. Login: Google OAuth (YouTube Membership check) + Wallet Connect
+3. User signs message (wallet ownership proof)
+4. Gateway checks:
    - YouTubeMember == true? → APPROVED
    - IFRLocked >= threshold? → APPROVED
-   - Beides false? → REJECTED
-5. Creator-App erhaelt: `{ approved: true/false, method: 'youtube'|'ifr'|'both' }`
+   - Both false? → REJECTED
+5. Creator app receives: `{ approved: true/false, method: 'youtube'|'ifr'|'both' }`
 
-Warum Hybrid:
-- Bestehende YouTube-Subscriber werden nicht ausgeschlossen
-- IFR-Holder bekommen alternativen Zugang
-- Creator behaelt YouTube-Einnahmen UND gewinnt IFR-Oekosystem
+Why Hybrid:
+- Existing YouTube subscribers are not excluded
+- IFR holders get alternative access
+- Creator keeps YouTube revenue AND gains IFR ecosystem
 
 ## Environment Variables (.env.example)
 
@@ -69,7 +69,7 @@ SESSION_SECRET=
 PORT=3002
 ```
 
-## Entitlement Rules (konfigurierbar)
+## Entitlement Rules (configurable)
 
 ```json
 {
@@ -106,21 +106,21 @@ GET  /health          → { status: 'ok' }
 git clone https://github.com/NeaBouli/ifr-creator-gateway
 cd ifr-creator-gateway
 cp .env.example .env
-# .env ausfuellen (Google OAuth Keys, RPC URL, IFRLock Adresse)
+# Fill in .env (Google OAuth keys, RPC URL, IFRLock address)
 docker-compose up -d
-# Gateway laeuft auf Port 3002
+# Gateway runs on port 3002
 ```
 
-## Datenschutz
-- IFR speichert keine Google-IDs
-- Wallet-Adressen werden nicht persistiert
-- Sessions sind temporaer (TTL: 24h)
-- Creator betreibt eigenen Server → eigene Datenschutz-Verantwortung
+## Privacy
+- IFR does not store Google IDs
+- Wallet addresses are not persisted
+- Sessions are temporary (TTL: 24h)
+- Creator operates their own server → their own data privacy responsibility
 
 ## Status
-- Spezifikation: Vollstaendig
-- Implementierung: Geplant (Phase 3)
-- Repository: github.com/NeaBouli/ifr-creator-gateway (geplant)
+- Specification: Complete
+- Implementation: Planned (Phase 3)
+- Repository: github.com/NeaBouli/ifr-creator-gateway (planned)
 
 ---
-*Stand: Februar 2026 | IFR Creator Gateway v0.1 Spec*
+*As of: March 2026 | IFR Creator Gateway v0.1 Spec*

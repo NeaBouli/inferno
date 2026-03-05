@@ -1,51 +1,51 @@
-# Inferno ($IFR) — Fair Launch Statement
+# Inferno ($IFR) -- Fair Launch Statement
 
-## Was "kein Presale / kein VC" bedeutet
+## What "No Presale / No VC" Means
 
-Inferno hat:
-- Keinen Presale (kein privater Token-Verkauf vor Launch)
-- Kein VC-Backing (keine bevorzugten Konditionen für Investoren)
-- Keine IDO/IEO (kein zentralisierter Launch)
-- Direktes Listing auf Uniswap V2 (permissionless)
-- Alle Konditionen öffentlich on-chain
+Inferno has:
+- No presale (no private token sale before launch)
+- No VC backing (no preferential terms for investors)
+- No IDO/IEO (no centralized launch)
+- Direct listing on Uniswap V2 (permissionless)
+- All terms publicly on-chain
 
-## Token Allocation — vollständig transparent
+## Token Allocation -- Fully Transparent
 
-| Kategorie | % | IFR | Vesting | Begründung |
-|-----------|---|-----|---------|------------|
-| DEX Liquidity | 40% | 400M | Keine | Sofortige Liquidität |
-| Reserve | 20% | 200M | Governance | Ökosystem-Wachstum |
-| Team | 15% | 150M | 4 Jahre (1 Jahr Cliff) | Standard Startup-Vesting |
+| Category | % | IFR | Vesting | Rationale |
+|----------|---|-----|---------|-----------|
+| DEX Liquidity | 40% | 400M | None | Immediate liquidity |
+| Reserve | 20% | 200M | Governance | Ecosystem growth |
+| Team | 15% | 150M | 4 years (1 year cliff) | Standard startup vesting |
 | Treasury | 15% | 150M | Governance | Community & Grants |
-| Community | 6% | 60M | Governance | Partner-Onboarding |
+| Community | 6% | 60M | Governance | Partner onboarding |
 | PartnerVault | 4% | 40M | Milestone | Creator Rewards |
 
-## Warum 30% Team + Treasury?
+## Why 30% Team + Treasury?
 
-15% Team + 15% Treasury = 30% — das ist Standard für
-nachhaltige Protokoll-Entwicklung. Zum Vergleich:
+15% Team + 15% Treasury = 30% -- this is standard for
+sustainable protocol development. For comparison:
 
-| Projekt | Team Allocation |
+| Project | Team Allocation |
 |---------|----------------|
 | Uniswap | 21.51% |
 | Aave | 30% |
 | Compound | 22.5% |
 | IFR | 15% Team + 15% Treasury |
 
-## On-Chain Beweise
+## On-Chain Proofs
 
-- Team (150M): im Vesting Contract gesperrt, 0 released
-  → 0xa710f9FE7bf42981E60BE2Fbe7D87Fb3541a3F8B
-- Cliff: 365 Tage ab Deploy (bis ca. Januar 2027)
-- Duration: 1,460 Tage (4 Jahre linear)
+- Team (150M): locked in Vesting contract, 0 released
+  -> Mainnet: `0x2694Bc84e8D5251E9E4Ecd4B2Ae3f866d6106271`
+- Cliff: 365 days from deploy (until approximately March 2027)
+- Duration: 1,460 days (4 years linear)
 
-## Was "Fair" wirklich bedeutet
+## What "Fair" Really Means
 
-"Fair Launch" bei IFR bedeutet:
-1. Gleiche Bedingungen für alle beim DEX-Listing
-2. Kein vorher-günstig-kaufen für Insider
-3. Team-Tokens on-chain gesperrt (nicht sofort verkaufbar)
-4. Alle Regeln sind im Code — nicht im Handschlag
+"Fair Launch" for IFR means:
+1. Equal conditions for everyone at DEX listing
+2. No buy-cheap-in-advance for insiders
+3. Team tokens locked on-chain (not immediately sellable)
+4. All rules are in code -- not in handshake agreements
 
 ---
-*Februar 2026 | Version 1.0*
+*March 2026 | Version 1.1 | Mainnet Live*

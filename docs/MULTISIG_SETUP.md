@@ -1,139 +1,139 @@
 # Inferno ($IFR) — Multisig Setup Guide
 
-## Warum Multisig?
-Auf Testnet: Single EOA (Deployer) als Governance Owner — akzeptabel fuer Tests.
-Auf Mainnet: MUSS Multisig sein. Sonst: Single Point of Failure.
-Ziel: Kein einzelner Key kann das Protokoll kontrollieren.
+## Why Multisig?
+On testnet: single EOA (deployer) as Governance Owner — acceptable for testing.
+On mainnet: MUST be multisig. Otherwise: single point of failure.
+Goal: no single key can control the protocol.
 
-## Empfohlene Struktur
+## Recommended Structure
 
 ### Owner Multisig (Governance)
-- **Typ:** Gnosis Safe (https://safe.global)
-- **Threshold:** 4-of-7 (4 Signers muessen zustimmen)
-- **Signer-Profile:**
-  - 2x Gruender/Core-Team (Hardware Wallets)
-  - 2x Trusted Community Members
-  - 2x Partner-Vertreter
-  - 1x Reserve-Signer (Cold Storage)
+- **Type:** Gnosis Safe (https://safe.global)
+- **Threshold:** 4-of-7 (4 signers must approve)
+- **Signer Profiles:**
+  - 2x founders/core team (hardware wallets)
+  - 2x trusted community members
+  - 2x partner representatives
+  - 1x reserve signer (cold storage)
 
 ### Guardian Multisig (Emergency Cancel)
-- **Typ:** Gnosis Safe
+- **Type:** Gnosis Safe
 - **Threshold:** 2-of-3
-- **Zweck:** Nur cancel() — kann nicht propose oder execute
-- **Signer-Profile:** Core-Team + 1 unabhaengiger Auditor
+- **Purpose:** Only cancel() — cannot propose or execute
+- **Signer Profiles:** Core team + 1 independent auditor
 
 ---
 
-## Gnosis Safe Setup — Schritt fuer Schritt
+## Gnosis Safe Setup — Step by Step
 
 ### Phase 1: 2-of-3 Multisig (Q3 2026)
 
-#### Voraussetzungen
+#### Prerequisites
 
-#### Wallet-Anforderungen pro Signer-Typ
+#### Wallet Requirements per Signer Type
 
-| Slot | Rolle | Wallet-Typ | Begruendung |
-|------|-------|-----------|------------|
-| Gruender 1+2 | Core Team | Hardware Wallet (Ledger/Trezor) | Zwingend — hoechstes Risiko |
-| Community 1+2 | Gewaehlt | Hardware Wallet empfohlen, MetaMask akzeptabel | |
-| Partner 1+2 | Akkreditiert | MetaMask/WalletConnect akzeptabel | |
-| Reserve | Cold Storage | Air-gapped Hardware Wallet | Zwingend |
+| Slot | Role | Wallet Type | Rationale |
+|------|------|------------|-----------|
+| Founder 1+2 | Core Team | Hardware Wallet (Ledger/Trezor) | Mandatory — highest risk |
+| Community 1+2 | Elected | Hardware wallet recommended, MetaMask acceptable | |
+| Partner 1+2 | Accredited | MetaMask/WalletConnect acceptable | |
+| Reserve | Cold Storage | Air-gapped hardware wallet | Mandatory |
 
-> Fuer Testnet-Phase sind Hot Wallets (MetaMask) fuer alle Slots OK.
-> Fuer Mainnet: Gruender-Slots MUESSEN Hardware Wallet sein.
+> For testnet phase, hot wallets (MetaMask) are OK for all slots.
+> For mainnet: founder slots MUST use hardware wallets.
 
-- Sepolia ETH auf allen 3 Wallets fuer Gas
-- Getrennte Geraete fuer jeden Signer
+- Sepolia ETH on all 3 wallets for gas
+- Separate devices for each signer
 
 #### Setup
 1. https://app.safe.global → "Create new Safe"
-2. Network: Ethereum (Mainnet) oder Sepolia (Test)
-3. Owners hinzufuegen: 3 Hardware Wallet Adressen
+2. Network: Ethereum (Mainnet) or Sepolia (Test)
+3. Add owners: 3 hardware wallet addresses
 4. Threshold: 2 (2-of-3)
-5. Safe Adresse notieren
+5. Note the Safe address
 
-#### Ownership Transfer (nach Safe Setup)
+#### Ownership Transfer (after Safe Setup)
 
-Scripts bereit:
+Scripts ready:
 ```bash
 npx hardhat run scripts/propose-ownership-transfer.js --network sepolia
 ```
 
-Fuer Mainnet anpassen:
-- Ziel-Adresse: Safe Multisig Adresse (nicht Timelock!)
-- Erstmal: LiquidityReserve, BuybackVault, BurnReserve → Safe
-- Dann: Token Owner → Safe (via Governance)
+For mainnet, adjust:
+- Target address: Safe multisig address (not Timelock!)
+- First: LiquidityReserve, BuybackVault, BurnReserve → Safe
+- Then: Token Owner → Safe (via Governance)
 
 ### Phase 2: 3-of-5 Multisig (Q4 2026)
 
-Erweiterung um 2 Community-Vertreter:
-1. Snapshot Vote: Community waehlt 2 Vertreter
+Expansion by 2 community representatives:
+1. Snapshot vote: community elects 2 representatives
 2. Safe Settings → Add Owners
 3. Threshold: 3-of-5
 
 ### Phase 3: 4-of-7 Multisig (Q1 2027)
 
-Vollstaendige Dezentralisierung:
-- 2 Gruender (Hardware Wallet)
-- 2 Community (Snapshot gewaehlt)
-- 2 Partner-Vertreter (erste akkreditierte Partner)
-- 1 Reserve (Cold Storage)
+Full decentralization:
+- 2 founders (hardware wallet)
+- 2 community (Snapshot elected)
+- 2 partner representatives (first accredited partners)
+- 1 reserve (cold storage)
 - Threshold: 4-of-7
 
 ### Guardian Multisig (2-of-3)
 
-Separates Safe fuer Emergency Cancel only:
-- 1 Gruender
-- 1 unabhaengiger Security Reviewer
-- 1 Community Vertreter
+Separate Safe for emergency cancel only:
+- 1 founder
+- 1 independent security reviewer
+- 1 community representative
 - Threshold: 2-of-3
-- Einzige Funktion: `governance.cancel(proposalId)`
+- Only function: `governance.cancel(proposalId)`
 
 ---
 
-## Sicherheits-Checkliste
+## Security Checklist
 
-- [ ] Jeder Signer hat eigenes Hardware Wallet (Mainnet)
-- [ ] Seed Phrases getrennt und sicher verwahrt
-- [ ] Test-Transaktion vor Ownership Transfer
-- [ ] Safe Adresse auf Etherscan verifiziert
-- [ ] Backup-Prozess dokumentiert
-- [ ] Recovery-Plan: Mind. 2 Signers immer erreichbar
-- [ ] Signer-Rotation alle 12 Monate geplant
+- [ ] Each signer has their own hardware wallet (mainnet)
+- [ ] Seed phrases stored separately and securely
+- [ ] Test transaction before ownership transfer
+- [ ] Safe address verified on Etherscan
+- [ ] Backup process documented
+- [ ] Recovery plan: at least 2 signers always reachable
+- [ ] Signer rotation planned every 12 months
 
 ---
 
 ## Gnosis Safe — Proposal Flow
 
 1. Safe UI → "New Transaction" → "Contract Interaction"
-2. Target: Governance Contract Adresse
-3. ABI: Governance ABI einfuegen
-4. Funktion: `propose(address target, bytes calldata)`
-5. Parameter aus Governance Dashboard Calldata Generator kopieren
-6. Submit → andere Signers bestaetigen → nach 48h: Execute
+2. Target: Governance contract address
+3. ABI: paste Governance ABI
+4. Function: `propose(address target, bytes calldata)`
+5. Copy parameters from Governance Dashboard calldata generator
+6. Submit → other signers confirm → after 48h: Execute
 
 ---
 
-## Kosten (Ethereum Mainnet)
+## Costs (Ethereum Mainnet)
 
-| Aktion | Geschaetzte Kosten |
-|--------|-------------------|
+| Action | Estimated Cost |
+|--------|---------------|
 | Safe Deployment | ~0.01 ETH (~$35) |
-| Jede Transaktion | ~0.002-0.005 ETH |
+| Each Transaction | ~0.002-0.005 ETH |
 | Ownership Transfer | ~0.005 ETH |
-| **Budget pro Safe** | **mind. 0.1 ETH** |
+| **Budget per Safe** | **min. 0.1 ETH** |
 
-> Sepolia: Kostenlos (Testnet ETH via Faucet)
-
----
-
-## Wichtige Hinweise
-
-- **Separation:** Owner-Multisig und Guardian-Multisig MUESSEN verschiedene Safes sein
-- **Hardware:** Gruender-Slots immer Hardware Wallet auf Mainnet
-- **Rotation:** Signer-Rotation alle 12 Monate empfohlen
-- **Backup:** Alle Safe-Einstellungen dokumentieren
-- **Recovery:** Mind. 2 Signers immer erreichbar halten
+> Sepolia: Free (testnet ETH via faucet)
 
 ---
-*Stand: Februar 2026 | Version 2.0*
+
+## Important Notes
+
+- **Separation:** Owner multisig and guardian multisig MUST be different Safes
+- **Hardware:** Founder slots always require hardware wallets on mainnet
+- **Rotation:** Signer rotation recommended every 12 months
+- **Backup:** Document all Safe settings
+- **Recovery:** Keep at least 2 signers always reachable
+
+---
+*As of: March 2026 | Version 2.0*

@@ -1,71 +1,71 @@
 # ChatGPT Independent Audit Prompt — V4
 
-Stand: 03. Maerz 2026 | 14 Contracts | 436 Tests | 91% Branch Coverage
+As of: March 2026 | 10 On-Chain Components | 444 Tests | 91% Branch Coverage
 
-## Anleitung
+## Instructions
 
-Kopiere diesen Prompt in ChatGPT (GPT-4o) und fuehre die 8 Self-Checks aus.
-Jeder Check prueft einen spezifischen Aspekt des Projekts gegen die aktuelle Codebasis.
+Copy this prompt into ChatGPT (GPT-4o) and run the 8 self-checks.
+Each check verifies a specific aspect of the project against the current codebase.
 
 ---
 
-## Self-Check A: Anti-Sybil Middleware vorhanden
+## Self-Check A: Anti-Sybil Middleware Present
 
-Pruefe ob im Points Backend (`apps/points-backend/src/middleware/`) folgende Dateien existieren:
-1. `lockProof.ts` — On-Chain IFR Lock Verification (min 1000 IFR, Bronze tier)
-2. `captcha.ts` — Cloudflare Turnstile Verification
+Check whether the Points Backend (`apps/points-backend/src/middleware/`) contains the following files:
+1. `lockProof.ts` — On-chain IFR Lock verification (min 1000 IFR, Bronze tier)
+2. `captcha.ts` — Cloudflare Turnstile verification
 
-**PASS-Kriterien:**
-- `lockProof.ts` existiert und enthaelt `isLocked(wallet, minAmount)` Aufruf
-- `captcha.ts` existiert und enthaelt Cloudflare Turnstile URL
-- Fail-closed Pattern in lockProof (503 bei RPC-Fehler, nicht fail-open)
-- Dev-Bypass in captcha nur wenn `CAPTCHA_SECRET` leer (nicht basierend auf NODE_ENV)
+**PASS criteria:**
+- `lockProof.ts` exists and contains `isLocked(wallet, minAmount)` call
+- `captcha.ts` exists and contains Cloudflare Turnstile URL
+- Fail-closed pattern in lockProof (503 on RPC error, not fail-open)
+- Dev bypass in captcha only when `CAPTCHA_SECRET` is empty (not based on NODE_ENV)
 
 ---
 
 ## Self-Check B: Creator Gateway SIWE Auth
 
-Pruefe ob `apps/creator-gateway/src/routes/auth.ts` SIWE (Sign-In with Ethereum) implementiert:
-1. `GET /auth/siwe/nonce` — Generiert Nonce mit 10-Minuten TTL
-2. `POST /auth/siwe/verify` — Verifiziert SIWE Signatur, prueft Nonce + Chain ID, gibt JWT zurueck
+Check whether `apps/creator-gateway/src/routes/auth.ts` implements SIWE (Sign-In with Ethereum):
+1. `GET /auth/siwe/nonce` — Generates nonce with 10-minute TTL
+2. `POST /auth/siwe/verify` — Verifies SIWE signature, checks nonce + Chain ID, returns JWT
 
-**PASS-Kriterien:**
-- `siwe` Package importiert (`SiweMessage`, `generateNonce`)
-- Nonce Store mit TTL (nicht unbegrenzt)
-- Chain ID Validierung gegen `CONFIG.chainId`
-- JWT wird erst nach erfolgreicher Verifikation ausgestellt
-- Legacy `/wallet` Endpoint bleibt fuer Backward Compatibility
+**PASS criteria:**
+- `siwe` package imported (`SiweMessage`, `generateNonce`)
+- Nonce store with TTL (not unlimited)
+- Chain ID validation against `CONFIG.chainId`
+- JWT is only issued after successful verification
+- Legacy `/wallet` endpoint remains for backward compatibility
 
 ---
 
 ## Self-Check C: PartnerVault Integration Tests
 
-Pruefe ob `test/PartnerVault.test.js` einen `describe("Integration: full lifecycle")` Block enthaelt:
+Check whether `test/PartnerVault.test.js` contains a `describe("Integration: full lifecycle")` block:
 
-**PASS-Kriterien:**
-- Mindestens 5 Integration-Tests vorhanden
-- Full Lifecycle Test: create → activate → milestone → lockReward → vest → claim
-- Multi-Partner Test mit unabhaengigen Vesting-Timelines
-- Anti-Double-Count in Integration getestet
-- authorizedCaller in Integration getestet
-- Guardian Pause/Unpause in Integration getestet
+**PASS criteria:**
+- At least 5 integration tests present
+- Full lifecycle test: create → activate → milestone → lockReward → vest → claim
+- Multi-partner test with independent vesting timelines
+- Anti-double-count tested in integration
+- authorizedCaller tested in integration
+- Guardian pause/unpause tested in integration
 
 ---
 
-## Self-Check D: Test-Zahlen Konsistenz
+## Self-Check D: Test Number Consistency
 
-Pruefe ob folgende Zahlen in allen Docs konsistent sind:
+Check whether the following numbers are consistent across all docs:
 
-| Metrik | Soll-Wert |
-|--------|-----------|
-| Contract Tests | 361 |
-| Creator Gateway Tests | 32 |
-| Points Backend Tests | 35 |
-| Benefits Network Tests | 8 |
-| Gesamt Tests | 436 |
+| Metric | Target Value |
+|--------|-------------|
+| Contract Tests | 367 |
+| Creator Gateway Tests | 41 |
+| Points Backend Tests | 20 |
+| Benefits Network Tests | 16 |
+| Total Tests | 444 |
 | Branch Coverage | 91% |
 
-**Dateien zu pruefen:**
+**Files to check:**
 - README.md
 - STATUS-REPORT.md
 - docs/PROJECT-SUMMARY.md
@@ -77,70 +77,70 @@ Pruefe ob folgende Zahlen in allen Docs konsistent sind:
 - docs/wiki/security.html
 - docs/index.html
 
-**PASS:** Keine veralteten Zahlen (276, 315, 330, 369) in den genannten Dateien.
+**PASS:** No outdated numbers (276, 315, 330, 339, 361, 369, 436) in the listed files.
 
 ---
 
 ## Self-Check E: AI Copilot Wiki RAG
 
-Pruefe ob `apps/ai-copilot/server/wiki-rag.ts` existiert und:
-1. Wiki-Dokumente laedt (HTML parsing)
-2. Modus-spezifische System-Prompts generiert (Customer, Partner, Developer)
-3. In `apps/ai-copilot/server/index.ts` eingebunden ist
+Check whether `apps/ai-copilot/server/wiki-rag.ts` exists and:
+1. Loads wiki documents (HTML parsing)
+2. Generates mode-specific system prompts (Customer, Partner, Developer)
+3. Is integrated in `apps/ai-copilot/server/index.ts`
 
-**PASS-Kriterien:**
-- Datei existiert unter `apps/ai-copilot/server/wiki-rag.ts`
-- Mindestens 3 Modi definiert
-- HTML-Parsing (cheerio oder regex)
-- System-Prompt-Generierung exportiert
+**PASS criteria:**
+- File exists at `apps/ai-copilot/server/wiki-rag.ts`
+- At least 3 modes defined
+- HTML parsing (cheerio or regex)
+- System prompt generation exported
 
 ---
 
 ## Self-Check F: EIP-712 Voucher Validation Endpoint
 
-Pruefe ob `apps/points-backend/src/routes/voucher.ts` einen GET `/validate/:nonce` Endpoint hat:
+Check whether `apps/points-backend/src/routes/voucher.ts` has a GET `/validate/:nonce` endpoint:
 
-**PASS-Kriterien:**
-- Route existiert und gibt Status + Ablaufdatum zurueck
-- Nonce-basierte Abfrage (nicht Wallet-basiert)
-- Unterscheidung: unused, redeemed, expired, unknown
-
----
-
-## Self-Check G: Zahlen in CHANGELOG aktuell
-
-Pruefe ob `docs/CHANGELOG.md` im [Unreleased] Abschnitt die aktuellen Zahlen enthaelt:
-
-**PASS-Kriterien:**
-- Contract Test Zaehler erwaehnt (276 → 361 oder 339 → 361)
-- Gesamt-Tests erwaehnt (414 oder 436)
-- Branch Coverage erwaehnt (91%)
-- Neue Dateien aufgelistet (lockProof.ts, captcha.ts, siwe.test.ts)
+**PASS criteria:**
+- Route exists and returns status + expiry date
+- Nonce-based query (not wallet-based)
+- Distinction: unused, redeemed, expired, unknown
 
 ---
 
-## Self-Check H: Sepolia Deployment vollstaendig
+## Self-Check G: Numbers in CHANGELOG Up to Date
 
-Pruefe ob `docs/DEPLOYMENTS.md` und `README.md` alle 13 On-Chain Components listen:
+Check whether `docs/CHANGELOG.md` in the [Unreleased] section contains the current numbers:
 
-**PASS-Kriterien:**
-- 10 Adressen gelistet (InfernoToken, LiquidityReserve, Vesting, BuybackVault, BurnReserve, Governance, IFRLock, PartnerVault, FeeRouterV1, LP Pair)
-- Alle verified auf Sepolia Etherscan
-- Ownership an Governance transferiert erwaehnt
+**PASS criteria:**
+- Contract test counter mentioned (367 or current)
+- Total tests mentioned (444)
+- Branch coverage mentioned (91%)
+- New files listed (lockProof.ts, captcha.ts, siwe.test.ts)
 
 ---
 
-## Ergebnis-Template
+## Self-Check H: Deployment Complete
 
-| Check | Status | Kommentar |
-|-------|--------|-----------|
+Check whether `docs/DEPLOYMENTS.md` and `README.md` list all on-chain components:
+
+**PASS criteria:**
+- 10 addresses listed (InfernoToken, LiquidityReserve, Vesting, BuybackVault, BurnReserve, Governance, IFRLock, PartnerVault, FeeRouterV1, LP Pair)
+- All verified on Etherscan
+- Ownership transfer to Governance mentioned
+
+---
+
+## Result Template
+
+| Check | Status | Comment |
+|-------|--------|---------|
 | A) Anti-Sybil Middleware | ? | |
 | B) Creator Gateway SIWE | ? | |
 | C) PartnerVault Integration | ? | |
-| D) Test-Zahlen Konsistenz | ? | |
+| D) Test Number Consistency | ? | |
 | E) AI Copilot Wiki RAG | ? | |
 | F) EIP-712 Voucher Validate | ? | |
-| G) CHANGELOG aktuell | ? | |
-| H) Sepolia Deployment | ? | |
+| G) CHANGELOG Up to Date | ? | |
+| H) Deployment Complete | ? | |
 
-**Gesamt:** ?/8 PASS
+**Total:** ?/8 PASS

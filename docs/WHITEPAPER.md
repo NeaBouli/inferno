@@ -1,247 +1,248 @@
 # Inferno ($IFR) — Project Whitepaper v1.0
 
 ## Executive Summary
-IFR ist ein deflationaerer ERC-20 Utility Token auf Ethereum.
-Kernidee: Nutzer sperren IFR-Token einmalig und erhalten dafuer
-dauerhaften Premium-Zugang zu Partner-Produkten — keine Abonnements,
-keine wiederkehrenden Zahlungen. Jeder Transfer verbrennt automatisch
-2.5% der Tokens permanent. Das Angebot sinkt mit jeder Transaktion.
+IFR is a deflationary ERC-20 utility token on Ethereum.
+Core idea: Users lock IFR tokens once and receive permanent premium
+access to partner products — no subscriptions, no recurring payments.
+Every transfer automatically burns 2.5% of tokens permanently.
+The supply decreases with every transaction.
 
-3 Saetze fuer jeden:
-- Fuer Nutzer: Lock once, access forever.
-- Fuer Partner: Acquire loyal users who have real skin in the game.
-- Fuer das Protokoll: More utility = more locking = less supply = more scarcity.
-
----
-
-## 1. Das Problem
-
-Abonnement-Muedigkeit: Nutzer zahlen monatlich fuer Dutzende Services.
-Churning: Plattformen verlieren Nutzer sobald Zahlungen ausbleiben.
-Keine echte Bindung: Nutzer haben keinen wirtschaftlichen Anreiz zu bleiben.
-Token ohne Nutzen: Die meisten Crypto-Token haben keine echte Verwendung.
+3 sentences for everyone:
+- For users: Lock once, access forever.
+- For partners: Acquire loyal users who have real skin in the game.
+- For the protocol: More utility = more locking = less supply = more scarcity.
 
 ---
 
-## 2. Die Loesung: Lock-to-Access
+## 1. The Problem
 
-Inferno fuehrt ein neues Zugriffsmodell ein:
-
-Statt monatlich zu zahlen → einmalig IFR sperren (Lock).
-Gesperrte Token bleiben Eigentum des Nutzers.
-Solange gesperrt → automatischer Premium-Zugang zu allen Partner-Produkten.
-Entsperren jederzeit moeglich → Zugang endet, Token zurueck.
-
-Analogie: Wie eine Kaution. Du gibst das Geld nicht aus — du hinterlegst es.
-Und solange die Kaution liegt, bist du drin.
+Subscription fatigue: Users pay monthly for dozens of services.
+Churning: Platforms lose users as soon as payments stop.
+No real commitment: Users have no economic incentive to stay.
+Tokens without utility: Most crypto tokens have no real use case.
 
 ---
 
-## 3. Deflationaere Mechanik
+## 2. The Solution: Lock-to-Access
 
-Jeder IFR-Transfer verbrennt automatisch Token:
-- 2.0% vom Sender verbrannt (permanent)
-- 0.5% vom Empfaenger verbrannt (permanent)
-- 1.0% ins Protokoll-Pool
-- Gesamt: 3.5% pro Transfer, davon 2.5% echter permanenter Burn
+Inferno introduces a new access model:
 
-Maximale Fee: 5% (im Smart Contract erzwungen, unveraenderbar)
-Neues Minting: Unmoeglich (kein Mint im Contract)
-Ergebnis: Das Angebot kann nur sinken, niemals steigen.
+Instead of paying monthly, users lock IFR once (Lock).
+Locked tokens remain the property of the user.
+As long as locked, automatic premium access to all partner products.
+Unlocking is possible at any time — access ends, tokens returned.
 
-Beispiel:
-Sendest du 10.000 IFR → Empfaenger erhaelt 9.650 IFR.
-250 IFR sind fuer immer vernichtet. 100 IFR ins Pool.
-
-### Kern-Prinzip: Lock > Transfer
-
-Die Fee-Struktur ist bewusst so gestaltet, dass Halten und Sperren (Lock)
-belohnt wird, waehrend haeufiges Transferieren bestraft wird:
-
-- **Locken = 0% Fee**: IFRLock, LiquidityReserve, BuybackVault, BurnReserve
-  und PartnerVault sind feeExempt. Lock/Unlock-Operationen kosten keine Fees.
-- **Transferieren = 3.5% Fee**: Jeder normale Transfer verbrennt Token.
-- **Ergebnis**: Wer IFR sperrt und haelt, verliert nichts. Wer staendig
-  tradet, verliert bei jedem Transfer 3.5%.
-
-### Fee-Exempt Adressen
-
-| Contract | feeExempt | Warum |
-|----------|-----------|-------|
-| IFRLock | Ja | Lock/Unlock ohne Verlust |
-| LiquidityReserve | Ja | Staged Release ohne Burn |
-| BuybackVault | Ja | ETH→IFR Swap ohne Doppel-Burn |
-| BurnReserve | Ja | Deposit ohne Zusatz-Burn |
-| PartnerVault | Ja | Reward-Auszahlung ohne Verlust |
-| FeeRouterV1 | Geplant | Fee-Routing ohne Komplikation |
-
-### CEX-Kompatibilitaet
-
-Fee-on-Transfer ist mit zentralen Boersen (CEX) kompatibel, erfordert aber
-Anpassung: CEX muss den tatsaechlich empfangenen Betrag pruefen
-(balanceOf nach Transfer), nicht den gesendeten Betrag.
-Integration-Guide: docs/wiki/fee-design.html
+Analogy: Like a security deposit. You don't spend the money — you deposit it.
+And as long as the deposit is in place, you're in.
 
 ---
 
-## 4. Token-Oekonomie
+## 3. Deflationary Mechanism
 
-Gesamtangebot: 1.000.000.000 IFR (1 Milliarde, einmalig, kein Minting)
+Every IFR transfer automatically burns tokens:
+- 2.0% burned from sender (permanent)
+- 0.5% burned from recipient (permanent)
+- 1.0% to protocol pool
+- Total: 3.5% per transfer, of which 2.5% is real permanent burn
 
-| Kategorie | % | Menge | Zweck |
-|-----------|---|-------|-------|
-| DEX Liquidity | 40% | 400M | Handel & Liquiditaet |
-| Liquidity Reserve | 20% | 200M | Gestaffelter Release (6 Monate Lock) |
-| Team (Vested) | 15% | 150M | 48 Monate Vesting, 12 Monate Cliff |
-| Treasury | 15% | 150M | Protokoll-Entwicklung |
-| Community & Grants | 6% | 60M | Ecosystem-Aufbau |
-| Partner Ecosystem | 4% | 40M | PartnerVault (Lock-triggered Rewards) |
+Maximum fee: 5% (enforced in the smart contract, immutable)
+New minting: Impossible (no mint function in the contract)
+Result: The supply can only decrease, never increase.
+
+Example:
+If you send 10,000 IFR, the recipient receives 9,650 IFR.
+250 IFR are destroyed forever. 100 IFR go to the pool.
+
+### Core Principle: Lock > Transfer
+
+The fee structure is deliberately designed to reward holding and locking,
+while penalizing frequent transferring:
+
+- **Locking = 0% fee**: IFRLock, LiquidityReserve, BuybackVault, BurnReserve,
+  and PartnerVault are feeExempt. Lock/unlock operations incur no fees.
+- **Transferring = 3.5% fee**: Every normal transfer burns tokens.
+- **Result**: Those who lock and hold IFR lose nothing. Those who trade
+  constantly lose 3.5% on every transfer.
+
+### Fee-Exempt Addresses
+
+| Contract | feeExempt | Reason |
+|----------|-----------|--------|
+| IFRLock | Yes | Lock/unlock without loss |
+| LiquidityReserve | Yes | Staged release without burn |
+| BuybackVault | Yes | ETH-to-IFR swap without double burn |
+| BurnReserve | Yes | Deposit without additional burn |
+| PartnerVault | Yes | Reward payout without loss |
+| FeeRouterV1 | Yes | Fee routing without complication |
+
+### CEX Compatibility
+
+Fee-on-transfer is compatible with centralized exchanges (CEX) but requires
+adaptation: the CEX must check the actually received amount
+(balanceOf after transfer), not the sent amount.
+Integration guide: docs/wiki/fee-design.html
+
+---
+
+## 4. Token Economics
+
+Total supply: 1,000,000,000 IFR (1 billion, one-time, no minting)
+
+| Category | % | Amount | Purpose |
+|----------|---|--------|---------|
+| DEX Liquidity | 40% | 400M | Trading & liquidity |
+| Liquidity Reserve | 20% | 200M | Staged release (6-month lock) |
+| Team (Vested) | 15% | 150M | 48-month vesting, 12-month cliff |
+| Treasury | 15% | 150M | Protocol development |
+| Community & Grants | 6% | 60M | Ecosystem building |
+| Partner Ecosystem | 4% | 40M | PartnerVault (lock-triggered rewards) |
 
 ### Community Fair Launch Model (CFLM)
 
-Fair Launch: Kein Presale, keine VC-Runden, keine Insider-Vorteile.
+Fair Launch: No presale, no VC rounds, no insider advantages.
 
-Warum? Die meisten Token-Projekte verkaufen frueh an VCs und Insider —
-die dann zum Launch sofort verkaufen (Dump). Inferno macht das Gegenteil:
+Why? Most token projects sell early to VCs and insiders —
+who then immediately sell (dump) at launch. Inferno does the opposite:
 
-- **Kein Presale**: Kein Token wurde vor dem oeffentlichen Launch verkauft
-- **Kein Seed / Private Round**: Keine Sonder-Konditionen fuer Frueh-Investoren
-- **Kein VC-Anteil**: Keine Venture Capital Firmen mit Vorzugs-Token
-- **100% on-chain verteilt**: Alle Allocations sichtbar, alle Vesting-Perioden erzwungen durch Smart Contracts
+- **No presale**: No tokens were sold before the public launch
+- **No seed / private round**: No special conditions for early investors
+- **No VC allocation**: No venture capital firms with preferential tokens
+- **100% distributed on-chain**: All allocations visible, all vesting periods enforced by smart contracts
 
-Vergleich mit anderen Projekten:
+Comparison with other projects:
 
-| Projekt | Presale? | VC-Anteil | Community-Anteil |
-|---------|----------|-----------|------------------|
-| Uniswap (UNI) | Nein | 18% | 60% |
-| Aave (AAVE) | Ja | 23% | 77% |
-| Compound (COMP) | Ja | 24% | 42% |
-| **Inferno (IFR)** | **Nein** | **0%** | **46% (40% DEX + 6% Grants)** |
+| Project | Presale? | VC Share | Community Share |
+|---------|----------|----------|-----------------|
+| Uniswap (UNI) | No | 18% | 60% |
+| Aave (AAVE) | Yes | 23% | 77% |
+| Compound (COMP) | Yes | 24% | 42% |
+| **Inferno (IFR)** | **No** | **0%** | **46% (40% DEX + 6% Grants)** |
 
-Team-Token (15%) sind durch einen 4-Jahres-Vesting-Contract gesichert
-mit 12 Monaten Cliff. Bis Januar 2027 kann kein einziger Team-Token
-freigegeben werden. Verifizierbar:
-https://sepolia.etherscan.io/address/0xa710f9FE7bf42981E60BE2Fbe7D87Fb3541a3F8B
+Team tokens (15%) are secured by a 4-year vesting contract
+with a 12-month cliff. Until January 2027, not a single team token
+can be released. Verifiable:
+https://etherscan.io/address/0x2694Bc84e8D5251E9E4Ecd4B2Ae3f866d6106271
 
 ---
 
 ## 5. Partner Ecosystem
 
-### Wie Partner IFR verdienen
-Wenn ein Nutzer IFR fuer das Produkt eines Partners sperrt:
-1. Partner erhaelt automatisch einen Prozentsatz des gesperrten Betrags
-2. Reward-Rate: 10–20% (Policy-Ziel), Hard-Bounds 5–25%
-3. Rewards vesten linear ueber 6–12 Monate
-4. Jaehrliches Emissions-Limit: 4M IFR (Bounds: 1–10M)
+### How Partners Earn IFR
+When a user locks IFR for a partner's product:
+1. The partner automatically receives a percentage of the locked amount
+2. Reward rate: 10-20% (policy target), hard bounds 5-25%
+3. Rewards vest linearly over 6-12 months
+4. Annual emission limit: 4M IFR (bounds: 1-10M)
 
-Warum deflationaer: Nutzer sperren immer mehr IFR als Partner erhalten.
-Bei 15% Reward: 1.000 IFR gesperrt → 150 IFR Reward → netto 850 IFR mehr gebunden.
+Why deflationary: Users always lock more IFR than partners receive.
+At 15% reward: 1,000 IFR locked -> 150 IFR reward -> net 850 IFR more bound.
 
 ### IFR Benefits Network
-Jedes Business (online oder offline) kann IFR-Lock als Zugangssystem nutzen:
-- Haendler: kein Crypto-Wissen noetig, nur Browser
-- Kunde: scannt QR → verbindet Wallet → signiert → fertig
-- System prueft on-chain ob Kunde IFR gesperrt hat
+Any business (online or offline) can use IFR lock as an access system:
+- Merchants: no crypto knowledge needed, just a browser
+- Customers: scan QR -> connect wallet -> sign -> done
+- System checks on-chain whether the customer has locked IFR
 
-Beispiel-Tiers (empfohlen, frei konfigurierbar):
-- Bronze: 1.000 IFR gesperrt → 5% Rabatt
-- Silver: 2.500 IFR → 10% Rabatt
-- Gold: 5.000 IFR → 15% Rabatt
-- Platinum: 10.000 IFR → 20% Rabatt
+Example tiers (recommended, freely configurable):
+- Bronze: 1,000 IFR locked -> 5% discount
+- Silver: 2,500 IFR -> 10% discount
+- Gold: 5,000 IFR -> 15% discount
+- Platinum: 10,000 IFR -> 20% discount
 
 ---
 
 ## 6. Governance
 
-Wie Aenderungen am Protokoll funktionieren:
-- Kein sofortiger Admin-Zugriff (niemand kann sofort etwas aendern)
-- Jede Aenderung: 48-Stunden oeffentliche Wartezeit (Timelock)
-- Guardian-Rolle kann jede Aenderung in den 48h stoppen
-- Kein Token-Voting (Schutz vor Whale-Manipulation)
+How protocol changes work:
+- No immediate admin access (nobody can change anything instantly)
+- Every change: 48-hour public waiting period (timelock)
+- Guardian role can stop any change during the 48h window
+- No token voting (protection against whale manipulation)
 
-Upgrade-Pfad:
-- Heute: Timelock-Governance (Single Admin, Testnet)
-- Phase 2: Multisig (4-of-7 Gnosis Safe)
-- Phase 4: DAO mit Community-Voting
+Upgrade path:
+- Phase 1: Timelock governance (single admin)
+- Phase 2: Multisig (Gnosis Safe)
+- Phase 3: Multisig expansion + guarded automation
+- Phase 4: DAO with community voting
 
 ---
 
-## 7. Technische Architektur
+## 7. Technical Architecture
 
-3 Schichten, sauber getrennt:
+3 layers, cleanly separated:
 
 **On-Chain (Truth Layer)**
-IFRLock Contract auf Ethereum: speichert wer wie viel IFR gesperrt hat.
-Einzige Wahrheitsquelle. Kein App-Wissen, keine User-IDs.
+IFRLock contract on Ethereum: stores who has locked how much IFR.
+Single source of truth. No app knowledge, no user IDs.
 
 **Bridge Layer (Stateless)**
-License Resolver: uebersetzt Wallet-Abfragen in Zugangs-Checks.
-Datenschutz-neutral: keine personenbezogenen Daten gespeichert.
+License Resolver: translates wallet queries into access checks.
+Privacy-neutral: no personal data stored.
 
 **Off-Chain (Partner Apps)**
-Jede App entscheidet selbst welcher Lock-Betrag fuer Premium-Zugang gilt.
-Integration: 5 Zeilen Code. Vollstaendig entkoppelt.
+Each app decides independently what lock amount qualifies for premium access.
+Integration: 5 lines of code. Fully decoupled.
 
 ---
 
-## 8. Sicherheit
+## 8. Security
 
-- Open Source: Alle Smart Contracts oeffentlich auf GitHub
-- Slither Static Analysis: 0 High/Critical Findings
-- 436 Tests (361 Contract + 75 App), alle bestehen, 99% Statement Coverage
-- Third-party Audit: empfohlen vor Mainnet-Deployment
-- Timelock: 48h Pflicht-Wartezeit auf alle Aenderungen
-- Kein Minting: technisch unmoeglich nach Launch
+- Open source: All smart contracts public on GitHub
+- Slither static analysis: 0 high/critical findings
+- 444 tests (367 contract + 41 Creator Gateway + 20 Points Backend + 16 Benefits Network), all passing, 99% statement coverage
+- Professional third-party audit: recommended as next security milestone
+- Timelock: 48h mandatory waiting period on all changes
+- No minting: technically impossible after launch
 
 ---
 
-## 9. On-Chain Transparency (Stand: Februar 2026)
+## 9. On-Chain Transparency (as of March 2026)
 
-### Token Supply Verteilung (verifiziert)
+### Token Supply Distribution (verified)
 - LP Pair: 400,000,000 IFR (40.08%)
 - LiquidityReserve: 200,000,000 IFR (20.04%)
-- Team Vesting: 150,000,000 IFR (15.03%) — 4 Jahre, 0 released
+- Team Vesting: 150,000,000 IFR (15.03%) — 4 years, 0 released
 - Treasury/Community: 169,387,995 IFR (16.97%)
 - PartnerVault: 40,000,000 IFR (4.01%)
-- Verbrannt: 2,000,425+ IFR (0.20%+) — steigt mit jedem Transfer
+- Burned: 2,000,425+ IFR (0.20%+) — increases with every transfer
 
-### Deflation in Aktion
-Seit Deployment wurden 2,000,425+ IFR permanent vernichtet.
-Bei 361 automatisierten Tests wurden reale Transfers durchgeführt —
-jeder davon hat die Deflationsmechanik on-chain bestätigt.
+### Deflation in Action
+Since deployment, 2,000,425+ IFR have been permanently destroyed.
+Across 367 automated contract tests, real transfers were executed —
+each of which confirmed the deflation mechanism on-chain.
 
-### Verifikation
-Alle Werte sind über scripts/onchain-audit.js direkt prüfbar.
-Kein Trust notwendig — nur Code und Chain.
+### Verification
+All values can be verified directly via scripts/onchain-audit.js.
+No trust required — only code and chain.
 
 ---
 
 ## 10. Roadmap
 
-| Phase | Status | Inhalt |
-|-------|--------|--------|
-| Phase 0 — Bootstrap | Aktiv | Sepolia Testnet, alle Contracts live |
-| Phase 1 — Launch | Geplant | Mainnet, LP, erste Partner |
-| Phase 2 — Multisig | Geplant | Governance zu Multisig |
-| Phase 3 — Growth | Geplant | Ecosystem-Expansion, Benefits Network |
-| Phase 4 — DAO | Langfristig | Community-Governance |
+| Phase | Status | Content |
+|-------|--------|---------|
+| Phase 0 — Bootstrap | Complete | Sepolia testnet, all contracts live |
+| Phase 1 — Launch | Complete | Mainnet deployed (2026-03-05), 10 on-chain components verified |
+| Phase 2 — Multisig | In Progress | Governance migration to Gnosis Safe |
+| Phase 3 — Growth | Planned | Ecosystem expansion, Benefits Network, guarded automation |
+| Phase 4 — DAO | Long-term | Community governance |
 
 ---
 
-## 11. Fuer Partner: Warum IFR?
+## 11. For Partners: Why IFR?
 
-- Echte Nutzerbindung: Nutzer mit gesperrten Token wandern nicht ab
-- Kein Subscription-Management: Lock on-chain, kein Backend noetig
-- Token-Incentives: Partner erhalten IFR aus dem 40M Partner-Pool
-- Einfache Integration: isLocked() — ein API-Call
-- Datenschutz: Keine Wallet-Daten gespeichert
-- Permissionless: Jeder kann integrieren
+- Real user retention: Users with locked tokens don't churn
+- No subscription management: Lock on-chain, no backend needed
+- Token incentives: Partners receive IFR from the 40M partner pool
+- Simple integration: isLocked() — one API call
+- Privacy: No wallet data stored
+- Permissionless: Anyone can integrate
 
-Interesse? → docs/PARTNER_INTEGRATION_SPEC.md
+Interested? See docs/PARTNER_INTEGRATION_SPEC.md
 
 ---
 
-## 12. Kontakt & Links
+## 12. Contact & Links
 
 | | |
 |-|-|
@@ -249,9 +250,9 @@ Interesse? → docs/PARTNER_INTEGRATION_SPEC.md
 | Website | https://neabouli.github.io/inferno/ |
 | Docs | https://neabouli.github.io/inferno/wiki/ |
 | X / Twitter | https://x.com/IFRtoken |
-| Sepolia Token | 0x3Bd71947F288d1dd8B21129B1bE4FF16EDd5d1F4 |
-| Sepolia Governance | 0x6050b22E4EAF3f414d1155fBaF30B868E0107017 |
+| Mainnet Token | 0x77e99917Eca8539c62F509ED1193ac36580A6e7B |
+| Mainnet Governance | 0xc43d48E7FDA576C5022d0670B652A622E8caD041 |
 
 ---
 *Inferno ($IFR) — Community Fair Launch Model*
-*Stand: Februar 2026 | Version 1.0 | Vertraulich — nur fuer Partner & Investoren*
+*As of: March 2026 | Version 1.0*

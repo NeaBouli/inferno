@@ -1,105 +1,105 @@
 # Inferno ($IFR) Governance Constitution v1.0
 
-## Präambel
-Die Inferno Governance sichert dezentrale Kontrolle über alle
-kritischen Protokoll-Parameter. Kein einzelner Akteur kann ohne
-48-stündige Timelock-Periode und Quorum-Zustimmung Änderungen vornehmen.
+## Preamble
+The Inferno Governance ensures decentralized control over all
+critical protocol parameters. No single actor can make changes without
+a 48-hour timelock period and quorum approval.
 
-## Artikel 1 — Governance Prinzipien
-1. **Transparenz:** Alle Proposals sind on-chain nachvollziehbar
-2. **Zeitverzögerung:** 48h Timelock für alle Änderungen (kein Bypass)
-3. **Dezentralisierung:** Ziel 4-of-7 Multisig bis Mainnet
-4. **Unveränderlichkeit von Kernwerten:** Burn-Rate, Max-Fee, Supply nie änderbar
-5. **Guardian-Recht:** Emergency Cancel durch 2-of-3 Guardian Multisig
+## Article 1 — Governance Principles
+1. **Transparency:** All proposals are traceable on-chain
+2. **Time Delay:** 48h timelock for all changes (no bypass)
+3. **Decentralization:** Target 4-of-7 multisig for mainnet
+4. **Immutability of Core Values:** Burn rate, max fee, supply are never changeable
+5. **Guardian Right:** Emergency cancel by 2-of-3 guardian multisig
 
-## Artikel 2 — Governance-fähige Parameter
+## Article 2 — Governable Parameters
 
 ### 2.1 PartnerVault
-| Parameter | Beschreibung | Grenzen |
-|-----------|-------------|---------|
-| rewardBps | Partner Reward Rate | 500–2500 bps (5–25%) |
-| annualEmissionCap | Jährliches Emissionslimit | 1M–10M IFR |
-| authorizedCaller | Whitelist für recordLockReward() | beliebige Adresse |
-| algoThrottleEnabled | Algorithmic Throttle an/aus | bool |
+| Parameter | Description | Bounds |
+|-----------|-------------|--------|
+| rewardBps | Partner reward rate | 500–2500 bps (5–25%) |
+| annualEmissionCap | Annual emission limit | 1M–10M IFR |
+| authorizedCaller | Whitelist for recordLockReward() | any address |
+| algoThrottleEnabled | Algorithmic throttle on/off | bool |
 
 ### 2.2 FeeRouterV1
-| Parameter | Beschreibung | Grenzen |
-|-----------|-------------|---------|
-| protocolFeeBps | Protocol Fee | 0–25 bps (Hard Cap) |
-| whitelistedAdapters | Swap Adapter Whitelist | beliebige Adresse |
-| voucherSigner | EIP-712 Voucher Signer | beliebige Adresse |
-| paused | Emergency Pause | bool |
-| feeCollector | Fee Empfänger | beliebige Adresse |
+| Parameter | Description | Bounds |
+|-----------|-------------|--------|
+| protocolFeeBps | Protocol fee | 0–25 bps (hard cap) |
+| whitelistedAdapters | Swap adapter whitelist | any address |
+| voucherSigner | EIP-712 voucher signer | any address |
+| paused | Emergency pause | bool |
+| feeCollector | Fee recipient | any address |
 
-### 2.3 IFRToken (unveränderlich)
-| Parameter | Wert | Änderbar? |
-|-----------|------|-----------|
-| totalSupply | 1,000,000,000 IFR | Nein |
-| burnFeeBps | 250 (2.5%) | Nein |
-| poolFeeBps | 100 (1.0%) | Nein |
-| decimals | 9 | Nein |
-| maxFeeBps | 500 (5.0%) | Hard Cap |
+### 2.3 IFRToken (immutable)
+| Parameter | Value | Changeable? |
+|-----------|-------|-------------|
+| totalSupply | 1,000,000,000 IFR | No |
+| burnFeeBps | 250 (2.5%) | No |
+| poolFeeBps | 100 (1.0%) | No |
+| decimals | 9 | No |
+| maxFeeBps | 500 (5.0%) | Hard cap |
 
-## Artikel 3 — Proposal Lifecycle
+## Article 3 — Proposal Lifecycle
 
 ### Phase 1: Proposal
-1. Proposer ruft `governance.propose(targets, values, calldatas, description)` auf
-2. Proposal erscheint in Timelock Queue
+1. Proposer calls `governance.propose(targets, values, calldatas, description)`
+2. Proposal appears in timelock queue
 3. ETA = block.timestamp + 48h (minimum)
 4. Status: **PENDING**
 
 ### Phase 2: Timelock
-- 48h Wartezeit (unveränderlich im Contract)
-- Während dieser Zeit: Community-Review, Guardian-Cancel möglich
+- 48h waiting period (immutable in contract)
+- During this time: community review, guardian cancel possible
 - Status: **QUEUED**
 
 ### Phase 3: Execution
-- Nach ETA: Jeder kann `execute()` aufrufen (permissionless)
-- Vor Execution: Nochmalige Prüfung ob Proposal noch aktuell
+- After ETA: anyone can call `execute()` (permissionless)
+- Before execution: re-verify that the proposal is still relevant
 - Status: **EXECUTED**
 
-### Phase 4: Abgelehnte/Gecancelte Proposals
-- Guardian kann jederzeit canceln: `guardian.cancel(proposalId)`
-- Gecancelte Proposals können nicht erneut executed werden
+### Phase 4: Rejected/Cancelled Proposals
+- Guardian can cancel at any time: `guardian.cancel(proposalId)`
+- Cancelled proposals cannot be re-executed
 - Status: **CANCELLED**
 
-## Artikel 4 — Multisig Struktur (Mainnet)
+## Article 4 — Multisig Structure (Mainnet)
 
 ### Owner Multisig (4-of-7)
-Verantwortlich für: Alle Governance Proposals
-- 2 Gründer-Wallets (Hardware Wallet, Ledger)
-- 2 Community-Vertreter (gewählt via Snapshot)
-- 2 Partner-Vertreter (erste akkreditierte Partner)
-- 1 Reserve-Wallet (Cold Storage, Notfall)
+Responsible for: All governance proposals
+- 2 founder wallets (hardware wallet, Ledger)
+- 2 community representatives (elected via Snapshot)
+- 2 partner representatives (first accredited partners)
+- 1 reserve wallet (cold storage, emergency)
 
 ### Guardian Multisig (2-of-3)
-Verantwortlich für: Emergency Cancel only
-- 1 Gründer-Wallet
-- 1 unabhängiger Security-Reviewer
-- 1 Community-Vertreter
+Responsible for: Emergency cancel only
+- 1 founder wallet
+- 1 independent security reviewer
+- 1 community representative
 
-## Artikel 5 — Verbotene Governance-Aktionen
-Die folgenden Aktionen sind durch Contract-Design technisch unmöglich:
-- Minting neuer IFR Token
-- Erhöhung der Burn-Rate über 5%
-- Direkter Zugriff auf gesperrte User-Tokens
-- Bypass der 48h Timelock
-- Änderung der Token Decimals
+## Article 5 — Prohibited Governance Actions
+The following actions are technically impossible by contract design:
+- Minting new IFR tokens
+- Increasing the burn rate above 5%
+- Direct access to locked user tokens
+- Bypassing the 48h timelock
+- Changing the token decimals
 
-## Artikel 6 — Governance Phasen
+## Article 6 — Governance Phases
 
-| Phase | Status | Beschreibung |
+| Phase | Status | Description |
 |-------|--------|-------------|
-| Phase 0 | Aktiv | Single EOA (Deployer), Bootstrap |
-| Phase 1 | Geplant | 2-of-3 Multisig |
-| Phase 2 | Geplant | 3-of-5 Multisig |
-| Phase 3 | Geplant | 4-of-7 Multisig |
-| Phase 4 | Geplant | Full DAO (Token Voting) |
+| Phase 0 | Active | Single EOA (deployer), bootstrap |
+| Phase 1 | Planned | 2-of-3 multisig |
+| Phase 2 | Planned | 3-of-5 multisig |
+| Phase 3 | Planned | 4-of-7 multisig |
+| Phase 4 | Planned | Full DAO (token voting) |
 
-## Artikel 7 — Änderungen dieser Constitution
-- Änderungen erfordern Governance Proposal + 48h Timelock
-- Kernwerte (Artikel 5) sind unveränderlich (Contract-Level)
-- Versionierung: GOVERNANCE_CONSTITUTION_v{n}.md
+## Article 7 — Amendments to This Constitution
+- Amendments require a governance proposal + 48h timelock
+- Core values (Article 5) are immutable (contract-level)
+- Versioning: GOVERNANCE_CONSTITUTION_v{n}.md
 
 ---
-*Version: 1.0 | Stand: Februar 2026 | Netzwerk: Sepolia (Testnet)*
+*Version: 1.0 | As of: March 2026 | Network: Ethereum Mainnet (deployed 2026-03-05)*

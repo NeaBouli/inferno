@@ -10,8 +10,8 @@ Integrate IFR Lock verification into your product in under 30 minutes.
 |---------|----------|---------|
 | Sepolia (Testnet) | IFRToken | `0x3Bd71947F288d1dd8B21129B1bE4FF16EDd5d1F4` |
 | Sepolia (Testnet) | IFRLock | `0x0Cab0A9440643128540222acC6eF5028736675d3` |
-| Mainnet | IFRToken | coming soon |
-| Mainnet | IFRLock | coming soon |
+| Mainnet | IFRToken | `0x77e99917Eca8539c62F509ED1193ac36580A6e7B` |
+| Mainnet | IFRLock | `0x769928aBDfc949D0718d8766a1C2d7dBb63954Eb` |
 
 Token Decimals: **9**
 
@@ -38,17 +38,17 @@ const IFRTOKEN_ABI = [
 ```javascript
 import { ethers } from "ethers";
 
-const IFRLOCK_ADDRESS = "0x..."; // aus Contract Addresses oben
+const IFRLOCK_ADDRESS = "0x769928aBDfc949D0718d8766a1C2d7dBb63954Eb"; // Mainnet
 const IFRLOCK_ABI = ["function isLocked(address, uint256) view returns (bool)"];
 
-// Provider (read-only, kein Wallet noetig)
+// Provider (read-only, no wallet needed)
 const provider = new ethers.providers.JsonRpcProvider(
   "https://eth-mainnet.g.alchemy.com/v2/YOUR_KEY"
 );
 
 const ifrLock = new ethers.Contract(IFRLOCK_ADDRESS, IFRLOCK_ABI, provider);
 
-// Pruefe ob User 5.000 IFR gesperrt hat (Gold Tier)
+// Check if user has 5,000 IFR locked (Gold Tier)
 async function checkAccess(userWallet) {
   const minAmount = ethers.utils.parseUnits("5000", 9); // 9 decimals
   const hasAccess = await ifrLock.isLocked(userWallet, minAmount);
@@ -93,7 +93,7 @@ export async function requireIFRLock(minIFR = 1000) {
   };
 }
 
-// Beispiel Route — nur fuer Gold Tier (5.000 IFR)
+// Example route — Gold Tier only (5,000 IFR)
 app.get("/premium/content", requireIFRLock(5000), (req, res) => {
   res.json({ content: "Premium content for IFR holders" });
 });
@@ -129,7 +129,7 @@ export function useIFRAccess(userAddress: string, minIFR: number) {
   });
 }
 
-// Verwendung in Komponente:
+// Usage in component:
 function PremiumFeature({ userAddress }) {
   const { data: hasAccess, isLoading } = useIFRAccess(userAddress, 5000);
 
@@ -146,7 +146,7 @@ function PremiumFeature({ userAddress }) {
 from web3 import Web3
 
 RPC_URL = "https://eth-mainnet.g.alchemy.com/v2/YOUR_KEY"
-IFRLOCK_ADDRESS = "0x..."
+IFRLOCK_ADDRESS = "0x769928aBDfc949D0718d8766a1C2d7dBb63954Eb"  # Mainnet
 IFRLOCK_ABI = [
     {
         "name": "isLocked",
@@ -174,14 +174,14 @@ def check_ifr_access(wallet: str, min_ifr: int = 5000) -> bool:
         min_amount
     ).call()
 
-# Verwendung:
+# Usage:
 if check_ifr_access("0xUserWallet...", min_ifr=5000):
     print("Access granted")
 ```
 
 ---
 
-## 7. Tier-System Beispiel
+## 7. Tier System Example
 ```javascript
 const TIERS = {
   bronze:   { minIFR: 1000,  label: "Bronze",   discount: 5  },
@@ -198,7 +198,7 @@ async function getUserTier(wallet) {
   if (ifr >= TIERS.gold.minIFR)     return TIERS.gold;
   if (ifr >= TIERS.silver.minIFR)   return TIERS.silver;
   if (ifr >= TIERS.bronze.minIFR)   return TIERS.bronze;
-  return null; // kein Tier
+  return null; // no tier
 }
 ```
 
@@ -206,13 +206,13 @@ async function getUserTier(wallet) {
 
 ## 8. Wallet Signature Verification (Anti-Spoofing)
 ```javascript
-// User muss beweisen dass er die Wallet besitzt — nicht nur die Adresse kennen
+// User must prove wallet ownership — not just know the address
 
-// Frontend: User signiert
+// Frontend: User signs
 const message = `IFR Access Verification\nWallet: ${wallet}\nTimestamp: ${Date.now()}`;
 const signature = await signer.signMessage(message);
 
-// Backend: Signatur verifizieren
+// Backend: Verify signature
 import { ethers } from "ethers";
 
 function verifyWalletOwnership(message, signature, expectedWallet) {
@@ -235,7 +235,7 @@ async function safeCheckAccess(wallet, minIFR) {
     return { access: locked, error: null };
   } catch (err) {
     console.error("IFR check failed:", err.message);
-    // Fail closed: bei RPC-Fehler kein Zugang
+    // Fail closed: no access on RPC error
     return { access: false, error: "RPC error — try again" };
   }
 }
@@ -243,15 +243,15 @@ async function safeCheckAccess(wallet, minIFR) {
 
 ---
 
-## 10. Checkliste vor Go-Live
+## 10. Checklist Before Go-Live
 
-- [ ] RPC_URL auf Mainnet gesetzt (nicht Sepolia)
-- [ ] IFRLOCK_ADDRESS korrekt (Mainnet-Adresse nach Deployment)
-- [ ] Decimals = 9 ueberall korrekt (nicht 18!)
-- [ ] Wallet Signature Verification aktiviert (Anti-Spoofing)
-- [ ] Fail-closed bei RPC-Fehler (kein Zugang bei Fehler)
-- [ ] Rate-Limiting auf Check-Endpoint (max 10 req/min pro IP)
-- [ ] Tier-Schwellen dokumentiert und kommuniziert
+- [ ] RPC_URL set to Mainnet (not Sepolia)
+- [ ] IFRLOCK_ADDRESS correct (`0x769928aBDfc949D0718d8766a1C2d7dBb63954Eb`)
+- [ ] Decimals = 9 correct everywhere (not 18!)
+- [ ] Wallet Signature Verification enabled (anti-spoofing)
+- [ ] Fail-closed on RPC error (no access on failure)
+- [ ] Rate limiting on check endpoint (max 10 req/min per IP)
+- [ ] Tier thresholds documented and communicated
 
 ---
 
@@ -261,9 +261,9 @@ async function safeCheckAccess(wallet, minIFR) {
 |-|-|
 | Partner Integration Spec | [docs/PARTNER_INTEGRATION_SPEC.md](PARTNER_INTEGRATION_SPEC.md) |
 | Business Onboarding | [docs/BUSINESS_ONBOARDING.md](BUSINESS_ONBOARDING.md) |
-| Contract ABI (vollstaendig) | [docs/PARTNER_INTEGRATION_SPEC.md](PARTNER_INTEGRATION_SPEC.md) |
+| Contract ABI (complete) | [docs/PARTNER_INTEGRATION_SPEC.md](PARTNER_INTEGRATION_SPEC.md) |
 | GitHub | https://github.com/NeaBouli/inferno |
 | Docs | https://neabouli.github.io/inferno/wiki/ |
 
 ---
-*Stand: Februar 2026 | IFR SDK Quickstart v1.0*
+*As of: March 2026 | IFR SDK Quickstart v1.1*

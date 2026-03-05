@@ -1,17 +1,17 @@
 # IFR Smart Contract — Test Coverage Report
 
-Stand: 03. Maerz 2026 | 361 Tests passing | solidity-coverage
+As of: 05 March 2026 | 444 tests passing | solidity-coverage
 
-## Zusammenfassung
+## Summary
 
-| Metrik | Wert |
-|--------|------|
+| Metric | Value |
+|--------|-------|
 | **Statements** | **99.45%** |
 | **Branches** | **90.79%** |
 | **Functions** | **98.26%** |
 | **Lines** | **99%** |
 
-## Coverage pro Contract
+## Coverage per Contract
 
 | Contract | Stmts | Branch | Funcs | Lines | Status |
 |----------|-------|--------|-------|-------|--------|
@@ -19,13 +19,13 @@ Stand: 03. Maerz 2026 | 361 Tests passing | solidity-coverage
 | LiquidityReserve.sol | 100% | 96.67% | 100% | 100% | OK |
 | Vesting.sol | 100% | 97.22% | 100% | 100% | OK |
 | BuybackVault.sol | 100% | 94.12% | 100% | 100% | OK |
-| BurnReserve.sol | 100% | 100% | 100% | 100% | Perfekt |
+| BurnReserve.sol | 100% | 100% | 100% | 100% | Perfect |
 | Governance.sol | 100% | 97.92% | 100% | 100% | OK |
 | IFRLock.sol | 100% | 85.71% | 100% | 100% | OK |
 | PartnerVault.sol | 99.15% | 85.21% | 100% | 100% | OK |
 | FeeRouterV1.sol | 100% | 96% | 100% | 100% | OK |
 
-### Mocks (nicht sicherheitsrelevant)
+### Mocks (not security-relevant)
 
 | Contract | Stmts | Branch | Funcs | Lines |
 |----------|-------|--------|-------|-------|
@@ -36,21 +36,21 @@ Stand: 03. Maerz 2026 | 361 Tests passing | solidity-coverage
 
 ## Interpretation
 
-- **>90%**: Sehr gut — Audit-ready
-- **80-90%**: Gut — ausreichend fuer Testnet + Audit-Vorbereitung
-- **<80%**: Verbesserungsbedarf — vor Mainnet beheben
+- **>90%**: Very good — audit-ready
+- **80-90%**: Good — sufficient for testnet + audit preparation
+- **<80%**: Needs improvement — fix before mainnet
 
-Alle 9 Contracts haben >85% Branch Coverage. 6 von 9 haben >94% Branch.
+All 9 contracts have >85% branch coverage. 6 of 9 have >94% branch.
 
-## Verbesserungen gegenueber v0.0.x
+## Improvements over v0.0.x
 
-| Contract | Branch alt | Branch neu | Delta |
+| Contract | Branch old | Branch new | Delta |
 |----------|-----------|-----------|-------|
 | BuybackVault | 61.76% | 94.12% | +32.36% |
 | Vesting | 69.44% | 97.22% | +27.78% |
 | LiquidityReserve | 86.67% | 96.67% | +10.00% |
 
-## Coverage generieren
+## Generating Coverage
 
 ```bash
 npx hardhat coverage
@@ -59,4 +59,4 @@ npx hardhat coverage
 ```
 
 ---
-*Generiert mit solidity-coverage | 361 Tests | Solidity 0.8.20*
+*Generated with solidity-coverage | 444 tests | Solidity 0.8.20*

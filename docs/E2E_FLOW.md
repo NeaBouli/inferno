@@ -1,25 +1,25 @@
 # IFR Points → Voucher → FeeRouter — End-to-End Flow
 
-## Uebersicht
+## Overview
 
-User verdient Punkte → bekommt Voucher → spart bei Swap
+User earns points → receives voucher → saves on swap fees
 
-## Vollstaendiger Flow (Schritt fuer Schritt)
+## Complete Flow (Step by Step)
 
-### Phase 1: Punkte verdienen
+### Phase 1: Earning Points
 
-1. User verbindet Wallet auf IFR Website (WalletConnect/MetaMask)
-2. AI Copilot fuehrt User durch Guides
-3. Points Backend zeichnet Events auf (SIWE Auth):
-   - `guide_wallet_setup`: +20 Punkte
-   - `guide_add_token`: +20 Punkte
-   - `guide_lock`: +30 Punkte
-   - Total: 70 Punkte nach 3 Guides
+1. User connects wallet on IFR website (WalletConnect/MetaMask)
+2. AI Copilot guides user through guides
+3. Points Backend records events (SIWE Auth):
+   - `guide_wallet_setup`: +20 points
+   - `guide_add_token`: +20 points
+   - `guide_lock`: +30 points
+   - Total: 70 points after 3 guides
 
-### Phase 2: Voucher ausstellen
+### Phase 2: Voucher Issuance
 
-4. User erreicht 100 Punkte-Schwelle
-5. `POST /voucher/issue` → Points Backend signiert EIP-712 Voucher:
+4. User reaches 100-point threshold
+5. `POST /voucher/issue` → Points Backend signs EIP-712 voucher:
    ```json
    {
      "user": "0xUSER...",
@@ -29,22 +29,22 @@ User verdient Punkte → bekommt Voucher → spart bei Swap
      "nonce": "<unique>"
    }
    ```
-6. User erhaelt: `{ voucher, signature }`
+6. User receives: `{ voucher, signature }`
 
-### Phase 3: Voucher beim Swap einloesen
+### Phase 3: Redeeming Voucher on Swap
 
-7. User macht Swap ETH → IFR ueber FeeRouter
+7. User swaps ETH → IFR via FeeRouter
 8. `swapWithFee(adapter, swapData, voucher, sig, useVoucher=true)`
-9. FeeRouter prueft:
-   - Signatur gueltig (`voucherSigner`)
-   - Nicht abgelaufen
-   - Nonce nicht verwendet
+9. FeeRouter verifies:
+   - Signature valid (`voucherSigner`)
+   - Not expired
+   - Nonce not used
    - `discount <= protocolFee`
-10. Effektive Fee: 5 bps - 15 bps → 0 bps (geclampt)
-11. Kein Protocol Fee fuer diesen Swap
-12. Nonce als "used" markiert → kein Replay moeglich
+10. Effective fee: 5 bps - 15 bps → 0 bps (clamped)
+11. No protocol fee for this swap
+12. Nonce marked as "used" → no replay possible
 
-## Sequenz-Diagramm (Text)
+## Sequence Diagram (Text)
 
 ```
 User → AI Copilot: "How do I lock IFR?"
@@ -58,22 +58,22 @@ FeeRouter → feeCollector: fee = 0 (discounted)
 FeeRouter → Uniswap Adapter: execute swap
 ```
 
-## Sicherheits-Garantien
+## Security Guarantees
 
-- Punkte sind off-chain, nicht transferierbar
-- Voucher on-chain verifiziert (kein Trust in Backend noetig)
-- Replay-Schutz: `usedNonces[wallet][nonce] = true`
-- Expiry: 7 Tage, danach wertlos
-- Discount cap: niemals > `protocolFeeBps`
-- Signer-Kompromittierung: `pause()` + `setVoucherSigner()` via Governance
+- Points are off-chain, non-transferable
+- Voucher verified on-chain (no trust in backend required)
+- Replay protection: `usedNonces[wallet][nonce] = true`
+- Expiry: 7 days, worthless after that
+- Discount cap: never > `protocolFeeBps`
+- Signer compromise: `pause()` + `setVoucherSigner()` via Governance
 
-## Zahlen-Beispiel
+## Numerical Example
 
 ```
 Swap: 1 ETH → IFR
-Ohne Voucher: 0.0005 ETH Protocol Fee (5 bps)
-Mit Voucher (15 bps discount): 0 ETH Protocol Fee (clamp)
-Ersparnis: ~$1.50 bei ETH = $3000
+Without voucher: 0.0005 ETH Protocol Fee (5 bps)
+With voucher (15 bps discount): 0 ETH Protocol Fee (clamp)
+Savings: ~$1.50 at ETH = $3000
 ```
 
 ## Links

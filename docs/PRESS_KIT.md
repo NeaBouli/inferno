@@ -1,100 +1,98 @@
-# Inferno ($IFR) — Press Kit
+# Inferno ($IFR) -- Press Kit
 
-## Kurzfassung
+## Summary
 
-Inferno ($IFR) ist ein deflationaerer ERC-20 Utility-Token auf Ethereum. Nutzer sperren IFR-Token on-chain und erhalten dafuer lebenslangen Premium-Zugang zu Partner-Produkten — keine Abos, keine wiederkehrenden Zahlungen.
+Inferno ($IFR) is a deflationary ERC-20 utility token on Ethereum. Users lock IFR tokens on-chain and receive lifetime premium access to partner products -- no subscriptions, no recurring payments.
 
-**Modell:** Community Fair Launch (CFLM) — kein Presale, kein VC, keine Insider-Allokation.
+**Model:** Community Fair Launch (CFLM) -- no presale, no VC, no insider allocation.
 
 ## Key Facts
 
-| Metrik | Wert |
-|--------|------|
+| Metric | Value |
+|--------|-------|
 | Token | $IFR (Inferno) |
 | Standard | ERC-20, Ethereum |
 | Decimals | 9 |
-| Initiale Supply | 1,000,000,000 IFR |
-| Aktuelle Supply | ~997,999,575 IFR |
-| Verbrannt | ~2,000,425 IFR (0.2%) |
-| Smart Contracts | 14 (alle verified) |
-| Tests | 436 (99% Coverage) |
-| Netzwerk | Sepolia Testnet (Pre-Mainnet) |
-| Launch-Modell | Community Fair Launch (CFLM) |
-| Mint-Funktion | Keine — Supply kann nur sinken |
+| Initial Supply | 1,000,000,000 IFR |
+| Smart Contracts | 10 on-chain components (all verified) |
+| Tests | 444 (99% coverage) |
+| Network | Ethereum Mainnet (deployed 2026-03-05) |
+| Launch Model | Community Fair Launch (CFLM) |
+| Mint Function | None -- supply can only decrease |
 
-## Token-Allokation
+## Token Allocation
 
-| Kategorie | Anteil | Menge | Mechanismus |
-|-----------|--------|-------|-------------|
+| Category | Share | Amount | Mechanism |
+|----------|-------|--------|-----------|
 | DEX Liquidity | 40% | 400M IFR | Uniswap V2 Pairing |
-| Liquidity Reserve | 20% | 200M IFR | 6-Monats-Lock, 50M/Quartal |
-| Team (Vested) | 15% | 150M IFR | 12-Monats-Cliff, 36-Monats-Linear |
-| Treasury | 15% | 150M IFR | Multisig-kontrolliert |
+| Liquidity Reserve | 20% | 200M IFR | 6-month lock, 50M/quarter |
+| Team (Vested) | 15% | 150M IFR | 12-month cliff, 36-month linear |
+| Treasury | 15% | 150M IFR | Multisig-controlled |
 | Community & Grants | 6% | 60M IFR | Grants, Bounties, Ecosystem |
-| Partner Ecosystem | 4% | 40M IFR | Milestone-basiert, 6-12 Mo Vesting |
+| Partner Ecosystem | 4% | 40M IFR | Milestone-based, 6-12 mo vesting |
 
-## Deflations-Mechanismus
+## Deflation Mechanism
 
-Jeder Transfer: -2.5% permanent verbrannt + 1% BuybackVault.
+Every transfer: -2.5% permanently burned + 1% BuybackVault.
 
-| Gebuehr | Rate | Ziel |
-|---------|------|------|
-| Sender Burn | 2.0% | Permanent verbrannt (Supply sinkt) |
-| Recipient Burn | 0.5% | Permanent verbrannt (Supply sinkt) |
-| Pool Fee | 1.0% | BuybackVault (Rueckkauf + Burn) |
-| **Gesamt** | **3.5%** | Hard Cap: 5% max |
+| Fee | Rate | Destination |
+|-----|------|-------------|
+| Sender Burn | 2.0% | Permanently burned (supply decreases) |
+| Recipient Burn | 0.5% | Permanently burned (supply decreases) |
+| Pool Fee | 1.0% | BuybackVault (buyback + burn) |
+| **Total** | **3.5%** | Hard Cap: 5% max |
 
-## Lock-to-Access Modell
+## Lock-to-Access Model
 
-Nutzer sperren IFR-Token im IFRLock-Contract → erhalten lebenslangen Premium-Zugang bei Partner-Produkten. Tokens bleiben im Besitz des Nutzers und koennen jederzeit entsperrt werden.
+Users lock IFR tokens in the IFRLock contract -> receive lifetime premium access to partner products. Tokens remain owned by the user and can be unlocked at any time.
 
-| Tier | Min. Lock | Beispiel-Zugang |
-|------|-----------|-----------------|
-| Bronze | 1,000 IFR | Basis-Features |
-| Silver | 2,500 IFR | Erweiterte Features |
-| Gold | 5,000 IFR | Premium-Zugang |
-| Platinum | 10,000 IFR | Vollzugang + Priority Support |
+| Tier | Min. Lock | Example Access |
+|------|-----------|----------------|
+| Bronze | 1,000 IFR | Basic features |
+| Silver | 2,500 IFR | Extended features |
+| Gold | 5,000 IFR | Premium access |
+| Platinum | 10,000 IFR | Full access + priority support |
 
 ## Partner Ecosystem
 
-- **40M IFR** dedizierter Partner Pool
-- Lock-triggered Creator Rewards (Algo-basiert)
-- Milestone-basierte Freigabe + Vesting
-- Partner-Token = DAO Voting Rights (Phase 4)
-- Offen fuer alle Produkte — permissionless Integration
+- **40M IFR** dedicated partner pool
+- Lock-triggered Creator Rewards (algo-based)
+- Milestone-based release + vesting
+- Partner tokens = DAO voting rights (Phase 4)
+- Open to all products -- permissionless integration
 
 ## Governance
 
-- 48h Timelock auf alle Aenderungen
+- 48h Timelock on all changes
 - Guardian Emergency Cancel
-- Governance Proposals #0-#3 erfolgreich ausgefuehrt
-- Ownership aller Contracts → Governance Timelock
-- Roadmap: Admin → Multisig → Full DAO
+- Governance Proposals successfully executed (Sepolia testnet phase)
+- Ownership of all contracts -> Governance Timelock
+- Roadmap: Admin -> Multisig -> Full DAO
 
-## Technologie
+## Technology
 
-| Komponente | Stack |
-|------------|-------|
+| Component | Stack |
+|-----------|-------|
 | Contracts | Solidity 0.8.20, OpenZeppelin v5 |
 | Framework | Hardhat v2, ethers v5 |
-| Tests | Chai v4, 436 Tests, 99% Coverage |
+| Tests | Chai v4, 444 tests, 99% coverage |
 | Dashboard | React 18 + Vite + ethers v5 |
 | Governance UI | React 18 + TypeScript + Tailwind |
 | AI Copilot | Claude Haiku 4.5 + RAG |
 | Benefits Network | Next.js 14 + wagmi v2 (PWA) |
 
-## Roadmap (Kurzfassung)
+## Roadmap (Summary)
 
-- **Q1 2026:** Testnet, 436 Tests, alle Apps live
-- **Q2 2026:** Security Audit, Mainnet Deploy, erste Partner
-- **Q3 2026:** 10+ Partner, Creator Gateway MVP, Apps live
-- **Q4 2026:** Community Governance, CEX Outreach
-- **Q2 2027+:** Full DAO, Token Voting
+- **Q1 2026:** Testnet complete, 444 tests, all apps built, mainnet deployed (2026-03-05)
+- **Q2 2026:** LP creation, security audit, first partners
+- **Q3 2026:** 10+ partners, Creator Gateway MVP, apps live
+- **Q4 2026:** Community governance, CEX outreach
+- **Q2 2027+:** Full DAO, token voting
 
 ## Links
 
-| Ressource | URL |
-|-----------|-----|
+| Resource | URL |
+|----------|-----|
 | Website | https://neabouli.github.io/inferno/ |
 | GitHub | https://github.com/NeaBouli/inferno |
 | Wiki | https://neabouli.github.io/inferno/wiki/ |
@@ -103,10 +101,10 @@ Nutzer sperren IFR-Token im IFRLock-Contract → erhalten lebenslangen Premium-Z
 | Fair Launch | docs/FAIR_LAUNCH.md |
 | Roadmap | docs/ROADMAP.md |
 
-## Medien-Anfragen
+## Media Inquiries
 
-GitHub Discussions oder Issues:
+GitHub Discussions or Issues:
 https://github.com/NeaBouli/inferno/discussions
 
 ---
-*Testnet Phase | Februar 2026 | Keine Anlageberatung*
+*Mainnet Live | March 2026 | Not financial advice*

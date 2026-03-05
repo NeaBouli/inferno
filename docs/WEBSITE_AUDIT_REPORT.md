@@ -141,8 +141,8 @@
 |------|-----------|----------------|-----------|----------|
 | `README.md` | 444 correct | 9 mainnet correct | All mainnet correct | English only |
 | `docs/DEPLOYMENTS.md` | N/A | 9 mainnet correct | All 9 verified | English only |
-| `docs/DOCS.md` | 444 correct | 10 (9+1 testnet) | Correct | German (intentional) |
-| `docs/PROJECT-SUMMARY.md` | 444 correct | 10 correct | All mainnet correct | German (intentional) |
+| `docs/DOCS.md` | 444 correct | 10 (9+1 testnet) | Correct | English only |
+| `docs/PROJECT-SUMMARY.md` | 444 correct | 10 correct | All mainnet correct | English only |
 | `docs/MAINNET_CHECKLIST.md` | 444 correct | 9 correct | N/A | English only |
 
 ### Landing Page (`docs/index.html`) — Passed Checks

@@ -1,12 +1,12 @@
-# AI Copilot — Korrigierter Deploy Guide
+# AI Copilot — Corrected Deploy Guide
 
-## Warum Two-App Approach?
-Vercel ist optimiert für statische Sites + Serverless Functions.
-Express-Server mit tsx watch läuft besser auf Railway/Render.
+## Why Two-App Approach?
+Vercel is optimized for static sites + serverless functions.
+Express server with tsx watch runs better on Railway/Render.
 
 ## Option A: Frontend (Vercel) + Backend (Railway)
 
-### Backend auf Railway:
+### Backend on Railway:
 1. https://railway.app → New Project → Deploy from GitHub
 2. Root Directory: `apps/ai-copilot`
 3. Start Command: `npx tsx server/index.ts`
@@ -16,9 +16,9 @@ Express-Server mit tsx watch läuft besser auf Railway/Render.
    POINTS_BACKEND_URL=https://ifr-points.railway.app
    PORT=3003
    ```
-5. URL notieren: `https://ifr-copilot-api.railway.app`
+5. Note the URL: `https://ifr-copilot-api.railway.app`
 
-### Frontend auf Vercel:
+### Frontend on Vercel:
 1. https://vercel.com → New Project → NeaBouli/inferno
 2. Root Directory: `apps/ai-copilot`
 3. Framework: Vite
@@ -28,8 +28,8 @@ Express-Server mit tsx watch läuft besser auf Railway/Render.
    ```
 5. URL: `https://ifr-copilot.vercel.app`
 
-### vite.config.ts anpassen:
-Ersetze hardcoded proxy durch env variable:
+### Adjust vite.config.ts:
+Replace hardcoded proxy with env variable:
 ```typescript
 server: {
   proxy: {
@@ -38,17 +38,17 @@ server: {
 }
 ```
 
-## Option B: Alles auf Railway (einfacher)
-Railway unterstützt Multi-Service Deployments:
+## Option B: Everything on Railway (simpler)
+Railway supports multi-service deployments:
 1. Service 1: Frontend (`vite build` → `serve dist/`)
 2. Service 2: Backend (`tsx server/index.ts`)
-Beide im selben Railway-Projekt → interne Kommunikation
+Both in the same Railway project → internal communication
 
-## Empfehlung
-- Testnet Phase: **Option B** (Railway, alles an einem Ort)
-- Mainnet: **Option A** (Vercel CDN für Frontend, Railway für API)
+## Recommendation
+- Current phase: **Option B** (Railway, everything in one place)
+- Production: **Option A** (Vercel CDN for frontend, Railway for API)
 
-## Lokale Entwicklung
+## Local Development
 ```bash
 cd apps/ai-copilot
 cp .env.example .env
@@ -66,4 +66,4 @@ curl https://ifr-copilot-api.railway.app/api/health
 ```
 
 ---
-*Stand: Februar 2026 | Ersetzt DEPLOY.md (alte Single-App Vercel Config)*
+*As of: February 2026 | Replaces DEPLOY.md (old single-app Vercel config)*

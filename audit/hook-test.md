@@ -1,1 +1,1 @@
-- [x] Hook verification
+- [x] Hook verification — pre-commit and CI hooks validated

@@ -1,25 +1,25 @@
 ---
 name: Feature Request
-about: Schlage ein neues Feature vor
+about: Suggest a new feature
 title: '[FEAT] '
 labels: enhancement
 assignees: ''
 ---
 
 ## Problem / Motivation
-Welches Problem löst dieses Feature?
+What problem does this feature solve?
 
-## Vorgeschlagene Lösung
-Beschreibung des gewünschten Verhaltens.
+## Proposed Solution
+Description of the desired behavior.
 
-## Alternativen
-Andere Lösungsansätze die du in Betracht gezogen hast.
+## Alternatives
+Other approaches you have considered.
 
-## Kontext
-Gibt es ähnliche Features in anderen Projekten?
+## Context
+Are there similar features in other projects?
 
 ## Impact
-- [ ] Smart Contract Änderung (erfordert Governance Proposal)
-- [ ] Off-chain App
-- [ ] Dokumentation
+- [ ] Smart contract change (requires Governance Proposal)
+- [ ] Off-chain app
+- [ ] Documentation
 - [ ] UI/UX

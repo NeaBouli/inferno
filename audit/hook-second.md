@@ -1,1 +1,1 @@
-- [x] Hook second test
+- [x] Hook second test — verified post-mainnet deployment
