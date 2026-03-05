@@ -1,5 +1,9 @@
-import { readFileSync, readdirSync } from "fs";
-import { join } from "path";
+import { readFileSync, readdirSync, existsSync } from "fs";
+import { join, resolve, dirname } from "path";
+import { fileURLToPath } from "url";
+
+const __wikiFilename = fileURLToPath(import.meta.url);
+const __wikiDirname = dirname(__wikiFilename);
 
 export interface WikiDoc {
   title: string;
@@ -8,10 +12,33 @@ export interface WikiDoc {
 }
 
 /**
- * Load and parse all wiki HTML files into plain text snippets.
- * Strips HTML tags and extracts meaningful content for RAG context.
+ * Load wiki docs from the pre-built JSON file (embedded at build time).
+ * Falls back to filesystem scan for local development.
  */
 export function loadWikiDocs(wikiDir: string): WikiDoc[] {
+  // 1. Try pre-built JSON (works on Railway and after prebuild)
+  const jsonPath = resolve(
+    __wikiDirname,
+    "../src/context/wiki-content.json"
+  );
+  if (existsSync(jsonPath)) {
+    try {
+      const raw = readFileSync(jsonPath, "utf-8");
+      const docs: WikiDoc[] = JSON.parse(raw);
+      console.log(`Wiki RAG: loaded ${docs.length} docs from wiki-content.json`);
+      return docs;
+    } catch (err) {
+      console.warn("Wiki RAG: failed to parse wiki-content.json:", err);
+    }
+  }
+
+  // 2. Fallback: read HTML files from filesystem (local dev without prebuild)
+  if (!existsSync(wikiDir)) {
+    console.warn(`Wiki RAG: neither JSON nor wiki dir found — no RAG context`);
+    return [];
+  }
+
+  console.log(`Wiki RAG: falling back to filesystem scan (${wikiDir})`);
   const files = readdirSync(wikiDir).filter((f) => f.endsWith(".html"));
   const docs: WikiDoc[] = [];
 
@@ -21,7 +48,7 @@ export function loadWikiDocs(wikiDir: string): WikiDoc[] {
 
     // Extract <title> content
     const titleMatch = html.match(/<title>(.*?)<\/title>/i);
-    const title = titleMatch?.[1]?.replace(" — IFR Wiki", "").trim() || slug;
+    const title = titleMatch?.[1]?.replace(/\s*[—–-]\s*Inferno.*$/i, "").trim() || slug;
 
     // Extract main content (inside <main> or <article>, fallback to <body>)
     let body = html;
@@ -51,6 +78,7 @@ export function loadWikiDocs(wikiDir: string): WikiDoc[] {
       .replace(/&gt;/g, ">")
       .replace(/&quot;/g, '"')
       .replace(/&#39;/g, "'")
+      .replace(/&mdash;/g, "—")
       .replace(/\s+/g, " ")
       .trim();
 
