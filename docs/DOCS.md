@@ -16,15 +16,16 @@
 inferno/
 ├── contracts/
 │   ├── token/InfernoToken.sol          [x] 93 LOC, 22 Tests
-│   ├── liquidity/LiquidityReserve.sol  [x] 151 LOC, 42 Tests
-│   ├── vesting/Vesting.sol             [x] 132 LOC, 27 Tests
+│   ├── liquidity/LiquidityReserve.sol  [x] 161 LOC, 42 Tests
+│   ├── vesting/Vesting.sol             [x] 142 LOC, 27 Tests
 │   ├── buyback/BuybackVault.sol        [x] 173 LOC, 26 Tests
-│   ├── burnreserve/BurnReserve.sol     [x] 92 LOC, 27 Tests
+│   ├── burnreserve/BurnReserve.sol     [x] 102 LOC, 27 Tests
 │   ├── governance/Governance.sol       [x] 150 LOC, 36 Tests
 │   ├── lock/IFRLock.sol               [x] 127 LOC, 37 Tests
 │   ├── partner/PartnerVault.sol       [x] 549 LOC, 95 Tests
+│   ├── bootstrap/BootstrapVault.sol  [x] 225 LOC, 22 Tests
 │   ├── FeeRouterV1.sol               [x] 228 LOC, 33 Tests
-│   └── mocks/                          MockToken, MockRouter, MockInfernoToken, MockAdapter
+│   └── mocks/                          MockToken, MockRouter, MockInfernoToken, MockAdapter, MockBootstrapHelpers
 ├── test/
 │   ├── InfernoToken.test.js            [x] 258 LOC
 │   ├── LiquidityReserve.test.js        [x] 283 LOC
@@ -34,7 +35,8 @@ inferno/
 │   ├── Governance.test.js              [x] 320 LOC
 │   ├── IFRLock.test.js                [x] 363 LOC
 │   ├── PartnerVault.test.js           [x] 480 LOC
-│   └── FeeRouterV1.test.js           [x] 500 LOC
+│   ├── FeeRouterV1.test.js           [x] 500 LOC
+│   └── BootstrapVault.test.js        [x] 337 LOC
 ├── scripts/
 │   ├── deploy-testnet.js               [x] 232 LOC (9-Step CFLM Deploy)
 │   ├── create-lp.js                    [x] 4-Step LP Pairing + Router Update
@@ -84,7 +86,7 @@ inferno/
 │   ├── CHANGELOG.md                    Aenderungsprotokoll
 │   ├── KNOWN-ISSUES.md                 Bekannte Probleme
 │   ├── SECURITY-AUDIT.md               Slither Audit Report
-│   ├── DEPLOYMENTS.md                  Sepolia Contract-Adressen
+│   ├── DEPLOYMENTS.md                  Sepolia + Mainnet Contract-Adressen
 │   ├── GOVERNANCE_CONSTITUTION.md     Governance Constitution v1.0 (Hard Bounds, Rollen, Upgrade-Pfad)
 │   ├── BUSINESS_ONBOARDING.md         Business Onboarding Guide (Benefits Network Setup & Go-Live)
 │   ├── PARTNER_INTEGRATION_SPEC.md    Technische Partner-Integration Spec (IFRLock + PartnerVault ABI, Rewards, Algo Throttle)
@@ -103,7 +105,7 @@ inferno/
 │   ├── PATCH-GUIDELINES.md             Patch-Richtlinien v1.0 (6 Schritte, Versionierung, Notfall-Patches)
 │   ├── COVERAGE_REPORT.md             Solidity Coverage Report (99% Stmts, 91% Branch, 98% Funcs, 99% Lines, Final Run)
 │   ├── BENEFITS_NETWORK_TEST.md       Benefits Network E2E Test Guide (Test-Flow, API, Lock Tiers, Fehler)
-│   ├── PROJECT-SUMMARY.md             Komplett-Uebersicht (14 Contracts, 444 Tests, 7 Apps, CI/CD)
+│   ├── PROJECT-SUMMARY.md             Komplett-Uebersicht (10 Contracts, 444 Tests, 7 Apps, CI/CD)
 │   ├── CONTRIBUTING.md                Contributing Guide v1.0 (Bug Reports, Code Standards, Git Konventionen)
 │   ├── TRANSPARENCY.md               On-Chain Transparency Report (8 Checks, Supply, Vesting, LP, Mainnet TODOs)
 │   ├── ONE-PAGER.md                  Investor One-Pager (Key Numbers, Produkte, Technologie, Vor-Mainnet)
@@ -132,7 +134,7 @@ inferno/
 │   ├── APP_SECURITY_REVIEW.md        App Security Review (12 Findings, 7 Fixed: CORS, JWT, ABI, Wallet)
 │   ├── robots.txt                     Crawler-Steuerung (Allow: /, Sitemap-Link)
 │   ├── sitemap.xml                    15 URLs (Landing + 14 Wiki-Seiten)
-│   └── wiki/                          [x] 14 HTML-Seiten (index, contracts, tokenomics, lock, governance, security, deployment, integration, agent, faq, transparency, fair-launch, fee-design, roadmap)
+│   └── wiki/                          [x] 16 HTML-Seiten (index, contracts, tokenomics, lock, governance, security, deployment, integration, bootstrap, agent, faq, transparency, fair-launch, fee-design, roadmap, testnet)
 ├── STATUS-REPORT.md                    Vollstaendiger Statusbericht
 └── README.md                           Projekt-Uebersicht
 ```
@@ -199,6 +201,12 @@ inferno/
 - **Sepolia:** protocolFeeBps=5 (0.05%), FEE_CAP_BPS=25 (0.25%), Adresse: `0x499289C8Ef49769F4FcFF3ca86D4BD7b55B49aa4`
 - **Integration:** Points Backend signiert Voucher via EIP-712, FeeRouterV1 validiert on-chain
 
+### 10. BootstrapVault (`contracts/bootstrap/BootstrapVault.sol`) — 225 LOC, 22 Tests
+- **Zweck:** Trustless community bootstrap for initial IFR/ETH liquidity pool creation
+- **Features:** contribute() (0.01-2 ETH/wallet), finalise() (permissionless LP creation), claim() (pro-rata IFR share), LP lock via Team.Finance, anti-whale max 2 ETH, 90-day window, no admin keys, no pause, no withdrawal
+- **Sepolia:** `0xE0E8F76e4fb38B2e367Aee043a2C02b8D1c7c037`
+- **Mainnet:** TBA
+
 ### Entfernt
 - ~~Presale.sol~~ — Entfernt bei CFLM-Migration (kein Presale im Fair Launch Modell)
 
@@ -208,9 +216,9 @@ inferno/
 
 | Metrik | Wert |
 |--------|------|
-| Contracts | 10 (+ 4 Mocks) |
-| Solidity LOC | 1,697 |
-| Tests | 367 (alle bestanden) |
+| Contracts | 10 (+ 5 Mocks) |
+| Solidity LOC | 1,950 |
+| Tests | 367 contract + 41 Creator Gateway + 20 Points + 16 Benefits = 444 total |
 | Branch Coverage | 91% |
 | Test LOC | 2,402 |
 | Deploy Script | 232 LOC, 9 Steps |
