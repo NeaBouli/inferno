@@ -14,7 +14,7 @@ GitHub Discussions enabled via `gh api repos/NeaBouli/inferno -X PATCH -f has_di
 | Q&A | Questions about the protocol |
 | Announcements | Project updates |
 | Show and tell | Community integrations |
-| Partners | Partner onboarding questions |
+| Builders | Builder onboarding questions |
 
 Categories at: https://github.com/NeaBouli/inferno/discussions/categories
 

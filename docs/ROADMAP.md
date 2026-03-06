@@ -64,7 +64,7 @@
 ### Should Have
 - [ ] Apps deployed (Railway / Vercel)
 - [ ] Dashboard + Governance Dashboard switched to mainnet
-- [ ] First real partner integration live
+- [ ] First real builder integration live
 - [ ] Community announcement (X/Twitter, Discord)
 - [ ] CoinGecko / CoinMarketCap listing application
 
@@ -72,7 +72,7 @@
 
 ## Phase 3: Growth (Q2-Q3 2026)
 
-- [ ] Partner Ecosystem expansion (permissionless integration)
+- [ ] Builder Ecosystem expansion (permissionless integration)
 - [ ] Creator Gateway live (YouTube monetization bridge)
 - [ ] Benefits Network live (merchant onboarding)
 - [ ] Guarded buyback automation (BuybackVault activation after 60 days)
@@ -89,7 +89,7 @@
 - [ ] Guardian multisig (2-of-3, cancel-only)
 - [ ] DAO governance framework (token-weighted voting)
 - [ ] Community proposals enabled
-- [ ] Partner token voting rights
+- [ ] Builder token voting rights
 - [ ] Protocol revenue sharing model
 - [ ] Full DAO transition: Admin → Multisig → DAO
 
@@ -98,7 +98,7 @@
 ## Phase 5: Scale (Q2 2027+)
 
 - [ ] Advanced lock types (tiered, time-based, NFT-gated)
-- [ ] Partner self-service portal
+- [ ] Builder self-service portal
 - [ ] Cross-protocol integrations
 - [ ] Advanced analytics dashboard
 - [ ] Community grants program

@@ -30,7 +30,7 @@ Inferno v0.1.0 marks the **first tagged release** of the protocol. All 14 smart 
 - AI Copilot (Claude-powered, 3 modes, safety guards)
 - Points Backend (SIWE auth, EIP-712 vouchers, anti-sybil)
 - Creator Gateway (YouTube x IFR Lock bridge)
-- Partner Directory (static, filter + cards)
+- Builder Directory (static, filter + cards)
 - Benefits Network (QR verification, Next.js PWA)
 
 **Testing:**

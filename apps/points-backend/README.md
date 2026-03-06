@@ -5,7 +5,7 @@ Points system for Inferno ($IFR) — SIWE authentication, points events, and EIP
 ## Features
 
 - **SIWE Authentication**: Sign-In with Ethereum — wallet-based auth, JWT sessions
-- **Points Events**: Track user actions (wallet connect, guide completion, partner onboarding)
+- **Points Events**: Track user actions (wallet connect, guide completion, builder onboarding)
 - **Daily Limits**: Per-event-type daily caps to prevent abuse
 - **EIP-712 Vouchers**: Signed discount vouchers redeemable on-chain via FeeRouter
 - **Anti-Sybil**: Rate limiting per IP + per wallet + global daily caps

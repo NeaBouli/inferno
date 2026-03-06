@@ -13,7 +13,7 @@ Goal: no single key can control the protocol.
 - **Signer Profiles:**
   - 2x founders/core team (hardware wallets)
   - 2x trusted community members
-  - 2x partner representatives
+  - 2x builder representatives
   - 1x reserve signer (cold storage)
 
 ### Guardian Multisig (Emergency Cancel)
@@ -36,7 +36,7 @@ Goal: no single key can control the protocol.
 |------|------|------------|-----------|
 | Founder 1+2 | Core Team | Hardware Wallet (Ledger/Trezor) | Mandatory — highest risk |
 | Community 1+2 | Elected | Hardware wallet recommended, MetaMask acceptable | |
-| Partner 1+2 | Accredited | MetaMask/WalletConnect acceptable | |
+| Builder 1+2 | Accredited | MetaMask/WalletConnect acceptable | |
 | Reserve | Cold Storage | Air-gapped hardware wallet | Mandatory |
 
 > For testnet phase, hot wallets (MetaMask) are OK for all slots.
@@ -76,7 +76,7 @@ Expansion by 2 community representatives:
 Full decentralization:
 - 2 founders (hardware wallet)
 - 2 community (Snapshot elected)
-- 2 partner representatives (first accredited partners)
+- 2 builder representatives (first accredited builders)
 - 1 reserve (cold storage)
 - Threshold: 4-of-7
 

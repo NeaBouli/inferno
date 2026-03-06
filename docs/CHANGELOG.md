@@ -69,7 +69,7 @@ All notable changes to the Inferno ($IFR) project.
 - docs/GOVERNANCE_CONSTITUTION.md -- Governance Constitution v1.0
 - docs/BUSINESS_ONBOARDING.md -- Business Onboarding SOP
 - docs/YOUTUBE_INTEGRATION.md -- YouTube Hybrid Model B Guide
-- docs/PARTNER_REWARDS_SPEC.md -- Partner Rewards Specification
+- docs/PARTNER_REWARDS_SPEC.md -- Builder Rewards Specification
 - docs/CHATGPT_AUDIT_PROMPT_V3.md -- Audit V3 Prompt (8 areas)
 - docs/CHATGPT_AUDIT_V3_RESULTS.md -- Audit V3 Results (placeholder)
 - docs/wiki/faq.html -- FAQ Wiki (30 Q&A, 6 sections)
@@ -87,7 +87,7 @@ All notable changes to the Inferno ($IFR) project.
 - .github/workflows/update-stats.yml -- daily 06:00 UTC on-chain stats
 - .github/workflows/post-deploy.yml -- trigger after deploy/execute script push
 - scripts/update-stats.js -- On-Chain Stats Auto-Update (stats.json + TRANSPARENCY.md + index.html)
-- apps/partner-directory/index.html -- Partner Directory (created, later removed)
+- apps/partner-directory/index.html -- Builder Directory (created, later removed)
 - apps/dashboard/src/components/LockPanel -- Lock/Unlock UI (Approve, Lock, Unlock, Tier)
 - apps/governance-dashboard/src/components/ProposalAlert -- Notification banner (Pending/Ready)
 - docs/ROADMAP.md -- 6-phase roadmap (Foundation -> DAO)
@@ -136,11 +136,11 @@ All notable changes to the Inferno ($IFR) project.
   - Anti-double-count mapping (wallet -> partnerId -> bool)
   - Algorithmic Emission Throttle (lockRatio -> emissionFactor)
 - Governance Dashboard (`apps/governance-dashboard/`)
-  - 4 Tabs: Overview, Partners, Timelock Queue, Calldata Generator
+  - 4 Tabs: Overview, Builders, Timelock Queue, Calldata Generator
   - React 18 + Vite + TypeScript + Tailwind + ethers v5
   - FeeRouter functions in Calldata Generator
 - IFR AI Copilot (`apps/ai-copilot/`)
-  - 3 modes: Customer, Partner, Developer
+  - 3 modes: Customer, Builder, Developer
   - RAG over IFR_KNOWLEDGE (canon parameters)
   - Safety Guards: no seed phrase, source quoting
   - Embedded in Landing Page + 9 wiki pages

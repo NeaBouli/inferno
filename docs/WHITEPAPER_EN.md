@@ -3,7 +3,7 @@
 > **DEPRECATED** — This document reflects the initial draft from September 2025 and is no longer accurate. The project has since migrated to the Community Fair Launch Model (CFLM) — no presale, no VC, no IDO. The current whitepaper is [WHITEPAPER.md](WHITEPAPER.md) (German). For an up-to-date English overview, see the [Landing Page](https://neabouli.github.io/inferno/) or the [Technical Wiki](https://neabouli.github.io/inferno/wiki/).
 
 ## Abstract
-Inferno ($IFR) is a deflationary ERC-20 token on Ethereum. Supply reduction is achieved through fee-based burns on transfers (2.5% per transfer) and an on-chain buyback mechanism. Governance controls parameters via a 48-hour timelock. The token serves as a universal utility lock: users lock IFR on-chain to access lifetime premium features across partner products.
+Inferno ($IFR) is a deflationary ERC-20 token on Ethereum. Supply reduction is achieved through fee-based burns on transfers (2.5% per transfer) and an on-chain buyback mechanism. Governance controls parameters via a 48-hour timelock. The token serves as a universal utility lock: users lock IFR on-chain to access lifetime premium features across builder products.
 
 ## 1. Rationale & Goals
 - **Deflation:** Predictable, transparent reduction of circulating supply.
@@ -28,7 +28,7 @@ Inferno ($IFR) is a deflationary ERC-20 token on Ethereum. Supply reduction is a
 
 ## 4. Fair Launch (CFLM)
 - **Model:** Community Fair Launch — no presale, no VC, no IDO.
-- **Distribution:** 100% of supply allocated at deployment (40% DEX, 20% Reserve, 15% Team vested, 15% Treasury, 6% Community, 4% Partner Ecosystem).
+- **Distribution:** 100% of supply allocated at deployment (40% DEX, 20% Reserve, 15% Team vested, 15% Treasury, 6% Community, 4% Builder Ecosystem).
 - **FeeExempt:** Token distribution is not reduced by fees.
 
 ## 5. Vesting

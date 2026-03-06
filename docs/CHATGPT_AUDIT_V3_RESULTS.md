@@ -53,7 +53,7 @@ Each area was checked with targeted grep/wc commands against the current code st
 - GITHUB_SECRETS.md created (CI/CD secrets documentation)
 - LockPanel.jsx in Token Dashboard (Lock/Unlock UI)
 - ProposalAlert.tsx in Governance Dashboard (Pending/Ready notifications)
-- Partner Directory App (apps/partner-directory/)
+- Builder Directory App (apps/partner-directory/)
 - Benefits Network E2E Test (Health, Business, Session — all OK)
 - Points Backend .dockerignore, AI Copilot server Dockerfile created
 - 7-point consistency check: all passed

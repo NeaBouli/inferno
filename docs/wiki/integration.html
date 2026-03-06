@@ -830,11 +830,11 @@ cast call 0x0Cab0A9440643128540222acC6eF5028736675d3 \
       </table>
 
       <!-- ============================================================
-           Section 11: Partner Benefits
+           Section 11: Builder Benefits
            ============================================================ -->
-      <h2>11. Partner Benefits</h2>
+      <h2>11. Builder Benefits</h2>
       <p>
-        Partners who integrate IFR Lock into their products gain access to a range of benefits designed to support growth and alignment with the Inferno ecosystem.
+        Builders who integrate IFR Lock into their products gain access to a range of benefits designed to support growth and alignment with the Inferno ecosystem.
       </p>
 
       <ul>
@@ -847,7 +847,7 @@ cast call 0x0Cab0A9440643128540222acC6eF5028736675d3 \
 
       <h3>Lock-triggered Creator Rewards</h3>
       <p>
-        Partner rewards are driven by real user engagement through the <strong>PartnerVault</strong> smart contract. When a user locks IFR for a creator's product, the creator earns a percentage of the locked amount from the Partner Ecosystem Pool.
+        Builder rewards are driven by real user engagement through the <strong>PartnerVault</strong> smart contract. When a user locks IFR for a creator's product, the creator earns a percentage of the locked amount from the Builder Ecosystem Pool.
       </p>
       <table>
         <thead>
@@ -869,9 +869,9 @@ cast call 0x0Cab0A9440643128540222acC6eF5028736675d3 \
             <td>Hard cap on total yearly rewards to prevent pool exhaustion</td>
           </tr>
           <tr>
-            <td><strong>Per-Partner Cap</strong></td>
-            <td>Configurable per partner</td>
-            <td>Maximum allocation per partner (governance-controlled)</td>
+            <td><strong>Per-Builder Cap</strong></td>
+            <td>Configurable per builder</td>
+            <td>Maximum allocation per builder (governance-controlled)</td>
           </tr>
           <tr>
             <td><strong>Vesting</strong></td>
@@ -883,18 +883,18 @@ cast call 0x0Cab0A9440643128540222acC6eF5028736675d3 \
 
       <h4>How It Works</h4>
       <ol>
-        <li><strong>Partner Registration:</strong> Governance creates a partner entry in PartnerVault with a beneficiary address, max allocation, and vesting schedule.</li>
-        <li><strong>User Locks IFR:</strong> When a user locks IFR for the partner's product via IFRLock, the lock event is recorded.</li>
-        <li><strong>Reward Accrual:</strong> <code>recordLockReward(partnerId, lockAmount)</code> credits the partner with <code>lockAmount &times; rewardBps / 10000</code> IFR from the pool.</li>
-        <li><strong>Vested Claiming:</strong> Partners call <code>claim(partnerId)</code> to withdraw vested rewards. Linear vesting ensures long-term alignment.</li>
+        <li><strong>Builder Registration:</strong> Governance creates a builder entry in PartnerVault with a beneficiary address, max allocation, and vesting schedule.</li>
+        <li><strong>User Locks IFR:</strong> When a user locks IFR for the builder's product via IFRLock, the lock event is recorded.</li>
+        <li><strong>Reward Accrual:</strong> <code>recordLockReward(partnerId, lockAmount)</code> credits the builder with <code>lockAmount &times; rewardBps / 10000</code> IFR from the pool.</li>
+        <li><strong>Vested Claiming:</strong> Builders call <code>claim(partnerId)</code> to withdraw vested rewards. Linear vesting ensures long-term alignment.</li>
       </ol>
 
       <p>
-        <strong>Total Partner Pool:</strong> 40M IFR (4% of total supply), managed by the PartnerVault contract on-chain. The remaining 60M IFR (6%) is reserved for community grants, bug bounties, and ecosystem development.
+        <strong>Total Builder Pool:</strong> 40M IFR (4% of total supply), managed by the PartnerVault contract on-chain. The remaining 60M IFR (6%) is reserved for community grants, bug bounties, and ecosystem development.
       </p>
 
       <h4>PartnerVault Integration (ethers.js v5)</h4>
-      <span class="code-label">Query partner rewards and claim</span>
+      <span class="code-label">Query builder rewards and claim</span>
       <pre><code>const VAULT_ADDR = "0xc6eb7714bCb035ebc2D4d9ba7B3762ef7B9d4F7D"; // Ethereum Mainnet
 const VAULT_ABI = [
   "function claimable(uint256 partnerId) view returns (uint256)",
@@ -904,7 +904,7 @@ const VAULT_ABI = [
 
 const vault = new ethers.Contract(VAULT_ADDR, VAULT_ABI, provider);
 
-// Check claimable amount for partner #0
+// Check claimable amount for builder #0
 const amount = await vault.claimable(0);
 console.log("Claimable:", ethers.utils.formatUnits(amount, 9), "IFR");
 
@@ -1002,17 +1002,17 @@ async function checkLicense(wallet) {
       </table>
 
       <!-- ============================================================
-           Section 14: Partner Onboarding Flow
+           Section 14: Builder Onboarding Flow
            ============================================================ -->
-      <h2>14. Partner Onboarding Flow</h2>
+      <h2>14. Builder Onboarding Flow</h2>
       <p>
-        The partner onboarding process is designed to get you integrated quickly and smoothly. Follow these steps to go from application to live integration.
+        The builder onboarding process is designed to get you integrated quickly and smoothly. Follow these steps to go from application to live integration.
       </p>
 
       <ol>
         <li><strong style="color: var(--text);">Application</strong> &mdash; Contact the Inferno team with your product description and user base size</li>
         <li><strong style="color: var(--text);">Technical Review</strong> &mdash; We assess integration feasibility and determine the minimum lock amount</li>
-        <li><strong style="color: var(--text);">Token Allocation</strong> &mdash; Partners receive an IFR allocation for initial user onboarding</li>
+        <li><strong style="color: var(--text);">Token Allocation</strong> &mdash; Builders receive an IFR allocation for initial user onboarding</li>
         <li><strong style="color: var(--text);">Integration</strong> &mdash; Implement the resolver using the code examples above (typically 1-2 days)</li>
         <li><strong style="color: var(--text);">Testing</strong> &mdash; Verify on Sepolia testnet before going live</li>
         <li><strong style="color: var(--text);">Launch</strong> &mdash; Go live on mainnet, joint announcement, featured on the Inferno ecosystem page</li>

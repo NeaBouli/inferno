@@ -12,7 +12,7 @@ _Last updated: 2026-03-06_
 | docs/WEBSITE_AUDIT_REPORT.md | OK | Post-mainnet coherence audit (15 findings) |
 | docs/DASHBOARD_TEST_RESULTS.md | OK | Dashboard build + live stats test results |
 | docs/APP_SECURITY_REVIEW.md | OK | Full + delta security review (20/25 fixed) |
-| docs/PARTNER_INTEGRATION_SPEC.md | OK | Partner integration specification |
+| docs/PARTNER_INTEGRATION_SPEC.md | OK | Builder integration specification |
 
 ## Project State
 

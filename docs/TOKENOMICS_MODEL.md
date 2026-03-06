@@ -17,7 +17,7 @@ Every transfer permanently burns 2.5%:
 - Transfer: 1,000 IFR
 - Recipient receives: 965 IFR (after 3.5% fee)
 - Burned: 25 IFR (permanent)
-- Pool: 10 IFR (BuybackVault/PartnerPool)
+- Pool: 10 IFR (BuybackVault/BuilderPool)
 
 ### Deflation Curve (Simulation)
 
@@ -42,14 +42,14 @@ Assumption: 100,000 transfers/year at average of 1,000 IFR
 | Team | 15% | 150,000,000 | Vesting 12-48 months |
 | Treasury | 15% | 150,000,000 | Governance-controlled |
 | Community & Grants | 6% | 60,000,000 | Ecosystem growth |
-| Partner Ecosystem | 4% | 40,000,000 | PartnerVault (Creator Rewards) |
+| Builder Ecosystem | 4% | 40,000,000 | PartnerVault (Creator Rewards) |
 
 ## PartnerVault Emission Model
 
 ### Parameters (Mainnet):
 - rewardBps: 1000 (10%)
 - annualEmissionCap: 4,000,000 IFR
-- PartnerPool: 40,000,000 IFR total
+- BuilderPool: 40,000,000 IFR total
 
 ### Runtime Simulation:
 At a constant annualEmissionCap of 4M IFR:
@@ -60,7 +60,7 @@ At a constant annualEmissionCap of 4M IFR:
 ### Creator Reward Example:
 - User A locks: 10,000 IFR
 - Creator B rewardBps: 1000 (10%)
-- Creator B Reward: 1,000 IFR (from PartnerPool)
+- Creator B Reward: 1,000 IFR (from BuilderPool)
 - Net Effect: 10,000 locked - 1,000 reward = 9,000 net deflationary
 
 **Important: Reward < Lock -> always net deflationary**
@@ -70,7 +70,7 @@ At a constant annualEmissionCap of 4M IFR:
 ### Tier Thresholds:
 | Tier | Min Lock | Benefits |
 |------|----------|----------|
-| Bronze | 1,000 IFR | Partner discounts |
+| Bronze | 1,000 IFR | Builder discounts |
 | Silver | 2,500 IFR | Increased discounts |
 | Gold | 5,000 IFR | Premium benefits |
 | Platinum | 10,000 IFR | Maximum benefits |

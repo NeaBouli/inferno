@@ -189,7 +189,7 @@ Step 7/8  Distribute Tokens:
             150M -> Vesting (Team)
             150M -> Treasury Multisig address
             60M  -> Community & Grants wallet
-            40M  -> Partner Ecosystem (PartnerVault)
+            40M  -> Builder Ecosystem (PartnerVault)
 Step 8/8  Remove deployer feeExempt
 ```
 

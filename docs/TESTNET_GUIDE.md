@@ -1,6 +1,6 @@
 # IFR Testnet Integration Guide — Sepolia
 
-Step-by-step guide for partners and developers to test the full IFR
+Step-by-step guide for builders and developers to test the full IFR
 integration on Sepolia. Mainnet was deployed on 2026-03-05 — see
 [DEPLOYMENTS.md](DEPLOYMENTS.md) for mainnet addresses.
 
@@ -162,14 +162,14 @@ What you see:
 
 ---
 
-## Step 7: Test Partner Lock Reward (PartnerVault)
+## Step 7: Test Builder Lock Reward (PartnerVault)
 
 This step requires:
 - PartnerVault is feeExempt (after Proposal #3)
-- A partner is registered in PartnerVault (via Governance)
+- A builder is registered in PartnerVault (via Governance)
 
 ```bash
-# Register partner (Governance Proposal required)
+# Register builder (Governance Proposal required)
 npx hardhat run scripts/propose-create-partner.js --network sepolia
 
 # Execute after 48h:
@@ -273,7 +273,7 @@ Mainnet is deployed (2026-03-05). See:
 - [ ] Mainnet deployment details: [DEPLOYMENTS.md](DEPLOYMENTS.md)
 - [ ] Security audit: [AUDIT_BRIEF.md](AUDIT_BRIEF.md)
 - [ ] Multisig setup: [MULTISIG_SETUP.md](MULTISIG_SETUP.md)
-- [ ] Partner integration: [PARTNER_INTEGRATION_SPEC.md](PARTNER_INTEGRATION_SPEC.md)
+- [ ] Builder integration: [PARTNER_INTEGRATION_SPEC.md](PARTNER_INTEGRATION_SPEC.md)
 
 ---
 *As of: March 2026 | Sepolia Testnet Guide v1.1*

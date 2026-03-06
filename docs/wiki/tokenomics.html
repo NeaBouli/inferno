@@ -850,10 +850,10 @@
             <td>Community grants, bug bounties, ecosystem development</td>
           </tr>
           <tr>
-            <td>Partner Ecosystem</td>
+            <td>Builder Ecosystem</td>
             <td>4%</td>
             <td>40,000,000</td>
-            <td>Milestone-based partner allocations (vested 6&ndash;12 months)</td>
+            <td>Milestone-based builder allocations (vested 6&ndash;12 months)</td>
           </tr>
         </tbody>
       </table>
@@ -896,7 +896,7 @@
           <span class="alloc-amount">60M IFR</span>
         </div>
         <div class="alloc-row">
-          <span class="alloc-label">Partner Ecosystem</span>
+          <span class="alloc-label">Builder Ecosystem</span>
           <div class="alloc-bar-track">
             <div class="alloc-bar-fill" style="width: 4%; background: linear-gradient(90deg, #f97316, #fb923c);">4%</div>
           </div>
@@ -941,13 +941,13 @@
         <li>Used for airdrops, rewards, community incentives, bug bounties, and grants</li>
       </ul>
 
-      <p><strong>Partner Ecosystem (4% &mdash; 40M IFR)</strong></p>
+      <p><strong>Builder Ecosystem (4% &mdash; 40M IFR)</strong></p>
       <ul>
         <li>Dedicated pool managed by the <strong>PartnerVault</strong> contract (Mainnet: <code>0xc6eb7714bCb035ebc2D4d9ba7B3762ef7B9d4F7D</code>)</li>
         <li>Primary distribution via <strong>lock-triggered Creator Rewards</strong>: when a user locks IFR for a creator's product, the creator earns a percentage (RewardBps) from the pool, vested over 6&ndash;12 months</li>
-        <li>Hard cap per partner and annual emission cap to prevent pool exhaustion</li>
+        <li>Hard cap per builder and annual emission cap to prevent pool exhaustion</li>
         <li>All allocations vest linearly &mdash; no instant dumps</li>
-        <li>Partner tokens grant DAO voting rights in Phase 4+</li>
+        <li>Builder tokens grant DAO voting rights in Phase 4+</li>
       </ul>
 
       <!-- ============================================================
@@ -1083,12 +1083,12 @@ if (from != address(0) && to != address(0)
            ============================================================ -->
       <h2 id="partner-vault">6. PartnerVault &amp; Creator Rewards</h2>
       <p>
-        The Partner Ecosystem Pool (4%, 40M IFR) is distributed through the <strong>PartnerVault</strong> contract (deployed on Ethereum Mainnet). Instead of fixed tier-based grants, partner rewards are driven by actual user engagement via lock-triggered Creator Rewards.
+        The Builder Ecosystem Pool (4%, 40M IFR) is distributed through the <strong>PartnerVault</strong> contract (deployed on Ethereum Mainnet). Instead of fixed tier-based grants, builder rewards are driven by actual user engagement via lock-triggered Creator Rewards.
       </p>
 
       <h3>Lock-triggered Creator Rewards</h3>
       <p>
-        When a user locks IFR for premium access to a creator's product, the creator earns a reward from the Partner Pool:
+        When a user locks IFR for premium access to a creator's product, the creator earns a reward from the Builder Pool:
       </p>
 
       <div class="example-card">
@@ -1137,7 +1137,7 @@ if (from != address(0) && to != address(0)
             <td>6&ndash;12 months linear</td>
           </tr>
           <tr>
-            <td>Per-Partner Cap</td>
+            <td>Per-Builder Cap</td>
             <td>Hard cap (configurable via governance)</td>
           </tr>
           <tr>
@@ -1146,7 +1146,7 @@ if (from != address(0) && to != address(0)
           </tr>
           <tr>
             <td>Claim Mechanism</td>
-            <td>Permissionless <code>claim()</code> by partner beneficiary</td>
+            <td>Permissionless <code>claim()</code> by builder beneficiary</td>
           </tr>
           <tr>
             <td>Fee Exempt</td>
@@ -1157,7 +1157,7 @@ if (from != address(0) && to != address(0)
 
       <div class="callout callout-green">
         <p>
-          <strong>Key difference from old model:</strong> Previous documentation listed fixed tier grants (5M / 2M / 1M / 500K IFR per partner). These numbers were replaced with the lock-triggered reward model because fixed grants become disproportionate at scale &mdash; at $0.50/IFR, a 5M grant would be $2.5M, which is unsustainable for early-stage creator partnerships.
+          <strong>Key difference from old model:</strong> Previous documentation listed fixed tier grants (5M / 2M / 1M / 500K IFR per builder). These numbers were replaced with the lock-triggered reward model because fixed grants become disproportionate at scale &mdash; at $0.50/IFR, a 5M grant would be $2.5M, which is unsustainable for early-stage creator partnerships.
         </p>
       </div>
 
@@ -1240,7 +1240,7 @@ if (from != address(0) && to != address(0)
           <tr><td>Complete Wallet Setup Guide</td><td>20</td></tr>
           <tr><td>Add IFR Token (Decimals verified)</td><td>20</td></tr>
           <tr><td>Complete Lock Guide</td><td>30</td></tr>
-          <tr><td>Partner Onboarding</td><td>50</td></tr>
+          <tr><td>Builder Onboarding</td><td>50</td></tr>
         </tbody>
       </table>
 

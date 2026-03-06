@@ -12,7 +12,7 @@
 
 ## 1. Projektstatus
 
-Inferno ($IFR) ist ein **deflationärer ERC-20 Utility-Token** auf Ethereum. Jeder Transfer verbrennt 2.5% permanent (2% Sender + 0.5% Recipient), plus 1% Pool Fee. Der Token dient als **universeller Utility-Lock**: Nutzer locken IFR on-chain, und Partner-Produkte verifizieren den Lock-Status, um Lifetime/Premium-Zugang zu gewähren.
+Inferno ($IFR) ist ein **deflationärer ERC-20 Utility-Token** auf Ethereum. Jeder Transfer verbrennt 2.5% permanent (2% Sender + 0.5% Recipient), plus 1% Pool Fee. Der Token dient als **universeller Utility-Lock**: Nutzer locken IFR on-chain, und Builder-Produkte verifizieren den Lock-Status, um Lifetime/Premium-Zugang zu gewähren.
 
 **Phase:** MAINNET DEPLOYED (05.03.2026) — 10 Contracts deployed + verified, Ownership transferred to Governance.
 
@@ -75,7 +75,7 @@ Inferno ($IFR) ist ein **deflationärer ERC-20 Utility-Token** auf Ethereum. Jed
 ### Philosophie
 
 - Inferno ist eine **PLATTFORM** — Community integriert sich selbst
-- Kein "Partner Onboarding", kein "Apply to join"
+- Kein "Builder Onboarding", kein "Apply to join"
 - No team ETH in LP — Bootstrap sammelt Community ETH
 - On-chain truth layer: IFRLock ist kanonische Quelle
 
@@ -108,7 +108,7 @@ Inferno ($IFR) ist ein **deflationärer ERC-20 Utility-Token** auf Ethereum. Jed
 #### Community Fair Launch Model (CFLM) — kein Presale
 - Ursprünglich war ein Presale-Contract geplant (Presale.sol existierte)
 - **Migration zu CFLM**: Presale wurde entfernt, kein VC, kein Private Sale
-- Allocation: 40% DEX / 20% Reserve / 15% Team (Vested) / 15% Treasury / 6% Community / 4% Partner
+- Allocation: 40% DEX / 20% Reserve / 15% Team (Vested) / 15% Treasury / 6% Community / 4% Builder
 
 #### Timelocked Governance statt DAO
 - **Bewusst KEIN Token-Voting** — verhindert Whale-Manipulation, Flash-Loan-Attacks
@@ -124,18 +124,18 @@ Inferno ($IFR) ist ein **deflationärer ERC-20 Utility-Token** auf Ethereum. Jed
 #### 3-Layer Lock-Architektur
 1. **Truth Layer** (IFRLock Smart Contract): `isLocked(wallet, minAmount) → bool`
 2. **Bridge Layer** (License Resolver): Stateless Mapping Wallet → Lock → Plan
-3. **Service Layer** (Partner Apps): Plan-basierte Features (MONTHLY oder LIFETIME)
+3. **Service Layer** (Builder Apps): Plan-basierte Features (MONTHLY oder LIFETIME)
 - **Keine Wallet-Speicherung in Apps**, keine On-Chain-Calls vom Client, kein Token-Narrativ im User-Flow
 
-#### Partner Token Allocation mit Lock-triggered Creator Rewards
-- 4% (40M IFR) reserviert für Partner Ecosystem Pool, verwaltet durch PartnerVault.sol
+#### Builder Allocation mit Lock-triggered Creator Rewards
+- 4% (40M IFR) reserviert für Builder Ecosystem Pool, verwaltet durch PartnerVault.sol
 - Verteilung über Lock-triggered Creator Rewards: User lockt IFR → Creator bekommt RewardBps% aus Pool, gevestet 6-12 Monate
-- Per-Partner Cap + Annual Emission Cap verhindern Pool-Erschöpfung
-- Partner-Tokens geben zukünftige DAO-Stimmrechte (Phase 4+)
+- Per-Builder Cap + Annual Emission Cap verhindern Pool-Erschöpfung
+- Builder-Tokens geben zukünftige DAO-Stimmrechte (Phase 4+)
 - **Sepolia-Parameter (Test):** rewardBps=1500 (15%), annualCap=4M, partnerCap=nicht im Constructor
-- **Mainnet-Empfehlung:** rewardBps=1000 (10%), annualCap=4M IFR, partnerCap=100K IFR/Partner
-  - 10% statt 15% → skalierbar für 500-1000+ Partner ohne Pool-Erschöpfung
-  - 100K/Partner statt unbegrenzt → 400 Partner bei Vollausschöpfung
+- **Mainnet-Empfehlung:** rewardBps=1000 (10%), annualCap=4M IFR, partnerCap=100K IFR/Builder
+  - 10% statt 15% → skalierbar für 500-1000+ Builder ohne Pool-Erschöpfung
+  - 100K/Builder statt unbegrenzt → 400 Builder bei Vollausschöpfung
 - **KRITISCH Mainnet-Deploy:** feeExempt MUSS VOR dem 40M Transfer gesetzt werden (Step 7, nicht Post-Deploy). Auf Sepolia gingen 1.4M IFR durch Fees verloren.
 
 ---
@@ -149,7 +149,7 @@ contracts/
 ├── token/InfernoToken.sol          # ERC-20 mit Fee-on-Transfer
 ├── governance/Governance.sol       # 48h Timelock + Guardian
 ├── lock/IFRLock.sol                # Utility Lock Contract
-├── partner/PartnerVault.sol        # Partner Ecosystem Pool
+├── partner/PartnerVault.sol        # Builder Ecosystem Pool
 ├── liquidity/LiquidityReserve.sol  # LP Token Lock mit Rate Limits
 ├── burnreserve/BurnReserve.sol     # Strukturiertes Token-Burning
 ├── buyback/BuybackVault.sol        # ETH→IFR Buyback via Uniswap V2

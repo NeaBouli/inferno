@@ -60,7 +60,7 @@ Sepolia deployment served as the full testnet validation phase. All contracts we
 | BurnReserve | 27 | Deposit, burn, burnAll, tracking, guardian auth, transferOwnership |
 | Governance | 36 | Propose, execute, cancel, self-governance, integration |
 | IFRLock | 37 | Lock, unlock, re-lock, isLocked, lockType, fee-exempt, pause, edge cases |
-| PartnerVault | 89 | Partners, milestones, rewards, vesting, claims, authorizedCaller, anti-double-count, algo throttle, integration |
+| PartnerVault | 89 | Builders, milestones, rewards, vesting, claims, authorizedCaller, anti-double-count, algo throttle, integration |
 | FeeRouterV1 | 33 | Fee charging, voucher discount, isVoucherValid (6 branches), replay protection, signer rotation, access control |
 | BootstrapVault | 22 | Contribution limits, finalize, claim, LP lock, anti-whale, window expiry |
 
@@ -112,7 +112,7 @@ Sepolia deployment served as the full testnet validation phase. All contracts we
 | Team (Vested) | 150M IFR | 15% |
 | Treasury | 150M IFR | 15% |
 | Community & Grants | 60M IFR | 6% |
-| Partner Ecosystem | 40M IFR | 4% |
+| Builder Ecosystem | 40M IFR | 4% |
 
 ---
 

@@ -10,7 +10,7 @@ As of: February 26, 2026
 | Stack | React 18 + Vite + TypeScript + Express |
 | Model | Claude Haiku 4.5 |
 | RAG | 14 wiki pages as context |
-| Modes | Customer, Partner, Developer |
+| Modes | Customer, Builder, Developer |
 
 ## Test Questions (6 questions, 3 modes)
 
@@ -26,14 +26,14 @@ As of: February 26, 2026
 - RAG source: lock-mechanism.html
 - Status: Manual verification required
 
-### Partner Mode
+### Builder Mode
 
 **Q3:** "How do I integrate IFR Lock into my app?"
 - Expected: isLocked() API call, 5 lines of code, integration guide link
 - RAG source: integration.html, contracts.html
 - Status: Manual verification required
 
-**Q4:** "How does the Partner Reward System work?"
+**Q4:** "How does the Builder Reward System work?"
 - Expected: recordLockReward(), rewardBps 10-20%, authorizedCaller, anti-double-count
 - RAG source: integration.html, tokenomics.html
 - Status: Manual verification required
