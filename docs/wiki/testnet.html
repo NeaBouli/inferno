@@ -519,6 +519,37 @@
           <li>Responsible disclosure via GitHub Issues</li>
           <li>Hall of Fame recognition for valid findings</li>
         </ul>
+        <div style="margin: 16px 0; padding: 16px; background: rgba(0,0,0,0.3); border-radius: 4px;">
+          <div style="color:#ffc800; font-size:12px; font-weight:700; letter-spacing:1px; margin-bottom:8px;">
+            GET SEPOLIA TEST ETH
+          </div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <input
+              id="sepolia-addr"
+              type="text"
+              placeholder="0x... your Sepolia address"
+              style="
+                flex:1; min-width:200px;
+                background:rgba(255,255,255,0.05);
+                border:1px solid rgba(255,200,0,0.4);
+                color:#fff; padding:8px 12px;
+                border-radius:4px; font-size:13px;
+                outline:none; font-family:monospace;
+              "
+            />
+            <button onclick="openFaucets()" style="
+              background:rgba(255,200,0,0.15);
+              border:1px solid rgba(255,200,0,0.6);
+              color:#ffc800; padding:8px 16px;
+              border-radius:4px; cursor:pointer;
+              font-weight:700; font-size:12px;
+              letter-spacing:1px; white-space:nowrap;
+            ">&#x26FD; GET TEST ETH</button>
+          </div>
+          <div id="faucet-msg" style="color:#888; font-size:11px; margin-top:6px;">
+            Opens Chainlink + Alchemy faucets with your address pre-filled.
+          </div>
+        </div>
         <a href="https://github.com/NeaBouli/inferno/issues/new?template=security-audit.md"
            style="color:#ffc800; font-weight:700; text-decoration:none; border: 1px solid rgba(255,200,0,0.5); padding:8px 20px; border-radius:4px;">
           &rarr; Submit a Finding
@@ -624,6 +655,25 @@ npm run dev
       hamburger.addEventListener('click', toggleSidebar);
       overlay.addEventListener('click', toggleSidebar);
     })();
+  </script>
+
+  <script>
+    function openFaucets() {
+      var addr = document.getElementById('sepolia-addr').value.trim();
+      var msg = document.getElementById('faucet-msg');
+      if (!addr || addr.indexOf('0x') !== 0 || addr.length !== 42) {
+        msg.style.color = '#ff6b6b';
+        msg.textContent = '\u26A0 Please enter a valid Ethereum address (0x...)';
+        return;
+      }
+      msg.style.color = '#00ffa0';
+      msg.textContent = '\u2713 Opening faucets \u2014 paste your address if not pre-filled.';
+      window.open('https://faucets.chain.link/sepolia', '_blank');
+      setTimeout(function () {
+        window.open('https://www.alchemy.com/faucets/ethereum-sepolia', '_blank');
+      }, 500);
+      navigator.clipboard.writeText(addr).catch(function () {});
+    }
   </script>
 
 <!-- IFR Copilot Widget -->
