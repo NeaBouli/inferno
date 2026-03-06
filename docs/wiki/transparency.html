@@ -958,6 +958,27 @@
     var INITIAL_SUPPLY = 1000000000;
     var API_KEY = (window.__ETHERSCAN_KEY__ || '');
     var BASE = 'https://api.etherscan.io/v2/api?chainid=1';
+    var PROXY = 'https://ifr-ai-copilot-production.up.railway.app';
+
+    // Proxy label → LIVE_CELLS id mapping
+    var PROXY_CELL_MAP = {
+      'Deployer': 'live-deployer', 'VoucherSigner': 'live-voucher',
+      'TeamBeneficiary': 'live-team', 'Community': 'live-ceoa',
+      'Treasury': 'live-teoa', 'GnosisSafe': 'live-tsafe',
+      'CommunitySafe': 'live-csafe', 'InfernoToken': 'live-token',
+      'Governance': 'live-gov', 'IFRLock': 'live-lock',
+      'BurnReserve': 'live-burn', 'BuybackVault': 'live-buyback',
+      'PartnerVault': 'live-partner', 'FeeRouterV1': 'live-router',
+      'Vesting': 'live-vesting', 'LiquidityReserve': 'live-liqres',
+      'BootstrapVault': 'live-bootstrap'
+    };
+
+    // Proxy label → display label mapping for TX feed
+    var PROXY_TX_LABELS = {
+      'Deployer': 'Deployer', 'Treasury': 'Treasury EOA',
+      'Community': 'Community EOA', 'GnosisSafe': 'Treasury Safe',
+      'CommunitySafe': 'Community Safe'
+    };
 
     var EOA = [
       { label: 'Deployer', addr: '0x6b36687b0cd4386fb14cf565B67D7862110Fed67' },
@@ -1112,10 +1133,7 @@
       });
     }
 
-    function loadBalances() {
-      // Show cached values immediately
-      showCachedBalances();
-      // Then attempt live updates sequentially with delay
+    function loadBalancesDirect() {
       var i = 0;
       function next() {
         if (i >= LIVE_CELLS.length) return;
@@ -1130,99 +1148,130 @@
               el.innerHTML = '<strong style="color:var(--live)">' + fmtIFR(val) + '</strong> IFR';
             }
           }
-        }).catch(function () {
-          // Keep cached value — no error shown
-        }).then(function () {
+        }).catch(function () {}).then(function () {
           setTimeout(next, 200);
         });
       }
       next();
     }
 
-    // ===== Section 4: Live TX Feed =====
-    function loadTxFeed() {
-      var statusEl = document.getElementById('txfeed-status');
-      var allAddrs = ALL.slice(0, 7); // Limit API calls: EOAs + Safes only
+    function loadBalances() {
+      showCachedBalances();
+      // Try proxy first (1 call instead of 17)
+      var controller = new AbortController();
+      var timer = setTimeout(function () { controller.abort(); }, 8000);
+      fetch(PROXY + '/api/ifr/balances', { signal: controller.signal })
+        .then(function (r) { clearTimeout(timer); return r.json(); })
+        .then(function (data) {
+          if (!data.balances) throw new Error('no balances');
+          Object.keys(data.balances).forEach(function (label) {
+            var cellId = PROXY_CELL_MAP[label];
+            if (!cellId) return;
+            var el = document.getElementById(cellId);
+            if (!el) return;
+            var val = data.balances[label].formatted;
+            var fmtVal = val >= 1e6 ? (val / 1e6).toFixed(1) + 'M' :
+                         val >= 1e3 ? (val / 1e3).toFixed(1) + 'K' : String(Math.round(val));
+            el.innerHTML = '<strong style="color:var(--live)">' + fmtVal + '</strong> IFR';
+          });
+        })
+        .catch(function () {
+          loadBalancesDirect();
+        });
+    }
 
+    // ===== Section 4: Live TX Feed =====
+    function renderTxFeed(combined) {
+      var tbody = document.getElementById('txfeed-body');
+      var statusEl = document.getElementById('txfeed-status');
+      if (combined.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="color:var(--muted)">No recent transactions</td></tr>';
+      } else {
+        tbody.innerHTML = combined.map(function (r) {
+          var dirColor = r.dir === 'OUT' ? '#ef4444' : 'var(--green)';
+          return '<tr>' +
+            '<td>' + fmtDate(r.ts) + '</td>' +
+            '<td>' + r.wallet + '</td>' +
+            '<td style="color:' + dirColor + ';font-weight:600">' + r.dir + '</td>' +
+            '<td>' + r.amount + '</td>' +
+            '<td><code>' + r.type + '</code></td>' +
+            '<td>' + txLink(r.hash) + '</td>' +
+            '</tr>';
+        }).join('');
+      }
+      var now = new Date();
+      statusEl.innerHTML = '<span style="color:var(--live)">\u25CF</span> Last refreshed: ' +
+        now.getUTCFullYear() + '-' + String(now.getUTCMonth() + 1).padStart(2, '0') + '-' +
+        String(now.getUTCDate()).padStart(2, '0') + ' ' +
+        String(now.getUTCHours()).padStart(2, '0') + ':' +
+        String(now.getUTCMinutes()).padStart(2, '0') + ':' +
+        String(now.getUTCSeconds()).padStart(2, '0') + ' UTC (auto-refresh every 60s)';
+    }
+
+    function loadTxFeedDirect() {
+      var allAddrs = ALL.slice(0, 7);
       var promises = [];
       allAddrs.forEach(function (item) {
         promises.push(esTxList(item.addr));
         promises.push(esTokenTx(item.addr));
       });
-
       Promise.all(promises).then(function (results) {
         var combined = [];
         var seen = {};
-
         for (var i = 0; i < results.length; i += 2) {
           var ethTxs = Array.isArray(results[i]) ? results[i] : [];
           var tokenTxs = Array.isArray(results[i + 1]) ? results[i + 1] : [];
           var walletLabel = allAddrs[i / 2].label;
-
           ethTxs.forEach(function (tx) {
             if (tx.isError === '1') return;
             var key = tx.hash + 'ETH';
             if (seen[key]) return;
             seen[key] = true;
             var isOut = tx.from.toLowerCase() === allAddrs[Math.floor(i / 2)].addr.toLowerCase();
-            combined.push({
-              ts: tx.timeStamp,
-              wallet: walletLabel,
-              dir: isOut ? 'OUT' : 'IN',
-              amount: fmtETH(tx.value) + ' ETH',
-              type: 'ETH',
-              hash: tx.hash
-            });
+            combined.push({ ts: tx.timeStamp, wallet: walletLabel, dir: isOut ? 'OUT' : 'IN',
+              amount: fmtETH(tx.value) + ' ETH', type: 'ETH', hash: tx.hash });
           });
-
           tokenTxs.forEach(function (tx) {
             if (tx.contractAddress.toLowerCase() !== IFR_TOKEN.toLowerCase()) return;
             var key = tx.hash + 'IFR';
             if (seen[key]) return;
             seen[key] = true;
             var isOut = tx.from.toLowerCase() === allAddrs[Math.floor(i / 2)].addr.toLowerCase();
-            combined.push({
-              ts: tx.timeStamp,
-              wallet: walletLabel,
-              dir: isOut ? 'OUT' : 'IN',
-              amount: fmtIFR(tx.value) + ' IFR',
-              type: 'IFR',
-              hash: tx.hash
-            });
+            combined.push({ ts: tx.timeStamp, wallet: walletLabel, dir: isOut ? 'OUT' : 'IN',
+              amount: fmtIFR(tx.value) + ' IFR', type: 'IFR', hash: tx.hash });
           });
         }
-
         combined.sort(function (a, b) { return parseInt(b.ts) - parseInt(a.ts); });
-        combined = combined.slice(0, 20);
-
-        var tbody = document.getElementById('txfeed-body');
-        if (combined.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="6" style="color:var(--muted)">No recent transactions</td></tr>';
-        } else {
-          tbody.innerHTML = combined.map(function (r) {
-            var dirColor = r.dir === 'OUT' ? '#ef4444' : 'var(--green)';
-            return '<tr>' +
-              '<td>' + fmtDate(r.ts) + '</td>' +
-              '<td>' + r.wallet + '</td>' +
-              '<td style="color:' + dirColor + ';font-weight:600">' + r.dir + '</td>' +
-              '<td>' + r.amount + '</td>' +
-              '<td><code>' + r.type + '</code></td>' +
-              '<td>' + txLink(r.hash) + '</td>' +
-              '</tr>';
-          }).join('');
-        }
-
-        var now = new Date();
-        statusEl.innerHTML = '<span style="color:var(--live)">\u25CF</span> Last refreshed: ' +
-          now.getUTCFullYear() + '-' + String(now.getUTCMonth() + 1).padStart(2, '0') + '-' +
-          String(now.getUTCDate()).padStart(2, '0') + ' ' +
-          String(now.getUTCHours()).padStart(2, '0') + ':' +
-          String(now.getUTCMinutes()).padStart(2, '0') + ':' +
-          String(now.getUTCSeconds()).padStart(2, '0') + ' UTC (auto-refresh every 60s)';
+        renderTxFeed(combined.slice(0, 20));
       }).catch(function () {
         document.getElementById('txfeed-status').innerHTML =
           '<span style="color:#ef4444">\u25CF</span> Error fetching transactions. Retrying in 60s&hellip;';
       });
+    }
+
+    function loadTxFeed() {
+      // Try proxy first (5 calls cached on server instead of 14 direct)
+      var controller = new AbortController();
+      var timer = setTimeout(function () { controller.abort(); }, 8000);
+      fetch(PROXY + '/api/ifr/txfeed', { signal: controller.signal })
+        .then(function (r) { clearTimeout(timer); return r.json(); })
+        .then(function (data) {
+          if (!data.transactions) throw new Error('no txfeed');
+          var combined = data.transactions.map(function (tx) {
+            return {
+              ts: String(tx.timestamp),
+              wallet: PROXY_TX_LABELS[tx.wallet] || tx.wallet,
+              dir: tx.dir,
+              amount: tx.amount,
+              type: tx.type,
+              hash: tx.hash
+            };
+          });
+          renderTxFeed(combined);
+        })
+        .catch(function () {
+          loadTxFeedDirect();
+        });
     }
 
     // ===== Section 5: Burn Tracker =====
@@ -1242,40 +1291,49 @@
       if (sbpEl) sbpEl.textContent = '\u2265 0.21%';
     }
 
-    function loadBurnData() {
-      // Show fallback immediately on first load
-      if (!burnDataLive) showBurnFallback();
+    function applyBurnData(burned, currentSupply) {
+      burnDataLive = true;
+      var pct = (burned / INITIAL_SUPPLY * 100);
+      document.getElementById('burn-total').textContent = fmtNum(Math.round(burned)) + ' IFR';
+      document.getElementById('burn-pct').textContent = pct.toFixed(4) + '%';
+      document.getElementById('burn-supply').textContent = fmtNum(Math.round(currentSupply)) + ' IFR';
+      var sbEl = document.getElementById('supply-burned');
+      var sbpEl = document.getElementById('supply-burned-pct');
+      if (sbEl) sbEl.textContent = fmtNum(Math.round(burned));
+      if (sbpEl) sbpEl.textContent = pct.toFixed(2) + '%';
+    }
 
-      // Then attempt live API call with 5s timeout
+    function loadBurnDirect() {
       var url = BASE + '&module=stats&action=tokensupply&contractaddress=' + IFR_TOKEN +
         (API_KEY ? '&apikey=' + API_KEY : '');
-
       var controller = new AbortController();
       var timer = setTimeout(function () { controller.abort(); }, 5000);
-
       fetch(url, { signal: controller.signal }).then(function (r) {
         clearTimeout(timer);
         return r.json();
       }).then(function (j) {
         if (j.status === '1' && j.result) {
-          burnDataLive = true;
           var currentSupply = parseFloat(j.result) / Math.pow(10, IFR_DECIMALS);
           var burned = INITIAL_SUPPLY - currentSupply;
-          var pct = (burned / INITIAL_SUPPLY * 100);
-
-          document.getElementById('burn-total').textContent = fmtNum(Math.round(burned)) + ' IFR';
-          document.getElementById('burn-pct').textContent = pct.toFixed(4) + '%';
-          document.getElementById('burn-supply').textContent = fmtNum(Math.round(currentSupply)) + ' IFR';
-
-          // Also update supply distribution table
-          var sbEl = document.getElementById('supply-burned');
-          var sbpEl = document.getElementById('supply-burned-pct');
-          if (sbEl) sbEl.textContent = fmtNum(Math.round(burned));
-          if (sbpEl) sbpEl.textContent = pct.toFixed(2) + '%';
+          applyBurnData(burned, currentSupply);
         }
-      }).catch(function () {
-        // Fallback stays — no error shown
-      });
+      }).catch(function () {});
+    }
+
+    function loadBurnData() {
+      if (!burnDataLive) showBurnFallback();
+      // Try proxy first
+      var controller = new AbortController();
+      var timer = setTimeout(function () { controller.abort(); }, 5000);
+      fetch(PROXY + '/api/ifr/supply', { signal: controller.signal })
+        .then(function (r) { clearTimeout(timer); return r.json(); })
+        .then(function (data) {
+          if (!data.totalSupply) throw new Error('no supply');
+          applyBurnData(data.burned, data.totalSupply);
+        })
+        .catch(function () {
+          loadBurnDirect();
+        });
     }
 
     // ===== Hero Timestamp =====
