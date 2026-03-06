@@ -441,6 +441,204 @@ app.get("/api/health", (_req, res) => {
   res.json({ status: "ok", apiKeySet: !!ANTHROPIC_API_KEY });
 });
 
+// ── Etherscan Proxy — CORS-safe on-chain data for Landing + Transparency ──
+const ETHERSCAN_API_KEY = process.env.ETHERSCAN_API_KEY || "";
+const IFR_TOKEN = "0x77e99917Eca8539c62F509ED1193ac36580A6e7B";
+const IFR_DECIMALS = 9;
+const TOTAL_MINTED = 1_000_000_000; // 1B IFR minted at deploy, supply only decreases
+const BURN_ADDRESS = "0x000000000000000000000000000000000000dEaD";
+
+const PROTOCOL_ADDRESSES: Record<string, string> = {
+  InfernoToken: "0x77e99917Eca8539c62F509ED1193ac36580A6e7B",
+  Governance: "0xc43d48E7FDA576C5022d0670B652A622E8caD041",
+  IFRLock: "0x769928aBDfc949D0718d8766a1C2d7dBb63954Eb",
+  BurnReserve: "0xaA1496133B6c274190A2113410B501C5802b6fCF",
+  BuybackVault: "0x670D293e3D65f96171c10DdC8d88B96b0570F812",
+  PartnerVault: "0xc6eb7714bCb035ebc2D4d9ba7B3762ef7B9d4F7D",
+  FeeRouterV1: "0x4807B77B2E25cD055DA42B09BA4d0aF9e580C60a",
+  Vesting: "0x2694Bc84e8D5251E9E4Ecd4B2Ae3f866d6106271",
+  LiquidityReserve: "0xdc0309804803b3A105154f6073061E3185018f64",
+  BootstrapVault: "0xA820540CFf3215de0b0Be8b78e2b3FbBf25C4FfA",
+  Deployer: "0x6b36687b0cd4386fb14cf565B67D7862110Fed67",
+  Treasury: "0xC8f4B45fA0C4727E9b27c13Af3d000C922a2ac9c",
+  Community: "0x61aF4E72C77b58F4b50964Ee93d420750Cd9857E",
+  GnosisSafe: "0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b",
+  CommunitySafe: "0xaC5687547B2B21d80F8fd345B51e608d476667C7",
+  TeamBeneficiary: "0x04FABC52c51d1F8ced6974E7C25a34249b1E6239",
+  VoucherSigner: "0x17F8DD6dECCb3ff5d95691982B85A87d7d9872d4",
+};
+
+async function esApiFetch(params: string): Promise<unknown> {
+  const url = `https://api.etherscan.io/v2/api?chainid=1${params}${ETHERSCAN_API_KEY ? "&apikey=" + ETHERSCAN_API_KEY : ""}`;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 10_000);
+  try {
+    const r = await fetch(url, { signal: controller.signal });
+    clearTimeout(timer);
+    return await r.json();
+  } catch {
+    clearTimeout(timer);
+    throw new Error("Etherscan API timeout");
+  }
+}
+
+// In-memory cache (60s TTL)
+const esCache = new Map<string, { data: unknown; ts: number }>();
+const ES_CACHE_TTL = 60_000;
+
+function getCached(key: string): unknown | null {
+  const entry = esCache.get(key);
+  if (entry && Date.now() - entry.ts < ES_CACHE_TTL) return entry.data;
+  return null;
+}
+
+function setCache(key: string, data: unknown): void {
+  esCache.set(key, { data, ts: Date.now() });
+}
+
+// GET /api/ifr/balances — IFR balance for all protocol addresses
+app.get("/api/ifr/balances", async (_req, res) => {
+  const cached = getCached("balances");
+  if (cached) { res.json(cached); return; }
+
+  try {
+    const results: Record<string, { raw: string; formatted: number }> = {};
+    const entries = Object.entries(PROTOCOL_ADDRESSES);
+
+    for (let i = 0; i < entries.length; i++) {
+      const [label, addr] = entries[i];
+      try {
+        const data = await esApiFetch(
+          `&module=account&action=tokenbalance&contractaddress=${IFR_TOKEN}&address=${addr}&tag=latest`
+        ) as { result?: string };
+        const raw = data.result || "0";
+        results[label] = { raw, formatted: parseInt(raw, 10) / 10 ** IFR_DECIMALS };
+      } catch {
+        results[label] = { raw: "0", formatted: 0 };
+      }
+      if (i < entries.length - 1) await new Promise(r => setTimeout(r, 200));
+    }
+
+    const response = { balances: results, timestamp: new Date().toISOString() };
+    setCache("balances", response);
+    res.json(response);
+  } catch (err) {
+    console.error("Etherscan balances error:", err);
+    res.status(502).json({ error: "Failed to fetch balances" });
+  }
+});
+
+// GET /api/ifr/supply — total supply + burned
+app.get("/api/ifr/supply", async (_req, res) => {
+  const cached = getCached("supply");
+  if (cached) { res.json(cached); return; }
+
+  try {
+    const supplyData = await esApiFetch(
+      `&module=stats&action=tokensupply&contractaddress=${IFR_TOKEN}`
+    ) as { result?: string };
+
+    const burnData = await esApiFetch(
+      `&module=account&action=tokenbalance&contractaddress=${IFR_TOKEN}&address=${BURN_ADDRESS}&tag=latest`
+    ) as { result?: string };
+
+    const totalSupplyRaw = supplyData.result || "0";
+    const burnBalanceRaw = burnData.result || "0";
+    const totalSupply = parseInt(totalSupplyRaw, 10) / 10 ** IFR_DECIMALS;
+    const burnBalance = parseInt(burnBalanceRaw, 10) / 10 ** IFR_DECIMALS;
+    const burned = TOTAL_MINTED - totalSupply + burnBalance;
+    const circulating = totalSupply - burnBalance;
+
+    const response = {
+      totalMinted: TOTAL_MINTED,
+      totalSupply,
+      burnBalance,
+      burned,
+      circulating,
+      timestamp: new Date().toISOString(),
+    };
+    setCache("supply", response);
+    res.json(response);
+  } catch (err) {
+    console.error("Etherscan supply error:", err);
+    res.status(502).json({ error: "Failed to fetch supply" });
+  }
+});
+
+// GET /api/ifr/txfeed — recent ETH + IFR transfers for key wallets
+app.get("/api/ifr/txfeed", async (_req, res) => {
+  const cached = getCached("txfeed");
+  if (cached) { res.json(cached); return; }
+
+  const feedWallets = ["Deployer", "Treasury", "Community", "GnosisSafe", "CommunitySafe"];
+  try {
+    const transactions: { wallet: string; dir: string; amount: string; type: string; hash: string; timestamp: number }[] = [];
+    const seen = new Set<string>();
+
+    for (let i = 0; i < feedWallets.length; i++) {
+      const label = feedWallets[i];
+      const addr = PROTOCOL_ADDRESSES[label].toLowerCase();
+
+      // ETH transactions
+      try {
+        const ethData = await esApiFetch(
+          `&module=account&action=txlist&address=${addr}&page=1&offset=10&sort=desc`
+        ) as { result?: Array<{ from: string; to: string; value: string; hash: string; timeStamp: string; isError: string }> };
+        if (Array.isArray(ethData.result)) {
+          for (const tx of ethData.result) {
+            if (tx.isError === "1") continue;
+            const key = tx.hash + "ETH";
+            if (seen.has(key)) continue;
+            seen.add(key);
+            const isOut = tx.from.toLowerCase() === addr;
+            const ethVal = parseFloat(tx.value) / 1e18;
+            const fmtEth = ethVal === 0 ? "0" : ethVal < 0.0001 ? "<0.0001" : ethVal.toFixed(4);
+            transactions.push({
+              wallet: label, dir: isOut ? "OUT" : "IN",
+              amount: fmtEth + " ETH", type: "ETH",
+              hash: tx.hash, timestamp: parseInt(tx.timeStamp, 10),
+            });
+          }
+        }
+      } catch { /* skip */ }
+      await new Promise(r => setTimeout(r, 200));
+
+      // IFR token transactions
+      try {
+        const tokData = await esApiFetch(
+          `&module=account&action=tokentx&contractaddress=${IFR_TOKEN}&address=${addr}&page=1&offset=10&sort=desc`
+        ) as { result?: Array<{ from: string; to: string; value: string; hash: string; timeStamp: string; contractAddress: string }> };
+        if (Array.isArray(tokData.result)) {
+          for (const tx of tokData.result) {
+            if (tx.contractAddress.toLowerCase() !== IFR_TOKEN.toLowerCase()) continue;
+            const key = tx.hash + "IFR";
+            if (seen.has(key)) continue;
+            seen.add(key);
+            const isOut = tx.from.toLowerCase() === addr;
+            const ifrVal = parseInt(tx.value, 10) / 10 ** IFR_DECIMALS;
+            const fmtIfr = ifrVal >= 1e6 ? (ifrVal / 1e6).toFixed(2) + "M" :
+                           ifrVal >= 1e3 ? (ifrVal / 1e3).toFixed(1) + "K" : ifrVal.toFixed(0);
+            transactions.push({
+              wallet: label, dir: isOut ? "OUT" : "IN",
+              amount: fmtIfr + " IFR", type: "IFR",
+              hash: tx.hash, timestamp: parseInt(tx.timeStamp, 10),
+            });
+          }
+        }
+      } catch { /* skip */ }
+      if (i < feedWallets.length - 1) await new Promise(r => setTimeout(r, 200));
+    }
+
+    transactions.sort((a, b) => b.timestamp - a.timestamp);
+    const response = { transactions: transactions.slice(0, 20), timestamp: new Date().toISOString() };
+    setCache("txfeed", response);
+    res.json(response);
+  } catch (err) {
+    console.error("Etherscan txfeed error:", err);
+    res.status(502).json({ error: "Failed to fetch transactions" });
+  }
+});
+
 const PORT = parseInt(process.env.PORT || "3003", 10);
 app.listen(PORT, () => {
   console.log(`IFR Copilot API on :${PORT}`);
