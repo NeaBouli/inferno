@@ -192,7 +192,7 @@
       padding-top: 64px;
       position: relative;
       overflow: hidden;
-      background: url('assets/banner.jpeg') center center / cover no-repeat;
+      background: #0a0a0a;
     }
 
     .hero::before {
@@ -930,7 +930,35 @@
       .coin-container { width: 120px; height: 120px; }
       .token-symbol { width: 60px; height: 60px; }
     }
+
+    /* === ANIMATED BANNER === */
+    canvas.net-canvas{position:absolute;inset:0;width:100%;height:100%;z-index:2;pointer-events:none;}
+    canvas.shock-canvas{position:absolute;inset:0;width:100%;height:100%;z-index:8;pointer-events:none;}
+    .bh-wrap{position:absolute;top:-60px;left:-60px;width:360px;height:360px;z-index:4;pointer-events:none;}
+    .bh-void{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:150px;height:150px;border-radius:50%;background:radial-gradient(circle,#000 60%,#010808 100%);box-shadow:0 0 50px 28px #000,0 0 100px 55px rgba(0,0,0,0.97),0 0 160px 80px rgba(0,0,0,0.8);z-index:6;}
+    .fire-ring{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:268px;height:268px;border-radius:50%;animation:fire-spin 46s linear infinite;z-index:5;}
+    .fire-ring::before{content:'';position:absolute;inset:0;border-radius:50%;background:conic-gradient(from 155deg,transparent 0deg,rgba(160,30,0,0.0) 8deg,rgba(200,55,0,0.25) 22deg,rgba(245,105,8,0.7) 48deg,rgba(255,155,18,1.0) 72deg,rgba(255,185,28,1.0) 88deg,rgba(255,145,12,0.95) 106deg,rgba(225,72,4,0.65) 130deg,rgba(160,30,0,0.2) 155deg,transparent 178deg);-webkit-mask:radial-gradient(circle,transparent 0%,transparent 41%,rgba(0,0,0,0.2) 43%,black 45.5%,black 54.5%,rgba(0,0,0,0.2) 57%,transparent 61%);mask:radial-gradient(circle,transparent 0%,transparent 41%,rgba(0,0,0,0.2) 43%,black 45.5%,black 54.5%,rgba(0,0,0,0.2) 57%,transparent 61%);filter:blur(3.5px);}
+    .fire-ring::after{content:'';position:absolute;inset:0;border-radius:50%;background:conic-gradient(from 330deg,transparent 0deg,rgba(255,90,0,0.0) 12deg,rgba(255,130,12,0.35) 38deg,rgba(255,170,28,0.6) 58deg,rgba(255,110,5,0.35) 80deg,transparent 105deg);-webkit-mask:radial-gradient(circle,transparent 39%,black 43%,black 57%,transparent 63%);mask:radial-gradient(circle,transparent 39%,black 43%,black 57%,transparent 63%);filter:blur(9px);}
+    @keyframes fire-spin{from{transform:translate(-50%,-50%) rotate(0deg);}to{transform:translate(-50%,-50%) rotate(360deg);}}
+    .teal-aura{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:308px;height:308px;border-radius:50%;background:conic-gradient(from 235deg,transparent 0deg,rgba(0,190,150,0.0) 8deg,rgba(0,210,168,0.22) 35deg,rgba(0,235,188,0.42) 58deg,rgba(0,215,172,0.22) 80deg,transparent 105deg);-webkit-mask:radial-gradient(circle,transparent 45%,black 49%,black 59%,transparent 65%);mask:radial-gradient(circle,transparent 45%,black 49%,black 59%,transparent 65%);filter:blur(11px);animation:teal-spin 62s linear infinite reverse;z-index:5;}
+    @keyframes teal-spin{from{transform:translate(-50%,-50%) rotate(0deg);}to{transform:translate(-50%,-50%) rotate(360deg);}}
+    .bh-ambient{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:360px;height:360px;border-radius:50%;background:radial-gradient(circle,transparent 30%,rgba(255,65,0,0.07) 40%,rgba(255,90,0,0.12) 46%,rgba(0,185,145,0.10) 52%,rgba(0,200,160,0.06) 58%,transparent 68%);animation:ambient-pulse 13s ease-in-out infinite alternate;z-index:3;}
+    @keyframes ambient-pulse{0%{transform:translate(-50%,-50%) scale(1);opacity:0.7;}100%{transform:translate(-50%,-50%) scale(1.12);opacity:1;}}
+    .gwave{position:absolute;top:50%;left:50%;width:268px;height:268px;border-radius:50%;border:1px solid rgba(0,175,138,0.22);animation:gwave-out 24s ease-out infinite;z-index:3;}
+    .gwave:nth-child(1){animation-delay:0s;}.gwave:nth-child(2){animation-delay:8s;}.gwave:nth-child(3){animation-delay:16s;}
+    @keyframes gwave-out{0%{transform:translate(-50%,-50%) scale(1);opacity:0.38;}100%{transform:translate(-50%,-50%) scale(5.8);opacity:0;}}
+    .inferno-banner-title{position:absolute;top:38px;right:48px;font-family:'Orbitron',sans-serif;font-weight:900;font-size:70px;letter-spacing:10px;text-transform:uppercase;z-index:10;user-select:none;display:flex;}
+    .letter{position:relative;display:inline-block;}
+    .letter .l-base{color:transparent;-webkit-text-stroke:1.5px rgba(120,138,145,0.30);}
+    .letter .l-shine{position:absolute;inset:0;color:transparent;-webkit-text-stroke:0px transparent;background:linear-gradient(108deg,rgba(80,98,105,0.0) 0%,rgba(80,98,105,0.0) 20%,rgba(110,145,140,0.28) 32%,rgba(155,205,198,0.62) 44%,rgba(205,235,230,0.90) 50%,rgba(155,205,198,0.62) 56%,rgba(110,145,140,0.28) 68%,rgba(80,98,105,0.0) 80%;background-size:500% 100%;-webkit-background-clip:text;background-clip:text;animation:ifr-spotlight 38s cubic-bezier(0.45,0,0.55,1) infinite;}
+    @keyframes ifr-spotlight{0%{background-position:160% 50%;}28%{background-position:160% 50%;}72%{background-position:-60% 50%;}100%{background-position:-60% 50%;}}
+    .letter .l-fire{position:absolute;inset:0;color:transparent;-webkit-text-stroke:0px transparent;opacity:0;}
+    .bstar{position:absolute;border-radius:50%;background:#fff;animation:btwinkle var(--dur) ease-in-out infinite alternate;animation-delay:var(--del);}
+    @keyframes btwinkle{from{opacity:var(--a0);}to{opacity:var(--a1);}}
+    .banner-stars-container{position:absolute;inset:0;z-index:1;pointer-events:none;overflow:hidden;}
+    /* === END ANIMATED BANNER === */
   </style>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@900&display=swap" rel="stylesheet">
 </head>
 <body>
 
@@ -968,6 +996,29 @@
 
 <!-- ── HERO ───────────────────────────────────────── -->
 <section class="hero" id="hero">
+  <!-- ANIMATED BANNER START -->
+  <div class="banner-stars-container" id="banner-stars"></div>
+  <canvas class="net-canvas" id="banner-net"></canvas>
+  <canvas class="shock-canvas" id="shock-canvas"></canvas>
+  <div class="bh-wrap">
+    <div class="gwave"></div>
+    <div class="gwave"></div>
+    <div class="gwave"></div>
+    <div class="bh-ambient"></div>
+    <div class="teal-aura"></div>
+    <div class="fire-ring"></div>
+    <div class="bh-void"></div>
+  </div>
+  <div class="inferno-banner-title" id="ifr-title">
+    <span class="letter" data-ifr="1"><span class="l-base">I</span><span class="l-shine">I</span><span class="l-fire">I</span></span>
+    <span class="letter" data-ifr="0"><span class="l-base">N</span><span class="l-shine">N</span></span>
+    <span class="letter" data-ifr="1"><span class="l-base">F</span><span class="l-shine">F</span><span class="l-fire">F</span></span>
+    <span class="letter" data-ifr="0"><span class="l-base">E</span><span class="l-shine">E</span></span>
+    <span class="letter" data-ifr="1"><span class="l-base">R</span><span class="l-shine">R</span><span class="l-fire">R</span></span>
+    <span class="letter" data-ifr="0"><span class="l-base">N</span><span class="l-shine">N</span></span>
+    <span class="letter" data-ifr="0"><span class="l-base">O</span><span class="l-shine">O</span></span>
+  </div>
+  <!-- ANIMATED BANNER END -->
   <div class="container">
     <div class="coin-container">
       <div class="coin">
@@ -2096,6 +2147,35 @@ if (isLocked) {
 
   update();
   setInterval(update, 60000);
+})();
+</script>
+
+<script>
+(function(){
+  const starsEl=document.getElementById('banner-stars');
+  for(let i=0;i<130;i++){const s=document.createElement('div');s.className='bstar';const sz=0.4+Math.random()*1.8;s.style.cssText=`width:${sz}px;height:${sz}px;left:${Math.random()*100}%;top:${Math.random()*100}%;--dur:${5+Math.random()*9}s;--del:${-Math.random()*12}s;--a0:${0.04+Math.random()*0.14};--a1:${0.25+Math.random()*0.55};`;starsEl.appendChild(s);}
+  const hero=document.getElementById('banner-stars').parentElement;
+  const canvas=document.getElementById('banner-net');
+  const ctx=canvas.getContext('2d');
+  const shockCvs=document.getElementById('shock-canvas');
+  const sctx=shockCvs.getContext('2d');
+  function resize(){canvas.width=hero.offsetWidth;canvas.height=hero.offsetHeight;shockCvs.width=hero.offsetWidth;shockCvs.height=hero.offsetHeight;}
+  resize();window.addEventListener('resize',resize);
+  const BHX=120,BHY=120,HORIZON_R=76;
+  class Synapse{constructor(){this.reset(true);}reset(initial){const angle=Math.random()*Math.PI*2;const dist=280+Math.random()*550;this.x=BHX+Math.cos(angle)*dist;this.y=BHY+Math.sin(angle)*dist;if(this.x<canvas.width*0.22){this.x=canvas.width*0.32+Math.random()*canvas.width*0.68;this.y=Math.random()*canvas.height;}this.startX=this.x;this.startY=this.y;this.baseAlpha=0.14+Math.random()*0.44;this.alpha=this.baseAlpha;this.r=1.1+Math.random()*1.5;this.speed=0.016+Math.random()*0.026;this.wobble=(Math.random()-0.5)*0.0011;this.wobbleAng=Math.random()*Math.PI*2;this.flashing=false;this.flashAmt=0;this.progress=initial?Math.random():0;}update(){this.progress+=this.speed*0.003;this.wobbleAng+=this.wobble;const tx=BHX+Math.sin(this.wobbleAng)*16;const ty=BHY+Math.cos(this.wobbleAng)*10;this.x=this.startX+(tx-this.startX)*this.progress;this.y=this.startY+(ty-this.startY)*this.progress;const dx=this.x-BHX,dy=this.y-BHY;const dist=Math.sqrt(dx*dx+dy*dy);if(dist<108&&!this.flashing){this.flashing=true;this.flashAmt=0.5+Math.random()*0.5;}if(this.flashing){const t=(108-dist)/108;this.alpha=this.baseAlpha+this.flashAmt*Math.sin(t*Math.PI);}if(dist<HORIZON_R+4)this.reset(false);}draw(c){const grd=c.createRadialGradient(this.x,this.y,0,this.x,this.y,this.r*3.5);grd.addColorStop(0,`rgba(0,235,188,${this.alpha})`);grd.addColorStop(0.5,`rgba(0,210,168,${this.alpha*0.4})`);grd.addColorStop(1,'rgba(0,190,150,0)');c.beginPath();c.arc(this.x,this.y,this.r*3.5,0,Math.PI*2);c.fillStyle=grd;c.fill();c.beginPath();c.arc(this.x,this.y,this.r,0,Math.PI*2);c.fillStyle=`rgba(0,248,200,${Math.min(this.alpha*1.3,1)})`;c.fill();}}
+  const synapses=Array.from({length:38},()=>new Synapse());
+  function buildNoiseRing(seed,n){const pts=[];for(let i=0;i<n;i++){const a=(i/n)*Math.PI*2;pts.push(Math.sin(a*3+seed*1.1)*0.18+Math.sin(a*7+seed*2.3)*0.10+Math.sin(a*13+seed*0.7)*0.06+Math.sin(a*2+seed*3.1)*0.08);}return pts;}
+  class Shockwave{constructor(){this.r=HORIZON_R;this.maxR=1400;this.speed=0.35;this.alpha=0.0;this.fadeIn=true;this.hue=18+Math.random()*18;this.seed=Math.random()*100;this.noise=buildNoiseRing(this.seed,360);this.noise2=buildNoiseRing(this.seed+31,360);this.noise3=buildNoiseRing(this.seed+67,360);this.letterTriggered=[];}update(){this.r+=this.speed;if(this.fadeIn){this.alpha+=0.012;if(this.alpha>=0.48){this.alpha=0.48;this.fadeIn=false;}}else{this.alpha=0.48*Math.pow(1-this.r/this.maxR,1.4);}}draw(c){if(this.alpha<=0.004)return;const life=1-this.r/this.maxR;const layers=[{offset:0,noise:this.noise,blur:18,aMul:1.0,wMul:1.0},{offset:12,noise:this.noise2,blur:28,aMul:0.55,wMul:1.6},{offset:-8,noise:this.noise3,blur:12,aMul:0.35,wMul:0.7}];layers.forEach(layer=>{const la=this.alpha*layer.aMul;if(la<0.003)return;c.save();c.filter=`blur(${layer.blur*life+2}px)`;c.beginPath();for(let i=0;i<=360;i++){const idx=i%360;const angle=(idx/360)*Math.PI*2;const r=this.r+layer.offset+layer.noise[idx]*(20+35*life)*layer.wMul;const x=BHX+Math.cos(angle)*r;const y=BHY+Math.sin(angle)*r;i===0?c.moveTo(x,y):c.lineTo(x,y);}c.closePath();const grad=c.createRadialGradient(BHX,BHY,Math.max(0,this.r-30),BHX,BHY,this.r+60);grad.addColorStop(0,`hsla(${this.hue},100%,52%,0)`);grad.addColorStop(0.3,`hsla(${this.hue},100%,58%,${la*0.4})`);grad.addColorStop(0.6,`hsla(${this.hue+12},95%,62%,${la})`);grad.addColorStop(0.8,`hsla(${this.hue+20},90%,65%,${la*0.5})`);grad.addColorStop(1,`hsla(${this.hue},100%,52%,0)`);c.strokeStyle=grad;c.lineWidth=(3+8*life)*layer.wMul;c.stroke();c.restore();});}isDone(){return this.r>=this.maxR||this.alpha<0.003;}}
+  const fireLetters=document.querySelectorAll('.letter[data-ifr="1"] .l-fire');
+  const ifrStates=Array.from(fireLetters).map(()=>({alpha:0,target:0,timer:0,hue:20}));
+  function igniteLetter(idx){if(idx<0||idx>=ifrStates.length)return;const st=ifrStates[idx];st.target=0.80+Math.random()*0.18;st.timer=180+Math.floor(Math.random()*120);st.hue=4+Math.random()*10;}
+  function updateIFR(){fireLetters.forEach((el,i)=>{const st=ifrStates[i];if(st.timer>0){st.alpha+=(st.target-st.alpha)*0.03;st.timer--;}else{st.alpha*=0.984;if(st.alpha<0.008)st.alpha=0;}if(st.alpha<0.008){el.style.opacity=0;el.style.webkitTextStroke='0px transparent';return;}el.style.background=`linear-gradient(180deg,hsla(${st.hue+15},100%,62%,${st.alpha*0.7}) 0%,hsla(${st.hue+5},100%,52%,${st.alpha}) 40%,hsla(${st.hue},100%,42%,${st.alpha}) 70%,hsla(${st.hue-5},90%,32%,${st.alpha*0.6}) 100%)`;el.style.webkitBackgroundClip='text';el.style.backgroundClip='text';el.style.webkitTextStroke=`1.5px hsla(${st.hue+5},100%,55%,${st.alpha*0.55})`;el.style.opacity=1;});}
+  const shockwaves=[];let lastShock=-99999;let nextShock=20000+Math.random()*18000;
+  let letterDists=null;
+  function computeLetterDists(){const hr=hero.getBoundingClientRect();letterDists=Array.from(fireLetters).map(el=>{const br=el.parentElement.getBoundingClientRect();const cx=br.left-hr.left+br.width/2;const cy=br.top-hr.top+br.height/2;return Math.sqrt((cx-BHX)**2+(cy-BHY)**2);});}
+  function loop(now){ctx.clearRect(0,0,canvas.width,canvas.height);sctx.clearRect(0,0,shockCvs.width,shockCvs.height);synapses.forEach(s=>{s.update();s.draw(ctx);});if(now-lastShock>nextShock){shockwaves.push(new Shockwave());lastShock=now;nextShock=20000+Math.random()*18000;if(!letterDists)computeLetterDists();}for(let i=shockwaves.length-1;i>=0;i--){const sw=shockwaves[i];sw.update();sw.draw(sctx);if(letterDists){letterDists.forEach((dist,idx)=>{if(!sw.letterTriggered[idx]&&sw.r>=dist-40){sw.letterTriggered[idx]=true;igniteLetter(idx);}});}if(sw.isDone())shockwaves.splice(i,1);}updateIFR();requestAnimationFrame(loop);}
+  setTimeout(()=>{shockwaves.push(new Shockwave());lastShock=performance.now();nextShock=20000+Math.random()*18000;if(!letterDists)computeLetterDists();},4000);
+  requestAnimationFrame(loop);
 })();
 </script>
 
