@@ -995,7 +995,7 @@
 
 <!-- ── BOOTSTRAP BANNER ────────────────────────────── -->
 <div id="bootstrap-banner" style="background:linear-gradient(135deg,#1a0a00 0%,#2d1200 100%);border-bottom:3px solid #ff6b35;padding:14px 20px;text-align:center;width:100%;box-sizing:border-box;display:block;z-index:99;margin-top:64px;">
-  <p style="margin:0 0 6px 0;font-size:1rem;font-weight:bold;color:#ff6b35;">&#x1f525; Community Bootstrap Event &mdash; Coming Soon</p>
+  <p style="margin:0 0 6px 0;font-size:1rem;font-weight:bold;color:#ff6b35;">&#x1f525; Community Bootstrap Event &mdash; Launching Soon After LP Pairing</p>
   <p style="margin:0 0 8px 0;font-size:0.85rem;color:#ccc;line-height:1.5;">Lock ETH for 90 days &rarr; receive IFR at launch price.<br>No team ETH. Fully trustless. 100% goes into liquidity.</p>
   <a href="wiki/bootstrap.html" style="display:inline-block;background:#ff6b35;color:#000;font-weight:bold;font-size:0.85rem;padding:6px 18px;border-radius:20px;text-decoration:none;">Learn More &rarr;</a>
 </div>
@@ -1075,7 +1075,7 @@
           <div class="stat-label">On-chain components</div>
         </div>
         <div class="stat-card">
-          <div class="stat-value">367</div>
+          <div class="stat-value">444</div>
           <div class="stat-label">Unit tests passing</div>
         </div>
       </div>
@@ -2002,13 +2002,25 @@ if (isLocked) {
   ];
   var rpcIdx = 0;
 
+  // Cached fallback values (06.03.2026) — shown immediately before RPC calls
+  var CACHED_DATA = {
+    totalSupply: 997900000, currentSupply: 997900000,
+    burned: 2100000, locked: 0, vesting: 150000000,
+    liqRes: 200000000, buyback: 0, bootstrap: 0,
+    partner: 40000000, treasury: 150000000,
+    community: 57900000, circulating: 0
+  };
+
   function rpcCall(to, data) {
     var url = RPCS[rpcIdx];
+    var controller = new AbortController();
+    var timer = setTimeout(function () { controller.abort(); }, 8000);
     return fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ jsonrpc: '2.0', method: 'eth_call', params: [{ to: to, data: data }, 'latest'], id: 1 })
-    }).then(function(r) { return r.json(); }).then(function(j) {
+      body: JSON.stringify({ jsonrpc: '2.0', method: 'eth_call', params: [{ to: to, data: data }, 'latest'], id: 1 }),
+      signal: controller.signal
+    }).then(function(r) { clearTimeout(timer); return r.json(); }).then(function(j) {
       if (j.error) throw new Error(j.error.message);
       return j.result;
     });
@@ -2140,22 +2152,29 @@ if (isLocked) {
     }).join('');
   }
 
+  function renderAll(data, label) {
+    var canvas = document.getElementById('dist-donut');
+    if (!canvas) return;
+    drawDonut(canvas, data);
+    var supplyEl = document.getElementById('donut-supply');
+    if (supplyEl) supplyEl.textContent = fmt(data.currentSupply);
+    renderLegend(data);
+    renderMetrics(data);
+    var updEl = document.getElementById('dist-updated');
+    if (updEl) updEl.textContent = label;
+  }
+
+  // Show cached data immediately
+  renderAll(CACHED_DATA, 'Showing cached values (06.03.2026) \u2014 loading live data\u2026');
+
   function update() {
     fetchData().then(function(data) {
-      var canvas = document.getElementById('dist-donut');
-      if (!canvas) return;
-      drawDonut(canvas, data);
-      var supplyEl = document.getElementById('donut-supply');
-      if (supplyEl) supplyEl.textContent = fmt(data.currentSupply);
-      renderLegend(data);
-      renderMetrics(data);
-      var updEl = document.getElementById('dist-updated');
-      if (updEl) updEl.textContent = 'Last updated: ' + new Date().toLocaleTimeString() + ' \u2014 auto-refreshes every 60s';
+      renderAll(data, 'Last updated: ' + new Date().toLocaleTimeString() + ' \u2014 auto-refreshes every 60s');
     }).catch(function(err) {
       console.error('Live distribution error:', err);
       rpcIdx = (rpcIdx + 1) % RPCS.length;
-      var legend = document.getElementById('dist-legend');
-      if (legend) legend.innerHTML = '<div style="font-size:13px;color:#ff4500;">Loading on-chain data\u2026 retrying</div>';
+      var updEl = document.getElementById('dist-updated');
+      if (updEl) updEl.textContent = 'Cached values (06.03.2026) \u2014 live data unavailable, retrying\u2026';
       setTimeout(update, 5000);
     });
   }
