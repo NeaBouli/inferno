@@ -3,7 +3,7 @@
 ## What is Inferno?
 Inferno is a deflationary ERC-20 utility token on Ethereum with
 a lock-to-access model. Users lock IFR tokens to gain access to
-partner benefits, creator content, and protocol discounts.
+builder benefits, creator content, and protocol discounts.
 
 ## Key Numbers (Ethereum Mainnet, March 2026)
 
@@ -29,7 +29,7 @@ Deflationary + Utility:
 
 1. **Benefits Network** -- QR-based discount verification for businesses
 2. **Creator Gateway** -- YouTube x IFR Lock hybrid access
-3. **AI Copilot** -- Guided onboarding (3 modes: User/Partner/Developer)
+3. **AI Copilot** -- Guided onboarding (3 modes: User/Builder/Developer)
 4. **Points System** -- Protocol fee discounts via EIP-712 voucher
 5. **Governance Dashboard** -- On-chain proposal management
 

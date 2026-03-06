@@ -85,7 +85,7 @@ Check whether the following numbers are consistent across all docs:
 
 Check whether `apps/ai-copilot/server/wiki-rag.ts` exists and:
 1. Loads wiki documents (HTML parsing)
-2. Generates mode-specific system prompts (Customer, Partner, Developer)
+2. Generates mode-specific system prompts (Customer, Builder, Developer)
 3. Is integrated in `apps/ai-copilot/server/index.ts`
 
 **PASS criteria:**

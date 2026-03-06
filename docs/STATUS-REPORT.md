@@ -112,7 +112,7 @@ Sepolia deployment served as the full testnet validation phase prior to mainnet.
 | Team (Vested) | 150M IFR | 15% |
 | Treasury | 150M IFR | 15% |
 | Community & Grants | 60M IFR | 6% |
-| Partner Ecosystem | 40M IFR | 4% |
+| Builder Ecosystem | 40M IFR | 4% |
 
 ---
 

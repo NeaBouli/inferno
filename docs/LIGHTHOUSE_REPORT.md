@@ -47,7 +47,7 @@ As of: 26 February 2026
 
 ### Recommended Next Steps
 
-1. **Performance**: Lazy-load images below the fold (e.g., partner logos)
+1. **Performance**: Lazy-load images below the fold (e.g., builder logos)
 2. **PWA**: `manifest.json` + service worker for offline support
 3. **Structured Data**: JSON-LD for Crypto Token Schema (schema.org)
 4. **Image Optimization**: WebP variants of PNG assets

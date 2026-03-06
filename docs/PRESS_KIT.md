@@ -2,7 +2,7 @@
 
 ## Summary
 
-Inferno ($IFR) is a deflationary ERC-20 utility token on Ethereum. Users lock IFR tokens on-chain and receive lifetime premium access to partner products -- no subscriptions, no recurring payments.
+Inferno ($IFR) is a deflationary ERC-20 utility token on Ethereum. Users lock IFR tokens on-chain and receive lifetime premium access to builder products -- no subscriptions, no recurring payments.
 
 **Model:** Community Fair Launch (CFLM) -- no presale, no VC, no insider allocation.
 
@@ -29,7 +29,7 @@ Inferno ($IFR) is a deflationary ERC-20 utility token on Ethereum. Users lock IF
 | Team (Vested) | 15% | 150M IFR | 12-month cliff, 36-month linear |
 | Treasury | 15% | 150M IFR | Multisig-controlled |
 | Community & Grants | 6% | 60M IFR | Grants, Bounties, Ecosystem |
-| Partner Ecosystem | 4% | 40M IFR | Milestone-based, 6-12 mo vesting |
+| Builder Ecosystem | 4% | 40M IFR | Milestone-based, 6-12 mo vesting |
 
 ## Deflation Mechanism
 
@@ -44,7 +44,7 @@ Every transfer: -2.5% permanently burned + 1% BuybackVault.
 
 ## Lock-to-Access Model
 
-Users lock IFR tokens in the IFRLock contract -> receive lifetime premium access to partner products. Tokens remain owned by the user and can be unlocked at any time.
+Users lock IFR tokens in the IFRLock contract -> receive lifetime premium access to builder products. Tokens remain owned by the user and can be unlocked at any time.
 
 | Tier | Min. Lock | Example Access |
 |------|-----------|----------------|
@@ -53,12 +53,12 @@ Users lock IFR tokens in the IFRLock contract -> receive lifetime premium access
 | Gold | 5,000 IFR | Premium access |
 | Platinum | 10,000 IFR | Full access + priority support |
 
-## Partner Ecosystem
+## Builder Ecosystem
 
-- **40M IFR** dedicated partner pool
+- **40M IFR** dedicated builder pool
 - Lock-triggered Creator Rewards (algo-based)
 - Milestone-based release + vesting
-- Partner tokens = DAO voting rights (Phase 4)
+- Builder tokens = DAO voting rights (Phase 4)
 - Open to all products -- permissionless integration
 
 ## Governance
@@ -84,8 +84,8 @@ Users lock IFR tokens in the IFRLock contract -> receive lifetime premium access
 ## Roadmap (Summary)
 
 - **Q1 2026:** Testnet complete, 444 tests, all apps built, mainnet deployed (2026-03-05)
-- **Q2 2026:** LP creation, security audit, first partners
-- **Q3 2026:** 10+ partners, Creator Gateway MVP, apps live
+- **Q2 2026:** LP creation, security audit, first builders
+- **Q3 2026:** 10+ builders, Creator Gateway MVP, apps live
 - **Q4 2026:** Community governance, CEX outreach
 - **Q2 2027+:** Full DAO, token voting
 

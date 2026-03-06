@@ -17,7 +17,7 @@ a 48-hour timelock period and quorum approval.
 ### 2.1 PartnerVault
 | Parameter | Description | Bounds |
 |-----------|-------------|--------|
-| rewardBps | Partner reward rate | 500–2500 bps (5–25%) |
+| rewardBps | Builder reward rate | 500–2500 bps (5–25%) |
 | annualEmissionCap | Annual emission limit | 1M–10M IFR |
 | authorizedCaller | Whitelist for recordLockReward() | any address |
 | algoThrottleEnabled | Algorithmic throttle on/off | bool |
@@ -69,7 +69,7 @@ a 48-hour timelock period and quorum approval.
 Responsible for: All governance proposals
 - 2 founder wallets (hardware wallet, Ledger)
 - 2 community representatives (elected via Snapshot)
-- 2 partner representatives (first accredited partners)
+- 2 builder representatives (first accredited builders)
 - 1 reserve wallet (cold storage, emergency)
 
 ### Guardian Multisig (2-of-3)

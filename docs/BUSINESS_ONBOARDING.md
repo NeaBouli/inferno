@@ -1,6 +1,6 @@
 # Business Onboarding SOP — IFR Benefits Network
 
-Standard Operating Procedure for onboarding new partner businesses
+Standard Operating Procedure for onboarding new builder businesses
 into the IFR Benefits Network.
 
 ## Overview
@@ -14,7 +14,7 @@ on-chain lock status, without requiring crypto knowledge from cashier staff.
 - [ ] Legal business with business registration
 - [ ] Willingness to set IFR lock requirements for customers (min. 1,000 IFR)
 - [ ] Technical basis: smartphone or tablet for QR scanner
-- [ ] Acceptance of the IFR Partner Terms of Service
+- [ ] Acceptance of the IFR Builder Terms of Service
 
 ### Exclusion Criteria
 - Gambling, tobacco, weapons
@@ -24,7 +24,7 @@ on-chain lock status, without requiring crypto knowledge from cashier staff.
 ## Step 2: Technical Setup
 
 ### Option A: Hosted Solution (recommended)
-1. Business receives access to the IFR Partner Dashboard
+1. Business receives access to the IFR Builder Dashboard
 2. Registration: name, logo, discount %, required lock
 3. QR code is generated (unique businessId)
 4. Cashier staff opens scanner URL on smartphone
@@ -70,8 +70,8 @@ Recommendation: offer at least Bronze (lowest barrier for customers).
 - [ ] Test scan performed with own wallet
 - [ ] Cashier staff briefed (5-minute training)
 - [ ] Discount configured in POS/register
-- [ ] IFR Partner badge placed on website/storefront
-- [ ] Entry in IFR Partner Directory confirmed
+- [ ] IFR Builder badge placed on website/storefront
+- [ ] Entry in IFR Builder Directory confirmed
 
 ## Step 6: Ongoing Operations
 
@@ -82,12 +82,12 @@ Recommendation: offer at least Bronze (lowest barrier for customers).
 
 ### Support Channels:
 - Technical: GitHub Issues → https://github.com/NeaBouli/inferno/issues
-- General: Partner documentation → docs/PARTNER_INTEGRATION_SPEC.md
+- General: Builder documentation → docs/PARTNER_INTEGRATION_SPEC.md
 
 ## FAQ for Businesses
 
 **Does the program cost anything?**
-No — the IFR Benefits Network is free for partners.
+No — the IFR Benefits Network is free for builders.
 Businesses only pay for their own hosting (Option B).
 
 **What if a customer removes their lock?**

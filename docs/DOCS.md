@@ -70,7 +70,7 @@ inferno/
 │       └── post-deploy.yml          [x] Trigger: after deploy/execute script push
 ├── apps/
 │   ├── dashboard/                      [x] React + Vite Frontend (Phase 1 + Phase 2 + LockPanel)
-│   ├── governance-dashboard/          [x] React + Vite + TS + Tailwind (Overview, Partners, Timelock, Calldata, ProposalAlert)
+│   ├── governance-dashboard/          [x] React + Vite + TS + Tailwind (Overview, Builders, Timelock, Calldata, ProposalAlert)
 │   ├── partner-directory/             [removed] Replaced by open ecosystem model
 │   ├── ai-copilot/                   [x] React + Vite + TS + Tailwind + Express (3 modes, RAG, Safety Guards)
 │   ├── points-backend/               [x] Express + Prisma + SQLite + siwe + jose (SIWE Auth, Points, EIP-712 Voucher, 35 Tests)
@@ -81,7 +81,7 @@ inferno/
 ├── docs/
 │   ├── DOCS.md                         This document
 │   ├── FAIR-LAUNCH-MIGRATION.md        CFLM Migration Plan
-│   ├── WHITEPAPER.md                   Project Whitepaper v1.0 (Partners & Investors, non-technical)
+│   ├── WHITEPAPER.md                   Project Whitepaper v1.0 (Builders & Investors, non-technical)
 │   ├── WHITEPAPER_EN.md                Whitepaper (EN, outdated)
 │   ├── CHANGELOG.md                    Change log
 │   ├── KNOWN-ISSUES.md                 Known Issues
@@ -89,7 +89,7 @@ inferno/
 │   ├── DEPLOYMENTS.md                  Sepolia + Mainnet Contract Addresses
 │   ├── GOVERNANCE_CONSTITUTION.md     Governance Constitution v1.0 (Hard Bounds, Roles, Upgrade Path)
 │   ├── BUSINESS_ONBOARDING.md         Business Onboarding Guide (Benefits Network Setup & Go-Live)
-│   ├── PARTNER_INTEGRATION_SPEC.md    Technical Partner Integration Spec (IFRLock + PartnerVault ABI, Rewards, Algo Throttle)
+│   ├── PARTNER_INTEGRATION_SPEC.md    Technical Builder Integration Spec (IFRLock + PartnerVault ABI, Rewards, Algo Throttle)
 │   ├── MAINNET_CHECKLIST.md           Deployment Checklist (3 Phases)
 │   ├── AUDIT_BRIEF.md                 Security Audit Brief + Scope
 │   ├── MULTISIG_SETUP.md              Gnosis Safe 4-of-7 Setup Guide
@@ -101,7 +101,7 @@ inferno/
 │   ├── YOUTUBE_INTEGRATION.md         YouTube x IFR Hybrid Model B, Creator Gateway, Entitlement Config
 │   ├── SECURITY_POLICY.md             Responsible Disclosure, Bug Bounty, Scope, Known Design Decisions
 │   ├── TOKENOMICS_MODEL.md            Deflation Curve, Allocation, PartnerVault Emission, Lock Economics, FeeRouter Fee
-│   ├── PARTNER_REWARDS_SPEC.md        Reward Formula, Vesting, Anti-Gaming, Partner Types (A/B/C), Onboarding
+│   ├── PARTNER_REWARDS_SPEC.md        Reward Formula, Vesting, Anti-Gaming, Builder Types (A/B/C), Onboarding
 │   ├── PATCH-GUIDELINES.md             Patch Guidelines v1.0 (6 Steps, Versioning, Emergency Patches)
 │   ├── COVERAGE_REPORT.md             Solidity Coverage Report (99% Stmts, 91% Branch, 98% Funcs, 99% Lines, Final Run)
 │   ├── BENEFITS_NETWORK_TEST.md       Benefits Network E2E Test Guide (Test Flow, API, Lock Tiers, Errors)
@@ -189,7 +189,7 @@ inferno/
 ### 8. PartnerVault -- [x] DONE
 - **Path:** `contracts/partner/PartnerVault.sol`
 - **Tests:** 95 (PartnerVault.test.js)
-- **Description:** Partner Ecosystem Pool (40M IFR) with Milestone-Unlocking + Lock-triggered Creator Rewards
+- **Description:** Builder Ecosystem Pool (40M IFR) with Milestone-Unlocking + Lock-triggered Creator Rewards
 - **Features:** createPartner, activatePartner, recordMilestone, recordLockReward (lockAmount x effectiveBps, wallet), claim (linear vesting with cliff), finalizeMilestones, SafeERC20, ReentrancyGuard, Pausable, Guardian Auth, Governance-controlled parameters (rewardBps 5-25%, annualEmissionCap, partnerCap) with min/max bounds, Annual Cap Reset, authorizedCaller Whitelist, Anti-Double-Count (wallet->partner), Algo Emission Throttle (lockRatio-based BPS scaling via IIFRLock)
 - **Mainnet:** rewardBps=1000 (10%), annualCap=4M IFR, Address: `0xc6eb7714bCb035ebc2D4d9ba7B3762ef7B9d4F7D`
 - **CRITICAL:** feeExempt MUST be set BEFORE the 40M transfer (Sepolia lesson: 1.4M IFR fee loss)
@@ -241,7 +241,7 @@ inferno/
 | 2026-02-26 | Consistency Check: 7/7 passed (test counts, 40M, Proposal #3, Wiki 13, .env, no keys) |
 | 2026-02-26 | ChatGPT Audit V3: 8 -> 12 checks expanded (PRESS_KIT, ROADMAP, v0.1.0, GitHub Templates), 12/12 PASS |
 | 2026-02-26 | LockPanel.jsx: Lock/Unlock UI in Token Dashboard (Approve, Lock, Unlock, Tier display, Balance, TX links) |
-| 2026-02-26 | Partner Directory: created, later removed (open ecosystem model) |
+| 2026-02-26 | Builder Directory: created, later removed (open ecosystem model) |
 | 2026-02-26 | ProposalAlert.tsx: Notification banner in Governance Dashboard (Pending/Ready Proposals, Countdown, Dismiss) |
 | 2026-02-26 | ROADMAP.md: 6-phase roadmap (Foundation -> Governance -> Ecosystem -> Mainnet -> Growth -> DAO) |
 | 2026-02-26 | Landing Page: Roadmap Phase 3/5 corrected (Multi-Chain removed, Full Roadmap link) |
@@ -332,8 +332,8 @@ inferno/
 | 2026-02-26 | Lock-Mechanism Wiki: Lock Economics, Creator Rewards mechanism, isLocked() verification, Anti-Gaming section |
 | 2026-02-26 | Creator Gateway App: Express + ethers v5 + googleapis + JWT, YouTube x IFR Lock Bridge (14 files, Port 3005) |
 | 2026-02-26 | Governance Wiki: Phase 4 DAO Roadmap (Token-Voting, Quorum, Milestones) |
-| 2026-02-26 | Landing Page: Partner Directory section (3 placeholder slots: Business, Creator, Developer) |
-| 2026-02-26 | Partner Rewards Spec: Reward formula, Vesting, Anti-Gaming, 3 Partner Types, Onboarding Flow |
+| 2026-02-26 | Landing Page: Builder Directory section (3 placeholder slots: Business, Creator, Developer) |
+| 2026-02-26 | Builder Rewards Spec: Reward formula, Vesting, Anti-Gaming, 3 Builder Types, Onboarding Flow |
 | 2026-02-26 | Hardhat Admin Tasks: lock-check, vault-status, feerouter-status, token-stats, gov-queue (tasks/admin.js) |
 | 2026-02-26 | Security Policy: Responsible Disclosure, Bug Bounty Framework, Scope, Known Design Decisions |
 | 2026-02-26 | Tokenomics Model: Deflation curve, Allocation, PartnerVault Emission, Lock Economics, FeeRouter Fee |
@@ -346,11 +346,11 @@ inferno/
 | 2026-02-24 | Testnet E2E Guide: 8-step Sepolia walkthrough (MetaMask, Lock, Benefits Network QR flow, Governance Dashboard, PartnerVault Rewards) |
 | 2026-02-24 | SDK Quickstart v1.0: ethers.js v5, wagmi v2, Python (web3.py), Tier System, Wallet Signature Verification, go-live checklist |
 | 2026-02-24 | Creator Gateway Spec v0.1: YouTube Hybrid Model B, Docker Quickstart, Entitlement Rules Engine, API Endpoints |
-| 2026-02-24 | WHITEPAPER.md v1.0: Completely rewritten as non-technical one-pager for partners & investors |
+| 2026-02-24 | WHITEPAPER.md v1.0: Completely rewritten as non-technical one-pager for builders & investors |
 | 2026-02-24 | Mainnet preparation: MAINNET_CHECKLIST.md, AUDIT_BRIEF.md, MULTISIG_SETUP.md |
-| 2026-02-24 | Partner Integration Spec: IFRLock + PartnerVault ABI, Reward Mechanics, Algo Throttle, AuthorizedCaller, Checklists |
+| 2026-02-24 | Builder Integration Spec: IFRLock + PartnerVault ABI, Reward Mechanics, Algo Throttle, AuthorizedCaller, Checklists |
 | 2026-02-24 | Governance Constitution v1.0 + Business Onboarding Guide created |
-| 2026-02-24 | Governance Dashboard: React 18 + Vite + TS + Tailwind (Overview, Partners, Timelock Queue, Calldata Generator) |
+| 2026-02-24 | Governance Dashboard: React 18 + Vite + TS + Tailwind (Overview, Builders, Timelock Queue, Calldata Generator) |
 | 2026-02-23 | PartnerVault Upgrade: authorizedCaller Whitelist, Anti-Double-Count, Algo Emission Throttle (95 Tests) |
 | 2026-02-23 | Benefits Network: Backend (Express + Prisma, 8 Tests) + Frontend (Next.js 14 PWA, wagmi v2) |
 | 2026-02-23 | PartnerVault.sol implemented (549 LOC, 95 Tests): Milestone-Unlocking + Lock-triggered Creator Rewards, SafeERC20, Governance Parameters |

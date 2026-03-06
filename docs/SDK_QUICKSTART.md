@@ -259,8 +259,8 @@ async function safeCheckAccess(wallet, minIFR) {
 
 | | |
 |-|-|
-| Partner Integration Spec | [docs/PARTNER_INTEGRATION_SPEC.md](PARTNER_INTEGRATION_SPEC.md) |
-| Business Onboarding | [docs/BUSINESS_ONBOARDING.md](BUSINESS_ONBOARDING.md) |
+| Builder Integration Spec | [docs/PARTNER_INTEGRATION_SPEC.md](PARTNER_INTEGRATION_SPEC.md) |
+| Builder Onboarding | [docs/BUSINESS_ONBOARDING.md](BUSINESS_ONBOARDING.md) |
 | Contract ABI (complete) | [docs/PARTNER_INTEGRATION_SPEC.md](PARTNER_INTEGRATION_SPEC.md) |
 | GitHub | https://github.com/NeaBouli/inferno |
 | Docs | https://neabouli.github.io/inferno/wiki/ |

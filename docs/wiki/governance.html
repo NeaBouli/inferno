@@ -1040,7 +1040,7 @@ await governance.execute(proposalId);</code></pre>
         </li>
         <li>
           <strong>Future: Full DAO</strong> &mdash;
-          Lock-weighted voting (IFRLock balances as voting power). Community proposals. On-chain quorum requirements. Partner tokens grant additional voting rights.
+          Lock-weighted voting (IFRLock balances as voting power). Community proposals. On-chain quorum requirements. Builder tokens grant additional voting rights.
         </li>
       </ol>
 
@@ -1093,7 +1093,7 @@ await governance.execute(proposalId);</code></pre>
             <td>Community vote</td>
           </tr>
           <tr>
-            <td>Partner Onboarding</td>
+            <td>Builder Onboarding</td>
             <td>Team decision</td>
             <td>Multisig vote</td>
             <td>Community proposal</td>
@@ -1107,9 +1107,9 @@ await governance.execute(proposalId);</code></pre>
         </tbody>
       </table>
 
-      <h3>Partner Voting Rights (DAO Phase)</h3>
+      <h3>Builder Voting Rights (DAO Phase)</h3>
       <p>
-        In the DAO phase, voting power will be derived from <strong>locked IFR balances</strong> (via IFRLock), not freely tradable tokens. This prevents flash-loan governance attacks. Partner tokens earned through the PartnerVault also grant voting rights, ensuring that governance influence reflects real ecosystem contribution.
+        In the DAO phase, voting power will be derived from <strong>locked IFR balances</strong> (via IFRLock), not freely tradable tokens. This prevents flash-loan governance attacks. Builder tokens earned through the PartnerVault also grant voting rights, ensuring that governance influence reflects real ecosystem contribution.
       </p>
 
       <div class="callout">
@@ -1161,7 +1161,7 @@ await governance.execute(proposalId);</code></pre>
       <pre><code>cd apps/governance-dashboard && npm run dev</code></pre>
       <p>
         Tabs: <strong>Overview</strong> (PartnerVault stats, algo throttle curve) &bull;
-        <strong>Partners</strong> (event-based table) &bull;
+        <strong>Builders</strong> (event-based table) &bull;
         <strong>Timelock Queue</strong> (proposals with countdown) &bull;
         <strong>Calldata Generator</strong> (encode governance calls).
       </p>

@@ -17,7 +17,7 @@ Inferno has:
 | Reserve | 20% | 200M | Governance | Ecosystem growth |
 | Team | 15% | 150M | 4 years (1 year cliff) | Standard startup vesting |
 | Treasury | 15% | 150M | Governance | Community & Grants |
-| Community | 6% | 60M | Governance | Partner onboarding |
+| Community | 6% | 60M | Governance | Builder onboarding |
 | PartnerVault | 4% | 40M | Milestone | Creator Rewards |
 
 ## Why 30% Team + Treasury?

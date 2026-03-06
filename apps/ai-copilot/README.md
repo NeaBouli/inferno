@@ -1,11 +1,11 @@
 # IFR AI Copilot
 
-Chat widget for Inferno ($IFR) — helps users, partners, and developers
+Chat widget for Inferno ($IFR) — helps users, builders, and developers
 with token mechanics, lock integration, and the Benefits Network.
 
 ## Features
 
-- **3 Modes**: Customer, Partner, Developer — each with tailored system prompts
+- **3 Modes**: Customer, Builder, Developer — each with tailored system prompts
 - **RAG Knowledge Base**: All IFR facts (contracts, tokenomics, tiers, governance) embedded as structured context
 - **Safety Guards**: Automatic seed phrase / private key detection with instant warnings
 - **Source Tags**: Every response cites its source (IFR_KNOWLEDGE)
@@ -41,7 +41,7 @@ The Anthropic API key stays on the server — never exposed to the browser.
 | Mode | Audience | Focus |
 |------|----------|-------|
 | Customer | Token holders | Wallet setup, locking, tiers, benefits |
-| Partner | Businesses | QR-flow, Benefits Network, Creator Rewards |
+| Builder | Businesses | QR-flow, Benefits Network, Creator Rewards |
 | Developer | Developers | SDK integration, ethers.js, wagmi, Python |
 
 ## Embedding in Wiki Pages

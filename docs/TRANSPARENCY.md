@@ -107,7 +107,7 @@ BuybackVault is initially empty — it collects 1% pool fees from transfers. Act
 | Reward Rate | 1,500 bps (15%) |
 | Annual Emission Cap | 4,000,000 IFR |
 | Total Rewarded | 0 IFR |
-| Algo Throttle | OFF (activates with first partner) |
+| Algo Throttle | OFF (activates with first builder) |
 
 Admin is Governance — no deployer access possible.
 

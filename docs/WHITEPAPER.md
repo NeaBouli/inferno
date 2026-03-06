@@ -3,13 +3,13 @@
 ## Executive Summary
 IFR is a deflationary ERC-20 utility token on Ethereum.
 Core idea: Users lock IFR tokens once and receive permanent premium
-access to partner products — no subscriptions, no recurring payments.
+access to builder products — no subscriptions, no recurring payments.
 Every transfer automatically burns 2.5% of tokens permanently.
 The supply decreases with every transaction.
 
 3 sentences for everyone:
 - For users: Lock once, access forever.
-- For partners: Acquire loyal users who have real skin in the game.
+- For builders: Acquire loyal users who have real skin in the game.
 - For the protocol: More utility = more locking = less supply = more scarcity.
 
 ---
@@ -29,7 +29,7 @@ Inferno introduces a new access model:
 
 Instead of paying monthly, users lock IFR once (Lock).
 Locked tokens remain the property of the user.
-As long as locked, automatic premium access to all partner products.
+As long as locked, automatic premium access to all builder products.
 Unlocking is possible at any time — access ends, tokens returned.
 
 Analogy: Like a security deposit. You don't spend the money — you deposit it.
@@ -95,7 +95,7 @@ Total supply: 1,000,000,000 IFR (1 billion, one-time, no minting)
 | Team (Vested) | 15% | 150M | 48-month vesting, 12-month cliff |
 | Treasury | 15% | 150M | Protocol development |
 | Community & Grants | 6% | 60M | Ecosystem building |
-| Partner Ecosystem | 4% | 40M | PartnerVault (lock-triggered rewards) |
+| Builder Ecosystem | 4% | 40M | PartnerVault (lock-triggered rewards) |
 
 ### Community Fair Launch Model (CFLM)
 
@@ -125,16 +125,16 @@ https://etherscan.io/address/0x2694Bc84e8D5251E9E4Ecd4B2Ae3f866d6106271
 
 ---
 
-## 5. Partner Ecosystem
+## 5. Builder Ecosystem
 
-### How Partners Earn IFR
-When a user locks IFR for a partner's product:
-1. The partner automatically receives a percentage of the locked amount
+### How Builders Earn IFR
+When a user locks IFR for a builder's product:
+1. The builder automatically receives a percentage of the locked amount
 2. Reward rate: 10-20% (policy target), hard bounds 5-25%
 3. Rewards vest linearly over 6-12 months
 4. Annual emission limit: 4M IFR (bounds: 1-10M)
 
-Why deflationary: Users always lock more IFR than partners receive.
+Why deflationary: Users always lock more IFR than builders receive.
 At 15% reward: 1,000 IFR locked -> 150 IFR reward -> net 850 IFR more bound.
 
 ### IFR Benefits Network
@@ -179,7 +179,7 @@ Single source of truth. No app knowledge, no user IDs.
 License Resolver: translates wallet queries into access checks.
 Privacy-neutral: no personal data stored.
 
-**Off-Chain (Partner Apps)**
+**Off-Chain (Builder Apps)**
 Each app decides independently what lock amount qualifies for premium access.
 Integration: 5 lines of code. Fully decoupled.
 
@@ -229,11 +229,11 @@ No trust required — only code and chain.
 
 ---
 
-## 11. For Partners: Why IFR?
+## 11. For Builders: Why IFR?
 
 - Real user retention: Users with locked tokens don't churn
 - No subscription management: Lock on-chain, no backend needed
-- Token incentives: Partners receive IFR from the 40M partner pool
+- Token incentives: Builders receive IFR from the 40M builder pool
 - Simple integration: isLocked() — one API call
 - Privacy: No wallet data stored
 - Permissionless: Anyone can integrate

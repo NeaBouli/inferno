@@ -45,7 +45,7 @@
 | Team Vesting | 150,000,000 IFR (15%) | `0xa710f9FE7bf42981E60BE2Fbe7D87Fb3541a3F8B` |
 | Treasury | 150,000,000 IFR (15%) | Deployer (placeholder) |
 | Community & Grants | 60,000,000 IFR (6%) | Deployer (placeholder) |
-| Partner Ecosystem | 40,000,000 IFR (4%) | [`0x5F12C0bC616e9Ca347D48C33266aA8fe98490A39`](https://sepolia.etherscan.io/address/0x5F12C0bC616e9Ca347D48C33266aA8fe98490A39) (PartnerVault) |
+| Builder Ecosystem | 40,000,000 IFR (4%) | [`0x5F12C0bC616e9Ca347D48C33266aA8fe98490A39`](https://sepolia.etherscan.io/address/0x5F12C0bC616e9Ca347D48C33266aA8fe98490A39) (PartnerVault) |
 
 ### Configuration
 
@@ -144,7 +144,7 @@
 | Team Vesting | 150,000,000 IFR (15%) | [`0x2694Bc84e8D5251E9E4Ecd4B2Ae3f866d6106271`](https://etherscan.io/address/0x2694Bc84e8D5251E9E4Ecd4B2Ae3f866d6106271) |
 | Treasury | 150,000,000 IFR (15%) | [`0xC8f4B45fA0C4727E9b27c13Af3d000C922a2ac9c`](https://etherscan.io/address/0xC8f4B45fA0C4727E9b27c13Af3d000C922a2ac9c) |
 | Community & Grants | 60,000,000 IFR (6%) | [`0x61aF4E72C77b58F4b50964Ee93d420750Cd9857E`](https://etherscan.io/address/0x61aF4E72C77b58F4b50964Ee93d420750Cd9857E) |
-| Partner Ecosystem | 40,000,000 IFR (4%) | [`0xc6eb7714bCb035ebc2D4d9ba7B3762ef7B9d4F7D`](https://etherscan.io/address/0xc6eb7714bCb035ebc2D4d9ba7B3762ef7B9d4F7D) (PartnerVault) |
+| Builder Ecosystem | 40,000,000 IFR (4%) | [`0xc6eb7714bCb035ebc2D4d9ba7B3762ef7B9d4F7D`](https://etherscan.io/address/0xc6eb7714bCb035ebc2D4d9ba7B3762ef7B9d4F7D) (PartnerVault) |
 
 ### Configuration
 

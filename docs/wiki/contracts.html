@@ -1819,14 +1819,14 @@ console.<span class="function">log</span>(<span class="string">"Since:"</span>, 
         <div class="contract-section" id="partner-vault">
             <div class="contract-header">
                 <h2>PartnerVault</h2>
-                <span class="contract-badge">Partner Ecosystem</span>
+                <span class="contract-badge">Builder Ecosystem</span>
             </div>
             <div class="contract-path">contracts/partner/PartnerVault.sol</div>
 
             <p>
-                Manages the 40M IFR Partner Ecosystem Pool (4% of total supply). Two mechanisms:
+                Manages the 40M IFR Builder Ecosystem Pool (4% of total supply). Two mechanisms:
                 <strong>milestone-based unlocking</strong> (governance records milestones that unlock IFR allocations) and
-                <strong>lock-triggered creator rewards</strong> (when a user locks IFR for a partner's product, the partner accrues
+                <strong>lock-triggered creator rewards</strong> (when a user locks IFR for a builder's product, the builder accrues
                 a reward of <code>lockAmount &times; rewardBps / 10000</code> from the pool).
                 Rewards vest linearly over 6&ndash;12 months with optional cliff.
             </p>
@@ -1850,16 +1850,16 @@ console.<span class="function">log</span>(<span class="string">"Since:"</span>, 
             <table>
                 <thead><tr><th>Function</th><th>Description</th></tr></thead>
                 <tbody>
-                    <tr><td><code>createPartner(partnerId, beneficiary, maxAllocation, vestingDuration, cliff, tier)</code></td><td>Register a new partner with allocation cap and vesting schedule</td></tr>
-                    <tr><td><code>activatePartner(partnerId)</code></td><td>Activate a partner to start earning rewards</td></tr>
+                    <tr><td><code>createPartner(partnerId, beneficiary, maxAllocation, vestingDuration, cliff, tier)</code></td><td>Register a new builder with allocation cap and vesting schedule</td></tr>
+                    <tr><td><code>activatePartner(partnerId)</code></td><td>Activate a builder to start earning rewards</td></tr>
                     <tr><td><code>recordMilestone(partnerId, milestoneId, unlockAmount)</code></td><td>Record milestone completion, unlock IFR allocation</td></tr>
                     <tr><td><code>recordLockReward(partnerId, lockAmount, wallet)</code></td><td>Record a user lock &rarr; creator reward (lockAmount &times; effectiveBps / 10000). Anti-double-count per wallet.</td></tr>
                     <tr><td><code>setRewardBps(newBps)</code></td><td>Update reward rate (500&ndash;2500 bps)</td></tr>
                     <tr><td><code>setAnnualEmissionCap(newCap)</code></td><td>Update annual emission cap (1M&ndash;10M IFR)</td></tr>
                     <tr><td><code>setAuthorizedCaller(caller, status)</code></td><td>Whitelist an address (e.g. backend wallet) to call <code>recordLockReward</code></td></tr>
                     <tr><td><code>setIFRLock(ifrLockAddress)</code></td><td>Set IFRLock reference for algorithmic emission throttle</td></tr>
-                    <tr><td><code>setPartnerBeneficiary(partnerId, newBeneficiary)</code></td><td>Change partner payout address</td></tr>
-                    <tr><td><code>setPartnerAllocation(partnerId, newMax)</code></td><td>Adjust partner allocation cap</td></tr>
+                    <tr><td><code>setPartnerBeneficiary(partnerId, newBeneficiary)</code></td><td>Change builder payout address</td></tr>
+                    <tr><td><code>setPartnerAllocation(partnerId, newMax)</code></td><td>Adjust builder allocation cap</td></tr>
                     <tr><td><code>finalizeMilestones(partnerId)</code></td><td>Lock milestones &mdash; no further milestone unlocks</td></tr>
                 </tbody>
             </table>
@@ -1870,12 +1870,12 @@ console.<span class="function">log</span>(<span class="string">"Since:"</span>, 
             <table>
                 <thead><tr><th>Function</th><th>Description</th></tr></thead>
                 <tbody>
-                    <tr><td><code>claim(partnerId)</code></td><td>Transfer vested IFR to partner beneficiary (ReentrancyGuard)</td></tr>
+                    <tr><td><code>claim(partnerId)</code></td><td>Transfer vested IFR to builder beneficiary (ReentrancyGuard)</td></tr>
                     <tr><td><code>claimable(partnerId)</code></td><td>View: currently claimable amount</td></tr>
                     <tr><td><code>vestedAmount(partnerId)</code></td><td>View: total vested so far</td></tr>
-                    <tr><td><code>partners(partnerId)</code></td><td>View: full partner data struct</td></tr>
+                    <tr><td><code>partners(partnerId)</code></td><td>View: full builder data struct</td></tr>
                     <tr><td><code>pendingBalance()</code></td><td>View: IFR balance held by vault</td></tr>
-                    <tr><td><code>walletRewardClaimed(wallet, partnerId)</code></td><td>View: whether a wallet has been rewarded for a partner</td></tr>
+                    <tr><td><code>walletRewardClaimed(wallet, partnerId)</code></td><td>View: whether a wallet has been rewarded for a builder</td></tr>
                     <tr><td><code>authorizedCaller(address)</code></td><td>View: whether an address is whitelisted for recordLockReward</td></tr>
                 </tbody>
             </table>

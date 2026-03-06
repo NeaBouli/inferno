@@ -25,7 +25,7 @@ You are an independent auditor for the Inferno ($IFR) project. Check ALL referen
   8. PartnerVault — `0x5F12C0bC616e9Ca347D48C33266aA8fe98490A39`
   9. FeeRouterV1 — `0x499289C8Ef49769F4FcFF3ca86D4BD7b55B49aa4`
   10. LP Pair (IFR/WETH) — `0x2252e8bBDE0E50CD372748aC233A99C08627d9c7`
-- **Token Allocation:** 40% DEX, 20% Reserve, 15% Team (vested), 15% Treasury, 6% Community & Grants, 4% Partner Ecosystem
+- **Token Allocation:** 40% DEX, 20% Reserve, 15% Team (vested), 15% Treasury, 6% Community & Grants, 4% Builder Ecosystem
 - **FeeRouter:** protocolFeeBps=5 (0.05%), FEE_CAP_BPS=25 (0.25%), EIP-712 Voucher Discounts
 - **Points System:** Off-chain (Express + Prisma + SQLite), SIWE Auth, no token, protocol fee discount only
 

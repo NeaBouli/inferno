@@ -45,7 +45,7 @@ The following contracts are in audit scope:
 | LP not yet locked | Post-deploy — Mainnet: burn to 0xdead or Unicrypt lock |
 | 9 Decimals | Intentional — IFR-specific |
 | No Oracle | Phase 0 — USD pricing Phase 2+ |
-| Fee-on-transfer breaks naive integrations | Documented — partners must check balanceOf |
+| Fee-on-transfer breaks naive integrations | Documented — builders must check balanceOf |
 
 ## Critical Functions (Focus for Auditors)
 

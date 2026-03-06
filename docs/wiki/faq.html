@@ -475,7 +475,7 @@
       <div class="faq-section">
         <div class="faq-item">
           <button class="faq-q"><span>What is Inferno ($IFR)?</span><span class="icon">+</span></button>
-          <div class="faq-a">Inferno is a deflationary ERC-20 token on Ethereum with a fee-on-transfer mechanism. Every transfer permanently burns 2.5% and routes 1% to a pool fee receiver. The token powers a lock-to-access model where users lock IFR to gain premium features in partner products.</div>
+          <div class="faq-a">Inferno is a deflationary ERC-20 token on Ethereum with a fee-on-transfer mechanism. Every transfer permanently burns 2.5% and routes 1% to a pool fee receiver. The token powers a lock-to-access model where users lock IFR to gain premium features in builder products.</div>
         </div>
 
         <div class="faq-item">
@@ -495,7 +495,7 @@
 
         <div class="faq-item">
           <button class="faq-q"><span>Is there a presale or VC backing?</span><span class="icon">+</span></button>
-          <div class="faq-a">No. Inferno follows a Community Fair Launch Model (CFLM) &mdash; no presale, no venture capital, no seed round. All 1 billion IFR tokens are distributed at deployment: 40% to DEX liquidity, 20% to the liquidity reserve, 15% to the team (vested over 36 months with a 12-month cliff), 15% to treasury, 6% to community grants, and 4% to the partner ecosystem.</div>
+          <div class="faq-a">No. Inferno follows a Community Fair Launch Model (CFLM) &mdash; no presale, no venture capital, no seed round. All 1 billion IFR tokens are distributed at deployment: 40% to DEX liquidity, 20% to the liquidity reserve, 15% to the team (vested over 36 months with a 12-month cliff), 15% to treasury, 6% to community grants, and 4% to the builder ecosystem.</div>
         </div>
       </div>
 
@@ -510,12 +510,12 @@
 
         <div class="faq-item">
           <button class="faq-q"><span>How do I lock IFR tokens?</span><span class="icon">+</span></button>
-          <div class="faq-a">Call the <code>lock(amount, lockType)</code> function on the IFRLock contract. The lockType is a string tag identifying which partner product you are locking for. You can also use the Token Dashboard which provides a graphical interface for locking. Your tokens move from your wallet into the contract and can be unlocked at any time.</div>
+          <div class="faq-a">Call the <code>lock(amount, lockType)</code> function on the IFRLock contract. The lockType is a string tag identifying which builder product you are locking for. You can also use the Token Dashboard which provides a graphical interface for locking. Your tokens move from your wallet into the contract and can be unlocked at any time.</div>
         </div>
 
         <div class="faq-item">
           <button class="faq-q"><span>What happens with my locked tokens?</span><span class="icon">+</span></button>
-          <div class="faq-a">Your tokens are held in the IFRLock smart contract. No one &mdash; not the team, not governance, not any admin &mdash; can access or move them. They remain yours. Partner products verify your lock on-chain via <code>isLocked(wallet, minAmount)</code> and grant access based on the result.</div>
+          <div class="faq-a">Your tokens are held in the IFRLock smart contract. No one &mdash; not the team, not governance, not any admin &mdash; can access or move them. They remain yours. Builder products verify your lock on-chain via <code>isLocked(wallet, minAmount)</code> and grant access based on the result.</div>
         </div>
 
         <div class="faq-item">
@@ -525,7 +525,7 @@
 
         <div class="faq-item">
           <button class="faq-q"><span>What is the minimum lock amount?</span><span class="icon">+</span></button>
-          <div class="faq-a">The minimum lock amount depends on the partner product. Each partner sets their own tier requirement. Typical tiers are 500, 1,000, 5,000, or 10,000 IFR. The IFRLock contract itself has no hardcoded minimum &mdash; it accepts any non-zero amount.</div>
+          <div class="faq-a">The minimum lock amount depends on the builder product. Each builder sets their own tier requirement. Typical tiers are 500, 1,000, 5,000, or 10,000 IFR. The IFRLock contract itself has no hardcoded minimum &mdash; it accepts any non-zero amount.</div>
         </div>
 
         <div class="faq-item">
@@ -549,33 +549,33 @@
         </div>
       </div>
 
-      <!-- ========== 3. Partners & Benefits ========== -->
-      <h2>3. Partners &amp; Benefits</h2>
+      <!-- ========== 3. Builders & Benefits ========== -->
+      <h2>3. Builders &amp; Benefits</h2>
 
       <div class="faq-section">
         <div class="faq-item">
           <button class="faq-q"><span>How does the Benefits Network work?</span><span class="icon">+</span></button>
-          <div class="faq-a">The Benefits Network connects IFR lockers with partner businesses. Users lock IFR tokens, and partner products check the lock status on-chain to grant premium access. Partners earn Creator Rewards from the PartnerVault for each locking user. It is a two-sided marketplace built on verifiable on-chain data.</div>
+          <div class="faq-a">The Benefits Network connects IFR lockers with builder businesses. Users lock IFR tokens, and builder products check the lock status on-chain to grant premium access. Builders earn Creator Rewards from the PartnerVault for each locking user. It is a two-sided marketplace built on verifiable on-chain data.</div>
         </div>
 
         <div class="faq-item">
           <button class="faq-q"><span>What are the tier requirements?</span><span class="icon">+</span></button>
-          <div class="faq-a">Each partner defines their own tiers. A typical structure might be: Basic (500 IFR), Standard (1,000 IFR), Premium (5,000 IFR), VIP (10,000 IFR). The partner calls <code>isLocked(wallet, minAmount)</code> with the tier threshold and grants features accordingly.</div>
+          <div class="faq-a">Each builder defines their own tiers. A typical structure might be: Basic (500 IFR), Standard (1,000 IFR), Premium (5,000 IFR), VIP (10,000 IFR). The builder calls <code>isLocked(wallet, minAmount)</code> with the tier threshold and grants features accordingly.</div>
         </div>
 
         <div class="faq-item">
           <button class="faq-q"><span>How is the lock status verified?</span><span class="icon">+</span></button>
-          <div class="faq-a">Partners call the read-only function <code>isLocked(walletAddress, minimumAmount)</code> on the IFRLock contract. It returns true or false. This is a single on-chain call with no API keys, no user databases, and no privacy concerns. The partner never needs to store wallet addresses.</div>
+          <div class="faq-a">Builders call the read-only function <code>isLocked(walletAddress, minimumAmount)</code> on the IFRLock contract. It returns true or false. This is a single on-chain call with no API keys, no user databases, and no privacy concerns. The builder never needs to store wallet addresses.</div>
         </div>
 
         <div class="faq-item">
-          <button class="faq-q"><span>How do I become a partner?</span><span class="icon">+</span></button>
-          <div class="faq-a">Partners register through the onboarding process described in the Business Onboarding documentation. After registration, a governance proposal adds the partner to the PartnerVault. Partner tiers range from Launch Partners (up to 5M IFR allocation) to Tier 3 (500K IFR). All allocations are milestone-based and vested.</div>
+          <button class="faq-q"><span>How do I become a builder?</span><span class="icon">+</span></button>
+          <div class="faq-a">Builders register through the onboarding process described in the Business Onboarding documentation. After registration, a governance proposal adds the builder to the PartnerVault. Builder tiers range from Launch Builders (up to 5M IFR allocation) to Tier 3 (500K IFR). All allocations are milestone-based and vested.</div>
         </div>
 
         <div class="faq-item">
           <button class="faq-q"><span>What are Creator Rewards?</span><span class="icon">+</span></button>
-          <div class="faq-a">When a user locks IFR for a partner's product, the partner earns a percentage of the lock amount from the Partner Ecosystem Pool (40M IFR). The reward rate is governance-controlled with hard bounds of 5&ndash;25% (policy target 10&ndash;20%). Rewards vest over 6&ndash;12 months. The system is designed to always remove more IFR from circulation than it distributes.</div>
+          <div class="faq-a">When a user locks IFR for a builder's product, the builder earns a percentage of the lock amount from the Builder Ecosystem Pool (40M IFR). The reward rate is governance-controlled with hard bounds of 5&ndash;25% (policy target 10&ndash;20%). Rewards vest over 6&ndash;12 months. The system is designed to always remove more IFR from circulation than it distributes.</div>
         </div>
       </div>
 

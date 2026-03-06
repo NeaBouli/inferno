@@ -51,7 +51,7 @@ Verification: files present, grep on keywords, number consistency.
 ### Check E — Wiki RAG
 - `apps/ai-copilot/server/wiki-rag.ts`
   - loadWikiDocs(): reads all HTML files from docs/wiki/
-  - buildSystemPrompt(): mode-specific (Customer/Partner/Developer)
+  - buildSystemPrompt(): mode-specific (Customer/Builder/Developer)
 
 ### Check F — Voucher
 - `apps/points-backend/src/routes/voucher.ts`

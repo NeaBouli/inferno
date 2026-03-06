@@ -371,7 +371,7 @@
 | File | `apps/points-backend/src/routes/voucher.ts:83-116` |
 | Status | Documented |
 
-**Description:** `GET /voucher/validate/:nonce` returns wallet address. Nonces are 256-bit random (not guessable). By design for partner validation.
+**Description:** `GET /voucher/validate/:nonce` returns wallet address. Nonces are 256-bit random (not guessable). By design for builder validation.
 
 ---
 

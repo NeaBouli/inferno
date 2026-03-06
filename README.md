@@ -12,7 +12,7 @@
 
 ## What is Inferno?
 
-Inferno (IFR) is a deflationary ERC-20 utility token on Ethereum. Every transfer burns 2.5% permanently, reducing total supply over time. Users lock IFR tokens on-chain to unlock lifetime premium access to partner products — no subscriptions, no recurring payments.
+Inferno (IFR) is a deflationary ERC-20 utility token on Ethereum. Every transfer burns 2.5% permanently, reducing total supply over time. Users lock IFR tokens on-chain to unlock lifetime premium access to builder products — no subscriptions, no recurring payments.
 
 **Community Fair Launch Model** — No presale, no VC, no insider allocations.
 
@@ -21,7 +21,7 @@ Inferno (IFR) is a deflationary ERC-20 utility token on Ethereum. Every transfer
 ## Key Features
 
 - **Deflationary**: 2.5% burned per transfer (2% sender + 0.5% recipient). 1% pool fee. Hard cap: 5% max.
-- **Utility Lock**: Lock IFR → lifetime premium access across partner products → unlock anytime.
+- **Utility Lock**: Lock IFR → lifetime premium access across builder products → unlock anytime.
 - **Timelock Governance**: 48-hour delay on all changes. Guardian cancel. No instant admin access.
 - **No Mint Function**: Supply can only decrease, never increase.
 - **Fair Launch**: No presale, no VC. Transparent allocation from day one.
@@ -35,7 +35,7 @@ Inferno (IFR) is a deflationary ERC-20 utility token on Ethereum. Every transfer
 | Team (Vested) | 15% | 150M IFR |
 | Treasury | 15% | 150M IFR |
 | Community & Grants | 6% | 60M IFR |
-| Partner Ecosystem | 4% | 40M IFR |
+| Builder Ecosystem | 4% | 40M IFR |
 
 Team tokens: 48-month vesting, 12-month cliff. Liquidity reserve: 6-month lock.
 
@@ -67,15 +67,15 @@ with a 1-year cliff. See [Fair Launch Statement](docs/FAIR_LAUNCH.md).
 
 Threshold: 1-of-1 (Phase 0). Will be expanded to 2-of-3 before mainnet.
 
-## Partner Ecosystem
+## Builder Ecosystem
 
-Lock-triggered Creator Rewards: when users lock IFR for a partner's product, the partner earns a percentage from the 40M Partner Ecosystem Pool.
+Lock-triggered Creator Rewards: when users lock IFR for a builder's product, the builder earns a percentage from the 40M Builder Ecosystem Pool.
 - Hard bounds (contract): 5-25%
 - Policy target: 10-20%
 - Annual emission: default 4M IFR (bounds: 1-10M IFR)
 - Vesting: 6-12 months
 - Authorized caller whitelist for automated reward recording
-- Anti-double-count: each wallet can only be rewarded once per partner
+- Anti-double-count: each wallet can only be rewarded once per builder
 - Algorithmic emission throttle: reward rate scales down as more IFR is locked (1% → 50% lock ratio)
 
 Token holdings grant future DAO voting rights.
@@ -131,15 +131,15 @@ The IFR Benefits Network lets any business verify on-chain IFR lock status to gr
 
 Read-only governance dashboard for monitoring PartnerVault, proposals, and generating calldata.
 
-**Tabs:** Overview · Partners · Timelock Queue · Calldata Generator
+**Tabs:** Overview · Builders · Timelock Queue · Calldata Generator
 
 **Start:** `cd apps/governance-dashboard && npm run dev` → http://localhost:5174
 
 ### AI Copilot
 
-Embedded chat widget with RAG knowledge base — helps users, partners, and developers understand IFR.
+Embedded chat widget with RAG knowledge base — helps users, builders, and developers understand IFR.
 
-**Modes:** Customer · Partner · Developer
+**Modes:** Customer · Builder · Developer
 
 **Safety:** Automatic seed phrase / private key detection, instant warnings, source citation tags.
 
@@ -166,11 +166,11 @@ SIWE authentication, points tracking, and EIP-712 signed voucher issuance for pr
 - [Security Audit](https://ifrunit.tech/wiki/security.html)
 - [Governance Constitution](docs/GOVERNANCE_CONSTITUTION.md) — Hard bounds, roles, upgrade path
 - [Business Onboarding](docs/BUSINESS_ONBOARDING.md) — Benefits Network setup & go-live checklist
-- [Partner Integration Spec](docs/PARTNER_INTEGRATION_SPEC.md) — Technical spec: IFRLock + PartnerVault ABI, Rewards, Algo Throttle
+- [Builder Integration Spec](docs/PARTNER_INTEGRATION_SPEC.md) — Technical spec: IFRLock + PartnerVault ABI, Rewards, Algo Throttle
 - [Mainnet Checklist](docs/MAINNET_CHECKLIST.md) — Deployment order, verification, post-deploy
 - [Security Audit Brief](docs/AUDIT_BRIEF.md) — Scope, audit areas, auditor recommendations
 - [Multisig Setup Guide](docs/MULTISIG_SETUP.md) — Gnosis Safe, signer structure, ownership transfer
-- [Whitepaper / One-Pager](docs/WHITEPAPER.md) — Project overview for partners & investors
+- [Whitepaper / One-Pager](docs/WHITEPAPER.md) — Project overview for builders & investors
 - [Creator Gateway Spec](docs/CREATOR_GATEWAY.md) — YouTube Hybrid Model, Docker Quickstart, Entitlement Engine
 - [SDK / Developer Quickstart](docs/SDK_QUICKSTART.md) — ethers.js, wagmi, Python, Tier System, Wallet Verification
 - [Testnet E2E Guide](docs/TESTNET_GUIDE.md) — Full Lock/Benefit/Governance/FeeRouter flow on Sepolia
@@ -182,7 +182,7 @@ SIWE authentication, points tracking, and EIP-712 signed voucher issuance for pr
 - [YouTube Integration Guide](docs/YOUTUBE_INTEGRATION.md) — Hybrid Model B, Creator Gateway, Entitlement Config
 - [Security Policy](docs/SECURITY_POLICY.md) — Responsible Disclosure, Bug Bounty, Scope
 - [Tokenomics Model](docs/TOKENOMICS_MODEL.md) — Deflation curve, emission model, lock economics
-- [Partner Rewards Spec](docs/PARTNER_REWARDS_SPEC.md) — Reward formula, vesting, anti-gaming, partner types
+- [Builder Rewards Spec](docs/PARTNER_REWARDS_SPEC.md) — Reward formula, vesting, anti-gaming, builder types
 - [Benefits Network Test Guide](docs/BENEFITS_NETWORK_TEST.md) — E2E test, API endpoints, lock tiers
 - [Coverage Report](docs/COVERAGE_REPORT.md) — Solidity coverage (99% Stmts, 91% Branch)
 - [Patch Guidelines](docs/PATCH-GUIDELINES.md) — Patch process, severity, versioning

@@ -1,13 +1,13 @@
-# IFR Partner Integration — Technical Specification
+# IFR Builder Integration — Technical Specification
 
 ## 1. Overview
 
-Partners integrate with two on-chain contracts:
+Builders integrate with two on-chain contracts:
 
 | Contract | Purpose | Address (Sepolia) |
 |----------|---------|-------------------|
 | **IFRLock** | Users lock IFR → `isLocked()` gates premium access | `0x0Cab0A9440643128540222acC6eF5028736675d3` |
-| **PartnerVault** | Partner rewards, milestones, vesting, claims | `0x5F12C0bC616e9Ca347D48C33266aA8fe98490A39` |
+| **PartnerVault** | Builder rewards, milestones, vesting, claims | `0x5F12C0bC616e9Ca347D48C33266aA8fe98490A39` |
 | InfernoToken | ERC-20 (9 decimals), fee-on-transfer | `0x3Bd71947F288d1dd8B21129B1bE4FF16EDd5d1F4` |
 | Governance | 48h timelock, admin of PartnerVault | `0x6050b22E4EAF3f414d1155fBaF30B868E0107017` |
 
@@ -15,7 +15,7 @@ Partners integrate with two on-chain contracts:
 
 ---
 
-## 2. Partner Lifecycle
+## 2. Builder Lifecycle
 
 ```
 createPartner() → activatePartner() → recordMilestone() / recordLockReward()
@@ -27,7 +27,7 @@ createPartner() → activatePartner() → recordMilestone() / recordLockReward()
 
 | Step | Caller | Function | When |
 |------|--------|----------|------|
-| 1. Create | Admin (Governance) | `createPartner(partnerId, beneficiary, maxAllocation, vestingDuration, cliff, tier)` | Once per partner |
+| 1. Create | Admin (Governance) | `createPartner(partnerId, beneficiary, maxAllocation, vestingDuration, cliff, tier)` | Once per builder |
 | 2. Activate | Admin (Governance) | `activatePartner(partnerId)` | After review |
 | 3a. Milestones | Admin (Governance) | `recordMilestone(partnerId, milestoneId, unlockAmount)` | Per milestone achieved |
 | 3b. Lock Rewards | Admin or AuthorizedCaller | `recordLockReward(partnerId, lockAmount, wallet)` | Per user lock event |
@@ -37,7 +37,7 @@ createPartner() → activatePartner() → recordMilestone() / recordLockReward()
 
 ## 3. IFRLock — Contract Reference
 
-### Read Functions (for partner resolvers)
+### Read Functions (for builder resolvers)
 
 ```solidity
 function isLocked(address user, uint256 minAmount) view returns (bool)
@@ -72,7 +72,7 @@ const IFR_LOCK_ABI = [
 
 ### lockType Convention
 
-Partners tag locks with a `bytes32` identifier for analytics:
+Builders tag locks with a `bytes32` identifier for analytics:
 
 ```javascript
 const lockType = ethers.utils.id("myapp_premium"); // keccak256 hash → bytes32
@@ -85,7 +85,7 @@ await lock.lockWithType(amount, lockType);
 
 ## 4. PartnerVault — Contract Reference
 
-### Partner Struct
+### Builder Struct
 
 ```solidity
 struct Partner {
@@ -103,7 +103,7 @@ struct Partner {
 }
 ```
 
-### Partner ID
+### Builder ID
 
 `bytes32 partnerId` — deterministic identifier, typically `keccak256(abi.encodePacked("partner_name"))`.
 
@@ -114,7 +114,7 @@ const partnerId = ethers.utils.id("my_partner"); // bytes32
 ### Admin Functions (via Governance Timelock)
 
 ```solidity
-// Partner management
+// Builder management
 function createPartner(bytes32 partnerId, address beneficiary, uint256 maxAllocation, uint32 vestingDuration, uint32 cliff, uint8 tier) external onlyAdmin
 function activatePartner(bytes32 partnerId) external onlyAdmin
 function recordMilestone(bytes32 partnerId, bytes32 milestoneId, uint256 unlockAmount) external onlyAdmin
@@ -214,7 +214,7 @@ User locks IFR via IFRLock
     → Contract calculates: reward = lockAmount × effectiveBps / 10000
     → reward added to partner.rewardAccrued
     → reward vests linearly (cliff → linear release)
-    → Partner calls claim() to withdraw vested amount
+    → Builder calls claim() to withdraw vested amount
 ```
 
 ### 5.2 Anti-Double-Count
@@ -225,9 +225,9 @@ Each `(wallet, partnerId)` combination can only be rewarded once:
 mapping(address => mapping(bytes32 => bool)) public walletRewardClaimed;
 ```
 
-- Same wallet + same partner → reverts with `"already rewarded"`
-- Same wallet + different partner → allowed
-- Different wallet + same partner → allowed
+- Same wallet + same builder → reverts with `"already rewarded"`
+- Same wallet + different builder → allowed
+- Different wallet + same builder → allowed
 
 Check before calling:
 
@@ -360,7 +360,7 @@ lock.on("Locked", async (user, amount, lockType) => {
 
 ---
 
-## 8. Partner Query — Full Example
+## 8. Builder Query — Full Example
 
 ```javascript
 const { ethers } = require("ethers");
@@ -374,7 +374,7 @@ const vault = new ethers.Contract(
 
 const partnerId = ethers.utils.id("my_partner");
 
-// Get partner info
+// Get builder info
 const info = await vault.partners(partnerId);
 console.log("Beneficiary:", info[0]);
 console.log("Max Allocation:", ethers.utils.formatUnits(info[1], 9), "IFR");
@@ -405,7 +405,7 @@ console.log("Emitted this year:", ethers.utils.formatUnits(yearlyEmitted, 9), "I
 
 ## 9. License Resolver — Minimal Backend
 
-Partners need a resolver to check if a user's wallet has enough IFR locked:
+Builders need a resolver to check if a user's wallet has enough IFR locked:
 
 ```javascript
 const { ethers } = require("ethers");
@@ -461,7 +461,7 @@ IFR has a 3.5% fee on every transfer (2% sender burn + 0.5% recipient burn + 1% 
 | User → User | **Yes** | 3.5% deducted |
 | External → PartnerVault | **Yes** | Unless sender is feeExempt |
 
-**For integrators:** Lock/unlock and claim operations are fee-free. No adjustment needed in your resolver logic.
+**For builders:** Lock/unlock and claim operations are fee-free. No adjustment needed in your resolver logic.
 
 ---
 
@@ -566,7 +566,7 @@ cast call 0x0Cab0A9440643128540222acC6eF5028736675d3 \
   0xYOUR_WALLET \
   --rpc-url $SEPOLIA_RPC_URL
 
-# Check partner claimable
+# Check builder claimable
 cast call 0x5F12C0bC616e9Ca347D48C33266aA8fe98490A39 \
   "claimable(bytes32)(uint256)" \
   $(cast keccak "my_partner") \
