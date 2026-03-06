@@ -1170,13 +1170,39 @@
     }
 
     // ===== Section 5: Burn Tracker =====
+    // Fallback minimum values (documented Community Safe transfer burn)
+    var FALLBACK_BURNED = 2100000;
+    var FALLBACK_SUPPLY = 997900000;
+    var burnDataLive = false;
+
+    function showBurnFallback() {
+      if (burnDataLive) return; // live data already loaded
+      document.getElementById('burn-total').textContent = '\u2265 ' + fmtNum(FALLBACK_BURNED) + ' IFR (estimated)';
+      document.getElementById('burn-pct').textContent = '\u2265 0.21%';
+      document.getElementById('burn-supply').textContent = '\u2264 ' + fmtNum(FALLBACK_SUPPLY) + ' IFR';
+      var sbEl = document.getElementById('supply-burned');
+      var sbpEl = document.getElementById('supply-burned-pct');
+      if (sbEl) sbEl.textContent = '\u2265 ' + fmtNum(FALLBACK_BURNED);
+      if (sbpEl) sbpEl.textContent = '\u2265 0.21%';
+    }
+
     function loadBurnData() {
-      // totalSupply via Etherscan token supply API
+      // Show fallback immediately on first load
+      if (!burnDataLive) showBurnFallback();
+
+      // Then attempt live API call with 5s timeout
       var url = BASE + '&module=stats&action=tokensupply&contractaddress=' + IFR_TOKEN +
         (API_KEY ? '&apikey=' + API_KEY : '');
 
-      fetch(url).then(function (r) { return r.json(); }).then(function (j) {
+      var controller = new AbortController();
+      var timer = setTimeout(function () { controller.abort(); }, 5000);
+
+      fetch(url, { signal: controller.signal }).then(function (r) {
+        clearTimeout(timer);
+        return r.json();
+      }).then(function (j) {
         if (j.status === '1' && j.result) {
+          burnDataLive = true;
           var currentSupply = parseFloat(j.result) / Math.pow(10, IFR_DECIMALS);
           var burned = INITIAL_SUPPLY - currentSupply;
           var pct = (burned / INITIAL_SUPPLY * 100);
@@ -1192,7 +1218,7 @@
           if (sbpEl) sbpEl.textContent = pct.toFixed(2) + '%';
         }
       }).catch(function () {
-        document.getElementById('burn-total').textContent = 'Updating\u2026';
+        // Fallback stays — no error shown
       });
     }
 
