@@ -438,7 +438,12 @@ app.post("/api/chat", async (req, res) => {
 });
 
 app.get("/api/health", (_req, res) => {
-  res.json({ status: "ok", apiKeySet: !!ANTHROPIC_API_KEY });
+  res.json({
+    status: "ok",
+    apiKeySet: !!ANTHROPIC_API_KEY,
+    etherscanKeySet: !!process.env.ETHERSCAN_API_KEY,
+    version: "2026-03-07-proxy",
+  });
 });
 
 // ── Etherscan Proxy — CORS-safe on-chain data for Landing + Transparency ──
