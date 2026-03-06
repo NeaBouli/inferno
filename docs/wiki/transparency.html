@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Transparency &mdash; Inferno ($IFR) Documentation</title>
+  <title>Live Transparency Report &mdash; Inferno ($IFR) Documentation</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -21,6 +21,7 @@
       --muted:    #8a8a96;
       --accent:   #ff4500;
       --green:    #22c55e;
+      --live:     #00ffa0;
       --sidebar-w: 240px;
     }
 
@@ -163,7 +164,7 @@
     .main {
       grid-column: 2;
       padding: 48px 56px;
-      max-width: 960px;
+      max-width: 1060px;
     }
 
     .main h1 {
@@ -173,9 +174,8 @@
       color: var(--text);
     }
 
-    .main h1 .accent {
-      color: var(--accent);
-    }
+    .main h1 .accent { color: var(--accent); }
+    .main h1 .live-accent { color: var(--live); }
 
     .main h2 {
       font-size: 22px;
@@ -195,7 +195,7 @@
       color: var(--muted);
       margin-bottom: 16px;
       font-size: 15px;
-      max-width: 680px;
+      max-width: 780px;
     }
 
     .main a {
@@ -203,9 +203,7 @@
       text-decoration: none;
     }
 
-    .main a:hover {
-      text-decoration: underline;
-    }
+    .main a:hover { text-decoration: underline; }
 
     .subtitle {
       font-size: 16px;
@@ -240,6 +238,8 @@
     }
 
     /* ---------- Tables ---------- */
+    .table-wrap { overflow-x: auto; }
+
     table {
       width: 100%;
       border-collapse: collapse;
@@ -302,20 +302,9 @@
       border-left-color: #f59e0b;
     }
 
-    /* ---------- Status Badge ---------- */
-    .status-ok {
-      color: var(--green);
-      font-weight: 600;
-    }
-
-    .status-testnet {
-      color: #f59e0b;
-      font-weight: 600;
-    }
-
-    .status-pending {
-      color: #f59e0b;
-      font-weight: 600;
+    .callout-live {
+      background: rgba(0, 255, 160, 0.04);
+      border-left-color: var(--live);
     }
 
     /* ---------- Address ---------- */
@@ -324,6 +313,93 @@
       font-size: 12px;
       color: var(--muted);
       word-break: break-all;
+    }
+
+    /* ---------- Live Indicator ---------- */
+    .live-dot {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #ef4444;
+      margin-right: 6px;
+      animation: pulse-live 1.5s ease-in-out infinite;
+      vertical-align: middle;
+    }
+
+    .live-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 3px 10px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      background: rgba(0, 255, 160, 0.08);
+      color: var(--live);
+      border: 1px solid rgba(0, 255, 160, 0.2);
+    }
+
+    @keyframes pulse-live {
+      0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+      50% { opacity: 0.5; box-shadow: 0 0 8px 2px rgba(239, 68, 68, 0.3); }
+    }
+
+    /* ---------- Stats Grid ---------- */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 16px;
+      margin: 24px 0;
+    }
+
+    .stat-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+    }
+
+    .stat-value {
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--accent);
+      margin-bottom: 4px;
+    }
+
+    .stat-value.live-value { color: var(--live); }
+
+    .stat-label {
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    /* ---------- Status badges ---------- */
+    .status-ok { color: var(--green); font-weight: 600; }
+    .status-pending { color: #f59e0b; font-weight: 600; }
+
+    /* ---------- Loading ---------- */
+    .loading {
+      color: var(--muted);
+      font-size: 13px;
+      font-style: italic;
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 14px;
+      height: 14px;
+      border: 2px solid var(--border);
+      border-top-color: var(--live);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      vertical-align: middle;
+      margin-right: 6px;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
     }
 
     /* ---------- Footer ---------- */
@@ -337,44 +413,20 @@
 
     /* ---------- Responsive ---------- */
     @media (max-width: 768px) {
-      .layout {
-        grid-template-columns: 1fr;
-      }
-
-      .sidebar {
-        transform: translateX(-100%);
-      }
-
-      .sidebar.open {
-        transform: translateX(0);
-      }
-
-      .sidebar-overlay.open {
-        display: block;
-      }
-
-      .hamburger {
-        display: flex;
-      }
-
-      .main {
-        grid-column: 1;
-        padding: 72px 20px 40px;
-      }
-
-      table {
-        font-size: 13px;
-      }
-
-      th, td {
-        padding: 10px 12px;
-      }
+      .layout { grid-template-columns: 1fr; }
+      .sidebar { transform: translateX(-100%); }
+      .sidebar.open { transform: translateX(0); }
+      .sidebar-overlay.open { display: block; }
+      .hamburger { display: flex; }
+      .main { grid-column: 1; padding: 72px 20px 40px; }
+      table { font-size: 13px; }
+      th, td { padding: 10px 12px; }
+      .stats-grid { grid-template-columns: 1fr 1fr; }
     }
 
     @media (max-width: 480px) {
-      .main h1 {
-        font-size: 26px;
-      }
+      .main h1 { font-size: 26px; }
+      .stats-grid { grid-template-columns: 1fr; }
     }
     /* ============================================================
        End Shared Styles
@@ -390,7 +442,6 @@
     <span></span>
   </button>
 
-  <!-- Overlay (mobile only) -->
   <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
   <div class="layout">
@@ -426,301 +477,267 @@
     <!-- Main content -->
     <main class="main">
 
-      <h1><span class="accent">On-Chain</span> Transparency Report</h1>
+      <!-- ===== SECTION 1: Hero ===== -->
+      <h1><span class="live-accent">Live</span> Transparency Report</h1>
       <p class="subtitle">
-        Every number is verifiable on Etherscan. No hidden wallets, no insider deals. All data sourced from Ethereum Mainnet.
+        Full on-chain audit trail &mdash; genesis to present. <span class="live-badge"><span class="live-dot"></span>LIVE</span>
       </p>
+      <p id="hero-timestamp" class="loading"><span class="spinner"></span>Connecting to Ethereum Mainnet&hellip;</p>
 
-      <div class="callout-green callout">
-        <p><strong>Verify yourself:</strong> All contracts are verified on <a href="https://etherscan.io/address/0x77e99917Eca8539c62F509ED1193ac36580A6e7B#code" target="_blank" rel="noopener">Etherscan</a>. Read contract state directly to verify every claim below.</p>
-      </div>
+      <!-- ===== SECTION 2: Live Wallet Balances ===== -->
+      <h2><span class="live-dot"></span> Wallet Balances</h2>
+      <p>Real-time ETH and IFR balances for all ecosystem addresses. Fetched directly from Ethereum Mainnet via Etherscan API.</p>
 
-      <!-- ========== CHECK 1: Contract Ownership ========== -->
-      <h2>CHECK 1: Contract Ownership</h2>
-      <p>Who controls each contract? Governance (Timelock) ownership means no single person can make instant changes &mdash; all modifications require a 48-hour delay.</p>
-
-      <table>
-        <thead>
-          <tr><th>Contract</th><th>Owner</th><th>Status</th></tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>InfernoToken</td>
-            <td class="address"><a href="https://etherscan.io/address/0xc43d48E7FDA576C5022d0670B652A622E8caD041">0xc43d...d041</a> (Governance)</td>
-            <td><span class="status-ok">OK</span></td>
-          </tr>
-          <tr>
-            <td>LiquidityReserve</td>
-            <td class="address"><a href="https://etherscan.io/address/0xc43d48E7FDA576C5022d0670B652A622E8caD041">0xc43d...d041</a> (Governance)</td>
-            <td><span class="status-ok">OK</span></td>
-          </tr>
-          <tr>
-            <td>BurnReserve</td>
-            <td class="address"><a href="https://etherscan.io/address/0xc43d48E7FDA576C5022d0670B652A622E8caD041">0xc43d...d041</a> (Governance)</td>
-            <td><span class="status-ok">OK</span></td>
-          </tr>
-          <tr>
-            <td>BuybackVault</td>
-            <td class="address"><a href="https://etherscan.io/address/0xc43d48E7FDA576C5022d0670B652A622E8caD041">0xc43d...d041</a> (Governance)</td>
-            <td><span class="status-ok">OK</span></td>
-          </tr>
-          <tr>
-            <td>PartnerVault</td>
-            <td>admin &rarr; Governance (set at deploy)</td>
-            <td><span class="status-ok">OK</span></td>
-          </tr>
-          <tr>
-            <td>FeeRouterV1</td>
-            <td>governance() &rarr; Governance (immutable)</td>
-            <td><span class="status-ok">OK</span></td>
-          </tr>
-          <tr>
-            <td>IFRLock</td>
-            <td>guardian &rarr; Deployer (emergency pause only)</td>
-            <td><span class="status-ok">OK</span></td>
-          </tr>
-          <tr>
-            <td>Vesting</td>
-            <td>guardian &rarr; Deployer (emergency pause only)</td>
-            <td><span class="status-ok">OK</span></td>
-          </tr>
-          <tr>
-            <td>Governance</td>
-            <td>owner &rarr; Deployer (pending transfer to Gnosis Safe)</td>
-            <td><span class="status-pending">Pending</span></td>
-          </tr>
-        </tbody>
-      </table>
-
-      <div class="callout callout-green">
-        <p><strong>Ownership Transfer Complete (2026-03-05):</strong> All 4 ownable contracts (InfernoToken, LiquidityReserve, BurnReserve, BuybackVault) transferred to Governance via <code>transferOwnership()</code>. PartnerVault admin was set to Governance at deploy. FeeRouterV1 governance is immutable. IFRLock and Vesting use guardian role (emergency pause only). Governance owner will be transferred to Gnosis Safe as a separate step.</p>
-      </div>
-
-      <!-- ========== CHECK 2: LP Token Ownership ========== -->
-      <h2>CHECK 2: LP Token Ownership</h2>
-      <p>Liquidity Pool tokens determine who can remove liquidity. On mainnet, these will be permanently burned.</p>
-
-      <table>
-        <thead>
-          <tr><th>Metric</th><th>Value</th></tr>
-        </thead>
-        <tbody>
-          <tr><td>LP Total Supply</td><td><code>63,245,553,203,367,586</code></td></tr>
-          <tr><td>Deployer LP Balance</td><td>~100%</td></tr>
-          <tr><td>Burned LP (0xdead)</td><td>0</td></tr>
-        </tbody>
-      </table>
-
-      <div class="callout callout-yellow">
-        <p><strong>Planned:</strong> LP Tokens will be permanently burned (sent to <code>0x000...dEaD</code>) or locked via Unicrypt after LP pairing. This locks liquidity permanently.</p>
-      </div>
-
-      <!-- ========== CHECK 3: Vesting Contract ========== -->
-      <h2>CHECK 3: Vesting Contract</h2>
-      <p>150M IFR (15% of supply) are locked in the Vesting contract with a 12-month cliff and 4-year linear release. No tokens can be withdrawn early.</p>
-
-      <table>
-        <thead>
-          <tr><th>Parameter</th><th>Value</th></tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Address</td>
-            <td class="address"><a href="https://etherscan.io/address/0x2694Bc84e8D5251E9E4Ecd4B2Ae3f866d6106271">0x2694...6271</a></td>
-          </tr>
-          <tr><td>IFR Balance</td><td>150,000,000 IFR (15%)</td></tr>
-          <tr><td>Beneficiary</td><td>Deployer (Team)</td></tr>
-          <tr><td>Cliff</td><td>365 days</td></tr>
-          <tr><td>Duration</td><td>1,460 days (4 years)</td></tr>
-          <tr><td>Released</td><td>0 IFR</td></tr>
-          <tr><td>Releasable Now</td><td>0 IFR (cliff not reached)</td></tr>
-          <tr><td>Paused</td><td>false</td></tr>
-        </tbody>
-      </table>
-
-      <!-- ========== CHECK 4: LiquidityReserve ========== -->
-      <h2>CHECK 4: LiquidityReserve</h2>
-      <p>200M IFR (20%) held in reserve for future liquidity needs. 6-month lock with staged 50M/quarter release.</p>
-
-      <table>
-        <thead>
-          <tr><th>Parameter</th><th>Value</th></tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Address</td>
-            <td class="address"><a href="https://etherscan.io/address/0xdc0309804803b3A105154f6073061E3185018f64">0xdc03...f64</a></td>
-          </tr>
-          <tr><td>IFR Balance</td><td>200,000,000 IFR (20%)</td></tr>
-        </tbody>
-      </table>
-
-      <!-- ========== CHECK 5: BuybackVault ========== -->
-      <h2>CHECK 5: BuybackVault</h2>
-      <p>Collects 1% pool fees from transfers. After 60-day activation, buys back IFR from Uniswap and burns 50%.</p>
-
-      <table>
-        <thead>
-          <tr><th>Parameter</th><th>Value</th></tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Address</td>
-            <td class="address"><a href="https://etherscan.io/address/0x670D293e3D65f96171c10DdC8d88B96b0570F812">0x670D...F812</a></td>
-          </tr>
-          <tr><td>IFR Balance</td><td>0 IFR (initial state)</td></tr>
-          <tr><td>Router</td><td>Uniswap V2 Router02</td></tr>
-          <tr><td>Slippage</td><td>5%</td></tr>
-          <tr><td>Burn Share</td><td>50%</td></tr>
-          <tr><td>Activation</td><td>60 days after deploy</td></tr>
-          <tr><td>Paused</td><td>false</td></tr>
-        </tbody>
-      </table>
-
-      <!-- ========== CHECK 6: FeeExempt Status ========== -->
-      <h2>CHECK 6: FeeExempt Status</h2>
-      <p>Contracts that handle IFR internally must be fee-exempt to prevent unexpected token loss during transfers.</p>
-
-      <table>
-        <thead>
-          <tr><th>Contract</th><th>feeExempt</th></tr>
-        </thead>
-        <tbody>
-          <tr><td>InfernoToken</td><td><span class="status-ok">true</span></td></tr>
-          <tr><td>IFRLock</td><td><span class="status-ok">true</span></td></tr>
-          <tr><td>LiquidityReserve</td><td><span class="status-ok">true</span></td></tr>
-          <tr><td>BuybackVault</td><td><span class="status-ok">true</span></td></tr>
-          <tr><td>BurnReserve</td><td><span class="status-ok">true</span></td></tr>
-          <tr><td>Governance</td><td>false (no IFR held)</td></tr>
-          <tr><td>PartnerVault v2</td><td><span class="status-ok">true</span> (executed 26.02.2026)</td></tr>
-          <tr><td>FeeRouterV1</td><td><span class="status-pending">Pending (next governance proposal)</span></td></tr>
-          <tr><td>LP Pair</td><td>false (fee applies to swaps)</td></tr>
-        </tbody>
-      </table>
-
-      <!-- ========== CHECK 7: PartnerVault ========== -->
-      <h2>CHECK 7: PartnerVault</h2>
-      <p>40M IFR (4%) allocated for builder ecosystem rewards. Governance-controlled, milestone-based, with algorithmic emission throttle.</p>
-
-      <table>
-        <thead>
-          <tr><th>Parameter</th><th>Value</th></tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Address</td>
-            <td class="address"><a href="https://etherscan.io/address/0xc6eb7714bCb035ebc2D4d9ba7B3762ef7B9d4F7D">0xc6eb...7B9d</a></td>
-          </tr>
-          <tr><td>IFR Balance</td><td>40,000,000 IFR (4.01%)</td></tr>
-          <tr><td>Admin</td><td>Governance (Timelock)</td></tr>
-          <tr><td>Reward Rate</td><td>1,500 bps (15%)</td></tr>
-          <tr><td>Annual Emission Cap</td><td>4,000,000 IFR</td></tr>
-          <tr><td>Total Rewarded</td><td>0 IFR</td></tr>
-          <tr><td>Algo Throttle</td><td>OFF (activates with first builder)</td></tr>
-        </tbody>
-      </table>
-
-      <!-- ========== CHECK 8: Token Supply Distribution ========== -->
-      <h2>CHECK 8: Token Supply Distribution</h2>
-      <p>Complete breakdown of where every IFR token is held. Totals are slightly below 1B due to permanent burns.</p>
-
-      <table>
-        <thead>
-          <tr><th>Wallet</th><th>IFR</th><th>%</th></tr>
-        </thead>
-        <tbody>
-          <tr><td><strong>Total Supply</strong></td><td><strong>997,999,575 IFR</strong></td><td><strong>100%</strong></td></tr>
-          <tr><td>LP Pair</td><td>400,000,000 IFR</td><td>40.08%</td></tr>
-          <tr><td>LiquidityReserve</td><td>200,000,000 IFR</td><td>20.04%</td></tr>
-          <tr><td>Vesting (Team)</td><td>150,000,000 IFR</td><td>15.03%</td></tr>
-          <tr><td>Deployer (Treasury + Community)</td><td>169,387,995 IFR</td><td>16.97%</td></tr>
-          <tr><td>PartnerVault</td><td>40,000,000 IFR</td><td>4.01%</td></tr>
-          <tr><td>Burned (since deploy)</td><td>2,000,425 IFR</td><td>0.20%</td></tr>
-        </tbody>
-      </table>
-
-      <div class="callout-green callout">
-        <p><strong>Deflation confirmed:</strong> 2,000,425+ IFR have been permanently burned since deployment. This number increases with every transfer. Supply can only decrease &mdash; there is no mint function.</p>
-      </div>
-
-      <!-- ========== Post-Deployment Status ========== -->
-      <h2>Post-Deployment Status</h2>
-      <p>Mainnet deployed on 2026-03-05. Remaining items tracked in <a href="../MAINNET_CHECKLIST.md">MAINNET_CHECKLIST.md</a>.</p>
-
-      <table>
-        <thead>
-          <tr><th>#</th><th>Action</th><th>Status</th></tr>
-        </thead>
-        <tbody>
-          <tr><td>1</td><td>Mainnet deploy (9 contracts)</td><td><span class="status-ok">Done (05.03.2026)</span></td></tr>
-          <tr><td>2</td><td>Etherscan verification (all 9)</td><td><span class="status-ok">Done (05.03.2026)</span></td></tr>
-          <tr><td>3</td><td>Token distribution (1B IFR, CFLM)</td><td><span class="status-ok">Done (05.03.2026)</span></td></tr>
-          <tr><td>4</td><td>Fee exemptions (8 addresses)</td><td><span class="status-ok">Done (05.03.2026)</span></td></tr>
-          <tr><td>5</td><td>Gnosis Safe deployed (1-of-1)</td><td><span class="status-ok">Done</span></td></tr>
-          <tr><td>6</td><td>LP Pairing (IFR/ETH, Uniswap V2)</td><td><span style="color:#f59e0b;font-weight:600;">Pending</span></td></tr>
-          <tr><td>7</td><td>LP Token lock/burn</td><td><span style="color:#ef4444;font-weight:600;">Critical</span></td></tr>
-          <tr><td>8</td><td>Ownership transfer &rarr; Governance</td><td><span class="status-ok">Done (05.03.2026)</span></td></tr>
-          <tr><td>9</td><td>Multisig expand (1-of-1 &rarr; 4-of-7)</td><td><span style="color:#f59e0b;font-weight:600;">Pending</span></td></tr>
-        </tbody>
-      </table>
-
-      <!-- ========== Verify ========== -->
-      <h2>How to Verify</h2>
-      <p>All data in this report can be independently verified:</p>
-
-      <pre><code>git clone https://github.com/NeaBouli/inferno
-cd inferno
-npm install
-# All contracts are verified on Etherscan — read state directly
-# Or run tests locally:
-npx hardhat test</code></pre>
-
-      <p>Or verify directly on Etherscan:</p>
-      <ul>
-        <li><a href="https://etherscan.io/address/0x77e99917Eca8539c62F509ED1193ac36580A6e7B#readContract">InfernoToken &mdash; Read Contract</a></li>
-        <li><a href="https://etherscan.io/address/0x2694Bc84e8D5251E9E4Ecd4B2Ae3f866d6106271">Vesting Contract</a></li>
-        <li><a href="https://etherscan.io/address/0xc43d48E7FDA576C5022d0670B652A622E8caD041">Governance (Timelock)</a></li>
-        <li><a href="https://etherscan.io/address/0xc6eb7714bCb035ebc2D4d9ba7B3762ef7B9d4F7D">PartnerVault v2</a></li>
-        <li>LP Pair (IFR/WETH) &mdash; TBD (published after LP creation)</li>
-      </ul>
-
-      <!-- ========== Live Transaction Feed ========== -->
-      <h2>Live Transaction Feed</h2>
-      <p>Real-time on-chain activity for all IFR ecosystem addresses. Auto-refreshes every 60 seconds.</p>
-
-      <div id="txfeed-status" style="font-size:13px;color:var(--muted);margin-bottom:12px;">Loading&hellip;</div>
-
-      <h3>EOA &amp; Safe Wallets</h3>
-      <div style="overflow-x:auto;">
-        <table id="txfeed-wallets">
+      <h3>EOA Wallets</h3>
+      <div class="table-wrap">
+        <table>
           <thead>
-            <tr><th>Date (UTC)</th><th>From</th><th>To</th><th>Amount</th><th>Type</th><th>TX</th></tr>
+            <tr><th>Role</th><th>Address</th><th>ETH</th><th>IFR</th></tr>
           </thead>
-          <tbody>
-            <tr><td colspan="6" style="color:var(--muted)">Loading&hellip;</td></tr>
+          <tbody id="tbl-eoa">
+            <tr><td colspan="4" class="loading"><span class="spinner"></span>Loading&hellip;</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Safe Multisigs</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Role</th><th>Address</th><th>ETH</th><th>IFR</th></tr>
+          </thead>
+          <tbody id="tbl-safe">
+            <tr><td colspan="4" class="loading"><span class="spinner"></span>Loading&hellip;</td></tr>
           </tbody>
         </table>
       </div>
 
       <h3>Smart Contracts</h3>
-      <div style="overflow-x:auto;">
-        <table id="txfeed-contracts">
+      <div class="table-wrap">
+        <table>
           <thead>
-            <tr><th>Date (UTC)</th><th>From</th><th>To</th><th>Amount</th><th>Type</th><th>TX</th></tr>
+            <tr><th>Contract</th><th>Address</th><th>ETH</th><th>IFR</th></tr>
           </thead>
-          <tbody>
-            <tr><td colspan="6" style="color:var(--muted)">Loading&hellip;</td></tr>
+          <tbody id="tbl-contracts">
+            <tr><td colspan="4" class="loading"><span class="spinner"></span>Loading&hellip;</td></tr>
           </tbody>
         </table>
       </div>
 
-      <p style="margin-top:32px;font-size:13px;color:var(--muted);font-style:italic;">
-        All data from Ethereum Mainnet. Last updated: March 2026 | Version 2.0
-      </p>
+      <!-- ===== SECTION 3: Genesis Documentation ===== -->
+      <h2>Protocol Genesis &mdash; Deployment History</h2>
+      <p>Complete chronological record of all mainnet deployment transactions on March 5, 2026.</p>
+
+      <h3>Contract Deployments (00:24&ndash;00:31 UTC)</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Time (UTC)</th><th>Action</th><th>Contract</th><th>TX</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>00:24:47</td><td>Deploy</td><td>InfernoToken</td><td><a href="https://etherscan.io/tx/0xbca47e278fe5ef57dd481c26818aee11177fbdc3170522adc66ca0e4de4610f2" target="_blank">0xbca47e27&hellip;</a></td></tr>
+            <tr><td>00:27:11</td><td>Deploy</td><td>Governance</td><td><a href="https://etherscan.io/tx/0xb93eb2c69416c86efe5b59501479f52f269cfbc9de55bca043363cc459a2c654" target="_blank">0xb93eb2c6&hellip;</a></td></tr>
+            <tr><td>00:29:47</td><td>Deploy</td><td>IFRLock</td><td><a href="https://etherscan.io/tx/0xf2a1ce58e34207278d417079e2a6d010ed516b171aad9d84234c307ad53219ce" target="_blank">0xf2a1ce58&hellip;</a></td></tr>
+            <tr><td>00:29:59</td><td>Deploy</td><td>BurnReserve</td><td><a href="https://etherscan.io/tx/0x06c661c9a2e0eefba06be05584d793a617d6931a43a9a14214af260859d2d282" target="_blank">0x06c661c9&hellip;</a></td></tr>
+            <tr><td>00:30:11</td><td>Deploy</td><td>BuybackVault</td><td><a href="https://etherscan.io/tx/0x8c41a2ca40862698e3b74f2493c1e04eb6978ca655decec21dd1fd071e0f6ec4" target="_blank">0x8c41a2ca&hellip;</a></td></tr>
+            <tr><td>00:30:23</td><td>Deploy</td><td>PartnerVault</td><td><a href="https://etherscan.io/tx/0x8187f2d6bfd6301476fc9eb07889333dbc30d55060e8fe84588edda38949899d" target="_blank">0x8187f2d6&hellip;</a></td></tr>
+            <tr><td>00:30:35</td><td>Deploy</td><td>FeeRouterV1</td><td><a href="https://etherscan.io/tx/0x2a771cdb6408720e270b4f563df7c97c65c9f959425d5f7162544485af4e9e22" target="_blank">0x2a771cdb&hellip;</a></td></tr>
+            <tr><td>00:30:47</td><td>Deploy</td><td>Vesting</td><td><a href="https://etherscan.io/tx/0x6eeb1c24e2c9ed4b450535003bdd24289d6034f0c86f413d5727fae34d5d9e8f" target="_blank">0x6eeb1c24&hellip;</a></td></tr>
+            <tr><td>00:30:59</td><td>Deploy</td><td>LiquidityReserve</td><td><a href="https://etherscan.io/tx/0x5fe1eb14d7326cad1ced2d7c8ae2412d45a5a50c8502eebd25f6964dad7f15ae" target="_blank">0x5fe1eb14&hellip;</a></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Fee Exemptions (00:31&ndash;00:34 UTC)</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Time (UTC)</th><th>Target</th><th>TX</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>00:31:11</td><td>setFeeExempt &mdash; IFRLock</td><td><a href="https://etherscan.io/tx/0xb16558d08fba2fdbb3bc8879959e4d776609877dccc70c574a836f06be799cee" target="_blank">0xb16558d0&hellip;</a></td></tr>
+            <tr><td>00:31:23</td><td>setFeeExempt &mdash; BurnReserve</td><td><a href="https://etherscan.io/tx/0x11263efc8531b12af710813be78018479aac21f52a399113e08c03519c1c1830" target="_blank">0x11263efc&hellip;</a></td></tr>
+            <tr><td>00:31:35</td><td>setFeeExempt &mdash; BuybackVault</td><td><a href="https://etherscan.io/tx/0x93946cb1fe0cc482ffccf2dea9209f4655e25ab5a3e2f2b6ed8511933cc084b6" target="_blank">0x93946cb1&hellip;</a></td></tr>
+            <tr><td>00:31:47</td><td>setFeeExempt &mdash; PartnerVault</td><td><a href="https://etherscan.io/tx/0x37d45a3825969630e7abd9cd11ccf4b78c26f11734ecc9895e27845873a2d6ed" target="_blank">0x37d45a38&hellip;</a></td></tr>
+            <tr><td>00:31:59</td><td>setFeeExempt &mdash; FeeRouterV1</td><td><a href="https://etherscan.io/tx/0xeb0fb055cf0cee226324e6c7a897e14de0bc0d20e6b73f4910bfc391c3be3393" target="_blank">0xeb0fb055&hellip;</a></td></tr>
+            <tr><td>00:32:11</td><td>setFeeExempt &mdash; Vesting</td><td><a href="https://etherscan.io/tx/0x2bb0b37d9757724c53424da3bcaaa9a93cb4f486f6409dcc5aa5c8284fe5ef8d" target="_blank">0x2bb0b37d&hellip;</a></td></tr>
+            <tr><td>00:32:35</td><td>setFeeExempt &mdash; LiquidityReserve</td><td><a href="https://etherscan.io/tx/0xc9c1227a3507c8ce6fa2956b2d388299348dbb0640dd30526cdc9b5b15cad2dc" target="_blank">0xc9c1227a&hellip;</a></td></tr>
+            <tr><td>00:32:47</td><td>setFeeExempt &mdash; Governance</td><td><a href="https://etherscan.io/tx/0xb761ac010f7ded6e5b84627a6ae57b358ef53cbc021c3ee380c9c33ede2d5c79" target="_blank">0xb761ac01&hellip;</a></td></tr>
+            <tr><td>00:34:11</td><td>setFeeExempt &mdash; InfernoToken</td><td><a href="https://etherscan.io/tx/0xe22ad74cdb21102712dfda5c7100f4594525473f309f8b76341d6cd3e52b60d6" target="_blank">0xe22ad74c&hellip;</a></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Token Distribution (00:32&ndash;00:33 UTC)</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Time (UTC)</th><th>Recipient</th><th>Amount</th><th>TX</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>00:32:59</td><td>LiquidityReserve (20%)</td><td>200,000,000 IFR</td><td><a href="https://etherscan.io/tx/0xced0d769afaef1d9c4990245922204cb0dee939d2c2d6e7a8ded3b79919ec70b" target="_blank">0xced0d769&hellip;</a></td></tr>
+            <tr><td>00:33:23</td><td>Vesting (15%)</td><td>150,000,000 IFR</td><td><a href="https://etherscan.io/tx/0x928b70f6198eff635565d97997d16c596f17d4d04fbd0f4e492bee18fbe1a142" target="_blank">0x928b70f6&hellip;</a></td></tr>
+            <tr><td>00:33:35</td><td>Treasury EOA (15%)</td><td>150,000,000 IFR</td><td><a href="https://etherscan.io/tx/0x9f2a036387f110cfa6054131501558aa43698b2a56a9fc29af3cd56be4f04f4a" target="_blank">0x9f2a0363&hellip;</a></td></tr>
+            <tr><td>00:33:47</td><td>Community EOA (6%)</td><td>60,000,000 IFR</td><td><a href="https://etherscan.io/tx/0xc792145344dc73ac8fed14f10bcbfd30d9880ea1bb1ad884122b39ed88a4e2b5" target="_blank">0xc7921453&hellip;</a></td></tr>
+            <tr><td>00:33:59</td><td>PartnerVault (4%)</td><td>40,000,000 IFR</td><td><a href="https://etherscan.io/tx/0x3a5d71dae7cc425f68585f8b5012f2e74136c76396021271717fa8608a8053cb" target="_blank">0x3a5d71da&hellip;</a></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p style="font-size:13px;"><strong>Remaining 400M IFR (40%)</strong> stayed on the Deployer wallet, reserved for DEX LP pairing.</p>
+
+      <h3>Ownership Transfers (18:54&ndash;18:55 UTC)</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Time (UTC)</th><th>Contract</th><th>New Owner</th><th>TX</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>18:54:35</td><td>InfernoToken</td><td>Governance</td><td><a href="https://etherscan.io/tx/0x0fc4684cfec94ecd3573344f892928c8d52c2074d5833b01e6e1c83616ed5e76" target="_blank">0x0fc4684c&hellip;</a></td></tr>
+            <tr><td>18:54:47</td><td>LiquidityReserve</td><td>Governance</td><td><a href="https://etherscan.io/tx/0x34650ee45d111dc3b8ea5eb72b0b7753aada03977f0d17e37d05c07f6d12c7d4" target="_blank">0x34650ee4&hellip;</a></td></tr>
+            <tr><td>18:54:59</td><td>BurnReserve</td><td>Governance</td><td><a href="https://etherscan.io/tx/0x757d519b303f1e775ada75fcdfcaa1b86218e76e13d2750e224e448ab0ca5b1a" target="_blank">0x757d519b&hellip;</a></td></tr>
+            <tr><td>18:55:11</td><td>BuybackVault</td><td>Governance</td><td><a href="https://etherscan.io/tx/0xcd03786978f402c768d3b270770211019918b5a232eb9884ab0f2bcdafea3971" target="_blank">0xcd037869&hellip;</a></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Post-Genesis: Community &amp; Treasury Migration (06.03.2026)</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Time (UTC)</th><th>Transfer</th><th>Sent</th><th>Received</th><th>Note</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>~19:30</td>
+              <td>Community EOA &rarr; Community Safe</td>
+              <td>60,000,000 IFR</td>
+              <td>57,900,000 IFR</td>
+              <td style="color:#f59e0b;font-size:12px;">2.1M burned (Community EOA was not feeExempt)</td>
+            </tr>
+            <tr>
+              <td>~19:45</td>
+              <td>Treasury EOA &rarr; Treasury Safe</td>
+              <td>150,000,000 IFR</td>
+              <td>150,000,000 IFR</td>
+              <td style="color:var(--green);font-size:12px;">feeExempt transfer (zero burn)</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout callout-yellow">
+        <p><strong>Transparency note:</strong> The Community EOA transfer was not fee-exempt, resulting in 2,100,000 IFR burned (3.5% fee). This is documented here for complete transparency. The Treasury transfer was fee-exempt (0 IFR burned).</p>
+      </div>
+
+      <!-- ===== SECTION 4: Live TX Feed ===== -->
+      <h2><span class="live-dot"></span> Live Transaction Feed</h2>
+      <p>Last 20 transactions across all ecosystem addresses. Auto-refreshes every 60 seconds.</p>
+
+      <div id="txfeed-status" class="loading"><span class="spinner"></span>Loading transactions&hellip;</div>
+      <div class="table-wrap">
+        <table id="txfeed-table">
+          <thead>
+            <tr><th>Time (UTC)</th><th>Wallet / Contract</th><th>Dir</th><th>Amount</th><th>Type</th><th>TX</th></tr>
+          </thead>
+          <tbody id="txfeed-body">
+            <tr><td colspan="6" class="loading"><span class="spinner"></span>Loading&hellip;</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- ===== SECTION 5: Burn Tracker ===== -->
+      <h2><span class="live-dot"></span> IFR Burn Tracker</h2>
+      <p>Every transfer burns IFR permanently. No mint function exists &mdash; supply can only decrease.</p>
+
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-value live-value" id="burn-total">--</div>
+          <div class="stat-label">Total IFR Burned</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value live-value" id="burn-pct">--</div>
+          <div class="stat-label">% of Initial Supply</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="burn-supply">--</div>
+          <div class="stat-label">Current Supply</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="burn-initial">1,000,000,000</div>
+          <div class="stat-label">Initial Supply (Fixed)</div>
+        </div>
+      </div>
+
+      <div class="callout callout-live">
+        <p><strong>Deflation is permanent:</strong> There is no <code>mint()</code> function in the InfernoToken contract. Every transfer applies a 3.5% fee (2% sender burn + 0.5% recipient burn + 1% pool fee). Supply decreases with every transaction.</p>
+      </div>
+
+      <!-- ===== SECTION 6: Governance Status ===== -->
+      <h2>Governance Status</h2>
+
+      <h3>Active Proposals</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>ID</th><th>Action</th><th>Target</th><th>ETA</th><th>Status</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>#0</td>
+              <td><code>setFeeExempt(BootstrapVault, true)</code></td>
+              <td>InfernoToken</td>
+              <td>07.03.2026 20:12 CET</td>
+              <td><span class="status-pending">Pending</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Governance Parameters</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Parameter</th><th>Value</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Timelock Delay</td><td>48 hours (172,800 seconds)</td></tr>
+            <tr><td>Governance Owner</td><td class="address"><a href="https://etherscan.io/address/0x6b36687b0cd4386fb14cf565B67D7862110Fed67">0x6b36...ed67</a> (Deployer &mdash; transfer to Gnosis Safe pending)</td></tr>
+            <tr><td>Guardian</td><td class="address"><a href="https://etherscan.io/address/0x6b36687b0cd4386fb14cf565B67D7862110Fed67">0x6b36...ed67</a> (Deployer &mdash; can cancel proposals only)</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Safe Multisig Status</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Safe</th><th>Address</th><th>Config</th><th>Planned Upgrade</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Treasury Safe</td>
+              <td class="address"><a href="https://etherscan.io/address/0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b">0x5ad6...cE3b</a></td>
+              <td>1-of-1 (Deployer)</td>
+              <td><span class="status-pending">Upgrade to 2-of-4</span></td>
+            </tr>
+            <tr>
+              <td>Community Safe</td>
+              <td class="address"><a href="https://etherscan.io/address/0xaC5687547B2B21d80F8fd345B51e608d476667C7">0xaC56...67C7</a></td>
+              <td>1-of-2 (Deployer + Voucher)</td>
+              <td><span class="status-pending">Upgrade to 2-of-4</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout callout-green">
+        <p><strong>Decentralization roadmap:</strong> Governance owner will be transferred from Deployer to Treasury Safe (Gnosis Safe). Safe threshold will be expanded from 1-of-1 to 2-of-4 signers. Full DAO governance is planned for Phase 4.</p>
+      </div>
 
       <!-- Footer -->
       <footer class="wiki-footer">
-        Inferno ($IFR) &mdash; Community Fair Launch Model &mdash; Documentation v1.0
+        Inferno ($IFR) &mdash; Live Transparency Report &mdash; Documentation v2.0
       </footer>
 
     </main>
@@ -732,71 +749,74 @@ npx hardhat test</code></pre>
       var hamburger = document.getElementById('hamburger');
       var sidebar = document.getElementById('sidebar');
       var overlay = document.getElementById('sidebarOverlay');
-
       function toggleSidebar() {
         var isOpen = sidebar.classList.toggle('open');
         hamburger.classList.toggle('open', isOpen);
         overlay.classList.toggle('open', isOpen);
         document.body.style.overflow = isOpen ? 'hidden' : '';
       }
-
       hamburger.addEventListener('click', toggleSidebar);
       overlay.addEventListener('click', toggleSidebar);
     })();
   </script>
 
-  <!-- Live Transaction Feed Script -->
+  <!-- ===== Live Data Script ===== -->
   <script>
   (function () {
     var IFR_TOKEN = '0x77e99917Eca8539c62F509ED1193ac36580A6e7B';
     var IFR_DECIMALS = 9;
-
-    var WALLETS = {
-      '0x6b36687b0cd4386fb14cf565B67D7862110Fed67': 'Deployer',
-      '0x17F8DD6dECCb3ff5d95691982B85A87d7d9872d4': 'Voucher Signer',
-      '0x04FABC52c51d1F8ced6974E7C25a34249b1E6239': 'Team Beneficiary',
-      '0xaC5687547B2B21d80F8fd345B51e608d476667C7': 'Community Safe',
-      '0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b': 'Treasury Safe'
-    };
-
-    var CONTRACTS = {
-      '0x77e99917Eca8539c62F509ED1193ac36580A6e7B': 'InfernoToken',
-      '0xc43d48E7FDA576C5022d0670B652A622E8caD041': 'Governance',
-      '0x769928aBDfc949D0718d8766a1C2d7dBb63954Eb': 'IFRLock',
-      '0xaA1496133B6c274190A2113410B501C5802b6fCF': 'BurnReserve',
-      '0x670D293e3D65f96171c10DdC8d88B96b0570F812': 'BuybackVault',
-      '0xc6eb7714bCb035ebc2D4d9ba7B3762ef7B9d4F7D': 'PartnerVault',
-      '0x4807B77B2E25cD055DA42B09BA4d0aF9e580C60a': 'FeeRouterV1',
-      '0x2694Bc84e8D5251E9E4Ecd4B2Ae3f866d6106271': 'Vesting',
-      '0xdc0309804803b3A105154f6073061E3185018f64': 'LiquidityReserve',
-      '0xA820540936d18e1377C39dd9445E5b36F3F1261a': 'BootstrapVault'
-    };
-
-    var ALL_ADDRESSES = Object.assign({}, WALLETS, CONTRACTS);
+    var INITIAL_SUPPLY = 1000000000;
     var API_KEY = (window.__ETHERSCAN_KEY__ || '');
     var BASE = 'https://api.etherscan.io/v2/api?chainid=1';
 
-    function shortAddr(addr) {
-      if (!addr || addr.length < 10) return addr || '—';
-      var label = ALL_ADDRESSES[addr] || ALL_ADDRESSES[addr.toLowerCase()];
-      for (var key in ALL_ADDRESSES) {
-        if (key.toLowerCase() === addr.toLowerCase()) { label = ALL_ADDRESSES[key]; break; }
-      }
-      var short = addr.slice(0, 6) + '...' + addr.slice(-4);
-      return label ? label : short;
+    var EOA = [
+      { label: 'Deployer', addr: '0x6b36687b0cd4386fb14cf565B67D7862110Fed67' },
+      { label: 'Voucher Signer', addr: '0x17F8DD6dECCb3ff5d95691982B85A87d7d9872d4' },
+      { label: 'Team Beneficiary', addr: '0x04FABC52c51d1F8ced6974E7C25a34249b1E6239' },
+      { label: 'Community EOA', addr: '0x61aF4E72C77b58F4b50964Ee93d420750Cd9857E' },
+      { label: 'Treasury EOA', addr: '0xC8f4B45fA0C4727E9b27c13Af3d000C922a2ac9c' }
+    ];
+
+    var SAFES = [
+      { label: 'Treasury Safe', addr: '0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b' },
+      { label: 'Community Safe', addr: '0xaC5687547B2B21d80F8fd345B51e608d476667C7' }
+    ];
+
+    var CONTRACTS = [
+      { label: 'InfernoToken', addr: '0x77e99917Eca8539c62F509ED1193ac36580A6e7B' },
+      { label: 'Governance', addr: '0xc43d48E7FDA576C5022d0670B652A622E8caD041' },
+      { label: 'IFRLock', addr: '0x769928aBDfc949D0718d8766a1C2d7dBb63954Eb' },
+      { label: 'BurnReserve', addr: '0xaA1496133B6c274190A2113410B501C5802b6fCF' },
+      { label: 'BuybackVault', addr: '0x670D293e3D65f96171c10DdC8d88B96b0570F812' },
+      { label: 'PartnerVault', addr: '0xc6eb7714bCb035ebc2D4d9ba7B3762ef7B9d4F7D' },
+      { label: 'FeeRouterV1', addr: '0x4807B77B2E25cD055DA42B09BA4d0aF9e580C60a' },
+      { label: 'Vesting', addr: '0x2694Bc84e8D5251E9E4Ecd4B2Ae3f866d6106271' },
+      { label: 'LiquidityReserve', addr: '0xdc0309804803b3A105154f6073061E3185018f64' },
+      { label: 'BootstrapVault', addr: '0xA820540936d18e1377C39dd9445E5b36F3F1261a' }
+    ];
+
+    var ALL = EOA.concat(SAFES).concat(CONTRACTS);
+    var LABEL_MAP = {};
+    ALL.forEach(function (e) { LABEL_MAP[e.addr.toLowerCase()] = e.label; });
+
+    function shortAddr(a) {
+      if (!a || a.length < 10) return a || '\u2014';
+      return a.slice(0, 6) + '\u2026' + a.slice(-4);
     }
 
-    function etherscanLink(hash) {
-      var short = hash.slice(0, 10) + '...';
-      return '<a href="https://etherscan.io/tx/' + hash + '" target="_blank" rel="noopener">' + short + '</a>';
+    function addrLabel(a) {
+      return LABEL_MAP[a.toLowerCase()] || shortAddr(a);
     }
 
-    function addrLink(addr) {
-      var display = shortAddr(addr);
-      return '<a href="https://etherscan.io/address/' + addr + '" target="_blank" rel="noopener" style="color:var(--muted)">' + display + '</a>';
+    function addrLink(a) {
+      return '<a href="https://etherscan.io/address/' + a + '" target="_blank" style="color:var(--muted)">' + addrLabel(a) + '</a>';
     }
 
-    function formatDate(ts) {
+    function txLink(h) {
+      return '<a href="https://etherscan.io/tx/' + h + '" target="_blank">' + h.slice(0, 10) + '\u2026</a>';
+    }
+
+    function fmtDate(ts) {
       var d = new Date(parseInt(ts) * 1000);
       return d.getUTCFullYear() + '-' +
         String(d.getUTCMonth() + 1).padStart(2, '0') + '-' +
@@ -805,140 +825,211 @@ npx hardhat test</code></pre>
         String(d.getUTCMinutes()).padStart(2, '0');
     }
 
-    function formatETH(wei) {
-      var eth = parseFloat(wei) / 1e18;
-      if (eth === 0) return '0';
-      if (eth < 0.0001) return '<0.0001 ETH';
-      return eth.toFixed(4) + ' ETH';
+    function fmtETH(wei) {
+      var e = parseFloat(wei) / 1e18;
+      if (e === 0) return '0';
+      if (e < 0.0001) return '<0.0001';
+      return e.toFixed(4);
     }
 
-    function formatIFR(raw) {
-      var val = parseFloat(raw) / Math.pow(10, IFR_DECIMALS);
-      if (val >= 1e6) return (val / 1e6).toFixed(1) + 'M IFR';
-      if (val >= 1e3) return (val / 1e3).toFixed(1) + 'K IFR';
-      return val.toFixed(0) + ' IFR';
+    function fmtIFR(raw) {
+      var v = parseFloat(raw) / Math.pow(10, IFR_DECIMALS);
+      if (v >= 1e6) return (v / 1e6).toFixed(2) + 'M';
+      if (v >= 1e3) return (v / 1e3).toFixed(1) + 'K';
+      return v.toFixed(0);
     }
 
-    function fetchAPI(module, action, address, extra) {
+    function fmtNum(n) { return n.toLocaleString('en-US'); }
+
+    function esCall(module, action, address, extra) {
       var url = BASE + '&module=' + module + '&action=' + action +
-        '&address=' + address + '&page=1&offset=10&sort=desc' +
-        (extra || '') + (API_KEY ? '&apikey=' + API_KEY : '');
+        '&address=' + address + (extra || '') + (API_KEY ? '&apikey=' + API_KEY : '');
       return fetch(url).then(function (r) { return r.json(); }).then(function (j) {
-        if (j.status === '1' && Array.isArray(j.result)) return j.result;
-        return [];
-      }).catch(function () { return []; });
+        if (j.status === '1' && j.result) return j.result;
+        return j.result || '0';
+      }).catch(function () { return '0'; });
     }
 
-    function buildRows(txs, tokenTxs) {
-      var combined = [];
-      txs.forEach(function (tx) {
-        if (tx.isError === '1') return;
-        combined.push({
-          ts: tx.timeStamp,
-          from: tx.from,
-          to: tx.to,
-          amount: formatETH(tx.value),
-          type: 'ETH',
-          hash: tx.hash
+    function esTokenBalance(addr) {
+      return esCall('account', 'tokenbalance', addr, '&contractaddress=' + IFR_TOKEN + '&tag=latest');
+    }
+
+    function esTxList(addr) {
+      return esCall('account', 'txlist', addr, '&page=1&offset=10&sort=desc');
+    }
+
+    function esTokenTx(addr) {
+      return esCall('account', 'tokentx', addr, '&contractaddress=' + IFR_TOKEN + '&page=1&offset=10&sort=desc');
+    }
+
+    // ===== Section 2: Balance Tables =====
+    function loadBalances() {
+      var groups = [
+        { items: EOA, tbodyId: 'tbl-eoa' },
+        { items: SAFES, tbodyId: 'tbl-safe' },
+        { items: CONTRACTS, tbodyId: 'tbl-contracts' }
+      ];
+
+      groups.forEach(function (g) {
+        var promises = g.items.map(function (item) {
+          return Promise.all([
+            esCall('account', 'balance', item.addr, '&tag=latest'),
+            esTokenBalance(item.addr)
+          ]).then(function (res) {
+            return { label: item.label, addr: item.addr, eth: res[0], ifr: res[1] };
+          });
+        });
+
+        Promise.all(promises).then(function (results) {
+          var tbody = document.getElementById(g.tbodyId);
+          tbody.innerHTML = results.map(function (r) {
+            var ethVal = typeof r.eth === 'string' ? r.eth : '0';
+            var ifrVal = typeof r.ifr === 'string' ? r.ifr : '0';
+            return '<tr>' +
+              '<td><strong>' + r.label + '</strong></td>' +
+              '<td class="address"><a href="https://etherscan.io/address/' + r.addr + '" target="_blank">' + shortAddr(r.addr) + '</a></td>' +
+              '<td>' + fmtETH(ethVal) + ' ETH</td>' +
+              '<td>' + fmtIFR(ifrVal) + ' IFR</td>' +
+              '</tr>';
+          }).join('');
+        }).catch(function () {
+          document.getElementById(g.tbodyId).innerHTML =
+            '<tr><td colspan="4" style="color:#ef4444">Error loading balances. Retrying in 60s&hellip;</td></tr>';
         });
       });
-      tokenTxs.forEach(function (tx) {
-        if (tx.contractAddress.toLowerCase() !== IFR_TOKEN.toLowerCase()) return;
-        combined.push({
-          ts: tx.timeStamp,
-          from: tx.from,
-          to: tx.to,
-          amount: formatIFR(tx.value),
-          type: 'IFR',
-          hash: tx.hash
-        });
-      });
-      var seen = {};
-      combined = combined.filter(function (r) {
-        var key = r.hash + r.type + r.from + r.to;
-        if (seen[key]) return false;
-        seen[key] = true;
-        return true;
-      });
-      combined.sort(function (a, b) { return parseInt(b.ts) - parseInt(a.ts); });
-      return combined.slice(0, 10);
     }
 
-    function renderTable(tableId, rows) {
-      var tbody = document.querySelector('#' + tableId + ' tbody');
-      if (rows.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" style="color:var(--muted)">No transactions found</td></tr>';
-        return;
-      }
-      tbody.innerHTML = rows.map(function (r) {
-        return '<tr>' +
-          '<td>' + formatDate(r.ts) + '</td>' +
-          '<td>' + addrLink(r.from) + '</td>' +
-          '<td>' + addrLink(r.to) + '</td>' +
-          '<td>' + r.amount + '</td>' +
-          '<td><code>' + r.type + '</code></td>' +
-          '<td>' + etherscanLink(r.hash) + '</td>' +
-          '</tr>';
-      }).join('');
-    }
-
-    function loadFeed() {
+    // ===== Section 4: Live TX Feed =====
+    function loadTxFeed() {
       var statusEl = document.getElementById('txfeed-status');
-      var now = new Date();
-      statusEl.textContent = 'Fetching on-chain data...';
+      var allAddrs = ALL.slice(0, 7); // Limit API calls: EOAs + Safes only
 
-      var walletAddrs = Object.keys(WALLETS);
-      var contractAddrs = Object.keys(CONTRACTS);
-
-      var walletPromises = [];
-      walletAddrs.forEach(function (addr) {
-        walletPromises.push(fetchAPI('account', 'txlist', addr));
-        walletPromises.push(fetchAPI('account', 'tokentx', addr, '&contractaddress=' + IFR_TOKEN));
+      var promises = [];
+      allAddrs.forEach(function (item) {
+        promises.push(esTxList(item.addr));
+        promises.push(esTokenTx(item.addr));
       });
 
-      var contractPromises = [];
-      contractAddrs.forEach(function (addr) {
-        contractPromises.push(fetchAPI('account', 'txlist', addr));
-        contractPromises.push(fetchAPI('account', 'tokentx', addr, '&contractaddress=' + IFR_TOKEN));
-      });
+      Promise.all(promises).then(function (results) {
+        var combined = [];
+        var seen = {};
 
-      Promise.all(walletPromises).then(function (results) {
-        var allEthTxs = [];
-        var allTokenTxs = [];
         for (var i = 0; i < results.length; i += 2) {
-          allEthTxs = allEthTxs.concat(results[i]);
-          allTokenTxs = allTokenTxs.concat(results[i + 1]);
-        }
-        var rows = buildRows(allEthTxs, allTokenTxs);
-        renderTable('txfeed-wallets', rows);
-      });
+          var ethTxs = Array.isArray(results[i]) ? results[i] : [];
+          var tokenTxs = Array.isArray(results[i + 1]) ? results[i + 1] : [];
+          var walletLabel = allAddrs[i / 2].label;
 
-      Promise.all(contractPromises).then(function (results) {
-        var allEthTxs = [];
-        var allTokenTxs = [];
-        for (var i = 0; i < results.length; i += 2) {
-          allEthTxs = allEthTxs.concat(results[i]);
-          allTokenTxs = allTokenTxs.concat(results[i + 1]);
-        }
-        var rows = buildRows(allEthTxs, allTokenTxs);
-        renderTable('txfeed-contracts', rows);
-      });
+          ethTxs.forEach(function (tx) {
+            if (tx.isError === '1') return;
+            var key = tx.hash + 'ETH';
+            if (seen[key]) return;
+            seen[key] = true;
+            var isOut = tx.from.toLowerCase() === allAddrs[Math.floor(i / 2)].addr.toLowerCase();
+            combined.push({
+              ts: tx.timeStamp,
+              wallet: walletLabel,
+              dir: isOut ? 'OUT' : 'IN',
+              amount: fmtETH(tx.value) + ' ETH',
+              type: 'ETH',
+              hash: tx.hash
+            });
+          });
 
-      Promise.all(walletPromises.concat(contractPromises)).then(function () {
-        var ts = now.getUTCFullYear() + '-' +
-          String(now.getUTCMonth() + 1).padStart(2, '0') + '-' +
+          tokenTxs.forEach(function (tx) {
+            if (tx.contractAddress.toLowerCase() !== IFR_TOKEN.toLowerCase()) return;
+            var key = tx.hash + 'IFR';
+            if (seen[key]) return;
+            seen[key] = true;
+            var isOut = tx.from.toLowerCase() === allAddrs[Math.floor(i / 2)].addr.toLowerCase();
+            combined.push({
+              ts: tx.timeStamp,
+              wallet: walletLabel,
+              dir: isOut ? 'OUT' : 'IN',
+              amount: fmtIFR(tx.value) + ' IFR',
+              type: 'IFR',
+              hash: tx.hash
+            });
+          });
+        }
+
+        combined.sort(function (a, b) { return parseInt(b.ts) - parseInt(a.ts); });
+        combined = combined.slice(0, 20);
+
+        var tbody = document.getElementById('txfeed-body');
+        if (combined.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="6" style="color:var(--muted)">No recent transactions</td></tr>';
+        } else {
+          tbody.innerHTML = combined.map(function (r) {
+            var dirColor = r.dir === 'OUT' ? '#ef4444' : 'var(--green)';
+            return '<tr>' +
+              '<td>' + fmtDate(r.ts) + '</td>' +
+              '<td>' + r.wallet + '</td>' +
+              '<td style="color:' + dirColor + ';font-weight:600">' + r.dir + '</td>' +
+              '<td>' + r.amount + '</td>' +
+              '<td><code>' + r.type + '</code></td>' +
+              '<td>' + txLink(r.hash) + '</td>' +
+              '</tr>';
+          }).join('');
+        }
+
+        var now = new Date();
+        statusEl.innerHTML = '<span style="color:var(--live)">\u25CF</span> Last refreshed: ' +
+          now.getUTCFullYear() + '-' + String(now.getUTCMonth() + 1).padStart(2, '0') + '-' +
           String(now.getUTCDate()).padStart(2, '0') + ' ' +
           String(now.getUTCHours()).padStart(2, '0') + ':' +
           String(now.getUTCMinutes()).padStart(2, '0') + ':' +
-          String(now.getUTCSeconds()).padStart(2, '0') + ' UTC';
-        statusEl.textContent = 'Last refreshed: ' + ts + ' (auto-refresh every 60s)';
+          String(now.getUTCSeconds()).padStart(2, '0') + ' UTC (auto-refresh every 60s)';
       }).catch(function () {
-        statusEl.textContent = 'Error fetching data. Retrying in 60s...';
+        document.getElementById('txfeed-status').innerHTML =
+          '<span style="color:#ef4444">\u25CF</span> Error fetching transactions. Retrying in 60s&hellip;';
       });
     }
 
-    loadFeed();
-    setInterval(loadFeed, 60000);
+    // ===== Section 5: Burn Tracker =====
+    function loadBurnData() {
+      // totalSupply via Etherscan token supply API
+      var url = BASE + '&module=stats&action=tokensupply&contractaddress=' + IFR_TOKEN +
+        (API_KEY ? '&apikey=' + API_KEY : '');
+
+      fetch(url).then(function (r) { return r.json(); }).then(function (j) {
+        if (j.status === '1' && j.result) {
+          var currentSupply = parseFloat(j.result) / Math.pow(10, IFR_DECIMALS);
+          var burned = INITIAL_SUPPLY - currentSupply;
+          var pct = (burned / INITIAL_SUPPLY * 100);
+
+          document.getElementById('burn-total').textContent = fmtNum(Math.round(burned)) + ' IFR';
+          document.getElementById('burn-pct').textContent = pct.toFixed(4) + '%';
+          document.getElementById('burn-supply').textContent = fmtNum(Math.round(currentSupply)) + ' IFR';
+        }
+      }).catch(function () {
+        document.getElementById('burn-total').textContent = 'Error';
+      });
+    }
+
+    // ===== Hero Timestamp =====
+    function updateHeroTimestamp() {
+      var now = new Date();
+      var ts = now.getUTCFullYear() + '-' + String(now.getUTCMonth() + 1).padStart(2, '0') + '-' +
+        String(now.getUTCDate()).padStart(2, '0') + ' ' +
+        String(now.getUTCHours()).padStart(2, '0') + ':' +
+        String(now.getUTCMinutes()).padStart(2, '0') + ':' +
+        String(now.getUTCSeconds()).padStart(2, '0') + ' UTC';
+      document.getElementById('hero-timestamp').innerHTML =
+        '<span style="color:var(--live)">\u25CF</span> Connected to Ethereum Mainnet &mdash; Block data as of ' + ts;
+    }
+
+    // ===== Init =====
+    loadBalances();
+    loadTxFeed();
+    loadBurnData();
+    updateHeroTimestamp();
+
+    setInterval(function () {
+      loadBalances();
+      loadTxFeed();
+      loadBurnData();
+      updateHeroTimestamp();
+    }, 60000);
   })();
   </script>
 
