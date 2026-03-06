@@ -766,6 +766,42 @@
         </table>
       </div>
 
+      <!-- ===== Token Supply Distribution ===== -->
+      <h2>Token Supply Distribution</h2>
+      <p>Complete breakdown of where every IFR token is held. Updated to reflect Safe migrations (06.03.2026).</p>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Wallet</th><th>IFR</th><th>%</th><th>Note</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Deployer (LP Reserve)</td><td>400,000,000</td><td>40.00%</td><td>Reserved for Uniswap V2 LP pairing</td></tr>
+            <tr><td>LiquidityReserve</td><td>200,000,000</td><td>20.00%</td><td>6-month lock, staged release</td></tr>
+            <tr><td>Vesting (Team)</td><td>150,000,000</td><td>15.00%</td><td>12-month cliff, 4-year linear</td></tr>
+            <tr><td>Treasury Safe</td><td>150,000,000</td><td>15.00%</td><td>Migrated from Treasury EOA (feeExempt)</td></tr>
+            <tr><td>Community Safe</td><td>57,900,000</td><td>5.79%</td><td>Migrated from Community EOA (2.1M burned on transfer)</td></tr>
+            <tr><td>PartnerVault</td><td>40,000,000</td><td>4.00%</td><td>Builder ecosystem rewards</td></tr>
+            <tr style="border-top:2px solid var(--border)">
+              <td><strong>Burned (permanent)</strong></td>
+              <td><strong id="supply-burned">~2,100,000</strong></td>
+              <td><strong id="supply-burned-pct">~0.21%</strong></td>
+              <td>Community transfer fee + prior burns</td>
+            </tr>
+            <tr>
+              <td><strong>Total</strong></td>
+              <td><strong>1,000,000,000</strong></td>
+              <td><strong>100%</strong></td>
+              <td>Initial supply (no mint function)</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout callout-yellow">
+        <p><strong>Transparency note:</strong> Community Safe received 57.9M IFR (not 60M) &mdash; 2.1M IFR were permanently burned during the transfer because the Community EOA was not registered as feeExempt. The Treasury transfer was feeExempt (150M = 150M, zero burn).</p>
+      </div>
+
       <!-- ===== SECTION 5: Burn Tracker ===== -->
       <h2><span class="live-dot"></span> IFR Burn Tracker</h2>
       <p>Every transfer burns IFR permanently. No mint function exists &mdash; supply can only decrease.</p>
@@ -1119,6 +1155,12 @@
           document.getElementById('burn-total').textContent = fmtNum(Math.round(burned)) + ' IFR';
           document.getElementById('burn-pct').textContent = pct.toFixed(4) + '%';
           document.getElementById('burn-supply').textContent = fmtNum(Math.round(currentSupply)) + ' IFR';
+
+          // Also update supply distribution table
+          var sbEl = document.getElementById('supply-burned');
+          var sbpEl = document.getElementById('supply-burned-pct');
+          if (sbEl) sbEl.textContent = fmtNum(Math.round(burned));
+          if (sbpEl) sbpEl.textContent = pct.toFixed(2) + '%';
         }
       }).catch(function () {
         document.getElementById('burn-total').textContent = 'Error';
