@@ -483,6 +483,7 @@
         Full on-chain audit trail &mdash; genesis to present. <span class="live-badge"><span class="live-dot"></span>LIVE</span>
       </p>
       <p id="hero-timestamp" class="loading"><span class="spinner"></span>Connecting to Ethereum Mainnet&hellip;</p>
+      <p id="data-source" style="font-size:12px;color:#888;margin-top:4px;"></p>
 
       <!-- ===== CHECK 0: All Protocol Wallets ===== -->
       <h2>All Protocol Wallets &mdash; From Genesis</h2>
@@ -960,6 +961,38 @@
     var BASE = 'https://api.etherscan.io/v2/api?chainid=1';
     var PROXY = 'https://ifr-ai-copilot-production.up.railway.app';
 
+    // ===== Data Source Tracking =====
+    var dataSourcePriority = { 'railway': 3, 'etherscan': 2, 'cached': 1 };
+    var currentSource = 'cached';
+
+    function setDataSource(source) {
+      if (dataSourcePriority[source] >= dataSourcePriority[currentSource]) {
+        currentSource = source;
+      }
+      var el = document.getElementById('data-source');
+      if (!el) return;
+      if (currentSource === 'railway') {
+        el.innerHTML = '<span style="color:#22c55e">\u25CF</span> Live (Railway Proxy)';
+      } else if (currentSource === 'etherscan') {
+        el.innerHTML = '<span style="color:#eab308">\u25CF</span> Live (Etherscan Direct)';
+      } else {
+        el.innerHTML = '<span style="color:#888">\u25CF</span> Cached (06.03.2026)';
+      }
+    }
+
+    // Show cached source immediately
+    setDataSource('cached');
+
+    // ===== Helper: fetch with timeout =====
+    function fetchWithTimeout(url, ms) {
+      var controller = new AbortController();
+      var timer = setTimeout(function () { controller.abort(); }, ms);
+      return fetch(url, { signal: controller.signal }).then(function (r) {
+        clearTimeout(timer);
+        return r;
+      });
+    }
+
     // Proxy label → LIVE_CELLS id mapping
     var PROXY_CELL_MAP = {
       'Deployer': 'live-deployer', 'VoucherSigner': 'live-voucher',
@@ -1133,7 +1166,21 @@
       });
     }
 
+    function applyProxyBalances(data) {
+      Object.keys(data.balances).forEach(function (label) {
+        var cellId = PROXY_CELL_MAP[label];
+        if (!cellId) return;
+        var el = document.getElementById(cellId);
+        if (!el) return;
+        var val = data.balances[label].formatted;
+        var fmtVal = val >= 1e6 ? (val / 1e6).toFixed(1) + 'M' :
+                     val >= 1e3 ? (val / 1e3).toFixed(1) + 'K' : String(Math.round(val));
+        el.innerHTML = '<strong style="color:var(--live)">' + fmtVal + '</strong> IFR';
+      });
+    }
+
     function loadBalancesDirect() {
+      var updated = false;
       var i = 0;
       function next() {
         if (i >= LIVE_CELLS.length) return;
@@ -1146,6 +1193,7 @@
             var parsed = parseFloat(val) / Math.pow(10, IFR_DECIMALS);
             if (parsed > 0 || KNOWN_BALANCES[cell.addr] === 0) {
               el.innerHTML = '<strong style="color:var(--live)">' + fmtIFR(val) + '</strong> IFR';
+              if (!updated) { updated = true; setDataSource('etherscan'); }
             }
           }
         }).catch(function () {}).then(function () {
@@ -1156,26 +1204,19 @@
     }
 
     function loadBalances() {
+      // Stufe 3: Cached values sofort
       showCachedBalances();
-      // Try proxy first (1 call instead of 17)
-      var controller = new AbortController();
-      var timer = setTimeout(function () { controller.abort(); }, 8000);
-      fetch(PROXY + '/api/ifr/balances', { signal: controller.signal })
-        .then(function (r) { clearTimeout(timer); return r.json(); })
+
+      // Stufe 1: Railway Proxy
+      fetchWithTimeout(PROXY + '/api/ifr/balances', 8000)
+        .then(function (r) { return r.json(); })
         .then(function (data) {
           if (!data.balances) throw new Error('no balances');
-          Object.keys(data.balances).forEach(function (label) {
-            var cellId = PROXY_CELL_MAP[label];
-            if (!cellId) return;
-            var el = document.getElementById(cellId);
-            if (!el) return;
-            var val = data.balances[label].formatted;
-            var fmtVal = val >= 1e6 ? (val / 1e6).toFixed(1) + 'M' :
-                         val >= 1e3 ? (val / 1e3).toFixed(1) + 'K' : String(Math.round(val));
-            el.innerHTML = '<strong style="color:var(--live)">' + fmtVal + '</strong> IFR';
-          });
+          applyProxyBalances(data);
+          setDataSource('railway');
         })
         .catch(function () {
+          // Stufe 2: Etherscan Direct
           loadBalancesDirect();
         });
     }
@@ -1243,6 +1284,7 @@
         }
         combined.sort(function (a, b) { return parseInt(b.ts) - parseInt(a.ts); });
         renderTxFeed(combined.slice(0, 20));
+        setDataSource('etherscan');
       }).catch(function () {
         document.getElementById('txfeed-status').innerHTML =
           '<span style="color:#ef4444">\u25CF</span> Error fetching transactions. Retrying in 60s&hellip;';
@@ -1250,11 +1292,9 @@
     }
 
     function loadTxFeed() {
-      // Try proxy first (5 calls cached on server instead of 14 direct)
-      var controller = new AbortController();
-      var timer = setTimeout(function () { controller.abort(); }, 8000);
-      fetch(PROXY + '/api/ifr/txfeed', { signal: controller.signal })
-        .then(function (r) { clearTimeout(timer); return r.json(); })
+      // Stufe 1: Railway Proxy
+      fetchWithTimeout(PROXY + '/api/ifr/txfeed', 8000)
+        .then(function (r) { return r.json(); })
         .then(function (data) {
           if (!data.transactions) throw new Error('no txfeed');
           var combined = data.transactions.map(function (tx) {
@@ -1268,8 +1308,10 @@
             };
           });
           renderTxFeed(combined);
+          setDataSource('railway');
         })
         .catch(function () {
+          // Stufe 2: Etherscan Direct
           loadTxFeedDirect();
         });
     }
@@ -1306,32 +1348,34 @@
     function loadBurnDirect() {
       var url = BASE + '&module=stats&action=tokensupply&contractaddress=' + IFR_TOKEN +
         (API_KEY ? '&apikey=' + API_KEY : '');
-      var controller = new AbortController();
-      var timer = setTimeout(function () { controller.abort(); }, 5000);
-      fetch(url, { signal: controller.signal }).then(function (r) {
-        clearTimeout(timer);
+      fetchWithTimeout(url, 5000).then(function (r) {
         return r.json();
       }).then(function (j) {
         if (j.status === '1' && j.result) {
           var currentSupply = parseFloat(j.result) / Math.pow(10, IFR_DECIMALS);
           var burned = INITIAL_SUPPLY - currentSupply;
           applyBurnData(burned, currentSupply);
+          setDataSource('etherscan');
         }
-      }).catch(function () {});
+      }).catch(function () {
+        // Stufe 3: Cached values bleiben sichtbar (showBurnFallback)
+      });
     }
 
     function loadBurnData() {
+      // Stufe 3: Cached sofort anzeigen
       if (!burnDataLive) showBurnFallback();
-      // Try proxy first
-      var controller = new AbortController();
-      var timer = setTimeout(function () { controller.abort(); }, 5000);
-      fetch(PROXY + '/api/ifr/supply', { signal: controller.signal })
-        .then(function (r) { clearTimeout(timer); return r.json(); })
+
+      // Stufe 1: Railway Proxy
+      fetchWithTimeout(PROXY + '/api/ifr/supply', 5000)
+        .then(function (r) { return r.json(); })
         .then(function (data) {
           if (!data.totalSupply) throw new Error('no supply');
           applyBurnData(data.burned, data.totalSupply);
+          setDataSource('railway');
         })
         .catch(function () {
+          // Stufe 2: Etherscan Direct
           loadBurnDirect();
         });
     }
@@ -1355,6 +1399,9 @@
     updateHeroTimestamp();
 
     setInterval(function () {
+      // Reset source tracking for new cycle
+      currentSource = 'cached';
+      setDataSource('cached');
       loadBalances();
       loadTxFeed();
       loadBurnData();
