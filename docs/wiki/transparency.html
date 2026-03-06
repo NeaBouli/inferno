@@ -487,6 +487,11 @@
       <!-- ===== CHECK 0: All Protocol Wallets ===== -->
       <h2>All Protocol Wallets &mdash; From Genesis</h2>
       <p>Every wallet involved in the IFR protocol since deployment. Genesis balances are hardcoded from on-chain records. Live balances update every 60 seconds via Etherscan API.</p>
+      <div style="color:#888; font-size:11px; margin-bottom:8px;">
+        &#x26A1; Showing cached values (06.03.2026) &mdash; live data loads in background.
+        <a href="https://etherscan.io/token/0x77e99917Eca8539c62F509ED1193ac36580A6e7B"
+           target="_blank" style="color:#00ffa0;">Verify on Etherscan &rarr;</a>
+      </div>
 
       <h3>EOA Wallets</h3>
       <div class="table-wrap">
@@ -1029,7 +1034,12 @@
     function esCall(module, action, address, extra) {
       var url = BASE + '&module=' + module + '&action=' + action +
         '&address=' + address + (extra || '') + (API_KEY ? '&apikey=' + API_KEY : '');
-      return fetch(url).then(function (r) { return r.json(); }).then(function (j) {
+      var controller = new AbortController();
+      var timer = setTimeout(function () { controller.abort(); }, 8000);
+      return fetch(url, { signal: controller.signal }).then(function (r) {
+        clearTimeout(timer);
+        return r.json();
+      }).then(function (j) {
         if (j.status === '1' && j.result) return j.result;
         return j.result || '0';
       }).catch(function () { return '0'; });
@@ -1046,6 +1056,27 @@
     function esTokenTx(addr) {
       return esCall('account', 'tokentx', addr, '&contractaddress=' + IFR_TOKEN + '&page=1&offset=10&sort=desc');
     }
+
+    // ===== Known Balances (cached 06.03.2026) =====
+    var KNOWN_BALANCES = {
+      '0x6b36687b0cd4386fb14cf565B67D7862110Fed67': 400000000,
+      '0x17F8DD6dECCb3ff5d95691982B85A87d7d9872d4': 0,
+      '0x04FABC52c51d1F8ced6974E7C25a34249b1E6239': 0,
+      '0x61aF4E72C77b58F4b50964Ee93d420750Cd9857E': 0,
+      '0xC8f4B45fA0C4727E9b27c13Af3d000C922a2ac9c': 0,
+      '0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b': 150000000,
+      '0xaC5687547B2B21d80F8fd345B51e608d476667C7': 57900000,
+      '0x77e99917Eca8539c62F509ED1193ac36580A6e7B': 0,
+      '0xc43d48E7FDA576C5022d0670B652A622E8caD041': 0,
+      '0x769928aBDfc949D0718d8766a1C2d7dBb63954Eb': 0,
+      '0xaA1496133B6c274190A2113410B501C5802b6fCF': 0,
+      '0x670D293e3D65f96171c10DdC8d88B96b0570F812': 0,
+      '0xc6eb7714bCb035ebc2D4d9ba7B3762ef7B9d4F7D': 40000000,
+      '0x4807B77B2E25cD055DA42B09BA4d0aF9e580C60a': 0,
+      '0x2694Bc84e8D5251E9E4Ecd4B2Ae3f866d6106271': 150000000,
+      '0xdc0309804803b3A105154f6073061E3185018f64': 200000000,
+      '0xA820540936d18e1377C39dd9445E5b36F3F1261a': 0
+    };
 
     // ===== Live Balance Cells =====
     var LIVE_CELLS = [
@@ -1068,19 +1099,44 @@
       { id: 'live-bootstrap',  addr: '0xA820540936d18e1377C39dd9445E5b36F3F1261a' }
     ];
 
-    function loadBalances() {
+    function showCachedBalances() {
       LIVE_CELLS.forEach(function (cell) {
+        var el = document.getElementById(cell.id);
+        if (!el) return;
+        var known = KNOWN_BALANCES[cell.addr];
+        if (known !== undefined) {
+          var label = known >= 1e6 ? (known / 1e6).toFixed(1) + 'M' :
+                     known >= 1e3 ? (known / 1e3).toFixed(1) + 'K' : String(known);
+          el.innerHTML = '<strong style="color:var(--live)">' + label + '</strong> IFR <span style="color:#666;font-size:10px;">(cached)</span>';
+        }
+      });
+    }
+
+    function loadBalances() {
+      // Show cached values immediately
+      showCachedBalances();
+      // Then attempt live updates sequentially with delay
+      var i = 0;
+      function next() {
+        if (i >= LIVE_CELLS.length) return;
+        var cell = LIVE_CELLS[i];
+        i++;
         esTokenBalance(cell.addr).then(function (raw) {
           var el = document.getElementById(cell.id);
           if (el) {
             var val = typeof raw === 'string' ? raw : '0';
-            el.innerHTML = '<strong style="color:var(--live)">' + fmtIFR(val) + '</strong> IFR';
+            var parsed = parseFloat(val) / Math.pow(10, IFR_DECIMALS);
+            if (parsed > 0 || KNOWN_BALANCES[cell.addr] === 0) {
+              el.innerHTML = '<strong style="color:var(--live)">' + fmtIFR(val) + '</strong> IFR';
+            }
           }
         }).catch(function () {
-          var el = document.getElementById(cell.id);
-          if (el) el.innerHTML = '<span style="color:#ef4444">err</span>';
+          // Keep cached value — no error shown
+        }).then(function () {
+          setTimeout(next, 200);
         });
-      });
+      }
+      next();
     }
 
     // ===== Section 4: Live TX Feed =====
