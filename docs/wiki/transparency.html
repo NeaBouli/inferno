@@ -684,6 +684,36 @@ npx hardhat test</code></pre>
         <li>LP Pair (IFR/WETH) &mdash; TBD (published after LP creation)</li>
       </ul>
 
+      <!-- ========== Live Transaction Feed ========== -->
+      <h2>Live Transaction Feed</h2>
+      <p>Real-time on-chain activity for all IFR ecosystem addresses. Auto-refreshes every 60 seconds.</p>
+
+      <div id="txfeed-status" style="font-size:13px;color:var(--muted);margin-bottom:12px;">Loading&hellip;</div>
+
+      <h3>EOA &amp; Safe Wallets</h3>
+      <div style="overflow-x:auto;">
+        <table id="txfeed-wallets">
+          <thead>
+            <tr><th>Date (UTC)</th><th>From</th><th>To</th><th>Amount</th><th>Type</th><th>TX</th></tr>
+          </thead>
+          <tbody>
+            <tr><td colspan="6" style="color:var(--muted)">Loading&hellip;</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Smart Contracts</h3>
+      <div style="overflow-x:auto;">
+        <table id="txfeed-contracts">
+          <thead>
+            <tr><th>Date (UTC)</th><th>From</th><th>To</th><th>Amount</th><th>Type</th><th>TX</th></tr>
+          </thead>
+          <tbody>
+            <tr><td colspan="6" style="color:var(--muted)">Loading&hellip;</td></tr>
+          </tbody>
+        </table>
+      </div>
+
       <p style="margin-top:32px;font-size:13px;color:var(--muted);font-style:italic;">
         All data from Ethereum Mainnet. Last updated: March 2026 | Version 2.0
       </p>
@@ -713,6 +743,203 @@ npx hardhat test</code></pre>
       hamburger.addEventListener('click', toggleSidebar);
       overlay.addEventListener('click', toggleSidebar);
     })();
+  </script>
+
+  <!-- Live Transaction Feed Script -->
+  <script>
+  (function () {
+    var IFR_TOKEN = '0x77e99917Eca8539c62F509ED1193ac36580A6e7B';
+    var IFR_DECIMALS = 9;
+
+    var WALLETS = {
+      '0x6b36687b0cd4386fb14cf565B67D7862110Fed67': 'Deployer',
+      '0x17F8DD6dECCb3ff5d95691982B85A87d7d9872d4': 'Voucher Signer',
+      '0x04FABC52c51d1F8ced6974E7C25a34249b1E6239': 'Team Beneficiary',
+      '0xaC5687547B2B21d80F8fd345B51e608d476667C7': 'Community Safe',
+      '0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b': 'Treasury Safe'
+    };
+
+    var CONTRACTS = {
+      '0x77e99917Eca8539c62F509ED1193ac36580A6e7B': 'InfernoToken',
+      '0xc43d48E7FDA576C5022d0670B652A622E8caD041': 'Governance',
+      '0x769928aBDfc949D0718d8766a1C2d7dBb63954Eb': 'IFRLock',
+      '0xaA1496133B6c274190A2113410B501C5802b6fCF': 'BurnReserve',
+      '0x670D293e3D65f96171c10DdC8d88B96b0570F812': 'BuybackVault',
+      '0xc6eb7714bCb035ebc2D4d9ba7B3762ef7B9d4F7D': 'PartnerVault',
+      '0x4807B77B2E25cD055DA42B09BA4d0aF9e580C60a': 'FeeRouterV1',
+      '0x2694Bc84e8D5251E9E4Ecd4B2Ae3f866d6106271': 'Vesting',
+      '0xdc0309804803b3A105154f6073061E3185018f64': 'LiquidityReserve',
+      '0xA820540936d18e1377C39dd9445E5b36F3F1261a': 'BootstrapVault'
+    };
+
+    var ALL_ADDRESSES = Object.assign({}, WALLETS, CONTRACTS);
+    var API_KEY = (window.__ETHERSCAN_KEY__ || '');
+    var BASE = 'https://api.etherscan.io/v2/api?chainid=1';
+
+    function shortAddr(addr) {
+      if (!addr || addr.length < 10) return addr || '—';
+      var label = ALL_ADDRESSES[addr] || ALL_ADDRESSES[addr.toLowerCase()];
+      for (var key in ALL_ADDRESSES) {
+        if (key.toLowerCase() === addr.toLowerCase()) { label = ALL_ADDRESSES[key]; break; }
+      }
+      var short = addr.slice(0, 6) + '...' + addr.slice(-4);
+      return label ? label : short;
+    }
+
+    function etherscanLink(hash) {
+      var short = hash.slice(0, 10) + '...';
+      return '<a href="https://etherscan.io/tx/' + hash + '" target="_blank" rel="noopener">' + short + '</a>';
+    }
+
+    function addrLink(addr) {
+      var display = shortAddr(addr);
+      return '<a href="https://etherscan.io/address/' + addr + '" target="_blank" rel="noopener" style="color:var(--muted)">' + display + '</a>';
+    }
+
+    function formatDate(ts) {
+      var d = new Date(parseInt(ts) * 1000);
+      return d.getUTCFullYear() + '-' +
+        String(d.getUTCMonth() + 1).padStart(2, '0') + '-' +
+        String(d.getUTCDate()).padStart(2, '0') + ' ' +
+        String(d.getUTCHours()).padStart(2, '0') + ':' +
+        String(d.getUTCMinutes()).padStart(2, '0');
+    }
+
+    function formatETH(wei) {
+      var eth = parseFloat(wei) / 1e18;
+      if (eth === 0) return '0';
+      if (eth < 0.0001) return '<0.0001 ETH';
+      return eth.toFixed(4) + ' ETH';
+    }
+
+    function formatIFR(raw) {
+      var val = parseFloat(raw) / Math.pow(10, IFR_DECIMALS);
+      if (val >= 1e6) return (val / 1e6).toFixed(1) + 'M IFR';
+      if (val >= 1e3) return (val / 1e3).toFixed(1) + 'K IFR';
+      return val.toFixed(0) + ' IFR';
+    }
+
+    function fetchAPI(module, action, address, extra) {
+      var url = BASE + '&module=' + module + '&action=' + action +
+        '&address=' + address + '&page=1&offset=10&sort=desc' +
+        (extra || '') + (API_KEY ? '&apikey=' + API_KEY : '');
+      return fetch(url).then(function (r) { return r.json(); }).then(function (j) {
+        if (j.status === '1' && Array.isArray(j.result)) return j.result;
+        return [];
+      }).catch(function () { return []; });
+    }
+
+    function buildRows(txs, tokenTxs) {
+      var combined = [];
+      txs.forEach(function (tx) {
+        if (tx.isError === '1') return;
+        combined.push({
+          ts: tx.timeStamp,
+          from: tx.from,
+          to: tx.to,
+          amount: formatETH(tx.value),
+          type: 'ETH',
+          hash: tx.hash
+        });
+      });
+      tokenTxs.forEach(function (tx) {
+        if (tx.contractAddress.toLowerCase() !== IFR_TOKEN.toLowerCase()) return;
+        combined.push({
+          ts: tx.timeStamp,
+          from: tx.from,
+          to: tx.to,
+          amount: formatIFR(tx.value),
+          type: 'IFR',
+          hash: tx.hash
+        });
+      });
+      var seen = {};
+      combined = combined.filter(function (r) {
+        var key = r.hash + r.type + r.from + r.to;
+        if (seen[key]) return false;
+        seen[key] = true;
+        return true;
+      });
+      combined.sort(function (a, b) { return parseInt(b.ts) - parseInt(a.ts); });
+      return combined.slice(0, 10);
+    }
+
+    function renderTable(tableId, rows) {
+      var tbody = document.querySelector('#' + tableId + ' tbody');
+      if (rows.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="color:var(--muted)">No transactions found</td></tr>';
+        return;
+      }
+      tbody.innerHTML = rows.map(function (r) {
+        return '<tr>' +
+          '<td>' + formatDate(r.ts) + '</td>' +
+          '<td>' + addrLink(r.from) + '</td>' +
+          '<td>' + addrLink(r.to) + '</td>' +
+          '<td>' + r.amount + '</td>' +
+          '<td><code>' + r.type + '</code></td>' +
+          '<td>' + etherscanLink(r.hash) + '</td>' +
+          '</tr>';
+      }).join('');
+    }
+
+    function loadFeed() {
+      var statusEl = document.getElementById('txfeed-status');
+      var now = new Date();
+      statusEl.textContent = 'Fetching on-chain data...';
+
+      var walletAddrs = Object.keys(WALLETS);
+      var contractAddrs = Object.keys(CONTRACTS);
+
+      var walletPromises = [];
+      walletAddrs.forEach(function (addr) {
+        walletPromises.push(fetchAPI('account', 'txlist', addr));
+        walletPromises.push(fetchAPI('account', 'tokentx', addr, '&contractaddress=' + IFR_TOKEN));
+      });
+
+      var contractPromises = [];
+      contractAddrs.forEach(function (addr) {
+        contractPromises.push(fetchAPI('account', 'txlist', addr));
+        contractPromises.push(fetchAPI('account', 'tokentx', addr, '&contractaddress=' + IFR_TOKEN));
+      });
+
+      Promise.all(walletPromises).then(function (results) {
+        var allEthTxs = [];
+        var allTokenTxs = [];
+        for (var i = 0; i < results.length; i += 2) {
+          allEthTxs = allEthTxs.concat(results[i]);
+          allTokenTxs = allTokenTxs.concat(results[i + 1]);
+        }
+        var rows = buildRows(allEthTxs, allTokenTxs);
+        renderTable('txfeed-wallets', rows);
+      });
+
+      Promise.all(contractPromises).then(function (results) {
+        var allEthTxs = [];
+        var allTokenTxs = [];
+        for (var i = 0; i < results.length; i += 2) {
+          allEthTxs = allEthTxs.concat(results[i]);
+          allTokenTxs = allTokenTxs.concat(results[i + 1]);
+        }
+        var rows = buildRows(allEthTxs, allTokenTxs);
+        renderTable('txfeed-contracts', rows);
+      });
+
+      Promise.all(walletPromises.concat(contractPromises)).then(function () {
+        var ts = now.getUTCFullYear() + '-' +
+          String(now.getUTCMonth() + 1).padStart(2, '0') + '-' +
+          String(now.getUTCDate()).padStart(2, '0') + ' ' +
+          String(now.getUTCHours()).padStart(2, '0') + ':' +
+          String(now.getUTCMinutes()).padStart(2, '0') + ':' +
+          String(now.getUTCSeconds()).padStart(2, '0') + ' UTC';
+        statusEl.textContent = 'Last refreshed: ' + ts + ' (auto-refresh every 60s)';
+      }).catch(function () {
+        statusEl.textContent = 'Error fetching data. Retrying in 60s...';
+      });
+    }
+
+    loadFeed();
+    setInterval(loadFeed, 60000);
+  })();
   </script>
 
 <!-- IFR Copilot Widget -->
