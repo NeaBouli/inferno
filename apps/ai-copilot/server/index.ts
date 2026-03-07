@@ -257,7 +257,7 @@ body {
 var currentMode = 'explorer';
 var histories = { explorer: [], user: [], dev: [] };
 var welcomes = {
-  explorer: "Welcome! I'm the IFR Copilot. &#x1f525;\\n\\nI can help you understand Inferno Protocol \\u2014 a deflationary utility token on Ethereum. Ask me about:\\n\\n\\u2022 What is $IFR?\\n\\u2022 How does Lock-to-Access work?\\n\\u2022 The Bootstrap Event\\n\\u2022 Fair Launch model",
+  explorer: "Welcome to IFR Copilot. &#x1f44b;\\n\\nYou're browsing without a connected wallet \\u2014 no problem!\\n\\n\\u2756 Without a wallet, you can:\\n\\u2022 Ask about IFR tokenomics, governance, or lock mechanism\\n\\u2022 Learn how the Bootstrap phase works\\n\\u2022 Explore the roadmap and security model\\n\\n\\u2756 Connect your wallet to unlock:\\n\\u2022 Your personal IFR balance and lock position\\n\\u2022 Personalized guidance based on your on-chain state\\n\\n\\u2756 Lock \\u22651,000 IFR to unlock:\\n\\u2022 Premium Copilot with deeper on-chain analysis\\n\\u2022 AI Copilot Gate (gated content platform)\\n\\u2022 Builder onboarding pathway\\n\\nOr just ask me anything! &#x1f525;",
   user: "Hey! &#x1f48e; Ready to help you get the most out of your IFR tokens.\\n\\nI can assist with:\\n\\u2022 Locking IFR for benefits\\n\\u2022 Understanding your tier (Bronze/Silver/Gold/Platinum)\\n\\u2022 Partner discounts \\u0026 Benefits Network\\n\\u2022 Step-by-step guides",
   dev: "Dev mode active. &#x2699;&#xfe0f;\\n\\n9 verified mainnet contracts \\u2022 444 tests \\u2022 99% coverage\\n\\nI can help with:\\n\\u2022 Contract addresses \\u0026 ABIs\\n\\u2022 Integration (ethers.js v5, 9 decimals)\\n\\u2022 Governance \\u0026 Timelock\\n\\u2022 Security audit results"
 };
