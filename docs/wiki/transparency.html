@@ -1399,9 +1399,6 @@
     updateHeroTimestamp();
 
     setInterval(function () {
-      // Reset source tracking for new cycle
-      currentSource = 'cached';
-      setDataSource('cached');
       loadBalances();
       loadTxFeed();
       loadBurnData();
