@@ -170,10 +170,47 @@ export default function IFRCopilot() {
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-3 space-y-3">
         {messages.length === 0 && (
-          <div className="text-center text-ifr-muted text-sm mt-8">
-            <p className="mb-1">Welcome to IFR Copilot</p>
-            <p className="text-xs">Mode: <span className="text-white">{MODE_LABELS[mode]}</span></p>
-            <p className="text-xs mt-2 italic">Try: "{MODE_PLACEHOLDERS[mode]}"</p>
+          <div className="flex justify-start">
+            <div className="max-w-[92%] bg-ifr-card text-gray-200 border border-ifr-border rounded-xl px-4 py-3 text-sm leading-relaxed">
+              <p className="mb-2">Welcome to IFR Copilot.</p>
+              <p className="text-ifr-muted text-xs mb-3">
+                You&apos;re browsing without a connected wallet &mdash; no problem! I can still help you with everything about the IFR Protocol.
+              </p>
+
+              <p className="text-white font-semibold text-xs mb-1">Without a wallet, you can:</p>
+              <ul className="text-ifr-muted text-xs mb-3 space-y-0.5 list-disc list-inside">
+                <li>Ask anything about IFR tokenomics, governance, or the lock mechanism</li>
+                <li>Learn how the Bootstrap phase works</li>
+                <li>Explore the roadmap and security model</li>
+                <li>Understand how IFR creates real utility</li>
+              </ul>
+
+              <p className="text-white font-semibold text-xs mb-1">Connect your wallet to unlock:</p>
+              <ul className="text-ifr-muted text-xs mb-3 space-y-0.5 list-disc list-inside">
+                <li>Your personal IFR balance and lock position</li>
+                <li>Your vesting schedule (if applicable)</li>
+                <li>Personalized guidance based on your on-chain state</li>
+              </ul>
+
+              <p className="text-white font-semibold text-xs mb-1">Lock &ge;1,000 IFR to unlock:</p>
+              <ul className="text-ifr-muted text-xs mb-3 space-y-0.5 list-disc list-inside">
+                <li>Premium Copilot access with deeper on-chain analysis</li>
+                <li>Access to the AI Copilot Gate (gated content platform)</li>
+                <li>Builder onboarding pathway</li>
+                <li>Your lock is verified on-chain &mdash; no account needed</li>
+              </ul>
+
+              <button
+                onClick={() => console.log("WalletConnect coming soon")}
+                className="w-full bg-ifr-dark border border-ifr-border text-ifr-muted rounded-lg py-2 text-xs font-medium mb-3 cursor-default opacity-60"
+              >
+                Connect Wallet (coming soon)
+              </button>
+
+              <p className="text-ifr-muted text-xs italic">
+                Or just ask me anything! Try: &ldquo;{MODE_PLACEHOLDERS[mode]}&rdquo;
+              </p>
+            </div>
           </div>
         )}
         {messages.map((msg, i) => (
