@@ -133,7 +133,8 @@
 | 7 | **FeeRouterV1** | [`0x4807B77B2E25cD055DA42B09BA4d0aF9e580C60a`](https://etherscan.io/address/0x4807B77B2E25cD055DA42B09BA4d0aF9e580C60a#code) | Verified |
 | 8 | **Vesting** | [`0x2694Bc84e8D5251E9E4Ecd4B2Ae3f866d6106271`](https://etherscan.io/address/0x2694Bc84e8D5251E9E4Ecd4B2Ae3f866d6106271#code) | Verified |
 | 9 | **LiquidityReserve** | [`0xdc0309804803b3A105154f6073061E3185018f64`](https://etherscan.io/address/0xdc0309804803b3A105154f6073061E3185018f64#code) | Verified |
-| 10 | **BootstrapVault** | [`0xA820540936d18e1377C39dd9445E5b36F3F1261a`](https://etherscan.io/address/0xA820540936d18e1377C39dd9445E5b36F3F1261a#code) | Verified |
+| 10 | ~~BootstrapVault V1~~ | [`0xA820540936d18e1377C39dd9445E5b36F3F1261a`](https://etherscan.io/address/0xA820540936d18e1377C39dd9445E5b36F3F1261a#code) | **DEPRECATED** — finalise() broken, superseded by V3 |
+| 11 | **BootstrapVaultV3** | [`0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141`](https://etherscan.io/address/0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141#code) | Verified |
 
 ### Token Distribution (CFLM)
 
@@ -202,14 +203,19 @@ All ownable contracts transferred to Governance (48h Timelock). Parameter change
 
 | # | Action | Target | TX | ETA | Status |
 |---|--------|--------|-----|-----|--------|
-| 0 | `setFeeExempt(BootstrapVault, true)` | InfernoToken | [`0xb5a38ba2...8191ac`](https://etherscan.io/tx/0xb5a38ba2a5d3a65b80358709e70446b894ad9c3a7663474591dacf5b598191ac) | 2026-03-07 20:12 CET | Pending (48h Timelock) |
+| 0 | `setFeeExempt(BootstrapVault V1, true)` | InfernoToken | [`0xb5a38ba2...8191ac`](https://etherscan.io/tx/0xb5a38ba2a5d3a65b80358709e70446b894ad9c3a7663474591dacf5b598191ac) | 2026-03-07 20:12 CET | **Executed** |
+| 1 | `setFeeExempt(Vesting, true)` | InfernoToken | [`0x8356f942...bddf0`](https://etherscan.io/tx/0x8356f9425f30b707e24bf985bab54b26c0fc5f6a28253a8f43d31278718bddf0) | 2026-03-10 00:21 CET | Pending (48h Timelock) |
+| 2 | `setFeeExempt(BurnReserve, true)` | InfernoToken | [`0x0c0e5c83...e41e`](https://etherscan.io/tx/0x0c0e5c835dfa30c742942699ab36fc10175686534adf3fe3d9e6cdbb7043e41e) | 2026-03-10 00:21 CET | Pending (48h Timelock) |
 
 ### NEXT STEPS (Mainnet)
 
 | Step | Status |
 |------|--------|
-| BootstrapVault deployed + verified | **Done** (2026-03-05) |
-| feeExempt(BootstrapVault) Proposal #0 | **Submitted** — ETA 2026-03-07 20:12 CET |
+| BootstrapVault V1 deployed + verified | **Done** (2026-03-05) — **DEPRECATED** |
+| BootstrapVaultV3 deployed + verified | **Done** (2026-03-07) — [`0xf72565C4...`](https://etherscan.io/address/0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141#code) |
+| feeExempt(BootstrapVault V1) Proposal #0 | **Executed** |
+| feeExempt(Vesting) Proposal #1 | **Submitted** — ETA 2026-03-10 00:21 CET |
+| feeExempt(BurnReserve) Proposal #2 | **Submitted** — ETA 2026-03-10 00:21 CET |
 | Create Uniswap V2 LP (400M IFR + ETH) | Pending |
 | Lock LP Tokens (min 12 months) | Pending |
 | Transfer InfernoToken Ownership to Governance | **Done** (2026-03-05) |
