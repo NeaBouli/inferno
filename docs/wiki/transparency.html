@@ -1318,19 +1318,19 @@
 
     // ===== Section 5: Burn Tracker =====
     // Fallback minimum values (documented Community Safe transfer burn)
-    var FALLBACK_BURNED = 2100000;
-    var FALLBACK_SUPPLY = 997900000;
+    var FALLBACK_BURNED = 1500000;
+    var FALLBACK_SUPPLY = 998500000;
     var burnDataLive = false;
 
     function showBurnFallback() {
       if (burnDataLive) return; // live data already loaded
       document.getElementById('burn-total').textContent = '\u2265 ' + fmtNum(FALLBACK_BURNED) + ' IFR (estimated)';
-      document.getElementById('burn-pct').textContent = '\u2265 0.21%';
+      document.getElementById('burn-pct').textContent = '\u2265 0.15%';
       document.getElementById('burn-supply').textContent = '\u2264 ' + fmtNum(FALLBACK_SUPPLY) + ' IFR';
       var sbEl = document.getElementById('supply-burned');
       var sbpEl = document.getElementById('supply-burned-pct');
       if (sbEl) sbEl.textContent = '\u2265 ' + fmtNum(FALLBACK_BURNED);
-      if (sbpEl) sbpEl.textContent = '\u2265 0.21%';
+      if (sbpEl) sbpEl.textContent = '\u2265 0.15%';
     }
 
     function applyBurnData(burned, currentSupply) {
