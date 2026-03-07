@@ -1,0 +1,23 @@
+{
+  "name": "ifr-telegram-bot",
+  "version": "1.0.0",
+  "description": "Inferno ($IFR) Official Telegram Community Bot",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js"
+  },
+  "dependencies": {
+    "telegraf": "^4.16.3",
+    "ethers": "^5.7.2",
+    "axios": "^1.6.7",
+    "node-cache": "^5.1.2",
+    "pino": "^8.18.0",
+    "dotenv": "^16.4.5"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "author": "IFR Protocol",
+  "license": "MIT"
+}
