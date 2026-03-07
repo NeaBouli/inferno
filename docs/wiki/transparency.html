@@ -976,7 +976,7 @@
       } else if (currentSource === 'etherscan') {
         el.innerHTML = '<span style="color:#eab308">\u25CF</span> Live (Etherscan Direct)';
       } else {
-        el.innerHTML = '<span style="color:#888">\u25CF</span> Cached (06.03.2026)';
+        el.innerHTML = '<span style="color:#ef4444">\u25CF</span> Cached (06.03.2026) \u2014 reconnecting\u2026';
       }
     }
 
@@ -1323,7 +1323,6 @@
     var burnDataLive = false;
 
     function showBurnFallback() {
-      if (burnDataLive) return; // live data already loaded
       document.getElementById('burn-total').textContent = '\u2265 ' + fmtNum(FALLBACK_BURNED) + ' IFR (estimated)';
       document.getElementById('burn-pct').textContent = '\u2265 0.15%';
       document.getElementById('burn-supply').textContent = '\u2264 ' + fmtNum(FALLBACK_SUPPLY) + ' IFR';
@@ -1334,6 +1333,7 @@
     }
 
     function applyBurnData(burned, currentSupply) {
+      if (!burned || isNaN(burned) || burned <= 0) { showBurnFallback(); return; }
       burnDataLive = true;
       var pct = (burned / INITIAL_SUPPLY * 100);
       document.getElementById('burn-total').textContent = fmtNum(Math.round(burned)) + ' IFR';
