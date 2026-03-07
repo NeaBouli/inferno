@@ -521,7 +521,7 @@ app.get("/api/ifr/balances", async (_req, res) => {
       } catch {
         results[label] = { raw: "0", formatted: 0 };
       }
-      if (i < entries.length - 1) await new Promise(r => setTimeout(r, 200));
+      if (i < entries.length - 1) await new Promise(r => setTimeout(r, 350));
     }
 
     const response = { balances: results, timestamp: new Date().toISOString() };
@@ -606,7 +606,7 @@ app.get("/api/ifr/txfeed", async (_req, res) => {
           }
         }
       } catch { /* skip */ }
-      await new Promise(r => setTimeout(r, 200));
+      await new Promise(r => setTimeout(r, 350));
 
       // IFR token transactions
       try {
@@ -631,7 +631,7 @@ app.get("/api/ifr/txfeed", async (_req, res) => {
           }
         }
       } catch { /* skip */ }
-      if (i < feedWallets.length - 1) await new Promise(r => setTimeout(r, 200));
+      if (i < feedWallets.length - 1) await new Promise(r => setTimeout(r, 350));
     }
 
     transactions.sort((a, b) => b.timestamp - a.timestamp);
