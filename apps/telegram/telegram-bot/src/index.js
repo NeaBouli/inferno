@@ -13,10 +13,16 @@ const partnerCommand  = require('./commands/partner');
 const bootstrapCommand = require('./commands/bootstrap');
 const roadmapCommand  = require('./commands/roadmap');
 const adminCommand    = require('./commands/admin');
+const rulesCommand    = require('./commands/rules');
+
+// Handlers
+const { onNewMember, onVerifyCallback } = require('./handlers/verification');
+const { scheduleDailyReport } = require('./handlers/dailyReport');
 
 // Middleware
 const rateLimit  = require('./middleware/rateLimit');
 const adminOnly  = require('./middleware/adminCheck');
+const { moderationMiddleware } = require('./services/moderation');
 
 // Validation
 if (!process.env.BOT_TOKEN) {
@@ -38,10 +44,18 @@ bot.catch((err, ctx) => {
   ctx.reply('❌ Ein unerwarteter Fehler ist aufgetreten. Bitte erneut versuchen.').catch(() => {});
 });
 
+// ── Moderation middleware (group messages) ───────────────────────────────────
+bot.use(moderationMiddleware());
+
+// ── Verification gate ────────────────────────────────────────────────────────
+bot.on('new_chat_members', onNewMember);
+bot.action(/^verify_\d+$/, onVerifyCallback);
+
 // ── Commands ────────────────────────────────────────────────────────────────
 
 bot.command('start', startCommand);
 bot.command('help',  startCommand); // /help = gleiche Ausgabe wie /start
+bot.command('rules', rulesCommand);
 
 bot.command('lock',       rateLimit('lock'),       lockCommand);
 bot.command('burns',      rateLimit('burns'),       burnsCommand);
@@ -69,6 +83,7 @@ bot.launch()
   .then(() => {
     logger.info('🔥 IFR Telegram Bot started successfully');
     logger.info({ env: process.env.NODE_ENV }, 'Environment');
+    scheduleDailyReport(bot);
   })
   .catch((err) => {
     logger.fatal({ err: err.message }, 'Failed to start bot');
