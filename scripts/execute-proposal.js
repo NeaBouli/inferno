@@ -1,22 +1,39 @@
 const { ethers } = require("hardhat");
 
 /**
- * INFERNO — Execute Governance Proposal #0
+ * INFERNO — Execute Governance Proposal
  *
- * Checks the status and ETA of Proposal #0 (setFeeExempt).
+ * Network-aware: auto-detects Mainnet vs Sepolia via chainId.
+ * Checks the status and ETA of a proposal (setFeeExempt).
  * If the timelock has elapsed, executes the proposal and verifies the result.
  * If not yet ready, displays a countdown.
  *
- * Usage: npx hardhat run scripts/execute-proposal.js --network sepolia
+ * Usage:
+ *   npx hardhat run scripts/execute-proposal.js --network mainnet
+ *   npx hardhat run scripts/execute-proposal.js --network sepolia
+ *   PROPOSAL_ID=3 npx hardhat run scripts/execute-proposal.js --network sepolia
  */
 
 const DECIMALS = 9;
-const ADDRESSES = {
-  token:      "0x3Bd71947F288d1dd8B21129B1bE4FF16EDd5d1F4",
-  governance: "0x6050b22E4EAF3f414d1155fBaF30B868E0107017",
+
+const NETWORK_CONFIG = {
+  // Mainnet (chainId 1)
+  1: {
+    token:      "0x77e99917Eca8539c62F509ED1193ac36580A6e7B",
+    governance: "0xc43d48E7FDA576C5022d0670B652A622E8caD041",
+    explorer:   "https://etherscan.io/tx/",
+    label:      "Mainnet",
+  },
+  // Sepolia (chainId 11155111)
+  11155111: {
+    token:      "0x3Bd71947F288d1dd8B21129B1bE4FF16EDd5d1F4",
+    governance: "0x6050b22E4EAF3f414d1155fBaF30B868E0107017",
+    explorer:   "https://sepolia.etherscan.io/tx/",
+    label:      "Sepolia",
+  },
 };
 
-const PROPOSAL_ID = parseInt(process.env.PROPOSAL_ID || "3");
+const PROPOSAL_ID = parseInt(process.env.PROPOSAL_ID || "0");
 
 function hr(title) {
   console.log("\n" + "=".repeat(60));
@@ -33,18 +50,29 @@ function formatCountdown(seconds) {
 
 async function main() {
   const [deployer] = await ethers.getSigners();
-  const token = await ethers.getContractAt("InfernoToken", ADDRESSES.token);
-  const governance = await ethers.getContractAt("Governance", ADDRESSES.governance);
-
   const network = await ethers.provider.getNetwork();
+  const chainId = network.chainId;
+
+  const config = NETWORK_CONFIG[chainId];
+  if (!config) {
+    console.error(`  ERROR: Unknown chainId ${chainId}. Supported: 1 (Mainnet), 11155111 (Sepolia)`);
+    process.exit(1);
+  }
+
+  const token = await ethers.getContractAt("InfernoToken", config.token);
+  const governance = await ethers.getContractAt("Governance", config.governance);
+
   const block = await ethers.provider.getBlock("latest");
   const blockTimestamp = block.timestamp;
 
   console.log("=".repeat(60));
   console.log("  INFERNO — Execute Governance Proposal");
   console.log("=".repeat(60));
+  console.log(`  Network:    ${config.label} (chainId ${chainId})`);
   console.log(`  Deployer:   ${deployer.address}`);
-  console.log(`  Network:    ${network.name} (${network.chainId})`);
+  console.log(`  Governance: ${config.governance}`);
+  console.log(`  Token:      ${config.token}`);
+  console.log(`  Proposal:   #${PROPOSAL_ID}`);
   console.log(`  Block:      ${block.number}`);
   console.log(`  Block Time: ${new Date(blockTimestamp * 1000).toISOString()}`);
 
@@ -143,7 +171,7 @@ async function main() {
     }
   }
 
-  console.log(`\n  Etherscan: https://sepolia.etherscan.io/tx/${tx.hash}`);
+  console.log(`\n  Etherscan: ${config.explorer}${tx.hash}`);
   console.log("=".repeat(60));
 }
 
