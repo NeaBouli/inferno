@@ -15,7 +15,7 @@ Formatter.prototype.transactionResponse = function (tx) {
  *
  * 1. Deploy BootstrapVaultV3 with immutable parameters (no ifrSource)
  * 2. Verify deployment state
- * 3. Print next steps (verify, feeExempt, LiqRes.withdraw)
+ * 3. Print next steps (verify, feeExempt, Plan B funding)
  *
  * Usage:
  *   DRY RUN:  npx hardhat run scripts/deploy-bootstrap-mainnet-v3.js
@@ -31,7 +31,6 @@ const ADDRESSES = {
   token:      "0x77e99917Eca8539c62F509ED1193ac36580A6e7B",  // InfernoToken
   router:     "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D",  // Uniswap V2 Router (Mainnet)
   governance: "0xc43d48E7FDA576C5022d0670B652A622E8caD041",
-  liqRes:     "0xdc0309804803b3A105154f6073061E3185018f64",  // LiquidityReserve (for next-steps info)
 };
 
 // ── Bootstrap Parameters ─────────────────────────────────────
@@ -141,9 +140,13 @@ async function main() {
   2. Create Governance proposal: setFeeExempt(BootstrapVaultV3, true)
      (Required before finalise() can work correctly)
 
-  3. Fund vault with ${fmt(IFR_ALLOC.mul(2))} IFR via Governance proposal:
-     LiquidityReserve.withdraw(${vault.address}, ${IFR_ALLOC.mul(2).toString()})
-     LiqRes: ${ADDRESSES.liqRes}
+  3. Fund vault via Treasury Safe: transfer 150M IFR to ${vault.address}
+     Treasury Safe: 0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b
+
+  4. Fund vault via Community Safe: transfer 50M IFR to ${vault.address}
+     Community Safe: 0xaC5687547B2B21d80F8fd345B51e608d476667C7
+
+  5. Verify: vault IFR balance >= ${fmt(IFR_ALLOC.mul(2))} before Bootstrap starts
 `);
 }
 

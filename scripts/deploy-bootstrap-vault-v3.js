@@ -5,7 +5,7 @@ const { ethers } = require("hardhat");
  *
  * 1. Deploy BootstrapVaultV3 with immutable parameters (no ifrSource)
  * 2. Verify deployment state
- * 3. Print next steps (verify, feeExempt proposal, LiqRes.withdraw)
+ * 3. Print next steps (verify, feeExempt proposal, Plan B funding)
  *
  * Usage: npx hardhat run scripts/deploy-bootstrap-vault-v3.js --network sepolia
  */
@@ -18,7 +18,6 @@ const ADDRESSES = {
   token:      "0x3Bd71947F288d1dd8B21129B1bE4FF16EDd5d1F4",
   router:     "0xC532a74256D3Db42D0Bf7a0400fEFDbad7694008",  // Uniswap V2 Router
   governance: "0x6050b22E4EAF3f414d1155fBaF30B868E0107017",
-  liqRes:     "0x344720eA0cd1654e2bDB41ecC1cCb11eD60f1957",  // LiquidityReserve v2 (for next-steps info)
 };
 
 // Bootstrap parameters
@@ -114,9 +113,11 @@ async function main() {
   2. Create Governance proposal: setFeeExempt(BootstrapVaultV3, true)
      (Required before finalise() can work correctly)
 
-  3. Fund vault with ${fmt(IFR_ALLOC.mul(2))} IFR via Governance proposal:
-     LiquidityReserve.withdraw(${vault.address}, ${IFR_ALLOC.mul(2).toString()})
-     LiqRes: ${ADDRESSES.liqRes}
+  3. Fund vault via Treasury Safe: transfer 150M IFR to ${vault.address}
+
+  4. Fund vault via Community Safe: transfer 50M IFR to ${vault.address}
+
+  5. Verify: vault IFR balance >= ${fmt(IFR_ALLOC.mul(2))} before Bootstrap starts
 `);
 }
 
