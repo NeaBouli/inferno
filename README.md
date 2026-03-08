@@ -4,9 +4,11 @@
 
 # Inferno ($IFR)
 
-**The Deflationary Utility Token**
+**The Deflationary Utility Token — Deployed on Ethereum Mainnet**
 
 [Website](https://ifrunit.tech/) · [Documentation](https://ifrunit.tech/wiki/) · [X / Twitter](https://x.com/IFRtoken) · [Etherscan](https://etherscan.io/address/0x77e99917Eca8539c62F509ED1193ac36580A6e7B#code)
+
+**14 on-chain components** | **494 tests** | **91% branch coverage** | **9 verified contracts + BootstrapVaultV3 + LP Pair + 3 upgrade deploys**
 
 ---
 
@@ -33,8 +35,8 @@ Inferno (IFR) is a deflationary ERC-20 utility token on Ethereum. Every transfer
 | DEX Liquidity | 40% | 400M IFR | |
 | Liquidity Reserve | 20% | 200M IFR | Not used for Bootstrap — locked until 01.09.2026 (Phase 2/3 LP expansion) |
 | Team (Vested) | 15% | 150M IFR | |
-| Treasury | 15% | 150M IFR | 150M allocated as Bootstrap funding source (Plan B) |
-| Community & Grants | 6% | 60M IFR | 50M Bootstrap funding + 10M operating buffer retained |
+| Treasury | 15% | 150M IFR | Bootstrap funding source (Plan B): Treasury Safe + Community Safe fund ~195M IFR |
+| Community & Grants | 6% | 60M IFR | Bootstrap funding (Plan B) + ~7.9M operating buffer retained |
 | Builder Ecosystem | 4% | 40M IFR | |
 
 Team tokens: 48-month vesting, 12-month cliff. Liquidity reserve: 6-month lock.
@@ -45,7 +47,7 @@ No presale, no VC, no IDO. Direct Uniswap V2 listing.
 Team allocation (15%) is locked in a vesting contract for 4 years
 with a 1-year cliff. See [Fair Launch Statement](docs/FAIR_LAUNCH.md).
 
-## Smart Contracts (9 Mainnet)
+## Smart Contracts (Ethereum Mainnet)
 
 | Contract | Mainnet Address |
 |----------|----------------|
@@ -58,6 +60,8 @@ with a 1-year cliff. See [Fair Launch Statement](docs/FAIR_LAUNCH.md).
 | FeeRouterV1 | [`0x4807B77B2E25cD055DA42B09BA4d0aF9e580C60a`](https://etherscan.io/address/0x4807B77B2E25cD055DA42B09BA4d0aF9e580C60a#code) |
 | Vesting | [`0x2694Bc84e8D5251E9E4Ecd4B2Ae3f866d6106271`](https://etherscan.io/address/0x2694Bc84e8D5251E9E4Ecd4B2Ae3f866d6106271#code) |
 | LiquidityReserve | [`0xdc0309804803b3A105154f6073061E3185018f64`](https://etherscan.io/address/0xdc0309804803b3A105154f6073061E3185018f64#code) |
+| BootstrapVaultV3 | [`0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141`](https://etherscan.io/address/0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141#code) **[ACTIVE]** |
+| BootstrapVault V1 | [`0xA820540936d18e1377C39dd9445E5b36F3F1261a`](https://etherscan.io/address/0xA820540936d18e1377C39dd9445E5b36F3F1261a#code) **[DEPRECATED]** |
 
 ### Gnosis Safe (Mainnet)
 
@@ -86,7 +90,7 @@ The ecosystem is open and permissionless. Any product can integrate IFR Lock.
 
 ## Testing & Security
 
-- 444 tests total: 367 contract tests + 41 Creator Gateway + 20 Points Backend + 16 Benefits Network — all passing
+- 494 tests total: 367 contract + 77 app + 50 Bootstrap Suite — all passing
 - Branch coverage: 91% (99% statements)
 - GitHub Actions CI: Creator Gateway, Points Backend, AI Copilot
 - Slither security audit: 0 high/critical findings
@@ -200,7 +204,7 @@ SIWE authentication, points tracking, and EIP-712 signed voucher issuance for pr
 - [Roadmap](docs/ROADMAP.md) — 6-phase roadmap (Foundation → Governance → Ecosystem → Mainnet → Growth → DAO)
 - [Page Update Checklist](docs/PAGE_UPDATE_CHECKLIST.md) — Which files to update for each event
 - [Deployment Stats](docs/stats.json) — Auto-generated on-chain stats (via update-stats.js)
-- [Project Summary](docs/PROJECT-SUMMARY.md) — Complete overview (9 mainnet contracts, 444 tests, 7 apps)
+- [Project Summary](docs/PROJECT-SUMMARY.md) — Complete overview (9 mainnet contracts, 494 tests, 7 apps)
 - [Release Notes v0.1.0](docs/RELEASE_NOTES_v0.1.0.md) — First tagged release (Sepolia testnet)
 - [Lighthouse Report](docs/LIGHTHOUSE_REPORT.md) — SEO optimizations (OG, Twitter Card, meta tags, sitemap, robots.txt)
 - [AI Copilot Test Results](docs/COPILOT_TEST_RESULTS.md) — RAG system test (6 questions, 3 modes, safety guards)
