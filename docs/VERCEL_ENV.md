@@ -46,7 +46,7 @@ railway domain
 Backend allows the following origins (fallback when `ALLOWED_ORIGINS` is not set):
 - `https://ifrunit.tech`
 - `https://www.ifrunit.tech`
-- `https://neabouli.github.io`
+- `https://ifrunit.tech`
 - `http://localhost:5175` (local dev)
 - `http://localhost:3003` (local dev)
 

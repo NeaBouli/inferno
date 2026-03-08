@@ -75,7 +75,7 @@ Users lock IFR tokens in the IFRLock contract -> receive lifetime premium access
 |-----------|-------|
 | Contracts | Solidity 0.8.20, OpenZeppelin v5 |
 | Framework | Hardhat v2, ethers v5 |
-| Tests | Chai v4, 444 tests, 99% coverage |
+| Tests | Chai v4, 494 tests, 99% coverage |
 | Dashboard | React 18 + Vite + ethers v5 |
 | Governance UI | React 18 + TypeScript + Tailwind |
 | AI Copilot | Claude Haiku 4.5 + RAG |
@@ -83,7 +83,7 @@ Users lock IFR tokens in the IFRLock contract -> receive lifetime premium access
 
 ## Roadmap (Summary)
 
-- **Q1 2026:** Testnet complete, 444 tests, all apps built, mainnet deployed (2026-03-05)
+- **Q1 2026:** Testnet complete, 494 tests, all apps built, mainnet deployed (2026-03-05)
 - **Q2 2026:** LP creation, security audit, first builders
 - **Q3 2026:** 10+ builders, Creator Gateway MVP, apps live
 - **Q4 2026:** Community governance, CEX outreach
@@ -93,9 +93,9 @@ Users lock IFR tokens in the IFRLock contract -> receive lifetime premium access
 
 | Resource | URL |
 |----------|-----|
-| Website | https://neabouli.github.io/inferno/ |
+| Website | https://ifrunit.tech/ |
 | GitHub | https://github.com/NeaBouli/inferno |
-| Wiki | https://neabouli.github.io/inferno/wiki/ |
+| Wiki | https://ifrunit.tech/wiki/ |
 | Transparency | docs/TRANSPARENCY.md |
 | Whitepaper | docs/WHITEPAPER.md |
 | Fair Launch | docs/FAIR_LAUNCH.md |

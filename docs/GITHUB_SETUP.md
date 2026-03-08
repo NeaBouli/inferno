@@ -25,7 +25,7 @@ Categories at: https://github.com/NeaBouli/inferno/discussions/categories
 | Source | Deploy from branch |
 | Branch | main |
 | Folder | /docs |
-| URL | https://neabouli.github.io/inferno/ |
+| URL | https://ifrunit.tech/ |
 
 ## Topics
 

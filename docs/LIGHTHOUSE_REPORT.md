@@ -11,17 +11,17 @@ As of: 26 February 2026
 | `og:title` | Inferno ($IFR) — The Deflationary Utility Token |
 | `og:description` | Lock IFR to unlock lifetime premium access. 2.5% burned per transfer. Community Fair Launch. |
 | `og:type` | website |
-| `og:url` | https://neabouli.github.io/inferno/ |
-| `og:image` | https://neabouli.github.io/inferno/assets/ifr_icon_4096.png |
+| `og:url` | https://ifrunit.tech/ |
+| `og:image` | https://ifrunit.tech/assets/ifr_icon_4096.png |
 | `og:site_name` | Inferno ($IFR) |
 | `twitter:card` | summary_large_image |
 | `twitter:site` | @IFRtoken |
 | `twitter:title` | Inferno ($IFR) — The Deflationary Utility Token |
 | `twitter:description` | Lock IFR to unlock lifetime premium access. 2.5% burned per transfer. Community Fair Launch. |
-| `twitter:image` | https://neabouli.github.io/inferno/assets/ifr_icon_4096.png |
+| `twitter:image` | https://ifrunit.tech/assets/ifr_icon_4096.png |
 | `robots` | index, follow |
 | `theme-color` | #ff4500 |
-| `canonical` | https://neabouli.github.io/inferno/ |
+| `canonical` | https://ifrunit.tech/ |
 
 ### Already Present
 
@@ -42,7 +42,7 @@ As of: 26 February 2026
 |------|--------|
 | `robots.txt` | Created (Allow: /, sitemap link) |
 | `sitemap.xml` | Updated (15 URLs: landing + 14 wiki pages) |
-| `canonical` | Set (https://neabouli.github.io/inferno/) |
+| `canonical` | Set (https://ifrunit.tech/) |
 | `robots` meta | Set (index, follow) |
 
 ### Recommended Next Steps

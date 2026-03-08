@@ -35,7 +35,7 @@ You are an independent auditor for the Inferno ($IFR) project. Check ALL referen
 Check in ALL files whether the following numbers are consistent:
 - "14 on-chain components" (not 10, not 8)
 - "9 repo contracts" (not 8)
-- "444 tests" (not 276, not 256, not 243)
+- "494 tests" (not 276, not 256, not 243)
 - "9 test suites" (not 8, not 7)
 - Token Allocation: 40/20/15/15/6/4 (sum = 100%)
 - Contract addresses match everywhere

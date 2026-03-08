@@ -216,7 +216,7 @@ inferno/
 |--------|-------|
 | Contracts | 10 (+ 5 Mocks) |
 | Solidity LOC | 1,950 |
-| Tests | 367 contract + 41 Creator Gateway + 20 Points + 16 Benefits = 444 total |
+| Tests | 367 contract + 41 Creator Gateway + 20 Points + 16 Benefits = 494 total |
 | Branch Coverage | 91% |
 | Test LOC | 2,402 |
 | Deploy Script | 232 LOC, 9 Steps |
@@ -260,7 +260,7 @@ inferno/
 | 2026-02-26 | update-stats.js: Auto-Update Script (Sepolia -> stats.json + TRANSPARENCY.md + STATUS-REPORT.md + index.html) |
 | 2026-02-26 | GitHub Actions: update-stats.yml (daily cron 06:00 UTC) + post-deploy.yml (trigger after deploy/execute push) |
 | 2026-02-26 | Wiki index.html: Stats cards expanded (330 Tests, 99% Coverage, 2M+ Burned, 13 Wiki Pages, 48h Timelock) |
-| 2026-02-26 | MULTISIG_SETUP.md v2.0: 3 phases (2-of-3 -> 3-of-5 -> 4-of-7), Guardian Multisig, wallet requirements, costs, checklist |
+| 2026-02-26 | MULTISIG_SETUP.md v2.0: 3 phases (2-of-4 -> 3-of-5 -> 4-of-7), Guardian Multisig, wallet requirements, costs, checklist |
 | 2026-02-26 | Coverage Final: 98.89% Stmts, 84.65% Branch (unchanged) |
 | 2026-02-26 | PROJECT-SUMMARY.md: FeeRouterV1 Coverage 100%/96% completed, Proposals #4-#6 updated |
 | 2026-02-26 | CHATGPT_AUDIT_V3_RESULTS.md: Complete results with methodology (8/8 PASS, 1 Finding) |

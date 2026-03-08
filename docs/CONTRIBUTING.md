@@ -79,7 +79,7 @@ For Solidity changes:
 
 ## Links
 
-- Docs: https://neabouli.github.io/inferno/wiki/
+- Docs: https://ifrunit.tech/wiki/
 - Issues: https://github.com/NeaBouli/inferno/issues
 - Security: [docs/SECURITY_POLICY.md](SECURITY_POLICY.md)
 

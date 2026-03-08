@@ -75,7 +75,7 @@
 | I) feeExempt | PASS | N/A. |
 | J) Owner Privileges | WARN | Can propose ANY calldata to ANY target contract. Can change owner immediately. Can change guardian immediately. Full control gated only by 48h timelock for execution. |
 
-**Recommendation:** Before mainnet, migrate owner to a multisig (Gnosis Safe 2-of-3 minimum). This is already on the roadmap.
+**Recommendation:** Before mainnet, migrate owner to a multisig (Gnosis Safe 2-of-4 minimum). This is already on the roadmap.
 
 ---
 
@@ -259,7 +259,7 @@ function setFeeCollector(address newCollector) external onlyGovernance {
 | # | Contract | Check | Finding | Recommendation |
 |---|----------|-------|---------|----------------|
 | W1 | Governance | H | `setOwner()` bypasses timelock — owner can transfer control immediately | Migrate owner to multisig before mainnet. Already planned. |
-| W2 | Governance | F | Single owner key controls all proposals. Key compromise = protocol compromise. | Gnosis Safe 2-of-3 minimum. Then 4-of-7 for mainnet. |
+| W2 | Governance | F | Single owner key controls all proposals. Key compromise = protocol compromise. | Gnosis Safe 2-of-4 minimum. Then 4-of-7 for mainnet. |
 | W3 | BuybackVault | C | `setParams` has no bounds on `burnShareBps`, `slippageBps`, `cooldown`. Invalid values cause DoS. | Add validation: `burnShareBps <= 10000`, `slippageBps <= 5000`, `cooldown >= 60`, `_router != address(0)`. |
 | W4 | BuybackVault | D | Uniswap swap in `executeBuyback` is MEV-vulnerable. Sandwich attacks extract value within slippage tolerance. | Use private mempool (Flashbots Protect) for buyback transactions on mainnet. |
 | W13 | BootstrapVault | D | `addLiquidityETH` with `amountTokenMin=0` exploitable if IFR/WETH pair pre-exists with manipulated ratio. No on-chain check. | Add `require(getPair(ifrToken, weth) == address(0), "pair exists")` before LP creation. Or verify pair freshness off-chain as pre-deploy step. |
@@ -309,7 +309,7 @@ All protocol parameter changes flow through the 48h timelock. The guardian (sepa
 **Risk:** If the Governance `owner` key is compromised, the attacker has 48h to execute any proposal. The guardian has that same 48h window to cancel.
 
 **Mitigation Path:**
-1. Migrate Governance owner to Gnosis Safe multisig (2-of-3 initially)
+1. Migrate Governance owner to Gnosis Safe multisig (2-of-4 initially)
 2. Scale to 4-of-7 for mainnet
 3. Long-term: full DAO governance (token-weighted voting)
 

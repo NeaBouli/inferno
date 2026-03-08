@@ -189,7 +189,7 @@ Integration: 5 lines of code. Fully decoupled.
 
 - Open source: All smart contracts public on GitHub
 - Slither static analysis: 0 high/critical findings
-- 444 tests (367 contract + 41 Creator Gateway + 20 Points Backend + 16 Benefits Network), all passing, 99% statement coverage
+- 494 tests (367 contract + 41 Creator Gateway + 20 Points Backend + 16 Benefits Network), all passing, 99% statement coverage
 - Professional third-party audit: recommended as next security milestone
 - Timelock: 48h mandatory waiting period on all changes
 - No minting: technically impossible after launch
@@ -247,8 +247,8 @@ Interested? See docs/PARTNER_INTEGRATION_SPEC.md
 | | |
 |-|-|
 | GitHub | https://github.com/NeaBouli/inferno |
-| Website | https://neabouli.github.io/inferno/ |
-| Docs | https://neabouli.github.io/inferno/wiki/ |
+| Website | https://ifrunit.tech/ |
+| Docs | https://ifrunit.tech/wiki/ |
 | X / Twitter | https://x.com/IFRtoken |
 | Mainnet Token | 0x77e99917Eca8539c62F509ED1193ac36580A6e7B |
 | Mainnet Governance | 0xc43d48E7FDA576C5022d0670B652A622E8caD041 |

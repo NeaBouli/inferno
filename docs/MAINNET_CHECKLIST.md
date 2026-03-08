@@ -71,7 +71,7 @@ These items MUST be completed before public launch:
 - [ ] Recommended: 2-of-4 signers (currently 1-of-2)
 - [ ] All signers have hardware wallets (Ledger/Trezor)
 - [x] Multisig address recorded: `0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b`
-- [ ] Guardian multisig created (separate Safe, 2-of-3 recommended)
+- [ ] Guardian multisig created (separate Safe, 2-of-4 recommended)
 - [ ] Guardian address recorded: [GUARDIAN_ADDRESS]
 - [ ] Test transaction on Sepolia with multisig successful
 

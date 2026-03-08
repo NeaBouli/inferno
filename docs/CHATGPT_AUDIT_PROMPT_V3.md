@@ -35,7 +35,7 @@ URL: https://github.com/NeaBouli/inferno/blob/main/docs/ONE-PAGER.md
 - No excessive marketing?
 
 ## F) Wiki transparency.html Present
-URL: https://neabouli.github.io/inferno/wiki/transparency.html
+URL: https://ifrunit.tech/wiki/transparency.html
 - Is the page reachable?
 - Is it linked in the sidebar of all wiki pages?
 - Are the tables correct?

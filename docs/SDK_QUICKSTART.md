@@ -263,7 +263,7 @@ async function safeCheckAccess(wallet, minIFR) {
 | Builder Onboarding | [docs/BUSINESS_ONBOARDING.md](BUSINESS_ONBOARDING.md) |
 | Contract ABI (complete) | [docs/PARTNER_INTEGRATION_SPEC.md](PARTNER_INTEGRATION_SPEC.md) |
 | GitHub | https://github.com/NeaBouli/inferno |
-| Docs | https://neabouli.github.io/inferno/wiki/ |
+| Docs | https://ifrunit.tech/wiki/ |
 
 ---
 *As of: March 2026 | IFR SDK Quickstart v1.1*
