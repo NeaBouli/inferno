@@ -12,13 +12,13 @@ As of: 26 February 2026
 | `og:description` | Lock IFR to unlock lifetime premium access. 2.5% burned per transfer. Community Fair Launch. |
 | `og:type` | website |
 | `og:url` | https://neabouli.github.io/inferno/ |
-| `og:image` | https://neabouli.github.io/inferno/assets/ifr_logo.png |
+| `og:image` | https://neabouli.github.io/inferno/assets/ifr_icon_4096.png |
 | `og:site_name` | Inferno ($IFR) |
 | `twitter:card` | summary_large_image |
 | `twitter:site` | @IFRtoken |
 | `twitter:title` | Inferno ($IFR) — The Deflationary Utility Token |
 | `twitter:description` | Lock IFR to unlock lifetime premium access. 2.5% burned per transfer. Community Fair Launch. |
-| `twitter:image` | https://neabouli.github.io/inferno/assets/ifr_logo.png |
+| `twitter:image` | https://neabouli.github.io/inferno/assets/ifr_icon_4096.png |
 | `robots` | index, follow |
 | `theme-color` | #ff4500 |
 | `canonical` | https://neabouli.github.io/inferno/ |
@@ -31,7 +31,7 @@ As of: 26 February 2026
 | `<meta name="viewport">` | OK |
 | `<meta name="description">` | OK |
 | `<title>` | OK |
-| `<link rel="icon">` | OK (token.png) |
+| `<link rel="icon">` | OK (ifr_icon_64.png) |
 | `<html lang="en">` | OK |
 | Font Preconnect | OK (googleapis + gstatic) |
 | Responsive Design | OK (CSS media queries) |
