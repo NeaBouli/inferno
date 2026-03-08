@@ -32,15 +32,14 @@ Inferno (IFR) is a deflationary ERC-20 utility token on Ethereum. Every transfer
 
 | Allocation | Share | Amount | Note |
 |-----------|-------|--------|------|
-| DEX Liquidity | 40% | 400M IFR | Paired on Uniswap V2 after Bootstrap completion |
-| Liquidity Reserve | 20% | 200M IFR | Smart-contract-locked until 01.09.2026. NOT used for Bootstrap. |
-| Team Vesting | 15% | 150M IFR | 12-month cliff, then linear over 36 months |
-| Bootstrap | 10% | 100M IFR | Plan B: Treasury Safe (~144.75M) + Community Safe (50M) = ~194.75M in BootstrapVaultV3 |
-| Buyback Vault | 8% | 80M IFR | Protocol buyback reserve |
-| Builder / PartnerVault | 4% | 40M IFR | Lock-triggered Creator Rewards, milestone vesting |
-| Community & Grants | 6% | 60M IFR | 57.9M received (3.5% burn). 50M → Bootstrap. ~7.9M operational reserve. |
-| Burn Reserve | 3% | 30M IFR | Permanent burn pool |
+| DEX Liquidity | 40% | 400M IFR | Held by deployer. Paired on Uniswap V2 via BootstrapVaultV3.finalise() after Bootstrap completion. |
+| Liquidity Reserve | 20% | 200M IFR | Smart-contract-locked until 01.09.2026. Phase 2 LP expansion. NOT used for Bootstrap. |
+| Team Vesting | 15% | 150M IFR | 12-month cliff, 36-month linear vesting. 0 tokens available before March 2027. |
+| Treasury | 15% | 150M IFR | Gnosis Safe multisig (0x5ad6193...). Funds Bootstrap via Plan B (~144.75M to vault). |
+| Community & Grants | 6% | 60M IFR | Community Safe (57.9M received after burn). 50M → Bootstrap. ~7.9M operational reserve. |
+| Builder Ecosystem | 4% | 40M IFR | PartnerVault contract. Lock-triggered Creator Rewards, milestone vesting. |
 
+BuybackVault and BurnReserve accumulate from the 1% protocol pool fee — not pre-funded genesis allocations.
 Team tokens: 48-month vesting, 12-month cliff. Liquidity reserve: locked until 01.09.2026.
 
 ## Fair Launch
