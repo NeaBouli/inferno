@@ -37,7 +37,7 @@ Deflationary + Utility:
 
 - Blockchain: Ethereum Mainnet (deployed 2026-03-05)
 - Contracts: Solidity 0.8.20, OpenZeppelin v5
-- Security: Slither 0 High/Critical, 444 tests, 99% coverage
+- Security: Slither 0 High/Critical, 494 tests, 99% coverage
 - Governance: 48h Timelock, Guardian Cancel, Gnosis Safe Multisig
 
 ## Post-Launch Roadmap
@@ -51,10 +51,10 @@ Deflationary + Utility:
 
 ## Links
 
-- Website: https://neabouli.github.io/inferno/
+- Website: https://ifrunit.tech/
 - GitHub: https://github.com/NeaBouli/inferno
 - Transparency: docs/TRANSPARENCY.md
-- Wiki: https://neabouli.github.io/inferno/wiki/
+- Wiki: https://ifrunit.tech/wiki/
 
 ---
 *Mainnet Live | March 2026 | Not financial advice*

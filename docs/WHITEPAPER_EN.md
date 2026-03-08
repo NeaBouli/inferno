@@ -1,6 +1,6 @@
 # Inferno – Whitepaper (EN)
 
-> **DEPRECATED** — This document reflects the initial draft from September 2025 and is no longer accurate. The project has since migrated to the Community Fair Launch Model (CFLM) — no presale, no VC, no IDO. The current whitepaper is [WHITEPAPER.md](WHITEPAPER.md) (German). For an up-to-date English overview, see the [Landing Page](https://neabouli.github.io/inferno/) or the [Technical Wiki](https://neabouli.github.io/inferno/wiki/).
+> **DEPRECATED** — This document reflects the initial draft from September 2025 and is no longer accurate. The project has since migrated to the Community Fair Launch Model (CFLM) — no presale, no VC, no IDO. The current whitepaper is [WHITEPAPER.md](WHITEPAPER.md) (German). For an up-to-date English overview, see the [Landing Page](https://ifrunit.tech/) or the [Technical Wiki](https://ifrunit.tech/wiki/).
 
 ## Abstract
 Inferno ($IFR) is a deflationary ERC-20 token on Ethereum. Supply reduction is achieved through fee-based burns on transfers (2.5% per transfer) and an on-chain buyback mechanism. Governance controls parameters via a 48-hour timelock. The token serves as a universal utility lock: users lock IFR on-chain to access lifetime premium features across builder products.

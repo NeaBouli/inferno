@@ -62,9 +62,9 @@
 
 | File | Line | Current | Correct |
 |------|------|---------|---------|
-| `docs/index.html` | 1675 | "367 tests" | "444 tests" |
+| `docs/index.html` | 1675 | "367 tests" | "494 tests" |
 
-**Fix:** Update to "444 tests" (367 contract + 41 Creator Gateway + 20 Points Backend + 16 Benefits Network).
+**Fix:** Update to "494 tests" (367 contract + 41 Creator Gateway + 20 Points Backend + 16 Benefits Network).
 
 ### H2: Wrong test count in FAQ
 
@@ -147,7 +147,7 @@
 
 ### Landing Page (`docs/index.html`) — Passed Checks
 
-- Domain: All references use `ifrunit.tech` (no `neabouli.github.io/inferno`)
+- Domain: All references use `ifrunit.tech` (no `ifrunit.tech`)
 - Mainnet badge: Green "Ethereum Mainnet" badge visible
 - Coin animation: All 3 keyframe animations present (`coinSpin`, `coinSpinFast`, `shadowPulse`)
 - Contract addresses: All 9 mainnet addresses correct with copy buttons

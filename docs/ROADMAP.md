@@ -16,7 +16,7 @@
 - [x] 14 on-chain components deployed on Sepolia (9 repo + 3 v2 + LP Pair + BootstrapVault)
 
 ### Testing & Security
-- [x] 367 contract tests, 444 total (+ 41 Creator Gateway + 20 Points + 16 Benefits)
+- [x] 367 contract tests, 494 total (+ 41 Creator Gateway + 20 Points + 16 Benefits)
 - [x] 91% branch coverage, 99% statement coverage
 - [x] Slither static analysis: 0 high/critical findings
 - [x] Claude Security Audit: 0 FAIL, 12 WARN, 78 PASS
@@ -85,8 +85,8 @@
 
 ## Phase 4: Decentralization (Q3 2026 - Q1 2027)
 
-- [ ] Multisig upgrade (2-of-3 → 3-of-5 → 4-of-7)
-- [ ] Guardian multisig (2-of-3, cancel-only)
+- [ ] Multisig upgrade (2-of-4 → 3-of-5 → 4-of-7)
+- [ ] Guardian multisig (2-of-4, cancel-only)
 - [ ] DAO governance framework (token-weighted voting)
 - [ ] Community proposals enabled
 - [ ] Builder token voting rights
