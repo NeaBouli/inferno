@@ -464,25 +464,11 @@
             <td>Standard startup vesting. 0 tokens available before March 2027.</td>
           </tr>
           <tr>
-            <td>Bootstrap</td>
-            <td>10%</td>
-            <td>100M IFR</td>
-            <td>Plan B funded</td>
-            <td>Plan B: Treasury Safe (~144.75M) + Community Safe (50M) = ~194.75M IFR in BootstrapVaultV3. Original 100M genesis allocation exceeded to maximize LP depth.</td>
-          </tr>
-          <tr>
-            <td>Buyback Vault</td>
-            <td>8%</td>
-            <td>80M IFR</td>
-            <td>Protocol-controlled</td>
-            <td>Protocol buyback reserve</td>
-          </tr>
-          <tr>
-            <td>Builder / PartnerVault</td>
-            <td>4%</td>
-            <td>40M IFR</td>
-            <td>Milestone-based</td>
-            <td>Lock-triggered Creator Rewards, vested 6&ndash;12 months</td>
+            <td>Treasury</td>
+            <td>15%</td>
+            <td>150M IFR</td>
+            <td>Gnosis Safe multisig</td>
+            <td>Protocol treasury. Funds Bootstrap via Plan B (~144.75M to vault). Ecosystem development, audits, partnerships.</td>
           </tr>
           <tr>
             <td>Community &amp; Grants</td>
@@ -492,14 +478,17 @@
             <td>Sent to Community Safe: 57.9M received (3.5% burn). 50M &rarr; Bootstrap. ~7.9M operational reserve.</td>
           </tr>
           <tr>
-            <td>Burn Reserve</td>
-            <td>3%</td>
-            <td>30M IFR</td>
-            <td>Permanent</td>
-            <td>Permanent burn pool</td>
+            <td>Builder / PartnerVault</td>
+            <td>4%</td>
+            <td>40M IFR</td>
+            <td>Milestone-based</td>
+            <td>Lock-triggered Creator Rewards, vested 6&ndash;12 months</td>
           </tr>
         </tbody>
       </table>
+      <p style="margin-top:12px;font-size:13px;color:var(--text-muted);line-height:1.6;">
+        <strong>Note:</strong> BuybackVault and BurnReserve are protocol contracts that accumulate from the 1% pool fee on every non-exempt transfer &mdash; they are not pre-funded genesis allocations. Bootstrap is funded via Plan B from Treasury + Community Safe (~194.75M IFR to BootstrapVaultV3).
+      </p>
 
       <!-- ========== Comparison ========== -->
       <h2>Comparison with Other Projects</h2>

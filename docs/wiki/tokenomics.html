@@ -807,7 +807,7 @@
            ============================================================ -->
       <h2 id="allocation">3. Token Allocation</h2>
       <p>
-        The total initial supply of 1,000,000,000 IFR is distributed across eight categories at deployment. All allocations are executed in the deploy script &mdash; there is no ongoing emission or inflation mechanism.
+        The total initial supply of 1,000,000,000 IFR is distributed across six categories at deployment. All allocations are executed in the deploy script &mdash; there is no ongoing emission or inflation mechanism.
       </p>
 
       <table>
@@ -824,7 +824,7 @@
             <td>DEX Liquidity</td>
             <td>40%</td>
             <td>400,000,000</td>
-            <td>Paired on Uniswap V2 after Bootstrap completion</td>
+            <td>Held by deployer. Paired on Uniswap V2 via <code>BootstrapVaultV3.finalise()</code> after Bootstrap completion.</td>
           </tr>
           <tr>
             <td>Liquidity Reserve</td>
@@ -836,37 +836,25 @@
             <td>Team Vesting</td>
             <td>15%</td>
             <td>150,000,000</td>
-            <td>12-month cliff, then linear over 36 months</td>
+            <td>12-month cliff, 36-month linear vesting. 0 tokens available before March 2027.</td>
           </tr>
           <tr>
-            <td>Bootstrap</td>
-            <td>10%</td>
-            <td>100,000,000</td>
-            <td>Funded via Plan B: Treasury Safe (~144.75M) + Community Safe (50M) = ~194.75M IFR in BootstrapVaultV3</td>
-          </tr>
-          <tr>
-            <td>Buyback Vault</td>
-            <td>8%</td>
-            <td>80,000,000</td>
-            <td>Protocol buyback reserve</td>
-          </tr>
-          <tr>
-            <td>Builder / PartnerVault</td>
-            <td>4%</td>
-            <td>40,000,000</td>
-            <td>Lock-triggered Creator Rewards, milestone vesting</td>
+            <td>Treasury</td>
+            <td>15%</td>
+            <td>150,000,000</td>
+            <td>Gnosis Safe multisig. Funds Bootstrap via Plan B (~144.75M to vault).</td>
           </tr>
           <tr>
             <td>Community &amp; Grants</td>
             <td>6%</td>
             <td>60,000,000</td>
-            <td>Sent to Community Safe: 57.9M received (after burn). 50M &rarr; Bootstrap. ~7.9M operational reserve.</td>
+            <td>Community Safe (57.9M received after burn). 50M &rarr; Bootstrap. ~7.9M operational reserve.</td>
           </tr>
           <tr>
-            <td>Burn Reserve</td>
-            <td>3%</td>
-            <td>30,000,000</td>
-            <td>Permanent burn pool</td>
+            <td>Builder Ecosystem</td>
+            <td>4%</td>
+            <td>40,000,000</td>
+            <td>PartnerVault contract. Lock-triggered Creator Rewards, milestone vesting.</td>
           </tr>
         </tbody>
       </table>
@@ -895,18 +883,11 @@
           <span class="alloc-amount">150M IFR</span>
         </div>
         <div class="alloc-row">
-          <span class="alloc-label">Bootstrap</span>
+          <span class="alloc-label">Treasury</span>
           <div class="alloc-bar-track">
-            <div class="alloc-bar-fill" style="width: 10%; background: linear-gradient(90deg, #22c55e, #4ade80);">10%</div>
+            <div class="alloc-bar-fill" style="width: 15%; background: linear-gradient(90deg, #9b59b6, #c084fc);">15%</div>
           </div>
-          <span class="alloc-amount">100M IFR</span>
-        </div>
-        <div class="alloc-row">
-          <span class="alloc-label">Buyback Vault</span>
-          <div class="alloc-bar-track">
-            <div class="alloc-bar-fill" style="width: 8%; background: linear-gradient(90deg, #14b8a6, #2dd4bf);">8%</div>
-          </div>
-          <span class="alloc-amount">80M IFR</span>
+          <span class="alloc-amount">150M IFR</span>
         </div>
         <div class="alloc-row">
           <span class="alloc-label">Community &amp; Grants</span>
@@ -916,18 +897,11 @@
           <span class="alloc-amount">60M IFR</span>
         </div>
         <div class="alloc-row">
-          <span class="alloc-label">Builder / PartnerVault</span>
+          <span class="alloc-label">Builder Ecosystem</span>
           <div class="alloc-bar-track">
             <div class="alloc-bar-fill" style="width: 4%; background: linear-gradient(90deg, #f97316, #fb923c);">4%</div>
           </div>
           <span class="alloc-amount">40M IFR</span>
-        </div>
-        <div class="alloc-row">
-          <span class="alloc-label">Burn Reserve</span>
-          <div class="alloc-bar-track">
-            <div class="alloc-bar-fill" style="width: 3%; background: linear-gradient(90deg, #ef4444, #f87171);">3%</div>
-          </div>
-          <span class="alloc-amount">30M IFR</span>
         </div>
       </div>
 
@@ -955,18 +929,12 @@
         <li>Prevents team dumps and aligns long-term incentives</li>
       </ul>
 
-      <p><strong>Bootstrap (10% &mdash; 100M IFR)</strong></p>
+      <p><strong>Treasury (15% &mdash; 150M IFR)</strong></p>
       <ul>
-        <li>Funded via Plan B (decision 08.03.2026): Treasury Safe (~144.75M) + Community Safe (50M) = ~194.75M IFR in BootstrapVaultV3</li>
-        <li>90-day Bootstrap period &mdash; ETH raised + IFR from vault create Uniswap V2 LP via <code>finalise()</code></li>
-        <li>BootstrapVaultV3 contract: <code>0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141</code></li>
-      </ul>
-
-      <p><strong>Buyback Vault (8% &mdash; 80M IFR)</strong></p>
-      <ul>
-        <li>Protocol buyback reserve held in the BuybackVault contract</li>
-        <li>Buys IFR via Uniswap V2 with ETH, splits 50/50 burn/treasury</li>
-        <li>Controlled by governance &mdash; no automatic execution (prevents MEV/sandwich attacks)</li>
+        <li>Held in Gnosis Safe multisig (<code>0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b</code>)</li>
+        <li>Funds Bootstrap via Plan B (~144.75M transferred to BootstrapVaultV3)</li>
+        <li>Remaining balance used for development, operations, and strategic initiatives</li>
+        <li>All disbursements require multisig approval</li>
       </ul>
 
       <p><strong>Community &amp; Grants (6% &mdash; 60M IFR)</strong></p>
@@ -976,7 +944,7 @@
         <li>~7.9M retained as operational reserve (after burn)</li>
       </ul>
 
-      <p><strong>Builder / PartnerVault (4% &mdash; 40M IFR)</strong></p>
+      <p><strong>Builder Ecosystem (4% &mdash; 40M IFR)</strong></p>
       <ul>
         <li>Dedicated pool managed by the <strong>PartnerVault</strong> contract (Mainnet: <code>0xc6eb7714bCb035ebc2D4d9ba7B3762ef7B9d4F7D</code>)</li>
         <li>Primary distribution via <strong>lock-triggered Creator Rewards</strong>: when a user locks IFR for a creator's product, the creator earns a percentage (RewardBps) from the pool, vested over 6&ndash;12 months</li>
@@ -985,9 +953,29 @@
         <li>Builder tokens grant DAO voting rights in Phase 4+</li>
       </ul>
 
-      <p><strong>Burn Reserve (3% &mdash; 30M IFR)</strong></p>
+      <p style="margin-top:24px;padding:12px 16px;background:rgba(255,255,255,0.03);border-left:3px solid var(--accent);border-radius:4px;font-size:13px;color:var(--muted);">
+        <strong>Note:</strong> BuybackVault and BurnReserve are <em>not</em> genesis allocations. They accumulate from the 1% protocol pool fee on every non-exempt IFR transfer. Bootstrap is funded via Plan B from Treasury + Community Safe &mdash; not a standalone genesis bucket.
+      </p>
+
+      <p><strong>Bootstrap Event (Plan B &mdash; not a genesis allocation)</strong></p>
       <ul>
-        <li>Permanent burn pool held in the BurnReserve contract</li>
+        <li>Funded via Plan B (decision 08.03.2026): Treasury Safe (~144.75M) + Community Safe (50M) = ~194.75M IFR in BootstrapVaultV3</li>
+        <li>90-day Bootstrap period &mdash; ETH raised + IFR from vault create Uniswap V2 LP via <code>finalise()</code></li>
+        <li>BootstrapVaultV3 contract: <code>0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141</code></li>
+      </ul>
+
+      <p><strong>BuybackVault (protocol contract &mdash; not a genesis allocation)</strong></p>
+      <ul>
+        <li>Accumulates from the 1% protocol pool fee on every non-exempt IFR transfer</li>
+        <li>Not pre-funded at genesis. Current balance: 0 IFR.</li>
+        <li>Buys IFR via Uniswap V2 with ETH, splits 50/50 burn/treasury</li>
+        <li>Controlled by governance &mdash; no automatic execution (prevents MEV/sandwich attacks)</li>
+      </ul>
+
+      <p><strong>BurnReserve (protocol contract &mdash; not a genesis allocation)</strong></p>
+      <ul>
+        <li>Accumulates from the 1% protocol pool fee on every non-exempt IFR transfer</li>
+        <li>Not pre-funded at genesis. Current balance: 0 IFR.</li>
         <li>Structured token burning to accelerate deflation</li>
         <li>Burns are executed via governance &mdash; transparent and verifiable on-chain</li>
       </ul>
