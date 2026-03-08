@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>DAO Governance &mdash; Inferno ($IFR) Documentation</title>
+  <title>Native Governance &mdash; Inferno ($IFR)</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -80,8 +80,6 @@
       padding: 16px 0;
       flex: 1;
     }
-
-    .sidebar-nav li {}
 
     .sidebar-nav a {
       display: block;
@@ -218,12 +216,11 @@
       background: #1a1a1d;
       border: 1px solid var(--border);
       border-radius: 8px;
-      padding: 16px 20px;
+      padding: 16px;
       overflow-x: auto;
       font-size: 13px;
       line-height: 1.7;
       margin: 16px 0;
-      color: var(--text);
     }
 
     code {
@@ -237,6 +234,16 @@
       padding: 2px 6px;
       border-radius: 4px;
       font-size: 13px;
+    }
+
+    .code-label {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--muted);
+      margin-bottom: 8px;
     }
 
     /* ---------- Tables ---------- */
@@ -297,12 +304,81 @@
       border-left-color: var(--green);
     }
 
-    /* ---------- Address ---------- */
-    .address {
-      font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+    .callout-green p {
+      color: var(--text);
+    }
+
+    /* ---------- Step number ---------- */
+    .step-num {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      background: var(--accent);
+      color: #fff;
+      font-size: 13px;
+      font-weight: 700;
+      border-radius: 50%;
+      margin-right: 10px;
+      flex-shrink: 0;
+    }
+
+    /* ---------- Status badge ---------- */
+    .status-badge {
+      display: inline-block;
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 24px;
+    }
+
+    .status-badge.coming-soon {
+      background: rgba(234, 179, 8, 0.15);
+      color: #eab308;
+      border: 1px solid rgba(234, 179, 8, 0.3);
+    }
+
+    /* ---------- Architecture diagram ---------- */
+    .arch-diagram {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0;
+      margin: 24px 0 32px;
+      flex-wrap: wrap;
+    }
+
+    .arch-box {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 20px 28px;
+      text-align: center;
+      min-width: 160px;
+    }
+
+    .arch-box-label {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .arch-box-sub {
       font-size: 12px;
       color: var(--muted);
-      word-break: break-all;
+      margin-top: 4px;
+    }
+
+    .arch-box.accent-border {
+      border-color: var(--accent);
+    }
+
+    .arch-arrow {
+      font-size: 24px;
+      color: var(--muted);
+      padding: 0 16px;
     }
 
     /* ---------- Footer ---------- */
@@ -341,12 +417,25 @@
         padding: 72px 20px 40px;
       }
 
+      .arch-diagram {
+        flex-direction: column;
+      }
+
+      .arch-arrow {
+        transform: rotate(90deg);
+        padding: 8px 0;
+      }
+
       table {
         font-size: 13px;
       }
 
       th, td {
         padding: 10px 12px;
+      }
+
+      .layer-grid {
+        grid-template-columns: 1fr !important;
       }
     }
 
@@ -359,83 +448,163 @@
        End Shared Styles
        ============================================================ */
 
-    /* ---------- DAO Governance Page Styles ---------- */
-    .phase-badge {
-      display: inline-block;
+    /* ---------- Governance Page — Layer Diagram ---------- */
+    .layer-stack {
+      margin: 24px 0 32px;
+    }
+
+    .layer-box {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 20px 24px;
+      margin-bottom: 0;
+    }
+
+    .layer-box.layer-telegram {
+      background: rgba(0, 136, 204, 0.06);
+      border-color: rgba(0, 136, 204, 0.3);
+    }
+
+    .layer-box.layer-bot {
+      background: rgba(168, 85, 247, 0.06);
+      border-color: rgba(168, 85, 247, 0.3);
+    }
+
+    .layer-box.layer-chain {
+      background: rgba(34, 197, 94, 0.06);
+      border-color: rgba(34, 197, 94, 0.3);
+    }
+
+    .layer-title {
       font-size: 11px;
       font-weight: 700;
-      padding: 2px 10px;
-      border-radius: 12px;
-      vertical-align: middle;
-      margin-left: 8px;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      margin-bottom: 14px;
     }
-    .badge-planned {
-      background: rgba(255, 160, 0, 0.15);
-      color: #ffa500;
-      border: 1px solid rgba(255, 160, 0, 0.3);
+
+    .layer-telegram .layer-title { color: #0088cc; }
+    .layer-bot .layer-title { color: #a855f7; }
+    .layer-chain .layer-title { color: var(--green); }
+
+    .layer-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
     }
-    .arch-diagram {
-      background: var(--card);
+
+    .layer-cell {
+      background: rgba(255, 255, 255, 0.03);
       border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 20px;
-      overflow-x: auto;
-      font-family: 'Courier New', monospace;
+      border-radius: 6px;
+      padding: 12px 14px;
+    }
+
+    .layer-cell-name {
       font-size: 13px;
-      line-height: 1.5;
-      color: var(--muted);
-      margin: 16px 0 24px;
-    }
-    .chamber-card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 24px;
-      margin: 16px 0;
-    }
-    .chamber-card h3 {
-      color: var(--accent);
-      margin-bottom: 12px;
-    }
-    .bot-table {
-      width: 100%;
-      border-collapse: collapse;
-      margin: 16px 0;
-    }
-    .bot-table th, .bot-table td {
-      padding: 12px 16px;
-      border: 1px solid var(--border);
-      text-align: left;
-    }
-    .bot-table th {
-      background: var(--card);
-      color: var(--text);
       font-weight: 600;
+      color: var(--text);
     }
-    .bot-table td {
+
+    .layer-cell-desc {
+      font-size: 12px;
       color: var(--muted);
+      margin-top: 2px;
     }
-    .contract-box {
+
+    .layer-arrow-row {
+      text-align: center;
+      padding: 8px 0;
+      font-size: 20px;
+      color: var(--muted);
+      letter-spacing: 16px;
+    }
+
+    /* ---------- Step flow (horizontal) ---------- */
+    .step-flow {
+      display: flex;
+      align-items: flex-start;
+      gap: 0;
+      margin: 20px 0 24px;
+      flex-wrap: wrap;
+    }
+
+    .step-card {
       background: var(--card);
       border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 20px;
+      border-radius: 10px;
+      padding: 16px 18px;
+      min-width: 140px;
+      flex: 1;
+    }
+
+    .step-card .step-num {
+      margin-bottom: 8px;
+      display: flex;
+    }
+
+    .step-card-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+
+    .step-card-desc {
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .step-arrow {
+      display: flex;
+      align-items: center;
+      font-size: 20px;
+      color: var(--muted);
+      padding: 0 8px;
+      padding-top: 20px;
+    }
+
+    /* ---------- Contract cards ---------- */
+    .contract-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 20px 24px;
       margin: 12px 0;
     }
-    .contract-box h4 {
+
+    .contract-card h3 {
       color: var(--green);
-      margin-bottom: 8px;
+      font-size: 16px;
+      margin: 0 0 8px;
     }
+
+    .contract-card .contract-status {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 10px;
+      border-radius: 12px;
+      background: rgba(234, 179, 8, 0.15);
+      color: #eab308;
+      border: 1px solid rgba(234, 179, 8, 0.3);
+      margin-left: 8px;
+      vertical-align: middle;
+    }
+
+    /* ---------- Journey steps ---------- */
     .journey-step {
       display: flex;
-      gap: 16px;
+      gap: 14px;
       margin: 12px 0;
       align-items: flex-start;
     }
+
     .journey-num {
       flex-shrink: 0;
-      width: 32px;
-      height: 32px;
+      width: 28px;
+      height: 28px;
       border-radius: 50%;
       background: var(--accent);
       color: #fff;
@@ -443,7 +612,29 @@
       align-items: center;
       justify-content: center;
       font-weight: 700;
+      font-size: 13px;
+    }
+
+    .journey-text {
       font-size: 14px;
+      color: var(--muted);
+      padding-top: 3px;
+    }
+
+    .journey-text strong {
+      color: var(--text);
+    }
+
+    @media (max-width: 768px) {
+      .step-flow {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .step-arrow {
+        transform: rotate(90deg);
+        justify-content: center;
+        padding: 4px 0;
+      }
     }
   </style>
   <link rel="icon" type="image/png" href="../assets/ifr_icon_64.png">
@@ -457,7 +648,7 @@
     <span></span>
   </button>
 
-  <!-- Overlay (mobile only) -->
+  <!-- Sidebar overlay (mobile) -->
   <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
   <div class="layout">
@@ -494,139 +685,358 @@
     <!-- Main content -->
     <main class="main">
 
-      <h1>DAO Governance <span class="phase-badge badge-planned">Phase 5 &mdash; Planned</span></h1>
-      <p style="color:var(--muted);margin-top:8px;">Two-chamber governance system via Telegram &mdash; on-chain anchoring, off-chain voting.</p>
+      <h1>Native <span class="accent">Governance</span></h1>
+      <p class="subtitle">
+        Two-chamber token-weighted governance via Telegram &mdash; on-chain truth, off-chain voting.
+      </p>
 
-      <h2 id="overview">Executive Summary</h2>
-      <p>IFR governance happens where the community lives: Telegram. A hybrid on-chain/off-chain system respects IFR's burning characteristic (no transaction costs for voting) while providing maximum transparency and security.</p>
-      <p>The system consists of two complementary chambers:</p>
-      <ol>
-        <li><strong>Der Rat (The Council)</strong> &mdash; Team governance for strategic decisions and capital allocation.</li>
-        <li><strong>Das Forum (The Forum)</strong> &mdash; Community innovation with built-in economic spam protection.</li>
-      </ol>
+      <div class="status-badge coming-soon">Phase 4 &mdash; Planned</div>
 
+      <!-- ============================================================
+           Section 1: Overview
+           ============================================================ -->
+      <h2 id="overview">What is IFR Native Governance?</h2>
+
+      <p>
+        IFR governance happens where the community already lives: <strong>Telegram</strong>. Instead of building a separate voting dApp, the governance system is integrated directly into Telegram groups and channels.
+      </p>
+
+      <p>
+        The system uses a hybrid on-chain/off-chain model. Voting is free and happens off-chain (via Telegram reactions and polls), while results are permanently anchored on-chain for transparency and tamper-proofing.
+      </p>
+
+      <ul>
+        <li><strong>No gas costs for voting:</strong> IFR is a deflationary token &mdash; every transfer burns tokens. Off-chain voting avoids unnecessary burns.</li>
+        <li><strong>IFR Lock = voting power:</strong> 1 IFR locked in the IFRLock contract = 1 vote. No minimum threshold for voting.</li>
+        <li><strong>Two chambers:</strong> The Council (team governance) + The Forum (community innovation).</li>
+        <li><strong>On-chain truth:</strong> Every vote result is finalized on-chain with a Merkle root for cryptographic verification.</li>
+      </ul>
+
+      <div class="callout-green callout">
+        <p><strong>Why Telegram?</strong> No extra app to install. No wallet connection friction for voting. The community is already there. Higher participation = better governance.</p>
+      </div>
+
+      <!-- ============================================================
+           Section 2: Architecture
+           ============================================================ -->
       <h2 id="architecture">Architecture</h2>
-      <p>Three-layer design: Presentation (Telegram), Logic (Bot Backend), Truth (Blockchain).</p>
-      <div class="arch-diagram">
-<pre>[TELEGRAM - UI LAYER]
-------------------------------------------------------
-| @IFR_News            | @IFR_Rat                    |
-| (Announcements)      | (Team + Bot only)            |
-------------------------------------------------------
-| @IFR_Forum           | @IFR_Abstimmung             |
-| (Anyone with Lock)   | (Voting only)                |
-------------------------------------------------------
-            |                           |
-            v                           v
-[BACKEND - BOT LAYER (Node.js)]
-------------------------------------------------------
-| Wallet-Mapper    | IFR-Reader    | Reaction-Tracker |
-| Poll-Manager     | Ranking Cron  | Consensus Cron   |
-| Finalizer Cron   | Executor (sole key holder)       |
-------------------------------------------------------
-            |                           |
-            v                           v
-[BLOCKCHAIN - ON-CHAIN LAYER (Ethereum)]
-------------------------------------------------------
-| IFR Core: InfernoToken + IFRLock                    |
-| New: RatVoting.sol | ForumVoting.sol                |
-|      IFRSpamProtection.sol                          |
-------------------------------------------------------</pre>
+
+      <p>
+        Three-layer design: Presentation (Telegram), Logic (Bot Backend), Truth (Blockchain).
+      </p>
+
+      <div class="layer-stack">
+
+        <!-- Layer 1: Telegram -->
+        <div class="layer-box layer-telegram">
+          <div class="layer-title">Telegram &mdash; UI Layer</div>
+          <div class="layer-grid">
+            <div class="layer-cell">
+              <div class="layer-cell-name">@IFR_News</div>
+              <div class="layer-cell-desc">Announcements (read-only)</div>
+            </div>
+            <div class="layer-cell">
+              <div class="layer-cell-name">@IFR_Council</div>
+              <div class="layer-cell-desc">Team + Bot (read-only for community)</div>
+            </div>
+            <div class="layer-cell">
+              <div class="layer-cell-name">@IFR_Forum</div>
+              <div class="layer-cell-desc">Open to all IFR Lockers</div>
+            </div>
+            <div class="layer-cell">
+              <div class="layer-cell-name">@IFR_Vote</div>
+              <div class="layer-cell-desc">Voting only (polls &amp; reactions)</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Arrow down -->
+        <div class="layer-arrow-row">&darr; &darr;</div>
+
+        <!-- Layer 2: Bot -->
+        <div class="layer-box layer-bot">
+          <div class="layer-title">Backend &mdash; Bot Layer (Node.js)</div>
+          <div class="layer-grid">
+            <div class="layer-cell">
+              <div class="layer-cell-name">Wallet-Mapper</div>
+              <div class="layer-cell-desc">TelegramID &harr; Wallet (encrypted)</div>
+            </div>
+            <div class="layer-cell">
+              <div class="layer-cell-name">IFR-Reader</div>
+              <div class="layer-cell-desc">Reads IFRLock contract, caches balances</div>
+            </div>
+            <div class="layer-cell">
+              <div class="layer-cell-name">Reaction-Tracker</div>
+              <div class="layer-cell-desc">Tracks votes with lock weights</div>
+            </div>
+            <div class="layer-cell">
+              <div class="layer-cell-name">Poll-Manager</div>
+              <div class="layer-cell-desc">Creates weighted Telegram polls</div>
+            </div>
+            <div class="layer-cell">
+              <div class="layer-cell-name">Cron: Ranking</div>
+              <div class="layer-cell-desc">Daily top proposal calculation</div>
+            </div>
+            <div class="layer-cell">
+              <div class="layer-cell-name">Cron: Consensus</div>
+              <div class="layer-cell-desc">Monitors 10-day Top 3 condition</div>
+            </div>
+            <div class="layer-cell">
+              <div class="layer-cell-name">Cron: Finalizer</div>
+              <div class="layer-cell-desc">Submits results on-chain</div>
+            </div>
+            <div class="layer-cell">
+              <div class="layer-cell-name">Executor</div>
+              <div class="layer-cell-desc">Sole private key holder for TXs</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Arrow down -->
+        <div class="layer-arrow-row">&darr; &darr;</div>
+
+        <!-- Layer 3: Blockchain -->
+        <div class="layer-box layer-chain">
+          <div class="layer-title">Blockchain &mdash; On-Chain Layer (Ethereum)</div>
+          <div class="layer-grid">
+            <div class="layer-cell">
+              <div class="layer-cell-name">IFR Core</div>
+              <div class="layer-cell-desc">InfernoToken + IFRLock Contract</div>
+            </div>
+            <div class="layer-cell">
+              <div class="layer-cell-name">New Contracts</div>
+              <div class="layer-cell-desc">RatVoting.sol &bull; ForumVoting.sol &bull; IFRSpamProtection.sol</div>
+            </div>
+          </div>
+        </div>
+
       </div>
 
-      <h2 id="council">Chamber 1: Der Rat (The Council)</h2>
-      <div class="chamber-card">
-        <h3>Team Governance</h3>
-        <p><strong>Purpose:</strong> Protocol parameters, treasury allocation, strategic partnerships.</p>
-        <p><strong>Participants:</strong> Dev team / Multisig signers.</p>
-        <p><strong>Proposal rights:</strong> Team only.</p>
-        <h4 style="margin-top:16px;">Process</h4>
-        <ol style="margin-top:8px;padding-left:20px;color:var(--muted);">
-          <li>Team member creates proposal via <code>/rat_proposal "Title" "Description" "Duration"</code></li>
-          <li>Bot posts proposal in @IFR_Rat (read-only for community). Discussion in @IFR_Forum.</li>
-          <li><strong>Snapshot voting:</strong> Only users with IFR-Lock participate. Off-chain votes weighted by lock amount (1 IFR = 1 vote).</li>
-          <li><strong>Finalization:</strong> Bot aggregates weighted results, creates Merkle Tree, sends single on-chain TX to <code>RatVoting.sol</code>: ProposalID + ForWeight + AgainstWeight + MerkleRoot.</li>
-        </ol>
-        <p style="margin-top:12px;color:var(--muted);">Every voter can cryptographically prove their vote was included in the Merkle Tree.</p>
+      <!-- ============================================================
+           Section 3: Chamber 1 — The Council
+           ============================================================ -->
+      <h2 id="council">Chamber 1 &mdash; The Council</h2>
+
+      <p>
+        Team governance for strategic decisions, treasury allocation, and partnerships. Only the dev team and multisig signers can create proposals. The community can discuss and vote, but proposal rights are restricted.
+      </p>
+
+      <div class="step-flow">
+        <div class="step-card">
+          <div class="step-num">1</div>
+          <div class="step-card-title">Create Proposal</div>
+          <div class="step-card-desc">Team member runs<br><code>/council_proposal</code><br>with title, description, duration</div>
+        </div>
+        <div class="step-arrow">&rarr;</div>
+        <div class="step-card">
+          <div class="step-num">2</div>
+          <div class="step-card-title">Publish &amp; Discuss</div>
+          <div class="step-card-desc">Bot posts to @IFR_Council (read-only). Discussion happens in @IFR_Forum.</div>
+        </div>
+        <div class="step-arrow">&rarr;</div>
+        <div class="step-card">
+          <div class="step-num">3</div>
+          <div class="step-card-title">Snapshot Vote</div>
+          <div class="step-card-desc">IFR Lockers vote off-chain. Weighted by lock balance: 1 IFR = 1 vote.</div>
+        </div>
+        <div class="step-arrow">&rarr;</div>
+        <div class="step-card">
+          <div class="step-num">4</div>
+          <div class="step-card-title">Finalize On-Chain</div>
+          <div class="step-card-desc">Bot aggregates results, builds Merkle Tree, sends single TX to <code>RatVoting.sol</code>.</div>
+        </div>
       </div>
 
-      <h2 id="forum">Chamber 2: Das Forum (Community Innovation)</h2>
-      <div class="chamber-card">
-        <h3>Community Governance</h3>
-        <p><strong>Purpose:</strong> Community brings ideas; most popular ones go to binding vote.</p>
-        <p><strong>Participants:</strong> Anyone with IFR-Lock.</p>
-        <p><strong>Proposal cost:</strong> 10 IFR (spam protection &mdash; refunded on success, burned on failure).</p>
-        <h4 style="margin-top:16px;">Process</h4>
-        <ol style="margin-top:8px;padding-left:20px;color:var(--muted);">
-          <li><strong>Submit:</strong> <code>/propose My Idea</code> in @IFR_Forum &rarr; Bot checks lock, transfers 10 IFR to <code>IFRSpamProtection.sol</code></li>
-          <li><strong>Voting period (7 days):</strong> Community votes via reactions. Bot weights each reaction by voter's IFR-Lock amount. Auto-deletion if downvotes &gt; 50%.</li>
-          <li><strong>Ranking:</strong> Daily cron calculates scores. Top 3 proposals posted daily.</li>
-          <li><strong>Consensus phase:</strong> Proposal stays 10 days in Top 3 &rarr; EIP-712 binding vote. Users sign via <code>/sign 42 yes</code>.</li>
-          <li><strong>Finalization:</strong> Bot bundles signatures &rarr; single TX to <code>ForumVoting.sol</code>. Contract verifies signatures + lock status. Result stored on-chain permanently.</li>
-        </ol>
+      <div class="callout-green callout">
+        <p><strong>Verifiable votes:</strong> Every voter can cryptographically prove their vote was correctly included in the Merkle Tree using the public <code>verifyVote()</code> function on RatVoting.sol.</p>
       </div>
 
-      <h2 id="bot">Bot Architecture</h2>
-      <p>A single bot serves both chambers with strict role separation.</p>
-      <table class="bot-table">
+      <!-- ============================================================
+           Section 4: Chamber 2 — The Forum
+           ============================================================ -->
+      <h2 id="forum">Chamber 2 &mdash; The Forum</h2>
+
+      <p>
+        Community innovation chamber. Anyone with IFR locked can submit proposals. A 10 IFR spam protection fee is required &mdash; refunded on successful consensus, burned if rejected. This reinforces IFR&rsquo;s deflationary design.
+      </p>
+
+      <div class="step-flow">
+        <div class="step-card">
+          <div class="step-num">1</div>
+          <div class="step-card-title">Submit Proposal</div>
+          <div class="step-card-desc"><code>/propose</code> in @IFR_Forum. 10 IFR deposited to IFRSpamProtection.sol.</div>
+        </div>
+        <div class="step-arrow">&rarr;</div>
+        <div class="step-card">
+          <div class="step-num">2</div>
+          <div class="step-card-title">7-Day Voting</div>
+          <div class="step-card-desc">Community reacts. Lock-weighted. Auto-deleted if downvotes &gt; 50%.</div>
+        </div>
+        <div class="step-arrow">&rarr;</div>
+        <div class="step-card">
+          <div class="step-num">3</div>
+          <div class="step-card-title">Daily Ranking</div>
+          <div class="step-card-desc">Cron calculates scores. Top 3 proposals posted every day.</div>
+        </div>
+      </div>
+
+      <div class="step-flow">
+        <div class="step-card">
+          <div class="step-num">4</div>
+          <div class="step-card-title">Consensus Phase</div>
+          <div class="step-card-desc">10 days in Top 3 triggers binding vote. EIP-712 signing via <code>/sign [id] yes</code>.</div>
+        </div>
+        <div class="step-arrow">&rarr;</div>
+        <div class="step-card">
+          <div class="step-num">5</div>
+          <div class="step-card-title">On-Chain Result</div>
+          <div class="step-card-desc">Bot bundles signatures, sends single TX to ForumVoting.sol. Result permanent on-chain.</div>
+        </div>
+      </div>
+
+      <div class="callout">
+        <p><strong>Deflationary mechanic:</strong> The 10 IFR spam fee reinforces IFR&rsquo;s deflationary design. Bad proposals burn IFR permanently. Good proposals earn it back. Every rejected proposal reduces total supply.</p>
+      </div>
+
+      <!-- ============================================================
+           Section 5: How Voting Works
+           ============================================================ -->
+      <h2 id="voting">How Voting Works</h2>
+
+      <p>
+        Voting is designed to be free, simple, and verifiable. No gas costs, no wallet popups, no dApp switching.
+      </p>
+
+      <h3>Step-by-Step</h3>
+
+      <div class="journey-step"><div class="journey-num">1</div><div class="journey-text"><strong>Connect wallet:</strong> Send <code>/connect</code> in @IFR_Forum. The bot opens a Mini-App where you sign a free message with MetaMask. This links your Telegram account to your Ethereum address (one-time only).</div></div>
+
+      <div class="journey-step"><div class="journey-num">2</div><div class="journey-text"><strong>Voting power:</strong> Automatically calculated from the IFR Lock Contract (read-only query, no transaction needed). 1 IFR locked = 1 vote.</div></div>
+
+      <div class="journey-step"><div class="journey-num">3</div><div class="journey-text"><strong>Cast vote:</strong> React with thumbs up or thumbs down on proposals in @IFR_Forum, or vote in @IFR_Vote polls. The bot records your vote and weights it by your lock balance.</div></div>
+
+      <div class="journey-step"><div class="journey-num">4</div><div class="journey-text"><strong>No gas costs:</strong> All voting happens off-chain (reactions and polls). Only the final result is sent on-chain &mdash; and the bot pays for that transaction.</div></div>
+
+      <div class="journey-step"><div class="journey-num">5</div><div class="journey-text"><strong>Verify:</strong> After finalization, anyone can verify their vote was counted correctly via the Merkle proof on RatVoting.sol (public view function).</div></div>
+
+      <h3>Cost Overview</h3>
+
+      <table>
         <thead>
-          <tr><th>Component</th><th>Function</th></tr>
+          <tr>
+            <th>Action</th>
+            <th>Gas Cost</th>
+            <th>How</th>
+          </tr>
         </thead>
         <tbody>
-          <tr><td>Wallet-Mapper</td><td>Encrypted DB: TelegramUserID &harr; EthereumAddress (one-time free signature)</td></tr>
-          <tr><td>IFR-Reader</td><td>Reads IFR Lock Contract permanently (Infura/Alchemy), caches lock amounts</td></tr>
-          <tr><td>Reaction-Tracker</td><td>Tracks every reaction with timestamp + lock weight of user</td></tr>
-          <tr><td>Poll-Manager</td><td>Creates native Telegram polls for Council, aggregates weighted results</td></tr>
-          <tr><td>Cron: Ranking</td><td>Runs daily, calculates top proposals</td></tr>
-          <tr><td>Cron: Consensus</td><td>Checks if proposal stayed 10 days in Top 3</td></tr>
-          <tr><td>Cron: Finalizer</td><td>Sends collected votes on-chain after signature phase</td></tr>
-          <tr><td>Executor</td><td>Sole component with private key / multisig access for on-chain TXs</td></tr>
+          <tr><td>Connect wallet</td><td>Free</td><td>One-time MetaMask signature</td></tr>
+          <tr><td>Vote on proposal</td><td>Free</td><td>Telegram reaction or poll</td></tr>
+          <tr><td>Submit proposal</td><td>10 IFR</td><td><code>/propose</code> command</td></tr>
+          <tr><td>Final on-chain TX</td><td>Bot pays</td><td>Automatic after voting ends</td></tr>
         </tbody>
       </table>
 
+      <!-- ============================================================
+           Section 6: Bot Architecture
+           ============================================================ -->
+      <h2 id="bot">Bot Architecture</h2>
+
+      <p>
+        A single Node.js bot serves both chambers with strict role separation. Only the Executor component holds private keys.
+      </p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Component</th>
+            <th>Function</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>Wallet-Mapper</strong></td><td>Encrypted database mapping TelegramUserID to EthereumAddress (one-time free signature)</td></tr>
+          <tr><td><strong>IFR-Reader</strong></td><td>Reads IFR Lock Contract via Infura/Alchemy, caches lock balances</td></tr>
+          <tr><td><strong>Reaction-Tracker</strong></td><td>Tracks every reaction with timestamp and lock weight of the voter</td></tr>
+          <tr><td><strong>Poll-Manager</strong></td><td>Creates native Telegram polls for Council votes, aggregates weighted results</td></tr>
+          <tr><td><strong>Cron: Ranking</strong></td><td>Runs daily, calculates top proposals by weighted score (upvotes minus downvotes)</td></tr>
+          <tr><td><strong>Cron: Consensus</strong></td><td>Monitors whether a proposal has stayed 10 consecutive days in Top 3</td></tr>
+          <tr><td><strong>Cron: Finalizer</strong></td><td>Submits collected votes on-chain after the signature phase ends</td></tr>
+          <tr><td><strong>Executor</strong></td><td>Sole component with private key / multisig access for on-chain transactions</td></tr>
+        </tbody>
+      </table>
+
+      <!-- ============================================================
+           Section 7: Smart Contracts
+           ============================================================ -->
       <h2 id="contracts">Smart Contracts</h2>
-      <div class="contract-box">
-        <h4>RatVoting.sol</h4>
-        <p>Stores results of team votes (snapshot model).</p>
-        <ul style="margin-top:8px;padding-left:20px;color:var(--muted);">
-          <li><code>finalizeProposal()</code> &mdash; Bot-only, stores ProposalID + ForWeight + AgainstWeight + MerkleRoot</li>
-          <li><code>verifyVote(proposalId, voter, vote, weight, proof)</code> &mdash; View function for vote verification</li>
-        </ul>
-      </div>
-      <div class="contract-box">
-        <h4>ForumVoting.sol</h4>
-        <p>Manages binding community votes (signed-vote model).</p>
-        <ul style="margin-top:8px;padding-left:20px;color:var(--muted);">
-          <li><code>submitVotes(proposalId, votes[], signatures[])</code> &mdash; Verifies signatures (ecrecover), checks IFR Lock, stores final result</li>
-        </ul>
-      </div>
-      <div class="contract-box">
-        <h4>IFRSpamProtection.sol</h4>
-        <p>Manages the 10 IFR proposal fee.</p>
-        <ul style="margin-top:8px;padding-left:20px;color:var(--muted);">
-          <li>Successful consensus &rarr; 10 IFR refunded (incentive for good proposals)</li>
-          <li>Downvoted &gt; 50% &rarr; 10 IFR burned (deflationary)</li>
-          <li>Requires <code>approve()</code> from user before submission</li>
+
+      <p>Three new contracts will be deployed for the governance system.</p>
+
+      <div class="contract-card">
+        <h3>RatVoting.sol <span class="contract-status">Phase 4</span></h3>
+        <p style="color:var(--muted);font-size:14px;margin-bottom:12px;">Stores Council vote results using a snapshot model. One on-chain transaction per proposal.</p>
+        <ul>
+          <li><code>finalizeProposal(proposalId, forWeight, againstWeight, merkleRoot)</code> &mdash; bot-only, stores the finalized vote result</li>
+          <li><code>verifyVote(proposalId, voter, vote, weight, proof)</code> &mdash; public view function for Merkle proof verification</li>
         </ul>
       </div>
 
+      <div class="contract-card">
+        <h3>ForumVoting.sol <span class="contract-status">Phase 4</span></h3>
+        <p style="color:var(--muted);font-size:14px;margin-bottom:12px;">Manages binding community votes using an EIP-712 signed-vote model.</p>
+        <ul>
+          <li><code>submitVotes(proposalId, votes[], signatures[])</code> &mdash; iterates over all votes, verifies each signature via ecrecover, checks IFR Lock balance, stores final result on-chain</li>
+        </ul>
+      </div>
+
+      <div class="contract-card">
+        <h3>IFRSpamProtection.sol <span class="contract-status">Phase 4</span></h3>
+        <p style="color:var(--muted);font-size:14px;margin-bottom:12px;">Manages the 10 IFR proposal fee. Requires <code>approve()</code> from the user before submission.</p>
+        <ul>
+          <li>Successful consensus &rarr; 10 IFR <strong>refunded</strong> to proposer (incentive for quality proposals)</li>
+          <li>Downvoted &gt; 50% &rarr; 10 IFR <strong>burned</strong> permanently (deflationary)</li>
+        </ul>
+      </div>
+
+      <!-- ============================================================
+           Section 8: User Journey
+           ============================================================ -->
       <h2 id="journey">User Journey</h2>
-      <div class="journey-step"><div class="journey-num">1</div><div><strong>Discover:</strong> Max joins @IFR_News and sees announcements.</div></div>
-      <div class="journey-step"><div class="journey-num">2</div><div><strong>Engage:</strong> Wants to participate &rarr; joins @IFR_Forum.</div></div>
-      <div class="journey-step"><div class="journey-num">3</div><div><strong>Connect:</strong> Bot prompts <code>/connect</code> &rarr; Mini-App &rarr; MetaMask signature (free).</div></div>
-      <div class="journey-step"><div class="journey-num">4</div><div><strong>Verified:</strong> "You have 5,000 IFR locked. You now have 5,000 votes."</div></div>
-      <div class="journey-step"><div class="journey-num">5</div><div><strong>Vote:</strong> Sees Council proposal in @IFR_Rat, discusses in Forum, votes in poll. His vote counts 5,000.</div></div>
-      <div class="journey-step"><div class="journey-num">6</div><div><strong>Propose:</strong> <code>/propose "Treasury should donate 10k IFR for community event"</code> &rarr; 10 IFR deposited &rarr; idea posted.</div></div>
-      <div class="journey-step"><div class="journey-num">7</div><div><strong>Consensus:</strong> After 10 days in Top 3: <code>/sign 42 yes</code> &rarr; wallet signature.</div></div>
-      <div class="journey-step"><div class="journey-num">8</div><div><strong>On-Chain:</strong> "Vote registered. Final result on-chain in 3 days: tx 0x..."</div></div>
 
-      <h2 id="status">Status</h2>
-      <p>This governance framework is planned for <strong>Phase 5</strong> of the IFR roadmap. Current status: <strong>Concept v1.0</strong> (March 2026).</p>
-      <p style="margin-top:12px;">Full concept document: <a href="../IFR_GOVERNANCE_KONZEPT.md" style="color:var(--accent);">IFR_GOVERNANCE_KONZEPT.md</a></p>
+      <p>How a new user named Max discovers IFR governance:</p>
+
+      <div class="journey-step"><div class="journey-num">1</div><div class="journey-text"><strong>Discover:</strong> Max joins @IFR_News and sees governance announcements.</div></div>
+      <div class="journey-step"><div class="journey-num">2</div><div class="journey-text"><strong>Join Forum:</strong> Max wants to participate &mdash; joins @IFR_Forum.</div></div>
+      <div class="journey-step"><div class="journey-num">3</div><div class="journey-text"><strong>Connect wallet:</strong> Bot prompts <code>/connect</code> &rarr; Mini-App opens &rarr; MetaMask signature (free).</div></div>
+      <div class="journey-step"><div class="journey-num">4</div><div class="journey-text"><strong>Get voting power:</strong> Bot confirms: &ldquo;You have 5,000 IFR locked. You now have 5,000 votes.&rdquo;</div></div>
+      <div class="journey-step"><div class="journey-num">5</div><div class="journey-text"><strong>Vote on Council proposal:</strong> Max sees a team proposal in @IFR_Council, discusses it in the Forum, votes in the poll. His vote counts as 5,000.</div></div>
+      <div class="journey-step"><div class="journey-num">6</div><div class="journey-text"><strong>Submit own idea:</strong> <code>/propose &ldquo;Treasury should fund 10k IFR for community event&rdquo;</code> &rarr; 10 IFR deposited &rarr; idea posted.</div></div>
+      <div class="journey-step"><div class="journey-num">7</div><div class="journey-text"><strong>Consensus phase:</strong> After 10 days in Top 3, bot DMs Max: &ldquo;Your proposal is in consensus phase! Vote: <code>/sign 42 yes</code>&rdquo;</div></div>
+      <div class="journey-step"><div class="journey-num">8</div><div class="journey-text"><strong>On-chain result:</strong> Max signs with wallet. Bot confirms: &ldquo;Vote registered. Final result on-chain in 3 days.&rdquo;</div></div>
+
+      <!-- ============================================================
+           Section 9: FAQ
+           ============================================================ -->
+      <h2 id="faq">FAQ</h2>
+
+      <h3>Why Telegram and not a dedicated voting dApp?</h3>
+      <p>The community lives in Telegram. No extra app to install means higher participation. Governance should meet users where they already are, not force them to a new platform.</p>
+
+      <h3>Do I need ETH to vote?</h3>
+      <p>No. Voting is completely free. Only submitting new proposals costs 10 IFR (spam protection). The bot pays all on-chain transaction fees for finalization.</p>
+
+      <h3>What determines my voting power?</h3>
+      <p>Your IFR Lock balance at the time of voting. 1 IFR locked = 1 vote. There is no minimum threshold for voting &mdash; only for proposing (you need IFR locked to submit a proposal).</p>
+
+      <h3>When will this launch?</h3>
+      <p>Phase 4 of the IFR roadmap. Follow <a href="https://x.com/IFRtoken" target="_blank" rel="noopener">@IFRtoken on X</a> for updates.</p>
+
+      <h3>Can I verify my vote was counted?</h3>
+      <p>Yes. After finalization, every voter can verify their vote via the Merkle proof on RatVoting.sol. The <code>verifyVote()</code> function is a public view function &mdash; anyone can call it at any time, for free.</p>
 
       <!-- Footer -->
       <footer class="wiki-footer">
-        Inferno ($IFR) &mdash; DAO Governance &mdash; Documentation v1.0
+        Inferno ($IFR) &mdash; Native Governance &mdash; Documentation v1.0
       </footer>
 
     </main>
