@@ -824,7 +824,7 @@
             <td>DEX Liquidity</td>
             <td>40%</td>
             <td>400,000,000</td>
-            <td>Immediately paired on Uniswap V2</td>
+            <td>Paired on Uniswap V2 after Bootstrap completion</td>
           </tr>
           <tr>
             <td>Liquidity Reserve</td>
@@ -909,17 +909,16 @@
 
       <p><strong>DEX Liquidity (40% &mdash; 400M IFR)</strong></p>
       <ul>
-        <li>Immediately paired with ETH on Uniswap V2 at deployment</li>
-        <li>LP tokens held by the deployer (to be locked or burned)</li>
+        <li>Paired on Uniswap V2 after Bootstrap completion</li>
+        <li>LP tokens locked via Team.Finance for 12 months (rug pull protection)</li>
         <li>Provides initial trading liquidity for the market</li>
       </ul>
 
       <p><strong>Liquidity Reserve (20% &mdash; 200M IFR)</strong></p>
       <ul>
-        <li>Locked in the LiquidityReserve contract for 6 months minimum</li>
+        <li>Smart-contract-locked until 01.09.2026. Purpose: Phase 2 LP expansion after lock expiry. NOT used for Bootstrap (Plan B decision, 08.03.2026).</li>
         <li>After the lock period: 50M IFR released per quarter (4 quarters to fully unlock)</li>
         <li>Purpose: supplemental liquidity, market-making, or strategic partnerships</li>
-        <li><strong>Not used for Bootstrap.</strong> Strategically locked until 01.09.2026 for Phase 2/3 LP expansion.</li>
       </ul>
 
       <p><strong>Team Vesting (15% &mdash; 150M IFR)</strong></p>
@@ -935,14 +934,14 @@
         <li>Controlled by a Gnosis Safe multisig wallet</li>
         <li>Available for ecosystem development, audits, marketing, and partnerships</li>
         <li>All spends require multisig approval</li>
-        <li><strong>150M allocated as Bootstrap funding source (Plan B).</strong></li>
+        <li><strong>Bootstrap funding source (Plan B, 08.03.2026):</strong> 150M sent to BootstrapVaultV3, ~144.75M received after transfer burn.</li>
       </ul>
 
       <p><strong>Community &amp; Grants (6% &mdash; 60M IFR)</strong></p>
       <ul>
         <li>Available to the community wallet</li>
         <li>Used for airdrops, rewards, community incentives, bug bounties, and grants</li>
-        <li><strong>50M used for Bootstrap funding.</strong> 10M retained as operating buffer (bug bounties, maintainers, community grants).</li>
+        <li><strong>50M used for Bootstrap funding.</strong> ~7.9M retained as operational reserve. (60M sent, 57.9M received after transfer burn, 50M allocated to Bootstrap, ~7.9M retained.)</li>
       </ul>
 
       <p><strong>Builder Ecosystem (4% &mdash; 40M IFR)</strong></p>
