@@ -446,43 +446,57 @@
             <td>DEX Liquidity</td>
             <td>40%</td>
             <td>400M IFR</td>
-            <td>None</td>
-            <td>Immediate liquidity</td>
+            <td>Post-Bootstrap</td>
+            <td>Uniswap V2 LP &mdash; created by BootstrapVaultV3.finalise() after Bootstrap completion</td>
           </tr>
           <tr>
             <td>Liquidity Reserve</td>
             <td>20%</td>
             <td>200M IFR</td>
-            <td>Governance</td>
-            <td>Ecosystem growth</td>
+            <td>Locked until 01.09.2026</td>
+            <td>Phase 2 LP expansion. NOT used for Bootstrap (Plan B, 08.03.2026).</td>
           </tr>
           <tr>
-            <td>Team</td>
+            <td>Team Vesting</td>
             <td>15%</td>
             <td>150M IFR</td>
             <td>4 years (1-year cliff)</td>
-            <td>Standard startup vesting</td>
+            <td>Standard startup vesting. 0 tokens available before March 2027.</td>
           </tr>
           <tr>
-            <td>Treasury</td>
-            <td>15%</td>
-            <td>150M IFR</td>
-            <td>Governance</td>
-            <td>Community &amp; Grants</td>
+            <td>Bootstrap</td>
+            <td>10%</td>
+            <td>100M IFR</td>
+            <td>Plan B funded</td>
+            <td>Plan B: Treasury Safe (~144.75M) + Community Safe (50M) = ~194.75M IFR in BootstrapVaultV3. Original 100M genesis allocation exceeded to maximize LP depth.</td>
           </tr>
           <tr>
-            <td>Community</td>
-            <td>6%</td>
-            <td>60M IFR</td>
-            <td>Governance</td>
-            <td>Builder onboarding. Funded via Plan B: Treasury Safe (~144.75M) + Community Safe (50M). LiquidityReserve not used for Bootstrap (locked until 01.09.2026).</td>
+            <td>Buyback Vault</td>
+            <td>8%</td>
+            <td>80M IFR</td>
+            <td>Protocol-controlled</td>
+            <td>Protocol buyback reserve</td>
           </tr>
           <tr>
-            <td>Builder Ecosystem</td>
+            <td>Builder / PartnerVault</td>
             <td>4%</td>
             <td>40M IFR</td>
             <td>Milestone-based</td>
-            <td>Creator Rewards</td>
+            <td>Lock-triggered Creator Rewards, vested 6&ndash;12 months</td>
+          </tr>
+          <tr>
+            <td>Community &amp; Grants</td>
+            <td>6%</td>
+            <td>60M IFR</td>
+            <td>Governance</td>
+            <td>Sent to Community Safe: 57.9M received (3.5% burn). 50M &rarr; Bootstrap. ~7.9M operational reserve.</td>
+          </tr>
+          <tr>
+            <td>Burn Reserve</td>
+            <td>3%</td>
+            <td>30M IFR</td>
+            <td>Permanent</td>
+            <td>Permanent burn pool</td>
           </tr>
         </tbody>
       </table>
