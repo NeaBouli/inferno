@@ -32,14 +32,16 @@ Inferno (IFR) is a deflationary ERC-20 utility token on Ethereum. Every transfer
 
 | Allocation | Share | Amount | Note |
 |-----------|-------|--------|------|
-| DEX Liquidity | 40% | 400M IFR | |
-| Liquidity Reserve | 20% | 200M IFR | Not used for Bootstrap — locked until 01.09.2026 (Phase 2/3 LP expansion) |
-| Team (Vested) | 15% | 150M IFR | |
-| Treasury | 15% | 150M IFR | Bootstrap funding source (Plan B): Treasury Safe + Community Safe fund ~195M IFR |
-| Community & Grants | 6% | 60M IFR | Bootstrap funding (Plan B) + ~7.9M operating buffer retained |
-| Builder Ecosystem | 4% | 40M IFR | |
+| DEX Liquidity | 40% | 400M IFR | Paired on Uniswap V2 after Bootstrap completion |
+| Liquidity Reserve | 20% | 200M IFR | Smart-contract-locked until 01.09.2026. NOT used for Bootstrap. |
+| Team Vesting | 15% | 150M IFR | 12-month cliff, then linear over 36 months |
+| Bootstrap | 10% | 100M IFR | Plan B: Treasury Safe (~144.75M) + Community Safe (50M) = ~194.75M in BootstrapVaultV3 |
+| Buyback Vault | 8% | 80M IFR | Protocol buyback reserve |
+| Builder / PartnerVault | 4% | 40M IFR | Lock-triggered Creator Rewards, milestone vesting |
+| Community & Grants | 6% | 60M IFR | 57.9M received (3.5% burn). 50M → Bootstrap. ~7.9M operational reserve. |
+| Burn Reserve | 3% | 30M IFR | Permanent burn pool |
 
-Team tokens: 48-month vesting, 12-month cliff. Liquidity reserve: 6-month lock.
+Team tokens: 48-month vesting, 12-month cliff. Liquidity reserve: locked until 01.09.2026.
 
 ## Fair Launch
 
