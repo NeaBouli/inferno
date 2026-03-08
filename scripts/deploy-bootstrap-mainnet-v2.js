@@ -1,3 +1,4 @@
+// DEPRECATED — use deploy-bootstrap-mainnet-v3.js
 const { ethers } = require("hardhat");
 
 // ── Monkey-patch ethers v5 Formatter ─────────────────────────

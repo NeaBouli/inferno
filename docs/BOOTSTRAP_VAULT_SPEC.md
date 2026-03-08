@@ -1,8 +1,12 @@
 # BootstrapVault — Technical Specification
 
+> **HISTORICAL DOCUMENT** — Based on V1 architecture (ifrSource / LiquidityReserve funding).
+> Superseded by BootstrapVaultV3 + Plan B (Treasury Safe + Community Safe funding).
+> See [DEPLOYMENTS.md](DEPLOYMENTS.md) for current architecture.
+
 **Version:** 1.0
 **Date:** 2026-03-03
-**Status:** Approved — Ready for Implementation
+**Status:** Superseded by BootstrapVaultV3
 **Author:** IFR Protocol
 
 ---
