@@ -472,7 +472,7 @@
 
         <h1 class="page-title">Smart Contracts</h1>
         <p class="page-description">
-            Complete reference for all 13 Inferno on-chain components &mdash; 9 repository contracts, 3 v2 upgrades (LiquidityReserve, BuybackVault, BurnReserve with transferOwnership), and the Uniswap V2 liquidity pair. Includes constructor parameters, public functions,
+            Complete reference for all 14 Inferno on-chain components &mdash; 9 repository contracts, BootstrapVaultV3 [ACTIVE], BootstrapVault V1 [DEPRECATED], 3 v2 upgrades (LiquidityReserve, BuybackVault, BurnReserve with transferOwnership), and the Uniswap V2 liquidity pair (pending Bootstrap completion). Includes constructor parameters, public functions,
             events, access control, and ethers.js usage examples.
         </p>
 
@@ -1970,8 +1970,8 @@ console.<span class="function">log</span>(<span class="string">"Since:"</span>, 
             <p class="contract-description">
                 The IFR/WETH liquidity pair on Uniswap V2. This is not a custom contract but a standard
                 <strong>UniswapV2Pair</strong> created by the factory during the LP pairing step. It holds
-                <strong>400M IFR</strong> (40% of total supply) paired with ETH, providing the primary
-                trading market for the token.
+                <strong>~195M IFR</strong> (from Treasury Safe + Community Safe, Plan B) paired with ETH, providing the primary
+                trading market for the token. LP creation is handled by BootstrapVaultV3 after the 90-day Bootstrap period.
             </p>
 
             <div class="info-box note">
@@ -1989,14 +1989,14 @@ console.<span class="function">log</span>(<span class="string">"Since:"</span>, 
                     <tbody>
                         <tr>
                             <td>LP Pair (Mainnet)</td>
-                            <td><code>TBD &mdash; pending LP creation on Uniswap V2</code></td>
+                            <td><code>Not yet created. LP will be created automatically by BootstrapVaultV3.finalise() after the 90-day Bootstrap period. ETA: Q2 2026 (post-Bootstrap completion).</code></td>
                         </tr>
                         <tr>
                             <td>Uniswap V2 Router (Mainnet)</td>
                             <td><code>0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D</code></td>
                         </tr>
                         <tr>
-                            <td>LP Pair (Sepolia)</td>
+                            <td>LP Pair (Sepolia Testnet only)</td>
                             <td><code>0x2252e8bBDE0E50CD372748aC233A99C08627d9c7</code></td>
                         </tr>
                     </tbody>
@@ -2012,11 +2012,11 @@ console.<span class="function">log</span>(<span class="string">"Since:"</span>, 
                     <tbody>
                         <tr>
                             <td>IFR in Pool</td>
-                            <td>400,000,000 IFR (40% of supply)</td>
+                            <td>~195M IFR (Plan B: Treasury Safe + Community Safe). LP created by BootstrapVaultV3.finalise()</td>
                         </tr>
                         <tr>
                             <td>ETH in Pool</td>
-                            <td>TBD after mainnet LP creation</td>
+                            <td>Not yet created. Will be determined by BootstrapVaultV3.finalise() after Bootstrap completion (ETA: Q2 2026).</td>
                         </tr>
                         <tr>
                             <td>LP Tokens</td>
@@ -2029,7 +2029,9 @@ console.<span class="function">log</span>(<span class="string">"Since:"</span>, 
             <h3>ethers.js Example</h3>
             <div class="code-block">
                 <div class="code-block-header">JavaScript (ethers v5)</div>
-<pre><span class="keyword">const</span> <span class="const">PAIR_ADDR</span> = <span class="string">"0x2252e8bBDE0E50CD372748aC233A99C08627d9c7"</span>;
+<pre><span class="comment">// Sepolia Testnet only — used for testing</span>
+<span class="comment">// TODO: Update to Mainnet LP pair after Bootstrap (created by BootstrapVaultV3.finalise())</span>
+<span class="keyword">const</span> <span class="const">PAIR_ADDR</span> = <span class="string">"0x2252e8bBDE0E50CD372748aC233A99C08627d9c7"</span>; <span class="comment">// Sepolia Testnet only</span>
 <span class="keyword">const</span> pairAbi = [
   <span class="string">"function getReserves() view returns (uint112, uint112, uint32)"</span>,
   <span class="string">"function token0() view returns (address)"</span>,
