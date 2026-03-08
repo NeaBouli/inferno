@@ -364,3 +364,9 @@ npx hardhat verify --network sepolia <CONTRACT_ADDR> <CONSTRUCTOR_ARGS>
 | BootstrapVault (Mainnet) | https://etherscan.io/address/0xA820540936d18e1377C39dd9445E5b36F3F1261a#code |
 | Gnosis Safe | https://app.safe.global/home?safe=eth:0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b |
 | AI Copilot (Railway) | https://ifr-ai-copilot-production.up.railway.app |
+
+---
+
+## Aufgabenliste
+
+Siehe **[TODO.md](TODO.md)** fuer die vollstaendige Projekt-Aufgabenliste (Stand: 08.03.2026).
