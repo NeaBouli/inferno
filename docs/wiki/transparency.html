@@ -636,8 +636,8 @@
               <td id="live-liqres"><span class="spinner"></span></td>
             </tr>
             <tr>
-              <td><strong>BootstrapVault</strong></td>
-              <td class="address"><a href="https://etherscan.io/address/0xA820540936d18e1377C39dd9445E5b36F3F1261a" target="_blank">0xA820...261a</a></td>
+              <td><strong>BootstrapVaultV3</strong></td>
+              <td class="address"><a href="https://etherscan.io/address/0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141" target="_blank">0xf725...e141</a></td>
               <td>&mdash;</td>
               <td>0</td>
               <td id="live-bootstrap"><span class="spinner"></span></td>
@@ -847,9 +847,30 @@
           <tbody>
             <tr>
               <td>#0</td>
-              <td><code>setFeeExempt(BootstrapVault, true)</code></td>
+              <td><code>setFeeExempt(BootstrapVault V1, true)</code></td>
               <td>InfernoToken</td>
               <td>07.03.2026 20:12 CET</td>
+              <td><span class="status-ok">Executed</span></td>
+            </tr>
+            <tr>
+              <td>#1</td>
+              <td><code>setFeeExempt(Vesting, true)</code></td>
+              <td>InfernoToken</td>
+              <td>10.03.2026 00:21 CET</td>
+              <td><span class="status-pending">Pending</span></td>
+            </tr>
+            <tr>
+              <td>#2</td>
+              <td><code>setFeeExempt(BurnReserve, true)</code></td>
+              <td>InfernoToken</td>
+              <td>10.03.2026 00:21 CET</td>
+              <td><span class="status-pending">Pending</span></td>
+            </tr>
+            <tr>
+              <td>#3</td>
+              <td><code>setFeeExempt(BootstrapVaultV3, true)</code></td>
+              <td>InfernoToken</td>
+              <td>10.03.2026 00:50 CET</td>
               <td><span class="status-pending">Pending</span></td>
             </tr>
           </tbody>
@@ -1036,7 +1057,7 @@
       { label: 'FeeRouterV1', addr: '0x4807B77B2E25cD055DA42B09BA4d0aF9e580C60a' },
       { label: 'Vesting', addr: '0x2694Bc84e8D5251E9E4Ecd4B2Ae3f866d6106271' },
       { label: 'LiquidityReserve', addr: '0xdc0309804803b3A105154f6073061E3185018f64' },
-      { label: 'BootstrapVault', addr: '0xA820540936d18e1377C39dd9445E5b36F3F1261a' }
+      { label: 'BootstrapVaultV3', addr: '0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141' }
     ];
 
     var ALL = EOA.concat(SAFES).concat(CONTRACTS);
@@ -1129,7 +1150,7 @@
       '0x4807B77B2E25cD055DA42B09BA4d0aF9e580C60a': 0,
       '0x2694Bc84e8D5251E9E4Ecd4B2Ae3f866d6106271': 150000000,
       '0xdc0309804803b3A105154f6073061E3185018f64': 200000000,
-      '0xA820540936d18e1377C39dd9445E5b36F3F1261a': 0
+      '0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141': 0
     };
 
     // ===== Live Balance Cells =====
@@ -1150,7 +1171,7 @@
       { id: 'live-router',    addr: '0x4807B77B2E25cD055DA42B09BA4d0aF9e580C60a' },
       { id: 'live-vesting',   addr: '0x2694Bc84e8D5251E9E4Ecd4B2Ae3f866d6106271' },
       { id: 'live-liqres',    addr: '0xdc0309804803b3A105154f6073061E3185018f64' },
-      { id: 'live-bootstrap',  addr: '0xA820540936d18e1377C39dd9445E5b36F3F1261a' }
+      { id: 'live-bootstrap',  addr: '0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141' }
     ];
 
     function showCachedBalances() {

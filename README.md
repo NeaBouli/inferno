@@ -28,14 +28,14 @@ Inferno (IFR) is a deflationary ERC-20 utility token on Ethereum. Every transfer
 
 ## Token Allocation
 
-| Allocation | Share | Amount |
-|-----------|-------|--------|
-| DEX Liquidity | 40% | 400M IFR |
-| Liquidity Reserve | 20% | 200M IFR |
-| Team (Vested) | 15% | 150M IFR |
-| Treasury | 15% | 150M IFR |
-| Community & Grants | 6% | 60M IFR |
-| Builder Ecosystem | 4% | 40M IFR |
+| Allocation | Share | Amount | Note |
+|-----------|-------|--------|------|
+| DEX Liquidity | 40% | 400M IFR | |
+| Liquidity Reserve | 20% | 200M IFR | Not used for Bootstrap — locked until 01.09.2026 (Phase 2/3 LP expansion) |
+| Team (Vested) | 15% | 150M IFR | |
+| Treasury | 15% | 150M IFR | 150M allocated as Bootstrap funding source (Plan B) |
+| Community & Grants | 6% | 60M IFR | 50M Bootstrap funding + 10M operating buffer retained |
+| Builder Ecosystem | 4% | 40M IFR | |
 
 Team tokens: 48-month vesting, 12-month cliff. Liquidity reserve: 6-month lock.
 

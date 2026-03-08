@@ -523,7 +523,7 @@
         <div class="arch-arrow">&rarr;</div>
         <div class="arch-box accent-border">
           <div class="arch-box-label"><span class="step-num">2</span> Finalise</div>
-          <div class="arch-box-sub">Creates Uniswap V2 LP<br>100% ETH + 400M IFR</div>
+          <div class="arch-box-sub">Creates Uniswap V2 LP<br>100% ETH + 100M IFR</div>
         </div>
         <div class="arch-arrow">&rarr;</div>
         <div class="arch-box accent-border">
@@ -542,7 +542,7 @@
         After the 90-day window closes, <strong>anyone</strong> can call <code>finalise()</code>. This is permissionless &mdash; no admin needs to trigger it. The contract automatically:
       </p>
       <ul>
-        <li>Pulls 400M IFR from the LiquidityReserve</li>
+        <li>Uses 100M IFR from its balance for LP pairing (pre-funded by Treasury &amp; Community Safe)</li>
         <li>Pairs all contributed ETH with the IFR to create the Uniswap V2 LP</li>
         <li>Locks the LP tokens via Team.Finance for 12 months</li>
       </ul>
@@ -551,7 +551,7 @@
       <p>
         After finalisation, each contributor calls <code>claim()</code> to receive their IFR share. Your share is proportional to your ETH contribution:
       </p>
-      <pre><code>your_IFR = (your_ETH / total_ETH) &times; 400,000,000 IFR</code></pre>
+      <pre><code>your_IFR = (your_ETH / total_ETH) &times; 100,000,000 IFR</code></pre>
 
       <!-- ============================================================
            Pricing
@@ -562,7 +562,7 @@
         The IFR start price is determined organically by total ETH raised. There is no fixed price &mdash; the community decides through participation.
       </p>
 
-      <pre><code>IFR price (ETH) = total_ETH_raised / 400,000,000</code></pre>
+      <pre><code>IFR price (ETH) = total_ETH_raised / 100,000,000</code></pre>
 
       <h3>Example Scenarios</h3>
 
@@ -595,11 +595,11 @@
 
       <table>
         <tbody>
-          <tr><td><strong>Contract</strong></td><td>BootstrapVault</td></tr>
-          <tr><td><strong>Sepolia</strong></td><td><a href="https://sepolia.etherscan.io/address/0xE0E8F76e4fb38B2e367Aee043a2C02b8D1c7c037#code" target="_blank" rel="noopener"><code>0xE0E8F76e4fb38B2e367Aee043a2C02b8D1c7c037</code></a></td></tr>
-          <tr><td><strong>Mainnet</strong></td><td>Sepolia only &mdash; Bootstrap Event uses mainnet InfernoToken directly</td></tr>
-          <tr><td><strong>Source</strong></td><td><a href="https://github.com/NeaBouli/inferno/blob/main/contracts/bootstrap/BootstrapVault.sol" target="_blank" rel="noopener">GitHub (open source)</a></td></tr>
-          <tr><td><strong>Verified</strong></td><td>Yes (Etherscan)</td></tr>
+          <tr><td><strong>Contract</strong></td><td>BootstrapVaultV3</td></tr>
+          <tr><td><strong>Sepolia</strong></td><td><a href="https://sepolia.etherscan.io/address/0x16086d4f7F191047d8A4fFf2090126E12e865A7E#code" target="_blank" rel="noopener"><code>0x16086d4f7F191047d8A4fFf2090126E12e865A7E</code></a></td></tr>
+          <tr><td><strong>Mainnet</strong></td><td><a href="https://etherscan.io/address/0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141#code" target="_blank" rel="noopener"><code>0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141</code></a></td></tr>
+          <tr><td><strong>Source</strong></td><td><a href="https://github.com/NeaBouli/inferno/blob/main/contracts/bootstrap/BootstrapVaultV3.sol" target="_blank" rel="noopener">GitHub (open source)</a></td></tr>
+          <tr><td><strong>Verified</strong></td><td>Yes (Etherscan, both networks)</td></tr>
         </tbody>
       </table>
 
@@ -607,9 +607,9 @@
       <ul>
         <li><code>nonReentrant</code> on all state-changing functions (OpenZeppelin ReentrancyGuard)</li>
         <li>No admin keys &mdash; all parameters immutable at deployment</li>
-        <li>No pause, no emergency withdraw &mdash; fully trustless</li>
+        <li>No pause, no admin withdraw &mdash; fully trustless (V3 adds permissionless <code>refund()</code> after 30-day grace period)</li>
         <li>Reviewed in <a href="../SECURITY_AUDIT_CLAUDE.md">Security Audit</a> (8 PASS, 2 WARN, 0 FAIL)</li>
-        <li>22 automated tests, all passing</li>
+        <li>27 automated tests, all passing</li>
       </ul>
 
       <!-- ============================================================
@@ -648,7 +648,7 @@
           <tr><td>Duration</td><td>90 days</td><td>Sufficient time for organic community growth</td></tr>
           <tr><td>Min contribution</td><td>0.01 ETH</td><td>Anti-spam, accessible entry</td></tr>
           <tr><td>Max contribution</td><td>2 ETH</td><td>Anti-whale, fair distribution</td></tr>
-          <tr><td>IFR allocation</td><td>400,000,000 IFR</td><td>40% of supply, from LiquidityReserve</td></tr>
+          <tr><td>IFR allocation</td><td>200,000,000 IFR</td><td>100M LP + 100M claims, funded by Treasury &amp; Community Safe</td></tr>
           <tr><td>Soft cap</td><td>None</td><td>LP always created regardless of ETH amount</td></tr>
           <tr><td>Hard cap</td><td>None</td><td>More ETH = deeper liquidity</td></tr>
           <tr><td>LP lock</td><td>12 months</td><td>Via Team.Finance after finalisation</td></tr>
@@ -668,13 +668,13 @@
       <p>The LP is always created, regardless of ETH amount (no soft cap). Less ETH means a lower IFR price and shallower liquidity. The bootstrap succeeds even with a single contributor.</p>
 
       <h3>Can I get my ETH back?</h3>
-      <p>No. All contributed ETH goes into the Uniswap V2 LP. There is no refund mechanism &mdash; this is by design for trustlessness (no admin can withdraw). Make sure you understand this before contributing.</p>
+      <p>Yes, under specific conditions. If <code>finalise()</code> has not been called within 30 days after the bootstrap window closes, contributors can call <code>refund()</code> to reclaim their full ETH contribution. This is a V3 safety mechanism to protect contributors if LP creation is delayed. Once finalised, all ETH is in the LP and cannot be withdrawn.</p>
 
       <h3>When is the Bootstrap Event?</h3>
       <p>The Bootstrap Event will launch alongside the mainnet deployment. The exact date is TBA. Follow <a href="https://x.com/IFRtoken" target="_blank" rel="noopener">@IFRtoken on X</a> for announcements.</p>
 
       <h3>How much IFR will I receive?</h3>
-      <p>Your IFR share is calculated as: <code>(your_ETH / total_ETH) &times; 400,000,000 IFR</code>. For example, if total ETH raised is 10 ETH and you contributed 1 ETH, you receive 40,000,000 IFR (10% of the allocation).</p>
+      <p>Your IFR share is calculated as: <code>(your_ETH / total_ETH) &times; 100,000,000 IFR</code>. For example, if total ETH raised is 10 ETH and you contributed 1 ETH, you receive 10,000,000 IFR (10% of the claim allocation).</p>
 
       <h3>Who can call finalise()?</h3>
       <p>Anyone. The <code>finalise()</code> function is fully permissionless. After the 90-day window closes, any Ethereum address can trigger it. The result is identical regardless of who calls it.</p>
