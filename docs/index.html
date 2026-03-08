@@ -163,11 +163,12 @@
     .btn-primary:hover { background: #e63e00; transform: translateY(-1px); }
 
     .btn-secondary {
-      background: transparent;
-      color: var(--text);
-      border: 1px solid var(--border);
+      background: rgba(60, 0, 255, 0.18);
+      border: 1.5px solid rgba(100, 60, 255, 0.7);
+      color: rgba(140, 100, 255, 0.95);
+      box-shadow: 0 0 14px rgba(80, 0, 255, 0.35), inset 0 0 8px rgba(100, 60, 255, 0.15);
     }
-    .btn-secondary:hover { border-color: var(--text-muted); background: var(--bg-card); }
+    .btn-secondary:hover { border-color: rgba(140, 100, 255, 0.9); background: rgba(60, 0, 255, 0.28); }
 
     /* ── FADE-IN ANIMATION ────────────────────────── */
 
@@ -235,9 +236,9 @@
       backface-visibility: hidden;
       border-radius: 50%;
       overflow: hidden;
-      border: 3px solid #ff4500;
-      background-color: #0d0d1a;
-      box-shadow: 0 0 40px rgba(255, 69, 0, 0.3), 0 0 80px rgba(255, 69, 0, 0.1);
+      border: none;
+      background-color: transparent;
+      box-shadow: none;
     }
 
     .coin-face img, .coin-back img {
