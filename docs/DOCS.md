@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/ifr_logo.png" alt="Inferno $IFR" width="200" />
+  <img src="assets/ifr_icon_256.png" alt="Inferno $IFR" width="200" />
 </p>
 
 # Inferno -- Project Status & Structure
