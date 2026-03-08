@@ -754,7 +754,8 @@
       </div>
 
       <div class="callout callout-yellow">
-        <p><strong>Transparency note:</strong> The Community EOA transfer was not fee-exempt, resulting in 2,100,000 IFR burned (3.5% fee). This is documented here for complete transparency. The Treasury transfer was fee-exempt (0 IFR burned).</p>
+        <p><strong>Transparency note:</strong> The Community EOA transfer was not fee-exempt, resulting in 2,100,000 IFR burned (3.5% fee-on-transfer). This is documented here for complete transparency. The Treasury transfer was fee-exempt (0 IFR burned).</p>
+        <p style="margin-top:8px;">Note: 2.1M IFR burned on transfer (3.5% fee-on-transfer). Bootstrap allocation from Community Safe: 50M IFR. Retained operational reserve: ~7.9M IFR.</p>
       </div>
 
       <!-- ===== SECTION 4: Live TX Feed ===== -->
@@ -848,7 +849,7 @@
           <tbody>
             <tr>
               <td>#0</td>
-              <td><code>setFeeExempt(BootstrapVault V1, true)</code></td>
+              <td><code>setFeeExempt(BootstrapVault V1, true)</code><br><span style="font-size:11px;color:var(--muted);">(historical &mdash; V1 deprecated due to transferFrom bug. Active vault: BootstrapVaultV3 <code>0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141</code>)</span></td>
               <td>InfernoToken</td>
               <td>07.03.2026 20:12 CET</td>
               <td><span class="status-ok">Executed</span></td>
