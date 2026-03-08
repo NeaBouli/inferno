@@ -486,29 +486,63 @@
 
       <h1>Community <span class="accent">Bootstrap Event</span></h1>
       <p class="subtitle">
-        No team ETH. No presale. Pure community price discovery.
+        Plan B &mdash; Treasury + Community Safe Funding. No team ETH. No presale. Pure community price discovery.
       </p>
 
-      <div class="status-badge" style="background: rgba(0,255,120,0.08); border-color: rgba(0,255,120,0.4); color: #00ff78;">&#x1f7e2; Mainnet Deployed &mdash; 05.03.2026</div>
+      <div class="status-badge coming-soon">Pre-Launch | Funding pending (10.03.2026)</div>
 
       <!-- ============================================================
-           What is the Bootstrap Event?
+           Why Plan B?
            ============================================================ -->
-      <h2>What is the Bootstrap Event?</h2>
+      <h2>Why Plan B?</h2>
 
-      <p>
-        The Bootstrap Event is a trustless, permissionless mechanism for creating the initial IFR/ETH liquidity pool. Instead of the team providing ETH or conducting a presale, the community contributes ETH during a fixed 90-day window.
-      </p>
+      <div class="callout">
+        <p>
+          <strong>LiquidityReserve (200M IFR)</strong> is smart-contract-locked until 01.09.2026. The Bootstrap period ends approximately 05.06.2026 &mdash; the timing is incompatible. The original plan to fund the Bootstrap from the LiquidityReserve contract is therefore not feasible.
+        </p>
+        <p style="margin-top: 12px;">
+          <strong>Solution (decided 08.03.2026):</strong> Fund the BootstrapVaultV3 directly from the Treasury Safe and Community Safe. No smart-contract lock needs to be broken, no governance override required. The funds are sent as standard ERC-20 transfers (subject to 3.5% fee-on-transfer until feeExempt is set).
+        </p>
+      </div>
 
-      <ul>
-        <li><strong>Not a presale:</strong> 100% of contributed ETH goes into the Uniswap V2 LP &mdash; nothing goes to the team.</li>
-        <li><strong>Organic price discovery:</strong> The IFR start price is determined entirely by how much ETH the community contributes.</li>
-        <li><strong>Trustless smart contract:</strong> No admin keys, no pause, no withdrawal. All parameters are immutable at deployment.</li>
-        <li><strong>Anti-whale:</strong> Maximum 2 ETH per wallet prevents concentration.</li>
-      </ul>
+      <!-- ============================================================
+           Funding Breakdown
+           ============================================================ -->
+      <h2>Funding Breakdown</h2>
 
-      <div class="callout-green callout">
-        <p><strong>Key difference from a presale:</strong> In a presale, the team takes your ETH. In the Bootstrap, your ETH goes directly into the liquidity pool. The team never touches it.</p>
+      <table>
+        <thead>
+          <tr>
+            <th>Source</th>
+            <th>Sent</th>
+            <th>Received (after burn)</th>
+            <th>Use</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Treasury Safe</td>
+            <td>150M IFR</td>
+            <td>~144.75M IFR</td>
+            <td>Bootstrap funding</td>
+          </tr>
+          <tr>
+            <td>Community Safe</td>
+            <td>60M IFR</td>
+            <td>57.9M IFR</td>
+            <td>50M Bootstrap + ~7.9M operational reserve</td>
+          </tr>
+          <tr>
+            <td><strong>Total in BootstrapVaultV3</strong></td>
+            <td>&mdash;</td>
+            <td><strong>~194.75M IFR</strong></td>
+            <td>LP creation + contributor claims</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="callout callout-green">
+        <p><strong>Note:</strong> Exact amount will be confirmed after on-chain verification. The vault becomes feeExempt after Governance Proposal #3 execution on 10.03.2026, so subsequent internal transfers incur no fees.</p>
       </div>
 
       <!-- ============================================================
@@ -524,7 +558,7 @@
         <div class="arch-arrow">&rarr;</div>
         <div class="arch-box accent-border">
           <div class="arch-box-label"><span class="step-num">2</span> Finalise</div>
-          <div class="arch-box-sub">Creates Uniswap V2 LP<br>100% ETH + 100M IFR</div>
+          <div class="arch-box-sub">Creates Uniswap V2 LP<br>ETH + IFR from vault</div>
         </div>
         <div class="arch-arrow">&rarr;</div>
         <div class="arch-box accent-border">
@@ -535,7 +569,7 @@
 
       <h3>Step 1 &mdash; Contribute ETH</h3>
       <p>
-        During the 90-day bootstrap window, anyone can contribute between 0.01 and 2 ETH by calling <code>contribute()</code> on the BootstrapVault contract. You can contribute multiple times up to the 2 ETH maximum per wallet. Your contribution is recorded on-chain and visible in real time.
+        During the 90-day bootstrap window, anyone can contribute between 0.01 and 2 ETH by calling <code>contribute()</code> on the BootstrapVaultV3 contract. You can contribute multiple times up to the 2 ETH maximum per wallet. Your contribution is recorded on-chain and visible in real time.
       </p>
 
       <h3>Step 2 &mdash; Finalise</h3>
@@ -543,7 +577,7 @@
         After the 90-day window closes, <strong>anyone</strong> can call <code>finalise()</code>. This is permissionless &mdash; no admin needs to trigger it. The contract automatically:
       </p>
       <ul>
-        <li>Uses 100M IFR from its balance for LP pairing (pre-funded by Treasury &amp; Community Safe)</li>
+        <li>Uses IFR from its balance for LP pairing (pre-funded by Treasury &amp; Community Safe)</li>
         <li>Pairs all contributed ETH with the IFR to create the Uniswap V2 LP</li>
         <li>Locks the LP tokens via Team.Finance for 12 months</li>
       </ul>
@@ -552,7 +586,7 @@
       <p>
         After finalisation, each contributor calls <code>claim()</code> to receive their IFR share. Your share is proportional to your ETH contribution:
       </p>
-      <pre><code>your_IFR = (your_ETH / total_ETH) &times; 100,000,000 IFR</code></pre>
+      <pre><code>your_IFR = (your_ETH / total_ETH) &times; IFR_in_vault</code></pre>
 
       <!-- ============================================================
            Pricing
@@ -563,7 +597,7 @@
         The IFR start price is determined organically by total ETH raised. There is no fixed price &mdash; the community decides through participation.
       </p>
 
-      <pre><code>IFR price (ETH) = total_ETH_raised / 100,000,000</code></pre>
+      <pre><code>IFR price (ETH) = total_ETH_raised / IFR_in_vault</code></pre>
 
       <h3>Example Scenarios</h3>
 
@@ -596,11 +630,18 @@
 
       <table>
         <tbody>
-          <tr><td><strong>Contract</strong></td><td>BootstrapVaultV3</td></tr>
+          <tr><td><strong>Contract</strong></td><td>BootstrapVaultV3 <span style="color: var(--green); font-weight: 600;">[ACTIVE]</span></td></tr>
           <tr><td><strong>Sepolia</strong></td><td><a href="https://sepolia.etherscan.io/address/0x16086d4f7F191047d8A4fFf2090126E12e865A7E#code" target="_blank" rel="noopener"><code>0x16086d4f7F191047d8A4fFf2090126E12e865A7E</code></a></td></tr>
           <tr><td><strong>Mainnet</strong></td><td><a href="https://etherscan.io/address/0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141#code" target="_blank" rel="noopener"><code>0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141</code></a></td></tr>
           <tr><td><strong>Source</strong></td><td><a href="https://github.com/NeaBouli/inferno/blob/main/contracts/bootstrap/BootstrapVaultV3.sol" target="_blank" rel="noopener">GitHub (open source)</a></td></tr>
           <tr><td><strong>Verified</strong></td><td>Yes (Etherscan, both networks)</td></tr>
+        </tbody>
+      </table>
+
+      <table>
+        <tbody>
+          <tr><td><strong>Contract</strong></td><td><s>BootstrapVault V1</s> <span style="color: #ffa500; font-weight: 600;">[DEPRECATED]</span></td></tr>
+          <tr><td><strong>Mainnet</strong></td><td><code><s>0xA820540936d18e1377C39dd9445E5b36F3F1261a</s></code> &mdash; superseded by V3</td></tr>
         </tbody>
       </table>
 
@@ -649,11 +690,53 @@
           <tr><td>Duration</td><td>90 days</td><td>Sufficient time for organic community growth</td></tr>
           <tr><td>Min contribution</td><td>0.01 ETH</td><td>Anti-spam, accessible entry</td></tr>
           <tr><td>Max contribution</td><td>2 ETH</td><td>Anti-whale, fair distribution</td></tr>
-          <tr><td>IFR allocation</td><td>200,000,000 IFR</td><td>100M LP + 100M claims, funded by Treasury &amp; Community Safe</td></tr>
+          <tr><td>IFR allocation</td><td>~194.75M IFR</td><td>Funded by Treasury Safe (~144.75M) + Community Safe (50M)</td></tr>
           <tr><td>Soft cap</td><td>None</td><td>LP always created regardless of ETH amount</td></tr>
           <tr><td>Hard cap</td><td>None</td><td>More ETH = deeper liquidity</td></tr>
           <tr><td>LP lock</td><td>12 months</td><td>Via Team.Finance after finalisation</td></tr>
-          <tr><td>Fee exempt</td><td>Yes</td><td>BootstrapVault is feeExempt on IFR token</td></tr>
+          <tr><td>Fee exempt</td><td>Yes (pending)</td><td>BootstrapVaultV3 becomes feeExempt after 10.03.2026</td></tr>
+        </tbody>
+      </table>
+
+      <!-- ============================================================
+           Timeline
+           ============================================================ -->
+      <h2>Timeline</h2>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Status</th>
+            <th>Step</th>
+            <th>Date</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td style="color: var(--green); font-weight: 600;">DONE</td>
+            <td>BootstrapVaultV3 deployed + verified</td>
+            <td>08.03.2026</td>
+          </tr>
+          <tr>
+            <td style="color: #eab308; font-weight: 600;">PENDING</td>
+            <td>feeExempt Proposal #3 &mdash; Execute</td>
+            <td>10.03.2026 ab 00:50 CET</td>
+          </tr>
+          <tr>
+            <td style="color: #eab308; font-weight: 600;">PENDING</td>
+            <td>Treasury Safe &rarr; Vault: ~144.75M IFR</td>
+            <td>After feeExempt</td>
+          </tr>
+          <tr>
+            <td style="color: #eab308; font-weight: 600;">PENDING</td>
+            <td>Community Safe &rarr; Vault: 50M IFR</td>
+            <td>After feeExempt</td>
+          </tr>
+          <tr>
+            <td style="color: #eab308; font-weight: 600;">PENDING</td>
+            <td>Bootstrap Launch Announcement</td>
+            <td>TBA</td>
+          </tr>
         </tbody>
       </table>
 
@@ -672,10 +755,10 @@
       <p>Yes, under specific conditions. If <code>finalise()</code> has not been called within 30 days after the bootstrap window closes, contributors can call <code>refund()</code> to reclaim their full ETH contribution. This is a V3 safety mechanism to protect contributors if LP creation is delayed. Once finalised, all ETH is in the LP and cannot be withdrawn.</p>
 
       <h3>When is the Bootstrap Event?</h3>
-      <p>The Bootstrap Event will launch alongside the mainnet deployment. The exact date is TBA. Follow <a href="https://x.com/IFRtoken" target="_blank" rel="noopener">@IFRtoken on X</a> for announcements.</p>
+      <p>The Bootstrap Event launches after funding is confirmed on-chain. Follow <a href="https://x.com/IFRtoken" target="_blank" rel="noopener">@IFRtoken on X</a> for the exact date announcement.</p>
 
       <h3>How much IFR will I receive?</h3>
-      <p>Your IFR share is calculated as: <code>(your_ETH / total_ETH) &times; 100,000,000 IFR</code>. For example, if total ETH raised is 10 ETH and you contributed 1 ETH, you receive 10,000,000 IFR (10% of the claim allocation).</p>
+      <p>Your IFR share is calculated as: <code>(your_ETH / total_ETH) &times; IFR_in_vault</code>. The total IFR in the vault is ~194.75M. For example, if total ETH raised is 10 ETH and you contributed 1 ETH, you receive ~19,475,000 IFR (10% of the claim allocation).</p>
 
       <h3>Who can call finalise()?</h3>
       <p>Anyone. The <code>finalise()</code> function is fully permissionless. After the 90-day window closes, any Ethereum address can trigger it. The result is identical regardless of who calls it.</p>
