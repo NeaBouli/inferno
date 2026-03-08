@@ -487,9 +487,9 @@ async function esApiFetch(params: string): Promise<unknown> {
   }
 }
 
-// In-memory cache (60s TTL)
+// In-memory cache (15s TTL — short to avoid stale data overwriting fresh frontend values)
 const esCache = new Map<string, { data: unknown; ts: number }>();
-const ES_CACHE_TTL = 60_000;
+const ES_CACHE_TTL = 15_000;
 
 function getCached(key: string): unknown | null {
   const entry = esCache.get(key);
@@ -503,6 +503,7 @@ function setCache(key: string, data: unknown): void {
 
 // GET /api/ifr/balances — IFR balance for all protocol addresses
 app.get("/api/ifr/balances", async (_req, res) => {
+  res.set("Cache-Control", "no-store");
   const cached = getCached("balances");
   if (cached) { res.json(cached); return; }
 
@@ -524,7 +525,7 @@ app.get("/api/ifr/balances", async (_req, res) => {
       if (i < entries.length - 1) await new Promise(r => setTimeout(r, 350));
     }
 
-    const response = { balances: results, timestamp: new Date().toISOString() };
+    const response = { balances: results, timestamp: new Date().toISOString(), fetchedAt: Date.now(), source: "live" };
     setCache("balances", response);
     res.json(response);
   } catch (err) {
@@ -534,7 +535,9 @@ app.get("/api/ifr/balances", async (_req, res) => {
 });
 
 // GET /api/ifr/supply — total supply + burned
+// burned = 1B genesis - live totalSupply() (IFR burns via _update, reducing supply directly)
 app.get("/api/ifr/supply", async (_req, res) => {
+  res.set("Cache-Control", "no-store");
   const cached = getCached("supply");
   if (cached) { res.json(cached); return; }
 
@@ -543,24 +546,27 @@ app.get("/api/ifr/supply", async (_req, res) => {
       `&module=stats&action=tokensupply&contractaddress=${IFR_TOKEN}`
     ) as { result?: string };
 
-    const burnData = await esApiFetch(
+    const burnReserveData = await esApiFetch(
       `&module=account&action=tokenbalance&contractaddress=${IFR_TOKEN}&address=${BURN_ADDRESS}&tag=latest`
     ) as { result?: string };
 
     const totalSupplyRaw = supplyData.result || "0";
-    const burnBalanceRaw = burnData.result || "0";
+    const burnReserveBalanceRaw = burnReserveData.result || "0";
     const totalSupply = parseInt(totalSupplyRaw, 10) / 10 ** IFR_DECIMALS;
-    const burnBalance = parseInt(burnBalanceRaw, 10) / 10 ** IFR_DECIMALS;
-    const burned = TOTAL_MINTED - totalSupply + burnBalance;
-    const circulating = totalSupply - burnBalance;
+    const burnAddressBalance = parseInt(burnReserveBalanceRaw, 10) / 10 ** IFR_DECIMALS;
+    // burned = genesis supply minus current totalSupply (IFR burns reduce supply via _update)
+    const burned = TOTAL_MINTED - totalSupply;
+    const circulating = totalSupply - burnAddressBalance;
 
     const response = {
       totalMinted: TOTAL_MINTED,
       totalSupply,
-      burnBalance,
+      burnAddressBalance,
       burned,
       circulating,
       timestamp: new Date().toISOString(),
+      fetchedAt: Date.now(),
+      source: "live",
     };
     setCache("supply", response);
     res.json(response);
@@ -572,6 +578,7 @@ app.get("/api/ifr/supply", async (_req, res) => {
 
 // GET /api/ifr/txfeed — recent ETH + IFR transfers for key wallets
 app.get("/api/ifr/txfeed", async (_req, res) => {
+  res.set("Cache-Control", "no-store");
   const cached = getCached("txfeed");
   if (cached) { res.json(cached); return; }
 
