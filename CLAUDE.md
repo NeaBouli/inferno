@@ -31,7 +31,7 @@ Inferno ($IFR) ist ein **deflationärer ERC-20 Utility-Token** auf Ethereum. Jed
 | FeeRouterV1 | `0x4807B77B2E25cD055DA42B09BA4d0aF9e580C60a` | governance (immutable) |
 | Vesting | `0x2694Bc84e8D5251E9E4Ecd4B2Ae3f866d6106271` | guardian→Deployer (emergency only) |
 | LiquidityReserve | `0xdc0309804803b3A105154f6073061E3185018f64` | owner→Governance |
-| BootstrapVault | `0xA820540936d18e1377C39dd9445E5b36F3F1261a` | keine Ownership (immutable params) |
+| BootstrapVaultV3 | `0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141` | keine Ownership (immutable params) |
 
 **Weitere Adressen:**
 - Deployer: `0x6b36687b0cd4386fb14cf565B67D7862110Fed67`
@@ -50,7 +50,7 @@ Inferno ($IFR) ist ein **deflationärer ERC-20 Utility-Token** auf Ethereum. Jed
 
 **ZEITKRITISCH:**
 - 17) Proposal #0 ausführen: **07.03.2026 20:12 CET**
-- 18) LiquidityReserve approve 200M IFR → BootstrapVault
+- 18) Treasury Safe (150M) + Community Safe (50M) → BootstrapVaultV3
 - 19) Governance owner → Gnosis Safe (nach 2-of-3)
 
 **VOR BOOTSTRAP ANKÜNDIGUNG:**
@@ -344,7 +344,7 @@ npx hardhat verify --network sepolia <CONTRACT_ADDR> <CONSTRUCTOR_ARGS>
    ```bash
    PROPOSAL_ID=0 npx hardhat run scripts/execute-proposal.js --network mainnet
    ```
-2. LiquidityReserve approve 200M IFR → BootstrapVault
+2. Treasury Safe (150M) + Community Safe (50M) → BootstrapVaultV3
 3. 2-of-3 Multisig aufsetzen (warte auf Wallet-Adressen)
 4. Governance owner → Gnosis Safe transferieren
 
@@ -361,7 +361,7 @@ npx hardhat verify --network sepolia <CONTRACT_ADDR> <CONSTRUCTOR_ARGS>
 | InfernoToken (Mainnet) | https://etherscan.io/address/0x77e99917Eca8539c62F509ED1193ac36580A6e7B#code |
 | Governance (Mainnet) | https://etherscan.io/address/0xc43d48E7FDA576C5022d0670B652A622E8caD041#code |
 | IFRLock (Mainnet) | https://etherscan.io/address/0x769928aBDfc949D0718d8766a1C2d7dBb63954Eb#code |
-| BootstrapVault (Mainnet) | https://etherscan.io/address/0xA820540936d18e1377C39dd9445E5b36F3F1261a#code |
+| BootstrapVaultV3 (Mainnet) | https://etherscan.io/address/0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141#code |
 | Gnosis Safe | https://app.safe.global/home?safe=eth:0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b |
 | AI Copilot (Railway) | https://ifr-ai-copilot-production.up.railway.app |
 
