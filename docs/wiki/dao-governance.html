@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DAO Governance &mdash; Inferno ($IFR) Documentation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    /* ============================================================
+       Inferno Wiki — Shared Styles (copy into every wiki page)
+       ============================================================ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #0a0a0a;
+      --card:     #111113;
+      --border:   #222225;
+      --text:     #e8e8ed;
+      --muted:    #8a8a96;
+      --accent:   #ff4500;
+      --green:    #22c55e;
+      --sidebar-w: 240px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    /* ---------- Layout (CSS Grid) ---------- */
+    .layout {
+      display: grid;
+      grid-template-columns: var(--sidebar-w) 1fr;
+      min-height: 100vh;
+    }
+
+    /* ---------- Sidebar ---------- */
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: var(--sidebar-w);
+      height: 100vh;
+      background: var(--card);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      padding: 24px 0;
+      overflow-y: auto;
+      z-index: 100;
+      transition: transform 0.3s ease;
+    }
+
+    .sidebar-logo {
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: 3px;
+      color: var(--accent);
+      padding: 0 24px 4px;
+      text-decoration: none;
+      display: block;
+    }
+
+    .sidebar-subtitle {
+      font-size: 12px;
+      color: var(--muted);
+      padding: 0 24px 24px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .sidebar-nav {
+      list-style: none;
+      padding: 16px 0;
+      flex: 1;
+    }
+
+    .sidebar-nav li {}
+
+    .sidebar-nav a {
+      display: block;
+      padding: 10px 24px;
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      transition: color 0.2s, background 0.2s, border-left 0.2s;
+      border-left: 3px solid transparent;
+    }
+
+    .sidebar-nav a:hover {
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .sidebar-nav a.active {
+      color: var(--accent);
+      border-left-color: var(--accent);
+      background: rgba(255, 69, 0, 0.06);
+    }
+
+    .sidebar-nav .nav-divider {
+      height: 1px;
+      background: var(--border);
+      margin: 12px 24px;
+    }
+
+    .sidebar-nav .nav-back a {
+      font-size: 13px;
+      color: var(--muted);
+      opacity: 0.7;
+    }
+
+    .sidebar-nav .nav-back a:hover {
+      opacity: 1;
+      color: var(--text);
+    }
+
+    /* ---------- Hamburger (mobile) ---------- */
+    .hamburger {
+      display: none;
+      position: fixed;
+      top: 16px;
+      left: 16px;
+      z-index: 200;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 12px;
+      cursor: pointer;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .hamburger span {
+      display: block;
+      width: 22px;
+      height: 2px;
+      background: var(--text);
+      border-radius: 2px;
+      transition: transform 0.3s, opacity 0.3s;
+    }
+
+    .hamburger.open span:nth-child(1) { transform: rotate(45deg) translate(5px, 5px); }
+    .hamburger.open span:nth-child(2) { opacity: 0; }
+    .hamburger.open span:nth-child(3) { transform: rotate(-45deg) translate(5px, -5px); }
+
+    .sidebar-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.6);
+      z-index: 90;
+    }
+
+    /* ---------- Main content ---------- */
+    .main {
+      grid-column: 2;
+      padding: 48px 56px;
+      max-width: 960px;
+    }
+
+    .main h1 {
+      font-size: 32px;
+      font-weight: 800;
+      margin-bottom: 8px;
+      color: var(--text);
+    }
+
+    .main h1 .accent {
+      color: var(--accent);
+    }
+
+    .main h2 {
+      font-size: 22px;
+      font-weight: 700;
+      margin: 40px 0 16px;
+      color: var(--text);
+    }
+
+    .main h3 {
+      font-size: 18px;
+      font-weight: 600;
+      margin: 32px 0 12px;
+      color: var(--text);
+    }
+
+    .main p {
+      color: var(--muted);
+      margin-bottom: 16px;
+      font-size: 15px;
+      max-width: 680px;
+    }
+
+    .main a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    .main a:hover {
+      text-decoration: underline;
+    }
+
+    .subtitle {
+      font-size: 16px;
+      color: var(--muted);
+      margin-bottom: 32px;
+    }
+
+    /* ---------- Code blocks ---------- */
+    pre {
+      background: #1a1a1d;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px 20px;
+      overflow-x: auto;
+      font-size: 13px;
+      line-height: 1.7;
+      margin: 16px 0;
+      color: var(--text);
+    }
+
+    code {
+      font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+      font-size: 13px;
+      color: var(--text);
+    }
+
+    p code, li code, td code {
+      background: rgba(255, 255, 255, 0.06);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 13px;
+    }
+
+    /* ---------- Tables ---------- */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0;
+      font-size: 14px;
+    }
+
+    th, td {
+      text-align: left;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    th {
+      color: var(--muted);
+      font-weight: 600;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    td { color: var(--text); }
+
+    tr:hover td { background: rgba(255, 255, 255, 0.02); }
+
+    /* ---------- Lists ---------- */
+    .main ul, .main ol {
+      padding-left: 24px;
+      margin-bottom: 16px;
+    }
+
+    .main li {
+      color: var(--muted);
+      font-size: 14px;
+      margin-bottom: 6px;
+    }
+
+    /* ---------- Callout ---------- */
+    .callout {
+      background: rgba(255, 69, 0, 0.06);
+      border-left: 3px solid var(--accent);
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 20px 0;
+    }
+
+    .callout p {
+      color: var(--text);
+      margin: 0;
+      font-size: 14px;
+    }
+
+    .callout-green {
+      background: rgba(34, 197, 94, 0.06);
+      border-left-color: var(--green);
+    }
+
+    /* ---------- Address ---------- */
+    .address {
+      font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+      font-size: 12px;
+      color: var(--muted);
+      word-break: break-all;
+    }
+
+    /* ---------- Footer ---------- */
+    .wiki-footer {
+      margin-top: 64px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    /* ---------- Responsive ---------- */
+    @media (max-width: 768px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        transform: translateX(-100%);
+      }
+
+      .sidebar.open {
+        transform: translateX(0);
+      }
+
+      .sidebar-overlay.open {
+        display: block;
+      }
+
+      .hamburger {
+        display: flex;
+      }
+
+      .main {
+        grid-column: 1;
+        padding: 72px 20px 40px;
+      }
+
+      table {
+        font-size: 13px;
+      }
+
+      th, td {
+        padding: 10px 12px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .main h1 {
+        font-size: 26px;
+      }
+    }
+    /* ============================================================
+       End Shared Styles
+       ============================================================ */
+
+    /* ---------- DAO Governance Page Styles ---------- */
+    .phase-badge {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 10px;
+      border-radius: 12px;
+      vertical-align: middle;
+      margin-left: 8px;
+    }
+    .badge-planned {
+      background: rgba(255, 160, 0, 0.15);
+      color: #ffa500;
+      border: 1px solid rgba(255, 160, 0, 0.3);
+    }
+    .arch-diagram {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 20px;
+      overflow-x: auto;
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
+      line-height: 1.5;
+      color: var(--muted);
+      margin: 16px 0 24px;
+    }
+    .chamber-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 24px;
+      margin: 16px 0;
+    }
+    .chamber-card h3 {
+      color: var(--accent);
+      margin-bottom: 12px;
+    }
+    .bot-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0;
+    }
+    .bot-table th, .bot-table td {
+      padding: 12px 16px;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .bot-table th {
+      background: var(--card);
+      color: var(--text);
+      font-weight: 600;
+    }
+    .bot-table td {
+      color: var(--muted);
+    }
+    .contract-box {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 20px;
+      margin: 12px 0;
+    }
+    .contract-box h4 {
+      color: var(--green);
+      margin-bottom: 8px;
+    }
+    .journey-step {
+      display: flex;
+      gap: 16px;
+      margin: 12px 0;
+      align-items: flex-start;
+    }
+    .journey-num {
+      flex-shrink: 0;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--accent);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 14px;
+    }
+  </style>
+  <link rel="icon" type="image/png" href="../assets/ifr_icon_64.png">
+</head>
+<body>
+
+  <!-- Hamburger button (mobile only) -->
+  <button class="hamburger" id="hamburger" aria-label="Toggle navigation">
+    <span></span>
+    <span></span>
+    <span></span>
+  </button>
+
+  <!-- Overlay (mobile only) -->
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <div class="layout">
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <a href="index.html" class="sidebar-logo">INFERNO</a>
+      <div class="sidebar-subtitle">Documentation</div>
+      <ul class="sidebar-nav">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="contracts.html">Smart Contracts</a></li>
+        <li><a href="tokenomics.html">Tokenomics</a></li>
+        <li><a href="lock-mechanism.html">Lock Mechanism</a></li>
+        <li><a href="governance.html">Governance</a></li>
+        <li><a href="security.html">Security</a></li>
+        <li><a href="deployment.html">Deployment</a></li>
+        <li><a href="integration.html">Integration Guide</a></li>
+        <li><a href="bootstrap.html">Bootstrap Event</a></li>
+        <li><a href="agent.html">AI Copilot</a></li>
+        <li><a href="faq.html">FAQ</a></li>
+        <li><a href="transparency.html">Transparency</a></li>
+        <li><a href="fair-launch.html">Fair Launch</a></li>
+        <li><a href="fee-design.html">Fee Design</a></li>
+        <li><a href="vesting.html">Vesting Schedule</a></li>
+        <li><a href="roadmap.html">Roadmap</a></li>
+        <li><a href="testnet.html">Testnet</a></li>
+        <li><a href="multisig.html">Multisig Policy</a></li>
+        <li><a href="dao-governance.html" class="active">DAO Governance</a></li>
+        <li><div class="nav-divider"></div></li>
+        <li class="nav-back"><a href="../index.html">&larr; Back to Website</a></li>
+      </ul>
+    </aside>
+
+    <!-- Main content -->
+    <main class="main">
+
+      <h1>DAO Governance <span class="phase-badge badge-planned">Phase 5 &mdash; Planned</span></h1>
+      <p style="color:var(--muted);margin-top:8px;">Two-chamber governance system via Telegram &mdash; on-chain anchoring, off-chain voting.</p>
+
+      <h2 id="overview">Executive Summary</h2>
+      <p>IFR governance happens where the community lives: Telegram. A hybrid on-chain/off-chain system respects IFR's burning characteristic (no transaction costs for voting) while providing maximum transparency and security.</p>
+      <p>The system consists of two complementary chambers:</p>
+      <ol>
+        <li><strong>Der Rat (The Council)</strong> &mdash; Team governance for strategic decisions and capital allocation.</li>
+        <li><strong>Das Forum (The Forum)</strong> &mdash; Community innovation with built-in economic spam protection.</li>
+      </ol>
+
+      <h2 id="architecture">Architecture</h2>
+      <p>Three-layer design: Presentation (Telegram), Logic (Bot Backend), Truth (Blockchain).</p>
+      <div class="arch-diagram">
+<pre>[TELEGRAM - UI LAYER]
+------------------------------------------------------
+| @IFR_News            | @IFR_Rat                    |
+| (Announcements)      | (Team + Bot only)            |
+------------------------------------------------------
+| @IFR_Forum           | @IFR_Abstimmung             |
+| (Anyone with Lock)   | (Voting only)                |
+------------------------------------------------------
+            |                           |
+            v                           v
+[BACKEND - BOT LAYER (Node.js)]
+------------------------------------------------------
+| Wallet-Mapper    | IFR-Reader    | Reaction-Tracker |
+| Poll-Manager     | Ranking Cron  | Consensus Cron   |
+| Finalizer Cron   | Executor (sole key holder)       |
+------------------------------------------------------
+            |                           |
+            v                           v
+[BLOCKCHAIN - ON-CHAIN LAYER (Ethereum)]
+------------------------------------------------------
+| IFR Core: InfernoToken + IFRLock                    |
+| New: RatVoting.sol | ForumVoting.sol                |
+|      IFRSpamProtection.sol                          |
+------------------------------------------------------</pre>
+      </div>
+
+      <h2 id="council">Chamber 1: Der Rat (The Council)</h2>
+      <div class="chamber-card">
+        <h3>Team Governance</h3>
+        <p><strong>Purpose:</strong> Protocol parameters, treasury allocation, strategic partnerships.</p>
+        <p><strong>Participants:</strong> Dev team / Multisig signers.</p>
+        <p><strong>Proposal rights:</strong> Team only.</p>
+        <h4 style="margin-top:16px;">Process</h4>
+        <ol style="margin-top:8px;padding-left:20px;color:var(--muted);">
+          <li>Team member creates proposal via <code>/rat_proposal "Title" "Description" "Duration"</code></li>
+          <li>Bot posts proposal in @IFR_Rat (read-only for community). Discussion in @IFR_Forum.</li>
+          <li><strong>Snapshot voting:</strong> Only users with IFR-Lock participate. Off-chain votes weighted by lock amount (1 IFR = 1 vote).</li>
+          <li><strong>Finalization:</strong> Bot aggregates weighted results, creates Merkle Tree, sends single on-chain TX to <code>RatVoting.sol</code>: ProposalID + ForWeight + AgainstWeight + MerkleRoot.</li>
+        </ol>
+        <p style="margin-top:12px;color:var(--muted);">Every voter can cryptographically prove their vote was included in the Merkle Tree.</p>
+      </div>
+
+      <h2 id="forum">Chamber 2: Das Forum (Community Innovation)</h2>
+      <div class="chamber-card">
+        <h3>Community Governance</h3>
+        <p><strong>Purpose:</strong> Community brings ideas; most popular ones go to binding vote.</p>
+        <p><strong>Participants:</strong> Anyone with IFR-Lock.</p>
+        <p><strong>Proposal cost:</strong> 10 IFR (spam protection &mdash; refunded on success, burned on failure).</p>
+        <h4 style="margin-top:16px;">Process</h4>
+        <ol style="margin-top:8px;padding-left:20px;color:var(--muted);">
+          <li><strong>Submit:</strong> <code>/propose My Idea</code> in @IFR_Forum &rarr; Bot checks lock, transfers 10 IFR to <code>IFRSpamProtection.sol</code></li>
+          <li><strong>Voting period (7 days):</strong> Community votes via reactions. Bot weights each reaction by voter's IFR-Lock amount. Auto-deletion if downvotes &gt; 50%.</li>
+          <li><strong>Ranking:</strong> Daily cron calculates scores. Top 3 proposals posted daily.</li>
+          <li><strong>Consensus phase:</strong> Proposal stays 10 days in Top 3 &rarr; EIP-712 binding vote. Users sign via <code>/sign 42 yes</code>.</li>
+          <li><strong>Finalization:</strong> Bot bundles signatures &rarr; single TX to <code>ForumVoting.sol</code>. Contract verifies signatures + lock status. Result stored on-chain permanently.</li>
+        </ol>
+      </div>
+
+      <h2 id="bot">Bot Architecture</h2>
+      <p>A single bot serves both chambers with strict role separation.</p>
+      <table class="bot-table">
+        <thead>
+          <tr><th>Component</th><th>Function</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Wallet-Mapper</td><td>Encrypted DB: TelegramUserID &harr; EthereumAddress (one-time free signature)</td></tr>
+          <tr><td>IFR-Reader</td><td>Reads IFR Lock Contract permanently (Infura/Alchemy), caches lock amounts</td></tr>
+          <tr><td>Reaction-Tracker</td><td>Tracks every reaction with timestamp + lock weight of user</td></tr>
+          <tr><td>Poll-Manager</td><td>Creates native Telegram polls for Council, aggregates weighted results</td></tr>
+          <tr><td>Cron: Ranking</td><td>Runs daily, calculates top proposals</td></tr>
+          <tr><td>Cron: Consensus</td><td>Checks if proposal stayed 10 days in Top 3</td></tr>
+          <tr><td>Cron: Finalizer</td><td>Sends collected votes on-chain after signature phase</td></tr>
+          <tr><td>Executor</td><td>Sole component with private key / multisig access for on-chain TXs</td></tr>
+        </tbody>
+      </table>
+
+      <h2 id="contracts">Smart Contracts</h2>
+      <div class="contract-box">
+        <h4>RatVoting.sol</h4>
+        <p>Stores results of team votes (snapshot model).</p>
+        <ul style="margin-top:8px;padding-left:20px;color:var(--muted);">
+          <li><code>finalizeProposal()</code> &mdash; Bot-only, stores ProposalID + ForWeight + AgainstWeight + MerkleRoot</li>
+          <li><code>verifyVote(proposalId, voter, vote, weight, proof)</code> &mdash; View function for vote verification</li>
+        </ul>
+      </div>
+      <div class="contract-box">
+        <h4>ForumVoting.sol</h4>
+        <p>Manages binding community votes (signed-vote model).</p>
+        <ul style="margin-top:8px;padding-left:20px;color:var(--muted);">
+          <li><code>submitVotes(proposalId, votes[], signatures[])</code> &mdash; Verifies signatures (ecrecover), checks IFR Lock, stores final result</li>
+        </ul>
+      </div>
+      <div class="contract-box">
+        <h4>IFRSpamProtection.sol</h4>
+        <p>Manages the 10 IFR proposal fee.</p>
+        <ul style="margin-top:8px;padding-left:20px;color:var(--muted);">
+          <li>Successful consensus &rarr; 10 IFR refunded (incentive for good proposals)</li>
+          <li>Downvoted &gt; 50% &rarr; 10 IFR burned (deflationary)</li>
+          <li>Requires <code>approve()</code> from user before submission</li>
+        </ul>
+      </div>
+
+      <h2 id="journey">User Journey</h2>
+      <div class="journey-step"><div class="journey-num">1</div><div><strong>Discover:</strong> Max joins @IFR_News and sees announcements.</div></div>
+      <div class="journey-step"><div class="journey-num">2</div><div><strong>Engage:</strong> Wants to participate &rarr; joins @IFR_Forum.</div></div>
+      <div class="journey-step"><div class="journey-num">3</div><div><strong>Connect:</strong> Bot prompts <code>/connect</code> &rarr; Mini-App &rarr; MetaMask signature (free).</div></div>
+      <div class="journey-step"><div class="journey-num">4</div><div><strong>Verified:</strong> "You have 5,000 IFR locked. You now have 5,000 votes."</div></div>
+      <div class="journey-step"><div class="journey-num">5</div><div><strong>Vote:</strong> Sees Council proposal in @IFR_Rat, discusses in Forum, votes in poll. His vote counts 5,000.</div></div>
+      <div class="journey-step"><div class="journey-num">6</div><div><strong>Propose:</strong> <code>/propose "Treasury should donate 10k IFR for community event"</code> &rarr; 10 IFR deposited &rarr; idea posted.</div></div>
+      <div class="journey-step"><div class="journey-num">7</div><div><strong>Consensus:</strong> After 10 days in Top 3: <code>/sign 42 yes</code> &rarr; wallet signature.</div></div>
+      <div class="journey-step"><div class="journey-num">8</div><div><strong>On-Chain:</strong> "Vote registered. Final result on-chain in 3 days: tx 0x..."</div></div>
+
+      <h2 id="status">Status</h2>
+      <p>This governance framework is planned for <strong>Phase 5</strong> of the IFR roadmap. Current status: <strong>Concept v1.0</strong> (March 2026).</p>
+      <p style="margin-top:12px;">Full concept document: <a href="../IFR_GOVERNANCE_KONZEPT.md" style="color:var(--accent);">IFR_GOVERNANCE_KONZEPT.md</a></p>
+
+      <!-- Footer -->
+      <footer class="wiki-footer">
+        Inferno ($IFR) &mdash; DAO Governance &mdash; Documentation v1.0
+      </footer>
+
+    </main>
+  </div>
+
+  <!-- Mobile sidebar toggle script -->
+  <script>
+    (function () {
+      var hamburger = document.getElementById('hamburger');
+      var sidebar = document.getElementById('sidebar');
+      var overlay = document.getElementById('sidebarOverlay');
+
+      function toggleSidebar() {
+        var isOpen = sidebar.classList.toggle('open');
+        hamburger.classList.toggle('open', isOpen);
+        overlay.classList.toggle('open', isOpen);
+        document.body.style.overflow = isOpen ? 'hidden' : '';
+      }
+
+      hamburger.addEventListener('click', toggleSidebar);
+      overlay.addEventListener('click', toggleSidebar);
+    })();
+  </script>
+
+<!-- IFR Copilot Widget -->
+<style>
+#ifr-btn { position:fixed; bottom:24px; right:24px; z-index:99999; width:60px; height:60px; border-radius:50%; background:#ff6600; border:none; cursor:pointer; font-size:28px; box-shadow:0 4px 20px rgba(255,102,0,0.5); }
+#ifr-panel { display:none; position:fixed; bottom:100px; right:24px; z-index:99998; width:400px; height:580px; border-radius:16px; overflow:hidden; box-shadow:0 8px 40px rgba(0,0,0,0.5); background:#1a1a1a; }
+#ifr-panel iframe { width:100%; height:100%; border:none; }
+</style>
+<button id="ifr-btn" onclick="var p=document.getElementById('ifr-panel');p.style.display=p.style.display==='block'?'none':'block';">&#x1f525;</button>
+<div id="ifr-panel"><iframe src="https://ifr-ai-copilot-production.up.railway.app" allow="clipboard-write"></iframe></div>
+
+</body>
+</html>

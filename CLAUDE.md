@@ -370,3 +370,17 @@ npx hardhat verify --network sepolia <CONTRACT_ADDR> <CONSTRUCTOR_ARGS>
 ## Aufgabenliste
 
 Siehe **[TODO.md](TODO.md)** fuer die vollstaendige Projekt-Aufgabenliste (Stand: 08.03.2026).
+
+---
+
+## IFR Governance Konzept v1.0 (08.03.2026)
+
+Zwei-Kammern-System ueber Telegram:
+- Kammer 1: Der Rat (Team-Governance) — Merkle Tree + RatVoting.sol
+- Kammer 2: Das Forum (Community) — 10 IFR Spamschutz + ForumVoting.sol
+- Bot-Layer Node.js: Wallet-Mapper, IFR-Reader, Reaction-Tracker, Cron-Jobs
+- Neue Contracts (Phase 5): RatVoting.sol, ForumVoting.sol, IFRSpamProtection.sol
+- Telegram Kanaele: @IFR_News, @IFR_Rat, @IFR_Forum, @IFR_Abstimmung
+- Konzept: docs/IFR_GOVERNANCE_KONZEPT.md
+- Wiki: docs/wiki/dao-governance.html
+- Status: Vision/Konzept — Umsetzung Phase 5
