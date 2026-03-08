@@ -651,6 +651,286 @@
         <p><strong>Migration note (06.03.2026):</strong> Community EOA &rarr; Community Safe: 60M sent, 57.9M received (2.1M burned &mdash; EOA was not feeExempt). Treasury EOA &rarr; Treasury Safe: 150M sent, 150M received (feeExempt). Both EOA wallets should now show 0 IFR.</p>
       </div>
 
+      <!-- ===== Token Distribution — Complete Record ===== -->
+      <h2 id="token-distribution">Token Distribution &mdash; Complete Record</h2>
+
+      <h3>Genesis Allocation &mdash; 1,000,000,000 IFR (Deploy: 05.03.2026)</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Recipient</th><th>Amount</th><th>%</th><th>Purpose</th><th>Status</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Deployer (EOA)</td>
+              <td>400,000,000</td>
+              <td>40%</td>
+              <td>DEX Liquidity &mdash; will be paired on Uniswap V2 via BootstrapVaultV3.finalise() after Bootstrap completion. Held by deployer until LP creation.</td>
+              <td class="status-pending">Pending LP creation</td>
+            </tr>
+            <tr>
+              <td>LiquidityReserve Contract</td>
+              <td>200,000,000</td>
+              <td>20%</td>
+              <td>Phase 2 LP expansion reserve. Smart-contract-locked until 01.09.2026. Cannot be accessed before that date.</td>
+              <td class="status-ok">Locked</td>
+            </tr>
+            <tr>
+              <td>Vesting Contract</td>
+              <td>150,000,000</td>
+              <td>15%</td>
+              <td>Team allocation. 12-month cliff (no release before ~March 2027), then linear over 36 months. Beneficiary immutable.</td>
+              <td class="status-ok">Locked &mdash; cliff not reached</td>
+            </tr>
+            <tr>
+              <td>Treasury Safe (Gnosis)</td>
+              <td>150,000,000</td>
+              <td>15%</td>
+              <td>Protocol treasury. Controlled by multisig (currently 1-of-2, upgrading to 2-of-4). Used for ecosystem development, audits, Bootstrap funding (Plan B).</td>
+              <td class="status-ok">Active &mdash; feeExempt</td>
+            </tr>
+            <tr>
+              <td>Community Safe (Gnosis)</td>
+              <td>60,000,000</td>
+              <td>6%</td>
+              <td>Community grants, bug bounties, ecosystem incentives. 50M allocated to Bootstrap (Plan B). ~7.9M retained as operational reserve.</td>
+              <td class="status-pending">57.9M received (2.1M burned on transfer)</td>
+            </tr>
+            <tr>
+              <td>PartnerVault Contract</td>
+              <td>40,000,000</td>
+              <td>4%</td>
+              <td>Builder ecosystem. Lock-triggered Creator Rewards, milestone-based vesting, 6&ndash;12 month payout.</td>
+              <td class="status-ok">Active</td>
+            </tr>
+            <tr style="font-weight:600;border-top:2px solid rgba(255,255,255,0.15);">
+              <td>TOTAL</td>
+              <td>1,000,000,000</td>
+              <td>100%</td>
+              <td></td>
+              <td></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="callout" style="margin-top:12px;">
+        <p><strong>Note:</strong> BuybackVault and BurnReserve are <em>not</em> genesis allocations. They accumulate from the 1% protocol pool fee on every non-exempt IFR transfer. Current balance: 0 IFR each (pool fees begin accumulating after Bootstrap + LP launch).</p>
+      </div>
+
+      <h3>All Token Movements &mdash; Chronological Log</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Date</th><th>From</th><th>To</th><th>Amount (IFR)</th><th>Received</th><th>Purpose</th><th>Status</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>05.03.2026</td>
+              <td>Mint (genesis)</td>
+              <td>Deployer</td>
+              <td>1,000,000,000</td>
+              <td>1,000,000,000</td>
+              <td>Genesis mint &mdash; 1B IFR to deployer</td>
+              <td class="status-ok">&#x2705; Done</td>
+            </tr>
+            <tr>
+              <td>05.03.2026</td>
+              <td>Deployer</td>
+              <td>LiquidityReserve</td>
+              <td>200,000,000</td>
+              <td>200,000,000</td>
+              <td>Phase 2 LP reserve &mdash; feeExempt transfer</td>
+              <td class="status-ok">&#x2705; Done</td>
+            </tr>
+            <tr>
+              <td>05.03.2026</td>
+              <td>Deployer</td>
+              <td>Vesting Contract</td>
+              <td>150,000,000</td>
+              <td>150,000,000</td>
+              <td>Team vesting &mdash; feeExempt transfer</td>
+              <td class="status-ok">&#x2705; Done</td>
+            </tr>
+            <tr>
+              <td>05.03.2026</td>
+              <td>Deployer</td>
+              <td>Treasury EOA</td>
+              <td>150,000,000</td>
+              <td>150,000,000</td>
+              <td>Treasury allocation &mdash; feeExempt at deploy</td>
+              <td class="status-ok">&#x2705; Done</td>
+            </tr>
+            <tr>
+              <td>05.03.2026</td>
+              <td>Deployer</td>
+              <td>Community EOA</td>
+              <td>60,000,000</td>
+              <td>60,000,000</td>
+              <td>Community allocation &mdash; feeExempt at deploy</td>
+              <td class="status-ok">&#x2705; Done</td>
+            </tr>
+            <tr>
+              <td>05.03.2026</td>
+              <td>Deployer</td>
+              <td>PartnerVault</td>
+              <td>40,000,000</td>
+              <td>40,000,000</td>
+              <td>Builder ecosystem &mdash; feeExempt at deploy</td>
+              <td class="status-ok">&#x2705; Done</td>
+            </tr>
+            <tr>
+              <td>07.03.2026</td>
+              <td>Community EOA</td>
+              <td>Community Safe</td>
+              <td>60,000,000</td>
+              <td>57,900,000</td>
+              <td>Migration to Gnosis Safe &mdash; 2.1M burned (fee-on-transfer, EOA not exempt)</td>
+              <td class="status-ok">&#x2705; Done</td>
+            </tr>
+            <tr>
+              <td>07.03.2026</td>
+              <td>Treasury EOA</td>
+              <td>Treasury Safe</td>
+              <td>150,000,000</td>
+              <td>150,000,000</td>
+              <td>Migration to Gnosis Safe &mdash; feeExempt (zero burn)</td>
+              <td class="status-ok">&#x2705; Done</td>
+            </tr>
+            <tr>
+              <td>10.03.2026</td>
+              <td>Treasury Safe</td>
+              <td>BootstrapVaultV3</td>
+              <td>~144,750,000</td>
+              <td>~144,750,000</td>
+              <td>Bootstrap Plan B funding &mdash; feeExempt after Proposal #3</td>
+              <td class="status-pending">&#x23F3; Pending Proposal #3</td>
+            </tr>
+            <tr>
+              <td>10.03.2026</td>
+              <td>Community Safe</td>
+              <td>BootstrapVaultV3</td>
+              <td>50,000,000</td>
+              <td>50,000,000</td>
+              <td>Bootstrap Plan B funding &mdash; feeExempt after Proposal #3</td>
+              <td class="status-pending">&#x23F3; Pending Proposal #3</td>
+            </tr>
+            <tr>
+              <td>Post-Bootstrap</td>
+              <td>BootstrapVaultV3</td>
+              <td>Uniswap V2 LP</td>
+              <td>~194,750,000 + ETH raised</td>
+              <td>&mdash;</td>
+              <td>LP creation via finalise() &mdash; trustless</td>
+              <td class="status-pending">&#x23F3; Post-Bootstrap</td>
+            </tr>
+            <tr>
+              <td>Post-Bootstrap</td>
+              <td>Uniswap V2 LP</td>
+              <td>Team.Finance</td>
+              <td>LP tokens</td>
+              <td>&mdash;</td>
+              <td>12-month LP lock</td>
+              <td class="status-pending">&#x23F3; Post-Bootstrap</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Current Wallet &amp; Contract Purposes (Live: 09.03.2026)</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Name</th><th>Address</th><th>Role</th><th>Balance</th><th>Access Control</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Deployer</strong></td>
+              <td class="address"><a href="https://etherscan.io/address/0x6b36687b0cd4386fb14cf565B67D7862110Fed67" target="_blank">0x6b36...Fed67</a></td>
+              <td>LP creation. Holds 400M IFR until BootstrapVaultV3.finalise() creates Uniswap LP. No other function post-deploy.</td>
+              <td>400,600,000 IFR</td>
+              <td>EOA &mdash; single key</td>
+            </tr>
+            <tr>
+              <td><strong>Treasury Safe</strong></td>
+              <td class="address"><a href="https://etherscan.io/address/0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b" target="_blank">0x5ad6...3b</a></td>
+              <td>Protocol treasury. Funds Bootstrap (Plan B). Ecosystem development, audits, partnerships. All spends require multisig approval.</td>
+              <td>150,000,000 IFR</td>
+              <td>Gnosis Safe &mdash; 1-of-2 (&rarr; 2-of-4)</td>
+            </tr>
+            <tr>
+              <td><strong>Community Safe</strong></td>
+              <td class="address"><a href="https://etherscan.io/address/0xaC5687547B2B21d80F8fd345B51e608d476667C7" target="_blank">0xaC56...67C7</a></td>
+              <td>Community grants, bug bounties, incentives. 50M reserved for Bootstrap. ~7.9M operational reserve retained.</td>
+              <td>57,900,000 IFR</td>
+              <td>Gnosis Safe &mdash; 1-of-2 (&rarr; 2-of-4)</td>
+            </tr>
+            <tr>
+              <td><strong>Vesting Contract</strong></td>
+              <td class="address"><a href="https://etherscan.io/address/0x2694Bc84e8D5251E9E4Ecd4B2Ae3f866d6106271" target="_blank">0x2694...6271</a></td>
+              <td>Team tokens locked. 12-month cliff (~March 2027), then 36-month linear release. Beneficiary immutable on-chain.</td>
+              <td>150,000,000 IFR</td>
+              <td>Smart contract &mdash; immutable schedule</td>
+            </tr>
+            <tr>
+              <td><strong>LiquidityReserve</strong></td>
+              <td class="address"><a href="https://etherscan.io/address/0xdc0309804803b3A105154f6073061E3185018f64" target="_blank">0xdc03...f64</a></td>
+              <td>Phase 2 LP reserve. Hard-locked until 01.09.2026. NOT used for Bootstrap (Plan B decision 08.03.2026).</td>
+              <td>200,000,000 IFR</td>
+              <td>Smart contract &mdash; time-locked</td>
+            </tr>
+            <tr>
+              <td><strong>PartnerVault</strong></td>
+              <td class="address"><a href="https://etherscan.io/address/0xc6eb7714bCb035ebc2D4d9ba7B3762ef7B9d4F7D" target="_blank">0xc6eb...f7D</a></td>
+              <td>Builder rewards. Distributed via lock-triggered Creator Rewards. Milestone-based, vested 6&ndash;12 months. Governed by Governance contract.</td>
+              <td>40,000,000 IFR</td>
+              <td>Smart contract &mdash; Governance controlled</td>
+            </tr>
+            <tr>
+              <td><strong>BootstrapVaultV3</strong></td>
+              <td class="address"><a href="https://etherscan.io/address/0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141" target="_blank">0xf725...e141</a></td>
+              <td>Community Bootstrap. Will hold ~194.75M IFR (Treasury 144.75M + Community 50M) after Plan B funding. Creates Uniswap LP via finalise().</td>
+              <td>0 IFR (funding pending 10.03.2026)</td>
+              <td>Smart contract &mdash; permissionless</td>
+            </tr>
+            <tr>
+              <td><strong>BuybackVault</strong></td>
+              <td class="address"><a href="https://etherscan.io/address/0x670D293e3D65f96171c10DdC8d88B96b0570F812" target="_blank">0x670D...F812</a></td>
+              <td>Protocol buyback reserve. Accumulates from 1% pool fee on IFR transfers. Not pre-funded at genesis. Activated 60 days after deployment.</td>
+              <td>0 IFR (pool fees not yet accumulated)</td>
+              <td>Smart contract &mdash; Governance controlled</td>
+            </tr>
+            <tr>
+              <td><strong>BurnReserve</strong></td>
+              <td class="address"><a href="https://etherscan.io/address/0xaA1496133B6c274190A2113410B501C5802b6fCF" target="_blank">0xaA14...fCF</a></td>
+              <td>Permanent burn reserve. Accumulates from pool fee share. Burns IFR permanently on trigger. Not pre-funded at genesis.</td>
+              <td>0 IFR (pool fees not yet accumulated)</td>
+              <td>Smart contract &mdash; permissionless burn</td>
+            </tr>
+            <tr>
+              <td><strong>FeeRouterV1</strong></td>
+              <td class="address"><a href="https://etherscan.io/address/0x4807B77B2E25cD055DA42B09BA4d0aF9e580C60a" target="_blank">0x4807...C60a</a></td>
+              <td>Routes the 1% protocol pool fee to BuybackVault and BurnReserve. Pass-through &mdash; holds no IFR.</td>
+              <td>0 IFR</td>
+              <td>Smart contract &mdash; immutable routing</td>
+            </tr>
+            <tr>
+              <td><strong>IFRLock</strong></td>
+              <td class="address"><a href="https://etherscan.io/address/0x769928aBDfc949D0718d8766a1C2d7dBb63954Eb" target="_blank">0x7699...54Eb</a></td>
+              <td>On-chain lock registry. Users lock IFR here for product access. Guardian can pause. No IFR held by contract itself (user balances tracked internally).</td>
+              <td>0 IFR contract balance</td>
+              <td>Smart contract &mdash; guardian pausable</td>
+            </tr>
+            <tr>
+              <td><strong>Governance</strong></td>
+              <td class="address"><a href="https://etherscan.io/address/0xc43d48E7FDA576C5022d0670B652A622E8caD041" target="_blank">0xc43d...D041</a></td>
+              <td>48-hour timelock for all protocol changes. Proposals require multisig submission. Immutable timelock hardcoded.</td>
+              <td>0 IFR</td>
+              <td>Smart contract &mdash; timelock</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
       <!-- ===== SECTION 3: Genesis Documentation ===== -->
       <h2>Protocol Genesis &mdash; Deployment History</h2>
       <p>Complete chronological record of all mainnet deployment transactions on March 5, 2026.</p>
