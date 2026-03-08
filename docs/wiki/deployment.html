@@ -497,7 +497,7 @@
             <tr><td>FeeRouterV1</td><td><code><a href="https://etherscan.io/address/0x4807B77B2E25cD055DA42B09BA4d0aF9e580C60a#code" target="_blank" rel="noopener">0x4807B77B2E25cD055DA42B09BA4d0aF9e580C60a</a></code></td></tr>
             <tr><td>Vesting</td><td><code><a href="https://etherscan.io/address/0x2694Bc84e8D5251E9E4Ecd4B2Ae3f866d6106271#code" target="_blank" rel="noopener">0x2694Bc84e8D5251E9E4Ecd4B2Ae3f866d6106271</a></code></td></tr>
             <tr><td>LiquidityReserve</td><td><code><a href="https://etherscan.io/address/0xdc0309804803b3A105154f6073061E3185018f64#code" target="_blank" rel="noopener">0xdc0309804803b3A105154f6073061E3185018f64</a></code></td></tr>
-            <tr><td>BootstrapVaultV3</td><td><code><a href="https://etherscan.io/address/0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141#code" target="_blank" rel="noopener">0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141</a></code></td></tr>
+            <tr><td>BootstrapVaultV3 <span class="badge badge-done">ACTIVE</span></td><td><code><a href="https://etherscan.io/address/0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141#code" target="_blank" rel="noopener">0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141</a></code></td></tr>
             <tr><td><s>BootstrapVault V1</s></td><td><code><s>0xA820...261a</s></code> &mdash; DEPRECATED, superseded by V3</td></tr>
           </tbody>
         </table>
@@ -588,7 +588,7 @@
             150M &rarr; Treasury &bull;
             60M &rarr; Community &amp; Grants &bull;
             40M &rarr; PartnerVault (fee-free after Step 8) &bull;
-            400M remains with deployer for LP pairing.
+            LP creation occurs via BootstrapVaultV3.finalise() after Bootstrap period. ETH raised + IFR from vault &rarr; Uniswap V2 LP (trustless, on-chain).
           </div>
         </div>
       </div>
@@ -610,7 +610,7 @@
       <h3>LP Pairing</h3>
       <pre><code>npx hardhat run scripts/create-lp.js --network mainnet</code></pre>
       <p>
-        Creates the IFR/WETH liquidity pair on Uniswap V2, adds initial liquidity from the 400M IFR allocation.
+        Liquidity created trustlessly by BootstrapVaultV3.finalise(). IFR source: Treasury Safe + Community Safe (Plan B, see <a href="bootstrap.html">bootstrap.html</a>).
       </p>
 
       <h3>Ownership Transfer</h3>
