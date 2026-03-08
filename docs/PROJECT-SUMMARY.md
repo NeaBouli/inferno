@@ -26,7 +26,7 @@ All 9 smart contracts deployed, verified, and operational on Ethereum Mainnet (2
 
 | # | Contract | Address | Status |
 |---|----------|---------|--------|
-| 10 | BootstrapVault | [`0xE0E8F76e4fb38B2e367Aee043a2C02b8D1c7c037`](https://sepolia.etherscan.io/address/0xE0E8F76e4fb38B2e367Aee043a2C02b8D1c7c037#code) | Verified |
+| 10 | BootstrapVaultV3 | [`0x16086d4f7F191047d8A4fFf2090126E12e865A7E`](https://sepolia.etherscan.io/address/0x16086d4f7F191047d8A4fFf2090126E12e865A7E#code) | Verified |
 
 ### Gnosis Safe (Mainnet)
 
