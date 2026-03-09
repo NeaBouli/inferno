@@ -1111,6 +1111,44 @@
     <div class="hero-buttons">
       <a href="https://github.com/NeaBouli/inferno" class="btn btn-github" target="_blank" rel="noopener">View on GitHub</a>
       <a href="wiki/index.html" class="btn btn-secondary">Read the Docs</a>
+      <button id="wc-btn" onclick="document.getElementById('wc-modal').style.display='flex'" style="display:inline-flex;align-items:center;gap:10px;padding:14px 28px;border:2px solid #3b99fc;background:transparent;color:#3b99fc;font-family:'Orbitron',sans-serif;font-size:0.85rem;letter-spacing:1px;border-radius:8px;cursor:pointer;transition:all .25s;position:relative;opacity:0.85;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M4.914 7.993C8.73 4.24 14.935 4.24 18.75 7.993l.461.45a.48.48 0 0 1 0 .687l-1.578 1.541a.251.251 0 0 1-.351 0l-.635-.62c-2.625-2.565-6.885-2.565-9.51 0l-.68.664a.251.251 0 0 1-.351 0L4.528 9.174a.48.48 0 0 1 0-.687l.386-.494zm14.73 2.733 1.404 1.372a.48.48 0 0 1 0 .687l-6.328 6.181a.503.503 0 0 1-.703 0L9.642 14.6a.126.126 0 0 0-.176 0l-4.375 4.274a.503.503 0 0 1-.703 0L1.04 17.502a.48.48 0 0 1 0-.687l6.328-6.181a.503.503 0 0 1 .703 0l4.375 4.274c.049.047.127.047.176 0l4.375-4.274a.503.503 0 0 1 .703 0l1.944 1.092z" fill="#3b99fc"/></svg>Connect Wallet<span style="position:absolute;top:-10px;right:-10px;background:#ff6600;color:#fff;font-size:0.65rem;padding:2px 8px;border-radius:20px;font-family:'Orbitron',sans-serif;letter-spacing:.5px;">SOON</span></button>
+    </div>
+  </div>
+
+  <!-- WalletConnect Info Modal -->
+  <div id="wc-modal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.85);align-items:center;justify-content:center;padding:20px;" onclick="if(event.target===this)this.style.display='none'">
+    <div style="background:#0f0f17;border:1px solid #3b99fc;border-radius:12px;max-width:520px;width:100%;padding:36px;position:relative;">
+      <button onclick="document.getElementById('wc-modal').style.display='none'" style="position:absolute;top:16px;right:16px;background:none;border:none;color:#666;font-size:1.4rem;cursor:pointer;line-height:1;">&times;</button>
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M4.914 7.993C8.73 4.24 14.935 4.24 18.75 7.993l.461.45a.48.48 0 0 1 0 .687l-1.578 1.541a.251.251 0 0 1-.351 0l-.635-.62c-2.625-2.565-6.885-2.565-9.51 0l-.68.664a.251.251 0 0 1-.351 0L4.528 9.174a.48.48 0 0 1 0-.687l.386-.494zm14.73 2.733 1.404 1.372a.48.48 0 0 1 0 .687l-6.328 6.181a.503.503 0 0 1-.703 0L9.642 14.6a.126.126 0 0 0-.176 0l-4.375 4.274a.503.503 0 0 1-.703 0L1.04 17.502a.48.48 0 0 1 0-.687l6.328-6.181a.503.503 0 0 1 .703 0l4.375 4.274c.049.047.127.047.176 0l4.375-4.274a.503.503 0 0 1 .703 0l1.944 1.092z" fill="#3b99fc"/></svg>
+        <h3 style="color:#fff;font-family:'Orbitron',sans-serif;font-size:1.1rem;margin:0;letter-spacing:1px;">WalletConnect</h3>
+        <span style="background:#ff6600;color:#fff;font-size:0.7rem;padding:3px 10px;border-radius:20px;font-family:'Orbitron',sans-serif;">COMING SOON</span>
+      </div>
+      <p style="color:#888;font-size:0.88rem;margin-bottom:28px;line-height:1.6;">WalletConnect integration is planned in 3 phases. Here is what each phase will unlock for $IFR holders.</p>
+      <div style="display:flex;flex-direction:column;gap:12px;">
+        <div style="background:#1a1a2e;border:1px solid #222;border-radius:8px;padding:16px 18px;display:flex;gap:14px;align-items:flex-start;">
+          <span style="color:#ff6600;font-family:'Orbitron',sans-serif;font-size:0.75rem;font-weight:700;flex-shrink:0;margin-top:2px;">PHASE 1</span>
+          <div>
+            <div style="color:#eee;font-size:0.9rem;font-weight:600;margin-bottom:4px;">Basic Connect</div>
+            <div style="color:#777;font-size:0.83rem;line-height:1.5;">Connect your wallet to display your address. Personalized experience &mdash; know your $IFR balance at a glance.<span style="color:#ff6600;margin-left:6px;font-size:0.78rem;">Post-Bootstrap</span></div>
+          </div>
+        </div>
+        <div style="background:#1a1a2e;border:1px solid #222;border-radius:8px;padding:16px 18px;display:flex;gap:14px;align-items:flex-start;">
+          <span style="color:#ff6600;font-family:'Orbitron',sans-serif;font-size:0.75rem;font-weight:700;flex-shrink:0;margin-top:2px;">PHASE 2</span>
+          <div>
+            <div style="color:#eee;font-size:0.9rem;font-weight:600;margin-bottom:4px;">IFR Lock Gate</div>
+            <div style="color:#777;font-size:0.83rem;line-height:1.5;">Lock &ge; 1,000 $IFR &rarr; unlock the AI Copilot Premium access. On-chain verification via IFRLock &mdash; no trust required.<span style="color:#ff6600;margin-left:6px;font-size:0.78rem;">Phase 2</span></div>
+          </div>
+        </div>
+        <div style="background:#1a1a2e;border:1px solid #222;border-radius:8px;padding:16px 18px;display:flex;gap:14px;align-items:flex-start;">
+          <span style="color:#555;font-family:'Orbitron',sans-serif;font-size:0.75rem;font-weight:700;flex-shrink:0;margin-top:2px;">PHASE 3</span>
+          <div>
+            <div style="color:#888;font-size:0.9rem;font-weight:600;margin-bottom:4px;">Uniswap Integration</div>
+            <div style="color:#555;font-size:0.83rem;line-height:1.5;">Direct Buy $IFR button &mdash; activates only after LP is live. Swap directly from the landing page.<span style="color:#555;margin-left:6px;font-size:0.78rem;">Phase 3</span></div>
+          </div>
+        </div>
+      </div>
+      <p style="color:#444;font-size:0.78rem;margin-top:20px;text-align:center;line-height:1.5;">Follow <a href="https://t.me/IFRtoken" target="_blank" style="color:#ff6600;text-decoration:none;">@IFRtoken</a> for the launch announcement.</p>
     </div>
   </div>
 </section>
