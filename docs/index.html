@@ -1255,7 +1255,7 @@
 
     <div class="reveal" style="margin-top:24px;">
       <div id="dist-metrics" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;"></div>
-      <p style="font-size:11px;color:var(--text-muted);margin-top:14px;text-align:center;">&#x1F512; User IFR Locks (IFRLock contract): <span data-live-key="ifrlock" style="color:#ff8c00;font-weight:600;">0</span> IFR &mdash; activates after Bootstrap + LP launch</p>
+      <p style="font-size:11px;color:var(--text-muted);margin-top:14px;text-align:center;">&#x1F512; User IFR Locks (IFRLock): <span data-live-key="ifrlock-stat" style="color:#ff8c00;font-weight:600;">loading&hellip;</span> IFR &mdash; activates after Bootstrap + LP launch</p>
       <p style="font-size:11px;color:var(--text-muted);margin-top:8px;text-align:center;"><span class="live-updated-at">Loading&hellip;</span> <span class="live-status"></span></p>
     </div>
 
@@ -2174,6 +2174,8 @@ if (isLocked) {
     setLive('treasury',     fmt(d.treasury) + ' IFR (' + pct(d.treasury, d.supply) + ')');
     setLive('community',    fmt(d.community) + ' IFR (' + pct(d.community, d.supply) + ')');
     setLive('deployer',     fmt(d.deployer) + ' IFR');
+    setLive('protocol-locked', fmt((d.vesting || 0) + (d.liqRes || 0)));
+    setLive('ifrlock-stat', fmt(d.ifrLock));
     // Wallet cards
     setLive('card-deployer',   fmt(d.deployer) + ' IFR');
     setLive('card-treasury',   fmt(d.treasury) + ' IFR');
@@ -2233,15 +2235,16 @@ if (isLocked) {
     if (!el) return;
     var protocolLocked = (data.vesting || 0) + (data.liqRes || 0);
     var items = [
-      { label: 'Total Burned',    value: fmt(data.burned),    sub: 'Since genesis \u2014 decreasing forever', color: '#ff4500' },
-      { label: 'Protocol Locked', value: fmt(protocolLocked), sub: 'Vesting ' + fmt(data.vesting) + ' + LiqRes ' + fmt(data.liqRes), color: '#ff8c00' },
-      { label: 'Current Supply',  value: fmt(data.supply),    sub: 'of 1B genesis',        color: '#fff'    },
-      { label: 'Deployer (LP)',   value: fmt(data.deployer),  sub: 'LP allocation',        color: '#FF6B35' }
+      { key: 'burned-stat',     label: 'Total Burned',    value: fmt(data.burned),    sub: 'Since genesis \u2014 decreasing forever', color: '#ff4500' },
+      { key: 'protocol-locked', label: 'Protocol Locked', value: fmt(protocolLocked), sub: 'Team Vesting + Liquidity Reserve', color: '#ff8c00' },
+      { key: '',                label: 'Current Supply',  value: fmt(data.supply),    sub: 'of 1B genesis',        color: '#fff'    },
+      { key: '',                label: 'Deployer (LP)',   value: fmt(data.deployer),  sub: 'LP allocation',        color: '#FF6B35' }
     ];
     el.innerHTML = items.map(function(m) {
+      var liveAttr = m.key ? ' data-live-key="' + m.key + '"' : '';
       return '<div style="background:#111113;border:1px solid #222225;border-radius:8px;padding:16px;text-align:center;">' +
         '<div style="font-size:11px;color:#8a8a96;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px;">' + m.label + '</div>' +
-        '<div style="font-size:22px;font-weight:700;color:' + m.color + ';">' + m.value + '</div>' +
+        '<div' + liveAttr + ' style="font-size:22px;font-weight:700;color:' + m.color + ';">' + m.value + '</div>' +
         '<div style="font-size:11px;color:#8a8a96;margin-top:2px;">' + m.sub + '</div></div>';
     }).join('');
   }
