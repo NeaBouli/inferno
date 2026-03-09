@@ -46,7 +46,7 @@
 | FeeRouterV1 | [`0x4807...C60a`](https://etherscan.io/address/0x4807B77B2E25cD055DA42B09BA4d0aF9e580C60a) | 0 | 0 | governance(): Governance |
 | Vesting | [`0x2694...6271`](https://etherscan.io/address/0x2694Bc84e8D5251E9E4Ecd4B2Ae3f866d6106271) | 0 | 150,000,000 | guardian(): Deployer |
 | LiquidityReserve | [`0xdc03...8f64`](https://etherscan.io/address/0xdc0309804803b3A105154f6073061E3185018f64) | 0 | 200,000,000 | owner(): Governance |
-| BootstrapVault | [`0xA820...261a`](https://etherscan.io/address/0xA820540936d18e1377C39dd9445E5b36F3F1261a) | 0 | 0 | — |
+| ~~BootstrapVault V1~~ | [`0xA820...261a`](https://etherscan.io/address/0xA820540936d18e1377C39dd9445E5b36F3F1261a) | 0 | 0 | **DEPRECATED** — use V3: `0x16086d4f7F191047d8A4fFf2090126E12e865A7E` |
 
 ## 4. Governance — Proposal Overview
 
@@ -243,7 +243,7 @@ TIME REMAINING:   ~23.0h
 |------|-----|--------------|------------|----|
 | 2026-03-05 00:32:59 | IN | Deployer | 200,000,000 | [`0xced0d769...`](https://etherscan.io/tx/0xced0d769afaef1d9c4990245922204cb0dee939d2c2d6e7a8ded3b79919ec70b) |
 
-### BootstrapVault (`0xA820...261a`)
+### ~~BootstrapVault V1~~ (`0xA820...261a`) — DEPRECATED, use V3: `0x16086...865A7E`
 
 **Function Calls:**
 

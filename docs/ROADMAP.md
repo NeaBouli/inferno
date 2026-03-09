@@ -54,7 +54,7 @@
 - [x] Mainnet feeExempt configuration (8 addresses set, deployer removed)
 - [x] Etherscan verification (mainnet, all 9 contracts)
 - [x] Ownership transfer to Governance (InfernoToken, LiquidityReserve, BuybackVault, BurnReserve)
-- [x] BootstrapVault deployed + verified (`0xA820540936d18e1377C39dd9445E5b36F3F1261a`)
+- [x] ~~BootstrapVault V1~~ deployed + verified (`0xA820540936d18e1377C39dd9445E5b36F3F1261a`) — **DEPRECATED**, use V3: `0x16086d4f7F191047d8A4fFf2090126E12e865A7E`
 - [x] Governance Proposal #0 submitted (feeExempt BootstrapVault, ETA 07.03.2026)
 - [ ] Mainnet Uniswap V2 LP pairing (IFR/WETH)
 - [ ] LP Token lock/burn (Unicrypt, 12 months minimum)
