@@ -2244,8 +2244,15 @@ if (isLocked) {
     }).join('');
   }
 
-  function refreshAllLiveData() {
-    Promise.all([
+  function dateTime() {
+    return new Date().toLocaleString('de-DE', {
+      day: '2-digit', month: '2-digit', year: 'numeric',
+      hour: '2-digit', minute: '2-digit', second: '2-digit'
+    });
+  }
+
+  function doRefresh() {
+    return Promise.all([
       fetch(PROXY_BASE + '/api/ifr/supply').then(function(r) { return r.json(); }),
       fetch(PROXY_BASE + '/api/ifr/balances').then(function(r) { return r.json(); })
     ]).then(function(res) {
@@ -2278,14 +2285,23 @@ if (isLocked) {
       updateLiveDisplay(data);
 
       document.querySelectorAll('.live-updated-at').forEach(function(el) {
-        el.textContent = 'Updated: ' + new Date().toLocaleTimeString();
+        el.textContent = 'Updated: ' + dateTime();
       });
       document.querySelectorAll('.live-status').forEach(function(el) {
         el.textContent = '';
       });
-    }).catch(function(e) {
-      console.error('Railway proxy fetch failed:', e);
-      showNotAvailable();
+    });
+  }
+
+  function refreshAllLiveData() {
+    doRefresh().catch(function(e) {
+      console.error('Live data failed, retrying in 3s:', e);
+      setTimeout(function() {
+        doRefresh().catch(function(e2) {
+          console.error('Retry also failed:', e2);
+          showNotAvailable();
+        });
+      }, 3000);
     });
   }
 

@@ -516,13 +516,13 @@ app.get("/api/ifr/balances", async (_req, res) => {
       try {
         const data = await esApiFetch(
           `&module=account&action=tokenbalance&contractaddress=${IFR_TOKEN}&address=${addr}&tag=latest`
-        ) as { result?: string };
-        const raw = data.result || "0";
+        ) as { status?: string; result?: string };
+        const raw = (data.status === "1" && data.result) ? data.result : "0";
         results[label] = { raw, formatted: parseInt(raw, 10) / 10 ** IFR_DECIMALS };
       } catch {
         results[label] = { raw: "0", formatted: 0 };
       }
-      if (i < entries.length - 1) await new Promise(r => setTimeout(r, 350));
+      if (i < entries.length - 1) await new Promise(r => setTimeout(r, 400));
     }
 
     const response = { balances: results, timestamp: new Date().toISOString(), fetchedAt: Date.now(), source: "live" };
