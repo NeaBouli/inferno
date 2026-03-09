@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Multisig Policy &mdash; Inferno ($IFR) Documentation</title>
+  <title>Press Kit &mdash; Inferno ($IFR) Documentation</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -213,6 +213,32 @@
       margin-bottom: 32px;
     }
 
+    /* ---------- Code blocks ---------- */
+    pre {
+      background: #1a1a1d;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px 20px;
+      overflow-x: auto;
+      font-size: 13px;
+      line-height: 1.7;
+      margin: 16px 0;
+      color: var(--text);
+    }
+
+    code {
+      font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+      font-size: 13px;
+      color: var(--text);
+    }
+
+    p code, li code, td code {
+      background: rgba(255, 255, 255, 0.06);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 13px;
+    }
+
     /* ---------- Tables ---------- */
     table {
       width: 100%;
@@ -230,9 +256,9 @@
     th {
       color: var(--muted);
       font-weight: 600;
-      font-size: 12px;
+      font-size: 13px;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
+      letter-spacing: 1px;
     }
 
     td { color: var(--text); }
@@ -271,58 +297,12 @@
       border-left-color: var(--green);
     }
 
-    /* ---------- Phase cards ---------- */
-    .phase-card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 24px 28px;
-      margin: 20px 0;
-    }
-
-    .phase-card h3 {
-      margin: 0 0 8px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      flex-wrap: wrap;
-    }
-
-    .phase-badge {
-      font-size: 11px;
-      font-weight: 700;
-      padding: 3px 10px;
-      border-radius: 999px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-
-    .badge-done { background: rgba(34,197,94,0.15); color: var(--green); }
-    .badge-progress { background: rgba(255,69,0,0.15); color: var(--accent); }
-    .badge-planned { background: rgba(138,138,150,0.15); color: var(--muted); }
-
-    /* ---------- Code ---------- */
-    pre {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 16px 20px;
-      overflow-x: auto;
-      font-size: 13px;
-      line-height: 1.7;
-      margin: 16px 0;
-    }
-
-    code {
+    /* ---------- Address ---------- */
+    .address {
       font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
-      font-size: 13px;
-    }
-
-    p code, li code, td code {
-      background: rgba(255, 255, 255, 0.06);
-      padding: 2px 6px;
-      border-radius: 4px;
-      font-size: 13px;
+      font-size: 12px;
+      color: var(--muted);
+      word-break: break-all;
     }
 
     /* ---------- Footer ---------- */
@@ -378,6 +358,45 @@
     /* ============================================================
        End Shared Styles
        ============================================================ */
+
+    /* ---------- Stats Grid ---------- */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 16px;
+      margin: 24px 0;
+    }
+
+    .stat-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+    }
+
+    .stat-value {
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--accent);
+      margin-bottom: 4px;
+    }
+
+    .stat-label {
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    @media (max-width: 768px) {
+      .stats-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .stats-grid {
+        grid-template-columns: 1fr;
+      }
+    }
   </style>
   <link rel="icon" type="image/png" href="../assets/ifr_icon_64.png">
 </head>
@@ -417,12 +436,12 @@
         <li><a href="vesting.html">Vesting Schedule</a></li>
         <li><a href="roadmap.html">Roadmap</a></li>
         <li><a href="testnet.html">Testnet</a></li>
-        <li><a href="multisig.html" class="active">Multisig Policy</a></li>
+        <li><a href="multisig.html">Multisig Policy</a></li>
         <li><a href="dao-governance.html">DAO Governance</a></li>
         <li><a href="mainnet-checklist.html">Mainnet Checklist</a></li>
         <li><a href="business-onboarding.html">Business Onboarding</a></li>
         <li><a href="contributing.html">Contributing</a></li>
-        <li><a href="press-kit.html">Press Kit</a></li>
+        <li><a href="press-kit.html" class="active">Press Kit</a></li>
         <li><a href="one-pager.html">One Pager</a></li>
         <li><div class="nav-divider"></div></li>
         <li class="nav-back"><a href="../index.html">&larr; Back to Website</a></li>
@@ -432,214 +451,340 @@
     <!-- Main content -->
     <main class="main">
 
-      <h1><span class="accent">Multisig Policy</span></h1>
+      <h1><span class="accent">Press Kit</span> &amp; Media Resources</h1>
       <p class="subtitle">
-        Gnosis Safe configuration, threshold roadmap, signer policy, and project continuity guarantees.
+        Key facts, media assets, and brand resources for journalists and content creators.
       </p>
 
+      <!-- ========== Summary ========== -->
       <div class="callout">
-        <p><strong>Gnosis Safe:</strong> <a href="https://app.safe.global/home?safe=eth:0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b" target="_blank" rel="noopener"><code>0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b</code></a> &mdash; currently 1-of-2 (Deployer + Signer2), expanding to 2-of-4 (planned &mdash; pending onboarding of 2 additional signers).</p>
+        <p><strong>Inferno ($IFR)</strong> is a deflationary ERC-20 utility token on Ethereum. Every transfer permanently burns tokens, reducing supply over time. Launched via Community Fair Launch Model (CFLM) &mdash; no presale, no VC funding, no private allocation. Users lock IFR on-chain to unlock lifetime access to partner products and services.</p>
       </div>
 
-      <!-- Why Multisig -->
-      <h2>Why Multisig?</h2>
-      <p>
-        A single private key controlling a protocol is a single point of failure. If that key is lost, stolen, or compromised, the entire protocol is at risk. A multisig wallet requires multiple independent signers to approve any transaction, eliminating this risk.
-      </p>
-      <ul>
-        <li><strong>No single point of failure</strong> &mdash; no one person can unilaterally change the protocol</li>
-        <li><strong>Key loss protection</strong> &mdash; losing one key does not lock the treasury</li>
-        <li><strong>Compromise resilience</strong> &mdash; an attacker needs multiple keys, not just one</li>
-        <li><strong>Transparent</strong> &mdash; all multisig transactions are on-chain and publicly visible</li>
-      </ul>
+      <!-- ========== Key Facts ========== -->
+      <h2>Key Facts</h2>
 
-      <!-- Threshold Policy -->
-      <h2>Threshold Policy</h2>
-      <p>
-        The multisig threshold increases as the protocol matures. More signers = more decentralization = more security.
-      </p>
-
-      <div class="phase-card">
-        <h3>Phase 0: Mainnet Deploy <span class="phase-badge badge-done">Current</span></h3>
-        <p style="color:var(--muted);margin:0;">1-of-2 (Deployer + Signer2) &mdash; Initial configuration. Required for rapid deployment and initial configuration.</p>
-      </div>
-
-      <div class="phase-card">
-        <h3>Phase 1: Bootstrap Event <span class="phase-badge badge-progress">Next</span></h3>
-        <p style="color:var(--muted);margin:0;">2-of-4 &mdash; Four independent signers. No single person can act alone. Up to two key losses are survivable.</p>
-      </div>
-
-      <div class="phase-card">
-        <h3>Phase 2: Ecosystem Growth <span class="phase-badge badge-planned">Planned</span></h3>
-        <p style="color:var(--muted);margin:0;">3-of-5 &mdash; Five signers from diverse backgrounds. Supermajority required for every action.</p>
-      </div>
-
-      <div class="phase-card">
-        <h3>Phase 3: DAO Transition <span class="phase-badge badge-planned">Planned</span></h3>
-        <p style="color:var(--muted);margin:0;">4-of-7 &rarr; 5-of-9 &mdash; Final multisig configuration before full DAO governance transition.</p>
-      </div>
-
-      <!-- What Signers Can Do -->
-      <h2>What Signers Can Do</h2>
       <table>
         <thead>
           <tr>
+            <th>Attribute</th>
+            <th>Value</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Token Ticker</td>
+            <td><strong>$IFR</strong></td>
+          </tr>
+          <tr>
+            <td>Standard</td>
+            <td>ERC-20 (Ethereum)</td>
+          </tr>
+          <tr>
+            <td>Decimals</td>
+            <td>9</td>
+          </tr>
+          <tr>
+            <td>Initial Supply</td>
+            <td>1,000,000,000 (1 Billion)</td>
+          </tr>
+          <tr>
+            <td>On-Chain Components</td>
+            <td>14 (9 contracts + LP Pair + 4 mocks)</td>
+          </tr>
+          <tr>
+            <td>Tests</td>
+            <td>494 total &mdash; 99% coverage</td>
+          </tr>
+          <tr>
+            <td>Mainnet Launch</td>
+            <td>March 5, 2026</td>
+          </tr>
+          <tr>
+            <td>Launch Model</td>
+            <td>Community Fair Launch (CFLM)</td>
+          </tr>
+          <tr>
+            <td>Mint Function</td>
+            <td>None &mdash; supply can only decrease</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- ========== Token Allocation ========== -->
+      <h2>Token Allocation</h2>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Category</th>
+            <th>Allocation</th>
+            <th>Amount</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>DEX Liquidity</td>
+            <td>40%</td>
+            <td>400,000,000 IFR</td>
+          </tr>
+          <tr>
+            <td>Liquidity Reserve</td>
+            <td>20%</td>
+            <td>200,000,000 IFR</td>
+          </tr>
+          <tr>
+            <td>Team (Vested)</td>
+            <td>15%</td>
+            <td>150,000,000 IFR</td>
+          </tr>
+          <tr>
+            <td>Treasury</td>
+            <td>15%</td>
+            <td>150,000,000 IFR</td>
+          </tr>
+          <tr>
+            <td>Community &amp; Grants</td>
+            <td>6%</td>
+            <td>60,000,000 IFR</td>
+          </tr>
+          <tr>
+            <td>Builder Ecosystem</td>
+            <td>4%</td>
+            <td>40,000,000 IFR</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- ========== Deflation Mechanism ========== -->
+      <h2>Deflation Mechanism</h2>
+
+      <p>Every IFR transfer applies the following fees, enforced at the smart contract level:</p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Fee</th>
+            <th>Rate</th>
             <th>Action</th>
-            <th>Mechanism</th>
           </tr>
         </thead>
         <tbody>
           <tr>
-            <td>Submit governance proposals</td>
-            <td>Via Governance contract (<code>propose()</code>)</td>
+            <td>Sender Burn</td>
+            <td>2.0%</td>
+            <td>Permanently burned from sender</td>
           </tr>
           <tr>
-            <td>Execute proposals after 48h</td>
-            <td>Via Governance contract (<code>execute()</code>)</td>
+            <td>Recipient Burn</td>
+            <td>0.5%</td>
+            <td>Permanently burned from received amount</td>
           </tr>
           <tr>
-            <td>Cancel malicious proposals</td>
-            <td>Guardian role (<code>cancel()</code>)</td>
+            <td>Pool Fee</td>
+            <td>1.0%</td>
+            <td>Routed to FeeRouterV1 (BurnReserve / BuybackVault)</td>
           </tr>
           <tr>
-            <td>Emergency pause (IFRLock)</td>
-            <td>Guardian role (<code>pause()</code>)</td>
-          </tr>
-          <tr>
-            <td>Transfer Governance admin</td>
-            <td>Only current admin can transfer</td>
+            <td><strong>Total</strong></td>
+            <td><strong>3.5%</strong></td>
+            <td>Hard cap: 5% maximum (on-chain enforced)</td>
           </tr>
         </tbody>
       </table>
 
-      <!-- What Signers Cannot Do -->
-      <h2>What Signers Cannot Do</h2>
+      <!-- ========== Lock-to-Access Model ========== -->
+      <h2>Lock-to-Access Model</h2>
+
+      <p>Users lock IFR tokens on-chain via the IFRLock contract to gain access tiers across all partner products:</p>
+
       <table>
         <thead>
           <tr>
-            <th>Restriction</th>
-            <th>Reason</th>
+            <th>Tier</th>
+            <th>Lock Amount</th>
+            <th>Access Level</th>
           </tr>
         </thead>
         <tbody>
           <tr>
-            <td>Directly access token supply</td>
-            <td>No mint function exists. Supply can only decrease.</td>
+            <td>Bronze</td>
+            <td>1,000 IFR</td>
+            <td>Basic premium features</td>
           </tr>
           <tr>
-            <td>Bypass 48-hour timelock</td>
-            <td>Hardcoded in Governance contract. Not configurable.</td>
+            <td>Silver</td>
+            <td>5,000 IFR</td>
+            <td>Extended premium features</td>
           </tr>
           <tr>
-            <td>Change fee above 5%</td>
-            <td>Hard cap enforced in InfernoToken contract.</td>
+            <td>Gold</td>
+            <td>25,000 IFR</td>
+            <td>Full premium access</td>
           </tr>
           <tr>
-            <td>Move locked user tokens</td>
-            <td>IFRLock only allows the original depositor to withdraw.</td>
-          </tr>
-          <tr>
-            <td>Execute instantly</td>
-            <td>Every change is public for 48 hours before execution.</td>
+            <td>Platinum</td>
+            <td>100,000 IFR</td>
+            <td>Lifetime all-access</td>
           </tr>
         </tbody>
       </table>
 
-      <!-- Who Can Become a Signer -->
-      <h2>Who Can Become a Signer?</h2>
-      <p>
-        Signer selection is transparent and community-driven. Candidates are evaluated based on:
-      </p>
+      <!-- ========== Builder Ecosystem ========== -->
+      <h2>Builder Ecosystem</h2>
+
       <ul>
-        <li><strong>Technical competence</strong> &mdash; ability to verify and understand governance proposals</li>
-        <li><strong>Independence</strong> &mdash; no two signers should share organizational affiliations</li>
-        <li><strong>Track record</strong> &mdash; verifiable on-chain history and community presence</li>
-        <li><strong>Hardware wallet</strong> &mdash; all signers must use hardware wallets (Ledger/Trezor)</li>
+        <li><strong>PartnerVault</strong> &mdash; 40M IFR reserved for builder rewards, distributed when users lock IFR through partner integrations.</li>
+        <li><strong>Lock-triggered Creator Rewards</strong> &mdash; when a user locks IFR via a partner, the partner receives a percentage from the pool.</li>
+        <li><strong>Per-partner cap</strong> prevents pool exhaustion by any single partner.</li>
+        <li><strong>Annual emission cap</strong> (4M IFR/year) ensures long-term sustainability.</li>
+        <li><strong>Builder tokens</strong> grant future DAO voting rights (Phase 4+).</li>
       </ul>
-      <p>
-        Signer additions and removals are on-chain transactions visible to everyone. The community can verify the current signer set at any time via the <a href="https://app.safe.global/home?safe=eth:0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b" target="_blank" rel="noopener">Gnosis Safe interface</a>.
-      </p>
 
-      <!-- On-Chain Verification -->
-      <h2>On-Chain Verification</h2>
+      <!-- ========== Governance ========== -->
+      <h2>Governance</h2>
+
+      <ul>
+        <li><strong>48-hour Timelock</strong> on all parameter changes &mdash; no instant admin actions.</li>
+        <li><strong>Guardian role</strong> can cancel malicious proposals but cannot execute them.</li>
+        <li><strong>No token voting</strong> (prevents whale manipulation and flash-loan attacks).</li>
+        <li><strong>Multisig transition</strong> (Phase 3) followed by full DAO governance (Phase 4).</li>
+        <li>All governance actions are transparent and verifiable on Etherscan.</li>
+      </ul>
+
+      <!-- ========== Technology ========== -->
+      <h2>Technology</h2>
+
       <table>
         <thead>
           <tr>
-            <th>Contract</th>
-            <th>Role</th>
-            <th>Controlled By</th>
+            <th>Component</th>
+            <th>Stack</th>
           </tr>
         </thead>
         <tbody>
           <tr>
-            <td>InfernoToken</td>
-            <td><code>owner()</code></td>
-            <td>Governance (timelock)</td>
+            <td>Smart Contracts</td>
+            <td>Solidity 0.8.20, OpenZeppelin v5, Hardhat</td>
           </tr>
           <tr>
-            <td>LiquidityReserve</td>
-            <td><code>owner()</code></td>
-            <td>Governance (timelock)</td>
+            <td>Testing Framework</td>
+            <td>Hardhat + Chai &mdash; 494 tests, 99% coverage</td>
           </tr>
           <tr>
-            <td>BuybackVault</td>
-            <td><code>owner()</code></td>
-            <td>Governance (timelock)</td>
+            <td>Dashboard</td>
+            <td>React 18 + Vite + ethers.js v5</td>
           </tr>
           <tr>
-            <td>BurnReserve</td>
-            <td><code>owner()</code></td>
-            <td>Governance (timelock)</td>
+            <td>Governance UI</td>
+            <td>React 18 + Vite + TypeScript + Tailwind</td>
           </tr>
           <tr>
-            <td>Governance</td>
-            <td><code>admin()</code></td>
-            <td>Deployer (pending &rarr; Multisig)</td>
+            <td>AI Copilot</td>
+            <td>React + Express + Anthropic API</td>
           </tr>
           <tr>
-            <td>PartnerVault</td>
-            <td><code>admin()</code></td>
-            <td>Governance (immutable)</td>
+            <td>Benefits Network</td>
+            <td>Next.js 14 + Express + Prisma + wagmi v2</td>
           </tr>
           <tr>
-            <td>IFRLock</td>
-            <td><code>guardian()</code></td>
-            <td>Deployer (pause-only)</td>
-          </tr>
-          <tr>
-            <td>Vesting</td>
-            <td><code>guardian()</code></td>
-            <td>Deployer (revoke-only)</td>
-          </tr>
-          <tr>
-            <td>FeeRouterV1</td>
-            <td><code>governance()</code></td>
-            <td>Governance (immutable)</td>
+            <td>Creator Gateway</td>
+            <td>Express + ethers v5 + JWT</td>
           </tr>
         </tbody>
       </table>
 
-      <!-- Project Continuity -->
-      <h2>Project Continuity</h2>
-      <p>
-        Inferno Protocol is designed to outlive any single contributor, company, or team. The protocol is permanently decentralized infrastructure:
-      </p>
+      <!-- ========== Roadmap Summary ========== -->
+      <h2>Roadmap Summary</h2>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Phase</th>
+            <th>Timeline</th>
+            <th>Milestones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Phase 1</td>
+            <td>Q1 2026</td>
+            <td>Mainnet deploy, contract verification, initial liquidity</td>
+          </tr>
+          <tr>
+            <td>Phase 2</td>
+            <td>Q2 2026</td>
+            <td>LP lock, partner onboarding, Benefits Network launch</td>
+          </tr>
+          <tr>
+            <td>Phase 3</td>
+            <td>Q3&ndash;Q4 2026</td>
+            <td>Multisig governance, guarded buyback automation, security audit</td>
+          </tr>
+          <tr>
+            <td>Phase 4</td>
+            <td>Q2 2027+</td>
+            <td>DAO governance migration, cross-chain expansion</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- ========== Media Assets ========== -->
+      <h2>Media Assets</h2>
+
+      <p>Download official Inferno brand assets below. Use these for articles, reviews, and media coverage.</p>
+
       <ul>
-        <li><strong>Open source</strong> &mdash; all code lives on <a href="https://github.com/NeaBouli/inferno">GitHub</a>. Anyone can fork, audit, or continue development.</li>
-        <li><strong>Verified on-chain</strong> &mdash; all 10 contracts are verified on <a href="https://etherscan.io/address/0x77e99917Eca8539c62F509ED1193ac36580A6e7B#code">Etherscan</a>. The bytecode is public and immutable.</li>
-        <li><strong>Governance protects</strong> &mdash; the 48-hour timelock prevents single-actor mistakes. Every change is publicly visible before execution.</li>
-        <li><strong>Multisig prevents failure</strong> &mdash; no single key loss can freeze the protocol. Threshold increases over time.</li>
-        <li><strong>Community can continue</strong> &mdash; if the original team disappears, anyone with the contracts, ABI, and governance access can operate the protocol.</li>
-        <li><strong>No off-chain dependencies</strong> &mdash; the core protocol (token, lock, governance, fees) runs entirely on Ethereum. No servers required.</li>
+        <li><a href="../assets/ifr_icon_256.png">IFR Icon 256px (PNG)</a></li>
+        <li><a href="../assets/ifr_icon_4096.png">IFR Icon 4096px (PNG)</a></li>
+        <li><a href="../assets/IFR_BannerMobile.png">IFR Banner Mobile (PNG)</a></li>
       </ul>
 
       <div class="callout-green callout">
-        <p>Inferno Protocol is fully open source and community-owned. No single entity controls the protocol. All contracts are verified on Ethereum Mainnet, governed by a 48-hour timelock, and protected by Gnosis Safe multisig. The protocol lives on-chain &mdash; permanently.</p>
+        <p><strong>Brand colors:</strong> Background <code>#0a0a0a</code>, Accent (Inferno Orange) <code>#ff4500</code>, Font: Inter. Dark theme only.</p>
       </div>
+
+      <!-- ========== Links ========== -->
+      <h2>Links</h2>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Resource</th>
+            <th>URL</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Website</td>
+            <td><a href="https://ifrunit.tech/" target="_blank">ifrunit.tech</a></td>
+          </tr>
+          <tr>
+            <td>GitHub</td>
+            <td><a href="https://github.com/NeaBouli/inferno" target="_blank">github.com/NeaBouli/inferno</a></td>
+          </tr>
+          <tr>
+            <td>Wiki</td>
+            <td><a href="https://ifrunit.tech/wiki/" target="_blank">ifrunit.tech/wiki</a></td>
+          </tr>
+          <tr>
+            <td>Transparency</td>
+            <td><a href="transparency.html">Transparency Page</a></td>
+          </tr>
+          <tr>
+            <td>Fair Launch</td>
+            <td><a href="fair-launch.html">Fair Launch Page</a></td>
+          </tr>
+          <tr>
+            <td>Roadmap</td>
+            <td><a href="roadmap.html">Roadmap Page</a></td>
+          </tr>
+        </tbody>
+      </table>
 
       <!-- Footer -->
       <footer class="wiki-footer">
-        Inferno ($IFR) &mdash; Community Fair Launch Model &mdash; Documentation v1.0
+        Inferno ($IFR) &mdash; Press Kit &mdash; Documentation v1.0
       </footer>
 
     </main>

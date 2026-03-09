@@ -133,8 +133,8 @@ inferno/
 │   ├── GITHUB_SETUP.md               Repository Setup (Discussions, Topics, Pages)
 │   ├── APP_SECURITY_REVIEW.md        App Security Review (12 Findings, 7 Fixed: CORS, JWT, ABI, Wallet)
 │   ├── robots.txt                     Crawler control (Allow: /, Sitemap link)
-│   ├── sitemap.xml                    15 URLs (Landing + 14 Wiki pages)
-│   └── wiki/                          [x] 18 HTML pages (index, contracts, tokenomics, lock, governance, security, deployment, integration, bootstrap, agent, faq, transparency, fair-launch, fee-design, vesting, roadmap, testnet, multisig)
+│   ├── sitemap.xml                    20 URLs (Landing + 19 Wiki pages)
+│   └── wiki/                          [x] 24 HTML pages (index, contracts, tokenomics, lock, governance, security, deployment, integration, bootstrap, agent, faq, transparency, fair-launch, fee-design, vesting, roadmap, testnet, multisig, dao-governance, mainnet-checklist, business-onboarding, contributing, press-kit, one-pager)
 ├── STATUS-REPORT.md                    Complete Status Report
 └── README.md                           Project Overview
 ```

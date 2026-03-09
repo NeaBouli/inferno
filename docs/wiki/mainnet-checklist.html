@@ -1,0 +1,1143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mainnet Checklist &mdash; Inferno ($IFR) Documentation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    /* ============================================================
+       Inferno Wiki — Shared Styles (copy into every wiki page)
+       ============================================================ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #0a0a0a;
+      --card:     #111113;
+      --border:   #222225;
+      --text:     #e8e8ed;
+      --muted:    #8a8a96;
+      --accent:   #ff4500;
+      --green:    #22c55e;
+      --sidebar-w: 240px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    /* ---------- Layout (CSS Grid) ---------- */
+    .layout {
+      display: grid;
+      grid-template-columns: var(--sidebar-w) 1fr;
+      min-height: 100vh;
+    }
+
+    /* ---------- Sidebar ---------- */
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: var(--sidebar-w);
+      height: 100vh;
+      background: var(--card);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      padding: 24px 0;
+      overflow-y: auto;
+      z-index: 100;
+      transition: transform 0.3s ease;
+    }
+
+    .sidebar-logo {
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: 3px;
+      color: var(--accent);
+      padding: 0 24px 4px;
+      text-decoration: none;
+      display: block;
+    }
+
+    .sidebar-subtitle {
+      font-size: 12px;
+      color: var(--muted);
+      padding: 0 24px 24px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .sidebar-nav {
+      list-style: none;
+      padding: 16px 0;
+      flex: 1;
+    }
+
+    .sidebar-nav li {}
+
+    .sidebar-nav a {
+      display: block;
+      padding: 10px 24px;
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      transition: color 0.2s, background 0.2s, border-left 0.2s;
+      border-left: 3px solid transparent;
+    }
+
+    .sidebar-nav a:hover {
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .sidebar-nav a.active {
+      color: var(--accent);
+      border-left-color: var(--accent);
+      background: rgba(255, 69, 0, 0.06);
+    }
+
+    .sidebar-nav .nav-divider {
+      height: 1px;
+      background: var(--border);
+      margin: 12px 24px;
+    }
+
+    .sidebar-nav .nav-back a {
+      font-size: 13px;
+      color: var(--muted);
+      opacity: 0.7;
+    }
+
+    .sidebar-nav .nav-back a:hover {
+      opacity: 1;
+      color: var(--text);
+    }
+
+    /* ---------- Hamburger (mobile) ---------- */
+    .hamburger {
+      display: none;
+      position: fixed;
+      top: 16px;
+      left: 16px;
+      z-index: 200;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 12px;
+      cursor: pointer;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .hamburger span {
+      display: block;
+      width: 22px;
+      height: 2px;
+      background: var(--text);
+      border-radius: 2px;
+      transition: transform 0.3s, opacity 0.3s;
+    }
+
+    .hamburger.open span:nth-child(1) { transform: rotate(45deg) translate(5px, 5px); }
+    .hamburger.open span:nth-child(2) { opacity: 0; }
+    .hamburger.open span:nth-child(3) { transform: rotate(-45deg) translate(5px, -5px); }
+
+    .sidebar-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.6);
+      z-index: 90;
+    }
+
+    /* ---------- Main content ---------- */
+    .main {
+      grid-column: 2;
+      padding: 48px 56px;
+      max-width: 960px;
+    }
+
+    .main h1 {
+      font-size: 32px;
+      font-weight: 800;
+      margin-bottom: 8px;
+      color: var(--text);
+    }
+
+    .main h1 .accent {
+      color: var(--accent);
+    }
+
+    .main h2 {
+      font-size: 22px;
+      font-weight: 700;
+      margin: 40px 0 16px;
+      color: var(--text);
+    }
+
+    .main h3 {
+      font-size: 18px;
+      font-weight: 600;
+      margin: 32px 0 12px;
+      color: var(--text);
+    }
+
+    .main p {
+      color: var(--muted);
+      margin-bottom: 16px;
+      font-size: 15px;
+      max-width: 680px;
+    }
+
+    .main a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    .main a:hover {
+      text-decoration: underline;
+    }
+
+    .subtitle {
+      font-size: 16px;
+      color: var(--muted);
+      margin-bottom: 32px;
+    }
+
+    /* ---------- Code blocks ---------- */
+    pre {
+      background: #1a1a1d;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px 20px;
+      overflow-x: auto;
+      font-size: 13px;
+      line-height: 1.7;
+      margin: 16px 0;
+      color: var(--text);
+    }
+
+    code {
+      font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+      font-size: 13px;
+      color: var(--text);
+    }
+
+    p code, li code, td code {
+      background: rgba(255, 255, 255, 0.06);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 13px;
+    }
+
+    /* ---------- Tables ---------- */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0;
+      font-size: 14px;
+    }
+
+    th, td {
+      text-align: left;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    th {
+      color: var(--muted);
+      font-weight: 600;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    td { color: var(--text); }
+
+    tr:hover td { background: rgba(255, 255, 255, 0.02); }
+
+    /* ---------- Lists ---------- */
+    .main ul, .main ol {
+      padding-left: 24px;
+      margin-bottom: 16px;
+    }
+
+    .main li {
+      color: var(--muted);
+      font-size: 14px;
+      margin-bottom: 6px;
+    }
+
+    /* ---------- Callout ---------- */
+    .callout {
+      background: rgba(255, 69, 0, 0.06);
+      border-left: 3px solid var(--accent);
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 20px 0;
+    }
+
+    .callout p {
+      color: var(--text);
+      margin: 0;
+      font-size: 14px;
+    }
+
+    .callout-green {
+      background: rgba(34, 197, 94, 0.06);
+      border-left-color: var(--green);
+    }
+
+    /* ---------- Address ---------- */
+    .address {
+      font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+      font-size: 12px;
+      color: var(--muted);
+      word-break: break-all;
+    }
+
+    /* ---------- Footer ---------- */
+    .wiki-footer {
+      margin-top: 64px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    /* ---------- Responsive ---------- */
+    @media (max-width: 768px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        transform: translateX(-100%);
+      }
+
+      .sidebar.open {
+        transform: translateX(0);
+      }
+
+      .sidebar-overlay.open {
+        display: block;
+      }
+
+      .hamburger {
+        display: flex;
+      }
+
+      .main {
+        grid-column: 1;
+        padding: 72px 20px 40px;
+      }
+
+      table {
+        font-size: 13px;
+      }
+
+      th, td {
+        padding: 10px 12px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .main h1 {
+        font-size: 26px;
+      }
+    }
+    /* ============================================================
+       End Shared Styles
+       ============================================================ */
+
+    /* ---------- Stats Grid ---------- */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 16px;
+      margin: 24px 0;
+    }
+
+    .stat-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+    }
+
+    .stat-value {
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--accent);
+      margin-bottom: 4px;
+    }
+
+    .stat-label {
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    /* ---------- Status badges ---------- */
+    .badge-done {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 600;
+      background: rgba(34, 197, 94, 0.15);
+      color: #22c55e;
+    }
+
+    .badge-pending {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 600;
+      background: rgba(234, 179, 8, 0.15);
+      color: #eab308;
+    }
+
+    /* ---------- Checklist ---------- */
+    .checklist {
+      list-style: none;
+      padding-left: 0;
+    }
+
+    .checklist li {
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .checklist li:last-child {
+      border-bottom: none;
+    }
+
+    .checklist .item-text {
+      flex: 1;
+    }
+
+    @media (max-width: 768px) {
+      .stats-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .stats-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+  <link rel="icon" type="image/png" href="../assets/ifr_icon_64.png">
+</head>
+<body>
+
+  <!-- Hamburger button (mobile only) -->
+  <button class="hamburger" id="hamburger" aria-label="Toggle navigation">
+    <span></span>
+    <span></span>
+    <span></span>
+  </button>
+
+  <!-- Overlay (mobile only) -->
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <div class="layout">
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <a href="index.html" class="sidebar-logo">INFERNO</a>
+      <div class="sidebar-subtitle">Documentation</div>
+      <ul class="sidebar-nav">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="contracts.html">Smart Contracts</a></li>
+        <li><a href="tokenomics.html">Tokenomics</a></li>
+        <li><a href="lock-mechanism.html">Lock Mechanism</a></li>
+        <li><a href="governance.html">Governance</a></li>
+        <li><a href="security.html">Security</a></li>
+        <li><a href="deployment.html">Deployment</a></li>
+        <li><a href="integration.html">Integration Guide</a></li>
+        <li><a href="bootstrap.html">Bootstrap Event</a></li>
+        <li><a href="agent.html">AI Copilot</a></li>
+        <li><a href="faq.html">FAQ</a></li>
+        <li><a href="transparency.html">Transparency</a></li>
+        <li><a href="fair-launch.html">Fair Launch</a></li>
+        <li><a href="fee-design.html">Fee Design</a></li>
+        <li><a href="vesting.html">Vesting Schedule</a></li>
+        <li><a href="roadmap.html">Roadmap</a></li>
+        <li><a href="testnet.html">Testnet</a></li>
+        <li><a href="multisig.html">Multisig Policy</a></li>
+        <li><a href="dao-governance.html">DAO Governance</a></li>
+        <li><a href="mainnet-checklist.html" class="active">Mainnet Checklist</a></li>
+        <li><a href="business-onboarding.html">Business Onboarding</a></li>
+        <li><a href="contributing.html">Contributing</a></li>
+        <li><a href="press-kit.html">Press Kit</a></li>
+        <li><a href="one-pager.html">One Pager</a></li>
+        <li><div class="nav-divider"></div></li>
+        <li class="nav-back"><a href="../index.html">&larr; Back to Website</a></li>
+      </ul>
+    </aside>
+
+    <!-- Main content -->
+    <main class="main">
+
+      <h1><span class="accent">Mainnet</span> Deployment Checklist</h1>
+      <p class="subtitle">
+        Complete deployment verification for Ethereum Mainnet &mdash; 9 contracts deployed and verified (2026-03-05).
+      </p>
+
+      <!-- ========== Stats ========== -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-value">9/9</div>
+          <div class="stat-label">Contracts Deployed</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">1B IFR</div>
+          <div class="stat-label">Distributed (CFLM)</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">8</div>
+          <div class="stat-label">Fee Exemptions Set</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">444</div>
+          <div class="stat-label">Total Tests Passing</div>
+        </div>
+      </div>
+
+      <!-- ========== CRITICAL ========== -->
+      <h2>CRITICAL &mdash; Before Any Public Launch</h2>
+
+      <p>These items MUST be completed before public launch.</p>
+
+      <h3>LP Token Lock (HIGHEST PRIORITY)</h3>
+      <ul class="checklist">
+        <li>
+          <span class="badge-pending">Pending</span>
+          <span class="item-text">Lock LP Tokens via Unicrypt (min 12 months) &mdash; or permanently burn LP tokens (<code>0x000...dEaD</code>)</span>
+        </li>
+        <li>
+          <span class="badge-pending">Pending</span>
+          <span class="item-text">Verify LP lock transaction on Etherscan</span>
+        </li>
+        <li>
+          <span class="badge-pending">Pending</span>
+          <span class="item-text">Record LP lock proof in TRANSPARENCY.md</span>
+        </li>
+        <li>
+          <span class="badge-pending">Pending</span>
+          <span class="item-text">Add LP lock link to landing page + wiki</span>
+        </li>
+      </ul>
+
+      <h3>Ownership Transfer &rarr; Governance (Done 2026-03-05)</h3>
+      <ul class="checklist">
+        <li>
+          <span class="badge-done">Done</span>
+          <span class="item-text"><code>InfernoToken.transferOwnership(Governance)</code></span>
+        </li>
+        <li>
+          <span class="badge-done">Done</span>
+          <span class="item-text"><code>LiquidityReserve.transferOwnership(Governance)</code></span>
+        </li>
+        <li>
+          <span class="badge-done">Done</span>
+          <span class="item-text"><code>BuybackVault.transferOwnership(Governance)</code></span>
+        </li>
+        <li>
+          <span class="badge-done">Done</span>
+          <span class="item-text"><code>BurnReserve.transferOwnership(Governance)</code></span>
+        </li>
+      </ul>
+
+      <h3>Deployer Wallet</h3>
+      <ul class="checklist">
+        <li>
+          <span class="badge-pending">Pending</span>
+          <span class="item-text">Transfer deployer wallet treasury share to Governance Treasury</span>
+        </li>
+        <li>
+          <span class="badge-pending">Pending</span>
+          <span class="item-text">Transfer community share to Community Multisig</span>
+        </li>
+        <li>
+          <span class="badge-pending">Pending</span>
+          <span class="item-text">Reduce deployer wallet to minimum (gas only)</span>
+        </li>
+      </ul>
+
+      <!-- ========== Current Status ========== -->
+      <div class="callout-green callout">
+        <p><strong>Current Status (2026-03-05):</strong> Mainnet Deploy: 9/9 contracts deployed + verified. Token Distribution: 1B IFR correctly distributed (CFLM). Fee Exemptions: 8 addresses set, deployer removed. Ownership Transfer: Done (4 contracts &rarr; Governance). BootstrapVault: Deployed + verified (<code>0xA820540936d18e1377C39dd9445E5b36F3F1261a</code>). <strong>OPEN:</strong> LP Pairing, LP Lock, Multisig expansion.</p>
+      </div>
+
+      <!-- ========== Sepolia Testnet ========== -->
+      <h2>Sepolia Testnet &mdash; Completed</h2>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Milestone</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>14 Contracts deployed + verified</td>
+            <td><span class="badge-done">Done</span></td>
+          </tr>
+          <tr>
+            <td>Uniswap V2 LP Pair live</td>
+            <td><span class="badge-done">Done</span></td>
+          </tr>
+          <tr>
+            <td>Ownership transferred to Governance</td>
+            <td><span class="badge-done">Done</span></td>
+          </tr>
+          <tr>
+            <td>Governance Proposals #0, #1 executed</td>
+            <td><span class="badge-done">Done</span></td>
+          </tr>
+          <tr>
+            <td>Governance Proposal #2 cancelled (v1 deprecated)</td>
+            <td><span class="badge-done">Done</span></td>
+          </tr>
+          <tr>
+            <td>Governance Proposal #3 executed (PartnerVault v2 feeExempt) + 1.4M Top-up</td>
+            <td><span class="badge-done">Done</span></td>
+          </tr>
+          <tr>
+            <td>Full Lock/Unlock cycle verified (8/8)</td>
+            <td><span class="badge-done">Done</span></td>
+          </tr>
+          <tr>
+            <td>Slither Audit: 0 high/critical</td>
+            <td><span class="badge-done">Done</span></td>
+          </tr>
+          <tr>
+            <td>solidity-coverage: 99% Stmts, 91% Branch</td>
+            <td><span class="badge-done">Done</span></td>
+          </tr>
+          <tr>
+            <td>LiquidityReserve/BuybackVault/BurnReserve v2 redeployed (transferOwnership)</td>
+            <td><span class="badge-done">Done</span></td>
+          </tr>
+          <tr>
+            <td>Ownership v2 &rarr; Governance (direct transfer)</td>
+            <td><span class="badge-done">Done</span></td>
+          </tr>
+          <tr>
+            <td>feeExempt Proposals #7-9 executed (2026-03-02)</td>
+            <td><span class="badge-done">Done</span></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- ========== Phase 0 ========== -->
+      <h2>Phase 0: Pre-Deployment (Preparation)</h2>
+
+      <h3>Security</h3>
+      <ul class="checklist">
+        <li>
+          <span class="badge-done">Done</span>
+          <span class="item-text">Slither Audit completed (0 high/critical, 15 fixes applied)</span>
+        </li>
+        <li>
+          <span class="badge-done">Done</span>
+          <span class="item-text">solidity-coverage report generated (99% Stmts, 91% Branch)</span>
+        </li>
+        <li>
+          <span class="badge-pending">Pending</span>
+          <span class="item-text">Third-party security audit completed (recommended: Code4rena, Sherlock, or Cyfrin)</span>
+        </li>
+        <li>
+          <span class="badge-pending">Pending</span>
+          <span class="item-text">All audit findings resolved and re-verified</span>
+        </li>
+        <li>
+          <span class="badge-pending">Pending</span>
+          <span class="item-text">Slither re-run on final code</span>
+        </li>
+        <li>
+          <span class="badge-pending">Pending</span>
+          <span class="item-text"><code>npx hardhat test</code> &mdash; all tests passing</span>
+        </li>
+        <li>
+          <span class="badge-pending">Pending</span>
+          <span class="item-text">Code freeze: no commit after audit completion without re-audit</span>
+        </li>
+      </ul>
+
+      <h3>Multisig Setup</h3>
+      <ul class="checklist">
+        <li>
+          <span class="badge-done">Done</span>
+          <span class="item-text">Gnosis Safe created: <a href="https://safe.global" target="_blank">safe.global</a></span>
+        </li>
+        <li>
+          <span class="badge-pending">Pending</span>
+          <span class="item-text">Recommended: 2-of-4 signers (currently 1-of-2)</span>
+        </li>
+        <li>
+          <span class="badge-pending">Pending</span>
+          <span class="item-text">All signers have hardware wallets (Ledger/Trezor)</span>
+        </li>
+        <li>
+          <span class="badge-done">Done</span>
+          <span class="item-text">Multisig address recorded: <code class="address">0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b</code></span>
+        </li>
+        <li>
+          <span class="badge-pending">Pending</span>
+          <span class="item-text">Guardian multisig created (separate Safe, 2-of-4 recommended)</span>
+        </li>
+        <li>
+          <span class="badge-pending">Pending</span>
+          <span class="item-text">Guardian address recorded</span>
+        </li>
+        <li>
+          <span class="badge-pending">Pending</span>
+          <span class="item-text">Test transaction on Sepolia with multisig successful</span>
+        </li>
+      </ul>
+
+      <h3>Wallets &amp; Keys</h3>
+      <ul class="checklist">
+        <li>
+          <span class="badge-pending">Pending</span>
+          <span class="item-text">Deployer wallet with sufficient ETH for gas (min. 0.5 ETH recommended)</span>
+        </li>
+        <li>
+          <span class="badge-pending">Pending</span>
+          <span class="item-text">All private keys on hardware wallets, not on computer</span>
+        </li>
+        <li>
+          <span class="badge-pending">Pending</span>
+          <span class="item-text">Backup phrases securely stored (offline, multiple copies)</span>
+        </li>
+        <li>
+          <span class="badge-pending">Pending</span>
+          <span class="item-text">Team beneficiary address for vesting confirmed</span>
+        </li>
+        <li>
+          <span class="badge-pending">Pending</span>
+          <span class="item-text">Treasury address confirmed</span>
+        </li>
+      </ul>
+
+      <h3>Contract Parameters Finalized</h3>
+
+      <div class="callout">
+        <p><strong>Parameters used for mainnet deployment:</strong></p>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Parameter</th>
+            <th>Value</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>rewardBps</code></td>
+            <td>1500 (15%)</td>
+          </tr>
+          <tr>
+            <td><code>annualEmissionCap</code></td>
+            <td>4,000,000 IFR</td>
+          </tr>
+          <tr>
+            <td><code>Timelock delay</code></td>
+            <td>172800 (48h)</td>
+          </tr>
+          <tr>
+            <td>Team Vesting</td>
+            <td>150M IFR, 48 months, 12-month cliff</td>
+          </tr>
+          <tr>
+            <td>Liquidity Reserve</td>
+            <td>200M IFR, 6-month lock</td>
+          </tr>
+          <tr>
+            <td><code>FeeRouterV1</code></td>
+            <td>protocolFeeBps = 5, FEE_CAP_BPS = 25</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- ========== Phase 1 ========== -->
+      <h2>Phase 1: Deployment (Follow order!)</h2>
+
+      <h3>Step 1 &mdash; Deploy Core Contracts</h3>
+      <ul class="checklist">
+        <li>
+          <span class="badge-done">Done</span>
+          <span class="item-text">
+            <strong>InfernoToken.sol</strong> deployed &mdash;
+            <a href="https://etherscan.io/address/0x77e99917Eca8539c62F509ED1193ac36580A6e7B#code" target="_blank"><code class="address">0x77e99917Eca8539c62F509ED1193ac36580A6e7B</code></a>
+            &mdash; Etherscan verified
+          </span>
+        </li>
+        <li>
+          <span class="badge-done">Done</span>
+          <span class="item-text">
+            <strong>Governance (Timelock)</strong> deployed &mdash; admin = Deployer (temporary), delay = 172800 (48h) &mdash;
+            <a href="https://etherscan.io/address/0xc43d48E7FDA576C5022d0670B652A622E8caD041#code" target="_blank"><code class="address">0xc43d48E7FDA576C5022d0670B652A622E8caD041</code></a>
+            &mdash; Etherscan verified
+          </span>
+        </li>
+      </ul>
+
+      <h3>Step 2 &mdash; Deploy Utility Contracts</h3>
+      <ul class="checklist">
+        <li>
+          <span class="badge-done">Done</span>
+          <span class="item-text">
+            <strong>IFRLock.sol</strong> &mdash;
+            <a href="https://etherscan.io/address/0x769928aBDfc949D0718d8766a1C2d7dBb63954Eb#code" target="_blank"><code class="address">0x769928aBDfc949D0718d8766a1C2d7dBb63954Eb</code></a>
+            &mdash; Etherscan verified
+          </span>
+        </li>
+        <li>
+          <span class="badge-done">Done</span>
+          <span class="item-text">
+            <strong>BurnReserve.sol</strong> &mdash;
+            <a href="https://etherscan.io/address/0xaA1496133B6c274190A2113410B501C5802b6fCF#code" target="_blank"><code class="address">0xaA1496133B6c274190A2113410B501C5802b6fCF</code></a>
+            &mdash; Etherscan verified
+          </span>
+        </li>
+        <li>
+          <span class="badge-done">Done</span>
+          <span class="item-text">
+            <strong>BuybackVault.sol</strong> &mdash;
+            <a href="https://etherscan.io/address/0x670D293e3D65f96171c10DdC8d88B96b0570F812#code" target="_blank"><code class="address">0x670D293e3D65f96171c10DdC8d88B96b0570F812</code></a>
+            &mdash; Etherscan verified
+          </span>
+        </li>
+        <li>
+          <span class="badge-done">Done</span>
+          <span class="item-text">
+            <strong>PartnerVault.sol</strong> &mdash; admin = Governance, rewardBps = 1500, annualEmissionCap = 4M IFR &mdash;
+            <a href="https://etherscan.io/address/0xc6eb7714bCb035ebc2D4d9ba7B3762ef7B9d4F7D#code" target="_blank"><code class="address">0xc6eb7714bCb035ebc2D4d9ba7B3762ef7B9d4F7D</code></a>
+            &mdash; Etherscan verified
+          </span>
+        </li>
+        <li>
+          <span class="badge-done">Done</span>
+          <span class="item-text">
+            <strong>FeeRouterV1.sol</strong> &mdash; governance = Governance, feeCollector = Treasury &mdash;
+            <a href="https://etherscan.io/address/0x4807B77B2E25cD055DA42B09BA4d0aF9e580C60a#code" target="_blank"><code class="address">0x4807B77B2E25cD055DA42B09BA4d0aF9e580C60a</code></a>
+            &mdash; Etherscan verified
+          </span>
+        </li>
+      </ul>
+
+      <h3>Step 3 &mdash; Vesting &amp; Reserve</h3>
+      <ul class="checklist">
+        <li>
+          <span class="badge-done">Done</span>
+          <span class="item-text">
+            <strong>Vesting.sol</strong> &mdash;
+            <a href="https://etherscan.io/address/0x2694Bc84e8D5251E9E4Ecd4B2Ae3f866d6106271#code" target="_blank"><code class="address">0x2694Bc84e8D5251E9E4Ecd4B2Ae3f866d6106271</code></a>
+            &mdash; Etherscan verified
+          </span>
+        </li>
+        <li>
+          <span class="badge-done">Done</span>
+          <span class="item-text">
+            <strong>LiquidityReserve.sol</strong> &mdash;
+            <a href="https://etherscan.io/address/0xdc0309804803b3A105154f6073061E3185018f64#code" target="_blank"><code class="address">0xdc0309804803b3A105154f6073061E3185018f64</code></a>
+            &mdash; Etherscan verified
+          </span>
+        </li>
+      </ul>
+
+      <h3>Step 4 &mdash; Set Fee Exemptions (BEFORE token distribution!)</h3>
+      <ul class="checklist">
+        <li>
+          <span class="badge-done">Done</span>
+          <span class="item-text"><code>setFeeExempt(Vesting, true)</code></span>
+        </li>
+        <li>
+          <span class="badge-done">Done</span>
+          <span class="item-text"><code>setFeeExempt(LiquidityReserve, true)</code></span>
+        </li>
+        <li>
+          <span class="badge-done">Done</span>
+          <span class="item-text"><code>setFeeExempt(BuybackVault, true)</code></span>
+        </li>
+        <li>
+          <span class="badge-done">Done</span>
+          <span class="item-text"><code>setFeeExempt(BurnReserve, true)</code></span>
+        </li>
+        <li>
+          <span class="badge-done">Done</span>
+          <span class="item-text"><code>setFeeExempt(IFRLock, true)</code></span>
+        </li>
+        <li>
+          <span class="badge-done">Done</span>
+          <span class="item-text"><code>setFeeExempt(PartnerVault, true)</code></span>
+        </li>
+        <li>
+          <span class="badge-done">Done</span>
+          <span class="item-text"><code>setFeeExempt(Treasury, true)</code></span>
+        </li>
+        <li>
+          <span class="badge-done">Done</span>
+          <span class="item-text">CRITICAL: All exemptions set BEFORE token transfers (Sepolia lesson applied)</span>
+        </li>
+      </ul>
+
+      <h3>Step 5 &mdash; Token Distribution (CRITICAL)</h3>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Allocation</th>
+            <th>Amount</th>
+            <th>Destination</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>DEX Liquidity</td>
+            <td>400M IFR</td>
+            <td>Deployer (for LP pairing)</td>
+            <td><span class="badge-done">Done</span></td>
+          </tr>
+          <tr>
+            <td>Liquidity Reserve</td>
+            <td>200M IFR</td>
+            <td>LiquidityReserve contract</td>
+            <td><span class="badge-done">Done</span></td>
+          </tr>
+          <tr>
+            <td>Team (Vested)</td>
+            <td>150M IFR</td>
+            <td>Vesting contract</td>
+            <td><span class="badge-done">Done</span></td>
+          </tr>
+          <tr>
+            <td>Treasury</td>
+            <td>150M IFR</td>
+            <td><code class="address">0xC8f4B45fA0C4727E9b27c13Af3d000C922a2ac9c</code></td>
+            <td><span class="badge-done">Done</span></td>
+          </tr>
+          <tr>
+            <td>Community &amp; Grants</td>
+            <td>60M IFR</td>
+            <td><code class="address">0x61aF4E72C77b58F4b50964Ee93d420750Cd9857E</code></td>
+            <td><span class="badge-done">Done</span></td>
+          </tr>
+          <tr>
+            <td>Partner Ecosystem</td>
+            <td>40M IFR</td>
+            <td>PartnerVault contract</td>
+            <td><span class="badge-done">Done</span></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="callout-green callout">
+        <p><strong>Total check:</strong> 400 + 200 + 150 + 150 + 60 + 40 = <strong>1,000,000,000 IFR</strong>. Deployer feeExempt removed after distribution.</p>
+      </div>
+
+      <h3>Step 6 &mdash; Uniswap V2 LP</h3>
+      <ul class="checklist">
+        <li>
+          <span class="badge-pending">Pending</span>
+          <span class="item-text">DEX Liquidity wallet approves Router for 400M IFR</span>
+        </li>
+        <li>
+          <span class="badge-pending">Pending</span>
+          <span class="item-text">LP created: IFR/ETH pair</span>
+        </li>
+        <li>
+          <span class="badge-pending">Pending</span>
+          <span class="item-text">LP tokens locked (liquidity lock service, min. 6 months)</span>
+        </li>
+        <li>
+          <span class="badge-pending">Pending</span>
+          <span class="item-text">LP Pair address recorded</span>
+        </li>
+      </ul>
+
+      <h3>Step 7 &mdash; FeeRouter Setup</h3>
+      <ul class="checklist">
+        <li>
+          <span class="badge-pending">Pending</span>
+          <span class="item-text">Deploy swap adapter and whitelist (<code>setAdapter</code>)</span>
+        </li>
+        <li>
+          <span class="badge-pending">Pending</span>
+          <span class="item-text">Set voucher signer address (Points Backend key)</span>
+        </li>
+        <li>
+          <span class="badge-pending">Pending</span>
+          <span class="item-text">Verify test swap with voucher discount</span>
+        </li>
+      </ul>
+
+      <h3>Step 8 &mdash; Ownership Transfer to Multisig</h3>
+      <ul class="checklist">
+        <li>
+          <span class="badge-done">Done</span>
+          <span class="item-text">InfernoToken Ownership &rarr; Governance (Done 2026-03-05)</span>
+        </li>
+        <li>
+          <span class="badge-done">Done</span>
+          <span class="item-text">LiquidityReserve Ownership &rarr; Governance (Done 2026-03-05)</span>
+        </li>
+        <li>
+          <span class="badge-done">Done</span>
+          <span class="item-text">BuybackVault Ownership &rarr; Governance (Done 2026-03-05)</span>
+        </li>
+        <li>
+          <span class="badge-done">Done</span>
+          <span class="item-text">BurnReserve Ownership &rarr; Governance (Done 2026-03-05)</span>
+        </li>
+        <li>
+          <span class="badge-pending">Pending</span>
+          <span class="item-text">Governance Owner &rarr; Multisig (<code class="address">0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b</code>)</span>
+        </li>
+        <li>
+          <span class="badge-pending">Pending</span>
+          <span class="item-text">Guardian &rarr; Guardian Multisig</span>
+        </li>
+        <li>
+          <span class="badge-done">Done</span>
+          <span class="item-text">Remove deployer feeExempt (Done 2026-03-05)</span>
+        </li>
+        <li>
+          <span class="badge-pending">Pending</span>
+          <span class="item-text">Deployer has no more admin rights (pending Governance owner &rarr; Multisig)</span>
+        </li>
+        <li>
+          <span class="badge-pending">Pending</span>
+          <span class="item-text">Test proposal with multisig successful</span>
+        </li>
+      </ul>
+
+      <!-- ========== Phase 2 ========== -->
+      <h2>Phase 2: Post-Deployment Verification</h2>
+
+      <ul class="checklist">
+        <li>
+          <span class="badge-pending">Pending</span>
+          <span class="item-text">All 10 contract addresses updated in <a href="deployment.html">docs/wiki/deployment.html</a></span>
+        </li>
+        <li>
+          <span class="badge-pending">Pending</span>
+          <span class="item-text">Landing page Etherscan links updated</span>
+        </li>
+        <li>
+          <span class="badge-pending">Pending</span>
+          <span class="item-text">README contract addresses updated</span>
+        </li>
+        <li>
+          <span class="badge-pending">Pending</span>
+          <span class="item-text">docs/DEPLOYMENTS.md mainnet section added</span>
+        </li>
+      </ul>
+
+      <h3>End-to-End Smoke Test</h3>
+      <ul class="checklist">
+        <li>
+          <span class="badge-pending">Pending</span>
+          <span class="item-text">Transfer: Fees correctly deducted</span>
+        </li>
+        <li>
+          <span class="badge-pending">Pending</span>
+          <span class="item-text">Lock: IFR locking works</span>
+        </li>
+        <li>
+          <span class="badge-pending">Pending</span>
+          <span class="item-text"><code>isLocked()</code> returns true</span>
+        </li>
+        <li>
+          <span class="badge-pending">Pending</span>
+          <span class="item-text">Unlock: IFR unlocking works</span>
+        </li>
+        <li>
+          <span class="badge-pending">Pending</span>
+          <span class="item-text">Governance: Proposal &rarr; 48h &rarr; Execute</span>
+        </li>
+        <li>
+          <span class="badge-pending">Pending</span>
+          <span class="item-text">PartnerVault: <code>claim()</code> works</span>
+        </li>
+        <li>
+          <span class="badge-pending">Pending</span>
+          <span class="item-text">FeeRouter: <code>swapWithFee</code> with/without voucher works</span>
+        </li>
+      </ul>
+
+      <h3>App Configuration</h3>
+      <ul class="checklist">
+        <li>
+          <span class="badge-pending">Pending</span>
+          <span class="item-text">Benefits Network Backend: <code>IFRLOCK_ADDRESS</code> set to mainnet</span>
+        </li>
+        <li>
+          <span class="badge-pending">Pending</span>
+          <span class="item-text">Governance Dashboard: all addresses set to mainnet</span>
+        </li>
+        <li>
+          <span class="badge-pending">Pending</span>
+          <span class="item-text">Points Backend: <code>voucherSigner</code> + <code>FeeRouter</code> address set to mainnet</span>
+        </li>
+      </ul>
+
+      <!-- Footer -->
+      <footer class="wiki-footer">
+        Inferno ($IFR) &mdash; Mainnet Checklist &mdash; Documentation v1.0
+      </footer>
+
+    </main>
+  </div>
+
+  <!-- Mobile sidebar toggle script -->
+  <script>
+    (function () {
+      var hamburger = document.getElementById('hamburger');
+      var sidebar = document.getElementById('sidebar');
+      var overlay = document.getElementById('sidebarOverlay');
+
+      function toggleSidebar() {
+        var isOpen = sidebar.classList.toggle('open');
+        hamburger.classList.toggle('open', isOpen);
+        overlay.classList.toggle('open', isOpen);
+        document.body.style.overflow = isOpen ? 'hidden' : '';
+      }
+
+      hamburger.addEventListener('click', toggleSidebar);
+      overlay.addEventListener('click', toggleSidebar);
+    })();
+  </script>
+
+<!-- IFR Copilot Widget -->
+<style>
+#ifr-btn { position:fixed; bottom:24px; right:24px; z-index:99999; width:60px; height:60px; border-radius:50%; background:#ff6600; border:none; cursor:pointer; font-size:28px; box-shadow:0 4px 20px rgba(255,102,0,0.5); }
+#ifr-panel { display:none; position:fixed; bottom:100px; right:24px; z-index:99998; width:400px; height:580px; border-radius:16px; overflow:hidden; box-shadow:0 8px 40px rgba(0,0,0,0.5); background:#1a1a1a; }
+#ifr-panel iframe { width:100%; height:100%; border:none; }
+</style>
+<button id="ifr-btn" onclick="var p=document.getElementById('ifr-panel');p.style.display=p.style.display==='block'?'none':'block';">&#x1f525;</button>
+<div id="ifr-panel"><iframe src="https://ifr-ai-copilot-production.up.railway.app" allow="clipboard-write"></iframe></div>
+
+</body>
+</html>
