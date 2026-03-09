@@ -503,9 +503,8 @@ function setCache(key: string, data: unknown): void {
 
 // ── Shared fetch functions (used by routes + background pre-warm) ──
 
-async function fetchBalancesData() {
+async function fetchBatch(entries: [string, string][]): Promise<Record<string, { raw: string; formatted: number }>> {
   const results: Record<string, { raw: string; formatted: number }> = {};
-  const entries = Object.entries(PROTOCOL_ADDRESSES);
   for (let i = 0; i < entries.length; i++) {
     const [label, addr] = entries[i];
     try {
@@ -519,6 +518,18 @@ async function fetchBalancesData() {
     }
     if (i < entries.length - 1) await new Promise(r => setTimeout(r, 400));
   }
+  return results;
+}
+
+async function fetchBalancesData() {
+  const entries = Object.entries(PROTOCOL_ADDRESSES) as [string, string][];
+  const batch1 = entries.slice(0, 6);   // InfernoToken..PartnerVault
+  const batch2 = entries.slice(6, 12);  // FeeRouterV1..Community
+  const batch3 = entries.slice(12);     // GnosisSafe..VoucherSigner
+
+  const [r1, r2, r3] = await Promise.all([fetchBatch(batch1), fetchBatch(batch2), fetchBatch(batch3)]);
+  const results = { ...r1, ...r2, ...r3 };
+
   const response = { balances: results, timestamp: new Date().toISOString(), fetchedAt: Date.now(), source: "live" as const };
   setCache("balances", response);
   return response;
