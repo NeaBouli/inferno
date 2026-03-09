@@ -503,7 +503,11 @@ function setCache(key: string, data: unknown): void {
 
 // ── Shared fetch functions (used by routes + background pre-warm) ──
 
-async function fetchBatch(entries: [string, string][]): Promise<Record<string, { raw: string; formatted: number }>> {
+async function fetchBalancesData() {
+  const entries = Object.entries(PROTOCOL_ADDRESSES) as [string, string][];
+  // Sequential fetching — Etherscan free tier allows 5 calls/sec
+  // Parallel batches caused rate limiting (3 calls at t=0 = 3 simultaneous)
+  // Sequential with 400ms delay = safe and reliable
   const results: Record<string, { raw: string; formatted: number }> = {};
   for (let i = 0; i < entries.length; i++) {
     const [label, addr] = entries[i];
@@ -516,19 +520,8 @@ async function fetchBatch(entries: [string, string][]): Promise<Record<string, {
     } catch {
       results[label] = { raw: "0", formatted: 0 };
     }
-    if (i < entries.length - 1) await new Promise(r => setTimeout(r, 400));
+    if (i < entries.length - 1) await new Promise(r => setTimeout(r, 250));
   }
-  return results;
-}
-
-async function fetchBalancesData() {
-  const entries = Object.entries(PROTOCOL_ADDRESSES) as [string, string][];
-  const batch1 = entries.slice(0, 6);   // InfernoToken..PartnerVault
-  const batch2 = entries.slice(6, 12);  // FeeRouterV1..Community
-  const batch3 = entries.slice(12);     // GnosisSafe..VoucherSigner
-
-  const [r1, r2, r3] = await Promise.all([fetchBatch(batch1), fetchBatch(batch2), fetchBatch(batch3)]);
-  const results = { ...r1, ...r2, ...r3 };
 
   const response = { balances: results, timestamp: new Date().toISOString(), fetchedAt: Date.now(), source: "live" as const };
   setCache("balances", response);
