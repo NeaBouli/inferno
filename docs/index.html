@@ -1255,7 +1255,8 @@
 
     <div class="reveal" style="margin-top:24px;">
       <div id="dist-metrics" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;"></div>
-      <p style="font-size:11px;color:var(--text-muted);margin-top:16px;text-align:center;"><span class="live-updated-at">Loading&hellip;</span> <span class="live-status"></span></p>
+      <p style="font-size:11px;color:var(--text-muted);margin-top:14px;text-align:center;">&#x1F512; User IFR Locks (IFRLock contract): <span data-live-key="ifrlock" style="color:#ff8c00;font-weight:600;">0</span> IFR &mdash; activates after Bootstrap + LP launch</p>
+      <p style="font-size:11px;color:var(--text-muted);margin-top:8px;text-align:center;"><span class="live-updated-at">Loading&hellip;</span> <span class="live-status"></span></p>
     </div>
 
     <div style="text-align:center; margin: 32px 0 16px 0;">
@@ -2230,11 +2231,12 @@ if (isLocked) {
   function renderMetrics(data) {
     var el = document.getElementById('dist-metrics');
     if (!el) return;
+    var protocolLocked = (data.vesting || 0) + (data.liqRes || 0);
     var items = [
-      { label: 'Total Burned',    value: fmt(data.burned),  sub: pct(data.burned, GENESIS_SUPPLY) + ' of genesis', color: '#ff4500' },
-      { label: 'Currently Locked', value: fmt(data.ifrLock), sub: 'in IFRLock contract',  color: '#ff8c00' },
-      { label: 'Current Supply',   value: fmt(data.supply),  sub: 'of 1B genesis',        color: '#fff'    },
-      { label: 'Deployer (LP)',    value: fmt(data.deployer), sub: 'LP allocation',        color: '#FF6B35' }
+      { label: 'Total Burned',    value: fmt(data.burned),    sub: 'Since genesis \u2014 decreasing forever', color: '#ff4500' },
+      { label: 'Protocol Locked', value: fmt(protocolLocked), sub: 'Vesting ' + fmt(data.vesting) + ' + LiqRes ' + fmt(data.liqRes), color: '#ff8c00' },
+      { label: 'Current Supply',  value: fmt(data.supply),    sub: 'of 1B genesis',        color: '#fff'    },
+      { label: 'Deployer (LP)',   value: fmt(data.deployer),  sub: 'LP allocation',        color: '#FF6B35' }
     ];
     el.innerHTML = items.map(function(m) {
       return '<div style="background:#111113;border:1px solid #222225;border-radius:8px;padding:16px;text-align:center;">' +
