@@ -2130,15 +2130,15 @@ if (isLocked) {
   var GENESIS_SUPPLY = 1000000000;
 
   var CATS = [
-    { key: 'burned',    label: '\uD83D\uDD25 Burned',             color: '#ff4500' },
-    { key: 'ifrLock',   label: '\uD83D\uDD12 Locked (IFRLock)',   color: '#ff8c00' },
-    { key: 'vesting',   label: '\u23F3 Team Vesting',             color: '#C0392B' },
-    { key: 'liqRes',    label: '\uD83D\uDCA7 Liquidity Reserve',  color: '#922B21' },
-    { key: 'bootstrap', label: '\uD83D\uDE80 Bootstrap Vault',    color: '#F39C12' },
-    { key: 'buyback',   label: '\u267B\uFE0F Buyback Vault',      color: '#E74C3C' },
-    { key: 'burnRes',   label: '\uD83D\uDD25 Burn Reserve',       color: '#D35400' },
-    { key: 'partner',   label: '\uD83C\uDFD7\uFE0F Builder Vault',color: '#457B9D' },
-    { key: 'treasury',  label: '\uD83C\uDFDB\uFE0F Treasury Safe',color: '#9B59B6' },
+    { key: 'burned',    label: '\uD83D\uDD25 Burned',             color: '#FF2D2D' },
+    { key: 'ifrLock',   label: '\uD83D\uDD12 User Locks (IFRLock)', color: '#FF8C00' },
+    { key: 'vesting',   label: '\u23F3 Team Vesting',             color: '#FFD700' },
+    { key: 'liqRes',    label: '\uD83D\uDCA7 Liquidity Reserve',  color: '#00BFFF' },
+    { key: 'bootstrap', label: '\uD83D\uDE80 Bootstrap Vault',    color: '#7B2FBE' },
+    { key: 'buyback',   label: '\u267B\uFE0F Buyback Vault',      color: '#20B2AA' },
+    { key: 'burnRes',   label: '\uD83D\uDD25 Burn Reserve',       color: '#DC143C' },
+    { key: 'partner',   label: '\uD83C\uDFD7\uFE0F Builder Vault',color: '#32CD32' },
+    { key: 'treasury',  label: '\uD83C\uDFDB\uFE0F Treasury Safe',color: '#4169E1' },
     { key: 'community', label: '\uD83D\uDC65 Community Safe',     color: '#1ABC9C' },
     { key: 'deployer',  label: '\uD83D\uDCB0 Deployer (LP)',      color: '#FF6B35' },
     { key: 'supply',    label: '\uD83D\uDCCA Current Supply',     color: '#fff'    }
@@ -2237,15 +2237,22 @@ if (isLocked) {
     });
   }
 
+  var NOT_YET_ACTIVE = { bootstrap: 1, buyback: 1, burnRes: 1, ifrLock: 1 };
+
   function renderLegend(data) {
     var el = document.getElementById('dist-legend');
     if (!el) return;
     el.innerHTML = CATS.filter(function(c) { return c.key !== 'supply'; }).map(function(cat) {
       var val = data[cat.key] || 0;
+      var detail;
+      if (val === 0 && NOT_YET_ACTIVE[cat.key]) {
+        detail = ' <span style="color:#555;">0 IFR \u2014 not yet active</span>';
+      } else {
+        detail = ' <strong style="color:#fff;">' + pct(val, GENESIS_SUPPLY) + '</strong> \u2014 ' + fmt(val);
+      }
       return '<div style="display:flex;align-items:center;gap:12px;">' +
         '<div style="width:14px;height:14px;border-radius:3px;background:' + cat.color + ';flex-shrink:0;"></div>' +
-        '<span style="font-size:14px;color:#8a8a96;">' + cat.label +
-        ' <strong style="color:#fff;">' + pct(val, GENESIS_SUPPLY) + '</strong> \u2014 ' + fmt(val) + '</span></div>';
+        '<span style="font-size:14px;color:#8a8a96;">' + cat.label + detail + '</span></div>';
     }).join('');
   }
 
