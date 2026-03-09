@@ -1202,7 +1202,8 @@
       </div>
       <div class="allocation reveal" id="live-distribution">
         <h3><span class="live-dot"></span> Live Token Distribution</h3>
-        <p style="font-size:12px;color:var(--text-muted);margin-bottom:20px;">Real-time on-chain data &mdash; refreshes every 60s</p>
+        <p style="font-size:12px;color:var(--text-muted);margin-bottom:4px;">Direct from Ethereum via Etherscan &mdash; refreshes every 30s</p>
+        <p style="font-size:11px;margin-bottom:20px;"><span class="live-updated-at" style="color:#00ffa0;">Loading live data&hellip;</span> <span class="live-status" style="color:#ff4500;"></span></p>
         <div style="display:flex;flex-wrap:wrap;gap:32px;align-items:center;justify-content:center;">
           <div style="position:relative;width:240px;height:240px;flex-shrink:0;">
             <canvas id="dist-donut" width="480" height="480" style="width:240px;height:240px;"></canvas>
@@ -1212,7 +1213,7 @@
             </div>
           </div>
           <div id="dist-legend" style="display:flex;flex-direction:column;gap:10px;min-width:220px;">
-            <div style="font-size:13px;color:var(--text-muted);">Loading on-chain data&hellip;</div>
+            <div style="font-size:13px;color:var(--text-muted);">Loading Etherscan data&hellip;</div>
           </div>
         </div>
         <div style="border-top:1px solid rgba(255,255,255,0.08);margin-top:20px;padding-top:16px;">
@@ -1253,7 +1254,7 @@
 
     <div class="reveal" style="margin-top:24px;">
       <div id="dist-metrics" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;"></div>
-      <p id="dist-updated" style="font-size:11px;color:var(--text-muted);margin-top:16px;text-align:center;"></p>
+      <p style="font-size:11px;color:var(--text-muted);margin-top:16px;text-align:center;"><span class="live-updated-at">Loading&hellip;</span> <span class="live-status"></span></p>
     </div>
 
     <div style="text-align:center; margin: 32px 0 16px 0;">
@@ -1272,6 +1273,132 @@
         text-transform: uppercase;
         animation: pulse-green 2.5s ease-in-out infinite;
       ">&#x2B24; Live Transparency Tracking Report</a>
+    </div>
+
+    <!-- Genesis & Project Wallets -->
+    <div class="reveal" style="margin-top:40px;">
+      <h3 style="text-align:center;font-size:18px;font-weight:700;margin-bottom:6px;">Genesis &amp; Project Wallets</h3>
+      <p style="text-align:center;font-size:12px;color:var(--text-muted);margin-bottom:24px;">All protocol wallets &mdash; live balances via Etherscan &mdash; <span class="live-updated-at" style="color:#00ffa0;">loading&hellip;</span></p>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px;">
+
+        <div style="background:#111113;border:1px solid #222225;border-radius:8px;padding:14px 16px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+            <span style="font-size:13px;font-weight:600;">&#x1F680; Deployer</span>
+            <span style="font-size:10px;padding:2px 8px;border-radius:10px;background:rgba(255,107,53,0.15);color:#FF6B35;">LP Allocation</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+            <a href="https://etherscan.io/address/0x6b36687b0cd4386fb14cf565B67D7862110Fed67" target="_blank" rel="noopener" style="font-size:11px;font-family:monospace;color:#8a8a96;text-decoration:none;">0x6b36687b...Fed67</a>
+            <button class="copy-btn" data-addr="0x6b36687b0cd4386fb14cf565B67D7862110Fed67" style="font-size:10px;background:none;border:1px solid #333;color:#8a8a96;border-radius:4px;padding:1px 6px;cursor:pointer;">Copy</button>
+          </div>
+          <div style="font-size:13px;font-weight:600;color:#FF6B35;" data-live-key="card-deployer">loading&hellip;</div>
+          <div style="font-size:10px;color:#666;margin-top:2px;">Holds 400M DEX Liquidity. Pairs on Uniswap V2 via Bootstrap finalise().</div>
+        </div>
+
+        <div style="background:#111113;border:1px solid #222225;border-radius:8px;padding:14px 16px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+            <span style="font-size:13px;font-weight:600;">&#x1F3DB;&#xFE0F; Treasury Safe</span>
+            <span style="font-size:10px;padding:2px 8px;border-radius:10px;background:rgba(155,89,182,0.15);color:#9B59B6;">Gnosis Multisig &#x1F512;</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+            <a href="https://etherscan.io/address/0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b" target="_blank" rel="noopener" style="font-size:11px;font-family:monospace;color:#8a8a96;text-decoration:none;">0x5ad6193e...cE3b</a>
+            <button class="copy-btn" data-addr="0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b" style="font-size:10px;background:none;border:1px solid #333;color:#8a8a96;border-radius:4px;padding:1px 6px;cursor:pointer;">Copy</button>
+          </div>
+          <div style="font-size:13px;font-weight:600;color:#9B59B6;" data-live-key="card-treasury">loading&hellip;</div>
+          <div style="font-size:10px;color:#666;margin-top:2px;">Protocol treasury. Funds Bootstrap Plan B. Multisig controlled.</div>
+        </div>
+
+        <div style="background:#111113;border:1px solid #222225;border-radius:8px;padding:14px 16px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+            <span style="font-size:13px;font-weight:600;">&#x1F465; Community Safe</span>
+            <span style="font-size:10px;padding:2px 8px;border-radius:10px;background:rgba(26,188,156,0.15);color:#1ABC9C;">Gnosis Multisig &#x1F512;</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+            <a href="https://etherscan.io/address/0xaC5687547B2B21d80F8fd345B51e608d476667C7" target="_blank" rel="noopener" style="font-size:11px;font-family:monospace;color:#8a8a96;text-decoration:none;">0xaC568754...67C7</a>
+            <button class="copy-btn" data-addr="0xaC5687547B2B21d80F8fd345B51e608d476667C7" style="font-size:10px;background:none;border:1px solid #333;color:#8a8a96;border-radius:4px;padding:1px 6px;cursor:pointer;">Copy</button>
+          </div>
+          <div style="font-size:13px;font-weight:600;color:#1ABC9C;" data-live-key="card-community">loading&hellip;</div>
+          <div style="font-size:10px;color:#666;margin-top:2px;">50M &rarr; Bootstrap. 7.9M = Community Operations Reserve.</div>
+        </div>
+
+        <div style="background:#111113;border:1px solid #222225;border-radius:8px;padding:14px 16px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+            <span style="font-size:13px;font-weight:600;">&#x23F3; Team Vesting</span>
+            <span style="font-size:10px;padding:2px 8px;border-radius:10px;background:rgba(192,57,43,0.15);color:#C0392B;">Locked &#x1F512;</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+            <a href="https://etherscan.io/address/0x2694Bc84e8D5251E9E4Ecd4B2Ae3f866d6106271" target="_blank" rel="noopener" style="font-size:11px;font-family:monospace;color:#8a8a96;text-decoration:none;">0x2694Bc84...6271</a>
+            <button class="copy-btn" data-addr="0x2694Bc84e8D5251E9E4Ecd4B2Ae3f866d6106271" style="font-size:10px;background:none;border:1px solid #333;color:#8a8a96;border-radius:4px;padding:1px 6px;cursor:pointer;">Copy</button>
+          </div>
+          <div style="font-size:13px;font-weight:600;color:#C0392B;" data-live-key="card-vesting">loading&hellip;</div>
+          <div style="font-size:10px;color:#666;margin-top:2px;">12-month cliff (~March 2027). 36-month linear vesting.</div>
+        </div>
+
+        <div style="background:#111113;border:1px solid #222225;border-radius:8px;padding:14px 16px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+            <span style="font-size:13px;font-weight:600;">&#x1F4A7; Liquidity Reserve</span>
+            <span style="font-size:10px;padding:2px 8px;border-radius:10px;background:rgba(146,43,33,0.15);color:#922B21;">Time-Locked &#x1F512;</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+            <a href="https://etherscan.io/address/0xdc0309804803b3A105154f6073061E3185018f64" target="_blank" rel="noopener" style="font-size:11px;font-family:monospace;color:#8a8a96;text-decoration:none;">0xdc030980...8f64</a>
+            <button class="copy-btn" data-addr="0xdc0309804803b3A105154f6073061E3185018f64" style="font-size:10px;background:none;border:1px solid #333;color:#8a8a96;border-radius:4px;padding:1px 6px;cursor:pointer;">Copy</button>
+          </div>
+          <div style="font-size:13px;font-weight:600;color:#922B21;" data-live-key="card-liqres">loading&hellip;</div>
+          <div style="font-size:10px;color:#666;margin-top:2px;">Locked until 01.09.2026. Phase 2 LP expansion.</div>
+        </div>
+
+        <div style="background:#111113;border:1px solid #222225;border-radius:8px;padding:14px 16px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+            <span style="font-size:13px;font-weight:600;">&#x1F3D7;&#xFE0F; Builder Vault</span>
+            <span style="font-size:10px;padding:2px 8px;border-radius:10px;background:rgba(69,123,157,0.15);color:#457B9D;">Active</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+            <a href="https://etherscan.io/address/0xc6eb7714bCb035ebc2D4d9ba7B3762ef7B9d4F7D" target="_blank" rel="noopener" style="font-size:11px;font-family:monospace;color:#8a8a96;text-decoration:none;">0xc6eb7714...4F7D</a>
+            <button class="copy-btn" data-addr="0xc6eb7714bCb035ebc2D4d9ba7B3762ef7B9d4F7D" style="font-size:10px;background:none;border:1px solid #333;color:#8a8a96;border-radius:4px;padding:1px 6px;cursor:pointer;">Copy</button>
+          </div>
+          <div style="font-size:13px;font-weight:600;color:#457B9D;" data-live-key="card-partner">loading&hellip;</div>
+          <div style="font-size:10px;color:#666;margin-top:2px;">Lock-triggered Creator Rewards. Milestone vesting.</div>
+        </div>
+
+        <div style="background:#111113;border:1px solid #222225;border-radius:8px;padding:14px 16px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+            <span style="font-size:13px;font-weight:600;">&#x1F680; Bootstrap Vault V3</span>
+            <span style="font-size:10px;padding:2px 8px;border-radius:10px;background:rgba(243,156,18,0.15);color:#F39C12;">&#x23F3; Pending Funding</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+            <a href="https://etherscan.io/address/0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141" target="_blank" rel="noopener" style="font-size:11px;font-family:monospace;color:#8a8a96;text-decoration:none;">0xf72565C4...e141</a>
+            <button class="copy-btn" data-addr="0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141" style="font-size:10px;background:none;border:1px solid #333;color:#8a8a96;border-radius:4px;padding:1px 6px;cursor:pointer;">Copy</button>
+          </div>
+          <div style="font-size:13px;font-weight:600;color:#F39C12;" data-live-key="card-bootstrap">loading&hellip;</div>
+          <div style="font-size:10px;color:#666;margin-top:2px;">Receives ~194.75M IFR (Plan B). Creates Uniswap LP via finalise().</div>
+        </div>
+
+        <div style="background:#111113;border:1px solid #222225;border-radius:8px;padding:14px 16px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+            <span style="font-size:13px;font-weight:600;">&#x267B;&#xFE0F; Buyback Vault</span>
+            <span style="font-size:10px;padding:2px 8px;border-radius:10px;background:rgba(231,76,60,0.15);color:#E74C3C;">Pool Fee Contract</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+            <a href="https://etherscan.io/address/0x670D293e3D65f96171c10DdC8d88B96b0570F812" target="_blank" rel="noopener" style="font-size:11px;font-family:monospace;color:#8a8a96;text-decoration:none;">0x670D293e...F812</a>
+            <button class="copy-btn" data-addr="0x670D293e3D65f96171c10DdC8d88B96b0570F812" style="font-size:10px;background:none;border:1px solid #333;color:#8a8a96;border-radius:4px;padding:1px 6px;cursor:pointer;">Copy</button>
+          </div>
+          <div style="font-size:13px;font-weight:600;color:#E74C3C;" data-live-key="card-buyback">loading&hellip;</div>
+          <div style="font-size:10px;color:#666;margin-top:2px;">Accumulates from 1% protocol fee. Not pre-funded at genesis.</div>
+        </div>
+
+        <div style="background:#111113;border:1px solid #222225;border-radius:8px;padding:14px 16px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+            <span style="font-size:13px;font-weight:600;">&#x1F525; Burn Reserve</span>
+            <span style="font-size:10px;padding:2px 8px;border-radius:10px;background:rgba(255,69,0,0.15);color:#ff4500;">Pool Fee Contract</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+            <a href="https://etherscan.io/address/0xaA1496133B6c274190A2113410B501C5802b6fCF" target="_blank" rel="noopener" style="font-size:11px;font-family:monospace;color:#8a8a96;text-decoration:none;">0xaA149613...6fCF</a>
+            <button class="copy-btn" data-addr="0xaA1496133B6c274190A2113410B501C5802b6fCF" style="font-size:10px;background:none;border:1px solid #333;color:#8a8a96;border-radius:4px;padding:1px 6px;cursor:pointer;">Copy</button>
+          </div>
+          <div style="font-size:13px;font-weight:600;color:#ff4500;" data-live-key="card-burnres">loading&hellip;</div>
+          <div style="font-size:10px;color:#666;margin-top:2px;">Permanent burn pool. Accumulates from protocol fee.</div>
+        </div>
+
+      </div>
     </div>
 
   </div>
@@ -1553,7 +1680,7 @@ if (isLocked) {
         <div style="color:#666;font-size:13px;margin-top:4px;">12-month cliff, 4-year linear</div>
       </div>
       <div style="background:#1a1a2e;border:1px solid #333;border-radius:12px;padding:28px 24px;text-align:center;">
-        <div style="font-size:32px;font-weight:700;color:#ff6a00;">2M+</div>
+        <div style="font-size:32px;font-weight:700;color:#ff6a00;"><span data-live-key="burned-stat">1.5M</span></div>
         <div style="color:#aaa;margin-top:8px;">IFR Burned</div>
         <div style="color:#666;font-size:13px;margin-top:4px;">Deflation active since deploy</div>
       </div>
@@ -1662,7 +1789,7 @@ if (isLocked) {
 
       <div class="faq-item">
         <button class="faq-question"><span>I am new to crypto. Is IFR safe to use?</span><span class="faq-icon">+</span></button>
-        <div class="faq-answer"><div class="faq-answer-inner">IFR is designed to be as safe and transparent as possible, but as with all crypto assets, you should understand what you are doing before investing.<br><br>What makes IFR safer than most tokens: All smart contracts are fully open source &mdash; anyone can verify the code. No admin can change your locked tokens or take your funds. No new tokens can ever be minted &mdash; supply only goes down. Every governance change requires a 48-hour public waiting period &mdash; no surprises. A Guardian role can cancel any suspicious governance proposal within 48 hours.<br><br>What you should know before using IFR: Every transfer burns 2.5% permanently &mdash; factor this into your calculations. Locking tokens means they are in a smart contract, not in your wallet &mdash; they are still yours, but act accordingly. The token is live on Ethereum Mainnet with all 9 contracts verified on Etherscan. Always buy from verified sources and verify the official contract address before any transaction.<br><br>When in doubt: start small, verify everything, and only lock what you are comfortable with.</div></div>
+        <div class="faq-answer"><div class="faq-answer-inner">IFR is designed to be as safe and transparent as possible, but as with all crypto assets, you should understand what you are doing before investing.<br><br>What makes IFR safer than most tokens: All smart contracts are fully open source &mdash; anyone can verify the code. No admin can change your locked tokens or take your funds. No new tokens can ever be minted &mdash; supply only goes down. Every governance change requires a 48-hour public waiting period &mdash; no surprises. A Guardian role can cancel any suspicious governance proposal within 48 hours.<br><br>What you should know before using IFR: Every transfer burns 2.5% permanently &mdash; factor this into your calculations. Locking tokens means they are in a smart contract, not in your wallet &mdash; they are still yours, but act accordingly. The token is live on Ethereum Mainnet with all 10 on-chain components verified on Etherscan. Always buy from verified sources and verify the official contract address before any transaction.<br><br>When in doubt: start small, verify everything, and only lock what you are comfortable with.</div></div>
       </div>
 
       <div class="faq-item">
@@ -1682,7 +1809,7 @@ if (isLocked) {
 
       <div class="faq-item">
         <button class="faq-question"><span>How secure is the protocol?</span><span class="faq-icon">+</span></button>
-        <div class="faq-answer"><div class="faq-answer-inner">The IFR protocol has been tested and verified through multiple layers of security analysis. Slither static analysis found 0 high or critical findings across all 9 contracts. An independent ChatGPT audit scored 7 out of 7 areas as PASS. There are 494 automated tests (367 contract + 77 app + 50 Bootstrap Suite) covering 99% of all code statements and 91% of all code branches.<br><br>All contracts use battle-tested OpenZeppelin v5 base contracts. The governance timelock enforces a 48-hour delay on all parameter changes. A Guardian role can emergency-cancel suspicious proposals. A professional third-party audit (Code4rena, Sherlock, or Cyfrin) is planned as the next security milestone.</div></div>
+        <div class="faq-answer"><div class="faq-answer-inner">The IFR protocol has been tested and verified through multiple layers of security analysis. Slither static analysis found 0 high or critical findings across all 10 on-chain components. An independent ChatGPT audit scored 7 out of 7 areas as PASS. There are 494 automated tests (367 contract + 77 app + 50 Bootstrap Suite) covering 99% of all code statements and 91% of all code branches.<br><br>All contracts use battle-tested OpenZeppelin v5 base contracts. The governance timelock enforces a 48-hour delay on all parameter changes. A Guardian role can emergency-cancel suspicious proposals. A professional third-party audit (Code4rena, Sherlock, or Cyfrin) is planned as the next security milestone.</div></div>
       </div>
 
       <div class="faq-item">
@@ -1726,7 +1853,7 @@ if (isLocked) {
         <div class="roadmap-dot done">&check;</div>
         <div class="roadmap-body">
           <h4>Phase 1 &mdash; Foundation <span class="badge-done">Complete</span></h4>
-          <p>Smart Contract Development (9 contracts, 494 tests). Security Audit (Slither, 0 high/critical). Mainnet Deployment (9/9 verified). Governance Dashboard deployed.</p>
+          <p>Smart Contract Development (10 on-chain components, 494 tests). Security Audit (Slither, 0 high/critical). Mainnet Deployment (9/9 verified). Governance Dashboard deployed.</p>
         </div>
       </div>
       <div class="roadmap-item">
@@ -1974,153 +2101,56 @@ if (isLocked) {
   });
 </script>
 
-<!-- Live Token Distribution Chart -->
+<!-- Live Token Distribution — Etherscan direct, single source of truth -->
 <script>
 (function() {
-  var RPCS = [
-    'https://eth.llamarpc.com',
-    'https://ethereum-rpc.publicnode.com',
-    'https://eth.drpc.org',
-    'https://1rpc.io/eth'
-  ];
-  var TOKEN = '0x77e99917Eca8539c62F509ED1193ac36580A6e7B';
-  var INITIAL = 1000000000;
-  var ADDRS = {
-    burnRes:    '0xaA1496133B6c274190A2113410B501C5802b6fCF',
-    locked:     '0x769928aBDfc949D0718d8766a1C2d7dBb63954Eb',
-    buyback:    '0x670D293e3D65f96171c10DdC8d88B96b0570F812',
-    liqRes:     '0xdc0309804803b3A105154f6073061E3185018f64',
-    vesting:    '0x2694Bc84e8D5251E9E4Ecd4B2Ae3f866d6106271',
-    bootstrap:  '0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141',
-    partner:    '0xc6eb7714bCb035ebc2D4d9ba7B3762ef7B9d4F7D',
-    treasury:   '0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b',
-    community:  '0xaC5687547B2B21d80F8fd345B51e608d476667C7',
-    deployer:   '0x6b36687b0cd4386fb14cf565B67D7862110Fed67',
-    dead:       '0x000000000000000000000000000000000000dEaD',
-    governance: '0xc43d48E7FDA576C5022d0670B652A622E8caD041'
+  'use strict';
+  var IFR_TOKEN = '0x77e99917Eca8539c62F509ED1193ac36580A6e7B';
+  var GENESIS_SUPPLY = 1000000000;
+  var WALLETS = {
+    deployer:      '0x6b36687b0cd4386fb14cf565B67D7862110Fed67',
+    treasurySafe:  '0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b',
+    communitySafe: '0xaC5687547B2B21d80F8fd345B51e608d476667C7',
+    vesting:       '0x2694Bc84e8D5251E9E4Ecd4B2Ae3f866d6106271',
+    liquidityRes:  '0xdc0309804803b3A105154f6073061E3185018f64',
+    partnerVault:  '0xc6eb7714bCb035ebc2D4d9ba7B3762ef7B9d4F7D',
+    bootstrapV3:   '0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141',
+    buybackVault:  '0x670D293e3D65f96171c10DdC8d88B96b0570F812',
+    burnReserve:   '0xaA1496133B6c274190A2113410B501C5802b6fCF',
+    ifrLock:       '0x769928aBDfc949D0718d8766a1C2d7dBb63954Eb'
   };
+
   var CATS = [
-    { key: 'burned',      label: 'Burned',            color: '#ff4500' },
-    { key: 'locked',      label: 'Locked (IFRLock)',   color: '#ff8c00' },
-    { key: 'vesting',     label: 'Vesting',            color: '#C0392B' },
-    { key: 'liqRes',      label: 'Liquidity Reserve',  color: '#922B21' },
-    { key: 'buyback',     label: 'Buyback Vault',      color: '#E74C3C' },
-    { key: 'bootstrap',   label: 'Bootstrap Vault',    color: '#F39C12' },
-    { key: 'partner',     label: 'Builder Vault',      color: '#457B9D' },
-    { key: 'treasury',    label: 'Treasury',            color: '#9B59B6' },
-    { key: 'community',   label: 'Community',           color: '#1ABC9C' },
-    { key: 'circulating', label: 'Circulating',        color: '#555'    }
+    { key: 'burned',    label: '\uD83D\uDD25 Burned',             color: '#ff4500' },
+    { key: 'ifrLock',   label: '\uD83D\uDD12 Locked (IFRLock)',   color: '#ff8c00' },
+    { key: 'vesting',   label: '\u23F3 Team Vesting',             color: '#C0392B' },
+    { key: 'liqRes',    label: '\uD83D\uDCA7 Liquidity Reserve',  color: '#922B21' },
+    { key: 'bootstrap', label: '\uD83D\uDE80 Bootstrap Vault',    color: '#F39C12' },
+    { key: 'buyback',   label: '\u267B\uFE0F Buyback Vault',      color: '#E74C3C' },
+    { key: 'burnRes',   label: '\uD83D\uDD25 Burn Reserve',       color: '#D35400' },
+    { key: 'partner',   label: '\uD83C\uDFD7\uFE0F Builder Vault',color: '#457B9D' },
+    { key: 'treasury',  label: '\uD83C\uDFDB\uFE0F Treasury Safe',color: '#9B59B6' },
+    { key: 'community', label: '\uD83D\uDC65 Community Safe',     color: '#1ABC9C' },
+    { key: 'deployer',  label: '\uD83D\uDCB0 Deployer (LP)',      color: '#FF6B35' },
+    { key: 'supply',    label: '\uD83D\uDCCA Current Supply',     color: '#fff'    }
   ];
-  var rpcIdx = 0;
 
-  // Cached fallback values (06.03.2026) — shown immediately before RPC calls
-  var CACHED_DATA = {
-    totalSupply: 997900000, currentSupply: 997900000,
-    burned: 2100000, locked: 0, vesting: 150000000,
-    liqRes: 200000000, buyback: 0, bootstrap: 0,
-    partner: 40000000, treasury: 150000000,
-    community: 57900000, circulating: 0
-  };
-
-  function rpcCall(to, data) {
-    var url = RPCS[rpcIdx];
-    var controller = new AbortController();
-    var timer = setTimeout(function () { controller.abort(); }, 8000);
-    return fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ jsonrpc: '2.0', method: 'eth_call', params: [{ to: to, data: data }, 'latest'], id: 1 }),
-      signal: controller.signal
-    }).then(function(r) { clearTimeout(timer); return r.json(); }).then(function(j) {
-      if (j.error) throw new Error(j.error.message);
-      return j.result;
+  function fetchIFRBalance(address) {
+    var url = 'https://api.etherscan.io/api?module=account&action=tokenbalance' +
+      '&contractaddress=' + IFR_TOKEN + '&address=' + address +
+      '&tag=latest&apikey=YourApiKeyToken';
+    return fetch(url).then(function(r) { return r.json(); }).then(function(d) {
+      if (d.status !== '1') return 0;
+      return Number(d.result) / 1e9;
     });
   }
 
-  function pad(addr) {
-    return addr.toLowerCase().replace('0x', '').padStart(64, '0');
-  }
-
-  function hexToNum(hex) {
-    if (!hex || hex === '0x') return 0;
-    var big = BigInt(hex);
-    return Number(big / 1000000n) / 1000;
-  }
-
-  function fetchData() {
-    var keys = Object.keys(ADDRS);
-    var calls = [rpcCall(TOKEN, '0x18160ddd')];
-    keys.forEach(function(k) {
-      calls.push(rpcCall(TOKEN, '0x70a08231' + pad(ADDRS[k])));
-    });
-    return Promise.all(calls).then(function(results) {
-      var totalSupply = hexToNum(results[0]);
-      var b = {};
-      keys.forEach(function(k, i) { b[k] = hexToNum(results[i + 1]); });
-
-      // Burned = real burns (address(0)) + dead address + burn reserve
-      var realBurns = Math.max(0, INITIAL - totalSupply);
-      var burned = realBurns + b.dead + b.burnRes;
-
-      // Current Supply = usable supply (excludes all burned/earmarked)
-      var currentSupply = Math.max(0, INITIAL - burned);
-
-      // Circulating = totalSupply minus ALL known protocol/team wallets
-      var knownSum = b.burnRes + b.locked + b.buyback + b.liqRes + b.vesting +
-                     b.bootstrap + b.partner + b.treasury + b.community +
-                     b.deployer + b.dead + b.governance;
-      var circulating = Math.max(0, totalSupply - knownSum);
-
-      return {
-        totalSupply: totalSupply,
-        currentSupply: currentSupply,
-        burned: burned,
-        locked: b.locked,
-        vesting: b.vesting,
-        liqRes: b.liqRes,
-        buyback: b.buyback,
-        bootstrap: b.bootstrap,
-        partner: b.partner,
-        treasury: b.treasury,
-        community: b.community,
-        circulating: circulating
-      };
-    });
-  }
-
-  function drawDonut(canvas, data) {
-    var ctx = canvas.getContext('2d');
-    var w = canvas.width;
-    var h = canvas.height;
-    var cx = w / 2;
-    var cy = h / 2;
-    var outerR = Math.min(w, h) / 2 - 10;
-    var innerR = outerR * 0.62;
-    var gap = 0.015;
-
-    ctx.clearRect(0, 0, w, h);
-
-    ctx.beginPath();
-    ctx.arc(cx, cy, outerR, 0, Math.PI * 2);
-    ctx.arc(cx, cy, innerR, Math.PI * 2, 0, true);
-    ctx.closePath();
-    ctx.fillStyle = '#1a1a1a';
-    ctx.fill();
-
-    var angle = -Math.PI / 2;
-    CATS.forEach(function(cat) {
-      var val = data[cat.key] || 0;
-      var slice = (val / INITIAL) * Math.PI * 2;
-      if (slice < 0.003) return;
-      var s = angle + gap / 2;
-      var e = angle + slice - gap / 2;
-      ctx.beginPath();
-      ctx.arc(cx, cy, outerR, s, e);
-      ctx.arc(cx, cy, innerR, e, s, true);
-      ctx.closePath();
-      ctx.fillStyle = cat.color;
-      ctx.fill();
-      angle += slice;
+  function fetchTotalSupply() {
+    var url = 'https://api.etherscan.io/api?module=stats&action=tokensupply' +
+      '&contractaddress=' + IFR_TOKEN + '&apikey=YourApiKeyToken';
+    return fetch(url).then(function(r) { return r.json(); }).then(function(d) {
+      if (d.status !== '1') return 0;
+      return Number(d.result) / 1e9;
     });
   }
 
@@ -2130,19 +2160,86 @@ if (isLocked) {
     return n.toFixed(0);
   }
 
-  function pct(n) {
-    return ((n / INITIAL) * 100).toFixed(2) + '%';
+  function pct(n, total) {
+    if (!total) return '0.00%';
+    return ((n / total) * 100).toFixed(2) + '%';
+  }
+
+  function setLive(key, val) {
+    document.querySelectorAll('[data-live-key="' + key + '"]').forEach(function(el) {
+      el.textContent = val;
+    });
+  }
+
+  function updateLiveDisplay(d) {
+    setLive('supply',       fmt(d.supply) + ' IFR');
+    setLive('supply-note',  'of 1B genesis');
+    setLive('burned',       fmt(d.burned) + ' IFR');
+    setLive('burned-pct',   pct(d.burned, GENESIS_SUPPLY));
+    setLive('burned-stat',  fmt(d.burned));
+    setLive('supply-stat',  fmt(d.supply));
+    setLive('ifrlock',      fmt(d.ifrLock) + ' IFR');
+    setLive('ifrlock-pct',  pct(d.ifrLock, d.supply));
+    setLive('vesting',      fmt(d.vesting) + ' IFR (' + pct(d.vesting, d.supply) + ')');
+    setLive('liq-res',      fmt(d.liqRes) + ' IFR (' + pct(d.liqRes, d.supply) + ')');
+    setLive('bootstrap',    fmt(d.bootstrap) + ' IFR');
+    setLive('buyback',      fmt(d.buyback) + ' IFR');
+    setLive('burn-res',     fmt(d.burnRes) + ' IFR');
+    setLive('partner',      fmt(d.partner) + ' IFR (' + pct(d.partner, d.supply) + ')');
+    setLive('treasury',     fmt(d.treasury) + ' IFR (' + pct(d.treasury, d.supply) + ')');
+    setLive('community',    fmt(d.community) + ' IFR (' + pct(d.community, d.supply) + ')');
+    setLive('deployer',     fmt(d.deployer) + ' IFR');
+    // Wallet cards
+    setLive('card-deployer',   fmt(d.deployer) + ' IFR');
+    setLive('card-treasury',   fmt(d.treasury) + ' IFR');
+    setLive('card-community',  fmt(d.community) + ' IFR');
+    setLive('card-vesting',    fmt(d.vesting) + ' IFR');
+    setLive('card-liqres',     fmt(d.liqRes) + ' IFR');
+    setLive('card-partner',    fmt(d.partner) + ' IFR');
+    setLive('card-bootstrap',  fmt(d.bootstrap) + ' IFR');
+    setLive('card-buyback',    fmt(d.buyback) + ' IFR');
+    setLive('card-burnres',    fmt(d.burnRes) + ' IFR');
+  }
+
+  function drawDonut(canvas, data) {
+    var ctx = canvas.getContext('2d');
+    var w = canvas.width; var h = canvas.height;
+    var cx = w / 2; var cy = h / 2;
+    var outerR = Math.min(w, h) / 2 - 10;
+    var innerR = outerR * 0.62;
+    ctx.clearRect(0, 0, w, h);
+    ctx.beginPath();
+    ctx.arc(cx, cy, outerR, 0, Math.PI * 2);
+    ctx.arc(cx, cy, innerR, Math.PI * 2, 0, true);
+    ctx.closePath();
+    ctx.fillStyle = '#1a1a1a';
+    ctx.fill();
+    var angle = -Math.PI / 2;
+    CATS.forEach(function(cat) {
+      var val = data[cat.key] || 0;
+      if (cat.key === 'supply') return;
+      var slice = (val / GENESIS_SUPPLY) * Math.PI * 2;
+      if (slice < 0.003) return;
+      var gap = 0.015;
+      ctx.beginPath();
+      ctx.arc(cx, cy, outerR, angle + gap/2, angle + slice - gap/2);
+      ctx.arc(cx, cy, innerR, angle + slice - gap/2, angle + gap/2, true);
+      ctx.closePath();
+      ctx.fillStyle = cat.color;
+      ctx.fill();
+      angle += slice;
+    });
   }
 
   function renderLegend(data) {
     var el = document.getElementById('dist-legend');
     if (!el) return;
-    el.innerHTML = CATS.map(function(cat) {
+    el.innerHTML = CATS.filter(function(c) { return c.key !== 'supply'; }).map(function(cat) {
       var val = data[cat.key] || 0;
       return '<div style="display:flex;align-items:center;gap:12px;">' +
         '<div style="width:14px;height:14px;border-radius:3px;background:' + cat.color + ';flex-shrink:0;"></div>' +
         '<span style="font-size:14px;color:#8a8a96;">' + cat.label +
-        ' <strong style="color:#fff;">' + pct(val) + '</strong> &mdash; ' + fmt(val) + '</span></div>';
+        ' <strong style="color:#fff;">' + pct(val, GENESIS_SUPPLY) + '</strong> \u2014 ' + fmt(val) + '</span></div>';
     }).join('');
   }
 
@@ -2150,10 +2247,10 @@ if (isLocked) {
     var el = document.getElementById('dist-metrics');
     if (!el) return;
     var items = [
-      { label: 'Total Burned',     value: fmt(data.burned),        sub: pct(data.burned) + ' of initial supply', color: '#ff4500' },
-      { label: 'Currently Locked',  value: fmt(data.locked),       sub: 'in IFRLock contract',                    color: '#ff8c00' },
-      { label: 'Current Supply',    value: fmt(data.currentSupply), sub: 'of 1B initial',                         color: '#fff'    },
-      { label: 'Circulating',       value: fmt(data.circulating),  sub: 'free supply',                            color: '#888'    }
+      { label: 'Total Burned',    value: fmt(data.burned),  sub: pct(data.burned, GENESIS_SUPPLY) + ' of genesis', color: '#ff4500' },
+      { label: 'Currently Locked', value: fmt(data.ifrLock), sub: 'in IFRLock contract',  color: '#ff8c00' },
+      { label: 'Current Supply',   value: fmt(data.supply),  sub: 'of 1B genesis',        color: '#fff'    },
+      { label: 'Deployer (LP)',    value: fmt(data.deployer), sub: 'LP allocation',        color: '#FF6B35' }
     ];
     el.innerHTML = items.map(function(m) {
       return '<div style="background:#111113;border:1px solid #222225;border-radius:8px;padding:16px;text-align:center;">' +
@@ -2163,35 +2260,55 @@ if (isLocked) {
     }).join('');
   }
 
-  function renderAll(data, label) {
-    var canvas = document.getElementById('dist-donut');
-    if (!canvas) return;
-    drawDonut(canvas, data);
-    var supplyEl = document.getElementById('donut-supply');
-    if (supplyEl) supplyEl.textContent = fmt(data.currentSupply);
-    renderLegend(data);
-    renderMetrics(data);
-    var updEl = document.getElementById('dist-updated');
-    if (updEl) updEl.textContent = label;
-  }
+  function refreshAllLiveData() {
+    var keys = Object.keys(WALLETS);
+    var calls = [fetchTotalSupply()];
+    keys.forEach(function(k) { calls.push(fetchIFRBalance(WALLETS[k])); });
 
-  // Show cached data immediately
-  renderAll(CACHED_DATA, 'Showing cached values (06.03.2026) \u2014 loading live data\u2026');
+    Promise.all(calls).then(function(results) {
+      var supply = results[0];
+      var b = {};
+      keys.forEach(function(k, i) { b[k] = results[i + 1]; });
 
-  function update() {
-    fetchData().then(function(data) {
-      renderAll(data, 'Last updated: ' + new Date().toLocaleTimeString() + ' \u2014 auto-refreshes every 60s');
-    }).catch(function(err) {
-      console.error('Live distribution error:', err);
-      rpcIdx = (rpcIdx + 1) % RPCS.length;
-      var updEl = document.getElementById('dist-updated');
-      if (updEl) updEl.textContent = 'Cached values (06.03.2026) \u2014 live data unavailable, retrying\u2026';
-      setTimeout(update, 5000);
+      var data = {
+        supply:    supply,
+        burned:    Math.max(0, GENESIS_SUPPLY - supply),
+        deployer:  b.deployer,
+        treasury:  b.treasurySafe,
+        community: b.communitySafe,
+        vesting:   b.vesting,
+        liqRes:    b.liquidityRes,
+        partner:   b.partnerVault,
+        bootstrap: b.bootstrapV3,
+        buyback:   b.buybackVault,
+        burnRes:   b.burnReserve,
+        ifrLock:   b.ifrLock
+      };
+
+      var canvas = document.getElementById('dist-donut');
+      if (canvas) drawDonut(canvas, data);
+      var supplyEl = document.getElementById('donut-supply');
+      if (supplyEl) supplyEl.textContent = fmt(data.supply);
+      renderLegend(data);
+      renderMetrics(data);
+      updateLiveDisplay(data);
+
+      document.querySelectorAll('.live-updated-at').forEach(function(el) {
+        el.textContent = 'Updated: ' + new Date().toLocaleTimeString();
+      });
+      document.querySelectorAll('.live-status').forEach(function(el) {
+        el.textContent = '';
+      });
+    }).catch(function(e) {
+      console.error('Etherscan fetch failed:', e);
+      document.querySelectorAll('.live-status').forEach(function(el) {
+        el.textContent = '\u26A0 Etherscan unreachable \u2014 retry in 30s';
+      });
     });
   }
 
-  update();
-  setInterval(update, 60000);
+  refreshAllLiveData();
+  setInterval(refreshAllLiveData, 30000);
 })();
 </script>
 
