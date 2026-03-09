@@ -488,9 +488,9 @@
 
       <!-- ===== CHECK 0: All Protocol Wallets ===== -->
       <h2>All Protocol Wallets &mdash; From Genesis</h2>
-      <p>Every wallet involved in the IFR protocol since deployment. Genesis balances are on-chain records. <span class="live-badge"><span class="live-dot"></span>LIVE</span> balances update every 30 seconds via Etherscan API.</p>
+      <p>Every wallet involved in the IFR protocol since deployment. Genesis balances are on-chain records. <span class="live-badge"><span class="live-dot"></span>LIVE</span> balances update every 30 seconds via Railway Proxy.</p>
       <div style="color:#888; font-size:11px; margin-bottom:8px;">
-        &#x26A1; Direct from Ethereum via Etherscan &mdash;
+        &#x26A1; Live via Railway Proxy &rarr; Ethereum &mdash;
         <a href="https://etherscan.io/token/0x77e99917Eca8539c62F509ED1193ac36580A6e7B"
            target="_blank" style="color:#00ffa0;">Verify on Etherscan &rarr;</a>
       </div>
@@ -856,63 +856,63 @@
               <td><strong>Deployer</strong></td>
               <td class="address"><a href="https://etherscan.io/address/0x6b36687b0cd4386fb14cf565B67D7862110Fed67" target="_blank">0x6b36...Fed67</a></td>
               <td>LP creation. Holds 400M IFR until BootstrapVaultV3.finalise() creates Uniswap LP. No other function post-deploy.</td>
-              <td>400,600,000 IFR</td>
+              <td id="cur-deployer">400,600,000 IFR</td>
               <td>EOA &mdash; single key</td>
             </tr>
             <tr>
               <td><strong>Treasury Safe</strong></td>
               <td class="address"><a href="https://etherscan.io/address/0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b" target="_blank">0x5ad6...3b</a></td>
               <td>Protocol treasury. Funds Bootstrap (Plan B). Ecosystem development, audits, partnerships. All spends require multisig approval.</td>
-              <td>150,000,000 IFR</td>
+              <td id="cur-tsafe">150,000,000 IFR</td>
               <td>Gnosis Safe &mdash; 1-of-2 (&rarr; 2-of-4)</td>
             </tr>
             <tr>
               <td><strong>Community Safe</strong></td>
               <td class="address"><a href="https://etherscan.io/address/0xaC5687547B2B21d80F8fd345B51e608d476667C7" target="_blank">0xaC56...67C7</a></td>
               <td>Community Safe &mdash; two purposes:<br>1. Bootstrap contribution: 50M IFR &rarr; BootstrapVaultV3 (Plan B, pending 10.03.2026)<br>2. Community Operations Reserve: 7.9M IFR permanent budget &mdash; bug bounties, community grants, ecosystem incentives, DAO seed funding. Genesis decision &mdash; publicly documented.</td>
-              <td>57,900,000 IFR</td>
+              <td id="cur-csafe">57,900,000 IFR</td>
               <td>Gnosis Safe &mdash; 1-of-2 (&rarr; 2-of-4)</td>
             </tr>
             <tr>
               <td><strong>Vesting Contract</strong></td>
               <td class="address"><a href="https://etherscan.io/address/0x2694Bc84e8D5251E9E4Ecd4B2Ae3f866d6106271" target="_blank">0x2694...6271</a></td>
               <td>Team tokens locked. 12-month cliff (~March 2027), then 36-month linear release. Beneficiary immutable on-chain.</td>
-              <td>150,000,000 IFR</td>
+              <td id="cur-vesting">150,000,000 IFR</td>
               <td>Smart contract &mdash; immutable schedule</td>
             </tr>
             <tr>
               <td><strong>LiquidityReserve</strong></td>
               <td class="address"><a href="https://etherscan.io/address/0xdc0309804803b3A105154f6073061E3185018f64" target="_blank">0xdc03...f64</a></td>
               <td>Phase 2 LP reserve. Hard-locked until 01.09.2026. NOT used for Bootstrap (Plan B decision 08.03.2026).</td>
-              <td>200,000,000 IFR</td>
+              <td id="cur-liqres">200,000,000 IFR</td>
               <td>Smart contract &mdash; time-locked</td>
             </tr>
             <tr>
               <td><strong>PartnerVault</strong></td>
               <td class="address"><a href="https://etherscan.io/address/0xc6eb7714bCb035ebc2D4d9ba7B3762ef7B9d4F7D" target="_blank">0xc6eb...f7D</a></td>
               <td>Builder rewards. Distributed via lock-triggered Creator Rewards. Milestone-based, vested 6&ndash;12 months. Governed by Governance contract.</td>
-              <td>40,000,000 IFR</td>
+              <td id="cur-partner">40,000,000 IFR</td>
               <td>Smart contract &mdash; Governance controlled</td>
             </tr>
             <tr>
               <td><strong>BootstrapVaultV3</strong></td>
               <td class="address"><a href="https://etherscan.io/address/0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141" target="_blank">0xf725...e141</a></td>
               <td>Community Bootstrap. Will hold ~194.75M IFR (Treasury 144.75M + Community 50M) after Plan B funding. Creates Uniswap LP via finalise().</td>
-              <td>0 IFR (funding pending 10.03.2026)</td>
+              <td id="cur-bootstrap">0 IFR (funding pending 10.03.2026)</td>
               <td>Smart contract &mdash; permissionless</td>
             </tr>
             <tr>
               <td><strong>BuybackVault</strong></td>
               <td class="address"><a href="https://etherscan.io/address/0x670D293e3D65f96171c10DdC8d88B96b0570F812" target="_blank">0x670D...F812</a></td>
               <td>Protocol buyback reserve. Accumulates from 1% pool fee on IFR transfers. Not pre-funded at genesis. Activated 60 days after deployment.</td>
-              <td>0 IFR (pool fees not yet accumulated)</td>
+              <td id="cur-buyback">0 IFR</td>
               <td>Smart contract &mdash; Governance controlled</td>
             </tr>
             <tr>
               <td><strong>BurnReserve</strong></td>
               <td class="address"><a href="https://etherscan.io/address/0xaA1496133B6c274190A2113410B501C5802b6fCF" target="_blank">0xaA14...fCF</a></td>
               <td>Permanent burn reserve. Accumulates from pool fee share. Burns IFR permanently on trigger. Not pre-funded at genesis.</td>
-              <td>0 IFR (pool fees not yet accumulated)</td>
+              <td id="cur-burnres">0 IFR</td>
               <td>Smart contract &mdash; permissionless burn</td>
             </tr>
             <tr>
@@ -1353,14 +1353,12 @@
         var burned = Math.max(0, supply.burned || (INITIAL_SUPPLY - currentSupply));
         var pct = (burned / INITIAL_SUPPLY * 100);
 
-        // Update all balance table cells
+        // Update all balance table cells (handle null from rate limiting)
         Object.keys(BALANCE_MAP).forEach(function(key) {
           var el = document.getElementById(BALANCE_MAP[key]);
-          if (el && bal[key]) {
-            el.innerHTML = '<strong style="color:var(--live)">' + fmtVal(bal[key].formatted) + '</strong> IFR';
-          } else if (el) {
-            el.innerHTML = '<strong style="color:var(--live)">0</strong> IFR';
-          }
+          if (!el) return;
+          var val = (bal[key] && bal[key].formatted != null) ? bal[key].formatted : 0;
+          el.innerHTML = '<strong style="color:var(--live)">' + fmtVal(val) + '</strong> IFR';
         });
 
         // Burn tracker stat cards
@@ -1376,6 +1374,19 @@
         if (sbEl) sbEl.textContent = fmtNum(Math.round(burned));
         var sbpEl = document.getElementById('supply-burned-pct');
         if (sbpEl) sbpEl.textContent = pct.toFixed(2) + '%';
+
+        // Update "Current Wallet & Contract Purposes" table cells
+        var CUR_MAP = {
+          Deployer: 'cur-deployer', GnosisSafe: 'cur-tsafe', CommunitySafe: 'cur-csafe',
+          Vesting: 'cur-vesting', LiquidityReserve: 'cur-liqres', PartnerVault: 'cur-partner',
+          BootstrapVaultV3: 'cur-bootstrap', BuybackVault: 'cur-buyback', BurnReserve: 'cur-burnres'
+        };
+        Object.keys(CUR_MAP).forEach(function(key) {
+          var el = document.getElementById(CUR_MAP[key]);
+          if (!el) return;
+          var val = (bal[key] && bal[key].formatted != null) ? bal[key].formatted : 0;
+          el.textContent = fmtNum(Math.round(val)) + ' IFR';
+        });
 
         // Hero timestamp + data source
         var heroEl = document.getElementById('hero-timestamp');
