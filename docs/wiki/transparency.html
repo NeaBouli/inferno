@@ -488,9 +488,9 @@
 
       <!-- ===== CHECK 0: All Protocol Wallets ===== -->
       <h2>All Protocol Wallets &mdash; From Genesis</h2>
-      <p>Every wallet involved in the IFR protocol since deployment. Genesis balances are hardcoded from on-chain records. Live balances update every 60 seconds via Etherscan API.</p>
+      <p>Every wallet involved in the IFR protocol since deployment. Genesis balances are on-chain records. <span class="live-badge"><span class="live-dot"></span>LIVE</span> balances update every 30 seconds via Etherscan API.</p>
       <div style="color:#888; font-size:11px; margin-bottom:8px;">
-        &#x26A1; Showing cached values (06.03.2026) &mdash; live data loads in background.
+        &#x26A1; Direct from Ethereum via Etherscan &mdash;
         <a href="https://etherscan.io/token/0x77e99917Eca8539c62F509ED1193ac36580A6e7B"
            target="_blank" style="color:#00ffa0;">Verify on Etherscan &rarr;</a>
       </div>
@@ -1068,7 +1068,7 @@
 
       <!-- ===== SECTION 4: Live TX Feed ===== -->
       <h2><span class="live-dot"></span> Live Transaction Feed</h2>
-      <p>Last 20 transactions across all ecosystem addresses. Auto-refreshes every 60 seconds.</p>
+      <p>Last 20 transactions across all ecosystem addresses. Auto-refreshes every 30 seconds.</p>
 
       <div id="txfeed-status" class="loading"><span class="spinner"></span>Loading transactions&hellip;</div>
       <div class="table-wrap">
@@ -1100,8 +1100,8 @@
             <tr><td>PartnerVault</td><td>40,000,000</td><td>4.00%</td><td>Builder ecosystem rewards</td></tr>
             <tr style="border-top:2px solid var(--border)">
               <td><strong>Burned (permanent)</strong></td>
-              <td><strong id="supply-burned">~2,100,000</strong></td>
-              <td><strong id="supply-burned-pct">~0.21%</strong></td>
+              <td><strong id="supply-burned" data-live-key="supply-burned">loading&hellip;</strong></td>
+              <td><strong id="supply-burned-pct" data-live-key="supply-burned-pct">loading&hellip;</strong></td>
               <td>Community transfer fee + prior burns</td>
             </tr>
             <tr>
@@ -1124,15 +1124,15 @@
 
       <div class="stats-grid">
         <div class="stat-card">
-          <div class="stat-value live-value" id="burn-total">--</div>
+          <div class="stat-value live-value" id="burn-total" data-live-key="burn-total">--</div>
           <div class="stat-label">Total IFR Burned</div>
         </div>
         <div class="stat-card">
-          <div class="stat-value live-value" id="burn-pct">--</div>
+          <div class="stat-value live-value" id="burn-pct" data-live-key="burn-pct">--</div>
           <div class="stat-label">% of Initial Supply</div>
         </div>
         <div class="stat-card">
-          <div class="stat-value" id="burn-supply">--</div>
+          <div class="stat-value" id="burn-supply" data-live-key="burn-supply">--</div>
           <div class="stat-label">Current Supply</div>
         </div>
         <div class="stat-card">
@@ -1282,114 +1282,87 @@
     })();
   </script>
 
-  <!-- ===== Live Data Script ===== -->
+  <!-- ===== Live Data Script — Etherscan direct, single source of truth ===== -->
   <script>
   (function () {
+    'use strict';
     var IFR_TOKEN = '0x77e99917Eca8539c62F509ED1193ac36580A6e7B';
     var IFR_DECIMALS = 9;
     var INITIAL_SUPPLY = 1000000000;
-    var API_KEY = (window.__ETHERSCAN_KEY__ || '');
-    var BASE = 'https://api.etherscan.io/v2/api?chainid=1';
-    var PROXY = 'https://ifr-ai-copilot-production.up.railway.app';
+    var ES_BASE = 'https://api.etherscan.io/api';
 
-    // ===== Data Source Tracking =====
-    var dataSourcePriority = { 'railway': 3, 'etherscan': 2, 'cached': 1 };
-    var currentSource = 'cached';
-
-    function setDataSource(source) {
-      if (dataSourcePriority[source] >= dataSourcePriority[currentSource]) {
-        currentSource = source;
-      }
-      var el = document.getElementById('data-source');
-      if (!el) return;
-      if (currentSource === 'railway') {
-        el.innerHTML = '<span style="color:#22c55e">\u25CF</span> Live (Railway Proxy)';
-      } else if (currentSource === 'etherscan') {
-        el.innerHTML = '<span style="color:#eab308">\u25CF</span> Live (Etherscan Direct)';
-      } else {
-        el.innerHTML = '<span style="color:#ef4444">\u25CF</span> Cached (06.03.2026) \u2014 reconnecting\u2026';
-      }
-    }
-
-    // Show cached source immediately
-    setDataSource('cached');
-
-    // ===== Helper: fetch with timeout =====
-    function fetchWithTimeout(url, ms) {
-      var controller = new AbortController();
-      var timer = setTimeout(function () { controller.abort(); }, ms);
-      return fetch(url, { signal: controller.signal }).then(function (r) {
-        clearTimeout(timer);
-        return r;
-      });
-    }
-
-    // Proxy label → LIVE_CELLS id mapping
-    var PROXY_CELL_MAP = {
-      'Deployer': 'live-deployer', 'VoucherSigner': 'live-voucher',
-      'TeamBeneficiary': 'live-team', 'Community': 'live-ceoa',
-      'Treasury': 'live-teoa', 'GnosisSafe': 'live-tsafe',
-      'CommunitySafe': 'live-csafe', 'InfernoToken': 'live-token',
-      'Governance': 'live-gov', 'IFRLock': 'live-lock',
-      'BurnReserve': 'live-burn', 'BuybackVault': 'live-buyback',
-      'PartnerVault': 'live-partner', 'FeeRouterV1': 'live-router',
-      'Vesting': 'live-vesting', 'LiquidityReserve': 'live-liqres',
-      'BootstrapVault': 'live-bootstrap'
-    };
-
-    // Proxy label → display label mapping for TX feed
-    var PROXY_TX_LABELS = {
-      'Deployer': 'Deployer', 'Treasury': 'Treasury EOA',
-      'Community': 'Community EOA', 'GnosisSafe': 'Treasury Safe',
-      'CommunitySafe': 'Community Safe'
-    };
-
-    var EOA = [
-      { label: 'Deployer', addr: '0x6b36687b0cd4386fb14cf565B67D7862110Fed67' },
-      { label: 'Voucher Signer', addr: '0x17F8DD6dECCb3ff5d95691982B85A87d7d9872d4' },
-      { label: 'Team Beneficiary', addr: '0x04FABC52c51d1F8ced6974E7C25a34249b1E6239' },
-      { label: 'Community EOA', addr: '0x61aF4E72C77b58F4b50964Ee93d420750Cd9857E' },
-      { label: 'Treasury EOA', addr: '0xC8f4B45fA0C4727E9b27c13Af3d000C922a2ac9c' }
+    var ALL_ADDRS = [
+      { id: 'live-deployer',   label: 'Deployer',          addr: '0x6b36687b0cd4386fb14cf565B67D7862110Fed67' },
+      { id: 'live-voucher',    label: 'Voucher Signer',    addr: '0x17F8DD6dECCb3ff5d95691982B85A87d7d9872d4' },
+      { id: 'live-team',       label: 'Team Beneficiary',  addr: '0x04FABC52c51d1F8ced6974E7C25a34249b1E6239' },
+      { id: 'live-ceoa',       label: 'Community EOA',     addr: '0x61aF4E72C77b58F4b50964Ee93d420750Cd9857E' },
+      { id: 'live-teoa',       label: 'Treasury EOA',      addr: '0xC8f4B45fA0C4727E9b27c13Af3d000C922a2ac9c' },
+      { id: 'live-tsafe',      label: 'Treasury Safe',     addr: '0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b' },
+      { id: 'live-csafe',      label: 'Community Safe',    addr: '0xaC5687547B2B21d80F8fd345B51e608d476667C7' },
+      { id: 'live-token',      label: 'InfernoToken',      addr: '0x77e99917Eca8539c62F509ED1193ac36580A6e7B' },
+      { id: 'live-gov',        label: 'Governance',        addr: '0xc43d48E7FDA576C5022d0670B652A622E8caD041' },
+      { id: 'live-lock',       label: 'IFRLock',           addr: '0x769928aBDfc949D0718d8766a1C2d7dBb63954Eb' },
+      { id: 'live-burn',       label: 'BurnReserve',       addr: '0xaA1496133B6c274190A2113410B501C5802b6fCF' },
+      { id: 'live-buyback',    label: 'BuybackVault',      addr: '0x670D293e3D65f96171c10DdC8d88B96b0570F812' },
+      { id: 'live-partner',    label: 'PartnerVault',      addr: '0xc6eb7714bCb035ebc2D4d9ba7B3762ef7B9d4F7D' },
+      { id: 'live-router',     label: 'FeeRouterV1',       addr: '0x4807B77B2E25cD055DA42B09BA4d0aF9e580C60a' },
+      { id: 'live-vesting',    label: 'Vesting',           addr: '0x2694Bc84e8D5251E9E4Ecd4B2Ae3f866d6106271' },
+      { id: 'live-liqres',     label: 'LiquidityReserve',  addr: '0xdc0309804803b3A105154f6073061E3185018f64' },
+      { id: 'live-bootstrap',  label: 'BootstrapVaultV3',  addr: '0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141' }
     ];
 
-    var SAFES = [
-      { label: 'Treasury Safe', addr: '0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b' },
-      { label: 'Community Safe', addr: '0xaC5687547B2B21d80F8fd345B51e608d476667C7' }
-    ];
-
-    var CONTRACTS = [
-      { label: 'InfernoToken', addr: '0x77e99917Eca8539c62F509ED1193ac36580A6e7B' },
-      { label: 'Governance', addr: '0xc43d48E7FDA576C5022d0670B652A622E8caD041' },
-      { label: 'IFRLock', addr: '0x769928aBDfc949D0718d8766a1C2d7dBb63954Eb' },
-      { label: 'BurnReserve', addr: '0xaA1496133B6c274190A2113410B501C5802b6fCF' },
-      { label: 'BuybackVault', addr: '0x670D293e3D65f96171c10DdC8d88B96b0570F812' },
-      { label: 'PartnerVault', addr: '0xc6eb7714bCb035ebc2D4d9ba7B3762ef7B9d4F7D' },
-      { label: 'FeeRouterV1', addr: '0x4807B77B2E25cD055DA42B09BA4d0aF9e580C60a' },
-      { label: 'Vesting', addr: '0x2694Bc84e8D5251E9E4Ecd4B2Ae3f866d6106271' },
-      { label: 'LiquidityReserve', addr: '0xdc0309804803b3A105154f6073061E3185018f64' },
-      { label: 'BootstrapVaultV3', addr: '0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141' }
-    ];
-
-    var ALL = EOA.concat(SAFES).concat(CONTRACTS);
     var LABEL_MAP = {};
-    ALL.forEach(function (e) { LABEL_MAP[e.addr.toLowerCase()] = e.label; });
+    ALL_ADDRS.forEach(function (e) { LABEL_MAP[e.addr.toLowerCase()] = e.label; });
 
-    function shortAddr(a) {
-      if (!a || a.length < 10) return a || '\u2014';
-      return a.slice(0, 6) + '\u2026' + a.slice(-4);
+    // TX feed uses first 7 addresses (EOA + Safes)
+    var TX_ADDRS = ALL_ADDRS.slice(0, 7);
+
+    // ===== Etherscan API — single source of truth =====
+    function fetchIFRBalance(address) {
+      var url = ES_BASE + '?module=account&action=tokenbalance' +
+        '&contractaddress=' + IFR_TOKEN + '&address=' + address +
+        '&tag=latest&apikey=YourApiKeyToken';
+      return fetch(url).then(function(r) { return r.json(); }).then(function(d) {
+        if (d.status !== '1') return '0';
+        return d.result;
+      }).catch(function() { return '0'; });
     }
 
-    function addrLabel(a) {
-      return LABEL_MAP[a.toLowerCase()] || shortAddr(a);
+    function fetchTotalSupply() {
+      var url = ES_BASE + '?module=stats&action=tokensupply' +
+        '&contractaddress=' + IFR_TOKEN + '&apikey=YourApiKeyToken';
+      return fetch(url).then(function(r) { return r.json(); }).then(function(d) {
+        if (d.status !== '1') return '0';
+        return d.result;
+      }).catch(function() { return '0'; });
     }
 
-    function addrLink(a) {
-      return '<a href="https://etherscan.io/address/' + a + '" target="_blank" style="color:var(--muted)">' + addrLabel(a) + '</a>';
+    function esTxList(addr) {
+      var url = ES_BASE + '?module=account&action=txlist' +
+        '&address=' + addr + '&page=1&offset=10&sort=desc&apikey=YourApiKeyToken';
+      return fetch(url).then(function(r) { return r.json(); }).then(function(j) {
+        return (j.status === '1' && Array.isArray(j.result)) ? j.result : [];
+      }).catch(function() { return []; });
     }
 
-    function txLink(h) {
-      return '<a href="https://etherscan.io/tx/' + h + '" target="_blank">' + h.slice(0, 10) + '\u2026</a>';
+    function esTokenTx(addr) {
+      var url = ES_BASE + '?module=account&action=tokentx' +
+        '&address=' + addr + '&contractaddress=' + IFR_TOKEN +
+        '&page=1&offset=10&sort=desc&apikey=YourApiKeyToken';
+      return fetch(url).then(function(r) { return r.json(); }).then(function(j) {
+        return (j.status === '1' && Array.isArray(j.result)) ? j.result : [];
+      }).catch(function() { return []; });
     }
+
+    // ===== Formatting =====
+    function fmtIFR(raw) {
+      var v = parseFloat(raw) / Math.pow(10, IFR_DECIMALS);
+      if (v >= 1e6) return (v / 1e6).toFixed(1) + 'M';
+      if (v >= 1e3) return (v / 1e3).toFixed(1) + 'K';
+      return v.toFixed(0);
+    }
+
+    function fmtNum(n) { return n.toLocaleString('en-US'); }
 
     function fmtDate(ts) {
       var d = new Date(parseInt(ts) * 1000);
@@ -1407,152 +1380,72 @@
       return e.toFixed(4);
     }
 
-    function fmtIFR(raw) {
-      var v = parseFloat(raw) / Math.pow(10, IFR_DECIMALS);
-      if (v >= 1e6) return (v / 1e6).toFixed(2) + 'M';
-      if (v >= 1e3) return (v / 1e3).toFixed(1) + 'K';
-      return v.toFixed(0);
+    function shortAddr(a) {
+      if (!a || a.length < 10) return a || '\u2014';
+      return a.slice(0, 6) + '\u2026' + a.slice(-4);
     }
 
-    function fmtNum(n) { return n.toLocaleString('en-US'); }
+    function addrLabel(a) { return LABEL_MAP[a.toLowerCase()] || shortAddr(a); }
 
-    function esCall(module, action, address, extra) {
-      var url = BASE + '&module=' + module + '&action=' + action +
-        '&address=' + address + (extra || '') + (API_KEY ? '&apikey=' + API_KEY : '');
-      var controller = new AbortController();
-      var timer = setTimeout(function () { controller.abort(); }, 8000);
-      return fetch(url, { signal: controller.signal }).then(function (r) {
-        clearTimeout(timer);
-        return r.json();
-      }).then(function (j) {
-        if (j.status === '1' && j.result) return j.result;
-        return j.result || '0';
-      }).catch(function () { return '0'; });
+    function txLink(h) {
+      return '<a href="https://etherscan.io/tx/' + h + '" target="_blank">' + h.slice(0, 10) + '\u2026</a>';
     }
 
-    function esTokenBalance(addr) {
-      return esCall('account', 'tokenbalance', addr, '&contractaddress=' + IFR_TOKEN + '&tag=latest');
+    function utcTimestamp() {
+      var now = new Date();
+      return now.getUTCFullYear() + '-' + String(now.getUTCMonth() + 1).padStart(2, '0') + '-' +
+        String(now.getUTCDate()).padStart(2, '0') + ' ' +
+        String(now.getUTCHours()).padStart(2, '0') + ':' +
+        String(now.getUTCMinutes()).padStart(2, '0') + ':' +
+        String(now.getUTCSeconds()).padStart(2, '0') + ' UTC';
     }
 
-    function esTxList(addr) {
-      return esCall('account', 'txlist', addr, '&page=1&offset=10&sort=desc');
-    }
+    // ===== refreshAllLiveData — single function updates everything =====
+    function refreshAllLiveData() {
+      var calls = [fetchTotalSupply()];
+      ALL_ADDRS.forEach(function(item) { calls.push(fetchIFRBalance(item.addr)); });
 
-    function esTokenTx(addr) {
-      return esCall('account', 'tokentx', addr, '&contractaddress=' + IFR_TOKEN + '&page=1&offset=10&sort=desc');
-    }
+      Promise.all(calls).then(function(results) {
+        var supplyRaw = results[0];
+        var currentSupply = parseFloat(supplyRaw) / Math.pow(10, IFR_DECIMALS);
+        var burned = Math.max(0, INITIAL_SUPPLY - currentSupply);
+        var pct = (burned / INITIAL_SUPPLY * 100);
 
-    // ===== Known Balances (cached 06.03.2026) =====
-    var KNOWN_BALANCES = {
-      '0x6b36687b0cd4386fb14cf565B67D7862110Fed67': 400000000,
-      '0x17F8DD6dECCb3ff5d95691982B85A87d7d9872d4': 0,
-      '0x04FABC52c51d1F8ced6974E7C25a34249b1E6239': 0,
-      '0x61aF4E72C77b58F4b50964Ee93d420750Cd9857E': 0,
-      '0xC8f4B45fA0C4727E9b27c13Af3d000C922a2ac9c': 0,
-      '0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b': 150000000,
-      '0xaC5687547B2B21d80F8fd345B51e608d476667C7': 57900000,
-      '0x77e99917Eca8539c62F509ED1193ac36580A6e7B': 0,
-      '0xc43d48E7FDA576C5022d0670B652A622E8caD041': 0,
-      '0x769928aBDfc949D0718d8766a1C2d7dBb63954Eb': 0,
-      '0xaA1496133B6c274190A2113410B501C5802b6fCF': 0,
-      '0x670D293e3D65f96171c10DdC8d88B96b0570F812': 0,
-      '0xc6eb7714bCb035ebc2D4d9ba7B3762ef7B9d4F7D': 40000000,
-      '0x4807B77B2E25cD055DA42B09BA4d0aF9e580C60a': 0,
-      '0x2694Bc84e8D5251E9E4Ecd4B2Ae3f866d6106271': 150000000,
-      '0xdc0309804803b3A105154f6073061E3185018f64': 200000000,
-      '0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141': 0
-    };
-
-    // ===== Live Balance Cells =====
-    var LIVE_CELLS = [
-      { id: 'live-deployer',  addr: '0x6b36687b0cd4386fb14cf565B67D7862110Fed67' },
-      { id: 'live-voucher',   addr: '0x17F8DD6dECCb3ff5d95691982B85A87d7d9872d4' },
-      { id: 'live-team',      addr: '0x04FABC52c51d1F8ced6974E7C25a34249b1E6239' },
-      { id: 'live-ceoa',      addr: '0x61aF4E72C77b58F4b50964Ee93d420750Cd9857E' },
-      { id: 'live-teoa',      addr: '0xC8f4B45fA0C4727E9b27c13Af3d000C922a2ac9c' },
-      { id: 'live-tsafe',     addr: '0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b' },
-      { id: 'live-csafe',     addr: '0xaC5687547B2B21d80F8fd345B51e608d476667C7' },
-      { id: 'live-token',     addr: '0x77e99917Eca8539c62F509ED1193ac36580A6e7B' },
-      { id: 'live-gov',       addr: '0xc43d48E7FDA576C5022d0670B652A622E8caD041' },
-      { id: 'live-lock',      addr: '0x769928aBDfc949D0718d8766a1C2d7dBb63954Eb' },
-      { id: 'live-burn',      addr: '0xaA1496133B6c274190A2113410B501C5802b6fCF' },
-      { id: 'live-buyback',   addr: '0x670D293e3D65f96171c10DdC8d88B96b0570F812' },
-      { id: 'live-partner',   addr: '0xc6eb7714bCb035ebc2D4d9ba7B3762ef7B9d4F7D' },
-      { id: 'live-router',    addr: '0x4807B77B2E25cD055DA42B09BA4d0aF9e580C60a' },
-      { id: 'live-vesting',   addr: '0x2694Bc84e8D5251E9E4Ecd4B2Ae3f866d6106271' },
-      { id: 'live-liqres',    addr: '0xdc0309804803b3A105154f6073061E3185018f64' },
-      { id: 'live-bootstrap',  addr: '0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141' }
-    ];
-
-    function showCachedBalances() {
-      LIVE_CELLS.forEach(function (cell) {
-        var el = document.getElementById(cell.id);
-        if (!el) return;
-        var known = KNOWN_BALANCES[cell.addr];
-        if (known !== undefined) {
-          var label = known >= 1e6 ? (known / 1e6).toFixed(1) + 'M' :
-                     known >= 1e3 ? (known / 1e3).toFixed(1) + 'K' : String(known);
-          el.innerHTML = '<strong style="color:var(--live)">' + label + '</strong> IFR <span style="color:#666;font-size:10px;">(cached)</span>';
-        }
-      });
-    }
-
-    function applyProxyBalances(data) {
-      Object.keys(data.balances).forEach(function (label) {
-        var cellId = PROXY_CELL_MAP[label];
-        if (!cellId) return;
-        var el = document.getElementById(cellId);
-        if (!el) return;
-        var val = data.balances[label].formatted;
-        var fmtVal = val >= 1e6 ? (val / 1e6).toFixed(1) + 'M' :
-                     val >= 1e3 ? (val / 1e3).toFixed(1) + 'K' : String(Math.round(val));
-        el.innerHTML = '<strong style="color:var(--live)">' + fmtVal + '</strong> IFR';
-      });
-    }
-
-    function loadBalancesDirect() {
-      var updated = false;
-      var i = 0;
-      function next() {
-        if (i >= LIVE_CELLS.length) return;
-        var cell = LIVE_CELLS[i];
-        i++;
-        esTokenBalance(cell.addr).then(function (raw) {
-          var el = document.getElementById(cell.id);
+        // Update all balance table cells
+        ALL_ADDRS.forEach(function(item, i) {
+          var el = document.getElementById(item.id);
           if (el) {
-            var val = typeof raw === 'string' ? raw : '0';
-            var parsed = parseFloat(val) / Math.pow(10, IFR_DECIMALS);
-            if (parsed > 0 || KNOWN_BALANCES[cell.addr] === 0) {
-              el.innerHTML = '<strong style="color:var(--live)">' + fmtIFR(val) + '</strong> IFR';
-              if (!updated) { updated = true; setDataSource('etherscan'); }
-            }
+            el.innerHTML = '<strong style="color:var(--live)">' + fmtIFR(results[i + 1]) + '</strong> IFR';
           }
-        }).catch(function () {}).then(function () {
-          setTimeout(next, 200);
         });
-      }
-      next();
+
+        // Burn tracker stat cards
+        var btEl = document.getElementById('burn-total');
+        if (btEl) btEl.textContent = fmtNum(Math.round(burned)) + ' IFR';
+        var bpEl = document.getElementById('burn-pct');
+        if (bpEl) bpEl.textContent = pct.toFixed(4) + '%';
+        var bsEl = document.getElementById('burn-supply');
+        if (bsEl) bsEl.textContent = fmtNum(Math.round(currentSupply)) + ' IFR';
+
+        // Supply distribution table
+        var sbEl = document.getElementById('supply-burned');
+        if (sbEl) sbEl.textContent = fmtNum(Math.round(burned));
+        var sbpEl = document.getElementById('supply-burned-pct');
+        if (sbpEl) sbpEl.textContent = pct.toFixed(2) + '%';
+
+        // Hero timestamp + data source
+        var heroEl = document.getElementById('hero-timestamp');
+        if (heroEl) heroEl.innerHTML = '<span style="color:var(--live)">\u25CF</span> Connected to Ethereum Mainnet \u2014 Updated ' + utcTimestamp();
+        var dsEl = document.getElementById('data-source');
+        if (dsEl) dsEl.innerHTML = '<span style="color:#22c55e">\u25CF</span> Live (Etherscan Direct) \u2014 refreshes every 30s';
+      }).catch(function(e) {
+        console.error('Etherscan fetch failed:', e);
+        var dsEl = document.getElementById('data-source');
+        if (dsEl) dsEl.innerHTML = '<span style="color:#ef4444">\u25CF</span> \u26A0 Etherscan unreachable \u2014 retry in 30s';
+      });
     }
 
-    function loadBalances() {
-      // Stufe 3: Cached values sofort
-      showCachedBalances();
-
-      // Stufe 1: Railway Proxy
-      fetchWithTimeout(PROXY + '/api/ifr/balances', 8000)
-        .then(function (r) { return r.json(); })
-        .then(function (data) {
-          if (!data.balances) throw new Error('no balances');
-          applyProxyBalances(data);
-          setDataSource('railway');
-        })
-        .catch(function () {
-          // Stufe 2: Etherscan Direct
-          loadBalancesDirect();
-        });
-    }
-
-    // ===== Section 4: Live TX Feed =====
+    // ===== TX Feed — Etherscan direct =====
     function renderTxFeed(combined) {
       var tbody = document.getElementById('txfeed-body');
       var statusEl = document.getElementById('txfeed-status');
@@ -1571,19 +1464,13 @@
             '</tr>';
         }).join('');
       }
-      var now = new Date();
       statusEl.innerHTML = '<span style="color:var(--live)">\u25CF</span> Last refreshed: ' +
-        now.getUTCFullYear() + '-' + String(now.getUTCMonth() + 1).padStart(2, '0') + '-' +
-        String(now.getUTCDate()).padStart(2, '0') + ' ' +
-        String(now.getUTCHours()).padStart(2, '0') + ':' +
-        String(now.getUTCMinutes()).padStart(2, '0') + ':' +
-        String(now.getUTCSeconds()).padStart(2, '0') + ' UTC (auto-refresh every 60s)';
+        utcTimestamp() + ' (auto-refresh every 30s)';
     }
 
-    function loadTxFeedDirect() {
-      var allAddrs = ALL.slice(0, 7);
+    function loadTxFeed() {
       var promises = [];
-      allAddrs.forEach(function (item) {
+      TX_ADDRS.forEach(function (item) {
         promises.push(esTxList(item.addr));
         promises.push(esTokenTx(item.addr));
       });
@@ -1591,15 +1478,15 @@
         var combined = [];
         var seen = {};
         for (var i = 0; i < results.length; i += 2) {
-          var ethTxs = Array.isArray(results[i]) ? results[i] : [];
-          var tokenTxs = Array.isArray(results[i + 1]) ? results[i + 1] : [];
-          var walletLabel = allAddrs[i / 2].label;
+          var ethTxs = results[i];
+          var tokenTxs = results[i + 1];
+          var walletLabel = TX_ADDRS[i / 2].label;
           ethTxs.forEach(function (tx) {
             if (tx.isError === '1') return;
             var key = tx.hash + 'ETH';
             if (seen[key]) return;
             seen[key] = true;
-            var isOut = tx.from.toLowerCase() === allAddrs[Math.floor(i / 2)].addr.toLowerCase();
+            var isOut = tx.from.toLowerCase() === TX_ADDRS[Math.floor(i / 2)].addr.toLowerCase();
             combined.push({ ts: tx.timeStamp, wallet: walletLabel, dir: isOut ? 'OUT' : 'IN',
               amount: fmtETH(tx.value) + ' ETH', type: 'ETH', hash: tx.hash });
           });
@@ -1608,133 +1495,28 @@
             var key = tx.hash + 'IFR';
             if (seen[key]) return;
             seen[key] = true;
-            var isOut = tx.from.toLowerCase() === allAddrs[Math.floor(i / 2)].addr.toLowerCase();
+            var isOut = tx.from.toLowerCase() === TX_ADDRS[Math.floor(i / 2)].addr.toLowerCase();
             combined.push({ ts: tx.timeStamp, wallet: walletLabel, dir: isOut ? 'OUT' : 'IN',
               amount: fmtIFR(tx.value) + ' IFR', type: 'IFR', hash: tx.hash });
           });
         }
         combined.sort(function (a, b) { return parseInt(b.ts) - parseInt(a.ts); });
         renderTxFeed(combined.slice(0, 20));
-        setDataSource('etherscan');
       }).catch(function () {
-        document.getElementById('txfeed-status').innerHTML =
-          '<span style="color:#ef4444">\u25CF</span> Error fetching transactions. Retrying in 60s&hellip;';
+        var statusEl = document.getElementById('txfeed-status');
+        if (statusEl) statusEl.innerHTML =
+          '<span style="color:#ef4444">\u25CF</span> Error fetching transactions. Retrying in 30s\u2026';
       });
     }
 
-    function loadTxFeed() {
-      // Stufe 1: Railway Proxy
-      fetchWithTimeout(PROXY + '/api/ifr/txfeed', 8000)
-        .then(function (r) { return r.json(); })
-        .then(function (data) {
-          if (!data.transactions) throw new Error('no txfeed');
-          var combined = data.transactions.map(function (tx) {
-            return {
-              ts: String(tx.timestamp),
-              wallet: PROXY_TX_LABELS[tx.wallet] || tx.wallet,
-              dir: tx.dir,
-              amount: tx.amount,
-              type: tx.type,
-              hash: tx.hash
-            };
-          });
-          renderTxFeed(combined);
-          setDataSource('railway');
-        })
-        .catch(function () {
-          // Stufe 2: Etherscan Direct
-          loadTxFeedDirect();
-        });
-    }
-
-    // ===== Section 5: Burn Tracker =====
-    // Fallback minimum values (documented Community Safe transfer burn)
-    var FALLBACK_BURNED = 1500000;
-    var FALLBACK_SUPPLY = 998500000;
-    var burnDataLive = false;
-
-    function showBurnFallback() {
-      document.getElementById('burn-total').textContent = '\u2265 ' + fmtNum(FALLBACK_BURNED) + ' IFR (estimated)';
-      document.getElementById('burn-pct').textContent = '\u2265 0.15%';
-      document.getElementById('burn-supply').textContent = '\u2264 ' + fmtNum(FALLBACK_SUPPLY) + ' IFR';
-      var sbEl = document.getElementById('supply-burned');
-      var sbpEl = document.getElementById('supply-burned-pct');
-      if (sbEl) sbEl.textContent = '\u2265 ' + fmtNum(FALLBACK_BURNED);
-      if (sbpEl) sbpEl.textContent = '\u2265 0.15%';
-    }
-
-    function applyBurnData(burned, currentSupply) {
-      if (!burned || isNaN(burned) || burned <= 0) { showBurnFallback(); return; }
-      burnDataLive = true;
-      var pct = (burned / INITIAL_SUPPLY * 100);
-      document.getElementById('burn-total').textContent = fmtNum(Math.round(burned)) + ' IFR';
-      document.getElementById('burn-pct').textContent = pct.toFixed(4) + '%';
-      document.getElementById('burn-supply').textContent = fmtNum(Math.round(currentSupply)) + ' IFR';
-      var sbEl = document.getElementById('supply-burned');
-      var sbpEl = document.getElementById('supply-burned-pct');
-      if (sbEl) sbEl.textContent = fmtNum(Math.round(burned));
-      if (sbpEl) sbpEl.textContent = pct.toFixed(2) + '%';
-    }
-
-    function loadBurnDirect() {
-      var url = BASE + '&module=stats&action=tokensupply&contractaddress=' + IFR_TOKEN +
-        (API_KEY ? '&apikey=' + API_KEY : '');
-      fetchWithTimeout(url, 5000).then(function (r) {
-        return r.json();
-      }).then(function (j) {
-        if (j.status === '1' && j.result) {
-          var currentSupply = parseFloat(j.result) / Math.pow(10, IFR_DECIMALS);
-          var burned = INITIAL_SUPPLY - currentSupply;
-          applyBurnData(burned, currentSupply);
-          setDataSource('etherscan');
-        }
-      }).catch(function () {
-        // Stufe 3: Cached values bleiben sichtbar (showBurnFallback)
-      });
-    }
-
-    function loadBurnData() {
-      // Stufe 3: Cached sofort anzeigen
-      if (!burnDataLive) showBurnFallback();
-
-      // Stufe 1: Railway Proxy
-      fetchWithTimeout(PROXY + '/api/ifr/supply', 5000)
-        .then(function (r) { return r.json(); })
-        .then(function (data) {
-          if (!data.totalSupply) throw new Error('no supply');
-          applyBurnData(data.burned, data.totalSupply);
-          setDataSource('railway');
-        })
-        .catch(function () {
-          // Stufe 2: Etherscan Direct
-          loadBurnDirect();
-        });
-    }
-
-    // ===== Hero Timestamp =====
-    function updateHeroTimestamp() {
-      var now = new Date();
-      var ts = now.getUTCFullYear() + '-' + String(now.getUTCMonth() + 1).padStart(2, '0') + '-' +
-        String(now.getUTCDate()).padStart(2, '0') + ' ' +
-        String(now.getUTCHours()).padStart(2, '0') + ':' +
-        String(now.getUTCMinutes()).padStart(2, '0') + ':' +
-        String(now.getUTCSeconds()).padStart(2, '0') + ' UTC';
-      document.getElementById('hero-timestamp').innerHTML =
-        '<span style="color:var(--live)">\u25CF</span> Connected to Ethereum Mainnet &mdash; Block data as of ' + ts;
-    }
-
-    // ===== Init =====
-    loadBalances();
+    // ===== Init — run immediately + every 30s =====
+    refreshAllLiveData();
     loadTxFeed();
-    loadBurnData();
-    updateHeroTimestamp();
 
     setInterval(function () {
-      loadBalances();
+      refreshAllLiveData();
       loadTxFeed();
-      loadBurnData();
-      updateHeroTimestamp();
-    }, 60000);
+    }, 30000);
   })();
   </script>
 
