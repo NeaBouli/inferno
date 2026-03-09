@@ -842,8 +842,73 @@ await governance.execute(proposalId);</code></pre>
         </p>
       </div>
 
-      <!-- ========== 10. Historical Proposals (Sepolia) ========== -->
-      <h2>10. Historical Proposals (Sepolia)</h2>
+      <!-- ========== 10. Mainnet Governance Proposals ========== -->
+      <h2>10. Mainnet Governance Proposals</h2>
+      <p>
+        Governance proposals submitted on the Ethereum Mainnet deployment (<code>0xc43d48E7FDA576C5022d0670B652A622E8caD041</code>):
+      </p>
+
+      <table>
+        <thead>
+          <tr><th>ID</th><th>Action</th><th>Proposed</th><th>ETA</th><th>Status</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>#0</td>
+            <td><code>setFeeExempt(BootstrapVault V1, true)</code><br><span style="font-size:11px;color:var(--muted);">V1 deprecated &mdash; transferFrom bug. Replaced by BootstrapVaultV3.</span></td>
+            <td>05.03.2026</td>
+            <td>07.03.2026 20:12 CET</td>
+            <td><span class="badge" style="background:#22c55e;">Executed</span></td>
+          </tr>
+          <tr>
+            <td>#1</td>
+            <td><code>setFeeExempt(Vesting, true)</code><br><span style="font-size:11px;color:var(--muted);">Redundant &mdash; already exempt before ownership transfer.</span></td>
+            <td>08.03.2026</td>
+            <td>10.03.2026 00:21 CET</td>
+            <td><span class="badge" style="background:#ef4444;">Cancelled</span></td>
+          </tr>
+          <tr>
+            <td>#2</td>
+            <td><code>setFeeExempt(BurnReserve, true)</code><br><span style="font-size:11px;color:var(--muted);">Redundant &mdash; already exempt before ownership transfer.</span></td>
+            <td>08.03.2026</td>
+            <td>10.03.2026 00:21 CET</td>
+            <td><span class="badge" style="background:#ef4444;">Cancelled</span></td>
+          </tr>
+          <tr>
+            <td>#3</td>
+            <td><code>setFeeExempt(BootstrapVaultV3, true)</code><br><span style="font-size:11px;color:var(--muted);">Replaced by #4 with correct timing.</span></td>
+            <td>08.03.2026</td>
+            <td>10.03.2026 00:50 CET</td>
+            <td><span class="badge" style="background:#ef4444;">Cancelled</span></td>
+          </tr>
+          <tr>
+            <td>#4</td>
+            <td><code>setFeeExempt(BootstrapVaultV3, true)</code><br>
+              <span class="address">TX: <code><a href="https://etherscan.io/tx/0x625a6618fe2643259638e1b044b735bea99e96d2269404c078c7771fea0a06ba">0x625a6618&hellip;</a></code></span>
+            </td>
+            <td>09.03.2026</td>
+            <td>11.03.2026 08:45 CET</td>
+            <td><span class="badge" style="background:#eab308;color:#000;">Queued</span></td>
+          </tr>
+          <tr>
+            <td>#5</td>
+            <td><code>setFeeExempt(FeeRouterV1, true)</code><br>
+              <span class="address">TX: <code><a href="https://etherscan.io/tx/0x82d2d1b8c2015481155c9d8c22fd983f84ddfb72f9a2033929495b7ae64c2d26">0x82d2d1b8&hellip;</a></code></span>
+            </td>
+            <td>09.03.2026</td>
+            <td>11.03.2026 08:46 CET</td>
+            <td><span class="badge" style="background:#eab308;color:#000;">Queued</span></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="info-box note" style="margin-top:16px;">
+        <strong>Why were Proposals #1&ndash;#3 cancelled?</strong>
+        Proposals #1 (Vesting) and #2 (BurnReserve) were redundant &mdash; both contracts were already set feeExempt directly before ownership was transferred to the Governance contract. Proposal #3 (BootstrapVaultV3) was cancelled and re-proposed as #4 with correct timing. All cancellations were performed intentionally by the Guardian (Deployer <code>0x6b36&hellip;ed67</code>) on 09.03.2026.
+      </div>
+
+      <!-- ========== 11. Historical Proposals (Sepolia) ========== -->
+      <h2>11. Historical Proposals (Sepolia)</h2>
       <p>
         Below are the governance proposals that have been submitted on the Sepolia testnet deployment:
       </p>
@@ -969,8 +1034,8 @@ await governance.execute(proposalId);</code></pre>
         <li><strong>48h delay is sufficient for testnet operations.</strong> The delay provides enough time for review while not blocking rapid iteration. For mainnet, consider increasing to 72h for critical parameter changes.</li>
       </ul>
 
-      <!-- ========== 11. Current Governance Model ========== -->
-      <h2>11. Current Governance Model</h2>
+      <!-- ========== 12. Current Governance Model ========== -->
+      <h2>12. Current Governance Model</h2>
       <p>
         Inferno currently operates under an <strong>Admin + Timelock</strong> governance model. This is a deliberate choice for the early phase of the protocol.
       </p>
