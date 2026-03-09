@@ -978,36 +978,58 @@
     /* === MOBILE HERO: static banner for tablets/phones === */
     .hero-mobile-banner { display: none; }
     @media (max-width: 1024px) {
-      /* Hide ALL animated banner elements */
-      .ifr-banner-canvas,
-      .ifr-bh-wrap,
-      .ifr-stars-container {
-        display: none !important;
-      }
-      /* Hide the coin animation on mobile */
-      .hero .coin-container {
-        display: none !important;
-      }
-      /* Remove excessive hero padding and overlay */
+      /* Force hero to vertical stack */
       .hero {
-        padding-top: 80px !important;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        padding-top: 0 !important;
         padding-bottom: 24px !important;
         min-height: auto !important;
       }
-      .hero::before {
-        background: linear-gradient(180deg, rgba(10,10,10,0.3) 0%, rgba(10,10,10,0.85) 100%) !important;
+
+      /* Hide ALL animation elements */
+      .ifr-banner-canvas,
+      .ifr-bh-wrap,
+      .ifr-stars-container,
+      .hero .coin-container,
+      .hero .coin,
+      canvas {
+        display: none !important;
       }
-      /* Show mobile banner full-width */
+
+      /* Banner: full width, top of hero, no margin */
       .hero-mobile-banner {
         display: block !important;
-        width: 100%;
-        margin: 0 auto 20px;
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 0 20px 0 !important;
+        padding: 0 !important;
+        order: -1 !important;
       }
+
       .hero-mobile-banner img {
-        width: 100%;
-        height: auto;
-        display: block;
-        border-radius: 0;
+        width: 100% !important;
+        height: auto !important;
+        display: block !important;
+        border-radius: 0 !important;
+        margin: 0 !important;
+      }
+
+      /* Container below banner: centered, full width */
+      .hero .container {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        text-align: center !important;
+        width: 100% !important;
+        padding: 0 20px !important;
+        order: 1 !important;
+      }
+
+      /* Remove hero overlay gradient on mobile */
+      .hero::before {
+        display: none !important;
       }
     }
 
