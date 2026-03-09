@@ -1430,10 +1430,47 @@
       });
     }
 
+    // ===== TX Feed — fetch + empty/error handling =====
+    var txBody = document.getElementById('txfeed-body');
+    var txStatus = document.getElementById('txfeed-status');
+
+    function loadTxFeed() {
+      fetch(PROXY_BASE + '/api/ifr/transactions').then(function(r) { return r.json(); })
+        .then(function(data) {
+          var txs = data.transactions || data || [];
+          if (!Array.isArray(txs) || txs.length === 0) {
+            txBody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#555;padding:24px;font-style:italic;">' +
+              'No recent transactions \u2014 feed activates after Bootstrap &amp; LP launch</td></tr>';
+            txStatus.innerHTML = '<span style="color:#555;">\u25CB</span> No transactions yet';
+            return;
+          }
+          txStatus.innerHTML = '<span style="color:#22c55e">\u25CF</span> ' + txs.length + ' transactions loaded \u2014 ' + dateTime();
+          var rows = '';
+          txs.forEach(function(tx) {
+            rows += '<tr>' +
+              '<td>' + (tx.time || '\u2014') + '</td>' +
+              '<td>' + (tx.label || tx.wallet || '\u2014') + '</td>' +
+              '<td>' + (tx.dir || '\u2014') + '</td>' +
+              '<td>' + (tx.amount || '\u2014') + '</td>' +
+              '<td>' + (tx.type || '\u2014') + '</td>' +
+              '<td>' + (tx.txHash ? '<a href="https://etherscan.io/tx/' + tx.txHash + '" target="_blank" rel="noopener">' + tx.txHash.slice(0,10) + '\u2026</a>' : '\u2014') + '</td>' +
+              '</tr>';
+          });
+          txBody.innerHTML = rows;
+        })
+        .catch(function() {
+          txBody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#555;padding:24px;font-style:italic;">' +
+            'Transaction feed temporarily unavailable</td></tr>';
+          txStatus.innerHTML = '<span style="color:#ef4444">\u25CF</span> Feed unavailable \u2014 retry in 30s';
+        });
+    }
+
     // ===== Init — warm up Railway then fetch data =====
     fetch(PROXY_BASE + '/api/ifr/supply').catch(function() {});
     setTimeout(refreshAllLiveData, 1000);
+    setTimeout(loadTxFeed, 2000);
     setInterval(refreshAllLiveData, 30000);
+    setInterval(loadTxFeed, 30000);
   })();
   </script>
 
