@@ -577,7 +577,8 @@ app.get("/api/ifr/supply", async (_req, res) => {
 });
 
 // GET /api/ifr/txfeed — recent ETH + IFR transfers for key wallets
-app.get("/api/ifr/txfeed", async (_req, res) => {
+// Also aliased as /api/ifr/transactions for transparency.html frontend
+async function handleTxFeed(_req: express.Request, res: express.Response) {
   res.set("Cache-Control", "no-store");
   const cached = getCached("txfeed");
   if (cached) { res.json(cached); return; }
@@ -589,14 +590,15 @@ app.get("/api/ifr/txfeed", async (_req, res) => {
 
     for (let i = 0; i < feedWallets.length; i++) {
       const label = feedWallets[i];
-      const addr = PROTOCOL_ADDRESSES[label].toLowerCase();
+      const addr = PROTOCOL_ADDRESSES[label]?.toLowerCase();
+      if (!addr) continue;
 
       // ETH transactions
       try {
         const ethData = await esApiFetch(
           `&module=account&action=txlist&address=${addr}&page=1&offset=10&sort=desc`
-        ) as { result?: Array<{ from: string; to: string; value: string; hash: string; timeStamp: string; isError: string }> };
-        if (Array.isArray(ethData.result)) {
+        ) as { status?: string; result?: Array<{ from: string; to: string; value: string; hash: string; timeStamp: string; isError: string }> };
+        if (ethData.status === "1" && Array.isArray(ethData.result)) {
           for (const tx of ethData.result) {
             if (tx.isError === "1") continue;
             const key = tx.hash + "ETH";
@@ -619,8 +621,8 @@ app.get("/api/ifr/txfeed", async (_req, res) => {
       try {
         const tokData = await esApiFetch(
           `&module=account&action=tokentx&contractaddress=${IFR_TOKEN}&address=${addr}&page=1&offset=10&sort=desc`
-        ) as { result?: Array<{ from: string; to: string; value: string; hash: string; timeStamp: string; contractAddress: string }> };
-        if (Array.isArray(tokData.result)) {
+        ) as { status?: string; result?: Array<{ from: string; to: string; value: string; hash: string; timeStamp: string; contractAddress: string }> };
+        if (tokData.status === "1" && Array.isArray(tokData.result)) {
           for (const tx of tokData.result) {
             if (tx.contractAddress.toLowerCase() !== IFR_TOKEN.toLowerCase()) continue;
             const key = tx.hash + "IFR";
@@ -647,9 +649,11 @@ app.get("/api/ifr/txfeed", async (_req, res) => {
     res.json(response);
   } catch (err) {
     console.error("Etherscan txfeed error:", err);
-    res.status(502).json({ error: "Failed to fetch transactions" });
+    res.json({ transactions: [] });
   }
-});
+}
+app.get("/api/ifr/txfeed", handleTxFeed);
+app.get("/api/ifr/transactions", handleTxFeed);
 
 const PORT = parseInt(process.env.PORT || "3003", 10);
 app.listen(PORT, () => {
