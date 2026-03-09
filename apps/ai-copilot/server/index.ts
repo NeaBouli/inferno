@@ -501,33 +501,57 @@ function setCache(key: string, data: unknown): void {
   esCache.set(key, { data, ts: Date.now() });
 }
 
+// ── Shared fetch functions (used by routes + background pre-warm) ──
+
+async function fetchBalancesData() {
+  const results: Record<string, { raw: string; formatted: number }> = {};
+  const entries = Object.entries(PROTOCOL_ADDRESSES);
+  for (let i = 0; i < entries.length; i++) {
+    const [label, addr] = entries[i];
+    try {
+      const data = await esApiFetch(
+        `&module=account&action=tokenbalance&contractaddress=${IFR_TOKEN}&address=${addr}&tag=latest`
+      ) as { status?: string; result?: string };
+      const raw = (data.status === "1" && data.result) ? data.result : "0";
+      results[label] = { raw, formatted: parseInt(raw, 10) / 10 ** IFR_DECIMALS };
+    } catch {
+      results[label] = { raw: "0", formatted: 0 };
+    }
+    if (i < entries.length - 1) await new Promise(r => setTimeout(r, 400));
+  }
+  const response = { balances: results, timestamp: new Date().toISOString(), fetchedAt: Date.now(), source: "live" as const };
+  setCache("balances", response);
+  return response;
+}
+
+async function fetchSupplyData() {
+  const supplyData = await esApiFetch(
+    `&module=stats&action=tokensupply&contractaddress=${IFR_TOKEN}`
+  ) as { result?: string };
+  const burnReserveData = await esApiFetch(
+    `&module=account&action=tokenbalance&contractaddress=${IFR_TOKEN}&address=${BURN_ADDRESS}&tag=latest`
+  ) as { result?: string };
+  const totalSupplyRaw = supplyData.result || "0";
+  const burnReserveBalanceRaw = burnReserveData.result || "0";
+  const totalSupply = parseInt(totalSupplyRaw, 10) / 10 ** IFR_DECIMALS;
+  const burnAddressBalance = parseInt(burnReserveBalanceRaw, 10) / 10 ** IFR_DECIMALS;
+  const burned = TOTAL_MINTED - totalSupply;
+  const circulating = totalSupply - burnAddressBalance;
+  const response = {
+    totalMinted: TOTAL_MINTED, totalSupply, burnAddressBalance, burned, circulating,
+    timestamp: new Date().toISOString(), fetchedAt: Date.now(), source: "live" as const,
+  };
+  setCache("supply", response);
+  return response;
+}
+
 // GET /api/ifr/balances — IFR balance for all protocol addresses
 app.get("/api/ifr/balances", async (_req, res) => {
   res.set("Cache-Control", "no-store");
   const cached = getCached("balances");
   if (cached) { res.json(cached); return; }
-
   try {
-    const results: Record<string, { raw: string; formatted: number }> = {};
-    const entries = Object.entries(PROTOCOL_ADDRESSES);
-
-    for (let i = 0; i < entries.length; i++) {
-      const [label, addr] = entries[i];
-      try {
-        const data = await esApiFetch(
-          `&module=account&action=tokenbalance&contractaddress=${IFR_TOKEN}&address=${addr}&tag=latest`
-        ) as { status?: string; result?: string };
-        const raw = (data.status === "1" && data.result) ? data.result : "0";
-        results[label] = { raw, formatted: parseInt(raw, 10) / 10 ** IFR_DECIMALS };
-      } catch {
-        results[label] = { raw: "0", formatted: 0 };
-      }
-      if (i < entries.length - 1) await new Promise(r => setTimeout(r, 400));
-    }
-
-    const response = { balances: results, timestamp: new Date().toISOString(), fetchedAt: Date.now(), source: "live" };
-    setCache("balances", response);
-    res.json(response);
+    res.json(await fetchBalancesData());
   } catch (err) {
     console.error("Etherscan balances error:", err);
     res.status(502).json({ error: "Failed to fetch balances" });
@@ -540,36 +564,8 @@ app.get("/api/ifr/supply", async (_req, res) => {
   res.set("Cache-Control", "no-store");
   const cached = getCached("supply");
   if (cached) { res.json(cached); return; }
-
   try {
-    const supplyData = await esApiFetch(
-      `&module=stats&action=tokensupply&contractaddress=${IFR_TOKEN}`
-    ) as { result?: string };
-
-    const burnReserveData = await esApiFetch(
-      `&module=account&action=tokenbalance&contractaddress=${IFR_TOKEN}&address=${BURN_ADDRESS}&tag=latest`
-    ) as { result?: string };
-
-    const totalSupplyRaw = supplyData.result || "0";
-    const burnReserveBalanceRaw = burnReserveData.result || "0";
-    const totalSupply = parseInt(totalSupplyRaw, 10) / 10 ** IFR_DECIMALS;
-    const burnAddressBalance = parseInt(burnReserveBalanceRaw, 10) / 10 ** IFR_DECIMALS;
-    // burned = genesis supply minus current totalSupply (IFR burns reduce supply via _update)
-    const burned = TOTAL_MINTED - totalSupply;
-    const circulating = totalSupply - burnAddressBalance;
-
-    const response = {
-      totalMinted: TOTAL_MINTED,
-      totalSupply,
-      burnAddressBalance,
-      burned,
-      circulating,
-      timestamp: new Date().toISOString(),
-      fetchedAt: Date.now(),
-      source: "live",
-    };
-    setCache("supply", response);
-    res.json(response);
+    res.json(await fetchSupplyData());
   } catch (err) {
     console.error("Etherscan supply error:", err);
     res.status(502).json({ error: "Failed to fetch supply" });
@@ -654,4 +650,20 @@ app.get("/api/ifr/txfeed", async (_req, res) => {
 const PORT = parseInt(process.env.PORT || "3003", 10);
 app.listen(PORT, () => {
   console.log(`IFR Copilot API on :${PORT}`);
+
+  // Pre-warm cache on startup so first user never waits
+  (async () => {
+    try { await fetchSupplyData(); console.log("[cache] supply pre-warmed"); } catch {}
+    try { await fetchBalancesData(); console.log("[cache] balances pre-warmed"); } catch {}
+  })();
+
+  // Background refresh every 12s — cache always fresh, users get instant responses
+  setInterval(async () => {
+    try {
+      await fetchSupplyData();
+      await fetchBalancesData();
+    } catch (e) {
+      console.error("[cache] pre-warm failed:", (e as Error).message);
+    }
+  }, 12_000);
 });

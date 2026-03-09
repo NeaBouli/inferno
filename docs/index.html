@@ -2305,7 +2305,9 @@ if (isLocked) {
     });
   }
 
-  refreshAllLiveData();
+  // Warm up Railway (may be cold-starting) then fetch data
+  fetch(PROXY_BASE + '/api/ifr/supply').catch(function() {});
+  setTimeout(refreshAllLiveData, 1000);
   setInterval(refreshAllLiveData, 30000);
 })();
 </script>

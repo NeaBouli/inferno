@@ -1406,8 +1406,9 @@
       });
     }
 
-    // ===== Init — run immediately + every 30s =====
-    refreshAllLiveData();
+    // ===== Init — warm up Railway then fetch data =====
+    fetch(PROXY_BASE + '/api/ifr/supply').catch(function() {});
+    setTimeout(refreshAllLiveData, 1000);
     setInterval(refreshAllLiveData, 30000);
   })();
   </script>
