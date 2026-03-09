@@ -978,16 +978,36 @@
     /* === MOBILE HERO: static banner for tablets/phones === */
     .hero-mobile-banner { display: none; }
     @media (max-width: 1024px) {
+      /* Hide ALL animated banner elements */
       .ifr-banner-canvas,
       .ifr-bh-wrap,
       .ifr-stars-container {
         display: none !important;
       }
+      /* Hide the coin animation on mobile */
+      .hero .coin-container {
+        display: none !important;
+      }
+      /* Remove excessive hero padding and overlay */
+      .hero {
+        padding-top: 80px !important;
+        padding-bottom: 24px !important;
+        min-height: auto !important;
+      }
+      .hero::before {
+        background: linear-gradient(180deg, rgba(10,10,10,0.3) 0%, rgba(10,10,10,0.85) 100%) !important;
+      }
+      /* Show mobile banner full-width */
       .hero-mobile-banner {
         display: block !important;
         width: 100%;
-        max-width: 600px;
-        margin: 0 auto 16px;
+        margin: 0 auto 20px;
+      }
+      .hero-mobile-banner img {
+        width: 100%;
+        height: auto;
+        display: block;
+        border-radius: 0;
       }
     }
 
@@ -1042,6 +1062,10 @@
 
 <!-- ── HERO ───────────────────────────────────────── -->
 <section class="hero" id="hero">
+  <!-- MOBILE: static banner (hidden on desktop via CSS) -->
+  <div class="hero-mobile-banner">
+    <img src="assets/IFR_BannerMobile.png" alt="Inferno $IFR">
+  </div>
   <!-- IFR ANIMATED BANNER START -->
   <div class="ifr-stars-container" id="ifr-bstars"></div>
   <canvas class="ifr-banner-canvas" id="ifr-c-parts"></canvas>
@@ -1057,9 +1081,6 @@
     <div class="ifr-bh-void" id="ifr-bh-void"></div>
   </div>
   <!-- IFR ANIMATED BANNER END -->
-  <div class="hero-mobile-banner">
-    <img src="assets/IFR_BannerMobile.png" alt="Inferno $IFR" style="width:100%;height:auto;border-radius:12px;">
-  </div>
   <div class="container">
     <div class="coin-container">
       <div class="coin">
