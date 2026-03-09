@@ -945,6 +945,7 @@
       .flow-arrow { transform: rotate(90deg); }
       .coin-container { width: 120px; height: 120px; }
       .token-symbol { width: 60px; height: 60px; }
+      #dist-chart-row { flex-direction: column !important; align-items: center !important; }
     }
 
     /* === IFR ANIMATED BANNER === */
@@ -1202,18 +1203,18 @@
       </div>
       <div class="allocation reveal" id="live-distribution">
         <h3><span class="live-dot"></span> Live Token Distribution</h3>
-        <p style="font-size:12px;color:var(--text-muted);margin-bottom:4px;">Direct from Ethereum via Etherscan &mdash; refreshes every 30s</p>
+        <p style="font-size:12px;color:var(--text-muted);margin-bottom:4px;">Live via Railway Proxy &rarr; Ethereum &mdash; refreshes every 30s</p>
         <p style="font-size:11px;margin-bottom:20px;"><span class="live-updated-at" style="color:#00ffa0;">Loading live data&hellip;</span> <span class="live-status" style="color:#ff4500;"></span></p>
-        <div style="display:flex;flex-wrap:wrap;gap:32px;align-items:center;justify-content:center;">
-          <div style="position:relative;width:240px;height:240px;flex-shrink:0;">
-            <canvas id="dist-donut" width="480" height="480" style="width:240px;height:240px;"></canvas>
+        <div id="dist-chart-row" style="display:flex;flex-direction:row;align-items:center;gap:2rem;justify-content:center;">
+          <div style="position:relative;flex:0 0 auto;width:260px;height:260px;">
+            <canvas id="dist-donut" width="520" height="520" style="width:260px;height:260px;"></canvas>
             <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;">
               <div id="donut-supply" style="font-size:20px;font-weight:700;color:#fff;">---</div>
               <div style="font-size:11px;color:var(--text-muted);">Current Supply</div>
             </div>
           </div>
-          <div id="dist-legend" style="display:flex;flex-direction:column;gap:10px;min-width:220px;">
-            <div style="font-size:13px;color:var(--text-muted);">Loading Etherscan data&hellip;</div>
+          <div id="dist-legend" style="flex:1 1 auto;display:flex;flex-direction:column;gap:0.4rem;min-width:220px;">
+            <div style="font-size:13px;color:var(--text-muted);">Loading live data&hellip;</div>
           </div>
         </div>
         <div style="border-top:1px solid rgba(255,255,255,0.08);margin-top:20px;padding-top:16px;">
@@ -1278,7 +1279,7 @@
     <!-- Genesis & Project Wallets -->
     <div class="reveal" style="margin-top:40px;">
       <h3 style="text-align:center;font-size:18px;font-weight:700;margin-bottom:6px;">Genesis &amp; Project Wallets</h3>
-      <p style="text-align:center;font-size:12px;color:var(--text-muted);margin-bottom:24px;">All protocol wallets &mdash; live balances via Etherscan &mdash; <span class="live-updated-at" style="color:#00ffa0;">loading&hellip;</span></p>
+      <p style="text-align:center;font-size:12px;color:var(--text-muted);margin-bottom:24px;">All protocol wallets &mdash; live balances via Railway Proxy &mdash; <span class="live-updated-at" style="color:#00ffa0;">loading&hellip;</span></p>
       <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px;">
 
         <div style="background:#111113;border:1px solid #222225;border-radius:8px;padding:14px 16px;">
@@ -2127,8 +2128,13 @@ if (isLocked) {
     document.querySelectorAll('[data-live-key]').forEach(function(el) {
       el.textContent = 'N/A';
     });
+    var supplyEl = document.getElementById('donut-supply');
+    if (supplyEl) supplyEl.textContent = 'N/A';
     document.querySelectorAll('.live-status').forEach(function(el) {
       el.textContent = '\u26A0 Data unavailable \u2014 retry in 30s';
+    });
+    document.querySelectorAll('.live-updated-at').forEach(function(el) {
+      el.textContent = 'Connection failed';
     });
   }
 
@@ -2247,19 +2253,20 @@ if (isLocked) {
       var bal = res[1].balances;
       if (!supply || !supply.totalSupply || !bal) { showNotAvailable(); return; }
 
+      function v(label) { return (bal[label] && bal[label].formatted != null) ? bal[label].formatted : 0; }
       var data = {
         supply:    supply.totalSupply,
         burned:    Math.max(0, supply.burned || (GENESIS_SUPPLY - supply.totalSupply)),
-        deployer:  bal.Deployer ? bal.Deployer.formatted : 0,
-        treasury:  bal.GnosisSafe ? bal.GnosisSafe.formatted : 0,
-        community: bal.CommunitySafe ? bal.CommunitySafe.formatted : 0,
-        vesting:   bal.Vesting ? bal.Vesting.formatted : 0,
-        liqRes:    bal.LiquidityReserve ? bal.LiquidityReserve.formatted : 0,
-        partner:   bal.PartnerVault ? bal.PartnerVault.formatted : 0,
-        bootstrap: bal.BootstrapVaultV3 ? bal.BootstrapVaultV3.formatted : 0,
-        buyback:   bal.BuybackVault ? bal.BuybackVault.formatted : 0,
-        burnRes:   bal.BurnReserve ? bal.BurnReserve.formatted : 0,
-        ifrLock:   bal.IFRLock ? bal.IFRLock.formatted : 0
+        deployer:  v('Deployer'),
+        treasury:  v('GnosisSafe'),
+        community: v('CommunitySafe'),
+        vesting:   v('Vesting'),
+        liqRes:    v('LiquidityReserve'),
+        partner:   v('PartnerVault'),
+        bootstrap: v('BootstrapVaultV3'),
+        buyback:   v('BuybackVault'),
+        burnRes:   v('BurnReserve'),
+        ifrLock:   v('IFRLock')
       };
 
       var canvas = document.getElementById('dist-donut');
