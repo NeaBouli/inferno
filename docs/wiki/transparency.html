@@ -1318,13 +1318,11 @@
       return v.toFixed(0);
     }
 
-    function utcTimestamp() {
-      var now = new Date();
-      return now.getUTCFullYear() + '-' + String(now.getUTCMonth() + 1).padStart(2, '0') + '-' +
-        String(now.getUTCDate()).padStart(2, '0') + ' ' +
-        String(now.getUTCHours()).padStart(2, '0') + ':' +
-        String(now.getUTCMinutes()).padStart(2, '0') + ':' +
-        String(now.getUTCSeconds()).padStart(2, '0') + ' UTC';
+    function dateTime() {
+      return new Date().toLocaleString('de-DE', {
+        day: '2-digit', month: '2-digit', year: 'numeric',
+        hour: '2-digit', minute: '2-digit', second: '2-digit'
+      });
     }
 
     function showNotAvailable() {
@@ -1340,8 +1338,8 @@
       if (dsEl) dsEl.innerHTML = '<span style="color:#ef4444">\u25CF</span> \u26A0 Data unavailable \u2014 retry in 30s';
     }
 
-    function refreshAllLiveData() {
-      Promise.all([
+    function doRefresh() {
+      return Promise.all([
         fetch(PROXY_BASE + '/api/ifr/supply').then(function(r) { return r.json(); }),
         fetch(PROXY_BASE + '/api/ifr/balances').then(function(r) { return r.json(); })
       ]).then(function(res) {
@@ -1390,12 +1388,21 @@
 
         // Hero timestamp + data source
         var heroEl = document.getElementById('hero-timestamp');
-        if (heroEl) heroEl.innerHTML = '<span style="color:var(--live)">\u25CF</span> Connected to Ethereum Mainnet \u2014 Updated ' + utcTimestamp();
+        if (heroEl) heroEl.innerHTML = '<span style="color:var(--live)">\u25CF</span> Connected to Ethereum Mainnet \u2014 Updated ' + dateTime();
         var dsEl = document.getElementById('data-source');
         if (dsEl) dsEl.innerHTML = '<span style="color:#22c55e">\u25CF</span> Live (Railway Proxy) \u2014 refreshes every 30s';
-      }).catch(function(e) {
-        console.error('Railway proxy fetch failed:', e);
-        showNotAvailable();
+      });
+    }
+
+    function refreshAllLiveData() {
+      doRefresh().catch(function(e) {
+        console.error('Live data failed, retrying in 3s:', e);
+        setTimeout(function() {
+          doRefresh().catch(function(e2) {
+            console.error('Retry also failed:', e2);
+            showNotAvailable();
+          });
+        }, 3000);
       });
     }
 
