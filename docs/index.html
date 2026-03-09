@@ -2105,20 +2105,8 @@ if (isLocked) {
 <script>
 (function() {
   'use strict';
-  var IFR_TOKEN = '0x77e99917Eca8539c62F509ED1193ac36580A6e7B';
+  var PROXY_BASE = 'https://ifr-ai-copilot-production.up.railway.app';
   var GENESIS_SUPPLY = 1000000000;
-  var WALLETS = {
-    deployer:      '0x6b36687b0cd4386fb14cf565B67D7862110Fed67',
-    treasurySafe:  '0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b',
-    communitySafe: '0xaC5687547B2B21d80F8fd345B51e608d476667C7',
-    vesting:       '0x2694Bc84e8D5251E9E4Ecd4B2Ae3f866d6106271',
-    liquidityRes:  '0xdc0309804803b3A105154f6073061E3185018f64',
-    partnerVault:  '0xc6eb7714bCb035ebc2D4d9ba7B3762ef7B9d4F7D',
-    bootstrapV3:   '0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141',
-    buybackVault:  '0x670D293e3D65f96171c10DdC8d88B96b0570F812',
-    burnReserve:   '0xaA1496133B6c274190A2113410B501C5802b6fCF',
-    ifrLock:       '0x769928aBDfc949D0718d8766a1C2d7dBb63954Eb'
-  };
 
   var CATS = [
     { key: 'burned',    label: '\uD83D\uDD25 Burned',             color: '#ff4500' },
@@ -2135,22 +2123,12 @@ if (isLocked) {
     { key: 'supply',    label: '\uD83D\uDCCA Current Supply',     color: '#fff'    }
   ];
 
-  function fetchIFRBalance(address) {
-    var url = 'https://api.etherscan.io/api?module=account&action=tokenbalance' +
-      '&contractaddress=' + IFR_TOKEN + '&address=' + address +
-      '&tag=latest&apikey=YourApiKeyToken';
-    return fetch(url).then(function(r) { return r.json(); }).then(function(d) {
-      if (d.status !== '1') return 0;
-      return Number(d.result) / 1e9;
+  function showNotAvailable() {
+    document.querySelectorAll('[data-live-key]').forEach(function(el) {
+      el.textContent = 'N/A';
     });
-  }
-
-  function fetchTotalSupply() {
-    var url = 'https://api.etherscan.io/api?module=stats&action=tokensupply' +
-      '&contractaddress=' + IFR_TOKEN + '&apikey=YourApiKeyToken';
-    return fetch(url).then(function(r) { return r.json(); }).then(function(d) {
-      if (d.status !== '1') return 0;
-      return Number(d.result) / 1e9;
+    document.querySelectorAll('.live-status').forEach(function(el) {
+      el.textContent = '\u26A0 Data unavailable \u2014 retry in 30s';
     });
   }
 
@@ -2261,28 +2239,27 @@ if (isLocked) {
   }
 
   function refreshAllLiveData() {
-    var keys = Object.keys(WALLETS);
-    var calls = [fetchTotalSupply()];
-    keys.forEach(function(k) { calls.push(fetchIFRBalance(WALLETS[k])); });
-
-    Promise.all(calls).then(function(results) {
-      var supply = results[0];
-      var b = {};
-      keys.forEach(function(k, i) { b[k] = results[i + 1]; });
+    Promise.all([
+      fetch(PROXY_BASE + '/api/ifr/supply').then(function(r) { return r.json(); }),
+      fetch(PROXY_BASE + '/api/ifr/balances').then(function(r) { return r.json(); })
+    ]).then(function(res) {
+      var supply = res[0];
+      var bal = res[1].balances;
+      if (!supply || !supply.totalSupply || !bal) { showNotAvailable(); return; }
 
       var data = {
-        supply:    supply,
-        burned:    Math.max(0, GENESIS_SUPPLY - supply),
-        deployer:  b.deployer,
-        treasury:  b.treasurySafe,
-        community: b.communitySafe,
-        vesting:   b.vesting,
-        liqRes:    b.liquidityRes,
-        partner:   b.partnerVault,
-        bootstrap: b.bootstrapV3,
-        buyback:   b.buybackVault,
-        burnRes:   b.burnReserve,
-        ifrLock:   b.ifrLock
+        supply:    supply.totalSupply,
+        burned:    Math.max(0, supply.burned || (GENESIS_SUPPLY - supply.totalSupply)),
+        deployer:  bal.Deployer ? bal.Deployer.formatted : 0,
+        treasury:  bal.GnosisSafe ? bal.GnosisSafe.formatted : 0,
+        community: bal.CommunitySafe ? bal.CommunitySafe.formatted : 0,
+        vesting:   bal.Vesting ? bal.Vesting.formatted : 0,
+        liqRes:    bal.LiquidityReserve ? bal.LiquidityReserve.formatted : 0,
+        partner:   bal.PartnerVault ? bal.PartnerVault.formatted : 0,
+        bootstrap: bal.BootstrapVaultV3 ? bal.BootstrapVaultV3.formatted : 0,
+        buyback:   bal.BuybackVault ? bal.BuybackVault.formatted : 0,
+        burnRes:   bal.BurnReserve ? bal.BurnReserve.formatted : 0,
+        ifrLock:   bal.IFRLock ? bal.IFRLock.formatted : 0
       };
 
       var canvas = document.getElementById('dist-donut');
@@ -2300,10 +2277,8 @@ if (isLocked) {
         el.textContent = '';
       });
     }).catch(function(e) {
-      console.error('Etherscan fetch failed:', e);
-      document.querySelectorAll('.live-status').forEach(function(el) {
-        el.textContent = '\u26A0 Etherscan unreachable \u2014 retry in 30s';
-      });
+      console.error('Railway proxy fetch failed:', e);
+      showNotAvailable();
     });
   }
 
