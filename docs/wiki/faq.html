@@ -232,7 +232,7 @@
       color: var(--text);
     }
 
-    p code, li code, td code {
+    p code, li code, td code, .faq-a code {
       background: rgba(255, 255, 255, 0.06);
       padding: 2px 6px;
       border-radius: 4px;
@@ -295,6 +295,49 @@
     .callout-green {
       background: rgba(34, 197, 94, 0.06);
       border-left-color: var(--green);
+    }
+
+    /* ---------- Quick Nav ---------- */
+    .quick-nav {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 20px 24px;
+      margin-bottom: 32px;
+    }
+
+    .quick-nav-label {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+
+    .quick-nav-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .quick-nav-links a {
+      display: inline-block;
+      padding: 6px 14px;
+      background: rgba(255, 69, 0, 0.08);
+      border: 1px solid rgba(255, 69, 0, 0.2);
+      border-radius: 6px;
+      color: var(--accent);
+      font-size: 13px;
+      font-weight: 500;
+      text-decoration: none;
+      transition: background 0.2s, border-color 0.2s;
+    }
+
+    .quick-nav-links a:hover {
+      background: rgba(255, 69, 0, 0.15);
+      border-color: rgba(255, 69, 0, 0.4);
+      text-decoration: none;
     }
 
     /* ---------- FAQ specific ---------- */
@@ -470,214 +513,392 @@
     <!-- Main content -->
     <main class="main">
 
-      <h1><span class="accent">FAQ</span></h1>
+      <h1><span class="accent">Frequently Asked Questions</span></h1>
       <p class="subtitle">
-        Frequently asked questions about the Inferno protocol, IFR token, locking, governance, and security.
+        Comprehensive answers about $IFR &mdash; tokenomics, security, governance, bootstrap, and the road to decentralization. 10 sections, 61 questions.
       </p>
 
-      <!-- ========== 1. General ========== -->
-      <h2>1. General</h2>
+      <!-- Quick Nav -->
+      <div class="quick-nav">
+        <p class="quick-nav-label">Jump to Section</p>
+        <div class="quick-nav-links">
+          <a href="#tokenomics">Tokenomics &amp; Supply</a>
+          <a href="#security">Security &amp; Audit</a>
+          <a href="#governance">Governance</a>
+          <a href="#bootstrap">Bootstrap &amp; Liquidity</a>
+          <a href="#rugpull">Is This a Scam?</a>
+          <a href="#vesting">Vesting &amp; Team</a>
+          <a href="#dao">DAO &amp; Roadmap</a>
+          <a href="#technical">Technical / Developer</a>
+          <a href="#benefits">Benefits Network</a>
+          <a href="#general">General</a>
+        </div>
+      </div>
+
+      <!-- ========== 1. Tokenomics & Supply ========== -->
+      <h2 id="tokenomics">1. Tokenomics &amp; Supply</h2>
 
       <div class="faq-section">
         <div class="faq-item">
-          <button class="faq-q"><span>What is Inferno ($IFR)?</span><span class="icon">+</span></button>
-          <div class="faq-a">Inferno is a deflationary ERC-20 token on Ethereum with a fee-on-transfer mechanism. Every transfer permanently burns 2.5% and routes 1% to a pool fee receiver. The token powers a lock-to-access model where users lock IFR to gain premium features in builder products.</div>
+          <button class="faq-q"><span>What is $IFR and what makes it deflationary?</span><span class="icon">+</span></button>
+          <div class="faq-a">Inferno ($IFR) is an ERC-20 utility token on Ethereum Mainnet with a fixed genesis supply of 1,000,000,000 tokens and 9 decimals. There is no mint function &mdash; supply can only decrease. Every transfer permanently burns 2.5% (2% sender-side + 0.5% recipient-side) and routes 1% to a pool fee receiver. This makes IFR structurally deflationary: the more it is used, the scarcer it becomes.</div>
         </div>
 
         <div class="faq-item">
-          <button class="faq-q"><span>What does deflationary mean?</span><span class="icon">+</span></button>
-          <div class="faq-a">Deflationary means the total supply decreases over time. Every IFR transfer burns 2.5% permanently &mdash; those tokens are sent to the zero address and can never be recovered. There is no mint function, so supply can only go down. Starting from 1 billion IFR, the circulating supply shrinks with every transaction.</div>
+          <button class="faq-q"><span>What is the total token supply and distribution?</span><span class="icon">+</span></button>
+          <div class="faq-a">Fixed genesis supply: 1,000,000,000 IFR distributed across 6 buckets at deployment:<br><br>&bull; <strong>40% DEX Liquidity</strong> (400M) &mdash; Uniswap V2 LP<br>&bull; <strong>20% LiquidityReserve</strong> (200M) &mdash; locked until 01.09.2026<br>&bull; <strong>15% Team Vesting</strong> (150M) &mdash; 12-month cliff, 36-month linear vesting<br>&bull; <strong>15% Treasury Safe</strong> (150M) &mdash; Gnosis Safe multisig<br>&bull; <strong>6% Community &amp; Grants</strong> (60M) &mdash; community initiatives<br>&bull; <strong>4% BuilderVault</strong> (40M) &mdash; builder ecosystem rewards<br><br>See <a href="tokenomics.html">Tokenomics</a> for the full breakdown.</div>
         </div>
 
         <div class="faq-item">
-          <button class="faq-q"><span>What is the difference between Lock and Staking?</span><span class="icon">+</span></button>
-          <div class="faq-a">Locking means your tokens are held in a smart contract to prove commitment &mdash; you can unlock at any time with no penalties or cooldown. There are no yield rewards for locking. Staking typically involves earning rewards over time and may have lock-up periods. IFR uses locking for access verification, not yield generation.</div>
+          <button class="faq-q"><span>Can new tokens ever be minted?</span><span class="icon">+</span></button>
+          <div class="faq-a">No &mdash; and this is one of the strongest guarantees in the protocol. There is no <code>mint()</code> function in the InfernoToken contract. No admin, no governance proposal, no upgrade can ever create new IFR tokens. The genesis supply is the maximum that will ever exist. This is verified in the open-source code and confirmed by Slither static analysis.</div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q"><span>How does the burn math work? Show me an example.</span><span class="icon">+</span></button>
+          <div class="faq-a">Example: Alice sends 10,000 IFR to Bob.<br><br>&bull; Sender burn (2.0%): 200 IFR burned from Alice's amount<br>&bull; Recipient burn (0.5%): 50 IFR burned from remaining amount<br>&bull; Pool fee (1.0%): 100 IFR sent to the pool fee receiver<br>&bull; Bob receives: 9,650 IFR<br>&bull; Total burned: 250 IFR (permanently removed from supply)<br><br>The fee is percentage-based, so as supply shrinks, each burn removes fewer absolute tokens. This creates asymptotic deflation &mdash; the burn rate slows exponentially.</div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q"><span>What is the difference between burning and locking?</span><span class="icon">+</span></button>
+          <div class="faq-a"><strong>Burning</strong> permanently destroys tokens by sending them to the zero address. They can never be recovered. This reduces total supply.<br><br><strong>Locking</strong> moves tokens into the IFRLock smart contract where they are held as a verifiable commitment. Locked tokens remain owned by the user and can be unlocked at any time. Locking reduces circulating supply but not total supply.<br><br>Both mechanisms reduce available supply, but only burning is permanent.</div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q"><span>Can all tokens eventually be burned?</span><span class="icon">+</span></button>
+          <div class="faq-a">Practically impossible. Burns are percentage-based: 2.5% of 1 billion is 25 million, but 2.5% of 1 million is only 25,000. The burn rate slows exponentially (asymptotic behaviour). Additionally: locked tokens do not move (no burn), the Vesting contract holds 150M locked for years, the LiquidityReserve holds 200M locked, and Governance can reduce fee rates if needed. The ecosystem is self-regulating.</div>
         </div>
 
         <div class="faq-item">
           <button class="faq-q"><span>Why 9 decimals instead of 18?</span><span class="icon">+</span></button>
-          <div class="faq-a">IFR uses 9 decimals as a deliberate design choice for the token's intended use case. This provides sufficient precision for fee calculations and lock amounts while keeping numbers more human-readable. One IFR equals 1,000,000,000 base units (1e9).</div>
+          <div class="faq-a">IFR uses 9 decimals as a deliberate design choice. This provides sufficient precision for fee calculations and lock amounts while keeping numbers more human-readable. One IFR equals 1,000,000,000 base units (1e9). All integrations must use <code>parseUnits(amount, 9)</code> instead of the typical 18 decimals.</div>
         </div>
 
         <div class="faq-item">
-          <button class="faq-q"><span>Is there a presale or VC backing?</span><span class="icon">+</span></button>
-          <div class="faq-a">No. Inferno follows a Community Fair Launch Model (CFLM) &mdash; no presale, no venture capital, no seed round. All 1 billion IFR tokens are distributed at deployment: 40% to DEX liquidity, 20% to the liquidity reserve, 15% to the team (vested over 36 months with a 12-month cliff), 15% to treasury, 6% to community grants, and 4% to the builder ecosystem.</div>
+          <button class="faq-q"><span>When does the LiquidityReserve unlock?</span><span class="icon">+</span></button>
+          <div class="faq-a">The LiquidityReserve (200M IFR) is locked until <strong>01.09.2026</strong>. After that date, the LP tokens can be withdrawn by the owner (Governance contract) for LP expansion. The reserve uses rate limits to prevent sudden large withdrawals. See <a href="transparency.html">Transparency</a> for on-chain verification.</div>
         </div>
       </div>
 
-      <!-- ========== 2. Token & Lock ========== -->
-      <h2>2. Token &amp; Lock</h2>
-
-      <div class="faq-section">
-        <div class="faq-item">
-          <button class="faq-q"><span>How do I add IFR to MetaMask?</span><span class="icon">+</span></button>
-          <div class="faq-a">Open MetaMask, click &ldquo;Import Tokens&rdquo;, and paste the IFR contract address (<code>0x77e99917Eca8539c62F509ED1193ac36580A6e7B</code>). Set decimals to 9. Make sure you are connected to Ethereum Mainnet. For testnet testing, see the <a href="testnet.html" style="color:#ff4500;">Testnet</a> page.</div>
-        </div>
-
-        <div class="faq-item">
-          <button class="faq-q"><span>How do I lock IFR tokens?</span><span class="icon">+</span></button>
-          <div class="faq-a">Call the <code>lock(amount, lockType)</code> function on the IFRLock contract. The lockType is a string tag identifying which builder product you are locking for. You can also use the Token Dashboard which provides a graphical interface for locking. Your tokens move from your wallet into the contract and can be unlocked at any time.</div>
-        </div>
-
-        <div class="faq-item">
-          <button class="faq-q"><span>What happens with my locked tokens?</span><span class="icon">+</span></button>
-          <div class="faq-a">Your tokens are held in the IFRLock smart contract. No one &mdash; not the team, not governance, not any admin &mdash; can access or move them. They remain yours. Builder products verify your lock on-chain via <code>isLocked(wallet, minAmount)</code> and grant access based on the result.</div>
-        </div>
-
-        <div class="faq-item">
-          <button class="faq-q"><span>Can I unlock at any time?</span><span class="icon">+</span></button>
-          <div class="faq-a">Yes. There is no lock-up period, no cooldown, and no penalty for unlocking. Call <code>unlock()</code> and your full locked amount returns to your wallet instantly. The IFRLock contract is fee-exempt, so no transfer fees are deducted during lock or unlock operations.</div>
-        </div>
-
-        <div class="faq-item">
-          <button class="faq-q"><span>What is the minimum lock amount?</span><span class="icon">+</span></button>
-          <div class="faq-a">The minimum lock amount depends on the builder product. Each builder sets their own tier requirement. Typical tiers are 500, 1,000, 5,000, or 10,000 IFR. The IFRLock contract itself has no hardcoded minimum &mdash; it accepts any non-zero amount.</div>
-        </div>
-
-        <div class="faq-item">
-          <button class="faq-q"><span>Why is there a 3.5% transfer fee?</span><span class="icon">+</span></button>
-          <div class="faq-a">The transfer fee powers the deflation mechanism: 2.5% is permanently burned (supply decreases with every transfer) and 1.0% flows into the BuybackVault (strengthens liquidity). IFR is not a trading token &mdash; users lock once and use benefits permanently. Transfers are rare (buy, lock, unlock), not daily. For protocol-internal operations (Lock, Unlock, Rewards), fee-exempt status applies &mdash; zero fees.</div>
-        </div>
-
-        <div class="faq-item">
-          <button class="faq-q"><span>Which addresses are fee-exempt?</span><span class="icon">+</span></button>
-          <div class="faq-a">IFRLock, LiquidityReserve, BuybackVault, BurnReserve, and PartnerVault are fee-exempt. This ensures internal protocol transfers (lock, unlock, reward payouts) incur no fees. The exemption list is on-chain transparent and only changeable via Governance proposals with a 48-hour timelock. The full status is documented in the <a href="transparency.html">Transparency Report</a>.</div>
-        </div>
-
-        <div class="faq-item">
-          <button class="faq-q"><span>How does the BuybackVault work?</span><span class="icon">+</span></button>
-          <div class="faq-a">The BuybackVault collects the 1% pool fee from every transfer. After a 60-day activation delay, it uses Uniswap V2 to buy back IFR with accumulated ETH. 50% of bought-back tokens are burned permanently, 50% go to the treasury. This creates additional buy pressure and deflation. The vault has a cooldown period between buybacks and a 5% maximum slippage setting.</div>
-        </div>
-
-        <div class="faq-item">
-          <button class="faq-q"><span>Is IFR compatible with DEX trading?</span><span class="icon">+</span></button>
-          <div class="faq-a">Yes. IFR works on Uniswap V2. Users should set slippage to at least 4% (3.5% fee + AMM slippage). The FeeRouter contract provides optimized routing with correct parameters. Fee-on-transfer tokens are fully DEX-compatible but require CEX coordination for centralized listings, which is planned for Phase 3+ (Growth).</div>
-        </div>
-      </div>
-
-      <!-- ========== 3. Builders & Benefits ========== -->
-      <h2>3. Builders &amp; Benefits</h2>
-
-      <div class="faq-section">
-        <div class="faq-item">
-          <button class="faq-q"><span>How does the Benefits Network work?</span><span class="icon">+</span></button>
-          <div class="faq-a">The Benefits Network connects IFR lockers with builder businesses. Users lock IFR tokens, and builder products check the lock status on-chain to grant premium access. Builders earn Creator Rewards from the PartnerVault for each locking user. It is a two-sided marketplace built on verifiable on-chain data.</div>
-        </div>
-
-        <div class="faq-item">
-          <button class="faq-q"><span>What are the tier requirements?</span><span class="icon">+</span></button>
-          <div class="faq-a">Each builder defines their own tiers. A typical structure might be: Basic (500 IFR), Standard (1,000 IFR), Premium (5,000 IFR), VIP (10,000 IFR). The builder calls <code>isLocked(wallet, minAmount)</code> with the tier threshold and grants features accordingly.</div>
-        </div>
-
-        <div class="faq-item">
-          <button class="faq-q"><span>How is the lock status verified?</span><span class="icon">+</span></button>
-          <div class="faq-a">Builders call the read-only function <code>isLocked(walletAddress, minimumAmount)</code> on the IFRLock contract. It returns true or false. This is a single on-chain call with no API keys, no user databases, and no privacy concerns. The builder never needs to store wallet addresses.</div>
-        </div>
-
-        <div class="faq-item">
-          <button class="faq-q"><span>How do I become a builder?</span><span class="icon">+</span></button>
-          <div class="faq-a">Builders register through the onboarding process described in the Business Onboarding documentation. After registration, a governance proposal adds the builder to the PartnerVault. Builder tiers range from Launch Builders (up to 5M IFR allocation) to Tier 3 (500K IFR). All allocations are milestone-based and vested.</div>
-        </div>
-
-        <div class="faq-item">
-          <button class="faq-q"><span>What are Creator Rewards?</span><span class="icon">+</span></button>
-          <div class="faq-a">When a user locks IFR for a builder's product, the builder earns a percentage of the lock amount from the Builder Ecosystem Pool (40M IFR). The reward rate is governance-controlled with hard bounds of 5&ndash;25% (policy target 10&ndash;20%). Rewards vest over 6&ndash;12 months. The system is designed to always remove more IFR from circulation than it distributes.</div>
-        </div>
-      </div>
-
-      <!-- ========== 4. FeeRouter & Points ========== -->
-      <h2>4. FeeRouter &amp; Points</h2>
-
-      <div class="faq-section">
-        <div class="faq-item">
-          <button class="faq-q"><span>What is the FeeRouter?</span><span class="icon">+</span></button>
-          <div class="faq-a">The FeeRouter is a smart contract that processes protocol fees on IFR swaps. The default fee is 0.05% (5 basis points) &mdash; significantly lower than standard DEX fees. It supports EIP-712 signed vouchers for fee discounts and has a governance-enforced hard cap of 0.25% (25 bps).</div>
-        </div>
-
-        <div class="faq-item">
-          <button class="faq-q"><span>What are IFR Points?</span><span class="icon">+</span></button>
-          <div class="faq-a">IFR Points are off-chain loyalty rewards earned through real actions in the ecosystem (wallet setup, token import, lock guide). At 100 points, you receive a one-time discount voucher for the FeeRouter. Points are NOT a token &mdash; they are not transferable, have no trading value, and cannot be sold.</div>
-        </div>
-
-        <div class="faq-item">
-          <button class="faq-q"><span>How do I earn points?</span><span class="icon">+</span></button>
-          <div class="faq-a">Points are awarded for five event types: wallet connection, token import, completing the lock guide, first lock, and referral. Each event type has a daily limit to prevent abuse. Points are tracked off-chain in the Points Backend using SIWE (Sign-In with Ethereum) authentication.</div>
-        </div>
-
-        <div class="faq-item">
-          <button class="faq-q"><span>What can I do with points?</span><span class="icon">+</span></button>
-          <div class="faq-a">Points can be redeemed for a one-time protocol fee discount voucher when you reach 100 points. The voucher is EIP-712 signed, tied to your wallet address, and valid for a single FeeRouter swap. There are no other current uses for points &mdash; and there are no promises of future uses.</div>
-        </div>
-
-        <div class="faq-item">
-          <button class="faq-q"><span>Are IFR Points a token?</span><span class="icon">+</span></button>
-          <div class="faq-a">No. IFR Points are purely off-chain data stored in a database. They exist on no blockchain, cannot be transferred between wallets, have zero monetary value, and are not tradeable. They serve one purpose: qualifying for a single-use protocol fee discount. This is intentional to avoid regulatory ambiguity.</div>
-        </div>
-      </div>
-
-      <!-- ========== 5. Governance ========== -->
-      <h2>5. Governance</h2>
-
-      <div class="faq-section">
-        <div class="faq-item">
-          <button class="faq-q"><span>How does governance work?</span><span class="icon">+</span></button>
-          <div class="faq-a">The Governance contract is a timelock governor. The owner creates proposals (encoded function calls on target contracts). Each proposal must wait the full delay period (default 48 hours) before it can be executed. This gives the community time to review and the Guardian time to cancel if needed.</div>
-        </div>
-
-        <div class="faq-item">
-          <button class="faq-q"><span>What is the Timelock?</span><span class="icon">+</span></button>
-          <div class="faq-a">The timelock is a mandatory waiting period between proposal creation and execution. The default delay is 48 hours, configurable between 1 hour and 30 days via self-governance (the Governance contract must propose a change to itself). This prevents instant parameter changes and gives stakeholders time to react.</div>
-        </div>
-
-        <div class="faq-item">
-          <button class="faq-q"><span>Who can create proposals?</span><span class="icon">+</span></button>
-          <div class="faq-a">Currently, only the Governance owner can create proposals. The governance model follows a phased approach: Phase 0 (single EOA), Phase 1&ndash;3 (multisig with increasing signers), Phase 4 (full DAO with token-weighted voting). Each phase increases decentralization while maintaining operational capability.</div>
-        </div>
-
-        <div class="faq-item">
-          <button class="faq-q"><span>What can be changed through governance?</span><span class="icon">+</span></button>
-          <div class="faq-a">Governance can change fee rates (sender burn, recipient burn, pool fee), fee exemptions, the pool fee receiver, guardian address, timelock delay, PartnerVault parameters (reward rate, emission cap, authorized callers), and FeeRouter parameters (protocol fee, voucher signer, fee collector). All changes require the full timelock delay.</div>
-        </div>
-
-        <div class="faq-item">
-          <button class="faq-q"><span>What CANNOT be changed?</span><span class="icon">+</span></button>
-          <div class="faq-a">The total supply (no mint function exists), the 9-decimal precision, the maximum fee cap (5% hardcoded), the FeeRouter fee cap (0.25% hardcoded), and the token name/symbol. These are immutable by design &mdash; no governance proposal, no admin action, and no upgrade can modify them.</div>
-        </div>
-      </div>
-
-      <!-- ========== 6. Security ========== -->
-      <h2>6. Security</h2>
+      <!-- ========== 2. Security & Audit ========== -->
+      <h2 id="security">2. Security &amp; Audit</h2>
 
       <div class="faq-section">
         <div class="faq-item">
           <button class="faq-q"><span>Has the protocol been audited?</span><span class="icon">+</span></button>
-          <div class="faq-a">The protocol has undergone Slither static analysis (0 high/critical findings), a Claude security audit (0 FAIL, 21 WARN, 81 PASS), and has 444 automated tests with 99% statement coverage. All 9 contracts are deployed and verified on Ethereum Mainnet. A professional third-party audit is planned as the next security milestone.</div>
+          <div class="faq-a">The protocol has undergone multiple layers of security analysis:<br><br>&bull; <strong>Slither static analysis</strong>: 0 high/critical findings across all contracts<br>&bull; <strong>Claude security audit</strong>: 0 FAIL, 21 WARN, 81 PASS<br>&bull; <strong>ChatGPT audit V4</strong>: 7/7 areas PASS<br>&bull; <strong>494 automated tests</strong> with 99% statement coverage and 91% branch coverage<br>&bull; <strong>App security review</strong>: 20/25 findings fixed, 5 documented<br><br>All 9 contracts are deployed and verified on Ethereum Mainnet. A professional third-party audit (Code4rena, Sherlock, or Cyfrin) is planned as the next security milestone.</div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q"><span>How can I verify the contracts on Etherscan?</span><span class="icon">+</span></button>
+          <div class="faq-a">All 9 contracts are verified on Etherscan with source code visible. Visit each contract address on <a href="https://etherscan.io" target="_blank" rel="noopener">etherscan.io</a>, click the &ldquo;Contract&rdquo; tab, then &ldquo;Read Contract&rdquo; to inspect state. The main token address is <code>0x77e99917Eca8539c62F509ED1193ac36580A6e7B</code>. All addresses are listed on the <a href="deployment.html">Deployment</a> page.</div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q"><span>What happens during the 48-hour timelock if a malicious proposal is detected?</span><span class="icon">+</span></button>
+          <div class="faq-a">The Guardian role can cancel any pending governance proposal before execution. During the 48-hour window: (1) the proposal is publicly visible on-chain, (2) anyone can monitor it via Etherscan or the Governance Dashboard, (3) the Guardian can call <code>cancel(proposalId)</code> to permanently prevent execution, (4) after cancellation, a new corrected proposal must be submitted with a fresh 48-hour delay.</div>
         </div>
 
         <div class="faq-item">
           <button class="faq-q"><span>What happens if a bug is found?</span><span class="icon">+</span></button>
-          <div class="faq-a">The project has a Responsible Disclosure policy documented in SECURITY_POLICY.md. Critical bugs should be reported privately via GitHub Security Advisory. The Guardian can pause contracts and cancel governance proposals in emergencies. The patch process follows a documented 6-step procedure with severity classification.</div>
+          <div class="faq-a">The project has a Responsible Disclosure policy documented in <a href="https://github.com/NeaBouli/inferno/blob/main/SECURITY.md" target="_blank" rel="noopener">SECURITY.md</a>. Critical bugs should be reported privately via GitHub Security Advisory. The Guardian can pause contracts and cancel governance proposals in emergencies. The patch process follows a documented 6-step procedure with severity classification.</div>
         </div>
 
         <div class="faq-item">
-          <button class="faq-q"><span>Is my lock safe?</span><span class="icon">+</span></button>
-          <div class="faq-a">The IFRLock contract uses OpenZeppelin's ReentrancyGuard and Pausable patterns. Your locked tokens cannot be accessed by any admin, team member, or governance action. The contract is fee-exempt, so the exact amount you lock is the exact amount you get back when unlocking. Only your wallet can call <code>unlock()</code>.</div>
+          <button class="faq-q"><span>Is my lock safe? Can the team access my tokens?</span><span class="icon">+</span></button>
+          <div class="faq-a">The IFRLock contract uses OpenZeppelin's ReentrancyGuard and Pausable patterns. Your locked tokens cannot be accessed by any admin, team member, or governance action. The contract is fee-exempt, so the exact amount you lock is the exact amount you get back when unlocking. Only your wallet can call <code>unlock()</code>. There is no upgrade proxy &mdash; contracts are immutable once deployed.</div>
         </div>
 
         <div class="faq-item">
-          <button class="faq-q"><span>Can the team access my tokens?</span><span class="icon">+</span></button>
-          <div class="faq-a">No. After ownership transfer to the Governance contract, the deployer has no direct control over any protocol contract. Locked tokens are controlled solely by the locking wallet. The Governance contract can change parameters (fees, exemptions) but cannot move user funds. There is no upgrade proxy &mdash; contracts are immutable once deployed.</div>
+          <button class="faq-q"><span>What is the Guardian role?</span><span class="icon">+</span></button>
+          <div class="faq-a">The Guardian is a separate role from the owner, designed for emergency response. The Guardian can: cancel any pending governance proposal before execution, and pause contracts via the Pausable pattern. The Guardian <strong>cannot</strong>: create proposals, execute proposals, or access user funds. It is a safety mechanism, not an admin backdoor. The Guardian address is transferable via the Vesting contract's <code>transferGuardian()</code> function.</div>
         </div>
 
         <div class="faq-item">
-          <button class="faq-q"><span>What is the Guardian?</span><span class="icon">+</span></button>
-          <div class="faq-a">The Guardian is a separate role from the owner, designed for emergency response. The Guardian can cancel any pending governance proposal before execution and can pause contracts via the Pausable pattern. The Guardian cannot create proposals, execute proposals, or access user funds. It is a safety mechanism, not an admin backdoor.</div>
+          <button class="faq-q"><span>Are the contracts upgradeable?</span><span class="icon">+</span></button>
+          <div class="faq-a">No. All 9 deployed contracts are immutable &mdash; there is no proxy pattern, no UUPS, no transparent proxy. Once deployed, the bytecode cannot be changed. This means no rug-pull via contract upgrade is possible. The trade-off is that bugs cannot be patched in-place, but this is a deliberate security decision: immutability over convenience.</div>
+        </div>
+      </div>
+
+      <!-- ========== 3. Governance ========== -->
+      <h2 id="governance">3. Governance</h2>
+
+      <div class="faq-section">
+        <div class="faq-item">
+          <button class="faq-q"><span>How does governance work?</span><span class="icon">+</span></button>
+          <div class="faq-a">The Governance contract is a custom timelock governor. The owner creates proposals containing encoded function calls on target contracts. Each proposal must wait the full delay period (default 48 hours) before execution. This gives the community time to review and the Guardian time to cancel if needed. The contract uses <code>propose(target, data)</code> and <code>execute(proposalId)</code>.</div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q"><span>Who are the multisig signers?</span><span class="icon">+</span></button>
+          <div class="faq-a">The Gnosis Safe multisig currently operates as a 1-of-2 configuration at <code>0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b</code>. The planned upgrade path is 2-of-4, then 3-of-5 as additional trusted community members are onboarded. Signer identities are documented in the <a href="multisig.html">Multisig Policy</a>. All multisig transactions are publicly visible on <a href="https://app.safe.global" target="_blank" rel="noopener">Safe</a>.</div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q"><span>What can be changed through governance?</span><span class="icon">+</span></button>
+          <div class="faq-a">Governance can change: fee rates (sender burn, recipient burn, pool fee), fee exemptions, the pool fee receiver, guardian address, timelock delay, PartnerVault parameters (reward rate, emission cap, authorized callers), and FeeRouter parameters (protocol fee, voucher signer, fee collector). All changes require the full timelock delay.</div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q"><span>What CANNOT be changed?</span><span class="icon">+</span></button>
+          <div class="faq-a">Immutable by design: the total supply (no mint function), 9-decimal precision, the maximum fee cap (5% hardcoded), the FeeRouter fee cap (0.25% hardcoded), and the token name/symbol. No governance proposal, no admin action, and no upgrade can modify these.</div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q"><span>Why no token voting (yet)?</span><span class="icon">+</span></button>
+          <div class="faq-a">Token-weighted voting is vulnerable to whale manipulation and flash-loan attacks where someone borrows millions of tokens, votes, and returns them in the same transaction. Inferno takes a phased approach: Phase 0 (single EOA), Phase 1&ndash;3 (multisig with increasing signers), Phase 4 (full DAO with safeguards). Security before ideology.</div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q"><span>What is the governance roadmap?</span><span class="icon">+</span></button>
+          <div class="faq-a"><strong>Phase 0</strong> (current): Single deployer EOA as Governance owner<br><strong>Phase 1</strong>: Transfer Governance owner &rarr; Gnosis Safe multisig (1-of-2)<br><strong>Phase 2</strong>: Expand to 2-of-4 multisig<br><strong>Phase 3</strong>: Expand to 3-of-5 multisig with community members<br><strong>Phase 4</strong>: Full DAO governance with token-weighted voting + safeguards<br><br>See <a href="dao-governance.html">DAO Governance</a> for the detailed plan.</div>
+        </div>
+      </div>
+
+      <!-- ========== 4. Bootstrap & Liquidity ========== -->
+      <h2 id="bootstrap">4. Bootstrap &amp; Liquidity</h2>
+
+      <div class="faq-section">
+        <div class="faq-item">
+          <button class="faq-q"><span>What is the Bootstrap Event?</span><span class="icon">+</span></button>
+          <div class="faq-a">The Bootstrap is a 90-day community liquidity event powered by the BootstrapVaultV3 smart contract. Anyone can contribute ETH (0.01&ndash;2 ETH per wallet). All collected ETH is paired with ~194.75M IFR to create the Uniswap V2 liquidity pool. No team ETH is used. The process is fully trustless and permissionless.</div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q"><span>What is the minimum and maximum contribution?</span><span class="icon">+</span></button>
+          <div class="faq-a">Minimum: 0.01 ETH per transaction. Maximum: 2 ETH total per wallet (hardcoded in the smart contract). The per-wallet cap prevents whale domination and ensures fair distribution. These limits are immutable &mdash; they cannot be changed after deployment.</div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q"><span>What wallet should I use?</span><span class="icon">+</span></button>
+          <div class="faq-a">Any Ethereum wallet that supports direct contract interaction: MetaMask, Rabby, Rainbow, Coinbase Wallet, or any WalletConnect-compatible wallet. Make sure you are connected to Ethereum Mainnet and have enough ETH for the contribution plus gas fees (~$2&ndash;5 at normal gas prices).</div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q"><span>What happens if the Bootstrap is not finalised?</span><span class="icon">+</span></button>
+          <div class="faq-a">If the Bootstrap is not finalised within the 90-day window, a 30-day grace period begins. After the grace period expires, any contributor can call <code>refund()</code> to get their ETH back. This is fully permissionless &mdash; no admin action needed. The refund function is a V3 improvement specifically designed for contributor protection.</div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q"><span>Who can call finalise()?</span><span class="icon">+</span></button>
+          <div class="faq-a">Anyone. The <code>finalise()</code> function is permissionless &mdash; any wallet can call it once the minimum ETH threshold is met. The function creates the Uniswap V2 LP pair, adds all ETH + IFR as liquidity, and locks the LP tokens. No admin intervention required.</div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q"><span>How are LP tokens locked?</span><span class="icon">+</span></button>
+          <div class="faq-a">After finalisation, LP tokens will be locked for a minimum of 12 months via Team.Finance or a similar LP lock provider. This prevents the team from pulling liquidity (rug-pull protection). The lock transaction is publicly verifiable on Etherscan.</div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q"><span>When does trading go live?</span><span class="icon">+</span></button>
+          <div class="faq-a">Trading begins the moment <code>finalise()</code> is called and the Uniswap V2 LP is created. Before that, IFR cannot be traded on any DEX. The Bootstrap must first receive its IFR allocation (requires Governance Proposals #4 and #5 to execute), then collect sufficient ETH during the 90-day window.</div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q"><span>Where does the Bootstrap funding come from?</span><span class="icon">+</span></button>
+          <div class="faq-a">The BootstrapVaultV3 is funded with ~194.75M IFR from the Treasury Safe (150M) and Community Safe (50M, minus fees). This is the &ldquo;Plan B&rdquo; approach because the original LiquidityReserve is locked until 01.09.2026 and cannot be used. The funding requires BootstrapVaultV3 to be fee-exempt (Governance Proposal #4). See <a href="bootstrap.html">Bootstrap Event</a> for full details.</div>
+        </div>
+      </div>
+
+      <!-- ========== 5. Is This a Scam? ========== -->
+      <h2 id="rugpull">5. Is This a Scam?</h2>
+
+      <div class="faq-section">
+        <div class="faq-item">
+          <button class="faq-q"><span>Can the team rug the liquidity?</span><span class="icon">+</span></button>
+          <div class="faq-a">No. The BootstrapVaultV3 contract has no admin withdraw function for contributed ETH. LP tokens are locked after finalisation. The team cannot pull liquidity at any point. The finalise() function is permissionless &mdash; anyone can trigger it. The contract code is verified and open-source on Etherscan.</div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q"><span>Can the team dump their tokens?</span><span class="icon">+</span></button>
+          <div class="faq-a">No. The team allocation (15%, 150M IFR) is locked in the Vesting contract with a 12-month cliff and 36-month linear vesting. Zero tokens are available to the team for the first 12 months. After the cliff, tokens release gradually over the remaining 24 months. The Vesting contract is on-chain and verified &mdash; the schedule cannot be accelerated.</div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q"><span>How transparent is the treasury?</span><span class="icon">+</span></button>
+          <div class="faq-a">All treasury wallets are publicly documented with Etherscan links. The Treasury Safe (<code>0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b</code>) and Community Safe (<code>0xaC5687547B2B21d80F8fd345B51e608d476667C7</code>) are Gnosis Safe multisigs with all transactions visible on-chain. The <a href="transparency.html">Transparency Report</a> provides 8 on-chain verification checks.</div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q"><span>Is this a presale or ICO?</span><span class="icon">+</span></button>
+          <div class="faq-a">No. Inferno follows the Community Fair Launch Model (CFLM): no presale, no ICO, no venture capital, no seed round, no private sale. All tokens are distributed at deployment with transparent allocation. The Bootstrap Event is a community liquidity event, not a token sale &mdash; contributors receive LP tokens representing their share of the pool, not IFR directly.</div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q"><span>How do I verify this project is legitimate?</span><span class="icon">+</span></button>
+          <div class="faq-a">Verification checklist:<br><br>&bull; All 9 contracts verified on <a href="https://etherscan.io/address/0x77e99917Eca8539c62F509ED1193ac36580A6e7B#code" target="_blank" rel="noopener">Etherscan</a> &mdash; read the source code<br>&bull; Full repository open-source at <a href="https://github.com/NeaBouli/inferno" target="_blank" rel="noopener">GitHub</a><br>&bull; 494 automated tests, 99% coverage<br>&bull; No mint function &mdash; verify in contract source<br>&bull; All wallet addresses publicly documented<br>&bull; Governance timelock &mdash; all changes visible 48h in advance<br>&bull; No hidden admin functions &mdash; Slither confirms</div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q"><span>What are common scam indicators and does IFR pass?</span><span class="icon">+</span></button>
+          <div class="faq-a"><strong>Anonymous team?</strong> &mdash; Pseudonymous but consistent identity across platforms.<br><strong>Closed source?</strong> &mdash; No, 100% open-source, all contracts verified.<br><strong>Mint function?</strong> &mdash; No, structurally impossible.<br><strong>Admin withdraw?</strong> &mdash; No admin can access user funds or Bootstrap ETH.<br><strong>Upgradeable proxy?</strong> &mdash; No, all contracts immutable.<br><strong>Unlocked liquidity?</strong> &mdash; LP will be locked 12+ months.<br><strong>Unrealistic promises?</strong> &mdash; No price predictions, no &ldquo;moon&rdquo; language, utility-only narrative.</div>
+        </div>
+      </div>
+
+      <!-- ========== 6. Vesting & Team ========== -->
+      <h2 id="vesting">6. Vesting &amp; Team</h2>
+
+      <div class="faq-section">
+        <div class="faq-item">
+          <button class="faq-q"><span>What is the team allocation?</span><span class="icon">+</span></button>
+          <div class="faq-a">15% of the total supply (150,000,000 IFR) is allocated to the team, held in the Vesting contract. This is a standard allocation for a community-first project &mdash; many projects allocate 20&ndash;30% to the team. The allocation is fully transparent and on-chain verifiable.</div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q"><span>Can the team sell immediately?</span><span class="icon">+</span></button>
+          <div class="faq-a">No. The Vesting contract enforces a <strong>12-month cliff</strong>: zero tokens are available for the first 12 months after deployment (March 2026 &rarr; March 2027). After the cliff, tokens vest linearly over 24 additional months. The team can only claim what has vested. The schedule is enforced by immutable smart contract code.</div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q"><span>How is vesting enforced on-chain?</span><span class="icon">+</span></button>
+          <div class="faq-a">The Vesting contract (<code>0x2694Bc84e8D5251E9E4Ecd4B2Ae3f866d6106271</code>) holds 150M IFR. It calculates the vested amount based on block timestamps: <code>vestedAmount = totalAllocation * (elapsed - cliffDuration) / vestingDuration</code>. The beneficiary can only call <code>release()</code> to claim what has vested. The cliff, vesting duration, and beneficiary are set at deployment and cannot be changed. See <a href="vesting.html">Vesting Schedule</a> for details.</div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q"><span>What is the Community Safe used for?</span><span class="icon">+</span></button>
+          <div class="faq-a">The Community Safe (<code>0xaC5687547B2B21d80F8fd345B51e608d476667C7</code>) holds the 6% Community &amp; Grants allocation (60M IFR). It funds: community initiatives, developer grants, bug bounties, marketing, and Bootstrap funding (50M IFR contributed to BootstrapVaultV3). All transactions are visible on the Safe interface.</div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q"><span>Why only 10M IFR for the team for 9 months?</span><span class="icon">+</span></button>
+          <div class="faq-a">This is an intentional self-restriction as a trust signal. The team vesting schedule means roughly 10M IFR becomes available in the first 9 months after the cliff ends. This demonstrates long-term commitment: the team earns alongside the community over 36 months, not upfront. If the project fails, the team loses too.</div>
+        </div>
+      </div>
+
+      <!-- ========== 7. DAO & Roadmap ========== -->
+      <h2 id="dao">7. DAO &amp; Roadmap</h2>
+
+      <div class="faq-section">
+        <div class="faq-item">
+          <button class="faq-q"><span>What is the 5-phase roadmap?</span><span class="icon">+</span></button>
+          <div class="faq-a"><strong>Phase 1</strong>: Foundation &mdash; smart contracts, testing, testnet deployment<br><strong>Phase 2</strong>: Mainnet &mdash; deployment, verification, LP creation<br><strong>Phase 3</strong>: Growth &mdash; Bootstrap event, builder onboarding, community expansion<br><strong>Phase 4</strong>: Decentralization &mdash; multisig governance, DAO transition<br><strong>Phase 5</strong>: Scaling &mdash; L2 expansion, cross-chain bridges, guarded automation<br><br>See <a href="roadmap.html">Roadmap</a> for the full breakdown.</div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q"><span>When will the DAO launch?</span><span class="icon">+</span></button>
+          <div class="faq-a">DAO governance is Phase 4, planned after the multisig governance phases are stable. There is no fixed date &mdash; the transition happens when: the multisig has operated successfully for 6+ months, sufficient community participation exists, and anti-manipulation safeguards (voting escrow, quorum thresholds, time-weighted voting) are implemented and tested.</div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q"><span>What DAO voting model is planned?</span><span class="icon">+</span></button>
+          <div class="faq-a">The planned model uses <strong>lock-weighted voting</strong>: only locked IFR counts for governance power. This prevents flash-loan attacks (you cannot borrow, vote, and return in one transaction). Additional safeguards include: quorum requirements, minimum proposal thresholds, voting escrow (longer locks = more weight), and the 48-hour timelock on execution. See <a href="dao-governance.html">DAO Governance</a> for the full concept.</div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q"><span>What are Creator Rewards?</span><span class="icon">+</span></button>
+          <div class="faq-a">When a user locks IFR for a builder's product, the builder earns a percentage from the Builder Ecosystem Pool (40M IFR). The reward rate has hard bounds of 5&ndash;25% (governance target 10&ndash;20%). Rewards vest over 6&ndash;12 months. The system is designed so builder rewards are always less than user locks, creating net deflation.</div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q"><span>Is there a Telegram or community chat?</span><span class="icon">+</span></button>
+          <div class="faq-a">Yes. The official channels are:<br><br>&bull; <strong>X / Twitter</strong>: <a href="https://x.com/IFRtoken" target="_blank" rel="noopener">@IFRtoken</a><br>&bull; <strong>GitHub</strong>: <a href="https://github.com/NeaBouli/inferno" target="_blank" rel="noopener">github.com/NeaBouli/inferno</a><br><br>Be cautious of impersonators. The only official links are listed on the <a href="../index.html">main website</a>. Inferno will never DM you first or ask for private keys.</div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q"><span>Will IFR expand to other chains (L2, cross-chain)?</span><span class="icon">+</span></button>
+          <div class="faq-a">Cross-chain expansion is Phase 5, planned after Ethereum governance is fully decentralized. Potential targets include Arbitrum, Optimism, and Base. However, the fee-on-transfer mechanism requires careful bridging design &mdash; standard bridges do not support deflationary tokens out of the box. This is not a near-term priority.</div>
+        </div>
+      </div>
+
+      <!-- ========== 8. Technical / Developer ========== -->
+      <h2 id="technical">8. Technical &amp; Developer FAQ</h2>
+
+      <div class="faq-section">
+        <div class="faq-item">
+          <button class="faq-q"><span>How do I check if a wallet has IFR locked?</span><span class="icon">+</span></button>
+          <div class="faq-a">Call the read-only function on the IFRLock contract:<br><br><pre>const ifrLock = new ethers.Contract(
+  "0x769928aBDfc949D0718d8766a1C2d7dBb63954Eb",
+  ["function isLocked(address,uint256) view returns (bool)"],
+  provider
+);
+const hasLock = await ifrLock.isLocked(walletAddress, ethers.utils.parseUnits("1000", 9));
+// true if wallet has >= 1000 IFR locked</pre>This is a single on-chain call. No API keys, no user databases, no privacy concerns.</div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q"><span>Where are the contract ABIs?</span><span class="icon">+</span></button>
+          <div class="faq-a">ABIs are available in two locations:<br><br>&bull; <code>/abi/</code> directory in the <a href="https://github.com/NeaBouli/inferno" target="_blank" rel="noopener">GitHub repository</a> (JSON files)<br>&bull; Etherscan &ldquo;Contract&rdquo; &rarr; &ldquo;ABI&rdquo; tab for each verified contract<br><br>For the IFRLock contract, the key functions are: <code>lock(uint256, string)</code>, <code>unlock()</code>, <code>isLocked(address, uint256)</code>, and <code>lockedBalance(address)</code>.</div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q"><span>Which addresses are fee-exempt?</span><span class="icon">+</span></button>
+          <div class="faq-a">Fee-exempt addresses (verified on-chain as of March 2026):<br><br>&bull; IFRLock: <code>0x769928aBDfc949D0718d8766a1C2d7dBb63954Eb</code><br>&bull; LiquidityReserve: <code>0xdc0309804803b3A105154f6073061E3185018f64</code><br>&bull; BuybackVault: <code>0x670D293e3D65f96171c10DdC8d88B96b0570F812</code><br>&bull; BurnReserve: <code>0xaA1496133B6c274190A2113410B501C5802b6fCF</code><br>&bull; PartnerVault: <code>0xc6eb7714bCb035ebc2D4d9ba7B3762ef7B9d4F7D</code><br>&bull; Vesting: <code>0x2694Bc84e8D5251E9E4Ecd4B2Ae3f866d6106271</code><br><br>BootstrapVaultV3 and FeeRouterV1 exemptions are pending (Governance Proposals #4 and #5).</div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q"><span>What tech stack does the project use?</span><span class="icon">+</span></button>
+          <div class="faq-a">&bull; <strong>Smart contracts</strong>: Solidity 0.8.20, Hardhat v2, OpenZeppelin v5, ethers v5<br>&bull; <strong>Testing</strong>: Chai v4, 494 tests, Slither static analysis<br>&bull; <strong>Frontend apps</strong>: React 18, Vite, TypeScript, Tailwind CSS<br>&bull; <strong>Backend apps</strong>: Express.js, Prisma, SQLite, SIWE authentication<br>&bull; <strong>Infrastructure</strong>: GitHub Pages (docs), Railway (AI Copilot), Alchemy (RPC)</div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q"><span>How do I contribute to the repository?</span><span class="icon">+</span></button>
+          <div class="faq-a">Fork the repository, create a feature branch, and submit a pull request. Read the <a href="contributing.html">Contributing Guide</a> for coding standards, commit message conventions (<code>feat:</code>, <code>fix:</code>, <code>docs:</code>, <code>test:</code>), and the PR template. All contributions must include tests where applicable. The project uses CJS-only (Hardhat v2 requirement).</div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q"><span>What is the FeeRouter and how does it work?</span><span class="icon">+</span></button>
+          <div class="faq-a">The FeeRouter (<code>0x4807B77B2E25cD055DA42B09BA4d0aF9e580C60a</code>) processes protocol fees on IFR swaps. Default fee: 0.05% (5 bps), hard cap: 0.25% (25 bps). It supports EIP-712 signed vouchers for fee discounts (earned through IFR Points). The contract has pause functionality, replay protection, and governance-controlled parameters. See <a href="fee-design.html">Fee Design</a>.</div>
+        </div>
+      </div>
+
+      <!-- ========== 9. IFR Benefits Network ========== -->
+      <h2 id="benefits">9. IFR Benefits Network</h2>
+
+      <div class="faq-section">
+        <div class="faq-item">
+          <button class="faq-q"><span>What is the Benefits Network?</span><span class="icon">+</span></button>
+          <div class="faq-a">The IFR Benefits Network lets any business &mdash; online or offline &mdash; offer discounts and premium access to customers who have IFR tokens locked. It connects IFR lockers with builder businesses through on-chain verification. No crypto knowledge is required on the merchant side.</div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q"><span>How does the merchant verification work?</span><span class="icon">+</span></button>
+          <div class="faq-a">Three steps:<br><br>1. The merchant opens their business link and clicks &ldquo;Start Verification&rdquo; &mdash; a QR code appears<br>2. The customer scans the QR code, connects their wallet, and signs a message (no app installation needed)<br>3. The system checks on-chain if the customer has enough IFR locked. If yes: APPROVED (green screen). The merchant clicks &ldquo;Redeem&rdquo;.<br><br>The verification is single-use and expires after 60 seconds &mdash; screenshots and videos cannot be reused.</div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q"><span>How does the challenge-response signature work?</span><span class="icon">+</span></button>
+          <div class="faq-a">The backend generates a unique session with a random challenge string. The customer signs this challenge with their wallet (proving ownership without revealing private keys). The backend verifies: (1) the signature is valid for the challenge, (2) the recovered wallet address has sufficient IFR locked on-chain. This is a standard Web3 authentication pattern &mdash; no tokens are transferred during verification.</div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q"><span>Does the merchant need crypto knowledge?</span><span class="icon">+</span></button>
+          <div class="faq-a">No. The merchant sees a simple web interface: &ldquo;Start Verification&rdquo; button, QR code, and green/red result screen. They never interact with wallets, blockchains, or smart contracts. The entire crypto layer is abstracted away. The merchant only needs a browser and an internet connection. See <a href="business-onboarding.html">Business Onboarding</a> for the setup guide.</div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q"><span>How do I onboard my business as a builder?</span><span class="icon">+</span></button>
+          <div class="faq-a">1. Read the <a href="business-onboarding.html">Business Onboarding</a> guide<br>2. Set your lock threshold tiers (e.g., 1000 IFR = 10% discount)<br>3. Register through the builder onboarding process<br>4. After approval, a governance proposal adds you to the PartnerVault<br>5. You start earning Creator Rewards when users lock IFR for your product<br><br>Builder tiers range from Launch Builders (up to 5M IFR allocation) to Tier 3 (500K IFR). All allocations are milestone-based and vested.</div>
+        </div>
+      </div>
+
+      <!-- ========== 10. General ========== -->
+      <h2 id="general">10. General</h2>
+
+      <div class="faq-section">
+        <div class="faq-item">
+          <button class="faq-q"><span>Why Ethereum only? Why not Solana, BSC, etc.?</span><span class="icon">+</span></button>
+          <div class="faq-a">Ethereum was chosen for maximum security, decentralization, and composability. The fee-on-transfer mechanism relies on EVM <code>_update()</code> hooks that work best on Ethereum L1. Multi-chain expansion is Phase 5 &mdash; first the protocol must be stable and governance decentralized on one chain before bridging to others.</div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q"><span>Why the name &ldquo;Inferno&rdquo;?</span><span class="icon">+</span></button>
+          <div class="faq-a">The name references Dante Alighieri's &ldquo;Inferno&rdquo; (first part of the Divine Comedy). Like in Dante's vision, fire purifies what passes through it. With every IFR transaction, 2.5% burns permanently &mdash; what remains is purer, scarcer, stronger. The fire metaphor represents the deflationary mechanism at the heart of the protocol.</div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q"><span>Where can I buy $IFR?</span><span class="icon">+</span></button>
+          <div class="faq-a">After the Bootstrap Event finalises and the Uniswap V2 LP is created, IFR will be tradeable on Uniswap V2 (Ethereum Mainnet). Set slippage to at least 4% (3.5% fee + AMM slippage). Always verify the official contract address: <code>0x77e99917Eca8539c62F509ED1193ac36580A6e7B</code>. Do not trust links from DMs or unofficial channels.</div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q"><span>What are the official links? (Anti-scam warning)</span><span class="icon">+</span></button>
+          <div class="faq-a"><strong>Official links only:</strong><br><br>&bull; Website: <a href="https://ifrunit.tech" target="_blank" rel="noopener">ifrunit.tech</a><br>&bull; GitHub: <a href="https://github.com/NeaBouli/inferno" target="_blank" rel="noopener">github.com/NeaBouli/inferno</a><br>&bull; X / Twitter: <a href="https://x.com/IFRtoken" target="_blank" rel="noopener">@IFRtoken</a><br>&bull; Token: <a href="https://etherscan.io/address/0x77e99917Eca8539c62F509ED1193ac36580A6e7B" target="_blank" rel="noopener">Etherscan</a><br><br><strong>Warning:</strong> Inferno will never DM you first, never ask for private keys, never offer &ldquo;guaranteed returns&rdquo;, and never request you to send tokens to any address. If someone claims to be from the Inferno team and contacts you first, it is a scam.</div>
         </div>
       </div>
 
       <!-- Footer -->
       <footer class="wiki-footer">
-        Inferno ($IFR) &mdash; Community Fair Launch Model &mdash; Documentation v1.0
+        Inferno ($IFR) &mdash; Community Fair Launch Model &mdash; Documentation v2.0 &mdash; 10 sections, 61 Q&amp;A
       </footer>
 
     </main>
