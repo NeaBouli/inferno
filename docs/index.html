@@ -749,67 +749,57 @@
 
     /* ── FAQ ──────────────────────────────────────── */
 
-    .faq-list { max-width: 720px; margin: 48px auto 0; }
-
-    .faq-item {
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      margin-bottom: 12px;
+    .lp-faq-item {
+      border: 1px solid #1e1e1e;
+      border-radius: 7px;
       overflow: hidden;
-      transition: border-color 0.3s;
+      transition: border-color 0.25s;
+      background: #0d0d0d;
     }
-
-    .faq-item:hover { border-color: rgba(255, 69, 0, 0.3); }
-
-    .faq-question {
+    .lp-faq-item:hover { border-color: #ff6600; }
+    .lp-faq-q {
       width: 100%;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      padding: 15px 18px;
       display: flex;
       justify-content: space-between;
-      align-items: center;
-      padding: 20px 24px;
-      background: none;
-      border: none;
-      color: var(--text);
-      font-family: inherit;
-      font-size: 15px;
+      align-items: flex-start;
+      font-size: 14px;
       font-weight: 600;
+      color: #ddd;
       text-align: left;
-      cursor: pointer;
-      transition: background 0.2s;
+      gap: 10px;
+      line-height: 1.4;
+      font-family: inherit;
     }
-
-    .faq-question:hover { background: rgba(255, 255, 255, 0.02); }
-
-    .faq-icon {
-      flex-shrink: 0;
-      width: 24px;
-      height: 24px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+    .lp-faq-q:hover { color: #fff; }
+    .lp-faq-icon {
+      color: #ff6600;
       font-size: 18px;
-      color: var(--accent);
-      transition: transform 0.3s;
+      flex-shrink: 0;
+      margin-top: 1px;
+      transition: transform 0.25s;
+      font-style: normal;
+      line-height: 1;
     }
-
-    .faq-item.open .faq-icon { transform: rotate(45deg); }
-
-    .faq-answer {
+    .lp-faq-item.open .lp-faq-icon { transform: rotate(45deg); }
+    .lp-faq-a {
       max-height: 0;
       overflow: hidden;
-      transition: max-height 0.35s ease, padding 0.35s ease;
+      transition: max-height 0.3s ease;
     }
-
-    .faq-item.open .faq-answer {
-      max-height: 600px;
-    }
-
-    .faq-answer-inner {
-      padding: 0 24px 20px;
+    .lp-faq-a-inner {
+      padding: 0 18px 16px;
+      color: #999;
       font-size: 14px;
-      color: var(--text-muted);
-      line-height: 1.7;
+      line-height: 1.65;
+      border-top: 1px solid #1a1a1a;
+      padding-top: 12px;
     }
+    .lp-faq-a-inner a { color: #ff6600; text-decoration: none; }
+    .lp-faq-item.open .lp-faq-a { max-height: 300px; }
 
     /* ── PARTNER STEPS ───────────────────────────────── */
 
@@ -1787,142 +1777,83 @@ if (isLocked) {
 </section>
 
 <!-- ── FAQ ────────────────────────────────────────── -->
-<section id="faq">
-  <div class="container">
-    <div class="reveal" style="text-align:center">
-      <p class="section-label">FAQ</p>
-      <h2 class="section-title">Frequently Asked Questions</h2>
+<section id="faq" style="background:#0a0a0f;padding:80px 20px;">
+  <div style="max-width:1100px;margin:0 auto;">
+
+    <h2 style="text-align:center;font-size:clamp(1.3rem,3vw,1.9rem);color:#fff;margin-bottom:10px;letter-spacing:2px;font-weight:800;">FREQUENTLY ASKED QUESTIONS</h2>
+
+    <p style="text-align:center;color:#888;font-size:0.93rem;margin-bottom:40px;">
+      Quick answers about $IFR &mdash;
+      <a href="wiki/faq.html" style="color:#ff6600;text-decoration:none;font-weight:700;">view all 61 questions in the full Wiki FAQ &rarr;</a>
+    </p>
+
+    <!-- 2-column accordion grid -->
+    <div id="lp-faq-grid" style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;">
+      <div id="faq-col-left" style="display:flex;flex-direction:column;gap:10px;"></div>
+      <div id="faq-col-right" style="display:flex;flex-direction:column;gap:10px;"></div>
     </div>
-    <div class="faq-list reveal">
 
-      <div class="faq-item">
-        <button class="faq-question"><span>What is Inferno (IFR)?</span><span class="faq-icon">+</span></button>
-        <div class="faq-answer"><div class="faq-answer-inner">Inferno (IFR) is a digital token built on the Ethereum blockchain. What makes it special: every time someone sends IFR to another person, a small portion is permanently destroyed &mdash; meaning the total number of tokens in existence decreases over time. This is called deflation. But IFR isn&rsquo;t just a token you trade. Its main purpose is utility: you can lock your IFR tokens in a smart contract to unlock lifetime premium access to builder products and services. Think of it like a refundable deposit &mdash; lock your tokens, enjoy premium features across multiple products. Withdraw your tokens anytime, and your access simply reverts to the standard plan. No subscriptions, no recurring payments.</div></div>
-      </div>
-
-      <div class="faq-item">
-        <button class="faq-question"><span>How does the fee-on-transfer work?</span><span class="faq-icon">+</span></button>
-        <div class="faq-answer"><div class="faq-answer-inner">Every time IFR is transferred between wallets (unless one party is exempt), three things happen automatically: 2.0% of the amount is burned from the sender&rsquo;s side &mdash; permanently destroyed. 0.5% is burned from the recipient&rsquo;s side &mdash; also permanently destroyed. 1.0% goes to a Pool Fee collector for ecosystem maintenance. That&rsquo;s 3.5% total per transfer, with 2.5% being real, permanent deflation. For example: if you send 10,000 IFR, the recipient receives 9,650 IFR. 250 IFR are burned forever, and 100 IFR go to the pool fee collector. The maximum fee is hard-capped at 5% in the smart contract code &mdash; it cannot be raised higher, ever.</div></div>
-      </div>
-
-      <div class="faq-item">
-        <button class="faq-question"><span>What is the IFR Lock mechanism?</span><span class="faq-icon">+</span></button>
-        <div class="faq-answer"><div class="faq-answer-inner">The Lock mechanism is the core utility of Inferno. Step 1: You buy IFR tokens on a decentralized exchange. Step 2: You lock them in the IFR Lock smart contract &mdash; like putting them in a secure vault. Step 3: Any builder product can now verify on the blockchain that you have tokens locked. Step 4: Because your tokens are locked, you automatically receive lifetime or premium access to that product. Step 5: If you ever want your tokens back, you unlock them instantly. Your access then reverts to the standard plan. The beauty: your tokens are never spent or given away. They stay yours. You simply prove commitment by locking them. And because every product checks the same smart contract, one lock can unlock benefits across multiple products simultaneously.</div></div>
-      </div>
-
-      <div class="faq-item">
-        <button class="faq-question"><span>Who controls Governance?</span><span class="faq-icon">+</span></button>
-        <div class="faq-answer"><div class="faq-answer-inner">Governance is how changes are made to the Inferno protocol &mdash; like adjusting fee rates or adding new features. There is NO instant admin access. Nobody can change anything immediately &mdash; not even the team. Every proposed change must go through a mandatory 48-hour waiting period called a Timelock. During these 48 hours, the proposal is publicly visible on the blockchain. Everyone can see it, verify it, and react to it. Additionally, a Guardian safety role can cancel any proposal during the waiting period if something looks wrong &mdash; but the Guardian cannot make changes themselves. Currently, there is no token voting. This is intentional: token voting systems are vulnerable to manipulation by large holders and flash-loan attacks. Inferno prioritizes security and predictability. A transition to community-driven DAO governance is planned for the future.</div></div>
-      </div>
-
-      <div class="faq-item">
-        <button class="faq-question"><span>Can new tokens be minted?</span><span class="faq-icon">+</span></button>
-        <div class="faq-answer"><div class="faq-answer-inner">No &mdash; and this is one of the strongest guarantees in the Inferno protocol. There is no mint function in the smart contract. This means no one &mdash; not the team, not governance, not any admin &mdash; can ever create new IFR tokens. The initial supply of 1,000,000,000 IFR is the maximum that will ever exist. From here, the supply can only go down through burns, never up. This is verified in the open-source code and confirmed by Slither static analysis (0 high/critical findings).</div></div>
-      </div>
-
-      <div class="faq-item">
-        <button class="faq-question"><span>Why no automatic buybacks?</span><span class="faq-icon">+</span></button>
-        <div class="faq-answer"><div class="faq-answer-inner">Automatic buybacks would mean the smart contract sells tokens at predictable times. This creates opportunities for sophisticated traders to exploit the system through MEV attacks and sandwich attacks &mdash; essentially front-running the protocol&rsquo;s trades for profit. Automatic selling also creates constant sell pressure, which can amplify price drops during market downturns. Instead, Inferno uses a controlled approach: fees are collected, and buybacks happen strategically through the BuybackVault smart contract using real ETH. Every buyback is transparent and verifiable on-chain. A partially automated system with safety guards is planned as a future upgrade.</div></div>
-      </div>
-
-      <div class="faq-item">
-        <button class="faq-question"><span>Can all tokens eventually be burned?</span><span class="faq-icon">+</span></button>
-        <div class="faq-answer"><div class="faq-answer-inner">Practically impossible &mdash; and here is why the ecosystem makes this scenario unrealistic: Burns are percentage-based, not fixed amounts. As supply shrinks, each burn removes fewer tokens. 2.5% of 1 billion is 25 million, but 2.5% of 1 million is only 25,000. The burn rate slows down exponentially &mdash; mathematically this is called asymptotic behavior. But there is more: Locked tokens do not move, so no transfer means no burn. As more people lock IFR for utility, fewer tokens circulate. The Vesting contract holds 150M tokens locked for years. The Liquidity Reserve holds 200M tokens, also locked. Governance can reduce fee rates if needed. And market dynamics naturally slow burns: as supply decreases each token becomes more valuable, people trade less, and burns slow down further. Think of it like a campfire: it burns hot at first, but as fuel decreases the fire naturally dies down. The ecosystem is self-regulating.</div></div>
-      </div>
-
-      <div class="faq-item">
-        <button class="faq-question"><span>How can builders integrate IFR?</span><span class="faq-icon">+</span></button>
-        <div class="faq-answer"><div class="faq-answer-inner">Integration is designed to be simple &mdash; any developer can add IFR verification in under 30 minutes. The core is one function call: <code style="background:rgba(255,255,255,0.06);padding:2px 6px;border-radius:4px;">isLocked(walletAddress, minimumAmount)</code> which returns true or false. No complex APIs, no user databases, no wallet storage needed. Builders benefit from token allocation from the Builder Ecosystem Pool (40M IFR, 4% of supply). Allocations are vested and milestone-based to ensure long-term alignment. Builders also receive revenue sharing, prominent listing on the Inferno website, and access to a growing user base. Privacy by design: the builder app never stores wallets and never makes blockchain calls directly. Everything goes through a stateless resolver. Full integration guide with code examples available in our Developer Documentation.</div></div>
-      </div>
-
-      <div class="faq-item">
-        <button class="faq-question"><span>How do builders earn IFR?</span><span class="faq-icon">+</span></button>
-        <div class="faq-answer"><div class="faq-answer-inner">Builders earn IFR through lock-triggered Creator Rewards. When a user locks IFR tokens for a builder's product, the builder accrues a percentage of the lock amount from the Builder Ecosystem Pool (40M IFR). The reward rate has hard bounds of 5&ndash;25% enforced by the smart contract, with a governance policy target of 10&ndash;20%. Annual emissions default to 4M IFR with contract-enforced bounds of 1&ndash;10M IFR. All rewards vest over 6&ndash;12 months. Per-builder allocations are capped to prevent concentration.</div></div>
-      </div>
-
-      <div class="faq-item">
-        <button class="faq-question"><span>Is Inferno a DAO?</span><span class="faq-icon">+</span></button>
-        <div class="faq-answer"><div class="faq-answer-inner">Not yet &mdash; and that is by design. Many projects rush into DAO governance on day one, which often leads to governance attacks, voter apathy, or whale domination. Inferno takes a phased approach: Today it uses timelocked admin governance with a 48-hour delay, public visibility, and Guardian cancel capability. Phase 3 focuses on ecosystem growth and community-driven integrations. Phase 4 will introduce multi-signature governance (Gnosis Safe) followed by full DAO governance with community proposals and safeguards against manipulation. The principle: decentralize gradually, not recklessly. Security always comes before ideology.</div></div>
-      </div>
-
-      <div class="faq-item">
-        <button class="faq-question"><span>What makes IFR different from other tokens?</span><span class="faq-icon">+</span></button>
-        <div class="faq-answer"><div class="faq-answer-inner">Most tokens exist for trading or speculation. IFR is fundamentally different in five ways: Real utility &mdash; lock tokens to unlock lifetime product access, not staking or yield farming but actual product benefits. Real deflation &mdash; every single transfer permanently reduces supply, verified on-chain. Real lock mechanism &mdash; your tokens are never spent or given away, they stay in a secure vault, withdrawable anytime. Real governance &mdash; 48-hour timelock on everything, Guardian safety net, open-source and audited. Real fairness &mdash; no presale, no VC funding, no insider allocations, Community Fair Launch Model with transparent allocation. IFR is designed as infrastructure &mdash; a universal utility layer that any product can plug into.</div></div>
-      </div>
-
-      <div class="faq-item">
-        <button class="faq-question"><span>What is the IFR Benefits Network?</span><span class="faq-icon">+</span></button>
-        <div class="faq-answer"><div class="faq-answer-inner">The IFR Benefits Network lets any business &mdash; online or offline &mdash; offer discounts and premium access to customers who have IFR tokens locked. No crypto knowledge required on the merchant side.<br><br>Here is how it works in three steps: The merchant opens their business link in a browser and clicks &ldquo;Start Verification&rdquo; &mdash; a QR code appears. The customer scans the QR code with their phone, connects their wallet, and signs a message. No app installation needed. The system checks on-chain whether the customer has enough IFR locked. If yes: APPROVED. The merchant sees a large green screen and clicks &ldquo;Redeem&rdquo;.<br><br>The verification is single-use and expires after 60 seconds &mdash; screenshots and videos cannot be used to cheat the system. Everything is verified directly against the blockchain.</div></div>
-      </div>
-
-      <div class="faq-item">
-        <button class="faq-question"><span>How much IFR do I need to lock for builder benefits?</span><span class="faq-icon">+</span></button>
-        <div class="faq-answer"><div class="faq-answer-inner">Each builder sets their own lock threshold &mdash; there is no universal minimum. Builders can freely configure tiers. Common recommendations:<br><br>Bronze tier: 1,000 IFR locked &mdash; typically 5% discount or basic access.<br>Silver tier: 2,500 IFR locked &mdash; typically 10% discount or standard premium.<br>Gold tier: 5,000 IFR locked &mdash; typically 15% discount or full premium.<br>Platinum tier: 10,000 IFR locked &mdash; typically 20% discount or VIP access.<br><br>These are suggestions, not rules. Each builder decides independently. Check the specific builder product for their exact lock requirements. Lock thresholds are defined in IFR token units &mdash; no USD pricing, no oracle dependency. What you see is what you get.</div></div>
-      </div>
-
-      <div class="faq-item">
-        <button class="faq-question"><span>Are my tokens safe when locked? Can I lose them?</span><span class="faq-icon">+</span></button>
-        <div class="faq-answer"><div class="faq-answer-inner">Your tokens are completely safe. Here is exactly what happens when you lock IFR:<br><br>Your tokens move from your wallet into the IFR Lock smart contract &mdash; a publicly audited, open-source contract on Ethereum. The contract holds your tokens. No admin, no team member, no third party can touch them. You can unlock and withdraw your tokens at any time &mdash; instantly, with no penalties. There is no lock-up period. There is no cooldown. There are no fees for locking or unlocking.<br><br>The only thing that changes when you lock: builder products can verify on-chain that you have tokens locked, and grant you access accordingly. When you unlock, that verification no longer applies and access reverts to the standard plan.<br><br>Think of it as a refundable deposit. The tokens stay yours. You just prove commitment by locking them.</div></div>
-      </div>
-
-      <div class="faq-item">
-        <button class="faq-question"><span>How do Creator Rewards work for builders?</span><span class="faq-icon">+</span></button>
-        <div class="faq-answer"><div class="faq-answer-inner">When a user locks IFR tokens to access a builder&rsquo;s product, the builder automatically earns a reward from the Builder Ecosystem Pool (40M IFR, 4% of total supply).<br><br>The mechanics: A user locks 1,000 IFR for a builder&rsquo;s product. The builder earns 150 IFR (15% reward rate &mdash; the governance policy target). Those 150 IFR vest linearly over 6 to 12 months &mdash; no instant payout. The builder claims vested rewards directly on-chain at any time.<br><br>Why this is deflationary: The user locks 1,000 IFR. The builder receives only 150 IFR. Net result: 850 more IFR are taken out of circulation than are distributed. The system is designed so that builder rewards are always less than user locks.<br><br>Reward rate bounds are enforced by the smart contract: minimum 5%, maximum 25%. The governance policy target is 10 to 20%. Annual emissions are capped at 4M IFR by default (adjustable between 1M and 10M via governance).</div></div>
-      </div>
-
-      <div class="faq-item">
-        <button class="faq-question"><span>I am new to crypto. Is IFR safe to use?</span><span class="faq-icon">+</span></button>
-        <div class="faq-answer"><div class="faq-answer-inner">IFR is designed to be as safe and transparent as possible, but as with all crypto assets, you should understand what you are doing before investing.<br><br>What makes IFR safer than most tokens: All smart contracts are fully open source &mdash; anyone can verify the code. No admin can change your locked tokens or take your funds. No new tokens can ever be minted &mdash; supply only goes down. Every governance change requires a 48-hour public waiting period &mdash; no surprises. A Guardian role can cancel any suspicious governance proposal within 48 hours.<br><br>What you should know before using IFR: Every transfer burns 2.5% permanently &mdash; factor this into your calculations. Locking tokens means they are in a smart contract, not in your wallet &mdash; they are still yours, but act accordingly. The token is live on Ethereum Mainnet with all 14 on-chain components verified on Etherscan. Always buy from verified sources and verify the official contract address before any transaction.<br><br>When in doubt: start small, verify everything, and only lock what you are comfortable with.</div></div>
-      </div>
-
-      <div class="faq-item">
-        <button class="faq-question"><span>What is the FeeRouter?</span><span class="faq-icon">+</span></button>
-        <div class="faq-answer"><div class="faq-answer-inner">The FeeRouter is a smart contract that processes protocol fees on IFR swaps. The default fee is 0.05% (5 basis points) &mdash; significantly cheaper than standard DEX fees. With an IFR Points voucher, this fee can be reduced all the way to 0%.<br><br>The FeeRouter supports whitelisted adapters for different DEX integrations and uses EIP-712 signed vouchers for discount verification. The fee collector address and protocol fee rate are governance-controlled parameters with a hard cap of 0.25% (25 bps) enforced by the smart contract. The contract includes pause functionality for emergencies and replay protection to prevent voucher reuse.</div></div>
-      </div>
-
-      <div class="faq-item">
-        <button class="faq-question"><span>What are IFR Points?</span><span class="faq-icon">+</span></button>
-        <div class="faq-answer"><div class="faq-answer-inner">IFR Points are reward points earned through real actions in the IFR ecosystem &mdash; such as setting up your wallet, importing the IFR token, or completing the lock guide. Once you reach 100 points, you receive a one-time discount voucher for the FeeRouter that reduces or eliminates the protocol fee on a single swap.<br><br>Important: IFR Points are NOT a token. They are not transferable, have no trading value, and cannot be sold or exchanged. Points exist solely as an off-chain loyalty mechanism to reward genuine engagement. Each voucher is EIP-712 signed, single-use, and tied to your wallet address. Daily earning limits and anti-sybil measures prevent abuse.</div></div>
-      </div>
-
-      <div class="faq-item">
-        <button class="faq-question"><span>What is the Creator Gateway?</span><span class="faq-icon">+</span></button>
-        <div class="faq-answer"><div class="faq-answer-inner">The Creator Gateway is an open-source bridge for content creators. It enables YouTube creators to make their premium content accessible to both YouTube members and IFR token lockers simultaneously &mdash; using Hybrid Model B (OR logic). If a user is either a YouTube member or has IFR locked, they get access.<br><br>Creators also earn PartnerVault rewards for every fan who locks IFR for their content. The gateway handles YouTube OAuth, JWT authentication, and entitlement verification. It is fully self-hostable via Docker and requires no blockchain knowledge from the creator &mdash; just a YouTube channel and a builder registration.</div></div>
-      </div>
-
-      <div class="faq-item">
-        <button class="faq-question"><span>How secure is the protocol?</span><span class="faq-icon">+</span></button>
-        <div class="faq-answer"><div class="faq-answer-inner">The IFR protocol has been tested and verified through multiple layers of security analysis. Slither static analysis found 0 high or critical findings across all 14 on-chain components. An independent ChatGPT audit scored 7 out of 7 areas as PASS. There are 494 automated tests (367 contract + 77 app + 50 Bootstrap Suite) covering 99% of all code statements and 91% of all code branches.<br><br>All contracts use battle-tested OpenZeppelin v5 base contracts. The governance timelock enforces a 48-hour delay on all parameter changes. A Guardian role can emergency-cancel suspicious proposals. A professional third-party audit (Code4rena, Sherlock, or Cyfrin) is planned as the next security milestone.</div></div>
-      </div>
-
-      <div class="faq-item">
-        <button class="faq-question"><span>What happens at mainnet launch?</span><span class="faq-icon">+</span></button>
-        <div class="faq-answer"><div class="faq-answer-inner">Mainnet is live. All 14 on-chain components are deployed and verified on Ethereum Mainnet (March 2026). Ownership has been transferred to the Governance timelock. Remaining steps: Uniswap V2 LP creation, LP token lock, and Governance owner transfer to the Gnosis Safe multisig.<br><br>The Sepolia testnet deployment remains active so developers and builders can continue testing. LP tokens will be locked or burned to prevent rug pulls. The full checklist is publicly available in the project documentation.</div></div>
-      </div>
-
-      <div class="faq-item">
-        <button class="faq-question"><span>Why does IFR have a 3.5% transfer fee?</span><span class="faq-icon">+</span></button>
-        <div class="faq-answer"><div class="faq-answer-inner">The transfer fee is the engine of the deflation mechanism: 2.5% is permanently burned (supply decreases with every transfer) and 1.0% flows into the BuybackVault (strengthening liquidity). IFR is not a trading token &mdash; users lock IFR once and use the benefits permanently. Transfers are rare, not daily. For frequent transfers (DEX Router, Lock Contract, Builder Vaults) fee-exempt status applies, meaning zero fees on protocol-internal operations.</div></div>
-      </div>
-
-      <div class="faq-item">
-        <button class="faq-question"><span>Can I buy IFR on a centralized exchange (CEX)?</span><span class="faq-icon">+</span></button>
-        <div class="faq-answer"><div class="faq-answer-inner">Available via Uniswap V2 on Ethereum Mainnet. Fee-on-transfer tokens have elevated requirements for CEX listings &mdash; this is known and part of the growth roadmap. The primary use case is Lock-to-Access, not short-term trading. CEX outreach is planned for Phase 3+ (Growth) after audit completion.</div></div>
-      </div>
-
-      <div class="faq-item">
-        <button class="faq-question"><span>What does fee-exempt mean?</span><span class="faq-icon">+</span></button>
-        <div class="faq-answer"><div class="faq-answer-inner">Certain addresses are excluded from the transfer fee: IFR Lock Contract, LiquidityReserve, BuybackVault, BurnReserve, and PartnerVault. This ensures that internal protocol transfers (lock, unlock, reward payouts) do not incur fees. The list is on-chain transparent and can only be changed via Governance proposals with a 48-hour timelock delay. See the full list in the <a href="wiki/transparency.html" style="color:#ff4500;">Transparency Report</a>.</div></div>
-      </div>
-
-    </div>
-    <div class="reveal" style="text-align:center; margin-top:40px; max-width:680px; margin-left:auto; margin-right:auto;">
-      <p style="color:var(--text-muted); font-size:14px; line-height:1.8; border:1px solid #222; border-radius:12px; padding:20px 24px; background:rgba(255,69,0,0.03);">
-        Inferno Protocol is fully open source and community-owned. No single entity controls the protocol. All contracts are verified on Ethereum Mainnet, governed by a 48-hour timelock, and protected by Gnosis Safe multisig. The protocol lives on-chain &mdash; permanently.
-      </p>
+    <!-- CTA -->
+    <div style="text-align:center;margin-top:44px;display:flex;flex-direction:column;align-items:center;gap:14px;">
+      <a href="wiki/faq.html" style="display:inline-block;padding:14px 40px;background:linear-gradient(135deg,#ff6600,#cc3300);color:#fff;font-size:0.88rem;letter-spacing:1px;border-radius:6px;text-decoration:none;font-weight:700;">ALL 61 QUESTIONS &amp; ANSWERS &rarr;</a>
+      <span style="color:#555;font-size:0.82rem;">Tokenomics &middot; Security &middot; Governance &middot; Bootstrap &middot; DAO &middot; Developer FAQ</span>
     </div>
   </div>
 </section>
+
+<script>
+(function(){
+  var faqs=[
+    {q:"What is $IFR and what makes it deflationary?",
+     a:"Fixed supply of 1 billion IFR \u2014 no minting ever. Every transfer burns 2.5% permanently. A buyback loop from protocol fees adds further pressure. Supply can only decrease over time."},
+    {q:"Can the team rug the liquidity?",
+     a:"No. BootstrapVaultV3 has no admin withdraw function. LP is locked 12 months via Team.Finance automatically on finalisation. No team ETH is used. <a href='wiki/faq.html#rugpull'>Full details \u2192</a>"},
+    {q:"What is the lock mechanism?",
+     a:"Any wallet locks $IFR in IFRLock. Locked tokens cannot be sold or transferred. The on-chain lock state is the canonical source for access control, builder discounts, and governance power."},
+    {q:"How does the Bootstrap work?",
+     a:"90-day community event \u2014 contribute 0.01\u20132 ETH. Collected ETH is automatically paired with ~194.75M IFR to create the Uniswap V2 LP. Fully permissionless, no team action needed."},
+    {q:"Who controls the protocol?",
+     a:"All changes require a 48-hour timelock via the Governance contract \u2014 nothing can change instantly. Transitioning to Gnosis Safe multisig (2-of-4 \u2192 3-of-5) for distributed control."},
+    {q:"What is the token distribution?",
+     a:"1B IFR fixed. 6 buckets: 40% DEX Liquidity \u00b7 20% LiqRes (locked) \u00b7 15% Team Vesting (12m cliff) \u00b7 15% Treasury \u00b7 6% Community \u00b7 4% BuilderVault. <a href='wiki/tokenomics.html'>Tokenomics \u2192</a>"},
+    {q:"Is the code open source and audited?",
+     a:"Yes \u2014 fully. 494 tests, 91% branch coverage, 0 critical findings. All contracts verified on Etherscan. <a href='https://github.com/NeaBouli/inferno' target='_blank'>github.com/NeaBouli/inferno</a>"},
+    {q:"When will $IFR be tradeable?",
+     a:"After Bootstrap finalises and the Uniswap V2 LP is created. Follow <a href='https://x.com/IFRtoken' target='_blank'>@IFRtoken</a> for the official launch announcement."}
+  ];
+
+  var left=document.getElementById('faq-col-left');
+  var right=document.getElementById('faq-col-right');
+
+  faqs.forEach(function(f,i){
+    var div=document.createElement('div');
+    div.className='lp-faq-item';
+    div.innerHTML='<button class="lp-faq-q" aria-expanded="false">'+
+      '<span>'+f.q+'</span><i class="lp-faq-icon">+</i></button>'+
+      '<div class="lp-faq-a"><div class="lp-faq-a-inner">'+f.a+'</div></div>';
+    div.querySelector('.lp-faq-q').addEventListener('click',function(){
+      var isOpen=div.classList.contains('open');
+      document.querySelectorAll('.lp-faq-item.open').forEach(function(el){
+        el.classList.remove('open');
+        el.querySelector('.lp-faq-q').setAttribute('aria-expanded','false');
+      });
+      if(!isOpen){
+        div.classList.add('open');
+        this.setAttribute('aria-expanded','true');
+      }
+    });
+    (i%2===0 ? left : right).appendChild(div);
+  });
+})();
+</script>
+
+<!-- Mobile: single column -->
+<style>
+@media(max-width:700px){
+  #lp-faq-grid { grid-template-columns:1fr !important; }
+}
+</style>
+
 
 <!-- ── ROADMAP ────────────────────────────────────── -->
 <section id="roadmap">
@@ -2130,15 +2061,6 @@ if (isLocked) {
 
   reveals.forEach(el => observer.observe(el));
 
-  // FAQ accordion
-  document.querySelectorAll('.faq-question').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const item = btn.parentElement;
-      const wasOpen = item.classList.contains('open');
-      document.querySelectorAll('.faq-item.open').forEach(i => i.classList.remove('open'));
-      if (!wasOpen) item.classList.add('open');
-    });
-  });
 </script>
 
 <!-- IFR Copilot Widget -->
