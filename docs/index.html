@@ -974,6 +974,35 @@
     @keyframes ifr-btwinkle{from{opacity:var(--a0);}to{opacity:var(--a1);}}
     .ifr-stars-container{position:absolute;inset:0;z-index:1;pointer-events:none;overflow:hidden;}
     /* === END IFR ANIMATED BANNER === */
+
+    /* === MOBILE HERO: static banner for tablets/phones === */
+    .hero-mobile-banner { display: none; }
+    @media (max-width: 1024px) {
+      .ifr-banner-canvas,
+      .ifr-bh-wrap,
+      .ifr-stars-container {
+        display: none !important;
+      }
+      .hero-mobile-banner {
+        display: block !important;
+        width: 100%;
+        max-width: 600px;
+        margin: 0 auto 16px;
+      }
+    }
+
+    /* === DANTE QUOTE === */
+    .dante-quote {
+      border-left: 3px solid #e74c3c;
+      padding: 1rem 1.5rem;
+      margin: 1.5rem 0;
+      font-style: italic;
+      color: #ccc;
+      background: rgba(231, 76, 60, 0.05);
+      border-radius: 0 8px 8px 0;
+      font-size: 1.05rem;
+      line-height: 1.7;
+    }
   </style>
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@900&display=swap" rel="stylesheet">
 </head>
@@ -1028,6 +1057,9 @@
     <div class="ifr-bh-void" id="ifr-bh-void"></div>
   </div>
   <!-- IFR ANIMATED BANNER END -->
+  <div class="hero-mobile-banner">
+    <img src="assets/IFR_BannerMobile.png" alt="Inferno $IFR" style="width:100%;height:auto;border-radius:12px;">
+  </div>
   <div class="container">
     <div class="coin-container">
       <div class="coin">
@@ -1057,6 +1089,12 @@
       <div class="what-text reveal">
         <p class="section-label">What is Inferno</p>
         <h2 class="section-title">A token that gets scarcer with every transaction</h2>
+        <blockquote class="dante-quote">
+          <p>&bdquo;Like in Dante&rsquo;s Inferno, fire purifies what passes through it.<br>
+          With every transaction, 2.5% burns &mdash; forever.<br>
+          What remains is purer, scarcer, stronger.<br>
+          That is $IFR.&ldquo;</p>
+        </blockquote>
         <p>
           Inferno ($IFR) is a <strong>deflationary ERC-20 token</strong> built on Ethereum. Every transfer
           automatically burns 2.5% of the amount, permanently reducing the total supply. An additional 1%
