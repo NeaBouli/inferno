@@ -75,9 +75,10 @@ inferno/
 │   ├── ai-copilot/                   [x] React + Vite + TS + Tailwind + Express (3 modes, RAG, Safety Guards)
 │   ├── points-backend/               [x] Express + Prisma + SQLite + siwe + jose (SIWE Auth, Points, EIP-712 Voucher, 35 Tests)
 │   ├── creator-gateway/              [x] Express + ethers v5 + googleapis + JWT (YouTube x IFR Lock Bridge, Port 3005, 41 Tests)
-│   └── benefits-network/
-│       ├── backend/                   [x] Express + Prisma + SQLite (16 Tests)
-│       └── frontend/                  [x] Next.js 14 + Tailwind + wagmi v2 (PWA)
+│   ├── benefits-network/
+│   │   ├── backend/                   [x] Express + Prisma + SQLite (16 Tests)
+│   │   └── frontend/                  [x] Next.js 14 + Tailwind + wagmi v2 (PWA)
+│   └── telegram/telegram-bot/         [x] Telegraf Bot (11 commands: start, lock, burns, tokenomics, ask, partner, bootstrap, roadmap, rules, admin, announce)
 ├── docs/
 │   ├── DOCS.md                         This document
 │   ├── FAIR-LAUNCH-MIGRATION.md        CFLM Migration Plan
