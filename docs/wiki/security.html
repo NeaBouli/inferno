@@ -1122,11 +1122,14 @@
         <li>Released: 0 IFR</li>
       </ul>
 
-      <style>.live-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#10b981;margin-right:6px;animation:pulse 2s infinite}@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}</style>
-      <h3><span class="live-dot"></span>Deflation (Live)</h3>
+      <style>.live-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--muted,#8a8a96);margin-right:6px;animation:pulse 2s infinite}@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}</style>
+      <h3><span class="live-dot" id="deflation-dot"></span>Deflation (Live)</h3>
       <p>
         Since deployment, <strong><span id="burn-amount">&mdash;</span> IFR have been permanently burned</strong>
         (<span id="burn-pct">&mdash;</span> of total supply). Deflation is provable on-chain.
+      </p>
+      <p id="deflation-status" style="font-size:0.85em;color:var(--muted,#8a8a96);margin-top:4px;">
+        <span style="color:var(--muted,#8a8a96)">&bull;</span> Connecting&hellip;
       </p>
 
       <div class="callout">
@@ -1176,16 +1179,36 @@
 <div id="ifr-panel"><iframe src="https://ifr-ai-copilot-production.up.railway.app" allow="clipboard-write"></iframe></div>
 
 <script>
-fetch('https://ifr-ai-copilot-production.up.railway.app/api/ifr/supply')
-  .then(r=>r.json())
-  .then(d=>{
-    if(d.burned){
-      document.getElementById('burn-amount').textContent=Number(d.burned).toLocaleString();
-      document.getElementById('burn-pct').textContent=(d.burned/1000000000*100).toFixed(4)+'%';
-      document.querySelector('.live-dot').style.background='#10b981';
-    }
-  })
-  .catch(()=>{document.querySelector('.live-dot').style.background='#ef4444';});
+(function() {
+  var PROXY = 'https://ifr-ai-copilot-production.up.railway.app';
+  var dot = document.getElementById('deflation-dot');
+  var status = document.getElementById('deflation-status');
+  var burnEl = document.getElementById('burn-amount');
+  var pctEl = document.getElementById('burn-pct');
+
+  function showOk() {
+    dot.style.background = '#22c55e';
+    status.innerHTML = '<span style="color:#22c55e">\u25CF</span> Live via Railway Proxy \u2192 Ethereum \u2014 refreshes every 30s';
+  }
+  function showFail() {
+    dot.style.background = '#ef4444';
+    status.innerHTML = '<span style="color:#ef4444">\u25CF</span> \u26A0 Connection failed \u2014 retry in 30s';
+  }
+  function update() {
+    fetch(PROXY + '/api/ifr/supply')
+      .then(function(r) { return r.json(); })
+      .then(function(d) {
+        if (d.burned != null && d.totalSupply != null) {
+          burnEl.textContent = Number(d.burned).toLocaleString();
+          pctEl.textContent = (d.burned / 1000000000 * 100).toFixed(4) + '%';
+          showOk();
+        } else { showFail(); }
+      })
+      .catch(function() { showFail(); });
+  }
+  update();
+  setInterval(update, 30000);
+})();
 </script>
 
 </body>
