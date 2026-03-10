@@ -79,16 +79,20 @@ bot.on('text', async (ctx) => {
 
 // ── Launch ──────────────────────────────────────────────────────────────────
 
-bot.launch({ dropPendingUpdates: true })
-  .then(() => {
-    logger.info('🔥 IFR Telegram Bot started successfully');
-    logger.info({ env: process.env.NODE_ENV }, 'Environment');
-    scheduleDailyReport(bot);
-  })
-  .catch((err) => {
-    logger.fatal({ err: err.message }, 'Failed to start bot');
-    process.exit(1);
-  });
+
+// Delayed launch to prevent 409 conflict on Railway restart
+setTimeout(() => {
+  bot.launch({ dropPendingUpdates: true })
+    .then(() => {
+      logger.info('🔥 IFR Telegram Bot started successfully');
+      logger.info({ env: process.env.NODE_ENV }, 'Environment');
+      scheduleDailyReport(bot);
+    })
+    .catch((err) => {
+      logger.fatal({ err: err.message }, 'Failed to start bot');
+      process.exit(1);
+    });
+}, 8000);
 
 // Graceful shutdown
 process.once('SIGINT',  () => { logger.info('SIGINT received — stopping bot'); bot.stop('SIGINT'); });
