@@ -915,8 +915,8 @@
       .arch-note { flex-direction: column; align-items: center; gap: 12px; }
     }
 
-    @media (max-width: 640px) {
-      section { padding: 72px 0; }
+    /* ── MOBILE/TABLET NAV: hamburger for <1024px ── */
+    @media (max-width: 1023px) {
       .nav-links { display: none; }
       .nav-links.open {
         display: flex;
@@ -925,12 +925,26 @@
         top: 64px;
         left: 0;
         right: 0;
-        background: var(--bg);
-        border-bottom: 1px solid var(--border);
-        padding: 16px 24px;
-        gap: 16px;
+        background: rgba(10,10,15,0.97);
+        backdrop-filter: blur(16px);
+        border-bottom: 1px solid rgba(0,245,255,0.12);
+        padding: 20px 24px;
+        gap: 12px;
+        max-height: calc(100vh - 64px);
+        overflow-y: auto;
+        z-index: 101;
       }
-      .nav-toggle { display: block; font-size: 24px; }
+      .nav-links.open a {
+        font-size: 15px;
+        padding: 6px 0;
+        border-bottom: 1px solid rgba(255,255,255,0.04);
+      }
+      .nav-links.open a:hover { color: #00f5ff; }
+      .nav-toggle { display: block; font-size: 26px; padding: 4px 8px; }
+    }
+
+    @media (max-width: 640px) {
+      section { padding: 72px 0; }
       #wc-btn .wc-label { display: none; }
       #wc-btn { padding: 8px 10px; }
       .what-stats { grid-template-columns: 1fr 1fr; }
@@ -2258,6 +2272,15 @@ if (isLocked) {
     a.addEventListener('click', () => {
       document.getElementById('navLinks').classList.remove('open');
     });
+  });
+
+  // Close mobile nav on outside tap
+  document.addEventListener('click', (e) => {
+    const nl = document.getElementById('navLinks');
+    const nt = document.getElementById('navToggle');
+    if (nl.classList.contains('open') && !nl.contains(e.target) && !nt.contains(e.target)) {
+      nl.classList.remove('open');
+    }
   });
 
   // Scroll reveal
