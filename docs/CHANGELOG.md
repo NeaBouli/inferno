@@ -4,6 +4,36 @@ All notable changes to the Inferno ($IFR) project.
 
 ---
 
+## [Plan B Bootstrap Decision] — 2026-03-08
+
+### Changed
+- **Bootstrap funding source changed from Plan A to Plan B**
+  - Plan A (original): LiquidityReserve → BootstrapVaultV3 (100M IFR)
+  - Plan B (active): Treasury Safe (144.75M) + Community Safe (50M) → BootstrapVaultV3 (~194.75M IFR total)
+  - Reason: LiquidityReserve hard-locked until 01.09.2026 — inaccessible for Bootstrap without governance risk. Plan B uses liquid multisig funds with zero smart contract risk.
+
+### Decision Details
+- **Date:** 08.03.2026
+- **Decided by:** Core Dev Team (Kaspartizan)
+- **On-chain execution:** Pending Proposals #4 + #5 (11.03.2026)
+- **Community Safe allocation after Bootstrap:**
+  - 50M IFR → BootstrapVaultV3 (Bootstrap contribution)
+  - 7.9M IFR → Community Operations Reserve (permanent — bug bounties, grants, DAO seed, ecosystem incentives)
+- **LiquidityReserve status:** Unchanged — remains locked until 01.09.2026 for Phase 2 LP expansion
+
+### Why Plan B is superior
+- No governance proposal required to unlock funds
+- Higher IFR allocation (~194.75M vs 100M) → deeper initial liquidity
+- Fully transparent — both Safe addresses publicly documented
+- Community-held funds used for community Bootstrap event
+
+### References
+- docs/BOOTSTRAP_VAULT_SPEC.md
+- docs/wiki/bootstrap.html
+- docs/wiki/transparency.html
+
+---
+
 ## [Unreleased]
 
 ### Added
