@@ -487,9 +487,9 @@ async function esApiFetch(params: string): Promise<unknown> {
   }
 }
 
-// In-memory cache (15s TTL — short to avoid stale data overwriting fresh frontend values)
+// In-memory cache (125s TTL — covers 120s balances interval with buffer)
 const esCache = new Map<string, { data: unknown; ts: number }>();
-const ES_CACHE_TTL = 15_000;
+const ES_CACHE_TTL = 125_000;
 
 function getCached(key: string): unknown | null {
   const entry = esCache.get(key);
@@ -665,13 +665,17 @@ app.listen(PORT, () => {
     try { await fetchBalancesData(); console.log("[cache] balances pre-warmed"); } catch {}
   })();
 
-  // Background refresh every 12s — cache always fresh, users get instant responses
+  // Rate limit budget: ~19.440 calls/day
+  // Supply: (86400/60)×2 = 2.880 | Balances: (86400/120)×17 = 12.240 | Total: ~15.120
+  // Etherscan free tier: 100.000 calls/day — safe margin >80%
   setInterval(async () => {
-    try {
-      await fetchSupplyData();
-      await fetchBalancesData();
-    } catch (e) {
-      console.error("[cache] pre-warm failed:", (e as Error).message);
+    try { await fetchSupplyData(); } catch (e) {
+      console.error("[cache] supply refresh failed:", (e as Error).message);
     }
-  }, 12_000);
+  }, 60_000);
+  setInterval(async () => {
+    try { await fetchBalancesData(); } catch (e) {
+      console.error("[cache] balances refresh failed:", (e as Error).message);
+    }
+  }, 120_000);
 });
