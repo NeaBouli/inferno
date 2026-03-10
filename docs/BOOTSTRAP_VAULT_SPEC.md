@@ -173,7 +173,7 @@ event EmergencyTriggered(address indexed caller, string reason); // governance o
 ### Known Risks (to document in audit)
 
 - Team.Finance integration: if locker fails, fallback needed
-- LiquidityReserve must approve BootstrapVault before finalise()
+- Treasury Safe + Community Safe transfer IFR directly to BootstrapVaultV3 (Plan B — no approve() needed)
 - Uniswap V2 pair must not exist before finalise() (or addLiquidity handles it)
 - **W17:** LP tokens locked with `withdrawer=address(this)` but contract has no `unlockLP()` function — LP tokens are permanently stranded after lock period expires. Accepted as stronger trust guarantee (LP permanently locked = rug-proof).
 
@@ -183,7 +183,7 @@ event EmergencyTriggered(address indexed caller, string reason); // governance o
 
 ### Pre-Deploy Checklist
 
-- [ ] LiquidityReserve approves BootstrapVault for 100M IFR
+- [x] Treasury Safe sends 144.75M IFR + Community Safe sends 50M IFR → BootstrapVaultV3 (~194.75M total)
 - [ ] Governance proposal: setFeeExempt(BootstrapVault, true)
 - [ ] Team.Finance locker address verified on Mainnet
 - [ ] Uniswap V2 Router address verified on Mainnet
@@ -193,7 +193,8 @@ event EmergencyTriggered(address indexed caller, string reason); // governance o
 
 1. Deploy BootstrapVault (all params immutable)
 2. Governance: setFeeExempt(BootstrapVault, true)
-3. LiquidityReserve: approve(BootstrapVault, 100M IFR)
+3. Treasury Safe: transfer(BootstrapVaultV3, 144,750,000 IFR)
+4. Community Safe: transfer(BootstrapVaultV3, 50,000,000 IFR)
 4. Announce bootstrap start on all channels
 5. After 90 days: anyone calls finalise()
 6. Contributors call claim()

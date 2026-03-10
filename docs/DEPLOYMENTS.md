@@ -34,7 +34,7 @@
 | IFRLock | `token, deployer (guardian)` |
 | PartnerVault | `token, governance (admin), deployer (guardian), 1500 (rewardBps), 4000000000000000 (4M*1e9 annualCap)` |
 | FeeRouterV1 | `governance, deployer (feeCollector), deployer (voucherSigner)` |
-| BootstrapVault | `token, LiquidityReserve v2 (ifrSource), router, address(0) (TF locker disabled), 1772604468 (startTime), 7776000 (90d), 100000000000000000 (100M*1e9 ifrAllocation), 10000000000000000 (0.01 ETH), 2000000000000000000 (2 ETH), 31536000 (365d)` — **Note:** LiquidityReserve must approve 200M IFR (2 × ifrAllocation — 100M for LP + 100M for claims) |
+| BootstrapVault | `token, LiquidityReserve v2 (ifrSource), router, address(0) (TF locker disabled), 1772604468 (startTime), 7776000 (90d), 100000000000000000 (100M*1e9 ifrAllocation), 10000000000000000 (0.01 ETH), 2000000000000000000 (2 ETH), 31536000 (365d)` — ⚠️ Plan A (deprecated 08.03.2026). Active: Plan B — Treasury Safe 144.75M + Community Safe 50M. See CHANGELOG.md. |
 
 ### Token Distribution
 

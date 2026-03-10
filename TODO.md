@@ -47,8 +47,8 @@ Stand: 08.03.2026 | Konsolidiert (Claude + Core Dev)
    - Warum wurden zusaetzliche Token gesperrt?
    - Nur 10M IFR fuer 9 Monate fuer Devs → bewusste Selbstbeschraenkung als Trust-Signal
    - Platzierung: README / Wiki / Landing Page (noch festlegen)
-5. **ZU PRUEFEN:** Wurde Bootstrap Allocation & Verteilung vollstaendig von Plan A auf Plan B umgestellt?
-6. **ZU PRUEFEN:** Gibt es noch alte Texte/Erklaerungen die Plan A Struktur beschreiben? (Landing Page, Wiki, .md, FAQ) → ggf. bereinigen
+5. ✅ ERLEDIGT (10.03.2026): Bootstrap auf Plan B umgestellt. Siehe CHANGELOG.md.
+6. ✅ ERLEDIGT (10.03.2026): Plan A Texte bereinigt in BOOTSTRAP_VAULT_SPEC.md + DEPLOYMENTS.md.
 7. `docs/index.html:1987` — Live Tracker JS: bootstrap Adresse noch V1 (`0xA820`), muss V3 werden (`0xf72565...e141`)
 8. `docs/wiki/deployment.html:499` — Mainnet-Tabelle zeigt alte V1 BootstrapVault Adresse (`0xA820`), muss V3 werden
 9. `scripts/propose-bootstrap-feeexempt.js:16` — Script hardcoded alte V1 Adresse, updaten oder DEPRECATED markieren
