@@ -22,6 +22,8 @@ async function verifyCommand(ctx) {
     let reply;
     if (data.isLocked && parseFloat(data.lockAmount) > 0) {
       reply = `✅ Wallet \`${short}\` has a verified IFR lock of *${amount} IFR*`;
+    } else if (data.isLocked) {
+      reply = `✅ Wallet \`${short}\` has an active IFR lock.`;
     } else {
       reply = `❌ Wallet \`${short}\` has no active IFR lock.`;
     }
