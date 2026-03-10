@@ -23,7 +23,7 @@ async function announceCommand(ctx) {
   try {
     await ctx.telegram.sendMessage(GROUP_ID, formatted, {
       parse_mode: 'Markdown',
-      message_thread_id: Number(TOPIC_ID),
+      message_thread_id: Number(TOPIC_ID) || undefined,
     });
     logger.info({ adminId: ctx.from.id, length: text.length }, 'Announcement posted');
     await ctx.reply('✅ Announcement gesendet.');
