@@ -585,12 +585,12 @@
       <div class="faq-section">
         <div class="faq-item">
           <button class="faq-q"><span>Has the protocol been audited?</span><span class="icon">+</span></button>
-          <div class="faq-a">The protocol has undergone multiple layers of security analysis:<br><br>&bull; <strong>Slither static analysis</strong>: 0 high/critical findings across all contracts<br>&bull; <strong>Claude security audit</strong>: 0 FAIL, 21 WARN, 81 PASS<br>&bull; <strong>ChatGPT audit V4</strong>: 7/7 areas PASS<br>&bull; <strong>497 automated tests</strong> with 99% statement coverage and 91% branch coverage<br>&bull; <strong>App security review</strong>: 20/25 findings fixed, 5 documented<br><br>All 9 contracts are deployed and verified on Ethereum Mainnet. A professional third-party audit (Code4rena, Sherlock, or Cyfrin) is planned as the next security milestone.</div>
+          <div class="faq-a">The protocol has undergone multiple layers of security analysis:<br><br>&bull; <strong>Slither static analysis</strong>: 0 high/critical findings across all contracts<br>&bull; <strong>Claude security audit</strong>: 0 FAIL, 21 WARN, 81 PASS<br>&bull; <strong>ChatGPT audit V4</strong>: 7/7 areas PASS<br>&bull; <strong>497 automated tests</strong> with 99% statement coverage and 91% branch coverage<br>&bull; <strong>App security review</strong>: 20/25 findings fixed, 5 documented<br><br>All 14 on-chain components are deployed and verified on Ethereum Mainnet. A professional third-party audit (Code4rena, Sherlock, or Cyfrin) is planned as the next security milestone.</div>
         </div>
 
         <div class="faq-item">
           <button class="faq-q"><span>How can I verify the contracts on Etherscan?</span><span class="icon">+</span></button>
-          <div class="faq-a">All 9 contracts are verified on Etherscan with source code visible. Visit each contract address on <a href="https://etherscan.io" target="_blank" rel="noopener">etherscan.io</a>, click the &ldquo;Contract&rdquo; tab, then &ldquo;Read Contract&rdquo; to inspect state. The main token address is <code>0x77e99917Eca8539c62F509ED1193ac36580A6e7B</code>. All addresses are listed on the <a href="deployment.html">Deployment</a> page.</div>
+          <div class="faq-a">All 14 on-chain components are verified on Etherscan with source code visible. Visit each contract address on <a href="https://etherscan.io" target="_blank" rel="noopener">etherscan.io</a>, click the &ldquo;Contract&rdquo; tab, then &ldquo;Read Contract&rdquo; to inspect state. The main token address is <code>0x77e99917Eca8539c62F509ED1193ac36580A6e7B</code>. All addresses are listed on the <a href="deployment.html">Deployment</a> page.</div>
         </div>
 
         <div class="faq-item">
@@ -725,7 +725,7 @@
 
         <div class="faq-item">
           <button class="faq-q"><span>How do I verify this project is legitimate?</span><span class="icon">+</span></button>
-          <div class="faq-a">Verification checklist:<br><br>&bull; All 9 contracts verified on <a href="https://etherscan.io/address/0x77e99917Eca8539c62F509ED1193ac36580A6e7B#code" target="_blank" rel="noopener">Etherscan</a> &mdash; read the source code<br>&bull; Full repository open-source at <a href="https://github.com/NeaBouli/inferno" target="_blank" rel="noopener">GitHub</a><br>&bull; 497 automated tests, 99% coverage<br>&bull; No mint function &mdash; verify in contract source<br>&bull; All wallet addresses publicly documented<br>&bull; Governance timelock &mdash; all changes visible 48h in advance<br>&bull; No hidden admin functions &mdash; Slither confirms</div>
+          <div class="faq-a">Verification checklist:<br><br>&bull; All 14 on-chain components verified on <a href="https://etherscan.io/address/0x77e99917Eca8539c62F509ED1193ac36580A6e7B#code" target="_blank" rel="noopener">Etherscan</a> &mdash; read the source code<br>&bull; Full repository open-source at <a href="https://github.com/NeaBouli/inferno" target="_blank" rel="noopener">GitHub</a><br>&bull; 497 automated tests, 99% coverage<br>&bull; No mint function &mdash; verify in contract source<br>&bull; All wallet addresses publicly documented<br>&bull; Governance timelock &mdash; all changes visible 48h in advance<br>&bull; No hidden admin functions &mdash; Slither confirms</div>
         </div>
 
         <div class="faq-item">
@@ -866,7 +866,7 @@ const hasLock = await ifrLock.isLocked(walletAddress, ethers.utils.parseUnits("1
 
         <div class="faq-item">
           <button class="faq-q"><span>How do I onboard my business as a builder?</span><span class="icon">+</span></button>
-          <div class="faq-a">1. Read the <a href="business-onboarding.html">Business Onboarding</a> guide<br>2. Set your lock threshold tiers (e.g., 1000 IFR = 10% discount)<br>3. Register through the builder onboarding process<br>4. After approval, a governance proposal adds you to the PartnerVault<br>5. You start earning Creator Rewards when users lock IFR for your product<br><br>Builder tiers range from Launch Builders (up to 5M IFR allocation) to Tier 3 (500K IFR). All allocations are milestone-based and vested.</div>
+          <div class="faq-a">1. Read the <a href="business-onboarding.html">Business Onboarding</a> guide<br>2. Set your lock threshold tiers (e.g., 1000 IFR = 10% discount)<br>3. Register through the builder onboarding process<br>4. After approval, a governance proposal adds you to the PartnerVault<br>5. You start earning Creator Rewards when users lock IFR for your product<br><br>Builders register through the onboarding process. Allocations are KPI- and lock-based, governed by Governance proposals. There are no fixed tier thresholds — all allocations are milestone-based and vested.</div>
         </div>
       </div>
 
