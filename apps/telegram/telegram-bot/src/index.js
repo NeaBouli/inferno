@@ -14,11 +14,18 @@ const bootstrapCommand = require('./commands/bootstrap');
 const roadmapCommand  = require('./commands/roadmap');
 const adminCommand    = require('./commands/admin');
 const announceCommand = require('./commands/announce');
+const banCommand      = require('./commands/ban');
+const warnCommand     = require('./commands/warn');
+const pinCommand      = require('./commands/pin');
+const priceCommand    = require('./commands/price');
+const verifyCommand   = require('./commands/verify');
 const rulesCommand    = require('./commands/rules');
 
 // Handlers
 const { onNewMember, onVerifyCallback } = require('./handlers/verification');
 const { scheduleDailyReport } = require('./handlers/dailyReport');
+const { scheduleDailyWelcome } = require('./handlers/dailyWelcome');
+const { startGovernanceNotifier } = require('./handlers/governanceNotifier');
 
 // Middleware
 const rateLimit  = require('./middleware/rateLimit');
@@ -65,10 +72,15 @@ bot.command('bootstrap',  rateLimit('bootstrap'),   bootstrapCommand);
 bot.command('partner',    rateLimit('partner'),     partnerCommand);
 bot.command('roadmap',    rateLimit('roadmap'),     roadmapCommand);
 bot.command('ask',        rateLimit('ask'),         askCommand);
+bot.command('price',      rateLimit('price'),       priceCommand);
+bot.command('verify',     rateLimit('verify'),      verifyCommand);
 
 // Admin — Whitelist only (silent ignore für Nicht-Admins)
 bot.command('admin',    adminOnly, adminCommand);
 bot.command('announce', adminOnly, announceCommand);
+bot.command('ban',      adminOnly, banCommand);
+bot.command('warn',     adminOnly, warnCommand);
+bot.command('pin',      adminOnly, pinCommand);
 
 // Unbekannte Nachrichten / Commands
 bot.on('text', async (ctx) => {
@@ -89,6 +101,8 @@ setTimeout(() => {
       logger.info('🔥 IFR Telegram Bot started successfully');
       logger.info({ env: process.env.NODE_ENV }, 'Environment');
       scheduleDailyReport(bot);
+      scheduleDailyWelcome(bot);
+      startGovernanceNotifier(bot);
     })
     .catch((err) => {
       logger.fatal({ err: err.message }, 'Failed to start bot');

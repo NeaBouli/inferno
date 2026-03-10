@@ -79,7 +79,7 @@ inferno/
 │   ├── benefits-network/
 │   │   ├── backend/                   [x] Express + Prisma + SQLite (16 Tests)
 │   │   └── frontend/                  [x] Next.js 14 + Tailwind + wagmi v2 (PWA)
-│   └── telegram/telegram-bot/         [x] Telegraf Bot (11 commands: start, lock, burns, tokenomics, ask, partner, bootstrap, roadmap, rules, admin, announce)
+│   └── telegram/telegram-bot/         [x] Telegraf Bot (16 commands: start, lock, burns, tokenomics, ask, partner, bootstrap, roadmap, rules, admin, announce, ban, warn, pin, price, verify)
 ├── docs/
 │   ├── DOCS.md                         This document
 │   ├── FAIR-LAUNCH-MIGRATION.md        CFLM Migration Plan
