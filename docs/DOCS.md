@@ -218,7 +218,7 @@ inferno/
 |--------|-------|
 | Contracts | 10 (+ 5 Mocks) |
 | Solidity LOC | 1,950 |
-| Tests | 367 contract + 41 Creator Gateway + 20 Points + 16 Benefits = 494 total |
+| Tests | 370 contract + 41 Creator Gateway + 20 Points + 16 Benefits = 497 total |
 | Branch Coverage | 91% |
 | Test LOC | 2,402 |
 | Deploy Script | 232 LOC, 9 Steps |
