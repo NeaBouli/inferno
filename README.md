@@ -95,7 +95,7 @@ The ecosystem is open and permissionless. Any product can integrate IFR Lock.
 - Branch coverage: 91% (99% statements)
 - GitHub Actions CI: Creator Gateway, Points Backend, AI Copilot
 - Slither security audit: 0 high/critical findings
-- Claude security audit: 0 FAIL, 20 WARN (1 fixed), 81 PASS ([full report](docs/SECURITY_AUDIT_CLAUDE.md))
+- Internal security audit: 0 FAIL, 20 WARN (1 fixed), 81 PASS ([full report](docs/SECURITY_AUDIT_SKYWALKER.md))
 - App security review: 12 findings (2 CRITICAL, 5 HIGH — all fixed) ([full report](docs/APP_SECURITY_REVIEW.md))
 - Full Sepolia testnet deployment with verified contracts
 - Governance lifecycle tested: propose → 48h wait → execute
@@ -104,7 +104,7 @@ The ecosystem is open and permissionless. Any product can integrate IFR Lock.
 
 All smart contracts are open source and community review is explicitly encouraged.
 
-- **Internal Audit:** [docs/SECURITY_AUDIT_CLAUDE.md](docs/SECURITY_AUDIT_CLAUDE.md) — 0 FAIL, 20 WARN (1 fixed), 81 PASS
+- **Internal Audit:** [docs/SECURITY_AUDIT_SKYWALKER.md](docs/SECURITY_AUDIT_SKYWALKER.md) — 0 FAIL, 20 WARN (1 fixed), 81 PASS
 - **Submit a Finding:** [GitHub Issues → Security Audit Template](https://github.com/NeaBouli/inferno/issues/new?template=security-audit.md)
 - **Security Policy:** [SECURITY.md](SECURITY.md)
 

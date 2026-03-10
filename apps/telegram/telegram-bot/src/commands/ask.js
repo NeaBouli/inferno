@@ -1,5 +1,5 @@
-// commands/ask.js — /ask <frage> via Claude API
-const { askClaude } = require('../services/claude');
+// commands/ask.js — /ask <frage> via AI API
+const { askSkywalker } = require('../services/skywalker');
 const logger = require('../services/logger');
 
 async function askCommand(ctx) {
@@ -16,7 +16,7 @@ async function askCommand(ctx) {
 
   try {
     const userId = ctx.from.id;
-    const answer = await askClaude(userId, question);
+    const answer = await askSkywalker(userId, question);
 
     await ctx.telegram.editMessageText(
       ctx.chat.id,

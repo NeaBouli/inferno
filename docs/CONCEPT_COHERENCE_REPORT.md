@@ -17,7 +17,7 @@
 
 | Check | Description | Status | Details |
 |-------|-------------|--------|---------|
-| 1 | No named builder | **PASS** | 0 matches in docs/apps/README (CLAUDE.md: only filename reference `securecall_logo.png # legacy`) |
+| 1 | No named builder | **PASS** | 0 matches in docs/apps/README (SKYWALKER.md: only filename reference `securecall_logo.png # legacy`) |
 | 2 | Fair Launch consistent | **FIXED** | WHITEPAPER_EN.md had presale section + "Kasplex/Kaspa EVM" — corrected + DEPRECATED header |
 | 3 | No false promises | **PASS** | 0 matches for "100% safe/risk-free/guaranteed" (ONE-PAGER "no yield, no risk" = correct) |
 | 4 | Deflationary consistent | **PASS** | 33 mentions of "2.5%" across 16 files; all "mint" only as "no mint" or in mock contracts |

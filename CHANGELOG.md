@@ -15,7 +15,7 @@
 - `scripts/propose-feeexempt-burnreserve.js` — Governance proposal: setFeeExempt(BurnReserve, true)
 
 ### Changed
-- `docs/SECURITY_AUDIT_CLAUDE.md` — Finding G + W14 marked RESOLVED in V2 (6537c11b)
+- `docs/SECURITY_AUDIT_SKYWALKER.md` — Finding G + W14 marked RESOLVED in V2 (6537c11b)
 
 ### Security
 - BootstrapVault V1 (0xA820...) superseded — do not deploy; finalise() was broken
