@@ -7,12 +7,12 @@ Security findings are welcome from the community.
 
 ### How to Report
 
-**Public findings (Low/Informational):**
-Open a GitHub Issue using the [Security Audit Finding template](.github/ISSUE_TEMPLATE/security-audit.md)
+**Do NOT open a public GitHub Issue for security vulnerabilities.**
 
-**Critical/High severity:**
-Open a GitHub Issue marked `[PRIVATE]` — we will respond within 48h.
-Or use [GitHub Security Advisories](https://github.com/NeaBouli/inferno/security/advisories/new) for confidential reporting.
+Please report all security vulnerabilities via GitHub Security Advisories:
+https://github.com/NeaBouli/inferno/security/advisories/new
+
+This ensures confidential handling. We will respond within 48h.
 
 ### Scope
 
