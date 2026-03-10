@@ -32,6 +32,76 @@ const SCAM_PATTERNS = [
 
 const LINK_REGEX = /https?:\/\/\S+|t\.me\/\S+|@\w{5,}/i;
 
+// ── Anti-impersonation ──────────────────────────────────────────────────────
+const IMPERSONATION_PATTERNS = [
+  /\bifr\b/i,
+  /\binferno\b/i,
+  /\badmin\b/i,
+  /\bofficial\b/i,
+];
+
+// ── Link whitelist ──────────────────────────────────────────────────────────
+const ALLOWED_DOMAINS = [
+  'ifrunit.tech',
+  'etherscan.io',
+  'github.com/NeaBouli',
+  't.me/IFRtoken',
+  't.me/IFR_token',
+];
+
+const URL_EXTRACT_REGEX = /https?:\/\/[^\s]+|t\.me\/[^\s]+/gi;
+
+// ── Wallet scanner ──────────────────────────────────────────────────────────
+const ETH_ADDRESS_REGEX = /0x[a-fA-F0-9]{40}/g;
+const KNOWN_ADDRESSES = [
+  (process.env.IFR_TOKEN_ADDRESS || '').toLowerCase(),
+  (process.env.IFR_LOCK_ADDRESS || '').toLowerCase(),
+  (process.env.GOVERNANCE_ADDRESS || '').toLowerCase(),
+].filter(Boolean);
+
+/**
+ * Check if a display name impersonates IFR staff.
+ */
+function checkImpersonation(user) {
+  if (!user) return false;
+  const name = `${user.first_name || ''} ${user.last_name || ''} ${user.username || ''}`;
+  return IMPERSONATION_PATTERNS.some((p) => p.test(name));
+}
+
+/**
+ * Check if message contains only whitelisted links.
+ * Returns { hasUnallowed: boolean, url: string | null }
+ */
+function checkLinks(text) {
+  if (!text) return { hasUnallowed: false, url: null };
+  const urls = text.match(URL_EXTRACT_REGEX);
+  if (!urls) return { hasUnallowed: false, url: null };
+
+  for (const url of urls) {
+    const allowed = ALLOWED_DOMAINS.some((d) => url.includes(d));
+    if (!allowed) return { hasUnallowed: true, url };
+  }
+  return { hasUnallowed: false, url: null };
+}
+
+/**
+ * Check if message contains fake contract addresses.
+ * Returns { hasFake: boolean, address: string | null }
+ */
+function checkFakeAddresses(text) {
+  if (!text) return { hasFake: false, address: null };
+  const addresses = text.match(ETH_ADDRESS_REGEX);
+  if (!addresses) return { hasFake: false, address: null };
+
+  for (const addr of addresses) {
+    const lower = addr.toLowerCase();
+    if (!KNOWN_ADDRESSES.includes(lower)) {
+      return { hasFake: true, address: addr };
+    }
+  }
+  return { hasFake: false, address: null };
+}
+
 /**
  * Check if a message is spam/scam.
  * Returns { isSpam: boolean, reason: string | null }
@@ -110,6 +180,43 @@ function moderationMiddleware() {
     // Skip commands
     if (text.startsWith('/')) return next();
 
+    // 0a. Anti-impersonation (check display name)
+    if (checkImpersonation(ctx.from)) {
+      logger.warn({ userId, name: ctx.from.first_name }, 'Impersonation detected');
+      try {
+        await ctx.restrictChatMember(userId, {
+          permissions: { can_send_messages: false },
+        });
+        const adminIds = (process.env.ADMIN_USER_IDS || '').split(',').filter(Boolean);
+        for (const aid of adminIds) {
+          await ctx.telegram.sendMessage(
+            parseInt(aid),
+            `⚠️ Impersonation detected: user ${userId} (${ctx.from.first_name}) restricted in ${ctx.chat.title}`
+          ).catch(() => {});
+        }
+      } catch (e) {
+        logger.debug({ err: e.message }, 'Could not restrict impersonator');
+      }
+      return;
+    }
+
+    // 0b. Link whitelist
+    const linkCheck = checkLinks(text);
+    if (linkCheck.hasUnallowed) {
+      logger.warn({ userId, url: linkCheck.url }, 'Unallowed link deleted');
+      await safeDelete(ctx);
+      return;
+    }
+
+    // 0c. Fake address scanner
+    const addrCheck = checkFakeAddresses(text);
+    if (addrCheck.hasFake) {
+      logger.warn({ userId, address: addrCheck.address }, 'Fake address deleted');
+      await safeDelete(ctx);
+      await ctx.reply('⚠️ Unknown contract address detected. Only share verified IFR addresses.').catch(() => {});
+      return;
+    }
+
     // 1. Scam check
     const spam = checkMessage(text);
     if (spam.isSpam) {
@@ -161,5 +268,8 @@ module.exports = {
   hasLinks,
   shouldBan,
   resetViolations,
+  checkImpersonation,
+  checkLinks,
+  checkFakeAddresses,
   moderationMiddleware,
 };

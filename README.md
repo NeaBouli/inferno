@@ -119,7 +119,7 @@ All smart contracts are open source and community review is explicitly encourage
 | Creator Gateway | `apps/creator-gateway/` | 3005 | Express + ethers v5 + googleapis + JWT |
 | Benefits Network Backend | `apps/benefits-network/backend/` | 3001 | Express + Prisma + SQLite + ethers v5 |
 | Benefits Network Frontend | `apps/benefits-network/frontend/` | 3000 | Next.js 14 + Tailwind + wagmi v2 (PWA) |
-| Telegram Bot | `apps/telegram/telegram-bot/` | — | Telegraf + Railway (11 commands, admin announcements) |
+| Telegram Bot | `apps/telegram/telegram-bot/` | — | Telegraf + Railway (16 commands, moderation, governance notifier) |
 
 ### Token Dashboard
 
