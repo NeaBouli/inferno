@@ -79,7 +79,7 @@ bot.on('text', async (ctx) => {
 
 // ── Launch ──────────────────────────────────────────────────────────────────
 
-bot.launch()
+bot.launch({ dropPendingUpdates: true })
   .then(() => {
     logger.info('🔥 IFR Telegram Bot started successfully');
     logger.info({ env: process.env.NODE_ENV }, 'Environment');
