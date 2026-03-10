@@ -465,8 +465,6 @@ const PROTOCOL_ADDRESSES: Record<string, string> = {
   LiquidityReserve: "0xdc0309804803b3A105154f6073061E3185018f64",
   BootstrapVaultV3: "0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141",
   Deployer: "0x6b36687b0cd4386fb14cf565B67D7862110Fed67",
-  Treasury: "0xC8f4B45fA0C4727E9b27c13Af3d000C922a2ac9c",
-  Community: "0x61aF4E72C77b58F4b50964Ee93d420750Cd9857E",
   GnosisSafe: "0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b",
   CommunitySafe: "0xaC5687547B2B21d80F8fd345B51e608d476667C7",
   TeamBeneficiary: "0x04FABC52c51d1F8ced6974E7C25a34249b1E6239",
@@ -583,7 +581,7 @@ async function handleTxFeed(_req: express.Request, res: express.Response) {
   const cached = getCached("txfeed");
   if (cached) { res.json(cached); return; }
 
-  const feedWallets = ["Deployer", "Treasury", "Community", "GnosisSafe", "CommunitySafe"];
+  const feedWallets = ["Deployer", "GnosisSafe", "CommunitySafe"];
   try {
     const transactions: { wallet: string; dir: string; amount: string; type: string; hash: string; timestamp: number }[] = [];
     const seen = new Set<string>();
