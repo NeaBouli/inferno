@@ -1101,31 +1101,32 @@
         </tbody>
       </table>
 
-      <h3>Token Supply Verteilung</h3>
+      <h3>Token Supply Distribution</h3>
       <table>
         <thead><tr><th>Wallet</th><th>IFR</th><th>%</th></tr></thead>
         <tbody>
           <tr><td>LP Pair</td><td>400,000,000</td><td>40.08%</td></tr>
           <tr><td>LiquidityReserve</td><td>200,000,000</td><td>20.04%</td></tr>
-          <tr><td>Vesting (Team, 4 Jahre)</td><td>150,000,000</td><td>15.03%</td></tr>
+          <tr><td>Vesting (Team, 4 Years)</td><td>150,000,000</td><td>15.03%</td></tr>
           <tr><td>Deployer (Treasury+Community)</td><td>169,387,995</td><td>16.97%</td></tr>
           <tr><td>PartnerVault</td><td>40,000,000</td><td>4.01%</td></tr>
-          <tr><td>Verbrannt (Deflation)</td><td>2,000,425</td><td>0.20%</td></tr>
+          <tr><td>Burned (Deflation)</td><td>2,000,425</td><td>0.20%</td></tr>
         </tbody>
       </table>
 
       <h3>Vesting (Team)</h3>
       <ul>
         <li>Balance: 150,000,000 IFR (15%)</li>
-        <li>Cliff: 365 Tage (bis ca. Januar 2027)</li>
-        <li>Duration: 1,460 Tage (4 Jahre linear)</li>
+        <li>Cliff: 365 days (~March 2027)</li>
+        <li>Duration: 1,460 days (4 years linear)</li>
         <li>Released: 0 IFR</li>
       </ul>
 
-      <h3>Deflation (Live)</h3>
+      <style>.live-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#10b981;margin-right:6px;animation:pulse 2s infinite}@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}</style>
+      <h3><span class="live-dot"></span>Deflation (Live)</h3>
       <p>
-        Seit Deploy wurden <strong>2,000,425 IFR permanent verbrannt</strong>
-        (0.20% des Supply). Deflation funktioniert on-chain nachweisbar.
+        Since deployment, <strong><span id="burn-amount">&mdash;</span> IFR have been permanently burned</strong>
+        (<span id="burn-pct">&mdash;</span> of total supply). Deflation is provable on-chain.
       </p>
 
       <div class="callout">
@@ -1173,6 +1174,19 @@
 </style>
 <button id="ifr-btn" onclick="var p=document.getElementById('ifr-panel');p.style.display=p.style.display==='block'?'none':'block';">&#x1f525;</button>
 <div id="ifr-panel"><iframe src="https://ifr-ai-copilot-production.up.railway.app" allow="clipboard-write"></iframe></div>
+
+<script>
+fetch('https://ifr-ai-copilot-production.up.railway.app/api/ifr/supply')
+  .then(r=>r.json())
+  .then(d=>{
+    if(d.burned){
+      document.getElementById('burn-amount').textContent=Number(d.burned).toLocaleString();
+      document.getElementById('burn-pct').textContent=(d.burned/1000000000*100).toFixed(4)+'%';
+      document.querySelector('.live-dot').style.background='#10b981';
+    }
+  })
+  .catch(()=>{document.querySelector('.live-dot').style.background='#ef4444';});
+</script>
 
 </body>
 </html>
