@@ -162,9 +162,10 @@ export default function IFRCopilot() {
         </div>
       </div>
 
-      {/* Safety banner */}
-      <div className="bg-yellow-900/20 border-b border-yellow-800/30 px-3 py-1.5 text-[11px] text-yellow-500">
-        Never share your seed phrase or private key with anyone.
+      {/* Disclaimer banner */}
+      <div style={{background:'#1a1a2e',border:'1px solid #f97316',borderRadius:'8px',padding:'10px 14px',margin:'8px 8px 0',fontSize:'12px',color:'#94a3b8',display:'flex',alignItems:'flex-start',gap:'8px'}}>
+        <span style={{color:'#f97316',fontSize:'14px'}}>&#x26A0;</span>
+        <span>AI responses may not always be accurate. Always verify critical info at <a href="https://ifrunit.tech" target="_blank" rel="noreferrer" style={{color:'#f97316'}}>ifrunit.tech</a>. Never share private keys or seed phrases.</span>
       </div>
 
       {/* Messages */}
