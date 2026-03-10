@@ -13,6 +13,7 @@ const partnerCommand  = require('./commands/partner');
 const bootstrapCommand = require('./commands/bootstrap');
 const roadmapCommand  = require('./commands/roadmap');
 const adminCommand    = require('./commands/admin');
+const announceCommand = require('./commands/announce');
 const rulesCommand    = require('./commands/rules');
 
 // Handlers
@@ -66,7 +67,8 @@ bot.command('roadmap',    rateLimit('roadmap'),     roadmapCommand);
 bot.command('ask',        rateLimit('ask'),         askCommand);
 
 // Admin — Whitelist only (silent ignore für Nicht-Admins)
-bot.command('admin', adminOnly, adminCommand);
+bot.command('admin',    adminOnly, adminCommand);
+bot.command('announce', adminOnly, announceCommand);
 
 // Unbekannte Nachrichten / Commands
 bot.on('text', async (ctx) => {
