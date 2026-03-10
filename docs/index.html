@@ -968,6 +968,111 @@
     .ifr-stars-container{position:absolute;inset:0;z-index:1;pointer-events:none;overflow:hidden;}
     /* === END IFR ANIMATED BANNER === */
 
+    /* === IFR HERO ENHANCEMENTS — Desktop only, static layers === */
+    @media (min-width: 1024px) {
+
+      /* ── ENHANCED FIRE ARC: wider, brighter orange/red glow ── */
+      .ifr-fire-enhance {
+        position: absolute;
+        top: 50%; left: 50%;
+        transform: translate(-50%, -50%);
+        width: 340px; height: 340px;
+        border-radius: 50%;
+        z-index: 4;
+        pointer-events: none;
+        background: conic-gradient(
+          from 130deg,
+          transparent 0deg,
+          rgba(180,40,0,0.0) 5deg,
+          rgba(220,60,0,0.3) 18deg,
+          rgba(255,100,10,0.7) 40deg,
+          rgba(255,160,20,0.95) 65deg,
+          rgba(255,200,40,1.0) 85deg,
+          rgba(255,170,20,0.95) 105deg,
+          rgba(255,120,10,0.8) 130deg,
+          rgba(240,70,0,0.5) 155deg,
+          rgba(200,40,0,0.2) 175deg,
+          transparent 200deg
+        );
+        -webkit-mask: radial-gradient(circle, transparent 38%, rgba(0,0,0,0.15) 41%, black 44%, black 56%, rgba(0,0,0,0.15) 59%, transparent 63%);
+        mask: radial-gradient(circle, transparent 38%, rgba(0,0,0,0.15) 41%, black 44%, black 56%, rgba(0,0,0,0.15) 59%, transparent 63%);
+        filter: blur(5px);
+      }
+
+      /* ── SHARP CYAN RIM: bright edge around the void ── */
+      .ifr-cyan-rim {
+        position: absolute;
+        top: 50%; left: 50%;
+        transform: translate(-50%, -50%);
+        width: 190px; height: 190px;
+        border-radius: 50%;
+        z-index: 5;
+        pointer-events: none;
+        box-shadow:
+          0 0 12px 2px rgba(0,245,255,0.5),
+          0 0 30px 6px rgba(0,220,240,0.25),
+          0 0 60px 12px rgba(0,200,220,0.10),
+          inset 0 0 15px 3px rgba(0,245,255,0.15);
+        border: 1.5px solid rgba(0,245,255,0.35);
+      }
+
+      /* ── CYAN ENERGY RAYS: emanating top-right from the void ── */
+      .ifr-cyan-rays {
+        position: absolute;
+        top: 50%; left: 50%;
+        transform: translate(-50%, -50%);
+        width: 600px; height: 600px;
+        border-radius: 50%;
+        z-index: 3;
+        pointer-events: none;
+        background: conic-gradient(
+          from 280deg,
+          transparent 0deg,
+          rgba(0,245,255,0.0) 2deg,
+          rgba(0,245,255,0.06) 5deg,
+          rgba(0,230,245,0.12) 10deg,
+          rgba(0,245,255,0.08) 18deg,
+          transparent 22deg,
+          rgba(0,245,255,0.04) 26deg,
+          rgba(0,240,250,0.10) 32deg,
+          rgba(0,245,255,0.06) 40deg,
+          transparent 46deg,
+          rgba(0,245,255,0.03) 52deg,
+          rgba(0,235,245,0.08) 58deg,
+          rgba(0,245,255,0.05) 66deg,
+          transparent 74deg,
+          rgba(0,245,255,0.02) 82deg,
+          rgba(0,240,250,0.06) 90deg,
+          transparent 100deg,
+          transparent 360deg
+        );
+        -webkit-mask: radial-gradient(circle, transparent 14%, rgba(0,0,0,0.3) 18%, black 25%, black 70%, transparent 85%);
+        mask: radial-gradient(circle, transparent 14%, rgba(0,0,0,0.3) 18%, black 25%, black 70%, transparent 85%);
+        filter: blur(3px);
+        opacity: 0.85;
+      }
+
+      /* ── STATIC NETWORK CONSTELLATION ── */
+      .ifr-network-svg {
+        position: absolute;
+        top: 0; right: 0;
+        width: 55%;
+        height: 100%;
+        z-index: 2;
+        pointer-events: none;
+        opacity: 0.6;
+      }
+
+    } /* end @media ≥1024px — hero enhancements */
+
+    /* Hide enhancements on mobile/tablet */
+    @media (max-width: 1023px) {
+      .ifr-fire-enhance,
+      .ifr-cyan-rim,
+      .ifr-cyan-rays,
+      .ifr-network-svg { display: none !important; }
+    }
+
     /* === MOBILE HERO: static banner for tablets/phones === */
     .hero-mobile-banner { display: none; }
     @media (max-width: 1024px) {
@@ -1093,8 +1198,75 @@
     <div class="ifr-bh-ambient" id="ifr-bh-ambient"></div>
     <div class="ifr-teal-aura"></div>
     <div class="ifr-fire-ring"></div>
+    <div class="ifr-fire-enhance"></div>
+    <div class="ifr-cyan-rays"></div>
+    <div class="ifr-cyan-rim"></div>
     <div class="ifr-bh-void" id="ifr-bh-void"></div>
   </div>
+  <!-- STATIC NETWORK CONSTELLATION -->
+  <svg class="ifr-network-svg" viewBox="0 0 800 600" preserveAspectRatio="xMaxYMid slice" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <radialGradient id="ng" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#00f5ff" stop-opacity="0.9"/><stop offset="100%" stop-color="#00f5ff" stop-opacity="0"/></radialGradient>
+      <filter id="nglow"><feGaussianBlur stdDeviation="2.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+    </defs>
+    <g stroke="rgba(0,220,240,0.18)" stroke-width="0.8" fill="none">
+      <line x1="380" y1="60" x2="480" y2="120"/>
+      <line x1="480" y1="120" x2="560" y2="80"/>
+      <line x1="480" y1="120" x2="520" y2="200"/>
+      <line x1="560" y1="80" x2="650" y2="110"/>
+      <line x1="560" y1="80" x2="620" y2="40"/>
+      <line x1="650" y1="110" x2="720" y2="70"/>
+      <line x1="650" y1="110" x2="680" y2="190"/>
+      <line x1="520" y1="200" x2="600" y2="240"/>
+      <line x1="520" y1="200" x2="480" y2="280"/>
+      <line x1="600" y1="240" x2="680" y2="190"/>
+      <line x1="600" y1="240" x2="650" y2="310"/>
+      <line x1="680" y1="190" x2="750" y2="210"/>
+      <line x1="680" y1="190" x2="720" y2="280"/>
+      <line x1="650" y1="310" x2="720" y2="280"/>
+      <line x1="650" y1="310" x2="580" y2="370"/>
+      <line x1="720" y1="280" x2="770" y2="330"/>
+      <line x1="580" y1="370" x2="640" y2="420"/>
+      <line x1="580" y1="370" x2="510" y2="400"/>
+      <line x1="640" y1="420" x2="720" y2="400"/>
+      <line x1="640" y1="420" x2="600" y2="490"/>
+      <line x1="720" y1="400" x2="770" y2="330"/>
+      <line x1="510" y1="400" x2="480" y2="280"/>
+      <line x1="510" y1="400" x2="560" y2="480"/>
+      <line x1="560" y1="480" x2="600" y2="490"/>
+      <line x1="600" y1="490" x2="680" y2="520"/>
+      <line x1="720" y1="70" x2="760" y2="130"/>
+      <line x1="760" y1="130" x2="750" y2="210"/>
+      <line x1="380" y1="60" x2="420" y2="150"/>
+      <line x1="420" y1="150" x2="480" y2="120"/>
+      <line x1="420" y1="150" x2="520" y2="200"/>
+    </g>
+    <g filter="url(#nglow)">
+      <circle cx="380" cy="60" r="3" fill="url(#ng)"/><circle cx="380" cy="60" r="1.2" fill="#00f5ff"/>
+      <circle cx="480" cy="120" r="3.5" fill="url(#ng)"/><circle cx="480" cy="120" r="1.4" fill="#00f5ff"/>
+      <circle cx="560" cy="80" r="3" fill="url(#ng)"/><circle cx="560" cy="80" r="1.2" fill="#00f5ff"/>
+      <circle cx="620" cy="40" r="2.5" fill="url(#ng)"/><circle cx="620" cy="40" r="1" fill="#00f5ff"/>
+      <circle cx="650" cy="110" r="3.5" fill="url(#ng)"/><circle cx="650" cy="110" r="1.4" fill="#00f5ff"/>
+      <circle cx="720" cy="70" r="3" fill="url(#ng)"/><circle cx="720" cy="70" r="1.2" fill="#00f5ff"/>
+      <circle cx="760" cy="130" r="2.5" fill="url(#ng)"/><circle cx="760" cy="130" r="1" fill="#00f5ff"/>
+      <circle cx="520" cy="200" r="3.5" fill="url(#ng)"/><circle cx="520" cy="200" r="1.4" fill="#00f5ff"/>
+      <circle cx="420" cy="150" r="3" fill="url(#ng)"/><circle cx="420" cy="150" r="1.2" fill="#00f5ff"/>
+      <circle cx="600" cy="240" r="4" fill="url(#ng)"/><circle cx="600" cy="240" r="1.5" fill="#00f5ff"/>
+      <circle cx="680" cy="190" r="3.5" fill="url(#ng)"/><circle cx="680" cy="190" r="1.4" fill="#00f5ff"/>
+      <circle cx="750" cy="210" r="3" fill="url(#ng)"/><circle cx="750" cy="210" r="1.2" fill="#00f5ff"/>
+      <circle cx="480" cy="280" r="3" fill="url(#ng)"/><circle cx="480" cy="280" r="1.2" fill="#00f5ff"/>
+      <circle cx="650" cy="310" r="3.5" fill="url(#ng)"/><circle cx="650" cy="310" r="1.4" fill="#00f5ff"/>
+      <circle cx="720" cy="280" r="3" fill="url(#ng)"/><circle cx="720" cy="280" r="1.2" fill="#00f5ff"/>
+      <circle cx="770" cy="330" r="3" fill="url(#ng)"/><circle cx="770" cy="330" r="1.2" fill="#00f5ff"/>
+      <circle cx="580" cy="370" r="3.5" fill="url(#ng)"/><circle cx="580" cy="370" r="1.4" fill="#00f5ff"/>
+      <circle cx="510" cy="400" r="3" fill="url(#ng)"/><circle cx="510" cy="400" r="1.2" fill="#00f5ff"/>
+      <circle cx="640" cy="420" r="4" fill="url(#ng)"/><circle cx="640" cy="420" r="1.5" fill="#00f5ff"/>
+      <circle cx="720" cy="400" r="3" fill="url(#ng)"/><circle cx="720" cy="400" r="1.2" fill="#00f5ff"/>
+      <circle cx="560" cy="480" r="3" fill="url(#ng)"/><circle cx="560" cy="480" r="1.2" fill="#00f5ff"/>
+      <circle cx="600" cy="490" r="3.5" fill="url(#ng)"/><circle cx="600" cy="490" r="1.4" fill="#00f5ff"/>
+      <circle cx="680" cy="520" r="3" fill="url(#ng)"/><circle cx="680" cy="520" r="1.2" fill="#00f5ff"/>
+    </g>
+  </svg>
   <!-- IFR ANIMATED BANNER END -->
   <div class="container">
     <div class="coin-container">
