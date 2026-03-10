@@ -1,4 +1,4 @@
-// services/claude.js — Claude API Wrapper für /ask
+// services/skywalker.js — AI API Wrapper für /ask
 require('dotenv').config();
 const axios = require('axios');
 const cache = require('./cache');
@@ -66,7 +66,7 @@ function checkRateLimit(userId) {
   return { allowed: true };
 }
 
-async function askClaude(userId, question) {
+async function askSkywalker(userId, question) {
   // Rate limit check
   const limit = checkRateLimit(userId);
   if (!limit.allowed) {
@@ -101,9 +101,9 @@ async function askClaude(userId, question) {
 
     return data.content[0].text;
   } catch (err) {
-    logger.error({ err: err.message }, 'Claude API error');
+    logger.error({ err: err.message }, 'AI API error');
     return '❌ Copilot gerade nicht erreichbar. Bitte versuche es später erneut oder schau in die FAQ:\nhttps://ifrunit.tech/wiki/faq.html';
   }
 }
 
-module.exports = { askClaude };
+module.exports = { askSkywalker };

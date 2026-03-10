@@ -53,7 +53,7 @@ Stand: 08.03.2026 | Konsolidiert (Claude + Core Dev)
 8. `docs/wiki/deployment.html:499` — Mainnet-Tabelle zeigt alte V1 BootstrapVault Adresse (`0xA820`), muss V3 werden
 9. `scripts/propose-bootstrap-feeexempt.js:16` — Script hardcoded alte V1 Adresse, updaten oder DEPRECATED markieren
 10. `docs/wiki/security.html:1128` — "TODOs vor Mainnet" Abschnitt ist veraltet (Mainnet seit 05.03.2026 deployed)
-11. `CLAUDE.md` — Mehrere alte V1 Referenzen (Zeile 34, 364) + veraltete Projekt-Infos (Sepolia-Stand statt Mainnet)
+11. `SKYWALKER.md` — Mehrere alte V1 Referenzen (Zeile 34, 364) + veraltete Projekt-Infos (Sepolia-Stand statt Mainnet)
 
 ## MITTEL — Listing + Sichtbarkeit
 

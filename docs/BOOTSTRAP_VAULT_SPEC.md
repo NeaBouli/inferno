@@ -262,7 +262,7 @@ event EmergencyTriggered(address indexed caller, string reason); // governance o
 
 ## Audit Update
 
-After implementation, add to docs/SECURITY_AUDIT_CLAUDE.md:
+After implementation, add to docs/SECURITY_AUDIT_SKYWALKER.md:
 
 **Scope v2 addition:** BootstrapVault.sol
 Focus areas: reentrancy, contribution accounting,
@@ -276,7 +276,7 @@ Team.Finance integration
 - [x] Spec approved
 - [x] Contract implemented (BootstrapVault.sol) — commit 2ce8b6b5
 - [x] Tests written (22/22 passing) — commit 2ce8b6b5
-- [x] Audit updated (SECURITY_AUDIT_CLAUDE.md) — 2026-03-03
+- [x] Audit updated (SECURITY_AUDIT_SKYWALKER.md) — 2026-03-03
 - [x] Sepolia testnet deploy — [`0xE0E8F76e4fb38B2e367Aee043a2C02b8D1c7c037`](https://sepolia.etherscan.io/address/0xE0E8F76e4fb38B2e367Aee043a2C02b8D1c7c037) — 2026-03-04
 - [x] Landing Page bootstrap banner — 2026-03-04
 - [x] Wiki bootstrap page — docs/wiki/bootstrap.html — 2026-03-04

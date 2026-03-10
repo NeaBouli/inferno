@@ -6,7 +6,7 @@ Offizieller Community-Bot für [Inferno ($IFR)](https://ifrunit.tech).
 
 - **Node.js 18** + **Telegraf v4**
 - **ethers.js v5** (IFR Token: 9 Decimals)
-- **Claude Haiku** (`claude-haiku-4-5-20251001`) für /ask
+- **AI Copilot** für /ask
 - **Railway** (auto-deploy via GitHub main)
 
 ## Setup (lokal)
@@ -30,7 +30,7 @@ node src/index.js
 | `/bootstrap` | Bootstrap-Info | Nein |
 | `/partner` | Partner-Ökosystem | Nein |
 | `/roadmap` | Projekt-Roadmap | Nein |
-| `/ask <frage>` | KI-Frage (Claude) | Nein |
+| `/ask <frage>` | KI-Frage (Copilot) | Nein |
 | `/admin` | Admin-Status (Whitelist) | Nein |
 
 ## ABIs

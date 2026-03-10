@@ -32,7 +32,7 @@ Which files need to be updated for each type of event.
 | `docs/TRANSPARENCY.md` | Proposal status (Pending -> Executed) |
 | `docs/wiki/transparency.html` | Update status badges |
 | `docs/wiki/governance.html` | Add to proposal list |
-| `CLAUDE.md` | Governance proposals table |
+| `SKYWALKER.md` | Governance proposals table |
 | `docs/DEPLOYMENTS.md` | New addresses if relevant |
 
 ## After Test Changes
@@ -78,7 +78,7 @@ Which files need to be updated for each type of event.
 |------|----------------|
 | `docs/DEPLOYMENTS.md` | All addresses + constructor args |
 | `docs/TRANSPARENCY.md` | Complete on-chain audit |
-| `CLAUDE.md` | Address table |
+| `SKYWALKER.md` | Address table |
 | `docs/MAINNET_CHECKLIST.md` | Update status |
 | `docs/index.html` | Contract addresses (if displayed) |
 

@@ -1,7 +1,7 @@
 # ChatGPT Audit V5 — Results
 
 **Date:** 2026-03-04
-**Scope:** Cross-audit of SECURITY_AUDIT_CLAUDE.md findings + independent review
+**Scope:** Cross-audit of SECURITY_AUDIT_SKYWALKER.md findings + independent review
 **Model:** ChatGPT-4o
 **Contracts reviewed:** All 10 (InfernoToken, IFRLock, Governance, Vesting, LiquidityReserve, BuybackVault, BurnReserve, PartnerVault, FeeRouterV1, BootstrapVault)
 

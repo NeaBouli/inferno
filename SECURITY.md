@@ -29,12 +29,12 @@ All contracts in `/contracts/`:
 
 ### Out of Scope
 - Testnet-only issues without mainnet impact
-- Issues already listed in docs/SECURITY_AUDIT_CLAUDE.md (W1-W12)
+- Issues already listed in docs/SECURITY_AUDIT_SKYWALKER.md (W1-W12)
 - UI/Frontend issues
 - Gas optimization suggestions
 
 ### Known Issues
-See [docs/SECURITY_AUDIT_CLAUDE.md](docs/SECURITY_AUDIT_CLAUDE.md)
+See [docs/SECURITY_AUDIT_SKYWALKER.md](docs/SECURITY_AUDIT_SKYWALKER.md)
 for the complete internal audit (0 FAIL, 12 WARN, 78 PASS).
 
 ### No Bug Bounty

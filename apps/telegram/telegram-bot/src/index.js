@@ -30,7 +30,7 @@ if (!process.env.BOT_TOKEN) {
   process.exit(1);
 }
 if (!process.env.CLAUDE_API_KEY) {
-  logger.warn('CLAUDE_API_KEY not set — /ask will not work');
+  logger.warn('AI_API_KEY not set — /ask will not work');
 }
 if (!process.env.IFR_LOCK_ADDRESS) {
   logger.warn('IFR_LOCK_ADDRESS not set — /lock will not work');

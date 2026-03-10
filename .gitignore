@@ -9,3 +9,6 @@ cache/
 *.key
 logs/*.log
 logs/**/*.log
+
+# AI tooling (internal)
+.claude/
