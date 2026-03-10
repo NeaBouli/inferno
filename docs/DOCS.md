@@ -48,6 +48,7 @@ inferno/
 │   ├── deploy-feerouter.js           [x] FeeRouterV1 Deploy + Verify
 │   ├── update-stats.js              [x] Auto-Update On-Chain Stats -> docs/stats.json + TRANSPARENCY.md + index.html
 │   ├── onchain-audit.js             [x] 8-Check On-Chain Audit (Ownership, LP, Vesting, Supply, FeeExempt)
+│   ├── propose-set-pool-fee-receiver.js [x] Governance Proposal: setPoolFeeReceiver → FeeRouterV1
 │   ├── propose-ownership-transfer.js [x] Ownership Transfer Proposals (3 Contracts, DRY RUN protection)
 │   ├── execute-ownership-transfer.js [x] Ownership Transfer Executor (after 48h Timelock)
 │   ├── redeploy-reserves.js         [x] Redeploy LiquidityReserve/BuybackVault/BurnReserve (transferOwnership upgrade)

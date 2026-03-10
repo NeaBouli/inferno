@@ -249,6 +249,9 @@ PROP_RESERVE=4 PROP_BUYBACK=5 PROP_BURN=6 npx hardhat run scripts/execute-owners
 
 # Burn LP tokens (historical/testing)
 npx hardhat run scripts/burn-lp-tokens.js --network sepolia
+
+# Governance: set poolFeeReceiver to FeeRouterV1 (Proposal #6)
+npx hardhat run scripts/propose-set-pool-fee-receiver.js --network mainnet
 ```
 
 ## License
