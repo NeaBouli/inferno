@@ -378,6 +378,51 @@ describe("BootstrapVaultV3", function () {
       ).to.be.revertedWith("already finalised");
     });
 
+    it("refund reduces totalETHRaised", async () => {
+      await vault.connect(userA).contribute({ value: pe("1") });
+      await vault.connect(userB).contribute({ value: pe("0.5") });
+      await vault.connect(userC).contribute({ value: pe("0.5") });
+
+      expect(await vault.totalETHRaised()).to.equal(pe("2"));
+
+      // Time travel past grace period
+      await ethers.provider.send("evm_increaseTime", [DURATION + REFUND_GRACE_PERIOD + 1]);
+      await ethers.provider.send("evm_mine", []);
+
+      // Charlie refunds
+      await vault.connect(userC).refund();
+
+      // totalETHRaised must be reduced
+      expect(await vault.totalETHRaised()).to.equal(pe("1.5"));
+    });
+
+    it("sets hasRefundOccurred on refund", async () => {
+      await vault.connect(userA).contribute({ value: pe("1") });
+
+      expect(await vault.hasRefundOccurred()).to.equal(false);
+
+      await ethers.provider.send("evm_increaseTime", [DURATION + REFUND_GRACE_PERIOD + 1]);
+      await ethers.provider.send("evm_mine", []);
+
+      await vault.connect(userA).refund();
+      expect(await vault.hasRefundOccurred()).to.equal(true);
+    });
+
+    it("finalise reverts after refund occurred", async () => {
+      await vault.connect(userA).contribute({ value: pe("1") });
+      await vault.connect(userB).contribute({ value: pe("1") });
+
+      // Time travel past grace period
+      await ethers.provider.send("evm_increaseTime", [DURATION + REFUND_GRACE_PERIOD + 1]);
+      await ethers.provider.send("evm_mine", []);
+
+      // userB refunds
+      await vault.connect(userB).refund();
+
+      // finalise must now revert
+      await expect(vault.finalise()).to.be.revertedWith("refund occurred");
+    });
+
     it("reverts on double refund", async () => {
       await vault.connect(userA).contribute({ value: pe("1") });
 

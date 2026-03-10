@@ -67,6 +67,7 @@ contract BootstrapVaultV3 is ReentrancyGuard {
     address[] public contributors;
     uint256 public totalETHRaised;
     bool public finalised;
+    bool public hasRefundOccurred;
     address public lpTokenAddress;
     uint256 public lpLockId;
 
@@ -137,6 +138,7 @@ contract BootstrapVaultV3 is ReentrancyGuard {
     function finalise() external nonReentrant {
         require(block.timestamp >= endTime, "bootstrap active");
         require(!finalised, "already finalised");
+        require(!hasRefundOccurred, "refund occurred");
         finalised = true;
 
         if (totalETHRaised == 0) {
@@ -205,6 +207,8 @@ contract BootstrapVaultV3 is ReentrancyGuard {
 
         uint256 amount = contributions[msg.sender];
         contributions[msg.sender] = 0;
+        totalETHRaised -= amount;
+        hasRefundOccurred = true;
 
         (bool success, ) = msg.sender.call{value: amount}("");
         require(success, "ETH transfer failed");
