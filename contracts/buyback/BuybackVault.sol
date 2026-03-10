@@ -149,6 +149,9 @@ contract BuybackVault {
         address _router,
         address _treasury
     ) external onlyOwner {
+        require(_burnShareBps <= 10_000, "burnShare>100%");
+        require(_slippageBps <= 10_000, "slippage>100%");
+        require(_router != address(0), "router=0");
         require(_treasury != address(0), "treasury=0");
 
         burnShareBps = _burnShareBps;
