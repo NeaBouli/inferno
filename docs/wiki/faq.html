@@ -505,7 +505,7 @@
     {
       "@type": "Question",
       "name": "Are the contracts upgradeable?",
-      "acceptedAnswer": {"@type":"Answer","text":"No. All 9 contracts are immutable — no proxy pattern, no UUPS. Bytecode cannot be changed after deployment. This prevents rug-pulls via contract upgrades."}
+      "acceptedAnswer": {"@type":"Answer","text":"No. All 14 deployed protocol contracts are immutable — no proxy pattern, no UUPS. Bytecode cannot be changed after deployment. The Treasury and Community Safe use Gnosis Safe proxy (audited multisig standard). This prevents rug-pulls via contract upgrades."}
     },
     {
       "@type": "Question",
@@ -683,7 +683,7 @@
 
         <div class="faq-item">
           <button class="faq-q"><span>Are the contracts upgradeable?</span><span class="icon">+</span></button>
-          <div class="faq-a">No. All 9 deployed contracts are immutable &mdash; there is no proxy pattern, no UUPS, no transparent proxy. Once deployed, the bytecode cannot be changed. This means no rug-pull via contract upgrade is possible. The trade-off is that bugs cannot be patched in-place, but this is a deliberate security decision: immutability over convenience.</div>
+          <div class="faq-a">No. All 14 deployed protocol contracts are immutable &mdash; there is no proxy pattern, no UUPS, no transparent proxy. Once deployed, the bytecode cannot be changed. This means no rug-pull via contract upgrade is possible. The trade-off is that bugs cannot be patched in-place, but this is a deliberate security decision: immutability over convenience.<br><br>The exception are the Treasury Safe and Community Safe, which use the Gnosis Safe proxy architecture. Gnosis Safe is a battle-tested, audited multisig standard &mdash; any upgrade requires explicit multisig consensus and is publicly verifiable on-chain. This is not a protocol risk but an industry-standard operational security pattern.</div>
         </div>
       </div>
 
