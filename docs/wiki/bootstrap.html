@@ -1032,6 +1032,14 @@
       <h3>Can I get my ETH back?</h3>
       <p>Yes, under specific conditions. If <code>finalise()</code> has not been called within 30 days after the bootstrap window closes, contributors can call <code>refund()</code> to reclaim their full ETH contribution. This is a V3 safety mechanism to protect contributors if LP creation is delayed. Once finalised, all ETH is in the LP and cannot be withdrawn.</p>
 
+      <div style="background:#1a1a2e; border:1px solid #f97316; border-radius:8px; padding:12px 16px; margin-top:12px; font-size:13px; color:#94a3b8;">
+        <span style="color:#f97316;">&#x1F5F3; Phase 3 &mdash; BootstrapVaultV4:</span>
+        Future bootstrap rounds will include on-chain contributor voting.
+        If the soft target is not reached, ETH contributors vote (weighted by contribution)
+        whether to proceed with LP pairing or trigger a full refund.
+        Simple majority decides. Governance-integrated, permissionless execution.
+      </div>
+
       <h3>When is the Bootstrap Event?</h3>
       <p>The Bootstrap Event launches after funding is confirmed on-chain. Follow <a href="https://x.com/IFRtoken" target="_blank" rel="noopener">@IFRtoken on X</a> for the exact date announcement.</p>
 
