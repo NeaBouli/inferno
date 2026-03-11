@@ -806,8 +806,8 @@
               <td>BootstrapVaultV3</td>
               <td>~144,750,000</td>
               <td>~144,750,000</td>
-              <td>Bootstrap Plan B funding &mdash; feeExempt after Proposal #4</td>
-              <td class="status-pending">&#x23F3; Pending Proposal #4</td>
+              <td>Bootstrap Plan B funding &mdash; feeExempt (Proposal #4 executed)</td>
+              <td class="status-ok">&#x2705; Done &mdash; <a href="https://etherscan.io/tx/0x6f08eaa6" target="_blank" style="font-size:11px;">TX: 0x6f08eaa6&hellip;</a></td>
             </tr>
             <tr>
               <td>11.03.2026</td>
@@ -815,8 +815,8 @@
               <td>BootstrapVaultV3</td>
               <td>50,000,000</td>
               <td>50,000,000</td>
-              <td>Bootstrap Plan B funding &mdash; feeExempt after Proposal #4</td>
-              <td class="status-pending">&#x23F3; Pending Proposal #4</td>
+              <td>Bootstrap Plan B funding &mdash; feeExempt (Proposal #4 executed)</td>
+              <td class="status-ok">&#x2705; Done &mdash; <a href="https://etherscan.io/tx/0x4394bec1" target="_blank" style="font-size:11px;">TX: 0x4394bec1&hellip;</a></td>
             </tr>
             <tr>
               <td>10.03.2026</td>
@@ -873,7 +873,7 @@
             <tr>
               <td><strong>Community Safe</strong></td>
               <td class="address"><a href="https://etherscan.io/address/0xaC5687547B2B21d80F8fd345B51e608d476667C7" target="_blank">0xaC56...67C7</a></td>
-              <td>Community Safe &mdash; two purposes:<br>1. Bootstrap contribution: 50M IFR &rarr; BootstrapVaultV3 (Plan B, pending 10.03.2026)<br>2. Community Operations Reserve: 7.9M IFR permanent budget &mdash; bug bounties, community grants, ecosystem incentives, DAO seed funding. Genesis decision &mdash; publicly documented.</td>
+              <td>Community Safe &mdash; two purposes:<br>1. Bootstrap contribution: 50M IFR &rarr; BootstrapVaultV3 (Plan B, funded 11.03.2026 &#x2705;)<br>2. Community Operations Reserve: 7.9M IFR permanent budget &mdash; bug bounties, community grants, ecosystem incentives, DAO seed funding. Genesis decision &mdash; publicly documented.</td>
               <td id="cur-csafe">57,900,000 IFR</td>
               <td>Gnosis Safe &mdash; 1-of-2 (&rarr; 2-of-4)</td>
             </tr>
@@ -901,8 +901,8 @@
             <tr>
               <td><strong>BootstrapVaultV3</strong></td>
               <td class="address"><a href="https://etherscan.io/address/0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141" target="_blank">0xf725...e141</a></td>
-              <td>Community Bootstrap. Will hold ~194.75M IFR (Treasury 144.75M + Community 50M) after Plan B funding. Creates Uniswap LP via finalise().</td>
-              <td id="cur-bootstrap">0 IFR (funding pending 10.03.2026)</td>
+              <td>Community Bootstrap. Holds ~194.75M IFR (Treasury 144.75M + Community 50M) &mdash; funded 11.03.2026. Creates Uniswap LP via finalise().</td>
+              <td id="cur-bootstrap">194,750,000 IFR (funded 11.03.2026 &#x2705;)</td>
               <td>Smart contract &mdash; permissionless</td>
             </tr>
             <tr>
@@ -1192,14 +1192,21 @@
               <td><code>setFeeExempt(BootstrapVaultV3, true)</code><br><span style="font-size:11px;color:var(--muted);"><a href="https://etherscan.io/tx/0x625a6618fe2643259638e1b044b735bea99e96d2269404c078c7771fea0a06ba">TX: 0x625a6618&hellip;</a></span></td>
               <td>InfernoToken</td>
               <td>11.03.2026 08:45 CET</td>
-              <td><span class="status-pending">Queued</span></td>
+              <td><span class="status-ok">Executed</span> &mdash; <a href="https://etherscan.io/tx/0xdb1590bf" target="_blank" style="font-size:11px;">TX: 0xdb1590bf&hellip;</a></td>
             </tr>
             <tr>
               <td>#5</td>
               <td><code>setFeeExempt(FeeRouterV1, true)</code><br><span style="font-size:11px;color:var(--muted);"><a href="https://etherscan.io/tx/0x82d2d1b8c2015481155c9d8c22fd983f84ddfb72f9a2033929495b7ae64c2d26">TX: 0x82d2d1b8&hellip;</a></span></td>
               <td>InfernoToken</td>
               <td>11.03.2026 08:46 CET</td>
-              <td><span class="status-pending">Queued</span></td>
+              <td><span class="status-ok">Executed</span> &mdash; <a href="https://etherscan.io/tx/0x1c885fbe" target="_blank" style="font-size:11px;">TX: 0x1c885fbe&hellip;</a></td>
+            </tr>
+            <tr>
+              <td>#6</td>
+              <td><code>setFeeExempt(BootstrapVaultV3, true)</code><br><span style="font-size:11px;color:var(--muted);">Re-verification after funding</span></td>
+              <td>InfernoToken</td>
+              <td>13.03.2026 09:23 CET</td>
+              <td><span class="status-pending">Queued</span> &mdash; <a href="https://etherscan.io/tx/0x89eebca7" target="_blank" style="font-size:11px;">TX: 0x89eebca7&hellip;</a></td>
             </tr>
           </tbody>
         </table>
