@@ -535,7 +535,7 @@
           <span class="stat-label">Branch Coverage</span>
         </div>
         <div class="stat-item">
-          <span class="stat-value">2M+</span>
+          <span class="stat-value" id="wiki-index-burned">&mdash;</span>
           <span class="stat-label">IFR Burned</span>
         </div>
         <div class="stat-item">
@@ -679,6 +679,24 @@
 </style>
 <button id="ifr-btn" onclick="var p=document.getElementById('ifr-panel');p.style.display=p.style.display==='block'?'none':'block';">&#x1f525;</button>
 <div id="ifr-panel"><iframe src="https://ifr-ai-copilot-production.up.railway.app" allow="clipboard-write"></iframe></div>
+
+<script>
+(function() {
+  function loadWikiIndexStats() {
+    fetch('https://ifr-ai-copilot-production.up.railway.app/api/ifr/supply')
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (!data || !data.totalSupply) return;
+        var burned = 1000000000 - data.totalSupply;
+        var el = document.getElementById('wiki-index-burned');
+        if (el) el.textContent = (burned / 1000000).toFixed(2) + 'M';
+      })
+      .catch(function(e) { console.error('Wiki index stats failed:', e); });
+  }
+  setTimeout(loadWikiIndexStats, 1000);
+  setInterval(loadWikiIndexStats, 60000);
+})();
+</script>
 
 </body>
 </html>
