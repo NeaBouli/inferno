@@ -761,6 +761,29 @@
         <li><strong>Burn rate is volume-dependent</strong>, not time-dependent &mdash; more trading = faster deflation</li>
       </ul>
 
+      <!-- Live Supply Widget -->
+      <div style="background:var(--card); border:1px solid var(--border); border-radius:10px; padding:16px 20px; margin:20px 0;">
+        <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px; font-size:13px; color:var(--muted);">
+          <span id="tokenomics-dot" style="width:8px; height:8px; border-radius:50%; background:#22c55e; animation:pulse-dot 2s ease-in-out infinite;"></span>
+          <span id="live-tokenomics-timestamp">Connecting to Ethereum Mainnet&hellip;</span>
+        </div>
+        <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:16px;">
+          <div>
+            <div style="font-size:12px; color:var(--muted); text-transform:uppercase; letter-spacing:0.5px;">Current Supply</div>
+            <div style="font-size:20px; font-weight:700; margin-top:4px;"><span id="live-total-supply" style="color:#22c55e;">&mdash;</span></div>
+          </div>
+          <div>
+            <div style="font-size:12px; color:var(--muted); text-transform:uppercase; letter-spacing:0.5px;">Total Burned</div>
+            <div style="font-size:20px; font-weight:700; margin-top:4px;"><span id="live-burned" style="color:var(--accent);">&mdash;</span></div>
+          </div>
+          <div>
+            <div style="font-size:12px; color:var(--muted); text-transform:uppercase; letter-spacing:0.5px;">Burn Rate</div>
+            <div style="font-size:20px; font-weight:700; margin-top:4px;"><span id="live-burn-pct" style="color:var(--accent);">&mdash;</span></div>
+          </div>
+        </div>
+      </div>
+      <style>@keyframes pulse-dot { 0%,100% { opacity:1; } 50% { opacity:0.4; } }</style>
+
       <h3>Projected Supply Scenarios</h3>
       <p>
         The following table illustrates how supply decreases based on cumulative transfer volume. These are simplified examples assuming uniform transfer sizes and no fee-exempt transfers.
@@ -874,7 +897,7 @@
             <td>Community &amp; Grants</td>
             <td>6%</td>
             <td>60,000,000</td>
-            <td>Community Safe (57.9M received after burn). 50M &rarr; Bootstrap. ~7.9M operational reserve.</td>
+            <td>Community Safe (57.9M received &mdash; 1.5M burned + 0.6M pool fee). 50M &rarr; Bootstrap. ~7.9M operational reserve.</td>
           </tr>
           <tr>
             <td>Builder Ecosystem</td>
@@ -965,7 +988,7 @@
 
       <p><strong>Community &amp; Grants (6% &mdash; 60M IFR)</strong></p>
       <ul>
-        <li>Sent to Community Safe: 57.9M received after 2.1M transfer burn (3.5% fee-on-transfer)</li>
+        <li>Sent to Community Safe: 57.9M received after 1.5M burn (2.5%) + 0.6M pool fee (1%) = 2.1M total deducted (EOA not feeExempt)</li>
         <li>50M allocated to Bootstrap funding via BootstrapVaultV3</li>
         <li>~7.9M retained as operational reserve (after burn)</li>
       </ul>
@@ -1347,6 +1370,52 @@ if (from != address(0) && to != address(0)
       overlay.addEventListener('click', toggleSidebar);
     })();
   </script>
+
+<!-- Live Supply Tracking -->
+<script>
+(function() {
+  var PROXY = 'https://ifr-ai-copilot-production.up.railway.app';
+  var GENESIS = 1000000000;
+
+  function fmtNum(n) {
+    return n.toLocaleString('en-US', { maximumFractionDigits: 0 });
+  }
+
+  function loadTokenomicsLive() {
+    fetch(PROXY + '/api/ifr/supply')
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (!data || !data.totalSupply) return;
+        var totalSupply = data.totalSupply;
+        var burned = data.burned || (GENESIS - totalSupply);
+        var pct = (burned / GENESIS * 100);
+
+        var tsEl = document.getElementById('live-total-supply');
+        var brEl = document.getElementById('live-burned');
+        var bpEl = document.getElementById('live-burn-pct');
+        var dot = document.getElementById('tokenomics-dot');
+        var stamp = document.getElementById('live-tokenomics-timestamp');
+
+        if (tsEl) tsEl.textContent = fmtNum(Math.round(totalSupply)) + ' IFR';
+        if (brEl) brEl.textContent = fmtNum(Math.round(burned)) + ' IFR';
+        if (bpEl) bpEl.textContent = pct.toFixed(4) + '%';
+        if (dot) dot.style.background = '#22c55e';
+        if (stamp) stamp.textContent = 'Live via Railway Proxy \u2192 Ethereum \u2014 ' +
+          new Date().toLocaleString('de-DE', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit', second:'2-digit' });
+      })
+      .catch(function() {
+        var dot = document.getElementById('tokenomics-dot');
+        var stamp = document.getElementById('live-tokenomics-timestamp');
+        if (dot) dot.style.background = '#ef4444';
+        if (stamp) stamp.textContent = 'Connection failed \u2014 retry in 60s';
+      });
+  }
+
+  fetch(PROXY + '/api/ifr/supply').catch(function() {});
+  setTimeout(loadTokenomicsLive, 1000);
+  setInterval(loadTokenomicsLive, 60000);
+})();
+</script>
 
 <!-- IFR Copilot Widget -->
 <style>
