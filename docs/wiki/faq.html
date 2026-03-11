@@ -758,7 +758,7 @@
 
         <div class="faq-item">
           <button class="faq-q"><span>When does trading go live?</span><span class="icon">+</span></button>
-          <div class="faq-a">Trading begins the moment <code>finalise()</code> is called and the Uniswap V2 LP is created. Before that, IFR cannot be traded on any DEX. The Bootstrap must first receive its IFR allocation (requires Governance Proposals #4 and #5 to execute), then collect sufficient ETH during the 90-day window.</div>
+          <div class="faq-a">Trading begins the moment <code>finalise()</code> is called and the Uniswap V2 LP is created. Before that, IFR cannot be traded on any DEX. The BootstrapVaultV3 is already funded with ~194.75M IFR (11.03.2026) and fee-exempt (Proposals #4+#5 executed). The 90-day contribution window must complete before finalisation.</div>
         </div>
 
         <div class="faq-item">
@@ -788,7 +788,7 @@
 
         <div class="faq-item">
           <button class="faq-q"><span>Is this a presale or ICO?</span><span class="icon">+</span></button>
-          <div class="faq-a">No. Inferno follows the Community Fair Launch Model (CFLM): no presale, no ICO, no venture capital, no seed round, no private sale. All tokens are distributed at deployment with transparent allocation. The Bootstrap Event is a community liquidity event, not a token sale &mdash; contributors receive LP tokens representing their share of the pool, not IFR directly.</div>
+          <div class="faq-a">No. Inferno follows the Community Fair Launch Model (CFLM): no presale, no ICO, no venture capital, no seed round, no private sale. All tokens are distributed at deployment with transparent allocation. The Bootstrap Event is a community liquidity event &mdash; contributors provide ETH, which is paired with IFR to create the Uniswap V2 LP. After finalisation, contributors call <code>claim()</code> to receive their pro-rata IFR share.</div>
         </div>
 
         <div class="faq-item">
@@ -858,7 +858,7 @@
 
         <div class="faq-item">
           <button class="faq-q"><span>Is there a Telegram or community chat?</span><span class="icon">+</span></button>
-          <div class="faq-a">Yes. The official channels are:<br><br>&bull; <strong>X / Twitter</strong>: <a href="https://x.com/IFRtoken" target="_blank" rel="noopener">@IFRtoken</a><br>&bull; <strong>GitHub</strong>: <a href="https://github.com/NeaBouli/inferno" target="_blank" rel="noopener">github.com/NeaBouli/inferno</a><br><br>Be cautious of impersonators. The only official links are listed on the <a href="../index.html">main website</a>. Inferno will never DM you first or ask for private keys.</div>
+          <div class="faq-a">Yes. The official channels are:<br><br>&bull; <strong>X / Twitter</strong>: <a href="https://x.com/IFRtoken" target="_blank" rel="noopener">@IFRtoken</a><br>&bull; <strong>Telegram Announcements</strong>: <a href="https://t.me/IFRtoken" target="_blank" rel="noopener">t.me/IFRtoken</a> (read-only)<br>&bull; <strong>Telegram Community</strong>: <a href="https://t.me/IFR_token" target="_blank" rel="noopener">t.me/IFR_token</a><br>&bull; <strong>GitHub</strong>: <a href="https://github.com/NeaBouli/inferno" target="_blank" rel="noopener">github.com/NeaBouli/inferno</a><br><br>Be cautious of impersonators. The only official links are listed on the <a href="../index.html">main website</a>. Inferno will never DM you first or ask for private keys.</div>
         </div>
 
         <div class="faq-item">
@@ -889,7 +889,7 @@ const hasLock = await ifrLock.isLocked(walletAddress, ethers.utils.parseUnits("1
 
         <div class="faq-item">
           <button class="faq-q"><span>Which addresses are fee-exempt?</span><span class="icon">+</span></button>
-          <div class="faq-a">Fee-exempt addresses (verified on-chain as of March 2026):<br><br>&bull; IFRLock: <code>0x769928aBDfc949D0718d8766a1C2d7dBb63954Eb</code><br>&bull; LiquidityReserve: <code>0xdc0309804803b3A105154f6073061E3185018f64</code><br>&bull; BuybackVault: <code>0x670D293e3D65f96171c10DdC8d88B96b0570F812</code><br>&bull; BurnReserve: <code>0xaA1496133B6c274190A2113410B501C5802b6fCF</code><br>&bull; PartnerVault: <code>0xc6eb7714bCb035ebc2D4d9ba7B3762ef7B9d4F7D</code><br>&bull; Vesting: <code>0x2694Bc84e8D5251E9E4Ecd4B2Ae3f866d6106271</code><br><br>BootstrapVaultV3 and FeeRouterV1 exemptions are pending (Governance Proposals #4 and #5).</div>
+          <div class="faq-a">Fee-exempt addresses (verified on-chain as of March 2026):<br><br>&bull; IFRLock: <code>0x769928aBDfc949D0718d8766a1C2d7dBb63954Eb</code><br>&bull; LiquidityReserve: <code>0xdc0309804803b3A105154f6073061E3185018f64</code><br>&bull; BuybackVault: <code>0x670D293e3D65f96171c10DdC8d88B96b0570F812</code><br>&bull; BurnReserve: <code>0xaA1496133B6c274190A2113410B501C5802b6fCF</code><br>&bull; PartnerVault: <code>0xc6eb7714bCb035ebc2D4d9ba7B3762ef7B9d4F7D</code><br>&bull; Vesting: <code>0x2694Bc84e8D5251E9E4Ecd4B2Ae3f866d6106271</code><br><br>BootstrapVaultV3: fee-exempt since Proposal #4 (executed 11.03.2026)<br>&bull; FeeRouterV1: fee-exempt since Proposal #5 (executed 11.03.2026)</div>
         </div>
 
         <div class="faq-item">
@@ -959,7 +959,7 @@ const hasLock = await ifrLock.isLocked(walletAddress, ethers.utils.parseUnits("1
 
         <div class="faq-item">
           <button class="faq-q"><span>What are the official links? (Anti-scam warning)</span><span class="icon">+</span></button>
-          <div class="faq-a"><strong>Official links only:</strong><br><br>&bull; Website: <a href="https://ifrunit.tech" target="_blank" rel="noopener">ifrunit.tech</a><br>&bull; GitHub: <a href="https://github.com/NeaBouli/inferno" target="_blank" rel="noopener">github.com/NeaBouli/inferno</a><br>&bull; X / Twitter: <a href="https://x.com/IFRtoken" target="_blank" rel="noopener">@IFRtoken</a><br>&bull; Token: <a href="https://etherscan.io/address/0x77e99917Eca8539c62F509ED1193ac36580A6e7B" target="_blank" rel="noopener">Etherscan</a><br><br><strong>Warning:</strong> Inferno will never DM you first, never ask for private keys, never offer &ldquo;guaranteed returns&rdquo;, and never request you to send tokens to any address. If someone claims to be from the Inferno team and contacts you first, it is a scam.</div>
+          <div class="faq-a"><strong>Official links only:</strong><br><br>&bull; Website: <a href="https://ifrunit.tech" target="_blank" rel="noopener">ifrunit.tech</a><br>&bull; GitHub: <a href="https://github.com/NeaBouli/inferno" target="_blank" rel="noopener">github.com/NeaBouli/inferno</a><br>&bull; X / Twitter: <a href="https://x.com/IFRtoken" target="_blank" rel="noopener">@IFRtoken</a><br>&bull; Telegram: <a href="https://t.me/IFRtoken" target="_blank" rel="noopener">t.me/IFRtoken</a> (Announcements) | <a href="https://t.me/IFR_token" target="_blank" rel="noopener">t.me/IFR_token</a> (Community)<br>&bull; Token: <a href="https://etherscan.io/address/0x77e99917Eca8539c62F509ED1193ac36580A6e7B" target="_blank" rel="noopener">Etherscan</a><br><br><strong>Warning:</strong> Inferno will never DM you first, never ask for private keys, never offer &ldquo;guaranteed returns&rdquo;, and never request you to send tokens to any address. If someone claims to be from the Inferno team and contacts you first, it is a scam.</div>
         </div>
       </div>
 
