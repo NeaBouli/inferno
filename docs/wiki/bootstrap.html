@@ -433,6 +433,169 @@
         font-size: 26px;
       }
     }
+
+    /* ---------- Live Vault Widget ---------- */
+    .vault-widget {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      margin: 24px 0 32px;
+    }
+
+    .vault-widget-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 16px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .vault-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #22c55e;
+      animation: pulse-dot 2s ease-in-out infinite;
+    }
+
+    .vault-dot.offline { background: #ef4444; animation: none; }
+
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    .vault-stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 16px;
+    }
+
+    .vault-stat {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .vault-stat-label {
+      font-size: 12px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .vault-stat-value {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .vault-stat-value .live { color: #22c55e; }
+
+    .vault-bar-track {
+      height: 6px;
+      background: var(--border);
+      border-radius: 3px;
+      margin-top: 16px;
+      overflow: hidden;
+    }
+
+    .vault-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), #22c55e);
+      border-radius: 3px;
+      transition: width 0.6s ease;
+    }
+
+    /* ---------- Phase Timeline ---------- */
+    .phase-timeline {
+      position: relative;
+      padding-left: 28px;
+      margin: 24px 0 32px;
+    }
+
+    .phase-timeline::before {
+      content: '';
+      position: absolute;
+      left: 8px;
+      top: 4px;
+      bottom: 4px;
+      width: 2px;
+      background: var(--border);
+    }
+
+    .phase-item {
+      position: relative;
+      padding: 12px 0 12px 20px;
+    }
+
+    .phase-item::before {
+      content: '';
+      position: absolute;
+      left: -24px;
+      top: 18px;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--border);
+      border: 2px solid var(--bg);
+    }
+
+    .phase-item.done::before { background: #22c55e; }
+    .phase-item.active::before { background: var(--accent); box-shadow: 0 0 8px rgba(255,69,0,0.5); }
+    .phase-item.pending::before { background: var(--border); }
+
+    .phase-label {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .phase-date {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    /* ---------- Countdown ---------- */
+    .countdown-box {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px 24px;
+      margin: 16px 0 24px;
+      text-align: center;
+    }
+
+    .countdown-label {
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 12px;
+    }
+
+    .countdown-digits {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      font-size: 28px;
+      font-weight: 800;
+      color: var(--accent);
+    }
+
+    .countdown-digits .unit {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--muted);
+    }
+
+    .countdown-waiting {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--muted);
+    }
+
     /* ============================================================
        End Shared Styles
        ============================================================ */
@@ -516,6 +679,35 @@
       </p>
 
       <div class="status-badge coming-soon" style="background:rgba(34,197,94,0.15);color:#22c55e;border-color:rgba(34,197,94,0.3);">Pre-Launch | Funded 11.03.2026 &#x2705;</div>
+
+      <!-- Live Vault Widget -->
+      <div class="vault-widget">
+        <div class="vault-widget-header">
+          <span class="vault-dot" id="vault-dot"></span>
+          <span id="vault-connection">Connecting to Ethereum Mainnet&hellip;</span>
+        </div>
+        <div class="vault-stats">
+          <div class="vault-stat">
+            <span class="vault-stat-label">Vault Balance</span>
+            <span class="vault-stat-value"><span class="live" id="vault-balance">&mdash;</span> IFR</span>
+          </div>
+          <div class="vault-stat">
+            <span class="vault-stat-label">Target</span>
+            <span class="vault-stat-value">194.75M IFR</span>
+          </div>
+          <div class="vault-stat">
+            <span class="vault-stat-label">Filled</span>
+            <span class="vault-stat-value"><span class="live" id="vault-pct">&mdash;</span>%</span>
+          </div>
+          <div class="vault-stat">
+            <span class="vault-stat-label">Status</span>
+            <span class="vault-stat-value" id="vault-status">&mdash;</span>
+          </div>
+        </div>
+        <div class="vault-bar-track">
+          <div class="vault-bar-fill" id="vault-bar" style="width: 0%;"></div>
+        </div>
+      </div>
 
       <!-- ============================================================
            Why Plan B?
@@ -729,6 +921,34 @@
            ============================================================ -->
       <h2>Timeline</h2>
 
+      <!-- Phase Timeline (visual) -->
+      <div class="phase-timeline">
+        <div class="phase-item done">
+          <div class="phase-label">&#x2705; Bootstrap Funded</div>
+          <div class="phase-date">11.03.2026 &mdash; 194.75M IFR in vault</div>
+        </div>
+        <div class="phase-item" id="phase-lp">
+          <div class="phase-label">&#x23F3; LP Pairing + Bootstrap Launch</div>
+          <div class="phase-date">After Proposal #6 execution &mdash; ~13.03.2026</div>
+        </div>
+        <div class="phase-item" id="phase-active">
+          <div class="phase-label">&#x23F3; Bootstrap Active (90 days)</div>
+          <div class="phase-date">~March&ndash;June 2026</div>
+        </div>
+        <div class="phase-item pending">
+          <div class="phase-label">&#x1F512; LiquidityReserve Unlock</div>
+          <div class="phase-date">01.09.2026 &mdash; 200M IFR available for LP expansion (Governance)</div>
+        </div>
+      </div>
+
+      <!-- Countdown -->
+      <div class="countdown-box">
+        <div class="countdown-label" id="countdown-label">Bootstrap Countdown</div>
+        <div id="bootstrap-countdown">
+          <span class="countdown-waiting">Waiting for LP Pairing&hellip;</span>
+        </div>
+      </div>
+
       <table>
         <thead>
           <tr>
@@ -762,6 +982,38 @@
             <td style="color: #eab308; font-weight: 600;">PENDING</td>
             <td>Bootstrap Launch Announcement</td>
             <td>TBA</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- ============================================================
+           Token Distribution Timeline
+           ============================================================ -->
+      <h2>Token Distribution Timeline</h2>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Period</th>
+            <th>Tokens in Play</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Now &ndash; June 2026</td>
+            <td>194.75M IFR (Bootstrap)</td>
+            <td style="color: var(--green); font-weight: 600;">&#x2705; Funded</td>
+          </tr>
+          <tr>
+            <td>June &ndash; 01.09.2026</td>
+            <td>Bootstrap-LP active, LiqRes locked</td>
+            <td style="color: #eab308; font-weight: 600;">&#x23F3; Pending LP</td>
+          </tr>
+          <tr>
+            <td>From 01.09.2026</td>
+            <td>+200M LiqRes for LP expansion (Governance)</td>
+            <td style="font-weight: 600;">&#x1F512; Locked</td>
           </tr>
         </tbody>
       </table>
@@ -827,6 +1079,151 @@
       overlay.addEventListener('click', toggleSidebar);
     })();
   </script>
+
+<!-- Live Vault Data + Countdown Script -->
+<script>
+(function() {
+  var PROXY_BASE = 'https://ifr-ai-copilot-production.up.railway.app';
+  var TARGET = 194750000;
+
+  // Format large numbers
+  function fmtVal(v) {
+    if (v >= 1e6) return (v / 1e6).toFixed(2) + 'M';
+    if (v >= 1e3) return (v / 1e3).toFixed(1) + 'K';
+    return v.toFixed(0);
+  }
+
+  function dateTime() {
+    return new Date().toLocaleString('de-DE', {
+      day: '2-digit', month: '2-digit', year: 'numeric',
+      hour: '2-digit', minute: '2-digit', second: '2-digit'
+    });
+  }
+
+  // ===== Vault Widget =====
+  function fetchVault() {
+    fetch(PROXY_BASE + '/api/ifr/vault')
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        var dot = document.getElementById('vault-dot');
+        var conn = document.getElementById('vault-connection');
+        var balEl = document.getElementById('vault-balance');
+        var pctEl = document.getElementById('vault-pct');
+        var statusEl = document.getElementById('vault-status');
+        var barEl = document.getElementById('vault-bar');
+
+        if (!data || data.error) {
+          dot.classList.add('offline');
+          conn.textContent = 'Data unavailable \u2014 retry in 30s';
+          return;
+        }
+
+        dot.classList.remove('offline');
+        conn.textContent = 'Live via Railway Proxy \u2192 Ethereum \u2014 ' + dateTime();
+
+        var bal = data.balance || 0;
+        var pct = data.percentFilled || 0;
+        balEl.textContent = fmtVal(bal);
+        pctEl.textContent = pct.toFixed(1);
+        barEl.style.width = Math.min(pct, 100) + '%';
+
+        var status = data.bootstrapStatus || 'unknown';
+        if (status === 'funded') {
+          statusEl.innerHTML = '<span style="color:#22c55e;">Funded \u2705</span>';
+        } else if (status === 'active') {
+          statusEl.innerHTML = '<span style="color:var(--accent);">Active \uD83D\uDD25</span>';
+        } else if (status === 'completed') {
+          statusEl.innerHTML = '<span style="color:#22c55e;">Completed \u2705</span>';
+        } else {
+          statusEl.innerHTML = '<span style="color:#eab308;">Pending</span>';
+        }
+
+        // Update phase timeline based on status
+        updatePhases(status);
+        // Update countdown based on status
+        updateCountdown(status, data);
+      })
+      .catch(function() {
+        var dot = document.getElementById('vault-dot');
+        var conn = document.getElementById('vault-connection');
+        dot.classList.add('offline');
+        conn.textContent = '\u26A0 Connection failed \u2014 retry in 30s';
+      });
+  }
+
+  // ===== Phase Timeline =====
+  function updatePhases(status) {
+    var phaseLp = document.getElementById('phase-lp');
+    var phaseActive = document.getElementById('phase-active');
+    if (status === 'active' || status === 'completed') {
+      phaseLp.className = 'phase-item done';
+      phaseActive.className = status === 'active' ? 'phase-item active' : 'phase-item done';
+    } else {
+      phaseLp.className = 'phase-item pending';
+      phaseActive.className = 'phase-item pending';
+    }
+  }
+
+  // ===== Countdown =====
+  var countdownInterval = null;
+
+  function updateCountdown(status, data) {
+    var container = document.getElementById('bootstrap-countdown');
+    var label = document.getElementById('countdown-label');
+
+    if (status === 'funded' || status === 'pending') {
+      label.textContent = 'Bootstrap Countdown';
+      container.innerHTML = '<span class="countdown-waiting">Waiting for LP Pairing\u2026</span>';
+      if (countdownInterval) { clearInterval(countdownInterval); countdownInterval = null; }
+    } else if (status === 'active') {
+      label.textContent = 'Bootstrap Ends In';
+      // If API provides endDate, use it; otherwise estimate 90 days from fundedDate
+      startCountdownTick();
+    } else if (status === 'completed') {
+      label.textContent = 'Bootstrap';
+      container.innerHTML = '<span class="countdown-waiting" style="color:#22c55e;">Completed \u2705</span>';
+      if (countdownInterval) { clearInterval(countdownInterval); countdownInterval = null; }
+    }
+  }
+
+  function startCountdownTick() {
+    // Estimate: 90 days from a future LP launch (~13.03.2026)
+    // This will be updated dynamically when bootstrapStatus changes to "active"
+    // For now, use a placeholder end date that will be overridden by real data
+    var endEstimate = new Date('2026-06-11T00:00:00Z').getTime();
+
+    function tick() {
+      var now = Date.now();
+      var diff = endEstimate - now;
+      var container = document.getElementById('bootstrap-countdown');
+      if (diff <= 0) {
+        container.innerHTML = '<span class="countdown-waiting" style="color:#22c55e;">Bootstrap window closed \u2014 finalise() available</span>';
+        if (countdownInterval) clearInterval(countdownInterval);
+        return;
+      }
+      var d = Math.floor(diff / 86400000);
+      var h = Math.floor((diff % 86400000) / 3600000);
+      var m = Math.floor((diff % 3600000) / 60000);
+      container.innerHTML =
+        '<div class="countdown-digits">' +
+        '<span>' + d + '<span class="unit">d</span></span>' +
+        '<span>' + h + '<span class="unit">h</span></span>' +
+        '<span>' + m + '<span class="unit">m</span></span>' +
+        '</div>';
+    }
+
+    tick();
+    if (countdownInterval) clearInterval(countdownInterval);
+    countdownInterval = setInterval(tick, 60000);
+  }
+
+  // ===== Init =====
+  // Warm up Railway then fetch
+  fetch(PROXY_BASE + '/api/ifr/vault').catch(function() {});
+  setTimeout(fetchVault, 1000);
+  setInterval(fetchVault, 30000);
+})();
+</script>
 
 <!-- IFR Copilot Widget -->
 <style>
