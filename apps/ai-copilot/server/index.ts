@@ -653,6 +653,49 @@ async function handleTxFeed(_req: express.Request, res: express.Response) {
 app.get("/api/ifr/txfeed", handleTxFeed);
 app.get("/api/ifr/transactions", handleTxFeed);
 
+// GET /api/ifr/vault — BootstrapVaultV3 live status
+const VAULT_TARGET_AMOUNT = 194_750_000;
+const VAULT_FUNDED_DATE = "2026-03-11";
+const VAULT_CACHE_TTL = 60_000;
+
+async function fetchVaultData() {
+  const addr = PROTOCOL_ADDRESSES.BootstrapVaultV3;
+  const data = await esApiFetch(
+    `&module=account&action=tokenbalance&contractaddress=${IFR_TOKEN}&address=${addr}&tag=latest`
+  ) as { status?: string; result?: string };
+  const raw = (data.status === "1" && data.result) ? data.result : "0";
+  const balance = parseInt(raw, 10) / 10 ** IFR_DECIMALS;
+  const balanceFormatted = Math.floor(balance).toString();
+  const percentFilled = Math.min((balance / VAULT_TARGET_AMOUNT) * 100, 100);
+  const funded = balance >= VAULT_TARGET_AMOUNT * 0.99; // 1% tolerance for fee burns
+
+  const response = {
+    vaultAddress: addr,
+    balance,
+    balanceFormatted,
+    targetAmount: VAULT_TARGET_AMOUNT,
+    percentFilled: Math.round(percentFilled * 100) / 100,
+    funded,
+    fundedDate: funded ? VAULT_FUNDED_DATE : null,
+    bootstrapStatus: funded ? "funded" : "pending",
+    cachedAt: new Date().toISOString(),
+  };
+  setCache("vault", response);
+  return response;
+}
+
+app.get("/api/ifr/vault", async (_req, res) => {
+  res.set("Cache-Control", "no-store");
+  const cached = getCached("vault");
+  if (cached) { res.json(cached); return; }
+  try {
+    res.json(await fetchVaultData());
+  } catch (err) {
+    console.error("Etherscan vault error:", err);
+    res.status(502).json({ error: "Failed to fetch vault data" });
+  }
+});
+
 const PORT = parseInt(process.env.PORT || "3003", 10);
 app.listen(PORT, () => {
   console.log(`IFR Copilot API on :${PORT}`);
@@ -661,6 +704,7 @@ app.listen(PORT, () => {
   (async () => {
     try { await fetchSupplyData(); console.log("[cache] supply pre-warmed"); } catch {}
     try { await fetchBalancesData(); console.log("[cache] balances pre-warmed"); } catch {}
+    try { await fetchVaultData(); console.log("[cache] vault pre-warmed"); } catch {}
   })();
 
   // Rate limit budget: ~19.440 calls/day
@@ -676,4 +720,9 @@ app.listen(PORT, () => {
       console.error("[cache] balances refresh failed:", (e as Error).message);
     }
   }, 120_000);
+  setInterval(async () => {
+    try { await fetchVaultData(); } catch (e) {
+      console.error("[cache] vault refresh failed:", (e as Error).message);
+    }
+  }, 60_000);
 });
