@@ -1209,6 +1209,23 @@
         {"@type":"ListItem","position":4,"name":"Tokenomics","item":"https://ifrunit.tech/wiki/tokenomics.html"},
         {"@type":"ListItem","position":5,"name":"FAQ","item":"https://ifrunit.tech/wiki/faq.html"}
       ]
+    },
+    {
+      "@type": "FinancialProduct",
+      "@id": "https://ifrunit.tech/#token",
+      "name": "Inferno Token",
+      "alternateName": "$IFR",
+      "description": "Deflationary ERC-20 utility token on Ethereum Mainnet. 1 billion supply (9 decimals), 3.5% transaction fee split: 1% burned, 1% buyback, 1% pool fee, 0.5% team. Lock-to-access mechanism via IFRLock contract.",
+      "url": "https://ifrunit.tech",
+      "provider": {"@id": "https://ifrunit.tech/#organization"},
+      "additionalProperty": [
+        {"@type":"PropertyValue","name":"Contract Address","value":"0x77e99917Eca8539c62F509ED1193ac36580A6e7B"},
+        {"@type":"PropertyValue","name":"Network","value":"Ethereum Mainnet"},
+        {"@type":"PropertyValue","name":"Decimals","value":"9"},
+        {"@type":"PropertyValue","name":"Total Supply","value":"1000000000"},
+        {"@type":"PropertyValue","name":"Burn Rate","value":"1%"},
+        {"@type":"PropertyValue","name":"Ticker","value":"IFR"}
+      ]
     }
   ]
 }
@@ -1254,7 +1271,7 @@
 </div>
 
 <!-- ── HERO ───────────────────────────────────────── -->
-<section class="hero" id="hero">
+<section class="hero" id="hero" aid-type="product" aid-name="Inferno Protocol $IFR">
   <!-- MOBILE: static banner (hidden on desktop via CSS) -->
   <div class="hero-mobile-banner">
     <img src="assets/IFR_BannerMobile.png" alt="Inferno $IFR">
@@ -1501,7 +1518,7 @@
 </section>
 
 <!-- ── TOKENOMICS ─────────────────────────────────── -->
-<section id="tokenomics">
+<section id="tokenomics" aid-type="data" aid-cnt-type="tokenomics">
   <div class="container">
     <div class="reveal">
       <p class="section-label">Tokenomics</p>
@@ -2062,7 +2079,7 @@ if (isLocked) {
 </section>
 
 <!-- ── FAQ ────────────────────────────────────────── -->
-<section id="faq" style="background:#0a0a0f;padding:80px 20px;">
+<section id="faq" style="background:#0a0a0f;padding:80px 20px;" aid-type="faq">
   <div style="max-width:1100px;margin:0 auto;">
 
     <h2 style="text-align:center;font-size:clamp(1.3rem,3vw,1.9rem);color:#fff;margin-bottom:10px;letter-spacing:2px;font-weight:800;">FREQUENTLY ASKED QUESTIONS</h2>
@@ -2189,7 +2206,7 @@ if (isLocked) {
 </section>
 
 <!-- ── CONTRACT INFO ──────────────────────────────── -->
-<section id="contracts" style="padding: 80px 0;">
+<section id="contracts" style="padding: 80px 0;" aid-type="data" aid-cnt-type="contracts">
   <div class="container">
     <div class="reveal" style="text-align:center;">
       <p class="section-label">On-Chain</p>
