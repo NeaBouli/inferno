@@ -1023,6 +1023,89 @@
       </table>
 
       <!-- ============================================================
+           Community Consensus Module
+           ============================================================ -->
+      <div id="consensus-module" style="margin-top:40px;">
+
+        <h2>Community Consensus</h2>
+        <p style="color:#64748b; font-size:13px; max-width:680px;">
+          This is a sentiment indicator, not a binding on-chain vote.
+          The team commits to following the community consensus.
+          On-chain binding governance comes with BootstrapVaultV4 in Phase 3.
+        </p>
+
+        <!-- Demo Mode Banner -->
+        <div id="consensus-demo-banner" style="background:rgba(234,179,8,0.12); border:1px solid rgba(234,179,8,0.4); border-radius:8px; padding:12px 16px; margin:16px 0; font-size:13px; color:#eab308;">
+          &#x26A0; WalletConnect not yet active &mdash; voting opens when WalletConnect is live. This module shows demo data.
+        </div>
+
+        <!-- Stats Row -->
+        <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:16px; margin:20px 0;">
+          <div style="background:var(--card); border:1px solid var(--border); border-radius:10px; padding:16px;">
+            <div style="font-size:12px; color:var(--muted); text-transform:uppercase; letter-spacing:0.5px;">Total ETH Contributed</div>
+            <div style="font-size:22px; font-weight:700; margin-top:4px;"><span id="cs-total-eth">0.00</span> ETH</div>
+          </div>
+          <div style="background:var(--card); border:1px solid var(--border); border-radius:10px; padding:16px;">
+            <div style="font-size:12px; color:var(--muted); text-transform:uppercase; letter-spacing:0.5px;">ETH Voted</div>
+            <div style="font-size:22px; font-weight:700; margin-top:4px;"><span id="cs-voted-eth">0.00</span> ETH <span style="font-size:13px; color:var(--muted);">(<span id="cs-voted-pct">0</span>%)</span></div>
+          </div>
+          <div style="background:var(--card); border:1px solid var(--border); border-radius:10px; padding:16px;">
+            <div style="font-size:12px; color:var(--muted); text-transform:uppercase; letter-spacing:0.5px;">Participation Rate</div>
+            <div style="font-size:22px; font-weight:700; margin-top:4px;"><span id="cs-participation">0</span>%</div>
+          </div>
+        </div>
+
+        <!-- Voting Bar -->
+        <div style="background:var(--card); border:1px solid var(--border); border-radius:10px; padding:20px; margin:16px 0;">
+          <div style="display:flex; justify-content:space-between; font-size:12px; font-weight:600; margin-bottom:8px;">
+            <span style="color:#ef4444;">&#x1F534; Refund</span>
+            <span style="color:#22c55e;">Finalise &#x1F7E2;</span>
+          </div>
+          <div style="position:relative; height:24px; background:linear-gradient(90deg,#ef4444 0%,#eab308 40%,#22c55e 100%); border-radius:12px; overflow:visible;">
+            <div id="cs-marker" style="position:absolute; top:-4px; width:4px; height:32px; background:#fff; border-radius:2px; left:50%; transition:left 0.6s ease; box-shadow:0 0 8px rgba(255,255,255,0.5);"></div>
+          </div>
+          <div style="text-align:center; margin-top:12px;">
+            <span style="font-size:24px; font-weight:800;" id="cs-trust-score">0</span><span style="font-size:14px; color:var(--muted);">% Trust Score</span>
+            <div id="cs-level-badge" style="display:inline-block; padding:4px 12px; border-radius:12px; font-size:12px; font-weight:600; margin-left:12px; background:rgba(100,116,139,0.2); color:#64748b;">No Data</div>
+          </div>
+        </div>
+
+        <!-- Resistance Index -->
+        <div style="background:var(--card); border:1px solid var(--border); border-radius:10px; padding:16px; margin:16px 0;">
+          <div style="font-size:13px; color:var(--muted); margin-bottom:8px;">
+            Resistance Index: <strong style="color:var(--text);"><span id="cs-resistance">100</span>%</strong> &mdash; <span id="cs-resistance-text">100% of contributors have not yet voted</span>
+          </div>
+          <div style="height:6px; background:var(--border); border-radius:3px; overflow:hidden;">
+            <div id="cs-participation-bar" style="height:100%; background:linear-gradient(90deg,var(--border),#22c55e); border-radius:3px; width:0%; transition:width 0.6s ease;"></div>
+          </div>
+        </div>
+
+        <!-- Vote Buttons -->
+        <div style="display:flex; gap:16px; margin:20px 0; flex-wrap:wrap;">
+          <button id="cs-btn-refund" disabled style="flex:1; min-width:140px; padding:14px 24px; border-radius:10px; border:2px solid #ef4444; background:rgba(239,68,68,0.1); color:#ef4444; font-size:15px; font-weight:700; cursor:not-allowed; opacity:0.5; transition:all 0.2s;">
+            &#x1F534; Vote Refund
+          </button>
+          <button id="cs-btn-finalise" disabled style="flex:1; min-width:140px; padding:14px 24px; border-radius:10px; border:2px solid #22c55e; background:rgba(34,197,94,0.1); color:#22c55e; font-size:15px; font-weight:700; cursor:not-allowed; opacity:0.5; transition:all 0.2s;">
+            &#x1F7E2; Vote Finalise
+          </button>
+        </div>
+        <p style="font-size:12px; color:var(--muted); text-align:center; margin-top:-8px;">
+          Connect wallet to vote &mdash; wallet must have contributed ETH to be eligible
+        </p>
+
+        <!-- Recent Votes (demo) -->
+        <div style="margin-top:24px;">
+          <div style="font-size:13px; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:8px;">Recent Votes</div>
+          <div id="cs-votes-list" style="background:var(--card); border:1px solid var(--border); border-radius:10px; overflow:hidden;">
+            <div style="padding:16px; text-align:center; color:#555; font-style:italic; font-size:13px;">
+              No votes yet &mdash; voting opens when WalletConnect is live
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ============================================================
            FAQ
            ============================================================ -->
       <h2>FAQ</h2>
@@ -1093,6 +1176,189 @@
       overlay.addEventListener('click', toggleSidebar);
     })();
   </script>
+
+<!-- Consensus Module Script -->
+<script>
+var ConsensusModule = {
+  config: {
+    walletConnectActive: false,
+    demoMode: true,
+    apiEndpoint: 'https://ifr-ai-copilot-production.up.railway.app/api/ifr/vault'
+  },
+
+  state: {
+    totalETH: 0,
+    votedETH: 0,
+    finaliseETH: 0,
+    refundETH: 0,
+    votes: []
+  },
+
+  calcKonsensScore: function(finaliseETH, votedETH) {
+    if (votedETH === 0) return 0;
+    return (finaliseETH / votedETH) * 100;
+  },
+
+  calcWiderstandsIndex: function(votedETH, totalETH) {
+    if (totalETH === 0) return 1;
+    return 1 - (votedETH / totalETH);
+  },
+
+  calcVertrauensScore: function(konsensScore, widerstandsIndex) {
+    return konsensScore * (1 - widerstandsIndex);
+  },
+
+  getLevel: function(vertrauensScore, participationRate) {
+    if (vertrauensScore > 70 && participationRate > 60) {
+      return { emoji: '\uD83D\uDFE2', label: 'Strong Consensus \u2014 Community supports finalisation', color: '#22c55e', bg: 'rgba(34,197,94,0.15)' };
+    }
+    if (vertrauensScore >= 50 && participationRate > 40) {
+      return { emoji: '\uD83D\uDFE1', label: 'Majority Consensus \u2014 Leaning towards finalisation', color: '#eab308', bg: 'rgba(234,179,8,0.15)' };
+    }
+    if (vertrauensScore >= 30 && participationRate > 30) {
+      return { emoji: '\uD83D\uDFE0', label: 'Divided \u2014 No clear direction', color: '#f97316', bg: 'rgba(249,115,22,0.15)' };
+    }
+    if (vertrauensScore >= 10) {
+      return { emoji: '\uD83D\uDD34', label: 'Weak Consensus \u2014 Leaning towards refund', color: '#ef4444', bg: 'rgba(239,68,68,0.15)' };
+    }
+    return { emoji: '\u26D4', label: 'No Consensus / High Resistance', color: '#64748b', bg: 'rgba(100,116,139,0.15)' };
+  },
+
+  render: function() {
+    var s = this.state;
+    var participation = s.totalETH > 0 ? (s.votedETH / s.totalETH) * 100 : 0;
+    var konsens = this.calcKonsensScore(s.finaliseETH, s.votedETH);
+    var widerstand = this.calcWiderstandsIndex(s.votedETH, s.totalETH);
+    var vertrauen = this.calcVertrauensScore(konsens, widerstand);
+    var level = this.getLevel(vertrauen, participation);
+
+    // Stats
+    var totalEl = document.getElementById('cs-total-eth');
+    var votedEl = document.getElementById('cs-voted-eth');
+    var votedPctEl = document.getElementById('cs-voted-pct');
+    var partEl = document.getElementById('cs-participation');
+    if (totalEl) totalEl.textContent = s.totalETH.toFixed(2);
+    if (votedEl) votedEl.textContent = s.votedETH.toFixed(2);
+    if (votedPctEl) votedPctEl.textContent = participation.toFixed(0);
+    if (partEl) partEl.textContent = participation.toFixed(0);
+
+    // Voting bar marker (0% = left/refund, 100% = right/finalise)
+    var marker = document.getElementById('cs-marker');
+    if (marker) marker.style.left = Math.max(2, Math.min(98, konsens)) + '%';
+
+    // Trust score + level
+    var trustEl = document.getElementById('cs-trust-score');
+    if (trustEl) trustEl.textContent = vertrauen.toFixed(1);
+    var badgeEl = document.getElementById('cs-level-badge');
+    if (badgeEl) {
+      badgeEl.textContent = level.emoji + ' ' + level.label;
+      badgeEl.style.background = level.bg;
+      badgeEl.style.color = level.color;
+    }
+
+    // Resistance
+    var resEl = document.getElementById('cs-resistance');
+    if (resEl) resEl.textContent = (widerstand * 100).toFixed(0);
+    var resText = document.getElementById('cs-resistance-text');
+    if (resText) resText.textContent = (widerstand * 100).toFixed(0) + '% of contributors have not yet voted';
+    var partBar = document.getElementById('cs-participation-bar');
+    if (partBar) partBar.style.width = participation + '%';
+
+    // Votes list
+    var listEl = document.getElementById('cs-votes-list');
+    if (listEl && s.votes.length > 0) {
+      var html = '';
+      s.votes.forEach(function(v) {
+        var dirColor = v.direction === 'finalise' ? '#22c55e' : '#ef4444';
+        var dirLabel = v.direction === 'finalise' ? 'Finalise' : 'Refund';
+        html += '<div style="display:flex; justify-content:space-between; align-items:center; padding:10px 16px; border-bottom:1px solid var(--border); font-size:13px;">' +
+          '<span style="color:var(--muted); font-family:monospace;">' + v.address + '</span>' +
+          '<span>' + v.amount.toFixed(2) + ' ETH</span>' +
+          '<span style="color:' + dirColor + '; font-weight:600;">' + dirLabel + '</span>' +
+          '<span style="color:var(--muted); font-size:12px;">' + v.timeAgo + '</span>' +
+          '</div>';
+      });
+      listEl.innerHTML = html;
+    }
+
+    // Demo banner visibility
+    var banner = document.getElementById('consensus-demo-banner');
+    if (banner) banner.style.display = this.config.demoMode ? 'block' : 'none';
+
+    // Buttons
+    var btnRefund = document.getElementById('cs-btn-refund');
+    var btnFinalise = document.getElementById('cs-btn-finalise');
+    if (this.config.walletConnectActive) {
+      if (btnRefund) { btnRefund.disabled = false; btnRefund.style.opacity = '1'; btnRefund.style.cursor = 'pointer'; }
+      if (btnFinalise) { btnFinalise.disabled = false; btnFinalise.style.opacity = '1'; btnFinalise.style.cursor = 'pointer'; }
+    }
+  },
+
+  connectWallet: function() {
+    if (!this.config.walletConnectActive) {
+      alert('WalletConnect coming soon \u2014 voting opens when wallet integration is live.');
+      return;
+    }
+    // WalletConnect integration point
+  },
+
+  submitVote: function(direction) {
+    if (!this.config.walletConnectActive) {
+      this.connectWallet();
+      return;
+    }
+    // Signature + backend submission point
+  },
+
+  loadDemoData: function() {
+    this.state = {
+      totalETH: 0,
+      votedETH: 0,
+      finaliseETH: 0,
+      refundETH: 0,
+      votes: []
+    };
+  },
+
+  init: function() {
+    var self = this;
+
+    // Wire up buttons
+    var btnRefund = document.getElementById('cs-btn-refund');
+    var btnFinalise = document.getElementById('cs-btn-finalise');
+    if (btnRefund) btnRefund.addEventListener('click', function() { self.submitVote('refund'); });
+    if (btnFinalise) btnFinalise.addEventListener('click', function() { self.submitVote('finalise'); });
+
+    // Load demo data
+    if (this.config.demoMode) {
+      this.loadDemoData();
+    }
+
+    // Fetch live vault data for totalETH
+    fetch(this.config.apiEndpoint)
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (data && !data.error) {
+          // totalETH will be populated when bootstrap is active
+          // For now, vault balance shows IFR not ETH
+          self.render();
+        }
+      })
+      .catch(function() {
+        self.render();
+      });
+
+    this.render();
+  }
+};
+
+// Init after DOM ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', function() { ConsensusModule.init(); });
+} else {
+  ConsensusModule.init();
+}
+</script>
 
 <!-- Live Vault Data + Countdown Script -->
 <script>
