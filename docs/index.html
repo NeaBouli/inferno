@@ -1159,10 +1159,67 @@
     }
   </style>
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@900&display=swap" rel="stylesheet">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "https://ifrunit.tech/#organization",
+      "name": "Inferno Protocol",
+      "url": "https://ifrunit.tech",
+      "logo": "https://ifrunit.tech/assets/ifr_icon_256.png",
+      "description": "Deflationary ERC-20 utility token on Ethereum. Fair launch, no VC, no presale. Lock-to-access mechanism for builder ecosystem.",
+      "sameAs": [
+        "https://x.com/IFRtoken",
+        "https://t.me/IFRtoken",
+        "https://github.com/NeaBouli/inferno"
+      ]
+    },
+    {
+      "@type": "SoftwareApplication",
+      "@id": "https://ifrunit.tech/#app",
+      "name": "IFR Inferno Protocol",
+      "applicationCategory": "FinanceApplication",
+      "operatingSystem": "Ethereum Mainnet",
+      "url": "https://ifrunit.tech",
+      "description": "Deflationary ERC-20 token with lock-to-access utility. 1B supply, 9 decimals, 3.5% transaction fee (1% pool, 1% burn, 1% buyback, 0.5% team).",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "ETH"
+      }
+    },
+    {
+      "@type": "WebSite",
+      "@id": "https://ifrunit.tech/#website",
+      "url": "https://ifrunit.tech",
+      "name": "Inferno Protocol",
+      "description": "Official website of the Inferno ($IFR) Protocol",
+      "publisher": {
+        "@id": "https://ifrunit.tech/#organization"
+      }
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {"@type":"ListItem","position":1,"name":"Home","item":"https://ifrunit.tech"},
+        {"@type":"ListItem","position":2,"name":"Wiki","item":"https://ifrunit.tech/wiki/index.html"},
+        {"@type":"ListItem","position":3,"name":"Bootstrap","item":"https://ifrunit.tech/wiki/bootstrap.html"},
+        {"@type":"ListItem","position":4,"name":"Tokenomics","item":"https://ifrunit.tech/wiki/tokenomics.html"},
+        {"@type":"ListItem","position":5,"name":"FAQ","item":"https://ifrunit.tech/wiki/faq.html"}
+      ]
+    }
+  ]
+}
+</script>
 </head>
 <body>
 
+<h1 style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);">Inferno Protocol — Deflationary ERC-20 Utility Token ($IFR) on Ethereum</h1>
+
 <!-- ── NAV ────────────────────────────────────────── -->
+<header>
 <nav id="navbar">
   <div class="nav-inner">
     <a href="#" class="nav-logo">
@@ -1186,7 +1243,9 @@
     <button class="nav-toggle" id="navToggle" aria-label="Toggle menu">&#9776;</button>
   </div>
 </nav>
+</header>
 
+<main>
 <!-- ── BOOTSTRAP BANNER ────────────────────────────── -->
 <div id="bootstrap-banner" style="background:linear-gradient(135deg,#1a0a00 0%,#2d1200 100%);border-bottom:3px solid #ff6b35;padding:14px 20px;text-align:center;width:100%;box-sizing:border-box;display:block;z-index:99;margin-top:64px;">
   <p style="margin:0 0 6px 0;font-size:1rem;font-weight:bold;color:#ff6b35;">&#x1f525; Community Bootstrap Event &mdash; Vault Funded (194.75M IFR) &mdash; Launching Soon</p>
@@ -2243,6 +2302,8 @@ if (isLocked) {
     </p>
   </div>
 </section>
+
+</main>
 
 <!-- ── FOOTER ─────────────────────────────────────── -->
 <footer>

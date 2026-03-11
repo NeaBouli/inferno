@@ -461,6 +461,64 @@
        ============================================================ */
   </style>
   <link rel="icon" type="image/png" href="../assets/ifr_icon_64.png">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "What is $IFR and what makes it deflationary?",
+      "acceptedAnswer": {"@type":"Answer","text":"Inferno ($IFR) is an ERC-20 utility token on Ethereum with a fixed supply of 1B tokens. Every transfer burns 2.5% and routes 1% to a pool fee. No mint function exists — supply can only decrease."}
+    },
+    {
+      "@type": "Question",
+      "name": "What is the total token supply and distribution?",
+      "acceptedAnswer": {"@type":"Answer","text":"1B IFR distributed as: 40% DEX Liquidity, 20% LiquidityReserve (locked until 01.09.2026), 15% Team Vesting (12-month cliff), 15% Treasury Safe, 6% Community & Grants, 4% BuilderVault."}
+    },
+    {
+      "@type": "Question",
+      "name": "Can new tokens ever be minted?",
+      "acceptedAnswer": {"@type":"Answer","text":"No. There is no mint() function. No admin, governance, or upgrade can create new IFR tokens. The genesis supply is the permanent maximum."}
+    },
+    {
+      "@type": "Question",
+      "name": "Has the protocol been audited?",
+      "acceptedAnswer": {"@type":"Answer","text":"Yes — Slither static analysis (0 high/critical), Claude security audit (0 FAIL), ChatGPT audit V4 (7/7 PASS), 497 automated tests with 99% statement and 91% branch coverage. Professional third-party audit planned."}
+    },
+    {
+      "@type": "Question",
+      "name": "How does governance work?",
+      "acceptedAnswer": {"@type":"Answer","text":"Custom timelock governor with 48-hour delay. Owner creates proposals, community reviews during delay, Guardian can cancel malicious proposals. Uses propose() and execute() pattern."}
+    },
+    {
+      "@type": "Question",
+      "name": "What is the Bootstrap Event?",
+      "acceptedAnswer": {"@type":"Answer","text":"A 90-day community liquidity event. Anyone contributes 0.01–2 ETH per wallet. All ETH is paired with ~194.75M IFR to create the Uniswap V2 LP. Fully trustless and permissionless."}
+    },
+    {
+      "@type": "Question",
+      "name": "Can the team rug the liquidity?",
+      "acceptedAnswer": {"@type":"Answer","text":"No. LP tokens are locked for 12+ months via Team.Finance. All contracts are immutable (no proxy). Ownership transferred to Governance with 48h timelock. Guardian can only cancel, not execute."}
+    },
+    {
+      "@type": "Question",
+      "name": "Are the contracts upgradeable?",
+      "acceptedAnswer": {"@type":"Answer","text":"No. All 9 contracts are immutable — no proxy pattern, no UUPS. Bytecode cannot be changed after deployment. This prevents rug-pulls via contract upgrades."}
+    },
+    {
+      "@type": "Question",
+      "name": "Is my lock safe? Can the team access my tokens?",
+      "acceptedAnswer": {"@type":"Answer","text":"Yes, your lock is safe. IFRLock uses OpenZeppelin ReentrancyGuard. No admin can access locked tokens. Only your wallet can call unlock(). The contract is fee-exempt and immutable."}
+    },
+    {
+      "@type": "Question",
+      "name": "Where does the Bootstrap funding come from?",
+      "acceptedAnswer": {"@type":"Answer","text":"BootstrapVaultV3 was funded on 11.03.2026 with ~194.75M IFR from Treasury Safe (~144.75M) and Community Safe (50M). Fee-exempt since Governance Proposal #4 execution."}
+    }
+  ]
+}
+</script>
 </head>
 <body>
 
