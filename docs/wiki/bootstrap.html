@@ -603,13 +603,13 @@
   <link rel="icon" type="image/png" href="../assets/ifr_icon_64.png">
   <meta property="og:type" content="article">
   <meta property="og:site_name" content="Inferno Protocol">
-  <meta property="og:title" content="Community Bootstrap Event — Inferno Protocol ($IFR)">
-  <meta property="og:description" content="90-day community liquidity event. Contribute 0.01–2 ETH, receive IFR at launch price. Vault funded with 194.75M IFR. Fully trustless.">
+  <meta property="og:title" content="IFR Bootstrap Event — Community Liquidity Launch">
+  <meta property="og:description" content="Contribute ETH to the IFR Bootstrap. No fixed price — community decides. 194.75M IFR pre-funded. Permissionless, trustless, on-chain.">
   <meta property="og:url" content="https://ifrunit.tech/wiki/bootstrap.html">
   <meta property="og:image" content="https://ifrunit.tech/assets/ifr_icon_256.png">
   <meta name="twitter:card" content="summary">
-  <meta name="twitter:title" content="Community Bootstrap Event — $IFR">
-  <meta name="twitter:description" content="90-day community liquidity event. Contribute ETH, receive IFR. Vault funded with 194.75M IFR.">
+  <meta name="twitter:title" content="IFR Bootstrap Event — Community Liquidity Launch">
+  <meta name="twitter:description" content="Contribute ETH to the IFR Bootstrap. No fixed price — community decides. 194.75M IFR pre-funded.">
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -622,6 +622,23 @@
     "about": {"@id": "https://ifrunit.tech/#app"}
   }
   </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FinancialProduct",
+    "name": "IFR Inferno Protocol Bootstrap Event",
+    "description": "Community liquidity bootstrapping event for IFR token. Contributors provide ETH, receive IFR pro-rata. No presale, no team ETH, no fixed price.",
+    "url": "https://ifrunit.tech/wiki/bootstrap.html",
+    "provider": {
+      "@type": "Organization",
+      "name": "Inferno Protocol",
+      "url": "https://ifrunit.tech"
+    },
+    "feesAndCommissionsSpecification": "No hard cap. No soft cap. LP always created. 3.5% fee-on-transfer waived via feeExempt.",
+    "additionalType": "https://schema.org/InvestmentOrDeposit"
+  }
+  </script>
+  <meta name="ai-summary" content="IFR Bootstrap: 194.75M IFR pre-funded in BootstrapVaultV3. Contributors send 0.01-2 ETH. After 90 days finalise() creates Uniswap V2 LP. LP locked 12 months via Team.Finance. Permissionless, no admin keys.">
 </head>
 <body>
 
@@ -1116,12 +1133,14 @@
             &#x1F7E2; Vote Finalise
           </button>
         </div>
-        <button id="wallet-connect-btn" disabled style="background:linear-gradient(135deg,#f97316,#ea580c); color:white; border:none; padding:12px 28px; border-radius:8px; font-size:14px; font-weight:600; cursor:not-allowed; opacity:0.6; margin:12px auto 0; display:block; width:100%; max-width:300px; letter-spacing:0.5px;">
-          &#x1F517; Connect Wallet (Coming Soon)
-        </button>
-        <p style="text-align:center; font-size:11px; color:#64748b; margin-top:6px;">
-          Wallet must have contributed ETH to be eligible to vote
-        </p>
+        <div style="text-align:center;">
+          <button id="wallet-connect-btn" disabled style="background:transparent; color:#f97316; border:1px solid #f97316; padding:8px 20px; border-radius:6px; font-size:12px; font-weight:500; cursor:not-allowed; opacity:0.7; margin-top:10px; display:inline-block;">
+            &#x1F517; Connect Wallet (Coming Soon)
+          </button>
+          <p style="font-size:11px; color:#64748b; margin-top:4px;">
+            Wallet must have contributed ETH to be eligible to vote
+          </p>
+        </div>
 
         <!-- Recent Votes (demo) -->
         <div style="margin-top:24px;">
