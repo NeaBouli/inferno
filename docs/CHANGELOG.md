@@ -4,6 +4,25 @@ All notable changes to the Inferno ($IFR) project.
 
 ---
 
+## [Bootstrap Funded] — 2026-03-11
+
+### Executed
+- **Proposal #4** executed: `setFeeExempt(BootstrapVaultV3, true)` — [TX: 0xdb1590bf…](https://etherscan.io/tx/0xdb1590bf)
+- **Proposal #5** executed: `setFeeExempt(FeeRouterV1, true)` — [TX: 0x1c885fbe…](https://etherscan.io/tx/0x1c885fbe)
+- **Treasury Safe → BootstrapVaultV3:** ~144,750,000 IFR — [TX: 0x6f08eaa6…](https://etherscan.io/tx/0x6f08eaa6)
+- **Community Safe → BootstrapVaultV3:** 50,000,000 IFR — [TX: 0x4394bec1…](https://etherscan.io/tx/0x4394bec1)
+- **Total in BootstrapVaultV3:** ~194,750,000 IFR (confirmed on-chain)
+
+### Queued
+- **Proposal #6** queued: ETA 13.03.2026 09:23 CET — [TX: 0x89eebca7…](https://etherscan.io/tx/0x89eebca7)
+
+### Updated
+- All status pages updated (transparency, bootstrap, faq, mainnet-checklist, roadmap)
+- Proposal #4+#5: "Queued/Pending" → "Executed" across all wiki pages
+- BootstrapVaultV3 balance: "0 IFR (pending)" → "194,750,000 IFR (funded ✅)"
+
+---
+
 ## [Plan B Bootstrap Decision] — 2026-03-08
 
 ### Changed
@@ -15,7 +34,7 @@ All notable changes to the Inferno ($IFR) project.
 ### Decision Details
 - **Date:** 08.03.2026
 - **Decided by:** Core Dev Team (Kaspartizan)
-- **On-chain execution:** Pending Proposals #4 + #5 (11.03.2026)
+- **On-chain execution:** Proposals #4 + #5 executed (11.03.2026). Proposal #6 queued (ETA 13.03.2026)
 - **Community Safe allocation after Bootstrap:**
   - 50M IFR → BootstrapVaultV3 (Bootstrap contribution)
   - 7.9M IFR → Community Operations Reserve (permanent — bug bounties, grants, DAO seed, ecosystem incentives)
