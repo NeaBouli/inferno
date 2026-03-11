@@ -845,6 +845,26 @@
         <p><strong>More ETH = higher price AND deeper liquidity.</strong> Deeper liquidity means less price volatility after launch. The bootstrap creates a healthier market for everyone.</p>
       </div>
 
+      <h3>ETH Target Scale</h3>
+
+      <table>
+        <thead>
+          <tr>
+            <th>ETH Raised</th>
+            <th>Rating</th>
+            <th>Meaning</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>&lt; 2 ETH</td><td>&#x26D4; Critical</td><td>Very thin liquidity, high volatility risk</td></tr>
+          <tr><td>2&ndash;5 ETH</td><td>&#x1F534; Weak</td><td>Functional but fragile &mdash; limited price stability</td></tr>
+          <tr><td>5&ndash;15 ETH</td><td>&#x1F7E1; Okay</td><td>Solid start &mdash; sufficient for stable trading</td></tr>
+          <tr><td>15&ndash;30 ETH</td><td>&#x1F7E2; Good</td><td>Healthy liquidity &mdash; strong community signal</td></tr>
+          <tr><td>&gt; 30 ETH</td><td>&#x1F525; Perfect</td><td>Deep liquidity &mdash; excellent foundation for growth</td></tr>
+        </tbody>
+      </table>
+      <p style="font-size:12px; color:#64748b;">* These are community reference targets, not hard caps or soft caps. The LP is always created regardless of ETH raised.</p>
+
       <!-- ============================================================
            Smart Contract
            ============================================================ -->
@@ -1055,6 +1075,13 @@
           </div>
         </div>
 
+        <!-- ETH Level Indicator -->
+        <div id="eth-level-indicator" style="background:var(--card); border:1px solid var(--border); border-radius:10px; padding:14px 16px; margin:16px 0; display:flex; align-items:center; gap:12px; font-size:14px;">
+          <span style="color:var(--muted);">Current ETH Level:</span>
+          <span id="eth-level-badge" style="font-weight:700;">&mdash;</span>
+          <span id="eth-level-text" style="color:var(--muted); font-size:13px;">&mdash;</span>
+        </div>
+
         <!-- Voting Bar -->
         <div style="background:var(--card); border:1px solid var(--border); border-radius:10px; padding:20px; margin:16px 0;">
           <div style="display:flex; justify-content:space-between; font-size:12px; font-weight:600; margin-bottom:8px;">
@@ -1208,6 +1235,14 @@ var ConsensusModule = {
     return konsensScore * (1 - widerstandsIndex);
   },
 
+  getETHLevel: function(eth) {
+    if (eth < 2) return { badge: '\u26D4 Critical', text: 'Very thin liquidity', color: '#6b7280' };
+    if (eth < 5) return { badge: '\uD83D\uDD34 Weak', text: 'Functional but fragile', color: '#ef4444' };
+    if (eth < 15) return { badge: '\uD83D\uDFE1 Okay', text: 'Solid start', color: '#f59e0b' };
+    if (eth < 30) return { badge: '\uD83D\uDFE2 Good', text: 'Healthy liquidity', color: '#22c55e' };
+    return { badge: '\uD83D\uDD25 Perfect', text: 'Deep liquidity \u2014 excellent foundation', color: '#f97316' };
+  },
+
   getLevel: function(vertrauensScore, participationRate) {
     if (vertrauensScore > 70 && participationRate > 60) {
       return { emoji: '\uD83D\uDFE2', label: 'Strong Consensus \u2014 Community supports finalisation', color: '#22c55e', bg: 'rgba(34,197,94,0.15)' };
@@ -1263,6 +1298,13 @@ var ConsensusModule = {
     if (resText) resText.textContent = (widerstand * 100).toFixed(0) + '% of contributors have not yet voted';
     var partBar = document.getElementById('cs-participation-bar');
     if (partBar) partBar.style.width = participation + '%';
+
+    // ETH Level Indicator
+    var ethLevel = this.getETHLevel(s.totalETH);
+    var ethBadge = document.getElementById('eth-level-badge');
+    var ethText = document.getElementById('eth-level-text');
+    if (ethBadge) { ethBadge.textContent = ethLevel.badge; ethBadge.style.color = ethLevel.color; }
+    if (ethText) ethText.textContent = ethLevel.text;
 
     // Votes list
     var listEl = document.getElementById('cs-votes-list');
