@@ -829,11 +829,11 @@
 
 <!-- IFR Copilot Widget -->
 <style>
-#ifr-btn { position:fixed; bottom:24px; right:24px; z-index:99999; width:60px; height:60px; border-radius:50%; background:#ff6600; border:none; cursor:pointer; font-size:28px; box-shadow:0 4px 20px rgba(255,102,0,0.5); }
+#ifr-btn { position:fixed; bottom:24px; right:24px; width:64px; height:64px; border-radius:50%; overflow:hidden; padding:0; cursor:pointer; border:2px solid #f97316; box-shadow:0 4px 20px rgba(249,115,22,0.4); z-index:99999; background:none; transition:transform 0.2s ease,box-shadow 0.2s ease; } #ifr-btn:hover { transform:scale(1.08); box-shadow:0 6px 28px rgba(249,115,22,0.6); } #ifr-btn img { width:100%; height:100%; object-fit:cover; object-position:center center; border-radius:50%; display:block; }
 #ifr-panel { display:none; position:fixed; bottom:100px; right:24px; z-index:99998; width:400px; height:580px; border-radius:16px; overflow:hidden; box-shadow:0 8px 40px rgba(0,0,0,0.5); background:#1a1a1a; }
 #ifr-panel iframe { width:100%; height:100%; border:none; }
 </style>
-<button id="ifr-btn" onclick="var p=document.getElementById('ifr-panel');p.style.display=p.style.display==='block'?'none':'block';">&#x1f525;</button>
+<button id="ifr-btn" onclick="var p=document.getElementById('ifr-panel');p.style.display=p.style.display==='block'?'none':'block';"><img src="../assets/CoPilot.jpg" alt="IFR Copilot"></button>
 <div id="ifr-panel"><iframe src="https://ifr-ai-copilot-production.up.railway.app" allow="clipboard-write"></iframe></div>
 
 </body>
