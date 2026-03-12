@@ -75,7 +75,7 @@ function trackCost(inputTokens: number, outputTokens: number): void {
   }
 }
 
-// Load wiki docs for RAG at startup
+// Load wiki docs for RAG at startup (local/pre-built JSON)
 const WIKI_DIR = resolve(__dirname, "../../../docs/wiki");
 let wikiDocs: WikiDoc[] = [];
 try {
@@ -84,6 +84,77 @@ try {
 } catch (err) {
   console.warn("Wiki RAG failed to load (non-critical):", err);
 }
+
+// ── Live Wiki Fetcher — auto-discover + fetch ALL wiki pages from ifrunit.tech ──
+let liveWikiContext = "";
+let liveWikiLastFetched = 0;
+const WIKI_CACHE_TTL = 1000 * 60 * 60; // 1 hour refresh
+
+async function fetchLiveWikiContext(): Promise<string> {
+  const now = Date.now();
+  if (liveWikiContext && now - liveWikiLastFetched < WIKI_CACHE_TTL) return liveWikiContext;
+
+  const BASE = "https://ifrunit.tech";
+  const results: string[] = [];
+
+  try {
+    // Step 1: fetch wiki index to discover all links
+    const pagesToFetch = new Set<string>();
+
+    const indexRes = await fetch(`${BASE}/wiki/index.html`, { signal: AbortSignal.timeout(8000) });
+    const indexHtml = await indexRes.text();
+
+    // Extract all wiki page links
+    const linkMatches = indexHtml.matchAll(/href="([^"]*\.html)"/g);
+    for (const match of linkMatches) {
+      const href = match[1];
+      if (href.startsWith("http")) {
+        pagesToFetch.add(href);
+      } else if (href.startsWith("/wiki/") || href.startsWith("wiki/")) {
+        pagesToFetch.add(`${BASE}/${href.replace(/^\//, "")}`);
+      } else if (!href.startsWith("http") && href.endsWith(".html")) {
+        pagesToFetch.add(`${BASE}/wiki/${href}`);
+      }
+    }
+
+    // Also fetch main landing page
+    pagesToFetch.add(`${BASE}/index.html`);
+
+    console.log(`[wiki-fetch] Fetching ${pagesToFetch.size} pages for Ali context...`);
+
+    // Step 2: fetch each page
+    for (const url of pagesToFetch) {
+      try {
+        const res = await fetch(url, { signal: AbortSignal.timeout(5000) });
+        const html = await res.text();
+        const text = html
+          .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, "")
+          .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "")
+          .replace(/<nav[^>]*>[\s\S]*?<\/nav>/gi, "")
+          .replace(/<[^>]+>/g, " ")
+          .replace(/&nbsp;/g, " ")
+          .replace(/&amp;/g, "&")
+          .replace(/&mdash;/g, "—")
+          .replace(/\s+/g, " ")
+          .trim()
+          .slice(0, 4000);
+        results.push(`=== ${url} ===\n${text}`);
+      } catch {
+        console.error(`[wiki-fetch] Failed: ${url}`);
+      }
+    }
+  } catch (err) {
+    console.error("[wiki-fetch] Wiki discovery failed:", err);
+  }
+
+  liveWikiContext = results.join("\n\n");
+  liveWikiLastFetched = Date.now();
+  console.log(`[wiki-fetch] Ali wiki context ready: ${results.length} pages, ${liveWikiContext.length} chars`);
+  return liveWikiContext;
+}
+
+// Pre-warm wiki context on startup
+fetchLiveWikiContext().catch(() => {});
 
 // Detect guide-completion in AI responses
 function detectGuideCompletion(userMessage: string, assistantReply: string): string | null {
@@ -380,7 +451,13 @@ app.post("/api/chat", async (req, res) => {
   }
 
   const basePrompt = SYSTEM_PROMPTS[mode] || SYSTEM_PROMPTS.customer;
-  const systemPrompt = buildSystemPrompt(basePrompt, mode || "customer", wikiDocs);
+  let systemPrompt = buildSystemPrompt(basePrompt, mode || "customer", wikiDocs);
+
+  // Append live wiki context (fetched from ifrunit.tech, 1h cache)
+  const liveWiki = await fetchLiveWikiContext();
+  if (liveWiki) {
+    systemPrompt += `\n\n--- LIVE WIKI CONTEXT (auto-fetched from ifrunit.tech) ---\n${liveWiki.slice(0, 80000)}\n--- END WIKI CONTEXT ---\nAlways prioritize this context for accurate IFR information.`;
+  }
 
   try {
     const response = await fetch("https://api.anthropic.com/v1/messages", {
