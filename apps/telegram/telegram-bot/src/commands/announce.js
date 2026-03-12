@@ -18,7 +18,10 @@ async function announceCommand(ctx) {
     return;
   }
 
-  const formatted = `📢 *Announcement*\n\n${text}\n\n🌐 ifrunit.tech`;
+  const formatted =
+    `📢 *Announcement*\n\n${text}\n\n` +
+    `🌐 ifrunit.tech\n` +
+    `💬 *Join the community:* [t.me/IFR\\_token](https://t.me/IFR_token)`;
   const opts = { parse_mode: 'Markdown' };
   if (TOPIC_ID && Number(TOPIC_ID) > 1) {
     opts.message_thread_id = Number(TOPIC_ID);
@@ -26,8 +29,14 @@ async function announceCommand(ctx) {
 
   let posted = 0;
   try {
-    await ctx.telegram.sendMessage(GROUP_ID, formatted, opts);
+    const sentMsg = await ctx.telegram.sendMessage(GROUP_ID, formatted, opts);
     posted++;
+    // Auto-pin announcement in group
+    try {
+      await ctx.telegram.pinChatMessage(GROUP_ID, sentMsg.message_id, { disable_notification: true });
+    } catch (pinErr) {
+      logger.warn({ err: pinErr.message }, 'Failed to pin announcement in group');
+    }
   } catch (err) {
     logger.error({ err: err.message }, 'Failed to post to group');
   }
