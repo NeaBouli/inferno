@@ -248,6 +248,10 @@ body {
   </div>
 </div>
 <div id="messages"></div>
+<div id="ali-disclaimer" style="background:#0f172a;border-top:1px solid #f59e0b;padding:5px 12px;font-size:10px;color:#64748b;line-height:1.5;flex-shrink:0;">
+  &#x26a0;&#xfe0f; <strong style="color:#f59e0b;">AI assistant</strong> &#x2014; not 100% accurate. Never share private keys or wallet addresses. &nbsp;&#xb7;&nbsp;
+  &#x1f49b; <a href="https://etherscan.io/address/0xA0860f872a9cAB34817D9a764e71ab43B942b275" target="_blank" style="color:#f97316;text-decoration:none;">Support ETH/IFR</a>
+</div>
 <div id="input-area">
   <input id="input" type="text" maxlength="500" placeholder="Ask about IFR..." onkeydown="if(event.key==='Enter'&&!event.shiftKey)send()" oninput="document.getElementById('charcount').textContent=this.value.length+'/500'">
   <span id="charcount" style="color:#666;font-size:11px;align-self:center;">0/500</span>
