@@ -2451,7 +2451,10 @@ if (isLocked) {
 
 <button id="ifr-btn" onclick="
   var p = document.getElementById('ifr-panel');
-  p.style.display = p.style.display === 'block' ? 'none' : 'block';
+  var d = document.getElementById('ali-disclaimer');
+  var open = p.style.display !== 'block';
+  p.style.display = open ? 'block' : 'none';
+  d.style.display = open ? 'block' : 'none';
 ">&#x1f525;</button>
 
 <div id="ifr-panel">
@@ -2468,17 +2471,6 @@ if (isLocked) {
   &#x1f49b; <a href="https://etherscan.io/address/0xA0860f872a9cAB34817D9a764e71ab43B942b275" target="_blank" rel="noopener" style="color:#f97316;text-decoration:none;">Support ETH/IFR</a>
 </div>
 
-<script>
-(function(){
-  var panel = document.getElementById('ifr-panel');
-  var disc = document.getElementById('ali-disclaimer');
-  if (!panel || !disc) return;
-  var obs = new MutationObserver(function(){
-    disc.style.display = panel.style.display === 'block' ? 'block' : 'none';
-  });
-  obs.observe(panel, { attributes: true, attributeFilter: ['style'] });
-})();
-</script>
 
 <script>
   // Copy-to-clipboard for contract addresses
