@@ -15,7 +15,7 @@ jobs:
       run:
         working-directory: apps/benefits-network/backend
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
@@ -32,7 +32,7 @@ jobs:
       run:
         working-directory: apps/benefits-network/frontend
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
