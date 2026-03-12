@@ -106,6 +106,38 @@ bot.on('channel_post', async (ctx) => {
   }
 });
 
+// ── Protected Topics — delete messages from non-admins ───────────────────────
+const PROTECTED_TOPICS = [58, 23, 21]; // Core Dev, Vote, Council
+const PROTECTED_ADMIN_IDS = process.env.ADMIN_USER_IDS
+  ? process.env.ADMIN_USER_IDS.split(',').map(id => parseInt(id.trim()))
+  : [579949616];
+
+bot.on('message', async (ctx, next) => {
+  try {
+    const threadId = ctx.message?.message_thread_id;
+    if (!threadId || !PROTECTED_TOPICS.includes(threadId)) return next();
+    const userId = ctx.from?.id;
+    if (!userId) return next();
+    if (PROTECTED_ADMIN_IDS.includes(userId)) return next();
+    const member = await ctx.telegram.getChatMember(ctx.chat.id, userId);
+    if (['creator', 'administrator'].includes(member.status)) return next();
+    await ctx.deleteMessage();
+    const warning = await ctx.telegram.sendMessage(
+      ctx.chat.id,
+      `🔒 @${ctx.from.username || ctx.from.first_name} — this topic requires verified wallet access.\n\nAvailable in Phase 2 via WalletConnect.\n🌐 ifrunit.tech`,
+      {
+        message_thread_id: threadId,
+        disable_web_page_preview: true
+      }
+    );
+    setTimeout(async () => {
+      try { await ctx.telegram.deleteMessage(ctx.chat.id, warning.message_id); } catch (e) { /* ignore */ }
+    }, 8000);
+  } catch (err) {
+    logger.error({ err: err.message }, 'Protected topic error');
+  }
+});
+
 // Unbekannte Nachrichten / Commands
 bot.on('text', async (ctx) => {
   if (ctx.message.text.startsWith('/')) {
