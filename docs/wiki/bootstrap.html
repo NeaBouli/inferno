@@ -969,12 +969,12 @@
           <div class="phase-date">11.03.2026 &mdash; 194.75M IFR in vault</div>
         </div>
         <div class="phase-item" id="phase-lp">
-          <div class="phase-label">&#x23F3; LP Pairing + Bootstrap Launch</div>
-          <div class="phase-date">After Proposal #6 execution &mdash; ~13.03.2026</div>
+          <div class="phase-label">&#x23F3; Bootstrap Launch &mdash; ETH Contributions Open</div>
+          <div class="phase-date">17.04.2026 00:00 UTC</div>
         </div>
         <div class="phase-item" id="phase-active">
           <div class="phase-label">&#x23F3; Bootstrap Active (90 days)</div>
-          <div class="phase-date">~March&ndash;June 2026</div>
+          <div class="phase-date">17.04.2026 &ndash; 15.07.2026</div>
         </div>
         <div class="phase-item pending">
           <div class="phase-label">&#x1F512; LiquidityReserve Unlock</div>
@@ -983,11 +983,11 @@
       </div>
 
       <!-- Countdown -->
-      <div class="countdown-box">
-        <div class="countdown-label" id="countdown-label">Bootstrap Countdown</div>
-        <div id="bootstrap-countdown">
-          <span class="countdown-waiting">Waiting for LP Pairing&hellip;</span>
-        </div>
+      <div id="bootstrap-countdown-box" style="background:#0f172a; border:1px solid #f97316; border-radius:12px; padding:24px; text-align:center; margin:24px 0;">
+        <div style="font-size:12px; color:#64748b; margin-bottom:8px; text-transform:uppercase; letter-spacing:1px;" id="countdown-label">Bootstrap Opens In</div>
+        <div id="bootstrap-main-countdown" style="font-size:36px; font-weight:700; font-family:monospace; color:#f97316; letter-spacing:2px;">--d --h --m --s</div>
+        <div style="font-size:13px; color:#94a3b8; margin-top:8px;">17.04.2026 00:00 UTC &mdash; ETH contributions open</div>
+        <div style="font-size:12px; color:#64748b; margin-top:4px;">Vault pre-funded with 194.75M IFR &#x2705; &mdash; waiting for Bootstrap launch date</div>
       </div>
 
       <table>
@@ -1021,8 +1021,13 @@
           </tr>
           <tr>
             <td style="color: #eab308; font-weight: 600;">PENDING</td>
-            <td>Bootstrap Launch Announcement</td>
-            <td>TBA</td>
+            <td>Bootstrap Launch &mdash; ETH contributions open</td>
+            <td>17.04.2026</td>
+          </tr>
+          <tr>
+            <td style="color: #eab308; font-weight: 600;">PENDING</td>
+            <td>Bootstrap End &mdash; finalise() available</td>
+            <td>15.07.2026</td>
           </tr>
         </tbody>
       </table>
@@ -1483,7 +1488,7 @@ if (document.readyState === 'loading') {
         // Update phase timeline based on status
         updatePhases(status);
         // Update countdown based on status
-        updateCountdown(status, data);
+        // Countdown is now date-based (updateMainCountdown), no longer status-dependent
       })
       .catch(function() {
         var dot = document.getElementById('vault-dot');
@@ -1506,58 +1511,50 @@ if (document.readyState === 'loading') {
     }
   }
 
-  // ===== Countdown =====
-  var countdownInterval = null;
+  // ===== Countdown (date-based) =====
+  var BOOTSTRAP_START = new Date('2026-04-17T00:00:00Z').getTime();
+  var BOOTSTRAP_END = new Date('2026-07-15T00:00:00Z').getTime();
 
-  function updateCountdown(status, data) {
-    var container = document.getElementById('bootstrap-countdown');
+  function updateMainCountdown() {
+    var now = Date.now();
+    var diffStart = BOOTSTRAP_START - now;
+    var diffEnd = BOOTSTRAP_END - now;
+    var el = document.getElementById('bootstrap-main-countdown');
     var label = document.getElementById('countdown-label');
+    var box = document.getElementById('bootstrap-countdown-box');
+    if (!el) return;
 
-    if (status === 'funded' || status === 'pending') {
-      label.textContent = 'Bootstrap Countdown';
-      container.innerHTML = '<span class="countdown-waiting">Waiting for LP Pairing\u2026</span>';
-      if (countdownInterval) { clearInterval(countdownInterval); countdownInterval = null; }
-    } else if (status === 'active') {
-      label.textContent = 'Bootstrap Ends In';
-      // If API provides endDate, use it; otherwise estimate 90 days from fundedDate
-      startCountdownTick();
-    } else if (status === 'completed') {
-      label.textContent = 'Bootstrap';
-      container.innerHTML = '<span class="countdown-waiting" style="color:#22c55e;">Completed \u2705</span>';
-      if (countdownInterval) { clearInterval(countdownInterval); countdownInterval = null; }
-    }
-  }
-
-  function startCountdownTick() {
-    // Estimate: 90 days from a future LP launch (~13.03.2026)
-    // This will be updated dynamically when bootstrapStatus changes to "active"
-    // For now, use a placeholder end date that will be overridden by real data
-    var endEstimate = new Date('2026-06-11T00:00:00Z').getTime();
-
-    function tick() {
-      var now = Date.now();
-      var diff = endEstimate - now;
-      var container = document.getElementById('bootstrap-countdown');
-      if (diff <= 0) {
-        container.innerHTML = '<span class="countdown-waiting" style="color:#22c55e;">Bootstrap window closed \u2014 finalise() available</span>';
-        if (countdownInterval) clearInterval(countdownInterval);
-        return;
-      }
-      var d = Math.floor(diff / 86400000);
-      var h = Math.floor((diff % 86400000) / 3600000);
-      var m = Math.floor((diff % 3600000) / 60000);
-      container.innerHTML =
-        '<div class="countdown-digits">' +
-        '<span>' + d + '<span class="unit">d</span></span>' +
-        '<span>' + h + '<span class="unit">h</span></span>' +
-        '<span>' + m + '<span class="unit">m</span></span>' +
-        '</div>';
+    if (diffStart > 0) {
+      // Before Bootstrap
+      var d = Math.floor(diffStart / 864e5);
+      var h = Math.floor(diffStart % 864e5 / 36e5);
+      var m = Math.floor(diffStart % 36e5 / 6e4);
+      var s = Math.floor(diffStart % 6e4 / 1e3);
+      el.textContent = d + 'd ' + h + 'h ' + m + 'm ' + s + 's';
+      return;
     }
 
-    tick();
-    if (countdownInterval) clearInterval(countdownInterval);
-    countdownInterval = setInterval(tick, 60000);
+    if (diffEnd > 0) {
+      // Bootstrap active
+      if (label) label.textContent = 'Bootstrap Closes In';
+      if (box) box.style.borderColor = '#22c55e';
+      el.style.color = '#22c55e';
+      var d = Math.floor(diffEnd / 864e5);
+      var h = Math.floor(diffEnd % 864e5 / 36e5);
+      var m = Math.floor(diffEnd % 36e5 / 6e4);
+      var s = Math.floor(diffEnd % 6e4 / 1e3);
+      el.textContent = d + 'd ' + h + 'h ' + m + 'm ' + s + 's';
+      return;
+    }
+
+    // Bootstrap ended
+    el.textContent = 'ENDED';
+    el.style.color = '#64748b';
+    if (label) label.textContent = 'Bootstrap';
   }
+
+  updateMainCountdown();
+  setInterval(updateMainCountdown, 1000);
 
   // ===== Init =====
   // Warm up Railway then fetch
