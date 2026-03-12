@@ -84,6 +84,8 @@ bot.command('pin',      adminOnly, pinCommand);
 
 // ── Channel → Community auto-sync ────────────────────────────────────────────
 bot.on('channel_post', async (ctx) => {
+  // Ignore posts made by the bot itself to prevent loop
+  if (ctx.channelPost.sender_chat) return;
   try {
     const groupId = process.env.TELEGRAM_GROUP_ID;
     const topicId = process.env.TELEGRAM_ANNOUNCEMENTS_TOPIC_ID;
