@@ -2444,7 +2444,7 @@ if (isLocked) {
 }
 #ifr-panel iframe {
   width: 100%;
-  height: 100%;
+  height: calc(100% - 50px);
   border: none;
 }
 </style>
@@ -2455,10 +2455,10 @@ if (isLocked) {
 ">&#x1f525;</button>
 
 <div id="ifr-panel">
-  <div id="ali-disclaimer" style="position:absolute;top:42px;left:0;right:0;z-index:999;background:rgba(15,23,42,0.95);border-bottom:1px solid #f59e0b;padding:5px 12px;font-size:10px;color:#64748b;line-height:1.5;pointer-events:auto;">
-    &#x26a0;&#xfe0f; <strong style="color:#f59e0b;">AI assistant</strong> &mdash; not 100% accurate. Never share private keys or wallet addresses.
+  <div id="ali-disclaimer" style="height:50px;background:#0f172a;border-bottom:1px solid #f59e0b;padding:6px 12px;font-size:10px;color:#64748b;line-height:1.5;display:flex;align-items:center;gap:6px;">
+    &#x26a0;&#xfe0f; <strong style="color:#f59e0b;">AI assistant</strong> &mdash; not 100% accurate. Never share private keys.
     &nbsp;&middot;&nbsp;
-    &#x1f49b; <a href="https://etherscan.io/address/0xA0860f872a9cAB34817D9a764e71ab43B942b275" target="_blank" rel="noopener" style="color:#f97316;pointer-events:auto;text-decoration:none;">Support ETH/IFR</a>
+    &#x1f49b; <a href="https://etherscan.io/address/0xA0860f872a9cAB34817D9a764e71ab43B942b275" target="_blank" rel="noopener" style="color:#f97316;text-decoration:none;">Support ETH/IFR</a>
   </div>
   <iframe
     src="https://ifr-ai-copilot-production.up.railway.app"
