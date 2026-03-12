@@ -2441,30 +2441,30 @@ if (isLocked) {
   overflow: hidden;
   box-shadow: 0 8px 40px rgba(0,0,0,0.5);
   background: #1a1a1a;
+  flex-direction: column;
 }
 #ifr-panel iframe {
   width: 100%;
-  height: 100%;
+  flex: 1;
   border: none;
 }
 </style>
 
 <button id="ifr-btn" onclick="
   var p = document.getElementById('ifr-panel');
-  p.style.display = p.style.display === 'block' ? 'none' : 'block';
+  p.style.display = p.style.display === 'flex' ? 'none' : 'flex';
 ">&#x1f525;</button>
 
 <div id="ifr-panel">
-  <div id="ali-disclaimer" style="background:#1a1a1a;border-bottom:1px solid #333;padding:10px 14px;font-size:11px;line-height:1.5;color:#999;">
-    <strong style="color:#ff6600;">Security Notice</strong><br>
-    Ali is an AI assistant. Never share private keys, seed phrases or passwords. All answers are informational &mdash; not financial advice. Verify on-chain data independently.<br>
-    <span style="color:#666;font-size:10px;">Infrastructure costs are covered by donated funds &mdash; <a href="https://etherscan.io/address/0xA0860f872a9cAB34817D9a764e71ab43B942b275" target="_blank" rel="noopener" style="color:#ff6600;text-decoration:none;">0xA0860f...b275</a></span>
-  </div>
   <iframe
     src="https://ifr-ai-copilot-production.up.railway.app"
-    allow="microphone"
-    style="height:calc(100% - 68px);">
+    allow="microphone">
   </iframe>
+  <div id="ali-disclaimer" style="background:#111;border-top:1px solid #333;padding:8px 14px;font-size:10px;line-height:1.4;color:#888;flex-shrink:0;">
+    <strong style="color:#ff6600;">Security Notice</strong> &mdash;
+    Ali is an AI assistant. Never share private keys, seed phrases or passwords. Not financial advice.<br>
+    <span style="color:#666;">Infrastructure funded by donations &mdash; <a href="https://etherscan.io/address/0xA0860f872a9cAB34817D9a764e71ab43B942b275" target="_blank" rel="noopener" style="color:#ff6600;text-decoration:none;">0xA0860f...b275</a></span>
+  </div>
 </div>
 <!-- End Copilot Widget -->
 
