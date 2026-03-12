@@ -2451,10 +2451,7 @@ if (isLocked) {
 
 <button id="ifr-btn" onclick="
   var p = document.getElementById('ifr-panel');
-  var d = document.getElementById('ali-disclaimer');
-  var open = p.style.display !== 'block';
-  p.style.display = open ? 'block' : 'none';
-  d.style.display = open ? 'block' : 'none';
+  p.style.display = p.style.display === 'block' ? 'none' : 'block';
 ">&#x1f525;</button>
 
 <div id="ifr-panel">
@@ -2464,12 +2461,6 @@ if (isLocked) {
   </iframe>
 </div>
 <!-- End Copilot Widget -->
-
-<div id="ali-disclaimer" style="position:fixed;bottom:100px;right:24px;width:352px;background:rgba(15,23,42,0.97);border:1px solid #f59e0b;border-bottom:none;border-radius:8px 8px 0 0;padding:5px 12px;font-size:10px;color:#64748b;z-index:100000;display:none;line-height:1.5;">
-  &#x26a0;&#xfe0f; <strong style="color:#f59e0b;">AI assistant</strong> &mdash; not 100% accurate. Never share private keys.
-  &nbsp;&middot;&nbsp;
-  &#x1f49b; <a href="https://etherscan.io/address/0xA0860f872a9cAB34817D9a764e71ab43B942b275" target="_blank" rel="noopener" style="color:#f97316;text-decoration:none;">Support ETH/IFR</a>
-</div>
 
 
 <script>
