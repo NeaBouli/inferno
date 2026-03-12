@@ -251,6 +251,13 @@ export default function IFRCopilot() {
         <div ref={messagesEndRef} />
       </div>
 
+      {/* Disclaimer */}
+      <div className="border-t border-amber-500/40 bg-slate-900/95 px-3 py-1.5 text-[10px] text-slate-400 leading-relaxed">
+        ⚠️ <strong className="text-amber-500">AI assistant</strong> — not 100% accurate. Never share private keys.
+        {" · "}
+        💛 <a href="https://etherscan.io/address/0xA0860f872a9cAB34817D9a764e71ab43B942b275" target="_blank" rel="noopener noreferrer" className="text-orange-500 hover:underline">Support ETH/IFR</a>
+      </div>
+
       {/* Input */}
       <div className="border-t border-ifr-border p-3">
         <div className="flex gap-2">
