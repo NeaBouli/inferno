@@ -1265,10 +1265,24 @@
 <main>
 <!-- ── BOOTSTRAP BANNER ────────────────────────────── -->
 <div id="bootstrap-banner" style="background:linear-gradient(135deg,#1a0a00 0%,#2d1200 100%);border-bottom:3px solid #ff6b35;padding:14px 20px;text-align:center;width:100%;box-sizing:border-box;display:block;z-index:99;margin-top:64px;">
-  <p style="margin:0 0 6px 0;font-size:1rem;font-weight:bold;color:#ff6b35;">&#x1f525; Community Bootstrap Event &mdash; Vault Funded (194.75M IFR) &mdash; Launching Soon</p>
-  <p style="margin:0 0 8px 0;font-size:0.85rem;color:#ccc;line-height:1.5;">Lock ETH for 90 days &rarr; receive IFR at launch price.<br>No team ETH. Fully trustless. 100% goes into liquidity.</p>
+  <p style="margin:0 0 6px 0;font-size:1rem;font-weight:bold;color:#ff6b35;">&#x1f525; Community Bootstrap Event &mdash; Vault Funded (194.75M IFR) &mdash; ETH contributions open in <span id="banner-countdown" style="color:#f97316;font-weight:700;font-family:monospace;">--d --h --m --s</span></p>
+  <p style="margin:0 0 8px 0;font-size:0.85rem;color:#ccc;line-height:1.5;">Contribute 0.01&ndash;2 ETH &rarr; receive IFR pro-rata at launch price.<br>No team ETH. Fully trustless. 100% goes into liquidity.</p>
   <a href="wiki/bootstrap.html" style="display:inline-block;background:#ff6b35;color:#000;font-weight:bold;font-size:0.85rem;padding:6px 18px;border-radius:20px;text-decoration:none;">Learn More &rarr;</a>
 </div>
+<script>
+(function(){
+  var BS=new Date('2026-04-17T00:00:00Z');
+  function upd(){
+    var d=BS-new Date();
+    var el=document.getElementById('banner-countdown');
+    if(!el)return;
+    if(d<=0){el.parentElement.innerHTML='\uD83D\uDD25 <strong style="color:#f97316;">Bootstrap Event is LIVE</strong> \u2014 <a href="wiki/bootstrap.html" style="color:#f97316;">Contribute ETH now \u2192</a>';return;}
+    var dd=Math.floor(d/864e5),hh=Math.floor(d%864e5/36e5),mm=Math.floor(d%36e5/6e4),ss=Math.floor(d%6e4/1e3);
+    el.textContent=dd+'d '+hh+'h '+mm+'m '+ss+'s';
+  }
+  upd();setInterval(upd,1000);
+})();
+</script>
 
 <!-- ── HERO ───────────────────────────────────────── -->
 <section class="hero" id="hero" aid-type="product" aid-name="Inferno Protocol $IFR">
