@@ -107,7 +107,7 @@ bot.on('channel_post', async (ctx) => {
 });
 
 // ── Protected Topics — delete messages from non-admins ───────────────────────
-const PROTECTED_TOPICS = [58, 23, 21]; // Core Dev, Vote, Council
+const PROTECTED_TOPICS = [58, 23, 21, 11]; // Core Dev, Vote, Council, Dev&Builder
 const PROTECTED_ADMIN_IDS = process.env.ADMIN_USER_IDS
   ? process.env.ADMIN_USER_IDS.split(',').map(id => parseInt(id.trim()))
   : [579949616];
