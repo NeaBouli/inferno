@@ -2428,7 +2428,8 @@ if (isLocked) {
   background: #ff6600;
   border: none;
   cursor: pointer;
-  font-size: 28px;
+  padding: 0;
+  overflow: hidden;
   box-shadow: 0 4px 20px rgba(255,102,0,0.5);
 }
 #ifr-panel {
@@ -2468,7 +2469,7 @@ if (isLocked) {
 <button id="ifr-btn" onclick="
   var p = document.getElementById('ifr-panel');
   p.style.display = p.style.display === 'block' ? 'none' : 'block';
-">&#x1f525;</button>
+"><img src="assets/CoPilot.jpg" alt="IFR Copilot" style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;"></button>
 
 <div id="ifr-panel">
   <iframe
