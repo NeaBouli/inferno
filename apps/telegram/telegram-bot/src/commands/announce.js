@@ -52,6 +52,13 @@ async function announceCommand(ctx) {
 
   logger.info({ adminId: ctx.from.id, posted }, 'Announcement posted');
   await ctx.reply(`✅ Announcement posted to ${posted} destination(s).`);
+
+  // Delete the original /announce command message
+  try {
+    await ctx.deleteMessage();
+  } catch (e) {
+    // ignore — Bot may lack delete permissions
+  }
 }
 
 module.exports = announceCommand;
