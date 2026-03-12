@@ -1292,6 +1292,19 @@ await governance.execute(proposalId);</code></pre>
         </tbody>
       </table>
 
+      <h3>Telegram DAO Layer &mdash; Topic Access Control (Phase 2)</h3>
+      <p>
+        Gated Telegram topics enforce on-chain lock requirements via WalletConnect verification on ifrunit.tech. Users connect their wallet, sign once, and the bot whitelists their Telegram account &mdash; no manual wallet entry required.
+      </p>
+      <table>
+        <thead><tr><th>Topic</th><th>Requirement</th></tr></thead>
+        <tbody>
+          <tr><td>Vote</td><td>Verified wallet + minimum IFR lock</td></tr>
+          <tr><td>Council</td><td>Verified wallet + higher lock threshold</td></tr>
+          <tr><td>Core Dev</td><td>Restricted to Gnosis Safe signers</td></tr>
+        </tbody>
+      </table>
+
       <h3>Roadmap</h3>
       <table>
         <thead><tr><th>Milestone</th><th>ETA</th><th>Status</th></tr></thead>
