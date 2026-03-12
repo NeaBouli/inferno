@@ -2441,25 +2441,24 @@ if (isLocked) {
   overflow: hidden;
   box-shadow: 0 8px 40px rgba(0,0,0,0.5);
   background: #1a1a1a;
-  flex-direction: column;
 }
 #ifr-panel iframe {
   width: 100%;
-  flex: 1;
+  height: 100%;
   border: none;
 }
 </style>
 
 <button id="ifr-btn" onclick="
   var p = document.getElementById('ifr-panel');
-  p.style.display = p.style.display === 'flex' ? 'none' : 'flex';
+  p.style.display = p.style.display === 'block' ? 'none' : 'block';
 ">&#x1f525;</button>
 
 <div id="ifr-panel">
-  <div id="ali-disclaimer" style="background:#0f172a;border-top:1px solid #f59e0b;border-bottom:1px solid #1e293b;padding:6px 12px;font-size:10px;color:#64748b;line-height:1.5;flex-shrink:0;">
+  <div id="ali-disclaimer" style="position:absolute;top:42px;left:0;right:0;z-index:999;background:rgba(15,23,42,0.95);border-bottom:1px solid #f59e0b;padding:5px 12px;font-size:10px;color:#64748b;line-height:1.5;pointer-events:auto;">
     &#x26a0;&#xfe0f; <strong style="color:#f59e0b;">AI assistant</strong> &mdash; not 100% accurate. Never share private keys or wallet addresses.
     &nbsp;&middot;&nbsp;
-    &#x1f49b; <a href="https://etherscan.io/address/0xA0860f872a9cAB34817D9a764e71ab43B942b275" target="_blank" rel="noopener" style="color:#f97316;text-decoration:none;">Support via ETH/IFR</a>
+    &#x1f49b; <a href="https://etherscan.io/address/0xA0860f872a9cAB34817D9a764e71ab43B942b275" target="_blank" rel="noopener" style="color:#f97316;pointer-events:auto;text-decoration:none;">Support ETH/IFR</a>
   </div>
   <iframe
     src="https://ifr-ai-copilot-production.up.railway.app"
