@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/assets/ifr_logo.png" alt="Inferno $IFR" width="200" />
+  <img src="https://raw.githubusercontent.com/NeaBouli/inferno/main/docs/assets/ifr_icon_256.png" alt="Inferno $IFR" width="200" />
 </p>
 
 # Inferno ($IFR)
