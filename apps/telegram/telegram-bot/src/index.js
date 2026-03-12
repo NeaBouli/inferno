@@ -82,6 +82,28 @@ bot.command('ban',      adminOnly, banCommand);
 bot.command('warn',     adminOnly, warnCommand);
 bot.command('pin',      adminOnly, pinCommand);
 
+// ── Channel → Community auto-sync ────────────────────────────────────────────
+bot.on('channel_post', async (ctx) => {
+  try {
+    const groupId = process.env.TELEGRAM_GROUP_ID;
+    const topicId = process.env.TELEGRAM_ANNOUNCEMENTS_TOPIC_ID;
+    if (!groupId) return;
+    const text = ctx.channelPost.text || ctx.channelPost.caption;
+    if (!text) return;
+    await ctx.telegram.sendMessage(
+      groupId,
+      `📡 *Channel Update*\n\n${text}\n\n💬 [Join the community](https://t.me/IFR_token)`,
+      {
+        parse_mode: 'Markdown',
+        message_thread_id: topicId ? parseInt(topicId) : undefined,
+        disable_web_page_preview: true
+      }
+    );
+  } catch (err) {
+    logger.error({ err: err.message }, 'Channel sync error');
+  }
+});
+
 // Unbekannte Nachrichten / Commands
 bot.on('text', async (ctx) => {
   if (ctx.message.text.startsWith('/')) {
