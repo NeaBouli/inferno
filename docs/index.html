@@ -2421,16 +2421,28 @@ if (isLocked) {
   position: fixed;
   bottom: 24px;
   right: 24px;
-  z-index: 99999;
-  width: 60px;
-  height: 60px;
+  width: 64px;
+  height: 64px;
   border-radius: 50%;
-  background: #ff6600;
-  border: none;
-  cursor: pointer;
-  padding: 0;
   overflow: hidden;
-  box-shadow: 0 4px 20px rgba(255,102,0,0.5);
+  padding: 0;
+  cursor: pointer;
+  border: 2px solid #f97316;
+  box-shadow: 0 4px 20px rgba(249,115,22,0.4);
+  z-index: 99999;
+  background: none;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+#ifr-btn:hover {
+  transform: scale(1.08);
+  box-shadow: 0 6px 28px rgba(249,115,22,0.6);
+}
+#ifr-btn img {
+  width: 64px;
+  height: 64px;
+  object-fit: cover;
+  border-radius: 50%;
+  display: block;
 }
 #ifr-panel {
   display: none;
@@ -2460,8 +2472,14 @@ if (isLocked) {
     border-radius: 16px 16px 0 0 !important;
   }
   #ifr-btn {
-    bottom: 12px !important;
-    right: 12px !important;
+    width: 52px !important;
+    height: 52px !important;
+    bottom: 16px !important;
+    right: 16px !important;
+  }
+  #ifr-btn img {
+    width: 52px !important;
+    height: 52px !important;
   }
 }
 </style>
@@ -2469,7 +2487,7 @@ if (isLocked) {
 <button id="ifr-btn" onclick="
   var p = document.getElementById('ifr-panel');
   p.style.display = p.style.display === 'block' ? 'none' : 'block';
-"><img src="assets/CoPilot.jpg" alt="IFR Copilot" style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;"></button>
+"><img src="assets/CoPilot.jpg" alt="IFR Copilot"></button>
 
 <div id="ifr-panel">
   <iframe
