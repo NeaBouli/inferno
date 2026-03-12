@@ -1,0 +1,56 @@
+name: "🔥 Builder / Partner Registry"
+description: "Register as a Pre-Builder, Builder, or Partner in the IFR ecosystem."
+title: "[BUILDER] Your Name or Project"
+labels: ["builder-registry"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## IFR Builder & Partner Registry
+        Welcome! Fill in as much or as little as you like — all fields are optional except Status.
+        Your entry will be reviewed by the team and added to [BUILDERS.md](../BUILDERS.md).
+
+  - type: dropdown
+    id: status
+    attributes:
+      label: "Status"
+      description: "What best describes you right now?"
+      options:
+        - "Pre-Builder — interested, waiting for Bootstrap to complete"
+        - "Builder — actively building on IFR"
+        - "Partner — product already using IFR lock mechanism"
+    validations:
+      required: true
+
+  - type: input
+    id: name
+    attributes:
+      label: "Name or Alias"
+      placeholder: "e.g. Alice, CryptoBuilder42, Acme Protocol"
+
+  - type: input
+    id: github
+    attributes:
+      label: "GitHub Profile"
+      placeholder: "https://github.com/yourname"
+
+  - type: input
+    id: link
+    attributes:
+      label: "Project or Website Link"
+      placeholder: "https://yourproject.xyz"
+
+  - type: textarea
+    id: description
+    attributes:
+      label: "What are you building?"
+      description: "Brief description of your project or use case (optional)"
+      placeholder: "e.g. A content platform that uses IFR lock for premium access"
+
+  - type: checkboxes
+    id: confirm
+    attributes:
+      label: "Confirmation"
+      options:
+        - label: "I understand this is a community registry, not a formal partnership agreement"
+          required: true
