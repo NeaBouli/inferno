@@ -26,6 +26,7 @@ const { onNewMember, onVerifyCallback } = require('./handlers/verification');
 const { scheduleDailyReport } = require('./handlers/dailyReport');
 const { scheduleDailyWelcome } = require('./handlers/dailyWelcome');
 const { startGovernanceNotifier } = require('./handlers/governanceNotifier');
+const { scheduleBootstrapAnnouncements } = require('./handlers/bootstrapAnnouncement');
 
 // Middleware
 const rateLimit  = require('./middleware/rateLimit');
@@ -159,6 +160,7 @@ setTimeout(() => {
       scheduleDailyReport(bot);
       scheduleDailyWelcome(bot);
       startGovernanceNotifier(bot);
+      scheduleBootstrapAnnouncements(bot);
     })
     .catch((err) => {
       logger.fatal({ err: err.message }, 'Failed to start bot');
