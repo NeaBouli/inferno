@@ -600,7 +600,37 @@
        End Shared Styles
        ============================================================ */
     @keyframes pulse-bootstrap { 0% { color: #ef4444; text-shadow: 0 0 8px rgba(239,68,68,0.8); } 50% { color: #22c55e; text-shadow: 0 0 12px rgba(34,197,94,0.9); } 100% { color: #ef4444; text-shadow: 0 0 8px rgba(239,68,68,0.8); } } .nav-bootstrap-pulse { animation: pulse-bootstrap 2s ease-in-out infinite; font-weight: 700 !important; }
+
+    /* Bootstrap Widget */
+    #bw-connect-btn {
+      background: linear-gradient(135deg, #f97316, #ea580c);
+      color: white; border: none; padding: 14px 32px;
+      border-radius: 10px; font-size: 1rem; font-weight: 700;
+      cursor: pointer; animation: pulse-bootstrap 2s ease-in-out infinite;
+      transition: transform 0.2s;
+    }
+    #bw-connect-btn:hover { transform: scale(1.04); }
+    #bw-contribute-btn, #bw-claim-btn {
+      background: linear-gradient(135deg, #f97316, #ea580c);
+      color: white; border: none; padding: 10px 24px;
+      border-radius: 8px; font-size: 0.95rem; font-weight: 600;
+      cursor: pointer; transition: transform 0.2s, opacity 0.2s;
+    }
+    #bw-contribute-btn:hover, #bw-claim-btn:hover { transform: scale(1.03); }
+    #bw-contribute-btn:disabled, #bw-claim-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+    .bw-stat-card {
+      background: rgba(31,41,55,0.8); border: 1px solid #374151;
+      border-radius: 10px; padding: 14px; text-align: center;
+    }
+    .bw-stat-label { color: #9ca3af; font-size: 0.8rem; margin-bottom: 4px; }
+    .bw-stat-value { color: #22c55e; font-size: 1.3rem; font-weight: 700; font-family: monospace; }
+    .bw-tx-pending { background: rgba(251,191,36,0.1); border: 1px solid rgba(251,191,36,0.3); color: #fbbf24; }
+    .bw-tx-success { background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.3); color: #22c55e; }
+    .bw-tx-error   { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); color: #ef4444; }
   </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
+  <script src="../assets/wallet-core.js"></script>
+  <script src="../assets/ifr-state.js"></script>
   <link rel="icon" type="image/png" href="../assets/ifr_icon_64.png">
   <meta property="og:type" content="article">
   <meta property="og:site_name" content="Inferno Protocol">
@@ -916,6 +946,115 @@
       </ul>
 
       <!-- ============================================================
+           Bootstrap Widget — WalletConnect UI
+           ============================================================ -->
+      <h2>Participate</h2>
+
+      <div id="bootstrap-widget" style="margin:40px 0;">
+
+        <!-- Stats Bar (immer sichtbar) -->
+        <div id="bw-stats" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:24px;">
+          <div class="bw-stat-card">
+            <div class="bw-stat-label">Total ETH Raised</div>
+            <div class="bw-stat-value" id="bw-total-eth">&mdash;</div>
+          </div>
+          <div class="bw-stat-card">
+            <div class="bw-stat-label">Contributors</div>
+            <div class="bw-stat-value" id="bw-contributors">&mdash;</div>
+          </div>
+          <div class="bw-stat-card">
+            <div class="bw-stat-label">IFR per ETH</div>
+            <div class="bw-stat-value" id="bw-ifr-per-eth">&mdash;</div>
+          </div>
+          <div class="bw-stat-card">
+            <div class="bw-stat-label" id="bw-timer-label">Opens In</div>
+            <div class="bw-stat-value" id="bw-countdown">&mdash;</div>
+          </div>
+        </div>
+
+        <!-- Connect Section -->
+        <div id="bw-connect-section">
+          <div style="text-align:center;padding:32px;background:rgba(249,115,22,0.05);border:1px solid rgba(249,115,22,0.2);border-radius:16px;">
+            <p style="color:#9ca3af;margin-bottom:20px;">Connect your wallet to participate in the Bootstrap Event</p>
+            <button id="bw-connect-btn" onclick="bwConnect()">
+              &#x1F98A; Connect Wallet
+            </button>
+            <p style="color:#6b7280;font-size:0.8rem;margin-top:12px;">
+              MetaMask required &middot; Ethereum Mainnet &middot; No intermediaries
+            </p>
+          </div>
+        </div>
+
+        <!-- Connected Section -->
+        <div id="bw-connected-section" style="display:none;">
+          <div style="background:rgba(34,197,94,0.05);border:1px solid rgba(34,197,94,0.2);border-radius:12px;padding:20px;margin-bottom:20px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
+              <div>
+                <span style="color:#9ca3af;font-size:0.85rem;">Connected: </span>
+                <span id="bw-wallet-addr" style="color:#22c55e;font-weight:600;font-family:monospace;"></span>
+              </div>
+              <div style="display:flex;gap:16px;align-items:center;">
+                <span style="color:#9ca3af;font-size:0.85rem;">ETH: <strong id="bw-eth-balance" style="color:#e5e7eb;"></strong></span>
+                <span style="color:#9ca3af;font-size:0.85rem;">IFR: <strong id="bw-ifr-balance" style="color:#f97316;"></strong></span>
+                <button onclick="bwDisconnect()" style="background:transparent;border:1px solid #374151;color:#6b7280;padding:4px 12px;border-radius:6px;cursor:pointer;font-size:0.8rem;">Disconnect</button>
+              </div>
+            </div>
+            <!-- My Contribution -->
+            <div id="bw-my-contribution" style="margin-top:16px;display:none;">
+              <div style="color:#9ca3af;font-size:0.85rem;">Your contribution:
+                <strong id="bw-contribution-eth" style="color:#e5e7eb;"></strong> ETH &rarr;
+                <strong id="bw-contribution-ifr" style="color:#f97316;"></strong> IFR (estimated)
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Contribute Form -->
+        <div id="bw-contribute-section" style="display:none;">
+          <div style="background:rgba(249,115,22,0.05);border:1px solid rgba(249,115,22,0.2);border-radius:16px;padding:24px;">
+            <h3 style="color:#f97316;margin-top:0;">Contribute ETH</h3>
+            <p style="color:#9ca3af;font-size:0.9rem;">Min: 0.01 ETH &middot; Max: 2 ETH per wallet &middot; 100% goes to Uniswap LP</p>
+            <div style="display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;margin:20px 0;">
+              <div style="flex:1;min-width:200px;">
+                <label style="color:#9ca3af;font-size:0.85rem;display:block;margin-bottom:6px;">Amount (ETH)</label>
+                <input id="bw-eth-input" type="number" min="0.01" max="2" step="0.01" placeholder="0.1"
+                  oninput="bwUpdateEstimate()"
+                  style="width:100%;background:#1f2937;border:1px solid #374151;color:#e5e7eb;padding:10px 14px;border-radius:8px;font-size:1rem;box-sizing:border-box;" />
+              </div>
+              <button id="bw-contribute-btn" onclick="bwContribute()">
+                Contribute ETH &rarr;
+              </button>
+            </div>
+            <div id="bw-estimate" style="color:#f97316;font-size:0.9rem;display:none;">
+              You will receive approximately <strong id="bw-estimate-ifr"></strong> IFR
+              <span style="color:#6b7280;font-size:0.8rem;">(based on current pool)</span>
+            </div>
+            <div id="bw-tx-status" style="display:none;margin-top:16px;padding:12px;border-radius:8px;font-size:0.9rem;"></div>
+          </div>
+        </div>
+
+        <!-- Claim / Refund Section -->
+        <div id="bw-claim-section" style="display:none;">
+          <div style="background:rgba(34,197,94,0.05);border:1px solid rgba(34,197,94,0.2);border-radius:16px;padding:24px;">
+            <h3 style="color:#22c55e;margin-top:0;" id="bw-claim-title">Claim Your IFR</h3>
+            <p id="bw-claim-desc" style="color:#9ca3af;"></p>
+            <button id="bw-claim-btn" onclick="bwClaim()" style="display:none;">&#x1F381; Claim IFR</button>
+            <button id="bw-refund-btn" onclick="bwRefund()" style="display:none;background:#374151;border-color:#4b5563;">&#x21A9; Request Refund</button>
+            <div id="bw-claim-tx-status" style="display:none;margin-top:16px;padding:12px;border-radius:8px;font-size:0.9rem;"></div>
+          </div>
+        </div>
+
+        <!-- Not yet active notice -->
+        <div id="bw-not-active-section" style="display:none;">
+          <div style="text-align:center;padding:24px;background:rgba(107,114,128,0.05);border:1px solid #374151;border-radius:16px;">
+            <p style="color:#9ca3af;">The Bootstrap Event opens on <strong style="color:#f97316;">April 17, 2026</strong>.</p>
+            <p style="color:#6b7280;font-size:0.85rem;">Connect your wallet now to be ready when it starts.</p>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ============================================================
            LP Lock
            ============================================================ -->
       <h2>LP Lock</h2>
@@ -1141,7 +1280,7 @@
           </button>
         </div>
         <div style="display:flex; flex-direction:column; align-items:center; width:100%; margin-top:12px;">
-          <button id="wallet-connect-btn" disabled style="background:transparent; color:#f97316; border:1px solid #f97316; padding:8px 20px; border-radius:6px; font-size:12px; font-weight:500; cursor:not-allowed; opacity:0.7;">&#x1F517; Connect Wallet (Coming Soon)</button>
+          <button id="wallet-connect-btn" onclick="bwConnect()" style="background:transparent; color:#f97316; border:1px solid #f97316; padding:8px 20px; border-radius:6px; font-size:12px; font-weight:500; cursor:pointer;">&#x1F517; Connect Wallet</button>
           <p style="font-size:11px; color:#64748b; margin-top:4px; text-align:center;">
             Wallet must have contributed ETH to be eligible to vote
           </p>
@@ -1563,6 +1702,261 @@ if (document.readyState === 'loading') {
   fetch(PROXY_BASE + '/api/ifr/vault').catch(function() {});
   setTimeout(fetchVault, 1000);
   setInterval(fetchVault, 30000);
+})();
+</script>
+
+<!-- Bootstrap Widget Controller -->
+<script>
+// ── Bootstrap Widget Controller ──────────────────────
+
+var BW = {
+  VAULT: "0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141",
+  START: new Date("2026-04-17T00:00:00Z").getTime(),
+  END:   new Date("2026-07-15T00:00:00Z").getTime(),
+  IFR_ALLOCATION: 194750000, // 194.75M IFR (9 decimals)
+  ABI: [
+    "function contribute() external payable",
+    "function claim() external",
+    "function refund() external",
+    "function finalise() external",
+    "function contributions(address) view returns (uint256)",
+    "function getBootstrapStatus() view returns (bool, bool, uint256, uint256, uint256)"
+  ]
+};
+
+// Countdown
+function bwUpdateCountdown() {
+  var now = Date.now();
+  var label = document.getElementById("bw-timer-label");
+  var val = document.getElementById("bw-countdown");
+  if (!label || !val) return;
+
+  var target, text;
+  if (now < BW.START) {
+    target = BW.START; text = "Opens In";
+  } else if (now < BW.END) {
+    target = BW.END; text = "Closes In";
+  } else {
+    val.textContent = "Ended"; label.textContent = "Status";
+    val.style.color = "#9ca3af"; return;
+  }
+
+  var diff = target - now;
+  var d = Math.floor(diff / 86400000);
+  var h = Math.floor((diff % 86400000) / 3600000);
+  var m = Math.floor((diff % 3600000) / 60000);
+  var s = Math.floor((diff % 60000) / 1000);
+  label.textContent = text;
+  val.textContent = d + "d " + String("0"+h).slice(-2) + ":" + String("0"+m).slice(-2) + ":" + String("0"+s).slice(-2);
+}
+setInterval(bwUpdateCountdown, 1000);
+bwUpdateCountdown();
+
+// Stats updaten
+function bwUpdateStats(status) {
+  if (!status) return;
+  var totalEth = parseFloat(status.totalETHRaised) || 0;
+  document.getElementById("bw-total-eth").textContent = totalEth.toFixed(4) + " ETH";
+  document.getElementById("bw-contributors").textContent = status.contributorCount || "0";
+  if (totalEth > 0) {
+    var ifrPerEth = (BW.IFR_ALLOCATION / totalEth).toLocaleString(undefined, {maximumFractionDigits: 0});
+    document.getElementById("bw-ifr-per-eth").textContent = ifrPerEth;
+  } else {
+    document.getElementById("bw-ifr-per-eth").textContent = "TBD";
+  }
+}
+
+// Estimate updaten
+function bwUpdateEstimate() {
+  var inputEl = document.getElementById("bw-eth-input");
+  var input = parseFloat(inputEl ? inputEl.value : "");
+  var cache = IFRState.getCache();
+  var status = cache ? cache.bootstrapStatus : null;
+  var el = document.getElementById("bw-estimate");
+  var elVal = document.getElementById("bw-estimate-ifr");
+  if (!el || !elVal) return;
+  if (!input || input <= 0) { el.style.display = "none"; return; }
+  var totalEth = parseFloat(status ? status.totalETHRaised : "0") + input;
+  var estimated = ((input / totalEth) * BW.IFR_ALLOCATION).toLocaleString(undefined, {maximumFractionDigits: 0});
+  elVal.textContent = estimated;
+  el.style.display = "block";
+}
+
+// UI-State setzen
+function bwUpdateUI(state) {
+  var now = Date.now();
+  var connected = IFRWallet.isConnected();
+  var bootstrapNotStarted = now < BW.START;
+  var bootstrapActive = now >= BW.START && now < BW.END;
+  var bootstrapEnded = now >= BW.END;
+  var finalized = state && state.bootstrapStatus ? state.bootstrapStatus.finalized : false;
+  var myContrib = parseFloat((state && state.bootstrapContributionETH) ? state.bootstrapContributionETH : "0");
+
+  // Stats immer updaten
+  bwUpdateStats(state ? state.bootstrapStatus : null);
+
+  // Sections togglen
+  document.getElementById("bw-connect-section").style.display = !connected ? "" : "none";
+  document.getElementById("bw-connected-section").style.display = connected ? "" : "none";
+  document.getElementById("bw-not-active-section").style.display = (connected && bootstrapNotStarted) ? "" : "none";
+  document.getElementById("bw-contribute-section").style.display = (connected && bootstrapActive) ? "" : "none";
+  document.getElementById("bw-claim-section").style.display = (connected && bootstrapEnded && myContrib > 0) ? "" : "none";
+
+  if (connected && state) {
+    // Wallet Info
+    document.getElementById("bw-wallet-addr").textContent = IFRWallet.getShortAddress();
+    document.getElementById("bw-eth-balance").textContent = parseFloat(state.ethBalance || "0").toFixed(4) + " ETH";
+    document.getElementById("bw-ifr-balance").textContent = (state.ifrBalanceFormatted || "0") + " IFR";
+
+    // Meine Contribution
+    if (myContrib > 0) {
+      var totalEth = parseFloat(state.bootstrapStatus ? state.bootstrapStatus.totalETHRaised : "0");
+      var myIFR = totalEth > 0
+        ? ((myContrib / totalEth) * BW.IFR_ALLOCATION).toLocaleString(undefined, {maximumFractionDigits: 0})
+        : "\u2014";
+      document.getElementById("bw-contribution-eth").textContent = myContrib.toFixed(4);
+      document.getElementById("bw-contribution-ifr").textContent = myIFR;
+      document.getElementById("bw-my-contribution").style.display = "";
+    }
+
+    // Claim/Refund Logic
+    if (bootstrapEnded && myContrib > 0) {
+      if (finalized) {
+        document.getElementById("bw-claim-title").textContent = "\uD83C\uDF81 Claim Your IFR";
+        document.getElementById("bw-claim-desc").textContent = "Bootstrap finalized. Claim your pro-rata IFR allocation.";
+        document.getElementById("bw-claim-btn").style.display = "";
+        document.getElementById("bw-refund-btn").style.display = "none";
+      } else if (now > BW.END + 30 * 24 * 3600 * 1000) {
+        document.getElementById("bw-claim-title").textContent = "\u21A9 Request Refund";
+        document.getElementById("bw-claim-desc").textContent = "Bootstrap not finalized. You may request a full ETH refund.";
+        document.getElementById("bw-claim-btn").style.display = "none";
+        document.getElementById("bw-refund-btn").style.display = "";
+      } else {
+        document.getElementById("bw-claim-title").textContent = "\u231B Awaiting Finalization";
+        document.getElementById("bw-claim-desc").textContent = "Anyone can trigger finalise() permissionlessly. Refund available 30 days after end if not finalized.";
+      }
+    }
+  }
+}
+
+// TX Status Anzeige
+function bwSetTxStatus(elId, type, msg, txHash) {
+  var el = document.getElementById(elId);
+  if (!el) return;
+  el.className = "bw-tx-" + type;
+  el.style.display = "";
+  el.innerHTML = msg + (txHash ? ' \u00B7 <a href="https://etherscan.io/tx/' + txHash + '" target="_blank" style="color:inherit;text-decoration:underline;">View on Etherscan \u2197</a>' : "");
+}
+
+// Connect
+async function bwConnect() {
+  var btn = document.getElementById("bw-connect-btn");
+  btn.textContent = "Connecting..."; btn.disabled = true;
+  try {
+    await IFRWallet.connect();
+    var state = await IFRState.load(IFRWallet.getAddress());
+    bwUpdateUI(state);
+  } catch(e) {
+    btn.textContent = "\uD83E\uDD8A Connect Wallet"; btn.disabled = false;
+    if (e.message === "NO_METAMASK") {
+      alert("MetaMask not found. Please install MetaMask from metamask.io");
+    }
+  }
+}
+
+// Disconnect
+function bwDisconnect() {
+  IFRWallet.disconnect();
+  bwUpdateUI(IFRState.getCache());
+}
+
+// Contribute
+async function bwContribute() {
+  var inputEl = document.getElementById("bw-eth-input");
+  var amount = parseFloat(inputEl ? inputEl.value : "");
+  if (!amount || amount < 0.01 || amount > 2) {
+    bwSetTxStatus("bw-tx-status", "error", "Enter an amount between 0.01 and 2 ETH");
+    return;
+  }
+  var btn = document.getElementById("bw-contribute-btn");
+  btn.disabled = true; btn.textContent = "Sending...";
+  bwSetTxStatus("bw-tx-status", "pending", "\u23F3 Transaction pending...");
+  try {
+    var signer = IFRWallet.getSigner();
+    var vault = new ethers.Contract(BW.VAULT, BW.ABI, signer);
+    var tx = await vault.contribute({ value: ethers.utils.parseEther(amount.toString()) });
+    bwSetTxStatus("bw-tx-status", "pending", "\u23F3 Waiting for confirmation...", tx.hash);
+    await tx.wait();
+    bwSetTxStatus("bw-tx-status", "success", "\u2705 Contribution confirmed!", tx.hash);
+    inputEl.value = "";
+    var state = await IFRState.load(IFRWallet.getAddress());
+    bwUpdateUI(state);
+  } catch(e) {
+    var msg = e.code === 4001 ? "Transaction cancelled." : (e.reason || e.message || "Transaction failed.");
+    bwSetTxStatus("bw-tx-status", "error", "\u274C " + msg);
+  }
+  btn.disabled = false; btn.textContent = "Contribute ETH \u2192";
+}
+
+// Claim
+async function bwClaim() {
+  var btn = document.getElementById("bw-claim-btn");
+  btn.disabled = true; btn.textContent = "Claiming...";
+  bwSetTxStatus("bw-claim-tx-status", "pending", "\u23F3 Transaction pending...");
+  try {
+    var signer = IFRWallet.getSigner();
+    var vault = new ethers.Contract(BW.VAULT, BW.ABI, signer);
+    var tx = await vault.claim();
+    bwSetTxStatus("bw-claim-tx-status", "pending", "\u23F3 Waiting for confirmation...", tx.hash);
+    await tx.wait();
+    bwSetTxStatus("bw-claim-tx-status", "success", "\u2705 IFR claimed successfully!", tx.hash);
+    var state = await IFRState.load(IFRWallet.getAddress());
+    bwUpdateUI(state);
+  } catch(e) {
+    var msg = e.code === 4001 ? "Transaction cancelled." : (e.reason || e.message || "Transaction failed.");
+    bwSetTxStatus("bw-claim-tx-status", "error", "\u274C " + msg);
+    btn.disabled = false; btn.textContent = "\uD83C\uDF81 Claim IFR";
+  }
+}
+
+// Refund
+async function bwRefund() {
+  if (!confirm("Are you sure? You will receive your ETH back and forfeit your IFR allocation.")) return;
+  var btn = document.getElementById("bw-refund-btn");
+  btn.disabled = true; btn.textContent = "Processing...";
+  bwSetTxStatus("bw-claim-tx-status", "pending", "\u23F3 Transaction pending...");
+  try {
+    var signer = IFRWallet.getSigner();
+    var vault = new ethers.Contract(BW.VAULT, BW.ABI, signer);
+    var tx = await vault.refund();
+    bwSetTxStatus("bw-claim-tx-status", "pending", "\u23F3 Waiting for confirmation...", tx.hash);
+    await tx.wait();
+    bwSetTxStatus("bw-claim-tx-status", "success", "\u2705 Refund successful! ETH returned.", tx.hash);
+    var state = await IFRState.load(IFRWallet.getAddress());
+    bwUpdateUI(state);
+  } catch(e) {
+    var msg = e.code === 4001 ? "Transaction cancelled." : (e.reason || e.message || "Transaction failed.");
+    bwSetTxStatus("bw-claim-tx-status", "error", "\u274C " + msg);
+    btn.disabled = false; btn.textContent = "\u21A9 Request Refund";
+  }
+}
+
+// ── Init ─────────────────────────────────────────────
+(async function() {
+  // Öffentliche Stats immer laden (kein Wallet nötig)
+  var state = await IFRState.load(null);
+  bwUpdateUI(state);
+  IFRState.startAutoRefresh(30000); // Alle 30s Bootstrap-Stats refreshen
+
+  // State-Update Listener
+  IFRState.on("stateLoaded", bwUpdateUI);
+
+  // Auto-Reconnect
+  var reconnected = await IFRWallet.autoReconnect();
+  if (reconnected) {
+    var rState = await IFRState.load(IFRWallet.getAddress());
+    bwUpdateUI(rState);
+  }
 })();
 </script>
 
