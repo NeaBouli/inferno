@@ -68,35 +68,70 @@ window.IFRWallet = (() => {
 
   // ── Disconnect ───────────────────────────────────────
   function disconnect() {
+    // Remove event listeners before clearing provider ref
+    if (_ethereumProvider) {
+      try {
+        _ethereumProvider.removeListener("accountsChanged", _onAccountsChanged);
+        _ethereumProvider.removeListener("chainChanged", _onChainChanged);
+      } catch(e) {}
+    }
+
+    // Full state reset
     _provider = null;
     _signer = null;
     _address = null;
+    _ethereumProvider = null;
+
+    // Clear session
     sessionStorage.removeItem(SESSION_KEY);
-    const eth = _getMetaMaskProvider();
-    if (eth && eth.removeListener) {
-      eth.removeListener("accountsChanged", _onAccountsChanged);
-      eth.removeListener("chainChanged", _onChainChanged);
-    }
+
+    // Fire UI event
     _emit("disconnected", null);
   }
 
   // ── Auto-Reconnect (bei Seitenlade) ─────────────────
   async function autoReconnect() {
     const saved = sessionStorage.getItem(SESSION_KEY);
+    if (!saved) return false;
+
     const eth = _getMetaMaskProvider();
-    if (!saved || !eth) return false;
+    if (!eth) {
+      sessionStorage.removeItem(SESSION_KEY);
+      return false;
+    }
+
     try {
+      // eth_accounts: no popup, returns only already-authorized accounts
       const accounts = await eth.request({ method: "eth_accounts" });
-      if (accounts && accounts[0] && accounts[0].toLowerCase() === saved.toLowerCase()) {
-        _provider = new ethers.providers.Web3Provider(eth);
-        _signer = _provider.getSigner();
-        _address = accounts[0];
-        _emit("connected", _address);
-        return true;
+      if (!accounts || accounts.length === 0) {
+        sessionStorage.removeItem(SESSION_KEY);
+        return false;
       }
-    } catch(e) {}
-    sessionStorage.removeItem(SESSION_KEY);
-    return false;
+
+      // Check if saved account is still active
+      const match = accounts.find(function(a) {
+        return a.toLowerCase() === saved.toLowerCase();
+      });
+      if (!match) {
+        sessionStorage.removeItem(SESSION_KEY);
+        return false;
+      }
+
+      _provider = new ethers.providers.Web3Provider(eth);
+      _signer = _provider.getSigner();
+      _address = match;
+      _ethereumProvider = eth;
+
+      // Re-attach event listeners
+      eth.on("accountsChanged", _onAccountsChanged);
+      eth.on("chainChanged", _onChainChanged);
+
+      _emit("connected", _address);
+      return true;
+    } catch(e) {
+      sessionStorage.removeItem(SESSION_KEY);
+      return false;
+    }
   }
 
   // ── Netzwerk-Switch ──────────────────────────────────
