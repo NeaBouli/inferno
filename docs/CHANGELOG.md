@@ -34,7 +34,7 @@ All notable changes to the Inferno ($IFR) project.
 ### Decision Details
 - **Date:** 08.03.2026
 - **Decided by:** Core Dev Team (Kaspartizan)
-- **On-chain execution:** Proposals #4 + #5 executed (11.03.2026). Proposal #6 queued (ETA 13.03.2026)
+- **On-chain execution:** Proposals #4 + #5 executed (11.03.2026). Proposal #6 executed 13.03.2026
 - **Community Safe allocation after Bootstrap:**
   - 50M IFR → BootstrapVaultV3 (Bootstrap contribution)
   - 7.9M IFR → Community Operations Reserve (permanent — bug bounties, grants, DAO seed, ecosystem incentives)
@@ -213,7 +213,7 @@ All notable changes to the Inferno ($IFR) project.
 
 ### Changed
 - PartnerVault address updated (v1 -> v2)
-- Docs: 243 -> 256 tests, 9 -> 10 on-chain components
+- Docs: 243 -> 256 tests, 9 -> 14 on-chain components
 - Landing Page: 5 new FAQ entries
 - Landing Page: Tokenomics Donut Chart + Deflation Visualizer
 - Audit wording clarified (Slither static analysis, not "audited")

@@ -23,7 +23,7 @@
 ## Findings & Fixes
 
 ### Fix 1: contracts.html — Component Count
-- **Line 470:** "10 on-chain components" -> "14 on-chain components"
+- **Line 470:** "14 on-chain components" -> "14 on-chain components"
 - Description added: "10 repository contracts, 3 v2 upgrades, 1 LP Pair"
 
 ### Fix 2: security.html — Branch Coverage
@@ -54,7 +54,7 @@
 - `pending-item "Ownership Transfer Proposals #4-6"` -> `check-item "Ownership Transfer (v2 redeploy + Proposals #7-9 executed)"`
 
 ### Fix 8: docs/DOCS.md — PROJECT-SUMMARY Description
-- "10 Contracts, 396 Tests" -> "14 Contracts, 444 Tests"
+- "10 Contracts, 396 Tests" -> "14 Contracts, 494 tests"
 
 ### Fix 9: docs/MAINNET_CHECKLIST.md — Contract Count
 - Header: "10 Contracts deployed" -> "14 Contracts deployed"

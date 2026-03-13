@@ -37,7 +37,7 @@ Inferno ($IFR) ist ein **deflationärer ERC-20 Utility-Token** auf Ethereum. Jed
 - Deployer: `0x6b36687b0cd4386fb14cf565B67D7862110Fed67`
 - Treasury: `0xC8f4B45fA0C4727E9b27c13Af3d000C922a2ac9c`
 - Community: `0x61aF4E72C77b58F4b50964Ee93d420750Cd9857E`
-- Gnosis Safe: `0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b` (1-of-1, →2-of-3 pending)
+- Gnosis Safe: `0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b` (1-of-1, →2-of-4 pending)
 - Uniswap V2 Router: `0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D`
 
 ### Governance Proposals (Mainnet)
@@ -51,10 +51,10 @@ Inferno ($IFR) ist ein **deflationärer ERC-20 Utility-Token** auf Ethereum. Jed
 **ZEITKRITISCH:**
 - 17) Proposal #0 ausführen: **07.03.2026 20:12 CET**
 - 18) Treasury Safe (150M) + Community Safe (50M) → BootstrapVaultV3
-- 19) Governance owner → Gnosis Safe (nach 2-of-3)
+- 19) Governance owner → Gnosis Safe (nach 2-of-4)
 
 **VOR BOOTSTRAP ANKÜNDIGUNG:**
-- 6) 2-of-3 Multisig (warte auf 2 Wallet-Adressen)
+- 6) 2-of-4 Multisig (warte auf 2 Wallet-Adressen)
 - 10) Roadmap Wiki + Landing neu schreiben
 - 15) Multisig-Policy Wiki-Seite
 - 16) Project Continuity + Schutzschild-Satz
@@ -221,7 +221,7 @@ docs/wiki/
 - **Sepolia Testnet** — Full lifecycle getestet (Governance, IFRLock, Fee-on-Transfer, PartnerVault)
 - **Security Review** — 20/25 Findings fixed, 5 documented (APP_SECURITY_REVIEW.md)
 - **AI Copilot** — Railway deployed, 3-Mode System (chat/learn/quiz)
-- **444 Tests** — All passing
+- **494 tests** — All passing
 
 ---
 
@@ -345,7 +345,7 @@ npx hardhat verify --network sepolia <CONTRACT_ADDR> <CONSTRUCTOR_ARGS>
    PROPOSAL_ID=0 npx hardhat run scripts/execute-proposal.js --network mainnet
    ```
 2. Treasury Safe (150M) + Community Safe (50M) → BootstrapVaultV3
-3. 2-of-3 Multisig aufsetzen (warte auf Wallet-Adressen)
+3. 2-of-4 Multisig aufsetzen (warte auf Wallet-Adressen)
 4. Governance owner → Gnosis Safe transferieren
 
 ---

@@ -4,9 +4,9 @@ _Last updated: 2026-03-06_
 
 | File | Status | Notes |
 |------|--------|-------|
-| docs/DOCS.md | OK | Project structure, 444 tests, 10 on-chain components |
+| docs/DOCS.md | OK | Project structure, 494 tests, 14 on-chain components |
 | docs/WHITEPAPER.md | OK | v1.0 whitepaper, fully translated to English |
-| docs/PROJECT-SUMMARY.md | OK | Mainnet summary, 444 tests, all addresses |
+| docs/PROJECT-SUMMARY.md | OK | Mainnet summary, 494 tests, all addresses |
 | docs/DEPLOYMENTS.md | OK | Sepolia + Mainnet addresses |
 | docs/MAINNET_CHECKLIST.md | OK | 3-phase deployment checklist |
 | docs/WEBSITE_AUDIT_REPORT.md | OK | Post-mainnet coherence audit (15 findings) |
