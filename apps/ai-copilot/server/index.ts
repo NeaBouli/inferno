@@ -662,7 +662,7 @@ async function handleTxFeed(_req: express.Request, res: express.Response) {
   const cached = getCached("txfeed");
   if (cached) { res.json(cached); return; }
 
-  const feedWallets = ["Deployer", "GnosisSafe", "CommunitySafe"];
+  const feedWallets = ["FeeRouterV1", "GnosisSafe", "CommunitySafe", "Deployer"];
   try {
     const transactions: { wallet: string; dir: string; amount: string; type: string; hash: string; timestamp: number }[] = [];
     const seen = new Set<string>();
