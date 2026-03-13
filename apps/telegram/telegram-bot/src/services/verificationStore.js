@@ -1,16 +1,8 @@
 // services/verificationStore.js — IFR 3-Tier Wallet Verification Store
 //
-// Tier 1 — SIGNER:    Gnosis Safe Signers (Whitelist)  → Core Dev (58) + Council (21)
-// Tier 2 — VOTER:     IFRLock.lockedBalance > 0        → Vote (23)
-// Tier 3 — BUILDER:   BuilderRegistry / Whitelist      → Dev & Builder (11)
-
-const SIGNER_WHITELIST = (process.env.SIGNER_WALLETS || '')
-  .split(',').map(a => a.trim().toLowerCase()).filter(a => a.startsWith('0x'));
-
-// Fallback: Deployer address
-if (SIGNER_WHITELIST.length === 0) {
-  SIGNER_WHITELIST.push('0x6b36687b0cd4386fb14cf565b67d7862110fed67');
-}
+// Tier 1 — SIGNER:    Gnosis Safe owners (on-chain via getOwners()) → Core Dev (58) + Council (21)
+// Tier 2 — VOTER:     IFRLock.lockedBalance > 0                     → Vote (23)
+// Tier 3 — BUILDER:   BuilderRegistry / Whitelist                   → Dev & Builder (11)
 
 const TOPIC_ACCESS = {
   58: 'signer',   // Core Dev
@@ -66,10 +58,12 @@ setInterval(() => {
   }
 }, 60000);
 
-// ── Tier Determination ───────────────────────────────
-function getTier(wallet) {
+// ── Tier Determination (async — uses on-chain Safe) ──
+async function getTier(wallet) {
+  const { getSignerWallets } = require('./onChainReader');
   const w = wallet.toLowerCase();
-  if (SIGNER_WHITELIST.includes(w)) return 'signer';
+  const signers = await getSignerWallets();
+  if (signers.includes(w)) return 'signer';
   if (builderWhitelist.has(w)) return 'builder';
   return 'community';
 }
@@ -103,5 +97,5 @@ module.exports = {
   createNonce, getNonce, consumeNonce,
   setVerified, isVerified, getUser, getWallet, getTierForUser,
   hasTopicAccess, getTier,
-  SIGNER_WHITELIST, TOPIC_ACCESS, builderWhitelist
+  TOPIC_ACCESS, builderWhitelist
 };
