@@ -268,11 +268,13 @@ test.describe("S9: Wiki button consistency", () => {
       );
       expect(critical).toEqual([]);
 
-      // Button exists and styled with gradient
+      // Button exists and styled with transparent background + orange border
       const btn = page.locator("#lp-header-connect-btn");
       await expect(btn).toBeVisible();
-      const bg = await btn.evaluate((el) => getComputedStyle(el).backgroundImage);
-      expect(bg).toContain("gradient");
+      const bg = await btn.evaluate((el) => getComputedStyle(el).backgroundColor);
+      expect(bg).toBe("rgba(0, 0, 0, 0)");
+      const border = await btn.evaluate((el) => getComputedStyle(el).borderColor);
+      expect(border).toContain("249");
 
       // Top-bar exists
       await expect(page.locator("#wiki-wallet-bar")).toBeVisible();
