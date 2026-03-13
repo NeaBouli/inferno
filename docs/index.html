@@ -1230,6 +1230,9 @@
   ]
 }
 </script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
+<script src="assets/wallet-core.js"></script>
+<script src="assets/ifr-state.js"></script>
 </head>
 <body>
 
@@ -1391,6 +1394,47 @@
       <a href="https://github.com/NeaBouli/inferno" class="btn btn-github" target="_blank" rel="noopener">View on GitHub</a>
       <a href="wiki/index.html" class="btn btn-secondary">Read the Docs</a>
     </div>
+
+    <!-- Wallet Connect Section -->
+    <div id="lp-wallet-section" style="margin-top:20px;">
+
+      <!-- Nicht verbunden -->
+      <div id="lp-connect-state">
+        <button id="lp-connect-btn" onclick="lpConnect()"
+          style="background:linear-gradient(135deg,#f97316,#ea580c);color:white;
+                 border:none;padding:12px 28px;border-radius:10px;font-size:0.95rem;
+                 font-weight:700;cursor:pointer;transition:transform 0.2s;">
+          &#x1F98A; Connect Wallet
+        </button>
+      </div>
+
+      <!-- Verbunden -->
+      <div id="lp-connected-state" style="display:none;">
+        <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;justify-content:center;">
+          <div style="background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.3);
+                      border-radius:8px;padding:8px 16px;">
+            <span style="color:#9ca3af;font-size:0.8rem;">Wallet: </span>
+            <span id="lp-wallet-addr" style="color:#22c55e;font-weight:600;font-family:monospace;font-size:0.85rem;"></span>
+          </div>
+          <div style="background:rgba(249,115,22,0.1);border:1px solid rgba(249,115,22,0.3);
+                      border-radius:8px;padding:8px 16px;">
+            <span style="color:#9ca3af;font-size:0.8rem;">IFR: </span>
+            <span id="lp-ifr-balance" style="color:#f97316;font-weight:700;"></span>
+          </div>
+          <div id="lp-lock-badge" style="display:none;background:rgba(251,191,36,0.1);
+                      border:1px solid rgba(251,191,36,0.3);border-radius:8px;padding:8px 16px;">
+            <span style="color:#fbbf24;font-weight:600;font-size:0.85rem;">&#x1F512; Premium Locked</span>
+          </div>
+          <button onclick="lpDisconnect()"
+            style="background:transparent;border:1px solid #374151;color:#6b7280;
+                   padding:8px 14px;border-radius:8px;cursor:pointer;font-size:0.8rem;">
+            Disconnect
+          </button>
+        </div>
+      </div>
+
+    </div>
+
   </div>
 
   <!-- WalletConnect Info Modal -->
@@ -2771,6 +2815,51 @@ function igniteLetter(idx,intensity){if(idx<0||idx>=ifrFire.length)return;const 
 function loop(now){ctxP.clearRect(0,0,W,H);ctxS.clearRect(0,0,W,H);synapses.forEach(s=>{s.update();s.draw(ctxP);});pressureVel+=(Math.random()-0.48)*0.00007;pressureVel=Math.max(0.00005,Math.min(0.0012,pressureVel));pressure+=pressureVel;if(Math.random()<0.0007)pressure+=0.06+Math.random()*0.28;const threshold=0.58+Math.random()*0.42;if(pressure>threshold&&now-lastShockT>2800){spawnShock(Math.min(pressure,1.4));pressure=Math.random()*0.12;pressureVel=0.0001+Math.random()*0.0002;lastShockT=now;if(!letterDists)computeLetterDists();}for(let i=shockwaves.length-1;i>=0;i--){const sw=shockwaves[i];sw.update();sw.draw(ctxS);synapses.forEach(s=>{const d=Math.hypot(s.x-BHX,s.y-BHY);if(Math.abs(sw.r-d)<22)s.flash(0.3+sw.intensity*0.5+Math.random()*0.2);});if(letterDists){letterDists.forEach((dist,idx)=>{if(!sw.letterTriggered[idx]&&sw.r>=dist-35){sw.letterTriggered[idx]=true;const delay=idx*(55+Math.random()*110);setTimeout(()=>igniteLetter(idx,sw.intensity),delay);}});}if(sw.isDone())shockwaves.splice(i,1);}ifrFire.forEach(st=>{if(st.timer>0){st.alpha+=(st.target-st.alpha)*0.030;st.alpha+=(Math.random()-0.5)*0.010;st.alpha=Math.max(0,Math.min(st.alpha,1));st.timer--;}else{st.alpha*=0.987;if(st.alpha<0.006)st.alpha=0;}});if(spotX>1.5){if(Math.random()<0.0004)spotSpeed=-0.00032;}else if(spotX<-0.5){spotX=1.8;spotSpeed=0;}else{if(Math.abs(spotSpeed)<0.0001)spotSpeed=-0.00032;}spotX+=spotSpeed;drawTitle();requestAnimationFrame(loop);}
 window.addEventListener('resize',resize);
 document.fonts.ready.then(()=>{resize();setTimeout(()=>{pressure=1.3;lastShockT=0;},3500);setTimeout(()=>{spotSpeed=-0.00032;},5000);requestAnimationFrame(loop);});
+})();
+</script>
+
+<!-- Landing Page Wallet Controller -->
+<script>
+async function lpConnect() {
+  var btn = document.getElementById("lp-connect-btn");
+  if (btn) { btn.textContent = "Connecting..."; btn.disabled = true; }
+  try {
+    await IFRWallet.connect();
+    var state = await IFRState.load(IFRWallet.getAddress());
+    lpUpdateUI(state);
+  } catch(e) {
+    if (btn) { btn.textContent = "\uD83E\uDD8A Connect Wallet"; btn.disabled = false; }
+    if (e.message === "NO_METAMASK") {
+      alert("MetaMask not found. Please install MetaMask from metamask.io");
+    }
+  }
+}
+
+function lpDisconnect() {
+  IFRWallet.disconnect();
+  lpUpdateUI(null);
+}
+
+function lpUpdateUI(state) {
+  var connected = IFRWallet.isConnected();
+  document.getElementById("lp-connect-state").style.display = connected ? "none" : "";
+  document.getElementById("lp-connected-state").style.display = connected ? "" : "none";
+  if (connected && state) {
+    document.getElementById("lp-wallet-addr").textContent = IFRWallet.getShortAddress();
+    document.getElementById("lp-ifr-balance").textContent = (state.ifrBalanceFormatted || "0") + " IFR";
+    var lockBadge = document.getElementById("lp-lock-badge");
+    if (lockBadge) lockBadge.style.display = state.isLocked1000 ? "" : "none";
+  }
+}
+
+IFRState.on("stateLoaded", lpUpdateUI);
+
+(async function() {
+  var reconnected = await IFRWallet.autoReconnect();
+  if (reconnected) {
+    var state = await IFRState.load(IFRWallet.getAddress());
+    lpUpdateUI(state);
+  }
 })();
 </script>
 
