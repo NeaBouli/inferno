@@ -450,7 +450,7 @@
           <div id="lp-header-dropdown" style="display:none;position:fixed;background:#111827;border:1px solid #374151;border-radius:12px;padding:16px;width:280px;max-width:calc(100vw - 24px);z-index:9999;box-shadow:0 8px 32px rgba(0,0,0,0.6);">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
               <span style="color:#6b7280;font-size:0.75rem;">Wallet</span>
-              <button onclick="lpToggleDropdown()" style="background:none;border:none;color:#6b7280;cursor:pointer;font-size:1.1rem;line-height:1;padding:2px 6px;border-radius:4px;" title="Close">&#x2715;</button>
+              <button onclick="lpCloseDropdown()" style="background:none;border:none;color:#6b7280;cursor:pointer;font-size:1.1rem;line-height:1;padding:2px 6px;border-radius:4px;" title="Close">&#x2715;</button>
             </div>
             <div style="margin-bottom:12px;">
               <div id="lp-drop-addr" style="color:#22c55e;font-family:monospace;font-size:0.78rem;font-weight:600;word-break:break-all;"></div>
@@ -703,7 +703,7 @@ async function lpConnect(){
     var state=await IFRState.load(IFRWallet.getAddress());
     lpUpdateUI(state);
   }catch(e){
-    if(btn){btn.textContent="\u{1F98A} Connect";btn.disabled=false;btn.style.background="linear-gradient(135deg,#f97316,#ea580c)";btn.onclick=lpConnect}
+    if(btn){btn.textContent="\u{1F98A} Connect";btn.disabled=false;btn.style.background="transparent";btn.style.borderColor="#f97316";btn.style.color="#f97316";btn.onclick=lpConnect}
     if(e.message==="NO_METAMASK"){
       var isMobile=/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
       if(isMobile){window.location.href="https://metamask.app.link/dapp/ifrunit.tech"}
@@ -718,7 +718,7 @@ function lpDisconnect(){
   var connectBtn=document.getElementById("lp-header-connect-btn");
   var connectedDiv=document.getElementById("lp-header-connected");
   var dropdown=document.getElementById("lp-header-dropdown");
-  if(connectBtn){connectBtn.style.display="";connectBtn.textContent="\u{1F98A} Connect";connectBtn.disabled=false;connectBtn.style.background="linear-gradient(135deg,#f97316,#ea580c)";connectBtn.onclick=lpConnect}
+  if(connectBtn){connectBtn.style.display="";connectBtn.textContent="\u{1F98A} Connect";connectBtn.disabled=false;connectBtn.style.background="transparent";connectBtn.style.borderColor="#f97316";connectBtn.style.color="#f97316";connectBtn.onclick=lpConnect}
   if(connectedDiv)connectedDiv.style.display="none";
   if(dropdown)dropdown.style.display="none";
 }
@@ -738,13 +738,14 @@ function lpToggleDropdown(){
   }
   dd.style.display="";
 }
+function lpCloseDropdown(){var dd=document.getElementById("lp-header-dropdown");if(dd)dd.style.display="none";}
 function lpUpdateUI(state){
   var connected=IFRWallet.isConnected();
   var connectBtn=document.getElementById("lp-header-connect-btn");
   var connectedDiv=document.getElementById("lp-header-connected");
   if(connectBtn){
     connectBtn.style.display=connected?"none":"";
-    if(!connected){connectBtn.textContent="\u{1F98A} Connect";connectBtn.disabled=false;connectBtn.style.background="linear-gradient(135deg,#f97316,#ea580c)";connectBtn.onclick=lpConnect}
+    if(!connected){connectBtn.textContent="\u{1F98A} Connect";connectBtn.disabled=false;connectBtn.style.background="transparent";connectBtn.style.borderColor="#f97316";connectBtn.style.color="#f97316";connectBtn.onclick=lpConnect}
   }
   if(connectedDiv)connectedDiv.style.display=connected?"":"none";
   if(connected&&state){

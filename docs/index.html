@@ -1281,7 +1281,7 @@
       <div id="lp-header-dropdown" style="display:none;position:fixed;top:60px;right:12px;background:#111827;border:1px solid #374151;border-radius:12px;padding:16px;width:280px;max-width:calc(100vw - 24px);z-index:9999;box-shadow:0 8px 32px rgba(0,0,0,0.6);">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
           <span style="color:#6b7280;font-size:0.75rem;">Wallet</span>
-          <button onclick="lpToggleDropdown()" style="background:none;border:none;color:#6b7280;cursor:pointer;font-size:1.1rem;line-height:1;padding:2px 6px;border-radius:4px;" title="Close">&#x2715;</button>
+          <button onclick="lpCloseDropdown()" style="background:none;border:none;color:#6b7280;cursor:pointer;font-size:1.1rem;line-height:1;padding:2px 6px;border-radius:4px;" title="Close">&#x2715;</button>
         </div>
         <div style="margin-bottom:12px;">
           <div id="lp-drop-addr" style="color:#22c55e;font-family:monospace;font-size:0.85rem;font-weight:600;word-break:break-all;"></div>
@@ -2931,6 +2931,11 @@ function lpToggleDropdown() {
     dd.style.width = "290px";
   }
   dd.style.display = "";
+}
+
+function lpCloseDropdown() {
+  var dd = document.getElementById("lp-header-dropdown");
+  if (dd) dd.style.display = "none";
 }
 
 window.addEventListener("resize", function() {
