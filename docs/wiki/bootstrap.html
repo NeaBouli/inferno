@@ -628,7 +628,8 @@
     .bw-tx-success { background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.3); color: #22c55e; }
     .bw-tx-error   { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); color: #ef4444; }
   </style>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"
+    onerror="console.error('ethers CDN failed, trying fallback');var s=document.createElement('script');s.src='https://unpkg.com/ethers@5.7.2/dist/ethers.umd.min.js';document.head.appendChild(s);"></script>
   <script src="../assets/wallet-core.js"></script>
   <script src="../assets/ifr-state.js"></script>
   <link rel="icon" type="image/png" href="../assets/ifr_icon_64.png">
@@ -1850,9 +1851,12 @@ function bwSetTxStatus(elId, type, msg, txHash) {
 
 // Connect
 async function bwConnect() {
+  if (typeof ethers === "undefined") {
+    alert("Web3 library failed to load. Please refresh the page (F5) and try again.");
+    return;
+  }
   if (typeof IFRWallet === "undefined") {
-    console.error("IFRWallet not loaded yet");
-    alert("Page still loading, please try again in a moment.");
+    alert("Wallet module not loaded. Please refresh the page and try again.");
     return;
   }
   var btn = document.getElementById("bw-connect-btn");
@@ -1862,21 +1866,24 @@ async function bwConnect() {
     var state = await IFRState.load(IFRWallet.getAddress());
     bwUpdateUI(state);
   } catch(e) {
-    console.error("Connect error:", e);
-    if (btn) { btn.textContent = "\uD83E\uDD8A Connect Wallet"; btn.disabled = false; }
+    console.error("Connect error:", e.message, e.code);
     if (e.message === "NO_METAMASK") {
-      if (!/Mobi|Android|iPhone/i.test(navigator.userAgent)) {
-        if (confirm("MetaMask not found.\n\nInstall MetaMask browser extension?")) {
-          window.open("https://metamask.io/download", "_blank");
-        }
+      var isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+      if (isMobile) {
+        window.location.href = "https://metamask.app.link/dapp/ifrunit.tech/wiki/bootstrap.html";
       } else {
-        var deeplink = "https://metamask.app.link/dapp/" + window.location.host + window.location.pathname;
-        if (confirm("Mobile erkannt.\n\nSeite in MetaMask App \u00f6ffnen?")) {
-          window.location.href = deeplink;
+        if (btn) {
+          btn.textContent = "\u26A0\uFE0F Install MetaMask";
+          btn.style.background = "#374151";
+          btn.onclick = function() { window.open("https://metamask.io/download","_blank"); };
+          btn.disabled = false;
         }
       }
-    } else if (e.code === 4001) {
-      console.log("User rejected connection");
+    } else if (e.code === 4001 || e.code === "ACTION_REJECTED") {
+      if (btn) { btn.textContent = "\uD83E\uDD8A Connect Wallet"; btn.disabled = false; }
+    } else {
+      if (btn) { btn.textContent = "\u274C Error \u2014 Retry"; btn.disabled = false; }
+      console.error("Unexpected:", e);
     }
   }
 }

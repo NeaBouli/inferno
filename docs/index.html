@@ -1239,7 +1239,8 @@
   ]
 }
 </script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"
+  onerror="console.error('ethers CDN failed, trying fallback');var s=document.createElement('script');s.src='https://unpkg.com/ethers@5.7.2/dist/ethers.umd.min.js';document.head.appendChild(s);"></script>
 <script src="assets/wallet-core.js"></script>
 <script src="assets/ifr-state.js"></script>
 </head>
@@ -1277,7 +1278,7 @@
         <span style="color:#6b7280;font-size:0.75rem;margin-left:6px;">&#x25BE;</span>
       </div>
       <!-- Dropdown -->
-      <div id="lp-header-dropdown" style="display:none;position:absolute;top:100%;right:0;background:#111827;border:1px solid #374151;border-radius:12px;padding:16px;min-width:260px;z-index:1000;box-shadow:0 8px 32px rgba(0,0,0,0.4);margin-top:8px;">
+      <div id="lp-header-dropdown" style="display:none;position:fixed;top:60px;right:12px;background:#111827;border:1px solid #374151;border-radius:12px;padding:16px;width:280px;max-width:calc(100vw - 24px);z-index:9999;box-shadow:0 8px 32px rgba(0,0,0,0.6);">
         <div style="margin-bottom:12px;">
           <div style="color:#9ca3af;font-size:0.75rem;margin-bottom:4px;">Wallet</div>
           <div id="lp-drop-addr" style="color:#22c55e;font-family:monospace;font-size:0.85rem;font-weight:600;word-break:break-all;"></div>
@@ -2841,9 +2842,12 @@ document.fonts.ready.then(()=>{resize();setTimeout(()=>{pressure=1.3;lastShockT=
 <!-- Landing Page Wallet Controller -->
 <script>
 async function lpConnect() {
+  if (typeof ethers === "undefined") {
+    alert("Web3 library failed to load. Please refresh the page (F5) and try again.");
+    return;
+  }
   if (typeof IFRWallet === "undefined") {
-    console.error("IFRWallet not loaded yet");
-    alert("Page still loading, please try again in a moment.");
+    alert("Wallet module not loaded. Please refresh the page and try again.");
     return;
   }
   var btn = document.getElementById("lp-header-connect-btn");
@@ -2853,21 +2857,25 @@ async function lpConnect() {
     var state = await IFRState.load(IFRWallet.getAddress());
     lpUpdateUI(state);
   } catch(e) {
-    console.error("Connect error:", e);
-    if (btn) { btn.textContent = "\uD83E\uDD8A Connect"; btn.disabled = false; }
+    console.error("Connect error:", e.message, e.code);
     if (e.message === "NO_METAMASK") {
-      if (!/Mobi|Android|iPhone/i.test(navigator.userAgent)) {
-        if (confirm("MetaMask not found.\n\nInstall MetaMask browser extension?")) {
-          window.open("https://metamask.io/download", "_blank");
-        }
+      var isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+      if (isMobile) {
+        window.location.href = "https://metamask.app.link/dapp/ifrunit.tech";
       } else {
-        var deeplink = "https://metamask.app.link/dapp/" + window.location.host + window.location.pathname;
-        if (confirm("Open in MetaMask App?\n\nMetaMask App \u00f6ffnen und diese Seite darin laden?")) {
-          window.location.href = deeplink;
+        if (btn) {
+          btn.textContent = "\u26A0\uFE0F Install MetaMask";
+          btn.style.borderColor = "#374151";
+          btn.style.color = "#9ca3af";
+          btn.onclick = function() { window.open("https://metamask.io/download","_blank"); };
+          btn.disabled = false;
         }
       }
-    } else if (e.code === 4001) {
-      console.log("User rejected connection");
+    } else if (e.code === 4001 || e.code === "ACTION_REJECTED") {
+      if (btn) { btn.textContent = "\uD83E\uDD8A Connect"; btn.disabled = false; }
+    } else {
+      if (btn) { btn.textContent = "\u274C Error \u2014 Retry"; btn.disabled = false; }
+      console.error("Unexpected:", e);
     }
   }
 }
@@ -2905,11 +2913,14 @@ function lpUpdateUI(state) {
     el = document.getElementById("lp-header-addr");
     if (el) el.textContent = addr;
     el = document.getElementById("lp-drop-addr");
-    if (el) el.textContent = IFRWallet.getAddress();
+    if (el) {
+      var fullAddr = IFRWallet.getAddress();
+      el.textContent = fullAddr.slice(0,10) + "..." + fullAddr.slice(-6);
+    }
     el = document.getElementById("lp-drop-eth");
     if (el) el.textContent = parseFloat(state.ethBalance || "0").toFixed(4) + " ETH";
     el = document.getElementById("lp-drop-ifr");
-    if (el) el.textContent = (state.ifrBalanceFormatted || "0") + " IFR";
+    if (el) el.textContent = parseFloat(ethers.utils.formatUnits(state.ifrBalance || "0", 9)).toLocaleString("en-US", {maximumFractionDigits: 0}) + " IFR";
     var lockDiv = document.getElementById("lp-drop-lock");
     var noLockDiv = document.getElementById("lp-drop-nolock");
     if (lockDiv) lockDiv.style.display = state.isLocked1000 ? "" : "none";
@@ -2926,6 +2937,16 @@ IFRState.on("stateLoaded", lpUpdateUI);
     lpUpdateUI(state);
   }
 })();
+
+document.addEventListener("visibilitychange", async function() {
+  if (document.visibilityState === "visible" && typeof IFRWallet !== "undefined" && !IFRWallet.isConnected()) {
+    var reconnected = await IFRWallet.autoReconnect();
+    if (reconnected) {
+      var state = await IFRState.load(IFRWallet.getAddress());
+      lpUpdateUI(state);
+    }
+  }
+});
 </script>
 
 </body>
