@@ -107,7 +107,7 @@ inferno/
 │   ├── PATCH-GUIDELINES.md             Patch Guidelines v1.0 (6 Steps, Versioning, Emergency Patches)
 │   ├── COVERAGE_REPORT.md             Solidity Coverage Report (99% Stmts, 91% Branch, 98% Funcs, 99% Lines, Final Run)
 │   ├── BENEFITS_NETWORK_TEST.md       Benefits Network E2E Test Guide (Test Flow, API, Lock Tiers, Errors)
-│   ├── PROJECT-SUMMARY.md             Complete Overview (10 Contracts, 538 tests, 7 Apps, CI/CD)
+│   ├── PROJECT-SUMMARY.md             Complete Overview (10 Contracts, 544 tests, 7 Apps, CI/CD)
 │   ├── CONTRIBUTING.md                Contributing Guide v1.0 (Bug Reports, Code Standards, Git Conventions)
 │   ├── TRANSPARENCY.md               On-Chain Transparency Report (8 Checks, Supply, Vesting, LP, Mainnet TODOs)
 │   ├── ONE-PAGER.md                  Investor One-Pager (Key Numbers, Products, Technology, Mainnet Live)
@@ -218,7 +218,7 @@ inferno/
 |--------|-------|
 | Contracts | 11 (+ 5 Mocks) |
 | Solidity LOC | 1,950 |
-| Tests | 367 contract + 27 BuilderRegistry + 77 app + 50 Bootstrap + 17 Verify = 538 total |
+| Tests | 367 contract + 27 BuilderRegistry + 77 app + 50 Bootstrap + 23 Verify = 544 total |
 | Branch Coverage | 91% |
 | Test LOC | 2,402 |
 | Deploy Script | 232 LOC, 9 Steps |
