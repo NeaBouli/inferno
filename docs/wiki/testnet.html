@@ -594,14 +594,9 @@
           <li>Responsible disclosure via GitHub Issues</li>
           <li>Hall of Fame recognition for valid findings</li>
         </ul>
-        <div style="margin: 16px 0; padding: 16px; background: rgba(0,0,0,0.3); border-radius: 4px;">
-          <div style="color:#ffc800; font-size:12px; font-weight:700; letter-spacing:1px; margin-bottom:8px;">
-            GET SEPOLIA TEST ETH
-          </div>
-          <p style="color:#aaa; font-size:12px; margin:0;">
-            &#x2193; Scroll down to the <a href="#faucet-section" style="color:#ffc800;">Faucet Section</a> &mdash; connects to your wallet automatically.
-          </p>
-        </div>
+        <p style="color:#9ca3af;font-size:0.85rem;margin-top:8px;">
+          &darr; <a href="#faucet-section" style="color:#f97316;">Get Sepolia Test ETH below</a> &mdash; auto-fills your wallet address.
+        </p>
         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-top:16px;">
           <span style="color:#888; font-size:13px;">Found a vulnerability? Report responsibly and get credited in the Hall of Fame.</span>
           <a href="https://github.com/NeaBouli/inferno/issues/new?template=security-audit.md"
@@ -611,29 +606,11 @@
         </div>
       </div>
 
-      <!-- ========== Governance Proposals ========== -->
-      <h2>Governance Proposals (Sepolia)</h2>
-      <p>10 governance proposals were executed on Sepolia to validate the full lifecycle: propose &rarr; 48h wait &rarr; execute.</p>
-
-      <table>
-        <thead>
-          <tr><th>#</th><th>Action</th><th>Status</th></tr>
-        </thead>
-        <tbody>
-          <tr><td>0</td><td>setFeeExempt (test)</td><td>Executed</td></tr>
-          <tr><td>1</td><td>setFeeExempt(IFRLock, true)</td><td>Executed</td></tr>
-          <tr><td>2</td><td>Cancelled (v1 deprecated)</td><td>Cancelled</td></tr>
-          <tr><td>3</td><td>setFeeExempt(PartnerVault v2, true) + top-up</td><td>Executed</td></tr>
-          <tr><td>4&ndash;6</td><td>transferOwnership (cancelled, v1 immutable)</td><td>Cancelled</td></tr>
-          <tr><td>7&ndash;9</td><td>setFeeExempt(LR v2, BV v2, BR v2)</td><td>Executed</td></tr>
-        </tbody>
-      </table>
-
       <!-- ========== Getting Started ========== -->
       <h2>Getting Started with Testnet</h2>
 
       <div id="faucet-section" style="margin:32px 0;">
-        <h3 style="color:#e5e7eb;">Get Sepolia Test ETH</h3>
+        <h3 style="color:#e5e7eb;">1. Get Sepolia Test ETH</h3>
 
         <div style="margin-bottom:20px;">
           <label style="color:#9ca3af;font-size:0.85rem;display:block;margin-bottom:6px;">
@@ -657,11 +634,20 @@
           </div>
         </div>
 
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;">
+        <style>#faucet-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}@media(max-width:600px){#faucet-grid{grid-template-columns:1fr!important}}</style>
+        <div id="faucet-grid">
           <div style="background:#1f2937;border:1px solid #374151;border-radius:12px;padding:16px;">
             <div style="font-weight:600;color:#e5e7eb;margin-bottom:4px;">Google Cloud Faucet</div>
             <div style="color:#9ca3af;font-size:0.8rem;margin-bottom:12px;">0.05 ETH/day &middot; No minimum mainnet balance</div>
             <button onclick="faucetOpen('https://cloud.google.com/application/web3/faucet/ethereum/sepolia')"
+              style="width:100%;background:linear-gradient(135deg,#f97316,#ea580c);color:white;border:none;padding:9px;border-radius:8px;font-size:0.85rem;font-weight:600;cursor:pointer;">
+              Get Test ETH &rarr;
+            </button>
+          </div>
+          <div style="background:#1f2937;border:1px solid #374151;border-radius:12px;padding:16px;">
+            <div style="font-weight:600;color:#e5e7eb;margin-bottom:4px;">Chainlink Faucet</div>
+            <div style="color:#9ca3af;font-size:0.8rem;margin-bottom:12px;">0.1 ETH/day &middot; No login needed</div>
+            <button onclick="faucetOpen('https://faucets.chain.link/sepolia')"
               style="width:100%;background:linear-gradient(135deg,#f97316,#ea580c);color:white;border:none;padding:9px;border-radius:8px;font-size:0.85rem;font-weight:600;cursor:pointer;">
               Get Test ETH &rarr;
             </button>
@@ -678,14 +664,6 @@
             <div style="font-weight:600;color:#e5e7eb;margin-bottom:4px;">Infura Faucet</div>
             <div style="color:#9ca3af;font-size:0.8rem;margin-bottom:12px;">0.5 ETH/day &middot; Login required</div>
             <button onclick="faucetOpen('https://www.infura.io/faucet/sepolia')"
-              style="width:100%;background:linear-gradient(135deg,#f97316,#ea580c);color:white;border:none;padding:9px;border-radius:8px;font-size:0.85rem;font-weight:600;cursor:pointer;">
-              Get Test ETH &rarr;
-            </button>
-          </div>
-          <div style="background:#1f2937;border:1px solid #374151;border-radius:12px;padding:16px;">
-            <div style="font-weight:600;color:#e5e7eb;margin-bottom:4px;">Chainlink Faucet</div>
-            <div style="color:#9ca3af;font-size:0.8rem;margin-bottom:12px;">0.1 ETH/day &middot; No login needed</div>
-            <button onclick="faucetOpen('https://faucets.chain.link/sepolia')"
               style="width:100%;background:linear-gradient(135deg,#f97316,#ea580c);color:white;border:none;padding:9px;border-radius:8px;font-size:0.85rem;font-weight:600;cursor:pointer;">
               Get Test ETH &rarr;
             </button>
@@ -731,6 +709,24 @@ npm run dev
 # Opens at http://localhost:5173
 # Connect MetaMask to Sepolia</code></pre>
 
+      <!-- ========== Governance Proposals ========== -->
+      <h2>Governance Proposals (Sepolia)</h2>
+      <p>10 governance proposals were executed on Sepolia to validate the full lifecycle: propose &rarr; 48h wait &rarr; execute.</p>
+
+      <table>
+        <thead>
+          <tr><th>#</th><th>Action</th><th>Status</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>0</td><td>setFeeExempt (test)</td><td>Executed</td></tr>
+          <tr><td>1</td><td>setFeeExempt(IFRLock, true)</td><td>Executed</td></tr>
+          <tr><td>2</td><td>Cancelled (v1 deprecated)</td><td>Cancelled</td></tr>
+          <tr><td>3</td><td>setFeeExempt(PartnerVault v2, true) + top-up</td><td>Executed</td></tr>
+          <tr><td>4&ndash;6</td><td>transferOwnership (cancelled, v1 immutable)</td><td>Cancelled</td></tr>
+          <tr><td>7&ndash;9</td><td>setFeeExempt(LR v2, BV v2, BR v2)</td><td>Executed</td></tr>
+        </tbody>
+      </table>
+
       <!-- ========== Community Audit ========== -->
       <h2>Community Audit</h2>
       <p>
@@ -738,6 +734,15 @@ npm run dev
         <a href="https://github.com/NeaBouli/inferno/issues/new?template=security-audit.md" target="_blank" rel="noopener">GitHub Issues</a>.
         The testnet deployment allows anyone to verify contract behavior without risking real funds.
       </p>
+
+      <div style="display:flex;gap:12px;flex-wrap:wrap;margin:16px 0;">
+        <a href="https://github.com/NeaBouli/inferno/issues/new?template=bug_report.md&title=[Security+Finding]" target="_blank" rel="noopener"
+          style="display:inline-flex;align-items:center;gap:8px;background:#1f2937;border:1px solid #374151;border-radius:8px;padding:8px 14px;text-decoration:none;color:#e5e7eb;font-size:0.85rem;font-weight:600;transition:border-color 0.2s;"
+          onmouseover="this.style.borderColor='#f97316'" onmouseout="this.style.borderColor='#374151'">
+          <svg height="16" width="16" viewBox="0 0 16 16" fill="#e5e7eb"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+          Submit a Finding on GitHub
+        </a>
+      </div>
 
       <div class="callout-green callout">
         <p><strong>Mainnet contracts</strong> are listed on the <a href="deployment.html">Deployment</a> page. For production addresses, see the main <a href="../index.html#contracts">landing page</a>.</p>
