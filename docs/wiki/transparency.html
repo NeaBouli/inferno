@@ -1535,12 +1535,12 @@
           var rows = '';
           txs.forEach(function(tx) {
             rows += '<tr>' +
-              '<td>' + (tx.time || '\u2014') + '</td>' +
+              '<td>' + (tx.timestamp ? new Date(tx.timestamp * 1000).toLocaleString() : '\u2014') + '</td>' +
               '<td>' + (tx.label || tx.wallet || '\u2014') + '</td>' +
               '<td>' + (tx.dir || '\u2014') + '</td>' +
               '<td>' + (tx.amount || '\u2014') + '</td>' +
               '<td>' + (tx.type || '\u2014') + '</td>' +
-              '<td>' + (tx.txHash ? '<a href="https://etherscan.io/tx/' + tx.txHash + '" target="_blank" rel="noopener">' + tx.txHash.slice(0,10) + '\u2026</a>' : '\u2014') + '</td>' +
+              '<td>' + (tx.hash ? '<a href="https://etherscan.io/tx/' + tx.hash + '" target="_blank" rel="noopener">' + tx.hash.slice(0,10) + '\u2026</a>' : '\u2014') + '</td>' +
               '</tr>';
           });
           txBody.innerHTML = rows;
