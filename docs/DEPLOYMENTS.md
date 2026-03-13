@@ -97,7 +97,7 @@
 | feeExempt Wiring | Done |
 | Token Distribution | Done |
 | Deployer Exemption Removed | Done |
-| Etherscan Verification | **Done** (10/10 verified) |
+| Etherscan Verification | **Done** (14/14 verified) |
 | Uniswap LP Pairing | **Done** — [`0x2252e8bBDE0E50CD372748aC233A99C08627d9c7`](https://sepolia.etherscan.io/address/0x2252e8bBDE0E50CD372748aC233A99C08627d9c7) |
 | Router on BuybackVault | **Done** — `0xC532a74256D3Db42D0Bf7a0400fEFDbad7694008` |
 | InfernoToken Ownership to Governance | **Done** — TX `0xa69bf285...d5762e1b` |
@@ -165,7 +165,7 @@
 | Step | Status |
 |------|--------|
 | 10 Contracts Deployed | Done (2026-03-05) |
-| Etherscan Verification | Done (10/10 verified) |
+| Etherscan Verification | Done (14/14 verified) |
 | feeExempt Wiring | Done |
 | Token Distribution (CFLM) | Done |
 | Deployer Exemption Removed | Done |

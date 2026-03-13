@@ -4,13 +4,13 @@
 **Branch:** `main`
 **Model:** Community Fair Launch (CFLM) -- no presale
 **Ticker:** $IFR
-**Status:** 10 On-Chain Components deployed + verified on Ethereum Mainnet | 444 Tests | 7 Apps
+**Status:** 10 On-Chain Components deployed + verified on Ethereum Mainnet | 494 tests | 7 Apps
 
 ---
 
 ## On-Chain (Ethereum Mainnet)
 
-10 on-chain components (9 repo contracts + 1 Uniswap V2 LP Pair). All verified on Etherscan. Ownership transferred to Governance (48h Timelock).
+14 on-chain components (9 repo contracts + 1 Uniswap V2 LP Pair). All verified on Etherscan. Ownership transferred to Governance (48h Timelock).
 
 | # | Contract | Address | Status |
 |---|----------|---------|--------|
@@ -181,7 +181,7 @@ Sepolia deployment served as the full testnet validation phase. All contracts we
 | 4 | Lock LP Tokens (min 12 months via Unicrypt) | Open |
 | 5 | Transfer InfernoToken Ownership -> Governance | Open |
 | 6 | Transfer Governance Owner -> Multisig | Open |
-| 7 | Expand Gnosis Safe to 2-of-3 signers | Open |
+| 7 | Expand Gnosis Safe to 2-of-4 signers | Open |
 | 8 | Professional Security Audit | Open |
 
 ---

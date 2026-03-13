@@ -222,7 +222,7 @@ No trust required — only code and chain.
 | Phase | Status | Content |
 |-------|--------|---------|
 | Phase 0 — Bootstrap | Complete | Sepolia testnet, all contracts live |
-| Phase 1 — Launch | Complete | Mainnet deployed (2026-03-05), 10 on-chain components verified |
+| Phase 1 — Launch | Complete | Mainnet deployed (2026-03-05), 14 on-chain components verified |
 | Phase 2 — Multisig | In Progress | Governance migration to Gnosis Safe |
 | Phase 3 — Growth | Planned | Ecosystem expansion, Benefits Network, guarded automation |
 | Phase 4 — DAO | Long-term | Community governance |

@@ -4,7 +4,7 @@ Last updated: March 2026
 
 ## Project Status: MAINNET DEPLOYED
 
-All 9 smart contracts deployed, verified, and operational on Ethereum Mainnet (2026-03-05). BootstrapVault deployed on Sepolia. Landing page, wiki (16 pages), dashboard, and 7 apps live.
+All 14 on-chain components deployed, verified, and operational on Ethereum Mainnet (2026-03-05). BootstrapVault deployed on Sepolia. Landing page, wiki (16 pages), dashboard, and 7 apps live.
 
 ## On-Chain Contracts (10)
 
