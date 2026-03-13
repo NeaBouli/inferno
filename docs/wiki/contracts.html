@@ -567,6 +567,7 @@
                 <li><a href="#partner-vault">PartnerVault <span class="toc-path">contracts/partner/PartnerVault.sol</span></a></li>
                 <li><a href="#fee-router">FeeRouterV1 <span class="toc-path">contracts/FeeRouterV1.sol</span></a></li>
                 <li><a href="#lp-pair">LP Pair (IFR/WETH) <span class="toc-path">Uniswap V2 Factory</span></a></li>
+                <li><a href="#builder-registry">BuilderRegistry <span class="toc-path">contracts/BuilderRegistry.sol</span></a></li>
             </ol>
         </div>
 
@@ -2126,6 +2127,97 @@ console.<span class="function">log</span>(<span class="string">"Token0:"</span>,
 console.<span class="function">log</span>(<span class="string">"Reserve0:"</span>, reserve0.toString());
 console.<span class="function">log</span>(<span class="string">"Reserve1:"</span>, reserve1.toString());</pre>
             </div>
+        </div>
+
+        <div class="section-divider"></div>
+
+        <!-- ════════════════════════════════════════════════════ -->
+        <!-- 11. BuilderRegistry                                   -->
+        <!-- ════════════════════════════════════════════════════ -->
+        <div class="contract-section" id="builder-registry">
+            <div class="contract-header">
+                <h2>BuilderRegistry</h2>
+                <span class="contract-badge">Registry</span>
+            </div>
+            <div class="contract-path">contracts/BuilderRegistry.sol</div>
+
+            <p>
+                On-chain registry for verified IFR builders and integration partners.
+                Registration and removal controlled exclusively by <strong>Governance (Timelock)</strong>.
+                Used by the Telegram Bot for topic access control and by PartnerVault for creator reward eligibility.
+            </p>
+
+            <h3>Key Functions</h3>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr><th>Function</th><th>Access</th><th>Description</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>registerBuilder(wallet, name, url, category)</code></td>
+                            <td>Governance</td>
+                            <td>Register a new builder with metadata</td>
+                        </tr>
+                        <tr>
+                            <td><code>removeBuilder(wallet)</code></td>
+                            <td>Governance</td>
+                            <td>Deactivate a builder</td>
+                        </tr>
+                        <tr>
+                            <td><code>updateBuilder(wallet, name, url, category)</code></td>
+                            <td>Governance</td>
+                            <td>Update builder metadata</td>
+                        </tr>
+                        <tr>
+                            <td><code>isBuilder(wallet)</code></td>
+                            <td>Public</td>
+                            <td>Check if address is an active builder</td>
+                        </tr>
+                        <tr>
+                            <td><code>getActiveBuilders()</code></td>
+                            <td>Public</td>
+                            <td>Get all active builder addresses</td>
+                        </tr>
+                        <tr>
+                            <td><code>getBuilderInfo(wallet)</code></td>
+                            <td>Public</td>
+                            <td>Get full builder metadata</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3>Categories</h3>
+            <p>Each builder must be registered with one of 4 valid categories:</p>
+            <ul>
+                <li><code>creator</code> &mdash; Content creators, community builders</li>
+                <li><code>integration</code> &mdash; DeFi integrations, aggregators</li>
+                <li><code>tooling</code> &mdash; Developer tools, analytics, dashboards</li>
+                <li><code>dao</code> &mdash; DAO contributors, governance delegates</li>
+            </ul>
+
+            <h3>Deployment</h3>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr><th>Network</th><th>Address</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Mainnet</td>
+                            <td><em>Phase 3 &mdash; pending deployment after audit</em></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3>Integration</h3>
+            <p>
+                The Telegram Bot reads <code>isBuilder(wallet)</code> to determine
+                <strong>Builder tier</strong> access (Dev &amp; Builder topic).
+                PartnerVault can query the registry for creator reward eligibility.
+            </p>
         </div>
 
         <div class="section-divider"></div>
