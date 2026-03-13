@@ -1276,7 +1276,7 @@
     <!-- Wallet: Connected -->
     <div id="lp-header-connected" style="display:none;align-items:center;gap:8px;margin-left:16px;position:relative;">
       <div style="background:rgba(34,197,94,0.15);border:1px solid rgba(34,197,94,0.4);border-radius:8px;padding:6px 12px;cursor:pointer;" onclick="lpToggleDropdown()">
-        <span id="lp-header-addr" style="color:#22c55e;font-family:monospace;font-size:0.8rem;font-weight:600;"></span>
+        <span id="lp-header-addr" style="color:#22c55e;font-family:monospace;font-size:0.75rem;font-weight:600;"></span>
         <span style="color:#6b7280;font-size:0.75rem;margin-left:6px;">&#x25BE;</span>
       </div>
       <!-- Dropdown -->
@@ -2364,6 +2364,18 @@ if (isLocked) {
   </div>
 </section>
 
+<!-- ── MAINNET CONTRACT BADGE ────────────────────── -->
+<div class="reveal" style="padding:0 24px 40px;">
+  <div style="background:rgba(17,24,39,0.6);border:1px solid #1f2937;border-radius:12px;padding:20px 24px;max-width:700px;margin:0 auto;text-align:center;">
+    <div style="color:#6b7280;font-size:0.75rem;letter-spacing:0.08em;margin-bottom:8px;">DEPLOYED ON ETHEREUM MAINNET</div>
+    <div style="display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;">
+      <span style="color:#9ca3af;font-size:0.85rem;">IFR Token:</span>
+      <code style="color:#22c55e;font-family:monospace;font-size:0.85rem;background:rgba(34,197,94,0.1);padding:4px 10px;border-radius:6px;">0x77e99917Eca8539c62F509ED1193ac36580A6e7B</code>
+      <a href="https://etherscan.io/token/0x77e99917Eca8539c62F509ED1193ac36580A6e7B" target="_blank" rel="noopener" style="color:#f97316;font-size:0.8rem;text-decoration:none;">Etherscan &#x2197;</a>
+    </div>
+  </div>
+</div>
+
 <!-- ── CONTRACT INFO ──────────────────────────────── -->
 <section id="contracts" style="padding: 80px 0;" aid-type="data" aid-cnt-type="contracts">
   <div class="container">
@@ -3043,7 +3055,7 @@ function lpUpdateUI(state) {
 
   if (connected && state) {
     var addr = IFRWallet.getAddress();
-    var shortAddr = addr.slice(0,6) + "..." + addr.slice(-4);
+    var shortAddr = addr.slice(0,6) + ".." + addr.slice(-4);
     var el;
     el = document.getElementById("lp-header-addr");
     if (el) el.textContent = shortAddr;
