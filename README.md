@@ -97,6 +97,7 @@ The ecosystem is open and permissionless. Any product can integrate IFR Lock.
 - Slither security audit: 0 high/critical findings
 - Internal security audit: 0 FAIL, 20 WARN (1 fixed), 81 PASS ([full report](docs/SECURITY_AUDIT_SKYWALKER.md))
 - App security review: 12 findings (2 CRITICAL, 5 HIGH — all fixed) ([full report](docs/APP_SECURITY_REVIEW.md))
+- **Bootstrap security review (13.03.2026):** BootstrapVaultV3 + InfernoToken + FeeRouterV1 + Governance — 11/14 secure, 3/14 low risk, 0 critical ([full report](audit/BOOTSTRAP_SECURITY_REVIEW_13032026.md))
 - Full Sepolia testnet deployment with verified contracts
 - Governance lifecycle tested: propose → 48h wait → execute
 
