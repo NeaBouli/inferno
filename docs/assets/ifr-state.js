@@ -71,22 +71,56 @@ window.IFRState = (() => {
     try {
       // Bootstrap Status (immer, auch ohne Wallet)
       const bootstrap = new ethers.Contract(CONTRACTS.bootstrap, ABI_BOOTSTRAP, provider);
-      const status = await bootstrap.getBootstrapStatus();
-      const totalETHRaised = await bootstrap.totalETHRaised();
-      const ifrAllocation = await bootstrap.ifrAllocation();
-      const startTime = await bootstrap.startTime();
-      const endTime = await bootstrap.endTime();
-      result.bootstrapStatus = {
-        active: status.active,
-        finalized: status._finalised,
-        totalETHRaised: ethers.utils.formatEther(totalETHRaised),
-        contributorCount: status.contributorCount.toNumber(),
-        timeRemaining: status.timeRemaining.toNumber(),
-        startTime: startTime.toNumber() * 1000,
-        endTime: endTime.toNumber() * 1000,
-        ifrAllocation: ethers.utils.formatUnits(ifrAllocation, 9),
-      };
-    } catch(e) { console.warn("Bootstrap status load failed:", e.message); }
+      try {
+        // Primary: getBootstrapStatus() aggregated call
+        const status = await bootstrap.getBootstrapStatus();
+        const totalETHRaised = await bootstrap.totalETHRaised();
+        const ifrAllocation = await bootstrap.ifrAllocation();
+        const startTime = await bootstrap.startTime();
+        const endTime = await bootstrap.endTime();
+        result.bootstrapStatus = {
+          active: status.active,
+          finalized: status._finalised,
+          totalETHRaised: ethers.utils.formatEther(totalETHRaised),
+          contributorCount: status.contributorCount.toNumber(),
+          timeRemaining: status.timeRemaining.toNumber(),
+          startTime: startTime.toNumber() * 1000,
+          endTime: endTime.toNumber() * 1000,
+          ifrAllocation: ethers.utils.formatUnits(ifrAllocation, 9),
+        };
+      } catch(e1) {
+        console.warn("getBootstrapStatus() failed, trying individual calls:", e1.message);
+        try {
+          // Fallback: individual state variable reads
+          const totalETHRaised = await bootstrap.totalETHRaised();
+          const ifrAllocation = await bootstrap.ifrAllocation();
+          const startTime = await bootstrap.startTime();
+          const endTime = await bootstrap.endTime();
+          const finalised = await bootstrap.finalised();
+          const now = Date.now();
+          const endMs = endTime.toNumber() * 1000;
+          result.bootstrapStatus = {
+            active: !finalised && now < endMs,
+            finalized: finalised,
+            totalETHRaised: ethers.utils.formatEther(totalETHRaised),
+            contributorCount: 0,
+            timeRemaining: Math.max(0, Math.floor((endMs - now) / 1000)),
+            startTime: startTime.toNumber() * 1000,
+            endTime: endMs,
+            ifrAllocation: ethers.utils.formatUnits(ifrAllocation, 9),
+          };
+        } catch(e2) {
+          console.warn("Individual bootstrap calls failed, using defaults:", e2.message);
+          // Hardcoded defaults from deployment
+          result.bootstrapStatus = {
+            active: false, finalized: false,
+            totalETHRaised: "0.0", contributorCount: 0,
+            timeRemaining: 0, startTime: 1713358800000, endTime: 1721134800000,
+            ifrAllocation: "194750000",
+          };
+        }
+      }
+    } catch(e) { console.warn("Bootstrap contract init failed:", e.message); }
 
     // Ab hier nur wenn Wallet verbunden
     if (!address) { _cache = result; _emit("stateLoaded", result); return result; }

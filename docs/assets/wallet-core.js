@@ -15,19 +15,37 @@ window.IFRWallet = (() => {
   let _signer = null;
   let _address = null;
   let _listeners = [];  // Callbacks für UI-Updates
+  let _ethereumProvider = null; // Resolved MetaMask provider (multi-wallet safe)
 
   // ── Session Storage Key ─────────────────────────────
   const SESSION_KEY = "ifr_wallet_connected";
 
+  // ── Multi-Wallet MetaMask Detection (EIP-5749) ─────
+  function _getMetaMaskProvider() {
+    if (_ethereumProvider) return _ethereumProvider;
+    // EIP-5749: multiple wallets inject into providers array
+    if (window.ethereum && window.ethereum.providers && Array.isArray(window.ethereum.providers)) {
+      _ethereumProvider = window.ethereum.providers.find(function(p) {
+        return p.isMetaMask && !p.isExodus && !p.isBraveWallet;
+      }) || window.ethereum.providers[0] || window.ethereum;
+    } else if (window.ethereum && window.ethereum.isMetaMask) {
+      _ethereumProvider = window.ethereum;
+    } else if (window.ethereum) {
+      _ethereumProvider = window.ethereum;
+    }
+    return _ethereumProvider || null;
+  }
+
   // ── Connect ─────────────────────────────────────────
   async function connect() {
-    if (!window.ethereum) {
+    const eth = _getMetaMaskProvider();
+    if (!eth) {
       throw new Error("NO_METAMASK");
     }
-    const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
+    const accounts = await eth.request({ method: "eth_requestAccounts" });
     if (!accounts || accounts.length === 0) throw new Error("NO_ACCOUNTS");
 
-    _provider = new ethers.providers.Web3Provider(window.ethereum);
+    _provider = new ethers.providers.Web3Provider(eth);
     _signer = _provider.getSigner();
     _address = accounts[0];
 
@@ -41,8 +59,8 @@ window.IFRWallet = (() => {
     sessionStorage.setItem(SESSION_KEY, _address);
 
     // Account-Change Listener
-    window.ethereum.on("accountsChanged", _onAccountsChanged);
-    window.ethereum.on("chainChanged", _onChainChanged);
+    eth.on("accountsChanged", _onAccountsChanged);
+    eth.on("chainChanged", _onChainChanged);
 
     _emit("connected", _address);
     return _address;
@@ -54,9 +72,10 @@ window.IFRWallet = (() => {
     _signer = null;
     _address = null;
     sessionStorage.removeItem(SESSION_KEY);
-    if (window.ethereum?.removeListener) {
-      window.ethereum.removeListener("accountsChanged", _onAccountsChanged);
-      window.ethereum.removeListener("chainChanged", _onChainChanged);
+    const eth = _getMetaMaskProvider();
+    if (eth && eth.removeListener) {
+      eth.removeListener("accountsChanged", _onAccountsChanged);
+      eth.removeListener("chainChanged", _onChainChanged);
     }
     _emit("disconnected", null);
   }
@@ -64,11 +83,12 @@ window.IFRWallet = (() => {
   // ── Auto-Reconnect (bei Seitenlade) ─────────────────
   async function autoReconnect() {
     const saved = sessionStorage.getItem(SESSION_KEY);
-    if (!saved || !window.ethereum) return false;
+    const eth = _getMetaMaskProvider();
+    if (!saved || !eth) return false;
     try {
-      const accounts = await window.ethereum.request({ method: "eth_accounts" });
+      const accounts = await eth.request({ method: "eth_accounts" });
       if (accounts && accounts[0] && accounts[0].toLowerCase() === saved.toLowerCase()) {
-        _provider = new ethers.providers.Web3Provider(window.ethereum);
+        _provider = new ethers.providers.Web3Provider(eth);
         _signer = _provider.getSigner();
         _address = accounts[0];
         _emit("connected", _address);
@@ -81,7 +101,9 @@ window.IFRWallet = (() => {
 
   // ── Netzwerk-Switch ──────────────────────────────────
   async function switchToMainnet() {
-    await window.ethereum.request({
+    const eth = _getMetaMaskProvider();
+    if (!eth) return;
+    await eth.request({
       method: "wallet_switchEthereumChain",
       params: [{ chainId: "0x1" }]
     });
