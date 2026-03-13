@@ -1239,9 +1239,9 @@
   ]
 }
 </script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js" defer></script>
-<script src="assets/wallet-core.js" defer></script>
-<script src="assets/ifr-state.js" defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
+<script src="assets/wallet-core.js"></script>
+<script src="assets/ifr-state.js"></script>
 </head>
 <body>
 
@@ -2841,6 +2841,11 @@ document.fonts.ready.then(()=>{resize();setTimeout(()=>{pressure=1.3;lastShockT=
 <!-- Landing Page Wallet Controller -->
 <script>
 async function lpConnect() {
+  if (typeof IFRWallet === "undefined") {
+    console.error("IFRWallet not loaded yet");
+    alert("Page still loading, please try again in a moment.");
+    return;
+  }
   var btn = document.getElementById("lp-header-connect-btn");
   if (btn) { btn.textContent = "Connecting..."; btn.disabled = true; }
   try {
@@ -2848,9 +2853,21 @@ async function lpConnect() {
     var state = await IFRState.load(IFRWallet.getAddress());
     lpUpdateUI(state);
   } catch(e) {
+    console.error("Connect error:", e);
     if (btn) { btn.textContent = "\uD83E\uDD8A Connect"; btn.disabled = false; }
     if (e.message === "NO_METAMASK") {
-      alert("MetaMask not found. Please install MetaMask from metamask.io");
+      if (!/Mobi|Android|iPhone/i.test(navigator.userAgent)) {
+        if (confirm("MetaMask not found.\n\nInstall MetaMask browser extension?")) {
+          window.open("https://metamask.io/download", "_blank");
+        }
+      } else {
+        var deeplink = "https://metamask.app.link/dapp/" + window.location.host + window.location.pathname;
+        if (confirm("Open in MetaMask App?\n\nMetaMask App \u00f6ffnen und diese Seite darin laden?")) {
+          window.location.href = deeplink;
+        }
+      }
+    } else if (e.code === 4001) {
+      console.log("User rejected connection");
     }
   }
 }
