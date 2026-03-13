@@ -505,6 +505,9 @@
     "about": {"@id": "https://ifrunit.tech/#app"}
   }
   </script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
+<script src="../assets/wallet-core.js"></script>
+<script src="../assets/ifr-state.js"></script>
 </head>
 <body>
 
@@ -560,6 +563,75 @@
       <p class="subtitle">
         Embedded AI assistant and on-chain points system &mdash; contextual help for holders, builders, and developers, plus fee discounts earned through real usage.
       </p>
+
+      <!-- ========== Copilot Premium Gate ========== -->
+      <div id="ag-gate-section" style="margin-bottom:24px;">
+
+        <!-- Nicht verbunden -->
+        <div id="ag-connect-state">
+          <div style="background:rgba(249,115,22,0.05);border:1px solid rgba(249,115,22,0.2);
+                      border-radius:16px;padding:24px;text-align:center;">
+            <p style="color:#9ca3af;margin-bottom:16px;">
+              Connect your wallet to check your IFR lock status.<br>
+              <span style="font-size:0.85rem;color:#6b7280;">
+                Free access available &middot; Premium unlocked with &ge;1,000 IFR locked
+              </span>
+            </p>
+            <button onclick="agConnect()"
+              style="background:linear-gradient(135deg,#f97316,#ea580c);color:white;
+                     border:none;padding:12px 28px;border-radius:10px;font-weight:700;
+                     cursor:pointer;font-size:0.95rem;">
+              &#x1F98A; Connect Wallet
+            </button>
+            <p style="color:#6b7280;font-size:0.75rem;margin-top:12px;">
+              Or continue below without connecting &mdash; free tier available
+            </p>
+          </div>
+        </div>
+
+        <!-- Verbunden — Status anzeigen -->
+        <div id="ag-connected-state" style="display:none;">
+          <div style="display:flex;align-items:center;justify-content:space-between;
+                      flex-wrap:wrap;gap:12px;padding:16px;
+                      background:rgba(31,41,55,0.8);border:1px solid #374151;border-radius:12px;">
+            <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+              <span style="color:#9ca3af;font-size:0.85rem;">
+                Wallet: <strong id="ag-wallet-addr" style="color:#22c55e;font-family:monospace;"></strong>
+              </span>
+              <span style="color:#9ca3af;font-size:0.85rem;">
+                IFR: <strong id="ag-ifr-balance" style="color:#f97316;"></strong>
+              </span>
+              <span style="color:#9ca3af;font-size:0.85rem;">
+                Locked: <strong id="ag-locked-amount" style="color:#fbbf24;"></strong>
+              </span>
+            </div>
+            <button onclick="agDisconnect()"
+              style="background:transparent;border:1px solid #374151;color:#6b7280;
+                     padding:6px 12px;border-radius:6px;cursor:pointer;font-size:0.8rem;">
+              Disconnect
+            </button>
+          </div>
+
+          <!-- Tier-Badge -->
+          <div id="ag-tier-free" style="display:none;margin-top:12px;padding:10px 16px;
+               background:rgba(107,114,128,0.1);border:1px solid #374151;border-radius:8px;">
+            <span style="color:#9ca3af;font-size:0.85rem;">
+              &#x2726; <strong style="color:#e5e7eb;">Free Tier</strong> &mdash;
+              Lock &ge;1,000 IFR to unlock Premium Copilot
+              <a href="lock-mechanism.html" style="color:#f97316;margin-left:8px;font-size:0.8rem;">
+                Learn more &rarr;
+              </a>
+            </span>
+          </div>
+          <div id="ag-tier-premium" style="display:none;margin-top:12px;padding:10px 16px;
+               background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.3);border-radius:8px;">
+            <span style="color:#fbbf24;font-size:0.85rem;font-weight:600;">
+              &#x26A1; Premium Copilot Active &mdash; &ge;1,000 IFR locked
+            </span>
+          </div>
+        </div>
+
+      </div>
 
       <!-- ========== 1. IFR AI Copilot ========== -->
       <h2 class="section-title">1. IFR AI Copilot</h2>
@@ -829,6 +901,60 @@
       overlay.addEventListener('click', toggleSidebar);
     })();
   </script>
+
+<!-- Agent Page Wallet Controller -->
+<script>
+async function agConnect() {
+  try {
+    await IFRWallet.connect();
+    var state = await IFRState.load(IFRWallet.getAddress());
+    agUpdateUI(state);
+  } catch(e) {
+    if (e.message === "NO_METAMASK") {
+      alert("MetaMask not found. Please install MetaMask from metamask.io");
+    }
+  }
+}
+
+function agDisconnect() {
+  IFRWallet.disconnect();
+  agUpdateUI(null);
+}
+
+function agUpdateUI(state) {
+  var connected = IFRWallet.isConnected();
+  document.getElementById("ag-connect-state").style.display = connected ? "none" : "";
+  document.getElementById("ag-connected-state").style.display = connected ? "" : "none";
+
+  if (connected && state) {
+    document.getElementById("ag-wallet-addr").textContent = IFRWallet.getShortAddress();
+    document.getElementById("ag-ifr-balance").textContent = (state.ifrBalanceFormatted || "0") + " IFR";
+    document.getElementById("ag-locked-amount").textContent = (state.lockedFormatted || "0") + " IFR";
+
+    var isPremium = state.isLocked1000;
+    document.getElementById("ag-tier-free").style.display = isPremium ? "none" : "";
+    document.getElementById("ag-tier-premium").style.display = isPremium ? "" : "none";
+
+    // Copilot iframe/widget: Premium-Kontext übergeben
+    var copilotFrame = document.getElementById("copilot-frame");
+    if (copilotFrame) {
+      var base = copilotFrame.dataset.src || copilotFrame.src.split("?")[0];
+      var tier = isPremium ? "premium" : "free";
+      copilotFrame.src = base + "?wallet=" + IFRWallet.getAddress() + "&tier=" + tier;
+    }
+  }
+}
+
+IFRState.on("stateLoaded", agUpdateUI);
+
+(async function() {
+  var reconnected = await IFRWallet.autoReconnect();
+  if (reconnected) {
+    var state = await IFRState.load(IFRWallet.getAddress());
+    agUpdateUI(state);
+  }
+})();
+</script>
 
 <!-- IFR Copilot Widget -->
 <style>
