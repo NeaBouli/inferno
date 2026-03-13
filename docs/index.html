@@ -916,6 +916,7 @@
       .trust-grid { grid-template-columns: 1fr; }
       .partner-steps { grid-template-columns: 1fr; }
       .arch-note { flex-direction: column; align-items: center; gap: 12px; }
+      .dao-chambers { grid-template-columns: 1fr !important; }
     }
 
     /* ── MOBILE/TABLET NAV: hamburger for <1024px ── */
@@ -1266,6 +1267,7 @@
       <li><a href="#security">Security</a></li>
       <li><a href="#faq">FAQ</a></li>
       <li><a href="#roadmap">Roadmap</a></li>
+      <li><a href="#dao-governance">Governance</a></li>
       <li><a href="wiki/bootstrap.html">Bootstrap</a></li>
       <li><a href="#contracts">Contracts</a></li>
     </ul>
@@ -1543,7 +1545,7 @@
           <div class="stat-label">On-chain components</div>
         </div>
         <div class="stat-card">
-          <div class="stat-value">497</div>
+          <div class="stat-value">556</div>
           <div class="stat-label">Unit tests passing</div>
         </div>
       </div>
@@ -2081,8 +2083,8 @@ if (isLocked) {
       <div class="trust-item reveal">
         <div class="trust-check">&check;</div>
         <div>
-          <h4>494 tests</h4>
-          <p>494 tests (367 contract + 77 App + 50 Bootstrap Suite). Comprehensive coverage: deployment, edge cases, access control, integrations.</p>
+          <h4>556 tests</h4>
+          <p>521 protocol + 35 ecosystem tests. Comprehensive coverage: contracts, bootstrap, wallet verification, browser testing.</p>
         </div>
       </div>
       <div class="trust-item reveal">
@@ -2151,7 +2153,7 @@ if (isLocked) {
         <div style="color:#666;font-size:13px;margin-top:4px;">48h timelock, no deployer control</div>
       </div>
       <div style="background:#1a1a2e;border:1px solid #333;border-radius:12px;padding:28px 24px;text-align:center;">
-        <div style="font-size:32px;font-weight:700;color:#ff6a00;">497</div>
+        <div style="font-size:32px;font-weight:700;color:#ff6a00;">556</div>
         <div style="color:#aaa;margin-top:8px;">Tests Passing</div>
         <div style="color:#666;font-size:13px;margin-top:4px;">99% statement coverage</div>
       </div>
@@ -2205,7 +2207,7 @@ if (isLocked) {
     {q:"What is the token distribution?",
      a:"1B IFR fixed. 6 buckets: 40% DEX Liquidity \u00b7 20% LiqRes (locked) \u00b7 15% Team Vesting (12m cliff) \u00b7 15% Treasury \u00b7 6% Community \u00b7 4% BuilderVault. <a href='wiki/tokenomics.html'>Tokenomics \u2192</a>"},
     {q:"Is the code open source and audited?",
-     a:"Yes \u2014 fully. 494 tests, 91% branch coverage, 0 critical findings. All contracts verified on Etherscan. <a href='https://github.com/NeaBouli/inferno' target='_blank'>github.com/NeaBouli/inferno</a>"},
+     a:"Yes \u2014 fully. 556 tests (521 protocol + 35 ecosystem), 91% branch coverage, 0 critical findings. All contracts verified on Etherscan. <a href='https://github.com/NeaBouli/inferno' target='_blank'>github.com/NeaBouli/inferno</a>"},
     {q:"When will $IFR be tradeable?",
      a:"After Bootstrap finalises and the Uniswap V2 LP is created. Follow <a href='https://x.com/IFRtoken' target='_blank'>@IFRtoken</a> for the official launch announcement."}
   ];
@@ -2255,7 +2257,7 @@ if (isLocked) {
         <div class="roadmap-dot done">&check;</div>
         <div class="roadmap-body">
           <h4>Phase 1 &mdash; Foundation <span class="badge-done">Complete</span></h4>
-          <p>Smart Contract Development (14 on-chain components, 494 tests). Security Audit (Slither, 0 high/critical). Mainnet Deployment (14/14 verified). Governance Dashboard deployed.</p>
+          <p>Smart Contract Development (14 on-chain components, 556 tests). Security Audit (Slither, 0 high/critical). Mainnet Deployment (14/14 verified). Governance Dashboard deployed.</p>
         </div>
       </div>
       <div class="roadmap-item">
@@ -2288,6 +2290,76 @@ if (isLocked) {
       </div>
     </div>
     <p class="reveal" style="text-align:center; margin-top:24px"><a href="wiki/roadmap.html" style="color:var(--accent); text-decoration:none; font-size:14px; font-weight:600;">Full Roadmap &rarr;</a></p>
+  </div>
+</section>
+
+<!-- ── DAO GOVERNANCE ─────────────────────────────── -->
+<section id="dao-governance" style="padding:80px 0;">
+  <div class="container">
+    <div class="reveal" style="text-align:center;margin-bottom:60px;">
+      <div style="display:inline-block;background:rgba(249,115,22,0.1);border:1px solid rgba(249,115,22,0.3);border-radius:20px;padding:6px 16px;font-size:0.8rem;color:#f97316;font-weight:600;letter-spacing:0.05em;margin-bottom:16px;">PHASE 4 &mdash; DAO GOVERNANCE</div>
+      <h2 class="section-title">Two-Chamber Governance</h2>
+      <p class="section-desc" style="max-width:600px;margin:0 auto;">Token-weighted on-chain voting. Telegram-native participation. No gas for voting &mdash; only for execution.</p>
+    </div>
+
+    <div class="dao-chambers reveal" style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:48px;">
+      <div style="background:linear-gradient(135deg,rgba(251,191,36,0.05),rgba(31,41,55,0.8));border:1px solid rgba(251,191,36,0.2);border-radius:20px;padding:32px;">
+        <div style="font-size:2rem;margin-bottom:12px;">&#x2696;&#xFE0F;</div>
+        <div style="font-size:0.75rem;font-weight:700;color:#fbbf24;letter-spacing:0.1em;margin-bottom:8px;">KAMMER 1</div>
+        <h3 style="color:#e5e7eb;font-size:1.4rem;margin:0 0 12px;">Der Rat</h3>
+        <p style="color:#9ca3af;font-size:0.9rem;line-height:1.7;margin:0 0 20px;">Strategic governance for the core team. Merkle-tree anchored votes. On-chain verified via <code style="color:#fbbf24;">RatVoting.sol</code>.</p>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <div style="display:flex;align-items:center;gap:10px;color:#9ca3af;font-size:0.85rem;"><span style="color:#fbbf24;">&rarr;</span> Gnosis Safe Signers only</div>
+          <div style="display:flex;align-items:center;gap:10px;color:#9ca3af;font-size:0.85rem;"><span style="color:#fbbf24;">&rarr;</span> Protocol parameters + upgrades</div>
+          <div style="display:flex;align-items:center;gap:10px;color:#9ca3af;font-size:0.85rem;"><span style="color:#fbbf24;">&rarr;</span> 48h Timelock on execution</div>
+        </div>
+      </div>
+      <div style="background:linear-gradient(135deg,rgba(249,115,22,0.05),rgba(31,41,55,0.8));border:1px solid rgba(249,115,22,0.2);border-radius:20px;padding:32px;">
+        <div style="font-size:2rem;margin-bottom:12px;">&#x1F3DB;&#xFE0F;</div>
+        <div style="font-size:0.75rem;font-weight:700;color:#f97316;letter-spacing:0.1em;margin-bottom:8px;">KAMMER 2</div>
+        <h3 style="color:#e5e7eb;font-size:1.4rem;margin:0 0 12px;">Das Forum</h3>
+        <p style="color:#9ca3af;font-size:0.9rem;line-height:1.7;margin:0 0 20px;">Community innovation layer. Token-weighted proposals. Spam protection via <code style="color:#f97316;">IFRSpamProtection.sol</code>.</p>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <div style="display:flex;align-items:center;gap:10px;color:#9ca3af;font-size:0.85rem;"><span style="color:#f97316;">&rarr;</span> Any IFR holder (1 lock = 1 vote)</div>
+          <div style="display:flex;align-items:center;gap:10px;color:#9ca3af;font-size:0.85rem;"><span style="color:#f97316;">&rarr;</span> 10 IFR spam protection per proposal</div>
+          <div style="display:flex;align-items:center;gap:10px;color:#9ca3af;font-size:0.85rem;"><span style="color:#f97316;">&rarr;</span> Top proposals &rarr; on-chain execution</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="reveal" style="background:rgba(17,24,39,0.8);border:1px solid #1f2937;border-radius:16px;padding:32px;margin-bottom:48px;">
+      <h4 style="color:#e5e7eb;text-align:center;margin:0 0 32px;font-size:1.1rem;">How Governance Works</h4>
+      <div style="display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:0;">
+        <div style="text-align:center;padding:16px;min-width:120px;">
+          <div style="width:48px;height:48px;background:rgba(249,115,22,0.15);border:1px solid rgba(249,115,22,0.4);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 8px;font-size:1.2rem;">&#x1F4A1;</div>
+          <div style="color:#f97316;font-size:0.75rem;font-weight:700;">PROPOSE</div>
+          <div style="color:#6b7280;font-size:0.75rem;margin-top:4px;">Lock 10 IFR<br>Submit idea</div>
+        </div>
+        <div style="color:#374151;font-size:1.5rem;padding:0 4px;">&rarr;</div>
+        <div style="text-align:center;padding:16px;min-width:120px;">
+          <div style="width:48px;height:48px;background:rgba(249,115,22,0.15);border:1px solid rgba(249,115,22,0.4);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 8px;font-size:1.2rem;">&#x1F5F3;&#xFE0F;</div>
+          <div style="color:#f97316;font-size:0.75rem;font-weight:700;">VOTE</div>
+          <div style="color:#6b7280;font-size:0.75rem;margin-top:4px;">Sign via wallet<br>No gas needed</div>
+        </div>
+        <div style="color:#374151;font-size:1.5rem;padding:0 4px;">&rarr;</div>
+        <div style="text-align:center;padding:16px;min-width:120px;">
+          <div style="width:48px;height:48px;background:rgba(249,115,22,0.15);border:1px solid rgba(249,115,22,0.4);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 8px;font-size:1.2rem;">&#x23F3;</div>
+          <div style="color:#f97316;font-size:0.75rem;font-weight:700;">TIMELOCK</div>
+          <div style="color:#6b7280;font-size:0.75rem;margin-top:4px;">48h public<br>review period</div>
+        </div>
+        <div style="color:#374151;font-size:1.5rem;padding:0 4px;">&rarr;</div>
+        <div style="text-align:center;padding:16px;min-width:120px;">
+          <div style="width:48px;height:48px;background:rgba(249,115,22,0.15);border:1px solid rgba(249,115,22,0.4);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 8px;font-size:1.2rem;">&#x26D3;&#xFE0F;</div>
+          <div style="color:#f97316;font-size:0.75rem;font-weight:700;">EXECUTE</div>
+          <div style="color:#6b7280;font-size:0.75rem;margin-top:4px;">Permissionless<br>on-chain</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="reveal" style="text-align:center;">
+      <a href="wiki/governance.html" style="display:inline-flex;align-items:center;gap:8px;background:transparent;border:1.5px solid #f97316;color:#f97316;padding:12px 28px;border-radius:10px;text-decoration:none;font-weight:700;font-size:0.95rem;transition:background 0.2s;" onmouseover="this.style.background='rgba(249,115,22,0.1)'" onmouseout="this.style.background='transparent'">Explore Governance &rarr;</a>
+      <p style="color:#6b7280;font-size:0.8rem;margin-top:12px;">Phase 4 &mdash; after LP live + ecosystem built</p>
+    </div>
   </div>
 </section>
 
