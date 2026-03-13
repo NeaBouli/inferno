@@ -18,8 +18,17 @@ const banCommand      = require('./commands/ban');
 const warnCommand     = require('./commands/warn');
 const pinCommand      = require('./commands/pin');
 const priceCommand    = require('./commands/price');
-const verifyCommand   = require('./commands/verify');
+const { handleVerify, handleMyStatus } = require('./commands/verify');
 const rulesCommand    = require('./commands/rules');
+
+// Verification System
+const express  = require('express');
+const { ethers } = require('ethers');
+const {
+  getNonce, consumeNonce, setVerified, getUser, isVerified: isUserVerified,
+  hasTopicAccess
+} = require('./services/verificationStore');
+const { determineTier } = require('./services/onChainReader');
 
 // Handlers
 const { onNewMember, onVerifyCallback } = require('./handlers/verification');
@@ -74,7 +83,8 @@ bot.command('partner',    rateLimit('partner'),     partnerCommand);
 bot.command('roadmap',    rateLimit('roadmap'),     roadmapCommand);
 bot.command('ask',        rateLimit('ask'),         askCommand);
 bot.command('price',      rateLimit('price'),       priceCommand);
-bot.command('verify',     rateLimit('verify'),      verifyCommand);
+bot.command('verify',     rateLimit('verify'),      handleVerify);
+bot.command('mystatus',   rateLimit('verify'),      handleMyStatus);
 
 // Admin — Whitelist only (silent ignore für Nicht-Admins)
 bot.command('admin',    adminOnly, adminCommand);
@@ -107,8 +117,8 @@ bot.on('channel_post', async (ctx) => {
   }
 });
 
-// ── Protected Topics — delete messages from non-admins ───────────────────────
-const PROTECTED_TOPICS = [58, 23, 21, 11]; // Core Dev, Vote, Council, Dev&Builder
+// ── Protected Topics — 3-Tier Wallet Verification ────────────────────────────
+const PROTECTED_TOPICS = [58, 21, 23, 11]; // Core Dev, Council, Vote, Dev&Builder
 const PROTECTED_ADMIN_IDS = process.env.ADMIN_USER_IDS
   ? process.env.ADMIN_USER_IDS.split(',').map(id => parseInt(id.trim()))
   : [579949616];
@@ -122,18 +132,21 @@ bot.on('message', async (ctx, next) => {
     if (PROTECTED_ADMIN_IDS.includes(userId)) return next();
     const member = await ctx.telegram.getChatMember(ctx.chat.id, userId);
     if (['creator', 'administrator'].includes(member.status)) return next();
+
+    // 3-Tier check: verified wallet with topic access?
+    if (hasTopicAccess(userId, threadId)) return next();
+
     await ctx.deleteMessage();
-    const warning = await ctx.telegram.sendMessage(
-      ctx.chat.id,
-      `🔒 @${ctx.from.username || ctx.from.first_name} — this topic requires verified wallet access.\n\nAvailable in Phase 2 via WalletConnect.\n🌐 ifrunit.tech`,
-      {
-        message_thread_id: threadId,
-        disable_web_page_preview: true
-      }
-    );
-    setTimeout(async () => {
-      try { await ctx.telegram.deleteMessage(ctx.chat.id, warning.message_id); } catch (e) { /* ignore */ }
-    }, 8000);
+    const reason = !isUserVerified(userId)
+      ? 'Use /verify to link your wallet first.'
+      : 'Your wallet tier does not grant access to this topic.\n\nUse /mystatus to check your access level.';
+    try {
+      await ctx.telegram.sendMessage(
+        userId,
+        `🚫 *Access denied*\n\n${reason}\n\n🔐 Verify: https://ifrunit.tech/wiki/verify.html`,
+        { parse_mode: 'Markdown', disable_web_page_preview: true }
+      );
+    } catch (e) { /* user may have blocked DMs */ }
   } catch (err) {
     logger.error({ err: err.message }, 'Protected topic error');
   }
@@ -148,8 +161,89 @@ bot.on('text', async (ctx) => {
   }
 });
 
-// ── Launch ──────────────────────────────────────────────────────────────────
+// ── Verify API (Express) ─────────────────────────────────────────────────────
+const verifyApp = express();
+verifyApp.use(express.json());
+verifyApp.use((req, res, next) => {
+  const origin = req.headers.origin || '';
+  if (origin.includes('ifrunit.tech') || origin === '') {
+    res.header('Access-Control-Allow-Origin', origin || '*');
+    res.header('Access-Control-Allow-Methods', 'POST, GET, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type');
+  }
+  if (req.method === 'OPTIONS') return res.sendStatus(200);
+  next();
+});
 
+verifyApp.post('/api/verify', async (req, res) => {
+  try {
+    const { nonce, signature, wallet } = req.body;
+    if (!nonce || !signature || !wallet)
+      return res.status(400).json({ success: false, error: 'Missing fields' });
+
+    const nonceData = getNonce(nonce);
+    if (!nonceData)
+      return res.status(400).json({ success: false, error: 'Invalid or expired code' });
+
+    let recovered;
+    try {
+      recovered = ethers.utils.verifyMessage(nonce, signature);
+    } catch (e) {
+      return res.status(400).json({ success: false, error: 'Invalid signature' });
+    }
+
+    if (recovered.toLowerCase() !== wallet.toLowerCase())
+      return res.status(401).json({ success: false, error: 'Signature mismatch' });
+
+    consumeNonce(nonce);
+
+    const tier = await determineTier(recovered);
+    setVerified(nonceData.userId, recovered, tier);
+
+    const tierLabel = {
+      signer: '🔑 Signer / Core Team', voter: '🗳️ IFR Holder / Voter',
+      builder: '🔨 Builder', community: '👤 Community Member'
+    }[tier];
+
+    const topicAccess = {
+      signer: ['Core Dev', 'Council', 'Vote', 'Dev & Builder'],
+      voter: ['Vote'],
+      builder: ['Vote', 'Dev & Builder'],
+      community: []
+    }[tier];
+
+    try {
+      await bot.telegram.sendMessage(
+        nonceData.userId,
+        `✅ *Verification successful!*\n\n` +
+        `Wallet: \`${recovered.slice(0, 6)}...${recovered.slice(-4)}\`\n` +
+        `Tier: ${tierLabel}\n\n` +
+        (topicAccess.length > 0
+          ? `*Access granted to:*\n${topicAccess.map(t => '• ' + t).join('\n')}`
+          : '_No restricted topic access for this wallet._\n\nLock IFR to gain Vote access.'),
+        { parse_mode: 'Markdown' }
+      );
+    } catch (e) {
+      logger.warn({ err: e.message }, 'Verify: Telegram DM failed');
+    }
+
+    res.json({ success: true, wallet: recovered, tier, access: topicAccess });
+  } catch (e) {
+    logger.error({ err: e.message }, 'Verify API error');
+    res.status(500).json({ success: false, error: 'Internal error' });
+  }
+});
+
+verifyApp.get('/api/verify/status/:userId', (req, res) => {
+  const user = getUser(req.params.userId);
+  if (!user) return res.json({ verified: false });
+  res.json({ verified: true, wallet: user.wallet, tier: user.tier });
+});
+
+const VERIFY_PORT = process.env.VERIFY_PORT || 3006;
+verifyApp.listen(VERIFY_PORT, () => logger.info({ port: VERIFY_PORT }, 'Verify API started'));
+
+// ── Launch ──────────────────────────────────────────────────────────────────
 
 // Delayed launch to prevent 409 conflict on Railway restart
 setTimeout(() => {
