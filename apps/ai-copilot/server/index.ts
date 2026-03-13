@@ -331,8 +331,16 @@ body {
 <script>
 var currentMode = 'explorer';
 var histories = { explorer: [], user: [], dev: [] };
+function getBootstrapWelcomeText() {
+  var now = Date.now();
+  var START = new Date("2026-04-17T00:00:00Z").getTime();
+  var END = new Date("2026-07-15T00:00:00Z").getTime();
+  if (now < START) return "Bootstrap Event opens April 17, 2026 \\u2014 not yet active";
+  if (now < END) return "\\u{1f525} Bootstrap Event is LIVE! Contribute ETH at ifrunit.tech/wiki/bootstrap.html";
+  return "Bootstrap Event ended July 15, 2026. IFR now live on Uniswap";
+}
 var welcomes = {
-  explorer: "Welcome to IFR Copilot. &#x1f44b;\\n\\nYou're browsing without a connected wallet \\u2014 no problem!\\n\\n\\u2756 Without a wallet, you can:\\n\\u2022 Ask about IFR tokenomics, governance, or lock mechanism\\n\\u2022 Learn how the Bootstrap phase works (starts April 17, 2026)\\n\\u2022 Explore the roadmap and security model\\n\\n\\u2756 Connect your wallet to unlock (Phase 2):\\n\\u2022 Your personal IFR balance and lock position\\n\\u2022 Personalized guidance based on your on-chain state\\n\\n\\u2756 Lock \\u22651,000 IFR to unlock (Phase 2):\\n\\u2022 Premium Copilot with deeper on-chain analysis\\n\\u2022 AI Copilot Gate (gated content platform)\\n\\u2022 Builder onboarding pathway\\n\\nOr just ask me anything! &#x1f525;",
+  explorer: "Welcome to IFR Copilot. &#x1f44b;\\n\\nYou're browsing without a connected wallet \\u2014 no problem!\\n\\n\\u2756 Without a wallet, you can:\\n\\u2022 Ask about IFR tokenomics, governance, or lock mechanism\\n\\u2022 " + getBootstrapWelcomeText() + "\\n\\u2022 Explore the roadmap and security model\\n\\n\\u2756 Connect your wallet to unlock (Phase 2):\\n\\u2022 Your personal IFR balance and lock position\\n\\u2022 Personalized guidance based on your on-chain state\\n\\n\\u2756 Lock \\u22651,000 IFR to unlock (Phase 2):\\n\\u2022 Premium Copilot with deeper on-chain analysis\\n\\u2022 AI Copilot Gate (gated content platform)\\n\\u2022 Builder onboarding pathway\\n\\nOr just ask me anything! &#x1f525;",
   user: "Hey! &#x1f48e; Ready to help you get the most out of your IFR tokens.\\n\\nI can assist with:\\n\\u2022 Locking IFR for benefits\\n\\u2022 Understanding your tier (Bronze/Silver/Gold/Platinum)\\n\\u2022 Partner discounts \\u0026 Benefits Network\\n\\u2022 Step-by-step guides",
   dev: "Dev mode active. &#x2699;&#xfe0f;\\n\\n14 verified on-chain components \\u2022 494 tests \\u2022 91% branch coverage\\n\\nI can help with:\\n\\u2022 Contract addresses \\u0026 ABIs\\n\\u2022 Integration (ethers.js v5, 9 decimals)\\n\\u2022 Governance \\u0026 Timelock\\n\\u2022 Security audit results"
 };

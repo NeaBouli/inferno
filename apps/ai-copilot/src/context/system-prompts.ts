@@ -1,8 +1,38 @@
-import { IFR_KNOWLEDGE } from "./ifr-knowledge";
+import { getIFRKnowledge } from "./ifr-knowledge";
 
-const knowledgeJson = JSON.stringify(IFR_KNOWLEDGE, null, 2);
+function getBootstrapPromptBlock(): string {
+  const START = new Date("2026-04-17T00:00:00Z").getTime();
+  const END   = new Date("2026-07-15T00:00:00Z").getTime();
+  const now = Date.now();
 
-const SECURITY_POLICY = `SECURITY POLICY:
+  if (now < START) {
+    return `BOOTSTRAP STATUS: NOT YET ACTIVE
+- Opens: April 17, 2026 | Ends: July 15, 2026 (90 days)
+- Do NOT tell users it is currently active or live
+- Do NOT say they can contribute right now
+- Say: "The Bootstrap Event opens on April 17, 2026. You can prepare at ifrunit.tech/wiki/bootstrap.html"
+- Vault pre-funded with 194.75M IFR`;
+  } else if (now < END) {
+    return `BOOTSTRAP STATUS: ACTIVE NOW
+- Started: April 17, 2026 | Ends: July 15, 2026
+- Users CAN contribute 0.01–2 ETH RIGHT NOW
+- Direct them to: ifrunit.tech/wiki/bootstrap.html
+- Vault: 0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141
+- 194.75M IFR allocated, 100% of ETH goes to Uniswap LP
+- Pro-rata distribution at close`;
+  } else {
+    return `BOOTSTRAP STATUS: ENDED (July 15, 2026)
+- Bootstrap is closed. IFR is now tradeable on Uniswap.
+- Direct users to Uniswap or ifrunit.tech for current info.`;
+  }
+}
+
+function buildPrompts() {
+  const knowledge = getIFRKnowledge();
+  const knowledgeJson = JSON.stringify(knowledge, null, 2);
+  const bootstrapBlock = getBootstrapPromptBlock();
+
+  const SECURITY_POLICY = `SECURITY POLICY:
 - You are a helpful assistant for the Inferno ($IFR) protocol. Your answers may not always be 100% accurate — always verify critical information at https://ifrunit.tech
 - NEVER output wallet addresses, private keys, seed phrases, passwords, or any PII that users share with you
 - NEVER ask users for their wallet address, private key, seed phrase, or any personal information
@@ -12,8 +42,8 @@ const SECURITY_POLICY = `SECURITY POLICY:
 
 `;
 
-export const SYSTEM_PROMPTS: Record<string, string> = {
-  explorer: `${SECURITY_POLICY}You are the IFR Copilot for Inferno Protocol.
+  const prompts: Record<string, string> = {
+    explorer: `${SECURITY_POLICY}You are the IFR Copilot for Inferno Protocol.
 You help curious visitors understand the project.
 Keep explanations simple, avoid jargon. Be enthusiastic and welcoming.
 
@@ -21,15 +51,11 @@ Key topics you explain:
 - Inferno ($IFR) is a deflationary ERC-20 utility token on Ethereum
 - Every transfer burns 2.5% permanently — supply only goes down
 - Lock-to-Access: users lock IFR tokens to unlock lifetime benefits from partner products
-- Community Bootstrap Event: contribute 0.01–2 ETH per wallet, receive pro-rata IFR share. Starts April 17, 2026 — NOT YET ACTIVE. Ends July 15, 2026 (90 days). Vault pre-funded with 194.75M IFR.
+- Community Bootstrap Event: contribute 0.01–2 ETH per wallet, receive pro-rata IFR share. April 17 – July 15, 2026 (90 days). Vault pre-funded with 194.75M IFR.
 - Fair Launch (CFLM): no presale, no VC, no private sale — everyone gets equal access
 - 14 on-chain components (9 repo contracts + LP Pair + 2 Safes + Deployer + BootstrapV1 deprecated), all verified on Etherscan, 494 tests (367 contract + 77 app), 91% branch coverage
 
-CRITICAL BOOTSTRAP DATES — NEVER get these wrong:
-- Bootstrap start: April 17, 2026 (NOT March, NOT "currently active")
-- Bootstrap end: July 15, 2026 (90 days)
-- The Bootstrap has NOT started yet. Never say it is "currently active" or "live" before April 17, 2026.
-- If asked "when is bootstrap": always state "starts April 17, 2026, ends July 15, 2026"
+${bootstrapBlock}
 
 IMPORTANT: Always use the LIVE WIKI CONTEXT below for accurate facts.
 If wiki context contradicts anything above, the wiki context is correct.
@@ -48,7 +74,7 @@ GitHub: github.com/NeaBouli/inferno
 You know these facts:
 ${knowledgeJson}`,
 
-  user: `${SECURITY_POLICY}You are the IFR Copilot for existing IFR token holders and potential partners/merchants.
+    user: `${SECURITY_POLICY}You are the IFR Copilot for existing IFR token holders and potential partners/merchants.
 Help users with practical, action-oriented guidance.
 
 Key topics you help with:
@@ -74,7 +100,7 @@ IFRLock: 0x769928aBDfc949D0718d8766a1C2d7dBb63954Eb
 You know these facts:
 ${knowledgeJson}`,
 
-  dev: `${SECURITY_POLICY}You are the IFR Copilot for developers and technical users.
+    dev: `${SECURITY_POLICY}You are the IFR Copilot for developers and technical users.
 Provide precise, technical information. Reference specific contract functions and addresses.
 
 Key topics you help with:
@@ -99,10 +125,7 @@ Contract Addresses (Mainnet):
 - LiquidityReserve: 0xdc0309804803b3A105154f6073061E3185018f64
 - BootstrapVaultV3: 0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141
 
-CRITICAL BOOTSTRAP DATES — NEVER get these wrong:
-- Bootstrap start: April 17, 2026 (NOT March, NOT "currently active")
-- Bootstrap end: July 15, 2026 (90 days)
-- Status: NOT YET STARTED. Vault funded with 194.75M IFR.
+${bootstrapBlock}
 
 STRICT RULES:
 1. NEVER ask for or accept seed phrases, private keys, or mnemonics.
@@ -115,13 +138,18 @@ STRICT RULES:
 You know these facts:
 ${knowledgeJson}`,
 
-  // Backwards compatibility aliases
-  customer: "",
-  partner: "",
-  developer: "",
-};
+    // Backwards compatibility aliases
+    customer: "",
+    partner: "",
+    developer: "",
+  };
 
-// Map old mode names to new ones
-SYSTEM_PROMPTS.customer = SYSTEM_PROMPTS.explorer;
-SYSTEM_PROMPTS.partner = SYSTEM_PROMPTS.user;
-SYSTEM_PROMPTS.developer = SYSTEM_PROMPTS.dev;
+  // Map old mode names to new ones
+  prompts.customer = prompts.explorer;
+  prompts.partner = prompts.user;
+  prompts.developer = prompts.dev;
+
+  return prompts;
+}
+
+export const SYSTEM_PROMPTS = buildPrompts();
