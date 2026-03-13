@@ -598,32 +598,9 @@
           <div style="color:#ffc800; font-size:12px; font-weight:700; letter-spacing:1px; margin-bottom:8px;">
             GET SEPOLIA TEST ETH
           </div>
-          <div style="display:flex; gap:8px; flex-wrap:wrap;">
-            <input
-              id="sepolia-addr"
-              type="text"
-              placeholder="0x... your Sepolia address"
-              style="
-                flex:1; min-width:200px;
-                background:rgba(255,255,255,0.05);
-                border:1px solid rgba(255,200,0,0.4);
-                color:#fff; padding:8px 12px;
-                border-radius:4px; font-size:13px;
-                outline:none; font-family:monospace;
-              "
-            />
-            <button onclick="openFaucets()" style="
-              background:rgba(255,200,0,0.15);
-              border:1px solid rgba(255,200,0,0.6);
-              color:#ffc800; padding:8px 16px;
-              border-radius:4px; cursor:pointer;
-              font-weight:700; font-size:12px;
-              letter-spacing:1px; white-space:nowrap;
-            ">&#x26FD; GET TEST ETH</button>
-          </div>
-          <div id="faucet-msg" style="color:#888; font-size:11px; margin-top:6px;">
-            Opens Chainlink + Alchemy faucets with your address pre-filled.
-          </div>
+          <p style="color:#aaa; font-size:12px; margin:0;">
+            &#x2193; Scroll down to the <a href="#faucet-section" style="color:#ffc800;">Faucet Section</a> &mdash; connects to your wallet automatically.
+          </p>
         </div>
         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-top:16px;">
           <span style="color:#888; font-size:13px;">Found a vulnerability? Report responsibly and get credited in the Hall of Fame.</span>
@@ -655,13 +632,71 @@
       <!-- ========== Getting Started ========== -->
       <h2>Getting Started with Testnet</h2>
 
-      <h3>1. Get Sepolia ETH</h3>
-      <p>You need Sepolia ETH for gas fees. Use one of these faucets:</p>
-      <ul>
-        <li><a href="https://sepoliafaucet.com" target="_blank" rel="noopener">sepoliafaucet.com</a> (Alchemy)</li>
-        <li><a href="https://faucets.chain.link/sepolia" target="_blank" rel="noopener">Chainlink Faucet</a></li>
-        <li><a href="https://www.infura.io/faucet/sepolia" target="_blank" rel="noopener">Infura Faucet</a></li>
-      </ul>
+      <div id="faucet-section" style="margin:32px 0;">
+        <h3 style="color:#e5e7eb;">Get Sepolia Test ETH</h3>
+
+        <div style="margin-bottom:20px;">
+          <label style="color:#9ca3af;font-size:0.85rem;display:block;margin-bottom:6px;">
+            Your Wallet Address
+          </label>
+          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+            <input id="faucet-address" type="text"
+              placeholder="Connect wallet above — or paste address manually"
+              style="flex:1;min-width:260px;background:#1f2937;border:1px solid #374151;
+                     color:#e5e7eb;padding:10px 14px;border-radius:8px;
+                     font-family:monospace;font-size:0.85rem;box-sizing:border-box;" />
+            <button onclick="faucetCopyAddress()"
+              id="faucet-copy-btn"
+              style="background:#374151;color:#9ca3af;border:none;padding:10px 16px;
+                     border-radius:8px;cursor:pointer;font-size:0.85rem;white-space:nowrap;">
+              &#x1F4CB; Copy
+            </button>
+          </div>
+          <div id="faucet-wallet-status" style="margin-top:6px;font-size:0.8rem;color:#6b7280;">
+            Connect your wallet to auto-fill your address
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;">
+          <div style="background:#1f2937;border:1px solid #374151;border-radius:12px;padding:16px;">
+            <div style="font-weight:600;color:#e5e7eb;margin-bottom:4px;">Google Cloud Faucet</div>
+            <div style="color:#9ca3af;font-size:0.8rem;margin-bottom:12px;">0.05 ETH/day &middot; No minimum mainnet balance</div>
+            <button onclick="faucetOpen('https://cloud.google.com/application/web3/faucet/ethereum/sepolia')"
+              style="width:100%;background:linear-gradient(135deg,#f97316,#ea580c);color:white;border:none;padding:9px;border-radius:8px;font-size:0.85rem;font-weight:600;cursor:pointer;">
+              Get Test ETH &rarr;
+            </button>
+          </div>
+          <div style="background:#1f2937;border:1px solid #374151;border-radius:12px;padding:16px;">
+            <div style="font-weight:600;color:#e5e7eb;margin-bottom:4px;">Alchemy Faucet</div>
+            <div style="color:#9ca3af;font-size:0.8rem;margin-bottom:12px;">0.5 ETH/day &middot; Login required</div>
+            <button onclick="faucetOpen('https://sepoliafaucet.com')"
+              style="width:100%;background:linear-gradient(135deg,#f97316,#ea580c);color:white;border:none;padding:9px;border-radius:8px;font-size:0.85rem;font-weight:600;cursor:pointer;">
+              Get Test ETH &rarr;
+            </button>
+          </div>
+          <div style="background:#1f2937;border:1px solid #374151;border-radius:12px;padding:16px;">
+            <div style="font-weight:600;color:#e5e7eb;margin-bottom:4px;">Infura Faucet</div>
+            <div style="color:#9ca3af;font-size:0.8rem;margin-bottom:12px;">0.5 ETH/day &middot; Login required</div>
+            <button onclick="faucetOpen('https://www.infura.io/faucet/sepolia')"
+              style="width:100%;background:linear-gradient(135deg,#f97316,#ea580c);color:white;border:none;padding:9px;border-radius:8px;font-size:0.85rem;font-weight:600;cursor:pointer;">
+              Get Test ETH &rarr;
+            </button>
+          </div>
+          <div style="background:#1f2937;border:1px solid #374151;border-radius:12px;padding:16px;">
+            <div style="font-weight:600;color:#e5e7eb;margin-bottom:4px;">Chainlink Faucet</div>
+            <div style="color:#9ca3af;font-size:0.8rem;margin-bottom:12px;">0.1 ETH/day &middot; No login needed</div>
+            <button onclick="faucetOpen('https://faucets.chain.link/sepolia')"
+              style="width:100%;background:linear-gradient(135deg,#f97316,#ea580c);color:white;border:none;padding:9px;border-radius:8px;font-size:0.85rem;font-weight:600;cursor:pointer;">
+              Get Test ETH &rarr;
+            </button>
+          </div>
+        </div>
+
+        <p style="color:#6b7280;font-size:0.8rem;margin-top:16px;font-style:italic;">
+          &#x1F4A1; Copy your address above, then click a faucet. Paste your address on the faucet page.
+          Funds arrive within ~30 seconds on Sepolia.
+        </p>
+      </div>
 
       <h3>2. Add Sepolia IFR to MetaMask</h3>
       <p>Add the token manually in MetaMask:</p>
@@ -736,21 +771,68 @@ npm run dev
   </script>
 
   <script>
-    function openFaucets() {
-      var addr = document.getElementById('sepolia-addr').value.trim();
-      var msg = document.getElementById('faucet-msg');
-      if (!addr || addr.indexOf('0x') !== 0 || addr.length !== 42) {
-        msg.style.color = '#ff6b6b';
-        msg.textContent = '\u26A0 Please enter a valid Ethereum address (0x...)';
-        return;
+    function faucetUpdateAddress(address) {
+      var input = document.getElementById("faucet-address");
+      var status = document.getElementById("faucet-wallet-status");
+      if (!input) return;
+      if (address) {
+        input.value = address;
+        input.style.borderColor = "rgba(34,197,94,0.5)";
+        input.style.color = "#22c55e";
+        if (status) {
+          status.textContent = "\u2705 Address auto-filled from connected wallet";
+          status.style.color = "#22c55e";
+        }
+      } else {
+        input.value = "";
+        input.style.borderColor = "#374151";
+        input.style.color = "#e5e7eb";
+        if (status) {
+          status.textContent = "Connect your wallet to auto-fill your address";
+          status.style.color = "#6b7280";
+        }
       }
-      msg.style.color = '#00ffa0';
-      msg.textContent = '\u2713 Opening faucets \u2014 paste your address if not pre-filled.';
-      window.open('https://faucets.chain.link/sepolia', '_blank');
-      setTimeout(function () {
-        window.open('https://www.alchemy.com/faucets/ethereum-sepolia', '_blank');
-      }, 500);
-      navigator.clipboard.writeText(addr).catch(function () {});
+    }
+
+    function faucetCopyAddress() {
+      var input = document.getElementById("faucet-address");
+      var btn = document.getElementById("faucet-copy-btn");
+      if (!input || !input.value) return;
+      navigator.clipboard.writeText(input.value).then(function() {
+        if (btn) {
+          btn.textContent = "\u2705 Copied!";
+          btn.style.color = "#22c55e";
+          setTimeout(function() {
+            btn.textContent = "\uD83D\uDCCB Copy";
+            btn.style.color = "#9ca3af";
+          }, 2000);
+        }
+      }).catch(function() {
+        input.select();
+        document.execCommand("copy");
+      });
+    }
+
+    function faucetOpen(url) {
+      var input = document.getElementById("faucet-address");
+      if (input && input.value) {
+        navigator.clipboard.writeText(input.value).catch(function() {});
+      }
+      window.open(url, "_blank");
+    }
+
+    // Auto-fill on page load if wallet already connected
+    setTimeout(function() {
+      if (typeof IFRWallet !== "undefined" && IFRWallet.isConnected()) {
+        faucetUpdateAddress(IFRWallet.getAddress());
+      }
+    }, 1500);
+
+    // Listen for wallet events
+    if (typeof IFRWallet !== "undefined") {
+      IFRWallet.on("connected", function(addr) { faucetUpdateAddress(addr); });
+      IFRWallet.on("disconnected", function() { faucetUpdateAddress(null); });
+      IFRWallet.on("accountChanged", function(addr) { faucetUpdateAddress(addr); });
     }
   </script>
 
