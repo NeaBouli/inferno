@@ -527,6 +527,42 @@
     <aside class="sidebar" id="sidebar">
       <a href="index.html" class="sidebar-logo">INFERNO</a>
       <div class="sidebar-subtitle">Documentation</div>
+      <div style="padding:12px 24px 16px;border-bottom:1px solid var(--border);" id="wiki-wallet-wrap">
+        <button id="lp-header-connect-btn" onclick="lpConnect()" style="width:100%;background:linear-gradient(135deg,#f97316,#ea580c);color:white;border:none;padding:10px 16px;border-radius:10px;font-size:0.85rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:transform 0.2s;">&#x1F98A; Connect Wallet</button>
+        <div id="lp-header-connected" style="display:none;">
+          <div style="background:rgba(34,197,94,0.15);border:1px solid rgba(34,197,94,0.4);border-radius:8px;padding:8px 12px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;" onclick="lpToggleDropdown()">
+            <span id="lp-header-addr" style="color:#22c55e;font-family:monospace;font-size:0.78rem;font-weight:600;"></span>
+            <span style="color:#6b7280;font-size:0.7rem;">&#x25BE;</span>
+          </div>
+          <div id="lp-header-dropdown" style="display:none;position:absolute;left:12px;right:12px;top:100%;background:#111827;border:1px solid #374151;border-radius:12px;padding:16px;z-index:9999;box-shadow:0 8px 32px rgba(0,0,0,0.6);margin-top:8px;">
+            <div style="margin-bottom:12px;">
+              <div style="color:#9ca3af;font-size:0.75rem;margin-bottom:4px;">Wallet</div>
+              <div id="lp-drop-addr" style="color:#22c55e;font-family:monospace;font-size:0.78rem;font-weight:600;word-break:break-all;"></div>
+            </div>
+            <div style="display:flex;gap:8px;margin-bottom:12px;">
+              <div style="flex:1;background:#1f2937;border-radius:8px;padding:8px;text-align:center;">
+                <div style="color:#9ca3af;font-size:0.7rem;">ETH</div>
+                <div id="lp-drop-eth" style="color:#e5e7eb;font-weight:700;font-size:0.85rem;"></div>
+              </div>
+              <div style="flex:1;background:#1f2937;border-radius:8px;padding:8px;text-align:center;">
+                <div style="color:#9ca3af;font-size:0.7rem;">IFR</div>
+                <div id="lp-drop-ifr" style="color:#f97316;font-weight:700;font-size:0.85rem;"></div>
+              </div>
+            </div>
+            <div id="lp-drop-lock" style="display:none;background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.3);border-radius:8px;padding:8px 10px;margin-bottom:10px;text-align:center;">
+              <span style="color:#fbbf24;font-size:0.78rem;font-weight:600;">&#x26A1; Premium</span>
+            </div>
+            <div id="lp-drop-nolock" style="background:rgba(107,114,128,0.1);border:1px solid #374151;border-radius:8px;padding:8px 10px;margin-bottom:10px;text-align:center;">
+              <span style="color:#9ca3af;font-size:0.78rem;">Lock &#x2265;1,000 IFR &#x2192; </span>
+              <a href="lock-mechanism.html" style="color:#f97316;font-size:0.78rem;">Premium &#x2197;</a>
+            </div>
+            <div style="display:flex;gap:8px;">
+              <a href="bootstrap.html" style="flex:1;text-align:center;padding:8px;background:#f97316;color:white;border-radius:8px;font-size:0.78rem;font-weight:600;text-decoration:none;">&#x1F525; Bootstrap</a>
+              <button onclick="lpDisconnect()" style="flex:1;background:#374151;color:#9ca3af;border:none;border-radius:8px;padding:8px;cursor:pointer;font-size:0.78rem;">Disconnect</button>
+            </div>
+          </div>
+        </div>
+      </div>
       <ul class="sidebar-nav">
         <li><a href="index.html">Home</a></li>
         <li><a href="one-pager.html">One Pager</a></li>
@@ -972,5 +1008,15 @@ IFRState.on("stateLoaded", agUpdateUI);
 <button id="ifr-btn" onclick="var p=document.getElementById('ifr-panel');var o=p.style.display==='block';p.style.display=o?'none':'block';this.classList.toggle('panel-open',!o);"><img src="../assets/CoPilot.jpg" alt="IFR Copilot"></button>
 <div id="ifr-panel"><button id="ifr-panel-close" onclick="document.getElementById('ifr-panel').style.display='none';document.getElementById('ifr-btn').classList.remove('panel-open');" style="position:absolute;top:8px;right:8px;z-index:10;background:rgba(0,0,0,0.6);color:#fff;border:none;border-radius:50%;width:28px;height:28px;font-size:1.1rem;cursor:pointer;line-height:1;">&times;</button><iframe src="https://ifr-ai-copilot-production.up.railway.app" allow="clipboard-write"></iframe></div>
 
+<script>
+async function lpConnect(){if(typeof ethers==="undefined"){alert("Web3 library not loaded. Please refresh.");return}if(typeof IFRWallet==="undefined"){alert("Wallet module not loaded. Please refresh.");return}var btn=document.getElementById("lp-header-connect-btn");if(btn){btn.textContent="Connecting...";btn.disabled=true}try{await IFRWallet.connect();var state=await IFRState.load(IFRWallet.getAddress());lpUpdateUI(state)}catch(e){if(btn){btn.textContent="\u{1F98A} Connect Wallet";btn.disabled=false}if(e.message==="NO_METAMASK"){var isMobile=/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);if(isMobile){window.location.href="https://metamask.app.link/dapp/ifrunit.tech"}else if(btn){btn.textContent="\u26A0\uFE0F Install MetaMask";btn.style.background="#374151";btn.onclick=function(){window.open("https://metamask.io/download","_blank")};btn.disabled=false}}else if(e.code===4001||e.code==="ACTION_REJECTED"){if(btn){btn.textContent="\u{1F98A} Connect Wallet";btn.disabled=false}}}}
+function lpDisconnect(){IFRWallet.disconnect();lpUpdateUI(null)}
+function lpToggleDropdown(){var dd=document.getElementById("lp-header-dropdown");if(dd)dd.style.display=dd.style.display==="none"?"":"none"}
+function lpUpdateUI(state){var connected=IFRWallet.isConnected();var connectBtn=document.getElementById("lp-header-connect-btn");var connectedDiv=document.getElementById("lp-header-connected");if(connectBtn)connectBtn.style.display=connected?"none":"";if(connectedDiv)connectedDiv.style.display=connected?"":"none";if(connected&&state){var addr=IFRWallet.getAddress();var el=document.getElementById("lp-header-addr");if(el)el.textContent=addr.slice(0,6)+"..."+addr.slice(-4);var dropAddr=document.getElementById("lp-drop-addr");if(dropAddr)dropAddr.textContent=addr.slice(0,10)+"..."+addr.slice(-6);var dropEth=document.getElementById("lp-drop-eth");if(dropEth)dropEth.textContent=parseFloat(state.ethBalance||"0").toFixed(4)+" ETH";var dropIfr=document.getElementById("lp-drop-ifr");if(dropIfr)dropIfr.textContent=(typeof ethers!=="undefined"&&state.ifrBalance?parseFloat(ethers.utils.formatUnits(state.ifrBalance,9)).toLocaleString("en-US",{maximumFractionDigits:0}):"0")+" IFR";var lockDiv=document.getElementById("lp-drop-lock");var noLockDiv=document.getElementById("lp-drop-nolock");if(lockDiv)lockDiv.style.display=state.isLocked1000?"":"none";if(noLockDiv)noLockDiv.style.display=state.isLocked1000?"none":""}}
+document.addEventListener("click",function(e){var dd=document.getElementById("lp-header-dropdown");var wrap=document.getElementById("wiki-wallet-wrap");if(dd&&wrap&&!wrap.contains(e.target))dd.style.display="none"});
+document.addEventListener("visibilitychange",async function(){if(document.visibilityState==="visible"&&!IFRWallet.isConnected()){var ok=await IFRWallet.autoReconnect();if(ok)lpUpdateUI(await IFRState.load(IFRWallet.getAddress()))}});
+IFRState.on("stateLoaded",lpUpdateUI);
+(async function(){var ok=await IFRWallet.autoReconnect();if(ok)lpUpdateUI(await IFRState.load(IFRWallet.getAddress()))})();
+</script>
 </body>
 </html>
