@@ -713,7 +713,7 @@
 
       <div class="callout callout-green">
         <p>
-          <strong>497 / 494 tests passing</strong> &mdash; 14 test suites, 0 failures.
+          <strong>494 / 494 tests passing</strong> &mdash; 14 test suites, 0 failures.
         </p>
       </div>
 
@@ -868,6 +868,33 @@
       <p>
         Full coverage report: <a href="https://github.com/neabouli/inferno/blob/main/docs/COVERAGE_REPORT.md">COVERAGE_REPORT.md</a>
       </p>
+
+      <div class="audit-block" style="background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.3);border-radius:12px;padding:24px;margin:32px 0;">
+        <h3 style="color:#22c55e;margin-top:0;">Internal Security Review &mdash; Bootstrap Flow</h3>
+        <p><strong>Date:</strong> 13 March 2026 &nbsp;|&nbsp; <strong>Scope:</strong> BootstrapVaultV3, InfernoToken, FeeRouterV1, Governance/Timelock</p>
+        <p><strong>Method:</strong> Manual code review + 494 automated tests (91% branch coverage)</p>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:16px 0;text-align:center;">
+          <div style="background:rgba(34,197,94,0.15);border-radius:8px;padding:12px;">
+            <div style="font-size:2rem;font-weight:700;color:#22c55e;">11</div>
+            <div style="font-size:0.85rem;color:#9ca3af;">Secure</div>
+          </div>
+          <div style="background:rgba(251,191,36,0.15);border-radius:8px;padding:12px;">
+            <div style="font-size:2rem;font-weight:700;color:#fbbf24;">3</div>
+            <div style="font-size:0.85rem;color:#9ca3af;">Low Risk</div>
+          </div>
+          <div style="background:rgba(239,68,68,0.1);border-radius:8px;padding:12px;">
+            <div style="font-size:2rem;font-weight:700;color:#ef4444;">0</div>
+            <div style="font-size:0.85rem;color:#9ca3af;">Critical</div>
+          </div>
+        </div>
+        <p style="margin-bottom:8px;">The 3 low-risk findings are structural design choices, not vulnerabilities:</p>
+        <ul style="color:#9ca3af;margin:0;padding-left:20px;">
+          <li><strong style="color:#e5e7eb;">Front-running</strong> &mdash; neutralized by pro-rata distribution and 2 ETH cap</li>
+          <li><strong style="color:#e5e7eb;">100% refund scenario</strong> &mdash; remaining IFR tokens locked permanently (effectively burned by design)</li>
+          <li><strong style="color:#e5e7eb;">Frontend is read-only</strong> &mdash; no Web3 write calls, users interact directly via Etherscan</li>
+        </ul>
+        <p style="margin-top:16px;margin-bottom:0;font-size:0.85rem;color:#6b7280;font-style:italic;">This is an internal review, not a professional third-party audit. Full technical report: <a href="https://github.com/NeaBouli/inferno/blob/main/audit/BOOTSTRAP_SECURITY_REVIEW_13032026.md" style="color:#f97316;">audit/BOOTSTRAP_SECURITY_REVIEW_13032026.md</a>. A formal audit by an independent firm is planned before Phase 3.</p>
+      </div>
 
       <!-- ============================================================
            4. Reentrancy Protection
