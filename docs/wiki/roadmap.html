@@ -586,6 +586,50 @@
         </ul>
       </div>
 
+      <!-- ========== WalletConnect Integration Roadmap ========== -->
+      <h2 id="walletconnect-roadmap">WalletConnect Integration</h2>
+      <p>
+        The IFR WalletConnect integration is being rolled out in phases,
+        progressively unlocking features as the ecosystem matures.
+      </p>
+
+      <div style="border-left:3px solid #22c55e;padding-left:16px;margin:20px 0;">
+        <h3 style="color:#22c55e;">&#x2705; Phase 1 &mdash; Core Infrastructure (March 2026)</h3>
+        <ul>
+          <li>&#x2705; <code>wallet-core.js</code> &mdash; Central session manager (connect/disconnect/auto-reconnect)</li>
+          <li>&#x2705; <code>ifr-state.js</code> &mdash; On-chain state reader (IFR balance, lock status, bootstrap contribution)</li>
+          <li>&#x2705; Bootstrap Widget &mdash; contribute() / claim() / refund() fully functional</li>
+          <li>&#x2705; Landing Page &mdash; Connect button in header with wallet dropdown</li>
+          <li>&#x2705; Agent Page &mdash; Free/Premium tier display based on IFRLock on-chain check</li>
+        </ul>
+      </div>
+
+      <div style="border-left:3px solid #f97316;padding-left:16px;margin:20px 0;">
+        <h3 style="color:#f97316;">&#x23F3; Phase 2 &mdash; Personalization (after Bootstrap Start, April 2026)</h3>
+        <ul>
+          <li>&#x23F3; Copilot receives wallet address + tier via URL params &rarr; personalized responses</li>
+          <li>&#x23F3; &ldquo;Buy IFR&rdquo; button &rarr; Uniswap (only after LP live, July 2026+)</li>
+          <li>&#x23F3; Live IFR token price display (only after LP live)</li>
+          <li>&#x23F3; Bootstrap countdown widget fully active</li>
+        </ul>
+      </div>
+
+      <div style="border-left:3px solid #6b7280;padding-left:16px;margin:20px 0;">
+        <h3 style="color:#6b7280;">&#x1F512; Phase 3 &mdash; Full Ecosystem (after LP live, Q3 2026+)</h3>
+        <ul>
+          <li>&#x1F512; AI Copilot Gate &mdash; &ge;1,000 IFR locked &rarr; gated content platform</li>
+          <li>&#x1F512; Builder Tools &mdash; Builder Registry on-chain check &rarr; Builder Dashboard</li>
+          <li>&#x1F512; Telegram Wallet Whitelist &mdash; WalletConnect &rarr; IFRLock check &rarr; Topic access</li>
+          <li>&#x1F512; Governance Tools &mdash; Core Team whitelist &rarr; Proposal creation/voting UI</li>
+          <li>&#x1F512; Creator Gateway &mdash; OAuth + WalletConnect + IFRLock &rarr; content monetization</li>
+        </ul>
+      </div>
+
+      <p style="color:#6b7280;font-size:0.85rem;font-style:italic;">
+        Stack: ethers.js v5 + MetaMask + IFRLock ABI.
+        All wallet interactions are non-custodial &mdash; IFR remains on-chain at all times.
+      </p>
+
       <h2>Current Focus</h2>
       <p>
         <strong>Phase 4 completion</strong> &mdash; 14 mainnet on-chain components deployed, verified, and ownership transferred to Governance. Next steps: LP pairing, LP lock, Governance owner &rarr; Multisig. See <a href="https://github.com/NeaBouli/inferno/blob/main/docs/MAINNET_CHECKLIST.md">Mainnet Checklist</a> for detailed progress.
