@@ -547,42 +547,6 @@
     <aside class="sidebar" id="sidebar">
       <a href="index.html" class="sidebar-logo">INFERNO</a>
       <div class="sidebar-subtitle">Documentation</div>
-      <div style="padding:12px 24px 16px;border-bottom:1px solid var(--border);" id="wiki-wallet-wrap">
-        <button id="lp-header-connect-btn" onclick="lpConnect()" style="width:100%;background:linear-gradient(135deg,#f97316,#ea580c);color:white;border:none;padding:10px 16px;border-radius:10px;font-size:0.85rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:transform 0.2s;">&#x1F98A; Connect Wallet</button>
-        <div id="lp-header-connected" style="display:none;">
-          <div style="background:rgba(34,197,94,0.15);border:1px solid rgba(34,197,94,0.4);border-radius:8px;padding:8px 12px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;" onclick="lpToggleDropdown()">
-            <span id="lp-header-addr" style="color:#22c55e;font-family:monospace;font-size:0.78rem;font-weight:600;"></span>
-            <span style="color:#6b7280;font-size:0.7rem;">&#x25BE;</span>
-          </div>
-          <div id="lp-header-dropdown" style="display:none;position:absolute;left:12px;right:12px;top:100%;background:#111827;border:1px solid #374151;border-radius:12px;padding:16px;z-index:9999;box-shadow:0 8px 32px rgba(0,0,0,0.6);margin-top:8px;">
-            <div style="margin-bottom:12px;">
-              <div style="color:#9ca3af;font-size:0.75rem;margin-bottom:4px;">Wallet</div>
-              <div id="lp-drop-addr" style="color:#22c55e;font-family:monospace;font-size:0.78rem;font-weight:600;word-break:break-all;"></div>
-            </div>
-            <div style="display:flex;gap:8px;margin-bottom:12px;">
-              <div style="flex:1;background:#1f2937;border-radius:8px;padding:8px;text-align:center;">
-                <div style="color:#9ca3af;font-size:0.7rem;">ETH</div>
-                <div id="lp-drop-eth" style="color:#e5e7eb;font-weight:700;font-size:0.85rem;"></div>
-              </div>
-              <div style="flex:1;background:#1f2937;border-radius:8px;padding:8px;text-align:center;">
-                <div style="color:#9ca3af;font-size:0.7rem;">IFR</div>
-                <div id="lp-drop-ifr" style="color:#f97316;font-weight:700;font-size:0.85rem;"></div>
-              </div>
-            </div>
-            <div id="lp-drop-lock" style="display:none;background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.3);border-radius:8px;padding:8px 10px;margin-bottom:10px;text-align:center;">
-              <span style="color:#fbbf24;font-size:0.78rem;font-weight:600;">&#x26A1; Premium</span>
-            </div>
-            <div id="lp-drop-nolock" style="background:rgba(107,114,128,0.1);border:1px solid #374151;border-radius:8px;padding:8px 10px;margin-bottom:10px;text-align:center;">
-              <span style="color:#9ca3af;font-size:0.78rem;">Lock &#x2265;1,000 IFR &#x2192; </span>
-              <a href="lock-mechanism.html" style="color:#f97316;font-size:0.78rem;">Premium &#x2197;</a>
-            </div>
-            <div style="display:flex;gap:8px;">
-              <a href="bootstrap.html" style="flex:1;text-align:center;padding:8px;background:#f97316;color:white;border-radius:8px;font-size:0.78rem;font-weight:600;text-decoration:none;">&#x1F525; Bootstrap</a>
-              <button onclick="lpDisconnect()" style="flex:1;background:#374151;color:#9ca3af;border:none;border-radius:8px;padding:8px;cursor:pointer;font-size:0.78rem;">Disconnect</button>
-            </div>
-          </div>
-        </div>
-      </div>
       <ul class="sidebar-nav">
         <li><a href="index.html">Home</a></li>
         <li><a href="one-pager.html">One Pager</a></li>
@@ -614,6 +578,47 @@
 
     <!-- Main content -->
     <main class="main">
+      <!-- Wallet Top Bar -->
+      <div id="wiki-wallet-bar" style="position:sticky;top:0;z-index:100;background:rgba(10,10,10,0.95);backdrop-filter:blur(12px);border-bottom:1px solid #1f2937;padding:10px 20px;display:flex;justify-content:space-between;align-items:center;margin:-32px -40px 24px -40px;">
+        <a href="../index.html" style="color:#f97316;font-weight:700;text-decoration:none;font-size:0.9rem;">&larr; Inferno</a>
+        <div id="wiki-wallet-wrap" style="position:relative;">
+          <button id="lp-header-connect-btn" onclick="lpConnect()" style="background:linear-gradient(135deg,#f97316,#ea580c);color:white;border:none;padding:8px 18px;border-radius:8px;font-size:0.82rem;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;">&#x1F98A; Connect</button>
+          <div id="lp-header-connected" style="display:none;">
+            <div style="background:rgba(34,197,94,0.15);border:1px solid rgba(34,197,94,0.4);border-radius:8px;padding:6px 12px;cursor:pointer;display:flex;align-items:center;gap:6px;" onclick="lpToggleDropdown()">
+              <span id="lp-header-addr" style="color:#22c55e;font-family:monospace;font-size:0.78rem;font-weight:600;"></span>
+              <span style="color:#6b7280;font-size:0.7rem;">&#x25BE;</span>
+            </div>
+          </div>
+          <div id="lp-header-dropdown" style="display:none;position:fixed;background:#111827;border:1px solid #374151;border-radius:12px;padding:16px;width:280px;max-width:calc(100vw - 24px);z-index:9999;box-shadow:0 8px 32px rgba(0,0,0,0.6);">
+            <div style="margin-bottom:12px;">
+              <div style="color:#9ca3af;font-size:0.75rem;margin-bottom:4px;">Wallet</div>
+              <div id="lp-drop-addr" style="color:#22c55e;font-family:monospace;font-size:0.78rem;font-weight:600;word-break:break-all;"></div>
+            </div>
+            <div style="display:flex;gap:8px;margin-bottom:12px;">
+              <div style="flex:1;background:#1f2937;border-radius:8px;padding:8px;text-align:center;">
+                <div style="color:#9ca3af;font-size:0.7rem;">ETH</div>
+                <div id="lp-drop-eth" style="color:#e5e7eb;font-weight:700;font-size:0.85rem;"></div>
+              </div>
+              <div style="flex:1;background:#1f2937;border-radius:8px;padding:8px;text-align:center;">
+                <div style="color:#9ca3af;font-size:0.7rem;">IFR</div>
+                <div id="lp-drop-ifr" style="color:#f97316;font-weight:700;font-size:0.85rem;"></div>
+              </div>
+            </div>
+            <div id="lp-drop-lock" style="display:none;background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.3);border-radius:8px;padding:8px 10px;margin-bottom:10px;text-align:center;">
+              <span style="color:#fbbf24;font-size:0.78rem;font-weight:600;">&#x26A1; Premium</span>
+            </div>
+            <div id="lp-drop-nolock" style="background:rgba(107,114,128,0.1);border:1px solid #374151;border-radius:8px;padding:8px 10px;margin-bottom:10px;text-align:center;">
+              <span style="color:#9ca3af;font-size:0.78rem;">Lock &#x2265;1,000 IFR &#x2192; </span>
+              <a href="lock-mechanism.html" style="color:#f97316;font-size:0.78rem;">Premium &#x2197;</a>
+            </div>
+            <div style="display:flex;gap:8px;">
+              <a href="bootstrap.html" style="flex:1;text-align:center;padding:8px;background:#f97316;color:white;border-radius:8px;font-size:0.78rem;font-weight:600;text-decoration:none;">&#x1F525; Bootstrap</a>
+              <button onclick="lpDisconnect()" style="flex:1;background:#374151;color:#9ca3af;border:none;border-radius:8px;padding:8px;cursor:pointer;font-size:0.78rem;">Disconnect</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
 
       <h1>Accept IFR Lock &mdash; <span class="accent">Business Onboarding</span></h1>
       <p class="subtitle">
@@ -881,13 +886,79 @@ npm run dev
 <div id="ifr-panel"><iframe src="https://ifr-ai-copilot-production.up.railway.app" allow="clipboard-write"></iframe></div>
 
 <script>
-async function lpConnect(){if(typeof ethers==="undefined"){alert("Web3 library not loaded. Please refresh.");return}if(typeof IFRWallet==="undefined"){alert("Wallet module not loaded. Please refresh.");return}var btn=document.getElementById("lp-header-connect-btn");if(btn){btn.textContent="Connecting...";btn.disabled=true}try{await IFRWallet.connect();var state=await IFRState.load(IFRWallet.getAddress());lpUpdateUI(state)}catch(e){if(btn){btn.textContent="\u{1F98A} Connect Wallet";btn.disabled=false}if(e.message==="NO_METAMASK"){var isMobile=/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);if(isMobile){window.location.href="https://metamask.app.link/dapp/ifrunit.tech"}else if(btn){btn.textContent="\u26A0\uFE0F Install MetaMask";btn.style.background="#374151";btn.onclick=function(){window.open("https://metamask.io/download","_blank")};btn.disabled=false}}else if(e.code===4001||e.code==="ACTION_REJECTED"){if(btn){btn.textContent="\u{1F98A} Connect Wallet";btn.disabled=false}}}}
-function lpDisconnect(){IFRWallet.disconnect();lpUpdateUI(null)}
-function lpToggleDropdown(){var dd=document.getElementById("lp-header-dropdown");if(dd)dd.style.display=dd.style.display==="none"?"":"none"}
-function lpUpdateUI(state){var connected=IFRWallet.isConnected();var connectBtn=document.getElementById("lp-header-connect-btn");var connectedDiv=document.getElementById("lp-header-connected");if(connectBtn)connectBtn.style.display=connected?"none":"";if(connectedDiv)connectedDiv.style.display=connected?"":"none";if(connected&&state){var addr=IFRWallet.getAddress();var el=document.getElementById("lp-header-addr");if(el)el.textContent=addr.slice(0,6)+"..."+addr.slice(-4);var dropAddr=document.getElementById("lp-drop-addr");if(dropAddr)dropAddr.textContent=addr.slice(0,10)+"..."+addr.slice(-6);var dropEth=document.getElementById("lp-drop-eth");if(dropEth)dropEth.textContent=parseFloat(state.ethBalance||"0").toFixed(4)+" ETH";var dropIfr=document.getElementById("lp-drop-ifr");if(dropIfr)dropIfr.textContent=(typeof ethers!=="undefined"&&state.ifrBalance?parseFloat(ethers.utils.formatUnits(state.ifrBalance,9)).toLocaleString("en-US",{maximumFractionDigits:0}):"0")+" IFR";var lockDiv=document.getElementById("lp-drop-lock");var noLockDiv=document.getElementById("lp-drop-nolock");if(lockDiv)lockDiv.style.display=state.isLocked1000?"":"none";if(noLockDiv)noLockDiv.style.display=state.isLocked1000?"none":""}}
+async function lpConnect(){
+  if(typeof ethers==="undefined"){alert("Web3 library not loaded. Please refresh.");return}
+  if(typeof IFRWallet==="undefined"){alert("Wallet module not loaded. Please refresh.");return}
+  var btn=document.getElementById("lp-header-connect-btn");
+  if(btn){btn.textContent="Connecting...";btn.disabled=true}
+  try{
+    await IFRWallet.connect();
+    var state=await IFRState.load(IFRWallet.getAddress());
+    lpUpdateUI(state);
+  }catch(e){
+    if(btn){btn.textContent="\u{1F98A} Connect";btn.disabled=false;btn.style.background="linear-gradient(135deg,#f97316,#ea580c)";btn.onclick=lpConnect}
+    if(e.message==="NO_METAMASK"){
+      var isMobile=/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+      if(isMobile){window.location.href="https://metamask.app.link/dapp/ifrunit.tech"}
+      else if(btn){btn.textContent="\u26A0\uFE0F Install MetaMask";btn.style.background="#374151";btn.onclick=function(){window.open("https://metamask.io/download","_blank")};btn.disabled=false}
+    }else if(e.code===4001||e.code==="ACTION_REJECTED"){
+      if(btn){btn.textContent="\u{1F98A} Connect";btn.disabled=false}
+    }
+  }
+}
+function lpDisconnect(){
+  IFRWallet.disconnect();
+  var connectBtn=document.getElementById("lp-header-connect-btn");
+  var connectedDiv=document.getElementById("lp-header-connected");
+  var dropdown=document.getElementById("lp-header-dropdown");
+  if(connectBtn){connectBtn.style.display="";connectBtn.textContent="\u{1F98A} Connect";connectBtn.disabled=false;connectBtn.style.background="linear-gradient(135deg,#f97316,#ea580c)";connectBtn.onclick=lpConnect}
+  if(connectedDiv)connectedDiv.style.display="none";
+  if(dropdown)dropdown.style.display="none";
+}
+function lpToggleDropdown(){
+  var dd=document.getElementById("lp-header-dropdown");
+  var wrap=document.getElementById("wiki-wallet-wrap");
+  if(!dd)return;
+  if(dd.style.display!=="none"&&dd.style.display!==""){dd.style.display="none";return}
+  if(wrap){
+    var rect=wrap.getBoundingClientRect();
+    var isMobile=window.innerWidth<768;
+    dd.style.position="fixed";
+    dd.style.top=(rect.bottom+8)+"px";
+    if(isMobile){dd.style.right="8px";dd.style.left="8px";dd.style.width="auto"}
+    else{dd.style.right=(window.innerWidth-rect.right)+"px";dd.style.left="auto";dd.style.width="280px"}
+  }
+  dd.style.display="";
+}
+function lpUpdateUI(state){
+  var connected=IFRWallet.isConnected();
+  var connectBtn=document.getElementById("lp-header-connect-btn");
+  var connectedDiv=document.getElementById("lp-header-connected");
+  if(connectBtn){
+    connectBtn.style.display=connected?"none":"";
+    if(!connected){connectBtn.textContent="\u{1F98A} Connect";connectBtn.disabled=false;connectBtn.style.background="linear-gradient(135deg,#f97316,#ea580c)";connectBtn.onclick=lpConnect}
+  }
+  if(connectedDiv)connectedDiv.style.display=connected?"":"none";
+  if(connected&&state){
+    var addr=IFRWallet.getAddress();
+    var shortAddr=addr.slice(0,6)+"..."+addr.slice(-4);
+    var el=document.getElementById("lp-header-addr");if(el)el.textContent=shortAddr;
+    var dropAddr=document.getElementById("lp-drop-addr");if(dropAddr)dropAddr.textContent=addr.slice(0,10)+"..."+addr.slice(-6);
+    var dropEth=document.getElementById("lp-drop-eth");if(dropEth)dropEth.textContent=parseFloat(state.ethBalance||"0").toFixed(4)+" ETH";
+    var dropIfr=document.getElementById("lp-drop-ifr");
+    if(dropIfr){var ifrAmt=state.ifrBalance&&typeof ethers!=="undefined"?parseFloat(ethers.utils.formatUnits(state.ifrBalance,9)).toLocaleString("en-US",{maximumFractionDigits:0}):"0";dropIfr.textContent=ifrAmt+" IFR"}
+    var lockDiv=document.getElementById("lp-drop-lock");var noLockDiv=document.getElementById("lp-drop-nolock");
+    if(lockDiv)lockDiv.style.display=state.isLocked1000?"":"none";
+    if(noLockDiv)noLockDiv.style.display=state.isLocked1000?"none":"";
+  }
+}
+window.addEventListener("resize",function(){var dd=document.getElementById("lp-header-dropdown");if(dd)dd.style.display="none"});
 document.addEventListener("click",function(e){var dd=document.getElementById("lp-header-dropdown");var wrap=document.getElementById("wiki-wallet-wrap");if(dd&&wrap&&!wrap.contains(e.target))dd.style.display="none"});
-document.addEventListener("visibilitychange",async function(){if(document.visibilityState==="visible"&&!IFRWallet.isConnected()){var ok=await IFRWallet.autoReconnect();if(ok)lpUpdateUI(await IFRState.load(IFRWallet.getAddress()))}});
+IFRWallet.on("disconnected",function(){lpUpdateUI(null)});
+IFRWallet.on("connected",async function(addr){var state=await IFRState.load(addr);lpUpdateUI(state)});
+IFRWallet.on("accountChanged",async function(addr){var state=await IFRState.load(addr);lpUpdateUI(state)});
 IFRState.on("stateLoaded",lpUpdateUI);
+document.addEventListener("visibilitychange",async function(){if(document.visibilityState==="visible"&&!IFRWallet.isConnected()){var ok=await IFRWallet.autoReconnect();if(ok)lpUpdateUI(await IFRState.load(IFRWallet.getAddress()))}});
 (async function(){var ok=await IFRWallet.autoReconnect();if(ok)lpUpdateUI(await IFRState.load(IFRWallet.getAddress()))})();
 </script>
 </body>

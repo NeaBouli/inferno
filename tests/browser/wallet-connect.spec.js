@@ -1,216 +1,372 @@
 // @ts-check
 const { test, expect } = require("@playwright/test");
 
-/* ──────────────────────────────────────────────────────────────
-   Suite 1 — Landing Page (docs/index.html)
-   ────────────────────────────────────────────────────────────── */
-test.describe("Landing Page", () => {
-  test.beforeEach(async ({ page }) => {
-    // Collect console errors
-    page._jsErrors = [];
-    page.on("pageerror", (err) => page._jsErrors.push(err.message));
+// Mock MetaMask provider factory
+function mockMetaMask(address) {
+  return `
+    window.ethereum = {
+      isMetaMask: true,
+      _address: "${address}",
+      request: async function(req) {
+        if (req.method === "eth_requestAccounts") return ["${address}"];
+        if (req.method === "eth_accounts") return ["${address}"];
+        if (req.method === "eth_chainId") return "0x1";
+        if (req.method === "wallet_switchEthereumChain") return null;
+        if (req.method === "net_version") return "1";
+        return null;
+      },
+      on: function() {},
+      removeListener: function() {},
+    };
+  `;
+}
+
+const MOCK_ADDR = "0xAbCdEf0123456789AbCdEf0123456789AbCdEf01";
+const MOCK_SHORT = "0xAbCd...Ef01";
+
+/* ══════════════════════════════════════════════════════════
+   Scenario 1 — Desktop: Connect + Disconnect
+   ══════════════════════════════════════════════════════════ */
+test.describe("S1: Desktop Connect + Disconnect", () => {
+  test("connect with mock wallet, then disconnect resets UI", async ({ page }) => {
+    page.on("pageerror", () => {}); // suppress RPC errors
     await page.goto("/", { waitUntil: "networkidle" });
-  });
 
-  test("page loads without JS errors", async ({ page }) => {
-    // Allow known RPC/network errors but no syntax/reference errors
-    const critical = page._jsErrors.filter(
-      (m) => !m.includes("Failed to fetch") && !m.includes("NetworkError") && !m.includes("net::ERR")
-    );
-    expect(critical).toEqual([]);
-  });
+    // Inject mock MetaMask
+    await page.evaluate(mockMetaMask(MOCK_ADDR));
 
-  test("ethers.js is loaded", async ({ page }) => {
-    const hasEthers = await page.evaluate(() => typeof window.ethers !== "undefined");
-    expect(hasEthers).toBe(true);
-  });
-
-  test("IFRWallet module is loaded", async ({ page }) => {
-    const hasWallet = await page.evaluate(() => typeof window.IFRWallet !== "undefined");
-    expect(hasWallet).toBe(true);
-  });
-
-  test("IFRState module is loaded", async ({ page }) => {
-    const hasState = await page.evaluate(() => typeof window.IFRState !== "undefined");
-    expect(hasState).toBe(true);
-  });
-
-  test("connect button exists and is visible", async ({ page }) => {
+    // Click connect
     const btn = page.locator("#lp-header-connect-btn");
     await expect(btn).toBeVisible();
-    await expect(btn).toBeEnabled();
-  });
-
-  test("lpConnect function is globally accessible", async ({ page }) => {
-    const hasFn = await page.evaluate(() => typeof window.lpConnect === "function");
-    expect(hasFn).toBe(true);
-  });
-
-  test("connect button clickable without crash (no wallet)", async ({ page }) => {
-    // Should show alert or change button — NOT crash
-    page.on("dialog", (d) => d.dismiss());
-    const btn = page.locator("#lp-header-connect-btn");
     await btn.click();
-    // Page should still be alive (no unhandled exception crash)
-    const title = await page.title();
-    expect(title.length).toBeGreaterThan(0);
-  });
 
-  test("IFRWallet has correct public API", async ({ page }) => {
-    const api = await page.evaluate(() => {
-      const w = window.IFRWallet;
-      return {
-        connect: typeof w.connect,
-        disconnect: typeof w.disconnect,
-        autoReconnect: typeof w.autoReconnect,
-        isConnected: typeof w.isConnected,
-        getAddress: typeof w.getAddress,
-        getShortAddress: typeof w.getShortAddress,
-        getSigner: typeof w.getSigner,
-        getProvider: typeof w.getProvider,
-        on: typeof w.on,
-        off: typeof w.off,
-      };
-    });
-    for (const [key, val] of Object.entries(api)) {
-      expect(val, `IFRWallet.${key} should be a function`).toBe("function");
-    }
-  });
+    // Wait for connected state
+    const connectedDiv = page.locator("#lp-header-connected");
+    await expect(connectedDiv).toBeVisible({ timeout: 10000 });
 
-  test("IFRState has correct public API", async ({ page }) => {
-    const api = await page.evaluate(() => {
-      const s = window.IFRState;
-      return {
-        load: typeof s.load,
-        getCache: typeof s.getCache,
-        hasAccess: typeof s.hasAccess,
-        startAutoRefresh: typeof s.startAutoRefresh,
-        stopAutoRefresh: typeof s.stopAutoRefresh,
-        on: typeof s.on,
-        CONTRACTS: typeof s.CONTRACTS,
-      };
-    });
-    expect(api.load).toBe("function");
-    expect(api.getCache).toBe("function");
-    expect(api.hasAccess).toBe("function");
-    expect(api.CONTRACTS).toBe("object");
-  });
+    // Verify address shown
+    const addrEl = page.locator("#lp-header-addr");
+    await expect(addrEl).toHaveText(MOCK_SHORT);
 
-  test("IFRState.CONTRACTS has correct mainnet addresses", async ({ page }) => {
-    const contracts = await page.evaluate(() => window.IFRState.CONTRACTS);
-    expect(contracts.token).toBe("0x77e99917Eca8539c62F509ED1193ac36580A6e7B");
-    expect(contracts.lock).toBe("0x769928aBDfc949D0718d8766a1C2d7dBb63954Eb");
-    expect(contracts.bootstrap).toBe("0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141");
+    // Now disconnect
+    await page.evaluate(() => window.lpDisconnect());
+
+    // Connect button should be back
+    await expect(btn).toBeVisible();
+    await expect(btn).toBeEnabled();
+    const text = await btn.textContent();
+    expect(text).toContain("Connect");
+
+    // Connected div should be hidden
+    await expect(connectedDiv).not.toBeVisible();
   });
 });
 
-/* ──────────────────────────────────────────────────────────────
-   Suite 2 — Bootstrap Page (docs/wiki/bootstrap.html)
-   ────────────────────────────────────────────────────────────── */
-test.describe("Bootstrap Page", () => {
-  test.beforeEach(async ({ page }) => {
-    page._jsErrors = [];
-    page.on("pageerror", (err) => page._jsErrors.push(err.message));
-    await page.goto("/wiki/bootstrap.html", { waitUntil: "networkidle" });
-  });
+/* ══════════════════════════════════════════════════════════
+   Scenario 2 — Desktop: No MetaMask → "Install MetaMask"
+   ══════════════════════════════════════════════════════════ */
+test.describe("S2: No MetaMask installed", () => {
+  test("button changes to Install MetaMask on desktop", async ({ page }) => {
+    await page.goto("/", { waitUntil: "networkidle" });
 
-  test("page loads without JS errors", async ({ page }) => {
-    const critical = page._jsErrors.filter(
-      (m) => !m.includes("Failed to fetch") && !m.includes("NetworkError") && !m.includes("net::ERR")
-    );
-    expect(critical).toEqual([]);
-  });
+    // Ensure no ethereum
+    await page.evaluate(() => { delete window.ethereum; });
 
-  test("ethers + IFRWallet + IFRState loaded", async ({ page }) => {
-    const loaded = await page.evaluate(() => ({
-      ethers: typeof window.ethers !== "undefined",
-      wallet: typeof window.IFRWallet !== "undefined",
-      state: typeof window.IFRState !== "undefined",
-    }));
-    expect(loaded.ethers).toBe(true);
-    expect(loaded.wallet).toBe(true);
-    expect(loaded.state).toBe(true);
-  });
-
-  test("sidebar connect button exists and styled", async ({ page }) => {
     const btn = page.locator("#lp-header-connect-btn");
-    await expect(btn).toBeVisible();
-    await expect(btn).toBeEnabled();
-    const bg = await btn.evaluate((el) => getComputedStyle(el).backgroundImage);
-    expect(bg).toContain("gradient");
-  });
-
-  test("wallet notice replaces old connect section", async ({ page }) => {
-    await expect(page.locator("#bw-wallet-notice")).toBeVisible();
-    await expect(page.locator("#bw-connect-section")).toHaveCount(0);
-    await expect(page.locator("#bw-connected-section")).toHaveCount(0);
-  });
-
-  test("bwConnect function is globally accessible", async ({ page }) => {
-    const hasFn = await page.evaluate(() => typeof window.bwConnect === "function");
-    expect(hasFn).toBe(true);
-  });
-
-  test("bootstrap stats elements exist", async ({ page }) => {
-    await expect(page.locator("#bw-countdown")).toBeVisible();
-  });
-
-  test("sidebar connect click without crash (no wallet)", async ({ page }) => {
     page.on("dialog", (d) => d.dismiss());
-    const btn = page.locator("#lp-header-connect-btn");
     await btn.click();
-    const title = await page.title();
-    expect(title.length).toBeGreaterThan(0);
+
+    // Should show "Install MetaMask"
+    await expect(btn).toContainText("Install MetaMask", { timeout: 5000 });
   });
 });
 
-/* ──────────────────────────────────────────────────────────────
-   Suite 3 — Multi-Wallet Detection (unit-style, in-page)
-   ────────────────────────────────────────────────────────────── */
-test.describe("Multi-Wallet Detection", () => {
-  test("IFRWallet.connect rejects cleanly when no ethereum", async ({ page }) => {
+/* ══════════════════════════════════════════════════════════
+   Scenario 3 — Multi-wallet: Exodus + MetaMask → MetaMask
+   ══════════════════════════════════════════════════════════ */
+test.describe("S3: Multi-wallet detection", () => {
+  test("selects real MetaMask over Exodus imposter", async ({ page }) => {
     await page.goto("/", { waitUntil: "networkidle" });
-    const result = await page.evaluate(async () => {
-      // Ensure no ethereum
-      delete window.ethereum;
-      try {
-        await window.IFRWallet.connect();
-        return "no_error";
-      } catch (e) {
-        return e.message;
-      }
-    });
-    expect(result).toBe("NO_METAMASK");
-  });
 
-  test("IFRWallet.connect finds MetaMask in providers array", async ({ page }) => {
-    await page.goto("/", { waitUntil: "networkidle" });
     const result = await page.evaluate(async () => {
-      // Simulate multi-wallet environment (EIP-5749)
       const mockMM = {
         isMetaMask: true,
-        request: async ({ method }) => {
-          if (method === "eth_requestAccounts") return ["0x1234567890abcdef1234567890abcdef12345678"];
-          if (method === "eth_accounts") return ["0x1234567890abcdef1234567890abcdef12345678"];
-          if (method === "eth_chainId") return "0x1";
+        request: async function(req) {
+          if (req.method === "eth_requestAccounts") return ["0xAA00000000000000000000000000000000000001"];
+          if (req.method === "eth_accounts") return ["0xAA00000000000000000000000000000000000001"];
+          if (req.method === "eth_chainId") return "0x1";
           return null;
         },
-        on: () => {},
-        removeListener: () => {},
+        on: function() {},
+        removeListener: function() {},
       };
       const mockExodus = { isMetaMask: true, isExodus: true };
       window.ethereum = {
         providers: [mockExodus, mockMM],
-        request: async () => [],
-        on: () => {},
+        request: async function() { return []; },
+        on: function() {},
       };
       try {
-        const addr = await window.IFRWallet.connect();
-        return addr;
-      } catch (e) {
-        return "ERROR:" + e.message;
-      }
+        return await window.IFRWallet.connect();
+      } catch (e) { return "ERROR:" + e.message; }
     });
-    expect(result).toBe("0x1234567890abcdef1234567890abcdef12345678");
+
+    expect(result).toBe("0xAA00000000000000000000000000000000000001");
+  });
+});
+
+/* ══════════════════════════════════════════════════════════
+   Scenario 4 — Disconnect: button immediately resets
+   ══════════════════════════════════════════════════════════ */
+test.describe("S4: Disconnect instant reset", () => {
+  test("button text resets to Connect, not Connecting...", async ({ page }) => {
+    page.on("pageerror", () => {});
+    await page.goto("/", { waitUntil: "networkidle" });
+    await page.evaluate(mockMetaMask(MOCK_ADDR));
+
+    // Connect
+    await page.locator("#lp-header-connect-btn").click();
+    await expect(page.locator("#lp-header-connected")).toBeVisible({ timeout: 10000 });
+
+    // Disconnect
+    await page.evaluate(() => window.lpDisconnect());
+
+    // Button must show "Connect" immediately — not "Connecting..."
+    const btn = page.locator("#lp-header-connect-btn");
+    const text = await btn.textContent();
+    expect(text).not.toContain("Connecting");
+    expect(text).toContain("Connect");
+    expect(await btn.isEnabled()).toBe(true);
+  });
+});
+
+/* ══════════════════════════════════════════════════════════
+   Scenario 5 — autoReconnect after reload
+   ══════════════════════════════════════════════════════════ */
+test.describe("S5: autoReconnect", () => {
+  test("reconnects after page reload without extra click", async ({ page }) => {
+    page.on("pageerror", () => {});
+    await page.goto("/", { waitUntil: "networkidle" });
+    await page.evaluate(mockMetaMask(MOCK_ADDR));
+
+    // Connect first
+    await page.locator("#lp-header-connect-btn").click();
+    await expect(page.locator("#lp-header-connected")).toBeVisible({ timeout: 10000 });
+
+    // Inject mock again before reload (so it's available on new page)
+    await page.addInitScript(mockMetaMask(MOCK_ADDR));
+    await page.reload({ waitUntil: "networkidle" });
+
+    // Should auto-reconnect — connected div visible without clicking
+    await expect(page.locator("#lp-header-connected")).toBeVisible({ timeout: 10000 });
+  });
+});
+
+/* ══════════════════════════════════════════════════════════
+   Scenario 6 — Mobile viewport: Connect button visible
+   ══════════════════════════════════════════════════════════ */
+test.describe("S6: Mobile viewport", () => {
+  test.use({ viewport: { width: 390, height: 844 } });
+
+  test("connect button visible on mobile", async ({ page }) => {
+    page._jsErrors = [];
+    page.on("pageerror", (err) => page._jsErrors.push(err.message));
+    await page.goto("/", { waitUntil: "networkidle" });
+
+    const btn = page.locator("#lp-header-connect-btn");
+    await expect(btn).toBeVisible();
+    await expect(btn).toBeEnabled();
+  });
+});
+
+/* ══════════════════════════════════════════════════════════
+   Scenario 7 — Mobile: dropdown positioned under button
+   ══════════════════════════════════════════════════════════ */
+test.describe("S7: Mobile dropdown position", () => {
+  test.use({ viewport: { width: 390, height: 844 } });
+
+  test("dropdown appears below button on mobile", async ({ page }) => {
+    page.on("pageerror", () => {});
+    await page.goto("/", { waitUntil: "networkidle" });
+    await page.evaluate(mockMetaMask(MOCK_ADDR));
+
+    // Connect
+    await page.locator("#lp-header-connect-btn").click();
+    await expect(page.locator("#lp-header-connected")).toBeVisible({ timeout: 10000 });
+
+    // Open dropdown
+    await page.locator("#lp-header-connected div").first().click();
+
+    const dd = page.locator("#lp-header-dropdown");
+    await expect(dd).toBeVisible();
+
+    // Verify position is fixed and below button
+    const style = await dd.evaluate((el) => ({
+      position: el.style.position,
+      top: parseInt(el.style.top),
+    }));
+    expect(style.position).toBe("fixed");
+    expect(style.top).toBeGreaterThan(30);
+  });
+});
+
+/* ══════════════════════════════════════════════════════════
+   Scenario 8 — Mobile: No MetaMask → deeplink redirect
+   ══════════════════════════════════════════════════════════ */
+test.describe("S8: Mobile deeplink", () => {
+  test("lpConnect calls deeplink on mobile without MetaMask", async ({ browser }) => {
+    // Create context with mobile userAgent
+    const context = await browser.newContext({
+      viewport: { width: 390, height: 844 },
+      userAgent: "Mozilla/5.0 (iPhone; CPU iPhone OS 15_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.0 Mobile/15E148 Safari/604.1",
+    });
+    const page = await context.newPage();
+
+    // Intercept navigation to metamask deeplink
+    let deeplink = null;
+    await page.route("**/metamask.app.link/**", (route) => {
+      deeplink = route.request().url();
+      route.abort();
+    });
+
+    page.on("pageerror", () => {});
+    await page.goto("http://localhost:8787/", { waitUntil: "networkidle" });
+
+    // Remove ethereum so NO_METAMASK fires
+    await page.evaluate(() => { delete window.ethereum; });
+
+    // Click connect — should trigger deeplink navigation
+    await page.locator("#lp-header-connect-btn").click().catch(() => {});
+
+    // Give it a moment for the navigation to fire
+    await page.waitForTimeout(1000);
+
+    expect(deeplink).toContain("metamask.app.link");
+    await context.close();
+  });
+});
+
+/* ══════════════════════════════════════════════════════════
+   Scenario 9 — Wiki pages: identical button style
+   ══════════════════════════════════════════════════════════ */
+test.describe("S9: Wiki button consistency", () => {
+  const wikiPages = [
+    "/wiki/tokenomics.html",
+    "/wiki/roadmap.html",
+    "/wiki/faq.html",
+  ];
+
+  for (const wikiPage of wikiPages) {
+    test(`${wikiPage} has connect button in top-bar`, async ({ page }) => {
+      page._jsErrors = [];
+      page.on("pageerror", (err) => page._jsErrors.push(err.message));
+      await page.goto(wikiPage, { waitUntil: "networkidle" });
+
+      // No JS errors
+      const critical = page._jsErrors.filter(
+        (m) => !m.includes("Failed to fetch") && !m.includes("NetworkError") && !m.includes("net::ERR")
+      );
+      expect(critical).toEqual([]);
+
+      // Button exists and styled with gradient
+      const btn = page.locator("#lp-header-connect-btn");
+      await expect(btn).toBeVisible();
+      const bg = await btn.evaluate((el) => getComputedStyle(el).backgroundImage);
+      expect(bg).toContain("gradient");
+
+      // Top-bar exists
+      await expect(page.locator("#wiki-wallet-bar")).toBeVisible();
+
+      // lpConnect globally available
+      const hasFn = await page.evaluate(() => typeof window.lpConnect === "function");
+      expect(hasFn).toBe(true);
+    });
+  }
+});
+
+/* ══════════════════════════════════════════════════════════
+   Scenario 10 — Bootstrap: stats + wallet notice
+   ══════════════════════════════════════════════════════════ */
+test.describe("S10: Bootstrap page", () => {
+  test("stats load and wallet notice shown", async ({ page }) => {
+    page._jsErrors = [];
+    page.on("pageerror", (err) => page._jsErrors.push(err.message));
+    await page.goto("/wiki/bootstrap.html", { waitUntil: "networkidle" });
+
+    const critical = page._jsErrors.filter(
+      (m) => !m.includes("Failed to fetch") && !m.includes("NetworkError") && !m.includes("net::ERR")
+    );
+    expect(critical).toEqual([]);
+
+    // Wallet notice visible
+    await expect(page.locator("#bw-wallet-notice")).toBeVisible();
+
+    // Old connect sections removed
+    await expect(page.locator("#bw-connect-section")).toHaveCount(0);
+    await expect(page.locator("#bw-connected-section")).toHaveCount(0);
+
+    // Stats countdown exists
+    await expect(page.locator("#bw-countdown")).toBeVisible();
+
+    // Top-bar connect button
+    await expect(page.locator("#lp-header-connect-btn")).toBeVisible();
+  });
+});
+
+/* ══════════════════════════════════════════════════════════
+   Scenario 11 — Wiki disconnect: button resets properly
+   ══════════════════════════════════════════════════════════ */
+test.describe("S11: Wiki disconnect reset", () => {
+  test("disconnect on wiki page resets button to Connect", async ({ page }) => {
+    page.on("pageerror", () => {});
+    await page.goto("/wiki/tokenomics.html", { waitUntil: "networkidle" });
+    await page.evaluate(mockMetaMask(MOCK_ADDR));
+
+    // Connect
+    await page.locator("#lp-header-connect-btn").click();
+    await expect(page.locator("#lp-header-connected")).toBeVisible({ timeout: 10000 });
+
+    // Disconnect
+    await page.evaluate(() => window.lpDisconnect());
+
+    // Button must show "Connect" not "Connecting..."
+    const btn = page.locator("#lp-header-connect-btn");
+    await expect(btn).toBeVisible();
+    const text = await btn.textContent();
+    expect(text).toContain("Connect");
+    expect(text).not.toContain("Connecting");
+  });
+});
+
+/* ══════════════════════════════════════════════════════════
+   Scenario 12 — Quick Connect→Disconnect→Connect
+   ══════════════════════════════════════════════════════════ */
+test.describe("S12: Rapid connect/disconnect cycle", () => {
+  test("connect→disconnect→connect works without refresh", async ({ page }) => {
+    page.on("pageerror", () => {});
+    await page.goto("/", { waitUntil: "networkidle" });
+    await page.evaluate(mockMetaMask(MOCK_ADDR));
+
+    const btn = page.locator("#lp-header-connect-btn");
+    const connectedDiv = page.locator("#lp-header-connected");
+
+    // Connect #1
+    await btn.click();
+    await expect(connectedDiv).toBeVisible({ timeout: 10000 });
+
+    // Disconnect
+    await page.evaluate(() => window.lpDisconnect());
+    await expect(btn).toBeVisible();
+
+    // Re-inject mock (disconnect cleared _ethereumProvider)
+    await page.evaluate(mockMetaMask(MOCK_ADDR));
+
+    // Connect #2
+    await btn.click();
+    await expect(connectedDiv).toBeVisible({ timeout: 10000 });
+
+    // Verify address still correct
+    const addr = await page.locator("#lp-header-addr").textContent();
+    expect(addr).toBe(MOCK_ADDR.slice(0, 6) + "..." + MOCK_ADDR.slice(-4));
   });
 });

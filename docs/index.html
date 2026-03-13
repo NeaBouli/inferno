@@ -2882,15 +2882,54 @@ async function lpConnect() {
 
 function lpDisconnect() {
   IFRWallet.disconnect();
-  lpUpdateUI(null);
-  var dd = document.getElementById("lp-header-dropdown");
-  if (dd) dd.style.display = "none";
+  // Immediate UI reset — don't wait for event
+  var connectBtn = document.getElementById("lp-header-connect-btn");
+  var connectedDiv = document.getElementById("lp-header-connected");
+  var dropdown = document.getElementById("lp-header-dropdown");
+  if (connectBtn) {
+    connectBtn.style.display = "";
+    connectBtn.textContent = "\uD83E\uDD8A Connect";
+    connectBtn.disabled = false;
+    connectBtn.style.borderColor = "#f97316";
+    connectBtn.style.color = "#f97316";
+    connectBtn.style.background = "transparent";
+    connectBtn.onclick = lpConnect;
+  }
+  if (connectedDiv) connectedDiv.style.display = "none";
+  if (dropdown) dropdown.style.display = "none";
 }
 
 function lpToggleDropdown() {
   var dd = document.getElementById("lp-header-dropdown");
-  if (dd) dd.style.display = dd.style.display === "none" ? "" : "none";
+  var wrap = document.getElementById("lp-header-connected");
+  if (!dd) return;
+  if (dd.style.display !== "none" && dd.style.display !== "") {
+    dd.style.display = "none";
+    return;
+  }
+  // Dynamic position
+  if (wrap) {
+    var rect = wrap.getBoundingClientRect();
+    var isMobile = window.innerWidth < 768;
+    dd.style.position = "fixed";
+    dd.style.top = (rect.bottom + 8) + "px";
+    if (isMobile) {
+      dd.style.right = "8px";
+      dd.style.left = "8px";
+      dd.style.width = "auto";
+    } else {
+      dd.style.right = (window.innerWidth - rect.right) + "px";
+      dd.style.left = "auto";
+      dd.style.width = "280px";
+    }
+  }
+  dd.style.display = "";
 }
+
+window.addEventListener("resize", function() {
+  var dd = document.getElementById("lp-header-dropdown");
+  if (dd) dd.style.display = "none";
+});
 
 document.addEventListener("click", function(e) {
   var dd = document.getElementById("lp-header-dropdown");
@@ -2904,23 +2943,37 @@ function lpUpdateUI(state) {
   var connected = IFRWallet.isConnected();
   var connectBtn = document.getElementById("lp-header-connect-btn");
   var connectedDiv = document.getElementById("lp-header-connected");
-  if (connectBtn) connectBtn.style.display = connected ? "none" : "";
+  if (connectBtn) {
+    connectBtn.style.display = connected ? "none" : "";
+    if (!connected) {
+      connectBtn.textContent = "\uD83E\uDD8A Connect";
+      connectBtn.disabled = false;
+      connectBtn.style.borderColor = "#f97316";
+      connectBtn.style.color = "#f97316";
+      connectBtn.style.background = "transparent";
+      connectBtn.onclick = lpConnect;
+    }
+  }
   if (connectedDiv) connectedDiv.style.display = connected ? "flex" : "none";
 
   if (connected && state) {
-    var addr = IFRWallet.getShortAddress();
+    var addr = IFRWallet.getAddress();
+    var shortAddr = addr.slice(0,6) + "..." + addr.slice(-4);
     var el;
     el = document.getElementById("lp-header-addr");
-    if (el) el.textContent = addr;
+    if (el) el.textContent = shortAddr;
     el = document.getElementById("lp-drop-addr");
-    if (el) {
-      var fullAddr = IFRWallet.getAddress();
-      el.textContent = fullAddr.slice(0,10) + "..." + fullAddr.slice(-6);
-    }
+    if (el) el.textContent = addr.slice(0,10) + "..." + addr.slice(-6);
     el = document.getElementById("lp-drop-eth");
     if (el) el.textContent = parseFloat(state.ethBalance || "0").toFixed(4) + " ETH";
     el = document.getElementById("lp-drop-ifr");
-    if (el) el.textContent = parseFloat(ethers.utils.formatUnits(state.ifrBalance || "0", 9)).toLocaleString("en-US", {maximumFractionDigits: 0}) + " IFR";
+    if (el) {
+      var ifrAmt = state.ifrBalance && typeof ethers !== "undefined"
+        ? parseFloat(ethers.utils.formatUnits(state.ifrBalance, 9))
+            .toLocaleString("en-US", {maximumFractionDigits: 0})
+        : "0";
+      el.textContent = ifrAmt + " IFR";
+    }
     var lockDiv = document.getElementById("lp-drop-lock");
     var noLockDiv = document.getElementById("lp-drop-nolock");
     if (lockDiv) lockDiv.style.display = state.isLocked1000 ? "" : "none";
@@ -2928,6 +2981,16 @@ function lpUpdateUI(state) {
   }
 }
 
+// Subscribe to wallet events for automatic UI updates
+IFRWallet.on("disconnected", function() { lpUpdateUI(null); });
+IFRWallet.on("connected", async function(addr) {
+  var state = await IFRState.load(addr);
+  lpUpdateUI(state);
+});
+IFRWallet.on("accountChanged", async function(addr) {
+  var state = await IFRState.load(addr);
+  lpUpdateUI(state);
+});
 IFRState.on("stateLoaded", lpUpdateUI);
 
 (async function() {
