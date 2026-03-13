@@ -1850,16 +1850,33 @@ function bwSetTxStatus(elId, type, msg, txHash) {
 
 // Connect
 async function bwConnect() {
+  if (typeof IFRWallet === "undefined") {
+    console.error("IFRWallet not loaded yet");
+    alert("Page still loading, please try again in a moment.");
+    return;
+  }
   var btn = document.getElementById("bw-connect-btn");
-  btn.textContent = "Connecting..."; btn.disabled = true;
+  if (btn) { btn.textContent = "Connecting..."; btn.disabled = true; }
   try {
     await IFRWallet.connect();
     var state = await IFRState.load(IFRWallet.getAddress());
     bwUpdateUI(state);
   } catch(e) {
-    btn.textContent = "\uD83E\uDD8A Connect Wallet"; btn.disabled = false;
+    console.error("Connect error:", e);
+    if (btn) { btn.textContent = "\uD83E\uDD8A Connect Wallet"; btn.disabled = false; }
     if (e.message === "NO_METAMASK") {
-      alert("MetaMask not found. Please install MetaMask from metamask.io");
+      if (!/Mobi|Android|iPhone/i.test(navigator.userAgent)) {
+        if (confirm("MetaMask not found.\n\nInstall MetaMask browser extension?")) {
+          window.open("https://metamask.io/download", "_blank");
+        }
+      } else {
+        var deeplink = "https://metamask.app.link/dapp/" + window.location.host + window.location.pathname;
+        if (confirm("Mobile erkannt.\n\nSeite in MetaMask App \u00f6ffnen?")) {
+          window.location.href = deeplink;
+        }
+      }
+    } else if (e.code === 4001) {
+      console.log("User rejected connection");
     }
   }
 }
