@@ -40,6 +40,19 @@ export const IFR_KNOWLEDGE = {
     gold:     { minIFR: 5000,  discount: "15%" },
     platinum: { minIFR: 10000, discount: "20%" }
   },
+  bootstrap: {
+    status: "NOT YET STARTED — opens April 17, 2026",
+    startDate: "April 17, 2026",
+    endDate: "July 15, 2026 (90 days)",
+    vault: "0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141",
+    funded: "194.75M IFR (funded March 11, 2026 via Plan B)",
+    minContribution: "0.01 ETH",
+    maxContribution: "2 ETH per wallet",
+    mechanism: "Pro-rata IFR distribution — no fixed price, community-driven",
+    lpLock: "12 months via Team.Finance",
+    refund: "30-day grace period after end — permissionless refund if not finalized",
+    securityReview: "Internal review March 2026: 11/14 secure, 3/14 low risk, 0 critical"
+  },
   links: {
     github: "https://github.com/NeaBouli/inferno",
     website: "https://ifrunit.tech",
