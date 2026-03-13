@@ -454,7 +454,7 @@
           <button id="lp-header-connect-btn" onclick="lpConnect()" style="display:inline-flex;align-items:center;gap:7px;padding:8px 16px;border:1.5px solid #f97316;background:transparent;color:#f97316;font-family:'Orbitron',sans-serif;font-size:0.72rem;letter-spacing:.8px;border-radius:6px;cursor:pointer;white-space:nowrap;transition:all .2s;position:relative;flex-shrink:0;margin-left:16px;">&#x1F98A; Connect</button>
           <div id="lp-header-connected" style="display:none;">
             <div style="background:rgba(34,197,94,0.15);border:1px solid rgba(34,197,94,0.4);border-radius:8px;padding:6px 12px;cursor:pointer;display:flex;align-items:center;gap:6px;" onclick="lpToggleDropdown()">
-              <span id="lp-header-addr" style="color:#22c55e;font-family:monospace;font-size:0.78rem;font-weight:600;"></span>
+              <span id="lp-header-addr" style="color:#22c55e;font-family:monospace;font-size:0.75rem;font-weight:600;"></span>
               <span style="color:#6b7280;font-size:0.7rem;">&#x25BE;</span>
             </div>
           </div>
@@ -909,7 +909,7 @@ function lpUpdateUI(state){
   if(connectedDiv)connectedDiv.style.display=connected?"":"none";
   if(connected&&state){
     var addr=IFRWallet.getAddress();
-    var shortAddr=addr.slice(0,6)+"..."+addr.slice(-4);
+    var shortAddr=addr.slice(0,6)+".."+addr.slice(-4);
     var el=document.getElementById("lp-header-addr");if(el)el.textContent=shortAddr;
     var dropAddr=document.getElementById("lp-drop-addr");if(dropAddr)dropAddr.textContent=addr.slice(0,10)+"..."+addr.slice(-6);
     var dropEth=document.getElementById("lp-drop-eth");if(dropEth)dropEth.textContent=parseFloat(state.ethBalance||"0").toFixed(4)+" ETH";
