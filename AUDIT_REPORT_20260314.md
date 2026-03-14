@@ -9,7 +9,7 @@
 
 ### 🔴 Test-Zahlen (KRITISCH — 19 veraltete Stellen)
 
-**Aktuell korrekt: 556 tests (521 protocol + 35 ecosystem)**
+**Aktuell korrekt: 568 tests (521 protocol + 47 ecosystem)**
 
 | Datei | Zeile | Alter Wert | Status |
 |-------|-------|------------|--------|
@@ -32,7 +32,7 @@
 | `audit/summary.md` | 9 | 444 | 🔴 VERALTET |
 | `audit/contracts/token-audit.md` | 23 | 444 | 🔴 VERALTET |
 
-**Korrekte Dateien (556):** README.md, docs/DOCS.md, docs/index.html, docs/wiki/security.html ✅
+**Korrekte Dateien (568):** README.md, docs/DOCS.md, docs/index.html, docs/wiki/security.html ✅
 
 ---
 
@@ -120,9 +120,9 @@ Erlaubt alle Bots inkl. ClaudeBot, PerplexityBot.
 | Quelle | Wert | Korrekt? |
 |--------|------|----------|
 | README.md | 556 (521+35) | ✅ |
-| docs/index.html | 556 | ✅ |
-| docs/wiki/security.html | 556 | ✅ |
-| docs/DOCS.md | 556 | ✅ |
+| docs/index.html | 568 | ✅ |
+| docs/wiki/security.html | 568 | ✅ |
+| docs/DOCS.md | 568 | ✅ |
 | docs/wiki/faq.html | **494** | ❌ |
 | docs/wiki/press-kit.html | **494** | ❌ |
 | docs/wiki/one-pager.html | **494** | ❌ |

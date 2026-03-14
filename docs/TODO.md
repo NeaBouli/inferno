@@ -1,5 +1,50 @@
 # IFR Protocol — Developer TODO List
-> Last updated: 2026-03-14 | Branch: main
+> Last updated: 2026-03-15 | Branch: main
+
+---
+
+## CLAUDE CODE — STANDING INSTRUCTIONS (read before every task)
+
+> These instructions apply to EVERY task. Execute them at the END of every prompt.
+
+### After completing ANY task — always run this checklist:
+
+**1. Test Count Sync**
+Find new test counts:
+```
+npx mocha tests/**/*.test.js --reporter min 2>&1 | tail -3
+npx hardhat test --reporter min 2>&1 | tail -3
+```
+Then update ALL of these if counts changed:
+- `docs/index.html` — test badges/counters
+- `docs/wiki/security.html` — test table + totals
+- `README.md` — test count table
+- `docs/DOCS.md` — test summary
+- `apps/ai-copilot/src/context/system-prompts.ts` — Ali knowledge
+- `docs/TODO.md` + `docs/TODO.html` — always
+
+**2. Wiki/Contract Count Sync**
+If a new wiki page or contract was added:
+```
+ls docs/wiki/*.html | wc -l          # → update "25 wiki pages" everywhere
+ls contracts/*.sol | wc -l           # → update "14 on-chain components" everywhere
+```
+
+**3. Consistency Check**
+```
+grep -rn "TODO: IFR_UPDATE" docs/ --include="*.html" | head -20
+```
+Visit each marked location and update if needed.
+
+**4. TODO.md Update**
+- Mark completed items: `[ ]` → `[x]`
+- Move to COMPLETED section
+- Update "Last updated" date
+
+**5. TODO.html Sync**
+Regenerate TODO.html from TODO.md content.
+
+**6. Commit everything together** — never leave counts out of sync.
 
 ---
 

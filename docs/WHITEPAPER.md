@@ -189,7 +189,7 @@ Integration: 5 lines of code. Fully decoupled.
 
 - Open source: All smart contracts public on GitHub
 - Slither static analysis: 0 high/critical findings
-- 556 tests (521 protocol + 35 ecosystem), all passing, 99% statement coverage
+- 568 tests (521 protocol + 47 ecosystem), all passing, 99% statement coverage
 - Professional third-party audit: recommended as next security milestone
 - Timelock: 48h mandatory waiting period on all changes
 - No minting: technically impossible after launch

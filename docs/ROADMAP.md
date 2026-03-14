@@ -16,7 +16,7 @@
 - [x] 14 on-chain components deployed on Sepolia (9 repo + 3 v2 + LP Pair + BootstrapVault)
 
 ### Testing & Security
-- [x] 556 total tests (521 protocol + 35 ecosystem)
+- [x] 568 total tests (521 protocol + 47 ecosystem)
 - [x] 91% branch coverage, 99% statement coverage
 - [x] Slither static analysis: 0 high/critical findings
 - [x] Claude Security Audit: 0 FAIL, 12 WARN, 78 PASS

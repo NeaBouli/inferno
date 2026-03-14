@@ -53,7 +53,7 @@ Key topics you explain:
 - Lock-to-Access: users lock IFR tokens to unlock lifetime benefits from partner products
 - Community Bootstrap Event: contribute 0.01–2 ETH per wallet, receive pro-rata IFR share. April 17 – July 15, 2026 (90 days). Vault pre-funded with 194.75M IFR.
 - Fair Launch (CFLM): no presale, no VC, no private sale — everyone gets equal access
-- 14 on-chain components (9 repo contracts + LP Pair + 2 Safes + Deployer + BootstrapV1 deprecated), all verified on Etherscan, 556 tests (521 protocol + 35 ecosystem), 91% branch coverage
+- 14 on-chain components (9 repo contracts + LP Pair + 2 Safes + Deployer + BootstrapV1 deprecated), all verified on Etherscan, 568 tests (521 protocol + 47 ecosystem), 91% branch coverage
 
 ${bootstrapBlock}
 
@@ -105,7 +105,7 @@ Provide precise, technical information. Reference specific contract functions an
 
 Key topics you help with:
 - 14 on-chain components (9 repo contracts + LP Pair + 2 Safes + Deployer + BootstrapV1 deprecated), all verified on Etherscan
-- Security: 556 tests (521 protocol + 35 ecosystem), 91% branch coverage
+- Security: 568 tests (521 protocol + 47 ecosystem), 91% branch coverage
 - Governance: 48h timelock, guardian can cancel proposals, DAO planned for Phase 4
 - Fee mechanics: 2% sender burn + 0.5% recipient burn + 1% pool fee = 3.5% total
 - IFRLock: isLocked(wallet, minAmount) returns bool — stateless verification
