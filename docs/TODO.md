@@ -19,9 +19,37 @@ Then update ALL of these if counts changed:
 - `docs/index.html` — test badges/counters
 - `docs/wiki/index.html` — Quick Stats (Tests, Wiki Pages, On-chain Components)
 - `docs/wiki/security.html` — test table + totals
+- `docs/wiki/faq.html` — JSON-LD + FAQ answers
+- `docs/wiki/press-kit.html` — tech stack table
+- `docs/wiki/one-pager.html` — stats table
+- `docs/wiki/roadmap.html` — phase checklist
 - `README.md` — test count table
 - `docs/DOCS.md` — test summary
+- `docs/PROJECT-SUMMARY.md` — test totals
+- `docs/STATUS-REPORT.md` — status header
+- `docs/MAINNET_CHECKLIST.md` — checklist header
+- `docs/WHITEPAPER.md` — security section
+- `docs/PRESS_KIT.md` — tech stack
+- `docs/ONE-PAGER.md` — stats
+- `docs/COVERAGE_REPORT.md` — header
+- `docs/FULL_REVIEW_REPORT.md` — review summary
+- `docs/CHATGPT_AUDIT_PROMPT_V2.md` — audit context
+- `docs/CHATGPT_AUDIT_PROMPT_V4.md` — audit context
+- `docs/AUDIT_BRIEF.md` — brief summary
+- `docs/AUDIT_SUBMISSION.md` — submission stats
+- `docs/SECURITY_POLICY.md` — security table
+- `docs/CONTRIBUTING.md` — contributor guide
+- `docs/PATCH-GUIDELINES.md` — patch checklist
+- `docs/TESTNET_GUIDE.md` — expected output
+- `docs/ROADMAP.md` — phase checklist
+- `SKYWALKER.md` — project instructions
 - `apps/ai-copilot/src/context/system-prompts.ts` — Ali knowledge
+- `reports/docs-status.md` — docs watchdog
+- `reports/docs-watchdog-report.md` — watchdog report
+- `audit/summary.md` — audit summary
+- `audit/test-audit.md` — test audit
+- `audit/contracts/token-audit.md` — token audit
+- `audit/BOOTSTRAP_SECURITY_REVIEW_13032026.md` — bootstrap review
 - `docs/TODO.md` + `docs/TODO.html` — always
 
 **2. Wiki/Contract Count Sync**
@@ -29,6 +57,12 @@ If a new wiki page or contract was added:
 ```
 ls docs/wiki/*.html | wc -l          # → update "25 wiki pages" everywhere
 ls contracts/*.sol | wc -l           # → update "14 on-chain components" everywhere
+```
+
+**Quick bulk replace command:**
+```
+grep -rn "OLD_COUNT" docs/ README.md SKYWALKER.md reports/ audit/ apps/ai-copilot/ \
+  --include="*.html" --include="*.md" --include="*.ts" | grep -i test
 ```
 
 **3. Consistency Check**
