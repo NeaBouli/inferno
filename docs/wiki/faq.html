@@ -516,6 +516,41 @@
       "@type": "Question",
       "name": "Where does the Bootstrap funding come from?",
       "acceptedAnswer": {"@type":"Answer","text":"BootstrapVaultV3 was funded on 11.03.2026 with ~194.75M IFR from Treasury Safe (~144.75M) and Community Safe (50M). Fee-exempt since Governance Proposal #4 execution."}
+    },
+    {
+      "@type": "Question",
+      "name": "What is the two-chamber governance system?",
+      "acceptedAnswer": {"@type":"Answer","text":"IFR governance uses a two-chamber model. Chamber 1 (The Council): Strategic decisions by Gnosis Safe Signers with 48h Timelock. Chamber 2 (The Forum): Community innovation layer where any IFR holder can submit proposals (10 IFR spam protection fee). 1 locked IFR = 1 vote. This is a Phase 4 feature, planned after LP is live."}
+    },
+    {
+      "@type": "Question",
+      "name": "Who can vote on governance proposals?",
+      "acceptedAnswer": {"@type":"Answer","text":"Any wallet with locked IFR tokens can vote in The Forum (Chamber 2). Council votes (Chamber 1) are restricted to Gnosis Safe Signers only. To participate: lock IFR, then verify your wallet at ifrunit.tech/wiki/verify.html."}
+    },
+    {
+      "@type": "Question",
+      "name": "How do I verify my wallet to access governance topics?",
+      "acceptedAnswer": {"@type":"Answer","text":"Send /verify to the IFR bot in Telegram, receive a one-time code, open ifrunit.tech/wiki/verify.html, connect MetaMask, enter the code, and sign. The bot confirms your tier and unlocks topic access. Your private key never leaves your device."}
+    },
+    {
+      "@type": "Question",
+      "name": "What are the governance access tiers?",
+      "acceptedAnswer": {"@type":"Answer","text":"Signer: Gnosis Safe owners get Core Dev + Council topics. Voter: Wallets with locked IFR > 0 get Vote topic. Builder: Registered in BuilderRegistry.sol get Dev & Builder topic. Community: Verified wallet gets general access. Use /mystatus in Telegram to check your tier."}
+    },
+    {
+      "@type": "Question",
+      "name": "What is the 10 IFR spam protection fee?",
+      "acceptedAnswer": {"@type":"Answer","text":"To submit a proposal in The Forum (Chamber 2), 10 IFR are required. If the proposal reaches consensus (top 3 after voting), the 10 IFR are refunded. If downvoted below 50%, the IFR are burned — adding deflationary pressure and creating economic incentive for quality proposals."}
+    },
+    {
+      "@type": "Question",
+      "name": "Can governance change the token supply or burn rate?",
+      "acceptedAnswer": {"@type":"Answer","text":"No. The token supply is fixed at 1B IFR — there is no mint function. The 2.5% burn rate can be adjusted by governance within hard bounds defined in the FeeRouter contract. No parameter can be changed instantly — all changes require the 48h Timelock."}
+    },
+    {
+      "@type": "Question",
+      "name": "What is the BuilderRegistry?",
+      "acceptedAnswer": {"@type":"Answer","text":"BuilderRegistry.sol is an on-chain registry of verified IFR builders and integration partners, controlled exclusively by Governance (Timelock). Registered builders gain access to the Dev & Builder Telegram topic and are eligible for Creator Rewards via PartnerVault. Contract complete with 27 tests, Sepolia deploy pending."}
     }
   ]
 }
@@ -770,6 +805,26 @@
           <button class="faq-q"><span>What is the governance roadmap?</span><span class="icon">+</span></button>
           <div class="faq-a"><strong>Phase 0</strong> (current): Single deployer EOA as Governance owner<br><strong>Phase 1</strong>: Transfer Governance owner &rarr; Gnosis Safe multisig (1-of-2)<br><strong>Phase 2</strong>: Expand to 2-of-4 multisig<br><strong>Phase 3</strong>: Expand to 3-of-5 multisig with community members<br><strong>Phase 4</strong>: Full DAO governance with token-weighted voting + safeguards<br><br>See <a href="dao-governance.html">DAO Governance</a> for the detailed plan.</div>
         </div>
+
+        <div class="faq-item">
+          <button class="faq-q"><span>What is the two-chamber governance system?</span><span class="icon">+</span></button>
+          <div class="faq-a">IFR governance uses a two-chamber model:<br><br><strong>Chamber 1 &mdash; The Council:</strong> Strategic decisions by Gnosis Safe Signers. Proposals go through a 48h Timelock before execution.<br><strong>Chamber 2 &mdash; The Forum:</strong> Community innovation layer. Any IFR holder can submit proposals (10 IFR spam protection fee). 1 locked IFR = 1 vote. No gas required for voting &mdash; only for execution.<br><br>This is a Phase 4 feature, planned after LP is live and the ecosystem is built. See <a href="governance.html">Governance</a> for the full concept.</div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q"><span>Who can vote on governance proposals?</span><span class="icon">+</span></button>
+          <div class="faq-a">Any wallet with locked IFR tokens can vote in The Forum (Chamber 2). Council votes (Chamber 1) are restricted to Gnosis Safe Signers only.<br><br>To participate:<br>&bull; Lock IFR via the <a href="lock.html">Lock Mechanism</a><br>&bull; Verify your wallet at <a href="verify.html">ifrunit.tech/wiki/verify.html</a> to unlock the Vote topic in Telegram<br>&bull; Use <code>/verify</code> in the <a href="https://t.me/IFR_token" target="_blank" rel="noopener">IFR Telegram community</a> to start</div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q"><span>How do I verify my wallet to access governance topics?</span><span class="icon">+</span></button>
+          <div class="faq-a">1. Send <code>/verify</code> to the IFR Telegram bot in <a href="https://t.me/IFR_token" target="_blank" rel="noopener">@IFR_token</a><br>2. You receive a one-time verification code (expires in 10 minutes)<br>3. Open <a href="verify.html">ifrunit.tech/wiki/verify.html</a><br>4. Connect MetaMask + enter the code + sign with your wallet<br>5. The bot confirms your tier and unlocks your topic access<br><br>This uses cryptographic signatures (EIP-191) &mdash; your private key never leaves your device.</div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q"><span>What are the governance access tiers?</span><span class="icon">+</span></button>
+          <div class="faq-a"><strong>&#x1F511; Signer:</strong> Gnosis Safe owners &rarr; Core Dev + Council + Vote + Dev &amp; Builder topics<br><strong>&#x1F5F3;&#xFE0F; Voter:</strong> Any wallet with locked IFR &gt; 0 &rarr; Vote topic<br><strong>&#x1F528; Builder:</strong> Registered in BuilderRegistry.sol &rarr; Vote + Dev &amp; Builder topics<br><strong>&#x1F464; Community:</strong> Verified wallet &rarr; General access<br><br>Use <code>/mystatus</code> in Telegram to check your current tier and access level.</div>
+        </div>
       </div>
 
       <!-- ========== 4. Bootstrap & Liquidity ========== -->
@@ -914,6 +969,26 @@
         <div class="faq-item">
           <button class="faq-q"><span>Will IFR expand to other chains (L2, cross-chain)?</span><span class="icon">+</span></button>
           <div class="faq-a">Cross-chain expansion is Phase 5, planned after Ethereum governance is fully decentralized. Potential targets include Arbitrum, Optimism, and Base. However, the fee-on-transfer mechanism requires careful bridging design &mdash; standard bridges do not support deflationary tokens out of the box. This is not a near-term priority.</div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q"><span>What is the 10 IFR spam protection fee?</span><span class="icon">+</span></button>
+          <div class="faq-a">To submit a proposal in The Forum (Chamber 2), 10 IFR are required as a spam protection fee. This prevents low-quality or spam proposals.<br><br>&bull; If the proposal reaches consensus (top 3 after voting period), the 10 IFR are <strong>refunded</strong>.<br>&bull; If the proposal is downvoted below 50%, the IFR are <strong>burned</strong> &mdash; adding deflationary pressure.<br><br>This creates an economic incentive to submit quality proposals. The mechanism is implemented in <code>IFRSpamProtection.sol</code> (Phase 4).</div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q"><span>When will DAO governance launch?</span><span class="icon">+</span></button>
+          <div class="faq-a">DAO governance (Phase 4) is planned after:<br><br>&bull; &#x2705; LP is live (after Bootstrap closes July 15, 2026)<br>&bull; &#x2705; Ecosystem is built (Builder Registry active, community established)<br>&bull; &#x2705; Multisig governance has operated successfully<br><br>The three new contracts needed &mdash; <code>RatVoting.sol</code>, <code>ForumVoting.sol</code>, and <code>IFRSpamProtection.sol</code> &mdash; are designed and planned. <code>BuilderRegistry.sol</code> (Phase 3) is already complete with 27 tests passing.</div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q"><span>Can governance change the token supply or burn rate?</span><span class="icon">+</span></button>
+          <div class="faq-a"><strong>Supply:</strong> No. The token supply is fixed at 1,000,000,000 IFR &mdash; there is no <code>mint()</code> function. This cannot be changed by governance or anyone else.<br><br><strong>Burn rate:</strong> The 2.5% burn rate can be adjusted by governance, but only within hard bounds defined in the contracts. The maximum fee cap is 5% (hardcoded). No parameter can be changed instantly &mdash; all changes require the 48h Timelock, giving the community time to review.</div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q"><span>What is the BuilderRegistry?</span><span class="icon">+</span></button>
+          <div class="faq-a"><code>BuilderRegistry.sol</code> is an on-chain registry of verified IFR builders and integration partners. It is controlled exclusively by Governance (Timelock) and supports 4 categories: Creator, Integration, Tooling, and DAO.<br><br>Registered builders gain:<br>&bull; Access to the Dev &amp; Builder Telegram topic<br>&bull; Eligibility for Creator Rewards via the PartnerVault contract<br>&bull; On-chain verification status<br><br>To apply: <a href="integration.html">ifrunit.tech/wiki/integration.html</a><br>Current status: Contract complete (27 tests), Sepolia deploy pending (Phase 3).</div>
         </div>
       </div>
 

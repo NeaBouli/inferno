@@ -179,6 +179,9 @@ Regenerate TODO.html from TODO.md content.
 - [x] `governance.html` — DAO concept fully documented (DE→EN)
 - [x] DAO contracts table (Phase 4 placeholder)
 
+### FAQ & Documentation
+- [x] `faq.html` — 8 new DAO/Governance FAQs (G1-G8: two-chamber, voting, verification, tiers, spam protection, timeline, supply, BuilderRegistry)
+
 ### SEO / Audit
 - [x] Audit report `AUDIT_REPORT_20260314.md` created
 - [x] Test counts 494/444 → 556 across 32 files
