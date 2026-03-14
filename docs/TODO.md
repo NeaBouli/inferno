@@ -17,6 +17,7 @@ npx hardhat test --reporter min 2>&1 | tail -3
 ```
 Then update ALL of these if counts changed:
 - `docs/index.html` — test badges/counters
+- `docs/wiki/index.html` — Quick Stats (Tests, Wiki Pages, On-chain Components)
 - `docs/wiki/security.html` — test table + totals
 - `README.md` — test count table
 - `docs/DOCS.md` — test summary
@@ -80,7 +81,7 @@ Regenerate TODO.html from TODO.md content.
 - [ ] Final test Protected Topics (Vote/Council/Dev&Builder/Core Dev)
 
 ### Ali Copilot
-- [ ] Security policy: no PII, no wallet outputs, no contract addresses directly, only ifrunit.tech, always reliability disclaimer
+- [x] Security policy: no PII, no wallet outputs, no contract addresses, only ifrunit.tech, reliability disclaimer, scam awareness ✅
 - [ ] Ali Phase 2: WalletConnect → wallet-specific responses (after LP live)
 
 ---
@@ -178,6 +179,9 @@ Regenerate TODO.html from TODO.md content.
 - [x] Two-chamber visual on landing page
 - [x] `governance.html` — DAO concept fully documented (DE→EN)
 - [x] DAO contracts table (Phase 4 placeholder)
+
+### Ali Copilot
+- [x] Security policy — no PII, no wallet outputs, no contract addresses, only ifrunit.tech links, reliability disclaimer, scam awareness (9-point policy in system-prompts.ts)
 
 ### FAQ & Documentation
 - [x] `faq.html` — 8 new DAO/Governance FAQs (G1-G8: two-chamber, voting, verification, tiers, spam protection, timeline, supply, BuilderRegistry)
