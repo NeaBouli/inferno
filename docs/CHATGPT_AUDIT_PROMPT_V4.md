@@ -1,6 +1,6 @@
 # ChatGPT Independent Audit Prompt — V4
 
-As of: March 2026 | 10 On-Chain Components | 494 tests | 91% Branch Coverage
+As of: March 2026 | 10 On-Chain Components | 556 tests | 91% Branch Coverage
 
 ## Instructions
 
@@ -62,7 +62,7 @@ Check whether the following numbers are consistent across all docs:
 | Creator Gateway Tests | 41 |
 | Points Backend Tests | 20 |
 | Benefits Network Tests | 16 |
-| Total Tests | 444 |
+| Total Tests | 556 |
 | Branch Coverage | 91% |
 
 **Files to check:**
@@ -113,7 +113,7 @@ Check whether `docs/CHANGELOG.md` in the [Unreleased] section contains the curre
 
 **PASS criteria:**
 - Contract test counter mentioned (367 or current)
-- Total tests mentioned (444)
+- Total tests mentioned (556)
 - Branch coverage mentioned (91%)
 - New files listed (lockProof.ts, captcha.ts, siwe.test.ts)
 

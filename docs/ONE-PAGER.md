@@ -14,7 +14,7 @@ builder benefits, creator content, and protocol discounts.
 | Team Vesting | 150M IFR, 4 years, 1 year cliff |
 | LP Liquidity | 400M IFR (40%) |
 | Protocol Fee | 0.05% (5 bps) |
-| Smart Contract Tests | 444 (99% coverage) |
+| Smart Contract Tests | 556 (99% coverage) |
 | On-Chain Components | 10 deployed + verified on mainnet |
 
 ## Tokenomics
@@ -37,7 +37,7 @@ Deflationary + Utility:
 
 - Blockchain: Ethereum Mainnet (deployed 2026-03-05)
 - Contracts: Solidity 0.8.20, OpenZeppelin v5
-- Security: Slither 0 High/Critical, 494 tests, 99% coverage
+- Security: Slither 0 High/Critical, 556 tests, 99% coverage
 - Governance: 48h Timelock, Guardian Cancel, Gnosis Safe Multisig
 
 ## Post-Launch Roadmap

@@ -8,7 +8,7 @@
 | Metric | Expected |
 |--------|----------|
 | Contract Tests | 367 |
-| Total Tests | 444 (367 + 41 + 20 + 16) |
+| Total Tests | 556 (521 protocol + 35 ecosystem) |
 | On-Chain Components | 14 (10 repo + 3 v2 + LP Pair) |
 | Branch Coverage | 91% |
 | Statement Coverage | 99% |
@@ -54,7 +54,7 @@
 - `pending-item "Ownership Transfer Proposals #4-6"` -> `check-item "Ownership Transfer (v2 redeploy + Proposals #7-9 executed)"`
 
 ### Fix 8: docs/DOCS.md — PROJECT-SUMMARY Description
-- "10 Contracts, 396 Tests" -> "14 Contracts, 494 tests"
+- "10 Contracts, 396 Tests" -> "14 Contracts, 556 tests"
 
 ### Fix 9: docs/MAINNET_CHECKLIST.md — Contract Count
 - Header: "10 Contracts deployed" -> "14 Contracts deployed"

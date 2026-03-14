@@ -44,7 +44,7 @@ Threshold: 1-of-2 (Deployer + Signer2). Expanding to 2-of-4.
 | Creator Gateway | 41 | Jest + ts-jest + supertest |
 | Points Backend | 20 | tsx runner |
 | Benefits Network | 16 | Jest |
-| **Total** | **444** | |
+| **Total** | **556** | |
 
 ### Solidity Coverage (solidity-coverage)
 
@@ -93,7 +93,7 @@ Threshold: 1-of-2 (Deployer + Signer2). Expanding to 2-of-4.
 
 ## Documentation
 
-- **16 wiki pages** (HTML, `docs/wiki/`)
+- **25 wiki pages** (HTML, `docs/wiki/`)
 - **40+ technical docs** (Markdown, `docs/*.md`)
 - Landing page (GitHub Pages): `docs/index.html`
 - Domain: [ifrunit.tech](https://ifrunit.tech)
