@@ -275,7 +275,7 @@ function updateStep2Wallet(){
   var signBtn=document.getElementById("sign-btn");
   if(typeof IFRWallet!=="undefined"&&IFRWallet.isConnected()){
     var addr=IFRWallet.getAddress();
-    addrEl.textContent=addr.slice(0,6)+".."+addr.slice(-4);
+    addrEl.textContent=addr.slice(0,6)+".."+addr.slice(-2);
     addrEl.style.color="#22c55e";
     signBtn.disabled=false;signBtn.style.opacity="1";
   }else{
@@ -320,7 +320,7 @@ function showResult(success,data){
     var ah="";
     if(data.access&&data.access.length>0){ah='<div style="margin-top:12px"><strong style="color:#e5e7eb">Topics unlocked:</strong><ul style="margin-top:8px">'+data.access.map(function(t){return'<li style="color:#22c55e">\u2705 '+t+'</li>'}).join("")+'</ul></div>';}
     else{ah='<p style="color:#9ca3af;margin-top:12px">No restricted topic access. Lock IFR to gain Vote access.</p>';}
-    r.innerHTML='<div class="callout-green callout"><p style="font-size:1.1rem;font-weight:700;color:#22c55e">\u2705 Verification Successful!</p><p style="margin-top:8px">Wallet: <code>'+data.wallet.slice(0,6)+'...'+data.wallet.slice(-4)+'</code></p><p>Tier: <strong>'+tl+'</strong></p>'+ah+'<p style="margin-top:12px;color:#6b7280;font-size:0.85rem">Check your Telegram DMs for confirmation.</p></div>';
+    r.innerHTML='<div class="callout-green callout"><p style="font-size:1.1rem;font-weight:700;color:#22c55e">\u2705 Verification Successful!</p><p style="margin-top:8px">Wallet: <code>'+data.wallet.slice(0,6)+'..'+data.wallet.slice(-2)+'</code></p><p>Tier: <strong>'+tl+'</strong></p>'+ah+'<p style="margin-top:12px;color:#6b7280;font-size:0.85rem">Check your Telegram DMs for confirmation.</p></div>';
   }else{
     r.innerHTML='<div class="callout" style="border-left-color:#ef4444;background:rgba(239,68,68,0.06)"><p style="color:#ef4444;font-weight:700">\u274C Verification Failed</p><p style="margin-top:8px">'+(data.error||"Unknown error")+'</p><p style="margin-top:8px;color:#6b7280">Get a new code with /verify in Telegram.</p></div>';
   }
@@ -383,7 +383,7 @@ function lpUpdateUI(state){
   if(connectBtn){connectBtn.style.display=connected?"none":"";if(!connected){connectBtn.textContent="\u{1F98A} Connect";connectBtn.disabled=false;connectBtn.style.background="transparent";connectBtn.style.borderColor="#f97316";connectBtn.style.color="#f97316";connectBtn.onclick=lpConnect}}
   if(connectedDiv)connectedDiv.style.display=connected?"":"none";
   if(connected&&state){
-    var addr=IFRWallet.getAddress();var shortAddr=addr.slice(0,6)+".."+addr.slice(-4);
+    var addr=IFRWallet.getAddress();var shortAddr=addr.slice(0,6)+".."+addr.slice(-2);
     var el=document.getElementById("lp-header-addr");if(el)el.textContent=shortAddr;
     var dropAddr=document.getElementById("lp-drop-addr");if(dropAddr)dropAddr.textContent=addr.slice(0,10)+"..."+addr.slice(-6);
     var dropEth=document.getElementById("lp-drop-eth");if(dropEth)dropEth.textContent=parseFloat(state.ethBalance||"0").toFixed(4)+" ETH";

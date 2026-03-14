@@ -801,7 +801,7 @@ function lpUpdateUI(state){
   if(connectedDiv)connectedDiv.style.display=connected?"":"none";
   if(connected&&state){
     var addr=IFRWallet.getAddress();
-    var shortAddr=addr.slice(0,6)+".."+addr.slice(-4);
+    var shortAddr=addr.slice(0,6)+".."+addr.slice(-2);
     var el=document.getElementById("lp-header-addr");if(el)el.textContent=shortAddr;
     var dropAddr=document.getElementById("lp-drop-addr");if(dropAddr)dropAddr.textContent=addr.slice(0,10)+"..."+addr.slice(-6);
     var dropEth=document.getElementById("lp-drop-eth");if(dropEth)dropEth.textContent=parseFloat(state.ethBalance||"0").toFixed(4)+" ETH";
