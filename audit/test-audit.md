@@ -1,1 +1,1 @@
-- [x] Test suite audit — 494 tests passing (367 contract + 41 Creator Gateway + 20 Points Backend + 16 Benefits Network)
+- [x] Test suite audit — 556 tests passing (521 protocol + 35 ecosystem)

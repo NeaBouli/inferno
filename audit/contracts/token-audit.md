@@ -20,5 +20,5 @@
 ## Test Coverage
 
 - 22 unit tests for InfernoToken (all passing)
-- 444 total tests across the project (367 contract + 77 app)
+- 556 total tests across the project (521 protocol + 35 ecosystem)
 - 99.45% statement coverage

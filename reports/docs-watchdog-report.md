@@ -9,9 +9,9 @@ All documentation is up to date following the mainnet deployment on 2026-03-05.
 ## Key Metrics
 
 - **Mainnet:** 9 contracts deployed and verified on Etherscan
-- **Total tests:** 444 (367 contract + 41 Creator Gateway + 20 Points Backend + 16 Benefits Network)
+- **Total tests:** 556 (521 protocol + 35 ecosystem)
 - **Solidity coverage:** 99.45% statements, 91% branch, 98.26% functions, 99% lines
-- **Wiki pages:** 16 HTML pages
+- **Wiki pages:** 25 HTML pages
 - **CI workflows:** 5 (creator-gateway, points-backend, ai-copilot, benefits-network, docs-validator)
 - **Apps:** 7 total
 

@@ -8,6 +8,7 @@
 
 [Website](https://ifrunit.tech/) · [Documentation](https://ifrunit.tech/wiki/) · [X / Twitter](https://x.com/IFRtoken) · [Etherscan](https://etherscan.io/address/0x77e99917Eca8539c62F509ED1193ac36580A6e7B#code)
 
+<!-- TODO: IFR_UPDATE — TEST_COUNT + CONTRACT_COUNT — update on each sprint -->
 **14 on-chain components** | **556 tests** | **91% branch coverage** | **9 verified contracts + BootstrapVaultV3 + LP Pair + 3 upgrade deploys**
 
 ---

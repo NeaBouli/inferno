@@ -28,7 +28,7 @@ Lifetime Access, Milestone-based PartnerVault, 48h Timelock Governance.
 - OpenZeppelin v5 (ERC20, Ownable, ReentrancyGuard, Pausable, SafeERC20)
 - Hardhat v2
 - ethers v5
-- 494 tests (Chai v4 + Waffle)
+- 556 tests (521 protocol + 35 ecosystem)
 
 ## Known Design Decisions (no finding expected)
 - 9 Decimals (not 18) — intentional decision
