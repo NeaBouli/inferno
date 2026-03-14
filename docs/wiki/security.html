@@ -772,12 +772,12 @@
       <h2><span class="section-num">3.</span> Test Coverage</h2>
 
       <p>
-        The project maintains <strong>556 tests</strong> (521 protocol + 35 ecosystem) across <strong>15 test suites</strong>, all passing. Tests cover deployment, core logic, edge cases, access control, pause mechanisms, cross-contract integration, wallet verification, and browser testing.
+        The project maintains <strong>556 tests</strong> (521 protocol + 35 ecosystem) across <strong>16 test suites</strong>, all passing. Tests cover deployment, core logic, edge cases, access control, pause mechanisms, cross-contract integration, wallet verification, and browser testing.
       </p>
 
       <div class="callout callout-green">
         <p>
-          <strong>556 / 556 tests passing</strong> &mdash; 15 test suites, 0 failures.
+          <strong>556 / 556 tests passing</strong> &mdash; 16 test suites, 0 failures.
         </p>
       </div>
 
@@ -835,6 +835,11 @@
               <td><strong>FeeRouterV1</strong></td>
               <td>33</td>
               <td>Deployment, fee charging, voucher discount, voucher validation (isVoucherValid), replay protection, signer rotation, fee collector, access control, pause, receive ETH</td>
+            </tr>
+            <tr>
+              <td><strong>BuilderRegistry</strong></td>
+              <td>27</td>
+              <td>Register, remove, update, category validation, access control, views, edge cases</td>
             </tr>
           </tbody>
         </table>
@@ -1382,7 +1387,7 @@ function lpUpdateUI(state){
   if(connectedDiv)connectedDiv.style.display=connected?"":"none";
   if(connected&&state){
     var addr=IFRWallet.getAddress();
-    var shortAddr=addr.slice(0,6)+".."+addr.slice(-4);
+    var shortAddr=addr.slice(0,6)+".."+addr.slice(-2);
     var el=document.getElementById("lp-header-addr");if(el)el.textContent=shortAddr;
     var dropAddr=document.getElementById("lp-drop-addr");if(dropAddr)dropAddr.textContent=addr.slice(0,10)+"..."+addr.slice(-6);
     var dropEth=document.getElementById("lp-drop-eth");if(dropEth)dropEth.textContent=parseFloat(state.ethBalance||"0").toFixed(4)+" ETH";
