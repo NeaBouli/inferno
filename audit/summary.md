@@ -6,7 +6,7 @@ _Last updated: 2026-03-06_
 
 - **Mainnet deployed:** 2026-03-05 (9 contracts, all verified on Etherscan)
 - **Slither static analysis:** 0 high/critical findings
-- **Total tests:** 556 (521 protocol + 35 ecosystem)
+- **Total tests:** 568 (521 protocol + 47 ecosystem)
 - **Solidity coverage:** 99.45% statements, 91% branch, 98.26% functions, 99% lines
 - **App security review:** 20/25 findings fixed, 5 documented (see docs/APP_SECURITY_REVIEW.md)
 - **Professional third-party audit:** Recommended as next security milestone

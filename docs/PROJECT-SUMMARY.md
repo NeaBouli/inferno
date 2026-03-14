@@ -44,7 +44,7 @@ Threshold: 1-of-2 (Deployer + Signer2). Expanding to 2-of-4.
 | Creator Gateway | 41 | Jest + ts-jest + supertest |
 | Points Backend | 20 | tsx runner |
 | Benefits Network | 16 | Jest |
-| **Total** | **556** | |
+| **Total** | **568** | |
 
 ### Solidity Coverage (solidity-coverage)
 

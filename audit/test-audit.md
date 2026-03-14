@@ -1,1 +1,1 @@
-- [x] Test suite audit — 556 tests passing (521 protocol + 35 ecosystem)
+- [x] Test suite audit — 568 tests passing (521 protocol + 47 ecosystem)
