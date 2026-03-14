@@ -3,32 +3,32 @@ const { getBurnStats } = require('../services/onchain');
 const logger = require('../services/logger');
 
 function formatNum(n) {
-  return Math.round(n).toLocaleString('de-DE');
+  return Math.round(n).toLocaleString('en-US');
 }
 
 async function burnsCommand(ctx) {
-  const loadingMsg = await ctx.reply('🔥 Lade Burn-Daten...');
+  const loadingMsg = await ctx.reply('🔥 Loading burn data...');
 
   try {
     const stats = await getBurnStats();
-    const date = new Date().toLocaleDateString('de-DE', {
+    const date = new Date().toLocaleDateString('en-US', {
       day: '2-digit', month: '2-digit', year: 'numeric',
     });
 
-    const reply = `🔥 *IFR Burn-Report — ${date}*
+    const reply = `🔥 *IFR Burn Report — ${date}*
 ━━━━━━━━━━━━━━━━━━━━━
 
-📦 *Initialer Supply:* 1.000.000.000 IFR
-📉 *Aktueller Supply:* ${formatNum(stats.totalSupply)} IFR
-🔥 *Verbrannt gesamt:* ${formatNum(stats.burned)} IFR *(${stats.burnedPercent.toFixed(4)}%)*
+📦 *Initial Supply:* 1,000,000,000 IFR
+📉 *Current Supply:* ${formatNum(stats.totalSupply)} IFR
+🔥 *Total Burned:* ${formatNum(stats.burned)} IFR *(${stats.burnedPercent.toFixed(4)}%)*
 
-📋 *Burn-Mechanismus:*
-• 2% vom Sender (permanent verbrannt)
-• 0.5% vom Empfänger (permanent verbrannt)
-• 1% Pool Fee
-• Gesamt: *3.5% pro Transfer*
+📋 *Burn Mechanism:*
+• 2% from sender (permanently burned)
+• 0.5% from recipient (permanently burned)
+• 1% pool fee
+• Total: *3.5% per transfer*
 
-💡 Jede Transaktion macht IFR dauerhaft seltener.
+💡 Every transaction makes IFR permanently scarcer.
 
 🌐 [Tokenomics Wiki](https://ifrunit.tech/wiki/tokenomics.html) | [Etherscan](https://etherscan.io/token/0x77e99917Eca8539c62F509ED1193ac36580A6e7B)`;
 
@@ -45,7 +45,7 @@ async function burnsCommand(ctx) {
       ctx.chat.id,
       loadingMsg.message_id,
       null,
-      '❌ Fehler beim Abrufen der Supply-Daten. Bitte erneut versuchen.\n\nManuelle Prüfung: https://etherscan.io/token/0x77e99917Eca8539c62F509ED1193ac36580A6e7B'
+      '❌ Failed to fetch supply data. Please try again.\n\nManual check: https://etherscan.io/token/0x77e99917Eca8539c62F509ED1193ac36580A6e7B'
     );
   }
 }

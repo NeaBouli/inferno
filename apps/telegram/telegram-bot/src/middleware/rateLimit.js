@@ -27,7 +27,7 @@ function rateLimit(command) {
 
     if (current >= max) {
       return ctx.reply(
-        `⏳ Zu viele Anfragen. Bitte ${windowSec} Sekunden warten.\n\nMehr Infos: https://ifrunit.tech`
+        `⏳ Too many requests. Please wait ${windowSec} seconds.\n\nMore info: https://ifrunit.tech`
       );
     }
 

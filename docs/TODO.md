@@ -106,12 +106,12 @@ Regenerate TODO.html from TODO.md content.
 - [ ] Transfer Governance → GnosisSafe ownership
 
 ### Telegram Bot
-- [ ] `/announce` command: auto-append community link (`https://t.me/IFR_token/1`)
-- [ ] Channel → Community Announcements auto-sync
-- [ ] Keep latest announcement always pinned
-- [ ] Test Daily Welcome (TELEGRAM_GENERAL_TOPIC_ID=5)
-- [ ] Test Daily Burn Report (TELEGRAM_BURNS_TOPIC_ID=7)
-- [ ] Full language check/switch to English
+- [x] `/announce` command: auto-append community link (`https://t.me/IFR_token/1`) ✅
+- [x] Channel → Community Announcements auto-sync + pin ✅
+- [x] Keep latest announcement always pinned ✅
+- [x] Test Daily Welcome (`/testwelcome` admin command) ✅
+- [x] Test Daily Burn Report (`/testburn` admin command) ✅
+- [x] Full language check/switch to English (7 files rewritten) ✅
 - [ ] Final test Protected Topics (Vote/Council/Dev&Builder/Core Dev)
 
 ### Ali Copilot

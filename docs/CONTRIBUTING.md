@@ -60,7 +60,7 @@ Commit prefixes:
 For Solidity changes:
 1. Deploy a new contract version (never patch in-place)
 2. Governance Proposal for migration (48h Timelock)
-3. Tests: `npx hardhat test` (all 568 must pass)
+3. Tests: `npx hardhat test` (all 578 must pass)
 4. Coverage: `npx hardhat coverage` (>80% Branch Coverage)
 5. Update documentation
 

@@ -1,37 +1,37 @@
-// services/skywalker.js — AI API Wrapper für /ask
+// services/skywalker.js — AI API Wrapper for /ask
 require('dotenv').config();
 const axios = require('axios');
 const cache = require('./cache');
 const logger = require('./logger');
 
-const SYSTEM_PROMPT = `Du bist der offizielle Assistent des Inferno ($IFR) Protokolls auf Ethereum.
-Beantworte AUSSCHLIESSLICH Fragen zu IFR und dem Inferno-Protokoll. Lehne alle anderen Anfragen höflich ab.
+const SYSTEM_PROMPT = `You are the official assistant for the Inferno ($IFR) Protocol on Ethereum.
+Answer ONLY questions about IFR and the Inferno Protocol. Politely decline all other requests.
 
-DISCLAIMER (bei jeder ersten Antwort an einen neuen User hinzufügen):
+DISCLAIMER (add to every first response to a new user):
 ⚠️ AI assistant — responses may not be 100% accurate. Never share wallet addresses or private keys.
 💛 Ali runs on donated infrastructure. Support via ETH/IFR: 0xA0860f872a9cAB34817D9a764e71ab43B942b275
 
-WISSEN ÜBER IFR:
-- Token: Inferno ($IFR), deflationary ERC-20 auf Ethereum Mainnet
-- Supply: 1.000.000.000 IFR (1 Milliarde), kein Mint möglich — fixiert
-- Burn: 3.5% pro Transfer (2% vom Sender verbrannt, 0.5% vom Empfänger verbrannt, 1% Pool Fee)
+IFR KNOWLEDGE:
+- Token: Inferno ($IFR), deflationary ERC-20 on Ethereum Mainnet
+- Supply: 1,000,000,000 IFR (1 billion), no mint function — fixed forever
+- Burn: 3.5% per transfer (2% sender burn, 0.5% recipient burn, 1% pool fee)
 - Decimals: 9
 - Contract: 0x77e99917Eca8539c62F509ED1193ac36580A6e7B
-- Lock-Mechanismus: IFR in IFRLock Contract sperren = Zugang zu Partner-Apps. Tokens bleiben Eigentum des Nutzers. Jederzeit entsperrbar.
-- Fair Launch: Kein Presale, kein VC-Kapital, kein Team-Kapital. Community-driven.
-- Team-Tokens: 4 Jahre vesting, 12 Monate Cliff
-- Verteilung: 40% LP, 20% LiqRes, 15% Team, 10% Bootstrap, 8% Buyback, 6% Community, 4% Partner
+- Lock Mechanism: Lock IFR in the IFRLock contract = access to partner apps. Tokens remain your property. Unlockable at any time.
+- Fair Launch: No presale, no VC funding, no team allocation at launch. Community-driven.
+- Team Tokens: 4-year vesting, 12-month cliff
+- Distribution: 40% LP, 20% LiqRes, 15% Team, 10% Bootstrap, 8% Buyback, 6% Community, 4% Partner
 - Website: https://ifrunit.tech
 - Repo: github.com/NeaBouli/inferno
 - X/Twitter: @IFRtoken
 
-WICHTIG:
-- Kein Finanzrat, keine Preisprognosen
-- Antworte auf Deutsch oder Englisch (je nach Sprache der Frage)
-- Max. 3 präzise Sätze
-- Wenn du etwas nicht weißt, verweise auf https://ifrunit.tech oder /help`;
+IMPORTANT:
+- No financial advice, no price predictions
+- Answer in the same language as the question (English or German)
+- Max 3 concise sentences
+- If unsure, refer to https://ifrunit.tech or /help`;
 
-// Rate limit tracking (in-memory pro User)
+// Rate limit tracking (in-memory per user)
 const userAskCounts = new Map(); // userId -> { count, resetAt }
 let globalAskCount = 0;
 let globalResetAt = Date.now() + 3600000;
@@ -75,14 +75,14 @@ async function askSkywalker(userId, question) {
   const limit = checkRateLimit(userId);
   if (!limit.allowed) {
     if (limit.reason === 'user') {
-      return `⏳ Du hast dein stündliches Limit für /ask erreicht.\nNoch ${limit.waitMin} Minuten warten.\n\nDu kannst auch direkt auf https://ifrunit.tech/wiki/faq.html nachschauen.`;
+      return `⏳ You've reached your hourly limit for /ask.\nPlease wait ${limit.waitMin} minutes.\n\nYou can also check https://ifrunit.tech/wiki/faq.html directly.`;
     }
-    return `⏳ Bot-Limit erreicht. Bitte in ${limit.waitMin} Minuten erneut versuchen.`;
+    return `⏳ Bot limit reached. Please try again in ${limit.waitMin} minutes.`;
   }
 
   // Input sanitation
   const sanitized = question.trim().substring(0, 500);
-  if (!sanitized) return '❓ Bitte stelle eine Frage nach /ask.';
+  if (!sanitized) return '❓ Please ask a question after /ask.';
 
   try {
     const { data } = await axios.post(
@@ -106,7 +106,7 @@ async function askSkywalker(userId, question) {
     return data.content[0].text;
   } catch (err) {
     logger.error({ err: err.message }, 'AI API error');
-    return '❌ Copilot gerade nicht erreichbar. Bitte versuche es später erneut oder schau in die FAQ:\nhttps://ifrunit.tech/wiki/faq.html';
+    return '❌ Copilot unavailable. Please try again later or check the FAQ:\nhttps://ifrunit.tech/wiki/faq.html';
   }
 }
 

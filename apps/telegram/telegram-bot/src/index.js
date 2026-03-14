@@ -60,7 +60,7 @@ const bot = new Telegraf(process.env.BOT_TOKEN);
 // Global error handler
 bot.catch((err, ctx) => {
   logger.error({ err: err.message, update: ctx.updateType }, 'Unhandled bot error');
-  ctx.reply('❌ Ein unerwarteter Fehler ist aufgetreten. Bitte erneut versuchen.').catch(() => {});
+  ctx.reply('❌ An unexpected error occurred. Please try again.').catch(() => {});
 });
 
 // ── Moderation middleware (group messages) ───────────────────────────────────
@@ -104,7 +104,7 @@ bot.on('channel_post', async (ctx) => {
     if (!groupId) return;
     const text = ctx.channelPost.text || ctx.channelPost.caption;
     if (!text) return;
-    await ctx.telegram.sendMessage(
+    const sentMsg = await ctx.telegram.sendMessage(
       groupId,
       `📡 *Channel Update*\n\n${text}\n\n💬 [Join the community](https://t.me/IFR_token)`,
       {
@@ -113,6 +113,12 @@ bot.on('channel_post', async (ctx) => {
         disable_web_page_preview: true
       }
     );
+    // Auto-pin synced announcement in community
+    try {
+      await ctx.telegram.pinChatMessage(groupId, sentMsg.message_id, { disable_notification: true });
+    } catch (pinErr) {
+      logger.warn({ err: pinErr.message }, 'Failed to pin synced channel post');
+    }
   } catch (err) {
     logger.error({ err: err.message }, 'Channel sync error');
   }
@@ -153,11 +159,31 @@ bot.on('message', async (ctx, next) => {
   }
 });
 
-// Unbekannte Nachrichten / Commands
+// ── Admin test commands ──────────────────────────────────────────────────────
+const { sendDailyWelcome } = require('./handlers/dailyWelcome');
+const { sendDailyBurnReport } = require('./handlers/dailyReport');
+
+bot.command('testwelcome', adminOnly, async (ctx) => {
+  const chatId = process.env.TELEGRAM_GROUP_ID;
+  const topicId = process.env.TELEGRAM_GENERAL_TOPIC_ID;
+  if (!chatId) return ctx.reply('❌ TELEGRAM_GROUP_ID not set.');
+  await sendDailyWelcome(bot, chatId, topicId ? parseInt(topicId, 10) : null);
+  await ctx.reply('✅ Daily welcome sent.');
+});
+
+bot.command('testburn', adminOnly, async (ctx) => {
+  const chatId = process.env.TELEGRAM_GROUP_ID;
+  const topicId = process.env.TELEGRAM_BURNS_TOPIC_ID;
+  if (!chatId) return ctx.reply('❌ TELEGRAM_GROUP_ID not set.');
+  await sendDailyBurnReport(bot, chatId, topicId ? parseInt(topicId, 10) : null);
+  await ctx.reply('✅ Burn report sent.');
+});
+
+// Unknown commands
 bot.on('text', async (ctx) => {
   if (ctx.message.text.startsWith('/')) {
     await ctx.reply(
-      '❓ Unbekannter Befehl. Tippe /help für alle verfügbaren Commands.'
+      '❓ Unknown command. Type /help for all available commands.'
     );
   }
 });
