@@ -1,19 +1,20 @@
-// commands/start.js — /start und /help
+// commands/start.js — /start and /help
 const { Markup } = require('telegraf');
 
-const WELCOME = `🔥 *Willkommen bei Inferno (\$IFR)!*
+const WELCOME = `🔥 *Welcome to Inferno ($IFR)!*
 
-Ich bin der offizielle Community-Assistent des Inferno-Protokolls — 24/7 für dich da.
+I'm the official community assistant for the Inferno Protocol — available 24/7.
 
-*Was ich kann:*
-🔒 \`/lock <wallet>\` — Lock-Status prüfen
-🔥 \`/burns\` — Burns & aktueller Supply
-📊 \`/tokenomics\` — Token-Verteilung
-🚀 \`/bootstrap\` — Bootstrap-Info
-🤝 \`/partner\` — Partner-Ökosystem
-🗺 \`/roadmap\` — Projekt-Roadmap
-💬 \`/ask <frage>\` — KI-Frage stellen
-❓ \`/help\` — Alle Befehle
+*What I can do:*
+🔒 \`/lock <wallet>\` — Check lock status
+🔥 \`/burns\` — Burns & current supply
+📊 \`/tokenomics\` — Token distribution
+🚀 \`/bootstrap\` — Bootstrap event info
+🤝 \`/partner\` — Partner ecosystem
+🗺 \`/roadmap\` — Project roadmap
+💬 \`/ask <question>\` — Ask the AI copilot
+🔐 \`/verify\` — Verify your wallet
+❓ \`/help\` — All commands
 
 🌐 [ifrunit.tech](https://ifrunit.tech) | 🐦 [@IFRtoken](https://x.com/IFRtoken)`;
 
@@ -24,7 +25,7 @@ const KEYBOARD = Markup.inlineKeyboard([
   ],
   [
     Markup.button.url('🔥 Tokenomics', 'https://ifrunit.tech/wiki/tokenomics.html'),
-    Markup.button.url('🔒 Lock-Guide', 'https://ifrunit.tech/wiki/lock-mechanism.html'),
+    Markup.button.url('🔒 Lock Guide', 'https://ifrunit.tech/wiki/lock-mechanism.html'),
   ],
 ]);
 

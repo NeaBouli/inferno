@@ -2,18 +2,18 @@
 const { Markup } = require('telegraf');
 
 async function partnerCommand(ctx) {
-  const reply = `🤝 *IFR Partner-Ökosystem*
+  const reply = `🤝 *IFR Partner Ecosystem*
 ━━━━━━━━━━━━━━━━━━━━━
 
-Partner-Apps nutzen den IFR Lock-Mechanismus als Zugangssystem:
+Partner apps use the IFR Lock Mechanism as an access system:
 
-*So funktioniert es:*
-1️⃣ User kauft IFR auf Uniswap
-2️⃣ User lockt IFR im IFRLock Contract
-3️⃣ Partner prüft: \`isLocked(wallet, minAmount)\`
-4️⃣ User erhält dauerhaften Zugang
+*How it works:*
+1️⃣ User buys IFR on Uniswap
+2️⃣ User locks IFR in the IFRLock contract
+3️⃣ Partner checks: \`isLocked(wallet, minAmount)\`
+4️⃣ User gets lifetime access
 
-*Für Entwickler — 5 Zeilen Code:*
+*For developers — 5 lines of code:*
 \`\`\`
 const locked = await ifrLock.isLocked(
   userWallet, minAmount
@@ -21,10 +21,10 @@ const locked = await ifrLock.isLocked(
 if (locked) grantAccess(user);
 \`\`\`
 
-*Partner werden:*
-• Registrierung via Governance
-• Zugang zu 40M IFR Partner-Vault
-• Open-Source Integration
+*Become a partner:*
+• Registration via Governance
+• Access to 40M IFR Partner Vault
+• Open-source integration
 
 📋 [Partner Wiki](https://ifrunit.tech/wiki/integration.html)`;
 

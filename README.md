@@ -9,7 +9,7 @@
 [Website](https://ifrunit.tech/) · [Documentation](https://ifrunit.tech/wiki/) · [X / Twitter](https://x.com/IFRtoken) · [Etherscan](https://etherscan.io/address/0x77e99917Eca8539c62F509ED1193ac36580A6e7B#code)
 
 <!-- TODO: IFR_UPDATE — TEST_COUNT + CONTRACT_COUNT — update on each sprint -->
-**14 on-chain components** | **568 tests** | **91% branch coverage** | **9 verified contracts + BootstrapVaultV3 + LP Pair + 3 upgrade deploys**
+**14 on-chain components** | **578 tests** | **91% branch coverage** | **9 verified contracts + BootstrapVaultV3 + LP Pair + 3 upgrade deploys**
 
 ---
 
@@ -92,7 +92,7 @@ The ecosystem is open and permissionless. Any product can integrate IFR Lock.
 
 ## Testing & Security
 
-**568 tests** — all passing
+**578 tests** — all passing
 
 ### Protocol Tests — 521
 | Suite | Count | Framework |
@@ -102,11 +102,12 @@ The ecosystem is open and permissionless. Any product can integrate IFR Lock.
 | App Backend | 77 | Mocha |
 | Bootstrap Suite | 50 | Hardhat |
 
-### Ecosystem Tests — 47
+### Ecosystem Tests — 57
 | Suite | Count | Framework |
 |---|---|---|
 | Wallet Verification + OnChain | 23 | Mocha |
 | Vote Announcements | 12 | Mocha |
+| Bot Announcements | 10 | Mocha |
 | Browser / WalletConnect | 12 | Playwright |
 
 - Branch coverage: 91% (99% statements)
@@ -224,7 +225,7 @@ SIWE authentication, points tracking, and EIP-712 signed voucher issuance for pr
 - [Roadmap](docs/ROADMAP.md) — 6-phase roadmap (Foundation → Governance → Ecosystem → Mainnet → Growth → DAO)
 - [Page Update Checklist](docs/PAGE_UPDATE_CHECKLIST.md) — Which files to update for each event
 - [Deployment Stats](docs/stats.json) — Auto-generated on-chain stats (via update-stats.js)
-- [Project Summary](docs/PROJECT-SUMMARY.md) — Complete overview (9 mainnet contracts, 568 tests, 7 apps)
+- [Project Summary](docs/PROJECT-SUMMARY.md) — Complete overview (9 mainnet contracts, 578 tests, 7 apps)
 - [Release Notes v0.1.0](docs/RELEASE_NOTES_v0.1.0.md) — First tagged release (Sepolia testnet)
 - [Lighthouse Report](docs/LIGHTHOUSE_REPORT.md) — SEO optimizations (OG, Twitter Card, meta tags, sitemap, robots.txt)
 - [AI Copilot Test Results](docs/COPILOT_TEST_RESULTS.md) — RAG system test (6 questions, 3 modes, safety guards)

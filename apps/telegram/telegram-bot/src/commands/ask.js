@@ -1,4 +1,4 @@
-// commands/ask.js — /ask <frage> via AI API
+// commands/ask.js — /ask <question> via AI API
 const { askSkywalker } = require('../services/skywalker');
 const logger = require('../services/logger');
 
@@ -8,11 +8,11 @@ async function askCommand(ctx) {
 
   if (!question) {
     return ctx.reply(
-      '💬 Nutzung: /ask <deine Frage>\n\nBeispiel:\n/ask Wie locke ich IFR?\n/ask Was ist der Burn-Mechanismus?'
+      '💬 Usage: /ask <your question>\n\nExample:\n/ask How do I lock IFR?\n/ask What is the burn mechanism?'
     );
   }
 
-  const loadingMsg = await ctx.reply('🤖 Copilot denkt nach...');
+  const loadingMsg = await ctx.reply('🤖 Copilot is thinking...');
 
   try {
     const userId = ctx.from.id;
@@ -31,7 +31,7 @@ async function askCommand(ctx) {
       ctx.chat.id,
       loadingMsg.message_id,
       null,
-      '❌ Copilot nicht erreichbar. Bitte später erneut versuchen.\n\nFAQ: https://ifrunit.tech/wiki/faq.html'
+      '❌ Copilot unavailable. Please try again later.\n\nFAQ: https://ifrunit.tech/wiki/faq.html'
     );
   }
 }

@@ -8,32 +8,32 @@ async function lockCommand(ctx) {
 
   if (!wallet) {
     return ctx.reply(
-      '🔒 Nutzung: /lock <wallet-adresse>\n\nBeispiel:\n/lock 0x6b36687b0cd4386fb14cf565B67D7862110Fed67'
+      '🔒 Usage: /lock <wallet-address>\n\nExample:\n/lock 0x6b36687b0cd4386fb14cf565B67D7862110Fed67'
     );
   }
 
-  const loadingMsg = await ctx.reply('🔍 Prüfe Lock-Status...');
+  const loadingMsg = await ctx.reply('🔍 Checking lock status...');
 
   try {
     const data = await getLockStatus(wallet);
     const short = `${wallet.substring(0, 6)}...${wallet.substring(38)}`;
-    const amount = parseFloat(data.lockAmount).toLocaleString('de-DE', { maximumFractionDigits: 2 });
+    const amount = parseFloat(data.lockAmount).toLocaleString('en-US', { maximumFractionDigits: 2 });
 
     const statusLine = data.isLocked
-      ? '✅ *AKTIV* — Wallet hat aktiven IFR-Lock'
-      : '❌ *KEIN LOCK* — Keine IFR gelockt';
+      ? '✅ *ACTIVE* — Wallet has an active IFR lock'
+      : '❌ *NO LOCK* — No IFR locked';
 
-    const reply = `🔒 *Lock-Status für* \`${short}\`
+    const reply = `🔒 *Lock Status for* \`${short}\`
 
 ${statusLine}
 
 📊 *Details:*
-• Gelockte Menge: *${amount} IFR*
-• Min. für Zugang: 1.000 IFR (je nach Partner)
+• Locked amount: *${amount} IFR*
+• Min. for access: 1,000 IFR (depends on partner)
 
 ${data.isLocked
-  ? '✅ Dieser Wallet hat Zugang zu IFR-Partner-Apps.'
-  : '💡 IFR locken auf [ifrunit.tech](https://ifrunit.tech) für Partner-Zugang.'}`;
+  ? '✅ This wallet has access to IFR partner apps.'
+  : '💡 Lock IFR at [ifrunit.tech](https://ifrunit.tech) for partner access.'}`;
 
     await ctx.telegram.editMessageText(
       ctx.chat.id,
@@ -44,9 +44,9 @@ ${data.isLocked
     );
   } catch (err) {
     logger.error({ err: err.message, wallet }, '/lock error');
-    const errMsg = err.message.includes('Ungültige')
-      ? '❌ Ungültige Ethereum-Adresse. Bitte prüfe die Eingabe (0x...)'
-      : '❌ Fehler beim Abrufen des Lock-Status. Bitte erneut versuchen.';
+    const errMsg = err.message.includes('invalid address')
+      ? '❌ Invalid Ethereum address. Please check your input (0x...)'
+      : '❌ Failed to fetch lock status. Please try again.';
 
     await ctx.telegram.editMessageText(ctx.chat.id, loadingMsg.message_id, null, errMsg);
   }
