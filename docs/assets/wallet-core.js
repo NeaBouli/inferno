@@ -150,7 +150,7 @@ window.IFRWallet = (() => {
   function getShortAddress(addr) {
     const a = addr || _address;
     if (!a) return "";
-    return a.slice(0, 6) + ".." + a.slice(-2);
+    return "\u2B24 " + a.slice(0, 6);
   }
   function getSigner() { return _signer; }
   function getProvider() {
