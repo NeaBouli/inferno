@@ -1238,6 +1238,91 @@ function isVoucherValid(DiscountVoucher calldata voucher)
         </tbody>
       </table>
 
+      <!-- ── BUILDER REGISTRY PROCESS ──────────────── -->
+      <div id="builder-registry-process" style="margin-top:48px;">
+        <h2>Builder Registration Process</h2>
+
+        <!-- Flow Diagram -->
+        <div style="display:flex;align-items:flex-start;gap:0;flex-wrap:wrap;margin:24px 0;">
+          <div style="flex:1;min-width:160px;text-align:center;padding:16px;">
+            <div style="width:52px;height:52px;background:rgba(249,115,22,0.15);border:2px solid rgba(249,115,22,0.4);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 10px;font-size:1.3rem;">1&#xFE0F;&#x20E3;</div>
+            <div style="color:#f97316;font-weight:700;font-size:0.85rem;">APPLY</div>
+            <div style="color:#6b7280;font-size:0.8rem;margin-top:6px;">Submit GitHub Issue via builder-registry.yml template</div>
+          </div>
+          <div style="color:#374151;font-size:1.5rem;padding:16px 4px;align-self:center;">&rarr;</div>
+          <div style="flex:1;min-width:160px;text-align:center;padding:16px;">
+            <div style="width:52px;height:52px;background:rgba(249,115,22,0.15);border:2px solid rgba(249,115,22,0.4);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 10px;font-size:1.3rem;">2&#xFE0F;&#x20E3;</div>
+            <div style="color:#f97316;font-weight:700;font-size:0.85rem;">REVIEW</div>
+            <div style="color:#6b7280;font-size:0.8rem;margin-top:6px;">Core team reviews application (48h typical)</div>
+          </div>
+          <div style="color:#374151;font-size:1.5rem;padding:16px 4px;align-self:center;">&rarr;</div>
+          <div style="flex:1;min-width:160px;text-align:center;padding:16px;">
+            <div style="width:52px;height:52px;background:rgba(249,115,22,0.15);border:2px solid rgba(249,115,22,0.4);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 10px;font-size:1.3rem;">3&#xFE0F;&#x20E3;</div>
+            <div style="color:#f97316;font-weight:700;font-size:0.85rem;">GOVERNANCE</div>
+            <div style="color:#6b7280;font-size:0.8rem;margin-top:6px;">Governance proposal: registerBuilder() via Timelock (48h delay)</div>
+          </div>
+          <div style="color:#374151;font-size:1.5rem;padding:16px 4px;align-self:center;">&rarr;</div>
+          <div style="flex:1;min-width:160px;text-align:center;padding:16px;">
+            <div style="width:52px;height:52px;background:rgba(34,197,94,0.15);border:2px solid rgba(34,197,94,0.4);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 10px;font-size:1.3rem;">&#x2705;</div>
+            <div style="color:#22c55e;font-weight:700;font-size:0.85rem;">REGISTERED</div>
+            <div style="color:#6b7280;font-size:0.8rem;margin-top:6px;">isBuilder(wallet) = true on-chain &rarr; Telegram Dev&amp;Builder access</div>
+          </div>
+        </div>
+
+        <!-- BuilderRegistry Contract Info -->
+        <div style="background:#1f2937;border:1px solid #374151;border-radius:12px;padding:20px;margin:20px 0;">
+          <h3 style="color:#e5e7eb;margin-top:0;">BuilderRegistry.sol</h3>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+            <div>
+              <div style="color:#9ca3af;font-size:0.75rem;margin-bottom:4px;">Status</div>
+              <div style="color:#22c55e;font-weight:600;">Sepolia deployed &middot; Mainnet: Phase 3</div>
+            </div>
+            <div>
+              <div style="color:#9ca3af;font-size:0.75rem;margin-bottom:4px;">Owner</div>
+              <div style="color:#e5e7eb;">Governance (Timelock)</div>
+            </div>
+            <div>
+              <div style="color:#9ca3af;font-size:0.75rem;margin-bottom:4px;">Categories</div>
+              <div style="color:#e5e7eb;font-family:monospace;font-size:0.85rem;">creator &middot; integration &middot; tooling &middot; dao</div>
+            </div>
+            <div>
+              <div style="color:#9ca3af;font-size:0.75rem;margin-bottom:4px;">Tests</div>
+              <div style="color:#e5e7eb;">27 / 27 passing</div>
+            </div>
+          </div>
+          <div style="color:#9ca3af;font-size:0.85rem;">
+            Key functions: <code style="color:#f97316;">registerBuilder()</code> &middot; <code style="color:#f97316;">removeBuilder()</code> &middot; <code style="color:#f97316;">isBuilder(address)</code> &middot; <code style="color:#f97316;">getActiveBuilders()</code>
+          </div>
+        </div>
+
+        <!-- Builder Categories -->
+        <h3>Builder Categories</h3>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin:16px 0;">
+          <div style="background:#1f2937;border:1px solid #374151;border-radius:10px;padding:16px;">
+            <div style="color:#f97316;font-weight:700;margin-bottom:6px;">&#x1F3A8; Creator</div>
+            <div style="color:#9ca3af;font-size:0.85rem;">Content creators, YouTubers, educators integrating IFR Lock for premium content access</div>
+          </div>
+          <div style="background:#1f2937;border:1px solid #374151;border-radius:10px;padding:16px;">
+            <div style="color:#f97316;font-weight:700;margin-bottom:6px;">&#x1F50C; Integration</div>
+            <div style="color:#9ca3af;font-size:0.85rem;">Products and platforms using IFRLock.isLocked() for feature gating or premium tiers</div>
+          </div>
+          <div style="background:#1f2937;border:1px solid #374151;border-radius:10px;padding:16px;">
+            <div style="color:#f97316;font-weight:700;margin-bottom:6px;">&#x1F6E0;&#xFE0F; Tooling</div>
+            <div style="color:#9ca3af;font-size:0.85rem;">Developer tools, SDKs, analytics, infrastructure built around the IFR ecosystem</div>
+          </div>
+          <div style="background:#1f2937;border:1px solid #374151;border-radius:10px;padding:16px;">
+            <div style="color:#f97316;font-weight:700;margin-bottom:6px;">&#x1F3DB;&#xFE0F; DAO</div>
+            <div style="color:#9ca3af;font-size:0.85rem;">Governance participants, community organizations, DAO tooling contributors</div>
+          </div>
+        </div>
+
+        <!-- Verify CTA -->
+        <div style="background:rgba(249,115,22,0.05);border:1px solid rgba(249,115,22,0.2);border-radius:12px;padding:20px;margin-top:24px;text-align:center;">
+          <p style="color:#9ca3af;margin:0 0 12px;">Already registered as a Builder? Verify your wallet to unlock Telegram Dev&amp;Builder topic access.</p>
+          <a href="verify.html" style="display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,#f97316,#ea580c);color:white;padding:10px 24px;border-radius:8px;text-decoration:none;font-weight:700;">&#x1F510; Verify Wallet &rarr;</a>
+        </div>
+      </div>
+
       <!-- Footer -->
       <footer class="wiki-footer">
         Inferno ($IFR) &mdash; Community Fair Launch Model &mdash; Developer Integration Guide
