@@ -48,7 +48,7 @@
 ## Phase 2: Mainnet Launch (Q1 2026) — IN PROGRESS
 
 ### Must Have
-- [x] Gnosis Safe Multisig deployed (1-of-2) — `0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b`
+- [x] Gnosis Safe Multisig deployed (2-of-4 active) — `0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b`
 - [x] Mainnet deploy (9 contracts, all verified on Etherscan)
 - [x] Token distribution complete (1B IFR, CFLM)
 - [x] Mainnet feeExempt configuration (8 addresses set, deployer removed)
@@ -58,7 +58,7 @@
 - [x] Governance Proposal #0 submitted (feeExempt BootstrapVault, ETA 07.03.2026)
 - [ ] Mainnet Uniswap V2 LP pairing (IFR/WETH)
 - [ ] LP Token lock/burn (Unicrypt, 12 months minimum)
-- [ ] Governance owner → Multisig (expand 1-of-2 → 2-of-4)
+- [x] Multisig expanded to 2-of-4 (14.03.2026) — upgrading to 3-of-5
 - [ ] Community wallet + team beneficiary addresses finalized
 
 ### Should Have
