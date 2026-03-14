@@ -1439,21 +1439,118 @@ await governance.execute(proposalId);</code></pre>
         </tbody>
       </table>
 
-      <h3>Telegram Integration (Planned)</h3>
-      <table>
-        <thead>
-          <tr><th>Command</th><th>Description</th></tr>
-        </thead>
-        <tbody>
-          <tr><td><code>/propose</code></td><td>Submit a proposal (Forum)</td></tr>
-          <tr><td><code>/vote [id] [yes|no]</code></td><td>Vote via wallet signature</td></tr>
-          <tr><td><code>/proposals</code></td><td>List active proposals</td></tr>
-          <tr><td><code>/result [id]</code></td><td>Show proposal result</td></tr>
-        </tbody>
-      </table>
+      <!-- ── PARTICIPATING IN GOVERNANCE ─────────────── -->
+      <div id="participating" style="margin-top:48px;">
+        <h2>Participating in Governance</h2>
 
-      <div class="callout" style="background:rgba(249,115,22,0.08);border:1px solid rgba(249,115,22,0.3);border-radius:12px;padding:20px;margin-top:24px;">
-        <p style="margin:0;">To participate in governance, verify your wallet first: <a href="verify.html" style="color:#f97316;font-weight:600;">&#x1F510; Verify Wallet &rarr;</a></p>
+        <!-- Step 0: Verify -->
+        <div style="background:rgba(249,115,22,0.05);border:1px solid rgba(249,115,22,0.2);border-radius:12px;padding:20px;margin:20px 0;">
+          <h3 style="color:#f97316;margin-top:0;">Step 0 &mdash; Verify Your Wallet</h3>
+          <p style="color:#9ca3af;">Before participating, link your wallet to your Telegram account. This proves token ownership without sharing your private key.</p>
+          <a href="verify.html" style="display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,#f97316,#ea580c);color:white;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:700;font-size:0.9rem;">&#x1F510; Verify Wallet &rarr;</a>
+          <p style="color:#6b7280;font-size:0.85rem;margin-top:12px;">Required for: Vote topic access, proposal submission, governance voting</p>
+        </div>
+
+        <!-- Telegram Bot Commands -->
+        <h3>Telegram Bot Commands</h3>
+        <p style="color:#9ca3af;">All governance interactions happen via the IFR Telegram Bot in <a href="https://t.me/IFR_token" style="color:#f97316;">@IFR Community</a>. No gas required for voting &mdash; only for on-chain execution.</p>
+
+        <table style="width:100%;border-collapse:collapse;margin:16px 0;">
+          <thead>
+            <tr style="border-bottom:1px solid #374151;">
+              <th style="color:#9ca3af;padding:10px;text-align:left;font-size:0.85rem;">Command</th>
+              <th style="color:#9ca3af;padding:10px;text-align:left;font-size:0.85rem;">Chamber</th>
+              <th style="color:#9ca3af;padding:10px;text-align:left;font-size:0.85rem;">Who</th>
+              <th style="color:#9ca3af;padding:10px;text-align:left;font-size:0.85rem;">Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="border-bottom:1px solid #1f2937;">
+              <td style="padding:10px;font-family:monospace;color:#22c55e;">/verify</td>
+              <td style="padding:10px;color:#9ca3af;">&mdash;</td>
+              <td style="padding:10px;color:#9ca3af;">Everyone</td>
+              <td style="padding:10px;color:#9ca3af;">Link wallet to Telegram account</td>
+            </tr>
+            <tr style="border-bottom:1px solid #1f2937;">
+              <td style="padding:10px;font-family:monospace;color:#22c55e;">/mystatus</td>
+              <td style="padding:10px;color:#9ca3af;">&mdash;</td>
+              <td style="padding:10px;color:#9ca3af;">Everyone</td>
+              <td style="padding:10px;color:#9ca3af;">Show wallet tier and topic access</td>
+            </tr>
+            <tr style="border-bottom:1px solid #1f2937;">
+              <td style="padding:10px;font-family:monospace;color:#f97316;">/proposals</td>
+              <td style="padding:10px;color:#9ca3af;">Both</td>
+              <td style="padding:10px;color:#9ca3af;">Everyone</td>
+              <td style="padding:10px;color:#9ca3af;">List active governance proposals</td>
+            </tr>
+            <tr style="border-bottom:1px solid #1f2937;">
+              <td style="padding:10px;font-family:monospace;color:#f97316;">/propose &quot;title&quot;</td>
+              <td style="padding:10px;color:#9ca3af;">The Forum</td>
+              <td style="padding:10px;color:#9ca3af;">IFR Holders</td>
+              <td style="padding:10px;color:#9ca3af;">Submit proposal (10 IFR spam protection)</td>
+            </tr>
+            <tr style="border-bottom:1px solid #1f2937;">
+              <td style="padding:10px;font-family:monospace;color:#f97316;">/vote [id] [yes/no]</td>
+              <td style="padding:10px;color:#9ca3af;">The Forum</td>
+              <td style="padding:10px;color:#9ca3af;">IFR Holders</td>
+              <td style="padding:10px;color:#9ca3af;">Vote via cryptographic signature &mdash; no gas</td>
+            </tr>
+            <tr style="border-bottom:1px solid #1f2937;">
+              <td style="padding:10px;font-family:monospace;color:#f97316;">/result [id]</td>
+              <td style="padding:10px;color:#9ca3af;">Both</td>
+              <td style="padding:10px;color:#9ca3af;">Everyone</td>
+              <td style="padding:10px;color:#9ca3af;">Show result + on-chain TX if executed</td>
+            </tr>
+            <tr style="border-bottom:1px solid #1f2937;">
+              <td style="padding:10px;font-family:monospace;color:#fbbf24;">/ratpropose &quot;title&quot;</td>
+              <td style="padding:10px;color:#9ca3af;">The Council</td>
+              <td style="padding:10px;color:#9ca3af;">Signers only</td>
+              <td style="padding:10px;color:#9ca3af;">Strategic proposal (no fee)</td>
+            </tr>
+            <tr>
+              <td style="padding:10px;font-family:monospace;color:#fbbf24;">/ratvote [id] [yes/no]</td>
+              <td style="padding:10px;color:#9ca3af;">The Council</td>
+              <td style="padding:10px;color:#9ca3af;">Signers only</td>
+              <td style="padding:10px;color:#9ca3af;">Signer vote &mdash; Merkle tree anchored</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <p style="color:#6b7280;font-size:0.85rem;font-style:italic;">Note: /propose, /vote, /ratpropose, /ratvote are Phase 4 commands &mdash; not yet active. /verify and /mystatus are live now.</p>
+
+        <!-- Topic Access Requirements -->
+        <h3>Topic Access Requirements</h3>
+        <table style="width:100%;border-collapse:collapse;margin:16px 0;">
+          <thead>
+            <tr style="border-bottom:1px solid #374151;">
+              <th style="color:#9ca3af;padding:10px;text-align:left;">Topic</th>
+              <th style="color:#9ca3af;padding:10px;text-align:left;">Requirement</th>
+              <th style="color:#9ca3af;padding:10px;text-align:left;">How to qualify</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="border-bottom:1px solid #1f2937;">
+              <td style="padding:10px;color:#fbbf24;font-weight:600;">&#x2696;&#xFE0F; Core Dev</td>
+              <td style="padding:10px;color:#9ca3af;">Gnosis Safe Signer</td>
+              <td style="padding:10px;color:#9ca3af;">Added by governance as Safe owner</td>
+            </tr>
+            <tr style="border-bottom:1px solid #1f2937;">
+              <td style="padding:10px;color:#fbbf24;font-weight:600;">&#x2696;&#xFE0F; Council</td>
+              <td style="padding:10px;color:#9ca3af;">Gnosis Safe Signer</td>
+              <td style="padding:10px;color:#9ca3af;">Same as Core Dev</td>
+            </tr>
+            <tr style="border-bottom:1px solid #1f2937;">
+              <td style="padding:10px;color:#22c55e;font-weight:600;">&#x1F5F3;&#xFE0F; Vote</td>
+              <td style="padding:10px;color:#9ca3af;">Any locked IFR &gt; 0</td>
+              <td style="padding:10px;color:#9ca3af;"><a href="lock-mechanism.html" style="color:#f97316;">Lock IFR &rarr;</a> then /verify</td>
+            </tr>
+            <tr>
+              <td style="padding:10px;color:#f97316;font-weight:600;">&#x1F528; Dev &amp; Builder</td>
+              <td style="padding:10px;color:#9ca3af;">Registered Builder</td>
+              <td style="padding:10px;color:#9ca3af;"><a href="integration.html" style="color:#f97316;">Apply as Builder &rarr;</a> then /verify</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
 
       <!-- Footer -->
