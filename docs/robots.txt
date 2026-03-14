@@ -21,5 +21,7 @@ Allow: /
 
 Disallow: /.env
 Disallow: /node_modules/
+Disallow: /TODO.html
+Disallow: /TODO.md
 
 Sitemap: https://ifrunit.tech/sitemap.xml

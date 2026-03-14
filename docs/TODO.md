@@ -3,206 +3,206 @@
 
 ---
 
-## 🔴 KRITISCH
+## CRITICAL
 
-### Bot & Infrastruktur
-- [ ] `voteAnnouncement.js` — Bot kündigt Governance Proposals an + verify.html Link + 24h Reminder
-- [ ] `SIGNER_WALLETS` in Railway env setzen: `0x6b36687...` + `0x17F8DD6dECCb3ff5d95691982B85A87d7d9872d4`
-- [ ] `VERIFY_PORT=3001` in Railway env setzen
+### Bot & Infrastructure
+- [ ] `voteAnnouncement.js` — Bot announces Governance Proposals + verify.html link + 24h reminder
+- [ ] `SIGNER_WALLETS` in Railway env: `0x6b36687...` + `0x17F8DD6dECCb3ff5d95691982B85A87d7d9872d4`
+- [ ] `VERIFY_PORT=3001` in Railway env
 
-### Core Developer (extern)
-- [ ] BuilderRegistry.sol auf Sepolia deployen
-- [ ] BuilderRegistry Audit durchführen
-- [ ] BuilderRegistry auf Mainnet deployen
-- [ ] `BUILDER_REGISTRY_ADDR` in Railway env setzen (nach Deploy)
+### Core Developer (external)
+- [ ] Deploy BuilderRegistry.sol on Sepolia
+- [ ] BuilderRegistry audit
+- [ ] Deploy BuilderRegistry on Mainnet
+- [ ] `BUILDER_REGISTRY_ADDR` in Railway env (after deploy)
 
 ---
 
-## 🟠 DIESE WOCHE
+## THIS WEEK
 
 ### Multisig
-- [ ] Multisig 1-of-2 → 2-of-4 upgraden (Gnosis Safe UI)
-- [ ] 2 fehlende Verifizierer müssen Safe beitreten und signieren
-- [ ] Governance → GnosisSafe Ownership übergeben
+- [ ] Upgrade Multisig 1-of-2 → 2-of-4 (Gnosis Safe UI)
+- [ ] 2 missing verifiers must join Safe and sign
+- [ ] Transfer Governance → GnosisSafe ownership
 
 ### Telegram Bot
-- [ ] `/announce` Command: Community-Link automatisch anhängen (`https://t.me/IFR_token/1`)
+- [ ] `/announce` command: auto-append community link (`https://t.me/IFR_token/1`)
 - [ ] Channel → Community Announcements auto-sync
-- [ ] Letzte Announcement immer angepinnt halten
-- [ ] Daily Welcome testen (TELEGRAM_GENERAL_TOPIC_ID=5)
-- [ ] Daily Burn Report testen (TELEGRAM_BURNS_TOPIC_ID=7)
-- [ ] Sprache komplett auf Englisch prüfen/umstellen
-- [ ] Protected Topics final testen (Vote/Council/Dev&Builder/Core Dev)
+- [ ] Keep latest announcement always pinned
+- [ ] Test Daily Welcome (TELEGRAM_GENERAL_TOPIC_ID=5)
+- [ ] Test Daily Burn Report (TELEGRAM_BURNS_TOPIC_ID=7)
+- [ ] Full language check/switch to English
+- [ ] Final test Protected Topics (Vote/Council/Dev&Builder/Core Dev)
 
 ### Ali Copilot
-- [ ] Sicherheitsrichtlinie: keine PII, keine Wallet-Ausgaben, keine Contract-Adressen direkt, nur ifrunit.tech, immer Reliability-Disclaimer
-- [ ] Ali Phase 2: WalletConnect → wallet-spezifische Antworten (nach LP live)
+- [ ] Security policy: no PII, no wallet outputs, no contract addresses directly, only ifrunit.tech, always reliability disclaimer
+- [ ] Ali Phase 2: WalletConnect → wallet-specific responses (after LP live)
 
 ---
 
-## 🟡 MITTELFRISTIG
+## MID-TERM
 
-### Bootstrap (vor 17.04.2026)
-- [ ] Announcement Text finalisieren (Reddit/X/Telegram/Farcaster)
-- [ ] Reddit Posts: r/defi + r/ethfinance + r/CryptoMoonShots
-- [ ] Farcaster Post vorbereiten
-- [ ] Juicebox Listing/Discovery einrichten (KEIN Funding — nur Discovery)
-- [ ] X/Twitter Announcement vorbereiten
-- [ ] Bootstrap-Seite final review
-- [ ] Bootstrap V4 auf bootstrap.html kommunizieren: "V4 Governance-Voting geplant für Phase 3"
+### Bootstrap (before 17.04.2026)
+- [ ] Finalize announcement text (Reddit/X/Telegram/Farcaster)
+- [ ] Reddit posts: r/defi + r/ethfinance + r/CryptoMoonShots
+- [ ] Prepare Farcaster post
+- [ ] Set up Juicebox listing/discovery (NO funding — discovery only)
+- [ ] Prepare X/Twitter announcement
+- [ ] Final review bootstrap page
+- [ ] Communicate Bootstrap V4 on bootstrap.html: "V4 governance voting planned for Phase 3"
 
 ### Frontend
-- [ ] Animated Token GIF erstellen (fehlt noch)
-- [ ] `Buy IFR` → Uniswap Button aktivieren (NUR nach LP live)
-- [ ] Live Token Price einbinden (NUR nach LP live)
-- [ ] WalletConnect Phase 2: `isLocked(wallet,1000e9)` Check → Copilot Gate (nach LP)
-- [ ] WalletConnect Phase 3: Uniswap Link (NUR nach LP live)
+- [ ] Create animated token GIF (still missing)
+- [ ] `Buy IFR` → activate Uniswap button (ONLY after LP live)
+- [ ] Integrate live token price (ONLY after LP live)
+- [ ] WalletConnect Phase 2: `isLocked(wallet,1000e9)` check → Copilot gate (after LP)
+- [ ] WalletConnect Phase 3: Uniswap link (ONLY after LP live)
 
-### Dokumentation
-- [ ] Plan B Dokumentation mit exaktem Zeitstempel der Entscheidung
-- [ ] Handover-Dokument für Core Developer aktualisieren
-- [ ] Project Continuity Sektion (Landing + README + Wiki)
+### Documentation
+- [ ] Plan B documentation with exact decision timestamp
+- [ ] Update handover document for Core Developer
+- [ ] Project Continuity section (Landing + README + Wiki)
 
 ### Railway
-- [ ] FeeRouterV1 Tracking verifizieren (nach Proposal #6)
-- [ ] BuybackVault + BurnReserve Accumulation Tracking verifizieren
-- [ ] Pool Fee Receiver: von Deployer EOA auf FeeRouterV1 umstellen
+- [ ] Verify FeeRouterV1 tracking (after Proposal #6)
+- [ ] Verify BuybackVault + BurnReserve accumulation tracking
+- [ ] Pool Fee Receiver: switch from Deployer EOA to FeeRouterV1
 
 ### SEO / LLMO
-- [ ] JSON-LD Schema.org auf allen Wiki-Seiten vollständig prüfen
-- [ ] ChatGPT/Perplexity Indexierung verifizieren
-- [ ] ethereum-lists PR #1010 verfolgen
+- [ ] Full JSON-LD Schema.org check on all wiki pages
+- [ ] Verify ChatGPT/Perplexity indexing
+- [ ] Follow up on ethereum-lists PR #1010
 
 ### CI/CD
-- [ ] Slither CI einrichten
-- [ ] Mythril CI einrichten
-- [ ] Coverage Badge im README
-- [ ] 2-3 Repo-Maintainer rekrutieren
+- [ ] Set up Slither CI
+- [ ] Set up Mythril CI
+- [ ] Coverage badge in README
+- [ ] Recruit 2-3 repo maintainers
 
 ---
 
-## ✅ ERLEDIGT
+## COMPLETED
 
-### Phase 3 — Sprint 2 (Wallet Verifikation)
-- [x] `wallet-core.js` — Zentrale Wallet Session (EIP-5749 Multi-Wallet)
-- [x] `ifr-state.js` — On-Chain State Reader (IFR/Lock/Bootstrap)
-- [x] Bootstrap Widget — contribute/claim/refund
-- [x] Landing Page Header Dropdown
-- [x] `agent.html` Free/Premium Gate
-- [x] 25 Wiki Top-Bar Wallet Buttons
-- [x] `verificationStore.js` — 3-Tier Nonce + Session Store
+### Phase 3 — Sprint 2 (Wallet Verification)
+- [x] `wallet-core.js` — Central wallet session (EIP-5749 multi-wallet)
+- [x] `ifr-state.js` — On-chain state reader (IFR/Lock/Bootstrap)
+- [x] Bootstrap widget — contribute/claim/refund
+- [x] Landing page header dropdown
+- [x] `agent.html` free/premium gate
+- [x] 25 wiki top-bar wallet buttons
+- [x] `verificationStore.js` — 3-tier nonce + session store
 - [x] `onChainReader.js` — IFRLock + Gnosis Safe getOwners() auto-sync
-- [x] `/verify` + `/mystatus` Bot Commands
-- [x] `verify.html` — 3-Tier Signing UI
-- [x] Topic Guards (Core Dev 58 / Council 21 / Vote 23 / Dev&Builder 11)
-- [x] 23/23 Verify Tests grün
+- [x] `/verify` + `/mystatus` bot commands
+- [x] `verify.html` — 3-tier signing UI
+- [x] Topic guards (Core Dev 58 / Council 21 / Vote 23 / Dev&Builder 11)
+- [x] 23/23 verify tests green
 
 ### Phase 3 — Sprint 3 (On-Chain Reader)
-- [x] `BuilderRegistry.sol` — 27/27 Tests, ABI exportiert
-- [x] Deploy Script (Sepolia + Mainnet + Etherscan verify)
-- [x] Gnosis Safe `getOwners()` Auto-Sync (5 Min Cache)
-- [x] BuilderRegistry Placeholder in onChainReader.js
+- [x] `BuilderRegistry.sol` — 27/27 tests, ABI exported
+- [x] Deploy script (Sepolia + Mainnet + Etherscan verify)
+- [x] Gnosis Safe `getOwners()` auto-sync (5 min cache)
+- [x] BuilderRegistry placeholder in onChainReader.js
 
 ### Phase 3 — Sprint 4 (Wiki)
-- [x] `governance.html` — Bot Commands Tabelle + Topic Access Tabelle
-- [x] `integration.html` — BuilderRegistry Prozess + 4 Kategorien
-- [x] `roadmap.html` — Phase 3 Sprint Status aktualisiert
+- [x] `governance.html` — Bot commands table + topic access table
+- [x] `integration.html` — BuilderRegistry process + 4 categories
+- [x] `roadmap.html` — Phase 3 sprint status updated
 
 ### WalletConnect Phase 1
-- [x] Connect Button Landing Page Header
-- [x] Wallet Dropdown (ETH/IFR Balance, Lock Badge, Bootstrap Link)
-- [x] X-Button Dropdown
-- [x] Disconnect sofortiger UI-Reset
-- [x] Mobile MetaMask Deeplink
-- [x] visibilitychange Auto-Reconnect
-- [x] 14 Playwright Tests grün
+- [x] Connect button landing page header
+- [x] Wallet dropdown (ETH/IFR balance, lock badge, bootstrap link)
+- [x] X-button dropdown
+- [x] Disconnect instant UI reset
+- [x] Mobile MetaMask deeplink
+- [x] visibilitychange auto-reconnect
+- [x] 14 Playwright tests green
 
 ### Telegram Bot
-- [x] Verification Gate + Spam Moderation
-- [x] Daily Burn Report (09:00 CET)
-- [x] Bootstrap Start/End Announcement (automatisch ab 17.04.2026)
-- [x] 7-Tage Countdown (vor Start + vor Ende)
+- [x] Verification gate + spam moderation
+- [x] Daily burn report (09:00 CET)
+- [x] Bootstrap start/end announcement (automatic from 17.04.2026)
+- [x] 7-day countdown (before start + before end)
 
 ### Ali Copilot
-- [x] Automatischer Bootstrap Datum-Check (NOT YET ACTIVE → ACTIVE → ENDED)
-- [x] Wiki-Seiten Auto-Fetch alle 60 Min
-- [x] Railway auto-deploy aktiv
+- [x] Automatic bootstrap date check (NOT YET ACTIVE → ACTIVE → ENDED)
+- [x] Wiki pages auto-fetch every 60 min
+- [x] Railway auto-deploy active
 
 ### DAO Governance
-- [x] Two-Chamber Visual auf Landing Page
-- [x] `governance.html` — DAO Konzept vollständig dokumentiert (DE→EN)
-- [x] DAO Contracts Tabelle (Phase 4 Placeholder)
+- [x] Two-chamber visual on landing page
+- [x] `governance.html` — DAO concept fully documented (DE→EN)
+- [x] DAO contracts table (Phase 4 placeholder)
 
 ### SEO / Audit
-- [x] Audit Report `AUDIT_REPORT_20260314.md` erstellt
-- [x] Test-Counts 494/444 → 556 in 32 Dateien
-- [x] Wiki-Seitenanzahl 16/24 → 25 in 8 Dateien
-- [x] `rel="canonical"` auf allen 25 Wiki-Seiten
-- [x] `twitter:card` + `twitter:site` + `twitter:image` auf allen Seiten
-- [x] JSON-LD auf `verify.html`
-- [x] `verify.html` in Sitemap
-- [x] Developer TODO Marker (`IFR_UPDATE`) gesetzt
-- [x] robots.txt (GPTBot, ClaudeBot, PerplexityBot erlaubt)
+- [x] Audit report `AUDIT_REPORT_20260314.md` created
+- [x] Test counts 494/444 → 556 across 32 files
+- [x] Wiki page count 16/24 → 25 across 8 files
+- [x] `rel="canonical"` on all 25 wiki pages
+- [x] `twitter:card` + `twitter:site` + `twitter:image` on all pages
+- [x] JSON-LD on `verify.html`
+- [x] `verify.html` in sitemap
+- [x] Developer TODO markers (`IFR_UPDATE`) set
+- [x] robots.txt (GPTBot, ClaudeBot, PerplexityBot allowed)
 
 ---
 
-## ⏳ NACH LP LIVE (nach 15.07.2026)
+## AFTER LP LIVE (after 15.07.2026)
 
-- [ ] CoinGecko Listing beantragen
-- [ ] CoinMarketCap Listing beantragen
-- [ ] AI Copilot Gate ≥1.000 IFR locked aktivieren
-- [ ] Telegram Wallet-Whitelist via WalletConnect
-- [ ] LiqRes Withdrawal Proposal: `setMaxWithdrawPerPeriod(200M)` ab 01.09.2026
+- [ ] Apply for CoinGecko listing
+- [ ] Apply for CoinMarketCap listing
+- [ ] Activate AI Copilot gate (≥1,000 IFR locked)
+- [ ] Telegram wallet whitelist via WalletConnect
+- [ ] LiqRes withdrawal proposal: `setMaxWithdrawPerPeriod(200M)` from 01.09.2026
 
 ---
 
-## 🔵 PHASE 4 — DAO (nach LP live + Ecosystem)
+## PHASE 4 — DAO (after LP live + ecosystem)
 
 ### Smart Contracts
-- [ ] `RatVoting.sol` — Team-Governance, Merkle Tree, on-chain Verankerung
-- [ ] `ForumVoting.sol` — Community-Voting, ecrecover Signaturen
-- [ ] `IFRSpamProtection.sol` — 10 IFR pro Proposal, deflationär
+- [ ] `RatVoting.sol` — Team governance, Merkle tree, on-chain anchoring
+- [ ] `ForumVoting.sol` — Community voting, ecrecover signatures
+- [ ] `IFRSpamProtection.sol` — 10 IFR per proposal, deflationary
 
-### Bot-Erweiterungen (Phase 4)
-- [ ] `/propose` Command (Forum)
-- [ ] `/vote [id] [yes/no]` Command
-- [ ] `/proposals` Command
-- [ ] `/result [id]` Command
-- [ ] `/ratpropose` Command (Council/Signer only)
-- [ ] `/ratvote` Command (Council/Signer only)
-- [ ] Wallet-Mapper Service
-- [ ] IFR-Reader Service
-- [ ] Reaction-Tracker Service
-- [ ] Poll-Manager Service
+### Bot Extensions (Phase 4)
+- [ ] `/propose` command (Forum)
+- [ ] `/vote [id] [yes/no]` command
+- [ ] `/proposals` command
+- [ ] `/result [id]` command
+- [ ] `/ratpropose` command (Council/Signer only)
+- [ ] `/ratvote` command (Council/Signer only)
+- [ ] Wallet mapper service
+- [ ] IFR reader service
+- [ ] Reaction tracker service
+- [ ] Poll manager service
 
 ---
 
-## 🏗️ PHASE 3+ VISION (langfristig)
+## PHASE 3+ VISION (long-term)
 
 ### Web Dashboard
-- [ ] Rollenbasiert via WalletConnect (User/Builder/Partner/Core Dev)
-- [ ] Governance-Tool integriert
-- [ ] CDN/Edge auf app.ifrunit.tech
+- [ ] Role-based via WalletConnect (User/Builder/Partner/Core Dev)
+- [ ] Integrated governance tool
+- [ ] CDN/Edge on app.ifrunit.tech
 
 ### Client App
-- [ ] APK (Android direkt)
+- [ ] APK (Android direct)
 - [ ] F-Droid
 - [ ] Google Play
 - [ ] App Store (iOS)
-- [ ] DAO Governance integriert (Der Rat + Das Forum)
+- [ ] Integrated DAO governance (The Council + The Forum)
 
 ### Creator & Partner
-- [ ] Creator Gateway (Open-Source Bridge, Docker, OAuth + WalletConnect)
-- [ ] YouTube Integration Hybrid Modell B
-- [ ] PartnerVault Option C (Milestone Unlock + Linear Vesting)
-- [ ] Bootstrap V4 (Contributor-Voting, ETH-gewichtet)
+- [ ] Creator Gateway (open-source bridge, Docker, OAuth + WalletConnect)
+- [ ] YouTube integration hybrid model B
+- [ ] PartnerVault Option C (milestone unlock + linear vesting)
+- [ ] Bootstrap V4 (contributor voting, ETH-weighted)
 
 ### Phase 5
-- [ ] Bug Bounty Programm
-- [ ] Professioneller Audit (Third-Party)
-- [ ] Ecosystem Fund
+- [ ] Bug bounty program
+- [ ] Professional audit (third-party)
+- [ ] Ecosystem fund
 
 ---
 
-*Dieses Dokument wird bei jedem erledigten Task aktualisiert.*
-*Zuletzt aktualisiert: 2026-03-14*
+*This document is updated with every completed task.*
+*Last updated: 2026-03-14*
