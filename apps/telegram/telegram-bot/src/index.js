@@ -35,6 +35,7 @@ const { onNewMember, onVerifyCallback } = require('./handlers/verification');
 const { scheduleDailyReport } = require('./handlers/dailyReport');
 const { scheduleDailyWelcome } = require('./handlers/dailyWelcome');
 const { startGovernanceNotifier } = require('./handlers/governanceNotifier');
+const { startVoteAnnouncements } = require('./services/voteAnnouncement');
 const { scheduleBootstrapAnnouncements } = require('./handlers/bootstrapAnnouncement');
 
 // Middleware
@@ -254,6 +255,7 @@ setTimeout(() => {
       scheduleDailyReport(bot);
       scheduleDailyWelcome(bot);
       startGovernanceNotifier(bot);
+      startVoteAnnouncements(bot);
       scheduleBootstrapAnnouncements(bot);
     })
     .catch((err) => {

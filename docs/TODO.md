@@ -6,7 +6,7 @@
 ## CRITICAL
 
 ### Bot & Infrastructure
-- [ ] `voteAnnouncement.js` — Bot announces Governance Proposals + verify.html link + 24h reminder
+- [x] `voteAnnouncement.js` — Bot announces Governance Proposals + verify.html link + 24h reminder ✅
 - [ ] `SIGNER_WALLETS` in Railway env: `0x6b36687...` + `0x17F8DD6dECCb3ff5d95691982B85A87d7d9872d4`
 - [ ] `VERIFY_PORT=3001` in Railway env
 
@@ -118,6 +118,7 @@
 - [x] 14 Playwright tests green
 
 ### Telegram Bot
+- [x] `voteAnnouncement.js` — Governance proposal announcements + executable reminder + verify.html link (12 tests)
 - [x] Verification gate + spam moderation
 - [x] Daily burn report (09:00 CET)
 - [x] Bootstrap start/end announcement (automatic from 17.04.2026)
@@ -205,4 +206,4 @@
 ---
 
 *This document is updated with every completed task.*
-*Last updated: 2026-03-14*
+*Last updated: 2026-03-15*
