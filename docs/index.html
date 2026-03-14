@@ -1260,14 +1260,14 @@
     <ul class="nav-links" id="navLinks">
       <li><a href="#about">About</a></li>
       <li><a href="#how">Overview</a></li>
-      <li><a href="#tokenomics">Tokenomics</a></li>
+      <li><a href="#tokenomics">Token</a></li>
       <li><a href="#ecosystem">Ecosystem</a></li>
       <li><a href="#copilot">Copilot</a></li>
-      <li><a href="#architecture">Architecture</a></li>
+      <li><a href="#architecture">Arch</a></li>
       <li><a href="#security">Security</a></li>
       <li><a href="#faq">FAQ</a></li>
       <li><a href="#roadmap">Roadmap</a></li>
-      <li><a href="#dao-governance">Governance</a></li>
+      <li><a href="#dao-governance">Gov</a></li>
       <li><a href="wiki/bootstrap.html">Bootstrap</a></li>
       <li><a href="#contracts">Contracts</a></li>
     </ul>
@@ -1275,9 +1275,8 @@
     <button id="lp-header-connect-btn" onclick="lpConnect()" style="display:inline-flex;align-items:center;gap:7px;padding:8px 16px;border:1.5px solid #f97316;background:transparent;color:#f97316;font-family:'Orbitron',sans-serif;font-size:0.72rem;letter-spacing:.8px;border-radius:6px;cursor:pointer;white-space:nowrap;transition:all .2s;position:relative;flex-shrink:0;margin-left:16px;">&#x1F98A; Connect</button>
     <!-- Wallet: Connected -->
     <div id="lp-header-connected" style="display:none;align-items:center;gap:8px;margin-left:16px;position:relative;">
-      <div style="background:rgba(34,197,94,0.15);border:1px solid rgba(34,197,94,0.4);border-radius:8px;padding:6px 12px;cursor:pointer;" onclick="lpToggleDropdown()">
-        <span id="lp-header-addr" style="color:#22c55e;font-family:monospace;font-size:0.75rem;font-weight:600;"></span>
-        <span style="color:#6b7280;font-size:0.75rem;margin-left:6px;">&#x25BE;</span>
+      <div style="background:rgba(34,197,94,0.15);border:1px solid rgba(34,197,94,0.4);border-radius:8px;padding:5px 8px;cursor:pointer;max-width:100px;white-space:nowrap;overflow:hidden;" onclick="lpToggleDropdown()">
+        <span id="lp-header-addr" style="color:#22c55e;font-family:monospace;font-size:0.72rem;font-weight:600;"></span>
       </div>
       <!-- Dropdown -->
       <div id="lp-header-dropdown" style="display:none;position:fixed;top:60px;right:12px;background:#111827;border:1px solid #374151;border-radius:12px;padding:16px;width:280px;max-width:calc(100vw - 24px);z-index:9999;box-shadow:0 8px 32px rgba(0,0,0,0.6);">
@@ -3044,7 +3043,7 @@ function lpUpdateUI(state) {
 
   if (connected && state) {
     var addr = IFRWallet.getAddress();
-    var shortAddr = addr.slice(0,6) + ".." + addr.slice(-2);
+    var shortAddr = "\u2B24 " + addr.slice(0,6);
     var el;
     el = document.getElementById("lp-header-addr");
     if (el) el.textContent = shortAddr;

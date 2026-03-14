@@ -108,9 +108,9 @@
         <div id="wiki-wallet-wrap" style="position:relative;">
           <button id="lp-header-connect-btn" onclick="lpConnect()" style="display:inline-flex;align-items:center;gap:7px;padding:8px 16px;border:1.5px solid #f97316;background:transparent;color:#f97316;font-family:'Orbitron',sans-serif;font-size:0.72rem;letter-spacing:.8px;border-radius:6px;cursor:pointer;white-space:nowrap;transition:all .2s;position:relative;flex-shrink:0;margin-left:16px;">&#x1F98A; Connect</button>
           <div id="lp-header-connected" style="display:none;">
-            <div style="background:rgba(34,197,94,0.15);border:1px solid rgba(34,197,94,0.4);border-radius:8px;padding:6px 12px;cursor:pointer;display:flex;align-items:center;gap:6px;" onclick="lpToggleDropdown()">
-              <span id="lp-header-addr" style="color:#22c55e;font-family:monospace;font-size:0.75rem;font-weight:600;"></span>
-              <span style="color:#6b7280;font-size:0.7rem;">&#x25BE;</span>
+            <div style="background:rgba(34,197,94,0.15);border:1px solid rgba(34,197,94,0.4);border-radius:8px;padding:5px 8px;cursor:pointer;display:flex;align-items:center;gap:6px;max-width:100px;white-space:nowrap;overflow:hidden;" onclick="lpToggleDropdown()">
+              <span id="lp-header-addr" style="color:#22c55e;font-family:monospace;font-size:0.72rem;font-weight:600;"></span>
+              
             </div>
           </div>
           <div id="lp-header-dropdown" style="display:none;position:fixed;background:#111827;border:1px solid #374151;border-radius:12px;padding:16px;width:280px;max-width:calc(100vw - 24px);z-index:9999;box-shadow:0 8px 32px rgba(0,0,0,0.6);">
@@ -275,7 +275,7 @@ function updateStep2Wallet(){
   var signBtn=document.getElementById("sign-btn");
   if(typeof IFRWallet!=="undefined"&&IFRWallet.isConnected()){
     var addr=IFRWallet.getAddress();
-    addrEl.textContent=addr.slice(0,6)+".."+addr.slice(-2);
+    addrEl.textContent="u2B24 "+addr.slice(0,6);
     addrEl.style.color="#22c55e";
     signBtn.disabled=false;signBtn.style.opacity="1";
   }else{
@@ -320,7 +320,7 @@ function showResult(success,data){
     var ah="";
     if(data.access&&data.access.length>0){ah='<div style="margin-top:12px"><strong style="color:#e5e7eb">Topics unlocked:</strong><ul style="margin-top:8px">'+data.access.map(function(t){return'<li style="color:#22c55e">\u2705 '+t+'</li>'}).join("")+'</ul></div>';}
     else{ah='<p style="color:#9ca3af;margin-top:12px">No restricted topic access. Lock IFR to gain Vote access.</p>';}
-    r.innerHTML='<div class="callout-green callout"><p style="font-size:1.1rem;font-weight:700;color:#22c55e">\u2705 Verification Successful!</p><p style="margin-top:8px">Wallet: <code>'+data.wallet.slice(0,6)+'..'+data.wallet.slice(-2)+'</code></p><p>Tier: <strong>'+tl+'</strong></p>'+ah+'<p style="margin-top:12px;color:#6b7280;font-size:0.85rem">Check your Telegram DMs for confirmation.</p></div>';
+    r.innerHTML='<div class="callout-green callout"><p style="font-size:1.1rem;font-weight:700;color:#22c55e">\u2705 Verification Successful!</p><p style="margin-top:8px">Wallet: <code>'+data.wallet.slice(0,6)+'</code></p><p>Tier: <strong>'+tl+'</strong></p>'+ah+'<p style="margin-top:12px;color:#6b7280;font-size:0.85rem">Check your Telegram DMs for confirmation.</p></div>';
   }else{
     r.innerHTML='<div class="callout" style="border-left-color:#ef4444;background:rgba(239,68,68,0.06)"><p style="color:#ef4444;font-weight:700">\u274C Verification Failed</p><p style="margin-top:8px">'+(data.error||"Unknown error")+'</p><p style="margin-top:8px;color:#6b7280">Get a new code with /verify in Telegram.</p></div>';
   }
@@ -383,7 +383,7 @@ function lpUpdateUI(state){
   if(connectBtn){connectBtn.style.display=connected?"none":"";if(!connected){connectBtn.textContent="\u{1F98A} Connect";connectBtn.disabled=false;connectBtn.style.background="transparent";connectBtn.style.borderColor="#f97316";connectBtn.style.color="#f97316";connectBtn.onclick=lpConnect}}
   if(connectedDiv)connectedDiv.style.display=connected?"":"none";
   if(connected&&state){
-    var addr=IFRWallet.getAddress();var shortAddr=addr.slice(0,6)+".."+addr.slice(-2);
+    var addr=IFRWallet.getAddress();var shortAddr="u2B24 "+addr.slice(0,6);
     var el=document.getElementById("lp-header-addr");if(el)el.textContent=shortAddr;
     var dropAddr=document.getElementById("lp-drop-addr");if(dropAddr)dropAddr.textContent=addr.slice(0,10)+"..."+addr.slice(-6);
     var dropEth=document.getElementById("lp-drop-eth");if(dropEth)dropEth.textContent=parseFloat(state.ethBalance||"0").toFixed(4)+" ETH";
