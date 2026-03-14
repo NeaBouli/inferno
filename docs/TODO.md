@@ -161,6 +161,47 @@ Regenerate TODO.html from TODO.md content.
 
 ---
 
+## PHASE 2+ FEATURES
+
+### Landing Page — Dashboard Role Badges
+- [ ] Dashboard Badges/Patches auf Landing Page einbauen (sichtbarer Bereich)
+  - Dashboard User Badge (klickbar → User Dashboard)
+  - Dashboard Builder Badge (klickbar → Builder Dashboard)
+  - Dashboard Developer / Core Team Badge (klickbar → Dev Dashboard)
+  - Visuell als klickbare Patches/Embleme gestaltet
+  - Je nach verbundener Wallet-Rolle sichtbar/aktiv
+
+### Governance Section — Live Wallet Verification Stats
+- [ ] Live-Anzeige: Anzahl verifizierter Wallets (keine öffentlichen Adressen)
+  - Aufschlüsselung nach Topic: General / Vote+Council / Dev&Builder / Core Team
+  - Nur Statistik/Anzahl — kein Datenschutz-Problem
+  - Backend-Endpoint: /api/verify/stats (Railway)
+
+### Governance Section — Letzte Abstimmungen (on-chain live)
+- [ ] The Council (Der Rat): letzte 5 Abstimmungen
+  - Titel, Ergebnis, Datum, Etherscan-Link
+- [ ] Das Forum (Community Vote): letzte 5 Votes
+  - Titel, Ergebnis, Datum, Link zu Details
+  - "Mehr anzeigen" Link → ältere Abstimmungen
+  - Live on-chain via Governance Contract Events
+
+### Landing Page — Mobile Performance Optimierung
+- [ ] Lazy Loading via IntersectionObserver (Animationen, Canvas, Widgets)
+- [ ] Rendering-Priorisierung: Text+CTA sofort, Animationen deferred
+- [ ] Header-Animation auf Mobile vereinfachen/überspringen
+- [ ] CSS will-change + transform statt top/left für Animationen
+- [ ] requestAnimationFrame für alle JS-Animationen
+- [ ] Passive Event Listeners für Scroll-Events
+- [ ] contain: layout wo möglich
+- [ ] Bilder: WebP + srcset korrekte Größen
+- [ ] Kritisches CSS inline, Rest deferred
+- [ ] font-display: swap für alle Fonts
+- [ ] Device Detection: Mobile/Low-End → reduzierte Animations-Variante
+- [ ] prefers-reduced-motion Media Query vollständig respektieren
+- [ ] Ziel: ruckelfreies Scrollen auf Low-End Smartphones
+
+---
+
 ## COMPLETED
 
 ### Phase 3 — Sprint 2 (Wallet Verification)
@@ -292,4 +333,4 @@ Regenerate TODO.html from TODO.md content.
 ---
 
 *This document is updated with every completed task.*
-*Last updated: 2026-03-15*
+*Last updated: 2026-03-16*

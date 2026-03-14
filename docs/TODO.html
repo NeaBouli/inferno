@@ -46,7 +46,7 @@
   <div class="container">
     <a href="wiki/roadmap.html" class="back" rel="nofollow">&larr; Roadmap</a>
     <h1>IFR Protocol &mdash; Developer TODO List</h1>
-    <div class="subtitle">Last updated: 2026-03-15 &middot; Branch: main</div>
+    <div class="subtitle">Last updated: 2026-03-16 &middot; Branch: main</div>
 
     <!-- ═══ STANDING INSTRUCTIONS ═══ -->
     <div style="background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.3);border-radius:12px;padding:20px;margin-bottom:32px;">
@@ -159,6 +159,68 @@
       <li><div class="cb"></div>Set up Mythril CI</li>
       <li><div class="cb"></div>Coverage badge in README</li>
       <li><div class="cb"></div>Recruit 2-3 repo maintainers</li>
+    </ul>
+
+    <hr>
+
+    <!-- ═══ PHASE 2+ FEATURES ═══ -->
+    <h2><span class="priority-badge p-medium">PHASE 2+</span> Phase 2+ Features</h2>
+
+    <h3>Landing Page &mdash; Dashboard Role Badges</h3>
+    <ul>
+      <li><div class="cb"></div>Dashboard Badges/Patches auf Landing Page einbauen (sichtbarer Bereich)
+        <ul style="margin-top:4px;color:#9ca3af;font-size:0.9em;">
+          <li>Dashboard User Badge (klickbar &rarr; User Dashboard)</li>
+          <li>Dashboard Builder Badge (klickbar &rarr; Builder Dashboard)</li>
+          <li>Dashboard Developer / Core Team Badge (klickbar &rarr; Dev Dashboard)</li>
+          <li>Visuell als klickbare Patches/Embleme gestaltet</li>
+          <li>Je nach verbundener Wallet-Rolle sichtbar/aktiv</li>
+        </ul>
+      </li>
+    </ul>
+
+    <h3>Governance Section &mdash; Live Wallet Verification Stats</h3>
+    <ul>
+      <li><div class="cb"></div>Live-Anzeige: Anzahl verifizierter Wallets (keine &ouml;ffentlichen Adressen)
+        <ul style="margin-top:4px;color:#9ca3af;font-size:0.9em;">
+          <li>Aufschl&uuml;sselung nach Topic: General / Vote+Council / Dev&amp;Builder / Core Team</li>
+          <li>Nur Statistik/Anzahl &mdash; kein Datenschutz-Problem</li>
+          <li>Backend-Endpoint: <code>/api/verify/stats</code> (Railway)</li>
+        </ul>
+      </li>
+    </ul>
+
+    <h3>Governance Section &mdash; Letzte Abstimmungen (on-chain live)</h3>
+    <ul>
+      <li><div class="cb"></div>The Council (Der Rat): letzte 5 Abstimmungen
+        <ul style="margin-top:4px;color:#9ca3af;font-size:0.9em;">
+          <li>Titel, Ergebnis, Datum, Etherscan-Link</li>
+        </ul>
+      </li>
+      <li><div class="cb"></div>Das Forum (Community Vote): letzte 5 Votes
+        <ul style="margin-top:4px;color:#9ca3af;font-size:0.9em;">
+          <li>Titel, Ergebnis, Datum, Link zu Details</li>
+          <li>&ldquo;Mehr anzeigen&rdquo; Link &rarr; &auml;ltere Abstimmungen</li>
+          <li>Live on-chain via Governance Contract Events</li>
+        </ul>
+      </li>
+    </ul>
+
+    <h3>Landing Page &mdash; Mobile Performance Optimierung</h3>
+    <ul>
+      <li><div class="cb"></div>Lazy Loading via IntersectionObserver (Animationen, Canvas, Widgets)</li>
+      <li><div class="cb"></div>Rendering-Priorisierung: Text+CTA sofort, Animationen deferred</li>
+      <li><div class="cb"></div>Header-Animation auf Mobile vereinfachen/&uuml;berspringen</li>
+      <li><div class="cb"></div>CSS <code>will-change</code> + <code>transform</code> statt top/left f&uuml;r Animationen</li>
+      <li><div class="cb"></div><code>requestAnimationFrame</code> f&uuml;r alle JS-Animationen</li>
+      <li><div class="cb"></div>Passive Event Listeners f&uuml;r Scroll-Events</li>
+      <li><div class="cb"></div><code>contain: layout</code> wo m&ouml;glich</li>
+      <li><div class="cb"></div>Bilder: WebP + <code>srcset</code> korrekte Gr&ouml;&szlig;en</li>
+      <li><div class="cb"></div>Kritisches CSS inline, Rest deferred</li>
+      <li><div class="cb"></div><code>font-display: swap</code> f&uuml;r alle Fonts</li>
+      <li><div class="cb"></div>Device Detection: Mobile/Low-End &rarr; reduzierte Animations-Variante</li>
+      <li><div class="cb"></div><code>prefers-reduced-motion</code> Media Query vollst&auml;ndig respektieren</li>
+      <li><div class="cb"></div>Ziel: ruckelfreies Scrollen auf Low-End Smartphones</li>
     </ul>
 
     <hr>
