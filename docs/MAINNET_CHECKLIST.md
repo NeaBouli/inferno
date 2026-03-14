@@ -68,7 +68,7 @@ These items MUST be completed before public launch:
 
 ### Multisig Setup (MUST be done before deployment)
 - [x] Gnosis Safe created: https://safe.global
-- [ ] Recommended: 2-of-4 signers (currently 1-of-2)
+- [x] 2-of-4 threshold active (4 signers: A.K., M.G., A.M., Y.K.) — upgrading to 3-of-5
 - [ ] All signers have hardware wallets (Ledger/Trezor)
 - [x] Multisig address recorded: `0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b`
 - [ ] Guardian multisig created (separate Safe, 2-of-4 recommended)

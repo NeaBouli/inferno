@@ -71,7 +71,7 @@ with a 1-year cliff. See [Fair Launch Statement](docs/FAIR_LAUNCH.md).
 |------|---------|
 | Treasury Multisig | [`0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b`](https://app.safe.global/home?safe=eth:0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b) |
 
-Threshold: 1-of-2 (Deployer + Signer2). Expanding to 2-of-4.
+Threshold: 2-of-4 (4 active signers). Upgrading to 3-of-5.
 
 ## Builder Ecosystem
 

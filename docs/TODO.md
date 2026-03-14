@@ -101,8 +101,11 @@ Regenerate TODO.html from TODO.md content.
 ## THIS WEEK
 
 ### Multisig
-- [ ] Upgrade Multisig 1-of-2 → 2-of-4 (Gnosis Safe UI)
-- [ ] 2 missing verifiers must join Safe and sign
+- [x] A.M. als 3. Signer hinzugefügt ✅
+- [x] Y.K. als 4. Signer hinzugefügt ✅
+- [x] Threshold auf 2-of-4 gesetzt ✅ (14.03.2026)
+- [ ] 5. Signer hinzufügen (beide Safes) — diese Woche
+- [ ] Threshold auf 3-of-5 setzen
 - [ ] Transfer Governance → GnosisSafe ownership
 
 ### Telegram Bot
