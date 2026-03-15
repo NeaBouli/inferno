@@ -175,7 +175,29 @@ window.IFRWallet = (() => {
   }
   function _onChainChanged() { window.location.reload(); }
 
+  // ── Mobile Deep-Link ──────────────────────────────────
+  const PENDING_KEY = "ifr_pending_connect";
+
+  function getDeepLink() {
+    const clean = window.location.href.replace(/^https?:\/\//, "");
+    return "https://metamask.app.link/dapp/" + clean;
+  }
+
+  function isMobile() {
+    return /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+  }
+
+  // Auto-connect after MetaMask deep-link return
+  if (sessionStorage.getItem(PENDING_KEY) === "1") {
+    sessionStorage.removeItem(PENDING_KEY);
+    setTimeout(function() {
+      const eth = _getMetaMaskProvider();
+      if (eth) connect().catch(function() {});
+    }, 500);
+  }
+
   // ── Public API ───────────────────────────────────────
   return { connect, disconnect, autoReconnect, isConnected,
-           getAddress, getShortAddress, getSigner, getProvider, on, off };
+           getAddress, getShortAddress, getSigner, getProvider,
+           on, off, getDeepLink, isMobile };
 })();

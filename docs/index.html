@@ -2953,9 +2953,9 @@ async function lpConnect() {
   } catch(e) {
     console.error("Connect error:", e.message, e.code);
     if (e.message === "NO_METAMASK") {
-      var isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
-      if (isMobile) {
-        window.location.href = "https://metamask.app.link/dapp/ifrunit.tech";
+      if (IFRWallet.isMobile()) {
+        sessionStorage.setItem("ifr_pending_connect", "1");
+        window.location.href = IFRWallet.getDeepLink();
       } else {
         if (btn) {
           btn.textContent = "\u26A0\uFE0F Install MetaMask";
