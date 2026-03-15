@@ -803,21 +803,26 @@
         <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
             <span style="font-size:1.3rem;">&#x23F3;</span>
-            <strong style="color:var(--text);">Team Vesting</strong>
+            <strong style="color:var(--text);">Team Vesting Contract</strong>
+            <span style="font-size:10px;color:var(--muted);margin-left:8px;">(the vault)</span>
           </div>
           <code style="font-size:11px;color:var(--muted);word-break:break-all;">0x2694Bc84e8D5251E9E4Ecd4B2Ae3f866d6106271</code>
           <p style="font-size:13px;color:var(--muted);margin:10px 0;">
-            150M IFR (15%) locked for 4 years. 12-month cliff (zero tokens before March 2027),
-            then linear release over 36 months until March 2030.
+            Smart contract holding 150M IFR (15%). 12-month cliff (zero tokens released before March 2027),
+            then linear release over 36 months until March 2030. Tokens are locked in this contract &mdash;
+            not accessible until the cliff ends.
           </p>
-          <p style="font-size:12px;color:var(--muted);margin:6px 0;">
-            <strong style="color:var(--text);">Beneficiary:</strong>
-            <code style="font-size:10px;">0x04FABC52...6239</code> &mdash;
-            held by the Core Developer as trustee on behalf of the entire team.
-            The 150M IFR represents the collective team allocation. Usage decisions
-            (reinvestment, compensation, or other purposes) are made collectively.
-            All claims publicly announced via official governance channels.
-          </p>
+          <div style="border-top:1px solid var(--border);margin-top:10px;padding-top:10px;">
+            <p style="font-size:12px;color:var(--muted);margin:0 0 6px 0;">
+              <strong style="color:#fbbf24;">Beneficiary (who receives tokens after cliff):</strong><br>
+              <code style="font-size:10px;">0x04FABC52c51d1F8ced6974E7C25a34249b1E6239</code> &mdash;
+              held by the Core Developer as trustee on behalf of the entire team.
+              The 150M IFR represents the collective team allocation. Usage decisions
+              (reinvestment, compensation, or other purposes) are made collectively.
+              All claims publicly announced via official governance channels.
+              <strong>Currently: 0 IFR</strong> (cliff not reached).
+            </p>
+          </div>
           <p style="font-size:12px;color:var(--muted);margin:6px 0;">
             <strong style="color:var(--text);">Planned (Option B, after March 2027):</strong>
             New multisig vesting contract with Gnosis Safe as beneficiary &mdash; placing

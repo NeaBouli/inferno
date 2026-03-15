@@ -1794,16 +1794,22 @@
 
         <div style="background:#111113;border:1px solid #222225;border-radius:8px;padding:14px 16px;">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-            <span style="font-size:13px;font-weight:600;">&#x23F3; Team Vesting</span>
+            <span style="font-size:13px;font-weight:600;">&#x23F3; Team Vesting Contract</span>
             <span style="font-size:10px;padding:2px 8px;border-radius:10px;background:rgba(192,57,43,0.15);color:#C0392B;">Locked &#x1F512;</span>
           </div>
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
             <a href="https://etherscan.io/address/0x2694Bc84e8D5251E9E4Ecd4B2Ae3f866d6106271" target="_blank" rel="noopener" style="font-size:11px;font-family:monospace;color:#8a8a96;text-decoration:none;">0x2694Bc84...6271</a>
             <button class="copy-btn" data-addr="0x2694Bc84e8D5251E9E4Ecd4B2Ae3f866d6106271" style="font-size:10px;background:none;border:1px solid #333;color:#8a8a96;border-radius:4px;padding:1px 6px;cursor:pointer;">Copy</button>
           </div>
           <div style="font-size:13px;font-weight:600;color:#C0392B;" data-live-key="card-vesting">loading&hellip;</div>
-          <div style="font-size:10px;color:#666;margin-top:2px;">12-month cliff (~March 2027). 36-month linear vesting.</div>
-          <div style="font-size:10px;color:#555;margin-top:4px;">Beneficiary: <a href="https://etherscan.io/address/0x04FABC52c51d1F8ced6974E7C25a34249b1E6239" target="_blank" rel="noopener" style="font-family:monospace;color:#666;text-decoration:none;">0x04FA...6239</a> (Core Dev trustee for team)</div>
+          <div style="font-size:10px;color:#666;margin-top:2px;">Smart contract holding 150M IFR. 12-month cliff (~March 2027), then 36-month linear release. Tokens locked here until cliff ends.</div>
+          <div style="border-top:1px solid #222;margin-top:6px;padding-top:6px;">
+            <div style="font-size:10px;color:#fbbf24;font-weight:600;margin-bottom:2px;">Beneficiary (receives tokens after cliff):</div>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <a href="https://etherscan.io/address/0x04FABC52c51d1F8ced6974E7C25a34249b1E6239" target="_blank" rel="noopener" style="font-size:10px;font-family:monospace;color:#666;text-decoration:none;">0x04FA...6239</a>
+              <span style="font-size:9px;color:#555;">Core Dev trustee for team &middot; 0 IFR until Mar 2027</span>
+            </div>
+          </div>
         </div>
 
         <div style="background:#111113;border:1px solid #222225;border-radius:8px;padding:14px 16px;">
@@ -1966,11 +1972,18 @@
         <text x="75" y="438" text-anchor="middle" fill="#a78bfa" font-size="11">Builder</text>
         <text x="75" y="454" text-anchor="middle" fill="#9ca3af" font-size="9">Creator Rewards</text>
 
-        <!-- Vesting -->
-        <rect x="650" y="80" width="130" height="50" rx="10" fill="#0d1117" stroke="#fbbf24" stroke-width="1.5"/>
-        <text x="715" y="100" text-anchor="middle" fill="#fbbf24" font-size="11" font-weight="bold">Vesting</text>
-        <text x="715" y="116" text-anchor="middle" fill="#9ca3af" font-size="9">150M &middot; Cliff Mar 2027</text>
-        <text x="715" y="128" text-anchor="middle" fill="#6b7280" font-size="8">0x04FA...6239</text>
+        <!-- Vesting Contract -->
+        <rect x="650" y="80" width="130" height="42" rx="10" fill="#0d1117" stroke="#fbbf24" stroke-width="1.5"/>
+        <text x="715" y="98" text-anchor="middle" fill="#fbbf24" font-size="11" font-weight="bold">Vesting Contract</text>
+        <text x="715" y="114" text-anchor="middle" fill="#9ca3af" font-size="9">150M locked &middot; 0x2694</text>
+
+        <!-- Beneficiary -->
+        <line x1="715" y1="122" x2="715" y2="138" stroke="#1e2730" stroke-width="1" stroke-dasharray="4,3"/>
+        <rect x="655" y="138" width="120" height="36" rx="8" fill="#0d1117" stroke="#fbbf24" stroke-width="1" stroke-dasharray="4,3"/>
+        <text x="715" y="154" text-anchor="middle" fill="#fbbf24" font-size="9">Beneficiary 0x04FA</text>
+        <text x="715" y="168" text-anchor="middle" fill="#6b7280" font-size="8">receives from Mar 2027</text>
+        <!-- Vesting → Beneficiary particle (slow — cliff) -->
+        <circle r="2" fill="#fbbf24" opacity="0.5"><animateMotion dur="8s" repeatCount="indefinite" path="M715,122 L715,138"/></circle>
 
         <!-- Animated Particles -->
         <!-- IFR → FeeRouter (orange) -->
