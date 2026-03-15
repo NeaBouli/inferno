@@ -92,6 +92,14 @@ Regenerate TODO.html from TODO.md content.
 
 ## CRITICAL
 
+### Governance Proposals
+- [ ] Proposal #7: `setFeeExempt(Deployer)` — Deployer EOA currently NOT fee-exempt
+- [ ] Proposal #8: `transferOwnership(TreasurySafe)` — Governance owner from Deployer → Gnosis Safe
+
+### Known Bugs
+- [ ] Android MetaMask Deep-Link: opens new browser instance instead of returning to Chrome
+- [ ] Bootstrap public stats: PublicNode RPC fallback added, monitor for rate-limiting
+
 ### Bot & Infrastructure
 - [x] `voteAnnouncement.js` — Bot announces Governance Proposals + verify.html link + 24h reminder ✅
 - [ ] `SIGNER_WALLETS` in Railway env: `0x6b36687...` + `0x17F8DD6dECCb3ff5d95691982B85A87d7d9872d4`
@@ -329,6 +337,11 @@ Regenerate TODO.html from TODO.md content.
 - [ ] Google Play
 - [ ] App Store (iOS)
 - [ ] Integrated DAO governance (The Council + The Forum)
+
+### Smart Contracts (Phase 3)
+- [ ] BuybackController.sol — auto-refill PartnerVault, overflow → Treasury, SOS reserve
+- [ ] LiquidityVault.sol — 3-phase LP release (deploy after Bootstrap decision 05.06)
+- [ ] Vesting Migration Option B — new multisig vesting contract after cliff (March 2027)
 
 ### Creator & Partner
 - [ ] Creator Gateway (open-source bridge, Docker, OAuth + WalletConnect)

@@ -1835,14 +1835,14 @@
         <div style="background:#111113;border:1px solid #222225;border-radius:8px;padding:14px 16px;">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
             <span style="font-size:13px;font-weight:600;">&#x1F680; Bootstrap Vault V3</span>
-            <span style="font-size:10px;padding:2px 8px;border-radius:10px;background:rgba(243,156,18,0.15);color:#F39C12;">&#x23F3; Pending Funding</span>
+            <span style="font-size:10px;padding:2px 8px;border-radius:10px;background:rgba(34,197,94,0.15);color:#22c55e;">&#x1F525; Active &mdash; ends June 5</span>
           </div>
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
             <a href="https://etherscan.io/address/0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141" target="_blank" rel="noopener" style="font-size:11px;font-family:monospace;color:#8a8a96;text-decoration:none;">0xf72565C4...e141</a>
             <button class="copy-btn" data-addr="0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141" style="font-size:10px;background:none;border:1px solid #333;color:#8a8a96;border-radius:4px;padding:1px 6px;cursor:pointer;">Copy</button>
           </div>
-          <div style="font-size:13px;font-weight:600;color:#F39C12;" data-live-key="card-bootstrap">loading&hellip;</div>
-          <div style="font-size:10px;color:#666;margin-top:2px;">Holds ~194.75M IFR (funded 11.03.2026 &#x2705;). Creates Uniswap LP via finalise().</div>
+          <div style="font-size:13px;font-weight:600;color:#22c55e;" data-live-key="card-bootstrap">loading&hellip;</div>
+          <div style="font-size:10px;color:#666;margin-top:2px;">194.75M IFR &#x2705; Bootstrap LIVE. Contribute 0.01&ndash;2 ETH at <a href="wiki/bootstrap.html" style="color:#f97316;">bootstrap.html</a></div>
         </div>
 
         <div style="background:#111113;border:1px solid #222225;border-radius:8px;padding:14px 16px;">
@@ -1992,14 +1992,32 @@
         <!-- Deployer → LiqReserve (purple) -->
         <circle r="3" fill="#a78bfa" opacity="0.7"><animateMotion dur="4s" repeatCount="indefinite" path="M370,80 L220,168"/></circle>
 
+        <!-- IFRLock Contract -->
+        <line x1="442" y1="260" x2="640" y2="252" stroke="#1e2730" stroke-width="1.5"/>
+        <line x1="705" y1="274" x2="705" y2="328" stroke="#1e2730" stroke-width="1.5"/>
+        <rect x="640" y="232" width="130" height="42" rx="10" fill="#0d1117" stroke="#22c55e" stroke-width="1.5"/>
+        <text x="705" y="250" text-anchor="middle" fill="#22c55e" font-size="11" font-weight="bold">IFRLock</text>
+        <text x="705" y="266" text-anchor="middle" fill="#9ca3af" font-size="9">Lock &rarr; Access</text>
+
+        <!-- User -->
+        <rect x="640" y="328" width="130" height="42" rx="10" fill="#0d1117" stroke="#9ca3af" stroke-width="1" stroke-dasharray="4,3"/>
+        <text x="705" y="346" text-anchor="middle" fill="#9ca3af" font-size="11">User</text>
+        <text x="705" y="362" text-anchor="middle" fill="#6b7280" font-size="9">Locks IFR &rarr; Premium</text>
+
+        <!-- User → IFRLock (green locking) -->
+        <circle r="3" fill="#22c55e" opacity="0.9"><animateMotion dur="2.5s" repeatCount="indefinite" path="M705,350 L705,274"/></circle>
+        <circle r="3" fill="#22c55e" opacity="0.5"><animateMotion dur="2.5s" begin="1.2s" repeatCount="indefinite" path="M705,350 L705,274"/></circle>
+        <!-- IFR → IFRLock (orange) -->
+        <circle r="3" fill="#f97316" opacity="0.7"><animateMotion dur="3s" repeatCount="indefinite" path="M442,260 L640,252"/></circle>
+
         <!-- Legend -->
         <g transform="translate(20,488)">
           <circle cx="8" cy="8" r="4" fill="#f97316"/><text x="16" y="12" fill="#9ca3af" font-size="9">Fee flow</text>
           <circle cx="80" cy="8" r="4" fill="#ef4444"/><text x="88" y="12" fill="#9ca3af" font-size="9">Burn</text>
           <circle cx="130" cy="8" r="4" fill="#60a5fa"/><text x="138" y="12" fill="#9ca3af" font-size="9">LP</text>
-          <circle cx="165" cy="8" r="4" fill="#22c55e"/><text x="173" y="12" fill="#9ca3af" font-size="9">Rewards</text>
-          <circle cx="230" cy="8" r="4" fill="#a78bfa"/><text x="238" y="12" fill="#9ca3af" font-size="9">Planned</text>
-          <rect x="295" y="4" width="14" height="8" fill="none" stroke="#9ca3af" stroke-width="1" stroke-dasharray="3,2" rx="2"/><text x="313" y="12" fill="#9ca3af" font-size="9">Phase 3</text>
+          <circle cx="165" cy="8" r="4" fill="#22c55e"/><text x="173" y="12" fill="#9ca3af" font-size="9">Lock / Rewards</text>
+          <circle cx="260" cy="8" r="4" fill="#a78bfa"/><text x="268" y="12" fill="#9ca3af" font-size="9">Planned</text>
+          <rect x="325" y="4" width="14" height="8" fill="none" stroke="#9ca3af" stroke-width="1" stroke-dasharray="3,2" rx="2"/><text x="343" y="12" fill="#9ca3af" font-size="9">Phase 3</text>
         </g>
       </svg>
     </div>
