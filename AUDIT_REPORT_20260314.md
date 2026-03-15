@@ -65,7 +65,7 @@ Alle Stellen zeigen: **Start 07.03.2026 / End 05.06.2026** (on-chain Daten, korr
 
 ### 🟢 Token Supply — KONSISTENT ✅
 
-1B IFR total, 194.75M Bootstrap — überall identisch.
+1B IFR total, 200M Bootstrap — überall identisch.
 
 ### 🟢 Contract-Adressen — KONSISTENT ✅
 

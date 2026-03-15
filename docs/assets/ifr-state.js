@@ -116,7 +116,7 @@ window.IFRState = (() => {
             active: false, finalized: false,
             totalETHRaised: "0.0", contributorCount: 0,
             timeRemaining: 0, startTime: 1772841600000, endTime: 1780617600000,
-            ifrAllocation: "194750000",
+            ifrAllocation: "200000000",
           };
         }
       }

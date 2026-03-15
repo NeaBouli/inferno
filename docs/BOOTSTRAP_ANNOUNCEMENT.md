@@ -17,7 +17,7 @@ The Inferno Bootstrap vault is open and accepting contributions:
 → No team ETH. Fully trustless. Permissionless.
 
 **What's in the vault:**
-→ ~194.75M IFR ready for LP creation
+→ ~200M IFR ready for LP creation
 → Smart contract funded ✅
 → Verify on-chain: etherscan.io
 
@@ -39,7 +39,7 @@ No presale. No VC. Community-first.
 ```
 🔥 **$IFR Bootstrap is LIVE — Contribute Now**
 
-✅ 194.75M IFR locked in vault
+✅ 200M IFR locked in vault
 ✅ Uniswap V2 LP ready to launch
 ✅ Smart contract verified on Etherscan
 ✅ No presale — no VC — community only
@@ -62,7 +62,7 @@ Closes June 5, 2026. Don't miss it.
 The vault closes June 5, 2026.
 
 💰 Min: 0.01 ETH | Max: 2 ETH per wallet
-🎯 194.75M IFR pool
+🎯 200M IFR pool
 🔒 100% ETH → Uniswap LP
 
 → ifrunit.tech/wiki/bootstrap.html
@@ -81,4 +81,4 @@ Don't miss the deadline.
 - On-chain startTime: 2026-03-07 (contract deployed, accepting contributions)
 - On-chain endTime: 2026-06-05 (90 days from deploy)
 - Status: **LIVE** since March 7, 2026
-- Vault funded: 194.75M IFR (Treasury 144.75M + Community 50M)
+- Vault funded: 200M IFR (Treasury 150M + Community 50M)

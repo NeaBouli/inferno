@@ -62,7 +62,7 @@ export function getIFRKnowledge() {
       startDate: "March 7, 2026 (on-chain startTime)",
       endDate: "June 5, 2026 (on-chain endTime)",
       vault: "0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141",
-      funded: "194.75M IFR (funded March 11, 2026 via Plan B)",
+      funded: "200M IFR (funded March 11, 2026 via Plan B)",
       minContribution: "0.01 ETH",
       maxContribution: "2 ETH per wallet",
       mechanism: "Pro-rata IFR distribution — no fixed price, community-driven",

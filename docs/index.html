@@ -1333,7 +1333,7 @@
     if(now<START){
       var d=START-now;
       var dd=Math.floor(d/864e5),hh=Math.floor(d%864e5/36e5),mm=Math.floor(d%36e5/6e4),ss=Math.floor(d%6e4/1e3);
-      hl.innerHTML='\uD83D\uDD25 Community Bootstrap Event \u2014 Vault Funded (194.75M IFR) \u2014 ETH contributions open in <span style="color:#f97316;font-weight:700;font-family:monospace;">'+dd+'d '+hh+'h '+mm+'m '+ss+'s</span>';
+      hl.innerHTML='\uD83D\uDD25 Community Bootstrap Event \u2014 Vault Funded (200M IFR) \u2014 ETH contributions open in <span style="color:#f97316;font-weight:700;font-family:monospace;">'+dd+'d '+hh+'h '+mm+'m '+ss+'s</span>';
     } else if(now<END){
       var d=END-now;
       var dd=Math.floor(d/864e5),hh=Math.floor(d%864e5/36e5),mm=Math.floor(d%36e5/6e4),ss=Math.floor(d%6e4/1e3);
@@ -1716,7 +1716,7 @@
           </div>
           <p style="font-size:11px;color:var(--text-muted);margin-top:12px;line-height:1.6;">
             <strong>Protocol contracts:</strong> BuybackVault and BurnReserve accumulate from the 1% pool fee &mdash; not pre-funded genesis allocations.<br>
-            <strong>Bootstrap (Plan B):</strong> ~194.75M IFR from Treasury Safe + Community Safe &rarr; BootstrapVaultV3. Community Safe retains ~7.9M IFR as operating buffer.<br>
+            <strong>Bootstrap (Plan B):</strong> ~200M IFR from Treasury Safe + Community Safe &rarr; BootstrapVaultV3. Community Safe retains ~7.9M IFR as operating buffer.<br>
             <strong>Liquidity Reserve:</strong> Strategically locked until 01.09.2026. Reserved for Phase 2/3 LP expansion. Not used for Bootstrap.
           </p>
         </div>
@@ -1848,7 +1848,7 @@
             <button class="copy-btn" data-addr="0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141" style="font-size:10px;background:none;border:1px solid #333;color:#8a8a96;border-radius:4px;padding:1px 6px;cursor:pointer;">Copy</button>
           </div>
           <div style="font-size:13px;font-weight:600;color:#22c55e;" data-live-key="card-bootstrap">loading&hellip;</div>
-          <div style="font-size:10px;color:#666;margin-top:2px;">194.75M IFR &#x2705; Bootstrap LIVE. Contribute 0.01&ndash;2 ETH at <a href="wiki/bootstrap.html" style="color:#f97316;">bootstrap.html</a></div>
+          <div style="font-size:10px;color:#666;margin-top:2px;">200M IFR &#x2705; Bootstrap LIVE. Contribute 0.01&ndash;2 ETH at <a href="wiki/bootstrap.html" style="color:#f97316;">bootstrap.html</a></div>
         </div>
 
         <div style="background:#111113;border:1px solid #222225;border-radius:8px;padding:14px 16px;">
@@ -1925,7 +1925,7 @@
         <!-- Bootstrap V3 -->
         <rect x="510" y="158" width="140" height="42" rx="10" fill="#0d1117" stroke="#f97316" stroke-width="1.5"/>
         <text x="580" y="176" text-anchor="middle" fill="#f97316" font-size="11" font-weight="bold">Bootstrap V3</text>
-        <text x="580" y="192" text-anchor="middle" fill="#9ca3af" font-size="9">194.75M IFR + ETH</text>
+        <text x="580" y="192" text-anchor="middle" fill="#9ca3af" font-size="9">200M IFR + ETH</text>
 
         <!-- Uniswap -->
         <rect x="510" y="318" width="140" height="42" rx="10" fill="#0d1117" stroke="#60a5fa" stroke-width="1.5"/>
@@ -2382,7 +2382,7 @@ if (isLocked) {
     {q:"What is the lock mechanism?",
      a:"Any wallet locks $IFR in IFRLock. Locked tokens cannot be sold or transferred. The on-chain lock state is the canonical source for access control, builder discounts, and governance power."},
     {q:"How does the Bootstrap work?",
-     a:"90-day community event \u2014 contribute 0.01\u20132 ETH. Collected ETH is automatically paired with ~194.75M IFR to create the Uniswap V2 LP. Fully permissionless, no team action needed."},
+     a:"90-day community event \u2014 contribute 0.01\u20132 ETH. Collected ETH is automatically paired with ~200M IFR to create the Uniswap V2 LP. Fully permissionless, no team action needed."},
     {q:"Who controls the protocol?",
      a:"All changes require a 48-hour timelock via the Governance contract \u2014 nothing can change instantly. Gnosis Safe multisig active (3-of-5 with 5 signers, 3-of-5 active) for distributed control. Bootstrap Event is LIVE (ends June 5, 2026)."},
     {q:"What is the token distribution?",
