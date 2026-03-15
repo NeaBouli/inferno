@@ -117,6 +117,9 @@ On errors: fix immediately, commit with `seo:` prefix.
 
 ### Known Bugs
 - [ ] Android MetaMask Deep-Link: opens new browser instance instead of returning to Chrome
+- [ ] npm audit: 34 vulnerabilities (2 critical, 9 high, 11 moderate, 12 low) — fix after LP launch
+      Link: https://github.com/NeaBouli/inferno/security/dependabot
+      Note: affects node_modules only, not Solidity contracts
 - [x] Bootstrap public stats: PublicNode RPC fallback + _publicStatsLoaded race guard ✅
 - [x] Recent Votes: loadSavedVotes() on DOMContentLoaded ✅ (bc18c85a)
 - [x] WalletConnect placeholder text removed ✅
@@ -163,11 +166,16 @@ On errors: fix immediately, commit with `seo:` prefix.
 ## MID-TERM
 
 ### Bootstrap (LIVE since 07.03.2026, ends 05.06.2026)
-- [ ] Finalize announcement text (Reddit/X/Telegram/Farcaster)
-- [ ] Reddit posts: r/defi + r/ethfinance + r/CryptoMoonShots
-- [ ] Prepare Farcaster post
+- [x] Announcement texts fertig — `docs/BOOTSTRAP_ANNOUNCEMENT.md` ✅
+- [ ] 📢 POST: Telegram @IFRtoken (Text #1)
+- [ ] 📢 POST: X Thread @IFRtoken (Text #2, 4 Tweets)
+- [ ] 📢 POST: Reddit r/ethfinance (Text #3)
+- [ ] 📢 POST: Reddit r/CryptoMoonShots (Text #4)
+- [ ] 📢 POST: Farcaster (Text #5)
+- [ ] 📢 POST: Reddit r/defi (Text #3 angepasst)
+- [ ] 🔍 Reddit Karma prüfen vor Post (r/CryptoMoonShots Mindest-Karma)
 - [ ] Set up Juicebox listing/discovery (NO funding — discovery only)
-- [ ] Prepare X/Twitter announcement
+- [x] X/Twitter announcement text prepared ✅ (in BOOTSTRAP_ANNOUNCEMENT.md)
 - [ ] Final review bootstrap page
 - [ ] Communicate Bootstrap V4 on bootstrap.html: "V4 governance voting planned for Phase 3"
 
