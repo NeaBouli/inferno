@@ -1243,7 +1243,7 @@
 
         <!-- Demo Mode Banner -->
         <div id="consensus-demo-banner" style="background:rgba(234,179,8,0.12); border:1px solid rgba(234,179,8,0.4); border-radius:8px; padding:12px 16px; margin:16px 0; font-size:13px; color:#eab308;">
-          &#x26A0; WalletConnect not yet active &mdash; voting opens when WalletConnect is live. This module shows demo data.
+          &#x26A0; Connect your wallet to participate in voting. Public stats are loaded automatically.
         </div>
 
         <!-- Stats Row -->
@@ -1309,12 +1309,12 @@
           </p>
         </div>
 
-        <!-- Recent Votes (demo) -->
+        <!-- Recent Votes -->
         <div style="margin-top:24px;">
           <div style="font-size:13px; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:8px;">Recent Votes</div>
           <div id="cs-votes-list" style="background:var(--card); border:1px solid var(--border); border-radius:10px; overflow:hidden;">
             <div style="padding:16px; text-align:center; color:#555; font-style:italic; font-size:13px;">
-              No votes yet &mdash; voting opens when WalletConnect is live
+              No votes recorded yet &mdash; connect wallet and contribute ETH to vote.
             </div>
           </div>
         </div>
@@ -1588,6 +1588,7 @@ var ConsensusModule = {
     if (btnF) { btnF.disabled = true; btnF.style.opacity = '0.4'; }
 
     this.render();
+    if (typeof loadSavedVotes === 'function') loadSavedVotes();
   },
 
   loadDemoData: function() {
@@ -1632,11 +1633,32 @@ var ConsensusModule = {
   }
 };
 
+// Load saved votes from localStorage into Recent Votes list
+function loadSavedVotes() {
+  var listEl = document.getElementById('cs-votes-list');
+  if (!listEl) return;
+  var raw = localStorage.getItem('ifr_votes');
+  var votes = [];
+  try { votes = raw ? JSON.parse(raw) : []; } catch(e) { votes = []; }
+  if (votes.length === 0) return; // keep default "No votes" text
+  var html = '';
+  votes.slice(-5).reverse().forEach(function(v) {
+    var color = v.type === 'finalise' ? '#22c55e' : '#ef4444';
+    var label = v.type === 'finalise' ? 'Vote Finalise' : 'Vote Refund';
+    var addr = typeof v.addr === 'string' && v.addr.length > 10 ? v.addr.slice(0,6) + '...' + v.addr.slice(-4) : (v.addr || '???');
+    html += '<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 16px;border-bottom:1px solid var(--border);font-size:13px;">' +
+      '<span style="color:' + color + ';font-weight:600;">' + label + '</span>' +
+      '<span style="color:var(--muted);">' + addr + ' &middot; ' + (v.date || '') + '</span></div>';
+  });
+  listEl.innerHTML = html;
+}
+
 // Init after DOM ready
 if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', function() { ConsensusModule.init(); });
+  document.addEventListener('DOMContentLoaded', function() { ConsensusModule.init(); loadSavedVotes(); });
 } else {
   ConsensusModule.init();
+  loadSavedVotes();
 }
 </script>
 
