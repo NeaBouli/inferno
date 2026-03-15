@@ -1,77 +1,204 @@
-# IFR Bootstrap Event — Telegram Announcement
+# IFR Bootstrap Event — Announcement Texts (All Channels)
 
-## Post 1 — Bootstrap is LIVE (now)
+**Status:** Ready to post
+**Date:** 16.03.2026
+**Bootstrap:** LIVE since 07.03.2026 — ends 05.06.2026
+
+---
+
+## 1. TELEGRAM (Channel @IFRtoken)
 
 ```
-🔥 **$IFR Community Bootstrap IS LIVE**
+🔥 IFR Bootstrap Event — LIVE
 
-The Inferno Bootstrap vault is open and accepting contributions:
+The IFR Community Bootstrap Event is now open.
 
-📅 **Started:** March 7, 2026
-📅 **Closes:** June 5, 2026
+📋 Details:
+├ Vault: 200,000,000 IFR funded ✅
+├ Duration: March 7 → June 5, 2026
+├ Contribute: 0.01–2 ETH per wallet
+├ 100% of ETH → Uniswap V2 LP
+└ No team ETH. Fully trustless.
 
-**How it works:**
-→ Contribute 0.01–2 ETH
-→ Receive IFR pro-rata at launch price
-→ 100% of ETH goes into Uniswap V2 liquidity
-→ No team ETH. Fully trustless. Permissionless.
+💡 How it works:
+1. Contribute 0.01–2 ETH
+2. After June 5: anyone calls finalise()
+3. LP created automatically on Uniswap
+4. Claim your IFR pro-rata
 
-**What's in the vault:**
-→ ~200M IFR ready for LP creation
-→ Smart contract funded ✅
-→ Verify on-chain: etherscan.io
+🌐 Participate: ifrunit.tech/wiki/bootstrap
 
-⚠️ **Only contribute through the official site:**
-🌐 ifrunit.tech/wiki/bootstrap.html
-
-No presale. No VC. Community-first.
-
-📖 Full details: ifrunit.tech/wiki/bootstrap.html
-💬 Questions: t.me/IFR_token
-
-#IFR #Bootstrap #DeFi #Ethereum #FairLaunch
+$IFR — Lock. Use. Benefit.
 ```
 
 ---
 
-## Post 2 — Reminder (periodic)
+## 2. X / TWITTER (@IFRtoken) — Thread (4 Tweets)
 
+**Tweet 1:**
 ```
-🔥 **$IFR Bootstrap is LIVE — Contribute Now**
+🔥 $IFR Bootstrap Event is LIVE
 
-✅ 200M IFR locked in vault
-✅ Uniswap V2 LP ready to launch
-✅ Smart contract verified on Etherscan
-✅ No presale — no VC — community only
+200M IFR vault funded.
+Community price discovery — no team ETH.
+100% goes into Uniswap liquidity.
 
-**Contribute 0.01–2 ETH → receive IFR**
+Contribute 0.01–2 ETH → receive IFR pro-rata at launch price.
+Ends June 5, 2026.
 
-Closes June 5, 2026. Don't miss it.
+👇 How it works:
+```
 
-🌐 ifrunit.tech/wiki/bootstrap.html
-💬 t.me/IFR_token
+**Tweet 2:**
+```
+⚙️ Fully trustless mechanics:
+
+1️⃣ Contribute ETH (0.01–2 ETH max per wallet)
+2️⃣ After June 5 — anyone calls finalise()
+3️⃣ Uniswap V2 LP created automatically
+4️⃣ Claim your IFR proportionally
+
+No admin keys. No pause. No rug.
+LP locked 12 months via Team.Finance.
+```
+
+**Tweet 3:**
+```
+🔒 Why $IFR?
+
+- 2.5% burned on every transfer — forever
+- Lock IFR once → lifetime premium access
+- Fair launch: no presale, no VC, no IDO
+- 578 tests, 0 critical audit findings
+- 14 on-chain components, all verified
+
+Not a trading token. A utility lock.
+```
+
+**Tweet 4:**
+```
+📊 Pricing is 100% community-driven:
+
+IFR price = total ETH raised ÷ 200M IFR
+
+More ETH = higher price + deeper liquidity
+No fixed price. No soft cap.
+
+🌐 ifrunit.tech/wiki/bootstrap
+📖 Docs: ifrunit.tech/wiki/index.html
+💬 Community: t.me/IFR_token
+
+$IFR $ETH #DeFi #FairLaunch
 ```
 
 ---
 
-## Post 3 — Final Countdown (late May 2026)
+## 3. REDDIT — r/ethfinance (sachlich)
+
+**Title:** IFR Bootstrap Event — Community liquidity launch, 200M IFR vault, no team ETH
+
+**Body:**
+```
+We launched a community bootstrap event for $IFR, a deflationary ERC-20 utility token on Ethereum Mainnet.
+
+**What is IFR?**
+Every transfer burns 2.5% permanently. Users lock IFR to gain lifetime premium access to builder products — no subscriptions, no renewals.
+
+**Bootstrap mechanics:**
+- 200M IFR pre-funded in BootstrapVaultV3 (on-chain)
+- Contribute 0.01–2 ETH per wallet (anti-whale)
+- 100% of ETH → Uniswap V2 LP via permissionless finalise()
+- LP locked 12 months via Team.Finance
+- No soft cap — LP always created regardless of ETH raised
+- If not finalised within 30 days: full ETH refund available
+
+**Fair launch:**
+No presale. No VC. No IDO. Team tokens vested 4 years with 12-month cliff. All on-chain, all verifiable.
+
+**Security:**
+- 578 automated tests, 91% branch coverage
+- Slither audit: 0 high/critical findings
+- All 14 contracts verified on Etherscan
+- 48h governance timelock on all parameter changes
+
+**Links:**
+- Bootstrap: https://ifrunit.tech/wiki/bootstrap.html
+- Docs: https://ifrunit.tech/wiki/index.html
+- GitHub: https://github.com/NeaBouli/inferno
+- Contract: https://etherscan.io/address/0x77e99917Eca8539c62F509ED1193ac36580A6e7B
+
+Ends June 5, 2026. Happy to answer questions.
+```
+
+---
+
+## 4. REDDIT — r/CryptoMoonShots
+
+**Title:** $IFR — Deflationary utility token Bootstrap Event LIVE | 200M IFR | Community price discovery | No team ETH
+
+**Body:**
+```
+🔥 Inferno ($IFR) — Bootstrap Event is LIVE
+
+Every transfer burns 2.5% — permanently. No mint function. Supply can only go down.
+
+But IFR isn't just deflationary — it's a universal access token. Lock IFR once → lifetime premium access to any integrated product. No subscription. No renewal.
+
+**The Bootstrap:**
+- 200,000,000 IFR in vault (funded by community treasury)
+- Contribute 0.01–2 ETH — max 2 ETH per wallet (fair distribution)
+- 100% of ETH → Uniswap liquidity — zero team cut
+- LP locked 12 months
+- Price = ETH raised ÷ 200M IFR (community decides)
+
+**Tokenomics:**
+- 1B initial supply, no mint function
+- 40% DEX liquidity, 20% locked reserve
+- 15% team vesting (4 years, 12-month cliff)
+- 4% builder ecosystem rewards
+
+**Not a meme. Not a rugpull.**
+- 578 tests, Slither audit 0 critical
+- Open source: github.com/NeaBouli/inferno
+- 48h governance timelock
+- Fair launch: no presale, no VC
+
+Ends June 5, 2026.
+👉 ifrunit.tech/wiki/bootstrap.html
+```
+
+---
+
+## 5. FARCASTER
 
 ```
-⏰ **$IFR Bootstrap Closing Soon**
+🔥 $IFR Bootstrap Event is live on Ethereum.
 
-The vault closes June 5, 2026.
+200M IFR vault. Community price discovery.
+0.01–2 ETH per wallet. 100% → Uniswap LP.
+No team ETH. LP locked 12 months.
 
-💰 Min: 0.01 ETH | Max: 2 ETH per wallet
-🎯 200M IFR pool
-🔒 100% ETH → Uniswap LP
+Every $IFR transfer burns 2.5% permanently.
+Lock IFR → lifetime product access. No subscriptions.
 
-→ ifrunit.tech/wiki/bootstrap.html
+Ends June 5, 2026.
+↗ ifrunit.tech/wiki/bootstrap
 
-First come, same price. Pro-rata distribution.
-Don't miss the deadline.
-
-#IFR #Bootstrap #LastChance
+#DeFi #Ethereum #FairLaunch $IFR
 ```
+
+---
+
+## POSTING ORDER (recommended)
+
+1. Telegram Channel (@IFRtoken) — first
+2. X Thread (@IFRtoken) — simultaneously
+3. Reddit r/ethfinance — 30 min later
+4. Reddit r/CryptoMoonShots — 1h later
+5. Farcaster — simultaneously with Reddit
+6. Reddit r/defi — 2h later (same text as r/ethfinance)
+
+**Note:** Reddit account needs minimum karma for r/CryptoMoonShots — check before posting.
 
 ---
 
