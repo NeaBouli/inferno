@@ -104,8 +104,9 @@ Regenerate TODO.html from TODO.md content.
 - [x] A.M. als 3. Signer hinzugefügt ✅
 - [x] Y.K. als 4. Signer hinzugefügt ✅
 - [x] Threshold auf 2-of-4 gesetzt ✅ (14.03.2026)
-- [ ] 5. Signer hinzufügen (beide Safes) — diese Woche
-- [ ] Threshold auf 3-of-5 setzen
+- [x] 5. Signer Psaltin (A.P.) hinzugefügt (beide Safes) ✅ (15.03.2026)
+- [x] Threshold auf 2-of-5 gesetzt ✅ (15.03.2026)
+- [ ] Threshold auf 3-of-5 erhöhen (nächster Schritt)
 - [ ] Transfer Governance → GnosisSafe ownership
 
 ### Telegram Bot
