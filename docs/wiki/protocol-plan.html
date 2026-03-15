@@ -1,0 +1,1368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+    <link rel="canonical" href="https://ifrunit.tech/wiki/protocol-plan.html">  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="version" content="2026-03-15">
+  <title>Protocol Plan &mdash; Inferno ($IFR) Documentation</title>
+  <meta name="description" content="Complete protocol plan — bootstrap event, liquidity phases, buyback mechanics, wallet architecture, governance, and contingency plan.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    /* ============================================================
+       Inferno Wiki — Shared Styles (copy into every wiki page)
+       ============================================================ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #0a0a0a;
+      --card:     #111113;
+      --border:   #222225;
+      --text:     #e8e8ed;
+      --muted:    #8a8a96;
+      --accent:   #ff4500;
+      --green:    #22c55e;
+      --sidebar-w: 240px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    /* ---------- Layout (CSS Grid) ---------- */
+    .layout {
+      display: grid;
+      grid-template-columns: var(--sidebar-w) 1fr;
+      min-height: 100vh;
+    }
+
+    /* ---------- Sidebar ---------- */
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: var(--sidebar-w);
+      height: 100vh;
+      background: var(--card);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      padding: 24px 0;
+      overflow-y: auto;
+      z-index: 100;
+      transition: transform 0.3s ease;
+    }
+
+    .sidebar-logo {
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: 3px;
+      color: var(--accent);
+      padding: 0 24px 4px;
+      text-decoration: none;
+      display: block;
+    }
+
+    .sidebar-subtitle {
+      font-size: 12px;
+      color: var(--muted);
+      padding: 0 24px 24px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .sidebar-nav {
+      list-style: none;
+      padding: 16px 0;
+      flex: 1;
+    }
+
+    .sidebar-nav a {
+      display: block;
+      padding: 10px 24px;
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      transition: color 0.2s, background 0.2s, border-left 0.2s;
+      border-left: 3px solid transparent;
+    }
+
+    .sidebar-nav a:hover {
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .sidebar-nav a.active {
+      color: var(--accent);
+      border-left-color: var(--accent);
+      background: rgba(255, 69, 0, 0.06);
+    }
+
+    .sidebar-nav .nav-divider {
+      height: 1px;
+      background: var(--border);
+      margin: 12px 24px;
+    }
+
+    .sidebar-nav .nav-back a {
+      font-size: 13px;
+      color: var(--muted);
+      opacity: 0.7;
+    }
+
+    .sidebar-nav .nav-back a:hover {
+      opacity: 1;
+      color: var(--text);
+    }
+
+    /* ---------- Hamburger (mobile) ---------- */
+    .hamburger {
+      display: none;
+      position: fixed;
+      top: 16px;
+      left: 16px;
+      z-index: 200;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 12px;
+      cursor: pointer;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .hamburger span {
+      display: block;
+      width: 22px;
+      height: 2px;
+      background: var(--text);
+      border-radius: 2px;
+      transition: transform 0.3s, opacity 0.3s;
+    }
+
+    .hamburger.open span:nth-child(1) { transform: rotate(45deg) translate(5px, 5px); }
+    .hamburger.open span:nth-child(2) { opacity: 0; }
+    .hamburger.open span:nth-child(3) { transform: rotate(-45deg) translate(5px, -5px); }
+
+    .sidebar-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.6);
+      z-index: 90;
+    }
+
+    /* ---------- Main content ---------- */
+    .main {
+      grid-column: 2;
+      padding: 48px 56px;
+      max-width: 960px;
+    }
+
+    .main h1 {
+      font-size: 32px;
+      font-weight: 800;
+      margin-bottom: 8px;
+      color: var(--text);
+    }
+
+    .main h1 .accent {
+      color: var(--accent);
+    }
+
+    .main h2 {
+      font-size: 22px;
+      font-weight: 700;
+      margin: 40px 0 16px;
+      color: var(--text);
+    }
+
+    .main h3 {
+      font-size: 18px;
+      font-weight: 600;
+      margin: 32px 0 12px;
+      color: var(--text);
+    }
+
+    .main p {
+      color: var(--muted);
+      margin-bottom: 16px;
+      font-size: 15px;
+      max-width: 680px;
+    }
+
+    .main a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    .main a:hover {
+      text-decoration: underline;
+    }
+
+    .subtitle {
+      font-size: 16px;
+      color: var(--muted);
+      margin-bottom: 32px;
+    }
+
+    /* ---------- Code blocks ---------- */
+    pre {
+      background: #1a1a1d;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px 20px;
+      overflow-x: auto;
+      font-size: 13px;
+      line-height: 1.7;
+      margin: 16px 0;
+      color: var(--text);
+    }
+
+    code {
+      font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+      font-size: 13px;
+      color: var(--text);
+    }
+
+    p code, li code, td code {
+      background: rgba(255, 255, 255, 0.06);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 13px;
+    }
+
+    /* ---------- Tables ---------- */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0;
+      font-size: 14px;
+    }
+
+    th, td {
+      text-align: left;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    th {
+      color: var(--muted);
+      font-weight: 600;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    td { color: var(--text); }
+
+    tr:hover td { background: rgba(255, 255, 255, 0.02); }
+
+    /* ---------- Lists ---------- */
+    .main ul, .main ol {
+      padding-left: 24px;
+      margin-bottom: 16px;
+    }
+
+    .main li {
+      color: var(--muted);
+      font-size: 14px;
+      margin-bottom: 6px;
+    }
+
+    /* ---------- Callout ---------- */
+    .callout {
+      background: rgba(255, 69, 0, 0.06);
+      border-left: 3px solid var(--accent);
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 20px 0;
+    }
+
+    .callout p {
+      color: var(--text);
+      margin: 0;
+      font-size: 14px;
+    }
+
+    .callout-green {
+      background: rgba(34, 197, 94, 0.06);
+      border-left-color: var(--green);
+    }
+
+    /* ---------- Stats bar ---------- */
+    .stats-bar {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 16px;
+      margin: 24px 0 48px;
+    }
+
+    .stat-item {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px 24px;
+      text-align: center;
+    }
+
+    .stat-value {
+      font-size: 28px;
+      font-weight: 800;
+      color: var(--accent);
+      display: block;
+    }
+
+    .stat-label {
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 4px;
+      display: block;
+    }
+
+    /* ---------- Allocation bar chart ---------- */
+    .alloc-chart {
+      margin: 24px 0;
+    }
+
+    .alloc-row {
+      display: flex;
+      align-items: center;
+      margin-bottom: 12px;
+      gap: 12px;
+    }
+
+    .alloc-label {
+      width: 160px;
+      flex-shrink: 0;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text);
+      text-align: right;
+    }
+
+    .alloc-bar-track {
+      flex: 1;
+      height: 28px;
+      background: rgba(255, 255, 255, 0.04);
+      border-radius: 6px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .alloc-bar-fill {
+      height: 100%;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      padding-left: 10px;
+      font-size: 12px;
+      font-weight: 700;
+      color: #fff;
+      min-width: fit-content;
+    }
+
+    .alloc-amount {
+      width: 80px;
+      flex-shrink: 0;
+      font-size: 13px;
+      color: var(--muted);
+      text-align: right;
+    }
+
+    /* ---------- Section card (used for fee example) ---------- */
+    .example-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      margin: 20px 0;
+    }
+
+    .example-card h4 {
+      font-size: 15px;
+      font-weight: 700;
+      margin-bottom: 16px;
+      color: var(--text);
+    }
+
+    .example-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 14px;
+    }
+
+    .example-row:last-child {
+      border-bottom: none;
+    }
+
+    .example-row .label {
+      color: var(--muted);
+    }
+
+    .example-row .value {
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .example-row .value.accent {
+      color: var(--accent);
+    }
+
+    .example-row .value.green {
+      color: var(--green);
+    }
+
+    /* ---------- Exempt list ---------- */
+    .exempt-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 12px;
+      margin: 16px 0;
+    }
+
+    .exempt-item {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px 18px;
+    }
+
+    .exempt-item .name {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+
+    .exempt-item .reason {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    /* ---------- Footer ---------- */
+    .wiki-footer {
+      margin-top: 64px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    /* ---------- Responsive ---------- */
+    @media (max-width: 768px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        transform: translateX(-100%);
+      }
+
+      .sidebar.open {
+        transform: translateX(0);
+      }
+
+      .sidebar-overlay.open {
+        display: block;
+      }
+
+      .hamburger {
+        display: flex;
+      }
+
+      .main {
+        grid-column: 1;
+        padding: 72px 20px 40px;
+      }
+
+      .stats-bar {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .alloc-label {
+        width: 100px;
+        font-size: 12px;
+      }
+
+      .alloc-amount {
+        display: none;
+      }
+
+      .exempt-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .stats-bar {
+        grid-template-columns: 1fr;
+      }
+
+      .main h1 {
+        font-size: 26px;
+      }
+
+      .alloc-row {
+        flex-wrap: wrap;
+      }
+
+      .alloc-label {
+        width: 100%;
+        text-align: left;
+      }
+    }
+    /* ============================================================
+    @keyframes pulse-bootstrap { 0% { color: #ef4444; text-shadow: 0 0 8px rgba(239,68,68,0.8); } 50% { color: #22c55e; text-shadow: 0 0 12px rgba(34,197,94,0.9); } 100% { color: #ef4444; text-shadow: 0 0 8px rgba(239,68,68,0.8); } } .nav-bootstrap-pulse { animation: pulse-bootstrap 2s ease-in-out infinite; font-weight: 700 !important; }       End Shared Styles
+       ============================================================ */
+  </style>
+  <link rel="icon" type="image/png" href="../assets/ifr_icon_64.png">
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="Inferno Protocol">
+  <meta property="og:title" content="Tokenomics Deep Dive — Inferno Protocol ($IFR)">
+  <meta property="og:description" content="1B fixed supply, 9 decimals, 3.5% fee-on-transfer (2.5% burn + 1% pool). Deflationary by design — no mint function.">
+  <meta property="og:url" content="https://ifrunit.tech/wiki/tokenomics.html">
+  <meta property="og:image" content="https://ifrunit.tech/assets/ifr_icon_256.png">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Tokenomics Deep Dive — Inferno Protocol ($IFR)">
+  <meta name="twitter:description" content="1B fixed supply, 3.5% fee-on-transfer. Deflationary ERC-20 — no mint function.">
+  <meta name="twitter:site" content="@IFRtoken">
+  <meta name="twitter:image" content="https://ifrunit.tech/assets/ifr_icon_256.png">  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "headline": "Tokenomics Deep Dive",
+    "description": "Complete tokenomics: 1B IFR fixed supply, 9 decimals, 3.5% fee-on-transfer with 2.5% permanent burn. Six allocation buckets with vesting schedules.",
+    "url": "https://ifrunit.tech/wiki/tokenomics.html",
+    "isPartOf": {"@id": "https://ifrunit.tech/#website"},
+    "publisher": {"@id": "https://ifrunit.tech/#organization"},
+    "about": {"@id": "https://ifrunit.tech/#app"}
+  }
+  </script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"
+  onerror="var s=document.createElement('script');s.src='https://unpkg.com/ethers@5.7.2/dist/ethers.umd.min.js';document.head.appendChild(s);"></script>
+<script src="../assets/wallet-core.js"></script>
+<script src="../assets/ifr-state.js"></script>
+</head>
+<body>
+
+  <!-- Hamburger button (mobile only) -->
+  <button class="hamburger" id="hamburger" aria-label="Toggle navigation">
+    <span></span>
+    <span></span>
+    <span></span>
+  </button>
+
+  <!-- Overlay (mobile only) -->
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <div class="layout">
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <a href="index.html" class="sidebar-logo">INFERNO</a>
+      <div class="sidebar-subtitle">Documentation</div>
+      <ul class="sidebar-nav">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="one-pager.html">One Pager</a></li>
+        <li><a href="fair-launch.html">Fair Launch</a></li>
+        <li><a href="tokenomics.html">Tokenomics</a></li>
+        <li><a href="protocol-plan.html" class="active">Protocol Plan</a></li>
+        <li><a href="lock-mechanism.html">Lock Mechanism</a></li>
+        <li><a href="roadmap.html">Roadmap</a></li>
+        <li><a href="bootstrap.html" class="nav-bootstrap-pulse">🔥 Bootstrap Event</a></li>
+        <li><a href="faq.html">FAQ</a></li>
+        <li><a href="governance.html">Governance</a></li>
+        <li><a href="dao-governance.html">DAO Governance</a></li>
+        <li><a href="multisig.html">Multisig Policy</a></li>
+        <li><a href="vesting.html">Vesting Schedule</a></li>
+        <li><a href="transparency.html">Transparency</a></li>
+        <li><a href="fee-design.html">Fee Design</a></li>
+        <li><a href="security.html">Security</a></li>
+        <li><a href="contracts.html">Smart Contracts</a></li>
+        <li><a href="deployment.html">Deployment</a></li>
+        <li><a href="testnet.html">Testnet</a></li>
+        <li><a href="mainnet-checklist.html">Mainnet Checklist</a></li>
+        <li><a href="integration.html">Integration Guide</a></li>
+        <li><a href="agent.html">AI Copilot</a></li>
+        <li><a href="verify.html">&#x1F510; Verify Wallet</a></li>
+        <li><a href="business-onboarding.html">Business Onboarding</a></li>
+        <li><a href="contributing.html">Contributing</a></li>
+        <li><a href="press-kit.html">Press Kit</a></li>
+        <li><a href="../index.html">&larr; Back to Website</a></li>
+      </ul>
+    </aside>
+
+    <!-- Main content -->
+    <main class="main">
+      <!-- Wallet Top Bar -->
+      <div id="wiki-wallet-bar" style="position:sticky;top:0;z-index:100;background:rgba(10,10,10,0.95);backdrop-filter:blur(12px);border-bottom:1px solid #1f2937;padding:10px 20px;display:flex;justify-content:space-between;align-items:center;margin:-32px -40px 24px -40px;">
+        <a href="../index.html" style="color:#f97316;font-weight:700;text-decoration:none;font-size:0.9rem;">&larr; Inferno</a>
+        <div id="wiki-wallet-wrap" style="position:relative;">
+          <button id="lp-header-connect-btn" onclick="lpConnect()" style="display:inline-flex;align-items:center;gap:7px;padding:8px 16px;border:1.5px solid #f97316;background:transparent;color:#f97316;font-family:'Orbitron',sans-serif;font-size:0.72rem;letter-spacing:.8px;border-radius:6px;cursor:pointer;white-space:nowrap;transition:all .2s;position:relative;flex-shrink:0;margin-left:16px;">&#x1F98A; Connect</button>
+          <div id="lp-header-connected" style="display:none;">
+            <div style="background:rgba(34,197,94,0.15);border:1px solid rgba(34,197,94,0.4);border-radius:8px;padding:5px 8px;cursor:pointer;display:flex;align-items:center;gap:6px;max-width:100px;white-space:nowrap;overflow:hidden;" onclick="lpToggleDropdown()">
+              <span id="lp-header-addr" style="color:#22c55e;font-family:monospace;font-size:0.72rem;font-weight:600;"></span>
+              
+            </div>
+          </div>
+          <div id="lp-header-dropdown" style="display:none;position:fixed;background:#111827;border:1px solid #374151;border-radius:12px;padding:16px;width:280px;max-width:calc(100vw - 24px);z-index:9999;box-shadow:0 8px 32px rgba(0,0,0,0.6);">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+              <span style="color:#6b7280;font-size:0.75rem;">Wallet</span>
+              <button onclick="lpCloseDropdown()" style="background:none;border:none;color:#6b7280;cursor:pointer;font-size:1.1rem;line-height:1;padding:2px 6px;border-radius:4px;" title="Close">&#x2715;</button>
+            </div>
+            <div style="margin-bottom:12px;">
+              <div id="lp-drop-addr" style="color:#22c55e;font-family:monospace;font-size:0.78rem;font-weight:600;word-break:break-all;"></div>
+            </div>
+            <div style="display:flex;gap:8px;margin-bottom:12px;">
+              <div style="flex:1;background:#1f2937;border-radius:8px;padding:8px;text-align:center;">
+                <div style="color:#9ca3af;font-size:0.7rem;">ETH</div>
+                <div id="lp-drop-eth" style="color:#e5e7eb;font-weight:700;font-size:0.85rem;"></div>
+              </div>
+              <div style="flex:1;background:#1f2937;border-radius:8px;padding:8px;text-align:center;">
+                <div style="color:#9ca3af;font-size:0.7rem;">IFR</div>
+                <div id="lp-drop-ifr" style="color:#f97316;font-weight:700;font-size:0.85rem;"></div>
+              </div>
+            </div>
+            <div id="lp-drop-lock" style="display:none;background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.3);border-radius:8px;padding:8px 10px;margin-bottom:10px;text-align:center;">
+              <span style="color:#fbbf24;font-size:0.78rem;font-weight:600;">&#x26A1; Premium</span>
+            </div>
+            <div id="lp-drop-nolock" style="background:rgba(107,114,128,0.1);border:1px solid #374151;border-radius:8px;padding:8px 10px;margin-bottom:10px;text-align:center;">
+              <span style="color:#9ca3af;font-size:0.78rem;">Lock &#x2265;1,000 IFR &#x2192; </span>
+              <a href="lock-mechanism.html" style="color:#f97316;font-size:0.78rem;">Premium &#x2197;</a>
+            </div>
+            <div style="display:flex;gap:8px;">
+              <a href="bootstrap.html" style="flex:1;text-align:center;padding:8px;background:#f97316;color:white;border-radius:8px;font-size:0.78rem;font-weight:600;text-decoration:none;">&#x1F525; Bootstrap</a>
+              <button onclick="lpDisconnect()" style="flex:1;background:#374151;color:#9ca3af;border:none;border-radius:8px;padding:8px;cursor:pointer;font-size:0.78rem;">Disconnect</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+
+            <h1>Protocol <span class="accent">Plan</span></h1>
+      <p class="subtitle">
+        Complete architecture of the IFR Protocol &mdash; how every wallet, contract, and mechanism works together.
+        Written for transparency: every decision, every trade-off, every scenario documented.
+      </p>
+
+      <!-- ============================================================
+           Section 1: What is IFR
+           ============================================================ -->
+      <h2 id="overview">1. What is IFR?</h2>
+      <p>
+        Inferno ($IFR) is a deflationary ERC-20 token on Ethereum Mainnet.
+        Every transfer automatically burns 2.5% of the amount &mdash; permanently.
+        An additional 1% goes to the protocol fee pool.
+        There is no <code>mint()</code> function. Supply can only decrease, never increase.
+      </p>
+
+      <!-- Fee Breakdown Visual -->
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;margin:20px 0;">
+        <div style="font-size:12px;color:var(--muted);margin-bottom:12px;text-transform:uppercase;letter-spacing:1px;">Transfer Fee Breakdown &mdash; sending 10,000 IFR</div>
+        <div style="display:flex;flex-direction:column;gap:6px;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div style="background:#22c55e;height:24px;border-radius:4px;flex:96.5;"></div>
+            <span style="color:#22c55e;font-size:12px;white-space:nowrap;min-width:180px;">9,650 IFR &rarr; Recipient (96.5%)</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div style="background:#ef4444;height:24px;border-radius:4px;flex:2;"></div>
+            <span style="color:#ef4444;font-size:12px;white-space:nowrap;min-width:180px;">200 IFR burned (2.0% sender)</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div style="background:#f97316;height:24px;border-radius:4px;flex:0.5;min-width:4px;"></div>
+            <span style="color:#f97316;font-size:12px;white-space:nowrap;min-width:180px;">50 IFR burned (0.5% recipient)</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div style="background:#3b82f6;height:24px;border-radius:4px;flex:1;min-width:4px;"></div>
+            <span style="color:#3b82f6;font-size:12px;white-space:nowrap;min-width:180px;">100 IFR &rarr; FeeRouterV1 (1.0%)</span>
+          </div>
+        </div>
+        <div style="margin-top:12px;font-size:12px;color:var(--muted);">Total burned per transfer: <strong style="color:#ef4444;">250 IFR (2.5%)</strong></div>
+      </div>
+
+      <h3>The Lock Mechanism</h3>
+      <p>
+        IFR serves as a universal access token. Users lock IFR in the IFRLock contract to gain
+        lifetime premium access to any product that integrates the lock check. No subscription.
+        No renewal. While tokens are locked, the holder gets access. Unlocking is always possible
+        &mdash; no penalty, no forced lock period.
+      </p>
+
+      <!-- ============================================================
+           Section 2: All Wallets & Contracts
+           ============================================================ -->
+      <h2 id="wallets">2. All Wallets &amp; Contracts</h2>
+      <p>
+        Every IFR token can be traced on-chain. Here is where every token lives,
+        who controls it, and what it is for.
+      </p>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:16px;margin:20px 0;">
+
+        <!-- Deployer -->
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+            <span style="font-size:1.3rem;">&#x1F680;</span>
+            <strong style="color:var(--text);">Deployer / LP Allocation</strong>
+          </div>
+          <code style="font-size:11px;color:var(--muted);word-break:break-all;">0x6b36687b0cd4386fb14cf565b67d7862110fed67</code>
+          <p style="font-size:13px;color:var(--muted);margin:10px 0;">
+            Holds 400M IFR (40%) reserved for Uniswap V2 liquidity. Standard EOA wallet &mdash; same wallet that deployed
+            all contracts. Tokens will be paired on Uniswap via phased LP releases (see Section 4).
+          </p>
+          <div style="display:flex;gap:12px;font-size:12px;">
+            <span style="color:#f97316;">400.6M IFR</span>
+            <span style="color:var(--muted);">feeExempt: No</span>
+          </div>
+        </div>
+
+        <!-- Treasury Safe -->
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+            <span style="font-size:1.3rem;">&#x1F3DB;</span>
+            <strong style="color:var(--text);">Treasury Safe</strong>
+          </div>
+          <code style="font-size:11px;color:var(--muted);word-break:break-all;">0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b</code>
+          <p style="font-size:13px;color:var(--muted);margin:10px 0;">
+            Protocol treasury controlled by Gnosis Safe multisig (2-of-5, upgrading to 3-of-5).
+            Originally held 150M IFR &mdash; ~144.75M transferred to Bootstrap Vault (Plan B).
+            Remaining balance funds audits, infrastructure, development.
+          </p>
+          <div style="display:flex;gap:12px;font-size:12px;">
+            <span style="color:#f97316;">~5.25M IFR</span>
+            <span style="color:#22c55e;">2-of-5 Multisig</span>
+          </div>
+        </div>
+
+        <!-- Community Safe -->
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+            <span style="font-size:1.3rem;">&#x1F465;</span>
+            <strong style="color:var(--text);">Community Safe</strong>
+          </div>
+          <code style="font-size:11px;color:var(--muted);word-break:break-all;">0xaC5687547B2B21d80F8fd345B51e608d476667C7</code>
+          <p style="font-size:13px;color:var(--muted);margin:10px 0;">
+            Community operations wallet. Originally 60M IFR (57.9M received after 2.1M burned on transfer &mdash;
+            Community EOA was not fee-exempt at migration time). 50M contributed to Bootstrap Plan B.
+            ~7.9M permanent reserve for bug bounties, grants, ecosystem incentives, DAO seed funding.
+          </p>
+          <div style="display:flex;gap:12px;font-size:12px;">
+            <span style="color:#f97316;">~7.9M IFR</span>
+            <span style="color:#22c55e;">2-of-5 Multisig</span>
+          </div>
+        </div>
+
+        <!-- Bootstrap Vault V3 -->
+        <div style="background:var(--card);border:1px solid #f97316;border-radius:12px;padding:20px;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+            <span style="font-size:1.3rem;">&#x1F525;</span>
+            <strong style="color:#f97316;">Bootstrap Vault V3</strong>
+            <span style="background:#f97316;color:#000;font-size:10px;padding:2px 8px;border-radius:10px;font-weight:700;">LIVE</span>
+          </div>
+          <code style="font-size:11px;color:var(--muted);word-break:break-all;">0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141</code>
+          <p style="font-size:13px;color:var(--muted);margin:10px 0;">
+            Holds ~194.75M IFR for the Bootstrap Event. When contributors send ETH, this contract holds it.
+            After the event closes (June 5, 2026), anyone calls <code>finalise()</code> to create the Uniswap V2 LP.
+            Fully trustless &mdash; no admin can touch the funds. If not finalized, contributors reclaim ETH after 30-day grace period.
+            <strong>IFR in this vault cannot be withdrawn by anyone.</strong>
+          </p>
+          <div style="display:flex;gap:12px;font-size:12px;">
+            <span style="color:#f97316;">194.75M IFR</span>
+            <span style="color:#22c55e;">Permissionless</span>
+          </div>
+        </div>
+
+        <!-- Liquidity Reserve -->
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+            <span style="font-size:1.3rem;">&#x1F4A7;</span>
+            <strong style="color:var(--text);">Liquidity Reserve</strong>
+          </div>
+          <code style="font-size:11px;color:var(--muted);word-break:break-all;">0xdc0309804803b3A105154f6073061E3185018f64</code>
+          <p style="font-size:13px;color:var(--muted);margin:10px 0;">
+            200M IFR (20%) time-locked until 01.09.2026. Smart contract &mdash; no one can access before unlock,
+            not even the team. After unlock, Governance Proposal required to deploy as additional Uniswap liquidity.
+          </p>
+          <div style="display:flex;gap:12px;font-size:12px;">
+            <span style="color:#f97316;">200M IFR</span>
+            <span style="color:var(--muted);">Locked until 01.09.2026</span>
+          </div>
+        </div>
+
+        <!-- Vesting -->
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+            <span style="font-size:1.3rem;">&#x23F3;</span>
+            <strong style="color:var(--text);">Team Vesting</strong>
+          </div>
+          <code style="font-size:11px;color:var(--muted);word-break:break-all;">0x2694Bc84e8D5251E9E4Ecd4B2Ae3f866d6106271</code>
+          <p style="font-size:13px;color:var(--muted);margin:10px 0;">
+            150M IFR (15%) locked for 4 years. 12-month cliff (zero tokens before March 2027),
+            then linear release over 36 months until March 2030.
+          </p>
+          <p style="font-size:12px;color:var(--muted);margin:6px 0;">
+            <strong style="color:var(--text);">Beneficiary:</strong>
+            <code style="font-size:10px;">0x04FABC52...6239</code> &mdash;
+            held by the Core Developer as trustee on behalf of the entire team.
+            The 150M IFR represents the collective team allocation. Usage decisions
+            (reinvestment, compensation, or other purposes) are made collectively.
+            All claims publicly announced via official governance channels.
+          </p>
+          <p style="font-size:12px;color:var(--muted);margin:6px 0;">
+            <strong style="color:var(--text);">Planned (Option B, after March 2027):</strong>
+            New multisig vesting contract with Gnosis Safe as beneficiary &mdash; placing
+            the team allocation under shared 3-of-5 control. Migration executed transparently.
+          </p>
+          <div style="display:flex;gap:12px;font-size:12px;">
+            <span style="color:#f97316;">150M IFR</span>
+            <span style="color:var(--muted);">Cliff: Mar 2027</span>
+          </div>
+        </div>
+
+        <!-- PartnerVault -->
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+            <span style="font-size:1.3rem;">&#x1F3D7;</span>
+            <strong style="color:var(--text);">PartnerVault (Builder Ecosystem)</strong>
+          </div>
+          <code style="font-size:11px;color:var(--muted);word-break:break-all;">0xc6eb7714bCb035ebc2D4d9ba7B3762ef7B9d4F7D</code>
+          <p style="font-size:13px;color:var(--muted);margin:10px 0;">
+            40M IFR (4%) for Builder and Creator Rewards. When a user locks IFR for a builder&rsquo;s product,
+            the builder earns from this pool. Rewards vest 6&ndash;12 months. Annual cap: 4M IFR/year.
+          </p>
+          <div style="display:flex;gap:12px;font-size:12px;">
+            <span style="color:#f97316;">40M IFR</span>
+            <span style="color:var(--muted);">Cap: 4M/year</span>
+          </div>
+        </div>
+
+        <!-- BuybackVault + BurnReserve -->
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+            <span style="font-size:1.3rem;">&#x267B;&#xFE0F; &#x1F525;</span>
+            <strong style="color:var(--text);">BuybackVault + BurnReserve</strong>
+          </div>
+          <code style="font-size:11px;color:var(--muted);">0x670D...F812 | 0xaA14...6fCF</code>
+          <p style="font-size:13px;color:var(--muted);margin:10px 0;">
+            Both accumulate from the 1% protocol pool fee. Zero IFR at genesis &mdash; fill over time.
+            BuybackVault feeds the BuybackController (Phase 3) for PartnerVault auto-refill.
+            BurnReserve permanently destroys IFR via <code>burn()</code>.
+          </p>
+          <div style="display:flex;gap:12px;font-size:12px;">
+            <span style="color:var(--muted);">0 IFR (fills after LP)</span>
+            <span style="color:var(--muted);">Governance</span>
+          </div>
+        </div>
+
+        <!-- Governance -->
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+            <span style="font-size:1.3rem;">&#x2696;</span>
+            <strong style="color:var(--text);">Governance (Timelock)</strong>
+          </div>
+          <code style="font-size:11px;color:var(--muted);word-break:break-all;">0xc43d48E7FDA576C5022d0670B652A622E8caD041</code>
+          <p style="font-size:13px;color:var(--muted);margin:10px 0;">
+            All protocol parameter changes go through this contract with a mandatory 48-hour Timelock.
+            No change can take effect instantly. Owner of InfernoToken. 7 proposals executed so far.
+          </p>
+          <div style="display:flex;gap:12px;font-size:12px;">
+            <span style="color:var(--muted);">48h Timelock</span>
+            <span style="color:var(--muted);">7 proposals</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ============================================================
+           Section 3: Bootstrap Event
+           ============================================================ -->
+      <h2 id="bootstrap">3. The Bootstrap Event</h2>
+      <p>
+        The Bootstrap Event is how IFR gets its initial Uniswap liquidity.
+        Instead of the team funding the LP themselves (Plan A &mdash; centralized financial risk),
+        the community contributes ETH and receives IFR pro-rata.
+        100% of ETH goes into the Uniswap liquidity pool. No team ETH is taken.
+      </p>
+
+      <!-- Bootstrap Timeline -->
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:24px;margin:20px 0;">
+        <div style="font-size:12px;color:var(--muted);margin-bottom:16px;text-transform:uppercase;letter-spacing:1px;">Bootstrap Timeline</div>
+        <div style="display:flex;align-items:center;gap:0;position:relative;">
+          <div style="flex:1;text-align:center;">
+            <div style="background:#22c55e;width:16px;height:16px;border-radius:50%;margin:0 auto;"></div>
+            <div style="height:3px;background:#22c55e;margin-top:-9px;margin-bottom:6px;"></div>
+            <div style="font-size:11px;color:#22c55e;font-weight:600;">07.03.2026</div>
+            <div style="font-size:10px;color:var(--muted);">Contract Deployed</div>
+          </div>
+          <div style="flex:1;text-align:center;">
+            <div style="background:#22c55e;width:16px;height:16px;border-radius:50%;margin:0 auto;"></div>
+            <div style="height:3px;background:#22c55e;margin-top:-9px;margin-bottom:6px;"></div>
+            <div style="font-size:11px;color:#22c55e;font-weight:600;">11.03.2026</div>
+            <div style="font-size:10px;color:var(--muted);">Vault Funded</div>
+          </div>
+          <div style="flex:1;text-align:center;">
+            <div style="background:#f97316;width:16px;height:16px;border-radius:50%;margin:0 auto;border:2px solid #f97316;animation:pulse 2s infinite;"></div>
+            <div style="height:3px;background:linear-gradient(90deg,#22c55e,#f97316);margin-top:-9px;margin-bottom:6px;"></div>
+            <div style="font-size:11px;color:#f97316;font-weight:600;">NOW</div>
+            <div style="font-size:10px;color:var(--muted);">LIVE &mdash; accepting ETH</div>
+          </div>
+          <div style="flex:1;text-align:center;">
+            <div style="background:var(--border);width:16px;height:16px;border-radius:50%;margin:0 auto;"></div>
+            <div style="height:3px;background:var(--border);margin-top:-9px;margin-bottom:6px;"></div>
+            <div style="font-size:11px;color:var(--muted);font-weight:600;">05.06.2026</div>
+            <div style="font-size:10px;color:var(--muted);">Bootstrap Closes</div>
+          </div>
+          <div style="flex:1;text-align:center;">
+            <div style="background:var(--border);width:16px;height:16px;border-radius:50%;margin:0 auto;"></div>
+            <div style="height:3px;background:var(--border);margin-top:-9px;margin-bottom:6px;"></div>
+            <div style="font-size:11px;color:var(--muted);font-weight:600;">finalise()</div>
+            <div style="font-size:10px;color:var(--muted);">LP Created</div>
+          </div>
+        </div>
+      </div>
+      <style>@keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.5;}}</style>
+
+      <h3>How It Works</h3>
+      <ol>
+        <li>Contribute 0.01&ndash;2 ETH while Bootstrap is active (until June 5, 2026)</li>
+        <li>After June 5, anyone calls <code>finalise()</code> on the smart contract</li>
+        <li><code>finalise()</code> creates the Uniswap V2 IFR/ETH pool with all raised ETH + ~150M IFR</li>
+        <li>LP tokens are locked via Team.Finance for 12 months</li>
+        <li>Contributors claim their IFR proportional to their ETH contribution</li>
+      </ol>
+
+      <h3>What If Bootstrap Fails?</h3>
+      <p>
+        If zero ETH is contributed by June 5, the IFR in the vault remains locked permanently
+        (no admin withdrawal function). The team would use the 400M Deployer IFR + team ETH
+        to create an initial liquidity pool directly via Governance. See Contingency Plan below.
+      </p>
+
+      <!-- Scenario Cards -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:20px 0;">
+        <div style="background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.3);border-radius:12px;padding:20px;">
+          <div style="font-size:14px;font-weight:700;color:#22c55e;margin-bottom:8px;">&#x2705; Scenario A &mdash; Success</div>
+          <ul style="font-size:13px;color:var(--muted);padding-left:16px;margin:0;">
+            <li>ETH contributed by community</li>
+            <li>finalise() creates LP automatically</li>
+            <li>LP tokens locked 12 months</li>
+            <li>Contributors claim IFR pro-rata</li>
+            <li>IFR tradeable on Uniswap</li>
+          </ul>
+        </div>
+        <div style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.3);border-radius:12px;padding:20px;">
+          <div style="font-size:14px;font-weight:700;color:#ef4444;margin-bottom:8px;">&#x26A0; Scenario B &mdash; Fallback</div>
+          <ul style="font-size:13px;color:var(--muted);padding-left:16px;margin:0;">
+            <li>Zero ETH contributed</li>
+            <li>194.75M IFR stays locked in vault</li>
+            <li>Team creates LP with Deployer IFR</li>
+            <li>Governance Proposal + 48h Timelock</li>
+            <li>IFR tradeable via direct pairing</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- ============================================================
+           Section 4: LP Phases
+           ============================================================ -->
+      <h2 id="lp-phases">4. Liquidity Phases</h2>
+      <p>
+        The 400M IFR Deployer allocation is not all added to Uniswap at once.
+        Flooding the pool immediately would depress the price and create poor trading conditions.
+        Instead, it is released in 3 phases as trading volume grows.
+      </p>
+
+      <!-- LP Phases Visual -->
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:24px;margin:20px 0;">
+        <div style="display:flex;gap:4px;height:40px;border-radius:8px;overflow:hidden;margin-bottom:16px;">
+          <div style="flex:150;background:#22c55e;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#000;">Phase 1 &mdash; 150M</div>
+          <div style="flex:100;background:#3b82f6;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;">Phase 2 &mdash; 100M</div>
+          <div style="flex:150;background:#8b5cf6;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;">Phase 3 &mdash; 150M</div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">
+          <div>
+            <div style="font-size:11px;color:#22c55e;font-weight:600;">Phase 1 &mdash; Automatic</div>
+            <div style="font-size:12px;color:var(--muted);">After Bootstrap finalise(). ~150M IFR + Bootstrap ETH &rarr; Uniswap LP. LP locked 12 months via Team.Finance.</div>
+          </div>
+          <div>
+            <div style="font-size:11px;color:#3b82f6;font-weight:600;">Phase 2 &mdash; Governance</div>
+            <div style="font-size:12px;color:var(--muted);">After LiqRes unlock (01.09.2026). 100M IFR via Governance Proposal + 48h Timelock. Volume verified off-chain.</div>
+          </div>
+          <div>
+            <div style="font-size:11px;color:#8b5cf6;font-weight:600;">Phase 3 &mdash; Flexible</div>
+            <div style="font-size:12px;color:var(--muted);">Remaining 150M via Governance. 2-of-5 Multisig + 48h Timelock. Timing based on market conditions.</div>
+          </div>
+        </div>
+        <div style="margin-top:16px;padding:10px;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);border-radius:8px;font-size:12px;color:#ef4444;">
+          <strong>Iron rule:</strong> ETH in the liquidity pool is never withdrawn by the team. LP tokens locked after each phase.
+        </div>
+      </div>
+
+      <!-- ============================================================
+           Section 5: Buyback Mechanism
+           ============================================================ -->
+      <h2 id="buyback">5. The Buyback Mechanism</h2>
+      <p>
+        The &ldquo;buyback&rdquo; in IFR is an <strong>ecosystem buyback</strong>:
+        the protocol automatically reinvests accumulated fee IFR back into the builder
+        ecosystem via the PartnerVault. It is not a market buyback with ETH.
+      </p>
+
+      <!-- Fee Flow Visual -->
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:24px;margin:20px 0;">
+        <div style="font-size:12px;color:var(--muted);margin-bottom:16px;text-transform:uppercase;letter-spacing:1px;">Fee Flow</div>
+        <div style="display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;">
+          <div style="background:#f97316;color:#000;padding:8px 14px;border-radius:8px;font-size:12px;font-weight:700;">IFR Transfer (1% fee)</div>
+          <span style="color:var(--muted);font-size:18px;">&rarr;</span>
+          <div style="background:#3b82f6;color:#fff;padding:8px 14px;border-radius:8px;font-size:12px;font-weight:700;">FeeRouterV1</div>
+          <span style="color:var(--muted);font-size:18px;">&rarr;</span>
+          <div style="display:flex;flex-direction:column;gap:6px;">
+            <div style="background:rgba(34,197,94,0.15);border:1px solid #22c55e;color:#22c55e;padding:6px 12px;border-radius:8px;font-size:11px;font-weight:600;">BuybackVault</div>
+            <div style="background:rgba(239,68,68,0.15);border:1px solid #ef4444;color:#ef4444;padding:6px 12px;border-radius:8px;font-size:11px;font-weight:600;">BurnReserve</div>
+          </div>
+        </div>
+      </div>
+
+      <h3>BuybackController (Phase 3)</h3>
+      <p>
+        In Phase 3, a BuybackController smart contract will automate BuybackVault distribution.
+        Parameters will be set based on real accumulation data:
+      </p>
+
+      <!-- 4-State Cards -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:20px 0;">
+        <div style="background:rgba(34,197,94,0.06);border:1px solid rgba(34,197,94,0.2);border-radius:10px;padding:16px;">
+          <div style="color:#22c55e;font-weight:700;font-size:13px;margin-bottom:4px;">&#x2705; Normal</div>
+          <div style="font-size:12px;color:var(--muted);">PartnerVault &ge; 85% (34M). No action needed. Fees accumulate in BuybackVault.</div>
+        </div>
+        <div style="background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.2);border-radius:10px;padding:16px;">
+          <div style="color:#3b82f6;font-weight:700;font-size:13px;margin-bottom:4px;">&#x1F504; Refill</div>
+          <div style="font-size:12px;color:var(--muted);">PartnerVault &lt; 85% (34M). Auto-refill to 90% (36M) from BuybackVault Operating Pool.</div>
+        </div>
+        <div style="background:rgba(249,115,22,0.06);border:1px solid rgba(249,115,22,0.2);border-radius:10px;padding:16px;">
+          <div style="color:#f97316;font-weight:700;font-size:13px;margin-bottom:4px;">&#x1F4B0; Overflow</div>
+          <div style="font-size:12px;color:var(--muted);">Operating Pool &gt; 2M IFR. Governance routes excess to Treasury.</div>
+        </div>
+        <div style="background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.2);border-radius:10px;padding:16px;">
+          <div style="color:#ef4444;font-weight:700;font-size:13px;margin-bottom:4px;">&#x1F6A8; SOS Reserve</div>
+          <div style="font-size:12px;color:var(--muted);">30% of BuybackVault. Community Vote (12 days) + 48h Timelock required to access.</div>
+        </div>
+      </div>
+
+      <!-- Vault Split -->
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;margin:20px 0;">
+        <div style="font-size:12px;color:var(--muted);margin-bottom:8px;">BuybackVault Split</div>
+        <div style="display:flex;height:28px;border-radius:6px;overflow:hidden;">
+          <div style="flex:70;background:#3b82f6;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;">70% Operating Pool</div>
+          <div style="flex:30;background:#ef4444;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;">30% SOS Reserve</div>
+        </div>
+      </div>
+
+      <!-- ============================================================
+           Section 6: Governance
+           ============================================================ -->
+      <h2 id="governance">6. Governance</h2>
+      <p>
+        All protocol parameter changes go through the Governance contract with a mandatory 48-hour Timelock.
+        No change can take effect instantly, giving the community time to review.
+        The Guardian (currently the Deployer) can cancel proposals during the timelock window.
+      </p>
+
+      <h3>Multisig Signers</h3>
+      <table style="width:100%;border-collapse:collapse;margin:16px 0;">
+        <thead>
+          <tr style="border-bottom:1px solid var(--border);">
+            <th style="color:var(--muted);padding:10px;text-align:left;font-size:0.85rem;">#</th>
+            <th style="color:var(--muted);padding:10px;text-align:left;font-size:0.85rem;">ID</th>
+            <th style="color:var(--muted);padding:10px;text-align:left;font-size:0.85rem;">Address</th>
+            <th style="color:var(--muted);padding:10px;text-align:left;font-size:0.85rem;">Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="border-bottom:1px solid #1f2937;"><td style="padding:10px;color:var(--muted);">1</td><td style="padding:10px;color:#f97316;font-weight:700;">A.K.</td><td style="padding:10px;font-family:monospace;color:var(--muted);font-size:12px;">0x6b36...ed67</td><td style="padding:10px;color:#22c55e;">Active</td></tr>
+          <tr style="border-bottom:1px solid #1f2937;"><td style="padding:10px;color:var(--muted);">2</td><td style="padding:10px;color:#f97316;font-weight:700;">M.G.</td><td style="padding:10px;font-family:monospace;color:var(--muted);font-size:12px;">0x17F8...72d4</td><td style="padding:10px;color:#22c55e;">Active</td></tr>
+          <tr style="border-bottom:1px solid #1f2937;"><td style="padding:10px;color:var(--muted);">3</td><td style="padding:10px;color:#f97316;font-weight:700;">A.M.</td><td style="padding:10px;font-family:monospace;color:var(--muted);font-size:12px;">0x0c48...ED74</td><td style="padding:10px;color:#22c55e;">Active</td></tr>
+          <tr style="border-bottom:1px solid #1f2937;"><td style="padding:10px;color:var(--muted);">4</td><td style="padding:10px;color:#f97316;font-weight:700;">Y.K.</td><td style="padding:10px;font-family:monospace;color:var(--muted);font-size:12px;">0xA086...b275</td><td style="padding:10px;color:#22c55e;">Active</td></tr>
+          <tr><td style="padding:10px;color:var(--muted);">5</td><td style="padding:10px;color:#f97316;font-weight:700;">A.P.</td><td style="padding:10px;font-family:monospace;color:var(--muted);font-size:12px;">0x32cF...0fE9</td><td style="padding:10px;color:#22c55e;">Active</td></tr>
+        </tbody>
+      </table>
+
+      <!-- ============================================================
+           Section 7: Contingency Plan
+           ============================================================ -->
+      <h2 id="contingency">7. Contingency Plan</h2>
+      <p>
+        If the Bootstrap receives zero ETH by June 5, the protocol has a clear fallback.
+        No IFR is lost &mdash; the 400M Deployer allocation remains available as emergency liquidity.
+      </p>
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;margin:20px 0;">
+        <div style="display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;font-size:12px;">
+          <div style="background:rgba(239,68,68,0.15);border:1px solid #ef4444;color:#ef4444;padding:8px 14px;border-radius:8px;font-weight:600;">0 ETH contributed</div>
+          <span style="color:var(--muted);">&rarr;</span>
+          <div style="background:rgba(249,115,22,0.15);border:1px solid #f97316;color:#f97316;padding:8px 14px;border-radius:8px;font-weight:600;">Governance Proposal</div>
+          <span style="color:var(--muted);">&rarr;</span>
+          <div style="background:rgba(59,130,246,0.15);border:1px solid #3b82f6;color:#3b82f6;padding:8px 14px;border-radius:8px;font-weight:600;">48h Timelock</div>
+          <span style="color:var(--muted);">&rarr;</span>
+          <div style="background:rgba(34,197,94,0.15);border:1px solid #22c55e;color:#22c55e;padding:8px 14px;border-radius:8px;font-weight:600;">Direct LP Creation</div>
+        </div>
+      </div>
+
+      <!-- ============================================================
+           Section 8: Token Distribution
+           ============================================================ -->
+      <h2 id="distribution">8. Token Distribution</h2>
+
+      <!-- Donut Chart (CSS-only) -->
+      <div style="display:flex;align-items:center;gap:32px;flex-wrap:wrap;margin:20px 0;">
+        <div style="width:200px;height:200px;border-radius:50%;background:conic-gradient(#22c55e 0% 40%,#3b82f6 40% 60%,#f97316 60% 75%,#8b5cf6 75% 90%,#eab308 90% 96%,#ef4444 96% 100%);position:relative;">
+          <div style="position:absolute;inset:30%;background:var(--bg);border-radius:50%;display:flex;align-items:center;justify-content:center;">
+            <span style="font-size:14px;color:var(--text);font-weight:700;">1B IFR</span>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px;font-size:13px;">
+          <div><span style="color:#22c55e;">&#x25CF;</span> 40% DEX Liquidity (400M)</div>
+          <div><span style="color:#3b82f6;">&#x25CF;</span> 20% Liquidity Reserve (200M)</div>
+          <div><span style="color:#f97316;">&#x25CF;</span> 15% Team Vesting (150M)</div>
+          <div><span style="color:#8b5cf6;">&#x25CF;</span> 15% Treasury (150M)</div>
+          <div><span style="color:#eab308;">&#x25CF;</span> 6% Community &amp; Grants (60M)</div>
+          <div><span style="color:#ef4444;">&#x25CF;</span> 4% Partner Ecosystem (40M)</div>
+        </div>
+      </div>
+
+      <!-- Unlock Timeline -->
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;margin:20px 0;">
+        <div style="font-size:12px;color:var(--muted);margin-bottom:12px;text-transform:uppercase;letter-spacing:1px;">Unlock Timeline</div>
+        <table style="width:100%;border-collapse:collapse;font-size:13px;">
+          <tr style="border-bottom:1px solid var(--border);"><td style="padding:8px;color:var(--muted);">March 2026</td><td style="padding:8px;">Bootstrap opens &mdash; 194.75M IFR in vault</td><td style="padding:8px;color:#22c55e;">&#x2705; LIVE</td></tr>
+          <tr style="border-bottom:1px solid var(--border);"><td style="padding:8px;color:var(--muted);">June 2026</td><td style="padding:8px;">Bootstrap closes &mdash; LP created via finalise()</td><td style="padding:8px;color:var(--muted);">Pending</td></tr>
+          <tr style="border-bottom:1px solid var(--border);"><td style="padding:8px;color:var(--muted);">Sep 2026</td><td style="padding:8px;">LiquidityReserve unlock &mdash; 200M IFR available</td><td style="padding:8px;color:var(--muted);">Locked</td></tr>
+          <tr style="border-bottom:1px solid var(--border);"><td style="padding:8px;color:var(--muted);">March 2027</td><td style="padding:8px;">Team Vesting cliff ends &mdash; linear release begins</td><td style="padding:8px;color:var(--muted);">Locked</td></tr>
+          <tr><td style="padding:8px;color:var(--muted);">March 2030</td><td style="padding:8px;">Team Vesting fully vested</td><td style="padding:8px;color:var(--muted);">Locked</td></tr>
+        </table>
+      </div>
+
+      <!-- ============================================================
+           Section 9: Known Issues
+           ============================================================ -->
+      <h2 id="open-issues">9. Known Issues &amp; Open Points</h2>
+      <p>Full transparency means documenting what is not yet perfect.</p>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;margin:20px 0;">
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+            <span style="background:#22c55e;color:#000;font-size:10px;padding:2px 8px;border-radius:10px;font-weight:700;">DONE</span>
+            <strong style="font-size:13px;">feeExempt &mdash; 8 contracts</strong>
+          </div>
+          <div style="font-size:12px;color:var(--muted);">All 8 protocol contracts are fee-exempt. Verified on-chain via 7 governance proposals.</div>
+        </div>
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+            <span style="background:#22c55e;color:#000;font-size:10px;padding:2px 8px;border-radius:10px;font-weight:700;">LIVE</span>
+            <strong style="font-size:13px;">Bootstrap Event</strong>
+          </div>
+          <div style="font-size:12px;color:var(--muted);">Active since 07.03.2026. Vault funded with 194.75M IFR. Ends 05.06.2026.</div>
+        </div>
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+            <span style="background:#f97316;color:#000;font-size:10px;padding:2px 8px;border-radius:10px;font-weight:700;">PENDING</span>
+            <strong style="font-size:13px;">Governance &rarr; Multisig Transfer</strong>
+          </div>
+          <div style="font-size:12px;color:var(--muted);">Governance owner will transfer from Deployer EOA to Treasury Safe (Gnosis Safe). Scheduled post-Bootstrap.</div>
+        </div>
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+            <span style="background:#f97316;color:#000;font-size:10px;padding:2px 8px;border-radius:10px;font-weight:700;">PENDING</span>
+            <strong style="font-size:13px;">Multisig Threshold 3-of-5</strong>
+          </div>
+          <div style="font-size:12px;color:var(--muted);">Currently 2-of-5 with 5 signers. Upgrading to 3-of-5 as next step.</div>
+        </div>
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+            <span style="background:#3b82f6;color:#fff;font-size:10px;padding:2px 8px;border-radius:10px;font-weight:700;">PHASE 3</span>
+            <strong style="font-size:13px;">BuybackController</strong>
+          </div>
+          <div style="font-size:12px;color:var(--muted);">Auto-rebalancing contract for PartnerVault refill + overflow routing. Deployed after LP launch.</div>
+        </div>
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+            <span style="background:#8b5cf6;color:#fff;font-size:10px;padding:2px 8px;border-radius:10px;font-weight:700;">PHASE 4</span>
+            <strong style="font-size:13px;">DAO Governance</strong>
+          </div>
+          <div style="font-size:12px;color:var(--muted);">RatVoting + ForumVoting + IFRSpamProtection. Full on-chain governance. After ecosystem is established.</div>
+        </div>
+      </div>
+
+      
+      <!-- Footer -->
+      <footer class="wiki-footer">
+        Inferno ($IFR) &mdash; Community Fair Launch Model &mdash; Documentation v1.0
+      </footer>
+
+    </main>
+  </div>
+
+  <!-- Mobile sidebar toggle script -->
+  <script>
+    (function () {
+      var hamburger = document.getElementById('hamburger');
+      var sidebar = document.getElementById('sidebar');
+      var overlay = document.getElementById('sidebarOverlay');
+
+      function toggleSidebar() {
+        var isOpen = sidebar.classList.toggle('open');
+        hamburger.classList.toggle('open', isOpen);
+        overlay.classList.toggle('open', isOpen);
+        document.body.style.overflow = isOpen ? 'hidden' : '';
+      }
+
+      hamburger.addEventListener('click', toggleSidebar);
+      overlay.addEventListener('click', toggleSidebar);
+    })();
+  </script>
+
+<!-- Live Supply Tracking -->
+<script>
+(function() {
+  var PROXY = 'https://ifr-ai-copilot-production.up.railway.app';
+  var GENESIS = 1000000000;
+
+  function fmtNum(n) {
+    return n.toLocaleString('en-US', { maximumFractionDigits: 0 });
+  }
+
+  function loadTokenomicsLive() {
+    fetch(PROXY + '/api/ifr/supply')
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (!data || !data.totalSupply) return;
+        var totalSupply = data.totalSupply;
+        var burned = data.burned || (GENESIS - totalSupply);
+        var pct = (burned / GENESIS * 100);
+
+        var tsEl = document.getElementById('live-total-supply');
+        var brEl = document.getElementById('live-burned');
+        var bpEl = document.getElementById('live-burn-pct');
+        var dot = document.getElementById('tokenomics-dot');
+        var stamp = document.getElementById('live-tokenomics-timestamp');
+
+        if (tsEl) tsEl.textContent = fmtNum(Math.round(totalSupply)) + ' IFR';
+        if (brEl) brEl.textContent = fmtNum(Math.round(burned)) + ' IFR';
+        if (bpEl) bpEl.textContent = pct.toFixed(4) + '%';
+        if (dot) dot.style.background = '#22c55e';
+        if (stamp) stamp.textContent = 'Live via Railway Proxy \u2192 Ethereum \u2014 ' +
+          new Date().toLocaleString('de-DE', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit', second:'2-digit' });
+      })
+      .catch(function() {
+        var dot = document.getElementById('tokenomics-dot');
+        var stamp = document.getElementById('live-tokenomics-timestamp');
+        if (dot) dot.style.background = '#ef4444';
+        if (stamp) stamp.textContent = 'Connection failed \u2014 retry in 60s';
+      });
+  }
+
+  fetch(PROXY + '/api/ifr/supply').catch(function() {});
+  setTimeout(loadTokenomicsLive, 1000);
+  setInterval(loadTokenomicsLive, 60000);
+})();
+</script>
+
+<!-- IFR Copilot Widget -->
+<style>
+#ifr-btn { position:fixed; bottom:24px; right:24px; width:64px; height:64px; border-radius:50%; overflow:hidden; padding:0; cursor:pointer; border:2px solid #f97316; box-shadow:0 4px 20px rgba(249,115,22,0.4); z-index:99999; background:none; transition:transform 0.2s ease,box-shadow 0.2s ease; } #ifr-btn:hover { transform:scale(1.08); box-shadow:0 6px 28px rgba(249,115,22,0.6); } #ifr-btn img { width:100%; height:100%; object-fit:cover; object-position:center center; border-radius:50%; display:block; }
+#ifr-panel { display:none; position:fixed; bottom:100px; right:24px; z-index:99998; width:400px; height:580px; border-radius:16px; overflow:hidden; box-shadow:0 8px 40px rgba(0,0,0,0.5); background:#1a1a1a; }
+#ifr-panel iframe { width:100%; height:100%; border:none; }
+</style>
+<button id="ifr-btn" onclick="var p=document.getElementById('ifr-panel');p.style.display=p.style.display==='block'?'none':'block';"><img src="../assets/CoPilot.jpg" alt="IFR Copilot"></button>
+<div id="ifr-panel"><iframe src="https://ifr-ai-copilot-production.up.railway.app" allow="clipboard-write"></iframe></div>
+
+<script>
+async function lpConnect(){
+  if(typeof ethers==="undefined"){alert("Web3 library not loaded. Please refresh.");return}
+  if(typeof IFRWallet==="undefined"){alert("Wallet module not loaded. Please refresh.");return}
+  var btn=document.getElementById("lp-header-connect-btn");
+  if(btn){btn.textContent="Connecting...";btn.disabled=true}
+  try{
+    await IFRWallet.connect();
+    var state=await IFRState.load(IFRWallet.getAddress());
+    lpUpdateUI(state);
+  }catch(e){
+    if(btn){btn.textContent="\u{1F98A} Connect";btn.disabled=false;btn.style.background="transparent";btn.style.borderColor="#f97316";btn.style.color="#f97316";btn.onclick=lpConnect}
+    if(e.message==="NO_METAMASK"){
+      var isMobile=/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+      if(isMobile){window.location.href="https://metamask.app.link/dapp/ifrunit.tech"}
+      else if(btn){btn.textContent="\u26A0\uFE0F Install MetaMask";btn.style.background="#374151";btn.onclick=function(){window.open("https://metamask.io/download","_blank")};btn.disabled=false}
+    }else if(e.code===4001||e.code==="ACTION_REJECTED"){
+      if(btn){btn.textContent="\u{1F98A} Connect";btn.disabled=false}
+    }
+  }
+}
+function lpDisconnect(){
+  IFRWallet.disconnect();
+  var connectBtn=document.getElementById("lp-header-connect-btn");
+  var connectedDiv=document.getElementById("lp-header-connected");
+  var dropdown=document.getElementById("lp-header-dropdown");
+  if(connectBtn){connectBtn.style.display="";connectBtn.textContent="\u{1F98A} Connect";connectBtn.disabled=false;connectBtn.style.background="transparent";connectBtn.style.borderColor="#f97316";connectBtn.style.color="#f97316";connectBtn.onclick=lpConnect}
+  if(connectedDiv)connectedDiv.style.display="none";
+  if(dropdown)dropdown.style.display="none";
+}
+function lpToggleDropdown(){
+  var dd=document.getElementById("lp-header-dropdown");
+  if(!dd)return;
+  if(dd.style.display!=="none"&&dd.style.display!==""){dd.style.display="none";return}
+  var isMobile=window.innerWidth<768;
+  dd.style.position="fixed";dd.style.zIndex="9999";
+  if(isMobile){
+    var wrap=document.getElementById("wiki-wallet-wrap");
+    if(wrap){var rect=wrap.getBoundingClientRect();dd.style.top=(rect.bottom+6)+"px"}
+    else{dd.style.top="60px"}
+    dd.style.left="8px";dd.style.right="8px";dd.style.width="auto";dd.style.maxWidth="calc(100vw - 16px)";
+  }else{
+    dd.style.top="12px";dd.style.right="12px";dd.style.left="auto";dd.style.width="290px";
+  }
+  dd.style.display="";
+}
+function lpCloseDropdown(){var dd=document.getElementById("lp-header-dropdown");if(dd)dd.style.display="none";}
+function lpUpdateUI(state){
+  var connected=IFRWallet.isConnected();
+  var connectBtn=document.getElementById("lp-header-connect-btn");
+  var connectedDiv=document.getElementById("lp-header-connected");
+  if(connectBtn){
+    connectBtn.style.display=connected?"none":"";
+    if(!connected){connectBtn.textContent="\u{1F98A} Connect";connectBtn.disabled=false;connectBtn.style.background="transparent";connectBtn.style.borderColor="#f97316";connectBtn.style.color="#f97316";connectBtn.onclick=lpConnect}
+  }
+  if(connectedDiv)connectedDiv.style.display=connected?"":"none";
+  if(connected&&state){
+    var addr=IFRWallet.getAddress();
+    var shortAddr="u2B24 "+addr.slice(0,6);
+    var el=document.getElementById("lp-header-addr");if(el)el.textContent=shortAddr;
+    var dropAddr=document.getElementById("lp-drop-addr");if(dropAddr)dropAddr.textContent=addr.slice(0,10)+"..."+addr.slice(-6);
+    var dropEth=document.getElementById("lp-drop-eth");if(dropEth)dropEth.textContent=parseFloat(state.ethBalance||"0").toFixed(4)+" ETH";
+    var dropIfr=document.getElementById("lp-drop-ifr");
+    if(dropIfr){var ifrAmt=state.ifrBalance&&typeof ethers!=="undefined"?parseFloat(ethers.utils.formatUnits(state.ifrBalance,9)).toLocaleString("en-US",{maximumFractionDigits:0}):"0";dropIfr.textContent=ifrAmt+" IFR"}
+    var lockDiv=document.getElementById("lp-drop-lock");var noLockDiv=document.getElementById("lp-drop-nolock");
+    if(lockDiv)lockDiv.style.display=state.isLocked1000?"":"none";
+    if(noLockDiv)noLockDiv.style.display=state.isLocked1000?"none":"";
+  }
+}
+window.addEventListener("resize",function(){var dd=document.getElementById("lp-header-dropdown");if(dd)dd.style.display="none"});
+document.addEventListener("click",function(e){var dd=document.getElementById("lp-header-dropdown");var wrap=document.getElementById("wiki-wallet-wrap");if(dd&&wrap&&!wrap.contains(e.target))dd.style.display="none"});
+IFRWallet.on("disconnected",function(){lpUpdateUI(null)});
+IFRWallet.on("connected",async function(addr){var state=await IFRState.load(addr);lpUpdateUI(state)});
+IFRWallet.on("accountChanged",async function(addr){var state=await IFRState.load(addr);lpUpdateUI(state)});
+IFRState.on("stateLoaded",lpUpdateUI);
+document.addEventListener("visibilitychange",async function(){if(document.visibilityState==="visible"&&!IFRWallet.isConnected()){var ok=await IFRWallet.autoReconnect();if(ok)lpUpdateUI(await IFRState.load(IFRWallet.getAddress()))}});
+(async function(){var ok=await IFRWallet.autoReconnect();if(ok)lpUpdateUI(await IFRState.load(IFRWallet.getAddress()))})();
+var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.addEventListener("mouseenter",function(){this.style.transform="scale(1.04)";this.style.boxShadow="0 4px 20px rgba(249,115,22,0.4)"});_wcBtn.addEventListener("mouseleave",function(){this.style.transform="";this.style.boxShadow="0 2px 12px rgba(249,115,22,0.25)"})}
+</script>
+</body>
+</html>
