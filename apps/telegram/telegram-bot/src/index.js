@@ -37,6 +37,7 @@ const { scheduleDailyWelcome } = require('./handlers/dailyWelcome');
 const { startGovernanceNotifier } = require('./handlers/governanceNotifier');
 const { startVoteAnnouncements } = require('./services/voteAnnouncement');
 const { scheduleBootstrapAnnouncements } = require('./handlers/bootstrapAnnouncement');
+const { startBootstrapListener } = require('./services/bootstrapListener');
 
 // Middleware
 const rateLimit  = require('./middleware/rateLimit');
@@ -283,6 +284,7 @@ setTimeout(() => {
       startGovernanceNotifier(bot);
       startVoteAnnouncements(bot);
       scheduleBootstrapAnnouncements(bot);
+      startBootstrapListener(bot);
     })
     .catch((err) => {
       logger.fatal({ err: err.message }, 'Failed to start bot');
