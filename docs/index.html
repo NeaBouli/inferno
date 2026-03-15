@@ -1318,20 +1318,31 @@
 <main>
 <!-- ── BOOTSTRAP BANNER ────────────────────────────── -->
 <div id="bootstrap-banner" style="background:linear-gradient(135deg,#1a0a00 0%,#2d1200 100%);border-bottom:3px solid #ff6b35;padding:14px 20px;text-align:center;width:100%;box-sizing:border-box;display:block;z-index:99;margin-top:64px;">
-  <p style="margin:0 0 6px 0;font-size:1rem;font-weight:bold;color:#ff6b35;">&#x1f525; Community Bootstrap Event &mdash; Vault Funded (194.75M IFR) &mdash; ETH contributions open in <span id="banner-countdown" style="color:#f97316;font-weight:700;font-family:monospace;">--d --h --m --s</span></p>
-  <p style="margin:0 0 8px 0;font-size:0.85rem;color:#ccc;line-height:1.5;">Contribute 0.01&ndash;2 ETH &rarr; receive IFR pro-rata at launch price.<br>No team ETH. Fully trustless. 100% goes into liquidity.</p>
-  <a href="wiki/bootstrap.html" style="display:inline-block;background:#ff6b35;color:#000;font-weight:bold;font-size:0.85rem;padding:6px 18px;border-radius:20px;text-decoration:none;">Learn More &rarr;</a>
+  <p id="banner-headline" style="margin:0 0 6px 0;font-size:1rem;font-weight:bold;color:#ff6b35;">&#x1f525; Community Bootstrap Event &mdash; loading&hellip;</p>
+  <p id="banner-sub" style="margin:0 0 8px 0;font-size:0.85rem;color:#ccc;line-height:1.5;">Contribute 0.01&ndash;2 ETH &rarr; receive IFR pro-rata at launch price.<br>No team ETH. Fully trustless. 100% goes into liquidity.</p>
+  <a href="wiki/bootstrap.html" id="banner-cta" style="display:inline-block;background:#ff6b35;color:#000;font-weight:bold;font-size:0.85rem;padding:6px 18px;border-radius:20px;text-decoration:none;">Learn More &rarr;</a>
 </div>
 <script>
 (function(){
-  var BS=new Date('2026-04-17T00:00:00Z');
+  var START=new Date('2026-03-07T00:00:00Z').getTime();
+  var END=new Date('2026-06-05T00:00:00Z').getTime();
+  var hl=document.getElementById('banner-headline');
+  var cta=document.getElementById('banner-cta');
   function upd(){
-    var d=BS-new Date();
-    var el=document.getElementById('banner-countdown');
-    if(!el)return;
-    if(d<=0){el.parentElement.innerHTML='\uD83D\uDD25 <strong style="color:#f97316;">Bootstrap Event is LIVE</strong> \u2014 <a href="wiki/bootstrap.html" style="color:#f97316;">Contribute ETH now \u2192</a>';return;}
-    var dd=Math.floor(d/864e5),hh=Math.floor(d%864e5/36e5),mm=Math.floor(d%36e5/6e4),ss=Math.floor(d%6e4/1e3);
-    el.textContent=dd+'d '+hh+'h '+mm+'m '+ss+'s';
+    var now=Date.now();
+    if(now<START){
+      var d=START-now;
+      var dd=Math.floor(d/864e5),hh=Math.floor(d%864e5/36e5),mm=Math.floor(d%36e5/6e4),ss=Math.floor(d%6e4/1e3);
+      hl.innerHTML='\uD83D\uDD25 Community Bootstrap Event \u2014 Vault Funded (194.75M IFR) \u2014 ETH contributions open in <span style="color:#f97316;font-weight:700;font-family:monospace;">'+dd+'d '+hh+'h '+mm+'m '+ss+'s</span>';
+    } else if(now<END){
+      var d=END-now;
+      var dd=Math.floor(d/864e5),hh=Math.floor(d%864e5/36e5),mm=Math.floor(d%36e5/6e4),ss=Math.floor(d%6e4/1e3);
+      hl.innerHTML='\uD83D\uDD25 <strong style="color:#22c55e;">Bootstrap Event is LIVE</strong> \u2014 Closes in <span style="color:#f97316;font-weight:700;font-family:monospace;">'+dd+'d '+hh+'h '+mm+'m '+ss+'s</span> (June 5, 2026)';
+      cta.textContent='Contribute ETH now \u2192';
+    } else {
+      hl.innerHTML='\u2705 Bootstrap Event has ended \u2014 IFR is now on Uniswap';
+      cta.textContent='View Details \u2192';
+    }
   }
   upd();setInterval(upd,1000);
 })();
@@ -2209,7 +2220,7 @@ if (isLocked) {
     {q:"How does the Bootstrap work?",
      a:"90-day community event \u2014 contribute 0.01\u20132 ETH. Collected ETH is automatically paired with ~194.75M IFR to create the Uniswap V2 LP. Fully permissionless, no team action needed."},
     {q:"Who controls the protocol?",
-     a:"All changes require a 48-hour timelock via the Governance contract \u2014 nothing can change instantly. Gnosis Safe multisig active (2-of-5 with 5 signers, upgrading to 3-of-5) for distributed control."},
+     a:"All changes require a 48-hour timelock via the Governance contract \u2014 nothing can change instantly. Gnosis Safe multisig active (2-of-5 with 5 signers, upgrading to 3-of-5) for distributed control. Bootstrap Event is LIVE (ends June 5, 2026)."},
     {q:"What is the token distribution?",
      a:"1B IFR fixed. 6 buckets: 40% DEX Liquidity \u00b7 20% LiqRes (locked) \u00b7 15% Team Vesting (12m cliff) \u00b7 15% Treasury \u00b7 6% Community \u00b7 4% BuilderVault. <a href='wiki/tokenomics.html'>Tokenomics \u2192</a>"},
     {q:"Is the code open source and audited?",

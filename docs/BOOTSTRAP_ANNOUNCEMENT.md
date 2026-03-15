@@ -1,13 +1,13 @@
 # IFR Bootstrap Event — Telegram Announcement
 
-## Post 1 — Announcement (now)
+## Post 1 — Bootstrap is LIVE (now)
 
 ```
-🔥 **$IFR Community Bootstrap — Official Dates**
+🔥 **$IFR Community Bootstrap IS LIVE**
 
-The Inferno Bootstrap event is confirmed:
+The Inferno Bootstrap vault is open and accepting contributions:
 
-📅 **Opens:** April 17, 2026
+📅 **Started:** March 7, 2026
 📅 **Closes:** June 5, 2026
 
 **How it works:**
@@ -34,12 +34,10 @@ No presale. No VC. Community-first.
 
 ---
 
-## Post 2 — Reminder (from 10.04.2026)
+## Post 2 — Reminder (periodic)
 
 ```
-🔥 **1 Week Until $IFR Bootstrap Opens**
-
-April 17 is approaching fast.
+🔥 **$IFR Bootstrap is LIVE — Contribute Now**
 
 ✅ 194.75M IFR locked in vault
 ✅ Uniswap V2 LP ready to launch
@@ -56,14 +54,13 @@ Closes June 5, 2026. Don't miss it.
 
 ---
 
-## Post 3 — Launch Day (17.04.2026)
+## Post 3 — Final Countdown (late May 2026)
 
 ```
-🚀 **$IFR Bootstrap IS NOW LIVE**
+⏰ **$IFR Bootstrap Closing Soon**
 
-The vault is open. Start contributing.
+The vault closes June 5, 2026.
 
-⏰ Closes: June 5, 2026
 💰 Min: 0.01 ETH | Max: 2 ETH per wallet
 🎯 194.75M IFR pool
 🔒 100% ETH → Uniswap LP
@@ -71,9 +68,9 @@ The vault is open. Start contributing.
 → ifrunit.tech/wiki/bootstrap.html
 
 First come, same price. Pro-rata distribution.
-No rush — but don't miss June 5.
+Don't miss the deadline.
 
-#IFR #Bootstrap #LiveNow
+#IFR #Bootstrap #LastChance
 ```
 
 ---
@@ -81,7 +78,7 @@ No rush — but don't miss June 5.
 ## On-Chain Reference
 
 - BootstrapVaultV3: `0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141`
-- On-chain startTime: 2026-03-07 (contract deployed)
+- On-chain startTime: 2026-03-07 (contract deployed, accepting contributions)
 - On-chain endTime: 2026-06-05 (90 days from deploy)
-- Communicated official launch: April 17, 2026
+- Status: **LIVE** since March 7, 2026
 - Vault funded: 194.75M IFR (Treasury 144.75M + Community 50M)
