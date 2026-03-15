@@ -379,3 +379,4 @@ On errors: fix immediately, commit with `seo:` prefix.
 
 *This document is updated with every completed task.*
 *Last updated: 2026-03-16*
+
