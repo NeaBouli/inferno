@@ -118,7 +118,9 @@ On errors: fix immediately, commit with `seo:` prefix.
 
 ### Known Bugs
 - [ ] Android MetaMask Deep-Link: opens new browser instance instead of returning to Chrome
-- [ ] Bootstrap public stats: PublicNode RPC fallback added, monitor for rate-limiting
+- [x] Bootstrap public stats: PublicNode RPC fallback + _publicStatsLoaded race guard ✅
+- [x] Recent Votes: loadSavedVotes() on DOMContentLoaded ✅ (bc18c85a)
+- [x] WalletConnect placeholder text removed ✅
 
 ### Bot & Infrastructure
 - [x] `voteAnnouncement.js` — Bot announces Governance Proposals + verify.html link + 24h reminder ✅
