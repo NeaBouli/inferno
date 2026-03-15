@@ -57,7 +57,7 @@
 
 ### 🟢 Bootstrap Dates — KONSISTENT ✅
 
-Alle Stellen zeigen: **Start 17.04.2026 / End 15.07.2026**
+Alle Stellen zeigen: **Start 17.04.2026 / End 05.06.2026** (on-chain endTime korrigiert 15.03.2026)
 - `docs/wiki/bootstrap.html` ✅
 - `apps/ai-copilot/src/context/ifr-knowledge.ts` ✅
 - `apps/ai-copilot/src/context/system-prompts.ts` ✅

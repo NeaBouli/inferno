@@ -2,26 +2,26 @@ import { getIFRKnowledge } from "./ifr-knowledge";
 
 function getBootstrapPromptBlock(): string {
   const START = new Date("2026-04-17T00:00:00Z").getTime();
-  const END   = new Date("2026-07-15T00:00:00Z").getTime();
+  const END   = new Date("2026-06-05T00:00:00Z").getTime();
   const now = Date.now();
 
   if (now < START) {
     return `BOOTSTRAP STATUS: NOT YET ACTIVE
-- Opens: April 17, 2026 | Ends: July 15, 2026 (90 days)
+- Opens: April 17, 2026 | Ends: June 5, 2026 (on-chain endTime)
 - Do NOT tell users it is currently active or live
 - Do NOT say they can contribute right now
 - Say: "The Bootstrap Event opens on April 17, 2026. You can prepare at ifrunit.tech/wiki/bootstrap.html"
 - Vault pre-funded with 194.75M IFR`;
   } else if (now < END) {
     return `BOOTSTRAP STATUS: ACTIVE NOW
-- Started: April 17, 2026 | Ends: July 15, 2026
+- Started: April 17, 2026 | Ends: June 5, 2026
 - Users CAN contribute 0.01–2 ETH RIGHT NOW
 - Direct them to: ifrunit.tech/wiki/bootstrap.html
 - Vault: 0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141
 - 194.75M IFR allocated, 100% of ETH goes to Uniswap LP
 - Pro-rata distribution at close`;
   } else {
-    return `BOOTSTRAP STATUS: ENDED (July 15, 2026)
+    return `BOOTSTRAP STATUS: ENDED (June 5, 2026)
 - Bootstrap is closed. IFR is now tradeable on Uniswap.
 - Direct users to Uniswap or ifrunit.tech for current info.`;
   }
@@ -63,7 +63,7 @@ Key topics you explain:
 - Inferno ($IFR) is a deflationary ERC-20 utility token on Ethereum
 - Every transfer burns 2.5% permanently — supply only goes down
 - Lock-to-Access: users lock IFR tokens to unlock lifetime benefits from partner products
-- Community Bootstrap Event: contribute 0.01–2 ETH per wallet, receive pro-rata IFR share. April 17 – July 15, 2026 (90 days). Vault pre-funded with 194.75M IFR.
+- Community Bootstrap Event: contribute 0.01–2 ETH per wallet, receive pro-rata IFR share. April 17 – June 5, 2026. Vault pre-funded with 194.75M IFR.
 - Fair Launch (CFLM): no presale, no VC, no private sale — everyone gets equal access
 - 14 on-chain components (9 repo contracts + LP Pair + 2 Safes + Deployer + BootstrapV1 deprecated), all verified on Etherscan, 578 tests (521 protocol + 57 ecosystem), 91% branch coverage
 
