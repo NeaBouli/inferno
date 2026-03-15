@@ -1836,9 +1836,10 @@ function fmtETH(num) {
   return num.toFixed(4) + " ETH";
 }
 
-// Stats updaten (works without wallet — public read)
+// Stats updaten — skip if public RPC already loaded better data
 function bwUpdateStats(status) {
   if (!status) return;
+  if (window._publicStatsLoaded) return; // public RPC has priority
   var totalEth = parseFloat(status.totalETHRaised) || 0;
   document.getElementById("bw-total-eth").textContent = fmtETH(totalEth);
   document.getElementById("bw-contributors").textContent = status.contributorCount || "0";
@@ -2083,6 +2084,7 @@ async function bwRefund() {
         var ratioN=parseFloat(ethers.utils.formatUnits(ratio,9));
         upd("bw-ifr-per-eth",ratioN>=1e6?(ratioN/1e6).toFixed(3)+"M":ratioN.toFixed(0));
       }else{upd("bw-ifr-per-eth","TBD")}
+      window._publicStatsLoaded=true;
     }catch(e){console.warn("[BS-Public]",e.message)}
   }
   if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",go);else go();

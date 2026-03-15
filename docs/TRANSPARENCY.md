@@ -136,7 +136,7 @@ Deflation is verified on-chain. Supply can only decrease — there is no mint fu
 |--------|-------|
 | Address | [`0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b`](https://etherscan.io/address/0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b) |
 | Network | Ethereum Mainnet |
-| Threshold | 2-of-5 (5 active signers: A.K., M.G., A.M., Y.K., A.P.) — upgrading to 3-of-5 |
+| Threshold | 3-of-5 (5 active signers: A.K., M.G., A.M., Y.K., A.P.) |
 | Safe URL | [app.safe.global](https://app.safe.global/home?safe=eth:0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b) |
 | Status | Active |
 | Deployed | 2026-03-04 |
