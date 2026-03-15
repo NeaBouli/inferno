@@ -2,7 +2,7 @@
 const logger = require('../services/logger');
 
 const BOOTSTRAP_START = new Date('2026-04-17T00:00:00Z').getTime();
-const BOOTSTRAP_END   = new Date('2026-07-15T00:00:00Z').getTime();
+const BOOTSTRAP_END   = new Date('2026-06-05T00:00:00Z').getTime();
 const CHECK_HOUR_UTC  = 8; // 09:00 CET = 08:00 UTC
 
 // In-memory state — prevents duplicate announcements within a process lifetime
@@ -42,7 +42,7 @@ async function checkAndAnnounceBootstrap(bot) {
       `📋 *Details:*\n` +
       `├ Vault: \`0xf72565...e141\`\n` +
       `├ Allocation: 194.75M IFR\n` +
-      `├ Duration: April 17 → July 15, 2026\n` +
+      `├ Duration: April 17 → June 5, 2026\n` +
       `├ 100% of ETH goes to Uniswap LP\n` +
       `└ No team ETH. Fully trustless.\n\n` +
       `🌐 *Participate:* [ifrunit.tech/wiki/bootstrap](https://ifrunit.tech/wiki/bootstrap.html)\n\n` +
@@ -58,7 +58,7 @@ async function checkAndAnnounceBootstrap(bot) {
 
     const msg =
       `⏹ *BOOTSTRAP EVENT HAS CLOSED*\n\n` +
-      `The IFR Bootstrap Event ended on July 15, 2026.\n\n` +
+      `The IFR Bootstrap Event ended on June 5, 2026.\n\n` +
       `✅ *Next steps:*\n` +
       `├ Anyone can call \`finalise()\` permissionlessly\n` +
       `├ After finalization: claim your IFR\n` +

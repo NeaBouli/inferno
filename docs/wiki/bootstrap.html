@@ -1138,7 +1138,7 @@
         </div>
         <div class="phase-item" id="phase-active">
           <div class="phase-label">&#x23F3; Bootstrap Active (90 days)</div>
-          <div class="phase-date">17.04.2026 &ndash; 15.07.2026</div>
+          <div class="phase-date">17.04.2026 &ndash; 05.06.2026</div>
         </div>
         <div class="phase-item pending">
           <div class="phase-label">&#x1F512; LiquidityReserve Unlock</div>
@@ -1191,7 +1191,7 @@
           <tr>
             <td style="color: #eab308; font-weight: 600;">PENDING</td>
             <td>Bootstrap End &mdash; finalise() available</td>
-            <td>15.07.2026</td>
+            <td>05.06.2026</td>
           </tr>
         </tbody>
       </table>
@@ -1211,12 +1211,12 @@
         </thead>
         <tbody>
           <tr>
-            <td>17.04.2026 &ndash; 15.07.2026</td>
+            <td>17.04.2026 &ndash; 05.06.2026</td>
             <td>194.75M IFR (Bootstrap)</td>
             <td style="color: var(--green); font-weight: 600;">&#x2705; Funded</td>
           </tr>
           <tr>
-            <td>15.07.2026 &ndash; 01.09.2026</td>
+            <td>05.06.2026 &ndash; 01.09.2026</td>
             <td>Bootstrap-LP active, LiqRes locked</td>
             <td style="color: #eab308; font-weight: 600;">&#x23F3; Pending LP</td>
           </tr>
@@ -1676,7 +1676,7 @@ if (document.readyState === 'loading') {
 
   // ===== Countdown (date-based) =====
   var BOOTSTRAP_START = new Date('2026-04-17T00:00:00Z').getTime();
-  var BOOTSTRAP_END = new Date('2026-07-15T00:00:00Z').getTime();
+  var BOOTSTRAP_END = new Date('2026-06-05T00:00:00Z').getTime();
 
   function updateMainCountdown() {
     var now = Date.now();
@@ -1734,7 +1734,7 @@ if (document.readyState === 'loading') {
 var BW = {
   VAULT: "0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141",
   START: new Date("2026-04-17T00:00:00Z").getTime(),
-  END:   new Date("2026-07-15T00:00:00Z").getTime(),
+  END:   new Date("2026-06-05T00:00:00Z").getTime(),
   IFR_ALLOCATION: 194750000, // 194.75M IFR (9 decimals)
   ABI: [
     "function contribute() external payable",

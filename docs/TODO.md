@@ -278,7 +278,7 @@ Regenerate TODO.html from TODO.md content.
 
 ---
 
-## AFTER LP LIVE (after 15.07.2026)
+## AFTER LP LIVE (after 05.06.2026)
 
 - [ ] Apply for CoinGecko listing
 - [ ] Apply for CoinMarketCap listing

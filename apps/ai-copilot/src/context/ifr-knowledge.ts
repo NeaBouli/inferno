@@ -1,5 +1,5 @@
 const BOOTSTRAP_START = new Date("2026-04-17T00:00:00Z").getTime();
-const BOOTSTRAP_END   = new Date("2026-07-15T00:00:00Z").getTime();
+const BOOTSTRAP_END   = new Date("2026-06-05T00:00:00Z").getTime();
 
 function getBootstrapStatus(): string {
   const now = Date.now();
@@ -8,9 +8,9 @@ function getBootstrapStatus(): string {
     return `NOT YET ACTIVE — opens April 17, 2026 (in ${days} days)`;
   } else if (now < BOOTSTRAP_END) {
     const days = Math.ceil((BOOTSTRAP_END - now) / 86400000);
-    return `ACTIVE — Bootstrap is OPEN. Ends July 15, 2026 (${days} days remaining). Contribute at ifrunit.tech/wiki/bootstrap.html`;
+    return `ACTIVE — Bootstrap is OPEN. Ends June 5, 2026 (${days} days remaining). Contribute at ifrunit.tech/wiki/bootstrap.html`;
   } else {
-    return `ENDED — Bootstrap closed July 15, 2026. IFR is now on Uniswap.`;
+    return `ENDED — Bootstrap closed June 5, 2026. IFR is now on Uniswap.`;
   }
 }
 
@@ -60,7 +60,7 @@ export function getIFRKnowledge() {
     bootstrap: {
       status: getBootstrapStatus(),
       startDate: "April 17, 2026",
-      endDate: "July 15, 2026 (90 days)",
+      endDate: "June 5, 2026 (on-chain endTime)",
       vault: "0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141",
       funded: "194.75M IFR (funded March 11, 2026 via Plan B)",
       minContribution: "0.01 ETH",

@@ -1063,12 +1063,51 @@
         <li>BootstrapVaultV3 contract: <code>0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141</code></li>
       </ul>
 
+      <p><strong>LP Allocation &mdash; Phased Release</strong></p>
+      <table style="width:100%;border-collapse:collapse;margin:16px 0;">
+        <thead>
+          <tr style="border-bottom:1px solid #374151;">
+            <th style="color:#9ca3af;padding:10px;text-align:left;font-size:0.85rem;">Phase</th>
+            <th style="color:#9ca3af;padding:10px;text-align:left;font-size:0.85rem;">Amount</th>
+            <th style="color:#9ca3af;padding:10px;text-align:left;font-size:0.85rem;">Trigger</th>
+            <th style="color:#9ca3af;padding:10px;text-align:left;font-size:0.85rem;">Mechanism</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="border-bottom:1px solid #1f2937;">
+            <td style="padding:10px;color:#22c55e;font-weight:600;">Phase 1</td>
+            <td style="padding:10px;color:#e5e7eb;">~150M IFR</td>
+            <td style="padding:10px;color:#9ca3af;">After Bootstrap (05.06.2026) &mdash; <code>finalise()</code></td>
+            <td style="padding:10px;color:#9ca3af;">Automatic: ~150M IFR + all Bootstrap ETH &rarr; Uniswap V2 LP. LP tokens locked 12 months via Team.Finance.</td>
+          </tr>
+          <tr style="border-bottom:1px solid #1f2937;">
+            <td style="padding:10px;color:#f97316;font-weight:600;">Phase 2</td>
+            <td style="padding:10px;color:#e5e7eb;">100M IFR</td>
+            <td style="padding:10px;color:#9ca3af;">After LiquidityReserve unlock (01.09.2026)</td>
+            <td style="padding:10px;color:#9ca3af;">Governance Proposal + 48h Timelock. Team verifies volume off-chain before submitting.</td>
+          </tr>
+          <tr>
+            <td style="padding:10px;color:#6b7280;font-weight:600;">Phase 3</td>
+            <td style="padding:10px;color:#e5e7eb;">100M IFR</td>
+            <td style="padding:10px;color:#9ca3af;">Governance decision (flexible timing)</td>
+            <td style="padding:10px;color:#9ca3af;">2-of-5 Multisig + 48h Timelock. Amount and timing based on market conditions.</td>
+          </tr>
+        </tbody>
+      </table>
+      <p style="font-size:12px;color:#6b7280;margin-top:8px;"><strong>Iron rule:</strong> ETH always stays in the LP &mdash; never withdrawn by the team.</p>
+
       <p><strong>BuybackVault (protocol contract &mdash; not a genesis allocation)</strong></p>
       <ul>
         <li>Accumulates from the 1% protocol pool fee on every non-exempt IFR transfer</li>
         <li>Not pre-funded at genesis. Current balance: 0 IFR.</li>
-        <li>Buys IFR via Uniswap V2 with ETH, splits 50/50 burn/treasury</li>
-        <li>Controlled by governance &mdash; no automatic execution (prevents MEV/sandwich attacks)</li>
+        <li>Phase 3: <strong>BuybackController.sol</strong> &mdash; automatic rebalancing:
+          <ul>
+            <li>PartnerVault &lt; 85% (34M IFR) &rarr; auto-refill to 90% (36M IFR)</li>
+            <li>Operating Pool overflow &gt; 2M IFR &rarr; Governance routes to Treasury</li>
+            <li>SOS Reserve (30%) &rarr; Community Vote 12 days + 48h Timelock</li>
+          </ul>
+        </li>
+        <li>Controlled by governance &mdash; no automatic execution before Phase 3 (prevents MEV/sandwich attacks)</li>
       </ul>
 
       <p><strong>BurnReserve (protocol contract &mdash; not a genesis allocation)</strong></p>
