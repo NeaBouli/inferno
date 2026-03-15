@@ -1556,9 +1556,38 @@ var ConsensusModule = {
       alert('You must contribute ETH to the Bootstrap first before voting.');
       return;
     }
-    // Record vote intent (off-chain signal — on-chain binding comes with BootstrapVaultV4)
+    // Record vote (off-chain signal — on-chain binding comes with BootstrapVaultV4)
+    var addr = IFRWallet.getAddress();
+    var votes = JSON.parse(localStorage.getItem('ifr_votes') || '[]');
+    // Prevent double-vote from same address
+    var existing = votes.find(function(v) { return v.addr === addr; });
+    if (existing) {
+      existing.type = direction;
+      existing.date = new Date().toLocaleDateString('de-DE');
+    } else {
+      votes.push({ type: direction, addr: addr, date: new Date().toLocaleDateString('de-DE') });
+    }
+    localStorage.setItem('ifr_votes', JSON.stringify(votes));
+
+    // Update UI
     var label = direction === 'finalise' ? 'Finalise' : 'Refund';
-    alert('Your vote for "' + label + '" has been recorded as a community signal.\n\nOn-chain binding governance comes with BootstrapVaultV4 in Phase 3.');
+    var banner = document.getElementById('consensus-demo-banner');
+    if (banner) {
+      banner.style.background = direction === 'finalise' ? 'rgba(34,197,94,0.12)' : 'rgba(239,68,68,0.12)';
+      banner.style.borderColor = direction === 'finalise' ? 'rgba(34,197,94,0.4)' : 'rgba(239,68,68,0.4)';
+      banner.style.color = direction === 'finalise' ? '#22c55e' : '#ef4444';
+      banner.innerHTML = '&#x2705; Your vote for <strong>' + label + '</strong> has been recorded as a community signal.';
+      banner.style.display = 'block';
+      setTimeout(function() { banner.style.display = 'none'; }, 5000);
+    }
+
+    // Disable buttons after vote
+    var btnR = document.getElementById('cs-btn-refund');
+    var btnF = document.getElementById('cs-btn-finalise');
+    if (btnR) { btnR.disabled = true; btnR.style.opacity = '0.4'; }
+    if (btnF) { btnF.disabled = true; btnF.style.opacity = '0.4'; }
+
+    this.render();
   },
 
   loadDemoData: function() {
@@ -2030,6 +2059,34 @@ async function bwRefund() {
     var rState = await IFRState.load(IFRWallet.getAddress());
     bwUpdateUI(rState);
   }
+})();
+</script>
+
+<!-- PUBLIC BOOTSTRAP STATS — no wallet needed, direct RPC -->
+<script>
+(function(){
+  var VAULT="0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141";
+  var RPC="https://ethereum-rpc.publicnode.com";
+  function upd(id,v){var e=document.getElementById(id);if(e)e.textContent=v}
+  async function go(){
+    try{
+      var p=new ethers.providers.JsonRpcProvider(RPC);
+      var c=new ethers.Contract(VAULT,["function getBootstrapStatus() view returns (bool,bool,uint256,uint256,uint256)"],p);
+      var r=await c.getBootstrapStatus();
+      var eth=r[2],cnt=r[4];
+      var ethN=parseFloat(ethers.utils.formatEther(eth));
+      upd("bw-total-eth",ethN>0?ethN.toFixed(4)+" ETH":"0.0000 ETH");
+      upd("bw-contributors",cnt.toString());
+      if(eth.gt(0)){
+        var alloc=ethers.utils.parseUnits("194750000",9);
+        var ratio=alloc.mul(ethers.utils.parseEther("1")).div(eth);
+        var ratioN=parseFloat(ethers.utils.formatUnits(ratio,9));
+        upd("bw-ifr-per-eth",ratioN>=1e6?(ratioN/1e6).toFixed(3)+"M":ratioN.toFixed(0));
+      }else{upd("bw-ifr-per-eth","TBD")}
+    }catch(e){console.warn("[BS-Public]",e.message)}
+  }
+  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",go);else go();
+  setInterval(go,30000);
 })();
 </script>
 
