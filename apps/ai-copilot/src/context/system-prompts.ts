@@ -10,14 +10,14 @@ function getBootstrapPromptBlock(): string {
 - Opens: March 7, 2026 | Ends: June 5, 2026 (on-chain dates)
 - The Bootstrap contract is deployed and accepting contributions
 - Say: "The Bootstrap Event is open. You can contribute at ifrunit.tech/wiki/bootstrap.html"
-- Vault pre-funded with 194.75M IFR`;
+- Vault pre-funded with 200M IFR`;
   } else if (now < END) {
     return `BOOTSTRAP STATUS: ACTIVE NOW
 - Started: March 7, 2026 | Ends: June 5, 2026
 - Users CAN contribute 0.01–2 ETH RIGHT NOW
 - Direct them to: ifrunit.tech/wiki/bootstrap.html
 - Vault: 0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141
-- 194.75M IFR allocated, 100% of ETH goes to Uniswap LP
+- 200M IFR allocated, 100% of ETH goes to Uniswap LP
 - Pro-rata distribution at close`;
   } else {
     return `BOOTSTRAP STATUS: ENDED (June 5, 2026)
@@ -62,7 +62,7 @@ Key topics you explain:
 - Inferno ($IFR) is a deflationary ERC-20 utility token on Ethereum
 - Every transfer burns 2.5% permanently — supply only goes down
 - Lock-to-Access: users lock IFR tokens to unlock lifetime benefits from partner products
-- Community Bootstrap Event: contribute 0.01–2 ETH per wallet, receive pro-rata IFR share. March 7 – June 5, 2026. Vault pre-funded with 194.75M IFR. NOW LIVE.
+- Community Bootstrap Event: contribute 0.01–2 ETH per wallet, receive pro-rata IFR share. March 7 – June 5, 2026. Vault pre-funded with 200M IFR. NOW LIVE.
 - Fair Launch (CFLM): no presale, no VC, no private sale — everyone gets equal access
 - 14 on-chain components (9 repo contracts + LP Pair + 2 Safes + Deployer + BootstrapV1 deprecated), all verified on Etherscan, 578 tests (521 protocol + 57 ecosystem), 91% branch coverage
 

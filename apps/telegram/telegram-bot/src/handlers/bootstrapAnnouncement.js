@@ -41,7 +41,7 @@ async function checkAndAnnounceBootstrap(bot) {
       `💰 *Contribute 0.01–2 ETH* and receive IFR pro-rata at launch price.\n\n` +
       `📋 *Details:*\n` +
       `├ Vault: \`0xf72565...e141\`\n` +
-      `├ Allocation: 194.75M IFR\n` +
+      `├ Allocation: 200M IFR\n` +
       `├ Duration: March 7 → June 5, 2026\n` +
       `├ 100% of ETH goes to Uniswap LP\n` +
       `└ No team ETH. Fully trustless.\n\n` +
