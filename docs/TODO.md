@@ -123,8 +123,8 @@ On errors: fix immediately, commit with `seo:` prefix.
 
 ### Bot & Infrastructure
 - [x] `voteAnnouncement.js` — Bot announces Governance Proposals + verify.html link + 24h reminder ✅
-- [ ] `SIGNER_WALLETS` in Railway env: `0x6b36687...` + `0x17F8DD6dECCb3ff5d95691982B85A87d7d9872d4`
-- [ ] `VERIFY_PORT=3001` in Railway env
+- [x] `SIGNER_WALLETS` gesetzt in Railway (alle 5 Signers: A.K./M.G./A.M./Y.K./A.P.) ✅ 16.03.2026
+- [x] `VERIFY_PORT=3001` gesetzt in Railway ✅ 16.03.2026
 
 ### Core Developer (external)
 - [ ] Deploy BuilderRegistry.sol on Sepolia
