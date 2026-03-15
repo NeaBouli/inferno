@@ -81,6 +81,20 @@ Regenerate TODO.html from TODO.md content.
 
 **6. Commit everything together** — never leave counts out of sync.
 
+**7. EVERY 7th PROMPT — SEO/AI Marker Audit:**
+Check all wiki pages + landing page for:
+- `<meta name="description">` present and current?
+- `<title>` correct and unique per page?
+- `<link rel="canonical">` set?
+- JSON-LD Schema.org block present? (WebSite/Article/FAQPage)
+- Open Graph: og:title, og:description, og:image, og:url
+- Twitter Card: twitter:card, twitter:site, twitter:title
+- robots.txt allows GPTBot/ClaudeBot/PerplexityBot?
+- sitemap.xml current (all 26 wiki pages)?
+- All IFR_UPDATE markers visited and current?
+- h1/h2/h3 hierarchy correct (no h1→h3 jumps)?
+On errors: fix immediately, commit with `seo:` prefix.
+
 ---
 
 ## BUG FIXES (15.03.2026)
@@ -93,8 +107,14 @@ Regenerate TODO.html from TODO.md content.
 ## CRITICAL
 
 ### Governance Proposals
-- [ ] Proposal #7: `setFeeExempt(Deployer)` — Deployer EOA currently NOT fee-exempt
-- [ ] Proposal #8: `transferOwnership(TreasurySafe)` — Governance owner from Deployer → Gnosis Safe
+- [ ] 🔴 Proposal #7: setFeeExempt (SOFORT — Core Dev required)
+      Target: InfernoToken `0x77e99917Eca8539c62F509ED1193ac36580A6e7B`
+      Call A: `setFeeExempt(0x6b36..., true)` → Deployer
+      Call B: `setFeeExempt(0x5ad6..., true)` → Treasury Safe
+      Call C: `setFeeExempt(0xaC56..., true)` → Community Safe
+      KRITISCH: Ohne Fix kostet jeder Transfer von diesen Wallets 3.5%!
+      Referenz: `docs/PROPOSAL_7_CALLDATA.md`
+- [ ] 🔴 Proposal #8: `transferOwnership(TreasurySafe)` — nach Proposal #7
 
 ### Known Bugs
 - [ ] Android MetaMask Deep-Link: opens new browser instance instead of returning to Chrome
