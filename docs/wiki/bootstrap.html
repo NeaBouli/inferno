@@ -1556,16 +1556,18 @@ var ConsensusModule = {
       alert('You must contribute ETH to the Bootstrap first before voting.');
       return;
     }
-    // Record vote (off-chain signal — on-chain binding comes with BootstrapVaultV4)
+    // Record vote with ETH weight (off-chain signal — on-chain binding BootstrapVaultV4)
     var addr = IFRWallet.getAddress();
+    var ethWeight = myContrib;
     var votes = JSON.parse(localStorage.getItem('ifr_votes') || '[]');
     // Prevent double-vote from same address
     var existing = votes.find(function(v) { return v.addr === addr; });
     if (existing) {
       existing.type = direction;
+      existing.ethWeight = ethWeight;
       existing.date = new Date().toLocaleDateString('de-DE');
     } else {
-      votes.push({ type: direction, addr: addr, date: new Date().toLocaleDateString('de-DE') });
+      votes.push({ type: direction, addr: addr, ethWeight: ethWeight, date: new Date().toLocaleDateString('de-DE') });
     }
     localStorage.setItem('ifr_votes', JSON.stringify(votes));
 
@@ -1576,7 +1578,7 @@ var ConsensusModule = {
       banner.style.background = direction === 'finalise' ? 'rgba(34,197,94,0.12)' : 'rgba(239,68,68,0.12)';
       banner.style.borderColor = direction === 'finalise' ? 'rgba(34,197,94,0.4)' : 'rgba(239,68,68,0.4)';
       banner.style.color = direction === 'finalise' ? '#22c55e' : '#ef4444';
-      banner.innerHTML = '&#x2705; Your vote for <strong>' + label + '</strong> has been recorded as a community signal.';
+      banner.innerHTML = '&#x2705; Your vote for <strong>' + label + '</strong> recorded (' + ethWeight.toFixed(4) + ' ETH weight).';
       banner.style.display = 'block';
       setTimeout(function() { banner.style.display = 'none'; }, 5000);
     }
@@ -1587,6 +1589,7 @@ var ConsensusModule = {
     if (btnR) { btnR.disabled = true; btnR.style.opacity = '0.4'; }
     if (btnF) { btnF.disabled = true; btnF.style.opacity = '0.4'; }
 
+    this.loadVotesFromStorage();
     this.render();
     if (typeof loadSavedVotes === 'function') loadSavedVotes();
   },
@@ -1601,6 +1604,25 @@ var ConsensusModule = {
     };
   },
 
+  loadVotesFromStorage: function() {
+    var votes = [];
+    try { votes = JSON.parse(localStorage.getItem('ifr_votes') || '[]'); } catch(e) {}
+    var votedETH = 0, finaliseETH = 0, refundETH = 0;
+    var voteList = [];
+    votes.forEach(function(v) {
+      var w = parseFloat(v.ethWeight || 0);
+      votedETH += w;
+      if (v.type === 'finalise') finaliseETH += w;
+      else refundETH += w;
+      var short = v.addr ? v.addr.slice(0,6) + '...' + v.addr.slice(-4) : '???';
+      voteList.push({ address: short, amount: w, direction: v.type, timeAgo: v.date || '' });
+    });
+    this.state.votedETH = votedETH;
+    this.state.finaliseETH = finaliseETH;
+    this.state.refundETH = refundETH;
+    this.state.votes = voteList;
+  },
+
   init: function() {
     var self = this;
 
@@ -1610,26 +1632,28 @@ var ConsensusModule = {
     if (btnRefund) btnRefund.addEventListener('click', function() { self.submitVote('refund'); });
     if (btnFinalise) btnFinalise.addEventListener('click', function() { self.submitVote('finalise'); });
 
-    // Load demo data
-    if (this.config.demoMode) {
+    // Load saved votes from localStorage (replaces demo data)
+    this.loadVotesFromStorage();
+
+    // Load demo data only if no saved votes
+    if (this.state.votes.length === 0 && this.config.demoMode) {
       this.loadDemoData();
     }
 
-    // Fetch live vault data for totalETH
-    fetch(this.config.apiEndpoint)
-      .then(function(r) { return r.json(); })
-      .then(function(data) {
-        if (data && !data.error) {
-          // totalETH will be populated when bootstrap is active
-          // For now, vault balance shows IFR not ETH
+    // Fetch totalETH from on-chain for consensus stats
+    if (typeof ethers !== 'undefined') {
+      try {
+        var rpc = new ethers.providers.JsonRpcProvider('https://ethereum-rpc.publicnode.com');
+        var vault = new ethers.Contract('0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141',
+          ['function totalETHRaised() view returns (uint256)'], rpc);
+        vault.totalETHRaised().then(function(total) {
+          self.state.totalETH = parseFloat(ethers.utils.formatEther(total));
           self.render();
-        }
-      })
-      .catch(function() {
-        self.render();
-      });
-
-    this.render();
+        }).catch(function() { self.render(); });
+      } catch(e) { self.render(); }
+    } else {
+      this.render();
+    }
   }
 };
 
