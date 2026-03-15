@@ -36,7 +36,7 @@ Inferno (IFR) is a deflationary ERC-20 utility token on Ethereum. Every transfer
 | DEX Liquidity | 40% | 400M IFR | Held by deployer. Paired on Uniswap V2 via BootstrapVaultV3.finalise() after Bootstrap completion. |
 | Liquidity Reserve | 20% | 200M IFR | Smart-contract-locked until 01.09.2026. Phase 2 LP expansion. NOT used for Bootstrap. |
 | Team Vesting | 15% | 150M IFR | 12-month cliff, 36-month linear vesting. 0 tokens available before March 2027. |
-| Treasury | 15% | 150M IFR | Gnosis Safe multisig (0x5ad6193...). Funds Bootstrap via Plan B (150M to vault). |
+| Treasury | 15% | 150M IFR | Gnosis Safe multisig (0x5ad6193...). 150M committed to Bootstrap. Refills via protocol fees (Phase 3). |
 | Community & Grants | 6% | 60M IFR | Community Safe (57.9M received after burn). 50M → Bootstrap. ~7.9M operational reserve. |
 | Builder Ecosystem | 4% | 40M IFR | PartnerVault contract. Lock-triggered Creator Rewards, milestone vesting. |
 
