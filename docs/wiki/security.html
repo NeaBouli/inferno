@@ -613,11 +613,11 @@
           <span class="stat-label">High / Critical</span>
         </div>
         <div class="stat-item">
-          <span class="stat-value">497</span>
+          <span class="stat-value">578</span>
           <span class="stat-label">Tests Passing</span>
         </div>
         <div class="stat-item">
-          <span class="stat-value">14</span>
+          <span class="stat-value">18</span>
           <span class="stat-label">Test Suites</span>
         </div>
         <div class="stat-item">
@@ -696,7 +696,7 @@
 
       <div class="callout callout-green">
         <p>
-          <strong>Result:</strong> 0 FAIL &mdash; 12 WARN &mdash; 78 PASS &mdash;
+          <strong>Result:</strong> 0 FAIL &mdash; 21 WARN &mdash; 81 PASS &mdash;
           <a href="https://github.com/NeaBouli/inferno/blob/main/docs/SECURITY_AUDIT_SKYWALKER.md">Full Report</a>
         </p>
       </div>
@@ -1226,9 +1226,9 @@
           <tr><td>IFRLock</td><td>admin-Pattern</td><td style="color:var(--green);">OK</td></tr>
           <tr><td>PartnerVault</td><td>Governance (Timelock)</td><td style="color:var(--green);">OK</td></tr>
           <tr><td>FeeRouterV1</td><td>Governance (Timelock)</td><td style="color:var(--green);">OK</td></tr>
-          <tr><td>LiquidityReserve</td><td>Deployer</td><td style="color:#f59e0b;">Testnet</td></tr>
-          <tr><td>BuybackVault</td><td>Deployer</td><td style="color:#f59e0b;">Testnet</td></tr>
-          <tr><td>BurnReserve</td><td>Deployer</td><td style="color:#f59e0b;">Testnet</td></tr>
+          <tr><td>LiquidityReserve</td><td>Governance (Timelock)</td><td style="color:var(--green);">OK</td></tr>
+          <tr><td>BuybackVault</td><td>Governance (Timelock)</td><td style="color:var(--green);">OK</td></tr>
+          <tr><td>BurnReserve</td><td>Governance (Timelock)</td><td style="color:var(--green);">OK</td></tr>
         </tbody>
       </table>
 
@@ -1236,12 +1236,14 @@
       <table>
         <thead><tr><th>Wallet</th><th>IFR</th><th>%</th></tr></thead>
         <tbody>
-          <tr><td>LP Pair</td><td>400,000,000</td><td>40.08%</td></tr>
-          <tr><td>LiquidityReserve</td><td>200,000,000</td><td>20.04%</td></tr>
-          <tr><td>Vesting (Team, 4 Years)</td><td>150,000,000</td><td>15.03%</td></tr>
-          <tr><td>Deployer (Treasury+Community)</td><td>169,387,995</td><td>16.97%</td></tr>
-          <tr><td>PartnerVault</td><td>40,000,000</td><td>4.01%</td></tr>
-          <tr><td>Burned (Deflation)</td><td>2,000,425</td><td>0.20%</td></tr>
+          <tr><td>LP Reserve (Deployer)</td><td>400,000,000</td><td>40.00%</td></tr>
+          <tr><td>BootstrapVaultV3</td><td>200,000,000</td><td>20.00%</td></tr>
+          <tr><td>LiquidityReserve</td><td>200,000,000</td><td>20.00%</td></tr>
+          <tr><td>Vesting (Team, 4 Years)</td><td>150,000,000</td><td>15.00%</td></tr>
+          <tr><td>PartnerVault</td><td>40,000,000</td><td>4.00%</td></tr>
+          <tr><td>Treasury Safe</td><td>~5,250,000</td><td>0.53%</td></tr>
+          <tr><td>Community Safe</td><td>~7,900,000</td><td>0.79%</td></tr>
+          <tr><td>Burned (Deflation)</td><td>~1,500,000+</td><td>~0.15%</td></tr>
         </tbody>
       </table>
 
