@@ -126,7 +126,7 @@ Regenerate TODO.html from TODO.md content.
 
 ## MID-TERM
 
-### Bootstrap (before 17.04.2026)
+### Bootstrap (LIVE since 07.03.2026, ends 05.06.2026)
 - [ ] Finalize announcement text (Reddit/X/Telegram/Farcaster)
 - [ ] Reddit posts: r/defi + r/ethfinance + r/CryptoMoonShots
 - [ ] Prepare Farcaster post
@@ -246,7 +246,7 @@ Regenerate TODO.html from TODO.md content.
 - [x] `voteAnnouncement.js` — Governance proposal announcements + executable reminder + verify.html link (12 tests)
 - [x] Verification gate + spam moderation
 - [x] Daily burn report (09:00 CET)
-- [x] Bootstrap start/end announcement (automatic from 17.04.2026)
+- [x] Bootstrap start/end announcement (automatic from 07.03.2026)
 - [x] 7-day countdown (before start + before end)
 
 ### Ali Copilot

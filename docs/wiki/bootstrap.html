@@ -1070,8 +1070,8 @@
         <!-- Not yet active notice -->
         <div id="bw-not-active-section" style="display:none;">
           <div style="text-align:center;padding:24px;background:rgba(107,114,128,0.05);border:1px solid #374151;border-radius:16px;">
-            <p style="color:#9ca3af;">The Bootstrap Event opens on <strong style="color:#f97316;">April 17, 2026</strong>.</p>
-            <p style="color:#6b7280;font-size:0.85rem;">Connect your wallet now to be ready when it starts.</p>
+            <p style="color:#22c55e;">The Bootstrap Event is <strong style="color:#22c55e;">LIVE</strong> &mdash; accepting contributions now.</p>
+            <p style="color:#6b7280;font-size:0.85rem;">Connect your wallet to contribute 0.01&ndash;2 ETH. Closes June 5, 2026.</p>
           </div>
         </div>
 
@@ -1132,13 +1132,13 @@
           <div class="phase-label">&#x2705; Bootstrap Funded</div>
           <div class="phase-date">11.03.2026 &mdash; 194.75M IFR in vault</div>
         </div>
-        <div class="phase-item" id="phase-lp">
-          <div class="phase-label">&#x23F3; Bootstrap Launch &mdash; ETH Contributions Open</div>
-          <div class="phase-date">17.04.2026 00:00 UTC</div>
+        <div class="phase-item done" id="phase-lp">
+          <div class="phase-label">&#x2705; Bootstrap LIVE &mdash; ETH Contributions Open</div>
+          <div class="phase-date">07.03.2026 &mdash; contract deployed &amp; accepting contributions</div>
         </div>
         <div class="phase-item" id="phase-active">
-          <div class="phase-label">&#x23F3; Bootstrap Active (90 days)</div>
-          <div class="phase-date">17.04.2026 &ndash; 05.06.2026</div>
+          <div class="phase-label">&#x23F3; Bootstrap Closes &mdash; finalise() available</div>
+          <div class="phase-date">05.06.2026 (on-chain endTime)</div>
         </div>
         <div class="phase-item pending">
           <div class="phase-label">&#x1F512; LiquidityReserve Unlock</div>
@@ -1147,11 +1147,11 @@
       </div>
 
       <!-- Countdown -->
-      <div id="bootstrap-countdown-box" style="background:#0f172a; border:1px solid #f97316; border-radius:12px; padding:24px; text-align:center; margin:24px 0;">
-        <div style="font-size:12px; color:#64748b; margin-bottom:8px; text-transform:uppercase; letter-spacing:1px;" id="countdown-label">Bootstrap Opens In</div>
+      <div id="bootstrap-countdown-box" style="background:#0f172a; border:1px solid #22c55e; border-radius:12px; padding:24px; text-align:center; margin:24px 0;">
+        <div style="font-size:12px; color:#22c55e; margin-bottom:8px; text-transform:uppercase; letter-spacing:1px; font-weight:600;" id="countdown-label">&#x1f525; Bootstrap is LIVE &mdash; Closes In</div>
         <div id="bootstrap-main-countdown" style="font-size:36px; font-weight:700; font-family:monospace; color:#f97316; letter-spacing:2px;">--d --h --m --s</div>
-        <div style="font-size:13px; color:#94a3b8; margin-top:8px;">17.04.2026 00:00 UTC &mdash; ETH contributions open</div>
-        <div style="font-size:12px; color:#64748b; margin-top:4px;">Vault pre-funded with 194.75M IFR &#x2705; &mdash; waiting for Bootstrap launch date</div>
+        <div style="font-size:13px; color:#94a3b8; margin-top:8px;">Ends 05.06.2026 &mdash; Contribute 0.01&ndash;2 ETH now</div>
+        <div style="font-size:12px; color:#64748b; margin-top:4px;">Vault funded with 194.75M IFR &#x2705; &mdash; 100% ETH goes into Uniswap LP</div>
       </div>
 
       <table>
@@ -1184,9 +1184,9 @@
             <td>11.03.2026</td>
           </tr>
           <tr>
-            <td style="color: #eab308; font-weight: 600;">PENDING</td>
+            <td style="color: var(--green); font-weight: 600;">LIVE</td>
             <td>Bootstrap Launch &mdash; ETH contributions open</td>
-            <td>17.04.2026</td>
+            <td>07.03.2026 &#x2705;</td>
           </tr>
           <tr>
             <td style="color: #eab308; font-weight: 600;">PENDING</td>
@@ -1211,9 +1211,9 @@
         </thead>
         <tbody>
           <tr>
-            <td>17.04.2026 &ndash; 05.06.2026</td>
+            <td>07.03.2026 &ndash; 05.06.2026</td>
             <td>194.75M IFR (Bootstrap)</td>
-            <td style="color: var(--green); font-weight: 600;">&#x2705; Funded</td>
+            <td style="color: var(--green); font-weight: 600;">&#x2705; LIVE</td>
           </tr>
           <tr>
             <td>05.06.2026 &ndash; 01.09.2026</td>
@@ -1675,7 +1675,7 @@ if (document.readyState === 'loading') {
   }
 
   // ===== Countdown (date-based) =====
-  var BOOTSTRAP_START = new Date('2026-04-17T00:00:00Z').getTime();
+  var BOOTSTRAP_START = new Date('2026-03-07T00:00:00Z').getTime();
   var BOOTSTRAP_END = new Date('2026-06-05T00:00:00Z').getTime();
 
   function updateMainCountdown() {
@@ -1733,7 +1733,7 @@ if (document.readyState === 'loading') {
 
 var BW = {
   VAULT: "0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141",
-  START: new Date("2026-04-17T00:00:00Z").getTime(),
+  START: new Date("2026-03-07T00:00:00Z").getTime(),
   END:   new Date("2026-06-05T00:00:00Z").getTime(),
   IFR_ALLOCATION: 194750000, // 194.75M IFR (9 decimals)
   ABI: [
