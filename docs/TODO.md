@@ -107,14 +107,13 @@ On errors: fix immediately, commit with `seo:` prefix.
 ## CRITICAL
 
 ### Governance Proposals
-- [ ] 🔴 Proposal #7: setFeeExempt (SOFORT — Core Dev required)
-      Target: InfernoToken `0x77e99917Eca8539c62F509ED1193ac36580A6e7B`
-      Call A: `setFeeExempt(0x6b36..., true)` → Deployer
-      Call B: `setFeeExempt(0x5ad6..., true)` → Treasury Safe
-      Call C: `setFeeExempt(0xaC56..., true)` → Community Safe
-      KRITISCH: Ohne Fix kostet jeder Transfer von diesen Wallets 3.5%!
-      Referenz: `docs/PROPOSAL_7_CALLDATA.md`
-- [ ] 🔴 Proposal #8: `transferOwnership(TreasurySafe)` — nach Proposal #7
+- [x] 🟡 Proposal #7 — SUBMITTED 16.03.2026 (IDs: 7/8/9)
+      TX A (Deployer):      `0xbb00c92475f76a0370a7a2343d2c5c01cc5ed624cbe45971886ffd1f29402f8c`
+      TX B (TreasurySafe):  `0x9b080b44ea30a889117dfdea0ecc7ef31e93efd4792e85a309fe1b69e0d41730`
+      TX C (CommunitySafe): `0x94d29562b7431ae5c1d4d4873fdb15fa93ed3cbb94022f142fb27eada5c1a57a`
+      ETA: 2026-03-17T22:50–22:51 UTC → execute() ab 17.03.2026 23:00 UTC
+- [ ] ⏰ 17.03.2026 23:00 UTC — execute Proposals 7/8/9 (feeExempt)
+- [ ] 🔴 Proposal #10: `transferOwnership(TreasurySafe)` — nach feeExempt execute
 
 ### Known Bugs
 - [ ] Android MetaMask Deep-Link: opens new browser instance instead of returning to Chrome

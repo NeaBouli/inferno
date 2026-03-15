@@ -1,8 +1,36 @@
 # Proposal #7 + #8 — Execution Guide
 
-**Status:** 🔴 PENDING — execute ASAP
+**Status:** 🟡 PROPOSED — submitted 16.03.2026
 **Prepared:** 16.03.2026
 **Executor:** A.K. (Deployer — Governance Owner)
+
+## Submitted Proposals
+
+| Call | Proposal ID | TX | ETA (execute after) |
+|------|-------------|----|--------------------|
+| Deployer feeExempt | 7 | [0xbb00c924...](https://etherscan.io/tx/0xbb00c92475f76a0370a7a2343d2c5c01cc5ed624cbe45971886ffd1f29402f8c) | 2026-03-17 ~22:50 UTC |
+| TreasurySafe feeExempt | 8 | [0x9b080b44...](https://etherscan.io/tx/0x9b080b44ea30a889117dfdea0ecc7ef31e93efd4792e85a309fe1b69e0d41730) | 2026-03-17 ~22:51 UTC |
+| CommunitySafe feeExempt | 9 | [0x94d29562...](https://etherscan.io/tx/0x94d29562b7431ae5c1d4d4873fdb15fa93ed3cbb94022f142fb27eada5c1a57a) | 2026-03-17 ~22:51 UTC |
+
+### Execute Command (after ETA)
+
+```bash
+PRIVATE_KEY=0x... node -e "
+require('dotenv').config();
+const{ethers}=require('ethers');
+const p=new ethers.providers.JsonRpcProvider(process.env.RPC_URL||'https://ethereum-rpc.publicnode.com');
+const s=new ethers.Wallet(process.env.PRIVATE_KEY,p);
+const g=new ethers.Contract('0xc43d48E7FDA576C5022d0670B652A622E8caD041',['function execute(uint256)'],s);
+async function run(){
+  for(const id of[7,8,9]){
+    console.log('Executing ID',id,'...');
+    const tx=await g.execute(id);console.log('TX:',tx.hash);
+    await tx.wait();console.log('ID',id,'executed');
+  }
+}
+run();
+"
+```
 
 ---
 
