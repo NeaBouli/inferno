@@ -115,7 +115,7 @@ window.IFRState = (() => {
           result.bootstrapStatus = {
             active: false, finalized: false,
             totalETHRaised: "0.0", contributorCount: 0,
-            timeRemaining: 0, startTime: 1713358800000, endTime: 1721134800000,
+            timeRemaining: 0, startTime: 1772841600000, endTime: 1780617600000,
             ifrAllocation: "194750000",
           };
         }
