@@ -142,8 +142,16 @@ function scheduleBootstrapAnnouncements(bot) {
     }, delay);
   }
 
-  // Also check immediately on startup (in case bot restarted on the day)
-  checkAndAnnounceBootstrap(bot).catch(() => {});
+  // On startup: mark phases as already announced (prevents duplicate posts on redeploy)
+  const phase = getBootstrapPhase();
+  if (phase === 'active') {
+    announced.start = true;
+    logger.info('Bootstrap already active — start announcement suppressed (cron handles daily posts)');
+  } else if (phase === 'ended') {
+    announced.start = true;
+    announced.end = true;
+    logger.info('Bootstrap already ended — all announcements suppressed');
+  }
 
   scheduleNext();
 }
