@@ -55,7 +55,7 @@ Then update ALL of these if counts changed:
 **2. Wiki/Contract Count Sync**
 If a new wiki page or contract was added:
 ```
-ls docs/wiki/*.html | wc -l          # → update "25 wiki pages" everywhere
+ls docs/wiki/*.html | wc -l          # → update "26 wiki pages" everywhere
 ls contracts/*.sol | wc -l           # → update "14 on-chain components" everywhere
 ```
 
@@ -82,6 +82,13 @@ Regenerate TODO.html from TODO.md content.
 **6. Commit everything together** — never leave counts out of sync.
 
 ---
+
+## BUG FIXES (15.03.2026)
+
+- [x] Bootstrap Widget: number formatting (19,475,000 → 19.48M) ✅
+- [x] Bootstrap ConsensusModule: wallet-connected voting buttons ✅
+- [x] MetaMask Mobile: centralized deep-link + pending connect ✅
+- [x] Protocol Plan wiki page created (26 pages) ✅
 
 ## CRITICAL
 
@@ -214,7 +221,7 @@ Regenerate TODO.html from TODO.md content.
 - [x] Bootstrap widget — contribute/claim/refund
 - [x] Landing page header dropdown
 - [x] `agent.html` free/premium gate
-- [x] 25 wiki top-bar wallet buttons
+- [x] 26 wiki top-bar wallet buttons
 - [x] `verificationStore.js` — 3-tier nonce + session store
 - [x] `onChainReader.js` — IFRLock + Gnosis Safe getOwners() auto-sync
 - [x] `/verify` + `/mystatus` bot commands
@@ -269,7 +276,7 @@ Regenerate TODO.html from TODO.md content.
 - [x] Audit report `AUDIT_REPORT_20260314.md` created
 - [x] Test counts 494/444 → 556 across 32 files
 - [x] Wiki page count 16/24 → 25 across 8 files
-- [x] `rel="canonical"` on all 25 wiki pages
+- [x] `rel="canonical"` on all 26 wiki pages
 - [x] `twitter:card` + `twitter:site` + `twitter:image` on all pages
 - [x] JSON-LD on `verify.html`
 - [x] `verify.html` in sitemap

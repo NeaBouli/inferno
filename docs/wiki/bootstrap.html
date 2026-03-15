@@ -1512,33 +1512,45 @@ var ConsensusModule = {
       listEl.innerHTML = html;
     }
 
-    // Demo banner visibility
+    // Demo banner visibility — hide when wallet connected
     var banner = document.getElementById('consensus-demo-banner');
-    if (banner) banner.style.display = this.config.demoMode ? 'block' : 'none';
+    var walletConnected = typeof IFRWallet !== 'undefined' && IFRWallet.isConnected();
+    if (banner) {
+      if (walletConnected) {
+        banner.style.display = 'none';
+      } else {
+        banner.innerHTML = '&#x26A0; Connect your wallet to participate in voting. Public stats are loaded automatically.';
+        banner.style.display = 'block';
+      }
+    }
 
-    // Buttons
+    // Buttons — enable when wallet connected
     var btnRefund = document.getElementById('cs-btn-refund');
     var btnFinalise = document.getElementById('cs-btn-finalise');
-    if (this.config.walletConnectActive) {
+    if (walletConnected) {
       if (btnRefund) { btnRefund.disabled = false; btnRefund.style.opacity = '1'; btnRefund.style.cursor = 'pointer'; }
       if (btnFinalise) { btnFinalise.disabled = false; btnFinalise.style.opacity = '1'; btnFinalise.style.cursor = 'pointer'; }
     }
   },
 
   connectWallet: function() {
-    if (!this.config.walletConnectActive) {
-      alert('WalletConnect coming soon \u2014 voting opens when wallet integration is live.');
+    if (typeof IFRWallet !== 'undefined' && !IFRWallet.isConnected()) {
+      lpConnect();
       return;
     }
-    // WalletConnect integration point
+    if (!IFRWallet.isConnected()) {
+      alert('Please connect your wallet first using the header button.');
+      return;
+    }
   },
 
   submitVote: function(direction) {
-    if (!this.config.walletConnectActive) {
+    if (typeof IFRWallet === 'undefined' || !IFRWallet.isConnected()) {
       this.connectWallet();
       return;
     }
-    // Signature + backend submission point
+    // Signature + backend submission point (Phase 3)
+    alert('Voting will be enabled in Phase 3 after Bootstrap finalisation. Your wallet is connected \u2014 stay tuned.');
   },
 
   loadDemoData: function() {
@@ -1775,15 +1787,27 @@ function bwUpdateCountdown() {
 setInterval(bwUpdateCountdown, 1000);
 bwUpdateCountdown();
 
-// Stats updaten
+// Number formatting helpers
+function fmtIFR(num) {
+  if (num >= 1e9) return (num / 1e9).toFixed(3) + "B";
+  if (num >= 1e6) return (num / 1e6).toFixed(2) + "M";
+  if (num >= 1e3) return (num / 1e3).toFixed(1) + "K";
+  return num.toFixed(0);
+}
+function fmtETH(num) {
+  if (num >= 1000) return num.toFixed(0) + " ETH";
+  return num.toFixed(4) + " ETH";
+}
+
+// Stats updaten (works without wallet — public read)
 function bwUpdateStats(status) {
   if (!status) return;
   var totalEth = parseFloat(status.totalETHRaised) || 0;
-  document.getElementById("bw-total-eth").textContent = totalEth.toFixed(4) + " ETH";
+  document.getElementById("bw-total-eth").textContent = fmtETH(totalEth);
   document.getElementById("bw-contributors").textContent = status.contributorCount || "0";
   if (totalEth > 0) {
-    var ifrPerEth = (BW.IFR_ALLOCATION / totalEth).toLocaleString(undefined, {maximumFractionDigits: 0});
-    document.getElementById("bw-ifr-per-eth").textContent = ifrPerEth;
+    var ifrPerEth = BW.IFR_ALLOCATION / totalEth;
+    document.getElementById("bw-ifr-per-eth").textContent = fmtIFR(ifrPerEth);
   } else {
     document.getElementById("bw-ifr-per-eth").textContent = "TBD";
   }
@@ -1800,7 +1824,7 @@ function bwUpdateEstimate() {
   if (!el || !elVal) return;
   if (!input || input <= 0) { el.style.display = "none"; return; }
   var totalEth = parseFloat(status ? status.totalETHRaised : "0") + input;
-  var estimated = ((input / totalEth) * BW.IFR_ALLOCATION).toLocaleString(undefined, {maximumFractionDigits: 0});
+  var estimated = fmtIFR((input / totalEth) * BW.IFR_ALLOCATION);
   elVal.textContent = estimated;
   el.style.display = "block";
 }
@@ -1885,9 +1909,9 @@ async function bwConnect() {
   } catch(e) {
     console.error("Connect error:", e.message, e.code);
     if (e.message === "NO_METAMASK") {
-      var isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
-      if (isMobile) {
-        window.location.href = "https://metamask.app.link/dapp/ifrunit.tech/wiki/bootstrap.html";
+      if (IFRWallet.isMobile()) {
+        sessionStorage.setItem("ifr_pending_connect", "1");
+        window.location.href = IFRWallet.getDeepLink();
       } else {
         if (btn) {
           btn.textContent = "\u26A0\uFE0F Install MetaMask";
@@ -2023,8 +2047,7 @@ async function lpConnect(){
   }catch(e){
     if(btn){btn.textContent="\u{1F98A} Connect";btn.disabled=false;btn.style.background="transparent";btn.style.borderColor="#f97316";btn.style.color="#f97316";btn.onclick=lpConnect}
     if(e.message==="NO_METAMASK"){
-      var isMobile=/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
-      if(isMobile){window.location.href="https://metamask.app.link/dapp/ifrunit.tech"}
+      if(IFRWallet.isMobile()){sessionStorage.setItem("ifr_pending_connect","1");window.location.href=IFRWallet.getDeepLink()}
       else if(btn){btn.textContent="\u26A0\uFE0F Install MetaMask";btn.style.background="#374151";btn.onclick=function(){window.open("https://metamask.io/download","_blank")};btn.disabled=false}
     }else if(e.code===4001||e.code==="ACTION_REJECTED"){
       if(btn){btn.textContent="\u{1F98A} Connect";btn.disabled=false}
@@ -2081,9 +2104,9 @@ function lpUpdateUI(state){
 }
 window.addEventListener("resize",function(){var dd=document.getElementById("lp-header-dropdown");if(dd)dd.style.display="none"});
 document.addEventListener("click",function(e){var dd=document.getElementById("lp-header-dropdown");var wrap=document.getElementById("wiki-wallet-wrap");if(dd&&wrap&&!wrap.contains(e.target))dd.style.display="none"});
-IFRWallet.on("disconnected",function(){lpUpdateUI(null)});
-IFRWallet.on("connected",async function(addr){var state=await IFRState.load(addr);lpUpdateUI(state)});
-IFRWallet.on("accountChanged",async function(addr){var state=await IFRState.load(addr);lpUpdateUI(state)});
+IFRWallet.on("disconnected",function(){lpUpdateUI(null);if(typeof ConsensusModule!=='undefined')ConsensusModule.render()});
+IFRWallet.on("connected",async function(addr){var state=await IFRState.load(addr);lpUpdateUI(state);if(typeof ConsensusModule!=='undefined')ConsensusModule.render()});
+IFRWallet.on("accountChanged",async function(addr){var state=await IFRState.load(addr);lpUpdateUI(state);if(typeof ConsensusModule!=='undefined')ConsensusModule.render()});
 IFRState.on("stateLoaded",lpUpdateUI);
 document.addEventListener("visibilitychange",async function(){if(document.visibilityState==="visible"&&!IFRWallet.isConnected()){var ok=await IFRWallet.autoReconnect();if(ok)lpUpdateUI(await IFRState.load(IFRWallet.getAddress()))}});
 (async function(){var ok=await IFRWallet.autoReconnect();if(ok)lpUpdateUI(await IFRState.load(IFRWallet.getAddress()))})();
