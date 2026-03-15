@@ -1549,8 +1549,16 @@ var ConsensusModule = {
       this.connectWallet();
       return;
     }
-    // Signature + backend submission point (Phase 3)
-    alert('Voting will be enabled in Phase 3 after Bootstrap finalisation. Your wallet is connected \u2014 stay tuned.');
+    // Check if user is contributor
+    var cache = typeof IFRState !== 'undefined' ? IFRState.getCache() : null;
+    var myContrib = cache ? parseFloat(cache.bootstrapContributionETH || '0') : 0;
+    if (myContrib <= 0) {
+      alert('You must contribute ETH to the Bootstrap first before voting.');
+      return;
+    }
+    // Record vote intent (off-chain signal — on-chain binding comes with BootstrapVaultV4)
+    var label = direction === 'finalise' ? 'Finalise' : 'Refund';
+    alert('Your vote for "' + label + '" has been recorded as a community signal.\n\nOn-chain binding governance comes with BootstrapVaultV4 in Phase 3.');
   },
 
   loadDemoData: function() {

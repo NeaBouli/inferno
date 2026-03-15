@@ -1803,6 +1803,7 @@
           </div>
           <div style="font-size:13px;font-weight:600;color:#C0392B;" data-live-key="card-vesting">loading&hellip;</div>
           <div style="font-size:10px;color:#666;margin-top:2px;">12-month cliff (~March 2027). 36-month linear vesting.</div>
+          <div style="font-size:10px;color:#555;margin-top:4px;">Beneficiary: <a href="https://etherscan.io/address/0x04FABC52c51d1F8ced6974E7C25a34249b1E6239" target="_blank" rel="noopener" style="font-family:monospace;color:#666;text-decoration:none;">0x04FA...6239</a> (Core Dev trustee for team)</div>
         </div>
 
         <div style="background:#111113;border:1px solid #222225;border-radius:8px;padding:14px 16px;">
@@ -1873,6 +1874,135 @@
       </div>
     </div>
 
+  </div>
+</section>
+
+<!-- ── TOKEN FLOW ARCHITECTURE ─────────────────────── -->
+<section id="token-flow" style="padding:60px 0;">
+  <div class="container">
+    <div class="reveal" style="text-align:center">
+      <p class="section-label">Architecture</p>
+      <h2 style="color:#f97316;margin-bottom:8px;">Token Flow</h2>
+      <p style="color:#9ca3af;margin-bottom:32px;font-size:0.9rem;">How every IFR token moves through the protocol</p>
+    </div>
+    <div style="max-width:900px;margin:0 auto;background:rgba(13,17,23,0.8);border:1px solid #1e2730;border-radius:20px;padding:20px;overflow:hidden;">
+      <svg viewBox="0 0 800 520" style="width:100%;height:auto;" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <filter id="glow"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+        </defs>
+
+        <!-- Connection Lines -->
+        <line x1="400" y1="80" x2="580" y2="180" stroke="#1e2730" stroke-width="1.5"/>
+        <line x1="400" y1="80" x2="220" y2="180" stroke="#1e2730" stroke-width="1.5"/>
+        <line x1="580" y1="200" x2="580" y2="330" stroke="#1e2730" stroke-width="1.5"/>
+        <line x1="400" y1="310" x2="400" y2="340" stroke="#1e2730" stroke-width="1.5"/>
+        <line x1="400" y1="375" x2="575" y2="440" stroke="#1e2730" stroke-width="1.5"/>
+        <line x1="400" y1="375" x2="220" y2="440" stroke="#1e2730" stroke-width="1.5"/>
+        <line x1="220" y1="375" x2="80" y2="440" stroke="#1e2730" stroke-width="1.5"/>
+        <line x1="125" y1="200" x2="125" y2="265" stroke="#1e2730" stroke-width="1.5"/>
+
+        <!-- IFR Token Center -->
+        <g filter="url(#glow)">
+          <circle cx="400" cy="260" r="42" fill="#0d1117" stroke="#f97316" stroke-width="2"/>
+          <circle cx="400" cy="260" r="37" fill="rgba(249,115,22,0.1)">
+            <animate attributeName="r" values="35;39;35" dur="3s" repeatCount="indefinite"/>
+          </circle>
+          <text x="400" y="256" text-anchor="middle" fill="#f97316" font-size="14" font-weight="bold">IFR</text>
+          <text x="400" y="272" text-anchor="middle" fill="#9ca3af" font-size="9">998.5M supply</text>
+        </g>
+
+        <!-- Deployer -->
+        <rect x="335" y="38" width="130" height="42" rx="10" fill="#0d1117" stroke="#ef4444" stroke-width="1.5"/>
+        <text x="400" y="56" text-anchor="middle" fill="#ef4444" font-size="11" font-weight="bold">Deployer</text>
+        <text x="400" y="72" text-anchor="middle" fill="#9ca3af" font-size="9">400M IFR &middot; LP Reserve</text>
+
+        <!-- Bootstrap V3 -->
+        <rect x="510" y="158" width="140" height="42" rx="10" fill="#0d1117" stroke="#f97316" stroke-width="1.5"/>
+        <text x="580" y="176" text-anchor="middle" fill="#f97316" font-size="11" font-weight="bold">Bootstrap V3</text>
+        <text x="580" y="192" text-anchor="middle" fill="#9ca3af" font-size="9">194.75M IFR + ETH</text>
+
+        <!-- Uniswap -->
+        <rect x="510" y="318" width="140" height="42" rx="10" fill="#0d1117" stroke="#60a5fa" stroke-width="1.5"/>
+        <text x="580" y="336" text-anchor="middle" fill="#60a5fa" font-size="11" font-weight="bold">Uniswap V2</text>
+        <text x="580" y="352" text-anchor="middle" fill="#9ca3af" font-size="9">IFR/ETH Pool</text>
+
+        <!-- LiquidityReserve -->
+        <rect x="150" y="158" width="140" height="42" rx="10" fill="#0d1117" stroke="#a78bfa" stroke-width="1.5" stroke-dasharray="5,3"/>
+        <text x="220" y="176" text-anchor="middle" fill="#a78bfa" font-size="11" font-weight="bold">LiqReserve</text>
+        <text x="220" y="192" text-anchor="middle" fill="#9ca3af" font-size="9">200M &middot; locked &rarr; Sep 2026</text>
+
+        <!-- Treasury -->
+        <rect x="55" y="158" width="110" height="42" rx="10" fill="#0d1117" stroke="#22c55e" stroke-width="1.5"/>
+        <text x="110" y="176" text-anchor="middle" fill="#22c55e" font-size="11" font-weight="bold">Treasury</text>
+        <text x="110" y="192" text-anchor="middle" fill="#9ca3af" font-size="9">5.25M &middot; 2-of-5</text>
+
+        <!-- Community -->
+        <rect x="55" y="253" width="110" height="42" rx="10" fill="#0d1117" stroke="#22c55e" stroke-width="1.5"/>
+        <text x="110" y="271" text-anchor="middle" fill="#22c55e" font-size="11" font-weight="bold">Community</text>
+        <text x="110" y="287" text-anchor="middle" fill="#9ca3af" font-size="9">7.9M &middot; 2-of-5</text>
+
+        <!-- PartnerVault -->
+        <rect x="150" y="338" width="140" height="42" rx="10" fill="#0d1117" stroke="#a78bfa" stroke-width="1.5"/>
+        <text x="220" y="356" text-anchor="middle" fill="#a78bfa" font-size="11" font-weight="bold">PartnerVault</text>
+        <text x="220" y="372" text-anchor="middle" fill="#9ca3af" font-size="9">40M &middot; Builder Rewards</text>
+
+        <!-- FeeRouter -->
+        <rect x="340" y="338" width="120" height="42" rx="10" fill="#0d1117" stroke="#fbbf24" stroke-width="1.5"/>
+        <text x="400" y="356" text-anchor="middle" fill="#fbbf24" font-size="11" font-weight="bold">FeeRouter</text>
+        <text x="400" y="372" text-anchor="middle" fill="#9ca3af" font-size="9">1% pool fee</text>
+
+        <!-- BuybackVault -->
+        <rect x="510" y="420" width="130" height="42" rx="10" fill="#0d1117" stroke="#fbbf24" stroke-width="1.5"/>
+        <text x="575" y="438" text-anchor="middle" fill="#fbbf24" font-size="11" font-weight="bold">Buyback</text>
+        <text x="575" y="454" text-anchor="middle" fill="#9ca3af" font-size="9">Phase 3 Controller</text>
+
+        <!-- BurnReserve -->
+        <rect x="155" y="420" width="130" height="42" rx="10" fill="#0d1117" stroke="#ef4444" stroke-width="1.5"/>
+        <text x="220" y="438" text-anchor="middle" fill="#ef4444" font-size="11" font-weight="bold">BurnReserve</text>
+        <text x="220" y="454" text-anchor="middle" fill="#9ca3af" font-size="9">Permanent burn</text>
+
+        <!-- Builder -->
+        <rect x="20" y="420" width="110" height="42" rx="10" fill="#0d1117" stroke="#a78bfa" stroke-width="1" stroke-dasharray="4,3"/>
+        <text x="75" y="438" text-anchor="middle" fill="#a78bfa" font-size="11">Builder</text>
+        <text x="75" y="454" text-anchor="middle" fill="#9ca3af" font-size="9">Creator Rewards</text>
+
+        <!-- Vesting -->
+        <rect x="650" y="80" width="130" height="50" rx="10" fill="#0d1117" stroke="#fbbf24" stroke-width="1.5"/>
+        <text x="715" y="100" text-anchor="middle" fill="#fbbf24" font-size="11" font-weight="bold">Vesting</text>
+        <text x="715" y="116" text-anchor="middle" fill="#9ca3af" font-size="9">150M &middot; Cliff Mar 2027</text>
+        <text x="715" y="128" text-anchor="middle" fill="#6b7280" font-size="8">0x04FA...6239</text>
+
+        <!-- Animated Particles -->
+        <!-- IFR → FeeRouter (orange) -->
+        <circle r="4" fill="#f97316" opacity="0.9"><animateMotion dur="2s" repeatCount="indefinite" path="M400,310 L400,340"/></circle>
+        <circle r="4" fill="#f97316" opacity="0.6"><animateMotion dur="2s" begin="0.7s" repeatCount="indefinite" path="M400,310 L400,340"/></circle>
+        <!-- FeeRouter → BurnReserve (red) -->
+        <circle r="3" fill="#ef4444" opacity="0.9"><animateMotion dur="1.8s" repeatCount="indefinite" path="M400,380 L220,440"/></circle>
+        <circle r="3" fill="#ef4444" opacity="0.5"><animateMotion dur="1.8s" begin="0.9s" repeatCount="indefinite" path="M400,380 L220,440"/></circle>
+        <!-- FeeRouter → Buyback (yellow) -->
+        <circle r="3" fill="#fbbf24" opacity="0.9"><animateMotion dur="2s" repeatCount="indefinite" path="M400,380 L575,440"/></circle>
+        <circle r="3" fill="#fbbf24" opacity="0.5"><animateMotion dur="2s" begin="1s" repeatCount="indefinite" path="M400,380 L575,440"/></circle>
+        <!-- Bootstrap → Uniswap (blue) -->
+        <circle r="4" fill="#60a5fa" opacity="0.9"><animateMotion dur="3s" repeatCount="indefinite" path="M580,200 L580,318"/></circle>
+        <circle r="4" fill="#60a5fa" opacity="0.5"><animateMotion dur="3s" begin="1.5s" repeatCount="indefinite" path="M580,200 L580,318"/></circle>
+        <!-- Partner → Builder (green) -->
+        <circle r="3" fill="#22c55e" opacity="0.9"><animateMotion dur="2.5s" repeatCount="indefinite" path="M220,380 L80,440"/></circle>
+        <!-- Deployer → Bootstrap (orange) -->
+        <circle r="3" fill="#f97316" opacity="0.7"><animateMotion dur="4s" begin="2s" repeatCount="indefinite" path="M430,80 L580,168"/></circle>
+        <!-- Deployer → LiqReserve (purple) -->
+        <circle r="3" fill="#a78bfa" opacity="0.7"><animateMotion dur="4s" repeatCount="indefinite" path="M370,80 L220,168"/></circle>
+
+        <!-- Legend -->
+        <g transform="translate(20,488)">
+          <circle cx="8" cy="8" r="4" fill="#f97316"/><text x="16" y="12" fill="#9ca3af" font-size="9">Fee flow</text>
+          <circle cx="80" cy="8" r="4" fill="#ef4444"/><text x="88" y="12" fill="#9ca3af" font-size="9">Burn</text>
+          <circle cx="130" cy="8" r="4" fill="#60a5fa"/><text x="138" y="12" fill="#9ca3af" font-size="9">LP</text>
+          <circle cx="165" cy="8" r="4" fill="#22c55e"/><text x="173" y="12" fill="#9ca3af" font-size="9">Rewards</text>
+          <circle cx="230" cy="8" r="4" fill="#a78bfa"/><text x="238" y="12" fill="#9ca3af" font-size="9">Planned</text>
+          <rect x="295" y="4" width="14" height="8" fill="none" stroke="#9ca3af" stroke-width="1" stroke-dasharray="3,2" rx="2"/><text x="313" y="12" fill="#9ca3af" font-size="9">Phase 3</text>
+        </g>
+      </svg>
+    </div>
   </div>
 </section>
 
