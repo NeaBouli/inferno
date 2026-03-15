@@ -1241,12 +1241,7 @@
           On-chain binding governance comes with BootstrapVaultV4 in Phase 3.
         </p>
 
-        <!-- Demo Mode Banner -->
-        <div id="consensus-demo-banner" style="background:rgba(234,179,8,0.12); border:1px solid rgba(234,179,8,0.4); border-radius:8px; padding:12px 16px; margin:16px 0; font-size:13px; color:#eab308;">
-          &#x26A0; Connect your wallet to participate in voting. Public stats are loaded automatically.
-        </div>
-
-        <!-- Stats Row -->
+        <!-- Stats Row (always visible — no wallet needed) -->
         <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:16px; margin:20px 0;">
           <div style="background:var(--card); border:1px solid var(--border); border-radius:10px; padding:16px;">
             <div style="font-size:12px; color:var(--muted); text-transform:uppercase; letter-spacing:0.5px;">Total ETH Contributed</div>
@@ -1294,8 +1289,13 @@
           </div>
         </div>
 
+        <!-- Vote Status Banner -->
+        <div id="consensus-demo-banner" style="background:rgba(234,179,8,0.12); border:1px solid rgba(234,179,8,0.4); border-radius:8px; padding:10px 14px; margin:16px 0 8px 0; font-size:12px; color:#eab308;">
+          &#x1F5F3; Connect wallet and contribute ETH to vote.
+        </div>
+
         <!-- Vote Buttons -->
-        <div style="display:flex; gap:16px; margin:20px 0; flex-wrap:wrap;">
+        <div style="display:flex; gap:16px; margin:8px 0 20px 0; flex-wrap:wrap;">
           <button id="cs-btn-refund" disabled style="flex:1; min-width:140px; padding:14px 24px; border-radius:10px; border:2px solid #ef4444; background:rgba(239,68,68,0.1); color:#ef4444; font-size:15px; font-weight:700; cursor:not-allowed; opacity:0.5; transition:all 0.2s;">
             &#x1F534; Vote Refund
           </button>
@@ -1512,22 +1512,27 @@ var ConsensusModule = {
       listEl.innerHTML = html;
     }
 
-    // Demo banner visibility — hide when wallet connected
+    // Vote banner + button states (stats always visible)
     var banner = document.getElementById('consensus-demo-banner');
-    var walletConnected = typeof IFRWallet !== 'undefined' && IFRWallet.isConnected();
-    if (banner) {
-      if (walletConnected) {
-        banner.style.display = 'none';
-      } else {
-        banner.innerHTML = '&#x26A0; Connect your wallet to participate in voting. Public stats are loaded automatically.';
-        banner.style.display = 'block';
-      }
-    }
-
-    // Buttons — enable when wallet connected
     var btnRefund = document.getElementById('cs-btn-refund');
     var btnFinalise = document.getElementById('cs-btn-finalise');
-    if (walletConnected) {
+    var walletConnected = typeof IFRWallet !== 'undefined' && IFRWallet.isConnected();
+    var cache = walletConnected && typeof IFRState !== 'undefined' ? IFRState.getCache() : null;
+    var myContrib = cache ? parseFloat(cache.bootstrapContributionETH || '0') : 0;
+
+    if (!walletConnected) {
+      // Not connected — show connect prompt, disable buttons
+      if (banner) { banner.innerHTML = '&#x1F5F3; Connect wallet and contribute ETH to vote.'; banner.style.display = 'block'; banner.style.background = 'rgba(234,179,8,0.12)'; banner.style.borderColor = 'rgba(234,179,8,0.4)'; banner.style.color = '#eab308'; }
+      if (btnRefund) { btnRefund.disabled = true; btnRefund.style.opacity = '0.4'; btnRefund.style.cursor = 'not-allowed'; }
+      if (btnFinalise) { btnFinalise.disabled = true; btnFinalise.style.opacity = '0.4'; btnFinalise.style.cursor = 'not-allowed'; }
+    } else if (myContrib <= 0) {
+      // Connected but no contribution — show contribute prompt
+      if (banner) { banner.innerHTML = '&#x26A0; Contribute ETH to the Bootstrap first to unlock voting.'; banner.style.display = 'block'; }
+      if (btnRefund) { btnRefund.disabled = true; btnRefund.style.opacity = '0.4'; btnRefund.style.cursor = 'not-allowed'; }
+      if (btnFinalise) { btnFinalise.disabled = true; btnFinalise.style.opacity = '0.4'; btnFinalise.style.cursor = 'not-allowed'; }
+    } else {
+      // Connected + contributor — enable voting
+      if (banner) banner.style.display = 'none';
       if (btnRefund) { btnRefund.disabled = false; btnRefund.style.opacity = '1'; btnRefund.style.cursor = 'pointer'; }
       if (btnFinalise) { btnFinalise.disabled = false; btnFinalise.style.opacity = '1'; btnFinalise.style.cursor = 'pointer'; }
     }
