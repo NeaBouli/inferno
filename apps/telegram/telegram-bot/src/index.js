@@ -26,7 +26,7 @@ const express  = require('express');
 const { ethers } = require('ethers');
 const {
   getNonce, consumeNonce, setVerified, getUser, isVerified: isUserVerified,
-  hasTopicAccess
+  hasTopicAccess, autoRestoreAll, reverifyFromMap
 } = require('./services/verificationStore');
 const { determineTier } = require('./services/onChainReader');
 
@@ -143,6 +143,12 @@ bot.on('message', async (ctx, next) => {
 
     // 3-Tier check: verified wallet with topic access?
     if (hasTopicAccess(userId, threadId)) return next();
+
+    // Try on-demand re-verify from persistent wallet map (post-restart recovery)
+    if (!isUserVerified(userId)) {
+      const restored = await reverifyFromMap(userId);
+      if (restored && hasTopicAccess(userId, threadId)) return next();
+    }
 
     await ctx.deleteMessage();
     const reason = !isUserVerified(userId)
@@ -285,6 +291,8 @@ setTimeout(() => {
       startVoteAnnouncements(bot);
       scheduleBootstrapAnnouncements(bot);
       startBootstrapListener(bot);
+      // Restore verified users from persistent wallet map (on-chain re-verify)
+      autoRestoreAll().catch(err => logger.error({ err: err.message }, 'Auto-restore failed'));
     })
     .catch((err) => {
       logger.fatal({ err: err.message }, 'Failed to start bot');
