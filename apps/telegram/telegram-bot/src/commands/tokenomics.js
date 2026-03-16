@@ -22,7 +22,7 @@ async function tokenomicsCommand(ctx) {
 • Kein Presale, kein VC-Kapital
 • Team-Tokens vested (kein Dump)
 • Alle Contracts auf Etherscan verifiziert
-• 444 Tests, 91% Branch Coverage
+• 578 Tests, 91% Branch Coverage
 
 🌐 Contract: \`0x77e99917Eca8539c62F509ED1193ac36580A6e7B\``;
 
