@@ -4,7 +4,7 @@ Last updated: March 2026
 
 ## Project Status: MAINNET DEPLOYED
 
-All 14 on-chain components deployed, verified, and operational on Ethereum Mainnet (2026-03-05). BootstrapVault deployed on Sepolia. Landing page, wiki (16 pages), dashboard, and 7 apps live.
+All 14 on-chain components deployed, verified, and operational on Ethereum Mainnet (2026-03-05). BootstrapVault deployed on Sepolia. Landing page, wiki (26 pages), dashboard, and 7 apps live.
 
 ## On-Chain Contracts (10)
 
@@ -93,7 +93,7 @@ Threshold: 2-of-4 (4 active signers). Upgrading to 3-of-5.
 
 ## Documentation
 
-- **25 wiki pages** (HTML, `docs/wiki/`)
+- **26 wiki pages** (HTML, `docs/wiki/`)
 - **40+ technical docs** (Markdown, `docs/*.md`)
 - Landing page (GitHub Pages): `docs/index.html`
 - Domain: [ifrunit.tech](https://ifrunit.tech)

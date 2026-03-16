@@ -7,7 +7,7 @@ async function roadmapCommand(ctx) {
 
 ✅ *Phase 1 — Foundation (abgeschlossen)*
 • 14 Contracts deployed & verifiziert
-• 444 Tests, 91% Branch Coverage
+• 578 Tests, 91% Branch Coverage
 • Governance, Vesting, Lock, Burn
 • Sepolia Testnet vollständig
 

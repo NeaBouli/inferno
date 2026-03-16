@@ -232,6 +232,6 @@ All ownable contracts transferred to Governance (48h Timelock). Parameter change
 |--------|------|
 | Address | [`0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b`](https://etherscan.io/address/0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b) |
 | Network | Ethereum Mainnet |
-| Threshold | 2-of-4 (4 active signers: A.K., M.G., A.M., Y.K.) — upgrading to 3-of-5 |
+| Threshold | 3-of-5 (5 active signers: A.K., M.G., A.M., Y.K., A.P.) |
 | Deployed | 2026-03-04 |
 | Safe URL | [app.safe.global](https://app.safe.global/home?safe=eth:0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b) |

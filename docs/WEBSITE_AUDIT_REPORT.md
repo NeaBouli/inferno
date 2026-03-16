@@ -93,7 +93,7 @@
 
 ### H5: Widget code inconsistency (index.html vs wiki pages)
 
-| Component | `docs/index.html` | `docs/wiki/*.html` (16 pages) |
+| Component | `docs/index.html` | `docs/wiki/*.html` (26 pages) |
 |-----------|-------------------|-------------------------------|
 | Button ID | `ifr-btn` | `ifr-copilot-btn` |
 | Panel ID | `ifr-panel` | `ifr-copilot-window` |
