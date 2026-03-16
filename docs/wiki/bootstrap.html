@@ -1645,7 +1645,10 @@ var ConsensusModule = {
     // Load saved votes from localStorage
     this.loadVotesFromStorage();
 
-    // Fetch totalETH from on-chain for consensus stats
+    // Render immediately with cached votes (don't wait for RPC)
+    this.render();
+
+    // Then fetch totalETH from on-chain and re-render with full data
     if (typeof ethers !== 'undefined') {
       try {
         var rpc = new ethers.providers.JsonRpcProvider('https://ethereum-rpc.publicnode.com');
@@ -1654,10 +1657,8 @@ var ConsensusModule = {
         vault.totalETHRaised().then(function(total) {
           self.state.totalETH = parseFloat(ethers.utils.formatEther(total));
           self.render();
-        }).catch(function() { self.render(); });
-      } catch(e) { self.render(); }
-    } else {
-      this.render();
+        }).catch(function() { /* keep previous render */ });
+      } catch(e) { /* keep previous render */ }
     }
   }
 };
