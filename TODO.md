@@ -117,6 +117,8 @@ Stand: 17.03.2026 | Konsolidiert (Claude + Core Dev)
       POST /api/bootstrap/vote → 403 correct (deployer has 0 contribution)
       On-chain verification working — only actual contributors can vote
       Note: 0.01 ETH contributor is external address, not deployer
+- [x] ✅ Auto-resubmit chains into fetchPublicVotes (17.03.2026)
+      resubmit → Promise.all → fetchPublicVotes → render
 - [x] ✅ Bootstrap Contribution Listener Bot (16.03.2026)
 - [x] ✅ wallet-guide.html — 27. Wiki-Seite (16.03.2026)
 - [x] ✅ Wiki Sidebar Navigation neu geordnet — 6 Sektionen (17.03.2026)
