@@ -1242,6 +1242,10 @@
       <div id="consensus-module" style="margin-top:40px;">
 
         <h2>Community Consensus</h2>
+        <div id="ifr-debug-panel" style="background:#1a0000;border:2px solid #ff4444;border-radius:8px;padding:12px;margin:16px 0;font-family:monospace;font-size:11px;color:#ffcc99;">
+          <strong style="color:#ff4444">DEBUG (temp)</strong>
+          <pre id="ifr-debug-output" style="margin:4px 0;white-space:pre-wrap;">Loading...</pre>
+        </div>
         <p style="color:#64748b; font-size:13px; max-width:680px;">
           This is a sentiment indicator, not a binding on-chain vote.
           The team commits to following the community consensus.
@@ -1402,6 +1406,14 @@
 
 <!-- Consensus Module Script -->
 <script>
+function updateDebug(msg) {
+  var el = document.getElementById('ifr-debug-output');
+  if (el) {
+    if (el.textContent === 'Loading...') el.textContent = '';
+    el.textContent += new Date().toLocaleTimeString() + ' ' + msg + '\n';
+  }
+}
+
 var ConsensusModule = {
   config: {
     walletConnectActive: false,
@@ -1456,6 +1468,8 @@ var ConsensusModule = {
 
   render: function() {
     var s = this.state;
+    var walletStatus = typeof IFRWallet !== 'undefined' ? (IFRWallet.isConnected() ? 'connected' : 'disconnected') : 'N/A';
+    updateDebug('render() — votedETH=' + s.votedETH + ' totalETH=' + s.totalETH + ' wallet=' + walletStatus);
     var participation = s.totalETH > 0 ? (s.votedETH / s.totalETH) * 100 : 0;
     var konsens = this.calcKonsensScore(s.finaliseETH, s.votedETH);
     var widerstand = this.calcWiderstandsIndex(s.votedETH, s.totalETH);
@@ -1627,9 +1641,11 @@ var ConsensusModule = {
 
   fetchPublicVotes: function() {
     var self = this;
+    updateDebug('fetchPublicVotes() called');
     fetch('https://ifr-ai-copilot-production.up.railway.app/api/bootstrap/votes')
       .then(function(r) { return r.json(); })
       .then(function(data) {
+        updateDebug('Railway response: ' + JSON.stringify(data));
         var publicVoted = parseFloat(data.totalVoted || '0');
         var publicFinalise = parseFloat(data.finaliseETH || '0');
         var publicRefund = parseFloat(data.refundETH || '0');
@@ -1652,7 +1668,27 @@ var ConsensusModule = {
         self.render();
         if (typeof loadSavedVotes === 'function') loadSavedVotes();
       })
-      .catch(function() { /* silent — localStorage data remains */ });
+      .catch(function(e) { updateDebug('Railway FETCH ERROR: ' + e.message); });
+  },
+
+  resubmitLocalVotesToRailway: function() {
+    // Backfill: re-submit localStorage votes to Railway
+    // Ensures Railway has votes even after restart
+    var votes = [];
+    try { votes = JSON.parse(localStorage.getItem('ifr_votes') || '[]'); } catch(e) {}
+    if (votes.length === 0) { updateDebug('No local votes to re-submit'); return; }
+    updateDebug('Re-submitting ' + votes.length + ' local vote(s) to Railway');
+    votes.forEach(function(v) {
+      if (v.addr && v.type) {
+        fetch('https://ifr-ai-copilot-production.up.railway.app/api/bootstrap/vote', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ wallet: v.addr, vote: v.type })
+        }).then(function(r) { return r.json(); })
+          .then(function(d) { updateDebug('Re-submit ' + (v.addr||'').slice(0,8) + ': ' + JSON.stringify(d)); })
+          .catch(function(e) { updateDebug('Re-submit error: ' + e.message); });
+      }
+    });
   },
 
   loadVotesFromStorage: function() {
@@ -1684,13 +1720,19 @@ var ConsensusModule = {
     if (btnFinalise) btnFinalise.addEventListener('click', function() { self.submitVote('finalise'); });
 
     // Load saved votes from localStorage
+    updateDebug('init() — loading localStorage votes: ' + (localStorage.getItem('ifr_votes') || 'null'));
     this.loadVotesFromStorage();
+    updateDebug('init() — state after load: votedETH=' + this.state.votedETH + ' votes=' + this.state.votes.length);
 
     // Render immediately with cached votes (don't wait for RPC)
     this.render();
 
-    // Fetch public vote aggregation from Railway
-    this.fetchPublicVotes();
+    // Re-submit localStorage votes to Railway (backfill after Railway restart)
+    this.resubmitLocalVotesToRailway();
+
+    // Fetch public vote aggregation from Railway (after brief delay for re-submit)
+    var self2 = this;
+    setTimeout(function() { self2.fetchPublicVotes(); }, 2000);
 
     // Then fetch totalETH from on-chain and re-render with full data
     if (typeof ethers !== 'undefined') {
