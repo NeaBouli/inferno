@@ -72,6 +72,54 @@ Stand: 08.03.2026 | Konsolidiert (Claude + Core Dev)
 21. **AI Copilot Update** — Plan B Bootstrap info geupdated (Commit 879f4b55, Railway deployed)
 22. Uniswap Link aktivieren — NUR wenn LP live
 
+## MITTEL — Wiki: Wallet & Contract Transparency Manual
+
+28. **NEW WIKI PAGE: Wallet & Contract Transparency Manual**
+    Datei: `docs/wiki/wallet-guide.html` (Basis: vesting.html klonen)
+
+    **TEIL 1 — PROJECT WALLETS** (Cards, blau)
+    Fuer jede Wallet: Name, Adresse, Rolle, Genesis-Balance, aktuelle Funktion, Interaktion mit Ecosystem, Access Control
+    1. Deployer EOA (`0x6b36...`) — LP Reserve
+    2. Treasury Safe (`0x5ad6...`) — Multisig 3-of-5
+    3. Community Safe (`0xaC56...`) — Multisig 3-of-5
+    4. Team Beneficiary (`0x04FA...`) — Vesting Empfaenger
+    5. Voucher Signer (`0x17F8...`) — FeeRouter Voucher
+    6. Community EOA (`0x61aF...`) — migriert zu Safe
+    7. Treasury EOA (`0xC8f4...`) — migriert zu Safe
+
+    **TEIL 2 — SMART CONTRACTS** (Cards, orange)
+    Fuer jeden Contract: Adresse, Owner, Funktion, Flows ein/aus, feeExempt Status, Phase, Etherscan Link
+    1. InfernoToken (`0x77e9...`) — ERC-20, Fee-on-transfer
+    2. Governance (`0xc43d...`) — 48h Timelock
+    3. IFRLock (`0x7699...`) — Lock/Unlock Mechanismus
+    4. BootstrapVaultV3 (`0xf725...`) — Community LP Launch
+    5. LiquidityReserve (`0xdc03...`) — Locked bis 01.09.2026
+    6. Vesting (`0x2694...`) — Team Allocation 4 Jahre
+    7. PartnerVault (`0xc6eb...`) — Builder Rewards
+    8. FeeRouterV1 (`0x4807...`) — Pool Fee Akkumulation
+    9. BuybackVault (`0x670D...`) — Phase 3 Buyback
+    10. BurnReserve (`0xaA14...`) — Permanente Burns
+    11. Treasury Safe (Gnosis) — Multisig Treasury
+    12. Community Safe (Gnosis) — Multisig Community
+
+    **UPCOMING (Phase 3-4)** (Cards, grau)
+    13. LiquidityVault.sol — Deploy nach 05.06.2026
+    14. BuilderRegistry.sol — Sepolia pending
+    15. RatVoting.sol — Phase 4 DAO
+    16. ForumVoting.sol — Phase 4 DAO
+    17. IFRSpamProtection.sol — Phase 4 DAO
+
+    **DESIGN:**
+    - Cards pro Wallet/Contract (wie Genesis Kacheln)
+    - Color coding: Wallets (blau), Contracts (orange), Upcoming (grau)
+    - Ecosystem Flow Diagram (SVG inline)
+    - Jede Card: Icon, Name, Adresse (copy button), Status Badge, Beschreibung, Etherscan Link
+    - Mobile-friendly
+
+    **LANDING PAGE BUTTONS:**
+    A) Unter "Genesis & Project Wallets" Kacheln: `[→ Full Wallet & Contract Guide]` → `/wiki/wallet-guide.html`
+    B) Unter Contract Addresses neben "Upcoming Contracts (Phase 3-4)": `[→ Wallet & Contract Guide]` → `/wiki/wallet-guide.html`
+
 ## MITTEL — Infrastruktur
 
 23. Repo-Maintainer rekrutieren (2-3 Personen)
