@@ -1,0 +1,1310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+    <link rel="canonical" href="https://ifrunit.tech/wiki/wallet-guide.html">  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wallet &amp; Contract Guide &mdash; Inferno ($IFR) Documentation</title>
+  <meta name="description" content="Complete reference for all 7 wallets and 12 smart contracts in the IFR ecosystem. Addresses, roles, access control, feeExempt status.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    /* ============================================================
+       Inferno Wiki — Shared Styles (copy into every wiki page)
+       ============================================================ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #0a0a0a;
+      --card:     #111113;
+      --border:   #222225;
+      --text:     #e8e8ed;
+      --muted:    #8a8a96;
+      --accent:   #ff4500;
+      --green:    #22c55e;
+      --sidebar-w: 240px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    /* ---------- Layout (CSS Grid) ---------- */
+    .layout {
+      display: grid;
+      grid-template-columns: var(--sidebar-w) 1fr;
+      min-height: 100vh;
+    }
+
+    /* ---------- Sidebar ---------- */
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: var(--sidebar-w);
+      height: 100vh;
+      background: var(--card);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      padding: 24px 0;
+      overflow-y: auto;
+      z-index: 100;
+      transition: transform 0.3s ease;
+    }
+
+    .sidebar-logo {
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: 3px;
+      color: var(--accent);
+      padding: 0 24px 4px;
+      text-decoration: none;
+      display: block;
+    }
+
+    .sidebar-subtitle {
+      font-size: 12px;
+      color: var(--muted);
+      padding: 0 24px 24px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .sidebar-nav {
+      list-style: none;
+      padding: 16px 0;
+      flex: 1;
+    }
+
+    .sidebar-nav li {}
+
+    .sidebar-nav a {
+      display: block;
+      padding: 10px 24px;
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      transition: color 0.2s, background 0.2s, border-left 0.2s;
+      border-left: 3px solid transparent;
+    }
+
+    .sidebar-nav a:hover {
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .sidebar-nav a.active {
+      color: var(--accent);
+      border-left-color: var(--accent);
+      background: rgba(255, 69, 0, 0.06);
+    }
+
+    .sidebar-nav .nav-divider {
+      height: 1px;
+      background: var(--border);
+      margin: 12px 24px;
+    }
+
+    .sidebar-nav .nav-back a {
+      font-size: 13px;
+      color: var(--muted);
+      opacity: 0.7;
+    }
+
+    .sidebar-nav .nav-back a:hover {
+      opacity: 1;
+      color: var(--text);
+    }
+
+    /* ---------- Hamburger (mobile) ---------- */
+    .hamburger {
+      display: none;
+      position: fixed;
+      top: 16px;
+      left: 16px;
+      z-index: 200;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 12px;
+      cursor: pointer;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .hamburger span {
+      display: block;
+      width: 22px;
+      height: 2px;
+      background: var(--text);
+      border-radius: 2px;
+      transition: transform 0.3s, opacity 0.3s;
+    }
+
+    .hamburger.open span:nth-child(1) { transform: rotate(45deg) translate(5px, 5px); }
+    .hamburger.open span:nth-child(2) { opacity: 0; }
+    .hamburger.open span:nth-child(3) { transform: rotate(-45deg) translate(5px, -5px); }
+
+    .sidebar-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.6);
+      z-index: 90;
+    }
+
+    /* ---------- Main content ---------- */
+    .main {
+      grid-column: 2;
+      padding: 48px 56px;
+      max-width: 960px;
+    }
+
+    .main h1 {
+      font-size: 32px;
+      font-weight: 800;
+      margin-bottom: 8px;
+      color: var(--text);
+    }
+
+    .main h1 .accent {
+      color: var(--accent);
+    }
+
+    .main h2 {
+      font-size: 22px;
+      font-weight: 700;
+      margin: 40px 0 16px;
+      color: var(--text);
+    }
+
+    .main h3 {
+      font-size: 18px;
+      font-weight: 600;
+      margin: 32px 0 12px;
+      color: var(--text);
+    }
+
+    .main p {
+      color: var(--muted);
+      margin-bottom: 16px;
+      font-size: 15px;
+      max-width: 680px;
+    }
+
+    .main a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    .main a:hover {
+      text-decoration: underline;
+    }
+
+    .subtitle {
+      font-size: 16px;
+      color: var(--muted);
+      margin-bottom: 32px;
+    }
+
+    /* ---------- Code blocks ---------- */
+    pre {
+      background: #1a1a1d;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px 20px;
+      overflow-x: auto;
+      font-size: 13px;
+      line-height: 1.7;
+      margin: 16px 0;
+      color: var(--text);
+    }
+
+    code {
+      font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+      font-size: 13px;
+      color: var(--text);
+    }
+
+    p code, li code, td code {
+      background: rgba(255, 255, 255, 0.06);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 13px;
+    }
+
+    /* ---------- Tables ---------- */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0;
+      font-size: 14px;
+    }
+
+    th, td {
+      text-align: left;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    th {
+      color: var(--muted);
+      font-weight: 600;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    td { color: var(--text); }
+
+    tr:hover td { background: rgba(255, 255, 255, 0.02); }
+
+    /* ---------- Lists ---------- */
+    .main ul, .main ol {
+      padding-left: 24px;
+      margin-bottom: 16px;
+    }
+
+    .main li {
+      color: var(--muted);
+      font-size: 14px;
+      margin-bottom: 6px;
+    }
+
+    /* ---------- Callout ---------- */
+    .callout {
+      background: rgba(255, 69, 0, 0.06);
+      border-left: 3px solid var(--accent);
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 20px 0;
+    }
+
+    .callout p {
+      color: var(--text);
+      margin: 0;
+      font-size: 14px;
+    }
+
+    .callout-green {
+      background: rgba(34, 197, 94, 0.06);
+      border-left-color: var(--green);
+    }
+
+    /* ---------- Address ---------- */
+    .address {
+      font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+      font-size: 12px;
+      color: var(--muted);
+      word-break: break-all;
+    }
+
+    /* ---------- Footer ---------- */
+    .wiki-footer {
+      margin-top: 64px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    /* ---------- Responsive ---------- */
+    @media (max-width: 768px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        transform: translateX(-100%);
+      }
+
+      .sidebar.open {
+        transform: translateX(0);
+      }
+
+      .sidebar-overlay.open {
+        display: block;
+      }
+
+      .hamburger {
+        display: flex;
+      }
+
+      .main {
+        grid-column: 1;
+        padding: 72px 20px 40px;
+      }
+
+      table {
+        font-size: 13px;
+      }
+
+      th, td {
+        padding: 10px 12px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .main h1 {
+        font-size: 26px;
+      }
+    }
+    /* ============================================================
+    @keyframes pulse-bootstrap { 0% { color: #ef4444; text-shadow: 0 0 8px rgba(239,68,68,0.8); } 50% { color: #22c55e; text-shadow: 0 0 12px rgba(34,197,94,0.9); } 100% { color: #ef4444; text-shadow: 0 0 8px rgba(239,68,68,0.8); } } .nav-bootstrap-pulse { animation: pulse-bootstrap 2s ease-in-out infinite; font-weight: 700 !important; }       End Shared Styles
+       ============================================================ */
+
+    /* ---------- Wallet Guide Cards ---------- */
+    .wg-stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:12px; margin:24px 0 32px; }
+    .wg-stat { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:18px; text-align:center; }
+    .wg-stat-val { font-size:24px; font-weight:800; color:var(--accent); }
+    .wg-stat-lbl { font-size:12px; color:var(--muted); margin-top:4px; }
+
+    /* Tab nav */
+    .wg-tabs { display:flex; gap:8px; margin:32px 0 24px; position:sticky; top:52px; z-index:50; background:var(--bg); padding:12px 0; border-bottom:1px solid var(--border); flex-wrap:wrap; }
+    .wg-tab { padding:8px 18px; border-radius:8px; font-size:13px; font-weight:600; color:var(--muted); background:var(--card); border:1px solid var(--border); text-decoration:none; transition:all 0.2s; cursor:pointer; white-space:nowrap; }
+    .wg-tab:hover { color:var(--text); border-color:var(--accent); text-decoration:none; }
+
+    /* Entity cards */
+    .wg-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(340px,1fr)); gap:16px; margin:20px 0 40px; }
+    .wg-card { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:20px; transition:border-color 0.2s; }
+    .wg-card:hover { border-color:rgba(255,69,0,0.3); }
+    .wg-card-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+    .wg-card-name { font-size:15px; font-weight:700; display:flex; align-items:center; gap:8px; }
+    .wg-badge { font-size:10px; font-weight:700; padding:3px 10px; border-radius:20px; white-space:nowrap; }
+    .wg-badge-active { background:rgba(255,69,0,0.12); color:var(--accent); }
+    .wg-badge-multisig { background:rgba(59,130,246,0.12); color:#3b82f6; }
+    .wg-badge-locked { background:rgba(107,114,128,0.12); color:#9ca3af; }
+    .wg-badge-migrated { background:rgba(34,197,94,0.12); color:var(--green); }
+    .wg-badge-signer { background:rgba(168,85,247,0.12); color:#a855f7; }
+    .wg-badge-core { background:rgba(255,69,0,0.12); color:var(--accent); }
+    .wg-badge-timelock { background:rgba(59,130,246,0.12); color:#3b82f6; }
+    .wg-badge-live { background:rgba(34,197,94,0.12); color:var(--green); }
+    .wg-badge-fee { background:rgba(234,179,8,0.12); color:#eab308; }
+    .wg-badge-burn { background:rgba(239,68,68,0.12); color:#ef4444; }
+    .wg-badge-upcoming { background:rgba(107,114,128,0.1); color:#6b7280; border:1px dashed #374151; }
+    .wg-addr-row { display:flex; align-items:center; gap:8px; margin:8px 0; }
+    .wg-addr { font-family:'SF Mono','Fira Code',monospace; font-size:11px; color:var(--muted); word-break:break-all; }
+    .wg-addr-link { color:var(--muted); text-decoration:none; }
+    .wg-addr-link:hover { color:var(--accent); }
+    .wg-copy-btn { background:none; border:1px solid var(--border); border-radius:4px; padding:2px 8px; font-size:10px; color:var(--muted); cursor:pointer; transition:all 0.2s; white-space:nowrap; }
+    .wg-copy-btn:hover { border-color:var(--accent); color:var(--accent); }
+    .wg-es-btn { background:none; border:1px solid var(--border); border-radius:4px; padding:2px 8px; font-size:10px; color:var(--muted); cursor:pointer; transition:all 0.2s; text-decoration:none; white-space:nowrap; }
+    .wg-es-btn:hover { border-color:var(--accent); color:var(--accent); }
+    .wg-field { margin:6px 0; font-size:13px; color:var(--muted); line-height:1.6; }
+    .wg-field strong { color:var(--text); font-weight:600; }
+    .wg-role-box { background:rgba(255,255,255,0.02); border:1px solid var(--border); border-radius:8px; padding:10px 12px; margin:10px 0; font-size:12px; color:var(--muted); line-height:1.6; }
+    .wg-fee-status { display:inline-flex; align-items:center; gap:4px; font-size:11px; font-weight:600; padding:2px 8px; border-radius:4px; }
+    .wg-fee-yes { background:rgba(34,197,94,0.1); color:var(--green); }
+    .wg-fee-pending { background:rgba(239,68,68,0.1); color:#ef4444; }
+
+    /* Upcoming cards - dashed */
+    .wg-card-upcoming { border-style:dashed; border-color:#374151; }
+    .wg-card-upcoming:hover { border-color:rgba(107,114,128,0.5); }
+
+    /* Flow diagram */
+    .wg-flow-wrap { max-width:800px; margin:20px auto; background:rgba(13,17,23,0.8); border:1px solid #1e2730; border-radius:16px; padding:20px; overflow:hidden; }
+
+    @media (max-width:768px) {
+      .wg-grid { grid-template-columns:1fr; }
+      .wg-stats { grid-template-columns:repeat(2,1fr); }
+      .wg-tabs { gap:6px; }
+      .wg-tab { padding:6px 12px; font-size:12px; }
+    }
+    @media (max-width:480px) {
+      .wg-stats { grid-template-columns:1fr 1fr; }
+    }
+  </style>
+  <link rel="icon" type="image/png" href="../assets/ifr_icon_64.png">
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="Inferno Protocol">
+  <meta property="og:title" content="Wallet &amp; Contract Guide &mdash; Inferno Protocol ($IFR)">
+  <meta property="og:description" content="Complete reference for all 7 wallets and 12 smart contracts in the IFR ecosystem. Addresses, roles, access control, feeExempt status.">
+  <meta property="og:url" content="https://ifrunit.tech/wiki/wallet-guide.html">
+  <meta property="og:image" content="https://ifrunit.tech/assets/ifr_icon_256.png">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Wallet &amp; Contract Guide &mdash; Inferno Protocol ($IFR)">
+  <meta name="twitter:description" content="Complete reference for all 7 wallets and 12 smart contracts in the IFR ecosystem. Addresses, roles, access control, feeExempt status.">
+  <meta name="twitter:site" content="@IFRtoken">
+  <meta name="twitter:image" content="https://ifrunit.tech/assets/ifr_icon_256.png">  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "headline": "Wallet & Contract Transparency Guide",
+    "description": "Complete reference for all 7 project wallets, 12 deployed smart contracts, and 7 upcoming contracts in the Inferno ($IFR) ecosystem.",
+    "url": "https://ifrunit.tech/wiki/wallet-guide.html",
+    "isPartOf": {"@id": "https://ifrunit.tech/#website"},
+    "publisher": {"@id": "https://ifrunit.tech/#organization"},
+    "about": {"@id": "https://ifrunit.tech/#app"}
+  }
+  </script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"
+  onerror="var s=document.createElement('script');s.src='https://unpkg.com/ethers@5.7.2/dist/ethers.umd.min.js';document.head.appendChild(s);"></script>
+<script src="../assets/wallet-core.js"></script>
+<script src="../assets/ifr-state.js"></script>
+</head>
+<body>
+
+  <!-- Hamburger button (mobile only) -->
+  <button class="hamburger" id="hamburger" aria-label="Toggle navigation">
+    <span></span>
+    <span></span>
+    <span></span>
+  </button>
+
+  <!-- Overlay (mobile only) -->
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <div class="layout">
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <a href="index.html" class="sidebar-logo">INFERNO</a>
+      <div class="sidebar-subtitle">Documentation</div>
+      <ul class="sidebar-nav">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="one-pager.html">One Pager</a></li>
+        <li><a href="fair-launch.html">Fair Launch</a></li>
+        <li><a href="tokenomics.html">Tokenomics</a></li>
+        <li><a href="protocol-plan.html">Protocol Plan</a></li>
+        <li><a href="lock-mechanism.html">Lock Mechanism</a></li>
+        <li><a href="roadmap.html">Roadmap</a></li>
+        <li><a href="bootstrap.html" class="nav-bootstrap-pulse">&#x1F525; Bootstrap Event</a></li>
+        <li><a href="faq.html">FAQ</a></li>
+        <li><a href="governance.html">Governance</a></li>
+        <li><a href="dao-governance.html">DAO Governance</a></li>
+        <li><a href="multisig.html">Multisig Policy</a></li>
+        <li><a href="vesting.html">Vesting Schedule</a></li>
+        <li><a href="transparency.html">Transparency</a></li>
+        <li><a href="wallet-guide.html" class="active">Wallet &amp; Contract Guide</a></li>
+        <li><a href="fee-design.html">Fee Design</a></li>
+        <li><a href="security.html">Security</a></li>
+        <li><a href="contracts.html">Smart Contracts</a></li>
+        <li><a href="deployment.html">Deployment</a></li>
+        <li><a href="testnet.html">Testnet</a></li>
+        <li><a href="mainnet-checklist.html">Mainnet Checklist</a></li>
+        <li><a href="integration.html">Integration Guide</a></li>
+        <li><a href="agent.html">AI Copilot</a></li>
+        <li><a href="verify.html">&#x1F510; Verify Wallet</a></li>
+        <li><a href="business-onboarding.html">Business Onboarding</a></li>
+        <li><a href="contributing.html">Contributing</a></li>
+        <li><a href="press-kit.html">Press Kit</a></li>
+        <li><a href="../index.html">&larr; Back to Website</a></li>
+      </ul>
+    </aside>
+
+    <!-- Main content -->
+    <main class="main">
+      <!-- Wallet Top Bar -->
+      <div id="wiki-wallet-bar" style="position:sticky;top:0;z-index:100;background:rgba(10,10,10,0.95);backdrop-filter:blur(12px);border-bottom:1px solid #1f2937;padding:10px 20px;display:flex;justify-content:space-between;align-items:center;margin:-32px -40px 24px -40px;">
+        <a href="../index.html" style="color:#f97316;font-weight:700;text-decoration:none;font-size:0.9rem;">&larr; Inferno</a>
+        <div id="wiki-wallet-wrap" style="position:relative;">
+          <button id="lp-header-connect-btn" onclick="lpConnect()" style="display:inline-flex;align-items:center;gap:7px;padding:8px 16px;border:1.5px solid #f97316;background:transparent;color:#f97316;font-family:'Orbitron',sans-serif;font-size:0.72rem;letter-spacing:.8px;border-radius:6px;cursor:pointer;white-space:nowrap;transition:all .2s;position:relative;flex-shrink:0;margin-left:16px;">&#x1F98A; Connect</button>
+          <div id="lp-header-connected" style="display:none;">
+            <div style="background:rgba(34,197,94,0.15);border:1px solid rgba(34,197,94,0.4);border-radius:8px;padding:5px 8px;cursor:pointer;display:flex;align-items:center;gap:6px;max-width:100px;white-space:nowrap;overflow:hidden;" onclick="lpToggleDropdown()">
+              <span id="lp-header-addr" style="color:#22c55e;font-family:monospace;font-size:0.72rem;font-weight:600;"></span>
+
+            </div>
+          </div>
+          <div id="lp-header-dropdown" style="display:none;position:fixed;background:#111827;border:1px solid #374151;border-radius:12px;padding:16px;width:280px;max-width:calc(100vw - 24px);z-index:9999;box-shadow:0 8px 32px rgba(0,0,0,0.6);">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+              <span style="color:#6b7280;font-size:0.75rem;">Wallet</span>
+              <button onclick="lpCloseDropdown()" style="background:none;border:none;color:#6b7280;cursor:pointer;font-size:1.1rem;line-height:1;padding:2px 6px;border-radius:4px;" title="Close">&#x2715;</button>
+            </div>
+            <div style="margin-bottom:12px;">
+              <div id="lp-drop-addr" style="color:#22c55e;font-family:monospace;font-size:0.78rem;font-weight:600;word-break:break-all;"></div>
+            </div>
+            <div style="display:flex;gap:8px;margin-bottom:12px;">
+              <div style="flex:1;background:#1f2937;border-radius:8px;padding:8px;text-align:center;">
+                <div style="color:#9ca3af;font-size:0.7rem;">ETH</div>
+                <div id="lp-drop-eth" style="color:#e5e7eb;font-weight:700;font-size:0.85rem;"></div>
+              </div>
+              <div style="flex:1;background:#1f2937;border-radius:8px;padding:8px;text-align:center;">
+                <div style="color:#9ca3af;font-size:0.7rem;">IFR</div>
+                <div id="lp-drop-ifr" style="color:#f97316;font-weight:700;font-size:0.85rem;"></div>
+              </div>
+            </div>
+            <div id="lp-drop-lock" style="display:none;background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.3);border-radius:8px;padding:8px 10px;margin-bottom:10px;text-align:center;">
+              <span style="color:#fbbf24;font-size:0.78rem;font-weight:600;">&#x26A1; Premium</span>
+            </div>
+            <div id="lp-drop-nolock" style="background:rgba(107,114,128,0.1);border:1px solid #374151;border-radius:8px;padding:8px 10px;margin-bottom:10px;text-align:center;">
+              <span style="color:#9ca3af;font-size:0.78rem;">Lock &#x2265;1,000 IFR &#x2192; </span>
+              <a href="lock-mechanism.html" style="color:#f97316;font-size:0.78rem;">Premium &#x2197;</a>
+            </div>
+            <div style="display:flex;gap:8px;">
+              <a href="bootstrap.html" style="flex:1;text-align:center;padding:8px;background:#f97316;color:white;border-radius:8px;font-size:0.78rem;font-weight:600;text-decoration:none;">&#x1F525; Bootstrap</a>
+              <button onclick="lpDisconnect()" style="flex:1;background:#374151;color:#9ca3af;border:none;border-radius:8px;padding:8px;cursor:pointer;font-size:0.78rem;">Disconnect</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+
+      <!-- ========== Hero ========== -->
+      <h1><span class="accent">Wallet &amp; Contract</span> Guide</h1>
+      <p class="subtitle">Every wallet and smart contract in the IFR ecosystem &mdash; explained. From genesis to Phase 4.</p>
+
+      <!-- ========== Stats Bar ========== -->
+      <div class="wg-stats">
+        <div class="wg-stat">
+          <div class="wg-stat-val">7</div>
+          <div class="wg-stat-lbl">Wallets</div>
+        </div>
+        <div class="wg-stat">
+          <div class="wg-stat-val">12</div>
+          <div class="wg-stat-lbl">Contracts</div>
+        </div>
+        <div class="wg-stat">
+          <div class="wg-stat-val">7</div>
+          <div class="wg-stat-lbl">Upcoming</div>
+        </div>
+        <div class="wg-stat">
+          <div class="wg-stat-val">3-of-5</div>
+          <div class="wg-stat-lbl">Multisig</div>
+        </div>
+      </div>
+
+      <!-- ========== Tab Navigation ========== -->
+      <div class="wg-tabs">
+        <a href="#wallets" class="wg-tab">&#x1F45B; Wallets</a>
+        <a href="#contracts" class="wg-tab">&#x26D3; Contracts</a>
+        <a href="#upcoming" class="wg-tab">&#x1F52E; Upcoming</a>
+        <a href="#flow" class="wg-tab">&#x1F504; Ecosystem Flow</a>
+      </div>
+
+      <!-- ================================================================
+           SECTION 1 — PROJECT WALLETS
+           ================================================================ -->
+      <h2 id="wallets">&#x1F45B; Project Wallets</h2>
+      <p>All 7 wallets that hold or interact with IFR tokens. Active wallets manage protocol operations; historical wallets were used during migration to multisig infrastructure.</p>
+
+      <div class="wg-grid">
+
+        <!-- WALLET 1 — Deployer EOA -->
+        <div class="wg-card">
+          <div class="wg-card-head">
+            <div class="wg-card-name">&#x1F680; Deployer EOA</div>
+            <span class="wg-badge wg-badge-active">Active</span>
+          </div>
+          <div class="wg-addr-row">
+            <span class="wg-addr"><a href="https://etherscan.io/address/0x6b36687b0cd4386fb14cf565B67D7862110Fed67" target="_blank" class="wg-addr-link">0x6b36687b0cd4386fb14cf565B67D7862110Fed67</a></span>
+            <button class="wg-copy-btn" data-addr="0x6b36687b0cd4386fb14cf565B67D7862110Fed67">Copy</button>
+            <a href="https://etherscan.io/address/0x6b36687b0cd4386fb14cf565B67D7862110Fed67" target="_blank" class="wg-es-btn">Etherscan</a>
+          </div>
+          <div class="wg-field"><strong>Genesis Balance:</strong> 1,000,000,000 IFR (100% &mdash; then distributed)</div>
+          <div class="wg-field"><strong>Current Role:</strong> Holds 400M IFR reserved for Uniswap V2 LP pairing via <code>BootstrapVaultV3.finalise()</code></div>
+          <div class="wg-role-box">
+            <strong>Ecosystem Role:</strong> Receives all genesis IFR, distributes to all protocol wallets and contracts at deploy. Post-deploy: passive LP reserve holder until Bootstrap <code>finalise()</code> creates the Uniswap pair.
+          </div>
+          <div class="wg-field"><strong>Access Control:</strong> Single EOA &mdash; Governance Owner (Proposal #8 pending: transfer to Treasury Safe)</div>
+          <div class="wg-field"><strong>feeExempt:</strong> <span class="wg-fee-status wg-fee-pending">&#x23F3; PENDING (Proposal #7)</span></div>
+        </div>
+
+        <!-- WALLET 2 — Treasury Safe -->
+        <div class="wg-card">
+          <div class="wg-card-head">
+            <div class="wg-card-name">&#x1F3DB;&#xFE0F; Treasury Safe</div>
+            <span class="wg-badge wg-badge-multisig">Multisig 3-of-5</span>
+          </div>
+          <div class="wg-addr-row">
+            <span class="wg-addr"><a href="https://etherscan.io/address/0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b" target="_blank" class="wg-addr-link">0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b</a></span>
+            <button class="wg-copy-btn" data-addr="0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b">Copy</button>
+            <a href="https://etherscan.io/address/0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b" target="_blank" class="wg-es-btn">Etherscan</a>
+          </div>
+          <div class="wg-field"><strong>Genesis Balance:</strong> 150,000,000 IFR (15%)</div>
+          <div class="wg-field"><strong>Current Role:</strong> Protocol treasury. Funded Bootstrap Plan B (144.75M IFR). Remaining ~5.25M operating reserve.</div>
+          <div class="wg-role-box">
+            <strong>Ecosystem Role:</strong> Controls protocol development spend. All transactions require 3-of-5 multisig approval. Will receive Governance ownership after Proposal #8.
+          </div>
+          <div class="wg-field"><strong>Access Control:</strong> Gnosis Safe &mdash; 3-of-5 (A.K./M.G./A.M./Y.K./A.P.) active since 15.03.2026</div>
+          <div class="wg-field"><strong>feeExempt:</strong> <span class="wg-fee-status wg-fee-pending">&#x23F3; PENDING (Proposal #8)</span></div>
+        </div>
+
+        <!-- WALLET 3 — Community Safe -->
+        <div class="wg-card">
+          <div class="wg-card-head">
+            <div class="wg-card-name">&#x1F465; Community Safe</div>
+            <span class="wg-badge wg-badge-multisig">Multisig 3-of-5</span>
+          </div>
+          <div class="wg-addr-row">
+            <span class="wg-addr"><a href="https://etherscan.io/address/0xaC5687547B2B21d80F8fd345B51e608d476667C7" target="_blank" class="wg-addr-link">0xaC5687547B2B21d80F8fd345B51e608d476667C7</a></span>
+            <button class="wg-copy-btn" data-addr="0xaC5687547B2B21d80F8fd345B51e608d476667C7">Copy</button>
+            <a href="https://etherscan.io/address/0xaC5687547B2B21d80F8fd345B51e608d476667C7" target="_blank" class="wg-es-btn">Etherscan</a>
+          </div>
+          <div class="wg-field"><strong>Genesis Balance:</strong> 57,900,000 IFR (received after 2.1M burn)</div>
+          <div class="wg-field"><strong>Current Role:</strong> 50M sent to Bootstrap Plan B. ~7.9M permanent Community Operations Reserve.</div>
+          <div class="wg-role-box">
+            <strong>Ecosystem Role:</strong> Bug bounties, grants, ecosystem incentives, DAO seed funding. All spends publicly announced.
+          </div>
+          <div class="wg-field"><strong>Access Control:</strong> Gnosis Safe &mdash; 3-of-5 active</div>
+          <div class="wg-field"><strong>feeExempt:</strong> <span class="wg-fee-status wg-fee-pending">&#x23F3; PENDING (Proposal #9)</span></div>
+        </div>
+
+        <!-- WALLET 4 — Team Beneficiary -->
+        <div class="wg-card">
+          <div class="wg-card-head">
+            <div class="wg-card-name">&#x23F3; Team Beneficiary</div>
+            <span class="wg-badge wg-badge-locked">Vesting &mdash; Locked</span>
+          </div>
+          <div class="wg-addr-row">
+            <span class="wg-addr"><a href="https://etherscan.io/address/0x04FABC52c51d1F8ced6974E7C25a34249b1E6239" target="_blank" class="wg-addr-link">0x04FABC52c51d1F8ced6974E7C25a34249b1E6239</a></span>
+            <button class="wg-copy-btn" data-addr="0x04FABC52c51d1F8ced6974E7C25a34249b1E6239">Copy</button>
+            <a href="https://etherscan.io/address/0x04FABC52c51d1F8ced6974E7C25a34249b1E6239" target="_blank" class="wg-es-btn">Etherscan</a>
+          </div>
+          <div class="wg-field"><strong>Genesis Balance:</strong> 0 IFR (receives from Vesting Contract)</div>
+          <div class="wg-field"><strong>Current Role:</strong> Designated beneficiary of the Vesting Contract. Core Developer acting as trustee for entire team allocation (150M IFR).</div>
+          <div class="wg-role-box">
+            <strong>Ecosystem Role:</strong> Cannot claim until March 2027 (cliff). Then ~4.17M IFR/month linear over 36 months. Planned: migrate to Gnosis Safe after cliff.
+          </div>
+          <div class="wg-field"><strong>Access Control:</strong> Single EOA &mdash; immutable in Vesting Contract</div>
+        </div>
+
+        <!-- WALLET 5 — Voucher Signer -->
+        <div class="wg-card">
+          <div class="wg-card-head">
+            <div class="wg-card-name">&#x270D;&#xFE0F; Voucher Signer</div>
+            <span class="wg-badge wg-badge-signer">Backend Signer</span>
+          </div>
+          <div class="wg-addr-row">
+            <span class="wg-addr"><a href="https://etherscan.io/address/0x17F8DD6dECCb3ff5d95691982B85A87d7d9872d4" target="_blank" class="wg-addr-link">0x17F8DD6dECCb3ff5d95691982B85A87d7d9872d4</a></span>
+            <button class="wg-copy-btn" data-addr="0x17F8DD6dECCb3ff5d95691982B85A87d7d9872d4">Copy</button>
+            <a href="https://etherscan.io/address/0x17F8DD6dECCb3ff5d95691982B85A87d7d9872d4" target="_blank" class="wg-es-btn">Etherscan</a>
+          </div>
+          <div class="wg-field"><strong>Genesis Balance:</strong> 0 IFR</div>
+          <div class="wg-field"><strong>Current Role:</strong> Signs EIP-712 vouchers for FeeRouterV1 fee discounts. Backend-only &mdash; never holds IFR.</div>
+          <div class="wg-role-box">
+            <strong>Ecosystem Role:</strong> Points system backend generates vouchers signed by this wallet. Users redeem on-chain via FeeRouterV1 for fee discounts. Rotatable via Governance.
+          </div>
+          <div class="wg-field"><strong>Access Control:</strong> EOA &mdash; Backend wallet (not multisig)</div>
+        </div>
+
+        <!-- WALLET 6 — Community EOA (Historical) -->
+        <div class="wg-card">
+          <div class="wg-card-head">
+            <div class="wg-card-name">&#x1F4E6; Community EOA (Historical)</div>
+            <span class="wg-badge wg-badge-migrated">Migrated</span>
+          </div>
+          <div class="wg-addr-row">
+            <span class="wg-addr"><a href="https://etherscan.io/address/0x61aF4E72C77b58F4b50964Ee93d420750Cd9857E" target="_blank" class="wg-addr-link">0x61aF4E72C77b58F4b50964Ee93d420750Cd9857E</a></span>
+            <button class="wg-copy-btn" data-addr="0x61aF4E72C77b58F4b50964Ee93d420750Cd9857E">Copy</button>
+            <a href="https://etherscan.io/address/0x61aF4E72C77b58F4b50964Ee93d420750Cd9857E" target="_blank" class="wg-es-btn">Etherscan</a>
+          </div>
+          <div class="wg-field"><strong>Genesis Balance:</strong> 60,000,000 IFR</div>
+          <div class="wg-field"><strong>History:</strong> Interim wallet before Community Safe deployment. Migrated 07.03.2026: sent 60M IFR, received 57.9M (2.1M permanently burned &mdash; EOA was not feeExempt).</div>
+          <div class="wg-field"><strong>Current Role:</strong> Inactive &mdash; 0 IFR. Historical only.</div>
+          <div class="wg-field"><strong>Access Control:</strong> EOA &mdash; no longer in use</div>
+        </div>
+
+        <!-- WALLET 7 — Treasury EOA (Historical) -->
+        <div class="wg-card">
+          <div class="wg-card-head">
+            <div class="wg-card-name">&#x1F4E6; Treasury EOA (Historical)</div>
+            <span class="wg-badge wg-badge-migrated">Migrated</span>
+          </div>
+          <div class="wg-addr-row">
+            <span class="wg-addr"><a href="https://etherscan.io/address/0xC8f4B45fA0C4727E9b27c13Af3d000C922a2ac9c" target="_blank" class="wg-addr-link">0xC8f4B45fA0C4727E9b27c13Af3d000C922a2ac9c</a></span>
+            <button class="wg-copy-btn" data-addr="0xC8f4B45fA0C4727E9b27c13Af3d000C922a2ac9c">Copy</button>
+            <a href="https://etherscan.io/address/0xC8f4B45fA0C4727E9b27c13Af3d000C922a2ac9c" target="_blank" class="wg-es-btn">Etherscan</a>
+          </div>
+          <div class="wg-field"><strong>Genesis Balance:</strong> 150,000,000 IFR</div>
+          <div class="wg-field"><strong>History:</strong> Interim wallet before Treasury Safe deployment. Migrated 07.03.2026: sent 150M, received 150M (feeExempt transfer &mdash; zero burn).</div>
+          <div class="wg-field"><strong>Current Role:</strong> Inactive &mdash; 0 IFR. Historical only.</div>
+          <div class="wg-field"><strong>Access Control:</strong> EOA &mdash; no longer in use</div>
+        </div>
+
+      </div><!-- /.wg-grid -->
+
+
+      <!-- ================================================================
+           SECTION 2 — SMART CONTRACTS
+           ================================================================ -->
+      <h2 id="contracts">&#x26D3; Smart Contracts</h2>
+      <p>All 12 deployed contracts on Ethereum Mainnet. Every contract is open source and verified on Etherscan.</p>
+
+      <div class="wg-grid">
+
+        <!-- CONTRACT 1 — InfernoToken -->
+        <div class="wg-card">
+          <div class="wg-card-head">
+            <div class="wg-card-name">&#x1F525; InfernoToken</div>
+            <span class="wg-badge wg-badge-core">Core Token</span>
+          </div>
+          <div class="wg-addr-row">
+            <span class="wg-addr"><a href="https://etherscan.io/address/0x77e99917Eca8539c62F509ED1193ac36580A6e7B" target="_blank" class="wg-addr-link">0x77e99917Eca8539c62F509ED1193ac36580A6e7B</a></span>
+            <button class="wg-copy-btn" data-addr="0x77e99917Eca8539c62F509ED1193ac36580A6e7B">Copy</button>
+            <a href="https://etherscan.io/address/0x77e99917Eca8539c62F509ED1193ac36580A6e7B#code" target="_blank" class="wg-es-btn">Etherscan</a>
+          </div>
+          <div class="wg-field"><strong>Owner:</strong> Governance (Timelock)</div>
+          <div class="wg-field"><strong>feeExempt:</strong> <span class="wg-fee-status wg-fee-yes">&#x2705; Self (yes)</span></div>
+          <div class="wg-role-box">
+            <strong>Function:</strong> The deflationary ERC-20 token. Every transfer applies 3.5% fee: 2% sender burn + 0.5% recipient burn + 1% to FeeRouterV1. No mint function &mdash; supply decreases permanently.
+          </div>
+          <div class="wg-field"><strong>Phase:</strong> Active since 05.03.2026</div>
+        </div>
+
+        <!-- CONTRACT 2 — Governance -->
+        <div class="wg-card">
+          <div class="wg-card-head">
+            <div class="wg-card-name">&#x2696;&#xFE0F; Governance</div>
+            <span class="wg-badge wg-badge-timelock">Timelock Controller</span>
+          </div>
+          <div class="wg-addr-row">
+            <span class="wg-addr"><a href="https://etherscan.io/address/0xc43d48E7FDA576C5022d0670B652A622E8caD041" target="_blank" class="wg-addr-link">0xc43d48E7FDA576C5022d0670B652A622E8caD041</a></span>
+            <button class="wg-copy-btn" data-addr="0xc43d48E7FDA576C5022d0670B652A622E8caD041">Copy</button>
+            <a href="https://etherscan.io/address/0xc43d48E7FDA576C5022d0670B652A622E8caD041#code" target="_blank" class="wg-es-btn">Etherscan</a>
+          </div>
+          <div class="wg-field"><strong>Owner:</strong> Deployer EOA (pending transfer to Treasury Safe via Proposal #8)</div>
+          <div class="wg-field"><strong>feeExempt:</strong> <span class="wg-fee-status wg-fee-yes">&#x2705; Yes</span></div>
+          <div class="wg-role-box">
+            <strong>Function:</strong> 48-hour timelock for all protocol changes. No parameter change can take effect instantly. Guardian can emergency-cancel any pending proposal.
+          </div>
+          <div class="wg-field"><strong>Proposals:</strong> #0&ndash;#6 executed | #7&ndash;#9 queued</div>
+          <div class="wg-field"><strong>Phase:</strong> Active &mdash; controls all protocol parameters</div>
+        </div>
+
+        <!-- CONTRACT 3 — IFRLock -->
+        <div class="wg-card">
+          <div class="wg-card-head">
+            <div class="wg-card-name">&#x1F512; IFRLock</div>
+            <span class="wg-badge wg-badge-active">Access Gate</span>
+          </div>
+          <div class="wg-addr-row">
+            <span class="wg-addr"><a href="https://etherscan.io/address/0x769928aBDfc949D0718d8766a1C2d7dBb63954Eb" target="_blank" class="wg-addr-link">0x769928aBDfc949D0718d8766a1C2d7dBb63954Eb</a></span>
+            <button class="wg-copy-btn" data-addr="0x769928aBDfc949D0718d8766a1C2d7dBb63954Eb">Copy</button>
+            <a href="https://etherscan.io/address/0x769928aBDfc949D0718d8766a1C2d7dBb63954Eb#code" target="_blank" class="wg-es-btn">Etherscan</a>
+          </div>
+          <div class="wg-field"><strong>Owner:</strong> Guardian = Deployer (pause-only)</div>
+          <div class="wg-field"><strong>feeExempt:</strong> <span class="wg-fee-status wg-fee-yes">&#x2705; Yes</span></div>
+          <div class="wg-role-box">
+            <strong>Function:</strong> Users lock IFR here to gain lifetime premium access. Any builder product can query <code>isLocked()</code> to verify access. No admin can touch user funds.
+          </div>
+          <div class="wg-field"><strong>Phase:</strong> Active &mdash; gateway to all premium features</div>
+        </div>
+
+        <!-- CONTRACT 4 — BootstrapVaultV3 -->
+        <div class="wg-card">
+          <div class="wg-card-head">
+            <div class="wg-card-name">&#x1F680; BootstrapVaultV3</div>
+            <span class="wg-badge wg-badge-live">LIVE</span>
+          </div>
+          <div class="wg-addr-row">
+            <span class="wg-addr"><a href="https://etherscan.io/address/0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141" target="_blank" class="wg-addr-link">0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141</a></span>
+            <button class="wg-copy-btn" data-addr="0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141">Copy</button>
+            <a href="https://etherscan.io/address/0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141#code" target="_blank" class="wg-es-btn">Etherscan</a>
+          </div>
+          <div class="wg-field"><strong>Owner:</strong> Permissionless (no admin)</div>
+          <div class="wg-field"><strong>feeExempt:</strong> <span class="wg-fee-status wg-fee-yes">&#x2705; Yes (since Proposal #4)</span></div>
+          <div class="wg-role-box">
+            <strong>Function:</strong> Community price discovery. Holds 200M IFR. Contributors send 0.01&ndash;2 ETH. After June 5, 2026: anyone calls <code>finalise()</code> to create Uniswap V2 LP. LP locked 12 months.
+          </div>
+          <div class="wg-field"><strong>Phase:</strong> LIVE since 07.03.2026 &mdash; ends 05.06.2026</div>
+        </div>
+
+        <!-- CONTRACT 5 — LiquidityReserve -->
+        <div class="wg-card">
+          <div class="wg-card-head">
+            <div class="wg-card-name">&#x1F4A7; LiquidityReserve</div>
+            <span class="wg-badge wg-badge-locked">Time-Locked</span>
+          </div>
+          <div class="wg-addr-row">
+            <span class="wg-addr"><a href="https://etherscan.io/address/0xdc0309804803b3A105154f6073061E3185018f64" target="_blank" class="wg-addr-link">0xdc0309804803b3A105154f6073061E3185018f64</a></span>
+            <button class="wg-copy-btn" data-addr="0xdc0309804803b3A105154f6073061E3185018f64">Copy</button>
+            <a href="https://etherscan.io/address/0xdc0309804803b3A105154f6073061E3185018f64#code" target="_blank" class="wg-es-btn">Etherscan</a>
+          </div>
+          <div class="wg-field"><strong>Owner:</strong> Governance</div>
+          <div class="wg-field"><strong>feeExempt:</strong> <span class="wg-fee-status wg-fee-yes">&#x2705; Yes</span></div>
+          <div class="wg-role-box">
+            <strong>Function:</strong> Holds 200M IFR for Phase 2/3 LP expansion. Hard-locked until 01.09.2026. Cannot be accessed before that date by anyone &mdash; including the team.
+          </div>
+          <div class="wg-field"><strong>Phase:</strong> Locked &mdash; unlocks 01.09.2026</div>
+        </div>
+
+        <!-- CONTRACT 6 — Vesting -->
+        <div class="wg-card">
+          <div class="wg-card-head">
+            <div class="wg-card-name">&#x23F3; Vesting</div>
+            <span class="wg-badge wg-badge-locked">Cliff Active</span>
+          </div>
+          <div class="wg-addr-row">
+            <span class="wg-addr"><a href="https://etherscan.io/address/0x2694Bc84e8D5251E9E4Ecd4B2Ae3f866d6106271" target="_blank" class="wg-addr-link">0x2694Bc84e8D5251E9E4Ecd4B2Ae3f866d6106271</a></span>
+            <button class="wg-copy-btn" data-addr="0x2694Bc84e8D5251E9E4Ecd4B2Ae3f866d6106271">Copy</button>
+            <a href="https://etherscan.io/address/0x2694Bc84e8D5251E9E4Ecd4B2Ae3f866d6106271#code" target="_blank" class="wg-es-btn">Etherscan</a>
+          </div>
+          <div class="wg-field"><strong>Owner:</strong> Guardian = Deployer (pause-only)</div>
+          <div class="wg-field"><strong>feeExempt:</strong> <span class="wg-fee-status wg-fee-yes">&#x2705; Yes</span></div>
+          <div class="wg-role-box">
+            <strong>Function:</strong> Team allocation locked 4 years. 12-month cliff (no release before March 2027), then linear over 36 months until March 2030.
+          </div>
+          <div class="wg-field"><strong>Balance:</strong> 150,000,000 IFR</div>
+          <div class="wg-field"><strong>Phase:</strong> Cliff active &mdash; first release March 2027</div>
+        </div>
+
+        <!-- CONTRACT 7 — PartnerVault -->
+        <div class="wg-card">
+          <div class="wg-card-head">
+            <div class="wg-card-name">&#x1F3D7;&#xFE0F; PartnerVault</div>
+            <span class="wg-badge wg-badge-active">Builder Rewards</span>
+          </div>
+          <div class="wg-addr-row">
+            <span class="wg-addr"><a href="https://etherscan.io/address/0xc6eb7714bCb035ebc2D4d9ba7B3762ef7B9d4F7D" target="_blank" class="wg-addr-link">0xc6eb7714bCb035ebc2D4d9ba7B3762ef7B9d4F7D</a></span>
+            <button class="wg-copy-btn" data-addr="0xc6eb7714bCb035ebc2D4d9ba7B3762ef7B9d4F7D">Copy</button>
+            <a href="https://etherscan.io/address/0xc6eb7714bCb035ebc2D4d9ba7B3762ef7B9d4F7D#code" target="_blank" class="wg-es-btn">Etherscan</a>
+          </div>
+          <div class="wg-field"><strong>Owner:</strong> Governance</div>
+          <div class="wg-field"><strong>feeExempt:</strong> <span class="wg-fee-status wg-fee-yes">&#x2705; Yes</span></div>
+          <div class="wg-role-box">
+            <strong>Function:</strong> Builder ecosystem rewards. When a user locks IFR for a creator's product, the creator earns from this pool. 6&ndash;12 month vesting, annual cap: 4M IFR.
+          </div>
+          <div class="wg-field"><strong>Balance:</strong> 40,000,000 IFR</div>
+          <div class="wg-field"><strong>Phase:</strong> Active</div>
+        </div>
+
+        <!-- CONTRACT 8 — FeeRouterV1 -->
+        <div class="wg-card">
+          <div class="wg-card-head">
+            <div class="wg-card-name">&#x1F500; FeeRouterV1</div>
+            <span class="wg-badge wg-badge-fee">Fee Accumulator</span>
+          </div>
+          <div class="wg-addr-row">
+            <span class="wg-addr"><a href="https://etherscan.io/address/0x4807B77B2E25cD055DA42B09BA4d0aF9e580C60a" target="_blank" class="wg-addr-link">0x4807B77B2E25cD055DA42B09BA4d0aF9e580C60a</a></span>
+            <button class="wg-copy-btn" data-addr="0x4807B77B2E25cD055DA42B09BA4d0aF9e580C60a">Copy</button>
+            <a href="https://etherscan.io/address/0x4807B77B2E25cD055DA42B09BA4d0aF9e580C60a#code" target="_blank" class="wg-es-btn">Etherscan</a>
+          </div>
+          <div class="wg-field"><strong>Owner:</strong> Governance</div>
+          <div class="wg-field"><strong>feeExempt:</strong> <span class="wg-fee-status wg-fee-yes">&#x2705; Yes</span></div>
+          <div class="wg-role-box">
+            <strong>Function:</strong> Receives 1% pool fee from every IFR transfer. Accumulates fees &mdash; NO automatic distribution. Phase 3: BuybackController will route accumulated fees.
+          </div>
+          <div class="wg-field"><strong>Phase:</strong> Accumulating</div>
+        </div>
+
+        <!-- CONTRACT 9 — BuybackVault -->
+        <div class="wg-card">
+          <div class="wg-card-head">
+            <div class="wg-card-name">&#x267B;&#xFE0F; BuybackVault</div>
+            <span class="wg-badge wg-badge-locked">Phase 3</span>
+          </div>
+          <div class="wg-addr-row">
+            <span class="wg-addr"><a href="https://etherscan.io/address/0x670D293e3D65f96171c10DdC8d88B96b0570F812" target="_blank" class="wg-addr-link">0x670D293e3D65f96171c10DdC8d88B96b0570F812</a></span>
+            <button class="wg-copy-btn" data-addr="0x670D293e3D65f96171c10DdC8d88B96b0570F812">Copy</button>
+            <a href="https://etherscan.io/address/0x670D293e3D65f96171c10DdC8d88B96b0570F812#code" target="_blank" class="wg-es-btn">Etherscan</a>
+          </div>
+          <div class="wg-field"><strong>Owner:</strong> Governance</div>
+          <div class="wg-field"><strong>feeExempt:</strong> <span class="wg-fee-status wg-fee-yes">&#x2705; Yes</span></div>
+          <div class="wg-role-box">
+            <strong>Function:</strong> Will receive IFR from FeeRouterV1 via BuybackController (Phase 3). Auto-refills PartnerVault when below 85% threshold (34M IFR). 70% Operating Pool + 30% SOS Reserve.
+          </div>
+          <div class="wg-field"><strong>Balance:</strong> 0 IFR</div>
+          <div class="wg-field"><strong>Phase:</strong> Inactive &mdash; activates Phase 3</div>
+        </div>
+
+        <!-- CONTRACT 10 — BurnReserve -->
+        <div class="wg-card">
+          <div class="wg-card-head">
+            <div class="wg-card-name">&#x1F525; BurnReserve</div>
+            <span class="wg-badge wg-badge-burn">Permanent Burns</span>
+          </div>
+          <div class="wg-addr-row">
+            <span class="wg-addr"><a href="https://etherscan.io/address/0xaA1496133B6c274190A2113410B501C5802b6fCF" target="_blank" class="wg-addr-link">0xaA1496133B6c274190A2113410B501C5802b6fCF</a></span>
+            <button class="wg-copy-btn" data-addr="0xaA1496133B6c274190A2113410B501C5802b6fCF">Copy</button>
+            <a href="https://etherscan.io/address/0xaA1496133B6c274190A2113410B501C5802b6fCF#code" target="_blank" class="wg-es-btn">Etherscan</a>
+          </div>
+          <div class="wg-field"><strong>Owner:</strong> Governance</div>
+          <div class="wg-field"><strong>feeExempt:</strong> <span class="wg-fee-status wg-fee-yes">&#x2705; Yes</span></div>
+          <div class="wg-role-box">
+            <strong>Function:</strong> Permanent burn pool. Burns IFR forever via <code>burn()</code>. Accumulates from protocol fee share (Phase 3).
+          </div>
+          <div class="wg-field"><strong>Balance:</strong> 0 IFR</div>
+          <div class="wg-field"><strong>Phase:</strong> Inactive &mdash; activates Phase 3</div>
+        </div>
+
+        <!-- CONTRACT 11 — Treasury Safe (Gnosis) -->
+        <div class="wg-card">
+          <div class="wg-card-head">
+            <div class="wg-card-name">&#x1F3DB;&#xFE0F; Treasury Safe (Gnosis)</div>
+            <span class="wg-badge wg-badge-multisig">Multisig 3-of-5</span>
+          </div>
+          <div class="wg-addr-row">
+            <span class="wg-addr"><a href="https://etherscan.io/address/0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b" target="_blank" class="wg-addr-link">0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b</a></span>
+            <button class="wg-copy-btn" data-addr="0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b">Copy</button>
+            <a href="https://etherscan.io/address/0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b#code" target="_blank" class="wg-es-btn">Etherscan</a>
+          </div>
+          <div class="wg-field"><strong>Note:</strong> Same address as Wallet 2 &mdash; this is both a wallet AND a smart contract (Gnosis Safe).</div>
+          <div class="wg-role-box">
+            <strong>Function:</strong> Controls Treasury funds AND will control Governance after Proposal #8. Requires 3-of-5 signatures.
+          </div>
+          <div class="wg-field"><strong>feeExempt:</strong> <span class="wg-fee-status wg-fee-pending">&#x23F3; PENDING (Proposal #8)</span></div>
+        </div>
+
+        <!-- CONTRACT 12 — Community Safe (Gnosis) -->
+        <div class="wg-card">
+          <div class="wg-card-head">
+            <div class="wg-card-name">&#x1F465; Community Safe (Gnosis)</div>
+            <span class="wg-badge wg-badge-multisig">Multisig 3-of-5</span>
+          </div>
+          <div class="wg-addr-row">
+            <span class="wg-addr"><a href="https://etherscan.io/address/0xaC5687547B2B21d80F8fd345B51e608d476667C7" target="_blank" class="wg-addr-link">0xaC5687547B2B21d80F8fd345B51e608d476667C7</a></span>
+            <button class="wg-copy-btn" data-addr="0xaC5687547B2B21d80F8fd345B51e608d476667C7">Copy</button>
+            <a href="https://etherscan.io/address/0xaC5687547B2B21d80F8fd345B51e608d476667C7#code" target="_blank" class="wg-es-btn">Etherscan</a>
+          </div>
+          <div class="wg-role-box">
+            <strong>Function:</strong> Gnosis Safe multisig for community funds. 7.9M IFR permanent reserve for grants/bounties/DAO.
+          </div>
+          <div class="wg-field"><strong>feeExempt:</strong> <span class="wg-fee-status wg-fee-pending">&#x23F3; PENDING (Proposal #9)</span></div>
+        </div>
+
+      </div><!-- /.wg-grid -->
+
+
+      <!-- ================================================================
+           SECTION 3 — UPCOMING CONTRACTS
+           ================================================================ -->
+      <h2 id="upcoming">&#x1F52E; Upcoming Contracts</h2>
+      <p>Contracts planned for Phase 2&ndash;4. Not yet deployed to Ethereum Mainnet.</p>
+
+      <div class="wg-grid">
+
+        <!-- UPCOMING 1 — Uniswap V2 LP Pair -->
+        <div class="wg-card wg-card-upcoming">
+          <div class="wg-card-head">
+            <div class="wg-card-name">&#x1F4B1; Uniswap V2 LP Pair</div>
+            <span class="wg-badge wg-badge-upcoming">After Bootstrap</span>
+          </div>
+          <div class="wg-field"><strong>Created via:</strong> <code>BootstrapVaultV3.finalise()</code></div>
+          <div class="wg-field"><strong>Timeline:</strong> After 05.06.2026</div>
+          <div class="wg-role-box">
+            <strong>Function:</strong> IFR/ETH trading pair on Uniswap V2. Created automatically when Bootstrap concludes. LP tokens locked for 12 months.
+          </div>
+        </div>
+
+        <!-- UPCOMING 2 — LiquidityVault.sol -->
+        <div class="wg-card wg-card-upcoming">
+          <div class="wg-card-head">
+            <div class="wg-card-name">&#x1F4A7; LiquidityVault.sol</div>
+            <span class="wg-badge wg-badge-upcoming">Phase 2</span>
+          </div>
+          <div class="wg-field"><strong>Purpose:</strong> Phase 2 LP management</div>
+          <div class="wg-field"><strong>Timeline:</strong> After 05.06.2026</div>
+          <div class="wg-role-box">
+            <strong>Function:</strong> Manages liquidity expansion using the 200M IFR from LiquidityReserve. Controlled by Governance.
+          </div>
+        </div>
+
+        <!-- UPCOMING 3 — BuilderRegistry.sol -->
+        <div class="wg-card wg-card-upcoming">
+          <div class="wg-card-head">
+            <div class="wg-card-name">&#x1F3D7;&#xFE0F; BuilderRegistry.sol</div>
+            <span class="wg-badge wg-badge-upcoming">Sepolia</span>
+          </div>
+          <div class="wg-field"><strong>Purpose:</strong> Builder &amp; Partner Registry</div>
+          <div class="wg-field"><strong>Status:</strong> 27 tests passing on Sepolia</div>
+          <div class="wg-role-box">
+            <strong>Function:</strong> On-chain registry for approved builders. Maps builder addresses to product metadata and reward eligibility.
+          </div>
+        </div>
+
+        <!-- UPCOMING 4 — BuybackController.sol -->
+        <div class="wg-card wg-card-upcoming">
+          <div class="wg-card-head">
+            <div class="wg-card-name">&#x1F500; BuybackController.sol</div>
+            <span class="wg-badge wg-badge-upcoming">Phase 3</span>
+          </div>
+          <div class="wg-field"><strong>Purpose:</strong> Routes FeeRouter fees to BuybackVault &amp; BurnReserve</div>
+          <div class="wg-role-box">
+            <strong>Function:</strong> Automates fee distribution from FeeRouterV1. Splits accumulated fees between BuybackVault and BurnReserve according to governance-set ratios.
+          </div>
+        </div>
+
+        <!-- UPCOMING 5 — RatVoting.sol -->
+        <div class="wg-card wg-card-upcoming">
+          <div class="wg-card-head">
+            <div class="wg-card-name">&#x1F5F3;&#xFE0F; RatVoting.sol</div>
+            <span class="wg-badge wg-badge-upcoming">Phase 4</span>
+          </div>
+          <div class="wg-field"><strong>Purpose:</strong> Council governance</div>
+          <div class="wg-role-box">
+            <strong>Function:</strong> Merkle tree-based council voting with on-chain anchoring. Enables trusted council members to vote on protocol proposals.
+          </div>
+        </div>
+
+        <!-- UPCOMING 6 — ForumVoting.sol -->
+        <div class="wg-card wg-card-upcoming">
+          <div class="wg-card-head">
+            <div class="wg-card-name">&#x1F4AC; ForumVoting.sol</div>
+            <span class="wg-badge wg-badge-upcoming">Phase 4</span>
+          </div>
+          <div class="wg-field"><strong>Purpose:</strong> Community voting</div>
+          <div class="wg-role-box">
+            <strong>Function:</strong> Community-wide voting using ecrecover signatures. Gasless off-chain signature collection with on-chain verification.
+          </div>
+        </div>
+
+        <!-- UPCOMING 7 — IFRSpamProtection.sol -->
+        <div class="wg-card wg-card-upcoming">
+          <div class="wg-card-head">
+            <div class="wg-card-name">&#x1F6E1;&#xFE0F; IFRSpamProtection.sol</div>
+            <span class="wg-badge wg-badge-upcoming">Phase 4</span>
+          </div>
+          <div class="wg-field"><strong>Purpose:</strong> Proposal spam prevention</div>
+          <div class="wg-role-box">
+            <strong>Function:</strong> Requires 10 IFR per proposal submission (burned permanently). Deflationary mechanism that prevents governance spam.
+          </div>
+        </div>
+
+      </div><!-- /.wg-grid -->
+
+
+      <!-- ================================================================
+           SECTION 4 — ECOSYSTEM FLOW
+           ================================================================ -->
+      <h2 id="flow">&#x1F504; Ecosystem Flow</h2>
+      <p>How tokens flow from genesis through the entire IFR protocol infrastructure.</p>
+
+      <div class="wg-flow-wrap">
+        <svg viewBox="0 0 800 500" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;">
+          <defs>
+            <marker id="arrow-orange" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+              <path d="M0,0 L8,3 L0,6" fill="#f97316"/>
+            </marker>
+            <marker id="arrow-blue" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+              <path d="M0,0 L8,3 L0,6" fill="#3b82f6"/>
+            </marker>
+            <marker id="arrow-green" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+              <path d="M0,0 L8,3 L0,6" fill="#22c55e"/>
+            </marker>
+            <marker id="arrow-red" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+              <path d="M0,0 L8,3 L0,6" fill="#ef4444"/>
+            </marker>
+            <marker id="arrow-grey" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+              <path d="M0,0 L8,3 L0,6" fill="#9ca3af"/>
+            </marker>
+          </defs>
+
+          <!-- Genesis -->
+          <rect x="310" y="8" width="180" height="36" rx="8" fill="none" stroke="#f97316" stroke-width="1.5"/>
+          <text x="400" y="30" text-anchor="middle" fill="white" font-size="13" font-weight="700">1B IFR Genesis</text>
+
+          <!-- Arrow Genesis -> Deployer -->
+          <line x1="400" y1="44" x2="400" y2="62" stroke="#f97316" stroke-width="1.5" marker-end="url(#arrow-orange)"/>
+
+          <!-- Deployer EOA -->
+          <rect x="310" y="64" width="180" height="36" rx="8" fill="rgba(249,115,22,0.1)" stroke="#f97316" stroke-width="1.5"/>
+          <text x="400" y="86" text-anchor="middle" fill="#f97316" font-size="12" font-weight="700">Deployer EOA</text>
+
+          <!-- Distribution arrows from Deployer -->
+          <!-- Left side: Treasury 150M -->
+          <line x1="310" y1="82" x2="120" y2="150" stroke="#3b82f6" stroke-width="1" marker-end="url(#arrow-blue)"/>
+          <rect x="30" y="140" width="160" height="50" rx="8" fill="none" stroke="#3b82f6" stroke-width="1"/>
+          <text x="110" y="160" text-anchor="middle" fill="white" font-size="11" font-weight="600">Treasury Safe</text>
+          <text x="110" y="178" text-anchor="middle" fill="#9ca3af" font-size="10">150M IFR</text>
+
+          <!-- Vesting 150M -->
+          <line x1="340" y1="100" x2="120" y2="220" stroke="#9ca3af" stroke-width="1" marker-end="url(#arrow-grey)"/>
+          <rect x="30" y="210" width="160" height="50" rx="8" fill="none" stroke="#9ca3af" stroke-width="1"/>
+          <text x="110" y="230" text-anchor="middle" fill="white" font-size="11" font-weight="600">Vesting Contract</text>
+          <text x="110" y="248" text-anchor="middle" fill="#9ca3af" font-size="10">150M IFR (4yr lock)</text>
+
+          <!-- Community 60M -->
+          <line x1="350" y1="100" x2="120" y2="290" stroke="#3b82f6" stroke-width="1" marker-end="url(#arrow-blue)"/>
+          <rect x="30" y="280" width="160" height="50" rx="8" fill="none" stroke="#3b82f6" stroke-width="1"/>
+          <text x="110" y="300" text-anchor="middle" fill="white" font-size="11" font-weight="600">Community Safe</text>
+          <text x="110" y="318" text-anchor="middle" fill="#9ca3af" font-size="10">60M IFR</text>
+
+          <!-- Right side: LiqReserve 200M -->
+          <line x1="490" y1="82" x2="660" y2="150" stroke="#9ca3af" stroke-width="1" marker-end="url(#arrow-grey)"/>
+          <rect x="590" y="140" width="180" height="50" rx="8" fill="none" stroke="#9ca3af" stroke-width="1"/>
+          <text x="680" y="160" text-anchor="middle" fill="white" font-size="11" font-weight="600">LiquidityReserve</text>
+          <text x="680" y="178" text-anchor="middle" fill="#9ca3af" font-size="10">200M IFR (locked)</text>
+
+          <!-- PartnerVault 40M -->
+          <line x1="490" y1="88" x2="660" y2="220" stroke="#22c55e" stroke-width="1" marker-end="url(#arrow-green)"/>
+          <rect x="590" y="210" width="180" height="50" rx="8" fill="none" stroke="#22c55e" stroke-width="1"/>
+          <text x="680" y="230" text-anchor="middle" fill="white" font-size="11" font-weight="600">PartnerVault</text>
+          <text x="680" y="248" text-anchor="middle" fill="#9ca3af" font-size="10">40M IFR</text>
+
+          <!-- Deployer keeps 400M label -->
+          <text x="400" y="118" text-anchor="middle" fill="#9ca3af" font-size="10" font-style="italic">Keeps 400M (LP Reserve)</text>
+
+          <!-- Bootstrap section -->
+          <rect x="290" y="160" width="220" height="50" rx="8" fill="rgba(34,197,94,0.08)" stroke="#22c55e" stroke-width="1.5"/>
+          <text x="400" y="180" text-anchor="middle" fill="#22c55e" font-size="12" font-weight="700">BootstrapVaultV3</text>
+          <text x="400" y="196" text-anchor="middle" fill="#9ca3af" font-size="10">200M IFR + ETH contributions</text>
+
+          <!-- Arrow from Treasury/Community to Bootstrap -->
+          <line x1="190" y1="165" x2="288" y2="178" stroke="#3b82f6" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#arrow-blue)"/>
+          <line x1="190" y1="295" x2="288" y2="195" stroke="#3b82f6" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#arrow-blue)"/>
+
+          <!-- Bootstrap -> Uniswap -->
+          <line x1="400" y1="210" x2="400" y2="248" stroke="#22c55e" stroke-width="1.5" marker-end="url(#arrow-green)"/>
+          <text x="440" y="236" fill="#22c55e" font-size="9" font-weight="600">finalise()</text>
+          <rect x="310" y="250" width="180" height="36" rx="8" fill="rgba(34,197,94,0.08)" stroke="#22c55e" stroke-width="1"/>
+          <text x="400" y="272" text-anchor="middle" fill="#22c55e" font-size="11" font-weight="600">Uniswap V2 LP</text>
+
+          <!-- IFR Transfer fee flow -->
+          <rect x="230" y="320" width="340" height="40" rx="8" fill="rgba(239,68,68,0.06)" stroke="#ef4444" stroke-width="1"/>
+          <text x="400" y="336" text-anchor="middle" fill="white" font-size="11" font-weight="600">IFR Transfer Fee: 3.5%</text>
+          <text x="400" y="352" text-anchor="middle" fill="#9ca3af" font-size="10">2% sender burn + 0.5% recipient burn + 1% FeeRouter</text>
+
+          <!-- Fee Router -->
+          <line x1="400" y1="360" x2="400" y2="388" stroke="#eab308" stroke-width="1.5" marker-end="url(#arrow-orange)"/>
+          <rect x="310" y="390" width="180" height="36" rx="8" fill="rgba(234,179,8,0.08)" stroke="#eab308" stroke-width="1"/>
+          <text x="400" y="412" text-anchor="middle" fill="#eab308" font-size="11" font-weight="600">FeeRouterV1 (1%)</text>
+
+          <!-- Phase 3 split -->
+          <line x1="350" y1="426" x2="280" y2="458" stroke="#9ca3af" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#arrow-grey)"/>
+          <line x1="450" y1="426" x2="520" y2="458" stroke="#9ca3af" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#arrow-grey)"/>
+
+          <rect x="190" y="456" width="160" height="36" rx="8" fill="none" stroke="#9ca3af" stroke-width="1" stroke-dasharray="4,3"/>
+          <text x="270" y="478" text-anchor="middle" fill="#9ca3af" font-size="10" font-weight="600">BuybackVault (Phase 3)</text>
+
+          <rect x="450" y="456" width="160" height="36" rx="8" fill="none" stroke="#ef4444" stroke-width="1" stroke-dasharray="4,3"/>
+          <text x="530" y="478" text-anchor="middle" fill="#ef4444" font-size="10" font-weight="600">BurnReserve (Phase 3)</text>
+
+          <!-- IFRLock section -->
+          <rect x="620" y="310" width="150" height="50" rx="8" fill="rgba(249,115,22,0.06)" stroke="#f97316" stroke-width="1"/>
+          <text x="695" y="330" text-anchor="middle" fill="white" font-size="11" font-weight="600">IFRLock</text>
+          <text x="695" y="346" text-anchor="middle" fill="#9ca3af" font-size="10">User locks IFR</text>
+          <line x1="695" y1="360" x2="695" y2="388" stroke="#f97316" stroke-width="1" marker-end="url(#arrow-orange)"/>
+          <text x="695" y="404" text-anchor="middle" fill="#f97316" font-size="11" font-weight="700">Premium Access</text>
+        </svg>
+      </div>
+
+
+      <!-- Footer -->
+      <footer class="wiki-footer">
+        Inferno ($IFR) &mdash; Wallet &amp; Contract Guide &mdash; Documentation v1.0
+      </footer>
+
+    </main>
+  </div>
+
+  <!-- Mobile sidebar toggle script -->
+  <script>
+    (function () {
+      var hamburger = document.getElementById('hamburger');
+      var sidebar = document.getElementById('sidebar');
+      var overlay = document.getElementById('sidebarOverlay');
+
+      function toggleSidebar() {
+        var isOpen = sidebar.classList.toggle('open');
+        hamburger.classList.toggle('open', isOpen);
+        overlay.classList.toggle('open', isOpen);
+        document.body.style.overflow = isOpen ? 'hidden' : '';
+      }
+
+      hamburger.addEventListener('click', toggleSidebar);
+      overlay.addEventListener('click', toggleSidebar);
+    })();
+  </script>
+
+  <!-- Copy button handler -->
+  <script>
+    document.addEventListener('click', function(e) {
+      var btn = e.target.closest('.wg-copy-btn');
+      if (!btn) return;
+      var addr = btn.getAttribute('data-addr');
+      if (addr && navigator.clipboard) {
+        navigator.clipboard.writeText(addr).then(function() {
+          btn.textContent = 'Copied!';
+          setTimeout(function() { btn.textContent = 'Copy'; }, 1500);
+        });
+      }
+    });
+  </script>
+
+<!-- IFR Copilot Widget -->
+<style>
+#ifr-btn { position:fixed; bottom:24px; right:24px; width:64px; height:64px; border-radius:50%; overflow:hidden; padding:0; cursor:pointer; border:2px solid #f97316; box-shadow:0 4px 20px rgba(249,115,22,0.4); z-index:99999; background:none; transition:transform 0.2s ease,box-shadow 0.2s ease; } #ifr-btn:hover { transform:scale(1.08); box-shadow:0 6px 28px rgba(249,115,22,0.6); } #ifr-btn img { width:100%; height:100%; object-fit:cover; object-position:center center; border-radius:50%; display:block; }
+#ifr-panel { display:none; position:fixed; bottom:100px; right:24px; z-index:99998; width:400px; height:580px; border-radius:16px; overflow:hidden; box-shadow:0 8px 40px rgba(0,0,0,0.5); background:#1a1a1a; }
+#ifr-panel iframe { width:100%; height:100%; border:none; }
+</style>
+<button id="ifr-btn" onclick="var p=document.getElementById('ifr-panel');p.style.display=p.style.display==='block'?'none':'block';"><img src="../assets/CoPilot.jpg" alt="IFR Copilot"></button>
+<div id="ifr-panel"><iframe src="https://ifr-ai-copilot-production.up.railway.app" allow="clipboard-write"></iframe></div>
+
+<script>
+async function lpConnect(){
+  if(typeof ethers==="undefined"){alert("Web3 library not loaded. Please refresh.");return}
+  if(typeof IFRWallet==="undefined"){alert("Wallet module not loaded. Please refresh.");return}
+  var btn=document.getElementById("lp-header-connect-btn");
+  if(btn){btn.textContent="Connecting...";btn.disabled=true}
+  try{
+    await IFRWallet.connect();
+    var state=await IFRState.load(IFRWallet.getAddress());
+    lpUpdateUI(state);
+  }catch(e){
+    if(btn){btn.textContent="\u{1F98A} Connect";btn.disabled=false;btn.style.background="transparent";btn.style.borderColor="#f97316";btn.style.color="#f97316";btn.onclick=lpConnect}
+    if(e.message==="NO_METAMASK"){
+      var isMobile=/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+      if(isMobile){window.location.href="https://metamask.app.link/dapp/ifrunit.tech"}
+      else if(btn){btn.textContent="\u26A0\uFE0F Install MetaMask";btn.style.background="#374151";btn.onclick=function(){window.open("https://metamask.io/download","_blank")};btn.disabled=false}
+    }else if(e.code===4001||e.code==="ACTION_REJECTED"){
+      if(btn){btn.textContent="\u{1F98A} Connect";btn.disabled=false}
+    }
+  }
+}
+function lpDisconnect(){
+  IFRWallet.disconnect();
+  var connectBtn=document.getElementById("lp-header-connect-btn");
+  var connectedDiv=document.getElementById("lp-header-connected");
+  var dropdown=document.getElementById("lp-header-dropdown");
+  if(connectBtn){connectBtn.style.display="";connectBtn.textContent="\u{1F98A} Connect";connectBtn.disabled=false;connectBtn.style.background="transparent";connectBtn.style.borderColor="#f97316";connectBtn.style.color="#f97316";connectBtn.onclick=lpConnect}
+  if(connectedDiv)connectedDiv.style.display="none";
+  if(dropdown)dropdown.style.display="none";
+}
+function lpToggleDropdown(){
+  var dd=document.getElementById("lp-header-dropdown");
+  if(!dd)return;
+  if(dd.style.display!=="none"&&dd.style.display!==""){dd.style.display="none";return}
+  var isMobile=window.innerWidth<768;
+  dd.style.position="fixed";dd.style.zIndex="9999";
+  if(isMobile){
+    var wrap=document.getElementById("wiki-wallet-wrap");
+    if(wrap){var rect=wrap.getBoundingClientRect();dd.style.top=(rect.bottom+6)+"px"}
+    else{dd.style.top="60px"}
+    dd.style.left="8px";dd.style.right="8px";dd.style.width="auto";dd.style.maxWidth="calc(100vw - 16px)";
+  }else{
+    dd.style.top="12px";dd.style.right="12px";dd.style.left="auto";dd.style.width="290px";
+  }
+  dd.style.display="";
+}
+function lpCloseDropdown(){var dd=document.getElementById("lp-header-dropdown");if(dd)dd.style.display="none";}
+function lpUpdateUI(state){
+  var connected=IFRWallet.isConnected();
+  var connectBtn=document.getElementById("lp-header-connect-btn");
+  var connectedDiv=document.getElementById("lp-header-connected");
+  if(connectBtn){
+    connectBtn.style.display=connected?"none":"";
+    if(!connected){connectBtn.textContent="\u{1F98A} Connect";connectBtn.disabled=false;connectBtn.style.background="transparent";connectBtn.style.borderColor="#f97316";connectBtn.style.color="#f97316";connectBtn.onclick=lpConnect}
+  }
+  if(connectedDiv)connectedDiv.style.display=connected?"":"none";
+  if(connected&&state){
+    var addr=IFRWallet.getAddress();
+    var shortAddr="u2B24 "+addr.slice(0,6);
+    var el=document.getElementById("lp-header-addr");if(el)el.textContent=shortAddr;
+    var dropAddr=document.getElementById("lp-drop-addr");if(dropAddr)dropAddr.textContent=addr.slice(0,10)+"..."+addr.slice(-6);
+    var dropEth=document.getElementById("lp-drop-eth");if(dropEth)dropEth.textContent=parseFloat(state.ethBalance||"0").toFixed(4)+" ETH";
+    var dropIfr=document.getElementById("lp-drop-ifr");
+    if(dropIfr){var ifrAmt=state.ifrBalance&&typeof ethers!=="undefined"?parseFloat(ethers.utils.formatUnits(state.ifrBalance,9)).toLocaleString("en-US",{maximumFractionDigits:0}):"0";dropIfr.textContent=ifrAmt+" IFR"}
+    var lockDiv=document.getElementById("lp-drop-lock");var noLockDiv=document.getElementById("lp-drop-nolock");
+    if(lockDiv)lockDiv.style.display=state.isLocked1000?"":"none";
+    if(noLockDiv)noLockDiv.style.display=state.isLocked1000?"none":"";
+  }
+}
+window.addEventListener("resize",function(){var dd=document.getElementById("lp-header-dropdown");if(dd)dd.style.display="none"});
+document.addEventListener("click",function(e){var dd=document.getElementById("lp-header-dropdown");var wrap=document.getElementById("wiki-wallet-wrap");if(dd&&wrap&&!wrap.contains(e.target))dd.style.display="none"});
+IFRWallet.on("disconnected",function(){lpUpdateUI(null)});
+IFRWallet.on("connected",async function(addr){var state=await IFRState.load(addr);lpUpdateUI(state)});
+IFRWallet.on("accountChanged",async function(addr){var state=await IFRState.load(addr);lpUpdateUI(state)});
+IFRState.on("stateLoaded",lpUpdateUI);
+document.addEventListener("visibilitychange",async function(){if(document.visibilityState==="visible"&&!IFRWallet.isConnected()){var ok=await IFRWallet.autoReconnect();if(ok)lpUpdateUI(await IFRState.load(IFRWallet.getAddress()))}});
+(async function(){var ok=await IFRWallet.autoReconnect();if(ok)lpUpdateUI(await IFRState.load(IFRWallet.getAddress()))})();
+var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.addEventListener("mouseenter",function(){this.style.transform="scale(1.04)";this.style.boxShadow="0 4px 20px rgba(249,115,22,0.4)"});_wcBtn.addEventListener("mouseleave",function(){this.style.transform="";this.style.boxShadow="0 2px 12px rgba(249,115,22,0.25)"})}
+</script>
+</body>
+</html>
