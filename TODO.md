@@ -25,7 +25,7 @@ Stand: 16.03.2026 | Konsolidiert (Claude + Core Dev)
 ## HOCH — Bootstrap Ankuendigung (nach Funding verified)
 
 1. ✅ X (@IFRtoken): Bootstrap Thread gepostet (16.03.2026) + PNG Banner
-2. ✅ Juicebox listing created (16.03.2026) — discovery only, NO funding. Project Owner: 0x6b36...Fed67
+2. ✅ Juicebox listing live (16.03.2026) — discovery only, NO funding. URL: https://juicebox.money/v5/eth:79
 3. Wiki `bootstrap.html`: Live-Status + Vault-Balance Banner aktivieren
 4. Bootstrap Countdown Widget auf Landing Page aktivieren
 5. Telegram Kanal & Chat auf Landing Page und Juicebox verlinken
