@@ -74,7 +74,7 @@ Stand: 08.03.2026 | Konsolidiert (Claude + Core Dev)
 
 ## MITTEL — Wiki: Wallet & Contract Transparency Manual
 
-28. **NEW WIKI PAGE: Wallet & Contract Transparency Manual**
+28. ✅ ERLEDIGT (16.03.2026): **Wallet & Contract Transparency Manual**
     Datei: `docs/wiki/wallet-guide.html` (Basis: vesting.html klonen)
 
     **TEIL 1 — PROJECT WALLETS** (Cards, blau)
