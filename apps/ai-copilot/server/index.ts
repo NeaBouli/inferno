@@ -785,6 +785,73 @@ app.get("/api/ifr/vault", async (_req, res) => {
   }
 });
 
+// ── Bootstrap Community Consensus Votes ─────────────────────────────
+// In-memory vote store (wallet → {vote, ethWeight, timestamp})
+// Resets on restart — acceptable for sentiment indicator
+const bootstrapVotes = new Map<string, { vote: string; ethWeight: number; timestamp: number }>();
+
+async function verifyContribution(wallet: string): Promise<number> {
+  // Use Etherscan eth_call to read contributions(address) from BootstrapVaultV3
+  // contributions(address) selector = 0x42e94c90
+  const addr = wallet.toLowerCase().replace("0x", "").padStart(64, "0");
+  const data = "0x42e94c90" + addr;
+  const params = `&module=proxy&action=eth_call&to=${PROTOCOL_ADDRESSES.BootstrapVaultV3}&data=${data}&tag=latest`;
+  const result = (await esApiFetch(params)) as { result?: string };
+  if (!result.result || result.result === "0x") return 0;
+  return parseInt(result.result, 16) / 1e18;
+}
+
+app.post("/api/bootstrap/vote", async (req, res) => {
+  const { wallet, vote } = req.body as { wallet?: string; vote?: string };
+  if (!wallet || !vote) {
+    res.status(400).json({ error: "Missing wallet or vote" });
+    return;
+  }
+  if (!["finalise", "refund"].includes(vote)) {
+    res.status(400).json({ error: "Invalid vote type" });
+    return;
+  }
+  try {
+    const ethWeight = await verifyContribution(wallet);
+    if (ethWeight <= 0) {
+      res.status(403).json({ error: "No contribution found on-chain" });
+      return;
+    }
+    bootstrapVotes.set(wallet.toLowerCase(), { vote, ethWeight, timestamp: Date.now() });
+    console.log(`[vote] ${wallet.slice(0, 8)} → ${vote} (${ethWeight.toFixed(4)} ETH)`);
+    res.json({ success: true, ethWeight });
+  } catch (e) {
+    console.error("[vote] error:", (e as Error).message);
+    res.status(500).json({ error: "Verification failed" });
+  }
+});
+
+app.get("/api/bootstrap/votes", (_req, res) => {
+  let totalVoted = 0, finaliseETH = 0, refundETH = 0;
+  const recentVotes: { wallet: string; vote: string; ethWeight: number; timestamp: number }[] = [];
+
+  for (const [wallet, v] of bootstrapVotes.entries()) {
+    totalVoted += v.ethWeight;
+    if (v.vote === "finalise") finaliseETH += v.ethWeight;
+    else refundETH += v.ethWeight;
+    recentVotes.push({
+      wallet: wallet.slice(0, 6) + "..." + wallet.slice(-4),
+      vote: v.vote,
+      ethWeight: v.ethWeight,
+      timestamp: v.timestamp,
+    });
+  }
+  recentVotes.sort((a, b) => b.timestamp - a.timestamp);
+
+  res.json({
+    totalVoted: totalVoted.toFixed(4),
+    finaliseETH: finaliseETH.toFixed(4),
+    refundETH: refundETH.toFixed(4),
+    voteCount: bootstrapVotes.size,
+    recentVotes: recentVotes.slice(0, 10),
+  });
+});
+
 const PORT = parseInt(process.env.PORT || "3003", 10);
 app.listen(PORT, () => {
   console.log(`IFR Copilot API on :${PORT}`);

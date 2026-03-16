@@ -1612,6 +1612,47 @@ var ConsensusModule = {
     this.loadVotesFromStorage();
     this.render();
     if (typeof loadSavedVotes === 'function') loadSavedVotes();
+
+    // Send vote to Railway for public aggregation
+    var self2 = this;
+    fetch('https://ifr-ai-copilot-production.up.railway.app/api/bootstrap/vote', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ wallet: addr, vote: direction })
+    }).then(function() {
+      // Re-fetch public stats after successful submission
+      self2.fetchPublicVotes();
+    }).catch(function() { /* silent — localStorage is primary */ });
+  },
+
+  fetchPublicVotes: function() {
+    var self = this;
+    fetch('https://ifr-ai-copilot-production.up.railway.app/api/bootstrap/votes')
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        var publicVoted = parseFloat(data.totalVoted || '0');
+        var publicFinalise = parseFloat(data.finaliseETH || '0');
+        var publicRefund = parseFloat(data.refundETH || '0');
+        // Use public stats if they have MORE data than localStorage
+        if (publicVoted > self.state.votedETH) {
+          self.state.votedETH = publicVoted;
+          self.state.finaliseETH = publicFinalise;
+          self.state.refundETH = publicRefund;
+        }
+        // Merge recent votes from backend
+        if (data.recentVotes && data.recentVotes.length > 0) {
+          var publicList = data.recentVotes.map(function(v) {
+            return { address: v.wallet, amount: v.ethWeight, direction: v.vote, timeAgo: new Date(v.timestamp).toLocaleDateString('de-DE') };
+          });
+          // Backend has more complete data — use it if bigger
+          if (publicList.length > self.state.votes.length) {
+            self.state.votes = publicList;
+          }
+        }
+        self.render();
+        if (typeof loadSavedVotes === 'function') loadSavedVotes();
+      })
+      .catch(function() { /* silent — localStorage data remains */ });
   },
 
   loadVotesFromStorage: function() {
@@ -1647,6 +1688,9 @@ var ConsensusModule = {
 
     // Render immediately with cached votes (don't wait for RPC)
     this.render();
+
+    // Fetch public vote aggregation from Railway
+    this.fetchPublicVotes();
 
     // Then fetch totalETH from on-chain and re-render with full data
     if (typeof ethers !== 'undefined') {

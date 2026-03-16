@@ -105,6 +105,9 @@ Stand: 17.03.2026 | Konsolidiert (Claude + Core Dev)
 - [x] ✅ Bootstrap Stats Race Condition gefixt (16.03.2026)
 - [x] ✅ Recent Votes Bug gefixt (16.03.2026)
 - [x] ✅ Bootstrap Voting UX — public stats + 3-state buttons (16.03.2026)
+- [x] ✅ Bootstrap Voting: Public stats via Railway API (17.03.2026)
+      POST /api/bootstrap/vote + GET /api/bootstrap/votes
+      On-chain contribution verification via Etherscan eth_call
 - [x] ✅ Bootstrap Contribution Listener Bot (16.03.2026)
 - [x] ✅ wallet-guide.html — 27. Wiki-Seite (16.03.2026)
 - [x] ✅ Wiki Sidebar Navigation neu geordnet — 6 Sektionen (17.03.2026)
