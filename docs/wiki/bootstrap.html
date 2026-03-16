@@ -1405,7 +1405,6 @@
 var ConsensusModule = {
   config: {
     walletConnectActive: false,
-    demoMode: true,
     apiEndpoint: 'https://ifr-ai-copilot-production.up.railway.app/api/ifr/vault'
   },
 
@@ -1469,9 +1468,9 @@ var ConsensusModule = {
     var votedPctEl = document.getElementById('cs-voted-pct');
     var partEl = document.getElementById('cs-participation');
     if (totalEl) totalEl.textContent = s.totalETH.toFixed(2);
-    if (votedEl) votedEl.textContent = s.votedETH.toFixed(2);
-    if (votedPctEl) votedPctEl.textContent = participation.toFixed(0);
-    if (partEl) partEl.textContent = participation.toFixed(0);
+    if (votedEl) votedEl.textContent = s.votedETH > 0 ? s.votedETH.toFixed(2) : '0.00';
+    if (votedPctEl) votedPctEl.textContent = s.votedETH > 0 ? participation.toFixed(0) : '0';
+    if (partEl) partEl.textContent = s.votedETH > 0 ? participation.toFixed(0) : '0';
 
     // Voting bar marker (0% = left/refund, 100% = right/finalise)
     var marker = document.getElementById('cs-marker');
@@ -1556,20 +1555,29 @@ var ConsensusModule = {
     }
   },
 
-  submitVote: function(direction) {
+  submitVote: async function(direction) {
     if (typeof IFRWallet === 'undefined' || !IFRWallet.isConnected()) {
       this.connectWallet();
       return;
     }
-    // Check if user is contributor
+    var addr = IFRWallet.getAddress();
+    // Check contribution: try cache first, then fall back to direct on-chain query
     var cache = typeof IFRState !== 'undefined' ? IFRState.getCache() : null;
     var myContrib = cache ? parseFloat(cache.bootstrapContributionETH || '0') : 0;
+    if (myContrib <= 0 && typeof ethers !== 'undefined') {
+      try {
+        var rpc = new ethers.providers.JsonRpcProvider('https://ethereum-rpc.publicnode.com');
+        var vault = new ethers.Contract('0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141',
+          ['function contributions(address) view returns (uint256)'], rpc);
+        var contrib = await vault.contributions(addr);
+        myContrib = parseFloat(ethers.utils.formatEther(contrib));
+      } catch(e) { /* keep myContrib = 0 */ }
+    }
     if (myContrib <= 0) {
       alert('You must contribute ETH to the Bootstrap first before voting.');
       return;
     }
     // Record vote with ETH weight (off-chain signal — on-chain binding BootstrapVaultV4)
-    var addr = IFRWallet.getAddress();
     var ethWeight = myContrib;
     var votes = JSON.parse(localStorage.getItem('ifr_votes') || '[]');
     // Prevent double-vote from same address
@@ -1606,16 +1614,6 @@ var ConsensusModule = {
     if (typeof loadSavedVotes === 'function') loadSavedVotes();
   },
 
-  loadDemoData: function() {
-    this.state = {
-      totalETH: 0,
-      votedETH: 0,
-      finaliseETH: 0,
-      refundETH: 0,
-      votes: []
-    };
-  },
-
   loadVotesFromStorage: function() {
     var votes = [];
     try { votes = JSON.parse(localStorage.getItem('ifr_votes') || '[]'); } catch(e) {}
@@ -1644,13 +1642,8 @@ var ConsensusModule = {
     if (btnRefund) btnRefund.addEventListener('click', function() { self.submitVote('refund'); });
     if (btnFinalise) btnFinalise.addEventListener('click', function() { self.submitVote('finalise'); });
 
-    // Load saved votes from localStorage (replaces demo data)
+    // Load saved votes from localStorage
     this.loadVotesFromStorage();
-
-    // Load demo data only if no saved votes
-    if (this.state.votes.length === 0 && this.config.demoMode) {
-      this.loadDemoData();
-    }
 
     // Fetch totalETH from on-chain for consensus stats
     if (typeof ethers !== 'undefined') {
