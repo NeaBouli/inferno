@@ -71,13 +71,13 @@ Stand: 16.03.2026 | Konsolidiert (Claude + Core Dev)
 - [ ] 🔴 Etherscan Token Profil — Logo + Links + Social vervollstaendigen
       URL: etherscan.io/token/0x77e99917Eca8539c62F509ED1193ac36580A6e7B
       Benoetigt: ifr_icon_256.png, ifrunit.tech, X/Telegram Links
-- [ ] 🔴 Mirror.xyz — Account anlegen + erster Deep-Dive Artikel
-      Thema: IFR Fair Launch Story + Bootstrap Mechanismus
-- [ ] 🔴 Farcaster / Warpcast — Account anlegen + erster Post
-      Handle: @IFRtoken (falls verfuegbar)
-- [ ] 🔴 Guild.xyz — Token-gated Community aufsetzen
-      Regel: IFRLock isLocked(wallet, 1000e9) = true → Zugang
-      Passt perfekt zum Lock-Mechanismus
+- [x] ✅ Mirror.xyz — Artikel vorbereitet (docs/MIRROR_ARTICLE.md, 16.03.2026)
+      Account anlegen + publizieren noch ausstehend
+- [x] ✅ Farcaster / Warpcast — 4 Posts vorbereitet (docs/FARCASTER_POSTS.md, 16.03.2026)
+      Account anlegen noch ausstehend, Handle: @IFRtoken
+- [x] ✅ Guild.xyz — Setup Guide erstellt (docs/GUILD_SETUP.md, 16.03.2026)
+      Guild erstellen noch ausstehend
+- [x] ✅ Contact Email kaspartizan@proton.me → Landing Page Footer + press-kit.html (16.03.2026)
 
 **🟡 Nach Announcement-Kampagne:**
 - [ ] 🟡 Reddit r/defi — Post (Text in BOOTSTRAP_ANNOUNCEMENT.md)
