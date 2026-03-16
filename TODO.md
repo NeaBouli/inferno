@@ -12,10 +12,10 @@ Stand: 17.03.2026 | Konsolidiert (Claude + Core Dev)
 5. ✅ Community Safe → BootstrapVaultV3: 50M IFR gesendet — 10.03.2026
 6. ✅ Verified on-chain: vault.balanceOf() >= 200M IFR
 
-## KRITISCH — Proposals #7/8/9 (17.03.2026)
+## KRITISCH — Proposals #7/8/9
 
 7. ⏰ Execute Proposals #7/8/9 (IDs 7,8,9)
-   ETA: 17.03.2026 ~22:50 UTC (00:50 Athen)
+   ETA: 18.03.2026 23:00 UTC (19.03.2026 01:00 Athen)
    Script: `docs/PROPOSAL_7_EXECUTION.md`
 8. Nach Execute: `isFeeExempt(Deployer+Safes)` verifizieren
 9. Nach Execute: transparency.html + wallet-guide.html feeExempt Status auf ✅ updaten
@@ -34,9 +34,9 @@ Stand: 17.03.2026 | Konsolidiert (Claude + Core Dev)
 | ID | Call | Status |
 |----|------|--------|
 | 0–6 | Diverse (Vesting, BurnReserve, Bootstrap, etc.) | ✅ Executed |
-| 7 | setFeeExempt(Deployer) | 🟡 Queued — ETA 22:50 UTC 17.03 |
-| 8 | setFeeExempt(TreasurySafe) | 🟡 Queued — ETA 22:51 UTC 17.03 |
-| 9 | setFeeExempt(CommunitySafe) | 🟡 Queued — ETA 22:51 UTC 17.03 |
+| 7 | setFeeExempt(Deployer) | 🟡 Queued — ETA 23:00 UTC 18.03 |
+| 8 | setFeeExempt(TreasurySafe) | 🟡 Queued — ETA 23:00 UTC 18.03 |
+| 9 | setFeeExempt(CommunitySafe) | 🟡 Queued — ETA 23:00 UTC 18.03 |
 | 10 | setOwner(TreasurySafe) | 🔴 PENDING — propose after #7 executed |
 
 ---
@@ -121,9 +121,9 @@ Stand: 17.03.2026 | Konsolidiert (Claude + Core Dev)
       resubmit → Promise.all → fetchPublicVotes → render
 - [x] ✅ Bootstrap Contribution Listener Bot (16.03.2026)
 - [x] ✅ wallet-guide.html — 27. Wiki-Seite (16.03.2026)
-- [x] ✅ Wiki Sidebar Navigation neu geordnet — 6 Sektionen (17.03.2026)
+- [x] ✅ Wiki Sidebar Navigation neu geordnet — 6 Sektionen (17.03.2026, Commit: 1ca41f5f)
 - [x] ✅ Token Flow SVG korrigiert (16.03.2026)
-- [x] ✅ Paragraph.xyz Blog-Link im Footer (17.03.2026)
+- [x] ✅ Paragraph.xyz Blog-Link im Footer (17.03.2026, Commit: 2eb00870)
 - [ ] Create animated token GIF (fuer CoinGecko/CMC)
 - [ ] WalletConnect Phase 2: `isLocked(wallet, 1000e9)` Check → Copilot Gate
 - [ ] Uniswap Link aktivieren — NUR wenn LP live
@@ -214,7 +214,7 @@ Stand: 17.03.2026 | Konsolidiert (Claude + Core Dev)
 | Datum | Aktion |
 |-------|--------|
 | ✅ 10.03.2026 | Proposals #1-#3 executed + Bootstrap funded (200M IFR) |
-| 🟡 17.03.2026 ~22:50 UTC | Proposals #7/#8/#9 execute (feeExempt Deployer+Safes) |
+| ⏰ 18.03.2026 23:00 UTC | Proposals #7/#8/#9 execute (feeExempt Deployer+Safes) |
 | 🔴 Nach #7 execute | Proposal #10: transferOwnership → TreasurySafe |
 | 05.06.2026 | Bootstrap Ende — finalise() → Uniswap V2 LP |
 | 01.09.2026 | LiqRes Lock-Ende — LP-Erweiterung moeglich |
