@@ -63,8 +63,42 @@ Stand: 16.03.2026 | Konsolidiert (Claude + Core Dev)
 25. 🟡 wallet-guide.html live verifizieren nach CDN-Flush
 26. 🟡 transparency.html live verifizieren nach CDN-Flush
 27. 🔒 npm audit: 34 Vulnerabilities — fix nach LP-Launch
-28. 📢 Reddit Posts: r/defi + r/ethfinance + r/CryptoMoonShots
-29. 📢 Farcaster Post
+
+## HOCH — Publication Platforms
+
+**🔴 SOFORT vorbereiten:**
+- [x] ✅ Juicebox — juicebox.money/v5/eth:79 (16.03.2026)
+- [ ] 🔴 Etherscan Token Profil — Logo + Links + Social vervollstaendigen
+      URL: etherscan.io/token/0x77e99917Eca8539c62F509ED1193ac36580A6e7B
+      Benoetigt: ifr_icon_256.png, ifrunit.tech, X/Telegram Links
+- [ ] 🔴 Mirror.xyz — Account anlegen + erster Deep-Dive Artikel
+      Thema: IFR Fair Launch Story + Bootstrap Mechanismus
+- [ ] 🔴 Farcaster / Warpcast — Account anlegen + erster Post
+      Handle: @IFRtoken (falls verfuegbar)
+- [ ] 🔴 Guild.xyz — Token-gated Community aufsetzen
+      Regel: IFRLock isLocked(wallet, 1000e9) = true → Zugang
+      Passt perfekt zum Lock-Mechanismus
+
+**🟡 Nach Announcement-Kampagne:**
+- [ ] 🟡 Reddit r/defi — Post (Text in BOOTSTRAP_ANNOUNCEMENT.md)
+- [ ] 🟡 Reddit r/ethfinance — Post
+- [ ] 🟡 Reddit r/CryptoMoonShots — Post (Karma pruefen!)
+- [ ] 🟡 Medium — Account anlegen + Artikel vorbereiten
+- [ ] 🟡 Paragraph.xyz — Newsletter/Blog aufsetzen
+- [ ] 🟡 Farcaster erster Bootstrap Post
+
+**⏳ Nach LP live (nach 05.06.2026):**
+- [ ] ⏳ CoinGecko Listing — Token Logo 256x256 PNG bereit
+- [ ] ⏳ CoinMarketCap Listing
+- [ ] ⏳ DEXTools Profil optimieren (automatisch nach LP)
+- [ ] ⏳ DEXScreener Profil optimieren
+- [ ] ⏳ GeckoTerminal Profil optimieren
+- [ ] ⏳ DexGuru Profil optimieren
+- [ ] ⏳ DeFiLlama TVL Listing beantragen
+- [ ] ⏳ TokenSniffer Audit-Status optimieren
+- [ ] ⏳ GoPlus Security Token Security Check
+- [ ] ⏳ De.fi Token Info vervollstaendigen
+- [ ] ⏳ Lens Protocol Account anlegen
 
 ---
 
@@ -228,6 +262,7 @@ Stand: 16.03.2026 | Konsolidiert (Claude + Core Dev)
 3. Creator Rewards / SDK (Phase 3)
 4. DAO Upgrade (Phase 4)
 5. Bug Bounty Programm (Phase 5)
+6. ⏳ Animated Token GIF erstellen (fuer CoinGecko/CMC) — 256x256px, transparent BG, <500KB
 
 ---
 
