@@ -147,13 +147,22 @@ Stand: 17.03.2026 | Konsolidiert (Claude + Core Dev)
 - [x] ✅ robots.txt AI Bots erlaubt
 - [ ] 🔒 npm audit: 34 Vulnerabilities — fix nach LP-Launch (Breaking Changes)
 
-## MITTEL — 400M LP Reserve Security
+## MITTEL — 400M Deployer Reserve — Security Roadmap
 
-- [ ] 🟡 Plan dokumentieren: 400M unter Multisig-Kontrolle bringen
-      **Option A:** Transfer → TreasurySafe (nach feeExempt Proposal #7)
-      **Option B:** Deployer direkt via finalise() pairen (Bootstrap Ende)
-      **Option C:** Governance Proposal nach Bootstrap + vor Phase 2 LP
-      → **Team-Entscheidung vor Bootstrap-Ende (05.06.2026) noetig!**
+**On-chain verifiziert (17.03.2026):**
+- Deployer haelt: **400.6M IFR** (Single EOA Key!)
+- Bootstrap Vault: **200M IFR** (100M LP + 100M Claims)
+- `finalise()` beruehrt Deployer IFR **NICHT** — nur Vault IFR
+- LP + Claims kommen komplett aus dem Vault
+- Deployer 400M ist SEPARAT vom Bootstrap
+
+**Optionen fuer 400M Sicherung:**
+- [ ] 🟡 **Option A:** Transfer 400M → TreasurySafe (nach Proposal #7 feeExempt)
+      Vorteil: 3-of-5 Schutz sofort. Nachteil: grosse Transaktion.
+- [ ] 🟡 **Option B:** Deployer behaelt 400M bis Phase 2 LP-Erweiterung
+      Vorteil: Keine unnoetige Bewegung. Nachteil: Single Key Risiko bis 01.09.2026.
+- [ ] 🟡 **Option C:** Governance Proposal fuer Transfer nach Bootstrap
+      → **Team-Entscheidung noetig — aktuell kein Zeitdruck (Bootstrap laeuft unabhaengig)**
 - [ ] 🟡 400M Deployer-Risiko auf transparency.html + wallet-guide.html dokumentieren
 - [ ] 🔵 Nach Bootstrap finalise(): LP Tokens bei Team.Finance verifizieren (12-Monate Lock)
 
