@@ -39,6 +39,9 @@
     .cb-done{border-color:#22c55e;background:rgba(34,197,94,0.15);color:#22c55e}
     code{background:#1f2937;color:#f97316;padding:1px 6px;border-radius:4px;font-size:0.82rem}
     hr{border:none;border-top:1px solid #1f2937;margin:32px 0}
+    table{width:100%;border-collapse:collapse;margin:12px 0;font-size:0.85rem}
+    th,td{text-align:left;padding:8px 12px;border-bottom:1px solid #1f2937}
+    th{color:#6b7280;font-size:0.75rem;text-transform:uppercase}
     .footer{text-align:center;color:#374151;font-size:0.75rem;margin-top:60px;padding-top:20px;border-top:1px solid #1f2937}
   </style>
 </head>
@@ -46,445 +49,179 @@
   <div class="container">
     <a href="wiki/roadmap.html" class="back" rel="nofollow">&larr; Roadmap</a>
     <h1>IFR Protocol &mdash; Developer TODO List</h1>
-    <div class="subtitle">Last updated: 2026-03-16 &middot; Branch: main</div>
+    <div class="subtitle">Last updated: 2026-03-17 &middot; Branch: main</div>
 
-    <!-- ═══ STANDING INSTRUCTIONS ═══ -->
-    <div style="background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.3);border-radius:12px;padding:20px;margin-bottom:32px;">
-      <h3 style="color:#fbbf24;margin-top:0;">Claude Code &mdash; Standing Instructions</h3>
-      <p style="color:#9ca3af;font-size:0.9rem;margin:0 0 12px;">
-        Execute this checklist at the END of every Claude Code task:
-      </p>
-      <ol style="color:#9ca3af;font-size:0.85rem;line-height:2;margin:0;padding-left:20px;">
-        <li>Run test counts &rarr; update <strong>35 files</strong>: index.html, wiki/index.html, security.html, faq.html, press-kit.html, one-pager.html, roadmap.html, README, DOCS.md, all audit/*.md, all reports/*.md, SKYWALKER.md, Ali system-prompts.ts, and 15+ docs/*.md files (use <code style="color:#fbbf24;">grep -rn "OLD_COUNT"</code> to find all)</li>
-        <li>Check wiki page count &rarr; update if new page added</li>
-        <li>Check contract count &rarr; update if new contract added</li>
-        <li>Visit all <code style="color:#fbbf24;">TODO: IFR_UPDATE</code> markers &rarr; update values</li>
-        <li>Mark completed TODO items [x] &rarr; move to Completed</li>
-        <li>Sync TODO.html from TODO.md</li>
-        <li>Commit everything together</li>
-      </ol>
-    </div>
-
-    <!-- ═══ CRITICAL ═══ -->
-    <h2><span class="priority-badge p-critical">CRITICAL</span> Critical</h2>
-
-    <h3>Bot &amp; Infrastructure</h3>
+    <!-- ═══ CRITICAL: PROPOSALS EXECUTE ═══ -->
+    <h2><span class="priority-badge p-critical">CRITICAL</span> Proposals #7/8/9 Execute</h2>
     <ul>
-      <li><div class="cb cb-done">&#x2713;</div><code>voteAnnouncement.js</code> &mdash; Governance proposal announcements + executable reminder + verify.html link (12 tests)</li>
-      <li><div class="cb cb-done">&#x2713;</div><code>SIGNER_WALLETS</code> gesetzt in Railway (16.03.2026)</li>
-      <li><div class="cb cb-done">&#x2713;</div><code>VERIFY_PORT=3001</code> gesetzt in Railway (16.03.2026)</li>
+      <li><div class="cb"></div>&#x23F0; Execute Proposals #7/8/9 &mdash; ETA 17.03.2026 ~22:50 UTC (00:50 Athen)</li>
+      <li><div class="cb"></div>After execute: verify <code>isFeeExempt(Deployer+Safes)</code></li>
+      <li><div class="cb"></div>After execute: update transparency.html + wallet-guide.html feeExempt &#x2192; &#x2705;</li>
     </ul>
 
-    <h3>Core Developer (external)</h3>
+    <h3>Proposal #10: transferOwnership</h3>
     <ul>
-      <li><div class="cb"></div>Deploy BuilderRegistry.sol to Sepolia</li>
-      <li><div class="cb"></div>Conduct BuilderRegistry audit</li>
-      <li><div class="cb"></div>Deploy BuilderRegistry to Mainnet</li>
-      <li><div class="cb"></div>Set <code>BUILDER_REGISTRY_ADDR</code> in Railway env (after deploy)</li>
+      <li><div class="cb"></div>&#x1F534; <code>scripts/propose_8.js</code> &mdash; transferOwnership to TreasurySafe (after #7 executed)</li>
+      <li><div class="cb"></div>48h wait &#x2192; execute &#x2192; Governance Owner = TreasurySafe 3-of-5</li>
     </ul>
 
-    <!-- ═══ THIS WEEK ═══ -->
-    <h2><span class="priority-badge p-week">THIS WEEK</span> This Week</h2>
+    <!-- ═══ GOVERNANCE STATUS ═══ -->
+    <h2><span class="priority-badge p-dao">STATUS</span> Governance Proposals</h2>
+    <table>
+      <thead><tr><th>ID</th><th>Call</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td>0&ndash;6</td><td>Diverse (Vesting, BurnReserve, Bootstrap, etc.)</td><td style="color:#22c55e;">&#x2705; Executed</td></tr>
+        <tr><td>7</td><td>setFeeExempt(Deployer)</td><td style="color:#eab308;">&#x1F7E1; Queued &mdash; ETA 22:50 UTC</td></tr>
+        <tr><td>8</td><td>setFeeExempt(TreasurySafe)</td><td style="color:#eab308;">&#x1F7E1; Queued &mdash; ETA 22:51 UTC</td></tr>
+        <tr><td>9</td><td>setFeeExempt(CommunitySafe)</td><td style="color:#eab308;">&#x1F7E1; Queued &mdash; ETA 22:51 UTC</td></tr>
+        <tr><td>10</td><td>setOwner(TreasurySafe)</td><td style="color:#ef4444;">&#x1F534; PENDING</td></tr>
+      </tbody>
+    </table>
 
-    <h3>Multisig</h3>
+    <!-- ═══ HIGH: MULTISIG ═══ -->
+    <h2><span class="priority-badge p-week">HIGH</span> Multisig + Governance</h2>
     <ul>
-      <li><div class="cb cb-done">&#x2713;</div>A.M. als 3. Signer hinzugef&uuml;gt</li>
-      <li><div class="cb cb-done">&#x2713;</div>Y.K. als 4. Signer hinzugef&uuml;gt</li>
-      <li><div class="cb cb-done">&#x2713;</div>Threshold auf 2-of-4 gesetzt (14.03.2026)</li>
-      <li><div class="cb cb-done">&#x2713;</div>5. Signer Psaltin (A.P.) hinzugef&uuml;gt (beide Safes) (15.03.2026)</li>
-      <li><div class="cb cb-done">&#x2713;</div>Threshold auf 2-of-5 gesetzt (15.03.2026)</li>
-      <li><div class="cb cb-done">&#x2713;</div>Threshold auf 3-of-5 erh&ouml;ht (15.03.2026, beide Safes)</li>
-      <li><div class="cb"></div>Transfer Governance &rarr; GnosisSafe ownership</li>
+      <li><div class="cb cb-done">&#x2713;</div>Multisig 1-of-2 &#x2192; 3-of-5 (15.03.2026, both Safes)</li>
+      <li><div class="cb cb-done">&#x2713;</div>Sepolia Proposal #10 executed</li>
+      <li><div class="cb"></div>&#x1F534; Transfer Governance &#x2192; TreasurySafe (Proposal #10)</li>
     </ul>
 
+    <!-- ═══ HIGH: TELEGRAM ═══ -->
     <h3>Telegram Bot</h3>
     <ul>
-      <li><div class="cb cb-done">&#x2713;</div><code>/announce</code> command: auto-append community link</li>
-      <li><div class="cb cb-done">&#x2713;</div>Channel &rarr; Community announcements auto-sync + pin</li>
-      <li><div class="cb cb-done">&#x2713;</div>Keep latest announcement pinned at all times</li>
-      <li><div class="cb cb-done">&#x2713;</div>Test daily welcome (<code>/testwelcome</code> admin command)</li>
-      <li><div class="cb cb-done">&#x2713;</div>Test daily burn report (<code>/testburn</code> admin command)</li>
-      <li><div class="cb cb-done">&#x2713;</div>Full language switch to English (7 files rewritten)</li>
-      <li><div class="cb"></div>Final test protected topics (Vote/Council/Dev&amp;Builder/Core Dev)</li>
+      <li><div class="cb cb-done">&#x2713;</div>Protected topics tested (17.03.2026)</li>
+      <li><div class="cb cb-done">&#x2713;</div>Persistent verification across restarts (17.03.2026)</li>
+      <li><div class="cb cb-done">&#x2713;</div><code>SIGNER_WALLETS</code> + <code>VERIFY_PORT=3001</code> in Railway</li>
+      <li><div class="cb"></div>Ali Phase 2: WalletConnect &#x2192; wallet-specific answers (after LP)</li>
     </ul>
 
-    <h3>Ali Copilot</h3>
-    <ul>
-      <li><div class="cb cb-done">&#x2713;</div>Security policy: no PII, no wallet outputs, no contract addresses, only ifrunit.tech, reliability disclaimer, scam awareness (9-point policy)</li>
-      <li><div class="cb"></div>Ali Phase 2: WalletConnect &rarr; wallet-specific answers (after LP live)</li>
-    </ul>
+    <hr>
 
-    <!-- ═══ GOVERNANCE PROPOSALS ═══ -->
-    <h2><span class="priority-badge p-critical">CRITICAL</span> Governance Proposals #7/8/9</h2>
+    <!-- ═══ MEDIUM: BOOTSTRAP ═══ -->
+    <h2><span class="priority-badge p-medium">MEDIUM</span> Bootstrap Announcements</h2>
     <ul>
-      <li><div class="cb"></div>&#x23F0; 17.03.2026 23:00 UTC: <code>execute()</code> Proposals #7/8/9 (script in docs/PROPOSAL_7_EXECUTION.md)</li>
-      <li><div class="cb"></div>Nach Execute: <code>isFeeExempt(Deployer+Safes)</code> verifizieren</li>
-      <li><div class="cb"></div>Nach Execute #7: transparency.html + wallet-guide.html feeExempt Status auf &#x2705; updaten</li>
-      <li><div class="cb"></div>Proposal #8 starten: transferOwnership &rarr; TreasurySafe</li>
-    </ul>
-
-    <!-- ═══ SESSION 16.03 DONE ═══ -->
-    <h2><span class="priority-badge p-done">DONE</span> Session 16.03.2026</h2>
-    <ul>
-      <li><div class="cb cb-done">&#x2713;</div>Bootstrap Stats Race Condition gefixt</li>
-      <li><div class="cb cb-done">&#x2713;</div>Recent Votes Bug gefixt</li>
-      <li><div class="cb cb-done">&#x2713;</div>Bootstrap Contribution Listener (Telegram Bot)</li>
-      <li><div class="cb cb-done">&#x2713;</div>Bootstrap Voting UX &mdash; public stats + 3-state buttons</li>
-      <li><div class="cb cb-done">&#x2713;</div><code>wallet-guide.html</code> &mdash; 27. Wiki-Seite</li>
-      <li><div class="cb cb-done">&#x2713;</div>Deep Audit 16.03.2026 &mdash; 7 Fixes, 0 Critical Security Issues</li>
-      <li><div class="cb cb-done">&#x2713;</div>Token Flow SVG korrigiert (FeeRouter Phase 3, Deployer-Linien)</li>
-      <li><div class="cb cb-done">&#x2713;</div>Announcement Texte fertig (docs/BOOTSTRAP_ANNOUNCEMENT.md)</li>
-      <li><div class="cb cb-done">&#x2713;</div>Bootstrap page reviewed + voting UX fixed</li>
-      <li><div class="cb cb-done">&#x2713;</div>X/Twitter Thread gepostet + PNG Banner</li>
+      <li><div class="cb cb-done">&#x2713;</div>Announcement texts (BOOTSTRAP_ANNOUNCEMENT.md)</li>
+      <li><div class="cb cb-done">&#x2713;</div>X/Twitter Thread gepostet (16.03.2026)</li>
+      <li><div class="cb cb-done">&#x2713;</div>Telegram Announcement gepostet</li>
       <li><div class="cb cb-done">&#x2713;</div>Juicebox listing live &mdash; <a href="https://juicebox.money/v5/eth:79" rel="nofollow">juicebox.money/v5/eth:79</a></li>
+      <li><div class="cb cb-done">&#x2713;</div>Bootstrap page final review</li>
+      <li><div class="cb cb-done">&#x2713;</div>Reddit r/defi + r/ethfinance + r/CryptoMoonShots (17.03.2026)</li>
+      <li><div class="cb"></div>&#x1F4E2; Farcaster &mdash; Account + erster Post</li>
     </ul>
 
-    <!-- ═══ STILL OPEN FROM SESSION ═══ -->
-    <h2><span class="priority-badge p-week">THIS WEEK</span> Still Open (16.03.2026)</h2>
+    <!-- ═══ MEDIUM: PLATFORMS ═══ -->
+    <h3>Publication Platforms</h3>
+
+    <h3 style="color:#22c55e;">&#x2705; Done</h3>
     <ul>
-      <li><div class="cb"></div>&#x1F7E1; wallet-guide.html live verifizieren nach CDN-Flush</li>
-      <li><div class="cb"></div>&#x1F7E1; transparency.html live verifizieren nach CDN-Flush</li>
-      <li><div class="cb"></div>&#x1F512; npm audit: 34 Vulnerabilities &mdash; fix nach LP-Launch</li>
+      <li><div class="cb cb-done">&#x2713;</div>Juicebox listing (16.03.2026)</li>
+      <li><div class="cb cb-done">&#x2713;</div>Etherscan Token Profile submitted (17.03.2026)</li>
+      <li><div class="cb cb-done">&#x2713;</div>Paragraph.xyz Artikel published (17.03.2026)</li>
+      <li><div class="cb cb-done">&#x2713;</div>MIRROR_ARTICLE.md vorbereitet</li>
+      <li><div class="cb cb-done">&#x2713;</div>FARCASTER_POSTS.md vorbereitet</li>
+      <li><div class="cb cb-done">&#x2713;</div>GUILD_SETUP.md vorbereitet</li>
+      <li><div class="cb cb-done">&#x2713;</div>Contact email kaspartisan@proton.me &#x2192; footer + press-kit</li>
     </ul>
 
-    <!-- ═══ PUBLICATION PLATFORMS ═══ -->
-    <h2><span class="priority-badge p-week">PLATFORMS</span> Publication Platforms</h2>
-
-    <h3>&#x1F534; SOFORT vorbereiten</h3>
+    <h3 style="color:#ef4444;">&#x1F534; Still Open</h3>
     <ul>
-      <li><div class="cb cb-done">&#x2713;</div>Juicebox &mdash; <a href="https://juicebox.money/v5/eth:79" rel="nofollow">juicebox.money/v5/eth:79</a> (16.03.2026)</li>
-      <li><div class="cb"></div>&#x1F534; Etherscan Token Profil &mdash; Logo + Links + Social vervollst&auml;ndigen</li>
-      <li><div class="cb cb-done">&#x2713;</div>Mirror.xyz &mdash; Artikel vorbereitet (<code>docs/MIRROR_ARTICLE.md</code>). Account + publish ausstehend.</li>
-      <li><div class="cb cb-done">&#x2713;</div>Farcaster &mdash; 4 Posts vorbereitet (<code>docs/FARCASTER_POSTS.md</code>). Account ausstehend.</li>
-      <li><div class="cb cb-done">&#x2713;</div>Guild.xyz &mdash; Setup Guide erstellt (<code>docs/GUILD_SETUP.md</code>). Guild erstellen ausstehend.</li>
-      <li><div class="cb cb-done">&#x2713;</div>Contact Email <code>kaspartisan@proton.me</code> &rarr; Landing Page Footer + press-kit.html</li>
+      <li><div class="cb"></div>Farcaster Account erstellen + ersten Post</li>
+      <li><div class="cb"></div>Collab.Land Bot zu Telegram Group</li>
+      <li><div class="cb"></div>Medium Account + Artikel</li>
+      <li><div class="cb"></div>Reddit Karma pr&uuml;fen (r/CryptoMoonShots)</li>
     </ul>
 
-    <h3>&#x1F7E1; Nach Announcement-Kampagne</h3>
+    <h3 style="color:#9ca3af;">&#x23F3; After LP (after 05.06.2026)</h3>
     <ul>
-      <li><div class="cb"></div>Reddit r/defi &mdash; Post (Text in BOOTSTRAP_ANNOUNCEMENT.md)</li>
-      <li><div class="cb"></div>Reddit r/ethfinance &mdash; Post</li>
-      <li><div class="cb"></div>Reddit r/CryptoMoonShots &mdash; Post (Karma pr&uuml;fen!)</li>
-      <li><div class="cb"></div>Medium &mdash; Account anlegen + Artikel vorbereiten</li>
-      <li><div class="cb"></div>Paragraph.xyz &mdash; Newsletter/Blog aufsetzen</li>
-      <li><div class="cb"></div>Farcaster erster Bootstrap Post</li>
-    </ul>
-
-    <h3>&#x23F3; Nach LP live (nach 05.06.2026)</h3>
-    <ul>
-      <li><div class="cb"></div>CoinGecko Listing &mdash; Token Logo 256&times;256 PNG bereit</li>
+      <li><div class="cb"></div>CoinGecko Listing</li>
       <li><div class="cb"></div>CoinMarketCap Listing</li>
-      <li><div class="cb"></div>DEXTools Profil optimieren</li>
-      <li><div class="cb"></div>DEXScreener Profil optimieren</li>
-      <li><div class="cb"></div>GeckoTerminal Profil optimieren</li>
-      <li><div class="cb"></div>DexGuru Profil optimieren</li>
-      <li><div class="cb"></div>DeFiLlama TVL Listing beantragen</li>
-      <li><div class="cb"></div>TokenSniffer Audit-Status optimieren</li>
-      <li><div class="cb"></div>GoPlus Security Token Security Check</li>
-      <li><div class="cb"></div>De.fi Token Info vervollst&auml;ndigen</li>
-      <li><div class="cb"></div>Lens Protocol Account anlegen</li>
+      <li><div class="cb"></div>DEXTools / DEXScreener / GeckoTerminal / DexGuru</li>
+      <li><div class="cb"></div>DeFiLlama TVL Listing</li>
+      <li><div class="cb"></div>TokenSniffer / GoPlus / De.fi</li>
+      <li><div class="cb"></div>Lens Protocol Account</li>
     </ul>
 
-    <!-- ═══ MEDIUM TERM ═══ -->
-    <h2><span class="priority-badge p-medium">MEDIUM</span> Medium Term</h2>
-
-    <h3>Bootstrap (LIVE since 07.03.2026, ends 05.06.2026)</h3>
+    <!-- ═══ MEDIUM: FRONTEND ═══ -->
+    <h2><span class="priority-badge p-medium">MEDIUM</span> Frontend (Sessions 16&ndash;17.03)</h2>
     <ul>
-      <li><div class="cb cb-done">&#x2713;</div>Announcement texts fertig (docs/BOOTSTRAP_ANNOUNCEMENT.md)</li>
-      <li><div class="cb"></div>Reddit posts: r/defi + r/ethfinance + r/CryptoMoonShots</li>
-      <li><div class="cb"></div>Prepare Farcaster post</li>
-      <li><div class="cb cb-done">&#x2713;</div>Juicebox listing live (16.03.2026) &mdash; <a href="https://juicebox.money/v5/eth:79" rel="nofollow">juicebox.money/v5/eth:79</a></li>
-      <li><div class="cb cb-done">&#x2713;</div>X/Twitter Thread gepostet (16.03.2026) + PNG Banner</li>
-      <li><div class="cb cb-done">&#x2713;</div>Bootstrap page reviewed + voting UX fixed (16.03.2026)</li>
+      <li><div class="cb cb-done">&#x2713;</div>Bootstrap Stats Race Condition fix</li>
+      <li><div class="cb cb-done">&#x2713;</div>Recent Votes Bug fix</li>
+      <li><div class="cb cb-done">&#x2713;</div>Bootstrap Voting UX &mdash; public stats + 3-state buttons</li>
+      <li><div class="cb cb-done">&#x2713;</div>Bootstrap Contribution Listener Bot</li>
+      <li><div class="cb cb-done">&#x2713;</div><code>wallet-guide.html</code> &mdash; 27. Wiki page</li>
+      <li><div class="cb cb-done">&#x2713;</div>Wiki Sidebar reorder &mdash; 6 themed sections (17.03.2026)</li>
+      <li><div class="cb cb-done">&#x2713;</div>Token Flow SVG corrected</li>
+      <li><div class="cb cb-done">&#x2713;</div>Paragraph.xyz Blog link in footer</li>
+      <li><div class="cb"></div>Animated token GIF (for CoinGecko/CMC)</li>
+      <li><div class="cb"></div>WalletConnect Phase 2: <code>isLocked</code> &#x2192; Copilot gate</li>
+      <li><div class="cb"></div>Uniswap link (ONLY after LP live)</li>
     </ul>
 
-    <h3>Frontend</h3>
+    <!-- ═══ MEDIUM: DOCS ═══ -->
+    <h3>Documentation (Sessions 16&ndash;17.03)</h3>
     <ul>
-      <li><div class="cb"></div>Create animated token GIF</li>
-      <li><div class="cb"></div><code>Buy IFR</code> &rarr; enable Uniswap button (ONLY after LP live)</li>
-      <li><div class="cb"></div>Integrate live token price (ONLY after LP live)</li>
-      <li><div class="cb"></div>WalletConnect Phase 2: <code>isLocked(wallet,1000e9)</code> check &rarr; Copilot gate</li>
-      <li><div class="cb"></div>WalletConnect Phase 3: Uniswap link (ONLY after LP live)</li>
+      <li><div class="cb cb-done">&#x2713;</div>MIRROR_ARTICLE.md</li>
+      <li><div class="cb cb-done">&#x2713;</div>FARCASTER_POSTS.md</li>
+      <li><div class="cb cb-done">&#x2713;</div>GUILD_SETUP.md</li>
+      <li><div class="cb cb-done">&#x2713;</div>BOOTSTRAP_ANNOUNCEMENT.md</li>
+      <li><div class="cb cb-done">&#x2713;</div>PROPOSAL_7_CALLDATA.md + PROPOSAL_7_EXECUTION.md</li>
+      <li><div class="cb cb-done">&#x2713;</div>PROPOSAL_8_EXECUTION.md + <code>propose_8.js</code></li>
+    </ul>
+
+    <!-- ═══ MEDIUM: SECURITY ═══ -->
+    <h3>Security / Audit</h3>
+    <ul>
+      <li><div class="cb cb-done">&#x2713;</div>Deep Audit 16.03.2026 &mdash; 7 fixes, 0 critical</li>
+      <li><div class="cb cb-done">&#x2713;</div>AUDIT_REPORT_20260316.md</li>
+      <li><div class="cb cb-done">&#x2713;</div>ifr_icon_32.svg + robots.txt AI bots</li>
+      <li><div class="cb"></div>&#x1F512; npm audit: 34 vulnerabilities &mdash; fix after LP launch</li>
+    </ul>
+
+    <!-- ═══ MEDIUM: 400M LP ═══ -->
+    <h3>400M LP Reserve Security</h3>
+    <ul>
+      <li><div class="cb"></div>&#x1F7E1; Plan: 400M under multisig control (Option A/B/C &mdash; decide before 05.06.2026)</li>
+      <li><div class="cb"></div>&#x1F7E1; Document 400M deployer risk on transparency + wallet-guide</li>
+      <li><div class="cb"></div>&#x1F535; After finalise(): verify LP tokens at Team.Finance (12-month lock)</li>
+    </ul>
+
+    <hr>
+
+    <!-- ═══ LOW ═══ -->
+    <h2><span class="priority-badge p-later">LOW</span> Low Priority</h2>
+
+    <h3>Frontend Fixes</h3>
+    <ul>
+      <li><div class="cb"></div>Bug: INFERNO &ldquo;I&rdquo; shift on mobile (CSS reflow)</li>
+      <li><div class="cb"></div>Bug: Silver/gas flicker starts too late</li>
+      <li><div class="cb"></div>Subtitle: <code>$IFR</code> (red) + &ldquo;The Deflationary Utility Token&rdquo;</li>
+      <li><div class="cb"></div>&ldquo;Read the Docs&rdquo; button: transparent red, soft pulse</li>
+      <li><div class="cb"></div>FAQ: &ldquo;Why Inferno?&rdquo; (Dante reference)</li>
     </ul>
 
     <h3>Documentation</h3>
     <ul>
-      <li><div class="cb"></div>Plan B documentation with exact decision timestamp</li>
-      <li><div class="cb"></div>Update handover document for core developers</li>
-      <li><div class="cb"></div>Project continuity section (landing + README + wiki)</li>
-    </ul>
-
-    <h3>Railway</h3>
-    <ul>
-      <li><div class="cb"></div>Verify FeeRouterV1 tracking (after Proposal #6)</li>
-      <li><div class="cb"></div>Verify BuybackVault + BurnReserve accumulation tracking</li>
-      <li><div class="cb"></div>Switch pool fee receiver from Deployer EOA to FeeRouterV1</li>
-    </ul>
-
-    <h3>SEO / LLMO</h3>
-    <ul>
-      <li><div class="cb"></div>Full JSON-LD Schema.org audit on all wiki pages</li>
-      <li><div class="cb"></div>Verify ChatGPT/Perplexity indexing</li>
-      <li><div class="cb"></div>Follow up on ethereum-lists PR #1010</li>
-    </ul>
-
-    <h3>Wiki: Wallet &amp; Contract Transparency Manual</h3>
-    <ul>
-      <li><div class="cb cb-done">&#x2713;</div><strong>DONE:</strong> <code>docs/wiki/wallet-guide.html</code> &mdash; 27. Wiki page (16.03.2026)
-        <ul style="margin-top:4px;color:#9ca3af;font-size:0.9em;">
-          <li><strong>Teil 1 &mdash; Project Wallets</strong> (7 wallets, blue cards): Deployer EOA, Treasury Safe, Community Safe, Team Beneficiary, Voucher Signer, Community EOA, Treasury EOA</li>
-          <li><strong>Teil 2 &mdash; Smart Contracts</strong> (12 contracts, orange cards): InfernoToken, Governance, IFRLock, BootstrapVaultV3, LiquidityReserve, Vesting, PartnerVault, FeeRouterV1, BuybackVault, BurnReserve, Treasury Safe, Community Safe</li>
-          <li><strong>Upcoming</strong> (5 contracts, grey cards): LiquidityVault, BuilderRegistry, RatVoting, ForumVoting, IFRSpamProtection</li>
-          <li><strong>Design:</strong> Cards with icon, address (copy button), status badge, Etherscan link, ecosystem flow SVG, mobile-friendly</li>
-          <li><strong>Landing Page:</strong> 2 buttons linking to <code>wallet-guide.html</code> (wallets section + contracts section)</li>
-        </ul>
-      </li>
-    </ul>
-
-    <h3>400M LP Reserve &mdash; Security Roadmap</h3>
-    <ul>
-      <li><div class="cb"></div>&#x1F534; Nach Proposal #8: 400M IFR bleibt beim Deployer EOA (Single Key!)
-        <ul style="margin-top:4px;color:#9ca3af;font-size:0.9em;">
-          <li><strong>Option A:</strong> Transfer 400M &rarr; Treasury Safe (3-of-5 Schutz sofort)</li>
-          <li><strong>Option B:</strong> Deployer direkt via finalise() pairen (keine Bewegung)</li>
-          <li><strong>Option C:</strong> Governance Proposal nach Bootstrap + vor Phase 2</li>
-          <li style="color:#eab308;font-weight:600;">Team-Entscheidung vor Bootstrap-Ende n&ouml;tig!</li>
-        </ul>
-      </li>
-      <li><div class="cb"></div>&#x1F7E1; 400M Deployer-Risiko auf transparency.html + wallet-guide.html dokumentieren</li>
-      <li><div class="cb"></div>&#x1F535; Nach finalise(): LP Tokens bei Team.Finance verifizieren (12-Monate Lock)</li>
-    </ul>
-
-    <h3>CI/CD</h3>
-    <ul>
-      <li><div class="cb"></div>Set up Slither CI</li>
-      <li><div class="cb"></div>Set up Mythril CI</li>
-      <li><div class="cb"></div>Coverage badge in README</li>
-      <li><div class="cb"></div>Recruit 2-3 repo maintainers</li>
+      <li><div class="cb"></div>CHANGELOG.md: Plan B documentation</li>
+      <li><div class="cb"></div>Wiki inconsistencies (test counts, roadmap phases, addresses)</li>
+      <li><div class="cb"></div>Vesting schedule internal doc</li>
+      <li><div class="cb"></div>Transparency page: Railway burned vs burnBalance fix</li>
     </ul>
 
     <hr>
 
-    <!-- ═══ PHASE 2+ FEATURES ═══ -->
-    <h2><span class="priority-badge p-medium">PHASE 2+</span> Phase 2+ Features</h2>
-
-    <h3>Landing Page &mdash; Dashboard Role Badges</h3>
+    <!-- ═══ PHASE 2+ ═══ -->
+    <h2><span class="priority-badge p-vision">PHASE 2+</span> Later</h2>
     <ul>
-      <li><div class="cb"></div>Dashboard Badges/Patches auf Landing Page einbauen (sichtbarer Bereich)
-        <ul style="margin-top:4px;color:#9ca3af;font-size:0.9em;">
-          <li>Dashboard User Badge (klickbar &rarr; User Dashboard)</li>
-          <li>Dashboard Builder Badge (klickbar &rarr; Builder Dashboard)</li>
-          <li>Dashboard Developer / Core Team Badge (klickbar &rarr; Dev Dashboard)</li>
-          <li>Visuell als klickbare Patches/Embleme gestaltet</li>
-          <li>Je nach verbundener Wallet-Rolle sichtbar/aktiv</li>
-        </ul>
-      </li>
-    </ul>
-
-    <h3>Governance Section &mdash; Live Wallet Verification Stats</h3>
-    <ul>
-      <li><div class="cb"></div>Live-Anzeige: Anzahl verifizierter Wallets (keine &ouml;ffentlichen Adressen)
-        <ul style="margin-top:4px;color:#9ca3af;font-size:0.9em;">
-          <li>Aufschl&uuml;sselung nach Topic: General / Vote+Council / Dev&amp;Builder / Core Team</li>
-          <li>Nur Statistik/Anzahl &mdash; kein Datenschutz-Problem</li>
-          <li>Backend-Endpoint: <code>/api/verify/stats</code> (Railway)</li>
-        </ul>
-      </li>
-    </ul>
-
-    <h3>Governance Section &mdash; Letzte Abstimmungen (on-chain live)</h3>
-    <ul>
-      <li><div class="cb"></div>The Council (Der Rat): letzte 5 Abstimmungen
-        <ul style="margin-top:4px;color:#9ca3af;font-size:0.9em;">
-          <li>Titel, Ergebnis, Datum, Etherscan-Link</li>
-        </ul>
-      </li>
-      <li><div class="cb"></div>Das Forum (Community Vote): letzte 5 Votes
-        <ul style="margin-top:4px;color:#9ca3af;font-size:0.9em;">
-          <li>Titel, Ergebnis, Datum, Link zu Details</li>
-          <li>&ldquo;Mehr anzeigen&rdquo; Link &rarr; &auml;ltere Abstimmungen</li>
-          <li>Live on-chain via Governance Contract Events</li>
-        </ul>
-      </li>
-    </ul>
-
-    <h3>Landing Page &mdash; Mobile Performance Optimierung</h3>
-    <ul>
-      <li><div class="cb"></div>Lazy Loading via IntersectionObserver (Animationen, Canvas, Widgets)</li>
-      <li><div class="cb"></div>Rendering-Priorisierung: Text+CTA sofort, Animationen deferred</li>
-      <li><div class="cb"></div>Header-Animation auf Mobile vereinfachen/&uuml;berspringen</li>
-      <li><div class="cb"></div>CSS <code>will-change</code> + <code>transform</code> statt top/left f&uuml;r Animationen</li>
-      <li><div class="cb"></div><code>requestAnimationFrame</code> f&uuml;r alle JS-Animationen</li>
-      <li><div class="cb"></div>Passive Event Listeners f&uuml;r Scroll-Events</li>
-      <li><div class="cb"></div><code>contain: layout</code> wo m&ouml;glich</li>
-      <li><div class="cb"></div>Bilder: WebP + <code>srcset</code> korrekte Gr&ouml;&szlig;en</li>
-      <li><div class="cb"></div>Kritisches CSS inline, Rest deferred</li>
-      <li><div class="cb"></div><code>font-display: swap</code> f&uuml;r alle Fonts</li>
-      <li><div class="cb"></div>Device Detection: Mobile/Low-End &rarr; reduzierte Animations-Variante</li>
-      <li><div class="cb"></div><code>prefers-reduced-motion</code> Media Query vollst&auml;ndig respektieren</li>
-      <li><div class="cb"></div>Ziel: ruckelfreies Scrollen auf Low-End Smartphones</li>
-    </ul>
-
-    <hr>
-
-    <!-- ═══ DONE ═══ -->
-    <h2><span class="priority-badge p-done">DONE</span> Completed</h2>
-
-    <h3>Phase 3 &mdash; Sprint 2 (Wallet Verification)</h3>
-    <ul>
-      <li><div class="cb cb-done">&#x2713;</div><code>wallet-core.js</code> &mdash; Central wallet session (EIP-5749)</li>
-      <li><div class="cb cb-done">&#x2713;</div><code>ifr-state.js</code> &mdash; On-chain state reader</li>
-      <li><div class="cb cb-done">&#x2713;</div>Bootstrap widget &mdash; contribute/claim/refund</li>
-      <li><div class="cb cb-done">&#x2713;</div>Landing page header dropdown</li>
-      <li><div class="cb cb-done">&#x2713;</div><code>agent.html</code> free/premium gate</li>
-      <li><div class="cb cb-done">&#x2713;</div>26 wiki top-bar wallet buttons</li>
-      <li><div class="cb cb-done">&#x2713;</div><code>verificationStore.js</code> &mdash; 3-tier nonce + session store</li>
-      <li><div class="cb cb-done">&#x2713;</div><code>onChainReader.js</code> &mdash; IFRLock + Gnosis Safe getOwners()</li>
-      <li><div class="cb cb-done">&#x2713;</div><code>/verify</code> + <code>/mystatus</code> bot commands</li>
-      <li><div class="cb cb-done">&#x2713;</div><code>verify.html</code> &mdash; 3-tier signing UI</li>
-      <li><div class="cb cb-done">&#x2713;</div>Topic guards (Core Dev / Council / Vote / Dev&amp;Builder)</li>
-      <li><div class="cb cb-done">&#x2713;</div>23/23 verify tests passing</li>
-    </ul>
-
-    <h3>Phase 3 &mdash; Sprint 3 (On-Chain Reader)</h3>
-    <ul>
-      <li><div class="cb cb-done">&#x2713;</div><code>BuilderRegistry.sol</code> &mdash; 27/27 tests, ABI exported</li>
-      <li><div class="cb cb-done">&#x2713;</div>Deploy script (Sepolia + Mainnet + Etherscan verify)</li>
-      <li><div class="cb cb-done">&#x2713;</div>Gnosis Safe <code>getOwners()</code> auto-sync (5 min cache)</li>
-      <li><div class="cb cb-done">&#x2713;</div>BuilderRegistry placeholder in onChainReader.js</li>
-    </ul>
-
-    <h3>Phase 3 &mdash; Sprint 4 (Wiki)</h3>
-    <ul>
-      <li><div class="cb cb-done">&#x2713;</div><code>governance.html</code> &mdash; Bot commands + topic access table</li>
-      <li><div class="cb cb-done">&#x2713;</div><code>integration.html</code> &mdash; BuilderRegistry process + 4 categories</li>
-      <li><div class="cb cb-done">&#x2713;</div><code>roadmap.html</code> &mdash; Phase 3 sprint status updated</li>
-    </ul>
-
-    <h3>WalletConnect Phase 1</h3>
-    <ul>
-      <li><div class="cb cb-done">&#x2713;</div>Connect button in landing page header</li>
-      <li><div class="cb cb-done">&#x2713;</div>Wallet dropdown (ETH/IFR balance, lock badge, bootstrap link)</li>
-      <li><div class="cb cb-done">&#x2713;</div>Close button on dropdown</li>
-      <li><div class="cb cb-done">&#x2713;</div>Disconnect instant UI reset</li>
-      <li><div class="cb cb-done">&#x2713;</div>Mobile MetaMask deeplink</li>
-      <li><div class="cb cb-done">&#x2713;</div>visibilitychange auto-reconnect</li>
-      <li><div class="cb cb-done">&#x2713;</div>14 Playwright tests passing</li>
-    </ul>
-
-    <h3>Telegram Bot</h3>
-    <ul>
-      <li><div class="cb cb-done">&#x2713;</div><code>voteAnnouncement.js</code> &mdash; Governance proposal announcements + executable reminder + verify.html link (12 tests)</li>
-      <li><div class="cb cb-done">&#x2713;</div>Verification gate + spam moderation</li>
-      <li><div class="cb cb-done">&#x2713;</div>Daily burn report (09:00 CET)</li>
-      <li><div class="cb cb-done">&#x2713;</div>Bootstrap start/end announcement (auto from 07.03.2026)</li>
-      <li><div class="cb cb-done">&#x2713;</div>7-day countdown (before start + before end)</li>
-    </ul>
-
-    <h3>Ali Copilot</h3>
-    <ul>
-      <li><div class="cb cb-done">&#x2713;</div>Automatic bootstrap date check (NOT YET ACTIVE &rarr; ACTIVE &rarr; ENDED)</li>
-      <li><div class="cb cb-done">&#x2713;</div>Wiki pages auto-fetch every 60 min</li>
-      <li><div class="cb cb-done">&#x2713;</div>Railway auto-deploy active</li>
-    </ul>
-
-    <h3>DAO Governance</h3>
-    <ul>
-      <li><div class="cb cb-done">&#x2713;</div>Two-chamber visual on landing page</li>
-      <li><div class="cb cb-done">&#x2713;</div><code>governance.html</code> &mdash; DAO concept fully documented</li>
-      <li><div class="cb cb-done">&#x2713;</div>DAO contracts table (Phase 4 placeholder)</li>
-    </ul>
-
-    <h3>Ali Copilot</h3>
-    <ul>
-      <li><div class="cb cb-done">&#x2713;</div>Security policy &mdash; 9-point policy in system-prompts.ts (no PII, no wallet details, no contract addresses, only ifrunit.tech, reliability disclaimer, scam awareness)</li>
-    </ul>
-
-    <h3>FAQ &amp; Documentation</h3>
-    <ul>
-      <li><div class="cb cb-done">&#x2713;</div><code>faq.html</code> &mdash; 8 new DAO/Governance FAQs (two-chamber, voting, verification, tiers, spam protection, timeline, supply, BuilderRegistry)</li>
-    </ul>
-
-    <h3>SEO / Audit</h3>
-    <ul>
-      <li><div class="cb cb-done">&#x2713;</div>Audit report <code>AUDIT_REPORT_20260314.md</code></li>
-      <li><div class="cb cb-done">&#x2713;</div>Test counts 494/444 &rarr; 556 across 32 files</li>
-      <li><div class="cb cb-done">&#x2713;</div>Wiki page count 16/24 &rarr; 25 across 8 files</li>
-      <li><div class="cb cb-done">&#x2713;</div><code>rel="canonical"</code> on all 26 wiki pages</li>
-      <li><div class="cb cb-done">&#x2713;</div><code>twitter:card</code> + <code>twitter:site</code> + <code>twitter:image</code></li>
-      <li><div class="cb cb-done">&#x2713;</div>JSON-LD on <code>verify.html</code></li>
-      <li><div class="cb cb-done">&#x2713;</div><code>verify.html</code> added to sitemap</li>
-      <li><div class="cb cb-done">&#x2713;</div>Developer TODO markers (<code>IFR_UPDATE</code>) placed</li>
-      <li><div class="cb cb-done">&#x2713;</div>robots.txt (GPTBot, ClaudeBot, PerplexityBot allowed)</li>
-    </ul>
-
-    <hr>
-
-    <!-- ═══ AFTER LP ═══ -->
-    <h2><span class="priority-badge p-later">AFTER LP</span> After LP Live (after 05.06.2026)</h2>
-    <ul>
-      <li><div class="cb"></div>Apply for CoinGecko listing</li>
-      <li><div class="cb"></div>Apply for CoinMarketCap listing</li>
-      <li><div class="cb"></div>Enable AI Copilot gate &ge;1,000 IFR locked</li>
-      <li><div class="cb"></div>Telegram wallet whitelist via WalletConnect</li>
-      <li><div class="cb"></div>LiqRes withdrawal proposal: <code>setMaxWithdrawPerPeriod(200M)</code> from 01.09.2026</li>
-      <li><div class="cb"></div>Animated Token GIF erstellen (f&uuml;r CoinGecko/CMC) &mdash; 256&times;256px, transparent BG, &lt;500KB</li>
-    </ul>
-
-    <!-- ═══ PHASE 4 ═══ -->
-    <h2><span class="priority-badge p-dao">PHASE 4</span> DAO (after LP live + ecosystem)</h2>
-
-    <h3>Smart Contracts</h3>
-    <ul>
-      <li><div class="cb"></div><code>RatVoting.sol</code> &mdash; Council governance, Merkle tree, on-chain anchoring</li>
-      <li><div class="cb"></div><code>ForumVoting.sol</code> &mdash; Community voting, ecrecover signatures</li>
-      <li><div class="cb"></div><code>IFRSpamProtection.sol</code> &mdash; 10 IFR per proposal, deflationary</li>
-    </ul>
-
-    <h3>Bot Extensions</h3>
-    <ul>
-      <li><div class="cb"></div><code>/propose</code> command (Forum)</li>
-      <li><div class="cb"></div><code>/vote [id] [yes/no]</code> command</li>
-      <li><div class="cb"></div><code>/proposals</code> command</li>
-      <li><div class="cb"></div><code>/result [id]</code> command</li>
-      <li><div class="cb"></div><code>/ratpropose</code> command (Council/Signer only)</li>
-      <li><div class="cb"></div><code>/ratvote</code> command (Council/Signer only)</li>
-      <li><div class="cb"></div>Wallet-Mapper / IFR-Reader / Reaction-Tracker / Poll-Manager services</li>
-    </ul>
-
-    <!-- ═══ VISION ═══ -->
-    <h2><span class="priority-badge p-vision">VISION</span> Phase 3+ (long-term)</h2>
-
-    <h3>Web Dashboard</h3>
-    <ul>
-      <li><div class="cb"></div>Role-based via WalletConnect (User/Builder/Partner/Core Dev)</li>
-      <li><div class="cb"></div>Integrated governance tool</li>
-      <li><div class="cb"></div>CDN/Edge on app.ifrunit.tech</li>
-    </ul>
-
-    <h3>Client App</h3>
-    <ul>
-      <li><div class="cb"></div>APK (Android) + F-Droid + Google Play + App Store (iOS)</li>
-      <li><div class="cb"></div>DAO governance integrated (The Council + The Forum)</li>
-    </ul>
-
-    <h3>Creator &amp; Partner</h3>
-    <ul>
-      <li><div class="cb"></div>Creator Gateway (open-source bridge, Docker, OAuth + WalletConnect)</li>
-      <li><div class="cb"></div>YouTube integration hybrid model B</li>
-      <li><div class="cb"></div>PartnerVault Option C (milestone unlock + linear vesting)</li>
-      <li><div class="cb"></div>Bootstrap V4 (contributor voting, ETH-weighted)</li>
-    </ul>
-
-    <h3>Phase 5</h3>
-    <ul>
-      <li><div class="cb"></div>Bug bounty program</li>
-      <li><div class="cb"></div>Professional third-party audit</li>
-      <li><div class="cb"></div>Ecosystem fund</li>
+      <li><div class="cb"></div>LiqRes withdrawal from 01.09.2026</li>
+      <li><div class="cb"></div>LP expansion from LiqRes (Phase 2/3)</li>
+      <li><div class="cb"></div>Creator Rewards / SDK (Phase 3)</li>
+      <li><div class="cb"></div>DAO Upgrade (Phase 4)</li>
+      <li><div class="cb"></div>Bug bounty program (Phase 5)</li>
+      <li><div class="cb"></div>Animated Token GIF (256&times;256, transparent, &lt;500KB)</li>
     </ul>
 
     <div class="footer">
-      IFR Protocol &mdash; Developer TODO &middot; noindex &middot; 2026-03-16
+      IFR Protocol &mdash; Developer TODO &middot; noindex &middot; 2026-03-17
     </div>
   </div>
 </body>

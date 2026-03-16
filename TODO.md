@@ -1,91 +1,91 @@
 # PROJEKT INFERNO — VOLLSTÄNDIGE TODO-LISTE
-Stand: 16.03.2026 | Konsolidiert (Claude + Core Dev)
+Stand: 17.03.2026 | Konsolidiert (Claude + Core Dev)
 
 ---
 
-## KRITISCH — 10.03.2026 ab 00:21 CET (Timelock)
+## KRITISCH — Governance Proposals Execute
 
-1. Execute Proposal #1: `setFeeExempt(Vesting, true)`
-   `PROPOSAL_ID=1 npx hardhat run scripts/execute-proposal.js --network mainnet`
-2. Execute Proposal #2: `setFeeExempt(BurnReserve, true)`
-   `PROPOSAL_ID=2 npx hardhat run scripts/execute-proposal.js --network mainnet`
-3. Execute Proposal #3: `setFeeExempt(BootstrapVaultV3, true)` — ab 00:50 CET
-   `PROPOSAL_ID=3 npx hardhat run scripts/execute-proposal.js --network mainnet`
+1. ✅ Execute Proposal #1: `setFeeExempt(Vesting, true)` — 10.03.2026
+2. ✅ Execute Proposal #2: `setFeeExempt(BurnReserve, true)` — 10.03.2026
+3. ✅ Execute Proposal #3: `setFeeExempt(BootstrapVaultV3, true)` — 10.03.2026
+4. ✅ Treasury Safe → BootstrapVaultV3: 150M IFR gesendet — 10.03.2026
+5. ✅ Community Safe → BootstrapVaultV3: 50M IFR gesendet — 10.03.2026
+6. ✅ Verified on-chain: vault.balanceOf() >= 200M IFR
 
-## KRITISCH — Direkt nach Proposals
+## KRITISCH — Proposals #7/8/9 (17.03.2026)
 
-4. Treasury Safe → BootstrapVaultV3: **150M IFR** senden
-   Gnosis Safe UI, Ziel: `0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141`
-5. Community Safe → BootstrapVaultV3: **50M IFR** senden (gleiche Zieladresse)
-6. Verify on-chain: `vault.balanceOf() >= 200M IFR`
-7. **Naechsten Governance Proposal Termin im Blick behalten — nicht verpassen!**
+7. ⏰ Execute Proposals #7/8/9 (IDs 7,8,9)
+   ETA: 17.03.2026 ~22:50 UTC (00:50 Athen)
+   Script: `docs/PROPOSAL_7_EXECUTION.md`
+8. Nach Execute: `isFeeExempt(Deployer+Safes)` verifizieren
+9. Nach Execute: transparency.html + wallet-guide.html feeExempt Status auf ✅ updaten
+
+## KRITISCH — Proposal #10: transferOwnership
+
+10. 🔴 Proposal #10: `setOwner(TreasurySafe)` — nach Proposals #7/8/9 executed
+    Script: `scripts/propose_8.js`
+    Guide: `docs/PROPOSAL_8_EXECUTION.md`
+    → 48h warten → execute → Governance Owner = TreasurySafe 3-of-5
 
 ---
 
-## HOCH — Bootstrap Ankuendigung (nach Funding verified)
+## Governance Proposals Status
 
-1. ✅ X (@IFRtoken): Bootstrap Thread gepostet (16.03.2026) + PNG Banner
-2. ✅ Juicebox listing live (16.03.2026) — discovery only, NO funding. URL: https://juicebox.money/v5/eth:79
-3. Wiki `bootstrap.html`: Live-Status + Vault-Balance Banner aktivieren
-4. Bootstrap Countdown Widget auf Landing Page aktivieren
-5. Telegram Kanal & Chat auf Landing Page und Juicebox verlinken
+| ID | Call | Status |
+|----|------|--------|
+| 0–6 | Diverse (Vesting, BurnReserve, Bootstrap, etc.) | ✅ Executed |
+| 7 | setFeeExempt(Deployer) | 🟡 Queued — ETA 22:50 UTC 17.03 |
+| 8 | setFeeExempt(TreasurySafe) | 🟡 Queued — ETA 22:51 UTC 17.03 |
+| 9 | setFeeExempt(CommunitySafe) | 🟡 Queued — ETA 22:51 UTC 17.03 |
+| 10 | setOwner(TreasurySafe) | 🔴 PENDING — propose after #7 executed |
+
+---
 
 ## HOCH — Multisig + Governance
 
-6. ✅ Multisig Upgrade: 1-of-2 → 3-of-5 (Treasury Safe + Community Safe) — 15.03.2026
-7. Governance → GnosisSafe ubergeben (via Proposal #8)
-8. ✅ Sepolia Proposal #10: `setFeeExempt(BootstrapVaultV3 Sepolia)` executed
+1. ✅ Multisig Upgrade: 1-of-2 → 3-of-5 (15.03.2026, beide Safes)
+2. ✅ Sepolia Proposal #10: setFeeExempt(BootstrapVaultV3 Sepolia) executed
+3. 🔴 Transfer Governance → TreasurySafe (via Proposal #10, nach Execute #7)
 
-## HOCH — Governance Proposals #7/8/9 (17.03.2026)
+## HOCH — Telegram Bot
 
-9. ⏰ 17.03.2026 23:00 UTC: execute() Proposals #7/8/9 (IDs 7,8,9 — script in docs/PROPOSAL_7_EXECUTION.md)
-10. Nach Execute: isFeeExempt(Deployer+Safes) verifizieren
-11. Nach Execute #7: transparency.html + wallet-guide.html feeExempt Status auf ✅ updaten
-12. Proposal #8 starten: transferOwnership → TreasurySafe (nach Proposal #7 executed)
+4. ✅ /announce command: auto-append community link
+5. ✅ Channel → Community auto-sync + pin
+6. ✅ Full language switch to English (7 files)
+7. ✅ Final test protected topics DONE (17.03.2026)
+8. ✅ Persistent verification across restarts (17.03.2026, Commit: f30dc3ce)
+9. ✅ SIGNER_WALLETS + VERIFY_PORT=3001 in Railway (16.03.2026)
+10. Ali Phase 2: WalletConnect → wallet-specific answers (after LP live)
 
-## HOCH — Session 16.03.2026 — erledigte Items
+---
 
-13. ✅ Bootstrap Stats Race Condition gefixt (16.03.2026)
-14. ✅ Recent Votes Bug gefixt (16.03.2026)
-15. ✅ Bootstrap Contribution Listener (Telegram Bot, 16.03.2026)
-16. ✅ Bootstrap Voting UX — public stats + 3-state buttons (16.03.2026)
-17. ✅ wallet-guide.html — 27. Wiki-Seite (16.03.2026)
-18. ✅ Deep Audit 16.03.2026 — 7 Fixes, 0 Critical Security Issues
-19. ✅ Token Flow SVG korrigiert (FeeRouter Phase 3, Deployer-Linien)
-20. ✅ Announcement Texte fertig (docs/BOOTSTRAP_ANNOUNCEMENT.md)
-21. ✅ Bootstrap page reviewed + voting UX fixed (16.03.2026)
-22. ✅ SIGNER_WALLETS gesetzt in Railway (16.03.2026)
-23. ✅ VERIFY_PORT=3001 gesetzt in Railway (16.03.2026)
-24. ✅ Threshold auf 3-of-5 erhoeht (15.03.2026, beide Safes — Treasury + Community)
+## MITTEL — Bootstrap Announcements
 
-## HOCH — Noch offen (Session 16.03.2026)
+1. ✅ Announcement texts fertig (docs/BOOTSTRAP_ANNOUNCEMENT.md, 16.03.2026)
+2. ✅ X/Twitter Thread gepostet (16.03.2026) + PNG Banner
+3. ✅ Telegram Announcement gepostet (16.03.2026)
+4. ✅ Juicebox listing live — juicebox.money/v5/eth:79 (16.03.2026)
+5. ✅ Bootstrap page final review done (16.03.2026)
+6. ✅ Reddit r/defi + r/ethfinance + r/CryptoMoonShots gepostet (17.03.2026)
+7. 📢 Farcaster — Account erstellen + erster Post
 
-25. 🟡 wallet-guide.html live verifizieren nach CDN-Flush
-26. 🟡 transparency.html live verifizieren nach CDN-Flush
-27. 🔒 npm audit: 34 Vulnerabilities — fix nach LP-Launch
+## MITTEL — Publication Platforms
 
-## HOCH — Publication Platforms
-
-**🔴 SOFORT vorbereiten:**
+**✅ Erledigt:**
 - [x] ✅ Juicebox — juicebox.money/v5/eth:79 (16.03.2026)
-- [ ] 🔴 Etherscan Token Profil — Logo + Links + Social vervollstaendigen
-      URL: etherscan.io/token/0x77e99917Eca8539c62F509ED1193ac36580A6e7B
-      Benoetigt: ifr_icon_256.png, ifrunit.tech, X/Telegram Links
-- [x] ✅ Mirror.xyz — Artikel vorbereitet (docs/MIRROR_ARTICLE.md, 16.03.2026)
-      Account anlegen + publizieren noch ausstehend
-- [x] ✅ Farcaster / Warpcast — 4 Posts vorbereitet (docs/FARCASTER_POSTS.md, 16.03.2026)
-      Account anlegen noch ausstehend, Handle: @IFRtoken
-- [x] ✅ Guild.xyz — Setup Guide erstellt (docs/GUILD_SETUP.md, 16.03.2026)
-      Guild erstellen noch ausstehend
-- [x] ✅ Contact Email kaspartisan@proton.me → Landing Page Footer + press-kit.html (16.03.2026)
+- [x] ✅ Etherscan Token Profile submitted (17.03.2026)
+- [x] ✅ Paragraph.xyz Artikel published (17.03.2026)
+      URL: paragraph.com/@0x6b36.../the-ifr-fair-launch-story
+- [x] ✅ MIRROR_ARTICLE.md vorbereitet (17.03.2026)
+- [x] ✅ FARCASTER_POSTS.md vorbereitet (17.03.2026)
+- [x] ✅ GUILD_SETUP.md vorbereitet (17.03.2026)
+- [x] ✅ Contact Email kaspartisan@proton.me → Footer + press-kit.html (16.03.2026)
 
-**🟡 Nach Announcement-Kampagne:**
-- [ ] 🟡 Reddit r/defi — Post (Text in BOOTSTRAP_ANNOUNCEMENT.md)
-- [ ] 🟡 Reddit r/ethfinance — Post
-- [ ] 🟡 Reddit r/CryptoMoonShots — Post (Karma pruefen!)
-- [ ] 🟡 Medium — Account anlegen + Artikel vorbereiten
-- [ ] 🟡 Paragraph.xyz — Newsletter/Blog aufsetzen
-- [ ] 🟡 Farcaster erster Bootstrap Post
+**🔴 Noch offen:**
+- [ ] 🔴 Farcaster Account erstellen + ersten Post
+- [ ] 🟡 Collab.Land Bot zu Telegram Group hinzufuegen
+- [ ] 🟡 Medium — Account anlegen + Artikel
+- [ ] 🔵 Reddit Karma pruefen (r/CryptoMoonShots Minimum)
 
 **⏳ Nach LP live (nach 05.06.2026):**
 - [ ] ⏳ CoinGecko Listing — Token Logo 256x256 PNG bereit
@@ -100,158 +100,76 @@ Stand: 16.03.2026 | Konsolidiert (Claude + Core Dev)
 - [ ] ⏳ De.fi Token Info vervollstaendigen
 - [ ] ⏳ Lens Protocol Account anlegen
 
----
+## MITTEL — Frontend (Session 16-17.03.2026)
 
-## MITTEL — Plan B Umstellung (Kohaerenz)
+- [x] ✅ Bootstrap Stats Race Condition gefixt (16.03.2026)
+- [x] ✅ Recent Votes Bug gefixt (16.03.2026)
+- [x] ✅ Bootstrap Voting UX — public stats + 3-state buttons (16.03.2026)
+- [x] ✅ Bootstrap Contribution Listener Bot (16.03.2026)
+- [x] ✅ wallet-guide.html — 27. Wiki-Seite (16.03.2026)
+- [x] ✅ Wiki Sidebar Navigation neu geordnet — 6 Sektionen (17.03.2026)
+- [x] ✅ Token Flow SVG korrigiert (16.03.2026)
+- [x] ✅ Paragraph.xyz Blog-Link im Footer (17.03.2026)
+- [ ] Create animated token GIF (fuer CoinGecko/CMC)
+- [ ] WalletConnect Phase 2: `isLocked(wallet, 1000e9)` Check → Copilot Gate
+- [ ] Uniswap Link aktivieren — NUR wenn LP live
 
-1. **Alle Seiten auf Plan B updaten** (Landing Page, Wiki, Live Tracker etc.) — aktuell viele Inkohaerenzen. Teilweise erledigt (Commits 861c33ab + 7e5a8eea + 879f4b55)
-2. **`.md` Dateien bereinigen** — geloeste TODOs entfernen, auf Plan B angleichen
-3. **Wallet-Eintraege im Live Tracker anpassen** + Berechnungen auf Plan B umstellen
-4. **Plan B Dokumentation verfassen mit Zeitstempel der Entscheidung:**
-   - Warum wurden zusaetzliche Token gesperrt?
-   - Nur 10M IFR fuer 9 Monate fuer Devs → bewusste Selbstbeschraenkung als Trust-Signal
-   - Platzierung: README / Wiki / Landing Page (noch festlegen)
-5. ✅ ERLEDIGT (10.03.2026): Bootstrap auf Plan B umgestellt. Siehe CHANGELOG.md.
-6. ✅ ERLEDIGT (10.03.2026): Plan A Texte bereinigt in BOOTSTRAP_VAULT_SPEC.md + DEPLOYMENTS.md.
-7. `docs/index.html:1987` — Live Tracker JS: bootstrap Adresse noch V1 (`0xA820`), muss V3 werden (`0xf72565...e141`)
-8. `docs/wiki/deployment.html:499` — Mainnet-Tabelle zeigt alte V1 BootstrapVault Adresse (`0xA820`), muss V3 werden
-9. `scripts/propose-bootstrap-feeexempt.js:16` — Script hardcoded alte V1 Adresse, updaten oder DEPRECATED markieren
-10. `docs/wiki/security.html:1128` — "TODOs vor Mainnet" Abschnitt ist veraltet (Mainnet seit 05.03.2026 deployed)
-11. `SKYWALKER.md` — Mehrere alte V1 Referenzen (Zeile 34, 364) + veraltete Projekt-Infos (Sepolia-Stand statt Mainnet)
+## MITTEL — Documentation (Session 16-17.03.2026)
 
-## MITTEL — Listing + Sichtbarkeit
+- [x] ✅ MIRROR_ARTICLE.md erstellt (17.03.2026)
+- [x] ✅ FARCASTER_POSTS.md erstellt (17.03.2026)
+- [x] ✅ GUILD_SETUP.md erstellt (17.03.2026)
+- [x] ✅ BOOTSTRAP_ANNOUNCEMENT.md fertig (16.03.2026)
+- [x] ✅ PROPOSAL_7_CALLDATA.md erstellt (16.03.2026)
+- [x] ✅ PROPOSAL_7_EXECUTION.md erstellt (16.03.2026)
+- [x] ✅ PROPOSAL_8_EXECUTION.md erstellt (17.03.2026)
+- [x] ✅ propose_8.js — transferOwnership Script (17.03.2026)
 
-12. CoinGecko Listing beantragen
-13. CoinMarketCap Listing beantragen
-14. Token Logo: 256x256 PNG transparent (fuer CG/CMC)
-15. OG-Image: 1200x630 fuer Social Sharing
-16. **Logo spiegelverkehrt (horizontal) generieren** → fuer Landing Page
+## MITTEL — Security/Audit
 
-## MITTEL — WalletConnect + Copilot Gate
+- [x] ✅ Deep Audit 16.03.2026 — 7 Fixes, 0 Critical (Commit: 44458cb6)
+- [x] ✅ AUDIT_REPORT_20260316.md erstellt
+- [x] ✅ ifr_icon_32.svg erstellt + auf GitHub (17.03.2026)
+- [x] ✅ robots.txt AI Bots erlaubt
+- [ ] 🔒 npm audit: 34 Vulnerabilities — fix nach LP-Launch (Breaking Changes)
 
-17. **WalletConnect in Landing Page einbauen**
-18. WalletConnect Phase 1: Basic Connect + Adresse anzeigen
-19. WalletConnect Phase 2: `isLocked(wallet, 1000e9)` Check → Copilot Gate
-20. AI Copilot Gate: >=1000 IFR locked → Premium Zugang
-21. **AI Copilot Update** — Plan B Bootstrap info geupdated (Commit 879f4b55, Railway deployed)
-22. Uniswap Link aktivieren — NUR wenn LP live
+## MITTEL — 400M LP Reserve Security
 
-## MITTEL — Wiki: Wallet & Contract Transparency Manual
-
-28. ✅ ERLEDIGT (16.03.2026): **Wallet & Contract Transparency Manual**
-    Datei: `docs/wiki/wallet-guide.html` (Basis: vesting.html klonen)
-
-    **TEIL 1 — PROJECT WALLETS** (Cards, blau)
-    Fuer jede Wallet: Name, Adresse, Rolle, Genesis-Balance, aktuelle Funktion, Interaktion mit Ecosystem, Access Control
-    1. Deployer EOA (`0x6b36...`) — LP Reserve
-    2. Treasury Safe (`0x5ad6...`) — Multisig 3-of-5
-    3. Community Safe (`0xaC56...`) — Multisig 3-of-5
-    4. Team Beneficiary (`0x04FA...`) — Vesting Empfaenger
-    5. Voucher Signer (`0x17F8...`) — FeeRouter Voucher
-    6. Community EOA (`0x61aF...`) — migriert zu Safe
-    7. Treasury EOA (`0xC8f4...`) — migriert zu Safe
-
-    **TEIL 2 — SMART CONTRACTS** (Cards, orange)
-    Fuer jeden Contract: Adresse, Owner, Funktion, Flows ein/aus, feeExempt Status, Phase, Etherscan Link
-    1. InfernoToken (`0x77e9...`) — ERC-20, Fee-on-transfer
-    2. Governance (`0xc43d...`) — 48h Timelock
-    3. IFRLock (`0x7699...`) — Lock/Unlock Mechanismus
-    4. BootstrapVaultV3 (`0xf725...`) — Community LP Launch
-    5. LiquidityReserve (`0xdc03...`) — Locked bis 01.09.2026
-    6. Vesting (`0x2694...`) — Team Allocation 4 Jahre
-    7. PartnerVault (`0xc6eb...`) — Builder Rewards
-    8. FeeRouterV1 (`0x4807...`) — Pool Fee Akkumulation
-    9. BuybackVault (`0x670D...`) — Phase 3 Buyback
-    10. BurnReserve (`0xaA14...`) — Permanente Burns
-    11. Treasury Safe (Gnosis) — Multisig Treasury
-    12. Community Safe (Gnosis) — Multisig Community
-
-    **UPCOMING (Phase 3-4)** (Cards, grau)
-    13. LiquidityVault.sol — Deploy nach 05.06.2026
-    14. BuilderRegistry.sol — Sepolia pending
-    15. RatVoting.sol — Phase 4 DAO
-    16. ForumVoting.sol — Phase 4 DAO
-    17. IFRSpamProtection.sol — Phase 4 DAO
-
-    **DESIGN:**
-    - Cards pro Wallet/Contract (wie Genesis Kacheln)
-    - Color coding: Wallets (blau), Contracts (orange), Upcoming (grau)
-    - Ecosystem Flow Diagram (SVG inline)
-    - Jede Card: Icon, Name, Adresse (copy button), Status Badge, Beschreibung, Etherscan Link
-    - Mobile-friendly
-
-    **LANDING PAGE BUTTONS:**
-    A) Unter "Genesis & Project Wallets" Kacheln: `[→ Full Wallet & Contract Guide]` → `/wiki/wallet-guide.html`
-    B) Unter Contract Addresses neben "Upcoming Contracts (Phase 3-4)": `[→ Wallet & Contract Guide]` → `/wiki/wallet-guide.html`
-
-## MITTEL — 400M LP Reserve — Security Roadmap
-
-29. 🔴 Nach Proposal #8 (transferOwnership): Governance dezentralisiert — aber 400M IFR bleibt beim Deployer EOA (Single Key!)
-30. 🟡 Plan dokumentieren: Wie werden 400M LP Reserve unter Multisig-Kontrolle gebracht?
-    - **Option A:** Transfer 400M → Treasury Safe (braucht feeExempt nach Proposal #7). Vorteil: 3-of-5 Schutz sofort. Nachteil: Transfer-Risiko ohne LP live.
-    - **Option B:** Deployer direkt via finalise() pairen. 400M bleiben beim Deployer bis Bootstrap. Vorteil: Keine unnoetige Bewegung. Nachteil: Single Key bis Bootstrap Ende.
-    - **Option C:** Governance Proposal fuer Transfer nach Bootstrap + vor Phase 2 LP.
-    - → **Team-Entscheidung vor Bootstrap-Ende noetig!**
-31. 🟡 Transparenz: 400M Deployer-Risiko auf transparency.html + wallet-guide.html explizit als "bekannt, geplant zu loesen" dokumentieren
-32. 🔵 Nach Bootstrap finalise(): LP Tokens bei Team.Finance verifizieren (12-Monate Lock)
+- [ ] 🟡 Plan dokumentieren: 400M unter Multisig-Kontrolle bringen
+      **Option A:** Transfer → TreasurySafe (nach feeExempt Proposal #7)
+      **Option B:** Deployer direkt via finalise() pairen (Bootstrap Ende)
+      **Option C:** Governance Proposal nach Bootstrap + vor Phase 2 LP
+      → **Team-Entscheidung vor Bootstrap-Ende (05.06.2026) noetig!**
+- [ ] 🟡 400M Deployer-Risiko auf transparency.html + wallet-guide.html dokumentieren
+- [ ] 🔵 Nach Bootstrap finalise(): LP Tokens bei Team.Finance verifizieren (12-Monate Lock)
 
 ## MITTEL — Infrastruktur
 
-23. Repo-Maintainer rekrutieren (2-3 Personen)
-24. Eigene Domain (weg von GitHub Pages)
-25. Multisig Policy Wiki-Seite erstellen
-26. Project Continuity Sektion in Landing + README + Wiki
-27. "Protection Shield" Statement einbauen
+1. Repo-Maintainer rekrutieren (2-3 Personen)
+2. Eigene Domain (weg von GitHub Pages)
+3. Project Continuity Sektion in Landing + README + Wiki
 
 ---
 
 ## NIEDRIG — Frontend Fixes & Styling
 
-1. **Bug: INFERNO "I" auf Mobile/Tablet verschoben**
-   - Erstes Zeichen "I" steht initial zu weit links (Portrait-Modus)
-   - Workaround: Drehen & zurueck → positioniert sich korrekt
-   - Vermutlich: CSS-Reflow-Problem beim ersten Render (Pulsar-Interaktion)
-   - Reproduzieren & fixen (mobile + tablet, Portrait-Modus)
-
-2. **Bug: Silber/Gas-Aufflackern INFERNO startet zu spaet**
-   - Animation-Delay nach Seitenlade reduzieren → frueher starten lassen
-
-3. **Subtitle anpassen:**
-   - Neu: **`$IFR`** *(rot, fett)* `The Deflationary Utility Token`
-   - Darunter unveraendert: `Lock. Use. Benefit. Across Every Product.`
-
-4. **"Read the Docs" / "Borrow" Button:**
-   - Farbe: Transparent Rot
-   - Effekt: Soft pulsierend (CSS Animation)
-   - Ort: Landing Page
-
-5. **FAQ / Name-Erklaerung einbauen:**
-   > Warum "Inferno"? — Bei jeder Transaktion betreten die verbrannten Token (2,5%) buchstaeblich das Inferno – sie verschwinden fuer immer. Dieser Feuerprozess laeutert das Verbliebene: knapper, reiner, wertvoller. Anspielung auf Dantes Laeuterungsreise. Durch das Feuer wird $IFR mit jeder Transaktion gestaerkt.
-
-## NIEDRIG — Telegram
-
-6. **Telegram Bot Relay Bug fixen**
-7. **Telegram Bot Simultanposting implementieren:**
-   - Problem: Supergroup laesst sich nicht direkt mit Channel verknuepfen
-   - Loesung: Bot postet Announcements simultan in Community (Supergroup) + Channel
+1. Bug: INFERNO "I" auf Mobile/Tablet verschoben (CSS-Reflow)
+2. Bug: Silber/Gas-Aufflackern INFERNO startet zu spaet
+3. Subtitle anpassen: `$IFR` (rot) + `The Deflationary Utility Token`
+4. "Read the Docs" Button: Transparent Rot, soft pulsierend
+5. FAQ / Name-Erklaerung einbauen (Dantes Inferno Referenz)
 
 ## NIEDRIG — Dokumentation + Community
 
-8. CHANGELOG.md: Plan B dokumentieren (eigener Commit)
-9. Wiki-Inkonsistenzen fixen:
-   - Security: 361 → 494 Tests
-   - Roadmap: 6 → 5 Phasen
-   - Testnet-Seite: falsche LiqRes-v2-Adresse
-10. Vesting-Zeitplan Dokument erstellen (intern)
-11. Transparency Page: Railway `burned` vs `burnBalance` Fix
-12. `docs/wiki/testnet.html:479` + `ai-copilot/wiki-content.json` (testnet slug) — BootstrapVault Sepolia zeigt V1 (`0xE0E8`), sollte V3 (`0x16086d4f...`) zeigen oder beide listen
-13. `docs/PROJECT-SUMMARY.md:29` — BootstrapVault Sepolia zeigt V1 Adresse, sollte V3 sein
-14. `docs/WHITEPAPER_EN.md` — Traegt DEPRECATED Header, kann entfernt oder archiviert werden
+6. CHANGELOG.md: Plan B dokumentieren
+7. Wiki-Inkonsistenzen fixen (Test-Counts, Roadmap Phasen, Adressen)
+8. Vesting-Zeitplan Dokument erstellen (intern)
+9. Transparency Page: Railway `burned` vs `burnBalance` Fix
 
 ## NIEDRIG — Audits & Tests
 
-15. Weitere Security Audits durchfuehren
-16. Testabdeckung erweitern / neue Tests schreiben
+10. Weitere Security Audits durchfuehren
+11. Testabdeckung erweitern / neue Tests schreiben
 
 ---
 
@@ -262,7 +180,7 @@ Stand: 16.03.2026 | Konsolidiert (Claude + Core Dev)
 3. Creator Rewards / SDK (Phase 3)
 4. DAO Upgrade (Phase 4)
 5. Bug Bounty Programm (Phase 5)
-6. ⏳ Animated Token GIF erstellen (fuer CoinGecko/CMC) — 256x256px, transparent BG, <500KB
+6. ⏳ Animated Token GIF (256x256px, transparent BG, <500KB)
 
 ---
 
@@ -281,14 +199,13 @@ Stand: 16.03.2026 | Konsolidiert (Claude + Core Dev)
 
 | Datum | Aktion |
 |-------|--------|
-| 10.03.2026 00:21 CET | Proposals #1 + #2 executen |
-| 10.03.2026 00:50 CET | Proposal #3 executen |
-| 10.03.2026 00:38 CET | Sepolia Proposal #10 executen |
-| 10.03.2026 danach | Treasury + Community → BootstrapVaultV3 (200M IFR) |
-| 17.03.2026 23:00 UTC | Proposals #7/8/9 executen |
+| ✅ 10.03.2026 | Proposals #1-#3 executed + Bootstrap funded (200M IFR) |
+| 🟡 17.03.2026 ~22:50 UTC | Proposals #7/#8/#9 execute (feeExempt Deployer+Safes) |
+| 🔴 Nach #7 execute | Proposal #10: transferOwnership → TreasurySafe |
+| 05.06.2026 | Bootstrap Ende — finalise() → Uniswap V2 LP |
 | 01.09.2026 | LiqRes Lock-Ende — LP-Erweiterung moeglich |
 
 ---
 
-**Gesamtuebersicht (Stand 16.03.2026):**
-KRITISCH: 7 | HOCH: 29 (12 ✅ erledigt) | MITTEL: 32 (+5 neu) | NIEDRIG: 16 | Phase 2+: 5
+**Gesamtuebersicht (Stand 17.03.2026):**
+KRITISCH: 10 (6 ✅) | HOCH: 10 (9 ✅) | MITTEL: ~50 (30+ ✅) | NIEDRIG: 11 | Phase 2+: 6
