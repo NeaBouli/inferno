@@ -1,8 +1,9 @@
 import "dotenv/config";
 import express from "express";
 import cors from "cors";
-import { resolve, dirname } from "path";
+import { resolve, dirname, join } from "path";
 import { fileURLToPath } from "url";
+import { existsSync, readFileSync, writeFileSync } from "fs";
 import { SYSTEM_PROMPTS } from "../src/context/system-prompts.js";
 import { loadWikiDocs, buildSystemPrompt, WikiDoc } from "./wiki-rag.js";
 
@@ -786,9 +787,37 @@ app.get("/api/ifr/vault", async (_req, res) => {
 });
 
 // ── Bootstrap Community Consensus Votes ─────────────────────────────
-// In-memory vote store (wallet → {vote, ethWeight, timestamp})
-// Resets on restart — acceptable for sentiment indicator
-const bootstrapVotes = new Map<string, { vote: string; ethWeight: number; timestamp: number }>();
+// File-persisted vote store (survives Railway restarts)
+const VOTES_FILE = join(process.env.RAILWAY_VOLUME_MOUNT_PATH || "/tmp", "ifr_bootstrap_votes.json");
+
+type VoteEntry = { vote: string; ethWeight: number; timestamp: number };
+
+function loadVotesFromFile(): Map<string, VoteEntry> {
+  try {
+    if (existsSync(VOTES_FILE)) {
+      const raw = JSON.parse(readFileSync(VOTES_FILE, "utf8"));
+      const map = new Map<string, VoteEntry>();
+      for (const [k, v] of Object.entries(raw)) map.set(k, v as VoteEntry);
+      console.log(`[votes] Loaded ${map.size} votes from ${VOTES_FILE}`);
+      return map;
+    }
+  } catch (e) {
+    console.error("[votes] Load error:", (e as Error).message);
+  }
+  return new Map();
+}
+
+function saveVotesToFile(votes: Map<string, VoteEntry>): void {
+  try {
+    const obj: Record<string, VoteEntry> = {};
+    for (const [k, v] of votes.entries()) obj[k] = v;
+    writeFileSync(VOTES_FILE, JSON.stringify(obj, null, 2), "utf8");
+  } catch (e) {
+    console.error("[votes] Save error:", (e as Error).message);
+  }
+}
+
+const bootstrapVotes = loadVotesFromFile();
 
 async function verifyContribution(wallet: string): Promise<number> {
   // Use Etherscan eth_call to read contributions(address) from BootstrapVaultV3
@@ -818,7 +847,8 @@ app.post("/api/bootstrap/vote", async (req, res) => {
       return;
     }
     bootstrapVotes.set(wallet.toLowerCase(), { vote, ethWeight, timestamp: Date.now() });
-    console.log(`[vote] ${wallet.slice(0, 8)} → ${vote} (${ethWeight.toFixed(4)} ETH)`);
+    saveVotesToFile(bootstrapVotes);
+    console.log(`[vote] ${wallet.slice(0, 8)} → ${vote} (${ethWeight.toFixed(4)} ETH) — saved to file`);
     res.json({ success: true, ethWeight });
   } catch (e) {
     console.error("[vote] error:", (e as Error).message);
