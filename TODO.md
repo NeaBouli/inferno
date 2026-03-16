@@ -77,7 +77,7 @@ Stand: 16.03.2026 | Konsolidiert (Claude + Core Dev)
       Account anlegen noch ausstehend, Handle: @IFRtoken
 - [x] ✅ Guild.xyz — Setup Guide erstellt (docs/GUILD_SETUP.md, 16.03.2026)
       Guild erstellen noch ausstehend
-- [x] ✅ Contact Email kaspartizan@proton.me → Landing Page Footer + press-kit.html (16.03.2026)
+- [x] ✅ Contact Email kaspartisan@proton.me → Landing Page Footer + press-kit.html (16.03.2026)
 
 **🟡 Nach Announcement-Kampagne:**
 - [ ] 🟡 Reddit r/defi — Post (Text in BOOTSTRAP_ANNOUNCEMENT.md)

@@ -61,6 +61,6 @@ We're building the infrastructure for a new kind of digital access. One that's p
 - Telegram: https://t.me/IFR_token
 - X: https://x.com/IFRtoken
 - Juicebox: https://juicebox.money/v5/eth:79
-- Contact: kaspartizan@proton.me
+- Contact: kaspartisan@proton.me
 
 *$IFR — Lock. Use. Benefit.*
