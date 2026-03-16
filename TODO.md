@@ -112,6 +112,11 @@ Stand: 17.03.2026 | Konsolidiert (Claude + Core Dev)
       File: /tmp/ifr_bootstrap_votes.json — survives Railway restarts
 - [x] ✅ Debug panel removed (17.03.2026)
 - [x] ✅ Bootstrap votes: localStorage re-submit to Railway on page load (17.03.2026)
+- [x] ✅ Railway vote endpoints verified live (17.03.2026)
+      GET /api/bootstrap/votes → 200 OK
+      POST /api/bootstrap/vote → 403 correct (deployer has 0 contribution)
+      On-chain verification working — only actual contributors can vote
+      Note: 0.01 ETH contributor is external address, not deployer
 - [x] ✅ Bootstrap Contribution Listener Bot (16.03.2026)
 - [x] ✅ wallet-guide.html — 27. Wiki-Seite (16.03.2026)
 - [x] ✅ Wiki Sidebar Navigation neu geordnet — 6 Sektionen (17.03.2026)
