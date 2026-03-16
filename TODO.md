@@ -1,5 +1,5 @@
 # PROJEKT INFERNO — VOLLSTÄNDIGE TODO-LISTE
-Stand: 08.03.2026 | Konsolidiert (Claude + Core Dev)
+Stand: 16.03.2026 | Konsolidiert (Claude + Core Dev)
 
 ---
 
@@ -24,17 +24,47 @@ Stand: 08.03.2026 | Konsolidiert (Claude + Core Dev)
 
 ## HOCH — Bootstrap Ankuendigung (nach Funding verified)
 
-1. X (@IFRtoken): Bootstrap live Tweet verfassen + posten
-2. Juicebox: Projekt anlegen
+1. ✅ X (@IFRtoken): Bootstrap Thread gepostet (16.03.2026) + PNG Banner
+2. ✅ Juicebox listing created (16.03.2026) — discovery only, NO funding. Project Owner: 0x6b36...Fed67
 3. Wiki `bootstrap.html`: Live-Status + Vault-Balance Banner aktivieren
 4. Bootstrap Countdown Widget auf Landing Page aktivieren
 5. Telegram Kanal & Chat auf Landing Page und Juicebox verlinken
 
 ## HOCH — Multisig + Governance
 
-6. Multisig Upgrade: 1-of-2 → 2-of-4 (Treasury Safe + Community Safe)
-7. Governance → GnosisSafe ubergeben
-8. Sepolia Proposal #10: `setFeeExempt(BootstrapVaultV3 Sepolia)` executen — ETA 10.03. 00:38 CET
+6. ✅ Multisig Upgrade: 1-of-2 → 3-of-5 (Treasury Safe + Community Safe) — 15.03.2026
+7. Governance → GnosisSafe ubergeben (via Proposal #8)
+8. ✅ Sepolia Proposal #10: `setFeeExempt(BootstrapVaultV3 Sepolia)` executed
+
+## HOCH — Governance Proposals #7/8/9 (17.03.2026)
+
+9. ⏰ 17.03.2026 23:00 UTC: execute() Proposals #7/8/9 (IDs 7,8,9 — script in docs/PROPOSAL_7_EXECUTION.md)
+10. Nach Execute: isFeeExempt(Deployer+Safes) verifizieren
+11. Nach Execute #7: transparency.html + wallet-guide.html feeExempt Status auf ✅ updaten
+12. Proposal #8 starten: transferOwnership → TreasurySafe (nach Proposal #7 executed)
+
+## HOCH — Session 16.03.2026 — erledigte Items
+
+13. ✅ Bootstrap Stats Race Condition gefixt (16.03.2026)
+14. ✅ Recent Votes Bug gefixt (16.03.2026)
+15. ✅ Bootstrap Contribution Listener (Telegram Bot, 16.03.2026)
+16. ✅ Bootstrap Voting UX — public stats + 3-state buttons (16.03.2026)
+17. ✅ wallet-guide.html — 27. Wiki-Seite (16.03.2026)
+18. ✅ Deep Audit 16.03.2026 — 7 Fixes, 0 Critical Security Issues
+19. ✅ Token Flow SVG korrigiert (FeeRouter Phase 3, Deployer-Linien)
+20. ✅ Announcement Texte fertig (docs/BOOTSTRAP_ANNOUNCEMENT.md)
+21. ✅ Bootstrap page reviewed + voting UX fixed (16.03.2026)
+22. ✅ SIGNER_WALLETS gesetzt in Railway (16.03.2026)
+23. ✅ VERIFY_PORT=3001 gesetzt in Railway (16.03.2026)
+24. ✅ Threshold auf 3-of-5 erhoeht (15.03.2026, beide Safes — Treasury + Community)
+
+## HOCH — Noch offen (Session 16.03.2026)
+
+25. 🟡 wallet-guide.html live verifizieren nach CDN-Flush
+26. 🟡 transparency.html live verifizieren nach CDN-Flush
+27. 🔒 npm audit: 34 Vulnerabilities — fix nach LP-Launch
+28. 📢 Reddit Posts: r/defi + r/ethfinance + r/CryptoMoonShots
+29. 📢 Farcaster Post
 
 ---
 
@@ -119,6 +149,17 @@ Stand: 08.03.2026 | Konsolidiert (Claude + Core Dev)
     **LANDING PAGE BUTTONS:**
     A) Unter "Genesis & Project Wallets" Kacheln: `[→ Full Wallet & Contract Guide]` → `/wiki/wallet-guide.html`
     B) Unter Contract Addresses neben "Upcoming Contracts (Phase 3-4)": `[→ Wallet & Contract Guide]` → `/wiki/wallet-guide.html`
+
+## MITTEL — 400M LP Reserve — Security Roadmap
+
+29. 🔴 Nach Proposal #8 (transferOwnership): Governance dezentralisiert — aber 400M IFR bleibt beim Deployer EOA (Single Key!)
+30. 🟡 Plan dokumentieren: Wie werden 400M LP Reserve unter Multisig-Kontrolle gebracht?
+    - **Option A:** Transfer 400M → Treasury Safe (braucht feeExempt nach Proposal #7). Vorteil: 3-of-5 Schutz sofort. Nachteil: Transfer-Risiko ohne LP live.
+    - **Option B:** Deployer direkt via finalise() pairen. 400M bleiben beim Deployer bis Bootstrap. Vorteil: Keine unnoetige Bewegung. Nachteil: Single Key bis Bootstrap Ende.
+    - **Option C:** Governance Proposal fuer Transfer nach Bootstrap + vor Phase 2 LP.
+    - → **Team-Entscheidung vor Bootstrap-Ende noetig!**
+31. 🟡 Transparenz: 400M Deployer-Risiko auf transparency.html + wallet-guide.html explizit als "bekannt, geplant zu loesen" dokumentieren
+32. 🔵 Nach Bootstrap finalise(): LP Tokens bei Team.Finance verifizieren (12-Monate Lock)
 
 ## MITTEL — Infrastruktur
 
@@ -209,9 +250,10 @@ Stand: 08.03.2026 | Konsolidiert (Claude + Core Dev)
 | 10.03.2026 00:50 CET | Proposal #3 executen |
 | 10.03.2026 00:38 CET | Sepolia Proposal #10 executen |
 | 10.03.2026 danach | Treasury + Community → BootstrapVaultV3 (200M IFR) |
+| 17.03.2026 23:00 UTC | Proposals #7/8/9 executen |
 | 01.09.2026 | LiqRes Lock-Ende — LP-Erweiterung moeglich |
 
 ---
 
-**Gesamtuebersicht:**
-KRITISCH: 7 | HOCH: 8 | MITTEL: 27 (+5 neu) | NIEDRIG: 16 (+3 neu) | Phase 2+: 5
+**Gesamtuebersicht (Stand 16.03.2026):**
+KRITISCH: 7 | HOCH: 29 (12 ✅ erledigt) | MITTEL: 32 (+5 neu) | NIEDRIG: 16 | Phase 2+: 5
