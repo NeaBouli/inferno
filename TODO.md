@@ -108,8 +108,9 @@ Stand: 17.03.2026 | Konsolidiert (Claude + Core Dev)
 - [x] ✅ Bootstrap Voting: Public stats via Railway API (17.03.2026)
       POST /api/bootstrap/vote + GET /api/bootstrap/votes
       On-chain contribution verification via Etherscan eth_call
-- [x] ✅ Bootstrap votes persistent to file (17.03.2026)
-      File: /tmp/ifr_bootstrap_votes.json — survives Railway restarts
+- [x] ✅ Bootstrap votes persistent via Railway GraphQL API (17.03.2026)
+      BOOTSTRAP_VOTES env var (base64) — survives deploys + restarts
+      Fallback: /tmp/ifr_bootstrap_votes.json
 - [x] ✅ Debug panel removed (17.03.2026)
 - [x] ✅ Bootstrap votes: localStorage re-submit to Railway on page load (17.03.2026)
 - [x] ✅ Railway vote endpoints verified live (17.03.2026)
