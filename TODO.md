@@ -174,7 +174,8 @@ Stand: 17.03.2026 | Konsolidiert (Claude + Core Dev)
 
 ## MITTEL — Builder Registry
 
-- [x] ✅ StealthX/SecureCall, Vendetta, K-9 Academy als Pre-Builder eingetragen (17.03.2026)
+- [x] ✅ StealthX, Vendetta, K-9 Academy — GitHub Issues #9/#10/#11 (17.03.2026)
+      BUILDERS.md entfernt — GitHub Issues ist das richtige Format
 
 ## MITTEL — Infrastruktur
 
