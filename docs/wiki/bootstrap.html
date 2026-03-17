@@ -1661,7 +1661,11 @@ var ConsensusModule = {
     var self = this;
     var votes = [];
     try { votes = JSON.parse(localStorage.getItem('ifr_votes') || '[]'); } catch(e) {}
-    if (votes.length === 0) return;
+    if (votes.length === 0) {
+      // No local votes — still fetch public stats from Railway
+      self.fetchPublicVotes();
+      return;
+    }
     var pending = [];
     votes.forEach(function(v) {
       if (v.addr && v.type) {
