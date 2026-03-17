@@ -172,6 +172,10 @@ Stand: 17.03.2026 | Konsolidiert (Claude + Core Dev)
 
 - [ ] 🔵 Nach Bootstrap finalise(): LP Tokens bei Team.Finance verifizieren (12-Monate Lock)
 
+## MITTEL — Builder Registry
+
+- [x] ✅ StealthX/SecureCall, Vendetta, K-9 Academy als Pre-Builder eingetragen (17.03.2026)
+
 ## MITTEL — Infrastruktur
 
 1. Repo-Maintainer rekrutieren (2-3 Personen)
