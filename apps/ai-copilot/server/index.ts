@@ -787,12 +787,35 @@ app.get("/api/ifr/vault", async (_req, res) => {
 });
 
 // ── Bootstrap Community Consensus Votes ─────────────────────────────
-// File-persisted vote store (survives Railway restarts)
+// Persistence priority:
+//   1. BOOTSTRAP_VOTES env var (base64 JSON — survives deploys via Railway GraphQL API)
+//   2. File /tmp/ifr_bootstrap_votes.json (survives restarts within same deploy)
 const VOTES_FILE = join(process.env.RAILWAY_VOLUME_MOUNT_PATH || "/tmp", "ifr_bootstrap_votes.json");
 
 type VoteEntry = { vote: string; ethWeight: number; timestamp: number };
 
-function loadVotesFromFile(): Map<string, VoteEntry> {
+function votesToObj(votes: Map<string, VoteEntry>): Record<string, VoteEntry> {
+  const obj: Record<string, VoteEntry> = {};
+  for (const [k, v] of votes.entries()) obj[k] = v;
+  return obj;
+}
+
+// ── Load: env var → file → empty ────────────────────
+function loadVotes(): Map<string, VoteEntry> {
+  // 1. Try BOOTSTRAP_VOTES env var (base64-encoded JSON, set via Railway API)
+  if (process.env.BOOTSTRAP_VOTES) {
+    try {
+      const raw = JSON.parse(Buffer.from(process.env.BOOTSTRAP_VOTES, "base64").toString("utf8"));
+      const map = new Map<string, VoteEntry>();
+      for (const [k, v] of Object.entries(raw)) map.set(k, v as VoteEntry);
+      console.log(`[votes] Loaded ${map.size} votes from BOOTSTRAP_VOTES env var`);
+      return map;
+    } catch (e) {
+      console.error("[votes] Env var parse error:", (e as Error).message);
+    }
+  }
+
+  // 2. Try file
   try {
     if (existsSync(VOTES_FILE)) {
       const raw = JSON.parse(readFileSync(VOTES_FILE, "utf8"));
@@ -802,22 +825,53 @@ function loadVotesFromFile(): Map<string, VoteEntry> {
       return map;
     }
   } catch (e) {
-    console.error("[votes] Load error:", (e as Error).message);
+    console.error("[votes] File load error:", (e as Error).message);
   }
+
   return new Map();
 }
 
+// ── Save: file + Railway API ────────────────────────
 function saveVotesToFile(votes: Map<string, VoteEntry>): void {
   try {
-    const obj: Record<string, VoteEntry> = {};
-    for (const [k, v] of votes.entries()) obj[k] = v;
-    writeFileSync(VOTES_FILE, JSON.stringify(obj, null, 2), "utf8");
+    writeFileSync(VOTES_FILE, JSON.stringify(votesToObj(votes), null, 2), "utf8");
   } catch (e) {
-    console.error("[votes] Save error:", (e as Error).message);
+    console.error("[votes] File save error:", (e as Error).message);
   }
 }
 
-const bootstrapVotes = loadVotesFromFile();
+async function saveVotesToRailway(votes: Map<string, VoteEntry>): Promise<void> {
+  // Always save to file first (immediate)
+  saveVotesToFile(votes);
+
+  // Then try Railway GraphQL API for cross-deploy persistence
+  const token = process.env.RAILWAY_TOKEN;
+  const serviceId = process.env.RAILWAY_SERVICE_ID;
+  const envId = process.env.RAILWAY_ENVIRONMENT_ID;
+  if (!token || !serviceId || !envId) return;
+
+  try {
+    const encoded = Buffer.from(JSON.stringify(votesToObj(votes))).toString("base64");
+    const body = JSON.stringify({
+      query: `mutation { variableUpsert(input: { serviceId: "${serviceId}", environmentId: "${envId}", name: "BOOTSTRAP_VOTES", value: "${encoded}" }) }`
+    });
+    const r = await fetch("https://backboard.railway.app/graphql/v2", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body,
+    });
+    const result = (await r.json()) as { errors?: { message: string }[] };
+    if (result.errors) {
+      console.error("[votes] Railway API error:", result.errors[0].message);
+    } else {
+      console.log("[votes] Saved to Railway env var");
+    }
+  } catch (e) {
+    console.error("[votes] Railway API fetch error:", (e as Error).message);
+  }
+}
+
+const bootstrapVotes = loadVotes();
 
 async function verifyContribution(wallet: string): Promise<number> {
   // Use Etherscan eth_call to read contributions(address) from BootstrapVaultV3
@@ -847,8 +901,8 @@ app.post("/api/bootstrap/vote", async (req, res) => {
       return;
     }
     bootstrapVotes.set(wallet.toLowerCase(), { vote, ethWeight, timestamp: Date.now() });
-    saveVotesToFile(bootstrapVotes);
-    console.log(`[vote] ${wallet.slice(0, 8)} → ${vote} (${ethWeight.toFixed(4)} ETH) — saved to file`);
+    saveVotesToRailway(bootstrapVotes).catch(() => {});
+    console.log(`[vote] ${wallet.slice(0, 8)} → ${vote} (${ethWeight.toFixed(4)} ETH)`);
     res.json({ success: true, ethWeight });
   } catch (e) {
     console.error("[vote] error:", (e as Error).message);
