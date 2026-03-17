@@ -846,14 +846,15 @@ async function saveVotesToRailway(votes: Map<string, VoteEntry>): Promise<void> 
 
   // Then try Railway GraphQL API for cross-deploy persistence
   const token = process.env.RAILWAY_TOKEN;
+  const projectId = process.env.RAILWAY_PROJECT_ID;
   const serviceId = process.env.RAILWAY_SERVICE_ID;
   const envId = process.env.RAILWAY_ENVIRONMENT_ID;
-  if (!token || !serviceId || !envId) return;
+  if (!token || !projectId || !serviceId || !envId) return;
 
   try {
     const encoded = Buffer.from(JSON.stringify(votesToObj(votes))).toString("base64");
     const body = JSON.stringify({
-      query: `mutation { variableUpsert(input: { serviceId: "${serviceId}", environmentId: "${envId}", name: "BOOTSTRAP_VOTES", value: "${encoded}" }) }`
+      query: `mutation { variableUpsert(input: { projectId: "${projectId}", serviceId: "${serviceId}", environmentId: "${envId}", name: "BOOTSTRAP_VOTES", value: "${encoded}" }) }`
     });
     const r = await fetch("https://backboard.railway.app/graphql/v2", {
       method: "POST",

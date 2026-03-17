@@ -111,6 +111,7 @@ Stand: 17.03.2026 | Konsolidiert (Claude + Core Dev)
 - [x] ✅ Bootstrap votes persistent via Railway GraphQL API (17.03.2026)
       BOOTSTRAP_VOTES env var (base64) — survives deploys + restarts
       Fallback: /tmp/ifr_bootstrap_votes.json
+- [x] ✅ Railway GraphQL fix — projectId added (17.03.2026)
 - [x] ✅ Debug panel removed (17.03.2026)
 - [x] ✅ Bootstrap votes: localStorage re-submit to Railway on page load (17.03.2026)
 - [x] ✅ Railway vote endpoints verified live (17.03.2026)
