@@ -12,13 +12,14 @@ Stand: 17.03.2026 | Konsolidiert (Claude + Core Dev)
 5. ✅ Community Safe → BootstrapVaultV3: 50M IFR gesendet — 10.03.2026
 6. ✅ Verified on-chain: vault.balanceOf() >= 200M IFR
 
-## KRITISCH — Proposals #7/8/9
+## KRITISCH — Proposals #7/8/9 — EXECUTED ✅
 
-7. ⏰ Execute Proposals #7/8/9 (IDs 7,8,9)
-   ETA: 18.03.2026 23:00 UTC (19.03.2026 01:00 Athen)
-   Script: `docs/PROPOSAL_7_EXECUTION.md`
-8. Nach Execute: `isFeeExempt(Deployer+Safes)` verifizieren
-9. Nach Execute: transparency.html + wallet-guide.html feeExempt Status auf ✅ updaten
+7. ✅ Proposals #7/8/9 executed on-chain (18.03.2026)
+   TX #7: `0xfbb98818e1124e5c238b209cef370370e01474538fead9d1e279a4bf4baae644`
+   TX #8: `0x4caadb53fc0a7a8f8635bd478155419c2b96fb16d70a00c87a71e828b6fd7f59`
+   TX #9: `0x1d43de02fe76da2f94ead84c2037f4f96b3ecb13a9fb8a5afb5bd838ecf08259`
+8. ✅ isFeeExempt(Deployer+TreasurySafe+CommunitySafe) = true
+9. ✅ transparency.html + wallet-guide.html feeExempt → ✅ (18.03.2026)
 
 ## KRITISCH — Proposal #10: transferOwnership
 
@@ -34,9 +35,9 @@ Stand: 17.03.2026 | Konsolidiert (Claude + Core Dev)
 | ID | Call | Status |
 |----|------|--------|
 | 0–6 | Diverse (Vesting, BurnReserve, Bootstrap, etc.) | ✅ Executed |
-| 7 | setFeeExempt(Deployer) | 🟡 Queued — ETA 23:00 UTC 18.03 |
-| 8 | setFeeExempt(TreasurySafe) | 🟡 Queued — ETA 23:00 UTC 18.03 |
-| 9 | setFeeExempt(CommunitySafe) | 🟡 Queued — ETA 23:00 UTC 18.03 |
+| 7 | setFeeExempt(Deployer) | ✅ Executed 18.03.2026 |
+| 8 | setFeeExempt(TreasurySafe) | ✅ Executed 18.03.2026 |
+| 9 | setFeeExempt(CommunitySafe) | ✅ Executed 18.03.2026 |
 | 10 | setOwner(TreasurySafe) | 🔴 PENDING — propose after #7 executed |
 
 ---
@@ -234,7 +235,7 @@ Stand: 17.03.2026 | Konsolidiert (Claude + Core Dev)
 | Datum | Aktion |
 |-------|--------|
 | ✅ 10.03.2026 | Proposals #1-#3 executed + Bootstrap funded (200M IFR) |
-| ⏰ 18.03.2026 23:00 UTC | Proposals #7/#8/#9 execute (feeExempt Deployer+Safes) |
+| ✅ 18.03.2026 | Proposals #7/#8/#9 executed — feeExempt Deployer+Safes |
 | 🔴 Nach #7 execute | Proposal #10: transferOwnership → TreasurySafe |
 | 05.06.2026 | Bootstrap Ende — finalise() → Uniswap V2 LP |
 | 01.09.2026 | LiqRes Lock-Ende — LP-Erweiterung moeglich |
