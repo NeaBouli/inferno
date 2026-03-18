@@ -49,18 +49,18 @@
   <div class="container">
     <a href="wiki/roadmap.html" class="back" rel="nofollow">&larr; Roadmap</a>
     <h1>IFR Protocol &mdash; Developer TODO List</h1>
-    <div class="subtitle">Last updated: 2026-03-17 &middot; Branch: main</div>
+    <div class="subtitle">Last updated: 2026-03-18 &middot; Branch: main</div>
 
     <!-- ═══ CRITICAL: EXECUTE ═══ -->
-    <h2><span class="priority-badge p-critical">CRITICAL</span> Execute Proposals #7/8/9</h2>
+    <h2><span class="priority-badge p-critical">CRITICAL</span> Proposals #7/8/9 &mdash; EXECUTED</h2>
     <ul>
-      <li><div class="cb"></div>&#x23F0; Execute IDs 7/8/9 &mdash; ETA: 18.03.2026 23:00 UTC (19.03 01:00 Athen)</li>
-      <li><div class="cb"></div>After execute: verify <code>isFeeExempt(Deployer+Safes)</code></li>
-      <li><div class="cb"></div>After execute: update transparency.html + wallet-guide.html feeExempt &#x2192; &#x2705;</li>
+      <li><div class="cb cb-done">&#x2713;</div>Execute IDs 7/8/9 &mdash; &#x2705; Executed 18.03.2026</li>
+      <li><div class="cb cb-done">&#x2713;</div>Verified: <code>isFeeExempt(Deployer+Safes)</code> = true on-chain</li>
+      <li><div class="cb cb-done">&#x2713;</div>transparency.html + wallet-guide.html feeExempt updated</li>
     </ul>
     <h3>Proposal #10: transferOwnership</h3>
     <ul>
-      <li><div class="cb"></div>&#x1F534; <code>scripts/propose_8.js</code> &mdash; after #7 executed, 48h wait, then execute</li>
+      <li><div class="cb"></div>&#x1F7E1; Proposal #10 QUEUED &mdash; <code>setOwner(TreasurySafe)</code> &mdash; ETA: 2026-03-20T07:18:23 UTC</li>
     </ul>
 
     <!-- ═══ GOVERNANCE STATUS ═══ -->
@@ -69,10 +69,10 @@
       <thead><tr><th>ID</th><th>Call</th><th>Status</th></tr></thead>
       <tbody>
         <tr><td>0&ndash;6</td><td>Diverse</td><td style="color:#22c55e;">&#x2705; Executed</td></tr>
-        <tr><td>7</td><td>setFeeExempt(Deployer)</td><td style="color:#eab308;">&#x1F7E1; Queued &mdash; 18.03 23:00 UTC</td></tr>
-        <tr><td>8</td><td>setFeeExempt(TreasurySafe)</td><td style="color:#eab308;">&#x1F7E1; Queued &mdash; 18.03 23:00 UTC</td></tr>
-        <tr><td>9</td><td>setFeeExempt(CommunitySafe)</td><td style="color:#eab308;">&#x1F7E1; Queued &mdash; 18.03 23:00 UTC</td></tr>
-        <tr><td>10</td><td>setOwner(TreasurySafe)</td><td style="color:#ef4444;">&#x1F534; PENDING</td></tr>
+        <tr><td>7</td><td>setFeeExempt(Deployer)</td><td style="color:#22c55e;">&#x2705; Executed 18.03.2026</td></tr>
+        <tr><td>8</td><td>setFeeExempt(TreasurySafe)</td><td style="color:#22c55e;">&#x2705; Executed 18.03.2026</td></tr>
+        <tr><td>9</td><td>setFeeExempt(CommunitySafe)</td><td style="color:#22c55e;">&#x2705; Executed 18.03.2026</td></tr>
+        <tr><td>10</td><td>setOwner(TreasurySafe)</td><td style="color:#eab308;">&#x1F7E1; Queued &mdash; ETA 20.03.2026 07:18 UTC</td></tr>
       </tbody>
     </table>
 
@@ -169,11 +169,11 @@
 
     <!-- ═══ MEDIUM: 400M ═══ -->
     <h3>400M LP Reserve (on-chain verified)</h3>
-    <p style="color:#6b7280;font-size:0.82rem;margin:0 0 10px;">finalise() uses Vault IFR only. Deployer 400.6M untouched. Transfer after Proposal #7.</p>
+    <p style="color:#6b7280;font-size:0.82rem;margin:0 0 10px;">400.6M IFR transferred to LP Reserve Safe (Gnosis 3-of-5) on 18.03.2026. Deployer holds 0 IFR.</p>
     <ul>
-      <li><div class="cb"></div>&#x1F534; After #7: Transfer 400,600,000 IFR Deployer &#x2192; TreasurySafe (direct ERC-20, no Governance needed)</li>
-      <li><div class="cb"></div>&#x1F7E1; Phase 2 LP: TreasurySafe &#x2192; Uniswap 100M (after 01.09.2026)</li>
-      <li><div class="cb"></div>&#x1F7E1; Phase 3 LP: TreasurySafe &#x2192; Uniswap 150M</li>
+      <li><div class="cb cb-done">&#x2713;</div>&#x2705; 400,600,000 IFR transferred Deployer &#x2192; LP Reserve Safe (18.03.2026)</li>
+      <li><div class="cb"></div>&#x1F7E1; Phase 2 LP: LP Reserve Safe &#x2192; Uniswap 100M (after 01.09.2026)</li>
+      <li><div class="cb"></div>&#x1F7E1; Phase 3 LP: LP Reserve Safe &#x2192; Uniswap 150M</li>
       <li><div class="cb"></div>&#x1F535; After finalise(): verify LP at Team.Finance (12-month lock)</li>
     </ul>
 
@@ -211,7 +211,7 @@
     </ul>
 
     <div class="footer">
-      IFR Protocol &mdash; Developer TODO &middot; noindex &middot; 2026-03-17
+      IFR Protocol &mdash; Developer TODO &middot; noindex &middot; 2026-03-18
     </div>
   </div>
 </body>

@@ -948,7 +948,7 @@
               <td class="address"><a href="https://etherscan.io/address/0x6b36687b0cd4386fb14cf565B67D7862110Fed67" target="_blank">0x6b36...Fed67</a></td>
               <td>Genesis deployer. 400.6M IFR transferred to LP Reserve Safe on 18.03.2026. <a href="https://etherscan.io/tx/0xd33c771dc3e09689f124d3ac8f4eab138c827494e3cca5dd329bc29192d23197" target="_blank" style="font-size:11px;">TX: 0xd33c771d&hellip;</a></td>
               <td id="cur-deployer">0 IFR</td>
-              <td>EOA &mdash; Governance Owner (Proposal #10 pending)</td>
+              <td>EOA &mdash; Governance Owner (Proposal #10 queued, ETA 20.03.2026)</td>
             </tr>
             <tr>
               <td><strong>IFR LP Reserve Safe</strong></td>
@@ -961,14 +961,14 @@
               <td><strong>Treasury Safe</strong></td>
               <td class="address"><a href="https://etherscan.io/address/0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b" target="_blank">0x5ad6...3b</a></td>
               <td>Protocol treasury. Funds Bootstrap (Plan B). Ecosystem development, audits, partnerships. All spends require multisig approval.</td>
-              <td id="cur-tsafe">150,000,000 IFR</td>
+              <td id="cur-tsafe">0 IFR</td>
               <td>Gnosis Safe &mdash; 3-of-5</td>
             </tr>
             <tr>
               <td><strong>Community Safe</strong></td>
               <td class="address"><a href="https://etherscan.io/address/0xaC5687547B2B21d80F8fd345B51e608d476667C7" target="_blank">0xaC56...67C7</a></td>
               <td>Community Safe &mdash; two purposes:<br>1. Bootstrap contribution: 50M IFR &rarr; BootstrapVaultV3 (Plan B, funded 11.03.2026 &#x2705;)<br>2. Community Operations Reserve: 7.9M IFR permanent budget &mdash; bug bounties, community grants, ecosystem incentives, DAO seed funding. Genesis decision &mdash; publicly documented.</td>
-              <td id="cur-csafe">57,900,000 IFR</td>
+              <td id="cur-csafe">7,900,000 IFR</td>
               <td>Gnosis Safe &mdash; 3-of-5</td>
             </tr>
             <tr>
@@ -1203,11 +1203,11 @@
             <tr><th>Wallet</th><th>IFR</th><th>%</th><th>Note</th></tr>
           </thead>
           <tbody>
-            <tr><td>LP Reserve Safe (ex-Deployer)</td><td>400,000,000</td><td>40.00%</td><td>Transferred to LP Reserve Safe 0x5D93... on 18.03.2026</td></tr>
+            <tr><td>LP Reserve Safe (ex-Deployer)</td><td>400,600,000</td><td>40.06%</td><td>Transferred to LP Reserve Safe 0x5D93... on 18.03.2026</td></tr>
             <tr><td>LiquidityReserve</td><td>200,000,000</td><td>20.00%</td><td>6-month lock, staged release</td></tr>
             <tr><td>Vesting (Team)</td><td>150,000,000</td><td>15.00%</td><td>12-month cliff, 4-year linear</td></tr>
-            <tr><td>Treasury Safe</td><td>150,000,000</td><td>15.00%</td><td>Migrated from Treasury EOA (feeExempt)</td></tr>
-            <tr><td>Community Safe</td><td>57,900,000</td><td>5.79%</td><td>Migrated from Community EOA (1.5M burned + 0.6M pool fee)</td></tr>
+            <tr><td>Treasury Safe</td><td>0</td><td>0.00%</td><td>144.75M transferred to Bootstrap (Plan B). Balance: 0 IFR.</td></tr>
+            <tr><td>Community Safe</td><td>7,900,000</td><td>0.79%</td><td>50M sent to Bootstrap. 7.9M operations reserve remaining.</td></tr>
             <tr><td>PartnerVault</td><td>40,000,000</td><td>4.00%</td><td>Builder ecosystem rewards</td></tr>
             <tr style="border-top:2px solid var(--border)">
               <td><strong>Burned (permanent)</strong></td>
@@ -1336,6 +1336,13 @@
               <td>18.03.2026</td>
               <td><span class="status-done">Executed</span> &mdash; <a href="https://etherscan.io/tx/0x1d43de02fe76da2f94ead84c2037f4f96b3ecb13a9fb8a5afb5bd838ecf08259" target="_blank" style="font-size:11px;">TX: 0x1d43de02&hellip;</a></td>
             </tr>
+            <tr>
+              <td>#10</td>
+              <td><code>setOwner(TreasurySafe)</code><br><span style="font-size:11px;color:var(--muted);">transferOwnership &rarr; Gnosis Safe 3-of-5</span></td>
+              <td>Governance</td>
+              <td>18.03.2026</td>
+              <td><span class="status-pending" style="background:rgba(234,179,8,0.15);color:#eab308;padding:2px 8px;border-radius:4px;font-size:12px;">Queued &mdash; ETA 20.03.2026 07:18 UTC</span></td>
+            </tr>
           </tbody>
         </table>
       </div>
@@ -1361,7 +1368,7 @@
           </thead>
           <tbody>
             <tr><td>Timelock Delay</td><td>48 hours (172,800 seconds)</td></tr>
-            <tr><td>Governance Owner</td><td class="address"><a href="https://etherscan.io/address/0x6b36687b0cd4386fb14cf565B67D7862110Fed67">0x6b36...ed67</a> (Deployer EOA &mdash; Proposal #10 pending: setOwner(TreasurySafe))</td></tr>
+            <tr><td>Governance Owner</td><td class="address"><a href="https://etherscan.io/address/0x6b36687b0cd4386fb14cf565B67D7862110Fed67">0x6b36...ed67</a> (Deployer EOA &mdash; Proposal #10 queued: setOwner(TreasurySafe), ETA 20.03.2026)</td></tr>
             <tr><td>Guardian</td><td class="address"><a href="https://etherscan.io/address/0x6b36687b0cd4386fb14cf565B67D7862110Fed67">0x6b36...ed67</a> (Deployer &mdash; can cancel proposals only)</td></tr>
           </tbody>
         </table>
