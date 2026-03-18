@@ -10,7 +10,7 @@ a 48-hour timelock period and quorum approval.
 2. **Time Delay:** 48h timelock for all changes (no bypass)
 3. **Decentralization:** Target 4-of-7 multisig for mainnet
 4. **Immutability of Core Values:** Burn rate, max fee, supply are never changeable
-5. **Guardian Right:** Emergency cancel by 2-of-4 guardian multisig
+5. **Guardian Right:** Emergency cancel by guardian multisig
 
 ## Article 2 — Governable Parameters
 
@@ -72,7 +72,7 @@ Responsible for: All governance proposals
 - 2 builder representatives (first accredited builders)
 - 1 reserve wallet (cold storage, emergency)
 
-### Guardian Multisig (2-of-4)
+### Guardian Multisig
 Responsible for: Emergency cancel only
 - 1 founder wallet
 - 1 independent security reviewer
@@ -90,9 +90,9 @@ The following actions are technically impossible by contract design:
 
 | Phase | Status | Description |
 |-------|--------|-------------|
-| Phase 0 | Active | Single EOA (deployer), bootstrap |
-| Phase 1 | Planned | 2-of-4 multisig |
-| Phase 2 | Planned | 3-of-5 multisig |
+| Phase 0 | Completed | Single EOA (deployer), bootstrap |
+| Phase 1 | Completed | 2-of-4 multisig (14.03.2026) |
+| Phase 2 | **Active** | 3-of-5 multisig (15.03.2026) ✅ |
 | Phase 3 | Planned | 4-of-7 multisig |
 | Phase 4 | Planned | Full DAO (token voting) |
 

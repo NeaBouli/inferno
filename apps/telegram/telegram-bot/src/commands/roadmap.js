@@ -14,7 +14,7 @@ async function roadmapCommand(ctx) {
 🔄 *Phase 2 — Launch (aktuell)*
 • Ownership Transfer (Treasury/Community)
 • Proposal #0 Execution
-• Multisig 2-of-4 (Gnosis Safe)
+• Multisig 3-of-5 (Gnosis Safe)
 • BootstrapVault Mainnet
 • Uniswap V2 LP Pairing
 

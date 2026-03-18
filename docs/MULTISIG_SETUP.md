@@ -18,7 +18,7 @@ Goal: no single key can control the protocol.
 
 ### Guardian Multisig (Emergency Cancel)
 - **Type:** Gnosis Safe
-- **Threshold:** 2-of-4
+- **Threshold:** TBD (separate Safe)
 - **Purpose:** Only cancel() — cannot propose or execute
 - **Signer Profiles:** Core team + 1 independent auditor
 
@@ -26,7 +26,7 @@ Goal: no single key can control the protocol.
 
 ## Gnosis Safe Setup — Step by Step
 
-### Phase 1: 2-of-4 Multisig (Q3 2026)
+### Phase 1: 2-of-4 Multisig (completed 14.03.2026, superseded by 3-of-5)
 
 #### Prerequisites
 
@@ -49,7 +49,7 @@ Goal: no single key can control the protocol.
 1. https://app.safe.global → "Create new Safe"
 2. Network: Ethereum (Mainnet) or Sepolia (Test)
 3. Add owners: 3 hardware wallet addresses
-4. Threshold: 2 (2-of-4)
+4. Threshold: 3 (3-of-5) — current active configuration
 5. Note the Safe address
 
 #### Ownership Transfer (after Safe Setup)
@@ -80,13 +80,13 @@ Full decentralization:
 - 1 reserve (cold storage)
 - Threshold: 4-of-7
 
-### Guardian Multisig (2-of-4)
+### Guardian Multisig
 
 Separate Safe for emergency cancel only:
 - 1 founder
 - 1 independent security reviewer
 - 1 community representative
-- Threshold: 2-of-4
+- Threshold: TBD
 - Only function: `governance.cancel(proposalId)`
 
 ---
