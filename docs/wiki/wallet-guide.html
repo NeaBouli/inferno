@@ -884,7 +884,13 @@
           <div class="wg-field"><strong>Owner:</strong> Governance</div>
           <div class="wg-field"><strong>feeExempt:</strong> <span class="wg-fee-status wg-fee-yes">&#x2705; Yes</span></div>
           <div class="wg-role-box">
-            <strong>Function:</strong> Builder ecosystem rewards. When a user locks IFR for a creator's product, the creator earns from this pool. 6&ndash;12 month vesting, annual cap: 4M IFR.
+            <strong>Function:</strong> 40M IFR &mdash; Governance-locked. Cannot be withdrawn directly by anyone.<br><br>
+            <strong>How it works:</strong><br>
+            &rarr; User locks IFR for a Builder product<br>
+            &rarr; Vault automatically releases % as Builder reward<br>
+            &rarr; Reward vests linearly over 6&ndash;12 months (annual cap: 4M IFR)<br>
+            &rarr; If no users lock IFR &rarr; 40M stay locked forever<br><br>
+            All parameters controlled by Governance (48h timelock).
           </div>
           <div class="wg-field"><strong>Balance:</strong> 40,000,000 IFR</div>
           <div class="wg-field"><strong>Phase:</strong> Active</div>

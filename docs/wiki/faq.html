@@ -1086,6 +1086,11 @@ const hasLock = await ifrLock.isLocked(walletAddress, ethers.utils.parseUnits("1
         </div>
 
         <div class="faq-item">
+          <button class="faq-q"><span>Are the 40M Builder Vault tokens locked?</span><span class="icon">+</span></button>
+          <div class="faq-a">Yes &mdash; but differently from other locked tokens. The 40M IFR in the Builder Vault (PartnerVault contract) <strong>cannot be withdrawn directly by anyone</strong>, including the team.<br><br>They can only flow out through real user adoption: when a user locks IFR for a Builder product, a percentage is automatically released as a reward for that Builder, then vests linearly over 6&ndash;12 months.<br><br>If no users ever lock IFR, all 40M remain locked in the contract permanently. This makes the Builder Vault a pure adoption incentive &mdash; not a team treasury. All parameters (reward rate, emission cap, vesting period) are controlled by Governance with a 48-hour timelock.</div>
+        </div>
+
+        <div class="faq-item">
           <button class="faq-q"><span>Where can I buy $IFR?</span><span class="icon">+</span></button>
           <div class="faq-a">After the Bootstrap Event finalises and the Uniswap V2 LP is created, IFR will be tradeable on Uniswap V2 (Ethereum Mainnet). Set slippage to at least 4% (3.5% fee + AMM slippage). Always verify the official contract address: <code>0x77e99917Eca8539c62F509ED1193ac36580A6e7B</code>. Do not trust links from DMs or unofficial channels.</div>
         </div>
