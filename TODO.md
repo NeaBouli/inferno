@@ -164,12 +164,17 @@ Stand: 17.03.2026 | Konsolidiert (Claude + Core Dev)
       LP Reserve Safe: `0x5D93E7919a71d725054e31017eCA86B026F86C04` (Gnosis 3-of-5)
       TX: `0xd33c771dc3e09689f124d3ac8f4eab138c827494e3cca5dd329bc29192d23197`
 
-- [ ] 🟡 Nach Transfer: Phase 2 LP via Governance Proposal
-      TreasurySafe → Uniswap (100M Phase 2)
+- [x] ✅ Site-wide update: LP Reserve Safe alle Seiten (18.03.2026)
+      Landing, Tokenomics, Transparency, Wallet-Guide, Roadmap,
+      Governance, Security, Fair-Launch, Protocol-Plan, One-Pager,
+      Multisig, Mainnet-Checklist — 13 Dateien aktualisiert
+
+- [ ] 🟡 Phase 2 LP via Governance Proposal
+      LP Reserve Safe → Uniswap (100M Phase 2)
       Timing: nach 01.09.2026 LiqRes unlock
 
-- [ ] 🟡 Nach Transfer: Phase 3 LP via Governance Proposal
-      TreasurySafe → Uniswap (150M Phase 3)
+- [ ] 🟡 Phase 3 LP via Governance Proposal
+      LP Reserve Safe → Uniswap (150M Phase 3)
       Timing: Team-Entscheidung
 
 - [ ] 🔵 Nach Bootstrap finalise(): LP Tokens bei Team.Finance verifizieren (12-Monate Lock)
