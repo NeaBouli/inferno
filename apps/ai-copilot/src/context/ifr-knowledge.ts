@@ -30,7 +30,8 @@ export function getIFRKnowledge() {
       decimals: 9
     },
     tokenomics: {
-      totalSupply: "1,000,000,000 IFR",
+      genesisSupply: "1,000,000,000 IFR",
+      currentSupply: "~998,500,000 IFR (decreasing — ~1.5M burned)",
       burnPerTransfer: "2.5% permanent",
       poolFee: "1.0%",
       totalFee: "3.5%",
@@ -49,7 +50,10 @@ export function getIFRKnowledge() {
       timelockDelay: "48 hours",
       guardian: "can cancel proposals",
       noInstantChanges: true,
-      daoPhase: "Phase 4 (planned)"
+      daoPhase: "Phase 4 (planned)",
+      multisig: "3-of-5 on all Safes (Treasury, Community, LP Reserve) — 5 signers: A.K./M.G./A.M./Y.K./A.P.",
+      proposals: "Proposals #1-9 executed. Proposal #10 queued: transferOwnership to TreasurySafe (ETA 20.03.2026).",
+      feeExempt: "Deployer, TreasurySafe, CommunitySafe — all active since 18.03.2026"
     },
     tiers: {
       bronze:   { minIFR: 1000,  discount: "5%" },
