@@ -2858,7 +2858,7 @@ if (isLocked) {
     { key: 'partner',   label: '\uD83C\uDFD7\uFE0F Builder Vault',color: '#32CD32' },
     { key: 'treasury',  label: '\uD83C\uDFDB\uFE0F Treasury Safe',color: '#4169E1' },
     { key: 'community', label: '\uD83D\uDC65 Community Safe',     color: '#1ABC9C' },
-    { key: 'deployer',  label: '\uD83D\uDCB0 LP Reserve Safe',     color: '#FF6B35' },
+    { key: 'lpReserve', label: '\uD83D\uDCB0 LP Reserve Safe',     color: '#FF6B35' },
     { key: 'supply',    label: '\uD83D\uDCCA Current Supply',     color: '#fff'    }
   ];
 
@@ -2910,11 +2910,12 @@ if (isLocked) {
     setLive('partner',      fmt(d.partner) + ' IFR (' + pct(d.partner, d.supply) + ')');
     setLive('treasury',     fmt(d.treasury) + ' IFR (' + pct(d.treasury, d.supply) + ')');
     setLive('community',    fmt(d.community) + ' IFR (' + pct(d.community, d.supply) + ')');
-    setLive('deployer',     fmt(d.deployer) + ' IFR');
-    setLive('protocol-locked', fmt((d.vesting || 0) + (d.liqRes || 0)));
+    setLive('deployer',     fmt(d.lpReserve) + ' IFR');
+    var protLocked = (d.vesting || 0) + (d.liqRes || 0) + (d.bootstrap || 0) + (d.partner || 0) + (d.lpReserve || 0) + (d.community || 0);
+    setLive('protocol-locked', fmt(protLocked));
     setLive('ifrlock-stat', fmt(d.ifrLock));
     // Wallet cards
-    setLive('card-deployer',   fmt(d.deployer) + ' IFR');
+    setLive('card-deployer',   fmt(d.lpReserve) + ' IFR');
     setLive('card-treasury',   fmt(d.treasury) + ' IFR');
     setLive('card-community',  fmt(d.community) + ' IFR');
     setLive('card-vesting',    fmt(d.vesting) + ' IFR');
@@ -2977,12 +2978,12 @@ if (isLocked) {
   function renderMetrics(data) {
     var el = document.getElementById('dist-metrics');
     if (!el) return;
-    var protocolLocked = (data.vesting || 0) + (data.liqRes || 0);
+    var protocolLocked = (data.vesting || 0) + (data.liqRes || 0) + (data.bootstrap || 0) + (data.partner || 0) + (data.lpReserve || 0) + (data.community || 0);
     var items = [
       { key: 'burned-stat',     label: 'Total Burned',    value: fmt(data.burned),    sub: 'Since genesis \u2014 decreasing forever', color: '#ff4500' },
-      { key: 'protocol-locked', label: 'Protocol Locked', value: fmt(protocolLocked), sub: 'Team Vesting + Liquidity Reserve', color: '#ff8c00' },
+      { key: 'protocol-locked', label: 'Protocol Locked', value: fmt(protocolLocked), sub: 'All non-circulating IFR secured', color: '#ff8c00' },
       { key: '',                label: 'Current Supply',  value: fmt(data.supply),    sub: 'of 1B genesis',        color: '#fff'    },
-      { key: '',                label: 'LP Reserve Safe', value: fmt(data.deployer),  sub: 'LP allocation (3-of-5)',color: '#FF6B35' }
+      { key: '',                label: 'LP Reserve Safe', value: fmt(data.lpReserve), sub: 'LP allocation (3-of-5)',color: '#FF6B35' }
     ];
     el.innerHTML = items.map(function(m) {
       var liveAttr = m.key ? ' data-live-key="' + m.key + '"' : '';
@@ -3014,6 +3015,7 @@ if (isLocked) {
         supply:    supply.totalSupply,
         burned:    Math.max(0, supply.burned || (GENESIS_SUPPLY - supply.totalSupply)),
         deployer:  v('Deployer'),
+        lpReserve: v('LPReserveSafe'),
         treasury:  v('GnosisSafe'),
         community: v('CommunitySafe'),
         vesting:   v('Vesting'),
