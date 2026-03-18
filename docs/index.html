@@ -2858,7 +2858,7 @@ if (isLocked) {
     { key: 'partner',   label: '\uD83C\uDFD7\uFE0F Builder Vault',color: '#32CD32' },
     { key: 'treasury',  label: '\uD83C\uDFDB\uFE0F Treasury Safe',color: '#4169E1' },
     { key: 'community', label: '\uD83D\uDC65 Community Safe',     color: '#1ABC9C' },
-    { key: 'deployer',  label: '\uD83D\uDCB0 Deployer (LP)',      color: '#FF6B35' },
+    { key: 'deployer',  label: '\uD83D\uDCB0 LP Reserve Safe',     color: '#FF6B35' },
     { key: 'supply',    label: '\uD83D\uDCCA Current Supply',     color: '#fff'    }
   ];
 
@@ -2982,7 +2982,7 @@ if (isLocked) {
       { key: 'burned-stat',     label: 'Total Burned',    value: fmt(data.burned),    sub: 'Since genesis \u2014 decreasing forever', color: '#ff4500' },
       { key: 'protocol-locked', label: 'Protocol Locked', value: fmt(protocolLocked), sub: 'Team Vesting + Liquidity Reserve', color: '#ff8c00' },
       { key: '',                label: 'Current Supply',  value: fmt(data.supply),    sub: 'of 1B genesis',        color: '#fff'    },
-      { key: '',                label: 'Deployer (LP)',   value: fmt(data.deployer),  sub: 'LP allocation',        color: '#FF6B35' }
+      { key: '',                label: 'LP Reserve Safe', value: fmt(data.deployer),  sub: 'LP allocation (3-of-5)',color: '#FF6B35' }
     ];
     el.innerHTML = items.map(function(m) {
       var liveAttr = m.key ? ' data-live-key="' + m.key + '"' : '';

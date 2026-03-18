@@ -999,6 +999,10 @@ await governance.execute(proposalId);</code></pre>
         </tbody>
       </table>
 
+      <div class="callout-green callout" style="margin-top:20px;">
+        <p><strong>Proposal #10 &mdash; LP Reserve Safe Transfer (18.03.2026):</strong> 400.6M IFR transferred from Deployer EOA (<code>0x6b36...ed67</code>) to LP Reserve Safe (<code>0x5D93E7919a71d725054e31017eCA86B026F86C04</code>), a Gnosis Safe 3-of-5 with the same 5 signers as Treasury and Community Safes. Deployer now holds 0 IFR. TX: <a href="https://etherscan.io/tx/0xd33c771dc3e09689f124d3ac8f4eab138c827494e3cca5dd329bc29192d23197" target="_blank"><code>0xd33c771d&hellip;</code></a></p>
+      </div>
+
       <div class="info-box note" style="margin-top:16px;">
         <strong>Why were Proposals #1&ndash;#3 cancelled?</strong>
         Proposals #1 (Vesting) and #2 (BurnReserve) were redundant &mdash; both contracts were already set feeExempt directly before ownership was transferred to the Governance contract. Proposal #3 (BootstrapVaultV3) was cancelled and re-proposed as #4 with correct timing. All cancellations were performed intentionally by the Guardian (Deployer <code>0x6b36&hellip;ed67</code>) on 09.03.2026.

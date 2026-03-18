@@ -716,20 +716,20 @@
 
       <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:16px;margin:20px 0;">
 
-        <!-- Deployer -->
+        <!-- LP Reserve Safe -->
         <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
             <span style="font-size:1.3rem;">&#x1F680;</span>
-            <strong style="color:var(--text);">Deployer / LP Allocation</strong>
+            <strong style="color:var(--text);">LP Reserve Safe (3-of-5)</strong>
           </div>
-          <code style="font-size:11px;color:var(--muted);word-break:break-all;">0x6b36687b0cd4386fb14cf565b67d7862110fed67</code>
+          <code style="font-size:11px;color:var(--muted);word-break:break-all;">0x5D93E7919a71d725054e31017eCA86B026F86C04</code>
           <p style="font-size:13px;color:var(--muted);margin:10px 0;">
-            Holds 400M IFR (40%) reserved for Uniswap V2 liquidity. Standard EOA wallet &mdash; same wallet that deployed
-            all contracts. Tokens will be paired on Uniswap via phased LP releases (see Section 4).
+            Holds 400.6M IFR (40%) reserved for Uniswap V2 liquidity. Gnosis Safe 3-of-5 multisig (same 5 signers as Treasury and Community Safes).
+            Transferred from Deployer EOA on 18.03.2026. Tokens will be paired on Uniswap via phased LP releases (see Section 4).
           </p>
           <div style="display:flex;gap:12px;font-size:12px;">
             <span style="color:#f97316;">400.6M IFR</span>
-            <span style="color:var(--muted);">feeExempt: No</span>
+            <span style="color:var(--muted);">Gnosis Safe 3-of-5</span>
           </div>
         </div>
 
@@ -956,7 +956,7 @@
       <h3>What If Bootstrap Fails?</h3>
       <p>
         If zero ETH is contributed by June 5, the IFR in the vault remains locked permanently
-        (no admin withdrawal function). The team would use the 400M Deployer IFR + team ETH
+        (no admin withdrawal function). The team would use the 400M LP Reserve Safe IFR + team ETH
         to create an initial liquidity pool directly via Governance. See Contingency Plan below.
       </p>
 
@@ -977,7 +977,7 @@
           <ul style="font-size:13px;color:var(--muted);padding-left:16px;margin:0;">
             <li>Zero ETH contributed</li>
             <li>200M IFR stays locked in vault</li>
-            <li>Team creates LP with Deployer IFR</li>
+            <li>Team creates LP with LP Reserve Safe IFR</li>
             <li>Governance Proposal + 48h Timelock</li>
             <li>IFR tradeable via direct pairing</li>
           </ul>
@@ -989,7 +989,7 @@
            ============================================================ -->
       <h2 id="lp-phases">4. Liquidity Phases</h2>
       <p>
-        The 400M IFR Deployer allocation is not all added to Uniswap at once.
+        The 400M IFR LP Reserve allocation is not all added to Uniswap at once.
         Flooding the pool immediately would depress the price and create poor trading conditions.
         Instead, it is released in 3 phases as trading volume grows.
       </p>
@@ -1115,7 +1115,7 @@
       <h2 id="contingency">7. Contingency Plan</h2>
       <p>
         If the Bootstrap receives zero ETH by June 5, the protocol has a clear fallback.
-        No IFR is lost &mdash; the 400M Deployer allocation remains available as emergency liquidity.
+        No IFR is lost &mdash; the 400M LP Reserve Safe allocation remains available as emergency liquidity.
       </p>
       <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;margin:20px 0;">
         <div style="display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;font-size:12px;">
