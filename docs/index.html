@@ -31,7 +31,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://cdnjs.cloudflare.com">
   <link rel="dns-prefetch" href="https://eth.llamarpc.com">
-  <link rel="dns-prefetch" href="https://ifr-ai-copilot-production.up.railway.app">
+  <link rel="preconnect" href="https://ifr-ai-copilot-production.up.railway.app">
   <link rel="icon" type="image/png" href="assets/ifr_icon_64.png">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
@@ -1240,10 +1240,10 @@
   ]
 }
 </script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"
   onerror="console.error('ethers CDN failed, trying fallback');var s=document.createElement('script');s.src='https://unpkg.com/ethers@5.7.2/dist/ethers.umd.min.js';document.head.appendChild(s);"></script>
-<script src="assets/wallet-core.js"></script>
-<script src="assets/ifr-state.js"></script>
+<script defer src="assets/wallet-core.js"></script>
+<script defer src="assets/ifr-state.js"></script>
 </head>
 <body>
 
@@ -3002,10 +3002,19 @@ if (isLocked) {
     });
   }
 
+  function fetchWithTimeout(url, ms) {
+    var ctrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
+    var tid = ctrl ? setTimeout(function() { ctrl.abort(); }, ms) : null;
+    return fetch(url, ctrl ? { signal: ctrl.signal } : {}).then(function(r) {
+      if (tid) clearTimeout(tid);
+      return r.json();
+    });
+  }
+
   function doRefresh() {
     return Promise.all([
-      fetch(PROXY_BASE + '/api/ifr/supply').then(function(r) { return r.json(); }),
-      fetch(PROXY_BASE + '/api/ifr/balances').then(function(r) { return r.json(); })
+      fetchWithTimeout(PROXY_BASE + '/api/ifr/supply', 8000),
+      fetchWithTimeout(PROXY_BASE + '/api/ifr/balances', 8000)
     ]).then(function(res) {
       var supply = res[0];
       var bal = res[1].balances;

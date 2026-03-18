@@ -118,6 +118,10 @@ On errors: fix immediately, commit with `seo:` prefix.
 - [x] Landing Page Stats FINAL FIX (19.03.2026): LP Reserve Safe 0→400.6M, Protocol Locked 350M→998.5M, all stats verified on-chain ✅
 - [x] Builder Vault lock mechanism documented for all users (19.03.2026): index, tokenomics, wallet-guide, faq, security, fair-launch ✅
 - [x] Multisig 2-of-4 references removed — all Safes already 3-of-5 since 15.03.2026 ✅
+- [x] Ali Copilot facts updated: supply, component count, governance proposals, multisig (19.03.2026) ✅
+- [x] SEO: llms.txt created + preconnect Railway (19.03.2026) ✅
+- [x] Landing Page performance: defer scripts + fetch timeout 8s (19.03.2026) ✅
+- [x] Wiki index: all 27 pages now have cards (was 16/27) (19.03.2026) ✅
 - [ ] Android MetaMask Deep-Link: opens new browser instance instead of returning to Chrome
 - [ ] npm audit: 34 vulnerabilities (2 critical, 9 high, 11 moderate, 12 low) — fix after LP launch
       Link: https://github.com/NeaBouli/inferno/security/dependabot

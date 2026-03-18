@@ -1,0 +1,57 @@
+# Inferno Protocol ($IFR)
+
+> Deflationary ERC-20 utility token on Ethereum Mainnet. Every transfer burns 2.5% permanently.
+
+## What is IFR?
+
+Inferno ($IFR) is a deflationary ERC-20 utility token deployed on Ethereum Mainnet. Every transfer permanently burns 2.5% of the transferred amount (2% sender burn + 0.5% recipient burn), plus a 1% pool fee routed to protocol contracts. Supply can only decrease, never increase — there is no mint function. Users lock IFR tokens on-chain to unlock lifetime premium access to builder products, with no subscriptions or recurring payments.
+
+## Key Facts
+
+- Token Contract: 0x77e99917Eca8539c62F509ED1193ac36580A6e7B (Ethereum Mainnet)
+- Genesis Supply: 1,000,000,000 IFR (1 Billion)
+- Current Supply: ~998,500,000 IFR (~1.5M burned)
+- Decimals: 9
+- Burn Rate: 2.5% per transfer (permanent)
+- Pool Fee: 1.0% per transfer (to protocol)
+- Total Fee: 3.5% (hard cap: 5.0%)
+- Governance: 48-hour timelock, no instant changes
+- Multisig: All Safes 3-of-5 (5 independent signers)
+- Bootstrap Event: ACTIVE (March 7 - June 5, 2026), 200M IFR + ETH contributions
+- LP Reserve: 400,600,000 IFR secured in Gnosis Safe 3-of-5
+- Team Tokens: 150M IFR, 12-month cliff + 36-month linear vesting (0 available before March 2027)
+- Fair Launch: No presale, no VC, no private sale
+
+## Token Distribution
+
+- LP Reserve Safe: 400,600,000 IFR (40.06%) — Gnosis Safe 3-of-5
+- BootstrapVaultV3: 200,000,000 IFR (20%) — Community price discovery
+- LiquidityReserve: 200,000,000 IFR (20%) — Locked until September 2026
+- Vesting (Team): 150,000,000 IFR (15%) — 12-month cliff, 4-year linear
+- PartnerVault: 40,000,000 IFR (4%) — Governance-locked builder rewards
+- Community Safe: 7,900,000 IFR (0.79%) — Operations reserve
+- Burned: ~1,500,000 IFR — Permanent deflation
+
+## Smart Contracts (all verified on Etherscan)
+
+- InfernoToken: 0x77e99917Eca8539c62F509ED1193ac36580A6e7B
+- Governance: 0xc43d48E7FDA576C5022d0670B652A622E8caD041
+- IFRLock: 0x769928aBDfc949D0718d8766a1C2d7dBb63954Eb
+- BurnReserve: 0xaA1496133B6c274190A2113410B501C5802b6fCF
+- BuybackVault: 0x670D293e3D65f96171c10DdC8d88B96b0570F812
+- PartnerVault: 0xc6eb7714bCb035ebc2D4d9ba7B3762ef7B9d4F7D
+- FeeRouterV1: 0x4807B77B2E25cD055DA42B09BA4d0aF9e580C60a
+- Vesting: 0x2694Bc84e8D5251E9E4Ecd4B2Ae3f866d6106271
+- LiquidityReserve: 0xdc0309804803b3A105154f6073061E3185018f64
+- BootstrapVaultV3: 0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141
+
+## Links
+
+- Website: https://ifrunit.tech
+- Technical Wiki: https://ifrunit.tech/wiki/
+- Bootstrap Event: https://ifrunit.tech/wiki/bootstrap.html
+- GitHub: https://github.com/NeaBouli/inferno
+- Telegram (Announcements): https://t.me/IFRtoken
+- Telegram (Community): https://t.me/IFR_token
+- X / Twitter: https://x.com/IFRtoken
+- Etherscan: https://etherscan.io/address/0x77e99917Eca8539c62F509ED1193ac36580A6e7B
