@@ -23,10 +23,13 @@ Stand: 17.03.2026 | Konsolidiert (Claude + Core Dev)
 
 ## KRITISCH — Proposal #10: transferOwnership
 
-10. 🔴 Proposal #10: `setOwner(TreasurySafe)` — nach Proposals #7/8/9 executed
-    Script: `scripts/propose_8.js`
-    Guide: `docs/PROPOSAL_8_EXECUTION.md`
-    → 48h warten → execute → Governance Owner = TreasurySafe 3-of-5
+10. ✅ Proposal #10 submitted — setOwner(TreasurySafe)
+    TX: `0xc5d6ae0b63c37fea4283da5c62e485744c764064445d578bcd073ea2223d9583`
+    ID: 10, ETA: 2026-03-20T07:18:23 UTC (20.03 09:18 Athen)
+11. 🔴 Execute Proposal #10 — 20.03.2026 07:18 UTC
+    ERST nach Bestaetigung aller 5 Signers!
+12. 🔴 400M Transfer: Deployer → TreasurySafe
+    WARTET auf Team-Abstimmung
 
 ---
 
@@ -38,7 +41,7 @@ Stand: 17.03.2026 | Konsolidiert (Claude + Core Dev)
 | 7 | setFeeExempt(Deployer) | ✅ Executed 18.03.2026 |
 | 8 | setFeeExempt(TreasurySafe) | ✅ Executed 18.03.2026 |
 | 9 | setFeeExempt(CommunitySafe) | ✅ Executed 18.03.2026 |
-| 10 | setOwner(TreasurySafe) | 🔴 PENDING — propose after #7 executed |
+| 10 | setOwner(TreasurySafe) | 🟡 Queued — ETA 20.03.2026 07:18 UTC |
 
 ---
 
@@ -236,7 +239,7 @@ Stand: 17.03.2026 | Konsolidiert (Claude + Core Dev)
 |-------|--------|
 | ✅ 10.03.2026 | Proposals #1-#3 executed + Bootstrap funded (200M IFR) |
 | ✅ 18.03.2026 | Proposals #7/#8/#9 executed — feeExempt Deployer+Safes |
-| 🔴 Nach #7 execute | Proposal #10: transferOwnership → TreasurySafe |
+| 🟡 20.03.2026 07:18 UTC | Proposal #10 execute: setOwner(TreasurySafe) |
 | 05.06.2026 | Bootstrap Ende — finalise() → Uniswap V2 LP |
 | 01.09.2026 | LiqRes Lock-Ende — LP-Erweiterung moeglich |
 
