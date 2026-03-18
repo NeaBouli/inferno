@@ -70,10 +70,10 @@ async function main() {
   // Safety check 3: Proposal #7 executed (Deployer must be feeExempt)
   const token = new ethers.Contract(
     TOKEN_ADDRESS,
-    ['function isFeeExempt(address) view returns (bool)'],
+    ['function feeExempt(address) view returns (bool)'],
     provider
   );
-  const deployerExempt = await token.isFeeExempt(DEPLOYER);
+  const deployerExempt = await token.feeExempt(DEPLOYER);
   if (!deployerExempt) {
     console.error('ERROR: Proposal #7 not yet executed!');
     console.error('Deployer is NOT feeExempt — execute Proposals #7/#8/#9 first.');
