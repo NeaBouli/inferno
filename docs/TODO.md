@@ -1,5 +1,5 @@
 # IFR Protocol — Developer TODO List
-> Last updated: 2026-03-15 | Branch: main
+> Last updated: 2026-03-18 | Branch: main
 
 ---
 
@@ -107,13 +107,12 @@ On errors: fix immediately, commit with `seo:` prefix.
 ## CRITICAL
 
 ### Governance Proposals
-- [x] 🟡 Proposal #7 — SUBMITTED 16.03.2026 (IDs: 7/8/9)
-      TX A (Deployer):      `0xbb00c92475f76a0370a7a2343d2c5c01cc5ed624cbe45971886ffd1f29402f8c`
-      TX B (TreasurySafe):  `0x9b080b44ea30a889117dfdea0ecc7ef31e93efd4792e85a309fe1b69e0d41730`
-      TX C (CommunitySafe): `0x94d29562b7431ae5c1d4d4873fdb15fa93ed3cbb94022f142fb27eada5c1a57a`
-      ETA: 2026-03-17T22:50–22:51 UTC → execute() ab 17.03.2026 23:00 UTC
-- [ ] ⏰ 17.03.2026 23:00 UTC — execute Proposals 7/8/9 (feeExempt)
-- [ ] 🔴 Proposal #10: `transferOwnership(TreasurySafe)` — nach feeExempt execute
+- [x] ✅ Proposals #7/8/9 — EXECUTED 18.03.2026
+      TX #7 (Deployer feeExempt):      `0xfbb98818e1124e5c238b209cef370370e01474538fead9d1e279a4bf4baae644`
+      TX #8 (TreasurySafe feeExempt):   `0x4caadb53fc0a7a8f8635bd478155419c2b96fb16d70a00c87a71e828b6fd7f59`
+      TX #9 (CommunitySafe feeExempt):  `0x1d43de02fe76da2f94ead84c2037f4f96b3ecb13a9fb8a5afb5bd838ecf08259`
+- [x] ✅ feeExempt verified on-chain: Deployer, TreasurySafe, CommunitySafe
+- [ ] 🟡 Proposal #10: `transferOwnership(TreasurySafe)` — QUEUED, ETA: 2026-03-20T07:18:23 UTC
 
 ### Known Bugs
 - [ ] Android MetaMask Deep-Link: opens new browser instance instead of returning to Chrome
@@ -386,5 +385,5 @@ On errors: fix immediately, commit with `seo:` prefix.
 ---
 
 *This document is updated with every completed task.*
-*Last updated: 2026-03-16*
+*Last updated: 2026-03-18*
 

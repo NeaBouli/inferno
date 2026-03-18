@@ -745,7 +745,7 @@ app.get("/api/ifr/txfeed", handleTxFeed);
 app.get("/api/ifr/transactions", handleTxFeed);
 
 // GET /api/ifr/vault — BootstrapVaultV3 live status
-const VAULT_TARGET_AMOUNT = 194_750_000;
+const VAULT_TARGET_AMOUNT = 200_000_000;
 const VAULT_FUNDED_DATE = "2026-03-11";
 const VAULT_CACHE_TTL = 60_000;
 
