@@ -222,7 +222,7 @@ All ownable contracts transferred to Governance (48h Timelock). Parameter change
 | Transfer LiquidityReserve Ownership to Governance | **Done** (2026-03-05) |
 | Transfer BurnReserve Ownership to Governance | **Done** (2026-03-05) |
 | Transfer BuybackVault Ownership to Governance | **Done** (2026-03-05) |
-| Transfer Governance Owner to Multisig | Pending |
+| Transfer Governance Owner to Treasury Safe 3-of-5 | Proposal #10 Queued (ETA 20.03.2026) |
 
 ---
 

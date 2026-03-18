@@ -34,7 +34,7 @@ All 14 on-chain components deployed, verified, and operational on Ethereum Mainn
 |------|---------|
 | Treasury Multisig | [`0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b`](https://app.safe.global/home?safe=eth:0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b) |
 
-Threshold: 2-of-4 (4 active signers). Upgrading to 3-of-5.
+Threshold: 3-of-5 (5 active signers: A.K., M.G., A.M., Y.K., A.P.).
 
 ## Test Coverage
 
@@ -117,7 +117,7 @@ Threshold: 2-of-4 (4 active signers). Upgrading to 3-of-5.
 1. **LP Pairing** — Create Uniswap V2 LP (400M IFR + ETH)
 2. **LP Token Lock/Burn** — Lock via Unicrypt or burn to 0xdead
 3. **Ownership Transfer** — InfernoToken → Governance → Multisig
-4. **Multisig Expansion** — 2-of-4 active, upgrading to 3-of-5
+4. **Multisig Expansion** — 3-of-5 active on all Safes ✅
 5. **Third-party Security Audit** — Code4rena, Sherlock, or Cyfrin
 6. **FeeRouter Setup** — Deploy swap adapter, set voucher signer
 

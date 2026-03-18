@@ -181,7 +181,7 @@ Sepolia deployment served as the full testnet validation phase. All contracts we
 | 4 | Lock LP Tokens (min 12 months via Unicrypt) | Open |
 | 5 | Transfer InfernoToken Ownership -> Governance | Open |
 | 6 | Transfer Governance Owner -> Multisig | Open |
-| 7 | Expand Gnosis Safe to 2-of-4 signers | Open |
+| 7 | Expand Gnosis Safe to 3-of-5 signers | **Done** (15.03.2026) |
 | 8 | Professional Security Audit | Open |
 
 ---
