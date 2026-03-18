@@ -559,7 +559,7 @@
       <!-- ========== Stats Bar ========== -->
       <div class="wg-stats">
         <div class="wg-stat">
-          <div class="wg-stat-val">7</div>
+          <div class="wg-stat-val">8</div>
           <div class="wg-stat-lbl">Wallets</div>
         </div>
         <div class="wg-stat">
@@ -596,7 +596,7 @@
         <div class="wg-card">
           <div class="wg-card-head">
             <div class="wg-card-name">&#x1F680; Deployer EOA</div>
-            <span class="wg-badge wg-badge-active">Active</span>
+            <span class="wg-badge wg-badge-migrated">Transferred</span>
           </div>
           <div class="wg-addr-row">
             <span class="wg-addr"><a href="https://etherscan.io/address/0x6b36687b0cd4386fb14cf565B67D7862110Fed67" target="_blank" class="wg-addr-link">0x6b36687b0cd4386fb14cf565B67D7862110Fed67</a></span>
@@ -604,12 +604,31 @@
             <a href="https://etherscan.io/address/0x6b36687b0cd4386fb14cf565B67D7862110Fed67" target="_blank" class="wg-es-btn">Etherscan</a>
           </div>
           <div class="wg-field"><strong>Genesis Balance:</strong> 1,000,000,000 IFR (100% &mdash; then distributed)</div>
-          <div class="wg-field"><strong>Current Role:</strong> Holds 400M IFR reserved for Uniswap V2 LP pairing via <code>BootstrapVaultV3.finalise()</code></div>
+          <div class="wg-field"><strong>Current Balance:</strong> 0 IFR &mdash; 400.6M transferred to LP Reserve Safe on 18.03.2026 (<a href="https://etherscan.io/tx/0xd33c771dc3e09689f124d3ac8f4eab138c827494e3cca5dd329bc29192d23197" target="_blank">TX</a>)</div>
           <div class="wg-role-box">
-            <strong>Ecosystem Role:</strong> Receives all genesis IFR, distributes to all protocol wallets and contracts at deploy. Post-deploy: passive LP reserve holder until Bootstrap <code>finalise()</code> creates the Uniswap pair.
+            <strong>Ecosystem Role:</strong> Genesis deployer. Received all 1B IFR at deploy, distributed to all protocol wallets and contracts. LP reserve (400.6M) transferred to LP Reserve Safe (Gnosis 3-of-5) on 18.03.2026. Governance Owner &mdash; Proposal #10 pending (setOwner to TreasurySafe).
           </div>
-          <div class="wg-field"><strong>Access Control:</strong> Single EOA &mdash; Governance Owner (Proposal #8 pending: transfer to Treasury Safe)</div>
+          <div class="wg-field"><strong>Access Control:</strong> Single EOA &mdash; Governance Owner (Proposal #10 queued: transfer to Treasury Safe)</div>
           <div class="wg-field"><strong>feeExempt:</strong> <span class="wg-fee-status wg-fee-yes">&#x2705; Active since 18.03.2026</span></div>
+        </div>
+
+        <!-- WALLET 1b — IFR LP Reserve Safe (NEW) -->
+        <div class="wg-card">
+          <div class="wg-card-head">
+            <div class="wg-card-name">&#x1F4B0; IFR LP Reserve Safe</div>
+            <span class="wg-badge wg-badge-multisig">Multisig 3-of-5</span>
+          </div>
+          <div class="wg-addr-row">
+            <span class="wg-addr"><a href="https://etherscan.io/address/0x5D93E7919a71d725054e31017eCA86B026F86C04" target="_blank" class="wg-addr-link">0x5D93E7919a71d725054e31017eCA86B026F86C04</a></span>
+            <button class="wg-copy-btn" data-addr="0x5D93E7919a71d725054e31017eCA86B026F86C04">Copy</button>
+            <a href="https://etherscan.io/address/0x5D93E7919a71d725054e31017eCA86B026F86C04" target="_blank" class="wg-es-btn">Etherscan</a>
+          </div>
+          <div class="wg-field"><strong>Balance:</strong> 400,600,000 IFR</div>
+          <div class="wg-field"><strong>Current Role:</strong> LP Reserve for Phase 2 (100M) + Phase 3 (150M) Uniswap expansion. Received from Deployer on 18.03.2026.</div>
+          <div class="wg-role-box">
+            <strong>Ecosystem Role:</strong> Holds the full DEX liquidity reserve under multisig control. Phase 2: 100M IFR for Uniswap LP expansion (after 01.09.2026 LiqRes unlock). Phase 3: 150M IFR for additional LP depth. All transfers require 3-of-5 multisig approval.
+          </div>
+          <div class="wg-field"><strong>Access Control:</strong> Gnosis Safe &mdash; 3-of-5 (same signers as Treasury + Community)</div>
         </div>
 
         <!-- WALLET 2 — Treasury Safe -->
@@ -1134,8 +1153,8 @@
           <text x="680" y="230" text-anchor="middle" fill="white" font-size="11" font-weight="600">PartnerVault</text>
           <text x="680" y="248" text-anchor="middle" fill="#9ca3af" font-size="10">40M IFR</text>
 
-          <!-- Deployer keeps 400M label -->
-          <text x="400" y="118" text-anchor="middle" fill="#9ca3af" font-size="10" font-style="italic">Keeps 400M (LP Reserve)</text>
+          <!-- Deployer transferred 400M to LP Reserve Safe -->
+          <text x="400" y="118" text-anchor="middle" fill="#9ca3af" font-size="10" font-style="italic">400M &#x2192; LP Reserve Safe (18.03)</text>
 
           <!-- Bootstrap section -->
           <rect x="290" y="160" width="220" height="50" rx="8" fill="rgba(34,197,94,0.08)" stroke="#22c55e" stroke-width="1.5"/>

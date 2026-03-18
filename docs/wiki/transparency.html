@@ -946,9 +946,16 @@
             <tr>
               <td><strong>Deployer</strong></td>
               <td class="address"><a href="https://etherscan.io/address/0x6b36687b0cd4386fb14cf565B67D7862110Fed67" target="_blank">0x6b36...Fed67</a></td>
-              <td>LP creation. Holds 400M IFR until BootstrapVaultV3.finalise() creates Uniswap LP. No other function post-deploy.</td>
-              <td id="cur-deployer">400,600,000 IFR</td>
-              <td>EOA &mdash; single key</td>
+              <td>Genesis deployer. 400.6M IFR transferred to LP Reserve Safe on 18.03.2026. <a href="https://etherscan.io/tx/0xd33c771dc3e09689f124d3ac8f4eab138c827494e3cca5dd329bc29192d23197" target="_blank" style="font-size:11px;">TX: 0xd33c771d&hellip;</a></td>
+              <td id="cur-deployer">0 IFR</td>
+              <td>EOA &mdash; Governance Owner (Proposal #10 pending)</td>
+            </tr>
+            <tr>
+              <td><strong>IFR LP Reserve Safe</strong></td>
+              <td class="address"><a href="https://etherscan.io/address/0x5D93E7919a71d725054e31017eCA86B026F86C04" target="_blank">0x5D93...C04</a></td>
+              <td>LP Reserve for Phase 2 (100M) + Phase 3 (150M) Uniswap expansion. Received 400.6M IFR from Deployer on 18.03.2026.</td>
+              <td>400,600,000 IFR</td>
+              <td>Gnosis Safe &mdash; 3-of-5</td>
             </tr>
             <tr>
               <td><strong>Treasury Safe</strong></td>
@@ -1110,7 +1117,7 @@
         </table>
       </div>
 
-      <p style="font-size:13px;"><strong>Remaining 400M IFR (40%)</strong> stayed on the Deployer wallet, reserved for DEX LP pairing.</p>
+      <p style="font-size:13px;"><strong>Remaining 400M IFR (40%)</strong> originally on Deployer, transferred to IFR LP Reserve Safe (Gnosis 3-of-5) on 18.03.2026. Reserved for DEX LP pairing.</p>
 
       <h3>Ownership Transfers (18:54&ndash;18:55 UTC)</h3>
       <div class="table-wrap">
@@ -1196,7 +1203,7 @@
             <tr><th>Wallet</th><th>IFR</th><th>%</th><th>Note</th></tr>
           </thead>
           <tbody>
-            <tr><td>Deployer (LP Reserve)</td><td>400,000,000</td><td>40.00%</td><td>Reserved for Uniswap V2 LP pairing</td></tr>
+            <tr><td>LP Reserve Safe (ex-Deployer)</td><td>400,000,000</td><td>40.00%</td><td>Transferred to LP Reserve Safe 0x5D93... on 18.03.2026</td></tr>
             <tr><td>LiquidityReserve</td><td>200,000,000</td><td>20.00%</td><td>6-month lock, staged release</td></tr>
             <tr><td>Vesting (Team)</td><td>150,000,000</td><td>15.00%</td><td>12-month cliff, 4-year linear</td></tr>
             <tr><td>Treasury Safe</td><td>150,000,000</td><td>15.00%</td><td>Migrated from Treasury EOA (feeExempt)</td></tr>
