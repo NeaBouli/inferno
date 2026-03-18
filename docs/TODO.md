@@ -135,6 +135,9 @@ On errors: fix immediately, commit with `seo:` prefix.
 - [x] `SIGNER_WALLETS` gesetzt in Railway (alle 5 Signers: A.K./M.G./A.M./Y.K./A.P.) ✅ 16.03.2026
 - [x] `VERIFY_PORT=3001` gesetzt in Railway ✅ 16.03.2026
 
+### Builder Applications
+- [x] NEXUS GR — GitHub Issue #13 (19.03.2026) ✅
+
 ### Core Developer (external)
 - [ ] Deploy BuilderRegistry.sol on Sepolia
 - [ ] BuilderRegistry audit
