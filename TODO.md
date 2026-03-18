@@ -160,11 +160,9 @@ Stand: 17.03.2026 | Konsolidiert (Claude + Core Dev)
 - Deployer 400.6M IFR wird von `finalise()` NICHT beruehrt
 - Transfer kann jederzeit nach Proposal #7 erfolgen (feeExempt!)
 
-- [ ] 🔴 Nach Proposal #7 Execute:
-      Deployer (`0x6b36...`) → TreasurySafe (`0x5ad6...`)
-      Transfer: 400,600,000 IFR (direkt, kein Governance noetig)
-      Deployer haelt Tokens als EOA → einfacher ERC-20 Transfer
-      VORAUSSETZUNG: Deployer feeExempt (nach Proposal #7)
+- [x] ✅ 400.6M IFR Transfer: Deployer → LP Reserve Safe (18.03.2026)
+      LP Reserve Safe: `0x5D93E7919a71d725054e31017eCA86B026F86C04` (Gnosis 3-of-5)
+      TX: `0xd33c771dc3e09689f124d3ac8f4eab138c827494e3cca5dd329bc29192d23197`
 
 - [ ] 🟡 Nach Transfer: Phase 2 LP via Governance Proposal
       TreasurySafe → Uniswap (100M Phase 2)
