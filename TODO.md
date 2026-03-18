@@ -168,6 +168,8 @@ Stand: 17.03.2026 | Konsolidiert (Claude + Core Dev)
       Landing, Tokenomics, Transparency, Wallet-Guide, Roadmap,
       Governance, Security, Fair-Launch, Protocol-Plan, One-Pager,
       Multisig, Mainnet-Checklist — 13 Dateien aktualisiert
+- [x] ✅ Railway: LP Reserve Safe added to balances endpoint (18.03.2026)
+      LPReserveSafe: 0x5D93... (400.6M IFR verified on-chain)
 
 - [ ] 🟡 Phase 2 LP via Governance Proposal
       LP Reserve Safe → Uniswap (100M Phase 2)

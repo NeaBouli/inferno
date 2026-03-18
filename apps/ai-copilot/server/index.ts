@@ -559,6 +559,7 @@ const PROTOCOL_ADDRESSES: Record<string, string> = {
   CommunitySafe: "0xaC5687547B2B21d80F8fd345B51e608d476667C7",
   TeamBeneficiary: "0x04FABC52c51d1F8ced6974E7C25a34249b1E6239",
   VoucherSigner: "0x17F8DD6dECCb3ff5d95691982B85A87d7d9872d4",
+  LPReserveSafe: "0x5D93E7919a71d725054e31017eCA86B026F86C04",
 };
 
 async function esApiFetch(params: string): Promise<unknown> {
