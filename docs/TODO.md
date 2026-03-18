@@ -122,6 +122,9 @@ On errors: fix immediately, commit with `seo:` prefix.
 - [x] SEO: llms.txt created + preconnect Railway (19.03.2026) ✅
 - [x] Landing Page performance: defer scripts + fetch timeout 8s (19.03.2026) ✅
 - [x] Wiki index: all 27 pages now have cards (was 16/27) (19.03.2026) ✅
+- [x] FeeRouterV1 tracking verified: Railway + Landing Page + SVG all correct (19.03.2026) ✅
+- [x] Token Visualisierung: SVG + Kacheln verified correct (19.03.2026) ✅
+- [x] ~~Animated Token GIF~~ — gestrichen (not planned) ✅
 - [ ] Android MetaMask Deep-Link: opens new browser instance instead of returning to Chrome
 - [ ] npm audit: 34 vulnerabilities (2 critical, 9 high, 11 moderate, 12 low) — fix after LP launch
       Link: https://github.com/NeaBouli/inferno/security/dependabot
@@ -189,7 +192,7 @@ On errors: fix immediately, commit with `seo:` prefix.
 - [ ] Communicate Bootstrap V4 on bootstrap.html: "V4 governance voting planned for Phase 3"
 
 ### Frontend
-- [ ] Create animated token GIF (still missing)
+- ~~Create animated token GIF~~ — not planned
 - [ ] `Buy IFR` → activate Uniswap button (ONLY after LP live)
 - [ ] Integrate live token price (ONLY after LP live)
 - [ ] WalletConnect Phase 2: `isLocked(wallet,1000e9)` check → Copilot gate (after LP)
