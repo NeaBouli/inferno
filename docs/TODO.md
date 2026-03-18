@@ -116,6 +116,7 @@ On errors: fix immediately, commit with `seo:` prefix.
 
 ### Known Bugs
 - [x] Landing Page Stats FINAL FIX (19.03.2026): LP Reserve Safe 0→400.6M, Protocol Locked 350M→998.5M, all stats verified on-chain ✅
+- [x] Builder Vault lock mechanism documented for all users (19.03.2026): index, tokenomics, wallet-guide, faq, security, fair-launch ✅
 - [ ] Android MetaMask Deep-Link: opens new browser instance instead of returning to Chrome
 - [ ] npm audit: 34 vulnerabilities (2 critical, 9 high, 11 moderate, 12 low) — fix after LP launch
       Link: https://github.com/NeaBouli/inferno/security/dependabot
