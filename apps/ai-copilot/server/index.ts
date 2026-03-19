@@ -938,6 +938,43 @@ app.get("/api/bootstrap/votes", (_req, res) => {
   });
 });
 
+// ── BuilderRegistry — on-chain builder lookup (active when env var set) ──
+const BUILDER_REGISTRY_ADDR = process.env.BUILDER_REGISTRY_ADDR || null;
+const BUILDER_REGISTRY_ABI = [
+  "function isRegistered(address) view returns (bool)",
+  "function getBuilder(address) view returns (string,string,uint256)",
+  "function builderCount() view returns (uint256)",
+];
+
+if (BUILDER_REGISTRY_ADDR) {
+  app.get("/api/builders/check/:address", async (req, res) => {
+    try {
+      const addr = req.params.address;
+      const url = `https://api.etherscan.io/api?apikey=${ETHERSCAN_API_KEY}&module=proxy&action=eth_call&to=${BUILDER_REGISTRY_ADDR}&data=0xc3c5a547000000000000000000000000${addr.replace("0x", "").toLowerCase()}&tag=latest`;
+      const resp = await fetch(url).then((r: Response) => r.json()) as { result?: string };
+      const isBuilder = resp.result ? resp.result !== "0x0000000000000000000000000000000000000000000000000000000000000000" : false;
+      res.json({ address: addr, isBuilder });
+    } catch (e: unknown) {
+      res.status(400).json({ error: e instanceof Error ? e.message : "Unknown error" });
+    }
+  });
+
+  app.get("/api/builders/count", async (_req, res) => {
+    try {
+      const url = `https://api.etherscan.io/api?apikey=${ETHERSCAN_API_KEY}&module=proxy&action=eth_call&to=${BUILDER_REGISTRY_ADDR}&data=0x7e20dae3&tag=latest`;
+      const resp = await fetch(url).then((r: Response) => r.json()) as { result?: string };
+      const count = resp.result ? parseInt(resp.result, 16) : 0;
+      res.json({ count });
+    } catch (e: unknown) {
+      res.status(400).json({ error: e instanceof Error ? e.message : "Unknown error" });
+    }
+  });
+
+  console.log("[BuilderRegistry] Endpoints active:", BUILDER_REGISTRY_ADDR);
+} else {
+  console.log("[BuilderRegistry] BUILDER_REGISTRY_ADDR not set — endpoints disabled");
+}
+
 const PORT = parseInt(process.env.PORT || "3003", 10);
 app.listen(PORT, () => {
   console.log(`IFR Copilot API on :${PORT}`);

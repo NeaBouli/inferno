@@ -146,6 +146,9 @@ On errors: fix immediately, commit with `seo:` prefix.
 - [ ] BuilderRegistry audit
 - [ ] Deploy BuilderRegistry on Mainnet
 - [ ] `BUILDER_REGISTRY_ADDR` in Railway env (after deploy)
+      BLOCKIERT: wartet auf Core Dev Deploy + Audit
+      Vorbereitet: /api/builders/check + /api/builders/count (auto-aktiv nach env var)
+      Docs: docs/BUILDER_REGISTRY_DEPLOY.md
 
 ---
 
