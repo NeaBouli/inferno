@@ -940,17 +940,28 @@ app.get("/api/bootstrap/votes", (_req, res) => {
 
 // ── BuilderRegistry — on-chain builder lookup (active when env var set) ──
 // Contract: 0xdfe6636DA47F8949330697e1dC5391267CEf0EE3 (Mainnet)
-// Functions: isBuilder(address) → 0xb6b6b475, getBuilderCount() → 0xe54a01f9
+// Uses direct JSON-RPC eth_call (Etherscan V1 proxy deprecated)
 const BUILDER_REGISTRY_ADDR = process.env.BUILDER_REGISTRY_ADDR || null;
+const ETH_RPC_URL = process.env.MAINNET_RPC_URL || "https://ethereum-rpc.publicnode.com";
+
+async function ethCall(to: string, data: string): Promise<string> {
+  const resp = await fetch(ETH_RPC_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "eth_call", params: [{ to, data }, "latest"] }),
+  });
+  const json = await resp.json() as { result?: string; error?: { message: string } };
+  if (json.error) throw new Error(json.error.message);
+  return json.result || "0x";
+}
 
 if (BUILDER_REGISTRY_ADDR) {
   app.get("/api/builders/check/:address", async (req, res) => {
     try {
       const addr = req.params.address;
       // isBuilder(address) selector: 0xb6b6b475
-      const url = `https://api.etherscan.io/api?apikey=${ETHERSCAN_API_KEY}&module=proxy&action=eth_call&to=${BUILDER_REGISTRY_ADDR}&data=0xb6b6b475000000000000000000000000${addr.replace("0x", "").toLowerCase()}&tag=latest`;
-      const resp = await fetch(url).then((r: Response) => r.json()) as { result?: string };
-      const isBuilder = resp.result ? resp.result !== "0x0000000000000000000000000000000000000000000000000000000000000000" : false;
+      const result = await ethCall(BUILDER_REGISTRY_ADDR, `0xb6b6b475000000000000000000000000${addr.replace("0x", "").toLowerCase()}`);
+      const isBuilder = result !== "0x" && result !== "0x0000000000000000000000000000000000000000000000000000000000000000";
       res.json({ address: addr, isBuilder });
     } catch (e: unknown) {
       res.status(400).json({ error: e instanceof Error ? e.message : "Unknown error" });
@@ -960,10 +971,9 @@ if (BUILDER_REGISTRY_ADDR) {
   app.get("/api/builders/count", async (_req, res) => {
     try {
       // getBuilderCount() selector: 0xe54a01f9
-      const url = `https://api.etherscan.io/api?apikey=${ETHERSCAN_API_KEY}&module=proxy&action=eth_call&to=${BUILDER_REGISTRY_ADDR}&data=0xe54a01f9&tag=latest`;
-      const resp = await fetch(url).then((r: Response) => r.json()) as { result?: string };
-      const count = resp.result ? parseInt(resp.result, 16) : 0;
-      res.json({ count });
+      const result = await ethCall(BUILDER_REGISTRY_ADDR, "0xe54a01f9");
+      const count = result && result !== "0x" ? parseInt(result, 16) : 0;
+      res.json({ count: isNaN(count) ? 0 : count });
     } catch (e: unknown) {
       res.status(400).json({ error: e instanceof Error ? e.message : "Unknown error" });
     }
