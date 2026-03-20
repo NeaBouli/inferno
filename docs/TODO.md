@@ -158,16 +158,16 @@ On errors: fix immediately, commit with `seo:` prefix.
 - [x] NEXUS GR — GitHub Issue #13 (19.03.2026) ✅
 
 ### Core Developer (external)
-- [ ] Deploy BuilderRegistry.sol on Sepolia
-- [ ] BuilderRegistry audit
-- [ ] Deploy BuilderRegistry on Mainnet
-- [ ] `BUILDER_REGISTRY_ADDR` in Railway env (after deploy)
-      BLOCKIERT: Core Dev im Urlaub — Handover bereit
-      Handover: docs/CORE_DEV_BUILDERREGISTRY.md (10-Schritt-Anleitung)
-      Checklist: docs/BUILDER_REGISTRY_DEPLOY.md
-      Script: scripts/deploy-builder-registry.js
-      API: /api/builders/check + /api/builders/count (auto-aktiv nach env var)
-      Nach Urlaub: Core Dev führt Schritt 1-10 aus
+- [x] ✅ Deploy BuilderRegistry.sol on Sepolia (20.03.2026)
+      Sepolia: `0x77e99917Eca8539c62F509ED1193ac36580A6e7B`
+- [x] ✅ Deploy BuilderRegistry on Mainnet (20.03.2026)
+      Mainnet: `0xdfe6636DA47F8949330697e1dC5391267CEf0EE3`
+      Owner: Governance (0xc43d...D041) → TreasurySafe 3-of-5
+      Etherscan verified
+- [ ] `BUILDER_REGISTRY_ADDR` in Railway env
+      Adresse: `0xdfe6636DA47F8949330697e1dC5391267CEf0EE3`
+      Services: ifr-ai-copilot + telegram-bot
+- [ ] BuilderRegistry audit (post-deploy — contract is upgradeable via Governance)
 
 ---
 
