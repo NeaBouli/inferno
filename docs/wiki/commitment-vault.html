@@ -735,20 +735,20 @@
       <!-- Coming Soon Banner -->
       <div style="background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.3);border-radius:12px;padding:20px;margin-bottom:32px;text-align:center;">
         <div style="font-size:1.1rem;font-weight:700;color:#3b82f6;margin-bottom:4px;">Phase 3 &mdash; Coming Soon</div>
-        <div style="color:var(--muted);font-size:0.88rem;">CommitmentVault wird nach Bootstrap Ende (ca. 05.06.2026) deployed.</div>
+        <div style="color:var(--muted);font-size:0.88rem;">CommitmentVault will be deployed after Bootstrap ends (approx. 06/05/2026).</div>
       </div>
 
       <!-- ======================================== -->
       <!-- Title -->
       <!-- ======================================== -->
       <h1>Commitment<span class="accent">Vault</span></h1>
-      <p class="subtitle">Freiwilliger Token-Lock mit selbst gew&auml;hlter Entsperr-Bedingung</p>
+      <p class="subtitle">Voluntary Token Lock with self-chosen unlock condition</p>
 
       <!-- ======================================== -->
       <!-- 1. Was ist CommitmentVault? -->
       <!-- ======================================== -->
-      <h2 id="was-ist-commitmentvault">1. Was ist CommitmentVault?</h2>
-      <p>CommitmentVault ist ein Smart Contract, der IFR-Token <strong style="color:var(--text);">unwiderruflich</strong> sperrt, bis eine selbst gew&auml;hlte Bedingung erf&uuml;llt ist. Im Gegensatz zu IFRLock (Produkt-Zugang) dient CommitmentVault als <strong style="color:var(--text);">Vertrauensbeweis</strong> &mdash; ein on-chain Signal, dass ein Holder langfristig an das Projekt glaubt.</p>
+      <h2 id="was-ist-commitmentvault">1. What is CommitmentVault?</h2>
+      <p>CommitmentVault is a smart contract that <strong style="color:var(--text);">irrevocably</strong> locks IFR tokens until a self-chosen condition is met. Unlike IFRLock (product access), CommitmentVault serves as a <strong style="color:var(--text);">Proof of Commitment</strong> &mdash; an on-chain signal that a holder believes in the project long-term.</p>
 
       <table>
         <thead>
@@ -761,72 +761,72 @@
         <tbody>
           <tr>
             <td><strong>Unlock</strong></td>
-            <td>Jederzeit</td>
-            <td>Erst bei Bedingung</td>
+            <td>Anytime</td>
+            <td>Only when condition is met</td>
           </tr>
           <tr>
-            <td><strong>Zweck</strong></td>
-            <td>Produkt-Zugang</td>
-            <td>Vertrauensbeweis</td>
+            <td><strong>Purpose</strong></td>
+            <td>Product Access</td>
+            <td>Proof of Commitment</td>
           </tr>
           <tr>
-            <td><strong>F&uuml;r</strong></td>
-            <td>Alle User</td>
+            <td><strong>For</strong></td>
+            <td>All Users</td>
             <td>Contributor, Team, Partner</td>
           </tr>
           <tr>
-            <td><strong>Belohnung</strong></td>
+            <td><strong>Reward</strong></td>
             <td>Premium Access</td>
-            <td>Community Vertrauen</td>
+            <td>Community Trust</td>
           </tr>
         </tbody>
       </table>
 
       <div class="callout">
-        <p><strong>Warum unwiderruflich?</strong> Der Smart Contract erzwingt die Bedingung &mdash; kein Mensch kann den Lock brechen. Die Community kann jeden Lock on-chain verifizieren. Code is law.</p>
+        <p><strong>Why irrevocable?</strong> The smart contract enforces the condition &mdash; no human can break the lock. The community can verify every lock on-chain. Code is law.</p>
       </div>
 
       <!-- ======================================== -->
       <!-- 2. Die 4 Bedingungstypen -->
       <!-- ======================================== -->
-      <h2 id="bedingungstypen">2. Die 4 Bedingungstypen</h2>
+      <h2 id="bedingungstypen">2. The 4 Condition Types</h2>
 
-      <h3>A) NUR ZEIT</h3>
-      <p><strong style="color:var(--text);">Formel:</strong> <code>unlock_time = T</code></p>
-      <p><strong style="color:var(--text);">Beispiel:</strong> &bdquo;Entsperre am 01.01.2027&ldquo;</p>
-      <p><strong style="color:var(--text);">Ideal f&uuml;r:</strong> Team, Partner, Diamond Hands</p>
+      <h3>A) TIME ONLY</h3>
+      <p><strong style="color:var(--text);">Formula:</strong> <code>unlock_time = T</code></p>
+      <p><strong style="color:var(--text);">Example:</strong> &ldquo;Unlock on 01/01/2027&rdquo;</p>
+      <p><strong style="color:var(--text);">Ideal for:</strong> Team, Partner, Diamond Hands</p>
 
-      <h3>B) NUR PREIS</h3>
-      <p><strong style="color:var(--text);">Formel:</strong> <code>unlock_price = P0 &times; Multiplikator</code></p>
-      <p><strong style="color:var(--text);">Beispiel:</strong> &bdquo;Entsperre wenn IFR &ge; P0 &times; 10&ldquo;</p>
-      <p><strong style="color:var(--text);">Ideal f&uuml;r:</strong> Contributor (aligned mit Wachstum)</p>
+      <h3>B) PRICE ONLY</h3>
+      <p><strong style="color:var(--text);">Formula:</strong> <code>unlock_price = P0 &times; Multiplier</code></p>
+      <p><strong style="color:var(--text);">Example:</strong> &ldquo;Unlock when IFR &ge; P0 &times; 10&rdquo;</p>
+      <p><strong style="color:var(--text);">Ideal for:</strong> Contributor (aligned with growth)</p>
 
-      <h3>C) ZEIT ODER PREIS</h3>
-      <p><strong style="color:var(--text);">Formel:</strong> <code>unlock_time = T OR unlock_price = P0 &times; M</code></p>
-      <p><strong style="color:var(--text);">Beispiel:</strong> &bdquo;01.06.2027 ODER wenn P0 &times; 50&ldquo;</p>
-      <p><strong style="color:var(--text);">Ideal f&uuml;r:</strong> Maximale Flexibilit&auml;t</p>
+      <h3>C) TIME OR PRICE</h3>
+      <p><strong style="color:var(--text);">Formula:</strong> <code>unlock_time = T OR unlock_price = P0 &times; M</code></p>
+      <p><strong style="color:var(--text);">Example:</strong> &ldquo;06/01/2027 OR when P0 &times; 50&rdquo;</p>
+      <p><strong style="color:var(--text);">Ideal for:</strong> Maximum flexibility</p>
 
-      <h3>D) ZEIT UND PREIS</h3>
-      <p><strong style="color:var(--text);">Formel:</strong> <code>unlock_time = T AND unlock_price = P0 &times; M</code></p>
-      <p><strong style="color:var(--text);">Beispiel:</strong> &bdquo;Nach 01.01.2027 UND P0 &times; 100&ldquo;</p>
-      <p><strong style="color:var(--text);">Ideal f&uuml;r:</strong> St&auml;rkste Commitment-Form</p>
+      <h3>D) TIME AND PRICE</h3>
+      <p><strong style="color:var(--text);">Formula:</strong> <code>unlock_time = T AND unlock_price = P0 &times; M</code></p>
+      <p><strong style="color:var(--text);">Example:</strong> &ldquo;After 01/01/2027 AND P0 &times; 100&rdquo;</p>
+      <p><strong style="color:var(--text);">Ideal for:</strong> Strongest form of commitment</p>
 
       <div class="callout" style="background:rgba(34,197,94,0.06);border-left-color:var(--green);">
-        <p><strong>Einmal offen, bleibt offen</strong> &mdash; Wenn eine Tranche sich &ouml;ffnet, bleibt sie offen. Auch wenn der Preis danach f&auml;llt.</p>
+        <p><strong>Once unlocked, stays unlocked</strong> &mdash; When a tranche opens, it stays open. Even if the price drops afterwards.</p>
       </div>
 
       <!-- ======================================== -->
       <!-- 3. Contributor-Konfiguration -->
       <!-- ======================================== -->
-      <h2 id="contributor-konfiguration">3. Contributor-Konfiguration</h2>
-      <p>Die 100M Contributor-Token werden in 10 gleich gro&szlig;e Tranchen aufgeteilt. Jede Tranche hat eine Preis-Bedingung (Typ B: NUR PREIS).</p>
+      <h2 id="contributor-konfiguration">3. Contributor Configuration</h2>
+      <p>The 100M Contributor tokens are split into 10 equal tranches. Each tranche has a price condition (Type B: PRICE ONLY).</p>
 
       <table>
         <thead>
           <tr>
             <th>Tranche</th>
-            <th>Menge</th>
-            <th>Bedingung (Preis)</th>
+            <th>Amount</th>
+            <th>Condition (Price)</th>
           </tr>
         </thead>
         <tbody>
@@ -844,30 +844,30 @@
       </table>
 
       <div class="callout-green">
-        <p><strong>Beispiel:</strong> Bei P0 = $0.0000002: Tranche 3 &ouml;ffnet bei $0.000002 (10-facher Preis). Wert: 10M &times; $0.000002 = $20</p>
+        <p><strong>Example:</strong> At P0 = $0.0000002: Tranche 3 opens at $0.000002 (10x price). Value: 10M &times; $0.000002 = $20</p>
       </div>
 
       <!-- ======================================== -->
       <!-- 4. Für alle Stakeholder -->
       <!-- ======================================== -->
-      <h2 id="stakeholder">4. F&uuml;r alle Stakeholder</h2>
+      <h2 id="stakeholder">4. For All Stakeholders</h2>
 
       <div class="stake-grid">
         <div class="stake-card">
           <div class="stake-card-title">Contributor</div>
-          <p>100M IFR in 10 Tranchen. Verdient ETH-Zinsen via LendingVault w&auml;hrend der Lock-Phase.</p>
+          <p>100M IFR in 10 tranches. Earns ETH yield via LendingVault during the lock phase.</p>
         </div>
         <div class="stake-card">
           <div class="stake-card-title">Team / Core Dev</div>
-          <p>Nach Vesting Cliff (M&auml;rz 2027). St&auml;rkster Vertrauensbeweis &mdash; Team-Token bleiben gesperrt bis Bedingung erf&uuml;llt.</p>
+          <p>After Vesting Cliff (March 2027). Strongest Proof of Commitment &mdash; team tokens remain locked until condition is met.</p>
         </div>
         <div class="stake-card">
           <div class="stake-card-title">Partner / Builder</div>
-          <p>&bdquo;Committed IFR Partner&ldquo; Badge auf Website. Sichtbarer Beweis f&uuml;r langfristiges Engagement.</p>
+          <p>&ldquo;Committed IFR Partner&rdquo; badge on website. Visible proof of long-term commitment.</p>
         </div>
         <div class="stake-card">
-          <div class="stake-card-title">Jeder IFR Holder</div>
-          <p>Diamond Hands Beweis on-chain. Jeder kann freiwillig Token in den CommitmentVault legen.</p>
+          <div class="stake-card-title">Any IFR Holder</div>
+          <p>Diamond Hands proof on-chain. Anyone can voluntarily lock tokens in the CommitmentVault.</p>
         </div>
       </div>
 
@@ -875,47 +875,47 @@
       <!-- 5. Auto-Unlock -->
       <!-- ======================================== -->
       <h2 id="auto-unlock">5. Auto-Unlock</h2>
-      <p>Wenn eine Bedingung erf&uuml;llt ist und der Besitzer 30 Tage lang nicht selbst <code>unlock()</code> aufruft, kann <strong style="color:var(--text);">jeder</strong> die Funktion f&uuml;r diese Wallet aufrufen.</p>
+      <p>When a condition is met and the owner does not call <code>unlock()</code> within 30 days, <strong style="color:var(--text);">anyone</strong> can call the function for that wallet.</p>
 
       <ul>
-        <li>Token gehen <strong style="color:var(--text);">IMMER</strong> zur Original-Wallet &mdash; es ist unm&ouml;glich, Token zu stehlen</li>
-        <li>Verhindert permanent gesperrte Token bei verlorenen Private Keys</li>
-        <li>30-Tage-Frist gibt dem Besitzer gen&uuml;gend Zeit, selbst zu handeln</li>
+        <li>Tokens <strong style="color:var(--text);">ALWAYS</strong> go to the original wallet &mdash; it is impossible to steal tokens</li>
+        <li>Prevents permanently locked tokens in case of lost private keys</li>
+        <li>The 30-day grace period gives the owner enough time to act</li>
       </ul>
 
       <div class="flow-diagram">
-        <div class="flow-step">Bedingung erf&uuml;llt</div>
+        <div class="flow-step">Condition met</div>
         <div class="flow-arrow">&rarr;</div>
-        <div class="flow-step">30 Tage warten</div>
+        <div class="flow-step">Wait 30 days</div>
         <div class="flow-arrow">&rarr;</div>
-        <div class="flow-step active">Jeder kann unlock()</div>
+        <div class="flow-step active">Anyone can unlock()</div>
         <div class="flow-arrow">&rarr;</div>
-        <div class="flow-step green">Token &rarr; Original Wallet</div>
+        <div class="flow-step green">Tokens &rarr; Original Wallet</div>
       </div>
 
       <!-- ======================================== -->
       <!-- 6. Warum ist das gut für IFR? -->
       <!-- ======================================== -->
-      <h2 id="warum-gut">6. Warum ist das gut f&uuml;r IFR?</h2>
+      <h2 id="warum-gut">6. Why is this good for IFR?</h2>
       <ul>
-        <li><strong style="color:var(--text);">Token aus Umlauf = weniger Verkaufsdruck</strong> &mdash; Gesperrte Token k&ouml;nnen nicht verkauft werden, was das verf&uuml;gbare Angebot reduziert.</li>
-        <li><strong style="color:var(--text);">Vertrauen on-chain beweisbar</strong> &mdash; Nicht nur Versprechen, sondern mathematisch verifizierbar. Jeder kann den Contract lesen.</li>
-        <li><strong style="color:var(--text);">Preis-Tranchen = aligned mit Projekt-Erfolg</strong> &mdash; Contributor profitieren nur, wenn das gesamte &Ouml;kosystem w&auml;chst. Kein Dump am Tag 1.</li>
+        <li><strong style="color:var(--text);">Tokens out of circulation = less sell pressure</strong> &mdash; Locked tokens cannot be sold, reducing the available supply.</li>
+        <li><strong style="color:var(--text);">Trust provable on-chain</strong> &mdash; Not just promises, but mathematically verifiable. Anyone can read the contract.</li>
+        <li><strong style="color:var(--text);">Price tranches = aligned with project success</strong> &mdash; Contributors only benefit when the entire ecosystem grows. No dump on day 1.</li>
       </ul>
 
       <!-- ======================================== -->
       <!-- FAQ -->
       <!-- ======================================== -->
-      <h2 id="faq">H&auml;ufige Fragen</h2>
+      <h2 id="faq">Frequently Asked Questions</h2>
 
-      <h3>Kann jemand meine gesperrten Token stehlen?</h3>
-      <p><strong style="color:var(--text);">Nein.</strong> <code>unlock()</code> sendet IMMER zur Original-Wallet. Der Smart Contract hat keine Funktion, die Token an eine andere Adresse senden k&ouml;nnte.</p>
+      <h3>Can someone steal my locked tokens?</h3>
+      <p><strong style="color:var(--text);">No.</strong> <code>unlock()</code> ALWAYS sends to the original wallet. The smart contract has no function that could send tokens to a different address.</p>
 
-      <h3>Was wenn ich den Zugang verliere?</h3>
-      <p>Auto-Unlock nach 30 Tagen. Jeder kann <code>unlock()</code> aufrufen, Token gehen trotzdem zu deiner Wallet. Solange deine Wallet-Adresse existiert, sind die Token sicher.</p>
+      <h3>What if I lose access?</h3>
+      <p>Auto-Unlock after 30 days. Anyone can call <code>unlock()</code>, and tokens still go to your wallet. As long as your wallet address exists, the tokens are safe.</p>
 
-      <h3>Wann wird CommitmentVault deployed?</h3>
-      <p>Nach Bootstrap Ende (ca. 05.06.2026). Der Contract muss zuerst auditiert werden. Details werden in der <a href="roadmap.html">Roadmap</a> und &uuml;ber die offiziellen Kan&auml;le bekannt gegeben.</p>
+      <h3>When will CommitmentVault be deployed?</h3>
+      <p>After Bootstrap ends (approx. 06/05/2026). The contract must be audited first. Details will be announced on the <a href="roadmap.html">Roadmap</a> and through the official channels.</p>
 
       <!-- Footer -->
       <footer class="wiki-footer">
