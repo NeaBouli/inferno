@@ -121,6 +121,45 @@
       <li><div class="cb"></div>&#x1F535; Wiki Navigation updaten (Sidebar + Index)</li>
     </ul>
 
+    <h3>Contracts (Core Dev &mdash; Solidity)</h3>
+    <ul>
+      <li><div class="cb"></div>&#x1F535; <code>CommitmentVault.sol</code> &mdash; lock/unlock/autoUnlock, 4 Bedingungstypen, TWAP Oracle (min. 40 Tests)</li>
+      <li><div class="cb"></div>&#x1F535; <code>LendingVault.sol</code> &mdash; requestLoan/repay/liquidate, Zinssatz-Kurve, 200%/150%/120% Collateral (min. 50 Tests)</li>
+      <li><div class="cb"></div>&#x1F535; <code>BuybackController.sol</code> &mdash; auto Fee-Distribution</li>
+      <li><div class="cb"></div>&#x1F535; Deploy: Sepolia &rarr; Audit &rarr; Mainnet (CommitmentVault &rarr; LendingVault &rarr; BuybackController)</li>
+    </ul>
+
+    <h3>WalletConnect UI</h3>
+    <ul>
+      <li><div class="cb"></div>&#x1F535; CommitmentVault UI &mdash; Tranche-Konfigurator, Lock/Unlock, Dashboard</li>
+      <li><div class="cb"></div>&#x1F535; LendingVault UI &mdash; Lender (Allowance, Loans, Zinsertr&auml;ge)</li>
+      <li><div class="cb"></div>&#x1F535; LendingVault UI &mdash; Borrower (Collateral, Loan, R&uuml;ckzahlung)</li>
+      <li><div class="cb"></div>&#x1F535; P2P Lending Marktplatz &mdash; <code>lending-market.html</code></li>
+      <li><div class="cb"></div>&#x1F535; Collateral Health Monitor (Warning &lt;150%, Nachschie&szlig;en)</li>
+    </ul>
+
+    <h3>Railway Erweiterungen</h3>
+    <ul>
+      <li><div class="cb"></div>&#x1F535; Lending Endpoints (offers/request/loans/health)</li>
+      <li><div class="cb"></div>&#x1F535; CommitmentVault Endpoints (tranchen-status/leaderboard)</li>
+      <li><div class="cb"></div>&#x1F535; Cron Job: Liquidation Monitor (alle 4h, Telegram Warning)</li>
+    </ul>
+
+    <h3>Uniswap Integration</h3>
+    <ul>
+      <li><div class="cb"></div>&#x1F535; &ldquo;Buy IFR&rdquo; Button auf Landing Page (nach LP live)</li>
+      <li><div class="cb"></div>&#x1F535; Live IFR Preis auf Landing Page (TWAP &rarr; Railway &rarr; Landing)</li>
+    </ul>
+
+    <!-- ═══ PHASE 4 ═══ -->
+    <h2><span class="priority-badge p-vision">VISION</span> Phase 4 &mdash; Mobile App + DAO</h2>
+    <ul>
+      <li><div class="cb"></div>&#x1F535; App Konzept + Tech Stack (PWA first &rarr; React Native)</li>
+      <li><div class="cb"></div>&#x1F535; <code>app.ifrunit.tech</code> &mdash; PWA (WalletConnect v2, Lock, CommitmentVault, Lending, Governance)</li>
+      <li><div class="cb"></div>&#x1F535; In-App Governance (Proposals lesen/abstimmen, IFR-gewichtet)</li>
+      <li><div class="cb"></div>&#x1F535; Diamond Hands Leaderboard (Top Wallets, CommitmentVault Tranchen, Badges)</li>
+    </ul>
+
     <hr>
 
     <!-- ═══ MEDIUM: BOOTSTRAP ═══ -->
