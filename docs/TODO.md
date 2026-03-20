@@ -194,6 +194,30 @@ On errors: fix immediately, commit with `seo:` prefix.
 - [ ] 🔵 BuybackController deployen (Phase 3+)
       Automatische Fee-Distribution (BuybackVault + BurnReserve)
 
+### Phase 3 — Wiki Erweiterung (neue Seiten)
+- [ ] 🔵 Wiki: CommitmentVault Seite — `docs/wiki/commitment-vault.html`
+      Was ist CommitmentVault, 4 Bedingungstypen mit Beispielen,
+      Contributor-Konfiguration (10 Tranchen), Auto-Unlock 30d,
+      Alle Stakeholder (Contributor/Team/Partner/User),
+      Interaktiver Rechner: Tranche-Werte bei P0
+- [ ] 🔵 Wiki: LendingVault Seite — `docs/wiki/lending-vault.html`
+      Der vollständige Lending-Kreislauf (6 Schritte),
+      Zinssatz-Modell (Utilization-Kurve),
+      Collateral-System (200%/150%/120%),
+      Warum jeder Default gut ist, Builder: wie leiht man IFR
+- [ ] 🔵 Wiki: Phased LP Strategy Seite — `docs/wiki/lp-strategy.html`
+      Warum NICHT sofort alle 400M in Pool,
+      AMM Mathematik mit echten Zahlen,
+      4-Phasen-Plan (Phase 0 bis Milestone 3),
+      Effizienz-Beweis (100M× mehr Liquidität durch Warten)
+- [ ] 🔵 Wiki: Ecosystem Kreislauf Seite — `docs/wiki/ecosystem.html`
+      Der selbstverstärkende Kreislauf (visuell),
+      3 Prinzipien (Commitment/Arbeit/Kaufdruck),
+      Stakeholder-Übersicht, Lock→Payment Übergang,
+      USD-Gegenwert Lock Mechanismus
+- [ ] 🔵 Wiki Navigation updaten — alle 4 neuen Seiten in Sidebar + Index
+      Timing: Nach CommitmentVault + LendingVault Deploy, oder vorher als "Coming Soon"
+
 ---
 
 ## THIS WEEK
