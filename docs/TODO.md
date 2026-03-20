@@ -164,9 +164,11 @@ On errors: fix immediately, commit with `seo:` prefix.
       Mainnet: `0xdfe6636DA47F8949330697e1dC5391267CEf0EE3`
       Owner: Governance (0xc43d...D041) → TreasurySafe 3-of-5
       Etherscan verified
-- [ ] `BUILDER_REGISTRY_ADDR` in Railway env
-      Adresse: `0xdfe6636DA47F8949330697e1dC5391267CEf0EE3`
-      Services: ifr-ai-copilot + telegram-bot
+- [x] ✅ `BUILDER_REGISTRY_ADDR` in Railway gesetzt (20.03.2026)
+      Services: ifr-ai-copilot + inferno (telegram-bot backend)
+      Mainnet: `0xdfe6636DA47F8949330697e1dC5391267CEf0EE3`
+      API Endpoints aktiv: /api/builders/count + /api/builders/check/:address
+      Note: Backend nutzt noch Fallback-Logik — on-chain read muss verifiziert werden
 - [ ] BuilderRegistry audit (post-deploy — contract is upgradeable via Governance)
 
 ---
