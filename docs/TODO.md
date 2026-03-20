@@ -112,6 +112,12 @@ On errors: fix immediately, commit with `seo:` prefix.
       TX #8 (TreasurySafe feeExempt):   `0x4caadb53fc0a7a8f8635bd478155419c2b96fb16d70a00c87a71e828b6fd7f59`
       TX #9 (CommunitySafe feeExempt):  `0x1d43de02fe76da2f94ead84c2037f4f96b3ecb13a9fb8a5afb5bd838ecf08259`
 - [x] ✅ feeExempt verified on-chain: Deployer, TreasurySafe, CommunitySafe
+- [x] ✅ Proposals #1/#2/#3 cancelled — stale/redundant (20.03.2026)
+      feeExempt already set directly by Deployer (05.03.2026)
+      Governance history now clean: 0 open proposals
+      TX cancel(1): `0xc7128c8892ce7170530a0c0bdef204664904c1c768ddff13a479570260d432f6`
+      TX cancel(2): `0x33ae7c2350d707a7e940195a8f5323195a08167e79f52d8b148d08f07adf82c3`
+      TX cancel(3): `0xa4c33997ca97515f6e109a6a8f46ad9020515d1a7b987d358c30ae87588413cb`
 - [x] ✅ Proposal #10: `setOwner(TreasurySafe)` — EXECUTED 20.03.2026
       Proposal #10 cancelled (structural bug: `setOwner` had `onlyOwner` instead of `onlySelf`)
       Direct `setOwner()` via Deployer (was owner at the time)
