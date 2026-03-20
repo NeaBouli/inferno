@@ -63,7 +63,16 @@ with a 1-year cliff. See [Fair Launch Statement](docs/FAIR_LAUNCH.md).
 | Vesting | [`0x2694Bc84e8D5251E9E4Ecd4B2Ae3f866d6106271`](https://etherscan.io/address/0x2694Bc84e8D5251E9E4Ecd4B2Ae3f866d6106271#code) |
 | LiquidityReserve | [`0xdc0309804803b3A105154f6073061E3185018f64`](https://etherscan.io/address/0xdc0309804803b3A105154f6073061E3185018f64#code) |
 | BootstrapVaultV3 | [`0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141`](https://etherscan.io/address/0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141#code) **[ACTIVE]** |
+| BuilderRegistry | [`0xdfe6636DA47F8949330697e1dC5391267CEf0EE3`](https://etherscan.io/address/0xdfe6636DA47F8949330697e1dC5391267CEf0EE3#code) |
 | BootstrapVault V1 | [`0xA820540936d18e1377C39dd9445E5b36F3F1261a`](https://etherscan.io/address/0xA820540936d18e1377C39dd9445E5b36F3F1261a#code) **[DEPRECATED]** |
+
+### Phase 3 Contracts (planned — after Bootstrap)
+
+| Contract | Purpose |
+|----------|---------|
+| CommitmentVault | Voluntary token lock with price/time conditions (anti-dump) |
+| LendingVault | IFR lending against ETH collateral (creates buy pressure) |
+| BuybackController | Automated fee distribution (BuybackVault + BurnReserve) |
 
 ### Gnosis Safe (Mainnet)
 

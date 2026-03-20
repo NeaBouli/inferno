@@ -101,6 +101,18 @@
       <li><div class="cb cb-done">&#x2713;</div>&#x2705; <code>BUILDER_REGISTRY_ADDR</code> in Railway gesetzt + API selectors fixed (20.03.2026)</li>
     </ul>
 
+    <!-- ═══ PHASE 3 — POST-BOOTSTRAP ═══ -->
+    <h2><span class="priority-badge p-critical">CRITICAL</span> Phase 3 &mdash; Nach Bootstrap finalise() (ca. 05.06.2026)</h2>
+    <ul>
+      <li><div class="cb"></div>&#x1F534; <strong>Proposal #11: Uniswap Pool feeExempt</strong><br>
+        <span style="color:#ef4444;font-size:0.82rem;">SOFORT nach finalise()! Ohne = IFR de facto nicht handelbar (3.5% Fee auf Swaps)</span></li>
+      <li><div class="cb"></div>&#x1F534; <strong>Proposal #12: P0 setzen in CommitmentVault</strong><br>
+        <span style="color:#6b7280;font-size:0.82rem;">P0 = Total ETH / 100M. IMMUTABLE nach dem Setzen!</span></li>
+      <li><div class="cb"></div>&#x1F535; CommitmentVault deployen (freiwilliger Lock, 4 Bedingungstypen, Auto-Unlock 30d)</li>
+      <li><div class="cb"></div>&#x1F535; LendingVault deployen (IFR Lending, ETH Collateral 200%, TWAP Oracle)</li>
+      <li><div class="cb"></div>&#x1F535; BuybackController deployen (auto Fee-Distribution)</li>
+    </ul>
+
     <hr>
 
     <!-- ═══ MEDIUM: BOOTSTRAP ═══ -->

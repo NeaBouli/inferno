@@ -1201,6 +1201,20 @@
         <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px;">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
             <span style="background:#3b82f6;color:#fff;font-size:10px;padding:2px 8px;border-radius:10px;font-weight:700;">PHASE 3</span>
+            <strong style="font-size:13px;">CommitmentVault</strong>
+          </div>
+          <div style="font-size:12px;color:var(--muted);">Voluntary token lock with 4 unlock conditions (time, price, time+price, time OR price). Contributors lock IFR in tranches tied to P0 multiples. Auto-unlock after 30 days when condition met. Prevents contributor dumping, proves commitment on-chain. Requires Bootstrap to end first (P0 calculation).</div>
+        </div>
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+            <span style="background:#3b82f6;color:#fff;font-size:10px;padding:2px 8px;border-radius:10px;font-weight:700;">PHASE 3</span>
+            <strong style="font-size:13px;">LendingVault</strong>
+          </div>
+          <div style="font-size:12px;color:var(--muted);">IFR lending against ETH collateral (200% initial, margin call 150%, liquidation 120%). Builders borrow IFR for discount programs, must repay by buying on Uniswap &mdash; creating buy pressure. Dynamic interest rates (2-25% based on utilization). TWAP oracle (24h) prevents flash-loan manipulation. Creates self-reinforcing demand loop.</div>
+        </div>
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+            <span style="background:#3b82f6;color:#fff;font-size:10px;padding:2px 8px;border-radius:10px;font-weight:700;">PHASE 3</span>
             <strong style="font-size:13px;">BuybackController</strong>
           </div>
           <div style="font-size:12px;color:var(--muted);">Auto-rebalancing contract for PartnerVault refill + overflow routing. Deployed after LP launch.</div>

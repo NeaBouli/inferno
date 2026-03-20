@@ -44,6 +44,13 @@ Inferno ($IFR) is a deflationary ERC-20 utility token deployed on Ethereum Mainn
 - Vesting: 0x2694Bc84e8D5251E9E4Ecd4B2Ae3f866d6106271
 - LiquidityReserve: 0xdc0309804803b3A105154f6073061E3185018f64
 - BootstrapVaultV3: 0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141
+- BuilderRegistry: 0xdfe6636DA47F8949330697e1dC5391267CEf0EE3
+
+## Phase 3 Contracts (planned — after Bootstrap ends June 2026)
+
+- CommitmentVault — Voluntary token lock with 4 unlock conditions (time, price, time+price, time OR price). Anti-dump mechanism for contributors.
+- LendingVault — IFR lending against ETH collateral (200% initial, 150% margin call, 120% liquidation). Creates buy pressure via loan repayments.
+- BuybackController — Automated fee distribution from FeeRouterV1 to BuybackVault + BurnReserve.
 
 ## Links
 
