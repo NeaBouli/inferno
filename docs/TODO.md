@@ -218,6 +218,80 @@ On errors: fix immediately, commit with `seo:` prefix.
 - [ ] 🔵 Wiki Navigation updaten — alle 4 neuen Seiten in Sidebar + Index
       Timing: Nach CommitmentVault + LendingVault Deploy, oder vorher als "Coming Soon"
 
+### Phase 3 — Contracts (Core Dev — Solidity)
+- [ ] 🔵 CommitmentVault.sol schreiben + Tests (min. 40)
+      lock(amount, tranches[]), unlock(trancheId), autoUnlock(wallet, trancheId)
+      checkCondition(trancheId), 4 Bedingungstypen, TWAP Oracle
+      feeExempt nach Deploy setzen
+- [ ] 🔵 LendingVault.sol schreiben + Tests (min. 50)
+      requestLoan, repayLoan, liquidate, setLendingAllowance, getInterestRate
+      Zinssatz: 0%→2%, 25%→3%, 50%→5%, 75%→8%, 90%→15%, 100%→25%
+      Collateral: 200% init, 150% warning, 120% liquidation
+      TWAP Oracle (Uniswap V2), feeExempt nach Deploy
+- [ ] 🔵 BuybackController.sol schreiben + Tests
+      Automatische Fee-Distribution (BuybackVault + BurnReserve)
+- [ ] 🔵 Core Dev: Deploy Sepolia → Audit → Mainnet
+      Reihenfolge: CommitmentVault → LendingVault → BuybackController
+      Docs: CORE_DEV_PHASE3.md erstellen
+
+### Phase 3 — WalletConnect UI Erweiterung
+- [ ] 🔵 CommitmentVault UI (commitment-vault.html)
+      Wallet connect → IFR Balance, Tranche-Konfigurator (Menge/Bedingung/P0-Multiplikator),
+      "Lock jetzt" Button → MetaMask TX, Dashboard: eigene Tranchen + Status,
+      Countdown bis Unlock, "Unlock" Button wenn Bedingung erfüllt
+- [ ] 🔵 LendingVault UI — LENDER Seite
+      "IFR verleihen" Interface, Lending Allowance setzen, aktive Loans,
+      Zinserträge in ETH, Loan-Anfragen annehmen/ablehnen
+- [ ] 🔵 LendingVault UI — BORROWER Seite
+      "IFR leihen" Interface, verfügbare Lender + Konditionen,
+      Collateral (ETH) hinterlegen, Loan beantragen → MetaMask TX,
+      aktiver Loan + Rückzahlungs-Timer, "Zurückzahlen" Button
+- [ ] 🔵 P2P Lending Matching Interface (docs/wiki/lending-market.html)
+      Öffentlicher Loan-Marktplatz: Lender listet Angebote, Borrower sieht alle,
+      Filter: Menge/Zinssatz/Dauer, "Loan beantragen" → on-chain TX
+- [ ] 🔵 Collateral Health Monitor
+      Borrower sieht Collateral-Ratio, Warning bei <150% (rot),
+      "Nachschießen" Button bei Margin Call
+
+### Phase 3 — Railway Erweiterungen
+- [ ] 🔵 Lending Endpoints
+      GET /api/lending/offers — alle Lender-Angebote
+      POST /api/lending/request — Loan beantragen
+      GET /api/lending/loans/:address — aktive Loans
+      GET /api/lending/health/:loanId — Collateral Ratio
+- [ ] 🔵 CommitmentVault Endpoints
+      GET /api/commitment/:address — Tranchen-Status
+      GET /api/commitment/leaderboard — Diamond Hands
+- [ ] 🔵 Cron Job: Liquidation Monitor (alle 4h)
+      Prüft alle offenen Loans, Warning bei <150%, Telegram bei <120%
+
+### Phase 3 — Uniswap Integration
+- [ ] 🔵 "Buy IFR" Button auf Landing Page (erst nach LP live)
+      Uniswap Link mit vorausgefüllter Token-Adresse
+- [ ] 🔵 Live IFR Preis auf Landing Page
+      Uniswap TWAP → Railway GET /api/ifr/price → Landing Page
+
+### Phase 4 — Mobile App (IFR Wallet)
+- [ ] 🔵 App Konzept + Design
+      Plattformen: iOS + Android (React Native oder PWA first)
+      Features MVP: Wallet connect, IFR Balance, Lock/Unlock,
+      CommitmentVault verwalten, LendingVault (Lender + Borrower),
+      Governance Proposals + Voting, Push Notifications
+      (Tranche unlockbar, Loan fällig, Margin Call, neue Proposals)
+- [ ] 🔵 App Tech Stack entscheiden
+      Option A: React Native | B: Flutter | C: PWA
+      Empfehlung: PWA first (app.ifrunit.tech), dann native
+- [ ] 🔵 app.ifrunit.tech — Progressive Web App
+      Subdomain, CDN/Edge Hosting, WalletConnect v2
+
+### Phase 4 — DAO + Governance App
+- [ ] 🔵 In-App Governance
+      Proposals lesen + abstimmen, Wallet-Voting (IFR-gewichtet),
+      Proposal erstellen (TreasurySafe Members)
+- [ ] 🔵 Diamond Hands Leaderboard
+      Top Wallets nach gesperrter IFR, CommitmentVault Tranchen öffentlich,
+      Community Status Badges
+
 ---
 
 ## THIS WEEK
