@@ -162,9 +162,12 @@ On errors: fix immediately, commit with `seo:` prefix.
 - [ ] BuilderRegistry audit
 - [ ] Deploy BuilderRegistry on Mainnet
 - [ ] `BUILDER_REGISTRY_ADDR` in Railway env (after deploy)
-      BLOCKIERT: wartet auf Core Dev Deploy + Audit
-      Vorbereitet: /api/builders/check + /api/builders/count (auto-aktiv nach env var)
-      Docs: docs/BUILDER_REGISTRY_DEPLOY.md
+      BLOCKIERT: Core Dev im Urlaub — Handover bereit
+      Handover: docs/CORE_DEV_BUILDERREGISTRY.md (10-Schritt-Anleitung)
+      Checklist: docs/BUILDER_REGISTRY_DEPLOY.md
+      Script: scripts/deploy-builder-registry.js
+      API: /api/builders/check + /api/builders/count (auto-aktiv nach env var)
+      Nach Urlaub: Core Dev führt Schritt 1-10 aus
 
 ---
 
