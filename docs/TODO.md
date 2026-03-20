@@ -168,7 +168,7 @@ On errors: fix immediately, commit with `seo:` prefix.
       Services: ifr-ai-copilot + inferno (telegram-bot backend)
       Mainnet: `0xdfe6636DA47F8949330697e1dC5391267CEf0EE3`
       API Endpoints aktiv: /api/builders/count + /api/builders/check/:address
-      Note: Backend nutzt noch Fallback-Logik — on-chain read muss verifiziert werden
+      Fix: function selectors corrected (isBuilder 0xb6b6b475, getBuilderCount 0xe54a01f9)
 - [ ] BuilderRegistry audit (post-deploy — contract is upgradeable via Governance)
 
 ---
