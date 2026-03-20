@@ -2,9 +2,9 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-    <link rel="canonical" href="https://ifrunit.tech/wiki/press-kit.html">  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Press Kit &mdash; Inferno ($IFR) Documentation</title>
-  <meta name="description" content="Media resources: brand assets, key facts, token allocation, contract addresses, and official links for press.">
+    <link rel="canonical" href="https://ifrunit.tech/wiki/commitment-vault.html">  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CommitmentVault &mdash; Inferno ($IFR) Documentation</title>
+  <meta name="description" content="Lock IFR tokens with custom unlock conditions. 4 condition types: time, price, time+price, time OR price. Anti-dump mechanism for contributors.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -69,7 +69,7 @@
       display: block;
     }
 
-    .sidebar-subtitle {
+    .sidebar-sub {
       font-size: 12px;
       color: var(--muted);
       padding: 0 24px 24px;
@@ -81,8 +81,6 @@
       padding: 16px 0;
       flex: 1;
     }
-
-    .sidebar-nav li {}
 
     .sidebar-nav a {
       display: block;
@@ -259,7 +257,7 @@
       font-weight: 600;
       font-size: 13px;
       text-transform: uppercase;
-      letter-spacing: 1px;
+      letter-spacing: 0.5px;
     }
 
     td { color: var(--text); }
@@ -295,15 +293,240 @@
 
     .callout-green {
       background: rgba(34, 197, 94, 0.06);
-      border-left-color: var(--green);
+      border-left: 3px solid var(--green);
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 20px 0;
     }
 
-    /* ---------- Address ---------- */
-    .address {
-      font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
-      font-size: 12px;
+    .callout-green p {
+      color: var(--text);
+      margin: 0;
+      font-size: 14px;
+    }
+
+    /* ---------- Flow diagram ---------- */
+    .flow-diagram {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin: 24px 0;
+      padding: 8px 0;
+      max-width: 100%;
+    }
+
+    .flow-step {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 14px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+      white-space: nowrap;
+      text-align: center;
+    }
+
+    .flow-step.active {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .flow-step.green {
+      border-color: var(--green);
+      color: var(--green);
+    }
+
+    .flow-arrow {
       color: var(--muted);
+      font-size: 18px;
+      padding: 0 8px;
+      flex-shrink: 0;
+    }
+
+    /* ---------- Architecture diagram ---------- */
+    .arch-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      margin: 24px 0;
+      max-width: 560px;
+    }
+
+    .arch-layer {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px 24px;
+    }
+
+    .arch-layer-label {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--accent);
+      margin-bottom: 6px;
+    }
+
+    .arch-layer-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+
+    .arch-layer-desc {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .arch-connector {
+      display: flex;
+      justify-content: center;
+      padding: 4px 0;
+      color: var(--muted);
+      font-size: 20px;
+    }
+
+    /* ---------- Step list ---------- */
+    .step-list {
+      list-style: none;
+      padding-left: 0;
+      counter-reset: step-counter;
+      margin: 16px 0;
+    }
+
+    .step-list li {
+      counter-increment: step-counter;
+      position: relative;
+      padding-left: 40px;
+      margin-bottom: 16px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .step-list li::before {
+      content: counter(step-counter);
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: rgba(255, 69, 0, 0.12);
+      color: var(--accent);
+      font-size: 13px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
+    }
+
+    /* ---------- Contract badge ---------- */
+    .contract-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 16px;
+      margin: 8px 0 16px;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 13px;
+      color: var(--text);
       word-break: break-all;
+    }
+
+    .contract-badge .label {
+      color: var(--muted);
+      font-family: 'Inter', sans-serif;
+      font-weight: 600;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      white-space: nowrap;
+    }
+
+    /* ---------- Fee comparison ---------- */
+    .fee-compare {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin: 20px 0;
+    }
+
+    .fee-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+    }
+
+    .fee-card.bad {
+      border-color: #ef4444;
+    }
+
+    .fee-card.good {
+      border-color: var(--green);
+    }
+
+    .fee-card-title {
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+
+    .fee-card.bad .fee-card-title {
+      color: #ef4444;
+    }
+
+    .fee-card.good .fee-card-title {
+      color: var(--green);
+    }
+
+    .fee-card p {
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 8px;
+      max-width: none;
+    }
+
+    .fee-card code {
+      font-size: 12px;
+    }
+
+    /* ---------- Stakeholder cards ---------- */
+    .stake-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin: 20px 0;
+    }
+
+    .stake-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+    }
+
+    .stake-card-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--accent);
+      margin-bottom: 8px;
+    }
+
+    .stake-card p {
+      font-size: 13px;
+      color: var(--muted);
+      margin: 0;
+      max-width: none;
     }
 
     /* ---------- Footer ---------- */
@@ -342,12 +565,25 @@
         padding: 72px 20px 40px;
       }
 
-      table {
-        font-size: 13px;
+      .flow-diagram {
+        flex-wrap: wrap;
+        gap: 8px;
       }
 
-      th, td {
-        padding: 10px 12px;
+      .flow-arrow {
+        padding: 0 4px;
+      }
+
+      .fee-compare {
+        grid-template-columns: 1fr;
+      }
+
+      .stake-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .arch-stack {
+        max-width: 100%;
       }
     }
 
@@ -359,64 +595,25 @@
     /* ============================================================
     @keyframes pulse-bootstrap { 0% { color: #ef4444; text-shadow: 0 0 8px rgba(239,68,68,0.8); } 50% { color: #22c55e; text-shadow: 0 0 12px rgba(34,197,94,0.9); } 100% { color: #ef4444; text-shadow: 0 0 8px rgba(239,68,68,0.8); } } .nav-bootstrap-pulse { animation: pulse-bootstrap 2s ease-in-out infinite; font-weight: 700 !important; }       End Shared Styles
        ============================================================ */
-
-    /* ---------- Stats Grid ---------- */
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 16px;
-      margin: 24px 0;
-    }
-
-    .stat-card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 20px;
-    }
-
-    .stat-value {
-      font-size: 24px;
-      font-weight: 800;
-      color: var(--accent);
-      margin-bottom: 4px;
-    }
-
-    .stat-label {
-      font-size: 13px;
-      color: var(--muted);
-    }
-
-    @media (max-width: 768px) {
-      .stats-grid {
-        grid-template-columns: 1fr 1fr;
-      }
-    }
-
-    @media (max-width: 480px) {
-      .stats-grid {
-        grid-template-columns: 1fr;
-      }
-    }
   </style>
   <link rel="icon" type="image/png" href="../assets/ifr_icon_64.png">
   <meta property="og:type" content="article">
   <meta property="og:site_name" content="Inferno Protocol">
-  <meta property="og:title" content="Press Kit — Inferno Protocol ($IFR)">
-  <meta property="og:description" content="Media resources: brand assets, key facts, token allocation, contract addresses, and official links for press coverage.">
-  <meta property="og:url" content="https://ifrunit.tech/wiki/press-kit.html">
+  <meta property="og:title" content="CommitmentVault — Inferno Protocol ($IFR)">
+  <meta property="og:description" content="Lock IFR tokens with custom unlock conditions. 4 condition types: time, price, time+price, time OR price. Anti-dump mechanism for contributors.">
+  <meta property="og:url" content="https://ifrunit.tech/wiki/commitment-vault.html">
   <meta property="og:image" content="https://ifrunit.tech/assets/ifr_icon_256.png">
   <meta name="twitter:card" content="summary">
-  <meta name="twitter:title" content="Press Kit — Inferno Protocol ($IFR)">
-  <meta name="twitter:description" content="Press kit: brand assets, key facts, token data, official links.">
+  <meta name="twitter:title" content="CommitmentVault — Inferno Protocol ($IFR)">
+  <meta name="twitter:description" content="Lock IFR tokens with custom unlock conditions. 4 condition types: time, price, time+price, time OR price.">
   <meta name="twitter:site" content="@IFRtoken">
   <meta name="twitter:image" content="https://ifrunit.tech/assets/ifr_icon_256.png">  <script type="application/ld+json">
   {
     "@context": "https://schema.org",
-    "@type": "WebPage",
-    "headline": "Press Kit and Media Resources",
-    "description": "Official press kit: brand assets, logo files, key protocol facts, token allocation data, contract addresses, and links for media coverage.",
-    "url": "https://ifrunit.tech/wiki/press-kit.html",
+    "@type": "TechArticle",
+    "headline": "CommitmentVault",
+    "description": "Lock IFR tokens with custom unlock conditions. 4 condition types: time, price, time+price, time OR price. Anti-dump mechanism for contributors.",
+    "url": "https://ifrunit.tech/wiki/commitment-vault.html",
     "isPartOf": {"@id": "https://ifrunit.tech/#website"},
     "publisher": {"@id": "https://ifrunit.tech/#organization"},
     "about": {"@id": "https://ifrunit.tech/#app"}
@@ -444,7 +641,7 @@
     <!-- Sidebar -->
     <aside class="sidebar" id="sidebar">
       <a href="index.html" class="sidebar-logo">INFERNO</a>
-      <div class="sidebar-subtitle">Documentation</div>
+      <div class="sidebar-sub">Documentation</div>
       <ul class="sidebar-nav">
         <li><a href="index.html">Home</a></li>
         <li><a href="one-pager.html">One Pager</a></li>
@@ -462,7 +659,7 @@
         <li><a href="testnet.html">Testnet</a></li>
         <li><a href="mainnet-checklist.html">Mainnet Checklist</a></li>
         <li class="nav-divider"></li>
-        <li><a href="bootstrap.html" class="nav-bootstrap-pulse">🔥 Bootstrap Event</a></li>
+        <li><a href="bootstrap.html" class="nav-bootstrap-pulse">&#x1F525; Bootstrap Event</a></li>
         <li><a href="roadmap.html">Roadmap</a></li>
         <li class="nav-divider"></li>
         <li><a href="governance.html">Governance</a></li>
@@ -474,16 +671,17 @@
         <li><a href="integration.html">Integration Guide</a></li>
         <li><a href="business-onboarding.html">Business Onboarding</a></li>
         <li><a href="agent.html">AI Copilot</a></li>
-                <li><a href="verify.html">&#x1F510; Verify Wallet</a></li>
+        <li><a href="verify.html">&#x1F510; Verify Wallet</a></li>
         <li class="nav-divider"></li>
-        <li><a href="commitment-vault.html">CommitmentVault</a></li>
+        <li style="padding:4px 24px 2px;"><span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--accent);">Phase 3</span></li>
+        <li><a href="commitment-vault.html" class="active">CommitmentVault</a></li>
         <li><a href="lending-vault.html">LendingVault</a></li>
         <li><a href="lp-strategy.html">LP Strategy</a></li>
         <li><a href="ecosystem.html">Ecosystem</a></li>
         <li class="nav-divider"></li>
         <li><a href="security.html">Security</a></li>
         <li><a href="contributing.html">Contributing</a></li>
-        <li><a href="press-kit.html" class="active">Press Kit</a></li>
+        <li><a href="press-kit.html">Press Kit</a></li>
         <li><a href="../index.html">&larr; Back to Website</a></li>
       </ul>
     </aside>
@@ -498,7 +696,7 @@
           <div id="lp-header-connected" style="display:none;">
             <div style="background:rgba(34,197,94,0.15);border:1px solid rgba(34,197,94,0.4);border-radius:8px;padding:5px 8px;cursor:pointer;display:flex;align-items:center;gap:6px;max-width:100px;white-space:nowrap;overflow:hidden;" onclick="lpToggleDropdown()">
               <span id="lp-header-addr" style="color:#22c55e;font-family:monospace;font-size:0.72rem;font-weight:600;"></span>
-              
+
             </div>
           </div>
           <div id="lp-header-dropdown" style="display:none;position:fixed;background:#111827;border:1px solid #374151;border-radius:12px;padding:16px;width:280px;max-width:calc(100vw - 24px);z-index:9999;box-shadow:0 8px 32px rgba(0,0,0,0.6);">
@@ -534,387 +732,194 @@
         </div>
       </div>
 
+      <!-- Coming Soon Banner -->
+      <div style="background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.3);border-radius:12px;padding:20px;margin-bottom:32px;text-align:center;">
+        <div style="font-size:1.1rem;font-weight:700;color:#3b82f6;margin-bottom:4px;">Phase 3 &mdash; Coming Soon</div>
+        <div style="color:var(--muted);font-size:0.88rem;">CommitmentVault wird nach Bootstrap Ende (ca. 05.06.2026) deployed.</div>
+      </div>
 
-      <h1><span class="accent">Press Kit</span> &amp; Media Resources</h1>
-      <p class="subtitle">
-        Key facts, media assets, and brand resources for journalists and content creators.
-      </p>
+      <!-- ======================================== -->
+      <!-- Title -->
+      <!-- ======================================== -->
+      <h1>Commitment<span class="accent">Vault</span></h1>
+      <p class="subtitle">Freiwilliger Token-Lock mit selbst gew&auml;hlter Entsperr-Bedingung</p>
 
-      <!-- ========== Summary ========== -->
+      <!-- ======================================== -->
+      <!-- 1. Was ist CommitmentVault? -->
+      <!-- ======================================== -->
+      <h2 id="was-ist-commitmentvault">1. Was ist CommitmentVault?</h2>
+      <p>CommitmentVault ist ein Smart Contract, der IFR-Token <strong style="color:var(--text);">unwiderruflich</strong> sperrt, bis eine selbst gew&auml;hlte Bedingung erf&uuml;llt ist. Im Gegensatz zu IFRLock (Produkt-Zugang) dient CommitmentVault als <strong style="color:var(--text);">Vertrauensbeweis</strong> &mdash; ein on-chain Signal, dass ein Holder langfristig an das Projekt glaubt.</p>
+
+      <table>
+        <thead>
+          <tr>
+            <th></th>
+            <th>IFRLock</th>
+            <th>CommitmentVault</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Unlock</strong></td>
+            <td>Jederzeit</td>
+            <td>Erst bei Bedingung</td>
+          </tr>
+          <tr>
+            <td><strong>Zweck</strong></td>
+            <td>Produkt-Zugang</td>
+            <td>Vertrauensbeweis</td>
+          </tr>
+          <tr>
+            <td><strong>F&uuml;r</strong></td>
+            <td>Alle User</td>
+            <td>Contributor, Team, Partner</td>
+          </tr>
+          <tr>
+            <td><strong>Belohnung</strong></td>
+            <td>Premium Access</td>
+            <td>Community Vertrauen</td>
+          </tr>
+        </tbody>
+      </table>
+
       <div class="callout">
-        <p><strong>Inferno ($IFR)</strong> is a deflationary ERC-20 utility token on Ethereum. Every transfer permanently burns tokens, reducing supply over time. Launched via Community Fair Launch Model (CFLM) &mdash; no presale, no VC funding, no private allocation. Users lock IFR on-chain to unlock lifetime access to partner products and services.</p>
+        <p><strong>Warum unwiderruflich?</strong> Der Smart Contract erzwingt die Bedingung &mdash; kein Mensch kann den Lock brechen. Die Community kann jeden Lock on-chain verifizieren. Code is law.</p>
       </div>
 
-      <!-- ========== Key Facts ========== -->
-      <h2>Key Facts</h2>
+      <!-- ======================================== -->
+      <!-- 2. Die 4 Bedingungstypen -->
+      <!-- ======================================== -->
+      <h2 id="bedingungstypen">2. Die 4 Bedingungstypen</h2>
 
-      <table>
-        <thead>
-          <tr>
-            <th>Attribute</th>
-            <th>Value</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Token Ticker</td>
-            <td><strong>$IFR</strong></td>
-          </tr>
-          <tr>
-            <td>Standard</td>
-            <td>ERC-20 (Ethereum)</td>
-          </tr>
-          <tr>
-            <td>Decimals</td>
-            <td>9</td>
-          </tr>
-          <tr>
-            <td>Initial Supply</td>
-            <td>1,000,000,000 (1 Billion)</td>
-          </tr>
-          <tr>
-            <td>On-Chain Components</td>
-            <td>14 (9 contracts + LP Pair + 4 mocks)</td>
-          </tr>
-          <tr>
-            <td>Tests</td>
-            <td>578 total (521 protocol + 57 ecosystem) &mdash; 99% coverage</td>
-          </tr>
-          <tr>
-            <td>Mainnet Launch</td>
-            <td>March 5, 2026</td>
-          </tr>
-          <tr>
-            <td>Launch Model</td>
-            <td>Community Fair Launch (CFLM)</td>
-          </tr>
-          <tr>
-            <td>Mint Function</td>
-            <td>None &mdash; supply can only decrease</td>
-          </tr>
-        </tbody>
-      </table>
+      <h3>A) NUR ZEIT</h3>
+      <p><strong style="color:var(--text);">Formel:</strong> <code>unlock_time = T</code></p>
+      <p><strong style="color:var(--text);">Beispiel:</strong> &bdquo;Entsperre am 01.01.2027&ldquo;</p>
+      <p><strong style="color:var(--text);">Ideal f&uuml;r:</strong> Team, Partner, Diamond Hands</p>
 
-      <!-- ========== Token Allocation ========== -->
-      <h2>Token Allocation</h2>
+      <h3>B) NUR PREIS</h3>
+      <p><strong style="color:var(--text);">Formel:</strong> <code>unlock_price = P0 &times; Multiplikator</code></p>
+      <p><strong style="color:var(--text);">Beispiel:</strong> &bdquo;Entsperre wenn IFR &ge; P0 &times; 10&ldquo;</p>
+      <p><strong style="color:var(--text);">Ideal f&uuml;r:</strong> Contributor (aligned mit Wachstum)</p>
 
-      <table>
-        <thead>
-          <tr>
-            <th>Category</th>
-            <th>Allocation</th>
-            <th>Amount</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>DEX Liquidity</td>
-            <td>40%</td>
-            <td>400,000,000 IFR</td>
-          </tr>
-          <tr>
-            <td>Liquidity Reserve</td>
-            <td>20%</td>
-            <td>200,000,000 IFR</td>
-          </tr>
-          <tr>
-            <td>Team (Vested)</td>
-            <td>15%</td>
-            <td>150,000,000 IFR</td>
-          </tr>
-          <tr>
-            <td>Treasury</td>
-            <td>15%</td>
-            <td>150,000,000 IFR</td>
-          </tr>
-          <tr>
-            <td>Community &amp; Grants</td>
-            <td>6%</td>
-            <td>60,000,000 IFR</td>
-          </tr>
-          <tr>
-            <td>Builder Ecosystem</td>
-            <td>4%</td>
-            <td>40,000,000 IFR</td>
-          </tr>
-        </tbody>
-      </table>
+      <h3>C) ZEIT ODER PREIS</h3>
+      <p><strong style="color:var(--text);">Formel:</strong> <code>unlock_time = T OR unlock_price = P0 &times; M</code></p>
+      <p><strong style="color:var(--text);">Beispiel:</strong> &bdquo;01.06.2027 ODER wenn P0 &times; 50&ldquo;</p>
+      <p><strong style="color:var(--text);">Ideal f&uuml;r:</strong> Maximale Flexibilit&auml;t</p>
 
-      <!-- ========== Deflation Mechanism ========== -->
-      <h2>Deflation Mechanism</h2>
+      <h3>D) ZEIT UND PREIS</h3>
+      <p><strong style="color:var(--text);">Formel:</strong> <code>unlock_time = T AND unlock_price = P0 &times; M</code></p>
+      <p><strong style="color:var(--text);">Beispiel:</strong> &bdquo;Nach 01.01.2027 UND P0 &times; 100&ldquo;</p>
+      <p><strong style="color:var(--text);">Ideal f&uuml;r:</strong> St&auml;rkste Commitment-Form</p>
 
-      <p>Every IFR transfer applies the following fees, enforced at the smart contract level:</p>
-
-      <table>
-        <thead>
-          <tr>
-            <th>Fee</th>
-            <th>Rate</th>
-            <th>Action</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Sender Burn</td>
-            <td>2.0%</td>
-            <td>Permanently burned from sender</td>
-          </tr>
-          <tr>
-            <td>Recipient Burn</td>
-            <td>0.5%</td>
-            <td>Permanently burned from received amount</td>
-          </tr>
-          <tr>
-            <td>Pool Fee</td>
-            <td>1.0%</td>
-            <td>Routed to FeeRouterV1 (BurnReserve / BuybackVault)</td>
-          </tr>
-          <tr>
-            <td><strong>Total</strong></td>
-            <td><strong>3.5%</strong></td>
-            <td>Hard cap: 5% maximum (on-chain enforced)</td>
-          </tr>
-        </tbody>
-      </table>
-
-      <!-- ========== Lock-to-Access Model ========== -->
-      <h2>Lock-to-Access Model</h2>
-
-      <p>Users lock IFR tokens on-chain via the IFRLock contract to gain access tiers across all partner products:</p>
-
-      <table>
-        <thead>
-          <tr>
-            <th>Tier</th>
-            <th>Lock Amount</th>
-            <th>Access Level</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Bronze</td>
-            <td>1,000 IFR</td>
-            <td>Basic premium features</td>
-          </tr>
-          <tr>
-            <td>Silver</td>
-            <td>5,000 IFR</td>
-            <td>Extended premium features</td>
-          </tr>
-          <tr>
-            <td>Gold</td>
-            <td>25,000 IFR</td>
-            <td>Full premium access</td>
-          </tr>
-          <tr>
-            <td>Platinum</td>
-            <td>100,000 IFR</td>
-            <td>Lifetime all-access</td>
-          </tr>
-        </tbody>
-      </table>
-
-      <!-- ========== Builder Ecosystem ========== -->
-      <h2>Builder Ecosystem</h2>
-
-      <ul>
-        <li><strong>PartnerVault</strong> &mdash; 40M IFR reserved for builder rewards, distributed when users lock IFR through partner integrations.</li>
-        <li><strong>Lock-triggered Creator Rewards</strong> &mdash; when a user locks IFR via a partner, the partner receives a percentage from the pool.</li>
-        <li><strong>Per-partner cap</strong> prevents pool exhaustion by any single partner.</li>
-        <li><strong>Annual emission cap</strong> (4M IFR/year) ensures long-term sustainability.</li>
-        <li><strong>Builder tokens</strong> grant future DAO voting rights (Phase 4+).</li>
-      </ul>
-
-      <!-- ========== Governance ========== -->
-      <h2>Governance</h2>
-
-      <ul>
-        <li><strong>48-hour Timelock</strong> on all parameter changes &mdash; no instant admin actions.</li>
-        <li><strong>Guardian role</strong> can cancel malicious proposals but cannot execute them.</li>
-        <li><strong>No token voting</strong> (prevents whale manipulation and flash-loan attacks).</li>
-        <li><strong>Multisig transition</strong> (Phase 3) followed by full DAO governance (Phase 4).</li>
-        <li>All governance actions are transparent and verifiable on Etherscan.</li>
-      </ul>
-
-      <!-- ========== Technology ========== -->
-      <h2>Technology</h2>
-
-      <table>
-        <thead>
-          <tr>
-            <th>Component</th>
-            <th>Stack</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Smart Contracts</td>
-            <td>Solidity 0.8.20, OpenZeppelin v5, Hardhat</td>
-          </tr>
-          <tr>
-            <td>Testing Framework</td>
-            <td>Hardhat + Chai &mdash; 578 tests (521 protocol + 57 ecosystem), 99% coverage</td>
-          </tr>
-          <tr>
-            <td>Dashboard</td>
-            <td>React 18 + Vite + ethers.js v5</td>
-          </tr>
-          <tr>
-            <td>Governance UI</td>
-            <td>React 18 + Vite + TypeScript + Tailwind</td>
-          </tr>
-          <tr>
-            <td>AI Copilot</td>
-            <td>React + Express + Anthropic API</td>
-          </tr>
-          <tr>
-            <td>Benefits Network</td>
-            <td>Next.js 14 + Express + Prisma + wagmi v2</td>
-          </tr>
-          <tr>
-            <td>Creator Gateway</td>
-            <td>Express + ethers v5 + JWT</td>
-          </tr>
-        </tbody>
-      </table>
-
-      <!-- ========== Roadmap Summary ========== -->
-      <h2>Roadmap Summary</h2>
-
-      <table>
-        <thead>
-          <tr>
-            <th>Phase</th>
-            <th>Timeline</th>
-            <th>Milestones</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Phase 1</td>
-            <td>Q1 2026</td>
-            <td>Mainnet deploy, contract verification, initial liquidity</td>
-          </tr>
-          <tr>
-            <td>Phase 2</td>
-            <td>Q2 2026</td>
-            <td>LP lock, partner onboarding, Benefits Network launch</td>
-          </tr>
-          <tr>
-            <td>Phase 3</td>
-            <td>Q3&ndash;Q4 2026</td>
-            <td>Multisig governance, guarded buyback automation, security audit</td>
-          </tr>
-          <tr>
-            <td>Phase 4</td>
-            <td>Q2 2027+</td>
-            <td>DAO governance migration, cross-chain expansion</td>
-          </tr>
-        </tbody>
-      </table>
-
-      <!-- ========== Media Assets ========== -->
-      <h2>Media Assets</h2>
-
-      <p>Download official Inferno brand assets below. Use these for articles, reviews, and media coverage.</p>
-
-      <ul>
-        <li><a href="../assets/ifr_icon_256.png">IFR Icon 256px (PNG)</a></li>
-        <li><a href="../assets/ifr_icon_4096.png">IFR Icon 4096px (PNG)</a></li>
-        <li><a href="../assets/IFR_BannerMobile.png">IFR Banner Mobile (PNG)</a></li>
-      </ul>
-
-      <div class="callout-green callout">
-        <p><strong>Brand colors:</strong> Background <code>#0a0a0a</code>, Accent (Inferno Orange) <code>#ff4500</code>, Font: Inter. Dark theme only.</p>
+      <div class="callout" style="background:rgba(34,197,94,0.06);border-left-color:var(--green);">
+        <p><strong>Einmal offen, bleibt offen</strong> &mdash; Wenn eine Tranche sich &ouml;ffnet, bleibt sie offen. Auch wenn der Preis danach f&auml;llt.</p>
       </div>
 
-      <!-- ========== Links ========== -->
-      <h2>Links</h2>
+      <!-- ======================================== -->
+      <!-- 3. Contributor-Konfiguration -->
+      <!-- ======================================== -->
+      <h2 id="contributor-konfiguration">3. Contributor-Konfiguration</h2>
+      <p>Die 100M Contributor-Token werden in 10 gleich gro&szlig;e Tranchen aufgeteilt. Jede Tranche hat eine Preis-Bedingung (Typ B: NUR PREIS).</p>
 
       <table>
         <thead>
           <tr>
-            <th>Resource</th>
-            <th>URL</th>
+            <th>Tranche</th>
+            <th>Menge</th>
+            <th>Bedingung (Preis)</th>
           </tr>
         </thead>
         <tbody>
-          <tr>
-            <td>Website</td>
-            <td><a href="https://ifrunit.tech/" target="_blank">ifrunit.tech</a></td>
-          </tr>
-          <tr>
-            <td>GitHub</td>
-            <td><a href="https://github.com/NeaBouli/inferno" target="_blank">github.com/NeaBouli/inferno</a></td>
-          </tr>
-          <tr>
-            <td>Wiki</td>
-            <td><a href="https://ifrunit.tech/wiki/" target="_blank">ifrunit.tech/wiki</a></td>
-          </tr>
-          <tr>
-            <td>Transparency</td>
-            <td><a href="transparency.html">Transparency Page</a></td>
-          </tr>
-          <tr>
-            <td>Fair Launch</td>
-            <td><a href="fair-launch.html">Fair Launch Page</a></td>
-          </tr>
-          <tr>
-            <td>Roadmap</td>
-            <td><a href="roadmap.html">Roadmap Page</a></td>
-          </tr>
-          <tr>
-            <td>X / Twitter</td>
-            <td><a href="https://x.com/IFRtoken" target="_blank">x.com/IFRtoken</a></td>
-          </tr>
-          <tr>
-            <td>Telegram Announcements</td>
-            <td><a href="https://t.me/IFRtoken" target="_blank">t.me/IFRtoken</a></td>
-          </tr>
-          <tr>
-            <td>Telegram Community</td>
-            <td><a href="https://t.me/IFR_token" target="_blank">t.me/IFR_token</a></td>
-          </tr>
-          <tr>
-            <td>Juicebox</td>
-            <td><a href="https://juicebox.money/v5/eth:79" target="_blank">juicebox.money/v5/eth:79</a></td>
-          </tr>
+          <tr><td>1</td><td>10M IFR</td><td>P0 &times; 2</td></tr>
+          <tr><td>2</td><td>10M IFR</td><td>P0 &times; 5</td></tr>
+          <tr><td>3</td><td>10M IFR</td><td>P0 &times; 10</td></tr>
+          <tr><td>4</td><td>10M IFR</td><td>P0 &times; 25</td></tr>
+          <tr><td>5</td><td>10M IFR</td><td>P0 &times; 50</td></tr>
+          <tr><td>6</td><td>10M IFR</td><td>P0 &times; 100</td></tr>
+          <tr><td>7</td><td>10M IFR</td><td>P0 &times; 250</td></tr>
+          <tr><td>8</td><td>10M IFR</td><td>P0 &times; 500</td></tr>
+          <tr><td>9</td><td>10M IFR</td><td>P0 &times; 1,000</td></tr>
+          <tr><td>10</td><td>10M IFR</td><td>P0 &times; 5,000</td></tr>
         </tbody>
       </table>
 
-      <!-- ========== Contact ========== -->
-      <h2>Contact</h2>
+      <div class="callout-green">
+        <p><strong>Beispiel:</strong> Bei P0 = $0.0000002: Tranche 3 &ouml;ffnet bei $0.000002 (10-facher Preis). Wert: 10M &times; $0.000002 = $20</p>
+      </div>
 
-      <table>
-        <thead>
-          <tr>
-            <th>Purpose</th>
-            <th>Contact</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Press inquiries</td>
-            <td><a href="mailto:kaspartisan@proton.me">kaspartisan@proton.me</a></td>
-          </tr>
-          <tr>
-            <td>Builder partnerships</td>
-            <td><a href="mailto:kaspartisan@proton.me">kaspartisan@proton.me</a></td>
-          </tr>
-          <tr>
-            <td>Security reports</td>
-            <td><a href="mailto:kaspartisan@proton.me">kaspartisan@proton.me</a> &mdash; or via <a href="https://github.com/NeaBouli/inferno/issues" target="_blank">GitHub Issues</a> (preferred)</td>
-          </tr>
-          <tr>
-            <td>General</td>
-            <td><a href="mailto:kaspartisan@proton.me">kaspartisan@proton.me</a></td>
-          </tr>
-        </tbody>
-      </table>
+      <!-- ======================================== -->
+      <!-- 4. Für alle Stakeholder -->
+      <!-- ======================================== -->
+      <h2 id="stakeholder">4. F&uuml;r alle Stakeholder</h2>
+
+      <div class="stake-grid">
+        <div class="stake-card">
+          <div class="stake-card-title">Contributor</div>
+          <p>100M IFR in 10 Tranchen. Verdient ETH-Zinsen via LendingVault w&auml;hrend der Lock-Phase.</p>
+        </div>
+        <div class="stake-card">
+          <div class="stake-card-title">Team / Core Dev</div>
+          <p>Nach Vesting Cliff (M&auml;rz 2027). St&auml;rkster Vertrauensbeweis &mdash; Team-Token bleiben gesperrt bis Bedingung erf&uuml;llt.</p>
+        </div>
+        <div class="stake-card">
+          <div class="stake-card-title">Partner / Builder</div>
+          <p>&bdquo;Committed IFR Partner&ldquo; Badge auf Website. Sichtbarer Beweis f&uuml;r langfristiges Engagement.</p>
+        </div>
+        <div class="stake-card">
+          <div class="stake-card-title">Jeder IFR Holder</div>
+          <p>Diamond Hands Beweis on-chain. Jeder kann freiwillig Token in den CommitmentVault legen.</p>
+        </div>
+      </div>
+
+      <!-- ======================================== -->
+      <!-- 5. Auto-Unlock -->
+      <!-- ======================================== -->
+      <h2 id="auto-unlock">5. Auto-Unlock</h2>
+      <p>Wenn eine Bedingung erf&uuml;llt ist und der Besitzer 30 Tage lang nicht selbst <code>unlock()</code> aufruft, kann <strong style="color:var(--text);">jeder</strong> die Funktion f&uuml;r diese Wallet aufrufen.</p>
+
+      <ul>
+        <li>Token gehen <strong style="color:var(--text);">IMMER</strong> zur Original-Wallet &mdash; es ist unm&ouml;glich, Token zu stehlen</li>
+        <li>Verhindert permanent gesperrte Token bei verlorenen Private Keys</li>
+        <li>30-Tage-Frist gibt dem Besitzer gen&uuml;gend Zeit, selbst zu handeln</li>
+      </ul>
+
+      <div class="flow-diagram">
+        <div class="flow-step">Bedingung erf&uuml;llt</div>
+        <div class="flow-arrow">&rarr;</div>
+        <div class="flow-step">30 Tage warten</div>
+        <div class="flow-arrow">&rarr;</div>
+        <div class="flow-step active">Jeder kann unlock()</div>
+        <div class="flow-arrow">&rarr;</div>
+        <div class="flow-step green">Token &rarr; Original Wallet</div>
+      </div>
+
+      <!-- ======================================== -->
+      <!-- 6. Warum ist das gut für IFR? -->
+      <!-- ======================================== -->
+      <h2 id="warum-gut">6. Warum ist das gut f&uuml;r IFR?</h2>
+      <ul>
+        <li><strong style="color:var(--text);">Token aus Umlauf = weniger Verkaufsdruck</strong> &mdash; Gesperrte Token k&ouml;nnen nicht verkauft werden, was das verf&uuml;gbare Angebot reduziert.</li>
+        <li><strong style="color:var(--text);">Vertrauen on-chain beweisbar</strong> &mdash; Nicht nur Versprechen, sondern mathematisch verifizierbar. Jeder kann den Contract lesen.</li>
+        <li><strong style="color:var(--text);">Preis-Tranchen = aligned mit Projekt-Erfolg</strong> &mdash; Contributor profitieren nur, wenn das gesamte &Ouml;kosystem w&auml;chst. Kein Dump am Tag 1.</li>
+      </ul>
+
+      <!-- ======================================== -->
+      <!-- FAQ -->
+      <!-- ======================================== -->
+      <h2 id="faq">H&auml;ufige Fragen</h2>
+
+      <h3>Kann jemand meine gesperrten Token stehlen?</h3>
+      <p><strong style="color:var(--text);">Nein.</strong> <code>unlock()</code> sendet IMMER zur Original-Wallet. Der Smart Contract hat keine Funktion, die Token an eine andere Adresse senden k&ouml;nnte.</p>
+
+      <h3>Was wenn ich den Zugang verliere?</h3>
+      <p>Auto-Unlock nach 30 Tagen. Jeder kann <code>unlock()</code> aufrufen, Token gehen trotzdem zu deiner Wallet. Solange deine Wallet-Adresse existiert, sind die Token sicher.</p>
+
+      <h3>Wann wird CommitmentVault deployed?</h3>
+      <p>Nach Bootstrap Ende (ca. 05.06.2026). Der Contract muss zuerst auditiert werden. Details werden in der <a href="roadmap.html">Roadmap</a> und &uuml;ber die offiziellen Kan&auml;le bekannt gegeben.</p>
 
       <!-- Footer -->
       <footer class="wiki-footer">
-        Inferno ($IFR) &mdash; Press Kit &mdash; Documentation v1.0
+        Inferno ($IFR) &mdash; Community Fair Launch Model &mdash; Documentation v1.0
       </footer>
 
     </main>
