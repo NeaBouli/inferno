@@ -37,7 +37,7 @@
 ## KNOWN OPEN ITEMS (in TODO.md)
 
 - Proposals #7/#8/#9 queued (execute after 17.03.2026 23:00 UTC)
-- Proposal #10 (transferOwnership) pending
+- Proposal #10 (setOwner→TreasurySafe) ✅ executed 20.03.2026 (TX 0xcd9f99d2...19c46c3)
 - Android MetaMask deep-link bug (low priority)
 - npm audit: 34 vulnerabilities (node_modules, not contracts)
 

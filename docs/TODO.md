@@ -112,7 +112,12 @@ On errors: fix immediately, commit with `seo:` prefix.
       TX #8 (TreasurySafe feeExempt):   `0x4caadb53fc0a7a8f8635bd478155419c2b96fb16d70a00c87a71e828b6fd7f59`
       TX #9 (CommunitySafe feeExempt):  `0x1d43de02fe76da2f94ead84c2037f4f96b3ecb13a9fb8a5afb5bd838ecf08259`
 - [x] ✅ feeExempt verified on-chain: Deployer, TreasurySafe, CommunitySafe
-- [ ] 🟡 Proposal #10: `transferOwnership(TreasurySafe)` — QUEUED, ETA: 2026-03-20T07:18:23 UTC
+- [x] ✅ Proposal #10: `setOwner(TreasurySafe)` — EXECUTED 20.03.2026
+      Proposal #10 cancelled (structural bug: `setOwner` had `onlyOwner` instead of `onlySelf`)
+      Direct `setOwner()` via Deployer (was owner at the time)
+      TX: `0xcd9f99d2e5df5c28b81f885c7ebf7e2d42a873bd1c81bef9d94aa5c2d19c46c3`
+      Block: 24698977
+      Contract bug fixed: `setOwner` modifier changed `onlyOwner` → `onlySelf` for future deployments
 
 ### Known Bugs
 - [x] Landing Page Stats FINAL FIX (19.03.2026): LP Reserve Safe 0→400.6M, Protocol Locked 350M→998.5M, all stats verified on-chain ✅
