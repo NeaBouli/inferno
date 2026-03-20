@@ -773,54 +773,54 @@
 
       <h1>Phased <span class="accent">LP Strategy</span></h1>
       <p class="subtitle">
-        400M IFR werden maximalen Wert erschaffen
+        400M IFR will create maximum value
       </p>
 
       <!-- ======================================== -->
       <!-- 1. Warum NICHT sofort alle 400M in den Pool? -->
       <!-- ======================================== -->
-      <h2>1. Warum NICHT sofort alle 400M in den Pool?</h2>
+      <h2>1. Why NOT add all 400M to the pool immediately?</h2>
       <p>
-        Die Uniswap V2 AMM-Formel ist einfach: <code>x * y = k</code>. Jeder Trade ver&auml;ndert das Verh&auml;ltnis der beiden Reserven, und der Preis ergibt sich aus <code>y / x</code>.
+        The Uniswap V2 AMM formula is simple: <code>x * y = k</code>. Every trade changes the ratio of the two reserves, and the price is derived from <code>y / x</code>.
       </p>
       <p>
-        Beim Bootstrap-Preis P<sub>0</sub> = <code>$0.0000002</code> sind 400M IFR gerade einmal <strong>$80 wert</strong>.
+        At the bootstrap price P<sub>0</sub> = <code>$0.0000002</code>, 400M IFR are worth only <strong>$80</strong>.
       </p>
       <p>
-        Entscheidend: LP hinzuf&uuml;gen &auml;ndert den Preis <strong>nicht</strong>. Man muss das bestehende Verh&auml;ltnis beibehalten. Aber 400M IFR f&uuml;r $80 einzusetzen ist eine <strong>katastrophale Verschwendung</strong>.
+        Key point: Adding LP does <strong>not</strong> change the price. You must maintain the existing ratio. But deploying 400M IFR for $80 is a <strong>catastrophic waste</strong>.
       </p>
 
       <div class="callout">
         <p>
-          <strong>Kernproblem:</strong> Pool = 100M IFR + 0.01 ETH. Adding 400M IFR + 0.04 ETH = 500M IFR + 0.05 ETH. Preis unver&auml;ndert. Aber 0.04 ETH verschwendet f&uuml;r einen 5x tieferen Pool bei nur $20 Tiefe.
+          <strong>Core problem:</strong> Pool = 100M IFR + 0.01 ETH. Adding 400M IFR + 0.04 ETH = 500M IFR + 0.05 ETH. Price unchanged. But 0.04 ETH wasted for a 5x deeper pool at only $20 depth.
         </p>
       </div>
 
 <pre><code>// AMM Constant Product Formula
 x * y = k
 
-// Bei P0 = $0.0000002
+// At P0 = $0.0000002
 // 400,000,000 IFR * $0.0000002 = $80
 
-// Pool vorher:  100M IFR + 0.01 ETH   (k = 1,000,000)
-// LP hinzu:    +400M IFR + 0.04 ETH   (gleiches Ratio)
-// Pool nachher: 500M IFR + 0.05 ETH   (k = 25,000,000)
-// Preis:        0.05 / 500M = $0.0000001 ETH/IFR  &larr; UNVER&Auml;NDERT
-// Verschwendet: 0.04 ETH f&uuml;r 5x Tiefe bei ~$20 Gesamttiefe</code></pre>
+// Pool before:  100M IFR + 0.01 ETH   (k = 1,000,000)
+// LP added:    +400M IFR + 0.04 ETH   (same ratio)
+// Pool after:   500M IFR + 0.05 ETH   (k = 25,000,000)
+// Price:        0.05 / 500M = $0.0000001 ETH/IFR  &larr; UNCHANGED
+// Wasted:       0.04 ETH for 5x depth at ~$20 total depth</code></pre>
 
       <!-- ======================================== -->
       <!-- 2. Die 4 Phasen -->
       <!-- ======================================== -->
-      <h2>2. Die 4 Phasen</h2>
+      <h2>2. The 4 Phases</h2>
 
       <!-- Phase 0 -->
       <div class="phase-card">
-        <div class="phase-label blue">PHASE 0 &mdash; Nach Bootstrap</div>
-        <h3>Initial Pool: 100M IFR + ETH (~$20 Tiefe)</h3>
+        <div class="phase-label blue">PHASE 0 &mdash; After Bootstrap</div>
+        <h3>Initial Pool: 100M IFR + ETH (~$20 depth)</h3>
         <ul>
-          <li>Team f&uuml;gt <strong>KEIN LP</strong> hinzu</li>
-          <li>Schutz durch <a href="commitment-vault.html">CommitmentVault</a> + <a href="lending-vault.html">LendingVault</a></li>
-          <li>Organisches Wachstum durch Community-Trades</li>
+          <li>Team adds <strong>NO LP</strong></li>
+          <li>Protection via <a href="commitment-vault.html">CommitmentVault</a> + <a href="lending-vault.html">LendingVault</a></li>
+          <li>Organic growth through community trades</li>
         </ul>
       </div>
 
@@ -829,20 +829,20 @@ x * y = k
         <div class="phase-label green">MILESTONE 1 &mdash; Pool = 1 ETH (~$2,000)</div>
         <h3>Governance Proposal: +50M IFR + 0.5 ETH</h3>
         <ul>
-          <li>Pool danach: ~150M IFR + 1.5 ETH (<strong>$3,000 Tiefe</strong>)</li>
-          <li>99% kaufen kostet: ~$30,000 statt $2,000</li>
-          <li>Erheblich manipulations-resistenter</li>
+          <li>Pool after: ~150M IFR + 1.5 ETH (<strong>$3,000 depth</strong>)</li>
+          <li>Buying 99% costs: ~$30,000 instead of $2,000</li>
+          <li>Significantly more manipulation-resistant</li>
         </ul>
       </div>
 
       <!-- Milestone 2 -->
       <div class="phase-card">
         <div class="phase-label orange">MILESTONE 2 &mdash; Pool = 5 ETH (~$10,000)</div>
-        <h3>Governance Proposal: +100M IFR + proportionales ETH</h3>
+        <h3>Governance Proposal: +100M IFR + proportional ETH</h3>
         <ul>
-          <li>Pool deutlich tiefer</li>
-          <li>Manipulation wird &ouml;konomisch unrentabel</li>
-          <li>Professionelle Market-Making-Tiefe</li>
+          <li>Pool significantly deeper</li>
+          <li>Manipulation becomes economically unprofitable</li>
+          <li>Professional market-making depth</li>
         </ul>
       </div>
 
@@ -851,9 +851,9 @@ x * y = k
         <div class="phase-label muted">MILESTONE 3 &mdash; September 2026</div>
         <h3>LiquidityReserve Unlock (200M IFR)</h3>
         <ul>
-          <li>Governance entscheidet &uuml;ber Menge</li>
-          <li>Preis ist jetzt deutlich h&ouml;her als P<sub>0</sub></li>
-          <li>Gleiche 200M IFR = massiv mehr Liquidit&auml;t als bei P<sub>0</sub></li>
+          <li>Governance decides on the amount</li>
+          <li>Price is now significantly higher than P<sub>0</sub></li>
+          <li>Same 200M IFR = massively more liquidity than at P<sub>0</sub></li>
         </ul>
       </div>
 
@@ -873,27 +873,27 @@ x * y = k
       <!-- ======================================== -->
       <!-- 3. Effizienz-Beweis -->
       <!-- ======================================== -->
-      <h2>3. Effizienz-Beweis</h2>
+      <h2>3. Efficiency Proof</h2>
       <p>
-        Die gleichen 400M IFR erzeugen bei h&ouml;herem Preis exponentiell mehr Liquidit&auml;t:
+        The same 400M IFR generate exponentially more liquidity at a higher price:
       </p>
 
       <table>
         <thead>
           <tr>
-            <th>Szenario</th>
-            <th>400M IFR Wert</th>
-            <th>Pool-Tiefe</th>
+            <th>Scenario</th>
+            <th>400M IFR Value</th>
+            <th>Pool depth</th>
           </tr>
         </thead>
         <tbody>
           <tr>
-            <td>Bei P<sub>0</sub> ($0.0000002)</td>
+            <td>At P<sub>0</sub> ($0.0000002)</td>
             <td>$80</td>
             <td>$0.016</td>
           </tr>
           <tr>
-            <td>Bei P<sub>0</sub> &times; 1,000 ($0.0002)</td>
+            <td>At P<sub>0</sub> &times; 1,000 ($0.0002)</td>
             <td>$80,000</td>
             <td>$1,600,000</td>
           </tr>
@@ -902,7 +902,7 @@ x * y = k
 
       <div class="callout-green">
         <p>
-          <strong>GLEICHE 400M IFR = 100,000,000x mehr Liquidit&auml;t.</strong> Warten ist die einzig rationale Strategie.
+          <strong>SAME 400M IFR = 100,000,000x more liquidity.</strong> Waiting is the only rational strategy.
         </p>
       </div>
 
@@ -911,13 +911,13 @@ x * y = k
       <!-- ======================================== -->
       <h2>4. LP Reserve Safe</h2>
       <p>
-        Alle 400.6M IFR der Liquidity Reserve liegen in einem Gnosis Safe mit 3-of-5 Multisig:
+        All 400.6M IFR of the Liquidity Reserve are held in a Gnosis Safe with 3-of-5 multisig:
       </p>
 
       <ul>
-        <li><strong>3 Signaturen</strong> n&ouml;tig f&uuml;r jede LP-Zugabe</li>
-        <li><strong>&Ouml;ffentliche Ank&uuml;ndigung</strong> vor jeder LP-Zugabe</li>
-        <li>Kein einzelnes Team-Mitglied kann LP allein bewegen</li>
+        <li><strong>3 signatures</strong> required for every LP addition</li>
+        <li><strong>Public announcement</strong> before every LP addition</li>
+        <li>No single team member can move LP alone</li>
       </ul>
 
       <div class="contract-badge">
@@ -927,7 +927,7 @@ x * y = k
 
       <div class="callout">
         <p>
-          <strong>Transparenz:</strong> Jede LP-Zugabe wird &ouml;ffentlich angek&uuml;ndigt, per Governance-Proposal genehmigt, und auf der <a href="transparency.html">Transparency</a>-Seite dokumentiert.
+          <strong>Transparency:</strong> Every LP addition is publicly announced, approved via governance proposal, and documented on the <a href="transparency.html">Transparency</a> page.
         </p>
       </div>
 

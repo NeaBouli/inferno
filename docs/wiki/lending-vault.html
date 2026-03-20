@@ -749,88 +749,88 @@
 
       <h1>Lending<span class="accent">Vault</span></h1>
       <p class="subtitle">
-        Gesperrte Token arbeiten &mdash; IFR Lending gegen ETH
+        Locked Tokens at Work &mdash; IFR Lending against ETH
       </p>
 
       <!-- ======================================== -->
       <!-- 1. Die Idee -->
       <!-- ======================================== -->
-      <h2>1. Die Idee</h2>
+      <h2>1. The Idea</h2>
       <p>
-        Ein Contributor hat <strong>100M IFR</strong> im <a href="commitment-vault.html">CommitmentVault</a> gesperrt. Er markiert davon <strong>50M als lendable</strong> &mdash; zur Ausleihe freigegeben, ohne die Token tatsachlich zu bewegen.
+        A contributor has <strong>100M IFR</strong> locked in the <a href="commitment-vault.html">CommitmentVault</a>. They mark <strong>50M as lendable</strong> &mdash; available for borrowing, without actually moving the tokens.
       </p>
       <p>
-        <strong>Builder</strong> konnen diese IFR gegen ETH-Collateral ausleihen, um sie fur Discount-Programme und User-Rewards einzusetzen. Der Contributor verdient ETH-Zinsen. Die Token bleiben die ganze Zeit im CommitmentVault.
+        <strong>Builders</strong> can borrow this IFR against ETH collateral to use for discount programs and user rewards. The contributor earns ETH interest. The tokens remain in the CommitmentVault the entire time.
       </p>
 
       <div class="callout-green">
         <p>
-          <strong>Win-Win-Win:</strong> Contributor verdient passiv ETH. Builder bekommt IFR fur sein Produkt. User profitiert von Discounts. Und der IFR-Preis steigt durch Kaufdruck.
+          <strong>Win-Win-Win:</strong> Contributor earns passive ETH. Builder gets IFR for their product. User benefits from discounts. And the IFR price rises through buy pressure.
         </p>
       </div>
 
       <!-- ======================================== -->
       <!-- 2. Der vollstandige Kreislauf -->
       <!-- ======================================== -->
-      <h2>2. Der vollstandige Kreislauf</h2>
+      <h2>2. The Complete Cycle</h2>
       <p>
-        Sechs Schritte, die sich selbst verstarken:
+        Six steps that reinforce each other:
       </p>
 
       <ol class="step-list">
         <li>
-          <strong>Builder leiht 10M IFR</strong> &mdash; hinterlegt 200% ETH Collateral. Die Token werden aus dem lendable Pool des Contributors zugewiesen.
+          <strong>Builder borrows 10M IFR</strong> &mdash; deposits 200% ETH collateral. The tokens are allocated from the contributor's lendable pool.
         </li>
         <li>
-          <strong>Builder nutzt IFR fur User-Discounts</strong> &mdash; z.B. &ldquo;Kaufe 5M IFR, locke sie, erhalte 30% Rabatt auf unser SaaS.&rdquo; User kauft IFR, um am Lock teilzunehmen.
+          <strong>Builder uses IFR for user discounts</strong> &mdash; e.g. &ldquo;Buy 5M IFR, lock them, get 30% off our SaaS.&rdquo; User buys IFR to participate in the lock.
         </li>
         <li>
-          <strong>User kauft IFR auf Uniswap</strong> &rarr; <span style="color:var(--green);font-weight:700;">KAUFDRUCK</span>
+          <strong>User buys IFR on Uniswap</strong> &rarr; <span style="color:var(--green);font-weight:700;">BUY PRESSURE</span>
         </li>
         <li>
-          <strong>90 Tage spater: Builder kauft IFR zuruck auf Uniswap</strong> &rarr; <span style="color:var(--green);font-weight:700;">KAUFDRUCK</span> &mdash; um den Loan zuruckzuzahlen.
+          <strong>90 days later: Builder buys IFR back on Uniswap</strong> &rarr; <span style="color:var(--green);font-weight:700;">BUY PRESSURE</span> &mdash; to repay the loan.
         </li>
         <li>
-          <strong>Zinsen werden aufgeteilt:</strong> 50% &rarr; Contributor (ETH-Ertrag), 50% &rarr; Uniswap LP (Pool wird tiefer und stabiler).
+          <strong>Interest is split:</strong> 50% &rarr; Contributor (ETH yield), 50% &rarr; Uniswap LP (pool becomes deeper and more stable).
         </li>
         <li>
-          <strong>Tieferer Pool</strong> &rarr; weniger Slippage &rarr; mehr Builder wollen leihen &rarr; <span style="color:var(--accent);font-weight:700;">KREISLAUF</span>
+          <strong>Deeper pool</strong> &rarr; less slippage &rarr; more builders want to borrow &rarr; <span style="color:var(--accent);font-weight:700;">CYCLE</span>
         </li>
       </ol>
 
       <div class="flow-diagram">
-        <div class="flow-step">Builder leiht IFR</div>
+        <div class="flow-step">Builder borrows IFR</div>
         <span class="flow-arrow">&rarr;</span>
-        <div class="flow-step">User kauft IFR</div>
+        <div class="flow-step">User buys IFR</div>
         <span class="flow-arrow">&rarr;</span>
-        <div class="flow-step green">Kaufdruck</div>
+        <div class="flow-step green">Buy pressure</div>
         <span class="flow-arrow">&rarr;</span>
-        <div class="flow-step">Builder zahlt zuruck</div>
+        <div class="flow-step">Builder repays</div>
         <span class="flow-arrow">&rarr;</span>
-        <div class="flow-step green">Kaufdruck</div>
+        <div class="flow-step green">Buy pressure</div>
         <span class="flow-arrow">&rarr;</span>
-        <div class="flow-step active">Pool tiefer</div>
+        <div class="flow-step active">Deeper pool</div>
         <span class="flow-arrow">&rarr;</span>
-        <div class="flow-step">Mehr Lending</div>
+        <div class="flow-step">More lending</div>
       </div>
 
       <!-- ======================================== -->
       <!-- 3. Zinssatz-Modell -->
       <!-- ======================================== -->
-      <h2>3. Zinssatz-Modell</h2>
+      <h2>3. Interest Rate Model</h2>
       <p>
-        Der Zinssatz passt sich dynamisch an die Auslastung (Utilization) des Lending-Pools an:
+        The interest rate dynamically adjusts to the utilization of the lending pool:
       </p>
 
       <table>
         <thead>
           <tr>
             <th>Utilization</th>
-            <th>Zinssatz / Monat</th>
+            <th>Interest Rate / Month</th>
           </tr>
         </thead>
         <tbody>
-          <tr><td>0%</td><td>2.0% (Basis)</td></tr>
+          <tr><td>0%</td><td>2.0% (Base)</td></tr>
           <tr><td>25%</td><td>3.0%</td></tr>
           <tr><td>50%</td><td>5.0%</td></tr>
           <tr><td>75%</td><td>8.0%</td></tr>
@@ -840,101 +840,101 @@
       </table>
 
       <p>
-        <strong>Selbstregulierend:</strong> Bei niedriger Utilization sind Loans billig &mdash; das ermutigt Builder zum Ausleihen und bringt Aktivitat ins System. Bei hoher Utilization werden Loans teuer &mdash; das verhindert Uberbelastung und schutzt Contributors.
+        <strong>Self-regulating:</strong> At low utilization, loans are cheap &mdash; this encourages builders to borrow and brings activity into the system. At high utilization, loans become expensive &mdash; this prevents overload and protects contributors.
       </p>
 
       <div class="callout">
         <p>
-          <strong>Kein manuelles Eingreifen notig:</strong> Die Zinskurve ist on-chain kodiert. Governance kann Parameter anpassen, aber das System balanciert sich im Normalfall selbst aus.
+          <strong>No manual intervention needed:</strong> The interest curve is encoded on-chain. Governance can adjust parameters, but the system balances itself under normal conditions.
         </p>
       </div>
 
       <!-- ======================================== -->
       <!-- 4. Collateral-System -->
       <!-- ======================================== -->
-      <h2>4. Collateral-System</h2>
+      <h2>4. Collateral System</h2>
       <p>
-        Jeder Loan wird durch ETH-Collateral abgesichert. Die Regeln:
+        Every loan is secured by ETH collateral. The rules:
       </p>
 
       <ul>
-        <li><strong>Initial:</strong> 200% ETH Collateral erforderlich (z.B. 10M IFR im Wert von 1 ETH &rarr; 2 ETH hinterlegen)</li>
-        <li><strong>Warning bei 150%:</strong> Margin Call &mdash; Builder hat 48 Stunden, um Collateral aufzustocken</li>
-        <li><strong>Liquidation bei 120%:</strong> Automatische Liquidation &mdash; Collateral wird eingezogen</li>
-        <li><strong>Liquidator-Bonus:</strong> 5% des Collaterals als Anreiz fur Liquidatoren</li>
-        <li><strong>Preis-Referenz:</strong> Uniswap TWAP (24h Durchschnitt) &mdash; verhindert Flash-Loan-Manipulation</li>
+        <li><strong>Initial:</strong> 200% ETH collateral required (e.g. 10M IFR worth 1 ETH &rarr; deposit 2 ETH)</li>
+        <li><strong>Warning at 150%:</strong> Margin Call &mdash; builder has 48 hours to top up collateral</li>
+        <li><strong>Liquidation at 120%:</strong> Automatic liquidation &mdash; collateral is seized</li>
+        <li><strong>Liquidator bonus:</strong> 5% of collateral as incentive for liquidators</li>
+        <li><strong>Price reference:</strong> Uniswap TWAP (24h average) &mdash; prevents flash-loan manipulation</li>
       </ul>
 
       <div class="arch-stack">
         <div class="arch-layer" style="border-color:var(--green);">
-          <div class="arch-layer-label" style="color:var(--green);">Sicher</div>
+          <div class="arch-layer-label" style="color:var(--green);">Safe</div>
           <div class="arch-layer-title">200% &mdash; Initial Collateral</div>
-          <div class="arch-layer-desc">Loan wird genehmigt. Voller Schutz fur den Contributor.</div>
+          <div class="arch-layer-desc">Loan is approved. Full protection for the contributor.</div>
         </div>
         <div class="arch-connector">&darr;</div>
         <div class="arch-layer" style="border-color:#fbbf24;">
           <div class="arch-layer-label" style="color:#fbbf24;">Warning</div>
           <div class="arch-layer-title">150% &mdash; Margin Call</div>
-          <div class="arch-layer-desc">Builder wird benachrichtigt. 48h Zeit zum Aufstocken.</div>
+          <div class="arch-layer-desc">Builder is notified. 48 hours to top up.</div>
         </div>
         <div class="arch-connector">&darr;</div>
         <div class="arch-layer" style="border-color:#ef4444;">
           <div class="arch-layer-label" style="color:#ef4444;">Liquidation</div>
-          <div class="arch-layer-title">120% &mdash; Automatische Liquidation</div>
-          <div class="arch-layer-desc">Collateral wird eingezogen. Liquidator erhalt 5% Bonus.</div>
+          <div class="arch-layer-title">120% &mdash; Automatic Liquidation</div>
+          <div class="arch-layer-desc">Collateral is seized. Liquidator receives 5% bonus.</div>
         </div>
       </div>
 
       <!-- ======================================== -->
       <!-- 5. Warum jeder Default gut ist -->
       <!-- ======================================== -->
-      <h2>5. Warum jeder Default gut ist</h2>
+      <h2>5. Why Every Default Benefits the Protocol</h2>
       <p>
-        Das System ist so designt, dass <strong>beide Ausgange</strong> positiv fur den IFR-Preis sind:
+        The system is designed so that <strong>both outcomes</strong> are positive for the IFR price:
       </p>
 
       <div class="fee-compare">
         <div class="fee-card good">
-          <div class="fee-card-title">Normalfall: Builder zahlt zuruck</div>
-          <p>Builder kauft IFR auf Uniswap, um den Loan zuruckzuzahlen.</p>
-          <p><strong>Ergebnis:</strong> Kaufdruck auf Uniswap.</p>
+          <div class="fee-card-title">Normal case: Builder repays</div>
+          <p>Builder buys IFR on Uniswap to repay the loan.</p>
+          <p><strong>Result:</strong> Buy pressure on Uniswap.</p>
         </div>
         <div class="fee-card good">
-          <div class="fee-card-title">Default: Builder zahlt nicht</div>
-          <p>ETH-Collateral wird automatisch verwendet, um IFR auf Uniswap zu kaufen.</p>
-          <p><strong>Ergebnis:</strong> Kaufdruck auf Uniswap.</p>
+          <div class="fee-card-title">Default: Builder does not repay</div>
+          <p>ETH collateral is automatically used to buy IFR on Uniswap.</p>
+          <p><strong>Result:</strong> Buy pressure on Uniswap.</p>
         </div>
       </div>
 
       <div class="callout-green">
         <p>
-          <strong>Kerninsight:</strong> Es gibt keinen negativen Ausgang fur den IFR-Token. Ruckzahlung = Kaufdruck. Default = Kaufdruck. Beide Pfade fuhren IFR-Nachfrage durch den Uniswap-Pool. Das Lending-System erzeugt strukturellen, nicht-spekulativen Buy Pressure.
+          <strong>Core insight:</strong> There is no negative outcome for the IFR token. Repayment = buy pressure. Default = buy pressure. Both paths drive IFR demand through the Uniswap pool. The lending system generates structural, non-speculative buy pressure.
         </p>
       </div>
 
       <!-- ======================================== -->
       <!-- 6. Als Builder — Schritt fur Schritt -->
       <!-- ======================================== -->
-      <h2>6. Als Builder &mdash; Schritt fur Schritt</h2>
+      <h2>6. As a Builder &mdash; Step by Step</h2>
       <p>
-        So nutzt du das LendingVault als Builder:
+        How to use the LendingVault as a builder:
       </p>
 
       <ol class="step-list">
         <li>
-          <strong>Lender-Angebote ansehen</strong> &mdash; Auf der <a href="lending-market.html">Lending Market</a> Seite findest du alle verfugbaren IFR-Pools mit aktuellen Zinssatzen.
+          <strong>Browse Lender offers</strong> &mdash; On the <a href="lending-market.html">Lending Market</a> page you can find all available IFR pools with current interest rates.
         </li>
         <li>
-          <strong>ETH Collateral hinterlegen</strong> &mdash; Mindestens 200% des IFR-Werts in ETH. Beispiel: Du willst 10M IFR leihen im Wert von 1 ETH &rarr; hinterlege mindestens 2 ETH.
+          <strong>Deposit ETH collateral</strong> &mdash; At least 200% of the IFR value in ETH. Example: you want to borrow 10M IFR worth 1 ETH &rarr; deposit at least 2 ETH.
         </li>
         <li>
-          <strong>Loan beantragen</strong> &mdash; On-chain Transaktion. Der Smart Contract pruft Collateral-Ratio und Verfugbarkeit automatisch.
+          <strong>Request a loan</strong> &mdash; On-chain transaction. The smart contract checks collateral ratio and availability automatically.
         </li>
         <li>
-          <strong>IFR fur dein Produkt nutzen</strong> &mdash; Setze die geliehenen IFR fur Discounts, User-Rewards oder Loyalty-Programme ein.
+          <strong>Use IFR for your product</strong> &mdash; Deploy the borrowed IFR for discounts, user rewards, or loyalty programs.
         </li>
         <li>
-          <strong>Nach 90 Tagen: IFR zuruckzahlen</strong> &mdash; Kaufe IFR auf Uniswap und zahle den Loan + Zinsen zuruck. Dein ETH-Collateral wird freigegeben.
+          <strong>After 90 days: repay IFR</strong> &mdash; Buy IFR on Uniswap and repay the loan + interest. Your ETH collateral is released.
         </li>
       </ol>
 
@@ -943,19 +943,19 @@
       <!-- ======================================== -->
       <h2>FAQ</h2>
 
-      <h3>Wie sicher ist mein ETH Collateral?</h3>
+      <h3>How safe is my ETH collateral?</h3>
       <p>
-        Das Collateral liegt in einem audited Smart Contract. Es kann nur durch zwei Wege freigegeben werden: (1) du zahlst den Loan vollstandig zuruck, oder (2) die Liquidation wird bei unter 120% ausgelost. Kein Admin, kein Multisig und keine Governance kann dein Collateral manuell bewegen.
+        The collateral is held in an audited smart contract. It can only be released in two ways: (1) you repay the loan in full, or (2) liquidation is triggered below 120%. No admin, no multisig, and no governance can move your collateral manually.
       </p>
 
-      <h3>Was wenn der IFR-Preis stark fallt?</h3>
+      <h3>What if the IFR price drops sharply?</h3>
       <p>
-        Wenn der IFR-Preis fallt, verbessert sich deine Collateral-Ratio automatisch &mdash; denn du brauchst weniger IFR-Wert in ETH abzudecken. Ein fallender IFR-Preis ist fur <em>Borrower</em> kein Risiko, sondern ein Vorteil. Fur <em>Lender</em> (Contributors) bleibt der Lock bestehen &mdash; ihre Token sind ohnehin langfristig committed.
+        If the IFR price drops, your collateral ratio automatically improves &mdash; because you need less ETH to cover the IFR value. A falling IFR price is not a risk for <em>borrowers</em>, but an advantage. For <em>lenders</em> (contributors), the lock remains in place &mdash; their tokens are committed long-term regardless.
       </p>
 
-      <h3>Wie finde ich einen Lender?</h3>
+      <h3>How do I find a lender?</h3>
       <p>
-        Auf der <a href="lending-market.html">Lending Market</a> Seite werden alle Contributors angezeigt, die Teile ihres Locks als lendable markiert haben. Du siehst verfugbare Mengen, aktuelle Zinssatze und Laufzeiten. Alles peer-to-pool &mdash; kein Matching notig.
+        The <a href="lending-market.html">Lending Market</a> page displays all contributors who have marked parts of their locks as lendable. You can see available amounts, current interest rates, and terms. Everything is peer-to-pool &mdash; no matching needed.
       </p>
 
       <!-- Footer -->
