@@ -136,6 +136,11 @@ On errors: fix immediately, commit with `seo:` prefix.
 - [x] FeeRouterV1 tracking verified: Railway + Landing Page + SVG all correct (19.03.2026) ✅
 - [x] Token Visualisierung: SVG + Kacheln verified correct (19.03.2026) ✅
 - [x] ~~Animated Token GIF~~ — gestrichen (not planned) ✅
+- [ ] 🔴 DEPLOYER_PRIVATE_KEY aus .env entfernen — DEADLINE: 30.03.2026
+      Deployer hat keine Governance-Rechte mehr (seit 20.03.2026)
+      Voraussetzung: Alle Tests grün (contract + bot + e2e)
+      Aktion: DEPLOYER_PRIVATE_KEY Zeile aus .env löschen
+      Verify: `grep DEPLOYER_PRIVATE_KEY .env` → leer
 - [ ] Android MetaMask Deep-Link: opens new browser instance instead of returning to Chrome
 - [ ] npm audit: 34 vulnerabilities (2 critical, 9 high, 11 moderate, 12 low) — fix after LP launch
       Link: https://github.com/NeaBouli/inferno/security/dependabot
