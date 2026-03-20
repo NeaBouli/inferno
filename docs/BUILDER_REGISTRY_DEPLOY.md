@@ -1,6 +1,13 @@
 # BuilderRegistry Deployment Checklist
 
-## Status: WAITING FOR CORE DEV
+## Status: DEPLOYED (Sepolia + Mainnet) — 20.03.2026
+
+| Network | Address | Etherscan |
+|---------|---------|-----------|
+| Mainnet | `0xdfe6636DA47F8949330697e1dC5391267CEf0EE3` | [Verified](https://etherscan.io/address/0xdfe6636DA47F8949330697e1dC5391267CEf0EE3#code) |
+| Sepolia | `0x77e99917Eca8539c62F509ED1193ac36580A6e7B` | [Verified](https://sepolia.etherscan.io/address/0x77e99917Eca8539c62F509ED1193ac36580A6e7B#code) |
+
+**Owner:** Governance (0xc43d...D041) → TreasurySafe 3-of-5
 
 ### Contract
 - **Source:** `contracts/BuilderRegistry.sol`
@@ -10,10 +17,10 @@
 ---
 
 ### Prerequisites
-- [ ] Core Dev deploys BuilderRegistry.sol on Sepolia
+- [x] Core Dev deploys BuilderRegistry.sol on Sepolia ✅ (20.03.2026)
 - [ ] Audit completed
-- [ ] Core Dev deploys BuilderRegistry.sol on Mainnet
-- [ ] Etherscan verification
+- [x] Core Dev deploys BuilderRegistry.sol on Mainnet ✅ (20.03.2026)
+- [x] Etherscan verification ✅
 
 ### After Mainnet Deploy
 1. Copy contract address from Etherscan

@@ -195,6 +195,7 @@ All ownable contracts transferred to Governance (48h Timelock). Parameter change
 | BuybackVault | `owner()` | Governance |
 | PartnerVault | `admin()` | Governance |
 | FeeRouterV1 | `governance()` | Governance (immutable) |
+| BuilderRegistry | `owner()` | Governance — [`0xdfe6636D...CEf0EE3`](https://etherscan.io/address/0xdfe6636DA47F8949330697e1dC5391267CEf0EE3) (deployed 20.03.2026) |
 | IFRLock | `guardian()` | Deployer (emergency pause only) |
 | Vesting | `guardian()` | Deployer (emergency pause only) |
 | Governance | `owner()` | TreasurySafe 3-of-5 (transferred 20.03.2026, TX `0xcd9f99d2...19c46c3`) |
