@@ -1,21 +1,25 @@
-# Proposal #8 — transferOwnership to Treasury Safe
+# Proposal #10 — setOwner to Treasury Safe
 
-**Status:** PENDING (propose after Proposal #7 executed)
+**Status:** ✅ EXECUTED 20.03.2026
 **Prepared:** 17.03.2026
-**Dependency:** Proposal #7 must be executed first (Deployer feeExempt)
+**Executed:** 20.03.2026 — Direct `setOwner()` call (Proposal #10 cancelled due to `onlyOwner` bug)
+**TX:** [`0xcd9f99d2e5df5c28b81f885c7ebf7e2d42a873bd1c81bef9d94aa5c2d19c46c3`](https://etherscan.io/tx/0xcd9f99d2e5df5c28b81f885c7ebf7e2d42a873bd1c81bef9d94aa5c2d19c46c3)
+**Block:** 24698977
 
 ---
 
-## What It Does
+## What It Did
 
-Transfers Governance ownership from Deployer EOA to Treasury Safe (3-of-5 Multisig).
+Transferred Governance ownership from Deployer EOA to Treasury Safe (3-of-5 Multisig).
 
 | Before | After |
 |--------|-------|
 | `Governance.owner()` = `0x6b36...Fed67` (Deployer EOA) | `Governance.owner()` = `0x5ad6...cE3b` (Treasury Safe 3-of-5) |
 | Single key can propose | 3-of-5 multisig required to propose |
 
-**After execution:**
+**Note:** Proposal #10 was cancelled because `setOwner()` had `onlyOwner` modifier instead of `onlySelf`, making it impossible to execute through the governance proposal mechanism. The ownership transfer was executed directly by the Deployer (who was the owner at the time). Contract bug fixed for future deployments.
+
+**Result:**
 - Only Treasury Safe (3-of-5) can create new governance proposals
 - Deployer has NO more governance control — permanently
 - All 5 signers must be reachable for future governance actions

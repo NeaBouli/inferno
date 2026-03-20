@@ -124,8 +124,8 @@ contract Governance {
         emit GuardianUpdated(old, _guardian);
     }
 
-    /// @notice Transfer ownership
-    function setOwner(address _owner) external onlyOwner {
+    /// @notice Transfer ownership (must go through own timelock)
+    function setOwner(address _owner) external onlySelf {
         require(_owner != address(0), "owner=0");
         address old = owner;
         owner = _owner;

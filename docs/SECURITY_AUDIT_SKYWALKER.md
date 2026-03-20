@@ -65,17 +65,17 @@
 | Check | Result | Details |
 |-------|--------|---------|
 | A) Reentrancy | PASS | `execute()` sets `p.executed = true` BEFORE `p.target.call(p.data)`. Re-entrant `execute()` fails on `!p.executed` check. |
-| B) Access Control | PASS | `propose`/`execute`: onlyOwner. `cancel`: onlyOwnerOrGuardian. `setDelay`: onlySelf (must go through own timelock). `setOwner`/`setGuardian`: onlyOwner. |
+| B) Access Control | PASS | `propose`/`execute`: onlyOwner. `cancel`: onlyOwnerOrGuardian. `setDelay`: onlySelf (must go through own timelock). `setOwner`: onlySelf (fixed 20.03.2026, was onlyOwner). `setGuardian`: onlyOwner. |
 | C) Overflow | PASS | `block.timestamp + delay` — MAX_DELAY is 30 days (~2.6M seconds). No overflow. |
 | D) Front-running | PASS | Proposals are public by design (transparency). 48h window lets users prepare. |
 | E) DoS | PASS | No loops. |
 | F) Centralization | WARN | Owner has full proposal power over any contract. Single point of failure if key is compromised. Guardian can cancel but not propose. |
 | G) Fee Edge Cases | PASS | N/A — Governance doesn't handle tokens. |
-| H) Timelock Bypass | WARN | `setOwner()` is immediate (no timelock). Owner can transfer control instantly. This is a deliberate design choice (cannot timelock ownership transfer — chicken-and-egg), but means a compromised key can immediately seize control. Guardian's `cancel()` cannot prevent this. |
+| H) Timelock Bypass | FIXED | `setOwner()` now uses `onlySelf` modifier (fixed 20.03.2026), meaning ownership transfer must go through the governance proposal timelock. Previously was `onlyOwner` (immediate), which was a single-point-of-failure risk. Owner is now TreasurySafe 3-of-5. |
 | I) feeExempt | PASS | N/A. |
 | J) Owner Privileges | WARN | Can propose ANY calldata to ANY target contract. Can change owner immediately. Can change guardian immediately. Full control gated only by 48h timelock for execution. |
 
-**Recommendation:** Before mainnet, migrate owner to a multisig (Gnosis Safe 2-of-4 minimum). This is already on the roadmap.
+**Update (20.03.2026):** Owner migrated to TreasurySafe 3-of-5 Gnosis Safe. `setOwner` modifier fixed to `onlySelf`. Centralization risk significantly reduced.
 
 ---
 

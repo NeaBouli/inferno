@@ -197,7 +197,7 @@ All ownable contracts transferred to Governance (48h Timelock). Parameter change
 | FeeRouterV1 | `governance()` | Governance (immutable) |
 | IFRLock | `guardian()` | Deployer (emergency pause only) |
 | Vesting | `guardian()` | Deployer (emergency pause only) |
-| Governance | `owner()` | Deployer (pending transfer to Gnosis Safe) |
+| Governance | `owner()` | TreasurySafe 3-of-5 (transferred 20.03.2026, TX `0xcd9f99d2...19c46c3`) |
 
 ### Governance Proposals (Mainnet)
 
@@ -222,7 +222,7 @@ All ownable contracts transferred to Governance (48h Timelock). Parameter change
 | Transfer LiquidityReserve Ownership to Governance | **Done** (2026-03-05) |
 | Transfer BurnReserve Ownership to Governance | **Done** (2026-03-05) |
 | Transfer BuybackVault Ownership to Governance | **Done** (2026-03-05) |
-| Transfer Governance Owner to Treasury Safe 3-of-5 | Proposal #10 Queued (ETA 20.03.2026) |
+| Transfer Governance Owner to Treasury Safe 3-of-5 | **Done** (20.03.2026) — TX [`0xcd9f99d2...`](https://etherscan.io/tx/0xcd9f99d2e5df5c28b81f885c7ebf7e2d42a873bd1c81bef9d94aa5c2d19c46c3) |
 
 ---
 

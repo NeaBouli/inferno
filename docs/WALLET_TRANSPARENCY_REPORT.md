@@ -12,7 +12,7 @@
 ## ACTION ITEMS
 
 - **Proposal #0 PENDING** — ETA: 7.3.2026, 20:12:23 CET — `setFeeExempt(address,bool)` on InfernoToken
-- **Governance Owner** is Deployer (`0x6b36...ed67`) — transfer to Gnosis Safe pending
+- **Governance Owner** is TreasurySafe 3-of-5 (`0x5ad6...cE3b`) — transferred 20.03.2026
 
 ---
 
@@ -38,7 +38,7 @@
 | Contract | Address | ETH | IFR | Controller |
 |----------|---------|-----|-----|------------|
 | InfernoToken | [`0x77e9...6e7B`](https://etherscan.io/address/0x77e99917Eca8539c62F509ED1193ac36580A6e7B) | 0 | 0 | owner(): Governance |
-| Governance | [`0xc43d...D041`](https://etherscan.io/address/0xc43d48E7FDA576C5022d0670B652A622E8caD041) | 0 | 0 | owner(): Deployer |
+| Governance | [`0xc43d...D041`](https://etherscan.io/address/0xc43d48E7FDA576C5022d0670B652A622E8caD041) | 0 | 0 | owner(): TreasurySafe 3-of-5 |
 | IFRLock | [`0x7699...54Eb`](https://etherscan.io/address/0x769928aBDfc949D0718d8766a1C2d7dBb63954Eb) | 0 | 0 | guardian(): Deployer |
 | BurnReserve | [`0xaA14...6fCF`](https://etherscan.io/address/0xaA1496133B6c274190A2113410B501C5802b6fCF) | 0 | 0 | owner(): Governance |
 | BuybackVault | [`0x670D...F812`](https://etherscan.io/address/0x670D293e3D65f96171c10DdC8d88B96b0570F812) | 0 | 0 | owner(): Governance |
@@ -50,7 +50,7 @@
 
 ## 4. Governance — Proposal Overview
 
-**Owner:** Deployer (`0x6b36687b0cd4386fb14cf565B67D7862110Fed67`)
+**Owner:** TreasurySafe 3-of-5 (`0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b`) — transferred 20.03.2026
 **Guardian:** Deployer (`0x6b36687b0cd4386fb14cf565B67D7862110Fed67`)
 **Delay:** 172800s (48.0h)
 **Proposals:** 1

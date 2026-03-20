@@ -174,7 +174,7 @@ These items MUST be completed before public launch:
 - [ ] Governance Owner → MULTISIG_ADDRESS
 - [ ] Guardian → GUARDIAN_ADDRESS
 - [x] Remove deployer feeExempt (Done 2026-03-05)
-- [ ] Deployer has no more admin rights (Proposal #10 queued: Governance → Treasury Safe 3-of-5, ETA 20.03.2026)
+- [x] Deployer has no more Governance admin rights (setOwner→TreasurySafe executed 20.03.2026, TX 0xcd9f99d2...19c46c3)
 - [ ] Test proposal with multisig successful
 
 ---
