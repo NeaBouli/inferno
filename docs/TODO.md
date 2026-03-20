@@ -171,114 +171,116 @@ On errors: fix immediately, commit with `seo:` prefix.
       Fix: function selectors corrected (isBuilder 0xb6b6b475, getBuilderCount 0xe54a01f9)
 - [ ] BuilderRegistry audit (post-deploy — contract is upgradeable via Governance)
 
-### Phase 3 — Nach Bootstrap finalise() (ca. 05.06.2026)
-- [ ] 🔴 KRITISCH: Proposal #11 — Uniswap Pool feeExempt setzen
-      WARNUNG: Ohne dieses Proposal ist IFR de facto nicht handelbar (3.5% Fee auf jeden Swap!)
-      Timing: SOFORT nach finalise() + Pool-Erstellung
-      Adresse: Uniswap V2 Pair (erst nach finalise() bekannt)
-      Ref: IFR_ECOSYSTEM_A_TO_Z.pdf Kapitel 9.2 + Anhang B
-- [ ] 🔴 KRITISCH: Proposal #12 — P0 setzen in CommitmentVault
-      P0 = Total ETH raised / 100,000,000 (IMMUTABLE nach dem Setzen!)
-      Alle CommitmentVault Tranche-Ziele basieren auf P0 — falsche Berechnung = katastrophal
-      Timing: Nach finalise() + Uniswap Pool live
-- [ ] 🔵 CommitmentVault deployen (Core Dev)
-      Freiwilliger Lock mit 4 Bedingungstypen (Zeit, Preis, Zeit+Preis, Zeit ODER Preis)
-      Auto-Unlock nach 30 Tagen wenn Bedingung erfüllt
-      feeExempt nach Deploy setzen
-      Contributor Lock: 10 Tranchen a 10M IFR (100M total)
-- [ ] 🔵 LendingVault deployen (Core Dev)
-      IFR Lending gegen ETH Collateral (200% initial, Margin Call 150%, Liquidation 120%)
-      Zinssatz: dynamisch (0% util=2%, 100%=25%)
-      Uniswap TWAP Preis-Oracle (24h Durchschnitt)
-      Railway Cron Job (alle 4h) für Liquidations-Check
-- [ ] 🔵 BuybackController deployen (Phase 3+)
-      Automatische Fee-Distribution (BuybackVault + BurnReserve)
+### Phase 3 — After Bootstrap finalise() (~05.06.2026)
+- [ ] 🔴 CRITICAL: Proposal #11 — Set Uniswap Pool feeExempt
+      WARNING: Without this proposal IFR is effectively not tradeable (3.5% fee on every swap!)
+      Timing: IMMEDIATELY after finalise() + pool creation
+      Address: Uniswap V2 Pair (only known after finalise())
+      Ref: IFR_ECOSYSTEM_A_TO_Z.pdf Chapter 9.2 + Appendix B
+- [ ] 🔴 CRITICAL: Proposal #12 — Set P0 in CommitmentVault
+      P0 = Total ETH raised / 100,000,000 (IMMUTABLE once set!)
+      All CommitmentVault tranche targets are based on P0 — wrong calculation = catastrophic
+      Timing: After finalise() + Uniswap Pool live
+- [ ] 🔵 Deploy CommitmentVault (Core Dev)
+      Voluntary lock with 4 condition types (time, price, time+price, time OR price)
+      Auto-unlock after 30 days when condition met
+      Set feeExempt after deploy
+      Contributor lock: 10 tranches of 10M IFR (100M total)
+- [ ] 🔵 Deploy LendingVault (Core Dev)
+      IFR lending against ETH collateral (200% initial, margin call 150%, liquidation 120%)
+      Interest rate: dynamic (0% util=2%, 100%=25%)
+      Uniswap TWAP price oracle (24h average)
+      Railway cron job (every 4h) for liquidation checks
+- [ ] 🔵 Deploy BuybackController (Phase 3+)
+      Automated fee distribution (BuybackVault + BurnReserve)
 
-### Phase 3 — Wiki Erweiterung (neue Seiten)
-- [x] ✅ Wiki: CommitmentVault Seite — `docs/wiki/commitment-vault.html` (20.03.2026)
-      4 Bedingungstypen, 10 Tranchen, Auto-Unlock, Stakeholder, FAQ
-- [x] ✅ Wiki: LendingVault Seite — `docs/wiki/lending-vault.html` (20.03.2026)
-      Lending-Kreislauf (6 Schritte), Zinssatz, Collateral, Default-Logik
-- [x] ✅ Wiki: Phased LP Strategy Seite — `docs/wiki/lp-strategy.html` (20.03.2026)
-      AMM Mathematik, 4 Phasen, Effizienz-Beweis
-- [x] ✅ Wiki: Ecosystem Kreislauf Seite — `docs/wiki/ecosystem.html` (20.03.2026)
-      Selbstverstärkender Kreislauf, 3 Prinzipien, Stakeholder, Zeitplan
-- [x] ✅ Wiki Navigation: Phase 3 Seiten in Sidebar (31 Seiten) + Index (20.03.2026)
-      Alle Seiten als "Phase 3 — Coming Soon" markiert
+### Phase 3 — Wiki Pages (new)
+- [x] ✅ Wiki: CommitmentVault page — `docs/wiki/commitment-vault.html` (20.03.2026)
+      4 condition types, 10 tranches, auto-unlock, stakeholders, FAQ
+- [x] ✅ Wiki: LendingVault page — `docs/wiki/lending-vault.html` (20.03.2026)
+      Lending cycle (6 steps), interest rates, collateral, default logic
+- [x] ✅ Wiki: Phased LP Strategy page — `docs/wiki/lp-strategy.html` (20.03.2026)
+      AMM mathematics, 4 phases, efficiency proof
+- [x] ✅ Wiki: Ecosystem page — `docs/wiki/ecosystem.html` (20.03.2026)
+      Self-reinforcing loop, 3 principles, stakeholders, timeline
+- [x] ✅ Wiki Navigation: Phase 3 pages in sidebar (31 pages) + index (20.03.2026)
+      All pages marked "Phase 3 — Coming Soon"
 
 ### Phase 3 — Contracts (Core Dev — Solidity)
-- [ ] 🔵 CommitmentVault.sol schreiben + Tests (min. 40)
+- [ ] 🔵 Write CommitmentVault.sol + tests (min. 40)
       lock(amount, tranches[]), unlock(trancheId), autoUnlock(wallet, trancheId)
-      checkCondition(trancheId), 4 Bedingungstypen, TWAP Oracle
-      feeExempt nach Deploy setzen
-- [ ] 🔵 LendingVault.sol schreiben + Tests (min. 50)
+      checkCondition(trancheId), 4 condition types, TWAP Oracle
+      Set feeExempt after deploy
+- [ ] 🔵 Write LendingVault.sol + tests (min. 50)
       requestLoan, repayLoan, liquidate, setLendingAllowance, getInterestRate
-      Zinssatz: 0%→2%, 25%→3%, 50%→5%, 75%→8%, 90%→15%, 100%→25%
+      Interest rates: 0%→2%, 25%→3%, 50%→5%, 75%→8%, 90%→15%, 100%→25%
       Collateral: 200% init, 150% warning, 120% liquidation
-      TWAP Oracle (Uniswap V2), feeExempt nach Deploy
-- [ ] 🔵 BuybackController.sol schreiben + Tests
-      Automatische Fee-Distribution (BuybackVault + BurnReserve)
+      TWAP Oracle (Uniswap V2), set feeExempt after deploy
+- [ ] 🔵 Write BuybackController.sol + tests
+      Automated fee distribution (BuybackVault + BurnReserve)
 - [ ] 🔵 Core Dev: Deploy Sepolia → Audit → Mainnet
-      Reihenfolge: CommitmentVault → LendingVault → BuybackController
-      Docs: CORE_DEV_PHASE3.md erstellen
+      Order: CommitmentVault → LendingVault → BuybackController
+      Docs: Create CORE_DEV_PHASE3.md
 
-### Phase 3 — WalletConnect UI Erweiterung
+### Phase 3 — WalletConnect UI
 - [ ] 🔵 CommitmentVault UI (commitment-vault.html)
-      Wallet connect → IFR Balance, Tranche-Konfigurator (Menge/Bedingung/P0-Multiplikator),
-      "Lock jetzt" Button → MetaMask TX, Dashboard: eigene Tranchen + Status,
-      Countdown bis Unlock, "Unlock" Button wenn Bedingung erfüllt
-- [ ] 🔵 LendingVault UI — LENDER Seite
-      "IFR verleihen" Interface, Lending Allowance setzen, aktive Loans,
-      Zinserträge in ETH, Loan-Anfragen annehmen/ablehnen
-- [ ] 🔵 LendingVault UI — BORROWER Seite
-      "IFR leihen" Interface, verfügbare Lender + Konditionen,
-      Collateral (ETH) hinterlegen, Loan beantragen → MetaMask TX,
-      aktiver Loan + Rückzahlungs-Timer, "Zurückzahlen" Button
+      Wallet connect → IFR balance, tranche configurator (amount/condition/P0 multiplier),
+      "Lock Now" button → MetaMask TX, dashboard: own tranches + status,
+      Countdown to unlock, "Unlock" button when condition met
+- [ ] 🔵 LendingVault UI — LENDER page
+      "Lend IFR" interface, set lending allowance, active loans,
+      Interest earnings in ETH, accept/reject loan requests
+- [ ] 🔵 LendingVault UI — BORROWER page
+      "Borrow IFR" interface, available lenders + terms,
+      Deposit collateral (ETH), request loan → MetaMask TX,
+      Active loan + repayment timer, "Repay" button
 - [ ] 🔵 P2P Lending Matching Interface (docs/wiki/lending-market.html)
-      Öffentlicher Loan-Marktplatz: Lender listet Angebote, Borrower sieht alle,
-      Filter: Menge/Zinssatz/Dauer, "Loan beantragen" → on-chain TX
+      Public loan marketplace: lenders list offers, borrowers browse all,
+      Filter: amount/interest rate/duration, "Request Loan" → on-chain TX
 - [ ] 🔵 Collateral Health Monitor
-      Borrower sieht Collateral-Ratio, Warning bei <150% (rot),
-      "Nachschießen" Button bei Margin Call
+      Borrower sees collateral ratio, warning at <150% (red),
+      "Top Up" button for margin calls
 
-### Phase 3 — Railway Erweiterungen
+### Phase 3 — Railway Extensions
 - [ ] 🔵 Lending Endpoints
-      GET /api/lending/offers — alle Lender-Angebote
-      POST /api/lending/request — Loan beantragen
-      GET /api/lending/loans/:address — aktive Loans
-      GET /api/lending/health/:loanId — Collateral Ratio
+      GET /api/lending/offers — all lender offers
+      POST /api/lending/request — request loan
+      GET /api/lending/loans/:address — active loans
+      GET /api/lending/health/:loanId — collateral ratio
 - [ ] 🔵 CommitmentVault Endpoints
-      GET /api/commitment/:address — Tranchen-Status
+      GET /api/commitment/:address — tranche status
       GET /api/commitment/leaderboard — Diamond Hands
-- [ ] 🔵 Cron Job: Liquidation Monitor (alle 4h)
-      Prüft alle offenen Loans, Warning bei <150%, Telegram bei <120%
+- [ ] 🔵 Cron Job: Liquidation Monitor (every 4h)
+      Checks all open loans, warning at <150%, Telegram alert at <120%
 
 ### Phase 3 — Uniswap Integration
-- [ ] 🔵 "Buy IFR" Button auf Landing Page (erst nach LP live)
-      Uniswap Link mit vorausgefüllter Token-Adresse
-- [ ] 🔵 Live IFR Preis auf Landing Page
+- [ ] 🔵 "Buy IFR" button on landing page (after LP is live)
+      Uniswap link with pre-filled token address
+- [ ] 🔵 Live IFR price on landing page
       Uniswap TWAP → Railway GET /api/ifr/price → Landing Page
 
 ### Phase 4 — Mobile App (IFR Wallet)
-- [ ] 🔵 App Konzept + Design
-      Plattformen: iOS + Android (React Native oder PWA first)
+- [ ] 🔵 App Concept + Design
+      Platforms: iOS + Android + APK + F-Droid
       Features MVP: Wallet connect, IFR Balance, Lock/Unlock,
-      CommitmentVault verwalten, LendingVault (Lender + Borrower),
+      CommitmentVault management, LendingVault (Lender + Borrower),
       Governance Proposals + Voting, Push Notifications
-      (Tranche unlockbar, Loan fällig, Margin Call, neue Proposals)
-- [ ] 🔵 App Tech Stack entscheiden
+      (Tranche unlockable, Loan due, Margin Call, new Proposals)
+- [ ] 🔵 Tech Stack Decision
       Option A: React Native | B: Flutter | C: PWA
-      Empfehlung: PWA first (app.ifrunit.tech), dann native
+      Recommendation: PWA first (app.ifrunit.tech), then native
 - [ ] 🔵 app.ifrunit.tech — Progressive Web App
       Subdomain, CDN/Edge Hosting, WalletConnect v2
+- [ ] 🔵 App Store Submission
+      Apple App Store, Google Play, APK (direct), F-Droid (open source)
 
 ### Phase 4 — DAO + Governance App
 - [ ] 🔵 In-App Governance
-      Proposals lesen + abstimmen, Wallet-Voting (IFR-gewichtet),
-      Proposal erstellen (TreasurySafe Members)
+      Read + vote on proposals, wallet-weighted voting (IFR-based),
+      Proposal creation (TreasurySafe Members only)
 - [ ] 🔵 Diamond Hands Leaderboard
-      Top Wallets nach gesperrter IFR, CommitmentVault Tranchen öffentlich,
-      Community Status Badges
+      Top wallets by locked IFR, CommitmentVault tranches public,
+      Community status badges
 
 ---
 
@@ -506,11 +508,7 @@ On errors: fix immediately, commit with `seo:` prefix.
 - [ ] CDN/Edge on app.ifrunit.tech
 
 ### Client App
-- [ ] APK (Android direct)
-- [ ] F-Droid
-- [ ] Google Play
-- [ ] App Store (iOS)
-- [ ] Integrated DAO governance (The Council + The Forum)
+→ Moved to Phase 4 — Mobile App section above
 
 ### Smart Contracts (Phase 3)
 - [ ] BuybackController.sol — auto-refill PartnerVault, overflow → Treasury, SOS reserve
