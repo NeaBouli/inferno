@@ -1071,6 +1071,19 @@ await governance.execute(proposalId);</code></pre>
         </tbody>
       </table>
 
+      <!-- Telegram Notifications -->
+      <div style="margin-top:28px;padding:20px;background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.2);border-radius:12px;">
+        <h3 style="margin:0 0 12px 0;color:#3b82f6;">Telegram Notifications</h3>
+        <p style="margin:0 0 8px 0;font-size:0.88rem;">New governance proposals are automatically announced in the <a href="https://t.me/IFRtoken" target="_blank" style="color:var(--accent);">@IFRtoken</a> channel and the <a href="https://t.me/IFR_token" target="_blank" style="color:var(--accent);">$IFR Community</a> group. Notifications are sent for:</p>
+        <ul style="margin:0;padding-left:20px;font-size:0.88rem;">
+          <li>New proposals (with action, target, ETA, and verify.html link)</li>
+          <li>Proposals becoming executable (timelock passed)</li>
+          <li>Proposals executed on-chain</li>
+          <li>Proposals cancelled</li>
+        </ul>
+        <p style="margin:8px 0 0 0;font-size:0.82rem;color:var(--muted);">Polling interval: every 30 minutes. Deduplication ensures no double announcements. Service: <code>voteAnnouncement.js</code> (12 tests).</p>
+      </div>
+
       <div class="callout-green callout" style="margin-top:20px;">
         <p><strong>LP Reserve Safe Transfer (18.03.2026):</strong> 400.6M IFR transferred from Deployer EOA (<code>0x6b36...ed67</code>) to LP Reserve Safe (<code>0x5D93E7919a71d725054e31017eCA86B026F86C04</code>), a Gnosis Safe 3-of-5 with the same 5 signers as Treasury and Community Safes. Deployer now holds 0 IFR. This was a direct ERC-20 transfer, not a governance proposal. TX: <a href="https://etherscan.io/tx/0xd33c771dc3e09689f124d3ac8f4eab138c827494e3cca5dd329bc29192d23197" target="_blank"><code>0xd33c771d&hellip;</code></a></p>
       </div>
