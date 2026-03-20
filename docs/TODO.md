@@ -171,6 +171,29 @@ On errors: fix immediately, commit with `seo:` prefix.
       Fix: function selectors corrected (isBuilder 0xb6b6b475, getBuilderCount 0xe54a01f9)
 - [ ] BuilderRegistry audit (post-deploy — contract is upgradeable via Governance)
 
+### Phase 3 — Nach Bootstrap finalise() (ca. 05.06.2026)
+- [ ] 🔴 KRITISCH: Proposal #11 — Uniswap Pool feeExempt setzen
+      WARNUNG: Ohne dieses Proposal ist IFR de facto nicht handelbar (3.5% Fee auf jeden Swap!)
+      Timing: SOFORT nach finalise() + Pool-Erstellung
+      Adresse: Uniswap V2 Pair (erst nach finalise() bekannt)
+      Ref: IFR_ECOSYSTEM_A_TO_Z.pdf Kapitel 9.2 + Anhang B
+- [ ] 🔴 KRITISCH: Proposal #12 — P0 setzen in CommitmentVault
+      P0 = Total ETH raised / 100,000,000 (IMMUTABLE nach dem Setzen!)
+      Alle CommitmentVault Tranche-Ziele basieren auf P0 — falsche Berechnung = katastrophal
+      Timing: Nach finalise() + Uniswap Pool live
+- [ ] 🔵 CommitmentVault deployen (Core Dev)
+      Freiwilliger Lock mit 4 Bedingungstypen (Zeit, Preis, Zeit+Preis, Zeit ODER Preis)
+      Auto-Unlock nach 30 Tagen wenn Bedingung erfüllt
+      feeExempt nach Deploy setzen
+      Contributor Lock: 10 Tranchen a 10M IFR (100M total)
+- [ ] 🔵 LendingVault deployen (Core Dev)
+      IFR Lending gegen ETH Collateral (200% initial, Margin Call 150%, Liquidation 120%)
+      Zinssatz: dynamisch (0% util=2%, 100%=25%)
+      Uniswap TWAP Preis-Oracle (24h Durchschnitt)
+      Railway Cron Job (alle 4h) für Liquidations-Check
+- [ ] 🔵 BuybackController deployen (Phase 3+)
+      Automatische Fee-Distribution (BuybackVault + BurnReserve)
+
 ---
 
 ## THIS WEEK
