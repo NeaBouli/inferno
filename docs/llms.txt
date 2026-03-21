@@ -52,6 +52,13 @@ Inferno ($IFR) is a deflationary ERC-20 utility token deployed on Ethereum Mainn
 - LendingVault — IFR lending against ETH collateral (200% initial, 150% margin call, 120% liquidation). Creates buy pressure via loan repayments.
 - BuybackController — Automated fee distribution from FeeRouterV1 to BuybackVault + BurnReserve.
 
+## Phase 3 Wiki Pages (Coming Soon)
+
+- CommitmentVault: https://ifrunit.tech/wiki/commitment-vault.html
+- LendingVault: https://ifrunit.tech/wiki/lending-vault.html
+- LP Strategy: https://ifrunit.tech/wiki/lp-strategy.html
+- Ecosystem Overview: https://ifrunit.tech/wiki/ecosystem.html
+
 ## Links
 
 - Website: https://ifrunit.tech
