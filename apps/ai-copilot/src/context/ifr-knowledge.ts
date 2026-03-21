@@ -48,12 +48,48 @@ export function getIFRKnowledge() {
     },
     governance: {
       timelockDelay: "48 hours",
-      guardian: "can cancel proposals",
+      owner: "TreasurySafe 3-of-5 (since 20.03.2026)",
+      guardian: "Deployer EOA — can cancel proposals",
       noInstantChanges: true,
       daoPhase: "Phase 4 (planned)",
       multisig: "3-of-5 on all Safes (Treasury, Community, LP Reserve) — 5 signers: A.K./M.G./A.M./Y.K./A.P.",
-      proposals: "Proposals #1-9 executed. Proposal #10 queued: transferOwnership to TreasurySafe (ETA 20.03.2026).",
+      proposals: "11 total: #0,#4-#9 executed, #1-#3,#10 cancelled. 0 open proposals.",
+      nextPlanned: "#11 Uniswap Pool feeExempt (after Bootstrap finalise()), #12 set P0 in CommitmentVault",
       feeExempt: "Deployer, TreasurySafe, CommunitySafe — all active since 18.03.2026"
+    },
+    builderRegistry: {
+      mainnet: "0xdfe6636DA47F8949330697e1dC5391267CEf0EE3",
+      sepolia: "0x77e99917Eca8539c62F509ED1193ac36580A6e7B",
+      owner: "Governance (TreasurySafe 3-of-5)",
+      deployed: "20.03.2026",
+      tests: "27/27 passing",
+      railwayEndpoints: "GET /api/builders/count, GET /api/builders/check/:address"
+    },
+    phase3: {
+      commitmentVault: {
+        status: "planned — Phase 3 (after Bootstrap ends June 2026)",
+        description: "Irrevocable token lock until self-chosen condition met. 4 types: time, price, time+price, time OR price.",
+        contributorConfig: "10 tranches x 10M IFR, P0x2 to P0x5000",
+        autoUnlock: "30 days after condition met — anyone can call, tokens always go to original wallet",
+        wiki: "https://ifrunit.tech/wiki/commitment-vault.html"
+      },
+      lendingVault: {
+        status: "planned — Phase 3",
+        description: "Lend locked IFR to builders against ETH collateral. Earn ETH interest. Creates buy pressure via repayments.",
+        interestRate: "2% to 25% based on utilization",
+        collateral: "200% initial, 150% margin call, 120% liquidation",
+        wiki: "https://ifrunit.tech/wiki/lending-vault.html"
+      },
+      lpStrategy: {
+        description: "Phased LP addition — NOT all 400M at once. Wait for price appreciation = 100M x more efficient.",
+        milestones: "M1: Pool 1 ETH → +50M IFR. M2: Pool 5 ETH → +100M IFR. M3: Sept 2026 LiqRes unlock.",
+        wiki: "https://ifrunit.tech/wiki/lp-strategy.html"
+      },
+      buybackController: {
+        status: "planned — Phase 3+",
+        description: "Automated fee distribution from FeeRouterV1 to BuybackVault + BurnReserve"
+      },
+      ecosystemWiki: "https://ifrunit.tech/wiki/ecosystem.html"
     },
     tiers: {
       bronze:   { minIFR: 1000,  discount: "5%" },

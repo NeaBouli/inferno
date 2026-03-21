@@ -344,6 +344,11 @@ On errors: fix immediately, commit with `seo:` prefix.
 - [ ] Pool Fee Receiver: switch from Deployer EOA to FeeRouterV1
 
 ### SEO / LLMO
+- [x] ✅ SEO: 4 new Phase 3 wiki pages — OG tags + JSON-LD + canonical (20.03.2026)
+- [x] ✅ llms.txt: Phase 3 wiki page URLs added (20.03.2026)
+- [x] ✅ sitemap.xml: 4 new pages added (20.03.2026)
+- [x] ✅ Ali Copilot: Phase 3 contracts + BuilderRegistry + Governance updated (20.03.2026)
+- [x] ✅ Landing Page: IntersectionObserver for live data + lazy images + scroll throttle (20.03.2026)
 - [ ] Full JSON-LD Schema.org check on all wiki pages
 - [ ] Verify ChatGPT/Perplexity indexing
 - [ ] Follow up on ethereum-lists PR #1010

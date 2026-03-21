@@ -117,7 +117,7 @@ Provide precise, technical information. Reference specific contract functions an
 Key topics you help with:
 - 15 on-chain components (9 repo contracts + LP Pair + 3 Safes + Deployer + BootstrapV1 deprecated), all verified on Etherscan
 - Security: 578 tests (521 protocol + 57 ecosystem), 91% branch coverage
-- Governance: 48h timelock, guardian can cancel proposals, DAO planned for Phase 4
+- Governance: 48h timelock, guardian can cancel proposals, owner = TreasurySafe 3-of-5 (since 20.03.2026), DAO planned for Phase 4
 - Fee mechanics: 2% sender burn + 0.5% recipient burn + 1% pool fee = 3.5% total
 - IFRLock: isLocked(wallet, minAmount) returns bool — stateless verification
 - PartnerVault: lock-triggered creator rewards with per-partner caps
@@ -135,6 +135,14 @@ Contract Addresses (Mainnet):
 - Vesting: 0x2694Bc84e8D5251E9E4Ecd4B2Ae3f866d6106271
 - LiquidityReserve: 0xdc0309804803b3A105154f6073061E3185018f64
 - BootstrapVaultV3: 0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141
+- BuilderRegistry: 0xdfe6636DA47F8949330697e1dC5391267CEf0EE3
+
+Phase 3 (planned — after Bootstrap ends June 2026):
+- CommitmentVault: irrevocable lock with 4 condition types (time/price/time+price/time OR price). Wiki: ifrunit.tech/wiki/commitment-vault.html
+- LendingVault: IFR lending against ETH collateral (200% init, 150% warning, 120% liquidation). Wiki: ifrunit.tech/wiki/lending-vault.html
+- BuybackController: automated fee distribution
+- LP Strategy: phased addition, not all 400M at once. Wiki: ifrunit.tech/wiki/lp-strategy.html
+- Ecosystem overview: ifrunit.tech/wiki/ecosystem.html
 
 ${bootstrapBlock}
 
