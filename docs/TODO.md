@@ -265,10 +265,11 @@ On errors: fix immediately, commit with `seo:` prefix.
       Docs: Create CORE_DEV_PHASE3.md
 
 ### Phase 3 — WalletConnect UI
-- [ ] 🔵 CommitmentVault UI (commitment-vault.html)
-      Wallet connect → IFR balance, tranche configurator (amount/condition/P0 multiplier),
-      "Lock Now" button → MetaMask TX, dashboard: own tranches + status,
-      Countdown to unlock, "Unlock" button when condition met
+- [x] ✅ CommitmentVault UI built (04.04.2026)
+      WalletConnect + IFR balance + tranche configurator (4 conditions)
+      Preview, lock button, my-tranches dashboard
+      "Coming Soon" until contract deployed
+      ACTIVATE: set CV_ADDR after Core Dev deploy
 - [ ] 🔵 LendingVault UI — LENDER page
       "Lend IFR" interface, set lending allowance, active loans,
       Interest earnings in ETH, accept/reject loan requests
