@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useAccount, useConnect, useSignMessage, useDisconnect } from 'wagmi';
-import { injected } from 'wagmi/connectors';
+import { useAccount, useSignMessage, useDisconnect } from 'wagmi';
+import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { Countdown } from '@/components/Countdown';
 import {
   getSessionStatus,
@@ -27,7 +27,6 @@ export default function CustomerPage({
   const { sessionId } = params;
 
   const { address, isConnected } = useAccount();
-  const { connect } = useConnect();
   const { disconnect } = useDisconnect();
   const { signMessageAsync } = useSignMessage();
 
@@ -75,10 +74,6 @@ export default function CustomerPage({
       setStep('sign');
     }
   }, [isConnected, step]);
-
-  const handleConnect = useCallback(() => {
-    connect({ connector: injected() });
-  }, [connect]);
 
   const handleSign = useCallback(async () => {
     setError(null);
@@ -208,12 +203,9 @@ export default function CustomerPage({
 
         {/* Step 1: Connect Wallet */}
         {step === 'connect' && (
-          <button
-            onClick={handleConnect}
-            className="w-full py-4 bg-ifr-red text-white text-lg font-bold rounded-xl hover:bg-ifr-red/90 transition"
-          >
-            Connect Wallet
-          </button>
+          <div className="flex justify-center">
+            <ConnectButton label="Connect Wallet" />
+          </div>
         )}
 
         {/* Step 2: Sign */}
