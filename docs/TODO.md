@@ -141,13 +141,12 @@ On errors: fix immediately, commit with `seo:` prefix.
       Voraussetzung: Alle Tests grün (contract + bot + e2e)
       Aktion: DEPLOYER_PRIVATE_KEY Zeile aus .env löschen
       Verify: `grep DEPLOYER_PRIVATE_KEY .env` → leer
-- [x] ✅ WalletConnect: disconnect + switch + mobile fix (03.04.2026)
-      Based on StealthX WalletConnectManager implementation
-      Fixed: accountsChanged re-creates provider/signer
-      Fixed: 30s connect timeout (was infinite)
-      Fixed: event listener accumulation guard
-      Fixed: disconnect clears WalletConnect + wagmi storage
-      Fixed: mobile deep-link 2s timeout (was 500ms)
+- [x] ✅ WalletConnect v2 LIVE (04.04.2026)
+      Real WalletConnect v2 protocol via @walletconnect/ethereum-provider
+      Desktop: MetaMask/WalletConnect choice modal + QR code
+      Mobile: WalletConnect deep links (300+ wallets)
+      Lazy CDN load (esm.sh), auto-reconnect both types
+      Landing page: COMING SOON → LIVE badge
 - [ ] npm audit: 34 vulnerabilities (2 critical, 9 high, 11 moderate, 12 low) — fix after LP launch
       Link: https://github.com/NeaBouli/inferno/security/dependabot
       Note: affects node_modules only, not Solidity contracts
@@ -464,7 +463,7 @@ On errors: fix immediately, commit with `seo:` prefix.
 - [x] `integration.html` — BuilderRegistry process + 4 categories
 - [x] `roadmap.html` — Phase 3 sprint status updated
 
-### WalletConnect Phase 1
+### WalletConnect Phase 1 ✅ LIVE
 - [x] Connect button landing page header
 - [x] Wallet dropdown (ETH/IFR balance, lock badge, bootstrap link)
 - [x] X-button dropdown
@@ -472,6 +471,12 @@ On errors: fix immediately, commit with `seo:` prefix.
 - [x] Mobile MetaMask deeplink
 - [x] visibilitychange auto-reconnect
 - [x] 14 Playwright tests green
+- [x] ✅ WalletConnect v2 protocol (04.04.2026)
+      @walletconnect/ethereum-provider via esm.sh CDN
+      Desktop: MetaMask/WC choice modal, QR code scan
+      Mobile: WC deep links (MetaMask, Trust, Rainbow, Coinbase, 300+)
+      Lazy load, auto-reconnect, clean disconnect
+      Landing page badge: COMING SOON → LIVE
 
 ### Telegram Bot
 - [x] `voteAnnouncement.js` — Governance proposal announcements + executable reminder + verify.html link (12 tests)
