@@ -1,5 +1,5 @@
 # IFR Protocol — Developer TODO List
-> Last updated: 2026-04-03 | Branch: main
+> Last updated: 2026-04-04 | Branch: main
 
 ---
 
@@ -146,6 +146,8 @@ On errors: fix immediately, commit with `seo:` prefix.
       30s timeout, accountsChanged re-creates provider/signer,
       listener guard, clean disconnect, mobile deep-link 2s delay
       Note: WC v2 QR needs bundler — planned Phase 2 build setup
+- [x] ChatGPT External Audit published (04.04.2026)
+      security.html + faq.html (3 new entries) + AUDIT_CHATGPT_19032026.md on GitHub
 - [ ] npm audit: 34 vulnerabilities (2 critical, 9 high, 11 moderate, 12 low) — fix after LP launch
       Link: https://github.com/NeaBouli/inferno/security/dependabot
       Note: affects node_modules only, not Solidity contracts
@@ -571,5 +573,5 @@ On errors: fix immediately, commit with `seo:` prefix.
 ---
 
 *This document is updated with every completed task.*
-*Last updated: 2026-04-03*
+*Last updated: 2026-04-04*
 

@@ -766,7 +766,7 @@
       <div class="faq-section">
         <div class="faq-item">
           <button class="faq-q"><span>Has the protocol been audited?</span><span class="icon">+</span></button>
-          <div class="faq-a">The protocol has undergone multiple layers of security analysis:<br><br>&bull; <strong>Slither static analysis</strong>: 0 high/critical findings across all contracts<br>&bull; <strong>Claude security audit</strong>: 0 FAIL, 21 WARN, 81 PASS<br>&bull; <strong>ChatGPT audit V4</strong>: 7/7 areas PASS<br>&bull; <strong>578 automated tests</strong> (521 protocol + 57 ecosystem) with 99% statement coverage and 91% branch coverage<br>&bull; <strong>App security review</strong>: 20/25 findings fixed, 5 documented<br><br>All 14 on-chain components are deployed and verified on Ethereum Mainnet.<br><br>&bull; <strong>Internal Security Review (March 2026)</strong>: Bootstrap flow (BootstrapVaultV3 + InfernoToken + FeeRouterV1 + Governance) &mdash; 11/14 secure, 3/14 low risk, 0 critical.<br><br>A professional third-party audit (Code4rena, Sherlock, or Cyfrin) is planned as the next security milestone.</div>
+          <div class="faq-a">Yes. The protocol has undergone multiple layers of security analysis:<br><br>&bull; <strong>External AI Security Audit (March 19, 2026)</strong>: Independent analysis of InfernoToken.sol &mdash; 2 critical/high findings identified and mitigated by Governance architecture (48h Timelock + TreasurySafe 3-of-5). No exploitable bugs found. <a href="security.html#external-audit">Full report</a><br>&bull; <strong>Slither static analysis</strong>: 0 high/critical findings across all contracts<br>&bull; <strong>Claude security audit</strong>: 0 FAIL, 21 WARN, 81 PASS<br>&bull; <strong>ChatGPT audit V4</strong>: 7/7 areas PASS<br>&bull; <strong>578 automated tests</strong> (521 protocol + 57 ecosystem) with 99% statement coverage and 91% branch coverage<br>&bull; <strong>App security review</strong>: 20/25 findings fixed, 5 documented<br>&bull; <strong>Internal Security Review (March 2026)</strong>: Bootstrap flow &mdash; 11/14 secure, 3/14 low risk, 0 critical<br><br>All 14 on-chain components are deployed and verified on Ethereum Mainnet. A professional third-party audit (Code4rena, Sherlock, or Cyfrin) is planned for Phase 2.</div>
         </div>
 
         <div class="faq-item">
@@ -1141,9 +1141,26 @@ const hasLock = await ifrLock.isLocked(walletAddress, ethers.utils.parseUnits("1
         </div>
       </div>
 
+      <!-- Security Audit FAQ (added 2026-04-04) -->
+      <h2 style="margin-top:2rem;">Security Audit Details</h2>
+      <div class="faq-section">
+        <div class="faq-item">
+          <button class="faq-q"><span>The owner can change fees &mdash; is that safe?</span><span class="icon">+</span></button>
+          <div class="faq-a">The token owner is the <strong>Governance Contract</strong> &mdash; not a single person. All changes require: (1) A public governance proposal, (2) 48-hour timelock (community can review), (3) Execution by TreasurySafe (3-of-5 Gnosis Safe). No individual can change fees unilaterally. The fee cap is hardcoded at max 5% and cannot be exceeded even by governance.</div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q"><span>Can fee-exempt wallets be abused?</span><span class="icon">+</span></button>
+          <div class="faq-a">All fee-exempt addresses are public and on-chain verifiable. Only protocol contracts are exempt: Vesting, BurnReserve, BootstrapVaultV3, TreasurySafe, CommunitySafe, and Deployer (legacy). No DEX routers or insider wallets have exemptions. Any exemption change requires Governance approval with a 48-hour timelock. You can verify all exempt addresses on <a href="https://etherscan.io/address/0x77e99917Eca8539c62F509ED1193ac36580A6e7B#readContract" target="_blank" rel="noopener">Etherscan</a>.</div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q"><span>Why does IFR use 9 decimals instead of 18?</span><span class="icon">+</span></button>
+          <div class="faq-a">9 decimals is a deliberate design choice. It provides sufficient precision while keeping token amounts readable. IFR is fully compatible with Uniswap V2 and all standard DEX interfaces. Some wallet display tools may show different formatting &mdash; always verify on <a href="https://etherscan.io/token/0x77e99917Eca8539c62F509ED1193ac36580A6e7B" target="_blank" rel="noopener">Etherscan</a>.</div>
+        </div>
+      </div>
+
       <!-- Footer -->
       <footer class="wiki-footer">
-        Inferno ($IFR) &mdash; Community Fair Launch Model &mdash; Documentation v2.1 &mdash; 11 sections, 64 Q&amp;A
+        Inferno ($IFR) &mdash; Community Fair Launch Model &mdash; Documentation v2.2 &mdash; 12 sections, 67 Q&amp;A
       </footer>
 
     </main>
