@@ -787,6 +787,62 @@ app.get("/api/ifr/vault", async (_req, res) => {
   }
 });
 
+// GET /api/ifr/price — IFR price status (Bootstrap → Uniswap TWAP)
+app.get("/api/ifr/price", async (_req, res) => {
+  res.set("Cache-Control", "no-store");
+  const cached = getCached("price");
+  if (cached) { res.json(cached); return; }
+  try {
+    // Read BootstrapVaultV3 to check if finalized
+    const vaultAddr = PROTOCOL_ADDRESSES.BootstrapVaultV3;
+
+    // finalized() → bool (selector 0xb3f05b97)
+    const finalizedData = await esApiFetch(
+      `&module=proxy&action=eth_call&to=${vaultAddr}&data=0xb3f05b97&tag=latest`
+    ) as { result?: string };
+    const finalized = finalizedData.result && finalizedData.result !== "0x" + "0".repeat(64);
+
+    if (!finalized) {
+      // Bootstrap still active — read totalETHRaised via ETH balance of vault
+      const ethBalData = await esApiFetch(
+        `&module=account&action=balance&address=${vaultAddr}&tag=latest`
+      ) as { status?: string; result?: string };
+      const ethRaised = (ethBalData.status === "1" && ethBalData.result)
+        ? parseInt(ethBalData.result, 10) / 1e18 : 0;
+
+      const IFR_BOOTSTRAP_ALLOCATION = 100_000_000; // 100M IFR
+      const estimatedP0 = ethRaised > 0 ? ethRaised / IFR_BOOTSTRAP_ALLOCATION : 0;
+
+      const response = {
+        price: null,
+        currency: "ETH",
+        status: "bootstrap_active",
+        bootstrapEndDate: "2026-06-05",
+        estimatedP0ETH: estimatedP0,
+        ethRaised,
+        message: "Price available after Bootstrap finalise() — June 5, 2026",
+        cachedAt: new Date().toISOString(),
+      };
+      setCache("price", response);
+      res.json(response);
+    } else {
+      // Bootstrap finalized — Phase 2: Uniswap TWAP here
+      const response = {
+        price: null,
+        currency: "ETH",
+        status: "pending_uniswap",
+        message: "Uniswap LP launching soon — price available after liquidity deployment",
+        cachedAt: new Date().toISOString(),
+      };
+      setCache("price", response);
+      res.json(response);
+    }
+  } catch (err) {
+    console.error("Price endpoint error:", err);
+    res.status(502).json({ error: "Failed to fetch price data" });
+  }
+});
+
 // ── Bootstrap Community Consensus Votes ─────────────────────────────
 // Persistence priority:
 //   1. BOOTSTRAP_VOTES env var (base64 JSON — survives deploys via Railway GraphQL API)
