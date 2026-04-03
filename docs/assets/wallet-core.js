@@ -1,7 +1,14 @@
 /**
- * IFR Wallet Core — v1.0
+ * IFR Wallet Core — v1.1
  * Central wallet session manager for all IFR pages.
  * Usage: await IFRWallet.connect(); IFRWallet.getAddress();
+ *
+ * v1.1 fixes (based on StealthX WalletConnectManager patterns):
+ *  - accountsChanged re-creates provider/signer (was only updating address)
+ *  - connect() has 30s timeout (was infinite)
+ *  - Event listener guard prevents accumulation on autoReconnect
+ *  - Disconnect clears all wallet-related storage keys
+ *  - Mobile deep-link retry with 2s timeout (was 500ms)
  */
 window.IFRWallet = (() => {
 
@@ -9,6 +16,7 @@ window.IFRWallet = (() => {
   const CHAIN_ID = 1; // Ethereum Mainnet
   const CHAIN_NAME = "Ethereum Mainnet";
   const RPC_URL = "https://eth.llamarpc.com";
+  const CONNECT_TIMEOUT_MS = 30000; // 30s like StealthX
 
   // ── Interner State ──────────────────────────────────
   let _provider = null;
@@ -16,6 +24,7 @@ window.IFRWallet = (() => {
   let _address = null;
   let _listeners = [];  // Callbacks für UI-Updates
   let _ethereumProvider = null; // Resolved MetaMask provider (multi-wallet safe)
+  let _listenersAttached = false; // Guard against duplicate event listeners
 
   // ── Session Storage Key ─────────────────────────────
   const SESSION_KEY = "ifr_wallet_connected";
@@ -36,13 +45,36 @@ window.IFRWallet = (() => {
     return _ethereumProvider || null;
   }
 
-  // ── Connect ─────────────────────────────────────────
+  // ── Attach/Detach Provider Listeners ───────────────
+  function _attachProviderListeners(eth) {
+    if (_listenersAttached) return;
+    eth.on("accountsChanged", _onAccountsChanged);
+    eth.on("chainChanged", _onChainChanged);
+    _listenersAttached = true;
+  }
+
+  function _detachProviderListeners() {
+    if (!_listenersAttached || !_ethereumProvider) return;
+    try {
+      _ethereumProvider.removeListener("accountsChanged", _onAccountsChanged);
+      _ethereumProvider.removeListener("chainChanged", _onChainChanged);
+    } catch(e) {}
+    _listenersAttached = false;
+  }
+
+  // ── Connect (with timeout) ────────────────────────
   async function connect() {
     const eth = _getMetaMaskProvider();
     if (!eth) {
       throw new Error("NO_METAMASK");
     }
-    const accounts = await eth.request({ method: "eth_requestAccounts" });
+
+    // 30s timeout — prevents hanging if MetaMask doesn't respond
+    const accountsPromise = eth.request({ method: "eth_requestAccounts" });
+    const timeoutPromise = new Promise(function(_, reject) {
+      setTimeout(function() { reject(new Error("CONNECT_TIMEOUT")); }, CONNECT_TIMEOUT_MS);
+    });
+    const accounts = await Promise.race([accountsPromise, timeoutPromise]);
     if (!accounts || accounts.length === 0) throw new Error("NO_ACCOUNTS");
 
     _provider = new ethers.providers.Web3Provider(eth);
@@ -58,9 +90,8 @@ window.IFRWallet = (() => {
     // Session merken
     sessionStorage.setItem(SESSION_KEY, _address);
 
-    // Account-Change Listener
-    eth.on("accountsChanged", _onAccountsChanged);
-    eth.on("chainChanged", _onChainChanged);
+    // Attach listeners (guarded — no duplicates)
+    _attachProviderListeners(eth);
 
     _emit("connected", _address);
     return _address;
@@ -69,12 +100,7 @@ window.IFRWallet = (() => {
   // ── Disconnect ───────────────────────────────────────
   function disconnect() {
     // Remove event listeners before clearing provider ref
-    if (_ethereumProvider) {
-      try {
-        _ethereumProvider.removeListener("accountsChanged", _onAccountsChanged);
-        _ethereumProvider.removeListener("chainChanged", _onChainChanged);
-      } catch(e) {}
-    }
+    _detachProviderListeners();
 
     // Full state reset
     _provider = null;
@@ -82,8 +108,18 @@ window.IFRWallet = (() => {
     _address = null;
     _ethereumProvider = null;
 
-    // Clear session
+    // Clear all wallet-related storage
     sessionStorage.removeItem(SESSION_KEY);
+    sessionStorage.removeItem("ifr_pending_connect");
+    // Clear WalletConnect v2 session data if present
+    try {
+      var keys = Object.keys(localStorage);
+      for (var i = 0; i < keys.length; i++) {
+        if (keys[i].indexOf("wc@2:") === 0 || keys[i].indexOf("wagmi.") === 0) {
+          localStorage.removeItem(keys[i]);
+        }
+      }
+    } catch(e) {}
 
     // Fire UI event
     _emit("disconnected", null);
@@ -122,9 +158,8 @@ window.IFRWallet = (() => {
       _address = match;
       _ethereumProvider = eth;
 
-      // Re-attach event listeners
-      eth.on("accountsChanged", _onAccountsChanged);
-      eth.on("chainChanged", _onChainChanged);
+      // Attach listeners (guarded — no duplicates)
+      _attachProviderListeners(eth);
 
       _emit("connected", _address);
       return true;
@@ -168,12 +203,24 @@ window.IFRWallet = (() => {
     if (!accounts || accounts.length === 0) {
       disconnect();
     } else {
-      _address = accounts[0];
+      var newAddr = accounts[0];
+      // Re-create provider/signer for new account (StealthX pattern)
+      var eth = _getMetaMaskProvider();
+      if (eth) {
+        _provider = new ethers.providers.Web3Provider(eth);
+        _signer = _provider.getSigner();
+      }
+      _address = newAddr;
       sessionStorage.setItem(SESSION_KEY, _address);
       _emit("accountChanged", _address);
     }
   }
-  function _onChainChanged() { window.location.reload(); }
+
+  function _onChainChanged() {
+    // Clean up before reload to prevent stale listeners
+    _detachProviderListeners();
+    window.location.reload();
+  }
 
   // ── Mobile Deep-Link ──────────────────────────────────
   const PENDING_KEY = "ifr_pending_connect";
@@ -187,13 +234,13 @@ window.IFRWallet = (() => {
     return /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
   }
 
-  // Auto-connect after MetaMask deep-link return
+  // Auto-connect after MetaMask deep-link return (2s delay for mobile)
   if (sessionStorage.getItem(PENDING_KEY) === "1") {
     sessionStorage.removeItem(PENDING_KEY);
     setTimeout(function() {
       const eth = _getMetaMaskProvider();
       if (eth) connect().catch(function() {});
-    }, 500);
+    }, 2000);
   }
 
   // ── Public API ───────────────────────────────────────
