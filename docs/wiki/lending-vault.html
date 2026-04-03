@@ -958,9 +958,162 @@
         The <a href="lending-market.html">Lending Market</a> page displays all contributors who have marked parts of their locks as lendable. You can see available amounts, current interest rates, and terms. Everything is peer-to-pool &mdash; no matching needed.
       </p>
 
+      <!-- ======================================== -->
+      <!-- Interactive LendingVault Widget -->
+      <!-- ======================================== -->
+      <h2 id="lending-widget" style="margin-top:3rem;">Use LendingVault</h2>
+
+      <style>
+        .lv-widget{background:rgba(255,69,0,0.04);border:1px solid rgba(255,69,0,0.18);border-radius:12px;padding:24px;margin:20px 0}
+        .lv-tabs{display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:20px}
+        .lv-tab{flex:1;padding:12px 8px;background:none;border:none;color:var(--muted);font-size:0.88rem;font-weight:600;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;font-family:inherit;transition:color 0.2s,border-color 0.2s}
+        .lv-tab:hover{color:var(--text)}
+        .lv-tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+        .lv-tab-content{display:none}
+        .lv-tab-content.lv-visible{display:block}
+        .lv-form-group{margin:14px 0}
+        .lv-form-group label{display:block;margin-bottom:5px;font-weight:600;font-size:0.9rem;color:var(--text)}
+        .lv-form-group input,.lv-form-group select{width:100%;padding:10px 14px;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:14px;font-family:inherit}
+        .lv-form-group input:focus,.lv-form-group select:focus{outline:none;border-color:var(--accent)}
+        .lv-hint{font-size:0.78rem;color:var(--muted);margin-top:4px}
+        .lv-preview{background:rgba(0,0,0,0.25);border-radius:8px;padding:16px;margin:16px 0;font-size:0.9rem;line-height:1.7}
+        .lv-btn{display:inline-block;padding:12px 28px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-size:1rem;font-weight:700;cursor:pointer;transition:opacity 0.2s}
+        .lv-btn:hover{opacity:0.9}
+        .lv-btn:disabled{opacity:0.4;cursor:not-allowed}
+        .lv-hidden{display:none!important}
+        .lv-stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin:16px 0}
+        .lv-stat{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:14px;text-align:center}
+        .lv-stat .stat-label{font-size:0.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px}
+        .lv-stat .stat-value{font-size:1.3rem;font-weight:700;color:var(--accent)}
+        .lv-info-box{background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:8px;padding:14px;margin:14px 0;font-size:0.88rem;line-height:1.7}
+        .lv-status-msg{margin-top:12px;padding:12px;border-radius:8px;font-size:0.88rem}
+      </style>
+
+      <!-- Coming Soon Banner -->
+      <div class="lv-widget" style="background:rgba(59,130,246,0.06);border-color:rgba(59,130,246,0.25);text-align:center;">
+        <div style="font-size:0.78rem;font-weight:700;color:#3b82f6;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px;">Phase 3 &mdash; Coming Soon</div>
+        <p style="color:var(--muted);font-size:0.88rem;margin:0;">LendingVault deploys after Bootstrap finalise() on June 5, 2026.<br>Connect your wallet now to check balances and explore the interface.</p>
+      </div>
+
+      <!-- Connect Wallet -->
+      <div class="lv-widget" id="lv-connect-section">
+        <h3 style="margin-bottom:8px;">Connect Wallet</h3>
+        <p style="color:var(--muted);font-size:0.88rem;margin-bottom:14px;">Connect to explore lender/borrower interfaces and check your balances.</p>
+        <button class="lv-btn" id="lv-connect-btn">Connect Wallet</button>
+        <div id="lv-wallet-info" class="lv-hidden" style="margin-top:14px;">
+          <div style="display:flex;gap:20px;flex-wrap:wrap;">
+            <div><span style="color:var(--muted);font-size:0.8rem;">Wallet</span><br><strong id="lv-address" style="font-family:monospace;">—</strong></div>
+            <div><span style="color:var(--muted);font-size:0.8rem;">IFR Balance</span><br><strong id="lv-ifr-balance" style="color:var(--accent);">—</strong></div>
+            <div><span style="color:var(--muted);font-size:0.8rem;">ETH Balance</span><br><strong id="lv-eth-balance" style="color:#22c55e;">—</strong></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab Navigation -->
+      <div class="lv-tabs">
+        <button class="lv-tab active" data-tab="lender">Lender</button>
+        <button class="lv-tab" data-tab="borrower">Borrower</button>
+        <button class="lv-tab" data-tab="market">Market</button>
+      </div>
+
+      <!-- LENDER TAB -->
+      <div id="lv-lender-tab" class="lv-tab-content lv-visible">
+        <div class="lv-widget">
+          <h3>Create Lending Offer</h3>
+          <p style="color:var(--muted);font-size:0.88rem;margin-bottom:14px;">Deposit IFR to earn interest. Borrowers pay you monthly interest in IFR.</p>
+
+          <div class="lv-form-group">
+            <label>IFR Amount to Offer</label>
+            <input type="number" id="lv-offer-amount" placeholder="e.g. 50000000" min="1" step="1">
+            <div class="lv-hint">Available: <span id="lv-lender-balance">—</span></div>
+          </div>
+
+          <div class="lv-info-box">
+            <strong>Current Interest Rate:</strong> <span id="lv-current-rate">2%</span>/month<br>
+            <strong>Utilization:</strong> <span id="lv-utilization">0%</span><br>
+            <strong>Interest Split:</strong> 50% to you, 50% to protocol
+          </div>
+
+          <button class="lv-btn" id="lv-create-offer-btn" disabled>Create Offer</button>
+          <div id="lv-offer-status" class="lv-hidden lv-status-msg"></div>
+        </div>
+
+        <div class="lv-widget">
+          <h3>My Lending Activity</h3>
+          <div id="lv-my-offers" style="color:var(--muted);font-size:0.88rem;">Connect wallet to see your offers and earnings.</div>
+        </div>
+      </div>
+
+      <!-- BORROWER TAB -->
+      <div id="lv-borrower-tab" class="lv-tab-content">
+        <div class="lv-widget">
+          <h3>Borrow IFR</h3>
+          <p style="color:var(--muted);font-size:0.88rem;margin-bottom:14px;">Post ETH collateral to borrow IFR. Use it for product access, builder discounts, or lock in IFRLock.</p>
+
+          <div class="lv-form-group">
+            <label>IFR Amount to Borrow</label>
+            <input type="number" id="lv-borrow-amount" placeholder="e.g. 10000000" min="1" step="1">
+          </div>
+
+          <div class="lv-form-group">
+            <label>Loan Duration</label>
+            <select id="lv-duration">
+              <option value="30">30 days</option>
+              <option value="60">60 days</option>
+              <option value="90" selected>90 days</option>
+              <option value="180">180 days</option>
+              <option value="365">365 days</option>
+            </select>
+          </div>
+
+          <div class="lv-preview" id="lv-loan-preview">
+            <strong style="font-size:0.82rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em;">Loan Preview</strong>
+            <div id="lv-loan-preview-content" style="margin-top:8px;">Enter an amount to see collateral required and total cost.</div>
+          </div>
+
+          <button class="lv-btn" id="lv-borrow-btn" disabled>Request Loan</button>
+          <div id="lv-borrow-status" class="lv-hidden lv-status-msg"></div>
+        </div>
+
+        <div class="lv-widget">
+          <h3>My Active Loans</h3>
+          <div id="lv-my-borrows" style="color:var(--muted);font-size:0.88rem;">Connect wallet to see your active loans, collateral health, and repayment status.</div>
+        </div>
+      </div>
+
+      <!-- MARKET TAB -->
+      <div id="lv-market-tab" class="lv-tab-content">
+        <div class="lv-stats-grid">
+          <div class="lv-stat"><div class="stat-label">Total Available</div><div class="stat-value" id="lv-total-available">—</div></div>
+          <div class="lv-stat"><div class="stat-label">Total Lent</div><div class="stat-value" id="lv-total-lent">—</div></div>
+          <div class="lv-stat"><div class="stat-label">Utilization</div><div class="stat-value" id="lv-util-display">—</div></div>
+          <div class="lv-stat"><div class="stat-label">Current Rate</div><div class="stat-value" id="lv-rate-display">—</div></div>
+        </div>
+
+        <div class="lv-widget">
+          <h3>Available Lending Offers</h3>
+          <div id="lv-offers-list" style="color:var(--muted);font-size:0.88rem;">LendingVault launches after Bootstrap finalise (June 2026). Offers will appear here.</div>
+        </div>
+
+        <div class="lv-widget">
+          <h3>Interest Rate Curve</h3>
+          <table style="width:100%;font-size:0.88rem;">
+            <thead><tr><th style="text-align:left;padding:6px 10px;">Utilization</th><th style="text-align:right;padding:6px 10px;">Monthly Rate</th></tr></thead>
+            <tbody>
+              <tr><td style="padding:6px 10px;">0 &ndash; 25%</td><td style="text-align:right;padding:6px 10px;color:var(--green);">2%</td></tr>
+              <tr><td style="padding:6px 10px;">26 &ndash; 50%</td><td style="text-align:right;padding:6px 10px;color:var(--green);">3%</td></tr>
+              <tr><td style="padding:6px 10px;">51 &ndash; 75%</td><td style="text-align:right;padding:6px 10px;color:#eab308;">5%</td></tr>
+              <tr><td style="padding:6px 10px;">76 &ndash; 90%</td><td style="text-align:right;padding:6px 10px;color:#f97316;">8%</td></tr>
+              <tr><td style="padding:6px 10px;">91 &ndash; 99%</td><td style="text-align:right;padding:6px 10px;color:var(--accent);">15%</td></tr>
+              <tr><td style="padding:6px 10px;">100%</td><td style="text-align:right;padding:6px 10px;color:#ef4444;">25%</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
       <!-- Footer -->
       <footer class="wiki-footer">
-        Inferno ($IFR) &mdash; Community Fair Launch Model &mdash; Documentation v1.0
+        Inferno ($IFR) &mdash; Community Fair Launch Model &mdash; Documentation v1.1
       </footer>
 
     </main>
@@ -1072,6 +1225,146 @@ IFRState.on("stateLoaded",lpUpdateUI);
 document.addEventListener("visibilitychange",async function(){if(document.visibilityState==="visible"&&!IFRWallet.isConnected()){var ok=await IFRWallet.autoReconnect();if(ok)lpUpdateUI(await IFRState.load(IFRWallet.getAddress()))}});
 (async function(){var ok=await IFRWallet.autoReconnect();if(ok)lpUpdateUI(await IFRState.load(IFRWallet.getAddress()))})();
 var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.addEventListener("mouseenter",function(){this.style.transform="scale(1.04)";this.style.boxShadow="0 4px 20px rgba(249,115,22,0.4)"});_wcBtn.addEventListener("mouseleave",function(){this.style.transform="";this.style.boxShadow="0 2px 12px rgba(249,115,22,0.25)"})}
+</script>
+
+<!-- LendingVault Widget Logic -->
+<script>
+(function() {
+  var LV_ADDR = "0x0000000000000000000000000000000000000000"; // TODO: set after deploy
+  var IFR_TOKEN = "0x77e99917Eca8539c62F509ED1193ac36580A6e7B";
+  var IFR_DECIMALS = 9;
+
+  var IFR_ABI = [
+    "function balanceOf(address) view returns (uint256)",
+    "function approve(address,uint256) external returns (bool)"
+  ];
+
+  var lvAddress = null;
+
+  // ── Tab Switching ────────────────────────────────────
+  document.querySelectorAll(".lv-tab").forEach(function(tab) {
+    tab.addEventListener("click", function() {
+      document.querySelectorAll(".lv-tab").forEach(function(t) { t.classList.remove("active"); });
+      document.querySelectorAll(".lv-tab-content").forEach(function(c) { c.classList.remove("lv-visible"); });
+      tab.classList.add("active");
+      var target = document.getElementById("lv-" + tab.dataset.tab + "-tab");
+      if (target) target.classList.add("lv-visible");
+    });
+  });
+
+  // ── Connect Wallet ───────────────────────────────────
+  var connectBtn = document.getElementById("lv-connect-btn");
+  if (connectBtn) connectBtn.addEventListener("click", async function() {
+    try {
+      if (typeof IFRWallet !== "undefined") {
+        await IFRWallet.connect();
+        lvAddress = IFRWallet.getAddress();
+      } else if (window.ethereum) {
+        var accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
+        lvAddress = accounts[0];
+      } else {
+        alert("Please install MetaMask"); return;
+      }
+      if (!lvAddress) return;
+
+      connectBtn.textContent = lvAddress.slice(0,6) + "..." + lvAddress.slice(-4);
+      connectBtn.disabled = true;
+      connectBtn.style.opacity = "0.7";
+
+      document.getElementById("lv-wallet-info").classList.remove("lv-hidden");
+      document.getElementById("lv-address").textContent = lvAddress.slice(0,6) + "..." + lvAddress.slice(-4);
+
+      await loadLVBalances();
+      loadMarketData();
+
+      document.getElementById("lv-create-offer-btn").disabled = false;
+      document.getElementById("lv-borrow-btn").disabled = false;
+    } catch(e) {
+      console.error("LV connect:", e);
+      if (e.code === 4001) { connectBtn.textContent = "Connect Wallet"; connectBtn.disabled = false; }
+    }
+  });
+
+  // ── Load Balances ────────────────────────────────────
+  async function loadLVBalances() {
+    try {
+      var provider = new ethers.providers.Web3Provider(window.ethereum);
+      var token = new ethers.Contract(IFR_TOKEN, IFR_ABI, provider);
+      var ifrBal = await token.balanceOf(lvAddress);
+      var ethBal = await provider.getBalance(lvAddress);
+
+      var ifrFmt = parseFloat(ethers.utils.formatUnits(ifrBal, IFR_DECIMALS)).toLocaleString("en-US", { maximumFractionDigits: 0 });
+      var ethFmt = parseFloat(ethers.utils.formatEther(ethBal)).toFixed(4);
+
+      document.getElementById("lv-ifr-balance").textContent = ifrFmt + " IFR";
+      document.getElementById("lv-eth-balance").textContent = ethFmt + " ETH";
+      document.getElementById("lv-lender-balance").textContent = ifrFmt + " IFR";
+    } catch(e) {
+      console.error("LV balances:", e);
+    }
+  }
+
+  // ── Market Data (placeholder) ────────────────────────
+  function loadMarketData() {
+    document.getElementById("lv-total-available").textContent = "After Jun 2026";
+    document.getElementById("lv-total-lent").textContent = "\u2014";
+    document.getElementById("lv-util-display").textContent = "0%";
+    document.getElementById("lv-rate-display").textContent = "2%/mo";
+    document.getElementById("lv-current-rate").textContent = "2%";
+    document.getElementById("lv-utilization").textContent = "0%";
+  }
+
+  // ── Loan Preview Calculator ──────────────────────────
+  var borrowInput = document.getElementById("lv-borrow-amount");
+  var durationSelect = document.getElementById("lv-duration");
+  if (borrowInput) borrowInput.addEventListener("input", updateLoanPreview);
+  if (durationSelect) durationSelect.addEventListener("change", updateLoanPreview);
+
+  function updateLoanPreview() {
+    var amount = parseFloat(document.getElementById("lv-borrow-amount").value) || 0;
+    var days = parseInt(document.getElementById("lv-duration").value);
+    var el = document.getElementById("lv-loan-preview-content");
+    if (!amount || amount <= 0) { el.innerHTML = "Enter an amount to see preview"; return; }
+
+    var months = Math.ceil(days / 30);
+    var rate = 0.02; // 2% base rate
+    var interest = Math.round(amount * rate * months);
+    var totalRepay = amount + interest;
+    // Simplified collateral: assume 1 IFR = 0.000001 ETH for preview
+    var ifrValueETH = amount * 0.000001;
+    var collateral = ifrValueETH * 2; // 200%
+
+    el.innerHTML =
+      "<strong>Borrow:</strong> " + amount.toLocaleString() + " IFR<br>" +
+      "<strong>Duration:</strong> " + days + " days (" + months + " month" + (months > 1 ? "s" : "") + ")<br>" +
+      "<strong>Interest Rate:</strong> ~2%/month (base rate)<br>" +
+      "<strong>Total Interest:</strong> ~" + interest.toLocaleString() + " IFR<br>" +
+      "<strong>Total Repay:</strong> ~" + totalRepay.toLocaleString() + " IFR<br>" +
+      "<strong>ETH Collateral (200%):</strong> ~" + collateral.toFixed(6) + " ETH<br>" +
+      "<span style='color:var(--muted);font-size:0.82rem;margin-top:6px;display:block;'>Final rates determined by contract at time of borrow. Collateral based on live IFR price.</span>";
+  }
+
+  // ── Action Buttons (disabled until deploy) ───────────
+  var offerBtn = document.getElementById("lv-create-offer-btn");
+  if (offerBtn) offerBtn.addEventListener("click", function() {
+    var s = document.getElementById("lv-offer-status");
+    s.classList.remove("lv-hidden");
+    s.style.background = "rgba(59,130,246,0.1)";
+    s.style.border = "1px solid rgba(59,130,246,0.3)";
+    s.style.color = "#93c5fd";
+    s.innerHTML = "<strong>LendingVault not yet deployed.</strong><br>Available after Bootstrap finalise() on June 5, 2026.";
+  });
+
+  var borrowBtn = document.getElementById("lv-borrow-btn");
+  if (borrowBtn) borrowBtn.addEventListener("click", function() {
+    var s = document.getElementById("lv-borrow-status");
+    s.classList.remove("lv-hidden");
+    s.style.background = "rgba(59,130,246,0.1)";
+    s.style.border = "1px solid rgba(59,130,246,0.3)";
+    s.style.color = "#93c5fd";
+    s.innerHTML = "<strong>LendingVault not yet deployed.</strong><br>Available after Bootstrap finalise() on June 5, 2026.";
+  });
+})();
 </script>
 </body>
 </html>
