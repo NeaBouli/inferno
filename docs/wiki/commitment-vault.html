@@ -937,9 +937,111 @@
         <li>Dump attempts punished by market mechanics</li>
       </ul>
 
+      <!-- ======================================== -->
+      <!-- Interactive CommitmentVault Widget -->
+      <!-- ======================================== -->
+      <h2 id="lock-widget" style="margin-top:3rem;">Lock Your IFR</h2>
+
+      <style>
+        .cv-widget{background:rgba(255,69,0,0.04);border:1px solid rgba(255,69,0,0.18);border-radius:12px;padding:24px;margin:20px 0}
+        .cv-widget h3{font-size:1.1rem;margin-bottom:12px}
+        .cv-form-group{margin:14px 0}
+        .cv-form-group label{display:block;margin-bottom:5px;font-weight:600;font-size:0.9rem;color:var(--text)}
+        .cv-form-group input,.cv-form-group select{width:100%;padding:10px 14px;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:14px;font-family:inherit}
+        .cv-form-group input:focus,.cv-form-group select:focus{outline:none;border-color:var(--accent)}
+        .cv-hint{font-size:0.78rem;color:var(--muted);margin-top:4px}
+        .cv-preview{background:rgba(0,0,0,0.25);border-radius:8px;padding:16px;margin:16px 0;font-size:0.9rem;line-height:1.7}
+        .cv-btn{display:inline-block;padding:12px 28px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-size:1rem;font-weight:700;cursor:pointer;transition:opacity 0.2s}
+        .cv-btn:hover{opacity:0.9}
+        .cv-btn:disabled{opacity:0.4;cursor:not-allowed}
+        .cv-hidden{display:none!important}
+        .cv-tranche-card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:14px;margin:8px 0;font-size:0.88rem}
+        .cv-tranche-card .cv-badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:0.72rem;font-weight:700}
+        .cv-badge-locked{background:rgba(234,179,8,0.15);color:#eab308}
+        .cv-badge-unlocked{background:rgba(34,197,94,0.15);color:#22c55e}
+        .cv-status-msg{margin-top:12px;padding:12px;border-radius:8px;font-size:0.88rem}
+      </style>
+
+      <!-- Coming Soon Banner -->
+      <div class="cv-widget" style="background:rgba(59,130,246,0.06);border-color:rgba(59,130,246,0.25);text-align:center;">
+        <div style="font-size:0.78rem;font-weight:700;color:#3b82f6;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px;">Phase 3 &mdash; Coming Soon</div>
+        <p style="color:var(--muted);font-size:0.88rem;margin:0;">CommitmentVault deploys after Bootstrap finalise() on June 5, 2026.<br>Connect your wallet now to check your IFR balance and plan your lock strategy.</p>
+      </div>
+
+      <!-- Step 1: Connect Wallet -->
+      <div class="cv-widget" id="cv-connect-section">
+        <h3>Connect Wallet</h3>
+        <p style="color:var(--muted);font-size:0.88rem;margin-bottom:14px;">Connect your wallet to configure tranches and lock IFR in CommitmentVault.</p>
+        <button class="cv-btn" id="cv-connect-btn">Connect Wallet</button>
+        <div id="cv-wallet-info" class="cv-hidden" style="margin-top:14px;">
+          <div style="display:flex;gap:20px;flex-wrap:wrap;">
+            <div><span style="color:var(--muted);font-size:0.8rem;">Wallet</span><br><strong id="cv-address" style="font-family:monospace;">—</strong></div>
+            <div><span style="color:var(--muted);font-size:0.8rem;">IFR Balance</span><br><strong id="cv-balance" style="color:var(--accent);">—</strong></div>
+            <div><span style="color:var(--muted);font-size:0.8rem;">Locked (IFRLock)</span><br><strong id="cv-locked" style="color:#eab308;">—</strong></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 2: Configure Tranche -->
+      <div class="cv-widget cv-hidden" id="cv-config-section">
+        <h3>Configure Tranche</h3>
+
+        <div class="cv-form-group">
+          <label>Amount to Lock (IFR)</label>
+          <input type="number" id="cv-amount" placeholder="e.g. 10000000" min="1" step="1">
+          <div class="cv-hint">Available: <span id="cv-bal-hint">—</span></div>
+        </div>
+
+        <div class="cv-form-group">
+          <label>Unlock Condition</label>
+          <select id="cv-condition-type">
+            <option value="0">A) Time Only &mdash; unlock after date</option>
+            <option value="1">B) Price Only &mdash; unlock at P0 &times; multiplier</option>
+            <option value="2">C) Time OR Price &mdash; whichever comes first</option>
+            <option value="3">D) Time AND Price &mdash; both must be met</option>
+          </select>
+        </div>
+
+        <div class="cv-form-group" id="cv-time-group">
+          <label>Unlock Date</label>
+          <input type="date" id="cv-unlock-date" min="2026-06-06">
+          <div class="cv-hint">Must be after Bootstrap finalise (June 5, 2026)</div>
+        </div>
+
+        <div class="cv-form-group cv-hidden" id="cv-price-group">
+          <label>P0 Multiplier (Price Target)</label>
+          <select id="cv-multiplier">
+            <option value="200">P0 &times; 2 (2x initial price)</option>
+            <option value="500">P0 &times; 5</option>
+            <option value="1000">P0 &times; 10</option>
+            <option value="2500">P0 &times; 25</option>
+            <option value="5000">P0 &times; 50</option>
+            <option value="10000">P0 &times; 100</option>
+            <option value="50000">P0 &times; 500</option>
+            <option value="100000">P0 &times; 1,000</option>
+            <option value="500000">P0 &times; 5,000</option>
+          </select>
+          <div class="cv-hint">P0 = initial price after Bootstrap. Set immutably on-chain after finalise().</div>
+        </div>
+
+        <div class="cv-preview" id="cv-preview">
+          <strong style="font-size:0.82rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em;">Tranche Preview</strong>
+          <div id="cv-preview-content" style="margin-top:8px;">Configure above to see preview</div>
+        </div>
+
+        <button class="cv-btn" id="cv-lock-btn" disabled>Lock IFR</button>
+        <div id="cv-lock-status" class="cv-hidden cv-status-msg"></div>
+      </div>
+
+      <!-- Step 3: My Tranches Dashboard -->
+      <div class="cv-widget cv-hidden" id="cv-dashboard-section">
+        <h3>My Locked Tranches</h3>
+        <div id="cv-tranches-list" style="color:var(--muted);font-size:0.88rem;">Connect wallet to view your tranches.</div>
+      </div>
+
       <!-- Footer -->
       <footer class="wiki-footer">
-        Inferno ($IFR) &mdash; Community Fair Launch Model &mdash; Documentation v1.0
+        Inferno ($IFR) &mdash; Community Fair Launch Model &mdash; Documentation v1.1
       </footer>
 
     </main>
@@ -1051,6 +1153,179 @@ IFRState.on("stateLoaded",lpUpdateUI);
 document.addEventListener("visibilitychange",async function(){if(document.visibilityState==="visible"&&!IFRWallet.isConnected()){var ok=await IFRWallet.autoReconnect();if(ok)lpUpdateUI(await IFRState.load(IFRWallet.getAddress()))}});
 (async function(){var ok=await IFRWallet.autoReconnect();if(ok)lpUpdateUI(await IFRState.load(IFRWallet.getAddress()))})();
 var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.addEventListener("mouseenter",function(){this.style.transform="scale(1.04)";this.style.boxShadow="0 4px 20px rgba(249,115,22,0.4)"});_wcBtn.addEventListener("mouseleave",function(){this.style.transform="";this.style.boxShadow="0 2px 12px rgba(249,115,22,0.25)"})}
+</script>
+
+<!-- CommitmentVault Widget Logic -->
+<script>
+(function() {
+  // Contract addresses — update after Core Dev deploys
+  var CV_ADDR = "0x0000000000000000000000000000000000000000"; // TODO: set after deploy
+  var IFR_TOKEN = "0x77e99917Eca8539c62F509ED1193ac36580A6e7B";
+  var IFR_DECIMALS = 9;
+
+  var CV_ABI = [
+    "function lock(uint256,uint8,uint256,uint256) external",
+    "function getTranches(address) view returns (tuple(uint256 amount,uint8 cType,uint256 unlockTime,uint256 p0Multiplier,bool unlocked,uint256 conditionMetAt)[])",
+    "function getTrancheCount(address) view returns (uint256)",
+    "function isConditionMet(address,uint256) view returns (bool)",
+    "function unlock(address,uint256) external",
+    "function p0() view returns (uint256)",
+    "function p0Set() view returns (bool)",
+    "function lockedBalance(address) view returns (uint256)",
+    "function totalLocked() view returns (uint256)"
+  ];
+
+  var IFR_ABI = [
+    "function balanceOf(address) view returns (uint256)",
+    "function approve(address,uint256) external returns (bool)"
+  ];
+
+  var cvSigner = null;
+  var cvAddress = null;
+  var cvBalance = null;
+
+  var COND_NAMES = ["Time Only", "Price Only", "Time OR Price", "Time AND Price"];
+
+  // ── Connect ──────────────────────────────────────────
+  var connectBtn = document.getElementById("cv-connect-btn");
+  if (connectBtn) connectBtn.addEventListener("click", async function() {
+    try {
+      if (typeof IFRWallet !== "undefined") {
+        await IFRWallet.connect();
+        cvAddress = IFRWallet.getAddress();
+        if (!cvAddress) return;
+        var p = new ethers.providers.Web3Provider(window.ethereum);
+        cvSigner = p.getSigner();
+      } else if (window.ethereum) {
+        var accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
+        cvAddress = accounts[0];
+        var p2 = new ethers.providers.Web3Provider(window.ethereum);
+        cvSigner = p2.getSigner();
+      } else {
+        alert("Please install MetaMask"); return;
+      }
+
+      connectBtn.textContent = cvAddress.slice(0,6) + "..." + cvAddress.slice(-4);
+      connectBtn.disabled = true;
+      connectBtn.style.opacity = "0.7";
+
+      document.getElementById("cv-wallet-info").classList.remove("cv-hidden");
+      document.getElementById("cv-address").textContent = cvAddress.slice(0,6) + "..." + cvAddress.slice(-4);
+
+      await loadCVBalance();
+
+      document.getElementById("cv-config-section").classList.remove("cv-hidden");
+      document.getElementById("cv-dashboard-section").classList.remove("cv-hidden");
+      loadTranches();
+    } catch(e) {
+      console.error("CV connect:", e);
+      if (e.code === 4001) connectBtn.textContent = "Connect Wallet";
+    }
+  });
+
+  // ── Load Balance ─────────────────────────────────────
+  async function loadCVBalance() {
+    try {
+      var provider = new ethers.providers.Web3Provider(window.ethereum);
+      var token = new ethers.Contract(IFR_TOKEN, IFR_ABI, provider);
+      var bal = await token.balanceOf(cvAddress);
+      cvBalance = bal;
+      var formatted = parseFloat(ethers.utils.formatUnits(bal, IFR_DECIMALS)).toLocaleString("en-US", { maximumFractionDigits: 0 });
+      document.getElementById("cv-balance").textContent = formatted + " IFR";
+      document.getElementById("cv-bal-hint").textContent = formatted + " IFR";
+
+      // Also show IFRLock balance via IFRState if available
+      if (typeof IFRState !== "undefined") {
+        var state = await IFRState.load(cvAddress);
+        if (state && state.lockedBalance) {
+          var lockedFmt = parseFloat(ethers.utils.formatUnits(state.lockedBalance, IFR_DECIMALS)).toLocaleString("en-US", { maximumFractionDigits: 0 });
+          document.getElementById("cv-locked").textContent = lockedFmt + " IFR";
+        } else {
+          document.getElementById("cv-locked").textContent = "0 IFR";
+        }
+      }
+    } catch(e) {
+      document.getElementById("cv-balance").textContent = "Error";
+    }
+  }
+
+  // ── Condition Type Toggle ────────────────────────────
+  var condSelect = document.getElementById("cv-condition-type");
+  if (condSelect) condSelect.addEventListener("change", function() {
+    var v = parseInt(this.value);
+    var timeG = document.getElementById("cv-time-group");
+    var priceG = document.getElementById("cv-price-group");
+    // A=0:time, B=1:price, C=2:time|price, D=3:time&price
+    timeG.classList.toggle("cv-hidden", v === 1);
+    priceG.classList.toggle("cv-hidden", v === 0);
+    updatePreview();
+  });
+
+  // ── Update Preview ───────────────────────────────────
+  function updatePreview() {
+    var amount = document.getElementById("cv-amount").value;
+    var cType = parseInt(document.getElementById("cv-condition-type").value);
+    var date = document.getElementById("cv-unlock-date").value;
+    var mult = parseInt(document.getElementById("cv-multiplier").value);
+    var el = document.getElementById("cv-preview-content");
+
+    if (!amount || amount <= 0) { el.innerHTML = "Enter an amount to see preview"; return; }
+
+    var html = "<strong>Amount:</strong> " + Number(amount).toLocaleString() + " IFR<br>";
+    html += "<strong>Condition:</strong> " + COND_NAMES[cType] + "<br>";
+
+    if (date && cType !== 1) {
+      html += "<strong>Unlock Date:</strong> " + date + "<br>";
+    }
+    if (cType >= 1) {
+      html += "<strong>Price Target:</strong> P0 &times; " + (mult / 100) + "<br>";
+    }
+
+    html += "<br><span style='color:var(--muted);font-size:0.82rem;'>Once locked, tokens cannot be withdrawn until the condition is met. Auto-unlock 30 days after condition met.</span>";
+    el.innerHTML = html;
+
+    document.getElementById("cv-lock-btn").disabled = false;
+  }
+
+  // ── Input Listeners ──────────────────────────────────
+  ["cv-amount","cv-unlock-date","cv-multiplier"].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) { el.addEventListener("input", updatePreview); el.addEventListener("change", updatePreview); }
+  });
+
+  // ── Load Tranches ────────────────────────────────────
+  function loadTranches() {
+    var list = document.getElementById("cv-tranches-list");
+    if (CV_ADDR === "0x0000000000000000000000000000000000000000") {
+      list.innerHTML = '<div style="text-align:center;padding:20px;">' +
+        '<div style="color:#3b82f6;font-weight:600;margin-bottom:4px;">Contract Not Yet Deployed</div>' +
+        '<div style="color:var(--muted);font-size:0.85rem;">Your tranches will appear here after CommitmentVault is deployed (after Bootstrap finalise, June 2026).</div>' +
+        '</div>';
+      return;
+    }
+    // TODO: fetch from contract after deploy
+    // var provider = new ethers.providers.Web3Provider(window.ethereum);
+    // var cv = new ethers.Contract(CV_ADDR, CV_ABI, provider);
+    // var tranches = await cv.getTranches(cvAddress);
+    // render tranche cards...
+  }
+
+  // ── Lock Button ──────────────────────────────────────
+  var lockBtn = document.getElementById("cv-lock-btn");
+  if (lockBtn) lockBtn.addEventListener("click", function() {
+    var statusEl = document.getElementById("cv-lock-status");
+    statusEl.classList.remove("cv-hidden");
+
+    if (CV_ADDR === "0x0000000000000000000000000000000000000000") {
+      statusEl.style.background = "rgba(59,130,246,0.1)";
+      statusEl.style.border = "1px solid rgba(59,130,246,0.3)";
+      statusEl.style.color = "#93c5fd";
+      statusEl.innerHTML = "<strong>CommitmentVault not yet deployed.</strong><br>Available after Bootstrap finalise() on June 5, 2026.<br>Your configuration is saved &mdash; come back after deployment to lock.";
+      return;
+    }
+    // TODO: implement actual lock transaction after deploy
+  });
+})();
 </script>
 </body>
 </html>
