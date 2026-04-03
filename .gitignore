@@ -12,3 +12,25 @@ logs/**/*.log
 
 # AI tooling (internal)
 .claude/
+
+# OS files
+.DS_Store
+
+# Build artifacts
+coverage/
+coverage.json
+test-results/
+dist/
+*.tsbuildinfo
+
+# Lock files (generated)
+package-lock.json
+
+# Archive (local artifacts, not for repo)
+_archive/
+
+# Banner assets (local only)
+Bannerr/
+
+# Auto-generated type declarations
+next-env.d.ts
