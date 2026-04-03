@@ -207,5 +207,61 @@ Each deploy follows: Sepolia → Audit → Mainnet → feeExempt Proposal
 
 ---
 
+## UI Activation — After Contract Deploy
+
+Both wiki pages have fully functional UIs that are currently in "Coming Soon" mode.
+Activation requires changing **1 line per contract** — no other code changes needed.
+
+### CommitmentVault UI (`docs/wiki/commitment-vault.html`)
+
+**What already works:**
+- Wallet connect → IFR balance + IFRLock status
+- 4 condition types configurable (Time/Price/OR/AND)
+- Tranche preview before locking
+- "My Tranches" dashboard (loads from contract)
+- Coming Soon overlay until contract is live
+
+**ACTIVATION — change 1 line:**
+
+```
+File: docs/wiki/commitment-vault.html
+Find: var CV_ADDR = "0x0000000000000000000000000000000000000000";
+Replace: var CV_ADDR = "0x<REAL_MAINNET_ADDRESS>";
+```
+
+### LendingVault UI (`docs/wiki/lending-vault.html`)
+
+**What already works:**
+- 3 tabs: Lender / Borrower / Market Overview
+- Wallet connect → IFR + ETH balance
+- Loan preview calculator (interest + collateral + total repay)
+- Interest rate curve table (2%–25% by utilization)
+- Market stats grid
+- Coming Soon overlay until contract is live
+
+**ACTIVATION — change 1 line:**
+
+```
+File: docs/wiki/lending-vault.html
+Find: var LV_ADDR = "0x0000000000000000000000000000000000000000";
+Replace: var LV_ADDR = "0x<REAL_MAINNET_ADDRESS>";
+```
+
+### Post-Activation Checklist
+
+After changing the addresses, complete these steps in order:
+
+1. **Governance Proposal:** `setFeeExempt(CommitmentVault, true)` — BEFORE users lock
+2. **Governance Proposal:** `setFeeExempt(LendingVault, true)` — BEFORE users deposit/borrow
+3. **Governance Proposal:** `setP0(value)` — CommitmentVault, AFTER Bootstrap finalise
+4. **Governance Proposal:** `setIFRPrice(value)` — LendingVault, AFTER Bootstrap finalise
+5. **Ali Copilot:** Update contract addresses in `apps/ai-copilot/server/index.ts` (`PROTOCOL_ADDRESSES`)
+6. **Railway:** Set `COMMITMENT_VAULT_ADDR` + `LENDING_VAULT_ADDR` as env vars
+7. **TODO.md:** Mark deploy items as completed
+8. **Telegram Bot:** Announce new contracts in @IFR_token channel
+
+---
+
 *This document is maintained by the IFR Protocol team.*
 *For questions: GitHub Issues or Telegram @IFR_token*
+*Last updated: 2026-04-04*
