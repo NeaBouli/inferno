@@ -117,6 +117,40 @@ export function getIFRKnowledge() {
       wiki: "https://ifrunit.tech/wiki/",
       etherscan: "https://etherscan.io/address/0x77e99917Eca8539c62F509ED1193ac36580A6e7B"
     },
+    bootstrapSafetyPlan: {
+      problem: "Pool may start with very low ETH. " +
+        "Currently 0.01 ETH = ~$20 depth. " +
+        "99% of pool IFR buyable for ~$2,000.",
+      layer1: {
+        name: "CommitmentVault",
+        description: "Contributors lock IFR claims " +
+          "in 10 tranches (P0x2 to P0x5000). " +
+          "No dump until milestones reached.",
+        status: "Contributor 1: committed ✅"
+      },
+      layer2: {
+        name: "LendingVault",
+        description: "Locked IFR earns ETH yield. " +
+          "Every loan repayment = IFR bought. " +
+          "Every default = collateral buys IFR.",
+        result: "Guaranteed organic buy pressure"
+      },
+      layer3: {
+        name: "LP Reserve Safe",
+        description: "400.6M IFR in Gnosis 3-of-5. " +
+          "Added at milestones ONLY. " +
+          "M1: pool 1 ETH → +50M IFR. " +
+          "M2: pool 5 ETH → +100M IFR.",
+        address: "0x5D93E7919a71d725054e31017eCA86B026F86C04"
+      },
+      p0Formula: "P0 = Total ETH raised / 100M. " +
+        "IMMUTABLE after set in CommitmentVault.",
+      currentStatus: {
+        ethRaised: "0.01 ETH (1 contributor)",
+        endDate: "2026-06-05",
+        contributor1: "Committed to CommitmentVault ✅"
+      }
+    },
     safety: {
       neverAsk: ["seed phrase", "private key", "mnemonic", "secret recovery"],
       alwaysWarn: "Never share your seed phrase or private key with anyone - including this assistant."

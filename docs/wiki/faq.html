@@ -551,6 +551,21 @@
       "@type": "Question",
       "name": "What is the BuilderRegistry?",
       "acceptedAnswer": {"@type":"Answer","text":"BuilderRegistry.sol is an on-chain registry of verified IFR builders and integration partners, controlled exclusively by Governance (Timelock). Registered builders gain access to the Dev & Builder Telegram topic and are eligible for Creator Rewards via PartnerVault. Contract complete with 27 tests, Sepolia deploy pending."}
+    },
+    {
+      "@type": "Question",
+      "name": "What happens if Bootstrap finalizes with very little ETH?",
+      "acceptedAnswer": {"@type":"Answer","text":"3 safety layers protect the protocol: 1) CommitmentVault prevents contributors from dumping their IFR claims. 2) LendingVault creates organic buy pressure as builders repay IFR loans. 3) LP Reserve Safe (400.6M IFR, Gnosis 3-of-5) adds liquidity at price milestones only. The system grows organically regardless of initial ETH raised."}
+    },
+    {
+      "@type": "Question",
+      "name": "Can Bootstrap be finalized with only 1 contributor?",
+      "acceptedAnswer": {"@type":"Answer","text":"Yes. finalise() is permissionless — anyone can call it after June 5, 2026. Whatever ETH was raised sets P0. The safety net (CommitmentVault + LendingVault) protects against low initial liquidity."}
+    },
+    {
+      "@type": "Question",
+      "name": "What is P0 and why does it matter?",
+      "acceptedAnswer": {"@type":"Answer","text":"P0 = Total ETH raised / 100,000,000 IFR. It is the initial IFR price after Bootstrap. All CommitmentVault tranches are relative to P0 (P0×2, P0×10, P0×5000). P0 is IMMUTABLE once set in CommitmentVault."}
     }
   ]
 }
@@ -1106,9 +1121,29 @@ const hasLock = await ifrLock.isLocked(walletAddress, ethers.utils.parseUnits("1
         </div>
       </div>
 
+      <!-- ═══ 11. Bootstrap Safety ═══ -->
+      <h2 id="bootstrap-safety">11. Bootstrap Safety</h2>
+
+      <div class="faq-section">
+        <div class="faq-item">
+          <button class="faq-q"><span>What happens if Bootstrap finalizes with very little ETH?</span><span class="icon">+</span></button>
+          <div class="faq-a">3 safety layers protect the protocol: 1) <strong>CommitmentVault</strong> prevents contributors from dumping their IFR claims. 2) <strong>LendingVault</strong> creates organic buy pressure as builders repay IFR loans. 3) <strong>LP Reserve Safe</strong> (400.6M IFR, Gnosis 3-of-5) adds liquidity at price milestones only. The system grows organically regardless of initial ETH raised.</div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q"><span>Can Bootstrap be finalized with only 1 contributor?</span><span class="icon">+</span></button>
+          <div class="faq-a">Yes. <code>finalise()</code> is permissionless &mdash; anyone can call it after June 5, 2026. Whatever ETH was raised sets P0. The safety net (CommitmentVault + LendingVault) protects against low initial liquidity.</div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q"><span>What is P0 and why does it matter?</span><span class="icon">+</span></button>
+          <div class="faq-a">P0 = Total ETH raised / 100,000,000 IFR. It is the initial IFR price after Bootstrap. All CommitmentVault tranches are relative to P0 (P0&times;2, P0&times;10, P0&times;5000). P0 is <strong>IMMUTABLE</strong> once set in CommitmentVault.</div>
+        </div>
+      </div>
+
       <!-- Footer -->
       <footer class="wiki-footer">
-        Inferno ($IFR) &mdash; Community Fair Launch Model &mdash; Documentation v2.0 &mdash; 10 sections, 61 Q&amp;A
+        Inferno ($IFR) &mdash; Community Fair Launch Model &mdash; Documentation v2.1 &mdash; 11 sections, 64 Q&amp;A
       </footer>
 
     </main>

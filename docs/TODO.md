@@ -1,5 +1,5 @@
 # IFR Protocol — Developer TODO List
-> Last updated: 2026-03-18 | Branch: main
+> Last updated: 2026-04-03 | Branch: main
 
 ---
 
@@ -170,6 +170,35 @@ On errors: fix immediately, commit with `seo:` prefix.
       API Endpoints aktiv: /api/builders/count + /api/builders/check/:address
       Fix: function selectors corrected (isBuilder 0xb6b6b475, getBuilderCount 0xe54a01f9)
 - [ ] BuilderRegistry audit (post-deploy — contract is upgradeable via Governance)
+
+### 🔴 POST-BOOTSTRAP CHECKLISTE (nach 05.06.2026)
+
+- [ ] 🔴 finalise() aufrufen (permissionless)
+      Prüfen: vault.finalized() = true
+
+- [ ] 🔴 Proposal #11: Uniswap Pool feeExempt
+      SOFORT nach finalise()!
+      Pool Adresse erst nach finalise() bekannt
+
+- [ ] 🔴 P0 berechnen:
+      P0 = totalETHRaised / 100,000,000
+      In CommitmentVault setzen (Proposal #12)
+      IMMUTABLE — korrekt berechnen!
+
+- [ ] 🔴 Contributor 1: CommitmentVault Lock
+      100M IFR → 10 Tranchen konfigurieren
+      Contributor hat zugestimmt ✅
+
+- [ ] 🔴 Contributor 1: LendingVault Allowance
+      setLendingAllowance(50,000,000 IFR)
+
+- [ ] 🟡 Mehr Contributors für Bootstrap
+      Ziel: mehr ETH = höheres P0
+      Kanäle: Reddit/Farcaster/Telegram
+
+- [x] ✅ Bootstrap safety plan documented
+      bootstrap.html + faq.html + Ali + TODO
+      (03.04.2026)
 
 ### Phase 3 — After Bootstrap finalise() (~05.06.2026)
 - [ ] 🔴 CRITICAL: Proposal #11 — Set Uniswap Pool feeExempt
@@ -534,5 +563,5 @@ On errors: fix immediately, commit with `seo:` prefix.
 ---
 
 *This document is updated with every completed task.*
-*Last updated: 2026-03-18*
+*Last updated: 2026-04-03*
 
