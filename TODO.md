@@ -1,5 +1,5 @@
 # PROJEKT INFERNO — VOLLSTÄNDIGE TODO-LISTE
-Stand: 17.03.2026 | Konsolidiert (Claude + Core Dev)
+Stand: 03.04.2026 | Konsolidiert (Claude + Core Dev)
 
 ---
 
@@ -86,6 +86,17 @@ Stand: 17.03.2026 | Konsolidiert (Claude + Core Dev)
 - [x] ✅ Contact Email kaspartisan@proton.me → Footer + press-kit.html (16.03.2026)
 
 **🔴 Noch offen:**
+- [x] ✅ Etherscan resubmission v2 prepared (03.04.2026)
+      Template: docs/ETHERSCAN_SUBMISSION.md
+      Email: kaspartisan@proton.me (kein info@)
+- [ ] 🔴 Etherscan Token Update resubmittieren
+      Von: kaspartisan@proton.me
+      Template: docs/ETHERSCAN_SUBMISSION.md
+      Guide: https://info.etherscan.com/how-to-update-token-info/
+- [x] ✅ README: Team + Tokenomics + Quick Links + Builders (03.04.2026)
+- [x] ✅ one-pager: Whitepaper badge + Team + Contact (03.04.2026)
+- [x] ✅ fair-launch: pseudonymous team section (03.04.2026)
+- [x] ✅ press-kit: Team note + all fields verified (03.04.2026)
 - [ ] 🔴 Farcaster Account erstellen + ersten Post
 - [ ] 🟡 Collab.Land Bot zu Telegram Group hinzufuegen
 - [ ] 🟡 Medium — Account anlegen + Artikel
