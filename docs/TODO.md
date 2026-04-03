@@ -270,13 +270,12 @@ On errors: fix immediately, commit with `seo:` prefix.
       Preview, lock button, my-tranches dashboard
       "Coming Soon" until contract deployed
       ACTIVATE: set CV_ADDR after Core Dev deploy
-- [ ] 🔵 LendingVault UI — LENDER page
-      "Lend IFR" interface, set lending allowance, active loans,
-      Interest earnings in ETH, accept/reject loan requests
-- [ ] 🔵 LendingVault UI — BORROWER page
-      "Borrow IFR" interface, available lenders + terms,
-      Deposit collateral (ETH), request loan → MetaMask TX,
-      Active loan + repayment timer, "Repay" button
+- [x] ✅ LendingVault UI built (04.04.2026)
+      3 tabs: Lender / Borrower / Market Overview
+      Loan preview calculator (interest + collateral)
+      Interest rate curve table
+      "Coming Soon" until contract deployed
+      ACTIVATE: set LV_ADDR after Core Dev deploy
 - [ ] 🔵 P2P Lending Matching Interface (docs/wiki/lending-market.html)
       Public loan marketplace: lenders list offers, borrowers browse all,
       Filter: amount/interest rate/duration, "Request Loan" → on-chain TX
