@@ -1,28 +1,16 @@
 /**
- * IFR Wallet Core — v1.2
- * Central wallet session manager for all IFR pages.
+ * IFR Wallet Core — v1.3
  * Usage: await IFRWallet.connect(); IFRWallet.getAddress();
  *
- * v1.2 — Stable MetaMask integration with all bug fixes
- *  - 30s connect timeout (prevents hanging)
- *  - accountsChanged re-creates provider/signer
- *  - Event listener guard (no accumulation)
- *  - Clean disconnect with full storage cleanup
- *  - Mobile deep-link with 2s delay
- *  - async/await throughout (matches all page callers)
- *
- * WalletConnect v2: requires bundler (webpack/vite) — planned for Phase 2 build setup
+ * v1.3 — Bulletproof connect: every async step wrapped in try/catch
  */
 window.IFRWallet = (function() {
 
-  // ── Constants ──────────────────────────────────────
   var CHAIN_ID = 1;
-  var RPC_URL  = "https://eth.llamarpc.com";
-  var CONNECT_TIMEOUT_MS = 30000;
+  var RPC_URL = "https://eth.llamarpc.com";
   var SESSION_KEY = "ifr_wallet_connected";
   var PENDING_KEY = "ifr_pending_connect";
 
-  // ── Internal State ─────────────────────────────────
   var _provider = null;
   var _signer = null;
   var _address = null;
@@ -30,7 +18,7 @@ window.IFRWallet = (function() {
   var _ethereumProvider = null;
   var _listenersAttached = false;
 
-  // ── Injected Provider Detection (EIP-5749) ─────────
+  // ── MetaMask Detection (EIP-5749) ──────────────────
   function _getMetaMaskProvider() {
     if (_ethereumProvider) return _ethereumProvider;
     if (window.ethereum && window.ethereum.providers && Array.isArray(window.ethereum.providers)) {
@@ -45,7 +33,7 @@ window.IFRWallet = (function() {
     return _ethereumProvider || null;
   }
 
-  // ── Listener Management (guarded) ──────────────────
+  // ── Listener Guard ─────────────────────────────────
   function _attachListeners(eth) {
     if (_listenersAttached || !eth) return;
     eth.on("accountsChanged", _onAccountsChanged);
@@ -61,43 +49,58 @@ window.IFRWallet = (function() {
     try {
       _ethereumProvider.removeListener("accountsChanged", _onAccountsChanged);
       _ethereumProvider.removeListener("chainChanged", _onChainChanged);
-    } catch(e) {}
+    } catch (e) {}
     _listenersAttached = false;
   }
 
-  // ── Connect (with 30s timeout) ─────────────────────
+  // ── Connect ────────────────────────────────────────
   async function connect() {
     var eth = _getMetaMaskProvider();
-    if (!eth) {
-      throw new Error("NO_METAMASK");
-    }
+    if (!eth) throw new Error("NO_METAMASK");
 
-    // Race: MetaMask approval vs 30s timeout
-    var accounts = await Promise.race([
-      eth.request({ method: "eth_requestAccounts" }),
-      new Promise(function(_, reject) {
-        setTimeout(function() { reject(new Error("CONNECT_TIMEOUT")); }, CONNECT_TIMEOUT_MS);
-      })
-    ]);
+    // Step 1: Request accounts from MetaMask
+    var accounts;
+    try {
+      accounts = await eth.request({ method: "eth_requestAccounts" });
+    } catch (e) {
+      // MetaMask user rejection or "already processing"
+      if (e.code === 4001 || e.code === "ACTION_REJECTED") throw e;
+      if (e.code === -32002) throw e; // already processing — let page handle
+      throw e;
+    }
 
     if (!accounts || accounts.length === 0) throw new Error("NO_ACCOUNTS");
 
-    _provider = new ethers.providers.Web3Provider(eth);
+    // Step 2: Create ethers provider
+    _provider = new ethers.providers.Web3Provider(eth, "any");
     _signer = _provider.getSigner();
     _address = accounts[0];
 
-    // Check network
-    var network = await _provider.getNetwork();
-    if (network.chainId !== CHAIN_ID) {
-      await switchToMainnet();
+    // Step 3: Network check — non-fatal
+    try {
+      var network = await _provider.getNetwork();
+      if (network.chainId !== CHAIN_ID) {
+        try {
+          await eth.request({
+            method: "wallet_switchEthereumChain",
+            params: [{ chainId: "0x1" }]
+          });
+          // Re-create provider after chain switch
+          _provider = new ethers.providers.Web3Provider(eth, "any");
+          _signer = _provider.getSigner();
+        } catch (switchErr) {
+          // User rejected chain switch — proceed anyway, they stay on wrong chain
+          console.warn("IFRWallet: chain switch rejected, continuing on current chain");
+        }
+      }
+    } catch (netErr) {
+      // getNetwork() failed — proceed anyway with what we have
+      console.warn("IFRWallet: getNetwork() failed, continuing:", netErr.message);
     }
 
-    // Save session
+    // Step 4: Save + emit
     sessionStorage.setItem(SESSION_KEY, _address);
-
-    // Attach listeners (guarded)
     _attachListeners(eth);
-
     _emit("connected", _address);
     return _address;
   }
@@ -105,15 +108,12 @@ window.IFRWallet = (function() {
   // ── Disconnect ─────────────────────────────────────
   function disconnect() {
     _detachListeners();
-
     _provider = null;
     _signer = null;
     _address = null;
     _ethereumProvider = null;
-
     sessionStorage.removeItem(SESSION_KEY);
     sessionStorage.removeItem(PENDING_KEY);
-
     _emit("disconnected", null);
   }
 
@@ -123,10 +123,7 @@ window.IFRWallet = (function() {
     if (!saved) return false;
 
     var eth = _getMetaMaskProvider();
-    if (!eth) {
-      sessionStorage.removeItem(SESSION_KEY);
-      return false;
-    }
+    if (!eth) { sessionStorage.removeItem(SESSION_KEY); return false; }
 
     try {
       var accounts = await eth.request({ method: "eth_accounts" });
@@ -134,75 +131,49 @@ window.IFRWallet = (function() {
         sessionStorage.removeItem(SESSION_KEY);
         return false;
       }
-
       var match = accounts.find(function(a) {
         return a.toLowerCase() === saved.toLowerCase();
       });
-      if (!match) {
-        sessionStorage.removeItem(SESSION_KEY);
-        return false;
-      }
+      if (!match) { sessionStorage.removeItem(SESSION_KEY); return false; }
 
-      _provider = new ethers.providers.Web3Provider(eth);
+      _provider = new ethers.providers.Web3Provider(eth, "any");
       _signer = _provider.getSigner();
       _address = match;
       _ethereumProvider = eth;
-
       _attachListeners(eth);
       _emit("connected", _address);
       return true;
-    } catch(e) {
+    } catch (e) {
       sessionStorage.removeItem(SESSION_KEY);
       return false;
     }
   }
 
-  // ── Network Switch ─────────────────────────────────
-  async function switchToMainnet() {
-    var eth = _getMetaMaskProvider();
-    if (!eth) return;
-    await eth.request({
-      method: "wallet_switchEthereumChain",
-      params: [{ chainId: "0x1" }]
-    });
-  }
-
   // ── Getters ────────────────────────────────────────
   function isConnected() { return _address !== null; }
-  function getAddress()  { return _address; }
-  function getSigner()   { return _signer; }
-
+  function getAddress() { return _address; }
+  function getSigner() { return _signer; }
   function getShortAddress(addr) {
     var a = addr || _address;
-    if (!a) return "";
-    return "\u2B24 " + a.slice(0, 6);
+    return a ? ("\u2B24 " + a.slice(0, 6)) : "";
   }
-
   function getProvider() {
-    if (_provider) return _provider;
-    return new ethers.providers.JsonRpcProvider(RPC_URL);
+    return _provider || new ethers.providers.JsonRpcProvider(RPC_URL);
   }
 
-  // ── Event System ───────────────────────────────────
-  function on(event, cb)  { _listeners.push({ event: event, cb: cb }); }
+  // ── Events ─────────────────────────────────────────
+  function on(event, cb) { _listeners.push({ event: event, cb: cb }); }
   function off(event, cb) { _listeners = _listeners.filter(function(l) { return l.cb !== cb; }); }
-
   function _emit(event, data) {
-    _listeners.forEach(function(l) {
-      if (l.event === event) l.cb(data);
-    });
+    _listeners.forEach(function(l) { if (l.event === event) l.cb(data); });
   }
 
-  // ── Internal Event Handlers ────────────────────────
+  // ── Internal Handlers ──────────────────────────────
   function _onAccountsChanged(accounts) {
-    if (!accounts || accounts.length === 0) {
-      disconnect();
-      return;
-    }
-    // Re-create provider + signer for new account
+    if (!accounts || accounts.length === 0) { disconnect(); return; }
     var eth = _getMetaMaskProvider();
     if (eth) {
-      _provider = new ethers.providers.Web3Provider(eth);
+      _provider = new ethers.providers.Web3Provider(eth, "any");
       _signer = _provider.getSigner();
     }
     _address = accounts[0];
@@ -215,38 +186,26 @@ window.IFRWallet = (function() {
     window.location.reload();
   }
 
-  // ── Mobile Helpers ─────────────────────────────────
+  // ── Mobile ─────────────────────────────────────────
   function getDeepLink() {
-    var clean = window.location.href.replace(/^https?:\/\//, "");
-    return "https://metamask.app.link/dapp/" + clean;
+    return "https://metamask.app.link/dapp/" + window.location.href.replace(/^https?:\/\//, "");
   }
-
   function isMobile() {
     return /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
   }
 
-  // Auto-connect after MetaMask deep-link return
+  // Deep-link return auto-connect
   if (sessionStorage.getItem(PENDING_KEY) === "1") {
     sessionStorage.removeItem(PENDING_KEY);
     setTimeout(function() {
-      var eth = _getMetaMaskProvider();
-      if (eth) connect().catch(function() {});
+      if (_getMetaMaskProvider()) connect().catch(function() {});
     }, 2000);
   }
 
-  // ── Public API ─────────────────────────────────────
   return {
-    connect:         connect,
-    disconnect:      disconnect,
-    autoReconnect:   autoReconnect,
-    isConnected:     isConnected,
-    getAddress:      getAddress,
-    getShortAddress: getShortAddress,
-    getSigner:       getSigner,
-    getProvider:     getProvider,
-    on:              on,
-    off:             off,
-    getDeepLink:     getDeepLink,
-    isMobile:        isMobile
+    connect: connect, disconnect: disconnect, autoReconnect: autoReconnect,
+    isConnected: isConnected, getAddress: getAddress, getShortAddress: getShortAddress,
+    getSigner: getSigner, getProvider: getProvider,
+    on: on, off: off, getDeepLink: getDeepLink, isMobile: isMobile
   };
 })();
