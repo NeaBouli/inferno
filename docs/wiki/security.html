@@ -1288,6 +1288,94 @@
         </p>
       </div>
 
+      <!-- ============================================================
+           External Security Audit — InfernoToken.sol (March 2026)
+           ============================================================ -->
+      <section id="external-audit" style="margin-top:3rem;">
+        <h2 style="font-size:1.5rem;font-weight:700;margin-bottom:0.5rem;">External Security Audit &mdash; InfernoToken.sol</h2>
+        <p style="color:var(--muted);font-size:0.85rem;margin-bottom:1.5rem;">
+          Date: March 19, 2026 &nbsp;|&nbsp;
+          Type: Independent AI Security Analysis &nbsp;|&nbsp;
+          Scope: InfernoToken.sol (ERC-20 with fee-on-transfer)
+        </p>
+
+        <!-- Summary Box -->
+        <div style="background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.25);border-radius:12px;padding:1.25rem;margin-bottom:1.5rem;">
+          <h3 style="font-size:1.1rem;margin-bottom:0.5rem;">Overall Assessment</h3>
+          <p style="margin:0;">Code quality: <strong>Good</strong>. Logic: <strong>Clean</strong>. No exploitable bugs found. Critical risks identified are mitigated by IFR&rsquo;s Governance architecture (48h Timelock + TreasurySafe 3-of-5).</p>
+        </div>
+
+        <!-- Findings Table -->
+        <h3 style="font-size:1.1rem;margin-bottom:0.75rem;">Findings &amp; Mitigations</h3>
+        <div style="overflow-x:auto;margin-bottom:1.5rem;">
+          <table style="width:100%;border-collapse:collapse;font-size:0.9rem;">
+            <thead>
+              <tr style="border-bottom:2px solid var(--border);text-align:left;">
+                <th style="padding:0.6rem 0.75rem;">Finding</th>
+                <th style="padding:0.6rem 0.75rem;">Severity</th>
+                <th style="padding:0.6rem 0.75rem;">IFR Mitigation</th>
+                <th style="padding:0.6rem 0.75rem;">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr style="border-bottom:1px solid var(--border);">
+                <td style="padding:0.6rem 0.75rem;font-weight:600;">Owner Control</td>
+                <td style="padding:0.6rem 0.75rem;color:#ef4444;">Critical</td>
+                <td style="padding:0.6rem 0.75rem;">Governance + 48h Timelock + TreasurySafe 3-of-5. No single person can make changes.</td>
+                <td style="padding:0.6rem 0.75rem;color:#22c55e;">Mitigated</td>
+              </tr>
+              <tr style="border-bottom:1px solid var(--border);">
+                <td style="padding:0.6rem 0.75rem;font-weight:600;">FeeExempt Logic</td>
+                <td style="padding:0.6rem 0.75rem;color:#ef4444;">High</td>
+                <td style="padding:0.6rem 0.75rem;">On-chain transparent, Governance-controlled. Only protocol contracts exempt &mdash; no DEX routers or insider wallets.</td>
+                <td style="padding:0.6rem 0.75rem;color:#22c55e;">Mitigated</td>
+              </tr>
+              <tr style="border-bottom:1px solid var(--border);">
+                <td style="padding:0.6rem 0.75rem;font-weight:600;">Rounding / Dust</td>
+                <td style="padding:0.6rem 0.75rem;color:#eab308;">Low</td>
+                <td style="padding:0.6rem 0.75rem;">Minimal impact at 9 decimals. Not exploitable in practice.</td>
+                <td style="padding:0.6rem 0.75rem;color:#eab308;">Accepted</td>
+              </tr>
+              <tr style="border-bottom:1px solid var(--border);">
+                <td style="padding:0.6rem 0.75rem;font-weight:600;">Decimals = 9</td>
+                <td style="padding:0.6rem 0.75rem;color:#eab308;">Low / Design</td>
+                <td style="padding:0.6rem 0.75rem;">Deliberate design choice. Fully compatible with Uniswap V2.</td>
+                <td style="padding:0.6rem 0.75rem;color:#eab308;">By Design</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Positives -->
+        <h3 style="font-size:1.1rem;margin-bottom:0.75rem;">Confirmed Strengths</h3>
+        <ul style="margin-bottom:1.5rem;padding-left:1.25rem;">
+          <li><strong>No Reentrancy Risk</strong> &mdash; no external calls in <code>_update()</code></li>
+          <li><strong>Real Burn</strong> &mdash; tokens sent to <code>address(0)</code>, not fake burn</li>
+          <li><strong>Fee Cap</strong> &mdash; hardcoded max 5%, cannot be exceeded</li>
+          <li><strong>No Mint</strong> &mdash; supply can only decrease, never increase</li>
+          <li><strong>OpenZeppelin v5</strong> &mdash; current standard library</li>
+        </ul>
+
+        <!-- Governance Architecture Note -->
+        <h3 style="font-size:1.1rem;margin-bottom:0.75rem;">Why Critical Findings Are Mitigated</h3>
+        <p style="margin-bottom:0.75rem;">The audit correctly identified that Owner control is a risk in fee-on-transfer tokens. In IFR, this risk is eliminated by architecture:</p>
+        <ul style="margin-bottom:1.5rem;padding-left:1.25rem;">
+          <li>The token owner is the <strong>Governance Contract</strong> &mdash; not a person</li>
+          <li>All changes require a <strong>48-hour Timelock</strong></li>
+          <li>Governance is controlled by <strong>TreasurySafe 3-of-5</strong> (5 signers, 3 required)</li>
+          <li>Every feeExempt address is <strong>on-chain verifiable</strong></li>
+        </ul>
+
+        <!-- Full Audit Link -->
+        <div class="callout">
+          <p>
+            <a href="https://github.com/NeaBouli/inferno/blob/main/docs/AUDIT_CHATGPT_19032026.md" target="_blank" rel="noopener">
+              Full Audit Document on GitHub
+            </a>
+          </p>
+        </div>
+      </section>
+
       <!-- Footer -->
       <footer class="wiki-footer">
         Inferno ($IFR) &mdash; Community Fair Launch Model &mdash; Documentation v1.0
