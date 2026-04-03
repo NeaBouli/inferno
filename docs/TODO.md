@@ -136,7 +136,12 @@ On errors: fix immediately, commit with `seo:` prefix.
 - [x] FeeRouterV1 tracking verified: Railway + Landing Page + SVG all correct (19.03.2026) ✅
 - [x] Token Visualisierung: SVG + Kacheln verified correct (19.03.2026) ✅
 - [x] ~~Animated Token GIF~~ — gestrichen (not planned) ✅
-- [ ] 🔴 DEPLOYER_PRIVATE_KEY aus .env entfernen — DEADLINE: 30.03.2026
+- [x] ✅ .env security verified (04.04.2026)
+      .gitignore: .env/.env.*/.env.local patterns ✅
+      .env never committed to git ✅
+      No real keys in git history ✅
+      .env.example updated with all current variables ✅
+- [ ] 🔴 DEPLOYER_PRIVATE_KEY aus .env entfernen — DEADLINE: 30.03.2026 (OVERDUE)
       Deployer hat keine Governance-Rechte mehr (seit 20.03.2026)
       Voraussetzung: Alle Tests grün (contract + bot + e2e)
       Aktion: DEPLOYER_PRIVATE_KEY Zeile aus .env löschen
