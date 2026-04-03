@@ -1240,10 +1240,10 @@
   ]
 }
 </script>
-<script defer src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"
   onerror="console.error('ethers CDN failed, trying fallback');var s=document.createElement('script');s.src='https://unpkg.com/ethers@5.7.2/dist/ethers.umd.min.js';document.head.appendChild(s);"></script>
-<script defer src="assets/wallet-core.js"></script>
-<script defer src="assets/ifr-state.js"></script>
+<script src="assets/wallet-core.js"></script>
+<script src="assets/ifr-state.js"></script>
 </head>
 <body>
 
@@ -3169,9 +3169,11 @@ async function lpConnect() {
       }
     } else if (e.code === 4001 || e.code === "ACTION_REJECTED") {
       if (btn) { btn.textContent = "\uD83E\uDD8A Connect"; btn.disabled = false; }
+    } else if (e.code === -32002) {
+      if (btn) { btn.textContent = "\uD83E\uDD8A Open MetaMask"; btn.disabled = false; }
     } else {
-      if (btn) { btn.textContent = "\u274C Error \u2014 Retry"; btn.disabled = false; }
-      console.error("Unexpected:", e);
+      if (btn) { btn.textContent = "\uD83E\uDD8A Retry"; btn.disabled = false; }
+      console.error("Connect error:", e.code, e.message, e);
     }
   }
 }
