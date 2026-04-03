@@ -364,7 +364,9 @@ On errors: fix immediately, commit with `seo:` prefix.
 ### Frontend
 - ~~Create animated token GIF~~ — not planned
 - [ ] `Buy IFR` → activate Uniswap button (ONLY after LP live)
-- [ ] Integrate live token price (ONLY after LP live)
+- [x] ✅ IFR Price Widget + Railway /api/ifr/price endpoint (04.04.2026)
+      Landing page: price stat card (TBD until LP)
+      Phase 2: Uniswap TWAP after LP live
 - [ ] WalletConnect Phase 2: `isLocked(wallet,1000e9)` check → Copilot gate (after LP)
 - [ ] WalletConnect Phase 3: Uniswap link (ONLY after LP live)
 

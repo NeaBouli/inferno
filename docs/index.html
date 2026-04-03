@@ -2991,7 +2991,8 @@ if (isLocked) {
       { key: 'burned-stat',     label: 'Total Burned',    value: fmt(data.burned),    sub: 'Since genesis \u2014 decreasing forever', color: '#ff4500' },
       { key: 'protocol-locked', label: 'Protocol Locked', value: fmt(protocolLocked), sub: 'All non-circulating IFR secured', color: '#ff8c00' },
       { key: '',                label: 'Current Supply',  value: fmt(data.supply),    sub: 'of 1B genesis',        color: '#fff'    },
-      { key: '',                label: 'LP Reserve Safe', value: fmt(data.lpReserve), sub: 'LP allocation (3-of-5)',color: '#FF6B35' }
+      { key: '',                label: 'LP Reserve Safe', value: fmt(data.lpReserve), sub: 'LP allocation (3-of-5)',color: '#FF6B35' },
+      { key: 'ifr-price',       label: 'IFR Price',       value: 'TBD',              sub: 'After Bootstrap finalise()',color: '#fbbf24' }
     ];
     el.innerHTML = items.map(function(m) {
       var liveAttr = m.key ? ' data-live-key="' + m.key + '"' : '';
@@ -3061,6 +3062,27 @@ if (isLocked) {
     });
   }
 
+  function loadIFRPrice() {
+    fetchWithTimeout(PROXY_BASE + '/api/ifr/price', 8000).then(function(data) {
+      var priceEl = document.querySelector('[data-live-key="ifr-price"]');
+      if (!priceEl) return;
+      var subEl = priceEl.nextElementSibling;
+      if (data.status === 'bootstrap_active') {
+        priceEl.textContent = 'TBD';
+        if (subEl) subEl.textContent = 'After Bootstrap \u2014 Jun 2026';
+        if (data.ethRaised > 0) {
+          if (subEl) subEl.textContent = fmt(data.ethRaised) + ' ETH raised';
+        }
+      } else if (data.price) {
+        priceEl.textContent = '\u039E' + data.price.toFixed(8);
+        if (subEl) subEl.textContent = 'Live Uniswap TWAP';
+      } else if (data.status === 'pending_uniswap') {
+        priceEl.textContent = 'Soon';
+        if (subEl) subEl.textContent = 'LP launching soon';
+      }
+    }).catch(function() {});
+  }
+
   function refreshAllLiveData() {
     doRefresh().catch(function(e) {
       console.error('Live data failed, retrying in 3s:', e);
@@ -3071,6 +3093,7 @@ if (isLocked) {
         });
       }, 3000);
     });
+    loadIFRPrice();
   }
 
   // Lazy-load live data — only start when section is visible
