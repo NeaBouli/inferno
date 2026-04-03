@@ -141,7 +141,13 @@ On errors: fix immediately, commit with `seo:` prefix.
       Voraussetzung: Alle Tests grün (contract + bot + e2e)
       Aktion: DEPLOYER_PRIVATE_KEY Zeile aus .env löschen
       Verify: `grep DEPLOYER_PRIVATE_KEY .env` → leer
-- [ ] Android MetaMask Deep-Link: opens new browser instance instead of returning to Chrome
+- [x] ✅ WalletConnect: disconnect + switch + mobile fix (03.04.2026)
+      Based on StealthX WalletConnectManager implementation
+      Fixed: accountsChanged re-creates provider/signer
+      Fixed: 30s connect timeout (was infinite)
+      Fixed: event listener accumulation guard
+      Fixed: disconnect clears WalletConnect + wagmi storage
+      Fixed: mobile deep-link 2s timeout (was 500ms)
 - [ ] npm audit: 34 vulnerabilities (2 critical, 9 high, 11 moderate, 12 low) — fix after LP launch
       Link: https://github.com/NeaBouli/inferno/security/dependabot
       Note: affects node_modules only, not Solidity contracts
