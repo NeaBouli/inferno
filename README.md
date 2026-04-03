@@ -2,14 +2,30 @@
   <img src="https://raw.githubusercontent.com/NeaBouli/inferno/main/docs/assets/ifr_icon_256.png" alt="Inferno $IFR" width="200" />
 </p>
 
-# Inferno ($IFR)
+# Inferno Protocol ($IFR)
 
-**The Deflationary Utility Token — Deployed on Ethereum Mainnet**
+> Deflationary ERC-20 utility token on Ethereum Mainnet.
+> Every transfer burns 2.5% permanently.
+> Lock IFR once — unlock lifetime premium access.
 
-[Website](https://ifrunit.tech/) · [Documentation](https://ifrunit.tech/wiki/) · [X / Twitter](https://x.com/IFRtoken) · [Etherscan](https://etherscan.io/address/0x77e99917Eca8539c62F509ED1193ac36580A6e7B#code)
+**Contract:** [`0x77e99917Eca8539c62F509ED1193ac36580A6e7B`](https://etherscan.io/address/0x77e99917Eca8539c62F509ED1193ac36580A6e7B#code) | **Network:** Ethereum Mainnet | **Bootstrap:** ACTIVE until June 5, 2026
 
 <!-- TODO: IFR_UPDATE — TEST_COUNT + CONTRACT_COUNT — update on each sprint -->
 **14 on-chain components** | **578 tests** | **91% branch coverage** | **9 verified contracts + BootstrapVaultV3 + LP Pair + 3 upgrade deploys**
+
+### Quick Links
+
+| Resource | Link |
+|---|---|
+| Website | [ifrunit.tech](https://ifrunit.tech) |
+| Wiki/Docs | [ifrunit.tech/wiki](https://ifrunit.tech/wiki/index.html) |
+| Whitepaper | [One-Pager](https://ifrunit.tech/wiki/one-pager.html) |
+| Bootstrap | [Bootstrap Event](https://ifrunit.tech/wiki/bootstrap.html) |
+| Security | [Security Audit](https://ifrunit.tech/wiki/security.html) |
+| Telegram | [t.me/IFRtoken](https://t.me/IFRtoken) |
+| Twitter/X | [x.com/IFRtoken](https://x.com/IFRtoken) |
+| Etherscan | [Token Page](https://etherscan.io/token/0x77e99917Eca8539c62F509ED1193ac36580A6e7B) |
+| GitHub | [NeaBouli/inferno](https://github.com/NeaBouli/inferno) |
 
 ---
 
@@ -20,6 +36,19 @@ Inferno (IFR) is a deflationary ERC-20 utility token on Ethereum. Every transfer
 **Community Fair Launch Model** — No presale, no VC, no insider allocations.
 
 > Inferno Protocol is fully open source and community-owned. No single entity controls the protocol. All contracts are verified on Ethereum Mainnet, governed by a 48-hour timelock, and protected by Gnosis Safe multisig. The protocol lives on-chain — permanently.
+
+## Token Economics
+
+| Property | Value |
+|---|---|
+| Symbol | $IFR |
+| Network | Ethereum Mainnet |
+| Decimals | 9 |
+| Genesis Supply | 1,000,000,000 IFR |
+| Current Supply | ~998.5M (decreasing) |
+| Burned | ~1.5M IFR since March 5, 2026 |
+| Burn Rate | 2.5% per transfer (permanent) |
+| Max Fee | 3.5% (hardcoded cap: 5%) |
 
 ## Key Features
 
@@ -281,6 +310,26 @@ npx hardhat run scripts/burn-lp-tokens.js --network sepolia
 # Governance: set poolFeeReceiver to FeeRouterV1 (Proposal #6)
 npx hardhat run scripts/propose-set-pool-fee-receiver.js --network mainnet
 ```
+
+## Team
+
+Inferno Protocol is developed by a pseudonymous team in the open-source DeFi tradition.
+
+**Transparency through:**
+- All contracts open source + Etherscan verified
+- On-chain governance (48h timelock)
+- Treasury: 3-of-5 Gnosis Safe multisig
+- Public audit: [security.html](https://ifrunit.tech/wiki/security.html)
+- Contact: kaspartisan@proton.me
+
+## Integrated Builder Products
+
+| Project | Category | Integration |
+|---|---|---|
+| K-9 Academy | Education | IFR Lock for course access |
+| StealthX/SecureCall | Privacy | IFR Lock for premium calls |
+| Vendetta | DeFi | IFR Lock + Rewards |
+| NEXUS GR | B2B Marketplace | Coming Soon |
 
 ## License
 
