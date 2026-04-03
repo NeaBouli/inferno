@@ -1383,6 +1383,44 @@
         <li><a href="https://juicebox.money/v5/eth:79" target="_blank" rel="noopener">Juicebox</a> &mdash; Community discovery (live &#x2705;)</li>
       </ul>
 
+      <!-- ============================================================
+           What Happens After Bootstrap Finalise?
+           ============================================================ -->
+      <h2 id="post-finalise">What Happens After Bootstrap Finalise?</h2>
+
+      <h3>The Problem &mdash; Low Liquidity</h3>
+      <p>Pool after <code>finalise()</code> with 0.01&nbsp;ETH:</p>
+      <ul>
+        <li>100M IFR + 0.01 ETH = ~$20 depth</li>
+        <li>Buying 99% of pool IFR costs only ~$2,000</li>
+        <li>Pool vulnerable to manipulation</li>
+      </ul>
+
+      <h3>The Solution &mdash; 3 Layers of Protection</h3>
+
+      <h4>Layer 1: CommitmentVault (Contributor Lock)</h4>
+      <p>Contributors lock IFR claims in <a href="commitment-vault.html">CommitmentVault</a>. 10 tranches (P0&times;2 to P0&times;5000). No dump possible until price milestones met.</p>
+      <p><strong>Contributor 1: Committed &#x2705;</strong></p>
+
+      <h4>Layer 2: LendingVault (Organic Buy Pressure)</h4>
+      <p>Locked IFR generates ETH yield via <a href="lending-vault.html">lending</a>. Every loan repayment = IFR bought on Uniswap. Every default = collateral buys IFR automatically. All roads lead to buy pressure.</p>
+
+      <h4>Layer 3: LP Reserve Safe (Team)</h4>
+      <p>400.6M IFR secured in Gnosis Safe 3-of-5. Added <strong>only</strong> at price milestones:</p>
+      <ul>
+        <li><strong>Milestone 1</strong> (pool 1 ETH): +50M IFR</li>
+        <li><strong>Milestone 2</strong> (pool 5 ETH): +100M IFR</li>
+        <li><strong>Milestone 3</strong> (Sept 2026): LiqRes unlock</li>
+      </ul>
+
+      <h3>Why This Works Even With 1 Contributor</h3>
+      <ol>
+        <li><strong>CommitmentVault</strong> &rarr; no dump</li>
+        <li><strong>LendingVault</strong> &rarr; organic buy pressure</li>
+        <li><strong>LP Reserve Safe</strong> &rarr; added at milestones</li>
+        <li>System is <strong>self-reinforcing</strong></li>
+      </ol>
+
       <!-- Footer -->
       <footer class="wiki-footer">
         Inferno ($IFR) &mdash; Community Bootstrap Event &mdash; Documentation v1.0
