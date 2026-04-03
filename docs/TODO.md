@@ -242,10 +242,11 @@ On errors: fix immediately, commit with `seo:` prefix.
       All pages marked "Phase 3 — Coming Soon"
 
 ### Phase 3 — Contracts (Core Dev — Solidity)
-- [ ] 🔵 Write CommitmentVault.sol + tests (min. 40)
-      lock(amount, tranches[]), unlock(trancheId), autoUnlock(wallet, trancheId)
-      checkCondition(trancheId), 4 condition types, TWAP Oracle
-      Set feeExempt after deploy
+- [x] ✅ CommitmentVault.sol written + tests (04.04.2026)
+      4 condition types (TIME/PRICE/OR/AND), auto-unlock 30d, P0 immutable
+      45 tests passing, ABI exported
+      Handover: docs/CORE_DEV_PHASE3.md
+- [ ] 🔴 CommitmentVault Deploy Sepolia → Audit → Mainnet (Core Dev)
 - [ ] 🔵 Write LendingVault.sol + tests (min. 50)
       requestLoan, repayLoan, liquidate, setLendingAllowance, getInterestRate
       Interest rates: 0%→2%, 25%→3%, 50%→5%, 75%→8%, 90%→15%, 100%→25%
