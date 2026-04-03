@@ -100,22 +100,85 @@ constructor(
 
 ---
 
-## LendingVault.sol — NEXT
+## LendingVault.sol — READY FOR REVIEW
 
-### Status
-- [ ] Contract design
-- [ ] Contract written
-- [ ] Tests written (target: 50+)
-- [ ] Deploy Sepolia
-- [ ] Audit
-- [ ] Deploy Mainnet
+### Contract Overview
 
-### Design Notes
-- IFR lending against ETH collateral
-- Collateral: 200% initial, 150% margin call, 120% liquidation
-- Interest rate: dynamic (0% util=2%, 100%=25%)
-- Uniswap TWAP price oracle (24h average)
-- Railway cron job (every 4h) for liquidation checks
+| Field | Value |
+|-------|-------|
+| **File** | `contracts/vault/LendingVault.sol` |
+| **Solidity** | ^0.8.20 |
+| **Base** | OpenZeppelin v5 (Ownable, ReentrancyGuard) |
+| **Tests** | 55/55 passing (`test/LendingVault.test.js`) |
+| **ABI** | `abi/LendingVault.json` |
+
+### Features
+
+- **Utilization-based interest rate** (per month):
+  - 0–25% util → 2%, 26–50% → 3%, 51–75% → 5%, 76–90% → 8%, 91–99% → 15%, 100% → 25%
+- **Collateral thresholds:** 200% initial, 150% margin call, 120% liquidation
+- **Liquidator bonus:** 5% of collateral
+- **Interest split:** 50% lender, 50% protocol (Uniswap LP or BurnReserve)
+- **Loan duration:** 30–365 days, minimum 1 month interest
+- **MAX_LOANS_PER_BORROWER = 10** (gas safety)
+- **Top-up collateral** for margin calls
+- **Health check** with MarginCallWarning event (for Railway cron)
+
+### Status Checklist
+
+- [x] Contract written + compiled
+- [x] Tests written — 55 passing
+- [x] ABI exported to `abi/LendingVault.json`
+- [ ] Deploy to Sepolia
+- [ ] Security audit
+- [ ] Deploy to Mainnet
+- [ ] Governance Proposal: `setFeeExempt(LendingVault, true)`
+- [ ] Governance Proposal: `setIFRPrice(value)` (initial price)
+- [ ] Set protocolFeeReceiver (BurnReserve or LP address)
+
+### Deploy Steps
+
+```bash
+# 1. Run tests
+npx hardhat test test/LendingVault.test.js
+
+# 2. Deploy to Sepolia
+npx hardhat run scripts/deploy-lending-vault.js --network sepolia
+
+# 3. Verify on Etherscan
+npx hardhat verify --network sepolia <ADDRESS> <IFR_TOKEN> <GOVERNANCE>
+
+# 4. Governance Proposals (in order):
+#    - Proposal A: setFeeExempt(LendingVault, true)
+#    - Proposal B: setIFRPrice(wei_per_1e9_IFR)
+#    - Proposal C: setProtocolFeeReceiver(address)
+
+# 5. Railway cron: checkHealth(loanId) every 4h
+```
+
+### Constructor Arguments
+
+```solidity
+constructor(
+    address _ifrToken,    // Mainnet: 0x77e99917Eca8539c62F509ED1193ac36580A6e7B
+    address _governance   // Mainnet: 0xc43d48E7FDA576C5022d0670B652A622E8caD041
+)
+```
+
+### IFR Price Format
+
+```
+ifrPriceWei = wei per 1e9 IFR (1 full token)
+Example: 1 IFR = 0.000001 ETH → ifrPriceWei = 1e12
+```
+
+### Important Notes
+
+1. **Set feeExempt BEFORE anyone deposits/borrows!**
+2. **setIFRPrice via Governance** — needs 48h timelock
+3. **Phase 2:** Replace manual price with Uniswap TWAP oracle
+4. **Railway cron:** Call `checkHealth(loanId)` every 4h for all active loans
+5. **Liquidation alert:** MarginCallWarning event → Telegram bot notification
 
 ---
 

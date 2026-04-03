@@ -247,11 +247,12 @@ On errors: fix immediately, commit with `seo:` prefix.
       45 tests passing, ABI exported
       Handover: docs/CORE_DEV_PHASE3.md
 - [ ] 🔴 CommitmentVault Deploy Sepolia → Audit → Mainnet (Core Dev)
-- [ ] 🔵 Write LendingVault.sol + tests (min. 50)
-      requestLoan, repayLoan, liquidate, setLendingAllowance, getInterestRate
-      Interest rates: 0%→2%, 25%→3%, 50%→5%, 75%→8%, 90%→15%, 100%→25%
-      Collateral: 200% init, 150% warning, 120% liquidation
-      TWAP Oracle (Uniswap V2), set feeExempt after deploy
+- [x] ✅ LendingVault.sol written + tests (04.04.2026)
+      Utilization-based interest (2–25%/month), 200/150/120% collateral
+      50/50 interest split, liquidator 5% bonus, top-up collateral
+      55 tests passing, ABI exported
+      Handover: docs/CORE_DEV_PHASE3.md
+- [ ] 🔴 LendingVault Deploy Sepolia → Audit → Mainnet (Core Dev)
 - [ ] 🔵 Write BuybackController.sol + tests
       Automated fee distribution (BuybackVault + BurnReserve)
 - [ ] 🔵 Core Dev: Deploy Sepolia → Audit → Mainnet
