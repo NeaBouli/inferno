@@ -1,6 +1,6 @@
 # Inferno ($IFR) — Mainnet Deployment Checklist
 
-> **Status:** Mainnet Deployed (2026-03-05) | **Mainnet:** 9 Contracts deployed + verified | **Tests:** 521 Protocol + 57 Ecosystem = 578 Total | **Coverage:** 99% Stmts, 91% Branch
+> **Status:** Mainnet Deployed (2026-03-05) | **Mainnet:** 9 Contracts deployed + verified | **Tests:** 367 Contract + 77 App + 100 Vault = 544 Total | **Coverage:** 99% Stmts, 91% Branch
 
 ## CRITICAL — Before Any Public Launch
 

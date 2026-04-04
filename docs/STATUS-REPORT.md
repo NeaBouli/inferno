@@ -4,7 +4,7 @@
 **Branch:** `main`
 **Model:** Community Fair Launch (CFLM) -- no presale
 **Ticker:** $IFR
-**Status:** 10 On-Chain Components deployed + verified on Ethereum Mainnet | 578 tests | 7 Apps
+**Status:** 10 On-Chain Components deployed + verified on Ethereum Mainnet | 544 tests | 7 Apps
 
 ---
 

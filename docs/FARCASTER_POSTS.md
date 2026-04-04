@@ -27,7 +27,7 @@ $IFR #DeFi #Ethereum #FairLaunch
 ## Post 2 — Technical
 
 ```
-578 tests. 0 critical audit findings.
+544 tests. 0 critical audit findings.
 48h governance timelock. No mint function.
 
 That's the security foundation of $IFR.

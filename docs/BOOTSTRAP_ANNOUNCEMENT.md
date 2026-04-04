@@ -70,7 +70,7 @@ LP locked 12 months via Team.Finance.
 - 2.5% burned on every transfer — forever
 - Lock IFR once → lifetime premium access
 - Fair launch: no presale, no VC, no IDO
-- 578 tests, 0 critical audit findings
+- 544 tests, 0 critical audit findings
 - 16 on-chain components, all verified
 
 Not a trading token. A utility lock.
@@ -118,7 +118,7 @@ Every transfer burns 2.5% permanently. Users lock IFR to gain lifetime premium a
 No presale. No VC. No IDO. Team tokens vested 4 years with 12-month cliff. All on-chain, all verifiable.
 
 **Security:**
-- 578 automated tests, 91% branch coverage
+- 544 automated tests, 91% branch coverage
 - Slither audit: 0 high/critical findings
 - All 16 contracts verified on Etherscan
 - 48h governance timelock on all parameter changes
@@ -161,7 +161,7 @@ But IFR isn't just deflationary — it's a universal access token. Lock IFR once
 - 4% builder ecosystem rewards
 
 **Not a meme. Not a rugpull.**
-- 578 tests, Slither audit 0 critical
+- 544 tests, Slither audit 0 critical
 - Open source: github.com/NeaBouli/inferno
 - 48h governance timelock
 - Fair launch: no presale, no VC
