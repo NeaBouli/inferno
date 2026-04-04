@@ -42,7 +42,7 @@ Deflationary + Utility:
 
 ## Post-Launch Roadmap
 
-- [x] Mainnet deployment (14 on-chain components, all verified)
+- [x] Mainnet deployment (16 on-chain components, all verified)
 - [x] Gnosis Safe Multisig deployed
 - [ ] Governance Proposal #0 execution (ETA 2026-03-07)
 - [ ] Uniswap V2 LP creation + LP lock

@@ -10,7 +10,7 @@
 
 ## On-Chain (Ethereum Mainnet)
 
-14 on-chain components (9 repo contracts + 1 Uniswap V2 LP Pair). All verified on Etherscan. Ownership transferred to Governance (48h Timelock).
+16 on-chain components (9 repo contracts + 1 Uniswap V2 LP Pair). All verified on Etherscan. Ownership transferred to Governance (48h Timelock).
 
 | # | Contract | Address | Status |
 |---|----------|---------|--------|

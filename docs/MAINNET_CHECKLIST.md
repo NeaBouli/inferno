@@ -40,7 +40,7 @@ These items MUST be completed before public launch:
 
 | Milestone | Status |
 |-----------|--------|
-| 14 Contracts deployed + verified | Done |
+| 16 Contracts deployed + verified | Done |
 | Uniswap V2 LP Pair live | Done |
 | Ownership transferred to Governance | Done |
 | Governance Proposals #0, #1 executed | Done |
