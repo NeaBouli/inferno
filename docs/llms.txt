@@ -56,6 +56,7 @@ Inferno ($IFR) is a deflationary ERC-20 utility token deployed on Ethereum Mainn
 
 - CommitmentVault: https://ifrunit.tech/wiki/commitment-vault.html
 - LendingVault: https://ifrunit.tech/wiki/lending-vault.html
+- Lending Market: https://ifrunit.tech/wiki/lending-market.html
 - LP Strategy: https://ifrunit.tech/wiki/lp-strategy.html
 - Ecosystem Overview: https://ifrunit.tech/wiki/ecosystem.html
 
