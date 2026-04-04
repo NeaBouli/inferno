@@ -1042,6 +1042,107 @@ if (BUILDER_REGISTRY_ADDR) {
   console.log("[BuilderRegistry] BUILDER_REGISTRY_ADDR not set — endpoints disabled");
 }
 
+// ── Lending Market Endpoints ─────────────────────────────────────────
+const LENDING_VAULT_ADDR = process.env.LENDING_VAULT_ADDR || "";
+
+// GET /api/lending/stats — LendingVault market stats
+app.get("/api/lending/stats", async (_req, res) => {
+  res.set("Cache-Control", "no-store");
+  try {
+    if (!LENDING_VAULT_ADDR || LENDING_VAULT_ADDR.startsWith("0x000")) {
+      return res.json({
+        status: "not_deployed",
+        totalAvailable: 0,
+        totalLent: 0,
+        currentRate: 2,
+        activeLoans: 0,
+        message: "LendingVault deploys after Bootstrap finalise — June 2026",
+      });
+    }
+
+    const lvAbi = [
+      "function totalLent() view returns (uint256)",
+      "function totalAvailable() view returns (uint256)",
+      "function getInterestRate() view returns (uint256)",
+      "function getLoanCount() view returns (uint256)",
+    ];
+
+    const url = process.env.MAINNET_RPC_URL || "https://ethereum-rpc.publicnode.com";
+    const provider = new (await import("ethers")).ethers.providers.JsonRpcProvider(url);
+    const lv = new (await import("ethers")).ethers.Contract(LENDING_VAULT_ADDR, lvAbi, provider);
+
+    const [lent, available, rate, loans] = await Promise.all([
+      lv.totalLent(),
+      lv.totalAvailable(),
+      lv.getInterestRate(),
+      lv.getLoanCount(),
+    ]);
+
+    res.json({
+      status: "active",
+      totalLent: parseFloat((await import("ethers")).ethers.utils.formatUnits(lent, IFR_DECIMALS)),
+      totalAvailable: parseFloat((await import("ethers")).ethers.utils.formatUnits(available, IFR_DECIMALS)),
+      currentRate: rate.toNumber() / 100,
+      activeLoans: loans.toNumber(),
+      cachedAt: new Date().toISOString(),
+    });
+  } catch (err) {
+    console.error("Lending stats error:", err);
+    res.status(502).json({ error: "Failed to fetch lending stats" });
+  }
+});
+
+// GET /api/lending/offers — all active lending offers
+app.get("/api/lending/offers", async (_req, res) => {
+  res.set("Cache-Control", "no-store");
+  try {
+    if (!LENDING_VAULT_ADDR || LENDING_VAULT_ADDR.startsWith("0x000")) {
+      return res.json([]);
+    }
+
+    const lvAbi = [
+      "function getOfferCount() view returns (uint256)",
+      "function getOffer(uint256) view returns (tuple(address lender, uint256 availableIFR, uint256 lentIFR, bool active))",
+      "function getInterestRate() view returns (uint256)",
+    ];
+
+    const url = process.env.MAINNET_RPC_URL || "https://ethereum-rpc.publicnode.com";
+    const provider = new (await import("ethers")).ethers.providers.JsonRpcProvider(url);
+    const lv = new (await import("ethers")).ethers.Contract(LENDING_VAULT_ADDR, lvAbi, provider);
+    const ethersLib = (await import("ethers")).ethers;
+
+    const count = (await lv.getOfferCount()).toNumber();
+    const rate = (await lv.getInterestRate()).toNumber() / 100;
+    const offers: Array<Record<string, unknown>> = [];
+
+    for (let i = 0; i < Math.min(count, 50); i++) {
+      try {
+        const o = await lv.getOffer(i);
+        if (o.active && o.availableIFR.gt(0)) {
+          offers.push({
+            id: i,
+            lender: o.lender,
+            availableAmount: parseFloat(ethersLib.utils.formatUnits(o.availableIFR, IFR_DECIMALS)),
+            lentAmount: parseFloat(ethersLib.utils.formatUnits(o.lentIFR, IFR_DECIMALS)),
+            rate,
+          });
+        }
+      } catch { /* skip invalid */ }
+    }
+
+    res.json(offers);
+  } catch (err) {
+    console.error("Lending offers error:", err);
+    res.status(502).json({ error: "Failed to fetch lending offers" });
+  }
+});
+
+if (LENDING_VAULT_ADDR) {
+  console.log("[LendingVault] Endpoints active:", LENDING_VAULT_ADDR);
+} else {
+  console.log("[LendingVault] LENDING_VAULT_ADDR not set — endpoints return placeholder data");
+}
+
 const PORT = parseInt(process.env.PORT || "3003", 10);
 app.listen(PORT, () => {
   console.log(`IFR Copilot API on :${PORT}`);

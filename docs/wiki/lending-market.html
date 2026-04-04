@@ -2,9 +2,9 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-    <link rel="canonical" href="https://ifrunit.tech/wiki/index.html">  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Inferno ($IFR) Documentation</title>
-  <meta name="description" content="Complete technical reference for Inferno ($IFR) — contracts, tokenomics, governance, security, and integration guides. 27 wiki pages.">
+    <link rel="canonical" href="https://ifrunit.tech/wiki/lending-market.html">  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lending Market &mdash; Inferno ($IFR) Documentation</title>
+  <meta name="description" content="P2P IFR lending marketplace. Browse active lending offers, interest rates, and borrow IFR against ETH collateral.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -21,6 +21,7 @@
       --text:     #e8e8ed;
       --muted:    #8a8a96;
       --accent:   #ff4500;
+      --green:    #22c55e;
       --sidebar-w: 240px;
     }
 
@@ -63,10 +64,16 @@
       font-weight: 800;
       letter-spacing: 3px;
       color: var(--accent);
-      padding: 0 24px 24px;
-      border-bottom: 1px solid var(--border);
+      padding: 0 24px 4px;
       text-decoration: none;
       display: block;
+    }
+
+    .sidebar-sub {
+      font-size: 12px;
+      color: var(--muted);
+      padding: 0 24px 24px;
+      border-bottom: 1px solid var(--border);
     }
 
     .sidebar-nav {
@@ -74,8 +81,6 @@
       padding: 16px 0;
       flex: 1;
     }
-
-    .sidebar-nav li {}
 
     .sidebar-nav a {
       display: block;
@@ -207,84 +212,9 @@
       margin-bottom: 32px;
     }
 
-    /* ---------- Cards grid ---------- */
-    .cards-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-      gap: 20px;
-      margin: 24px 0 48px;
-    }
-
-    .card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 24px;
-      text-decoration: none;
-      color: var(--text);
-      transition: border-color 0.25s, transform 0.2s, box-shadow 0.25s;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .card:hover {
-      border-color: var(--accent);
-      transform: translateY(-2px);
-      box-shadow: 0 8px 24px rgba(255, 69, 0, 0.08);
-      text-decoration: none;
-    }
-
-    .card-icon {
-      font-size: 28px;
-      margin-bottom: 4px;
-    }
-
-    .card-title {
-      font-size: 16px;
-      font-weight: 600;
-      color: var(--text);
-    }
-
-    .card-desc {
-      font-size: 13px;
-      color: var(--muted);
-      line-height: 1.5;
-    }
-
-    /* ---------- Stats bar ---------- */
-    .stats-bar {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-      gap: 16px;
-      margin: 24px 0 48px;
-    }
-
-    .stat-item {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 20px 24px;
-      text-align: center;
-    }
-
-    .stat-value {
-      font-size: 28px;
-      font-weight: 800;
-      color: var(--accent);
-      display: block;
-    }
-
-    .stat-label {
-      font-size: 13px;
-      color: var(--muted);
-      margin-top: 4px;
-      display: block;
-    }
-
     /* ---------- Code blocks ---------- */
     pre {
-      background: var(--card);
+      background: #1a1a1d;
       border: 1px solid var(--border);
       border-radius: 8px;
       padding: 16px 20px;
@@ -292,14 +222,16 @@
       font-size: 13px;
       line-height: 1.7;
       margin: 16px 0;
+      color: var(--text);
     }
 
     code {
       font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
       font-size: 13px;
+      color: var(--text);
     }
 
-    p code, li code {
+    p code, li code, td code {
       background: rgba(255, 255, 255, 0.06);
       padding: 2px 6px;
       border-radius: 4px;
@@ -323,7 +255,7 @@
     th {
       color: var(--muted);
       font-weight: 600;
-      font-size: 12px;
+      font-size: 13px;
       text-transform: uppercase;
       letter-spacing: 0.5px;
     }
@@ -357,6 +289,259 @@
       color: var(--text);
       margin: 0;
       font-size: 14px;
+    }
+
+    .callout-green {
+      background: rgba(34, 197, 94, 0.06);
+      border-left: 3px solid var(--green);
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 20px 0;
+    }
+
+    .callout-green p {
+      color: var(--text);
+      margin: 0;
+      font-size: 14px;
+    }
+
+    .callout-blue {
+      background: rgba(59, 130, 246, 0.08);
+      border-left: 3px solid #3b82f6;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 20px 0;
+    }
+
+    .callout-blue p {
+      color: var(--text);
+      margin: 0;
+      font-size: 14px;
+    }
+
+    /* ---------- Flow diagram ---------- */
+    .flow-diagram {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin: 24px 0;
+      padding: 8px 0;
+      max-width: 100%;
+    }
+
+    .flow-step {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 14px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+      white-space: nowrap;
+      text-align: center;
+    }
+
+    .flow-step.active {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .flow-step.green {
+      border-color: var(--green);
+      color: var(--green);
+    }
+
+    .flow-arrow {
+      color: var(--muted);
+      font-size: 18px;
+      padding: 0 8px;
+      flex-shrink: 0;
+    }
+
+    /* ---------- Architecture diagram ---------- */
+    .arch-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      margin: 24px 0;
+      max-width: 560px;
+    }
+
+    .arch-layer {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px 24px;
+    }
+
+    .arch-layer-label {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--accent);
+      margin-bottom: 6px;
+    }
+
+    .arch-layer-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+
+    .arch-layer-desc {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .arch-connector {
+      display: flex;
+      justify-content: center;
+      padding: 4px 0;
+      color: var(--muted);
+      font-size: 20px;
+    }
+
+    /* ---------- Step list ---------- */
+    .step-list {
+      list-style: none;
+      padding-left: 0;
+      counter-reset: step-counter;
+      margin: 16px 0;
+    }
+
+    .step-list li {
+      counter-increment: step-counter;
+      position: relative;
+      padding-left: 40px;
+      margin-bottom: 16px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .step-list li::before {
+      content: counter(step-counter);
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: rgba(255, 69, 0, 0.12);
+      color: var(--accent);
+      font-size: 13px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
+    }
+
+    /* ---------- Contract badge ---------- */
+    .contract-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 16px;
+      margin: 8px 0 16px;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 13px;
+      color: var(--text);
+      word-break: break-all;
+    }
+
+    .contract-badge .label {
+      color: var(--muted);
+      font-family: 'Inter', sans-serif;
+      font-weight: 600;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      white-space: nowrap;
+    }
+
+    /* ---------- Fee comparison ---------- */
+    .fee-compare {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin: 20px 0;
+    }
+
+    .fee-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+    }
+
+    .fee-card.bad {
+      border-color: #ef4444;
+    }
+
+    .fee-card.good {
+      border-color: var(--green);
+    }
+
+    .fee-card-title {
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+
+    .fee-card.bad .fee-card-title {
+      color: #ef4444;
+    }
+
+    .fee-card.good .fee-card-title {
+      color: var(--green);
+    }
+
+    .fee-card p {
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 8px;
+      max-width: none;
+    }
+
+    .fee-card code {
+      font-size: 12px;
+    }
+
+    /* ---------- Coming Soon Banner ---------- */
+    .coming-soon-banner {
+      background: rgba(59, 130, 246, 0.08);
+      border: 1px solid rgba(59, 130, 246, 0.3);
+      border-radius: 12px;
+      padding: 16px 20px;
+      margin-bottom: 32px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .coming-soon-banner .badge {
+      background: #3b82f6;
+      color: #fff;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      padding: 4px 10px;
+      border-radius: 6px;
+      white-space: nowrap;
+    }
+
+    .coming-soon-banner .text {
+      color: var(--text);
+      font-size: 14px;
+      font-weight: 500;
     }
 
     /* ---------- Footer ---------- */
@@ -395,20 +580,25 @@
         padding: 72px 20px 40px;
       }
 
-      .cards-grid {
+      .flow-diagram {
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .flow-arrow {
+        padding: 0 4px;
+      }
+
+      .fee-compare {
         grid-template-columns: 1fr;
       }
 
-      .stats-bar {
-        grid-template-columns: repeat(2, 1fr);
+      .arch-stack {
+        max-width: 100%;
       }
     }
 
     @media (max-width: 480px) {
-      .stats-bar {
-        grid-template-columns: 1fr;
-      }
-
       .main h1 {
         font-size: 26px;
       }
@@ -420,21 +610,21 @@
   <link rel="icon" type="image/png" href="../assets/ifr_icon_64.png">
   <meta property="og:type" content="article">
   <meta property="og:site_name" content="Inferno Protocol">
-  <meta property="og:title" content="Inferno Documentation — Protocol ($IFR)">
-  <meta property="og:description" content="Complete technical reference for Inferno: contracts, tokenomics, governance, security, integration guides. 27 wiki pages.">
-  <meta property="og:url" content="https://ifrunit.tech/wiki/index.html">
+  <meta property="og:title" content="Lending Market — Inferno Protocol ($IFR)">
+  <meta property="og:description" content="IFR Lending against ETH collateral. Builders borrow IFR for discount programs. Dynamic interest rates. Self-reinforcing buy pressure.">
+  <meta property="og:url" content="https://ifrunit.tech/wiki/lending-market.html">
   <meta property="og:image" content="https://ifrunit.tech/assets/ifr_icon_256.png">
   <meta name="twitter:card" content="summary">
-  <meta name="twitter:title" content="Inferno Documentation — Protocol ($IFR)">
-  <meta name="twitter:description" content="Complete technical reference: contracts, tokenomics, governance, security.">
+  <meta name="twitter:title" content="Lending Market — Inferno Protocol ($IFR)">
+  <meta name="twitter:description" content="IFR Lending against ETH collateral. Builders borrow IFR for discount programs. Dynamic interest rates.">
   <meta name="twitter:site" content="@IFRtoken">
   <meta name="twitter:image" content="https://ifrunit.tech/assets/ifr_icon_256.png">  <script type="application/ld+json">
   {
     "@context": "https://schema.org",
-    "@type": "CollectionPage",
-    "headline": "Inferno Protocol Documentation",
-    "description": "Documentation hub for the Inferno Protocol: 27 wiki pages covering smart contracts, tokenomics, governance, security audits, and developer integration guides.",
-    "url": "https://ifrunit.tech/wiki/index.html",
+    "@type": "TechArticle",
+    "headline": "Lending Market — IFR Lending against ETH Collateral",
+    "description": "IFR Lending against ETH collateral. Builders borrow IFR for discount programs. Dynamic interest rates. Self-reinforcing buy pressure.",
+    "url": "https://ifrunit.tech/wiki/lending-market.html",
     "isPartOf": {"@id": "https://ifrunit.tech/#website"},
     "publisher": {"@id": "https://ifrunit.tech/#organization"},
     "about": {"@id": "https://ifrunit.tech/#app"}
@@ -462,9 +652,9 @@
     <!-- Sidebar -->
     <aside class="sidebar" id="sidebar">
       <a href="index.html" class="sidebar-logo">INFERNO</a>
-      <div class="sidebar-subtitle">Documentation</div>
+      <div class="sidebar-sub">Documentation</div>
       <ul class="sidebar-nav">
-        <li><a href="index.html" class="active">Home</a></li>
+        <li><a href="index.html">Home</a></li>
         <li><a href="one-pager.html">One Pager</a></li>
         <li><a href="fair-launch.html">Fair Launch</a></li>
         <li class="nav-divider"></li>
@@ -480,8 +670,14 @@
         <li><a href="testnet.html">Testnet</a></li>
         <li><a href="mainnet-checklist.html">Mainnet Checklist</a></li>
         <li class="nav-divider"></li>
-        <li><a href="bootstrap.html" class="nav-bootstrap-pulse">🔥 Bootstrap Event</a></li>
+        <li><a href="bootstrap.html" class="nav-bootstrap-pulse">&#x1F525; Bootstrap Event</a></li>
         <li><a href="roadmap.html">Roadmap</a></li>
+        <li class="nav-divider"></li>
+        <li><a href="commitment-vault.html">CommitmentVault</a></li>
+        <li><a href="lending-vault.html">LendingVault</a></li>
+        <li><a href="lending-market.html" class="active">Lending Market</a></li>
+        <li><a href="lp-strategy.html">LP Strategy</a></li>
+        <li><a href="ecosystem.html">Ecosystem</a></li>
         <li class="nav-divider"></li>
         <li><a href="governance.html">Governance</a></li>
         <li><a href="dao-governance.html">DAO Governance</a></li>
@@ -511,7 +707,6 @@
           <div id="lp-header-connected" style="display:none;">
             <div style="background:rgba(34,197,94,0.15);border:1px solid rgba(34,197,94,0.4);border-radius:8px;padding:5px 8px;cursor:pointer;display:flex;align-items:center;gap:6px;max-width:100px;white-space:nowrap;overflow:hidden;" onclick="lpToggleDropdown()">
               <span id="lp-header-addr" style="color:#22c55e;font-family:monospace;font-size:0.72rem;font-weight:600;"></span>
-              
             </div>
           </div>
           <div id="lp-header-dropdown" style="display:none;position:fixed;background:#111827;border:1px solid #374151;border-radius:12px;padding:16px;width:280px;max-width:calc(100vw - 24px);z-index:9999;box-shadow:0 8px 32px rgba(0,0,0,0.6);">
@@ -547,267 +742,122 @@
         </div>
       </div>
 
-
-      <h1>Inferno <span class="accent">($IFR)</span> Documentation</h1>
-      <p class="subtitle">
-        Complete technical reference for the Inferno token ecosystem &mdash; contracts, tokenomics, governance, security, and integration guides.
-      </p>
-
-      <!-- Welcome section -->
-      <h2>Welcome</h2>
-      <p>
-        This wiki is the single source of truth for the Inferno ($IFR) project. It covers every aspect of the protocol: from the smart contract architecture and fee mechanics to governance proposals, security audits, and step-by-step integration guides for developers.
-      </p>
-      <p>
-        Inferno is a Community Fair Launch Model (CFLM) ERC-20 token on Ethereum with a built-in deflationary fee structure, on-chain governance via a 48-hour timelock, and a transparent vesting schedule. Whether you are a holder, developer, or auditor, you will find the information you need here.
-      </p>
-
-      <div class="callout">
-        <p>
-          Inferno Protocol is fully open source and community-owned. No single entity controls the protocol. All contracts are verified on Ethereum Mainnet, governed by a 48-hour timelock, and protected by Gnosis Safe multisig. The protocol lives on-chain &mdash; permanently.
-        </p>
+      <!-- Coming Soon Banner -->
+      <div class="coming-soon-banner">
+        <span class="badge">Phase 3</span>
+        <span class="text">Coming Soon &mdash; Lending Market is currently in design phase and not yet deployed on-chain.</span>
       </div>
 
-      <div class="callout" style="background:rgba(255,255,255,0.02); border-left-color:var(--muted);">
-        <p>
-          <strong>Tip:</strong> Use the sidebar to navigate between sections. Each page is self-contained and covers one topic in depth.
-        </p>
+      <h1>Lending <span class="accent">Market</span></h1>
+      <p class="subtitle">P2P IFR Lending &mdash; Browse Offers, Borrow, Earn Interest</p>
+
+      <!-- ======================================== -->
+      <!-- Marketplace Content -->
+      <!-- ======================================== -->
+
+      <style>
+        .market-stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin:20px 0}
+        .market-stat{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:16px;text-align:center}
+        .market-stat .m-label{font-size:0.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px}
+        .market-stat .m-value{font-size:1.4rem;font-weight:700;color:var(--accent)}
+        .offers-table{width:100%;border-collapse:collapse;font-size:0.88rem;margin:16px 0}
+        .offers-table th{text-align:left;padding:10px 12px;color:var(--muted);font-size:0.75rem;text-transform:uppercase;border-bottom:2px solid var(--border)}
+        .offers-table td{padding:10px 12px;border-bottom:1px solid var(--border)}
+        .offers-table tr:hover{background:rgba(255,255,255,0.02)}
+        .market-widget{background:rgba(255,69,0,0.04);border:1px solid rgba(255,69,0,0.18);border-radius:12px;padding:24px;margin:20px 0}
+        .market-btn{display:inline-block;padding:6px 16px;background:var(--accent);color:#fff;border:none;border-radius:6px;font-size:0.82rem;font-weight:600;cursor:pointer;text-decoration:none;transition:opacity 0.2s}
+        .market-btn:hover{opacity:0.9}
+        .market-hidden{display:none!important}
+        .how-step{display:flex;gap:16px;align-items:flex-start;margin:16px 0}
+        .how-num{flex-shrink:0;width:32px;height:32px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.88rem}
+      </style>
+
+      <!-- Coming Soon -->
+      <div class="market-widget" style="background:rgba(59,130,246,0.06);border-color:rgba(59,130,246,0.25);text-align:center;">
+        <div style="font-size:0.78rem;font-weight:700;color:#3b82f6;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px;">Phase 3 &mdash; Coming Soon</div>
+        <p style="color:var(--muted);font-size:0.88rem;margin:0;">Lending Market launches after Bootstrap finalise() on June 5, 2026.<br>Data will populate live from LendingVault on Ethereum Mainnet.</p>
       </div>
 
-      <!-- Quick stats -->
-      <h2>Quick Stats</h2>
-      <div class="stats-bar">
-        <div class="stat-item">
-          <span class="stat-value" style="color: var(--accent);">Mainnet</span>
-          <span class="stat-label">Ethereum</span>
-        </div>
-        <div class="stat-item">
-          <span class="stat-value">14</span>
-          <span class="stat-label">On-chain Components</span>
-        </div>
-        <div class="stat-item">
-          <span class="stat-value">578</span>
-          <span class="stat-label">Tests Passing</span>
-        </div>
-        <div class="stat-item">
-          <span class="stat-value">91%</span>
-          <span class="stat-label">Branch Coverage</span>
-        </div>
-        <div class="stat-item">
-          <span class="stat-value" id="wiki-index-burned">&mdash;</span>
-          <span class="stat-label">IFR Burned</span>
-        </div>
-        <div class="stat-item">
-          <span class="stat-value">27</span>
-          <span class="stat-label">Wiki Pages</span>
-        </div>
-        <div class="stat-item">
-          <span class="stat-value">48h</span>
-          <span class="stat-label">Timelock</span>
-        </div>
+      <!-- Live Stats -->
+      <h2 id="stats">Market Stats</h2>
+      <div class="market-stats-grid">
+        <div class="market-stat"><div class="m-label">Total Available</div><div class="m-value" id="m-available">&mdash;</div></div>
+        <div class="market-stat"><div class="m-label">Total Lent</div><div class="m-value" id="m-lent">&mdash;</div></div>
+        <div class="market-stat"><div class="m-label">Current Rate</div><div class="m-value" id="m-rate">&mdash;</div></div>
+        <div class="market-stat"><div class="m-label">Active Loans</div><div class="m-value" id="m-loans">&mdash;</div></div>
       </div>
 
-      <!-- Section cards -->
-      <h2>Documentation Sections</h2>
-      <div class="cards-grid">
+      <!-- Offers Table -->
+      <h2 id="offers">Active Lending Offers</h2>
+      <p style="color:var(--muted);font-size:0.88rem;margin-bottom:14px;">Browse available IFR lending offers. Click &ldquo;Borrow&rdquo; to request a loan on the <a href="lending-vault.html">LendingVault</a> page.</p>
+      <table class="offers-table" id="offers-table">
+        <thead>
+          <tr>
+            <th>Lender</th>
+            <th>Available IFR</th>
+            <th>Rate / Month</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="offers-body">
+          <tr><td colspan="4" style="text-align:center;color:var(--muted);padding:24px;">Loading offers&hellip;</td></tr>
+        </tbody>
+      </table>
 
-        <a href="contracts.html" class="card">
-          <div class="card-icon">&#x1f4dc;</div>
-          <div class="card-title">Smart Contracts</div>
-          <div class="card-desc">Complete reference for all 14 on-chain components</div>
-        </a>
-
-        <a href="tokenomics.html" class="card">
-          <div class="card-icon">&#x1f4ca;</div>
-          <div class="card-title">Tokenomics</div>
-          <div class="card-desc">Fee structure, deflation model, allocation</div>
-        </a>
-
-        <a href="lock-mechanism.html" class="card">
-          <div class="card-icon">&#x1f512;</div>
-          <div class="card-title">Lock Mechanism</div>
-          <div class="card-desc">IFR Lock system and integration guide</div>
-        </a>
-
-        <a href="governance.html" class="card">
-          <div class="card-icon">&#x1f3db;</div>
-          <div class="card-title">Governance</div>
-          <div class="card-desc">Timelock proposals and parameter changes</div>
-        </a>
-
-        <a href="security.html" class="card">
-          <div class="card-icon">&#x1f6e1;</div>
-          <div class="card-title">Security & Audit</div>
-          <div class="card-desc">Slither + Claude audit, 578 tests, community audit open</div>
-        </a>
-
-        <a href="deployment.html" class="card">
-          <div class="card-icon">&#x1f680;</div>
-          <div class="card-title">Deployment</div>
-          <div class="card-desc">Contract addresses and deploy process</div>
-        </a>
-
-        <a href="integration.html" class="card">
-          <div class="card-icon">&#x1f50c;</div>
-          <div class="card-title">Integration Guide</div>
-          <div class="card-desc">How to integrate IFR Lock into your product</div>
-        </a>
-
-        <a href="agent.html" class="card">
-          <div class="card-icon">&#x1f916;</div>
-          <div class="card-title">AI Copilot</div>
-          <div class="card-desc">Embedded AI assistant, points system, fee discounts</div>
-        </a>
-
-        <a href="faq.html" class="card">
-          <div class="card-icon">&#x2753;</div>
-          <div class="card-title">FAQ</div>
-          <div class="card-desc">Frequently asked questions about IFR, Lock, Tiers, Builders</div>
-        </a>
-
-        <a href="transparency.html" class="card">
-          <div class="card-icon">&#x1f50d;</div>
-          <div class="card-title">Transparency</div>
-          <div class="card-desc">On-chain verification, supply distribution, ownership audit</div>
-        </a>
-
-        <a href="wallet-guide.html" class="card">
-          <div class="card-icon">&#x1f4d6;</div>
-          <div class="card-title">Wallet &amp; Contract Guide</div>
-          <div class="card-desc">Complete reference for all 7 wallets, 12 contracts, and 5 upcoming</div>
-        </a>
-
-        <a href="fair-launch.html" class="card">
-          <div class="card-icon">&#x1f680;</div>
-          <div class="card-title">Fair Launch</div>
-          <div class="card-desc">No presale, no VC, vesting schedule, community first</div>
-        </a>
-
-        <a href="fee-design.html" class="card">
-          <div class="card-icon">&#x1f4b8;</div>
-          <div class="card-title">Fee Design</div>
-          <div class="card-desc">Why 3.5%, fee-exempt addresses, CEX strategy, slippage</div>
-        </a>
-
-        <a href="bootstrap.html" class="card">
-          <div class="card-icon">&#x1f680;</div>
-          <div class="card-title">Bootstrap Event</div>
-          <div class="card-desc">Community price discovery &mdash; contribute ETH, receive IFR at launch</div>
-        </a>
-
-        <a href="roadmap.html" class="card">
-          <div class="card-icon">&#x1f5fa;</div>
-          <div class="card-title">Roadmap</div>
-          <div class="card-desc">5 phases from Foundation to Scale</div>
-        </a>
-
-        <a href="multisig.html" class="card">
-          <div class="card-icon">&#x1f6e1;</div>
-          <div class="card-title">Multisig Policy</div>
-          <div class="card-desc">Gnosis Safe, threshold roadmap, signer policy, project continuity</div>
-        </a>
-
-        <a href="one-pager.html" class="card">
-          <div class="card-icon">&#x1f4cb;</div>
-          <div class="card-title">One Pager</div>
-          <div class="card-desc">Key numbers, products, technology at a glance</div>
-        </a>
-
-        <a href="vesting.html" class="card">
-          <div class="card-icon">&#x23f3;</div>
-          <div class="card-title">Vesting Schedule</div>
-          <div class="card-desc">Team vesting, cliff, linear release, on-chain verification</div>
-        </a>
-
-        <a href="protocol-plan.html" class="card">
-          <div class="card-icon">&#x1f4d0;</div>
-          <div class="card-title">Protocol Plan</div>
-          <div class="card-desc">Architecture, wallet structure, contract relationships</div>
-        </a>
-
-        <a href="dao-governance.html" class="card">
-          <div class="card-icon">&#x1f3db;</div>
-          <div class="card-title">DAO Governance</div>
-          <div class="card-desc">Two-chamber system, Council + Forum, Phase 4 roadmap</div>
-        </a>
-
-        <a href="mainnet-checklist.html" class="card">
-          <div class="card-icon">&#x2705;</div>
-          <div class="card-title">Mainnet Checklist</div>
-          <div class="card-desc">Pre-deploy, deployment, post-deploy verification steps</div>
-        </a>
-
-        <a href="testnet.html" class="card">
-          <div class="card-icon">&#x1f9ea;</div>
-          <div class="card-title">Testnet Guide</div>
-          <div class="card-desc">Sepolia deployment, E2E test flows, expected outputs</div>
-        </a>
-
-        <a href="business-onboarding.html" class="card">
-          <div class="card-icon">&#x1f4bc;</div>
-          <div class="card-title">Business Onboarding</div>
-          <div class="card-desc">Benefits Network setup, merchant console, go-live checklist</div>
-        </a>
-
-        <a href="verify.html" class="card">
-          <div class="card-icon">&#x1f50f;</div>
-          <div class="card-title">Verify Wallet</div>
-          <div class="card-desc">3-tier signing UI, Telegram verification, wallet binding</div>
-        </a>
-
-        <a href="contributing.html" class="card">
-          <div class="card-icon">&#x1f91d;</div>
-          <div class="card-title">Contributing</div>
-          <div class="card-desc">Bug reports, code standards, git conventions</div>
-        </a>
-
-        <a href="press-kit.html" class="card">
-          <div class="card-icon">&#x1f4f0;</div>
-          <div class="card-title">Press Kit</div>
-          <div class="card-desc">Key facts, logos, brand assets, media resources</div>
-        </a>
-
+      <!-- How It Works -->
+      <h2 id="how-it-works">How It Works</h2>
+      <div class="how-step">
+        <div class="how-num">1</div>
+        <div><strong>Lender creates offer</strong><br><span style="color:var(--muted);font-size:0.88rem;">Deposit IFR on <a href="lending-vault.html">LendingVault</a>. Set how much you want to lend. Earn interest when borrowers repay.</span></div>
+      </div>
+      <div class="how-step">
+        <div class="how-num">2</div>
+        <div><strong>Borrower selects offer + posts ETH collateral</strong><br><span style="color:var(--muted);font-size:0.88rem;">Choose an offer, set duration (30&ndash;365 days), post 200% ETH collateral. Receive IFR immediately.</span></div>
+      </div>
+      <div class="how-step">
+        <div class="how-num">3</div>
+        <div><strong>Repay IFR + interest</strong><br><span style="color:var(--muted);font-size:0.88rem;">Return borrowed IFR plus monthly interest. Get your ETH collateral back. Interest split: 50% lender, 50% protocol.</span></div>
       </div>
 
-      <!-- Phase 3 Section -->
-      <h2 style="margin-top:48px;">Phase 3 &mdash; Ecosystem <span style="background:rgba(59,130,246,0.15);color:#3b82f6;font-size:0.7rem;padding:2px 8px;border-radius:4px;margin-left:8px;font-weight:700;">COMING SOON</span></h2>
-      <div class="cards-grid">
+      <!-- Interest Rate Table -->
+      <h2 id="rates">Interest Rate Curve</h2>
+      <p style="color:var(--muted);font-size:0.88rem;margin-bottom:14px;">Rates increase with utilization to ensure fair pricing and available liquidity.</p>
+      <table style="width:100%;font-size:0.88rem;margin-bottom:24px;">
+        <thead><tr><th style="text-align:left;padding:8px 12px;">Utilization</th><th style="text-align:right;padding:8px 12px;">Monthly Rate</th><th style="text-align:right;padding:8px 12px;">Effective Annual</th></tr></thead>
+        <tbody>
+          <tr><td style="padding:8px 12px;">0 &ndash; 25%</td><td style="text-align:right;padding:8px 12px;color:var(--green);">2%</td><td style="text-align:right;padding:8px 12px;color:var(--green);">~27%</td></tr>
+          <tr><td style="padding:8px 12px;">26 &ndash; 50%</td><td style="text-align:right;padding:8px 12px;color:var(--green);">3%</td><td style="text-align:right;padding:8px 12px;color:var(--green);">~43%</td></tr>
+          <tr><td style="padding:8px 12px;">51 &ndash; 75%</td><td style="text-align:right;padding:8px 12px;color:#eab308;">5%</td><td style="text-align:right;padding:8px 12px;color:#eab308;">~80%</td></tr>
+          <tr><td style="padding:8px 12px;">76 &ndash; 90%</td><td style="text-align:right;padding:8px 12px;color:#f97316;">8%</td><td style="text-align:right;padding:8px 12px;color:#f97316;">~152%</td></tr>
+          <tr><td style="padding:8px 12px;">91 &ndash; 99%</td><td style="text-align:right;padding:8px 12px;color:var(--accent);">15%</td><td style="text-align:right;padding:8px 12px;color:var(--accent);">~435%</td></tr>
+          <tr><td style="padding:8px 12px;">100%</td><td style="text-align:right;padding:8px 12px;color:#ef4444;">25%</td><td style="text-align:right;padding:8px 12px;color:#ef4444;">~1355%</td></tr>
+        </tbody>
+      </table>
 
-        <a href="commitment-vault.html" class="card" style="border-color:rgba(59,130,246,0.3);">
-          <div class="card-icon">&#x1F512;</div>
-          <div class="card-title">CommitmentVault</div>
-          <div class="card-desc">Voluntary token lock with 4 unlock conditions. Anti-dump mechanism.</div>
-        </a>
+      <!-- Collateral & Safety -->
+      <h2 id="safety">Collateral &amp; Safety</h2>
+      <table style="width:100%;font-size:0.88rem;margin-bottom:24px;">
+        <thead><tr><th style="text-align:left;padding:8px 12px;">Threshold</th><th style="text-align:right;padding:8px 12px;">Ratio</th><th style="text-align:left;padding:8px 12px;">Action</th></tr></thead>
+        <tbody>
+          <tr><td style="padding:8px 12px;">Initial Collateral</td><td style="text-align:right;padding:8px 12px;font-weight:700;">200%</td><td style="padding:8px 12px;">Required to borrow</td></tr>
+          <tr><td style="padding:8px 12px;color:#eab308;">Margin Call</td><td style="text-align:right;padding:8px 12px;color:#eab308;font-weight:700;">&lt; 150%</td><td style="padding:8px 12px;">Warning &mdash; top up collateral</td></tr>
+          <tr><td style="padding:8px 12px;color:#ef4444;">Liquidation</td><td style="text-align:right;padding:8px 12px;color:#ef4444;font-weight:700;">&lt; 120%</td><td style="padding:8px 12px;">Automatic &mdash; liquidator gets 5% bonus</td></tr>
+        </tbody>
+      </table>
 
-        <a href="lending-vault.html" class="card" style="border-color:rgba(59,130,246,0.3);">
-          <div class="card-icon">&#x1F4B0;</div>
-          <div class="card-title">LendingVault</div>
-          <div class="card-desc">IFR lending against ETH collateral. Self-reinforcing buy pressure.</div>
-        </a>
-
-        <a href="lending-market.html" class="card" style="border-color:rgba(59,130,246,0.3);">
-          <div class="card-icon">&#x1F3EA;</div>
-          <div class="card-title">Lending Market</div>
-          <div class="card-desc">P2P marketplace. Browse offers, borrow IFR, earn interest.</div>
-        </a>
-
-        <a href="lp-strategy.html" class="card" style="border-color:rgba(59,130,246,0.3);">
-          <div class="card-icon">&#x1F4C8;</div>
-          <div class="card-title">LP Strategy</div>
-          <div class="card-desc">Phased liquidity deployment. AMM mathematics explained.</div>
-        </a>
-
-        <a href="ecosystem.html" class="card" style="border-color:rgba(59,130,246,0.3);">
-          <div class="card-icon">&#x1F504;</div>
-          <div class="card-title">Ecosystem</div>
-          <div class="card-desc">The self-reinforcing loop. 3 principles. All stakeholders.</div>
-        </a>
-
-      </div>
+      <!-- Contract Addresses -->
+      <h2 id="contracts">Contract Addresses</h2>
+      <table style="width:100%;font-size:0.88rem;">
+        <tbody>
+          <tr><td style="padding:8px 12px;">LendingVault (Mainnet)</td><td style="padding:8px 12px;"><a href="https://etherscan.io/address/0x974305Ab0EC905172e697271C3d7d385194EB9DF" target="_blank" style="color:var(--accent);"><code>0x974305Ab0EC905172e697271C3d7d385194EB9DF</code></a></td></tr>
+          <tr><td style="padding:8px 12px;">IFR Token</td><td style="padding:8px 12px;"><a href="https://etherscan.io/address/0x77e99917Eca8539c62F509ED1193ac36580A6e7B" target="_blank" style="color:var(--accent);"><code>0x77e99917Eca8539c62F509ED1193ac36580A6e7B</code></a></td></tr>
+          <tr><td style="padding:8px 12px;">Owner</td><td style="padding:8px 12px;">Governance (TreasurySafe 3-of-5)</td></tr>
+        </tbody>
+      </table>
 
       <!-- Footer -->
       <footer class="wiki-footer">
-        Inferno ($IFR) &mdash; Community Fair Launch Model &mdash; Documentation v1.0
+        Inferno ($IFR) &mdash; Community Fair Launch Model &mdash; Documentation v1.1
       </footer>
 
     </main>
@@ -840,24 +890,6 @@
 </style>
 <button id="ifr-btn" onclick="var p=document.getElementById('ifr-panel');p.style.display=p.style.display==='block'?'none':'block';"><img src="../assets/CoPilot.jpg" alt="IFR Copilot"></button>
 <div id="ifr-panel"><iframe src="https://ifr-ai-copilot-production.up.railway.app" allow="clipboard-write"></iframe></div>
-
-<script>
-(function() {
-  function loadWikiIndexStats() {
-    fetch('https://ifr-ai-copilot-production.up.railway.app/api/ifr/supply')
-      .then(function(r) { return r.json(); })
-      .then(function(data) {
-        if (!data || !data.totalSupply) return;
-        var burned = 1000000000 - data.totalSupply;
-        var el = document.getElementById('wiki-index-burned');
-        if (el) el.textContent = (burned / 1000000).toFixed(2) + 'M';
-      })
-      .catch(function(e) { console.error('Wiki index stats failed:', e); });
-  }
-  setTimeout(loadWikiIndexStats, 1000);
-  setInterval(loadWikiIndexStats, 60000);
-})();
-</script>
 
 <script>
 async function lpConnect(){
@@ -937,6 +969,71 @@ IFRState.on("stateLoaded",lpUpdateUI);
 document.addEventListener("visibilitychange",async function(){if(document.visibilityState==="visible"&&!IFRWallet.isConnected()){var ok=await IFRWallet.autoReconnect();if(ok)lpUpdateUI(await IFRState.load(IFRWallet.getAddress()))}});
 (async function(){var ok=await IFRWallet.autoReconnect();if(ok)lpUpdateUI(await IFRState.load(IFRWallet.getAddress()))})();
 var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.addEventListener("mouseenter",function(){this.style.transform="scale(1.04)";this.style.boxShadow="0 4px 20px rgba(249,115,22,0.4)"});_wcBtn.addEventListener("mouseleave",function(){this.style.transform="";this.style.boxShadow="0 2px 12px rgba(249,115,22,0.25)"})}
+</script>
+
+<!-- Lending Market JS -->
+<script>
+(function() {
+  var RAILWAY = "https://ifr-ai-copilot-production.up.railway.app";
+  function fetchJSON(url) {
+    return fetch(url).then(function(r) { return r.json(); }).catch(function() { return null; });
+  }
+
+  function fmt(n) {
+    return Number(n).toLocaleString("en-US", { maximumFractionDigits: 0 });
+  }
+
+  function shortAddr(a) {
+    return a ? a.slice(0, 6) + "..." + a.slice(-4) : "";
+  }
+
+  async function loadMarket() {
+    var [stats, offers] = await Promise.all([
+      fetchJSON(RAILWAY + "/api/lending/stats"),
+      fetchJSON(RAILWAY + "/api/lending/offers")
+    ]);
+
+    // Stats
+    if (stats) {
+      var avEl = document.getElementById("m-available");
+      var ltEl = document.getElementById("m-lent");
+      var rtEl = document.getElementById("m-rate");
+      var lnEl = document.getElementById("m-loans");
+
+      if (stats.status === "not_deployed") {
+        if (avEl) avEl.textContent = "Jun 2026";
+        if (ltEl) ltEl.textContent = "\u2014";
+        if (rtEl) rtEl.textContent = "2%";
+        if (lnEl) lnEl.textContent = "0";
+      } else {
+        if (avEl) avEl.textContent = fmt(stats.totalAvailable) + " IFR";
+        if (ltEl) ltEl.textContent = fmt(stats.totalLent) + " IFR";
+        if (rtEl) rtEl.textContent = stats.currentRate + "%";
+        if (lnEl) lnEl.textContent = stats.activeLoans;
+      }
+    }
+
+    // Offers
+    var tbody = document.getElementById("offers-body");
+    if (!tbody) return;
+
+    if (offers && offers.length > 0) {
+      tbody.innerHTML = offers.map(function(o) {
+        return "<tr>" +
+          "<td style='font-family:monospace;font-size:0.82rem;'>" + shortAddr(o.lender) + "</td>" +
+          "<td>" + fmt(o.availableAmount) + " IFR</td>" +
+          "<td>" + (o.rate || 2) + "%</td>" +
+          "<td><a href='lending-vault.html' class='market-btn'>Borrow \u2192</a></td>" +
+          "</tr>";
+      }).join("");
+    } else {
+      tbody.innerHTML = "<tr><td colspan='4' style='text-align:center;color:var(--muted);padding:24px;'>No offers yet. LendingVault launches after Bootstrap June 2026.</td></tr>";
+    }
+  }
+
+  loadMarket();
+  setInterval(loadMarket, 60000);
+})();
 </script>
 </body>
 </html>
