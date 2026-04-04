@@ -251,13 +251,19 @@ On errors: fix immediately, commit with `seo:` prefix.
       4 condition types (TIME/PRICE/OR/AND), auto-unlock 30d, P0 immutable
       45 tests passing, ABI exported
       Handover: docs/CORE_DEV_PHASE3.md
-- [ ] 🔴 CommitmentVault Deploy Sepolia → Audit → Mainnet (Core Dev)
+- [x] ✅ CommitmentVault deployed Mainnet (04.04.2026)
+      Sepolia: 0xc43d48E7FDA576C5022d0670B652A622E8caD041
+      Mainnet: 0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3
+      Etherscan verified, UI activated
 - [x] ✅ LendingVault.sol written + tests (04.04.2026)
       Utilization-based interest (2–25%/month), 200/150/120% collateral
       50/50 interest split, liquidator 5% bonus, top-up collateral
       55 tests passing, ABI exported
       Handover: docs/CORE_DEV_PHASE3.md
-- [ ] 🔴 LendingVault Deploy Sepolia → Audit → Mainnet (Core Dev)
+- [x] ✅ LendingVault deployed Mainnet (04.04.2026)
+      Sepolia: 0x769928aBDfc949D0718d8766a1C2d7dBb63954Eb
+      Mainnet: 0x974305Ab0EC905172e697271C3d7d385194EB9DF
+      Etherscan verified, UI activated
 - [ ] 🔵 Write BuybackController.sol + tests
       Automated fee distribution (BuybackVault + BurnReserve)
 - [ ] 🔵 Core Dev: Deploy Sepolia → Audit → Mainnet

@@ -560,6 +560,8 @@ const PROTOCOL_ADDRESSES: Record<string, string> = {
   TeamBeneficiary: "0x04FABC52c51d1F8ced6974E7C25a34249b1E6239",
   VoucherSigner: "0x17F8DD6dECCb3ff5d95691982B85A87d7d9872d4",
   LPReserveSafe: "0x5D93E7919a71d725054e31017eCA86B026F86C04",
+  CommitmentVault: "0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3",
+  LendingVault: "0x974305Ab0EC905172e697271C3d7d385194EB9DF",
 };
 
 async function esApiFetch(params: string): Promise<unknown> {
