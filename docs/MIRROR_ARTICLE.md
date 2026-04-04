@@ -15,7 +15,7 @@ Lock IFR once. Get lifetime access. No subscriptions. No recurring fees. No comp
 We spent months building before launching. The result:
 
 - 14 smart contracts on Ethereum Mainnet
-- 578 automated tests (91% branch coverage)
+- 544 automated tests (91% branch coverage)
 - Slither static analysis: 0 critical findings
 - 48-hour governance timelock on all parameter changes
 - No mint function — supply only decreases

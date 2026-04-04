@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
     <link rel="canonical" href="https://ifrunit.tech/wiki/security.html">  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Security &mdash; Inferno ($IFR) Documentation</title>
-  <meta name="description" content="Slither audit (0 high/critical), 578 tests, 99% statement coverage, 91% branch coverage. All contracts immutable — no proxy.">
+  <meta name="description" content="Slither audit (0 high/critical), 544 tests, 99% statement coverage, 91% branch coverage. All contracts immutable — no proxy.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -481,19 +481,19 @@
   <meta property="og:type" content="article">
   <meta property="og:site_name" content="Inferno Protocol">
   <meta property="og:title" content="Security and Audit — Inferno Protocol ($IFR)">
-  <meta property="og:description" content="Slither audit (0 high/critical), 578 tests, 99% statement coverage, 91% branch coverage. All contracts immutable — no proxy pattern.">
+  <meta property="og:description" content="Slither audit (0 high/critical), 544 tests, 99% statement coverage, 91% branch coverage. All contracts immutable — no proxy pattern.">
   <meta property="og:url" content="https://ifrunit.tech/wiki/security.html">
   <meta property="og:image" content="https://ifrunit.tech/assets/ifr_icon_256.png">
   <meta name="twitter:card" content="summary">
   <meta name="twitter:title" content="Security and Audit — Inferno Protocol ($IFR)">
-  <meta name="twitter:description" content="Slither audit, 578 tests, 99% coverage. Immutable contracts, no proxy upgrades.">
+  <meta name="twitter:description" content="Slither audit, 544 tests, 99% coverage. Immutable contracts, no proxy upgrades.">
   <meta name="twitter:site" content="@IFRtoken">
   <meta name="twitter:image" content="https://ifrunit.tech/assets/ifr_icon_256.png">  <script type="application/ld+json">
   {
     "@context": "https://schema.org",
     "@type": "TechArticle",
     "headline": "Security and Audit",
-    "description": "Multi-layer security: Slither static analysis (0 high/critical), 578 automated tests, 99% statement and 91% branch coverage. All contracts immutable.",
+    "description": "Multi-layer security: Slither static analysis (0 high/critical), 544 automated tests, 99% statement and 91% branch coverage. All contracts immutable.",
     "url": "https://ifrunit.tech/wiki/security.html",
     "isPartOf": {"@id": "https://ifrunit.tech/#website"},
     "publisher": {"@id": "https://ifrunit.tech/#organization"},
@@ -709,7 +709,7 @@
 
       <div class="callout callout-green">
         <p>
-          <strong>Result:</strong> 0 FAIL &mdash; 21 WARN &mdash; 81 PASS &mdash;
+          <strong>Result:</strong> 0 FAIL &mdash; 12 WARN &mdash; 78 PASS &mdash;
           <a href="https://github.com/NeaBouli/inferno/blob/main/docs/SECURITY_AUDIT_SKYWALKER.md">Full Report</a>
         </p>
       </div>
@@ -788,12 +788,12 @@
 
       <!-- TODO: IFR_UPDATE — TEST_COUNT — update on each sprint -->
       <p>
-        The project maintains <strong>578 tests</strong> (521 protocol + 57 ecosystem) across <strong>18 test suites</strong>, all passing. Tests cover deployment, core logic, edge cases, access control, pause mechanisms, cross-contract integration, wallet verification, governance announcements, and browser testing.
+        The project maintains <strong>544 tests</strong> (367 contract + 77 app + 100 vault) across <strong>18 test suites</strong>, all passing. Tests cover deployment, core logic, edge cases, access control, pause mechanisms, cross-contract integration, wallet verification, governance announcements, and browser testing.
       </p>
 
       <div class="callout callout-green">
         <p>
-          <strong>578 / 578 tests passing</strong> &mdash; 18 test suites, 0 failures.
+          <strong>544 / 544 tests passing</strong> &mdash; 20 test suites, 0 failures.
         </p>
       </div>
 
@@ -967,7 +967,7 @@
       <div class="audit-block" style="background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.3);border-radius:12px;padding:24px;margin:32px 0;">
         <h3 style="color:#22c55e;margin-top:0;">Internal Security Review &mdash; Bootstrap Flow</h3>
         <p><strong>Date:</strong> 13 March 2026 &nbsp;|&nbsp; <strong>Scope:</strong> BootstrapVaultV3, InfernoToken, FeeRouterV1, Governance/Timelock</p>
-        <p><strong>Method:</strong> Manual code review + 578 automated tests (91% branch coverage)</p>
+        <p><strong>Method:</strong> Manual code review + 544 automated tests (91% branch coverage)</p>
         <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:16px 0;text-align:center;">
           <div style="background:rgba(34,197,94,0.15);border-radius:8px;padding:12px;">
             <div style="font-size:2rem;font-weight:700;color:#22c55e;">11</div>

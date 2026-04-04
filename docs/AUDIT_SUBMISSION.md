@@ -12,7 +12,7 @@ Sherlock. Auditors will find all relevant information here.
 | Language | Solidity 0.8.20 |
 | Framework | Hardhat |
 | Libraries | OpenZeppelin 5.x |
-| Tests | 578 (99% Statement Coverage) |
+| Tests | 544 (99% Statement Coverage) |
 
 ## Audit Scope (In Scope)
 

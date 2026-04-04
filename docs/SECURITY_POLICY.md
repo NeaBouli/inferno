@@ -66,7 +66,7 @@ Target: 5-10% of a defined treasury budget for critical findings.
 | Slither Static Analysis | Completed | 0 High/Critical |
 | ChatGPT Independent Audit | 7/7 PASS | No critical findings |
 | Professional Audit | Recommended | Code4rena / Sherlock |
-| Contract Tests | 578 total | All passing |
+| Contract Tests | 544 total | All passing |
 
 ## Contact
 
