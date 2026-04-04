@@ -1896,7 +1896,7 @@
       <p style="color:#9ca3af;margin-bottom:32px;font-size:0.9rem;">How every IFR token moves through the protocol</p>
     </div>
     <div style="max-width:900px;margin:0 auto;background:rgba(13,17,23,0.8);border:1px solid #1e2730;border-radius:20px;padding:20px;overflow:hidden;">
-      <svg viewBox="0 0 800 520" style="width:100%;height:auto;" xmlns="http://www.w3.org/2000/svg">
+      <svg viewBox="0 0 800 540" style="width:100%;height:auto;" xmlns="http://www.w3.org/2000/svg">
         <defs>
           <filter id="glow"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
         </defs>
@@ -2023,14 +2023,30 @@
         <!-- IFR → IFRLock (orange) -->
         <circle r="3" fill="#f97316" opacity="0.7"><animateMotion dur="3s" repeatCount="indefinite" path="M442,260 L640,252"/></circle>
 
+        <!-- CommitmentVault (Phase 3) -->
+        <line x1="705" y1="370" x2="705" y2="408" stroke="#3b82f6" stroke-width="1" stroke-dasharray="4,3"/>
+        <rect x="640" y="408" width="140" height="42" rx="10" fill="#0d1117" stroke="#3b82f6" stroke-width="1.5" stroke-dasharray="5,3"/>
+        <text x="710" y="426" text-anchor="middle" fill="#3b82f6" font-size="10" font-weight="bold">CommitmentVault</text>
+        <text x="710" y="442" text-anchor="middle" fill="#6b7280" font-size="8">Irrevocable lock &middot; 4 types</text>
+        <!-- Animated: User → CommitmentVault -->
+        <circle r="2.5" fill="#3b82f6" opacity="0.7"><animateMotion dur="3s" repeatCount="indefinite" path="M705,370 L705,408"/></circle>
+
+        <!-- LendingVault (Phase 3) -->
+        <line x1="640" y1="429" x2="530" y2="475" stroke="#3b82f6" stroke-width="1" stroke-dasharray="4,3"/>
+        <rect x="400" y="462" width="140" height="42" rx="10" fill="#0d1117" stroke="#3b82f6" stroke-width="1.5" stroke-dasharray="5,3"/>
+        <text x="470" y="480" text-anchor="middle" fill="#3b82f6" font-size="10" font-weight="bold">LendingVault</text>
+        <text x="470" y="494" text-anchor="middle" fill="#6b7280" font-size="8">Lend IFR &#x2194; Borrow ETH</text>
+        <!-- Animated: CommitmentVault → LendingVault -->
+        <circle r="2.5" fill="#3b82f6" opacity="0.5"><animateMotion dur="4s" begin="1s" repeatCount="indefinite" path="M640,429 L530,475"/></circle>
+
         <!-- Legend -->
-        <g transform="translate(20,488)">
+        <g transform="translate(20,510)">
           <circle cx="8" cy="8" r="4" fill="#f97316"/><text x="16" y="12" fill="#9ca3af" font-size="9">Fee flow</text>
           <circle cx="80" cy="8" r="4" fill="#ef4444"/><text x="88" y="12" fill="#9ca3af" font-size="9">Burn</text>
           <circle cx="130" cy="8" r="4" fill="#60a5fa"/><text x="138" y="12" fill="#9ca3af" font-size="9">LP</text>
           <circle cx="165" cy="8" r="4" fill="#22c55e"/><text x="173" y="12" fill="#9ca3af" font-size="9">Lock / Rewards</text>
-          <circle cx="260" cy="8" r="4" fill="#a78bfa"/><text x="268" y="12" fill="#9ca3af" font-size="9">Planned</text>
-          <rect x="325" y="4" width="14" height="8" fill="none" stroke="#9ca3af" stroke-width="1" stroke-dasharray="3,2" rx="2"/><text x="343" y="12" fill="#9ca3af" font-size="9">Phase 3</text>
+          <circle cx="260" cy="8" r="4" fill="#3b82f6"/><text x="268" y="12" fill="#9ca3af" font-size="9">Phase 3 Vaults</text>
+          <rect x="345" y="4" width="14" height="8" fill="none" stroke="#9ca3af" stroke-width="1" stroke-dasharray="3,2" rx="2"/><text x="363" y="12" fill="#9ca3af" font-size="9">Phase 3</text>
         </g>
       </svg>
     </div>
