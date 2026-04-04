@@ -106,10 +106,14 @@
     <ul>
       <li><div class="cb"></div>&#x1F534; <strong>finalise() aufrufen</strong> (permissionless)<br>
         <span style="color:#6b7280;font-size:0.82rem;">Pr&uuml;fen: vault.finalized() = true</span></li>
-      <li><div class="cb"></div>&#x1F534; <strong>Proposal #11: Uniswap Pool feeExempt</strong><br>
+      <li><div class="cb"></div>&#x1F534; <strong>Proposal #11: feeExempt(CommitmentVault)</strong> &mdash; PENDING<br>
+        <span style="color:#ef4444;font-size:0.82rem;">KRITISCH vor ersten User-Locks! Script: PROPOSAL_11_EXECUTION.md</span></li>
+      <li><div class="cb"></div>&#x1F534; <strong>Proposal #12: feeExempt(LendingVault)</strong> &mdash; PENDING<br>
+        <span style="color:#ef4444;font-size:0.82rem;">KRITISCH vor ersten Loans! Script: PROPOSAL_12_EXECUTION.md</span></li>
+      <li><div class="cb"></div>&#x1F534; <strong>Proposal #13: Uniswap Pool feeExempt</strong><br>
         <span style="color:#ef4444;font-size:0.82rem;">SOFORT nach finalise()! Pool Adresse erst nach finalise() bekannt</span></li>
       <li><div class="cb"></div>&#x1F534; <strong>P0 berechnen</strong><br>
-        <span style="color:#6b7280;font-size:0.82rem;">P0 = totalETHRaised / 100,000,000 &mdash; In CommitmentVault setzen (Proposal #12) &mdash; IMMUTABLE!</span></li>
+        <span style="color:#6b7280;font-size:0.82rem;">P0 = totalETHRaised / 100,000,000 &mdash; In CommitmentVault setzen (Proposal #14) &mdash; IMMUTABLE!</span></li>
       <li><div class="cb"></div>&#x1F534; <strong>Contributor 1: CommitmentVault Lock</strong><br>
         <span style="color:#6b7280;font-size:0.82rem;">100M IFR &rarr; 10 Tranchen konfigurieren. Contributor hat zugestimmt &#x2705;</span></li>
       <li><div class="cb"></div>&#x1F534; <strong>Contributor 1: LendingVault Allowance</strong><br>
@@ -122,12 +126,12 @@
     <!-- ═══ PHASE 3 — POST-BOOTSTRAP ═══ -->
     <h2><span class="priority-badge p-critical">CRITICAL</span> Phase 3 &mdash; After Bootstrap finalise() (~05.06.2026)</h2>
     <ul>
-      <li><div class="cb"></div>&#x1F534; <strong>Proposal #11: Uniswap Pool feeExempt</strong><br>
+      <li><div class="cb"></div>&#x1F534; <strong>Proposal #13: Uniswap Pool feeExempt</strong><br>
         <span style="color:#ef4444;font-size:0.82rem;">IMMEDIATELY after finalise()! Without = IFR effectively not tradeable (3.5% fee on swaps)</span></li>
-      <li><div class="cb"></div>&#x1F534; <strong>Proposal #12: Set P0 in CommitmentVault</strong><br>
+      <li><div class="cb"></div>&#x1F534; <strong>Proposal #14: Set P0 in CommitmentVault</strong><br>
         <span style="color:#6b7280;font-size:0.82rem;">P0 = Total ETH / 100M. IMMUTABLE once set!</span></li>
-      <li><div class="cb"></div>&#x1F535; Deploy CommitmentVault (voluntary lock, 4 condition types, auto-unlock 30d)</li>
-      <li><div class="cb"></div>&#x1F535; Deploy LendingVault (IFR lending, ETH collateral 200%, TWAP Oracle)</li>
+      <li><div class="cb cb-done">&#x2713;</div>&#x2705; CommitmentVault deployed Mainnet: <code>0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3</code></li>
+      <li><div class="cb cb-done">&#x2713;</div>&#x2705; LendingVault deployed Mainnet: <code>0x974305Ab0EC905172e697271C3d7d385194EB9DF</code></li>
       <li><div class="cb"></div>&#x1F535; Deploy BuybackController (automated fee distribution)</li>
     </ul>
     <h3>Wiki Pages (4 new) &#x2705;</h3>

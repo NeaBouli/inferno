@@ -196,6 +196,8 @@ All ownable contracts transferred to Governance (48h Timelock). Parameter change
 | PartnerVault | `admin()` | Governance |
 | FeeRouterV1 | `governance()` | Governance (immutable) |
 | BuilderRegistry | `owner()` | Governance — [`0xdfe6636D...CEf0EE3`](https://etherscan.io/address/0xdfe6636DA47F8949330697e1dC5391267CEf0EE3) (deployed 20.03.2026) |
+| CommitmentVault | `owner()` | Governance — [`0x0719d9eb...73d3`](https://etherscan.io/address/0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3) (deployed 04.04.2026) |
+| LendingVault | `owner()` | Governance — [`0x974305Ab...9DF`](https://etherscan.io/address/0x974305Ab0EC905172e697271C3d7d385194EB9DF) (deployed 04.04.2026) |
 | IFRLock | `guardian()` | Deployer (emergency pause only) |
 | Vesting | `guardian()` | Deployer (emergency pause only) |
 | Governance | `owner()` | TreasurySafe 3-of-5 (transferred 20.03.2026, TX `0xcd9f99d2...19c46c3`) |
@@ -217,6 +219,10 @@ All ownable contracts transferred to Governance (48h Timelock). Parameter change
 | feeExempt(BootstrapVault V1) Proposal #0 | **Executed** |
 | feeExempt(Vesting) Proposal #1 | **Cancelled** (redundant — feeExempt set directly by Deployer 05.03.2026) |
 | feeExempt(BurnReserve) Proposal #2 | **Cancelled** (redundant — feeExempt set directly by Deployer 05.03.2026) |
+| CommitmentVault deployed + verified | **Done** (04.04.2026) — [`0x0719d9eb...`](https://etherscan.io/address/0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3#code) |
+| LendingVault deployed + verified | **Done** (04.04.2026) — [`0x974305Ab...`](https://etherscan.io/address/0x974305Ab0EC905172e697271C3d7d385194EB9DF#code) |
+| feeExempt(CommitmentVault) Proposal #11 | **Pending** — TreasurySafe 3-of-5 |
+| feeExempt(LendingVault) Proposal #12 | **Pending** — TreasurySafe 3-of-5 |
 | Create Uniswap V2 LP (400M IFR + ETH) | Pending |
 | Lock LP Tokens (min 12 months) | Pending |
 | Transfer InfernoToken Ownership to Governance | **Done** (2026-03-05) |
