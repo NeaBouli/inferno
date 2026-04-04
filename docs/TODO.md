@@ -187,13 +187,21 @@ On errors: fix immediately, commit with `seo:` prefix.
 - [ ] 🔴 finalise() aufrufen (permissionless)
       Prüfen: vault.finalized() = true
 
-- [ ] 🔴 Proposal #11: Uniswap Pool feeExempt
+- [ ] 🔴 Proposal #11: feeExempt(CommitmentVault) — PENDING
+      KRITISCH vor ersten User-Locks!
+      Script: docs/PROPOSAL_11_EXECUTION.md
+      Via TreasurySafe 3-of-5
+- [ ] 🔴 Proposal #12: feeExempt(LendingVault) — PENDING
+      KRITISCH vor ersten Loans/Deposits!
+      Script: docs/PROPOSAL_12_EXECUTION.md
+      Via TreasurySafe 3-of-5
+- [ ] 🔴 Proposal #13: Uniswap Pool feeExempt
       SOFORT nach finalise()!
       Pool Adresse erst nach finalise() bekannt
 
 - [ ] 🔴 P0 berechnen:
       P0 = totalETHRaised / 100,000,000
-      In CommitmentVault setzen (Proposal #12)
+      In CommitmentVault setzen (Proposal #14)
       IMMUTABLE — korrekt berechnen!
 
 - [ ] 🔴 Contributor 1: CommitmentVault Lock
@@ -212,12 +220,11 @@ On errors: fix immediately, commit with `seo:` prefix.
       (03.04.2026)
 
 ### Phase 3 — After Bootstrap finalise() (~05.06.2026)
-- [ ] 🔴 CRITICAL: Proposal #11 — Set Uniswap Pool feeExempt
+- [ ] 🔴 CRITICAL: Proposal #13 — Set Uniswap Pool feeExempt
       WARNING: Without this proposal IFR is effectively not tradeable (3.5% fee on every swap!)
       Timing: IMMEDIATELY after finalise() + pool creation
       Address: Uniswap V2 Pair (only known after finalise())
-      Ref: IFR_ECOSYSTEM_A_TO_Z.pdf Chapter 9.2 + Appendix B
-- [ ] 🔴 CRITICAL: Proposal #12 — Set P0 in CommitmentVault
+- [ ] 🔴 CRITICAL: Proposal #14 — Set P0 in CommitmentVault
       P0 = Total ETH raised / 100,000,000 (IMMUTABLE once set!)
       All CommitmentVault tranche targets are based on P0 — wrong calculation = catastrophic
       Timing: After finalise() + Uniswap Pool live

@@ -1040,7 +1040,7 @@ await governance.execute(proposalId);</code></pre>
         </tbody>
       </table>
 
-      <h3 style="margin-top:28px;">Planned Future Proposals</h3>
+      <h3 style="margin-top:28px;">Upcoming &amp; Planned Proposals</h3>
       <table>
         <thead>
           <tr><th>#</th><th>Action</th><th>Timing</th><th>Status</th></tr>
@@ -1048,14 +1048,32 @@ await governance.execute(proposalId);</code></pre>
         <tbody>
           <tr>
             <td>#11</td>
+            <td><code>setFeeExempt(CommitmentVault, true)</code><br>
+              <span class="address" style="color:#ef4444;">CRITICAL &mdash; must execute before first user lock!</span><br>
+              <span class="address"><code>0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3</code></span>
+            </td>
+            <td>ASAP (via TreasurySafe)</td>
+            <td><span class="badge" style="background:#eab308;">Pending</span></td>
+          </tr>
+          <tr>
+            <td>#12</td>
+            <td><code>setFeeExempt(LendingVault, true)</code><br>
+              <span class="address" style="color:#ef4444;">CRITICAL &mdash; must execute before first deposit/borrow!</span><br>
+              <span class="address"><code>0x974305Ab0EC905172e697271C3d7d385194EB9DF</code></span>
+            </td>
+            <td>ASAP (via TreasurySafe)</td>
+            <td><span class="badge" style="background:#eab308;">Pending</span></td>
+          </tr>
+          <tr>
+            <td>#13</td>
             <td><code>setFeeExempt(Uniswap V2 Pair, true)</code><br>
-              <span class="address" style="color:#ef4444;">&#x26A0;&#xFE0F; CRITICAL &mdash; without this proposal IFR is effectively not tradeable (3.5% fee on every swap)</span>
+              <span class="address" style="color:#ef4444;">CRITICAL &mdash; without this IFR is not tradeable (3.5% fee on every swap)</span>
             </td>
             <td>IMMEDIATELY after finalise()</td>
             <td><span class="badge" style="background:#6b7280;">Planned</span></td>
           </tr>
           <tr>
-            <td>#12</td>
+            <td>#14</td>
             <td><code>setP0(CommitmentVault)</code><br>
               <span class="address">P0 = Total ETH / 100M &mdash; IMMUTABLE once set</span>
             </td>
@@ -1063,7 +1081,7 @@ await governance.execute(proposalId);</code></pre>
             <td><span class="badge" style="background:#6b7280;">Planned</span></td>
           </tr>
           <tr>
-            <td>#13+</td>
+            <td>#15+</td>
             <td>LP milestone additions (50M/100M IFR + proportional ETH)</td>
             <td>At pool depth $2k / $10k</td>
             <td><span class="badge" style="background:#6b7280;">Planned</span></td>

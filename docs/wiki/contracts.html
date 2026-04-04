@@ -2239,6 +2239,66 @@ console.<span class="function">log</span>(<span class="string">"Reserve1:"</span
 
         <div class="section-divider"></div>
 
+        <!-- 12. CommitmentVault                                   -->
+        <div class="contract-card" id="commitment-vault">
+            <div class="contract-header">
+                <h2>CommitmentVault</h2>
+                <span style="background:rgba(234,179,8,0.15);color:#eab308;padding:2px 8px;border-radius:4px;font-size:0.75rem;font-weight:700;">feeExempt Pending</span>
+            </div>
+            <div class="contract-path">contracts/vault/CommitmentVault.sol</div>
+            <p>Irrevocable token lock with 4 condition types (TIME_ONLY, PRICE_ONLY, TIME_OR_PRICE, TIME_AND_PRICE). Auto-unlock 30 days after condition met. P0 immutable after Bootstrap. Owner: Governance (TreasurySafe 3-of-5).</p>
+            <div style="margin:12px 0;">
+                <table style="width:100%;font-size:0.88rem;">
+                    <tbody>
+                        <tr>
+                            <td>Mainnet</td>
+                            <td><a href="https://etherscan.io/address/0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3#code" target="_blank"><code>0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3</code></a> (deployed 04.04.2026)</td>
+                        </tr>
+                        <tr>
+                            <td>Sepolia</td>
+                            <td><a href="https://sepolia.etherscan.io/address/0xc43d48E7FDA576C5022d0670B652A622E8caD041#code" target="_blank"><code>0xc43d48E7FDA576C5022d0670B652A622E8caD041</code></a></td>
+                        </tr>
+                        <tr>
+                            <td>Status</td>
+                            <td><strong style="color:#eab308;">feeExempt pending &mdash; Governance Proposal #11</strong></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="section-divider"></div>
+
+        <!-- 13. LendingVault                                      -->
+        <div class="contract-card" id="lending-vault">
+            <div class="contract-header">
+                <h2>LendingVault</h2>
+                <span style="background:rgba(234,179,8,0.15);color:#eab308;padding:2px 8px;border-radius:4px;font-size:0.75rem;font-weight:700;">feeExempt Pending</span>
+            </div>
+            <div class="contract-path">contracts/vault/LendingVault.sol</div>
+            <p>IFR lending against ETH collateral. Utilization-based interest (2&ndash;25%/month). Collateral: 200% initial, 150% margin call, 120% liquidation. Liquidator bonus: 5%. Interest split: 50% lender, 50% protocol. Owner: Governance (TreasurySafe 3-of-5).</p>
+            <div style="margin:12px 0;">
+                <table style="width:100%;font-size:0.88rem;">
+                    <tbody>
+                        <tr>
+                            <td>Mainnet</td>
+                            <td><a href="https://etherscan.io/address/0x974305Ab0EC905172e697271C3d7d385194EB9DF#code" target="_blank"><code>0x974305Ab0EC905172e697271C3d7d385194EB9DF</code></a> (deployed 04.04.2026)</td>
+                        </tr>
+                        <tr>
+                            <td>Sepolia</td>
+                            <td><a href="https://sepolia.etherscan.io/address/0x769928aBDfc949D0718d8766a1C2d7dBb63954Eb#code" target="_blank"><code>0x769928aBDfc949D0718d8766a1C2d7dBb63954Eb</code></a></td>
+                        </tr>
+                        <tr>
+                            <td>Status</td>
+                            <td><strong style="color:#eab308;">feeExempt pending &mdash; Governance Proposal #12</strong></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="section-divider"></div>
+
         <!-- ── Footer ─────────────────────────────────────────── -->
         <div style="text-align: center; padding: 32px 0 0; color: #8a8a96; font-size: 13px;">
             <p>Inferno Protocol &mdash; Solidity 0.8.20 &bull; OpenZeppelin v5 &bull; Hardhat v2</p>
