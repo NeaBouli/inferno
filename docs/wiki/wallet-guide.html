@@ -1209,11 +1209,30 @@
           <text x="530" y="478" text-anchor="middle" fill="#ef4444" font-size="10" font-weight="600">BurnReserve (Phase 3)</text>
 
           <!-- IFRLock section -->
-          <rect x="620" y="310" width="150" height="50" rx="8" fill="rgba(249,115,22,0.06)" stroke="#f97316" stroke-width="1"/>
-          <text x="695" y="330" text-anchor="middle" fill="white" font-size="11" font-weight="600">IFRLock</text>
-          <text x="695" y="346" text-anchor="middle" fill="#9ca3af" font-size="10">User locks IFR</text>
-          <line x1="695" y1="360" x2="695" y2="388" stroke="#f97316" stroke-width="1" marker-end="url(#arrow-orange)"/>
-          <text x="695" y="404" text-anchor="middle" fill="#f97316" font-size="11" font-weight="700">Premium Access</text>
+          <rect x="620" y="296" width="150" height="44" rx="8" fill="rgba(249,115,22,0.06)" stroke="#f97316" stroke-width="1"/>
+          <text x="695" y="314" text-anchor="middle" fill="white" font-size="11" font-weight="600">IFRLock</text>
+          <text x="695" y="330" text-anchor="middle" fill="#9ca3af" font-size="10">User locks IFR</text>
+          <line x1="695" y1="340" x2="695" y2="358" stroke="#f97316" stroke-width="1" marker-end="url(#arrow-orange)"/>
+          <text x="695" y="374" text-anchor="middle" fill="#f97316" font-size="10" font-weight="700">Premium Access</text>
+
+          <!-- CommitmentVault (Phase 3) -->
+          <rect x="620" y="390" width="150" height="44" rx="8" fill="rgba(59,130,246,0.06)" stroke="#3b82f6" stroke-width="1"/>
+          <text x="695" y="408" text-anchor="middle" fill="white" font-size="10" font-weight="600">CommitmentVault</text>
+          <text x="695" y="424" text-anchor="middle" fill="#9ca3af" font-size="9">Irrevocable lock (4 types)</text>
+
+          <!-- LendingVault (Phase 3) -->
+          <rect x="30" y="390" width="150" height="44" rx="8" fill="rgba(59,130,246,0.06)" stroke="#3b82f6" stroke-width="1"/>
+          <text x="105" y="408" text-anchor="middle" fill="white" font-size="10" font-weight="600">LendingVault</text>
+          <text x="105" y="424" text-anchor="middle" fill="#9ca3af" font-size="9">Lend IFR &#x2194; Borrow ETH</text>
+
+          <!-- Arrow: IFRLock -> CommitmentVault -->
+          <line x1="695" y1="374" x2="695" y2="388" stroke="#3b82f6" stroke-width="1" stroke-dasharray="3,2" marker-end="url(#arrow-blue)"/>
+
+          <!-- Arrow: Community/Vesting -> LendingVault -->
+          <line x1="110" y1="330" x2="105" y2="388" stroke="#3b82f6" stroke-width="1" stroke-dasharray="3,2" marker-end="url(#arrow-blue)"/>
+
+          <!-- Phase 3 label -->
+          <text x="400" y="494" text-anchor="middle" fill="#3b82f6" font-size="9" font-weight="600">Phase 3: CommitmentVault + LendingVault + Lending Market &#x2014; deployed 04.04.2026</text>
         </svg>
       </div>
 
