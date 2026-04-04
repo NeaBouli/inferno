@@ -187,14 +187,15 @@ On errors: fix immediately, commit with `seo:` prefix.
 - [ ] 🔴 finalise() aufrufen (permissionless)
       Prüfen: vault.finalized() = true
 
-- [ ] 🔴 Proposal #11: feeExempt(CommitmentVault) — PENDING
-      KRITISCH vor ersten User-Locks!
-      Script: docs/PROPOSAL_11_EXECUTION.md
-      Via TreasurySafe 3-of-5
-- [ ] 🔴 Proposal #12: feeExempt(LendingVault) — PENDING
-      KRITISCH vor ersten Loans/Deposits!
-      Script: docs/PROPOSAL_12_EXECUTION.md
-      Via TreasurySafe 3-of-5
+- [ ] 🔴 Proposals #11+#12: feeExempt(CV+LV) — SUBMITTED, 48h TIMELOCK
+      Submitted: 04.04.2026 via TreasurySafe 3-of-5
+      EXECUTE AFTER: 06.04.2026
+      Script: node scripts/execute-proposals-11-12.js
+      Verify: feeExempt(CV) + feeExempt(LV) = true
+- [x] ✅ Railway: COMMITMENT_VAULT_ADDR gesetzt (04.04.2026)
+      0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3
+- [x] ✅ Railway: LENDING_VAULT_ADDR gesetzt (04.04.2026)
+      0x974305Ab0EC905172e697271C3d7d385194EB9DF
 - [ ] 🔴 Proposal #13: Uniswap Pool feeExempt
       SOFORT nach finalise()!
       Pool Adresse erst nach finalise() bekannt

@@ -106,10 +106,9 @@
     <ul>
       <li><div class="cb"></div>&#x1F534; <strong>finalise() aufrufen</strong> (permissionless)<br>
         <span style="color:#6b7280;font-size:0.82rem;">Pr&uuml;fen: vault.finalized() = true</span></li>
-      <li><div class="cb"></div>&#x1F534; <strong>Proposal #11: feeExempt(CommitmentVault)</strong> &mdash; PENDING<br>
-        <span style="color:#ef4444;font-size:0.82rem;">KRITISCH vor ersten User-Locks! Script: PROPOSAL_11_EXECUTION.md</span></li>
-      <li><div class="cb"></div>&#x1F534; <strong>Proposal #12: feeExempt(LendingVault)</strong> &mdash; PENDING<br>
-        <span style="color:#ef4444;font-size:0.82rem;">KRITISCH vor ersten Loans! Script: PROPOSAL_12_EXECUTION.md</span></li>
+      <li><div class="cb"></div>&#x1F534; <strong>Proposals #11+#12: feeExempt(CV+LV)</strong> &mdash; 48h TIMELOCK<br>
+        <span style="color:#ef4444;font-size:0.82rem;">Submitted 04.04.2026. EXECUTE AFTER 06.04.2026: <code>node scripts/execute-proposals-11-12.js</code></span></li>
+      <li><div class="cb cb-done">&#x2713;</div>&#x2705; Railway: COMMITMENT_VAULT_ADDR + LENDING_VAULT_ADDR gesetzt (04.04.2026)</li>
       <li><div class="cb"></div>&#x1F534; <strong>Proposal #13: Uniswap Pool feeExempt</strong><br>
         <span style="color:#ef4444;font-size:0.82rem;">SOFORT nach finalise()! Pool Adresse erst nach finalise() bekannt</span></li>
       <li><div class="cb"></div>&#x1F534; <strong>P0 berechnen</strong><br>
