@@ -14,7 +14,7 @@ Inferno ($IFR) is a deflationary ERC-20 utility token on Ethereum. Users lock IF
 | Standard | ERC-20, Ethereum |
 | Decimals | 9 |
 | Initial Supply | 1,000,000,000 IFR |
-| Smart Contracts | 14 on-chain components (all verified) |
+| Smart Contracts | 16 on-chain components (all verified) |
 | Tests | 578 (99% coverage) |
 | Network | Ethereum Mainnet (deployed 2026-03-05) |
 | Launch Model | Community Fair Launch (CFLM) |

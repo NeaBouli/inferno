@@ -13,7 +13,7 @@
 - [x] PartnerVault (549 LOC, 95 tests, milestone unlocking + creator rewards)
 - [x] FeeRouterV1 (EIP-712 vouchers, protocol fee routing)
 - [x] v2 upgrades: LiquidityReserve, BuybackVault, BurnReserve (transferOwnership)
-- [x] 14 on-chain components deployed on Sepolia (9 repo + 3 v2 + LP Pair + BootstrapVault)
+- [x] 16 on-chain components deployed on Sepolia (9 repo + 3 v2 + LP Pair + BootstrapVault)
 
 ### Testing & Security
 - [x] 578 total tests (521 protocol + 57 ecosystem)

@@ -505,7 +505,7 @@
     {
       "@type": "Question",
       "name": "Are the contracts upgradeable?",
-      "acceptedAnswer": {"@type":"Answer","text":"No. All 14 deployed protocol contracts are immutable — no proxy pattern, no UUPS. Bytecode cannot be changed after deployment. The Treasury and Community Safe use Gnosis Safe proxy (audited multisig standard). This prevents rug-pulls via contract upgrades."}
+      "acceptedAnswer": {"@type":"Answer","text":"No. All 16 deployed protocol contracts are immutable — no proxy pattern, no UUPS. Bytecode cannot be changed after deployment. The Treasury and Community Safe use Gnosis Safe proxy (audited multisig standard). This prevents rug-pulls via contract upgrades."}
     },
     {
       "@type": "Question",
@@ -767,12 +767,12 @@
       <div class="faq-section">
         <div class="faq-item">
           <button class="faq-q"><span>Has the protocol been audited?</span><span class="icon">+</span></button>
-          <div class="faq-a">Yes. The protocol has undergone multiple layers of security analysis:<br><br>&bull; <strong>External AI Security Audit (March 19, 2026)</strong>: Independent analysis of InfernoToken.sol &mdash; 2 critical/high findings identified and mitigated by Governance architecture (48h Timelock + TreasurySafe 3-of-5). No exploitable bugs found. <a href="security.html#external-audit">Full report</a><br>&bull; <strong>Slither static analysis</strong>: 0 high/critical findings across all contracts<br>&bull; <strong>Claude security audit</strong>: 0 FAIL, 21 WARN, 81 PASS<br>&bull; <strong>ChatGPT audit V4</strong>: 7/7 areas PASS<br>&bull; <strong>578 automated tests</strong> (521 protocol + 57 ecosystem) with 99% statement coverage and 91% branch coverage<br>&bull; <strong>App security review</strong>: 20/25 findings fixed, 5 documented<br>&bull; <strong>Internal Security Review (March 2026)</strong>: Bootstrap flow &mdash; 11/14 secure, 3/14 low risk, 0 critical<br><br>All 14 on-chain components are deployed and verified on Ethereum Mainnet. A professional third-party audit (Code4rena, Sherlock, or Cyfrin) is planned for Phase 2.</div>
+          <div class="faq-a">Yes. The protocol has undergone multiple layers of security analysis:<br><br>&bull; <strong>External AI Security Audit (March 19, 2026)</strong>: Independent analysis of InfernoToken.sol &mdash; 2 critical/high findings identified and mitigated by Governance architecture (48h Timelock + TreasurySafe 3-of-5). No exploitable bugs found. <a href="security.html#external-audit">Full report</a><br>&bull; <strong>Slither static analysis</strong>: 0 high/critical findings across all contracts<br>&bull; <strong>Claude security audit</strong>: 0 FAIL, 21 WARN, 81 PASS<br>&bull; <strong>ChatGPT audit V4</strong>: 7/7 areas PASS<br>&bull; <strong>578 automated tests</strong> (521 protocol + 57 ecosystem) with 99% statement coverage and 91% branch coverage<br>&bull; <strong>App security review</strong>: 20/25 findings fixed, 5 documented<br>&bull; <strong>Internal Security Review (March 2026)</strong>: Bootstrap flow &mdash; 11/14 secure, 3/14 low risk, 0 critical<br><br>All 16 on-chain components are deployed and verified on Ethereum Mainnet. A professional third-party audit (Code4rena, Sherlock, or Cyfrin) is planned for Phase 2.</div>
         </div>
 
         <div class="faq-item">
           <button class="faq-q"><span>How can I verify the contracts on Etherscan?</span><span class="icon">+</span></button>
-          <div class="faq-a">All 14 on-chain components are verified on Etherscan with source code visible. Visit each contract address on <a href="https://etherscan.io" target="_blank" rel="noopener">etherscan.io</a>, click the &ldquo;Contract&rdquo; tab, then &ldquo;Read Contract&rdquo; to inspect state. The main token address is <code>0x77e99917Eca8539c62F509ED1193ac36580A6e7B</code>. All addresses are listed on the <a href="deployment.html">Deployment</a> page.</div>
+          <div class="faq-a">All 16 on-chain components are verified on Etherscan with source code visible. Visit each contract address on <a href="https://etherscan.io" target="_blank" rel="noopener">etherscan.io</a>, click the &ldquo;Contract&rdquo; tab, then &ldquo;Read Contract&rdquo; to inspect state. The main token address is <code>0x77e99917Eca8539c62F509ED1193ac36580A6e7B</code>. All addresses are listed on the <a href="deployment.html">Deployment</a> page.</div>
         </div>
 
         <div class="faq-item">
@@ -797,7 +797,7 @@
 
         <div class="faq-item">
           <button class="faq-q"><span>Are the contracts upgradeable?</span><span class="icon">+</span></button>
-          <div class="faq-a">No. All 14 deployed protocol contracts are immutable &mdash; there is no proxy pattern, no UUPS, no transparent proxy. Once deployed, the bytecode cannot be changed. This means no rug-pull via contract upgrade is possible. The trade-off is that bugs cannot be patched in-place, but this is a deliberate security decision: immutability over convenience.<br><br>The exception are the Treasury Safe and Community Safe, which use the Gnosis Safe proxy architecture. Gnosis Safe is a battle-tested, audited multisig standard &mdash; any upgrade requires explicit multisig consensus and is publicly verifiable on-chain. This is not a protocol risk but an industry-standard operational security pattern.</div>
+          <div class="faq-a">No. All 16 deployed protocol contracts are immutable &mdash; there is no proxy pattern, no UUPS, no transparent proxy. Once deployed, the bytecode cannot be changed. This means no rug-pull via contract upgrade is possible. The trade-off is that bugs cannot be patched in-place, but this is a deliberate security decision: immutability over convenience.<br><br>The exception are the Treasury Safe and Community Safe, which use the Gnosis Safe proxy architecture. Gnosis Safe is a battle-tested, audited multisig standard &mdash; any upgrade requires explicit multisig consensus and is publicly verifiable on-chain. This is not a protocol risk but an industry-standard operational security pattern.</div>
         </div>
       </div>
 
@@ -927,7 +927,7 @@
 
         <div class="faq-item">
           <button class="faq-q"><span>How do I verify this project is legitimate?</span><span class="icon">+</span></button>
-          <div class="faq-a">Verification checklist:<br><br>&bull; All 14 on-chain components verified on <a href="https://etherscan.io/address/0x77e99917Eca8539c62F509ED1193ac36580A6e7B#code" target="_blank" rel="noopener">Etherscan</a> &mdash; read the source code<br>&bull; Full repository open-source at <a href="https://github.com/NeaBouli/inferno" target="_blank" rel="noopener">GitHub</a><br>&bull; 578 automated tests, 99% coverage<br>&bull; No mint function &mdash; verify in contract source<br>&bull; All wallet addresses publicly documented<br>&bull; Governance timelock &mdash; all changes visible 48h in advance<br>&bull; No hidden admin functions &mdash; Slither confirms</div>
+          <div class="faq-a">Verification checklist:<br><br>&bull; All 16 on-chain components verified on <a href="https://etherscan.io/address/0x77e99917Eca8539c62F509ED1193ac36580A6e7B#code" target="_blank" rel="noopener">Etherscan</a> &mdash; read the source code<br>&bull; Full repository open-source at <a href="https://github.com/NeaBouli/inferno" target="_blank" rel="noopener">GitHub</a><br>&bull; 578 automated tests, 99% coverage<br>&bull; No mint function &mdash; verify in contract source<br>&bull; All wallet addresses publicly documented<br>&bull; Governance timelock &mdash; all changes visible 48h in advance<br>&bull; No hidden admin functions &mdash; Slither confirms</div>
         </div>
 
         <div class="faq-item">

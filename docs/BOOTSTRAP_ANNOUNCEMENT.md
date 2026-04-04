@@ -71,7 +71,7 @@ LP locked 12 months via Team.Finance.
 - Lock IFR once → lifetime premium access
 - Fair launch: no presale, no VC, no IDO
 - 578 tests, 0 critical audit findings
-- 14 on-chain components, all verified
+- 16 on-chain components, all verified
 
 Not a trading token. A utility lock.
 ```
@@ -120,7 +120,7 @@ No presale. No VC. No IDO. Team tokens vested 4 years with 12-month cliff. All o
 **Security:**
 - 578 automated tests, 91% branch coverage
 - Slither audit: 0 high/critical findings
-- All 14 contracts verified on Etherscan
+- All 16 contracts verified on Etherscan
 - 48h governance timelock on all parameter changes
 
 **Links:**

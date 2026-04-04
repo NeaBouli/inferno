@@ -55,8 +55,8 @@ Then update ALL of these if counts changed:
 **2. Wiki/Contract Count Sync**
 If a new wiki page or contract was added:
 ```
-ls docs/wiki/*.html | wc -l          # → update "26 wiki pages" everywhere
-ls contracts/*.sol | wc -l           # → update "14 on-chain components" everywhere
+ls docs/wiki/*.html | wc -l          # → update "32 wiki pages" everywhere
+ls contracts/*.sol | wc -l           # → update "16 on-chain components" everywhere
 ```
 
 **Quick bulk replace command:**
@@ -90,7 +90,7 @@ Check all wiki pages + landing page for:
 - Open Graph: og:title, og:description, og:image, og:url
 - Twitter Card: twitter:card, twitter:site, twitter:title
 - robots.txt allows GPTBot/ClaudeBot/PerplexityBot?
-- sitemap.xml current (all 26 wiki pages)?
+- sitemap.xml current (all 32 wiki pages)?
 - All IFR_UPDATE markers visited and current?
 - h1/h2/h3 hierarchy correct (no h1→h3 jumps)?
 On errors: fix immediately, commit with `seo:` prefix.
@@ -528,7 +528,7 @@ On errors: fix immediately, commit with `seo:` prefix.
 - [x] Audit report `AUDIT_REPORT_20260314.md` created
 - [x] Test counts 494/444 → 556 across 32 files
 - [x] Wiki page count 16/24 → 25 across 8 files
-- [x] `rel="canonical"` on all 26 wiki pages
+- [x] `rel="canonical"` on all 32 wiki pages
 - [x] `twitter:card` + `twitter:site` + `twitter:image` on all pages
 - [x] JSON-LD on `verify.html`
 - [x] `verify.html` in sitemap
