@@ -10,70 +10,150 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        *, *::before, *::after {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+    /* ============================================================
+       Inferno Wiki — Shared Styles (copy into every wiki page)
+       ============================================================ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-        html {
-            scroll-behavior: smooth;
-        }
+    :root {
+      --bg:       #0a0a0a;
+      --card:     #111113;
+      --border:   #222225;
+      --text:     #e8e8ed;
+      --muted:    #8a8a96;
+      --accent:   #ff4500;
+      --green:    #22c55e;
+      --sidebar-w: 240px;
+    }
 
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: #0a0a0a;
-            color: #e8e8ed;
-            line-height: 1.7;
-            min-height: 100vh;
-        }
+    html { scroll-behavior: smooth; }
 
-        /* ── Layout ───────────────────────────────────────────── */
-        .layout {
-            display: grid;
-            grid-template-columns: 240px 1fr;
-            min-height: 100vh;
-        }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      min-height: 100vh;
+    }
 
-        /* ── Sidebar ──────────────────────────────────────────── */
-        .sidebar {
-            background: #111113;
-            border-right: 1px solid #222225;
-            padding: 32px 20px;
-            position: sticky;
-            top: 0;
-            height: 100vh;
-            overflow-y: auto;
-        }
+    /* ---------- Layout (CSS Grid) ---------- */
+    .layout {
+      display: grid;
+      grid-template-columns: var(--sidebar-w) 1fr;
+      min-height: 100vh;
+    }
 
-        .sidebar-logo {
-            font-size: 20px;
-            font-weight: 800;
-            letter-spacing: 3px;
-            color: var(--accent);
-            padding: 0 24px 4px;
-            text-decoration: none;
-            display: block;
-        }
+    /* ---------- Sidebar ---------- */
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: var(--sidebar-w);
+      height: 100vh;
+      background: var(--card);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      padding: 24px 0;
+      overflow-y: auto;
+      z-index: 100;
+      transition: transform 0.3s ease;
+    }
 
-        .sidebar-subtitle {
-            font-size: 12px;
-            color: var(--muted);
-            padding: 0 24px 24px;
-            border-bottom: 1px solid var(--border);
-        }
+    .sidebar-logo {
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: 3px;
+      color: var(--accent);
+      padding: 0 24px 4px;
+      text-decoration: none;
+      display: block;
+    }
 
-        .sidebar nav .divider {
-            height: 1px;
-            background: #222225;
-            margin: 12px 0;
-        }
+    .sidebar-subtitle {
+      font-size: 12px;
+      color: var(--muted);
+      padding: 0 24px 24px;
+      border-bottom: 1px solid var(--border);
+    }
 
-        /* ── Main Content ─────────────────────────────────────── */
-        .main {
-            padding: 48px 56px 80px;
-            max-width: 960px;
-        }
+    .sidebar-nav {
+      list-style: none;
+      padding: 16px 0;
+      flex: 1;
+    }
+
+    .sidebar-nav a {
+      display: block;
+      padding: 10px 24px;
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      transition: color 0.2s, background 0.2s, border-left 0.2s;
+      border-left: 3px solid transparent;
+    }
+
+    .sidebar-nav a:hover {
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .sidebar-nav a.active {
+      color: var(--accent);
+      border-left-color: var(--accent);
+      background: rgba(255, 69, 0, 0.06);
+    }
+
+    .sidebar-nav .nav-divider {
+      height: 1px;
+      background: var(--border);
+      margin: 12px 24px;
+    }
+
+    /* ---------- Hamburger (mobile) ---------- */
+    .hamburger {
+      display: none;
+      position: fixed;
+      top: 16px;
+      left: 16px;
+      z-index: 200;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 12px;
+      cursor: pointer;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .hamburger span {
+      display: block;
+      width: 22px;
+      height: 2px;
+      background: var(--text);
+      border-radius: 2px;
+      transition: transform 0.3s, opacity 0.3s;
+    }
+
+    .hamburger.open span:nth-child(1) { transform: rotate(45deg) translate(5px, 5px); }
+    .hamburger.open span:nth-child(2) { opacity: 0; }
+    .hamburger.open span:nth-child(3) { transform: rotate(-45deg) translate(5px, -5px); }
+
+    .sidebar-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.6);
+      z-index: 90;
+    }
+
+    /* ---------- Main content ---------- */
+    .main {
+      grid-column: 2;
+      padding: 48px 56px;
+      max-width: 960px;
+    }
 
         .page-title {
             font-size: 36px;
@@ -372,23 +452,17 @@
         .hamburger.open span:nth-child(1) { transform:rotate(45deg) translate(5px,5px); }
         .hamburger.open span:nth-child(2) { opacity:0; }
         .hamburger.open span:nth-child(3) { transform:rotate(-45deg) translate(5px,-5px); }
-        .sidebar-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:90; }
-        .sidebar-nav { list-style:none; padding:16px 0; flex:1; }
-        .sidebar-nav a { display:block; padding:10px 24px; color:var(--muted); text-decoration:none; font-size:14px; font-weight:500; transition:color 0.2s,background 0.2s,border-left 0.2s; border-left:3px solid transparent; }
-        .sidebar-nav a:hover { color:var(--text); background:rgba(255,255,255,0.03); }
-        .sidebar-nav a.active { color:var(--accent); border-left-color:var(--accent); background:rgba(255,69,0,0.06); }
-        .nav-divider { height:1px; background:var(--border); margin:8px 24px; }
-
-        @media (max-width: 768px) {
-            .layout { grid-template-columns: 1fr; }
-            .sidebar { transform:translateX(-100%); }
-            .sidebar.open { transform:translateX(0); }
-            .sidebar-overlay.open { display:block; }
-            .hamburger { display:flex; }
-            .main { grid-column:1; padding:72px 20px 40px; }
-            .page-title { font-size: 28px; }
-            .toc ol li a .toc-path { display: none; }
-        }
+    /* ---------- Responsive ---------- */
+    @media (max-width: 768px) {
+      .layout { grid-template-columns: 1fr; }
+      .sidebar { transform: translateX(-100%); }
+      .sidebar.open { transform: translateX(0); }
+      .sidebar-overlay.open { display: block; }
+      .hamburger { display: flex; }
+      .main { grid-column: 1; padding: 72px 20px 40px; }
+      .page-title { font-size: 28px; }
+      .toc ol li a .toc-path { display: none; }
+    }
     @keyframes pulse-bootstrap { 0% { color: #ef4444; text-shadow: 0 0 8px rgba(239,68,68,0.8); } 50% { color: #22c55e; text-shadow: 0 0 12px rgba(34,197,94,0.9); } 100% { color: #ef4444; text-shadow: 0 0 8px rgba(239,68,68,0.8); } } .nav-bootstrap-pulse { animation: pulse-bootstrap 2s ease-in-out infinite; font-weight: 700 !important; }
     </style>
     <link rel="icon" type="image/png" href="../assets/ifr_icon_64.png">
