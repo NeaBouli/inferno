@@ -766,8 +766,9 @@
               <code>setGuardian</code>, <code>setOwner</code>
             </td>
             <td>
-              Deployer<br>
-              <span class="address">0x5Ecc668eab04C5bee81b5c7242e1077c946dE406</span>
+              TreasurySafe 3-of-5<br>
+              <span class="address"><a href="https://etherscan.io/address/0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b" target="_blank">0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b</a></span><br>
+              <span style="font-size:0.75rem;color:var(--muted);">Transferred 20.03.2026 &mdash; <a href="https://etherscan.io/tx/0xcd9f99d2e5df5c28b81f885c7ebf7e2d42a873bd1c81bef9d94aa5c2d19c46c3" target="_blank">TX</a></span>
             </td>
           </tr>
           <tr>
@@ -777,8 +778,9 @@
               Cannot propose or execute
             </td>
             <td>
-              Deployer<br>
-              <span class="address">0x5Ecc668eab04C5bee81b5c7242e1077c946dE406</span>
+              Deployer EOA<br>
+              <span class="address">0x6b36687b0cd4386fb14cf565B67D7862110Fed67</span><br>
+              <span style="font-size:0.75rem;color:var(--muted);">Emergency cancel only &mdash; no governance power</span>
             </td>
           </tr>
           <tr>
@@ -796,7 +798,7 @@
 
       <div class="callout callout-green">
         <p>
-          <strong>Note:</strong> On mainnet, the Owner and Guardian roles will be transferred to a Gnosis Safe multisig for additional security.
+          <strong>Note:</strong> The Owner role was transferred to TreasurySafe (Gnosis Safe 3-of-5) on 20.03.2026. All proposals now require 3-of-5 multisig signatures. The Guardian (Deployer EOA) retains only the emergency <code>cancel()</code> function &mdash; it cannot propose or execute.
         </p>
       </div>
 
@@ -1267,7 +1269,7 @@ await governance.execute(proposalId);</code></pre>
           </tr>
           <tr>
             <td>Who can propose</td>
-            <td>Owner (deployer EOA) only</td>
+            <td>Owner (TreasurySafe 3-of-5) only</td>
           </tr>
           <tr>
             <td>Safety mechanism</td>
