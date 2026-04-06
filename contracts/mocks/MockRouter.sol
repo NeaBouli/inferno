@@ -76,4 +76,37 @@ contract MockRouter {
         amounts[0] = msg.value;
         amounts[1] = out;
     }
+
+    // ── addLiquidityETH (for BuybackController tests) ──────────
+
+    bool public addLiquidityReverts;
+    uint256 public liquidityMinted;
+
+    function setAddLiquidityReverts(bool _reverts) external {
+        addLiquidityReverts = _reverts;
+    }
+
+    function addLiquidityETH(
+        address token,
+        uint256 amountTokenDesired,
+        uint256 /*amountTokenMin*/,
+        uint256 /*amountETHMin*/,
+        address to,
+        uint256 /*deadline*/
+    ) external payable returns (uint256 amountToken, uint256 amountETH, uint256 liquidity) {
+        require(!addLiquidityReverts, "MockRouter: addLiquidity reverts");
+        require(token == IFR_ADDR, "unsupported token");
+        require(msg.value > 0, "no ETH");
+
+        // Transfer IFR from sender to this contract (simulates LP deposit)
+        // In real Uniswap the router pulls tokens via transferFrom
+        // For testing we just accept whatever is offered
+        amountToken = amountTokenDesired;
+        amountETH = msg.value;
+        liquidity = msg.value; // 1:1 mock LP tokens
+
+        liquidityMinted += liquidity;
+
+        // Emit nothing — the BuybackController emits its own event
+    }
 }
