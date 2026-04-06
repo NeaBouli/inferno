@@ -617,23 +617,13 @@ On errors: fix immediately, commit with `seo:` prefix.
       Uses locked balance (not wallet balance) for tier calculation
       Governance-configurable thresholds
 
-- [ ] 🔵 Generator Engine (deterministic)
-      Builder inputs JSON config:
-      { "minAmount": 500, "lock": true, "lockDuration": 7,
-        "cooldown": true, "tierSystem": true, "apiCheck": true }
-      Output: verified contract code from audited templates
-      NO free AI generation — only pre-audited template combinations
-      Security Score calculated automatically
-
-- [ ] 🔵 Validator Layer (Security Scoring)
-      Every configuration gets a score:
-      🟢 SAFE:   Hard Lock + Duration >= 7d + Cooldown
-      🟡 MEDIUM: Hold + Live Check (no lock)
-      🔴 RISKY:  Soft Lock without Cooldown
-      Warnings for unsafe patterns:
-      - "Soft lock vulnerable to short-term exploit"
-      - "No cooldown — flash access possible"
-      - "Lock duration < 7 days — insufficient"
+- [x] ✅ Generator Engine + Security Scorer — Phase 5b (07.04.2026)
+      apps/builder/engine/:
+      - ConfigValidator.ts — validates partner JSON config
+      - SecurityScorer.ts — 0-100 score, 🟢 SAFE / 🟡 MEDIUM / 🔴 RISKY
+      - CodeGenerator.ts — generates contract + SDK snippet + deploy guide
+      POST /api/builder/generate endpoint active
+      30 tests passing (test/builder/GeneratorEngine.test.js)
 
 - [ ] 🔵 IFR SDK (JavaScript / TypeScript)
       npm install ifr-sdk
