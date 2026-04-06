@@ -81,9 +81,9 @@ Inferno ($IFR) ist ein **deflationärer ERC-20 Utility-Token** auf Ethereum. Jed
 
 ### Tests & Coverage
 
-- **578 total tests** (521 protocol + 57 ecosystem) — all passing
+- **544 total tests (367 contract + 77 app + 100 vault) — all passing
 - **Solidity Coverage**: 99.45% Stmts, 91% Branch, 98.26% Funcs, 99% Lines
-- **Wiki**: 26 HTML pages
+- **Wiki**: 32 HTML pages
 - **CI**: 5 Workflows (creator-gateway, points-backend, ai-copilot, benefits-network, docs-validator)
 
 ---
@@ -190,7 +190,7 @@ apps/
 └── benefits-network/frontend/      # Port 3000, Next.js 14 + wagmi v2
 ```
 
-### Wiki (16 HTML Pages)
+### Wiki (32 HTML Pages)
 
 ```
 docs/wiki/
@@ -221,7 +221,7 @@ docs/wiki/
 - **Sepolia Testnet** — Full lifecycle getestet (Governance, IFRLock, Fee-on-Transfer, PartnerVault)
 - **Security Review** — 20/25 Findings fixed, 5 documented (APP_SECURITY_REVIEW.md)
 - **AI Copilot** — Railway deployed, 3-Mode System (chat/learn/quiz)
-- **578 tests** (521 protocol + 57 ecosystem) — All passing
+- **544 tests** (367 contract + 77 app + 100 vault) — All passing
 
 ---
 

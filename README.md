@@ -11,7 +11,7 @@
 **Contract:** [`0x77e99917Eca8539c62F509ED1193ac36580A6e7B`](https://etherscan.io/address/0x77e99917Eca8539c62F509ED1193ac36580A6e7B#code) | **Network:** Ethereum Mainnet | **Bootstrap:** ACTIVE until June 5, 2026
 
 <!-- TODO: IFR_UPDATE — TEST_COUNT + CONTRACT_COUNT — update on each sprint -->
-**14 on-chain components** | **578 tests** | **91% branch coverage** | **9 verified contracts + BootstrapVaultV3 + LP Pair + 3 upgrade deploys**
+**16 on-chain components** | **544 tests** | **91% branch coverage** | **9 verified contracts + BootstrapVaultV3 + LP Pair + 3 upgrade deploys**
 
 ### Quick Links
 
@@ -130,7 +130,7 @@ The ecosystem is open and permissionless. Any product can integrate IFR Lock.
 
 ## Testing & Security
 
-**578 tests** — all passing
+**544 tests** — all passing
 
 ### Protocol Tests — 521
 | Suite | Count | Framework |
@@ -151,7 +151,7 @@ The ecosystem is open and permissionless. Any product can integrate IFR Lock.
 - Branch coverage: 91% (99% statements)
 - GitHub Actions CI: Creator Gateway, Points Backend, AI Copilot
 - Slither security audit: 0 high/critical findings
-- Internal security audit: 0 FAIL, 20 WARN (1 fixed), 81 PASS ([full report](docs/SECURITY_AUDIT_SKYWALKER.md))
+- Internal security audit: 0 FAIL, 12 WARN, 78 PASS ([full report](docs/SECURITY_AUDIT_SKYWALKER.md))
 - App security review: 12 findings (2 CRITICAL, 5 HIGH — all fixed) ([full report](docs/APP_SECURITY_REVIEW.md))
 - **Bootstrap security review (13.03.2026):** BootstrapVaultV3 + InfernoToken + FeeRouterV1 + Governance — 11/14 secure, 3/14 low risk, 0 critical ([full report](audit/BOOTSTRAP_SECURITY_REVIEW_13032026.md))
 - Full Sepolia testnet deployment with verified contracts
@@ -161,7 +161,7 @@ The ecosystem is open and permissionless. Any product can integrate IFR Lock.
 
 All smart contracts are open source and community review is explicitly encouraged.
 
-- **Internal Audit:** [docs/SECURITY_AUDIT_SKYWALKER.md](docs/SECURITY_AUDIT_SKYWALKER.md) — 0 FAIL, 20 WARN (1 fixed), 81 PASS
+- **Internal Audit:** [docs/SECURITY_AUDIT_SKYWALKER.md](docs/SECURITY_AUDIT_SKYWALKER.md) — 0 FAIL, 12 WARN, 78 PASS
 - **Submit a Finding:** [GitHub Issues → Security Audit Template](https://github.com/NeaBouli/inferno/issues/new?template=security-audit.md)
 - **Security Policy:** [SECURITY.md](SECURITY.md)
 
@@ -263,7 +263,7 @@ SIWE authentication, points tracking, and EIP-712 signed voucher issuance for pr
 - [Roadmap](docs/ROADMAP.md) — 6-phase roadmap (Foundation → Governance → Ecosystem → Mainnet → Growth → DAO)
 - [Page Update Checklist](docs/PAGE_UPDATE_CHECKLIST.md) — Which files to update for each event
 - [Deployment Stats](docs/stats.json) — Auto-generated on-chain stats (via update-stats.js)
-- [Project Summary](docs/PROJECT-SUMMARY.md) — Complete overview (9 mainnet contracts, 578 tests, 7 apps)
+- [Project Summary](docs/PROJECT-SUMMARY.md) — Complete overview (9 mainnet contracts, 544 tests, 7 apps)
 - [Release Notes v0.1.0](docs/RELEASE_NOTES_v0.1.0.md) — First tagged release (Sepolia testnet)
 - [Lighthouse Report](docs/LIGHTHOUSE_REPORT.md) — SEO optimizations (OG, Twitter Card, meta tags, sitemap, robots.txt)
 - [AI Copilot Test Results](docs/COPILOT_TEST_RESULTS.md) — RAG system test (6 questions, 3 modes, safety guards)

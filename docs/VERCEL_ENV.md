@@ -67,7 +67,7 @@ curl https://ifr-ai-copilot-production.up.railway.app/api/health
 
 The Copilot is embedded as an iframe widget in all pages:
 - `docs/index.html` (Landing Page)
-- `docs/wiki/*.html` (all 26 wiki pages)
+- `docs/wiki/*.html` (all 32 wiki pages)
 
 ```javascript
 iframe.src = 'https://ifr-ai-copilot-production.up.railway.app';
