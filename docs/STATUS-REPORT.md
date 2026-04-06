@@ -10,7 +10,7 @@
 
 ## On-Chain (Ethereum Mainnet)
 
-16 on-chain components (9 repo contracts + 1 Uniswap V2 LP Pair). All verified on Etherscan. Ownership transferred to Governance (48h Timelock).
+16 on-chain components (13 deployed contracts + 3 Gnosis Safes). All verified on Etherscan. Ownership transferred to Governance (48h Timelock).
 
 | # | Contract | Address | Status |
 |---|----------|---------|--------|
@@ -49,7 +49,7 @@ Sepolia deployment served as the full testnet validation phase prior to mainnet.
 | Benefits Network | 16 | Jest |
 | **Total** | **544** | |
 
-### Contract Tests (367 -- 10 Suites)
+### Contract Tests (367 -- 13 Suites)
 
 | Suite | Tests | Description |
 |-------|-------|-------------|
@@ -175,7 +175,7 @@ Sepolia deployment served as the full testnet validation phase prior to mainnet.
 
 | # | Task | Status |
 |---|------|--------|
-| 1 | Mainnet Deployment (9 contracts + verify) | **Done** (2026-03-05) |
+| 1 | Mainnet Deployment (13 contracts + verify) | **Done** (2026-03-05) |
 | 2 | Governance Proposal #0 (Mainnet) | **Pending** (ETA 2026-03-07 20:12 CET) |
 | 3 | Create Uniswap V2 LP (400M IFR + ETH) | Open |
 | 4 | Lock LP Tokens (min 12 months via Unicrypt) | Open |

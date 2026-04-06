@@ -11,7 +11,7 @@
 **Contract:** [`0x77e99917Eca8539c62F509ED1193ac36580A6e7B`](https://etherscan.io/address/0x77e99917Eca8539c62F509ED1193ac36580A6e7B#code) | **Network:** Ethereum Mainnet | **Bootstrap:** ACTIVE until June 5, 2026
 
 <!-- TODO: IFR_UPDATE — TEST_COUNT + CONTRACT_COUNT — update on each sprint -->
-**16 on-chain components** | **544 tests** | **91% branch coverage** | **9 verified contracts + BootstrapVaultV3 + LP Pair + 3 upgrade deploys**
+**16 on-chain components** | **544 tests** | **91% branch coverage** | **13 verified contracts + 3 Gnosis Safes**
 
 ### Quick Links
 

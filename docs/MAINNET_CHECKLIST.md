@@ -1,6 +1,6 @@
 # Inferno ($IFR) — Mainnet Deployment Checklist
 
-> **Status:** Mainnet Deployed (2026-03-05) | **Mainnet:** 9 Contracts deployed + verified | **Tests:** 367 Contract + 77 App + 100 Vault = 544 Total | **Coverage:** 99% Stmts, 91% Branch
+> **Status:** Mainnet Deployed (2026-03-05) | **Mainnet:** 13 Contracts deployed + verified | **Tests:** 367 Contract + 77 App + 100 Vault = 544 Total | **Coverage:** 99% Stmts, 91% Branch
 
 ## CRITICAL — Before Any Public Launch
 
@@ -26,7 +26,7 @@ These items MUST be completed before public launch:
 - [ ] Reduce deployer wallet to minimum (gas only)
 
 ### Current Status (2026-03-05)
-- Mainnet Deploy: 9/9 contracts deployed + verified
+- Mainnet Deploy: 13/13 contracts deployed + verified
 - Token Distribution: 1B IFR correctly distributed (CFLM)
 - Fee Exemptions: 8 addresses set, deployer removed
 - Ownership Transfer: Done (2026-03-05, 4 contracts → Governance)
@@ -181,7 +181,7 @@ These items MUST be completed before public launch:
 
 ## Phase 2: Post-Deployment Verification
 
-- [ ] All 10 contract addresses updated in docs/wiki/deployment.html
+- [ ] All 13 contract addresses updated in docs/wiki/deployment.html
 - [ ] Landing page Etherscan links updated
 - [ ] README contract addresses updated
 - [ ] docs/DEPLOYMENTS.md mainnet section added
