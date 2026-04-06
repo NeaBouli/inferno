@@ -588,13 +588,102 @@ On errors: fix immediately, commit with `seo:` prefix.
 - [ ] PartnerVault Option C (milestone unlock + linear vesting)
 - [ ] Bootstrap V4 (contributor voting, ETH-weighted)
 
-### Phase 5
-- [ ] Bug bounty program
-- [ ] Professional audit (third-party)
-- [ ] Ecosystem fund
+### Phase 5 — IFR Integration Builder
+> "IFR = Stripe for Web3 Access" — Builder integrate IFR in < 1 hour
+
+- [ ] 🔵 Contract Library — Modular Vault Building Blocks
+      Path: contracts/library/
+      Modules:
+      - HardLockModule.sol (time-bound lock: 7/30/90 days min)
+      - CooldownModule.sol (anti-gaming between lock/unlock)
+      - TierModule.sol (Tier 1/2/3 based on IFR amount)
+      - AntiAbuseModule.sol (withdraw protection)
+      Rule: Builders combine ONLY these audited modules — no custom code
+
+- [ ] 🔵 Tier System (on-chain)
+      Not just on/off — graduated access levels:
+      Tier 1: >= 500 IFR   → Basic Access
+      Tier 2: >= 2,000 IFR → Premium
+      Tier 3: >= 10,000 IFR → Pro / Full Access
+      Builders gate features by tier
+      CommitmentVault compatible
+
+- [ ] 🔵 Generator Engine (deterministic)
+      Builder inputs JSON config:
+      { "minAmount": 500, "lock": true, "lockDuration": 7,
+        "cooldown": true, "tierSystem": true, "apiCheck": true }
+      Output: verified contract code from audited templates
+      NO free AI generation — only pre-audited template combinations
+      Security Score calculated automatically
+
+- [ ] 🔵 Validator Layer (Security Scoring)
+      Every configuration gets a score:
+      🟢 SAFE:   Hard Lock + Duration >= 7d + Cooldown
+      🟡 MEDIUM: Hold + Live Check (no lock)
+      🔴 RISKY:  Soft Lock without Cooldown
+      Warnings for unsafe patterns:
+      - "Soft lock vulnerable to short-term exploit"
+      - "No cooldown — flash access possible"
+      - "Lock duration < 7 days — insufficient"
+
+- [ ] 🔵 IFR SDK (JavaScript / TypeScript)
+      npm install ifr-sdk
+      import { checkAccess, getTier } from "ifr-sdk"
+      const hasAccess = await checkAccess({ wallet, required: 500 })
+      const tier = await getTier(wallet) // returns 1, 2, or 3
+      REST API: GET /api/ifr/check?wallet=0x...&tier=2
+
+- [ ] 🔵 Generator UI (Web Interface)
+      URL: app.ifrunit.tech/builder
+      - Slider: Min IFR Amount (100 — 10,000)
+      - Toggle: Hard Lock ON/OFF
+      - Dropdown: Duration (7 / 30 / 90 days)
+      - Toggle: Cooldown / Tier System / API Check
+      Output: Contract code + Security Score + SDK snippet + Guide
+
+- [ ] 🔵 Business Onboarding Flow (< 1 hour)
+      1. Generator UI → config + score
+      2. Deploy contract + verify
+      3. npm install ifr-sdk
+      4. 3 lines of code in app
+      5. Test + Go live
+      Docs: docs/wiki/business-onboarding.html
+
+- [ ] 🔵 Revenue Share Discussion (Phase 5+ Governance)
+      Governance Proposal after Phase 4:
+      Option A: % of pool fees → holder rewards
+      Option B: Tier-based rewards (more IFR = more)
+      Option C: Builder pays % → holder pool
+      Goal: not just burn — but cashflow
+      Formula: Value = Utility + Cashflow
+
+- [ ] 🔵 Flywheel Documentation (Wiki)
+      New page: ecosystem-flywheel.html
+      More builders use SDK → more IFR locked → supply drops
+      → price rises → more builders come → FLYWHEEL
+
+- [ ] 🔵 Bug bounty program
+- [ ] 🔵 Professional audit (third-party: Code4rena / Sherlock / Cyfrin)
+- [ ] 🔵 Ecosystem fund
+
+### External Analysis — Findings (April 2026)
+
+External AI analysis confirms:
+- ✅ Live Balance Check (SecureCall) — strong security model
+- ✅ Fair Launch — no VC, trustworthy distribution
+- ✅ Clear use case — rare in DeFi space
+- ✅ CommitmentVault solves "soft lock" vulnerability
+
+Open items for Phase 5:
+- 📌 SDK for builders → Phase 5
+- 📌 Tier system → Phase 5
+- 📌 Generator engine → Phase 5
+- 📌 Revenue share → Phase 5+ Governance
+
+Strategic goal: "IFR = Stripe for Web3 Access — Web3 SaaS Standard"
 
 ---
 
 *This document is updated with every completed task.*
-*Last updated: 2026-04-04*
+*Last updated: 2026-04-06*
 
