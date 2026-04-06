@@ -4,7 +4,7 @@ Last updated: March 2026
 
 ## Project Status: MAINNET DEPLOYED
 
-All 16 on-chain components deployed, verified, and operational on Ethereum Mainnet (2026-03-05). BootstrapVault deployed on Sepolia. Landing page, wiki (26 pages), dashboard, and 7 apps live.
+All 16 on-chain components deployed, verified, and operational on Ethereum Mainnet (2026-03-05). BootstrapVault deployed on Sepolia. Landing page, wiki (32 pages), dashboard, and 7 apps live.
 
 ## On-Chain Contracts (10)
 
@@ -44,7 +44,7 @@ Threshold: 3-of-5 (5 active signers: A.K., M.G., A.M., Y.K., A.P.).
 | Creator Gateway | 41 | Jest + ts-jest + supertest |
 | Points Backend | 20 | tsx runner |
 | Benefits Network | 16 | Jest |
-| **Total** | **578** | |
+| **Total** | **544** | |
 
 ### Solidity Coverage (solidity-coverage)
 
