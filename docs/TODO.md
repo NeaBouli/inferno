@@ -303,16 +303,20 @@ On errors: fix immediately, commit with `seo:` prefix.
       "Top Up" button for margin calls
 
 ### Phase 3 — Railway Extensions
-- [ ] 🔵 Lending Endpoints
+- [x] ✅ Lending Endpoints (07.04.2026)
+      GET /api/lending/stats — market overview
       GET /api/lending/offers — all lender offers
-      POST /api/lending/request — request loan
-      GET /api/lending/loans/:address — active loans
-      GET /api/lending/health/:loanId — collateral ratio
-- [ ] 🔵 CommitmentVault Endpoints
-      GET /api/commitment/:address — tranche status
-      GET /api/commitment/leaderboard — Diamond Hands
-- [ ] 🔵 Cron Job: Liquidation Monitor (every 4h)
-      Checks all open loans, warning at <150%, Telegram alert at <120%
+      GET /api/lending/loans/:address — active loans per borrower
+      GET /api/lending/health/:loanId — collateral ratio + health
+      GET /api/lending/lender/:address — lender dashboard
+- [x] ✅ CommitmentVault Endpoints (07.04.2026)
+      GET /api/commitment/tranches/:address — all tranches
+      GET /api/commitment/status/:address — quick summary + tier
+      GET /api/commitment/p0 — P0 status
+      GET /api/commitment/leaderboard — Diamond Hands (placeholder, Phase 2: event indexing)
+- [x] ✅ Cron Job: Liquidation Monitor every 4h (07.04.2026)
+      Checks all active loans, logs warning at <150%, critical at <120%
+      Phase 2: Telegram alert integration
 
 ### Phase 3 — Uniswap Integration
 - [ ] 🔵 "Buy IFR" button on landing page (after LP is live)
