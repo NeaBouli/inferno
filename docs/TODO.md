@@ -600,22 +600,22 @@ On errors: fix immediately, commit with `seo:` prefix.
 ### Phase 5 — IFR Integration Builder
 > "IFR = Stripe for Web3 Access" — Builder integrate IFR in < 1 hour
 
-- [ ] 🔵 Contract Library — Modular Vault Building Blocks
+- [x] ✅ Contract Library — Phase 5a (07.04.2026)
       Path: contracts/library/
-      Modules:
-      - HardLockModule.sol (time-bound lock: 7/30/90 days min)
-      - CooldownModule.sol (anti-gaming between lock/unlock)
-      - TierModule.sol (Tier 1/2/3 based on IFR amount)
-      - AntiAbuseModule.sol (withdraw protection)
-      Rule: Builders combine ONLY these audited modules — no custom code
+      5 Contracts, 45 tests passing:
+      - BaseAccessModule.sol (minimal balance check)
+      - HardLockModule.sol (time-bound lock 7-365 days)
+      - TierModule.sol (Tier 1/2/3: 500/2k/10k IFR)
+      - CooldownModule.sol (anti-gaming 24h default)
+      - IFRBuilderVault.sol (complete recommended solution)
+      ABI: abi/library/IFRBuilderVault.json
 
-- [ ] 🔵 Tier System (on-chain)
-      Not just on/off — graduated access levels:
-      Tier 1: >= 500 IFR   → Basic Access
+- [x] ✅ Tier System (on-chain) — included in Contract Library
+      Tier 1: >= 500 IFR → Basic Access
       Tier 2: >= 2,000 IFR → Premium
       Tier 3: >= 10,000 IFR → Pro / Full Access
-      Builders gate features by tier
-      CommitmentVault compatible
+      Uses locked balance (not wallet balance) for tier calculation
+      Governance-configurable thresholds
 
 - [ ] 🔵 Generator Engine (deterministic)
       Builder inputs JSON config:
