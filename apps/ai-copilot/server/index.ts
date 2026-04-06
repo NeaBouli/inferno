@@ -1143,6 +1143,344 @@ if (LENDING_VAULT_ADDR) {
   console.log("[LendingVault] LENDING_VAULT_ADDR not set — endpoints return placeholder data");
 }
 
+// ── CommitmentVault Endpoints ────────────────────────────────────────
+const COMMITMENT_VAULT_ADDR = process.env.COMMITMENT_VAULT_ADDR || "";
+
+const CV_ABI = [
+  "function getTranches(address wallet) view returns (tuple(uint256 amount, uint8 cType, uint256 unlockTime, uint256 p0Multiplier, bool unlocked, uint256 conditionMetAt)[])",
+  "function getTrancheCount(address wallet) view returns (uint256)",
+  "function lockedBalance(address wallet) view returns (uint256)",
+  "function hasActiveLock(address wallet) view returns (bool)",
+  "function totalLocked() view returns (uint256)",
+  "function p0() view returns (uint256)",
+  "function p0Set() view returns (bool)",
+];
+
+const CONDITION_TYPES = ["TIME_ONLY", "PRICE_ONLY", "TIME_OR_PRICE", "TIME_AND_PRICE"] as const;
+const AUTO_UNLOCK_DELAY = 30 * 86400; // 30 days in seconds
+
+// GET /api/commitment/tranches/:address
+app.get("/api/commitment/tranches/:address", async (req, res) => {
+  res.set("Cache-Control", "no-store");
+  try {
+    const addr = req.params.address;
+    if (!addr || !/^0x[0-9a-fA-F]{40}$/.test(addr)) {
+      return res.status(400).json({ error: "Invalid address" });
+    }
+    if (!COMMITMENT_VAULT_ADDR || COMMITMENT_VAULT_ADDR.startsWith("0x000")) {
+      return res.json({ wallet: addr, trancheCount: 0, tranches: [], totalLocked: "0", p0Set: false, p0ETH: null });
+    }
+
+    const ethersLib = (await import("ethers")).ethers;
+    const provider = new ethersLib.providers.JsonRpcProvider(ETH_RPC_URL);
+    const cv = new ethersLib.Contract(COMMITMENT_VAULT_ADDR, CV_ABI, provider);
+
+    const [tranches, p0SetVal] = await Promise.all([cv.getTranches(addr), cv.p0Set()]);
+    const p0Val = p0SetVal ? await cv.p0() : null;
+
+    const formatted = tranches.map((t: { amount: { toString: () => string }; cType: number; unlockTime: { toNumber: () => number }; p0Multiplier: { toNumber: () => number }; unlocked: boolean; conditionMetAt: { toNumber: () => number } }, i: number) => {
+      const condMetAt = t.conditionMetAt.toNumber();
+      return {
+        id: i,
+        amount: ethersLib.utils.formatUnits(t.amount, IFR_DECIMALS),
+        conditionType: CONDITION_TYPES[t.cType] || "UNKNOWN",
+        unlockTime: t.unlockTime.toNumber() || null,
+        p0Multiplier: t.p0Multiplier.toNumber(),
+        unlocked: t.unlocked,
+        conditionMetAt: condMetAt || null,
+        autoUnlockAt: condMetAt > 0 ? condMetAt + AUTO_UNLOCK_DELAY : null,
+      };
+    });
+
+    const totalLocked = tranches
+      .filter((t: { unlocked: boolean }) => !t.unlocked)
+      .reduce((sum: number, t: { amount: { toString: () => string } }) => sum + parseFloat(ethersLib.utils.formatUnits(t.amount, IFR_DECIMALS)), 0);
+
+    res.json({
+      wallet: addr,
+      trancheCount: tranches.length,
+      tranches: formatted,
+      totalLocked: totalLocked.toFixed(0),
+      p0Set: p0SetVal,
+      p0ETH: p0Val ? ethersLib.utils.formatEther(p0Val) : null,
+    });
+  } catch (err) {
+    console.error("CV tranches error:", err);
+    res.status(502).json({ error: "Failed to fetch tranches" });
+  }
+});
+
+// GET /api/commitment/status/:address — short summary for widgets
+app.get("/api/commitment/status/:address", async (req, res) => {
+  res.set("Cache-Control", "no-store");
+  try {
+    const addr = req.params.address;
+    if (!addr || !/^0x[0-9a-fA-F]{40}$/.test(addr)) {
+      return res.status(400).json({ error: "Invalid address" });
+    }
+    if (!COMMITMENT_VAULT_ADDR || COMMITMENT_VAULT_ADDR.startsWith("0x000")) {
+      return res.json({ wallet: addr, isLocked: false, totalLocked: "0", tier: 0 });
+    }
+
+    const ethersLib = (await import("ethers")).ethers;
+    const provider = new ethersLib.providers.JsonRpcProvider(ETH_RPC_URL);
+    const cv = new ethersLib.Contract(COMMITMENT_VAULT_ADDR, CV_ABI, provider);
+
+    const [locked, hasLock] = await Promise.all([cv.lockedBalance(addr), cv.hasActiveLock(addr)]);
+    const lockedNum = parseFloat(ethersLib.utils.formatUnits(locked, IFR_DECIMALS));
+
+    let tier = 0;
+    if (lockedNum >= 10000) tier = 3;
+    else if (lockedNum >= 2000) tier = 2;
+    else if (lockedNum >= 500) tier = 1;
+
+    res.json({ wallet: addr, isLocked: hasLock, totalLocked: lockedNum.toFixed(0), tier });
+  } catch (err) {
+    console.error("CV status error:", err);
+    res.status(502).json({ error: "Failed to fetch status" });
+  }
+});
+
+// GET /api/commitment/p0
+app.get("/api/commitment/p0", async (_req, res) => {
+  res.set("Cache-Control", "no-store");
+  try {
+    if (!COMMITMENT_VAULT_ADDR || COMMITMENT_VAULT_ADDR.startsWith("0x000")) {
+      return res.json({ p0Set: false, p0ETH: null, message: "CommitmentVault not deployed yet" });
+    }
+
+    const ethersLib = (await import("ethers")).ethers;
+    const provider = new ethersLib.providers.JsonRpcProvider(ETH_RPC_URL);
+    const cv = new ethersLib.Contract(COMMITMENT_VAULT_ADDR, CV_ABI, provider);
+
+    const p0SetVal = await cv.p0Set();
+    const p0Val = p0SetVal ? await cv.p0() : null;
+
+    res.json({
+      p0Set: p0SetVal,
+      p0ETH: p0Val ? ethersLib.utils.formatEther(p0Val) : null,
+      message: p0SetVal ? "P0 is set" : "P0 set after Bootstrap finalise()",
+    });
+  } catch (err) {
+    console.error("CV p0 error:", err);
+    res.status(502).json({ error: "Failed to fetch P0" });
+  }
+});
+
+// GET /api/commitment/leaderboard
+app.get("/api/commitment/leaderboard", async (_req, res) => {
+  res.set("Cache-Control", "public, max-age=60");
+  try {
+    if (!COMMITMENT_VAULT_ADDR || COMMITMENT_VAULT_ADDR.startsWith("0x000")) {
+      return res.json({ leaderboard: [], totalLockedProtocol: "0", message: "CommitmentVault not deployed yet" });
+    }
+
+    const ethersLib = (await import("ethers")).ethers;
+    const provider = new ethersLib.providers.JsonRpcProvider(ETH_RPC_URL);
+    const cv = new ethersLib.Contract(COMMITMENT_VAULT_ADDR, CV_ABI, provider);
+
+    const totalLocked = await cv.totalLocked();
+
+    // Leaderboard requires event indexing (Phase 2) — return protocol total for now
+    res.json({
+      leaderboard: [],
+      totalLockedProtocol: ethersLib.utils.formatUnits(totalLocked, IFR_DECIMALS),
+      message: "Individual rankings available after first locks are created",
+    });
+  } catch (err) {
+    console.error("CV leaderboard error:", err);
+    res.status(502).json({ error: "Failed to fetch leaderboard" });
+  }
+});
+
+if (COMMITMENT_VAULT_ADDR) {
+  console.log("[CommitmentVault] Endpoints active:", COMMITMENT_VAULT_ADDR);
+} else {
+  console.log("[CommitmentVault] COMMITMENT_VAULT_ADDR not set — endpoints return placeholder data");
+}
+
+// ── LendingVault — Additional Endpoints ──────────────────────────────
+
+const LV_LOAN_ABI = [
+  "function getLoanCount() view returns (uint256)",
+  "function getLoan(uint256 loanId) view returns (tuple(address borrower, uint256 ifrAmount, uint256 ethCollateral, uint256 startTime, uint256 duration, uint256 monthlyRateBps, uint256 repaidAt, bool active))",
+  "function getCollateralRatio(uint256 loanId) view returns (uint256)",
+  "function checkHealth(uint256 loanId) view returns (uint256)",
+];
+
+// GET /api/lending/loans/:address — active loans for a borrower
+app.get("/api/lending/loans/:address", async (req, res) => {
+  res.set("Cache-Control", "no-store");
+  try {
+    const addr = req.params.address;
+    if (!addr || !/^0x[0-9a-fA-F]{40}$/.test(addr)) {
+      return res.status(400).json({ error: "Invalid address" });
+    }
+    if (!LENDING_VAULT_ADDR || LENDING_VAULT_ADDR.startsWith("0x000")) {
+      return res.json({ wallet: addr, activeLoans: [] });
+    }
+
+    const ethersLib = (await import("ethers")).ethers;
+    const provider = new ethersLib.providers.JsonRpcProvider(ETH_RPC_URL);
+    const lv = new ethersLib.Contract(LENDING_VAULT_ADDR, LV_LOAN_ABI, provider);
+
+    const count = (await lv.getLoanCount()).toNumber();
+    const myLoans: Array<Record<string, unknown>> = [];
+
+    for (let i = 0; i < Math.min(count, 100); i++) {
+      try {
+        const loan = await lv.getLoan(i);
+        if (loan.active && loan.borrower.toLowerCase() === addr.toLowerCase()) {
+          const dueTs = loan.startTime.toNumber() + loan.duration.toNumber();
+          myLoans.push({
+            id: i,
+            ifrAmount: ethersLib.utils.formatUnits(loan.ifrAmount, IFR_DECIMALS),
+            ethCollateral: ethersLib.utils.formatEther(loan.ethCollateral),
+            startTime: loan.startTime.toNumber(),
+            dueDate: new Date(dueTs * 1000).toISOString().split("T")[0],
+            monthlyRate: loan.monthlyRateBps.toNumber() / 100 + "%",
+            active: loan.active,
+          });
+        }
+      } catch { /* skip invalid loan */ }
+    }
+
+    res.json({ wallet: addr, activeLoans: myLoans });
+  } catch (err) {
+    console.error("Lending loans error:", err);
+    res.status(502).json({ error: "Failed to fetch loans" });
+  }
+});
+
+// GET /api/lending/health/:loanId — collateral health check
+app.get("/api/lending/health/:loanId", async (req, res) => {
+  res.set("Cache-Control", "no-store");
+  try {
+    const loanId = parseInt(req.params.loanId, 10);
+    if (isNaN(loanId) || loanId < 0) {
+      return res.status(400).json({ error: "Invalid loanId" });
+    }
+    if (!LENDING_VAULT_ADDR || LENDING_VAULT_ADDR.startsWith("0x000")) {
+      return res.status(404).json({ error: "LendingVault not deployed" });
+    }
+
+    const ethersLib = (await import("ethers")).ethers;
+    const provider = new ethersLib.providers.JsonRpcProvider(ETH_RPC_URL);
+    const lv = new ethersLib.Contract(LENDING_VAULT_ADDR, LV_LOAN_ABI, provider);
+
+    const loan = await lv.getLoan(loanId);
+    if (!loan.active) {
+      return res.status(404).json({ error: "Loan not active" });
+    }
+
+    let collateralRatio = 0;
+    let health: "HEALTHY" | "WARNING" | "CRITICAL" = "HEALTHY";
+    try {
+      collateralRatio = (await lv.getCollateralRatio(loanId)).toNumber();
+      if (collateralRatio < 120) health = "CRITICAL";
+      else if (collateralRatio < 150) health = "WARNING";
+    } catch {
+      // getCollateralRatio may revert if price not set — return basic data
+    }
+
+    res.json({
+      loanId,
+      ethCollateral: ethersLib.utils.formatEther(loan.ethCollateral),
+      ifrAmount: ethersLib.utils.formatUnits(loan.ifrAmount, IFR_DECIMALS),
+      collateralRatio: collateralRatio > 0 ? collateralRatio + "%" : "N/A (price not set)",
+      health,
+      warningThreshold: "150%",
+      liquidationThreshold: "120%",
+    });
+  } catch (err) {
+    console.error("Lending health error:", err);
+    res.status(502).json({ error: "Failed to fetch loan health" });
+  }
+});
+
+// GET /api/lending/lender/:address — lender dashboard
+app.get("/api/lending/lender/:address", async (req, res) => {
+  res.set("Cache-Control", "no-store");
+  try {
+    const addr = req.params.address;
+    if (!addr || !/^0x[0-9a-fA-F]{40}$/.test(addr)) {
+      return res.status(400).json({ error: "Invalid address" });
+    }
+    if (!LENDING_VAULT_ADDR || LENDING_VAULT_ADDR.startsWith("0x000")) {
+      return res.json({ wallet: addr, hasOffer: false });
+    }
+
+    const lvAbi = [
+      "function hasOffer(address) view returns (bool)",
+      "function lenderOfferIndex(address) view returns (uint256)",
+      "function getOffer(uint256) view returns (tuple(address lender, uint256 availableIFR, uint256 lentIFR, bool active))",
+      "function getInterestRate() view returns (uint256)",
+    ];
+
+    const ethersLib = (await import("ethers")).ethers;
+    const provider = new ethersLib.providers.JsonRpcProvider(ETH_RPC_URL);
+    const lv = new ethersLib.Contract(LENDING_VAULT_ADDR, lvAbi, provider);
+
+    const has = await lv.hasOffer(addr);
+    if (!has) {
+      return res.json({ wallet: addr, hasOffer: false });
+    }
+
+    const idx = (await lv.lenderOfferIndex(addr)).toNumber();
+    const offer = await lv.getOffer(idx);
+    const rate = (await lv.getInterestRate()).toNumber() / 100;
+    const availNum = parseFloat(ethersLib.utils.formatUnits(offer.availableIFR, IFR_DECIMALS));
+    const lentNum = parseFloat(ethersLib.utils.formatUnits(offer.lentIFR, IFR_DECIMALS));
+    const total = availNum + lentNum;
+
+    res.json({
+      wallet: addr,
+      hasOffer: true,
+      offerId: idx,
+      availableAmount: availNum.toFixed(0),
+      lentAmount: lentNum.toFixed(0),
+      utilization: total > 0 ? ((lentNum / total) * 100).toFixed(1) + "%" : "0%",
+      currentRate: rate + "%",
+      active: offer.active,
+    });
+  } catch (err) {
+    console.error("Lending lender error:", err);
+    res.status(502).json({ error: "Failed to fetch lender data" });
+  }
+});
+
+// ── Liquidation Monitor (every 4 hours) ──────────────────────────────
+const LIQUIDATION_CHECK_MS = 4 * 60 * 60 * 1000; // 4 hours
+
+async function checkLoanHealth() {
+  if (!LENDING_VAULT_ADDR || LENDING_VAULT_ADDR.startsWith("0x000")) return;
+  try {
+    const ethersLib = (await import("ethers")).ethers;
+    const provider = new ethersLib.providers.JsonRpcProvider(ETH_RPC_URL);
+    const lv = new ethersLib.Contract(LENDING_VAULT_ADDR, LV_LOAN_ABI, provider);
+
+    const count = (await lv.getLoanCount()).toNumber();
+    let warnings = 0;
+
+    for (let i = 0; i < count; i++) {
+      try {
+        const loan = await lv.getLoan(i);
+        if (!loan.active) continue;
+
+        const ratio = (await lv.getCollateralRatio(i)).toNumber();
+        if (ratio < 150) {
+          warnings++;
+          console.warn(`[Liquidation] Loan #${i}: collateral ratio ${ratio}% — ${ratio < 120 ? "CRITICAL" : "WARNING"}`);
+        }
+      } catch { /* skip — price may not be set */ }
+    }
+
+    console.log(`[Liquidation] Checked ${count} loans, ${warnings} below 150%`);
+  } catch (e) {
+    console.error("[Liquidation] Health check error:", (e as Error).message);
+  }
+}
+
 const PORT = parseInt(process.env.PORT || "3003", 10);
 app.listen(PORT, () => {
   console.log(`IFR Copilot API on :${PORT}`);
@@ -1153,6 +1491,10 @@ app.listen(PORT, () => {
     try { await fetchBalancesData(); console.log("[cache] balances pre-warmed"); } catch {}
     try { await fetchVaultData(); console.log("[cache] vault pre-warmed"); } catch {}
   })();
+
+  // Liquidation monitor: check every 4 hours
+  setInterval(checkLoanHealth, LIQUIDATION_CHECK_MS);
+  console.log("[Liquidation] Monitor scheduled — every 4h");
 
   // Rate limit budget: ~19.440 calls/day
   // Supply: (86400/60)×2 = 2.880 | Balances: (86400/120)×17 = 12.240 | Total: ~15.120
