@@ -1,6 +1,6 @@
 # Proposal #12 — setFeeExempt(LendingVault)
 
-**Status:** PENDING — prepared 2026-04-04
+**Status:** EXECUTED — 2026-04-06
 **Priority:** CRITICAL — must execute BEFORE first deposit/borrow!
 **Executor:** TreasurySafe 3-of-5 (0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b)
 

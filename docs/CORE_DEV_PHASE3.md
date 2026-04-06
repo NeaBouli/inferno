@@ -38,7 +38,7 @@
 - [ ] Deploy to Sepolia
 - [ ] Security audit
 - [ ] Deploy to Mainnet
-- [ ] Governance Proposal: `setFeeExempt(CommitmentVault, true)`
+- [x] Governance Proposal: `setFeeExempt(CommitmentVault, true)` — Executed 06.04.2026
 - [ ] Governance Proposal: `setP0(value)`
 
 ### Deploy Steps
@@ -132,7 +132,7 @@ constructor(
 - [ ] Deploy to Sepolia
 - [ ] Security audit
 - [ ] Deploy to Mainnet
-- [ ] Governance Proposal: `setFeeExempt(LendingVault, true)`
+- [x] Governance Proposal: `setFeeExempt(LendingVault, true)` — Executed 06.04.2026
 - [ ] Governance Proposal: `setIFRPrice(value)` (initial price)
 - [ ] Set protocolFeeReceiver (BurnReserve or LP address)
 
