@@ -187,11 +187,10 @@ On errors: fix immediately, commit with `seo:` prefix.
 - [ ] 🔴 finalise() aufrufen (permissionless)
       Prüfen: vault.finalized() = true
 
-- [ ] 🔴 Proposals #11+#12: feeExempt(CV+LV) — SUBMITTED, 48h TIMELOCK
+- [x] ✅ Proposals #11+#12: feeExempt(CV+LV) — EXECUTED 06.04.2026
       Submitted: 04.04.2026 via TreasurySafe 3-of-5
-      EXECUTE AFTER: 06.04.2026
-      Script: node scripts/execute-proposals-11-12.js
-      Verify: feeExempt(CV) + feeExempt(LV) = true
+      Executed: 06.04.2026 via TreasurySafe 3-of-5
+      Verified on-chain: feeExempt(CV) = true, feeExempt(LV) = true
 - [x] ✅ Railway: COMMITMENT_VAULT_ADDR gesetzt (04.04.2026)
       0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3
 - [x] ✅ Railway: LENDING_VAULT_ADDR gesetzt (04.04.2026)
