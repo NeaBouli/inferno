@@ -46,7 +46,7 @@
     .callout p { color:var(--text); margin:0; font-size:14px; }
     .callout-green { background:rgba(34,197,94,0.06); border-left-color:var(--green); }
     .wiki-footer { margin-top:64px; padding-top:24px; border-top:1px solid var(--border); font-size:13px; color:var(--muted); }
-    @media (max-width:768px) { .layout { grid-template-columns:1fr; } .sidebar { transform:translateX(-100%); } .sidebar.open { transform:translateX(0); } .sidebar-overlay.open { display:block; } .hamburger { display:flex; } .main { grid-column:1; padding:72px 20px 40px; } }
+    @media (max-width:768px) { .layout { grid-template-columns:1fr; } .sidebar { transform:translateX(-100%); height:100vh; height:100dvh; overflow-y:auto; -webkit-overflow-scrolling:touch; padding-bottom:80px; } .sidebar.open { transform:translateX(0); } .sidebar-overlay.open { display:block; } .hamburger { display:flex; } .main { grid-column:1; padding:72px 20px 40px; } }
     @media (max-width:480px) { .main h1 { font-size:26px; } }
     @keyframes pulse-bootstrap { 0% { color:#ef4444; text-shadow:0 0 8px rgba(239,68,68,0.8); } 50% { color:#22c55e; text-shadow:0 0 12px rgba(34,197,94,0.9); } 100% { color:#ef4444; text-shadow:0 0 8px rgba(239,68,68,0.8); } } .nav-bootstrap-pulse { animation:pulse-bootstrap 2s ease-in-out infinite; font-weight:700 !important; }
     .tier-btn { transition:border-color 0.2s,background 0.2s; }
