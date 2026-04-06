@@ -768,8 +768,8 @@
 
       <!-- Coming Soon Banner -->
       <div style="background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.3);border-radius:12px;padding:20px;margin-bottom:32px;text-align:center;">
-        <div style="font-size:1.1rem;font-weight:700;color:#3b82f6;margin-bottom:4px;">Phase 3 &mdash; Coming Soon</div>
-        <div style="color:var(--muted);font-size:0.88rem;">CommitmentVault will be deployed after Bootstrap ends (approx. 06/05/2026).</div>
+        <div style="font-size:1.1rem;font-weight:700;color:#3b82f6;margin-bottom:4px;">Live on Ethereum Mainnet</div>
+        <div style="color:var(--muted);font-size:0.88rem;">CommitmentVault deployed on Ethereum Mainnet. feeExempt active since 06.04.2026.</div>
       </div>
 
       <!-- ======================================== -->
@@ -997,8 +997,8 @@
       </style>
 
       <!-- Coming Soon Banner -->
-      <div class="cv-widget" style="background:rgba(59,130,246,0.06);border-color:rgba(59,130,246,0.25);text-align:center;">
-        <div style="font-size:0.78rem;font-weight:700;color:#3b82f6;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px;">Phase 3 &mdash; Coming Soon</div>
+      <div class="cv-widget" style="background:rgba(34,197,94,0.06);border-color:rgba(34,197,94,0.25);text-align:center;">
+        <div style="font-size:0.78rem;font-weight:700;color:#22c55e;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px;">Live on Ethereum Mainnet</div>
         <p style="color:var(--muted);font-size:0.88rem;margin:0;">CommitmentVault deployed on Mainnet. feeExempt active since 06.04.2026.<br>Connect your wallet now to check your IFR balance and plan your lock strategy.</p>
       </div>
 
@@ -1332,8 +1332,8 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
     var list = document.getElementById("cv-tranches-list");
     if (CV_ADDR === "0x0000000000000000000000000000000000000000") {
       list.innerHTML = '<div style="text-align:center;padding:20px;">' +
-        '<div style="color:#3b82f6;font-weight:600;margin-bottom:4px;">Contract Not Yet Deployed</div>' +
-        '<div style="color:var(--muted);font-size:0.85rem;">Your tranches will appear here after CommitmentVault is deployed (after Bootstrap finalise, June 2026).</div>' +
+        '<div style="color:#3b82f6;font-weight:600;margin-bottom:4px;">Contract Live on Mainnet</div>' +
+        '<div style="color:var(--muted);font-size:0.85rem;">Connect wallet and lock IFR to see your tranches here.</div>' +
         '</div>';
       return;
     }
@@ -1354,7 +1354,7 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
       statusEl.style.background = "rgba(59,130,246,0.1)";
       statusEl.style.border = "1px solid rgba(59,130,246,0.3)";
       statusEl.style.color = "#93c5fd";
-      statusEl.innerHTML = "<strong>CommitmentVault deployed — feeExempt active.</strong><br>Execute proposal #11 on 06.04.2026 to enable fee-free locking.";
+      statusEl.innerHTML = "<strong>CommitmentVault deployed — feeExempt active.</strong><br>feeExempt is active. Locking available after Bootstrap finalise (June 2026).";
       return;
     }
     // TODO: implement actual lock transaction after deploy
