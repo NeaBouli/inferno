@@ -1,6 +1,6 @@
 # Core Dev Phase 3 — Handover Document
 
-> Last updated: 2026-04-04
+> Last updated: 2026-04-07
 
 ---
 
@@ -182,18 +182,85 @@ Example: 1 IFR = 0.000001 ETH → ifrPriceWei = 1e12
 
 ---
 
-## BuybackController.sol — AFTER LENDING
+## BuybackController.sol — READY FOR REVIEW
 
-### Status
-- [ ] Contract design
-- [ ] Contract written
-- [ ] Tests
-- [ ] Deploy
+### Contract Overview
 
-### Design Notes
-- Automated fee distribution from FeeRouterV1
-- Split: BuybackVault + BurnReserve
-- SOS reserve mechanism
+| Field | Value |
+|-------|-------|
+| **File** | `contracts/buyback/BuybackController.sol` |
+| **Solidity** | ^0.8.20 |
+| **Tests** | 50/50 passing (`test/BuybackController.test.js`) |
+| **ABI** | `abi/BuybackController.json` |
+
+### Features
+
+- **50/50 fee distribution:**
+  - 50% → Buy IFR on Uniswap V2 → send to BurnReserve (deflationary)
+  - 50% → Add Uniswap V2 liquidity (deepen pool)
+- **Permissionless execution** — anyone can call `execute()` after cooldown
+- **LP fallback** — if no IFR available for LP, redirects to buyback+burn
+- **LP failure handling** — if `addLiquidityETH` reverts, falls back to buyback
+- **Guardian pause/unpause** — emergency circuit breaker
+- **Slippage protection** — configurable (default 5%, max 10%)
+- **Cumulative stats** — totalETHProcessed, totalIFRBurned, totalLiquidityAdded, executionCount
+- **Emergency withdraw** — Governance can recover ETH/IFR
+
+### Status Checklist
+
+- [x] Contract written + compiled
+- [x] Tests written — 50 passing
+- [x] ABI exported to `abi/BuybackController.json`
+- [ ] Deploy to Sepolia
+- [ ] Security audit
+- [ ] Deploy to Mainnet
+- [ ] Governance Proposal: `setFeeExempt(BuybackController, true)`
+- [ ] Governance Proposal: FeeRouterV1 → `setPoolFeeReceiver(BuybackController)`
+
+### Deploy Steps (AFTER LP Launch)
+
+```bash
+# 1. Run tests
+npx hardhat test test/BuybackController.test.js
+
+# 2. Deploy to Sepolia
+npx hardhat run scripts/deploy-buyback-controller.js --network sepolia
+
+# 3. Verify on Etherscan
+npx hardhat verify --network sepolia <ADDRESS> \
+  <IFR_TOKEN> <BURN_RESERVE> <UNISWAP_ROUTER> <LP_RECEIVER> <GUARDIAN> <GOVERNANCE>
+
+# 4. Deploy to Mainnet
+npx hardhat run scripts/deploy-buyback-controller.js --network mainnet
+
+# 5. Governance Proposals (in order):
+#    - Proposal A: setFeeExempt(BuybackController, true)
+#    - Proposal B: setPoolFeeReceiver(BuybackController)
+
+# 6. Railway Cron Job (24h):
+#    node scripts/trigger-buyback.js
+```
+
+### Constructor Arguments
+
+```solidity
+constructor(
+    address _token,       // Mainnet: 0x77e99917Eca8539c62F509ED1193ac36580A6e7B
+    address _burnReserve, // Mainnet: 0xaA149613...
+    address _router,      // Mainnet: 0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D (Uniswap V2)
+    address _lpReceiver,  // Mainnet: TreasurySafe 0x5ad6...cE3b
+    address _guardian,    // Mainnet: Deployer 0x6b36...ed67
+    address _governance   // Mainnet: Governance 0xc43d48E7...D041
+)
+```
+
+### Important Notes
+
+1. **Deploy ONLY after Bootstrap finalise() + Uniswap LP is live**
+2. **Set feeExempt BEFORE activating** — otherwise buyback swaps lose 3.5% to fees
+3. **setPoolFeeReceiver** redirects 1% pool fees from current receiver → BuybackController
+4. **Railway cron:** Call `execute()` every 24h (permissionless, anyone can call)
+5. **LP tokens** go to `lpReceiver` (TreasurySafe) — not locked in controller
 
 ---
 
@@ -264,4 +331,4 @@ After changing the addresses, complete these steps in order:
 
 *This document is maintained by the IFR Protocol team.*
 *For questions: GitHub Issues or Telegram @IFR_token*
-*Last updated: 2026-04-04*
+*Last updated: 2026-04-07*

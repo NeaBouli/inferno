@@ -141,11 +141,10 @@ On errors: fix immediately, commit with `seo:` prefix.
       .env never committed to git ✅
       No real keys in git history ✅
       .env.example updated with all current variables ✅
-- [ ] 🔴 DEPLOYER_PRIVATE_KEY aus .env entfernen — DEADLINE: 30.03.2026 (OVERDUE)
+- [x] ✅ DEPLOYER_PRIVATE_KEY in .env — Bewusste Entscheidung: behalten bis Projektabschluss (07.04.2026)
       Deployer hat keine Governance-Rechte mehr (seit 20.03.2026)
-      Voraussetzung: Alle Tests grün (contract + bot + e2e)
-      Aktion: DEPLOYER_PRIVATE_KEY Zeile aus .env löschen
-      Verify: `grep DEPLOYER_PRIVATE_KEY .env` → leer
+      Key wird für Sepolia-Deploys + Testnet-Scripts benötigt
+      Nie committed (.gitignore ✅), kein Sicherheitsrisiko
 - [x] ✅ WalletConnect Phase 1 stable (04.04.2026)
       wallet-core.js v1.2 — MetaMask connect with all bug fixes:
       30s timeout, accountsChanged re-creates provider/signer,
@@ -271,11 +270,14 @@ On errors: fix immediately, commit with `seo:` prefix.
       Sepolia: 0x769928aBDfc949D0718d8766a1C2d7dBb63954Eb
       Mainnet: 0x974305Ab0EC905172e697271C3d7d385194EB9DF
       Etherscan verified, UI activated
-- [ ] 🔵 Write BuybackController.sol + tests
-      Automated fee distribution (BuybackVault + BurnReserve)
+- [x] ✅ BuybackController.sol written + tests (07.04.2026)
+      50/50 split: buyback+burn / LP deepening
+      Permissionless execute() after 24h cooldown
+      50 tests passing, ABI: abi/BuybackController.json
+      Handover: docs/CORE_DEV_PHASE3.md
 - [ ] 🔵 Core Dev: Deploy Sepolia → Audit → Mainnet
       Order: CommitmentVault → LendingVault → BuybackController
-      Docs: Create CORE_DEV_PHASE3.md
+      Docs: CORE_DEV_PHASE3.md (updated 07.04.2026)
 
 ### Phase 3 — WalletConnect UI
 - [x] ✅ CommitmentVault UI built (04.04.2026)
@@ -578,7 +580,7 @@ On errors: fix immediately, commit with `seo:` prefix.
 → Moved to Phase 4 — Mobile App section above
 
 ### Smart Contracts (Phase 3)
-- [ ] BuybackController.sol — auto-refill PartnerVault, overflow → Treasury, SOS reserve
+- [x] ✅ BuybackController.sol — 50/50 buyback+burn / LP deepening (07.04.2026)
 - [ ] LiquidityVault.sol — 3-phase LP release (deploy after Bootstrap decision 05.06)
 - [ ] Vesting Migration Option B — new multisig vesting contract after cliff (March 2027)
 
@@ -685,5 +687,5 @@ Strategic goal: "IFR = Stripe for Web3 Access — Web3 SaaS Standard"
 ---
 
 *This document is updated with every completed task.*
-*Last updated: 2026-04-06*
+*Last updated: 2026-04-07*
 

@@ -131,7 +131,7 @@
         <span style="color:#6b7280;font-size:0.82rem;">P0 = Total ETH / 100M. IMMUTABLE once set!</span></li>
       <li><div class="cb cb-done">&#x2713;</div>&#x2705; CommitmentVault deployed Mainnet: <code>0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3</code></li>
       <li><div class="cb cb-done">&#x2713;</div>&#x2705; LendingVault deployed Mainnet: <code>0x974305Ab0EC905172e697271C3d7d385194EB9DF</code></li>
-      <li><div class="cb"></div>&#x1F535; Deploy BuybackController (automated fee distribution)</li>
+      <li><div class="cb cb-done">&#x2713;</div>&#x2705; BuybackController.sol written &mdash; 50/50 buyback+burn / LP, 50 tests, ABI exported (07.04.2026)</li>
     </ul>
     <h3>Wiki Pages (4 new) &#x2705;</h3>
     <ul>
@@ -148,7 +148,7 @@
       <li><div class="cb cb-done">&#x2713;</div>&#x2705; CommitmentVault deployed Mainnet: <code>0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3</code> &mdash; Etherscan verified, UI activated</li>
       <li><div class="cb cb-done">&#x2713;</div>&#x2705; <code>LendingVault.sol</code> &mdash; utilization interest 2&ndash;25%, 200/150/120% collateral, 50/50 split, 55 tests passing (04.04.2026)</li>
       <li><div class="cb cb-done">&#x2713;</div>&#x2705; LendingVault deployed Mainnet: <code>0x974305Ab0EC905172e697271C3d7d385194EB9DF</code> &mdash; Etherscan verified, UI activated</li>
-      <li><div class="cb"></div>&#x1F535; <code>BuybackController.sol</code> &mdash; automated fee distribution</li>
+      <li><div class="cb cb-done">&#x2713;</div>&#x2705; <code>BuybackController.sol</code> &mdash; 50/50 buyback+burn / LP deepening, permissionless execute, 50 tests passing (07.04.2026)</li>
       <li><div class="cb"></div>&#x1F535; Deploy: Sepolia &rarr; Audit &rarr; Mainnet (CommitmentVault &rarr; LendingVault &rarr; BuybackController)</li>
     </ul>
 
@@ -268,8 +268,8 @@
       <li><div class="cb cb-done">&#x2713;</div>AUDIT_REPORT_20260316.md</li>
       <li><div class="cb cb-done">&#x2713;</div>ifr_icon_32.svg + robots.txt AI bots</li>
       <li><div class="cb cb-done">&#x2713;</div>&#x2705; .env security verified (04.04.2026) &mdash; gitignore + never committed + .env.example updated</li>
-      <li><div class="cb"></div>&#x1F534; <strong>DEPLOYER_PRIVATE_KEY aus .env entfernen</strong> &mdash; Deadline: 30.03.2026 <strong style="color:#ef4444;">(OVERDUE)</strong><br>
-        <span style="color:#6b7280;font-size:0.8rem;">Deployer hat keine Governance-Rechte mehr (seit 20.03.2026). Key nur noch f&uuml;r Guardian-Rolle n&ouml;tig. Voraussetzung: alle Tests gr&uuml;n.</span></li>
+      <li><div class="cb cb-done">&#x2713;</div>&#x2705; DEPLOYER_PRIVATE_KEY in .env &mdash; Bewusste Entscheidung: behalten bis Projektabschluss (07.04.2026)<br>
+        <span style="color:#6b7280;font-size:0.8rem;">Deployer hat keine Governance-Rechte mehr. Key f&uuml;r Sepolia-Deploys + Testnet-Scripts. Nie committed (.gitignore), kein Risiko.</span></li>
       <li><div class="cb cb-done">&#x2713;</div>&#x2705; ChatGPT External Audit published (04.04.2026) &mdash; security.html + faq.html + AUDIT_CHATGPT_19032026.md</li>
       <li><div class="cb"></div>&#x1F512; npm audit: 34 vulns &mdash; fix after LP</li>
     </ul>

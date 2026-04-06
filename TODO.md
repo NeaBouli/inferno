@@ -1,5 +1,5 @@
 # PROJEKT INFERNO — VOLLSTÄNDIGE TODO-LISTE
-Stand: 03.04.2026 | Konsolidiert (Claude + Core Dev)
+Stand: 07.04.2026 | Konsolidiert (Claude + Core Dev)
 
 ---
 
