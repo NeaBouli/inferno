@@ -6,9 +6,9 @@ Last updated: March 2026
 
 All 16 on-chain components deployed, verified, and operational on Ethereum Mainnet (2026-03-05). BootstrapVault deployed on Sepolia. Landing page, wiki (32 pages), dashboard, and 7 apps live.
 
-## On-Chain Contracts (10)
+## On-Chain Contracts (13)
 
-### Mainnet (9)
+### Mainnet (13)
 
 | # | Contract | Address | Status |
 |---|----------|---------|--------|

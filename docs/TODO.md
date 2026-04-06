@@ -684,6 +684,15 @@ Open items for Phase 5:
 
 Strategic goal: "IFR = Stripe for Web3 Access — Web3 SaaS Standard"
 
+### Contract Count Standardization
+- [x] ✅ Contract count standardized site-wide (07.04.2026)
+      Canonical: 13 deployed contracts + 3 Gnosis Safes = 16 on-chain components
+      Fixed: wiki (10 pages), Ali copilot, README, docs (PROJECT-SUMMARY, STATUS-REPORT, MAINNET_CHECKLIST)
+      13 contracts: InfernoToken, Governance, IFRLock, BootstrapVaultV3, Vesting,
+      LiquidityReserve, PartnerVault, FeeRouterV1, BuybackVault, BurnReserve,
+      BuilderRegistry, CommitmentVault, LendingVault
+      3 Safes: TreasurySafe, CommunitySafe, LP Reserve Safe
+
 ---
 
 *This document is updated with every completed task.*
