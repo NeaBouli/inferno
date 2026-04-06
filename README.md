@@ -320,7 +320,7 @@ Inferno Protocol is developed by a pseudonymous team in the open-source DeFi tra
 - On-chain governance (48h timelock)
 - Treasury: 3-of-5 Gnosis Safe multisig
 - Public audit: [security.html](https://ifrunit.tech/wiki/security.html)
-- Contact: kaspartisan@proton.me
+- Contact: GitHub Issues or Telegram @IFR_token
 
 ## Integrated Builder Products
 

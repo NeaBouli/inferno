@@ -2,7 +2,7 @@
 
 ## RESUBMISSION v2 — 03.04.2026
 
-**Send from:** kaspartisan@proton.me
+**Send from:** contact via github.com/NeaBouli/inferno
 
 ---
 
@@ -15,10 +15,10 @@
 
 3. **Project Website:** https://ifrunit.tech
 
-4. **Project Email:** kaspartisan@proton.me
+4. **Project Email:** contact via github.com/NeaBouli/inferno
 
    > **NOTE FOR ETHERSCAN:**
-   > This project uses a pseudonymous community-driven model. kaspartisan@proton.me is the official project contact. The domain ifrunit.tech is hosted via GitHub Pages and does not support custom email. All project activity is verifiable through our public GitHub and on-chain history.
+   > This project uses a pseudonymous community-driven model. contact via github.com/NeaBouli/inferno is the official project contact. The domain ifrunit.tech is hosted via GitHub Pages and does not support custom email. All project activity is verifiable through our public GitHub and on-chain history.
 
 5. **Logo (32x32 PNG):**
    https://raw.githubusercontent.com/NeaBouli/inferno/main/docs/assets/ifr_icon_64.png
