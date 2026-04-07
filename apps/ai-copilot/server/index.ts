@@ -1611,6 +1611,57 @@ app.post("/api/builder/generate", async (req, res) => {
 
 console.log("[Builder] POST /api/builder/generate active");
 
+// ── IFR SDK REST API ─────────────────────────────────────────────────
+
+// GET /api/ifr/check — lightweight access check for SDK / REST clients
+app.get("/api/ifr/check", async (req, res) => {
+  res.set("Cache-Control", "public, max-age=30");
+  try {
+    const wallet = req.query.wallet as string;
+    const required = parseInt(req.query.required as string || "1000", 10);
+
+    if (!wallet || !/^0x[0-9a-fA-F]{40}$/.test(wallet)) {
+      return res.status(400).json({ error: "Invalid wallet address" });
+    }
+
+    const ethersLib = (await import("ethers")).ethers;
+    const provider = new ethersLib.providers.JsonRpcProvider(ETH_RPC_URL);
+
+    const tokenAbi = ["function balanceOf(address) view returns (uint256)"];
+    const lockAbi = ["function lockedBalance(address) view returns (uint256)"];
+
+    const token = new ethersLib.Contract("0x77e99917Eca8539c62F509ED1193ac36580A6e7B", tokenAbi, provider);
+    const lock = new ethersLib.Contract("0x769928aBDfc949D0718d8766a1C2d7dBb63954Eb", lockAbi, provider);
+
+    const [balRaw, lockedRaw] = await Promise.all([
+      token.balanceOf(wallet),
+      lock.lockedBalance(wallet).catch(() => ethersLib.BigNumber.from(0)),
+    ]);
+
+    const balance = parseFloat(ethersLib.utils.formatUnits(balRaw, IFR_DECIMALS));
+    const locked = parseFloat(ethersLib.utils.formatUnits(lockedRaw, IFR_DECIMALS));
+    const total = balance + locked;
+
+    const tier = total >= 10000 ? 3 : total >= 2000 ? 2 : total >= 500 ? 1 : 0;
+    const tierNames = ["None", "Basic", "Premium", "Pro"];
+
+    res.json({
+      hasAccess: total >= required,
+      balance: balance.toFixed(0),
+      locked: locked.toFixed(0),
+      total: total.toFixed(0),
+      required,
+      tier,
+      tierName: tierNames[tier],
+    });
+  } catch (err) {
+    console.error("IFR check error:", err);
+    res.status(502).json({ error: "Failed to check access" });
+  }
+});
+
+console.log("[SDK] GET /api/ifr/check active");
+
 const PORT = parseInt(process.env.PORT || "3003", 10);
 app.listen(PORT, () => {
   console.log(`IFR Copilot API on :${PORT}`);
