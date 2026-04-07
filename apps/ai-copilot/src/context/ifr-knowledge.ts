@@ -53,9 +53,9 @@ export function getIFRKnowledge() {
       noInstantChanges: true,
       daoPhase: "Phase 4 (planned)",
       multisig: "3-of-5 on all Safes (Treasury, Community, LP Reserve) — 5 signers: A.K./M.G./A.M./Y.K./A.P.",
-      proposals: "11 total: #0,#4-#9 executed, #1-#3,#10 cancelled. 0 open proposals.",
-      nextPlanned: "#11 Uniswap Pool feeExempt (after Bootstrap finalise()), #12 set P0 in CommitmentVault",
-      feeExempt: "Deployer, TreasurySafe, CommunitySafe — all active since 18.03.2026"
+      proposals: "#0,#4-#9,#11,#12 executed; #1-#3,#10 cancelled. 0 open proposals.",
+      nextPlanned: "#13 Uniswap Pool feeExempt (after Bootstrap finalise()), #14 set P0 in CommitmentVault",
+      feeExempt: "Deployer, TreasurySafe, CommunitySafe, CommitmentVault, LendingVault — all active"
     },
     builderRegistry: {
       mainnet: "0xdfe6636DA47F8949330697e1dC5391267CEf0EE3",
@@ -63,22 +63,29 @@ export function getIFRKnowledge() {
       owner: "Governance (TreasurySafe 3-of-5)",
       deployed: "20.03.2026",
       tests: "27/27 passing",
-      railwayEndpoints: "GET /api/builders/count, GET /api/builders/check/:address"
+      railwayEndpoints: "GET /api/builders/count, GET /api/builders/check/:address",
+      builders: "#9 StealthX, #11 K-9 Academy, #12 Vendetta, #13 NEXUS GR, #15 ORIGO"
     },
     phase3: {
       commitmentVault: {
-        status: "planned — Phase 3 (after Bootstrap ends June 2026)",
+        status: "DEPLOYED — Mainnet 04.04.2026, feeExempt active",
+        address: "0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3",
         description: "Irrevocable token lock until self-chosen condition met. 4 types: time, price, time+price, time OR price.",
         contributorConfig: "10 tranches x 10M IFR, P0x2 to P0x5000",
         autoUnlock: "30 days after condition met — anyone can call, tokens always go to original wallet",
-        wiki: "https://ifrunit.tech/wiki/commitment-vault.html"
+        tests: "45/45 passing",
+        wiki: "https://ifrunit.tech/wiki/commitment-vault.html",
+        apiEndpoints: "GET /api/commitment/tranches/:address, GET /api/commitment/status/:address, GET /api/commitment/p0, GET /api/commitment/leaderboard"
       },
       lendingVault: {
-        status: "planned — Phase 3",
-        description: "Lend locked IFR to builders against ETH collateral. Earn ETH interest. Creates buy pressure via repayments.",
+        status: "DEPLOYED — Mainnet 04.04.2026, feeExempt active",
+        address: "0x974305Ab0EC905172e697271C3d7d385194EB9DF",
+        description: "Lend IFR against ETH collateral. Earn ETH interest. Creates buy pressure via repayments.",
         interestRate: "2% to 25% based on utilization",
         collateral: "200% initial, 150% margin call, 120% liquidation",
-        wiki: "https://ifrunit.tech/wiki/lending-vault.html"
+        tests: "55/55 passing",
+        wiki: "https://ifrunit.tech/wiki/lending-vault.html",
+        apiEndpoints: "GET /api/lending/stats, GET /api/lending/offers, GET /api/lending/loans/:address, GET /api/lending/health/:loanId, GET /api/lending/lender/:address"
       },
       lpStrategy: {
         description: "Phased LP addition — NOT all 400M at once. Wait for price appreciation = 100M x more efficient.",
@@ -86,16 +93,64 @@ export function getIFRKnowledge() {
         wiki: "https://ifrunit.tech/wiki/lp-strategy.html"
       },
       buybackController: {
-        status: "planned — Phase 3+",
-        description: "Automated fee distribution from FeeRouterV1 to BuybackVault + BurnReserve"
+        status: "WRITTEN — 50 tests passing, deploy after LP launch",
+        description: "50% buyback+burn / 50% LP deepening. Permissionless execute() after 24h cooldown.",
+        tests: "50/50 passing"
       },
       ecosystemWiki: "https://ifrunit.tech/wiki/ecosystem.html"
     },
+    phase5: {
+      integrationBuilder: {
+        url: "https://ifrunit.tech/builder.html",
+        description: "Generate IFR integration code in 60 seconds. Contract + SDK + deploy guide.",
+        features: [
+          "Amount slider (100-10k IFR)",
+          "Hard Lock / Balance toggle",
+          "Tier System (Basic/Premium/Pro)",
+          "Security Score (0-100, SAFE/MEDIUM/RISKY)",
+          "Contract code generation",
+          "SDK snippet (npm install ifr-sdk)",
+          "Deploy guide (Sepolia → BuilderRegistry → Mainnet)"
+        ]
+      },
+      sdk: {
+        package: "ifr-sdk",
+        version: "0.1.0",
+        install: "npm install ifr-sdk",
+        methods: "checkAccess(), getTier(), getBalance(), getLockedBalance(), isBuilder(), getTotalSupply()",
+        restApi: "GET /api/ifr/check?wallet=0x...&required=1000"
+      },
+      contractLibrary: {
+        path: "contracts/library/",
+        modules: [
+          "BaseAccessModule — minimal balance check (RISKY)",
+          "HardLockModule — time-bound lock 7-365 days (SAFE)",
+          "TierModule — Tier 1/2/3: 500/2k/10k IFR",
+          "CooldownModule — anti-gaming 24h default",
+          "IFRBuilderVault — all modules combined (recommended)"
+        ],
+        tests: "45/45 passing"
+      },
+      tiers: {
+        tier1: "≥500 IFR → Basic Access",
+        tier2: "≥2,000 IFR → Premium",
+        tier3: "≥10,000 IFR → Pro / Full Access",
+        note: "Uses locked balance (not wallet balance) for tier calculation"
+      },
+      securityScoring: {
+        maxScore: 100,
+        categories: "Hard Lock (30), Cooldown (20), Tier System (15), Min Amount (20), On-Chain Check (15)",
+        levels: "≥80 SAFE, ≥50 MEDIUM, <50 RISKY"
+      },
+      apiEndpoints: {
+        builderGenerate: "POST /api/builder/generate — generate contract + SDK from JSON config",
+        ifrCheck: "GET /api/ifr/check?wallet=0x...&required=1000 — access check + tier"
+      }
+    },
     tiers: {
-      bronze:   { minIFR: 1000,  discount: "5%" },
-      silver:   { minIFR: 2500,  discount: "10%" },
-      gold:     { minIFR: 5000,  discount: "15%" },
-      platinum: { minIFR: 10000, discount: "20%" }
+      tier1: { minIFR: 500,   level: "Basic" },
+      tier2: { minIFR: 2000,  level: "Premium" },
+      tier3: { minIFR: 10000, level: "Pro" }
     },
     bootstrap: {
       status: getBootstrapStatus(),
