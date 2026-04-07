@@ -1463,6 +1463,7 @@
       <a href="https://github.com/NeaBouli/inferno" class="btn btn-github" target="_blank" rel="noopener">View on GitHub</a>
       <a href="wiki/index.html" class="btn btn-secondary">Read the Docs</a>
     </div>
+    <div style="margin-top:12px"><a href="#wizard" style="display:inline-flex;align-items:center;gap:8px;background:rgba(255,107,0,0.1);border:1px solid rgba(255,107,0,0.4);color:#ff6b00;padding:10px 22px;border-radius:8px;text-decoration:none;font-weight:600;font-size:0.85rem">&#x1F9ED; Find your path &rarr;</a></div>
 
   </div>
 
@@ -1568,6 +1569,90 @@
     </div>
   </div>
 </section>
+
+<!-- ── ONBOARDING WIZARD ───────────────────────────── -->
+<section id="wizard" style="padding:56px 0;background:rgba(22,27,34,0.6);border-top:1px solid #1e2730;border-bottom:1px solid #1e2730">
+  <div style="max-width:720px;margin:0 auto;padding:0 24px">
+    <div style="text-align:center;margin-bottom:36px">
+      <div style="display:inline-block;background:rgba(255,107,0,0.1);border:1px solid rgba(255,107,0,0.3);border-radius:20px;padding:6px 20px;font-size:0.85rem;color:#ff6b00;margin-bottom:16px;font-weight:600">&#x1F9ED; Quick Start Guide</div>
+      <h2 style="font-size:1.8rem;font-weight:800;margin-bottom:10px;color:#e6edf3">What brings you here today?</h2>
+      <p style="color:#8b949e;font-size:0.95rem;max-width:460px;margin:0 auto;line-height:1.6">Select your goal &mdash; we guide you step by step to exactly what you need.</p>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:24px;font-size:0.85rem;color:#8b949e" id="wz-progress"><span id="wz-step">Step 1 of 2</span></div>
+    <div id="wz-box"></div>
+    <div style="display:flex;justify-content:center;gap:16px;margin-top:20px">
+      <button onclick="wzBack()" id="wz-back" style="display:none;background:none;border:none;color:#8b949e;cursor:pointer;font-size:0.9rem;padding:8px 16px">&larr; Back</button>
+      <button onclick="wzReset()" style="background:none;border:none;color:#8b949e;cursor:pointer;font-size:0.9rem;padding:8px 16px">&#x21BA; Start over</button>
+    </div>
+  </div>
+</section>
+<script>
+(function(){
+var hist=[],cur="start";
+var S={
+start:{q:"What brings you here today?",sub:"Choose what fits you best:",s:1,t:2,o:[
+{i:"&#x1F4B0;",t:"Buy / Invest in IFR",d:"Join the Bootstrap or get IFR at launch price",n:"buy"},
+{i:"&#x1F512;",t:"Lock IFR for Premium Access",d:"Unlock features across all builder apps",n:"lock"},
+{i:"&#x1F6E0;&#xFE0F;",t:"Build with IFR",d:"Integrate IFR access into your product",n:"build"},
+{i:"&#x1F4B8;",t:"Lend or Borrow IFR",d:"Earn yield or borrow against ETH collateral",n:"lend_choice"},
+{i:"&#x1F91D;",t:"Contribute / Community",d:"Write, build, vote or connect",n:"community"},
+{i:"&#x1F50D;",t:"Research / Press",d:"Audits, docs, press kit, deep dive",n:"research"}
+]},
+buy:{q:"Do you already have a crypto wallet?",sub:"This tells us where to start:",s:2,t:2,o:[
+{i:"&#x2705;",t:"Yes \u2014 I have MetaMask",d:"Ready to contribute ETH to Bootstrap",a:"wizard/buy.html",h:1},
+{i:"&#x1F195;",t:"No \u2014 I am new to crypto",d:"We guide you from zero to IFR holder",a:"wizard/buy.html"}
+]},
+lock:{q:"How much IFR do you want to lock?",sub:"More IFR = more features unlocked:",s:2,t:2,o:[
+{i:"&#x1F949;",t:"500+ IFR \u2014 Basic",d:"Basic features across all apps",a:"wizard/lock.html"},
+{i:"&#x2B50;",t:"2,000+ IFR \u2014 Premium",d:"Premium + AI Copilot access",a:"wizard/lock.html",h:1},
+{i:"&#x1F3C6;",t:"10,000+ IFR \u2014 Pro",d:"All features + priority access",a:"wizard/lock.html"},
+{i:"&#x1F48E;",t:"Long-term commitment",d:"CommitmentVault \u2014 price-triggered unlock",a:"wiki/commitment-vault.html"}
+]},
+build:{q:"What do you want to build?",sub:"We tailor the guide to your use case:",s:2,t:2,o:[
+{i:"&#x26A1;",t:"Quick integration (<60 min)",d:"Use the Integration Builder \u2014 get code now",a:"builder.html",h:1},
+{i:"&#x1F4D6;",t:"I want to understand the tech first",d:"Full docs: API, ABIs, contracts",a:"wiki/integration.html"},
+{i:"&#x1F91D;",t:"I represent a business / team",d:"Full onboarding with BuilderRegistry",a:"wiki/business-onboarding.html"}
+]},
+lend_choice:{q:"Lend or Borrow?",sub:"Choose your role in the lending market:",s:2,t:2,o:[
+{i:"&#x1F4B8;",t:"Lend IFR \u2014 Earn Interest",d:"2\u201325%/month based on demand. ETH collateral secured.",a:"wizard/lend.html",h:1},
+{i:"&#x1F3E6;",t:"Borrow IFR \u2014 Use ETH Collateral",d:"200% collateral ratio. Repay anytime.",a:"wizard/borrow.html"}
+]},
+community:{q:"How do you want to contribute?",sub:"Every contribution helps IFR grow:",s:2,t:2,o:[
+{i:"&#x1F4AC;",t:"Join the Community",d:"Telegram community chat",a:"wizard/contribute.html",h:1},
+{i:"&#x270D;&#xFE0F;",t:"Write / Create Content",d:"Articles, posts, videos about IFR",a:"wizard/contribute.html"},
+{i:"&#x1F3DB;&#xFE0F;",t:"Participate in Governance",d:"Vote on proposals, shape the protocol",a:"wiki/governance.html"},
+{i:"&#x1F41B;",t:"Report a Bug",d:"GitHub Issues \u2014 all feedback welcome",a:"https://github.com/NeaBouli/inferno/issues/new"}
+]},
+research:{q:"What are you looking for?",sub:"We have everything documented:",s:2,t:2,o:[
+{i:"&#x1F50D;",t:"Security Audits",d:"Grok 10/10, SKYWALKER, Slither reports",a:"wiki/open-audit.html"},
+{i:"&#x1F4CA;",t:"Tokenomics Deep Dive",d:"Supply, allocation, burn mechanics",a:"wiki/tokenomics.html"},
+{i:"&#x1F4F0;",t:"Press Kit",d:"Logos, facts, quotes for media",a:"wiki/press-kit.html"},
+{i:"&#x1F4D6;",t:"Full Documentation",d:"Complete wiki with 33 pages",a:"wiki/index.html"}
+]}
+};
+function render(){
+var s=S[cur];if(!s)return;
+document.getElementById("wz-step").textContent="Step "+s.s+" of "+s.t;
+document.getElementById("wz-back").style.display=hist.length>0?"block":"none";
+var h="";
+for(var j=0;j<s.o.length;j++){var o=s.o[j];
+var isA=!!o.a;var href=o.a||"";
+if(href&&!href.startsWith("http"))href="https://ifrunit.tech/"+href;
+var oc=isA?'onclick="location.href=\''+href+'\'"':'onclick="wzGo(\''+o.n+'\')"';
+h+='<div '+oc+' style="background:#0d1117;border:1px solid '+(o.h?"#ff6b00":"#1e2730")+';border-radius:12px;padding:16px 18px;cursor:pointer;display:flex;align-items:center;gap:14px;margin-bottom:8px;transition:all .15s;'+(o.h?"background:rgba(255,107,0,0.06);":"")+'" onmouseover="this.style.borderColor=\'#ff6b00\';this.style.transform=\'translateY(-1px)\'" onmouseout="this.style.borderColor=\''+(o.h?"#ff6b00":"#1e2730")+'\';this.style.transform=\'none\'">';
+h+='<div style="font-size:1.6rem;flex-shrink:0">'+o.i+'</div>';
+h+='<div style="flex:1"><div style="font-weight:700;font-size:0.9rem;margin-bottom:2px;color:'+(o.h?"#ff6b00":"inherit")+'">'+o.t+'</div>';
+h+='<div style="color:#8b949e;font-size:0.8rem;line-height:1.4">'+o.d+'</div></div>';
+h+='<div style="color:#ff6b00;font-size:1rem;flex-shrink:0">&rarr;</div></div>';
+}
+document.getElementById("wz-box").innerHTML='<div style="background:#161b22;border:1px solid #1e2730;border-radius:14px;padding:24px;box-shadow:0 4px 24px rgba(0,0,0,0.3)"><h3 style="font-size:1.15rem;font-weight:700;margin-bottom:4px">'+s.q+'</h3><p style="color:#8b949e;font-size:0.85rem;margin-bottom:18px">'+s.sub+'</p>'+h+'</div>';
+}
+window.wzGo=function(k){hist.push(cur);cur=k;render();document.getElementById("wizard").scrollIntoView({behavior:"smooth",block:"start"})};
+window.wzBack=function(){if(hist.length>0){cur=hist.pop();render()}};
+window.wzReset=function(){hist=[];cur="start";render()};
+render();
+})();
+</script>
 
 <!-- ── HOW IT WORKS ───────────────────────────────── -->
 <section id="how">
