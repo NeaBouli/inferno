@@ -1,0 +1,24 @@
+{
+  "name": "ifr-sdk",
+  "version": "0.1.0",
+  "description": "IFR Protocol SDK — Web3 access control for builders",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "node test/sdk.test.js",
+    "prepublish": "npm run build"
+  },
+  "keywords": ["ifr", "web3", "access-control", "lock", "defi", "ethereum"],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/NeaBouli/inferno"
+  },
+  "dependencies": {
+    "ethers": "^5.7.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  }
+}

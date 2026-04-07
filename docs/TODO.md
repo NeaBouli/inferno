@@ -625,12 +625,12 @@ On errors: fix immediately, commit with `seo:` prefix.
       POST /api/builder/generate endpoint active
       30 tests passing (test/builder/GeneratorEngine.test.js)
 
-- [ ] 🔵 IFR SDK (JavaScript / TypeScript)
-      npm install ifr-sdk
-      import { checkAccess, getTier } from "ifr-sdk"
-      const hasAccess = await checkAccess({ wallet, required: 500 })
-      const tier = await getTier(wallet) // returns 1, 2, or 3
-      REST API: GET /api/ifr/check?wallet=0x...&tier=2
+- [x] ✅ IFR SDK — Phase 5c (07.04.2026)
+      apps/sdk/ — npm installable (ifr-sdk v0.1.0)
+      IFRClient: checkAccess(), getTier(), getBalance(), getLockedBalance(), isBuilder()
+      Static: IFRClient.apiCheck() (no ethers needed)
+      GET /api/ifr/check?wallet=0x...&required=1000 — Railway endpoint
+      36 tests passing (test/sdk/sdk.test.js)
 
 - [ ] 🔵 Generator UI (Web Interface)
       URL: app.ifrunit.tech/builder
