@@ -1,25 +1,29 @@
 /**
- * IFR Wallet Core v3.0 — WalletConnect v2 + Web3Modal
+ * IFR Wallet Core v4.0 — WalletConnect v2 via jsdelivr ESM
  * Usage: await IFRWallet.connect(); IFRWallet.getAddress();
  *
- * v3.0 — WalletConnect v2 replaces MetaMask SDK
+ * v4.0 — Fixes v3.0 broken UMD bundles
  *
- * WHY: MetaMask SDK deep-links break on Android Chrome
- *      (known bug since 2022, 5-6 manual steps).
+ * v3.0 PROBLEM: unpkg UMD bundles of @walletconnect/ethereum-provider
+ *   have missing internal dependencies → EthereumProvider = undefined.
  *
- * HOW:
+ * v4.0 SOLUTION: dynamic import() from jsdelivr +esm endpoint.
+ *   jsdelivr bundles ALL dependencies (Rollup+Terser) into a single ESM.
+ *   The QR modal auto-resolves from /npm/@walletconnect/modal/+esm.
+ *
+ * FLOW:
  *   - Desktop WITH extension: MetaMask extension (instant, no modal)
- *   - Desktop WITHOUT extension: WalletConnect QR modal
+ *   - Desktop WITHOUT extension: WalletConnect QR modal (jsdelivr ESM)
  *   - Mobile: WalletConnect QR/deep-link → works with ANY wallet
+ *   - Fallback: MetaMask deep-link if WC CDN unavailable
  *   - Auto-reconnect from localStorage
- *   - Network auto-switch to Ethereum Mainnet
  *
- * API: 100% backward-compatible with v1.3 + v2.0 (drop-in).
+ * API: 100% backward-compatible (v1.3 → v2.0 → v3.0 → v4.0 drop-in).
  *      IFRWallet.connect/disconnect/autoReconnect
  *      IFRWallet.getAddress/getSigner/getProvider/isConnected
  *      IFRWallet.on/off/getDeepLink/isMobile/getShortAddress
  *
- * WalletConnect ProjectID registered at cloud.walletconnect.com
+ * WalletConnect ProjectID: cloud.walletconnect.com (Reown)
  */
 window.IFRWallet = (function() {
 
@@ -29,9 +33,9 @@ window.IFRWallet = (function() {
   var SESSION_KEY = "ifr_wallet_connected";
   var WC_PROJECT_ID = "32f56abaa4b1d7f59fb1571c0c0a551f";
 
-  // CDN URLs for WalletConnect v2 (lazy-loaded only when needed)
-  var WC_PROVIDER_CDN = "https://unpkg.com/@walletconnect/ethereum-provider@2.17.3/dist/index.umd.js";
-  var WC_MODAL_CDN = "https://unpkg.com/@walletconnect/modal@2.7.0/dist/index.umd.js";
+  // jsdelivr +esm bundles ALL WC dependencies via Rollup (single fetch chain).
+  // The QR modal auto-resolves from /npm/@walletconnect/modal/+esm internally.
+  var WC_ESM_URL = "https://cdn.jsdelivr.net/npm/@walletconnect/ethereum-provider@2.17.3/+esm";
 
   var _provider = null;        // ethers Web3Provider (for ifr-state.js compat)
   var _signer = null;
@@ -45,18 +49,6 @@ window.IFRWallet = (function() {
   // ── Mobile Detection ──────────────────────────────
   function _isMobile() {
     return /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
-  }
-
-  // ── Script Loader ─────────────────────────────────
-  function _loadScript(src) {
-    return new Promise(function(resolve, reject) {
-      if (document.querySelector('script[src="' + src + '"]')) return resolve();
-      var s = document.createElement("script");
-      s.src = src;
-      s.onload = resolve;
-      s.onerror = function() { reject(new Error("Failed to load: " + src)); };
-      document.head.appendChild(s);
-    });
   }
 
   // ── MetaMask Extension Detection (EIP-5749) ──────
@@ -76,31 +68,21 @@ window.IFRWallet = (function() {
     return _ethereumProvider || null;
   }
 
-  // ── WalletConnect v2 Provider ─────────────────────
+  // ── WalletConnect v2 Provider (dynamic ESM import) ─
   async function _loadWalletConnect() {
     if (_wcLoading) return _wcLoading;
     if (_wcProvider) return _wcProvider;
 
     _wcLoading = (async function() {
       try {
-        // Load WC packages from CDN
-        await Promise.all([
-          _loadScript(WC_PROVIDER_CDN),
-          _loadScript(WC_MODAL_CDN)
-        ]);
-
-        // Create EthereumProvider with WalletConnect v2
-        var EthereumProvider = window.EthereumProvider || (window.WalletConnectEthereumProvider && window.WalletConnectEthereumProvider.EthereumProvider);
+        // dynamic import() from jsdelivr — works in all modern browsers.
+        // jsdelivr +esm bundles the entire dependency tree (Rollup+Terser).
+        // Internally imports @walletconnect/modal for QR display.
+        var mod = await import(WC_ESM_URL);
+        var EthereumProvider = mod.EthereumProvider || mod.default;
 
         if (!EthereumProvider) {
-          // Try alternate global names
-          if (window.walletconnectEthereumProvider) {
-            EthereumProvider = window.walletconnectEthereumProvider.EthereumProvider;
-          }
-        }
-
-        if (!EthereumProvider) {
-          console.warn("[IFR Wallet] WalletConnect provider not found after CDN load");
+          console.warn("[IFR Wallet] EthereumProvider not found in ESM module");
           return null;
         }
 
@@ -119,16 +101,11 @@ window.IFRWallet = (function() {
             themeMode: "dark",
             themeVariables: {
               "--wcm-accent-color": "#ff4500"
-            },
-            explorerRecommendedWalletIds: [
-              "c57ca95b47569778a828d19178114f4db188b89b763c899ba0be274e97267d96", // MetaMask
-              "4622a2b2d6af1c9844944291e5e7351a6aa24cd7b23099efac1b2fd875da31a0", // Trust
-              "1ae92b26df02f0abca6304df07debccd18262fdf5fe82daa81593582dac9a369", // Rainbow
-              "ef333840daf915aafdc4a004525502d6d49c8b07e0884e895a33c40355d9a2a0", // Ledger
-            ]
+            }
           }
         });
 
+        console.log("[IFR Wallet] WalletConnect v2 ready (jsdelivr ESM)");
         return _wcProvider;
       } catch (e) {
         console.warn("[IFR Wallet] WalletConnect init failed:", e);
@@ -201,7 +178,7 @@ window.IFRWallet = (function() {
           window.location.href = getDeepLink();
           return;
         }
-        throw new Error("NO_WALLET");
+        throw new Error("NO_METAMASK");
       }
     }
 
