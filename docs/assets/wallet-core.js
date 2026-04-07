@@ -27,7 +27,7 @@ window.IFRWallet = (function() {
   var CHAIN_ID_HEX = "0x1";
   var RPC_URL = "https://eth.llamarpc.com";
   var SESSION_KEY = "ifr_wallet_connected";
-  var WC_PROJECT_ID = "83571cb48aa54b4bbc0eb9b098785fc7";
+  var WC_PROJECT_ID = "32f56abaa4b1d7f59fb1571c0c0a551f";
 
   // CDN URLs for WalletConnect v2 (lazy-loaded only when needed)
   var WC_PROVIDER_CDN = "https://unpkg.com/@walletconnect/ethereum-provider@2.17.3/dist/index.umd.js";
