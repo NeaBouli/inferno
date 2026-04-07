@@ -152,6 +152,11 @@ On errors: fix immediately, commit with `seo:` prefix.
       Note: WC v2 QR needs bundler — planned Phase 2 build setup
 - [x] ChatGPT External Audit published (04.04.2026)
       security.html + faq.html (3 new entries) + AUDIT_CHATGPT_19032026.md on GitHub
+- [x] ✅ Grok (xAI) Audit published (07.04.2026)
+      audit/GROK_AUDIT_07042026.md + .pdf
+      docs/wiki/open-audit.html (new wiki page)
+      security.html: CTA banner linked
+      Result: 10/10 Coherence, 0 Critical, all claims verified
 - [ ] npm audit: 34 vulnerabilities (2 critical, 9 high, 11 moderate, 12 low) — fix after LP launch
       Link: https://github.com/NeaBouli/inferno/security/dependabot
       Note: affects node_modules only, not Solidity contracts
