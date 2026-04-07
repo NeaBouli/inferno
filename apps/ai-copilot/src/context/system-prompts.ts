@@ -137,12 +137,20 @@ Contract Addresses (Mainnet):
 - BootstrapVaultV3: 0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141
 - BuilderRegistry: 0xdfe6636DA47F8949330697e1dC5391267CEf0EE3
 
-Phase 3 (planned — after Bootstrap ends June 2026):
-- CommitmentVault: irrevocable lock with 4 condition types (time/price/time+price/time OR price). Wiki: ifrunit.tech/wiki/commitment-vault.html
-- LendingVault: IFR lending against ETH collateral (200% init, 150% warning, 120% liquidation). Wiki: ifrunit.tech/wiki/lending-vault.html
-- BuybackController: automated fee distribution
+Phase 3 (DEPLOYED — April 2026):
+- CommitmentVault: 0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3 — irrevocable lock, 4 condition types, feeExempt active. Wiki: ifrunit.tech/wiki/commitment-vault.html
+- LendingVault: 0x974305Ab0EC905172e697271C3d7d385194EB9DF — IFR lending against ETH collateral, feeExempt active. Wiki: ifrunit.tech/wiki/lending-vault.html
+- BuybackController: written (50 tests), deploy after LP launch — 50% buyback+burn / 50% LP deepening
 - LP Strategy: phased addition, not all 400M at once. Wiki: ifrunit.tech/wiki/lp-strategy.html
 - Ecosystem overview: ifrunit.tech/wiki/ecosystem.html
+
+Phase 5 — Integration Builder (LIVE):
+- Builder Tool: ifrunit.tech/builder.html — generate contract + SDK + deploy guide in 60 seconds
+- IFR SDK: npm install ifr-sdk — checkAccess(), getTier(), getBalance(), isBuilder()
+- REST API: GET /api/ifr/check?wallet=0x...&required=1000
+- Contract Library: BaseAccessModule, HardLockModule, TierModule, CooldownModule, IFRBuilderVault
+- Tier System: Tier 1 (500 IFR), Tier 2 (2000 IFR), Tier 3 (10000 IFR) — uses locked balance
+- Security Score: 0-100 (SAFE >= 80, MEDIUM >= 50, RISKY < 50)
 
 ${bootstrapBlock}
 
