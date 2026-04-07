@@ -1,14 +1,25 @@
 /**
- * IFR Wallet Core — v2.0 (MetaMask SDK)
+ * IFR Wallet Core v3.0 — WalletConnect v2 + Web3Modal
  * Usage: await IFRWallet.connect(); IFRWallet.getAddress();
  *
- * v2.0 — MetaMask SDK integration
- *   - Desktop: MetaMask extension via EIP-5749 + SDK fallback
- *   - Mobile: Automatic deep-link to MetaMask app via SDK
- *   - Persistent sessions via localStorage
- *   - Auto-reconnect on page reload
+ * v3.0 — WalletConnect v2 replaces MetaMask SDK
+ *
+ * WHY: MetaMask SDK deep-links break on Android Chrome
+ *      (known bug since 2022, 5-6 manual steps).
+ *
+ * HOW:
+ *   - Desktop WITH extension: MetaMask extension (instant, no modal)
+ *   - Desktop WITHOUT extension: WalletConnect QR modal
+ *   - Mobile: WalletConnect QR/deep-link → works with ANY wallet
+ *   - Auto-reconnect from localStorage
  *   - Network auto-switch to Ethereum Mainnet
- *   - 100% backward-compatible API (drop-in replacement for v1.3)
+ *
+ * API: 100% backward-compatible with v1.3 + v2.0 (drop-in).
+ *      IFRWallet.connect/disconnect/autoReconnect
+ *      IFRWallet.getAddress/getSigner/getProvider/isConnected
+ *      IFRWallet.on/off/getDeepLink/isMobile/getShortAddress
+ *
+ * WalletConnect ProjectID registered at cloud.walletconnect.com
  */
 window.IFRWallet = (function() {
 
@@ -16,79 +27,42 @@ window.IFRWallet = (function() {
   var CHAIN_ID_HEX = "0x1";
   var RPC_URL = "https://eth.llamarpc.com";
   var SESSION_KEY = "ifr_wallet_connected";
-  var SDK_CDN = "https://unpkg.com/@metamask/sdk@0.31.2/dist/browser/umd/metamask-sdk.js";
+  var WC_PROJECT_ID = "83571cb48aa54b4bbc0eb9b098785fc7";
 
-  var _provider = null;   // ethers Web3Provider
+  // CDN URLs for WalletConnect v2 (lazy-loaded only when needed)
+  var WC_PROVIDER_CDN = "https://unpkg.com/@walletconnect/ethereum-provider@2.17.3/dist/index.umd.js";
+  var WC_MODAL_CDN = "https://unpkg.com/@walletconnect/modal@2.7.0/dist/index.umd.js";
+
+  var _provider = null;        // ethers Web3Provider (for ifr-state.js compat)
   var _signer = null;
   var _address = null;
   var _listeners = [];
-  var _ethereumProvider = null;  // raw EIP-1193 provider
+  var _ethereumProvider = null; // raw EIP-1193 provider
   var _listenersAttached = false;
-  var _sdk = null;
-  var _sdkLoading = null;  // promise guard
+  var _wcProvider = null;       // WalletConnect provider instance
+  var _wcLoading = null;        // promise guard
 
   // ── Mobile Detection ──────────────────────────────
   function _isMobile() {
     return /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
   }
 
-  // ── MetaMask SDK Loader ───────────────────────────
-  function _loadSDK() {
-    if (_sdkLoading) return _sdkLoading;
-    if (_sdk) return Promise.resolve(_sdk);
-
-    _sdkLoading = new Promise(function(resolve, reject) {
-      // Already loaded globally?
-      if (typeof MetaMaskSDK !== "undefined") {
-        _sdk = new MetaMaskSDK.MetaMaskSDK({
-          dappMetadata: {
-            name: "Inferno Protocol ($IFR)",
-            url: "https://ifrunit.tech",
-            iconUrl: "https://ifrunit.tech/assets/ifr_icon_256.png"
-          },
-          useDeeplink: true,
-          enableAnalytics: false,
-          defaultReadOnlyChainId: CHAIN_ID_HEX
-        });
-        resolve(_sdk);
-        return;
-      }
-
-      var script = document.createElement("script");
-      script.src = SDK_CDN;
-      script.onload = function() {
-        try {
-          _sdk = new MetaMaskSDK.MetaMaskSDK({
-            dappMetadata: {
-              name: "Inferno Protocol ($IFR)",
-              url: "https://ifrunit.tech",
-              iconUrl: "https://ifrunit.tech/assets/ifr_icon_256.png"
-            },
-            useDeeplink: true,
-            enableAnalytics: false,
-            defaultReadOnlyChainId: CHAIN_ID_HEX
-          });
-          resolve(_sdk);
-        } catch (e) {
-          console.warn("[IFR Wallet] SDK init failed:", e);
-          resolve(null);
-        }
-      };
-      script.onerror = function() {
-        console.warn("[IFR Wallet] SDK CDN unavailable, using extension-only mode");
-        resolve(null);
-      };
-      document.head.appendChild(script);
+  // ── Script Loader ─────────────────────────────────
+  function _loadScript(src) {
+    return new Promise(function(resolve, reject) {
+      if (document.querySelector('script[src="' + src + '"]')) return resolve();
+      var s = document.createElement("script");
+      s.src = src;
+      s.onload = resolve;
+      s.onerror = function() { reject(new Error("Failed to load: " + src)); };
+      document.head.appendChild(s);
     });
-
-    return _sdkLoading;
   }
 
-  // ── Provider Detection (EIP-5749 + SDK) ───────────
+  // ── MetaMask Extension Detection (EIP-5749) ──────
   function _getMetaMaskProvider() {
     if (_ethereumProvider) return _ethereumProvider;
 
-    // Multi-provider environment (EIP-5749)
     if (window.ethereum && window.ethereum.providers && Array.isArray(window.ethereum.providers)) {
       _ethereumProvider = window.ethereum.providers.find(function(p) {
         return p.isMetaMask && !p.isExodus && !p.isBraveWallet;
@@ -99,14 +73,70 @@ window.IFRWallet = (function() {
       _ethereumProvider = window.ethereum;
     }
 
-    // SDK provider as fallback
-    if (!_ethereumProvider && _sdk) {
-      try {
-        _ethereumProvider = _sdk.getProvider();
-      } catch (e) {}
-    }
-
     return _ethereumProvider || null;
+  }
+
+  // ── WalletConnect v2 Provider ─────────────────────
+  async function _loadWalletConnect() {
+    if (_wcLoading) return _wcLoading;
+    if (_wcProvider) return _wcProvider;
+
+    _wcLoading = (async function() {
+      try {
+        // Load WC packages from CDN
+        await Promise.all([
+          _loadScript(WC_PROVIDER_CDN),
+          _loadScript(WC_MODAL_CDN)
+        ]);
+
+        // Create EthereumProvider with WalletConnect v2
+        var EthereumProvider = window.EthereumProvider || (window.WalletConnectEthereumProvider && window.WalletConnectEthereumProvider.EthereumProvider);
+
+        if (!EthereumProvider) {
+          // Try alternate global names
+          if (window.walletconnectEthereumProvider) {
+            EthereumProvider = window.walletconnectEthereumProvider.EthereumProvider;
+          }
+        }
+
+        if (!EthereumProvider) {
+          console.warn("[IFR Wallet] WalletConnect provider not found after CDN load");
+          return null;
+        }
+
+        _wcProvider = await EthereumProvider.init({
+          projectId: WC_PROJECT_ID,
+          chains: [CHAIN_ID],
+          showQrModal: true,
+          rpcMap: { 1: RPC_URL },
+          metadata: {
+            name: "Inferno Protocol ($IFR)",
+            description: "Deflationary ERC-20 Token — Fair Launch",
+            url: "https://ifrunit.tech",
+            icons: ["https://ifrunit.tech/assets/ifr_icon_256.png"]
+          },
+          qrModalOptions: {
+            themeMode: "dark",
+            themeVariables: {
+              "--wcm-accent-color": "#ff4500"
+            },
+            explorerRecommendedWalletIds: [
+              "c57ca95b47569778a828d19178114f4db188b89b763c899ba0be274e97267d96", // MetaMask
+              "4622a2b2d6af1c9844944291e5e7351a6aa24cd7b23099efac1b2fd875da31a0", // Trust
+              "1ae92b26df02f0abca6304df07debccd18262fdf5fe82daa81593582dac9a369", // Rainbow
+              "ef333840daf915aafdc4a004525502d6d49c8b07e0884e895a33c40355d9a2a0", // Ledger
+            ]
+          }
+        });
+
+        return _wcProvider;
+      } catch (e) {
+        console.warn("[IFR Wallet] WalletConnect init failed:", e);
+        return null;
+      }
+    })();
+
+    return _wcLoading;
   }
 
   // ── Listener Guard ────────────────────────────────
@@ -115,18 +145,19 @@ window.IFRWallet = (function() {
     try {
       eth.on("accountsChanged", _onAccountsChanged);
       eth.on("chainChanged", _onChainChanged);
+      eth.on("disconnect", _onDisconnect);
       _listenersAttached = true;
     } catch (e) {}
   }
 
   function _detachListeners() {
-    if (!_listenersAttached || !_ethereumProvider) {
-      _listenersAttached = false;
-      return;
-    }
+    if (!_listenersAttached) { _listenersAttached = false; return; }
+    var eth = _ethereumProvider || _wcProvider;
+    if (!eth) { _listenersAttached = false; return; }
     try {
-      _ethereumProvider.removeListener("accountsChanged", _onAccountsChanged);
-      _ethereumProvider.removeListener("chainChanged", _onChainChanged);
+      eth.removeListener("accountsChanged", _onAccountsChanged);
+      eth.removeListener("chainChanged", _onChainChanged);
+      eth.removeListener("disconnect", _onDisconnect);
     } catch (e) {}
     _listenersAttached = false;
   }
@@ -134,49 +165,49 @@ window.IFRWallet = (function() {
   // ── Connect ───────────────────────────────────────
   async function connect() {
     var accounts;
+    var eth = _getMetaMaskProvider();
 
-    // Mobile without extension → use SDK for deep-link
-    if (_isMobile() && !window.ethereum) {
-      await _loadSDK();
-      if (_sdk) {
-        try {
-          accounts = await _sdk.connect();
-          _ethereumProvider = _sdk.getProvider();
-        } catch (e) {
-          if (e.code === 4001 || e.code === "ACTION_REJECTED") throw e;
-          // SDK connect failed — try deep-link as last resort
-          window.location.href = getDeepLink();
-          return;
-        }
-      } else {
-        // SDK didn't load — direct deep-link
-        window.location.href = getDeepLink();
-        return;
-      }
-    } else {
-      // Desktop or mobile with extension
-      var eth = _getMetaMaskProvider();
-
-      // No extension found — try loading SDK
-      if (!eth) {
-        await _loadSDK();
-        eth = _getMetaMaskProvider();
-      }
-
-      if (!eth) throw new Error("NO_METAMASK");
-
+    if (eth) {
+      // ── Path A: Browser extension available (desktop) ──
       try {
         accounts = await eth.request({ method: "eth_requestAccounts" });
       } catch (e) {
         if (e.code === 4001 || e.code === "ACTION_REJECTED") throw e;
-        if (e.code === -32002) throw e;  // already processing
+        if (e.code === -32002) throw e;
         throw e;
+      }
+    } else {
+      // ── Path B: No extension → WalletConnect v2 QR modal ──
+      var wc = await _loadWalletConnect();
+
+      if (wc) {
+        try {
+          // This shows the QR modal automatically
+          await wc.connect();
+          accounts = wc.accounts;
+          _ethereumProvider = wc;
+        } catch (e) {
+          if (e.message && e.message.indexOf("User") !== -1) throw e;
+          // WC failed — try deep-link as last resort on mobile
+          if (_isMobile()) {
+            window.location.href = getDeepLink();
+            return;
+          }
+          throw e;
+        }
+      } else {
+        // WC didn't load — deep-link on mobile, error on desktop
+        if (_isMobile()) {
+          window.location.href = getDeepLink();
+          return;
+        }
+        throw new Error("NO_WALLET");
       }
     }
 
     if (!accounts || accounts.length === 0) throw new Error("NO_ACCOUNTS");
 
-    var eth = _getMetaMaskProvider();
+    eth = _ethereumProvider || _getMetaMaskProvider();
 
     // Create ethers provider (backward compat with ifr-state.js)
     _provider = new ethers.providers.Web3Provider(eth, "any");
@@ -202,7 +233,6 @@ window.IFRWallet = (function() {
       console.warn("IFRWallet: getNetwork() failed, continuing:", netErr.message);
     }
 
-    // Persist to localStorage (survives tab close, unlike sessionStorage)
     localStorage.setItem(SESSION_KEY, _address);
     _attachListeners(eth);
     _emit("connected", _address);
@@ -213,9 +243,11 @@ window.IFRWallet = (function() {
   function disconnect() {
     _detachListeners();
 
-    // Terminate SDK session if active
-    if (_sdk) {
-      try { _sdk.terminate(); } catch (e) {}
+    // Terminate WalletConnect session if active
+    if (_wcProvider) {
+      try { _wcProvider.disconnect(); } catch (e) {}
+      _wcProvider = null;
+      _wcLoading = null;
     }
 
     _provider = null;
@@ -229,7 +261,7 @@ window.IFRWallet = (function() {
   // ── Auto-Reconnect ───────────────────────────────
   async function autoReconnect() {
     var saved = localStorage.getItem(SESSION_KEY);
-    // Also check legacy sessionStorage
+    // Migrate from legacy sessionStorage
     if (!saved) {
       saved = sessionStorage.getItem(SESSION_KEY);
       if (saved) {
@@ -239,6 +271,7 @@ window.IFRWallet = (function() {
     }
     if (!saved) return false;
 
+    // Only auto-reconnect via extension (not WC — requires user action)
     var eth = _getMetaMaskProvider();
     if (!eth) { localStorage.removeItem(SESSION_KEY); return false; }
 
@@ -287,7 +320,7 @@ window.IFRWallet = (function() {
   // ── Internal Handlers ─────────────────────────────
   function _onAccountsChanged(accounts) {
     if (!accounts || accounts.length === 0) { disconnect(); return; }
-    var eth = _getMetaMaskProvider();
+    var eth = _ethereumProvider || _getMetaMaskProvider();
     if (eth) {
       _provider = new ethers.providers.Web3Provider(eth, "any");
       _signer = _provider.getSigner();
@@ -300,6 +333,10 @@ window.IFRWallet = (function() {
   function _onChainChanged() {
     _detachListeners();
     window.location.reload();
+  }
+
+  function _onDisconnect() {
+    disconnect();
   }
 
   // ── Mobile Helpers ────────────────────────────────
