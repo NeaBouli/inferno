@@ -692,5 +692,29 @@ Strategic goal: "IFR = Stripe for Web3 Access — Web3 SaaS Standard"
 ---
 
 *This document is updated with every completed task.*
+### Lending Market UI (Phase 3+ — after LP Launch)
+> Prerequisite: Bootstrap finalise() + LP live
+
+- [ ] 🔵 Lender Interface
+      Create offer (deposit IFR), manage (pause/close), earnings dashboard
+      WalletConnect required
+- [ ] 🔵 Borrower Interface
+      Browse offers, take loan (ETH collateral), manage loans, repay
+      WalletConnect required
+- [ ] 🔵 Collateral Health Monitor UI
+      Live ratio per loan: HEALTHY/WARNING/CRITICAL
+      Margin Call warning (<150%), Liquidation button (<120%)
+      Telegram alert integration
+- [ ] 🔵 Liquidation Interface
+      All liquidatable loans, 5% liquidator bonus, permissionless
+- [ ] 🔵 Market Overview Dashboard
+      Total Lent/Available, Utilization, Interest Rate, Active Loans/Offers
+      Data: /api/lending/stats + /api/lending/offers
+
+Technical: WalletConnect v2 + ethers.js v5, ABI: abi/LendingVault.json
+Railway endpoints already live: stats, offers, loans/:addr, health/:id, lender/:addr
+
+---
+
 *Last updated: 2026-04-07*
 
