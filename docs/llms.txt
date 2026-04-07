@@ -60,6 +60,13 @@ Inferno ($IFR) is a deflationary ERC-20 utility token deployed on Ethereum Mainn
 - LP Strategy: https://ifrunit.tech/wiki/lp-strategy.html
 - Ecosystem Overview: https://ifrunit.tech/wiki/ecosystem.html
 
+## Integration Builder (Phase 5)
+
+- Builder Tool: https://ifrunit.tech/builder.html — Generate secure IFR integration code (contract + SDK + deploy guide) in 60 seconds
+- Generator API: POST /api/builder/generate — accepts JSON config, returns contract code + security score
+- IFR SDK: npm install ifr-sdk — IFRClient with checkAccess(), getTier(), getBalance(), isBuilder()
+- Access Check API: GET /api/ifr/check?wallet=0x...&required=1000 — REST API for SDK-less integration
+
 ## Links
 
 - Website: https://ifrunit.tech

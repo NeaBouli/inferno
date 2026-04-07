@@ -632,18 +632,17 @@ On errors: fix immediately, commit with `seo:` prefix.
       GET /api/ifr/check?wallet=0x...&required=1000 — Railway endpoint
       36 tests passing (test/sdk/sdk.test.js)
 
-- [ ] 🔵 Generator UI (Web Interface)
-      URL: app.ifrunit.tech/builder
-      - Slider: Min IFR Amount (100 — 10,000)
-      - Toggle: Hard Lock ON/OFF
-      - Dropdown: Duration (7 / 30 / 90 days)
-      - Toggle: Cooldown / Tier System / API Check
-      Output: Contract code + Security Score + SDK snippet + Guide
+- [x] ✅ Generator UI — Phase 5d (07.04.2026)
+      docs/builder.html — live at ifrunit.tech/builder.html
+      Config: amount slider, lock type/duration, tier, cooldown, verification
+      Live security score (0-100, SAFE/MEDIUM/RISKY)
+      Code output: contract + SDK snippet + deploy guide
+      Copy button, tab switching, step indicators
+      Landing page + business-onboarding.html linked
+      Sitemap + llms.txt updated
 
-- [ ] 🔵 Business Onboarding Flow (< 1 hour)
-      1. Generator UI → config + score
-      2. Deploy contract + verify
-      3. npm install ifr-sdk
+- [x] ✅ Business Onboarding Flow — included in Generator UI
+      1. Configure → 2. Score → 3. Get Code → 4. Deploy
       4. 3 lines of code in app
       5. Test + Go live
       Docs: docs/wiki/business-onboarding.html
