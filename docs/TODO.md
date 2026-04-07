@@ -719,6 +719,14 @@ Strategic goal: "IFR = Stripe for Web3 Access — Web3 SaaS Standard"
 Technical: WalletConnect v2 + ethers.js v5, ABI: abi/LendingVault.json
 Railway endpoints already live: stats, offers, loans/:addr, health/:id, lender/:addr
 
+### Interactive Onboarding Wizard
+- [x] ✅ Onboarding Wizard (07.04.2026)
+      docs/wizard/ — 6 sub-pages (buy, lock, build, lend, borrow, contribute)
+      Embedded in landing page before "How It Works"
+      6 user paths: Investor, Locker, Builder, Lender, Borrower, Community/Press
+      Step-by-step with back/restart, mobile optimized
+      All sub-pages noindex, hero CTA "Find your path"
+
 ---
 
 *Last updated: 2026-04-07*

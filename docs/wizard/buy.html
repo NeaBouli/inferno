@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Get $IFR Token — Inferno</title>
+<style>
+:root{--bg:#0d1117;--surface:#161b22;--border:#1e2730;--accent:#ff6b00;--text:#e6edf3;--dim:#8b949e;--green:#3fb950;--red:#f85149;--r:12px}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,sans-serif;min-height:100vh;padding:24px}
+.back{color:var(--accent);text-decoration:none;font-size:14px;display:inline-flex;align-items:center;gap:6px;margin-bottom:24px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:28px;max-width:600px;margin:0 auto}
+h1{font-size:1.8rem;margin-bottom:8px}h1 span{color:var(--accent)}
+.sub{color:var(--dim);margin-bottom:24px;line-height:1.6}
+.btn{display:block;text-align:center;background:var(--accent);color:#000;font-weight:700;padding:14px;border-radius:8px;text-decoration:none;font-size:1rem;margin-bottom:10px}
+.btn:hover{opacity:0.9}
+.btn2{background:var(--surface);color:var(--text);border:1px solid var(--border)}
+.tag{display:inline-block;padding:3px 10px;border-radius:20px;font-size:0.75rem;font-weight:700;margin-bottom:12px}
+.info{background:rgba(63,185,80,0.08);border:1px solid rgba(63,185,80,0.3);border-radius:8px;padding:14px;margin-bottom:18px;font-size:0.875rem;line-height:1.6}
+.warn{background:rgba(248,81,73,0.08);border:1px solid rgba(248,81,73,0.3);border-radius:8px;padding:14px;margin-bottom:18px;font-size:0.875rem;line-height:1.6}
+.steps{list-style:none;margin-bottom:24px}
+.steps li{display:flex;gap:14px;align-items:flex-start;padding:14px 0;border-bottom:1px solid var(--border)}
+.steps li:last-child{border-bottom:none}
+.step-num{background:var(--accent);color:#000;font-weight:700;font-size:0.8rem;border-radius:50%;width:26px;height:26px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.step-body strong{display:block;margin-bottom:3px}
+.step-body span{color:var(--dim);font-size:0.875rem;line-height:1.5}
+</style>
+</head>
+<body>
+<a class="back" href="/#wizard">&#8592; Back to Wizard</a>
+<div class="card">
+  <span class="tag" style="background:rgba(255,107,0,0.15);color:var(--accent)">BUY</span>
+  <h1>Get <span>$IFR</span> Token</h1>
+  <p class="sub">IFR is a deflationary ERC-20 utility token. Follow these steps to get your first tokens during the Bootstrap phase.</p>
+
+  <div class="info">Bootstrap is live — contribute ETH directly and claim IFR at a fixed rate before public launch.</div>
+
+  <ul class="steps">
+    <li>
+      <div class="step-num">1</div>
+      <div class="step-body"><strong>Install MetaMask</strong><span>Download the MetaMask browser extension or mobile app. Create a new wallet and securely store your seed phrase.</span></div>
+    </li>
+    <li>
+      <div class="step-num">2</div>
+      <div class="step-body"><strong>Get ETH</strong><span>Purchase ETH on any exchange (Coinbase, Kraken, Binance) and send it to your MetaMask wallet on Ethereum Mainnet.</span></div>
+    </li>
+    <li>
+      <div class="step-num">3</div>
+      <div class="step-body"><strong>Connect &amp; Contribute to Bootstrap</strong><span>Visit the Bootstrap page, connect your wallet, and contribute ETH to receive your IFR allocation.</span></div>
+    </li>
+    <li>
+      <div class="step-num">4</div>
+      <div class="step-body"><strong>Claim IFR</strong><span>After contributing, return to the Bootstrap page to claim your IFR tokens once the phase concludes.</span></div>
+    </li>
+  </ul>
+
+  <a class="btn" href="/bootstrap">Bootstrap Page</a>
+  <a class="btn btn2" href="/tokenomics">Tokenomics</a>
+</div>
+</body>
+</html>

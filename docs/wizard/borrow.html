@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Borrow IFR with ETH — Inferno</title>
+<style>
+:root{--bg:#0d1117;--surface:#161b22;--border:#1e2730;--accent:#ff6b00;--text:#e6edf3;--dim:#8b949e;--green:#3fb950;--red:#f85149;--r:12px}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,sans-serif;min-height:100vh;padding:24px}
+.back{color:var(--accent);text-decoration:none;font-size:14px;display:inline-flex;align-items:center;gap:6px;margin-bottom:24px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:28px;max-width:600px;margin:0 auto}
+h1{font-size:1.8rem;margin-bottom:8px}h1 span{color:var(--accent)}
+.sub{color:var(--dim);margin-bottom:24px;line-height:1.6}
+.btn{display:block;text-align:center;background:var(--accent);color:#000;font-weight:700;padding:14px;border-radius:8px;text-decoration:none;font-size:1rem;margin-bottom:10px}
+.btn:hover{opacity:0.9}
+.btn2{background:var(--surface);color:var(--text);border:1px solid var(--border)}
+.tag{display:inline-block;padding:3px 10px;border-radius:20px;font-size:0.75rem;font-weight:700;margin-bottom:12px}
+.info{background:rgba(63,185,80,0.08);border:1px solid rgba(63,185,80,0.3);border-radius:8px;padding:14px;margin-bottom:18px;font-size:0.875rem;line-height:1.6}
+.warn{background:rgba(248,81,73,0.08);border:1px solid rgba(248,81,73,0.3);border-radius:8px;padding:14px;margin-bottom:18px;font-size:0.875rem;line-height:1.6}
+.flow{display:flex;flex-direction:column;gap:0;margin-bottom:24px}
+.flow-step{display:flex;gap:14px;align-items:flex-start;padding:14px 0;border-bottom:1px solid var(--border)}
+.flow-step:last-child{border-bottom:none}
+.flow-icon{font-size:1.3rem;width:32px;flex-shrink:0;text-align:center;margin-top:1px}
+.flow-body strong{display:block;margin-bottom:3px}
+.flow-body span{color:var(--dim);font-size:0.875rem;line-height:1.5}
+.connector{width:2px;height:10px;background:var(--border);margin-left:29px}
+</style>
+</head>
+<body>
+<a class="back" href="/#wizard">&#8592; Back to Wizard</a>
+<div class="card">
+  <span class="tag" style="background:rgba(248,81,73,0.15);color:var(--red)">BORROW</span>
+  <h1>Borrow <span>IFR</span> with ETH</h1>
+  <p class="sub">Use ETH as collateral to borrow IFR. Keep your ETH exposure while accessing IFR liquidity immediately.</p>
+
+  <div class="flow">
+    <div class="flow-step">
+      <div class="flow-icon">&#128179;</div>
+      <div class="flow-body"><strong>Deposit ETH</strong><span>Connect your wallet and deposit ETH as collateral into the Lending Market smart contract.</span></div>
+    </div>
+    <div class="flow-step">
+      <div class="flow-icon">&#9889;</div>
+      <div class="flow-body"><strong>Receive IFR</strong><span>Instantly borrow IFR up to your collateral limit. The loan-to-value ratio determines your maximum borrow amount.</span></div>
+    </div>
+    <div class="flow-step">
+      <div class="flow-icon">&#128200;</div>
+      <div class="flow-body"><strong>Monitor Health Factor</strong><span>Watch your position health. If collateral value drops, your health factor decreases. Keep it above 1.0 to avoid liquidation.</span></div>
+    </div>
+    <div class="flow-step">
+      <div class="flow-icon">&#9989;</div>
+      <div class="flow-body"><strong>Repay &amp; Recover ETH</strong><span>Repay the borrowed IFR plus accrued interest at any time to fully unlock and withdraw your ETH collateral.</span></div>
+    </div>
+  </div>
+
+  <div class="warn">If your health factor falls below 1.0, your collateral can be liquidated. Monitor your position regularly and add collateral if needed.</div>
+
+  <a class="btn" href="/lending-market">Lending Market</a>
+</div>
+</body>
+</html>

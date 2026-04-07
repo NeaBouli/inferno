@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Lend IFR &amp; Earn — Inferno</title>
+<style>
+:root{--bg:#0d1117;--surface:#161b22;--border:#1e2730;--accent:#ff6b00;--text:#e6edf3;--dim:#8b949e;--green:#3fb950;--red:#f85149;--r:12px}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,sans-serif;min-height:100vh;padding:24px}
+.back{color:var(--accent);text-decoration:none;font-size:14px;display:inline-flex;align-items:center;gap:6px;margin-bottom:24px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:28px;max-width:600px;margin:0 auto}
+h1{font-size:1.8rem;margin-bottom:8px}h1 span{color:var(--accent)}
+.sub{color:var(--dim);margin-bottom:24px;line-height:1.6}
+.btn{display:block;text-align:center;background:var(--accent);color:#000;font-weight:700;padding:14px;border-radius:8px;text-decoration:none;font-size:1rem;margin-bottom:10px}
+.btn:hover{opacity:0.9}
+.btn2{background:var(--surface);color:var(--text);border:1px solid var(--border)}
+.tag{display:inline-block;padding:3px 10px;border-radius:20px;font-size:0.75rem;font-weight:700;margin-bottom:12px}
+.info{background:rgba(63,185,80,0.08);border:1px solid rgba(63,185,80,0.3);border-radius:8px;padding:14px;margin-bottom:18px;font-size:0.875rem;line-height:1.6}
+.warn{background:rgba(248,81,73,0.08);border:1px solid rgba(248,81,73,0.3);border-radius:8px;padding:14px;margin-bottom:18px;font-size:0.875rem;line-height:1.6}
+.rates{display:flex;gap:12px;margin-bottom:24px}
+.rate-card{flex:1;border:1px solid var(--border);border-radius:var(--r);padding:18px;text-align:center}
+.rate-label{color:var(--dim);font-size:0.78rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px}
+.rate-val{font-size:2rem;font-weight:700;color:var(--green);margin-bottom:6px}
+.rate-desc{color:var(--dim);font-size:0.78rem;line-height:1.4}
+.rate-card.high .rate-val{color:var(--accent)}
+.rate-card.max .rate-val{color:var(--red)}
+@media(max-width:480px){.rates{flex-direction:column}}
+</style>
+</head>
+<body>
+<a class="back" href="/#wizard">&#8592; Back to Wizard</a>
+<div class="card">
+  <span class="tag" style="background:rgba(63,185,80,0.15);color:var(--green)">LEND</span>
+  <h1>Lend <span>IFR</span> &amp; Earn</h1>
+  <p class="sub">Deposit IFR into the LendingVault to earn yield. Rates adjust dynamically based on market utilization.</p>
+
+  <div class="info">Yields are paid in IFR. Higher utilization of the lending pool means higher rates for lenders.</div>
+
+  <div class="rates">
+    <div class="rate-card">
+      <div class="rate-label">Low Demand</div>
+      <div class="rate-val">2%</div>
+      <div class="rate-desc">Base APY when utilization is low</div>
+    </div>
+    <div class="rate-card high">
+      <div class="rate-label">High Demand</div>
+      <div class="rate-val">8%</div>
+      <div class="rate-desc">APY at elevated utilization</div>
+    </div>
+    <div class="rate-card max">
+      <div class="rate-label">Max Demand</div>
+      <div class="rate-val">25%</div>
+      <div class="rate-desc">Peak APY at full utilization</div>
+    </div>
+  </div>
+
+  <div class="warn">Rates shown are indicative. Actual yield depends on real-time utilization. Smart contract risk applies.</div>
+
+  <a class="btn" href="/lendingvault">LendingVault</a>
+  <a class="btn btn2" href="/lending-market">Lending Market</a>
+</div>
+</body>
+</html>
