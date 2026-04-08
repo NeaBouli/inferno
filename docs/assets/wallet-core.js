@@ -1,5 +1,5 @@
 /**
- * IFR Wallet Core v4.0 — WalletConnect v2 via jsdelivr ESM
+ * IFR Wallet Core v4.1 — WalletConnect v2 via esm.sh
  * Usage: await IFRWallet.connect(); IFRWallet.getAddress();
  *
  * v4.0 — Fixes v3.0 broken UMD bundles
@@ -7,18 +7,19 @@
  * v3.0 PROBLEM: unpkg UMD bundles of @walletconnect/ethereum-provider
  *   have missing internal dependencies → EthereumProvider = undefined.
  *
- * v4.0 SOLUTION: dynamic import() from jsdelivr +esm endpoint.
- *   jsdelivr bundles ALL dependencies (Rollup+Terser) into a single ESM.
- *   The QR modal auto-resolves from /npm/@walletconnect/modal/+esm.
+ * v4.1 SOLUTION: dynamic import() from esm.sh CDN.
+ *   esm.sh resolves WC dependency tree at runtime (individual fetches).
+ *   QR modal auto-imported internally by @walletconnect/ethereum-provider.
+ *   Verified working on Samsung Galaxy S10 Chrome via ADB (08.04.2026).
  *
  * FLOW:
  *   - Desktop WITH extension: MetaMask extension (instant, no modal)
- *   - Desktop WITHOUT extension: WalletConnect QR modal (jsdelivr ESM)
+ *   - Desktop WITHOUT extension: WalletConnect QR modal (esm.sh)
  *   - Mobile: WalletConnect QR/deep-link → works with ANY wallet
  *   - Fallback: MetaMask deep-link if WC CDN unavailable
  *   - Auto-reconnect from localStorage
  *
- * API: 100% backward-compatible (v1.3 → v2.0 → v3.0 → v4.0 drop-in).
+ * API: 100% backward-compatible (v1.3 → v2.0 → v3.0 → v4.1 drop-in).
  *      IFRWallet.connect/disconnect/autoReconnect
  *      IFRWallet.getAddress/getSigner/getProvider/isConnected
  *      IFRWallet.on/off/getDeepLink/isMobile/getShortAddress
@@ -33,9 +34,10 @@ window.IFRWallet = (function() {
   var SESSION_KEY = "ifr_wallet_connected";
   var WC_PROJECT_ID = "32f56abaa4b1d7f59fb1571c0c0a551f";
 
-  // jsdelivr +esm bundles ALL WC dependencies via Rollup (single fetch chain).
-  // The QR modal auto-resolves from /npm/@walletconnect/modal/+esm internally.
-  var WC_ESM_URL = "https://cdn.jsdelivr.net/npm/@walletconnect/ethereum-provider@2.17.3/+esm";
+  // esm.sh resolves WC dependency tree at runtime (verified on Samsung S10 Chrome).
+  // jsdelivr +esm FAILS: elliptic@6.6.1 named export 'ec' missing after Rollup bundling.
+  // esm.sh (default, without ?bundle-deps) works — internal deps resolve individually.
+  var WC_ESM_URL = "https://esm.sh/@walletconnect/ethereum-provider@2.17.3";
 
   var _provider = null;        // ethers Web3Provider (for ifr-state.js compat)
   var _signer = null;
@@ -105,7 +107,7 @@ window.IFRWallet = (function() {
           }
         });
 
-        console.log("[IFR Wallet] WalletConnect v2 ready (jsdelivr ESM)");
+        console.log("[IFR Wallet] WalletConnect v2 ready (esm.sh)");
         return _wcProvider;
       } catch (e) {
         console.warn("[IFR Wallet] WalletConnect init failed:", e);
