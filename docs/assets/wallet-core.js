@@ -17,7 +17,8 @@
  *   - Desktop WITHOUT extension: WalletConnect QR modal (esm.sh)
  *   - Mobile: WalletConnect QR/deep-link → works with ANY wallet
  *   - Fallback: MetaMask deep-link if WC CDN unavailable
- *   - Auto-reconnect from localStorage
+ *   - Auto-reconnect from localStorage + WC session persistence
+ *   - Mobile return-from-wallet detection (visibilitychange/focus/pageshow)
  *
  * API: 100% backward-compatible (v1.3 → v2.0 → v3.0 → v4.1 drop-in).
  *      IFRWallet.connect/disconnect/autoReconnect
@@ -107,6 +108,18 @@ window.IFRWallet = (function() {
           }
         });
 
+        // Listen for WC session events (fires when user approves in wallet app)
+        _wcProvider.on("connect", function() {
+          if (_wcProvider.accounts && _wcProvider.accounts.length > 0 && !_address) {
+            _finishConnect(_wcProvider, _wcProvider.accounts);
+          }
+        });
+        _wcProvider.on("session_event", function() {
+          if (_wcProvider.accounts && _wcProvider.accounts.length > 0 && !_address) {
+            _finishConnect(_wcProvider, _wcProvider.accounts);
+          }
+        });
+
         console.log("[IFR Wallet] WalletConnect v2 ready (esm.sh)");
         return _wcProvider;
       } catch (e) {
@@ -141,54 +154,12 @@ window.IFRWallet = (function() {
     _listenersAttached = false;
   }
 
-  // ── Connect ───────────────────────────────────────
-  async function connect() {
-    var accounts;
-    var eth = _getMetaMaskProvider();
+  // ── Finish Connect (shared by connect + WC session events) ─
+  async function _finishConnect(eth, accounts) {
+    if (!accounts || accounts.length === 0) return null;
+    if (_address) return _address; // already connected
 
-    if (eth) {
-      // ── Path A: Browser extension available (desktop) ──
-      try {
-        accounts = await eth.request({ method: "eth_requestAccounts" });
-      } catch (e) {
-        if (e.code === 4001 || e.code === "ACTION_REJECTED") throw e;
-        if (e.code === -32002) throw e;
-        throw e;
-      }
-    } else {
-      // ── Path B: No extension → WalletConnect v2 QR modal ──
-      var wc = await _loadWalletConnect();
-
-      if (wc) {
-        try {
-          // This shows the QR modal automatically
-          await wc.connect();
-          accounts = wc.accounts;
-          _ethereumProvider = wc;
-        } catch (e) {
-          if (e.message && e.message.indexOf("User") !== -1) throw e;
-          // WC failed — try deep-link as last resort on mobile
-          if (_isMobile()) {
-            window.location.href = getDeepLink();
-            return;
-          }
-          throw e;
-        }
-      } else {
-        // WC didn't load — deep-link on mobile, error on desktop
-        if (_isMobile()) {
-          window.location.href = getDeepLink();
-          return;
-        }
-        throw new Error("NO_METAMASK");
-      }
-    }
-
-    if (!accounts || accounts.length === 0) throw new Error("NO_ACCOUNTS");
-
-    eth = _ethereumProvider || _getMetaMaskProvider();
-
-    // Create ethers provider (backward compat with ifr-state.js)
+    _ethereumProvider = eth;
     _provider = new ethers.providers.Web3Provider(eth, "any");
     _signer = _provider.getSigner();
     _address = accounts[0];
@@ -218,6 +189,51 @@ window.IFRWallet = (function() {
     return _address;
   }
 
+  // ── Connect ───────────────────────────────────────
+  async function connect() {
+    var accounts;
+    var eth = _getMetaMaskProvider();
+
+    if (eth) {
+      // ── Path A: Browser extension available (desktop) ──
+      try {
+        accounts = await eth.request({ method: "eth_requestAccounts" });
+      } catch (e) {
+        if (e.code === 4001 || e.code === "ACTION_REJECTED") throw e;
+        if (e.code === -32002) throw e;
+        throw e;
+      }
+      return await _finishConnect(eth, accounts);
+    } else {
+      // ── Path B: No extension → WalletConnect v2 QR modal ──
+      var wc = await _loadWalletConnect();
+
+      if (wc) {
+        try {
+          // This shows the QR modal automatically
+          await wc.connect();
+          accounts = wc.accounts;
+        } catch (e) {
+          if (e.message && e.message.indexOf("User") !== -1) throw e;
+          // WC failed — try deep-link as last resort on mobile
+          if (_isMobile()) {
+            window.location.href = getDeepLink();
+            return;
+          }
+          throw e;
+        }
+        return await _finishConnect(wc, accounts);
+      } else {
+        // WC didn't load — deep-link on mobile, error on desktop
+        if (_isMobile()) {
+          window.location.href = getDeepLink();
+          return;
+        }
+        throw new Error("NO_METAMASK");
+      }
+    }
+  }
+
   // ── Disconnect ────────────────────────────────────
   function disconnect() {
     _detachListeners();
@@ -239,6 +255,8 @@ window.IFRWallet = (function() {
 
   // ── Auto-Reconnect ───────────────────────────────
   async function autoReconnect() {
+    if (_address) return true; // already connected
+
     var saved = localStorage.getItem(SESSION_KEY);
     // Migrate from legacy sessionStorage
     if (!saved) {
@@ -248,34 +266,85 @@ window.IFRWallet = (function() {
         sessionStorage.removeItem(SESSION_KEY);
       }
     }
-    if (!saved) return false;
 
-    // Only auto-reconnect via extension (not WC — requires user action)
+    // Path A: Try extension reconnect
     var eth = _getMetaMaskProvider();
-    if (!eth) { localStorage.removeItem(SESSION_KEY); return false; }
+    if (eth && saved) {
+      try {
+        var accounts = await eth.request({ method: "eth_accounts" });
+        if (accounts && accounts.length > 0) {
+          var match = accounts.find(function(a) {
+            return a.toLowerCase() === saved.toLowerCase();
+          });
+          if (match) {
+            await _finishConnect(eth, [match]);
+            return true;
+          }
+        }
+      } catch (e) {}
+    }
 
-    try {
-      var accounts = await eth.request({ method: "eth_accounts" });
-      if (!accounts || accounts.length === 0) {
-        localStorage.removeItem(SESSION_KEY); return false;
-      }
-      var match = accounts.find(function(a) {
-        return a.toLowerCase() === saved.toLowerCase();
-      });
-      if (!match) { localStorage.removeItem(SESSION_KEY); return false; }
-
-      _provider = new ethers.providers.Web3Provider(eth, "any");
-      _signer = _provider.getSigner();
-      _address = match;
-      _ethereumProvider = eth;
-      _attachListeners(eth);
-      _emit("connected", _address);
+    // Path B: Try WalletConnect session recovery
+    // WC persists sessions — if user previously connected via QR,
+    // the session may still be alive after page reload or return from wallet app.
+    if (_wcProvider && _wcProvider.session && _wcProvider.accounts && _wcProvider.accounts.length > 0) {
+      await _finishConnect(_wcProvider, _wcProvider.accounts);
       return true;
-    } catch (e) {
-      localStorage.removeItem(SESSION_KEY);
-      return false;
+    }
+
+    // Path C: Try loading WC to check for persisted session (lazy)
+    if (!eth && saved) {
+      try {
+        var wc = await _loadWalletConnect();
+        if (wc && wc.session && wc.accounts && wc.accounts.length > 0) {
+          await _finishConnect(wc, wc.accounts);
+          return true;
+        }
+      } catch (e) {}
+    }
+
+    if (saved && !_address) localStorage.removeItem(SESSION_KEY);
+    return false;
+  }
+
+  // ── Mobile Return-from-Wallet Detection ─────────
+  // After QR scan, user switches to MetaMask app, approves,
+  // then returns to Chrome. These handlers detect the return
+  // and check if the WC session completed while in background.
+  var _wcReconnectTimer = null;
+
+  function _tryWcSessionRecover() {
+    if (_address) return; // already connected
+    if (!_wcProvider) return;
+    if (_wcProvider.session && _wcProvider.accounts && _wcProvider.accounts.length > 0) {
+      _finishConnect(_wcProvider, _wcProvider.accounts);
     }
   }
+
+  document.addEventListener("visibilitychange", function() {
+    if (document.visibilityState === "visible" && !_address) {
+      // Immediate check
+      setTimeout(_tryWcSessionRecover, 300);
+      // Poll for 30s in case session takes a moment to sync
+      if (_wcReconnectTimer) clearInterval(_wcReconnectTimer);
+      _wcReconnectTimer = setInterval(function() {
+        if (_address) { clearInterval(_wcReconnectTimer); _wcReconnectTimer = null; return; }
+        _tryWcSessionRecover();
+      }, 2000);
+      setTimeout(function() {
+        if (_wcReconnectTimer) { clearInterval(_wcReconnectTimer); _wcReconnectTimer = null; }
+      }, 30000);
+    }
+  });
+
+  window.addEventListener("focus", function() {
+    if (!_address) setTimeout(_tryWcSessionRecover, 300);
+  });
+
+  // iOS Safari back-forward cache
+  window.addEventListener("pageshow", function(e) {
+    if (e.persisted && !_address) setTimeout(_tryWcSessionRecover, 500);
+  });
 
   // ── Getters ───────────────────────────────────────
   function isConnected() { return _address !== null; }
