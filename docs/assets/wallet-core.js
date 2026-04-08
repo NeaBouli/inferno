@@ -210,9 +210,9 @@ window.IFRWallet = (function() {
 
       if (wc) {
         try {
-          // This shows the QR modal automatically
-          await wc.connect();
-          accounts = wc.accounts;
+          // enable() shows QR modal and returns accounts[] directly.
+          // wc.connect() never resolves on Android/iPad Chrome (2025 WebSocket bug).
+          accounts = await wc.enable();
         } catch (e) {
           if (e.message && e.message.indexOf("User") !== -1) throw e;
           // WC failed — try deep-link as last resort on mobile
