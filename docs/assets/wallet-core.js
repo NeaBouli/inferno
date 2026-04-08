@@ -78,8 +78,8 @@ window.IFRWallet = (function() {
 
     _wcLoading = (async function() {
       try {
-        // dynamic import() from jsdelivr — works in all modern browsers.
-        // jsdelivr +esm bundles the entire dependency tree (Rollup+Terser).
+        // dynamic import() from esm.sh — works in all modern browsers.
+        // esm.sh resolves WC dependency tree at runtime.
         // Internally imports @walletconnect/modal for QR display.
         var mod = await import(WC_ESM_URL);
         var EthereumProvider = mod.EthereumProvider || mod.default;
