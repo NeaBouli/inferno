@@ -2920,8 +2920,35 @@ if (isLocked) {
     </div>
     <p class="footer-brand"><span>Inferno ($IFR)</span> &mdash; Community Fair Launch Model</p>
     <p class="footer-copy">&copy; 2026 Inferno Protocol. All rights reserved.</p>
+    <p class="footer-copy" style="margin-top:6px;">
+      Core Dev Contact:
+      <a id="ifr-core-contact" href="#" rel="nofollow noopener"
+         data-u="kaspartisan"
+         data-h="proton"
+         data-t="me"
+         style="color:#888;text-decoration:none;border-bottom:1px dotted #555;">
+        [enable JavaScript to view]
+      </a>
+    </p>
   </div>
 </footer>
+
+<script>
+  // Scraper-resistant email assembly — no literal address in HTML source.
+  // Assembled client-side only when DOM is ready. Static crawlers see nothing.
+  (function() {
+    var a = document.getElementById('ifr-core-contact');
+    if (!a) return;
+    var u = a.getAttribute('data-u');
+    var h = a.getAttribute('data-h');
+    var t = a.getAttribute('data-t');
+    var at = String.fromCharCode(64);
+    var dot = String.fromCharCode(46);
+    var addr = u + at + h + dot + t;
+    a.href = 'mailto' + String.fromCharCode(58) + addr;
+    a.textContent = addr;
+  })();
+</script>
 
 <!-- ── JS ─────────────────────────────────────────── -->
 <script>
