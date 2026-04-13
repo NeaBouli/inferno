@@ -1,7 +1,7 @@
 // scripts/propose_8.js
 // Governance Proposal #8 — setOwner(TreasurySafe)
 // Transfers Governance ownership from Deployer EOA to 3-of-5 Multisig
-// Usage: PRIVATE_KEY=0x... node scripts/propose_8.js
+// Usage: DEPLOYER_PRIVATE_KEY=0x... node scripts/propose_8.js
 // NEVER commit .env or private keys!
 //
 // WARNING: After execution, ONLY the 3-of-5 Multisig can create proposals.
@@ -24,16 +24,16 @@ const GOV_ABI = [
 ];
 
 async function main() {
-  if (!process.env.PRIVATE_KEY) {
+  if (!process.env.DEPLOYER_PRIVATE_KEY) {
     console.error('ERROR: PRIVATE_KEY env var required');
-    console.error('Usage: PRIVATE_KEY=0x... node scripts/propose_8.js');
+    console.error('Usage: DEPLOYER_PRIVATE_KEY=0x... node scripts/propose_8.js');
     process.exit(1);
   }
 
   const provider = new ethers.providers.JsonRpcProvider(
     process.env.RPC_URL || 'https://ethereum-rpc.publicnode.com'
   );
-  const signer = new ethers.Wallet(process.env.PRIVATE_KEY, provider);
+  const signer = new ethers.Wallet(process.env.DEPLOYER_PRIVATE_KEY, provider);
 
   console.log('=== Proposal #8 — setOwner(TreasurySafe) ===');
   console.log('');
@@ -127,7 +127,7 @@ async function main() {
     console.log('IMPORTANT: Execute ONLY after confirming all 5 signers are reachable.');
     console.log('');
     console.log('Execute command (after ETA):');
-    console.log('  PROPOSAL_ID=' + id + ' PRIVATE_KEY=0x... node scripts/execute-proposal.js --network mainnet');
+    console.log('  PROPOSAL_ID=' + id + ' DEPLOYER_PRIVATE_KEY=0x... node scripts/execute-proposal.js --network mainnet');
     console.log('');
     console.log('Or via Etherscan Write Contract:');
     console.log('  https://etherscan.io/address/' + GOV_ADDRESS + '#writeContract');

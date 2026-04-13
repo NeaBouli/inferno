@@ -1,6 +1,6 @@
 // scripts/propose_7.js
 // Governance Proposal #7 — setFeeExempt(Deployer + TreasurySafe + CommunitySafe)
-// Usage: PRIVATE_KEY=0x... node scripts/propose_7.js
+// Usage: DEPLOYER_PRIVATE_KEY=0x... node scripts/propose_7.js
 // NEVER commit .env or private keys!
 
 require('dotenv').config();
@@ -23,16 +23,16 @@ const TARGETS = [
 ];
 
 async function main() {
-  if (!process.env.PRIVATE_KEY) {
+  if (!process.env.DEPLOYER_PRIVATE_KEY) {
     console.error('ERROR: PRIVATE_KEY env var required');
-    console.error('Usage: PRIVATE_KEY=0x... node scripts/propose_7.js');
+    console.error('Usage: DEPLOYER_PRIVATE_KEY=0x... node scripts/propose_7.js');
     process.exit(1);
   }
 
   const provider = new ethers.providers.JsonRpcProvider(
     process.env.RPC_URL || 'https://ethereum-rpc.publicnode.com'
   );
-  const signer = new ethers.Wallet(process.env.PRIVATE_KEY, provider);
+  const signer = new ethers.Wallet(process.env.DEPLOYER_PRIVATE_KEY, provider);
 
   // Verify signer is Deployer (Governance Owner)
   if (signer.address.toLowerCase() !== DEPLOYER.toLowerCase()) {
@@ -83,7 +83,7 @@ async function main() {
   console.log('To execute after 48h:');
   console.log('  node -e "require(\'dotenv\').config();const{ethers}=require(\'ethers\');' +
     'const p=new ethers.providers.JsonRpcProvider(process.env.RPC_URL||\'https://ethereum-rpc.publicnode.com\');' +
-    'const s=new ethers.Wallet(process.env.PRIVATE_KEY,p);' +
+    'const s=new ethers.Wallet(process.env.DEPLOYER_PRIVATE_KEY,p);' +
     'const g=new ethers.Contract(\'' + GOV_ADDRESS + '\',[\'function execute(uint256)\'],s);' +
     'g.execute(PROPOSAL_ID).then(tx=>tx.wait()).then(()=>console.log(\'Done\'))"');
 }

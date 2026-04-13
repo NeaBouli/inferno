@@ -177,19 +177,25 @@ contract BuybackController {
 
         token.approve(address(router), ifrBalance);
 
+        uint256 minIFR = (ifrBalance * (10_000 - slippageBps)) / 10_000;
+        uint256 minETH = (ethAmount * (10_000 - slippageBps)) / 10_000;
+
         try router.addLiquidityETH{value: ethAmount}(
             address(token),
             ifrBalance,
-            0,       // accept any amount of IFR
-            0,       // accept any amount of ETH
+            minIFR,
+            minETH,
             lpReceiver,
             block.timestamp
         ) returns (uint256 amountToken, uint256 amountETH, uint256 liquidity) {
             totalLiquidityAdded += liquidity;
             emit LiquidityAdded(amountETH, amountToken, liquidity);
 
-            // Refund unused ETH/IFR stays in contract for next cycle
+            // Reset approve to 0 after use
+            token.approve(address(router), 0);
         } catch {
+            // Reset approve on failure
+            token.approve(address(router), 0);
             // LP failed → redirect ETH to buyback
             _buybackAndBurn(ethAmount);
             emit LiquidityFallback(ethAmount);
