@@ -1,0 +1,86 @@
+name: Security Audit
+
+on:
+  push:
+    branches: [main, master, develop, dev]
+  pull_request:
+    branches: [main, master]
+  schedule:
+    - cron: '0 3 * * 1'
+
+jobs:
+  secret-scan:
+    name: Secret Detection
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  dependency-audit:
+    name: Dependency Audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check for package.json
+        id: check-npm
+        run: |
+          if [ -f package.json ]; then
+            echo "has_npm=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_npm=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: npm audit
+        if: steps.check-npm.outputs.has_npm == 'true'
+        run: npm audit --audit-level=high || true
+
+      - name: Check for Cargo.toml
+        id: check-cargo
+        run: |
+          if [ -f Cargo.toml ] || find . -maxdepth 3 -name "Cargo.toml" -print -quit | grep -q .; then
+            echo "has_cargo=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_cargo=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: cargo audit
+        if: steps.check-cargo.outputs.has_cargo == 'true'
+        run: |
+          cargo install cargo-audit 2>/dev/null || true
+          cargo audit || true
+
+      - name: Check for requirements.txt
+        id: check-pip
+        run: |
+          if [ -f requirements.txt ] || find . -maxdepth 3 -name "requirements.txt" -print -quit | grep -q .; then
+            echo "has_pip=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_pip=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: pip audit
+        if: steps.check-pip.outputs.has_pip == 'true'
+        run: |
+          pip install pip-audit 2>/dev/null || true
+          find . -maxdepth 3 -name "requirements.txt" -exec pip-audit -r {} \; || true
+
+  security-summary:
+    name: Security Summary
+    runs-on: ubuntu-latest
+    needs: [secret-scan, dependency-audit]
+    if: always()
+    steps:
+      - name: Summary
+        run: |
+          echo "## Security Audit Summary" >> $GITHUB_STEP_SUMMARY
+          echo "| Check | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Secret Scan | ${{ needs.secret-scan.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Dependencies | ${{ needs.dependency-audit.result }} |" >> $GITHUB_STEP_SUMMARY
