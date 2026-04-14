@@ -4,7 +4,7 @@ _Last updated: 2026-03-06_
 
 | File | Status | Notes |
 |------|--------|-------|
-| docs/DOCS.md | OK | Project structure, 578 tests, 14 on-chain components |
+| docs/DOCS.md | OK | Project structure, 578 tests, 17 on-chain components |
 | docs/WHITEPAPER.md | OK | v1.0 whitepaper, fully translated to English |
 | docs/PROJECT-SUMMARY.md | OK | Mainnet summary, 578 tests, all addresses |
 | docs/DEPLOYMENTS.md | OK | Sepolia + Mainnet addresses |

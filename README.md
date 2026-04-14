@@ -11,7 +11,7 @@
 **Contract:** [`0x77e99917Eca8539c62F509ED1193ac36580A6e7B`](https://etherscan.io/address/0x77e99917Eca8539c62F509ED1193ac36580A6e7B#code) | **Network:** Ethereum Mainnet | **Bootstrap:** ACTIVE until June 5, 2026
 
 <!-- TODO: IFR_UPDATE — TEST_COUNT + CONTRACT_COUNT — update on each sprint -->
-**16 on-chain components** | **544 tests** | **91% branch coverage** | **13 verified contracts + 3 Gnosis Safes**
+**17 on-chain components** | **544 tests** | **91% branch coverage** | **14 verified contracts + 3 Gnosis Safes**
 
 ### Quick Links
 
@@ -93,15 +93,10 @@ with a 1-year cliff. See [Fair Launch Statement](docs/FAIR_LAUNCH.md).
 | LiquidityReserve | [`0xdc0309804803b3A105154f6073061E3185018f64`](https://etherscan.io/address/0xdc0309804803b3A105154f6073061E3185018f64#code) |
 | BootstrapVaultV3 | [`0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141`](https://etherscan.io/address/0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141#code) **[ACTIVE]** |
 | BuilderRegistry | [`0xdfe6636DA47F8949330697e1dC5391267CEf0EE3`](https://etherscan.io/address/0xdfe6636DA47F8949330697e1dC5391267CEf0EE3#code) |
+| CommitmentVault | [`0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3`](https://etherscan.io/address/0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3#code) |
+| LendingVault | [`0x974305Ab0EC905172e697271C3d7d385194EB9DF`](https://etherscan.io/address/0x974305Ab0EC905172e697271C3d7d385194EB9DF#code) |
+| BuybackController | [`0x1e0547D50005A4Af66AbD5e6915ebfAA2d711F7c`](https://etherscan.io/address/0x1e0547D50005A4Af66AbD5e6915ebfAA2d711F7c#code) |
 | BootstrapVault V1 | [`0xA820540936d18e1377C39dd9445E5b36F3F1261a`](https://etherscan.io/address/0xA820540936d18e1377C39dd9445E5b36F3F1261a#code) **[DEPRECATED]** |
-
-### Phase 3 Contracts (planned — after Bootstrap)
-
-| Contract | Purpose |
-|----------|---------|
-| CommitmentVault | Voluntary token lock with price/time conditions (anti-dump) |
-| LendingVault | IFR lending against ETH collateral (creates buy pressure) |
-| BuybackController | Automated fee distribution (BuybackVault + BurnReserve) |
 
 ### Gnosis Safe (Mainnet)
 

@@ -56,7 +56,7 @@ Then update ALL of these if counts changed:
 If a new wiki page or contract was added:
 ```
 ls docs/wiki/*.html | wc -l          # → update "32 wiki pages" everywhere
-ls contracts/*.sol | wc -l           # → update "16 on-chain components" everywhere
+ls contracts/*.sol | wc -l           # → update "17 on-chain components" everywhere
 ```
 
 **Quick bulk replace command:**
@@ -693,7 +693,7 @@ Strategic goal: "IFR = Stripe for Web3 Access — Web3 SaaS Standard"
 
 ### Contract Count Standardization
 - [x] ✅ Contract count standardized site-wide (07.04.2026)
-      Canonical: 13 deployed contracts + 3 Gnosis Safes = 16 on-chain components
+      Canonical: 14 deployed contracts + 3 Gnosis Safes = 17 on-chain components
       Fixed: wiki (10 pages), Ali copilot, README, docs (PROJECT-SUMMARY, STATUS-REPORT, MAINNET_CHECKLIST)
       13 contracts: InfernoToken, Governance, IFRLock, BootstrapVaultV3, Vesting,
       LiquidityReserve, PartnerVault, FeeRouterV1, BuybackVault, BurnReserve,

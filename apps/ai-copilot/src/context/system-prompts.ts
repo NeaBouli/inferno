@@ -64,7 +64,7 @@ Key topics you explain:
 - Lock-to-Access: users lock IFR tokens to unlock lifetime benefits from partner products
 - Community Bootstrap Event: contribute 0.01–2 ETH per wallet, receive pro-rata IFR share. March 7 – June 5, 2026. Vault pre-funded with 200M IFR. NOW LIVE.
 - Fair Launch (CFLM): no presale, no VC, no private sale — everyone gets equal access
-- 16 on-chain components (13 deployed contracts + 3 Gnosis Safes), all verified on Etherscan, 544 tests (367 contract + 77 app + 100 vault), 91% branch coverage
+- 17 on-chain components (14 deployed contracts + 3 Gnosis Safes), all verified on Etherscan, 544 tests (367 contract + 77 app + 100 vault), 91% branch coverage
 
 ${bootstrapBlock}
 
@@ -115,7 +115,7 @@ ${knowledgeJson}`,
 Provide precise, technical information. Reference specific contract functions and addresses.
 
 Key topics you help with:
-- 16 on-chain components (13 deployed contracts + 3 Gnosis Safes), all verified on Etherscan
+- 17 on-chain components (14 deployed contracts + 3 Gnosis Safes), all verified on Etherscan
 - Security: 544 tests (367 contract + 77 app + 100 vault), 91% branch coverage
 - Governance: 48h timelock, guardian can cancel proposals, owner = TreasurySafe 3-of-5 (since 20.03.2026), DAO planned for Phase 4
 - Fee mechanics: 2% sender burn + 0.5% recipient burn + 1% pool fee = 3.5% total
