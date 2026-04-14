@@ -399,6 +399,8 @@ On errors: fix immediately, commit with `seo:` prefix.
 - [ ] 🔍 Reddit Karma prüfen vor Post (r/CryptoMoonShots Mindest-Karma)
 - [ ] Set up Juicebox listing/discovery (NO funding — discovery only)
 - [x] X/Twitter announcement text prepared ✅ (in BOOTSTRAP_ANNOUNCEMENT.md)
+- [x] ✅ Etherscan Token Profile live (17.03.2026)
+      Logo + Links bestätigt via Support-Mail
 - [ ] Final review bootstrap page
 - [ ] Communicate Bootstrap V4 on bootstrap.html: "V4 governance voting planned for Phase 3"
 
@@ -429,7 +431,9 @@ On errors: fix immediately, commit with `seo:` prefix.
 - [x] ✅ Landing Page: IntersectionObserver for live data + lazy images + scroll throttle (20.03.2026)
 - [ ] Full JSON-LD Schema.org check on all wiki pages
 - [ ] Verify ChatGPT/Perplexity indexing
-- [ ] Follow up on ethereum-lists PR #1010
+- [ ] 🟡 ethereum-lists PR #1010 — Follow-up gepostet (14.04.2026)
+      @ligi angeschrieben — warten auf CI Approval + Merge
+      Falls kein Merge bis 28.04.2026 → erneut nachfragen
 
 ### CI/CD
 - [ ] Set up Slither CI
