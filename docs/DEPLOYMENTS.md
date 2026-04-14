@@ -20,6 +20,7 @@
 | 8 | **PartnerVault** | [`0x5F12C0bC616e9Ca347D48C33266aA8fe98490A39`](https://sepolia.etherscan.io/address/0x5F12C0bC616e9Ca347D48C33266aA8fe98490A39#code) | Verified |
 | 9 | **FeeRouterV1** | [`0x499289C8Ef49769F4FcFF3ca86D4BD7b55B49aa4`](https://sepolia.etherscan.io/address/0x499289C8Ef49769F4FcFF3ca86D4BD7b55B49aa4#code) | Verified |
 | 10 | **BootstrapVault** | [`0xE0E8F76e4fb38B2e367Aee043a2C02b8D1c7c037`](https://sepolia.etherscan.io/address/0xE0E8F76e4fb38B2e367Aee043a2C02b8D1c7c037#code) | Verified |
+| 11 | **BuybackController** | [`0xaA1496133B6c274190A2113410B501C5802b6fCF`](https://sepolia.etherscan.io/address/0xaA1496133B6c274190A2113410B501C5802b6fCF#code) | Verified |
 
 ### Constructor Arguments
 
@@ -135,6 +136,7 @@
 | 9 | **LiquidityReserve** | [`0xdc0309804803b3A105154f6073061E3185018f64`](https://etherscan.io/address/0xdc0309804803b3A105154f6073061E3185018f64#code) | Verified |
 | 10 | ~~BootstrapVault V1~~ | [`0xA820540936d18e1377C39dd9445E5b36F3F1261a`](https://etherscan.io/address/0xA820540936d18e1377C39dd9445E5b36F3F1261a#code) | **DEPRECATED** — finalise() broken, superseded by V3 |
 | 11 | **BootstrapVaultV3** | [`0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141`](https://etherscan.io/address/0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141#code) | Verified |
+| 12 | **BuybackController** | [`0x1e0547D50005A4Af66AbD5e6915ebfAA2d711F7c`](https://etherscan.io/address/0x1e0547D50005A4Af66AbD5e6915ebfAA2d711F7c#code) | Verified |
 
 ### Token Distribution (CFLM)
 
@@ -151,7 +153,7 @@
 
 | Setting | Value |
 |---------|-------|
-| FeeExempt | Vesting, LiquidityReserve, BuybackVault, BurnReserve, IFRLock, PartnerVault, Treasury |
+| FeeExempt | Vesting, LiquidityReserve, BuybackVault, BurnReserve, IFRLock, PartnerVault, Treasury, CommitmentVault, LendingVault, BuybackController (pending Proposal A) |
 | Deployer FeeExempt | Removed |
 | LiquidityReserve Lock | 180 days |
 | Vesting Cliff | 12 months |
@@ -198,6 +200,7 @@ All ownable contracts transferred to Governance (48h Timelock). Parameter change
 | BuilderRegistry | `owner()` | Governance — [`0xdfe6636D...CEf0EE3`](https://etherscan.io/address/0xdfe6636DA47F8949330697e1dC5391267CEf0EE3) (deployed 20.03.2026) |
 | CommitmentVault | `owner()` | Governance — [`0x0719d9eb...73d3`](https://etherscan.io/address/0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3) (deployed 04.04.2026) |
 | LendingVault | `owner()` | Governance — [`0x974305Ab...9DF`](https://etherscan.io/address/0x974305Ab0EC905172e697271C3d7d385194EB9DF) (deployed 04.04.2026) |
+| BuybackController | `owner()` | Deployer — [`0x1e0547D5...F7c`](https://etherscan.io/address/0x1e0547D50005A4Af66AbD5e6915ebfAA2d711F7c) (deployed 14.04.2026, feeExempt pending) |
 | IFRLock | `guardian()` | Deployer (emergency pause only) |
 | Vesting | `guardian()` | Deployer (emergency pause only) |
 | Governance | `owner()` | TreasurySafe 3-of-5 (transferred 20.03.2026, TX `0xcd9f99d2...19c46c3`) |
@@ -223,6 +226,9 @@ All ownable contracts transferred to Governance (48h Timelock). Parameter change
 | LendingVault deployed + verified | **Done** (04.04.2026) — [`0x974305Ab...`](https://etherscan.io/address/0x974305Ab0EC905172e697271C3d7d385194EB9DF#code) |
 | feeExempt(CommitmentVault) Proposal #11 | **Executed** (06.04.2026) — TreasurySafe 3-of-5 |
 | feeExempt(LendingVault) Proposal #12 | **Executed** (06.04.2026) — TreasurySafe 3-of-5 |
+| BuybackController deployed + verified | **Done** (14.04.2026) — [`0x1e0547D5...`](https://etherscan.io/address/0x1e0547D50005A4Af66AbD5e6915ebfAA2d711F7c#code) — TX [`0x761ee37c...`](https://etherscan.io/tx/0x761ee37c87d528317c5f7da13a2581e037f2fe39c71bfc58ce83a32930391677) |
+| Proposal A: setFeeExempt(BuybackController) | **Pending** — 3/5 signed, 48h Timelock, Execute ~16.04.2026 07:30 UTC+2 |
+| Proposal B: setFeeCollector(BuybackController) | **Waiting** — Submit after Proposal A executed |
 | Create Uniswap V2 LP (400M IFR + ETH) | Pending |
 | Lock LP Tokens (min 12 months) | Pending |
 | Transfer InfernoToken Ownership to Governance | **Done** (2026-03-05) |

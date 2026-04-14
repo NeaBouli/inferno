@@ -644,9 +644,9 @@
           <li class="check-item">BuilderRegistry Mainnet deploy &#x2705; (20.03.2026 &mdash; <a href="https://etherscan.io/address/0xdfe6636DA47F8949330697e1dC5391267CEf0EE3#code" target="_blank">0xdfe6...0EE3</a>)</li>
           <li class="pending-item">LP Token Lock/Burn</li>
           <li class="pending-item">Professional security audit</li>
-          <li class="pending-item">CommitmentVault &mdash; voluntary lock with 4 condition types (time, price, time+price, time OR price)</li>
-          <li class="pending-item">LendingVault &mdash; IFR lending against ETH collateral (200%, TWAP Oracle, auto-liquidation)</li>
-          <li class="pending-item">BuybackController &mdash; automated fee distribution (BuybackVault + BurnReserve)</li>
+          <li class="check-item">CommitmentVault &mdash; deployed 04.04.2026 (<a href="https://etherscan.io/address/0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3#code" target="_blank" style="color:var(--accent);">0x0719...73d3</a>)</li>
+          <li class="check-item">LendingVault &mdash; deployed 04.04.2026 (<a href="https://etherscan.io/address/0x974305Ab0EC905172e697271C3d7d385194EB9DF#code" target="_blank" style="color:var(--accent);">0x9743...B9DF</a>)</li>
+          <li class="check-item">BuybackController &mdash; deployed 14.04.2026 (<a href="https://etherscan.io/address/0x1e0547D50005A4Af66AbD5e6915ebfAA2d711F7c#code" target="_blank" style="color:var(--accent);">0x1e05...F7c</a>) &mdash; feeExempt pending</li>
         </ul>
 
         <!-- Sprint Status -->
@@ -693,7 +693,8 @@
           <li class="pending-item"><strong>June 2026:</strong> First Builder loans via LendingVault</li>
           <li class="pending-item"><strong>September 2026:</strong> LiquidityReserve unlock (200M IFR available) &mdash; Governance decides LP addition</li>
           <li class="pending-item"><strong>March 2027:</strong> Vesting Cliff &mdash; Core Dev receives first IFR (public announcement before each claim)</li>
-          <li class="pending-item"><strong>2027+:</strong> BuybackController live, payment model active (when IFR &ge; P0 &times; 2,500), DAO Governance</li>
+          <li class="check-item"><strong>April 2026:</strong> BuybackController deployed + verified &mdash; Proposal A (feeExempt) in 48h Timelock, Proposal B (setFeeCollector) pending</li>
+          <li class="pending-item"><strong>2027+:</strong> Payment model active (when IFR &ge; P0 &times; 2,500), DAO Governance</li>
         </ul>
       </div>
 
@@ -767,7 +768,7 @@
 
       <h2>Current Focus</h2>
       <p>
-        <strong>Phase 4 completion</strong> &mdash; 14 mainnet on-chain components deployed, verified, and ownership transferred to Governance. Next steps: LP pairing, LP lock, Governance owner &rarr; Multisig. See <a href="https://github.com/NeaBouli/inferno/blob/main/docs/MAINNET_CHECKLIST.md">Mainnet Checklist</a> for detailed progress.
+        <strong>Phase 4 completion</strong> &mdash; 17 mainnet on-chain components deployed, verified, and ownership transferred to Governance. BuybackController deployed 14.04.2026 &mdash; governance wiring in progress. Next steps: Execute Proposal A (feeExempt), Submit + Execute Proposal B (setFeeCollector), LP pairing, LP lock. See <a href="https://github.com/NeaBouli/inferno/blob/main/docs/NEXT_STEPS.md">Next Steps</a> for BuybackController execution guide.
       </p>
 
       <div class="callout-green callout">
