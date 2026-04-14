@@ -245,8 +245,14 @@ On errors: fix immediately, commit with `seo:` prefix.
       Interest rate: dynamic (0% util=2%, 100%=25%)
       Uniswap TWAP price oracle (24h average)
       Railway cron job (every 4h) for liquidation checks
-- [ ] 🔵 Deploy BuybackController (Phase 3+)
-      Automated fee distribution (BuybackVault + BurnReserve)
+- [x] ✅ Deploy BuybackController (14.04.2026)
+      Mainnet: `0x1e0547D50005A4Af66AbD5e6915ebfAA2d711F7c` — Verified
+      Sepolia: `0xaA1496133B6c274190A2113410B501C5802b6fCF` — Verified
+      TX: `0x761ee37c87d528317c5f7da13a2581e037f2fe39c71bfc58ce83a32930391677`
+      Security: BC-1 Slippage Protection + BC-2 Exact Approve
+- [ ] 🔴 Proposal A: setFeeExempt(BuybackController, true) — Execute ~16.04.2026 07:30 UTC+2
+      3/5 signed, 48h Timelock läuft
+- [ ] 🔴 Proposal B: setFeeCollector(BuybackController) auf FeeRouterV1 — nach Execute A
 
 ### Phase 3 — Wiki Pages (new)
 - [x] ✅ Wiki: CommitmentVault page — `docs/wiki/commitment-vault.html` (20.03.2026)
@@ -283,9 +289,9 @@ On errors: fix immediately, commit with `seo:` prefix.
       Permissionless execute() after 24h cooldown
       50 tests passing, ABI: abi/BuybackController.json
       Handover: docs/CORE_DEV_PHASE3.md
-- [ ] 🔵 Core Dev: Deploy Sepolia → Audit → Mainnet
-      Order: CommitmentVault → LendingVault → BuybackController
-      Docs: CORE_DEV_PHASE3.md (updated 07.04.2026)
+- [x] ✅ Core Dev: All Phase 3 contracts deployed (14.04.2026)
+      CommitmentVault → LendingVault → BuybackController — all Mainnet + Sepolia
+      Docs: CORE_DEV_PHASE3.md, NEXT_STEPS.md
 
 ### Phase 3 — WalletConnect UI
 - [x] ✅ CommitmentVault UI built (04.04.2026)

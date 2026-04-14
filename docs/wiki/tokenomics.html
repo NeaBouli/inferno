@@ -1161,14 +1161,14 @@
       <ul>
         <li>Accumulates from the 1% protocol pool fee on every non-exempt IFR transfer</li>
         <li>Not pre-funded at genesis. Current balance: 0 IFR.</li>
-        <li>Phase 3: <strong>BuybackController.sol</strong> &mdash; automatic rebalancing:
+        <li><strong>BuybackController.sol</strong> &mdash; <strong style="color:#22c55e;">Deployed 14.04.2026</strong> (<a href="https://etherscan.io/address/0x1e0547D50005A4Af66AbD5e6915ebfAA2d711F7c#code" target="_blank" style="color:var(--accent);">0x1e05...F7c</a>):
           <ul>
-            <li>PartnerVault &lt; 85% (34M IFR) &rarr; auto-refill to 90% (36M IFR)</li>
-            <li>Operating Pool overflow &gt; 2M IFR &rarr; Governance routes to Treasury</li>
-            <li>SOS Reserve (30%) &rarr; Community Vote 12 days + 48h Timelock</li>
+            <li>50/50 split: buyback+burn / LP deepening</li>
+            <li>Permissionless <code>execute()</code> with 24h cooldown</li>
+            <li>Slippage protection (minIFR/minETH parameters)</li>
+            <li>Governance wiring: Proposal A (feeExempt) in 48h Timelock, Proposal B (setFeeCollector) pending</li>
           </ul>
         </li>
-        <li>Controlled by governance &mdash; no automatic execution before Phase 3 (prevents MEV/sandwich attacks)</li>
       </ul>
 
       <p><strong>BurnReserve (protocol contract &mdash; not a genesis allocation)</strong></p>
@@ -1276,6 +1276,18 @@
         <div class="exempt-item">
           <div class="name">IFRLock</div>
           <div class="reason">Users locking and unlocking tokens should not be penalized by fees on lock/unlock operations</div>
+        </div>
+        <div class="exempt-item">
+          <div class="name">CommitmentVault</div>
+          <div class="reason">Voluntary lock deposits and withdrawals must transfer full amounts &mdash; feeExempt since 06.04.2026</div>
+        </div>
+        <div class="exempt-item">
+          <div class="name">LendingVault</div>
+          <div class="reason">Lending deposits, repayments, and liquidations must be exact &mdash; feeExempt since 06.04.2026</div>
+        </div>
+        <div class="exempt-item">
+          <div class="name">BuybackController <span style="color:#eab308;font-size:0.75rem;">(pending)</span></div>
+          <div class="reason">Automated buyback+burn and LP deepening operations &mdash; feeExempt Proposal A in 48h Timelock (Execute ~16.04.2026)</div>
         </div>
       </div>
 
