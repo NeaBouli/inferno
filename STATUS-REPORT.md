@@ -4,13 +4,13 @@
 **Branch:** `main`
 **Model:** Community Fair Launch (CFLM) -- no presale
 **Ticker:** $IFR
-**Status:** 10 On-Chain Components deployed + verified on Ethereum Mainnet | 494 tests | 7 Apps
+**Status:** 17 On-Chain Components deployed + verified on Ethereum Mainnet | 544 tests | 7 Apps
 
 ---
 
 ## On-Chain (Ethereum Mainnet)
 
-14 on-chain components (9 repo contracts + 1 Uniswap V2 LP Pair). All verified on Etherscan. Ownership transferred to Governance (48h Timelock).
+17 on-chain components (14 deployed contracts + 3 Gnosis Safes). All verified on Etherscan. Ownership transferred to Governance (48h Timelock).
 
 | # | Contract | Address | Status |
 |---|----------|---------|--------|

@@ -4,11 +4,11 @@ Last updated: March 2026
 
 ## Project Status: MAINNET DEPLOYED
 
-All 16 on-chain components deployed, verified, and operational on Ethereum Mainnet (2026-03-05). BootstrapVault deployed on Sepolia. Landing page, wiki (32 pages), dashboard, and 7 apps live.
+All 17 on-chain components deployed, verified, and operational on Ethereum Mainnet. BuybackController deployed 14.04.2026. Landing page, wiki (32 pages), dashboard, and 7 apps live.
 
-## On-Chain Contracts (13)
+## On-Chain Contracts (14)
 
-### Mainnet (13)
+### Mainnet (14)
 
 | # | Contract | Address | Status |
 |---|----------|---------|--------|
@@ -21,6 +21,11 @@ All 16 on-chain components deployed, verified, and operational on Ethereum Mainn
 | 7 | FeeRouterV1 | [`0x4807B77B2E25cD055DA42B09BA4d0aF9e580C60a`](https://etherscan.io/address/0x4807B77B2E25cD055DA42B09BA4d0aF9e580C60a#code) | Verified |
 | 8 | Vesting | [`0x2694Bc84e8D5251E9E4Ecd4B2Ae3f866d6106271`](https://etherscan.io/address/0x2694Bc84e8D5251E9E4Ecd4B2Ae3f866d6106271#code) | Verified |
 | 9 | LiquidityReserve | [`0xdc0309804803b3A105154f6073061E3185018f64`](https://etherscan.io/address/0xdc0309804803b3A105154f6073061E3185018f64#code) | Verified |
+| 10 | BootstrapVaultV3 | [`0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141`](https://etherscan.io/address/0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141#code) | Verified |
+| 11 | BuilderRegistry | [`0xdfe6636DA47F8949330697e1dC5391267CEf0EE3`](https://etherscan.io/address/0xdfe6636DA47F8949330697e1dC5391267CEf0EE3#code) | Verified |
+| 12 | CommitmentVault | [`0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3`](https://etherscan.io/address/0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3#code) | Verified |
+| 13 | LendingVault | [`0x974305Ab0EC905172e697271C3d7d385194EB9DF`](https://etherscan.io/address/0x974305Ab0EC905172e697271C3d7d385194EB9DF#code) | Verified |
+| 14 | BuybackController | [`0x1e0547D50005A4Af66AbD5e6915ebfAA2d711F7c`](https://etherscan.io/address/0x1e0547D50005A4Af66AbD5e6915ebfAA2d711F7c#code) | Verified |
 
 ### Sepolia (Testnet)
 

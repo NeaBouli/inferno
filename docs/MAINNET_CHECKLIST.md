@@ -40,7 +40,7 @@ These items MUST be completed before public launch:
 
 | Milestone | Status |
 |-----------|--------|
-| 16 Contracts deployed + verified | Done |
+| 17 Contracts deployed + verified | Done |
 | Uniswap V2 LP Pair live | Done |
 | Ownership transferred to Governance | Done |
 | Governance Proposals #0, #1 executed | Done |
@@ -181,7 +181,7 @@ These items MUST be completed before public launch:
 
 ## Phase 2: Post-Deployment Verification
 
-- [ ] All 13 contract addresses updated in docs/wiki/deployment.html
+- [ ] All 14 contract addresses updated in docs/wiki/deployment.html
 - [ ] Landing page Etherscan links updated
 - [ ] README contract addresses updated
 - [ ] docs/DEPLOYMENTS.md mainnet section added
