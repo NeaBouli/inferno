@@ -1,0 +1,28 @@
+{
+  "version": "1.0",
+  "chainId": "1",
+  "createdAt": 1744607100,
+  "meta": {
+    "name": "Proposal A - setFeeExempt BuybackController",
+    "description": "Governance.propose(InfernoToken, setFeeExempt(0x1e0547D50005A4Af66AbD5e6915ebfAA2d711F7c, true)) — Exempts BuybackController from 2.5% transfer fee. MUST be executed BEFORE Proposal B (setFeeCollector).",
+    "txBuilderVersion": "1.16.5"
+  },
+  "transactions": [
+    {
+      "to": "0xc43d48E7FDA576C5022d0670B652A622E8caD041",
+      "value": "0",
+      "data": "0x9d48184800000000000000000000000077e99917eca8539c62f509ed1193ac36580a6e7b000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000448ebfc7960000000000000000000000001e0547d50005a4af66abd5e6915ebfaa2d711f7c000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000",
+      "contractMethod": {
+        "name": "propose",
+        "inputs": [
+          { "name": "target", "type": "address", "internalType": "address" },
+          { "name": "data", "type": "bytes", "internalType": "bytes" }
+        ]
+      },
+      "contractInputsValues": {
+        "target": "0x77e99917Eca8539c62F509ED1193ac36580A6e7B",
+        "data": "0x8ebfc7960000000000000000000000001e0547d50005a4af66abd5e6915ebfaa2d711f7c0000000000000000000000000000000000000000000000000000000000000001"
+      }
+    }
+  ]
+}
