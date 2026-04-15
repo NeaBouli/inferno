@@ -51,18 +51,29 @@
     <h1>IFR Protocol &mdash; Developer TODO List</h1>
     <div class="subtitle">Last updated: 2026-04-15 &middot; Branch: main</div>
 
-    <!-- ═══ KRITISCH: DEADLINE 16.04.2026 ═══ -->
-    <h2><span class="priority-badge p-critical">KRITISCH</span> MORGEN 16.04.2026 08:52 Uhr Athen</h2>
+    <!-- ═══ KRITISCH: Proposal #13 Execute 16.04.2026 ═══ -->
+    <h2><span class="priority-badge p-critical">KRITISCH</span> 16.04.2026 ab 08:52 Uhr Athen</h2>
     <ul>
-      <li><div class="cb"></div>&#x1F534; <strong>Execute Governance Proposal &mdash; Safe TX #10</strong><br>
-        <span style="color:#6b7280;font-size:0.82rem;">Submitted: 14.04.2026 08:52 AM via TreasurySafe<br>
-        Timelock 48h abl&auml;uft: <strong style="color:#ef4444;">16.04.2026 08:52 Uhr Athen</strong><br>
-        Aktion: propose() &rarr; vermutlich setFeeExempt(BuybackController)<br>
-        &#x26A0;&#xFE0F; PROPOSAL ID VERIFIZIEREN &mdash; k&ouml;nnte 14 oder 15 sein! &rarr; proposalCount() pr&uuml;fen vor Execute</span></li>
-      <li><div class="cb"></div>&#x1F534; <strong>Nach Execute: feeExempt(BuybackController) verifizieren</strong><br>
-        <span style="color:#6b7280;font-size:0.82rem;"><code>feeExempt('0x1e0547D50005A4Af66AbD5e6915ebfAA2d711F7c')</code> muss <code>true</code> zur&uuml;ckgeben</span></li>
-      <li><div class="cb"></div>&#x1F7E1; <strong>Safe TX #10 Details verifizieren</strong><br>
-        <span style="color:#6b7280;font-size:0.82rem;">Was genau macht der Proposal? &rarr; Safe History TX #10 aufklappen &rarr; Ziel + Funktion notieren</span></li>
+      <li><div class="cb"></div>&#x1F534; <strong>Execute Proposal #13 &mdash; setFeeExempt(BuybackController, true)</strong><br>
+        <span style="color:#6b7280;font-size:0.82rem;">
+        Proposal ID: <strong>13</strong><br>
+        Target: InfernoToken (<code>0x77e99917...6e7B</code>)<br>
+        Aktion: <code>setFeeExempt(0x1e0547D5...F7c, true)</code><br>
+        ETA: <strong style="color:#ef4444;">16.04.2026 08:52:11 Uhr Athen</strong> &larr; TIMELOCK ABGELAUFEN<br>
+        TX Submit: <a href="https://etherscan.io/tx/0x4eea741b8080c7a035356ec8fa7aab68d06a32ef6569ca0ac682fbb684e8a054" target="_blank"><code>0x4eea741b...a054</code></a> (Block 24876058)<br>
+        Status: PENDING EXECUTION &#x2705;<br><br>
+        &#x26A0;&#xFE0F; <code>execute()</code> ist <strong>onlyOwner</strong> &rarr; Owner = TreasurySafe (3-of-5)<br>
+        &rarr; Execute &uuml;ber <strong>Safe UI</strong> &mdash; NICHT direkt vom Deployer!<br><br>
+        <strong>SCHRITTE:</strong><br>
+        1. <a href="https://app.safe.global/home?safe=eth:0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b" target="_blank">Safe UI &ouml;ffnen</a><br>
+        2. New Transaction &rarr; Transaction Builder<br>
+        3. To: <code>0xc43d48E7...D041</code> (Governance)<br>
+        4. Function: <code>execute(uint256 proposalId)</code><br>
+        5. proposalId: <strong>13</strong><br>
+        6. 3-of-5 Signaturen sammeln &rarr; Execute
+        </span></li>
+      <li><div class="cb"></div>&#x1F534; <strong>Nach Execute verifizieren: feeExempt(BuybackController)</strong><br>
+        <span style="color:#6b7280;font-size:0.82rem;">BuybackController (<code>0x1e0547D5...F7c</code>) &mdash; <code>feeExempt()</code> muss <code>true</code> zur&uuml;ckgeben</span></li>
     </ul>
 
     <!-- ═══ CRITICAL: EXECUTE ═══ -->
@@ -147,7 +158,7 @@
       <li><div class="cb cb-done">&#x2713;</div>&#x2705; LendingVault deployed Mainnet: <code>0x974305Ab0EC905172e697271C3d7d385194EB9DF</code></li>
       <li><div class="cb cb-done">&#x2713;</div>&#x2705; BuybackController.sol written &mdash; 50/50 buyback+burn / LP, 50 tests, ABI exported (07.04.2026)</li>
       <li><div class="cb cb-done">&#x2713;</div>&#x2705; BuybackController deployed Mainnet: <code>0x1e0547D50005A4Af66AbD5e6915ebfAA2d711F7c</code> &mdash; Verified (14.04.2026)</li>
-      <li><div class="cb"></div>&#x1F534; <strong>Proposal A: setFeeExempt(BuybackController, true)</strong> &mdash; Execute ~16.04.2026 08:52 Athen</li>
+      <li><div class="cb"></div>&#x1F534; <strong>Proposal A (= Proposal #13): setFeeExempt(BuybackController, true)</strong> &mdash; Execute ab 16.04.2026 08:52 Athen via Safe UI</li>
       <li><div class="cb"></div>&#x1F534; <strong>Proposal B: setFeeCollector(BuybackController)</strong> auf FeeRouterV1 &mdash; nach Execute A</li>
     </ul>
     <h3>Wiki Pages (4 new) &#x2705;</h3>
