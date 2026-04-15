@@ -1,5 +1,5 @@
 # IFR Protocol — Developer TODO List
-> Last updated: 2026-04-04 | Branch: main
+> Last updated: 2026-04-15 | Branch: main
 
 ---
 
@@ -103,6 +103,51 @@ On errors: fix immediately, commit with `seo:` prefix.
 - [x] Bootstrap ConsensusModule: wallet-connected voting buttons ✅
 - [x] MetaMask Mobile: centralized deep-link + pending connect ✅
 - [x] Protocol Plan wiki page created (26 pages) ✅
+
+## 🔴 KRITISCH — MORGEN 16.04.2026 08:52 Uhr Athen
+
+- [ ] 🔴 Execute Governance Proposal — Safe TX #10
+      Submitted: 14.04.2026 08:52 AM via TreasurySafe
+      Timelock 48h abläuft: 16.04.2026 08:52 Uhr Athen
+      Aktion: propose() → vermutlich setFeeExempt(BuybackController)
+      Execute-Befehl:
+      ```
+      cd /Users/gio/Desktop/inferno
+      node -e "
+      require('dotenv').config();
+      const{ethers}=require('ethers');
+      const p=new ethers.providers.JsonRpcProvider(
+        process.env.RPC_URL||'https://ethereum-rpc.publicnode.com');
+      const s=new ethers.Wallet(process.env.DEPLOYER_PRIVATE_KEY,p);
+      const g=new ethers.Contract(
+        '0xc43d48E7FDA576C5022d0670B652A622E8caD041',
+        ['function execute(uint256)'],s);
+      g.execute(15)
+        .then(tx=>{console.log('TX:',tx.hash);return tx.wait();})
+        .then(()=>console.log('✅ executed'))
+        .catch(e=>console.error('❌',e.message));"
+      ```
+      ⚠️ PROPOSAL ID VERIFIZIEREN — könnte 14 oder 15 sein!
+      → proposalCount() prüfen vor Execute
+
+- [ ] 🔴 Nach Execute: feeExempt(BuybackController) verifizieren
+      ```
+      node -e "require('dotenv').config();
+      const{ethers}=require('ethers');
+      const p=new ethers.providers.JsonRpcProvider(
+        process.env.RPC_URL||'https://ethereum-rpc.publicnode.com');
+      const t=new ethers.Contract(
+        '0x77e99917Eca8539c62F509ED1193ac36580A6e7B',
+        ['function feeExempt(address) view returns (bool)'],p);
+      t.feeExempt('0x1e0547D50005A4Af66AbD5e6915ebfAA2d711F7c')
+        .then(r=>console.log('feeExempt:',r));"
+      ```
+
+- [ ] 🟡 Safe TX #10 Details verifizieren:
+      Was genau macht der Proposal?
+      → Safe History TX #10 aufklappen → Ziel + Funktion notieren
+
+---
 
 ## CRITICAL
 
@@ -739,5 +784,5 @@ Railway endpoints already live: stats, offers, loans/:addr, health/:id, lender/:
 
 ---
 
-*Last updated: 2026-04-07*
+*Last updated: 2026-04-15*
 
