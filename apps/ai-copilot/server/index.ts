@@ -334,10 +334,8 @@ var currentMode = 'explorer';
 var histories = { explorer: [], user: [], dev: [] };
 function getBootstrapWelcomeText() {
   var now = Date.now();
-  var START = new Date("2026-03-07T00:00:00Z").getTime();
   var END = new Date("2026-06-05T00:00:00Z").getTime();
-  if (now < START) return "Bootstrap Event opens March 7, 2026 \\u2014 not yet active";
-  if (now < END) return "\\u{1f525} Bootstrap Event is LIVE! Contribute ETH at ifrunit.tech/wiki/bootstrap.html";
+  if (now < END) return "\\u{1f525} Bootstrap Event is LIVE since March 7, 2026! Contribute ETH at ifrunit.tech/wiki/bootstrap.html";
   return "Bootstrap Event ended June 5, 2026. IFR now live on Uniswap";
 }
 var welcomes = {
