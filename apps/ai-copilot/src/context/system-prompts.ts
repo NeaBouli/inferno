@@ -1,19 +1,12 @@
 import { getIFRKnowledge } from "./ifr-knowledge";
 
 function getBootstrapPromptBlock(): string {
-  const START = new Date("2026-03-07T00:00:00Z").getTime();
-  const END   = new Date("2026-06-05T00:00:00Z").getTime();
+  const END = new Date("2026-06-05T00:00:00Z").getTime();
   const now = Date.now();
 
-  if (now < START) {
-    return `BOOTSTRAP STATUS: NOT YET ACTIVE
-- Opens: March 7, 2026 | Ends: June 5, 2026 (on-chain dates)
-- The Bootstrap contract is deployed and accepting contributions
-- Say: "The Bootstrap Event is open. You can contribute at ifrunit.tech/wiki/bootstrap.html"
-- Vault pre-funded with 200M IFR`;
-  } else if (now < END) {
-    return `BOOTSTRAP STATUS: ACTIVE NOW
-- Started: March 7, 2026 | Ends: June 5, 2026
+  if (now < END) {
+    return `BOOTSTRAP STATUS: NOW ACTIVE
+- Bootstrap phase is LIVE since 07.03.2026 | Ends: June 5, 2026
 - Users CAN contribute 0.01–2 ETH RIGHT NOW
 - Direct them to: ifrunit.tech/wiki/bootstrap.html
 - Vault: 0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141

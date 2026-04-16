@@ -429,6 +429,9 @@ Details + Calldata: siehe `docs/PROPOSAL_B_CALLDATA.md`
 
 ### Ali Copilot
 - [x] Security policy: no PII, no wallet outputs, no contract addresses, only ifrunit.tech, reliability disclaimer, scam awareness ✅
+- [x] ✅ Bootstrap status "NOW ACTIVE" (16.04.2026)
+      ifr-knowledge.ts, system-prompts.ts, server/index.ts — dead "NOT YET ACTIVE" branch entfernt
+      Status: Bootstrap is LIVE since 07.03.2026, ends 05.06.2026
 - [ ] Ali Phase 2: WalletConnect → wallet-specific responses (after LP live)
 
 ---
