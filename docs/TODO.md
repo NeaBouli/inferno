@@ -114,22 +114,50 @@ On errors: fix immediately, commit with `seo:` prefix.
 
 ## 🔴 KRITISCH — Proposal B: setFeeCollector
 
+Details + Calldata: siehe `docs/PROPOSAL_B_CALLDATA.md`
+
 - [ ] 🔴 Proposal B via TreasurySafe submiten:
       Aktion: setFeeCollector(BuybackController) auf FeeRouterV1
       Contract: FeeRouterV1 (0x4807B77B2E25cD055DA42B09BA4d0aF9e580C60a)
       Target Argument: BuybackController (0x1e0547D50005A4Af66AbD5e6915ebfAA2d711F7c)
-      Nach Submit: 48h Timelock → dann execute via Safe UI (3-of-5)
+      Route: Fall A — FeeRouterV1.governance = Governance Contract (verified on-chain)
+      → propose() via TreasurySafe → 48h Timelock → execute() via TreasurySafe
 
-      SCHRITTE Submit:
-      1. Safe UI: https://app.safe.global/home?safe=eth:0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b
-      2. New Transaction → Transaction Builder
-      3. To: 0xc43d48E7FDA576C5022d0670B652A622E8caD041 (Governance)
-      4. Function: propose(address target, bytes data)
-      5. target: 0x4807B77B2E25cD055DA42B09BA4d0aF9e580C60a (FeeRouterV1)
-      6. data: ABI-encoded setFeeCollector(0x1e0547D50005A4Af66AbD5e6915ebfAA2d711F7c)
-      7. 3-of-5 Signaturen → Submit
-      8. 48h Timelock abwarten
-      9. execute(proposalId) via Safe UI
+      On-chain State (16.04.2026):
+      - FeeRouterV1.governance:   0xc43d48E7...D041 (Governance Contract)
+      - FeeRouterV1.feeCollector: 0xC8f4B45f...ac9c (aktuell — wird überschrieben)
+      - Governance.owner:         0x5ad6193e...CE3b (TreasurySafe 3-of-5)
+      - Governance.delay:         172800s (48h)
+
+      Calldata (bereits berechnet):
+      - Inner setFeeCollector(BuybackController):
+        0xa42dce800000000000000000000000001e0547d50005a4af66abd5e6915ebfaa2d711f7c
+      - Outer propose(FeeRouterV1, inner):
+        0x9d4818480000000000000000000000004807b77b2e25cd055da42b09ba4d0af9e580c60a00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000024a42dce800000000000000000000000001e0547d50005a4af66abd5e6915ebfaa2d711f7c00000000000000000000000000000000000000000000000000000000
+
+      Safe UI (Variante A — Contract Interaction, empfohlen):
+      1. https://app.safe.global/home?safe=eth:0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b
+      2. New Transaction → Contract Interaction
+      3. Contract: 0xc43d48E7FDA576C5022d0670B652A622E8caD041 (Governance)
+      4. Method: propose(address target, bytes data)
+         - target: 0x4807B77B2E25cD055DA42B09BA4d0aF9e580C60a
+         - data:   0xa42dce800000000000000000000000001e0547d50005a4af66abd5e6915ebfaa2d711f7c
+      5. 3-of-5 Signaturen → Submit
+      6. Proposal ID aus ProposalCreated Event notieren
+      7. 48h Timelock abwarten
+      8. execute(proposalId) via Safe UI (3-of-5)
+
+- [ ] 🔴 Verify nach Execute:
+      feeCollector == BuybackController?
+      ```
+      node -e "require('dotenv').config();
+      const{ethers}=require('ethers');
+      const p=new ethers.providers.JsonRpcProvider(process.env.RPC_URL);
+      const fr=new ethers.Contract(
+        '0x4807B77B2E25cD055DA42B09BA4d0aF9e580C60a',
+        ['function feeCollector() view returns (address)'],p);
+      fr.feeCollector().then(r=>console.log('feeCollector:',r));"
+      ```
 
 ---
 
