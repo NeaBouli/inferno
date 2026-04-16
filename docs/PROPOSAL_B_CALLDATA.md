@@ -102,8 +102,9 @@ fr.feeCollector()
 
 ## Status
 
-- [ ] Submit via TreasurySafe 3-of-5
-- [ ] Proposal ID notieren: `____`
-- [ ] Timelock abläuft: `____` (Submit + 48h)
+- [x] ✅ Submitted via TreasurySafe 3-of-5 — 16.04.2026
+- [x] ✅ Proposal ID: **14** (on-chain EXAKT verifiziert)
+- [ ] Timelock abläuft: **18.04.2026 11:09:35 Athen** (Unix: 1776499775)
 - [ ] Execute via TreasurySafe 3-of-5
+      → `execute(14)` Calldata: `0xfe0d94c1000000000000000000000000000000000000000000000000000000000000000e`
 - [ ] Verify `feeCollector == BuybackController`

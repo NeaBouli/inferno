@@ -62,38 +62,35 @@
         </span></li>
     </ul>
 
-    <!-- ═══ KRITISCH: Proposal B setFeeCollector ═══ -->
-    <h2><span class="priority-badge p-critical">KRITISCH</span> Proposal B: setFeeCollector</h2>
+    <!-- ═══ ERLEDIGT: Proposal B submitted als #14 ═══ -->
+    <h2><span class="priority-badge p-done">ERLEDIGT</span> Proposal B submitted als Proposal #14 (16.04.2026)</h2>
+    <ul>
+      <li><div class="cb cb-done">&#x2713;</div>&#x2705; <strong>Proposal #14 submitted: setFeeCollector(BuybackController)</strong><br>
+        <span style="color:#6b7280;font-size:0.82rem;">
+        Target: FeeRouterV1 (<code>0x4807B77B...C60a</code>)<br>
+        Calldata: <code>0xa42dce80...1e0547d5...f7c</code> (on-chain EXAKT bestätigt)<br>
+        Decoded: <code>setFeeCollector(0x1e0547D5...F7c)</code><br>
+        ETA: <strong style="color:#ef4444;">18.04.2026 11:09:35 Athen</strong> (48h Timelock)
+        </span></li>
+    </ul>
+
+    <!-- ═══ KRITISCH: Execute Proposal #14 ═══ -->
+    <h2><span class="priority-badge p-critical">KRITISCH</span> Execute Proposal #14 &mdash; ab 18.04.2026 11:09 Athen</h2>
     <p style="color:#6b7280;font-size:0.82rem;margin:0 0 12px;">Details + Calldata: <a href="../docs/PROPOSAL_B_CALLDATA.md"><code>docs/PROPOSAL_B_CALLDATA.md</code></a></p>
     <ul>
-      <li><div class="cb"></div>&#x1F534; <strong>Proposal B via TreasurySafe submiten: setFeeCollector(BuybackController)</strong><br>
+      <li><div class="cb"></div>&#x1F534; <strong>Execute Proposal #14 via TreasurySafe (3-of-5)</strong><br>
         <span style="color:#6b7280;font-size:0.82rem;">
-        Aktion: <code>setFeeCollector(BuybackController)</code> auf FeeRouterV1<br>
-        Contract: FeeRouterV1 (<code>0x4807B77B2E25cD055DA42B09BA4d0aF9e580C60a</code>)<br>
-        Target: BuybackController (<code>0x1e0547D50005A4Af66AbD5e6915ebfAA2d711F7c</code>)<br>
-        <strong>Route: Fall A</strong> &mdash; FeeRouterV1.governance = Governance Contract (on-chain verified)<br>
-        &rarr; <code>propose()</code> via TreasurySafe &rarr; 48h Timelock &rarr; <code>execute()</code> via TreasurySafe<br><br>
-        <strong>On-chain State (16.04.2026):</strong><br>
-        FeeRouterV1.governance: <code>0xc43d48E7...D041</code> (Governance)<br>
-        FeeRouterV1.feeCollector: <code>0xC8f4B45f...ac9c</code> (wird &uuml;berschrieben)<br>
-        Governance.owner: <code>0x5ad6193e...CE3b</code> (TreasurySafe 3-of-5)<br>
-        Governance.delay: 172800s (48h)<br><br>
-        <strong>Calldata (bereits berechnet):</strong><br>
-        Inner <code>setFeeCollector(BuybackController)</code>:<br>
-        <code style="word-break:break-all;font-size:0.7rem;">0xa42dce800000000000000000000000001e0547d50005a4af66abd5e6915ebfaa2d711f7c</code><br><br>
-        Outer <code>propose(FeeRouterV1, inner)</code>:<br>
-        <code style="word-break:break-all;font-size:0.7rem;">0x9d4818480000000000000000000000004807b77b2e25cd055da42b09ba4d0af9e580c60a00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000024a42dce800000000000000000000000001e0547d50005a4af66abd5e6915ebfaa2d711f7c00000000000000000000000000000000000000000000000000000000</code><br><br>
-        <strong>Safe UI (Variante A &mdash; Contract Interaction, empfohlen):</strong><br>
+        ETA: <strong style="color:#ef4444;">18.04.2026 11:09:35 Athen</strong><br><br>
+        <strong>Safe UI (Contract Interaction, empfohlen):</strong><br>
         1. <a href="https://app.safe.global/home?safe=eth:0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b" target="_blank">Safe UI</a><br>
         2. New Transaction &rarr; Contract Interaction<br>
         3. Contract: <code>0xc43d48E7...D041</code> (Governance)<br>
-        4. Method: <code>propose(address target, bytes data)</code><br>
-        &nbsp;&nbsp;&nbsp;target: <code>0x4807B77B...C60a</code><br>
-        &nbsp;&nbsp;&nbsp;data: <code>0xa42dce80...f7c</code><br>
-        5. 3-of-5 Signaturen &rarr; Submit<br>
-        6. Proposal ID aus ProposalCreated Event notieren<br>
-        7. 48h Timelock abwarten<br>
-        8. <code>execute(proposalId)</code> via Safe UI (3-of-5)
+        4. Method: <code>execute(uint256 proposalId)</code> &rarr; proposalId: <strong>14</strong><br>
+        5. 3-of-5 Signaturen &rarr; Execute<br><br>
+        <strong>ODER Transaction Builder (raw calldata):</strong><br>
+        To: <code>0xc43d48E7FDA576C5022d0670B652A622E8caD041</code><br>
+        Data: <code style="word-break:break-all;font-size:0.7rem;">0xfe0d94c1000000000000000000000000000000000000000000000000000000000000000e</code><br>
+        (= <code>execute(14)</code>, Selector <code>0xfe0d94c1</code>)
         </span></li>
       <li><div class="cb"></div>&#x1F534; <strong>Verify nach Execute: feeCollector == BuybackController</strong><br>
         <span style="color:#6b7280;font-size:0.82rem;">
