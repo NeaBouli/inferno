@@ -104,41 +104,32 @@ On errors: fix immediately, commit with `seo:` prefix.
 - [x] MetaMask Mobile: centralized deep-link + pending connect ✅
 - [x] Protocol Plan wiki page created (26 pages) ✅
 
-## 🔴 KRITISCH — 16.04.2026 ab 08:52 Uhr Athen
+## ✅ ERLEDIGT — Proposal #13 executed (16.04.2026)
 
-- [ ] 🔴 Execute Proposal #13 — setFeeExempt(BuybackController, true)
-      Proposal ID: 13
-      Target: InfernoToken (0x77e99917Eca8539c62F509ED1193ac36580A6e7B)
-      Aktion: setFeeExempt(0x1e0547D50005A4Af66AbD5e6915ebfAA2d711F7c, true)
-      ETA: 16.04.2026 08:52:11 Uhr Athen ← TIMELOCK ABGELAUFEN
-      TX Submit: 0x4eea741b8080c7a035356ec8fa7aab68d06a32ef6569ca0ac682fbb684e8a054
-      Block: 24876058
-      Status: PENDING EXECUTION ✅
+- [x] ✅ Proposal #13 executed (16.04.2026 10:31 Athen)
+      setFeeExempt(BuybackController, true) ✅
+      TX: 0x74a7c9c97800cfe5a68315db68e648ae1631124a748fa5b101e58bea2681404f
+      Block: 24890909
+      BuybackController feeExempt = TRUE (on-chain verified)
 
-      ⚠️ execute() ist onlyOwner → Owner = TreasurySafe (3-of-5)
-      → Execute über Safe UI — NICHT direkt vom Deployer!
+## 🔴 KRITISCH — Proposal B: setFeeCollector
 
-      SCHRITTE:
-      1. https://app.safe.global/home?safe=eth:0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b
+- [ ] 🔴 Proposal B via TreasurySafe submiten:
+      Aktion: setFeeCollector(BuybackController) auf FeeRouterV1
+      Contract: FeeRouterV1 (0x4807B77B2E25cD055DA42B09BA4d0aF9e580C60a)
+      Target Argument: BuybackController (0x1e0547D50005A4Af66AbD5e6915ebfAA2d711F7c)
+      Nach Submit: 48h Timelock → dann execute via Safe UI (3-of-5)
+
+      SCHRITTE Submit:
+      1. Safe UI: https://app.safe.global/home?safe=eth:0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b
       2. New Transaction → Transaction Builder
       3. To: 0xc43d48E7FDA576C5022d0670B652A622E8caD041 (Governance)
-      4. Function: execute(uint256 proposalId)
-      5. proposalId: 13
-      6. 3-of-5 Signaturen sammeln → Execute
-
-- [ ] 🔴 Nach Execute verifizieren:
-      BuybackController (0x1e0547D50005A4Af66AbD5e6915ebfAA2d711F7c)
-      feeExempt = true?
-      ```
-      node -e "require('dotenv').config();
-      const{ethers}=require('ethers');
-      const p=new ethers.providers.JsonRpcProvider(process.env.RPC_URL);
-      const t=new ethers.Contract(
-        '0x77e99917Eca8539c62F509ED1193ac36580A6e7B',
-        ['function feeExempt(address) view returns (bool)'],p);
-      t.feeExempt('0x1e0547D50005A4Af66AbD5e6915ebfAA2d711F7c')
-        .then(r=>console.log('feeExempt:',r?'✅':'❌'));"
-      ```
+      4. Function: propose(address target, bytes data)
+      5. target: 0x4807B77B2E25cD055DA42B09BA4d0aF9e580C60a (FeeRouterV1)
+      6. data: ABI-encoded setFeeCollector(0x1e0547D50005A4Af66AbD5e6915ebfAA2d711F7c)
+      7. 3-of-5 Signaturen → Submit
+      8. 48h Timelock abwarten
+      9. execute(proposalId) via Safe UI
 
 ---
 
@@ -288,10 +279,10 @@ On errors: fix immediately, commit with `seo:` prefix.
       Sepolia: `0xaA1496133B6c274190A2113410B501C5802b6fCF` — Verified
       TX: `0x761ee37c87d528317c5f7da13a2581e037f2fe39c71bfc58ce83a32930391677`
       Security: BC-1 Slippage Protection + BC-2 Exact Approve
-- [ ] 🔴 Proposal A (= Proposal #13): setFeeExempt(BuybackController, true) — Execute ab 16.04.2026 08:52 Athen
-      On-chain confirmed: ID 13, ETA 1776318731, PENDING EXECUTION
-      Execute via TreasurySafe Safe UI (onlyOwner)
-- [ ] 🔴 Proposal B: setFeeCollector(BuybackController) auf FeeRouterV1 — nach Execute A
+- [x] ✅ Proposal A (= Proposal #13): setFeeExempt(BuybackController, true) — EXECUTED 16.04.2026 10:31 Athen
+      TX: 0x74a7c9c97800cfe5a68315db68e648ae1631124a748fa5b101e58bea2681404f (Block 24890909)
+      BuybackController feeExempt = TRUE ✅
+- [ ] 🔴 Proposal B: setFeeCollector(BuybackController) auf FeeRouterV1 — siehe KRITISCH-Sektion oben
 
 ### Phase 3 — Wiki Pages (new)
 - [x] ✅ Wiki: CommitmentVault page — `docs/wiki/commitment-vault.html` (20.03.2026)
