@@ -1166,7 +1166,7 @@
             <li>50/50 split: buyback+burn / LP deepening</li>
             <li>Permissionless <code>execute()</code> with 24h cooldown</li>
             <li>Slippage protection (minIFR/minETH parameters)</li>
-            <li>Governance wiring: Proposal A (feeExempt) in 48h Timelock, Proposal B (setFeeCollector) pending</li>
+            <li>Governance wiring: Proposal #13 (feeExempt) executed 16.04.2026, Proposal #14 (setFeeCollector) executed 18.04.2026 &mdash; fully active &#x2705;</li>
           </ul>
         </li>
       </ul>
@@ -1286,8 +1286,8 @@
           <div class="reason">Lending deposits, repayments, and liquidations must be exact &mdash; feeExempt since 06.04.2026</div>
         </div>
         <div class="exempt-item">
-          <div class="name">BuybackController <span style="color:#eab308;font-size:0.75rem;">(pending)</span></div>
-          <div class="reason">Automated buyback+burn and LP deepening operations &mdash; feeExempt Proposal A in 48h Timelock (Execute ~16.04.2026)</div>
+          <div class="name">BuybackController <span style="color:#22c55e;font-size:0.75rem;">&#x2705; active</span></div>
+          <div class="reason">Automated buyback+burn and LP deepening operations &mdash; feeExempt since 16.04.2026 (Proposal #13), feeCollector since 18.04.2026 (Proposal #14)</div>
         </div>
       </div>
 
@@ -1463,7 +1463,7 @@ if (from != address(0) && to != address(0)
         <tbody>
           <tr><td><code>protocolFeeBps</code></td><td>5 bps (0.05%)</td><td>Default, governance-adjustable</td></tr>
           <tr><td><code>FEE_CAP_BPS</code></td><td>25 bps (0.25%)</td><td>Hard cap, contract-enforced</td></tr>
-          <tr><td>Fee target</td><td><code>feeCollector</code> address</td><td>Set by governance</td></tr>
+          <tr><td>Fee target</td><td><code>feeCollector</code> = BuybackController</td><td>Set via Proposal #14 (18.04.2026)</td></tr>
         </tbody>
       </table>
 

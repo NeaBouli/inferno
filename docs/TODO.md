@@ -1,5 +1,5 @@
 # IFR Protocol — Developer TODO List
-> Last updated: 2026-04-15 | Branch: main
+> Last updated: 2026-04-18 | Branch: main
 
 ---
 
@@ -120,33 +120,13 @@ On errors: fix immediately, commit with `seo:` prefix.
       Calldata: 0xa42dce80...1e0547d5...f7c (on-chain EXAKT bestätigt)
       ETA: 18.04.2026 11:09:35 Athen (48h Timelock)
 
-## 🔴 KRITISCH — Execute Proposal #14 (ab 18.04.2026 11:09 Athen)
+## ✅ ERLEDIGT — Proposal #14 executed (18.04.2026)
 
-Details + Calldata: siehe `docs/PROPOSAL_B_CALLDATA.md`
-
-- [ ] 🔴 Execute Proposal #14 — ab 18.04.2026 11:09:35 Athen
-      Via TreasurySafe Safe UI (3-of-5):
-      1. https://app.safe.global/home?safe=eth:0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b
-      2. New Transaction → Contract Interaction
-      3. Contract: 0xc43d48E7FDA576C5022d0670B652A622E8caD041 (Governance)
-      4. Method: execute(uint256 proposalId) → proposalId: 14
-      5. 3-of-5 Signaturen → Execute
-
-      ODER via Transaction Builder (raw calldata):
-      To:   0xc43d48E7FDA576C5022d0670B652A622E8caD041
-      Data: 0xfe0d94c1000000000000000000000000000000000000000000000000000000000000000e
-      (= execute(14), Selector 0xfe0d94c1)
-
-- [ ] 🔴 Verify nach Execute: feeCollector == BuybackController?
-      ```
-      node -e "require('dotenv').config();
-      const{ethers}=require('ethers');
-      const p=new ethers.providers.JsonRpcProvider(process.env.RPC_URL);
-      const fr=new ethers.Contract(
-        '0x4807B77B2E25cD055DA42B09BA4d0aF9e580C60a',
-        ['function feeCollector() view returns (address)'],p);
-      fr.feeCollector().then(r=>console.log('feeCollector:',r));"
-      ```
+- [x] ✅ Proposal #14 executed (18.04.2026)
+      setFeeCollector(BuybackController) auf FeeRouterV1 ✅
+      FeeRouterV1.feeCollector = 0x1e0547D50005A4Af66AbD5e6915ebfAA2d711F7c (BuybackController)
+      Protocol fees fließen jetzt in den 50/50 Buyback+Burn / LP-Deepening Flywheel
+- [x] ✅ Verified on-chain: feeCollector == BuybackController
 
 ---
 
@@ -299,7 +279,7 @@ Details + Calldata: siehe `docs/PROPOSAL_B_CALLDATA.md`
 - [x] ✅ Proposal A (= Proposal #13): setFeeExempt(BuybackController, true) — EXECUTED 16.04.2026 10:31 Athen
       TX: 0x74a7c9c97800cfe5a68315db68e648ae1631124a748fa5b101e58bea2681404f (Block 24890909)
       BuybackController feeExempt = TRUE ✅
-- [ ] 🔴 Proposal B: setFeeCollector(BuybackController) auf FeeRouterV1 — siehe KRITISCH-Sektion oben
+- [x] ✅ Proposal B (= Proposal #14): setFeeCollector(BuybackController) auf FeeRouterV1 — EXECUTED 18.04.2026 ✅
 
 ### Phase 3 — Wiki Pages (new)
 - [x] ✅ Wiki: CommitmentVault page — `docs/wiki/commitment-vault.html` (20.03.2026)
@@ -789,5 +769,5 @@ Railway endpoints already live: stats, offers, loans/:addr, health/:id, lender/:
 
 ---
 
-*Last updated: 2026-04-15*
+*Last updated: 2026-04-18*
 

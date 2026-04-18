@@ -49,4 +49,8 @@ For Uniswap V2 swaps:
 - FeeRouter handles routing with correct parameters
 
 ---
-*Version 1.0 | March 2026 | Mainnet Live*
+## Fee Collector
+
+Since 18.04.2026 (Governance Proposal #14), the `feeCollector` on FeeRouterV1 is set to the **BuybackController** (`0x1e0547D50005A4Af66AbD5e6915ebfAA2d711F7c`). Protocol pool fees flow directly into the 50/50 buyback+burn / LP-deepening flywheel.
+
+*Version 1.1 | April 2026 | Mainnet Live*

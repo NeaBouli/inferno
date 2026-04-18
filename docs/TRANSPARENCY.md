@@ -1,6 +1,6 @@
 # Inferno ($IFR) — On-Chain Transparency Report
 
-Last updated: March 2026 | Network: Ethereum Mainnet
+Last updated: April 2026 | Network: Ethereum Mainnet
 
 All data is verifiable on-chain via Etherscan. No hidden wallets, no insider deals.
 
@@ -92,7 +92,7 @@ BuybackVault is initially empty — it collects 1% pool fees from transfers. Act
 | PartnerVault | true |
 | Treasury | true |
 | Governance | false (no IFR held) |
-| FeeRouterV1 | Pending (next governance proposal) |
+| FeeRouterV1 | true |
 | LP Pair | false (fee applies to swaps) |
 
 ---
@@ -160,4 +160,4 @@ Or verify directly on Etherscan:
 - [Governance (Timelock)](https://etherscan.io/address/0xc43d48E7FDA576C5022d0670B652A622E8caD041)
 - [PartnerVault](https://etherscan.io/address/0xc6eb7714bCb035ebc2D4d9ba7B3762ef7B9d4F7D)
 
-*All data from Ethereum Mainnet. Last updated: March 2026 | Version 2.0*
+*All data from Ethereum Mainnet. Last updated: April 2026 | Version 2.1*
