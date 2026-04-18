@@ -1,29 +1,25 @@
 /**
- * IFR Wallet Core v4.1 — WalletConnect v2 via esm.sh
+ * IFR Wallet Core v4.2 — WalletConnect v2 via esm.sh
  * Usage: await IFRWallet.connect(); IFRWallet.getAddress();
  *
+ * v4.2 — Mobile/Tablet connect disabled (desktop browser only).
+ *   On smartphone/tablet, connect() shows a styled "Desktop Only" modal
+ *   and throws MOBILE_NOT_SUPPORTED. autoReconnect() returns false on mobile.
+ *   All mobile deep-link fallbacks removed.
+ *
+ * v4.1 — dynamic import() from esm.sh CDN.
  * v4.0 — Fixes v3.0 broken UMD bundles
  *
- * v3.0 PROBLEM: unpkg UMD bundles of @walletconnect/ethereum-provider
- *   have missing internal dependencies → EthereumProvider = undefined.
- *
- * v4.1 SOLUTION: dynamic import() from esm.sh CDN.
- *   esm.sh resolves WC dependency tree at runtime (individual fetches).
- *   QR modal auto-imported internally by @walletconnect/ethereum-provider.
- *   Verified working on Samsung Galaxy S10 Chrome via ADB (08.04.2026).
- *
  * FLOW:
+ *   - Mobile/Tablet: blocked — shows "Desktop Only" modal
  *   - Desktop WITH extension: MetaMask extension (instant, no modal)
  *   - Desktop WITHOUT extension: WalletConnect QR modal (esm.sh)
- *   - Mobile: WalletConnect QR/deep-link → works with ANY wallet
- *   - Fallback: MetaMask deep-link if WC CDN unavailable
- *   - Auto-reconnect from localStorage + WC session persistence
- *   - Mobile return-from-wallet detection (visibilitychange/focus/pageshow)
+ *   - Auto-reconnect from localStorage + WC session persistence (desktop only)
  *
- * API: 100% backward-compatible (v1.3 → v2.0 → v3.0 → v4.1 drop-in).
+ * API: 100% backward-compatible (v1.3 → v4.2 drop-in).
  *      IFRWallet.connect/disconnect/autoReconnect
  *      IFRWallet.getAddress/getSigner/getProvider/isConnected
- *      IFRWallet.on/off/getDeepLink/isMobile/getShortAddress
+ *      IFRWallet.on/off/getDeepLink/isMobile/isMobileOrTablet/getShortAddress
  *
  * WalletConnect ProjectID: cloud.walletconnect.com (Reown)
  */
@@ -49,9 +45,52 @@ window.IFRWallet = (function() {
   var _wcProvider = null;       // WalletConnect provider instance
   var _wcLoading = null;        // promise guard
 
-  // ── Mobile Detection ──────────────────────────────
+  // ── Mobile / Tablet Detection ─────────────────────
   function _isMobile() {
     return /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+  }
+
+  function _isMobileOrTablet() {
+    if (/Mobi|Android|iPhone|iPad|iPod|tablet/i.test(navigator.userAgent)) return true;
+    // iPad with desktop UA (iPadOS 13+)
+    if (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1) return true;
+    // Touch-only device with small/medium screen
+    if ("ontouchstart" in window && window.innerWidth < 1024) return true;
+    return false;
+  }
+
+  // ── Desktop-Only Modal ──────────────────────────────
+  var _desktopModalShown = false;
+
+  function _showDesktopOnlyModal() {
+    if (_desktopModalShown) return;
+    _desktopModalShown = true;
+
+    var overlay = document.createElement("div");
+    overlay.id = "ifr-desktop-only-modal";
+    overlay.style.cssText = "position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,0.75);display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(6px);";
+
+    var card = document.createElement("div");
+    card.style.cssText = "background:#111827;border:1px solid #374151;border-radius:16px;padding:32px;max-width:420px;width:100%;text-align:center;box-shadow:0 8px 40px rgba(0,0,0,0.6);";
+
+    card.innerHTML =
+      '<div style="font-size:2.5rem;margin-bottom:16px;">\uD83D\uDDA5\uFE0F</div>' +
+      '<h3 style="color:#f97316;font-family:\'Orbitron\',sans-serif;font-size:1.2rem;margin:0 0 12px;letter-spacing:1px;">Desktop Browser Only</h3>' +
+      '<p style="color:#9ca3af;font-size:0.92rem;line-height:1.6;margin:0 0 24px;">Wallet connection is only available on a <strong style="color:#e5e7eb;">desktop or laptop computer</strong> using a web browser with MetaMask extension.</p>' +
+      '<p style="color:#6b7280;font-size:0.82rem;line-height:1.5;margin:0 0 24px;">Open <strong style="color:#f97316;">ifrunit.tech</strong> on your PC or Mac to connect your wallet and participate in the Bootstrap event.</p>' +
+      '<button id="ifr-desktop-modal-close" style="background:#f97316;color:white;border:none;padding:12px 32px;border-radius:8px;font-weight:600;font-size:0.95rem;cursor:pointer;transition:background 0.2s;">Got it</button>';
+
+    overlay.appendChild(card);
+    document.body.appendChild(overlay);
+
+    var closeBtn = document.getElementById("ifr-desktop-modal-close");
+    function closeModal() {
+      var el = document.getElementById("ifr-desktop-only-modal");
+      if (el) el.remove();
+      _desktopModalShown = false;
+    }
+    closeBtn.addEventListener("click", closeModal);
+    overlay.addEventListener("click", function(e) { if (e.target === overlay) closeModal(); });
   }
 
   // ── MetaMask Extension Detection (EIP-5749) ──────
@@ -191,6 +230,14 @@ window.IFRWallet = (function() {
 
   // ── Connect ───────────────────────────────────────
   async function connect() {
+    // ── Mobile/Tablet Block: wallet connect is desktop-only ──
+    if (_isMobileOrTablet()) {
+      _showDesktopOnlyModal();
+      var err = new Error("MOBILE_NOT_SUPPORTED");
+      err.code = "MOBILE_NOT_SUPPORTED";
+      throw err;
+    }
+
     var accounts;
     var eth = _getMetaMaskProvider();
 
@@ -210,25 +257,13 @@ window.IFRWallet = (function() {
 
       if (wc) {
         try {
-          // enable() shows QR modal and returns accounts[] directly.
-          // wc.connect() never resolves on Android/iPad Chrome (2025 WebSocket bug).
           accounts = await wc.enable();
         } catch (e) {
           if (e.message && e.message.indexOf("User") !== -1) throw e;
-          // WC failed — try deep-link as last resort on mobile
-          if (_isMobile()) {
-            window.location.href = getDeepLink();
-            return;
-          }
           throw e;
         }
         return await _finishConnect(wc, accounts);
       } else {
-        // WC didn't load — deep-link on mobile, error on desktop
-        if (_isMobile()) {
-          window.location.href = getDeepLink();
-          return;
-        }
         throw new Error("NO_METAMASK");
       }
     }
@@ -255,6 +290,7 @@ window.IFRWallet = (function() {
 
   // ── Auto-Reconnect ───────────────────────────────
   async function autoReconnect() {
+    if (_isMobileOrTablet()) return false; // desktop only
     if (_address) return true; // already connected
 
     var saved = localStorage.getItem(SESSION_KEY);
@@ -397,6 +433,7 @@ window.IFRWallet = (function() {
     connect: connect, disconnect: disconnect, autoReconnect: autoReconnect,
     isConnected: isConnected, getAddress: getAddress, getShortAddress: getShortAddress,
     getSigner: getSigner, getProvider: getProvider,
-    on: on, off: off, getDeepLink: getDeepLink, isMobile: isMobile
+    on: on, off: off, getDeepLink: getDeepLink, isMobile: isMobile,
+    isMobileOrTablet: _isMobileOrTablet
   };
 })();
