@@ -9,8 +9,8 @@ require("./tasks/admin");
 module.exports = {
   solidity: {
     compilers: [
-      { version: "0.8.20" },
-      { version: "0.8.28" },
+      { version: "0.8.20", settings: { evmVersion: "paris" } },
+      { version: "0.8.28", settings: { evmVersion: "cancun" } },
     ],
   },
   networks: {
