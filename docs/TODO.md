@@ -552,6 +552,11 @@ On errors: fix immediately, commit with `seo:` prefix.
 - [x] ✅ wallet-core.js v1.2 stable (04.04.2026)
       MetaMask connect with 5 bug fixes (timeout, accountsChanged,
       listener guard, disconnect cleanup, mobile deep-link)
+- [x] ✅ wallet-core.js v4.2 — Mobile/Tablet Detection (18.04.2026)
+      _isMobileOrTablet(): Smartphones + Tablets (inkl. iPadOS 13+)
+      _showDesktopOnlyModal(): Desktop-only Modal im Inferno Design
+      connect() + autoReconnect() blockieren auf Mobile/Tablet
+      Greift automatisch auf allen 34 HTML-Seiten — kein HTML-Edit nötig
 - [ ] 🔵 WalletConnect v2 QR (needs webpack/vite build setup)
 
 ### Telegram Bot
