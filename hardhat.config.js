@@ -7,7 +7,12 @@ require("./tasks/admin");
 
 /** @type import('hardhat/config').HardhatUserConfig */
 module.exports = {
-  solidity: "0.8.20",
+  solidity: {
+    compilers: [
+      { version: "0.8.20" },
+      { version: "0.8.28" },
+    ],
+  },
   networks: {
     hardhat: {
       forking: process.env.MAINNET_RPC_URL
