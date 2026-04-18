@@ -104,7 +104,6 @@ fr.feeCollector()
 
 - [x] ✅ Submitted via TreasurySafe 3-of-5 — 16.04.2026
 - [x] ✅ Proposal ID: **14** (on-chain EXAKT verifiziert)
-- [ ] Timelock abläuft: **18.04.2026 11:09:35 Athen** (Unix: 1776499775)
-- [ ] Execute via TreasurySafe 3-of-5
-      → `execute(14)` Calldata: `0xfe0d94c1000000000000000000000000000000000000000000000000000000000000000e`
-- [ ] Verify `feeCollector == BuybackController`
+- [x] ✅ Timelock abgelaufen: **18.04.2026 11:09:35 Athen** (Unix: 1776499775)
+- [x] ✅ Executed via TreasurySafe 3-of-5 — 18.04.2026
+- [x] ✅ Verified on-chain: `FeeRouterV1.feeCollector() == 0x1e0547D50005A4Af66AbD5e6915ebfAA2d711F7c` (BuybackController)

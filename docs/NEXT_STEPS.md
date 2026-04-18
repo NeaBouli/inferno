@@ -100,7 +100,7 @@ Once both proposals are executed:
 | 13.04.2026 | BuybackController deployed Sepolia | Done |
 | 14.04.2026 | BuybackController deployed Mainnet | Done |
 | 14.04.2026 | Proposal A submitted (3/5 signed) | Done |
-| ~16.04.2026 | Execute Proposal A (48h timelock) | Pending |
-| ~16.04.2026 | Submit Proposal B | Pending |
-| ~18.04.2026 | Execute Proposal B | Pending |
-| ~18.04.2026 | Buyback system fully live | Pending |
+| 16.04.2026 | Execute Proposal A (= #13, feeExempt) | Done |
+| 16.04.2026 | Submit Proposal B (= #14, setFeeCollector) | Done |
+| 18.04.2026 | Execute Proposal B (= #14) | Done |
+| 18.04.2026 | Buyback system fully live | Done ✅ |
