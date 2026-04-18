@@ -7,6 +7,9 @@ on:
   workflow_dispatch:
     # Manuell auslösbar
 
+permissions:
+  contents: write
+
 jobs:
   update-stats:
     runs-on: ubuntu-latest
