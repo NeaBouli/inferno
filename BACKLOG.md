@@ -39,3 +39,4 @@
 
 ---
 *Zuletzt aktualisiert: 2026-05-10*
+- [x] scripts/propose-pool-feeexempt.js — erstellt 2026-05-10 (LP_TOKEN env var → Proposal #11)
