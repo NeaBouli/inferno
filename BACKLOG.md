@@ -1,7 +1,7 @@
 # inferno — Backlog
 
 ## 🔴 Aktiv (diese Session)
-- [ ] Bootstrap finalise() aufrufen — **Deadline: 05.06.2026** (26 Tage!)
+- [ ] Bootstrap finalise() aufrufen — **Deadline: 05.06.2026** (26 Tage!) — Script: `scripts/finalise-bootstrap.js`
 - [ ] Proposal #11 (Uniswap Pool feeExempt) — SOFORT nach finalise() ausführen!
 - [ ] npm audit: ethers@5→@6 Migration für restliche 3 criticals (dev-only)
 
@@ -35,6 +35,7 @@
 - [x] Wiki: contracts.html — BuybackController Status auf Active ✅
 - [x] Wiki: roadmap.html — BuybackController governance wiring dokumentiert
 - [x] Wiki: tokenomics.html — BuybackController fee-flow bereits korrekt
+- [x] scripts/finalise-bootstrap.js — erstellt 2026-05-10 (pre-flight checks, gas estimate, critical warnings)
 
 ---
 *Zuletzt aktualisiert: 2026-05-10*
