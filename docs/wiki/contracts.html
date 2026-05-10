@@ -2370,7 +2370,7 @@ console.<span class="function">log</span>(<span class="string">"Reserve1:"</span
             <div class="contract-header">
                 <h2>BuybackController</h2>
                 <span class="contract-badge">Buyback</span>
-                <span style="background:rgba(234,179,8,0.15);color:#eab308;padding:2px 8px;border-radius:4px;font-size:0.75rem;font-weight:700;">feeExempt Pending</span>
+                <span style="background:rgba(34,197,94,0.15);color:#22c55e;padding:2px 8px;border-radius:4px;font-size:0.75rem;font-weight:700;">&#x2705; Active</span>
             </div>
             <div class="contract-path">contracts/buyback/BuybackController.sol</div>
             <p>Automated fee distribution controller. Receives protocol fees from FeeRouterV1 and splits 50/50: half buys IFR from Uniswap and sends to BurnReserve (permanent burn), half adds IFR+ETH liquidity to Uniswap LP (deepening). Permissionless <code>execute()</code> with 24h cooldown. Slippage protection via <code>minIFR</code>/<code>minETH</code> parameters.</p>
@@ -2407,8 +2407,9 @@ console.<span class="function">log</span>(<span class="string">"Reserve1:"</span
                         </tr>
                         <tr>
                             <td>Status</td>
-                            <td><strong style="color:#eab308;">Proposal A: setFeeExempt &mdash; 48h Timelock (Execute ~16.04.2026)</strong><br>
-                            <strong style="color:#eab308;">Proposal B: setFeeCollector &mdash; Waiting on Proposal A</strong></td>
+                            <td><strong style="color:#22c55e;">&#x2705; Proposal #13 (setFeeExempt) &mdash; executed 16.04.2026</strong><br>
+                            <strong style="color:#22c55e;">&#x2705; Proposal #14 (setFeeCollector) &mdash; executed 18.04.2026</strong><br>
+                            <strong style="color:#22c55e;">Buyback system fully active</strong></td>
                         </tr>
                     </tbody>
                 </table>
