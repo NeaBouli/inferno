@@ -36,7 +36,7 @@
 - [x] Wiki: roadmap.html — BuybackController governance wiring dokumentiert
 - [x] Wiki: tokenomics.html — BuybackController fee-flow bereits korrekt
 - [x] scripts/finalise-bootstrap.js — erstellt 2026-05-10 (pre-flight checks, gas estimate, critical warnings)
+- [x] scripts/propose-pool-feeexempt.js — erstellt 2026-05-10 (LP_TOKEN env var → Proposal #11)
 
 ---
 *Zuletzt aktualisiert: 2026-05-10*
-- [x] scripts/propose-pool-feeexempt.js — erstellt 2026-05-10 (LP_TOKEN env var → Proposal #11)
