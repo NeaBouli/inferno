@@ -91,7 +91,8 @@ async function main() {
   console.log("=".repeat(60));
   console.log("\n  NEXT STEPS:");
   console.log(`  1. Wait until: ${eta.toISOString()}`);
-  console.log("  2. Execute Proposal #11 (any wallet can call execute)");
+  console.log(`  2. Execute Proposal #${proposalId}:`);
+  console.log(`     PROPOSAL_ID=${proposalId} npx hardhat run scripts/execute-proposal.js --network mainnet`);
   console.log("  3. After execution: IFR is tradeable on Uniswap ✅");
 }
 
