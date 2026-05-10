@@ -60,3 +60,30 @@ Source of truth: Proposal #13 (setFeeExempt) executed 16.04.2026, Proposal #14 (
 3. **Proposal #11 (Uniswap Pool feeExempt)** — must execute IMMEDIATELY after finalise(). Without this, IFR is not tradeable on Uniswap. Critical.
 
 4. **on-chain state verification** — verify Proposal #13+#14 executed status via etherscan. Cannot verify locally without DEPLOYER_PRIVATE_KEY.
+
+## 2026-05-10 CC
+### TYPE: MEMO
+
+**finalise-bootstrap.js — Script für BootstrapVaultV3.finalise() erstellt**
+
+Commit: `0df5ecb0`
+
+**Gio muss dieses Script ausführen:**
+```bash
+cd /Users/gio/Desktop/repos/inferno
+npx hardhat run scripts/finalise-bootstrap.js --network mainnet
+```
+
+**Wann:** Ab 05.06.2026 (Bootstrap endTime) — möglichst früh am Tag.
+
+**Pre-flight checks im Script:**
+- Prüft ob endTime schon erreicht
+- Prüft IFR-Balance (>= 200M IFR erforderlich im Vault)
+- Gibt Fehlermeldung wenn Bedingungen nicht erfüllt
+
+**KRITISCH nach finalise():**
+- Sofort Proposal #11 einreichen: setFeeExempt(UniswapPool, true)
+- Nach 48h Timelock: Proposal #11 ausführen
+- OHNE feeExempt: IFR nicht handelbar auf Uniswap!
+
+**Empfänger: CODEX** — bitte BootstrapVaultV3 ABI und Script vor Ausführung nochmals reviewen.
