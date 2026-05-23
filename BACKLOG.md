@@ -1,7 +1,7 @@
 # inferno — Backlog
 
 ## 🔴 Aktiv (diese Session)
-- [ ] Bootstrap finalise() aufrufen — **Deadline: 05.06.2026** (26 Tage!) — Script: `scripts/finalise-bootstrap.js`
+- [ ] Bootstrap finalise() aufrufen — **Deadline: 05.06.2026** (~13 Tage!) — Script: `scripts/finalise-bootstrap.js`
 - [ ] Proposal #11 (Uniswap Pool feeExempt) — SOFORT nach finalise() ausführen!
 - [ ] npm audit: ethers@5→@6 Migration für restliche 3 criticals (dev-only)
 
