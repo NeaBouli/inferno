@@ -259,20 +259,27 @@ describe("Governance", function () {
   });
 
   describe("setOwner()", () => {
-    it("owner can transfer ownership", async () => {
-      await expect(gov.setOwner(user.address))
+    it("transfers ownership via timelock", async () => {
+      const data = gov.interface.encodeFunctionData("setOwner", [user.address]);
+      await gov.propose(gov.address, data);
+      await increaseTime(DELAY);
+      await expect(gov.execute(0))
         .to.emit(gov, "OwnerUpdated")
         .withArgs(owner.address, user.address);
 
       expect(await gov.owner()).to.equal(user.address);
     });
 
-    it("reverts for non-owner", async () => {
-      await expect(gov.connect(user).setOwner(user.address)).to.be.revertedWith("not owner");
+    it("reverts when called directly (not via timelock)", async () => {
+      await expect(gov.setOwner(user.address)).to.be.revertedWith("not self");
     });
 
-    it("reverts for zero address", async () => {
-      await expect(gov.setOwner(ethers.constants.AddressZero)).to.be.revertedWith("owner=0");
+    it("reverts for zero address via timelock", async () => {
+      const data = gov.interface.encodeFunctionData("setOwner", [ethers.constants.AddressZero]);
+      await gov.propose(gov.address, data);
+      await increaseTime(DELAY);
+      // execute() propagates inner revert as string(returnData) — raw ABI bytes, no exact match
+      await expect(gov.execute(0)).to.be.reverted;
     });
   });
 
