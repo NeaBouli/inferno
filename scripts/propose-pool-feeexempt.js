@@ -16,8 +16,9 @@ const { ethers } = require("hardhat");
  * It can also be read from: BootstrapVaultV3.lpTokenAddress()
  */
 
-const TOKEN = "0x77e99917Eca8539c62F509ED1193ac36580A6e7B";
-const GOV   = "0xc43d48E7FDA576C5022d0670B652A622E8caD041";
+const TOKEN      = "0x77e99917Eca8539c62F509ED1193ac36580A6e7B";
+const GOV        = "0xc43d48E7FDA576C5022d0670B652A622E8caD041";
+const VAULT_V3   = "0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141";
 
 const GOV_ABI = [
   "function propose(address target, bytes calldata calldata_) external returns (uint256)",
@@ -34,14 +35,24 @@ async function main() {
   const [deployer] = await ethers.getSigners();
   const network = await ethers.provider.getNetwork();
 
-  // Resolve LP token address from env or environment variable
-  const lpToken = process.env.LP_TOKEN;
+  // Resolve LP token address: env var takes precedence, then auto-fetch from vault
+  let lpToken = process.env.LP_TOKEN;
   if (!lpToken || !ethers.utils.isAddress(lpToken)) {
-    throw new Error(
-      "LP_TOKEN environment variable not set or invalid.\n" +
-      "Set LP_TOKEN=0x<address> before running.\n" +
-      "Get the address from: BootstrapVaultV3.lpTokenAddress() after finalise()."
+    console.log("  LP_TOKEN not set — auto-fetching from BootstrapVaultV3...");
+    const vault = new ethers.Contract(
+      VAULT_V3,
+      ["function lpTokenAddress() view returns (address)", "function finalised() view returns (bool)"],
+      deployer.provider
     );
+    const [finalised, vaultLp] = await Promise.all([vault.finalised(), vault.lpTokenAddress()]);
+    if (!finalised) {
+      throw new Error("BootstrapVaultV3 is not finalised yet. Run finalise-bootstrap.js first.");
+    }
+    if (!vaultLp || vaultLp === ethers.constants.AddressZero) {
+      throw new Error("Vault finalised but LP address is zero — something went wrong in finalise().");
+    }
+    lpToken = vaultLp;
+    console.log(`  Auto-fetched LP token: ${lpToken}`);
   }
 
   console.log("=".repeat(60));
