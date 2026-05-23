@@ -61,6 +61,50 @@ Source of truth: Proposal #13 (setFeeExempt) executed 16.04.2026, Proposal #14 (
 
 4. **on-chain state verification** — verify Proposal #13+#14 executed status via etherscan. Cannot verify locally without DEPLOYER_PRIVATE_KEY.
 
+---
+
+## 2026-05-23 [CC]
+### TYPE: SECURITY + FIX
+### Commit: 49914983
+
+**BUG: Falsche IFR-Adresse in finalise-bootstrap.js**
+
+`IFR_MAINNET` zeigte auf `0x3Bd71947...` — das ist die **Sepolia** IFR-Testadresse (aus `execute-proposal.js` chainId 11155111 Block). Der Mainnet-IFR-Token ist `0x77e99917...`.
+
+Konsequenz ohne Fix: `balanceOf(BOOTSTRAP_V3_MAINNET)` würde den falschen Contract abfragen → entweder 0 (Revert wegen fehlender Funktion) oder falsche Balance → Pre-flight-Check wirft `Insufficient IFR` obwohl genug IFR im Vault sind.
+
+**Fix:** `IFR_MAINNET = "0x77e99917Eca8539c62F509ED1193ac36580A6e7B"` (konsistent mit `check-bootstrap-status.js`, `propose-pool-feeexempt.js`, `execute-proposal.js` mainnet config).
+
+**Bootstrap Pre-flight — vollständige Checkliste für 05.06.2026:**
+
+```bash
+# T-1: Status prüfen (read-only, kein private key nötig)
+npx hardhat run scripts/check-bootstrap-status.js --network mainnet
+
+# T0 (nach endTime): Finalise aufrufen
+npx hardhat run scripts/finalise-bootstrap.js --network mainnet
+# → Gibt LP Token Address aus
+
+# SOFORT danach: Proposal für LP feeExempt einreichen
+LP_TOKEN=0x<adresse_aus_finalise> npx hardhat run scripts/propose-pool-feeexempt.js --network mainnet
+# → Gibt Proposal ID aus
+
+# +48h: Proposal ausführen
+PROPOSAL_ID=<id> npx hardhat run scripts/execute-proposal.js --network mainnet
+# → IFR handelbar auf Uniswap ✅
+```
+
+**Scripts verifiziert (2026-05-23):**
+- `finalise-bootstrap.js` ✅ (IFR-Adresse gefixt)
+- `check-bootstrap-status.js` ✅
+- `propose-pool-feeexempt.js` ✅
+- `execute-proposal.js` ✅
+
+### EMPFÄNGER: GIO
+**Gio-Action 05.06.2026:** DEPLOYER_PRIVATE_KEY in .env sicherstellen, dann Checkliste oben abarbeiten. Genug ETH für Gas bereithalten (~0.05 ETH Puffer).
+
+---
+
 ## 2026-05-10 CC
 ### TYPE: MEMO
 
