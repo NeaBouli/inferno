@@ -131,3 +131,21 @@ npx hardhat run scripts/finalise-bootstrap.js --network mainnet
 - OHNE feeExempt: IFR nicht handelbar auf Uniswap!
 
 **Empfänger: CODEX** — bitte BootstrapVaultV3 ABI und Script vor Ausführung nochmals reviewen.
+
+---
+
+## 2026-05-23 [CC]
+### TYPE: FIX
+### STATUS: DONE
+### Commit: 04f6acf6
+
+**Governance.test.js — setOwner() Tests für onlySelf korrigiert**
+
+`setOwner()` nutzt `onlySelf` Modifier (muss über eigenen Timelock laufen) — Verbesserung gegenüber `onlyOwner`. Tests hatten noch den alten direkten Aufruf.
+
+3 Tests gefixt:
+- "owner can transfer ownership" → propose + DELAY warten + execute via Timelock
+- "reverts for non-owner" → direkter Aufruf revert "not self" (war: "not owner")
+- "reverts for zero address" → propose + execute reverts (.to.be.reverted ohne String-Match, da execute() den inner revert als string(returnData) propagiert — ABI-Bytes werden als raw string gesetzt)
+
+Tests: 596 passing, 0 failing ✅
