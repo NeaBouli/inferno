@@ -38,7 +38,7 @@ const IFR_ABI = [
   "function balanceOf(address) view returns (uint256)",
 ];
 
-const IFR_MAINNET = "0x3Bd71947F288d1dd8B21129B1bE4FF16EDd5d1F4";
+const IFR_MAINNET = "0x77e99917Eca8539c62F509ED1193ac36580A6e7B";
 const DECIMALS = 9;
 const fmt = (bn) => ethers.utils.formatUnits(bn, DECIMALS);
 const fmtEth = (bn) => ethers.utils.formatEther(bn);
