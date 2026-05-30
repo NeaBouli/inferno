@@ -260,8 +260,8 @@ On errors: fix immediately, commit with `seo:` prefix.
       Kanäle: Reddit/Farcaster/Telegram
 
 - [ ] 🟡 inferno-redesign.html Review
-      Design für neue Landing Page — NICHT deployen ohne Review!
-      Prüfen: alle Module, live Anzeigen, Bootstrap Widget erhalten
+      GitHub Issue: https://github.com/NeaBouli/inferno/issues/31
+      NICHT deployen ohne Review + Abnahme!
       Lokal unter: /Users/gio/Desktop/repos/inferno/inferno-redesign.html
 
 - [x] ✅ Bootstrap safety plan documented
