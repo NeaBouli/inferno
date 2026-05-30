@@ -128,6 +128,17 @@ On errors: fix immediately, commit with `seo:` prefix.
       Protocol fees fließen jetzt in den 50/50 Buyback+Burn / LP-Deepening Flywheel
 - [x] ✅ Verified on-chain: feeCollector == BuybackController
 
+## ✅ ERLEDIGT — 13 Codex-Commits gepusht (18.04.2026)
+
+- [x] ✅ 13 Codex-Commits gepusht (18.04.2026)
+      - finalise-bootstrap.js Script ✅
+      - propose-pool-feeexempt.js Script ✅
+      - check-bootstrap-status.js Script ✅
+      - IFR Token Adresse fix (Sepolia→Mainnet) ✅
+      - Governance setOwner() Tests gefixt ✅
+      - npm Vulns 69→60 ✅
+- [x] ✅ inferno-redesign.html in .gitignore (18.04.2026)
+
 ---
 
 ## CRITICAL
@@ -247,6 +258,11 @@ On errors: fix immediately, commit with `seo:` prefix.
 - [ ] 🟡 Mehr Contributors für Bootstrap
       Ziel: mehr ETH = höheres P0
       Kanäle: Reddit/Farcaster/Telegram
+
+- [ ] 🟡 inferno-redesign.html Review
+      Design für neue Landing Page — NICHT deployen ohne Review!
+      Prüfen: alle Module, live Anzeigen, Bootstrap Widget erhalten
+      Lokal unter: /Users/gio/Desktop/repos/inferno/inferno-redesign.html
 
 - [x] ✅ Bootstrap safety plan documented
       bootstrap.html + faq.html + Ali + TODO
