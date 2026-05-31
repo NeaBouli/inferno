@@ -1,4 +1,5 @@
-const { ethers } = require("hardhat");
+require("dotenv").config({ quiet: true });
+const { ethers } = require("ethers");
 
 /**
  * INFERNO — Check BootstrapVaultV3 status
@@ -7,6 +8,7 @@ const { ethers } = require("hardhat");
  * No transactions, no private key needed — read-only.
  *
  * Usage:
+ *   node scripts/check-bootstrap-status.js
  *   npx hardhat run scripts/check-bootstrap-status.js --network mainnet
  */
 
@@ -32,9 +34,20 @@ const TOKEN_ABI = [
 const DECIMALS = 9;
 const fmt = (bn) => ethers.utils.formatUnits(bn, DECIMALS);
 const fmtEth = (bn) => ethers.utils.formatEther(bn);
+const PUBLIC_MAINNET_RPC = "https://ethereum-rpc.publicnode.com";
+
+async function optionalBool(contract, fnName) {
+  try {
+    return await contract[fnName]();
+  } catch (_) {
+    return null;
+  }
+}
 
 async function main() {
-  const network = await ethers.provider.getNetwork();
+  const rpcUrl = process.env.MAINNET_RPC_URL || PUBLIC_MAINNET_RPC;
+  const provider = new ethers.providers.JsonRpcProvider(rpcUrl);
+  const network = await provider.getNetwork();
   const now = Math.floor(Date.now() / 1000);
   const nowDate = new Date(now * 1000).toISOString();
 
@@ -45,15 +58,14 @@ async function main() {
   console.log(`  Vault:     ${BOOTSTRAP_V3}`);
   console.log(`  Now:       ${nowDate}`);
 
-  const vault = new ethers.Contract(BOOTSTRAP_V3, VAULT_ABI, ethers.provider);
-  const token = new ethers.Contract(IFR_TOKEN, TOKEN_ABI, ethers.provider);
+  const vault = new ethers.Contract(BOOTSTRAP_V3, VAULT_ABI, provider);
+  const token = new ethers.Contract(IFR_TOKEN, TOKEN_ABI, provider);
 
   const [
-    finalised, hasRefund, startTime, endTime,
+    finalised, startTime, endTime,
     totalETH, ifrAlloc, lpAddr, minC, maxC,
   ] = await Promise.all([
     vault.finalised(),
-    vault.hasRefundOccurred(),
     vault.startTime(),
     vault.endTime(),
     vault.totalETHRaised(),
@@ -62,6 +74,7 @@ async function main() {
     vault.minContribution(),
     vault.maxContribution(),
   ]);
+  const hasRefund = await optionalBool(vault, "hasRefundOccurred");
 
   const ifrBalance = await token.balanceOf(BOOTSTRAP_V3);
   const ifrRequired = ifrAlloc.mul(2);
@@ -76,7 +89,11 @@ async function main() {
   console.log("\n── STATE ─────────────────────────────────────────────");
   console.log(`  Finalised:         ${finalised ? "✅ YES" : "❌ NO"}`);
   console.log(`  Active:            ${isActive ? "✅ YES" : "❌ NO"}`);
-  console.log(`  Refund occurred:   ${hasRefund ? "⚠️  YES" : "✅ NO"}`);
+  if (hasRefund === null) {
+    console.log("  Refund occurred:   n/a (getter not exposed on deployed contract)");
+  } else {
+    console.log(`  Refund occurred:   ${hasRefund ? "⚠️  YES" : "✅ NO"}`);
+  }
 
   console.log("\n── TIMING ────────────────────────────────────────────");
   console.log(`  Start:             ${start}`);
@@ -103,7 +120,7 @@ async function main() {
   if (finalised) {
     console.log(`  LP Token:          ${lpAddr}`);
     console.log(`  Status:            ✅ FINALISED — LP created and locked`);
-  } else if (hasRefund) {
+  } else if (hasRefund === true) {
     console.log(`  Status:            ❌ REFUND OCCURRED — finalise() permanently blocked`);
   } else if (secondsLeft > 0) {
     console.log(`  Status:            ⏳ Bootstrap active — ${daysLeft} days until finalise() possible`);
