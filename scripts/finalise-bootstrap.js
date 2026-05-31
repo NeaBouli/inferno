@@ -43,6 +43,14 @@ const DECIMALS = 9;
 const fmt = (bn) => ethers.utils.formatUnits(bn, DECIMALS);
 const fmtEth = (bn) => ethers.utils.formatEther(bn);
 
+async function optionalBool(contract, fnName) {
+  try {
+    return await contract[fnName]();
+  } catch (_) {
+    return null;
+  }
+}
+
 async function main() {
   const [caller] = await ethers.getSigners();
   const network = await ethers.provider.getNetwork();
@@ -57,19 +65,23 @@ async function main() {
   console.log(`  Network:   ${network.name} (chainId ${network.chainId})`);
   console.log(`  Vault:     ${BOOTSTRAP_V3_MAINNET}`);
 
+  if (network.chainId !== 1) {
+    throw new Error(`Wrong network: expected mainnet chainId 1, got ${network.chainId}.`);
+  }
+
   const vault = new ethers.Contract(BOOTSTRAP_V3_MAINNET, VAULT_ABI, caller);
   const token = new ethers.Contract(IFR_MAINNET, IFR_ABI, caller.provider);
 
   // ── Pre-flight checks ─────────────────────────────────────
   console.log("\n[1/3] Pre-flight checks...");
 
-  const [finalised, endTime, totalETH, ifrAlloc, hasRefund] = await Promise.all([
+  const [finalised, endTime, totalETH, ifrAlloc] = await Promise.all([
     vault.finalised(),
     vault.endTime(),
     vault.totalETHRaised(),
     vault.ifrAllocation(),
-    vault.hasRefundOccurred(),
   ]);
+  const hasRefund = await optionalBool(vault, "hasRefundOccurred");
 
   const ifrBalance = await token.balanceOf(BOOTSTRAP_V3_MAINNET);
   const endDate = new Date(endTime.toNumber() * 1000).toISOString();
@@ -82,7 +94,7 @@ async function main() {
   console.log(`  ifrAllocation:     ${fmt(ifrAlloc)} IFR`);
   console.log(`  IFR in vault:      ${fmt(ifrBalance)} IFR`);
   console.log(`  Required IFR:      ${fmt(ifrAlloc.mul(2))} IFR (2x allocation)`);
-  console.log(`  hasRefundOccurred: ${hasRefund}`);
+  console.log(`  hasRefundOccurred: ${hasRefund === null ? "n/a (getter not exposed)" : hasRefund}`);
 
   if (finalised) {
     console.log("\n✅ Already finalised! LP address:", await vault.lpTokenAddress());
@@ -93,7 +105,7 @@ async function main() {
     throw new Error(`Bootstrap still active. ${(secondsLeft / 86400).toFixed(1)} days remaining. Try after ${endDate}.`);
   }
 
-  if (hasRefund) {
+  if (hasRefund === true) {
     throw new Error("Refund has already occurred — finalise() is permanently blocked.");
   }
 
