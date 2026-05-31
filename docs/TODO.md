@@ -229,7 +229,9 @@ On errors: fix immediately, commit with `seo:` prefix.
 ### 🔴 POST-BOOTSTRAP CHECKLISTE (nach 05.06.2026)
 
 - [ ] 🔴 finalise() aufrufen (permissionless)
-      Prüfen: vault.finalized() = true
+      GitHub Issue: https://github.com/NeaBouli/inferno/issues/32
+      Prüfen: vault.finalised() = true
+      Script: npx hardhat run scripts/finalise-bootstrap.js --network mainnet
 
 - [x] ✅ Proposals #11+#12: feeExempt(CV+LV) — EXECUTED 06.04.2026
       Submitted: 04.04.2026 via TreasurySafe 3-of-5
@@ -240,10 +242,12 @@ On errors: fix immediately, commit with `seo:` prefix.
 - [x] ✅ Railway: LENDING_VAULT_ADDR gesetzt (04.04.2026)
       0x974305Ab0EC905172e697271C3d7d385194EB9DF
 - [ ] 🔴 Proposal #13: Uniswap Pool feeExempt
+      GitHub Issue: https://github.com/NeaBouli/inferno/issues/33
       SOFORT nach finalise()!
       Pool Adresse erst nach finalise() bekannt
 
 - [ ] 🔴 P0 berechnen:
+      GitHub Issue: https://github.com/NeaBouli/inferno/issues/34
       P0 = totalETHRaised / 100,000,000
       In CommitmentVault setzen (Proposal #14)
       IMMUTABLE — korrekt berechnen!
@@ -270,10 +274,12 @@ On errors: fix immediately, commit with `seo:` prefix.
 
 ### Phase 3 — After Bootstrap finalise() (~05.06.2026)
 - [ ] 🔴 CRITICAL: Proposal #13 — Set Uniswap Pool feeExempt
+      GitHub Issue: https://github.com/NeaBouli/inferno/issues/33
       WARNING: Without this proposal IFR is effectively not tradeable (3.5% fee on every swap!)
       Timing: IMMEDIATELY after finalise() + pool creation
       Address: Uniswap V2 Pair (only known after finalise())
 - [ ] 🔴 CRITICAL: Proposal #14 — Set P0 in CommitmentVault
+      GitHub Issue: https://github.com/NeaBouli/inferno/issues/34
       P0 = Total ETH raised / 100,000,000 (IMMUTABLE once set!)
       All CommitmentVault tranche targets are based on P0 — wrong calculation = catastrophic
       Timing: After finalise() + Uniswap Pool live
