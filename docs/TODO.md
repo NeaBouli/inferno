@@ -230,8 +230,9 @@ On errors: fix immediately, commit with `seo:` prefix.
 
 - [ ] 🔴 finalise() aufrufen (permissionless)
       GitHub Issue: https://github.com/NeaBouli/inferno/issues/32
-      Prüfen: vault.finalised() = true
-      Script: npx hardhat run scripts/finalise-bootstrap.js --network mainnet
+      Execution Plan: docs/FINALISE_EXECUTION_PLAN.md
+      Script: node scripts/finalise-bootstrap.js (kein Hardhat nötig, chainId guard ✅)
+      finalise() PERMISSIONLESS — kein Safe nötig!
 
 - [x] ✅ Proposals #11+#12: feeExempt(CV+LV) — EXECUTED 06.04.2026
       Submitted: 04.04.2026 via TreasurySafe 3-of-5
