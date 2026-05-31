@@ -152,8 +152,11 @@
     <!-- ═══ POST-BOOTSTRAP CHECKLISTE ═══ -->
     <h2><span class="priority-badge p-critical">CRITICAL</span> Post-Bootstrap Checkliste (nach 05.06.2026)</h2>
     <ul>
-      <li><div class="cb"></div>&#x1F534; <strong>finalise() aufrufen</strong> (permissionless) &mdash; <a href="https://github.com/NeaBouli/inferno/issues/32" target="_blank">Issue #32</a><br>
-        <span style="color:#6b7280;font-size:0.82rem;">Pr&uuml;fen: vault.finalised() = true &mdash; Script: finalise-bootstrap.js</span></li>
+      <li><div class="cb"></div>&#x1F534; <strong>finalise() aufrufen</strong> (PERMISSIONLESS) &mdash; <a href="https://github.com/NeaBouli/inferno/issues/32" target="_blank">Issue #32</a><br>
+        <span style="color:#6b7280;font-size:0.82rem;">
+        Plan: <a href="FINALISE_EXECUTION_PLAN.md" target="_blank">FINALISE_EXECUTION_PLAN.md</a> &mdash;
+        Script: <code>node scripts/finalise-bootstrap.js</code> (kein Hardhat, chainId guard &#x2705;)<br>
+        Codex-reviewed 31.05.2026 &mdash; kein Safe n&ouml;tig, kein minETH-Check</span></li>
       <li><div class="cb cb-done">&#x2713;</div>&#x2705; <strong>Proposals #11+#12: feeExempt(CV+LV)</strong> &mdash; EXECUTED 06.04.2026<br>
         <span style="color:#22c55e;font-size:0.82rem;">Both vaults fully operational. Verified on-chain.</span></li>
       <li><div class="cb cb-done">&#x2713;</div>&#x2705; Railway: COMMITMENT_VAULT_ADDR + LENDING_VAULT_ADDR gesetzt (04.04.2026)</li>
