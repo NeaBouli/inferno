@@ -231,7 +231,9 @@ On errors: fix immediately, commit with `seo:` prefix.
 - [ ] 🔴 finalise() aufrufen (permissionless)
       GitHub Issue: https://github.com/NeaBouli/inferno/issues/32
       Execution Plan: docs/FINALISE_EXECUTION_PLAN.md
-      Script: node scripts/finalise-bootstrap.js (kein Hardhat nötig, chainId guard ✅)
+      ⚠️ BLOCKER: .env mit DEPLOYER_PRIVATE_KEY + MAINNET_RPC_URL muss gesetzt sein!
+      Script: npx hardhat run scripts/finalise-bootstrap.js --network mainnet
+      (NICHT: node scripts/... — Script verwendet require("hardhat"))
       finalise() PERMISSIONLESS — kein Safe nötig!
 
 - [x] ✅ Proposals #11+#12: feeExempt(CV+LV) — EXECUTED 06.04.2026
@@ -484,9 +486,9 @@ On errors: fix immediately, commit with `seo:` prefix.
 - [x] ✅ Landing Page: IntersectionObserver for live data + lazy images + scroll throttle (20.03.2026)
 - [ ] Full JSON-LD Schema.org check on all wiki pages
 - [ ] Verify ChatGPT/Perplexity indexing
-- [ ] 🟡 ethereum-lists PR #1010 — Follow-up gepostet (14.04.2026)
-      @ligi angeschrieben — warten auf CI Approval + Merge
-      Falls kein Merge bis 28.04.2026 → erneut nachfragen
+- [x] ❌ ethereum-lists PR #1010 CLOSED (31.05.2026)
+      Neu einreichen nach LP Launch (Pool-Adresse dann bekannt)
+      Alternativen: Trust Wallet Assets, Uniswap Token List
 
 ### CI/CD
 - [ ] Set up Slither CI

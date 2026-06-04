@@ -153,9 +153,10 @@
     <h2><span class="priority-badge p-critical">CRITICAL</span> Post-Bootstrap Checkliste (nach 05.06.2026)</h2>
     <ul>
       <li><div class="cb"></div>&#x1F534; <strong>finalise() aufrufen</strong> (PERMISSIONLESS) &mdash; <a href="https://github.com/NeaBouli/inferno/issues/32" target="_blank">Issue #32</a><br>
+        <span style="color:#ef4444;font-size:0.82rem;">&#x26A0;&#xFE0F; BLOCKER: .env mit DEPLOYER_PRIVATE_KEY + MAINNET_RPC_URL muss gesetzt sein!</span><br>
         <span style="color:#6b7280;font-size:0.82rem;">
         Plan: <a href="FINALISE_EXECUTION_PLAN.md" target="_blank">FINALISE_EXECUTION_PLAN.md</a> &mdash;
-        Script: <code>node scripts/finalise-bootstrap.js</code> (kein Hardhat, chainId guard &#x2705;)<br>
+        Script: <code>npx hardhat run scripts/finalise-bootstrap.js --network mainnet</code><br>
         Codex-reviewed 31.05.2026 &mdash; kein Safe n&ouml;tig, kein minETH-Check</span></li>
       <li><div class="cb cb-done">&#x2713;</div>&#x2705; <strong>Proposals #11+#12: feeExempt(CV+LV)</strong> &mdash; EXECUTED 06.04.2026<br>
         <span style="color:#22c55e;font-size:0.82rem;">Both vaults fully operational. Verified on-chain.</span></li>
@@ -300,8 +301,8 @@
       <li><div class="cb cb-done">&#x2713;</div>SEO: Phase 3 wiki pages OG + JSON-LD + sitemap + llms.txt (20.03)</li>
       <li><div class="cb cb-done">&#x2713;</div>Ali Copilot: Phase 3 + BuilderRegistry + Governance updated (20.03)</li>
       <li><div class="cb cb-done">&#x2713;</div>Landing Page: IntersectionObserver lazy live data + lazy images + scroll throttle (20.03)</li>
-      <li><div class="cb"></div>&#x1F7E1; ethereum-lists PR #1010 &mdash; Follow-up gepostet (14.04.2026)<br>
-        <span style="color:#6b7280;font-size:0.8rem;">@ligi angeschrieben &mdash; warten auf CI Approval + Merge. Falls kein Merge bis 28.04.2026 &rarr; erneut nachfragen</span></li>
+      <li><div class="cb cb-done">&#x2713;</div><span style="text-decoration:line-through;color:#6b7280;">&#x274C; ethereum-lists PR #1010 CLOSED (31.05.2026)<br>
+        Neu einreichen nach LP Launch. Alternativen: Trust Wallet Assets, Uniswap Token List</span></li>
       <li><div class="cb cb-done" style="text-decoration:line-through;color:#6b7280;">&#x2713;</div><span style="text-decoration:line-through;color:#6b7280;">Animated token GIF</span> &mdash; not planned</li>
       <li><div class="cb cb-done">&#x2713;</div>&#x2705; wallet-core.js v1.2 stable (04.04.2026)<br>
         <span style="color:#6b7280;font-size:0.8rem;">MetaMask connect: 30s timeout, accountsChanged re-creates provider/signer, listener guard, clean disconnect, mobile deep-link 2s</span></li>
