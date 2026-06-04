@@ -6,6 +6,40 @@
 
 ---
 
+## ⚠️ BLOCKER — VOR MORGEN ERLEDIGEN
+
+### .env Setup (KRITISCH)
+
+`finalise-bootstrap.js` läuft via **Hardhat** — Hardhat liest Signer aus `.env`.
+Ohne `.env` mit gesetztem `DEPLOYER_PRIVATE_KEY` schlägt der Call still fehl (`accounts: []`).
+
+```bash
+cd ~/Desktop/repos/inferno
+# Falls .env noch nicht existiert:
+cp .env.example .env
+
+# Eintragen:
+# DEPLOYER_PRIVATE_KEY=0x<deployer_private_key>
+# MAINNET_RPC_URL=https://eth-mainnet.g.alchemy.com/v2/<key>
+# ODER als Public-RPC-Fallback:
+# MAINNET_RPC_URL=https://ethereum-rpc.publicnode.com
+```
+
+### .env verifizieren:
+
+```bash
+node -e "require('dotenv').config(); \
+  console.log('DEPLOYER_KEY set:', !!process.env.DEPLOYER_PRIVATE_KEY); \
+  console.log('RPC set:', !!process.env.MAINNET_RPC_URL);"
+# Erwartung: beide true
+```
+
+### Gas-Check:
+
+Deployer-Wallet muss **≥ 0.05 ETH** auf Mainnet haben (Gas für finalise + feeExempt Proposal).
+
+---
+
 ## On-chain Facts (verifiziert 31.05.2026)
 
 | Feld | Wert |
@@ -34,8 +68,10 @@
 - [x] Deployer feeExempt ✅
 - [x] BuybackController feeExempt ✅
 - [x] FeeCollector == BuybackController ✅
-- [x] `finalise-bootstrap.js` — Codex reviewed + chainId guard ✅
-- [x] `check-bootstrap-status.js` — standalone, kein Hardhat ✅
+- [x] `finalise-bootstrap.js` — Codex reviewed + chainId guard ✅ (via `npx hardhat run`)
+- [x] `check-bootstrap-status.js` — standalone, kein Hardhat ✅ (via `node`)
+- [ ] `.env` gesetzt: `DEPLOYER_PRIVATE_KEY` + `MAINNET_RPC_URL`?
+- [ ] Gas ≥ 0.05 ETH auf Deployer-Wallet?
 - [ ] Gas ETH auf ausführender Wallet vorhanden?
 - [ ] Alle 5 Signer informiert (A.K., M.G., A.M., Y.K., A.P.)?
 
@@ -43,33 +79,35 @@
 
 ## Ablauf — 05.06.2026 23:50 UTC
 
-### Schritt 1 — Status prüfen (kurz vorher)
+### Schritt 0 — Kurz vorher: Status prüfen
 
 ```bash
-cd /Users/gio/Desktop/repos/inferno
+cd ~/Desktop/repos/inferno
 node scripts/check-bootstrap-status.js
 ```
 
-Erwartung: `endTime` erreicht, `finalised: false`
+Erwartung: `secondsLeft <= 0`, `finalised: false`
 
-### Schritt 2 — finalise() aufrufen (PERMISSIONLESS)
+### Schritt 1 — finalise() aufrufen (PERMISSIONLESS)
 
 ```bash
-node scripts/finalise-bootstrap.js
+npx hardhat run scripts/finalise-bootstrap.js --network mainnet
 ```
 
-Script schätzt Gas → bestätigen → TX senden.
+Script schätzt Gas → bestätigt chainId (muss 1 sein) → TX senden.
 **TX Hash sofort notieren!**
 
-### Schritt 3 — LP Token Adresse sichern
+> **Nicht** `node scripts/finalise-bootstrap.js` — das Script verwendet `require("hardhat")`.
+
+### Schritt 2 — LP Token Adresse sichern
 
 Aus finalise()-TX → `PairCreated` Event → LP Token Adresse.
 Wird auch von `propose-pool-feeexempt.js` auto-gefetched.
 
-### Schritt 4 — SOFORT: Uniswap Pool feeExempt (Issue #33)
+### Schritt 3 — SOFORT: Uniswap Pool feeExempt (Issue #33)
 
 ```bash
-node scripts/propose-pool-feeexempt.js
+npx hardhat run scripts/propose-pool-feeexempt.js --network mainnet
 ```
 
 Proposal ID notieren → **48h Timelock** → danach ausführen.
@@ -101,7 +139,7 @@ Proposal erstellen: `setP0(p0Value)` auf CommitmentVault → 48h → ausführen.
 
 ```bash
 node scripts/check-bootstrap-status.js
-# estimateGas zeigt Revert-Grund
+# standalone — zeigt estimateGas Revert-Grund
 ```
 
 Häufigste Ursachen:
