@@ -228,13 +228,11 @@ On errors: fix immediately, commit with `seo:` prefix.
 
 ### 🔴 POST-BOOTSTRAP CHECKLISTE (nach 05.06.2026)
 
-- [ ] 🔴 finalise() aufrufen (permissionless)
-      GitHub Issue: https://github.com/NeaBouli/inferno/issues/32
-      Execution Plan: docs/FINALISE_EXECUTION_PLAN.md
-      ⚠️ BLOCKER: .env mit DEPLOYER_PRIVATE_KEY + MAINNET_RPC_URL muss gesetzt sein!
-      Script: npx hardhat run scripts/finalise-bootstrap.js --network mainnet
-      (NICHT: node scripts/... — Script verwendet require("hardhat"))
-      finalise() PERMISSIONLESS — kein Safe nötig!
+- [x] ✅ finalise() ausgeführt (05.06.2026 23:51 UTC)
+      TX: 0x949848bdd09f4c867a2593afffb0137c7db2c1457d8a8f5ff4428f8ecce69c5f
+      Block: 25254575 | Gas: 2,778,422
+      LP Token: 0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0
+      GitHub Issue #32: CLOSED ✅
 
 - [x] ✅ Proposals #11+#12: feeExempt(CV+LV) — EXECUTED 06.04.2026
       Submitted: 04.04.2026 via TreasurySafe 3-of-5
