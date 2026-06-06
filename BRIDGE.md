@@ -293,3 +293,51 @@ Proposal muss über TreasurySafe (3-of-5) submitted werden via Gnosis Safe UI.
 Target: InfernoToken.setFeeExempt(0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0, true)
 Via: TreasurySafe 0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b (3-of-5)
 Calldata: 0x8ebfc796000000000000000000000000be495e9c0d8cc2dcf95570cf95b63c4844df31a00000000000000000000000000000000000000000000000000000000000000001
+
+## 2026-06-06 [AUTOR: CC]
+### TYPE: TODO
+
+**Issue #34: P0 setzen in CommitmentVault — Analyse + Script vorbereitet**
+
+**P0-Berechnung:**
+- totalETHRaised = 30,000,000,000,000,000 wei (0.030 ETH) — on-chain, Bootstrap TX 0x9498...69c5f
+- ifrAllocation = 100,000,000 IFR (whole tokens, 9 decimals)
+- **P0 = totalETHRaised_wei / ifrAllocation = 30_000_000_000_000_000 / 100_000_000 = 300,000,000 wei per 1 IFR**
+- Entspricht: 3e-10 ETH/IFR = 0.3 Gwei/IFR
+- NatSpec-konform: `setP0()` erwartet wei per 1 IFR (whole token, nicht smallest unit)
+
+**Contract-Analyse:**
+- `setP0(uint256 _p0)` — `onlyOwner`, EINMALIG setzbar (`p0Set` flag)
+- Owner von CommitmentVault = Governance (`0xc43d48E7FDA576C5022d0670B652A622E8caD041`)
+- Owner von Governance = TreasurySafe (`0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b`, 3-of-5)
+- Deployer (0x6b36687b) kann NICHT direkt proposieren — gleicher Blocker wie Issue #33
+
+**KRITISCH — CommitmentVault deployed address fehlt im Repo:**
+- `deployments/mainnet.json` enthält NUR BuybackController
+- `deploy-commitment-vault.js` existiert, aber keine gespeicherte Deployment-Adresse
+- **Gio muss CommitmentVault-Adresse aus Etherscan/TX-History ermitteln und als env-Var setzen**
+- Wenn CommitmentVault noch nicht deployed: zuerst deployen via `npx hardhat run scripts/deploy-commitment-vault.js --network mainnet`
+
+**Script: `scripts/propose-set-p0.js`**
+- Standardmodus: DRY_RUN=true (gibt nur Calldata aus, kein TX-Broadcast)
+- Prüft on-chain ob p0Set bereits true — schützt vor Doppel-Proposal
+- Gibt vollständige Gnosis Safe UI Calldata aus
+- Fallback: live broadcast wenn DRY_RUN=false UND Deployer = Gov-Owner (nicht der Fall)
+
+**Gio muss tun:**
+1. CommitmentVault deployed address ermitteln (Etherscan / Deploy-TX suchen)
+2. Adresse in `.env` setzen: `COMMITMENT_VAULT=0x<address>`
+3. Dry-run: `COMMITMENT_VAULT=0x<address> DRY_RUN=true npx hardhat run scripts/propose-set-p0.js --network mainnet`
+4. Output-Calldata via Gnosis Safe UI submitten:
+   - URL: https://app.safe.global/transactions/queue?safe=eth:0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b
+   - To: 0xc43d48E7FDA576C5022d0670B652A622E8caD041 (Governance)
+   - Data: [Calldata aus Script-Output]
+5. 48h warten (Timelock)
+6. Proposal via TreasurySafe execute()
+
+**Wenn CommitmentVault noch NICHT deployed:**
+- Zuerst deployen: `npx hardhat run scripts/deploy-commitment-vault.js --network mainnet`
+- Dann: `setFeeExempt(CommitmentVault, true)` Proposal nötig (analog Issue #33) — BEFORE users lock!
+- Dann erst P0 Proposal
+
+refs #34
