@@ -248,3 +248,26 @@ Fixes:
 - ethereum-lists PR #1010 als CLOSED markiert (31.05.2026) — Neueinreichung nach LP Launch
 
 refs #32
+
+## 2026-06-05 [AUTOR: CC]
+### TYPE: FIX
+
+**🔥 BOOTSTRAP FINALISED — 23:51 UTC**
+
+finalise() erfolgreich ausgeführt (auto-script).
+
+- TX: `0x949848bdd09f4c867a2593afffb0137c7db2c1457d8a8f5ff4428f8ecce69c5f`
+- Block: 25254575
+- Gas used: 2,778,422
+- Finalised: true
+- **LP Token: `0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0`**
+
+**feeExempt Proposal — FEHLGESCHLAGEN:**
+`execution reverted: not owner`
+Deployer (0x6b36687b) ist NICHT Owner der Governance — TreasurySafe ist Owner.
+Proposal muss über TreasurySafe (3-of-5) submitted werden via Gnosis Safe UI.
+
+**Action required (Issue #33):**
+Target: InfernoToken.setFeeExempt(0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0, true)
+Via: TreasurySafe 0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b (3-of-5)
+Calldata: 0x8ebfc796000000000000000000000000be495e9c0d8cc2dcf95570cf95b63c4844df31a00000000000000000000000000000000000000000000000000000000000000001
