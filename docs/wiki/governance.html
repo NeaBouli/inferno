@@ -1120,19 +1120,20 @@ await governance.execute(proposalId);</code></pre>
             <td><span class="badge" style="background:#22c55e;">Executed 18.04.2026</span></td>
           </tr>
           <tr>
-            <td>Planned (post-bootstrap)</td>
-            <td><code>setFeeExempt(Uniswap V2 Pair, true)</code><br>
+            <td>#15</td>
+            <td><code>setFeeExempt(LP Token, true)</code><br>
+              <span class="address">LP Token: <code>0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0</code></span><br>
               <span class="address" style="color:#ef4444;">CRITICAL &mdash; without this IFR is not tradeable (3.5% fee on every swap)</span>
             </td>
-            <td>IMMEDIATELY after finalise()</td>
-            <td><span class="badge" style="background:#6b7280;">Planned</span></td>
+            <td>ETA: 08.06.2026 09:57 Athen (Timelock running)</td>
+            <td><span class="badge" style="background:#f59e0b;">&#x23F3; Queued</span></td>
           </tr>
           <tr>
-            <td>Planned (post-bootstrap)</td>
+            <td>Planned #16</td>
             <td><code>setP0(CommitmentVault)</code><br>
-              <span class="address">P0 = Total ETH / 100M &mdash; IMMUTABLE once set</span>
+              <span class="address">P0 = 0.030 ETH / 100M = 0.0000000003 ETH &mdash; IMMUTABLE once set</span>
             </td>
-            <td>After pool is live</td>
+            <td>After LP feeExempt active (post-Proposal #15)</td>
             <td><span class="badge" style="background:#6b7280;">Planned</span></td>
           </tr>
           <tr>

@@ -4,6 +4,28 @@
 
 ---
 
+## 2026-06-06 [AUTOR: CC]
+### TYPE: FIX
+
+**Issue #35 — Post-Bootstrap Website + Ali Copilot updates**
+
+Bootstrap ended 05.06.2026 23:51 UTC. All public-facing content updated to reflect FINALIZED state.
+
+Files changed:
+- `docs/wiki/bootstrap.html` — ACTIVE→ENDED banner, LP Token, TX, disabled Contribute/Vote buttons (prev session)
+- `docs/wiki/transparency.html` — finalise() TX row DONE, Proposal #15 row added (prev session)
+- `docs/wiki/governance.html` — Proposal #15 Queued ETA 08.06, setP0→Planned #16 (prev session)
+- `docs/index.html` — Bootstrap Vault badge FINALIZED, Uniswap link, FAQ updated, Phase 2 roadmap DONE
+- `apps/ai-copilot/src/context/ifr-knowledge.ts` — bootstrap.phase/currentState/startDate updated, lpToken/finaliseTx/uniswapLink/totalETHRaised(0.030) added, Proposal #15 in governance, bootstrapSafetyPlan.currentStatus updated
+- `apps/ai-copilot/src/context/system-prompts.ts` — bootstrapBlock ENDED details with LP Token + Uniswap, "NOW LIVE" removed from explorer prompt
+- `docs/TODO.md` — Issue #35 Ali update logged, Proposal #13→#15 QUEUED, Proposal #14→#16 updated P0 value, Bootstrap section header updated
+- `docs/TODO.html` — finalise() row DONE with TX/LP, Proposal #15 QUEUED, Proposal #16 P0 updated
+
+Tests: no test suite for docs/HTML — verified edits correct by Read inspection.
+closes #35
+
+---
+
 ## 2026-05-10 CC
 ### TYPE: SECURITY
 

@@ -242,10 +242,10 @@ On errors: fix immediately, commit with `seo:` prefix.
       0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3
 - [x] ✅ Railway: LENDING_VAULT_ADDR gesetzt (04.04.2026)
       0x974305Ab0EC905172e697271C3d7d385194EB9DF
-- [ ] 🔴 Proposal #13: Uniswap Pool feeExempt
+- [x] ✅ Proposal #15: setFeeExempt(LP Token, true)
       GitHub Issue: https://github.com/NeaBouli/inferno/issues/33
-      SOFORT nach finalise()!
-      Pool Adresse erst nach finalise() bekannt
+      LP Token: 0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0
+      Status: QUEUED — Timelock running, ETA 08.06.2026 09:57 Athen
 
 - [ ] 🔴 P0 berechnen:
       GitHub Issue: https://github.com/NeaBouli/inferno/issues/34
@@ -274,16 +274,15 @@ On errors: fix immediately, commit with `seo:` prefix.
       (03.04.2026)
 
 ### Phase 3 — After Bootstrap finalise() (~05.06.2026)
-- [ ] 🔴 CRITICAL: Proposal #13 — Set Uniswap Pool feeExempt
-      GitHub Issue: https://github.com/NeaBouli/inferno/issues/33
-      WARNING: Without this proposal IFR is effectively not tradeable (3.5% fee on every swap!)
-      Timing: IMMEDIATELY after finalise() + pool creation
-      Address: Uniswap V2 Pair (only known after finalise())
-- [ ] 🔴 CRITICAL: Proposal #14 — Set P0 in CommitmentVault
+- [x] ✅ Proposal #15 — setFeeExempt(LP Token, true)
+      GitHub Issue: https://github.com/NeaBouli/inferno/issues/33 — QUEUED
+      LP Token: 0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0
+      ETA: 08.06.2026 09:57 Athen — Timelock running
+- [ ] 🔴 CRITICAL: Proposal #16 — Set P0 in CommitmentVault
       GitHub Issue: https://github.com/NeaBouli/inferno/issues/34
-      P0 = Total ETH raised / 100,000,000 (IMMUTABLE once set!)
+      P0 = 0.030 ETH / 100,000,000 = 0.0000000003 ETH per IFR (IMMUTABLE once set!)
       All CommitmentVault tranche targets are based on P0 — wrong calculation = catastrophic
-      Timing: After finalise() + Uniswap Pool live
+      Timing: After Proposal #15 executed (post 08.06.2026)
 - [ ] 🔵 Deploy CommitmentVault (Core Dev)
       Voluntary lock with 4 condition types (time, price, time+price, time OR price)
       Auto-unlock after 30 days when condition met
@@ -435,13 +434,16 @@ On errors: fix immediately, commit with `seo:` prefix.
 - [x] ✅ Bootstrap status "NOW ACTIVE" (16.04.2026)
       ifr-knowledge.ts, system-prompts.ts, server/index.ts — dead "NOT YET ACTIVE" branch entfernt
       Status: Bootstrap is LIVE since 07.03.2026, ends 05.06.2026
+- [x] ✅ Ali Copilot Bootstrap ENDED update (06.06.2026) — Issue #35
+      ifr-knowledge.ts: phase/currentState/startDate updated, lpToken/finaliseTx/uniswapLink added, ETHRaised→0.030, Proposal #15 added
+      system-prompts.ts: bootstrapBlock ENDED details, explorer prompt "NOW LIVE" removed
 - [ ] Ali Phase 2: WalletConnect → wallet-specific responses (after LP live)
 
 ---
 
 ## MID-TERM
 
-### Bootstrap (LIVE since 07.03.2026, ends 05.06.2026)
+### Bootstrap (ENDED 05.06.2026 — IFR live on Uniswap V2)
 - [x] Announcement texts fertig — `docs/BOOTSTRAP_ANNOUNCEMENT.md` ✅
 - [ ] 📢 POST: Telegram @IFRtoken (Text #1)
 - [ ] 📢 POST: X Thread @IFRtoken (Text #2, 4 Tweets)
@@ -797,5 +799,5 @@ Railway endpoints already live: stats, offers, loans/:addr, health/:id, lender/:
 
 ---
 
-*Last updated: 2026-04-18*
+*Last updated: 2026-06-06*
 
