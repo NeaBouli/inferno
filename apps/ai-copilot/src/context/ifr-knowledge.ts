@@ -49,9 +49,9 @@ export function getIFRKnowledge() {
       noInstantChanges: true,
       daoPhase: "Phase 4 (planned)",
       multisig: "3-of-5 on all Safes (Treasury, Community, LP Reserve) — 5 signers: A.K./M.G./A.M./Y.K./A.P.",
-      proposals: "#0,#4-#9,#11,#12 executed; #1-#3,#10 cancelled. 0 open proposals.",
-      nextPlanned: "#13 Uniswap Pool feeExempt (after Bootstrap finalise()), #14 set P0 in CommitmentVault",
-      feeExempt: "Deployer, TreasurySafe, CommunitySafe, CommitmentVault, LendingVault — all active"
+      proposals: "#0,#4-#9,#11,#12 executed; #1-#3,#10 cancelled. #15 queued (setFeeExempt LP Token, ETA 08.06.2026 09:57 Athen).",
+      nextPlanned: "#15 setFeeExempt(LP Token 0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0, true) — Timelock running, ETA 08.06.2026. #16 set P0 in CommitmentVault (after #15).",
+      feeExempt: "Deployer, TreasurySafe, CommunitySafe, CommitmentVault, LendingVault — all active. LP Token exempt pending Proposal #15."
     },
     builderRegistry: {
       mainnet: "0xdfe6636DA47F8949330697e1dC5391267CEf0EE3",
@@ -150,17 +150,21 @@ export function getIFRKnowledge() {
     },
     bootstrap: {
       status: getBootstrapStatus(),
-      phase: "NOW ACTIVE — Bootstrap is LIVE since 07.03.2026, ends 05.06.2026",
-      currentState: "The Bootstrap is currently LIVE. Contributors can send ETH to BootstrapVaultV3 (0xf72565C4...) to participate. Minimum: 0.01 ETH. End date: 05.06.2026.",
-      startDate: "07.03.2026 (on-chain startTime) — NOW ACTIVE",
-      endDate: "05.06.2026 (on-chain endTime)",
+      phase: "ENDED — Bootstrap closed 05.06.2026 23:51 UTC. finalise() executed. IFR is live on Uniswap V2.",
+      currentState: "Bootstrap FINALIZED. finalise() TX: 0x949848bdd09f4c867a2593afffb0137c7db2c1457d8a8f5ff4428f8ecce69c5f (Block 25254575). 200M IFR + 0.030 ETH paired as Uniswap V2 LP. LP locked 12 months via Team.Finance.",
+      startDate: "07.03.2026 (on-chain startTime) — ENDED 05.06.2026",
+      endDate: "05.06.2026 23:51 UTC (finalise() executed on-chain)",
       vault: "0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141",
       funded: "200M IFR (funded March 11, 2026 via Plan B)",
+      totalETHRaised: "0.030 ETH (finalized)",
+      lpToken: "0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0",
+      finaliseTx: "0x949848bdd09f4c867a2593afffb0137c7db2c1457d8a8f5ff4428f8ecce69c5f",
+      finaliseBlock: 25254575,
+      uniswapLink: "https://app.uniswap.org/swap?outputCurrency=0x77e99917Eca8539c62F509ED1193ac36580A6e7B",
       minContribution: "0.01 ETH",
       maxContribution: "2 ETH per wallet",
       mechanism: "Pro-rata IFR distribution — no fixed price, community-driven",
       lpLock: "12 months via Team.Finance",
-      refund: "30-day grace period after end — permissionless refund if not finalized",
       securityReview: "Internal review March 2026: 11/14 secure, 3/14 low risk, 0 critical",
       url: "https://ifrunit.tech/wiki/bootstrap.html"
     },
@@ -199,9 +203,11 @@ export function getIFRKnowledge() {
       p0Formula: "P0 = Total ETH raised / 100M. " +
         "IMMUTABLE after set in CommitmentVault.",
       currentStatus: {
-        ethRaised: "0.01 ETH (1 contributor)",
+        ethRaised: "0.030 ETH (finalized — Bootstrap ENDED 05.06.2026)",
         endDate: "2026-06-05",
-        contributor1: "Committed to CommitmentVault ✅"
+        contributor1: "Committed to CommitmentVault ✅",
+        lpToken: "0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0",
+        proposal15: "setFeeExempt(LP Token, true) — Queued, ETA 08.06.2026 09:57 Athen"
       }
     },
     safety: {

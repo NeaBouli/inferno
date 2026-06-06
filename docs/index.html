@@ -1560,7 +1560,7 @@
 var hist=[],cur="start";
 var S={
 start:{q:"What brings you here today?",sub:"Choose what fits you best:",s:1,t:2,o:[
-{i:"&#x1F4B0;",t:"Buy / Invest in IFR",d:"Join the Bootstrap or get IFR at launch price",n:"buy"},
+{i:"&#x1F4B0;",t:"Buy / Invest in IFR",d:"Bootstrap ENDED — buy IFR on Uniswap V2",n:"buy"},
 {i:"&#x1F512;",t:"Lock IFR for Premium Access",d:"Unlock features across all builder apps",n:"lock"},
 {i:"&#x1F6E0;&#xFE0F;",t:"Build with IFR",d:"Integrate IFR access into your product",n:"build"},
 {i:"&#x1F4B8;",t:"Lend or Borrow IFR",d:"Earn yield or borrow against ETH collateral",n:"lend_choice"},
@@ -1568,7 +1568,7 @@ start:{q:"What brings you here today?",sub:"Choose what fits you best:",s:1,t:2,
 {i:"&#x1F50D;",t:"Research / Press",d:"Audits, docs, press kit, deep dive",n:"research"}
 ]},
 buy:{q:"Do you already have a crypto wallet?",sub:"This tells us where to start:",s:2,t:2,o:[
-{i:"&#x2705;",t:"Yes \u2014 I have MetaMask",d:"Ready to contribute ETH to Bootstrap",a:"wizard/buy.html",h:1},
+{i:"&#x2705;",t:"Yes \u2014 I have MetaMask",d:"Buy IFR on Uniswap V2 \u2014 Bootstrap ENDED, LP is live",a:"https://app.uniswap.org/swap?outputCurrency=0x77e99917Eca8539c62F509ED1193ac36580A6e7B",h:1},
 {i:"&#x1F195;",t:"No \u2014 I am new to crypto",d:"We guide you from zero to IFR holder",a:"wizard/buy.html"}
 ]},
 lock:{q:"How much IFR do you want to lock?",sub:"More IFR = more features unlocked:",s:2,t:2,o:[
@@ -1901,14 +1901,14 @@ render();
         <div style="background:#111113;border:1px solid #222225;border-radius:8px;padding:14px 16px;">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
             <span style="font-size:13px;font-weight:600;">&#x1F680; Bootstrap Vault V3</span>
-            <span style="font-size:10px;padding:2px 8px;border-radius:10px;background:rgba(34,197,94,0.15);color:#22c55e;">&#x1F525; Active &mdash; ends June 5</span>
+            <span style="font-size:10px;padding:2px 8px;border-radius:10px;background:rgba(107,114,128,0.2);color:#9ca3af;">&#x2705; FINALIZED &mdash; 05.06.2026</span>
           </div>
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
             <a href="https://etherscan.io/address/0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141" target="_blank" rel="noopener" style="font-size:11px;font-family:monospace;color:#8a8a96;text-decoration:none;">0xf72565C4...e141</a>
             <button class="copy-btn" data-addr="0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141" style="font-size:10px;background:none;border:1px solid #333;color:#8a8a96;border-radius:4px;padding:1px 6px;cursor:pointer;">Copy</button>
           </div>
           <div style="font-size:13px;font-weight:600;color:#22c55e;" data-live-key="card-bootstrap">loading&hellip;</div>
-          <div style="font-size:10px;color:#666;margin-top:2px;">200M IFR &#x2705; Bootstrap LIVE. Contribute 0.01&ndash;2 ETH at <a href="wiki/bootstrap.html" style="color:#f97316;">bootstrap.html</a></div>
+          <div style="font-size:10px;color:#666;margin-top:2px;">Bootstrap FINALIZED 05.06.2026. LP Token: <a href="https://app.uniswap.org/swap?outputCurrency=0x77e99917Eca8539c62F509ED1193ac36580A6e7B" target="_blank" rel="noopener" style="color:#22c55e;">Buy IFR on Uniswap</a> &mdash; <a href="wiki/bootstrap.html" style="color:#f97316;">details</a></div>
         </div>
 
         <div style="background:#111113;border:1px solid #222225;border-radius:8px;padding:14px 16px;">
@@ -2532,13 +2532,13 @@ if (isLocked) {
     {q:"How does the Bootstrap work?",
      a:"90-day community event \u2014 contribute 0.01\u20132 ETH. Collected ETH is automatically paired with ~200M IFR to create the Uniswap V2 LP. Fully permissionless, no team action needed."},
     {q:"Who controls the protocol?",
-     a:"All changes require a 48-hour timelock via the Governance contract \u2014 nothing can change instantly. Gnosis Safe multisig active (3-of-5 with 5 signers, 3-of-5 active) for distributed control. Bootstrap Event is LIVE (ends June 5, 2026)."},
+     a:"All changes require a 48-hour timelock via the Governance contract \u2014 nothing can change instantly. Gnosis Safe multisig active (3-of-5 with 5 signers, 3-of-5 active) for distributed control. Bootstrap ENDED 05.06.2026 \u2014 IFR now live on Uniswap V2."},
     {q:"What is the token distribution?",
      a:"1B IFR fixed. 6 buckets: 40% DEX Liquidity \u00b7 20% LiqRes (locked) \u00b7 15% Team Vesting (12m cliff) \u00b7 15% Treasury \u00b7 6% Community \u00b7 4% BuilderVault. <a href='wiki/tokenomics.html'>Tokenomics \u2192</a>"},
     {q:"Is the code open source and audited?",
      a:"Yes \u2014 fully. 544 tests (367 contract + 77 app + 100 vault), 91% branch coverage, 0 critical findings. All contracts verified on Etherscan. <a href='https://github.com/NeaBouli/inferno' target='_blank'>github.com/NeaBouli/inferno</a>"},
-    {q:"When will $IFR be tradeable?",
-     a:"After Bootstrap finalises and the Uniswap V2 LP is created. Follow <a href='https://x.com/IFRtoken' target='_blank'>@IFRtoken</a> for the official launch announcement."}
+    {q:"Where can I buy $IFR?",
+     a:"$IFR is live on Uniswap V2 as of 05.06.2026. Bootstrap ENDED — <a href='https://app.uniswap.org/swap?outputCurrency=0x77e99917Eca8539c62F509ED1193ac36580A6e7B' target='_blank'>Buy IFR on Uniswap</a>. LP Token: 0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0."}
   ];
 
   var left=document.getElementById('faq-col-left');
@@ -2590,10 +2590,10 @@ if (isLocked) {
         </div>
       </div>
       <div class="roadmap-item">
-        <div class="roadmap-dot current">2</div>
+        <div class="roadmap-dot done">&check;</div>
         <div class="roadmap-body">
-          <h4>Phase 2 &mdash; Launch</h4>
-          <p>Ownership Transfer to Governance (Done). LP Pairing &amp; Lock. Bootstrap Event. Dashboard Launch. First Builder Integrations.</p>
+          <h4>Phase 2 &mdash; Launch <span class="badge-done">Complete</span></h4>
+          <p>Ownership Transfer to Governance (Done). Bootstrap ENDED 05.06.2026 &mdash; 0.030 ETH raised. Uniswap V2 LP live. LP locked 12m via Team.Finance. Dashboard Launch. First Builder Integrations.</p>
         </div>
       </div>
       <div class="roadmap-item">
@@ -2628,7 +2628,7 @@ if (isLocked) {
     <div class="reveal" style="text-align:center;margin-bottom:32px;">
       <p class="section-label">Phase 3</p>
       <h2 class="section-title">DeFi Infrastructure</h2>
-      <p style="color:var(--text-muted);max-width:600px;margin:8px auto 0;font-size:14px;">Launching after Bootstrap finalise (June 2026) &mdash; voluntary locks, P2P lending, and phased liquidity.</p>
+      <p style="color:var(--text-muted);max-width:600px;margin:8px auto 0;font-size:14px;">Bootstrap ENDED 05.06.2026 &mdash; IFR live on Uniswap V2. Next: voluntary locks, P2P lending, and phased liquidity.</p>
     </div>
     <div class="reveal" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;max-width:960px;margin:0 auto;">
       <a href="wiki/commitment-vault.html" style="background:#111113;border:1px solid #222225;border-radius:12px;padding:20px;text-decoration:none;transition:border-color 0.2s;">

@@ -7,7 +7,7 @@
   <link rel="alternate" hreflang="x-default" href="https://ifrunit.tech/wiki/bootstrap.html">>  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Community Bootstrap &mdash; Inferno ($IFR) Documentation</title>
   <meta name="keywords" content="bootstrap, fair launch, initial price, liquidity, Uniswap">
-  <meta name="description" content="90-day community liquidity event. Contribute 0.01–2 ETH, receive IFR at launch price. Vault funded with 200M IFR. Fully trustless.">
+  <meta name="description" content="Bootstrap ENDED 05.06.2026. finalise() executed. LP Token live on Uniswap. 0.030 ETH raised. IFR now tradeable.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -819,7 +819,7 @@
         Plan B &mdash; Treasury + Community Safe Funding. No team ETH. No presale. Pure community price discovery.
       </p>
 
-      <div class="status-badge coming-soon" style="background:rgba(34,197,94,0.15);color:#22c55e;border-color:rgba(34,197,94,0.3);">Pre-Launch | Funded 11.03.2026 &#x2705;</div>
+      <div class="status-badge coming-soon" style="background:rgba(34,197,94,0.15);color:#22c55e;border-color:rgba(34,197,94,0.3);">&#x2705; Bootstrap ENDED 05.06.2026 &mdash; LP Live on Uniswap</div>
 
       <!-- Live Vault Widget -->
       <div class="vault-widget">
@@ -1018,7 +1018,7 @@
 
       <table>
         <tbody>
-          <tr><td><strong>Contract</strong></td><td>BootstrapVaultV3 <span style="color: var(--green); font-weight: 600;">[ACTIVE]</span></td></tr>
+          <tr><td><strong>Contract</strong></td><td>BootstrapVaultV3 <span style="color: #22c55e; font-weight: 600;">[FINALIZED &#x2705;]</span></td></tr>
           <tr><td><strong>Sepolia</strong></td><td><a href="https://sepolia.etherscan.io/address/0x16086d4f7F191047d8A4fFf2090126E12e865A7E#code" target="_blank" rel="noopener"><code>0x16086d4f7F191047d8A4fFf2090126E12e865A7E</code></a></td></tr>
           <tr><td><strong>Mainnet</strong></td><td><a href="https://etherscan.io/address/0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141#code" target="_blank" rel="noopener"><code>0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141</code></a></td></tr>
           <tr><td><strong>Source</strong></td><td><a href="https://github.com/NeaBouli/inferno/blob/main/contracts/bootstrap/BootstrapVaultV3.sol" target="_blank" rel="noopener">GitHub (open source)</a></td></tr>
@@ -1070,9 +1070,10 @@
           </div>
         </div>
 
-        <!-- Wallet Notice (connect via sidebar) -->
-        <div id="bw-wallet-notice" style="text-align:center;padding:16px;background:rgba(249,115,22,0.05);border:1px solid rgba(249,115,22,0.2);border-radius:12px;margin-bottom:20px;">
-          <p style="color:#9ca3af;margin:0;font-size:0.9rem;">Use the <strong style="color:#f97316;">Connect Wallet</strong> button in the header to connect your wallet and participate.</p>
+        <!-- Bootstrap Ended Notice -->
+        <div id="bw-wallet-notice" style="text-align:center;padding:20px;background:rgba(34,197,94,0.06);border:1px solid rgba(34,197,94,0.3);border-radius:12px;margin-bottom:20px;">
+          <p style="color:#22c55e;margin:0 0 8px 0;font-size:1rem;font-weight:700;">&#x2705; Bootstrap ENDED &mdash; 05.06.2026 23:51 UTC</p>
+          <p style="color:#9ca3af;margin:0;font-size:0.88rem;">finalise() executed. IFR is now tradeable on <a href="https://app.uniswap.org/swap?outputCurrency=0x77e99917Eca8539c62F509ED1193ac36580A6e7B" target="_blank" rel="noopener" style="color:#f97316;">Uniswap &#x2197;</a>. Contributions are no longer accepted.</p>
         </div>
 
         <!-- My Contribution (shown when connected) -->
@@ -1121,8 +1122,8 @@
         <!-- Not yet active notice -->
         <div id="bw-not-active-section" style="display:none;">
           <div style="text-align:center;padding:24px;background:rgba(107,114,128,0.05);border:1px solid #374151;border-radius:16px;">
-            <p style="color:#22c55e;">The Bootstrap Event is <strong style="color:#22c55e;">LIVE</strong> &mdash; accepting contributions now.</p>
-            <p style="color:#6b7280;font-size:0.85rem;">Connect your wallet to contribute 0.01&ndash;2 ETH. Closes June 5, 2026.</p>
+            <p style="color:#22c55e;">The Bootstrap Event has <strong style="color:#22c55e;">ENDED</strong> &mdash; finalise() executed 05.06.2026 23:51 UTC.</p>
+            <p style="color:#6b7280;font-size:0.85rem;">LP Token: <code>0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0</code> &mdash; IFR is now tradeable on <a href="https://app.uniswap.org/swap?outputCurrency=0x77e99917Eca8539c62F509ED1193ac36580A6e7B" target="_blank" rel="noopener" style="color:#f97316;">Uniswap</a>.</p>
           </div>
         </div>
 
@@ -1187,9 +1188,9 @@
           <div class="phase-label">&#x2705; Bootstrap LIVE &mdash; ETH Contributions Open</div>
           <div class="phase-date">07.03.2026 &mdash; contract deployed &amp; accepting contributions</div>
         </div>
-        <div class="phase-item" id="phase-active">
-          <div class="phase-label">&#x23F3; Bootstrap Closes &mdash; finalise() available</div>
-          <div class="phase-date">05.06.2026 (on-chain endTime)</div>
+        <div class="phase-item done" id="phase-active">
+          <div class="phase-label">&#x2705; Bootstrap ENDED &mdash; finalise() executed</div>
+          <div class="phase-date">05.06.2026 23:51 UTC &mdash; Block 25254575 &mdash; LP Token: 0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0</div>
         </div>
         <div class="phase-item pending">
           <div class="phase-label">&#x1F512; LiquidityReserve Unlock</div>
@@ -1199,10 +1200,10 @@
 
       <!-- Countdown -->
       <div id="bootstrap-countdown-box" style="background:#0f172a; border:1px solid #22c55e; border-radius:12px; padding:24px; text-align:center; margin:24px 0;">
-        <div style="font-size:12px; color:#22c55e; margin-bottom:8px; text-transform:uppercase; letter-spacing:1px; font-weight:600;" id="countdown-label">&#x1f525; Bootstrap is LIVE &mdash; Closes In</div>
-        <div id="bootstrap-main-countdown" style="font-size:36px; font-weight:700; font-family:monospace; color:#f97316; letter-spacing:2px;">--d --h --m --s</div>
-        <div style="font-size:13px; color:#94a3b8; margin-top:8px;">Ends 05.06.2026 &mdash; Contribute 0.01&ndash;2 ETH now</div>
-        <div style="font-size:12px; color:#64748b; margin-top:4px;">Vault funded with 200M IFR &#x2705; &mdash; 100% ETH goes into Uniswap LP</div>
+        <div style="font-size:12px; color:#22c55e; margin-bottom:8px; text-transform:uppercase; letter-spacing:1px; font-weight:600;">&#x2705; Bootstrap ENDED &mdash; finalise() Executed</div>
+        <div style="font-size:22px; font-weight:700; font-family:monospace; color:#22c55e; letter-spacing:1px;">05.06.2026 23:51 UTC &mdash; Block 25254575</div>
+        <div style="font-size:13px; color:#94a3b8; margin-top:8px;">totalETHRaised: 0.030 ETH &mdash; LP Token: <code style="color:#f97316;">0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0</code></div>
+        <div style="font-size:12px; color:#64748b; margin-top:4px;">finalise() TX: <a href="https://etherscan.io/tx/0x949848bdd09f4c867a2593afffb0137c7db2c1457d8a8f5ff4428f8ecce69c5f" target="_blank" rel="noopener" style="color:#f97316;font-size:11px;">0x949848bd&hellip;</a> &mdash; <a href="https://app.uniswap.org/swap?outputCurrency=0x77e99917Eca8539c62F509ED1193ac36580A6e7B" target="_blank" rel="noopener" style="color:#f97316;">Trade IFR on Uniswap &#x2197;</a></div>
       </div>
 
       <table>
@@ -1235,14 +1236,14 @@
             <td>11.03.2026</td>
           </tr>
           <tr>
-            <td style="color: var(--green); font-weight: 600;">LIVE</td>
+            <td style="color: var(--green); font-weight: 600;">DONE</td>
             <td>Bootstrap Launch &mdash; ETH contributions open</td>
             <td>07.03.2026 &#x2705;</td>
           </tr>
           <tr>
-            <td style="color: #eab308; font-weight: 600;">PENDING</td>
-            <td>Bootstrap End &mdash; finalise() available</td>
-            <td>05.06.2026</td>
+            <td style="color: var(--green); font-weight: 600;">DONE &#x2705;</td>
+            <td>Bootstrap ENDED &mdash; finalise() executed &mdash; <a href="https://etherscan.io/tx/0x949848bdd09f4c867a2593afffb0137c7db2c1457d8a8f5ff4428f8ecce69c5f" target="_blank" style="font-size:12px;">TX: 0x949848bd&hellip;</a><br><span style="font-size:12px;color:var(--muted);">LP Token: <code>0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0</code> &mdash; Block: 25254575</span></td>
+            <td>05.06.2026 23:51 UTC</td>
           </tr>
         </tbody>
       </table>
@@ -1264,12 +1265,12 @@
           <tr>
             <td>07.03.2026 &ndash; 05.06.2026</td>
             <td>200M IFR (Bootstrap)</td>
-            <td style="color: var(--green); font-weight: 600;">&#x2705; LIVE</td>
+            <td style="color: var(--green); font-weight: 600;">&#x2705; ENDED</td>
           </tr>
           <tr>
             <td>05.06.2026 &ndash; 01.09.2026</td>
-            <td>Bootstrap-LP active, LiqRes locked</td>
-            <td style="color: #eab308; font-weight: 600;">&#x23F3; Pending LP</td>
+            <td>Bootstrap-LP active, LiqRes locked &mdash; LP Token: <code style="font-size:11px;">0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0</code></td>
+            <td style="color: var(--green); font-weight: 600;">&#x2705; LP Live</td>
           </tr>
           <tr>
             <td>From 01.09.2026</td>
@@ -1339,23 +1340,23 @@
           </div>
         </div>
 
-        <!-- Vote Status Banner -->
-        <div id="consensus-demo-banner" style="background:rgba(234,179,8,0.12); border:1px solid rgba(234,179,8,0.4); border-radius:8px; padding:10px 14px; margin:16px 0 8px 0; font-size:12px; color:#eab308;">
-          &#x1F5F3; Connect wallet and contribute ETH to vote.
+        <!-- Bootstrap Ended Banner -->
+        <div id="consensus-demo-banner" style="background:rgba(34,197,94,0.08); border:1px solid rgba(34,197,94,0.3); border-radius:8px; padding:10px 14px; margin:16px 0 8px 0; font-size:12px; color:#22c55e;">
+          &#x2705; Bootstrap closed 05.06.2026. Voting period ended. finalise() executed on-chain.
         </div>
 
-        <!-- Vote Buttons -->
+        <!-- Vote Buttons (disabled — bootstrap ended) -->
         <div style="display:flex; gap:16px; margin:8px 0 20px 0; flex-wrap:wrap;">
-          <button id="cs-btn-refund" disabled style="flex:1; min-width:140px; padding:14px 24px; border-radius:10px; border:2px solid #ef4444; background:rgba(239,68,68,0.1); color:#ef4444; font-size:15px; font-weight:700; cursor:not-allowed; opacity:0.5; transition:all 0.2s;">
+          <button disabled style="flex:1; min-width:140px; padding:14px 24px; border-radius:10px; border:2px solid #374151; background:rgba(55,65,81,0.1); color:#4b5563; font-size:15px; font-weight:700; cursor:not-allowed; opacity:0.4; transition:all 0.2s;">
             &#x1F534; Vote Refund
           </button>
-          <button id="cs-btn-finalise" disabled style="flex:1; min-width:140px; padding:14px 24px; border-radius:10px; border:2px solid #22c55e; background:rgba(34,197,94,0.1); color:#22c55e; font-size:15px; font-weight:700; cursor:not-allowed; opacity:0.5; transition:all 0.2s;">
+          <button disabled style="flex:1; min-width:140px; padding:14px 24px; border-radius:10px; border:2px solid #374151; background:rgba(55,65,81,0.1); color:#4b5563; font-size:15px; font-weight:700; cursor:not-allowed; opacity:0.4; transition:all 0.2s;">
             &#x1F7E2; Vote Finalise
           </button>
         </div>
         <div style="display:flex; flex-direction:column; align-items:center; width:100%; margin-top:12px;">
           <p style="font-size:11px; color:#64748b; margin-top:4px; text-align:center;">
-            Connect via header button &middot; Wallet must have contributed ETH to be eligible to vote
+            Voting closed &mdash; Bootstrap ENDED 05.06.2026
           </p>
         </div>
 

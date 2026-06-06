@@ -13,8 +13,12 @@ function getBootstrapPromptBlock(): string {
 - 200M IFR allocated, 100% of ETH goes to Uniswap LP
 - Pro-rata distribution at close`;
   } else {
-    return `BOOTSTRAP STATUS: ENDED (June 5, 2026)
-- Bootstrap is closed. IFR is now tradeable on Uniswap.
+    return `BOOTSTRAP STATUS: ENDED (05.06.2026 23:51 UTC)
+- Bootstrap FINALIZED. finalise() executed. IFR is now live on Uniswap V2.
+- 0.030 ETH raised. 200M IFR + 0.030 ETH paired as LP.
+- LP Token: 0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0 (locked 12m via Team.Finance)
+- Proposal #15: setFeeExempt(LP Token, true) — Timelock running, ETA 08.06.2026.
+- Buy IFR: https://app.uniswap.org/swap?outputCurrency=0x77e99917Eca8539c62F509ED1193ac36580A6e7B
 - Direct users to Uniswap or ifrunit.tech for current info.`;
   }
 }
@@ -55,7 +59,7 @@ Key topics you explain:
 - Inferno ($IFR) is a deflationary ERC-20 utility token on Ethereum
 - Every transfer burns 2.5% permanently — supply only goes down
 - Lock-to-Access: users lock IFR tokens to unlock lifetime benefits from partner products
-- Community Bootstrap Event: contribute 0.01–2 ETH per wallet, receive pro-rata IFR share. March 7 – June 5, 2026. Vault pre-funded with 200M IFR. NOW LIVE.
+- Community Bootstrap Event: ENDED 05.06.2026. 200M IFR + 0.030 ETH → Uniswap V2 LP created. IFR now tradeable on Uniswap.
 - Fair Launch (CFLM): no presale, no VC, no private sale — everyone gets equal access
 - 17 on-chain components (14 deployed contracts + 3 Gnosis Safes), all verified on Etherscan, 544 tests (367 contract + 77 app + 100 vault), 91% branch coverage
 
