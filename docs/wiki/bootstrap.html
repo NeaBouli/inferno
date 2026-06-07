@@ -945,9 +945,9 @@
         <li>Locks the LP tokens via Team.Finance for 12 months</li>
       </ul>
 
-      <div class="callout" style="margin:20px 0;padding:16px;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.3);border-radius:10px;">
-        <p style="margin:0 0 8px 0;font-weight:700;color:#ef4444;">&#x26A0;&#xFE0F; CRITICAL AFTER FINALISE()</p>
-        <p style="margin:0;font-size:0.88rem;">After finalise(), <strong>IMMEDIATELY</strong> submit Governance Proposal for Uniswap Pool feeExempt (Proposal #15 — QUEUED, ETA 08.06.2026 09:57 Athen). Without this proposal, <strong>EVERY swap pays 3.5% fee</strong> &mdash; IFR is effectively not tradeable. Second step: Set P0 in CommitmentVault (Proposal #16 — QUEUED, ETA 09.06.2026 02:56 Athen, IMMUTABLE).</p>
+      <div class="callout" style="margin:20px 0;padding:16px;background:rgba(249,115,22,0.08);border:1px solid rgba(249,115,22,0.3);border-radius:10px;">
+        <p style="margin:0 0 8px 0;font-weight:700;color:#f97316;">&#x23F3; GOVERNANCE — POST-FINALISE()</p>
+        <p style="margin:0;font-size:0.88rem;"><strong>Bootstrap FINALIZED 05.06.2026 23:51 UTC.</strong> Two governance proposals pending: <strong>Proposal #15</strong> — setFeeExempt(LP Token, true) — QUEUED, ETA 08.06.2026 09:57 Athen. Without this, every swap pays 3.5% fee. <strong>Proposal #16</strong> — setP0(CommitmentVault) — QUEUED, ETA 09.06.2026 02:56 Athen (IMMUTABLE once set). P0 = 0.030 ETH / 200,000,000 IFR.</p>
       </div>
 
       <h3>Step 3 &mdash; Claim IFR</h3>
@@ -1933,7 +1933,7 @@ if (document.readyState === 'loading') {
 
   // ===== Countdown (date-based) =====
   var BOOTSTRAP_START = new Date('2026-03-07T00:00:00Z').getTime();
-  var BOOTSTRAP_END = new Date('2026-06-05T00:00:00Z').getTime();
+  var BOOTSTRAP_END = new Date('2026-06-05T23:51:00Z').getTime(); // finalise() executed 05.06.2026 23:51 UTC Block 25254575
 
   function updateMainCountdown() {
     var now = Date.now();
@@ -1991,7 +1991,7 @@ if (document.readyState === 'loading') {
 var BW = {
   VAULT: "0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141",
   START: new Date("2026-03-07T00:00:00Z").getTime(),
-  END:   new Date("2026-06-05T00:00:00Z").getTime(),
+  END:   new Date("2026-06-05T23:51:00Z").getTime(), // finalise() 05.06.2026 23:51 UTC
   IFR_ALLOCATION: 200000000, // 200M IFR (9 decimals)
   ABI: [
     "function contribute() external payable",
