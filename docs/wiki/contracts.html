@@ -2143,8 +2143,9 @@ console.<span class="function">log</span>(<span class="string">"Since:"</span>, 
                     </thead>
                     <tbody>
                         <tr>
-                            <td>LP Pair (Mainnet)</td>
-                            <td><code>Not yet created. LP will be created automatically by BootstrapVaultV3.finalise() after the 90-day Bootstrap period. ETA: Q2 2026 (post-Bootstrap completion).</code></td>
+                            <td>LP Pair (Mainnet) &#x2705;</td>
+                            <td><code><a href="https://etherscan.io/address/0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0" target="_blank" rel="noopener">0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0</a></code><br>
+                            Created by finalise() &mdash; TX: <a href="https://etherscan.io/tx/0x949848bdd09f4c867a2593afffb0137c7db2c1457d8a8f5ff4428f8ecce69c5f" target="_blank" rel="noopener">0x949848bd&hellip;</a> &mdash; Block 25254575 (05.06.2026)</td>
                         </tr>
                         <tr>
                             <td>Uniswap V2 Router (Mainnet)</td>
@@ -2171,11 +2172,11 @@ console.<span class="function">log</span>(<span class="string">"Since:"</span>, 
                         </tr>
                         <tr>
                             <td>ETH in Pool</td>
-                            <td>Not yet created. Will be determined by BootstrapVaultV3.finalise() after Bootstrap completion (ETA: Q2 2026).</td>
+                            <td>0.030 ETH (totalETHRaised from Bootstrap, contributed by community)</td>
                         </tr>
                         <tr>
                             <td>LP Tokens</td>
-                            <td>Will be locked (min 12 months via Unicrypt)</td>
+                            <td>Locked 12 months via Team.Finance &#x2705; &mdash; LP Token: <code>0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0</code></td>
                         </tr>
                     </tbody>
                 </table>
@@ -2184,9 +2185,8 @@ console.<span class="function">log</span>(<span class="string">"Since:"</span>, 
             <h3>ethers.js Example</h3>
             <div class="code-block">
                 <div class="code-block-header">JavaScript (ethers v5)</div>
-<pre><span class="comment">// Sepolia Testnet only — used for testing</span>
-<span class="comment">// TODO: Update to Mainnet LP pair after Bootstrap (created by BootstrapVaultV3.finalise())</span>
-<span class="keyword">const</span> <span class="const">PAIR_ADDR</span> = <span class="string">"0x2252e8bBDE0E50CD372748aC233A99C08627d9c7"</span>; <span class="comment">// Sepolia Testnet only</span>
+<pre><span class="comment">// Mainnet LP Pair (IFR/WETH) — created by BootstrapVaultV3.finalise() on 05.06.2026</span>
+<span class="keyword">const</span> <span class="const">PAIR_ADDR</span> = <span class="string">"0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0"</span>; <span class="comment">// Ethereum Mainnet</span>
 <span class="keyword">const</span> pairAbi = [
   <span class="string">"function getReserves() view returns (uint112, uint112, uint32)"</span>,
   <span class="string">"function token0() view returns (address)"</span>,

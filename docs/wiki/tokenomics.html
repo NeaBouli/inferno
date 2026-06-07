@@ -1117,11 +1117,12 @@
         <strong>Note:</strong> BuybackVault and BurnReserve are <em>not</em> genesis allocations. They accumulate from the 1% protocol pool fee on every non-exempt IFR transfer. Bootstrap is funded via Plan B from Treasury + Community Safe &mdash; not a standalone genesis bucket.
       </p>
 
-      <p><strong>Bootstrap Event (Plan B &mdash; not a genesis allocation)</strong></p>
+      <p><strong>Bootstrap Event (Plan B &mdash; COMPLETED &#x2705; 05.06.2026)</strong></p>
       <ul>
         <li>Funded via Plan B (decision 08.03.2026): Treasury Safe (150M) + Community Safe (50M) = ~200M IFR in BootstrapVaultV3</li>
-        <li>90-day Bootstrap period &mdash; ETH raised + IFR from vault create Uniswap V2 LP via <code>finalise()</code></li>
-        <li>BootstrapVaultV3 contract: <code>0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141</code></li>
+        <li>Bootstrap period: 07.03.2026 &ndash; 05.06.2026 &mdash; finalise() executed 05.06.2026 23:51 UTC</li>
+        <li>totalETHRaised: 0.030 ETH &mdash; LP Token: <a href="https://etherscan.io/address/0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0" target="_blank" style="color:var(--accent);">0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0</a></li>
+        <li>BootstrapVaultV3 contract: <code>0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141</code> &mdash; FINALIZED</li>
       </ul>
 
       <p><strong>LP Allocation &mdash; Phased Release</strong></p>
@@ -1136,10 +1137,10 @@
         </thead>
         <tbody>
           <tr style="border-bottom:1px solid #1f2937;">
-            <td style="padding:10px;color:#22c55e;font-weight:600;">Phase 1</td>
+            <td style="padding:10px;color:#22c55e;font-weight:600;">Phase 1 &#x2705;</td>
             <td style="padding:10px;color:#e5e7eb;">~150M IFR</td>
-            <td style="padding:10px;color:#9ca3af;">After Bootstrap (05.06.2026) &mdash; <code>finalise()</code></td>
-            <td style="padding:10px;color:#9ca3af;">Automatic: ~150M IFR + all Bootstrap ETH &rarr; Uniswap V2 LP. LP tokens locked 12 months via Team.Finance.</td>
+            <td style="padding:10px;color:#22c55e;">DONE &mdash; finalise() 05.06.2026 23:51 UTC</td>
+            <td style="padding:10px;color:#9ca3af;">LP created: 0.030 ETH + IFR &rarr; Uniswap V2 LP. LP Token: <code>0xbE495E9c&hellip;</code>. LP locked 12 months via Team.Finance &#x2705;</td>
           </tr>
           <tr style="border-bottom:1px solid #1f2937;">
             <td style="padding:10px;color:#f97316;font-weight:600;">Phase 2</td>
@@ -1288,6 +1289,10 @@
         <div class="exempt-item">
           <div class="name">BuybackController <span style="color:#22c55e;font-size:0.75rem;">&#x2705; active</span></div>
           <div class="reason">Automated buyback+burn and LP deepening operations &mdash; feeExempt since 16.04.2026 (Proposal #13), feeCollector since 18.04.2026 (Proposal #14)</div>
+        </div>
+        <div class="exempt-item" style="border-left:3px solid #f59e0b;">
+          <div class="name">LP Token (IFR/WETH) <span style="color:#f59e0b;font-size:0.75rem;">&#x23F3; Pending &mdash; Proposal #15</span></div>
+          <div class="reason">Uniswap V2 LP Token (<code>0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0</code>) &mdash; QUEUED, ETA 08.06.2026 09:57 Athen. Without feeExempt, every swap pays 3.5% fee (IFR effectively untradeable).</div>
         </div>
       </div>
 
