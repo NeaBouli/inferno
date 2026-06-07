@@ -7,6 +7,34 @@
 ## 2026-06-06 [AUTOR: CC]
 ### TYPE: FIX
 
+**Full site documentation update — Bootstrap ENDED, LP live, Proposals #15/#16**
+
+Files changed (full site update):
+- `docs/wiki/bootstrap.html` — CRITICAL callout: #11→#15, #12→#16 (with QUEUED/ETA)
+- `docs/wiki/governance.html` — Proposal #16: Planned→Queued, ETA 09.06.2026 02:56 Athen, CommitmentVault address added
+- `docs/wiki/roadmap.html` — Phase 4 LP pending→done (finalise() TX + LP Token), Post-Bootstrap Milestones updated (#11→#15, #12→#16), Current Focus updated
+- `docs/wiki/contracts.html` — LP Pair: "Not yet created"→real address 0xbE495E9c..., ETH in Pool 0.030, LP lock Team.Finance, ethers.js example updated to mainnet
+- `docs/wiki/deployment.html` — BootstrapVaultV3 badge: ACTIVE→FINALIZED
+- `docs/wiki/fee-design.html` — LP Token row added to feeExempt table (Proposal #15 pending)
+- `docs/wiki/tokenomics.html` — Bootstrap Event marked COMPLETED, Phase 1 LP Allocation marked DONE, LP Token added to feeExempt grid
+- `docs/index.html` — Wallet dropdown Bootstrap link→Buy IFR (Uniswap)
+- `README.md` — Bootstrap: ACTIVE→FINALIZED, LP Token added, CommitmentVault row added
+- `docs/TODO.md` — Proposal #16: Timing→QUEUED ETA 09.06.2026
+- `docs/TODO.html` — Proposal #16: Planned→QUEUED ETA 09.06.2026
+
+Grep verifications:
+- "Bootstrap ACTIVE": 0 hits ✅
+- bE495E9c (LP Token): 23 hits ✅ (≥5 required)
+- 0719d9eb (CommitmentVault): 8 hits ✅ (≥2 required)
+- 08.06.2026|09.06.2026: 9 hits ✅ (≥4 required)
+
+Risk: Low — docs only, no contract changes.
+
+---
+
+## 2026-06-06 [AUTOR: CC]
+### TYPE: FIX
+
 **Issue #35 — Post-Bootstrap Website + Ali Copilot updates**
 
 Bootstrap ended 05.06.2026 23:51 UTC. All public-facing content updated to reflect FINALIZED state.

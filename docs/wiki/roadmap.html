@@ -673,8 +673,8 @@
           <li class="check-item">Ownership transfer to Governance (4 contracts, 2026-03-05)</li>
           <li class="check-item">BootstrapVault deployed + verified &mdash; funded 11.03.2026 via Plan B: Treasury Safe (150M IFR) + Community Safe (50M IFR) = ~200M IFR in BootstrapVaultV3 &#x2705;</li>
           <li class="check-item">LP Reserve: 400.6M IFR transferred from Deployer EOA to LP Reserve Safe (3-of-5 Gnosis Safe) &mdash; 18.03.2026 &#x2705;</li>
-          <li class="pending-item">Mainnet LP pairing (IFR/ETH on Uniswap V2)</li>
-          <li class="pending-item">LP Token lock/burn</li>
+          <li class="check-item">Mainnet LP pairing (IFR/ETH on Uniswap V2) &mdash; finalise() executed 05.06.2026 &#x2705; LP Token: <a href="https://etherscan.io/address/0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0" target="_blank" style="color:var(--accent);">0xbE495E9c&hellip;</a></li>
+          <li class="check-item">LP Token lock &mdash; Team.Finance, 12 months &#x2705;</li>
           <li class="pending-item">Dashboards switched to mainnet</li>
           <li class="pending-item">First builder integrations</li>
           <li class="pending-item">CoinGecko / CoinMarketCap listing</li>
@@ -683,12 +683,12 @@
 
       <!-- Post-Bootstrap Milestones -->
       <div class="phase-card" style="border-left:3px solid #ef4444;">
-        <h3>Post-Bootstrap Milestones <span class="phase-badge badge-planned">After 05.06.2026</span></h3>
-        <p style="color:#ef4444;font-weight:600;font-size:0.85rem;">Critical sequence after Bootstrap finalise()</p>
+        <h3>Post-Bootstrap Milestones <span class="phase-badge badge-progress">June 2026 — Active</span></h3>
+        <p style="color:#22c55e;font-weight:600;font-size:0.85rem;">Bootstrap FINALIZED 05.06.2026 &mdash; Uniswap V2 LP live</p>
         <ul>
-          <li class="pending-item"><strong>June 2026:</strong> Call Bootstrap finalise()</li>
-          <li class="pending-item"><strong style="color:#ef4444;">June 2026 IMMEDIATELY:</strong> Proposal #11 &mdash; Uniswap Pool feeExempt (without = IFR not tradeable!)</li>
-          <li class="pending-item"><strong>June 2026:</strong> Proposal #12 &mdash; Set P0 in CommitmentVault (IMMUTABLE)</li>
+          <li class="check-item"><strong>05.06.2026:</strong> Bootstrap finalise() executed &#x2705; &mdash; TX: <a href="https://etherscan.io/tx/0x949848bdd09f4c867a2593afffb0137c7db2c1457d8a8f5ff4428f8ecce69c5f" target="_blank" style="color:var(--accent);">0x949848bd&hellip;</a> &mdash; Block 25254575 &mdash; LP Token: <a href="https://etherscan.io/address/0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0" target="_blank" style="color:var(--accent);">0xbE495E9c&hellip;</a></li>
+          <li class="pending-item"><strong style="color:#f59e0b;">08.06.2026 (ETA):</strong> Proposal #15 &mdash; setFeeExempt(LP Token, true) &mdash; QUEUED, Timelock running (without = IFR not tradeable!)</li>
+          <li class="pending-item"><strong>09.06.2026 (ETA):</strong> Proposal #16 &mdash; setP0(CommitmentVault) (IMMUTABLE once set)</li>
           <li class="pending-item"><strong>June 2026:</strong> Contributor locks 100M IFR in CommitmentVault (10 tranches of 10M)</li>
           <li class="pending-item"><strong>June 2026:</strong> First Builder loans via LendingVault</li>
           <li class="pending-item"><strong>September 2026:</strong> LiquidityReserve unlock (200M IFR available) &mdash; Governance decides LP addition</li>
@@ -768,7 +768,7 @@
 
       <h2>Current Focus</h2>
       <p>
-        <strong>Phase 4 completion</strong> &mdash; 17 mainnet on-chain components deployed, verified, and ownership transferred to Governance. BuybackController deployed 14.04.2026 &mdash; governance wiring in progress. Next steps: Execute Proposal A (feeExempt), Submit + Execute Proposal B (setFeeCollector), LP pairing, LP lock. See <a href="https://github.com/NeaBouli/inferno/blob/main/docs/NEXT_STEPS.md">Next Steps</a> for BuybackController execution guide.
+        <strong>Phase 4 complete &mdash; Bootstrap FINALIZED</strong> &mdash; 17 mainnet on-chain components deployed, verified. finalise() executed 05.06.2026, Uniswap V2 LP live (LP Token: <a href="https://etherscan.io/address/0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0" target="_blank" style="color:var(--accent);">0xbE495E9c&hellip;</a>), LP locked 12 months via Team.Finance. Next: Execute Proposal #15 (feeExempt LP Token &mdash; ETA 08.06.2026) and Proposal #16 (setP0 CommitmentVault &mdash; ETA 09.06.2026).
       </p>
 
       <div class="callout-green callout">

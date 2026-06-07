@@ -282,7 +282,7 @@ On errors: fix immediately, commit with `seo:` prefix.
       GitHub Issue: https://github.com/NeaBouli/inferno/issues/34
       P0 = 0.030 ETH / 100,000,000 = 0.0000000003 ETH per IFR (IMMUTABLE once set!)
       All CommitmentVault tranche targets are based on P0 — wrong calculation = catastrophic
-      Timing: After Proposal #15 executed (post 08.06.2026)
+      Status: QUEUED — ETA 09.06.2026 02:56 Athen (execute AFTER Proposal #15 on 08.06.2026)
 - [ ] 🔵 Deploy CommitmentVault (Core Dev)
       Voluntary lock with 4 condition types (time, price, time+price, time OR price)
       Auto-unlock after 30 days when condition met
