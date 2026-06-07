@@ -1039,7 +1039,7 @@
         <div class="cv-form-group" id="cv-time-group">
           <label>Unlock Date</label>
           <input type="date" id="cv-unlock-date" min="2026-06-06">
-          <div class="cv-hint">Must be after Bootstrap finalise (June 5, 2026)</div>
+          <div class="cv-hint">Bootstrap FINALIZED 05.06.2026 &#x2705; &mdash; Locking available (Proposal #16 setP0 pending ETA 09.06.2026)</div>
         </div>
 
         <div class="cv-form-group cv-hidden" id="cv-price-group">
@@ -1055,7 +1055,7 @@
             <option value="100000">P0 &times; 1,000</option>
             <option value="500000">P0 &times; 5,000</option>
           </select>
-          <div class="cv-hint">P0 = initial price after Bootstrap. Set immutably on-chain after finalise().</div>
+          <div class="cv-hint">P0 = 0.030 ETH / 200,000,000 IFR &mdash; set immutably via Proposal #16 (ETA 09.06.2026). CommitmentVault: <code style="font-size:10px;">0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3</code></div>
         </div>
 
         <div class="cv-preview" id="cv-preview">
@@ -1355,7 +1355,7 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
       statusEl.style.background = "rgba(59,130,246,0.1)";
       statusEl.style.border = "1px solid rgba(59,130,246,0.3)";
       statusEl.style.color = "#93c5fd";
-      statusEl.innerHTML = "<strong>CommitmentVault deployed — feeExempt active.</strong><br>feeExempt is active. Locking available after Bootstrap finalise (June 2026).";
+      statusEl.innerHTML = "<strong>CommitmentVault deployed — feeExempt active.</strong><br>feeExempt is active. Bootstrap FINALIZED 05.06.2026 &mdash; Locking available after Proposal #16 setP0 (ETA 09.06.2026, IMMUTABLE).";
       return;
     }
     // TODO: implement actual lock transaction after deploy

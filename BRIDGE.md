@@ -383,3 +383,32 @@ Proposal #16 (proposals-mapping, nicht getProposal):
 Hinweis: getProposal() hat off-by-one (gibt immer leeres nächstes Slot zurück). proposals(id) ist korrekt.
 
 closes #34 (Proposal submitted — execute ausstehend)
+
+## 2026-06-06 [AUTOR: CC]
+### TYPE: FIX
+Prompt #63: Vollständiges Seiten-Audit — alle 42 HTML-Seiten geprüft.
+
+**Geändert (12 Seiten):**
+- wiki/bootstrap.html — BW.END + BOOTSTRAP_END auf 23:51 UTC (exakter finalise() Zeitpunkt); Callout von "CRITICAL AFTER FINALISE()" auf Post-Finalise-Status mit Proposal #15/#16
+- wiki/roadmap.html — badge "Active" → "FINALIZED"; countdown widget item → ENDED
+- wiki/protocol-plan.html — "Bootstrap is active (until June 5)" → "Bootstrap ENDED 05.06.2026 23:51 UTC" + Block/TX
+- wiki/faq.html — "after Bootstrap closes June 5, 2026" → "Bootstrap FINALIZED 05.06.2026 23:51 UTC"
+- wiki/transparency.html — Proposal #16 Row hinzugefügt (setP0 CommitmentVault, ETA 09.06.2026)
+- wiki/governance.html — P0 Formel korrigiert (100M → 200M IFR); Bootstrap FINALIZED Notice + Proposal #15/#16 hinzugefügt
+- wiki/tokenomics.html — Block 25254575 + TX + Proposal #15/#16 hinzugefügt
+- wiki/fee-design.html — Bootstrap FINALIZED Notice + Block/TX + Proposal #15/#16 hinzugefügt
+- wiki/contracts.html — Bootstrap FINALIZED + ENDED Note in LP Pair Description
+- wiki/wallet-guide.html — BootstrapVaultV3 Badge LIVE → FINALIZED + Block/TX/LP Token
+- wiki/ecosystem.html — Timeline "Bootstrap End + finalise()" von future → done, mit Block/TX/LP Token
+- wiki/lending-vault.html — "Lending available after Bootstrap finalise (June 2026)" → FINALIZED + Proposal #16
+- wiki/commitment-vault.html — 3 Stellen: "Bootstrap finalise (June 2026)" → FINALIZED + Proposal #16 + P0-Formel
+- wiki/deployment.html — LP Token Row mit Block/TX hinzugefügt
+- wizard/buy.html — "Bootstrap is live" → FINALIZED, Schritte auf Uniswap-Buy aktualisiert
+
+**Bereits korrekt (30 Seiten):**
+index.html, TODO.html, wiki/agent.html, wiki/business-onboarding.html, wiki/contributing.html, wiki/dao-governance.html, wiki/fair-launch.html, wiki/index.html, wiki/integration.html, wiki/lending-market.html, wiki/lock-mechanism.html, wiki/lp-strategy.html, wiki/mainnet-checklist.html, wiki/multisig.html, wiki/one-pager.html, wiki/open-audit.html, wiki/press-kit.html, wiki/security.html, wiki/testnet.html, wiki/verify.html, wiki/vesting.html, wizard/borrow.html, wizard/build.html, wizard/contribute.html, wizard/lend.html, wizard/lock.html
+
+**Grep-Checks:**
+- Bootstrap ACTIVE (sichtbar): 0 echte Treffer (nur JS-Code, Nav-Links, historische TODOs)
+- LP Token bE495E9c: 38 Treffer
+- Block 25254575: 16 Treffer
