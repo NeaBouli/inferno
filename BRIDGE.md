@@ -341,3 +341,17 @@ Calldata: 0x8ebfc796000000000000000000000000be495e9c0d8cc2dcf95570cf95b63c4844df
 - Dann erst P0 Proposal
 
 refs #34
+
+## 2026-06-06 [AUTOR: CC]
+### TYPE: FIX
+Issue #34 DONE: P0 Proposal on-chain via TreasurySafe.
+
+Proposal #16 (proposals-mapping, nicht getProposal):
+- Target: 0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3 (CommitmentVault)
+- ETA: 09.06.2026 02:56 Athen (48h Timelock)
+- P0 = 300_000_000 wei/IFR (0.030 ETH / 100M IFR)
+- execute() via TreasurySafe nach 09.06. 02:56 Athen
+
+Hinweis: getProposal() hat off-by-one (gibt immer leeres nächstes Slot zurück). proposals(id) ist korrekt.
+
+closes #34 (Proposal submitted — execute ausstehend)
