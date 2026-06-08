@@ -384,6 +384,28 @@ Hinweis: getProposal() hat off-by-one (gibt immer leeres nächstes Slot zurück)
 
 closes #34 (Proposal submitted — execute ausstehend)
 
+## 2026-06-08 [AUTOR: CC]
+### TYPE: FIX
+
+**Proposal #15 EXECUTED — IFR live on Uniswap**
+
+TX: `0xd5a3bc9527b6cc5288b892a9ba99a3af37b940f273856ab6ba938403cd2b4204`
+Block: 25271071
+LP Token (`0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0`) feeExempt = TRUE — IFR tradeable on Uniswap without 3.5% swap fee.
+
+Files changed:
+- `docs/wiki/governance.html` — Proposal #15: Queued → Executed, TX + Block documented; Bootstrap notice updated
+- `docs/wiki/transparency.html` — Proposal #15 row: Queued → Executed; new row in Token Movements (ProposalExecuted #15)
+- `docs/wiki/fee-design.html` — LP Token feeExempt: Pending → TRUE (08.06.2026); Bootstrap notice updated
+- `docs/index.html` — Buy IFR Uniswap URL: `/#/swap` → `/swap` (canonical URL fix)
+- `docs/wiki/faq.html` — "Where can I buy $IFR": updated to live Uniswap link; "When does trading go live": DONE; "Bootstrap finalized with 1 contributor": updated P0 + status
+
+Pending: Proposal #16 setP0(CommitmentVault) — ETA 09.06.2026 02:56 Athen
+
+closes #33
+
+---
+
 ## 2026-06-06 [AUTOR: CC]
 ### TYPE: FIX
 Prompt #63: Vollständiges Seiten-Audit — alle 42 HTML-Seiten geprüft.
