@@ -279,25 +279,27 @@ verifyApp.listen(VERIFY_PORT, () => logger.info({ port: VERIFY_PORT }, 'Verify A
 
 // ── Launch ──────────────────────────────────────────────────────────────────
 
-// Delayed launch to prevent 409 conflict on restart
+// Delayed launch to prevent 409 conflict on restart.
+// Telegraf v4 startPolling() runs an infinite loop — bot.launch() NEVER resolves
+// while polling. Do NOT use .then() for post-start init; it only fires on shutdown.
 setTimeout(() => {
-  bot.launch()
-    .then(() => {
-      logger.info('🔥 IFR Telegram Bot started successfully');
-      logger.info({ env: process.env.NODE_ENV }, 'Environment');
-      scheduleDailyReport(bot);
-      scheduleDailyWelcome(bot);
-      startGovernanceNotifier(bot);
-      startVoteAnnouncements(bot);
-      scheduleBootstrapAnnouncements(bot);
-      startBootstrapListener(bot);
-      // Restore verified users from persistent wallet map (on-chain re-verify)
-      autoRestoreAll().catch(err => logger.error({ err: err.message }, 'Auto-restore failed'));
-    })
-    .catch((err) => {
-      logger.fatal({ err: err.message }, 'Failed to start bot');
-      process.exit(1);
-    });
+  // Fire-and-forget: polling loop runs indefinitely
+  bot.launch().catch((err) => {
+    logger.fatal({ err: err.message }, 'Fatal polling error');
+    process.exit(1);
+  });
+
+  // Allow ~3s for an immediate 409 to surface before initialising services
+  setTimeout(() => {
+    logger.info({ env: process.env.NODE_ENV }, '🔥 IFR Telegram Bot polling started');
+    scheduleDailyReport(bot);
+    scheduleDailyWelcome(bot);
+    startGovernanceNotifier(bot);
+    startVoteAnnouncements(bot);
+    scheduleBootstrapAnnouncements(bot);
+    startBootstrapListener(bot);
+    autoRestoreAll().catch(err => logger.error({ err: err.message }, 'Auto-restore failed'));
+  }, 3000);
 }, 8000);
 
 // Graceful shutdown
