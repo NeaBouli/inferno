@@ -8,6 +8,32 @@
 ### TYPE: FIX
 ### STATUS: DONE
 
+**Railway → Hetzner Migration: ai-copilot**
+- `inferno-ai-copilot` Container läuft auf Hetzner (135.181.254.229) — healthy ✅
+- Port 3003, Traefik-Route: `copilot-api.ifrunit.tech` (SSL via letsencrypt)
+- Wiki RAG: 24 Docs geladen aus wiki-content.json ✅
+- Bootstrap-Votes: 2 Votes aus BOOTSTRAP_VOTES env ✅
+- BuilderRegistry / LendingVault / CommitmentVault aktiv ✅
+- Volume: `inferno_copilot_data` für BOOTSTRAP_VOTES Persistenz
+- `vercel.json` Rewrite: `ifr-copilot-api.railway.app` → `copilot-api.ifrunit.tech`
+- **TODO DNS**: A-Record `copilot-api.ifrunit.tech` → `135.181.254.229` setzen
+- **TODO Cleanup**: Railway `ifr-ai-copilot` Service nach DNS-Propagierung stoppen
+
+**points-backend**: Nicht auf Railway deployed, Migration ausstehend
+- Braucht PostgreSQL (Hetzner infra-postgres-1 verfügbar)
+- Dockerfile vorhanden: `apps/points-backend/Dockerfile`
+- Prisma-Migrations müssen laufen
+
+**Telegram Announcement Posts (08.06.2026)** — bereits gesendet:
+- Post 1+2 → @IFRtoken Channel (msg_ids: 42, 43)
+- Post 3 → @IFR_token Community #General (msg_id: 154)
+
+---
+
+## 2026-06-09 [CC]
+### TYPE: FIX
+### STATUS: DONE
+
 **Governance Contract Adresse korrigiert**
 - Falsche Adresse in `.env.production` und allen Scripts: `0x6050b22...` (Sepolia)
 - Korrekte Mainnet-Adresse: `0xc43d48E7FDA576C5022d0670B652A622E8caD041`

@@ -445,7 +445,7 @@ On errors: fix immediately, commit with `seo:` prefix.
 
 ### Bootstrap (ENDED 05.06.2026 — IFR live on Uniswap V2)
 - [x] Announcement texts fertig — `docs/BOOTSTRAP_ANNOUNCEMENT.md` ✅
-- [ ] 📢 POST: Telegram @IFRtoken (Text #1)
+- [x] ✅ POST: Telegram @IFRtoken Channel + Community (08.06.2026) — 3 Posts gesendet (msg_ids: 42, 43, 154)
 - [ ] 📢 POST: X Thread @IFRtoken (Text #2, 4 Tweets)
 - [ ] 📢 POST: Reddit r/ethfinance (Text #3)
 - [ ] 📢 POST: Reddit r/CryptoMoonShots (Text #4)
@@ -473,10 +473,18 @@ On errors: fix immediately, commit with `seo:` prefix.
 - [ ] Update handover document for Core Developer
 - [ ] Project Continuity section (Landing + README + Wiki)
 
-### Railway
-- [ ] Verify FeeRouterV1 tracking (after Proposal #6)
-- [ ] Verify BuybackVault + BurnReserve accumulation tracking
-- [ ] Pool Fee Receiver: switch from Deployer EOA to FeeRouterV1
+### Railway → Hetzner Migration
+- [x] ✅ Telegram-Bot: Railway → Hetzner (09.06.2026) — läuft auf 135.181.254.229
+- [x] ✅ Ali Copilot (ai-copilot): Railway → Hetzner (09.06.2026) — `copilot-api.ifrunit.tech`
+      DNS: A-Record `copilot-api.ifrunit.tech` → 135.181.254.229 muss noch gesetzt werden
+- [ ] Railway `ifr-ai-copilot` Service stoppen (nach DNS-Propagierung + Vercel Redeploy)
+- [ ] points-backend: Migration planen (braucht PostgreSQL, Prisma migrations)
+      → Hetzner infra-postgres-1 verfügbar
+
+### Railway (Alt — vor Migration)
+- [x] ✅ FeeRouterV1 tracking verified (nach Proposal #6)
+- [x] ✅ BuybackVault + BurnReserve: tracking aktiv
+- [x] ✅ Pool Fee Receiver: FeeRouterV1 gesetzt
 
 ### SEO / LLMO
 - [x] ✅ SEO: 4 new Phase 3 wiki pages — OG tags + JSON-LD + canonical (20.03.2026)
@@ -594,7 +602,7 @@ On errors: fix immediately, commit with `seo:` prefix.
 ### Ali Copilot
 - [x] Automatic bootstrap date check (NOT YET ACTIVE → ACTIVE → ENDED)
 - [x] Wiki pages auto-fetch every 60 min
-- [x] Railway auto-deploy active
+- [x] ✅ Hetzner auto-deploy active (09.06.2026) — `copilot-api.ifrunit.tech`, 24 wiki docs, healthy
 
 ### DAO Governance
 - [x] Two-chamber visual on landing page
