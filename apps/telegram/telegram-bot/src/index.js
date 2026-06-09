@@ -279,9 +279,9 @@ verifyApp.listen(VERIFY_PORT, () => logger.info({ port: VERIFY_PORT }, 'Verify A
 
 // ── Launch ──────────────────────────────────────────────────────────────────
 
-// Delayed launch to prevent 409 conflict on Railway restart
+// Delayed launch to prevent 409 conflict on restart
 setTimeout(() => {
-  bot.launch({ dropPendingUpdates: true })
+  bot.launch()
     .then(() => {
       logger.info('🔥 IFR Telegram Bot started successfully');
       logger.info({ env: process.env.NODE_ENV }, 'Environment');
