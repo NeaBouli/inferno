@@ -5,6 +5,19 @@
 ---
 
 ## 2026-06-09 [CC]
+### TYPE: MEMO
+### STATUS: OPEN — Governance Mainnet Deployment ausstehend
+
+**Governance Contract nicht auf Mainnet**
+- `GOVERNANCE_ADDRESS=0x6050b22E4EAF3f414d1155fBaF30B868E0107017` ist die **Sepolia**-Adresse
+- Auf Mainnet: `eth_getCode` → `0x` (kein Bytecode)
+- Bot-Notifier aktivieren sich automatisch nach Deployment (getCode-Check vorhanden)
+- TODO: `npx hardhat run scripts/deploy-mainnet.js --network mainnet` → Governance-Adresse in `.env.production` auf Hetzner und in allen Scripts aktualisieren
+- Relevante Scripts: `propose-ownership-transfer.js`, `execute-ownership-transfer.js`, `transfer-ownership-mainnet.js`, `deploy-feerouter.js`
+
+---
+
+## 2026-06-09 [CC]
 ### TYPE: BUG → FIX
 ### STATUS: DONE
 
