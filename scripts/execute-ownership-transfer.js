@@ -1,7 +1,7 @@
 const { ethers } = require("hardhat");
 
 const ADDRESSES = {
-  gov: "0x6050b22E4EAF3f414d1155fBaF30B868E0107017",
+  gov: "0xc43d48E7FDA576C5022d0670B652A622E8caD041",
 };
 
 // Proposal IDs — set these after running propose-ownership-transfer.js

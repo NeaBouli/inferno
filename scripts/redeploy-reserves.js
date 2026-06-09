@@ -2,7 +2,7 @@ const { ethers } = require("hardhat");
 
 // Existing addresses (DO NOT redeploy these)
 const TOKEN_ADDRESS = "0x3Bd71947F288d1dd8B21129B1bE4FF16EDd5d1F4";
-const GOVERNANCE_ADDRESS = "0x6050b22E4EAF3f414d1155fBaF30B868E0107017";
+const GOVERNANCE_ADDRESS = "0xc43d48E7FDA576C5022d0670B652A622E8caD041";
 const ROUTER_ADDRESS = "0xC532a74256D3Db42D0Bf7a0400fEFDbad7694008";
 
 async function main() {
