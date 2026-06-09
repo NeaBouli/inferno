@@ -5,15 +5,16 @@
 ---
 
 ## 2026-06-09 [CC]
-### TYPE: MEMO
-### STATUS: OPEN — Governance Mainnet Deployment ausstehend
+### TYPE: FIX
+### STATUS: DONE
 
-**Governance Contract nicht auf Mainnet**
-- `GOVERNANCE_ADDRESS=0x6050b22E4EAF3f414d1155fBaF30B868E0107017` ist die **Sepolia**-Adresse
-- Auf Mainnet: `eth_getCode` → `0x` (kein Bytecode)
-- Bot-Notifier aktivieren sich automatisch nach Deployment (getCode-Check vorhanden)
-- TODO: `npx hardhat run scripts/deploy-mainnet.js --network mainnet` → Governance-Adresse in `.env.production` auf Hetzner und in allen Scripts aktualisieren
-- Relevante Scripts: `propose-ownership-transfer.js`, `execute-ownership-transfer.js`, `transfer-ownership-mainnet.js`, `deploy-feerouter.js`
+**Governance Contract Adresse korrigiert**
+- Falsche Adresse in `.env.production` und allen Scripts: `0x6050b22...` (Sepolia)
+- Korrekte Mainnet-Adresse: `0xc43d48E7FDA576C5022d0670B652A622E8caD041`
+- `eth_getCode` bestätigt: 16140 Zeichen Bytecode ✅, `proposalCount` = 17 ✅
+- Bot-Governance-Notifier und VoteAnnouncements aktiv (beide schedulers gestartet)
+- Scripts aktualisiert: deploy-lock, propose-ownership-transfer, execute-ownership-transfer, deploy-feerouter, transfer-ownership, redeploy-reserves, onchain-audit, deploy-bootstrap-vault (all v), execute-proposal, deploy-partner-vault, deploy-buyback-controller
+- sepolia-smoke-test.js bewusst NICHT geändert (Sepolia-Adresse korrekt dort)
 
 ---
 

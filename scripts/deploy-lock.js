@@ -12,7 +12,7 @@ const { ethers } = require("hardhat");
 
 const ADDRESSES = {
   token:      "0x3Bd71947F288d1dd8B21129B1bE4FF16EDd5d1F4",
-  governance: "0x6050b22E4EAF3f414d1155fBaF30B868E0107017",
+  governance: "0xc43d48E7FDA576C5022d0670B652A622E8caD041",
 };
 
 async function main() {

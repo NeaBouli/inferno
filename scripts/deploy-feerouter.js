@@ -11,7 +11,7 @@ async function main() {
   console.log("ETH Balance:", ethers.utils.formatEther(balance));
 
   // --- Config ---
-  const GOVERNANCE = "0x6050b22E4EAF3f414d1155fBaF30B868E0107017";
+  const GOVERNANCE = "0xc43d48E7FDA576C5022d0670B652A622E8caD041";
   const FEE_COLLECTOR = deployer.address; // temporary — change to multisig on mainnet
   const VOUCHER_SIGNER = process.env.VOUCHER_SIGNER_ADDRESS || deployer.address;
 
