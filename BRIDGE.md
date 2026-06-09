@@ -5,6 +5,20 @@
 ---
 
 ## 2026-06-09 [CC]
+### TYPE: BUG → FIX
+### STATUS: DONE
+
+**Telegraf v4 bot.launch() Scheduler-Bug — Silent Failure**
+- Root cause: Telegraf v4 `startPolling()` returns an infinite-loop Promise
+- `bot.launch()` NEVER resolves while polling → `.then()` only fires on shutdown
+- All schedulers (dailyReport, governance, votes, bootstrap) silently never started
+- Fix: `bot.launch()` fire-and-forget (`.catch()` only), +3s delay for 409 detection, then init all services
+- Commit: `8c84efde` — deployed to Hetzner, all schedulers confirmed running
+- Logs confirmed: dailyReport ✅, dailyWelcome ✅, governance notifier ✅, vote announcements ✅
+
+---
+
+## 2026-06-09 [CC]
 ### TYPE: FIX
 ### STATUS: DONE
 
