@@ -4,6 +4,29 @@
 
 ---
 
+## 2026-06-09 [CC]
+### TYPE: FIX
+### STATUS: DONE
+
+**Telegram Posts gesendet — IFR Live-Ankündigungen**
+- Post 1 (Channel Announcements) "🔥 IFR IS NOW LIVE ON UNISWAP" → msg_id: 42
+- Post 2 (Channel Announcements) "⚡ PHASE 2 COMPLETE — ALL GOVERNANCE EXECUTED" → msg_id: 43
+- Post 3 (Community #General) "🎉 Gm Community!" → msg_id: 154
+
+**Telegram-Bot Railway → Hetzner**
+- Railway Service `inferno` → `○ Offline` (via `railway down --yes`)
+- BOT_TOKEN: aus Railway Variables gesichert (`8685690992:AAGVgjKJSjZtQ3vYX1h6kbajvpZ-FBbGRlM`) → in Memory
+- Code + Dockerfile auf Hetzner: `/opt/inferno/telegram-bot/`
+- Docker Compose: `/opt/inferno/docker-compose.yml`
+- Fix: `dropPendingUpdates: true` entfernt (verursachte Launch-Hang auf Hetzner)
+- Container: `inferno-telegram-bot` — läuft auf Hetzner
+
+**Governance-Fehler (WARN, kein kritischer Bug)**
+- `proposalCount()` revert auf GOVERNANCE_ADDRESS `0x6050...` — contract evtl. nicht deployed oder ABI-Mismatch
+- Telegram-Bot läuft trotzdem, nur Governance-Notifier deaktiviert
+
+---
+
 ## 2026-06-06 [AUTOR: CC]
 ### TYPE: FIX
 
