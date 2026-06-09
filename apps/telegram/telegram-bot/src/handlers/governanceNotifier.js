@@ -22,49 +22,59 @@ function startGovernanceNotifier(bot) {
   }
 
   const provider = new ethers.providers.JsonRpcProvider(rpcUrl);
-  const governance = new ethers.Contract(govAddress, GOV_ABI, provider);
 
-  async function poll() {
-    try {
-      const count = (await governance.proposalCount()).toNumber();
-
-      // First run — just record current count
-      if (lastSeenProposalId === -1) {
-        lastSeenProposalId = count - 1;
-        logger.info({ proposalCount: count }, 'Governance notifier initialized');
-        return;
-      }
-
-      // Check for new proposals
-      for (let i = lastSeenProposalId + 1; i < count; i++) {
-        const prop = await governance.proposals(i);
-        const eta = new Date(prop.eta.toNumber() * 1000).toISOString().replace('T', ' ').slice(0, 16);
-
-        const text =
-          `📜 *New Governance Proposal #${i}*\n\n` +
-          `🎯 Target: \`${prop.target}\`\n` +
-          `⏱ ETA: ${eta} UTC\n\n` +
-          `🔗 [Governance Dashboard](https://ifrunit.tech/wiki/governance.html)`;
-
-        const opts = { parse_mode: 'Markdown', disable_web_page_preview: true };
-        if (topicId && Number(topicId) > 1) opts.message_thread_id = Number(topicId);
-
-        await bot.telegram.sendMessage(chatId, text, opts);
-        logger.info({ proposalId: i, target: prop.target }, 'New proposal notification sent');
-      }
-
-      if (count - 1 > lastSeenProposalId) {
-        lastSeenProposalId = count - 1;
-      }
-    } catch (err) {
-      logger.error({ err: err.message }, 'Governance poll error');
+  // Check if contract is deployed before starting; avoid 30-min error spam
+  provider.getCode(govAddress).then((code) => {
+    if (code === '0x') {
+      logger.warn({ govAddress }, 'Governance contract not yet deployed on mainnet — notifier will activate after deployment');
+      return;
     }
-  }
 
-  // Initial poll, then repeat
-  poll();
-  setInterval(poll, POLL_INTERVAL_MS);
-  logger.info({ intervalMin: POLL_INTERVAL_MS / 60000 }, 'Governance notifier started');
+    const governance = new ethers.Contract(govAddress, GOV_ABI, provider);
+
+    async function poll() {
+      try {
+        const count = (await governance.proposalCount()).toNumber();
+
+        // First run — just record current count
+        if (lastSeenProposalId === -1) {
+          lastSeenProposalId = count - 1;
+          logger.info({ proposalCount: count }, 'Governance notifier initialized');
+          return;
+        }
+
+        // Check for new proposals
+        for (let i = lastSeenProposalId + 1; i < count; i++) {
+          const prop = await governance.proposals(i);
+          const eta = new Date(prop.eta.toNumber() * 1000).toISOString().replace('T', ' ').slice(0, 16);
+
+          const text =
+            `📜 *New Governance Proposal #${i}*\n\n` +
+            `🎯 Target: \`${prop.target}\`\n` +
+            `⏱ ETA: ${eta} UTC\n\n` +
+            `🔗 [Governance Dashboard](https://ifrunit.tech/wiki/governance.html)`;
+
+          const opts = { parse_mode: 'Markdown', disable_web_page_preview: true };
+          if (topicId && Number(topicId) > 1) opts.message_thread_id = Number(topicId);
+
+          await bot.telegram.sendMessage(chatId, text, opts);
+          logger.info({ proposalId: i, target: prop.target }, 'New proposal notification sent');
+        }
+
+        if (count - 1 > lastSeenProposalId) {
+          lastSeenProposalId = count - 1;
+        }
+      } catch (err) {
+        logger.error({ err: err.message }, 'Governance poll error');
+      }
+    }
+
+    poll();
+    setInterval(poll, POLL_INTERVAL_MS);
+    logger.info({ intervalMin: POLL_INTERVAL_MS / 60000 }, 'Governance notifier started');
+  }).catch((err) => {
+    logger.warn({ err: err.message }, 'Governance notifier: getCode check failed — skipping');
+  });
 }
 
 module.exports = { startGovernanceNotifier };

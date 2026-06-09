@@ -192,38 +192,47 @@ function startVoteAnnouncements(bot) {
   const provider = new ethers.providers.JsonRpcProvider(rpcUrl);
   const POLL_MS = 30 * 60 * 1000; // 30 minutes
 
-  // Mark existing proposals as already announced on first run
-  let initialized = false;
-
-  async function poll() {
-    if (!initialized) {
-      try {
-        const governance = new ethers.Contract(govAddress, GOV_ABI, provider);
-        const count = (await governance.proposalCount()).toNumber();
-        // Mark all existing proposals so we don't spam on restart
-        for (let id = 0; id < count; id++) {
-          const p = await governance.getProposal(id);
-          markAnnounced(id, 'new');
-          if (p.executed) markAnnounced(id, 'executed');
-          if (p.cancelled) markAnnounced(id, 'cancelled');
-          if (!p.executed && !p.cancelled && Math.floor(Date.now() / 1000) >= p.eta.toNumber()) {
-            markAnnounced(id, 'executable');
-          }
-        }
-        initialized = true;
-        logger.info({ proposalCount: count }, 'Vote announcements initialized');
-      } catch (e) {
-        logger.error({ err: e.message }, 'VoteAnnounce: init failed');
-        return;
-      }
+  // Check if contract is deployed before starting; avoid 30-min error spam
+  provider.getCode(govAddress).then((code) => {
+    if (code === '0x') {
+      logger.warn({ govAddress }, 'Governance contract not yet deployed on mainnet — vote announcements will activate after deployment');
+      return;
     }
 
-    await checkAndAnnounceProposals(bot, provider, govAddress);
-  }
+    // Mark existing proposals as already announced on first run
+    let initialized = false;
 
-  poll();
-  setInterval(poll, POLL_MS);
-  logger.info({ intervalMin: POLL_MS / 60000 }, 'Vote announcement scheduler started');
+    async function poll() {
+      if (!initialized) {
+        try {
+          const governance = new ethers.Contract(govAddress, GOV_ABI, provider);
+          const count = (await governance.proposalCount()).toNumber();
+          for (let id = 0; id < count; id++) {
+            const p = await governance.getProposal(id);
+            markAnnounced(id, 'new');
+            if (p.executed) markAnnounced(id, 'executed');
+            if (p.cancelled) markAnnounced(id, 'cancelled');
+            if (!p.executed && !p.cancelled && Math.floor(Date.now() / 1000) >= p.eta.toNumber()) {
+              markAnnounced(id, 'executable');
+            }
+          }
+          initialized = true;
+          logger.info({ proposalCount: count }, 'Vote announcements initialized');
+        } catch (e) {
+          logger.error({ err: e.message }, 'VoteAnnounce: init failed');
+          return;
+        }
+      }
+
+      await checkAndAnnounceProposals(bot, provider, govAddress);
+    }
+
+    poll();
+    setInterval(poll, POLL_MS);
+    logger.info({ intervalMin: POLL_MS / 60000 }, 'Vote announcement scheduler started');
+  }).catch((err) => {
+    logger.warn({ err: err.message }, 'Vote announcements: getCode check failed — skipping');
+  });
 }
 
 // Exported for testing
