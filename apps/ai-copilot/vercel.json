@@ -4,6 +4,6 @@
   "outputDirectory": "dist",
   "framework": "vite",
   "rewrites": [
-    { "source": "/api/(.*)", "destination": "https://ifr-copilot-api.railway.app/api/$1" }
+    { "source": "/api/(.*)", "destination": "https://copilot-api.ifrunit.tech/api/$1" }
   ]
 }
