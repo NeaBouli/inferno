@@ -1,7 +1,7 @@
 /**
  * contributor1-lock.js
  * Lock contributor IFR in CommitmentVault.
- * 10 tranches × (balance / 10) IFR each — condition: TIME_OR_PRICE (30 days OR price >= P0*2).
+ * 10 tranches × (balance / 10) IFR each — condition: TIME_ONLY (unlock after 30 days).
  * Tranche size is calculated dynamically from the actual on-chain IFR balance.
  *
  * Usage:
@@ -33,14 +33,18 @@ const IFR_DECIMALS = 9;
 const NUM_TRANCHES = 10;
 
 // ConditionType enum (CommitmentVault.sol)
-//   0 = TIME_ONLY
+//   0 = TIME_ONLY      ← used here: guaranteed unlock after 30d
 //   1 = PRICE_ONLY
-//   2 = TIME_OR_PRICE  ← unlock after 30d OR when price >= P0*2
+//   2 = TIME_OR_PRICE
 //   3 = TIME_AND_PRICE
-const CTYPE_TIME_OR_PRICE = 2;
+//
+// Why TIME_ONLY: P0 = 0.3 ETH/IFR is ~600,000,000× above current market price.
+// Price unlock is unreachable on any foreseeable timeline.
+// TIME_ONLY guarantees unlock after 30 days regardless of price.
+const CTYPE_TIME_ONLY = 0;
 
 const UNLOCK_SECONDS = 30 * 24 * 3600; // 30 days
-const P0_MULTIPLIER  = 200;            // targetPrice = p0 * 200 / 100 = p0 * 2
+const P0_MULTIPLIER  = 0;              // not used for TIME_ONLY
 
 // ── ABIs ───────────────────────────────────────────────────────────────────────
 const ERC20_ABI = [
@@ -125,8 +129,8 @@ async function main() {
   console.log('Tranche size (1-9):', ethers.utils.formatUnits(trancheAmount, IFR_DECIMALS), 'IFR');
   console.log('Last tranche (10):', ethers.utils.formatUnits(lastTranche, IFR_DECIMALS), 'IFR');
   console.log('Total to lock:', ethers.utils.formatUnits(totalLock, IFR_DECIMALS), 'IFR');
-  console.log('Condition: TIME_OR_PRICE — 30 days OR price >= P0*2');
-  console.log('P0 multiplier:', P0_MULTIPLIER, '(=', P0_MULTIPLIER / 100, 'x P0)');
+  console.log('Condition: TIME_ONLY (0) — unlock after 30 days');
+  console.log('p0Multiplier: 0 (not used for TIME_ONLY)');
   console.log('');
 
   // ── Build calldata ───────────────────────────────────────────────────────────
@@ -143,7 +147,7 @@ async function main() {
     const amount = i === NUM_TRANCHES - 1 ? lastTranche : trancheAmount;
     lockCalldatas.push(cvIface.encodeFunctionData('lock', [
       amount,
-      CTYPE_TIME_OR_PRICE,
+      CTYPE_TIME_ONLY,
       unlockTime,
       P0_MULTIPLIER,
     ]));
@@ -162,7 +166,7 @@ async function main() {
     console.log('  to:', COMMITMENT_VAULT);
     console.log('  calldata:', lockCalldatas[i]);
     console.log('  decoded: lock(amount=' + ethers.utils.formatUnits(amount, IFR_DECIMALS) +
-      ' IFR, cType=TIME_OR_PRICE(2), unlockTime=' + unlockTime + ', p0Multiplier=' + P0_MULTIPLIER + ')');
+      ' IFR, cType=TIME_ONLY(0), unlockTime=' + unlockTime + ', p0Multiplier=0)');
     console.log('');
   }
 
@@ -198,7 +202,7 @@ async function main() {
   for (let i = 0; i < NUM_TRANCHES; i++) {
     const amount = i === NUM_TRANCHES - 1 ? lastTranche : trancheAmount;
     console.log('Locking tranche', i, '(' + ethers.utils.formatUnits(amount, IFR_DECIMALS) + ' IFR)...');
-    const lockTx = await cvSigned.lock(amount, CTYPE_TIME_OR_PRICE, unlockTime, P0_MULTIPLIER);
+    const lockTx = await cvSigned.lock(amount, CTYPE_TIME_ONLY, unlockTime, P0_MULTIPLIER);
     console.log('lock tx:', lockTx.hash);
     await lockTx.wait();
     console.log('tranche', i, 'confirmed');

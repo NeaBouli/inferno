@@ -5,6 +5,51 @@
 ---
 
 ## 2026-06-10 [CC]
+### TYPE: DECISION
+### STATUS: OPEN — Contributors ausstehend
+
+**Contributor Preis-Strategie**
+
+#### Pool-Zustand (on-chain verifiziert, 10.06.2026)
+- ETH im Pool: 0.038 ETH (~$95) — extrem dünn
+- IFR im Pool: 79M IFR
+- Aktueller Preis: ~$0.0000012 per IFR (0.0000000005 ETH/IFR)
+- P0 = 0.3 ETH/IFR → Abstand ~600,000,000× → Preis-Unlock unrealistisch
+
+#### Kauf-Impact (x*y=k)
+| ETH Kauf | Preisanstieg |
+|---|---|
+| 0.01 ETH | +60% |
+| 0.05 ETH | +437% |
+| 0.1 ETH | +1,220% |
+| 3 × 0.03 ETH | ~+300% kombiniert → Pool ~0.128 ETH |
+
+#### Empfohlene Reihenfolge
+1. **SOFORT**: Jeder Contributor kauft 0.03 ETH IFR auf Uniswap
+   → 3 × 0.03 = 0.09 ETH Volumen → Pool ~0.128 ETH → Preis ~+300%
+   → https://app.uniswap.org/swap?outputCurrency=0x77e99917Eca8539c62F509ED1193ac36580A6e7B
+
+2. **DANACH**: Lock 33.3M IFR TIME_ONLY 30 Tage
+   → `CONTRIBUTOR_ADDR=0x... MAINNET=true PRIVATE_KEY=0x... node scripts/contributor1-lock.js`
+   → cType: TIME_ONLY (0) — P0-Preis-Unlock auf absehbare Zeit irrealistisch
+   → ~100M IFR aus Umlauf entfernt
+
+3. **PARALLEL**: StealthX Integration ankündigen
+   → Spec: `docs/STEALTHX_IFR_INTEGRATION.md`
+
+#### Warum TIME_ONLY statt TIME_OR_PRICE
+P0 = 0.3 ETH/IFR liegt ~600 Mio.× über dem aktuellen Preis.
+Selbst mit 1 ETH Kauf wäre der Preis immer noch ~10.000× unter P0.
+TIME_ONLY (cType=0) garantiert Unlock nach 30 Tagen ohne Preis-Abhängigkeit.
+
+#### Status
+- [ ] Contributors informiert
+- [ ] Käufe auf Uniswap ausgeführt (je 0.03 ETH)
+- [ ] Locks ausgeführt (alle 3 Contributors)
+
+---
+
+## 2026-06-10 [CC]
 ### TYPE: FIX
 ### STATUS: DONE
 
