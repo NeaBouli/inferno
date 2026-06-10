@@ -642,20 +642,20 @@
   <meta property="og:locale" content="en_US">
   <meta property="og:type" content="article">
   <meta property="og:site_name" content="Inferno Protocol">
-  <meta property="og:title" content="IFR Bootstrap Event — Community Liquidity Launch">
-  <meta property="og:description" content="Contribute ETH to the IFR Bootstrap. No fixed price — community decides. 200M IFR pre-funded. Permissionless, trustless, on-chain.">
+  <meta property="og:title" content="IFR Bootstrap — ENDED 05.06.2026 | LP Live on Uniswap">
+  <meta property="og:description" content="IFR Bootstrap ENDED 05.06.2026. finalise() executed. 0.030 ETH raised. LP Token live on Uniswap V2. IFR now tradeable.">
   <meta property="og:url" content="https://ifrunit.tech/wiki/bootstrap.html">
   <meta property="og:image" content="https://ifrunit.tech/assets/ifr_icon_256.png">
   <meta name="twitter:card" content="summary">
-  <meta name="twitter:title" content="IFR Bootstrap Event — Community Liquidity Launch">
-  <meta name="twitter:description" content="Contribute ETH to the IFR Bootstrap. No fixed price — community decides. 200M IFR pre-funded.">
+  <meta name="twitter:title" content="IFR Bootstrap — ENDED 05.06.2026 | LP Live on Uniswap">
+  <meta name="twitter:description" content="IFR Bootstrap ENDED 05.06.2026. finalise() executed. 0.030 ETH raised. LP Token live on Uniswap V2.">`
   <meta name="twitter:site" content="@IFRtoken">
   <meta name="twitter:image" content="https://ifrunit.tech/assets/ifr_icon_256.png">  <script type="application/ld+json">
   {
     "@context": "https://schema.org",
     "@type": "TechArticle",
     "headline": "Community Bootstrap Event",
-    "description": "90-day community liquidity event powered by BootstrapVaultV3. Contribute 0.01–2 ETH per wallet, receive pro-rata IFR share. Vault funded with ~200M IFR from Treasury and Community Safe.",
+    "description": "IFR Bootstrap ENDED 05.06.2026. finalise() executed (Block 25254575). 0.030 ETH raised. LP Token 0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0 live on Uniswap V2. Contributors can claim pro-rata IFR via claim().",
     "url": "https://ifrunit.tech/wiki/bootstrap.html",
     "isPartOf": {"@id": "https://ifrunit.tech/#website"},
     "publisher": {"@id": "https://ifrunit.tech/#organization"},
@@ -667,7 +667,7 @@
     "@context": "https://schema.org",
     "@type": "FinancialProduct",
     "name": "IFR Inferno Protocol Bootstrap Event",
-    "description": "Community liquidity bootstrapping event for IFR token. Contributors provide ETH, receive IFR pro-rata. No presale, no team ETH, no fixed price.",
+    "description": "IFR Bootstrap ENDED 05.06.2026. 0.030 ETH raised, LP created on Uniswap V2. Token: 0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0. No presale, no team ETH, fully permissionless.",
     "url": "https://ifrunit.tech/wiki/bootstrap.html",
     "provider": {
       "@type": "Organization",
@@ -678,7 +678,7 @@
     "additionalType": "https://schema.org/InvestmentOrDeposit"
   }
   </script>
-  <meta name="ai-summary" content="IFR Bootstrap: 200M IFR pre-funded in BootstrapVaultV3. Contributors send 0.01-2 ETH. After 90 days finalise() creates Uniswap V2 LP. LP locked 12 months via Team.Finance. Permissionless, no admin keys.">
+  <meta name="ai-summary" content="IFR Bootstrap ENDED 05.06.2026 23:51 UTC. finalise() executed (TX 0x949848bdd09f4c867a2593afffb0137c7db2c1457d8a8f5ff4428f8ecce69c5f, Block 25254575). 0.030 ETH raised. LP Token 0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0 live on Uniswap V2. LP locked 12 months via Team.Finance. Contributors claim pro-rata IFR via claim(). No admin keys, fully permissionless.">
 <script type="application/ld+json">
   {
   "@context": "https://schema.org",
@@ -947,7 +947,7 @@
 
       <div class="callout" style="margin:20px 0;padding:16px;background:rgba(249,115,22,0.08);border:1px solid rgba(249,115,22,0.3);border-radius:10px;">
         <p style="margin:0 0 8px 0;font-weight:700;color:#f97316;">&#x23F3; GOVERNANCE — POST-FINALISE()</p>
-        <p style="margin:0;font-size:0.88rem;"><strong>Bootstrap FINALIZED 05.06.2026 23:51 UTC.</strong> Two governance proposals pending: <strong>Proposal #15</strong> — setFeeExempt(LP Token, true) — QUEUED, ETA 08.06.2026 09:57 Athen. Without this, every swap pays 3.5% fee. <strong>Proposal #16</strong> — setP0(CommitmentVault) — QUEUED, ETA 09.06.2026 02:56 Athen (IMMUTABLE once set). P0 = 0.030 ETH / 200,000,000 IFR.</p>
+        <p style="margin:0;font-size:0.88rem;"><strong>Bootstrap FINALIZED 05.06.2026 23:51 UTC.</strong> Both post-finalise governance proposals executed: <strong>Proposal #15</strong> — setFeeExempt(LP Token, true) — <span style="color:#22c55e;">EXECUTED 08.06.2026</span> &#x2705; (<a href="https://etherscan.io/tx/0xd5a3bc95" target="_blank" rel="noopener" style="color:#f97316;font-size:0.85em;">TX</a>). LP swaps now fee-exempt. <strong>Proposal #16</strong> — setP0(CommitmentVault) — <span style="color:#22c55e;">EXECUTED 09.06.2026</span> &#x2705;. P0 = 0.3 Gwei (IMMUTABLE on-chain).</p>
       </div>
 
       <h3>Step 3 &mdash; Claim IFR</h3>
@@ -1021,6 +1021,7 @@
           <tr><td><strong>Contract</strong></td><td>BootstrapVaultV3 <span style="color: #22c55e; font-weight: 600;">[FINALIZED &#x2705;]</span></td></tr>
           <tr><td><strong>Sepolia</strong></td><td><a href="https://sepolia.etherscan.io/address/0x16086d4f7F191047d8A4fFf2090126E12e865A7E#code" target="_blank" rel="noopener"><code>0x16086d4f7F191047d8A4fFf2090126E12e865A7E</code></a></td></tr>
           <tr><td><strong>Mainnet</strong></td><td><a href="https://etherscan.io/address/0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141#code" target="_blank" rel="noopener"><code>0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141</code></a></td></tr>
+          <tr><td><strong>LP Token (Uniswap V2)</strong></td><td><a href="https://etherscan.io/address/0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0" target="_blank" rel="noopener"><code>0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0</code></a> <span style="color:#22c55e;font-size:0.85em;">&#x2705; Live</span></td></tr>
           <tr><td><strong>Source</strong></td><td><a href="https://github.com/NeaBouli/inferno/blob/main/contracts/bootstrap/BootstrapVaultV3.sol" target="_blank" rel="noopener">GitHub (open source)</a></td></tr>
           <tr><td><strong>Verified</strong></td><td>Yes (Etherscan, both networks)</td></tr>
           <tr><td><strong>Security</strong></td><td><span style="display:inline-flex;align-items:center;gap:6px;background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.3);border-radius:20px;padding:4px 12px;font-size:0.8rem;color:#22c55e;">Security Reviewed &mdash; 0 Critical Issues</span> <a href="https://ifrunit.tech/wiki/security.html" style="font-size:0.8rem;color:#f97316;margin-left:8px;">Details &rarr;</a></td></tr>
@@ -1185,8 +1186,8 @@
           <div class="phase-date">11.03.2026 &mdash; 200M IFR in vault</div>
         </div>
         <div class="phase-item done" id="phase-lp">
-          <div class="phase-label">&#x2705; Bootstrap LIVE &mdash; ETH Contributions Open</div>
-          <div class="phase-date">07.03.2026 &mdash; contract deployed &amp; accepting contributions</div>
+          <div class="phase-label">&#x2705; Bootstrap ENDED &mdash; ETH Contributions Closed</div>
+          <div class="phase-date">07.03.2026 &mdash; 05.06.2026 &mdash; contract deployed, finalised 23:51 UTC</div>
         </div>
         <div class="phase-item done" id="phase-active">
           <div class="phase-label">&#x2705; Bootstrap ENDED &mdash; finalise() executed</div>
@@ -1365,7 +1366,7 @@
           <div style="font-size:13px; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:8px;">Recent Votes</div>
           <div id="cs-votes-list" style="background:var(--card); border:1px solid var(--border); border-radius:10px; overflow:hidden;">
             <div style="padding:16px; text-align:center; color:#555; font-style:italic; font-size:13px;">
-              No votes recorded yet &mdash; connect wallet and contribute ETH to vote.
+              Bootstrap ENDED 05.06.2026. Voting period closed. finalise() executed on-chain.
             </div>
           </div>
         </div>
@@ -1395,7 +1396,7 @@
       </div>
 
       <h3>When is the Bootstrap Event?</h3>
-      <p>The Bootstrap Event launches after funding is confirmed on-chain. Follow <a href="https://x.com/IFRtoken" target="_blank" rel="noopener">@IFRtoken on X</a> for the exact date announcement.</p>
+      <p>The Bootstrap Event ran from <strong>07.03.2026 to 05.06.2026</strong> and is now finalized. finalise() was executed on 05.06.2026 23:51 UTC (Block 25254575, TX <a href="https://etherscan.io/tx/0x949848bdd09f4c867a2593afffb0137c7db2c1457d8a8f5ff4428f8ecce69c5f" target="_blank" rel="noopener" style="color:#f97316;">0x949848bd&hellip;</a>). IFR is now tradeable on <a href="https://app.uniswap.org/swap?outputCurrency=0x77e99917Eca8539c62F509ED1193ac36580A6e7B" target="_blank" rel="noopener" style="color:#f97316;">Uniswap V2 &#x2197;</a>.</p>
 
       <h3>How much IFR will I receive?</h3>
       <p>Your IFR share is calculated as: <code>(your_ETH / total_ETH) &times; IFR_in_vault</code>. The total IFR in the vault is ~200M. For example, if total ETH raised is 10 ETH and you contributed 1 ETH, you receive ~19,475,000 IFR (10% of the claim allocation).</p>
@@ -1954,20 +1955,7 @@ if (document.readyState === 'loading') {
       return;
     }
 
-    if (diffEnd > 0) {
-      // Bootstrap active
-      if (label) label.textContent = 'Bootstrap Closes In';
-      if (box) box.style.borderColor = '#22c55e';
-      el.style.color = '#22c55e';
-      var d = Math.floor(diffEnd / 864e5);
-      var h = Math.floor(diffEnd % 864e5 / 36e5);
-      var m = Math.floor(diffEnd % 36e5 / 6e4);
-      var s = Math.floor(diffEnd % 6e4 / 1e3);
-      el.textContent = d + 'd ' + h + 'h ' + m + 'm ' + s + 's';
-      return;
-    }
-
-    // Bootstrap ended
+    // Bootstrap ended (diffEnd always <= 0 since 05.06.2026)
     el.textContent = 'ENDED';
     el.style.color = '#64748b';
     if (label) label.textContent = 'Bootstrap';
@@ -2010,23 +1998,9 @@ function bwUpdateCountdown() {
   var val = document.getElementById("bw-countdown");
   if (!label || !val) return;
 
-  var target, text;
-  if (now < BW.START) {
-    target = BW.START; text = "Opens In";
-  } else if (now < BW.END) {
-    target = BW.END; text = "Closes In";
-  } else {
-    val.textContent = "Ended"; label.textContent = "Status";
-    val.style.color = "#9ca3af"; return;
-  }
-
-  var diff = target - now;
-  var d = Math.floor(diff / 86400000);
-  var h = Math.floor((diff % 86400000) / 3600000);
-  var m = Math.floor((diff % 3600000) / 60000);
-  var s = Math.floor((diff % 60000) / 1000);
-  label.textContent = text;
-  val.textContent = d + "d " + String("0"+h).slice(-2) + ":" + String("0"+m).slice(-2) + ":" + String("0"+s).slice(-2);
+  // Bootstrap always ended since 05.06.2026
+  val.textContent = "Ended"; label.textContent = "Status";
+  val.style.color = "#9ca3af"; return;
 }
 setInterval(bwUpdateCountdown, 1000);
 bwUpdateCountdown();
@@ -2120,7 +2094,7 @@ function bwUpdateUI(state) {
         document.getElementById("bw-refund-btn").style.display = "";
       } else {
         document.getElementById("bw-claim-title").textContent = "\u231B Awaiting Finalization";
-        document.getElementById("bw-claim-desc").textContent = "Anyone can trigger finalise() permissionlessly. Refund available 30 days after end if not finalized.";
+        document.getElementById("bw-claim-desc").textContent = "Bootstrap finalized 05.06.2026. Claim your pro-rata IFR or check Uniswap for trading.";
       }
     }
   }
