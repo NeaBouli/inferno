@@ -161,12 +161,12 @@ ssh hetzner "cd /opt/inferno && docker compose build points-backend && docker co
 ## Status
 
 - [x] Code analysiert — SQLite, kein separater DB-Server nötig
-- [x] Dockerfile-Fix geplant (multi-stage)
-- [ ] VOUCHER_SIGNER_PRIVATE_KEY beschaffen/generieren
-- [ ] Dockerfile in `apps/points-backend/Dockerfile` ersetzen
-- [ ] Source auf Hetzner synchronisieren
-- [ ] .env.points-backend erstellen
-- [ ] docker-compose.yml erweitern
-- [ ] DNS: `points-api.ifrunit.tech` → `135.181.254.229`
-- [ ] Container deployed + healthy
-- [ ] ai-copilot POINTS_BACKEND_URL → intern aktualisieren
+- [x] Dockerfile-Fix: multi-stage build + PRISMA_QUERY_ENGINE_LIBRARY
+- [x] VOUCHER_SIGNER_PRIVATE_KEY: neues EOA generiert
+- [x] Dockerfile in `apps/points-backend/Dockerfile` ersetzt
+- [x] Source auf Hetzner synchronisiert
+- [x] .env.points-backend erstellt
+- [x] docker-compose.yml erweitert
+- [x] Container deployed + healthy ✅ (2026-06-10)
+- [ ] DNS: `points-api.ifrunit.tech` → `135.181.254.229` (Papaki — manuell)
+- [ ] ai-copilot POINTS_BACKEND_URL → `http://inferno-points-backend:3004` (nach DNS)
