@@ -175,10 +175,18 @@
         <span style="color:#22c55e;font-size:0.82rem;"><code>claimed(address)</code> in ABI + ifr-state.js. 4-Pfad-Logik: claim / claimed-msg / refund / awaiting</span></li>
       <li><div class="cb"></div>&#x1F534; <strong>BW.IFR_ALLOCATION Fix in bootstrap.html</strong><br>
         <span style="color:#6b7280;font-size:0.82rem;">Aktuell: 200,000,000 &rarr; Korrekt: 100,000,000 (on-chain: ifrAllocation() = 100M)<br>Betrifft: IFR-Sch&auml;tzung im Contribute-Widget</span></li>
-      <li><div class="cb"></div>&#x1F534; <strong>Contributors: CommitmentVault Lock</strong><br>
-        <span style="color:#6b7280;font-size:0.82rem;">Jeder hat 33,333,333 IFR &mdash; Lock-Plan je Wallet abstimmen.<br>Script: <code>scripts/contributor1-lock.js</code> (DRY_RUN &mdash; anpassen auf 33.3M)</span></li>
-      <li><div class="cb"></div>&#x1F534; <strong>Contributors: LendingVault Allowance</strong><br>
-        <span style="color:#6b7280;font-size:0.82rem;"><code>createOffer(amount IFR)</code> &mdash; nicht setLendingAllowance() (existiert nicht)<br>Script: <code>scripts/contributor1-lending-allowance.js</code></span></li>
+      <li><div class="cb"></div>&#x1F534; <strong>CommitmentVault Lock ausf&uuml;hren</strong><br>
+        <span style="color:#6b7280;font-size:0.82rem;">Script: <code>scripts/contributor1-lock.js</code> &mdash; dynamisch: balance/10 pro Tranche<br>
+        DRY_RUN &#x2705; &mdash; 10 &times; 3,333,333 IFR, TIME_OR_PRICE, 30d, P0&times;2<br>
+        LIVE: <code>CONTRIBUTOR_ADDR=0x... MAINNET=true PRIVATE_KEY=0x... node scripts/contributor1-lock.js</code></span></li>
+      <li><div class="cb"></div>&#x1F534; <strong>LendingVault createOffer() ausf&uuml;hren</strong><br>
+        <span style="color:#6b7280;font-size:0.82rem;">Script: <code>scripts/contributor1-lending-allowance.js</code> &mdash; 50% Balance = ~16.6M IFR<br>
+        DRY_RUN &#x2705; &mdash; approve + createOffer korrekt<br>
+        LIVE: <code>CONTRIBUTOR_ADDR=0x... MAINNET=true PRIVATE_KEY=0x... node scripts/contributor1-lending-allowance.js</code></span></li>
+      <li><div class="cb"></div>&#x1F7E1; <strong>StealthX &times; IFR Integration</strong><br>
+        <span style="color:#6b7280;font-size:0.82rem;">Spec: <code>docs/STEALTHX_IFR_INTEGRATION.md</code><br>
+        IFRLock gate: <code>lockedBalance(wallet) &ge; 1000 IFR</code> &rarr; Premium unlock<br>
+        N&auml;chster Schritt: StealthX Team briefen</span></li>
       <li><div class="cb"></div>&#x1F7E1; Mehr Contributors f&uuml;r Bootstrap<br>
         <span style="color:#6b7280;font-size:0.82rem;">Ziel: mehr ETH = h&ouml;heres P0. Kan&auml;le: Reddit/Farcaster/Telegram</span></li>
       <li><div class="cb"></div>&#x1F7E1; <strong>inferno-redesign.html Review</strong><br>

@@ -1,19 +1,21 @@
 /**
  * contributor1-lending-allowance.js
- * Set up Contributor 1 as a lender in LendingVault with 50M IFR.
+ * Set up contributor as a lender in LendingVault with 50% of IFR balance.
+ * Lending amount is calculated dynamically from the actual on-chain IFR balance.
  *
  * LendingVault has no setLendingAllowance() — lenders participate by:
- *   1. approve(LendingVault, 50M IFR)  — ERC-20 approval
- *   2. createOffer(50M IFR)            — deposit IFR, create lending offer
- *
- * Anyone can call createOffer(). No owner restriction.
+ *   1. approve(LendingVault, amount)  — ERC-20 approval
+ *   2. createOffer(amount)            — deposit IFR, create lending offer
+ *      OR increaseOffer(amount)       — if offer already exists
  *
  * Usage:
  *   DRY_RUN=true node scripts/contributor1-lending-allowance.js
- *   MAINNET=true PRIVATE_KEY=0x... node scripts/contributor1-lending-allowance.js
+ *   CONTRIBUTOR_ADDR=0x... DRY_RUN=true node scripts/contributor1-lending-allowance.js
+ *   CONTRIBUTOR_ADDR=0x... MAINNET=true PRIVATE_KEY=0x... node scripts/contributor1-lending-allowance.js
  *
  * Env vars:
- *   CONTRIBUTOR1_ADDRESS   override default on-chain address
+ *   CONTRIBUTOR_ADDR       contributor address (default: C1)
+ *   CONTRIBUTOR1_ADDRESS   alias for CONTRIBUTOR_ADDR
  *   PRIVATE_KEY            signer private key (required for MAINNET=true)
  *   MAINNET_RPC_URL        Ethereum RPC endpoint
  *   DRY_RUN                show calldata only, do not send tx
@@ -26,15 +28,13 @@ require('dotenv').config();
 const { ethers } = require('ethers');
 
 // ── Addresses ──────────────────────────────────────────────────────────────────
-const IFR_TOKEN      = '0x77e99917Eca8539c62F509ED1193ac36580A6e7B';
-const LENDING_VAULT  = '0x974305Ab0EC905172e697271C3d7d385194EB9DF';
-// Contributor 1 — BootstrapVault contributors[0], block 24663703
-const DEFAULT_CONTRIBUTOR1 = '0x4f632748460E5277bF8435259cADce440AbAC254';
+const IFR_TOKEN     = '0x77e99917Eca8539c62F509ED1193ac36580A6e7B';
+const LENDING_VAULT = '0x974305Ab0EC905172e697271C3d7d385194EB9DF';
+const DEFAULT_CONTRIBUTOR = '0x4f632748460E5277bF8435259cADce440AbAC254'; // C1
 
 // ── Parameters ─────────────────────────────────────────────────────────────────
 const IFR_DECIMALS    = 9;
-const ONE_IFR         = ethers.BigNumber.from(10).pow(IFR_DECIMALS);
-const LENDING_AMOUNT  = ONE_IFR.mul(50_000_000); // 50M IFR
+const LENDING_SHARE   = 2; // offer 1/2 (50%) of IFR balance
 
 // ── ABIs ───────────────────────────────────────────────────────────────────────
 const ERC20_ABI = [
@@ -57,23 +57,25 @@ const LV_ABI = [
 
 // ── Main ───────────────────────────────────────────────────────────────────────
 async function main() {
-  const DRY_RUN = process.env.DRY_RUN === 'true';
+  const DRY_RUN    = process.env.DRY_RUN === 'true';
   const IS_MAINNET = process.env.MAINNET === 'true';
-  const contributor1 = (process.env.CONTRIBUTOR1_ADDRESS || DEFAULT_CONTRIBUTOR1).toLowerCase();
+  const contributor = (
+    process.env.CONTRIBUTOR_ADDR ||
+    process.env.CONTRIBUTOR1_ADDRESS ||
+    DEFAULT_CONTRIBUTOR
+  ).toLowerCase();
 
-  const rpcUrl = process.env.MAINNET_RPC_URL || 'https://ethereum-rpc.publicnode.com';
+  const rpcUrl   = process.env.MAINNET_RPC_URL || 'https://ethereum-rpc.publicnode.com';
   const provider = new ethers.providers.JsonRpcProvider(rpcUrl);
 
   console.log('=== contributor1-lending-allowance.js ===');
   console.log('Mode:', DRY_RUN ? 'DRY_RUN' : IS_MAINNET ? 'MAINNET (LIVE)' : 'DRY_RUN (default)');
-  console.log('Contributor 1:', contributor1);
+  console.log('Contributor:', contributor);
   console.log('LendingVault:', LENDING_VAULT);
   console.log('IFR Token:', IFR_TOKEN);
-  console.log('Lending amount: 50M IFR');
   console.log('');
   console.log('NOTE: LendingVault has no setLendingAllowance().');
-  console.log('      Lending is done via createOffer(amount) — permissionless, callable by anyone.');
-  console.log('      Steps: (1) approve(LendingVault, 50M IFR) + (2) createOffer(50M IFR)');
+  console.log('      Steps: (1) approve(LendingVault, 50% IFR balance) + (2) createOffer(amount)');
   console.log('');
 
   // ── On-chain reads ───────────────────────────────────────────────────────────
@@ -82,9 +84,9 @@ async function main() {
 
   const [lvOwner, ifrBal, lvAllowance, hasOffer, totalAvailable, totalLent, interestRate] = await Promise.all([
     lv.owner(),
-    ifr.balanceOf(contributor1),
-    ifr.allowance(contributor1, LENDING_VAULT),
-    lv.hasOffer(contributor1),
+    ifr.balanceOf(contributor),
+    ifr.allowance(contributor, LENDING_VAULT),
+    lv.hasOffer(contributor),
     lv.totalAvailable(),
     lv.totalLent(),
     lv.getInterestRate(),
@@ -94,16 +96,16 @@ async function main() {
   console.log('owner:', lvOwner);
   console.log('totalAvailable:', ethers.utils.formatUnits(totalAvailable, IFR_DECIMALS), 'IFR');
   console.log('totalLent:', ethers.utils.formatUnits(totalLent, IFR_DECIMALS), 'IFR');
-  console.log('interestRate:', interestRate.toString(), 'bps/month (', interestRate.toNumber() / 100, '% /month)');
+  console.log('interestRate:', interestRate.toString(), 'bps/month (' + (interestRate.toNumber() / 100) + '% /month)');
   console.log('');
-  console.log('--- Contributor 1 state ---');
+  console.log('--- Contributor state ---');
   console.log('IFR balance:', ethers.utils.formatUnits(ifrBal, IFR_DECIMALS), 'IFR');
   console.log('LV allowance:', ethers.utils.formatUnits(lvAllowance, IFR_DECIMALS), 'IFR');
   console.log('Has existing offer:', hasOffer);
 
   if (hasOffer) {
-    const offerIdx = await lv.lenderOfferIndex(contributor1);
-    const offer = await lv.offers(offerIdx);
+    const offerIdx = await lv.lenderOfferIndex(contributor);
+    const offer    = await lv.offers(offerIdx);
     console.log('  Offer ID:', offerIdx.toString());
     console.log('  Available:', ethers.utils.formatUnits(offer.availableIFR, IFR_DECIMALS), 'IFR');
     console.log('  Lent:', ethers.utils.formatUnits(offer.lentIFR, IFR_DECIMALS), 'IFR');
@@ -111,40 +113,40 @@ async function main() {
   }
   console.log('');
 
+  if (ifrBal.isZero()) {
+    console.error('ERROR: IFR balance is 0. Ensure claim() has been called on BootstrapVault first.');
+    process.exit(1);
+  }
+
+  // ── Dynamic lending amount: 50% of IFR balance ───────────────────────────────
+  const lendingAmount = ifrBal.div(LENDING_SHARE);
+
+  console.log('--- Lending plan ---');
+  console.log('Offer amount (50% of balance):', ethers.utils.formatUnits(lendingAmount, IFR_DECIMALS), 'IFR');
+  console.log('');
+
   // ── Build calldata ───────────────────────────────────────────────────────────
-  const lvIface   = new ethers.utils.Interface(LV_ABI);
+  const lvIface    = new ethers.utils.Interface(LV_ABI);
   const erc20Iface = new ethers.utils.Interface(ERC20_ABI);
 
-  const approveCalldata = erc20Iface.encodeFunctionData('approve', [
-    LENDING_VAULT,
-    LENDING_AMOUNT,
-  ]);
-
-  const offerCalldata = hasOffer
-    ? lvIface.encodeFunctionData('increaseOffer', [LENDING_AMOUNT])
-    : lvIface.encodeFunctionData('createOffer', [LENDING_AMOUNT]);
-
-  const offerFnName = hasOffer ? 'increaseOffer' : 'createOffer';
+  const approveCalldata = erc20Iface.encodeFunctionData('approve', [LENDING_VAULT, lendingAmount]);
+  const offerFnName    = hasOffer ? 'increaseOffer' : 'createOffer';
+  const offerCalldata  = lvIface.encodeFunctionData(offerFnName, [lendingAmount]);
 
   console.log('--- Transactions to execute ---');
   console.log('');
-  console.log('[TX 0] ERC-20 approve(LendingVault, 50M IFR)');
+  console.log('[TX 0] ERC-20 approve(LendingVault,', ethers.utils.formatUnits(lendingAmount, IFR_DECIMALS), 'IFR)');
   console.log('  to:', IFR_TOKEN);
   console.log('  calldata:', approveCalldata);
-  console.log('  decoded: approve(spender=LendingVault, amount=50,000,000 IFR)');
   console.log('');
-  console.log('[TX 1] LendingVault.' + offerFnName + '(50M IFR)');
+  console.log('[TX 1] LendingVault.' + offerFnName + '(' + ethers.utils.formatUnits(lendingAmount, IFR_DECIMALS) + ' IFR)');
   console.log('  to:', LENDING_VAULT);
   console.log('  calldata:', offerCalldata);
-  console.log('  decoded:', offerFnName + '(amount=50,000,000 IFR)');
   console.log('  access: permissionless — any address can call createOffer()');
   console.log('');
 
-  // ── Balance check ─────────────────────────────────────────────────────────────
-  if (ifrBal.lt(LENDING_AMOUNT)) {
-    console.warn('WARNING: Contributor 1 IFR balance (' +
-      ethers.utils.formatUnits(ifrBal, IFR_DECIMALS) +
-      ' IFR) < 50M IFR required. Ensure tokens are claimed/transferred first.');
+  if (ifrBal.lt(lendingAmount)) {
+    console.warn('WARNING: IFR balance insufficient for lending amount.');
   }
 
   if (DRY_RUN || !IS_MAINNET) {
@@ -157,17 +159,16 @@ async function main() {
     throw new Error('PRIVATE_KEY env var required for MAINNET=true');
   }
 
-  const signer = new ethers.Wallet(process.env.PRIVATE_KEY, provider);
+  const signer    = new ethers.Wallet(process.env.PRIVATE_KEY, provider);
   console.log('Signer:', signer.address);
   console.log('');
 
   const ifrSigned = ifr.connect(signer);
   const lvSigned  = lv.connect(signer);
 
-  // Step 1: Approve if needed
-  if (lvAllowance.lt(LENDING_AMOUNT)) {
-    console.log('Approving LendingVault to spend 50M IFR...');
-    const approveTx = await ifrSigned.approve(LENDING_VAULT, LENDING_AMOUNT);
+  if (lvAllowance.lt(lendingAmount)) {
+    console.log('Approving LendingVault to spend', ethers.utils.formatUnits(lendingAmount, IFR_DECIMALS), 'IFR...');
+    const approveTx = await ifrSigned.approve(LENDING_VAULT, lendingAmount);
     console.log('approve tx:', approveTx.hash);
     await approveTx.wait();
     console.log('approve confirmed');
@@ -175,22 +176,21 @@ async function main() {
     console.log('Allowance already sufficient, skipping approve');
   }
 
-  // Step 2: Create or increase offer
   if (hasOffer) {
-    console.log('Increasing existing offer by 50M IFR...');
-    const tx = await lvSigned.increaseOffer(LENDING_AMOUNT);
+    console.log('Increasing existing offer by', ethers.utils.formatUnits(lendingAmount, IFR_DECIMALS), 'IFR...');
+    const tx = await lvSigned.increaseOffer(lendingAmount);
     console.log('increaseOffer tx:', tx.hash);
     await tx.wait();
     console.log('increaseOffer confirmed');
   } else {
-    console.log('Creating new lending offer with 50M IFR...');
-    const tx = await lvSigned.createOffer(LENDING_AMOUNT);
+    console.log('Creating new lending offer with', ethers.utils.formatUnits(lendingAmount, IFR_DECIMALS), 'IFR...');
+    const tx = await lvSigned.createOffer(lendingAmount);
     console.log('createOffer tx:', tx.hash);
     await tx.wait();
     console.log('createOffer confirmed');
   }
 
-  const newOfferIdx = await lv.lenderOfferIndex(contributor1);
+  const newOfferIdx = await lv.lenderOfferIndex(contributor);
   const newOffer    = await lv.offers(newOfferIdx);
   console.log('');
   console.log('=== Done ===');
