@@ -1987,6 +1987,7 @@ var BW = {
     "function refund() external",
     "function finalise() external",
     "function contributions(address) view returns (uint256)",
+    "function claimed(address) view returns (bool)",
     "function getBootstrapStatus() view returns (bool, bool, uint256, uint256, uint256)"
   ]
 };
@@ -2057,6 +2058,7 @@ function bwUpdateUI(state) {
   var bootstrapEnded = now >= BW.END;
   var finalized = state && state.bootstrapStatus ? state.bootstrapStatus.finalized : false;
   var myContrib = parseFloat((state && state.bootstrapContributionETH) ? state.bootstrapContributionETH : "0");
+  var alreadyClaimed = state ? !!state.bootstrapClaimed : false;
 
   // Stats immer updaten
   bwUpdateStats(state ? state.bootstrapStatus : null);
@@ -2066,10 +2068,11 @@ function bwUpdateUI(state) {
   if (walletNotice) walletNotice.style.display = connected ? "none" : "";
   document.getElementById("bw-not-active-section").style.display = (connected && bootstrapNotStarted) ? "" : "none";
   document.getElementById("bw-contribute-section").style.display = (connected && bootstrapActive) ? "" : "none";
-  document.getElementById("bw-claim-section").style.display = (connected && bootstrapEnded && myContrib > 0) ? "" : "none";
+  // Show claim section: contributed > 0 OR already claimed (so claimed state is visible)
+  document.getElementById("bw-claim-section").style.display = (connected && bootstrapEnded && (myContrib > 0 || alreadyClaimed)) ? "" : "none";
 
   if (connected && state) {
-    // Meine Contribution
+    // Meine Contribution (auch wenn bereits geclaimed \u2014 zeige historischen Betrag aus IFR-Balance)
     if (myContrib > 0) {
       var totalEth = parseFloat(state.bootstrapStatus ? state.bootstrapStatus.totalETHRaised : "0");
       var myIFR = totalEth > 0
@@ -2081,20 +2084,28 @@ function bwUpdateUI(state) {
     }
 
     // Claim/Refund Logic
-    if (bootstrapEnded && myContrib > 0) {
-      if (finalized) {
+    if (bootstrapEnded && (myContrib > 0 || alreadyClaimed)) {
+      if (finalized && myContrib > 0 && !alreadyClaimed) {
         document.getElementById("bw-claim-title").textContent = "\uD83C\uDF81 Claim Your IFR";
         document.getElementById("bw-claim-desc").textContent = "Bootstrap finalized. Claim your pro-rata IFR allocation.";
         document.getElementById("bw-claim-btn").style.display = "";
+        document.getElementById("bw-claim-btn").disabled = false;
         document.getElementById("bw-refund-btn").style.display = "none";
-      } else if (now > BW.END + 30 * 24 * 3600 * 1000) {
+      } else if (finalized && alreadyClaimed) {
+        document.getElementById("bw-claim-title").textContent = "\u2705 IFR Claimed";
+        document.getElementById("bw-claim-desc").textContent = "Your IFR allocation has been claimed. Check your wallet or Uniswap to trade.";
+        document.getElementById("bw-claim-btn").style.display = "none";
+        document.getElementById("bw-refund-btn").style.display = "none";
+      } else if (!finalized && now > BW.END + 30 * 24 * 3600 * 1000) {
         document.getElementById("bw-claim-title").textContent = "\u21A9 Request Refund";
         document.getElementById("bw-claim-desc").textContent = "Bootstrap not finalized. You may request a full ETH refund.";
         document.getElementById("bw-claim-btn").style.display = "none";
         document.getElementById("bw-refund-btn").style.display = "";
-      } else {
+      } else if (!finalized) {
         document.getElementById("bw-claim-title").textContent = "\u231B Awaiting Finalization";
         document.getElementById("bw-claim-desc").textContent = "Bootstrap finalized 05.06.2026. Claim your pro-rata IFR or check Uniswap for trading.";
+        document.getElementById("bw-claim-btn").style.display = "none";
+        document.getElementById("bw-refund-btn").style.display = "none";
       }
     }
   }
