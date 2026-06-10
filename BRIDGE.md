@@ -21,11 +21,16 @@
 - HTTPS: `{"status":"ok","apiKeySet":true,"etherscanKeySet":true}` ✅
 - Railway `ifr-ai-copilot` Service gestoppt (`railway down`) ✅
 
-**points-backend**: Nicht auf Railway deployed, Migration dokumentiert
-- SQLite (NICHT PostgreSQL) — nur Volume-Mount nötig
-- Dockerfile vorhanden aber broken (npm ci --only=production fehlt tsc)
-- Plan: `docs/POINTS_BACKEND_MIGRATION.md` — multi-stage Dockerfile nötig
-- Offen: VOUCHER_SIGNER_PRIVATE_KEY generieren
+**points-backend**: Migration abgeschlossen ✅
+- Deployed auf Hetzner, Port 3004, Traefik-Route `points-api.ifrunit.tech` (SSL)
+- Container: `inferno-points-backend` — healthy ✅
+- Volume: `inferno_points_data` für SQLite DB
+- Dockerfile multi-stage (builder: tsc + prisma generate; runner: --omit=dev)
+- Fix: `PRISMA_QUERY_ENGINE_LIBRARY` → `/app/node_modules/@prisma/engines/libquery_engine-linux-musl-openssl-3.0.x.so.node`
+- Grund: TSC kompiliert keine `.node`-Binaries; Prisma sucht nicht in `@prisma/engines/` standardmäßig
+- VOUCHER_SIGNER_PRIVATE_KEY: neues EOA generiert (Voucher-Signing only, kein Funds)
+- DNS pending: A-Record `points-api.ifrunit.tech` → `135.181.254.229` bei Papaki setzen
+- TODO ai-copilot: `POINTS_BACKEND_URL=http://inferno-points-backend:3004` setzen (nach DNS)
 
 **Verify-API (Telegram Bot):**
 - `verify-api.ifrunit.tech` Traefik-Route konfiguriert (Port 3001)
