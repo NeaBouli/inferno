@@ -510,8 +510,10 @@ On errors: fix immediately, commit with `seo:` prefix.
 - [x] ✅ Landing Page: IntersectionObserver for live data + lazy images + scroll throttle (20.03.2026)
 - [ ] Full JSON-LD Schema.org check on all wiki pages
 - [ ] Verify ChatGPT/Perplexity indexing
-- [x] ❌ ethereum-lists PR #1010 CLOSED (31.05.2026)
-      Neu einreichen nach LP Launch (Pool-Adresse dann bekannt)
+- [x] ❌ ethereum-lists PR #1010 CLOSED (auto-close 03.06.2026 — inactivity)
+- [ ] 🟡 ethereum-lists neuer PR #1036 — submitted 10.06.2026
+      URL: https://github.com/ethereum-lists/tokens/pull/1036
+      JSON: email + chat + telegram + twitter ergänzt
       Alternativen: Trust Wallet Assets, Uniswap Token List
 
 ### CI/CD
