@@ -175,9 +175,12 @@
         <span style="color:#22c55e;font-size:0.82rem;"><code>claimed(address)</code> in ABI + ifr-state.js. 4-Pfad-Logik: claim / claimed-msg / refund / awaiting</span></li>
       <li><div class="cb"></div>&#x1F534; <strong>BW.IFR_ALLOCATION Fix in bootstrap.html</strong><br>
         <span style="color:#6b7280;font-size:0.82rem;">Aktuell: 200,000,000 &rarr; Korrekt: 100,000,000 (on-chain: ifrAllocation() = 100M)<br>Betrifft: IFR-Sch&auml;tzung im Contribute-Widget</span></li>
-      <li><div class="cb"></div>&#x1F534; <strong>CommitmentVault Lock ausf&uuml;hren</strong><br>
-        <span style="color:#6b7280;font-size:0.82rem;">Script: <code>scripts/contributor1-lock.js</code> &mdash; dynamisch: balance/10 pro Tranche<br>
-        DRY_RUN &#x2705; &mdash; 10 &times; 3,333,333 IFR, TIME_OR_PRICE, 30d, P0&times;2<br>
+      <li><div class="cb"></div>&#x1F534; <strong>Contributors informieren: ZUERST kaufen!</strong><br>
+        <span style="color:#ef4444;font-size:0.82rem;">Jeder Contributor: 0.03 ETH &rarr; <a href="https://app.uniswap.org/swap?outputCurrency=0x77e99917Eca8539c62F509ED1193ac36580A6e7B" target="_blank" rel="noopener">Uniswap</a> &rarr; IFR kaufen (BEVOR Lock!)<br>
+        3 &times; 0.03 ETH = 0.09 ETH &rarr; Pool ~0.128 ETH &rarr; Preis ~+300%</span></li>
+      <li><div class="cb"></div>&#x1F534; <strong>CommitmentVault Lock ausf&uuml;hren</strong> (nach K&auml;ufen)<br>
+        <span style="color:#6b7280;font-size:0.82rem;">Script: <code>scripts/contributor1-lock.js</code> &mdash; TIME_ONLY(0), 30d, balance/10 pro Tranche<br>
+        DRY_RUN &#x2705; &mdash; 10 &times; 3,333,333 IFR, TIME_ONLY(0), p0Multiplier=0<br>
         LIVE: <code>CONTRIBUTOR_ADDR=0x... MAINNET=true PRIVATE_KEY=0x... node scripts/contributor1-lock.js</code></span></li>
       <li><div class="cb"></div>&#x1F534; <strong>LendingVault createOffer() ausf&uuml;hren</strong><br>
         <span style="color:#6b7280;font-size:0.82rem;">Script: <code>scripts/contributor1-lending-allowance.js</code> &mdash; 50% Balance = ~16.6M IFR<br>

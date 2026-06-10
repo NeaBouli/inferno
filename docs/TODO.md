@@ -266,11 +266,16 @@ On errors: fix immediately, commit with `seo:` prefix.
       Aktuell: 200000000 → Korrekt: 100000000 (on-chain: ifrAllocation() = 100M)
       Betrifft: IFR-Schätzung im Contribute-Widget + Allocation-Anzeige
 
-- [ ] 🔴 CommitmentVault Lock ausführen
-      Script: scripts/contributor1-lock.js (dynamisch: balance/10 pro Tranche)
+- [ ] 🔴 Contributors informieren: ZUERST kaufen!
+      Jeder Contributor: 0.03 ETH → Uniswap → IFR kaufen (BEVOR Lock!)
+      3 × 0.03 ETH = 0.09 ETH Volumen → Pool ~0.128 ETH → Preis ~+300%
+      https://app.uniswap.org/swap?outputCurrency=0x77e99917Eca8539c62F509ED1193ac36580A6e7B
+
+- [ ] 🔴 CommitmentVault Lock ausführen (NACH Käufen)
+      Script: scripts/contributor1-lock.js (dynamisch: balance/10, TIME_ONLY 30d)
       DRY_RUN: CONTRIBUTOR_ADDR=0x... DRY_RUN=true node scripts/contributor1-lock.js ✅
       LIVE:    CONTRIBUTOR_ADDR=0x... MAINNET=true PRIVATE_KEY=0x... node scripts/contributor1-lock.js
-      Dry Run Output: 10 × 3,333,333 IFR, TIME_OR_PRICE, unlockTime+30d, P0×2 ✅
+      Dry Run Output: 10 × 3,333,333 IFR, TIME_ONLY(0), unlockTime+30d, p0Multiplier=0 ✅
 
 - [ ] 🔴 LendingVault createOffer() ausführen
       Script: scripts/contributor1-lending-allowance.js (50% balance = ~16.6M IFR)
