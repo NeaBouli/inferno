@@ -164,10 +164,21 @@
         LP Token: 0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0</span></li>
       <li><div class="cb cb-done">&#x2713;</div>&#x2705; <strong>P0 berechnen + setzen (Proposal #16)</strong> &mdash; <a href="https://github.com/NeaBouli/inferno/issues/34" target="_blank">Issue #34</a><br>
         <span style="color:#22c55e;font-size:0.82rem;">&#x2705; EXECUTED 09.06.2026 &mdash; P0 = 300,000,000 wei &middot; TX: 0xf60b25b9&hellip; &middot; Block 25278067 &middot; p0Set = TRUE</span></li>
-      <li><div class="cb"></div>&#x1F534; <strong>Contributor 1: CommitmentVault Lock</strong><br>
-        <span style="color:#6b7280;font-size:0.82rem;">100M IFR &rarr; 10 Tranchen konfigurieren. Contributor hat zugestimmt &#x2705;</span></li>
-      <li><div class="cb"></div>&#x1F534; <strong>Contributor 1: LendingVault Allowance</strong><br>
-        <span style="color:#6b7280;font-size:0.82rem;">setLendingAllowance(50,000,000 IFR)</span></li>
+      <li><div class="cb cb-done">&#x2713;</div>&#x2705; <strong>Alle 3 Contributors geclaimed</strong> (10.06.2026 &mdash; on-chain verified)<br>
+        <span style="color:#22c55e;font-size:0.82rem;">
+          0x4f63: 33,333,333 IFR &#x2705; &nbsp;|&nbsp;
+          0x80ff: 33,333,333 IFR &#x2705; &nbsp;|&nbsp;
+          0xf556: 33,333,333 IFR &#x2705;<br>
+          Total: 100M IFR verteilt (ifrAllocation = 100M, totalETH = 0.03 ETH)
+        </span></li>
+      <li><div class="cb cb-done">&#x2713;</div>&#x2705; <strong>Claim Button Fix</strong> (10.06.2026) &mdash; commit <code>174fede3</code><br>
+        <span style="color:#22c55e;font-size:0.82rem;"><code>claimed(address)</code> in ABI + ifr-state.js. 4-Pfad-Logik: claim / claimed-msg / refund / awaiting</span></li>
+      <li><div class="cb"></div>&#x1F534; <strong>BW.IFR_ALLOCATION Fix in bootstrap.html</strong><br>
+        <span style="color:#6b7280;font-size:0.82rem;">Aktuell: 200,000,000 &rarr; Korrekt: 100,000,000 (on-chain: ifrAllocation() = 100M)<br>Betrifft: IFR-Sch&auml;tzung im Contribute-Widget</span></li>
+      <li><div class="cb"></div>&#x1F534; <strong>Contributors: CommitmentVault Lock</strong><br>
+        <span style="color:#6b7280;font-size:0.82rem;">Jeder hat 33,333,333 IFR &mdash; Lock-Plan je Wallet abstimmen.<br>Script: <code>scripts/contributor1-lock.js</code> (DRY_RUN &mdash; anpassen auf 33.3M)</span></li>
+      <li><div class="cb"></div>&#x1F534; <strong>Contributors: LendingVault Allowance</strong><br>
+        <span style="color:#6b7280;font-size:0.82rem;"><code>createOffer(amount IFR)</code> &mdash; nicht setLendingAllowance() (existiert nicht)<br>Script: <code>scripts/contributor1-lending-allowance.js</code></span></li>
       <li><div class="cb"></div>&#x1F7E1; Mehr Contributors f&uuml;r Bootstrap<br>
         <span style="color:#6b7280;font-size:0.82rem;">Ziel: mehr ETH = h&ouml;heres P0. Kan&auml;le: Reddit/Farcaster/Telegram</span></li>
       <li><div class="cb"></div>&#x1F7E1; <strong>inferno-redesign.html Review</strong><br>
