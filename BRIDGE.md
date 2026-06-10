@@ -21,10 +21,16 @@
 - HTTPS: `{"status":"ok","apiKeySet":true,"etherscanKeySet":true}` ✅
 - Railway `ifr-ai-copilot` Service gestoppt (`railway down`) ✅
 
-**points-backend**: Nicht auf Railway deployed, Migration ausstehend
-- Braucht PostgreSQL (Hetzner infra-postgres-1 verfügbar)
-- Dockerfile vorhanden: `apps/points-backend/Dockerfile`
-- Prisma-Migrations müssen laufen
+**points-backend**: Nicht auf Railway deployed, Migration dokumentiert
+- SQLite (NICHT PostgreSQL) — nur Volume-Mount nötig
+- Dockerfile vorhanden aber broken (npm ci --only=production fehlt tsc)
+- Plan: `docs/POINTS_BACKEND_MIGRATION.md` — multi-stage Dockerfile nötig
+- Offen: VOUCHER_SIGNER_PRIVATE_KEY generieren
+
+**Verify-API (Telegram Bot):**
+- `verify-api.ifrunit.tech` Traefik-Route konfiguriert (Port 3001)
+- DNS pending: A-Record `verify-api.ifrunit.tech` → `135.181.254.229` bei Papaki setzen
+- verify.html aktualisiert auf `verify-api.ifrunit.tech`
 
 **Telegram Announcement Posts (08.06.2026)** — bereits gesendet:
 - Post 1+2 → @IFRtoken Channel (msg_ids: 42, 43)

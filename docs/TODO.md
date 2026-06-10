@@ -478,8 +478,12 @@ On errors: fix immediately, commit with `seo:` prefix.
 - [x] ✅ Ali Copilot (ai-copilot): Railway → Hetzner (09.06.2026) — `copilot-api.ifrunit.tech`
       DNS: A-Record `copilot-api.ifrunit.tech` → 135.181.254.229 muss noch gesetzt werden
 - [x] ✅ Railway `ifr-ai-copilot` Service gestoppt (10.06.2026) — Hetzner ist aktiv
-- [ ] points-backend: Migration planen (braucht PostgreSQL, Prisma migrations)
-      → Hetzner infra-postgres-1 verfügbar
+- [ ] 🟡 points-backend Migration → Hetzner
+      SQLite (kein separater DB-Server), Dockerfile-Fix nötig
+      → Plan: docs/POINTS_BACKEND_MIGRATION.md
+- [ ] 🟡 DNS: A-Record `verify-api.ifrunit.tech` → `135.181.254.229` setzen (Papaki)
+      Telegram-Bot Verify-API auf Hetzner, Traefik-Route konfiguriert
+- [ ] 🟡 DNS: A-Record `points-api.ifrunit.tech` → `135.181.254.229` (nach points-backend Deploy)
 
 ### Railway (Alt — vor Migration)
 - [x] ✅ FeeRouterV1 tracking verified (nach Proposal #6)

@@ -1065,7 +1065,7 @@ IFRState.on("stateLoaded", agUpdateUI);
 }
 </style>
 <button id="ifr-btn" onclick="var p=document.getElementById('ifr-panel');var o=p.style.display==='block';p.style.display=o?'none':'block';this.classList.toggle('panel-open',!o);"><img src="../assets/CoPilot.jpg" alt="IFR Copilot"></button>
-<div id="ifr-panel"><button id="ifr-panel-close" onclick="document.getElementById('ifr-panel').style.display='none';document.getElementById('ifr-btn').classList.remove('panel-open');" style="position:absolute;top:8px;right:8px;z-index:10;background:rgba(0,0,0,0.6);color:#fff;border:none;border-radius:50%;width:28px;height:28px;font-size:1.1rem;cursor:pointer;line-height:1;">&times;</button><iframe src="https://ifr-ai-copilot-production.up.railway.app" allow="clipboard-write"></iframe></div>
+<div id="ifr-panel"><button id="ifr-panel-close" onclick="document.getElementById('ifr-panel').style.display='none';document.getElementById('ifr-btn').classList.remove('panel-open');" style="position:absolute;top:8px;right:8px;z-index:10;background:rgba(0,0,0,0.6);color:#fff;border:none;border-radius:50%;width:28px;height:28px;font-size:1.1rem;cursor:pointer;line-height:1;">&times;</button><iframe src="https://copilot-api.ifrunit.tech" allow="clipboard-write"></iframe></div>
 
 <script>
 async function lpConnect(){

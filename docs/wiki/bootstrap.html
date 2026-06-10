@@ -1487,7 +1487,7 @@
 var ConsensusModule = {
   config: {
     walletConnectActive: false,
-    apiEndpoint: 'https://ifr-ai-copilot-production.up.railway.app/api/ifr/vault'
+    apiEndpoint: 'https://copilot-api.ifrunit.tech/api/ifr/vault'
   },
 
   state: {
@@ -1697,7 +1697,7 @@ var ConsensusModule = {
 
     // Send vote to Railway for public aggregation
     var self2 = this;
-    fetch('https://ifr-ai-copilot-production.up.railway.app/api/bootstrap/vote', {
+    fetch('https://copilot-api.ifrunit.tech/api/bootstrap/vote', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ wallet: addr, vote: direction })
@@ -1709,7 +1709,7 @@ var ConsensusModule = {
 
   fetchPublicVotes: function() {
     var self = this;
-    fetch('https://ifr-ai-copilot-production.up.railway.app/api/bootstrap/votes')
+    fetch('https://copilot-api.ifrunit.tech/api/bootstrap/votes')
       .then(function(r) { return r.json(); })
       .then(function(data) {
         var publicVoted = parseFloat(data.totalVoted || '0');
@@ -1751,7 +1751,7 @@ var ConsensusModule = {
     var pending = [];
     votes.forEach(function(v) {
       if (v.addr && v.type) {
-        var p = fetch('https://ifr-ai-copilot-production.up.railway.app/api/bootstrap/vote', {
+        var p = fetch('https://copilot-api.ifrunit.tech/api/bootstrap/vote', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ wallet: v.addr, vote: v.type })
@@ -1850,7 +1850,7 @@ if (document.readyState === 'loading') {
 <!-- Live Vault Data + Countdown Script -->
 <script>
 (function() {
-  var PROXY_BASE = 'https://ifr-ai-copilot-production.up.railway.app';
+  var PROXY_BASE = 'https://copilot-api.ifrunit.tech';
   var TARGET = 200000000;
 
   // Format large numbers
@@ -2307,7 +2307,7 @@ async function bwRefund() {
 #ifr-panel iframe { width:100%; height:100%; border:none; }
 </style>
 <button id="ifr-btn" onclick="var p=document.getElementById('ifr-panel');p.style.display=p.style.display==='block'?'none':'block';"><img src="../assets/CoPilot.jpg" alt="IFR Copilot"></button>
-<div id="ifr-panel"><iframe src="https://ifr-ai-copilot-production.up.railway.app" allow="clipboard-write"></iframe></div>
+<div id="ifr-panel"><iframe src="https://copilot-api.ifrunit.tech" allow="clipboard-write"></iframe></div>
 
 <script>
 async function lpConnect(){
