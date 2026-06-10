@@ -251,12 +251,28 @@ On errors: fix immediately, commit with `seo:` prefix.
       GitHub Issue: https://github.com/NeaBouli/inferno/issues/34
       P0 = 0.3 Gwei (0.0000000003 ETH per IFR) — on-chain ✅ IMMUTABLE
 
-- [ ] 🔴 Contributor 1: CommitmentVault Lock
-      100M IFR → 10 Tranchen konfigurieren
-      Contributor hat zugestimmt ✅
+- [x] ✅ Alle 3 Contributors geclaimed (10.06.2026)
+      0x4f63: 33,333,333 IFR ✅ (claimed: true, on-chain verified)
+      0x80ff: 33,333,333 IFR ✅ (claimed: true, on-chain verified)
+      0xf556: 33,333,333 IFR ✅ (claimed: true, on-chain verified)
+      Total: 100M IFR verteilt (ifrAllocation = 100M, totalETH = 0.03 ETH)
 
-- [ ] 🔴 Contributor 1: LendingVault Allowance
-      setLendingAllowance(50,000,000 IFR)
+- [x] ✅ Claim Button Fix in bootstrap.html (10.06.2026)
+      claimed(address) zu ABI + ifr-state.js hinzugefügt
+      4-Pfad-Logik: claim / claimed-msg / refund / awaiting
+      Commit: 174fede3
+
+- [ ] 🔴 BW.IFR_ALLOCATION Fix in bootstrap.html
+      Aktuell: 200000000 → Korrekt: 100000000 (on-chain: ifrAllocation() = 100M)
+      Betrifft: IFR-Schätzung im Contribute-Widget + Allocation-Anzeige
+
+- [ ] 🔴 Contributors: CommitmentVault Lock
+      Jeder Contributor hat 33,333,333 IFR — Lock-Plan je Wallet abstimmen
+      Script: scripts/contributor1-lock.js (DRY_RUN, anpassen auf 33.3M Tranchen)
+
+- [ ] 🔴 Contributors: LendingVault Allowance
+      createOffer(amount IFR) — nicht setLendingAllowance() (existiert nicht)
+      Script: scripts/contributor1-lending-allowance.js
 
 - [ ] 🟡 Mehr Contributors für Bootstrap
       Ziel: mehr ETH = höheres P0
@@ -807,5 +823,5 @@ Railway endpoints already live: stats, offers, loans/:addr, health/:id, lender/:
 
 ---
 
-*Last updated: 2026-06-06*
+*Last updated: 2026-06-10*
 
