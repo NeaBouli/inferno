@@ -477,7 +477,7 @@ On errors: fix immediately, commit with `seo:` prefix.
 - [x] ✅ Telegram-Bot: Railway → Hetzner (09.06.2026) — läuft auf 135.181.254.229
 - [x] ✅ Ali Copilot (ai-copilot): Railway → Hetzner (09.06.2026) — `copilot-api.ifrunit.tech`
       DNS: A-Record `copilot-api.ifrunit.tech` → 135.181.254.229 muss noch gesetzt werden
-- [ ] Railway `ifr-ai-copilot` Service stoppen (nach DNS-Propagierung + Vercel Redeploy)
+- [x] ✅ Railway `ifr-ai-copilot` Service gestoppt (10.06.2026) — Hetzner ist aktiv
 - [ ] points-backend: Migration planen (braucht PostgreSQL, Prisma migrations)
       → Hetzner infra-postgres-1 verfügbar
 

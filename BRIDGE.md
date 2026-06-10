@@ -16,8 +16,10 @@
 - BuilderRegistry / LendingVault / CommitmentVault aktiv ✅
 - Volume: `inferno_copilot_data` für BOOTSTRAP_VOTES Persistenz
 - `vercel.json` Rewrite: `ifr-copilot-api.railway.app` → `copilot-api.ifrunit.tech`
-- **TODO DNS**: A-Record `copilot-api.ifrunit.tech` → `135.181.254.229` setzen
-- **TODO Cleanup**: Railway `ifr-ai-copilot` Service nach DNS-Propagierung stoppen
+- DNS: A-Record `copilot-api.ifrunit.tech` → `135.181.254.229` ✅ (10.06.2026)
+- Let's Encrypt Zertifikat ausgestellt ✅
+- HTTPS: `{"status":"ok","apiKeySet":true,"etherscanKeySet":true}` ✅
+- Railway `ifr-ai-copilot` Service gestoppt (`railway down`) ✅
 
 **points-backend**: Nicht auf Railway deployed, Migration ausstehend
 - Braucht PostgreSQL (Hetzner infra-postgres-1 verfügbar)
