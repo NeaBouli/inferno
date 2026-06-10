@@ -247,11 +247,9 @@ On errors: fix immediately, commit with `seo:` prefix.
       LP Token: 0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0
       Status: QUEUED — Timelock running, ETA 08.06.2026 09:57 Athen
 
-- [ ] 🔴 P0 berechnen:
+- [x] ✅ P0 berechnen + setzen — Proposal #16 executed 09.06.2026
       GitHub Issue: https://github.com/NeaBouli/inferno/issues/34
-      P0 = totalETHRaised / 100,000,000
-      In CommitmentVault setzen (Proposal #14)
-      IMMUTABLE — korrekt berechnen!
+      P0 = 0.3 Gwei (0.0000000003 ETH per IFR) — on-chain ✅ IMMUTABLE
 
 - [ ] 🔴 Contributor 1: CommitmentVault Lock
       100M IFR → 10 Tranchen konfigurieren
@@ -278,11 +276,9 @@ On errors: fix immediately, commit with `seo:` prefix.
       GitHub Issue: https://github.com/NeaBouli/inferno/issues/33 — QUEUED
       LP Token: 0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0
       ETA: 08.06.2026 09:57 Athen — Timelock running
-- [ ] 🔴 CRITICAL: Proposal #16 — Set P0 in CommitmentVault
+- [x] ✅ Proposal #16 — Set P0 in CommitmentVault — EXECUTED 09.06.2026
       GitHub Issue: https://github.com/NeaBouli/inferno/issues/34
-      P0 = 0.030 ETH / 100,000,000 = 0.0000000003 ETH per IFR (IMMUTABLE once set!)
-      All CommitmentVault tranche targets are based on P0 — wrong calculation = catastrophic
-      Status: QUEUED — ETA 09.06.2026 02:56 Athen (execute AFTER Proposal #15 on 08.06.2026)
+      P0 = 0.3 Gwei on-chain ✅ IMMUTABLE
 - [ ] 🔵 Deploy CommitmentVault (Core Dev)
       Voluntary lock with 4 condition types (time, price, time+price, time OR price)
       Auto-unlock after 30 days when condition met
