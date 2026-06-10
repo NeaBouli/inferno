@@ -266,13 +266,21 @@ On errors: fix immediately, commit with `seo:` prefix.
       Aktuell: 200000000 → Korrekt: 100000000 (on-chain: ifrAllocation() = 100M)
       Betrifft: IFR-Schätzung im Contribute-Widget + Allocation-Anzeige
 
-- [ ] 🔴 Contributors: CommitmentVault Lock
-      Jeder Contributor hat 33,333,333 IFR — Lock-Plan je Wallet abstimmen
-      Script: scripts/contributor1-lock.js (DRY_RUN, anpassen auf 33.3M Tranchen)
+- [ ] 🔴 CommitmentVault Lock ausführen
+      Script: scripts/contributor1-lock.js (dynamisch: balance/10 pro Tranche)
+      DRY_RUN: CONTRIBUTOR_ADDR=0x... DRY_RUN=true node scripts/contributor1-lock.js ✅
+      LIVE:    CONTRIBUTOR_ADDR=0x... MAINNET=true PRIVATE_KEY=0x... node scripts/contributor1-lock.js
+      Dry Run Output: 10 × 3,333,333 IFR, TIME_OR_PRICE, unlockTime+30d, P0×2 ✅
 
-- [ ] 🔴 Contributors: LendingVault Allowance
-      createOffer(amount IFR) — nicht setLendingAllowance() (existiert nicht)
-      Script: scripts/contributor1-lending-allowance.js
+- [ ] 🔴 LendingVault createOffer() ausführen
+      Script: scripts/contributor1-lending-allowance.js (50% balance = ~16.6M IFR)
+      DRY_RUN: CONTRIBUTOR_ADDR=0x... DRY_RUN=true node scripts/contributor1-lending-allowance.js ✅
+      LIVE:    CONTRIBUTOR_ADDR=0x... MAINNET=true PRIVATE_KEY=0x... node scripts/contributor1-lending-allowance.js
+
+- [ ] 🟡 StealthX × IFR Integration
+      Spec: docs/STEALTHX_IFR_INTEGRATION.md
+      IFRLock gate: lockedBalance(wallet) >= 1000 IFR → Premium unlock
+      Nächster Schritt: StealthX Team briefen
 
 - [ ] 🟡 Mehr Contributors für Bootstrap
       Ziel: mehr ETH = höheres P0
