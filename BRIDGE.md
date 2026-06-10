@@ -4,6 +4,24 @@
 
 ---
 
+## 2026-06-10 [CC]
+### TYPE: FIX
+### STATUS: DONE
+
+**Fix: claim() Button Visibility nach Bootstrap FINALIZED**
+- On-chain verifiziert: `finalised()=true`, `contributions(0x4f63...)=0.01 ETH`, `claimed(addr)=false`
+- Bug: `claimed(address)` fehlte in `ABI_BOOTSTRAP` (ifr-state.js) + wurde nicht geladen
+- Fix `ifr-state.js`:
+  - `claimed(address)` zu `ABI_BOOTSTRAP` hinzugefügt
+  - `result.bootstrapClaimed = await bootstrap.claimed(address)` nach `bootstrapContributionETH`
+- Fix `docs/wiki/bootstrap.html`:
+  - `claimed(address)` zu `BW.ABI` hinzugefügt
+  - `bwUpdateUI()`: `alreadyClaimed = state.bootstrapClaimed` ausgelesen
+  - Claim-Section Sichtbarkeit: `myContrib > 0 || alreadyClaimed` (vorher: nur `myContrib > 0`)
+  - 4-Pfad-Logik: claim-button (finalized+unclaimed), claimed-msg (finalized+claimed), refund (nicht finalized+30d), awaiting (nicht finalized)
+
+---
+
 ## 2026-06-09 [CC]
 ### TYPE: FIX
 ### STATUS: DONE

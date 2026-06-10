@@ -34,6 +34,7 @@ window.IFRState = (() => {
     "function endTime() view returns (uint256)",
     "function finalised() view returns (bool)",
     "function hasRefundOccurred() view returns (bool)",
+    "function claimed(address) view returns (bool)",
     "function claim() external",
     "function contribute() external payable",
     "function refund() external",
@@ -141,6 +142,7 @@ window.IFRState = (() => {
       const contrib = await bootstrap.contributions(address);
       result.bootstrapContribution = contrib;
       result.bootstrapContributionETH = ethers.utils.formatEther(contrib);
+      result.bootstrapClaimed = await bootstrap.claimed(address);
 
       // IFRLock
       if (CONTRACTS.lock) {
