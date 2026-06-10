@@ -168,5 +168,5 @@ ssh hetzner "cd /opt/inferno && docker compose build points-backend && docker co
 - [x] .env.points-backend erstellt
 - [x] docker-compose.yml erweitert
 - [x] Container deployed + healthy ✅ (2026-06-10)
-- [ ] DNS: `points-api.ifrunit.tech` → `135.181.254.229` (Papaki — manuell)
-- [ ] ai-copilot POINTS_BACKEND_URL → `http://inferno-points-backend:3004` (nach DNS)
+- [x] DNS: `points-api.ifrunit.tech` → `135.181.254.229` ✅ (10.06.2026)
+- [x] ai-copilot POINTS_BACKEND_URL → `http://inferno-points-backend:3004` ✅

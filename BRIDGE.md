@@ -29,12 +29,16 @@
 - Fix: `PRISMA_QUERY_ENGINE_LIBRARY` → `/app/node_modules/@prisma/engines/libquery_engine-linux-musl-openssl-3.0.x.so.node`
 - Grund: TSC kompiliert keine `.node`-Binaries; Prisma sucht nicht in `@prisma/engines/` standardmäßig
 - VOUCHER_SIGNER_PRIVATE_KEY: neues EOA generiert (Voucher-Signing only, kein Funds)
-- DNS pending: A-Record `points-api.ifrunit.tech` → `135.181.254.229` bei Papaki setzen
-- TODO ai-copilot: `POINTS_BACKEND_URL=http://inferno-points-backend:3004` setzen (nach DNS)
+- DNS: A-Record `points-api.ifrunit.tech` → `135.181.254.229` ✅ (10.06.2026)
+- Let's Encrypt Zertifikat ausgestellt ✅
+- HTTPS: `{"status":"ok"}` ✅
+- ai-copilot: `POINTS_BACKEND_URL=http://inferno-points-backend:3004` gesetzt + recreated ✅
 
 **Verify-API (Telegram Bot):**
 - `verify-api.ifrunit.tech` Traefik-Route konfiguriert (Port 3001)
-- DNS pending: A-Record `verify-api.ifrunit.tech` → `135.181.254.229` bei Papaki setzen
+- DNS: A-Record `verify-api.ifrunit.tech` → `135.181.254.229` ✅ (10.06.2026)
+- Let's Encrypt Zertifikat ausgestellt ✅
+- HTTPS erreichbar — POST `/api/verify` antwortet mit 400 (validiert Input) ✅
 - verify.html aktualisiert auf `verify-api.ifrunit.tech`
 
 **Telegram Announcement Posts (08.06.2026)** — bereits gesendet:
