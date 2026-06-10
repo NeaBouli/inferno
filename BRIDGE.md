@@ -528,3 +528,22 @@ index.html, TODO.html, wiki/agent.html, wiki/business-onboarding.html, wiki/cont
 - Bootstrap ACTIVE (sichtbar): 0 echte Treffer (nur JS-Code, Nav-Links, historische TODOs)
 - LP Token bE495E9c: 38 Treffer
 - Block 25254575: 16 Treffer
+
+---
+
+## 2026-06-10 [CC]
+### TYPE: MEMO
+### STATUS: DONE
+
+**Contributor 1 — CommitmentVault lock + LendingVault offer scripts**
+
+- Contributor 1 found on-chain: `BootstrapVault.contributors[0]` = `0x4f632748460E5277bF8435259cADce440AbAC254`
+  - Block: 24663703, ETH contributed: 0.01 ETH
+- CommitmentVault p0: 300000000 wei, p0Set: true ✅
+- Scripts created:
+  - `scripts/contributor1-lock.js` — 10 tranches × 10M IFR, cType=TIME_OR_PRICE(2), 30d OR P0*2
+  - `scripts/contributor1-lending-allowance.js` — approve + createOffer(50M IFR) on LendingVault
+- Note: LendingVault has no setLendingAllowance(). createOffer() is permissionless.
+- DRY_RUN=true verified clean ✅
+- Commit: be9253a7 on main
+- WARNING: Contributor 1 IFR balance = 0 — tokens not yet claimed from BootstrapVault. Run claim before executing MAINNET=true.
