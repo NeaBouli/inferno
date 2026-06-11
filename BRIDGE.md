@@ -610,3 +610,28 @@ index.html, TODO.html, wiki/agent.html, wiki/business-onboarding.html, wiki/cont
 - DRY_RUN=true verified clean ✅
 - Commit: be9253a7 on main
 - WARNING: Contributor 1 IFR balance = 0 — tokens not yet claimed from BootstrapVault. Run claim before executing MAINNET=true.
+
+---
+
+## 2026-06-11 [CODEX]
+### TYPE: FEATURE
+### STATUS: DONE
+### EMPFÄNGER: CC|GIO
+
+**NEA-150 — Chameleon BuilderRegistry Governance Payload**
+
+- Gio wallet for Chameleon registration: `0x4f632748460E5277bF8435259cADce440AbAC254`.
+- Read-only Mainnet check:
+  - BuilderRegistry: `0xdfe6636DA47F8949330697e1dC5391267CEf0EE3`
+  - Registry owner: Governance `0xc43d48E7FDA576C5022d0670B652A622E8caD041`
+  - Governance owner: TreasurySafe `0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b`
+  - Chameleon wallet `isBuilder`: false
+  - Builder count: 0
+- Added `scripts/propose-builder-registration.js`.
+  - Defaults: wallet Gio address, name `Chameleon`, url `https://github.com/NeaBouli/chameleon`, category `integration`.
+  - Default `DRY_RUN=true`; prints Safe/Governance calldata and does not broadcast.
+  - If run with `DRY_RUN=false`, it refuses unless signer is Governance owner.
+- Verification:
+  - `DRY_RUN=true npx hardhat run scripts/propose-builder-registration.js --network mainnet` ✅ produced Safe calldata.
+  - `npx hardhat test test/BuilderRegistry.test.js` ✅ 27 passing.
+- Next: submit printed calldata via TreasurySafe, wait timelock ETA, execute proposal, then verify `isBuilder(0x4f6327...) == true`.
