@@ -1,5 +1,5 @@
 # IFR Protocol — Developer TODO List
-> Last updated: 2026-04-18 | Branch: main
+> Last updated: 2026-06-10 | Branch: main
 
 ---
 
@@ -194,6 +194,9 @@ On errors: fix immediately, commit with `seo:` prefix.
       docs/wiki/open-audit.html (new wiki page)
       security.html: CTA banner linked
       Result: 10/10 Coherence, 0 Critical, all claims verified
+- [x] ✅ Blockaid Unflag bestätigt (10.06.2026)
+      IFR Contract unflagged — Propagation ~24h ab 10.06.2026 02:25 UTC
+      Nach 24h: MetaMask+WalletConnect testen
 - [ ] npm audit: 34 vulnerabilities (2 critical, 9 high, 11 moderate, 12 low) — fix after LP launch
       Link: https://github.com/NeaBouli/inferno/security/dependabot
       Note: affects node_modules only, not Solidity contracts
@@ -245,7 +248,8 @@ On errors: fix immediately, commit with `seo:` prefix.
 - [x] ✅ Proposal #15: setFeeExempt(LP Token, true)
       GitHub Issue: https://github.com/NeaBouli/inferno/issues/33
       LP Token: 0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0
-      Status: QUEUED — Timelock running, ETA 08.06.2026 09:57 Athen
+      Status: EXECUTED 08.06.2026 — LP Token feeExempt = TRUE
+      TX: 0xd5a3bc9527b6cc5288b892a9ba99a3af37b940f273856ab6ba938403cd2b4204
 
 - [x] ✅ P0 berechnen + setzen — Proposal #16 executed 09.06.2026
       GitHub Issue: https://github.com/NeaBouli/inferno/issues/34
@@ -262,8 +266,8 @@ On errors: fix immediately, commit with `seo:` prefix.
       4-Pfad-Logik: claim / claimed-msg / refund / awaiting
       Commit: 174fede3
 
-- [ ] 🔴 BW.IFR_ALLOCATION Fix in bootstrap.html
-      Aktuell: 200000000 → Korrekt: 100000000 (on-chain: ifrAllocation() = 100M)
+- [x] ✅ BW.IFR_ALLOCATION Fix in bootstrap.html (10.06.2026)
+      BW.IFR_ALLOCATION = 100000000 (on-chain: ifrAllocation() = 100M)
       Betrifft: IFR-Schätzung im Contribute-Widget + Allocation-Anzeige
 
 - [ ] 🔴 Contributors informieren: ZUERST kaufen!
@@ -302,18 +306,18 @@ On errors: fix immediately, commit with `seo:` prefix.
 
 ### Phase 3 — After Bootstrap finalise() (~05.06.2026)
 - [x] ✅ Proposal #15 — setFeeExempt(LP Token, true)
-      GitHub Issue: https://github.com/NeaBouli/inferno/issues/33 — QUEUED
+      GitHub Issue: https://github.com/NeaBouli/inferno/issues/33 — EXECUTED 08.06.2026
       LP Token: 0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0
-      ETA: 08.06.2026 09:57 Athen — Timelock running
+      LP Token feeExempt = TRUE ✅
 - [x] ✅ Proposal #16 — Set P0 in CommitmentVault — EXECUTED 09.06.2026
       GitHub Issue: https://github.com/NeaBouli/inferno/issues/34
       P0 = 0.3 Gwei on-chain ✅ IMMUTABLE
-- [ ] 🔵 Deploy CommitmentVault (Core Dev)
+- [x] ✅ Deploy CommitmentVault (Core Dev)
       Voluntary lock with 4 condition types (time, price, time+price, time OR price)
       Auto-unlock after 30 days when condition met
       Set feeExempt after deploy
       Contributor lock: 10 tranches of 10M IFR (100M total)
-- [ ] 🔵 Deploy LendingVault (Core Dev)
+- [x] ✅ Deploy LendingVault (Core Dev)
       IFR lending against ETH collateral (200% initial, margin call 150%, liquidation 120%)
       Interest rate: dynamic (0% util=2%, 100%=25%)
       Uniswap TWAP price oracle (24h average)
@@ -443,7 +447,7 @@ On errors: fix immediately, commit with `seo:` prefix.
 - [x] 5. Signer Psaltin (A.P.) hinzugefügt (beide Safes) ✅ (15.03.2026)
 - [x] Threshold auf 2-of-5 gesetzt ✅ (15.03.2026)
 - [x] Threshold auf 3-of-5 gesetzt ✅ (15.03.2026)
-- [ ] Transfer Governance → GnosisSafe ownership
+- [x] ✅ Transfer Governance → GnosisSafe ownership
 
 ### Telegram Bot
 - [x] `/announce` command: auto-append community link (`https://t.me/IFR_token/1`) ✅
@@ -501,14 +505,14 @@ On errors: fix immediately, commit with `seo:` prefix.
 ### Railway → Hetzner Migration
 - [x] ✅ Telegram-Bot: Railway → Hetzner (09.06.2026) — läuft auf 135.181.254.229
 - [x] ✅ Ali Copilot (ai-copilot): Railway → Hetzner (09.06.2026) — `copilot-api.ifrunit.tech`
-      DNS: A-Record `copilot-api.ifrunit.tech` → 135.181.254.229 muss noch gesetzt werden
+      DNS: A-Record `copilot-api.ifrunit.tech` → 135.181.254.229 ✅
 - [x] ✅ Railway `ifr-ai-copilot` Service gestoppt (10.06.2026) — Hetzner ist aktiv
-- [ ] 🟡 points-backend Migration → Hetzner
-      SQLite (kein separater DB-Server), Dockerfile-Fix nötig
-      → Plan: docs/POINTS_BACKEND_MIGRATION.md
-- [ ] 🟡 DNS: A-Record `verify-api.ifrunit.tech` → `135.181.254.229` setzen (Papaki)
-      Telegram-Bot Verify-API auf Hetzner, Traefik-Route konfiguriert
-- [ ] 🟡 DNS: A-Record `points-api.ifrunit.tech` → `135.181.254.229` (nach points-backend Deploy)
+- [x] ✅ points-backend Migration → Hetzner
+      SQLite, Dockerfile-Fix, Prisma engine path, Traefik + SSL ✅
+      URL: `points-api.ifrunit.tech`
+- [x] ✅ DNS: A-Record `verify-api.ifrunit.tech` → `135.181.254.229` gesetzt (Papaki)
+      Telegram-Bot Verify-API auf Hetzner, Traefik-Route + SSL ✅
+- [x] ✅ DNS: A-Record `points-api.ifrunit.tech` → `135.181.254.229`
 
 ### Railway (Alt — vor Migration)
 - [x] ✅ FeeRouterV1 tracking verified (nach Proposal #6)
@@ -839,4 +843,3 @@ Railway endpoints already live: stats, offers, loans/:addr, health/:id, lender/:
 ---
 
 *Last updated: 2026-06-10*
-

@@ -49,7 +49,7 @@
   <div class="container">
     <a href="wiki/roadmap.html" class="back" rel="nofollow">&larr; Roadmap</a>
     <h1>IFR Protocol &mdash; Developer TODO List</h1>
-    <div class="subtitle">Last updated: 2026-04-15 &middot; Branch: main</div>
+    <div class="subtitle">Last updated: 2026-06-10 &middot; Branch: main</div>
 
     <!-- ═══ ERLEDIGT: Proposal #13 ═══ -->
     <h2><span class="priority-badge p-done">ERLEDIGT</span> Proposal #13 executed (16.04.2026)</h2>
@@ -160,10 +160,12 @@
         <span style="color:#22c55e;font-size:0.82rem;">Both vaults fully operational. Verified on-chain.</span></li>
       <li><div class="cb cb-done">&#x2713;</div>&#x2705; Railway: COMMITMENT_VAULT_ADDR + LENDING_VAULT_ADDR gesetzt (04.04.2026)</li>
       <li><div class="cb cb-done">&#x2713;</div>&#x2705; <strong>Proposal #15: setFeeExempt(LP Token, true)</strong> &mdash; <a href="https://github.com/NeaBouli/inferno/issues/33" target="_blank">Issue #33</a><br>
-        <span style="color:#f59e0b;font-size:0.82rem;">&#x23F3; QUEUED &mdash; Timelock running. ETA: 08.06.2026 09:57 Athen<br>
-        LP Token: 0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0</span></li>
+        <span style="color:#22c55e;font-size:0.82rem;">&#x2705; EXECUTED 08.06.2026 &mdash; LP Token feeExempt = TRUE<br>
+        TX: 0xd5a3bc95&hellip; &middot; LP Token: 0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0</span></li>
       <li><div class="cb cb-done">&#x2713;</div>&#x2705; <strong>P0 berechnen + setzen (Proposal #16)</strong> &mdash; <a href="https://github.com/NeaBouli/inferno/issues/34" target="_blank">Issue #34</a><br>
         <span style="color:#22c55e;font-size:0.82rem;">&#x2705; EXECUTED 09.06.2026 &mdash; P0 = 300,000,000 wei &middot; TX: 0xf60b25b9&hellip; &middot; Block 25278067 &middot; p0Set = TRUE</span></li>
+      <li><div class="cb cb-done">&#x2713;</div>&#x2705; <strong>Blockaid Unflag best&auml;tigt</strong> (10.06.2026)<br>
+        <span style="color:#22c55e;font-size:0.82rem;">IFR Contract unflagged &mdash; Propagation ~24h ab 10.06.2026 02:25 UTC. Nach 24h: MetaMask + WalletConnect testen.</span></li>
       <li><div class="cb cb-done">&#x2713;</div>&#x2705; <strong>Alle 3 Contributors geclaimed</strong> (10.06.2026 &mdash; on-chain verified)<br>
         <span style="color:#22c55e;font-size:0.82rem;">
           0x4f63: 33,333,333 IFR &#x2705; &nbsp;|&nbsp;
@@ -173,8 +175,8 @@
         </span></li>
       <li><div class="cb cb-done">&#x2713;</div>&#x2705; <strong>Claim Button Fix</strong> (10.06.2026) &mdash; commit <code>174fede3</code><br>
         <span style="color:#22c55e;font-size:0.82rem;"><code>claimed(address)</code> in ABI + ifr-state.js. 4-Pfad-Logik: claim / claimed-msg / refund / awaiting</span></li>
-      <li><div class="cb"></div>&#x1F534; <strong>BW.IFR_ALLOCATION Fix in bootstrap.html</strong><br>
-        <span style="color:#6b7280;font-size:0.82rem;">Aktuell: 200,000,000 &rarr; Korrekt: 100,000,000 (on-chain: ifrAllocation() = 100M)<br>Betrifft: IFR-Sch&auml;tzung im Contribute-Widget</span></li>
+      <li><div class="cb cb-done">&#x2713;</div>&#x2705; <strong>BW.IFR_ALLOCATION Fix in bootstrap.html</strong> (10.06.2026)<br>
+        <span style="color:#22c55e;font-size:0.82rem;">BW.IFR_ALLOCATION = 100,000,000 (on-chain: ifrAllocation() = 100M). IFR-Sch&auml;tzung im Contribute-Widget synchronisiert.</span></li>
       <li><div class="cb"></div>&#x1F534; <strong>Contributors informieren: ZUERST kaufen!</strong><br>
         <span style="color:#ef4444;font-size:0.82rem;">Jeder Contributor: 0.03 ETH &rarr; <a href="https://app.uniswap.org/swap?outputCurrency=0x77e99917Eca8539c62F509ED1193ac36580A6e7B" target="_blank" rel="noopener">Uniswap</a> &rarr; IFR kaufen (BEVOR Lock!)<br>
         3 &times; 0.03 ETH = 0.09 ETH &rarr; Pool ~0.128 ETH &rarr; Preis ~+300%</span></li>
@@ -229,7 +231,7 @@
       <li><div class="cb cb-done">&#x2713;</div>&#x2705; <code>LendingVault.sol</code> &mdash; utilization interest 2&ndash;25%, 200/150/120% collateral, 50/50 split, 55 tests passing (04.04.2026)</li>
       <li><div class="cb cb-done">&#x2713;</div>&#x2705; LendingVault deployed Mainnet: <code>0x974305Ab0EC905172e697271C3d7d385194EB9DF</code> &mdash; Etherscan verified, UI activated</li>
       <li><div class="cb cb-done">&#x2713;</div>&#x2705; <code>BuybackController.sol</code> &mdash; 50/50 buyback+burn / LP deepening, permissionless execute, 50 tests passing (07.04.2026)</li>
-      <li><div class="cb"></div>&#x1F535; Deploy: Sepolia &rarr; Audit &rarr; Mainnet (CommitmentVault &rarr; LendingVault &rarr; BuybackController)</li>
+      <li><div class="cb cb-done">&#x2713;</div>&#x2705; Deploy: CommitmentVault &rarr; LendingVault &rarr; BuybackController &mdash; all Mainnet + verified</li>
     </ul>
 
     <h3>WalletConnect UI</h3>
@@ -246,8 +248,8 @@
       <li><div class="cb cb-done">&#x2713;</div>&#x2705; AI Copilot: Railway &rarr; Hetzner (09.06.2026) &mdash; <code>copilot-api.ifrunit.tech</code> HTTPS live</li>
       <li><div class="cb cb-done">&#x2713;</div>&#x2705; Railway <code>ifr-ai-copilot</code> Service gestoppt (10.06.2026)</li>
       <li><div class="cb cb-done">&#x2713;</div>&#x2705; Alle Railway-URLs in docs/ ersetzt &rarr; <code>copilot-api.ifrunit.tech</code></li>
-      <li><div class="cb"></div>&#x1F7E1; DNS: <code>verify-api.ifrunit.tech</code> &rarr; 135.181.254.229 (Papaki, pending)</li>
-      <li><div class="cb"></div>&#x1F7E1; points-backend Migration &rarr; <code>points-api.ifrunit.tech</code> (SQLite, Dockerfile-Fix nötig)</li>
+      <li><div class="cb cb-done">&#x2713;</div>&#x2705; DNS: <code>verify-api.ifrunit.tech</code> &rarr; 135.181.254.229 (Papaki) + SSL</li>
+      <li><div class="cb cb-done">&#x2713;</div>&#x2705; points-backend Migration &rarr; <code>points-api.ifrunit.tech</code> (SQLite, Dockerfile + Prisma engine fix, SSL)</li>
     </ul>
 
     <h3>Hetzner Extensions (ehem. Railway)</h3>
@@ -450,7 +452,7 @@
     </ul>
 
     <div class="footer">
-      IFR Protocol &mdash; Developer TODO &middot; noindex &middot; 2026-04-15
+      IFR Protocol &mdash; Developer TODO &middot; noindex &middot; 2026-06-10
     </div>
   </div>
 </body>

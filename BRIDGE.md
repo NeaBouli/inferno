@@ -4,6 +4,151 @@
 
 ---
 
+## Blockaid Unflag — 10.06.2026
+### TYPE: SECURITY
+### STATUS: DONE — Unflag bestaetigt
+
+IFR Contract `0x77e99917Eca8539c62F509ED1193ac36580A6e7B`
+war faelschlich von Blockaid geflaggt — Unflag bestaetigt.
+Propagation: ~24h ab 10.06.2026 02:25 UTC.
+
+Nach 24h testen:
+- MetaMask → IFR importieren → keine Warnung?
+- Uniswap → IFR kaufen → keine Warnung?
+- bootstrap.html → WalletConnect → funktioniert?
+
+---
+
+## 2026-06-10 [CODEX]
+### TYPE: REVIEW
+### STATUS: DONE — Vollstaendiger Projekt-Status-Audit
+
+### Gelesene Quellen
+- `docs/TODO.md`
+- `BRIDGE.md`
+- `docs/wiki/transparency.html`
+- `docs/wiki/governance.html`
+- `docs/wiki/roadmap.html`
+- `docs/SECURITY_AUDIT_REPORT.md`
+
+### ✅ ERLEDIGT (Phase 2 / Post-Bootstrap)
+- Bootstrap `finalise()` ausgefuehrt am 05.06.2026 23:51 UTC.
+- LP Token live: `0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0`.
+- Proposal #15 `setFeeExempt(LP Token, true)` executed am 08.06.2026; LP feeExempt on-chain `true`.
+- Proposal #16 `setP0(CommitmentVault)` executed am 09.06.2026; P0 = `300,000,000 wei`.
+- Alle 3 Bootstrap-Contributors haben geclaimed; 100M IFR verteilt.
+- `BW.IFR_ALLOCATION` in `bootstrap.html` ist auf `100000000` gesetzt; TODO als erledigt synchronisiert.
+- CommitmentVault, LendingVault und BuybackController sind deployed, verified und dokumentiert.
+- Governance Owner ist TreasurySafe 3-of-5.
+- Telegram Bot, Ali Copilot, points-backend und Verify-API Migration nach Hetzner laut Bridge abgeschlossen.
+- Blockaid Unflag fuer IFR Contract bestaetigt; Propagation ~24h ab 10.06.2026 02:25 UTC.
+- Internal Security Audit Report v1.0 erstellt: 0 manuell bestaetigte Critical/High Issues; 597 Contract-Tests passing.
+
+### 🔴 KRITISCH OFFEN
+- Contributors informieren: zuerst je 0.03 ETH IFR auf Uniswap kaufen, erst danach locken.
+- CommitmentVault Lock ausfuehren nach Kaeufen: `scripts/contributor1-lock.js`.
+- LendingVault `createOffer()` ausfuehren: `scripts/contributor1-lending-allowance.js`.
+
+### 🟡 MEDIUM OFFEN
+- StealthX x IFR Integration briefen und WalletConnect/MetaMask Flow nach Blockaid-Propagation erneut testen.
+- Mehr Contributors / Marktkommunikation fuer Bootstrap-Nachlauf.
+- `inferno-redesign.html` Review vor jedem Deploy.
+- ethereum-lists PR #1036 weiterverfolgen.
+- CoinGecko und CoinMarketCap Listing beantragen.
+- Slither/Mythril CI, Coverage Badge, Maintainer-Recruiting.
+
+### 📋 OFFENE GITHUB ISSUES
+| Issue | Title | Labels |
+|---:|---|---|
+| #31 | Review inferno-redesign.html before deploy | design, review-required |
+| #15 | [BUILDER] ORIGO — Conway's Game of Life Universe (Vendetta Labs) | builder-registry |
+| #13 | [BUILDER] NEXUS GR — AI-Powered B2B & P2P Matching Platform | builder-registry |
+| #12 | Builder Registration: Vendetta | builder-registry |
+| #11 | [BUILDER] K-9 Academy | builder-registry |
+| #9 | [BUILDER] StealthX / SecureCall | builder-registry |
+
+### 🔗 ON-CHAIN STATUS
+Prompt ABI check mit `finalized()` revertete, weil der deployed Contract die britische Schreibweise `finalised()` nutzt. Korrigierter read-only Check:
+
+```text
+=== ON-CHAIN STATUS 10.06.2026 ===
+IFR Supply: 997976080.83640976
+Bootstrap finalized: true
+Bootstrap ETH raised: 0.03
+Pool token0: 0x77e99917Eca8539c62F509ED1193ac36580A6e7B
+Pool token1: 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2
+Pool ETH: 0.0460
+Pool IFR: 65,324,702.034
+LP feeExempt: true
+Proposals total: 17
+Gov Owner: 0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b
+```
+
+### Git Log letzte 10
+```text
+048474f3 docs: internal security audit report v1.0
+4e13c988 feat: add BuilderRegistry registration proposal script
+c8a2eaae docs: contributor price strategy + lock script TIME_ONLY
+17b67774 feat: contributor lock scripts fixed + StealthX integration spec
+fff11432 docs: ethereum-lists PR #1036 submitted — TODO updated
+d9bd9cd0 docs: all 3 contributors claimed — TODO updated + IFR_ALLOCATION fix
+174fede3 fix: claim() button visibility — read claimed(address) from BootstrapVaultV3
+9c946de7 docs: BRIDGE.md — contributor1 lock+lending scripts memo
+be9253a7 feat: contributor1 lock + lending allowance scripts (DRY_RUN safe)
+01d1f8f5 fix: bootstrap.html — remove ALL live/active states, add FINALIZED
+```
+
+---
+
+## 2026-06-11 [CC]
+### TYPE: MEMO
+### STATUS: DONE — Alle sofortigen Aktionen abgeschlossen
+
+**Uniswap "Potential Honeypot Detected" — Root Cause & Aktionen**
+
+#### Root Cause (verifiziert)
+- Quelle: Blockaid → Uniswap GraphQL API → `attackType: HONEYPOT`
+- Beweis: Uniswap Interface Quellcode (`getCurrencySafetyInfo.ts`) nutzt `protectionInfo.blockaidFees` → Blockaid ist der direkte Datenprovider
+- GoPlus: `is_honeypot: 0` → kein Problem bei GoPlus
+- IFR Fee (3.5%) liegt weit unter Uniswap's `TOKEN_PROTECTION_FOT_FEE_BREAKPOINT = 15%` → FOT-Score löst die Warning NICHT aus
+- Uniswap-Pair `0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0` ist `feeExempt: true` → Swaps funktionieren korrekt
+
+#### Abgeschlossene Aktionen
+1. ✅ **Uniswap Default Token List** — GitHub Issue #2509: https://github.com/Uniswap/default-token-list/issues/2509
+2. ✅ **Blockaid Email** — gesendet an support@blockaid.io (2026-06-11)
+3. ✅ **Blockaid Portal Report** — abgesendet via report.blockaid.io (2026-06-11, kaspartisan@proton.me)
+4. ✅ **Blockaid Follow-up** — Dokumentation nachgeliefert (2026-06-12): Whitepaper, Security-Page, Grok Audit PDF, GitHub. Ticket #1280903 / #1280905, Bearbeiter: Jas Olleres (support@blockaid.co)
+
+#### Offene Punkte (optional — kein Blocker für den Fix)
+- [ ] **CoinGecko Listing** — https://www.coingecko.com/request-form (CoinGecko-Account nötig)
+- [ ] **CoinMarketCap Listing** — https://support.coinmarketcap.com/hc/en-us/requests/new (CMC-Account nötig)
+
+#### Reminder & Follow-up
+- **~2026-06-19** — Falls keine weitere Antwort von Jas Olleres: Ticket #1280903 nachhaken via Reply.
+- **Nach Blockaid-Fix** — Uniswap-Warning verschwindet automatisch, kein weiterer Handlungsbedarf.
+- **Falls Blockaid ablehnt** — Nächster Schritt: Uniswap Labs direkt kontaktieren (token-safety@uniswap.org oder Discord #token-listing).
+
+#### TODO
+- [ ] **2026-06-19** — Blockaid Ticket #1280903 checken. Falls keine Antwort: Reply an support@blockaid.co mit "Any update on this? Ticket #1280903"
+- [ ] **CoinGecko** — Listing beantragen: https://www.coingecko.com/request-form
+- [ ] **CoinMarketCap** — Listing beantragen: https://support.coinmarketcap.com/hc/en-us/requests/new
+
+#### Technische Fakten für alle Submissions
+- Token: Inferno (IFR), `0x77e99917Eca8539c62F509ED1193ac36580A6e7B`, Ethereum Mainnet
+- Uniswap V2 Pair: `0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0` (feeExempt=true)
+- Owner: Governance Contract `0xc43d48E7FDA576C5022d0670B652A622E8caD041` mit 48h Timelock (172.800s on-chain verifiziert)
+- Keine Mint-Funktion, supply only decreases
+- GoPlus: is_honeypot=0
+- Website: https://ifrunit.tech | GitHub: https://github.com/NeaBouli/inferno
+
+#### Ausstehend (Gio action required)
+- [x] Blockaid Portal https://report.blockaid.io — abgesendet 2026-06-11
+- [x] Email an support@blockaid.io — gesendet 2026-06-11
+- [ ] CoinGecko Request Form — https://www.coingecko.com/request-form (Login mit CoinGecko-Account nötig)
+- [ ] CoinMarketCap — https://support.coinmarketcap.com/hc/en-us/requests/new (CMC-Account nötig)
+
+---
+
 ## 2026-06-10 [CC]
 ### TYPE: DECISION
 ### STATUS: OPEN — Contributors ausstehend
