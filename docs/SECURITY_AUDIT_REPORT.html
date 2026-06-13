@@ -1,0 +1,592 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Inferno Protocol - Security Audit Report</title>
+<style>
+@page { size: A4; margin: 18mm 16mm; }
+* { box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif; color: #111827; line-height: 1.48; margin: 0; background: #f3f4f6; }
+.report { max-width: 960px; margin: 0 auto; padding: 40px 48px; background: #fff; min-height: 100vh; }
+h1 { font-size: 30px; margin: 0 0 12px; color: #0f172a; }
+h2 { font-size: 20px; margin: 32px 0 12px; padding-bottom: 6px; border-bottom: 1px solid #d1d5db; color: #111827; }
+h3 { font-size: 16px; margin: 24px 0 8px; color: #1f2937; }
+p { margin: 8px 0 12px; }
+a { color: #075985; text-decoration: none; }
+table { width: 100%; border-collapse: collapse; margin: 12px 0 18px; font-size: 12px; page-break-inside: auto; }
+th, td { border: 1px solid #d1d5db; padding: 7px 8px; vertical-align: top; }
+th { background: #f8fafc; color: #111827; font-weight: 700; }
+code { font-family: "SFMono-Regular", Consolas, monospace; background: #f3f4f6; padding: 1px 4px; border-radius: 3px; font-size: 0.92em; }
+pre { background: #111827; color: #f9fafb; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 12px; }
+hr { border: 0; border-top: 2px solid #111827; margin: 20px 0; }
+ul { padding-left: 22px; }
+li { margin: 4px 0; }
+@media print { body { background: #fff; } .report { max-width: none; padding: 0; } a { color: #111827; } h2, h3 { page-break-after: avoid; } table, pre { page-break-inside: avoid; } }
+</style>
+</head>
+<body><main class="report"><h1>Inferno Protocol - Security Audit Report</h1>
+<p><strong>Version:</strong> 1.0<br />
+<strong>Date:</strong> 10.06.2026<br />
+<strong>Auditor:</strong> Internal Security Review<br />
+<strong>Status:</strong> PASSED - 0 Critical Issues</p>
+<hr />
+<h2>Executive Summary</h2>
+<p>This internal security review covered the core IFR Solidity contracts, existing audit artifacts, deployment documentation, and automated test outputs available in the repository. No critical vulnerability was manually confirmed in the reviewed scope. The protocol design is materially protected by immutable deployments, a 48-hour governance timelock, Etherscan verification, fee caps, bounded privileged operations, and contract-specific test suites.</p>
+<p>Current automated tooling results must be read precisely: the default <code>npx hardhat test</code> run executed 30 tests successfully, while the explicit contract-suite command <code>npx hardhat test test/*.test.js</code> executed 597 tests successfully. Slither's direct <code>contracts/</code> command failed due import resolution, and the Hardhat-project Slither run produced broad project-level warning counts that require separate triage before being treated as confirmed vulnerabilities.</p>
+<h2>Scope</h2>
+<table>
+<thead>
+<tr>
+<th>Contract</th>
+<th style="text-align:right">Address</th>
+<th>Source</th>
+<th style="text-align:right">Tests</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>InfernoToken</td>
+<td style="text-align:right"><a href="https://etherscan.io/address/0x77e99917Eca8539c62F509ED1193ac36580A6e7B#code">0x77e99917Eca8539c62F509ED1193ac36580A6e7B</a></td>
+<td><code>contracts/token/InfernoToken.sol</code></td>
+<td style="text-align:right">22</td>
+</tr>
+<tr>
+<td>IFRLock</td>
+<td style="text-align:right"><a href="https://etherscan.io/address/0x769928aBDfc949D0718d8766a1C2d7dBb63954Eb#code">0x769928aBDfc949D0718d8766a1C2d7dBb63954Eb</a></td>
+<td><code>contracts/lock/IFRLock.sol</code></td>
+<td style="text-align:right">37</td>
+</tr>
+<tr>
+<td>BootstrapVaultV3</td>
+<td style="text-align:right"><a href="https://etherscan.io/address/0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141#code">0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141</a></td>
+<td><code>contracts/bootstrap/BootstrapVaultV3.sol</code></td>
+<td style="text-align:right">30</td>
+</tr>
+<tr>
+<td>FeeRouterV1</td>
+<td style="text-align:right"><a href="https://etherscan.io/address/0x4807B77B2E25cD055DA42B09BA4d0aF9e580C60a#code">0x4807B77B2E25cD055DA42B09BA4d0aF9e580C60a</a></td>
+<td><code>contracts/FeeRouterV1.sol</code></td>
+<td style="text-align:right">33</td>
+</tr>
+<tr>
+<td>BuybackController</td>
+<td style="text-align:right"><a href="https://etherscan.io/address/0x1e0547D50005A4Af66AbD5e6915ebfAA2d711F7c#code">0x1e0547D50005A4Af66AbD5e6915ebfAA2d711F7c</a></td>
+<td><code>contracts/buyback/BuybackController.sol</code></td>
+<td style="text-align:right">50</td>
+</tr>
+<tr>
+<td>BuybackVault</td>
+<td style="text-align:right"><a href="https://etherscan.io/address/0x670D293e3D65f96171c10DdC8d88B96b0570F812#code">0x670D293e3D65f96171c10DdC8d88B96b0570F812</a></td>
+<td><code>contracts/buyback/BuybackVault.sol</code></td>
+<td style="text-align:right">26</td>
+</tr>
+<tr>
+<td>CommitmentVault</td>
+<td style="text-align:right"><a href="https://etherscan.io/address/0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3#code">0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3</a></td>
+<td><code>contracts/vault/CommitmentVault.sol</code></td>
+<td style="text-align:right">45</td>
+</tr>
+<tr>
+<td>LendingVault</td>
+<td style="text-align:right"><a href="https://etherscan.io/address/0x974305Ab0EC905172e697271C3d7d385194EB9DF#code">0x974305Ab0EC905172e697271C3d7d385194EB9DF</a></td>
+<td><code>contracts/vault/LendingVault.sol</code></td>
+<td style="text-align:right">55</td>
+</tr>
+<tr>
+<td>Governance</td>
+<td style="text-align:right"><a href="https://etherscan.io/address/0xc43d48E7FDA576C5022d0670B652A622E8caD041#code">0xc43d48E7FDA576C5022d0670B652A622E8caD041</a></td>
+<td><code>contracts/governance/Governance.sol</code></td>
+<td style="text-align:right">36</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Scoped Contract Tests:</strong> 334 statically counted <code>it(...)</code> cases across the nine reviewed contract test files.<br />
+<strong>Repository Contract Tests:</strong> 597 passing from explicit <code>npx hardhat test test/*.test.js</code>.<br />
+<strong>Default Test Run:</strong> 30 passing, 0 failing from <code>npx hardhat test</code>.<br />
+<strong>Historical Coverage:</strong> <code>audit/summary.md</code> records 99.45% statements, 91% branch, 98.26% functions, 99% lines.<br />
+<strong>Current Coverage Command:</strong> <code>npx hardhat coverage</code> completed but only executed the 30-test default suite and did not emit a Solidity coverage percentage table in the captured tail.</p>
+<h2>Methodology</h2>
+<h3>Static Analysis</h3>
+<ul>
+<li>Slither v0.11.5 direct command: <code>slither contracts/ --print human-summary</code> failed because direct <code>solc</code> resolution did not locate OpenZeppelin imports under <code>node_modules</code>.</li>
+<li>Slither v0.11.5 Hardhat-project command: <code>slither . --print human-summary</code> compiled and analyzed 77 contracts.</li>
+<li>Slither Hardhat-project summary: 2,617 source SLOC, 43 source contracts, 5 optimization issues, 117 informational issues, 94 low issues, 43 medium issues, and 9 high issues.</li>
+<li>Mythril: not installed in the local environment (<code>myth</code> and <code>mythril</code> commands not found), so no fresh Mythril result is claimed.</li>
+</ul>
+<p>The Slither Hardhat-project high/medium counts are treated as automated signals requiring detector-level triage. They are not manually confirmed as exploitable Critical or High findings in this report.</p>
+<h3>Manual Review</h3>
+<ul>
+<li>Reentrancy checks across token transfer paths, ETH transfer paths, router calls, and state-update ordering.</li>
+<li>Access control review of <code>onlyOwner</code>, <code>onlyGuardian</code>, <code>onlyGovernance</code>, and timelock-only flows.</li>
+<li>Integer overflow/underflow review under Solidity 0.8.20 checked arithmetic.</li>
+<li>Flash loan and price-manipulation review for router quote usage, liquidity addition, lending collateral, and bootstrap finalization.</li>
+<li>Front-running and MEV review for pro-rata bootstrap contribution, fee-router adapter forwarding, and buyback slippage controls.</li>
+</ul>
+<h3>Automated Testing</h3>
+<ul>
+<li><code>npx hardhat test</code>: 30 passing, 0 failing.</li>
+<li><code>npx hardhat test test/InfernoToken.test.js</code>: 22 passing.</li>
+<li><code>npx hardhat test test/*.test.js</code>: 597 passing in 9 minutes.</li>
+<li><code>npx hardhat coverage</code>: compiled 52 Solidity files and ran the default 30-test suite, but did not output a complete coverage percentage table in the captured result.</li>
+</ul>
+<h2>Findings</h2>
+<h3>Critical (0)</h3>
+<p>No critical vulnerabilities were manually confirmed in the reviewed scope.</p>
+<h3>High (0 manually confirmed)</h3>
+<p>No high-severity issue was manually confirmed in the reviewed deployed scope. Slither's Hardhat-project <code>human-summary</code> emitted 9 high automated signals at broad project level; those require detector-level review before classification as confirmed vulnerabilities.</p>
+<h3>Medium (5 documented / operational)</h3>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Area</th>
+<th>Summary</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>M-01</td>
+<td>Governance</td>
+<td><code>setGuardian()</code> is owner-callable and not timelocked, reducing the independence of the cancel safeguard if the owner key is compromised.</td>
+<td>Documented in prior audit as W15.</td>
+</tr>
+<tr>
+<td>M-02</td>
+<td>BootstrapVault / LP lock</td>
+<td>LP tokens are locked with the contract as withdrawer and no reclaim function, making post-lock recovery intentionally unavailable.</td>
+<td>Accepted design trade-off; stronger permanent lock guarantee.</td>
+</tr>
+<tr>
+<td>M-03</td>
+<td>System-wide fee exemption</td>
+<td>Vault correctness depends on IFR fee exemptions remaining active for lock/deposit/withdraw paths.</td>
+<td>Operational invariant documented.</td>
+</tr>
+<tr>
+<td>M-04</td>
+<td>CommitmentVault oracle phase</td>
+<td>Price-based unlocks cannot become true until <code>priceOracle</code> and <code>_getCurrentPrice()</code> are implemented beyond the current placeholder.</td>
+<td>Feature-phase limitation; time-based conditions unaffected.</td>
+</tr>
+<tr>
+<td>M-05</td>
+<td>LendingVault price input</td>
+<td>Lending collateral ratios depend on governance-updated <code>ifrPriceWei</code>; stale or wrong price input affects collateralization and liquidation.</td>
+<td>Governed operational dependency.</td>
+</tr>
+</tbody>
+</table>
+<h3>Low (8)</h3>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Area</th>
+<th>Summary</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>L-01</td>
+<td>BootstrapVaultV3</td>
+<td>Pro-rata design neutralizes first-come advantage, but public finalization and LP creation remain MEV-observable.</td>
+<td>Low risk; expected public-chain behavior.</td>
+</tr>
+<tr>
+<td>L-02</td>
+<td>BootstrapVaultV3</td>
+<td>If refunds occur, remaining IFR can become stranded in the vault.</td>
+<td>Accepted burn-like outcome.</td>
+</tr>
+<tr>
+<td>L-03</td>
+<td>FeeRouterV1</td>
+<td><code>maxUses</code> is part of the voucher struct but vouchers are single-use by nonce.</td>
+<td>Low/code quality.</td>
+</tr>
+<tr>
+<td>L-04</td>
+<td>FeeRouterV1</td>
+<td>Governance setters for <code>voucherSigner</code> and <code>feeCollector</code> do not reject <code>address(0)</code>.</td>
+<td>Low; timelock/governance controlled.</td>
+</tr>
+<tr>
+<td>L-05</td>
+<td>FeeRouterV1</td>
+<td><code>swapWithFee()</code> forwards ETH to external adapter without <code>nonReentrant</code>; state exposure is limited.</td>
+<td>Low defense-in-depth item.</td>
+</tr>
+<tr>
+<td>L-06</td>
+<td>BuybackVault</td>
+<td><code>executeBuyback()</code> lacks <code>nonReentrant</code>; owner-only execution and cooldown reduce exploitability.</td>
+<td>Low defense-in-depth item.</td>
+</tr>
+<tr>
+<td>L-07</td>
+<td>BuybackVault / BuybackController</td>
+<td>Router mutability requires governance discipline and timelock monitoring.</td>
+<td>Low operational risk.</td>
+</tr>
+<tr>
+<td>L-08</td>
+<td>IFRLock</td>
+<td>Guardian is a privileged pause role for locking; unlock remains available, limiting user-fund impact.</td>
+<td>Low operational risk.</td>
+</tr>
+</tbody>
+</table>
+<h3>Informational (6)</h3>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Area</th>
+<th>Summary</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>I-01</td>
+<td>Tokenomics</td>
+<td>InfernoToken has no public mint function after constructor; supply only decreases through burns.</td>
+</tr>
+<tr>
+<td>I-02</td>
+<td>Deployment</td>
+<td>Mainnet deployment docs report all scoped addresses verified on Etherscan.</td>
+</tr>
+<tr>
+<td>I-03</td>
+<td>Governance</td>
+<td>Core ownership is routed through Governance and TreasurySafe 3-of-5 according to deployment docs.</td>
+</tr>
+<tr>
+<td>I-04</td>
+<td>Testing</td>
+<td>Historical documentation records 544/578 tests and 91% branch coverage; current default command runs only 30 tests.</td>
+</tr>
+<tr>
+<td>I-05</td>
+<td>Tooling</td>
+<td>Slither direct <code>contracts/</code> invocation should be replaced with Hardhat-aware Slither usage in CI.</td>
+</tr>
+<tr>
+<td>I-06</td>
+<td>Documentation</td>
+<td>The report should be superseded by a third-party audit before material external reliance.</td>
+</tr>
+</tbody>
+</table>
+<h2>Contract-by-Contract Analysis</h2>
+<h3>InfernoToken</h3>
+<p><strong>Address:</strong> <code>0x77e99917Eca8539c62F509ED1193ac36580A6e7B</code><br />
+<strong>Decimals:</strong> 9<br />
+<strong>Supply:</strong> 1,000,000,000 IFR initial supply<br />
+<strong>Source:</strong> <code>contracts/token/InfernoToken.sol</code> - 93 lines, 5 implementation functions<br />
+<strong>Tests:</strong> 22 passing when run directly.</p>
+<p><strong>Key Functions:</strong></p>
+<ul>
+<li><code>transfer()</code> / <code>transferFrom()</code> - inherited ERC-20 transfer entry points route through <code>_update()</code>, where non-exempt transfers apply burn and pool fee accounting.</li>
+<li><code>feeExempt</code> mapping - owner-controlled exemption list used for protocol vaults and operational addresses.</li>
+<li>Burn mechanism - 2.0% sender burn plus 0.5% recipient burn by default, with total fee cap of 5% across burn and pool fee components.</li>
+</ul>
+<p><strong>Security Properties:</strong></p>
+<ul>
+<li>PASS: No mint function is exposed after deployment.</li>
+<li>PASS: Fee-rate updates are capped at 5%.</li>
+<li>PASS: Pool fee receiver cannot be set to zero.</li>
+<li>PASS: Reentrancy is not applicable to transfer fee logic because <code>_update()</code> performs internal ERC-20 accounting and no arbitrary external calls.</li>
+<li>NOTE: Fee exemption governance is a powerful operational control and must remain timelocked/multisig controlled.</li>
+</ul>
+<h3>IFRLock</h3>
+<p><strong>Address:</strong> <code>0x769928aBDfc949D0718d8766a1C2d7dBb63954Eb</code><br />
+<strong>Source:</strong> <code>contracts/lock/IFRLock.sol</code> - 127 lines, 10 implementation functions plus IERC20 interface<br />
+<strong>Tests:</strong> 37 statically counted.</p>
+<p><strong>Key Functions:</strong></p>
+<ul>
+<li><code>lock()</code> / <code>lockWithType()</code> - transfer IFR from the user into the lock contract and increase tracked locked balance.</li>
+<li><code>unlock()</code> - deletes user lock state before transferring IFR back, uses <code>nonReentrant</code>, and remains available while locking is paused.</li>
+<li><code>pause()</code> / <code>unpause()</code> / <code>setGuardian()</code> - guardian-only operational controls.</li>
+</ul>
+<p><strong>Security Properties:</strong></p>
+<ul>
+<li>PASS: Unlock follows checks-effects-interactions and uses <code>nonReentrant</code>.</li>
+<li>PASS: Pause only blocks new locks, not user exits.</li>
+<li>PASS: Zero token and zero guardian constructor values are rejected.</li>
+<li>NOTE: Correct operation requires the lock contract to remain fee-exempt in InfernoToken.</li>
+</ul>
+<h3>BootstrapVaultV3</h3>
+<p><strong>Address:</strong> <code>0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141</code><br />
+<strong>Source:</strong> <code>contracts/bootstrap/BootstrapVaultV3.sol</code> - 250 lines, 8 implementation functions plus interfaces<br />
+<strong>Tests:</strong> 30 statically counted.</p>
+<p><strong>Key Functions:</strong></p>
+<ul>
+<li><code>contribute()</code> - accepts ETH during the configured window, enforces min/max contribution, and records contributors.</li>
+<li><code>finalise()</code> - permissionlessly creates Uniswap V2 liquidity after the sale and optionally locks LP tokens through Team.Finance.</li>
+<li><code>claim()</code> - distributes pro-rata IFR allocation to contributors.</li>
+<li><code>refund()</code> - allows contributor ETH recovery after a 30-day grace period if finalization never occurs.</li>
+</ul>
+<p><strong>Security Properties:</strong></p>
+<ul>
+<li>PASS: No admin withdrawal function exists.</li>
+<li>PASS: Pro-rata allocation reduces contribution-order front-running.</li>
+<li>PASS: <code>refund()</code> zeros state before ETH transfer.</li>
+<li>PASS: Finalization is blocked after any refund.</li>
+<li>NOTE: LP-token reclaim is intentionally unavailable when the contract is configured as the Team.Finance withdrawer.</li>
+</ul>
+<h3>FeeRouterV1</h3>
+<p><strong>Address:</strong> <code>0x4807B77B2E25cD055DA42B09BA4d0aF9e580C60a</code><br />
+<strong>Source:</strong> <code>contracts/FeeRouterV1.sol</code> - 228 lines, 8 functions<br />
+<strong>Tests:</strong> 33 statically counted.</p>
+<p><strong>Key Functions:</strong></p>
+<ul>
+<li><code>swapWithFee()</code> - routes ETH through whitelisted adapters and sends protocol fees to <code>feeCollector</code>.</li>
+<li><code>_applyVoucher()</code> - validates EIP-712 discount vouchers and consumes nonces.</li>
+<li><code>setFeeBps()</code> / <code>setAdapter()</code> / <code>setVoucherSigner()</code> / <code>setPaused()</code> / <code>setFeeCollector()</code> - governance controls.</li>
+</ul>
+<p><strong>Security Properties:</strong></p>
+<ul>
+<li>PASS: Adapter execution is whitelist-gated.</li>
+<li>PASS: Voucher replay protection is nonce-based.</li>
+<li>PASS: Protocol fee is capped by <code>FEE_CAP_BPS</code>.</li>
+<li>LOW: <code>maxUses</code> is not enforced and should be removed or implemented.</li>
+<li>LOW: Governance setters should reject zero addresses for signer and collector.</li>
+</ul>
+<h3>BuybackController</h3>
+<p><strong>Address:</strong> <code>0x1e0547D50005A4Af66AbD5e6915ebfAA2d711F7c</code><br />
+<strong>Source:</strong> <code>contracts/buyback/BuybackController.sol</code> - 276 lines, 16 implementation functions plus interfaces<br />
+<strong>Tests:</strong> 50 statically counted.</p>
+<p><strong>Key Functions:</strong></p>
+<ul>
+<li><code>execute()</code> - permissionlessly processes pending ETH after cooldown.</li>
+<li><code>_buybackAndBurn()</code> - swaps ETH to IFR and routes bought IFR to burn reserve.</li>
+<li><code>_addLiquidity()</code> - adds ETH and IFR to Uniswap V2 liquidity or falls back to buyback on failure.</li>
+<li><code>setCooldown()</code> / <code>setMinTrigger()</code> / <code>setSlippage()</code> / <code>setRouter()</code> / <code>setLpReceiver()</code> - owner-governed configuration.</li>
+</ul>
+<p><strong>Security Properties:</strong></p>
+<ul>
+<li>PASS: Cooldown, minimum trigger, and slippage are bounded.</li>
+<li>PASS: Pause is guardian-only; configuration is owner-only.</li>
+<li>PASS: LP failure falls back to buyback path rather than leaving execution permanently blocked.</li>
+<li>NOTE: Router and LP receiver mutability require timelock/multisig monitoring.</li>
+</ul>
+<h3>BuybackVault</h3>
+<p><strong>Address:</strong> <code>0x670D293e3D65f96171c10DdC8d88B96b0570F812</code><br />
+<strong>Source:</strong> <code>contracts/buyback/BuybackVault.sol</code> - 176 lines, 7 implementation functions plus interfaces<br />
+<strong>Tests:</strong> 26 statically counted.</p>
+<p><strong>Key Functions:</strong></p>
+<ul>
+<li><code>depositETH()</code> - accepts ETH for later buyback execution.</li>
+<li><code>executeBuyback()</code> - swaps ETH to IFR and splits output between burn reserve and treasury.</li>
+<li><code>setParams()</code> - owner-controlled burn share, cooldown, slippage, router, and treasury configuration.</li>
+</ul>
+<p><strong>Security Properties:</strong></p>
+<ul>
+<li>PASS: Activation delay prevents immediate post-deploy execution.</li>
+<li>PASS: Burn share and slippage are bounded to &lt;= 100%.</li>
+<li>PASS: Owner can transfer ownership and guardian can pause execution.</li>
+<li>LOW: <code>executeBuyback()</code> is owner-only but lacks <code>nonReentrant</code>; add as defense in depth in a future version.</li>
+</ul>
+<h3>CommitmentVault</h3>
+<p><strong>Address:</strong> <code>0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3</code><br />
+<strong>Source:</strong> <code>contracts/vault/CommitmentVault.sol</code> - 244 lines, 12 functions<br />
+<strong>Tests:</strong> 45 statically counted.</p>
+<p><strong>Key Functions:</strong></p>
+<ul>
+<li><code>lock()</code> - creates time- and/or price-conditioned IFR tranches.</li>
+<li><code>isConditionMet()</code> - evaluates unlock eligibility.</li>
+<li><code>markConditionMet()</code> - starts the public auto-unlock delay.</li>
+<li><code>unlock()</code> - sends IFR back to original wallet after conditions are met.</li>
+<li><code>setP0()</code> / <code>setPriceOracle()</code> - governance-controlled pricing configuration.</li>
+</ul>
+<p><strong>Security Properties:</strong></p>
+<ul>
+<li>PASS: Unlock always pays the original wallet, not the caller.</li>
+<li>PASS: <code>MAX_TRANCHES</code> limits per-wallet iteration cost.</li>
+<li>PASS: <code>setP0()</code> is one-time only and rejects zero values.</li>
+<li>MEDIUM: Price-condition paths are not functional until oracle integration is implemented; current <code>_getCurrentPrice()</code> returns zero.</li>
+</ul>
+<h3>LendingVault</h3>
+<p><strong>Address:</strong> <code>0x974305Ab0EC905172e697271C3d7d385194EB9DF</code><br />
+<strong>Source:</strong> <code>contracts/vault/LendingVault.sol</code> - 406 lines, 18 functions<br />
+<strong>Tests:</strong> 55 statically counted.</p>
+<p><strong>Key Functions:</strong></p>
+<ul>
+<li><code>createOffer()</code> / <code>increaseOffer()</code> / <code>withdrawOffer()</code> - lender IFR liquidity management.</li>
+<li><code>borrow()</code> - creates ETH-collateralized IFR loans.</li>
+<li><code>repay()</code> - accepts principal plus interest, restores offer liquidity, and returns ETH collateral.</li>
+<li><code>liquidate()</code> - pays liquidator bonus and lender collateral when ratio falls below liquidation threshold.</li>
+<li><code>setIFRPrice()</code> / <code>setProtocolFeeReceiver()</code> - governance controls.</li>
+</ul>
+<p><strong>Security Properties:</strong></p>
+<ul>
+<li>PASS: Major state-mutating token/ETH flows use <code>nonReentrant</code>.</li>
+<li>PASS: Borrowing enforces duration, active loan count, non-self-borrow, offer availability, and collateralization checks.</li>
+<li>PASS: Liquidation requires collateral ratio below 120%.</li>
+<li>MEDIUM: Collateral safety depends on timely and accurate governance price updates.</li>
+<li>NOTE: ETH return uses <code>transfer</code>; this limits gas forwarding but can fail for contract borrowers with expensive receive logic.</li>
+</ul>
+<h3>Governance</h3>
+<p><strong>Address:</strong> <code>0xc43d48E7FDA576C5022d0670B652A622E8caD041</code><br />
+<strong>Source:</strong> <code>contracts/governance/Governance.sol</code> - 150 lines, 7 implementation functions<br />
+<strong>Tests:</strong> 36 statically counted.</p>
+<p><strong>Key Functions:</strong></p>
+<ul>
+<li><code>propose()</code> - queues target calldata with current delay.</li>
+<li><code>execute()</code> - owner-only execution after ETA.</li>
+<li><code>cancel()</code> - owner or guardian cancellation path.</li>
+<li><code>setDelay()</code> / <code>setOwner()</code> - self-call-only timelocked changes.</li>
+<li><code>setGuardian()</code> - owner-controlled guardian rotation.</li>
+</ul>
+<p><strong>Security Properties:</strong></p>
+<ul>
+<li>PASS: Delay is bounded between 1 hour and 30 days.</li>
+<li>PASS: Delay and owner changes must be executed through the governance contract itself.</li>
+<li>PASS: Guardian can cancel but cannot execute proposals.</li>
+<li>MEDIUM: Guardian rotation is not self-call-only and should be considered for timelock routing in a future version.</li>
+</ul>
+<h2>On-Chain Verification</h2>
+<p>All scoped contracts are documented as verified on Etherscan in <code>docs/DEPLOYMENTS.md</code>.</p>
+<table>
+<thead>
+<tr>
+<th>Contract</th>
+<th>Etherscan</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>InfernoToken</td>
+<td>https://etherscan.io/address/0x77e99917Eca8539c62F509ED1193ac36580A6e7B#code</td>
+</tr>
+<tr>
+<td>IFRLock</td>
+<td>https://etherscan.io/address/0x769928aBDfc949D0718d8766a1C2d7dBb63954Eb#code</td>
+</tr>
+<tr>
+<td>BootstrapVaultV3</td>
+<td>https://etherscan.io/address/0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141#code</td>
+</tr>
+<tr>
+<td>FeeRouterV1</td>
+<td>https://etherscan.io/address/0x4807B77B2E25cD055DA42B09BA4d0aF9e580C60a#code</td>
+</tr>
+<tr>
+<td>BuybackController</td>
+<td>https://etherscan.io/address/0x1e0547D50005A4Af66AbD5e6915ebfAA2d711F7c#code</td>
+</tr>
+<tr>
+<td>BuybackVault</td>
+<td>https://etherscan.io/address/0x670D293e3D65f96171c10DdC8d88B96b0570F812#code</td>
+</tr>
+<tr>
+<td>CommitmentVault</td>
+<td>https://etherscan.io/address/0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3#code</td>
+</tr>
+<tr>
+<td>LendingVault</td>
+<td>https://etherscan.io/address/0x974305Ab0EC905172e697271C3d7d385194EB9DF#code</td>
+</tr>
+<tr>
+<td>Governance</td>
+<td>https://etherscan.io/address/0xc43d48E7FDA576C5022d0670B652A622E8caD041#code</td>
+</tr>
+</tbody>
+</table>
+<h2>Test Results</h2>
+<p>Command:</p>
+<pre><code class="language-bash">npx hardhat test
+</code></pre>
+<p>Result:</p>
+<pre><code class="language-text">30 passing, 0 failing
+</code></pre>
+<p>Additional direct contract test:</p>
+<pre><code class="language-bash">npx hardhat test test/InfernoToken.test.js
+</code></pre>
+<p>Result:</p>
+<pre><code class="language-text">22 passing
+</code></pre>
+<p>Explicit repository contract suite:</p>
+<pre><code class="language-bash">npx hardhat test test/*.test.js
+</code></pre>
+<p>Result:</p>
+<pre><code class="language-text">597 passing (9m)
+</code></pre>
+<p>Static test counts by scoped contract:</p>
+<table>
+<thead>
+<tr>
+<th>Contract</th>
+<th>Test file</th>
+<th style="text-align:right">Count</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>InfernoToken</td>
+<td><code>test/InfernoToken.test.js</code></td>
+<td style="text-align:right">22</td>
+</tr>
+<tr>
+<td>IFRLock</td>
+<td><code>test/IFRLock.test.js</code></td>
+<td style="text-align:right">37</td>
+</tr>
+<tr>
+<td>BootstrapVaultV3</td>
+<td><code>test/BootstrapVaultV3.test.js</code></td>
+<td style="text-align:right">30</td>
+</tr>
+<tr>
+<td>FeeRouterV1</td>
+<td><code>test/FeeRouterV1.test.js</code></td>
+<td style="text-align:right">33</td>
+</tr>
+<tr>
+<td>BuybackController</td>
+<td><code>test/BuybackController.test.js</code></td>
+<td style="text-align:right">50</td>
+</tr>
+<tr>
+<td>BuybackVault</td>
+<td><code>test/BuybackVault.test.js</code></td>
+<td style="text-align:right">26</td>
+</tr>
+<tr>
+<td>CommitmentVault</td>
+<td><code>test/CommitmentVault.test.js</code></td>
+<td style="text-align:right">45</td>
+</tr>
+<tr>
+<td>LendingVault</td>
+<td><code>test/LendingVault.test.js</code></td>
+<td style="text-align:right">55</td>
+</tr>
+<tr>
+<td>Governance</td>
+<td><code>test/Governance.test.js</code></td>
+<td style="text-align:right">36</td>
+</tr>
+</tbody>
+</table>
+<h2>Deployment Security</h2>
+<ul>
+<li>PASS: Mainnet deployment docs report scoped contracts verified on Etherscan.</li>
+<li>PASS: Core ownable contracts were transferred to Governance.</li>
+<li>PASS: Governance owner is documented as TreasurySafe 3-of-5 multisig.</li>
+<li>PASS: Governance delay is documented as 48 hours.</li>
+<li>PASS: No proxy pattern or upgradeable contracts were identified in the scoped contracts.</li>
+<li>PASS: BootstrapVaultV3 has no admin withdrawal path.</li>
+<li>NOTE: Some operational roles remain by design, including guardians for pause/cancel flows and governed router/price parameters.</li>
+</ul>
+<h2>Conclusion</h2>
+<p>The reviewed IFR contracts show a mature security posture for an internally reviewed protocol: core ownership is timelocked, deployment addresses are verified, token supply cannot be reminted after deployment, and the primary user-fund flows use direct accounting, bounded parameters, and reentrancy protection where most relevant. No critical issue was manually confirmed in this review.</p>
+<p>The main residual risks are governance and operational rather than immediate code-level fund-drain paths: fee-exemption invariants, price input integrity for lending, future oracle implementation for CommitmentVault price conditions, and timely triage of Slither's broad project-level automated warnings. This report is suitable as an internal audit artifact and should be supplemented by an independent third-party audit before being treated as external assurance.</p>
+<h2>Disclaimer</h2>
+<p>This report represents an internal security review based on the repository state and local tool outputs available during review. It is not a formal third-party audit, does not provide a warranty, and does not guarantee absence of vulnerabilities. Smart contracts and DeFi systems remain subject to market, governance, operational, MEV, dependency, and implementation risks.</p>
+</main></body>
+</html>
