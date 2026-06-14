@@ -4,6 +4,25 @@
 
 ---
 
+## 2026-06-10 [CODEX]
+### TYPE: MEMO
+### STATUS: CURRENT — Session Backup / Restart Stand
+
+- HEAD Commit: `7cd356cb`
+- Phase: 2 abgeschlossen / Phase 3 läuft
+- IFR: live auf Uniswap
+- Bootstrap: FINALIZED 05.06.2026
+- Blockaid: unflagged 10.06.2026
+- Pool: 0.038 ETH (dünn — Contributors kaufen morgen)
+- Contributor Adressen on-chain aus `BootstrapVaultV3.contributors()` verifiziert:
+  - C1: `0x4f632748460E5277bF8435259cADce440AbAC254`
+  - C2: `0x80fF32c5441cBCbFa5c3ce0dC70359BDD05B6958`
+  - C3: `0xf556cCe85128c93AC6A7e088cF334180F2D3905B`
+
+Session Log: `docs/SESSION_LOG_20260610.md`
+
+---
+
 ## Blockaid Unflag — 10.06.2026
 ### TYPE: SECURITY
 ### STATUS: DONE — Unflag bestaetigt
