@@ -275,16 +275,22 @@ On errors: fix immediately, commit with `seo:` prefix.
       3 × 0.03 ETH = 0.09 ETH Volumen → Pool ~0.128 ETH → Preis ~+300%
       https://app.uniswap.org/swap?outputCurrency=0x77e99917Eca8539c62F509ED1193ac36580A6e7B
 
+- [ ] 🔴 11.06: Contributors kaufen 0.03 ETH auf Uniswap
+      → Runbook: docs/CONTRIBUTOR_RUNBOOK.md
+
+- [ ] 🔴 11.06: Blockaid Retest (nach 24h Propagation)
+      → Checkliste: BRIDGE.md
+
 - [ ] 🔴 CommitmentVault Lock ausführen (NACH Käufen)
-      Script: scripts/contributor1-lock.js (dynamisch: balance/10, TIME_ONLY 30d)
-      DRY_RUN: CONTRIBUTOR_ADDR=0x... DRY_RUN=true node scripts/contributor1-lock.js ✅
-      LIVE:    CONTRIBUTOR_ADDR=0x... MAINNET=true PRIVATE_KEY=0x... node scripts/contributor1-lock.js
+      Script: scripts/contributors-lock.js (dynamisch: balance/10, TIME_ONLY 30d)
+      DRY_RUN: CONTRIBUTOR_ADDR=0x... DRY_RUN=true node scripts/contributors-lock.js ✅
+      LIVE:    CONTRIBUTOR_ADDR=0x... MAINNET=true PRIVATE_KEY=0x... node scripts/contributors-lock.js
       Dry Run Output: 10 × 3,333,333 IFR, TIME_ONLY(0), unlockTime+30d, p0Multiplier=0 ✅
 
 - [ ] 🔴 LendingVault createOffer() ausführen
-      Script: scripts/contributor1-lending-allowance.js (50% balance = ~16.6M IFR)
-      DRY_RUN: CONTRIBUTOR_ADDR=0x... DRY_RUN=true node scripts/contributor1-lending-allowance.js ✅
-      LIVE:    CONTRIBUTOR_ADDR=0x... MAINNET=true PRIVATE_KEY=0x... node scripts/contributor1-lending-allowance.js
+      Script: scripts/contributors-lending-offer.js (50% balance = ~16.6M IFR)
+      DRY_RUN: CONTRIBUTOR_ADDR=0x... DRY_RUN=true node scripts/contributors-lending-offer.js ✅
+      LIVE:    CONTRIBUTOR_ADDR=0x... MAINNET=true PRIVATE_KEY=0x... node scripts/contributors-lending-offer.js
 
 - [ ] 🟡 StealthX × IFR Integration
       Spec: docs/STEALTHX_IFR_INTEGRATION.md
@@ -462,10 +468,10 @@ On errors: fix immediately, commit with `seo:` prefix.
 - [x] Security policy: no PII, no wallet outputs, no contract addresses, only ifrunit.tech, reliability disclaimer, scam awareness ✅
 - [x] ✅ Bootstrap status "NOW ACTIVE" (16.04.2026)
       ifr-knowledge.ts, system-prompts.ts, server/index.ts — dead "NOT YET ACTIVE" branch entfernt
-      Status: Bootstrap is LIVE since 07.03.2026, ends 05.06.2026
+      Status: Bootstrap started 07.03.2026 and ended 05.06.2026
 - [x] ✅ Ali Copilot Bootstrap ENDED update (06.06.2026) — Issue #35
       ifr-knowledge.ts: phase/currentState/startDate updated, lpToken/finaliseTx/uniswapLink added, ETHRaised→0.030, Proposal #15 added
-      system-prompts.ts: bootstrapBlock ENDED details, explorer prompt "NOW LIVE" removed
+      system-prompts.ts: bootstrapBlock ENDED details, old live wording removed
 - [ ] Ali Phase 2: WalletConnect → wallet-specific responses (after LP live)
 
 ---
