@@ -139,7 +139,7 @@
       <li><div class="cb cb-done">&#x2713;</div>Persistent verification &mdash; <code>f30dc3ce</code> (17.03)</li>
       <li><div class="cb cb-done">&#x2713;</div>SIGNER_WALLETS + VERIFY_PORT in Railway</li>
       <li><div class="cb cb-done">&#x2713;</div>&#x2705; Ali Copilot: Bootstrap status &ldquo;NOW ACTIVE&rdquo; (16.04.2026) &mdash; ifr-knowledge.ts, system-prompts.ts, server/index.ts &mdash; dead &ldquo;NOT YET ACTIVE&rdquo; branch entfernt</li>
-      <li><div class="cb cb-done">&#x2713;</div>&#x2705; Ali Copilot: Bootstrap ENDED update (06.06.2026) &mdash; Issue #35 &mdash; lpToken, finaliseTx, ETHRaised=0.030, Proposal #15, Uniswap link, &ldquo;NOW LIVE&rdquo; removed from prompts</li>
+      <li><div class="cb cb-done">&#x2713;</div>&#x2705; Ali Copilot: Bootstrap ENDED update (06.06.2026) &mdash; Issue #35 &mdash; lpToken, finaliseTx, ETHRaised=0.030, Proposal #15, Uniswap link, old live wording removed from prompts</li>
       <li><div class="cb"></div>Ali Phase 2: WalletConnect (after LP)</li>
     </ul>
     <h3>Builder Applications</h3>
@@ -180,14 +180,18 @@
       <li><div class="cb"></div>&#x1F534; <strong>Contributors informieren: ZUERST kaufen!</strong><br>
         <span style="color:#ef4444;font-size:0.82rem;">Jeder Contributor: 0.03 ETH &rarr; <a href="https://app.uniswap.org/swap?outputCurrency=0x77e99917Eca8539c62F509ED1193ac36580A6e7B" target="_blank" rel="noopener">Uniswap</a> &rarr; IFR kaufen (BEVOR Lock!)<br>
         3 &times; 0.03 ETH = 0.09 ETH &rarr; Pool ~0.128 ETH &rarr; Preis ~+300%</span></li>
+      <li><div class="cb"></div>&#x1F534; <strong>11.06: Contributors kaufen 0.03 ETH auf Uniswap</strong><br>
+        <span style="color:#ef4444;font-size:0.82rem;">Runbook: <code>docs/CONTRIBUTOR_RUNBOOK.md</code></span></li>
+      <li><div class="cb"></div>&#x1F534; <strong>11.06: Blockaid Retest</strong> (nach 24h Propagation)<br>
+        <span style="color:#ef4444;font-size:0.82rem;">Checkliste: <code>BRIDGE.md</code></span></li>
       <li><div class="cb"></div>&#x1F534; <strong>CommitmentVault Lock ausf&uuml;hren</strong> (nach K&auml;ufen)<br>
-        <span style="color:#6b7280;font-size:0.82rem;">Script: <code>scripts/contributor1-lock.js</code> &mdash; TIME_ONLY(0), 30d, balance/10 pro Tranche<br>
+        <span style="color:#6b7280;font-size:0.82rem;">Script: <code>scripts/contributors-lock.js</code> &mdash; TIME_ONLY(0), 30d, balance/10 pro Tranche<br>
         DRY_RUN &#x2705; &mdash; 10 &times; 3,333,333 IFR, TIME_ONLY(0), p0Multiplier=0<br>
-        LIVE: <code>CONTRIBUTOR_ADDR=0x... MAINNET=true PRIVATE_KEY=0x... node scripts/contributor1-lock.js</code></span></li>
+        LIVE: <code>CONTRIBUTOR_ADDR=0x... MAINNET=true PRIVATE_KEY=0x... node scripts/contributors-lock.js</code></span></li>
       <li><div class="cb"></div>&#x1F534; <strong>LendingVault createOffer() ausf&uuml;hren</strong><br>
-        <span style="color:#6b7280;font-size:0.82rem;">Script: <code>scripts/contributor1-lending-allowance.js</code> &mdash; 50% Balance = ~16.6M IFR<br>
+        <span style="color:#6b7280;font-size:0.82rem;">Script: <code>scripts/contributors-lending-offer.js</code> &mdash; 50% Balance = ~16.6M IFR<br>
         DRY_RUN &#x2705; &mdash; approve + createOffer korrekt<br>
-        LIVE: <code>CONTRIBUTOR_ADDR=0x... MAINNET=true PRIVATE_KEY=0x... node scripts/contributor1-lending-allowance.js</code></span></li>
+        LIVE: <code>CONTRIBUTOR_ADDR=0x... MAINNET=true PRIVATE_KEY=0x... node scripts/contributors-lending-offer.js</code></span></li>
       <li><div class="cb"></div>&#x1F7E1; <strong>StealthX &times; IFR Integration</strong><br>
         <span style="color:#6b7280;font-size:0.82rem;">Spec: <code>docs/STEALTHX_IFR_INTEGRATION.md</code><br>
         IFRLock gate: <code>lockedBalance(wallet) &ge; 1000 IFR</code> &rarr; Premium unlock<br>

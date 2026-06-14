@@ -19,6 +19,18 @@ Nach 24h testen:
 
 ---
 
+## Blockaid Retest — 11.06.2026 (nach 24h)
+
+| Test | Device | Result |
+|---|---|---|
+| MetaMask: IFR importieren | Desktop | PASS/FAIL |
+| MetaMask: Uniswap IFR kaufen | Desktop | PASS/FAIL |
+| WalletConnect: bootstrap.html | Desktop | PASS/FAIL |
+| MetaMask: IFR importieren | Samsung S10 | PASS/FAIL |
+| WalletConnect: bootstrap.html | Samsung S10 | PASS/FAIL |
+
+---
+
 ## 2026-06-10 [CODEX]
 ### TYPE: REVIEW
 ### STATUS: DONE — Vollstaendiger Projekt-Status-Audit
