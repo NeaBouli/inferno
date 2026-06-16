@@ -139,6 +139,20 @@ nav #connect {
   }
 }
 
+@media (max-width: 1120px) {
+  nav .nav-inner {
+    gap: 14px !important;
+  }
+
+  nav .nav-links {
+    gap: 16px !important;
+  }
+
+  nav .nav-cta .btn-ghost {
+    display: none !important;
+  }
+}
+
 .masthead {
   position: relative !important;
   height: 440px !important;
@@ -397,6 +411,62 @@ nav #connect {
   z-index: 1 !important;
   display: block !important;
   filter: drop-shadow(0 10px 22px rgba(62, 69, 77, .1));
+}
+
+#faq {
+  background: var(--bg-alt) !important;
+  border-top: 1px solid var(--line) !important;
+  border-bottom: 1px solid var(--line) !important;
+}
+
+#faq h2 {
+  color: var(--ink) !important;
+}
+
+#faq p,
+#faq span {
+  color: var(--ink-muted) !important;
+}
+
+#faq .lp-faq-item {
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, .96), rgba(246, 242, 235, .92)) !important;
+  border: 1px solid var(--line) !important;
+  box-shadow: var(--shadow-soft) !important;
+}
+
+#faq .lp-faq-item:hover {
+  border-color: var(--line-strong) !important;
+}
+
+#faq .lp-faq-q {
+  color: var(--ink) !important;
+  background: transparent !important;
+}
+
+#faq .lp-faq-q:hover {
+  color: var(--accent) !important;
+}
+
+#faq .lp-faq-a-inner {
+  color: var(--ink-2) !important;
+  border-top: 1px solid var(--line) !important;
+}
+
+#faq .lp-faq-a-inner a,
+#faq .lp-faq-icon {
+  color: var(--accent) !important;
+}
+
+#governance .reveal[style*="background:rgba(17,24,39"] {
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, .96), rgba(246, 242, 235, .92)) !important;
+  border: 1px solid var(--line) !important;
+  box-shadow: var(--shadow-soft) !important;
+}
+
+#governance .reveal[style*="background:rgba(17,24,39"] h4 {
+  color: var(--ink) !important;
 }
 
 @media (max-width: 900px) {
