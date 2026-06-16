@@ -1,0 +1,139 @@
+/* Landing header copied to match inferno-redesign.html. */
+nav {
+  background: color-mix(in srgb, #FAF7F2 82%, transparent) !important;
+  backdrop-filter: blur(14px) !important;
+  border-bottom: 1px solid #E6DDD0 !important;
+  box-shadow: none !important;
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 50 !important;
+}
+
+nav .nav-inner {
+  max-width: 1140px !important;
+  height: 66px !important;
+  padding: 0 24px !important;
+  margin: 0 auto !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 24px !important;
+}
+
+nav .nav-brand {
+  display: flex !important;
+  align-items: center !important;
+  gap: 11px !important;
+  color: #211C17 !important;
+  text-decoration: none !important;
+  margin: 0 !important;
+  white-space: nowrap !important;
+}
+
+nav .nav-brand img {
+  width: 30px !important;
+  height: 30px !important;
+  border-radius: 50% !important;
+  display: block !important;
+}
+
+nav .nav-brand .wm {
+  font-family: "IBM Plex Sans", -apple-system, system-ui, sans-serif !important;
+  font-size: 16px !important;
+  font-weight: 600 !important;
+  letter-spacing: .06em !important;
+  color: #211C17 !important;
+}
+
+nav .nav-brand .tk {
+  font-family: "IBM Plex Mono", "SF Mono", Menlo, monospace !important;
+  font-size: 12px !important;
+  font-weight: 400 !important;
+  margin-left: 2px !important;
+  color: #8C8273 !important;
+}
+
+nav .nav-links {
+  display: flex !important;
+  align-items: center !important;
+  gap: 26px !important;
+  list-style: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+nav .nav-links a {
+  color: #574F45 !important;
+  text-decoration: none !important;
+  font-family: "IBM Plex Sans", -apple-system, system-ui, sans-serif !important;
+  font-size: 14px !important;
+  font-weight: 400 !important;
+  letter-spacing: 0 !important;
+}
+
+nav .nav-links a:hover {
+  color: #211C17 !important;
+}
+
+nav .nav-cta {
+  display: flex !important;
+  align-items: center !important;
+  gap: 14px !important;
+  margin: 0 !important;
+  flex-shrink: 0 !important;
+}
+
+nav .nav-cta .btn {
+  min-height: 44px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 9px !important;
+  font-family: "IBM Plex Sans", -apple-system, system-ui, sans-serif !important;
+  font-size: 15px !important;
+  font-weight: 500 !important;
+  line-height: normal !important;
+  letter-spacing: 0 !important;
+  border-radius: 4px !important;
+  box-shadow: none !important;
+}
+
+nav .nav-cta .btn-ghost {
+  background: transparent !important;
+  color: #211C17 !important;
+  border: 1px solid #D7CCBB !important;
+}
+
+nav #connect {
+  padding: 9px 18px !important;
+  background: #B0481E !important;
+  border: 1px solid transparent !important;
+  color: #fff !important;
+}
+
+@media (max-width: 900px) {
+  nav .nav-inner {
+    gap: 14px !important;
+  }
+
+  nav .nav-links {
+    display: none !important;
+  }
+
+  nav .nav-cta {
+    margin-left: auto !important;
+  }
+
+  nav .nav-cta .btn-ghost {
+    display: none !important;
+  }
+
+  nav #connect {
+    min-height: 38px !important;
+    padding: 8px 14px !important;
+    font-size: 13px !important;
+  }
+}

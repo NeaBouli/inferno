@@ -70,7 +70,6 @@ h4, h5, h6,
 .card-title,
 .metric-label,
 .stat-label,
-.nav-logo,
 .sidebar-logo {
   font-family: var(--sans) !important;
 }
@@ -81,7 +80,7 @@ code, pre, kbd, samp {
 
 /* Landing page */
 nav {
-  background: color-mix(in srgb, var(--bg) 84%, transparent) !important;
+  background: color-mix(in srgb, var(--bg) 82%, transparent) !important;
   backdrop-filter: blur(14px);
   border-bottom: 1px solid var(--line) !important;
   box-shadow: none !important;
@@ -100,18 +99,16 @@ nav {
   gap: 24px !important;
 }
 
-.nav-logo,
 .nav-brand {
   display: flex !important;
   align-items: center !important;
   gap: 11px !important;
-  color: var(--ink) !important;
+  color: rgb(33, 28, 23) !important;
   text-decoration: none !important;
   margin-right: 0 !important;
   white-space: nowrap;
 }
 
-.nav-logo img,
 .nav-brand img {
   width: 30px !important;
   height: 30px !important;
@@ -124,7 +121,7 @@ nav {
   font-size: 16px !important;
   letter-spacing: .06em !important;
   text-transform: uppercase;
-  color: var(--ink) !important;
+  color: rgb(33, 28, 23) !important;
 }
 
 .nav-brand .tk {
@@ -163,28 +160,29 @@ nav {
 }
 
 .nav-cta .btn,
-.nav-github,
-#lp-header-connect-btn {
+#connect {
   padding: 9px 16px !important;
   min-height: 44px;
   font-family: var(--sans) !important;
   font-size: 15px !important;
-  font-weight: 600 !important;
+  font-weight: 500 !important;
+  line-height: normal !important;
+  gap: 9px !important;
   letter-spacing: 0 !important;
-  border-radius: var(--radius-sm) !important;
+  border-radius: 4px !important;
 }
 
-#lp-header-connect-btn {
-  padding-inline: 18px !important;
-}
-
-.nav-toggle {
-  background: none !important;
+.nav-cta .btn-ghost {
+  background: transparent !important;
+  color: rgb(33, 28, 23) !important;
   border: 1px solid var(--line-strong) !important;
-  border-radius: var(--radius-sm) !important;
-  color: var(--ink) !important;
-  padding: 7px 9px !important;
-  line-height: 1 !important;
+}
+
+#connect {
+  padding-inline: 18px !important;
+  background: #B0481E !important;
+  border: 1px solid transparent !important;
+  color: #fff !important;
 }
 
 .hero {
@@ -716,11 +714,11 @@ footer,
     margin-left: auto !important;
   }
 
-  .nav-github {
+  .nav-cta .btn-ghost {
     display: none !important;
   }
 
-  #lp-header-connect-btn {
+  #connect {
     min-height: 38px;
     padding: 8px 14px !important;
     font-size: 13px !important;

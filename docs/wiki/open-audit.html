@@ -4,7 +4,8 @@
   <meta charset="UTF-8">
     <link rel="canonical" href="https://ifrunit.tech/wiki/open-audit.html">
   <link rel="alternate" hreflang="en" href="https://ifrunit.tech/wiki/open-audit.html">
-  <link rel="alternate" hreflang="x-default" href="https://ifrunit.tech/wiki/open-audit.html">>  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="alternate" hreflang="x-default" href="https://ifrunit.tech/wiki/open-audit.html">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Open Audit Log &mdash; Inferno ($IFR) Documentation</title>
   <meta name="keywords" content="audit, Grok, xAI, Slither, test coverage, OpenZeppelin, immutable contracts">
   <meta name="description" content="External and internal audit log: Grok (xAI) 10/10 coherence, Slither 0 critical, 544 tests, 99% statement coverage, 91% branch coverage. All contracts immutable — no proxy.">
@@ -757,6 +758,7 @@
   var status = document.getElementById('deflation-status');
   var burnEl = document.getElementById('burn-amount');
   var pctEl = document.getElementById('burn-pct');
+  if (!dot || !status || !burnEl || !pctEl) return;
 
   function showOk() {
     dot.style.background = '#22c55e';
