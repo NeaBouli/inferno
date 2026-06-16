@@ -1,0 +1,604 @@
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap");
+
+/* Inferno 2026 visual skin.
+   This file intentionally overrides only presentation. Existing page content,
+   scripts, IDs, anchors, and data remain in the source pages. */
+
+:root {
+  --bg: #FAF7F2;
+  --bg-alt: #F2ECE2;
+  --bg-card: #FFFFFF;
+  --bg-card-hover: #FBF5EB;
+  --card: #FFFFFF;
+  --surface: #FFFFFF;
+  --border: #E6DDD0;
+  --line: #E6DDD0;
+  --line-strong: #D7CCBB;
+  --text: #211C17;
+  --ink: #211C17;
+  --text-muted: #756B60;
+  --muted: #8C8273;
+  --ink-2: #574F45;
+  --ink-muted: #8C8273;
+  --accent: #B0481E;
+  --accent-deep: #8E3814;
+  --accent-dim: rgba(176, 72, 30, 0.13);
+  --accent-glow: rgba(176, 72, 30, 0.16);
+  --green: #3F6B50;
+  --positive: #3F6B50;
+  --positive-tint: #E8EFE8;
+  --serif: "Newsreader", Georgia, "Times New Roman", serif;
+  --sans: "IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --mono: "IBM Plex Mono", "SF Mono", Menlo, Consolas, monospace;
+  --radius: 6px;
+  --radius-sm: 4px;
+  --shadow-soft: 0 1px 2px rgba(33, 28, 23, .04), 0 8px 24px rgba(33, 28, 23, .05);
+}
+
+html {
+  background: var(--bg);
+  max-width: 100%;
+  overflow-x: clip;
+}
+
+body {
+  font-family: var(--sans) !important;
+  background:
+    linear-gradient(180deg, rgba(250, 247, 242, .98) 0%, rgba(242, 236, 226, .92) 100%) !important;
+  color: var(--ink) !important;
+  line-height: 1.65;
+  font-size: 17px;
+  text-rendering: optimizeLegibility;
+  max-width: 100%;
+  overflow-x: clip;
+}
+
+::selection { background: var(--accent); color: #fff; }
+
+a { color: var(--accent); text-underline-offset: 3px; }
+a:hover { color: var(--accent-deep); }
+
+h1, h2, h3 {
+  font-family: var(--serif) !important;
+  color: var(--ink) !important;
+  font-weight: 600 !important;
+  line-height: 1.12 !important;
+  letter-spacing: 0 !important;
+}
+
+h4, h5, h6,
+.card-title,
+.metric-label,
+.stat-label,
+.nav-logo,
+.sidebar-logo {
+  font-family: var(--sans) !important;
+}
+
+code, pre, kbd, samp {
+  font-family: var(--mono) !important;
+}
+
+/* Landing page */
+nav {
+  background: color-mix(in srgb, var(--bg) 84%, transparent) !important;
+  backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--line) !important;
+  box-shadow: none !important;
+}
+
+.nav-inner { max-width: 1140px !important; }
+.nav-logo, .nav-brand { color: var(--ink) !important; }
+.nav-links a { color: var(--ink-2) !important; }
+.nav-links a:hover { color: var(--ink) !important; }
+
+.hero {
+  background: var(--bg) !important;
+  color: var(--ink) !important;
+  padding-top: 150px !important;
+  padding-bottom: 88px !important;
+}
+
+.hero::before {
+  background:
+    linear-gradient(180deg, rgba(250, 247, 242, .38), rgba(250, 247, 242, .96)) !important;
+}
+
+.hero h1 {
+  font-size: clamp(42px, 6vw, 74px) !important;
+  max-width: 13ch;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.hero h1 .accent,
+.accent {
+  color: var(--accent) !important;
+}
+
+.hero p,
+.section-desc,
+.main p,
+.subtitle,
+.lead {
+  color: var(--ink-2) !important;
+}
+
+section,
+.section {
+  background: var(--bg) !important;
+  border-top: 1px solid var(--line);
+}
+
+section:nth-of-type(even),
+.section.alt {
+  background: var(--bg-alt) !important;
+}
+
+.section-label {
+  font-family: var(--mono) !important;
+  color: var(--accent) !important;
+  letter-spacing: .14em !important;
+}
+
+.section-title {
+  font-family: var(--serif) !important;
+  color: var(--ink) !important;
+  font-size: clamp(32px, 4.4vw, 50px) !important;
+  font-weight: 600 !important;
+}
+
+.btn,
+button,
+input,
+select,
+textarea {
+  font-family: var(--sans) !important;
+}
+
+.btn {
+  border-radius: var(--radius-sm) !important;
+  box-shadow: none !important;
+}
+
+.btn-primary,
+.buy-ifr-btn,
+button[style*="#f97316"],
+button[style*="#ff4500"] {
+  background: var(--accent) !important;
+  border-color: var(--accent) !important;
+  color: #fff !important;
+}
+
+.btn-primary:hover,
+.buy-ifr-btn:hover {
+  background: var(--accent-deep) !important;
+}
+
+.btn-secondary,
+.btn-github,
+.btn-ghost {
+  background: transparent !important;
+  border: 1px solid var(--line-strong) !important;
+  color: var(--ink) !important;
+}
+
+.coin-container,
+.token-visual,
+.hero-visual {
+  filter: drop-shadow(0 16px 30px rgba(33, 28, 23, .12));
+}
+
+/* Wiki shell */
+.layout {
+  background: var(--bg) !important;
+}
+
+.sidebar {
+  background: color-mix(in srgb, var(--surface) 94%, var(--bg-alt)) !important;
+  border-right: 1px solid var(--line) !important;
+  box-shadow: 8px 0 24px rgba(33, 28, 23, .04);
+}
+
+.sidebar-logo {
+  color: var(--accent) !important;
+  border-bottom-color: var(--line) !important;
+  letter-spacing: .12em !important;
+}
+
+.sidebar-subtitle {
+  color: var(--ink-muted) !important;
+}
+
+.sidebar-nav a {
+  color: var(--ink-2) !important;
+  border-left-color: transparent !important;
+}
+
+.sidebar-nav a:hover {
+  color: var(--ink) !important;
+  background: var(--bg-alt) !important;
+}
+
+.sidebar-nav a.active {
+  color: var(--accent) !important;
+  background: color-mix(in srgb, var(--accent) 9%, transparent) !important;
+  border-left-color: var(--accent) !important;
+}
+
+.sidebar-nav .nav-divider {
+  background: var(--line) !important;
+}
+
+.hamburger {
+  background: var(--surface) !important;
+  border-color: var(--line-strong) !important;
+  box-shadow: var(--shadow-soft);
+}
+
+.hamburger span {
+  background: var(--ink) !important;
+}
+
+.sidebar-overlay {
+  background: rgba(33, 28, 23, .38) !important;
+}
+
+.main {
+  max-width: 1120px !important;
+  padding: 52px 64px !important;
+  color: var(--ink) !important;
+}
+
+.main h1 {
+  font-size: clamp(38px, 4.5vw, 58px) !important;
+  margin-bottom: 12px !important;
+}
+
+.main h2 {
+  font-size: clamp(28px, 3vw, 40px) !important;
+  margin-top: 56px !important;
+  margin-bottom: 18px !important;
+}
+
+.main h3 {
+  font-size: clamp(21px, 2vw, 27px) !important;
+  margin-top: 34px !important;
+}
+
+.main p,
+.main li {
+  color: var(--ink-2) !important;
+}
+
+.main p {
+  max-width: 78ch !important;
+}
+
+.main strong {
+  color: var(--ink) !important;
+}
+
+#wiki-wallet-bar {
+  background: color-mix(in srgb, var(--surface) 88%, transparent) !important;
+  border-bottom: 1px solid var(--line) !important;
+  color: var(--ink) !important;
+  box-shadow: 0 8px 20px rgba(33, 28, 23, .05);
+}
+
+#wiki-wallet-bar * {
+  color: inherit;
+}
+
+#wiki-wallet-dropdown,
+#lp-header-dropdown {
+  background: var(--surface) !important;
+  border: 1px solid var(--line) !important;
+  box-shadow: var(--shadow-soft) !important;
+  color: var(--ink) !important;
+}
+
+/* Cards, panels, metrics */
+.card,
+.stat-card,
+.metric,
+.wallet-card,
+.contract-card,
+.vault-widget,
+.info-box,
+.warning-box,
+.success-box,
+.phase-card,
+.chamber,
+.gstep,
+.trust-item,
+.architecture-box,
+.arch-box,
+.step,
+.flow-step,
+.faq-item,
+.toc,
+.callout {
+  background: var(--surface) !important;
+  border: 1px solid var(--line) !important;
+  border-radius: var(--radius) !important;
+  box-shadow: var(--shadow-soft) !important;
+  color: var(--ink) !important;
+}
+
+.cards-grid,
+.cardgrid,
+.stats-grid,
+.metrics {
+  gap: 16px !important;
+}
+
+.card:hover,
+a.card:hover {
+  border-color: var(--line-strong) !important;
+  transform: translateY(-2px);
+}
+
+.card-icon,
+.glyph {
+  background: transparent !important;
+  border: 1px solid var(--line) !important;
+  color: var(--accent) !important;
+  border-radius: 9px !important;
+}
+
+.card-title,
+.card h3,
+.stat-value,
+.metric-value,
+.vault-stat-value {
+  color: var(--ink) !important;
+}
+
+.card-desc,
+.stat-label,
+.metric-label,
+.vault-stat-label,
+.phase-date,
+.subtle,
+.muted {
+  color: var(--ink-muted) !important;
+}
+
+.live,
+.stat-value,
+.metric .num,
+.vault-stat-value .live {
+  color: var(--accent) !important;
+}
+
+.status-badge,
+.badge,
+.tag,
+.phase-banner,
+.road-tag {
+  font-family: var(--mono) !important;
+  border-radius: 999px !important;
+  border: 1px solid var(--line-strong) !important;
+  background: var(--surface) !important;
+  color: var(--accent) !important;
+}
+
+.status-badge.coming-soon,
+.status-ok,
+.road-tag.done {
+  background: var(--positive-tint) !important;
+  border-color: color-mix(in srgb, var(--positive) 28%, var(--line)) !important;
+  color: var(--positive) !important;
+}
+
+/* Tables and code-heavy documentation */
+table {
+  width: 100%;
+  background: var(--surface) !important;
+  border: 1px solid var(--line) !important;
+  border-radius: var(--radius) !important;
+  border-collapse: separate !important;
+  border-spacing: 0 !important;
+  overflow: hidden;
+  box-shadow: var(--shadow-soft);
+}
+
+th,
+td {
+  border-color: var(--line) !important;
+  color: var(--ink-2) !important;
+}
+
+th {
+  background: var(--bg-alt) !important;
+  color: var(--ink) !important;
+  font-family: var(--mono) !important;
+  font-size: 12px !important;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+
+tr:nth-child(even) td {
+  background: color-mix(in srgb, var(--bg-alt) 40%, transparent) !important;
+}
+
+pre {
+  background: #211C17 !important;
+  color: #F6EFE5 !important;
+  border: 1px solid #3A332B !important;
+  border-radius: var(--radius) !important;
+  box-shadow: none !important;
+}
+
+pre code {
+  color: inherit !important;
+  background: transparent !important;
+}
+
+:not(pre) > code {
+  background: color-mix(in srgb, var(--accent) 10%, var(--surface)) !important;
+  color: var(--accent-deep) !important;
+  border: 1px solid color-mix(in srgb, var(--accent) 18%, var(--line)) !important;
+  border-radius: 4px !important;
+  padding: 1px 5px;
+}
+
+hr {
+  border-color: var(--line) !important;
+}
+
+input,
+textarea,
+select {
+  background: var(--surface) !important;
+  border: 1px solid var(--line-strong) !important;
+  color: var(--ink) !important;
+  border-radius: var(--radius-sm) !important;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  outline: 2px solid color-mix(in srgb, var(--accent) 25%, transparent) !important;
+  border-color: var(--accent) !important;
+}
+
+/* Common inline dark surfaces in the existing static pages. */
+.main [style*="background:#0"],
+.main [style*="background: #0"],
+.main [style*="background:#111"],
+.main [style*="background: #111"],
+.main [style*="background:#1"],
+.main [style*="background: #1"],
+.main [style*="background:#222"],
+.main [style*="background: #222"],
+.main [style*="background:rgba(10,10,10"],
+.main [style*="background:rgba(17,17,19"],
+.main [style*="background:rgba(255,69,0"] {
+  background: var(--surface) !important;
+  border-color: var(--line) !important;
+  color: var(--ink) !important;
+}
+
+.main [style*="color:#9ca3af"],
+.main [style*="color:#94a3b8"],
+.main [style*="color:#8a8a96"],
+.main [style*="color:#6b7280"],
+.main [style*="color: var(--muted)"],
+.main [style*="color:var(--muted)"] {
+  color: var(--ink-muted) !important;
+}
+
+.main [style*="color:#f97316"],
+.main [style*="color:#ff4500"],
+.main [style*="color:var(--accent)"] {
+  color: var(--accent) !important;
+}
+
+.main [style*="color:#22c55e"],
+.main [style*="color:#16a34a"] {
+  color: var(--positive) !important;
+}
+
+.vault-bar-track,
+.progress-track,
+.alloc-track {
+  background: var(--bg-alt) !important;
+  border: 1px solid var(--line) !important;
+}
+
+.vault-bar-fill,
+.progress-fill,
+.alloc-fill {
+  background: linear-gradient(90deg, var(--accent), var(--positive)) !important;
+}
+
+#ifr-panel {
+  background: var(--surface) !important;
+  border: 1px solid var(--line) !important;
+  box-shadow: 0 18px 50px rgba(33, 28, 23, .16) !important;
+  color: var(--ink) !important;
+}
+
+#ifr-btn {
+  box-shadow: 0 14px 34px rgba(176, 72, 30, .24) !important;
+}
+
+footer,
+.wiki-footer {
+  background: var(--bg-alt) !important;
+  border-top: 1px solid var(--line) !important;
+  color: var(--ink-2) !important;
+}
+
+@media (max-width: 900px) {
+  .main {
+    padding: 88px 22px 44px !important;
+  }
+
+  .hero {
+    padding-top: 112px !important;
+  }
+
+  .hero h1 {
+    font-size: clamp(38px, 12vw, 58px) !important;
+  }
+
+  #wiki-wallet-bar {
+    margin: -88px -22px 24px -22px !important;
+    padding: 10px 18px 10px 64px !important;
+    width: auto !important;
+    max-width: none !important;
+  }
+
+  .sidebar {
+    left: 0 !important;
+    transform: translateX(-100%);
+  }
+
+  .sidebar.open {
+    transform: translateX(0);
+  }
+}
+
+@media (max-width: 640px) {
+  body { font-size: 16px; }
+
+  .container,
+  .nav-inner,
+  .hero .container,
+  section > div,
+  .main > div,
+  #faq-col-left,
+  #faq-col-right,
+  .lp-faq-item,
+  .lp-faq-q,
+  .lp-faq-a,
+  .lp-faq-a-inner {
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .lp-faq-item,
+  #faq-col-left,
+  #faq-col-right {
+    width: 100% !important;
+  }
+
+  .main {
+    overflow-x: clip;
+  }
+
+  .cards-grid,
+  .cardgrid,
+  .metrics,
+  .stats-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  table {
+    display: block;
+    overflow-x: auto;
+  }
+}
