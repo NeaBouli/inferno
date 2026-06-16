@@ -167,6 +167,72 @@ nav #connect {
   background: linear-gradient(rgba(250, 247, 242, 0) 62%, rgba(250, 247, 242, .55) 88%, #FAF7F2 100%) !important;
 }
 
+.masthead-particles {
+  position: absolute !important;
+  inset: 0 !important;
+  z-index: 1 !important;
+  overflow: hidden !important;
+  pointer-events: none !important;
+}
+
+.masthead-particles span {
+  position: absolute !important;
+  left: 104% !important;
+  top: var(--y) !important;
+  width: var(--s) !important;
+  height: var(--s) !important;
+  border-radius: 50% !important;
+  background: rgba(156, 255, 234, var(--a)) !important;
+  box-shadow:
+    0 0 calc(var(--s) * 3) rgba(156, 255, 234, calc(var(--a) * .95)),
+    0 0 calc(var(--s) * 7) rgba(58, 218, 188, calc(var(--a) * .5)) !important;
+  filter: saturate(1.12) brightness(var(--b)) !important;
+  animation: masthead-particle-drift var(--d) linear infinite !important;
+  animation-delay: var(--delay) !important;
+  opacity: 0 !important;
+}
+
+.masthead-particles span::before {
+  content: "" !important;
+  position: absolute !important;
+  top: 50% !important;
+  right: 90% !important;
+  width: calc(var(--s) * 9) !important;
+  height: 1px !important;
+  transform: translateY(-50%) !important;
+  background: linear-gradient(90deg, transparent, rgba(156, 255, 234, calc(var(--a) * .62))) !important;
+}
+
+.masthead-particles span:nth-child(1) { --y: 10%; --s: 5px; --a: 1; --b: 1.45; --d: 9s; --delay: -1s; --dy: 38px; --scale: .58; }
+.masthead-particles span:nth-child(2) { --y: 18%; --s: 3px; --a: .72; --b: 1.14; --d: 13s; --delay: -7s; --dy: 8px; --scale: .45; }
+.masthead-particles span:nth-child(3) { --y: 28%; --s: 4px; --a: .88; --b: 1.24; --d: 11s; --delay: -4s; --dy: -28px; --scale: .52; }
+.masthead-particles span:nth-child(4) { --y: 36%; --s: 6px; --a: .78; --b: 1.28; --d: 15s; --delay: -10s; --dy: -70px; --scale: .62; }
+.masthead-particles span:nth-child(5) { --y: 47%; --s: 3px; --a: .66; --b: 1.08; --d: 10s; --delay: -2s; --dy: -110px; --scale: .4; }
+.masthead-particles span:nth-child(6) { --y: 58%; --s: 4px; --a: .76; --b: 1.18; --d: 16s; --delay: -12s; --dy: -165px; --scale: .48; }
+.masthead-particles span:nth-child(7) { --y: 14%; --s: 7px; --a: .5; --b: 1; --d: 18s; --delay: -8s; --dy: 52px; --scale: .72; }
+.masthead-particles span:nth-child(8) { --y: 23%; --s: 3px; --a: .96; --b: 1.38; --d: 8s; --delay: -5s; --dy: 18px; --scale: .42; }
+.masthead-particles span:nth-child(9) { --y: 42%; --s: 5px; --a: .58; --b: 1.04; --d: 14s; --delay: -11s; --dy: -98px; --scale: .54; }
+.masthead-particles span:nth-child(10) { --y: 64%; --s: 3px; --a: .84; --b: 1.3; --d: 12s; --delay: -6s; --dy: -214px; --scale: .4; }
+.masthead-particles span:nth-child(11) { --y: 31%; --s: 8px; --a: .4; --b: .96; --d: 20s; --delay: -15s; --dy: -42px; --scale: .68; }
+.masthead-particles span:nth-child(12) { --y: 52%; --s: 4px; --a: .94; --b: 1.34; --d: 9.5s; --delay: -3s; --dy: -150px; --scale: .46; }
+
+@keyframes masthead-particle-drift {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 0, 0) scale(.72);
+  }
+  10% {
+    opacity: var(--a);
+  }
+  72% {
+    opacity: calc(var(--a) * .88);
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(-92vw, var(--dy), 0) scale(var(--scale));
+  }
+}
+
 .template-hero {
   position: relative !important;
   min-height: 0 !important;
