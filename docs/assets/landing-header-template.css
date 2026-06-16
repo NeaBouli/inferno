@@ -366,6 +366,39 @@ nav #connect {
   display: none !important;
 }
 
+#token-flow .token-flow-panel {
+  position: relative !important;
+  isolation: isolate !important;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, .94), rgba(231, 235, 238, .9) 42%, rgba(255, 255, 255, .96)),
+    repeating-linear-gradient(0deg, rgba(147, 156, 166, .18) 0 1px, transparent 1px 62px),
+    repeating-linear-gradient(90deg, rgba(147, 156, 166, .16) 0 1px, transparent 1px 62px) !important;
+  border: 1px solid rgba(174, 184, 194, .78) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .86),
+    inset 0 -1px 0 rgba(140, 151, 160, .18),
+    0 18px 46px rgba(80, 88, 96, .14) !important;
+}
+
+#token-flow .token-flow-panel::before {
+  content: "" !important;
+  position: absolute !important;
+  inset: 0 !important;
+  z-index: -1 !important;
+  background:
+    linear-gradient(115deg, transparent 0%, rgba(255, 255, 255, .62) 18%, transparent 36%),
+    radial-gradient(circle at 20% 10%, rgba(255, 255, 255, .72), transparent 24%),
+    radial-gradient(circle at 82% 88%, rgba(156, 166, 176, .2), transparent 28%) !important;
+  opacity: .82 !important;
+}
+
+#token-flow .token-flow-panel svg {
+  position: relative !important;
+  z-index: 1 !important;
+  display: block !important;
+  filter: drop-shadow(0 10px 22px rgba(62, 69, 77, .1));
+}
+
 @media (max-width: 900px) {
   .masthead {
     height: 280px !important;
