@@ -25,6 +25,7 @@
 All three contributors were checked with:
 
 ```bash
+node scripts/check-contributors-execution.js
 CONTRIBUTOR_ADDR=0x... LOCK_BPS=5000 DRY_RUN=true node scripts/contributors-lock.js
 CONTRIBUTOR_ADDR=0x... DRY_RUN=true node scripts/contributors-lending-offer.js
 ```

@@ -44,6 +44,29 @@ Aktueller Snapshot: `docs/CONTRIBUTOR_EXECUTION_STATUS_20260616.md`
 
 ---
 
+## 2026-06-16 [CODEX]
+### TYPE: TOOLING
+### STATUS: READY — Contributor Execution Monitor
+
+Read-only Monitor ergänzt:
+
+```bash
+node scripts/check-contributors-execution.js
+```
+
+Das Script liest BootstrapVaultV3, IFR, CommitmentVault, LendingVault und den LP
+Pool. Es zeigt pro Contributor:
+- ETH/IFR Balance
+- ob ein Uniswap-Kauf gegenüber der Claim-Balance erkannt wurde
+- Lock-Balance und Tranche Count
+- LendingVault Allowance und Offer Status
+- nächsten operativen Schritt
+
+`STRICT=true node scripts/check-contributors-execution.js` beendet mit Exit-Code
+`1`, solange Contributor Buy/Lock/Lending noch offen ist.
+
+---
+
 ## Blockaid Unflag — 10.06.2026
 ### TYPE: SECURITY
 ### STATUS: DONE — Unflag bestaetigt
@@ -240,7 +263,7 @@ Selbst mit 1 ETH Kauf wäre der Preis immer noch ~10.000× unter P0.
 TIME_ONLY (cType=0) garantiert Unlock nach 30 Tagen ohne Preis-Abhängigkeit.
 
 #### Status
-- [ ] Contributors informiert
+- [x] Contributors informiert (16.06.2026 — kaufen IFR danach)
 - [ ] Käufe auf Uniswap ausgeführt (je 0.03 ETH)
 - [ ] Locks ausgeführt (alle 3 Contributors)
 
