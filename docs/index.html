@@ -1251,7 +1251,7 @@
 <script src="assets/ifr-state.js"></script>
   <link rel="stylesheet" href="assets/redesign-skin.css">
 </head>
-<body>
+<body id="top">
 
 <h1 style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);">Inferno Protocol — Deflationary ERC-20 Utility Token ($IFR) on Ethereum</h1>
 
@@ -1259,28 +1259,26 @@
 <header>
 <nav id="navbar">
   <div class="nav-inner">
-    <a href="#" class="nav-logo">
+    <a href="#top" class="nav-brand nav-logo">
       <img src="assets/ifr_icon_256.png" alt="IFR">
-      Inferno
+      <span class="wm">INFERNO</span><span class="tk">$IFR</span>
     </a>
     <ul class="nav-links" id="navLinks">
-      <li><a href="#about">About</a></li>
-      <li><a href="#how">Overview</a></li>
-      <li><a href="#tokenomics">Token</a></li>
+      <li><a href="#about">Overview</a></li>
+      <li><a href="#how">How it works</a></li>
       <li><a href="#ecosystem">Ecosystem</a></li>
-      <li><a href="#copilot">Copilot</a></li>
-      <li><a href="#architecture">Arch</a></li>
+      <li><a href="#tokenomics">Tokenomics</a></li>
       <li><a href="#security">Security</a></li>
-      <li><a href="#faq">FAQ</a></li>
-      <li><a href="#roadmap">Roadmap</a></li>
-      <li><a href="#dao-governance">Gov</a></li>
-      <li><a href="wiki/bootstrap.html">Bootstrap</a></li>
+      <li><a href="#dao-governance">Governance</a></li>
       <li><a href="#contracts">Contracts</a></li>
+      <li><a href="#faq">FAQ</a></li>
     </ul>
+    <div class="nav-cta">
+      <a class="btn btn-ghost nav-github" href="https://github.com/NeaBouli/inferno" target="_blank" rel="noopener">GitHub</a>
     <!-- Wallet: Not connected -->
-    <button id="lp-header-connect-btn" onclick="lpConnect()" style="display:inline-flex;align-items:center;gap:7px;padding:8px 16px;border:1.5px solid #f97316;background:transparent;color:#f97316;font-family:'Orbitron',sans-serif;font-size:0.72rem;letter-spacing:.8px;border-radius:6px;cursor:pointer;white-space:nowrap;transition:all .2s;position:relative;flex-shrink:0;margin-left:16px;">&#x1F98A; Connect</button>
+      <button class="btn btn-primary" id="lp-header-connect-btn" onclick="lpConnect()">Connect Wallet</button>
     <!-- Wallet: Connected -->
-    <div id="lp-header-connected" style="display:none;align-items:center;gap:8px;margin-left:16px;position:relative;">
+      <div id="lp-header-connected" style="display:none;align-items:center;gap:8px;margin-left:16px;position:relative;">
       <div style="background:rgba(34,197,94,0.15);border:1px solid rgba(34,197,94,0.4);border-radius:8px;padding:5px 8px;cursor:pointer;max-width:100px;white-space:nowrap;overflow:hidden;" onclick="lpToggleDropdown()">
         <span id="lp-header-addr" style="color:#22c55e;font-family:monospace;font-size:0.72rem;font-weight:600;"></span>
       </div>
@@ -1315,6 +1313,7 @@
           <button onclick="lpDisconnect()" style="flex:1;background:#374151;color:#9ca3af;border:none;border-radius:8px;padding:8px;cursor:pointer;font-size:0.8rem;">Disconnect</button>
         </div>
       </div>
+    </div>
     </div>
     <button class="nav-toggle" id="navToggle" aria-label="Toggle menu">&#9776;</button>
   </div>
@@ -3426,11 +3425,11 @@ async function lpConnect() {
         }
       }
     } else if (e.code === 4001 || e.code === "ACTION_REJECTED") {
-      if (btn) { btn.textContent = "\uD83E\uDD8A Connect"; btn.disabled = false; }
+      if (btn) { btn.textContent = "Connect Wallet"; btn.disabled = false; }
     } else if (e.code === -32002) {
-      if (btn) { btn.textContent = "\uD83E\uDD8A Open MetaMask"; btn.disabled = false; }
+      if (btn) { btn.textContent = "Open MetaMask"; btn.disabled = false; }
     } else {
-      if (btn) { btn.textContent = "\uD83E\uDD8A Retry"; btn.disabled = false; }
+      if (btn) { btn.textContent = "Retry"; btn.disabled = false; }
       console.error("Connect error:", e.code, e.message, e);
     }
   }
@@ -3444,7 +3443,7 @@ function lpDisconnect() {
   var dropdown = document.getElementById("lp-header-dropdown");
   if (connectBtn) {
     connectBtn.style.display = "";
-    connectBtn.textContent = "\uD83E\uDD8A Connect";
+    connectBtn.textContent = "Connect Wallet";
     connectBtn.disabled = false;
     connectBtn.style.borderColor = "#f97316";
     connectBtn.style.color = "#f97316";
@@ -3511,7 +3510,7 @@ function lpUpdateUI(state) {
   if (connectBtn) {
     connectBtn.style.display = connected ? "none" : "";
     if (!connected) {
-      connectBtn.textContent = "\uD83E\uDD8A Connect";
+      connectBtn.textContent = "Connect Wallet";
       connectBtn.disabled = false;
       connectBtn.style.borderColor = "#f97316";
       connectBtn.style.color = "#f97316";
