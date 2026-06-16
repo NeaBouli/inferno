@@ -7,7 +7,7 @@
   <link rel="alternate" hreflang="x-default" href="https://ifrunit.tech/wiki/wallet-guide.html">>  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Wallet &amp; Contract Guide &mdash; Inferno ($IFR) Documentation</title>
   <meta name="keywords" content="Inferno, IFR, ERC-20, Ethereum, deflationary token, DeFi, blockchain, smart contract, governance, bootstrap">
-  <meta name="description" content="Complete reference for all 8 wallets and 13 smart contracts in the IFR ecosystem. Addresses, roles, access control, feeExempt status.">
+  <meta name="description" content="Complete reference for all 8 wallets and 17 on-chain components in the IFR ecosystem. Addresses, roles, access control, feeExempt status.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -434,19 +434,19 @@
   <meta property="og:type" content="article">
   <meta property="og:site_name" content="Inferno Protocol">
   <meta property="og:title" content="Wallet &amp; Contract Guide &mdash; Inferno Protocol ($IFR)">
-  <meta property="og:description" content="Complete reference for all 8 wallets and 13 smart contracts in the IFR ecosystem. Addresses, roles, access control, feeExempt status.">
+  <meta property="og:description" content="Complete reference for all 8 wallets and 17 on-chain components in the IFR ecosystem. Addresses, roles, access control, feeExempt status.">
   <meta property="og:url" content="https://ifrunit.tech/wiki/wallet-guide.html">
   <meta property="og:image" content="https://ifrunit.tech/assets/ifr_icon_256.png">
   <meta name="twitter:card" content="summary">
   <meta name="twitter:title" content="Wallet &amp; Contract Guide &mdash; Inferno Protocol ($IFR)">
-  <meta name="twitter:description" content="Complete reference for all 8 wallets and 13 smart contracts in the IFR ecosystem. Addresses, roles, access control, feeExempt status.">
+  <meta name="twitter:description" content="Complete reference for all 8 wallets and 17 on-chain components in the IFR ecosystem. Addresses, roles, access control, feeExempt status.">
   <meta name="twitter:site" content="@IFRtoken">
   <meta name="twitter:image" content="https://ifrunit.tech/assets/ifr_icon_256.png">  <script type="application/ld+json">
   {
     "@context": "https://schema.org",
     "@type": "TechArticle",
     "headline": "Wallet & Contract Transparency Guide",
-    "description": "Complete reference for all 8 project wallets, 13 deployed smart contracts, and upcoming contracts in the Inferno ($IFR) ecosystem.",
+    "description": "Complete reference for all 8 project wallets, 17 on-chain components, and upcoming contracts in the Inferno ($IFR) ecosystem.",
     "url": "https://ifrunit.tech/wiki/wallet-guide.html",
     "isPartOf": {"@id": "https://ifrunit.tech/#website"},
     "publisher": {"@id": "https://ifrunit.tech/#organization"},
@@ -603,11 +603,11 @@
           <div class="wg-stat-lbl">Wallets</div>
         </div>
         <div class="wg-stat">
-          <div class="wg-stat-val">13</div>
+          <div class="wg-stat-val">17</div>
           <div class="wg-stat-lbl">Contracts</div>
         </div>
         <div class="wg-stat">
-          <div class="wg-stat-val">6</div>
+          <div class="wg-stat-val">4</div>
           <div class="wg-stat-lbl">Upcoming</div>
         </div>
         <div class="wg-stat">
@@ -1038,8 +1038,8 @@
       <!-- ================================================================
            SECTION 3 — UPCOMING CONTRACTS
            ================================================================ -->
-      <h2 id="upcoming">&#x1F52E; Upcoming Contracts</h2>
-      <p>Contracts planned for Phase 2&ndash;4. Not yet deployed to Ethereum Mainnet.</p>
+      <h2 id="upcoming">&#x1F52E; Recently Activated / Upcoming Contracts</h2>
+      <p>Bootstrap LP, CommitmentVault, LendingVault, and BuybackController are deployed on Ethereum Mainnet. Remaining items in this section are future integrations unless marked live.</p>
 
       <div class="wg-grid">
 
@@ -1047,12 +1047,12 @@
         <div class="wg-card wg-card-upcoming">
           <div class="wg-card-head">
             <div class="wg-card-name">&#x1F4B1; Uniswap V2 LP Pair</div>
-            <span class="wg-badge wg-badge-upcoming">After Bootstrap</span>
+            <span class="wg-badge wg-badge-live">Live</span>
           </div>
           <div class="wg-field"><strong>Created via:</strong> <code>BootstrapVaultV3.finalise()</code></div>
-          <div class="wg-field"><strong>Timeline:</strong> After 05.06.2026</div>
+          <div class="wg-field"><strong>Timeline:</strong> Created 05.06.2026</div>
           <div class="wg-role-box">
-            <strong>Function:</strong> IFR/ETH trading pair on Uniswap V2. Created automatically when Bootstrap concludes. LP tokens locked for 12 months.
+            <strong>Function:</strong> IFR/ETH trading pair on Uniswap V2. Created by BootstrapVaultV3.finalise() with 100M IFR + 0.030 ETH. LP tokens locked for 12 months.
           </div>
         </div>
 
@@ -1087,15 +1087,20 @@
           <div class="wg-field"><strong>Deployed:</strong> 20.03.2026 | 27/27 tests passing</div>
         </div>
 
-        <!-- UPCOMING 4 — BuybackController.sol -->
-        <div class="wg-card wg-card-upcoming">
+        <!-- CONTRACT — BuybackController.sol (DEPLOYED) -->
+        <div class="wg-card">
           <div class="wg-card-head">
             <div class="wg-card-name">&#x1F500; BuybackController.sol</div>
-            <span class="wg-badge wg-badge-upcoming">Phase 3</span>
+            <span class="wg-badge wg-badge-active">Mainnet</span>
+          </div>
+          <div class="wg-addr-row">
+            <span class="wg-addr"><a href="https://etherscan.io/address/0x1e0547D50005A4Af66AbD5e6915ebfAA2d711F7c" target="_blank" class="wg-addr-link">0x1e0547D50005A4Af66AbD5e6915ebfAA2d711F7c</a></span>
+            <button class="wg-copy-btn" data-addr="0x1e0547D50005A4Af66AbD5e6915ebfAA2d711F7c">Copy</button>
+            <a href="https://etherscan.io/address/0x1e0547D50005A4Af66AbD5e6915ebfAA2d711F7c#code" target="_blank" class="wg-es-btn">Etherscan</a>
           </div>
           <div class="wg-field"><strong>Purpose:</strong> Routes FeeRouter fees to BuybackVault &amp; BurnReserve</div>
           <div class="wg-role-box">
-            <strong>Function:</strong> Automates fee distribution from FeeRouterV1. Splits accumulated fees between BuybackVault and BurnReserve according to governance-set ratios.
+            <strong>Function:</strong> Automates fee distribution from FeeRouterV1. Deployed 14.04.2026, feeExempt via Proposal #13 and FeeRouter collector via Proposal #14.
           </div>
         </div>
 
@@ -1212,7 +1217,7 @@
           <!-- Bootstrap section -->
           <rect x="290" y="160" width="220" height="50" rx="8" fill="rgba(34,197,94,0.08)" stroke="#22c55e" stroke-width="1.5"/>
           <text x="400" y="180" text-anchor="middle" fill="#22c55e" font-size="12" font-weight="700">BootstrapVaultV3</text>
-          <text x="400" y="196" text-anchor="middle" fill="#9ca3af" font-size="10">200M IFR + ETH contributions</text>
+          <text x="400" y="196" text-anchor="middle" fill="#9ca3af" font-size="10">100M IFR + 0.030 ETH LP</text>
 
           <!-- Arrow from Treasury/Community to Bootstrap -->
           <line x1="190" y1="165" x2="288" y2="178" stroke="#3b82f6" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#arrow-blue)"/>

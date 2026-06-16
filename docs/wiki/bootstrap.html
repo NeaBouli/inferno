@@ -1424,31 +1424,31 @@
       <h2 id="post-finalise">What Happens After Bootstrap Finalise?</h2>
 
       <h3>The Problem &mdash; Low Liquidity</h3>
-      <p>Pool after <code>finalise()</code> with 0.01&nbsp;ETH:</p>
+      <p>Pool after <code>finalise()</code> used the actual 0.030&nbsp;ETH raised:</p>
       <ul>
-        <li>100M IFR + 0.01 ETH = ~$20 depth</li>
-        <li>Buying 99% of pool IFR costs only ~$2,000</li>
-        <li>Pool vulnerable to manipulation</li>
+        <li>Initial LP: 100M IFR + 0.030 ETH</li>
+        <li>Current pool snapshot 16.06.2026: 0.083261656 ETH + 36.128M IFR</li>
+        <li>Liquidity is still thin; contributor buys, voluntary locks, and lending offers remain the immediate stabilization steps</li>
       </ul>
 
       <h3>The Solution &mdash; 3 Layers of Protection</h3>
 
       <h4>Layer 1: CommitmentVault (Contributor Lock)</h4>
-      <p>Contributors lock IFR claims in <a href="https://ifrunit.tech/wiki/commitment-vault.html">CommitmentVault</a>. 10 tranches (P0&times;2 to P0&times;5000). No dump possible until price milestones met.</p>
-      <p><strong>Contributor 1: Committed &#x2705;</strong></p>
+      <p>Contributors first buy IFR on Uniswap, then lock 50% of their current IFR balance in <a href="https://ifrunit.tech/wiki/commitment-vault.html">CommitmentVault</a> with <code>LOCK_BPS=5000</code>. The current operational plan uses 10 TIME_ONLY tranches with a 30-day unlock; the remaining 50% is reserved for LendingVault offers.</p>
+      <p><strong>Status 16.06.2026:</strong> C1/C2/C3 have claimed, but no contributor locks or LendingVault offers exist yet.</p>
 
       <h4>Layer 2: LendingVault (Organic Buy Pressure)</h4>
       <p>Locked IFR generates ETH yield via <a href="https://ifrunit.tech/wiki/lending-vault.html">lending</a>. Every loan repayment = IFR bought on Uniswap. Every default = collateral buys IFR automatically. All roads lead to buy pressure.</p>
 
       <h4>Layer 3: LP Reserve Safe (Team)</h4>
-      <p>400.6M IFR secured in Gnosis Safe 3-of-5. Added <strong>only</strong> at price milestones:</p>
+      <p>400.6M IFR secured in Gnosis Safe 3-of-5. Added <strong>only</strong> by governance-controlled decisions; no automatic reserve addition has executed.</p>
       <ul>
         <li><strong>Milestone 1</strong> (pool 1 ETH): +50M IFR</li>
         <li><strong>Milestone 2</strong> (pool 5 ETH): +100M IFR</li>
         <li><strong>Milestone 3</strong> (Sept 2026): LiqRes unlock</li>
       </ul>
 
-      <h3>Why This Works Even With 1 Contributor</h3>
+      <h3>Why This Works With Low Initial Liquidity</h3>
       <ol>
         <li><strong>CommitmentVault</strong> &rarr; no dump</li>
         <li><strong>LendingVault</strong> &rarr; organic buy pressure</li>
@@ -1696,7 +1696,7 @@ var ConsensusModule = {
     this.render();
     if (typeof loadSavedVotes === 'function') loadSavedVotes();
 
-    // Send vote to Railway for public aggregation
+    // Send vote to API for public aggregation
     var self2 = this;
     fetch('https://copilot-api.ifrunit.tech/api/bootstrap/vote', {
       method: 'POST',
@@ -1739,13 +1739,13 @@ var ConsensusModule = {
   },
 
   resubmitLocalVotesToRailway: function() {
-    // Backfill: re-submit localStorage votes to Railway
-    // Ensures Railway has votes even after restart
+    // Backfill: re-submit localStorage votes to API
+    // Ensures the backend has votes even after restart
     var self = this;
     var votes = [];
     try { votes = JSON.parse(localStorage.getItem('ifr_votes') || '[]'); } catch(e) {}
     if (votes.length === 0) {
-      // No local votes — still fetch public stats from Railway
+      // No local votes — still fetch public stats from API
       self.fetchPublicVotes();
       return;
     }
@@ -1800,7 +1800,7 @@ var ConsensusModule = {
     // Render immediately with cached votes (don't wait for RPC)
     this.render();
 
-    // Re-submit localStorage votes to Railway (backfill after Railway restart)
+    // Re-submit localStorage votes to API (backfill after backend restart)
     // This automatically calls fetchPublicVotes() after all re-submits complete
     this.resubmitLocalVotesToRailway();
 
@@ -1887,7 +1887,7 @@ if (document.readyState === 'loading') {
         }
 
         dot.classList.remove('offline');
-        conn.textContent = 'Live via Railway Proxy \u2192 Ethereum \u2014 ' + dateTime();
+        conn.textContent = 'Live via copilot-api.ifrunit.tech \u2192 Ethereum \u2014 ' + dateTime();
 
         var bal = data.balance || 0;
         var pct = data.percentFilled || 0;
@@ -1965,7 +1965,7 @@ if (document.readyState === 'loading') {
   setInterval(updateMainCountdown, 1000);
 
   // ===== Init =====
-  // Warm up Railway then fetch
+  // Warm up API proxy then fetch
   fetch(PROXY_BASE + '/api/ifr/vault').catch(function() {});
   setTimeout(fetchVault, 1000);
   setInterval(fetchVault, 30000);

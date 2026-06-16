@@ -563,17 +563,17 @@
     {
       "@type": "Question",
       "name": "What happens if Bootstrap finalizes with very little ETH?",
-      "acceptedAnswer": {"@type":"Answer","text":"3 safety layers protect the protocol: 1) CommitmentVault prevents contributors from dumping their IFR claims. 2) LendingVault creates organic buy pressure as builders repay IFR loans. 3) LP Reserve Safe (400.6M IFR, Gnosis 3-of-5) adds liquidity at price milestones only. The system grows organically regardless of initial ETH raised."}
+      "acceptedAnswer": {"@type":"Answer","text":"Bootstrap finalized on 05.06.2026 with 0.030 ETH. The active stabilization path is: contributors buy IFR first, then lock 50% in CommitmentVault using TIME_ONLY tranches, then place the remaining 50% into LendingVault offers. LP Reserve Safe funds remain governance-controlled and have not been automatically added."}
     },
     {
       "@type": "Question",
       "name": "Can Bootstrap be finalized with only 1 contributor?",
-      "acceptedAnswer": {"@type":"Answer","text":"Yes. finalise() is permissionless — anyone can call it after June 5, 2026. Whatever ETH was raised sets P0. The safety net (CommitmentVault + LendingVault) protects against low initial liquidity."}
+      "acceptedAnswer": {"@type":"Answer","text":"Bootstrap already finalized on 05.06.2026 with 3 contributors and 0.030 ETH raised. finalise() was permissionless and created the Uniswap V2 LP. P0 was later set in CommitmentVault by Proposal #16."}
     },
     {
       "@type": "Question",
       "name": "What is P0 and why does it matter?",
-      "acceptedAnswer": {"@type":"Answer","text":"P0 = Total ETH raised / 100,000,000 IFR. It is the initial IFR price after Bootstrap. All CommitmentVault tranches are relative to P0 (P0×2, P0×10, P0×5000). P0 is IMMUTABLE once set in CommitmentVault."}
+      "acceptedAnswer": {"@type":"Answer","text":"P0 = Total ETH raised / 100,000,000 IFR. Bootstrap raised 0.030 ETH, so Proposal #16 set P0 to 300,000,000 wei per IFR on 09.06.2026. P0 is immutable once set, but the current contributor execution plan uses TIME_ONLY tranches rather than price-based unlocks."}
     }
   ]
 }
@@ -876,7 +876,7 @@
 
         <div class="faq-item">
           <button class="faq-q"><span>Who can vote on governance proposals?</span><span class="icon">+</span></button>
-          <div class="faq-a">Any wallet with locked IFR tokens can vote in The Forum (Chamber 2). Council votes (Chamber 1) are restricted to Gnosis Safe Signers only.<br><br>To participate:<br>&bull; Lock IFR via the <a href="lock.html">Lock Mechanism</a><br>&bull; Verify your wallet at <a href="https://ifrunit.tech/wiki/verify.html">ifrunit.tech/wiki/verify.html</a> to unlock the Vote topic in Telegram<br>&bull; Use <code>/verify</code> in the <a href="https://t.me/IFR_token" target="_blank" rel="noopener">IFR Telegram community</a> to start</div>
+          <div class="faq-a">Any wallet with locked IFR tokens can vote in The Forum (Chamber 2). Council votes (Chamber 1) are restricted to Gnosis Safe Signers only.<br><br>To participate:<br>&bull; Lock IFR via the <a href="lock-mechanism.html">Lock Mechanism</a><br>&bull; Verify your wallet at <a href="https://ifrunit.tech/wiki/verify.html">ifrunit.tech/wiki/verify.html</a> to unlock the Vote topic in Telegram<br>&bull; Use <code>/verify</code> in the <a href="https://t.me/IFR_token" target="_blank" rel="noopener">IFR Telegram community</a> to start</div>
         </div>
 
         <div class="faq-item">
@@ -1082,7 +1082,7 @@ const hasLock = await ifrLock.isLocked(walletAddress, ethers.utils.parseUnits("1
 
         <div class="faq-item">
           <button class="faq-q"><span>What tech stack does the project use?</span><span class="icon">+</span></button>
-          <div class="faq-a">&bull; <strong>Smart contracts</strong>: Solidity 0.8.20, Hardhat v2, OpenZeppelin v5, ethers v5<br>&bull; <strong>Testing</strong>: Chai v4, 544 tests (367 contract + 77 app + 100 vault), Slither static analysis<br>&bull; <strong>Frontend apps</strong>: React 18, Vite, TypeScript, Tailwind CSS<br>&bull; <strong>Backend apps</strong>: Express.js, Prisma, SQLite, SIWE authentication<br>&bull; <strong>Infrastructure</strong>: GitHub Pages (docs), Railway (AI Copilot), Alchemy (RPC)</div>
+          <div class="faq-a">&bull; <strong>Smart contracts</strong>: Solidity 0.8.20, Hardhat v2, OpenZeppelin v5, ethers v5<br>&bull; <strong>Testing</strong>: Chai v4, Hardhat, contract/app/vault suites<br>&bull; <strong>Frontend apps</strong>: React 18, Vite, TypeScript, Tailwind CSS where app tooling is used; static docs are served through GitHub Pages<br>&bull; <strong>Backend apps</strong>: Express.js, Prisma, SQLite, SIWE authentication<br>&bull; <strong>Infrastructure</strong>: GitHub Pages (docs), Hetzner-hosted APIs at <code>copilot-api.ifrunit.tech</code> and <code>points-api.ifrunit.tech</code>, Ethereum RPC providers</div>
         </div>
 
         <div class="faq-item">
@@ -1162,17 +1162,17 @@ const hasLock = await ifrLock.isLocked(walletAddress, ethers.utils.parseUnits("1
       <div class="faq-section">
         <div class="faq-item">
           <button class="faq-q"><span>What happens if Bootstrap finalizes with very little ETH?</span><span class="icon">+</span></button>
-          <div class="faq-a">3 safety layers protect the protocol: 1) <strong>CommitmentVault</strong> prevents contributors from dumping their IFR claims. 2) <strong>LendingVault</strong> creates organic buy pressure as builders repay IFR loans. 3) <strong>LP Reserve Safe</strong> (400.6M IFR, Gnosis 3-of-5) adds liquidity at price milestones only. The system grows organically regardless of initial ETH raised.</div>
+          <div class="faq-a">Bootstrap finalized on 05.06.2026 with 0.030 ETH. The active stabilization path is: 1) contributors buy IFR on Uniswap, 2) contributors lock 50% in <strong>CommitmentVault</strong> using TIME_ONLY tranches, 3) contributors create <strong>LendingVault</strong> offers with the remaining 50%. The LP Reserve Safe remains governance-controlled and has not been automatically added.</div>
         </div>
 
         <div class="faq-item">
-          <button class="faq-q"><span>Can Bootstrap be finalized with only 1 contributor?</span><span class="icon">+</span></button>
-          <div class="faq-a">&#x2705; Bootstrap FINALIZED 05.06.2026 23:51 UTC &mdash; <code>finalise()</code> was called, 0.030 ETH raised. P0 = 300,000,000 wei/IFR. Proposal #16 (setP0 CommitmentVault) EXECUTED 09.06.2026 &#x2705; &mdash; CommitmentVault now active. The safety net (CommitmentVault + LendingVault) protects against low initial liquidity.</div>
+          <button class="faq-q"><span>How was Bootstrap finalized?</span><span class="icon">+</span></button>
+          <div class="faq-a">&#x2705; Bootstrap FINALIZED 05.06.2026 23:51 UTC with 3 contributors and 0.030 ETH raised. <code>finalise()</code> paired 100M IFR with the raised ETH and reserved 100M IFR for contributor claims. P0 = 300,000,000 wei/IFR was set by Proposal #16 on 09.06.2026.</div>
         </div>
 
         <div class="faq-item">
           <button class="faq-q"><span>What is P0 and why does it matter?</span><span class="icon">+</span></button>
-          <div class="faq-a">P0 = Total ETH raised / 100,000,000 IFR. It is the initial IFR price after Bootstrap. All CommitmentVault tranches are relative to P0 (P0&times;2, P0&times;10, P0&times;5000). P0 is <strong>IMMUTABLE</strong> once set in CommitmentVault.</div>
+          <div class="faq-a">P0 = Total ETH raised / 100,000,000 IFR. Bootstrap raised 0.030 ETH, so Proposal #16 set P0 to 300,000,000 wei per IFR. P0 is <strong>IMMUTABLE</strong> once set in CommitmentVault. The current contributor execution plan uses TIME_ONLY tranches, because price-based unlocks are unrealistic at the current thin-liquidity stage.</div>
         </div>
       </div>
 
