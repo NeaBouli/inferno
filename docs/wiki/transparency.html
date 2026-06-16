@@ -607,9 +607,9 @@
 
       <!-- ===== CHECK 0: All Protocol Wallets ===== -->
       <h2>All Protocol Wallets &mdash; From Genesis</h2>
-      <p>Every wallet involved in the IFR protocol since deployment. Genesis balances are on-chain records. <span class="live-badge"><span class="live-dot"></span>LIVE</span> balances update every 30 seconds via Railway Proxy.</p>
+      <p>Every wallet involved in the IFR protocol since deployment. Genesis balances are on-chain records. <span class="live-badge"><span class="live-dot"></span>LIVE</span> balances update every 30 seconds via copilot-api.ifrunit.tech.</p>
       <div style="color:#888; font-size:11px; margin-bottom:8px;">
-        &#x26A1; Live via Railway Proxy &rarr; Ethereum &mdash;
+        &#x26A1; Live via copilot-api.ifrunit.tech &rarr; Ethereum &mdash;
         <a href="https://etherscan.io/token/0x77e99917Eca8539c62F509ED1193ac36580A6e7B"
            target="_blank" style="color:#00ffa0;">Verify on Etherscan &rarr;</a>
       </div>
@@ -791,8 +791,8 @@
               <td>LP Reserve Safe (3-of-5)</td>
               <td>400,000,000</td>
               <td>40%</td>
-              <td>DEX Liquidity &mdash; will be paired on Uniswap V2 via BootstrapVaultV3.finalise() after Bootstrap completion. Transferred from Deployer to LP Reserve Safe (Gnosis 3-of-5) on 18.03.2026.</td>
-              <td class="status-pending">Pending LP creation</td>
+              <td>DEX Liquidity reserve under LP Reserve Safe (Gnosis 3-of-5). Bootstrap LP was created separately by BootstrapVaultV3.finalise() with 100M IFR + 0.030 ETH on 05.06.2026.</td>
+              <td class="status-ok">Reserve held; Bootstrap LP live</td>
             </tr>
             <tr>
               <td>LiquidityReserve Contract</td>
@@ -840,7 +840,7 @@
         </table>
       </div>
       <div class="callout" style="margin-top:12px;">
-        <p><strong>Note:</strong> BuybackVault and BurnReserve are <em>not</em> genesis allocations. They accumulate from the 1% protocol pool fee on every non-exempt IFR transfer. Current balance: 0 IFR each (pool fees begin accumulating after Bootstrap + LP launch).</p>
+        <p><strong>Note:</strong> BuybackVault and BurnReserve are <em>not</em> genesis allocations. They accumulate from the 1% protocol pool fee on every non-exempt IFR transfer. Bootstrap and LP launch are complete; balances are shown live above.</p>
       </div>
 
       <h3>All Token Movements &mdash; Chronological Log</h3>
@@ -1555,7 +1555,7 @@
       <section id="infrastructure-fund">
         <h2>Infrastructure Fund</h2>
         <p>
-          Running IFR infrastructure (Railway backend, RPC nodes, domain, tooling)
+          Running IFR infrastructure (Hetzner-hosted APIs, RPC nodes, domain, tooling)
           incurs ongoing costs. These are currently covered by the core development
           team. To support long-term sustainability, we publicly disclose our
           infrastructure donation addresses.
@@ -1619,7 +1619,7 @@
     })();
   </script>
 
-  <!-- ===== Live Data Script — Railway proxy, single source of truth ===== -->
+  <!-- ===== Live Data Script — API proxy, single source of truth ===== -->
   <script>
   (function () {
     'use strict';
@@ -1727,7 +1727,7 @@
         var heroEl = document.getElementById('hero-timestamp');
         if (heroEl) heroEl.innerHTML = '<span style="color:var(--live)">\u25CF</span> Connected to Ethereum Mainnet \u2014 Updated ' + dateTime();
         var dsEl = document.getElementById('data-source');
-        if (dsEl) dsEl.innerHTML = '<span style="color:#22c55e">\u25CF</span> Live (Railway Proxy) \u2014 refreshes every 30s';
+        if (dsEl) dsEl.innerHTML = '<span style="color:#22c55e">\u25CF</span> Live (copilot-api.ifrunit.tech) \u2014 refreshes every 30s';
       });
     }
 
@@ -1753,7 +1753,7 @@
           var txs = data.transactions || data || [];
           if (!Array.isArray(txs) || txs.length === 0) {
             txBody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#555;padding:24px;font-style:italic;">' +
-              'No recent transactions \u2014 feed activates after Bootstrap &amp; LP launch</td></tr>';
+              'No recent transactions returned by API</td></tr>';
             txStatus.innerHTML = '<span style="color:#555;">\u25CB</span> No transactions yet';
             return;
           }
@@ -1778,7 +1778,7 @@
         });
     }
 
-    // ===== Init — warm up Railway then fetch data =====
+    // ===== Init — warm up API proxy then fetch data =====
     fetch(PROXY_BASE + '/api/ifr/supply').catch(function() {});
     setTimeout(refreshAllLiveData, 1000);
     setTimeout(loadTxFeed, 2000);

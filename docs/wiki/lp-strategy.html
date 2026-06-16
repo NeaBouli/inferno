@@ -826,21 +826,19 @@
 
       <div class="callout">
         <p>
-          <strong>Core problem:</strong> Pool = 100M IFR + 0.01 ETH. Adding 400M IFR + 0.04 ETH = 500M IFR + 0.05 ETH. Price unchanged. But 0.04 ETH wasted for a 5x deeper pool at only $20 depth.
+          <strong>Core problem:</strong> The actual Bootstrap LP started with 100M IFR + 0.030 ETH. Adding the full reserve at the same ratio would deepen the pool without improving price discovery. Reserve additions should therefore be governance-paced, not automatic.
         </p>
       </div>
 
 <pre><code>// AMM Constant Product Formula
 x * y = k
 
-// At P0 = $0.0000002
-// 400,000,000 IFR * $0.0000002 = $80
+// Actual Bootstrap P0: 0.030 ETH / 100,000,000 IFR
+// P0 set by Proposal #16: 300,000,000 wei per IFR
 
-// Pool before:  100M IFR + 0.01 ETH   (k = 1,000,000)
-// LP added:    +400M IFR + 0.04 ETH   (same ratio)
-// Pool after:   500M IFR + 0.05 ETH   (k = 25,000,000)
-// Price:        0.05 / 500M = $0.0000001 ETH/IFR  &larr; UNCHANGED
-// Wasted:       0.04 ETH for 5x depth at ~$20 total depth</code></pre>
+// Pool before:  100M IFR + 0.030 ETH
+// Same-ratio additions deepen liquidity but do not change price
+// Governance should add reserves only when it improves market structure</code></pre>
 
       <!-- ======================================== -->
       <!-- 2. Die 4 Phasen -->

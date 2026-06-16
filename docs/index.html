@@ -1466,7 +1466,7 @@
           <span style="color:#555;font-family:'Orbitron',sans-serif;font-size:0.75rem;font-weight:700;flex-shrink:0;margin-top:2px;">PHASE 3</span>
           <div>
             <div style="color:#888;font-size:0.9rem;font-weight:600;margin-bottom:4px;">Uniswap Integration</div>
-            <div style="color:#555;font-size:0.83rem;line-height:1.5;">Direct Buy $IFR button &mdash; activates only after LP is live. Swap directly from the landing page.<span style="color:#555;margin-left:6px;font-size:0.78rem;">Phase 3</span></div>
+            <div style="color:#555;font-size:0.83rem;line-height:1.5;">Direct Buy $IFR button is live after LP launch. Swap directly from the landing page.<span style="color:#555;margin-left:6px;font-size:0.78rem;">Phase 3</span></div>
           </div>
         </div>
         <div style="background:#1a1a2e;border:1px solid #222;border-radius:8px;padding:16px 18px;display:flex;gap:14px;align-items:flex-start;">
@@ -1733,7 +1733,7 @@ render();
       </div>
       <div class="allocation reveal" id="live-distribution">
         <h3><span class="live-dot"></span> Live Token Distribution</h3>
-        <p style="font-size:12px;color:var(--text-muted);margin-bottom:4px;">Live via Railway Proxy &rarr; Ethereum &mdash; refreshes every 30s</p>
+        <p style="font-size:12px;color:var(--text-muted);margin-bottom:4px;">Live via copilot-api.ifrunit.tech &rarr; Ethereum &mdash; refreshes every 30s</p>
         <p style="font-size:11px;margin-bottom:20px;"><span class="live-updated-at" style="color:#00ffa0;">Loading live data&hellip;</span> <span class="live-status" style="color:#ff4500;"></span></p>
         <div id="dist-chart-row" style="display:flex;flex-direction:row;align-items:center;gap:2rem;justify-content:center;">
           <div style="position:relative;flex:0 0 auto;width:260px;height:260px;">
@@ -1776,7 +1776,7 @@ render();
           </div>
           <p style="font-size:11px;color:var(--text-muted);margin-top:12px;line-height:1.6;">
             <strong>Protocol contracts:</strong> BuybackVault and BurnReserve accumulate from the 1% pool fee &mdash; not pre-funded genesis allocations.<br>
-            <strong>Bootstrap (Plan B):</strong> ~200M IFR from Treasury Safe + Community Safe &rarr; BootstrapVaultV3. Community Safe retains ~7.9M IFR as operating buffer.<br>
+            <strong>Bootstrap (Plan B):</strong> ~200M IFR was funded to BootstrapVaultV3. finalise() used 100M IFR + 0.030 ETH for the Uniswap V2 LP and reserved 100M IFR for contributor claims; all 3 contributors have claimed.<br>
             <strong>Liquidity Reserve:</strong> Strategically locked until 01.09.2026. Reserved for Phase 2/3 LP expansion. Not used for Bootstrap.
           </p>
         </div>
@@ -1785,7 +1785,7 @@ render();
 
     <div class="reveal" style="margin-top:24px;">
       <div id="dist-metrics" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;"></div>
-      <p style="font-size:11px;color:var(--text-muted);margin-top:14px;text-align:center;">&#x1F512; User IFR Locks (IFRLock): <span data-live-key="ifrlock-stat" style="color:#ff8c00;font-weight:600;">loading&hellip;</span> IFR &mdash; activates after Bootstrap + LP launch</p>
+      <p style="font-size:11px;color:var(--text-muted);margin-top:14px;text-align:center;">&#x1F512; User IFR Locks (IFRLock): <span data-live-key="ifrlock-stat" style="color:#ff8c00;font-weight:600;">loading&hellip;</span> IFR &mdash; live on-chain</p>
       <p style="font-size:11px;color:var(--text-muted);margin-top:8px;text-align:center;"><span class="live-updated-at">Loading&hellip;</span> <span class="live-status"></span></p>
     </div>
 
@@ -1810,7 +1810,7 @@ render();
     <!-- Genesis & Project Wallets -->
     <div class="reveal" style="margin-top:40px;">
       <h3 style="text-align:center;font-size:18px;font-weight:700;margin-bottom:6px;">Genesis &amp; Project Wallets</h3>
-      <p style="text-align:center;font-size:12px;color:var(--text-muted);margin-bottom:24px;">All protocol wallets &mdash; live balances via Railway Proxy &mdash; <span class="live-updated-at" style="color:#00ffa0;">loading&hellip;</span></p>
+      <p style="text-align:center;font-size:12px;color:var(--text-muted);margin-bottom:24px;">All protocol wallets &mdash; live balances via copilot-api.ifrunit.tech &mdash; <span class="live-updated-at" style="color:#00ffa0;">loading&hellip;</span></p>
       <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px;">
 
         <div style="background:#111113;border:1px solid #222225;border-radius:8px;padding:14px 16px;">
@@ -1823,7 +1823,7 @@ render();
             <button class="copy-btn" data-addr="0x5D93E7919a71d725054e31017eCA86B026F86C04" style="font-size:10px;background:none;border:1px solid #333;color:#8a8a96;border-radius:4px;padding:1px 6px;cursor:pointer;">Copy</button>
           </div>
           <div style="font-size:13px;font-weight:600;color:#3b82f6;" data-live-key="card-deployer">loading&hellip;</div>
-          <div style="font-size:10px;color:#666;margin-top:2px;">400.6M IFR LP Reserve. Phase 2: 100M + Phase 3: 150M Uniswap. Ex-Deployer, transferred 18.03.2026.</div>
+          <div style="font-size:10px;color:#666;margin-top:2px;">400.6M IFR LP Reserve. Governance-controlled LP expansion reserve; not used for the Bootstrap LP. Ex-Deployer, transferred 18.03.2026.</div>
         </div>
 
         <div style="background:#111113;border:1px solid #222225;border-radius:8px;padding:14px 16px;">
@@ -2062,7 +2062,7 @@ render();
         <!-- Bootstrap V3 -->
         <rect x="510" y="158" width="140" height="42" rx="10" fill="#0d1117" stroke="#f97316" stroke-width="1.5"/>
         <text x="580" y="176" text-anchor="middle" fill="#f97316" font-size="11" font-weight="bold">Bootstrap V3</text>
-        <text x="580" y="192" text-anchor="middle" fill="#9ca3af" font-size="9">200M IFR + ETH</text>
+        <text x="580" y="192" text-anchor="middle" fill="#9ca3af" font-size="9">100M IFR + 0.030 ETH</text>
 
         <!-- Uniswap -->
         <rect x="510" y="318" width="140" height="42" rx="10" fill="#0d1117" stroke="#60a5fa" stroke-width="1.5"/>
@@ -2531,7 +2531,7 @@ if (isLocked) {
     {q:"What is the lock mechanism?",
      a:"Any wallet locks $IFR in IFRLock. Locked tokens cannot be sold or transferred. The on-chain lock state is the canonical source for access control, builder discounts, and governance power."},
     {q:"How does the Bootstrap work?",
-     a:"90-day community event \u2014 contribute 0.01\u20132 ETH. Collected ETH is automatically paired with ~200M IFR to create the Uniswap V2 LP. Fully permissionless, no team action needed."},
+     a:"The 90-day community event ended on 05.06.2026. finalise() paired 0.030 ETH with 100M IFR to create the Uniswap V2 LP and reserved 100M IFR for contributor claims. Fully permissionless, no team action needed."},
     {q:"Who controls the protocol?",
      a:"All changes require a 48-hour timelock via the Governance contract \u2014 nothing can change instantly. Gnosis Safe multisig active (3-of-5 with 5 signers, 3-of-5 active) for distributed control. Bootstrap ENDED 05.06.2026 \u2014 IFR now live on Uniswap V2."},
     {q:"What is the token distribution?",
@@ -3226,7 +3226,7 @@ if (isLocked) {
       { key: 'protocol-locked', label: 'Protocol Locked', value: fmt(protocolLocked), sub: 'All non-circulating IFR secured', color: '#ff8c00' },
       { key: '',                label: 'Current Supply',  value: fmt(data.supply),    sub: 'of 1B genesis',        color: '#fff'    },
       { key: '',                label: 'LP Reserve Safe', value: fmt(data.lpReserve), sub: 'LP allocation (3-of-5)',color: '#FF6B35' },
-      { key: 'ifr-price',       label: 'IFR Price',       value: 'TBD',              sub: 'After Bootstrap finalise()',color: '#fbbf24' }
+      { key: 'ifr-price',       label: 'IFR Price',       value: 'TBD',              sub: 'Live Uniswap TWAP',color: '#fbbf24' }
     ];
     el.innerHTML = items.map(function(m) {
       var liveAttr = m.key ? ' data-live-key="' + m.key + '"' : '';
@@ -3303,7 +3303,7 @@ if (isLocked) {
       var subEl = priceEl.nextElementSibling;
       if (data.status === 'bootstrap_active') {
         priceEl.textContent = 'TBD';
-        if (subEl) subEl.textContent = 'After Bootstrap \u2014 Jun 2026';
+        if (subEl) subEl.textContent = 'Bootstrap already finalized';
         if (data.ethRaised > 0) {
           if (subEl) subEl.textContent = fmt(data.ethRaised) + ' ETH raised';
         }
@@ -3312,7 +3312,7 @@ if (isLocked) {
         if (subEl) subEl.textContent = 'Live Uniswap TWAP';
       } else if (data.status === 'pending_uniswap') {
         priceEl.textContent = 'Soon';
-        if (subEl) subEl.textContent = 'LP launching soon';
+        if (subEl) subEl.textContent = 'Waiting for API price feed';
       }
     }).catch(function() {});
   }

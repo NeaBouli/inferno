@@ -971,7 +971,7 @@
             <td>DEX Liquidity</td>
             <td>40%</td>
             <td>400,000,000</td>
-            <td>Held by LP Reserve Safe (3-of-5 Gnosis Safe). Paired on Uniswap V2 via <code>BootstrapVaultV3.finalise()</code> after Bootstrap completion. Transferred from Deployer on 18.03.2026.</td>
+            <td>Held by LP Reserve Safe (3-of-5 Gnosis Safe) for governance-controlled LP expansion. Bootstrap LP was created separately by <code>BootstrapVaultV3.finalise()</code> with 100M IFR + 0.030 ETH on 05.06.2026.</td>
           </tr>
           <tr>
             <td>Liquidity Reserve</td>
@@ -1056,9 +1056,9 @@
 
       <p><strong>DEX Liquidity (40% &mdash; 400M IFR)</strong></p>
       <ul>
-        <li>Paired on Uniswap V2 after Bootstrap completion</li>
-        <li>LP tokens locked via Team.Finance for 12 months (rug pull protection)</li>
-        <li>Provides initial trading liquidity for the market</li>
+        <li>Held by LP Reserve Safe for governance-controlled LP expansion</li>
+        <li>Initial Uniswap V2 LP is already live via BootstrapVaultV3 finalise()</li>
+        <li>Reserve additions require explicit governance timing</li>
       </ul>
 
       <p><strong>Liquidity Reserve (20% &mdash; 200M IFR)</strong></p>
@@ -1123,7 +1123,8 @@
         <li>Bootstrap period: 07.03.2026 &ndash; 05.06.2026 &mdash; finalise() executed 05.06.2026 23:51 UTC</li>
         <li>totalETHRaised: 0.030 ETH &mdash; LP Token: <a href="https://etherscan.io/address/0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0" target="_blank" style="color:var(--accent);">0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0</a></li>
         <li>BootstrapVaultV3 contract: <code>0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141</code> &mdash; FINALIZED &mdash; Block 25254575 &mdash; TX: <a href="https://etherscan.io/tx/0x949848bdd09f4c867a2593afffb0137c7db2c1457d8a8f5ff4428f8ecce69c5f" target="_blank" style="color:var(--accent);font-size:11px;">0x949848bd&hellip;</a></li>
-        <li>Pending: Proposal #15 (setFeeExempt LP Token, ETA 08.06.2026) &mdash; Proposal #16 (setP0 CommitmentVault, ETA 09.06.2026)</li>
+        <li>Proposal #15 executed 08.06.2026: LP Token feeExempt = true</li>
+        <li>Proposal #16 executed 09.06.2026: CommitmentVault P0 = 300,000,000 wei</li>
       </ul>
 
       <p><strong>LP Allocation &mdash; Phased Release</strong></p>
@@ -1291,9 +1292,9 @@
           <div class="name">BuybackController <span style="color:#22c55e;font-size:0.75rem;">&#x2705; active</span></div>
           <div class="reason">Automated buyback+burn and LP deepening operations &mdash; feeExempt since 16.04.2026 (Proposal #13), feeCollector since 18.04.2026 (Proposal #14)</div>
         </div>
-        <div class="exempt-item" style="border-left:3px solid #f59e0b;">
-          <div class="name">LP Token (IFR/WETH) <span style="color:#f59e0b;font-size:0.75rem;">&#x23F3; Pending &mdash; Proposal #15</span></div>
-          <div class="reason">Uniswap V2 LP Token (<code>0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0</code>) &mdash; QUEUED, ETA 08.06.2026 09:57 Athen. Without feeExempt, every swap pays 3.5% fee (IFR effectively untradeable).</div>
+        <div class="exempt-item">
+          <div class="name">LP Token (IFR/WETH) <span style="color:#22c55e;font-size:0.75rem;">&#x2705; active</span></div>
+          <div class="reason">Uniswap V2 LP Token (<code>0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0</code>) &mdash; Proposal #15 executed 08.06.2026, feeExempt = true.</div>
         </div>
       </div>
 
@@ -1568,7 +1569,7 @@ if (from != address(0) && to != address(0)
         if (brEl) brEl.textContent = fmtNum(Math.round(burned)) + ' IFR';
         if (bpEl) bpEl.textContent = pct.toFixed(4) + '%';
         if (dot) dot.style.background = '#22c55e';
-        if (stamp) stamp.textContent = 'Live via Railway Proxy \u2192 Ethereum \u2014 ' +
+        if (stamp) stamp.textContent = 'Live via copilot-api.ifrunit.tech \u2192 Ethereum \u2014 ' +
           new Date().toLocaleString('de-DE', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit', second:'2-digit' });
       })
       .catch(function() {

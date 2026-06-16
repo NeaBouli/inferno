@@ -55,7 +55,7 @@ Then update ALL of these if counts changed:
 **2. Wiki/Contract Count Sync**
 If a new wiki page or contract was added:
 ```
-ls docs/wiki/*.html | wc -l          # → update "32 wiki pages" everywhere
+ls docs/wiki/*.html | wc -l          # → update "33 wiki pages" everywhere
 ls contracts/*.sol | wc -l           # → update "17 on-chain components" everywhere
 ```
 
@@ -90,7 +90,7 @@ Check all wiki pages + landing page for:
 - Open Graph: og:title, og:description, og:image, og:url
 - Twitter Card: twitter:card, twitter:site, twitter:title
 - robots.txt allows GPTBot/ClaudeBot/PerplexityBot?
-- sitemap.xml current (all 32 wiki pages)?
+- sitemap.xml current (all 33 wiki pages)?
 - All IFR_UPDATE markers visited and current?
 - h1/h2/h3 hierarchy correct (no h1→h3 jumps)?
 On errors: fix immediately, commit with `seo:` prefix.
@@ -311,7 +311,7 @@ On errors: fix immediately, commit with `seo:` prefix.
       bootstrap.html + faq.html + Ali + TODO
       (03.04.2026)
 
-### Phase 3 — After Bootstrap finalise() (~05.06.2026)
+### Phase 3 — After Bootstrap finalise() (finalised 05.06.2026)
 - [x] ✅ Proposal #15 — setFeeExempt(LP Token, true)
       GitHub Issue: https://github.com/NeaBouli/inferno/issues/33 — EXECUTED 08.06.2026
       LP Token: 0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0
@@ -418,7 +418,7 @@ On errors: fix immediately, commit with `seo:` prefix.
 - [ ] 🔵 "Buy IFR" button on landing page (after LP is live)
       Uniswap link with pre-filled token address
 - [ ] 🔵 Live IFR price on landing page
-      Uniswap TWAP → Railway GET /api/ifr/price → Landing Page
+      Uniswap TWAP → Hetzner API GET /api/ifr/price → Landing Page
 
 ### Phase 4 — Mobile App (IFR Wallet)
 - [ ] 🔵 App Concept + Design
@@ -497,12 +497,11 @@ On errors: fix immediately, commit with `seo:` prefix.
 
 ### Frontend
 - ~~Create animated token GIF~~ — not planned
-- [ ] `Buy IFR` → activate Uniswap button (ONLY after LP live)
+- [x] ✅ `Buy IFR` → Uniswap button activated after LP live
 - [x] ✅ IFR Price Widget + Railway /api/ifr/price endpoint (04.04.2026)
-      Landing page: price stat card (TBD until LP)
-      Phase 2: Uniswap TWAP after LP live
+      Migrated to Hetzner API. Landing page price stat card uses live API/TWAP feed after LP.
 - [ ] WalletConnect Phase 2: `isLocked(wallet,1000e9)` check → Copilot gate (after LP)
-- [ ] WalletConnect Phase 3: Uniswap link (ONLY after LP live)
+- [x] ✅ WalletConnect Phase 3: Uniswap link active after LP live
 
 ### Documentation
 - [ ] Plan B documentation with exact decision timestamp
@@ -661,7 +660,7 @@ On errors: fix immediately, commit with `seo:` prefix.
 - [x] Audit report `AUDIT_REPORT_20260314.md` created
 - [x] Test counts 494/444 → 556 across 32 files
 - [x] Wiki page count 16/24 → 25 across 8 files
-- [x] `rel="canonical"` on all 32 wiki pages
+- [x] `rel="canonical"` on all 33 wiki pages
 - [x] `twitter:card` + `twitter:site` + `twitter:image` on all pages
 - [x] JSON-LD on `verify.html`
 - [x] `verify.html` in sitemap
@@ -754,7 +753,7 @@ On errors: fix immediately, commit with `seo:` prefix.
       apps/sdk/ — npm installable (ifr-sdk v0.1.0)
       IFRClient: checkAccess(), getTier(), getBalance(), getLockedBalance(), isBuilder()
       Static: IFRClient.apiCheck() (no ethers needed)
-      GET /api/ifr/check?wallet=0x...&required=1000 — Railway endpoint
+      GET /api/ifr/check?wallet=0x...&required=1000 — Hetzner API endpoint
       36 tests passing (test/sdk/sdk.test.js)
 
 - [x] ✅ Generator UI — Phase 5d (07.04.2026)
@@ -837,7 +836,7 @@ Strategic goal: "IFR = Stripe for Web3 Access — Web3 SaaS Standard"
       Data: /api/lending/stats + /api/lending/offers
 
 Technical: WalletConnect v2 + ethers.js v5, ABI: abi/LendingVault.json
-Railway endpoints already live: stats, offers, loans/:addr, health/:id, lender/:addr
+Hetzner API endpoints already live: stats, offers, loans/:addr, health/:id, lender/:addr
 
 ### Interactive Onboarding Wizard
 - [x] ✅ Onboarding Wizard (07.04.2026)

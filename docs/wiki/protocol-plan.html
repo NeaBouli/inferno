@@ -1044,7 +1044,7 @@
         <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">
           <div>
             <div style="font-size:11px;color:#22c55e;font-weight:600;">Phase 1 &mdash; Automatic</div>
-            <div style="font-size:12px;color:var(--muted);">After Bootstrap finalise(). ~150M IFR + Bootstrap ETH &rarr; Uniswap LP. LP locked 12 months via Team.Finance.</div>
+            <div style="font-size:12px;color:var(--muted);">Executed 05.06.2026. 100M IFR + 0.030 ETH &rarr; Uniswap V2 LP. LP locked 12 months via Team.Finance.</div>
           </div>
           <div>
             <div style="font-size:11px;color:#3b82f6;font-weight:600;">Phase 2 &mdash; Governance</div>
@@ -1325,7 +1325,7 @@
         if (brEl) brEl.textContent = fmtNum(Math.round(burned)) + ' IFR';
         if (bpEl) bpEl.textContent = pct.toFixed(4) + '%';
         if (dot) dot.style.background = '#22c55e';
-        if (stamp) stamp.textContent = 'Live via Railway Proxy \u2192 Ethereum \u2014 ' +
+        if (stamp) stamp.textContent = 'Live via copilot-api.ifrunit.tech \u2192 Ethereum \u2014 ' +
           new Date().toLocaleString('de-DE', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit', second:'2-digit' });
       })
       .catch(function() {
