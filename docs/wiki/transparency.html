@@ -24,8 +24,8 @@
       --text:     #e8e8ed;
       --muted:    #8a8a96;
       --accent:   #ff4500;
-      --green:    #22c55e;
-      --live:     #00ffa0;
+      --green:    #2f6a45;
+      --live:     #2f6a45;
       --sidebar-w: 240px;
     }
 
@@ -307,7 +307,7 @@
     }
 
     .callout-live {
-      background: rgba(0, 255, 160, 0.04);
+      background: rgba(47, 106, 69, 0.08);
       border-left-color: var(--live);
     }
 
@@ -325,7 +325,7 @@
       width: 8px;
       height: 8px;
       border-radius: 50%;
-      background: #ef4444;
+      background: var(--live);
       margin-right: 6px;
       animation: pulse-live 1.5s ease-in-out infinite;
       vertical-align: middle;
@@ -340,14 +340,14 @@
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 1px;
-      background: rgba(0, 255, 160, 0.08);
+      background: rgba(47, 106, 69, 0.10);
       color: var(--live);
-      border: 1px solid rgba(0, 255, 160, 0.2);
+      border: 1px solid rgba(47, 106, 69, 0.28);
     }
 
     @keyframes pulse-live {
-      0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
-      50% { opacity: 0.5; box-shadow: 0 0 8px 2px rgba(239, 68, 68, 0.3); }
+      0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(47, 106, 69, 0.35); }
+      50% { opacity: 0.68; box-shadow: 0 0 7px 2px rgba(47, 106, 69, 0.18); }
     }
 
     /* ---------- Stats Grid ---------- */
@@ -612,7 +612,7 @@
       <div style="color:#888; font-size:11px; margin-bottom:8px;">
         &#x26A1; Live via copilot-api.ifrunit.tech &rarr; Ethereum &mdash;
         <a href="https://etherscan.io/token/0x77e99917Eca8539c62F509ED1193ac36580A6e7B"
-           target="_blank" style="color:#00ffa0;">Verify on Etherscan &rarr;</a>
+           target="_blank" style="color:#2f6a45;">Verify on Etherscan &rarr;</a>
       </div>
 
       <h3>EOA Wallets</h3>
@@ -1726,9 +1726,9 @@
 
         // Hero timestamp + data source
         var heroEl = document.getElementById('hero-timestamp');
-        if (heroEl) heroEl.innerHTML = '<span style="color:var(--live)">\u25CF</span> Connected to Ethereum Mainnet \u2014 Updated ' + dateTime();
+        if (heroEl) heroEl.innerHTML = '<span style="color:#2f6a45">\u25CF</span> Connected to Ethereum Mainnet \u2014 Updated ' + dateTime();
         var dsEl = document.getElementById('data-source');
-        if (dsEl) dsEl.innerHTML = '<span style="color:#22c55e">\u25CF</span> Live (copilot-api.ifrunit.tech) \u2014 refreshes every 30s';
+        if (dsEl) dsEl.innerHTML = '<span style="color:#2f6a45">\u25CF</span> Live (copilot-api.ifrunit.tech) \u2014 refreshes every 30s';
       });
     }
 
@@ -1758,7 +1758,7 @@
             txStatus.innerHTML = '<span style="color:#555;">\u25CB</span> No transactions yet';
             return;
           }
-          txStatus.innerHTML = '<span style="color:#22c55e">\u25CF</span> ' + txs.length + ' transactions loaded \u2014 ' + dateTime();
+          txStatus.innerHTML = '<span style="color:#2f6a45">\u25CF</span> ' + txs.length + ' transactions loaded \u2014 ' + dateTime();
           var rows = '';
           txs.forEach(function(tx) {
             rows += '<tr>' +

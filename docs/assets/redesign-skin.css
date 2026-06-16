@@ -670,6 +670,28 @@ select:focus {
   background: var(--positive) !important;
 }
 
+[style*="fill:#22c55e"],
+[style*="fill: #22c55e"],
+[style*="stroke:#22c55e"],
+[style*="stroke: #22c55e"] {
+  fill: var(--positive) !important;
+  stroke: var(--positive) !important;
+}
+
+svg [fill="#22c55e"],
+svg [fill="#10b981"],
+svg [fill="#34d399"],
+svg [fill="#4ade80"] {
+  fill: var(--positive) !important;
+}
+
+svg [stroke="#22c55e"],
+svg [stroke="#10b981"],
+svg [stroke="#34d399"],
+svg [stroke="#4ade80"] {
+  stroke: var(--positive) !important;
+}
+
 [style*="background:rgba(34,197,94"],
 [style*="background: rgba(34,197,94"],
 [style*="background:rgba(34, 197, 94"],
