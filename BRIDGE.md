@@ -23,6 +23,27 @@ Session Log: `docs/SESSION_LOG_20260610.md`
 
 ---
 
+## 2026-06-16 [CODEX]
+### TYPE: MEMO
+### STATUS: READY — Contributor Buy → Lock → Lending vorbereitet
+
+Aktueller Stand on-chain geprüft am 16.06.2026:
+- Pool: `0.083261656128757442` ETH / `36128594.451082089` IFR
+- C1/C2/C3: je `33333333.333333333` IFR frei, `0` locked, `0` Tranches
+- CommitmentVault Allowance: `0` für alle Contributor
+- LendingVault Allowance: `0` für alle Contributor
+- LendingVault Offers: keine bestehenden Offers, `totalAvailable=0`, `totalLent=0`
+- LendingVault Zinssatz: `200` bps/month
+
+Contributor-Käufe sind noch ausstehend. Danach:
+1. Dry-runs erneut ausführen, weil die IFR-Balances nach dem Kauf höher sind.
+2. `LOCK_BPS=5000` verwenden, wenn Lock + Lending aus derselben Wallet kommen.
+3. Danach `contributors-lending-offer.js` mit default `LENDING_BPS=5000` ausführen.
+
+Aktueller Snapshot: `docs/CONTRIBUTOR_EXECUTION_STATUS_20260616.md`
+
+---
+
 ## Blockaid Unflag — 10.06.2026
 ### TYPE: SECURITY
 ### STATUS: DONE — Unflag bestaetigt

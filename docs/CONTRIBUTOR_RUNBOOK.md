@@ -1,4 +1,4 @@
-# Contributor Runbook — 11.06.2026
+# Contributor Runbook — updated 16.06.2026
 
 ## Vorbereitung (heute Abend ✅)
 - [x] Scripts generalisiert
@@ -21,7 +21,15 @@ Empfohlen für morgen:
 - Wenn Contributor nur locken soll: Standard `LOCK_BPS=10000` verwenden.
 - Wenn Contributor nur lender sein soll: Lock überspringen und nur Lending Offer ausführen.
 
-## Ablauf Morgen
+## Aktueller Stand 16.06.2026
+- C1/C2/C3 haben weiterhin je `33333333.333333333` IFR.
+- C1/C2/C3 haben noch keine CommitmentVault Locks.
+- C1/C2/C3 haben noch keine LendingVault Offers.
+- C1/C2/C3 brauchen weiterhin mehr ETH für Kauf + Gas.
+- Pool am 16.06.2026: `0.083261656128757442` ETH und `36128594.451082089` IFR.
+- Detaillierter Snapshot: `docs/CONTRIBUTOR_EXECUTION_STATUS_20260616.md`
+
+## Ablauf nach Contributor-Kauf
 
 ### Schritt 1 — Jeder Contributor kauft 0.03 ETH IFR
 URL: https://app.uniswap.org/swap?outputCurrency=0x77e99917Eca8539c62F509ED1193ac36580A6e7B
@@ -56,7 +64,7 @@ Erwarteter Output bei Full Lock:
 
 Erwarteter Output bei 50% Lock:
 - `LOCK_BPS=5000`
-- 10 Tranchen über 50% der aktuellen Balance
+- 10 Tranchen über 50% der aktuellen Balance nach dem Kauf
 - 50% bleibt für Lending verfügbar
 
 ### Schritt 4 — Lock ausführen
