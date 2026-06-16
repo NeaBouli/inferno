@@ -1250,33 +1250,33 @@
 <script src="assets/wallet-core.js"></script>
 <script src="assets/ifr-state.js"></script>
   <link rel="stylesheet" href="assets/redesign-skin.css">
+  <link rel="stylesheet" href="assets/landing-header-template.css">
 </head>
 <body id="top">
 
 <h1 style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);">Inferno Protocol — Deflationary ERC-20 Utility Token ($IFR) on Ethereum</h1>
 
 <!-- ── NAV ────────────────────────────────────────── -->
-<header>
-<nav id="navbar">
+<nav>
   <div class="nav-inner">
-    <a href="#top" class="nav-brand nav-logo">
-      <img src="assets/ifr_icon_256.png" alt="IFR">
+    <a class="nav-brand" href="#top">
+      <img src="assets/ifr_icon_256.png" alt="Inferno">
       <span class="wm">INFERNO</span><span class="tk">$IFR</span>
     </a>
-    <ul class="nav-links" id="navLinks">
+    <ul class="nav-links">
       <li><a href="#about">Overview</a></li>
       <li><a href="#how">How it works</a></li>
       <li><a href="#ecosystem">Ecosystem</a></li>
       <li><a href="#tokenomics">Tokenomics</a></li>
-      <li><a href="#security">Security</a></li>
-      <li><a href="#dao-governance">Governance</a></li>
+      <li><a href="#trust">Security</a></li>
+      <li><a href="#governance">Governance</a></li>
       <li><a href="#contracts">Contracts</a></li>
       <li><a href="#faq">FAQ</a></li>
     </ul>
     <div class="nav-cta">
-      <a class="btn btn-ghost nav-github" href="https://github.com/NeaBouli/inferno" target="_blank" rel="noopener">GitHub</a>
+      <a class="btn btn-ghost" href="https://github.com/NeaBouli/inferno" target="_blank" rel="noopener" style="padding:9px 16px;">GitHub</a>
     <!-- Wallet: Not connected -->
-      <button class="btn btn-primary" id="lp-header-connect-btn" onclick="lpConnect()">Connect Wallet</button>
+      <a class="btn btn-primary" href="#" id="connect" style="padding:9px 18px;" onclick="lpConnect();return false;">Connect Wallet</a>
     <!-- Wallet: Connected -->
       <div id="lp-header-connected" style="display:none;align-items:center;gap:8px;margin-left:16px;position:relative;">
       <div style="background:rgba(34,197,94,0.15);border:1px solid rgba(34,197,94,0.4);border-radius:8px;padding:5px 8px;cursor:pointer;max-width:100px;white-space:nowrap;overflow:hidden;" onclick="lpToggleDropdown()">
@@ -1315,10 +1315,8 @@
       </div>
     </div>
     </div>
-    <button class="nav-toggle" id="navToggle" aria-label="Toggle menu">&#9776;</button>
   </div>
 </nav>
-</header>
 
 <main>
 <!-- Bootstrap banner removed 2026-06-06 — Bootstrap ended, LP live -->
@@ -2395,7 +2393,8 @@ if (isLocked) {
 </section>
 
 <!-- ── SECURITY & TRUST ──────────────────────────── -->
-<section id="security">
+<section id="trust">
+  <span id="security" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);"></span>
   <div class="container">
     <div class="reveal" style="text-align:center">
       <p class="section-label">Security &amp; Trust</p>
@@ -2662,7 +2661,8 @@ if (isLocked) {
 </section>
 
 <!-- ── DAO GOVERNANCE ─────────────────────────────── -->
-<section id="dao-governance" style="padding:80px 0;">
+<section id="governance" style="padding:80px 0;">
+  <span id="dao-governance" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);"></span>
   <div class="container">
     <div class="reveal" style="text-align:center;margin-bottom:60px;">
       <div style="display:inline-block;background:rgba(249,115,22,0.1);border:1px solid rgba(249,115,22,0.3);border-radius:20px;padding:6px 16px;font-size:0.8rem;color:#f97316;font-weight:600;letter-spacing:0.05em;margin-bottom:16px;">PHASE 4 &mdash; DAO GOVERNANCE</div>
@@ -2923,7 +2923,7 @@ if (isLocked) {
 <!-- ── JS ─────────────────────────────────────────── -->
 <script>
   // Nav scroll effect (throttled with rAF)
-  const nav = document.getElementById('navbar');
+  const nav = document.querySelector('nav');
   let scrollTicking = false;
   window.addEventListener('scroll', () => {
     if (!scrollTicking) {
@@ -2932,27 +2932,6 @@ if (isLocked) {
         scrollTicking = false;
       });
       scrollTicking = true;
-    }
-  });
-
-  // Mobile nav toggle
-  document.getElementById('navToggle').addEventListener('click', () => {
-    document.getElementById('navLinks').classList.toggle('open');
-  });
-
-  // Close mobile nav on link click
-  document.querySelectorAll('.nav-links a').forEach(a => {
-    a.addEventListener('click', () => {
-      document.getElementById('navLinks').classList.remove('open');
-    });
-  });
-
-  // Close mobile nav on outside tap
-  document.addEventListener('click', (e) => {
-    const nl = document.getElementById('navLinks');
-    const nt = document.getElementById('navToggle');
-    if (nl.classList.contains('open') && !nl.contains(e.target) && !nt.contains(e.target)) {
-      nl.classList.remove('open');
     }
   });
 
@@ -3403,7 +3382,7 @@ async function lpConnect() {
     alert("Wallet module not loaded. Please refresh the page and try again.");
     return;
   }
-  var btn = document.getElementById("lp-header-connect-btn");
+  var btn = document.getElementById("connect");
   if (btn) { btn.textContent = "Connecting..."; btn.disabled = true; }
   try {
     await IFRWallet.connect();
@@ -3420,7 +3399,7 @@ async function lpConnect() {
           btn.textContent = "\u26A0\uFE0F Install MetaMask";
           btn.style.borderColor = "#374151";
           btn.style.color = "#9ca3af";
-          btn.onclick = function() { window.open("https://metamask.io/download","_blank"); };
+          btn.onclick = function() { window.open("https://metamask.io/download","_blank"); return false; };
           btn.disabled = false;
         }
       }
@@ -3438,17 +3417,17 @@ async function lpConnect() {
 function lpDisconnect() {
   IFRWallet.disconnect();
   // Immediate UI reset — don't wait for event
-  var connectBtn = document.getElementById("lp-header-connect-btn");
+  var connectBtn = document.getElementById("connect");
   var connectedDiv = document.getElementById("lp-header-connected");
   var dropdown = document.getElementById("lp-header-dropdown");
   if (connectBtn) {
     connectBtn.style.display = "";
     connectBtn.textContent = "Connect Wallet";
     connectBtn.disabled = false;
-    connectBtn.style.borderColor = "#f97316";
-    connectBtn.style.color = "#f97316";
-    connectBtn.style.background = "transparent";
-    connectBtn.onclick = lpConnect;
+    connectBtn.style.borderColor = "transparent";
+    connectBtn.style.color = "#fff";
+    connectBtn.style.background = "#B0481E";
+    connectBtn.onclick = function() { lpConnect(); return false; };
   }
   if (connectedDiv) connectedDiv.style.display = "none";
   if (dropdown) dropdown.style.display = "none";
@@ -3505,17 +3484,17 @@ document.addEventListener("click", function(e) {
 
 function lpUpdateUI(state) {
   var connected = IFRWallet.isConnected();
-  var connectBtn = document.getElementById("lp-header-connect-btn");
+  var connectBtn = document.getElementById("connect");
   var connectedDiv = document.getElementById("lp-header-connected");
   if (connectBtn) {
     connectBtn.style.display = connected ? "none" : "";
     if (!connected) {
       connectBtn.textContent = "Connect Wallet";
       connectBtn.disabled = false;
-      connectBtn.style.borderColor = "#f97316";
-      connectBtn.style.color = "#f97316";
-      connectBtn.style.background = "transparent";
-      connectBtn.onclick = lpConnect;
+      connectBtn.style.borderColor = "transparent";
+      connectBtn.style.color = "#fff";
+      connectBtn.style.background = "#B0481E";
+      connectBtn.onclick = function() { lpConnect(); return false; };
     }
   }
   if (connectedDiv) connectedDiv.style.display = connected ? "flex" : "none";
