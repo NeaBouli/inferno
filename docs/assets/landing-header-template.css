@@ -137,3 +137,266 @@ nav #connect {
     font-size: 13px !important;
   }
 }
+
+.masthead {
+  position: relative !important;
+  height: 440px !important;
+  background: #0A0807 url("inferno-redesign-masthead.png") no-repeat 50% 58% / cover !important;
+}
+
+.masthead::after {
+  content: "" !important;
+  position: absolute !important;
+  inset: 0 !important;
+  pointer-events: none !important;
+  background: linear-gradient(rgba(250, 247, 242, 0) 62%, rgba(250, 247, 242, .55) 88%, #FAF7F2 100%) !important;
+}
+
+.template-hero {
+  position: relative !important;
+  min-height: 0 !important;
+  padding: 72px 0 92px !important;
+  margin: 0 !important;
+  background: transparent !important;
+  color: #211C17 !important;
+  overflow: visible !important;
+}
+
+.template-hero::before,
+.template-hero::after {
+  content: none !important;
+  display: none !important;
+}
+
+.template-hero > .container {
+  max-width: 1140px !important;
+  width: 100% !important;
+  margin: 0 auto !important;
+  padding: 0 24px !important;
+  display: grid !important;
+  grid-template-columns: 1.15fr .85fr !important;
+  gap: 64px !important;
+  align-items: center !important;
+  text-align: left !important;
+}
+
+.template-hero .reveal {
+  opacity: 1 !important;
+  transform: none !important;
+}
+
+.template-hero .hero-eyebrow {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  margin: 0 0 26px !important;
+  color: #8C8273 !important;
+  font-family: "IBM Plex Mono", "SF Mono", Menlo, monospace !important;
+  font-size: 12.5px !important;
+  font-weight: 400 !important;
+  line-height: 20.625px !important;
+  letter-spacing: 1.5px !important;
+  text-transform: uppercase !important;
+}
+
+.template-hero .hero-eyebrow .dot {
+  width: 8px !important;
+  height: 8px !important;
+  border-radius: 50% !important;
+  background: #3F6B50 !important;
+  box-shadow: 0 0 0 5px rgba(63, 107, 80, .12) !important;
+  flex: 0 0 auto !important;
+}
+
+.template-hero h1 {
+  max-width: 8.55em !important;
+  margin: 0 0 24px !important;
+  color: #211C17 !important;
+  font-family: "Newsreader", Georgia, "Times New Roman", serif !important;
+  font-size: 62px !important;
+  font-weight: 500 !important;
+  line-height: 1.06 !important;
+  letter-spacing: -.01em !important;
+  text-align: left !important;
+}
+
+.template-hero h1 em {
+  color: #B0481E !important;
+  font-style: italic !important;
+  margin-right: .08em !important;
+}
+
+.template-hero .sub {
+  max-width: 28.8em !important;
+  margin: 0 0 36px !important;
+  color: #574F45 !important;
+  font-family: "IBM Plex Sans", -apple-system, system-ui, sans-serif !important;
+  font-size: 19px !important;
+  font-weight: 400 !important;
+  line-height: 1.6 !important;
+  text-align: left !important;
+}
+
+.template-hero .hero-actions {
+  display: flex !important;
+  justify-content: flex-start !important;
+  gap: 14px !important;
+  margin: 0 0 40px !important;
+}
+
+.template-hero .hero-actions .btn {
+  display: flex !important;
+  align-items: center !important;
+  gap: 9px !important;
+  min-height: auto !important;
+  padding: 12px 20px !important;
+  border-radius: 4px !important;
+  box-shadow: none !important;
+  font-family: "IBM Plex Sans", -apple-system, system-ui, sans-serif !important;
+  font-size: 15px !important;
+  font-weight: 500 !important;
+  line-height: 24.75px !important;
+  text-decoration: none !important;
+}
+
+.template-hero .hero-actions .btn-primary {
+  background: #B0481E !important;
+  color: #fff !important;
+  border: 1px solid transparent !important;
+}
+
+.template-hero .hero-actions .btn-ghost {
+  background: transparent !important;
+  color: #211C17 !important;
+  border: 1px solid #D7CCBB !important;
+}
+
+.template-hero .hero-note {
+  margin: 0 !important;
+  color: #8C8273 !important;
+  font-family: "IBM Plex Mono", "SF Mono", Menlo, monospace !important;
+  font-size: 12px !important;
+  line-height: 19.8px !important;
+  letter-spacing: .02em !important;
+}
+
+.template-hero .ledger {
+  display: block !important;
+  width: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  background: #fff !important;
+  color: #211C17 !important;
+  border: 1px solid #E6DDD0 !important;
+  border-radius: 6px !important;
+  box-shadow: 0 1px 2px rgba(33, 28, 23, .04), 0 8px 24px rgba(33, 28, 23, .05) !important;
+}
+
+.template-hero .ledger-head {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  padding: 16px 20px !important;
+  border-bottom: 1px solid #E6DDD0 !important;
+}
+
+.template-hero .ledger-head .t {
+  color: #8C8273 !important;
+  font-family: "IBM Plex Mono", "SF Mono", Menlo, monospace !important;
+  font-size: 12px !important;
+  letter-spacing: 1.5px !important;
+  text-transform: uppercase !important;
+}
+
+.template-hero .net {
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  color: #3F6B50 !important;
+  font-family: "IBM Plex Mono", "SF Mono", Menlo, monospace !important;
+  font-size: 11px !important;
+  line-height: 18.15px !important;
+}
+
+.template-hero .net .d {
+  display: block !important;
+  width: 6px !important;
+  height: 6px !important;
+  border-radius: 50% !important;
+  background: #3F6B50 !important;
+}
+
+.template-hero .ledger-row {
+  display: flex !important;
+  align-items: baseline !important;
+  justify-content: space-between !important;
+  gap: 20px !important;
+  padding: 15px 20px !important;
+  border-bottom: 1px solid #E6DDD0 !important;
+}
+
+.template-hero .ledger-row:last-child {
+  border-bottom: 0 !important;
+}
+
+.template-hero .ledger-row .k {
+  color: #574F45 !important;
+  font-family: "IBM Plex Sans", -apple-system, system-ui, sans-serif !important;
+  font-size: 13.5px !important;
+  font-weight: 400 !important;
+  line-height: 22.275px !important;
+}
+
+.template-hero .ledger-row .v {
+  color: #211C17 !important;
+  text-align: right !important;
+  font-family: "IBM Plex Mono", "SF Mono", Menlo, monospace !important;
+  font-size: 18px !important;
+  font-weight: 500 !important;
+  line-height: 29.7px !important;
+}
+
+.template-hero .ledger-row .v.acc {
+  color: #B0481E !important;
+}
+
+.legacy-hero {
+  display: none !important;
+}
+
+@media (max-width: 900px) {
+  .masthead {
+    height: 280px !important;
+    background-position: 50% 50% !important;
+  }
+
+  .template-hero {
+    padding: 72px 0 76px !important;
+  }
+
+  .template-hero > .container {
+    display: block !important;
+    padding: 0 24px !important;
+  }
+
+  .template-hero h1 {
+    max-width: 8.6em !important;
+    font-size: 40px !important;
+    line-height: 1.02 !important;
+    margin-bottom: 26px !important;
+  }
+
+  .template-hero .sub {
+    max-width: none !important;
+    font-size: 20px !important;
+    line-height: 1.5 !important;
+    margin-bottom: 0 !important;
+  }
+
+  .template-hero .hero-actions,
+  .template-hero .hero-note,
+  .template-hero .ledger {
+    display: none !important;
+  }
+}
