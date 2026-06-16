@@ -163,6 +163,7 @@ nav #connect {
   content: "" !important;
   position: absolute !important;
   inset: 0 !important;
+  z-index: 2 !important;
   pointer-events: none !important;
   background: linear-gradient(rgba(250, 247, 242, 0) 62%, rgba(250, 247, 242, .55) 88%, #FAF7F2 100%) !important;
 }
@@ -170,23 +171,41 @@ nav #connect {
 .masthead-particles {
   position: absolute !important;
   inset: 0 !important;
-  z-index: 1 !important;
+  z-index: 4 !important;
   overflow: hidden !important;
   pointer-events: none !important;
 }
 
+.masthead-particles::before {
+  content: "" !important;
+  position: absolute !important;
+  inset: 0 !important;
+  opacity: .72 !important;
+  background:
+    radial-gradient(circle at 78% 18%, rgba(206, 255, 244, .95) 0 2px, transparent 3px),
+    radial-gradient(circle at 86% 24%, rgba(114, 255, 215, .72) 0 1.5px, transparent 3px),
+    radial-gradient(circle at 91% 42%, rgba(206, 255, 244, .82) 0 2px, transparent 3px),
+    radial-gradient(circle at 72% 54%, rgba(114, 255, 215, .64) 0 1.5px, transparent 3px),
+    radial-gradient(circle at 96% 62%, rgba(206, 255, 244, .8) 0 2px, transparent 3px) !important;
+  filter: drop-shadow(0 0 10px rgba(46, 230, 187, .82)) !important;
+  animation: masthead-starfield-drift 9s linear infinite !important;
+}
+
 .masthead-particles span {
   position: absolute !important;
-  left: 104% !important;
+  left: 98% !important;
   top: var(--y) !important;
   width: var(--s) !important;
   height: var(--s) !important;
   border-radius: 50% !important;
-  background: rgba(156, 255, 234, var(--a)) !important;
+  background: #c9fff3 !important;
+  border: 1px solid rgba(255, 255, 255, .85) !important;
   box-shadow:
-    0 0 calc(var(--s) * 3) rgba(156, 255, 234, calc(var(--a) * .95)),
-    0 0 calc(var(--s) * 7) rgba(58, 218, 188, calc(var(--a) * .5)) !important;
-  filter: saturate(1.12) brightness(var(--b)) !important;
+    0 0 3px rgba(255, 255, 255, .98),
+    0 0 calc(var(--s) * 5) rgba(190, 255, 241, calc(var(--a) * .98)),
+    0 0 calc(var(--s) * 14) rgba(32, 211, 169, calc(var(--a) * .78)) !important;
+  filter: saturate(1.45) brightness(var(--b)) !important;
+  mix-blend-mode: screen !important;
   animation: masthead-particle-drift var(--d) linear infinite !important;
   animation-delay: var(--delay) !important;
   opacity: 0 !important;
@@ -197,39 +216,66 @@ nav #connect {
   position: absolute !important;
   top: 50% !important;
   right: 90% !important;
-  width: calc(var(--s) * 9) !important;
-  height: 1px !important;
+  width: calc(var(--s) * 17) !important;
+  height: 3px !important;
   transform: translateY(-50%) !important;
-  background: linear-gradient(90deg, transparent, rgba(156, 255, 234, calc(var(--a) * .62))) !important;
+  background: linear-gradient(90deg, transparent, rgba(190, 255, 241, calc(var(--a) * .92))) !important;
+  filter: blur(.2px) !important;
 }
 
-.masthead-particles span:nth-child(1) { --y: 10%; --s: 5px; --a: 1; --b: 1.45; --d: 9s; --delay: -1s; --dy: 38px; --scale: .58; }
-.masthead-particles span:nth-child(2) { --y: 18%; --s: 3px; --a: .72; --b: 1.14; --d: 13s; --delay: -7s; --dy: 8px; --scale: .45; }
-.masthead-particles span:nth-child(3) { --y: 28%; --s: 4px; --a: .88; --b: 1.24; --d: 11s; --delay: -4s; --dy: -28px; --scale: .52; }
-.masthead-particles span:nth-child(4) { --y: 36%; --s: 6px; --a: .78; --b: 1.28; --d: 15s; --delay: -10s; --dy: -70px; --scale: .62; }
-.masthead-particles span:nth-child(5) { --y: 47%; --s: 3px; --a: .66; --b: 1.08; --d: 10s; --delay: -2s; --dy: -110px; --scale: .4; }
-.masthead-particles span:nth-child(6) { --y: 58%; --s: 4px; --a: .76; --b: 1.18; --d: 16s; --delay: -12s; --dy: -165px; --scale: .48; }
-.masthead-particles span:nth-child(7) { --y: 14%; --s: 7px; --a: .5; --b: 1; --d: 18s; --delay: -8s; --dy: 52px; --scale: .72; }
-.masthead-particles span:nth-child(8) { --y: 23%; --s: 3px; --a: .96; --b: 1.38; --d: 8s; --delay: -5s; --dy: 18px; --scale: .42; }
-.masthead-particles span:nth-child(9) { --y: 42%; --s: 5px; --a: .58; --b: 1.04; --d: 14s; --delay: -11s; --dy: -98px; --scale: .54; }
-.masthead-particles span:nth-child(10) { --y: 64%; --s: 3px; --a: .84; --b: 1.3; --d: 12s; --delay: -6s; --dy: -214px; --scale: .4; }
-.masthead-particles span:nth-child(11) { --y: 31%; --s: 8px; --a: .4; --b: .96; --d: 20s; --delay: -15s; --dy: -42px; --scale: .68; }
-.masthead-particles span:nth-child(12) { --y: 52%; --s: 4px; --a: .94; --b: 1.34; --d: 9.5s; --delay: -3s; --dy: -150px; --scale: .46; }
+.masthead-particles span:nth-child(1) { --y: 9%; --s: 11px; --a: 1; --b: 2; --d: 9s; --delay: -1s; --dy: 38px; --scale: .58; }
+.masthead-particles span:nth-child(2) { --y: 17%; --s: 8px; --a: .96; --b: 1.72; --d: 13s; --delay: -7s; --dy: 8px; --scale: .45; }
+.masthead-particles span:nth-child(3) { --y: 27%; --s: 10px; --a: 1; --b: 1.86; --d: 11s; --delay: -4s; --dy: -28px; --scale: .52; }
+.masthead-particles span:nth-child(4) { --y: 35%; --s: 12px; --a: .98; --b: 1.78; --d: 15s; --delay: -10s; --dy: -70px; --scale: .62; }
+.masthead-particles span:nth-child(5) { --y: 46%; --s: 8px; --a: .92; --b: 1.58; --d: 10s; --delay: -2s; --dy: -110px; --scale: .4; }
+.masthead-particles span:nth-child(6) { --y: 57%; --s: 9px; --a: .96; --b: 1.68; --d: 16s; --delay: -12s; --dy: -165px; --scale: .48; }
+.masthead-particles span:nth-child(7) { --y: 13%; --s: 13px; --a: .86; --b: 1.52; --d: 18s; --delay: -8s; --dy: 52px; --scale: .72; }
+.masthead-particles span:nth-child(8) { --y: 22%; --s: 9px; --a: 1; --b: 1.96; --d: 8s; --delay: -5s; --dy: 18px; --scale: .42; }
+.masthead-particles span:nth-child(9) { --y: 41%; --s: 11px; --a: .9; --b: 1.56; --d: 14s; --delay: -11s; --dy: -98px; --scale: .54; }
+.masthead-particles span:nth-child(10) { --y: 63%; --s: 8px; --a: 1; --b: 1.86; --d: 12s; --delay: -6s; --dy: -214px; --scale: .4; }
+.masthead-particles span:nth-child(11) { --y: 30%; --s: 14px; --a: .82; --b: 1.48; --d: 20s; --delay: -15s; --dy: -42px; --scale: .68; }
+.masthead-particles span:nth-child(12) { --y: 51%; --s: 10px; --a: 1; --b: 1.92; --d: 9.5s; --delay: -3s; --dy: -150px; --scale: .46; }
+.masthead-particles span:nth-child(13) { --y: 19%; --s: 12px; --a: .92; --b: 1.72; --d: 10.5s; --delay: -8.5s; --dy: 32px; --scale: .56; }
+.masthead-particles span:nth-child(14) { --y: 25%; --s: 8px; --a: 1; --b: 1.9; --d: 7.8s; --delay: -2.8s; --dy: -18px; --scale: .42; }
+.masthead-particles span:nth-child(15) { --y: 33%; --s: 10px; --a: .95; --b: 1.76; --d: 12.5s; --delay: -9.2s; --dy: -64px; --scale: .5; }
+.masthead-particles span:nth-child(16) { --y: 39%; --s: 13px; --a: .84; --b: 1.5; --d: 17s; --delay: -13.5s; --dy: -94px; --scale: .66; }
+.masthead-particles span:nth-child(17) { --y: 48%; --s: 9px; --a: 1; --b: 1.94; --d: 8.6s; --delay: -6.4s; --dy: -126px; --scale: .44; }
+.masthead-particles span:nth-child(18) { --y: 60%; --s: 11px; --a: .9; --b: 1.64; --d: 14.5s; --delay: -4.6s; --dy: -196px; --scale: .54; }
+.masthead-particles span:nth-child(19) { --y: 12%; --s: 9px; --a: .96; --b: 1.82; --d: 11.2s; --delay: -10.8s; --dy: 48px; --scale: .48; }
+.masthead-particles span:nth-child(20) { --y: 21%; --s: 14px; --a: .82; --b: 1.46; --d: 19s; --delay: -16s; --dy: 20px; --scale: .7; }
+.masthead-particles span:nth-child(21) { --y: 44%; --s: 8px; --a: 1; --b: 1.9; --d: 8.8s; --delay: -7.1s; --dy: -104px; --scale: .4; }
+.masthead-particles span:nth-child(22) { --y: 55%; --s: 12px; --a: .88; --b: 1.58; --d: 16.5s; --delay: -14s; --dy: -174px; --scale: .6; }
+.masthead-particles span:nth-child(23) { --y: 66%; --s: 9px; --a: .98; --b: 1.82; --d: 10.8s; --delay: -5.8s; --dy: -234px; --scale: .42; }
+.masthead-particles span:nth-child(24) { --y: 37%; --s: 11px; --a: .94; --b: 1.74; --d: 13.8s; --delay: -12.1s; --dy: -76px; --scale: .52; }
 
 @keyframes masthead-particle-drift {
   0% {
     opacity: 0;
     transform: translate3d(0, 0, 0) scale(.72);
   }
-  10% {
+  7% {
     opacity: var(--a);
   }
-  72% {
-    opacity: calc(var(--a) * .88);
+  78% {
+    opacity: calc(var(--a) * .95);
   }
   100% {
     opacity: 0;
-    transform: translate3d(-92vw, var(--dy), 0) scale(var(--scale));
+    transform: translate3d(-105vw, var(--dy), 0) scale(var(--scale));
+  }
+}
+
+@keyframes masthead-starfield-drift {
+  0% {
+    opacity: .72;
+    transform: translate3d(0, 0, 0);
+  }
+  75% {
+    opacity: .48;
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(-62vw, -28px, 0);
   }
 }
 
