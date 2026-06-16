@@ -171,7 +171,7 @@ nav #connect {
 .masthead-particles {
   position: absolute !important;
   inset: 0 !important;
-  z-index: 4 !important;
+  z-index: 12 !important;
   overflow: hidden !important;
   pointer-events: none !important;
 }
@@ -180,35 +180,52 @@ nav #connect {
   content: "" !important;
   position: absolute !important;
   inset: 0 !important;
-  opacity: .72 !important;
+  opacity: .98 !important;
   background:
-    radial-gradient(circle at 78% 18%, rgba(206, 255, 244, .95) 0 2px, transparent 3px),
-    radial-gradient(circle at 86% 24%, rgba(114, 255, 215, .72) 0 1.5px, transparent 3px),
-    radial-gradient(circle at 91% 42%, rgba(206, 255, 244, .82) 0 2px, transparent 3px),
-    radial-gradient(circle at 72% 54%, rgba(114, 255, 215, .64) 0 1.5px, transparent 3px),
-    radial-gradient(circle at 96% 62%, rgba(206, 255, 244, .8) 0 2px, transparent 3px) !important;
-  filter: drop-shadow(0 0 10px rgba(46, 230, 187, .82)) !important;
-  animation: masthead-starfield-drift 9s linear infinite !important;
+    radial-gradient(circle at 72% 14%, rgba(188, 255, 240, 1) 0 3px, transparent 4px),
+    radial-gradient(circle at 80% 22%, rgba(111, 255, 218, .96) 0 2.5px, transparent 4px),
+    radial-gradient(circle at 88% 34%, rgba(188, 255, 240, .98) 0 3px, transparent 4px),
+    radial-gradient(circle at 68% 44%, rgba(111, 255, 218, .9) 0 2.5px, transparent 4px),
+    radial-gradient(circle at 94% 54%, rgba(188, 255, 240, .95) 0 3px, transparent 4px),
+    radial-gradient(circle at 76% 63%, rgba(111, 255, 218, .82) 0 2px, transparent 4px) !important;
+  filter:
+    drop-shadow(0 0 7px rgba(255, 255, 255, .92))
+    drop-shadow(0 0 18px rgba(46, 230, 187, .96)) !important;
+  animation: masthead-starfield-drift 7s linear infinite, masthead-starfield-twinkle 1.5s ease-in-out infinite !important;
+}
+
+.masthead-particles::after {
+  content: "" !important;
+  position: absolute !important;
+  inset: 0 !important;
+  opacity: .9 !important;
+  background:
+    radial-gradient(circle at 64% 19%, rgba(174, 255, 237, .96) 0 2.5px, transparent 4px),
+    radial-gradient(circle at 83% 12%, rgba(78, 246, 202, .9) 0 2px, transparent 4px),
+    radial-gradient(circle at 91% 27%, rgba(174, 255, 237, .9) 0 2px, transparent 4px),
+    radial-gradient(circle at 74% 37%, rgba(78, 246, 202, .86) 0 2px, transparent 4px),
+    radial-gradient(circle at 86% 49%, rgba(174, 255, 237, .88) 0 2.5px, transparent 4px) !important;
+  filter: drop-shadow(0 0 14px rgba(46, 230, 187, .9)) !important;
+  animation: masthead-fixed-stars-twinkle 2.1s ease-in-out infinite !important;
 }
 
 .masthead-particles span {
   position: absolute !important;
-  left: 98% !important;
+  left: 100% !important;
   top: var(--y) !important;
-  width: var(--s) !important;
-  height: var(--s) !important;
+  width: calc(var(--s) * 1.35) !important;
+  height: calc(var(--s) * 1.35) !important;
   border-radius: 50% !important;
-  background: #c9fff3 !important;
-  border: 1px solid rgba(255, 255, 255, .85) !important;
+  background: #baffef !important;
+  border: 1px solid rgba(224, 255, 248, .88) !important;
   box-shadow:
-    0 0 3px rgba(255, 255, 255, .98),
-    0 0 calc(var(--s) * 5) rgba(190, 255, 241, calc(var(--a) * .98)),
-    0 0 calc(var(--s) * 14) rgba(32, 211, 169, calc(var(--a) * .78)) !important;
-  filter: saturate(1.45) brightness(var(--b)) !important;
+    0 0 4px rgba(218, 255, 247, 1),
+    0 0 calc(var(--s) * 7) rgba(190, 255, 241, 1),
+    0 0 calc(var(--s) * 18) rgba(32, 211, 169, calc(var(--a) * .9)) !important;
+  filter: saturate(1.7) brightness(var(--b)) !important;
   mix-blend-mode: screen !important;
   animation: masthead-particle-drift var(--d) linear infinite !important;
   animation-delay: var(--delay) !important;
-  opacity: 0 !important;
 }
 
 .masthead-particles span::before {
@@ -216,10 +233,10 @@ nav #connect {
   position: absolute !important;
   top: 50% !important;
   right: 90% !important;
-  width: calc(var(--s) * 17) !important;
-  height: 3px !important;
+  width: calc(var(--s) * 22) !important;
+  height: 4px !important;
   transform: translateY(-50%) !important;
-  background: linear-gradient(90deg, transparent, rgba(190, 255, 241, calc(var(--a) * .92))) !important;
+  background: linear-gradient(90deg, transparent, rgba(121, 255, 224, .9), rgba(210, 255, 245, 1)) !important;
   filter: blur(.2px) !important;
 }
 
@@ -250,32 +267,56 @@ nav #connect {
 
 @keyframes masthead-particle-drift {
   0% {
-    opacity: 0;
+    opacity: .9;
     transform: translate3d(0, 0, 0) scale(.72);
   }
   7% {
-    opacity: var(--a);
+    opacity: 1;
   }
   78% {
-    opacity: calc(var(--a) * .95);
+    opacity: 1;
   }
   100% {
-    opacity: 0;
+    opacity: .2;
     transform: translate3d(-105vw, var(--dy), 0) scale(var(--scale));
   }
 }
 
 @keyframes masthead-starfield-drift {
   0% {
-    opacity: .72;
+    opacity: .98;
     transform: translate3d(0, 0, 0);
   }
   75% {
-    opacity: .48;
+    opacity: .82;
   }
   100% {
-    opacity: 0;
+    opacity: .35;
     transform: translate3d(-62vw, -28px, 0);
+  }
+}
+
+@keyframes masthead-starfield-twinkle {
+  0%, 100% {
+    filter:
+      drop-shadow(0 0 6px rgba(255, 255, 255, .86))
+      drop-shadow(0 0 15px rgba(46, 230, 187, .82));
+  }
+  50% {
+    filter:
+      drop-shadow(0 0 10px rgba(255, 255, 255, 1))
+      drop-shadow(0 0 28px rgba(46, 230, 187, 1));
+  }
+}
+
+@keyframes masthead-fixed-stars-twinkle {
+  0%, 100% {
+    opacity: .58;
+    transform: scale(.985);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.015);
   }
 }
 
@@ -523,6 +564,24 @@ nav #connect {
   z-index: 1 !important;
   display: block !important;
   filter: drop-shadow(0 10px 22px rgba(62, 69, 77, .1));
+}
+
+#token-flow svg rect[fill="#0d1117"],
+#token-flow svg circle[fill="#0d1117"] {
+  fill: #fffaf2 !important;
+}
+
+#token-flow svg rect[fill="#0d1117"] {
+  filter: drop-shadow(0 6px 12px rgba(113, 91, 68, .12)) !important;
+}
+
+#token-flow svg text[fill="#9ca3af"],
+#token-flow svg text[fill="#6b7280"] {
+  fill: #6f675d !important;
+}
+
+#token-flow svg line[stroke="#1e2730"] {
+  stroke: rgba(138, 126, 111, .58) !important;
 }
 
 #faq {
