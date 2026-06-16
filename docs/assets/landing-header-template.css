@@ -155,8 +155,15 @@ nav #connect {
 
 .masthead {
   position: relative !important;
-  height: 440px !important;
-  background: #0A0807 url("inferno-redesign-masthead.png") no-repeat 50% 58% / cover !important;
+  height: 300px !important;
+  background-color: #0A0807 !important;
+  background-image: image-set(
+    url("inferno-redesign-masthead.png") 1x,
+    url("inferno-redesign-masthead@2x.png") 2x
+  ) !important;
+  background-repeat: no-repeat !important;
+  background-position: 50% 50% !important;
+  background-size: cover !important;
 }
 
 .masthead::after {
@@ -490,7 +497,7 @@ nav #connect {
 
 @media (max-width: 900px) {
   .masthead {
-    height: 280px !important;
+    height: 220px !important;
     background-position: 50% 50% !important;
   }
 
