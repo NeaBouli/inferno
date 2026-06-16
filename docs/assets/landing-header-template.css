@@ -164,6 +164,7 @@ nav #connect {
   background-repeat: no-repeat !important;
   background-position: 50% 50% !important;
   background-size: cover !important;
+  border-bottom: 1px solid #D7CCBB !important;
 }
 
 .masthead::after {
@@ -172,7 +173,7 @@ nav #connect {
   inset: 0 !important;
   z-index: 2 !important;
   pointer-events: none !important;
-  background: linear-gradient(rgba(250, 247, 242, 0) 62%, rgba(250, 247, 242, .55) 88%, #FAF7F2 100%) !important;
+  background: none !important;
 }
 
 .template-hero {
@@ -437,6 +438,38 @@ nav #connect {
 
 #token-flow svg line[stroke="#1e2730"] {
   stroke: rgba(138, 126, 111, .58) !important;
+}
+
+[style*="color:#22c55e"],
+[style*="color:#4CAF50"],
+[style*="color:#00ffa0"] {
+  color: #2f6a45 !important;
+}
+
+[style*="background:rgba(34,197,94"],
+[style*="background: rgba(34,197,94"],
+[style*="background:rgba(34, 197, 94"],
+[style*="background: rgba(34, 197, 94"] {
+  background: rgba(47, 106, 69, .12) !important;
+}
+
+[style*="border:1px solid rgba(34,197,94"],
+[style*="border: 1px solid rgba(34,197,94"],
+[style*="border:1px solid rgba(34, 197, 94"],
+[style*="border: 1px solid rgba(34, 197, 94"] {
+  border-color: rgba(47, 106, 69, .34) !important;
+}
+
+#token-flow svg rect[stroke="#22c55e"] {
+  stroke: #2f6a45 !important;
+}
+
+#token-flow svg text[fill="#22c55e"] {
+  fill: #2f6a45 !important;
+}
+
+#token-flow svg circle[fill="#22c55e"] {
+  fill: #2f6a45 !important;
 }
 
 #faq {
