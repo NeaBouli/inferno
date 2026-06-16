@@ -29,6 +29,18 @@ Empfohlen für morgen:
 - Pool am 16.06.2026: `0.083261656128757442` ETH und `36128594.451082089` IFR.
 - Detaillierter Snapshot: `docs/CONTRIBUTOR_EXECUTION_STATUS_20260616.md`
 
+## Status nach Käufen prüfen
+```bash
+node scripts/check-contributors-execution.js
+```
+
+Das Script ist read-only und zeigt pro Contributor:
+- ETH/IFR Balance
+- ob ein Uniswap-Kauf erkannt wurde
+- CommitmentVault Locks/Tranches
+- LendingVault Offer Status
+- nächsten auszuführenden Schritt
+
 ## Ablauf nach Contributor-Kauf
 
 ### Schritt 1 — Jeder Contributor kauft 0.03 ETH IFR
