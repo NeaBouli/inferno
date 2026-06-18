@@ -25,6 +25,7 @@
 | Telegram | [t.me/IFRtoken](https://t.me/IFRtoken) |
 | Twitter/X | [x.com/IFRtoken](https://x.com/IFRtoken) |
 | Etherscan | [Token Page](https://etherscan.io/token/0x77e99917Eca8539c62F509ED1193ac36580A6e7B) |
+| Token List | [ifrunit.tech/token-list.json](https://ifrunit.tech/token-list.json) |
 | GitHub | [NeaBouli/inferno](https://github.com/NeaBouli/inferno) |
 
 ---
