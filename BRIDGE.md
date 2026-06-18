@@ -883,3 +883,45 @@ Next:
 - Update Uniswap issue #2509 with the new token-list and icon URLs after deploy.
 - Request Etherscan reputation review from `Unknown` to `Neutral`/`OK`.
 - Revisit MetaMask registry only after Etherscan reputation changes.
+
+---
+
+## 2026-06-18 [CODEX TERMINAL]
+### TYPE: STATUS / EXTERNAL
+### STATUS: SYNCED
+
+**Datum:** 2026-06-18 13:02 PDT
+**Autor:** CODEX TERMINAL
+
+**Was geprüft wurde**
+
+- `BRIDGE.md` vollständig gelesen; bestehender Token-Metadata-Stand vom 2026-06-18 weiterverwendet.
+- Git HEAD vor dieser Bridge-Synchronisierung: `14117740 feat: publish IFR token metadata`.
+- `git status --short` war vor dieser Bridge-Synchronisierung clean.
+- IFR Token List live und maschinenlesbar:
+  - `https://ifrunit.tech/token-list.json`
+  - `https://ifrunit.tech/.well-known/token-list.json`
+- Beide Token-List-Endpunkte liefern:
+  - Name: `Inferno Token List`
+  - Symbol: `IFR`
+  - Address: `0x77e99917Eca8539c62F509ED1193ac36580A6e7B`
+  - Logo: `https://ifrunit.tech/assets/ifr_icon_256.png`
+  - Timestamp: `2026-06-18T15:30:00.000Z`
+- Landing enthält den MetaMask-Import-Flow via `lpAddIFRToken()` / `wallet_watchAsset`.
+- Uniswap Default Token List Issue bleibt offen:
+  - `https://github.com/Uniswap/default-token-list/issues/2509`
+  - State: `open`
+  - Last updated: `2026-06-18T15:28:12Z`
+- MetaMask Registry bleibt blockiert, solange Etherscan Token Reputation für IFR noch `Unknown` ist.
+
+**Commit/PR/Issue**
+
+- Commit: `14117740 feat: publish IFR token metadata`
+- Issue: `https://github.com/Uniswap/default-token-list/issues/2509`
+
+**Offene nächste Schritte**
+
+- Uniswap Issue #2509 weiter aktualisieren, falls Reviewer zusätzliche Token-List- oder Icon-Nachweise anfordern.
+- Etherscan Reputation Review anstoßen bzw. nachfassen, bis IFR von `Unknown` auf `Neutral`/`OK` wechselt.
+- MetaMask Registry erst nach Reputation-Upgrade erneut angehen.
+- Bei künftigen Token-Metadata-Änderungen `docs/token-list.json` und `docs/.well-known/token-list.json` synchron halten.
