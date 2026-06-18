@@ -695,14 +695,22 @@ svg [stroke="#4ade80"] {
 [style*="background:rgba(34,197,94"],
 [style*="background: rgba(34,197,94"],
 [style*="background:rgba(34, 197, 94"],
-[style*="background: rgba(34, 197, 94"] {
+[style*="background: rgba(34, 197, 94"],
+[style*="background:rgba(0,255,160"],
+[style*="background: rgba(0,255,160"],
+[style*="background:rgba(0, 255, 160"],
+[style*="background: rgba(0, 255, 160"] {
   background: rgba(47, 106, 69, .12) !important;
 }
 
 [style*="border:1px solid rgba(34,197,94"],
 [style*="border: 1px solid rgba(34,197,94"],
 [style*="border:1px solid rgba(34, 197, 94"],
-[style*="border: 1px solid rgba(34, 197, 94"] {
+[style*="border: 1px solid rgba(34, 197, 94"],
+[style*="border:1px solid rgba(0,255,160"],
+[style*="border: 1px solid rgba(0,255,160"],
+[style*="border:1px solid rgba(0, 255, 160"],
+[style*="border: 1px solid rgba(0, 255, 160"] {
   border-color: rgba(47, 106, 69, .34) !important;
 }
 
