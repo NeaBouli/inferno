@@ -925,3 +925,38 @@ Next:
 - Etherscan Reputation Review anstoßen bzw. nachfassen, bis IFR von `Unknown` auf `Neutral`/`OK` wechselt.
 - MetaMask Registry erst nach Reputation-Upgrade erneut angehen.
 - Bei künftigen Token-Metadata-Änderungen `docs/token-list.json` und `docs/.well-known/token-list.json` synchron halten.
+
+---
+
+## 2026-06-18 [CODEX TERMINAL]
+### TYPE: STATUS / EXTERNAL
+### STATUS: MONITORING
+
+**Datum:** 2026-06-18 14:42 PDT
+**Autor:** CODEX TERMINAL
+
+**Festgehalten**
+
+- Uniswap Default Token List Issue #2509 bleibt der aktive öffentliche Listing-Thread für IFR:
+  - `https://github.com/Uniswap/default-token-list/issues/2509`
+- IFR Token List ist bereits live und kann bei Uniswap als Nachweis verwendet werden:
+  - `https://ifrunit.tech/token-list.json`
+  - `https://ifrunit.tech/.well-known/token-list.json`
+- Etherscan Icon/Token-Metadaten sind live, aber Reputation ist weiterhin der relevante Blocker für MetaMask Registry.
+- MetaMask Registry bleibt zurückgestellt, bis Etherscan IFR nicht mehr als `Unknown`, sondern mindestens als `Neutral`/`OK` führt.
+
+**Monitoring-Auftrag**
+
+- Uniswap Issue #2509 regelmäßig prüfen:
+  - Statuswechsel `open` -> `closed` beobachten.
+  - Neue Reviewer-Kommentare beantworten.
+  - Falls verlangt, Token-List-URLs, Icon-URL, Etherscan-Link und Governance-/No-Mint-Nachweise erneut posten.
+- Etherscan Reputation regelmäßig prüfen:
+  - Sobald Reputation von `Unknown` auf `Neutral`/`OK` wechselt, MetaMask Registry wieder aufnehmen.
+- MetaMask Registry erst nach Etherscan-Reputation-Upgrade erneut anfassen.
+
+**Offene nächste Schritte**
+
+- Ticket-Watch aktiv halten: Uniswap #2509 + Etherscan Reputation.
+- Bei jeder Statusänderung neuen `EXTERNAL`-Eintrag in `BRIDGE.md` ergänzen.
+- Keine neue Token-Metadata-Quelle anlegen; `BRIDGE.md` bleibt die zentrale Übergabe.
