@@ -855,3 +855,31 @@ index.html, TODO.html, wiki/agent.html, wiki/business-onboarding.html, wiki/cont
   - `DRY_RUN=true npx hardhat run scripts/propose-builder-registration.js --network mainnet` ✅ produced Safe calldata.
   - `npx hardhat test test/BuilderRegistry.test.js` ✅ 27 passing.
 - Next: submit printed calldata via TreasurySafe, wait timelock ETA, execute proposal, then verify `isBuilder(0x4f6327...) == true`.
+
+---
+
+## 2026-06-18 [CODEX]
+### TYPE: TOKEN-METADATA
+### STATUS: DONE / EXTERNAL OPEN
+
+**IFR Token Icon Distribution**
+
+- Etherscan: icon live at `https://etherscan.io/token/images/infernoprotocol_ifr.svg`; token page shows `Inferno (IFR)`.
+- Hosted schema-valid Uniswap Token List:
+  - `https://ifrunit.tech/token-list.json`
+  - `https://ifrunit.tech/.well-known/token-list.json`
+- Landing page: added MetaMask import flow via EIP-747 `wallet_watchAsset`.
+  - Contract: `0x77e99917Eca8539c62F509ED1193ac36580A6e7B`
+  - Symbol: `IFR`
+  - Decimals: `9`
+  - Image: `https://ifrunit.tech/assets/ifr_icon_256.png`
+- Uniswap Default Token List: existing request is open:
+  - `https://github.com/Uniswap/default-token-list/issues/2509`
+- MetaMask Registry: blocked for now.
+  - `MetaMask/contract-metadata` is effectively frozen for new tokens.
+  - Ethereum assets require Etherscan reputation `NEUTRAL` or `OK`; IFR currently shows `Unknown`.
+
+Next:
+- Update Uniswap issue #2509 with the new token-list and icon URLs after deploy.
+- Request Etherscan reputation review from `Unknown` to `Neutral`/`OK`.
+- Revisit MetaMask registry only after Etherscan reputation changes.

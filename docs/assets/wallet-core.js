@@ -30,6 +30,10 @@ window.IFRWallet = (function() {
   var RPC_URL = "https://eth.llamarpc.com";
   var SESSION_KEY = "ifr_wallet_connected";
   var WC_PROJECT_ID = "32f56abaa4b1d7f59fb1571c0c0a551f";
+  var IFR_TOKEN_ADDRESS = "0x77e99917Eca8539c62F509ED1193ac36580A6e7B";
+  var IFR_TOKEN_SYMBOL = "IFR";
+  var IFR_TOKEN_DECIMALS = 9;
+  var IFR_TOKEN_IMAGE = "https://ifrunit.tech/assets/ifr_icon_256.png";
 
   // esm.sh resolves WC dependency tree at runtime (verified on Samsung S10 Chrome).
   // jsdelivr +esm FAILS: elliptic@6.6.1 named export 'ec' missing after Rollup bundling.
@@ -269,6 +273,37 @@ window.IFRWallet = (function() {
     }
   }
 
+  // ── Add IFR Token To Wallet (EIP-747) ─────────────
+  async function addIFRToken() {
+    var eth = _ethereumProvider || _getMetaMaskProvider();
+    if (!eth || typeof eth.request !== "function") {
+      throw new Error("NO_WALLET_PROVIDER");
+    }
+
+    try {
+      await eth.request({
+        method: "wallet_switchEthereumChain",
+        params: [{ chainId: CHAIN_ID_HEX }]
+      });
+    } catch (switchErr) {
+      // Non-fatal: wallet_watchAsset can still show the token import prompt.
+      console.warn("IFRWallet: chain switch before token import rejected:", switchErr.message);
+    }
+
+    return await eth.request({
+      method: "wallet_watchAsset",
+      params: {
+        type: "ERC20",
+        options: {
+          address: IFR_TOKEN_ADDRESS,
+          symbol: IFR_TOKEN_SYMBOL,
+          decimals: IFR_TOKEN_DECIMALS,
+          image: IFR_TOKEN_IMAGE
+        }
+      }
+    });
+  }
+
   // ── Disconnect ────────────────────────────────────
   function disconnect() {
     _detachListeners();
@@ -433,6 +468,7 @@ window.IFRWallet = (function() {
     connect: connect, disconnect: disconnect, autoReconnect: autoReconnect,
     isConnected: isConnected, getAddress: getAddress, getShortAddress: getShortAddress,
     getSigner: getSigner, getProvider: getProvider,
+    addToken: addIFRToken,
     on: on, off: off, getDeepLink: getDeepLink, isMobile: isMobile,
     isMobileOrTablet: _isMobileOrTablet
   };

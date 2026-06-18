@@ -1312,6 +1312,7 @@
         </div>
         <div style="display:flex;gap:8px;">
           <a href="https://app.uniswap.org/swap?outputCurrency=0x77e99917Eca8539c62F509ED1193ac36580A6e7B" target="_blank" rel="noopener" style="flex:1;text-align:center;padding:8px;background:#f97316;color:white;border-radius:8px;font-size:0.8rem;font-weight:600;text-decoration:none;">&#x1F525; Buy IFR</a>
+          <button onclick="lpAddIFRToken()" style="flex:1;background:#e9ded0;color:#2f241d;border:none;border-radius:8px;padding:8px;cursor:pointer;font-size:0.8rem;font-weight:700;">Add IFR</button>
           <button onclick="lpDisconnect()" style="flex:1;background:#374151;color:#9ca3af;border:none;border-radius:8px;padding:8px;cursor:pointer;font-size:0.8rem;">Disconnect</button>
         </div>
       </div>
@@ -1464,6 +1465,7 @@
     <p style="margin-top:12px;margin-bottom:16px;"><span style="display:inline-block;background:rgba(34,197,94,0.15);color:#22c55e;border:1px solid rgba(34,197,94,0.3);padding:6px 18px;border-radius:20px;font-size:13px;font-weight:600;letter-spacing:0.5px;">Ethereum Mainnet</span></p>
     <div class="hero-buttons">
       <a href="https://app.uniswap.org/swap?outputCurrency=0x77e99917Eca8539c62F509ED1193ac36580A6e7B" class="btn btn-primary" target="_blank" rel="noopener">Buy IFR on Uniswap</a>
+      <a href="#" class="btn btn-secondary" onclick="lpAddIFRToken();return false;">Add IFR to MetaMask</a>
       <a href="https://github.com/NeaBouli/inferno" class="btn btn-github" target="_blank" rel="noopener">View on GitHub</a>
       <a href="wiki/index.html" class="btn btn-secondary">Read the Docs</a>
     </div>
@@ -2790,6 +2792,7 @@ if (isLocked) {
         <div><img src="assets/ifr_icon_64.png" alt="IFR" loading="lazy" style="width:20px;height:20px;vertical-align:middle;margin-right:6px;"><span style="color:var(--text-muted);font-size:13px;">InfernoToken</span></div>
         <div style="display:flex;align-items:center;gap:8px;">
           <code style="font-size:12px;color:var(--accent);word-break:break-all;">0x77e99917Eca8539c62F509ED1193ac36580A6e7B</code>
+          <button onclick="lpAddIFRToken()" title="Add IFR to MetaMask" style="background:#e9ded0;border:1px solid #d4c3ae;border-radius:4px;padding:4px 8px;cursor:pointer;color:#2f241d;font-size:12px;font-weight:700;">MetaMask</button>
           <button class="copy-btn" data-addr="0x77e99917Eca8539c62F509ED1193ac36580A6e7B" title="Copy address" style="background:none;border:1px solid var(--border);border-radius:4px;padding:4px 8px;cursor:pointer;color:var(--text-muted);font-size:12px;">Copy</button>
         </div>
       </div>
@@ -3449,6 +3452,26 @@ async function lpConnect() {
       console.error("Connect error:", e.code, e.message, e);
     }
   }
+}
+
+async function lpAddIFRToken() {
+  if (typeof IFRWallet === "undefined" || typeof IFRWallet.addToken !== "function") {
+    alert("Wallet module not loaded. Please refresh the page and try again.");
+    return false;
+  }
+
+  try {
+    var added = await IFRWallet.addToken();
+    if (added) alert("IFR was added to MetaMask.");
+  } catch (e) {
+    console.error("Add IFR token error:", e.message, e.code);
+    if (e.message === "NO_WALLET_PROVIDER") {
+      window.open("https://metamask.io/download", "_blank");
+    } else if (e.code !== 4001 && e.code !== "ACTION_REJECTED") {
+      alert("MetaMask could not add IFR automatically. Please import the token address manually.");
+    }
+  }
+  return false;
 }
 
 function lpDisconnect() {
