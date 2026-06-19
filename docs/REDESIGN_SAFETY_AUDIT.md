@@ -210,11 +210,11 @@ decoded content.
 
 **D5. Footer social/resource links incomplete**
 - Index footer: GitHub, X/Twitter, Telegram Announcements, Telegram Community,
-  Documentation (wiki), Juicebox, Blog (paragraph.com), Etherscan, Governance,
+  Documentation (wiki), Blog (paragraph.com), Etherscan, Governance,
   Contact (email).
 - Redesign footer: GitHub, X/Twitter, Telegram (`#` placeholder), Governance
   (`#` placeholder), Press kit (`#` placeholder). Missing: Documentation/wiki,
-  Juicebox, Blog, Etherscan direct link, contact email.
+  Blog, Etherscan direct link, contact email.
 - Review: Complete before deploy.
 
 ---

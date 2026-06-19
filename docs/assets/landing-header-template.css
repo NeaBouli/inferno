@@ -39,9 +39,9 @@ nav .nav-brand img {
 
 nav .nav-brand .wm {
   font-family: "IBM Plex Sans", -apple-system, system-ui, sans-serif !important;
-  font-size: 16px !important;
+  font-size: 15px !important;
   font-weight: 600 !important;
-  letter-spacing: .06em !important;
+  letter-spacing: .045em !important;
   color: #211C17 !important;
 }
 
@@ -190,12 +190,12 @@ nav #connect {
   }
 
   nav .nav-brand .wm {
-    font-size: 15px !important;
-    letter-spacing: .055em !important;
+    font-size: 13px !important;
+    letter-spacing: .025em !important;
   }
 
   nav .nav-brand .tk {
-    font-size: 11px !important;
+    font-size: 10px !important;
   }
 
   nav .nav-links {

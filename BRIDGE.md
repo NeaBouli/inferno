@@ -1143,3 +1143,46 @@ Next:
 
 - Nach Deploy auf `ifrunit.tech` echte mobile Safari/Chrome-Prüfung machen.
 - Wallet-Flow mit echter MetaMask-Extension/App prüfen: Connect, Add IFR, Disconnect.
+
+---
+
+## 2026-06-19 [CODEX TERMINAL]
+### TYPE: FIX
+### STATUS: DONE — Juicebox removed, IFR Protocol branding clarified
+
+**Datum:** 2026-06-19 14:33 PDT
+**Autor:** CODEX TERMINAL
+
+**Was geändert wurde**
+
+- Veralteten Juicebox-Link `https://juicebox.money/v5/eth:79` aus öffentlichen Seiten und Begleitdokumenten entfernt.
+- Landing klar auf `IFR Protocol` erweitert:
+  - SEO Title/Description/Keywords
+  - OpenGraph/Twitter Metadata
+  - Header-Branding `IFR PROTOCOL` + `$IFR`
+  - versteckter SEO-H1
+  - Footer-Branding `IFR Protocol / Inferno ($IFR)`
+- Wiki klar auf `IFR Protocol / Inferno Protocol` erweitert:
+  - Wiki-Startseite Title/Meta/JSON-LD/H1/Intro
+  - Sidebar-Logo auf allen `docs/wiki/*.html` Seiten von `INFERNO` auf `IFR PROTOCOL`
+  - Sidebar-CSS auf längeres Label angepasst (`font-size`, `white-space`)
+- Alte Bootstrap-/Announcement-/TODO-Referenzen von Juicebox auf kanonische IFR-Protocol-Website/Wiki umgestellt.
+
+**Verifikation**
+
+- `rg -n "juicebox\.money|Juicebox|juicebox" docs README.md package.json --glob "*.html" --glob "*.md" --glob "*.json"` -> keine Treffer.
+- `rg -n 'class="sidebar-logo">INFERNO' docs/wiki --glob "*.html"` -> keine Treffer.
+- `git diff --check` -> clean.
+- Lokaler Browsercheck:
+  - Server: `python3 -m http.server 4173` aus `docs/`
+  - Landing mobile `390x844`: Title `IFR Protocol — Inferno ($IFR) Deflationary Utility Token`, Brand `IFR PROTOCOL$IFR`, kein Top-Row-Overlap, kein Juicebox im DOM.
+  - Wiki mobile/desktop: Title `IFR Protocol Documentation — Inferno ($IFR)`, Sidebar `IFR PROTOCOL`, kein Juicebox im DOM.
+
+**Commit/PR/Issue**
+
+- Lokaler Commit folgt nach finalem Statuscheck.
+
+**Offene nächste Schritte**
+
+- Nach Deploy auf `ifrunit.tech` kurz live prüfen, ob Landing Header, Wiki Sidebar und Footer wie lokal gerendert werden.
+- Externe Token-List-/Registry-Tickets weiterhin beobachten wie im vorherigen Bridge-Stand dokumentiert.

@@ -55,7 +55,6 @@ The user has locked at least 1,000 IFR in the IFRLock contract. This is the same
 | Twitter/X | https://x.com/IFRtoken |
 | GitHub | https://github.com/NeaBouli/inferno |
 | Telegram | https://t.me/IFR_token |
-| Juicebox | https://juicebox.money/v5/eth:79 |
 | Bootstrap | https://ifrunit.tech/wiki/bootstrap.html |
 
 ---

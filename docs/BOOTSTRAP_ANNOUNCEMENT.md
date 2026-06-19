@@ -27,7 +27,7 @@ The IFR Community Bootstrap Event is now open.
 4. Claim your IFR pro-rata
 
 🌐 Participate: ifrunit.tech/wiki/bootstrap
-🟢 Juicebox: juicebox.money/v5/eth:79
+🟢 IFR Protocol: ifrunit.tech
 
 $IFR — Lock. Use. Benefit.
 ```
@@ -87,7 +87,7 @@ No fixed price. No soft cap.
 
 🌐 ifrunit.tech/wiki/bootstrap
 📖 Docs: ifrunit.tech/wiki/index.html
-🟢 Juicebox: juicebox.money/v5/eth:79
+🟢 IFR Protocol: ifrunit.tech
 💬 Community: t.me/IFR_token
 
 $IFR $ETH #DeFi #FairLaunch
@@ -125,7 +125,6 @@ No presale. No VC. No IDO. Team tokens vested 4 years with 12-month cliff. All o
 
 **Links:**
 - Bootstrap: https://ifrunit.tech/wiki/bootstrap.html
-- Juicebox: https://juicebox.money/v5/eth:79
 - Docs: https://ifrunit.tech/wiki/index.html
 - GitHub: https://github.com/NeaBouli/inferno
 - Contract: https://etherscan.io/address/0x77e99917Eca8539c62F509ED1193ac36580A6e7B
@@ -168,7 +167,7 @@ But IFR isn't just deflationary — it's a universal access token. Lock IFR once
 
 Ends June 5, 2026.
 👉 ifrunit.tech/wiki/bootstrap.html
-🟢 juicebox.money/v5/eth:79
+🟢 ifrunit.tech
 ```
 
 ---
@@ -187,7 +186,7 @@ Lock IFR → lifetime product access. No subscriptions.
 
 Ends June 5, 2026.
 ↗ ifrunit.tech/wiki/bootstrap
-🟢 juicebox.money/v5/eth:79
+🟢 ifrunit.tech
 
 #DeFi #Ethereum #FairLaunch $IFR
 ```
