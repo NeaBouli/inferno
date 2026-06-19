@@ -1296,3 +1296,49 @@ Next:
 - Live-Endpunkt erneut prüfen:
   - `https://copilot-api.ifrunit.tech/api/ifr/price` muss `status: uniswap_v2_live` und einen numerischen `price` liefern.
   - Danach Landing live prüfen.
+
+---
+
+## 2026-06-19 [CODEX TERMINAL]
+### TYPE: DEPLOY
+### STATUS: DONE — IFR price live on production
+
+**Datum:** 2026-06-19 15:55 PDT
+**Autor:** CODEX TERMINAL
+
+**Was deployed wurde**
+
+- Commit `77a19e82 fix: declare ai copilot ethers dependency` nach Hetzner synchronisiert.
+- `apps/ai-copilot` per rsync nach `/opt/inferno/ai-copilot/` übertragen.
+- Service neu gebaut und gestartet:
+  - `cd /opt/inferno`
+  - `docker compose build ai-copilot`
+  - `docker compose up -d ai-copilot`
+- Container `inferno-ai-copilot` ist `healthy`.
+
+**Live-Verifikation**
+
+- `https://copilot-api.ifrunit.tech/api/ifr/price`:
+  - `status: uniswap_v2_live`
+  - `price: 2.3045916231668866e-9`
+  - `source: Uniswap V2 IFR/WETH reserves`
+  - reserves:
+    - ETH: `0.08326165612875744`
+    - IFR: `36128594.45108209`
+  - `ifrPerEth: 433916356.35030043`
+- `https://ifrunit.tech` live per Playwright geprüft:
+  - Title: `IFR Protocol — Inferno ($IFR) Deflationary Utility Token`
+  - IFR Price Kachel: `Ξ0.000000002305`
+  - Subtext: `Live Uniswap V2 spot · 0.0833 ETH LP`
+  - Kein `Soon`
+  - Kein `Waiting for API price feed`
+
+**Commit/PR/Issue**
+
+- `c3cc9524 fix: read IFR price from Uniswap reserves`
+- `77a19e82 fix: declare ai copilot ethers dependency`
+
+**Offene nächste Schritte**
+
+- Optional: echten TWAP/Oracle implementieren, wenn die UI langfristig wieder `TWAP` nennen soll.
+- Dependency-Audit für `apps/ai-copilot` separat planen; Docker build meldet weiter `24 vulnerabilities`.
