@@ -1200,7 +1200,7 @@
       "applicationCategory": "FinanceApplication",
       "operatingSystem": "Ethereum Mainnet",
       "url": "https://ifrunit.tech",
-      "description": "Deflationary ERC-20 token with lock-to-access utility. 1B supply, 9 decimals, 3.5% transaction fee (1% pool, 1% burn, 1% buyback, 0.5% team).",
+      "description": "Deflationary ERC-20 token with lock-to-access utility. 1B genesis supply, 9 decimals, 3.5% transaction fee (2.5% burn + 1% IFR pool fee).",
       "offers": {
         "@type": "Offer",
         "price": "0",
@@ -1232,7 +1232,7 @@
       "@id": "https://ifrunit.tech/#token",
       "name": "Inferno Token",
       "alternateName": "$IFR",
-      "description": "Deflationary ERC-20 utility token on Ethereum Mainnet. 1 billion supply (9 decimals), 3.5% transaction fee split: 1% burned, 1% buyback, 1% pool fee, 0.5% team. Lock-to-access mechanism via IFRLock contract.",
+      "description": "Deflationary ERC-20 utility token on Ethereum Mainnet. 1 billion genesis supply (9 decimals), 3.5% transaction fee split: 2.5% burned and 1% routed as IFR pool fee. Lock-to-access mechanism via IFRLock contract.",
       "url": "https://ifrunit.tech",
       "provider": {"@id": "https://ifrunit.tech/#organization"},
       "additionalProperty": [
@@ -1811,7 +1811,7 @@ render();
             <div class="alloc-row-track"><div class="alloc-row-fill" data-width="4" style="background:#457B9D;"></div></div>
           </div>
           <p style="font-size:11px;color:var(--text-muted);margin-top:12px;line-height:1.6;">
-            <strong>Protocol contracts:</strong> BuybackVault and BurnReserve accumulate from the 1% pool fee &mdash; not pre-funded genesis allocations.<br>
+            <strong>Protocol contracts:</strong> FeeRouterV1 receives the 1% IFR pool fee. BuybackController handles separate ETH protocol fees and can buy/burn/add LP when funded.<br>
             <strong>Bootstrap (Plan B):</strong> ~200M IFR was funded to BootstrapVaultV3. finalise() used 100M IFR + 0.030 ETH for the Uniswap V2 LP and reserved 100M IFR for contributor claims; all 3 contributors have claimed.<br>
             <strong>Liquidity Reserve:</strong> Strategically locked until 01.09.2026. Reserved for Phase 2/3 LP expansion. Not used for Bootstrap.
           </p>
@@ -2015,7 +2015,7 @@ render();
             <span style="font-size:10px;padding:2px 8px;border-radius:10px;background:rgba(251,191,36,0.15);color:#fbbf24;">Fee Splitter</span>
           </div>
           <a href="https://etherscan.io/address/0x4807B77B2E25cD055DA42B09BA4d0aF9e580C60a" target="_blank" rel="noopener" style="font-size:11px;font-family:monospace;color:#8a8a96;text-decoration:none;">0x4807B77B...580C60a</a>
-          <div style="font-size:10px;color:#666;margin-top:4px;">Receives 1% pool fee. Splits to BuybackVault + BurnReserve.</div>
+          <div style="font-size:10px;color:#666;margin-top:4px;">Receives the 1% IFR pool fee. ETH protocol fees route to BuybackController.</div>
         </div>
 
         <div style="background:#111113;border:1px solid #222225;border-radius:8px;padding:14px 16px;">
@@ -2088,23 +2088,23 @@ render();
             <animate attributeName="r" values="35;39;35" dur="3s" repeatCount="indefinite"/>
           </circle>
           <text x="400" y="256" text-anchor="middle" fill="#f97316" font-size="14" font-weight="bold">IFR</text>
-          <text x="400" y="272" text-anchor="middle" fill="#9ca3af" font-size="9">998.5M supply</text>
+          <text x="400" y="272" text-anchor="middle" fill="#9ca3af" font-size="9" data-live-key="supply-flow">997.8M supply</text>
         </g>
 
         <!-- LP Reserve Safe -->
         <rect x="335" y="38" width="130" height="42" rx="10" fill="#0d1117" stroke="#3b82f6" stroke-width="1.5"/>
         <text x="400" y="56" text-anchor="middle" fill="#3b82f6" font-size="11" font-weight="bold">LP Reserve Safe</text>
-        <text x="400" y="72" text-anchor="middle" fill="#9ca3af" font-size="9">400M IFR &middot; 3-of-5 Multisig</text>
+        <text x="400" y="72" text-anchor="middle" fill="#9ca3af" font-size="9">400.6M IFR &middot; 3-of-5</text>
 
         <!-- Bootstrap V3 -->
         <rect x="510" y="158" width="140" height="42" rx="10" fill="#0d1117" stroke="#f97316" stroke-width="1.5"/>
         <text x="580" y="176" text-anchor="middle" fill="#f97316" font-size="11" font-weight="bold">Bootstrap V3</text>
-        <text x="580" y="192" text-anchor="middle" fill="#9ca3af" font-size="9">100M IFR + 0.030 ETH</text>
+        <text x="580" y="192" text-anchor="middle" fill="#9ca3af" font-size="9">finalised &middot; claims done</text>
 
         <!-- Uniswap -->
         <rect x="510" y="318" width="140" height="42" rx="10" fill="#0d1117" stroke="#60a5fa" stroke-width="1.5"/>
         <text x="580" y="336" text-anchor="middle" fill="#60a5fa" font-size="11" font-weight="bold">Uniswap V2</text>
-        <text x="580" y="352" text-anchor="middle" fill="#9ca3af" font-size="9">IFR/ETH Pool</text>
+        <text x="580" y="352" text-anchor="middle" fill="#9ca3af" font-size="9" data-live-key="lp-flow">36.1M IFR + 0.083 ETH</text>
 
         <!-- LiquidityReserve -->
         <rect x="150" y="158" width="140" height="42" rx="10" fill="#0d1117" stroke="#a78bfa" stroke-width="1.5" stroke-dasharray="5,3"/>
@@ -2129,7 +2129,7 @@ render();
         <!-- FeeRouter -->
         <rect x="340" y="338" width="120" height="42" rx="10" fill="#0d1117" stroke="#fbbf24" stroke-width="1.5"/>
         <text x="400" y="356" text-anchor="middle" fill="#fbbf24" font-size="11" font-weight="bold">FeeRouter</text>
-        <text x="400" y="372" text-anchor="middle" fill="#9ca3af" font-size="9">1% pool fee</text>
+        <text x="400" y="372" text-anchor="middle" fill="#9ca3af" font-size="9" data-live-key="feerouter-flow">292K IFR fees held</text>
 
         <!-- BuybackVault (Phase 3) -->
         <rect x="510" y="420" width="130" height="42" rx="10" fill="#0d1117" stroke="#fbbf24" stroke-width="1" stroke-dasharray="5,3"/>
@@ -2163,10 +2163,9 @@ render();
         <!-- IFR → FeeRouter (orange) -->
         <circle r="4" fill="#f97316" opacity="0.9"><animateMotion dur="2s" repeatCount="indefinite" path="M400,310 L400,340"/></circle>
         <circle r="4" fill="#f97316" opacity="0.6"><animateMotion dur="2s" begin="0.7s" repeatCount="indefinite" path="M400,310 L400,340"/></circle>
-        <!-- FeeRouter → BurnReserve (red, slow — Phase 3 via BuybackController) -->
-        <circle r="2" fill="#ef4444" opacity="0.4"><animateMotion dur="4s" repeatCount="indefinite" path="M400,380 L220,440"/></circle>
-        <!-- FeeRouter → Buyback (yellow, slow — Phase 3 via BuybackController) -->
-        <circle r="2" fill="#fbbf24" opacity="0.4"><animateMotion dur="4s" begin="2s" repeatCount="indefinite" path="M400,380 L575,440"/></circle>
+        <!-- Governance-controlled downstream routing from protocol fee contracts -->
+        <circle r="2" fill="#ef4444" opacity="0.25"><animateMotion dur="4s" repeatCount="indefinite" path="M400,380 L220,440"/></circle>
+        <circle r="2" fill="#fbbf24" opacity="0.25"><animateMotion dur="4s" begin="2s" repeatCount="indefinite" path="M400,380 L575,440"/></circle>
         <!-- Bootstrap → Uniswap (blue) -->
         <circle r="4" fill="#60a5fa" opacity="0.9"><animateMotion dur="3s" repeatCount="indefinite" path="M580,200 L580,318"/></circle>
         <circle r="4" fill="#60a5fa" opacity="0.5"><animateMotion dur="3s" begin="1.5s" repeatCount="indefinite" path="M580,200 L580,318"/></circle>
@@ -3162,6 +3161,7 @@ if (isLocked) {
     setLive('burned-pct',   pct(d.burned, GENESIS_SUPPLY));
     setLive('burned-stat',  fmt(d.burned));
     setLive('supply-stat',  fmt(d.supply));
+    setLive('supply-flow',  fmt(d.supply) + ' supply');
     setLive('ifrlock',      fmt(d.ifrLock) + ' IFR');
     setLive('ifrlock-pct',  pct(d.ifrLock, d.supply));
     setLive('vesting',      fmt(d.vesting) + ' IFR (' + pct(d.vesting, d.supply) + ')');
@@ -3186,6 +3186,7 @@ if (isLocked) {
     setLive('card-bootstrap',  fmt(d.bootstrap) + ' IFR');
     setLive('card-buyback',    fmt(d.buyback) + ' IFR');
     setLive('card-burnres',    fmt(d.burnRes) + ' IFR');
+    setLive('feerouter-flow',  fmt(d.feeRouter) + ' IFR fees held');
   }
 
   function drawDonut(canvas, data) {
@@ -3303,6 +3304,7 @@ if (isLocked) {
         bootstrap: v('BootstrapVaultV3'),
         buyback:   v('BuybackVault'),
         burnRes:   v('BurnReserve'),
+        feeRouter: v('FeeRouterV1'),
         ifrLock:   v('IFRLock')
       };
 
@@ -3339,6 +3341,9 @@ if (isLocked) {
         if (subEl) {
           var ethReserve = data.reserves && data.reserves.eth ? data.reserves.eth.toFixed(4) : null;
           subEl.textContent = ethReserve ? 'Live Uniswap V2 spot · ' + ethReserve + ' ETH LP' : 'Live Uniswap V2 spot';
+        }
+        if (data.reserves && data.reserves.eth && data.reserves.ifr) {
+          setLive('lp-flow', fmt(data.reserves.ifr) + ' IFR + ' + data.reserves.eth.toFixed(3) + ' ETH');
         }
       } else if (data.status === 'pending_uniswap') {
         priceEl.textContent = 'Soon';

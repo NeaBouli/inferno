@@ -1342,3 +1342,85 @@ Next:
 
 - Optional: echten TWAP/Oracle implementieren, wenn die UI langfristig wieder `TWAP` nennen soll.
 - Dependency-Audit für `apps/ai-copilot` separat planen; Docker build meldet weiter `24 vulnerabilities`.
+
+---
+
+## 2026-06-19 [CODEX TERMINAL]
+### TYPE: FIX / STATUS
+### STATUS: DONE — Landing Token Flow checked against Mainnet
+
+**Datum:** 2026-06-19 16:03 PDT
+**Autor:** CODEX TERMINAL
+
+**Was geprüft wurde**
+
+- Landing Token-Flow-Abschnitt in `docs/index.html`.
+- Mainnet read-only Check gegen IFR Token, FeeRouterV1 und bekannte Contract-Adressen.
+- Live API Checks:
+  - `https://copilot-api.ifrunit.tech/api/ifr/supply`
+  - `https://copilot-api.ifrunit.tech/api/ifr/balances`
+  - `https://copilot-api.ifrunit.tech/api/ifr/price`
+
+**On-chain Fakten beim Check**
+
+- IFR Token:
+  - `senderBurnBps = 200` (2.0%)
+  - `recipientBurnBps = 50` (0.5%)
+  - `poolFeeBps = 100` (1.0%)
+  - Gesamt: `3.5%` auf nicht fee-exempt Transfers.
+  - Pool fee receiver: `FeeRouterV1` (`0x4807B77B2E25cD055DA42B09BA4d0aF9e580C60a`)
+  - Owner: Governance (`0xc43d48E7FDA576C5022d0670B652A622E8caD041`)
+  - Supply: `997,769,355.275448874` IFR
+- FeeRouterV1:
+  - `protocolFeeBps = 5` (0.05% ETH protocol fee for router swaps)
+  - `feeCollector = BuybackController` (`0x1e0547D50005A4Af66AbD5e6915ebfAA2d711F7c`)
+  - `paused = false`
+- Current relevant balances:
+  - LP Reserve Safe: `400,600,000` IFR
+  - LiquidityReserve: `200,000,000` IFR
+  - Vesting: `150,000,000` IFR
+  - CommunitySafe: `7,900,000` IFR
+  - FeeRouterV1: `292,257.88982045` IFR
+  - Uniswap V2 pool: `36,128,594.45108209` IFR / `0.08326165612875744` ETH
+
+**Was geändert wurde**
+
+- Veraltete Landing-Structured-Data-Descriptions korrigiert:
+  - vorher falsch: `1% burn + 1% buyback + 1% pool + 0.5% team`
+  - jetzt: `2.5% burn + 1% IFR pool fee`
+- Landing-Text korrigiert:
+  - FeeRouterV1 empfängt die 1% IFR pool fee.
+  - BuybackController verarbeitet separate ETH protocol fees; kein direkter Team-Fee.
+- Token-Flow-Grafik aktualisiert:
+  - Supply von statisch `998.5M` auf live `data-live-key="supply-flow"`.
+  - LP Reserve Safe auf `400.6M IFR`.
+  - Bootstrap V3 als `finalised · claims done`.
+  - Uniswap V2 als live `data-live-key="lp-flow"`.
+  - FeeRouter als live `data-live-key="feerouter-flow"`.
+- Live-JS ergänzt:
+  - `supply-flow` aktualisiert aus Supply API.
+  - `lp-flow` aktualisiert aus Price/Reserve API.
+  - `feerouter-flow` aktualisiert aus Balances API.
+
+**Verifikation**
+
+- `rg` auf Landing:
+  - keine Treffer mehr für falsche alte Splits wie `1% buyback`, `0.5% team`, `Splits to BuybackVault`.
+- Lokaler Browsercheck:
+  - Server: `python3 -m http.server 4175` aus `docs/`
+  - Playwright desktop `1366x900`
+  - Token Flow gerendert mit:
+    - `997.8M supply`
+    - `36.1M IFR + 0.083 ETH`
+    - `292K IFR fees held`
+  - `badFeeSplit = false`
+- `git diff --check` -> clean.
+
+**Commit/PR/Issue**
+
+- Commit folgt nach finalem Statuscheck.
+
+**Offene nächste Schritte**
+
+- Nach Deploy auf `ifrunit.tech` kurz live prüfen, ob der Token Flow dieselben Live-Werte rendert.
+- Separat Wiki-Seiten `tokenomics.html` und `fee-design.html` auf gleiche FeeRouter/BuybackController-Nuance prüfen, falls Gio das vollständige Wiki-Audit fortsetzen will.
