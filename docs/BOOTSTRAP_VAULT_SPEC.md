@@ -210,11 +210,11 @@ event EmergencyTriggered(address indexed caller, string reason); // governance o
 - GitHub Discussions: Technical Q&A thread
 - Wiki: Dedicated Bootstrap page (wiki/bootstrap.html)
 
-### Juicebox (Discovery)
+### Public Discovery
 
-- Create Juicebox project as visibility tool
-- Link to BootstrapVault contract address
-- Juicebox community as additional discovery channel
+- Keep IFR Protocol website and wiki as the canonical discovery surfaces
+- Link to BootstrapVault contract address from the canonical bootstrap page
+- Keep external discovery channels pointed back to ifrunit.tech
 - Clear disclaimer: actual bootstrap runs on-chain via BootstrapVault
 
 ---
@@ -280,7 +280,7 @@ Team.Finance integration
 - [x] Sepolia testnet deploy — [`0xE0E8F76e4fb38B2e367Aee043a2C02b8D1c7c037`](https://sepolia.etherscan.io/address/0xE0E8F76e4fb38B2e367Aee043a2C02b8D1c7c037) — 2026-03-04
 - [x] Landing Page bootstrap banner — 2026-03-04
 - [x] Wiki bootstrap page — docs/wiki/bootstrap.html — 2026-03-04
-- [ ] Juicebox project created
+- [x] Canonical public discovery moved to IFR Protocol website/wiki
 - [ ] Mainnet deploy
 
 ---

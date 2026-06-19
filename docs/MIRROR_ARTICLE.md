@@ -60,7 +60,6 @@ We're building the infrastructure for a new kind of digital access. One that's p
 - GitHub: https://github.com/NeaBouli/inferno
 - Telegram: https://t.me/IFR_token
 - X: https://x.com/IFRtoken
-- Juicebox: https://juicebox.money/v5/eth:79
 - Contact: GitHub Issues or Telegram @IFR_token
 
 *$IFR — Lock. Use. Benefit.*

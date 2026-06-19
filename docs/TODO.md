@@ -488,7 +488,7 @@ On errors: fix immediately, commit with `seo:` prefix.
 - [ ] 📢 POST: Farcaster (Text #5)
 - [ ] 📢 POST: Reddit r/defi (Text #3 angepasst)
 - [ ] 🔍 Reddit Karma prüfen vor Post (r/CryptoMoonShots Mindest-Karma)
-- [ ] Set up Juicebox listing/discovery (NO funding — discovery only)
+- [x] Use IFR Protocol website/wiki as canonical discovery surface
 - [x] X/Twitter announcement text prepared ✅ (in BOOTSTRAP_ANNOUNCEMENT.md)
 - [x] ✅ Etherscan Token Profile live (17.03.2026)
       Logo + Links bestätigt via Support-Mail
