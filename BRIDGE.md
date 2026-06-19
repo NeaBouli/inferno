@@ -960,3 +960,33 @@ Next:
 - Ticket-Watch aktiv halten: Uniswap #2509 + Etherscan Reputation.
 - Bei jeder Statusänderung neuen `EXTERNAL`-Eintrag in `BRIDGE.md` ergänzen.
 - Keine neue Token-Metadata-Quelle anlegen; `BRIDGE.md` bleibt die zentrale Übergabe.
+
+---
+
+## 2026-06-19 [CODEX TERMINAL]
+### TYPE: DECISION / PROCESS
+### STATUS: ACTIVE
+
+**Datum:** 2026-06-19 03:18 PDT
+**Autor:** CODEX TERMINAL
+
+**Bridge-Regel bestätigt**
+
+- `BRIDGE.md` bleibt die zentrale laufende Übergabe- und Synchronisationsquelle für alle Agenten.
+- Jede relevante Änderung, externe Prüfung, Ticket-Aktualisierung, neue Erkenntnis oder offene Entscheidung wird am Ende von `BRIDGE.md` ergänzt.
+- Bestehende Bridge-Einträge werden weiterverwendet; keine parallele Übergabedatei für denselben Status anlegen.
+- Bei externen Stati immer konkrete Links, Zeitpunkte und offene nächste Schritte notieren.
+
+**Aktuell besonders zu beobachten**
+
+- Uniswap Default Token List Issue #2509:
+  - `https://github.com/Uniswap/default-token-list/issues/2509`
+- Etherscan Reputation für IFR, aktuell noch relevanter Blocker für MetaMask Registry.
+- Contributor-Ausführung: Uniswap-Käufe, 50% CommitmentVault-Locks, 50% LendingVault-Offers.
+- Chameleon BuilderRegistry Governance-Ausführung via TreasurySafe/Timelock.
+
+**Nächste Regel für Agenten**
+
+- Vor neuen Arbeiten `BRIDGE.md` lesen.
+- Nach relevanten Arbeiten oder Checks `BRIDGE.md` aktualisieren.
+- Danach committen und pushen, sofern eine Dateiänderung entstanden ist.
