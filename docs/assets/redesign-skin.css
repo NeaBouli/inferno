@@ -398,6 +398,15 @@ button[style*="#ff4500"] {
   color: inherit;
 }
 
+#wiki-wallet-bar #lp-header-connect-btn,
+#wiki-wallet-bar #lp-header-connect-btn[style],
+#wiki-wallet-bar button#lp-header-connect-btn {
+  color: #fff !important;
+  background: #B0481E !important;
+  border-color: transparent !important;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, .22);
+}
+
 #wiki-wallet-dropdown,
 #lp-header-dropdown {
   background: var(--surface) !important;
