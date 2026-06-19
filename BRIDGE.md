@@ -1424,3 +1424,39 @@ Next:
 
 - Nach Deploy auf `ifrunit.tech` kurz live prüfen, ob der Token Flow dieselben Live-Werte rendert.
 - Separat Wiki-Seiten `tokenomics.html` und `fee-design.html` auf gleiche FeeRouter/BuybackController-Nuance prüfen, falls Gio das vollständige Wiki-Audit fortsetzen will.
+
+---
+
+## 2026-06-19 [CODEX TERMINAL]
+### TYPE: FIX
+### STATUS: DONE — Wiki Connect Wallet button contrast
+
+**Datum:** 2026-06-19 16:20 PDT
+**Autor:** CODEX TERMINAL
+
+**Was geändert wurde**
+
+- Ursache: `docs/assets/redesign-skin.css` setzt in Wiki-Wallet-Bar und generischen inline-color Overrides dunkle Textfarbe. Dadurch wurde der `Connect Wallet` Button trotz inline `color:#fff` dunkel/schlecht lesbar.
+- Fix in `docs/assets/redesign-skin.css`:
+  - gezielte CSS-Ausnahme für `#wiki-wallet-bar #lp-header-connect-btn`
+  - `color: #fff !important`
+  - `background: #B0481E !important`
+  - transparenter Border und leichter Textshadow für Kontrast
+- Keine 33 Wiki-HTML-Seiten einzeln geändert; gemeinsame Skin-Regel reicht für alle Wiki-Seiten.
+
+**Verifikation**
+
+- Lokaler Server:
+  - `python3 -m http.server 4176` aus `docs/`
+- Playwright:
+  - `wiki/index.html` mobile `390x844`: Button Text `Connect Wallet`, computed color `rgb(255, 255, 255)`, background `rgb(176, 72, 30)`.
+  - `wiki/index.html` desktop `1366x900`: Button Text `Connect Wallet`, computed color `rgb(255, 255, 255)`, background `rgb(176, 72, 30)`.
+- `git diff --check` -> clean.
+
+**Commit/PR/Issue**
+
+- Commit folgt.
+
+**Offene nächste Schritte**
+
+- Nach Deploy kurz auf echter Wiki-Seite prüfen, ob der Button in Safari/Chrome weiß bleibt.
