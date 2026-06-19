@@ -1092,3 +1092,54 @@ Next:
 
 - Nach Deploy auf `ifrunit.tech` mobile Safari/Chrome real-device prüfen.
 - Falls Gio weniger Header-Höhe auf Smartphone wünscht, kurze Mobile-Labels oder horizontale Scroll-Nav als Alternative prüfen.
+
+---
+
+## 2026-06-19 [CODEX TERMINAL]
+### TYPE: FIX
+### STATUS: DONE — Wiki wallet dropdown aligned with Landing
+
+**Datum:** 2026-06-19 14:22 PDT
+**Autor:** CODEX TERMINAL
+
+**Was geändert wurde**
+
+- Wiki-Wallet-Bar auf allen 33 `docs/wiki/*.html` Seiten an Landing-Wallet-Aktionen angepasst.
+- Alter verbundener Dropdown-CTA `🔥 Bootstrap` wurde entfernt.
+- Neuer Dropdown-CTA-Satz wie Landing:
+  - `🔥 Buy IFR` -> Uniswap Swap URL mit IFR Token-Adresse
+  - `Add IFR` -> MetaMask/EIP-747 Token-Import
+  - `Disconnect`
+- `lpAddIFRToken()` auf den Wiki-Seiten ergänzt; nutzt `IFRWallet.addIFRToken()` aus `docs/assets/wallet-core.js`.
+- Sichtbarer Wiki-Connect-Button auf Landing-ähnlichen Status angepasst:
+  - Text: `Connect Wallet`
+  - Farbe: `#B0481E`
+  - kein alter Fox/Outline-Button mehr im Wiki-Wallet-Bar-Header.
+
+**Verifikation**
+
+- Repo-Checks:
+  - `rg "Bootstrap</a>" docs/wiki --glob "*.html"` -> keine Treffer für den alten Dropdown-CTA.
+  - `git diff --check` -> clean.
+- Lokaler Browsercheck:
+  - Server: `python3 -m http.server 4178 --bind 127.0.0.1` aus `docs/`
+  - Seite: `http://127.0.0.1:4178/wiki/index.html`
+  - Viewport: mobile `390x844`
+  - Ergebnis:
+    - Connect-Button Text: `Connect Wallet`
+    - Connect-Button Background: `rgb(176, 72, 30)`
+    - Dropdown enthält keinen Bootstrap-Action-Link mehr.
+    - Dropdown-Actions: `Buy IFR`, `Add IFR`, `Disconnect`
+    - `window.lpAddIFRToken` vorhanden.
+    - Kein horizontaler Body-Overflow.
+- Screenshot:
+  - `/Users/gio/Desktop/inferno-wiki-wallet-mobile-20260619.png`
+
+**Commit/PR/Issue**
+
+- Kein externes Issue; direkter UI-/Wallet-Fix im Wiki.
+
+**Offene nächste Schritte**
+
+- Nach Deploy auf `ifrunit.tech` echte mobile Safari/Chrome-Prüfung machen.
+- Wallet-Flow mit echter MetaMask-Extension/App prüfen: Connect, Add IFR, Disconnect.
