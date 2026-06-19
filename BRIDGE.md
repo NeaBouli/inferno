@@ -1052,3 +1052,43 @@ Next:
 - Etherscan Reputation Review nachfassen, bis Token Rep von `Unknown` auf `Neutral`/`OK` wechselt.
 - MetaMask Registry erst nach Etherscan-Reputation-Upgrade wieder aufnehmen.
 - Chameleon BuilderRegistry Proposal via TreasurySafe submitten, Timelock abwarten, ausführen, dann `isBuilder(...) == true` verifizieren.
+
+---
+
+## 2026-06-19 [CODEX TERMINAL]
+### TYPE: FIX
+### STATUS: DONE — Mobile/tablet landing navigation restored
+
+**Datum:** 2026-06-19 13:07 PDT
+**Autor:** CODEX TERMINAL
+
+**Was geändert wurde**
+
+- Landing-Header auf Smartphone und Tablet repariert: die Navigationslinks werden unter `900px` nicht mehr ausgeblendet.
+- `docs/assets/landing-header-template.css`
+  - Mobile/tablet `.nav-inner` darf umbrechen.
+  - `.nav-links` wird als sichtbare zweite Header-Zeile gerendert.
+  - Tablet: einzeilige Navigation.
+  - Smartphone (`<=520px`): kompakte zweizeilige Navigation, damit alle Links direkt sichtbar sind.
+- `docs/assets/redesign-skin.css`
+  - Gleiche responsive Header-Regeln ergänzt, damit der Skin die Landing-Vorlage nicht wieder überschreibt.
+
+**Verifikation**
+
+- Lokaler Server:
+  - `python3 -m http.server 4177 --bind 127.0.0.1` aus `docs/`
+- Playwright mit lokalem Google Chrome:
+  - Mobile viewport `390x844`: 8/8 Nav-Links sichtbar (`Overview`, `How`, `Ecosystem`, `Tokenomics`, `Security`, `Governance`, `Contracts`, `FAQ`), kein horizontaler Body-Overflow.
+  - Tablet viewport `768x1024`: 8/8 Nav-Links sichtbar, kein horizontaler Body-Overflow.
+- Screenshots zur manuellen Kontrolle:
+  - `/Users/gio/Desktop/inferno-nav-mobile-20260619.png`
+  - `/Users/gio/Desktop/inferno-nav-tablet-20260619.png`
+
+**Commit/PR/Issue**
+
+- Kein externes Issue; direkter UI-Fix auf Landing.
+
+**Offene nächste Schritte**
+
+- Nach Deploy auf `ifrunit.tech` mobile Safari/Chrome real-device prüfen.
+- Falls Gio weniger Header-Höhe auf Smartphone wünscht, kurze Mobile-Labels oder horizontale Scroll-Nav als Alternative prüfen.
