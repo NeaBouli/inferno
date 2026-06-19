@@ -1186,3 +1186,64 @@ Next:
 
 - Nach Deploy auf `ifrunit.tech` kurz live prüfen, ob Landing Header, Wiki Sidebar und Footer wie lokal gerendert werden.
 - Externe Token-List-/Registry-Tickets weiterhin beobachten wie im vorherigen Bridge-Stand dokumentiert.
+
+---
+
+## 2026-06-19 [CODEX TERMINAL]
+### TYPE: FIX
+### STATUS: DONE — IFR price feed reads Uniswap V2 reserves
+
+**Datum:** 2026-06-19 15:45 PDT
+**Autor:** CODEX TERMINAL
+
+**Was geprüft/geändert wurde**
+
+- Landing zeigte `IFR Price -> Soon -> Waiting for API price feed`.
+- Root Cause:
+  - `https://copilot-api.ifrunit.tech/api/ifr/price` liefert live noch veraltete Bootstrap-Logik (`bootstrap_active`, `price:null`).
+  - Backend-Code hatte noch keinen Uniswap-Reserve-Read und verwendete für Bootstrap-finalized außerdem die falsche US-Schreibweise im Kommentar/Flow.
+- `apps/ai-copilot/server/index.ts`
+  - `/api/ifr/price` liest jetzt direkt das Uniswap V2 IFR/WETH Pair `0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0`.
+  - Antwort enthält `status: uniswap_v2_live`, ETH/IFR-Reserven, `ifrPerEth`, Blocknummer und `price` in ETH pro IFR.
+  - Quelle bewusst als `Uniswap V2 spot` bezeichnet, nicht als TWAP.
+- `docs/index.html`
+  - IFR-Price-Kachel zeigt sehr kleine ETH-Preise mit ausreichend Dezimalstellen.
+  - Text von `Live Uniswap TWAP` auf `Live Uniswap V2 spot` korrigiert.
+  - Price-Kachel wird initial gerendert und nicht mehr vom Supply/Balances-Feed blockiert.
+  - Generisches `N/A` überschreibt `ifr-price` nicht mehr.
+- `apps/ai-copilot/src/context/wiki-content.json`
+  - durch `npm run build` regeneriert; nimmt die vorherige IFR-Protocol-Wiki-Umbenennung in den Copilot-RAG-Index auf.
+
+**Live/Local Werte beim Check**
+
+- Direkter Pair-Read:
+  - Block: `25354686`
+  - ETH Reserve: `0.08326165612875744`
+  - IFR Reserve: `36128594.45108209`
+  - Preis: `0.0000000023045916231668866 ETH/IFR`
+  - IFR pro ETH: `433916356.35030043`
+- Lokaler neuer API-Response:
+  - `price: 2.3045916231668866e-9`
+  - `status: uniswap_v2_live`
+  - `source: Uniswap V2 IFR/WETH reserves`
+- Lokale Landing mit geroutetem lokalem API-Response:
+  - Kachel zeigt `Ξ0.000000002305`
+  - Subtext: `Live Uniswap V2 spot · 0.0833 ETH LP`
+  - Kein `Soon`, kein `Waiting for API price feed`.
+
+**Verifikation**
+
+- `npm ci` in `apps/ai-copilot` ausgeführt, weil lokale Dependencies fehlten.
+- `npm run build` in `apps/ai-copilot` -> erfolgreich (`vite v6.4.1`, 30 modules transformed).
+- `git diff --check` -> clean.
+
+**Hinweise**
+
+- `npm ci` meldet bestehende Audit-Warnings im App-Dependency-Tree: `9 vulnerabilities` (`2 low`, `2 moderate`, `3 high`, `2 critical`). Nicht durch diesen Fix verursacht; sollte separat behandelt werden.
+- Nach Deploy der Copilot-API muss der Live-Endpunkt `https://copilot-api.ifrunit.tech/api/ifr/price` erneut geprüft werden; aktuell ist nur der lokale Handler gefixt.
+
+**Offene nächste Schritte**
+
+- Copilot-API deployen/restarten, damit der neue Price-Endpoint live geht.
+- Danach `https://ifrunit.tech` prüfen: IFR Price darf nicht mehr `Soon` zeigen.
+- Optional spaeter echten TWAP/Oracle ergänzen, falls die UI wieder `TWAP` nennen soll.

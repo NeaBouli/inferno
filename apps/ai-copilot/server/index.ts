@@ -538,6 +538,8 @@ app.get("/api/health", (_req, res) => {
 const ETHERSCAN_API_KEY = process.env.ETHERSCAN_API_KEY || "";
 const IFR_TOKEN = "0x77e99917Eca8539c62F509ED1193ac36580A6e7B";
 const IFR_DECIMALS = 9;
+const IFR_UNISWAP_V2_PAIR = "0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0";
+const WETH_TOKEN = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2";
 const TOTAL_MINTED = 1_000_000_000; // 1B IFR minted at deploy, supply only decreases
 const BURN_ADDRESS = "0x000000000000000000000000000000000000dEaD";
 
@@ -793,50 +795,54 @@ app.get("/api/ifr/price", async (_req, res) => {
   const cached = getCached("price");
   if (cached) { res.json(cached); return; }
   try {
-    // Read BootstrapVaultV3 to check if finalized
-    const vaultAddr = PROTOCOL_ADDRESSES.BootstrapVaultV3;
+    const ethersLib = (await import("ethers")).ethers;
+    const provider = new ethersLib.providers.JsonRpcProvider(ETH_RPC_URL);
+    const pairAbi = [
+      "function token0() view returns (address)",
+      "function token1() view returns (address)",
+      "function getReserves() view returns (uint112 reserve0,uint112 reserve1,uint32 blockTimestampLast)",
+    ];
+    const pair = new ethersLib.Contract(IFR_UNISWAP_V2_PAIR, pairAbi, provider);
+    const [token0, token1, reserves, blockNumber] = await Promise.all([
+      pair.token0(),
+      pair.token1(),
+      pair.getReserves(),
+      provider.getBlockNumber(),
+    ]);
 
-    // finalized() → bool (selector 0xb3f05b97)
-    const finalizedData = await esApiFetch(
-      `&module=proxy&action=eth_call&to=${vaultAddr}&data=0xb3f05b97&tag=latest`
-    ) as { result?: string };
-    const finalized = finalizedData.result && finalizedData.result !== "0x" + "0".repeat(64);
+    const token0Lower = token0.toLowerCase();
+    const token1Lower = token1.toLowerCase();
+    const ifrLower = IFR_TOKEN.toLowerCase();
+    const wethLower = WETH_TOKEN.toLowerCase();
 
-    if (!finalized) {
-      // Bootstrap still active — read totalETHRaised via ETH balance of vault
-      const ethBalData = await esApiFetch(
-        `&module=account&action=balance&address=${vaultAddr}&tag=latest`
-      ) as { status?: string; result?: string };
-      const ethRaised = (ethBalData.status === "1" && ethBalData.result)
-        ? parseInt(ethBalData.result, 10) / 1e18 : 0;
-
-      const IFR_BOOTSTRAP_ALLOCATION = 100_000_000; // 100M IFR
-      const estimatedP0 = ethRaised > 0 ? ethRaised / IFR_BOOTSTRAP_ALLOCATION : 0;
-
-      const response = {
-        price: null,
-        currency: "ETH",
-        status: "bootstrap_active",
-        bootstrapEndDate: "2026-06-05",
-        estimatedP0ETH: estimatedP0,
-        ethRaised,
-        message: "Price available after Bootstrap finalise() — June 5, 2026",
-        cachedAt: new Date().toISOString(),
-      };
-      setCache("price", response);
-      res.json(response);
-    } else {
-      // Bootstrap finalized — Phase 2: Uniswap TWAP here
-      const response = {
-        price: null,
-        currency: "ETH",
-        status: "pending_uniswap",
-        message: "Uniswap LP launching soon — price available after liquidity deployment",
-        cachedAt: new Date().toISOString(),
-      };
-      setCache("price", response);
-      res.json(response);
+    if (!([token0Lower, token1Lower].includes(ifrLower)) || !([token0Lower, token1Lower].includes(wethLower))) {
+      throw new Error("Configured IFR/WETH pair token mismatch");
     }
+
+    const ifrReserveRaw = token0Lower === ifrLower ? reserves.reserve0 : reserves.reserve1;
+    const wethReserveRaw = token0Lower === wethLower ? reserves.reserve0 : reserves.reserve1;
+    const ifrReserve = parseFloat(ethersLib.utils.formatUnits(ifrReserveRaw, IFR_DECIMALS));
+    const ethReserve = parseFloat(ethersLib.utils.formatEther(wethReserveRaw));
+    const price = ifrReserve > 0 ? ethReserve / ifrReserve : null;
+
+    const response = {
+      price,
+      currency: "ETH",
+      status: price ? "uniswap_v2_live" : "pending_uniswap",
+      source: "Uniswap V2 IFR/WETH reserves",
+      pair: IFR_UNISWAP_V2_PAIR,
+      blockNumber,
+      reserves: {
+        eth: ethReserve,
+        ifr: ifrReserve,
+      },
+      ifrPerEth: ethReserve > 0 ? ifrReserve / ethReserve : null,
+      blockTimestampLast: reserves.blockTimestampLast,
+      message: price ? "Live IFR/WETH spot price from Uniswap V2 reserves" : "Uniswap LP reserves not available yet",
+      cachedAt: new Date().toISOString(),
+    };
+    setCache("price", response);
+    res.json(response);
   } catch (err) {
     console.error("Price endpoint error:", err);
     res.status(502).json({ error: "Failed to fetch price data" });
