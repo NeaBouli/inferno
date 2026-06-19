@@ -1418,7 +1418,7 @@ Next:
 
 **Commit/PR/Issue**
 
-- Commit folgt nach finalem Statuscheck.
+- Commit: `d699eb31 fix: align landing token flow with mainnet`
 
 **Offene nächste Schritte**
 
