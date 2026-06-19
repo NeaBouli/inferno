@@ -746,6 +746,10 @@ footer,
 }
 
 @media (max-width: 900px) {
+  nav {
+    overflow: hidden !important;
+  }
+
   .main {
     padding: 88px 22px 44px !important;
   }
@@ -759,14 +763,46 @@ footer,
   }
 
   .nav-inner {
-    gap: 14px !important;
+    height: auto !important;
+    min-height: 66px !important;
+    padding: 0 20px 10px !important;
+    gap: 0 14px !important;
+    flex-wrap: wrap !important;
   }
 
   .nav-links {
+    order: 3 !important;
+    width: calc(100% + 40px) !important;
+    margin: 0 -20px !important;
+    padding: 9px 20px 0 !important;
+    display: flex !important;
+    gap: 18px !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    scrollbar-width: none !important;
+    -webkit-overflow-scrolling: touch !important;
+    background: transparent !important;
+    border: 0 !important;
+    border-top: 1px solid var(--line) !important;
+    box-shadow: none !important;
+    scroll-snap-type: x proximity !important;
+  }
+
+  .nav-links::-webkit-scrollbar {
     display: none !important;
-    background: var(--surface) !important;
-    border: 1px solid var(--line) !important;
-    box-shadow: var(--shadow-soft) !important;
+  }
+
+  .nav-links li {
+    flex: 0 0 auto !important;
+    scroll-snap-align: start !important;
+  }
+
+  .nav-links a {
+    display: block !important;
+    font-size: 13px !important;
+    line-height: 1 !important;
+    padding: 4px 0 2px !important;
+    white-space: nowrap !important;
   }
 
   .nav-links.open {
@@ -801,6 +837,46 @@ footer,
 
   .sidebar.open {
     transform: translateX(0);
+  }
+}
+
+@media (max-width: 520px) {
+  .nav-inner {
+    padding-inline: 16px !important;
+  }
+
+  .nav-brand {
+    gap: 9px !important;
+  }
+
+  .nav-brand img {
+    width: 28px !important;
+    height: 28px !important;
+  }
+
+  .nav-brand .wm {
+    font-size: 15px !important;
+    letter-spacing: .055em !important;
+  }
+
+  .nav-brand .tk {
+    font-size: 11px !important;
+  }
+
+  .nav-links {
+    width: calc(100% + 32px) !important;
+    margin-inline: -16px !important;
+    padding-inline: 16px !important;
+    gap: 9px 16px !important;
+    flex-wrap: wrap !important;
+    overflow: visible !important;
+    scroll-snap-type: none !important;
+  }
+
+  #connect {
+    min-height: 36px !important;
+    padding: 7px 12px !important;
+    font-size: 12px !important;
   }
 }
 
