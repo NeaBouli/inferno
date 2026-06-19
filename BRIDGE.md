@@ -990,3 +990,65 @@ Next:
 - Vor neuen Arbeiten `BRIDGE.md` lesen.
 - Nach relevanten Arbeiten oder Checks `BRIDGE.md` aktualisieren.
 - Danach committen und pushen, sofern eine Dateiänderung entstanden ist.
+
+---
+
+## 2026-06-19 [CODEX TERMINAL]
+### TYPE: STATUS / EXTERNAL
+### STATUS: MONITORING — NO STATE CHANGE
+
+**Datum:** 2026-06-19 13:02 PDT
+**Autor:** CODEX TERMINAL
+
+**Was geprüft wurde**
+
+- `BRIDGE.md` vollständig gelesen und mit letztem dokumentiertem Stand synchronisiert.
+- Git HEAD vor dieser Bridge-Aktualisierung: `ff577914 docs: record bridge update policy`.
+- `git status --short` war vor dieser Bridge-Aktualisierung clean.
+- Uniswap Default Token List Issue #2509 geprüft:
+  - `https://github.com/Uniswap/default-token-list/issues/2509`
+  - Status: `open`
+  - Titel: `Add IFR: Inferno`
+  - Last updated: `2026-06-18T15:28:12Z`
+  - Comments: `2`
+  - Kein PR/Branch verknüpft.
+- IFR Token Lists geprüft und live:
+  - `https://ifrunit.tech/token-list.json`
+  - `https://ifrunit.tech/.well-known/token-list.json`
+  - Beide liefern `Inferno Token List`, 1 Token, `IFR`, Decimals `9`, Address `0x77e99917Eca8539c62F509ED1193ac36580A6e7B`, Logo `https://ifrunit.tech/assets/ifr_icon_256.png`, Timestamp `2026-06-18T15:30:00.000Z`.
+- Etherscan Token Page geprüft:
+  - `https://etherscan.io/token/0x77e99917Eca8539c62F509ED1193ac36580A6e7B`
+  - Token Rep weiterhin `Unknown`.
+  - Holders: `17` zum Check-Zeitpunkt laut Etherscan HTML.
+- Contributor Execution Monitor ausgeführt:
+  - Command: `node scripts/check-contributors-execution.js`
+  - Network: Ethereum Mainnet (`homestead`, chainId `1`)
+  - Block: `25353887`
+  - Pool: `0.083261656128757442` ETH / `36128594.451082089` IFR
+  - LendingVault: `totalAvailable=0`, `totalLent=0`, Rate `200` bps/month
+  - C1: `0x4f632748460E5277bF8435259cADce440AbAC254`, ETH `0.001055298994466727`, IFR `33333333.333333333`, buy=false, locked=0, offer=false, next=`top up ETH for buy + gas`
+  - C2: `0x80fF32c5441cBCbFa5c3ce0dC70359BDD05B6958`, ETH `0.004243668025184632`, IFR `33333333.333333333`, buy=false, locked=0, offer=false, next=`top up ETH for buy + gas`
+  - C3: `0xf556cCe85128c93AC6A7e088cF334180F2D3905B`, ETH `0.004617965521402287`, IFR `33333333.333333333`, buy=false, locked=0, offer=false, next=`top up ETH for buy + gas`
+- Chameleon BuilderRegistry dry-run ausgeführt:
+  - Command: `DRY_RUN=true npx hardhat run scripts/propose-builder-registration.js --network mainnet`
+  - BuilderRegistry owner: Governance `0xc43d48E7FDA576C5022d0670B652A622E8caD041`
+  - Governance owner: TreasurySafe `0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b`
+  - Builder count: `0`
+  - Chameleon wallet `0x4f632748460E5277bF8435259cADce440AbAC254` active/isBuilder: `false`
+  - Safe calldata wurde erneut ausgegeben; keine Transaktion gesendet.
+
+**Commit/PR/Issue**
+
+- Current pre-update HEAD: `ff577914 docs: record bridge update policy`
+- Uniswap Issue: `https://github.com/Uniswap/default-token-list/issues/2509`
+- Safe queue URL fuer Chameleon Governance: `https://app.safe.global/transactions/queue?safe=eth:0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b`
+
+**Offene nächste Schritte**
+
+- Contributors brauchen weiter ETH-Top-up auf mindestens ca. `0.05 ETH` je Wallet, danach IFR-Kauf auf Uniswap.
+- Nach Contributor-Käufen erneut `node scripts/check-contributors-execution.js` ausführen.
+- Danach je Contributor erst `LOCK_BPS=5000` CommitmentVault-Lock dry-run/live, dann LendingVault offer dry-run/live.
+- Uniswap Issue #2509 weiter beobachten und bei Reviewer-Kommentaren sofort aktualisieren.
+- Etherscan Reputation Review nachfassen, bis Token Rep von `Unknown` auf `Neutral`/`OK` wechselt.
+- MetaMask Registry erst nach Etherscan-Reputation-Upgrade wieder aufnehmen.
+- Chameleon BuilderRegistry Proposal via TreasurySafe submitten, Timelock abwarten, ausführen, dann `isBuilder(...) == true` verifizieren.
