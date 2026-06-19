@@ -1247,3 +1247,52 @@ Next:
 - Copilot-API deployen/restarten, damit der neue Price-Endpoint live geht.
 - Danach `https://ifrunit.tech` prüfen: IFR Price darf nicht mehr `Soon` zeigen.
 - Optional spaeter echten TWAP/Oracle ergänzen, falls die UI wieder `TWAP` nennen soll.
+
+---
+
+## 2026-06-19 [CODEX TERMINAL]
+### TYPE: FIX / DEPLOY
+### STATUS: IN PROGRESS — Copilot container redeploy for IFR price feed
+
+**Datum:** 2026-06-19 15:52 PDT
+**Autor:** CODEX TERMINAL
+
+**Was geprüft/geändert wurde**
+
+- Nach Commit `c3cc9524` wurde der Hetzner-Service geprüft.
+- `copilot-api.ifrunit.tech/api/ifr/price` lief weiter mit altem Container-Code bzw. war nach erstem Rebuild fehlerhaft.
+- Server-Check:
+  - Host: `hetzner` -> `135.181.254.229`
+  - Compose path: `/opt/inferno/docker-compose.yml`
+  - Service: `ai-copilot`, Container: `inferno-ai-copilot`
+  - Source path: `/opt/inferno/ai-copilot`
+  - Kein Git-Checkout auf dem Server; Source wird per rsync synchronisiert.
+- Manuelles Rebuild/Restart wurde ausgeführt:
+  - `rsync apps/ai-copilot/ -> hetzner:/opt/inferno/ai-copilot/`
+  - `docker compose build ai-copilot`
+  - `docker compose up -d ai-copilot`
+- Danach war der Container healthy, aber `/api/ifr/price` gab `502`.
+- Root Cause im Container-Log:
+  - `ERR_MODULE_NOT_FOUND: Cannot find package 'ethers' imported from /app/server/index.ts`
+  - Das App-Paket nutzte `ethers` bereits dynamisch im Server, deklarierte es aber nicht in `apps/ai-copilot/package.json`; lokal funktionierte es durch Root-Hoisting.
+- Fix:
+  - `ethers@^5.8.0` zu `apps/ai-copilot` Runtime-Dependencies ergänzt.
+  - `apps/ai-copilot/package-lock.json` aktualisiert.
+
+**Verifikation lokal**
+
+- `npm run build` in `apps/ai-copilot` -> erfolgreich.
+- `npx tsc --noEmit` in `apps/ai-copilot` -> erfolgreich.
+
+**Hinweise**
+
+- `npm install ethers@^5.8.0` erhöht den App-npm-audit-Zähler auf `24 vulnerabilities` (`14 low`, `4 moderate`, `4 high`, `2 critical`) durch transitive Dependencies. Separate Dependency-Audit-Aufgabe bleibt offen.
+
+**Offene nächste Schritte**
+
+- Dependency-Fix committen/pushen.
+- `apps/ai-copilot` erneut nach Hetzner rsyncen.
+- `docker compose build ai-copilot && docker compose up -d ai-copilot`.
+- Live-Endpunkt erneut prüfen:
+  - `https://copilot-api.ifrunit.tech/api/ifr/price` muss `status: uniswap_v2_live` und einen numerischen `price` liefern.
+  - Danach Landing live prüfen.
