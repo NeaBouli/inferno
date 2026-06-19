@@ -3124,6 +3124,7 @@ if (isLocked) {
 
   function showNotAvailable() {
     document.querySelectorAll('[data-live-key]').forEach(function(el) {
+      if (el.getAttribute('data-live-key') === 'ifr-price') return;
       el.textContent = 'N/A';
     });
     var supplyEl = document.getElementById('donut-supply');
@@ -3134,6 +3135,7 @@ if (isLocked) {
     document.querySelectorAll('.live-updated-at').forEach(function(el) {
       el.textContent = 'Connection failed';
     });
+    loadIFRPrice();
   }
 
   function fmt(n) {
@@ -3244,7 +3246,7 @@ if (isLocked) {
       { key: 'protocol-locked', label: 'Protocol Locked', value: fmt(protocolLocked), sub: 'All non-circulating IFR secured', color: '#ff8c00' },
       { key: '',                label: 'Current Supply',  value: fmt(data.supply),    sub: 'of 1B genesis',        color: '#fff'    },
       { key: '',                label: 'LP Reserve Safe', value: fmt(data.lpReserve), sub: 'LP allocation (3-of-5)',color: '#FF6B35' },
-      { key: 'ifr-price',       label: 'IFR Price',       value: 'TBD',              sub: 'Live Uniswap TWAP',color: '#fbbf24' }
+      { key: 'ifr-price',       label: 'IFR Price',       value: 'TBD',              sub: 'Live Uniswap V2 spot',color: '#fbbf24' }
     ];
     el.innerHTML = items.map(function(m) {
       var liveAttr = m.key ? ' data-live-key="' + m.key + '"' : '';
@@ -3269,6 +3271,13 @@ if (isLocked) {
       if (tid) clearTimeout(tid);
       return r.json();
     });
+  }
+
+  function fmtEthPrice(n) {
+    if (!n || n <= 0) return 'TBD';
+    if (n < 0.000001) return '\u039E' + n.toFixed(12).replace(/0+$/, '').replace(/\.$/, '');
+    if (n < 0.01) return '\u039E' + n.toFixed(8).replace(/0+$/, '').replace(/\.$/, '');
+    return '\u039E' + n.toFixed(6).replace(/0+$/, '').replace(/\.$/, '');
   }
 
   function doRefresh() {
@@ -3326,8 +3335,11 @@ if (isLocked) {
           if (subEl) subEl.textContent = fmt(data.ethRaised) + ' ETH raised';
         }
       } else if (data.price) {
-        priceEl.textContent = '\u039E' + data.price.toFixed(8);
-        if (subEl) subEl.textContent = 'Live Uniswap TWAP';
+        priceEl.textContent = fmtEthPrice(data.price);
+        if (subEl) {
+          var ethReserve = data.reserves && data.reserves.eth ? data.reserves.eth.toFixed(4) : null;
+          subEl.textContent = ethReserve ? 'Live Uniswap V2 spot · ' + ethReserve + ' ETH LP' : 'Live Uniswap V2 spot';
+        }
       } else if (data.status === 'pending_uniswap') {
         priceEl.textContent = 'Soon';
         if (subEl) subEl.textContent = 'Waiting for API price feed';
@@ -3351,6 +3363,8 @@ if (isLocked) {
   // Lazy-load live data — only start when section is visible
   var liveStarted = false;
   var liveSection = document.querySelector('.live-tracking') || document.getElementById('live-tracking') || document.querySelector('[id*="live"]');
+  renderMetrics({ supply: 0, burned: 0, lpReserve: 0 });
+  setTimeout(loadIFRPrice, 1000);
   if (liveSection) {
     var liveObserver = new IntersectionObserver(function(entries) {
       if (entries[0].isIntersecting && !liveStarted) {
