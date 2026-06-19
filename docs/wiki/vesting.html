@@ -680,7 +680,7 @@
       <div id="wiki-wallet-bar" style="position:sticky;top:0;z-index:100;background:rgba(10,10,10,0.95);backdrop-filter:blur(12px);border-bottom:1px solid #1f2937;padding:10px 20px;display:flex;justify-content:space-between;align-items:center;margin:-32px -40px 24px -40px;">
         <a href="https://ifrunit.tech/index.html" style="color:#f97316;font-weight:700;text-decoration:none;font-size:0.9rem;">&larr; Inferno</a>
         <div id="wiki-wallet-wrap" style="position:relative;">
-          <button id="lp-header-connect-btn" onclick="lpConnect()" style="display:inline-flex;align-items:center;gap:7px;padding:8px 16px;border:1.5px solid #f97316;background:transparent;color:#f97316;font-family:'Orbitron',sans-serif;font-size:0.72rem;letter-spacing:.8px;border-radius:6px;cursor:pointer;white-space:nowrap;transition:all .2s;position:relative;flex-shrink:0;margin-left:16px;">&#x1F98A; Connect</button>
+          <button id="lp-header-connect-btn" onclick="lpConnect()" style="display:inline-flex;align-items:center;justify-content:center;gap:9px;padding:9px 18px;min-height:38px;border:1px solid transparent;background:#B0481E;color:#fff;font-family:var(--sans, -apple-system, system-ui, sans-serif);font-size:0.84rem;font-weight:600;letter-spacing:0;border-radius:4px;cursor:pointer;white-space:nowrap;transition:all .2s;position:relative;flex-shrink:0;margin-left:16px;">Connect Wallet</button>
           <div id="lp-header-connected" style="display:none;">
             <div style="background:rgba(34,197,94,0.15);border:1px solid rgba(34,197,94,0.4);border-radius:8px;padding:5px 8px;cursor:pointer;display:flex;align-items:center;gap:6px;max-width:100px;white-space:nowrap;overflow:hidden;" onclick="lpToggleDropdown()">
               <span id="lp-header-addr" style="color:#22c55e;font-family:monospace;font-size:0.72rem;font-weight:600;"></span>
@@ -713,7 +713,8 @@
               <a href="https://ifrunit.tech/wiki/lock-mechanism.html" style="color:#f97316;font-size:0.78rem;">Premium &#x2197;</a>
             </div>
             <div style="display:flex;gap:8px;">
-              <a href="https://ifrunit.tech/wiki/bootstrap.html" style="flex:1;text-align:center;padding:8px;background:#f97316;color:white;border-radius:8px;font-size:0.78rem;font-weight:600;text-decoration:none;">&#x1F525; Bootstrap</a>
+              <a href="https://app.uniswap.org/swap?outputCurrency=0x77e99917Eca8539c62F509ED1193ac36580A6e7B" target="_blank" rel="noopener" style="flex:1;text-align:center;padding:8px;background:#f97316;color:white;border-radius:8px;font-size:0.78rem;font-weight:600;text-decoration:none;">&#x1F525; Buy IFR</a>
+              <button onclick="lpAddIFRToken()" style="flex:1;background:#e9ded0;color:#2f241d;border:none;border-radius:8px;padding:8px;cursor:pointer;font-size:0.78rem;font-weight:700;">Add IFR</button>
               <button onclick="lpDisconnect()" style="flex:1;background:#374151;color:#9ca3af;border:none;border-radius:8px;padding:8px;cursor:pointer;font-size:0.78rem;">Disconnect</button>
             </div>
           </div>
@@ -1033,22 +1034,34 @@ async function lpConnect(){
     var state=await IFRState.load(IFRWallet.getAddress());
     lpUpdateUI(state);
   }catch(e){
-    if(btn){btn.textContent="\u{1F98A} Connect";btn.disabled=false;btn.style.background="transparent";btn.style.borderColor="#f97316";btn.style.color="#f97316";btn.onclick=lpConnect}
+    if(btn){btn.textContent="Connect Wallet";btn.disabled=false;btn.style.background="#B0481E";btn.style.borderColor="transparent";btn.style.color="#fff";btn.onclick=lpConnect}
     if(e.message==="NO_METAMASK"){
       var isMobile=/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
       if(isMobile){window.location.href="https://metamask.app.link/dapp/ifrunit.tech"}
       else if(btn){btn.textContent="\u26A0\uFE0F Install MetaMask";btn.style.background="#374151";btn.onclick=function(){window.open("https://metamask.io/download","_blank")};btn.disabled=false}
     }else if(e.code===4001||e.code==="ACTION_REJECTED"){
-      if(btn){btn.textContent="\u{1F98A} Connect";btn.disabled=false}
+      if(btn){btn.textContent="Connect Wallet";btn.disabled=false}
     }
   }
+}
+async function lpAddIFRToken(){
+  if(typeof IFRWallet==="undefined"||typeof IFRWallet.addIFRToken!=="function"){alert("Wallet module not loaded. Please refresh.");return false}
+  try{
+    var added=await IFRWallet.addIFRToken();
+    if(added)alert("IFR was added to MetaMask.");
+  }catch(e){
+    console.error("Add IFR token error:",e.message,e.code);
+    if(e.message==="NO_WALLET_PROVIDER"){alert("Install MetaMask or connect a wallet first.")}
+    else if(e.code!==4001&&e.code!=="ACTION_REJECTED"){alert("MetaMask could not add IFR automatically. Please import the token address manually.")}
+  }
+  return false;
 }
 function lpDisconnect(){
   IFRWallet.disconnect();
   var connectBtn=document.getElementById("lp-header-connect-btn");
   var connectedDiv=document.getElementById("lp-header-connected");
   var dropdown=document.getElementById("lp-header-dropdown");
-  if(connectBtn){connectBtn.style.display="";connectBtn.textContent="\u{1F98A} Connect";connectBtn.disabled=false;connectBtn.style.background="transparent";connectBtn.style.borderColor="#f97316";connectBtn.style.color="#f97316";connectBtn.onclick=lpConnect}
+  if(connectBtn){connectBtn.style.display="";connectBtn.textContent="Connect Wallet";connectBtn.disabled=false;connectBtn.style.background="#B0481E";connectBtn.style.borderColor="transparent";connectBtn.style.color="#fff";connectBtn.onclick=lpConnect}
   if(connectedDiv)connectedDiv.style.display="none";
   if(dropdown)dropdown.style.display="none";
 }
@@ -1075,7 +1088,7 @@ function lpUpdateUI(state){
   var connectedDiv=document.getElementById("lp-header-connected");
   if(connectBtn){
     connectBtn.style.display=connected?"none":"";
-    if(!connected){connectBtn.textContent="\u{1F98A} Connect";connectBtn.disabled=false;connectBtn.style.background="transparent";connectBtn.style.borderColor="#f97316";connectBtn.style.color="#f97316";connectBtn.onclick=lpConnect}
+    if(!connected){connectBtn.textContent="Connect Wallet";connectBtn.disabled=false;connectBtn.style.background="#B0481E";connectBtn.style.borderColor="transparent";connectBtn.style.color="#fff";connectBtn.onclick=lpConnect}
   }
   if(connectedDiv)connectedDiv.style.display=connected?"":"none";
   if(connected&&state){
