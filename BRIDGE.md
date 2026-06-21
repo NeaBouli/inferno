@@ -1460,3 +1460,51 @@ Next:
 **Offene nächste Schritte**
 
 - Nach Deploy kurz auf echter Wiki-Seite prüfen, ob der Button in Safari/Chrome weiß bleibt.
+
+---
+
+## 2026-06-21 [CODEX TERMINAL]
+### TYPE: STATUS
+### STATUS: RESTART CHECKPOINT — Bridge-only Sicherung
+
+**Datum:** 2026-06-21
+**Autor:** CODEX TERMINAL
+
+**Was gesichert wurde**
+
+- Gio muss den Rechner neu starten; dieser Eintrag hält den letzten bekannten Arbeitsstand fest.
+- Letzter bekannter sauberer HEAD aus der vorherigen Synchronisation:
+  - `e20a10b6 fix: improve wiki connect button contrast`
+- Letzter bekannter Git-Status aus der vorherigen Synchronisation:
+  - clean nach Commit/Push
+- Letzte erledigte Arbeit:
+  - Wiki `Connect Wallet` Button-Kontrast korrigiert.
+  - Button-Text im Wiki ist weiß und besser lesbar.
+  - Änderung liegt in `docs/assets/redesign-skin.css`.
+  - Lokale Playwright-Prüfung war erfolgreich auf Mobile und Desktop.
+
+**Wichtiger Hinweis**
+
+- Während dieses Checkpoints war der Terminal-Runner nicht funktionsfähig:
+  - `pwd`, `echo ok`, `date`, `git status --short` und weitere minimale Shell-Kommandos lieferten nur `code -1` ohne Ausgabe.
+- Deshalb konnten in dieser Sitzung nicht erneut verifiziert werden:
+  - aktueller `git status --short`
+  - aktueller `git log -1 --oneline`
+  - Commit/Push dieses Bridge-Checkpoints
+
+**Offene nächste Schritte nach Neustart**
+
+- Repo öffnen:
+  - `cd /Users/gio/Desktop/repos/inferno`
+- Status prüfen:
+  - `git status --short`
+  - `git log -1 --oneline`
+- Falls dieser Bridge-Checkpoint uncommitted ist:
+  - `git add BRIDGE.md`
+  - `git commit -m "docs: checkpoint before restart"`
+  - `git push origin main`
+- Danach weiter mit den bekannten offenen Punkten:
+  - Contributors ETH top-up, IFR-Kauf, 50% Lock, 50% Lending.
+  - Uniswap Issue #2509 beobachten.
+  - Etherscan Reputation / MetaMask Registry Blocker beobachten.
+  - Chameleon BuilderRegistry Governance-Ausführung abschließen.
