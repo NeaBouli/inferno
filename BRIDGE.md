@@ -1789,3 +1789,37 @@ index acf5e72f..680ed772 100644
 
 - StealthX public pages ausserhalb dieses Repos auf Threshold-Konsistenz pruefen.
 - Falls gewuenscht, StealthX/Chameleon spaeter per Governance in IFR `BuilderRegistry` registrieren.
+
+---
+
+## 2026-06-27 [CODEX TERMINAL]
+### TYPE: STATUS
+### STATUS: CURRENT — Final bridge sync after docs commits
+
+**Datum:** 2026-06-27 15:58 PDT
+**Autor:** CODEX TERMINAL
+
+**Finaler Repo-Stand**
+
+- Letzte Commits:
+  - `eea5c0d0 docs: finalize StealthX IFR holder discount model`
+  - `4ce2485b docs: add GeckoTerminal footer backlink`
+- Beide Commits wurden nach `origin/main` gepusht.
+- `git status --short` war nach Commit `eea5c0d0` clean.
+
+**Abgeschlossene Punkte**
+
+- GeckoTerminal dofollow Footer-Backlink ist in `docs/index.html` gesetzt.
+- StealthX/IFR-Doku ist auf aktuellen Holder-Discount-Flow korrigiert.
+- Bridge enthaelt fuer beide Arbeiten jeweils Verifikation, Build-/Test-Status und offene Folgepunkte.
+
+**Weiterhin offen**
+
+- Root Dependency-/Build-Situation separat bereinigen:
+  - `npm ci` blockiert wegen nicht synchronem `package.json` / `package-lock.json`.
+  - Root `npm run build` existiert nicht.
+- Externe/operative Punkte bleiben:
+  - Contributors: ETH top-up, IFR-Kauf, 50% Lock, 50% Lending.
+  - Uniswap Issue #2509 beobachten.
+  - Etherscan Reputation / MetaMask Registry Blocker beobachten.
+  - Optional StealthX/Chameleon BuilderRegistry Governance-Registrierung.
