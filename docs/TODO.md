@@ -675,8 +675,12 @@ On errors: fix immediately, commit with `seo:` prefix.
 
 ## AFTER LP LIVE (after 05.06.2026)
 
-- [ ] Apply for CoinGecko listing
+- [x] Apply for CoinGecko listing
+      Submitted by Gio; CoinGecko email received; response expected in about 5 days.
 - [ ] Apply for CoinMarketCap listing
+      Draft prepared: docs/COINMARKETCAP_SUBMISSION.md
+      Submit via official CMC form: https://support.coinmarketcap.com/hc/en-us/requests/new
+      Form choice: 1 - [New Listing] Add cryptoasset
 - [ ] Activate AI Copilot gate (≥1,000 IFR locked)
 - [ ] Telegram wallet whitelist via WalletConnect
 - [ ] LiqRes withdrawal proposal: `setMaxWithdrawPerPeriod(200M)` from 01.09.2026

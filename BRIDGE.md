@@ -2134,3 +2134,76 @@ index acf5e72f..680ed772 100644
   - Worktree clean.
   - `main` lokal ahead of `origin/main`.
   - Push muss wiederholt werden, sobald Git-Transport/Credential-Helper nicht mehr hängt.
+
+---
+
+## 2026-06-28 [CODEX]
+### TYPE: STATUS / EXTERNAL
+### STATUS: CURRENT — CoinMarketCap submission draft prepared
+
+**Datum:** 2026-06-28 01:35 PDT
+**Autor:** CODEX
+
+**Gio Update**
+
+- Gio clarified that CoinGecko was already submitted.
+- CoinGecko sent an email; response expected in about 5 days.
+- CoinMarketCap should be taken over next.
+
+**CMC Sources Checked**
+
+- Official CMC request form:
+  - `https://support.coinmarketcap.com/hc/en-us/requests/new`
+- Official CMC "How to Add a Coin/Token":
+  - submit through the request form and select `1 - [New Listing] Add cryptoasset`.
+  - CMC states there is no standard timeline or guaranteed outcome.
+  - duplicate requests should be avoided.
+- Official CMC Listings Criteria:
+  - online submission form is the only official way for listings/updates.
+  - free-tier turnaround is variable and not guaranteed.
+  - CMC warns against third-party listing agents, spoofed emails, bribes, and unofficial channels.
+
+**On-chain / Metadata Snapshot Used**
+
+- Ethereum Mainnet block: `25411979`
+- Token:
+  - name: `Inferno`
+  - symbol: `IFR`
+  - decimals: `9`
+  - contract: `0x77e99917Eca8539c62F509ED1193ac36580A6e7B`
+  - totalSupply: `997769355.275448874`
+  - owner: Governance `0xc43d48E7FDA576C5022d0670B652A622E8caD041`
+  - `senderBurnBps=200`, `recipientBurnBps=50`, `poolFeeBps=100`
+- Uniswap V2:
+  - pair: `0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0`
+  - pair feeExempt: `true`
+  - reserves: `0.143261656128757442` ETH / `21028676.626442057` IFR
+- Token list endpoints checked:
+  - `https://ifrunit.tech/token-list.json`
+  - `https://ifrunit.tech/.well-known/token-list.json`
+  - both return IFR metadata and logo URL.
+
+**Geändert wurde**
+
+- Added `docs/COINMARKETCAP_SUBMISSION.md`
+  - CMC-ready copy/paste submission.
+  - Official links, contract data, market/pair data, tokenomics, on-chain snapshot, and suggested message body.
+  - Notes to avoid duplicate requests and unofficial intermediaries.
+- Updated `docs/TODO.md`
+  - CoinGecko marked submitted with expected response in about 5 days.
+  - CoinMarketCap left open but linked to the prepared draft and official form.
+- Updated `docs/TODO.html`
+  - HTML TODO synchronized with Markdown.
+
+**Limit**
+
+- I cannot complete the CMC web form without access to the CMC/Zendesk account or official project email session.
+- Next human action is to open the official request form, select `1 - [New Listing] Add cryptoasset`, and paste the prepared content from `docs/COINMARKETCAP_SUBMISSION.md`.
+
+**Push / Git Note**
+
+- Prior Git HTTPS pushes hung.
+- Existing contributor/StealthX sync commit was pushed to GitHub through the GitHub Git-Database API:
+  - remote commit: `4c96fdd5c0335799e2856adc2939528537a80b5a`
+  - same tree as local `0a577993`
+- Local tracking ref may still appear stale until normal `git fetch` works again.
