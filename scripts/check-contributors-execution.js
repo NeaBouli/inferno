@@ -10,7 +10,8 @@
  *   STRICT=true node scripts/check-contributors-execution.js
  *
  * Optional:
- *   MIN_CONTRIBUTOR_ETH=0.05
+ *   MIN_CONTRIBUTOR_ETH=0.05  minimum ETH before the Uniswap buy
+ *   MIN_GAS_ETH=0.005         minimum ETH after buy for lock/lending gas
  */
 
 "use strict";
@@ -71,18 +72,27 @@ function short(addr) {
   return `${addr.slice(0, 6)}...${addr.slice(-4)}`;
 }
 
-function nextAction(row, minEth) {
+function nextAction(row, minBuyEth, minGasEth) {
   if (!row.claimed) return "claim bootstrap IFR";
-  if (row.eth.lt(minEth)) return "top up ETH for buy + gas";
-  if (!row.buyDetected) return "buy IFR on Uniswap";
-  if (row.tranches.isZero()) return "run LOCK_BPS=5000 lock";
-  if (!row.hasOffer) return "run LendingVault offer";
+  if (!row.buyDetected) {
+    if (row.eth.lt(minBuyEth)) return "top up ETH for buy + gas";
+    return "buy IFR on Uniswap";
+  }
+  if (row.tranches.isZero()) {
+    if (row.eth.lt(minGasEth)) return "top up ETH for lock/lending gas";
+    return "run LOCK_BPS=5000 lock";
+  }
+  if (!row.hasOffer) {
+    if (row.eth.lt(minGasEth)) return "top up ETH for lending gas";
+    return "run LendingVault offer with LENDING_BPS=10000";
+  }
   return "done";
 }
 
 async function main() {
   const strict = envFlag("STRICT", false);
-  const minEth = ethers.utils.parseEther(process.env.MIN_CONTRIBUTOR_ETH || "0.05");
+  const minBuyEth = ethers.utils.parseEther(process.env.MIN_CONTRIBUTOR_ETH || "0.05");
+  const minGasEth = ethers.utils.parseEther(process.env.MIN_GAS_ETH || "0.005");
   const provider = new ethers.providers.JsonRpcProvider(
     process.env.MAINNET_RPC_URL || PUBLIC_MAINNET_RPC
   );
@@ -160,7 +170,8 @@ async function main() {
   console.log(`Network: ${network.name} (${network.chainId})`);
   console.log(`Block: ${blockNumber}`);
   console.log(`Bootstrap finalised: ${finalised}`);
-  console.log(`Min ETH target per contributor: ${fmtEth(minEth)}`);
+  console.log(`Min ETH target before buy: ${fmtEth(minBuyEth)}`);
+  console.log(`Min ETH target after buy for gas: ${fmtEth(minGasEth)}`);
   console.log(`Pool ETH: ${fmtEth(poolEth)}`);
   console.log(`Pool IFR: ${fmtIFR(poolIfr)}`);
   console.log(`Lending totalAvailable: ${fmtIFR(totalAvailable)}`);
@@ -170,7 +181,7 @@ async function main() {
 
   let allDone = true;
   for (const row of rows) {
-    const action = nextAction(row, minEth);
+    const action = nextAction(row, minBuyEth, minGasEth);
     if (action !== "done") allDone = false;
 
     console.log(`${row.name} ${short(row.address)} ${row.address}`);
@@ -194,9 +205,9 @@ async function main() {
 
   console.log("Commands after contributor buys:");
   console.log("  CONTRIBUTOR_ADDR=0x... LOCK_BPS=5000 DRY_RUN=true node scripts/contributors-lock.js");
-  console.log("  CONTRIBUTOR_ADDR=0x... DRY_RUN=true node scripts/contributors-lending-offer.js");
+  console.log("  CONTRIBUTOR_ADDR=0x... LENDING_BPS=10000 DRY_RUN=true node scripts/contributors-lending-offer.js");
   console.log("  CONTRIBUTOR_ADDR=0x... PRIVATE_KEY=0x... DRY_RUN=false MAINNET=true LOCK_BPS=5000 node scripts/contributors-lock.js");
-  console.log("  CONTRIBUTOR_ADDR=0x... PRIVATE_KEY=0x... DRY_RUN=false MAINNET=true node scripts/contributors-lending-offer.js");
+  console.log("  CONTRIBUTOR_ADDR=0x... PRIVATE_KEY=0x... DRY_RUN=false MAINNET=true LENDING_BPS=10000 node scripts/contributors-lending-offer.js");
 
   if (strict && !allDone) {
     process.exitCode = 1;

@@ -1823,3 +1823,314 @@ index acf5e72f..680ed772 100644
   - Uniswap Issue #2509 beobachten.
   - Etherscan Reputation / MetaMask Registry Blocker beobachten.
   - Optional StealthX/Chameleon BuilderRegistry Governance-Registrierung.
+
+---
+
+## 2026-06-28 [CODEX TERMINAL]
+### TYPE: STATUS
+### STATUS: CURRENT — Contributor 0.02 ETH buys verified
+
+**Datum:** 2026-06-28 01:07 PDT
+**Autor:** CODEX TERMINAL
+
+**Gelesener Stand**
+
+- `BRIDGE.md` bis zum aktuellen Ende gelesen.
+- Letzter Bridge-Stand war clean nach:
+  - `eea5c0d0 docs: finalize StealthX IFR holder discount model`
+  - `4ce2485b docs: add GeckoTerminal footer backlink`
+- Offener operativer Punkt war:
+  - Contributors: ETH top-up, IFR-Kauf, 50% Lock, 50% Lending.
+
+**On-chain Check**
+
+- Command:
+  - `node scripts/check-contributors-execution.js`
+- Network: Ethereum Mainnet / homestead
+- Block: `25411859`
+- Bootstrap: `finalised=true`
+- Pool nach den Buys:
+  - ETH: `0.143261656128757442`
+  - IFR: `21028676.626442057`
+- LendingVault:
+  - `totalAvailable=0`
+  - `totalLent=0`
+  - Rate: `200` bps/month
+- Fee-exempt Status:
+  - CommitmentVault: `true`
+  - LendingVault: `true`
+  - UniswapPair: `true`
+
+**Contributor Status**
+
+- C1 `0x4f632748460E5277bF8435259cADce440AbAC254`
+  - ETH: `0.000813371861694519`
+  - IFR: `36735135.849220732`
+  - Buy detected: `true`
+  - Locked: `0`
+  - Tranches: `0`
+  - Lending offer: `false`
+  - 50% Lock amount: `18367567.924610366` IFR
+- C2 `0x80fF32c5441cBCbFa5c3ce0dC70359BDD05B6958`
+  - ETH: `0.006003060054329544`
+  - IFR: `40313881.905691312`
+  - Buy detected: `true`
+  - Locked: `0`
+  - Tranches: `0`
+  - Lending offer: `false`
+  - 50% Lock amount: `20156940.952845656` IFR
+- C3 `0xf556cCe85128c93AC6A7e088cF334180F2D3905B`
+  - ETH: `0.004874255577385839`
+  - IFR: `38050900.069727987`
+  - Buy detected: `true`
+  - Locked: `0`
+  - Tranches: `0`
+  - Lending offer: `false`
+  - 50% Lock amount: `19025450.034863993` IFR
+
+**Interpretation**
+
+- Gio meldete: jeder Contributor hat `0.02 ETH` in IFR geswapt.
+- On-chain bestaetigt: `Buy detected=true` fuer alle drei Contributor.
+- Die alte Monitor-Meldung `Next: top up ETH for buy + gas` kommt von `MIN_CONTRIBUTOR_ETH=0.05` und ist nach den Buys zu grob formuliert.
+- Fuer Lock/Lending ist jetzt nur noch Gas relevant:
+  - C1 mit `0.000813 ETH` ist sehr wahrscheinlich zu knapp fuer Approve + 10 Lock-TXs + Lending.
+  - C2/C3 koennten bei aktuellem niedrigen Gas reichen, sind aber fuer 13 TXs ebenfalls nicht komfortabel.
+- Aktueller Gas-Snapshot:
+  - baseFee: `0.059362151` gwei
+  - gasPrice: `0.059697498` gwei
+  - maxFeePerGas: `1.618724302` gwei
+
+**Naechster Ablauf**
+
+1. Falls moeglich, vor Live-Ausfuehrung jede Contributor-Wallet nochmal mit etwas ETH fuer Gas auffuellen, besonders C1.
+2. Pro Contributor Lock-Dry-run final pruefen:
+   - `CONTRIBUTOR_ADDR=0x... LOCK_BPS=5000 DRY_RUN=true node scripts/contributors-lock.js`
+3. Pro Contributor live locken:
+   - `CONTRIBUTOR_ADDR=0x... PRIVATE_KEY=0x... DRY_RUN=false MAINNET=true LOCK_BPS=5000 node scripts/contributors-lock.js`
+4. Danach Lending fuer den verbleibenden Rest:
+   - Wichtig: nach 50% Lock muss `LENDING_BPS=10000` gesetzt werden, wenn der komplette Rest in Lending soll.
+   - `CONTRIBUTOR_ADDR=0x... PRIVATE_KEY=0x... DRY_RUN=false MAINNET=true LENDING_BPS=10000 node scripts/contributors-lending-offer.js`
+
+**Dokumentation aktualisiert**
+
+- `docs/TODO.md`
+  - Contributor Buy von offen auf erledigt gesetzt.
+  - Tatsachliche Ausfuehrung `0.02 ETH` statt alter Empfehlung `0.03 ETH` dokumentiert.
+  - Live-Commands um `DRY_RUN=false` korrigiert.
+  - Lending-Hinweis auf `LENDING_BPS=10000` nach 50% Lock korrigiert.
+- `docs/TODO.html`
+  - gleiche Synchronisation fuer die HTML-TODO-Seite.
+- `docs/CONTRIBUTOR_RUNBOOK.md`
+  - Ist-Status auf 28.06.2026 aktualisiert.
+  - Contributor-Balances nach den 0.02-ETH-Kaeufen dokumentiert.
+  - Lock/Lending Ablauf auf `LOCK_BPS=5000` plus `LENDING_BPS=10000` fuer den verbleibenden Rest korrigiert.
+
+**Tooling aktualisiert**
+
+- `scripts/check-contributors-execution.js`
+  - `Next`-Logik ist jetzt phase-aware:
+    - vor Buy: `MIN_CONTRIBUTOR_ETH` fuer Kauf + Gas
+    - nach Buy: `MIN_GAS_ETH` fuer Lock/Lending-Gas
+  - Default `MIN_GAS_ETH=0.005`.
+  - Beispielcommands auf `LENDING_BPS=10000` und `DRY_RUN=false` fuer Live-Runs korrigiert.
+- Re-run nach Tooling-Fix:
+  - C1: `Next: top up ETH for lock/lending gas`
+  - C2: `Next: run LOCK_BPS=5000 lock`
+  - C3: `Next: top up ETH for lock/lending gas`
+
+---
+
+## 2026-06-28 [CODEX]
+### TYPE: STATUS / EXTERNAL
+### STATUS: CURRENT — Bridge sync, external listing watch, contributor monitor recheck
+
+**Datum:** 2026-06-28 01:21 PDT
+**Autor:** CODEX
+
+**Was geprüft wurde**
+
+- `BRIDGE.md` vollständig gelesen und mit dem neuesten dokumentierten Stand synchronisiert.
+- Git-Status vor diesem Eintrag:
+  - `BRIDGE.md`, `docs/CONTRIBUTOR_RUNBOOK.md`, `docs/TODO.md`, `docs/TODO.html`, `scripts/check-contributors-execution.js` waren bereits geändert.
+  - Die vorhandenen Diffs passen zum vorigen 2026-06-28-Bridge-Eintrag: Contributor-Buys dokumentiert, Runbook/TODOs aktualisiert, Monitor-Next-Logik phase-aware korrigiert.
+- `git diff --check` war sauber.
+- `git log -3 --oneline`:
+  - `93a7913b docs: record final bridge sync`
+  - `eea5c0d0 docs: finalize StealthX IFR holder discount model`
+  - `4ce2485b docs: add GeckoTerminal footer backlink`
+
+**Contributor Monitor Recheck**
+
+- Command:
+  - `node scripts/check-contributors-execution.js`
+- Network: Ethereum Mainnet / homestead
+- Block: `25411924`
+- Pool:
+  - ETH: `0.143261656128757442`
+  - IFR: `21028676.626442057`
+- LendingVault:
+  - `totalAvailable=0`
+  - `totalLent=0`
+  - Rate: `200` bps/month
+- C1:
+  - ETH `0.000813371861694519`
+  - IFR `36735135.849220732`
+  - Buy detected `true`
+  - Locked `0`
+  - Offer `false`
+  - Next: `top up ETH for lock/lending gas`
+- C2:
+  - ETH `0.006003060054329544`
+  - IFR `40313881.905691312`
+  - Buy detected `true`
+  - Locked `0`
+  - Offer `false`
+  - Next: `run LOCK_BPS=5000 lock`
+- C3:
+  - ETH `0.004874255577385839`
+  - IFR `38050900.069727987`
+  - Buy detected `true`
+  - Locked `0`
+  - Offer `false`
+  - Next: `top up ETH for lock/lending gas`
+
+**External Checks**
+
+- Uniswap Default Token List Issue #2509:
+  - URL: `https://github.com/Uniswap/default-token-list/issues/2509`
+  - State: `OPEN`
+  - Title: `Add IFR: Inferno`
+  - Updated: `2026-06-18T15:28:12Z`
+  - Comments: `2`
+  - Labels/assignees: none
+  - No linked branches or pull requests.
+- GitHub web page also shows issue #2509 as open and the original IFR token data remains visible.
+- Token-list endpoints checked:
+  - `https://ifrunit.tech/token-list.json`
+  - `https://ifrunit.tech/.well-known/token-list.json`
+  - Both return `Inferno Token List`, count `1`, symbol `IFR`, address `0x77e99917Eca8539c62F509ED1193ac36580A6e7B`, decimals `9`, logo `https://ifrunit.tech/assets/ifr_icon_256.png`, timestamp `2026-06-18T15:30:00.000Z`.
+- Etherscan token page checked:
+  - `https://etherscan.io/token/0x77e99917Eca8539c62F509ED1193ac36580A6e7B`
+  - Meta description still reports `Token Rep: Unknown | Holders: 17`.
+  - MetaMask Registry remains blocked until reputation changes to at least `Neutral`/`OK`.
+
+**BuilderRegistry Check**
+
+- Attempted:
+  - `DRY_RUN=true npx hardhat run scripts/propose-builder-registration.js --network mainnet`
+- Result:
+  - No output after more than 60 seconds; command was interrupted with Ctrl-C.
+  - No transaction was sent.
+- Interpretation:
+  - Treat as an RPC/Hardhat responsiveness issue for this run, not as a BuilderRegistry state change.
+  - Re-run later if BuilderRegistry governance registration becomes the active task.
+
+**StealthX App Task Clarification**
+
+- New Gio input from the StealthX app context:
+  - SecureCall Android should request notification and microphone permissions during the first-run/onboarding flow, together with the other existing permission prompts.
+  - Invitation/QR flows are reportedly not working reliably.
+  - Secure Trio should expose in-app purchase/upgrade/activation flow parity with the already structured SecureCall app flow.
+- Inferno repo scope check:
+  - This repo does not contain the SecureCall/SecureChat/Chameleon Android app implementation.
+  - These are external StealthX product-repo tasks, not Inferno protocol changes.
+- Docs updated to prevent scope confusion:
+  - `docs/STEALTHX_IFR_INTEGRATION.md` Next Steps now call out these app-side tasks as externally tracked.
+  - `docs/TODO.md` StealthX section now records permissions, invitation/QR, and Secure Trio purchase as app-side tasks outside this repo.
+  - `docs/TODO.html` synchronized with the Markdown TODO.
+
+**Offene nächste Schritte**
+
+1. Commit/push der vorhandenen Contributor-buy documentation/tooling sync plus dieses Bridge-Recheck.
+2. Contributors:
+   - C1 and C3 need ETH top-up for lock/lending gas.
+   - C2 can proceed to final `LOCK_BPS=5000` dry-run/live when Gio has the signer ready.
+   - After 50% lock, use `LENDING_BPS=10000` for the remaining free IFR if the goal is full remaining balance lending.
+3. Keep watching Uniswap Issue #2509 for reviewer comments/state changes.
+4. Keep watching Etherscan reputation; MetaMask Registry remains deferred while `Token Rep: Unknown`.
+5. Optional: re-run BuilderRegistry dry-run with a responsive RPC before submitting any Safe payload.
+6. Track/implement the StealthX Android app tasks in the relevant product repos:
+   - first-run permission prompts for `POST_NOTIFICATIONS` and `RECORD_AUDIO`;
+   - invitation/QR-flow reproduction and fix;
+   - Secure Trio in-app purchase/upgrade/activation parity with SecureCall.
+
+---
+
+## 2026-06-28 [CODEX]
+### TYPE: STATUS / EXTERNAL
+### STATUS: CURRENT — Handoff re-sync and CoinGecko clarification
+
+**Datum:** 2026-06-28 01:23 PDT
+**Autor:** CODEX
+
+**Was geprüft wurde**
+
+- `BRIDGE.md` vollständig gelesen:
+  - initialer `cat` wurde vom Terminal gekürzt,
+  - danach vollständig in Bereichen `1-700`, `701-1400`, `1401-2120` gelesen.
+- Git-Status:
+  - `git status --short` zeigt weiterhin uncommitted Änderungen in:
+    - `BRIDGE.md`
+    - `docs/CONTRIBUTOR_RUNBOOK.md`
+    - `docs/STEALTHX_IFR_INTEGRATION.md`
+    - `docs/TODO.html`
+    - `docs/TODO.md`
+    - `scripts/check-contributors-execution.js`
+- `git log -3 --oneline`:
+  - `93a7913b docs: record final bridge sync`
+  - `eea5c0d0 docs: finalize StealthX IFR holder discount model`
+  - `4ce2485b docs: add GeckoTerminal footer backlink`
+- `git diff --check` ist sauber.
+
+**CoinGecko / Listing Klarstellung**
+
+- In `BRIDGE.md` ist keine abgeschlossene CoinGecko-Registration dokumentiert.
+- Dokumentierter Stand bleibt:
+  - CoinGecko Request Form: offen / Login mit CoinGecko-Account nötig.
+  - CoinMarketCap Request: offen.
+- Uniswap Issue #2509 nennt im Formular weiterhin:
+  - `Link to CoinMarketCap or CoinGecko page of token: N/A (submission pending)`.
+- Abgeschlossen ist GeckoTerminal, nicht CoinGecko:
+  - GeckoTerminal dofollow Footer-Backlink ist seit `4ce2485b` gesetzt.
+
+**Uniswap Issue #2509 Recheck**
+
+- Web/API geprüft:
+  - `https://github.com/Uniswap/default-token-list/issues/2509`
+- Status:
+  - State: `open`
+  - Title: `Add IFR: Inferno`
+  - Created: `2026-06-11T23:53:02Z`
+  - Updated: `2026-06-18T15:28:12Z`
+  - Comments: `2`
+  - Labels: none
+  - Assignees: none
+- Keine sichtbaren Branches oder Pull Requests verknüpft.
+
+**Remote Sync Hinweis**
+
+- `git fetch origin && git status -sb` wurde versucht.
+- `git fetch` gab nach mehr als 60 Sekunden keine Ausgabe zurück und wurde mit Ctrl-C abgebrochen.
+- Keine Dateien wurden durch den abgebrochenen Fetch verändert.
+- Remote-Abgleich sollte vor finalem Push erneut versucht werden.
+
+**Offene nächste Schritte**
+
+1. Vor Commit/Push nochmal `git diff --check` ausführen.
+2. Vor Push `git fetch origin` erneut versuchen; falls es wieder hängt, Ursache separat prüfen.
+3. Vorhandene Änderungen committen/pushen, sobald Remote-Abgleich möglich ist.
+4. CoinGecko/CoinMarketCap bleiben externe offene Listings; nicht mit GeckoTerminal verwechseln.
+5. Contributor Lock/Lending bleibt wie im vorherigen Bridge-Eintrag: C1/C3 Gas-Top-up, C2 kann mit Lock weiter.
+
+**Follow-up in derselben Sitzung**
+
+- Lokaler Commit wurde erstellt mit Message:
+  - `docs: sync contributor buys and stealthx app tasks`
+- Danach wurde diese Bridge-Follow-up-Notiz noch ergänzt und in denselben lokalen Commit amended.
+- Push-Versuche zu `origin/main` über HTTPS hingen ohne Ausgabe und wurden kontrolliert mit Ctrl-C beendet.
+- GitHub selbst war per `curl -I https://github.com` erreichbar; Blocker liegt wahrscheinlich im Git-HTTPS/Credential-Transport (`credential.helper=osxkeychain`).
+- Aktueller erwarteter Abschlusszustand nach Amend:
+  - Worktree clean.
+  - `main` lokal ahead of `origin/main`.
+  - Push muss wiederholt werden, sobald Git-Transport/Credential-Helper nicht mehr hängt.

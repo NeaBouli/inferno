@@ -85,6 +85,10 @@ StealthX public checkout page is the operational source of truth.
 
 - [ ] Keep IFR docs aligned with StealthX public checkout rules.
 - [ ] Resolve any public threshold inconsistencies on StealthX pages.
+- [ ] Track StealthX app implementation separately in the product repos:
+      first-run Android permission prompts for notifications/microphone,
+      broken invitation/QR flows, and Secure Trio in-app purchase parity with
+      SecureCall are app-side tasks, not Inferno protocol changes.
 - [ ] Register the relevant StealthX/Chameleon builder entry in IFR
       BuilderRegistry through Governance, if the team wants on-chain builder
       registry visibility.
