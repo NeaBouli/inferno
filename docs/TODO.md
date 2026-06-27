@@ -271,13 +271,13 @@ On errors: fix immediately, commit with `seo:` prefix.
       Betrifft: IFR-Schätzung im Contribute-Widget + Allocation-Anzeige
 
 - [x] ✅ Contributors informiert: ZUERST kaufen! (16.06.2026)
-      Jeder Contributor: 0.03 ETH → Uniswap → IFR kaufen (BEVOR Lock!)
-      3 × 0.03 ETH = 0.09 ETH Volumen → Pool ~0.128 ETH → Preis ~+300%
+      Ursprüngliche Empfehlung: 0.03 ETH je Contributor; ausgeführt wurden 0.02 ETH je Contributor.
       https://app.uniswap.org/swap?outputCurrency=0x77e99917Eca8539c62F509ED1193ac36580A6e7B
 
-- [ ] 🔴 Contributors kaufen 0.03 ETH auf Uniswap
+- [x] ✅ Contributors kaufen 0.02 ETH auf Uniswap (28.06.2026)
       → Runbook: docs/CONTRIBUTOR_RUNBOOK.md
       → Monitor: node scripts/check-contributors-execution.js
+      → On-chain geprüft: Buy detected = true für C1/C2/C3; Pool = 0.143261656128757442 ETH / 21028676.626442057 IFR
 
 - [ ] 🔴 Blockaid Retest (nach 24h Propagation)
       → Checkliste: BRIDGE.md
@@ -285,18 +285,22 @@ On errors: fix immediately, commit with `seo:` prefix.
 - [ ] 🔴 CommitmentVault Lock ausführen (NACH Käufen)
       Script: scripts/contributors-lock.js (dynamisch: balance/10, TIME_ONLY 30d)
       DRY_RUN: CONTRIBUTOR_ADDR=0x... LOCK_BPS=5000 DRY_RUN=true node scripts/contributors-lock.js ✅
-      LIVE:    CONTRIBUTOR_ADDR=0x... MAINNET=true PRIVATE_KEY=0x... LOCK_BPS=5000 node scripts/contributors-lock.js
+      LIVE:    CONTRIBUTOR_ADDR=0x... PRIVATE_KEY=0x... DRY_RUN=false MAINNET=true LOCK_BPS=5000 node scripts/contributors-lock.js
       Dry Run Output: 10 Tranchen, TIME_ONLY(0), unlockTime+30d, p0Multiplier=0 ✅
 
 - [ ] 🔴 LendingVault createOffer() ausführen
-      Script: scripts/contributors-lending-offer.js (50% balance = ~16.6M IFR)
-      DRY_RUN: CONTRIBUTOR_ADDR=0x... DRY_RUN=true node scripts/contributors-lending-offer.js ✅
-      LIVE:    CONTRIBUTOR_ADDR=0x... MAINNET=true PRIVATE_KEY=0x... node scripts/contributors-lending-offer.js
+      Script: scripts/contributors-lending-offer.js
+      Nach 50% Lock den verbleibenden Rest mit LENDING_BPS=10000 anbieten.
+      DRY_RUN: CONTRIBUTOR_ADDR=0x... LENDING_BPS=10000 DRY_RUN=true node scripts/contributors-lending-offer.js ✅
+      LIVE:    CONTRIBUTOR_ADDR=0x... PRIVATE_KEY=0x... DRY_RUN=false MAINNET=true LENDING_BPS=10000 node scripts/contributors-lending-offer.js
 
 - [ ] 🟡 StealthX × IFR Integration
       Spec: docs/STEALTHX_IFR_INTEGRATION.md
       Aktueller Partner-Flow: browser-based IFR balance verification → 50% Stripe checkout discount
       Lock-Gating wurde aus technischen Gründen aus den StealthX Apps entfernt
+      App-side StealthX tasks live außerhalb dieses Repos: Android first-run permission prompts
+      (notifications/microphone), kaputte invitation/QR-Flows und Secure Trio In-App-Kauf
+      analog SecureCall in den Produkt-Repos tracken/umsetzen.
 
 - [ ] 🟡 Mehr Contributors für Bootstrap
       Ziel: mehr ETH = höheres P0
