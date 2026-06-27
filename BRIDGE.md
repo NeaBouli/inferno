@@ -2207,3 +2207,66 @@ index acf5e72f..680ed772 100644
   - remote commit: `4c96fdd5c0335799e2856adc2939528537a80b5a`
   - same tree as local `0a577993`
 - Local tracking ref may still appear stale until normal `git fetch` works again.
+
+---
+
+## 2026-06-28 [CODEX]
+### TYPE: STATUS / EXTERNAL
+### STATUS: CURRENT — Git HTTPS transport diagnosed as local blocker
+
+**Datum:** 2026-06-28 02:00 PDT
+**Autor:** CODEX
+
+**Was geprüft wurde**
+
+- `gh auth status`
+  - authenticated as `NeaBouli`
+  - Git operations protocol: `https`
+  - token scopes include `repo` and `workflow`
+  - token value was not printed.
+- `gh api repos/NeaBouli/inferno --jq '.full_name + " " + .default_branch'`
+  - `NeaBouli/inferno main`
+- `curl -I https://github.com`
+  - HTTP/2 `200`
+- `git ls-remote --heads origin main`
+  - `timeout` binary is not installed on this macOS system.
+  - repeated with Python `subprocess.run(..., timeout=15)`.
+  - result: timed out after 15 seconds.
+
+**Conclusion**
+
+- GitHub Web/API and raw HTTPS via `curl` work.
+- `git-remote-https` operations hang locally.
+- Treat this as a local Git HTTPS transport / credential / system-time/network issue, not as a repo-code blocker.
+- Do not spend more work time on normal `git fetch`, `git push`, or `git ls-remote` until system time/network/Codex session is fixed.
+
+**Remote / Local Tree Check**
+
+- GitHub API remote `main` after API push:
+  - remote commit: `daafad728bdf4b91c9af80ec642029f851c5aa9a`
+  - remote tree: `200de2e84cca39b196c9d387f383a70c28bbff45`
+  - parent: `4c96fdd5c0335799e2856adc2939528537a80b5a`
+- Local HEAD before this Bridge note:
+  - local commit: `763b9968240a90422a440867c5cb8ec6bac98e99`
+  - local tree: `200de2e84cca39b196c9d387f383a70c28bbff45`
+- Interpretation:
+  - remote and local content trees are identical.
+  - commit SHAs differ only because prior pushes were done through the GitHub Git-Database API, which created remote commits with different metadata/parents.
+
+**Local Ref Alignment Note**
+
+- The remote API commits are not present as local Git objects because normal fetch hangs.
+- Local refs cannot be cleanly updated to those remote SHAs until the commit objects are fetched or reconstructed exactly.
+- Do not rewrite content to solve this.
+- After system time/network/Codex restart:
+  1. restore automatic system time,
+  2. run normal `git fetch origin`,
+  3. if local tree still equals remote tree, align local `main`/`origin/main` to remote `main`.
+
+**Push Method Going Forward**
+
+- If urgent push is needed while Git transport hangs:
+  - use GitHub API Git Database flow with current remote `main` as parent,
+  - compare remote ref before updating,
+  - update `refs/heads/main` with `force:false`,
+  - do not print secrets.
