@@ -1734,3 +1734,58 @@ index acf5e72f..680ed772 100644
 
 - Root `package-lock.json` separat mit dem Root `package.json` synchronisieren, wenn der Root-`npm ci` wieder gruen werden soll.
 - Falls GeckoTerminal spaeter explizit das Token-Profil statt des Pool-Profils verlangt, Linkziel auf `https://www.geckoterminal.com/eth/tokens/0x77e99917Eca8539c62F509ED1193ac36580A6e7B` umstellen.
+
+---
+
+## 2026-06-27 [CODEX TERMINAL]
+### TYPE: DOCS / STATUS
+### STATUS: DONE — StealthX IFR holder-discount docs finalized
+
+**Datum:** 2026-06-27 15:55 PDT
+**Autor:** CODEX TERMINAL
+
+**Was abgeschlossen wurde**
+
+- Die seit 2026-06-22 offenen StealthX-Doku-Aenderungen wurden geprueft und fuer Commit vorbereitet.
+- Inhaltliche Korrektur:
+  - StealthX/SecureCall/SecureChat/Chameleon wird nicht mehr als aktuelles IFR-Lock-Gating beschrieben.
+  - Aktueller Stand ist IFR holder verification / read-only balance check fuer 50% Stripe checkout discount.
+  - `IFRLock` und `CommitmentVault` bleiben als IFR-Protokollkomponenten dokumentiert, sind aber nicht Teil des aktuellen StealthX-Checkout-Discount-Flows.
+
+**Geaenderte Dateien**
+
+- `README.md`
+  - Integrated Builder Products: StealthX-Zeile auf `IFR holder verification for 50% checkout discount` korrigiert.
+- `docs/STEALTHX_IFR_INTEGRATION.md`
+  - alte Lock/Premium-Unlock-Spec durch aktuellen Holder-Discount-Flow ersetzt.
+  - SecureCall, SecureChat und Chameleon als StealthX-Produkte aufgenommen.
+  - technische Balance-Check-Skizze gegen IFR Token `balanceOf(address)` dokumentiert.
+- `docs/TODO.md`
+  - StealthX TODO auf browser-based IFR balance verification und 50% Stripe checkout discount umgestellt.
+- `docs/TODO.html`
+  - gleicher Status im HTML-TODO synchronisiert.
+
+**Verifikation**
+
+- `git diff --check` -> clean.
+- Alte falsche Aussagen in den betroffenen Dateien geprueft:
+  - keine Treffer mehr fuer `IFR Lock for premium calls`
+  - keine Treffer mehr fuer `Premium unlock`
+  - keine Treffer mehr fuer `lockedBalance(wallet) >= 1000`
+  - keine Treffer mehr fuer `IFRLock gate`
+- Aktuelle Aussagen vorhanden:
+  - `IFR holder verification for 50% checkout discount`
+  - `browser-based IFR balance verification -> 50% Stripe checkout discount`
+  - `50% checkout discount for eligible IFR holders`
+
+**Build/Test-Status**
+
+- Docs-only Aenderung, kein Contract- oder Runtime-Code.
+- Root-Build bleibt separat blockiert wie im GeckoTerminal-Eintrag dokumentiert:
+  - Root `npm ci` scheitert weiter an nicht synchronem `package.json` / `package-lock.json`.
+  - Root `npm run build` existiert nicht.
+
+**Offene naechste Schritte**
+
+- StealthX public pages ausserhalb dieses Repos auf Threshold-Konsistenz pruefen.
+- Falls gewuenscht, StealthX/Chameleon spaeter per Governance in IFR `BuilderRegistry` registrieren.

@@ -325,7 +325,7 @@ Inferno Protocol is developed by a pseudonymous team in the open-source DeFi tra
 | Project | Category | Integration |
 |---|---|---|
 | K-9 Academy | Education | IFR Lock for course access |
-| StealthX/SecureCall | Privacy | IFR Lock for premium calls |
+| StealthX/SecureCall/SecureChat/Chameleon | Privacy | IFR holder verification for 50% checkout discount |
 | Vendetta | DeFi | IFR Lock + Rewards |
 | NEXUS GR | B2B Marketplace | Coming Soon |
 
