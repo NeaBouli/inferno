@@ -1508,3 +1508,229 @@ Next:
   - Uniswap Issue #2509 beobachten.
   - Etherscan Reputation / MetaMask Registry Blocker beobachten.
   - Chameleon BuilderRegistry Governance-Ausführung abschließen.
+
+---
+
+## 2026-06-22 [CODEX TERMINAL]
+### TYPE: DOCS / DECISION
+### STATUS: DONE — StealthX IFR integration model corrected
+
+**Datum:** 2026-06-22
+**Autor:** CODEX TERMINAL
+
+**Entscheidung / Klarstellung**
+
+- StealthX/SecureCall/SecureChat/Chameleon nutzt IFR aktuell als Holder-Discount-Signal.
+- Partner hat die frühere Lock-Funktion aus technischen Gründen aus den Apps entfernt.
+- Der aktuelle öffentliche Flow ist:
+  - Browser-Wallet-Verifikation
+  - read-only IFR Balance Check auf Ethereum Mainnet
+  - 50% Stripe Checkout Discount für qualifizierte IFR Holder
+  - normale Produktaktivierung über Stripe/Lizenz/Activation Code
+- Kein aktueller In-App WalletConnect Unlock.
+- Kein aktueller IFRLock/CommitmentVault Gate für StealthX App-Features.
+
+**Geänderte Dateien**
+
+- `docs/STEALTHX_IFR_INTEGRATION.md`
+  - alte Lock/Premium-Unlock-Spec ersetzt
+  - aktuelles Holder-Discount-Modell dokumentiert
+  - SecureCall, SecureChat und Chameleon als öffentliche StealthX-Produkte aufgenommen
+- `README.md`
+  - Integrated Builder Products: StealthX-Zeile auf IFR Holder Verification / 50% Checkout Discount korrigiert
+- `docs/TODO.md`
+  - StealthX TODO von Lock-Gate auf Balance-Verification-Discount umgestellt
+- `docs/TODO.html`
+  - gleiche Korrektur im HTML-TODO
+
+**Offene nächste Schritte**
+
+- StealthX-Seiten auf Schwellenwert-Konsistenz prüfen; SecureChat public copy enthielt unterschiedliche Suite-Schwellen.
+- Falls gewünscht: StealthX/Chameleon per Governance in IFR `BuilderRegistry` registrieren.
+- Künftige Kommunikation als "IFR holder discount" formulieren, nicht als "IFR lock unlock", solange Lock-Gating nicht wieder eingeführt wird.
+
+---
+
+## 2026-06-22 [CODEX TERMINAL]
+### TYPE: STATUS
+### STATUS: CURRENT — Offene Punkte nach StealthX-Doku-Korrektur
+
+**Datum:** 2026-06-22
+**Autor:** CODEX TERMINAL
+
+**Repo**
+
+- Branch: `main`
+- Remote: `origin/main`
+- Aktueller Worktree hat uncommitted Docs-Änderungen:
+  - `BRIDGE.md`
+  - `README.md`
+  - `docs/STEALTHX_IFR_INTEGRATION.md`
+  - `docs/TODO.md`
+  - `docs/TODO.html`
+- Zweck der Änderung: StealthX-Integration von altem Lock-Gating auf aktuellen IFR Holder Discount Flow korrigiert.
+
+**Verifizierter Mainnet-Status**
+
+- Check: `node scripts/check-contributors-execution.js`
+- Block: `25371602`
+- Bootstrap: `finalised=true`
+- Uniswap V2 Pool:
+  - ETH: `0.083261656128757442`
+  - IFR: `36128594.451082089`
+- LendingVault:
+  - `totalAvailable=0`
+  - `totalLent=0`
+  - Rate: `200` bps/month
+
+**Contributors**
+
+- C1 `0x4f632748460E5277bF8435259cADce440AbAC254`
+  - ETH `0.001055298994466727`
+  - IFR `33333333.333333333`
+  - Buy detected: `false`
+  - Locked: `0`
+  - Lending offer: `false`
+  - Next: ETH top-up for buy + gas
+- C2 `0x80fF32c5441cBCbFa5c3ce0dC70359BDD05B6958`
+  - ETH `0.004243668025184632`
+  - IFR `33333333.333333333`
+  - Buy detected: `false`
+  - Locked: `0`
+  - Lending offer: `false`
+  - Next: ETH top-up for buy + gas
+- C3 `0xf556cCe85128c93AC6A7e088cF334180F2D3905B`
+  - ETH `0.004617965521402287`
+  - IFR `33333333.333333333`
+  - Buy detected: `false`
+  - Locked: `0`
+  - Lending offer: `false`
+  - Next: ETH top-up for buy + gas
+
+**BuilderRegistry / Chameleon / StealthX**
+
+- Registry: `0xdfe6636DA47F8949330697e1dC5391267CEf0EE3`
+- Block: `25371602`
+- `getBuilderCount() = 0`
+- `getActiveBuilders().length = 0`
+- Chameleon/Gio wallet `0x4f632748460E5277bF8435259cADce440AbAC254`:
+  - `isBuilder=false`
+- Interpretation:
+  - StealthX products are public IFR partner/use-case pages through holder discount.
+  - No StealthX/Chameleon entry is registered on-chain in BuilderRegistry yet.
+  - On-chain builder registration is optional governance visibility, not required for the public discount flow.
+
+**External**
+
+- Uniswap Default Token List Issue:
+  - URL: `https://github.com/Uniswap/default-token-list/issues/2509`
+  - State: `open`
+  - Updated: `2026-06-18T15:28:12Z`
+  - Comments: `2`
+- Etherscan reputation / MetaMask Registry:
+  - Still treated as open blocker from prior Bridge status until reputation changes from `Unknown` to `Neutral`/`OK`.
+
+**Offen / Als nächstes**
+
+1. Commit der aktuellen StealthX-Doku-Korrektur vorbereiten:
+   - optional `git diff --check`
+   - `git add BRIDGE.md README.md docs/STEALTHX_IFR_INTEGRATION.md docs/TODO.md docs/TODO.html`
+   - commit/push
+2. Contributor-Ausführung:
+   - C1/C2/C3 mit ETH auf ca. `0.05 ETH` je Wallet auffüllen
+   - IFR-Käufe auf Uniswap ausführen
+   - danach `node scripts/check-contributors-execution.js`
+   - danach Lock-Dry-runs und Lending-Dry-runs
+   - dann live `LOCK_BPS=5000` und LendingVault offers
+3. StealthX-Seiten:
+   - öffentliche Thresholds prüfen und Inkonsistenzen bereinigen, besonders SecureChat Suite-Schwelle.
+   - Kommunikation konsequent als "IFR holder discount" führen.
+4. BuilderRegistry:
+   - entscheiden, ob StealthX/Chameleon on-chain registriert werden soll.
+   - falls ja: Safe-Payload aus `scripts/propose-builder-registration.js` submitten, 48h Timelock abwarten, ausführen, `isBuilder=true` verifizieren.
+5. External listings:
+   - Uniswap Issue #2509 weiter beobachten.
+   - Etherscan Reputation nachfassen.
+   - MetaMask Registry erst nach Etherscan Reputation Upgrade wieder aufnehmen.
+
+---
+
+## 2026-06-27 [CODEX TERMINAL]
+### TYPE: FIX / EXTERNAL
+### STATUS: DONE — GeckoTerminal dofollow footer backlink added
+
+**Datum:** 2026-06-27 15:53 PDT
+**Autor:** CODEX TERMINAL
+
+**Was geaendert wurde**
+
+- GeckoTerminal verlangt fuer die Token-Profil-Freigabe einen dofollow-Linkback.
+- Footer-Suche vor dem Edit:
+  - Keine dedizierte `Footer.tsx` / Next-Footer-Komponente fuer `ifrunit.tech` gefunden.
+  - Gefunden wurden nur Footer-Helper-Scripts:
+    - `scripts/docs-footer-generator.js`
+    - `scripts/docs-footer-injector.js`
+  - Oeffentliche `ifrunit.tech` Landing liegt in diesem Repo als statische Seite in `docs/index.html`.
+- `docs/index.html` Footer erweitert:
+  - Neuer Link in bestehender `.footer-links` Liste, direkt nach `Etherscan`.
+  - Bestehendes Footer-Pattern uebernommen: normales `<a>` mit `target="_blank"` und `rel="noopener"`.
+  - Keine bestehenden Footer-Inhalte entfernt oder umstrukturiert.
+
+**Link**
+
+```html
+<a href="https://www.geckoterminal.com/eth/pools/0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0" target="_blank" rel="noopener">Track $IFR on GeckoTerminal</a>
+```
+
+**Dofollow-Status**
+
+- Dofollow ist erfuellt:
+  - `rel` enthaelt nur `noopener`.
+  - Kein `nofollow`, kein `sponsored`, kein `ugc` am GeckoTerminal-Link.
+
+**Verifikation**
+
+- Vollstaendiger Diff fuer die Aenderung:
+
+```diff
+diff --git a/docs/index.html b/docs/index.html
+index acf5e72f..680ed772 100644
+--- a/docs/index.html
++++ b/docs/index.html
+@@ -2923,6 +2923,7 @@ if (isLocked) {
+       <a href="wiki/index.html">Documentation</a>
+       <a href="https://paragraph.com/@0x6b36687b0cd4386fb14cf565b67d7862110fed67/the-ifr-fair-launch-story-%E2%80%94-from-code-to-community" target="_blank" rel="noopener">Blog</a>
+       <a href="https://etherscan.io/address/0x77e99917Eca8539c62F509ED1193ac36580A6e7B#code" target="_blank" rel="noopener">Etherscan</a>
++      <a href="https://www.geckoterminal.com/eth/pools/0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0" target="_blank" rel="noopener">Track $IFR on GeckoTerminal</a>
+       <a href="https://etherscan.io/address/0xc43d48E7FDA576C5022d0670B652A622E8caD041#code" target="_blank" rel="noopener">Governance</a>
+       <a href="https://github.com/NeaBouli/inferno/issues" target="_blank" rel="noopener">&#x2709; Contact</a>
+     </div>
+```
+
+- `grep -ri "geckoterminal" docs/index.html`:
+  - zeigt den Link mit `rel="noopener"`.
+- Negativcheck:
+  - `rg -n "geckoterminal.*nofollow|nofollow.*geckoterminal|geckoterminal.*sponsored|sponsored.*geckoterminal|geckoterminal.*ugc|ugc.*geckoterminal" docs/index.html`
+  - keine Treffer.
+- Statischer HTTP-Check:
+  - `python3 -m http.server 4180 --bind 127.0.0.1` aus `docs/`
+  - `curl -fsS http://127.0.0.1:4180/ | grep -i "geckoterminal"` liefert den Link.
+  - HTTP-Negativcheck auf `nofollow|sponsored|ugc` am GeckoTerminal-Link liefert keine Treffer.
+
+**Build-Status**
+
+- Geforderter Command `npm ci && npm run build` wurde ausgefuehrt, aber nicht gruen:
+  - `npm ci` bricht ab, weil `package.json` und `package-lock.json` im Root nicht synchron sind.
+  - Fehler:
+    - `form-data@4.0.5` im Lockfile erfuellt nicht `form-data@4.0.6`.
+    - `hasown@2.0.2` im Lockfile erfuellt nicht `hasown@2.0.4`.
+  - Danach wurde `npm run build` separat geprueft und scheitert im Root mit `Missing script: "build"`.
+- Interpretation:
+  - Der Footer-Fix betrifft die statische GitHub-Pages-Site `docs/index.html`.
+  - Es gibt in diesem Repo keinen Root-Build fuer diese statische Landing.
+  - Der einzige gefundene Next-Kontext ist `apps/benefits-network/frontend/next.config.js`, nicht die `ifrunit.tech` Landing.
+
+**Offene naechste Schritte**
+
+- Root `package-lock.json` separat mit dem Root `package.json` synchronisieren, wenn der Root-`npm ci` wieder gruen werden soll.
+- Falls GeckoTerminal spaeter explizit das Token-Profil statt des Pool-Profils verlangt, Linkziel auf `https://www.geckoterminal.com/eth/tokens/0x77e99917Eca8539c62F509ED1193ac36580A6e7B` umstellen.
