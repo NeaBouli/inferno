@@ -295,8 +295,8 @@ On errors: fix immediately, commit with `seo:` prefix.
 
 - [ ] 🟡 StealthX × IFR Integration
       Spec: docs/STEALTHX_IFR_INTEGRATION.md
-      IFRLock gate: lockedBalance(wallet) >= 1000 IFR → Premium unlock
-      Nächster Schritt: StealthX Team briefen
+      Aktueller Partner-Flow: browser-based IFR balance verification → 50% Stripe checkout discount
+      Lock-Gating wurde aus technischen Gründen aus den StealthX Apps entfernt
 
 - [ ] 🟡 Mehr Contributors für Bootstrap
       Ziel: mehr ETH = höheres P0
