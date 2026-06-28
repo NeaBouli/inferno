@@ -2447,3 +2447,58 @@ index acf5e72f..680ed772 100644
 3. C1 und C3 vor Lock/Lending weiter mit ETH fuer Gas auffuellen.
 4. Nach jedem 50%-Lock erneut Monitor ausfuehren und fuer den freien Rest Lending mit `LENDING_BPS=10000` vorbereiten.
 5. CoinMarketCap bleibt Human-Account-Action ueber `docs/COINMARKETCAP_SUBMISSION.md`.
+
+---
+
+## 2026-06-28 [CODEX]
+### TYPE: STATUS / EXECUTION
+### STATUS: BLOCKED — C2 live lock needs C2 signer key
+
+**Datum:** 2026-06-28 12:33 EEST
+**Autor:** CODEX
+
+**Gio Auftrag**
+
+- C2 soll jetzt mit `LOCK_BPS=5000` gelockt werden.
+
+**Preflight**
+
+- Worktree vor Preflight:
+  - `## main...origin/main`
+  - clean.
+- C2 Dry-run wurde erneut ausgefuehrt:
+  - Command: `CONTRIBUTOR_ADDR=0x80fF32c5441cBCbFa5c3ce0dC70359BDD05B6958 LOCK_BPS=5000 DRY_RUN=true node scripts/contributors-lock.js`
+  - Result: sauber, keine Transaktionen gesendet.
+  - Current IFR balance: `40313881.905691312`
+  - Current locked balance: `0`
+  - Current CommitmentVault allowance: `0`
+  - Total lock amount: `20156940.952845656` IFR
+  - Tranche 1-9: `2015694.095284565` IFR
+  - Tranche 10: `2015694.095284571` IFR
+  - cType: `TIME_ONLY (0)`
+  - unlockTime im letzten Dry-run: `1785230992` / `2026-07-28T09:29:52.000Z`
+
+**Signer Check**
+
+- `PRIVATE_KEY` ist in `.env` nicht gesetzt.
+- Vorhanden ist nur `DEPLOYER_PRIVATE_KEY`.
+- Abgeleitete Adresse aus `DEPLOYER_PRIVATE_KEY`:
+  - `0x6b36687b0cd4386fb14cf565B67D7862110Fed67`
+  - `MATCHES_C2=false`
+- C2 Contributor-Adresse:
+  - `0x80fF32c5441cBCbFa5c3ce0dC70359BDD05B6958`
+
+**Conclusion**
+
+- Live-Lock wurde nicht ausgefuehrt.
+- Es wurde keine Transaktion gesendet.
+- Grund: C2 Private Key fehlt in der lokalen Umgebung; der vorhandene Deployer-Key passt nicht zu C2.
+
+**Naechster Schritt**
+
+- C2-Key lokal als `PRIVATE_KEY` setzen, nicht in Chat posten.
+- Danach live ausfuehren:
+  - `CONTRIBUTOR_ADDR=0x80fF32c5441cBCbFa5c3ce0dC70359BDD05B6958 PRIVATE_KEY=0x... DRY_RUN=false MAINNET=true LOCK_BPS=5000 node scripts/contributors-lock.js`
+- Nach Live-Ausfuehrung:
+  - `node scripts/check-contributors-execution.js`
+  - danach fuer den freien Rest C2 Lending mit `LENDING_BPS=10000` vorbereiten.
