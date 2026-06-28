@@ -2270,3 +2270,180 @@ index acf5e72f..680ed772 100644
   - compare remote ref before updating,
   - update `refs/heads/main` with `force:false`,
   - do not print secrets.
+
+---
+
+## 2026-06-28 [CODEX]
+### TYPE: STATUS / EXTERNAL
+### STATUS: RESTART CHECKPOINT — repo clean, Git HTTPS still blocked
+
+**Datum:** 2026-06-28 12:04 EEST
+**Autor:** CODEX
+
+**Was geprueft wurde**
+
+- `BRIDGE.md` vor diesem Checkpoint vollstaendig gelesen:
+  - Datei hatte `2272` Zeilen.
+  - Gelesen in Abschnitten `1-760`, `761-1520`, `1521-2272`.
+- `gh auth status`:
+  - authenticated as `NeaBouli`;
+  - Git operations protocol: `https`;
+  - token value was not printed.
+- `gh api repos/NeaBouli/inferno --jq '.full_name + " " + .default_branch'`:
+  - `NeaBouli/inferno main`.
+- `curl -I --max-time 10 https://github.com`:
+  - HTTP/2 `200`.
+- `git ls-remote --heads origin main` via `perl -e 'alarm 15; exec @ARGV' ...`:
+  - exited after the 15s alarm with code `142`;
+  - no remote refs returned.
+
+**Git / Remote Stand**
+
+- `git status --short --branch` before this Bridge entry:
+  - `## main...origin/main`
+  - clean.
+- `git log --oneline --decorate -5` before this Bridge entry:
+  - `6c57b4c2 (HEAD -> main, origin/main, origin/HEAD) docs: record git transport diagnostics`
+  - `daafad72 docs: prepare coinmarketcap submission`
+  - `4c96fdd5 docs: sync contributor buys and stealthx app tasks`
+  - `93a7913b docs: record final bridge sync`
+  - `eea5c0d0 docs: finalize StealthX IFR holder discount model`
+- GitHub API remote `main`:
+  - `6c57b4c24df6388b84ccd34814fc92e8ff77856c`.
+- Local HEAD / local `origin/main`:
+  - `6c57b4c24df6388b84ccd34814fc92e8ff77856c`.
+- Tree for local HEAD and local `origin/main`:
+  - `1f9305ffe4e12b8eff74b10e7dbf3e9f55c1836c`.
+
+**Conclusion**
+
+- Repo content is clean and synchronized at checkpoint start.
+- GitHub API and normal HTTPS via `curl` work.
+- Git HTTPS transport still hangs locally and must not be treated as a project blocker.
+- This Bridge entry is the only new local change for restart handoff.
+
+**Offene naechste Schritte nach Neustart**
+
+1. Systemzeit wieder auf automatisch stellen.
+2. Codex/Terminal neu starten.
+3. Danach normalen Git-Transport erneut testen:
+   - `git ls-remote --heads origin main`
+   - `git fetch origin`
+4. Wenn Git weiter haengt:
+   - API/Curl weiter nutzen;
+   - bei API-Commits remote/local Tree vergleichen;
+   - bei identischem Tree lokale Refs auf den Remote-Commit angleichen, nicht Inhalte neu aendern.
+5. Fachlich weiter mit:
+   - Contributors: C1/C3 Gas-Top-up, C2 Lock moeglich, danach Lending;
+   - CoinMarketCap Submission aus `docs/COINMARKETCAP_SUBMISSION.md`;
+   - Uniswap Issue #2509 beobachten;
+   - Etherscan Reputation / MetaMask Registry beobachten;
+   - StealthX App-Themen in den passenden App-Repos umsetzen.
+
+---
+
+## 2026-06-28 [CODEX]
+### TYPE: STATUS / RECOVERY
+### STATUS: CURRENT — Restart resumed, Git HTTPS restored, C2 lock dry-run clean
+
+**Datum:** 2026-06-28 12:29 EEST
+**Autor:** CODEX
+
+**Was geprueft wurde**
+
+- `BRIDGE.md` nach dem Ausfall erneut vollstaendig gelesen:
+  - Datei hatte `2341` Zeilen.
+  - Gelesen in Abschnitten `1-780`, `781-1560`, `1561-2341`.
+- Git-Status nach Restart:
+  - `## main...origin/main`
+  - nur `BRIDGE.md` war geaendert, durch den Restart-Checkpoint.
+- `git log --oneline --decorate -5`:
+  - `6c57b4c2 (HEAD -> main, origin/main, origin/HEAD) docs: record git transport diagnostics`
+  - `daafad72 docs: prepare coinmarketcap submission`
+  - `4c96fdd5 docs: sync contributor buys and stealthx app tasks`
+  - `93a7913b docs: record final bridge sync`
+  - `eea5c0d0 docs: finalize StealthX IFR holder discount model`
+- Systemzeit:
+  - `Sun Jun 28 12:26:01 EEST 2026`.
+  - `systemsetup -getusingnetworktime` konnte ohne Admin-Rechte nicht gelesen werden.
+- Git HTTPS Transport:
+  - `git ls-remote --heads origin main` antwortet wieder sofort.
+  - Remote `main`: `6c57b4c24df6388b84ccd34814fc92e8ff77856c`.
+  - `git fetch origin` funktioniert wieder normal.
+- `git diff --check` ist sauber.
+
+**Read-only Rechecks**
+
+- Contributor Monitor:
+  - Command: `node scripts/check-contributors-execution.js`
+  - Network: Ethereum Mainnet / homestead
+  - Block: `25412257`
+  - Pool: `0.143261656128757442` ETH / `21028676.626442057` IFR
+  - LendingVault: `totalAvailable=0`, `totalLent=0`, Rate `200` bps/month
+- C1:
+  - ETH `0.000813371861694519`
+  - IFR `36735135.849220732`
+  - Buy detected `true`
+  - Locked `0`
+  - Offer `false`
+  - Next: `top up ETH for lock/lending gas`
+- C2:
+  - ETH `0.006003060054329544`
+  - IFR `40313881.905691312`
+  - Buy detected `true`
+  - Locked `0`
+  - Offer `false`
+  - Next: `run LOCK_BPS=5000 lock`
+- C3:
+  - ETH `0.004874255577385839`
+  - IFR `38050900.069727987`
+  - Buy detected `true`
+  - Locked `0`
+  - Offer `false`
+  - Next: `top up ETH for lock/lending gas`
+
+**External Watch**
+
+- Uniswap Default Token List Issue #2509:
+  - State: `open`
+  - Title: `Add IFR: Inferno`
+  - Updated: `2026-06-18T15:28:12Z`
+  - Comments: `2`
+  - Labels/assignees: none.
+- `https://ifrunit.tech/token-list.json` returns the expected IFR token list:
+  - symbol `IFR`
+  - address `0x77e99917Eca8539c62F509ED1193ac36580A6e7B`
+  - decimals `9`
+  - logo `https://ifrunit.tech/assets/ifr_icon_256.png`
+  - pair `0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0`.
+- Etherscan token page still reports:
+  - `Token Rep: Unknown`
+  - `Holders: 17`
+  - MetaMask Registry remains deferred until reputation is at least `Neutral`/`OK`.
+
+**C2 Lock Dry-run**
+
+- Command:
+  - `CONTRIBUTOR_ADDR=0x80fF32c5441cBCbFa5c3ce0dC70359BDD05B6958 LOCK_BPS=5000 DRY_RUN=true node scripts/contributors-lock.js`
+- Result:
+  - no transactions sent.
+  - Contributor: `0x80fF32c5441cBCbFa5c3ce0dC70359BDD05B6958`
+  - Current IFR balance: `40313881.905691312`
+  - Current locked balance: `0`
+  - Current CommitmentVault allowance: `0`
+  - Total lock amount: `20156940.952845656` IFR
+  - Tranches: `10`
+  - Tranche 1-9: `2015694.095284565` IFR
+  - Tranche 10: `2015694.095284571` IFR
+  - cType: `TIME_ONLY (0)`
+  - unlockTime: `1785230798` / `2026-07-28T09:26:38.000Z`
+  - First required TX is IFR `approve(CommitmentVault, 20156940.952845656 IFR)`, then 10 `lock(...)` TXs.
+
+**Aktueller Stand / Naechste Schritte**
+
+1. Diesen Bridge-Recovery-Eintrag committen und normal pushen, da Git HTTPS wieder funktioniert.
+2. C2 kann mit Signer live ausfuehren:
+   - `CONTRIBUTOR_ADDR=0x80fF32c5441cBCbFa5c3ce0dC70359BDD05B6958 PRIVATE_KEY=0x... DRY_RUN=false MAINNET=true LOCK_BPS=5000 node scripts/contributors-lock.js`
+3. C1 und C3 vor Lock/Lending weiter mit ETH fuer Gas auffuellen.
+4. Nach jedem 50%-Lock erneut Monitor ausfuehren und fuer den freien Rest Lending mit `LENDING_BPS=10000` vorbereiten.
+5. CoinMarketCap bleibt Human-Account-Action ueber `docs/COINMARKETCAP_SUBMISSION.md`.
