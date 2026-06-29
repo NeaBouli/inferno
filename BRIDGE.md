@@ -3169,3 +3169,26 @@ index acf5e72f..680ed772 100644
 
 - `docs/TODO.md`
 - `docs/TODO.html`
+
+---
+
+## 2026-06-29 [CODEX]
+### TYPE: LANDING / TOKENOMICS COPY
+### STATUS: DONE — Protocol locked unlock paths added
+
+**Geaendert**
+
+- `docs/index.html`
+  - Unter dem Landing-Bereich `Every Transfer Burns IFR Permanently` eine kurze Box `Protocol Locked Unlock Paths` ergaenzt.
+  - Kurzform erklaert:
+    - LP Reserve Safe: multisig governed, no automatic unlock.
+    - Liquidity Reserve: locked until 01.09.2026, then staged LP use.
+    - Team Vesting: cliff until ~03.2027, then 36-month linear release.
+    - Builder Vault: released only via partner milestones and rewards.
+
+**Verifikation**
+
+- Inline JS syntax check ok.
+- Browser-Check lokal mit Chrome:
+  - Desktop: Box sitzt unter Burn-Beispiel in der linken Tokenomics-Spalte.
+  - Mobile: Box bricht einspaltig ohne neuen Overflow um.
