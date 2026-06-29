@@ -300,6 +300,7 @@ On errors: fix immediately, commit with `seo:` prefix.
       C1/C3 lending follows after their lock/gas steps.
 
 - [ ] 🟠 CommitmentVault Batch Lock UX verbessern
+      Status 29.06.2026: bewusst auf Backlog gesetzt; aktueller Self-service Flow bleibt 1x approve + 10x lock fuer 10 Tranchen.
       Ziel: 10-Tranchen-Split nicht mehr als 10 separate `lock()` Wallet-Confirmations.
       Aktuell: 1x approve + N x lock(amount, cType, unlockTime, p0Multiplier).
       Vorschlag: native Vault-Erweiterung `lockBatch(...)` / `lockSplit(totalAmount, splitCount, ...)`.
