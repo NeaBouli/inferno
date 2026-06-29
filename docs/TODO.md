@@ -296,7 +296,8 @@ On errors: fix immediately, commit with `seo:` prefix.
       Nach 50% Lock den verbleibenden Rest mit LENDING_BPS=10000 anbieten.
       DRY_RUN: CONTRIBUTOR_ADDR=0x... LENDING_BPS=10000 DRY_RUN=true node scripts/contributors-lending-offer.js ✅
       LIVE:    CONTRIBUTOR_ADDR=0x... PRIVATE_KEY=0x... DRY_RUN=false MAINNET=true LENDING_BPS=10000 node scripts/contributors-lending-offer.js
-      Status 29.06.2026: no offers yet; C2 needs small ETH top-up before remaining free IFR can be offered.
+      Status 29.06.2026: Self-service UI built in `docs/wiki/lending-vault.html#lending-widget`.
+      C2 still needs small ETH top-up before remaining free IFR can be offered.
 
 - [ ] 🟠 CommitmentVault Batch Lock UX verbessern
       Ziel: 10-Tranchen-Split nicht mehr als 10 separate `lock()` Wallet-Confirmations.
