@@ -2502,3 +2502,106 @@ index acf5e72f..680ed772 100644
 - Nach Live-Ausfuehrung:
   - `node scripts/check-contributors-execution.js`
   - danach fuer den freien Rest C2 Lending mit `LENDING_BPS=10000` vorbereiten.
+
+---
+
+## 2026-06-29 [CODEX]
+### TYPE: FEATURE / UI
+### STATUS: DONE — CommitmentVault self-service MetaMask lock flow
+
+**Datum:** 2026-06-29 EEST
+**Autor:** CODEX
+
+**Gio Klarstellung**
+
+- Contributor sollen nicht ihre Private Keys an Codex/Terminal geben.
+- C2 und alle kuenftigen User sollen selbst mit MetaMask/Wallet locken koennen.
+- Der bestehende Plattformbereich sollte genutzt werden, wenn er schon existiert.
+
+**Befund**
+
+- `docs/wiki/commitment-vault.html` enthielt bereits den Bereich `Lock Your IFR`.
+- Der UI-Teil war vorhanden:
+  - Wallet Connect
+  - IFR Balance
+  - Amount / Condition / Unlock Date
+  - Preview
+  - `Lock IFR` Button
+- Die eigentliche Transaktionslogik war noch ein TODO:
+  - `// TODO: implement actual lock transaction after deploy`
+- `docs/wizard/lock.html` war nur eine statische Zwischen-Seite.
+- Landing-Wizard `What brings you here today?` verlinkte Lock-Tier-Optionen noch auf die statische Wizard-Seite.
+
+**Geaendert wurde**
+
+- `docs/wiki/commitment-vault.html`
+  - Echter MetaMask-/ethers.js-Flow fuer CommitmentVault eingebaut.
+  - Direkter injected-wallet Pfad bevorzugt, damit Desktop MetaMask und MetaMask Mobile/WebView den Lock selbst signieren koennen.
+  - Mainnet-Check / `wallet_switchEthereumChain`.
+  - `balanceOf`, `allowance`, `lockedBalance`, `getTrancheCount`, `getTranches` reads.
+  - `approve(CommitmentVault, amount)` automatisch nur wenn Allowance nicht reicht.
+  - Danach `lock(amount, cType, unlockTime, p0Multiplier)`.
+  - Optionaler Split in `10` gleiche Tranches, empfohlen fuer Contributors.
+  - `Use 50%` Quick Action setzt 50% der Balance und aktiviert 10-Tranchen-Split.
+  - `Use max` Quick Action.
+  - Tranche-Dashboard liest bestehende Tranches.
+  - Unlock-Button wird fuer unlockbare Tranches gerendert und ruft `unlock(wallet, trancheId)` auf.
+  - Statusmeldungen mit lesbaren Farben fuer Info/Warn/Error/Success.
+- `docs/index.html`
+  - Landing-Wizard unter `What brings you here today?` angepasst:
+    - `Lock IFR in CommitmentVault`
+    - Step 2 fuehrt direkt zum Live Lock Dashboard `wiki/commitment-vault.html#lock-widget`.
+    - Optionen fuer Dashboard, 50%-/10-Tranchen-Lock, Single time-based lock und Docs.
+- `docs/wizard/lock.html`
+  - Primaerer CTA fuehrt jetzt direkt zu `wiki/commitment-vault.html#lock-widget`.
+  - Alte reine Info-Links bleiben nachrangig.
+
+**QA / Verification**
+
+- Statische Checks:
+  - `git diff --check` sauber.
+  - CommitmentVault Widget Inline-JS mit `new Function(...)` geparst: sauber.
+- Lokaler Server:
+  - `python3 -m http.server 4182 --bind 127.0.0.1` aus `docs/`.
+- Browser Plugin:
+  - In-App Browser war in dieser Sitzung nicht verfuegbar (`iab` unavailable).
+  - Fallback: Playwright mit lokal installiertem Google Chrome.
+- Playwright Desktop:
+  - Landing `#wizard` zeigt nach Klick auf Lock:
+    - `Open Lock Dashboard`
+    - `Lock 50% in 10 tranches`
+    - `Single time-based lock`
+    - `Read how locking works`.
+  - CommitmentVault Widget mit mock MetaMask C2-Adresse:
+    - Wallet connected: `0x80fF...6958`.
+    - IFR Balance angezeigt: `40,313,881.906 IFR`.
+    - `Use 50%` setzt Amount `20156940.952845656`.
+    - 10-Tranchen-Split aktiviert.
+    - Preview zeigt `Tranches: 10 equal parts`.
+    - Klick auf `Approve + Lock IFR` loest simuliert aus:
+      - `1`x ERC20 `approve`
+      - `10`x CommitmentVault `lock`
+      - Status: `Lock complete. Your CommitmentVault tranches are now on-chain.`
+- Playwright Mobile:
+  - Viewport `390x844`.
+  - `Lock Your IFR` und Connect-Widget rendern ohne horizontalen Overflow.
+
+**Screenshots**
+
+- `/tmp/inferno-lock-qa/landing-wizard-lock.png`
+- `/tmp/inferno-lock-qa/commitment-widget-configured.png`
+- `/tmp/inferno-lock-qa/commitment-widget-complete-fixed.png`
+- `/tmp/inferno-lock-qa/commitment-widget-mobile.png`
+
+**Wichtiger Hinweis**
+
+- QA hat keine echten Mainnet-Transaktionen gesendet.
+- Der Browser-Test hat die Wallet/RPC-Schicht gemockt und die exakte Transaktionssequenz validiert.
+- Live-Nutzung erfolgt durch User/Contributor selbst in MetaMask; Private Keys muessen nicht in `.env`, Terminal oder Chat.
+
+**Naechster operativer Schritt**
+
+- C2 kann jetzt `https://ifrunit.tech/wiki/commitment-vault.html#lock-widget` oeffnen, MetaMask verbinden, `Use 50%` waehlen, 10-Tranchen-Split aktiviert lassen und die MetaMask-Prompts bestaetigen.
+- Nach C2-Lock:
+  - `node scripts/check-contributors-execution.js`
+  - danach C2 Lending fuer den freien Rest mit `LENDING_BPS=10000` vorbereiten.

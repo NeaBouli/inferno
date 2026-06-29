@@ -1598,7 +1598,7 @@ var hist=[],cur="start";
 var S={
 start:{q:"What brings you here today?",sub:"Choose what fits you best:",s:1,t:2,o:[
 {i:"&#x1F4B0;",t:"Buy / Invest in IFR",d:"Bootstrap ENDED — buy IFR on Uniswap V2",n:"buy"},
-{i:"&#x1F512;",t:"Lock IFR for Premium Access",d:"Unlock features across all builder apps",n:"lock"},
+{i:"&#x1F512;",t:"Lock IFR in CommitmentVault",d:"Connect MetaMask, approve IFR, and lock on-chain",n:"lock"},
 {i:"&#x1F6E0;&#xFE0F;",t:"Build with IFR",d:"Integrate IFR access into your product",n:"build"},
 {i:"&#x1F4B8;",t:"Lend or Borrow IFR",d:"Earn yield or borrow against ETH collateral",n:"lend_choice"},
 {i:"&#x1F91D;",t:"Contribute / Community",d:"Write, build, vote or connect",n:"community"},
@@ -1608,11 +1608,11 @@ buy:{q:"Do you already have a crypto wallet?",sub:"This tells us where to start:
 {i:"&#x2705;",t:"Yes \u2014 I have MetaMask",d:"Buy IFR on Uniswap V2 \u2014 Bootstrap ENDED, LP is live",a:"https://app.uniswap.org/swap?outputCurrency=0x77e99917Eca8539c62F509ED1193ac36580A6e7B",h:1},
 {i:"&#x1F195;",t:"No \u2014 I am new to crypto",d:"We guide you from zero to IFR holder",a:"wizard/buy.html"}
 ]},
-lock:{q:"How much IFR do you want to lock?",sub:"More IFR = more features unlocked:",s:2,t:2,o:[
-{i:"&#x1F949;",t:"500+ IFR \u2014 Basic",d:"Basic features across all apps",a:"wizard/lock.html"},
-{i:"&#x2B50;",t:"2,000+ IFR \u2014 Premium",d:"Premium + AI Copilot access",a:"wizard/lock.html",h:1},
-{i:"&#x1F3C6;",t:"10,000+ IFR \u2014 Pro",d:"All features + priority access",a:"wizard/lock.html"},
-{i:"&#x1F48E;",t:"Long-term commitment",d:"CommitmentVault \u2014 price-triggered unlock",a:"wiki/commitment-vault.html"}
+lock:{q:"How do you want to lock IFR?",sub:"Open the live CommitmentVault dashboard and sign with your own wallet:",s:2,t:2,o:[
+{i:"&#x1F512;",t:"Open Lock Dashboard",d:"MetaMask flow: approve IFR, then lock in CommitmentVault",a:"wiki/commitment-vault.html#lock-widget",h:1},
+{i:"&#x2696;&#xFE0F;",t:"Lock 50% in 10 tranches",d:"Contributor-friendly split, with the rest available for LendingVault",a:"wiki/commitment-vault.html#lock-widget"},
+{i:"&#x23F1;&#xFE0F;",t:"Single time-based lock",d:"Choose amount and unlock date in one transaction after approval",a:"wiki/commitment-vault.html#lock-widget"},
+{i:"&#x1F4D6;",t:"Read how locking works",d:"CommitmentVault rules, conditions, and safety guarantees",a:"wiki/commitment-vault.html"}
 ]},
 build:{q:"What do you want to build?",sub:"We tailor the guide to your use case:",s:2,t:2,o:[
 {i:"&#x26A1;",t:"Quick integration (<60 min)",d:"Use the Integration Builder \u2014 get code now",a:"builder.html",h:1},

@@ -1012,7 +1012,7 @@
           <div style="display:flex;gap:20px;flex-wrap:wrap;">
             <div><span style="color:var(--muted);font-size:0.8rem;">Wallet</span><br><strong id="cv-address" style="font-family:monospace;">—</strong></div>
             <div><span style="color:var(--muted);font-size:0.8rem;">IFR Balance</span><br><strong id="cv-balance" style="color:var(--accent);">—</strong></div>
-            <div><span style="color:var(--muted);font-size:0.8rem;">Locked (IFRLock)</span><br><strong id="cv-locked" style="color:#eab308;">—</strong></div>
+            <div><span style="color:var(--muted);font-size:0.8rem;">Locked (CommitmentVault)</span><br><strong id="cv-locked" style="color:#eab308;">—</strong></div>
           </div>
         </div>
       </div>
@@ -1023,8 +1023,12 @@
 
         <div class="cv-form-group">
           <label>Amount to Lock (IFR)</label>
-          <input type="number" id="cv-amount" placeholder="e.g. 10000000" min="1" step="1">
+          <input type="number" id="cv-amount" placeholder="e.g. 10000000" min="0.000000001" step="0.000000001">
           <div class="cv-hint">Available: <span id="cv-bal-hint">—</span></div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">
+            <button type="button" class="cv-btn" id="cv-half-btn" style="padding:7px 12px;font-size:0.78rem;background:#1f2937;">Use 50%</button>
+            <button type="button" class="cv-btn" id="cv-max-btn" style="padding:7px 12px;font-size:0.78rem;background:#1f2937;">Use max</button>
+          </div>
         </div>
 
         <div class="cv-form-group">
@@ -1059,12 +1063,22 @@
           <div class="cv-hint">P0 = 0.030 ETH / 200,000,000 IFR &mdash; set immutably via Proposal #16 (ETA 09.06.2026). CommitmentVault: <code style="font-size:10px;">0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3</code></div>
         </div>
 
+        <div class="cv-form-group" style="background:rgba(255,255,255,0.035);border:1px solid var(--border);border-radius:8px;padding:12px 14px;">
+          <label style="display:flex;align-items:flex-start;gap:10px;margin:0;cursor:pointer;">
+            <input type="checkbox" id="cv-split-tranches" style="width:auto;margin-top:3px;">
+            <span>
+              Split into 10 equal tranches
+              <span style="display:block;color:var(--muted);font-weight:400;font-size:0.78rem;line-height:1.45;margin-top:2px;">Recommended for contributors who lock 50% and keep the rest for LendingVault.</span>
+            </span>
+          </label>
+        </div>
+
         <div class="cv-preview" id="cv-preview">
           <strong style="font-size:0.82rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em;">Tranche Preview</strong>
           <div id="cv-preview-content" style="margin-top:8px;">Configure above to see preview</div>
         </div>
 
-        <button class="cv-btn" id="cv-lock-btn" disabled>Lock IFR</button>
+        <button class="cv-btn" id="cv-lock-btn" disabled>Approve + Lock IFR</button>
         <div id="cv-lock-status" class="cv-hidden cv-status-msg"></div>
       </div>
 
@@ -1206,15 +1220,18 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
 <!-- CommitmentVault Widget Logic -->
 <script>
 (function() {
-  // Contract addresses — update after Core Dev deploys
-  var CV_ADDR = "0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3"; // TODO: set after deploy
+  var CV_ADDR = "0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3";
   var IFR_TOKEN = "0x77e99917Eca8539c62F509ED1193ac36580A6e7B";
   var IFR_DECIMALS = 9;
+  var MAINNET_CHAIN_ID = 1;
+  var MAINNET_CHAIN_HEX = "0x1";
+  var MAX_TRANCHES = 50;
 
   var CV_ABI = [
     "function lock(uint256,uint8,uint256,uint256) external",
     "function getTranches(address) view returns (tuple(uint256 amount,uint8 cType,uint256 unlockTime,uint256 p0Multiplier,bool unlocked,uint256 conditionMetAt)[])",
     "function getTrancheCount(address) view returns (uint256)",
+    "function getTranche(address,uint256) view returns (tuple(uint256 amount,uint8 cType,uint256 unlockTime,uint256 p0Multiplier,bool unlocked,uint256 conditionMetAt))",
     "function isConditionMet(address,uint256) view returns (bool)",
     "function unlock(address,uint256) external",
     "function p0() view returns (uint256)",
@@ -1225,154 +1242,345 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
 
   var IFR_ABI = [
     "function balanceOf(address) view returns (uint256)",
+    "function allowance(address,address) view returns (uint256)",
     "function approve(address,uint256) external returns (bool)"
   ];
 
+  var cvProvider = null;
   var cvSigner = null;
   var cvAddress = null;
-  var cvBalance = null;
+  var cvBalance = ethers.BigNumber.from(0);
+  var cvAllowance = ethers.BigNumber.from(0);
+  var cvTrancheCount = ethers.BigNumber.from(0);
 
   var COND_NAMES = ["Time Only", "Price Only", "Time OR Price", "Time AND Price"];
 
-  // ── Connect ──────────────────────────────────────────
-  var connectBtn = document.getElementById("cv-connect-btn");
+  function el(id) { return document.getElementById(id); }
+  function shortAddr(addr) { return addr ? addr.slice(0, 6) + "..." + addr.slice(-4) : ""; }
+  function explorerTx(hash) {
+    return '<a href="https://etherscan.io/tx/' + hash + '" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline;">' + hash.slice(0, 10) + "..." + hash.slice(-6) + "</a>";
+  }
+  function formatIFR(value, maxDigits) {
+    var num = Number(ethers.utils.formatUnits(value || 0, IFR_DECIMALS));
+    return num.toLocaleString("en-US", { maximumFractionDigits: maxDigits == null ? 3 : maxDigits });
+  }
+  function inputFromBN(value) {
+    return ethers.utils.formatUnits(value, IFR_DECIMALS).replace(/\.?0+$/, "");
+  }
+  function setStatus(kind, message) {
+    var statusEl = el("cv-lock-status");
+    if (!statusEl) return;
+    statusEl.classList.remove("cv-hidden");
+    var styles = {
+      info: ["rgba(37,99,235,0.10)", "rgba(37,99,235,0.35)", "#1d4ed8"],
+      warn: ["rgba(217,119,6,0.12)", "rgba(217,119,6,0.35)", "#92400e"],
+      error: ["rgba(220,38,38,0.10)", "rgba(220,38,38,0.35)", "#991b1b"],
+      success: ["rgba(22,163,74,0.12)", "rgba(22,163,74,0.35)", "#166534"]
+    };
+    var s = styles[kind] || styles.info;
+    statusEl.style.background = s[0];
+    statusEl.style.border = "1px solid " + s[1];
+    statusEl.style.color = s[2];
+    statusEl.innerHTML = message;
+  }
+  async function ensureMainnet(provider) {
+    var net = await provider.getNetwork();
+    if (net.chainId === MAINNET_CHAIN_ID) return;
+    if (!window.ethereum || typeof window.ethereum.request !== "function") {
+      throw new Error("Please switch your wallet to Ethereum Mainnet.");
+    }
+    await window.ethereum.request({
+      method: "wallet_switchEthereumChain",
+      params: [{ chainId: MAINNET_CHAIN_HEX }]
+    });
+  }
+  function defaultUnlockDate() {
+    var d = new Date(Date.now() + 30 * 24 * 3600 * 1000);
+    return d.toISOString().slice(0, 10);
+  }
+
+  var unlockDateEl = el("cv-unlock-date");
+  if (unlockDateEl && !unlockDateEl.value) unlockDateEl.value = defaultUnlockDate();
+
+  // Connect wallet. Prefer injected MetaMask so mobile MetaMask can sign directly.
+  var connectBtn = el("cv-connect-btn");
   if (connectBtn) connectBtn.addEventListener("click", async function() {
     try {
-      if (typeof IFRWallet !== "undefined") {
-        await IFRWallet.connect();
-        cvAddress = IFRWallet.getAddress();
-        if (!cvAddress) return;
-        var p = new ethers.providers.Web3Provider(window.ethereum);
-        cvSigner = p.getSigner();
-      } else if (window.ethereum) {
+      if (typeof ethers === "undefined") throw new Error("ethers.js did not load. Please refresh.");
+      connectBtn.textContent = "Connecting...";
+      connectBtn.disabled = true;
+
+      if (window.ethereum && typeof window.ethereum.request === "function") {
         var accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
-        cvAddress = accounts[0];
-        var p2 = new ethers.providers.Web3Provider(window.ethereum);
-        cvSigner = p2.getSigner();
+        cvProvider = new ethers.providers.Web3Provider(window.ethereum, "any");
+        await ensureMainnet(cvProvider);
+        cvProvider = new ethers.providers.Web3Provider(window.ethereum, "any");
+        cvSigner = cvProvider.getSigner();
+        cvAddress = ethers.utils.getAddress(accounts[0]);
+      } else if (typeof IFRWallet !== "undefined") {
+        await IFRWallet.connect();
+        cvProvider = IFRWallet.getProvider();
+        await ensureMainnet(cvProvider);
+        cvSigner = IFRWallet.getSigner();
+        cvAddress = ethers.utils.getAddress(IFRWallet.getAddress());
       } else {
-        alert("Please install MetaMask"); return;
+        throw new Error("Please install MetaMask or use a wallet browser.");
       }
 
-      connectBtn.textContent = cvAddress.slice(0,6) + "..." + cvAddress.slice(-4);
+      connectBtn.textContent = shortAddr(cvAddress);
       connectBtn.disabled = true;
       connectBtn.style.opacity = "0.7";
 
-      document.getElementById("cv-wallet-info").classList.remove("cv-hidden");
-      document.getElementById("cv-address").textContent = cvAddress.slice(0,6) + "..." + cvAddress.slice(-4);
+      el("cv-wallet-info").classList.remove("cv-hidden");
+      el("cv-address").textContent = shortAddr(cvAddress);
 
-      await loadCVBalance();
-
-      document.getElementById("cv-config-section").classList.remove("cv-hidden");
-      document.getElementById("cv-dashboard-section").classList.remove("cv-hidden");
-      loadTranches();
+      await loadCVState();
+      el("cv-config-section").classList.remove("cv-hidden");
+      el("cv-dashboard-section").classList.remove("cv-hidden");
+      updatePreview();
+      await loadTranches();
     } catch(e) {
       console.error("CV connect:", e);
-      if (e.code === 4001) connectBtn.textContent = "Connect Wallet";
+      connectBtn.textContent = "Connect Wallet";
+      connectBtn.disabled = false;
+      if (e.code === 4001 || e.code === "ACTION_REJECTED") {
+        setStatus("warn", "Wallet connection was cancelled.");
+      } else {
+        setStatus("error", e.message || "Wallet connection failed.");
+      }
     }
   });
 
-  // ── Load Balance ─────────────────────────────────────
-  async function loadCVBalance() {
+  async function loadCVState() {
     try {
-      var provider = new ethers.providers.Web3Provider(window.ethereum);
-      var token = new ethers.Contract(IFR_TOKEN, IFR_ABI, provider);
-      var bal = await token.balanceOf(cvAddress);
-      cvBalance = bal;
-      var formatted = parseFloat(ethers.utils.formatUnits(bal, IFR_DECIMALS)).toLocaleString("en-US", { maximumFractionDigits: 0 });
-      document.getElementById("cv-balance").textContent = formatted + " IFR";
-      document.getElementById("cv-bal-hint").textContent = formatted + " IFR";
-
-      // Also show IFRLock balance via IFRState if available
-      if (typeof IFRState !== "undefined") {
-        var state = await IFRState.load(cvAddress);
-        if (state && state.lockedBalance) {
-          var lockedFmt = parseFloat(ethers.utils.formatUnits(state.lockedBalance, IFR_DECIMALS)).toLocaleString("en-US", { maximumFractionDigits: 0 });
-          document.getElementById("cv-locked").textContent = lockedFmt + " IFR";
-        } else {
-          document.getElementById("cv-locked").textContent = "0 IFR";
-        }
-      }
+      var token = new ethers.Contract(IFR_TOKEN, IFR_ABI, cvProvider);
+      var cv = new ethers.Contract(CV_ADDR, CV_ABI, cvProvider);
+      var values = await Promise.all([
+        token.balanceOf(cvAddress),
+        token.allowance(cvAddress, CV_ADDR),
+        cv.lockedBalance(cvAddress),
+        cv.getTrancheCount(cvAddress)
+      ]);
+      cvBalance = values[0];
+      cvAllowance = values[1];
+      cvTrancheCount = values[3];
+      el("cv-balance").textContent = formatIFR(cvBalance, 3) + " IFR";
+      el("cv-bal-hint").textContent = formatIFR(cvBalance, 3) + " IFR";
+      el("cv-locked").textContent = formatIFR(values[2], 3) + " IFR";
     } catch(e) {
-      document.getElementById("cv-balance").textContent = "Error";
+      console.error("CV state:", e);
+      el("cv-balance").textContent = "Error";
+      el("cv-bal-hint").textContent = "Error";
+      setStatus("error", "Could not read CommitmentVault state. Please refresh and try again.");
     }
   }
 
-  // ── Condition Type Toggle ────────────────────────────
-  var condSelect = document.getElementById("cv-condition-type");
+  function selectedPlan() {
+    var amountValue = (el("cv-amount").value || "").trim();
+    if (!amountValue || Number(amountValue) <= 0) throw new Error("Enter an IFR amount greater than 0.");
+    var totalAmount = ethers.utils.parseUnits(amountValue, IFR_DECIMALS);
+    if (totalAmount.lte(0)) throw new Error("Lock amount is too small.");
+    if (cvBalance.gt(0) && totalAmount.gt(cvBalance)) throw new Error("Amount exceeds your current IFR balance.");
+
+    var cType = parseInt(el("cv-condition-type").value, 10);
+    var needsTime = cType === 0 || cType === 2 || cType === 3;
+    var needsPrice = cType === 1 || cType === 2 || cType === 3;
+    var unlockTime = 0;
+    var p0Multiplier = 0;
+
+    if (needsTime) {
+      var date = el("cv-unlock-date").value;
+      if (!date) throw new Error("Choose an unlock date.");
+      unlockTime = Math.floor(new Date(date + "T00:00:00Z").getTime() / 1000);
+      if (!unlockTime || unlockTime <= Math.floor(Date.now() / 1000)) {
+        throw new Error("Unlock date must be in the future.");
+      }
+    }
+    if (needsPrice) {
+      p0Multiplier = parseInt(el("cv-multiplier").value, 10);
+      if (!p0Multiplier || p0Multiplier <= 0) throw new Error("Choose a valid P0 multiplier.");
+    }
+
+    var splitCount = el("cv-split-tranches").checked ? 10 : 1;
+    if (cvTrancheCount.add(splitCount).gt(MAX_TRANCHES)) {
+      throw new Error("This wallet would exceed the 50 tranche limit.");
+    }
+
+    var base = totalAmount.div(splitCount);
+    if (base.isZero()) throw new Error("Amount is too small for the selected tranche split.");
+    var amounts = [];
+    for (var i = 0; i < splitCount; i++) {
+      amounts.push(i === splitCount - 1 ? totalAmount.sub(base.mul(splitCount - 1)) : base);
+    }
+    return { totalAmount: totalAmount, amounts: amounts, cType: cType, unlockTime: unlockTime, p0Multiplier: p0Multiplier, splitCount: splitCount };
+  }
+
+  var condSelect = el("cv-condition-type");
   if (condSelect) condSelect.addEventListener("change", function() {
-    var v = parseInt(this.value);
-    var timeG = document.getElementById("cv-time-group");
-    var priceG = document.getElementById("cv-price-group");
-    // A=0:time, B=1:price, C=2:time|price, D=3:time&price
-    timeG.classList.toggle("cv-hidden", v === 1);
-    priceG.classList.toggle("cv-hidden", v === 0);
+    var v = parseInt(this.value, 10);
+    el("cv-time-group").classList.toggle("cv-hidden", v === 1);
+    el("cv-price-group").classList.toggle("cv-hidden", v === 0);
     updatePreview();
   });
 
-  // ── Update Preview ───────────────────────────────────
   function updatePreview() {
-    var amount = document.getElementById("cv-amount").value;
-    var cType = parseInt(document.getElementById("cv-condition-type").value);
-    var date = document.getElementById("cv-unlock-date").value;
-    var mult = parseInt(document.getElementById("cv-multiplier").value);
-    var el = document.getElementById("cv-preview-content");
-
-    if (!amount || amount <= 0) { el.innerHTML = "Enter an amount to see preview"; return; }
-
-    var html = "<strong>Amount:</strong> " + Number(amount).toLocaleString() + " IFR<br>";
-    html += "<strong>Condition:</strong> " + COND_NAMES[cType] + "<br>";
-
-    if (date && cType !== 1) {
-      html += "<strong>Unlock Date:</strong> " + date + "<br>";
+    var preview = el("cv-preview-content");
+    try {
+      var amount = (el("cv-amount").value || "").trim();
+      if (!amount || Number(amount) <= 0) {
+        preview.innerHTML = "Enter an amount to see preview";
+        el("cv-lock-btn").disabled = true;
+        return;
+      }
+      var cType = parseInt(el("cv-condition-type").value, 10);
+      var splitCount = el("cv-split-tranches").checked ? 10 : 1;
+      var html = "<strong>Amount:</strong> " + Number(amount).toLocaleString("en-US", { maximumFractionDigits: 9 }) + " IFR<br>";
+      html += "<strong>Condition:</strong> " + COND_NAMES[cType] + "<br>";
+      html += "<strong>Tranches:</strong> " + splitCount + (splitCount === 10 ? " equal parts" : " tranche") + "<br>";
+      if (cType !== 1 && el("cv-unlock-date").value) html += "<strong>Unlock Date:</strong> " + el("cv-unlock-date").value + "<br>";
+      if (cType >= 1) html += "<strong>Price Target:</strong> P0 &times; " + (parseInt(el("cv-multiplier").value, 10) / 100) + "<br>";
+      html += "<br><span style='color:var(--muted);font-size:0.82rem;'>MetaMask will ask for approval first if needed, then one lock signature per tranche.</span>";
+      preview.innerHTML = html;
+      el("cv-lock-btn").disabled = false;
+    } catch(e) {
+      preview.innerHTML = e.message;
+      el("cv-lock-btn").disabled = true;
     }
-    if (cType >= 1) {
-      html += "<strong>Price Target:</strong> P0 &times; " + (mult / 100) + "<br>";
-    }
-
-    html += "<br><span style='color:var(--muted);font-size:0.82rem;'>Once locked, tokens cannot be withdrawn until the condition is met. Auto-unlock 30 days after condition met.</span>";
-    el.innerHTML = html;
-
-    document.getElementById("cv-lock-btn").disabled = false;
   }
 
-  // ── Input Listeners ──────────────────────────────────
-  ["cv-amount","cv-unlock-date","cv-multiplier"].forEach(function(id) {
-    var el = document.getElementById(id);
-    if (el) { el.addEventListener("input", updatePreview); el.addEventListener("change", updatePreview); }
+  ["cv-amount","cv-unlock-date","cv-multiplier","cv-split-tranches"].forEach(function(id) {
+    var node = el(id);
+    if (node) { node.addEventListener("input", updatePreview); node.addEventListener("change", updatePreview); }
+  });
+  var halfBtn = el("cv-half-btn");
+  if (halfBtn) halfBtn.addEventListener("click", function() {
+    if (cvBalance.isZero()) return;
+    el("cv-amount").value = inputFromBN(cvBalance.div(2));
+    el("cv-split-tranches").checked = true;
+    updatePreview();
+  });
+  var maxBtn = el("cv-max-btn");
+  if (maxBtn) maxBtn.addEventListener("click", function() {
+    if (cvBalance.isZero()) return;
+    el("cv-amount").value = inputFromBN(cvBalance);
+    updatePreview();
   });
 
-  // ── Load Tranches ────────────────────────────────────
-  function loadTranches() {
-    var list = document.getElementById("cv-tranches-list");
-    if (CV_ADDR === "0x0000000000000000000000000000000000000000") {
-      list.innerHTML = '<div style="text-align:center;padding:20px;">' +
-        '<div style="color:#3b82f6;font-weight:600;margin-bottom:4px;">Contract Live on Mainnet</div>' +
-        '<div style="color:var(--muted);font-size:0.85rem;">Connect wallet and lock IFR to see your tranches here.</div>' +
-        '</div>';
-      return;
+  async function loadTranches() {
+    var list = el("cv-tranches-list");
+    if (!cvProvider || !cvAddress) return;
+    try {
+      list.innerHTML = "Loading tranches...";
+      var cv = new ethers.Contract(CV_ADDR, CV_ABI, cvProvider);
+      var tranches = await cv.getTranches(cvAddress);
+      if (!tranches.length) {
+        list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted);">No CommitmentVault tranches yet.</div>';
+        return;
+      }
+      var conditionChecks = await Promise.all(tranches.map(function(t, i) {
+        if (t.unlocked) return Promise.resolve(true);
+        return cv.isConditionMet(cvAddress, i).catch(function() { return false; });
+      }));
+      list.innerHTML = tranches.map(function(t, i) {
+        var unlockDate = t.unlockTime && !t.unlockTime.isZero()
+          ? new Date(t.unlockTime.toNumber() * 1000).toISOString().slice(0, 10)
+          : "Price based";
+        var conditionType = t.cType && t.cType.toNumber ? t.cType.toNumber() : Number(t.cType);
+        var multiplier = t.p0Multiplier && t.p0Multiplier.toNumber ? t.p0Multiplier.toNumber() : Number(t.p0Multiplier || 0);
+        var status = t.unlocked ? "Unlocked" : (conditionChecks[i] ? "Unlock ready" : "Locked");
+        var badgeClass = t.unlocked ? "cv-badge-unlocked" : "cv-badge-locked";
+        var unlockBtn = (!t.unlocked && conditionChecks[i])
+          ? '<button type="button" class="cv-btn" data-unlock-tranche="' + i + '" style="padding:7px 12px;font-size:0.78rem;margin-top:10px;">Unlock</button>'
+          : "";
+        return '<div class="cv-tranche-card">' +
+          '<div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap;">' +
+          '<div><strong>Tranche #' + i + '</strong><br><span style="color:var(--muted);">' + formatIFR(t.amount, 6) + ' IFR · ' + COND_NAMES[conditionType] + '</span></div>' +
+          '<span class="cv-badge ' + badgeClass + '">' + status + '</span>' +
+          '</div>' +
+          '<div style="margin-top:8px;color:var(--muted);">Unlock date: ' + unlockDate + (multiplier > 0 ? ' · P0 x ' + (multiplier / 100) : '') + '</div>' +
+          unlockBtn +
+          '</div>';
+      }).join("");
+    } catch(e) {
+      console.error("CV tranches:", e);
+      list.innerHTML = '<div style="color:#fca5a5;">Could not load tranches.</div>';
     }
-    // TODO: fetch from contract after deploy
-    // var provider = new ethers.providers.Web3Provider(window.ethereum);
-    // var cv = new ethers.Contract(CV_ADDR, CV_ABI, provider);
-    // var tranches = await cv.getTranches(cvAddress);
-    // render tranche cards...
   }
 
-  // ── Lock Button ──────────────────────────────────────
-  var lockBtn = document.getElementById("cv-lock-btn");
-  if (lockBtn) lockBtn.addEventListener("click", function() {
-    var statusEl = document.getElementById("cv-lock-status");
-    statusEl.classList.remove("cv-hidden");
+  el("cv-tranches-list").addEventListener("click", async function(event) {
+    var button = event.target.closest("[data-unlock-tranche]");
+    if (!button || !cvSigner || !cvAddress) return;
+    var trancheId = Number(button.getAttribute("data-unlock-tranche"));
+    try {
+      button.disabled = true;
+      button.textContent = "Confirm in wallet...";
+      var cv = new ethers.Contract(CV_ADDR, CV_ABI, cvSigner);
+      var tx = await cv.unlock(cvAddress, trancheId);
+      setStatus("info", "Unlock submitted: " + explorerTx(tx.hash) + "<br>Waiting for confirmation...");
+      await tx.wait();
+      setStatus("success", "Unlock confirmed: " + explorerTx(tx.hash));
+      await loadCVState();
+      await loadTranches();
+    } catch(e) {
+      console.error("CV unlock:", e);
+      button.disabled = false;
+      button.textContent = "Unlock";
+      if (e.code === 4001 || e.code === "ACTION_REJECTED") setStatus("warn", "Unlock was cancelled in wallet.");
+      else setStatus("error", e.reason || e.message || "Unlock failed.");
+    }
+  });
 
-    if (CV_ADDR === "0x0000000000000000000000000000000000000000") {
-      statusEl.style.background = "rgba(59,130,246,0.1)";
-      statusEl.style.border = "1px solid rgba(59,130,246,0.3)";
-      statusEl.style.color = "#93c5fd";
-      statusEl.innerHTML = "<strong>CommitmentVault deployed — feeExempt active.</strong><br>feeExempt is active. Bootstrap FINALIZED 05.06.2026 &mdash; Locking available after Proposal #16 setP0 (ETA 09.06.2026, IMMUTABLE).";
+  var lockBtn = el("cv-lock-btn");
+  if (lockBtn) lockBtn.addEventListener("click", async function() {
+    if (!cvSigner || !cvAddress) {
+      setStatus("warn", "Connect your wallet first.");
       return;
     }
-    // TODO: implement actual lock transaction after deploy
+    var plan;
+    try {
+      await ensureMainnet(cvProvider);
+      plan = selectedPlan();
+    } catch(e) {
+      setStatus("error", e.message || "Invalid lock configuration.");
+      return;
+    }
+
+    lockBtn.disabled = true;
+    try {
+      var token = new ethers.Contract(IFR_TOKEN, IFR_ABI, cvSigner);
+      var cv = new ethers.Contract(CV_ADDR, CV_ABI, cvSigner);
+      var currentAllowance = await token.allowance(cvAddress, CV_ADDR);
+      if (currentAllowance.lt(plan.totalAmount)) {
+        setStatus("info", "Step 1 of " + (plan.splitCount + 1) + ": confirm IFR approval in your wallet.");
+        var approveTx = await token.approve(CV_ADDR, plan.totalAmount);
+        setStatus("info", "Approval submitted: " + explorerTx(approveTx.hash) + "<br>Waiting for confirmation...");
+        await approveTx.wait();
+      }
+
+      for (var i = 0; i < plan.amounts.length; i++) {
+        setStatus("info", "Lock tranche " + (i + 1) + " of " + plan.amounts.length + ": confirm in your wallet.");
+        var lockTx = await cv.lock(plan.amounts[i], plan.cType, plan.unlockTime, plan.p0Multiplier);
+        setStatus("info", "Lock submitted: " + explorerTx(lockTx.hash) + "<br>Waiting for confirmation...");
+        await lockTx.wait();
+      }
+
+      setStatus("success", "Lock complete. Your CommitmentVault tranches are now on-chain.");
+      await loadCVState();
+      await loadTranches();
+      updatePreview();
+    } catch(e) {
+      console.error("CV lock:", e);
+      if (e.code === 4001 || e.code === "ACTION_REJECTED") setStatus("warn", "Transaction was cancelled in wallet.");
+      else setStatus("error", e.reason || e.message || "Lock transaction failed.");
+    } finally {
+      lockBtn.disabled = false;
+    }
   });
+
+  if (window.ethereum && typeof window.ethereum.on === "function") {
+    window.ethereum.on("accountsChanged", function() { window.location.reload(); });
+    window.ethereum.on("chainChanged", function() { window.location.reload(); });
+  }
 })();
 </script>
 </body>
