@@ -3193,3 +3193,38 @@ index acf5e72f..680ed772 100644
 - Browser-Check lokal mit Chrome:
   - Desktop: eigene Kachel sitzt unter Burn-Beispiel in der linken Tokenomics-Spalte.
   - Mobile: Box bricht einspaltig ohne neuen Overflow um.
+
+---
+
+## 2026-06-29 [CODEX]
+### TYPE: LANDING / WALLET POPUP
+### STATUS: DONE — Premium IFRLock embedded in wallet mask
+
+**Problem**
+
+- Der Wallet-Popup-Link `Lock >=1,000 IFR -> Lock now` fuehrte zur `CommitmentVault`-Maske.
+- Das war fuer einfachen Premium-/Access-Lock falsch, weil Premium ueber `IFRLock` geprueft wird.
+
+**Geaendert**
+
+- `docs/index.html`
+  - Wallet-Popup zeigt jetzt zwei getrennte Optionen:
+    - `Premium Access`: eingebetteter Button `Lock 1,000 IFR for Premium` gegen `IFRLock`.
+    - `CommitmentVault Lock`: separater Link zur Advanced-/CommitmentVault-Maske.
+  - Neue Funktion `lpLockPremium()`:
+    - nutzt denselben `IFRWallet` Main Connector.
+    - liest `IFRLock.lockedBalance(wallet)`.
+    - berechnet fehlenden Betrag bis `1,000 IFR`.
+    - macht bei Bedarf `InfernoToken.approve(IFRLock, missing)`.
+    - ruft danach `IFRLock.lock(missing)` auf.
+    - aktualisiert `IFRState` und Header-Popup nach Abschluss.
+  - `Add IFR` toleriert jetzt beide Wallet-Core APIs: `addIFRToken()` und Legacy `addToken()`.
+
+**Verifikation**
+
+- Inline JS syntax check ok.
+- Browser-Mock-Test ohne echte Mainnet-Transaktion:
+  - Popup zeigt `Premium Access` + `CommitmentVault Lock`.
+  - `Premium Access` sendet `approve(address,uint256)` an IFR Token.
+  - Danach sendet es `lock(uint256)` an `IFRLock` `0x769928aBDfc949D0718d8766a1C2d7dBb63954Eb`.
+  - Keine Transaktion an `CommitmentVault`.
