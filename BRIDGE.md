@@ -3314,3 +3314,91 @@ index acf5e72f..680ed772 100644
 - X Support/Premium Support Ticket fuer falsche `$IFR` Cashtag-Zuordnung.
 - X pinned clarification post.
 - Uniswap icon / CoinGecko metadata propagation beobachten.
+
+---
+
+## 2026-06-30 [CODEX]
+### TYPE: SOCIAL / X AUTOMATION
+### STATUS: INFO — X bot posting possible, credentials required
+
+**Frage**
+
+- Kann wie bei Telegram auch auf dem X Kanal automatisiert/bot-basiert gepostet werden?
+
+**Antwort**
+
+- Ja, technisch moeglich ueber die offizielle X API.
+- Relevanter API-Endpunkt:
+  - `POST /2/tweets` bzw. X API `Create Post`.
+- Im Gegensatz zu Telegram ist X API Posting nicht einfach frei:
+  - X Developer Account erforderlich.
+  - X App erforderlich.
+  - API-Zugriff/Tier/Pricing beachten.
+  - User-Auth fuer den offiziellen Account `@IFRtoken` erforderlich.
+  - Posts mit Links koennen je nach X API Pricing/Tier relevant sein.
+
+**Benoetigt**
+
+- X Developer Account mit App.
+- App Permissions:
+  - Read and Write.
+  - OAuth 2.0 User Context oder OAuth 1.0a User Context.
+- Credentials/Secrets:
+  - Client ID / Client Secret oder API Key / API Secret.
+  - Access Token / Refresh Token fuer `@IFRtoken`.
+- Sichere Ablage:
+  - Nicht ins Repo committen.
+  - Lokale `.env` / Server env / Secret Manager.
+
+**Empfohlene Umsetzung**
+
+- Neues Script/Tool gebaut:
+  - `scripts/post-x.js`
+  - Input: Markdown/Textdatei.
+  - Thread-Split ueber einzelne Zeile `---tweet---`.
+  - 280-Zeichen-Check pro Post.
+  - `X_DRY_RUN=true` zeigt Post-Text und Payload ohne API Call.
+  - `X_DRY_RUN=false` sendet live an X.
+  - Live-Posting braucht zusaetzlich `X_ALLOW_LIVE=true`.
+  - Nach Erfolg werden Post-IDs und `https://x.com/IFRtoken/status/...` URLs ausgegeben.
+  - Optional `X_REPLY_TO_ID`, um als Reply zu posten.
+  - Optional OAuth2 Refresh via `X_REFRESH_TOKEN`, `X_CLIENT_ID`, `X_CLIENT_SECRET`.
+- Beispiel-Flow:
+  - `X_DRY_RUN=true node scripts/post-x.js docs/social/x-post.md`
+  - `X_DRY_RUN=false X_ALLOW_LIVE=true X_ACCESS_TOKEN=... node scripts/post-x.js docs/social/x-post.md`
+
+**Gebaut**
+
+- `scripts/post-x.js`
+- `docs/social/README_X_AUTOMATION.md`
+- `docs/social/x.env.example`
+- `docs/social/x-geckoterminal-thread.md`
+- `docs/social/x-clarification-post.md`
+- `docs/social/x-cashtag-support-ticket.md`
+- `package.json`
+  - `npm run post:x:dry`
+  - `npm run post:x -- docs/social/x-geckoterminal-thread.md`
+
+**Wichtig fuer IFR**
+
+- Wegen falscher X `$IFR` Cashtag-Zuordnung neue X Posts moeglichst eindeutig schreiben:
+  - `Inferno IFR on Ethereum`
+  - Contract: `0x77e99917Eca8539c62F509ED1193ac36580A6e7B`
+  - GeckoTerminal Pool-Link
+  - Official Website `https://ifrunit.tech`
+- `$IFR` nicht allein als erste Zeile verwenden, solange X den Cashtag falsch mapped.
+
+**Open**
+
+- X Developer App anlegen bzw. bestehende App-Zugaenge bereitstellen.
+- Credentials sicher als Env konfigurieren.
+- Danach Live-Test mit:
+  - `X_DRY_RUN=false X_ALLOW_LIVE=true X_ACCESS_TOKEN=... node scripts/post-x.js docs/social/x-clarification-post.md`
+
+**Verifikation**
+
+- `node --check scripts/post-x.js` OK.
+- `npm run post:x:dry` OK:
+  - `x-geckoterminal-thread.md` erzeugt 3 Posts: 232 / 163 / 266 Zeichen.
+- `X_DRY_RUN=true node scripts/post-x.js docs/social/x-clarification-post.md` OK:
+  - 2 Posts: 248 / 188 Zeichen.
