@@ -3174,12 +3174,13 @@ index acf5e72f..680ed772 100644
 
 ## 2026-06-29 [CODEX]
 ### TYPE: LANDING / TOKENOMICS COPY
-### STATUS: DONE — Protocol locked unlock paths added
+### STATUS: UPDATED — Protocol locked unlock paths as separate card
 
 **Geaendert**
 
 - `docs/index.html`
-  - Unter dem Landing-Bereich `Every Transfer Burns IFR Permanently` eine kurze Box `Protocol Locked Unlock Paths` ergaenzt.
+  - Unter dem Landing-Bereich `Every Transfer Burns IFR Permanently` eine separate Kachel `Protocol Locked Unlock Paths` ergaenzt.
+  - Wichtig: gleiche Tokenomics-Spalte, aber nicht innerhalb derselben Burn-Kachel.
   - Kurzform erklaert:
     - LP Reserve Safe: multisig governed, no automatic unlock.
     - Liquidity Reserve: locked until 01.09.2026, then staged LP use.
@@ -3190,5 +3191,5 @@ index acf5e72f..680ed772 100644
 
 - Inline JS syntax check ok.
 - Browser-Check lokal mit Chrome:
-  - Desktop: Box sitzt unter Burn-Beispiel in der linken Tokenomics-Spalte.
+  - Desktop: eigene Kachel sitzt unter Burn-Beispiel in der linken Tokenomics-Spalte.
   - Mobile: Box bricht einspaltig ohne neuen Overflow um.
