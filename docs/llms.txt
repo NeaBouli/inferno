@@ -49,7 +49,7 @@ Inferno ($IFR) is a deflationary ERC-20 utility token deployed on Ethereum Mainn
 ## Phase 3 Contracts (deployed April 2026)
 
 - CommitmentVault: 0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3 — Live self-service wallet locking with 4 unlock conditions (time, price, time+price, time OR price). C2 first 50% lock verified on-chain on June 29, 2026. 45 tests.
-- LendingVault: 0x974305Ab0EC905172e697271C3d7d385194EB9DF — Live self-service lender offer flow. Lenders connect MetaMask, approve IFR if needed, then createOffer(amount). Approval alone is not an offer. Borrow transactions require active offers and ifrPriceWei for ETH collateral calculation. 55 tests.
+- LendingVault: 0x974305Ab0EC905172e697271C3d7d385194EB9DF — Live guided self-service lender offer flow. Lenders follow 1-5 steps: connect MetaMask, choose amount, approve IFR if needed, createOffer(amount), verify live market status. Approval alone is not an offer. C2 has an active offer for 20,156,940.952845656 IFR. Borrow transactions require active offers and ifrPriceWei for ETH collateral calculation. 55 tests.
 - BuybackController — Planned. Automated fee distribution from FeeRouterV1 to BuybackVault + BurnReserve.
 
 ## Phase 3 Wiki Pages

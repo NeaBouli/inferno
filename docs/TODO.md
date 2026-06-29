@@ -291,13 +291,13 @@ On errors: fix immediately, commit with `seo:` prefix.
       - C2 ✅ locked 20,156,940.952845656 IFR in 10 TIME_ONLY tranches via self-service MetaMask UI
       - C1/C3 ⏳ gas top-up, then 50% lock
 
-- [ ] 🔴 LendingVault createOffer() ausführen
+- [x] ✅ C2 LendingVault createOffer() ausgeführt
       Script: scripts/contributors-lending-offer.js
       Nach 50% Lock den verbleibenden Rest mit LENDING_BPS=10000 anbieten.
       DRY_RUN: CONTRIBUTOR_ADDR=0x... LENDING_BPS=10000 DRY_RUN=true node scripts/contributors-lending-offer.js ✅
       LIVE:    CONTRIBUTOR_ADDR=0x... PRIVATE_KEY=0x... DRY_RUN=false MAINNET=true LENDING_BPS=10000 node scripts/contributors-lending-offer.js
-      Status 29.06.2026: Self-service UI built in `docs/wiki/lending-vault.html#lending-widget`.
-      C2 still needs small ETH top-up before remaining free IFR can be offered.
+      Status 29.06.2026: C2 active offer on-chain: 20,156,940.952845656 IFR available, 0 IFR lent.
+      C1/C3 lending follows after their lock/gas steps.
 
 - [ ] 🟠 CommitmentVault Batch Lock UX verbessern
       Ziel: 10-Tranchen-Split nicht mehr als 10 separate `lock()` Wallet-Confirmations.
@@ -399,9 +399,9 @@ On errors: fix immediately, commit with `seo:` prefix.
       Preview, lock button, my-tranches dashboard
       "Coming Soon" until contract deployed
       ACTIVATE: set CV_ADDR after Core Dev deploy
-- [x] ✅ LendingVault UI built + activated (04.04.2026, live flow updated 29.06.2026)
+- [x] ✅ LendingVault UI built + activated (04.04.2026, guided live flow updated 29.06.2026)
       3 tabs: Lender / Borrower / Market Overview
-      Lender self-service uses MetaMask: approve IFR if needed, then createOffer(amount) or increaseOffer(amount)
+      Guided Lender self-service uses MetaMask: connect, choose amount, approve IFR if needed, createOffer(amount) or increaseOffer(amount), verify live market state
       Borrower tab shows live offers and disables borrow while ifrPriceWei is not set
       Loan preview calculator (interest + collateral), interest rate curve table
 - [x] ✅ P2P Lending Market page built + live on-chain reads (04.04.2026, updated 29.06.2026)
@@ -838,7 +838,7 @@ Strategic goal: "IFR = Stripe for Web3 Access — Web3 SaaS Standard"
 > Prerequisite: Bootstrap finalise() + LP live
 
 - [x] ✅ Lender Interface
-      Create offer (deposit IFR) and increase existing offer via MetaMask
+      Guided 1-5 flow: connect, amount, approval, create/increase offer, live market verification
       WalletConnect/Header connector reused; approval-only state is detected and prompts Create Offer
 - [ ] 🔵 Borrower Interface
       Browse offers is wired; take loan (ETH collateral), manage loans, repay remain pending
