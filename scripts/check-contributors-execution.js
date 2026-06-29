@@ -148,11 +148,17 @@ async function main() {
       offer = await lending.offers(offerIndex);
     }
 
+    const accountedIfr = ifr
+      .add(locked)
+      .add(offer ? offer.availableIFR : 0)
+      .add(offer ? offer.lentIFR : 0);
+
     rows.push({
       name: `C${i + 1}`,
       address,
       eth,
       ifr,
+      accountedIfr,
       claimed,
       locked,
       tranches,
@@ -160,7 +166,7 @@ async function main() {
       lendingAllowance,
       hasOffer,
       offer,
-      buyDetected: ifr.gt(CLAIM_BALANCE),
+      buyDetected: accountedIfr.gt(CLAIM_BALANCE),
     });
   }
 
@@ -187,6 +193,7 @@ async function main() {
     console.log(`${row.name} ${short(row.address)} ${row.address}`);
     console.log(`  ETH: ${fmtEth(row.eth)}`);
     console.log(`  IFR: ${fmtIFR(row.ifr)}`);
+    console.log(`  Accounted IFR: ${fmtIFR(row.accountedIfr)}`);
     console.log(`  Claimed: ${row.claimed}`);
     console.log(`  Buy detected: ${row.buyDetected}`);
     console.log(`  Locked: ${fmtIFR(row.locked)} IFR`);

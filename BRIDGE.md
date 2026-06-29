@@ -2673,3 +2673,79 @@ index acf5e72f..680ed772 100644
 
 - QA hat weiterhin keine echten Mainnet-Transaktionen gesendet.
 - C2 nutzt nach Deploy denselben normalen Wallet-Button/Connector und bestaetigt die Transaktionen selbst in MetaMask.
+
+---
+
+## 2026-06-29 [CODEX]
+### TYPE: STATUS / ON-CHAIN
+### STATUS: DONE — C2 CommitmentVault lock verified
+
+**Datum:** 2026-06-29 EEST
+**Autor:** CODEX
+
+**Gio Meldung**
+
+- C2 hat im neuen CommitmentVault UI alle MetaMask-Prompts bestaetigt.
+- UI zeigte:
+  - `Lock complete. Your CommitmentVault tranches are now on-chain.`
+
+**On-chain Verification**
+
+- Command:
+  - `node scripts/check-contributors-execution.js`
+- Network: Ethereum Mainnet / homestead
+- Block: `25418893` / Re-run `25418896`
+- C2 `0x80fF32c5441cBCbFa5c3ce0dC70359BDD05B6958`:
+  - ETH: `0.003339556916621219`
+  - Free IFR: `20156940.952845656`
+  - Locked IFR: `20156940.952845656`
+  - Accounted IFR after monitor fix: `40313881.905691312`
+  - Tranches: `10`
+  - Buy detected: `true`
+  - Lending offer: `false`
+  - Next: `top up ETH for lending gas`
+
+**Direct Tranche Read**
+
+- CommitmentVault: `0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3`
+- C2 tranche count: `10`
+- All tranches:
+  - cType: `0` / `TIME_ONLY`
+  - unlock: `2026-07-29T00:00:00.000Z`
+  - unlocked: `false`
+- Tranche amounts:
+  - #0-#8: `2015694.095284565` IFR each
+  - #9: `2015694.095284571` IFR
+- Total locked:
+  - `20156940.952845656` IFR
+
+**Tooling Fix**
+
+- `scripts/check-contributors-execution.js`
+  - Fixed `buyDetected` after lock/lending.
+  - Before: compared only free IFR to claim balance.
+  - Now: compares accounted IFR = free IFR + locked IFR + LendingVault available/lent IFR.
+  - This prevents a contributor from incorrectly reverting to `top up ETH for buy + gas` after locking 50%.
+  - Output now prints `Accounted IFR`.
+
+**Current Contributor State**
+
+- C1:
+  - Buy detected: `true`
+  - Locked: `0`
+  - Next: `top up ETH for lock/lending gas`
+- C2:
+  - 50% lock complete.
+  - Needs small ETH top-up before LendingVault offer; current ETH is below default `MIN_GAS_ETH=0.005`.
+  - After top-up, prepare LendingVault offer for remaining free IFR with `LENDING_BPS=10000`.
+- C3:
+  - Buy detected: `true`
+  - Locked: `0`
+  - Next: `top up ETH for lock/lending gas`
+
+**Next**
+
+1. Do not click `Approve + Lock IFR` again for C2.
+2. Top up C2 ETH slightly for LendingVault gas.
+3. Then use self-service or script flow for C2 LendingVault offer with remaining free IFR.
+4. Repeat Lock flow for C1/C3 after gas top-up.
