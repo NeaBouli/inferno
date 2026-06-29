@@ -3500,7 +3500,6 @@ index acf5e72f..680ed772 100644
 
 **Need From Gio**
 
-- Finale CoinGecko Token-URL, nicht nur GeckoTerminal Pool-URL.
 - Bestaetigung, ob CMC jetzt offiziell eingereicht werden soll.
 - Falls CMC eingereicht wird:
   - offizielles Kontakt-E-Mail/Konto verwenden.
@@ -3508,6 +3507,15 @@ index acf5e72f..680ed772 100644
 - Fuer X spaeter:
   - X Developer App fertigstellen.
   - Credentials nicht ins Repo, nur lokal/Secret.
+
+**Correction / Known Listing URL**
+
+- The verified/current listing URL already known from Gio and repo history is:
+  - `https://www.geckoterminal.com/eth/pools/0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0`
+- This page is in the CoinGecko/GeckoTerminal ecosystem and shows IFR/WETH as `Inferno Price (IFR)`.
+- Do not use `https://www.coingecko.com/en/coins/inferno` for IFR:
+  - that page is a different token (`INF`), not IFR.
+- If a separate CoinGecko coin page for IFR appears later, add it as extra evidence, but current follow-ups should use the GeckoTerminal URL above.
 
 ---
 
@@ -3546,12 +3554,14 @@ index acf5e72f..680ed772 100644
 
 **Next**
 
-- After final CoinGecko URL is available, use it as evidence for Etherscan reputation follow-up.
+- Use the already-known GeckoTerminal/CoinGecko-ecosystem URL as evidence for Etherscan reputation follow-up:
+  - `https://www.geckoterminal.com/eth/pools/0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0`
 - If CMC is submitted/accepted, add CMC URL as second major aggregator proof.
+- If a separate CoinGecko coin page for IFR appears later, add it as additional proof; do not confuse it with the unrelated `INF` CoinGecko page.
 - Then re-request or follow up on Etherscan reputation review with:
   - verified contract source
   - live icon/profile
   - official website/contact/socials
-  - CoinGecko URL
+  - GeckoTerminal/CoinGecko-ecosystem URL
   - CMC URL when available
   - no-mint / fair-launch / audit-transparency references.
