@@ -2969,3 +2969,51 @@ index acf5e72f..680ed772 100644
 
 - `ifrPriceWei` per Governance/Owner aktivieren, bevor Borrower echte Loans ausfuehren koennen.
 - Batch-Lock UX bleibt Improvement: ein Approval + eine Split-Lock TX statt 10 Lock TXs.
+
+---
+
+## 2026-06-29 [CODEX]
+### TYPE: LIVE STATUS / UI PATCH
+### STATUS: DONE — C2 LendingVault offer active, pending-status contrast improved
+
+**Datum:** 2026-06-29 EEST
+**Autor:** CODEX
+
+**Gio Rueckmeldung**
+
+- Nach `Create Offer` war die Statusmeldung `Offer transaction submitted... Waiting for confirmation...` kaum lesbar.
+- Danach zeigte `My Lending Activity`:
+  - `Active offer`
+  - `Available: 20,156,940.953 IFR`
+  - `Lent: 0 IFR`
+
+**Geaendert**
+
+- `docs/wiki/lending-vault.html`
+  - `info` und `warn` Statusboxen auf dunkles Amber gestellt:
+    - Background `#d97706`
+    - Border `#f59e0b`
+    - Text `#1f1300`
+  - Betrifft besonders:
+    - `Offer transaction submitted...`
+    - `Waiting for confirmation...`
+    - Approval/Offer pending Hinweise
+
+**On-chain geprueft**
+
+- LendingVault:
+  - `totalAvailable=20,156,940.952845656 IFR`
+  - `totalLent=0`
+  - `offerCount=1`
+- C2:
+  - `hasOffer=true`
+  - `offerIndex=0`
+  - `availableIFR=20,156,940.952845656`
+  - `lentIFR=0`
+  - `active=true`
+
+**Interpretation**
+
+- C2 Lending Offer ist jetzt korrekt on-chain aktiv.
+- Market und Live-Kacheln sollten ab jetzt `20.2M IFR` available anzeigen.
+- Borrowing bleibt trotzdem blockiert, solange `ifrPriceWei=0`.
