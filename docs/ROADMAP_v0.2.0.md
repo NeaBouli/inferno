@@ -31,6 +31,8 @@ v0.2.0 is the **Mainnet-Ready Release**. All prerequisites for a secure mainnet 
 | 4 | Ownership Transfer: Governance admin -> Multisig | Open |
 | 5 | Test transaction via Multisig | Open |
 
+**Post-v0.2.0 governance note:** after community voting is live, the signer set should expand through a mixed community model, not pure whale voting and not pure random selection. Preferred path: keep 3-of-5 until governance voting is proven, then move to 4-of-7 with 3 core/protocol seats, 2 contributor/builder seats, and 2 community-elected seats. Consider 5-of-9 only after one stable term. See [Community Signer Expansion Plan](GOVERNANCE_SIGNER_EXPANSION_PLAN.md).
+
 ### M3: Addresses & Wallets (Priority: High)
 
 | # | Task | Status |
@@ -95,7 +97,7 @@ v0.2.0 is the **Mainnet-Ready Release**. All prerequisites for a secure mainnet 
 ## Scope: v0.2.0 vs v0.3.0+
 
 **In v0.2.0:** Multisig, Deploy, LP Lock, Post-Launch Basics
-**Not in v0.2.0:** DAO Governance, Multi-Chain, Oracle Integration, CEX Listing
+**Not in v0.2.0:** DAO Governance, Community Signer Expansion, Multi-Chain, Oracle Integration, CEX Listing
 
 ---
 *Inferno ($IFR) -- Roadmap v0.2.0 | March 2026*
