@@ -1029,13 +1029,13 @@
       <!-- Live Status Banner -->
       <div class="lv-widget" style="background:rgba(34,197,94,0.06);border-color:rgba(34,197,94,0.25);text-align:center;">
         <div style="font-size:0.78rem;font-weight:700;color:#22c55e;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px;">Live on Ethereum Mainnet</div>
-        <p style="color:var(--muted);font-size:0.88rem;margin:0;">LendingVault deployed on Mainnet. feeExempt active since 06.04.2026.<br>Connect your wallet now to check balances and explore the interface.</p>
+        <p style="color:var(--muted);font-size:0.88rem;margin:0;">LendingVault deployed on Mainnet. feeExempt active since 06.04.2026.<br>The live contract is ready; the self-service <code>approve + createOffer</code> wallet flow is the next UI step.</p>
       </div>
 
       <!-- Connect Wallet -->
       <div class="lv-widget" id="lv-connect-section">
         <h3 style="margin-bottom:8px;">Connect Wallet</h3>
-        <p style="color:var(--muted);font-size:0.88rem;margin-bottom:14px;">Connect to explore lender/borrower interfaces and check your balances.</p>
+        <p style="color:var(--muted);font-size:0.88rem;margin-bottom:14px;">Connect to check balances and preview the lender/borrower interface. Offer creation is not yet wired to send transactions from this page.</p>
         <button class="lv-btn" id="lv-connect-btn">Connect Wallet</button>
         <div id="lv-wallet-info" class="lv-hidden" style="margin-top:14px;">
           <div style="display:flex;gap:20px;flex-wrap:wrap;">
@@ -1057,7 +1057,7 @@
       <div id="lv-lender-tab" class="lv-tab-content lv-visible">
         <div class="lv-widget">
           <h3>Create Lending Offer</h3>
-          <p style="color:var(--muted);font-size:0.88rem;margin-bottom:14px;">Deposit IFR to earn interest. Borrowers pay you monthly interest in IFR.</p>
+          <p style="color:var(--muted);font-size:0.88rem;margin-bottom:14px;">Deposit IFR to earn interest. This page currently previews the lender flow; live offer creation still uses the contributor script until the wallet transaction UI is wired.</p>
 
           <div class="lv-form-group">
             <label>IFR Amount to Offer</label>
@@ -1071,7 +1071,7 @@
             <strong>Interest Split:</strong> 50% to you, 50% to protocol
           </div>
 
-          <button class="lv-btn" id="lv-create-offer-btn" disabled>Create Offer</button>
+          <button class="lv-btn" id="lv-create-offer-btn" disabled>Preview Offer Status</button>
           <div id="lv-offer-status" class="lv-hidden lv-status-msg"></div>
         </div>
 

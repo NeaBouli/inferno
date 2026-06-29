@@ -588,7 +588,7 @@
       </p>
 
       <div class="callout">
-        <p><strong>Current status:</strong> Phase 4 (Mainnet Launch) &mdash; 17 on-chain components deployed and verified on Ethereum Mainnet. Bootstrap finalized 05.06.2026, Uniswap V2 LP live and locked, Governance owned by TreasurySafe 3-of-5. Next milestones: contributor buys, 50% CommitmentVault locks, 50% LendingVault offers, listings, and integrations.</p>
+        <p><strong>Current status:</strong> Phase 4 (Mainnet Launch) &mdash; 17 on-chain components deployed and verified on Ethereum Mainnet. Bootstrap finalized 05.06.2026, Uniswap V2 LP live and locked, Governance owned by TreasurySafe 3-of-5. Contributor buys are verified for C1/C2/C3. CommitmentVault self-service locking is functional; C2 has completed the first 50% lock on-chain. Next milestones: C1/C3 locks after gas top-up, C2 LendingVault offer, listings, and integrations.</p>
       </div>
 
       <!-- Phase 1 -->
@@ -691,7 +691,10 @@
           <li class="check-item"><strong>05.06.2026:</strong> Bootstrap finalise() executed &#x2705; &mdash; TX: <a href="https://etherscan.io/tx/0x949848bdd09f4c867a2593afffb0137c7db2c1457d8a8f5ff4428f8ecce69c5f" target="_blank" style="color:var(--accent);">0x949848bd&hellip;</a> &mdash; Block 25254575 &mdash; LP Token: <a href="https://etherscan.io/address/0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0" target="_blank" style="color:var(--accent);">0xbE495E9c&hellip;</a></li>
           <li class="check-item"><strong>08.06.2026:</strong> Proposal #15 &mdash; setFeeExempt(LP Token, true) EXECUTED &#x2705; &mdash; TX: <a href="https://etherscan.io/tx/0xd5a3bc9527b6cc5288b892a9ba99a3af37b940f273856ab6ba938403cd2b4204" target="_blank" style="color:var(--accent);">0xd5a3bc95&hellip;</a> &middot; Block 25271071 &mdash; IFR tradeable on Uniswap &#x1F525;</li>
           <li class="check-item"><strong>09.06.2026:</strong> Proposal #16 &mdash; setP0(CommitmentVault) EXECUTED &#x2705; &mdash; P0 = 300,000,000 wei &middot; TX: <a href="https://etherscan.io/tx/0xf60b25b97bc7f9dae99b20b246c4149500e3e41b341d395d77df4eec04018cf7" target="_blank" style="color:var(--accent);">0xf60b25b9&hellip;</a> &middot; Block 25278067</li>
-          <li class="pending-item"><strong>June 2026:</strong> Contributors buy IFR, then lock 50% in CommitmentVault with TIME_ONLY tranches and place 50% into LendingVault offers</li>
+          <li class="check-item"><strong>28.06.2026:</strong> Contributors C1/C2/C3 bought IFR on Uniswap; monitor detects all buys &#x2705;</li>
+          <li class="check-item"><strong>29.06.2026:</strong> CommitmentVault self-service MetaMask lock flow functional; C2 locked 20,156,940.952845656 IFR in 10 TIME_ONLY tranches &#x2705;</li>
+          <li class="pending-item"><strong>June/July 2026:</strong> C1/C3 top up ETH and lock 50% in CommitmentVault; C2 places remaining free IFR into a LendingVault offer</li>
+          <li class="pending-item"><strong>Improvement:</strong> Batch lock UX &mdash; add contract/UI path for one approval plus one split-lock transaction instead of 10 separate lock confirmations</li>
           <li class="pending-item"><strong>June 2026:</strong> First Builder loans via LendingVault</li>
           <li class="pending-item"><strong>September 2026:</strong> LiquidityReserve unlock (200M IFR available) &mdash; Governance decides LP addition</li>
           <li class="pending-item"><strong>March 2027:</strong> Vesting Cliff &mdash; Core Dev receives first IFR (public announcement before each claim)</li>
@@ -770,7 +773,7 @@
 
       <h2>Current Focus</h2>
       <p>
-        <strong>Phase 4 complete &mdash; All Governance Executed &#x2705;</strong> &mdash; 17 mainnet on-chain components deployed, verified. finalise() executed 05.06.2026, Uniswap V2 LP live, LP locked 12 months. Proposal #15 (feeExempt LP Token) EXECUTED 08.06.2026. Proposal #16 (setP0 CommitmentVault) EXECUTED 09.06.2026 &mdash; P0 = 300,000,000 wei. Phase 5 begins: CommitmentVault active, LendingVault, Builder Ecosystem.
+        <strong>Phase 4 complete &mdash; All Governance Executed &#x2705;</strong> &mdash; 17 mainnet on-chain components deployed, verified. finalise() executed 05.06.2026, Uniswap V2 LP live, LP locked 12 months. Proposal #15 (feeExempt LP Token) EXECUTED 08.06.2026. Proposal #16 (setP0 CommitmentVault) EXECUTED 09.06.2026 &mdash; P0 = 300,000,000 wei. CommitmentVault self-service locking is live and C2 is verified on-chain. Next implementation focus: LendingVault self-service offer flow and batch-lock UX.
       </p>
 
       <div class="callout-green callout">

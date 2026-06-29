@@ -987,6 +987,15 @@
               <td>CommitmentVault p0Set = TRUE &mdash; P0 = 300,000,000 wei (IMMUTABLE) &mdash; CommitmentVault now active</td>
               <td class="status-ok">&#x2705; Done</td>
             </tr>
+            <tr>
+              <td>29.06.2026</td>
+              <td>C2 Contributor<br><span style="font-size:11px;color:var(--muted);"><code>0x80fF32c5...5B6958</code></span></td>
+              <td>CommitmentVault<br><span style="font-size:11px;color:var(--muted);"><code>0x0719d9eb...C4F73d3</code></span></td>
+              <td>20,156,940.952845656 IFR</td>
+              <td>10 TIME_ONLY tranches<br><span style="font-size:11px;color:var(--muted);">Unlock date: 29.07.2026 UTC</span></td>
+              <td>Self-service MetaMask lock flow executed by contributor. Free IFR remains available for the next LendingVault offer step.</td>
+              <td class="status-ok">&#x2705; Verified on-chain</td>
+            </tr>
           </tbody>
         </table>
       </div>
@@ -1081,6 +1090,20 @@
               <td>On-chain lock registry. Users lock IFR here for product access. Guardian can pause. No IFR held by contract itself (user balances tracked internally).</td>
               <td>0 IFR contract balance</td>
               <td>Smart contract &mdash; guardian pausable</td>
+            </tr>
+            <tr>
+              <td><strong>CommitmentVault</strong></td>
+              <td class="address"><a href="https://etherscan.io/address/0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3" target="_blank">0x0719...73d3</a></td>
+              <td>Post-bootstrap commitment locks. P0 set by Proposal #16. Self-service MetaMask lock widget is live; C2 50% lock verified on 29.06.2026.</td>
+              <td id="cur-commitment">loading&hellip;</td>
+              <td>Smart contract &mdash; non-custodial tranche locks</td>
+            </tr>
+            <tr>
+              <td><strong>LendingVault</strong></td>
+              <td class="address"><a href="https://etherscan.io/address/0x974305Ab0EC905172e697271C3d7d385194EB9DF" target="_blank">0x9743...B9DF</a></td>
+              <td>P2P IFR lending against ETH collateral. Contract is deployed and feeExempt; contributor offers are still pending.</td>
+              <td id="cur-lending">0 IFR available / 0 IFR lent</td>
+              <td>Smart contract &mdash; permissionless offers</td>
             </tr>
             <tr>
               <td><strong>Governance</strong></td>
@@ -1729,8 +1752,35 @@
         var heroEl = document.getElementById('hero-timestamp');
         if (heroEl) heroEl.innerHTML = '<span style="color:#2f6a45">\u25CF</span> Connected to Ethereum Mainnet \u2014 Updated ' + dateTime();
         var dsEl = document.getElementById('data-source');
-        if (dsEl) dsEl.innerHTML = '<span style="color:#2f6a45">\u25CF</span> Live (copilot-api.ifrunit.tech) \u2014 refreshes every 30s';
+        if (dsEl) dsEl.innerHTML = '<span style="color:#2f6a45">\u25CF</span> Live (copilot-api.ifrunit.tech + direct Mainnet vault reads) \u2014 refreshes every 30s';
+        loadVaultLiveData();
       });
+    }
+
+    function loadVaultLiveData() {
+      if (typeof ethers === 'undefined') return;
+      var rpc = 'https://ethereum-rpc.publicnode.com';
+      var commitmentAddr = '0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3';
+      var lendingAddr = '0x974305Ab0EC905172e697271C3d7d385194EB9DF';
+      var commitmentAbi = ['function totalLocked() view returns (uint256)'];
+      var lendingAbi = [
+        'function totalAvailable() view returns (uint256)',
+        'function totalLent() view returns (uint256)'
+      ];
+      try {
+        var provider = new ethers.providers.JsonRpcProvider(rpc);
+        var commitment = new ethers.Contract(commitmentAddr, commitmentAbi, provider);
+        var lending = new ethers.Contract(lendingAddr, lendingAbi, provider);
+        Promise.all([commitment.totalLocked(), lending.totalAvailable(), lending.totalLent()]).then(function(values) {
+          var totalLocked = Math.round(Number(ethers.utils.formatUnits(values[0], 9)));
+          var totalAvailable = Math.round(Number(ethers.utils.formatUnits(values[1], 9)));
+          var totalLent = Math.round(Number(ethers.utils.formatUnits(values[2], 9)));
+          var commitmentEl = document.getElementById('cur-commitment');
+          if (commitmentEl) commitmentEl.textContent = fmtNum(totalLocked) + ' IFR locked';
+          var lendingEl = document.getElementById('cur-lending');
+          if (lendingEl) lendingEl.textContent = fmtNum(totalAvailable) + ' IFR available / ' + fmtNum(totalLent) + ' IFR lent';
+        }).catch(function() {});
+      } catch(e) {}
     }
 
     function refreshAllLiveData() {
@@ -1783,6 +1833,7 @@
     // ===== Init — warm up API proxy then fetch data =====
     fetch(PROXY_BASE + '/api/ifr/supply').catch(function() {});
     setTimeout(refreshAllLiveData, 1000);
+    setTimeout(loadVaultLiveData, 1400);
     setTimeout(loadTxFeed, 2000);
     setInterval(refreshAllLiveData, 30000);
     setInterval(loadTxFeed, 30000);
