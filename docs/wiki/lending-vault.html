@@ -4,10 +4,11 @@
   <meta charset="UTF-8">
     <link rel="canonical" href="https://ifrunit.tech/wiki/lending-vault.html">
   <link rel="alternate" hreflang="en" href="https://ifrunit.tech/wiki/lending-vault.html">
-  <link rel="alternate" hreflang="x-default" href="https://ifrunit.tech/wiki/lending-vault.html">>  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="alternate" hreflang="x-default" href="https://ifrunit.tech/wiki/lending-vault.html">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>LendingVault &mdash; Inferno ($IFR) Documentation</title>
-  <meta name="keywords" content="LendingVault, lending, borrowing, ETH collateral, interest rate">
-  <meta name="description" content="IFR Lending against ETH collateral. Builders borrow IFR for discount programs. Dynamic interest rates. Self-reinforcing buy pressure.">
+  <meta name="keywords" content="LendingVault, IFR lending, IFR borrower, lending market, Ethereum Mainnet, ETH collateral, interest rate, createOffer, IFR approval">
+  <meta name="description" content="Live IFR LendingVault on Ethereum Mainnet. Lenders connect MetaMask, approve IFR, then create offers. Borrower and market views read live LendingVault data; borrowing opens after ifrPriceWei is set.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -620,19 +621,19 @@
   <meta property="og:type" content="article">
   <meta property="og:site_name" content="Inferno Protocol">
   <meta property="og:title" content="LendingVault — Inferno Protocol ($IFR)">
-  <meta property="og:description" content="IFR Lending against ETH collateral. Builders borrow IFR for discount programs. Dynamic interest rates. Self-reinforcing buy pressure.">
+  <meta property="og:description" content="Live IFR LendingVault on Ethereum Mainnet. Lenders approve IFR, create offers, and expose borrowable market liquidity.">
   <meta property="og:url" content="https://ifrunit.tech/wiki/lending-vault.html">
   <meta property="og:image" content="https://ifrunit.tech/assets/ifr_icon_256.png">
   <meta name="twitter:card" content="summary">
   <meta name="twitter:title" content="LendingVault — Inferno Protocol ($IFR)">
-  <meta name="twitter:description" content="IFR Lending against ETH collateral. Builders borrow IFR for discount programs. Dynamic interest rates.">
+  <meta name="twitter:description" content="Live IFR LendingVault on Ethereum Mainnet with lender offers, borrower status, and live market reads.">
   <meta name="twitter:site" content="@IFRtoken">
   <meta name="twitter:image" content="https://ifrunit.tech/assets/ifr_icon_256.png">  <script type="application/ld+json">
   {
     "@context": "https://schema.org",
     "@type": "TechArticle",
     "headline": "LendingVault — IFR Lending against ETH Collateral",
-    "description": "IFR Lending against ETH collateral. Builders borrow IFR for discount programs. Dynamic interest rates. Self-reinforcing buy pressure.",
+    "description": "Live IFR LendingVault on Ethereum Mainnet. Lenders approve IFR, create offers, and expose borrowable market liquidity. Borrowing opens after ifrPriceWei is set.",
     "url": "https://ifrunit.tech/wiki/lending-vault.html",
     "isPartOf": {"@id": "https://ifrunit.tech/#website"},
     "publisher": {"@id": "https://ifrunit.tech/#organization"},
@@ -787,7 +788,7 @@
 
       <h1>Lending<span class="accent">Vault</span></h1>
       <p class="subtitle">
-        Locked Tokens at Work &mdash; IFR Lending against ETH
+        Self-service IFR lending offers on Ethereum Mainnet
       </p>
 
       <!-- ======================================== -->
@@ -795,15 +796,15 @@
       <!-- ======================================== -->
       <h2>1. The Idea</h2>
       <p>
-        A contributor has <strong>100M IFR</strong> locked in the <a href="https://ifrunit.tech/wiki/commitment-vault.html">CommitmentVault</a>. They mark <strong>50M as lendable</strong> &mdash; available for borrowing, without actually moving the tokens.
+        A lender connects MetaMask, chooses free IFR, approves the LendingVault once if needed, then signs <code>createOffer(amount)</code>. Only after <code>createOffer</code> confirms on-chain does the amount appear in the market and borrower views.
       </p>
       <p>
-        <strong>Builders</strong> can borrow this IFR against ETH collateral to use for discount programs and user rewards. The contributor earns ETH interest. The tokens remain in the CommitmentVault the entire time.
+        <strong>Builders</strong> can browse live offers and borrow IFR against ETH collateral after the contract price parameter <code>ifrPriceWei</code> is set for collateral calculation. Approval alone is not a lending offer; it only gives the vault permission to transfer IFR in the next transaction.
       </p>
 
       <div class="callout-green">
         <p>
-          <strong>Win-Win-Win:</strong> Contributor earns passive ETH. Builder gets IFR for their product. User benefits from discounts. And the IFR price rises through buy pressure.
+          <strong>Current Mainnet flow:</strong> Lender approves IFR, creates an offer, borrowers see it in the market, and later loan repayment or liquidation routes value back through the protocol.
         </p>
       </div>
 
@@ -1121,6 +1122,11 @@
         </div>
 
         <div class="lv-widget">
+          <h3>Available Offers for Borrowers</h3>
+          <div id="lv-borrower-offers" style="color:var(--muted);font-size:0.88rem;">Offers will appear here after lenders create positions.</div>
+        </div>
+
+        <div class="lv-widget">
           <h3>My Active Loans</h3>
           <div id="lv-my-borrows" style="color:var(--muted);font-size:0.88rem;">Connect wallet to see your active loans, collateral health, and repayment status.</div>
         </div>
@@ -1305,6 +1311,7 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
     "function totalAvailable() view returns (uint256)",
     "function totalLent() view returns (uint256)",
     "function getInterestRate() view returns (uint256)",
+    "function ifrPriceWei() view returns (uint256)",
     "function getOfferCount() view returns (uint256)",
     "function getOffer(uint256 offerId) view returns (tuple(address lender,uint256 availableIFR,uint256 lentIFR,bool active))",
     "function createOffer(uint256 amount) external",
@@ -1319,6 +1326,7 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
   var lvHasOffer = false;
   var lvOffer = null;
   var lvRate = ethers.BigNumber.from(200);
+  var lvIfrPriceWei = ethers.BigNumber.from(0);
 
   function el(id) { return document.getElementById(id); }
   function shortAddr(a) { return a ? a.slice(0, 6) + "..." + a.slice(-4) : ""; }
@@ -1347,6 +1355,24 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
     s.style.border = "1px solid " + st[1];
     s.style.color = st[2];
     s.innerHTML = msg;
+  }
+
+  function updateOfferActionState() {
+    var btn = el("lv-create-offer-btn");
+    if (!btn) return;
+    var amount = null;
+    try {
+      var raw = (el("lv-offer-amount").value || "").trim();
+      if (raw && Number(raw) > 0) amount = ethers.utils.parseUnits(raw, IFR_DECIMALS);
+    } catch(e) {}
+    var allowanceCovers = amount ? lvAllowance.gte(amount) : lvAllowance.gt(0);
+    if (lvHasOffer && lvOffer && lvOffer.active) {
+      btn.textContent = allowanceCovers ? "Increase Offer" : "Approve + Increase Offer";
+    } else if (lvHasOffer) {
+      btn.textContent = "Offer Inactive";
+    } else {
+      btn.textContent = allowanceCovers ? "Create Offer" : "Approve + Create Offer";
+    }
   }
 
   async function ensureMainnet(provider) {
@@ -1423,7 +1449,6 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
     await loadMarketData();
 
     el("lv-create-offer-btn").disabled = false;
-    el("lv-borrow-btn").disabled = false;
   }
   window.lvAdoptMainWallet = lvAdoptMainWallet;
 
@@ -1448,13 +1473,15 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
         vault.hasOffer(lvAddress),
         vault.totalAvailable(),
         vault.totalLent(),
-        vault.getInterestRate()
+        vault.getInterestRate(),
+        vault.ifrPriceWei()
       ]);
       lvBalance = values[0];
       lvAllowance = values[1];
       var ethBal = values[2];
       lvHasOffer = values[3];
       lvRate = values[6];
+      lvIfrPriceWei = values[7];
 
       lvOffer = null;
       if (lvHasOffer) {
@@ -1472,7 +1499,6 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
 
       if (lvOffer && lvOffer.active) {
         el("lv-existing-offer").textContent = formatIFR(lvOffer.availableIFR, 3) + " IFR available / " + formatIFR(lvOffer.lentIFR, 3) + " IFR lent";
-        el("lv-create-offer-btn").textContent = "Approve + Increase Offer";
         el("lv-my-offers").innerHTML =
           "<strong>Active offer</strong><br>" +
           "Available: " + formatIFR(lvOffer.availableIFR, 3) + " IFR<br>" +
@@ -1482,9 +1508,15 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
         el("lv-my-offers").textContent = "This wallet has an inactive offer. Current contract cannot recreate an offer for a wallet with hasOffer=true.";
       } else {
         el("lv-existing-offer").textContent = "No existing offer";
-        el("lv-create-offer-btn").textContent = "Approve + Create Offer";
-        el("lv-my-offers").textContent = "No lending offer yet.";
+        if (lvAllowance.gt(0)) {
+          el("lv-my-offers").innerHTML = "<strong>Approval done, offer pending.</strong><br>Allowance: " + formatIFR(lvAllowance, 3) + " IFR<br>Click <strong>Create Offer</strong> to deposit IFR into LendingVault.";
+          if (!el("lv-offer-amount").value) el("lv-offer-amount").value = formatInput(lvAllowance.gt(lvBalance) ? lvBalance : lvAllowance);
+          setStatus("warn", "Approval is already confirmed, but no LendingVault offer exists yet. Click <strong>Create Offer</strong> to finish.");
+        } else {
+          el("lv-my-offers").textContent = "No lending offer yet.";
+        }
       }
+      updateOfferActionState();
     } catch(e) {
       console.error("LV balances:", e);
       setStatus("error", "Could not read LendingVault state. Please refresh and try again.");
@@ -1500,12 +1532,14 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
         vault.totalAvailable(),
         vault.totalLent(),
         vault.getInterestRate(),
+        vault.ifrPriceWei(),
         vault.getOfferCount()
       ]);
       var totalAvailable = values[0];
       var totalLent = values[1];
       var rate = values[2];
-      var count = values[3].toNumber();
+      lvIfrPriceWei = values[3];
+      var count = values[4].toNumber();
       var total = totalAvailable.add(totalLent);
       var util = total.isZero() ? 0 : Number(totalLent.mul(10000).div(total).toString()) / 100;
       var ratePct = (Number(rate.toString()) / 100).toFixed(2).replace(/\.?0+$/, "") + "%";
@@ -1518,12 +1552,19 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
       el("lv-utilization").textContent = util.toFixed(2).replace(/\.?0+$/, "") + "%";
 
       var offersEl = el("lv-offers-list");
-      if (!offersEl) return;
+      var borrowerOffersEl = el("lv-borrower-offers");
       if (!count) {
-        offersEl.textContent = "No offers yet. LendingVault is live — offers appear here once lenders create positions.";
+        if (offersEl) offersEl.textContent = "No offers yet. LendingVault is live — offers appear here once lenders create positions.";
+        if (borrowerOffersEl) borrowerOffersEl.textContent = "No borrowable offers yet. A lender must create an offer first.";
+        var emptyBorrowBtn = el("lv-borrow-btn");
+        if (emptyBorrowBtn) {
+          emptyBorrowBtn.disabled = true;
+          emptyBorrowBtn.textContent = lvIfrPriceWei.isZero() ? "Borrow Disabled — Price Not Set" : "No Offers Available";
+        }
         return;
       }
       var rows = [];
+      var borrowerRows = [];
       var max = Math.min(count, 50);
       for (var i = 0; i < max; i++) {
         try {
@@ -1535,9 +1576,26 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
             "<span style='color:var(--accent);font-weight:700;'>" + formatIFR(offer.availableIFR, 3) + " IFR</span>" +
             "</div>"
           );
+          borrowerRows.push(
+            "<div style='display:grid;grid-template-columns:1fr auto;gap:10px;border-bottom:1px solid var(--border);padding:10px 0;'>" +
+            "<div><strong>Offer #" + i + "</strong><br><span style='color:var(--muted);font-family:monospace;'>" + shortAddr(offer.lender) + "</span></div>" +
+            "<div style='text-align:right;color:var(--accent);font-weight:700;'>" + formatIFR(offer.availableIFR, 3) + " IFR</div>" +
+            "</div>"
+          );
         } catch(e) {}
       }
-      offersEl.innerHTML = rows.length ? rows.join("") : "No active offers yet.";
+      if (offersEl) offersEl.innerHTML = rows.length ? rows.join("") : "No active offers yet.";
+      if (borrowerOffersEl) {
+        var priceNote = lvIfrPriceWei.isZero()
+          ? "<div style='margin-top:12px;color:#fbbf24;'>Borrow transactions are disabled until Governance sets <code>ifrPriceWei</code> for collateral calculation.</div>"
+          : "";
+        borrowerOffersEl.innerHTML = borrowerRows.length ? borrowerRows.join("") + priceNote : "No active offers yet.";
+      }
+      var borrowBtn = el("lv-borrow-btn");
+      if (borrowBtn) {
+        borrowBtn.disabled = lvIfrPriceWei.isZero() || rows.length === 0;
+        borrowBtn.textContent = lvIfrPriceWei.isZero() ? "Borrow Disabled — Price Not Set" : "Request Loan";
+      }
     } catch(e) {
       console.error("LV market:", e);
     }
@@ -1560,6 +1618,7 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
     e.preventDefault();
     if (!lvBalance || lvBalance.isZero()) return;
     el("lv-offer-amount").value = formatInput(lvBalance.div(2));
+    updateOfferActionState();
   });
 
   var useMaxBtn = el("lv-use-max");
@@ -1567,7 +1626,11 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
     e.preventDefault();
     if (!lvBalance || lvBalance.isZero()) return;
     el("lv-offer-amount").value = formatInput(lvBalance);
+    updateOfferActionState();
   });
+
+  var offerAmountInput = el("lv-offer-amount");
+  if (offerAmountInput) offerAmountInput.addEventListener("input", updateOfferActionState);
 
   // ── Loan Preview Calculator ──────────────────────────
   var borrowInput = document.getElementById("lv-borrow-amount");
@@ -1645,10 +1708,14 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
   if (borrowBtn) borrowBtn.addEventListener("click", function() {
     var s = document.getElementById("lv-borrow-status");
     s.classList.remove("lv-hidden");
-    s.style.background = "rgba(59,130,246,0.1)";
-    s.style.border = "1px solid rgba(59,130,246,0.3)";
-    s.style.color = "#93c5fd";
-    s.innerHTML = "<strong>LendingVault deployed — feeExempt active.</strong><br>Bootstrap FINALIZED 05.06.2026. Proposal #16 executed 09.06.2026; P0 is set. Contributor lending offers are still pending.";
+    s.style.background = "rgba(251,191,36,0.1)";
+    s.style.border = "1px solid rgba(251,191,36,0.3)";
+    s.style.color = "#fbbf24";
+    if (lvIfrPriceWei && lvIfrPriceWei.isZero()) {
+      s.innerHTML = "<strong>Borrowing is not active yet.</strong><br>LendingVault is deployed and lender offers are live, but borrow transactions require <code>ifrPriceWei</code> to be set for ETH collateral calculation.";
+    } else {
+      s.innerHTML = "<strong>Select an available offer first.</strong><br>The borrower transaction must reference a live offer and post the required ETH collateral.";
+    }
   });
 })();
 </script>

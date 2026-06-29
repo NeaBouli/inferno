@@ -2861,3 +2861,111 @@ index acf5e72f..680ed772 100644
   2. `Use max` oder Betrag eingeben
   3. `Approve + Create Offer`
   4. MetaMask Approval bestaetigen, danach Offer TX bestaetigen
+
+---
+
+## 2026-06-29 [CODEX]
+### TYPE: UI / LIVE DATA / COPILOT
+### STATUS: DONE — Landing, Lending Market, Borrower state, Copilot facts updated
+
+**Datum:** 2026-06-29 EEST
+**Autor:** CODEX
+
+**Gio Beobachtung**
+
+- Lending wurde in MetaMask bestaetigt, aber `My Lending Activity` zeigte weiter `No lending offer yet`.
+- Borrower und Market zeigten keine Daten.
+- Landing `What brings you here today?`, Live-Kacheln, Copilot/SEO/GEO sollten Lending, Borrower und Market korrekt abbilden.
+- IFR Price Kachel war zu breit: `Ξ0.000000006813` ragte aus der Kachel.
+
+**On-chain gepruefter Status**
+
+- LendingVault `0x974305Ab0EC905172e697271C3d7d385194EB9DF`
+  - `totalAvailable=0`
+  - `totalLent=0`
+  - `getInterestRate=200` bps/month = `2%`
+  - `getOfferCount=0`
+  - `ifrPriceWei=0`
+- C2 `0x80fF32c5441cBCbFa5c3ce0dC70359BDD05B6958`
+  - `hasOffer=false`
+  - LendingVault allowance: `20,156,940.952845656 IFR`
+  - Free balance: `20,156,940.952845656 IFR`
+- Interpretation:
+  - C2 hat `approve(LendingVault, amount)` bestaetigt.
+  - C2 hat noch kein `createOffer(amount)` bestaetigt.
+  - Market/Borrower muessen daher `0 IFR available` zeigen.
+  - Borrowing bleibt bis `ifrPriceWei` gesetzt ist deaktiviert.
+
+**Geaendert wurde**
+
+- `docs/wiki/lending-vault.html`
+  - Approval-only Zustand wird erkannt:
+    - `Approval done, offer pending.`
+    - Button wird zu `Create Offer`.
+    - Betrag wird aus Allowance/free balance vorgefuellt.
+  - Borrower-Tab zeigt live Offers.
+  - Bei `getOfferCount=0`: `No borrowable offers yet`.
+  - Bei `ifrPriceWei=0`: Button `Borrow Disabled — Price Not Set`.
+  - SEO/OG/JSON-LD und sichtbarer RAG-Text erklaeren:
+    - Approval ist keine Offer.
+    - `createOffer` ist der Markteintrag.
+    - Borrowing braucht `ifrPriceWei`.
+- `docs/wiki/lending-market.html`
+  - Direkter Mainnet-Read aus LendingVault:
+    - `totalAvailable`
+    - `totalLent`
+    - `getInterestRate`
+    - `getOfferCount`
+    - `getLoanCount`
+    - `ifrPriceWei`
+    - `getOffer(i)`
+  - Copilot-API bleibt Fallback.
+  - Empty State erklaert konkret: nach Approval noch `Create Offer` klicken.
+- `docs/index.html`
+  - Wizard `What brings you here today?` erweitert:
+    - `Offer IFR as Lender`
+    - `View Lending Market`
+    - `Borrow IFR`
+  - Live-Kachel `LendingVault Offers` ergaenzt.
+  - Transparency-Stat `LendingVault Available` ergaenzt.
+  - Live Mainnet-Read fuer LendingVault Werte.
+  - IFR Price Anzeige gekuerzt: `Ξ0.000000006813` wird z.B. `6.813 gwei`.
+- `apps/ai-copilot/server/index.ts`
+  - `LENDING_VAULT_ADDR` nutzt Mainnet-Adresse als Default.
+  - `/api/lending/stats` liefert jetzt:
+    - `offerCount`
+    - `ifrPriceWei`
+    - `priceSet`
+    - `borrowingEnabled`
+  - `/api/lending/offers` liefert `priceSet`/`borrowEnabled` pro Offer.
+- `apps/ai-copilot/src/context/ifr-knowledge.ts`
+  - LendingVault Facts aktualisiert: self-service live, Approval != Offer, C2 Approval done, Offer pending, Borrowing braucht `ifrPriceWei`.
+- `apps/ai-copilot/src/context/wiki-content.json`
+  - RAG Index neu generiert.
+- `docs/llms.txt`, `docs/sitemap.xml`, `docs/wiki/roadmap.html`, `docs/TODO.md`, `docs/TODO.html`
+  - SEO/GEO/AI und Roadmap/TODO Status aktualisiert.
+
+**Verifikation**
+
+- `npm --prefix apps/ai-copilot run build` erfolgreich.
+- `npm exec tsc -- -p tsconfig.json --noEmit` in `apps/ai-copilot` erfolgreich.
+- Inline-JS Syntax fuer Landing, LendingVault, LendingMarket erfolgreich geparst.
+- `git diff --check` sauber.
+- Browser-Test mit lokalem Server + Chrome:
+  - Landing Preis: `6.813 gwei`
+  - LendingVault Borrower: `No borrowable offers yet`
+  - Borrow Button: `Borrow Disabled — Price Not Set`
+  - Lending Market: `0 IFR`, Hinweis auf `Create Offer`
+
+**Konkreter naechster Schritt fuer C2**
+
+1. `https://ifrunit.tech/wiki/lending-vault.html#lending-widget` oeffnen.
+2. Wallet verbinden.
+3. Wenn der Button `Create Offer` zeigt: klicken.
+4. MetaMask bestaetigen.
+5. Danach muessen Market und My Lending Activity live eine Offer anzeigen.
+
+**Offen**
+
+- `ifrPriceWei` per Governance/Owner aktivieren, bevor Borrower echte Loans ausfuehren koennen.
+- Batch-Lock UX bleibt Improvement: ein Approval + eine Split-Lock TX statt 10 Lock TXs.

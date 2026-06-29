@@ -4,10 +4,11 @@
   <meta charset="UTF-8">
     <link rel="canonical" href="https://ifrunit.tech/wiki/lending-market.html">
   <link rel="alternate" hreflang="en" href="https://ifrunit.tech/wiki/lending-market.html">
-  <link rel="alternate" hreflang="x-default" href="https://ifrunit.tech/wiki/lending-market.html">>  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="alternate" hreflang="x-default" href="https://ifrunit.tech/wiki/lending-market.html">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Lending Market &mdash; Inferno ($IFR) Documentation</title>
-  <meta name="keywords" content="lending market, P2P lending, offers, borrowing, DeFi">
-  <meta name="description" content="P2P IFR lending marketplace. Browse active lending offers, interest rates, and borrow IFR against ETH collateral.">
+  <meta name="keywords" content="IFR lending market, LendingVault offers, IFR borrower, IFR lender, Ethereum Mainnet, ETH collateral, DeFi market">
+  <meta name="description" content="Live IFR Lending Market on Ethereum Mainnet. Browse LendingVault offers, available IFR, utilization, loan count, rate and borrow readiness directly from the contract.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -620,19 +621,19 @@
   <meta property="og:type" content="article">
   <meta property="og:site_name" content="Inferno Protocol">
   <meta property="og:title" content="Lending Market — Inferno Protocol ($IFR)">
-  <meta property="og:description" content="IFR Lending against ETH collateral. Builders borrow IFR for discount programs. Dynamic interest rates. Self-reinforcing buy pressure.">
+  <meta property="og:description" content="Live IFR Lending Market on Ethereum Mainnet with direct LendingVault reads for offers, liquidity, loans, rate and borrow readiness.">
   <meta property="og:url" content="https://ifrunit.tech/wiki/lending-market.html">
   <meta property="og:image" content="https://ifrunit.tech/assets/ifr_icon_256.png">
   <meta name="twitter:card" content="summary">
   <meta name="twitter:title" content="Lending Market — Inferno Protocol ($IFR)">
-  <meta name="twitter:description" content="IFR Lending against ETH collateral. Builders borrow IFR for discount programs. Dynamic interest rates.">
+  <meta name="twitter:description" content="Live IFR Lending Market on Ethereum Mainnet with direct LendingVault reads.">
   <meta name="twitter:site" content="@IFRtoken">
   <meta name="twitter:image" content="https://ifrunit.tech/assets/ifr_icon_256.png">  <script type="application/ld+json">
   {
     "@context": "https://schema.org",
     "@type": "TechArticle",
     "headline": "Lending Market — IFR Lending against ETH Collateral",
-    "description": "IFR Lending against ETH collateral. Builders borrow IFR for discount programs. Dynamic interest rates. Self-reinforcing buy pressure.",
+    "description": "Live IFR Lending Market on Ethereum Mainnet. Browse LendingVault offers, available IFR, utilization, loan count, rate and borrow readiness directly from the contract.",
     "url": "https://ifrunit.tech/wiki/lending-market.html",
     "isPartOf": {"@id": "https://ifrunit.tech/#website"},
     "publisher": {"@id": "https://ifrunit.tech/#organization"},
@@ -811,7 +812,7 @@
       <!-- Live Status -->
       <div class="market-widget" style="background:rgba(34,197,94,0.06);border-color:rgba(34,197,94,0.25);text-align:center;">
         <div style="font-size:0.78rem;font-weight:700;color:#22c55e;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px;">Live on Ethereum Mainnet</div>
-        <p style="color:var(--muted);font-size:0.88rem;margin:0;">LendingVault live on Mainnet. Offers will appear here once lenders create positions..<br>Data will populate live from LendingVault on Ethereum Mainnet.</p>
+        <p style="color:var(--muted);font-size:0.88rem;margin:0;">LendingVault is live on Mainnet. Offers appear after a lender confirms <code>createOffer</code>; an IFR approval alone is not an offer.<br>Data reads directly from LendingVault on Ethereum Mainnet.</p>
       </div>
 
       <!-- Live Stats -->
@@ -825,7 +826,7 @@
 
       <!-- Offers Table -->
       <h2 id="offers">Active Lending Offers</h2>
-      <p style="color:var(--muted);font-size:0.88rem;margin-bottom:14px;">Browse available IFR lending offers. Click &ldquo;Borrow&rdquo; to request a loan on the <a href="https://ifrunit.tech/wiki/lending-vault.html">LendingVault</a> page.</p>
+      <p style="color:var(--muted);font-size:0.88rem;margin-bottom:14px;">Browse available IFR lending offers. Borrow transactions require at least one active offer and a non-zero <code>ifrPriceWei</code> collateral price on LendingVault.</p>
       <table class="offers-table" id="offers-table">
         <thead>
           <tr>
@@ -1024,6 +1025,19 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
 <script>
 (function() {
   var RAILWAY = "https://copilot-api.ifrunit.tech";
+  var LV_ADDR = "0x974305Ab0EC905172e697271C3d7d385194EB9DF";
+  var IFR_DECIMALS = 9;
+  var RPC_URL = "https://ethereum-rpc.publicnode.com";
+  var LV_ABI = [
+    "function totalAvailable() view returns (uint256)",
+    "function totalLent() view returns (uint256)",
+    "function getInterestRate() view returns (uint256)",
+    "function getOfferCount() view returns (uint256)",
+    "function getLoanCount() view returns (uint256)",
+    "function ifrPriceWei() view returns (uint256)",
+    "function getOffer(uint256 offerId) view returns (tuple(address lender,uint256 availableIFR,uint256 lentIFR,bool active))"
+  ];
+
   function fetchJSON(url) {
     return fetch(url).then(function(r) { return r.json(); }).catch(function() { return null; });
   }
@@ -1036,48 +1050,92 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
     return a ? a.slice(0, 6) + "..." + a.slice(-4) : "";
   }
 
-  async function loadMarket() {
-    var [stats, offers] = await Promise.all([
-      fetchJSON(RAILWAY + "/api/lending/stats"),
-      fetchJSON(RAILWAY + "/api/lending/offers")
-    ]);
+  function renderMarket(stats, offers) {
+    var avEl = document.getElementById("m-available");
+    var ltEl = document.getElementById("m-lent");
+    var rtEl = document.getElementById("m-rate");
+    var lnEl = document.getElementById("m-loans");
+    if (avEl) avEl.textContent = fmt(stats.totalAvailable || 0) + " IFR";
+    if (ltEl) ltEl.textContent = fmt(stats.totalLent || 0) + " IFR";
+    if (rtEl) rtEl.textContent = (stats.currentRate || 0) + "%";
+    if (lnEl) lnEl.textContent = stats.activeLoans || 0;
 
-    // Stats
-    if (stats) {
-      var avEl = document.getElementById("m-available");
-      var ltEl = document.getElementById("m-lent");
-      var rtEl = document.getElementById("m-rate");
-      var lnEl = document.getElementById("m-loans");
-
-      if (stats.status === "not_deployed") {
-        if (avEl) avEl.textContent = "Jun 2026";
-        if (ltEl) ltEl.textContent = "\u2014";
-        if (rtEl) rtEl.textContent = "2%";
-        if (lnEl) lnEl.textContent = "0";
-      } else {
-        if (avEl) avEl.textContent = fmt(stats.totalAvailable) + " IFR";
-        if (ltEl) ltEl.textContent = fmt(stats.totalLent) + " IFR";
-        if (rtEl) rtEl.textContent = stats.currentRate + "%";
-        if (lnEl) lnEl.textContent = stats.activeLoans;
-      }
-    }
-
-    // Offers
     var tbody = document.getElementById("offers-body");
     if (!tbody) return;
 
     if (offers && offers.length > 0) {
       tbody.innerHTML = offers.map(function(o) {
+        var actionLabel = stats.priceSet ? "Borrow \u2192" : "View";
+        var actionTitle = stats.priceSet ? "Open LendingVault borrower flow" : "Borrowing opens after ifrPriceWei is set";
         return "<tr>" +
           "<td style='font-family:monospace;font-size:0.82rem;'>" + shortAddr(o.lender) + "</td>" +
           "<td>" + fmt(o.availableAmount) + " IFR</td>" +
-          "<td>" + (o.rate || 2) + "%</td>" +
-          "<td><a href='lending-vault.html' class='market-btn'>Borrow \u2192</a></td>" +
+          "<td>" + (o.rate || stats.currentRate || 2) + "%</td>" +
+          "<td><a href='lending-vault.html#lending-widget' class='market-btn' title='" + actionTitle + "'>" + actionLabel + "</a></td>" +
           "</tr>";
       }).join("");
+      if (!stats.priceSet) {
+        tbody.innerHTML += "<tr><td colspan='4' style='color:#fbbf24;padding:12px;'>Borrow transactions are pending until Governance sets <code>ifrPriceWei</code>. Offers can still be viewed.</td></tr>";
+      }
     } else {
-      tbody.innerHTML = "<tr><td colspan='4' style='text-align:center;color:var(--muted);padding:24px;'>No offers yet. LendingVault is live &mdash; offers appear when lenders create positions.</td></tr>";
+      tbody.innerHTML = "<tr><td colspan='4' style='text-align:center;color:var(--muted);padding:24px;'>No offers yet. If you already approved IFR, return to LendingVault and click <strong>Create Offer</strong> to deposit IFR into the market.</td></tr>";
     }
+  }
+
+  async function loadOnchainMarket() {
+    if (typeof ethers === "undefined") throw new Error("ethers.js unavailable");
+    var provider = new ethers.providers.JsonRpcProvider(RPC_URL);
+    var vault = new ethers.Contract(LV_ADDR, LV_ABI, provider);
+    var values = await Promise.all([
+      vault.totalAvailable(),
+      vault.totalLent(),
+      vault.getInterestRate(),
+      vault.getOfferCount(),
+      vault.getLoanCount(),
+      vault.ifrPriceWei()
+    ]);
+    var offerCount = values[3].toNumber();
+    var rate = values[2].toNumber() / 100;
+    var stats = {
+      totalAvailable: Number(ethers.utils.formatUnits(values[0], IFR_DECIMALS)),
+      totalLent: Number(ethers.utils.formatUnits(values[1], IFR_DECIMALS)),
+      currentRate: rate,
+      activeLoans: values[4].toNumber(),
+      offerCount: offerCount,
+      priceSet: !values[5].isZero()
+    };
+    var offers = [];
+    for (var i = 0; i < Math.min(offerCount, 50); i++) {
+      try {
+        var o = await vault.getOffer(i);
+        if (o.active && o.availableIFR.gt(0)) {
+          offers.push({
+            id: i,
+            lender: o.lender,
+            availableAmount: Number(ethers.utils.formatUnits(o.availableIFR, IFR_DECIMALS)),
+            lentAmount: Number(ethers.utils.formatUnits(o.lentIFR, IFR_DECIMALS)),
+            rate: rate
+          });
+        }
+      } catch(e) {}
+    }
+    return { stats: stats, offers: offers };
+  }
+
+  async function loadMarket() {
+    try {
+      var live = await loadOnchainMarket();
+      renderMarket(live.stats, live.offers);
+      return;
+    } catch(e) {
+      console.warn("Direct LendingVault read failed, falling back to API:", e);
+    }
+
+    var data = await Promise.all([
+      fetchJSON(RAILWAY + "/api/lending/stats"),
+      fetchJSON(RAILWAY + "/api/lending/offers")
+    ]);
+    renderMarket(data[0] || { totalAvailable: 0, totalLent: 0, currentRate: 2, activeLoans: 0, priceSet: false }, data[1] || []);
   }
 
   loadMarket();
