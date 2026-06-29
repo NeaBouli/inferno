@@ -198,7 +198,8 @@
         Status 29.06.2026: Self-service UI built in <code>docs/wiki/lending-vault.html#lending-widget</code>. C2 still needs small ETH top-up before remaining free IFR can be offered.<br>
         LIVE script fallback: <code>CONTRIBUTOR_ADDR=0x... PRIVATE_KEY=0x... DRY_RUN=false MAINNET=true LENDING_BPS=10000 node scripts/contributors-lending-offer.js</code></span></li>
       <li><div class="cb"></div>&#x1F7E0; <strong>CommitmentVault Batch Lock UX verbessern</strong><br>
-        <span style="color:#6b7280;font-size:0.82rem;">Ziel: 10-Tranchen-Split nicht mehr als 10 separate <code>lock()</code> Wallet-Confirmations.<br>
+        <span style="color:#6b7280;font-size:0.82rem;">Status 29.06.2026: bewusst auf Backlog gesetzt; aktueller Self-service Flow bleibt 1x approve + 10x lock f&uuml;r 10 Tranchen.<br>
+        Ziel: 10-Tranchen-Split nicht mehr als 10 separate <code>lock()</code> Wallet-Confirmations.<br>
         Vorschlag: native Vault-Erweiterung <code>lockBatch(...)</code> / <code>lockSplit(totalAmount, splitCount, ...)</code>.<br>
         Wichtig: Reiner Helper/Batcher ist nicht sauber, weil der aktuelle Vault <code>msg.sender</code> lockt; ohne <code>lockFor(owner,...)</code> w&uuml;rden Tranches dem Helper statt dem User zugeordnet.</span></li>
       <li><div class="cb"></div>&#x1F7E1; <strong>StealthX &times; IFR Integration</strong><br>

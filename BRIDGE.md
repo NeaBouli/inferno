@@ -3150,3 +3150,22 @@ index acf5e72f..680ed772 100644
   - Legende zeigt `CommitmentVault Locks 2.02% — 20.2M`.
   - Legende zeigt `LendingVault Offers 2.02% — 20.2M`.
   - Metrics zeigen `Protocol Locked 798.5M`.
+
+---
+
+## 2026-06-29 [CODEX]
+### TYPE: TODO / PRODUCT DECISION
+### STATUS: DONE — Batch lock bleibt Backlog
+
+**Entscheidung**
+
+- Native `lockBatch(...)` / `lockSplit(...)` wird nicht sofort gebaut.
+- Grund: echtes Batch-Signieren braucht eine Contract-Erweiterung bzw. V2, weil der aktuelle `CommitmentVault` nur `lock(...)` besitzt und auf `msg.sender` schreibt.
+- Aktueller Self-service Flow bleibt produktiv:
+  - 1x `approve`
+  - danach 10x `lock(...)`, wenn der User in 10 Tranchen splitten will.
+
+**TODO aktualisiert**
+
+- `docs/TODO.md`
+- `docs/TODO.html`
