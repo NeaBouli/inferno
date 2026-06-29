@@ -3565,3 +3565,49 @@ index acf5e72f..680ed772 100644
   - GeckoTerminal/CoinGecko-ecosystem URL
   - CMC URL when available
   - no-mint / fair-launch / audit-transparency references.
+
+---
+
+## 2026-06-30 [GIO/CODEX]
+### TYPE: ETHERSCAN / TOKEN UPDATE REQUEST
+### STATUS: SUBMITTED - waiting for Etherscan response
+
+**Submitted**
+
+- Gio submitted Etherscan `2.a. Update Token Info` request for IFR.
+- Token contract:
+  - `0x77e99917Eca8539c62F509ED1193ac36580A6e7B`
+- Request type:
+  - Existing Token Info Update
+- Purpose:
+  - Token reputation review from `Unknown` toward `Neutral`.
+  - Token profile/logo/socials are already live.
+- Included context:
+  - IFR official website `https://ifrunit.tech`
+  - Official/project contact email entered by Gio.
+  - GeckoTerminal/CoinGecko-ecosystem pool URL:
+    - `https://www.geckoterminal.com/eth/pools/0xbe495e9c0d8cc2dcf95570cf95b63c4844df31a0`
+
+**Etherscan Auto-Reply**
+
+- Etherscan confirmed receipt of the token information update request.
+- They currently have a high request backlog and slower response rate.
+- They explicitly ask not to submit multiple tickets for the same token, because duplicates increase backlog and delay turnaround.
+- They will only process requests that follow their token update guidelines.
+- Paid Priority Support is available for urgent 24h turnaround.
+- Featured Listing is a separate paid visibility product and is not required for reputation review.
+
+**Current Action**
+
+- Wait for Etherscan response.
+- Do not submit another Etherscan ticket for IFR while this request is pending.
+- Re-check Etherscan token page periodically for:
+  - `Token Rep` change from `Unknown`.
+  - any email response asking for additional proof.
+- If Etherscan requests more evidence, add:
+  - verified source code / contract page
+  - hosted token list
+  - Etherscan icon URL
+  - GeckoTerminal URL
+  - CMC URL if accepted by then
+  - no-mint / fair-launch / governance docs.
