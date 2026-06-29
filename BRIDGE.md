@@ -3086,3 +3086,67 @@ index acf5e72f..680ed772 100644
 
 - Borrower-Flow finalisieren, sobald `ifrPriceWei` gesetzt ist.
 - Batch-Lock UX bleibt separates Improvement.
+
+---
+
+## 2026-06-29 [CODEX]
+### TYPE: LANDING / LIVE DATA
+### STATUS: DONE — Live Token Distribution corrected
+
+**Datum:** 2026-06-29 EEST
+**Autor:** CODEX
+
+**Gio Frage**
+
+- Stimmen die Daten in `Live Token Distribution` auf der Landing?
+
+**Antwort**
+
+- Teilweise ja, aber zwei Werte waren auf der Landing falsch bzw. inkonsistent:
+  - Obere Legende zeigte `CommitmentVault Locks 0`, obwohl Mainnet `20,156,940.952845656 IFR` locked meldet.
+  - Obere Legende zeigte `Builder Vault 0`, obwohl PartnerVault auf Mainnet `40,000,000 IFR` haelt.
+- Ursache:
+  - Die Kacheln unten lasen CommitmentVault/LendingVault direkt nach.
+  - Donut/Legende nutzten einen separaten Datensatz und ignorierten `CommitmentVault`/`LendingVault` aus `/api/ifr/balances`.
+  - PartnerVault wurde vom Copilot-API/Etherscan-Pfad fehlerhaft mit `0` geliefert.
+
+**Mainnet Snapshot**
+
+- Current Supply: `997,769,355.2754489 IFR`
+- Burned: `2,230,644.7245511 IFR`
+- CommitmentVault: `20,156,940.952845656 IFR`
+- LendingVault Available: `20,156,940.952845656 IFR`
+- LendingVault Lent: `0 IFR`
+- Lending Offer Count: `1`
+- PartnerVault / Builder Vault: `40,000,000 IFR`
+- Vesting: `150,000,000 IFR`
+- LiquidityReserve: `200,000,000 IFR`
+- LPReserveSafe: `400,600,000 IFR`
+- CommunitySafe: `7,900,000 IFR`
+
+**Geaendert**
+
+- `docs/index.html`
+  - Live Distribution Section bekommt eindeutige Klasse `live-tracking` und wird direkt als `#live-distribution` beobachtet.
+  - Donut/Legende/Metrics nutzen jetzt einen gemeinsamen `liveDistributionData` Datensatz.
+  - `CommitmentVault` und `LendingVault` werden aus `/api/ifr/balances` initial uebernommen.
+  - Direct Mainnet reads korrigieren danach:
+    - `CommitmentVault.totalLocked()`
+    - `LendingVault.totalAvailable()`
+    - `LendingVault.totalLent()`
+    - `LendingVault.getOfferCount()`
+    - `PartnerVault balanceOf()`
+  - Neue Legendenzeile:
+    - `LendingVault Offers 2.02% — 20.2M`
+  - `Protocol Locked` steigt durch korrektes PartnerVault auf `798.5M`.
+- `apps/ai-copilot/server/index.ts`
+  - `/api/ifr/balances` liest IFR balances jetzt direkt per Ethereum RPC `balanceOf`, nicht mehr ueber Etherscan tokenbalance.
+  - Dadurch kein API-Key-/Etherscan-Ausfall fuer Live Balances.
+
+**Verifikation**
+
+- Browser-Test mit bewusst fehlerhaftem API-Mock `PartnerVault=0`:
+  - Legende korrigiert auf `Builder Vault 4.00% — 40.0M`.
+  - Legende zeigt `CommitmentVault Locks 2.02% — 20.2M`.
+  - Legende zeigt `LendingVault Offers 2.02% — 20.2M`.
+  - Metrics zeigen `Protocol Locked 798.5M`.

@@ -596,9 +596,35 @@ function setCache(key: string, data: unknown): void {
 
 async function fetchBalancesData() {
   const entries = Object.entries(PROTOCOL_ADDRESSES) as [string, string][];
-  // Sequential fetching — Etherscan free tier allows 5 calls/sec
-  // Parallel batches caused rate limiting (3 calls at t=0 = 3 simultaneous)
-  // Sequential with 400ms delay = safe and reliable
+  const ethersLib = (await import("ethers")).ethers;
+  const provider = new ethersLib.providers.JsonRpcProvider(ETH_RPC_URL);
+  const token = new ethersLib.Contract(
+    IFR_TOKEN,
+    ["function balanceOf(address wallet) view returns (uint256)"],
+    provider
+  );
+  const results: Record<string, { raw: string; formatted: number }> = {};
+  for (let i = 0; i < entries.length; i += 4) {
+    const batch = entries.slice(i, i + 4);
+    const values = await Promise.all(batch.map(async ([label, addr]) => {
+      try {
+        const raw = await token.balanceOf(addr);
+        return [label, { raw: raw.toString(), formatted: parseFloat(ethersLib.utils.formatUnits(raw, IFR_DECIMALS)) }] as const;
+      } catch {
+        return [label, { raw: "0", formatted: 0 }] as const;
+      }
+    }));
+    for (const [label, value] of values) results[label] = value;
+    if (i + 4 < entries.length) await new Promise(r => setTimeout(r, 150));
+  }
+
+  const response = { balances: results, timestamp: new Date().toISOString(), fetchedAt: Date.now(), source: "live" as const };
+  setCache("balances", response);
+  return response;
+}
+
+async function fetchBalancesDataEtherscanFallback() {
+  const entries = Object.entries(PROTOCOL_ADDRESSES) as [string, string][];
   const results: Record<string, { raw: string; formatted: number }> = {};
   for (let i = 0; i < entries.length; i++) {
     const [label, addr] = entries[i];

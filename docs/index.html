@@ -1771,7 +1771,7 @@ render();
           </div>
         </div>
       </div>
-      <div class="allocation reveal" id="live-distribution">
+      <div class="allocation reveal live-tracking" id="live-distribution">
         <h3><span class="live-dot"></span> Live Token Distribution</h3>
         <p style="font-size:12px;color:var(--text-muted);margin-bottom:4px;">Live via copilot-api.ifrunit.tech &rarr; Ethereum &mdash; refreshes every 30s</p>
         <p style="font-size:11px;margin-bottom:20px;"><span class="live-updated-at" style="color:#065f46;">Loading live data&hellip;</span> <span class="live-status" style="color:#ff4500;"></span></p>
@@ -3146,11 +3146,13 @@ if (isLocked) {
   'use strict';
   var PROXY_BASE = 'https://copilot-api.ifrunit.tech';
   var GENESIS_SUPPLY = 1000000000;
+  var liveDistributionData = null;
 
   var CATS = [
     { key: 'burned',    label: '\uD83D\uDD25 Burned',             color: '#FF2D2D' },
     { key: 'ifrLock',   label: '\uD83D\uDD12 User Locks (IFRLock)', color: '#FF8C00' },
     { key: 'commitmentLocked', label: '\uD83D\uDD12 CommitmentVault Locks', color: '#FBBF24' },
+    { key: 'lendingAvailable', label: '\uD83D\uDCB8 LendingVault Offers', color: '#22C55E' },
     { key: 'vesting',   label: '\u23F3 Team Vesting',             color: '#FFD700' },
     { key: 'liqRes',    label: '\uD83D\uDCA7 Liquidity Reserve',  color: '#00BFFF' },
     { key: 'bootstrap', label: '\uD83D\uDE80 Bootstrap Vault',    color: '#7B2FBE' },
@@ -3360,8 +3362,12 @@ if (isLocked) {
         burnRes:   v('BurnReserve'),
         feeRouter: v('FeeRouterV1'),
         ifrLock:   v('IFRLock'),
-        commitmentLocked: 0
+        commitmentLocked: v('CommitmentVault'),
+        lendingAvailable: v('LendingVault'),
+        lendingLent: 0,
+        lendingRate: ''
       };
+      liveDistributionData = data;
 
       var canvas = document.getElementById('dist-donut');
       if (canvas) drawDonut(canvas, data);
@@ -3411,9 +3417,12 @@ if (isLocked) {
   function loadCommitmentVaultLive() {
     if (typeof ethers === 'undefined') return;
     var rpc = 'https://ethereum-rpc.publicnode.com';
+    var tokenAddr = '0x77e99917Eca8539c62F509ED1193ac36580A6e7B';
     var cvAddr = '0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3';
     var lvAddr = '0x974305Ab0EC905172e697271C3d7d385194EB9DF';
+    var partnerAddr = '0xc6eb7714bCb035ebc2D4d9ba7B3762ef7B9d4F7D';
     var c2Addr = '0x80fF32c5441cBCbFa5c3ce0dC70359BDD05B6958';
+    var tokenAbi = ['function balanceOf(address wallet) view returns (uint256)'];
     var cvAbi = [
       'function totalLocked() view returns (uint256)',
       'function lockedBalance(address wallet) view returns (uint256)',
@@ -3428,12 +3437,21 @@ if (isLocked) {
     ];
     try {
       var provider = new ethers.providers.JsonRpcProvider(rpc);
+      var token = new ethers.Contract(tokenAddr, tokenAbi, provider);
       var cv = new ethers.Contract(cvAddr, cvAbi, provider);
       var lv = new ethers.Contract(lvAddr, lvAbi, provider);
       Promise.all([cv.totalLocked(), cv.lockedBalance(c2Addr), cv.getTrancheCount(c2Addr)]).then(function(values) {
         var total = Number(ethers.utils.formatUnits(values[0], 9));
         var c2 = Number(ethers.utils.formatUnits(values[1], 9));
         var tranches = values[2].toString();
+        if (liveDistributionData) {
+          liveDistributionData.commitmentLocked = total;
+          renderLegend(liveDistributionData);
+          renderMetrics(liveDistributionData);
+          updateLiveDisplay(liveDistributionData);
+          var canvas = document.getElementById('dist-donut');
+          if (canvas) drawDonut(canvas, liveDistributionData);
+        }
         setLive('commitment-locked', fmt(total) + ' IFR');
         setLive('commitment-locked-stat', fmt(total));
         setLive('card-commitment-locked', fmt(total) + ' IFR');
@@ -3446,12 +3464,33 @@ if (isLocked) {
         var rate = (Number(values[2].toString()) / 100).toFixed(2).replace(/\.?0+$/, '') + '%';
         var offers = Number(values[3].toString());
         var priceSet = !values[4].isZero();
+        if (liveDistributionData) {
+          liveDistributionData.lendingAvailable = available;
+          liveDistributionData.lendingLent = lent;
+          liveDistributionData.lendingRate = rate;
+          renderLegend(liveDistributionData);
+          renderMetrics(liveDistributionData);
+          updateLiveDisplay(liveDistributionData);
+          var canvas2 = document.getElementById('dist-donut');
+          if (canvas2) drawDonut(canvas2, liveDistributionData);
+        }
         setLive('card-lending-available', fmt(available) + ' IFR');
         setLive('card-lending-lent', fmt(lent) + ' IFR');
         setLive('lending-available-stat', fmt(available));
         setLive('lending-market-rate', rate + '/mo');
         setLive('lending-price-status', priceSet ? 'price set' : 'price pending');
         setLive('lending-offer-count', String(offers));
+      }).catch(function() {});
+      token.balanceOf(partnerAddr).then(function(value) {
+        var partner = Number(ethers.utils.formatUnits(value, 9));
+        if (liveDistributionData) {
+          liveDistributionData.partner = partner;
+          renderLegend(liveDistributionData);
+          renderMetrics(liveDistributionData);
+          updateLiveDisplay(liveDistributionData);
+          var canvas3 = document.getElementById('dist-donut');
+          if (canvas3) drawDonut(canvas3, liveDistributionData);
+        }
       }).catch(function() {});
     } catch(e) {}
   }
@@ -3472,7 +3511,7 @@ if (isLocked) {
 
   // Lazy-load live data — only start when section is visible
   var liveStarted = false;
-  var liveSection = document.querySelector('.live-tracking') || document.getElementById('live-tracking') || document.querySelector('[id*="live"]');
+  var liveSection = document.getElementById('live-distribution') || document.querySelector('.live-tracking') || document.getElementById('live-tracking') || document.querySelector('[id*="live"]');
   renderMetrics({ supply: 0, burned: 0, lpReserve: 0 });
   setTimeout(loadIFRPrice, 1000);
   setTimeout(loadCommitmentVaultLive, 1200);
