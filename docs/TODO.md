@@ -287,12 +287,22 @@ On errors: fix immediately, commit with `seo:` prefix.
       DRY_RUN: CONTRIBUTOR_ADDR=0x... LOCK_BPS=5000 DRY_RUN=true node scripts/contributors-lock.js ✅
       LIVE:    CONTRIBUTOR_ADDR=0x... PRIVATE_KEY=0x... DRY_RUN=false MAINNET=true LOCK_BPS=5000 node scripts/contributors-lock.js
       Dry Run Output: 10 Tranchen, TIME_ONLY(0), unlockTime+30d, p0Multiplier=0 ✅
+      Status 29.06.2026:
+      - C2 ✅ locked 20,156,940.952845656 IFR in 10 TIME_ONLY tranches via self-service MetaMask UI
+      - C1/C3 ⏳ gas top-up, then 50% lock
 
 - [ ] 🔴 LendingVault createOffer() ausführen
       Script: scripts/contributors-lending-offer.js
       Nach 50% Lock den verbleibenden Rest mit LENDING_BPS=10000 anbieten.
       DRY_RUN: CONTRIBUTOR_ADDR=0x... LENDING_BPS=10000 DRY_RUN=true node scripts/contributors-lending-offer.js ✅
       LIVE:    CONTRIBUTOR_ADDR=0x... PRIVATE_KEY=0x... DRY_RUN=false MAINNET=true LENDING_BPS=10000 node scripts/contributors-lending-offer.js
+      Status 29.06.2026: no offers yet; C2 needs small ETH top-up before remaining free IFR can be offered.
+
+- [ ] 🟠 CommitmentVault Batch Lock UX verbessern
+      Ziel: 10-Tranchen-Split nicht mehr als 10 separate `lock()` Wallet-Confirmations.
+      Aktuell: 1x approve + N x lock(amount, cType, unlockTime, p0Multiplier).
+      Vorschlag: native Vault-Erweiterung `lockBatch(...)` / `lockSplit(totalAmount, splitCount, ...)`.
+      Wichtig: Reiner Helper/Batcher ist nicht sauber, weil der aktuelle Vault `msg.sender` lockt; ohne `lockFor(owner, ...)` würden Tokens/Tranches dem Helper statt dem User zugeordnet.
 
 - [ ] 🟡 StealthX × IFR Integration
       Spec: docs/STEALTHX_IFR_INTEGRATION.md

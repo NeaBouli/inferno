@@ -951,8 +951,8 @@
       <h3>What if I lose access?</h3>
       <p>Auto-Unlock after 30 days. Anyone can call <code>unlock()</code>, and tokens still go to your wallet. As long as your wallet address exists, the tokens are safe.</p>
 
-      <h3>When will CommitmentVault be deployed?</h3>
-      <p>After Bootstrap ends (approx. 06/05/2026). The contract must be audited first. Details will be announced on the <a href="https://ifrunit.tech/wiki/roadmap.html">Roadmap</a> and through the official channels.</p>
+      <h3>Is CommitmentVault live?</h3>
+      <p><strong style="color:var(--green);">Yes.</strong> CommitmentVault is deployed on Ethereum Mainnet, feeExempt is active, and Proposal #16 set immutable P0 on 09.06.2026. The self-service MetaMask lock widget below is functional.</p>
 
       <!-- ============================================================
            Why CommitmentVault Is Critical After Bootstrap
@@ -970,8 +970,12 @@
         <li>Contributors buy IFR first, then lock 50% of their current IFR balance</li>
         <li>Current operational mode: 10 TIME_ONLY tranches, 30-day unlock</li>
         <li>Remaining 50% is reserved for LendingVault offers</li>
-        <li>As of 16.06.2026, contributor locks have not yet been executed</li>
+        <li>As of 29.06.2026, C2 has executed the first 50% contributor lock: 20,156,940.952845656 IFR in 10 TIME_ONLY tranches, unlock date 29.07.2026 UTC</li>
       </ul>
+
+      <div class="callout" style="border-left-color:#fbbf24;background:rgba(251,191,36,0.06);">
+        <p><strong>UX improvement tracked:</strong> The current 10-tranche split is intentionally transparent but requires one approval plus one wallet confirmation per tranche. A future batch-lock path should reduce this to one approval plus one split-lock transaction. Because the current vault locks <code>msg.sender</code>, a helper contract cannot safely batch on behalf of a user unless the vault adds a native <code>lockBatch</code>/<code>lockSplit</code> function or an explicit <code>lockFor</code> design.</p>
+      </div>
 
       <!-- ======================================== -->
       <!-- Interactive CommitmentVault Widget -->

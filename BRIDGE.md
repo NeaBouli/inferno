@@ -2749,3 +2749,62 @@ index acf5e72f..680ed772 100644
 2. Top up C2 ETH slightly for LendingVault gas.
 3. Then use self-service or script flow for C2 LendingVault offer with remaining free IFR.
 4. Repeat Lock flow for C1/C3 after gas top-up.
+
+---
+
+## 2026-06-29 [CODEX]
+### TYPE: DOCS / UI STATUS
+### STATUS: DONE — Lock tracking documented, Lending self-service identified as next gap
+
+**Datum:** 2026-06-29 EEST
+**Autor:** CODEX
+
+**Gio Frage**
+
+- Muss C2 Lock in Live-Daten, Transparency, Landing-Kacheln und Roadmap sichtbar sein?
+- Ist der Lock-Mechanismus als funktionsfaehig dokumentiert?
+- Batch-Lock Verbesserung festhalten.
+- Danach klaeren: Lending-Mechanismus schon vorhanden oder noch nicht?
+
+**Geaendert wurde**
+
+- `docs/index.html`
+  - Phase-3 Landing Copy: CommitmentVault self-service locks sind live; LendingVault offers sind naechster Schritt.
+  - Neue Landing-Kachel `CommitmentVault User Locks`.
+  - Neue Transparency-Stat-Kachel `CommitmentVault Locked`.
+  - Direkter Mainnet-Read fuer:
+    - `CommitmentVault.totalLocked()`
+    - `CommitmentVault.lockedBalance(C2)`
+    - `CommitmentVault.getTrancheCount(C2)`
+- `docs/wiki/transparency.html`
+  - C2 Lock als eigene Transparenz-Zeile dokumentiert:
+    - `20,156,940.952845656 IFR`
+    - `10 TIME_ONLY tranches`
+    - Unlock `29.07.2026 UTC`
+  - Current Contract Purposes um `CommitmentVault` und `LendingVault` ergaenzt.
+  - Direkter Mainnet-Read fuer CommitmentVault totalLocked und LendingVault totalAvailable/totalLent.
+- `docs/wiki/roadmap.html`
+  - Current status aktualisiert: C1/C2/C3 buys verified, C2 Lock done.
+  - CommitmentVault self-service locking als functional dokumentiert.
+  - C1/C3 Lock und C2 LendingVault offer bleiben offen.
+  - Batch-Lock UX als Improvement aufgenommen.
+- `docs/wiki/commitment-vault.html`
+  - Alte Aussage "contributor locks not executed" ersetzt.
+  - C2 Lock verified dokumentiert.
+  - Batch-Lock Vorschlag festgehalten:
+    - Ziel: ein Approval + eine Split-Lock TX statt 10 Lock TXs.
+    - Reiner Helper/Batcher ist wegen `msg.sender` im aktuellen Vault nicht sauber; braucht native `lockBatch`/`lockSplit` oder explizites `lockFor`.
+- `docs/TODO.md` und `docs/TODO.html`
+  - C2 Lock Done, C1/C3 pending, C2 Lending pending.
+  - Batch-Lock UX als eigener offener Punkt.
+- `docs/wiki/lending-vault.html` und `docs/wizard/lend.html`
+  - Klarstellung: LendingVault contract ist live, aber die Self-Service UI fuer `approve + createOffer` ist noch nicht gebaut.
+
+**Wichtiger Status**
+
+- Lock-Mechanismus: JA, funktionsfaehig und dokumentiert.
+- Landing/Transparency Live Tracking: JA, CommitmentVault ist ergaenzt.
+- Lending-Mechanismus:
+  - Contract/Scripts/Docs: JA.
+  - Self-service MetaMask UI wie beim Lock: NOCH NICHT.
+  - Naechster Build: LendingVault Offer UI mit main wallet connector, `approve(LendingVault, amount)` und `createOffer(amount)`.

@@ -189,12 +189,18 @@
       <li><div class="cb"></div>&#x1F534; <strong>CommitmentVault Lock ausf&uuml;hren</strong> (nach K&auml;ufen)<br>
         <span style="color:#6b7280;font-size:0.82rem;">Script: <code>scripts/contributors-lock.js</code> &mdash; TIME_ONLY(0), 30d, balance/10 pro Tranche<br>
         DRY_RUN &#x2705; &mdash; 10 Tranchen, TIME_ONLY(0), p0Multiplier=0<br>
-        LIVE: <code>CONTRIBUTOR_ADDR=0x... PRIVATE_KEY=0x... DRY_RUN=false MAINNET=true LOCK_BPS=5000 node scripts/contributors-lock.js</code></span></li>
+        Status 29.06.2026: C2 &#x2705; locked 20,156,940.952845656 IFR in 10 TIME_ONLY tranches via self-service MetaMask UI; C1/C3 need gas top-up, then 50% lock.<br>
+        LIVE script fallback: <code>CONTRIBUTOR_ADDR=0x... PRIVATE_KEY=0x... DRY_RUN=false MAINNET=true LOCK_BPS=5000 node scripts/contributors-lock.js</code></span></li>
       <li><div class="cb"></div>&#x1F534; <strong>LendingVault createOffer() ausf&uuml;hren</strong><br>
         <span style="color:#6b7280;font-size:0.82rem;">Script: <code>scripts/contributors-lending-offer.js</code><br>
         Nach 50% Lock den verbleibenden Rest mit <code>LENDING_BPS=10000</code> anbieten.<br>
         DRY_RUN &#x2705; &mdash; approve + createOffer korrekt<br>
-        LIVE: <code>CONTRIBUTOR_ADDR=0x... PRIVATE_KEY=0x... DRY_RUN=false MAINNET=true LENDING_BPS=10000 node scripts/contributors-lending-offer.js</code></span></li>
+        Status 29.06.2026: no offers yet; C2 needs small ETH top-up before remaining free IFR can be offered.<br>
+        LIVE script fallback: <code>CONTRIBUTOR_ADDR=0x... PRIVATE_KEY=0x... DRY_RUN=false MAINNET=true LENDING_BPS=10000 node scripts/contributors-lending-offer.js</code></span></li>
+      <li><div class="cb"></div>&#x1F7E0; <strong>CommitmentVault Batch Lock UX verbessern</strong><br>
+        <span style="color:#6b7280;font-size:0.82rem;">Ziel: 10-Tranchen-Split nicht mehr als 10 separate <code>lock()</code> Wallet-Confirmations.<br>
+        Vorschlag: native Vault-Erweiterung <code>lockBatch(...)</code> / <code>lockSplit(totalAmount, splitCount, ...)</code>.<br>
+        Wichtig: Reiner Helper/Batcher ist nicht sauber, weil der aktuelle Vault <code>msg.sender</code> lockt; ohne <code>lockFor(owner,...)</code> w&uuml;rden Tranches dem Helper statt dem User zugeordnet.</span></li>
       <li><div class="cb"></div>&#x1F7E1; <strong>StealthX &times; IFR Integration</strong><br>
         <span style="color:#6b7280;font-size:0.82rem;">Spec: <code>docs/STEALTHX_IFR_INTEGRATION.md</code><br>
         Aktueller Partner-Flow: Browser-basierte IFR Balance Verification &rarr; 50% Stripe Checkout Discount<br>

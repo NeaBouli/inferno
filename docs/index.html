@@ -1950,6 +1950,19 @@ render();
           <div style="font-size:10px;color:#666;margin-top:2px;">Bootstrap FINALIZED 05.06.2026. LP Token: <a href="https://app.uniswap.org/swap?outputCurrency=0x77e99917Eca8539c62F509ED1193ac36580A6e7B" target="_blank" rel="noopener" style="color:#22c55e;">Buy IFR on Uniswap</a> &mdash; <a href="wiki/bootstrap.html" style="color:#f97316;">details</a></div>
         </div>
 
+        <div style="background:#111113;border:1px solid rgba(251,191,36,0.35);border-radius:8px;padding:14px 16px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+            <span style="font-size:13px;font-weight:600;">&#x1F512; CommitmentVault User Locks</span>
+            <span style="font-size:10px;padding:2px 8px;border-radius:10px;background:rgba(251,191,36,0.15);color:#fbbf24;">Live</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+            <a href="https://etherscan.io/address/0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3" target="_blank" rel="noopener" style="font-size:11px;font-family:monospace;color:#8a8a96;text-decoration:none;">0x0719d9eb...C4F73d3</a>
+            <a href="wiki/commitment-vault.html#lock-widget" style="font-size:10px;color:#f97316;text-decoration:none;">Lock IFR</a>
+          </div>
+          <div style="font-size:13px;font-weight:600;color:#fbbf24;" data-live-key="card-commitment-locked">loading&hellip;</div>
+          <div style="font-size:10px;color:#666;margin-top:2px;">Total CommitmentVault locked IFR. C2 verified: <span data-live-key="c2-commitment-lock">loading&hellip;</span>, <span data-live-key="c2-commitment-tranches">10 tranches</span>, unlock 29.07.2026.</div>
+        </div>
+
         <div style="background:#111113;border:1px solid #222225;border-radius:8px;padding:14px 16px;">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
             <span style="font-size:13px;font-weight:600;">&#x267B;&#xFE0F; Buyback Vault</span>
@@ -2516,6 +2529,11 @@ if (isLocked) {
         <div style="color:#666;font-size:13px;margin-top:4px;">Deflation active since deploy</div>
       </div>
       <div style="background:#1a1a2e;border:1px solid #333;border-radius:12px;padding:28px 24px;text-align:center;">
+        <div style="font-size:32px;font-weight:700;color:#ff6a00;"><span data-live-key="commitment-locked-stat">loading&hellip;</span></div>
+        <div style="color:#aaa;margin-top:8px;">CommitmentVault Locked</div>
+        <div style="color:#666;font-size:13px;margin-top:4px;">Live Mainnet read</div>
+      </div>
+      <div style="background:#1a1a2e;border:1px solid #333;border-radius:12px;padding:28px 24px;text-align:center;">
         <div style="font-size:32px;font-weight:700;color:#ff6a00;">Governance</div>
         <div style="color:#aaa;margin-top:8px;">Contract Owner</div>
         <div style="color:#666;font-size:13px;margin-top:4px;">48h timelock, no deployer control</div>
@@ -2667,18 +2685,18 @@ if (isLocked) {
     <div class="reveal" style="text-align:center;margin-bottom:32px;">
       <p class="section-label">Phase 3</p>
       <h2 class="section-title">DeFi Infrastructure</h2>
-      <p style="color:var(--text-muted);max-width:600px;margin:8px auto 0;font-size:14px;">Bootstrap ENDED 05.06.2026 &mdash; IFR live on Uniswap V2. Next: voluntary locks, P2P lending, and phased liquidity.</p>
+      <p style="color:var(--text-muted);max-width:600px;margin:8px auto 0;font-size:14px;">Bootstrap ENDED 05.06.2026 &mdash; IFR live on Uniswap V2. CommitmentVault self-service locks are live; next: LendingVault offers, P2P lending, and phased liquidity.</p>
     </div>
     <div class="reveal" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;max-width:960px;margin:0 auto;">
       <a href="wiki/commitment-vault.html" style="background:#111113;border:1px solid #222225;border-radius:12px;padding:20px;text-decoration:none;transition:border-color 0.2s;">
         <div style="font-size:24px;margin-bottom:8px;">&#x1F512;</div>
         <div style="font-weight:700;color:#e8e8ed;margin-bottom:4px;">CommitmentVault</div>
-        <div style="font-size:13px;color:#8a8a96;">Lock IFR with conditions. 4 types: time, price, or both.</div>
+        <div style="font-size:13px;color:#8a8a96;">Live wallet flow: approve IFR, then lock with time or price conditions.</div>
       </a>
       <a href="wiki/lending-vault.html" style="background:#111113;border:1px solid #222225;border-radius:12px;padding:20px;text-decoration:none;transition:border-color 0.2s;">
         <div style="font-size:24px;margin-bottom:8px;">&#x1F4B0;</div>
         <div style="font-weight:700;color:#e8e8ed;margin-bottom:4px;">LendingVault</div>
-        <div style="font-size:13px;color:#8a8a96;">Lend IFR, earn interest. Borrow against ETH collateral.</div>
+        <div style="font-size:13px;color:#8a8a96;">Contract live; self-service offer flow is the next UI task.</div>
       </a>
       <a href="wiki/lending-market.html" style="background:#111113;border:1px solid #222225;border-radius:12px;padding:20px;text-decoration:none;transition:border-color 0.2s;">
         <div style="font-size:24px;margin-bottom:8px;">&#x1F3EA;</div>
@@ -3111,6 +3129,7 @@ if (isLocked) {
   var CATS = [
     { key: 'burned',    label: '\uD83D\uDD25 Burned',             color: '#FF2D2D' },
     { key: 'ifrLock',   label: '\uD83D\uDD12 User Locks (IFRLock)', color: '#FF8C00' },
+    { key: 'commitmentLocked', label: '\uD83D\uDD12 CommitmentVault Locks', color: '#FBBF24' },
     { key: 'vesting',   label: '\u23F3 Team Vesting',             color: '#FFD700' },
     { key: 'liqRes',    label: '\uD83D\uDCA7 Liquidity Reserve',  color: '#00BFFF' },
     { key: 'bootstrap', label: '\uD83D\uDE80 Bootstrap Vault',    color: '#7B2FBE' },
@@ -3166,6 +3185,8 @@ if (isLocked) {
     setLive('supply-flow',  fmt(d.supply) + ' supply');
     setLive('ifrlock',      fmt(d.ifrLock) + ' IFR');
     setLive('ifrlock-pct',  pct(d.ifrLock, d.supply));
+    setLive('commitment-locked', fmt(d.commitmentLocked || 0) + ' IFR');
+    setLive('commitment-locked-stat', fmt(d.commitmentLocked || 0));
     setLive('vesting',      fmt(d.vesting) + ' IFR (' + pct(d.vesting, d.supply) + ')');
     setLive('liq-res',      fmt(d.liqRes) + ' IFR (' + pct(d.liqRes, d.supply) + ')');
     setLive('bootstrap',    fmt(d.bootstrap) + ' IFR');
@@ -3186,6 +3207,7 @@ if (isLocked) {
     setLive('card-liqres',     fmt(d.liqRes) + ' IFR');
     setLive('card-partner',    fmt(d.partner) + ' IFR');
     setLive('card-bootstrap',  fmt(d.bootstrap) + ' IFR');
+    setLive('card-commitment-locked', fmt(d.commitmentLocked || 0) + ' IFR');
     setLive('card-buyback',    fmt(d.buyback) + ' IFR');
     setLive('card-burnres',    fmt(d.burnRes) + ' IFR');
     setLive('feerouter-flow',  fmt(d.feeRouter) + ' IFR fees held');
@@ -3247,6 +3269,7 @@ if (isLocked) {
     var items = [
       { key: 'burned-stat',     label: 'Total Burned',    value: fmt(data.burned),    sub: 'Since genesis \u2014 decreasing forever', color: '#ff4500' },
       { key: 'protocol-locked', label: 'Protocol Locked', value: fmt(protocolLocked), sub: 'All non-circulating IFR secured', color: '#ff8c00' },
+      { key: 'commitment-locked-stat', label: 'CommitmentVault Locked', value: fmt(data.commitmentLocked || 0), sub: 'Live user locks on Mainnet', color: '#fbbf24' },
       { key: '',                label: 'Current Supply',  value: fmt(data.supply),    sub: 'of 1B genesis',        color: '#fff'    },
       { key: '',                label: 'LP Reserve Safe', value: fmt(data.lpReserve), sub: 'LP allocation (3-of-5)',color: '#FF6B35' },
       { key: 'ifr-price',       label: 'IFR Price',       value: 'TBD',              sub: 'Live Uniswap V2 spot',color: '#fbbf24' }
@@ -3307,7 +3330,8 @@ if (isLocked) {
         buyback:   v('BuybackVault'),
         burnRes:   v('BurnReserve'),
         feeRouter: v('FeeRouterV1'),
-        ifrLock:   v('IFRLock')
+        ifrLock:   v('IFRLock'),
+        commitmentLocked: 0
       };
 
       var canvas = document.getElementById('dist-donut');
@@ -3317,6 +3341,7 @@ if (isLocked) {
       renderLegend(data);
       renderMetrics(data);
       updateLiveDisplay(data);
+      loadCommitmentVaultLive();
 
       document.querySelectorAll('.live-updated-at').forEach(function(el) {
         el.textContent = 'Updated: ' + dateTime();
@@ -3354,6 +3379,32 @@ if (isLocked) {
     }).catch(function() {});
   }
 
+  function loadCommitmentVaultLive() {
+    if (typeof ethers === 'undefined') return;
+    var rpc = 'https://ethereum-rpc.publicnode.com';
+    var cvAddr = '0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3';
+    var c2Addr = '0x80fF32c5441cBCbFa5c3ce0dC70359BDD05B6958';
+    var abi = [
+      'function totalLocked() view returns (uint256)',
+      'function lockedBalance(address wallet) view returns (uint256)',
+      'function getTrancheCount(address wallet) view returns (uint256)'
+    ];
+    try {
+      var provider = new ethers.providers.JsonRpcProvider(rpc);
+      var cv = new ethers.Contract(cvAddr, abi, provider);
+      Promise.all([cv.totalLocked(), cv.lockedBalance(c2Addr), cv.getTrancheCount(c2Addr)]).then(function(values) {
+        var total = Number(ethers.utils.formatUnits(values[0], 9));
+        var c2 = Number(ethers.utils.formatUnits(values[1], 9));
+        var tranches = values[2].toString();
+        setLive('commitment-locked', fmt(total) + ' IFR');
+        setLive('commitment-locked-stat', fmt(total));
+        setLive('card-commitment-locked', fmt(total) + ' IFR');
+        setLive('c2-commitment-lock', fmt(c2) + ' IFR');
+        setLive('c2-commitment-tranches', tranches + ' tranches');
+      }).catch(function() {});
+    } catch(e) {}
+  }
+
   function refreshAllLiveData() {
     doRefresh().catch(function(e) {
       console.error('Live data failed, retrying in 3s:', e);
@@ -3365,6 +3416,7 @@ if (isLocked) {
       }, 3000);
     });
     loadIFRPrice();
+    loadCommitmentVaultLive();
   }
 
   // Lazy-load live data — only start when section is visible
@@ -3372,6 +3424,7 @@ if (isLocked) {
   var liveSection = document.querySelector('.live-tracking') || document.getElementById('live-tracking') || document.querySelector('[id*="live"]');
   renderMetrics({ supply: 0, burned: 0, lpReserve: 0 });
   setTimeout(loadIFRPrice, 1000);
+  setTimeout(loadCommitmentVaultLive, 1200);
   if (liveSection) {
     var liveObserver = new IntersectionObserver(function(entries) {
       if (entries[0].isIntersecting && !liveStarted) {
