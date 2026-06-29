@@ -3508,3 +3508,50 @@ index acf5e72f..680ed772 100644
 - Fuer X spaeter:
   - X Developer App fertigstellen.
   - Credentials nicht ins Repo, nur lokal/Secret.
+
+---
+
+## 2026-06-30 [CODEX]
+### TYPE: ETHERSCAN / REPUTATION CHECK
+### STATUS: OPEN - reputation still `Unknown`, token metadata/icon live
+
+**Check**
+
+- Direct Etherscan token page fetch:
+  - `https://etherscan.io/token/0x77e99917Eca8539c62F509ED1193ac36580A6e7B`
+- Current meta description returned:
+  - `Token Rep: Unknown | Holders: 18 | As at Jun-29-2026 01:05:47 PM (UTC)`
+- Token page content confirms:
+  - Token: `Inferno (IFR)`
+  - Contract decimals: `9`
+  - Logo loaded from:
+    - `/token/images/infernoprotocol_ifr.svg`
+  - Website/social metadata visible:
+    - `https://ifrunit.tech/`
+    - `https://x.com/IFRtoken`
+    - `https://github.com/NeaBouli/inferno`
+    - `https://t.me/IFRtoken`
+    - Whitepaper link to `https://ifrunit.tech/wiki/one-pager.html`
+- Icon URL check:
+  - `https://etherscan.io/token/images/infernoprotocol_ifr.svg`
+  - HTTP `200`
+  - `content-type: image/svg+xml`
+  - `last-modified: Tue, 14 Apr 2026 07:36:55 GMT`
+
+**Conclusion**
+
+- Gio's memory likely refers to Etherscan token profile / icon approval, which is live.
+- Etherscan Reputation itself has not moved to `Neutral` or `OK` yet.
+- MetaMask Registry remains deferred until Etherscan reputation is at least `Neutral`/`OK`.
+
+**Next**
+
+- After final CoinGecko URL is available, use it as evidence for Etherscan reputation follow-up.
+- If CMC is submitted/accepted, add CMC URL as second major aggregator proof.
+- Then re-request or follow up on Etherscan reputation review with:
+  - verified contract source
+  - live icon/profile
+  - official website/contact/socials
+  - CoinGecko URL
+  - CMC URL when available
+  - no-mint / fair-launch / audit-transparency references.
