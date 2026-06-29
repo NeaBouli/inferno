@@ -2605,3 +2605,71 @@ index acf5e72f..680ed772 100644
 - Nach C2-Lock:
   - `node scripts/check-contributors-execution.js`
   - danach C2 Lending fuer den freien Rest mit `LENDING_BPS=10000` vorbereiten.
+
+---
+
+## 2026-06-29 [CODEX]
+### TYPE: FIX / UI
+### STATUS: DONE — Lock flow now uses main wallet connector
+
+**Datum:** 2026-06-29 EEST
+**Autor:** CODEX
+
+**Gio Feedback**
+
+- Der separate `Connect Wallet` Button im Bereich `Lock Your IFR` funktionierte nicht wie gewuenscht.
+- Gewuenscht ist:
+  - den bestehenden Main Connector / Header Wallet Button verwenden;
+  - im Wallet-Popup eine Lock-Aktion ergaenzen;
+  - denselben Connector auch unter `Lock Your IFR` verwenden.
+
+**Geaendert wurde**
+
+- `docs/wiki/commitment-vault.html`
+  - Wallet-Popup ergaenzt:
+    - `Lock now` im `Lock >=1,000 IFR` Hinweis fuehrt direkt zu `#lock-widget`.
+    - Neue Popup-Aktion `Lock IFR` fuehrt direkt zu `#lock-widget`.
+  - `Lock Your IFR` Connect-Button nutzt jetzt den bestehenden `IFRWallet` / Header-Connector.
+  - Wenn die Header-Wallet bereits verbunden ist, uebernimmt das Lock-Widget diese Wallet automatisch.
+  - `cvAdoptMainWallet()` synchronisiert:
+    - Provider
+    - Signer
+    - Wallet-Adresse
+    - IFR Balance
+    - CommitmentVault locked balance
+    - Tranche-Dashboard.
+  - Der alte sichtbare `u2B24` Fehler im Wallet-Pill wurde auf `\u2B24` korrigiert.
+- `docs/index.html`
+  - Landing Wallet-Popup ebenfalls ergaenzt:
+    - `Lock now` zeigt auf `wiki/commitment-vault.html#lock-widget`.
+    - Neue Aktion `Lock IFR` zeigt auf `wiki/commitment-vault.html#lock-widget`.
+- `docs/wiki/*.html`
+  - Mechanische Korrektur des Wallet-Pill-Symbols:
+    - `"u2B24 "` -> `"\u2B24 "`.
+
+**QA / Verification**
+
+- `git diff --check` sauber.
+- CommitmentVault Widget Inline-JS parst sauber.
+- Browser Plugin weiterhin nicht verfuegbar (`iab` unavailable); Playwright-Fallback mit lokalem Google Chrome.
+- Lokaler Server:
+  - `python3 -m http.server 4182 --bind 127.0.0.1` aus `docs/`.
+- Playwright mit mock Wallet `0x80fF32c5441cBCbFa5c3ce0dC70359BDD05B6958`:
+  - Landing Header Wallet Popup enthaelt `Lock IFR`.
+  - Landing Popup zeigt C2 Balances und `Lock now`.
+  - CommitmentVault-Seite uebernimmt die bereits verbundene Header-Wallet automatisch.
+  - Header-Pill zeigt `⬤ 0x80fF`, nicht mehr `u2B24`.
+  - Lock-Flow bleibt gruen:
+    - `Use 50%`
+    - 10-Tranchen-Split
+    - `1`x `approve`
+    - `10`x `lock`
+    - Status `Lock complete`.
+- Screenshots:
+  - `/tmp/inferno-lock-qa/landing-wallet-lock-popup-fixed.png`
+  - `/tmp/inferno-lock-qa/commitment-main-connector-complete-fixed.png`
+
+**Hinweis**
+
+- QA hat weiterhin keine echten Mainnet-Transaktionen gesendet.
+- C2 nutzt nach Deploy denselben normalen Wallet-Button/Connector und bestaetigt die Transaktionen selbst in MetaMask.
