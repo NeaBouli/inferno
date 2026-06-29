@@ -1346,7 +1346,7 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
     s.classList.remove("lv-hidden");
     var styles = {
       info: ["rgba(59,130,246,0.1)", "rgba(59,130,246,0.3)", "#93c5fd"],
-      warn: ["rgba(251,191,36,0.1)", "rgba(251,191,36,0.3)", "#fbbf24"],
+      warn: ["rgba(251,191,36,0.16)", "rgba(251,191,36,0.5)", "#fff7cc"],
       error: ["rgba(239,68,68,0.1)", "rgba(239,68,68,0.3)", "#fca5a5"],
       success: ["rgba(34,197,94,0.1)", "rgba(34,197,94,0.3)", "#86efac"]
     };
@@ -1511,7 +1511,7 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
         if (lvAllowance.gt(0)) {
           el("lv-my-offers").innerHTML = "<strong>Approval done, offer pending.</strong><br>Allowance: " + formatIFR(lvAllowance, 3) + " IFR<br>Click <strong>Create Offer</strong> to deposit IFR into LendingVault.";
           if (!el("lv-offer-amount").value) el("lv-offer-amount").value = formatInput(lvAllowance.gt(lvBalance) ? lvBalance : lvAllowance);
-          setStatus("warn", "Approval is already confirmed, but no LendingVault offer exists yet. Click <strong>Create Offer</strong> to finish.");
+          setStatus("warn", "<strong>Approval is already confirmed.</strong><br>No LendingVault offer exists yet. Click <strong>Create Offer</strong> once, then confirm the <code>createOffer</code> transaction in MetaMask.");
         } else {
           el("lv-my-offers").textContent = "No lending offer yet.";
         }
@@ -1587,7 +1587,7 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
       if (offersEl) offersEl.innerHTML = rows.length ? rows.join("") : "No active offers yet.";
       if (borrowerOffersEl) {
         var priceNote = lvIfrPriceWei.isZero()
-          ? "<div style='margin-top:12px;color:#fbbf24;'>Borrow transactions are disabled until Governance sets <code>ifrPriceWei</code> for collateral calculation.</div>"
+          ? "<div style='margin-top:12px;color:#fff7cc;'>Borrow transactions are disabled until Governance sets <code>ifrPriceWei</code> for collateral calculation.</div>"
           : "";
         borrowerOffersEl.innerHTML = borrowerRows.length ? borrowerRows.join("") + priceNote : "No active offers yet.";
       }
@@ -1710,7 +1710,7 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
     s.classList.remove("lv-hidden");
     s.style.background = "rgba(251,191,36,0.1)";
     s.style.border = "1px solid rgba(251,191,36,0.3)";
-    s.style.color = "#fbbf24";
+    s.style.color = "#fff7cc";
     if (lvIfrPriceWei && lvIfrPriceWei.isZero()) {
       s.innerHTML = "<strong>Borrowing is not active yet.</strong><br>LendingVault is deployed and lender offers are live, but borrow transactions require <code>ifrPriceWei</code> to be set for ETH collateral calculation.";
     } else {
