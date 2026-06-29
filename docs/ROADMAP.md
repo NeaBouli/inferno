@@ -95,6 +95,7 @@
       Candidate pool should require identity/contact verification, security readiness, long-term IFR alignment, no active conflicts,
       and public acceptance of signer duties. Community vote should shortlist/elect candidates, while token holdings or locked IFR
       can be one signal among several. Add rotation/term limits and emergency replacement rules before adding signers.
+      Full plan: [Community Signer Expansion Plan](GOVERNANCE_SIGNER_EXPANSION_PLAN.md)
 - [ ] Builder token voting rights
 - [ ] Protocol revenue sharing model
 - [ ] Full DAO transition: Admin → Multisig → DAO

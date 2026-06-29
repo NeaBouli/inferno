@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Community Signer Expansion &mdash; Inferno ($IFR)</title>
+  <meta name="description" content="Planned community multisig signer expansion architecture for Inferno Protocol: eligibility, voting, staged 4-of-7 and 5-of-9 Safe models, rotation, and risk controls.">
+  <link rel="canonical" href="https://ifrunit.tech/wiki/community-signer-expansion.html">
+  <style>
+    :root{--bg:#080808;--panel:#111113;--panel2:#171719;--text:#f4f4f5;--muted:#a1a1aa;--line:#2a2a2d;--accent:#f97316;--green:#22c55e;--blue:#38bdf8;--red:#ef4444}
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;line-height:1.65}
+    a{color:var(--accent);text-decoration:none}
+    a:hover{text-decoration:underline}
+    .wrap{max-width:1040px;margin:0 auto;padding:32px 20px 72px}
+    .top{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:36px;border-bottom:1px solid var(--line);padding-bottom:16px}
+    .brand{font-weight:800;color:#fff}
+    .nav{display:flex;gap:16px;flex-wrap:wrap;font-size:14px}
+    .hero{padding:42px 0 28px}
+    .eyebrow{display:inline-block;color:var(--accent);border:1px solid rgba(249,115,22,.35);background:rgba(249,115,22,.08);border-radius:999px;padding:4px 12px;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+    h1{font-size:clamp(34px,6vw,58px);line-height:1.05;margin:18px 0 14px;letter-spacing:0}
+    .lead{max-width:780px;color:var(--muted);font-size:18px;margin:0}
+    h2{font-size:26px;margin:42px 0 14px;color:#fff}
+    h3{font-size:18px;margin:26px 0 10px;color:#fff}
+    p{margin:0 0 14px}
+    ul{margin:0 0 16px;padding-left:22px;color:var(--muted)}
+    li{margin:7px 0}
+    .grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin:22px 0}
+    .card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:18px}
+    .card strong{display:block;color:#fff;margin-bottom:6px}
+    .card p{font-size:14px;color:var(--muted);margin:0}
+    .callout{border-left:3px solid var(--accent);background:rgba(249,115,22,.08);padding:16px 18px;margin:20px 0;color:#f3f4f6}
+    table{width:100%;border-collapse:collapse;margin:16px 0 24px;background:var(--panel)}
+    th,td{border-bottom:1px solid var(--line);padding:12px;text-align:left;vertical-align:top}
+    th{color:#d4d4d8;font-size:13px;text-transform:uppercase;letter-spacing:.06em}
+    td{color:var(--muted)}
+    code{color:#fbbf24;background:#161616;border:1px solid #2a2a2d;border-radius:4px;padding:1px 5px}
+    .status{color:var(--green);font-weight:700}
+    .risk{color:var(--red);font-weight:700}
+    .next{color:var(--blue);font-weight:700}
+    .footer{margin-top:48px;padding-top:18px;border-top:1px solid var(--line);color:#71717a;font-size:13px}
+    @media(max-width:760px){.grid{grid-template-columns:1fr}.top{align-items:flex-start;flex-direction:column}table{font-size:14px}}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="top">
+      <a class="brand" href="../index.html">Inferno Protocol</a>
+      <nav class="nav">
+        <a href="roadmap.html">Roadmap</a>
+        <a href="governance.html">Governance</a>
+        <a href="dao-governance.html">DAO Governance</a>
+        <a href="multisig.html">Multisig Policy</a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="hero">
+        <span class="eyebrow">Planned Governance Architecture</span>
+        <h1>Community Signer Expansion</h1>
+        <p class="lead">A staged plan for adding community members to the multisig after community voting is live. The model is community-legitimized, but security-filtered: not pure whale voting, not pure random selection.</p>
+      </section>
+
+      <div class="callout">
+        <strong>Status:</strong> Planned. The current 3-of-5 Safe remains active until community voting, signer eligibility, onboarding, and replacement rules are ready.
+      </div>
+
+      <h2>Design Goal</h2>
+      <p>No multisig model can remove every risk. The goal is to minimize practical risks: key compromise, inactive signers, whale capture, random unqualified signers, conflicts of interest, and slow emergency response.</p>
+
+      <div class="grid">
+        <div class="card"><strong>Security first</strong><p>Signer seats are operational security roles, not only popularity positions.</p></div>
+        <div class="card"><strong>Community mandate</strong><p>Eligible candidates should be nominated, reviewed, and voted on by the community.</p></div>
+        <div class="card"><strong>Staged expansion</strong><p>Move from 3-of-5 to 4-of-7 first; consider 5-of-9 only after one proven term.</p></div>
+      </div>
+
+      <h2>Why Not Pure Whale Voting?</h2>
+      <ul>
+        <li>Large holders may be aligned, but token amount alone can become plutocratic control.</li>
+        <li>Freely tradable balances can move quickly and do not prove long-term responsibility.</li>
+        <li>One entity can split holdings across wallets.</li>
+        <li>A large balance does not prove Safe, calldata, or key-management competence.</li>
+      </ul>
+
+      <h2>Why Not Pure Random Selection?</h2>
+      <ul>
+        <li>Randomness can select inactive or unprepared users.</li>
+        <li>Signer duties require secure wallet setup, response discipline, and transaction review.</li>
+        <li>Randomness is only acceptable inside a pre-qualified candidate pool.</li>
+      </ul>
+
+      <h2>Candidate Eligibility</h2>
+      <table>
+        <thead><tr><th>Requirement</th><th>Reason</th></tr></thead>
+        <tbody>
+          <tr><td>Hardware wallet or equivalent secure signing setup</td><td>Reduces hot-wallet compromise risk.</td></tr>
+          <tr><td>Safe readiness</td><td>Signer must verify target, calldata, value, and network before signing.</td></tr>
+          <tr><td>24-48h response expectation</td><td>Prevents routine execution from stalling.</td></tr>
+          <tr><td>Reliable contact path</td><td>Signer must be reachable for coordination and incident review.</td></tr>
+          <tr><td>Conflict review</td><td>Filters hostile, compromised, or conflicted candidates.</td></tr>
+          <tr><td>Public acceptance of duties</td><td>Creates accountability before the community.</td></tr>
+          <tr><td>Alignment signal</td><td>Locked IFR, contributor work, lending, builder activity, or long holding history.</td></tr>
+        </tbody>
+      </table>
+
+      <h2>Preferred IFR Path</h2>
+      <table>
+        <thead><tr><th>Stage</th><th>Model</th><th>When</th><th>Rationale</th></tr></thead>
+        <tbody>
+          <tr><td><span class="status">Active</span></td><td><code>3-of-5</code></td><td>Current</td><td>Operational reliability while voting and onboarding are still being built.</td></tr>
+          <tr><td><span class="next">First expansion</span></td><td><code>4-of-7</code></td><td>After community voting is live</td><td>Adds community seats without slowing execution too much.</td></tr>
+          <tr><td><span class="next">Mature expansion</span></td><td><code>5-of-9</code></td><td>After one proven term</td><td>Stronger decentralization once the process is battle-tested.</td></tr>
+        </tbody>
+      </table>
+
+      <h2>4-of-7 Seat Mix</h2>
+      <table>
+        <thead><tr><th>Seat type</th><th>Count</th><th>Purpose</th></tr></thead>
+        <tbody>
+          <tr><td>Core / protocol signers</td><td>3</td><td>Continuity, technical context, emergency execution.</td></tr>
+          <tr><td>Contributor / builder signers</td><td>2</td><td>Ecosystem execution and product context.</td></tr>
+          <tr><td>Community-elected signers</td><td>2</td><td>Community mandate and decentralization.</td></tr>
+        </tbody>
+      </table>
+
+      <h2>5-of-9 Seat Mix</h2>
+      <table>
+        <thead><tr><th>Seat type</th><th>Count</th><th>Purpose</th></tr></thead>
+        <tbody>
+          <tr><td>Core / security signers</td><td>3</td><td>Protocol continuity and security review.</td></tr>
+          <tr><td>Contributor / builder signers</td><td>2</td><td>Ecosystem representation.</td></tr>
+          <tr><td>Community-elected signers</td><td>3</td><td>Broader community mandate.</td></tr>
+          <tr><td>Independent security / guardian seat</td><td>1</td><td>Additional transaction review capacity.</td></tr>
+        </tbody>
+      </table>
+
+      <h2>Safe Separation</h2>
+      <ul>
+        <li><strong>Treasury Safe:</strong> conservative expansion, highest qualification bar.</li>
+        <li><strong>Community / Grants Safe:</strong> can expand earlier and include more community seats.</li>
+        <li><strong>LP Reserve Safe:</strong> conservative, because liquidity actions affect market structure.</li>
+        <li><strong>Guardian Safe:</strong> separate cancel-only or emergency-only role, not treasury spending.</li>
+      </ul>
+
+      <h2>Voting And Rotation</h2>
+      <ul>
+        <li>Locked IFR should count more than freely transferable IFR.</li>
+        <li>Candidate eligibility comes before the vote.</li>
+        <li>First community signer term should be 6 months; later terms can be 12 months.</li>
+        <li>At least one community seat can rotate each term.</li>
+        <li>Emergency replacement rules must exist before adding community signers.</li>
+      </ul>
+
+      <h2>Implementation Checklist</h2>
+      <ul>
+        <li>Publish signer eligibility criteria.</li>
+        <li>Define signer duties and removal conditions.</li>
+        <li>Define voter eligibility: locked IFR, verified wallet, or other governance credential.</li>
+        <li>Open candidate applications and nominations.</li>
+        <li>Run a test Safe onboarding drill.</li>
+        <li>Hold the community vote.</li>
+        <li>Queue Safe signer update through governance.</li>
+        <li>Execute after the required review/timelock path.</li>
+        <li>Verify owners and threshold on Safe.</li>
+        <li>Update docs, landing, wiki, and AI copilot knowledge.</li>
+      </ul>
+
+      <div class="callout">
+        Bottom line: community-democratic selection, security-filtered eligibility, staged threshold expansion, and documented rotation.
+      </div>
+    </main>
+
+    <footer class="footer">
+      Inferno ($IFR) &mdash; Community signer expansion plan &mdash; Documentation
+    </footer>
+  </div>
+</body>
+</html>

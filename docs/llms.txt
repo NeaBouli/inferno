@@ -59,6 +59,15 @@ Inferno ($IFR) is a deflationary ERC-20 utility token deployed on Ethereum Mainn
 - Lending Market: https://ifrunit.tech/wiki/lending-market.html
 - LP Strategy: https://ifrunit.tech/wiki/lp-strategy.html
 - Ecosystem Overview: https://ifrunit.tech/wiki/ecosystem.html
+- Community Signer Expansion Plan: https://ifrunit.tech/wiki/community-signer-expansion.html
+
+## Governance Signer Expansion
+
+- Status: planned, not active yet.
+- Current Safe model: 3-of-5.
+- Preferred path: keep 3-of-5 until community voting is live; then expand to 4-of-7 using a mixed model; consider 5-of-9 only after one stable community-signer term.
+- Selection model: eligibility filter + public nomination + community vote + security review + term limits/rotation + emergency replacement rules.
+- Avoid pure whale voting and pure random selection. Locked IFR, long-term participation, builder/lender/contributor activity, and security readiness are positive signals, not sole criteria.
 
 ## Integration Builder (Phase 5)
 

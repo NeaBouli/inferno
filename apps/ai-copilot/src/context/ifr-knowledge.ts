@@ -49,6 +49,7 @@ export function getIFRKnowledge() {
       noInstantChanges: true,
       daoPhase: "Phase 4 (planned)",
       multisig: "3-of-5 on all Safes (Treasury, Community, LP Reserve) — 5 signers: A.K./M.G./A.M./Y.K./A.P.",
+      communitySignerExpansion: "Planned after community voting is live. Preferred path: keep 3-of-5 now, expand to 4-of-7 using a mixed model (3 core/protocol, 2 contributor/builder, 2 community-elected), then consider 5-of-9 only after one stable term. Selection is not pure whale voting and not pure random selection; it requires eligibility, public nomination, community vote, security review, rotation, and emergency replacement rules. Full plan: https://ifrunit.tech/wiki/community-signer-expansion.html",
       proposals: "#0,#4-#9,#11,#12 executed; #1-#3,#10 cancelled. #15 queued (setFeeExempt LP Token, ETA 08.06.2026 09:57 Athen).",
       nextPlanned: "#15 setFeeExempt(LP Token 0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0, true) — Timelock running, ETA 08.06.2026. #16 set P0 in CommitmentVault (after #15).",
       feeExempt: "Deployer, TreasurySafe, CommunitySafe, CommitmentVault, LendingVault — all active. LP Token exempt pending Proposal #15."

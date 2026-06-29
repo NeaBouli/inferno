@@ -3662,3 +3662,55 @@ index acf5e72f..680ed772 100644
   - community-elected seats
   - ecosystem/builder seat
 - Whether locked IFR, active lending participation, or verified contributor status should be minimum eligibility requirements.
+
+---
+
+## 2026-06-30 [CODEX]
+### TYPE: ROADMAP / GOVERNANCE ARCHITECTURE
+### STATUS: DONE - full community signer expansion plan documented and linked
+
+**Architecture**
+
+- Full plan created:
+  - `docs/GOVERNANCE_SIGNER_EXPANSION_PLAN.md`
+  - `docs/wiki/community-signer-expansion.html`
+- Recommended model:
+  - current 3-of-5 stays active until community voting is live
+  - first expansion: 4-of-7
+    - 3 core/protocol signers
+    - 2 contributor/builder signers
+    - 2 community-elected signers
+  - later optional expansion: 5-of-9 after one stable community-signer term
+- Selection model:
+  - not pure whale voting
+  - not pure random selection
+  - use eligibility filter + public nomination + community vote + security review + rotation + emergency replacement rules
+- Risk framing:
+  - no multisig model is risk-free
+  - goal is lowest practical risk against key compromise, signer inactivity, whale capture, random unqualified signers, conflicts, and slow emergency response
+
+**Updated / Linked**
+
+- Landing:
+  - `docs/index.html`
+  - Roadmap Phase 4 now links signer plan.
+  - Governance CTA now links signer expansion plan.
+- Roadmaps:
+  - `docs/ROADMAP.md`
+  - `docs/ROADMAP_v0.2.0.md`
+  - `docs/wiki/roadmap.html`
+- Wiki:
+  - `docs/wiki/community-signer-expansion.html`
+  - `docs/wiki/multisig.html`
+  - `docs/wiki/dao-governance.html`
+  - `docs/wiki/governance.html`
+- AI / GEO:
+  - `docs/llms.txt`
+  - `apps/ai-copilot/src/context/ifr-knowledge.ts`
+
+**Decision Summary**
+
+- Large holders can be a positive signal, especially if IFR is locked, but they should not automatically become signers.
+- Random selection can only happen inside a pre-qualified candidate pool.
+- Signer eligibility must include wallet security, Safe readiness, availability, contact reliability, conflict review, public duty acceptance, and alignment.
+- Treasury and LP Reserve Safes should expand more conservatively than Community/Grants Safe.
