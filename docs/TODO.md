@@ -399,15 +399,14 @@ On errors: fix immediately, commit with `seo:` prefix.
       Preview, lock button, my-tranches dashboard
       "Coming Soon" until contract deployed
       ACTIVATE: set CV_ADDR after Core Dev deploy
-- [x] ✅ LendingVault UI built (04.04.2026)
+- [x] ✅ LendingVault UI built + activated (04.04.2026, live flow updated 29.06.2026)
       3 tabs: Lender / Borrower / Market Overview
-      Loan preview calculator (interest + collateral)
-      Interest rate curve table
-      "Coming Soon" until contract deployed
-      ACTIVATE: set LV_ADDR after Core Dev deploy
-- [x] ✅ P2P Lending Market page built (04.04.2026)
-      lending-market.html: live offers table + stats from Railway
-      /api/lending/stats + /api/lending/offers endpoints
+      Lender self-service uses MetaMask: approve IFR if needed, then createOffer(amount) or increaseOffer(amount)
+      Borrower tab shows live offers and disables borrow while ifrPriceWei is not set
+      Loan preview calculator (interest + collateral), interest rate curve table
+- [x] ✅ P2P Lending Market page built + live on-chain reads (04.04.2026, updated 29.06.2026)
+      lending-market.html: live offers table + stats direct from LendingVault with copilot-api fallback
+      /api/lending/stats + /api/lending/offers endpoints expose offerCount, priceSet, borrowingEnabled
       How It Works, Interest Rate Curve, Collateral & Safety
 - [ ] 🔵 Collateral Health Monitor
       Borrower sees collateral ratio, warning at <150% (red),
@@ -838,21 +837,21 @@ Strategic goal: "IFR = Stripe for Web3 Access — Web3 SaaS Standard"
 ### Lending Market UI (Phase 3+ — after LP Launch)
 > Prerequisite: Bootstrap finalise() + LP live
 
-- [ ] 🔵 Lender Interface
-      Create offer (deposit IFR), manage (pause/close), earnings dashboard
-      WalletConnect required
+- [x] ✅ Lender Interface
+      Create offer (deposit IFR) and increase existing offer via MetaMask
+      WalletConnect/Header connector reused; approval-only state is detected and prompts Create Offer
 - [ ] 🔵 Borrower Interface
-      Browse offers, take loan (ETH collateral), manage loans, repay
-      WalletConnect required
+      Browse offers is wired; take loan (ETH collateral), manage loans, repay remain pending
+      Borrow transactions require ifrPriceWei to be set and an active offer to exist
 - [ ] 🔵 Collateral Health Monitor UI
       Live ratio per loan: HEALTHY/WARNING/CRITICAL
       Margin Call warning (<150%), Liquidation button (<120%)
       Telegram alert integration
 - [ ] 🔵 Liquidation Interface
       All liquidatable loans, 5% liquidator bonus, permissionless
-- [ ] 🔵 Market Overview Dashboard
+- [x] ✅ Market Overview Dashboard
       Total Lent/Available, Utilization, Interest Rate, Active Loans/Offers
-      Data: /api/lending/stats + /api/lending/offers
+      Data: direct LendingVault reads + /api/lending/stats + /api/lending/offers fallback
 
 Technical: WalletConnect v2 + ethers.js v5, ABI: abi/LendingVault.json
 Hetzner API endpoints already live: stats, offers, loans/:addr, health/:id, lender/:addr

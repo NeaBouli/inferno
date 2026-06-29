@@ -74,11 +74,12 @@ export function getIFRKnowledge() {
         apiEndpoints: "GET /api/commitment/tranches/:address, GET /api/commitment/status/:address, GET /api/commitment/p0, GET /api/commitment/leaderboard"
       },
       lendingVault: {
-        status: "DEPLOYED — Mainnet 04.04.2026, feeExempt active",
+        status: "DEPLOYED — Mainnet 04.04.2026, feeExempt active; self-service lender offer UI live",
         address: "0x974305Ab0EC905172e697271C3d7d385194EB9DF",
-        description: "Lend IFR against ETH collateral. Earn ETH interest. Creates buy pressure via repayments.",
+        description: "Lenders connect MetaMask, approve IFR if needed, then createOffer(amount). Approval alone is not an offer; createOffer is required before borrower and market views show liquidity.",
         interestRate: "2% to 25% based on utilization",
         collateral: "200% initial, 150% margin call, 120% liquidation",
+        currentMainnetState: "C2 has completed CommitmentVault lock and LendingVault approval for remaining free IFR, but no LendingVault offer exists until createOffer confirms on-chain. Borrow transactions require ifrPriceWei to be set.",
         tests: "55/55 passing",
         wiki: "https://ifrunit.tech/wiki/lending-vault.html",
         apiEndpoints: "GET /api/lending/stats, GET /api/lending/offers, GET /api/lending/loans/:address, GET /api/lending/health/:loanId, GET /api/lending/lender/:address"

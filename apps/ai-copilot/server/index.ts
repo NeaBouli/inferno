@@ -1047,7 +1047,7 @@ if (BUILDER_REGISTRY_ADDR) {
 }
 
 // ── Lending Market Endpoints ─────────────────────────────────────────
-const LENDING_VAULT_ADDR = process.env.LENDING_VAULT_ADDR || "";
+const LENDING_VAULT_ADDR = process.env.LENDING_VAULT_ADDR || PROTOCOL_ADDRESSES.LendingVault;
 
 // GET /api/lending/stats — LendingVault market stats
 app.get("/api/lending/stats", async (_req, res) => {
@@ -1069,25 +1069,33 @@ app.get("/api/lending/stats", async (_req, res) => {
       "function totalAvailable() view returns (uint256)",
       "function getInterestRate() view returns (uint256)",
       "function getLoanCount() view returns (uint256)",
+      "function getOfferCount() view returns (uint256)",
+      "function ifrPriceWei() view returns (uint256)",
     ];
 
-    const url = process.env.MAINNET_RPC_URL || "https://ethereum-rpc.publicnode.com";
-    const provider = new (await import("ethers")).ethers.providers.JsonRpcProvider(url);
-    const lv = new (await import("ethers")).ethers.Contract(LENDING_VAULT_ADDR, lvAbi, provider);
+    const ethersLib = (await import("ethers")).ethers;
+    const provider = new ethersLib.providers.JsonRpcProvider(ETH_RPC_URL);
+    const lv = new ethersLib.Contract(LENDING_VAULT_ADDR, lvAbi, provider);
 
-    const [lent, available, rate, loans] = await Promise.all([
+    const [lent, available, rate, loans, offers, price] = await Promise.all([
       lv.totalLent(),
       lv.totalAvailable(),
       lv.getInterestRate(),
       lv.getLoanCount(),
+      lv.getOfferCount(),
+      lv.ifrPriceWei(),
     ]);
 
     res.json({
       status: "active",
-      totalLent: parseFloat((await import("ethers")).ethers.utils.formatUnits(lent, IFR_DECIMALS)),
-      totalAvailable: parseFloat((await import("ethers")).ethers.utils.formatUnits(available, IFR_DECIMALS)),
+      totalLent: parseFloat(ethersLib.utils.formatUnits(lent, IFR_DECIMALS)),
+      totalAvailable: parseFloat(ethersLib.utils.formatUnits(available, IFR_DECIMALS)),
       currentRate: rate.toNumber() / 100,
       activeLoans: loans.toNumber(),
+      offerCount: offers.toNumber(),
+      ifrPriceWei: price.toString(),
+      priceSet: !price.isZero(),
+      borrowingEnabled: offers.gt(0) && !price.isZero(),
       cachedAt: new Date().toISOString(),
     });
   } catch (err) {
@@ -1108,15 +1116,16 @@ app.get("/api/lending/offers", async (_req, res) => {
       "function getOfferCount() view returns (uint256)",
       "function getOffer(uint256) view returns (tuple(address lender, uint256 availableIFR, uint256 lentIFR, bool active))",
       "function getInterestRate() view returns (uint256)",
+      "function ifrPriceWei() view returns (uint256)",
     ];
 
-    const url = process.env.MAINNET_RPC_URL || "https://ethereum-rpc.publicnode.com";
-    const provider = new (await import("ethers")).ethers.providers.JsonRpcProvider(url);
-    const lv = new (await import("ethers")).ethers.Contract(LENDING_VAULT_ADDR, lvAbi, provider);
     const ethersLib = (await import("ethers")).ethers;
+    const provider = new ethersLib.providers.JsonRpcProvider(ETH_RPC_URL);
+    const lv = new ethersLib.Contract(LENDING_VAULT_ADDR, lvAbi, provider);
 
     const count = (await lv.getOfferCount()).toNumber();
     const rate = (await lv.getInterestRate()).toNumber() / 100;
+    const price = await lv.ifrPriceWei();
     const offers: Array<Record<string, unknown>> = [];
 
     for (let i = 0; i < Math.min(count, 50); i++) {
@@ -1129,6 +1138,8 @@ app.get("/api/lending/offers", async (_req, res) => {
             availableAmount: parseFloat(ethersLib.utils.formatUnits(o.availableIFR, IFR_DECIMALS)),
             lentAmount: parseFloat(ethersLib.utils.formatUnits(o.lentIFR, IFR_DECIMALS)),
             rate,
+            borrowEnabled: !price.isZero(),
+            priceSet: !price.isZero(),
           });
         }
       } catch { /* skip invalid */ }
@@ -1144,7 +1155,7 @@ app.get("/api/lending/offers", async (_req, res) => {
 if (LENDING_VAULT_ADDR) {
   console.log("[LendingVault] Endpoints active:", LENDING_VAULT_ADDR);
 } else {
-  console.log("[LendingVault] LENDING_VAULT_ADDR not set — endpoints return placeholder data");
+  console.log("[LendingVault] Address unavailable — endpoints return placeholder data");
 }
 
 // ── CommitmentVault Endpoints ────────────────────────────────────────
