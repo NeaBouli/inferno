@@ -3402,3 +3402,109 @@ index acf5e72f..680ed772 100644
   - `x-geckoterminal-thread.md` erzeugt 3 Posts: 232 / 163 / 266 Zeichen.
 - `X_DRY_RUN=true node scripts/post-x.js docs/social/x-clarification-post.md` OK:
   - 2 Posts: 248 / 188 Zeichen.
+
+---
+
+## 2026-06-30 [CODEX]
+### TYPE: LISTINGS / TOKEN ICON / TODO
+### STATUS: OPEN - CoinGecko done per Gio, next listings and metadata propagation queued
+
+**Context**
+
+- Gio meldete: CoinGecko / GeckoTerminal ist durch.
+- X API / Bot Posting wird spaeter fortgesetzt, wenn Gio wieder am Rechner ist.
+- Bis dahin bleibt der X Live-Posting-Schritt geparkt:
+  - X Developer App bestaetigen.
+  - Read/Write Permission setzen.
+  - `@IFRtoken` OAuth/User-Auth abschliessen.
+  - Access/Refresh Token nur lokal oder als Secret ablegen.
+  - Danach Live-Test mit `scripts/post-x.js`.
+
+**GitHub / Uniswap Token Logo Status**
+
+- Geprueft am 30.06.2026:
+  - Uniswap Default Token List Issue:
+    - `https://github.com/Uniswap/default-token-list/issues/2509`
+  - Status: `open`
+  - Title: `Add IFR: Inferno`
+  - Created: `2026-06-11T23:53:02Z`
+  - Updated: `2026-06-18T15:28:12Z`
+  - Comments: `2`
+  - Labels: none
+  - Assignees: none
+  - PR/branch: none visible
+- Ergebnis:
+  - Noch nicht akzeptiert / noch nicht gemerged.
+  - Das erklaert, warum Uniswap das IFR Logo ggf. weiterhin nicht anzeigt.
+  - Etherscan Icon ist ein separater Kanal und bedeutet nicht automatisch Uniswap-Logo.
+- Naechster Schritt:
+  - Issue #2509 aktualisieren, sobald die finale CoinGecko Token-URL vorliegt.
+  - Danach optional CMC URL nachreichen.
+
+**Next Listing / Metadata Work**
+
+1. CoinMarketCap (CMC)
+   - Offizieller Weg: CoinMarketCap Request Form, Option `1 - [New Listing] Add cryptoasset`.
+   - Keine Doppel-Requests und keine Status-Spam-Requests.
+   - Lokale Vorlage ist vorhanden:
+     - `docs/COINMARKETCAP_SUBMISSION.md`
+   - Einreichen mit:
+     - Website `https://ifrunit.tech`
+     - Contract `0x77e99917Eca8539c62F509ED1193ac36580A6e7B`
+     - Etherscan
+     - GeckoTerminal Pool
+     - Uniswap V2 Pair
+     - CoinGecko URL
+     - Tokenomics / burn / fee / no mint
+     - X, Telegram, GitHub, docs
+     - Logo URLs
+
+2. Uniswap Token Icon / Default Token List
+   - Issue #2509 bleibt offen.
+   - Nach CoinGecko finaler URL Issue aktualisieren.
+   - Ziel:
+     - CoinGecko URL im Issue ersetzen statt `N/A`.
+     - CMC URL spaeter nachreichen.
+     - Weiterhin canonical token-list URLs und hosted icon URLs nennen.
+
+3. Etherscan Reputation / Metadata
+   - Token Icon ist laut frueherer Pruefung live:
+     - `https://etherscan.io/token/images/infernoprotocol_ifr.svg`
+   - Weiteres Ziel:
+     - Etherscan Reputation von `Unknown` auf `Neutral/OK` bringen, falls noch nicht erfolgt.
+   - Wichtig fuer:
+     - Wallet-Vertrauen.
+     - MetaMask/Token-Registry Chancen.
+
+4. MetaMask / Wallet Metadata
+   - Direktes Logo/Registry-Thema bleibt nachrangig, bis Etherscan Reputation sauber ist.
+   - Dapp-seitig nutzt `wallet_watchAsset` weiterhin Project Logo.
+
+5. DEXScreener
+   - Token erscheint automatisch, sobald LP + mindestens eine Transaktion existieren.
+   - Token-Info kommt automatisch aus externen Tokenlisten wie CoinGecko.
+   - Schnelle manuelle Profilpflege/Logo/Socials laeuft ueber DEXScreener Enhanced Token Info und kann kostenpflichtig sein.
+
+6. Trust Wallet Assets
+   - Separater PR-Prozess im `trustwallet/assets` Repository.
+   - Processing Fee und Review erforderlich.
+   - Zahlung garantiert keine Annahme.
+   - Sinnvoll erst nach CoinGecko/CMC/Etherscan-Stabilisierung.
+
+7. Weitere optionale Verzeichnisse
+   - DEXTools Profil/Logo/Socials.
+   - CoinPaprika.
+   - LiveCoinWatch.
+   - CryptoRank.
+   - DefiLlama nur sinnvoll, wenn IFR Protocol TVL/Yield/Fees als Protokoll sauber reportbar sind.
+
+**Need From Gio**
+
+- Finale CoinGecko Token-URL, nicht nur GeckoTerminal Pool-URL.
+- Bestaetigung, ob CMC jetzt offiziell eingereicht werden soll.
+- Falls CMC eingereicht wird:
+  - offizielles Kontakt-E-Mail/Konto verwenden.
+  - keine Mehrfacheinreichungen.
+- Fuer X spaeter:
+  - X Developer App fertigstellen.
+  - Credentials nicht ins Repo, nur lokal/Secret.
