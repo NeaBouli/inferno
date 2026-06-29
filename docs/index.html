@@ -1308,11 +1308,13 @@
         <div id="lp-drop-lock" style="display:none;background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.3);border-radius:8px;padding:8px 12px;margin-bottom:12px;text-align:center;">
           <span style="color:#fbbf24;font-size:0.8rem;font-weight:600;">&#x26A1; Premium Locked &mdash; &ge;1,000 IFR</span>
         </div>
-        <div id="lp-drop-nolock" style="background:rgba(107,114,128,0.1);border:1px solid #374151;border-radius:8px;padding:8px 12px;margin-bottom:12px;text-align:center;">
-          <span style="color:#9ca3af;font-size:0.8rem;">Lock &ge;1,000 IFR &rarr; </span>
-          <a href="wiki/commitment-vault.html#lock-widget" style="color:#f97316;font-size:0.8rem;">Lock now</a>
+        <div id="lp-drop-nolock" style="background:rgba(107,114,128,0.1);border:1px solid #374151;border-radius:8px;padding:10px 12px;margin-bottom:12px;text-align:left;">
+          <div style="color:#e5e7eb;font-size:0.8rem;font-weight:700;margin-bottom:4px;">Premium Access</div>
+          <div style="color:#9ca3af;font-size:0.76rem;line-height:1.35;margin-bottom:8px;">Lock &ge;1,000 IFR in IFRLock to unlock Premium. Refundable anytime.</div>
+          <button id="lp-premium-lock-btn" onclick="lpLockPremium()" style="width:100%;background:#16a34a;color:white;border:none;border-radius:8px;padding:9px 10px;cursor:pointer;font-size:0.8rem;font-weight:700;">Lock 1,000 IFR for Premium</button>
+          <div id="lp-premium-lock-status" style="display:none;margin-top:8px;color:#fbbf24;font-size:0.72rem;line-height:1.35;"></div>
         </div>
-        <a href="wiki/commitment-vault.html#lock-widget" style="display:block;text-align:center;padding:9px 10px;background:#16a34a;color:white;border-radius:8px;font-size:0.8rem;font-weight:700;text-decoration:none;margin-bottom:8px;">&#x1F512; Lock IFR</a>
+        <a href="wiki/commitment-vault.html#lock-widget" style="display:block;text-align:center;padding:9px 10px;background:#1f2937;border:1px solid #374151;color:#e5e7eb;border-radius:8px;font-size:0.8rem;font-weight:700;text-decoration:none;margin-bottom:8px;">&#x1F512; CommitmentVault Lock</a>
         <div style="display:flex;gap:8px;flex-wrap:wrap;">
           <a href="https://app.uniswap.org/swap?outputCurrency=0x77e99917Eca8539c62F509ED1193ac36580A6e7B" target="_blank" rel="noopener" style="flex:1 1 80px;text-align:center;padding:8px;background:#f97316;color:white;border-radius:8px;font-size:0.8rem;font-weight:600;text-decoration:none;">&#x1F525; Buy IFR</a>
           <button onclick="lpAddIFRToken()" style="flex:1 1 80px;background:#e9ded0;color:#2f241d;border:none;border-radius:8px;padding:8px;cursor:pointer;font-size:0.8rem;font-weight:700;">Add IFR</button>
@@ -3627,13 +3629,14 @@ async function lpConnect() {
 }
 
 async function lpAddIFRToken() {
-  if (typeof IFRWallet === "undefined" || typeof IFRWallet.addToken !== "function") {
+  if (typeof IFRWallet === "undefined" || (typeof IFRWallet.addIFRToken !== "function" && typeof IFRWallet.addToken !== "function")) {
     alert("Wallet module not loaded. Please refresh the page and try again.");
     return false;
   }
 
   try {
-    var added = await IFRWallet.addToken();
+    var addToken = IFRWallet.addIFRToken || IFRWallet.addToken;
+    var added = await addToken();
     if (added) alert("IFR was added to MetaMask.");
   } catch (e) {
     console.error("Add IFR token error:", e.message, e.code);
@@ -3641,6 +3644,91 @@ async function lpAddIFRToken() {
       window.open("https://metamask.io/download", "_blank");
     } else if (e.code !== 4001 && e.code !== "ACTION_REJECTED") {
       alert("MetaMask could not add IFR automatically. Please import the token address manually.");
+    }
+  }
+  return false;
+}
+
+function lpSetPremiumLockStatus(message, color) {
+  var status = document.getElementById("lp-premium-lock-status");
+  if (!status) return;
+  status.style.display = message ? "" : "none";
+  status.style.color = color || "#fbbf24";
+  status.innerHTML = message || "";
+}
+
+async function lpLockPremium() {
+  if (typeof ethers === "undefined" || typeof IFRWallet === "undefined" || typeof IFRState === "undefined") {
+    lpSetPremiumLockStatus("Wallet modules not loaded. Please refresh.", "#fca5a5");
+    return false;
+  }
+  var button = document.getElementById("lp-premium-lock-btn");
+  try {
+    if (!IFRWallet.isConnected()) {
+      lpSetPremiumLockStatus("Connect wallet first.", "#fbbf24");
+      await IFRWallet.connect();
+    }
+    var provider = IFRWallet.getProvider();
+    var signer = IFRWallet.getSigner();
+    var address = IFRWallet.getAddress();
+    var tokenAddr = IFRState.CONTRACTS.token;
+    var lockAddr = IFRState.CONTRACTS.lock;
+    var minLock = ethers.utils.parseUnits("1000", 9);
+    var tokenAbi = [
+      "function balanceOf(address) view returns (uint256)",
+      "function allowance(address,address) view returns (uint256)",
+      "function approve(address,uint256) external returns (bool)"
+    ];
+    var lockAbi = [
+      "function lockedBalance(address) view returns (uint256)",
+      "function lock(uint256 amount) external"
+    ];
+    var token = new ethers.Contract(tokenAddr, tokenAbi, signer);
+    var lock = new ethers.Contract(lockAddr, lockAbi, signer);
+    if (button) {
+      button.disabled = true;
+      button.textContent = "Checking IFRLock...";
+    }
+    var locked = await lock.lockedBalance(address);
+    if (locked.gte(minLock)) {
+      lpSetPremiumLockStatus("Premium already active.", "#86efac");
+      var activeState = await IFRState.load(address);
+      lpUpdateUI(activeState);
+      return false;
+    }
+    var missing = minLock.sub(locked);
+    var balance = await token.balanceOf(address);
+    if (balance.lt(missing)) {
+      lpSetPremiumLockStatus("Not enough free IFR. Need " + ethers.utils.formatUnits(missing, 9).replace(/\.?0+$/, "") + " IFR.", "#fca5a5");
+      return false;
+    }
+    var allowance = await token.allowance(address, lockAddr);
+    if (allowance.lt(missing)) {
+      if (button) button.textContent = "Approve in wallet...";
+      lpSetPremiumLockStatus("Confirm approval for IFRLock in your wallet.", "#fbbf24");
+      var approveTx = await token.approve(lockAddr, missing);
+      lpSetPremiumLockStatus("Approval submitted. Waiting for confirmation...", "#fbbf24");
+      await approveTx.wait();
+    }
+    if (button) button.textContent = "Lock in wallet...";
+    lpSetPremiumLockStatus("Confirm IFRLock transaction in your wallet.", "#fbbf24");
+    var lockTx = await lock.lock(missing);
+    lpSetPremiumLockStatus("Lock submitted. Waiting for confirmation...", "#fbbf24");
+    await lockTx.wait();
+    lpSetPremiumLockStatus("Premium lock complete.", "#86efac");
+    var state = await IFRState.load(address);
+    lpUpdateUI(state);
+  } catch(e) {
+    console.error("Premium lock error:", e);
+    if (e.code === 4001 || e.code === "ACTION_REJECTED") {
+      lpSetPremiumLockStatus("Transaction cancelled in wallet.", "#fbbf24");
+    } else {
+      lpSetPremiumLockStatus(e.reason || e.message || "Premium lock failed.", "#fca5a5");
+    }
+  } finally {
+    if (button) {
+      button.disabled = false;
+      button.textContent = "Lock 1,000 IFR for Premium";
     }
   }
   return false;
