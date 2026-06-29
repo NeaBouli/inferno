@@ -1623,7 +1623,7 @@ build:{q:"What do you want to build?",sub:"We tailor the guide to your use case:
 {i:"&#x1F91D;",t:"I represent a business / team",d:"Full onboarding with BuilderRegistry",a:"wiki/business-onboarding.html"}
 ]},
 lend_choice:{q:"What do you want to do in LendingVault?",sub:"Lender offers and market data are live. Borrowing opens after price collateral is activated:",s:2,t:2,o:[
-{i:"&#x1F4B8;",t:"Offer IFR as Lender",d:"Connect wallet, approve IFR, then create or increase a LendingVault offer",a:"wiki/lending-vault.html#lending-widget",h:1},
+{i:"&#x1F4B8;",t:"Offer IFR as Lender",d:"Guided 1-5 flow: connect, amount, approve, create offer, verify live",a:"wiki/lending-vault.html#lending-widget",h:1},
 {i:"&#x1F3EA;",t:"View Lending Market",d:"Live offers, available IFR, utilization, and current monthly rate",a:"wiki/lending-market.html#offers"},
 {i:"&#x1F3E6;",t:"Borrow IFR",d:"Browse offers now; borrow transactions unlock after ifrPriceWei is set",a:"wiki/lending-vault.html#lending-widget"}
 ]},
@@ -1976,7 +1976,7 @@ render();
             <a href="wiki/lending-vault.html#lending-widget" style="font-size:10px;color:#22c55e;text-decoration:none;">Offer IFR</a>
           </div>
           <div style="font-size:13px;font-weight:600;color:#22c55e;"><span data-live-key="card-lending-available">loading&hellip;</span> available</div>
-          <div style="font-size:10px;color:#666;margin-top:2px;"><span data-live-key="card-lending-lent">loading&hellip;</span> lent. Borrower transactions require <span data-live-key="lending-price-status">price check</span>.</div>
+          <div style="font-size:10px;color:#666;margin-top:2px;"><span data-live-key="lending-offer-count">0</span> live offers. <span data-live-key="card-lending-lent">loading&hellip;</span> lent. Borrower transactions require <span data-live-key="lending-price-status">price check</span>.</div>
         </div>
 
         <div style="background:#111113;border:1px solid #222225;border-radius:8px;padding:14px 16px;">
@@ -2706,7 +2706,7 @@ if (isLocked) {
     <div class="reveal" style="text-align:center;margin-bottom:32px;">
       <p class="section-label">Phase 3</p>
       <h2 class="section-title">DeFi Infrastructure</h2>
-      <p style="color:var(--text-muted);max-width:600px;margin:8px auto 0;font-size:14px;">Bootstrap ENDED 05.06.2026 &mdash; IFR live on Uniswap V2. CommitmentVault locks and LendingVault offers are now self-service wallet flows.</p>
+      <p style="color:var(--text-muted);max-width:600px;margin:8px auto 0;font-size:14px;">Bootstrap ENDED 05.06.2026 &mdash; IFR live on Uniswap V2. CommitmentVault locks and LendingVault offers are now guided self-service wallet flows.</p>
     </div>
     <div class="reveal" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;max-width:960px;margin:0 auto;">
       <a href="wiki/commitment-vault.html" style="background:#111113;border:1px solid #222225;border-radius:12px;padding:20px;text-decoration:none;transition:border-color 0.2s;">
@@ -2717,7 +2717,7 @@ if (isLocked) {
       <a href="wiki/lending-vault.html" style="background:#111113;border:1px solid #222225;border-radius:12px;padding:20px;text-decoration:none;transition:border-color 0.2s;">
         <div style="font-size:24px;margin-bottom:8px;">&#x1F4B0;</div>
         <div style="font-weight:700;color:#e8e8ed;margin-bottom:4px;">LendingVault</div>
-        <div style="font-size:13px;color:#8a8a96;">Offer free IFR with MetaMask: approve, then create or increase offer.</div>
+        <div style="font-size:13px;color:#8a8a96;">Guided lender flow: connect, choose amount, approve, create offer, verify market status.</div>
       </a>
       <a href="wiki/lending-market.html" style="background:#111113;border:1px solid #222225;border-radius:12px;padding:20px;text-decoration:none;transition:border-color 0.2s;">
         <div style="font-size:24px;margin-bottom:8px;">&#x1F3EA;</div>

@@ -3017,3 +3017,72 @@ index acf5e72f..680ed772 100644
 - C2 Lending Offer ist jetzt korrekt on-chain aktiv.
 - Market und Live-Kacheln sollten ab jetzt `20.2M IFR` available anzeigen.
 - Borrowing bleibt trotzdem blockiert, solange `ifrPriceWei=0`.
+
+---
+
+## 2026-06-29 [CODEX]
+### TYPE: UX / LANDING / WIKI
+### STATUS: DONE — Guided 1-5 lender flow for new users
+
+**Datum:** 2026-06-29 EEST
+**Autor:** CODEX
+
+**Gio Vorgabe**
+
+- Fuer neue User ist der Lender-Prozess ohne KI zu umfangreich.
+- Lender sollen durch klare Schritte 1, 2, 3 usw. gefuehrt werden, bis die Offer live ist.
+- Landing, Live Tracking, Kacheln, Wiki und GitHub muessen aktualisiert werden.
+
+**Geaendert**
+
+- `docs/wiki/lending-vault.html`
+  - Neuer `Lender Flow` Stepper:
+    1. Connect wallet
+    2. Choose amount
+    3. Approve IFR
+    4. Create offer
+    5. Offer live
+  - Stepper liest den echten Zustand:
+    - Wallet verbunden?
+    - Betrag gesetzt?
+    - Allowance ausreichend?
+    - Offer aktiv?
+  - CTA springt automatisch:
+    - `Connect Wallet`
+    - `Use Max`
+    - `Approve IFR`
+    - `Create Offer`
+    - `View Market`
+  - Betragseingabe ist toleranter:
+    - akzeptiert deutsches Dezimalkomma und normalisiert intern auf Punkt.
+  - SEO/OG/JSON-LD Text auf `guided 1-5 lender flow` aktualisiert.
+- `docs/index.html`
+  - Landing Wizard `What brings you here today?` beschreibt den Lender-Flow jetzt als:
+    - connect
+    - amount
+    - approve
+    - create offer
+    - verify live
+  - Phase-3 Kachel `LendingVault` beschreibt den gefuehrten Flow.
+  - Live-Kachel `LendingVault Offers` zeigt jetzt auch `lending-offer-count`.
+- `docs/wiki/lending-market.html`
+  - Market verweist fuer neue Lender direkt auf den guided Lender Flow.
+- `apps/ai-copilot/src/context/ifr-knowledge.ts`, `docs/llms.txt`
+  - AI/GEO-Fakten aktualisiert: guided 1-5 Flow, C2 Offer aktiv.
+- `docs/wiki/roadmap.html`, `docs/TODO.md`, `docs/TODO.html`
+  - Status aktualisiert:
+    - C2 Lending Offer aktiv.
+    - C1/C3 noch offen.
+    - Borrower-Loans warten auf `ifrPriceWei`.
+
+**Verifikation**
+
+- Browser mobile viewport ohne Wallet:
+  - Schritt 1 `Connect wallet` ist aktiv.
+  - CTA zeigt `Connect Wallet`.
+  - Kein horizontaler Overflow.
+
+**Offen**
+
+- Borrower-Flow finalisieren, sobald `ifrPriceWei` gesetzt ist.
+- Batch-Lock UX bleibt separates Improvement.

@@ -8,7 +8,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>LendingVault &mdash; Inferno ($IFR) Documentation</title>
   <meta name="keywords" content="LendingVault, IFR lending, IFR borrower, lending market, Ethereum Mainnet, ETH collateral, interest rate, createOffer, IFR approval">
-  <meta name="description" content="Live IFR LendingVault on Ethereum Mainnet. Lenders connect MetaMask, approve IFR, then create offers. Borrower and market views read live LendingVault data; borrowing opens after ifrPriceWei is set.">
+  <meta name="description" content="Live IFR LendingVault on Ethereum Mainnet with a guided 1-5 lender flow. Connect MetaMask, choose amount, approve IFR if needed, create offer, then verify live market status.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -621,19 +621,19 @@
   <meta property="og:type" content="article">
   <meta property="og:site_name" content="Inferno Protocol">
   <meta property="og:title" content="LendingVault — Inferno Protocol ($IFR)">
-  <meta property="og:description" content="Live IFR LendingVault on Ethereum Mainnet. Lenders approve IFR, create offers, and expose borrowable market liquidity.">
+  <meta property="og:description" content="Live IFR LendingVault on Ethereum Mainnet with guided lender steps, direct market reads, and borrower readiness status.">
   <meta property="og:url" content="https://ifrunit.tech/wiki/lending-vault.html">
   <meta property="og:image" content="https://ifrunit.tech/assets/ifr_icon_256.png">
   <meta name="twitter:card" content="summary">
   <meta name="twitter:title" content="LendingVault — Inferno Protocol ($IFR)">
-  <meta name="twitter:description" content="Live IFR LendingVault on Ethereum Mainnet with lender offers, borrower status, and live market reads.">
+  <meta name="twitter:description" content="Live IFR LendingVault on Ethereum Mainnet with guided lender steps and live market reads.">
   <meta name="twitter:site" content="@IFRtoken">
   <meta name="twitter:image" content="https://ifrunit.tech/assets/ifr_icon_256.png">  <script type="application/ld+json">
   {
     "@context": "https://schema.org",
     "@type": "TechArticle",
     "headline": "LendingVault — IFR Lending against ETH Collateral",
-    "description": "Live IFR LendingVault on Ethereum Mainnet. Lenders approve IFR, create offers, and expose borrowable market liquidity. Borrowing opens after ifrPriceWei is set.",
+    "description": "Live IFR LendingVault on Ethereum Mainnet with a guided 1-5 lender flow: connect wallet, choose amount, approve IFR if needed, create offer, then verify live market status.",
     "url": "https://ifrunit.tech/wiki/lending-vault.html",
     "isPartOf": {"@id": "https://ifrunit.tech/#website"},
     "publisher": {"@id": "https://ifrunit.tech/#organization"},
@@ -796,7 +796,7 @@
       <!-- ======================================== -->
       <h2>1. The Idea</h2>
       <p>
-        A lender connects MetaMask, chooses free IFR, approves the LendingVault once if needed, then signs <code>createOffer(amount)</code>. Only after <code>createOffer</code> confirms on-chain does the amount appear in the market and borrower views.
+        A lender follows a guided 1-5 flow: connect MetaMask, choose the free IFR amount, approve the LendingVault if needed, confirm <code>createOffer(amount)</code>, then verify that the offer is live in the market. Only after <code>createOffer</code> confirms on-chain does the amount appear in the market and borrower views.
       </p>
       <p>
         <strong>Builders</strong> can browse live offers and borrow IFR against ETH collateral after the contract price parameter <code>ifrPriceWei</code> is set for collateral calculation. Approval alone is not a lending offer; it only gives the vault permission to transfer IFR in the next transaction.
@@ -1026,12 +1026,31 @@
         .lv-stat .stat-value{font-size:1.3rem;font-weight:700;color:var(--accent)}
         .lv-info-box{background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:8px;padding:14px;margin:14px 0;font-size:0.88rem;line-height:1.7}
         .lv-status-msg{margin-top:12px;padding:12px;border-radius:8px;font-size:0.88rem}
+        .lv-guide{display:grid;gap:10px;margin-top:14px}
+        .lv-guide-step{display:grid;grid-template-columns:32px 1fr auto;gap:12px;align-items:center;background:rgba(255,255,255,0.035);border:1px solid var(--border);border-radius:8px;padding:12px}
+        .lv-guide-num{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#1f2937;color:#9ca3af;font-weight:800;font-size:0.82rem}
+        .lv-guide-title{font-weight:700;font-size:0.9rem;color:var(--text);line-height:1.3}
+        .lv-guide-desc{font-size:0.78rem;color:var(--muted);line-height:1.4;margin-top:2px}
+        .lv-guide-state{font-size:0.7rem;font-weight:800;text-transform:uppercase;letter-spacing:0.04em;color:#8a8a96;white-space:nowrap}
+        .lv-guide-step.done{border-color:rgba(34,197,94,0.35);background:rgba(34,197,94,0.055)}
+        .lv-guide-step.done .lv-guide-num{background:#166534;color:#dcfce7}
+        .lv-guide-step.done .lv-guide-state{color:#86efac}
+        .lv-guide-step.active{border-color:#f97316;background:rgba(249,115,22,0.09)}
+        .lv-guide-step.active .lv-guide-num{background:#f97316;color:#1a0c02}
+        .lv-guide-step.active .lv-guide-state{color:#fdba74}
+        .lv-guide-step.blocked{border-color:rgba(239,68,68,0.45);background:rgba(239,68,68,0.07)}
+        .lv-guide-step.blocked .lv-guide-num{background:#991b1b;color:#fee2e2}
+        .lv-guide-step.blocked .lv-guide-state{color:#fca5a5}
+        .lv-guide-cta{display:flex;justify-content:space-between;gap:12px;align-items:center;background:rgba(0,0,0,0.24);border:1px solid var(--border);border-radius:8px;padding:12px;margin-top:12px}
+        .lv-guide-cta strong{display:block;color:var(--text);font-size:0.88rem}
+        .lv-guide-cta span{display:block;color:var(--muted);font-size:0.78rem;margin-top:2px}
+        @media(max-width:560px){.lv-guide-step{grid-template-columns:30px 1fr}.lv-guide-state{grid-column:2}.lv-guide-cta{display:block}.lv-guide-cta .lv-btn{margin-top:10px;width:100%;text-align:center}}
       </style>
 
       <!-- Live Status Banner -->
       <div class="lv-widget" style="background:rgba(34,197,94,0.06);border-color:rgba(34,197,94,0.25);text-align:center;">
         <div style="font-size:0.78rem;font-weight:700;color:#22c55e;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px;">Live on Ethereum Mainnet</div>
-        <p style="color:var(--muted);font-size:0.88rem;margin:0;">LendingVault deployed on Mainnet. feeExempt active since 06.04.2026.<br>Connect your wallet, choose free IFR, approve once if needed, then create or increase your lending offer.</p>
+        <p style="color:var(--muted);font-size:0.88rem;margin:0;">LendingVault deployed on Mainnet. feeExempt active since 06.04.2026.<br>The page now guides lenders step by step from wallet connection to a live market offer.</p>
       </div>
 
       <!-- Connect Wallet -->
@@ -1039,13 +1058,49 @@
         <h3 style="margin-bottom:8px;">Connect Wallet</h3>
         <p style="color:var(--muted);font-size:0.88rem;margin-bottom:14px;">Use the same IFR wallet connector as the header. After connection, you can offer free IFR in LendingVault.</p>
         <button class="lv-btn" id="lv-connect-btn">Connect Wallet</button>
-        <div id="lv-wallet-info" class="lv-hidden" style="margin-top:14px;">
+      <div id="lv-wallet-info" class="lv-hidden" style="margin-top:14px;">
           <div style="display:flex;gap:20px;flex-wrap:wrap;">
             <div><span style="color:var(--muted);font-size:0.8rem;">Wallet</span><br><strong id="lv-address" style="font-family:monospace;">—</strong></div>
             <div><span style="color:var(--muted);font-size:0.8rem;">IFR Balance</span><br><strong id="lv-ifr-balance" style="color:var(--accent);">—</strong></div>
             <div><span style="color:var(--muted);font-size:0.8rem;">ETH Balance</span><br><strong id="lv-eth-balance" style="color:#22c55e;">—</strong></div>
             <div><span style="color:var(--muted);font-size:0.8rem;">Allowance</span><br><strong id="lv-allowance" style="color:#93c5fd;">—</strong></div>
           </div>
+        </div>
+      </div>
+
+      <div class="lv-widget" id="lv-lender-guide">
+        <h3 style="margin-bottom:8px;">Lender Flow</h3>
+        <p style="color:var(--muted);font-size:0.88rem;margin-bottom:14px;">Follow the active step. Completed steps turn green automatically after the Mainnet state updates.</p>
+        <div class="lv-guide">
+          <div class="lv-guide-step active" id="lv-step-connect">
+            <div class="lv-guide-num">1</div>
+            <div><div class="lv-guide-title">Connect wallet</div><div class="lv-guide-desc">Use MetaMask on Ethereum Mainnet.</div></div>
+            <div class="lv-guide-state">Active</div>
+          </div>
+          <div class="lv-guide-step" id="lv-step-amount">
+            <div class="lv-guide-num">2</div>
+            <div><div class="lv-guide-title">Choose amount</div><div class="lv-guide-desc">Pick free IFR to offer. Use max is fine for the full free balance.</div></div>
+            <div class="lv-guide-state">Waiting</div>
+          </div>
+          <div class="lv-guide-step" id="lv-step-approve">
+            <div class="lv-guide-num">3</div>
+            <div><div class="lv-guide-title">Approve IFR</div><div class="lv-guide-desc">Only needed if LendingVault allowance is too low.</div></div>
+            <div class="lv-guide-state">Waiting</div>
+          </div>
+          <div class="lv-guide-step" id="lv-step-offer">
+            <div class="lv-guide-num">4</div>
+            <div><div class="lv-guide-title">Create offer</div><div class="lv-guide-desc">Confirm createOffer in MetaMask. This is the market entry.</div></div>
+            <div class="lv-guide-state">Waiting</div>
+          </div>
+          <div class="lv-guide-step" id="lv-step-live">
+            <div class="lv-guide-num">5</div>
+            <div><div class="lv-guide-title">Offer live</div><div class="lv-guide-desc">Borrowers and Market can now see the IFR amount.</div></div>
+            <div class="lv-guide-state">Waiting</div>
+          </div>
+        </div>
+        <div class="lv-guide-cta">
+          <div><strong id="lv-guide-title">Connect your wallet</strong><span id="lv-guide-summary">Start with the same wallet button used in the page header.</span></div>
+          <button class="lv-btn" id="lv-guide-action" type="button" style="padding:9px 16px;font-size:0.86rem;">Connect Wallet</button>
         </div>
       </div>
 
@@ -1064,7 +1119,7 @@
 
           <div class="lv-form-group">
             <label>IFR Amount to Offer</label>
-            <input type="number" id="lv-offer-amount" placeholder="e.g. 50000000" min="1" step="1">
+            <input type="text" id="lv-offer-amount" inputmode="decimal" placeholder="e.g. 50000000" autocomplete="off">
             <div class="lv-hint">Available: <span id="lv-lender-balance">—</span></div>
           </div>
 
@@ -1340,6 +1395,84 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
   function formatInput(value) {
     return ethers.utils.formatUnits(value, IFR_DECIMALS).replace(/\.?0+$/, "");
   }
+  function normalizeAmount(raw) {
+    return String(raw || "").trim().replace(/\s+/g, "").replace(",", ".");
+  }
+  function parseOfferAmountOrNull() {
+    try {
+      var input = el("lv-offer-amount");
+      var raw = normalizeAmount(input && input.value);
+      if (!raw || Number(raw) <= 0) return null;
+      return ethers.utils.parseUnits(raw, IFR_DECIMALS);
+    } catch(e) {
+      return null;
+    }
+  }
+  function setGuideStep(id, state) {
+    var row = el(id);
+    if (!row) return;
+    row.classList.remove("done", "active", "blocked");
+    if (state) row.classList.add(state);
+    var label = row.querySelector(".lv-guide-state");
+    if (label) label.textContent = state === "done" ? "Done" : state === "active" ? "Active" : state === "blocked" ? "Check" : "Waiting";
+  }
+  function setGuideCta(title, summary, actionText, handler) {
+    var titleEl = el("lv-guide-title");
+    var summaryEl = el("lv-guide-summary");
+    var actionEl = el("lv-guide-action");
+    if (titleEl) titleEl.textContent = title;
+    if (summaryEl) summaryEl.textContent = summary;
+    if (actionEl) {
+      actionEl.textContent = actionText;
+      actionEl.disabled = !handler;
+      actionEl.onclick = handler || null;
+    }
+  }
+  function updateLenderGuide() {
+    var amount = parseOfferAmountOrNull();
+    var hasActiveOffer = !!(lvHasOffer && lvOffer && lvOffer.active);
+    var allowanceCovers = amount ? lvAllowance.gte(amount) : lvAllowance.gt(0);
+    setGuideStep("lv-step-connect", lvAddress ? "done" : "active");
+    setGuideStep("lv-step-amount", "");
+    setGuideStep("lv-step-approve", "");
+    setGuideStep("lv-step-offer", "");
+    setGuideStep("lv-step-live", "");
+
+    if (!lvAddress) {
+      setGuideCta("Connect your wallet", "Start with MetaMask on Ethereum Mainnet.", "Connect Wallet", function() { if (connectBtn) connectBtn.click(); });
+      return;
+    }
+    if (hasActiveOffer && !amount) {
+      setGuideStep("lv-step-amount", "done");
+      setGuideStep("lv-step-approve", "done");
+      setGuideStep("lv-step-offer", "done");
+      setGuideStep("lv-step-live", "done");
+      setGuideCta("Offer is live", "Your IFR is visible in the Lending Market. Enter another amount only if you want to increase it.", "View Market", function() {
+        var marketTab = document.querySelector('.lv-tab[data-tab="market"]');
+        if (marketTab) marketTab.click();
+      });
+      return;
+    }
+    if (!amount) {
+      setGuideStep("lv-step-amount", "active");
+      setGuideCta("Choose the IFR amount", "Use max for the full free balance, or enter a smaller amount.", "Use Max", function() { var b = el("lv-use-max"); if (b) b.click(); });
+      return;
+    }
+    setGuideStep("lv-step-amount", "done");
+    if (lvBalance.gt(0) && amount.gt(lvBalance)) {
+      setGuideStep("lv-step-approve", "blocked");
+      setGuideCta("Amount is too high", "Lower the amount or use max. The amount cannot exceed your free IFR balance.", "Use Max", function() { var b = el("lv-use-max"); if (b) b.click(); });
+      return;
+    }
+    if (!allowanceCovers) {
+      setGuideStep("lv-step-approve", "active");
+      setGuideCta("Approve IFR", "Click the action button, then confirm the approval in MetaMask.", "Approve IFR", function() { var b = el("lv-create-offer-btn"); if (b) b.click(); });
+      return;
+    }
+    setGuideStep("lv-step-approve", "done");
+    setGuideStep("lv-step-offer", "active");
+    setGuideCta(hasActiveOffer ? "Increase offer" : "Create offer", "Click once, then confirm the transaction in MetaMask. This creates the market entry.", hasActiveOffer ? "Increase Offer" : "Create Offer", function() { var b = el("lv-create-offer-btn"); if (b) b.click(); });
+  }
   function setStatus(type, msg) {
     var s = el("lv-offer-status");
     if (!s) return;
@@ -1360,11 +1493,7 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
   function updateOfferActionState() {
     var btn = el("lv-create-offer-btn");
     if (!btn) return;
-    var amount = null;
-    try {
-      var raw = (el("lv-offer-amount").value || "").trim();
-      if (raw && Number(raw) > 0) amount = ethers.utils.parseUnits(raw, IFR_DECIMALS);
-    } catch(e) {}
+    var amount = parseOfferAmountOrNull();
     var allowanceCovers = amount ? lvAllowance.gte(amount) : lvAllowance.gt(0);
     if (lvHasOffer && lvOffer && lvOffer.active) {
       btn.textContent = allowanceCovers ? "Increase Offer" : "Approve + Increase Offer";
@@ -1373,6 +1502,7 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
     } else {
       btn.textContent = allowanceCovers ? "Create Offer" : "Approve + Create Offer";
     }
+    updateLenderGuide();
   }
 
   async function ensureMainnet(provider) {
@@ -1449,6 +1579,7 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
     await loadMarketData();
 
     el("lv-create-offer-btn").disabled = false;
+    updateLenderGuide();
   }
   window.lvAdoptMainWallet = lvAdoptMainWallet;
 
@@ -1517,9 +1648,11 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
         }
       }
       updateOfferActionState();
+      updateLenderGuide();
     } catch(e) {
       console.error("LV balances:", e);
       setStatus("error", "Could not read LendingVault state. Please refresh and try again.");
+      updateLenderGuide();
     }
   }
 
@@ -1605,7 +1738,7 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
   setInterval(loadMarketData, 60000);
 
   function selectedOfferAmount() {
-    var raw = (el("lv-offer-amount").value || "").trim();
+    var raw = normalizeAmount(el("lv-offer-amount").value);
     if (!raw || Number(raw) <= 0) throw new Error("Enter an IFR amount greater than 0.");
     var amount = ethers.utils.parseUnits(raw, IFR_DECIMALS);
     if (amount.lte(0)) throw new Error("Offer amount is too small.");
@@ -1619,6 +1752,7 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
     if (!lvBalance || lvBalance.isZero()) return;
     el("lv-offer-amount").value = formatInput(lvBalance.div(2));
     updateOfferActionState();
+    updateLenderGuide();
   });
 
   var useMaxBtn = el("lv-use-max");
@@ -1627,10 +1761,15 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
     if (!lvBalance || lvBalance.isZero()) return;
     el("lv-offer-amount").value = formatInput(lvBalance);
     updateOfferActionState();
+    updateLenderGuide();
   });
 
   var offerAmountInput = el("lv-offer-amount");
-  if (offerAmountInput) offerAmountInput.addEventListener("input", updateOfferActionState);
+  if (offerAmountInput) offerAmountInput.addEventListener("input", function() {
+    updateOfferActionState();
+    updateLenderGuide();
+  });
+  updateLenderGuide();
 
   // ── Loan Preview Calculator ──────────────────────────
   var borrowInput = document.getElementById("lv-borrow-amount");
