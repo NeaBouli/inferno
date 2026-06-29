@@ -3228,3 +3228,89 @@ index acf5e72f..680ed772 100644
   - `Premium Access` sendet `approve(address,uint256)` an IFR Token.
   - Danach sendet es `lock(uint256)` an `IFRLock` `0x769928aBDfc949D0718d8766a1C2d7dBb63954Eb`.
   - Keine Transaktion an `CommitmentVault`.
+
+---
+
+## 2026-06-30 [CODEX]
+### TYPE: SOCIAL / LISTING METADATA
+### STATUS: DONE / OPEN FOLLOW-UP — GeckoTerminal post sent, X/Uniswap metadata issues identified
+
+**Telegram Announcement**
+
+- Gio meldete: IFR ist im CoinGecko/GeckoTerminal Oekosystem als verified Ethereum Token Pool sichtbar.
+- Pool:
+  - `https://www.geckoterminal.com/eth/pools/0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0`
+- Telegram Post wurde direkt an offiziellen Announcement Channel `@IFRtoken` gesendet.
+- Telegram Result:
+  - Channel: `@IFRtoken`
+  - message_id: `44`
+- Inhalt:
+  - IFR/WETH live on Uniswap V2.
+  - Deflationary ERC-20 on Ethereum Mainnet.
+  - 2.5% burn forever.
+  - 1% protocol fee pool.
+  - No mint function.
+  - Fair launch: no presale, no VC, no IDO.
+  - Premium access via IFRLock.
+  - CommitmentVault + LendingVault live on Mainnet.
+  - Website `https://ifrunit.tech`.
+
+**X / Cashtag Issue**
+
+- Problem:
+  - Alte und neue X Posts mit `$IFR` zeigen X-autogenerierten Cashtag-Link.
+  - X scheint `$IFR` intern auf ein anderes IFR Asset / falsche Asset-Seite zu mappen.
+  - Das betrifft alte Posts rueckwirkend, weil X Cashtags dynamisch rendert.
+  - Alte Posts sind auf X nicht bzw. nur zeitlich begrenzt editierbar.
+- Bewertung:
+  - Kein Hinweis auf Account-Hack.
+  - Kein Fehler im Text/Account-Link `https://x.com/IFRtoken`.
+  - Ursache liegt wahrscheinlich in X Smart-Cashtag-/Asset-Datenbank und nicht im IFR Code.
+- Empfehlung:
+  - Neuen gepinnten Klarstellungs-Post auf X setzen.
+  - In Bio/Profil Contract eindeutig nennen.
+  - In neuen Posts nicht `$IFR` allein als erste Zeile verwenden.
+  - Immer Contract + GeckoTerminal-Link ergaenzen.
+- Support Text fuer X:
+  - Cashtag `$IFR` falsch gemappt.
+  - Richtiger Token: Inferno (`$IFR`) on Ethereum Mainnet.
+  - Contract: `0x77e99917Eca8539c62F509ED1193ac36580A6e7B`.
+  - Verified pool: GeckoTerminal Link oben.
+  - Official X: `https://x.com/IFRtoken`.
+  - Website: `https://ifrunit.tech`.
+
+**Uniswap Token Icon**
+
+- Frage:
+  - Warum zeigt Uniswap noch kein IFR Token Icon?
+- Antwort:
+  - ERC-20 Contracts enthalten kein Logo-Feld.
+  - Uniswap zieht Logos/Token-Info aus externen Token-Metadatenquellen, insbesondere CoinGecko/Tokenlists/Uniswap-Metadaten-Caches.
+  - GeckoTerminal Pool-Verification bedeutet nicht automatisch, dass Uniswap Web sofort das Token Icon rendert.
+  - Caches koennen 24-48h oder laenger brauchen.
+- Follow-up:
+  - CoinGecko/GeckoTerminal Token-Profil vollstaendig halten:
+    - Logo
+    - Website
+    - X
+    - Telegram
+    - Ethereum Contract
+    - IFR/WETH Pool
+  - Falls Uniswap Icon danach weiterhin fehlt:
+    - Uniswap Support anschreiben.
+    - Contract, GeckoTerminal-Link, Website und Logo-URL mitsenden.
+
+**Canonical Identifiers**
+
+- Official Website: `https://ifrunit.tech`
+- Official X: `https://x.com/IFRtoken`
+- Telegram Announcements: `https://t.me/IFRtoken`
+- Telegram Community: `https://t.me/IFR_token`
+- Ethereum Contract: `0x77e99917Eca8539c62F509ED1193ac36580A6e7B`
+- Uniswap V2 / GeckoTerminal Pool: `0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0`
+
+**Open**
+
+- X Support/Premium Support Ticket fuer falsche `$IFR` Cashtag-Zuordnung.
+- X pinned clarification post.
+- Uniswap icon / CoinGecko metadata propagation beobachten.
