@@ -195,7 +195,7 @@
         <span style="color:#6b7280;font-size:0.82rem;">Script: <code>scripts/contributors-lending-offer.js</code><br>
         Nach 50% Lock den verbleibenden Rest mit <code>LENDING_BPS=10000</code> anbieten.<br>
         DRY_RUN &#x2705; &mdash; approve + createOffer korrekt<br>
-        Status 29.06.2026: no offers yet; C2 needs small ETH top-up before remaining free IFR can be offered.<br>
+        Status 29.06.2026: Self-service UI built in <code>docs/wiki/lending-vault.html#lending-widget</code>. C2 still needs small ETH top-up before remaining free IFR can be offered.<br>
         LIVE script fallback: <code>CONTRIBUTOR_ADDR=0x... PRIVATE_KEY=0x... DRY_RUN=false MAINNET=true LENDING_BPS=10000 node scripts/contributors-lending-offer.js</code></span></li>
       <li><div class="cb"></div>&#x1F7E0; <strong>CommitmentVault Batch Lock UX verbessern</strong><br>
         <span style="color:#6b7280;font-size:0.82rem;">Ziel: 10-Tranchen-Split nicht mehr als 10 separate <code>lock()</code> Wallet-Confirmations.<br>

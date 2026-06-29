@@ -2806,5 +2806,58 @@ index acf5e72f..680ed772 100644
 - Landing/Transparency Live Tracking: JA, CommitmentVault ist ergaenzt.
 - Lending-Mechanismus:
   - Contract/Scripts/Docs: JA.
-  - Self-service MetaMask UI wie beim Lock: NOCH NICHT.
-  - Naechster Build: LendingVault Offer UI mit main wallet connector, `approve(LendingVault, amount)` und `createOffer(amount)`.
+  - Self-service MetaMask UI wie beim Lock: im naechsten Eintrag gebaut.
+  - Live Ziel: LendingVault Offer UI mit main wallet connector, `approve(LendingVault, amount)` und `createOffer(amount)`.
+
+---
+
+## 2026-06-29 [CODEX]
+### TYPE: FEATURE / UI
+### STATUS: DONE — LendingVault self-service offer flow
+
+**Datum:** 2026-06-29 EEST
+**Autor:** CODEX
+
+**Gio Frage**
+
+- "Wo mache ich das?" bezogen auf IFR im LendingVault anbieten.
+
+**Antwort / Entscheidung**
+
+- Vor diesem Change: noch nirgends sauber auf der Website; nur Script-Flow war live.
+- Nach diesem Change: `https://ifrunit.tech/wiki/lending-vault.html#lending-widget`
+
+**Geaendert wurde**
+
+- `docs/wiki/lending-vault.html`
+  - Header Wallet Popup um `Lend IFR` ergaenzt.
+  - LendingWidget nutzt denselben `IFRWallet` / Header Connector.
+  - Liest:
+    - IFR Balance
+    - ETH Balance
+    - Allowance fuer LendingVault
+    - bestehendes LendingVault Offer
+    - `totalAvailable`, `totalLent`, `getInterestRate`, `getOfferCount`
+  - Quick Actions:
+    - `Use 50%`
+    - `Use max`
+  - Transaktionsflow:
+    - wenn Allowance zu klein: `approve(LendingVault, amount)`
+    - wenn kein Offer: `createOffer(amount)`
+    - wenn aktives Offer vorhanden: `increaseOffer(amount)`
+  - Nach Erfolg: State reload, Market Stats reload, eigene Offer-Anzeige aktualisiert.
+- `docs/index.html`, `docs/wizard/lend.html`, `docs/wiki/roadmap.html`
+  - Texte aktualisiert: LendingVault Offer UI ist jetzt self-service wired.
+- `docs/TODO.md`, `docs/TODO.html`
+  - C2 Lending bleibt operativ pending, aber UI ist gebaut.
+
+**Wichtiger operativer Hinweis**
+
+- C2 hat nur ca. `0.003339556916621219 ETH`.
+- Monitor-Mindestziel fuer Gas ist `0.005 ETH`.
+- Vor dem echten Lending Offer sollte C2 leicht ETH auffuellen.
+- Danach auf `wiki/lending-vault.html#lending-widget`:
+  1. Wallet verbinden
+  2. `Use max` oder Betrag eingeben
+  3. `Approve + Create Offer`
+  4. MetaMask Approval bestaetigen, danach Offer TX bestaetigen
