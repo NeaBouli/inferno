@@ -89,6 +89,12 @@
 - [ ] Guardian multisig (separate Safe, cancel-only)
 - [ ] DAO governance framework (token-weighted voting)
 - [ ] Community proposals enabled
+- [ ] Community signer expansion after community voting is live:
+      evolve the Treasury/Community Safe from the current 3-of-5 model toward a broader signer set such as 4-of-7 or 5-of-9.
+      Recommended model: mixed selection, not pure whale voting and not pure random selection.
+      Candidate pool should require identity/contact verification, security readiness, long-term IFR alignment, no active conflicts,
+      and public acceptance of signer duties. Community vote should shortlist/elect candidates, while token holdings or locked IFR
+      can be one signal among several. Add rotation/term limits and emergency replacement rules before adding signers.
 - [ ] Builder token voting rights
 - [ ] Protocol revenue sharing model
 - [ ] Full DAO transition: Admin → Multisig → DAO
@@ -113,4 +119,4 @@
 See [Mainnet Checklist](MAINNET_CHECKLIST.md) for detailed progress.
 
 ---
-*Last updated: 05 March 2026*
+*Last updated: 30 June 2026*

@@ -3611,3 +3611,54 @@ index acf5e72f..680ed772 100644
   - GeckoTerminal URL
   - CMC URL if accepted by then
   - no-mint / fair-launch / governance docs.
+
+---
+
+## 2026-06-30 [GIO/CODEX]
+### TYPE: ROADMAP / GOVERNANCE / MULTISIG
+### STATUS: PLANNED - community signer expansion after voting goes live
+
+**User Intent**
+
+- Once the community receives voting rights, Gio wants to expand the multisig to additional community members.
+- Question discussed:
+  - large token holders?
+  - random selection?
+  - mixed model?
+
+**Roadmap Decision**
+
+- Added roadmap item:
+  - Community signer expansion after community voting is live.
+  - Current 3-of-5 Safe model can later evolve toward 4-of-7 or 5-of-9.
+- Updated:
+  - `docs/ROADMAP.md`
+  - `docs/wiki/roadmap.html`
+
+**Recommended Model**
+
+- Do not use pure whale voting:
+  - large holders may be aligned, but this can become plutocratic and weak against delegated/borrowed concentration.
+- Do not use pure random selection:
+  - randomness improves fairness, but signer responsibility needs operational readiness and security discipline.
+- Use a mixed model:
+  - candidate application / public nomination
+  - basic identity/contact verification or public accountability standard
+  - security-readiness check: hardware wallet, Safe experience, 2FA, no hot-wallet-only setup
+  - conflict review: no obvious hostile exchange, competitor, or compromised address risk
+  - community vote to shortlist/elect
+  - IFR holding or locked IFR as one positive signal, not the only requirement
+  - term limits / rotation
+  - emergency replacement path
+
+**Open Design Questions**
+
+- Final signer target:
+  - 4-of-7 for moderate expansion
+  - 5-of-9 for stronger decentralization but slower execution
+- Whether signer seats should be split into categories:
+  - core/security seats
+  - contributor seats
+  - community-elected seats
+  - ecosystem/builder seat
+- Whether locked IFR, active lending participation, or verified contributor status should be minimum eligibility requirements.
