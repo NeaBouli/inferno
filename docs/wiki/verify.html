@@ -341,7 +341,7 @@ function updateStep2Wallet(){
   var signBtn=document.getElementById("sign-btn");
   if(typeof IFRWallet!=="undefined"&&IFRWallet.isConnected()){
     var addr=IFRWallet.getAddress();
-    addrEl.textContent="u2B24 "+addr.slice(0,6);
+    addrEl.textContent="\u2B24 "+addr.slice(0,6);
     addrEl.style.color="#22c55e";
     signBtn.disabled=false;signBtn.style.opacity="1";
   }else{
@@ -461,7 +461,7 @@ function lpUpdateUI(state){
   if(connectBtn){connectBtn.style.display=connected?"none":"";if(!connected){connectBtn.textContent="Connect Wallet";connectBtn.disabled=false;connectBtn.style.background="#B0481E";connectBtn.style.borderColor="transparent";connectBtn.style.color="#fff";connectBtn.onclick=lpConnect}}
   if(connectedDiv)connectedDiv.style.display=connected?"":"none";
   if(connected&&state){
-    var addr=IFRWallet.getAddress();var shortAddr="u2B24 "+addr.slice(0,6);
+    var addr=IFRWallet.getAddress();var shortAddr="\u2B24 "+addr.slice(0,6);
     var el=document.getElementById("lp-header-addr");if(el)el.textContent=shortAddr;
     var dropAddr=document.getElementById("lp-drop-addr");if(dropAddr)dropAddr.textContent=addr.slice(0,10)+"..."+addr.slice(-6);
     var dropEth=document.getElementById("lp-drop-eth");if(dropEth)dropEth.textContent=parseFloat(state.ethBalance||"0").toFixed(4)+" ETH";
