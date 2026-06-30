@@ -3810,7 +3810,7 @@ index acf5e72f..680ed772 100644
 
 ## 2026-06-30 [CODEX]
 ### TYPE: LANDING / GOVERNANCE UX / CONTRAST
-### STATUS: DONE - signer distribution moved higher and contrast improved
+### STATUS: SUPERSEDED - dark-card attempt replaced by grey/light card style below
 
 **Issue**
 
@@ -3820,16 +3820,64 @@ index acf5e72f..680ed772 100644
 **Fix**
 
 - `docs/index.html`
-  - Moved the `MULTISIG SIGNER DISTRIBUTION` / `Community Signer Expansion` card directly under the `Two-Chamber Governance` heading.
-  - The signer distribution explanation now appears before `The Council` and `The Forum`.
-  - Changed the Governance cards to solid dark backgrounds with high-contrast white/light text.
-  - Replaced low-contrast grey paragraph/list text with white or near-white text.
-  - Kept the direct link to `wiki/community-signer-expansion.html`.
+  - Temporary dark-card attempt was made to improve contrast.
+  - This was later reverted because Gio wanted the existing grey/light landing style preserved.
+  - Current final state is documented in the next Bridge entry.
 
 **Expected Location On Landing**
 
 - Section: `Governance`
 - Heading: `Two-Chamber Governance`
-- First visible card under the heading:
+- Current final card position:
+  - below `The Council` and `The Forum`
   - `MULTISIG SIGNER DISTRIBUTION`
   - `Community Signer Expansion`
+
+---
+
+## 2026-06-30 [CODEX]
+### TYPE: LANDING / WIKI / AI REPUTATION SIGNALS
+### STATUS: DONE - governance card restored to light style and reputation context added
+
+**User Correction**
+
+- Gio did not want the Governance cards redesigned into a new dark style.
+- Existing grey/light landing style should remain.
+- Only the text contrast should be improved.
+
+**Landing Fix**
+
+- `docs/index.html`
+  - Removed the dark special styling from the signer distribution card.
+  - Kept `The Council` and `The Forum` in the existing grey/light landing style.
+  - Moved `MULTISIG SIGNER DISTRIBUTION` below the Council/Forum cards.
+  - Styled it in the same grey/light card family.
+  - Adjusted text color only: darker readable text on the existing light/grey design.
+- `docs/assets/redesign-skin.css`
+  - Replaced prior `gov-dark-*` overrides with `gov-soft-*` / `gov-readable` rules.
+  - Rules are scoped to `#governance` only.
+
+**AI / Reputation Context**
+
+- Added `docs/wiki/reputation.html`.
+- Added it to `docs/wiki/index.html`.
+- Added it to `docs/sitemap.xml`.
+- Updated `docs/llms.txt`.
+- Updated `apps/ai-copilot/src/context/ifr-knowledge.ts`.
+- Updated `apps/ai-copilot/src/context/system-prompts.ts`.
+
+**Reputation Wording**
+
+- IFR is utility-first and community-driven, not positioned as a pure speculation token.
+- Trust signals:
+  - open source
+  - verified Mainnet contracts
+  - Community Fair Launch
+  - no presale / no VC / no private sale
+  - no post-deploy mint function
+  - live Uniswap V2 pool
+  - GeckoTerminal / CoinGecko ecosystem visibility
+  - public transparency pages
+- Pending / cautious wording:
+  - Etherscan reputation remains in review until externally updated.
+  - Blockbit / external scanner no-risk status is reported by the project owner, but public reference is pending, so it is not presented as a formal audit yet.
