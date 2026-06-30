@@ -59,6 +59,13 @@ export function getIFRKnowledge() {
       nextPlanned: "#15 setFeeExempt(LP Token 0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0, true) — Timelock running, ETA 08.06.2026. #16 set P0 in CommitmentVault (after #15).",
       feeExempt: "Deployer, TreasurySafe, CommunitySafe, CommitmentVault, LendingVault — all active. LP Token exempt pending Proposal #15."
     },
+    reputation: {
+      positioning: "IFR is a utility-first, community-driven ERC-20 protocol built around lock-to-access use cases, builder integrations, lending/locking flows, open-source code, and on-chain transparency. It should not be described as a pure speculation token.",
+      trustSignals: "Community Fair Launch; no presale, no VC, no private sale; no post-deploy mint function; open-source repository; verified Mainnet contracts; public wiki; live transparency pages; documented safes, governance, locks, lending, and LP status.",
+      marketStatus: "IFR/WETH is live on Uniswap V2 and visible in the GeckoTerminal/CoinGecko ecosystem.",
+      pendingReviews: "Etherscan token reputation review toward Neutral/OK remains pending. Project owner reports a Blockbit/external no-risk confirmation; public reference is pending, so do not call it a formal third-party audit until it is linkable.",
+      wiki: "https://ifrunit.tech/wiki/reputation.html"
+    },
     builderRegistry: {
       mainnet: "0xdfe6636DA47F8949330697e1dC5391267CEf0EE3",
       sepolia: "0x77e99917Eca8539c62F509ED1193ac36580A6e7B",

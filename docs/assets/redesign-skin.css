@@ -649,61 +649,33 @@ select:focus {
   color: var(--ink) !important;
 }
 
-#governance .gov-dark-panel {
-  background: #07111f !important;
-  border-color: #38bdf8 !important;
-  color: #f8fafc !important;
+#governance .gov-soft-card {
+  background: linear-gradient(135deg, rgba(255,255,255,.96), rgba(246,242,235,.92)) !important;
+  border-color: var(--line) !important;
+  box-shadow: var(--shadow-soft) !important;
+  color: var(--ink) !important;
 }
 
-#governance .gov-dark-mini {
-  background: #0f172a !important;
-  border-color: #334155 !important;
-  color: #f1f5f9 !important;
+#governance .gov-soft-mini {
+  background: #fffaf2 !important;
+  border-color: #e4d8c7 !important;
+  color: #2f271f !important;
 }
 
-#governance .gov-dark-chamber,
-#governance .gov-dark-flow {
-  background: #111827 !important;
-  color: #f8fafc !important;
+#governance .gov-readable h3,
+#governance .gov-readable h4 {
+  color: #211c17 !important;
 }
 
-#governance .gov-dark-chamber-gold {
-  border-color: #fbbf24 !important;
+#governance .gov-readable p,
+#governance .gov-readable div {
+  color: #2f271f !important;
 }
 
-#governance .gov-dark-chamber-orange {
-  border-color: #fb923c !important;
-}
-
-#governance .gov-dark-flow {
-  border-color: #334155 !important;
-}
-
-#governance .gov-dark-panel h3,
-#governance .gov-dark-chamber h3,
-#governance .gov-dark-flow h4,
-#governance .gov-dark-panel p,
-#governance .gov-dark-chamber p,
-#governance .gov-dark-flow div,
-#governance .gov-dark-mini div {
-  color: #f8fafc !important;
-}
-
-#governance .gov-dark-panel [style*="color:#7dd3fc"],
-#governance .gov-dark-mini [style*="color:#7dd3fc"] {
-  color: #7dd3fc !important;
-}
-
-#governance .gov-dark-chamber-gold [style*="color:#fde68a"],
-#governance .gov-dark-chamber-gold [style*="color:#fbbf24"] {
-  color: #fde68a !important;
-}
-
-#governance .gov-dark-chamber-orange [style*="color:#fdba74"],
-#governance .gov-dark-chamber-orange [style*="color:#f97316"],
-#governance .gov-dark-flow [style*="color:#f97316"],
-#governance .gov-dark-flow [style*="color:#fb923c"] {
-  color: #fb923c !important;
+#governance .gov-readable [style*="color:#b45309"],
+#governance .gov-readable [style*="color:#f97316"],
+#governance .gov-readable [style*="color:#fb923c"] {
+  color: #b45309 !important;
 }
 
 [style*="color:#f97316"],
