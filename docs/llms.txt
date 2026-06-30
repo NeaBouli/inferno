@@ -68,7 +68,7 @@ IFR includes an AI Copilot assistant. Free users can ask general protocol questi
 - Status: planned, not active yet.
 - Current Safe model: 3-of-5.
 - Preferred path: keep 3-of-5 until community voting is live; then expand to 4-of-7 using a mixed model; consider 5-of-9 only after one stable community-signer term.
-- Selection model: eligibility filter + public nomination + community vote + security review + term limits/rotation + emergency replacement rules.
+- Selection model / multisig signer distribution process: eligibility filter + public nomination + community vote + security review + term limits/rotation + emergency replacement rules.
 - Avoid pure whale voting and pure random selection. Locked IFR, long-term participation, builder/lender/contributor activity, and security readiness are positive signals, not sole criteria.
 
 ## Integration Builder (Phase 5)
