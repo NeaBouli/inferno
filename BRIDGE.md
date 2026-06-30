@@ -3767,3 +3767,41 @@ index acf5e72f..680ed772 100644
   - assistant communication becomes more contextual and useful because it can use verified wallet and lock state.
 - Safety line retained:
   - assistant never needs private keys or seed phrases.
+
+---
+
+## 2026-06-30 [CODEX]
+### TYPE: LANDING / SEO / AI / GOVERNANCE MULTISIG DISTRIBUTION
+### STATUS: DONE - community signer distribution made explicit
+
+**Correction**
+
+- Gio clarified that the requested Landing/SEO/AI update referred to the multisig distribution procedure, not only the AI Copilot lock messaging.
+
+**Updated**
+
+- `docs/index.html`
+  - Added a visible Governance section card: `Community Signer Expansion`.
+  - The landing now explains the signer distribution process directly:
+    - not pure whale voting
+    - not pure random selection
+    - eligibility/security checks first
+    - public nomination
+    - community vote from the qualified pool
+    - security/conflict review
+    - staged Safe path from current `3-of-5` to `4-of-7`, later optional `5-of-9`
+    - term limits, rotation, and emergency replacement rules
+  - Added link text: `Read signer distribution plan`.
+  - Added community signer distribution to meta keywords/descriptions and JSON-LD structured data.
+- `docs/llms.txt`
+  - Reworded Governance Signer Expansion as the multisig signer distribution process.
+- `apps/ai-copilot/src/context/ifr-knowledge.ts`
+  - Added explicit wording that this is the multisig signer distribution process.
+- `apps/ai-copilot/src/context/system-prompts.ts`
+  - Added explicit Copilot guidance for explaining the community multisig signer distribution model.
+
+**Public Wording**
+
+- Large IFR holders, locked IFR holders, lenders, builders, and contributors can be positive alignment signals.
+- None of those factors automatically grants a signer seat.
+- Final signer candidates must be qualified, publicly nominated, voted on by the community, security-reviewed, and onboarded through Safe/governance.

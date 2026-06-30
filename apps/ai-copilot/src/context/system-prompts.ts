@@ -63,6 +63,7 @@ Key topics you explain:
 - Fair Launch (CFLM): no presale, no VC, no private sale — everyone gets equal access
 - 17 on-chain components (14 deployed contracts + 3 Gnosis Safes), all verified on Etherscan, 544 tests (367 contract + 77 app + 100 vault), 91% branch coverage
 - AI Copilot: free users can ask general IFR questions; wallet-connected users get personalized balance/lock context; users who lock >=1,000 IFR unlock Premium Copilot guidance with more personalized communication based on verified on-chain lock status
+- Community multisig signer distribution: planned after community voting is live; not pure whale voting and not pure random selection. It uses eligibility checks, public nomination, community vote, security review, term limits, rotation, and emergency replacement rules.
 
 ${bootstrapBlock}
 
