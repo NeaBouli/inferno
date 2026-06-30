@@ -7,7 +7,7 @@
   <link rel="alternate" hreflang="x-default" href="https://ifrunit.tech/wiki/agent.html">>  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>AI Copilot &amp; Points &mdash; Inferno ($IFR) Documentation</title>
   <meta name="keywords" content="Inferno, IFR, ERC-20, Ethereum, deflationary token, DeFi, blockchain, smart contract, governance, bootstrap">
-  <meta name="description" content="IFR AI Copilot with 3 modes (Explorer, User, Dev). RAG knowledge base, safety guards, points system.">
+  <meta name="description" content="IFR AI Copilot with 3 modes, RAG knowledge base, safety guards and Premium guidance for users who lock at least 1,000 IFR.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -501,14 +501,14 @@
   <meta property="og:image" content="https://ifrunit.tech/assets/ifr_icon_256.png">
   <meta name="twitter:card" content="summary">
   <meta name="twitter:title" content="AI Copilot and Points — Inferno Protocol ($IFR)">
-  <meta name="twitter:description" content="AI Copilot: 3 modes (Explorer, User, Dev), RAG knowledge base, safety guards, points system.">
+  <meta name="twitter:description" content="AI Copilot: 3 modes, RAG knowledge base, safety guards, and Premium guidance for IFR lockers.">
   <meta name="twitter:site" content="@IFRtoken">
   <meta name="twitter:image" content="https://ifrunit.tech/assets/ifr_icon_256.png">  <script type="application/ld+json">
   {
     "@context": "https://schema.org",
     "@type": "WebPage",
     "headline": "AI Copilot and Points",
-    "description": "IFR AI Copilot: embedded assistant with Explorer, User, and Dev modes. RAG-powered knowledge base, safety guards, and points system for FeeRouter discounts.",
+    "description": "IFR AI Copilot: embedded assistant with Explorer, User, and Dev modes. Premium guidance becomes more personalized for users who lock at least 1,000 IFR and verify wallet context.",
     "url": "https://ifrunit.tech/wiki/agent.html",
     "isPartOf": {"@id": "https://ifrunit.tech/#website"},
     "publisher": {"@id": "https://ifrunit.tech/#organization"},
@@ -670,7 +670,7 @@
             <p style="color:#9ca3af;margin-bottom:16px;">
               Connect your wallet to check your IFR lock status.<br>
               <span style="font-size:0.85rem;color:#6b7280;">
-                Free access available &middot; Premium unlocked with &ge;1,000 IFR locked
+                Free access available &middot; Premium guidance unlocked with &ge;1,000 IFR locked
               </span>
             </p>
             <button onclick="agConnect()"
@@ -713,7 +713,7 @@
                background:rgba(107,114,128,0.1);border:1px solid #374151;border-radius:8px;">
             <span style="color:#9ca3af;font-size:0.85rem;">
               &#x2726; <strong style="color:#e5e7eb;">Free Tier</strong> &mdash;
-              Lock &ge;1,000 IFR to unlock Premium Copilot
+              Lock &ge;1,000 IFR to unlock Premium Copilot with more personalized guidance
               <a href="https://ifrunit.tech/wiki/lock-mechanism.html" style="color:#f97316;margin-left:8px;font-size:0.8rem;">
                 Learn more &rarr;
               </a>
@@ -722,7 +722,7 @@
           <div id="ag-tier-premium" style="display:none;margin-top:12px;padding:10px 16px;
                background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.3);border-radius:8px;">
             <span style="color:#fbbf24;font-size:0.85rem;font-weight:600;">
-              &#x26A1; Premium Copilot Active &mdash; &ge;1,000 IFR locked
+              &#x26A1; Premium Copilot Active &mdash; more personalized guidance enabled by &ge;1,000 IFR locked
             </span>
           </div>
         </div>
@@ -732,7 +732,7 @@
       <!-- ========== 1. IFR AI Copilot ========== -->
       <h2 class="section-title">1. IFR AI Copilot</h2>
       <p>
-        The IFR AI Copilot is an embedded AI assistant available on the Inferno website. It provides contextual, role-aware guidance to every user type &mdash; from first-time token holders to integration developers. The copilot is powered by <strong>Claude Haiku 4.5</strong> and answers exclusively from the curated <code>IFR_KNOWLEDGE</code> base.
+        The IFR AI Copilot is an embedded AI assistant available on the Inferno website. It provides contextual, role-aware guidance to every user type &mdash; from first-time token holders to integration developers. Users can ask general questions for free. After wallet connection and IFR lock verification, Premium Copilot can communicate more personally because it can use wallet balance, lock status, tier, and on-chain context instead of only generic documentation. The copilot is powered by <strong>Claude Haiku 4.5</strong> and answers exclusively from the curated <code>IFR_KNOWLEDGE</code> base.
       </p>
       <p>
         The copilot appears as a floating widget in the bottom-right corner of every page. It understands the Inferno protocol, token mechanics, lock system, governance, and builder integrations &mdash; and adapts its responses based on the selected mode.
