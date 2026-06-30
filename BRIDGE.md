@@ -4,6 +4,159 @@
 
 ---
 
+## 2026-06-30 [CODEX]
+### TYPE: CURRENT DAY STATUS
+### STATUS: UPDATED - full bridge handoff for today's work
+
+**High-Level Stand**
+
+- Community Signer Expansion ist in Landing, Wiki, SEO/LLM-Kontext und Copilot-Kontext dokumentiert.
+- Die falsche standalone Wiki-Seite wurde ersetzt: `docs/wiki/community-signer-expansion.html` nutzt jetzt echte Wiki-Struktur, Sidebar, Wallet-Bar und Copilot Widget.
+- Landing Governance Design wurde nach Gio-Korrektur wieder an das bestehende helle/graue Kartenkonzept angepasst.
+- Lesbarkeit im Governance-Bereich wurde verbessert, ohne das Grunddesign umzubauen.
+- Reputation-/Trust-Kontext wurde fuer KI, SEO/GEO und Wiki ergaenzt:
+  - utility-first
+  - community-driven
+  - open source
+  - verified Mainnet contracts
+  - Community Fair Launch
+  - no presale / no VC / no private sale
+  - no post-deploy mint function
+  - live Uniswap V2 pool
+  - GeckoTerminal / CoinGecko ecosystem visibility
+  - public transparency pages
+
+**Community Multisig / Signer Expansion**
+
+- Governance-Plan dokumentiert:
+  - keine reine Whale-Auswahl
+  - kein reiner Zufall
+  - gemischtes Modell aus Qualifikation, oeffentlicher Nominierung, Community Vote, Conflict Review und Safe/Governance-Onboarding
+  - moeglicher Pfad: aktuell `3-of-5`, spaeter `4-of-7`, optional langfristig `5-of-9`
+  - Kriterien bleiben offen, bis Community-Voting live ist
+  - grosse Holder, Lockers, Lenders, Builder und aktive Contributors sind nur Alignment-Signale, keine automatischen Signer-Sitze
+- Landing-Ort:
+  - Section `Governance`
+  - unter `Two-Chamber Governance`
+  - separate Karte `MULTISIG SIGNER DISTRIBUTION`
+  - Link zur Wiki-Seite `Community Signer Expansion`
+- Wiki-Seite:
+  - `docs/wiki/community-signer-expansion.html`
+  - in Governance-Navigation und Wiki-Index eingebunden
+
+**AI / SEO / GEO / LLM**
+
+- `docs/llms.txt` erweitert.
+- `apps/ai-copilot/src/context/ifr-knowledge.ts` erweitert.
+- `apps/ai-copilot/src/context/system-prompts.ts` erweitert.
+- `docs/wiki/reputation.html` neu/aktualisiert und im Wiki verlinkt.
+- `docs/sitemap.xml` aktualisiert.
+- Ziel: Chatbots und Crawler sollen IFR als utility-first, fair launched, transparent und community-driven erfassen.
+- Wording bleibt bewusst sachlich: Etherscan Token Rep ist noch in Review; keine externen Status als final behaupten, solange nicht oeffentlich bestaetigt.
+
+**Etherscan**
+
+- Etherscan Token Update / Reputation Request wurde durch Gio abgesendet.
+- Etherscan Antwort:
+  - Request erhalten
+  - hoher Backlog
+  - keine Duplicate Tickets senden
+  - normale Bearbeitung kann laenger dauern
+  - paid priority support optional fuer 24h turnaround
+- Bridge-Status:
+  - Warten auf Etherscan.
+  - Nicht erneut einreichen, solange kein konkreter Ablehnungsgrund kommt.
+
+**CoinGecko / GeckoTerminal**
+
+- GeckoTerminal/CoinGecko-Status als positiver Trust-/Reputation-Kontext dokumentiert.
+- Pool-URL:
+  - `https://www.geckoterminal.com/eth/pools/0xbe495e9c0d8cc2dcf95570cf95b63c4844df31a0`
+- Branding-Kit Mail:
+  - angehaengte `.DS_Store` ist nur macOS Finder-Metadaten.
+  - Nicht verwenden, nicht uploaden, nicht committen.
+  - Echte Branding Assets nur von offiziellen CoinGecko/GeckoTerminal-Seiten oder aus klaren offiziellen Download-Dateien nutzen.
+
+**X / Twitter Bot**
+
+- X Developer Console wurde erklaert:
+  - Pay-per-use / Credits koennen Kosten verursachen, wenn Live-API genutzt wird.
+  - Manueller X-Account bleibt weiterhin normal nutzbar.
+  - Account Holder muss Developer App / Policies bestaetigen und spaeter Credentials bereitstellen.
+- X Automation bleibt als geplante technische Option dokumentiert:
+  - Dry-run by default.
+  - Live posting nur mit expliziten Env Flags.
+  - Keine Credentials ins Repo.
+- Secret Safety heute explizit abgesichert:
+  - `.gitignore` erweitert fuer Telegram/X/Twitter Secret-Dateien.
+  - Ignorierte Muster:
+    - `telegram.env`
+    - `telegram.*.env`
+    - `x.env`
+    - `x.*.env`
+    - `twitter.env`
+    - `twitter.*.env`
+    - `*.secrets.env`
+    - `*secret*.env`
+    - `*token*.env`
+  - `docs/social/x.env.example` bleibt erlaubt, weil nur Platzhalter.
+  - `git check-ignore` fuer typische X/Twitter Secret-Dateien: OK.
+
+**Deployment / GitHub / Railway**
+
+- GitHub Pages Deploy fuer Commit `e195d458` war zuerst blockiert/cancelled.
+- Aktion:
+  - stuck Pages run gecancelt
+  - neuen Pages Build angestossen
+  - failed deploy job rerun
+- Ergebnis:
+  - `pages-build-deployment` ist wieder gruen.
+  - Live-Seite liefert neue Wiki-Struktur aus.
+  - `https://ifrunit.tech/wiki/community-signer-expansion.html` zeigt neue Seite mit Wiki-Shell.
+- Aktuelle gruene Workflows fuer letzten Commit:
+  - `AI Copilot CI`
+  - `Docs Validator`
+  - `Security Audit`
+  - `pages-build-deployment`
+- Alte rote GitHub Workflows, nicht durch heutigen Wiki/Landing-Commit verursacht:
+  - `Benefits Network CI`
+    - Fehler: cache dependency path fuer `apps/benefits-network/*/package-lock.json` nicht vorhanden.
+  - `Points Backend CI`
+    - Fehler: doppelte Test-Globals/Funktionen in `captcha.test.ts` und `lockProof.test.ts`.
+  - `Update On-Chain Stats`
+    - Fehler: root `package-lock.json` nicht synchron mit `package.json` (`form-data`, `hasown`).
+- Railway:
+  - `ifr-ai-copilot`: Online und Health OK.
+  - `inferno`: Crashed.
+  - Crash-Log:
+    - `Verify API started port="3001"`
+    - `Fatal polling error err="404: Not Found"`
+  - Root path im Code:
+    - `apps/telegram/telegram-bot/src/index.js`
+    - `bot.launch().catch(...)` beendet Prozess bei Polling-Fehler.
+  - Wahrscheinliche Ursache:
+    - alter/falscher/missing Telegram Bot Token oder ein nicht mehr gueltiger Telegram API Bot-Kontext im Railway-Service `inferno`.
+  - Naechster Fix:
+    - klaeren, ob Railway-Service `inferno` noch gebraucht wird oder alter Restservice ist.
+    - falls gebraucht: Env/Token korrigieren oder Startmodus anpassen.
+    - falls nicht gebraucht: Service stoppen/deaktivieren, damit keine Crash-Mails mehr kommen.
+
+**Files touched today in current working copy**
+
+- `.gitignore`
+- `docs/social/README_X_AUTOMATION.md`
+- `BRIDGE.md`
+
+**Do Not Forget**
+
+- Keine echten Telegram-, X-, Twitter-, API- oder Wallet-Secrets in GitHub committen.
+- Keine `.DS_Store` Dateien committen oder an externe Token-Listing-Portale hochladen.
+- Etherscan nicht doppelt nerven; warten, bis Support antwortet.
+- Batch-Lock Verbesserungswunsch bleibt TODO fuer spaeter: Locking Flow ist aktuell funktional, aber 10 Tranches bedeuten mehrere Wallet-Signaturen.
+- Alte rote Workflows separat beheben, weil sie nicht Teil des aktuellen Landing/Wiki-Fixes waren.
+
+---
+
 ## 2026-06-10 [CODEX]
 ### TYPE: MEMO
 ### STATUS: CURRENT — Session Backup / Restart Stand
