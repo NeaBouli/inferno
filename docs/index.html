@@ -1313,6 +1313,9 @@
         <div id="lp-drop-nolock" style="background:rgba(107,114,128,0.1);border:1px solid #374151;border-radius:8px;padding:10px 12px;margin-bottom:12px;text-align:left;">
           <div style="color:#e5e7eb;font-size:0.8rem;font-weight:700;margin-bottom:4px;">Premium Access</div>
           <div style="color:#9ca3af;font-size:0.76rem;line-height:1.35;margin-bottom:8px;">Lock &ge;1,000 IFR in IFRLock to unlock Premium and more personalized Copilot guidance. Refundable anytime.</div>
+          <div style="color:#d1d5db;font-size:0.72rem;line-height:1.35;margin-bottom:8px;background:#1f2937;border:1px solid #374151;border-radius:6px;padding:7px 8px;">
+            Wallet safety: approve only IFRLock <span style="font-family:monospace;color:#fbbf24;">0x769928...3954Eb</span> and only the exact amount shown.
+          </div>
           <button id="lp-premium-lock-btn" onclick="lpLockPremium()" style="width:100%;background:#16a34a;color:white;border:none;border-radius:8px;padding:9px 10px;cursor:pointer;font-size:0.8rem;font-weight:700;">Lock 1,000 IFR for Premium</button>
           <div id="lp-premium-lock-status" style="display:none;margin-top:8px;color:#fbbf24;font-size:0.72rem;line-height:1.35;"></div>
         </div>
@@ -3736,7 +3739,7 @@ async function lpLockPremium() {
     var allowance = await token.allowance(address, lockAddr);
     if (allowance.lt(missing)) {
       if (button) button.textContent = "Approve in wallet...";
-      lpSetPremiumLockStatus("Confirm approval for IFRLock in your wallet.", "#fbbf24");
+      lpSetPremiumLockStatus("Confirm approval for IFRLock 0x769928...3954Eb only. MetaMask may show an untrusted-contract warning while external reputation updates.", "#fbbf24");
       var approveTx = await token.approve(lockAddr, missing);
       lpSetPremiumLockStatus("Approval submitted. Waiting for confirmation...", "#fbbf24");
       await approveTx.wait();

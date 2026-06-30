@@ -1,7 +1,9 @@
 {
   "scripts": {
     "post:x": "node scripts/post-x.js",
-    "post:x:dry": "X_DRY_RUN=true node scripts/post-x.js docs/social/x-geckoterminal-thread.md"
+    "post:x:dry": "X_DRY_RUN=true node scripts/post-x.js docs/social/x-geckoterminal-thread.md",
+    "post:x:daily:promo": "X_DRY_RUN=true node scripts/x-daily-bot.js promo",
+    "post:x:daily:status": "X_DRY_RUN=true node scripts/x-daily-bot.js status"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-verify": "^2.1.3",
