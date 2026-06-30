@@ -34,6 +34,11 @@ export function getIFRKnowledge() {
       maxFee: "5.0% (hard cap)",
       partnerPool: "40M IFR (4%)"
     },
+    aiCopilot: {
+      premiumThreshold: "Lock >=1,000 IFR in IFRLock",
+      premiumBenefit: "IFR lockers unlock Premium Copilot guidance. After wallet connection and lock verification, the assistant can communicate more personally because it can use wallet balance, lock status, tier, and on-chain context instead of only generic documentation.",
+      safety: "The assistant never needs private keys or seed phrases. Lock verification is read from on-chain state."
+    },
     partnerRewards: {
       rewardBps: 1500,
       policyTarget: "10-20%",

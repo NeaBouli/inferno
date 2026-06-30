@@ -3714,3 +3714,56 @@ index acf5e72f..680ed772 100644
 - Random selection can only happen inside a pre-qualified candidate pool.
 - Signer eligibility must include wallet security, Safe readiness, availability, contact reliability, conflict review, public duty acceptance, and alignment.
 - Treasury and LP Reserve Safes should expand more conservatively than Community/Grants Safe.
+
+---
+
+## 2026-06-30 [CODEX]
+### TYPE: SEO / GEO / AI / COPILOT PREMIUM MESSAGING
+### STATUS: DONE - IFR lock improves Copilot context messaging updated
+
+**User Intent**
+
+- Gio wanted chatbot/Aladin users to be told that locking IFR improves communication with the assistant.
+- Existing implementation already had:
+  - wallet-connect context
+  - Premium Copilot gate at `>=1,000 IFR`
+  - lock verification through IFRLock
+  - general text saying Premium gives deeper on-chain analysis
+- Gap:
+  - language was not explicit enough that verified wallet + lock context makes the assistant more personalized/useful.
+
+**Updated**
+
+- Landing SEO / social descriptions:
+  - `docs/index.html`
+- Landing wallet popup / AI Copilot section:
+  - `docs/index.html`
+- Embedded Aladin / IFR Copilot welcome text:
+  - `apps/ai-copilot/server/index.ts`
+- React Copilot widget premium text:
+  - `apps/ai-copilot/src/components/IFRCopilot.tsx`
+- Copilot structured knowledge:
+  - `apps/ai-copilot/src/context/ifr-knowledge.ts`
+  - `apps/ai-copilot/src/context/system-prompts.ts`
+- AI/GEO text:
+  - `docs/llms.txt`
+- Agent wiki page and RAG source:
+  - `docs/wiki/agent.html`
+  - `apps/ai-copilot/src/context/wiki-content.json`
+- Google/Search indexing:
+  - `docs/sitemap.xml`
+  - homepage lastmod set to `2026-06-30`
+  - agent page lastmod set to `2026-06-30`
+  - community signer expansion page added to sitemap
+
+**Final Messaging**
+
+- Free users:
+  - can ask general IFR protocol questions.
+- Wallet-connected users:
+  - can receive more personalized guidance from wallet balance and lock context.
+- Users who lock `>=1,000 IFR`:
+  - unlock Premium Copilot guidance.
+  - assistant communication becomes more contextual and useful because it can use verified wallet and lock state.
+- Safety line retained:
+  - assistant never needs private keys or seed phrases.

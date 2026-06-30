@@ -195,9 +195,9 @@ export default function IFRCopilot() {
 
               <p className="text-white font-semibold text-xs mb-1">Lock &ge;1,000 IFR to unlock:</p>
               <ul className="text-ifr-muted text-xs mb-3 space-y-0.5 list-disc list-inside">
-                <li>Premium Copilot access with deeper on-chain analysis</li>
-                <li>Access to the AI Copilot Gate (gated content platform)</li>
-                <li>Builder onboarding pathway</li>
+                <li>Premium Copilot access with more personalized communication based on wallet and lock context</li>
+                <li>Deeper on-chain guidance for your IFR position</li>
+                <li>AI Copilot Gate and builder onboarding pathway</li>
                 <li>Your lock is verified on-chain &mdash; no account needed</li>
               </ul>
 
