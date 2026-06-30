@@ -5,21 +5,37 @@
  * Post a single X post or a thread via the official X API.
  *
  * Defaults to dry-run. Live posting requires:
- *   X_DRY_RUN=false X_ALLOW_LIVE=true X_ACCESS_TOKEN=...
+ *   Credentials in local x.env plus X_DRY_RUN=false X_ALLOW_LIVE=true
  *
  * Input files can contain one post, or multiple posts separated by a line:
  *   ---tweet---
  */
 
-require('dotenv').config({ quiet: true });
-
 const fs = require('fs');
 const path = require('path');
+const dotenv = require('dotenv');
 
 const CREATE_POST_URL = 'https://api.x.com/2/tweets';
 const REFRESH_TOKEN_URL = 'https://api.x.com/2/oauth2/token';
 const THREAD_SEPARATOR = /^---tweet---$/gim;
 const MAX_POST_CHARS = 280;
+
+function loadEnvFiles() {
+  const envFiles = [
+    process.env.X_ENV_FILE,
+    'x.env',
+    '.env',
+  ].filter(Boolean);
+
+  envFiles.forEach(file => {
+    const absPath = path.resolve(process.cwd(), file);
+    if (fs.existsSync(absPath)) {
+      dotenv.config({ path: absPath, quiet: true });
+    }
+  });
+}
+
+loadEnvFiles();
 
 function envFlag(name, defaultValue) {
   if (process.env[name] == null) return defaultValue;
@@ -30,9 +46,10 @@ function usage() {
   console.log([
     'Usage:',
     '  X_DRY_RUN=true node scripts/post-x.js docs/social/x-post.md',
-    '  X_DRY_RUN=false X_ALLOW_LIVE=true X_ACCESS_TOKEN=... node scripts/post-x.js docs/social/x-post.md',
+    '  X_DRY_RUN=false X_ALLOW_LIVE=true node scripts/post-x.js docs/social/x-post.md',
     '',
     'Optional env:',
+    '  X_ENV_FILE=...         Load credentials from a custom local env file',
     '  X_REPLY_TO_ID=...       Start the thread as a reply to an existing post',
     '  X_REFRESH_TOKEN=...     Refresh OAuth2 access token before posting',
     '  X_CLIENT_ID=...         OAuth2 client id for refresh',
