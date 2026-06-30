@@ -25,6 +25,9 @@ logs/**/*.log
 # AI tooling (internal)
 .claude/
 
+# Local working handoff / private operator notes
+BRIDGE.md
+
 # OS files
 .DS_Store
 
