@@ -2,82 +2,589 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Community Signer Expansion &mdash; Inferno ($IFR)</title>
-  <meta name="description" content="Planned community multisig signer expansion architecture for Inferno Protocol: eligibility, voting, staged 4-of-7 and 5-of-9 Safe models, rotation, and risk controls.">
   <link rel="canonical" href="https://ifrunit.tech/wiki/community-signer-expansion.html">
+  <link rel="alternate" hreflang="en" href="https://ifrunit.tech/wiki/community-signer-expansion.html">
+  <link rel="alternate" hreflang="x-default" href="https://ifrunit.tech/wiki/community-signer-expansion.html">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Community Signer Expansion &mdash; Inferno ($IFR) Documentation</title>
+  <meta name="keywords" content="Inferno, IFR, multisig, Gnosis Safe, community governance, signer expansion, DAO governance, Ethereum">
+  <meta name="description" content="Planned Inferno ($IFR) community multisig signer expansion: eligibility, public nomination, community voting, staged 4-of-7 and 5-of-9 Safe models, rotation, and risk controls.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
-    :root{--bg:#080808;--panel:#111113;--panel2:#171719;--text:#f4f4f5;--muted:#a1a1aa;--line:#2a2a2d;--accent:#f97316;--green:#22c55e;--blue:#38bdf8;--red:#ef4444}
-    *{box-sizing:border-box}
-    body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;line-height:1.65}
-    a{color:var(--accent);text-decoration:none}
-    a:hover{text-decoration:underline}
-    .wrap{max-width:1040px;margin:0 auto;padding:32px 20px 72px}
-    .top{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:36px;border-bottom:1px solid var(--line);padding-bottom:16px}
-    .brand{font-weight:800;color:#fff}
-    .nav{display:flex;gap:16px;flex-wrap:wrap;font-size:14px}
-    .hero{padding:42px 0 28px}
-    .eyebrow{display:inline-block;color:var(--accent);border:1px solid rgba(249,115,22,.35);background:rgba(249,115,22,.08);border-radius:999px;padding:4px 12px;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
-    h1{font-size:clamp(34px,6vw,58px);line-height:1.05;margin:18px 0 14px;letter-spacing:0}
-    .lead{max-width:780px;color:var(--muted);font-size:18px;margin:0}
-    h2{font-size:26px;margin:42px 0 14px;color:#fff}
-    h3{font-size:18px;margin:26px 0 10px;color:#fff}
-    p{margin:0 0 14px}
-    ul{margin:0 0 16px;padding-left:22px;color:var(--muted)}
-    li{margin:7px 0}
-    .grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin:22px 0}
-    .card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:18px}
-    .card strong{display:block;color:#fff;margin-bottom:6px}
-    .card p{font-size:14px;color:var(--muted);margin:0}
-    .callout{border-left:3px solid var(--accent);background:rgba(249,115,22,.08);padding:16px 18px;margin:20px 0;color:#f3f4f6}
-    table{width:100%;border-collapse:collapse;margin:16px 0 24px;background:var(--panel)}
-    th,td{border-bottom:1px solid var(--line);padding:12px;text-align:left;vertical-align:top}
-    th{color:#d4d4d8;font-size:13px;text-transform:uppercase;letter-spacing:.06em}
-    td{color:var(--muted)}
-    code{color:#fbbf24;background:#161616;border:1px solid #2a2a2d;border-radius:4px;padding:1px 5px}
-    .status{color:var(--green);font-weight:700}
-    .risk{color:var(--red);font-weight:700}
-    .next{color:var(--blue);font-weight:700}
-    .footer{margin-top:48px;padding-top:18px;border-top:1px solid var(--line);color:#71717a;font-size:13px}
-    @media(max-width:760px){.grid{grid-template-columns:1fr}.top{align-items:flex-start;flex-direction:column}table{font-size:14px}}
+    /* ============================================================
+       Inferno Wiki — Shared Styles (copy into every wiki page)
+       ============================================================ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #0a0a0a;
+      --card:     #111113;
+      --border:   #222225;
+      --text:     #e8e8ed;
+      --muted:    #8a8a96;
+      --accent:   #ff4500;
+      --green:    #22c55e;
+      --sidebar-w: 240px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    /* ---------- Layout (CSS Grid) ---------- */
+    .layout {
+      display: grid;
+      grid-template-columns: var(--sidebar-w) 1fr;
+      min-height: 100vh;
+    }
+
+    /* ---------- Sidebar ---------- */
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: var(--sidebar-w);
+      height: 100vh;
+      background: var(--card);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      padding: 24px 0;
+      overflow-y: auto;
+      z-index: 100;
+      transition: transform 0.3s ease;
+    }
+
+    .sidebar-logo {
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: 3px;
+      color: var(--accent);
+      padding: 0 24px 4px;
+      text-decoration: none;
+      display: block;
+    }
+
+    .sidebar-subtitle {
+      font-size: 12px;
+      color: var(--muted);
+      padding: 0 24px 24px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .sidebar-nav {
+      list-style: none;
+      padding: 16px 0;
+      flex: 1;
+    }
+
+    .sidebar-nav li {}
+
+    .sidebar-nav a {
+      display: block;
+      padding: 10px 24px;
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      transition: color 0.2s, background 0.2s, border-left 0.2s;
+      border-left: 3px solid transparent;
+    }
+
+    .sidebar-nav a:hover {
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .sidebar-nav a.active {
+      color: var(--accent);
+      border-left-color: var(--accent);
+      background: rgba(255, 69, 0, 0.06);
+    }
+
+    .sidebar-nav .nav-divider {
+      height: 1px;
+      background: var(--border);
+      margin: 12px 24px;
+    }
+
+    .sidebar-nav .nav-back a {
+      font-size: 13px;
+      color: var(--muted);
+      opacity: 0.7;
+    }
+
+    .sidebar-nav .nav-back a:hover {
+      opacity: 1;
+      color: var(--text);
+    }
+
+    /* ---------- Hamburger (mobile) ---------- */
+    .hamburger {
+      display: none;
+      position: fixed;
+      top: 16px;
+      left: 16px;
+      z-index: 200;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 12px;
+      cursor: pointer;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .hamburger span {
+      display: block;
+      width: 22px;
+      height: 2px;
+      background: var(--text);
+      border-radius: 2px;
+      transition: transform 0.3s, opacity 0.3s;
+    }
+
+    .hamburger.open span:nth-child(1) { transform: rotate(45deg) translate(5px, 5px); }
+    .hamburger.open span:nth-child(2) { opacity: 0; }
+    .hamburger.open span:nth-child(3) { transform: rotate(-45deg) translate(5px, -5px); }
+
+    .sidebar-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.6);
+      z-index: 90;
+    }
+
+    /* ---------- Main content ---------- */
+    .main {
+      grid-column: 2;
+      padding: 48px 56px;
+      max-width: 960px;
+    }
+
+    .main h1 {
+      font-size: 32px;
+      font-weight: 800;
+      margin-bottom: 8px;
+      color: var(--text);
+    }
+
+    .main h1 .accent {
+      color: var(--accent);
+    }
+
+    .main h2 {
+      font-size: 22px;
+      font-weight: 700;
+      margin: 40px 0 16px;
+      color: var(--text);
+    }
+
+    .main h3 {
+      font-size: 18px;
+      font-weight: 600;
+      margin: 32px 0 12px;
+      color: var(--text);
+    }
+
+    .main p {
+      color: var(--muted);
+      margin-bottom: 16px;
+      font-size: 15px;
+      max-width: 680px;
+    }
+
+    .main a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    .main a:hover {
+      text-decoration: underline;
+    }
+
+    .subtitle {
+      font-size: 16px;
+      color: var(--muted);
+      margin-bottom: 32px;
+    }
+
+    /* ---------- Tables ---------- */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0;
+      font-size: 14px;
+    }
+
+    th, td {
+      text-align: left;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    th {
+      color: var(--muted);
+      font-weight: 600;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    td { color: var(--text); }
+
+    tr:hover td { background: rgba(255, 255, 255, 0.02); }
+
+    /* ---------- Lists ---------- */
+    .main ul, .main ol {
+      padding-left: 24px;
+      margin-bottom: 16px;
+    }
+
+    .main li {
+      color: var(--muted);
+      font-size: 14px;
+      margin-bottom: 6px;
+    }
+
+    /* ---------- Callout ---------- */
+    .callout {
+      background: rgba(255, 69, 0, 0.06);
+      border-left: 3px solid var(--accent);
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 20px 0;
+    }
+
+    .callout p {
+      color: var(--text);
+      margin: 0;
+      font-size: 14px;
+    }
+
+    .callout-green {
+      background: rgba(34, 197, 94, 0.06);
+      border-left-color: var(--green);
+    }
+
+    /* ---------- Phase cards ---------- */
+    .phase-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px 28px;
+      margin: 20px 0;
+    }
+
+    .phase-card h3 {
+      margin: 0 0 8px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .phase-badge {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 999px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .badge-done { background: rgba(34,197,94,0.15); color: var(--green); }
+    .badge-progress { background: rgba(255,69,0,0.15); color: var(--accent); }
+    .badge-planned { background: rgba(138,138,150,0.15); color: var(--muted); }
+
+    /* ---------- Code ---------- */
+    pre {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px 20px;
+      overflow-x: auto;
+      font-size: 13px;
+      line-height: 1.7;
+      margin: 16px 0;
+    }
+
+    code {
+      font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+      font-size: 13px;
+    }
+
+    p code, li code, td code {
+      background: rgba(255, 255, 255, 0.06);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 13px;
+    }
+
+    /* ---------- Footer ---------- */
+    .wiki-footer {
+      margin-top: 64px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    /* ---------- Responsive ---------- */
+    @media (max-width: 768px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        transform: translateX(-100%);
+        height: 100vh;
+        height: 100dvh;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        padding-bottom: 80px;
+      }
+
+      .sidebar.open {
+        transform: translateX(0);
+      }
+
+      .sidebar-overlay.open {
+        display: block;
+      }
+
+      .hamburger {
+        display: flex;
+      }
+
+      .main {
+        grid-column: 1;
+        padding: 72px 20px 40px;
+      }
+
+      table {
+        font-size: 13px;
+      }
+
+      th, td {
+        padding: 10px 12px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .main h1 {
+        font-size: 26px;
+      }
+    }
+    /* ============================================================
+    End Shared Styles
+       ============================================================ */
   </style>
+  <link rel="icon" type="image/png" href="../assets/ifr_icon_64.png">
+  <meta property="og:locale" content="en_US">
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="Inferno Protocol">
+  <meta property="og:title" content="Community Signer Expansion — Inferno Protocol ($IFR)">
+  <meta property="og:description" content="Security-filtered community signer selection for Inferno multisig governance: eligibility, nomination, voting, staged thresholds, rotation, and emergency replacement.">
+  <meta property="og:url" content="https://ifrunit.tech/wiki/community-signer-expansion.html">
+  <meta property="og:image" content="https://ifrunit.tech/assets/ifr_icon_256.png">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Community Signer Expansion — Inferno Protocol ($IFR)">
+  <meta name="twitter:description" content="Planned 3-of-5 to 4-of-7 and optional 5-of-9 Safe expansion with community vote plus security eligibility checks.">
+  <meta name="twitter:site" content="@IFRtoken">
+  <meta name="twitter:image" content="https://ifrunit.tech/assets/ifr_icon_256.png">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "headline": "Community Signer Expansion",
+    "description": "Planned Inferno community multisig signer expansion: eligibility filter, public nomination, community voting, staged 4-of-7 and 5-of-9 Safe models, rotation, and emergency replacement rules.",
+    "url": "https://ifrunit.tech/wiki/community-signer-expansion.html",
+    "isPartOf": {"@id": "https://ifrunit.tech/#website"},
+    "publisher": {"@id": "https://ifrunit.tech/#organization"},
+    "about": {"@id": "https://ifrunit.tech/#app"}
+  }
+  </script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"
+  onerror="var s=document.createElement('script');s.src='https://unpkg.com/ethers@5.7.2/dist/ethers.umd.min.js';document.head.appendChild(s);"></script>
+<script src="../assets/wallet-core.js"></script>
+<script src="../assets/ifr-state.js"></script>
+<script type="application/ld+json">
+  {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {"@type": "ListItem", "position": 1, "name": "Inferno", "item": "https://ifrunit.tech/"},
+    {"@type": "ListItem", "position": 2, "name": "Wiki", "item": "https://ifrunit.tech/wiki/"},
+    {"@type": "ListItem", "position": 3, "name": "Community Signer Expansion", "item": "https://ifrunit.tech/wiki/community-signer-expansion.html"}
+  ]
+}
+  </script>
+  <link rel="stylesheet" href="../assets/redesign-skin.css">
 </head>
 <body>
-  <div class="wrap">
-    <header class="top">
-      <a class="brand" href="../index.html">Inferno Protocol</a>
-      <nav class="nav">
-        <a href="roadmap.html">Roadmap</a>
-        <a href="governance.html">Governance</a>
-        <a href="dao-governance.html">DAO Governance</a>
-        <a href="multisig.html">Multisig Policy</a>
-      </nav>
-    </header>
 
-    <main>
-      <section class="hero">
-        <span class="eyebrow">Planned Governance Architecture</span>
-        <h1>Community Signer Expansion</h1>
-        <p class="lead">A staged plan for adding community members to the multisig after community voting is live. The model is community-legitimized, but security-filtered: not pure whale voting, not pure random selection.</p>
-      </section>
+  <!-- Hamburger button (mobile only) -->
+  <button class="hamburger" id="hamburger" aria-label="Toggle navigation">
+    <span></span>
+    <span></span>
+    <span></span>
+  </button>
+
+  <!-- Overlay (mobile only) -->
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <div class="layout">
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <a href="https://ifrunit.tech/wiki/index.html" class="sidebar-logo">IFR PROTOCOL</a>
+      <div class="sidebar-subtitle">Documentation</div>
+      <ul class="sidebar-nav">
+        <li><a href="https://ifrunit.tech/wiki/index.html">Home</a></li>
+        <li><a href="https://ifrunit.tech/wiki/one-pager.html">One Pager</a></li>
+        <li><a href="https://ifrunit.tech/wiki/fair-launch.html">Fair Launch</a></li>
+        <li class="nav-divider"></li>
+        <li><a href="https://ifrunit.tech/wiki/tokenomics.html">Tokenomics</a></li>
+        <li><a href="https://ifrunit.tech/wiki/fee-design.html">Fee Design</a></li>
+        <li><a href="https://ifrunit.tech/wiki/lock-mechanism.html">Lock Mechanism</a></li>
+        <li><a href="https://ifrunit.tech/wiki/vesting.html">Vesting Schedule</a></li>
+        <li><a href="https://ifrunit.tech/wiki/protocol-plan.html">Protocol Plan</a></li>
+        <li><a href="https://ifrunit.tech/wiki/contracts.html">Smart Contracts</a></li>
+        <li class="nav-divider"></li>
+        <li><a href="https://ifrunit.tech/wiki/wallet-guide.html">Wallet &amp; Contract Guide</a></li>
+        <li><a href="https://ifrunit.tech/wiki/deployment.html">Deployment</a></li>
+        <li><a href="https://ifrunit.tech/wiki/testnet.html">Testnet</a></li>
+        <li><a href="https://ifrunit.tech/wiki/mainnet-checklist.html">Mainnet Checklist</a></li>
+        <li><a href="https://ifrunit.tech/wiki/bootstrap.html">Bootstrap Event</a></li>
+        <li><a href="https://ifrunit.tech/wiki/roadmap.html">Roadmap</a></li>
+        <li class="nav-divider"></li>
+        <li><a href="https://ifrunit.tech/wiki/commitment-vault.html">CommitmentVault</a></li>
+        <li><a href="https://ifrunit.tech/wiki/lending-vault.html">LendingVault</a></li>
+        <li><a href="https://ifrunit.tech/wiki/lending-market.html">Lending Market</a></li>
+        <li><a href="https://ifrunit.tech/wiki/lp-strategy.html">LP Strategy</a></li>
+        <li><a href="https://ifrunit.tech/wiki/ecosystem.html">Ecosystem</a></li>
+        <li class="nav-divider"></li>
+        <li><a href="https://ifrunit.tech/wiki/governance.html">Governance</a></li>
+        <li><a href="https://ifrunit.tech/wiki/dao-governance.html">DAO Governance</a></li>
+        <li><a href="https://ifrunit.tech/wiki/multisig.html">Multisig Policy</a></li>
+        <li><a href="https://ifrunit.tech/wiki/community-signer-expansion.html" class="active">Community Signer Expansion</a></li>
+        <li><a href="https://ifrunit.tech/wiki/transparency.html">Transparency</a></li>
+        <li class="nav-divider"></li>
+        <li><a href="https://ifrunit.tech/wiki/faq.html">FAQ</a></li>
+        <li><a href="https://ifrunit.tech/wiki/integration.html">Integration Guide</a></li>
+        <li><a href="https://ifrunit.tech/wiki/business-onboarding.html">Business Onboarding</a></li>
+        <li><a href="https://ifrunit.tech/wiki/agent.html">AI Copilot</a></li>
+        <li><a href="https://ifrunit.tech/wiki/verify.html">Verify Wallet</a></li>
+        <li class="nav-divider"></li>
+        <li><a href="https://ifrunit.tech/wiki/security.html">Security</a></li>
+        <li><a href="https://ifrunit.tech/wiki/contributing.html">Contributing</a></li>
+        <li><a href="https://ifrunit.tech/wiki/press-kit.html">Press Kit</a></li>
+        <li><a href="https://ifrunit.tech/index.html">&larr; Back to Website</a></li>
+      </ul>
+    </aside>
+
+    <!-- Main content -->
+    <main class="main">
+      <!-- Wallet Top Bar -->
+      <div id="wiki-wallet-bar" style="position:sticky;top:0;z-index:100;background:rgba(10,10,10,0.95);backdrop-filter:blur(12px);border-bottom:1px solid #1f2937;padding:10px 20px;display:flex;justify-content:space-between;align-items:center;margin:-32px -40px 24px -40px;">
+        <a href="https://ifrunit.tech/index.html" style="color:#f97316;font-weight:700;text-decoration:none;font-size:0.9rem;">&larr; Inferno</a>
+        <div id="wiki-wallet-wrap" style="position:relative;">
+          <button id="lp-header-connect-btn" onclick="lpConnect()" style="display:inline-flex;align-items:center;justify-content:center;gap:9px;padding:9px 18px;min-height:38px;border:1px solid transparent;background:#B0481E;color:#fff;font-family:var(--sans, -apple-system, system-ui, sans-serif);font-size:0.84rem;font-weight:600;letter-spacing:0;border-radius:4px;cursor:pointer;white-space:nowrap;transition:all .2s;position:relative;flex-shrink:0;margin-left:16px;">Connect Wallet</button>
+          <div id="lp-header-connected" style="display:none;">
+            <div style="background:rgba(34,197,94,0.15);border:1px solid rgba(34,197,94,0.4);border-radius:8px;padding:5px 8px;cursor:pointer;display:flex;align-items:center;gap:6px;max-width:100px;white-space:nowrap;overflow:hidden;" onclick="lpToggleDropdown()">
+              <span id="lp-header-addr" style="color:#22c55e;font-family:monospace;font-size:0.72rem;font-weight:600;"></span>
+
+            </div>
+          </div>
+          <div id="lp-header-dropdown" style="display:none;position:fixed;background:#111827;border:1px solid #374151;border-radius:12px;padding:16px;width:280px;max-width:calc(100vw - 24px);z-index:9999;box-shadow:0 8px 32px rgba(0,0,0,0.6);">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+              <span style="color:#6b7280;font-size:0.75rem;">Wallet</span>
+              <button onclick="lpCloseDropdown()" style="background:none;border:none;color:#6b7280;cursor:pointer;font-size:1.1rem;line-height:1;padding:2px 6px;border-radius:4px;" title="Close">&#x2715;</button>
+            </div>
+            <div style="margin-bottom:12px;">
+              <div id="lp-drop-addr" style="color:#22c55e;font-family:monospace;font-size:0.78rem;font-weight:600;word-break:break-all;"></div>
+            </div>
+            <div style="display:flex;gap:8px;margin-bottom:12px;">
+              <div style="flex:1;background:#1f2937;border-radius:8px;padding:8px;text-align:center;">
+                <div style="color:#9ca3af;font-size:0.7rem;">ETH</div>
+                <div id="lp-drop-eth" style="color:#e5e7eb;font-weight:700;font-size:0.85rem;"></div>
+              </div>
+              <div style="flex:1;background:#1f2937;border-radius:8px;padding:8px;text-align:center;">
+                <div style="color:#9ca3af;font-size:0.7rem;">IFR</div>
+                <div id="lp-drop-ifr" style="color:#f97316;font-weight:700;font-size:0.85rem;"></div>
+              </div>
+            </div>
+            <div id="lp-drop-lock" style="display:none;background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.3);border-radius:8px;padding:8px 10px;margin-bottom:10px;text-align:center;">
+              <span style="color:#fbbf24;font-size:0.78rem;font-weight:600;">&#x26A1; Premium</span>
+            </div>
+            <div id="lp-drop-nolock" style="background:rgba(107,114,128,0.1);border:1px solid #374151;border-radius:8px;padding:8px 10px;margin-bottom:10px;text-align:center;">
+              <span style="color:#9ca3af;font-size:0.78rem;">Lock &#x2265;1,000 IFR &#x2192; </span>
+              <a href="https://ifrunit.tech/wiki/lock-mechanism.html" style="color:#f97316;font-size:0.78rem;">Premium &#x2197;</a>
+            </div>
+            <div style="display:flex;gap:8px;">
+              <a href="https://app.uniswap.org/swap?outputCurrency=0x77e99917Eca8539c62F509ED1193ac36580A6e7B" target="_blank" rel="noopener" style="flex:1;text-align:center;padding:8px;background:#f97316;color:white;border-radius:8px;font-size:0.78rem;font-weight:600;text-decoration:none;">&#x1F525; Buy IFR</a>
+              <button onclick="lpAddIFRToken()" style="flex:1;background:#e9ded0;color:#2f241d;border:none;border-radius:8px;padding:8px;cursor:pointer;font-size:0.78rem;font-weight:700;">Add IFR</button>
+              <button onclick="lpDisconnect()" style="flex:1;background:#374151;color:#9ca3af;border:none;border-radius:8px;padding:8px;cursor:pointer;font-size:0.78rem;">Disconnect</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+
+      <h1><span class="accent">Community Signer Expansion</span></h1>
+      <p class="subtitle">
+        Security-filtered plan for adding community members to the Safe signer set after community voting is live.
+      </p>
 
       <div class="callout">
-        <strong>Status:</strong> Planned. The current 3-of-5 Safe remains active until community voting, signer eligibility, onboarding, and replacement rules are ready.
+        <p><strong>Status:</strong> Planned. The current 3-of-5 Safe model remains active until voting, eligibility, onboarding, rotation, and replacement rules are ready.</p>
+      </div>
+
+      <div class="phase-card">
+        <h3>Governance Principle <span class="phase-badge badge-planned">Planned</span></h3>
+        <p style="color:var(--muted);margin:0;">Signer seats are operational security roles. Community legitimacy matters, but candidates must first pass a practical security and reliability filter. The model is not pure whale voting and not pure random selection.</p>
       </div>
 
       <h2>Design Goal</h2>
-      <p>No multisig model can remove every risk. The goal is to minimize practical risks: key compromise, inactive signers, whale capture, random unqualified signers, conflicts of interest, and slow emergency response.</p>
+      <p>
+        The expansion should reduce single-team dependency without introducing weaker controls. The practical risks are key compromise, inactive signers, whale capture, random unqualified signers, undisclosed conflicts, and slow emergency response.
+      </p>
+      <ul>
+        <li><strong>Security first</strong> &mdash; signer seats require secure wallet setup, transaction review discipline, and reachable operators.</li>
+        <li><strong>Community mandate</strong> &mdash; eligible candidates should be publicly nominated and voted on by the community.</li>
+        <li><strong>Staged expansion</strong> &mdash; move from 3-of-5 to 4-of-7 first; consider 5-of-9 only after one stable signer term.</li>
+      </ul>
 
-      <div class="grid">
-        <div class="card"><strong>Security first</strong><p>Signer seats are operational security roles, not only popularity positions.</p></div>
-        <div class="card"><strong>Community mandate</strong><p>Eligible candidates should be nominated, reviewed, and voted on by the community.</p></div>
-        <div class="card"><strong>Staged expansion</strong><p>Move from 3-of-5 to 4-of-7 first; consider 5-of-9 only after one proven term.</p></div>
-      </div>
+      <h2>Selection Model</h2>
+      <table>
+        <thead>
+          <tr><th>Stage</th><th>Action</th><th>Purpose</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>1</td><td>Eligibility filter</td><td>Confirm secure wallet setup, Safe readiness, contact reliability, and public duty acceptance.</td></tr>
+          <tr><td>2</td><td>Public nomination</td><td>Let the community see who is applying and why the candidate is aligned.</td></tr>
+          <tr><td>3</td><td>Community vote</td><td>Give the final signer mandate to holders and contributors through the governance process.</td></tr>
+          <tr><td>4</td><td>Security and conflict review</td><td>Filter compromised, hostile, conflicted, or unreachable candidates before onboarding.</td></tr>
+          <tr><td>5</td><td>Safe onboarding</td><td>Update owners and threshold through the documented governance and Safe process.</td></tr>
+          <tr><td>6</td><td>Term and rotation</td><td>Use fixed signer terms so community seats can refresh without destabilizing operations.</td></tr>
+          <tr><td>7</td><td>Emergency replacement</td><td>Define removal and replacement rules before community seats are added.</td></tr>
+        </tbody>
+      </table>
 
       <h2>Why Not Pure Whale Voting?</h2>
       <ul>
-        <li>Large holders may be aligned, but token amount alone can become plutocratic control.</li>
-        <li>Freely tradable balances can move quickly and do not prove long-term responsibility.</li>
+        <li>Large holders can be aligned, but token amount alone can become plutocratic control.</li>
+        <li>Freely transferable balances can move quickly and do not prove long-term responsibility.</li>
         <li>One entity can split holdings across wallets.</li>
         <li>A large balance does not prove Safe, calldata, or key-management competence.</li>
       </ul>
@@ -91,10 +598,12 @@
 
       <h2>Candidate Eligibility</h2>
       <table>
-        <thead><tr><th>Requirement</th><th>Reason</th></tr></thead>
+        <thead>
+          <tr><th>Requirement</th><th>Reason</th></tr>
+        </thead>
         <tbody>
           <tr><td>Hardware wallet or equivalent secure signing setup</td><td>Reduces hot-wallet compromise risk.</td></tr>
-          <tr><td>Safe readiness</td><td>Signer must verify target, calldata, value, and network before signing.</td></tr>
+          <tr><td>Safe readiness</td><td>Signer must verify target address, calldata, value, and network before signing.</td></tr>
           <tr><td>24-48h response expectation</td><td>Prevents routine execution from stalling.</td></tr>
           <tr><td>Reliable contact path</td><td>Signer must be reachable for coordination and incident review.</td></tr>
           <tr><td>Conflict review</td><td>Filters hostile, compromised, or conflicted candidates.</td></tr>
@@ -103,19 +612,23 @@
         </tbody>
       </table>
 
-      <h2>Preferred IFR Path</h2>
+      <h2>Preferred Path</h2>
       <table>
-        <thead><tr><th>Stage</th><th>Model</th><th>When</th><th>Rationale</th></tr></thead>
+        <thead>
+          <tr><th>Stage</th><th>Model</th><th>When</th><th>Rationale</th></tr>
+        </thead>
         <tbody>
-          <tr><td><span class="status">Active</span></td><td><code>3-of-5</code></td><td>Current</td><td>Operational reliability while voting and onboarding are still being built.</td></tr>
-          <tr><td><span class="next">First expansion</span></td><td><code>4-of-7</code></td><td>After community voting is live</td><td>Adds community seats without slowing execution too much.</td></tr>
-          <tr><td><span class="next">Mature expansion</span></td><td><code>5-of-9</code></td><td>After one proven term</td><td>Stronger decentralization once the process is battle-tested.</td></tr>
+          <tr><td>Current</td><td><code>3-of-5</code></td><td>Active</td><td>Operational reliability while voting and onboarding rules are still being prepared.</td></tr>
+          <tr><td>First expansion</td><td><code>4-of-7</code></td><td>After community voting is live</td><td>Adds community seats without making execution too slow.</td></tr>
+          <tr><td>Mature expansion</td><td><code>5-of-9</code></td><td>After one proven term</td><td>Stronger decentralization once the process is battle-tested.</td></tr>
         </tbody>
       </table>
 
       <h2>4-of-7 Seat Mix</h2>
       <table>
-        <thead><tr><th>Seat type</th><th>Count</th><th>Purpose</th></tr></thead>
+        <thead>
+          <tr><th>Seat type</th><th>Count</th><th>Purpose</th></tr>
+        </thead>
         <tbody>
           <tr><td>Core / protocol signers</td><td>3</td><td>Continuity, technical context, emergency execution.</td></tr>
           <tr><td>Contributor / builder signers</td><td>2</td><td>Ecosystem execution and product context.</td></tr>
@@ -125,7 +638,9 @@
 
       <h2>5-of-9 Seat Mix</h2>
       <table>
-        <thead><tr><th>Seat type</th><th>Count</th><th>Purpose</th></tr></thead>
+        <thead>
+          <tr><th>Seat type</th><th>Count</th><th>Purpose</th></tr>
+        </thead>
         <tbody>
           <tr><td>Core / security signers</td><td>3</td><td>Protocol continuity and security review.</td></tr>
           <tr><td>Contributor / builder signers</td><td>2</td><td>Ecosystem representation.</td></tr>
@@ -139,7 +654,7 @@
         <li><strong>Treasury Safe:</strong> conservative expansion, highest qualification bar.</li>
         <li><strong>Community / Grants Safe:</strong> can expand earlier and include more community seats.</li>
         <li><strong>LP Reserve Safe:</strong> conservative, because liquidity actions affect market structure.</li>
-        <li><strong>Guardian Safe:</strong> separate cancel-only or emergency-only role, not treasury spending.</li>
+        <li><strong>Guardian Safe:</strong> optional cancel-only or emergency-only role, not treasury spending.</li>
       </ul>
 
       <h2>Voting And Rotation</h2>
@@ -160,19 +675,143 @@
         <li>Run a test Safe onboarding drill.</li>
         <li>Hold the community vote.</li>
         <li>Queue Safe signer update through governance.</li>
-        <li>Execute after the required review/timelock path.</li>
+        <li>Execute after the required review or timelock path.</li>
         <li>Verify owners and threshold on Safe.</li>
         <li>Update docs, landing, wiki, and AI copilot knowledge.</li>
       </ul>
 
-      <div class="callout">
-        Bottom line: community-democratic selection, security-filtered eligibility, staged threshold expansion, and documented rotation.
+      <div class="callout-green callout">
+        <p><strong>Bottom line:</strong> community-democratic selection, security-filtered eligibility, staged threshold expansion, and documented rotation.</p>
       </div>
-    </main>
 
-    <footer class="footer">
-      Inferno ($IFR) &mdash; Community signer expansion plan &mdash; Documentation
-    </footer>
+      <!-- Footer -->
+      <footer class="wiki-footer">
+        Inferno ($IFR) &mdash; Community Fair Launch Model &mdash; Documentation v1.0
+      </footer>
+
+    </main>
   </div>
+
+  <!-- Mobile sidebar toggle script -->
+  <script>
+    (function () {
+      var hamburger = document.getElementById('hamburger');
+      var sidebar = document.getElementById('sidebar');
+      var overlay = document.getElementById('sidebarOverlay');
+
+      function toggleSidebar() {
+        var isOpen = sidebar.classList.toggle('open');
+        hamburger.classList.toggle('open', isOpen);
+        overlay.classList.toggle('open', isOpen);
+        document.body.style.overflow = isOpen ? 'hidden' : '';
+      }
+
+      hamburger.addEventListener('click', toggleSidebar);
+      overlay.addEventListener('click', toggleSidebar);
+    })();
+  </script>
+
+<!-- IFR Copilot Widget -->
+<style>
+#ifr-btn { position:fixed; bottom:24px; right:24px; width:64px; height:64px; border-radius:50%; overflow:hidden; padding:0; cursor:pointer; border:2px solid #f97316; box-shadow:0 4px 20px rgba(249,115,22,0.4); z-index:99999; background:none; transition:transform 0.2s ease,box-shadow 0.2s ease; } #ifr-btn:hover { transform:scale(1.08); box-shadow:0 6px 28px rgba(249,115,22,0.6); } #ifr-btn img { width:100%; height:100%; object-fit:cover; object-position:center center; border-radius:50%; display:block; }
+#ifr-panel { display:none; position:fixed; bottom:100px; right:12px; z-index:99998; width:min(400px, calc(100vw - 24px)); height:min(580px, calc(100vh - 120px)); border-radius:16px; overflow:hidden; box-shadow:0 8px 40px rgba(0,0,0,0.5); background:#1a1a1a; }
+@media(max-width:480px){ #ifr-panel { bottom:0; right:0; left:0; width:100vw; height:calc(100vh - 70px); border-radius:16px 16px 0 0; } #ifr-btn { bottom:12px; right:12px; width:52px; height:52px; } }
+#ifr-panel iframe { width:100%; height:100%; border:none; }
+</style>
+<button id="ifr-btn" onclick="var p=document.getElementById('ifr-panel');p.style.display=p.style.display==='block'?'none':'block';"><img src="../assets/CoPilot.jpg" alt="IFR Copilot"></button>
+<div id="ifr-panel"><iframe src="https://copilot-api.ifrunit.tech" allow="clipboard-write"></iframe></div>
+
+<script>
+async function lpConnect(){
+  if(typeof ethers==="undefined"){alert("Web3 library not loaded. Please refresh.");return}
+  if(typeof IFRWallet==="undefined"){alert("Wallet module not loaded. Please refresh.");return}
+  var btn=document.getElementById("lp-header-connect-btn");
+  if(btn){btn.textContent="Connecting...";btn.disabled=true}
+  try{
+    await IFRWallet.connect();
+    var state=await IFRState.load(IFRWallet.getAddress());
+    lpUpdateUI(state);
+  }catch(e){
+    if(btn){btn.textContent="Connect Wallet";btn.disabled=false;btn.style.background="#B0481E";btn.style.borderColor="transparent";btn.style.color="#fff";btn.onclick=lpConnect}
+    if(e.message==="NO_METAMASK"){
+      var isMobile=/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+      if(isMobile){window.location.href="https://metamask.app.link/dapp/ifrunit.tech"}
+      else if(btn){btn.textContent="\u26A0\uFE0F Install MetaMask";btn.style.background="#374151";btn.onclick=function(){window.open("https://metamask.io/download","_blank")};btn.disabled=false}
+    }else if(e.code===4001||e.code==="ACTION_REJECTED"){
+      if(btn){btn.textContent="Connect Wallet";btn.disabled=false}
+    }
+  }
+}
+async function lpAddIFRToken(){
+  if(typeof IFRWallet==="undefined"||typeof IFRWallet.addIFRToken!=="function"){alert("Wallet module not loaded. Please refresh.");return false}
+  try{
+    var added=await IFRWallet.addIFRToken();
+    if(added)alert("IFR was added to MetaMask.");
+  }catch(e){
+    console.error("Add IFR token error:",e.message,e.code);
+    if(e.message==="NO_WALLET_PROVIDER"){alert("Install MetaMask or connect a wallet first.")}
+    else if(e.code!==4001&&e.code!=="ACTION_REJECTED"){alert("MetaMask could not add IFR automatically. Please import the token address manually.")}
+  }
+  return false;
+}
+function lpDisconnect(){
+  IFRWallet.disconnect();
+  var connectBtn=document.getElementById("lp-header-connect-btn");
+  var connectedDiv=document.getElementById("lp-header-connected");
+  var dropdown=document.getElementById("lp-header-dropdown");
+  if(connectBtn){connectBtn.style.display="";connectBtn.textContent="Connect Wallet";connectBtn.disabled=false;connectBtn.style.background="#B0481E";connectBtn.style.borderColor="transparent";connectBtn.style.color="#fff";connectBtn.onclick=lpConnect}
+  if(connectedDiv)connectedDiv.style.display="none";
+  if(dropdown)dropdown.style.display="none";
+}
+function lpToggleDropdown(){
+  var dd=document.getElementById("lp-header-dropdown");
+  if(!dd)return;
+  if(dd.style.display!=="none"&&dd.style.display!==""){dd.style.display="none";return}
+  var isMobile=window.innerWidth<768;
+  dd.style.position="fixed";dd.style.zIndex="9999";
+  if(isMobile){
+    var wrap=document.getElementById("wiki-wallet-wrap");
+    if(wrap){var rect=wrap.getBoundingClientRect();dd.style.top=(rect.bottom+6)+"px"}
+    else{dd.style.top="60px"}
+    dd.style.left="8px";dd.style.right="8px";dd.style.width="auto";dd.style.maxWidth="calc(100vw - 16px)";
+  }else{
+    dd.style.top="12px";dd.style.right="12px";dd.style.left="auto";dd.style.width="290px";
+  }
+  dd.style.display="";
+}
+function lpCloseDropdown(){var dd=document.getElementById("lp-header-dropdown");if(dd)dd.style.display="none";}
+function lpUpdateUI(state){
+  var connected=IFRWallet.isConnected();
+  var connectBtn=document.getElementById("lp-header-connect-btn");
+  var connectedDiv=document.getElementById("lp-header-connected");
+  if(connectBtn){
+    connectBtn.style.display=connected?"none":"";
+    if(!connected){connectBtn.textContent="Connect Wallet";connectBtn.disabled=false;connectBtn.style.background="#B0481E";connectBtn.style.borderColor="transparent";connectBtn.style.color="#fff";connectBtn.onclick=lpConnect}
+  }
+  if(connectedDiv)connectedDiv.style.display=connected?"":"none";
+  if(connected&&state){
+    var addr=IFRWallet.getAddress();
+    var shortAddr="\u2B24 "+addr.slice(0,6);
+    var el=document.getElementById("lp-header-addr");if(el)el.textContent=shortAddr;
+    var dropAddr=document.getElementById("lp-drop-addr");if(dropAddr)dropAddr.textContent=addr.slice(0,10)+"..."+addr.slice(-6);
+    var dropEth=document.getElementById("lp-drop-eth");if(dropEth)dropEth.textContent=parseFloat(state.ethBalance||"0").toFixed(4)+" ETH";
+    var dropIfr=document.getElementById("lp-drop-ifr");
+    if(dropIfr){var ifrAmt=state.ifrBalance&&typeof ethers!=="undefined"?parseFloat(ethers.utils.formatUnits(state.ifrBalance,9)).toLocaleString("en-US",{maximumFractionDigits:0}):"0";dropIfr.textContent=ifrAmt+" IFR"}
+    var lockDiv=document.getElementById("lp-drop-lock");var noLockDiv=document.getElementById("lp-drop-nolock");
+    if(lockDiv)lockDiv.style.display=state.isLocked1000?"":"none";
+    if(noLockDiv)noLockDiv.style.display=state.isLocked1000?"none":"";
+  }
+}
+window.addEventListener("resize",function(){var dd=document.getElementById("lp-header-dropdown");if(dd)dd.style.display="none"});
+document.addEventListener("click",function(e){var dd=document.getElementById("lp-header-dropdown");var wrap=document.getElementById("wiki-wallet-wrap");if(dd&&wrap&&!wrap.contains(e.target))dd.style.display="none"});
+IFRWallet.on("disconnected",function(){lpUpdateUI(null)});
+IFRWallet.on("connected",async function(addr){var state=await IFRState.load(addr);lpUpdateUI(state)});
+IFRWallet.on("accountChanged",async function(addr){var state=await IFRState.load(addr);lpUpdateUI(state)});
+IFRState.on("stateLoaded",lpUpdateUI);
+document.addEventListener("visibilitychange",async function(){if(document.visibilityState==="visible"&&!IFRWallet.isConnected()){var ok=await IFRWallet.autoReconnect();if(ok)lpUpdateUI(await IFRState.load(IFRWallet.getAddress()))}});
+(async function(){var ok=await IFRWallet.autoReconnect();if(ok)lpUpdateUI(await IFRState.load(IFRWallet.getAddress()))})();
+var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.addEventListener("mouseenter",function(){this.style.transform="scale(1.04)";this.style.boxShadow="0 4px 20px rgba(249,115,22,0.4)"});_wcBtn.addEventListener("mouseleave",function(){this.style.transform="";this.style.boxShadow="0 2px 12px rgba(249,115,22,0.25)"})}
+</script>
 </body>
+<!-- cache-bust: 1775428215 -->
 </html>
