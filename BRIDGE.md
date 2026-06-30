@@ -105,12 +105,12 @@
 **Deployment / GitHub / Railway**
 
 - Re-check 30.06.2026:
-  - GitHub Actions: latest `main` runs for `Docs Validator`, `Security Audit`, `pages-build-deployment` are green on `8ef82f36`.
+  - GitHub Actions: latest `main` runs for `Docs Validator`, `Security Audit`, `pages-build-deployment` are green.
   - `AI Copilot CI` latest visible run remains green on `e195d458`.
   - Historical cancelled Pages run on `e195d458` was superseded by later successful Pages deployments.
   - Railway project `ifr-ai-copilot` currently has two services:
-    - `ifr-ai-copilot`: Online, latest deployment `92dcb182` success from `8ef82f36`.
-    - `inferno`: Crashed, latest deployment `a205400d` from `8ef82f36`.
+    - `ifr-ai-copilot`: Online / `SUCCESS`, one replica running.
+    - `inferno`: Railway status can briefly show `SUCCESS` because restart policy keeps the replica cycling, but runtime logs still show repeated Telegram polling failure.
   - Railway `inferno` is still connected to GitHub repo `NeaBouli/inferno`, root `apps/telegram/telegram-bot`, config `/apps/telegram/telegram-bot/railway.json`.
   - Build succeeds; runtime starts `Verify API` on port `3001`, then Telegram polling fails repeatedly with `Fatal polling error err="404: Not Found"`.
   - Most likely cause: stale/invalid Telegram bot token or old Telegram bot context on the Railway `inferno` service.
