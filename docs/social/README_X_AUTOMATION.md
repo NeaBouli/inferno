@@ -6,7 +6,7 @@ Automation script:
 
 ```bash
 X_DRY_RUN=true node scripts/post-x.js docs/social/x-geckoterminal-thread.md
-X_DRY_RUN=false X_ALLOW_LIVE=true X_ACCESS_TOKEN=... node scripts/post-x.js docs/social/x-geckoterminal-thread.md
+X_DRY_RUN=false X_ALLOW_LIVE=true node scripts/post-x.js docs/social/x-geckoterminal-thread.md
 npm run post:x:dry
 ```
 
@@ -23,9 +23,20 @@ Safety rules:
 
 - Real credentials stay in `.env`, server env, or a secret manager.
 - Use `docs/social/x.env.example` as the safe template.
+- The script automatically loads local `x.env` first, then `.env`.
+- For a custom local file, run with `X_ENV_FILE=/path/to/private-x.env`.
 - Do not commit real X credentials. Local files such as `x.env`, `x.production.env`, `twitter.env`, `*.secrets.env`, and `*token*.env` are gitignored.
 - Keep `X_DRY_RUN=true` by default.
 - Live posting requires both `X_DRY_RUN=false` and `X_ALLOW_LIVE=true`.
+
+Local setup:
+
+```bash
+cp docs/social/x.env.example x.env
+nano x.env
+X_DRY_RUN=true node scripts/post-x.js docs/social/x-clarification-post.md
+X_DRY_RUN=false X_ALLOW_LIVE=true node scripts/post-x.js docs/social/x-clarification-post.md
+```
 
 Thread format:
 
