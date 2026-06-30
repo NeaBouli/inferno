@@ -3881,3 +3881,39 @@ index acf5e72f..680ed772 100644
 - Pending / cautious wording:
   - Etherscan reputation remains in review until externally updated.
   - Blockbit / external scanner no-risk status is reported by the project owner, but public reference is pending, so it is not presented as a formal audit yet.
+
+---
+
+## 2026-06-30 [CODEX]
+### TYPE: WIKI / DESIGN INTEGRATION
+### STATUS: DONE - community signer page rebuilt inside the real wiki structure
+
+**Issue**
+
+- `docs/wiki/community-signer-expansion.html` was implemented as a standalone special page.
+- It did not match the wiki structure:
+  - no shared wiki sidebar
+  - no wallet top bar
+  - no Copilot widget
+  - no shared wiki visual system
+  - not integrated as an active item in the wiki navigation
+
+**Fix**
+
+- Rebuilt `docs/wiki/community-signer-expansion.html` using the same shared wiki shell as `multisig.html`.
+- Added:
+  - standard wiki sidebar
+  - active `Community Signer Expansion` nav entry
+  - wallet connect top bar
+  - Copilot widget
+  - canonical / hreflang / OpenGraph / Twitter metadata
+  - TechArticle and Breadcrumb JSON-LD
+  - shared wiki tables, callouts, phase-card styling
+- Added `Community Signer Expansion` to the governance navigation group across wiki pages.
+- Added a `Community Signer Expansion` card to `docs/wiki/index.html`.
+- Updated the wiki index page count from 32 to 35.
+
+**Design Rule**
+
+- Do not create standalone wiki pages for protocol documentation.
+- New wiki pages must use the established wiki shell, sidebar, wallet bar, Copilot widget, shared styles, and canonical navigation.
