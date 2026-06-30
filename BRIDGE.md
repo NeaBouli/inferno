@@ -3403,6 +3403,23 @@ index acf5e72f..680ed772 100644
 - `X_DRY_RUN=true node scripts/post-x.js docs/social/x-clarification-post.md` OK:
   - 2 Posts: 248 / 188 Zeichen.
 
+**Secret Safety Update**
+
+- `2026-06-30`: `.gitignore` explizit erweitert, damit Social-Bot-Secrets nicht auf GitHub landen.
+- Ignorierte Muster:
+  - `telegram.env`
+  - `telegram.*.env`
+  - `x.env`
+  - `x.*.env`
+  - `twitter.env`
+  - `twitter.*.env`
+  - `*.secrets.env`
+  - `*secret*.env`
+  - `*token*.env`
+- `docs/social/x.env.example` bleibt bewusst versioniert, weil es nur leere Platzhalter enthaelt.
+- Check:
+  - `git check-ignore -v x.env x.production.env twitter.env twitter.production.env local.secrets.env x-token.env` OK.
+
 ---
 
 ## 2026-06-30 [CODEX]
