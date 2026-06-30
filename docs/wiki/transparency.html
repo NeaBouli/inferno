@@ -382,6 +382,48 @@
     /* ---------- Status badges ---------- */
     .status-ok { color: var(--green); font-weight: 600; }
     .status-pending { color: #f59e0b; font-weight: 600; }
+    .lazy-controls {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+      margin: 14px 0;
+    }
+    .lazy-controls input,
+    .lazy-controls select {
+      background: #111113;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      font-size: 13px;
+      min-height: 38px;
+      padding: 9px 10px;
+    }
+    .lazy-controls input { flex: 1 1 220px; }
+    .lazy-controls select { flex: 0 0 180px; }
+    .lazy-btn {
+      background: #1f2937;
+      border: 1px solid #374151;
+      border-radius: 6px;
+      color: #e5e7eb;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 700;
+      min-height: 38px;
+      padding: 9px 14px;
+    }
+    .lazy-btn:hover { border-color: var(--accent); color: #fff; }
+    .lazy-btn:disabled { cursor: default; opacity: 0.45; }
+    .event-badge {
+      border-radius: 999px;
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 8px;
+    }
+    .event-lock { background: rgba(239,68,68,0.12); color: #ef4444; }
+    .event-unlock { background: rgba(34,197,94,0.12); color: #22c55e; }
+    .event-lending { background: rgba(59,130,246,0.12); color: #60a5fa; }
 
     /* ---------- Loading ---------- */
     .loading {
@@ -777,6 +819,59 @@
 
       <div class="callout callout-live">
         <p><strong>Migration note (06.03.2026):</strong> Community EOA &rarr; Community Safe: 60M sent, 57.9M received (1.5M burned via 2.5% burn fee + 0.6M to Pool Fee Receiver via 1% pool fee &mdash; EOA was not feeExempt). Treasury EOA &rarr; Treasury Safe: 150M sent, 150M received (feeExempt). Both EOA wallets should now show 0 IFR.</p>
+      </div>
+
+      <!-- ===== Live Lock Tracking ===== -->
+      <h2 id="live-locks"><span class="live-dot"></span> Live Lock Tracking</h2>
+      <p>Unified lock activity across IFRLock, CommitmentVault, and LendingVault. The table loads 5 records first; more records are requested only when you click the next button.</p>
+
+      <div class="stat-grid" style="margin-top:16px;">
+        <div class="stat-card">
+          <div class="stat-label">IFRLock Locked</div>
+          <div class="stat-value live-value" id="locks-ifrlock-locked">--</div>
+          <div class="stat-subtitle">Access locks currently active</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">IFRLock Unlocked</div>
+          <div class="stat-value" id="locks-ifrlock-unlocked" style="color:#22c55e;">--</div>
+          <div class="stat-subtitle">Cumulative user unlocks</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">CommitmentVault</div>
+          <div class="stat-value" id="locks-commitment-total" style="color:#fbbf24;">--</div>
+          <div class="stat-subtitle">Conditional tranches locked</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">LendingVault</div>
+          <div class="stat-value" id="locks-lending-total" style="color:#60a5fa;">--</div>
+          <div class="stat-subtitle">Available + lent IFR</div>
+        </div>
+      </div>
+
+      <div class="lazy-controls">
+        <input id="lock-search" type="search" placeholder="Search wallet, tx, contract..." aria-label="Search lock events">
+        <select id="lock-type" aria-label="Filter lock event contract">
+          <option value="">All lock systems</option>
+          <option value="IFRLock">IFRLock</option>
+          <option value="CommitmentVault">CommitmentVault</option>
+          <option value="LendingVault">LendingVault</option>
+        </select>
+        <button class="lazy-btn" id="lock-apply" type="button">Apply</button>
+      </div>
+
+      <div id="lock-events-status" class="loading"><span class="spinner"></span>Loading lock events&hellip;</div>
+      <div class="table-wrap">
+        <table id="lock-events-table">
+          <thead>
+            <tr><th>Block</th><th>System</th><th>Event</th><th>Wallet</th><th>Amount</th><th>Detail</th><th>TX</th></tr>
+          </thead>
+          <tbody id="lock-events-body">
+            <tr><td colspan="7" class="loading"><span class="spinner"></span>Loading&hellip;</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="lazy-controls" style="justify-content:flex-end;">
+        <button class="lazy-btn" id="lock-next" type="button">Load next 5</button>
       </div>
 
       <!-- ===== Token Distribution — Complete Record ===== -->
@@ -1270,6 +1365,9 @@
           </tbody>
         </table>
       </div>
+      <div class="lazy-controls" style="justify-content:flex-end;">
+        <button class="lazy-btn" id="txfeed-next" type="button">Load next 5</button>
+      </div>
 
       <!-- ===== Token Supply Distribution ===== -->
       <h2>Token Supply Distribution</h2>
@@ -1680,6 +1778,29 @@
       return v.toFixed(0);
     }
 
+    function escapeHtml(value) {
+      return String(value == null ? '' : value).replace(/[&<>"']/g, function(ch) {
+        return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch];
+      });
+    }
+
+    function shortAddr(addr) {
+      if (!addr || addr.length < 12) return '&mdash;';
+      return addr.slice(0, 6) + '&hellip;' + addr.slice(-4);
+    }
+
+    function fmtAmountText(value) {
+      var n = parseFloat(value || '0');
+      if (!isFinite(n)) return '0 IFR';
+      return fmtVal(n) + ' IFR';
+    }
+
+    function lockEventClass(action, contract) {
+      if (/unlock|withdraw|repaid|liquidated/i.test(action)) return 'event-unlock';
+      if (/lending|offer|loan/i.test(contract + ' ' + action)) return 'event-lending';
+      return 'event-lock';
+    }
+
     function dateTime() {
       return new Date().toLocaleString('de-DE', {
         day: '2-digit', month: '2-digit', year: 'numeric',
@@ -1712,6 +1833,7 @@
         var currentSupply = supply.totalSupply;
         var burned = Math.max(0, supply.burned || (INITIAL_SUPPLY - currentSupply));
         var pct = (burned / INITIAL_SUPPLY * 100);
+        var lockMeta = res[1].ifrLock || {};
 
         // Update all balance table cells (handle null from rate limiting)
         Object.keys(BALANCE_MAP).forEach(function(key) {
@@ -1747,6 +1869,18 @@
           var val = (bal[key] && bal[key].formatted != null) ? bal[key].formatted : 0;
           el.textContent = fmtNum(Math.round(val)) + ' IFR';
         });
+
+        var ifrLockedEl = document.getElementById('locks-ifrlock-locked');
+        if (ifrLockedEl) ifrLockedEl.textContent = fmtVal(lockMeta.lockedFormatted || 0) + ' IFR';
+        var ifrUnlockedEl = document.getElementById('locks-ifrlock-unlocked');
+        if (ifrUnlockedEl) ifrUnlockedEl.textContent = fmtVal(lockMeta.unlockedFormatted || 0) + ' IFR';
+        var commitmentLocksEl = document.getElementById('locks-commitment-total');
+        if (commitmentLocksEl) commitmentLocksEl.textContent = fmtVal((bal.CommitmentVault && bal.CommitmentVault.formatted) || 0) + ' IFR';
+        var lendingLocksEl = document.getElementById('locks-lending-total');
+        if (lendingLocksEl) {
+          var lendingTotal = ((bal.LendingVault && bal.LendingVault.formatted) || 0);
+          lendingLocksEl.textContent = fmtVal(lendingTotal) + ' IFR';
+        }
 
         // Hero timestamp + data source
         var heroEl = document.getElementById('hero-timestamp');
@@ -1795,21 +1929,94 @@
       });
     }
 
-    // ===== TX Feed — fetch + empty/error handling =====
+    // ===== Lock Events — lazy paged table =====
+    var lockBody = document.getElementById('lock-events-body');
+    var lockStatus = document.getElementById('lock-events-status');
+    var lockNext = document.getElementById('lock-next');
+    var lockApply = document.getElementById('lock-apply');
+    var lockPage = 1;
+    var lockLoading = false;
+
+    function loadLockEvents(reset) {
+      if (!lockBody || lockLoading) return;
+      lockLoading = true;
+      if (reset) {
+        lockPage = 1;
+        lockBody.innerHTML = '<tr><td colspan="7" class="loading"><span class="spinner"></span>Loading&hellip;</td></tr>';
+      }
+      if (lockNext) { lockNext.disabled = true; lockNext.textContent = 'Loading...'; }
+      var search = document.getElementById('lock-search');
+      var type = document.getElementById('lock-type');
+      var params = new URLSearchParams({
+        page: String(lockPage),
+        limit: '5',
+        q: search ? search.value.trim() : '',
+        type: type ? type.value : ''
+      });
+      fetch(PROXY_BASE + '/api/locks/events?' + params.toString()).then(function(r) { return r.json(); })
+        .then(function(data) {
+          var events = data.events || [];
+          if (reset) lockBody.innerHTML = '';
+          if (!events.length && lockPage === 1) {
+            lockBody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#555;padding:24px;font-style:italic;">No lock events found for this filter.</td></tr>';
+          } else {
+            var rows = events.map(function(ev) {
+              var badgeClass = lockEventClass(ev.action, ev.contract);
+              return '<tr>' +
+                '<td>' + escapeHtml(ev.blockNumber || '&mdash;') + '</td>' +
+                '<td>' + escapeHtml(ev.contract || '&mdash;') + '</td>' +
+                '<td><span class="event-badge ' + badgeClass + '">' + escapeHtml(ev.action || '&mdash;') + '</span></td>' +
+                '<td class="address">' + (ev.wallet ? '<a href="https://etherscan.io/address/' + encodeURIComponent(ev.wallet) + '" target="_blank" rel="noopener">' + shortAddr(ev.wallet) + '</a>' : '&mdash;') + '</td>' +
+                '<td>' + escapeHtml(fmtAmountText(ev.amount)) + '</td>' +
+                '<td>' + escapeHtml(ev.detail || '') + '</td>' +
+                '<td>' + (ev.hash ? '<a href="https://etherscan.io/tx/' + encodeURIComponent(ev.hash) + '" target="_blank" rel="noopener">' + ev.hash.slice(0,10) + '&hellip;</a>' : '&mdash;') + '</td>' +
+                '</tr>';
+            }).join('');
+            lockBody.insertAdjacentHTML('beforeend', rows);
+          }
+          if (lockStatus) lockStatus.innerHTML = '<span style="color:#2f6a45">\u25CF</span> Showing ' + lockBody.querySelectorAll('tr').length + ' lock rows &mdash; ' + dateTime();
+          if (lockNext) {
+            lockNext.disabled = !data.hasMore;
+            lockNext.textContent = data.hasMore ? 'Load next 5' : 'No more records';
+          }
+          if (data.hasMore) lockPage += 1;
+        })
+        .catch(function() {
+          if (lockStatus) lockStatus.innerHTML = '<span style="color:#ef4444">\u25CF</span> Lock events temporarily unavailable';
+          if (lockNext) { lockNext.disabled = false; lockNext.textContent = 'Retry'; }
+        })
+        .finally(function() { lockLoading = false; });
+    }
+
+    if (lockNext) lockNext.addEventListener('click', function() { loadLockEvents(false); });
+    if (lockApply) lockApply.addEventListener('click', function() { loadLockEvents(true); });
+
+    // ===== TX Feed — lazy paged table =====
     var txBody = document.getElementById('txfeed-body');
     var txStatus = document.getElementById('txfeed-status');
+    var txNext = document.getElementById('txfeed-next');
+    var txPage = 1;
+    var txLoading = false;
 
-    function loadTxFeed() {
-      fetch(PROXY_BASE + '/api/ifr/transactions').then(function(r) { return r.json(); })
+    function loadTxFeed(reset) {
+      if (!txBody || txLoading) return;
+      txLoading = true;
+      if (reset) {
+        txPage = 1;
+        txBody.innerHTML = '<tr><td colspan="6" class="loading"><span class="spinner"></span>Loading&hellip;</td></tr>';
+      }
+      if (txNext) { txNext.disabled = true; txNext.textContent = 'Loading...'; }
+      fetch(PROXY_BASE + '/api/ifr/transactions?page=' + txPage + '&limit=5').then(function(r) { return r.json(); })
         .then(function(data) {
           var txs = data.transactions || data || [];
-          if (!Array.isArray(txs) || txs.length === 0) {
+          if (reset) txBody.innerHTML = '';
+          if (!Array.isArray(txs) || txs.length === 0 && txPage === 1) {
             txBody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#555;padding:24px;font-style:italic;">' +
               'No recent transactions returned by API</td></tr>';
             txStatus.innerHTML = '<span style="color:#555;">\u25CB</span> No transactions yet';
             return;
           }
-          txStatus.innerHTML = '<span style="color:#2f6a45">\u25CF</span> ' + txs.length + ' transactions loaded \u2014 ' + dateTime();
+          txStatus.innerHTML = '<span style="color:#2f6a45">\u25CF</span> Showing ' + (txBody.querySelectorAll('tr').length + txs.length) + ' transactions \u2014 ' + dateTime();
           var rows = '';
           txs.forEach(function(tx) {
             rows += '<tr>' +
@@ -1821,22 +2028,32 @@
               '<td>' + (tx.hash ? '<a href="https://etherscan.io/tx/' + tx.hash + '" target="_blank" rel="noopener">' + tx.hash.slice(0,10) + '\u2026</a>' : '\u2014') + '</td>' +
               '</tr>';
           });
-          txBody.innerHTML = rows;
+          txBody.insertAdjacentHTML('beforeend', rows);
+          if (txNext) {
+            txNext.disabled = !data.hasMore;
+            txNext.textContent = data.hasMore ? 'Load next 5' : 'No more records';
+          }
+          txPage += 1;
         })
         .catch(function() {
           txBody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#555;padding:24px;font-style:italic;">' +
             'Transaction feed temporarily unavailable</td></tr>';
           txStatus.innerHTML = '<span style="color:#ef4444">\u25CF</span> Feed unavailable \u2014 retry in 30s';
-        });
+          if (txNext) { txNext.disabled = false; txNext.textContent = 'Retry'; }
+        })
+        .finally(function() { txLoading = false; });
     }
+
+    if (txNext) txNext.addEventListener('click', function() { loadTxFeed(false); });
 
     // ===== Init — warm up API proxy then fetch data =====
     fetch(PROXY_BASE + '/api/ifr/supply').catch(function() {});
     setTimeout(refreshAllLiveData, 1000);
     setTimeout(loadVaultLiveData, 1400);
-    setTimeout(loadTxFeed, 2000);
+    setTimeout(function() { loadLockEvents(true); }, 1800);
+    setTimeout(function() { loadTxFeed(true); }, 2200);
     setInterval(refreshAllLiveData, 30000);
-    setInterval(loadTxFeed, 30000);
+    setInterval(function() { loadTxFeed(true); }, 30000);
   })();
   </script>
 

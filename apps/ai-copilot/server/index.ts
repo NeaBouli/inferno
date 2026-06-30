@@ -564,6 +564,8 @@ const PROTOCOL_ADDRESSES: Record<string, string> = {
   LendingVault: "0x974305Ab0EC905172e697271C3d7d385194EB9DF",
 };
 
+const IFRLOCK_DEPLOY_BLOCK = 21965900;
+
 async function esApiFetch(params: string): Promise<unknown> {
   const url = `https://api.etherscan.io/v2/api?chainid=1${params}${ETHERSCAN_API_KEY ? "&apikey=" + ETHERSCAN_API_KEY : ""}`;
   const controller = new AbortController();
@@ -605,9 +607,22 @@ async function fetchBalancesData() {
   );
   const ifrLock = new ethersLib.Contract(
     PROTOCOL_ADDRESSES.IFRLock,
-    ["function totalLocked() view returns (uint256)"],
+    ["function totalLocked() view returns (uint256)", "event Unlocked(address indexed user, uint256 amount)"],
     provider
   );
+  async function fetchIFRLockUnlockedTotal() {
+    const topic = ifrLock.interface.getEventTopic("Unlocked");
+    let total = ethersLib.BigNumber.from(0);
+    const data = await esApiFetch(
+      `&module=logs&action=getLogs&fromBlock=${IFRLOCK_DEPLOY_BLOCK}&toBlock=latest&address=${PROTOCOL_ADDRESSES.IFRLock}&topic0=${topic}`
+    ) as { status?: string; result?: Array<{ data: string }> };
+    if (data.status !== "1" || !Array.isArray(data.result)) return total;
+    for (const log of data.result) {
+      if (log.data) total = total.add(ethersLib.BigNumber.from(log.data));
+    }
+    return total;
+  }
+  const unlockedTotalPromise = fetchIFRLockUnlockedTotal().catch(() => ethersLib.BigNumber.from(0));
   const results: Record<string, { raw: string; formatted: number }> = {};
   for (let i = 0; i < entries.length; i += 4) {
     const batch = entries.slice(i, i + 4);
@@ -623,7 +638,19 @@ async function fetchBalancesData() {
     if (i + 4 < entries.length) await new Promise(r => setTimeout(r, 150));
   }
 
-  const response = { balances: results, timestamp: new Date().toISOString(), fetchedAt: Date.now(), source: "live" as const };
+  const unlockedTotal = await unlockedTotalPromise;
+  const response = {
+    balances: results,
+    ifrLock: {
+      lockedRaw: results.IFRLock?.raw || "0",
+      lockedFormatted: results.IFRLock?.formatted || 0,
+      unlockedRaw: unlockedTotal.toString(),
+      unlockedFormatted: parseFloat(ethersLib.utils.formatUnits(unlockedTotal, IFR_DECIMALS)),
+    },
+    timestamp: new Date().toISOString(),
+    fetchedAt: Date.now(),
+    source: "live" as const,
+  };
   setCache("balances", response);
   return response;
 }
@@ -634,9 +661,22 @@ async function fetchBalancesDataEtherscanFallback() {
   const provider = new ethersLib.providers.JsonRpcProvider(ETH_RPC_URL);
   const ifrLock = new ethersLib.Contract(
     PROTOCOL_ADDRESSES.IFRLock,
-    ["function totalLocked() view returns (uint256)"],
+    ["function totalLocked() view returns (uint256)", "event Unlocked(address indexed user, uint256 amount)"],
     provider
   );
+  async function fetchIFRLockUnlockedTotal() {
+    const topic = ifrLock.interface.getEventTopic("Unlocked");
+    let total = ethersLib.BigNumber.from(0);
+    const data = await esApiFetch(
+      `&module=logs&action=getLogs&fromBlock=${IFRLOCK_DEPLOY_BLOCK}&toBlock=latest&address=${PROTOCOL_ADDRESSES.IFRLock}&topic0=${topic}`
+    ) as { status?: string; result?: Array<{ data: string }> };
+    if (data.status !== "1" || !Array.isArray(data.result)) return total;
+    for (const log of data.result) {
+      if (log.data) total = total.add(ethersLib.BigNumber.from(log.data));
+    }
+    return total;
+  }
+  const unlockedTotalPromise = fetchIFRLockUnlockedTotal().catch(() => ethersLib.BigNumber.from(0));
   const results: Record<string, { raw: string; formatted: number }> = {};
   for (let i = 0; i < entries.length; i++) {
     const [label, addr] = entries[i];
@@ -657,7 +697,19 @@ async function fetchBalancesDataEtherscanFallback() {
     if (i < entries.length - 1) await new Promise(r => setTimeout(r, 250));
   }
 
-  const response = { balances: results, timestamp: new Date().toISOString(), fetchedAt: Date.now(), source: "live" as const };
+  const unlockedTotal = await unlockedTotalPromise;
+  const response = {
+    balances: results,
+    ifrLock: {
+      lockedRaw: results.IFRLock?.raw || "0",
+      lockedFormatted: results.IFRLock?.formatted || 0,
+      unlockedRaw: unlockedTotal.toString(),
+      unlockedFormatted: parseFloat(ethersLib.utils.formatUnits(unlockedTotal, IFR_DECIMALS)),
+    },
+    timestamp: new Date().toISOString(),
+    fetchedAt: Date.now(),
+    source: "live" as const,
+  };
   setCache("balances", response);
   return response;
 }
@@ -712,15 +764,19 @@ app.get("/api/ifr/supply", async (_req, res) => {
 
 // GET /api/ifr/txfeed — recent ETH + IFR transfers for key wallets
 // Also aliased as /api/ifr/transactions for transparency.html frontend
-async function handleTxFeed(_req: express.Request, res: express.Response) {
+async function handleTxFeed(req: express.Request, res: express.Response) {
   res.set("Cache-Control", "no-store");
-  const cached = getCached("txfeed");
+  const page = Math.max(1, Math.min(parseInt(String(req.query.page || "1"), 10) || 1, 100));
+  const limit = Math.max(1, Math.min(parseInt(String(req.query.limit || "5"), 10) || 5, 20));
+  const cacheKey = `txfeed:${page}:${limit}`;
+  const cached = getCached(cacheKey);
   if (cached) { res.json(cached); return; }
 
   const feedWallets = ["FeeRouterV1", "GnosisSafe", "CommunitySafe", "Deployer"];
   try {
     const transactions: { wallet: string; dir: string; amount: string; type: string; hash: string; timestamp: number }[] = [];
     const seen = new Set<string>();
+    const perWalletOffset = Math.min(50, Math.max(page * limit, 10));
 
     for (let i = 0; i < feedWallets.length; i++) {
       const label = feedWallets[i];
@@ -730,7 +786,7 @@ async function handleTxFeed(_req: express.Request, res: express.Response) {
       // ETH transactions
       try {
         const ethData = await esApiFetch(
-          `&module=account&action=txlist&address=${addr}&page=1&offset=10&sort=desc`
+          `&module=account&action=txlist&address=${addr}&page=1&offset=${perWalletOffset}&sort=desc`
         ) as { status?: string; result?: Array<{ from: string; to: string; value: string; hash: string; timeStamp: string; isError: string }> };
         if (ethData.status === "1" && Array.isArray(ethData.result)) {
           for (const tx of ethData.result) {
@@ -754,7 +810,7 @@ async function handleTxFeed(_req: express.Request, res: express.Response) {
       // IFR token transactions
       try {
         const tokData = await esApiFetch(
-          `&module=account&action=tokentx&contractaddress=${IFR_TOKEN}&address=${addr}&page=1&offset=10&sort=desc`
+          `&module=account&action=tokentx&contractaddress=${IFR_TOKEN}&address=${addr}&page=1&offset=${perWalletOffset}&sort=desc`
         ) as { status?: string; result?: Array<{ from: string; to: string; value: string; hash: string; timeStamp: string; contractAddress: string }> };
         if (tokData.status === "1" && Array.isArray(tokData.result)) {
           for (const tx of tokData.result) {
@@ -778,8 +834,15 @@ async function handleTxFeed(_req: express.Request, res: express.Response) {
     }
 
     transactions.sort((a, b) => b.timestamp - a.timestamp);
-    const response = { transactions: transactions.slice(0, 20), timestamp: new Date().toISOString() };
-    setCache("txfeed", response);
+    const start = (page - 1) * limit;
+    const response = {
+      transactions: transactions.slice(start, start + limit),
+      page,
+      limit,
+      hasMore: transactions.length > start + limit,
+      timestamp: new Date().toISOString(),
+    };
+    setCache(cacheKey, response);
     res.json(response);
   } catch (err) {
     console.error("Etherscan txfeed error:", err);
@@ -788,6 +851,132 @@ async function handleTxFeed(_req: express.Request, res: express.Response) {
 }
 app.get("/api/ifr/txfeed", handleTxFeed);
 app.get("/api/ifr/transactions", handleTxFeed);
+
+type LockEventRow = {
+  contract: string;
+  action: string;
+  wallet: string;
+  amount: string;
+  detail: string;
+  hash: string;
+  blockNumber: number;
+  timestamp: number | null;
+};
+
+const LOCK_EVENT_SOURCES = [
+  {
+    contract: "IFRLock",
+    address: PROTOCOL_ADDRESSES.IFRLock,
+    fromBlock: IFRLOCK_DEPLOY_BLOCK,
+    events: [
+      "event Locked(address indexed user, uint256 amount, bytes32 indexed lockType)",
+      "event Unlocked(address indexed user, uint256 amount)",
+    ],
+  },
+  {
+    contract: "CommitmentVault",
+    address: PROTOCOL_ADDRESSES.CommitmentVault,
+    fromBlock: 25278000,
+    events: [
+      "event Locked(address indexed wallet, uint256 indexed trancheId, uint256 amount, uint8 cType)",
+      "event Unlocked(address indexed wallet, uint256 indexed trancheId, uint256 amount, address unlockedBy)",
+    ],
+  },
+  {
+    contract: "LendingVault",
+    address: PROTOCOL_ADDRESSES.LendingVault,
+    fromBlock: 25278000,
+    events: [
+      "event OfferCreated(address indexed lender, uint256 indexed offerId, uint256 amount)",
+      "event OfferIncreased(address indexed lender, uint256 indexed offerId, uint256 addedAmount)",
+      "event OfferWithdrawn(address indexed lender, uint256 indexed offerId, uint256 amount)",
+      "event LoanCreated(uint256 indexed loanId, address indexed borrower, uint256 offerId, uint256 ifrAmount, uint256 ethCollateral)",
+      "event LoanRepaid(uint256 indexed loanId, uint256 principal, uint256 interest)",
+      "event LoanLiquidated(uint256 indexed loanId, address indexed liquidator, uint256 liquidatorBonus, uint256 lenderReceived)",
+    ],
+  },
+];
+
+function toEtherscanTopics(log: Record<string, unknown>): string[] {
+  if (Array.isArray(log.topics)) return log.topics.filter(Boolean) as string[];
+  return [log.topic0, log.topic1, log.topic2, log.topic3].filter(Boolean) as string[];
+}
+
+async function fetchLockEventsPage(page: number, limit: number, type: string, q: string): Promise<LockEventRow[]> {
+  const ethersLib = (await import("ethers")).ethers;
+  const normalizedType = type.toLowerCase();
+  const normalizedQuery = q.toLowerCase();
+  const start = (page - 1) * limit;
+  const perSourceOffset = Math.min(100, Math.max(page * limit + 1, 10));
+  const rows: LockEventRow[] = [];
+
+  for (const source of LOCK_EVENT_SOURCES) {
+    if (normalizedType && source.contract.toLowerCase() !== normalizedType) continue;
+    const iface = new ethersLib.utils.Interface(source.events);
+    for (const fragment of Object.values(iface.events)) {
+      const topic0 = iface.getEventTopic(fragment);
+      const data = await esApiFetch(
+        `&module=logs&action=getLogs&fromBlock=${source.fromBlock}&toBlock=latest&address=${source.address}&topic0=${topic0}&page=1&offset=${perSourceOffset}`
+      ) as { status?: string; result?: Array<Record<string, unknown>> };
+      if (data.status !== "1" || !Array.isArray(data.result)) continue;
+      for (const rawLog of data.result) {
+        try {
+          const parsed = iface.parseLog({
+            topics: toEtherscanTopics(rawLog),
+            data: String(rawLog.data || "0x"),
+          });
+          const blockNumber = parseInt(String(rawLog.blockNumber || "0"), 16) || Number(rawLog.blockNumber || 0);
+          const timestampRaw = rawLog.timeStamp ? String(rawLog.timeStamp) : "";
+          const timestamp = timestampRaw ? (parseInt(timestampRaw, 16) || Number(timestampRaw)) : null;
+          const wallet = String(parsed.args.user || parsed.args.wallet || parsed.args.lender || parsed.args.borrower || parsed.args.liquidator || "");
+          const amountRaw = parsed.args.amount || parsed.args.addedAmount || parsed.args.ifrAmount || parsed.args.principal || parsed.args.lenderReceived || ethersLib.BigNumber.from(0);
+          const amount = ethersLib.utils.formatUnits(amountRaw, IFR_DECIMALS);
+          const action = parsed.name;
+          const detail = parsed.args.trancheId != null ? `Tranche ${parsed.args.trancheId.toString()}` :
+            parsed.args.offerId != null ? `Offer ${parsed.args.offerId.toString()}` :
+            parsed.args.loanId != null ? `Loan ${parsed.args.loanId.toString()}` : "";
+          const row: LockEventRow = {
+            contract: source.contract,
+            action,
+            wallet,
+            amount,
+            detail,
+            hash: String(rawLog.transactionHash || ""),
+            blockNumber,
+            timestamp,
+          };
+          const haystack = `${row.contract} ${row.action} ${row.wallet} ${row.hash} ${row.detail}`.toLowerCase();
+          if (!normalizedQuery || haystack.includes(normalizedQuery)) rows.push(row);
+        } catch { /* skip malformed log */ }
+      }
+    }
+  }
+
+  rows.sort((a, b) => (b.blockNumber || 0) - (a.blockNumber || 0));
+  return rows.slice(start, start + limit + 1);
+}
+
+// GET /api/locks/events — paged lock/lending event feed for Transparency page
+app.get("/api/locks/events", async (req, res) => {
+  res.set("Cache-Control", "public, max-age=30");
+  try {
+    const page = Math.max(1, Math.min(parseInt(String(req.query.page || "1"), 10) || 1, 100));
+    const limit = Math.max(1, Math.min(parseInt(String(req.query.limit || "5"), 10) || 5, 20));
+    const type = String(req.query.type || "");
+    const q = String(req.query.q || "").trim();
+    const events = await fetchLockEventsPage(page, limit, type, q);
+    res.json({
+      events: events.slice(0, limit),
+      page,
+      limit,
+      hasMore: events.length > limit,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (err) {
+    console.error("Lock events error:", err);
+    res.status(502).json({ error: "Failed to fetch lock events" });
+  }
+});
 
 // GET /api/ifr/vault — BootstrapVaultV3 live status
 const VAULT_TARGET_AMOUNT = 200_000_000;
