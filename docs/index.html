@@ -1982,6 +1982,19 @@ render();
         <div style="font-size:10px;color:#666;margin-top:2px;">Total CommitmentVault locked IFR. C2 verified: <span data-live-key="c2-commitment-lock">loading&hellip;</span>, <span data-live-key="c2-commitment-tranches">10 tranches</span>, unlock 29.07.2026.</div>
       </div>
 
+        <div style="background:#111113;border:1px solid rgba(255,140,0,0.35);border-radius:8px;padding:14px 16px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+            <span style="font-size:13px;font-weight:600;">&#x1F512; IFRLock Access Locks</span>
+            <span style="font-size:10px;padding:2px 8px;border-radius:10px;background:rgba(255,140,0,0.15);color:#ff8c00;">Live</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+            <a href="https://etherscan.io/address/0x769928aBDfc949D0718d8766a1C2d7dBb63954Eb" target="_blank" rel="noopener" style="font-size:11px;font-family:monospace;color:#8a8a96;text-decoration:none;">0x769928aB...3954Eb</a>
+            <a href="#top" onclick="lpToggleDropdown();return false;" style="font-size:10px;color:#ff8c00;text-decoration:none;">Lock IFR</a>
+          </div>
+          <div style="font-size:13px;font-weight:600;color:#ff8c00;"><span data-live-key="card-ifrlock">loading&hellip;</span> locked</div>
+          <div style="font-size:10px;color:#666;margin-top:2px;">Simple access locks for Premium and builder products. Users can unlock anytime; no yield, no vesting, no reward promise.</div>
+        </div>
+
         <div style="background:#111113;border:1px solid rgba(34,197,94,0.35);border-radius:8px;padding:14px 16px;">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
             <span style="font-size:13px;font-weight:600;">&#x1F4B8; LendingVault Offers</span>
@@ -3278,6 +3291,7 @@ if (isLocked) {
     setLive('card-partner',    fmt(d.partner) + ' IFR');
     setLive('card-bootstrap',  fmt(d.bootstrap) + ' IFR');
     setLive('card-commitment-locked', fmt(d.commitmentLocked || 0) + ' IFR');
+    setLive('card-ifrlock', fmt(d.ifrLock) + ' IFR');
     setLive('card-lending-available', fmt(d.lendingAvailable || 0) + ' IFR');
     setLive('card-lending-lent', fmt(d.lendingLent || 0) + ' IFR');
     setLive('card-buyback',    fmt(d.buyback) + ' IFR');
