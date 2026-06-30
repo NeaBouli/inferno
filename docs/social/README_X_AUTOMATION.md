@@ -10,6 +10,20 @@ X_DRY_RUN=false X_ALLOW_LIVE=true node scripts/post-x.js docs/social/x-geckoterm
 npm run post:x:dry
 ```
 
+Scheduled daily automation:
+
+```bash
+npm run post:x:daily:promo
+npm run post:x:daily:status
+```
+
+Production schedule:
+
+- `03:00 Europe/Athens` — rotating project promotion from the IFR content palette.
+- `10:00 Europe/Athens` — live protocol status from supply, CommitmentVault and LendingVault API data.
+- Automatic scheduled posts intentionally contain no links.
+- Live cron must set `X_DRY_RUN=false` and `X_ALLOW_LIVE=true`; the repository defaults stay dry-run safe.
+
 Live posting requires an X Developer App with write access and user-context credentials for `@IFRtoken`.
 
 Recommended credential path:
