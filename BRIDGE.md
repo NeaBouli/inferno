@@ -104,6 +104,19 @@
 
 **Deployment / GitHub / Railway**
 
+- Re-check 30.06.2026:
+  - GitHub Actions: latest `main` runs for `Docs Validator`, `Security Audit`, `pages-build-deployment` are green on `8ef82f36`.
+  - `AI Copilot CI` latest visible run remains green on `e195d458`.
+  - Historical cancelled Pages run on `e195d458` was superseded by later successful Pages deployments.
+  - Railway project `ifr-ai-copilot` currently has two services:
+    - `ifr-ai-copilot`: Online, latest deployment `92dcb182` success from `8ef82f36`.
+    - `inferno`: Crashed, latest deployment `a205400d` from `8ef82f36`.
+  - Railway `inferno` is still connected to GitHub repo `NeaBouli/inferno`, root `apps/telegram/telegram-bot`, config `/apps/telegram/telegram-bot/railway.json`.
+  - Build succeeds; runtime starts `Verify API` on port `3001`, then Telegram polling fails repeatedly with `Fatal polling error err="404: Not Found"`.
+  - Most likely cause: stale/invalid Telegram bot token or old Telegram bot context on the Railway `inferno` service.
+  - Operational interpretation: this is the old Telegram bot Railway service after migration to Hetzner; because it remains source-connected, every commit can create a fresh crashed Railway deployment.
+  - Recommended fix: disconnect/delete/disable Railway service `inferno` if Hetzner is authoritative, or rotate/set the correct Telegram token in Railway if Railway should run the bot again. Do not print or commit bot tokens.
+
 - GitHub Pages Deploy fuer Commit `e195d458` war zuerst blockiert/cancelled.
 - Aktion:
   - stuck Pages run gecancelt
@@ -522,7 +535,7 @@ TIME_ONLY (cType=0) garantiert Unlock nach 30 Tagen ohne Preis-Abhängigkeit.
 
 **Telegram-Bot Railway → Hetzner**
 - Railway Service `inferno` → `○ Offline` (via `railway down --yes`)
-- BOT_TOKEN: aus Railway Variables gesichert (`8685690992:AAGVgjKJSjZtQ3vYX1h6kbajvpZ-FBbGRlM`) → in Memory
+- BOT_TOKEN: aus Railway Variables gesichert, aber nicht im Repo dokumentieren; Token gehoert in externe Secret-Verwaltung und muss bei Verdacht rotiert werden.
 - Code + Dockerfile auf Hetzner: `/opt/inferno/telegram-bot/`
 - Docker Compose: `/opt/inferno/docker-compose.yml`
 - Fix: `dropPendingUpdates: true` entfernt (verursachte Launch-Hang auf Hetzner)
