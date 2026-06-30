@@ -3805,3 +3805,31 @@ index acf5e72f..680ed772 100644
 - Large IFR holders, locked IFR holders, lenders, builders, and contributors can be positive alignment signals.
 - None of those factors automatically grants a signer seat.
 - Final signer candidates must be qualified, publicly nominated, voted on by the community, security-reviewed, and onboarded through Safe/governance.
+
+---
+
+## 2026-06-30 [CODEX]
+### TYPE: LANDING / GOVERNANCE UX / CONTRAST
+### STATUS: DONE - signer distribution moved higher and contrast improved
+
+**Issue**
+
+- Gio could not find the multisig signer distribution explanation on the live landing around the Governance section.
+- The Governance cards used grey text on grey/dark translucent backgrounds, which was hard to read on mobile.
+
+**Fix**
+
+- `docs/index.html`
+  - Moved the `MULTISIG SIGNER DISTRIBUTION` / `Community Signer Expansion` card directly under the `Two-Chamber Governance` heading.
+  - The signer distribution explanation now appears before `The Council` and `The Forum`.
+  - Changed the Governance cards to solid dark backgrounds with high-contrast white/light text.
+  - Replaced low-contrast grey paragraph/list text with white or near-white text.
+  - Kept the direct link to `wiki/community-signer-expansion.html`.
+
+**Expected Location On Landing**
+
+- Section: `Governance`
+- Heading: `Two-Chamber Governance`
+- First visible card under the heading:
+  - `MULTISIG SIGNER DISTRIBUTION`
+  - `Community Signer Expansion`
