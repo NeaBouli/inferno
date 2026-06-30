@@ -23,7 +23,7 @@ Safety rules:
 
 - Real credentials stay in `.env`, server env, or a secret manager.
 - Use `docs/social/x.env.example` as the safe template.
-- Do not commit real X credentials.
+- Do not commit real X credentials. Local files such as `x.env`, `x.production.env`, `twitter.env`, `*.secrets.env`, and `*token*.env` are gitignored.
 - Keep `X_DRY_RUN=true` by default.
 - Live posting requires both `X_DRY_RUN=false` and `X_ALLOW_LIVE=true`.
 

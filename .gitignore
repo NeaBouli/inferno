@@ -5,6 +5,18 @@ cache/
 .env.*
 .env.local
 .env*.local
+
+# Social bot secrets (Telegram/X/Twitter)
+telegram.env
+telegram.*.env
+x.env
+x.*.env
+twitter.env
+twitter.*.env
+*.secrets.env
+*secret*.env
+*token*.env
+
 *.pem
 *.key
 logs/*.log
