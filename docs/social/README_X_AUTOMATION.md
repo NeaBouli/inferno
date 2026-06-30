@@ -10,13 +10,24 @@ X_DRY_RUN=false X_ALLOW_LIVE=true node scripts/post-x.js docs/social/x-geckoterm
 npm run post:x:dry
 ```
 
-Live posting requires an X Developer App with write access and OAuth user-context credentials for `@IFRtoken`.
+Live posting requires an X Developer App with write access and user-context credentials for `@IFRtoken`.
+
+Recommended credential path:
+
+- In X Developer Portal, set App permissions to `Read and write`.
+- Open `Keys & Tokens`.
+- Regenerate `Access Token` for `@IFRtoken` after permissions are changed.
+- Store these four OAuth 1.0a values in local `x.env` or `.env`:
+  - `X_CONSUMER_KEY`
+  - `X_CONSUMER_SECRET`
+  - `X_ACCESS_TOKEN`
+  - `X_ACCESS_TOKEN_SECRET`
 
 Required setup:
 
 - X Developer Account
 - X App with Read and Write permission
-- OAuth 2.0 user-context access token for `@IFRtoken`
+- OAuth 1.0a user-context token for `@IFRtoken`, or OAuth 2.0 user-context access/refresh token
 - Optional refresh token setup via `X_CLIENT_ID`, `X_CLIENT_SECRET`, `X_REFRESH_TOKEN`
 
 Safety rules:

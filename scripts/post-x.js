@@ -13,6 +13,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 const dotenv = require('dotenv');
 
 const CREATE_POST_URL = 'https://api.x.com/2/tweets';
@@ -51,6 +52,10 @@ function usage() {
     'Optional env:',
     '  X_ENV_FILE=...         Load credentials from a custom local env file',
     '  X_REPLY_TO_ID=...       Start the thread as a reply to an existing post',
+    '  X_CONSUMER_KEY=...      OAuth 1.0a consumer key / API key',
+    '  X_CONSUMER_SECRET=...   OAuth 1.0a consumer secret / API secret',
+    '  X_ACCESS_TOKEN=...      OAuth 1.0a access token or OAuth2 bearer access token',
+    '  X_ACCESS_TOKEN_SECRET=... OAuth 1.0a access token secret',
     '  X_REFRESH_TOKEN=...     Refresh OAuth2 access token before posting',
     '  X_CLIENT_ID=...         OAuth2 client id for refresh',
     '  X_CLIENT_SECRET=...     OAuth2 client secret for confidential apps',
@@ -89,7 +94,54 @@ function validatePosts(posts) {
   });
 }
 
-function authHeaders(token) {
+function oauthEncode(value) {
+  return encodeURIComponent(String(value))
+    .replace(/[!'()*]/g, char => `%${char.charCodeAt(0).toString(16).toUpperCase()}`);
+}
+
+function createOAuth1AuthHeader(method, url) {
+  const consumerKey = process.env.X_CONSUMER_KEY || process.env.X_API_KEY;
+  const consumerSecret = process.env.X_CONSUMER_SECRET || process.env.X_API_SECRET;
+  const accessToken = process.env.X_ACCESS_TOKEN;
+  const accessTokenSecret = process.env.X_ACCESS_TOKEN_SECRET;
+
+  const missing = [];
+  if (!consumerKey) missing.push('X_CONSUMER_KEY');
+  if (!consumerSecret) missing.push('X_CONSUMER_SECRET');
+  if (!accessToken) missing.push('X_ACCESS_TOKEN');
+  if (!accessTokenSecret) missing.push('X_ACCESS_TOKEN_SECRET');
+  if (missing.length) throw new Error(`Missing OAuth 1.0a credentials: ${missing.join(', ')}`);
+
+  const oauthParams = {
+    oauth_consumer_key: consumerKey,
+    oauth_nonce: crypto.randomBytes(16).toString('hex'),
+    oauth_signature_method: 'HMAC-SHA1',
+    oauth_timestamp: Math.floor(Date.now() / 1000).toString(),
+    oauth_token: accessToken,
+    oauth_version: '1.0',
+  };
+
+  const parameterString = Object.entries(oauthParams)
+    .map(([key, value]) => [oauthEncode(key), oauthEncode(value)])
+    .sort(([aKey, aValue], [bKey, bValue]) => aKey === bKey ? aValue.localeCompare(bValue) : aKey.localeCompare(bKey))
+    .map(([key, value]) => `${key}=${value}`)
+    .join('&');
+
+  const signatureBase = [
+    method.toUpperCase(),
+    oauthEncode(url),
+    oauthEncode(parameterString),
+  ].join('&');
+  const signingKey = `${oauthEncode(consumerSecret)}&${oauthEncode(accessTokenSecret)}`;
+  oauthParams.oauth_signature = crypto.createHmac('sha1', signingKey).update(signatureBase).digest('base64');
+
+  return 'OAuth ' + Object.entries(oauthParams)
+    .sort(([aKey], [bKey]) => aKey.localeCompare(bKey))
+    .map(([key, value]) => `${oauthEncode(key)}="${oauthEncode(value)}"`)
+    .join(', ');
+}
+
+function bearerAuthHeaders(token) {
   return {
     Authorization: `Bearer ${token}`,
     'Content-Type': 'application/json',
@@ -131,15 +183,37 @@ async function refreshAccessTokenIfConfigured() {
   return json.access_token;
 }
 
-async function createPost(accessToken, text, replyToId) {
+function getAuthMode() {
+  if (process.env.X_ACCESS_TOKEN_SECRET || process.env.X_CONSUMER_KEY || process.env.X_API_KEY) {
+    return 'oauth1';
+  }
+  return 'bearer';
+}
+
+async function getBearerAccessToken() {
+  const accessToken = await refreshAccessTokenIfConfigured();
+  if (!accessToken) {
+    throw new Error(
+      'X_ACCESS_TOKEN is required for OAuth2 bearer posting, unless refresh credentials are configured. ' +
+      'For OAuth 1.0a posting, set X_CONSUMER_KEY, X_CONSUMER_SECRET, X_ACCESS_TOKEN, and X_ACCESS_TOKEN_SECRET.'
+    );
+  }
+  return accessToken;
+}
+
+async function createPost(auth, text, replyToId) {
   const payload = { text };
   if (replyToId) {
     payload.reply = { in_reply_to_tweet_id: String(replyToId) };
   }
 
+  const headers = auth.mode === 'oauth1'
+    ? { Authorization: createOAuth1AuthHeader('POST', CREATE_POST_URL), 'Content-Type': 'application/json' }
+    : bearerAuthHeaders(auth.accessToken);
+
   const res = await fetch(CREATE_POST_URL, {
     method: 'POST',
-    headers: authHeaders(accessToken),
+    headers,
     body: JSON.stringify(payload),
   });
   const json = await res.json().catch(() => ({}));
@@ -177,15 +251,16 @@ async function main() {
     throw new Error('Live posting blocked. Set X_ALLOW_LIVE=true explicitly.');
   }
 
-  const accessToken = await refreshAccessTokenIfConfigured();
-  if (!accessToken) {
-    throw new Error('X_ACCESS_TOKEN is required for live posting unless refresh credentials are configured.');
-  }
+  const authMode = getAuthMode();
+  const auth = authMode === 'oauth1'
+    ? { mode: 'oauth1' }
+    : { mode: 'bearer', accessToken: await getBearerAccessToken() };
+  console.log('Auth:', auth.mode === 'oauth1' ? 'OAuth 1.0a user context' : 'OAuth2 bearer/user context');
 
   const results = [];
   let replyToId = initialReplyToId;
   for (let i = 0; i < posts.length; i++) {
-    const result = await createPost(accessToken, posts[i], replyToId);
+    const result = await createPost(auth, posts[i], replyToId);
     const id = result && result.data && result.data.id;
     if (!id) throw new Error(`X response did not include post id: ${JSON.stringify(result)}`);
     results.push({ index: i + 1, id, text: result.data.text });
