@@ -603,12 +603,17 @@ async function fetchBalancesData() {
     ["function balanceOf(address wallet) view returns (uint256)"],
     provider
   );
+  const ifrLock = new ethersLib.Contract(
+    PROTOCOL_ADDRESSES.IFRLock,
+    ["function totalLocked() view returns (uint256)"],
+    provider
+  );
   const results: Record<string, { raw: string; formatted: number }> = {};
   for (let i = 0; i < entries.length; i += 4) {
     const batch = entries.slice(i, i + 4);
     const values = await Promise.all(batch.map(async ([label, addr]) => {
       try {
-        const raw = await token.balanceOf(addr);
+        const raw = label === "IFRLock" ? await ifrLock.totalLocked() : await token.balanceOf(addr);
         return [label, { raw: raw.toString(), formatted: parseFloat(ethersLib.utils.formatUnits(raw, IFR_DECIMALS)) }] as const;
       } catch {
         return [label, { raw: "0", formatted: 0 }] as const;
@@ -625,15 +630,27 @@ async function fetchBalancesData() {
 
 async function fetchBalancesDataEtherscanFallback() {
   const entries = Object.entries(PROTOCOL_ADDRESSES) as [string, string][];
+  const ethersLib = (await import("ethers")).ethers;
+  const provider = new ethersLib.providers.JsonRpcProvider(ETH_RPC_URL);
+  const ifrLock = new ethersLib.Contract(
+    PROTOCOL_ADDRESSES.IFRLock,
+    ["function totalLocked() view returns (uint256)"],
+    provider
+  );
   const results: Record<string, { raw: string; formatted: number }> = {};
   for (let i = 0; i < entries.length; i++) {
     const [label, addr] = entries[i];
     try {
-      const data = await esApiFetch(
-        `&module=account&action=tokenbalance&contractaddress=${IFR_TOKEN}&address=${addr}&tag=latest`
-      ) as { status?: string; result?: string };
-      const raw = (data.status === "1" && data.result) ? data.result : "0";
-      results[label] = { raw, formatted: parseInt(raw, 10) / 10 ** IFR_DECIMALS };
+      if (label === "IFRLock") {
+        const raw = await ifrLock.totalLocked();
+        results[label] = { raw: raw.toString(), formatted: parseFloat(ethersLib.utils.formatUnits(raw, IFR_DECIMALS)) };
+      } else {
+        const data = await esApiFetch(
+          `&module=account&action=tokenbalance&contractaddress=${IFR_TOKEN}&address=${addr}&tag=latest`
+        ) as { status?: string; result?: string };
+        const raw = (data.status === "1" && data.result) ? data.result : "0";
+        results[label] = { raw, formatted: parseInt(raw, 10) / 10 ** IFR_DECIMALS };
+      }
     } catch {
       results[label] = { raw: "0", formatted: 0 };
     }
