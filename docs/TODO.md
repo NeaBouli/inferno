@@ -689,9 +689,11 @@ On errors: fix immediately, commit with `seo:` prefix.
 - [x] Apply for CoinGecko listing
       Submitted by Gio; CoinGecko email received; response expected in about 5 days.
 - [ ] Apply for CoinMarketCap listing
-      Draft prepared: docs/COINMARKETCAP_SUBMISSION.md
-      Submit via official CMC form: https://support.coinmarketcap.com/hc/en-us/requests/new
+      Submission pack updated 02.07.2026: docs/COINMARKETCAP_SUBMISSION.md
+      Submit via official CMC form: https://coinmarketcap.com/request/
+      Direct form: https://support.coinmarketcap.com/hc/en-us/requests/new?ticket_form_id=360000493112
       Form choice: 1 - [New Listing] Add cryptoasset
+      Final submit requires Gio browser/session because CMC Cloudflare human verification blocks automation.
 - [ ] Activate AI Copilot gate (≥1,000 IFR locked)
 - [ ] Telegram wallet whitelist via WalletConnect
 - [ ] LiqRes withdrawal proposal: `setMaxWithdrawPerPeriod(200M)` from 01.09.2026
