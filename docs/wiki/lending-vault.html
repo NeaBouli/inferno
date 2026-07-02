@@ -797,7 +797,7 @@
       <!-- ======================================== -->
       <h2>1. The Idea</h2>
       <p>
-        A lender follows a guided 1-5 flow: connect MetaMask, choose the free IFR amount, approve the LendingVault if needed, confirm <code>createOffer(amount)</code>, then verify that the offer is live in the market. Only after <code>createOffer</code> confirms on-chain does the amount appear in the market and borrower views.
+        A lender follows a guided 1-5 flow: connect MetaMask, choose the free IFR amount, approve the LendingVault if needed, confirm <code>createOffer(amount)</code>, then verify that the offer is live in the market. Only after <code>createOffer</code> confirms on-chain does the amount appear in the market and borrower views. Unlent offer balances can be withdrawn again with <code>withdrawOffer(amount)</code>.
       </p>
       <p>
         <strong>Builders</strong> can browse live offers and borrow IFR against ETH collateral after the contract price parameter <code>ifrPriceWei</code> is set for collateral calculation. Approval alone is not a lending offer; it only gives the vault permission to transfer IFR in the next transaction.
@@ -805,7 +805,7 @@
 
       <div class="callout-green">
         <p>
-          <strong>Current Mainnet flow:</strong> Lender approves IFR, creates an offer, borrowers see it in the market, and later loan repayment or liquidation routes value back through the protocol.
+          <strong>Current Mainnet flow:</strong> Lender approves IFR, creates an offer, borrowers see it in the market, and later loan repayment or liquidation routes value back through the protocol. Lenders can withdraw only the currently available, unlent part of an offer; IFR already borrowed stays active until repayment or liquidation.
         </p>
       </div>
 
@@ -1027,6 +1027,11 @@
         .lv-stat .stat-value{font-size:1.3rem;font-weight:700;color:var(--accent)}
         .lv-info-box{background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:8px;padding:14px;margin:14px 0;font-size:0.88rem;line-height:1.7}
         .lv-status-msg{margin-top:12px;padding:12px;border-radius:8px;font-size:0.88rem}
+        .lv-withdraw-panel{margin-top:16px;border-top:1px solid var(--border);padding-top:16px}
+        .lv-withdraw-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+        .lv-withdraw-actions .lv-form-group{flex:1 1 220px;margin:0}
+        .lv-btn-muted{background:#374151}
+        .lv-btn-danger{background:#991b1b}
         .lv-guide{display:grid;gap:10px;margin-top:14px}
         .lv-guide-step{display:grid;grid-template-columns:32px 1fr auto;gap:12px;align-items:center;background:rgba(255,255,255,0.035);border:1px solid var(--border);border-radius:8px;padding:12px}
         .lv-guide-num{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#1f2937;color:#9ca3af;font-weight:800;font-size:0.82rem}
@@ -1138,6 +1143,24 @@
 
           <button class="lv-btn" id="lv-create-offer-btn" disabled>Approve + Create Offer</button>
           <div id="lv-offer-status" class="lv-hidden lv-status-msg"></div>
+
+          <div class="lv-withdraw-panel">
+            <h4 style="margin:0 0 8px;color:var(--text);font-size:1rem;">Withdraw Available IFR</h4>
+            <p style="color:var(--muted);font-size:0.82rem;line-height:1.5;margin:0 0 12px;">
+              You can withdraw only the unlent part of your offer. The UI keeps a small live balance when needed so the current contract does not mark your offer inactive.
+            </p>
+            <div class="lv-withdraw-actions">
+              <div class="lv-form-group">
+                <label>IFR Amount to Withdraw</label>
+                <input type="text" id="lv-withdraw-amount" inputmode="decimal" placeholder="e.g. 5000000" autocomplete="off">
+                <div class="lv-hint">Available: <span id="lv-withdrawable">—</span></div>
+              </div>
+              <button class="lv-btn lv-btn-muted" id="lv-withdraw-max" type="button" disabled>Use safe max</button>
+              <button class="lv-btn lv-btn-danger" id="lv-withdraw-offer-btn" type="button" disabled>Withdraw IFR</button>
+            </div>
+            <div id="lv-withdraw-note" class="lv-hint" style="margin-top:8px;">Connect wallet to see withdraw limits.</div>
+            <div id="lv-withdraw-status" class="lv-hidden lv-status-msg"></div>
+          </div>
         </div>
 
         <div class="lv-widget">
@@ -1371,7 +1394,8 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
     "function getOfferCount() view returns (uint256)",
     "function getOffer(uint256 offerId) view returns (tuple(address lender,uint256 availableIFR,uint256 lentIFR,bool active))",
     "function createOffer(uint256 amount) external",
-    "function increaseOffer(uint256 amount) external"
+    "function increaseOffer(uint256 amount) external",
+    "function withdrawOffer(uint256 amount) external"
   ];
 
   var lvAddress = null;
@@ -1408,6 +1432,28 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
     } catch(e) {
       return null;
     }
+  }
+  function parseWithdrawAmountOrNull() {
+    try {
+      var input = el("lv-withdraw-amount");
+      var raw = normalizeAmount(input && input.value);
+      if (!raw || Number(raw) <= 0) return null;
+      return ethers.utils.parseUnits(raw, IFR_DECIMALS);
+    } catch(e) {
+      return null;
+    }
+  }
+  function oneIFR() {
+    return ethers.BigNumber.from(10).pow(IFR_DECIMALS);
+  }
+  function safeWithdrawMax() {
+    if (!lvOffer || !lvOffer.active || !lvOffer.availableIFR) return ethers.BigNumber.from(0);
+    if (lvOffer.lentIFR && lvOffer.lentIFR.isZero()) {
+      var keepAlive = oneIFR();
+      if (lvOffer.availableIFR.lte(keepAlive)) return ethers.BigNumber.from(0);
+      return lvOffer.availableIFR.sub(keepAlive);
+    }
+    return lvOffer.availableIFR;
   }
   function setGuideStep(id, state) {
     var row = el(id);
@@ -1490,9 +1536,29 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
     s.style.color = st[2];
     s.innerHTML = msg;
   }
+  function setWithdrawStatus(type, msg) {
+    var s = el("lv-withdraw-status");
+    if (!s) return;
+    s.classList.remove("lv-hidden");
+    var styles = {
+      info: ["#d97706", "#f59e0b", "#1f1300"],
+      warn: ["#d97706", "#f59e0b", "#1f1300"],
+      error: ["rgba(239,68,68,0.1)", "rgba(239,68,68,0.3)", "#fca5a5"],
+      success: ["rgba(34,197,94,0.1)", "rgba(34,197,94,0.3)", "#86efac"]
+    };
+    var st = styles[type] || styles.info;
+    s.style.background = st[0];
+    s.style.border = "1px solid " + st[1];
+    s.style.color = st[2];
+    s.innerHTML = msg;
+  }
 
   function updateOfferActionState() {
     var btn = el("lv-create-offer-btn");
+    var withdrawBtn = el("lv-withdraw-offer-btn");
+    var withdrawMaxBtn = el("lv-withdraw-max");
+    var withdrawableEl = el("lv-withdrawable");
+    var withdrawNoteEl = el("lv-withdraw-note");
     if (!btn) return;
     var amount = parseOfferAmountOrNull();
     var allowanceCovers = amount ? lvAllowance.gte(amount) : lvAllowance.gt(0);
@@ -1502,6 +1568,20 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
       btn.textContent = "Offer Inactive";
     } else {
       btn.textContent = allowanceCovers ? "Create Offer" : "Approve + Create Offer";
+    }
+    var hasWithdrawable = !!(lvHasOffer && lvOffer && lvOffer.active && lvOffer.availableIFR && lvOffer.availableIFR.gt(0));
+    var maxWithdraw = hasWithdrawable ? safeWithdrawMax() : ethers.BigNumber.from(0);
+    if (withdrawableEl) withdrawableEl.textContent = hasWithdrawable ? formatIFR(lvOffer.availableIFR, 3) + " IFR" : "0 IFR";
+    if (withdrawNoteEl) {
+      if (!lvAddress) withdrawNoteEl.textContent = "Connect wallet to see withdraw limits.";
+      else if (!hasWithdrawable) withdrawNoteEl.textContent = "No available IFR can be withdrawn from this offer right now.";
+      else if (lvOffer.lentIFR && lvOffer.lentIFR.isZero()) withdrawNoteEl.textContent = "Safe max leaves 1 IFR in the offer. Withdrawing the full amount would deactivate the offer for this wallet.";
+      else withdrawNoteEl.textContent = "All currently available IFR can be withdrawn; lent IFR remains active until repayment or liquidation.";
+    }
+    if (withdrawMaxBtn) withdrawMaxBtn.disabled = !hasWithdrawable || !lvAddress || maxWithdraw.isZero();
+    if (withdrawBtn) {
+      var withdrawAmount = parseWithdrawAmountOrNull();
+      withdrawBtn.disabled = !hasWithdrawable || !lvAddress || !withdrawAmount || withdrawAmount.gt(maxWithdraw);
     }
     updateLenderGuide();
   }
@@ -1634,7 +1714,8 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
         el("lv-my-offers").innerHTML =
           "<strong>Active offer</strong><br>" +
           "Available: " + formatIFR(lvOffer.availableIFR, 3) + " IFR<br>" +
-          "Lent: " + formatIFR(lvOffer.lentIFR, 3) + " IFR";
+          "Lent: " + formatIFR(lvOffer.lentIFR, 3) + " IFR<br>" +
+          "<span style='color:var(--muted);font-size:0.82rem;'>Available IFR can be withdrawn from the offer. Lent IFR returns after borrower repayment or liquidation.</span>";
       } else if (lvHasOffer) {
         el("lv-existing-offer").textContent = "Existing inactive offer detected";
         el("lv-my-offers").textContent = "This wallet has an inactive offer. Current contract cannot recreate an offer for a wallet with hasOffer=true.";
@@ -1770,6 +1851,17 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
     updateOfferActionState();
     updateLenderGuide();
   });
+  var withdrawAmountInput = el("lv-withdraw-amount");
+  if (withdrawAmountInput) withdrawAmountInput.addEventListener("input", updateOfferActionState);
+  var withdrawMaxBtn = el("lv-withdraw-max");
+  if (withdrawMaxBtn) withdrawMaxBtn.addEventListener("click", function(e) {
+    e.preventDefault();
+    if (!lvOffer || !lvOffer.active || !lvOffer.availableIFR || lvOffer.availableIFR.isZero()) return;
+    var amount = safeWithdrawMax();
+    if (amount.isZero()) return;
+    el("lv-withdraw-amount").value = formatInput(amount);
+    updateOfferActionState();
+  });
   updateLenderGuide();
 
   // ── Loan Preview Calculator ──────────────────────────
@@ -1841,6 +1933,43 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
       }
     } finally {
       offerBtn.disabled = !lvAddress;
+    }
+  });
+
+  var withdrawBtn = document.getElementById("lv-withdraw-offer-btn");
+  if (withdrawBtn) withdrawBtn.addEventListener("click", async function() {
+    try {
+      if (!lvSigner || !lvAddress) throw new Error("Connect your wallet first.");
+      if (!lvHasOffer || !lvOffer || !lvOffer.active) throw new Error("No active lending offer found.");
+      var amount = parseWithdrawAmountOrNull();
+      if (!amount) throw new Error("Enter an IFR amount greater than 0.");
+      var maxWithdraw = safeWithdrawMax();
+      if (amount.gt(maxWithdraw)) {
+        if (lvOffer.lentIFR && lvOffer.lentIFR.isZero()) {
+          throw new Error("Use a smaller amount. The UI keeps 1 IFR in the offer so this wallet can continue increasing the offer later.");
+        }
+        throw new Error("Amount exceeds the offer's available, unlent IFR.");
+      }
+
+      withdrawBtn.disabled = true;
+      var vault = new ethers.Contract(LV_ADDR, LV_ABI, lvSigner);
+      setWithdrawStatus("info", "Withdraw available IFR: confirm <code>withdrawOffer</code> in your wallet.");
+      var withdrawTx = await vault.withdrawOffer(amount);
+      setWithdrawStatus("info", "Withdraw transaction submitted: " + txLink(withdrawTx.hash) + "<br>Waiting for confirmation...");
+      await withdrawTx.wait();
+      setWithdrawStatus("success", "Withdraw complete. Available IFR was returned to your wallet.");
+      el("lv-withdraw-amount").value = "";
+      await loadLVState();
+      await loadMarketData();
+    } catch(e) {
+      console.error("LV withdraw:", e);
+      if (e.code === 4001 || e.code === "ACTION_REJECTED") {
+        setWithdrawStatus("warn", "Transaction cancelled in wallet.");
+      } else {
+        setWithdrawStatus("error", e.message || "Could not withdraw from lending offer.");
+      }
+    } finally {
+      updateOfferActionState();
     }
   });
 
