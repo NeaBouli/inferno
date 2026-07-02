@@ -1,11 +1,11 @@
 Hello X Support,
 
-the cashtag `$IFR` is currently mapped to the wrong asset.
+the Inferno Protocol community is moving social communication to the cashtag `$IFRp` to avoid confusion with unrelated tickers.
 
-Please map `$IFR` to the official Inferno Protocol token on Ethereum Mainnet.
+Please map `$IFRp` to the official Inferno Protocol token on Ethereum Mainnet.
 
 Official token:
-Inferno IFR
+Inferno $IFRp
 
 Ethereum contract:
 0x77e99917Eca8539c62F509ED1193ac36580A6e7B
@@ -19,6 +19,6 @@ https://ifrunit.tech
 Official X account:
 https://x.com/IFRtoken
 
-The current wrong mapping creates ticker confusion for our community.
+This mapping helps our community avoid ticker confusion with unrelated assets.
 
 Thank you.

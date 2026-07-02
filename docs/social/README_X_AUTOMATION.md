@@ -19,7 +19,7 @@ npm run post:x:daily:status
 
 Production schedule:
 
-- `03:00 Europe/Athens` — rotating project promotion from the IFR content palette.
+- `03:00 Europe/Athens` — rotating project promotion from the Inferno / `$IFRp` content palette.
 - `10:00 Europe/Athens` — live protocol status from supply, CommitmentVault and LendingVault API data.
 - Automatic scheduled posts intentionally contain no links.
 - Live cron must set `X_DRY_RUN=false` and `X_ALLOW_LIVE=true`; the repository defaults stay dry-run safe.
@@ -69,10 +69,12 @@ Thread format:
 - Separate blocks with a line containing exactly `---tweet---`.
 - Each post must be 280 characters or less.
 
-IFR wording guidance:
+Social ticker guidance:
 
-- Do not use `$IFR` alone as the first line while X maps the cashtag incorrectly.
-- Prefer `Inferno IFR on Ethereum`.
+- Use `$IFRp` as the public social cashtag.
+- Do not use the old three-letter cashtag in new social posts.
+- Prefer `Inferno $IFRp on Ethereum`.
+- Technical pages, token lists, MetaMask import, contract reads, and DEX pool labels may still show `IFR` where they reflect on-chain metadata.
 - Include the official contract and GeckoTerminal pool for important posts.
 
 Canonical identifiers:
@@ -86,4 +88,4 @@ Included drafts:
 
 - `x-geckoterminal-thread.md` — listing/verified pool thread
 - `x-clarification-post.md` — pinned clarification candidate
-- `x-cashtag-support-ticket.md` — support text for wrong `$IFR` cashtag mapping
+- `x-cashtag-support-ticket.md` — support text for `$IFRp` cashtag mapping
