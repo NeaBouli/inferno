@@ -283,27 +283,30 @@ Inferno has verified Ethereum Mainnet contracts, a live Uniswap V2 IFR/WETH pool
 
 ### Public Verification Post
 
-After CMC gives a ticket number, post from the official X account without tagging CoinMarketCap:
+Actual public verification post from the official X account:
+
+- Ticket: `1390230`
+- URL: `https://x.com/IFRtoken/status/2072445000961474600`
+
+Posted text:
 
 ```text
-CoinMarketCap verification post for Inferno.
+CMC verification for Inferno.
 
-Ticket: [CMC_TICKET_NUMBER]
+Ticket: 1390230
 Token: Inferno
 On-chain symbol: IFR
 Social cashtag: $IFRp
-Ethereum contract:
-0x77e99917Eca8539c62F509ED1193ac36580A6e7B
 
-Official website:
+Official site:
 https://ifrunit.tech
+
+Contract, metadata, docs, and explorer proof are on the official site and in the CMC ticket.
+
+CMC DexScan: not available yet
 ```
 
-Paste the public post URL into the CMC form if the form allows doing it after ticket creation. If the form requires it before submission, write:
-
-```text
-Public verification post will be published from https://twitter.com/IFRtoken immediately after CMC provides the ticket number, because the post must include that ticket number.
-```
+Note: X rejected a version containing the raw Ethereum address with `Crypto addresses are prohibited for the first 7 days after authentication.` The CMC email reply should therefore include the public post URL plus the official website, Etherscan token URL, verified source URL, token metadata, and Uniswap/GeckoTerminal links as proof.
 
 ### Proof / Supporting Evidence
 
