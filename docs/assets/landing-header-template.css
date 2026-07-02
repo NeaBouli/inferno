@@ -328,13 +328,33 @@ nav #connect {
 
 .template-hero .sub {
   max-width: 28.8em !important;
-  margin: 0 0 36px !important;
+  margin: 0 0 14px !important;
   color: #574F45 !important;
   font-family: "IBM Plex Sans", -apple-system, system-ui, sans-serif !important;
   font-size: 19px !important;
   font-weight: 400 !important;
   line-height: 1.6 !important;
   text-align: left !important;
+}
+
+.template-hero .ticker-note {
+  max-width: 41em !important;
+  margin: 0 0 32px !important;
+  padding: 10px 12px !important;
+  color: #574F45 !important;
+  background: rgba(255, 248, 239, .86) !important;
+  border: 1px solid #E6DDD0 !important;
+  border-left: 3px solid #B0481E !important;
+  border-radius: 4px !important;
+  font-family: "IBM Plex Sans", -apple-system, system-ui, sans-serif !important;
+  font-size: 13.5px !important;
+  line-height: 1.55 !important;
+  text-align: left !important;
+}
+
+.template-hero .ticker-note strong {
+  color: #211C17 !important;
+  font-weight: 600 !important;
 }
 
 .template-hero .hero-actions {
@@ -631,7 +651,14 @@ nav #connect {
     max-width: none !important;
     font-size: 20px !important;
     line-height: 1.5 !important;
+    margin-bottom: 12px !important;
+  }
+
+  .template-hero .ticker-note {
+    max-width: none !important;
     margin-bottom: 0 !important;
+    padding-right: 64px !important;
+    font-size: 13px !important;
   }
 
   .template-hero .hero-actions,
