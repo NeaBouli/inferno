@@ -2,7 +2,7 @@
 'use strict';
 
 /**
- * Generate the scheduled daily X posts for IFR and hand them to post-x.js.
+ * Generate the scheduled daily X posts for Inferno and hand them to post-x.js.
  *
  * Slots:
  *   promo  — 03:00 Europe/Athens, rotating project promotion
@@ -19,18 +19,19 @@ const { spawnSync } = require('child_process');
 const ATHENS_TZ = 'Europe/Athens';
 const COPILOT_API = process.env.IFR_COPILOT_API || 'https://copilot-api.ifrunit.tech';
 const MAX_POST_CHARS = 280;
+const SOCIAL_TICKER = '$IFRp';
 
 const promoPosts = [
-  'Inferno IFR is built around lock-to-access utility: buy once, lock once, use benefits across integrated products. No subscription loop. On-chain access, user-owned commitment.',
-  'Inferno IFR is deflationary by design. Standard transfers burn 2.5% permanently and route 1% to the protocol pool. Supply can only go down; there is no mint function.',
-  'Inferno IFR launched without presale, VC round, private sale or IDO. The protocol is built around open documentation, verified Mainnet contracts and public transparency.',
-  'IFRLock is the simple utility layer: lock IFR, prove access on-chain, unlock premium features across builder products. Wallet-native access without passwords or accounts.',
+  'Inferno $IFRp is built around lock-to-access utility: buy once, lock once, use benefits across integrated products. No subscription loop. On-chain access, user-owned commitment.',
+  'Inferno $IFRp is deflationary by design. Standard transfers burn 2.5% permanently and route 1% to the protocol pool. Supply can only go down; there is no mint function.',
+  'Inferno $IFRp launched without presale, VC round, private sale or IDO. The protocol is built around open documentation, verified Mainnet contracts and public transparency.',
+  'IFRLock is the simple utility layer: lock $IFRp, prove access on-chain, unlock premium features across builder products. Wallet-native access without passwords or accounts.',
   'CommitmentVault lets holders make verifiable long-term commitments. Tranches can use time, price, time OR price, or time AND price conditions. The lock is enforced by code.',
-  'LendingVault opens a P2P IFR lending market: lenders offer free IFR, borrowers post ETH collateral, and repayments route value back through the protocol.',
-  'Inferno IFR gives builders a utility primitive: users lock tokens for access, creators can earn rewards, and integrations can verify status directly on-chain.',
-  'The IFR protocol is designed for transparency: live supply, burns, locks, lending offers, safes, governance and contract references are publicly trackable.',
-  'Inferno IFR is not a generic ticker story. It is a Mainnet utility protocol with live lock, commitment and lending flows built around long-term use.',
-  'Every IFR integration follows the same principle: less recurring friction, more on-chain commitment. Users keep custody, products verify access, the protocol stays transparent.',
+  'LendingVault opens a P2P $IFRp lending market: lenders offer free tokens, borrowers post ETH collateral, and repayments route value back through the protocol.',
+  'Inferno $IFRp gives builders a utility primitive: users lock tokens for access, creators can earn rewards, and integrations can verify status directly on-chain.',
+  'The $IFRp protocol is designed for transparency: live supply, burns, locks, lending offers, safes, governance and contract references are publicly trackable.',
+  'Inferno $IFRp is not a generic ticker story. It is a Mainnet utility protocol with live lock, commitment and lending flows built around long-term use.',
+  'Every $IFRp integration follows the same principle: less recurring friction, more on-chain commitment. Users keep custody, products verify access, the protocol stays transparent.',
 ];
 
 function athensDateParts(date = new Date()) {
@@ -92,11 +93,11 @@ async function buildStatusPost() {
   const date = athensDateParts().iso;
   const locked = Number(commitment.totalLockedProtocol || 0);
   const lines = [
-    `IFR protocol status — ${date}`,
-    `Supply: ${shortMillions(supply.totalSupply)} IFR`,
-    `Burned: ${shortMillions(supply.burned)} IFR forever`,
-    `CommitmentVault: ${shortMillions(locked)} IFR locked`,
-    `LendingVault: ${shortMillions(lending.totalAvailable)} IFR available, ${shortNumber(lending.activeLoans)} active loans`,
+    `${SOCIAL_TICKER} protocol status — ${date}`,
+    `Supply: ${shortMillions(supply.totalSupply)} ${SOCIAL_TICKER}`,
+    `Burned: ${shortMillions(supply.burned)} ${SOCIAL_TICKER} forever`,
+    `CommitmentVault: ${shortMillions(locked)} ${SOCIAL_TICKER} locked`,
+    `LendingVault: ${shortMillions(lending.totalAvailable)} ${SOCIAL_TICKER} available, ${shortNumber(lending.activeLoans)} active loans`,
     'Mainnet contracts live. No mint function.',
   ];
   return lines.join('\n');
