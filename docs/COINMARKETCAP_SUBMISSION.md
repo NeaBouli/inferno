@@ -151,6 +151,209 @@ Use these values in the official request form:
 - Pool URL: `https://www.geckoterminal.com/eth/pools/0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0`
 - Swap URL: `https://app.uniswap.org/swap?outputCurrency=0x77e99917Eca8539c62F509ED1193ac36580A6e7B`
 
+## Exact CMC Form Values
+
+Use these values for the current CoinMarketCap form.
+
+### Identity / Request
+
+- Your email address: `kaspartisan@proton.me`
+- Subject Field: `Inferno - IFR - Add cryptoasset`
+- Terms & Conditions: check / accept.
+- Relationship with the Project: `Founder / core developer / official representative of Inferno Protocol.`
+- Project Launch Date: `05/03/2026 - Inferno token deployed on Ethereum Mainnet. Evidence: https://etherscan.io/address/0x77e99917Eca8539c62F509ED1193ac36580A6e7B#code`
+- Project Name: `Inferno`
+- Project Ticker/Symbol: `IFR`
+
+### Categories
+
+Suggested Cryptoasset Tags:
+
+- `DeFi`
+- `Ethereum Ecosystem`
+- `DAO`
+- `Governance`
+- `DApp`
+
+If the form has stricter choices, prioritize `DeFi`, `Ethereum Ecosystem`, and `Governance`.
+
+### Descriptions
+
+One-liner description:
+
+```text
+Inferno is a deflationary Ethereum utility token for lock-to-access products, commitment locks, and IFR-backed lending flows.
+```
+
+Detailed Project Description:
+
+```text
+Launched on 05/03/2026, Inferno is an Ethereum Mainnet ERC-20 utility token for the IFR Protocol ecosystem. The token's on-chain symbol is IFR. The project uses $IFRp only as a social cashtag to avoid unrelated ticker collisions on social platforms.
+
+Inferno is designed around deflationary token mechanics and on-chain utility flows. The token has a fixed genesis supply of 1,000,000,000 IFR, uses 9 decimals, and has no mint function. Supply can only decrease. Non-exempt transfers burn 2.5% of the transferred amount and route a 1% protocol pool fee. Certain protocol contracts and the Uniswap V2 pair are fee-exempt where required for correct operation.
+
+The core utility model is lock-to-access. Users can lock IFR in IFRLock to prove on-chain access status for premium features and ecosystem products. The protocol also includes CommitmentVault, where users can create time- or price-conditioned token lock tranches, and LendingVault, where lenders can offer available IFR and borrowers can use ETH collateral in the protocol's lending flow.
+
+Inferno was launched without a presale, VC round, private sale, or IDO. The Bootstrap event finalized on 05/06/2026 and created the live Uniswap V2 IFR/WETH pool. The token contract, governance contract, vaults, and related protocol contracts are verified on Etherscan. Governance actions are controlled by a 48-hour timelock Governance contract owned by the Treasury Safe.
+
+The project maintains public documentation, token metadata, security documentation, live transparency pages, and open-source code. Official resources include the website at https://ifrunit.tech, documentation at https://ifrunit.tech/wiki/, source code at https://github.com/NeaBouli/inferno, and the verified token contract at https://etherscan.io/token/0x77e99917Eca8539c62F509ED1193ac36580A6e7B.
+```
+
+### Chain / Contract
+
+- Platform: `Ethereum`
+- Chain Fork: `NA`
+- Link to Logo: `https://ifrunit.tech/assets/ifr_icon_256.png`
+- Website 1: `https://ifrunit.tech`
+- Website 2: `https://www.geckoterminal.com/eth/pools/0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0`
+- Platform of Contract Address 1: `Ethereum`
+- Contract Address 1: `0x77e99917Eca8539c62F509ED1193ac36580A6e7B`
+- Number of Decimals: `9`
+- Block Explorer 1: `https://etherscan.io/token/0x77e99917Eca8539c62F509ED1193ac36580A6e7B`
+- Add Contract Address 2: leave unchecked / `NA`.
+- Block Explorer(s) 2, 3, 4, 5: `NA`
+
+### Links / Socials
+
+- Source Code: `https://github.com/NeaBouli/inferno`
+- Whitepaper / Technical Documentation: `https://ifrunit.tech/wiki/one-pager.html`
+- Announcement: `https://t.me/IFRtoken`
+- Message Board 1: `https://ifrunit.tech/wiki/`
+- Message Board(s) 2, 3, 4, 5: `https://paragraph.com/@0x6b36687b0cd4386fb14cf565b67d7862110fed67/the-ifr-fair-launch-story-%E2%80%94-from-code-to-community`
+- Twitter: `https://twitter.com/IFRtoken`
+- Reddit: `NA`
+- Facebook: `NA`
+- LinkedIn: `NA`
+- Chat 1: `https://t.me/IFRtoken`
+- Chat(s) 2, 3, 4, 5: `https://t.me/IFR_token`
+- Video Channel: `NA`
+- Mobile App 1: `NA`
+- Mobile App(s) 2, 3, 4, 5: `NA`
+
+### Supply
+
+- Circulating Supply: `997769355.2754488`
+- Total Supply: `997769355.2754488`
+- Max Supply: `1000000000`
+- Total Supply API endpoint: `NA`
+- Circulating Supply API endpoint: `NA`
+
+Supply note for proof/supporting evidence:
+
+```text
+Live total supply is available through the official project API at https://copilot-api.ifrunit.tech/api/ifr/supply, but the endpoint returns a JSON object rather than only a raw numerical value. Therefore the CMC supply endpoint field is marked NA, and the exact live supply is provided in the form and proof section.
+```
+
+### Markets / Priority
+
+- List of CMC-supported exchanges:
+
+```text
+Uniswap V2 IFR/WETH pool: https://www.geckoterminal.com/eth/pools/0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0, Uniswap swap URL: https://app.uniswap.org/swap?outputCurrency=0x77e99917Eca8539c62F509ED1193ac36580A6e7B
+```
+
+- CMC Priority (CMCP): `No` unless Gio explicitly wants paid priority.
+
+### Optional / Required Project Details
+
+- Media Coverage/Awards: `NA`
+- Country of Origin: `Greece` if accurate; otherwise replace before submitting.
+- Team/Backers/Investors:
+
+```text
+Inferno is an open-source, community-driven project. It launched with no presale, no VC round, no private sale, and no IDO. Core development and protocol documentation are maintained publicly through the GitHub repository. Governance is controlled by the verified Governance contract with a 48-hour timelock and Treasury Safe ownership.
+```
+
+- Traction/Adoption/Partnerships/MVPs/Apps:
+
+```text
+Inferno has verified Ethereum Mainnet contracts, a live Uniswap V2 IFR/WETH pool, live IFRLock access locks, live CommitmentVault locks, and an active LendingVault offer flow. Current live protocol values include 2,000 IFR locked in IFRLock, 47,942,976.87179437 IFR locked in CommitmentVault, and 20,156,940.952845655 IFR available in LendingVault. The project also operates public documentation, token lists, a transparency page, AI Copilot context, and social automation for the official @IFRtoken account.
+```
+
+- Annex A - Rich List & Reserve Addresses: `NA` for initial submission unless Gio prepares the CMC Google Sheet.
+- Emission/release schedule: `NA` for initial submission unless Gio prepares Annex M. Note in proof that max supply is fixed and no mint function exists.
+- Hashing/Consensus Algorithm: `Ethereum Proof-of-Stake`
+- ICO/IEO Start Date: `NA`
+- ICO/IEO End Date: `NA`
+- ICO/IEO/Launch Price: `NA`
+- Dofollow linkbacks to CMC: `Yes` if Gio is willing to add the footer/linkback later; otherwise `No`.
+- Marketing consent: Gio preference.
+- SRD Application: `Yes` if Gio wants official representative onboarding after application; otherwise `No`.
+- Interested in CMC Boost: `No` unless Gio explicitly wants paid visibility.
+
+### Public Verification Post
+
+After CMC gives a ticket number, post from the official X account without tagging CoinMarketCap:
+
+```text
+CoinMarketCap verification post for Inferno.
+
+Ticket: [CMC_TICKET_NUMBER]
+Token: Inferno
+On-chain symbol: IFR
+Social cashtag: $IFRp
+Ethereum contract:
+0x77e99917Eca8539c62F509ED1193ac36580A6e7B
+
+Official website:
+https://ifrunit.tech
+```
+
+Paste the public post URL into the CMC form if the form allows doing it after ticket creation. If the form requires it before submission, write:
+
+```text
+Public verification post will be published from https://twitter.com/IFRtoken immediately after CMC provides the ticket number, because the post must include that ticket number.
+```
+
+### Proof / Supporting Evidence
+
+```text
+Official website and ticker clarity:
+https://ifrunit.tech
+
+The landing page states that IFR is the on-chain token symbol and $IFRp is used only as the social cashtag. Technical token metadata, wallets, token lists, and DEX pools use IFR.
+
+Verified Ethereum token contract:
+https://etherscan.io/token/0x77e99917Eca8539c62F509ED1193ac36580A6e7B
+
+Verified source code:
+https://etherscan.io/address/0x77e99917Eca8539c62F509ED1193ac36580A6e7B#code
+
+Official token metadata:
+https://ifrunit.tech/token-list.json
+https://ifrunit.tech/.well-known/token-list.json
+
+Official logo:
+https://ifrunit.tech/assets/ifr_icon_256.png
+
+Official documentation:
+https://ifrunit.tech/wiki/
+https://ifrunit.tech/wiki/one-pager.html
+https://ifrunit.tech/wiki/security.html
+https://ifrunit.tech/wiki/transparency.html
+
+Open-source repository:
+https://github.com/NeaBouli/inferno
+
+Live Uniswap V2 pool:
+https://www.geckoterminal.com/eth/pools/0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0
+
+Live supply API:
+https://copilot-api.ifrunit.tech/api/ifr/supply
+
+Current live supply snapshot at block 25440410:
+Total supply: 997,769,355.2754488 IFR
+Burned since genesis: 2,230,644.724551201 IFR
+
+Protocol utility snapshot:
+IFRLock locked: 2,000 IFR
+CommitmentVault locked: 47,942,976.87179437 IFR
+LendingVault available: 20,156,940.952845655 IFR
+```
+
+- Privacy Notice: check / accept.
+- Attachments: optional. If needed, attach logo PNG and screenshots of website/token page.
+
 ## Submission Notes
 
 - Submit only once. CoinMarketCap explicitly discourages duplicate requests.
