@@ -1,4 +1,4 @@
-const CACHE_NAME = "ifr-web3-v2";
+const CACHE_NAME = "ifr-web3-v3";
 const PRECACHE_URLS = [
   "/",
   "/web3/",
@@ -9,7 +9,7 @@ const PRECACHE_URLS = [
   "/assets/ifr_icon_4096_v2.png",
   "/assets/inferno-redesign-masthead-opaque.jpg",
   "/assets/inferno-redesign-masthead-opaque@2x.jpg",
-  "/assets/wallet-core.js",
+  "/web3-wallet-core.js",
   "/assets/ifr-state.js"
 ];
 
