@@ -39,6 +39,34 @@ export function getIFRKnowledge() {
       premiumBenefit: "IFR lockers unlock Premium Copilot guidance. After wallet connection and lock verification, the assistant can communicate more personally because it can use wallet balance, lock status, tier, and on-chain context instead of only generic documentation.",
       safety: "The assistant never needs private keys or seed phrases. Lock verification is read from on-chain state."
     },
+    web3Access: {
+      primaryUrl: "https://web3.ifrunit.tech/",
+      purpose: "Web3 is the lightweight user execution surface for IFR. Simple users should connect wallets and perform live user actions there instead of being routed into Wiki transaction pages.",
+      userActions: [
+        "connect wallet",
+        "buy IFR",
+        "add IFR to wallet",
+        "check IFR balance",
+        "check CommitmentVault lock state",
+        "lock IFR in CommitmentVault",
+        "unlock matured CommitmentVault tranches",
+        "create or increase LendingVault offers",
+        "withdraw unlent IFR",
+        "track the live GeckoTerminal pool"
+      ],
+      roleRouting: {
+        users: "Keep users on Web3 for execution flows.",
+        builders: "Route builders to Wiki documentation for integration details, business onboarding, and ecosystem context.",
+        developers: "Route developers to Wiki documentation for contracts, integration guide, and wallet/contract guide.",
+        community: "Route deeper community/research users to Wiki governance, signer expansion, and transparency pages."
+      },
+      wikiRoutes: {
+        builders: ["https://ifrunit.tech/wiki/integration.html", "https://ifrunit.tech/wiki/business-onboarding.html", "https://ifrunit.tech/wiki/ecosystem.html"],
+        developers: ["https://ifrunit.tech/wiki/contracts.html", "https://ifrunit.tech/wiki/integration.html", "https://ifrunit.tech/wiki/wallet-guide.html"],
+        community: ["https://ifrunit.tech/wiki/governance.html", "https://ifrunit.tech/wiki/community-signer-expansion.html", "https://ifrunit.tech/wiki/transparency.html"]
+      },
+      importantDistinction: "CommitmentVault and LendingVault Wiki pages are documentation/reference pages. Current user-facing Lock IFR and Create offer execution is intended to happen on Web3."
+    },
     partnerRewards: {
       rewardBps: 1500,
       policyTarget: "10-20%",

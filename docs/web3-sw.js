@@ -1,4 +1,4 @@
-const CACHE_NAME = "ifr-web3-v5";
+const CACHE_NAME = "ifr-web3-v6";
 const PRECACHE_URLS = [
   "/",
   "/web3/",

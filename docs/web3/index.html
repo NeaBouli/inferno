@@ -4,8 +4,19 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>IFR Web3 Access Layer | Inferno Protocol</title>
-  <meta name="description" content="IFR Protocol Web3 access layer. Lock IFR to unlock product access, verify on-chain status, and let builders earn from real usage.">
+  <meta name="description" content="IFR Web3 access layer for users: connect wallets, buy IFR, add IFR to wallet, lock or unlock CommitmentVault tranches, create LendingVault offers, and route builders or developers to IFR Wiki docs.">
   <meta name="robots" content="index, follow">
+  <meta property="og:title" content="IFR Web3 Access Layer | Inferno Protocol">
+  <meta property="og:description" content="User execution surface for IFR: wallet connect, buy IFR, CommitmentVault lock/unlock, LendingVault offers, pool tracking, and Wiki routing for builders and developers.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://web3.ifrunit.tech/">
+  <meta property="og:image" content="https://ifrunit.tech/assets/ifr_icon_4096_v2.png">
+  <meta property="og:site_name" content="IFR Protocol / Inferno">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:site" content="@IFRtoken">
+  <meta name="twitter:title" content="IFR Web3 Access Layer | Inferno Protocol">
+  <meta name="twitter:description" content="Connect a wallet and use IFR directly on Web3. Builders and developers are routed to IFR Wiki integration and contract docs.">
+  <meta name="twitter:image" content="https://ifrunit.tech/assets/ifr_icon_4096_v2.png">
   <meta name="theme-color" content="#f6f0e6">
   <meta name="application-name" content="IFR Web3">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -23,6 +34,35 @@
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
   <script src="/web3-wallet-core.js"></script>
   <script src="/assets/ifr-state.js"></script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "IFR Web3 Access Layer",
+    "applicationCategory": "FinanceApplication",
+    "operatingSystem": "Web",
+    "url": "https://web3.ifrunit.tech/",
+    "description": "User execution surface for Inferno Protocol: wallet connection, IFR token import, Uniswap buy link, CommitmentVault lock and unlock flows, LendingVault offer flows, and role-based Wiki routing for builders, developers, and community research.",
+    "creator": {
+      "@type": "Organization",
+      "name": "Inferno Protocol",
+      "url": "https://ifrunit.tech/"
+    },
+    "sameAs": [
+      "https://ifrunit.tech/wiki/",
+      "https://github.com/NeaBouli/inferno",
+      "https://x.com/IFRtoken"
+    ],
+    "featureList": [
+      "Wallet connection",
+      "Add IFR to wallet",
+      "Buy IFR on Uniswap",
+      "CommitmentVault lock and unlock",
+      "LendingVault offer creation and withdrawal",
+      "Builder and developer Wiki routing"
+    ]
+  }
+  </script>
   <style>
     :root {
       --paper: #f8f3ea;

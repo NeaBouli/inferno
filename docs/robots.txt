@@ -24,4 +24,7 @@ Disallow: /node_modules/
 Disallow: /TODO.html
 Disallow: /TODO.md
 
+# Search Console / crawler hints:
+# - /web3/ is the lightweight user execution surface.
+# - Wiki pages are documentation surfaces for builders, developers, and community research.
 Sitemap: https://ifrunit.tech/sitemap.xml
