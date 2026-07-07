@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <link rel="canonical" href="https://ifrunit.tech/wiki/contracts.html">
   <link rel="alternate" hreflang="en" href="https://ifrunit.tech/wiki/contracts.html">
-  <link rel="alternate" hreflang="x-default" href="https://ifrunit.tech/wiki/contracts.html">>    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="alternate" hreflang="x-default" href="https://ifrunit.tech/wiki/contracts.html">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="version" content="2026-02-26">
     <title>Smart Contracts - Inferno Documentation</title>
   <meta name="keywords" content="smart contracts, Solidity, verified, Etherscan, ABI">
@@ -199,6 +200,11 @@
             color: #ff4500;
             letter-spacing: 0.5px;
             text-transform: uppercase;
+        }
+
+        .contract-badge.status-active {
+            background: rgba(34, 197, 94, 0.15);
+            color: #22c55e;
         }
 
         .contract-path {
@@ -420,7 +426,7 @@
         }
 
         .toc ol li a {
-            color: #e8e8ed;
+            color: var(--ink, #211C17);
             text-decoration: none;
             font-size: 14px;
             font-weight: 500;
@@ -443,7 +449,7 @@
         }
 
         .toc ol li a .toc-path {
-            color: #8a8a96;
+            color: var(--muted, #8C8273);
             font-size: 12px;
             font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
             margin-left: auto;
@@ -2307,15 +2313,15 @@ console.<span class="function">log</span>(<span class="string">"Reserve1:"</span
         <div class="section-divider"></div>
 
         <!-- 12. CommitmentVault                                   -->
-        <div class="contract-card" id="commitment-vault">
+        <div class="contract-section" id="commitment-vault">
             <div class="contract-header">
                 <h2>CommitmentVault</h2>
-                <span style="background:rgba(34,197,94,0.15);color:#22c55e;padding:2px 8px;border-radius:4px;font-size:0.75rem;font-weight:700;">feeExempt Active</span>
+                <span class="contract-badge status-active">feeExempt Active</span>
             </div>
             <div class="contract-path">contracts/vault/CommitmentVault.sol</div>
             <p>Irrevocable token lock with 4 condition types (TIME_ONLY, PRICE_ONLY, TIME_OR_PRICE, TIME_AND_PRICE). Auto-unlock 30 days after condition met. P0 immutable after Bootstrap. Owner: Governance (TreasurySafe 3-of-5).</p>
-            <div style="margin:12px 0;">
-                <table style="width:100%;font-size:0.88rem;">
+            <div class="table-wrap">
+                <table>
                     <tbody>
                         <tr>
                             <td>Mainnet</td>
@@ -2337,15 +2343,15 @@ console.<span class="function">log</span>(<span class="string">"Reserve1:"</span
         <div class="section-divider"></div>
 
         <!-- 13. LendingVault                                      -->
-        <div class="contract-card" id="lending-vault">
+        <div class="contract-section" id="lending-vault">
             <div class="contract-header">
                 <h2>LendingVault</h2>
-                <span style="background:rgba(34,197,94,0.15);color:#22c55e;padding:2px 8px;border-radius:4px;font-size:0.75rem;font-weight:700;">feeExempt Active</span>
+                <span class="contract-badge status-active">feeExempt Active</span>
             </div>
             <div class="contract-path">contracts/vault/LendingVault.sol</div>
             <p>IFR lending against ETH collateral. Utilization-based interest (2&ndash;25%/month). Collateral: 200% initial, 150% margin call, 120% liquidation. Liquidator bonus: 5%. Interest split: 50% lender, 50% protocol. Owner: Governance (TreasurySafe 3-of-5).</p>
-            <div style="margin:12px 0;">
-                <table style="width:100%;font-size:0.88rem;">
+            <div class="table-wrap">
+                <table>
                     <tbody>
                         <tr>
                             <td>Mainnet</td>
@@ -2372,12 +2378,12 @@ console.<span class="function">log</span>(<span class="string">"Reserve1:"</span
             <div class="contract-header">
                 <h2>BuybackController</h2>
                 <span class="contract-badge">Buyback</span>
-                <span style="background:rgba(34,197,94,0.15);color:#22c55e;padding:2px 8px;border-radius:4px;font-size:0.75rem;font-weight:700;">&#x2705; Active</span>
+                <span class="contract-badge status-active">Active</span>
             </div>
             <div class="contract-path">contracts/buyback/BuybackController.sol</div>
             <p>Automated fee distribution controller. Receives protocol fees from FeeRouterV1 and splits 50/50: half buys IFR from Uniswap and sends to BurnReserve (permanent burn), half adds IFR+ETH liquidity to Uniswap LP (deepening). Permissionless <code>execute()</code> with 24h cooldown. Slippage protection via <code>minIFR</code>/<code>minETH</code> parameters.</p>
-            <div style="margin:12px 0;">
-                <table style="width:100%;font-size:0.88rem;">
+            <div class="table-wrap">
+                <table>
                     <tbody>
                         <tr>
                             <td>Mainnet</td>

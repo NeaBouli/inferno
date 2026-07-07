@@ -3224,6 +3224,7 @@ if (isLocked) {
   var PROXY_BASE = 'https://copilot-api.ifrunit.tech';
   var GENESIS_SUPPLY = 1000000000;
   var liveDistributionData = null;
+  var liveIFRPriceData = null;
 
   var CATS = [
     { key: 'burned',    label: '\uD83D\uDD25 Burned',             color: '#FF2D2D' },
@@ -3389,6 +3390,7 @@ if (isLocked) {
         '<div' + liveAttr + ' style="font-size:22px;font-weight:700;color:' + m.color + ';">' + m.value + '</div>' +
         '<div style="font-size:11px;color:#8a8a96;margin-top:2px;">' + m.sub + '</div></div>';
     }).join('');
+    if (liveIFRPriceData) applyIFRPriceData(liveIFRPriceData);
   }
 
   function dateTime() {
@@ -3469,30 +3471,35 @@ if (isLocked) {
     });
   }
 
+  function applyIFRPriceData(data) {
+    var priceEl = document.querySelector('[data-live-key="ifr-price"]');
+    if (!priceEl || !data) return;
+    var subEl = priceEl.nextElementSibling;
+    if (data.status === 'bootstrap_active') {
+      priceEl.textContent = 'TBD';
+      if (subEl) subEl.textContent = 'Bootstrap already finalized';
+      if (data.ethRaised > 0) {
+        if (subEl) subEl.textContent = fmt(data.ethRaised) + ' ETH raised';
+      }
+    } else if (data.price) {
+      priceEl.textContent = fmtEthPrice(data.price);
+      if (subEl) {
+        var ethReserve = data.reserves && data.reserves.eth ? data.reserves.eth.toFixed(4) : null;
+        subEl.textContent = ethReserve ? 'Live Uniswap V2 spot · ' + ethReserve + ' ETH LP' : 'Live Uniswap V2 spot';
+      }
+      if (data.reserves && data.reserves.eth && data.reserves.ifr) {
+        setLive('lp-flow', fmt(data.reserves.ifr) + ' IFR + ' + data.reserves.eth.toFixed(3) + ' ETH');
+      }
+    } else if (data.status === 'pending_uniswap') {
+      priceEl.textContent = 'Soon';
+      if (subEl) subEl.textContent = 'Waiting for API price feed';
+    }
+  }
+
   function loadIFRPrice() {
     fetchWithTimeout(PROXY_BASE + '/api/ifr/price', 8000).then(function(data) {
-      var priceEl = document.querySelector('[data-live-key="ifr-price"]');
-      if (!priceEl) return;
-      var subEl = priceEl.nextElementSibling;
-      if (data.status === 'bootstrap_active') {
-        priceEl.textContent = 'TBD';
-        if (subEl) subEl.textContent = 'Bootstrap already finalized';
-        if (data.ethRaised > 0) {
-          if (subEl) subEl.textContent = fmt(data.ethRaised) + ' ETH raised';
-        }
-      } else if (data.price) {
-        priceEl.textContent = fmtEthPrice(data.price);
-        if (subEl) {
-          var ethReserve = data.reserves && data.reserves.eth ? data.reserves.eth.toFixed(4) : null;
-          subEl.textContent = ethReserve ? 'Live Uniswap V2 spot · ' + ethReserve + ' ETH LP' : 'Live Uniswap V2 spot';
-        }
-        if (data.reserves && data.reserves.eth && data.reserves.ifr) {
-          setLive('lp-flow', fmt(data.reserves.ifr) + ' IFR + ' + data.reserves.eth.toFixed(3) + ' ETH');
-        }
-      } else if (data.status === 'pending_uniswap') {
-        priceEl.textContent = 'Soon';
-        if (subEl) subEl.textContent = 'Waiting for API price feed';
-      }
+      liveIFRPriceData = data;
+      applyIFRPriceData(data);
     }).catch(function() {});
   }
 
