@@ -7,8 +7,14 @@
   <meta name="description" content="IFR Protocol Web3 access layer. Lock IFR to unlock product access, verify on-chain status, and let builders earn from real usage.">
   <meta name="robots" content="index, follow">
   <meta name="theme-color" content="#f6f0e6">
+  <meta name="application-name" content="IFR Web3">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="IFR Web3">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="canonical" href="https://web3.ifrunit.tech/">
   <link rel="icon" type="image/png" href="/assets/ifr_icon_64.png">
+  <link rel="apple-touch-icon" href="/assets/ifr_icon_256.png">
+  <link rel="manifest" href="/web3-manifest.webmanifest">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://cdn.jsdelivr.net">
@@ -213,25 +219,29 @@
       color: #244f3c;
     }
 
+    .install-button[hidden] {
+      display: none;
+    }
+
     .hero {
       position: relative;
-      min-height: calc(100svh - 68px);
       overflow: hidden;
-      background:
-        linear-gradient(90deg, rgba(23, 27, 24, 0.97) 0%, rgba(31, 36, 31, 0.92) 48%, rgba(248, 243, 234, 0.08) 100%),
-        var(--graphite);
+      background: var(--graphite);
       color: #f7efe3;
       isolation: isolate;
     }
 
-    .hero-canvas {
-      position: absolute;
-      inset: 0;
-      z-index: -2;
-      width: 100%;
-      height: 100%;
-      display: block;
-      background: var(--graphite);
+    .hero-banner {
+      min-height: clamp(140px, 20vw, 270px);
+      border-bottom: 1px solid rgba(248, 243, 234, 0.2);
+      background-image:
+        image-set(
+          url("/assets/inferno-redesign-masthead-opaque@2x.jpg") 2x,
+          url("/assets/inferno-redesign-masthead-opaque.jpg") 1x
+        );
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
     }
 
     .hero::after {
@@ -244,12 +254,12 @@
     }
 
     .hero-grid {
-      min-height: calc(100svh - 68px);
+      min-height: calc(100svh - 68px - clamp(140px, 20vw, 270px));
       display: grid;
       grid-template-columns: minmax(0, 1.05fr) minmax(320px, 0.7fr);
       gap: 48px;
       align-items: center;
-      padding: 66px 0 54px;
+      padding: 58px 0 54px;
     }
 
     .eyebrow {
@@ -463,6 +473,78 @@
       margin: 18px 0 0;
       color: var(--muted);
       font-size: 13px;
+    }
+
+    .wallet-strip {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .wallet-chip {
+      min-height: 42px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 9px 10px;
+      border: 1px solid rgba(239, 231, 218, 0.22);
+      border-radius: 6px;
+      background: rgba(248, 243, 234, 0.08);
+      color: #efe4d5;
+      font-size: 13px;
+      font-weight: 700;
+      text-align: center;
+    }
+
+    .install-dialog {
+      position: fixed;
+      inset: 0;
+      z-index: 120;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      background: rgba(10, 10, 10, 0.64);
+      backdrop-filter: blur(8px);
+    }
+
+    .install-dialog.is-open {
+      display: flex;
+    }
+
+    .install-card {
+      width: min(420px, 100%);
+      padding: 24px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--paper-3);
+      color: var(--ink);
+      box-shadow: var(--shadow);
+    }
+
+    .install-card h2 {
+      font-size: 30px;
+    }
+
+    .install-card p {
+      color: var(--ink-soft);
+    }
+
+    .install-steps {
+      display: grid;
+      gap: 8px;
+      margin: 18px 0 0;
+      padding: 0;
+      list-style: none;
+      color: var(--ink-soft);
+    }
+
+    .install-steps li {
+      padding: 10px 12px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #fbf6ed;
     }
 
     main {
@@ -816,6 +898,10 @@
         grid-template-columns: repeat(2, minmax(0, 1fr));
       }
 
+      .wallet-strip {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
       .flow {
         grid-template-columns: 1fr;
       }
@@ -863,6 +949,10 @@
         grid-template-columns: 1fr;
       }
 
+      .wallet-strip {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
       .audience-tabs {
         grid-template-columns: repeat(2, minmax(0, 1fr));
       }
@@ -902,6 +992,7 @@
         <li><a href="/wiki/">Wiki</a></li>
       </ul>
       <div class="nav-actions">
+        <button class="btn btn-quiet install-button" type="button" data-install-app hidden>Install App</button>
         <a class="btn btn-quiet" href="https://app.uniswap.org/swap?outputCurrency=0x77e99917Eca8539c62F509ED1193ac36580A6e7B" target="_blank" rel="noopener">Buy IFR</a>
         <button class="btn btn-primary" type="button" data-wallet-connect>Connect Wallet</button>
       </div>
@@ -909,7 +1000,7 @@
   </header>
 
   <section class="hero" id="top">
-    <canvas class="hero-canvas" id="hero-canvas" aria-hidden="true"></canvas>
+    <div class="hero-banner" aria-hidden="true"></div>
     <div class="hero-grid shell">
       <div>
         <div class="eyebrow"><span class="pulse"></span> Ethereum Mainnet access layer</div>
@@ -917,8 +1008,17 @@
         <p class="hero-copy">Inferno Protocol turns IFR into reusable access infrastructure: holders lock once for product access, builders verify lock status on-chain, and every transfer keeps the token scarcer.</p>
         <div class="hero-actions">
           <button class="btn btn-primary" type="button" data-wallet-connect>Connect Wallet</button>
+          <button class="btn btn-mint install-button" type="button" data-install-app hidden>Install App</button>
           <a class="btn btn-mint" href="/wiki/integration.html">Build with IFR</a>
           <a class="btn btn-quiet" href="/wiki/contracts.html">View verified contracts</a>
+        </div>
+        <div class="wallet-strip" aria-label="Supported wallet paths">
+          <span class="wallet-chip">MetaMask</span>
+          <span class="wallet-chip">Rainbow</span>
+          <span class="wallet-chip">Trust Wallet</span>
+          <span class="wallet-chip">Coinbase</span>
+          <span class="wallet-chip">OKX</span>
+          <span class="wallet-chip">WalletConnect</span>
         </div>
         <div class="trust-row" aria-label="Protocol facts">
           <div class="trust-pill">
@@ -1124,6 +1224,7 @@
         <p>Holders can buy or lock IFR. Builders can start from the integration docs. Developers can verify contracts and inspect the protocol surface before integrating.</p>
         <div class="hero-actions">
           <button class="btn btn-primary" type="button" data-wallet-connect>Connect Wallet</button>
+          <button class="btn btn-mint install-button" type="button" data-install-app hidden>Install App</button>
           <a class="btn btn-mint" href="/wiki/integration.html">Open builder docs</a>
           <a class="btn btn-quiet" href="/wiki/contracts.html" style="color:#fff7ec;border-color:rgba(255,247,236,.35)">Verify contracts</a>
         </div>
@@ -1142,6 +1243,21 @@
       </div>
     </div>
   </footer>
+
+  <div class="install-dialog" data-install-dialog aria-hidden="true">
+    <div class="install-card" role="dialog" aria-modal="true" aria-labelledby="install-title">
+      <h2 id="install-title">Install IFR Web3</h2>
+      <p data-install-copy>Save the app to your home screen for direct wallet access.</p>
+      <ul class="install-steps" data-install-steps>
+        <li>Open the browser menu.</li>
+        <li>Choose Add to Home Screen or Install App.</li>
+        <li>Launch IFR Web3 from the app icon.</li>
+      </ul>
+      <div class="hero-actions" style="margin-top:20px">
+        <button class="btn btn-primary" type="button" data-install-close>Close</button>
+      </div>
+    </div>
+  </div>
 
   <script>
     (function() {
@@ -1207,6 +1323,12 @@
       const accessTier = document.querySelector("[data-access-tier]");
       const bootstrapStatus = document.querySelector("[data-bootstrap-status]");
       const bootstrapNote = document.querySelector("[data-bootstrap-note]");
+      const installButtons = document.querySelectorAll("[data-install-app]");
+      const installDialog = document.querySelector("[data-install-dialog]");
+      const installClose = document.querySelector("[data-install-close]");
+      const installCopy = document.querySelector("[data-install-copy]");
+      const installSteps = document.querySelector("[data-install-steps]");
+      let deferredInstallPrompt = null;
 
       function shortAddress(address) {
         if (!address) return "Not connected";
@@ -1298,13 +1420,19 @@
         button.addEventListener("click", async () => {
           if (!window.IFRWallet || !window.IFRState) return;
           setWalletLoading(true);
-          walletState.textContent = "Connecting";
+          walletState.textContent = window.IFRWallet.isMobileOrTablet && IFRWallet.isMobileOrTablet() ? "WalletConnect" : "Connecting";
           try {
             const address = await IFRWallet.connect();
             const state = await IFRState.load(address);
             renderState(state);
           } catch (error) {
-            walletState.textContent = error && error.message === "MOBILE_NOT_SUPPORTED" ? "Desktop wallet" : "Connect failed";
+            if (error && (error.code === 4001 || error.message === "User rejected.")) {
+              walletState.textContent = "Rejected";
+            } else if (error && error.code === -32002) {
+              walletState.textContent = "Open wallet";
+            } else {
+              walletState.textContent = "Connect failed";
+            }
           } finally {
             setWalletLoading(false);
           }
@@ -1314,118 +1442,81 @@
       addTokenButton.addEventListener("click", async () => {
         if (!window.IFRWallet || !IFRWallet.addIFRToken) return;
         try {
+          if (!IFRWallet.isConnected()) {
+            await IFRWallet.connect();
+          }
           await IFRWallet.addIFRToken();
+          walletState.textContent = "Token added";
         } catch (error) {
           walletState.textContent = "Token add failed";
         }
       });
 
+      function isStandalone() {
+        return window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
+      }
+
+      function showInstallButtons() {
+        if (isStandalone()) return;
+        installButtons.forEach((button) => { button.hidden = false; });
+      }
+
+      function openInstallDialog() {
+        if (!installDialog) return;
+        const isiOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+        if (isiOS) {
+          installCopy.textContent = "Install IFR Web3 from Safari for direct home screen access.";
+          installSteps.innerHTML = [
+            "Tap Share in Safari.",
+            "Choose Add to Home Screen.",
+            "Open IFR Web3 from the new app icon."
+          ].map((step) => `<li>${step}</li>`).join("");
+        }
+        installDialog.classList.add("is-open");
+        installDialog.setAttribute("aria-hidden", "false");
+      }
+
+      window.addEventListener("beforeinstallprompt", (event) => {
+        event.preventDefault();
+        deferredInstallPrompt = event;
+        showInstallButtons();
+      });
+
+      window.addEventListener("appinstalled", () => {
+        deferredInstallPrompt = null;
+        installButtons.forEach((button) => { button.hidden = true; });
+      });
+
+      installButtons.forEach((button) => {
+        button.addEventListener("click", async () => {
+          if (deferredInstallPrompt) {
+            deferredInstallPrompt.prompt();
+            await deferredInstallPrompt.userChoice.catch(() => null);
+            deferredInstallPrompt = null;
+            return;
+          }
+          openInstallDialog();
+        });
+      });
+
+      installClose.addEventListener("click", () => {
+        installDialog.classList.remove("is-open");
+        installDialog.setAttribute("aria-hidden", "true");
+      });
+
+      installDialog.addEventListener("click", (event) => {
+        if (event.target === installDialog) installClose.click();
+      });
+
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", () => {
+          navigator.serviceWorker.register("/web3-sw.js", { scope: "/" }).catch(() => null);
+        });
+      }
+
+      if (!isStandalone()) showInstallButtons();
       loadInitialState();
     })();
-  </script>
-
-  <script type="module">
-    import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.165.0/build/three.module.js";
-
-    const canvas = document.getElementById("hero-canvas");
-    const scene = new THREE.Scene();
-    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-
-    const camera = new THREE.PerspectiveCamera(48, 1, 0.1, 100);
-    camera.position.set(0, 0, 13);
-
-    const group = new THREE.Group();
-    scene.add(group);
-
-    const coreGeometry = new THREE.TorusGeometry(2.45, 0.11, 18, 160);
-    const coreMaterial = new THREE.MeshBasicMaterial({ color: 0xb4481f, transparent: true, opacity: 0.84 });
-    const core = new THREE.Mesh(coreGeometry, coreMaterial);
-    core.rotation.x = 0.9;
-    core.rotation.y = -0.34;
-    core.position.set(-3.8, 0.55, 0);
-    group.add(core);
-
-    const innerGeometry = new THREE.TorusGeometry(1.55, 0.045, 12, 130);
-    const innerMaterial = new THREE.MeshBasicMaterial({ color: 0x3d9a70, transparent: true, opacity: 0.64 });
-    const inner = new THREE.Mesh(innerGeometry, innerMaterial);
-    inner.rotation.x = 0.9;
-    inner.rotation.y = -0.34;
-    inner.position.copy(core.position);
-    group.add(inner);
-
-    const nodeGeometry = new THREE.BufferGeometry();
-    const count = 160;
-    const positions = new Float32Array(count * 3);
-    const colors = new Float32Array(count * 3);
-    for (let i = 0; i < count; i += 1) {
-      const ix = i * 3;
-      positions[ix] = THREE.MathUtils.randFloat(-8.6, 8.6);
-      positions[ix + 1] = THREE.MathUtils.randFloat(-4.2, 4.2);
-      positions[ix + 2] = THREE.MathUtils.randFloat(-4.0, 2.2);
-      const mint = Math.random() > 0.38;
-      colors[ix] = mint ? 0.22 : 0.82;
-      colors[ix + 1] = mint ? 0.72 : 0.31;
-      colors[ix + 2] = mint ? 0.54 : 0.16;
-    }
-    nodeGeometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
-    nodeGeometry.setAttribute("color", new THREE.BufferAttribute(colors, 3));
-    const nodeMaterial = new THREE.PointsMaterial({
-      size: 0.05,
-      vertexColors: true,
-      transparent: true,
-      opacity: 0.72,
-      depthWrite: false
-    });
-    const nodes = new THREE.Points(nodeGeometry, nodeMaterial);
-    nodes.position.x = 2.2;
-    group.add(nodes);
-
-    const linePositions = [];
-    for (let i = 0; i < 72; i += 1) {
-      const a = i % count;
-      const b = (i * 7 + 19) % count;
-      const ax = a * 3;
-      const bx = b * 3;
-      const dx = positions[ax] - positions[bx];
-      const dy = positions[ax + 1] - positions[bx + 1];
-      const dz = positions[ax + 2] - positions[bx + 2];
-      if (Math.sqrt(dx * dx + dy * dy + dz * dz) < 3.25) {
-        linePositions.push(
-          positions[ax], positions[ax + 1], positions[ax + 2],
-          positions[bx], positions[bx + 1], positions[bx + 2]
-        );
-      }
-    }
-    const lineGeometry = new THREE.BufferGeometry();
-    lineGeometry.setAttribute("position", new THREE.Float32BufferAttribute(linePositions, 3));
-    const lineMaterial = new THREE.LineBasicMaterial({ color: 0x5fae8b, transparent: true, opacity: 0.12 });
-    const lines = new THREE.LineSegments(lineGeometry, lineMaterial);
-    lines.position.x = 2.2;
-    group.add(lines);
-
-    function resize() {
-      const rect = canvas.getBoundingClientRect();
-      renderer.setSize(rect.width, rect.height, false);
-      camera.aspect = rect.width / Math.max(rect.height, 1);
-      camera.updateProjectionMatrix();
-    }
-
-    function animate(time) {
-      const t = time * 0.001;
-      core.rotation.z = t * 0.18;
-      inner.rotation.z = -t * 0.14;
-      nodes.rotation.y = Math.sin(t * 0.23) * 0.06;
-      nodes.rotation.x = Math.cos(t * 0.19) * 0.035;
-      lines.rotation.copy(nodes.rotation);
-      group.position.y = Math.sin(t * 0.35) * 0.08;
-      renderer.render(scene, camera);
-      requestAnimationFrame(animate);
-    }
-
-    resize();
-    window.addEventListener("resize", resize, { passive: true });
-    requestAnimationFrame(animate);
   </script>
 </body>
 </html>

@@ -1,0 +1,46 @@
+{
+  "name": "IFR Web3 Access Layer",
+  "short_name": "IFR Web3",
+  "description": "Connect a wallet, check IFR access status, and use Inferno Protocol on Ethereum Mainnet.",
+  "id": "/",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#f8f3ea",
+  "theme_color": "#b4481f",
+  "categories": ["finance", "productivity", "utilities"],
+  "icons": [
+    {
+      "src": "/assets/ifr_icon_64.png",
+      "sizes": "64x64",
+      "type": "image/png"
+    },
+    {
+      "src": "/assets/ifr_icon_256.png",
+      "sizes": "256x256",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/assets/ifr_icon_4096_v2.png",
+      "sizes": "4096x4096",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Connect Wallet",
+      "short_name": "Connect",
+      "url": "/#access",
+      "icons": [{ "src": "/assets/ifr_icon_256.png", "sizes": "256x256" }]
+    },
+    {
+      "name": "Verified Contracts",
+      "short_name": "Contracts",
+      "url": "/wiki/contracts.html",
+      "icons": [{ "src": "/assets/ifr_icon_256.png", "sizes": "256x256" }]
+    }
+  ]
+}
