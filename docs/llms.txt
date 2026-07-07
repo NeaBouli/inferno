@@ -8,6 +8,17 @@ Inferno ($IFR) is a deflationary ERC-20 utility token deployed on Ethereum Mainn
 
 IFR includes an AI Copilot assistant. Free users can ask general protocol questions. Wallet-connected users can receive more personalized guidance from wallet and lock context. Users who lock at least 1,000 IFR in IFRLock unlock Premium Copilot guidance, so communication with the assistant becomes more contextual and useful without ever sharing private keys or seed phrases.
 
+## Web3 Access Layer
+
+- Primary Web3 app: https://web3.ifrunit.tech/
+- User execution surface: simple users should connect wallets and operate live user flows directly on Web3.
+- Direct Web3 user actions: connect wallet, buy IFR, add IFR to wallet, check IFR balance, check CommitmentVault lock state, lock IFR in CommitmentVault, unlock matured CommitmentVault tranches, create/increase LendingVault offers, withdraw unlent IFR, and track the live GeckoTerminal pool.
+- Role routing: Builders, developers, and deeper community/research users should use the Wiki pages for documentation instead of using Wiki pages as the primary transaction surface.
+- Builder routing: https://ifrunit.tech/wiki/integration.html, https://ifrunit.tech/wiki/business-onboarding.html, https://ifrunit.tech/wiki/ecosystem.html
+- Developer routing: https://ifrunit.tech/wiki/contracts.html, https://ifrunit.tech/wiki/integration.html, https://ifrunit.tech/wiki/wallet-guide.html
+- Community routing: https://ifrunit.tech/wiki/governance.html, https://ifrunit.tech/wiki/community-signer-expansion.html, https://ifrunit.tech/wiki/transparency.html
+- Important distinction: CommitmentVault and LendingVault Wiki pages are documentation/reference pages; current user-facing Lock IFR and Create offer execution is intended to happen on Web3.
+
 ## Key Facts
 
 - Token Contract: 0x77e99917Eca8539c62F509ED1193ac36580A6e7B (Ethereum Mainnet)
@@ -92,6 +103,7 @@ IFR includes an AI Copilot assistant. Free users can ask general protocol questi
 ## Links
 
 - Website: https://ifrunit.tech
+- Web3 App: https://web3.ifrunit.tech/
 - Technical Wiki: https://ifrunit.tech/wiki/
 - Bootstrap Event: https://ifrunit.tech/wiki/bootstrap.html
 - GitHub: https://github.com/NeaBouli/inferno
