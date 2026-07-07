@@ -54,6 +54,7 @@ window.IFRWallet = (function() {
   var _listenersAttached = false;
   var _wcProvider = null;       // WalletConnect provider instance
   var _wcLoading = null;        // promise guard
+  var _wcUri = null;
 
   // ── Mobile / Tablet Detection ─────────────────────
   function _isMobile() {
@@ -167,6 +168,10 @@ window.IFRWallet = (function() {
           if (_wcProvider.accounts && _wcProvider.accounts.length > 0 && !_address) {
             _finishConnect(_wcProvider, _wcProvider.accounts);
           }
+        });
+        _wcProvider.on("display_uri", function(uri) {
+          _wcUri = uri;
+          _emit("walletconnectUri", uri);
         });
 
         console.log("[IFR Web3 Wallet] WalletConnect v2 ready (esm.sh)");
@@ -312,6 +317,7 @@ window.IFRWallet = (function() {
       try { _wcProvider.disconnect(); } catch (e) {}
       _wcProvider = null;
       _wcLoading = null;
+      _wcUri = null;
     }
 
     _provider = null;
@@ -426,6 +432,7 @@ window.IFRWallet = (function() {
   function getProvider() {
     return _provider || new ethers.providers.JsonRpcProvider(RPC_URL);
   }
+  function getWalletConnectUri() { return _wcUri; }
 
   // ── Events ────────────────────────────────────────
   function on(event, cb) { _listeners.push({ event: event, cb: cb }); }
@@ -468,6 +475,7 @@ window.IFRWallet = (function() {
     getSigner: getSigner, getProvider: getProvider,
     addToken: addIFRToken,
     on: on, off: off, getDeepLink: getDeepLink, isMobile: isMobile,
-    isMobileOrTablet: _isMobileOrTablet
+    isMobileOrTablet: _isMobileOrTablet,
+    getWalletConnectUri: getWalletConnectUri
   };
 })();

@@ -534,7 +534,24 @@
       display: flex;
     }
 
-    .install-card {
+    .wallet-connect-dialog {
+      position: fixed;
+      inset: 0;
+      z-index: 130;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      background: rgba(10, 10, 10, 0.68);
+      backdrop-filter: blur(8px);
+    }
+
+    .wallet-connect-dialog.is-open {
+      display: flex;
+    }
+
+    .install-card,
+    .wallet-connect-card {
       width: min(420px, 100%);
       padding: 24px;
       border: 1px solid var(--line);
@@ -544,12 +561,24 @@
       box-shadow: var(--shadow);
     }
 
-    .install-card h2 {
+    .install-card h2,
+    .wallet-connect-card h2 {
       font-size: 30px;
     }
 
-    .install-card p {
+    .install-card p,
+    .wallet-connect-card p {
       color: var(--ink-soft);
+    }
+
+    .wallet-connect-actions {
+      display: grid;
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .wallet-connect-actions .btn {
+      width: 100%;
     }
 
     .install-steps {
@@ -1293,6 +1322,20 @@
     </div>
   </div>
 
+  <div class="wallet-connect-dialog" data-wallet-dialog aria-hidden="true">
+    <div class="wallet-connect-card" role="dialog" aria-modal="true" aria-labelledby="wallet-connect-title">
+      <h2 id="wallet-connect-title">Open your wallet</h2>
+      <p data-wallet-dialog-copy>WalletConnect is preparing a secure session. Keep this page open.</p>
+      <div class="wallet-connect-actions">
+        <a class="btn btn-primary" href="#" rel="noopener" data-wallet-metamask>Open MetaMask</a>
+        <a class="btn btn-mint" href="#" rel="noopener" data-wallet-trust>Open Trust Wallet</a>
+        <a class="btn btn-mint" href="#" rel="noopener" data-wallet-coinbase>Open Coinbase Wallet</a>
+        <button class="btn btn-quiet" type="button" data-wallet-copy>Copy WalletConnect URI</button>
+        <button class="btn btn-quiet" type="button" data-wallet-dialog-close>Close</button>
+      </div>
+    </div>
+  </div>
+
   <script>
     (function() {
       const audiences = {
@@ -1362,7 +1405,17 @@
       const installClose = document.querySelector("[data-install-close]");
       const installCopy = document.querySelector("[data-install-copy]");
       const installSteps = document.querySelector("[data-install-steps]");
+      const walletDialog = document.querySelector("[data-wallet-dialog]");
+      const walletDialogCopy = document.querySelector("[data-wallet-dialog-copy]");
+      const walletDialogClose = document.querySelector("[data-wallet-dialog-close]");
+      const walletMetaMask = document.querySelector("[data-wallet-metamask]");
+      const walletTrust = document.querySelector("[data-wallet-trust]");
+      const walletCoinbase = document.querySelector("[data-wallet-coinbase]");
+      const walletCopy = document.querySelector("[data-wallet-copy]");
       let deferredInstallPrompt = null;
+      let walletConnectUri = "";
+      const web3Url = "https://web3.ifrunit.tech/";
+      const encodedWeb3Url = encodeURIComponent(web3Url);
 
       function shortAddress(address) {
         if (!address) return "Not connected";
@@ -1374,6 +1427,38 @@
           button.disabled = isLoading;
           button.textContent = isLoading ? "Connecting..." : (window.IFRWallet && IFRWallet.isConnected() ? "Connected" : "Connect Wallet");
         });
+      }
+
+      function setWalletDialogLinks(uri) {
+        walletConnectUri = uri || walletConnectUri || "";
+        const hasUri = Boolean(walletConnectUri);
+        const encoded = hasUri ? encodeURIComponent(walletConnectUri) : "";
+        walletMetaMask.href = hasUri ? `https://metamask.app.link/wc?uri=${encoded}` : `https://metamask.app.link/dapp/web3.ifrunit.tech`;
+        walletTrust.href = hasUri ? `https://link.trustwallet.com/wc?uri=${encoded}` : `https://link.trustwallet.com/open_url?coin_id=60&url=${encodedWeb3Url}`;
+        walletCoinbase.href = hasUri ? `https://go.cb-w.com/wc?uri=${encoded}` : `https://go.cb-w.com/dapp?cb_url=${encodedWeb3Url}`;
+        walletMetaMask.textContent = hasUri ? "Open MetaMask" : "Open MetaMask Browser";
+        walletTrust.textContent = hasUri ? "Open Trust Wallet" : "Open Trust Wallet Browser";
+        walletCoinbase.textContent = hasUri ? "Open Coinbase Wallet" : "Open Coinbase Wallet Browser";
+        walletMetaMask.setAttribute("aria-disabled", "false");
+        walletTrust.setAttribute("aria-disabled", "false");
+        walletCoinbase.setAttribute("aria-disabled", "false");
+        walletCopy.disabled = !hasUri;
+        walletDialogCopy.textContent = hasUri
+          ? "Choose your wallet, approve the connection, then return to this page."
+          : "Open the site inside your wallet browser, or keep this page open while WalletConnect prepares a secure session.";
+      }
+
+      function openWalletDialog(uri) {
+        if (!walletDialog) return;
+        setWalletDialogLinks(uri);
+        walletDialog.classList.add("is-open");
+        walletDialog.setAttribute("aria-hidden", "false");
+      }
+
+      function closeWalletDialog() {
+        if (!walletDialog) return;
+        walletDialog.classList.remove("is-open");
+        walletDialog.setAttribute("aria-hidden", "true");
       }
 
       function renderState(state) {
@@ -1453,18 +1538,21 @@
       connectButtons.forEach((button) => {
         button.addEventListener("click", async () => {
           if (!window.IFRWallet || !window.IFRState) return;
+          const isMobileConnect = window.IFRWallet.isMobileOrTablet && IFRWallet.isMobileOrTablet();
+          if (isMobileConnect) openWalletDialog(IFRWallet.getWalletConnectUri && IFRWallet.getWalletConnectUri());
           setWalletLoading(true);
-          walletState.textContent = window.IFRWallet.isMobileOrTablet && IFRWallet.isMobileOrTablet() ? "WalletConnect" : "Connecting";
+          walletState.textContent = isMobileConnect ? "Open wallet" : "Connecting";
           let connectWatchdog = window.setTimeout(() => {
             if (window.IFRWallet && !IFRWallet.isConnected()) {
-              walletState.textContent = "Check wallet";
+              walletState.textContent = isMobileConnect ? "Approve in wallet" : "Check wallet";
               setWalletLoading(false);
             }
-          }, 12000);
+          }, isMobileConnect ? 45000 : 15000);
           try {
             const address = await IFRWallet.connect();
             const state = await IFRState.load(address);
             renderState(state);
+            closeWalletDialog();
           } catch (error) {
             if (error && (error.code === 4001 || error.message === "User rejected.")) {
               walletState.textContent = "Rejected";
@@ -1548,6 +1636,25 @@
       installDialog.addEventListener("click", (event) => {
         if (event.target === installDialog) installClose.click();
       });
+
+      walletDialogClose.addEventListener("click", closeWalletDialog);
+      walletDialog.addEventListener("click", (event) => {
+        if (event.target === walletDialog) closeWalletDialog();
+      });
+      walletCopy.addEventListener("click", async () => {
+        if (!walletConnectUri || !navigator.clipboard) return;
+        await navigator.clipboard.writeText(walletConnectUri).catch(() => null);
+        walletState.textContent = "URI copied";
+      });
+      if (window.IFRWallet && IFRWallet.on) {
+        IFRWallet.on("walletconnectUri", (uri) => {
+          setWalletDialogLinks(uri);
+          if (IFRWallet.isMobileOrTablet && IFRWallet.isMobileOrTablet()) {
+            openWalletDialog(uri);
+          }
+        });
+        IFRWallet.on("connected", closeWalletDialog);
+      }
 
       if ("serviceWorker" in navigator) {
         window.addEventListener("load", () => {
