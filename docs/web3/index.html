@@ -825,6 +825,19 @@
       font-size: 18px;
     }
 
+    .audience-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 22px;
+    }
+
+    .audience-actions .btn {
+      min-height: 46px;
+      padding: 0 18px;
+      font-size: 13px;
+    }
+
     .detail-list {
       display: grid;
       gap: 10px;
@@ -1176,7 +1189,12 @@
       }
 
       .protocol-actions,
+      .audience-actions,
       .protocol-actions .btn {
+        width: 100%;
+      }
+
+      .audience-actions .btn {
         width: 100%;
       }
 
@@ -1228,8 +1246,8 @@
         <div class="hero-actions">
           <button class="btn btn-primary" type="button" data-wallet-connect>Connect Wallet</button>
           <button class="btn btn-mint install-button" type="button" data-install-app hidden>Install App</button>
-          <a class="btn btn-mint" href="#builders">Build with IFR</a>
-          <a class="btn btn-quiet" href="#contracts">View verified contracts</a>
+          <a class="btn btn-mint" href="/wiki/integration.html">Build with IFR</a>
+          <a class="btn btn-quiet" href="/wiki/contracts.html">View verified contracts</a>
         </div>
         <div class="wallet-strip" aria-label="Supported wallet paths">
           <span class="wallet-chip">MetaMask</span>
@@ -1332,6 +1350,12 @@
           <div>
             <h3 data-audience-title>Lock once. Use across the ecosystem.</h3>
             <p data-audience-copy>Holders can connect, check IFR balance, view locked IFR, and move into the CommitmentVault or LendingVault flows without hunting through the full documentation tree.</p>
+            <div class="audience-actions" data-audience-actions>
+              <button class="btn btn-primary" type="button" data-open-lock>Lock IFR</button>
+              <button class="btn btn-mint" type="button" data-open-lending>Create offer</button>
+              <a class="btn btn-quiet" href="https://app.uniswap.org/swap?outputCurrency=0x77e99917Eca8539c62F509ED1193ac36580A6e7B" target="_blank" rel="noopener">Buy IFR</a>
+              <a class="btn btn-quiet" href="https://www.geckoterminal.com/eth/pools/0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0" target="_blank" rel="noopener">Track pool</a>
+            </div>
           </div>
           <ul class="detail-list" data-audience-list>
             <li>Check wallet, IFR balance, and lock state.</li>
@@ -1444,8 +1468,8 @@
         <div class="hero-actions">
           <button class="btn btn-primary" type="button" data-wallet-connect>Connect Wallet</button>
           <button class="btn btn-mint install-button" type="button" data-install-app hidden>Install App</button>
-          <a class="btn btn-mint" href="#builders">Open builder layer</a>
-          <a class="btn btn-quiet" href="#contracts" style="color:#fff7ec;border-color:rgba(255,247,236,.35)">Verify contracts</a>
+          <a class="btn btn-mint" href="/wiki/integration.html">Open builder docs</a>
+          <a class="btn btn-quiet" href="/wiki/contracts.html" style="color:#fff7ec;border-color:rgba(255,247,236,.35)">Verify contracts</a>
         </div>
       </div>
     </section>
@@ -1595,38 +1619,59 @@
       const audiences = {
         users: {
           title: "Lock once. Use across the ecosystem.",
-          copy: "Holders can connect, check IFR balance, view locked IFR, and move into the CommitmentVault or LendingVault flows without hunting through the full documentation tree.",
+          copy: "Users can connect, buy IFR, add the token to their wallet, lock IFR in the CommitmentVault, manage unlockable tranches, and create or withdraw LendingVault offers directly on this Web3 page.",
           items: [
-            "Check wallet, IFR balance, and lock state.",
-            "Buy IFR on the live Uniswap V2 pool.",
-            "Lock IFR for access or lend IFR through protocol offers."
+            "Use the access terminal for wallet, IFR balance, lock state, and token import.",
+            "Buy IFR on Uniswap or track the live pool without leaving the user flow.",
+            "Lock, unlock matured tranches, create lending offers, increase offers, or withdraw unlent IFR directly on Web3."
+          ],
+          actions: [
+            { label: "Lock IFR", kind: "button", variant: "btn-primary", data: "data-open-lock" },
+            { label: "Create offer", kind: "button", variant: "btn-mint", data: "data-open-lending" },
+            { label: "Buy IFR", kind: "link", variant: "btn-quiet", href: "https://app.uniswap.org/swap?outputCurrency=0x77e99917Eca8539c62F509ED1193ac36580A6e7B", external: true },
+            { label: "Track pool", kind: "link", variant: "btn-quiet", href: "https://www.geckoterminal.com/eth/pools/0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0", external: true }
           ]
         },
         builders: {
           title: "Add IFR-gated access to real products.",
-          copy: "Builders can use locked IFR as an access signal, define product thresholds, and point users into a protocol-owned lock flow instead of managing a separate token model.",
+          copy: "Builders should use the Wiki for integration details, onboarding, thresholds, and product architecture. User execution still stays on Web3.",
           items: [
             "Use verified Mainnet contracts as the source of truth.",
             "Design product tiers around lock status and wallet proof.",
-            "Route users to integration docs and builder onboarding."
+            "Route builders to integration docs and business onboarding before implementation."
+          ],
+          actions: [
+            { label: "Integration guide", kind: "link", variant: "btn-primary", href: "/wiki/integration.html" },
+            { label: "Business onboarding", kind: "link", variant: "btn-mint", href: "/wiki/business-onboarding.html" },
+            { label: "Ecosystem", kind: "link", variant: "btn-quiet", href: "/wiki/ecosystem.html" }
           ]
         },
         developers: {
           title: "Verify the surface before integrating.",
-          copy: "The landing links to token, lock, governance, vaults, SDK notes, and the wiki so developers can inspect the protocol without relying on marketing claims.",
+          copy: "Developers should leave the user execution flow and inspect the technical Wiki pages: verified contracts, integration notes, wallet guidance, and deployment context.",
           items: [
             "Check Etherscan-verified contracts.",
-            "Read the integration spec and SDK quickstart.",
-            "Keep dynamic API usage explicit for web3.ifrunit.tech."
+            "Read the integration guide and wallet/contract guide.",
+            "Keep dynamic API usage explicit for web3.ifrunit.tech before shipping integrations."
+          ],
+          actions: [
+            { label: "Smart contracts", kind: "link", variant: "btn-primary", href: "/wiki/contracts.html" },
+            { label: "Integration guide", kind: "link", variant: "btn-mint", href: "/wiki/integration.html" },
+            { label: "Wallet guide", kind: "link", variant: "btn-quiet", href: "/wiki/wallet-guide.html" }
           ]
         },
         community: {
           title: "A cleaner front door for the protocol.",
-          copy: "Community members get a focused entry point for the live token, locks, lending, verified contracts, and education without the old full tracking dashboard overload.",
+          copy: "Community members can use Web3 for simple token actions, while deeper governance, signer expansion, and transparency context lives in the Wiki.",
           items: [
             "Understand what IFR does in one screen.",
-            "Find the official wiki and contract references.",
-            "Share a dedicated Web3 URL instead of a docs mirror."
+            "Find governance, signer expansion, and transparency references.",
+            "Share the dedicated Web3 URL for users and the Wiki for deeper context."
+          ],
+          actions: [
+            { label: "Governance", kind: "link", variant: "btn-primary", href: "/wiki/governance.html" },
+            { label: "Signer expansion", kind: "link", variant: "btn-mint", href: "/wiki/community-signer-expansion.html" },
+            { label: "Transparency", kind: "link", variant: "btn-quiet", href: "/wiki/transparency.html" }
           ]
         }
       };
@@ -1634,6 +1679,18 @@
       const title = document.querySelector("[data-audience-title]");
       const copy = document.querySelector("[data-audience-copy]");
       const list = document.querySelector("[data-audience-list]");
+      const audienceActions = document.querySelector("[data-audience-actions]");
+      function renderAudienceActions(actions) {
+        if (!audienceActions) return;
+        audienceActions.innerHTML = actions.map((action) => {
+          const classes = `btn ${action.variant || "btn-quiet"}`;
+          if (action.kind === "button") {
+            return `<button class="${classes}" type="button" ${action.data || ""}>${action.label}</button>`;
+          }
+          const target = action.external ? ' target="_blank" rel="noopener"' : "";
+          return `<a class="${classes}" href="${action.href}"${target}>${action.label}</a>`;
+        }).join("");
+      }
       document.querySelectorAll("[data-audience]").forEach((tab) => {
         tab.addEventListener("click", () => {
           const data = audiences[tab.dataset.audience];
@@ -1642,6 +1699,7 @@
           title.textContent = data.title;
           copy.textContent = data.copy;
           list.innerHTML = data.items.map((item) => `<li>${item}</li>`).join("");
+          renderAudienceActions(data.actions || []);
         });
       });
 
@@ -1666,7 +1724,6 @@
       const walletTrust = document.querySelector("[data-wallet-trust]");
       const walletCoinbase = document.querySelector("[data-wallet-coinbase]");
       const walletCopy = document.querySelector("[data-wallet-copy]");
-      const openLockButtons = document.querySelectorAll("[data-open-lock]");
       const lockDialog = document.querySelector("[data-lock-dialog]");
       const lockClose = document.querySelector("[data-lock-close]");
       const lockAmount = document.querySelector("[data-lock-amount]");
@@ -1679,7 +1736,6 @@
       const lockMax = document.querySelector("[data-lock-max]");
       const lockRefresh = document.querySelector("[data-lock-refresh]");
       const lockSubmit = document.querySelector("[data-lock-submit]");
-      const openLendingButtons = document.querySelectorAll("[data-open-lending]");
       const lendingDialog = document.querySelector("[data-lending-dialog]");
       const lendingClose = document.querySelector("[data-lending-close]");
       const lendingAmount = document.querySelector("[data-lending-amount]");
@@ -2135,15 +2191,16 @@
         }
       });
 
-      openLockButtons.forEach((button) => {
-        button.addEventListener("click", async () => {
-          openProtocolDialog(lockDialog);
-          try {
-            await loadLockPanel();
-          } catch (error) {
-            lockStatus.textContent = error && error.message ? error.message : "Lock panel could not load.";
-          }
-        });
+      document.addEventListener("click", async (event) => {
+        const button = event.target.closest("[data-open-lock]");
+        if (!button) return;
+        event.preventDefault();
+        openProtocolDialog(lockDialog);
+        try {
+          await loadLockPanel();
+        } catch (error) {
+          lockStatus.textContent = error && error.message ? error.message : "Lock panel could not load.";
+        }
       });
 
       lockClose.addEventListener("click", () => closeProtocolDialog(lockDialog));
@@ -2190,15 +2247,16 @@
         }
       });
 
-      openLendingButtons.forEach((button) => {
-        button.addEventListener("click", async () => {
-          openProtocolDialog(lendingDialog);
-          try {
-            await loadLendingPanel();
-          } catch (error) {
-            lendingStatus.textContent = error && error.message ? error.message : "Lending panel could not load.";
-          }
-        });
+      document.addEventListener("click", async (event) => {
+        const button = event.target.closest("[data-open-lending]");
+        if (!button) return;
+        event.preventDefault();
+        openProtocolDialog(lendingDialog);
+        try {
+          await loadLendingPanel();
+        } catch (error) {
+          lendingStatus.textContent = error && error.message ? error.message : "Lending panel could not load.";
+        }
       });
 
       lendingClose.addEventListener("click", () => closeProtocolDialog(lendingDialog));
