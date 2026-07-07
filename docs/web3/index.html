@@ -21,7 +21,7 @@
   <link rel="dns-prefetch" href="https://eth.llamarpc.com">
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
-  <script src="/assets/wallet-core.js"></script>
+  <script src="/web3-wallet-core.js"></script>
   <script src="/assets/ifr-state.js"></script>
   <style>
     :root {
@@ -1421,6 +1421,12 @@
           if (!window.IFRWallet || !window.IFRState) return;
           setWalletLoading(true);
           walletState.textContent = window.IFRWallet.isMobileOrTablet && IFRWallet.isMobileOrTablet() ? "WalletConnect" : "Connecting";
+          let connectWatchdog = window.setTimeout(() => {
+            if (window.IFRWallet && !IFRWallet.isConnected()) {
+              walletState.textContent = "Check wallet";
+              setWalletLoading(false);
+            }
+          }, 12000);
           try {
             const address = await IFRWallet.connect();
             const state = await IFRState.load(address);
@@ -1434,6 +1440,7 @@
               walletState.textContent = "Connect failed";
             }
           } finally {
+            window.clearTimeout(connectWatchdog);
             setWalletLoading(false);
           }
         });

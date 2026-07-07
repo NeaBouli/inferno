@@ -1,22 +1,28 @@
 /**
- * IFR Wallet Core v4.2 — WalletConnect v2 via esm.sh
+ * IFR Web3 Wallet Core v1.0 — Mobile + WalletConnect v2 via esm.sh
  * Usage: await IFRWallet.connect(); IFRWallet.getAddress();
  *
- * v4.2 — Mobile/Tablet connect disabled (desktop browser only).
- *   On smartphone/tablet, connect() shows a styled "Desktop Only" modal
- *   and throws MOBILE_NOT_SUPPORTED. autoReconnect() returns false on mobile.
- *   All mobile deep-link fallbacks removed.
+ * v4.3 — Mobile/tablet wallet connect restored.
+ *   Supports injected EIP-1193 wallets in wallet browsers first, then
+ *   WalletConnect v2 for MetaMask, Rainbow, Trust Wallet, Coinbase Wallet,
+ *   OKX, Rabby, Zerion and other WalletConnect-compatible wallets.
+ *
+ * v4.2 — Historical release with desktop-only mobile policy.
  *
  * v4.1 — dynamic import() from esm.sh CDN.
  * v4.0 — Fixes v3.0 broken UMD bundles
  *
  * FLOW:
- *   - Mobile/Tablet: blocked — shows "Desktop Only" modal
- *   - Desktop WITH extension: MetaMask extension (instant, no modal)
+ *   - Mobile/tablet WITH wallet browser: injected EIP-1193 provider
+ *   - Mobile/tablet WITHOUT injected wallet: WalletConnect mobile selector
+ *   - Desktop WITH extension: injected EIP-1193 provider
  *   - Desktop WITHOUT extension: WalletConnect QR modal (esm.sh)
- *   - Auto-reconnect from localStorage + WC session persistence (desktop only)
+ *   - Auto-reconnect from localStorage + WC session persistence
  *
- * API: 100% backward-compatible (v1.3 → v4.2 drop-in).
+ * Web3-only connector. Main ifrunit.tech and wiki keep the shared
+ * minimalist docs/assets/wallet-core.js implementation.
+ *
+ * API: 100% backward-compatible (v1.3 → v4.3 drop-in).
  *      IFRWallet.connect/disconnect/autoReconnect
  *      IFRWallet.getAddress/getSigner/getProvider/isConnected
  *      IFRWallet.on/off/getDeepLink/isMobile/isMobileOrTablet/getShortAddress
@@ -28,7 +34,7 @@ window.IFRWallet = (function() {
   var CHAIN_ID = 1;
   var CHAIN_ID_HEX = "0x1";
   var RPC_URL = "https://eth.llamarpc.com";
-  var SESSION_KEY = "ifr_wallet_connected";
+  var SESSION_KEY = "ifr_web3_wallet_connected";
   var WC_PROJECT_ID = "32f56abaa4b1d7f59fb1571c0c0a551f";
   var IFR_TOKEN_ADDRESS = "0x77e99917Eca8539c62F509ED1193ac36580A6e7B";
   var IFR_TOKEN_SYMBOL = "IFR";
@@ -63,47 +69,44 @@ window.IFRWallet = (function() {
     return false;
   }
 
-  // ── Desktop-Only Modal ──────────────────────────────
-  var _desktopModalShown = false;
+  // ── Wallet Help Modal ───────────────────────────────
+  var _walletHelpModalShown = false;
 
-  function _showDesktopOnlyModal() {
-    if (_desktopModalShown) return;
-    _desktopModalShown = true;
-
+  function _showWalletHelpModal(message) {
+    if (_walletHelpModalShown) return;
+    _walletHelpModalShown = true;
     var overlay = document.createElement("div");
-    overlay.id = "ifr-desktop-only-modal";
+    overlay.id = "ifr-wallet-help-modal";
     overlay.style.cssText = "position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,0.75);display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(6px);";
 
     var card = document.createElement("div");
-    card.style.cssText = "background:#111827;border:1px solid #374151;border-radius:16px;padding:32px;max-width:420px;width:100%;text-align:center;box-shadow:0 8px 40px rgba(0,0,0,0.6);";
+    card.style.cssText = "background:#111827;border:1px solid #374151;border-radius:12px;padding:28px;max-width:430px;width:100%;text-align:center;box-shadow:0 8px 40px rgba(0,0,0,0.6);";
 
     card.innerHTML =
-      '<div style="font-size:2.5rem;margin-bottom:16px;">\uD83D\uDDA5\uFE0F</div>' +
-      '<h3 style="color:#f97316;font-family:\'Orbitron\',sans-serif;font-size:1.2rem;margin:0 0 12px;letter-spacing:1px;">Desktop Browser Only</h3>' +
-      '<p style="color:#9ca3af;font-size:0.92rem;line-height:1.6;margin:0 0 24px;">Wallet connection is only available on a <strong style="color:#e5e7eb;">desktop or laptop computer</strong> using a web browser with MetaMask extension.</p>' +
-      '<p style="color:#6b7280;font-size:0.82rem;line-height:1.5;margin:0 0 24px;">Open <strong style="color:#f97316;">ifrunit.tech</strong> on your PC or Mac to connect your wallet and participate in the Bootstrap event.</p>' +
-      '<button id="ifr-desktop-modal-close" style="background:#f97316;color:white;border:none;padding:12px 32px;border-radius:8px;font-weight:600;font-size:0.95rem;cursor:pointer;transition:background 0.2s;">Got it</button>';
+      '<h3 style="color:#f97316;font-family:system-ui,-apple-system,sans-serif;font-size:1.1rem;margin:0 0 12px;">Wallet connection</h3>' +
+      '<p style="color:#d1d5db;font-size:0.94rem;line-height:1.6;margin:0 0 22px;">' + (message || "Use an injected wallet browser or WalletConnect-compatible wallet.") + '</p>' +
+      '<button id="ifr-wallet-help-close" style="background:#f97316;color:white;border:none;padding:12px 28px;border-radius:8px;font-weight:600;font-size:0.95rem;cursor:pointer;">Got it</button>';
 
     overlay.appendChild(card);
     document.body.appendChild(overlay);
 
-    var closeBtn = document.getElementById("ifr-desktop-modal-close");
+    var closeBtn = document.getElementById("ifr-wallet-help-close");
     function closeModal() {
-      var el = document.getElementById("ifr-desktop-only-modal");
+      var el = document.getElementById("ifr-wallet-help-modal");
       if (el) el.remove();
-      _desktopModalShown = false;
+      _walletHelpModalShown = false;
     }
     closeBtn.addEventListener("click", closeModal);
     overlay.addEventListener("click", function(e) { if (e.target === overlay) closeModal(); });
   }
 
-  // ── MetaMask Extension Detection (EIP-5749) ──────
+  // ── Injected Wallet Detection (EIP-1193 / EIP-5749) ─
   function _getMetaMaskProvider() {
     if (_ethereumProvider) return _ethereumProvider;
 
     if (window.ethereum && window.ethereum.providers && Array.isArray(window.ethereum.providers)) {
       _ethereumProvider = window.ethereum.providers.find(function(p) {
-        return p.isMetaMask && !p.isExodus && !p.isBraveWallet;
+        return p.isMetaMask;
       }) || window.ethereum.providers[0] || window.ethereum;
     } else if (window.ethereum && window.ethereum.isMetaMask) {
       _ethereumProvider = window.ethereum;
@@ -128,19 +131,22 @@ window.IFRWallet = (function() {
         var EthereumProvider = mod.EthereumProvider || mod.default;
 
         if (!EthereumProvider) {
-          console.warn("[IFR Wallet] EthereumProvider not found in ESM module");
+          console.warn("[IFR Web3 Wallet] EthereumProvider not found in ESM module");
           return null;
         }
 
         _wcProvider = await EthereumProvider.init({
           projectId: WC_PROJECT_ID,
           chains: [CHAIN_ID],
+          optionalChains: [CHAIN_ID],
+          methods: ["eth_sendTransaction", "eth_signTransaction", "eth_sign", "personal_sign", "eth_signTypedData", "eth_signTypedData_v4"],
+          events: ["chainChanged", "accountsChanged", "disconnect"],
           showQrModal: true,
           rpcMap: { 1: RPC_URL },
           metadata: {
-            name: "Inferno Protocol ($IFR)",
-            description: "Deflationary ERC-20 Token — Fair Launch",
-            url: "https://ifrunit.tech",
+            name: "Inferno Protocol",
+            description: "IFR Protocol Web3 access layer",
+            url: "https://web3.ifrunit.tech",
             icons: ["https://ifrunit.tech/assets/ifr_icon_256.png"]
           },
           qrModalOptions: {
@@ -163,10 +169,10 @@ window.IFRWallet = (function() {
           }
         });
 
-        console.log("[IFR Wallet] WalletConnect v2 ready (esm.sh)");
+        console.log("[IFR Web3 Wallet] WalletConnect v2 ready (esm.sh)");
         return _wcProvider;
       } catch (e) {
-        console.warn("[IFR Wallet] WalletConnect init failed:", e);
+        console.warn("[IFR Web3 Wallet] WalletConnect init failed:", e);
         return null;
       }
     })();
@@ -234,19 +240,11 @@ window.IFRWallet = (function() {
 
   // ── Connect ───────────────────────────────────────
   async function connect() {
-    // ── Mobile/Tablet Block: wallet connect is desktop-only ──
-    if (_isMobileOrTablet()) {
-      _showDesktopOnlyModal();
-      var err = new Error("MOBILE_NOT_SUPPORTED");
-      err.code = "MOBILE_NOT_SUPPORTED";
-      throw err;
-    }
-
     var accounts;
     var eth = _getMetaMaskProvider();
 
     if (eth) {
-      // ── Path A: Browser extension available (desktop) ──
+      // ── Path A: Injected wallet browser or desktop extension ──
       try {
         accounts = await eth.request({ method: "eth_requestAccounts" });
       } catch (e) {
@@ -256,7 +254,7 @@ window.IFRWallet = (function() {
       }
       return await _finishConnect(eth, accounts);
     } else {
-      // ── Path B: No extension → WalletConnect v2 QR modal ──
+      // ── Path B: No injected wallet → WalletConnect v2 modal ──
       var wc = await _loadWalletConnect();
 
       if (wc) {
@@ -268,7 +266,8 @@ window.IFRWallet = (function() {
         }
         return await _finishConnect(wc, accounts);
       } else {
-        throw new Error("NO_METAMASK");
+        _showWalletHelpModal("No injected wallet was found and WalletConnect could not load. Install a wallet app or try another browser.");
+        throw new Error("NO_WALLET");
       }
     }
   }
@@ -325,7 +324,6 @@ window.IFRWallet = (function() {
 
   // ── Auto-Reconnect ───────────────────────────────
   async function autoReconnect() {
-    if (_isMobileOrTablet()) return false; // desktop only
     if (_address) return true; // already connected
 
     var saved = localStorage.getItem(SESSION_KEY);
@@ -338,7 +336,7 @@ window.IFRWallet = (function() {
       }
     }
 
-    // Path A: Try extension reconnect
+    // Path A: Try injected wallet reconnect
     var eth = _getMetaMaskProvider();
     if (eth && saved) {
       try {
@@ -364,7 +362,7 @@ window.IFRWallet = (function() {
     }
 
     // Path C: Try loading WC to check for persisted session (lazy)
-    if (!eth && saved) {
+    if (saved) {
       try {
         var wc = await _loadWalletConnect();
         if (wc && wc.session && wc.accounts && wc.accounts.length > 0) {
