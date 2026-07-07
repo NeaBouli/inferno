@@ -534,7 +534,8 @@
       display: flex;
     }
 
-    .wallet-connect-dialog {
+    .wallet-connect-dialog,
+    .protocol-dialog {
       position: fixed;
       inset: 0;
       z-index: 130;
@@ -546,12 +547,14 @@
       backdrop-filter: blur(8px);
     }
 
-    .wallet-connect-dialog.is-open {
+    .wallet-connect-dialog.is-open,
+    .protocol-dialog.is-open {
       display: flex;
     }
 
     .install-card,
-    .wallet-connect-card {
+    .wallet-connect-card,
+    .protocol-card {
       width: min(420px, 100%);
       padding: 24px;
       border: 1px solid var(--line);
@@ -561,13 +564,39 @@
       box-shadow: var(--shadow);
     }
 
+    .protocol-dialog {
+      z-index: 140;
+      align-items: flex-start;
+      overflow: auto;
+    }
+
+    .protocol-card {
+      width: min(760px, 100%);
+      margin: 32px 0;
+    }
+
+    .protocol-card header {
+      display: flex;
+      justify-content: space-between;
+      gap: 18px;
+      align-items: flex-start;
+      margin-bottom: 18px;
+    }
+
+    .protocol-card header p {
+      max-width: 540px;
+      margin: 8px 0 0;
+    }
+
     .install-card h2,
-    .wallet-connect-card h2 {
+    .wallet-connect-card h2,
+    .protocol-card h2 {
       font-size: 30px;
     }
 
     .install-card p,
-    .wallet-connect-card p {
+    .wallet-connect-card p,
+    .protocol-card p {
       color: var(--ink-soft);
     }
 
@@ -579,6 +608,121 @@
 
     .wallet-connect-actions .btn {
       width: 100%;
+    }
+
+    .protocol-close {
+      width: 38px;
+      height: 38px;
+      flex: 0 0 auto;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: #fffaf2;
+      color: var(--ink);
+      cursor: pointer;
+      font-size: 20px;
+      line-height: 1;
+    }
+
+    .protocol-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      margin: 18px 0;
+    }
+
+    .protocol-stat,
+    .tranche-row {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #fbf6ed;
+    }
+
+    .protocol-stat {
+      padding: 14px;
+    }
+
+    .protocol-stat span,
+    .protocol-field label,
+    .tranche-row small {
+      display: block;
+      color: var(--ink-soft);
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .protocol-stat strong {
+      display: block;
+      margin-top: 6px;
+      overflow-wrap: anywhere;
+      color: var(--ink);
+      font-size: 16px;
+    }
+
+    .protocol-form {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 180px;
+      gap: 12px;
+      align-items: end;
+      margin: 18px 0;
+    }
+
+    .protocol-field input,
+    .protocol-field select {
+      width: 100%;
+      min-height: 48px;
+      margin-top: 8px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #fffaf2;
+      color: var(--ink);
+      font: 700 16px/1 var(--sans);
+      padding: 0 13px;
+    }
+
+    .protocol-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin: 16px 0;
+    }
+
+    .protocol-actions .btn {
+      min-width: 150px;
+    }
+
+    .protocol-status {
+      min-height: 22px;
+      margin: 10px 0 0;
+      color: var(--ink-soft);
+      font-weight: 700;
+    }
+
+    .tranche-list {
+      display: grid;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .tranche-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 14px;
+      align-items: center;
+      padding: 14px;
+    }
+
+    .tranche-row strong {
+      display: block;
+      margin: 4px 0;
+      color: var(--ink);
+    }
+
+    .tranche-row .btn {
+      min-height: 40px;
+      padding: 0 14px;
+      font-size: 13px;
     }
 
     .install-steps {
@@ -1020,8 +1164,20 @@
       .audience-detail,
       .builder-copy,
       .contract-stack,
-      .final-cta {
+      .final-cta,
+      .protocol-card {
         padding: 22px;
+      }
+
+      .protocol-grid,
+      .protocol-form,
+      .tranche-row {
+        grid-template-columns: 1fr;
+      }
+
+      .protocol-actions,
+      .protocol-actions .btn {
+        width: 100%;
       }
 
       .mini-grid {
@@ -1072,8 +1228,8 @@
         <div class="hero-actions">
           <button class="btn btn-primary" type="button" data-wallet-connect>Connect Wallet</button>
           <button class="btn btn-mint install-button" type="button" data-install-app hidden>Install App</button>
-          <a class="btn btn-mint" href="/wiki/integration.html">Build with IFR</a>
-          <a class="btn btn-quiet" href="/wiki/contracts.html">View verified contracts</a>
+          <a class="btn btn-mint" href="#builders">Build with IFR</a>
+          <a class="btn btn-quiet" href="#contracts">View verified contracts</a>
         </div>
         <div class="wallet-strip" aria-label="Supported wallet paths">
           <span class="wallet-chip">MetaMask</span>
@@ -1145,12 +1301,12 @@
         </div>
         <div>
           <div class="panel-actions">
-            <a class="btn btn-primary" href="/wiki/commitment-vault.html">Lock IFR</a>
-            <a class="btn btn-mint" href="/wiki/lending-vault.html">Create offer</a>
+            <button class="btn btn-primary" type="button" data-open-lock>Lock IFR</button>
+            <button class="btn btn-mint" type="button" data-open-lending>Create offer</button>
             <button class="btn btn-quiet" type="button" data-add-token>Add IFR to wallet</button>
             <a class="btn btn-quiet" href="https://www.geckoterminal.com/eth/pools/0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0" target="_blank" rel="noopener">Track pool</a>
           </div>
-          <p class="panel-foot">This module reads wallet and lock state directly from Mainnet. Transaction flows stay on their dedicated protocol pages.</p>
+          <p class="panel-foot">This module reads wallet, lock, and lending state from Mainnet. Lock, unlock, and offer actions run directly here on Web3.</p>
         </div>
       </aside>
     </div>
@@ -1288,8 +1444,8 @@
         <div class="hero-actions">
           <button class="btn btn-primary" type="button" data-wallet-connect>Connect Wallet</button>
           <button class="btn btn-mint install-button" type="button" data-install-app hidden>Install App</button>
-          <a class="btn btn-mint" href="/wiki/integration.html">Open builder docs</a>
-          <a class="btn btn-quiet" href="/wiki/contracts.html" style="color:#fff7ec;border-color:rgba(255,247,236,.35)">Verify contracts</a>
+          <a class="btn btn-mint" href="#builders">Open builder layer</a>
+          <a class="btn btn-quiet" href="#contracts" style="color:#fff7ec;border-color:rgba(255,247,236,.35)">Verify contracts</a>
         </div>
       </div>
     </section>
@@ -1333,6 +1489,104 @@
         <button class="btn btn-quiet" type="button" data-wallet-copy>Copy WalletConnect URI</button>
         <button class="btn btn-quiet" type="button" data-wallet-dialog-close>Close</button>
       </div>
+    </div>
+  </div>
+
+  <div class="protocol-dialog" data-lock-dialog aria-hidden="true">
+    <div class="protocol-card" role="dialog" aria-modal="true" aria-labelledby="lock-title">
+      <header>
+        <div>
+          <h2 id="lock-title">Lock IFR</h2>
+          <p>CommitmentVault locks run directly on this Web3 page. Approve IFR if needed, lock into a time-only tranche, and unlock matured tranches from the same wallet session.</p>
+        </div>
+        <button class="protocol-close" type="button" aria-label="Close lock panel" data-lock-close>&times;</button>
+      </header>
+
+      <div class="protocol-grid">
+        <div class="protocol-stat">
+          <span>Wallet IFR</span>
+          <strong data-lock-wallet-balance>Connect</strong>
+        </div>
+        <div class="protocol-stat">
+          <span>Vault locked</span>
+          <strong data-lock-total>Connect</strong>
+        </div>
+        <div class="protocol-stat">
+          <span>Approved</span>
+          <strong data-lock-allowance>Connect</strong>
+        </div>
+      </div>
+
+      <div class="protocol-form">
+        <div class="protocol-field">
+          <label for="lock-amount">Amount</label>
+          <input id="lock-amount" inputmode="decimal" autocomplete="off" placeholder="0.00 IFR" data-lock-amount>
+        </div>
+        <div class="protocol-field">
+          <label for="lock-duration">Duration</label>
+          <select id="lock-duration" data-lock-duration>
+            <option value="30">30 days</option>
+            <option value="90" selected>90 days</option>
+            <option value="180">180 days</option>
+            <option value="365">365 days</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="protocol-actions">
+        <button class="btn btn-quiet" type="button" data-lock-max>Use max</button>
+        <button class="btn btn-mint" type="button" data-lock-refresh>Refresh</button>
+        <button class="btn btn-primary" type="button" data-lock-submit>Approve / Lock</button>
+      </div>
+      <p class="protocol-status" data-lock-status>Connect a wallet to load your vault state.</p>
+
+      <div class="tranche-list" data-lock-tranches></div>
+    </div>
+  </div>
+
+  <div class="protocol-dialog" data-lending-dialog aria-hidden="true">
+    <div class="protocol-card" role="dialog" aria-modal="true" aria-labelledby="lending-title">
+      <header>
+        <div>
+          <h2 id="lending-title">Create offer</h2>
+          <p>LendingVault offer actions run directly here. Deposit IFR as available lending liquidity or withdraw unlent IFR from an active offer.</p>
+        </div>
+        <button class="protocol-close" type="button" aria-label="Close lending panel" data-lending-close>&times;</button>
+      </header>
+
+      <div class="protocol-grid">
+        <div class="protocol-stat">
+          <span>Wallet IFR</span>
+          <strong data-lending-wallet-balance>Connect</strong>
+        </div>
+        <div class="protocol-stat">
+          <span>Available offer</span>
+          <strong data-lending-available>Connect</strong>
+        </div>
+        <div class="protocol-stat">
+          <span>Lent out</span>
+          <strong data-lending-lent>Connect</strong>
+        </div>
+      </div>
+
+      <div class="protocol-form">
+        <div class="protocol-field">
+          <label for="lending-amount">Amount</label>
+          <input id="lending-amount" inputmode="decimal" autocomplete="off" placeholder="0.00 IFR" data-lending-amount>
+        </div>
+        <div class="protocol-field">
+          <label>Current status</label>
+          <input readonly value="Lender offer" data-lending-mode>
+        </div>
+      </div>
+
+      <div class="protocol-actions">
+        <button class="btn btn-quiet" type="button" data-lending-max>Use max</button>
+        <button class="btn btn-mint" type="button" data-lending-refresh>Refresh</button>
+        <button class="btn btn-primary" type="button" data-lending-deposit>Approve / Deposit</button>
+        <button class="btn btn-quiet" type="button" data-lending-withdraw>Withdraw</button>
+      </div>
+      <p class="protocol-status" data-lending-status>Connect a wallet to load your lending state.</p>
     </div>
   </div>
 
@@ -1412,10 +1666,63 @@
       const walletTrust = document.querySelector("[data-wallet-trust]");
       const walletCoinbase = document.querySelector("[data-wallet-coinbase]");
       const walletCopy = document.querySelector("[data-wallet-copy]");
+      const openLockButtons = document.querySelectorAll("[data-open-lock]");
+      const lockDialog = document.querySelector("[data-lock-dialog]");
+      const lockClose = document.querySelector("[data-lock-close]");
+      const lockAmount = document.querySelector("[data-lock-amount]");
+      const lockDuration = document.querySelector("[data-lock-duration]");
+      const lockWalletBalance = document.querySelector("[data-lock-wallet-balance]");
+      const lockTotal = document.querySelector("[data-lock-total]");
+      const lockAllowance = document.querySelector("[data-lock-allowance]");
+      const lockStatus = document.querySelector("[data-lock-status]");
+      const lockTranches = document.querySelector("[data-lock-tranches]");
+      const lockMax = document.querySelector("[data-lock-max]");
+      const lockRefresh = document.querySelector("[data-lock-refresh]");
+      const lockSubmit = document.querySelector("[data-lock-submit]");
+      const openLendingButtons = document.querySelectorAll("[data-open-lending]");
+      const lendingDialog = document.querySelector("[data-lending-dialog]");
+      const lendingClose = document.querySelector("[data-lending-close]");
+      const lendingAmount = document.querySelector("[data-lending-amount]");
+      const lendingWalletBalance = document.querySelector("[data-lending-wallet-balance]");
+      const lendingAvailable = document.querySelector("[data-lending-available]");
+      const lendingLent = document.querySelector("[data-lending-lent]");
+      const lendingMode = document.querySelector("[data-lending-mode]");
+      const lendingStatus = document.querySelector("[data-lending-status]");
+      const lendingMax = document.querySelector("[data-lending-max]");
+      const lendingRefresh = document.querySelector("[data-lending-refresh]");
+      const lendingDeposit = document.querySelector("[data-lending-deposit]");
+      const lendingWithdraw = document.querySelector("[data-lending-withdraw]");
       let deferredInstallPrompt = null;
       let walletConnectUri = "";
+      let currentLockState = null;
+      let currentLendingState = null;
       const web3Url = "https://web3.ifrunit.tech/";
       const encodedWeb3Url = encodeURIComponent(web3Url);
+      const IFR_TOKEN_ADDRESS = "0x77e99917Eca8539c62F509ED1193ac36580A6e7B";
+      const COMMITMENT_VAULT_ADDRESS = "0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3";
+      const LENDING_VAULT_ADDRESS = "0x974305Ab0EC905172e697271C3d7d385194EB9DF";
+      const IFR_DECIMALS = 9;
+      const TOKEN_ABI = [
+        "function balanceOf(address) view returns (uint256)",
+        "function allowance(address,address) view returns (uint256)",
+        "function approve(address,uint256) returns (bool)"
+      ];
+      const COMMITMENT_ABI = [
+        "function lock(uint256,uint8,uint256,uint256) external",
+        "function unlock(address,uint256) external",
+        "function lockedBalance(address) view returns (uint256)",
+        "function getTrancheCount(address) view returns (uint256)",
+        "function getTranche(address,uint256) view returns (tuple(uint256 amount,uint8 cType,uint256 unlockTime,uint256 p0Multiplier,bool unlocked,uint256 conditionMetAt))",
+        "function isConditionMet(address,uint256) view returns (bool)"
+      ];
+      const LENDING_ABI = [
+        "function createOffer(uint256) external",
+        "function increaseOffer(uint256) external",
+        "function withdrawOffer(uint256) external",
+        "function hasOffer(address) view returns (bool)",
+        "function lenderOfferIndex(address) view returns (uint256)",
+        "function getOffer(uint256) view returns (tuple(address lender,uint256 availableIFR,uint256 lentIFR,bool active))"
+      ];
 
       function shortAddress(address) {
         if (!address) return "Not connected";
@@ -1461,6 +1768,252 @@
         walletDialog.setAttribute("aria-hidden", "true");
       }
 
+      function formatIFR(value) {
+        if (!window.ethers || value == null) return "0 IFR";
+        const formatted = ethers.utils.formatUnits(value, IFR_DECIMALS);
+        const numeric = Number(formatted);
+        if (!Number.isFinite(numeric)) return `${formatted} IFR`;
+        return `${numeric.toLocaleString(undefined, { maximumFractionDigits: 4 })} IFR`;
+      }
+
+      function parseIFRInput(input) {
+        const clean = String(input || "").replace(",", ".").trim();
+        if (!clean || Number(clean) <= 0) throw new Error("Enter an IFR amount greater than zero.");
+        return ethers.utils.parseUnits(clean, IFR_DECIMALS);
+      }
+
+      function openProtocolDialog(dialog) {
+        if (!dialog) return;
+        dialog.classList.add("is-open");
+        dialog.setAttribute("aria-hidden", "false");
+      }
+
+      function closeProtocolDialog(dialog) {
+        if (!dialog) return;
+        dialog.classList.remove("is-open");
+        dialog.setAttribute("aria-hidden", "true");
+      }
+
+      async function ensureWalletReady(label) {
+        if (!window.ethers || !window.IFRWallet || !window.IFRState) {
+          throw new Error("Wallet scripts are not ready yet.");
+        }
+
+        if (IFRWallet.isConnected()) return IFRWallet.getAddress();
+
+        const isMobileConnect = IFRWallet.isMobileOrTablet && IFRWallet.isMobileOrTablet();
+        if (isMobileConnect) openWalletDialog(IFRWallet.getWalletConnectUri && IFRWallet.getWalletConnectUri());
+        setWalletLoading(true);
+        walletState.textContent = label || (isMobileConnect ? "Open wallet" : "Connecting");
+        const connectWatchdog = window.setTimeout(() => {
+          if (window.IFRWallet && !IFRWallet.isConnected()) {
+            walletState.textContent = isMobileConnect ? "Approve in wallet" : "Check wallet";
+            if (isMobileConnect) openWalletDialog(IFRWallet.getWalletConnectUri && IFRWallet.getWalletConnectUri());
+            setWalletLoading(false);
+          }
+        }, isMobileConnect ? 12000 : 8000);
+
+        try {
+          const address = await IFRWallet.connect();
+          const state = await IFRState.load(address);
+          renderState(state);
+          closeWalletDialog();
+          return address;
+        } finally {
+          window.clearTimeout(connectWatchdog);
+          setWalletLoading(false);
+        }
+      }
+
+      function getContracts(signerOrProvider) {
+        return {
+          token: new ethers.Contract(IFR_TOKEN_ADDRESS, TOKEN_ABI, signerOrProvider),
+          commitment: new ethers.Contract(COMMITMENT_VAULT_ADDRESS, COMMITMENT_ABI, signerOrProvider),
+          lending: new ethers.Contract(LENDING_VAULT_ADDRESS, LENDING_ABI, signerOrProvider)
+        };
+      }
+
+      async function refreshWalletState() {
+        if (!window.IFRState || !window.IFRWallet || !IFRWallet.isConnected()) return;
+        const state = await IFRState.load(IFRWallet.getAddress());
+        renderState(state);
+      }
+
+      async function loadCommitmentSummary(address) {
+        if (!address || !window.ethers || !window.IFRWallet || !IFRWallet.getProvider()) return;
+        const { commitment } = getContracts(IFRWallet.getProvider());
+        const locked = await commitment.lockedBalance(address);
+        lockedBalance.textContent = formatIFR(locked);
+        accessTier.textContent = locked.gte(ethers.utils.parseUnits("1000", IFR_DECIMALS)) ? "Premium ready" : "Lock needed";
+      }
+
+      async function loadLockPanel() {
+        const address = await ensureWalletReady("Loading lock");
+        const provider = IFRWallet.getProvider();
+        const { token, commitment } = getContracts(provider);
+        lockStatus.textContent = "Reading CommitmentVault...";
+
+        const [balance, allowance, locked, count] = await Promise.all([
+          token.balanceOf(address),
+          token.allowance(address, COMMITMENT_VAULT_ADDRESS),
+          commitment.lockedBalance(address),
+          commitment.getTrancheCount(address)
+        ]);
+
+        const totalTranches = count.toNumber();
+        const trancheReads = [];
+        for (let i = 0; i < totalTranches; i++) {
+          trancheReads.push(Promise.all([
+            commitment.getTranche(address, i),
+            commitment.isConditionMet(address, i).catch(() => false)
+          ]).then(([tranche, conditionMet]) => ({ id: i, tranche, conditionMet })));
+        }
+
+        const tranches = await Promise.all(trancheReads);
+        currentLockState = { address, balance, allowance, locked, tranches };
+        lockWalletBalance.textContent = formatIFR(balance);
+        lockTotal.textContent = formatIFR(locked);
+        lockAllowance.textContent = formatIFR(allowance);
+        lockedBalance.textContent = formatIFR(locked);
+        accessTier.textContent = locked.gte(ethers.utils.parseUnits("1000", IFR_DECIMALS)) ? "Premium ready" : "Lock needed";
+        renderTranches(tranches);
+        lockStatus.textContent = tranches.length ? "Vault state loaded." : "No CommitmentVault tranches yet.";
+      }
+
+      function renderTranches(tranches) {
+        if (!lockTranches) return;
+        const active = tranches.filter((item) => !item.tranche.unlocked);
+        if (!active.length) {
+          lockTranches.innerHTML = '<div class="tranche-row"><div><small>Tranches</small><strong>No active locks</strong><span>New locks will appear here after confirmation.</span></div></div>';
+          return;
+        }
+
+        lockTranches.innerHTML = active.map((item) => {
+          const unlockDate = new Date(item.tranche.unlockTime.toNumber() * 1000);
+          const canUnlock = Boolean(item.conditionMet);
+          return `
+            <div class="tranche-row">
+              <div>
+                <small>Tranche #${item.id} · ${canUnlock ? "Unlockable" : "Time locked"}</small>
+                <strong>${formatIFR(item.tranche.amount)}</strong>
+                <span>Unlock time: ${unlockDate.toLocaleString()}</span>
+              </div>
+              <button class="btn ${canUnlock ? "btn-primary" : "btn-quiet"}" type="button" data-unlock-tranche="${item.id}" ${canUnlock ? "" : "disabled"}>${canUnlock ? "Unlock" : "Locked"}</button>
+            </div>
+          `;
+        }).join("");
+      }
+
+      async function lockIFR() {
+        const address = await ensureWalletReady("Preparing lock");
+        const signer = IFRWallet.getSigner();
+        const { token, commitment } = getContracts(signer);
+        const amount = parseIFRInput(lockAmount.value);
+        const days = Number(lockDuration.value || 90);
+        const unlockTime = Math.floor(Date.now() / 1000) + (days * 24 * 60 * 60);
+
+        lockSubmit.disabled = true;
+        lockStatus.textContent = "Checking token allowance...";
+        const allowance = await token.allowance(address, COMMITMENT_VAULT_ADDRESS);
+
+        if (allowance.lt(amount)) {
+          lockStatus.textContent = "Approve IFR in your wallet, then keep this page open.";
+          const approveTx = await token.approve(COMMITMENT_VAULT_ADDRESS, amount);
+          lockStatus.textContent = "Waiting for approval confirmation...";
+          await approveTx.wait();
+        }
+
+        lockStatus.textContent = "Confirm the lock transaction in your wallet.";
+        const lockTx = await commitment.lock(amount, 0, unlockTime, 0);
+        lockStatus.textContent = "Waiting for lock confirmation...";
+        await lockTx.wait();
+        lockAmount.value = "";
+        lockStatus.textContent = "Lock confirmed.";
+        await Promise.all([loadLockPanel(), refreshWalletState()]);
+      }
+
+      async function unlockTranche(trancheId) {
+        const address = await ensureWalletReady("Preparing unlock");
+        const signer = IFRWallet.getSigner();
+        const { commitment } = getContracts(signer);
+        lockStatus.textContent = `Confirm unlock for tranche #${trancheId}.`;
+        const tx = await commitment.unlock(address, trancheId);
+        lockStatus.textContent = "Waiting for unlock confirmation...";
+        await tx.wait();
+        lockStatus.textContent = "Unlock confirmed.";
+        await Promise.all([loadLockPanel(), refreshWalletState()]);
+      }
+
+      async function loadLendingPanel() {
+        const address = await ensureWalletReady("Loading lending");
+        const provider = IFRWallet.getProvider();
+        const { token, lending } = getContracts(provider);
+        lendingStatus.textContent = "Reading LendingVault...";
+
+        const [balance, hasOffer] = await Promise.all([
+          token.balanceOf(address),
+          lending.hasOffer(address)
+        ]);
+
+        let offer = null;
+        let offerId = null;
+        if (hasOffer) {
+          offerId = await lending.lenderOfferIndex(address);
+          offer = await lending.getOffer(offerId);
+        }
+
+        currentLendingState = { address, balance, hasOffer, offer, offerId };
+        lendingWalletBalance.textContent = formatIFR(balance);
+        lendingAvailable.textContent = offer ? formatIFR(offer.availableIFR) : "0 IFR";
+        lendingLent.textContent = offer ? formatIFR(offer.lentIFR) : "0 IFR";
+        lendingMode.value = offer ? (offer.active ? `Offer #${offerId.toString()} active` : `Offer #${offerId.toString()} closed`) : "No offer yet";
+        lendingWithdraw.disabled = !offer || !offer.active || offer.availableIFR.isZero();
+        lendingDeposit.disabled = Boolean(offer && !offer.active);
+        lendingStatus.textContent = offer ? "Lending offer loaded." : "No LendingVault offer yet.";
+      }
+
+      async function depositLendingIFR() {
+        const address = await ensureWalletReady("Preparing offer");
+        const signer = IFRWallet.getSigner();
+        const { token, lending } = getContracts(signer);
+        const amount = parseIFRInput(lendingAmount.value);
+
+        lendingDeposit.disabled = true;
+        lendingStatus.textContent = "Checking token allowance...";
+        const allowance = await token.allowance(address, LENDING_VAULT_ADDRESS);
+
+        if (allowance.lt(amount)) {
+          lendingStatus.textContent = "Approve IFR in your wallet, then keep this page open.";
+          const approveTx = await token.approve(LENDING_VAULT_ADDRESS, amount);
+          lendingStatus.textContent = "Waiting for approval confirmation...";
+          await approveTx.wait();
+        }
+
+        const hasOffer = currentLendingState && currentLendingState.hasOffer;
+        lendingStatus.textContent = hasOffer ? "Confirm increase offer transaction." : "Confirm create offer transaction.";
+        const tx = hasOffer ? await lending.increaseOffer(amount) : await lending.createOffer(amount);
+        lendingStatus.textContent = "Waiting for lending confirmation...";
+        await tx.wait();
+        lendingAmount.value = "";
+        lendingStatus.textContent = "Lending offer confirmed.";
+        await Promise.all([loadLendingPanel(), refreshWalletState()]);
+      }
+
+      async function withdrawLendingIFR() {
+        await ensureWalletReady("Preparing withdraw");
+        const signer = IFRWallet.getSigner();
+        const { lending } = getContracts(signer);
+        const amount = parseIFRInput(lendingAmount.value);
+        lendingWithdraw.disabled = true;
+        lendingStatus.textContent = "Confirm withdraw transaction in your wallet.";
+        const tx = await lending.withdrawOffer(amount);
+        lendingStatus.textContent = "Waiting for withdraw confirmation...";
+        await tx.wait();
+        lendingAmount.value = "";
+        lendingStatus.textContent = "Withdraw confirmed.";
+        await Promise.all([loadLendingPanel(), refreshWalletState()]);
+      }
+
       function renderState(state) {
         if (!state) return;
         if (state.address) {
@@ -1469,6 +2022,7 @@
           ifrBalance.textContent = state.ifrBalanceFormatted ? `${state.ifrBalanceFormatted} IFR` : "0 IFR";
           lockedBalance.textContent = state.lockedFormatted ? `${state.lockedFormatted} IFR` : "0 IFR";
           accessTier.textContent = state.isLocked1000 ? "Premium ready" : "Lock needed";
+          loadCommitmentSummary(state.address).catch(() => null);
         } else {
           walletAddress.textContent = "Not connected";
           walletState.textContent = "Ready";
@@ -1578,6 +2132,114 @@
           walletState.textContent = "Token added";
         } catch (error) {
           walletState.textContent = "Token add failed";
+        }
+      });
+
+      openLockButtons.forEach((button) => {
+        button.addEventListener("click", async () => {
+          openProtocolDialog(lockDialog);
+          try {
+            await loadLockPanel();
+          } catch (error) {
+            lockStatus.textContent = error && error.message ? error.message : "Lock panel could not load.";
+          }
+        });
+      });
+
+      lockClose.addEventListener("click", () => closeProtocolDialog(lockDialog));
+      lockDialog.addEventListener("click", (event) => {
+        if (event.target === lockDialog) closeProtocolDialog(lockDialog);
+      });
+      lockRefresh.addEventListener("click", async () => {
+        try {
+          await loadLockPanel();
+        } catch (error) {
+          lockStatus.textContent = error && error.message ? error.message : "Refresh failed.";
+        }
+      });
+      lockMax.addEventListener("click", () => {
+        if (!currentLockState || !currentLockState.balance) return;
+        lockAmount.value = ethers.utils.formatUnits(currentLockState.balance, IFR_DECIMALS);
+      });
+      lockSubmit.addEventListener("click", async () => {
+        try {
+          await lockIFR();
+        } catch (error) {
+          if (error && (error.code === 4001 || error.code === "ACTION_REJECTED")) {
+            lockStatus.textContent = "Transaction rejected in wallet.";
+          } else {
+            lockStatus.textContent = error && error.message ? error.message : "Lock failed.";
+          }
+        } finally {
+          lockSubmit.disabled = false;
+        }
+      });
+      lockTranches.addEventListener("click", async (event) => {
+        const button = event.target.closest("[data-unlock-tranche]");
+        if (!button || button.disabled) return;
+        button.disabled = true;
+        try {
+          await unlockTranche(Number(button.dataset.unlockTranche));
+        } catch (error) {
+          if (error && (error.code === 4001 || error.code === "ACTION_REJECTED")) {
+            lockStatus.textContent = "Unlock rejected in wallet.";
+          } else {
+            lockStatus.textContent = error && error.message ? error.message : "Unlock failed.";
+          }
+          button.disabled = false;
+        }
+      });
+
+      openLendingButtons.forEach((button) => {
+        button.addEventListener("click", async () => {
+          openProtocolDialog(lendingDialog);
+          try {
+            await loadLendingPanel();
+          } catch (error) {
+            lendingStatus.textContent = error && error.message ? error.message : "Lending panel could not load.";
+          }
+        });
+      });
+
+      lendingClose.addEventListener("click", () => closeProtocolDialog(lendingDialog));
+      lendingDialog.addEventListener("click", (event) => {
+        if (event.target === lendingDialog) closeProtocolDialog(lendingDialog);
+      });
+      lendingRefresh.addEventListener("click", async () => {
+        try {
+          await loadLendingPanel();
+        } catch (error) {
+          lendingStatus.textContent = error && error.message ? error.message : "Refresh failed.";
+        }
+      });
+      lendingMax.addEventListener("click", () => {
+        if (!currentLendingState || !currentLendingState.balance) return;
+        lendingAmount.value = ethers.utils.formatUnits(currentLendingState.balance, IFR_DECIMALS);
+      });
+      lendingDeposit.addEventListener("click", async () => {
+        try {
+          await depositLendingIFR();
+        } catch (error) {
+          if (error && (error.code === 4001 || error.code === "ACTION_REJECTED")) {
+            lendingStatus.textContent = "Transaction rejected in wallet.";
+          } else {
+            lendingStatus.textContent = error && error.message ? error.message : "Deposit failed.";
+          }
+        } finally {
+          lendingDeposit.disabled = false;
+        }
+      });
+      lendingWithdraw.addEventListener("click", async () => {
+        try {
+          await withdrawLendingIFR();
+        } catch (error) {
+          if (error && (error.code === 4001 || error.code === "ACTION_REJECTED")) {
+            lendingStatus.textContent = "Withdraw rejected in wallet.";
+          } else {
+            lendingStatus.textContent = error && error.message ? error.message : "Withdraw failed.";
+          }
+        } finally {
+          lendingWithdraw.disabled = false;
         }
       });
 
