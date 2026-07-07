@@ -400,6 +400,42 @@ nav #connect {
   letter-spacing: .02em !important;
 }
 
+.template-hero .hero-ledger-stack {
+  display: flex !important;
+  flex-direction: column !important;
+  align-self: start !important;
+  justify-self: stretch !important;
+  gap: 18px !important;
+  margin-top: 34px !important;
+}
+
+.template-hero .hero-web3-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  align-self: flex-start !important;
+  min-height: 46px !important;
+  padding: 12px 22px !important;
+  border: 1px solid rgba(47, 106, 69, .42) !important;
+  border-radius: 4px !important;
+  background: #2F6A45 !important;
+  color: #fff !important;
+  box-shadow: 0 10px 24px rgba(47, 106, 69, .18), inset 0 1px 0 rgba(255, 255, 255, .18) !important;
+  font-family: "IBM Plex Mono", "SF Mono", Menlo, monospace !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  line-height: 1 !important;
+  letter-spacing: 1.6px !important;
+  text-decoration: none !important;
+  transition: transform .2s ease, background .2s ease, box-shadow .2s ease !important;
+}
+
+.template-hero .hero-web3-btn:hover {
+  background: #285b3b !important;
+  box-shadow: 0 12px 28px rgba(47, 106, 69, .24), inset 0 1px 0 rgba(255, 255, 255, .22) !important;
+  transform: translateY(-1px) !important;
+}
+
 .template-hero .ledger {
   display: block !important;
   width: 100% !important;
@@ -659,6 +695,17 @@ nav #connect {
     margin-bottom: 0 !important;
     padding-right: 64px !important;
     font-size: 13px !important;
+  }
+
+  .template-hero .hero-ledger-stack {
+    align-items: flex-start !important;
+    gap: 0 !important;
+    margin-top: 22px !important;
+  }
+
+  .template-hero .hero-web3-btn {
+    min-height: 44px !important;
+    padding: 12px 20px !important;
   }
 
   .template-hero .hero-actions,
