@@ -6,7 +6,7 @@
   <link rel="alternate" hreflang="en" href="https://ifrunit.tech/wiki/tokenomics.html">
   <link rel="alternate" hreflang="x-default" href="https://ifrunit.tech/wiki/tokenomics.html">>  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="version" content="2026-02-26">
-  <title>Tokenomics Deep Dive &mdash; Inferno ($IFR) Documentation</title>
+  <title>Tokenomics Deep Dive &mdash; Inferno (IFR) Documentation</title>
   <meta name="keywords" content="tokenomics, token supply, burn rate, fee structure, deflationary">
   <meta name="description" content="1B fixed supply, 9 decimals, 3.5% fee-on-transfer (2.5% burn + 1% pool). Deflationary by design — no mint function exists.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -537,12 +537,12 @@
   <meta property="og:locale" content="en_US">
   <meta property="og:type" content="article">
   <meta property="og:site_name" content="Inferno Protocol">
-  <meta property="og:title" content="Tokenomics Deep Dive — Inferno Protocol ($IFR)">
+  <meta property="og:title" content="Tokenomics Deep Dive — Inferno Protocol (IFR)">
   <meta property="og:description" content="1B fixed supply, 9 decimals, 3.5% fee-on-transfer (2.5% burn + 1% pool). Deflationary by design — no mint function.">
   <meta property="og:url" content="https://ifrunit.tech/wiki/tokenomics.html">
   <meta property="og:image" content="https://ifrunit.tech/assets/ifr_icon_256.png">
   <meta name="twitter:card" content="summary">
-  <meta name="twitter:title" content="Tokenomics Deep Dive — Inferno Protocol ($IFR)">
+  <meta name="twitter:title" content="Tokenomics Deep Dive — Inferno Protocol (IFR)">
   <meta name="twitter:description" content="1B fixed supply, 3.5% fee-on-transfer. Deflationary ERC-20 — no mint function.">
   <meta name="twitter:site" content="@IFRtoken">
   <meta name="twitter:image" content="https://ifrunit.tech/assets/ifr_icon_256.png">  <script type="application/ld+json">
@@ -701,7 +701,7 @@
 
       <h1>Tokenomics <span class="accent">Deep Dive</span></h1>
       <p class="subtitle">
-        Complete breakdown of $IFR fee mechanics, deflation model, token allocation, fair launch design, and fee-exempt addresses.
+        Complete breakdown of IFR fee mechanics, deflation model, token allocation, fair launch design, and fee-exempt addresses.
       </p>
 
       <!-- Quick stats -->
@@ -729,7 +729,7 @@
            ============================================================ -->
       <h2 id="fee-mechanics">1. Fee-on-Transfer Mechanics</h2>
       <p>
-        Every standard ERC-20 transfer of $IFR triggers an automatic fee mechanism built directly into the token's <code>_update</code> function. This is not an external router or wrapper &mdash; the fee logic lives inside the token contract itself, making it impossible to bypass on any DEX or wallet transfer.
+        Every standard ERC-20 transfer of IFR triggers an automatic fee mechanism built directly into the token's <code>_update</code> function. This is not an external router or wrapper &mdash; the fee logic lives inside the token contract itself, making it impossible to bypass on any DEX or wallet transfer.
       </p>
       <p>
         Fees are only applied on <strong>normal transfers</strong> between non-exempt addresses. Minting (from <code>address(0)</code>) and burning (to <code>address(0)</code>) are excluded. If either the sender or the recipient is marked as <code>feeExempt</code>, the entire fee is waived.
@@ -1518,7 +1518,7 @@ if (from != address(0) && to != address(0)
 
       <!-- Footer -->
       <footer class="wiki-footer">
-        Inferno ($IFR) &mdash; Community Fair Launch Model &mdash; Documentation v1.0
+        Inferno (IFR) &mdash; Community Fair Launch Model &mdash; Documentation v1.0
       </footer>
 
     </main>
