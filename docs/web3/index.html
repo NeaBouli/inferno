@@ -1,0 +1,1431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IFR Web3 Access Layer | Inferno Protocol</title>
+  <meta name="description" content="IFR Protocol Web3 access layer. Lock IFR to unlock product access, verify on-chain status, and let builders earn from real usage.">
+  <meta name="robots" content="index, follow">
+  <meta name="theme-color" content="#f6f0e6">
+  <link rel="canonical" href="https://web3.ifrunit.tech/">
+  <link rel="icon" type="image/png" href="/assets/ifr_icon_64.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net">
+  <link rel="dns-prefetch" href="https://eth.llamarpc.com">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+  <script src="/assets/wallet-core.js"></script>
+  <script src="/assets/ifr-state.js"></script>
+  <style>
+    :root {
+      --paper: #f8f3ea;
+      --paper-2: #efe7da;
+      --paper-3: #fffaf1;
+      --ink: #211c17;
+      --ink-soft: #5f554a;
+      --muted: #827668;
+      --line: #ddd1bf;
+      --line-strong: #cabba4;
+      --ember: #b4481f;
+      --ember-deep: #83300f;
+      --ember-soft: #f4ded0;
+      --mint: #2f7354;
+      --mint-soft: #dceae0;
+      --gold: #b57a28;
+      --graphite: #171b18;
+      --graphite-2: #242922;
+      --white: #fffdf8;
+      --radius: 8px;
+      --shadow: 0 18px 50px rgba(44, 35, 24, 0.12);
+      --serif: "Newsreader", Georgia, "Times New Roman", serif;
+      --sans: "IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --mono: "IBM Plex Mono", "SF Mono", Menlo, Consolas, monospace;
+    }
+
+    * { box-sizing: border-box; }
+
+    html {
+      background: var(--paper);
+      color: var(--ink);
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      min-width: 320px;
+      font-family: var(--sans);
+      background:
+        linear-gradient(180deg, rgba(248, 243, 234, 0.98), rgba(239, 231, 218, 0.96)),
+        radial-gradient(circle at 18% 12%, rgba(180, 72, 31, 0.1), transparent 30%),
+        radial-gradient(circle at 82% 18%, rgba(47, 115, 84, 0.11), transparent 32%);
+      color: var(--ink);
+      line-height: 1.55;
+      overflow-x: clip;
+      text-rendering: optimizeLegibility;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    a {
+      color: inherit;
+      text-underline-offset: 3px;
+    }
+
+    button,
+    input,
+    select {
+      font: inherit;
+    }
+
+    .shell {
+      width: min(1180px, calc(100% - 40px));
+      margin: 0 auto;
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: color-mix(in srgb, var(--paper) 86%, transparent);
+      border-bottom: 1px solid var(--line);
+      backdrop-filter: blur(16px);
+    }
+
+    .nav {
+      min-height: 68px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 22px;
+      padding: 0;
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      color: var(--ink);
+      text-decoration: none;
+      white-space: nowrap;
+      flex: 0 0 auto;
+    }
+
+    .brand img {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      box-shadow: 0 0 0 1px rgba(180, 72, 31, 0.25);
+    }
+
+    .brand-name {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+    }
+
+    .brand-main {
+      font-weight: 700;
+      font-size: 15px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .brand-token {
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 22px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      min-width: 0;
+    }
+
+    .nav-links a {
+      display: block;
+      color: var(--ink-soft);
+      text-decoration: none;
+      font-size: 14px;
+      white-space: nowrap;
+    }
+
+    .nav-links a:hover,
+    .nav-links a:focus-visible {
+      color: var(--ink);
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex: 0 0 auto;
+    }
+
+    .btn {
+      min-height: 44px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 9px;
+      padding: 10px 16px;
+      border: 1px solid transparent;
+      border-radius: 5px;
+      color: var(--ink);
+      background: var(--paper-3);
+      text-decoration: none;
+      cursor: pointer;
+      transition: transform 160ms ease, background 160ms ease, border-color 160ms ease, color 160ms ease;
+      white-space: nowrap;
+    }
+
+    .btn:hover,
+    .btn:focus-visible {
+      transform: translateY(-1px);
+    }
+
+    .btn-primary {
+      background: var(--ember);
+      color: #fff;
+      border-color: var(--ember);
+    }
+
+    .btn-primary:hover,
+    .btn-primary:focus-visible {
+      background: var(--ember-deep);
+      border-color: var(--ember-deep);
+    }
+
+    .btn-quiet {
+      border-color: var(--line-strong);
+      background: transparent;
+      color: var(--ink);
+    }
+
+    .btn-mint {
+      border-color: color-mix(in srgb, var(--mint) 35%, var(--line));
+      background: var(--mint-soft);
+      color: #244f3c;
+    }
+
+    .hero {
+      position: relative;
+      min-height: calc(100svh - 68px);
+      overflow: hidden;
+      background:
+        linear-gradient(90deg, rgba(23, 27, 24, 0.97) 0%, rgba(31, 36, 31, 0.92) 48%, rgba(248, 243, 234, 0.08) 100%),
+        var(--graphite);
+      color: #f7efe3;
+      isolation: isolate;
+    }
+
+    .hero-canvas {
+      position: absolute;
+      inset: 0;
+      z-index: -2;
+      width: 100%;
+      height: 100%;
+      display: block;
+      background: var(--graphite);
+    }
+
+    .hero::after {
+      content: "";
+      position: absolute;
+      inset: auto 0 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(244, 222, 208, 0.5), transparent);
+      z-index: 1;
+    }
+
+    .hero-grid {
+      min-height: calc(100svh - 68px);
+      display: grid;
+      grid-template-columns: minmax(0, 1.05fr) minmax(320px, 0.7fr);
+      gap: 48px;
+      align-items: center;
+      padding: 66px 0 54px;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 24px;
+      color: #d8cbbc;
+      font-family: var(--mono);
+      font-size: 12px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .pulse {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: #4ca174;
+      box-shadow: 0 0 0 6px rgba(76, 161, 116, 0.15);
+    }
+
+    h1,
+    h2,
+    h3 {
+      margin: 0;
+      letter-spacing: 0;
+      line-height: 1.08;
+    }
+
+    h1,
+    h2 {
+      font-family: var(--serif);
+      font-weight: 600;
+    }
+
+    h1 {
+      max-width: 790px;
+      color: #fff8ee;
+      font-size: clamp(48px, 7.2vw, 104px);
+    }
+
+    h1 span {
+      color: #f2b27c;
+      font-style: italic;
+    }
+
+    .hero-copy {
+      max-width: 670px;
+      margin: 28px 0 0;
+      color: #dacfc0;
+      font-size: clamp(18px, 2vw, 22px);
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 32px;
+    }
+
+    .hero .hero-actions .btn-quiet {
+      color: #fff7ec;
+      border-color: rgba(255, 247, 236, 0.36);
+      background: rgba(255, 247, 236, 0.04);
+    }
+
+    .hero .hero-actions .btn-quiet:hover,
+    .hero .hero-actions .btn-quiet:focus-visible {
+      background: rgba(255, 247, 236, 0.1);
+      border-color: rgba(255, 247, 236, 0.56);
+    }
+
+    .trust-row {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(120px, 1fr));
+      gap: 1px;
+      margin-top: 42px;
+      max-width: 760px;
+      border: 1px solid rgba(239, 231, 218, 0.22);
+      background: rgba(239, 231, 218, 0.16);
+    }
+
+    .trust-pill {
+      min-height: 88px;
+      padding: 15px;
+      background: rgba(248, 243, 234, 0.08);
+      backdrop-filter: blur(10px);
+    }
+
+    .trust-label {
+      display: block;
+      color: #b8aa98;
+      font-family: var(--mono);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    .trust-value {
+      display: block;
+      margin-top: 8px;
+      color: #fff4e8;
+      font-weight: 700;
+      font-size: 16px;
+    }
+
+    .access-panel {
+      align-self: stretch;
+      min-height: 560px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 22px;
+      border: 1px solid rgba(239, 231, 218, 0.24);
+      border-radius: var(--radius);
+      background:
+        linear-gradient(180deg, rgba(255, 250, 241, 0.91), rgba(239, 231, 218, 0.86)),
+        rgba(255, 250, 241, 0.88);
+      color: var(--ink);
+      box-shadow: 0 26px 90px rgba(0, 0, 0, 0.26);
+    }
+
+    .panel-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 18px;
+    }
+
+    .panel-kicker {
+      margin: 0 0 8px;
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--ember);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .panel-title {
+      font-size: 28px;
+      font-family: var(--serif);
+      line-height: 1.1;
+    }
+
+    .network-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 9px;
+      border: 1px solid rgba(47, 115, 84, 0.28);
+      border-radius: 999px;
+      background: rgba(220, 234, 224, 0.75);
+      color: #24513c;
+      font-family: var(--mono);
+      font-size: 11px;
+      white-space: nowrap;
+    }
+
+    .status-stack {
+      display: grid;
+      gap: 12px;
+      margin: 22px 0;
+    }
+
+    .status-card {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(255, 253, 248, 0.82);
+    }
+
+    .status-label {
+      margin: 0;
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .status-value {
+      margin-top: 6px;
+      font-size: 22px;
+      font-weight: 700;
+      word-break: break-word;
+    }
+
+    .status-note {
+      align-self: end;
+      color: var(--mint);
+      font-size: 13px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .panel-actions {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .panel-actions .btn {
+      width: 100%;
+    }
+
+    .panel-foot {
+      margin: 18px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    main {
+      background: var(--paper);
+    }
+
+    .section {
+      padding: 86px 0;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .section-head {
+      display: grid;
+      grid-template-columns: minmax(0, 0.8fr) minmax(280px, 0.52fr);
+      gap: 36px;
+      align-items: end;
+      margin-bottom: 34px;
+    }
+
+    .label {
+      margin: 0 0 12px;
+      color: var(--ember);
+      font-family: var(--mono);
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    h2 {
+      color: var(--ink);
+      font-size: clamp(34px, 5vw, 66px);
+    }
+
+    .lead {
+      margin: 0;
+      color: var(--ink-soft);
+      font-size: 18px;
+    }
+
+    .audience-tabs {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 1px;
+      border: 1px solid var(--line);
+      background: var(--line);
+    }
+
+    .audience-tab {
+      min-height: 68px;
+      border: 0;
+      border-radius: 0;
+      background: var(--paper-3);
+      color: var(--ink-soft);
+      cursor: pointer;
+      font-weight: 700;
+    }
+
+    .audience-tab[aria-selected="true"] {
+      background: var(--mint-soft);
+      color: #234f3b;
+    }
+
+    .audience-detail {
+      display: grid;
+      grid-template-columns: minmax(0, 0.86fr) minmax(280px, 0.5fr);
+      gap: 28px;
+      margin-top: 20px;
+      padding: 28px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--paper-3);
+      box-shadow: var(--shadow);
+    }
+
+    .audience-detail h3 {
+      font-family: var(--serif);
+      font-size: clamp(28px, 3.4vw, 48px);
+    }
+
+    .audience-detail p {
+      max-width: 680px;
+      color: var(--ink-soft);
+      font-size: 18px;
+    }
+
+    .detail-list {
+      display: grid;
+      gap: 10px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .detail-list li {
+      padding: 13px 14px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #fbf6ed;
+      color: var(--ink-soft);
+    }
+
+    .flow {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .flow-step {
+      position: relative;
+      min-height: 270px;
+      padding: 22px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background:
+        linear-gradient(145deg, rgba(255, 253, 248, 0.95), rgba(245, 235, 220, 0.86)),
+        var(--paper-3);
+      overflow: hidden;
+    }
+
+    .flow-step::after {
+      content: "";
+      position: absolute;
+      right: -32px;
+      bottom: -42px;
+      width: 150px;
+      height: 150px;
+      border: 1px solid color-mix(in srgb, var(--ember) 22%, transparent);
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(180, 72, 31, 0.12), transparent 62%);
+    }
+
+    .step-number {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 38px;
+      height: 38px;
+      border: 1px solid rgba(180, 72, 31, 0.28);
+      border-radius: 50%;
+      background: var(--ember-soft);
+      color: var(--ember-deep);
+      font-family: var(--mono);
+      font-weight: 700;
+    }
+
+    .flow-step h3 {
+      margin-top: 28px;
+      font-size: 26px;
+    }
+
+    .flow-step p {
+      margin: 14px 0 0;
+      color: var(--ink-soft);
+    }
+
+    .builder-band {
+      display: grid;
+      grid-template-columns: minmax(0, 0.84fr) minmax(320px, 0.6fr);
+      gap: 24px;
+      align-items: stretch;
+    }
+
+    .builder-copy,
+    .contract-stack {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--paper-3);
+      padding: 28px;
+      box-shadow: var(--shadow);
+    }
+
+    .builder-copy h2 {
+      font-size: clamp(34px, 4vw, 56px);
+    }
+
+    .builder-copy p {
+      color: var(--ink-soft);
+      font-size: 18px;
+    }
+
+    .mini-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 24px;
+    }
+
+    .mini-card {
+      min-height: 120px;
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #fbf6ed;
+    }
+
+    .mini-card strong {
+      display: block;
+      margin-bottom: 8px;
+    }
+
+    .mini-card span {
+      color: var(--ink-soft);
+      font-size: 14px;
+    }
+
+    .contract-stack {
+      display: grid;
+      gap: 12px;
+      align-content: start;
+    }
+
+    .contract-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 14px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #fbf6ed;
+      text-decoration: none;
+    }
+
+    .contract-name {
+      display: block;
+      font-weight: 700;
+    }
+
+    .contract-address {
+      display: block;
+      max-width: 260px;
+      margin-top: 5px;
+      overflow: hidden;
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 12px;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .contract-arrow {
+      color: var(--ember);
+      font-family: var(--mono);
+      font-weight: 700;
+    }
+
+    .final-cta {
+      position: relative;
+      overflow: hidden;
+      padding: 50px;
+      border-radius: var(--radius);
+      background:
+        linear-gradient(135deg, rgba(36, 41, 34, 0.96), rgba(27, 32, 27, 0.98)),
+        var(--graphite-2);
+      color: #fff7ec;
+    }
+
+    .final-cta::before {
+      content: "";
+      position: absolute;
+      inset: -80px auto auto -70px;
+      width: 230px;
+      height: 230px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(180, 72, 31, 0.34), transparent 64%);
+    }
+
+    .final-cta h2 {
+      position: relative;
+      max-width: 780px;
+      color: #fff7ec;
+    }
+
+    .final-cta p {
+      position: relative;
+      max-width: 700px;
+      color: #d8cbbc;
+      font-size: 18px;
+    }
+
+    .footer {
+      padding: 34px 0;
+      background: var(--paper-2);
+      color: var(--ink-soft);
+      font-size: 14px;
+    }
+
+    .footer-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+    }
+
+    .footer-links {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      flex-wrap: wrap;
+    }
+
+    .footer-links a {
+      color: var(--ink-soft);
+      text-decoration: none;
+    }
+
+    .footer-links a:hover {
+      color: var(--ink);
+      text-decoration: underline;
+    }
+
+    @media (max-width: 980px) {
+      .shell {
+        width: min(100% - 32px, 1180px);
+      }
+
+      .nav {
+        min-height: auto;
+        flex-wrap: wrap;
+        padding: 12px 0 10px;
+      }
+
+      .nav-links {
+        order: 3;
+        width: 100%;
+        justify-content: flex-start;
+        gap: 18px;
+        overflow-x: auto;
+        padding: 10px 0 2px;
+        scrollbar-width: none;
+      }
+
+      .nav-links::-webkit-scrollbar { display: none; }
+
+      .hero-grid,
+      .section-head,
+      .audience-detail,
+      .builder-band {
+        grid-template-columns: 1fr;
+      }
+
+      .hero-grid {
+        gap: 28px;
+      }
+
+      .access-panel {
+        min-height: 0;
+      }
+
+      .trust-row {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .flow {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 680px) {
+      .shell {
+        width: min(100% - 24px, 1180px);
+      }
+
+      .brand-name {
+        display: grid;
+        gap: 0;
+      }
+
+      .nav-actions .btn-quiet {
+        display: none;
+      }
+
+      .hero-grid {
+        min-height: auto;
+        padding: 46px 0 34px;
+      }
+
+      h1 {
+        font-size: clamp(43px, 14vw, 64px);
+      }
+
+      .hero-copy {
+        font-size: 18px;
+      }
+
+      .hero-actions,
+      .panel-actions {
+        display: grid;
+        grid-template-columns: 1fr;
+      }
+
+      .hero-actions .btn,
+      .panel-actions .btn {
+        width: 100%;
+      }
+
+      .trust-row {
+        grid-template-columns: 1fr;
+      }
+
+      .audience-tabs {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .audience-detail,
+      .builder-copy,
+      .contract-stack,
+      .final-cta {
+        padding: 22px;
+      }
+
+      .mini-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .footer-inner {
+        display: grid;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <nav class="nav shell" aria-label="Primary navigation">
+      <a class="brand" href="/">
+        <img src="/assets/ifr_icon_256.png" alt="IFR">
+        <span class="brand-name">
+          <span class="brand-main">Inferno Protocol</span>
+          <span class="brand-token">IFR</span>
+        </span>
+      </a>
+      <ul class="nav-links">
+        <li><a href="#access">Access</a></li>
+        <li><a href="#use-cases">Use Cases</a></li>
+        <li><a href="#builders">Builders</a></li>
+        <li><a href="#contracts">Contracts</a></li>
+        <li><a href="/wiki/">Wiki</a></li>
+      </ul>
+      <div class="nav-actions">
+        <a class="btn btn-quiet" href="https://app.uniswap.org/swap?outputCurrency=0x77e99917Eca8539c62F509ED1193ac36580A6e7B" target="_blank" rel="noopener">Buy IFR</a>
+        <button class="btn btn-primary" type="button" data-wallet-connect>Connect Wallet</button>
+      </div>
+    </nav>
+  </header>
+
+  <section class="hero" id="top">
+    <canvas class="hero-canvas" id="hero-canvas" aria-hidden="true"></canvas>
+    <div class="hero-grid shell">
+      <div>
+        <div class="eyebrow"><span class="pulse"></span> Ethereum Mainnet access layer</div>
+        <h1>Lock IFR. <span>Unlock access.</span> Builders earn from real usage.</h1>
+        <p class="hero-copy">Inferno Protocol turns IFR into reusable access infrastructure: holders lock once for product access, builders verify lock status on-chain, and every transfer keeps the token scarcer.</p>
+        <div class="hero-actions">
+          <button class="btn btn-primary" type="button" data-wallet-connect>Connect Wallet</button>
+          <a class="btn btn-mint" href="/wiki/integration.html">Build with IFR</a>
+          <a class="btn btn-quiet" href="/wiki/contracts.html">View verified contracts</a>
+        </div>
+        <div class="trust-row" aria-label="Protocol facts">
+          <div class="trust-pill">
+            <span class="trust-label">Network</span>
+            <span class="trust-value">Ethereum Mainnet</span>
+          </div>
+          <div class="trust-pill">
+            <span class="trust-label">Token</span>
+            <span class="trust-value">No mint path</span>
+          </div>
+          <div class="trust-pill">
+            <span class="trust-label">Transfer</span>
+            <span class="trust-value">2.5% burned</span>
+          </div>
+          <div class="trust-pill">
+            <span class="trust-label">Market</span>
+            <span class="trust-value">Uniswap V2 live</span>
+          </div>
+        </div>
+      </div>
+
+      <aside class="access-panel" id="access" aria-label="Wallet access status">
+        <div>
+          <div class="panel-top">
+            <div>
+              <p class="panel-kicker">Your access terminal</p>
+              <h2 class="panel-title">Wallet-aware IFR status</h2>
+            </div>
+            <span class="network-badge"><span class="pulse"></span>Mainnet</span>
+          </div>
+          <div class="status-stack">
+            <div class="status-card">
+              <div>
+                <p class="status-label">Wallet</p>
+                <div class="status-value" data-wallet-address>Not connected</div>
+              </div>
+              <span class="status-note" data-wallet-state>Ready</span>
+            </div>
+            <div class="status-card">
+              <div>
+                <p class="status-label">IFR Balance</p>
+                <div class="status-value" data-ifr-balance>Connect</div>
+              </div>
+              <span class="status-note">ERC-20</span>
+            </div>
+            <div class="status-card">
+              <div>
+                <p class="status-label">Locked IFR</p>
+                <div class="status-value" data-locked-balance>Connect</div>
+              </div>
+              <span class="status-note" data-access-tier>Access check</span>
+            </div>
+            <div class="status-card">
+              <div>
+                <p class="status-label">Bootstrap</p>
+                <div class="status-value" data-bootstrap-status>Loading</div>
+              </div>
+              <span class="status-note" data-bootstrap-note>Vault</span>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div class="panel-actions">
+            <a class="btn btn-primary" href="/wiki/commitment-vault.html">Lock IFR</a>
+            <a class="btn btn-mint" href="/wiki/lending-vault.html">Create offer</a>
+            <button class="btn btn-quiet" type="button" data-add-token>Add IFR to wallet</button>
+            <a class="btn btn-quiet" href="https://www.geckoterminal.com/eth/pools/0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0" target="_blank" rel="noopener">Track pool</a>
+          </div>
+          <p class="panel-foot">This module reads wallet and lock state directly from Mainnet. Transaction flows stay on their dedicated protocol pages.</p>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <main>
+    <section class="section" id="use-cases">
+      <div class="shell">
+        <div class="section-head">
+          <div>
+            <p class="label">One protocol, four doors</p>
+            <h2>Use IFR where access and contribution need proof.</h2>
+          </div>
+          <p class="lead">The Web3 page should stay light: one clear action surface for holders, one entry point for builders, and proof for developers who want to verify the system.</p>
+        </div>
+        <div class="audience-tabs" role="tablist" aria-label="Audience selector">
+          <button class="audience-tab" type="button" role="tab" aria-selected="true" data-audience="users">Users</button>
+          <button class="audience-tab" type="button" role="tab" aria-selected="false" data-audience="builders">Builders</button>
+          <button class="audience-tab" type="button" role="tab" aria-selected="false" data-audience="developers">Developers</button>
+          <button class="audience-tab" type="button" role="tab" aria-selected="false" data-audience="community">Community</button>
+        </div>
+        <div class="audience-detail" data-audience-panel>
+          <div>
+            <h3 data-audience-title>Lock once. Use across the ecosystem.</h3>
+            <p data-audience-copy>Holders can connect, check IFR balance, view locked IFR, and move into the CommitmentVault or LendingVault flows without hunting through the full documentation tree.</p>
+          </div>
+          <ul class="detail-list" data-audience-list>
+            <li>Check wallet, IFR balance, and lock state.</li>
+            <li>Buy IFR on the live Uniswap V2 pool.</li>
+            <li>Lock IFR for access or lend IFR through protocol offers.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="flow">
+      <div class="shell">
+        <div class="section-head">
+          <div>
+            <p class="label">Token flow</p>
+            <h2>A smaller, clearer path than the old live tracker.</h2>
+          </div>
+          <p class="lead">The new Web3 landing focuses on actions that are live or directly verifiable: buy, lock, verify, build.</p>
+        </div>
+        <div class="flow">
+          <article class="flow-step">
+            <span class="step-number">01</span>
+            <h3>Buy IFR</h3>
+            <p>IFR is live on Ethereum through the Uniswap V2 pool. The page links users directly to the configured token output.</p>
+          </article>
+          <article class="flow-step">
+            <span class="step-number">02</span>
+            <h3>Lock for access</h3>
+            <p>CommitmentVault locks turn token ownership into a durable access signal for products and protocol tooling.</p>
+          </article>
+          <article class="flow-step">
+            <span class="step-number">03</span>
+            <h3>Build on proof</h3>
+            <p>Builders can check lock status, set product thresholds, and route users into IFR-powered access flows.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="builders">
+      <div class="shell builder-band">
+        <div class="builder-copy">
+          <p class="label">Builder layer</p>
+          <h2>Give products an on-chain access primitive without rebuilding token logic.</h2>
+          <p>IFR Protocol already has the token, lock contract, lending contract, governance, and public documentation. The Web3 landing should act as the clean front door for integrations, not a second wiki.</p>
+          <div class="mini-grid">
+            <div class="mini-card">
+              <strong>Access checks</strong>
+              <span>Read locked IFR and map it to product tiers or partner policy.</span>
+            </div>
+            <div class="mini-card">
+              <strong>Builder onboarding</strong>
+              <span>Point teams to the integration spec, verified contracts, and SDK starter.</span>
+            </div>
+            <div class="mini-card">
+              <strong>Usage alignment</strong>
+              <span>Builders can design access around real user participation instead of recurring fees.</span>
+            </div>
+            <div class="mini-card">
+              <strong>Motion-ready</strong>
+              <span>The hero is built with a replaceable Three.js layer for future Spline, Rive, Lottie, or video assets.</span>
+            </div>
+          </div>
+        </div>
+        <div class="contract-stack" id="contracts">
+          <p class="label">Verified contracts</p>
+          <a class="contract-row" href="https://etherscan.io/token/0x77e99917Eca8539c62F509ED1193ac36580A6e7B" target="_blank" rel="noopener">
+            <span>
+              <span class="contract-name">IFR Token</span>
+              <span class="contract-address">0x77e99917Eca8539c62F509ED1193ac36580A6e7B</span>
+            </span>
+            <span class="contract-arrow">-&gt;</span>
+          </a>
+          <a class="contract-row" href="https://etherscan.io/address/0x769928aBDfc949D0718d8766a1C2d7dBb63954Eb" target="_blank" rel="noopener">
+            <span>
+              <span class="contract-name">IFRLock</span>
+              <span class="contract-address">0x769928aBDfc949D0718d8766a1C2d7dBb63954Eb</span>
+            </span>
+            <span class="contract-arrow">-&gt;</span>
+          </a>
+          <a class="contract-row" href="https://etherscan.io/address/0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3" target="_blank" rel="noopener">
+            <span>
+              <span class="contract-name">CommitmentVault</span>
+              <span class="contract-address">0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3</span>
+            </span>
+            <span class="contract-arrow">-&gt;</span>
+          </a>
+          <a class="contract-row" href="https://etherscan.io/address/0x974305Ab0EC905172e697271C3d7d385194EB9DF" target="_blank" rel="noopener">
+            <span>
+              <span class="contract-name">LendingVault</span>
+              <span class="contract-address">0x974305Ab0EC905172e697271C3d7d385194EB9DF</span>
+            </span>
+            <span class="contract-arrow">-&gt;</span>
+          </a>
+          <a class="contract-row" href="https://etherscan.io/address/0xc43d48E7FDA576C5022d0670B652A622E8caD041" target="_blank" rel="noopener">
+            <span>
+              <span class="contract-name">Governance</span>
+              <span class="contract-address">0xc43d48E7FDA576C5022d0670B652A622E8caD041</span>
+            </span>
+            <span class="contract-arrow">-&gt;</span>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="shell final-cta">
+        <h2>Start with a wallet check, then move into the flow that fits.</h2>
+        <p>Holders can buy or lock IFR. Builders can start from the integration docs. Developers can verify contracts and inspect the protocol surface before integrating.</p>
+        <div class="hero-actions">
+          <button class="btn btn-primary" type="button" data-wallet-connect>Connect Wallet</button>
+          <a class="btn btn-mint" href="/wiki/integration.html">Open builder docs</a>
+          <a class="btn btn-quiet" href="/wiki/contracts.html" style="color:#fff7ec;border-color:rgba(255,247,236,.35)">Verify contracts</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner shell">
+      <span>IFR Protocol / Inferno - Ethereum Mainnet access layer</span>
+      <div class="footer-links">
+        <a href="/">Landing</a>
+        <a href="/wiki/">Wiki</a>
+        <a href="https://github.com/NeaBouli/inferno" target="_blank" rel="noopener">GitHub</a>
+        <a href="https://www.geckoterminal.com/eth/pools/0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0" target="_blank" rel="noopener">GeckoTerminal</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    (function() {
+      const audiences = {
+        users: {
+          title: "Lock once. Use across the ecosystem.",
+          copy: "Holders can connect, check IFR balance, view locked IFR, and move into the CommitmentVault or LendingVault flows without hunting through the full documentation tree.",
+          items: [
+            "Check wallet, IFR balance, and lock state.",
+            "Buy IFR on the live Uniswap V2 pool.",
+            "Lock IFR for access or lend IFR through protocol offers."
+          ]
+        },
+        builders: {
+          title: "Add IFR-gated access to real products.",
+          copy: "Builders can use locked IFR as an access signal, define product thresholds, and point users into a protocol-owned lock flow instead of managing a separate token model.",
+          items: [
+            "Use verified Mainnet contracts as the source of truth.",
+            "Design product tiers around lock status and wallet proof.",
+            "Route users to integration docs and builder onboarding."
+          ]
+        },
+        developers: {
+          title: "Verify the surface before integrating.",
+          copy: "The landing links to token, lock, governance, vaults, SDK notes, and the wiki so developers can inspect the protocol without relying on marketing claims.",
+          items: [
+            "Check Etherscan-verified contracts.",
+            "Read the integration spec and SDK quickstart.",
+            "Keep dynamic API usage explicit for web3.ifrunit.tech."
+          ]
+        },
+        community: {
+          title: "A cleaner front door for the protocol.",
+          copy: "Community members get a focused entry point for the live token, locks, lending, verified contracts, and education without the old full tracking dashboard overload.",
+          items: [
+            "Understand what IFR does in one screen.",
+            "Find the official wiki and contract references.",
+            "Share a dedicated Web3 URL instead of a docs mirror."
+          ]
+        }
+      };
+
+      const title = document.querySelector("[data-audience-title]");
+      const copy = document.querySelector("[data-audience-copy]");
+      const list = document.querySelector("[data-audience-list]");
+      document.querySelectorAll("[data-audience]").forEach((tab) => {
+        tab.addEventListener("click", () => {
+          const data = audiences[tab.dataset.audience];
+          document.querySelectorAll("[data-audience]").forEach((el) => el.setAttribute("aria-selected", "false"));
+          tab.setAttribute("aria-selected", "true");
+          title.textContent = data.title;
+          copy.textContent = data.copy;
+          list.innerHTML = data.items.map((item) => `<li>${item}</li>`).join("");
+        });
+      });
+
+      const connectButtons = document.querySelectorAll("[data-wallet-connect]");
+      const addTokenButton = document.querySelector("[data-add-token]");
+      const walletAddress = document.querySelector("[data-wallet-address]");
+      const walletState = document.querySelector("[data-wallet-state]");
+      const ifrBalance = document.querySelector("[data-ifr-balance]");
+      const lockedBalance = document.querySelector("[data-locked-balance]");
+      const accessTier = document.querySelector("[data-access-tier]");
+      const bootstrapStatus = document.querySelector("[data-bootstrap-status]");
+      const bootstrapNote = document.querySelector("[data-bootstrap-note]");
+
+      function shortAddress(address) {
+        if (!address) return "Not connected";
+        return `${address.slice(0, 6)}...${address.slice(-4)}`;
+      }
+
+      function setWalletLoading(isLoading) {
+        connectButtons.forEach((button) => {
+          button.disabled = isLoading;
+          button.textContent = isLoading ? "Connecting..." : (window.IFRWallet && IFRWallet.isConnected() ? "Connected" : "Connect Wallet");
+        });
+      }
+
+      function renderState(state) {
+        if (!state) return;
+        if (state.address) {
+          walletAddress.textContent = shortAddress(state.address);
+          walletState.textContent = "Connected";
+          ifrBalance.textContent = state.ifrBalanceFormatted ? `${state.ifrBalanceFormatted} IFR` : "0 IFR";
+          lockedBalance.textContent = state.lockedFormatted ? `${state.lockedFormatted} IFR` : "0 IFR";
+          accessTier.textContent = state.isLocked1000 ? "Premium ready" : "Lock needed";
+        } else {
+          walletAddress.textContent = "Not connected";
+          walletState.textContent = "Ready";
+          ifrBalance.textContent = "Connect";
+          lockedBalance.textContent = "Connect";
+          accessTier.textContent = "Access check";
+        }
+
+        if (state.bootstrapStatus) {
+          bootstrapStatus.textContent = state.bootstrapStatus.finalized ? "Finalized" : "Open";
+          bootstrapNote.textContent = `${Number(state.bootstrapStatus.totalETHRaised || 0).toFixed(3)} ETH`;
+        }
+      }
+
+      async function loadReadOnlyBootstrap() {
+        bootstrapStatus.textContent = "Finalized";
+        bootstrapNote.textContent = "0.030 ETH";
+
+        if (!window.ethers) {
+          return;
+        }
+
+        const provider = new ethers.providers.JsonRpcProvider("https://ethereum-rpc.publicnode.com");
+        const bootstrap = new ethers.Contract(
+          "0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141",
+          [
+            "function finalised() view returns (bool)",
+            "function totalETHRaised() view returns (uint256)"
+          ],
+          provider
+        );
+
+        try {
+          const [finalised, totalETHRaised] = await Promise.all([
+            bootstrap.finalised(),
+            bootstrap.totalETHRaised()
+          ]);
+          bootstrapStatus.textContent = finalised ? "Finalized" : "Open";
+          bootstrapNote.textContent = `${Number(ethers.utils.formatEther(totalETHRaised)).toFixed(3)} ETH`;
+        } catch (error) {
+          bootstrapStatus.textContent = "Finalized";
+          bootstrapNote.textContent = "0.030 ETH";
+        }
+      }
+
+      async function loadInitialState() {
+        if (!window.IFRState || !window.IFRWallet) {
+          walletState.textContent = "Wallet script unavailable";
+          await loadReadOnlyBootstrap();
+          return;
+        }
+        try {
+          const restored = await IFRWallet.autoReconnect();
+          if (restored) {
+            const state = await IFRState.load(IFRWallet.getAddress());
+            renderState(state);
+          } else {
+            await loadReadOnlyBootstrap();
+          }
+          IFRState.on("stateLoaded", renderState);
+        } catch (error) {
+          walletState.textContent = "Read-only";
+          await loadReadOnlyBootstrap();
+        }
+      }
+
+      connectButtons.forEach((button) => {
+        button.addEventListener("click", async () => {
+          if (!window.IFRWallet || !window.IFRState) return;
+          setWalletLoading(true);
+          walletState.textContent = "Connecting";
+          try {
+            const address = await IFRWallet.connect();
+            const state = await IFRState.load(address);
+            renderState(state);
+          } catch (error) {
+            walletState.textContent = error && error.message === "MOBILE_NOT_SUPPORTED" ? "Desktop wallet" : "Connect failed";
+          } finally {
+            setWalletLoading(false);
+          }
+        });
+      });
+
+      addTokenButton.addEventListener("click", async () => {
+        if (!window.IFRWallet || !IFRWallet.addIFRToken) return;
+        try {
+          await IFRWallet.addIFRToken();
+        } catch (error) {
+          walletState.textContent = "Token add failed";
+        }
+      });
+
+      loadInitialState();
+    })();
+  </script>
+
+  <script type="module">
+    import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.165.0/build/three.module.js";
+
+    const canvas = document.getElementById("hero-canvas");
+    const scene = new THREE.Scene();
+    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+
+    const camera = new THREE.PerspectiveCamera(48, 1, 0.1, 100);
+    camera.position.set(0, 0, 13);
+
+    const group = new THREE.Group();
+    scene.add(group);
+
+    const coreGeometry = new THREE.TorusGeometry(2.45, 0.11, 18, 160);
+    const coreMaterial = new THREE.MeshBasicMaterial({ color: 0xb4481f, transparent: true, opacity: 0.84 });
+    const core = new THREE.Mesh(coreGeometry, coreMaterial);
+    core.rotation.x = 0.9;
+    core.rotation.y = -0.34;
+    core.position.set(-3.8, 0.55, 0);
+    group.add(core);
+
+    const innerGeometry = new THREE.TorusGeometry(1.55, 0.045, 12, 130);
+    const innerMaterial = new THREE.MeshBasicMaterial({ color: 0x3d9a70, transparent: true, opacity: 0.64 });
+    const inner = new THREE.Mesh(innerGeometry, innerMaterial);
+    inner.rotation.x = 0.9;
+    inner.rotation.y = -0.34;
+    inner.position.copy(core.position);
+    group.add(inner);
+
+    const nodeGeometry = new THREE.BufferGeometry();
+    const count = 160;
+    const positions = new Float32Array(count * 3);
+    const colors = new Float32Array(count * 3);
+    for (let i = 0; i < count; i += 1) {
+      const ix = i * 3;
+      positions[ix] = THREE.MathUtils.randFloat(-8.6, 8.6);
+      positions[ix + 1] = THREE.MathUtils.randFloat(-4.2, 4.2);
+      positions[ix + 2] = THREE.MathUtils.randFloat(-4.0, 2.2);
+      const mint = Math.random() > 0.38;
+      colors[ix] = mint ? 0.22 : 0.82;
+      colors[ix + 1] = mint ? 0.72 : 0.31;
+      colors[ix + 2] = mint ? 0.54 : 0.16;
+    }
+    nodeGeometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+    nodeGeometry.setAttribute("color", new THREE.BufferAttribute(colors, 3));
+    const nodeMaterial = new THREE.PointsMaterial({
+      size: 0.05,
+      vertexColors: true,
+      transparent: true,
+      opacity: 0.72,
+      depthWrite: false
+    });
+    const nodes = new THREE.Points(nodeGeometry, nodeMaterial);
+    nodes.position.x = 2.2;
+    group.add(nodes);
+
+    const linePositions = [];
+    for (let i = 0; i < 72; i += 1) {
+      const a = i % count;
+      const b = (i * 7 + 19) % count;
+      const ax = a * 3;
+      const bx = b * 3;
+      const dx = positions[ax] - positions[bx];
+      const dy = positions[ax + 1] - positions[bx + 1];
+      const dz = positions[ax + 2] - positions[bx + 2];
+      if (Math.sqrt(dx * dx + dy * dy + dz * dz) < 3.25) {
+        linePositions.push(
+          positions[ax], positions[ax + 1], positions[ax + 2],
+          positions[bx], positions[bx + 1], positions[bx + 2]
+        );
+      }
+    }
+    const lineGeometry = new THREE.BufferGeometry();
+    lineGeometry.setAttribute("position", new THREE.Float32BufferAttribute(linePositions, 3));
+    const lineMaterial = new THREE.LineBasicMaterial({ color: 0x5fae8b, transparent: true, opacity: 0.12 });
+    const lines = new THREE.LineSegments(lineGeometry, lineMaterial);
+    lines.position.x = 2.2;
+    group.add(lines);
+
+    function resize() {
+      const rect = canvas.getBoundingClientRect();
+      renderer.setSize(rect.width, rect.height, false);
+      camera.aspect = rect.width / Math.max(rect.height, 1);
+      camera.updateProjectionMatrix();
+    }
+
+    function animate(time) {
+      const t = time * 0.001;
+      core.rotation.z = t * 0.18;
+      inner.rotation.z = -t * 0.14;
+      nodes.rotation.y = Math.sin(t * 0.23) * 0.06;
+      nodes.rotation.x = Math.cos(t * 0.19) * 0.035;
+      lines.rotation.copy(nodes.rotation);
+      group.position.y = Math.sin(t * 0.35) * 0.08;
+      renderer.render(scene, camera);
+      requestAnimationFrame(animate);
+    }
+
+    resize();
+    window.addEventListener("resize", resize, { passive: true });
+    requestAnimationFrame(animate);
+  </script>
+</body>
+</html>
