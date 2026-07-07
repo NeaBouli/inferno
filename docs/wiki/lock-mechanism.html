@@ -5,7 +5,7 @@
     <link rel="canonical" href="https://ifrunit.tech/wiki/lock-mechanism.html">
   <link rel="alternate" hreflang="en" href="https://ifrunit.tech/wiki/lock-mechanism.html">
   <link rel="alternate" hreflang="x-default" href="https://ifrunit.tech/wiki/lock-mechanism.html">>  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Lock Mechanism &mdash; Inferno ($IFR) Documentation</title>
+  <title>Lock Mechanism &mdash; Inferno (IFR) Documentation</title>
   <meta name="keywords" content="Inferno, IFR, ERC-20, Ethereum, deflationary token, DeFi, blockchain, smart contract, governance, bootstrap">
   <meta name="description" content="Lock IFR tokens to unlock lifetime access across builder products. On-chain isLocked() verification. Fee-exempt lock and unlock.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -575,12 +575,12 @@
   <meta property="og:locale" content="en_US">
   <meta property="og:type" content="article">
   <meta property="og:site_name" content="Inferno Protocol">
-  <meta property="og:title" content="IFR Lock Mechanism — Inferno Protocol ($IFR)">
+  <meta property="og:title" content="IFR Lock Mechanism — Inferno Protocol (IFR)">
   <meta property="og:description" content="Lock IFR tokens to unlock lifetime access across builder products. On-chain verification via isLocked(). Fee-exempt lock and unlock.">
   <meta property="og:url" content="https://ifrunit.tech/wiki/lock-mechanism.html">
   <meta property="og:image" content="https://ifrunit.tech/assets/ifr_icon_256.png">
   <meta name="twitter:card" content="summary">
-  <meta name="twitter:title" content="IFR Lock Mechanism — Inferno Protocol ($IFR)">
+  <meta name="twitter:title" content="IFR Lock Mechanism — Inferno Protocol (IFR)">
   <meta name="twitter:description" content="Lock IFR for lifetime product access. On-chain verification, fee-exempt, multi-tier system.">
   <meta name="twitter:site" content="@IFRtoken">
   <meta name="twitter:image" content="https://ifrunit.tech/assets/ifr_icon_256.png">  <script type="application/ld+json">
@@ -1066,7 +1066,7 @@ await governance.propose(
         <li><strong>No yield / no APY:</strong> Locking IFR does not generate rewards for the locker. There is no staking, no slashing, no impermanent loss.</li>
         <li><strong>Purpose:</strong> Locking grants tier-based access to builder products (Benefits Network, Creator content, premium features).</li>
         <li><strong>Refundable:</strong> Users can call <code>unlock()</code> at any time to retrieve their full locked amount.</li>
-        <li><strong>Minimum lock:</strong> 1,000 IFR (Bronze Tier). Higher tiers at 2,500 / 5,000 / 10,000 IFR.</li>
+        <li><strong>Current first-party baseline:</strong> 1,000 IFR (Bronze Tier) for the default IFR premium flow. Builder products can set their own lock thresholds through off-chain/resolver policy without changing the IFRLock contract. Higher example tiers: 2,500 / 5,000 / 10,000 IFR.</li>
       </ul>
 
       <div class="table-wrap">
@@ -1075,7 +1075,7 @@ await governance.propose(
             <tr><th>Tier</th><th>Minimum Lock</th><th>Typical Benefit</th></tr>
           </thead>
           <tbody>
-            <tr><td>Bronze</td><td>1,000 IFR</td><td>5&ndash;10% discount</td></tr>
+            <tr><td>Bronze</td><td>1,000 IFR current default</td><td>5&ndash;10% discount</td></tr>
             <tr><td>Silver</td><td>2,500 IFR</td><td>10&ndash;15% discount</td></tr>
             <tr><td>Gold</td><td>5,000 IFR</td><td>15&ndash;20% discount</td></tr>
             <tr><td>Platinum</td><td>10,000 IFR</td><td>20&ndash;25% discount</td></tr>
@@ -1122,7 +1122,7 @@ const ifrLock = new ethers.Contract(IFRLOCK_ADDRESS, [
   "function isLocked(address user, uint256 minAmount) view returns (bool)"
 ], provider);
 
-// Check if wallet has at least 1,000 IFR locked (9 decimals)
+// Example: check if wallet has at least 1,000 IFR locked (9 decimals)
 const minAmount = ethers.parseUnits("1000", 9);
 const locked = await ifrLock.isLocked(walletAddress, minAmount);
 // Returns: true or false</code></pre>
@@ -1145,7 +1145,7 @@ const locked = await ifrLock.isLocked(walletAddress, minAmount);
 
       <!-- Footer -->
       <footer class="wiki-footer">
-        Inferno ($IFR) &mdash; Community Fair Launch Model &mdash; Documentation v1.0
+        Inferno (IFR) &mdash; Community Fair Launch Model &mdash; Documentation v1.0
       </footer>
 
     </main>
