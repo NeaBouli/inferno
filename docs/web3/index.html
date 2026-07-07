@@ -142,6 +142,27 @@
       color: var(--muted);
     }
 
+    .brand-tags {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .brand-tag {
+      min-height: 22px;
+      display: inline-flex;
+      align-items: center;
+      border: 1px solid rgba(75, 111, 92, 0.22);
+      border-radius: 999px;
+      padding: 0 8px;
+      background: rgba(75, 111, 92, 0.08);
+      color: var(--mint-dark);
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0;
+    }
+
     .nav-links {
       display: flex;
       align-items: center;
@@ -914,7 +935,17 @@
 
       .brand-name {
         display: grid;
-        gap: 0;
+        gap: 3px;
+      }
+
+      .brand-tags {
+        gap: 5px;
+      }
+
+      .brand-tag {
+        min-height: 19px;
+        padding: 0 6px;
+        font-size: 10px;
       }
 
       .nav-actions .btn-quiet {
@@ -981,7 +1012,10 @@
         <img src="/assets/ifr_icon_256.png" alt="IFR">
         <span class="brand-name">
           <span class="brand-main">Inferno Protocol</span>
-          <span class="brand-token">IFR</span>
+          <span class="brand-tags" aria-label="Token tags">
+            <span class="brand-tag">#IFR</span>
+            <span class="brand-tag">$IFRp</span>
+          </span>
         </span>
       </a>
       <ul class="nav-links">
@@ -989,7 +1023,7 @@
         <li><a href="#use-cases">Use Cases</a></li>
         <li><a href="#builders">Builders</a></li>
         <li><a href="#contracts">Contracts</a></li>
-        <li><a href="/wiki/">Wiki</a></li>
+        <li><a href="https://ifrunit.tech">IFRUnit.tech</a></li>
       </ul>
       <div class="nav-actions">
         <button class="btn btn-quiet install-button" type="button" data-install-app hidden>Install App</button>
@@ -1237,6 +1271,7 @@
       <span>IFR Protocol / Inferno - Ethereum Mainnet access layer</span>
       <div class="footer-links">
         <a href="/">Landing</a>
+        <a href="https://ifrunit.tech">IFRUnit.tech</a>
         <a href="/wiki/">Wiki</a>
         <a href="https://github.com/NeaBouli/inferno" target="_blank" rel="noopener">GitHub</a>
         <a href="https://www.geckoterminal.com/eth/pools/0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0" target="_blank" rel="noopener">GeckoTerminal</a>
