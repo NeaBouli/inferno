@@ -754,3 +754,9 @@ nav #connect {
     display: none !important;
   }
 }
+
+@media (min-width: 700px) and (max-width: 900px) {
+  .template-hero .hero-ledger-stack {
+    margin-top: 50px !important;
+  }
+}
