@@ -75,6 +75,9 @@
 - [ ] Builder Ecosystem expansion (permissionless integration)
 - [ ] Creator Gateway live (YouTube monetization bridge)
 - [ ] Benefits Network live (merchant onboarding)
+- [ ] IFRp Commerce App / `shop.ifrunit.tech` customer/seller PWA
+      Master architecture: `docs/ifrp-commerce-app/MASTER_ARCHITECTURE.md`
+      Scope: customer wallet, ETH/IFR swap, IFR locking, QR proof, seller scanner, seller discount rules, and verified seller rewards through PartnerVault after governance approval.
 - [ ] Guarded buyback automation (BuybackVault activation after 60 days)
 - [ ] Developer SDK + documentation (ethers.js, wagmi, Python)
 - [ ] Bug bounty program (Immunefi)
@@ -106,6 +109,7 @@
 
 - [ ] Advanced lock types (tiered, time-based, NFT-gated)
 - [ ] Builder self-service portal
+- [ ] Seller/customer commerce app scaling: embedded wallet, App Store / Play Store wrapper, product catalog, reward analytics
 - [ ] Cross-protocol integrations
 - [ ] Advanced analytics dashboard
 - [ ] Community grants program
