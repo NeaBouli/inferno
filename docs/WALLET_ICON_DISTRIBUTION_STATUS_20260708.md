@@ -23,8 +23,8 @@ This note records where IFR token metadata and icon visibility can realistically
 | --- | --- | --- |
 | Etherscan | Live, reputation `Neutral` | `https://etherscan.io/token/0x77e99917Eca8539c62F509ED1193ac36580A6e7B` |
 | Uniswap Default Token List | Open, updated with Neutral/Icon/List evidence | `https://github.com/Uniswap/default-token-list/issues/2509` |
-| MetaMask contract metadata | PR opened after Neutral reputation cleared the old blocker | `https://github.com/MetaMask/contract-metadata/pull/1858` |
-| ethereum-lists | PR open, no maintainer response yet | `https://github.com/ethereum-lists/tokens/pull/1036` |
+| MetaMask contract metadata | PR opened after Neutral reputation cleared the old blocker; polite follow-up posted because review is still required | `https://github.com/MetaMask/contract-metadata/pull/1858` |
+| ethereum-lists | PR open; polite follow-up posted after no maintainer response | `https://github.com/ethereum-lists/tokens/pull/1036` |
 
 ## Wallet-Specific Reality Check
 

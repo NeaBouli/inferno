@@ -17,6 +17,10 @@ Status: prepared, not executed.
 
 Open next step: choose a final price policy, submit the Safe transaction to `Governance.propose(LendingVault, setIFRPrice(candidate))`, wait 48 hours, execute, then verify Web3/Wiki borrowing.
 
+Policy note added:
+
+- `docs/LENDING_PRICE_POLICY_20260708.md`
+
 ## 2. CommitmentVault Price-Condition Locks
 
 Status: intentionally disabled for price conditions.
@@ -55,8 +59,12 @@ Status: improved, still has follow-up items.
 - Etherscan token reputation now reads `Neutral`, not `Unknown`.
 - MetaMask contract-metadata retry is now open:
   - `https://github.com/MetaMask/contract-metadata/pull/1858`
+- MetaMask follow-up comment posted on 2026-07-08 because the PR is waiting for code-owner review:
+  - `https://github.com/MetaMask/contract-metadata/pull/1858#issuecomment-4912859782`
 - ethereum-lists PR #1036 is still open with no maintainer review/comment:
   - `https://github.com/ethereum-lists/tokens/pull/1036`
+- ethereum-lists follow-up comment posted on 2026-07-08:
+  - `https://github.com/ethereum-lists/tokens/pull/1036#issuecomment-4912862731`
 - Wallet icon distribution status is documented:
   - `docs/WALLET_ICON_DISTRIBUTION_STATUS_20260708.md`
 - CMC check script is present, but local `CMC_API_KEY` is not set, so CMC listing status was not queried.
