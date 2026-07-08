@@ -1,273 +1,185 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import QRCode from 'react-qr-code';
+import { AppShell } from '@/components/AppShell';
 import { Countdown } from '@/components/Countdown';
 import { StatusBadge } from '@/components/StatusBadge';
-import {
-  getBusiness,
-  createSession,
-  getSessionStatus,
-  redeemSession,
-  type BusinessInfo,
-  type SessionStatus,
-} from '@/lib/api';
+import { BusinessInfo, SessionCreated, SessionStatus, createSession, getBusiness, getSessionStatus, redeemSession } from '@/lib/api';
 
-function shortAddr(addr: string) {
-  return `${addr.slice(0, 6)}...${addr.slice(-4)}`;
-}
-
-export default function MerchantPage({
-  params,
-}: {
-  params: { businessId: string };
-}) {
-  const { businessId } = params;
-
+export default function BusinessConsole({ params }: { params: { businessId: string } }) {
   const [business, setBusiness] = useState<BusinessInfo | null>(null);
-  const [sessionId, setSessionId] = useState<string | null>(null);
-  const [session, setSession] = useState<SessionStatus | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [redeemed, setRedeemed] = useState(false);
+  const [session, setSession] = useState<SessionCreated | null>(null);
+  const [status, setStatus] = useState<SessionStatus | null>(null);
+  const [origin, setOrigin] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const isDone = status && ['REDEEMED', 'EXPIRED', 'REJECTED'].includes(status.status);
 
-  // Load business info
   useEffect(() => {
-    getBusiness(businessId)
+    setOrigin(window.location.origin);
+    getBusiness(params.businessId)
       .then(setBusiness)
-      .catch((err) => setError(err.message))
-      .finally(() => setLoading(false));
-  }, [businessId]);
+      .catch((err: Error) => setError(err.message));
+  }, [params.businessId]);
 
-  // Poll session status
   useEffect(() => {
-    if (!sessionId) return;
-    const interval = setInterval(async () => {
-      try {
-        const status = await getSessionStatus(sessionId);
-        setSession(status);
-        if (
-          status.status === 'REDEEMED' ||
-          status.status === 'EXPIRED' ||
-          status.status === 'REJECTED'
-        ) {
-          clearInterval(interval);
-        }
-      } catch {
-        // ignore polling errors
-      }
-    }, 1500);
-    return () => clearInterval(interval);
-  }, [sessionId]);
+    if (!session) return;
+    const poll = () => {
+      getSessionStatus(session.sessionId)
+        .then(setStatus)
+        .catch((err: Error) => setError(err.message));
+    };
+    poll();
+    const timer = window.setInterval(poll, 3000);
+    return () => window.clearInterval(timer);
+  }, [session]);
 
-  const handleStart = useCallback(async () => {
-    setError(null);
-    setSession(null);
-    setRedeemed(false);
+  const customerUrl = useMemo(() => {
+    if (!session || !origin) return '';
+    return `${origin}${session.qrUrl}`;
+  }, [origin, session]);
+
+  async function startSession() {
+    setLoading(true);
+    setError('');
     try {
-      const result = await createSession(businessId);
-      setSessionId(result.sessionId);
-      setSession({
-        status: 'PENDING',
-        recoveredAddress: null,
-        reason: null,
-        redeemedAt: null,
-        expiresAt: result.expiresAt,
-      });
+      const nextSession = await createSession(params.businessId);
+      setSession(nextSession);
+      setStatus(null);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create session');
+      setError(err instanceof Error ? err.message : 'Session failed');
+    } finally {
+      setLoading(false);
     }
-  }, [businessId]);
+  }
 
-  const handleRedeem = useCallback(async () => {
-    if (!sessionId) return;
+  async function redeem() {
+    if (!session) return;
+    setLoading(true);
+    setError('');
     try {
-      await redeemSession(sessionId);
-      setRedeemed(true);
-      setSession((s) => (s ? { ...s, status: 'REDEEMED' } : s));
+      await redeemSession(session.sessionId);
+      setStatus(await getSessionStatus(session.sessionId));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Redeem failed');
+    } finally {
+      setLoading(false);
     }
-  }, [sessionId]);
-
-  const handleExpired = useCallback(() => {
-    setSession((s) => (s ? { ...s, status: 'EXPIRED' } : s));
-  }, []);
-
-  if (loading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="animate-spin h-8 w-8 border-2 border-ifr-red border-t-transparent rounded-full" />
-      </div>
-    );
   }
-
-  if (error && !business) {
-    return (
-      <div className="flex min-h-screen items-center justify-center p-6">
-        <div className="bg-red-900/20 border border-red-500/30 rounded-xl p-6 text-center max-w-sm">
-          <p className="text-red-400">{error}</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!business) return null;
-
-  // ── APPROVED: Full-screen green ──
-  if (session?.status === 'APPROVED' && !redeemed) {
-    return (
-      <div className="flex min-h-screen flex-col items-center justify-center p-6 bg-ifr-green/5">
-        <div className="w-full max-w-sm text-center space-y-6">
-          <div className="text-6xl">&#10003;</div>
-          <h1 className="text-3xl font-bold text-ifr-green">APPROVED</h1>
-          <p className="text-gray-300">
-            Wallet:{' '}
-            <span className="font-mono text-white">
-              {session.recoveredAddress
-                ? shortAddr(session.recoveredAddress)
-                : '—'}
-            </span>
-          </p>
-          <div className="bg-black/30 rounded-xl p-4">
-            <p className="text-sm text-gray-400 mb-1">Valid for</p>
-            <Countdown expiresAt={session.expiresAt} onExpired={handleExpired} />
-          </div>
-          <p className="text-2xl font-bold">
-            {business.discountPercent}% Discount
-            {business.tierLabel && (
-              <span className="ml-2 text-lg text-gray-400">
-                ({business.tierLabel})
-              </span>
-            )}
-          </p>
-          <button
-            onClick={handleRedeem}
-            className="w-full py-4 bg-ifr-green text-white text-lg font-bold rounded-xl hover:bg-ifr-green/90 transition"
-          >
-            Redeem
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  // ── REDEEMED ──
-  if (session?.status === 'REDEEMED' || redeemed) {
-    return (
-      <div className="flex min-h-screen flex-col items-center justify-center p-6">
-        <div className="w-full max-w-sm text-center space-y-6">
-          <div className="text-6xl">&#10003;</div>
-          <h1 className="text-2xl font-bold text-ifr-green">Redeemed</h1>
-          <p className="text-gray-400">Discount has been applied.</p>
-          <button
-            onClick={handleStart}
-            className="w-full py-3 bg-white/10 text-white rounded-xl hover:bg-white/15 transition"
-          >
-            New Verification
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  // ── REJECTED ──
-  if (session?.status === 'REJECTED') {
-    return (
-      <div className="flex min-h-screen flex-col items-center justify-center p-6">
-        <div className="w-full max-w-sm text-center space-y-6">
-          <div className="bg-ifr-red/10 border border-ifr-red/30 rounded-xl p-6">
-            <h2 className="text-xl font-bold text-ifr-red mb-2">Not Eligible</h2>
-            <p className="text-gray-400 text-sm">{session.reason || 'Lock requirement not met.'}</p>
-          </div>
-          <button
-            onClick={handleStart}
-            className="w-full py-3 bg-white/10 text-white rounded-xl hover:bg-white/15 transition"
-          >
-            New Verification
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  // ── EXPIRED ──
-  if (session?.status === 'EXPIRED') {
-    return (
-      <div className="flex min-h-screen flex-col items-center justify-center p-6">
-        <div className="w-full max-w-sm text-center space-y-6">
-          <div className="bg-gray-500/10 border border-gray-500/30 rounded-xl p-6">
-            <h2 className="text-xl font-bold text-gray-400">Expired</h2>
-            <p className="text-gray-500 text-sm mt-2">Session timed out.</p>
-          </div>
-          <button
-            onClick={handleStart}
-            className="w-full py-3 bg-white/10 text-white rounded-xl hover:bg-white/15 transition"
-          >
-            New Verification
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  // ── DEFAULT: Business Info + Start / QR + Polling ──
-  const customerUrl =
-    typeof window !== 'undefined' && sessionId
-      ? `${window.location.origin}/r/${sessionId}`
-      : '';
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center p-6">
-      <div className="w-full max-w-sm space-y-6">
-        {/* Header */}
-        <div className="text-center">
-          <p className="text-xs text-gray-500 uppercase tracking-widest mb-1">
-            IFR Benefits Network
+    <AppShell>
+      <section className="mx-auto grid w-full max-w-5xl gap-6 px-5 pb-16 pt-8 lg:grid-cols-[0.9fr_1.1fr]">
+        <div className="rounded-[2rem] border border-white/10 bg-white/[0.06] p-6 shadow-2xl shadow-black/30">
+          <p className="text-xs font-bold uppercase tracking-[0.18em] text-orange-200/80">
+            Seller scanner
           </p>
-          <h1 className="text-2xl font-bold">{business.name}</h1>
-          <p className="text-ifr-red text-xl font-semibold mt-1">
-            {business.discountPercent}% Discount
+          <h1 className="mt-2 text-4xl font-black text-white">{business?.name || 'Business console'}</h1>
+          <p className="mt-4 text-sm leading-6 text-stone-300">
+            Start a short-lived verification session. The customer signs the QR challenge;
+            the backend checks IFRLock on-chain and this screen updates automatically.
           </p>
-          {business.tierLabel && (
-            <p className="text-gray-400 text-sm">{business.tierLabel} Tier</p>
-          )}
-          <p className="text-gray-500 text-xs mt-2">
-            Requires {business.requiredLockIFR.toLocaleString()} IFR locked
-          </p>
+
+          <div className="mt-6 grid gap-3 rounded-2xl border border-white/10 bg-black/25 p-4 text-sm text-stone-300">
+            <div className="flex justify-between gap-4">
+              <span>Benefit</span>
+              <strong className="text-white">{business ? `${business.discountPercent}%` : '-'}</strong>
+            </div>
+            <div className="flex justify-between gap-4">
+              <span>Required lock</span>
+              <strong className="text-white">{business ? `${business.requiredLockIFR.toLocaleString('en-US')} IFR` : '-'}</strong>
+            </div>
+            <div className="flex justify-between gap-4">
+              <span>Tier</span>
+              <strong className="text-white">{business?.tierLabel || 'Standard'}</strong>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={startSession}
+            disabled={!business || loading}
+            className="mt-6 w-full rounded-2xl bg-orange-300 px-5 py-4 text-sm font-black uppercase tracking-[0.16em] text-stone-950 shadow-xl shadow-orange-950/40 transition hover:bg-orange-200 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {loading ? 'Working...' : session ? 'Create new QR session' : 'Create QR session'}
+          </button>
+          {error ? <p className="mt-4 rounded-2xl border border-red-400/30 bg-red-500/10 p-3 text-sm text-red-200">{error}</p> : null}
         </div>
 
-        {/* No active session: show start button */}
-        {!sessionId && (
-          <button
-            onClick={handleStart}
-            className="w-full py-4 bg-ifr-red text-white text-lg font-bold rounded-xl hover:bg-ifr-red/90 transition"
-          >
-            Start Verification
-          </button>
-        )}
+        <div className="rounded-[2rem] border border-white/10 bg-stone-100 p-6 text-stone-950 shadow-2xl shadow-black/30">
+          {session && customerUrl ? (
+            <div className="grid gap-5">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-[0.18em] text-stone-500">Customer QR</p>
+                  <h2 className="mt-1 text-2xl font-black">Scan to verify</h2>
+                </div>
+                {status ? <StatusBadge status={status.status} /> : <StatusBadge status="PENDING" />}
+              </div>
 
-        {/* Active session: QR + status */}
-        {sessionId && session?.status === 'PENDING' && (
-          <>
-            <div className="bg-white p-4 rounded-xl mx-auto w-fit">
-              <QRCode value={customerUrl} size={256} />
-            </div>
-            <p className="text-center text-gray-400 text-sm">
-              Customer scans this QR code to verify
-            </p>
-            <div className="flex items-center justify-center gap-3">
-              <div className="animate-spin h-4 w-4 border-2 border-ifr-orange border-t-transparent rounded-full" />
-              <span className="text-gray-400">Waiting for customer...</span>
-              <Countdown expiresAt={session.expiresAt} onExpired={handleExpired} />
-            </div>
-          </>
-        )}
+              {status?.status === 'APPROVED' ? (
+                <div className="rounded-3xl border border-green-300/40 bg-green-50 p-6 text-center">
+                  <p className="text-5xl">✓</p>
+                  <h3 className="mt-3 text-3xl font-black text-green-800">Approved</h3>
+                  <p className="mt-2 text-sm text-green-900">
+                    {status.recoveredAddress ? `Wallet ${status.recoveredAddress.slice(0, 6)}...${status.recoveredAddress.slice(-4)} verified.` : 'Wallet verified.'}
+                  </p>
+                  <p className="mt-4 text-2xl font-black">{business?.discountPercent}% benefit</p>
+                </div>
+              ) : isDone ? (
+                <div className="rounded-3xl border border-stone-200 bg-white p-6 text-center">
+                  <h3 className="text-3xl font-black">{status.status}</h3>
+                  <p className="mt-2 text-sm leading-6 text-stone-500">
+                    {status.reason || 'Create a new session for the next customer.'}
+                  </p>
+                </div>
+              ) : (
+                <div className="grid place-items-center rounded-3xl bg-white p-6">
+                  <QRCode value={customerUrl} size={240} />
+                </div>
+              )}
 
-        {error && (
-          <p className="text-ifr-red text-sm text-center">{error}</p>
-        )}
-      </div>
-    </div>
+              <div className="grid gap-2 rounded-2xl border border-stone-200 bg-white p-4 text-sm">
+                <div className="flex justify-between gap-4">
+                  <span className="text-stone-500">Expires in</span>
+                  <strong><Countdown expiresAt={session.expiresAt} /></strong>
+                </div>
+                <div className="break-all text-xs text-stone-500">{customerUrl}</div>
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-2">
+                <button
+                  type="button"
+                  onClick={redeem}
+                  disabled={loading || status?.status !== 'APPROVED'}
+                  className="rounded-2xl bg-stone-950 px-5 py-4 text-sm font-black uppercase tracking-[0.16em] text-white transition hover:bg-stone-800 disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  Redeem approved benefit
+                </button>
+                <button
+                  type="button"
+                  onClick={startSession}
+                  disabled={loading}
+                  className="rounded-2xl border border-stone-300 px-5 py-4 text-sm font-black uppercase tracking-[0.16em] text-stone-950 transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  New verification
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="grid min-h-[28rem] place-items-center text-center">
+              <div>
+                <p className="text-5xl">QR</p>
+                <h2 className="mt-4 text-2xl font-black">No active session</h2>
+                <p className="mt-2 max-w-sm text-sm leading-6 text-stone-500">
+                  Create a session to show a customer QR code here.
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+      </section>
+    </AppShell>
   );
 }

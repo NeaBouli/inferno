@@ -40,6 +40,8 @@ dist/
 
 # Lock files (generated)
 package-lock.json
+!apps/benefits-network/backend/package-lock.json
+!apps/benefits-network/frontend/package-lock.json
 
 # Archive (local artifacts, not for repo)
 _archive/
