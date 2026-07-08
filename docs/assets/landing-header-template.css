@@ -417,25 +417,62 @@ nav #connect {
   width: min(100%, 240px) !important;
   min-height: 46px !important;
   padding: 12px 22px !important;
-  border: 1px solid rgba(242, 178, 124, .68) !important;
+  border: 1px solid rgba(176, 72, 30, .72) !important;
   border-radius: 4px !important;
-  background: #f2b27c !important;
+  background: linear-gradient(180deg, #f2b27c 0%, #d36b35 48%, #a93d18 100%) !important;
   color: #211c17 !important;
-  box-shadow: 0 12px 26px rgba(180, 72, 31, .16), inset 0 1px 0 rgba(255, 255, 255, .38) !important;
+  box-shadow:
+    0 13px 0 #6f2811,
+    0 20px 32px rgba(176, 72, 30, .26),
+    inset 0 1px 0 rgba(255, 255, 255, .42),
+    inset 0 -2px 0 rgba(70, 24, 8, .28) !important;
   font-family: "IBM Plex Mono", "SF Mono", Menlo, monospace !important;
   font-size: 13px !important;
   font-weight: 600 !important;
   line-height: 1 !important;
   letter-spacing: 1.6px !important;
   text-decoration: none !important;
-  transition: transform .2s ease, background .2s ease, box-shadow .2s ease !important;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, .28) !important;
+  transform: translateY(-5px) !important;
+  animation: hero-web3-ember-pulse 2.8s ease-in-out infinite !important;
+  transition: transform .2s ease, filter .2s ease, box-shadow .2s ease !important;
 }
 
 .template-hero .hero-web3-btn:hover {
-  background: #eaa264 !important;
+  background: linear-gradient(180deg, #ffc28d 0%, #df743b 48%, #b0481e 100%) !important;
   border-color: rgba(180, 72, 31, .58) !important;
-  box-shadow: 0 14px 30px rgba(180, 72, 31, .22), inset 0 1px 0 rgba(255, 255, 255, .44) !important;
-  transform: translateY(-1px) !important;
+  box-shadow:
+    0 10px 0 #6f2811,
+    0 22px 36px rgba(176, 72, 30, .34),
+    inset 0 1px 0 rgba(255, 255, 255, .48),
+    inset 0 -2px 0 rgba(70, 24, 8, .28) !important;
+  filter: saturate(1.07) !important;
+  transform: translateY(-2px) !important;
+}
+
+@keyframes hero-web3-ember-pulse {
+  0%, 100% {
+    box-shadow:
+      0 13px 0 #6f2811,
+      0 20px 32px rgba(176, 72, 30, .24),
+      0 0 0 0 rgba(176, 72, 30, .18),
+      inset 0 1px 0 rgba(255, 255, 255, .42),
+      inset 0 -2px 0 rgba(70, 24, 8, .28);
+  }
+  50% {
+    box-shadow:
+      0 13px 0 #6f2811,
+      0 23px 38px rgba(176, 72, 30, .34),
+      0 0 0 7px rgba(176, 72, 30, .08),
+      inset 0 1px 0 rgba(255, 255, 255, .46),
+      inset 0 -2px 0 rgba(70, 24, 8, .28);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .template-hero .hero-web3-btn {
+    animation: none !important;
+  }
 }
 
 .template-hero .ledger {
