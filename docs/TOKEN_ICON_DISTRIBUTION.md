@@ -1,6 +1,6 @@
 # IFR Token Icon Distribution
 
-Last checked: 2026-06-18
+Last checked: 2026-07-08
 
 ## Canonical Token Metadata
 
@@ -17,15 +17,15 @@ Last checked: 2026-06-18
 
 | Surface | Status | Notes |
 | --- | --- | --- |
-| Etherscan | Live | Token page uses `infernoprotocol_ifr.svg`. Reputation still shows `Unknown`. |
+| Etherscan | Live | Token page uses `infernoprotocol_ifr.svg`. Reputation now shows `Neutral`. |
 | Uniswap Default Token List | Open | Request exists: https://github.com/Uniswap/default-token-list/issues/2509 |
 | Uniswap Custom Token List | Ready | Hosted at `https://ifrunit.tech/token-list.json`. |
-| MetaMask Registry | Blocked | `MetaMask/contract-metadata` is effectively frozen for new tokens and requires Etherscan `NEUTRAL` or `OK` reputation for Ethereum assets. IFR currently shows `Unknown`. |
+| MetaMask Registry | Ready for retry | `MetaMask/contract-metadata` is effectively frozen for new tokens, but the former Etherscan `Unknown` blocker is cleared because IFR now shows `Neutral`. |
 | MetaMask `wallet_watchAsset` | Implemented | Landing page can request MetaMask to add IFR with the official icon URL. |
 
 ## Next Actions
 
 1. Keep Uniswap issue #2509 updated after any CoinGecko/CoinMarketCap page goes live.
-2. Request Etherscan reputation review from `Unknown` to `Neutral` or `OK`.
-3. Re-check MetaMask registry only after Etherscan reputation changes.
+2. Retry MetaMask registry/token metadata follow-up with Etherscan `Neutral` as supporting evidence.
+3. Keep monitoring Etherscan reputation for movement from `Neutral` to `OK`.
 4. Keep `docs/token-list.json` and `docs/.well-known/token-list.json` in sync when metadata changes.

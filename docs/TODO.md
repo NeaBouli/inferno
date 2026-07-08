@@ -197,9 +197,11 @@ On errors: fix immediately, commit with `seo:` prefix.
 - [x] ✅ Blockaid Unflag bestätigt (10.06.2026)
       IFR Contract unflagged — Propagation ~24h ab 10.06.2026 02:25 UTC
       Nach 24h: MetaMask+WalletConnect testen
-- [ ] npm audit: 34 vulnerabilities (2 critical, 9 high, 11 moderate, 12 low) — fix after LP launch
+- [ ] npm audit: 61 vulnerabilities (1 critical, 9 high, 26 moderate, 25 low) — migration branch needed
       Link: https://github.com/NeaBouli/inferno/security/dependabot
-      Note: affects node_modules only, not Solidity contracts
+      Status 08.07.2026: non-forced `npm audit fix --package-lock-only` applied safely.
+      Remaining findings are mostly Hardhat 2 / ethers v5 / Waffle-Ganache / solc / undici toolchain debt.
+      Do not run `npm audit fix --force` on main; handle via dedicated modernization branch.
 - [x] Bootstrap public stats: PublicNode RPC fallback + _publicStatsLoaded race guard ✅
 - [x] Recent Votes: loadSavedVotes() on DOMContentLoaded ✅ (bc18c85a)
 - [x] WalletConnect placeholder text removed ✅
@@ -301,10 +303,12 @@ On errors: fix immediately, commit with `seo:` prefix.
 
 - [ ] 🟠 CommitmentVault Batch Lock UX verbessern
       Status 29.06.2026: bewusst auf Backlog gesetzt; aktueller Self-service Flow bleibt 1x approve + 10x lock fuer 10 Tranchen.
+      Status 08.07.2026: Web3 supports direct CommitmentVault locking, but batch UX still needs a native contract path.
       Ziel: 10-Tranchen-Split nicht mehr als 10 separate `lock()` Wallet-Confirmations.
       Aktuell: 1x approve + N x lock(amount, cType, unlockTime, p0Multiplier).
       Vorschlag: native Vault-Erweiterung `lockBatch(...)` / `lockSplit(totalAmount, splitCount, ...)`.
       Wichtig: Reiner Helper/Batcher ist nicht sauber, weil der aktuelle Vault `msg.sender` lockt; ohne `lockFor(owner, ...)` würden Tokens/Tranches dem Helper statt dem User zugeordnet.
+      Price-condition locks: weiterhin deaktiviert; `CommitmentVault._getCurrentPrice()` gibt im deployten Contract 0 zurück, Oracle-Adresse allein reicht nicht.
 
 - [ ] 🟡 StealthX × IFR Integration
       Spec: docs/STEALTHX_IFR_INTEGRATION.md
@@ -313,6 +317,7 @@ On errors: fix immediately, commit with `seo:` prefix.
       App-side StealthX tasks live außerhalb dieses Repos: Android first-run permission prompts
       (notifications/microphone), kaputte invitation/QR-Flows und Secure Trio In-App-Kauf
       analog SecureCall in den Produkt-Repos tracken/umsetzen.
+      Status 08.07.2026: bleibt bewusst extern; dieses Repo hält nur IFR protocol/source-of-truth docs.
 
 - [ ] 🟡 Mehr Contributors für Bootstrap
       Ziel: mehr ETH = höheres P0
@@ -412,6 +417,8 @@ On errors: fix immediately, commit with `seo:` prefix.
 - [ ] 🔵 Collateral Health Monitor
       Borrower sees collateral ratio, warning at <150% (red),
       "Top Up" button for margin calls
+      Status 08.07.2026: Web3 Borrow panel shows collateral health badges for active wallet loans.
+      Remaining: global liquidation/liquidator dashboard and Telegram alert UX.
 
 ### Phase 3 — Railway Extensions
 - [x] ✅ Lending Endpoints (07.04.2026)
@@ -843,13 +850,12 @@ Strategic goal: "IFR = Stripe for Web3 Access — Web3 SaaS Standard"
 - [x] ✅ Lender Interface
       Guided 1-5 flow: connect, amount, approval, create/increase offer, live market verification
       WalletConnect/Header connector reused; approval-only state is detected and prompts Create Offer
-- [ ] 🔵 Borrower Interface
-      Browse offers is wired; take loan (ETH collateral), manage loans, repay remain pending
-      Borrow transactions require ifrPriceWei to be set and an active offer to exist
-- [ ] 🔵 Collateral Health Monitor UI
-      Live ratio per loan: HEALTHY/WARNING/CRITICAL
-      Margin Call warning (<150%), Liquidation button (<120%)
-      Telegram alert integration
+- [x] ✅ Borrower Interface
+      Web3 + Wiki can browse offers, preview required ETH collateral, submit borrow(), approve/repay, and top up collateral.
+      Borrow transactions remain contract-gated until `LendingVault.ifrPriceWei` is set by Governance and an active third-party offer exists.
+- [x] ✅ Collateral Health Monitor UI
+      Web3 Borrow panel shows live ratio state per active wallet loan: Healthy / Warning / Liquidation / Price not set.
+      Remaining separate item: global liquidator dashboard and Telegram alert integration.
 - [ ] 🔵 Liquidation Interface
       All liquidatable loans, 5% liquidator bonus, permissionless
 - [x] ✅ Market Overview Dashboard

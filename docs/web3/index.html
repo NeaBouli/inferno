@@ -832,6 +832,40 @@
       font-size: 13px;
     }
 
+    .health-badge {
+      display: inline-flex;
+      align-items: center;
+      width: fit-content;
+      margin-top: 8px;
+      padding: 4px 9px;
+      border-radius: 999px;
+      border: 1px solid rgba(43, 110, 82, 0.24);
+      background: rgba(221, 238, 225, 0.75);
+      color: #245f47;
+      font-size: 11px;
+      font-weight: 900;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .health-badge.is-warning {
+      border-color: rgba(175, 92, 29, 0.28);
+      background: rgba(255, 229, 196, 0.78);
+      color: #9a4c17;
+    }
+
+    .health-badge.is-critical {
+      border-color: rgba(169, 48, 31, 0.3);
+      background: rgba(255, 216, 209, 0.8);
+      color: #9b2f20;
+    }
+
+    .health-badge.is-muted {
+      border-color: rgba(47, 63, 79, 0.16);
+      background: rgba(236, 231, 220, 0.8);
+      color: #59645d;
+    }
+
     .install-steps {
       display: grid;
       gap: 8px;
@@ -2744,6 +2778,23 @@
         return currentBorrowState.loans.find((item) => String(item.id) === String(borrowLoan.value)) || null;
       }
 
+      function loanHealthState(ratio, priceMissing) {
+        if (priceMissing) {
+          return { label: "Price not set", value: "Collateral ratio unavailable", className: "is-muted" };
+        }
+        if (!ratio || ratio.eq(ethers.constants.MaxUint256)) {
+          return { label: "Safe", value: "No liquidation pressure", className: "" };
+        }
+        const pct = ratio.toNumber();
+        if (pct < 120) {
+          return { label: "Liquidation", value: `${pct}% collateral ratio`, className: "is-critical" };
+        }
+        if (pct < 150) {
+          return { label: "Warning", value: `${pct}% collateral ratio`, className: "is-warning" };
+        }
+        return { label: "Healthy", value: `${pct}% collateral ratio`, className: "" };
+      }
+
       async function updateBorrowPreview() {
         if (!currentBorrowState) return;
         const offer = selectedBorrowOffer();
@@ -2808,7 +2859,10 @@
           : "<option value=\"\">No active offers</option>";
 
         borrowLoan.innerHTML = loans.length
-          ? loans.map((item) => `<option value="${item.id}">Loan #${item.id} - ${formatIFR(item.loan.ifrAmount)}</option>`).join("")
+          ? loans.map((item) => {
+              const health = loanHealthState(item.ratio, priceMissing);
+              return `<option value="${item.id}">Loan #${item.id} - ${formatIFR(item.loan.ifrAmount)} - ${health.label}</option>`;
+            }).join("")
           : "<option value=\"\">No active loans</option>";
 
         borrowOffers.innerHTML = offers.length
@@ -2830,19 +2884,20 @@
         borrowLoans.innerHTML = loans.length
           ? loans.map((item) => {
               const repay = item.interest ? item.loan.ifrAmount.add(item.interest) : item.loan.ifrAmount;
-              const ratio = item.ratio && !item.ratio.eq(ethers.constants.MaxUint256) ? `${item.ratio.toString()}%` : "Safe";
+              const health = loanHealthState(item.ratio, priceMissing);
               return `
                 <div class="loan-row">
                   <div>
                     <small>Loan #${item.id} - offer #${item.loan.offerId.toString()}</small>
                     <strong>${formatIFR(item.loan.ifrAmount)} borrowed</strong>
-                    <span style="color:var(--ink-soft);font-size:12px;">Collateral ${formatETH(item.loan.ethCollateral)} - repay ${formatIFR(repay)} - ratio ${ratio}</span>
+                    <span style="color:var(--ink-soft);font-size:12px;">Collateral ${formatETH(item.loan.ethCollateral)} - repay ${formatIFR(repay)} - ${health.value}</span>
+                    <span class="health-badge ${health.className}">${health.label}</span>
                   </div>
                   <button class="btn btn-mint" type="button" data-select-borrow-loan="${item.id}">Manage</button>
                 </div>
               `;
             }).join("")
-          : "<p class=\"protocol-note\">No active borrower loans for this wallet.</p>";
+          : "<p class=\"protocol-note\">No active borrower loans for this wallet. When loans exist, this panel shows collateral health, repayment, and top-up actions.</p>";
 
         borrowRepay.disabled = loans.length === 0;
         borrowTopupSubmit.disabled = loans.length === 0;
