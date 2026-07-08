@@ -712,6 +712,14 @@
       margin: 18px 0;
     }
 
+    .protocol-form-wide {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .protocol-field-full {
+      grid-column: 1 / -1;
+    }
+
     .protocol-field input,
     .protocol-field select {
       width: 100%;
@@ -723,6 +731,37 @@
       color: var(--ink);
       font: 700 16px/1 var(--sans);
       padding: 0 13px;
+    }
+
+    .protocol-check {
+      min-height: 48px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 8px;
+      padding: 0 13px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #fffaf2;
+      color: var(--ink);
+      font-weight: 700;
+    }
+
+    .protocol-check input {
+      width: 18px;
+      height: 18px;
+      margin: 0;
+      accent-color: var(--ember);
+    }
+
+    .protocol-note {
+      margin: 12px 0 0;
+      padding: 12px 13px;
+      border: 1px solid rgba(180, 72, 31, 0.22);
+      border-radius: var(--radius);
+      background: rgba(244, 222, 208, 0.48);
+      color: var(--ink-soft);
+      font-size: 13px;
     }
 
     .protocol-actions {
@@ -1347,10 +1386,17 @@
             </div>
             <div class="status-card">
               <div>
-                <p class="status-label">Locked IFR</p>
-                <div class="status-value" data-locked-balance>Connect</div>
+                <p class="status-label">IFRLock Access</p>
+                <div class="status-value" data-access-lock-balance>Connect</div>
               </div>
-              <span class="status-note" data-access-tier>Access check</span>
+              <span class="status-note" data-access-lock-note>Access check</span>
+            </div>
+            <div class="status-card">
+              <div>
+                <p class="status-label">CommitmentVault</p>
+                <div class="status-value" data-commitment-balance>Connect</div>
+              </div>
+              <span class="status-note" data-commitment-note>Tranches</span>
             </div>
             <div class="status-card">
               <div>
@@ -1363,12 +1409,13 @@
         </div>
         <div>
           <div class="panel-actions">
-            <button class="btn btn-primary" type="button" data-open-lock>Lock IFR</button>
+            <button class="btn btn-primary" type="button" data-open-access-lock>Access lock</button>
+            <button class="btn btn-mint" type="button" data-open-lock>Commitment lock</button>
             <button class="btn btn-mint" type="button" data-open-lending>Create offer</button>
             <button class="btn btn-quiet" type="button" data-add-token>Add IFR to wallet</button>
             <a class="btn btn-quiet" href="https://www.geckoterminal.com/eth/pools/0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0" target="_blank" rel="noopener">Track pool</a>
           </div>
-          <p class="panel-foot">This module reads wallet, lock, and lending state from Mainnet. Lock, unlock, and offer actions run directly here on Web3.</p>
+          <p class="panel-foot">Access lock uses IFRLock for simple refundable product access. Commitment lock uses CommitmentVault tranches with time and price conditions.</p>
         </div>
       </aside>
     </div>
@@ -1393,9 +1440,10 @@
         <div class="audience-detail" data-audience-panel>
           <div>
             <h3 data-audience-title>Lock once. Use across the ecosystem.</h3>
-            <p data-audience-copy>Holders can connect, check IFR balance, view locked IFR, and move into the CommitmentVault or LendingVault flows without hunting through the full documentation tree.</p>
+            <p data-audience-copy>Holders can connect, check IFR balance, use the simple IFRLock access lock, manage CommitmentVault tranches, and create or withdraw LendingVault offers without hunting through the full documentation tree.</p>
             <div class="audience-actions" data-audience-actions>
-              <button class="btn btn-primary" type="button" data-open-lock>Lock IFR</button>
+              <button class="btn btn-primary" type="button" data-open-access-lock>Access lock</button>
+              <button class="btn btn-mint" type="button" data-open-lock>Commitment lock</button>
               <button class="btn btn-mint" type="button" data-open-lending>Create offer</button>
               <a class="btn btn-quiet" href="https://app.uniswap.org/swap?outputCurrency=0x77e99917Eca8539c62F509ED1193ac36580A6e7B" target="_blank" rel="noopener">Buy IFR</a>
               <a class="btn btn-quiet" href="https://www.geckoterminal.com/eth/pools/0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0" target="_blank" rel="noopener">Track pool</a>
@@ -1404,7 +1452,7 @@
           <ul class="detail-list" data-audience-list>
             <li>Check wallet, IFR balance, and lock state.</li>
             <li>Buy IFR on the live Uniswap V2 pool.</li>
-            <li>Lock IFR for access or lend IFR through protocol offers.</li>
+            <li>Use IFRLock for simple access, CommitmentVault for tranches, or LendingVault for offers.</li>
           </ul>
         </div>
       </div>
@@ -1428,7 +1476,7 @@
           <article class="flow-step">
             <span class="step-number">02</span>
             <h3>Lock for access</h3>
-            <p>CommitmentVault locks turn token ownership into a durable access signal for products and protocol tooling.</p>
+            <p>IFRLock is the simple refundable access lock. CommitmentVault is the advanced tranche vault for time and price commitments.</p>
           </article>
           <article class="flow-step">
             <span class="step-number">03</span>
@@ -1560,12 +1608,64 @@
     </div>
   </div>
 
+  <div class="protocol-dialog" data-access-lock-dialog aria-hidden="true">
+    <div class="protocol-card" role="dialog" aria-modal="true" aria-labelledby="access-lock-title">
+      <header>
+        <div>
+          <h2 id="access-lock-title">IFRLock Access</h2>
+          <p>Simple refundable access lock. Tokens are held in IFRLock, products can read <code>isLocked(wallet, minAmount)</code>, and unlock returns the full IFRLock balance to the same wallet.</p>
+        </div>
+        <button class="protocol-close" type="button" aria-label="Close access lock panel" data-access-lock-close>&times;</button>
+      </header>
+
+      <div class="protocol-grid">
+        <div class="protocol-stat">
+          <span>Wallet IFR</span>
+          <strong data-access-wallet-balance>Connect</strong>
+        </div>
+        <div class="protocol-stat">
+          <span>IFRLock locked</span>
+          <strong data-access-lock-total>Connect</strong>
+        </div>
+        <div class="protocol-stat">
+          <span>Approved</span>
+          <strong data-access-lock-allowance>Connect</strong>
+        </div>
+      </div>
+
+      <div class="protocol-form protocol-form-wide">
+        <div class="protocol-field">
+          <label for="access-lock-amount">Amount</label>
+          <input id="access-lock-amount" inputmode="decimal" autocomplete="off" placeholder="1000 IFR" data-access-lock-amount>
+        </div>
+        <div class="protocol-field">
+          <label for="access-lock-type">Lock type</label>
+          <select id="access-lock-type" data-access-lock-type>
+            <option value="">Default access</option>
+            <option value="premium">Premium access</option>
+            <option value="builder">Builder access</option>
+            <option value="community">Community access</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="protocol-actions">
+        <button class="btn btn-quiet" type="button" data-access-lock-max>Use max</button>
+        <button class="btn btn-mint" type="button" data-access-lock-refresh>Refresh</button>
+        <button class="btn btn-primary" type="button" data-access-lock-submit>Approve / Lock</button>
+        <button class="btn btn-quiet" type="button" data-access-lock-unlock>Unlock all</button>
+      </div>
+      <p class="protocol-status" data-access-lock-status>Connect a wallet to load IFRLock state.</p>
+      <p class="protocol-note">This is the simple access lock shown as IFRLock Access Locks on the landing page. It is separate from CommitmentVault.</p>
+    </div>
+  </div>
+
   <div class="protocol-dialog" data-lock-dialog aria-hidden="true">
     <div class="protocol-card" role="dialog" aria-modal="true" aria-labelledby="lock-title">
       <header>
         <div>
-          <h2 id="lock-title">Lock IFR</h2>
-          <p>CommitmentVault locks run directly on this Web3 page. Approve IFR if needed, lock into a time-only tranche, and unlock matured tranches from the same wallet session.</p>
+          <h2 id="lock-title">CommitmentVault Lock</h2>
+          <p>Advanced tranche lock. Choose the condition type, time and price settings, approve IFR if needed, then lock into CommitmentVault from this Web3 page.</p>
         </div>
         <button class="protocol-close" type="button" aria-label="Close lock panel" data-lock-close>&times;</button>
       </header>
@@ -1585,19 +1685,37 @@
         </div>
       </div>
 
-      <div class="protocol-form">
+      <div class="protocol-form protocol-form-wide">
         <div class="protocol-field">
           <label for="lock-amount">Amount</label>
           <input id="lock-amount" inputmode="decimal" autocomplete="off" placeholder="0.00 IFR" data-lock-amount>
         </div>
         <div class="protocol-field">
-          <label for="lock-duration">Duration</label>
-          <select id="lock-duration" data-lock-duration>
-            <option value="30">30 days</option>
-            <option value="90" selected>90 days</option>
-            <option value="180">180 days</option>
-            <option value="365">365 days</option>
+          <label for="lock-condition">Condition</label>
+          <select id="lock-condition" data-lock-condition>
+            <option value="0" selected>Time only</option>
+            <option value="1">Price only</option>
+            <option value="2">Time OR price</option>
+            <option value="3">Time AND price</option>
           </select>
+        </div>
+        <div class="protocol-field" data-lock-time-field>
+          <label for="lock-unlock-date">Unlock date</label>
+          <input id="lock-unlock-date" type="date" data-lock-date>
+        </div>
+        <div class="protocol-field" data-lock-price-field>
+          <label for="lock-multiplier">P0 multiplier</label>
+          <select id="lock-multiplier" data-lock-multiplier>
+            <option value="200">2x P0</option>
+            <option value="500">5x P0</option>
+            <option value="1000">10x P0</option>
+            <option value="2500">25x P0</option>
+            <option value="10000">100x P0</option>
+          </select>
+        </div>
+        <div class="protocol-field protocol-field-full">
+          <label for="lock-split">Tranche split</label>
+          <label class="protocol-check"><input id="lock-split" type="checkbox" data-lock-split> Split into 10 equal tranches</label>
         </div>
       </div>
 
@@ -1607,6 +1725,7 @@
         <button class="btn btn-primary" type="button" data-lock-submit>Approve / Lock</button>
       </div>
       <p class="protocol-status" data-lock-status>Connect a wallet to load your vault state.</p>
+      <p class="protocol-note" data-lock-note>Time-only locks are always available. Price conditions require the CommitmentVault price oracle to be configured on-chain.</p>
 
       <div class="tranche-list" data-lock-tranches></div>
     </div>
@@ -1663,14 +1782,15 @@
       const audiences = {
         users: {
           title: "Lock once. Use across the ecosystem.",
-          copy: "Users can connect, buy IFR, add the token to their wallet, lock IFR in the CommitmentVault, manage unlockable tranches, and create or withdraw LendingVault offers directly on this Web3 page.",
+          copy: "Users can connect, buy IFR, add the token to their wallet, use the simple IFRLock access lock, manage CommitmentVault tranches, and create or withdraw LendingVault offers directly on this Web3 page.",
           items: [
             "Use the access terminal for wallet, IFR balance, lock state, and token import.",
             "Buy IFR on Uniswap or track the live pool without leaving the user flow.",
-            "Lock, unlock matured tranches, create lending offers, increase offers, or withdraw unlent IFR directly on Web3."
+            "Use IFRLock for simple access, CommitmentVault for conditional tranches, or LendingVault for offers."
           ],
           actions: [
-            { label: "Lock IFR", kind: "button", variant: "btn-primary", data: "data-open-lock" },
+            { label: "Access lock", kind: "button", variant: "btn-primary", data: "data-open-access-lock" },
+            { label: "Commitment lock", kind: "button", variant: "btn-mint", data: "data-open-lock" },
             { label: "Create offer", kind: "button", variant: "btn-mint", data: "data-open-lending" },
             { label: "Buy IFR", kind: "link", variant: "btn-quiet", href: "https://app.uniswap.org/swap?outputCurrency=0x77e99917Eca8539c62F509ED1193ac36580A6e7B", external: true },
             { label: "Track pool", kind: "link", variant: "btn-quiet", href: "https://www.geckoterminal.com/eth/pools/0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0", external: true }
@@ -1752,8 +1872,10 @@
       const walletAddress = document.querySelector("[data-wallet-address]");
       const walletState = document.querySelector("[data-wallet-state]");
       const ifrBalance = document.querySelector("[data-ifr-balance]");
-      const lockedBalance = document.querySelector("[data-locked-balance]");
-      const accessTier = document.querySelector("[data-access-tier]");
+      const accessLockBalance = document.querySelector("[data-access-lock-balance]");
+      const accessLockNote = document.querySelector("[data-access-lock-note]");
+      const commitmentBalance = document.querySelector("[data-commitment-balance]");
+      const commitmentNote = document.querySelector("[data-commitment-note]");
       const bootstrapStatus = document.querySelector("[data-bootstrap-status]");
       const bootstrapNote = document.querySelector("[data-bootstrap-note]");
       const installButtons = document.querySelectorAll("[data-install-app]");
@@ -1768,14 +1890,32 @@
       const walletTrust = document.querySelector("[data-wallet-trust]");
       const walletCoinbase = document.querySelector("[data-wallet-coinbase]");
       const walletCopy = document.querySelector("[data-wallet-copy]");
+      const accessLockDialog = document.querySelector("[data-access-lock-dialog]");
+      const accessLockClose = document.querySelector("[data-access-lock-close]");
+      const accessLockAmount = document.querySelector("[data-access-lock-amount]");
+      const accessLockType = document.querySelector("[data-access-lock-type]");
+      const accessWalletBalance = document.querySelector("[data-access-wallet-balance]");
+      const accessLockTotal = document.querySelector("[data-access-lock-total]");
+      const accessLockAllowance = document.querySelector("[data-access-lock-allowance]");
+      const accessLockStatus = document.querySelector("[data-access-lock-status]");
+      const accessLockMax = document.querySelector("[data-access-lock-max]");
+      const accessLockRefresh = document.querySelector("[data-access-lock-refresh]");
+      const accessLockSubmit = document.querySelector("[data-access-lock-submit]");
+      const accessLockUnlock = document.querySelector("[data-access-lock-unlock]");
       const lockDialog = document.querySelector("[data-lock-dialog]");
       const lockClose = document.querySelector("[data-lock-close]");
       const lockAmount = document.querySelector("[data-lock-amount]");
-      const lockDuration = document.querySelector("[data-lock-duration]");
+      const lockCondition = document.querySelector("[data-lock-condition]");
+      const lockDate = document.querySelector("[data-lock-date]");
+      const lockMultiplier = document.querySelector("[data-lock-multiplier]");
+      const lockSplit = document.querySelector("[data-lock-split]");
+      const lockTimeField = document.querySelector("[data-lock-time-field]");
+      const lockPriceField = document.querySelector("[data-lock-price-field]");
       const lockWalletBalance = document.querySelector("[data-lock-wallet-balance]");
       const lockTotal = document.querySelector("[data-lock-total]");
       const lockAllowance = document.querySelector("[data-lock-allowance]");
       const lockStatus = document.querySelector("[data-lock-status]");
+      const lockNote = document.querySelector("[data-lock-note]");
       const lockTranches = document.querySelector("[data-lock-tranches]");
       const lockMax = document.querySelector("[data-lock-max]");
       const lockRefresh = document.querySelector("[data-lock-refresh]");
@@ -1802,11 +1942,13 @@
       }
       let deferredInstallPrompt = null;
       let walletConnectUri = "";
+      let currentAccessLockState = null;
       let currentLockState = null;
       let currentLendingState = null;
       const web3Url = "https://web3.ifrunit.tech/";
       const encodedWeb3Url = encodeURIComponent(web3Url);
       const IFR_TOKEN_ADDRESS = "0x77e99917Eca8539c62F509ED1193ac36580A6e7B";
+      const IFR_LOCK_ADDRESS = "0x769928aBDfc949D0718d8766a1C2d7dBb63954Eb";
       const COMMITMENT_VAULT_ADDRESS = "0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3";
       const LENDING_VAULT_ADDRESS = "0x974305Ab0EC905172e697271C3d7d385194EB9DF";
       const IFR_DECIMALS = 9;
@@ -1815,13 +1957,21 @@
         "function allowance(address,address) view returns (uint256)",
         "function approve(address,uint256) returns (bool)"
       ];
+      const IFR_LOCK_ABI = [
+        "function lock(uint256) external",
+        "function lockWithType(uint256,bytes32) external",
+        "function unlock() external",
+        "function lockedBalance(address) view returns (uint256)",
+        "function lockInfo(address) view returns (uint256 amount,uint256 lockedAt)"
+      ];
       const COMMITMENT_ABI = [
         "function lock(uint256,uint8,uint256,uint256) external",
         "function unlock(address,uint256) external",
         "function lockedBalance(address) view returns (uint256)",
         "function getTrancheCount(address) view returns (uint256)",
         "function getTranche(address,uint256) view returns (tuple(uint256 amount,uint8 cType,uint256 unlockTime,uint256 p0Multiplier,bool unlocked,uint256 conditionMetAt))",
-        "function isConditionMet(address,uint256) view returns (bool)"
+        "function isConditionMet(address,uint256) view returns (bool)",
+        "function priceOracle() view returns (address)"
       ];
       const LENDING_ABI = [
         "function createOffer(uint256) external",
@@ -1936,6 +2086,7 @@
       function getContracts(signerOrProvider) {
         return {
           token: new ethers.Contract(IFR_TOKEN_ADDRESS, TOKEN_ABI, signerOrProvider),
+          ifrLock: new ethers.Contract(IFR_LOCK_ADDRESS, IFR_LOCK_ABI, signerOrProvider),
           commitment: new ethers.Contract(COMMITMENT_VAULT_ADDRESS, COMMITMENT_ABI, signerOrProvider),
           lending: new ethers.Contract(LENDING_VAULT_ADDRESS, LENDING_ABI, signerOrProvider)
         };
@@ -1945,14 +2096,138 @@
         if (!window.IFRState || !window.IFRWallet || !IFRWallet.isConnected()) return;
         const state = await IFRState.load(IFRWallet.getAddress());
         renderState(state);
+        await Promise.all([
+          loadAccessLockSummary(state.address).catch(() => null),
+          loadCommitmentSummary(state.address).catch(() => null)
+        ]);
+      }
+
+      function defaultUnlockDate(days) {
+        const date = new Date(Date.now() + (days || 30) * 24 * 60 * 60 * 1000);
+        return date.toISOString().slice(0, 10);
+      }
+
+      function syncCommitmentConditionFields() {
+        const cType = Number(lockCondition ? lockCondition.value : 0);
+        const needsTime = cType === 0 || cType === 2 || cType === 3;
+        const needsPrice = cType === 1 || cType === 2 || cType === 3;
+        if (lockTimeField) lockTimeField.hidden = !needsTime;
+        if (lockPriceField) lockPriceField.hidden = !needsPrice;
+      }
+
+      function getCommitmentPlan() {
+        const totalAmount = parseIFRInput(lockAmount.value);
+        const cType = Number(lockCondition ? lockCondition.value : 0);
+        const needsTime = cType === 0 || cType === 2 || cType === 3;
+        const needsPrice = cType === 1 || cType === 2 || cType === 3;
+        let unlockTime = 0;
+        let p0Multiplier = 0;
+
+        if (needsTime) {
+          if (!lockDate.value) throw new Error("Choose an unlock date.");
+          unlockTime = Math.floor(new Date(`${lockDate.value}T00:00:00Z`).getTime() / 1000);
+          if (!unlockTime || unlockTime <= Math.floor(Date.now() / 1000)) {
+            throw new Error("Unlock date must be in the future.");
+          }
+        }
+
+        if (needsPrice) {
+          p0Multiplier = Number(lockMultiplier.value || 0);
+          if (!p0Multiplier || p0Multiplier <= 0) throw new Error("Choose a P0 multiplier.");
+          if (currentLockState && currentLockState.priceOracleIsMissing) {
+            throw new Error("Price-condition locks are disabled until the CommitmentVault price oracle is configured on-chain.");
+          }
+        }
+
+        const splitCount = lockSplit && lockSplit.checked ? 10 : 1;
+        const base = totalAmount.div(splitCount);
+        if (base.isZero()) throw new Error("Amount is too small for the selected tranche split.");
+        const amounts = [];
+        for (let i = 0; i < splitCount; i++) {
+          amounts.push(i === splitCount - 1 ? totalAmount.sub(base.mul(splitCount - 1)) : base);
+        }
+
+        return { totalAmount, amounts, cType, unlockTime, p0Multiplier, splitCount };
+      }
+
+      async function loadAccessLockSummary(address) {
+        if (!address || !window.ethers || !window.IFRWallet || !IFRWallet.getProvider()) return;
+        const { ifrLock } = getContracts(IFRWallet.getProvider());
+        const locked = await ifrLock.lockedBalance(address);
+        accessLockBalance.textContent = formatIFR(locked);
+        accessLockNote.textContent = locked.gte(ethers.utils.parseUnits("1000", IFR_DECIMALS)) ? "Premium ready" : "Lock needed";
       }
 
       async function loadCommitmentSummary(address) {
         if (!address || !window.ethers || !window.IFRWallet || !IFRWallet.getProvider()) return;
         const { commitment } = getContracts(IFRWallet.getProvider());
-        const locked = await commitment.lockedBalance(address);
-        lockedBalance.textContent = formatIFR(locked);
-        accessTier.textContent = locked.gte(ethers.utils.parseUnits("1000", IFR_DECIMALS)) ? "Premium ready" : "Lock needed";
+        const [locked, count] = await Promise.all([
+          commitment.lockedBalance(address),
+          commitment.getTrancheCount(address)
+        ]);
+        commitmentBalance.textContent = formatIFR(locked);
+        commitmentNote.textContent = count.toNumber() ? `${count.toNumber()} tranches` : "No tranches";
+      }
+
+      async function loadAccessLockPanel() {
+        const address = await ensureWalletReady("Loading access lock");
+        const provider = IFRWallet.getProvider();
+        const { token, ifrLock } = getContracts(provider);
+        accessLockStatus.textContent = "Reading IFRLock...";
+
+        const [balance, allowance, locked] = await Promise.all([
+          token.balanceOf(address),
+          token.allowance(address, IFR_LOCK_ADDRESS),
+          ifrLock.lockedBalance(address)
+        ]);
+
+        currentAccessLockState = { address, balance, allowance, locked };
+        accessWalletBalance.textContent = formatIFR(balance);
+        accessLockTotal.textContent = formatIFR(locked);
+        accessLockAllowance.textContent = formatIFR(allowance);
+        accessLockBalance.textContent = formatIFR(locked);
+        accessLockNote.textContent = locked.gte(ethers.utils.parseUnits("1000", IFR_DECIMALS)) ? "Premium ready" : "Lock needed";
+        accessLockUnlock.disabled = locked.isZero();
+        accessLockStatus.textContent = locked.isZero() ? "No IFRLock balance yet." : "IFRLock state loaded.";
+      }
+
+      async function lockAccessIFR() {
+        const address = await ensureWalletReady("Preparing access lock");
+        const signer = IFRWallet.getSigner();
+        const { token, ifrLock } = getContracts(signer);
+        const amount = parseIFRInput(accessLockAmount.value);
+        const lockType = accessLockType.value;
+
+        accessLockSubmit.disabled = true;
+        accessLockStatus.textContent = "Checking token allowance...";
+        const allowance = await token.allowance(address, IFR_LOCK_ADDRESS);
+        if (allowance.lt(amount)) {
+          accessLockStatus.textContent = "Approve IFRLock 0x769928...3954Eb for the exact amount.";
+          const approveTx = await token.approve(IFR_LOCK_ADDRESS, amount);
+          accessLockStatus.textContent = "Waiting for approval confirmation...";
+          await approveTx.wait();
+        }
+
+        accessLockStatus.textContent = "Confirm IFRLock transaction in your wallet.";
+        const tx = lockType ? await ifrLock.lockWithType(amount, ethers.utils.formatBytes32String(lockType)) : await ifrLock.lock(amount);
+        accessLockStatus.textContent = "Waiting for IFRLock confirmation...";
+        await tx.wait();
+        accessLockAmount.value = "";
+        accessLockStatus.textContent = "IFRLock confirmed.";
+        await Promise.all([loadAccessLockPanel(), refreshWalletState()]);
+      }
+
+      async function unlockAccessIFR() {
+        await ensureWalletReady("Preparing access unlock");
+        const signer = IFRWallet.getSigner();
+        const { ifrLock } = getContracts(signer);
+        accessLockUnlock.disabled = true;
+        accessLockStatus.textContent = "Confirm unlock() in your wallet. This releases all IFRLock tokens.";
+        const tx = await ifrLock.unlock();
+        accessLockStatus.textContent = "Waiting for unlock confirmation...";
+        await tx.wait();
+        accessLockStatus.textContent = "IFRLock unlock confirmed.";
+        await Promise.all([loadAccessLockPanel(), refreshWalletState()]);
       }
 
       async function loadLockPanel() {
@@ -1961,14 +2236,16 @@
         const { token, commitment } = getContracts(provider);
         lockStatus.textContent = "Reading CommitmentVault...";
 
-        const [balance, allowance, locked, count] = await Promise.all([
+        const [balance, allowance, locked, count, priceOracle] = await Promise.all([
           token.balanceOf(address),
           token.allowance(address, COMMITMENT_VAULT_ADDRESS),
           commitment.lockedBalance(address),
-          commitment.getTrancheCount(address)
+          commitment.getTrancheCount(address),
+          commitment.priceOracle().catch(() => ethers.constants.AddressZero)
         ]);
 
         const totalTranches = count.toNumber();
+        const priceOracleIsMissing = priceOracle === ethers.constants.AddressZero;
         const trancheReads = [];
         for (let i = 0; i < totalTranches; i++) {
           trancheReads.push(Promise.all([
@@ -1978,18 +2255,22 @@
         }
 
         const tranches = await Promise.all(trancheReads);
-        currentLockState = { address, balance, allowance, locked, tranches };
+        currentLockState = { address, balance, allowance, locked, tranches, priceOracle, priceOracleIsMissing };
         lockWalletBalance.textContent = formatIFR(balance);
         lockTotal.textContent = formatIFR(locked);
         lockAllowance.textContent = formatIFR(allowance);
-        lockedBalance.textContent = formatIFR(locked);
-        accessTier.textContent = locked.gte(ethers.utils.parseUnits("1000", IFR_DECIMALS)) ? "Premium ready" : "Lock needed";
+        commitmentBalance.textContent = formatIFR(locked);
+        commitmentNote.textContent = totalTranches ? `${totalTranches} tranches` : "No tranches";
+        lockNote.textContent = priceOracleIsMissing
+          ? "Time-only locks are available. Price-condition locks are disabled until the CommitmentVault price oracle is configured on-chain."
+          : `Price-condition locks are available. Oracle: ${shortAddress(priceOracle)}.`;
         renderTranches(tranches);
         lockStatus.textContent = tranches.length ? "Vault state loaded." : "No CommitmentVault tranches yet.";
       }
 
       function renderTranches(tranches) {
         if (!lockTranches) return;
+        const conditionNames = ["Time only", "Price only", "Time OR price", "Time AND price"];
         const active = tranches.filter((item) => !item.tranche.unlocked);
         if (!active.length) {
           lockTranches.innerHTML = '<div class="tranche-row"><div><small>Tranches</small><strong>No active locks</strong><span>New locks will appear here after confirmation.</span></div></div>';
@@ -1997,14 +2278,17 @@
         }
 
         lockTranches.innerHTML = active.map((item) => {
-          const unlockDate = new Date(item.tranche.unlockTime.toNumber() * 1000);
+          const unlockTimestamp = item.tranche.unlockTime.toNumber();
+          const unlockDate = unlockTimestamp ? new Date(unlockTimestamp * 1000).toLocaleString() : "No time condition";
+          const multiplier = item.tranche.p0Multiplier.toNumber();
+          const condition = conditionNames[item.tranche.cType] || `Condition ${item.tranche.cType}`;
           const canUnlock = Boolean(item.conditionMet);
           return `
             <div class="tranche-row">
               <div>
-                <small>Tranche #${item.id} · ${canUnlock ? "Unlockable" : "Time locked"}</small>
+                <small>Tranche #${item.id} · ${condition} · ${canUnlock ? "Unlockable" : "Locked"}</small>
                 <strong>${formatIFR(item.tranche.amount)}</strong>
-                <span>Unlock time: ${unlockDate.toLocaleString()}</span>
+                <span>Unlock time: ${unlockDate}${multiplier ? ` · P0 x${multiplier / 100}` : ""}</span>
               </div>
               <button class="btn ${canUnlock ? "btn-primary" : "btn-quiet"}" type="button" data-unlock-tranche="${item.id}" ${canUnlock ? "" : "disabled"}>${canUnlock ? "Unlock" : "Locked"}</button>
             </div>
@@ -2016,25 +2300,27 @@
         const address = await ensureWalletReady("Preparing lock");
         const signer = IFRWallet.getSigner();
         const { token, commitment } = getContracts(signer);
-        const amount = parseIFRInput(lockAmount.value);
-        const days = Number(lockDuration.value || 90);
-        const unlockTime = Math.floor(Date.now() / 1000) + (days * 24 * 60 * 60);
+        const plan = getCommitmentPlan();
 
         lockSubmit.disabled = true;
         lockStatus.textContent = "Checking token allowance...";
         const allowance = await token.allowance(address, COMMITMENT_VAULT_ADDRESS);
 
-        if (allowance.lt(amount)) {
+        if (allowance.lt(plan.totalAmount)) {
           lockStatus.textContent = "Approve IFR in your wallet, then keep this page open.";
-          const approveTx = await token.approve(COMMITMENT_VAULT_ADDRESS, amount);
+          const approveTx = await token.approve(COMMITMENT_VAULT_ADDRESS, plan.totalAmount);
           lockStatus.textContent = "Waiting for approval confirmation...";
           await approveTx.wait();
         }
 
-        lockStatus.textContent = "Confirm the lock transaction in your wallet.";
-        const lockTx = await commitment.lock(amount, 0, unlockTime, 0);
-        lockStatus.textContent = "Waiting for lock confirmation...";
-        await lockTx.wait();
+        for (let i = 0; i < plan.amounts.length; i++) {
+          lockStatus.textContent = plan.amounts.length === 1
+            ? "Confirm the CommitmentVault lock transaction in your wallet."
+            : `Confirm CommitmentVault tranche ${i + 1} of ${plan.amounts.length}.`;
+          const lockTx = await commitment.lock(plan.amounts[i], plan.cType, plan.unlockTime, plan.p0Multiplier);
+          lockStatus.textContent = `Waiting for tranche ${i + 1} confirmation...`;
+          await lockTx.wait();
+        }
         lockAmount.value = "";
         lockStatus.textContent = "Lock confirmed.";
         await Promise.all([loadLockPanel(), refreshWalletState()]);
@@ -2128,15 +2414,20 @@
           walletAddress.textContent = shortAddress(state.address);
           walletState.textContent = "Connected";
           ifrBalance.textContent = state.ifrBalanceFormatted ? `${state.ifrBalanceFormatted} IFR` : "0 IFR";
-          lockedBalance.textContent = state.lockedFormatted ? `${state.lockedFormatted} IFR` : "0 IFR";
-          accessTier.textContent = state.isLocked1000 ? "Premium ready" : "Lock needed";
+          accessLockBalance.textContent = state.lockedFormatted ? `${state.lockedFormatted} IFR` : "0 IFR";
+          accessLockNote.textContent = state.isLocked1000 ? "Premium ready" : "Lock needed";
+          commitmentBalance.textContent = "Loading";
+          commitmentNote.textContent = "Tranches";
+          loadAccessLockSummary(state.address).catch(() => null);
           loadCommitmentSummary(state.address).catch(() => null);
         } else {
           walletAddress.textContent = "Not connected";
           walletState.textContent = "Ready";
           ifrBalance.textContent = "Connect";
-          lockedBalance.textContent = "Connect";
-          accessTier.textContent = "Access check";
+          accessLockBalance.textContent = "Connect";
+          accessLockNote.textContent = "Access check";
+          commitmentBalance.textContent = "Connect";
+          commitmentNote.textContent = "Tranches";
         }
 
         if (state.bootstrapStatus) {
@@ -2240,6 +2531,64 @@
           walletState.textContent = "Token added";
         } catch (error) {
           walletState.textContent = "Token add failed";
+        }
+      });
+
+      if (lockDate && !lockDate.value) lockDate.value = defaultUnlockDate(30);
+      syncCommitmentConditionFields();
+      if (lockCondition) lockCondition.addEventListener("change", syncCommitmentConditionFields);
+
+      document.addEventListener("click", async (event) => {
+        const button = event.target.closest("[data-open-access-lock]");
+        if (!button) return;
+        event.preventDefault();
+        openProtocolDialog(accessLockDialog);
+        try {
+          await loadAccessLockPanel();
+        } catch (error) {
+          accessLockStatus.textContent = error && error.message ? error.message : "Access lock panel could not load.";
+        }
+      });
+
+      accessLockClose.addEventListener("click", () => closeProtocolDialog(accessLockDialog));
+      accessLockDialog.addEventListener("click", (event) => {
+        if (event.target === accessLockDialog) closeProtocolDialog(accessLockDialog);
+      });
+      accessLockRefresh.addEventListener("click", async () => {
+        try {
+          await loadAccessLockPanel();
+        } catch (error) {
+          accessLockStatus.textContent = error && error.message ? error.message : "Refresh failed.";
+        }
+      });
+      accessLockMax.addEventListener("click", () => {
+        if (!currentAccessLockState || !currentAccessLockState.balance) return;
+        accessLockAmount.value = ethers.utils.formatUnits(currentAccessLockState.balance, IFR_DECIMALS);
+      });
+      accessLockSubmit.addEventListener("click", async () => {
+        try {
+          await lockAccessIFR();
+        } catch (error) {
+          if (error && (error.code === 4001 || error.code === "ACTION_REJECTED")) {
+            accessLockStatus.textContent = "Transaction rejected in wallet.";
+          } else {
+            accessLockStatus.textContent = error && error.message ? error.message : "IFRLock failed.";
+          }
+        } finally {
+          accessLockSubmit.disabled = false;
+        }
+      });
+      accessLockUnlock.addEventListener("click", async () => {
+        try {
+          await unlockAccessIFR();
+        } catch (error) {
+          if (error && (error.code === 4001 || error.code === "ACTION_REJECTED")) {
+            accessLockStatus.textContent = "Unlock rejected in wallet.";
+          } else {
+            accessLockStatus.textContent = error && error.message ? error.message : "Unlock failed.";
+          }
+        } finally {
+          accessLockUnlock.disabled = false;
         }
       });
 
