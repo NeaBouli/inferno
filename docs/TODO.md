@@ -104,6 +104,37 @@ On errors: fix immediately, commit with `seo:` prefix.
 - [x] MetaMask Mobile: centralized deep-link + pending connect ✅
 - [x] Protocol Plan wiki page created (26 pages) ✅
 
+## CURRENT WATCHLIST — 2026-07-08
+
+- [ ] MetaMask Registry PR #1858 — waiting for MetaMask code-owner review
+      PR: https://github.com/MetaMask/contract-metadata/pull/1858
+      Status: open, mergeable, bot checks green, follow-up posted 2026-07-08.
+      Blocker: at least one approving MetaMask reviewer with write access and maintainer approval for pending fork workflows.
+- [ ] Uniswap Default Token List Issue #2509 — waiting for maintainer response
+      Issue: https://github.com/Uniswap/default-token-list/issues/2509
+      Status: open, updated 2026-07-08 with Etherscan Neutral, token-list URLs, icon URLs, and GeckoTerminal pool.
+      Do not double-comment until maintainer response or new external proof appears.
+- [ ] ethereum-lists PR #1036 — waiting for maintainer response
+      PR: https://github.com/ethereum-lists/tokens/pull/1036
+      Status: open, follow-up posted 2026-07-08.
+- [ ] CoinMarketCap listing/check — requires local CMC_API_KEY or Gio browser session
+      Script: `bash scripts/cmc/check_ifr_listing.sh`
+      Status: intentionally blocked without local key. Never commit or paste the key.
+- [ ] LendingVault borrow activation — price policy decision needed
+      Runbook: docs/LENDING_PRICE_GOVERNANCE_RUNBOOK.md
+      Policy: docs/LENDING_PRICE_POLICY_20260708.md
+      Current: `ifrPriceWei = 0`, Safe JSON ready at `/tmp/inferno/lending-price-safe-tx.json`.
+      Default decision: keep borrowing disabled until deeper liquidity or explicit Governance pilot approval.
+- [ ] CommitmentVault price-condition locks — V2/PriceLockVault needed
+      Design: docs/COMMITMENT_PRICE_LOCK_ORACLE_PATH.md
+      Current: time-only locks live; price locks must stay disabled because deployed `_getCurrentPrice()` returns 0.
+- [ ] Dependency modernization — dedicated branch required
+      Docs: docs/DEPENDENCY_UPGRADES.md
+      Scope: Hardhat/Ethers/Waffle/Ganache/toolchain migration. Do not run `npm audit fix --force` on main.
+- [ ] Trust Wallet / Rainbow / Phantom / Zerion visibility follow-up
+      Docs: docs/WALLET_ICON_DISTRIBUTION_STATUS_20260708.md
+      Status: Trust Wallet not yet worth fee submission until CMC/activity improves; Rainbow depends on upstream lists/market data; Phantom and several wallets are indirect trust/indexing paths.
+
 ## ✅ ERLEDIGT — Proposal #13 executed (16.04.2026)
 
 - [x] ✅ Proposal #13 executed (16.04.2026 10:31 Athen)
