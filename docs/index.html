@@ -2151,6 +2151,14 @@ render();
           <filter id="glow"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
         </defs>
 
+        <!-- Live Mainnet Snapshot -->
+        <g class="token-flow-snapshot">
+          <rect x="38" y="34" width="224" height="74" rx="12" fill="#0d1117" stroke="#b0481e" stroke-width="1.4"/>
+          <text x="56" y="56" fill="#b0481e" font-size="10" font-weight="bold" letter-spacing="1.2">LIVE MAINNET</text>
+          <text x="56" y="76" fill="#475569" font-size="9" data-live-key="flow-snapshot-supply">997.7M supply &middot; 2.3M burned</text>
+          <text x="56" y="94" fill="#475569" font-size="9" data-live-key="flow-snapshot-lp">LP 18.0M IFR + 0.167 ETH</text>
+        </g>
+
         <!-- Connection Lines -->
         <!-- Treasury/Community → Bootstrap (funded) -->
         <line x1="165" y1="200" x2="510" y2="178" stroke="#1e2730" stroke-width="1" stroke-dasharray="5,3"/>
@@ -2168,7 +2176,7 @@ render();
             <animate attributeName="r" values="35;39;35" dur="3s" repeatCount="indefinite"/>
           </circle>
           <text x="400" y="256" text-anchor="middle" fill="#f97316" font-size="14" font-weight="bold">IFR</text>
-          <text x="400" y="272" text-anchor="middle" fill="#9ca3af" font-size="9" data-live-key="supply-flow">997.8M supply</text>
+          <text x="400" y="272" text-anchor="middle" fill="#9ca3af" font-size="9" data-live-key="supply-flow">997.7M supply</text>
         </g>
 
         <!-- LP Reserve Safe -->
@@ -2184,7 +2192,7 @@ render();
         <!-- Uniswap -->
         <rect x="510" y="318" width="140" height="42" rx="10" fill="#0d1117" stroke="#60a5fa" stroke-width="1.5"/>
         <text x="580" y="336" text-anchor="middle" fill="#60a5fa" font-size="11" font-weight="bold">Uniswap V2</text>
-        <text x="580" y="352" text-anchor="middle" fill="#9ca3af" font-size="9" data-live-key="lp-flow">36.1M IFR + 0.083 ETH</text>
+        <text x="580" y="352" text-anchor="middle" fill="#9ca3af" font-size="9" data-live-key="lp-flow">18.0M IFR + 0.167 ETH</text>
 
         <!-- LiquidityReserve -->
         <rect x="150" y="158" width="140" height="42" rx="10" fill="#0d1117" stroke="#a78bfa" stroke-width="1.5" stroke-dasharray="5,3"/>
@@ -2209,7 +2217,7 @@ render();
         <!-- FeeRouter -->
         <rect x="340" y="338" width="120" height="42" rx="10" fill="#0d1117" stroke="#fbbf24" stroke-width="1.5"/>
         <text x="400" y="356" text-anchor="middle" fill="#fbbf24" font-size="11" font-weight="bold">FeeRouter</text>
-        <text x="400" y="372" text-anchor="middle" fill="#9ca3af" font-size="9" data-live-key="feerouter-flow">292K IFR fees held</text>
+        <text x="400" y="372" text-anchor="middle" fill="#9ca3af" font-size="9" data-live-key="feerouter-flow">314.2K IFR fees held</text>
 
         <!-- BuybackVault (Phase 3) -->
         <rect x="510" y="420" width="130" height="42" rx="10" fill="#0d1117" stroke="#fbbf24" stroke-width="1" stroke-dasharray="5,3"/>
@@ -2276,7 +2284,7 @@ render();
         <line x1="705" y1="370" x2="705" y2="408" stroke="#3b82f6" stroke-width="1" stroke-dasharray="4,3"/>
         <rect x="640" y="408" width="140" height="42" rx="10" fill="#0d1117" stroke="#3b82f6" stroke-width="1.5" stroke-dasharray="5,3"/>
         <text x="710" y="426" text-anchor="middle" fill="#3b82f6" font-size="10" font-weight="bold">CommitmentVault</text>
-        <text x="710" y="442" text-anchor="middle" fill="#6b7280" font-size="8">Irrevocable lock &middot; 4 types</text>
+        <text x="710" y="442" text-anchor="middle" fill="#6b7280" font-size="8" data-live-key="commitment-flow">47.9M locked &middot; 4 types</text>
         <!-- Animated: User → CommitmentVault -->
         <circle r="2.5" fill="#3b82f6" opacity="0.7"><animateMotion dur="3s" repeatCount="indefinite" path="M705,370 L705,408"/></circle>
 
@@ -2284,7 +2292,7 @@ render();
         <line x1="640" y1="429" x2="530" y2="475" stroke="#3b82f6" stroke-width="1" stroke-dasharray="4,3"/>
         <rect x="400" y="462" width="140" height="42" rx="10" fill="#0d1117" stroke="#3b82f6" stroke-width="1.5" stroke-dasharray="5,3"/>
         <text x="470" y="480" text-anchor="middle" fill="#3b82f6" font-size="10" font-weight="bold">LendingVault</text>
-        <text x="470" y="494" text-anchor="middle" fill="#6b7280" font-size="8">Lend IFR &#x2194; Borrow ETH</text>
+        <text x="470" y="494" text-anchor="middle" fill="#6b7280" font-size="8" data-live-key="lending-flow">52.2M available</text>
         <!-- Animated: CommitmentVault → LendingVault -->
         <circle r="2.5" fill="#3b82f6" opacity="0.5"><animateMotion dur="4s" begin="1s" repeatCount="indefinite" path="M640,429 L530,475"/></circle>
 
@@ -3287,6 +3295,7 @@ if (isLocked) {
     setLive('burned-stat',  fmt(d.burned));
     setLive('supply-stat',  fmt(d.supply));
     setLive('supply-flow',  fmt(d.supply) + ' supply');
+    setLive('flow-snapshot-supply', fmt(d.supply) + ' supply · ' + fmt(d.burned) + ' burned');
     setLive('ifrlock',      fmt(d.ifrLock) + ' IFR');
     setLive('ifrlock-pct',  pct(d.ifrLock, d.supply));
     setLive('commitment-locked', fmt(d.commitmentLocked || 0) + ' IFR');
@@ -3322,6 +3331,8 @@ if (isLocked) {
     setLive('card-buyback',    fmt(d.buyback) + ' IFR');
     setLive('card-burnres',    fmt(d.burnRes) + ' IFR');
     setLive('feerouter-flow',  fmt(d.feeRouter) + ' IFR fees held');
+    setLive('commitment-flow', fmt(d.commitmentLocked || 0) + ' locked · 4 types');
+    setLive('lending-flow',    fmt(d.lendingAvailable || 0) + ' available');
   }
 
   function drawDonut(canvas, data) {
@@ -3491,7 +3502,9 @@ if (isLocked) {
         subEl.textContent = ethReserve ? 'Live Uniswap V2 spot · ' + ethReserve + ' ETH LP' : 'Live Uniswap V2 spot';
       }
       if (data.reserves && data.reserves.eth && data.reserves.ifr) {
-        setLive('lp-flow', fmt(data.reserves.ifr) + ' IFR + ' + data.reserves.eth.toFixed(3) + ' ETH');
+        var lpFlow = fmt(data.reserves.ifr) + ' IFR + ' + data.reserves.eth.toFixed(3) + ' ETH';
+        setLive('lp-flow', lpFlow);
+        setLive('flow-snapshot-lp', 'LP ' + lpFlow);
       }
     } else if (data.status === 'pending_uniswap') {
       priceEl.textContent = 'Soon';
