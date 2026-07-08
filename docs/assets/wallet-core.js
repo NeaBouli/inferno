@@ -2,7 +2,7 @@
  * IFR Wallet Core v4.2 — WalletConnect v2 via esm.sh
  * Usage: await IFRWallet.connect(); IFRWallet.getAddress();
  *
- * v4.2 — Mobile/Tablet connect disabled (desktop browser only).
+ * v4.2.1 — Mobile/tablet helper modal readability + current Web3 guidance.
  *   On smartphone/tablet, connect() shows a styled "Desktop Only" modal
  *   and throws MOBILE_NOT_SUPPORTED. autoReconnect() returns false on mobile.
  *   All mobile deep-link fallbacks removed.
@@ -75,14 +75,14 @@ window.IFRWallet = (function() {
     overlay.style.cssText = "position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,0.75);display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(6px);";
 
     var card = document.createElement("div");
-    card.style.cssText = "background:#111827;border:1px solid #374151;border-radius:16px;padding:32px;max-width:420px;width:100%;text-align:center;box-shadow:0 8px 40px rgba(0,0,0,0.6);";
+    card.style.cssText = "background:#0f172a;border:1px solid rgba(148,163,184,0.34);border-radius:16px;padding:32px;max-width:460px;width:100%;text-align:center;box-shadow:0 18px 54px rgba(0,0,0,0.58);";
 
     card.innerHTML =
       '<div style="font-size:2.5rem;margin-bottom:16px;">\uD83D\uDDA5\uFE0F</div>' +
-      '<h3 style="color:#f97316;font-family:\'Orbitron\',sans-serif;font-size:1.2rem;margin:0 0 12px;letter-spacing:1px;">Desktop Browser Only</h3>' +
-      '<p style="color:#9ca3af;font-size:0.92rem;line-height:1.6;margin:0 0 24px;">Wallet connection is only available on a <strong style="color:#e5e7eb;">desktop or laptop computer</strong> using a web browser with MetaMask extension.</p>' +
-      '<p style="color:#6b7280;font-size:0.82rem;line-height:1.5;margin:0 0 24px;">Open <strong style="color:#f97316;">ifrunit.tech</strong> on your PC or Mac to connect your wallet and participate in the Bootstrap event.</p>' +
-      '<button id="ifr-desktop-modal-close" style="background:#f97316;color:white;border:none;padding:12px 32px;border-radius:8px;font-weight:600;font-size:0.95rem;cursor:pointer;transition:background 0.2s;">Got it</button>';
+      '<h3 style="color:#fb923c!important;font-family:system-ui,-apple-system,BlinkMacSystemFont,\'Segoe UI\',sans-serif;font-size:1.28rem;margin:0 0 14px;letter-spacing:0;font-weight:800;">Desktop browser only</h3>' +
+      '<p style="color:#f8fafc!important;font-size:1rem;line-height:1.62;margin:0 0 18px;font-weight:500;">This page keeps the classic wallet flow for a <strong style="color:#ffffff!important;font-weight:800;">desktop or laptop browser</strong> with the MetaMask extension.</p>' +
+      '<p style="color:#dbe4ef!important;font-size:0.93rem;line-height:1.58;margin:0 0 24px;">On iPad or phone, use <strong style="color:#fb923c!important;font-weight:800;">web3.ifrunit.tech</strong> for mobile wallet connection, locks, and lending actions.</p>' +
+      '<button id="ifr-desktop-modal-close" style="background:#c24b1d;color:#fff!important;border:1px solid rgba(251,146,60,0.55);padding:12px 32px;border-radius:8px;font-weight:700;font-size:0.98rem;cursor:pointer;box-shadow:0 10px 24px rgba(194,75,29,0.24);transition:background 0.2s;">Got it</button>';
 
     overlay.appendChild(card);
     document.body.appendChild(overlay);
