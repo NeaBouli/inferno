@@ -4,10 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>IFR Web3 Access Layer | Inferno Protocol</title>
-  <meta name="description" content="IFR Web3 access layer for users: connect wallets, buy IFR, add IFR to wallet, lock or unlock CommitmentVault tranches, create LendingVault offers, and route builders or developers to IFR Wiki docs.">
+  <meta name="description" content="IFR Web3 access layer for users: connect wallets, buy IFR, add IFR to wallet, lock IFR for Premium access, manage CommitmentVault tranches, create LendingVault offers, and route builders or developers to IFR Wiki docs.">
   <meta name="robots" content="index, follow">
   <meta property="og:title" content="IFR Web3 Access Layer | Inferno Protocol">
-  <meta property="og:description" content="User execution surface for IFR: wallet connect, buy IFR, CommitmentVault lock/unlock, LendingVault offers, pool tracking, and Wiki routing for builders and developers.">
+  <meta property="og:description" content="User execution surface for IFR: wallet connect, buy IFR, IFRLock Premium access, CommitmentVault lock/unlock, LendingVault offers, pool tracking, and Wiki routing for builders and developers.">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://web3.ifrunit.tech/">
   <meta property="og:image" content="https://ifrunit.tech/assets/ifr_icon_4096_v2.png">
@@ -15,7 +15,7 @@
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:site" content="@IFRtoken">
   <meta name="twitter:title" content="IFR Web3 Access Layer | Inferno Protocol">
-  <meta name="twitter:description" content="Connect a wallet and use IFR directly on Web3. Builders and developers are routed to IFR Wiki integration and contract docs.">
+  <meta name="twitter:description" content="Connect a wallet and use IFR directly on Web3: buy IFR, add it to wallet, lock for Premium access, and manage vault actions.">
   <meta name="twitter:image" content="https://ifrunit.tech/assets/ifr_icon_4096_v2.png">
   <meta name="theme-color" content="#f6f0e6">
   <meta name="application-name" content="IFR Web3">
@@ -42,7 +42,7 @@
     "applicationCategory": "FinanceApplication",
     "operatingSystem": "Web",
     "url": "https://web3.ifrunit.tech/",
-    "description": "User execution surface for Inferno Protocol: wallet connection, IFR token import, Uniswap buy link, CommitmentVault lock and unlock flows, LendingVault offer flows, and role-based Wiki routing for builders, developers, and community research.",
+    "description": "User execution surface for Inferno Protocol: wallet connection, IFR token import, Uniswap buy link, IFRLock Premium access, CommitmentVault lock and unlock flows, LendingVault offer flows, and role-based Wiki routing for builders, developers, and community research.",
     "creator": {
       "@type": "Organization",
       "name": "Inferno Protocol",
@@ -57,6 +57,7 @@
       "Wallet connection",
       "Add IFR to wallet",
       "Buy IFR on Uniswap",
+      "IFRLock Premium access",
       "CommitmentVault lock and unlock",
       "LendingVault offer creation and withdrawal",
       "Builder and developer Wiki routing"
@@ -1650,13 +1651,14 @@
       </div>
 
       <div class="protocol-actions">
+        <button class="btn btn-mint" type="button" data-access-lock-premium>Lock missing to 1,000 IFR</button>
         <button class="btn btn-quiet" type="button" data-access-lock-max>Use max</button>
         <button class="btn btn-mint" type="button" data-access-lock-refresh>Refresh</button>
         <button class="btn btn-primary" type="button" data-access-lock-submit>Approve / Lock</button>
         <button class="btn btn-quiet" type="button" data-access-lock-unlock>Unlock all</button>
       </div>
       <p class="protocol-status" data-access-lock-status>Connect a wallet to load IFRLock state.</p>
-      <p class="protocol-note">This is the simple access lock shown as IFRLock Access Locks on the landing page. It is separate from CommitmentVault.</p>
+      <p class="protocol-note">This is the simple access lock shown as IFRLock Access Locks on the landing page. Premium access starts at 1,000 IFR locked here. It is separate from CommitmentVault.</p>
     </div>
   </div>
 
@@ -1902,6 +1904,7 @@
       const accessLockRefresh = document.querySelector("[data-access-lock-refresh]");
       const accessLockSubmit = document.querySelector("[data-access-lock-submit]");
       const accessLockUnlock = document.querySelector("[data-access-lock-unlock]");
+      const accessLockPremium = document.querySelector("[data-access-lock-premium]");
       const lockDialog = document.querySelector("[data-lock-dialog]");
       const lockClose = document.querySelector("[data-lock-close]");
       const lockAmount = document.querySelector("[data-lock-amount]");
@@ -2032,6 +2035,14 @@
         const numeric = Number(formatted);
         if (!Number.isFinite(numeric)) return `${formatted} IFR`;
         return `${numeric.toLocaleString(undefined, { maximumFractionDigits: 4 })} IFR`;
+      }
+
+      function formatIFRShort(value) {
+        return formatIFR(value).replace(/ IFR$/, "");
+      }
+
+      function formatIFRInputValue(value) {
+        return ethers.utils.formatUnits(value, IFR_DECIMALS).replace(/(\.\d*?)0+$/, "$1").replace(/\.$/, "");
       }
 
       function parseIFRInput(input) {
@@ -2181,14 +2192,52 @@
           ifrLock.lockedBalance(address)
         ]);
 
-        currentAccessLockState = { address, balance, allowance, locked };
+        const premiumMinimum = ethers.utils.parseUnits("1000", IFR_DECIMALS);
+        const premiumMissing = locked.gte(premiumMinimum) ? ethers.BigNumber.from(0) : premiumMinimum.sub(locked);
+        currentAccessLockState = { address, balance, allowance, locked, premiumMinimum, premiumMissing };
         accessWalletBalance.textContent = formatIFR(balance);
         accessLockTotal.textContent = formatIFR(locked);
         accessLockAllowance.textContent = formatIFR(allowance);
         accessLockBalance.textContent = formatIFR(locked);
-        accessLockNote.textContent = locked.gte(ethers.utils.parseUnits("1000", IFR_DECIMALS)) ? "Premium ready" : "Lock needed";
+        accessLockNote.textContent = premiumMissing.isZero() ? "Premium ready" : "Lock needed";
+        if (accessLockPremium) {
+          accessLockPremium.disabled = premiumMissing.isZero();
+          accessLockPremium.textContent = premiumMissing.isZero() ? "Premium ready" : `Lock ${formatIFRShort(premiumMissing)} IFR for Premium`;
+        }
         accessLockUnlock.disabled = locked.isZero();
         accessLockStatus.textContent = locked.isZero() ? "No IFRLock balance yet." : "IFRLock state loaded.";
+      }
+
+      async function lockPremiumAccessIFR() {
+        const address = await ensureWalletReady("Preparing Premium access");
+        const provider = IFRWallet.getProvider();
+        const { token, ifrLock } = getContracts(provider);
+        const premiumMinimum = ethers.utils.parseUnits("1000", IFR_DECIMALS);
+
+        accessLockPremium.disabled = true;
+        accessLockStatus.textContent = "Checking Premium access threshold...";
+        const [balance, locked] = await Promise.all([
+          token.balanceOf(address),
+          ifrLock.lockedBalance(address)
+        ]);
+
+        if (locked.gte(premiumMinimum)) {
+          accessLockStatus.textContent = "Premium access is already ready in IFRLock.";
+          await loadAccessLockPanel();
+          return;
+        }
+
+        const missing = premiumMinimum.sub(locked);
+        if (balance.lt(missing)) {
+          accessLockStatus.textContent = `Premium needs ${formatIFR(missing)} more in IFRLock, but this wallet has ${formatIFR(balance)} free.`;
+          await loadAccessLockPanel().catch(() => null);
+          return;
+        }
+
+        accessLockAmount.value = formatIFRInputValue(missing);
+        accessLockType.value = "premium";
+        accessLockStatus.textContent = `Ready to lock ${formatIFR(missing)} for Premium access.`;
+        await lockAccessIFR();
       }
 
       async function lockAccessIFR() {
@@ -2563,7 +2612,24 @@
       });
       accessLockMax.addEventListener("click", () => {
         if (!currentAccessLockState || !currentAccessLockState.balance) return;
-        accessLockAmount.value = ethers.utils.formatUnits(currentAccessLockState.balance, IFR_DECIMALS);
+        accessLockAmount.value = formatIFRInputValue(currentAccessLockState.balance);
+      });
+      accessLockPremium.addEventListener("click", async () => {
+        try {
+          await lockPremiumAccessIFR();
+        } catch (error) {
+          if (error && (error.code === 4001 || error.code === "ACTION_REJECTED")) {
+            accessLockStatus.textContent = "Premium lock rejected in wallet.";
+          } else {
+            accessLockStatus.textContent = error && error.message ? error.message : "Premium lock failed.";
+          }
+        } finally {
+          if (currentAccessLockState && currentAccessLockState.premiumMissing) {
+            accessLockPremium.disabled = currentAccessLockState.premiumMissing.isZero();
+          } else {
+            accessLockPremium.disabled = false;
+          }
+        }
       });
       accessLockSubmit.addEventListener("click", async () => {
         try {
