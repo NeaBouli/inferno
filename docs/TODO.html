@@ -49,7 +49,28 @@
   <div class="container">
     <a href="wiki/roadmap.html" class="back" rel="nofollow">&larr; Roadmap</a>
     <h1>IFR Protocol &mdash; Developer TODO List</h1>
-    <div class="subtitle">Last updated: 2026-06-16 &middot; Branch: main</div>
+    <div class="subtitle">Last updated: 2026-07-08 &middot; Branch: main</div>
+
+    <!-- ═══ CURRENT WATCHLIST ═══ -->
+    <h2><span class="priority-badge p-critical">WATCH</span> Current Watchlist &mdash; 2026-07-08</h2>
+    <ul>
+      <li><div class="cb"></div><strong>MetaMask Registry PR #1858</strong> &mdash; waiting for MetaMask code-owner review.<br>
+        <span style="color:#6b7280;font-size:0.82rem;">Open, mergeable, bot checks green, follow-up posted 2026-07-08. Blocker: approving reviewer with write access and maintainer approval for pending fork workflows. <a href="https://github.com/MetaMask/contract-metadata/pull/1858" target="_blank" rel="noopener">PR #1858</a></span></li>
+      <li><div class="cb"></div><strong>Uniswap Default Token List Issue #2509</strong> &mdash; waiting for maintainer response.<br>
+        <span style="color:#6b7280;font-size:0.82rem;">Updated 2026-07-08 with Etherscan Neutral, token-list URLs, icon URLs, and GeckoTerminal pool. Do not double-comment until maintainer response or new proof appears. <a href="https://github.com/Uniswap/default-token-list/issues/2509" target="_blank" rel="noopener">Issue #2509</a></span></li>
+      <li><div class="cb"></div><strong>ethereum-lists PR #1036</strong> &mdash; waiting for maintainer response.<br>
+        <span style="color:#6b7280;font-size:0.82rem;">Follow-up posted 2026-07-08. <a href="https://github.com/ethereum-lists/tokens/pull/1036" target="_blank" rel="noopener">PR #1036</a></span></li>
+      <li><div class="cb"></div><strong>CoinMarketCap listing/check</strong> &mdash; requires local <code>CMC_API_KEY</code> or Gio browser session.<br>
+        <span style="color:#6b7280;font-size:0.82rem;">Script: <code>bash scripts/cmc/check_ifr_listing.sh</code>. Never commit or paste the key.</span></li>
+      <li><div class="cb"></div><strong>LendingVault borrow activation</strong> &mdash; price policy decision needed.<br>
+        <span style="color:#6b7280;font-size:0.82rem;">Current: <code>ifrPriceWei = 0</code>, Safe JSON ready at <code>/tmp/inferno/lending-price-safe-tx.json</code>. Default: keep borrowing disabled until deeper liquidity or explicit Governance pilot approval.</span></li>
+      <li><div class="cb"></div><strong>CommitmentVault price-condition locks</strong> &mdash; V2/PriceLockVault needed.<br>
+        <span style="color:#6b7280;font-size:0.82rem;">Time-only locks are live; price locks stay disabled because deployed <code>_getCurrentPrice()</code> returns 0.</span></li>
+      <li><div class="cb"></div><strong>Dependency modernization</strong> &mdash; dedicated branch required.<br>
+        <span style="color:#6b7280;font-size:0.82rem;">Hardhat/Ethers/Waffle/Ganache/toolchain migration. Do not run <code>npm audit fix --force</code> on main.</span></li>
+      <li><div class="cb"></div><strong>Trust Wallet / Rainbow / Phantom / Zerion visibility</strong> &mdash; staged follow-up.<br>
+        <span style="color:#6b7280;font-size:0.82rem;">Trust Wallet not yet worth fee submission until CMC/activity improves; Rainbow depends on upstream lists/market data; Phantom and several wallets are indirect trust/indexing paths.</span></li>
+    </ul>
 
     <!-- ═══ ERLEDIGT: Proposal #13 ═══ -->
     <h2><span class="priority-badge p-done">ERLEDIGT</span> Proposal #13 executed (16.04.2026)</h2>
