@@ -1439,10 +1439,10 @@
             </div>
             <div class="status-card">
               <div>
-                <p class="status-label">Bootstrap</p>
-                <div class="status-value" data-bootstrap-status>Loading</div>
+                <p class="status-label">LendingVault</p>
+                <div class="status-value" data-lending-summary>Connect</div>
               </div>
-              <span class="status-note" data-bootstrap-note>Vault</span>
+              <span class="status-note" data-lending-summary-note>Offers</span>
             </div>
           </div>
         </div>
@@ -1994,8 +1994,8 @@
       const accessLockNote = document.querySelector("[data-access-lock-note]");
       const commitmentBalance = document.querySelector("[data-commitment-balance]");
       const commitmentNote = document.querySelector("[data-commitment-note]");
-      const bootstrapStatus = document.querySelector("[data-bootstrap-status]");
-      const bootstrapNote = document.querySelector("[data-bootstrap-note]");
+      const lendingSummary = document.querySelector("[data-lending-summary]");
+      const lendingSummaryNote = document.querySelector("[data-lending-summary-note]");
       const installButtons = document.querySelectorAll("[data-install-app]");
       const installDialog = document.querySelector("[data-install-dialog]");
       const installClose = document.querySelector("[data-install-close]");
@@ -2187,6 +2187,15 @@
         return formatIFR(value).replace(/ IFR$/, "");
       }
 
+      function formatIFRCompact(value) {
+        if (!window.ethers || value == null) return "0 IFR";
+        const numeric = Number(ethers.utils.formatUnits(value, IFR_DECIMALS));
+        if (!Number.isFinite(numeric)) return formatIFR(value);
+        if (numeric >= 1000000) return `${(numeric / 1000000).toLocaleString("en-US", { maximumFractionDigits: 2 })}M IFR`;
+        if (numeric >= 1000) return `${(numeric / 1000).toLocaleString("en-US", { maximumFractionDigits: 1 })}K IFR`;
+        return `${numeric.toLocaleString("en-US", { maximumFractionDigits: 4 })} IFR`;
+      }
+
       function formatIFRInputValue(value) {
         return ethers.utils.formatUnits(value, IFR_DECIMALS).replace(/(\.\d*?)0+$/, "$1").replace(/\.$/, "");
       }
@@ -2317,7 +2326,8 @@
         renderState(state);
         await Promise.all([
           loadAccessLockSummary(state.address).catch(() => null),
-          loadCommitmentSummary(state.address).catch(() => null)
+          loadCommitmentSummary(state.address).catch(() => null),
+          loadLendingSummary(state.address).catch(() => null)
         ]);
       }
 
@@ -2386,6 +2396,53 @@
         ]);
         commitmentBalance.textContent = formatIFR(locked);
         commitmentNote.textContent = count.toNumber() ? `${count.toNumber()} tranches` : "No tranches";
+      }
+
+      async function loadLendingSummary(address) {
+        if (!address || !window.ethers || !window.IFRWallet || !IFRWallet.getProvider()) return;
+        const { lending } = getContracts(IFRWallet.getProvider());
+        lendingSummary.textContent = "Loading";
+        lendingSummaryNote.textContent = "Lending";
+
+        const [hasOffer, loanCountValue] = await Promise.all([
+          lending.hasOffer(address).catch(() => false),
+          lending.getLoanCount().catch(() => ethers.BigNumber.from(0))
+        ]);
+
+        let offer = null;
+        if (hasOffer) {
+          const offerId = await lending.lenderOfferIndex(address);
+          offer = await lending.getOffer(offerId);
+        }
+
+        const loanCount = loanCountValue.toNumber();
+        let activeLoans = 0;
+        let borrowed = ethers.BigNumber.from(0);
+        const loanReads = [];
+        for (let i = 0; i < Math.min(loanCount, 120); i++) {
+          loanReads.push(
+            lending.getLoan(i)
+              .then((loan) => {
+                if (!loan.active || loan.borrower.toLowerCase() !== address.toLowerCase()) return;
+                activeLoans++;
+                borrowed = borrowed.add(loan.ifrAmount);
+              })
+              .catch(() => null)
+          );
+        }
+        await Promise.all(loanReads);
+
+        if (borrowed.gt(0)) {
+          lendingSummary.textContent = `${formatIFRCompact(borrowed)} borrowed`;
+        } else if (offer && offer.active) {
+          lendingSummary.textContent = `${formatIFRCompact(offer.availableIFR)} available`;
+        } else {
+          lendingSummary.textContent = "No offer";
+        }
+
+        const lentText = offer ? `${formatIFRCompact(offer.lentIFR)} lent` : "0 lent";
+        const loanText = activeLoans === 1 ? "1 loan" : `${activeLoans} loans`;
+        lendingSummaryNote.textContent = `${lentText} · ${loanText}`;
       }
 
       async function loadAccessLockPanel() {
@@ -2929,8 +2986,11 @@
           accessLockNote.textContent = state.isLocked1000 ? "Premium ready" : "Lock needed";
           commitmentBalance.textContent = "Loading";
           commitmentNote.textContent = "Tranches";
+          lendingSummary.textContent = "Loading";
+          lendingSummaryNote.textContent = "Lending";
           loadAccessLockSummary(state.address).catch(() => null);
           loadCommitmentSummary(state.address).catch(() => null);
+          loadLendingSummary(state.address).catch(() => null);
         } else {
           walletAddress.textContent = "Not connected";
           walletState.textContent = "Ready";
@@ -2939,49 +2999,14 @@
           accessLockNote.textContent = "Access check";
           commitmentBalance.textContent = "Connect";
           commitmentNote.textContent = "Tranches";
-        }
-
-        if (state.bootstrapStatus) {
-          bootstrapStatus.textContent = state.bootstrapStatus.finalized ? "Finalized" : "Open";
-          bootstrapNote.textContent = `${Number(state.bootstrapStatus.totalETHRaised || 0).toFixed(3)} ETH`;
-        }
-      }
-
-      async function loadReadOnlyBootstrap() {
-        bootstrapStatus.textContent = "Finalized";
-        bootstrapNote.textContent = "0.030 ETH";
-
-        if (!window.ethers) {
-          return;
-        }
-
-        const provider = new ethers.providers.JsonRpcProvider("https://ethereum-rpc.publicnode.com");
-        const bootstrap = new ethers.Contract(
-          "0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141",
-          [
-            "function finalised() view returns (bool)",
-            "function totalETHRaised() view returns (uint256)"
-          ],
-          provider
-        );
-
-        try {
-          const [finalised, totalETHRaised] = await Promise.all([
-            bootstrap.finalised(),
-            bootstrap.totalETHRaised()
-          ]);
-          bootstrapStatus.textContent = finalised ? "Finalized" : "Open";
-          bootstrapNote.textContent = `${Number(ethers.utils.formatEther(totalETHRaised)).toFixed(3)} ETH`;
-        } catch (error) {
-          bootstrapStatus.textContent = "Finalized";
-          bootstrapNote.textContent = "0.030 ETH";
+          lendingSummary.textContent = "Connect";
+          lendingSummaryNote.textContent = "Offers";
         }
       }
 
       async function loadInitialState() {
         if (!window.IFRState || !window.IFRWallet) {
           walletState.textContent = "Wallet script unavailable";
-          await loadReadOnlyBootstrap();
           return;
         }
         try {
@@ -2989,13 +3014,10 @@
           if (restored) {
             const state = await IFRState.load(IFRWallet.getAddress());
             renderState(state);
-          } else {
-            await loadReadOnlyBootstrap();
           }
           IFRState.on("stateLoaded", renderState);
         } catch (error) {
           walletState.textContent = "Read-only";
-          await loadReadOnlyBootstrap();
         }
       }
 
