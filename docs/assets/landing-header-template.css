@@ -415,62 +415,97 @@ nav #connect {
   justify-content: center !important;
   align-self: center !important;
   width: min(100%, 240px) !important;
-  min-height: 46px !important;
+  min-height: 48px !important;
   padding: 12px 22px !important;
-  border: 1px solid rgba(176, 72, 30, .72) !important;
-  border-radius: 4px !important;
-  background: linear-gradient(180deg, #f2b27c 0%, #d36b35 48%, #a93d18 100%) !important;
-  color: #211c17 !important;
+  position: relative !important;
+  isolation: isolate !important;
+  overflow: hidden !important;
+  border: 1px solid rgba(176, 72, 30, .46) !important;
+  border-radius: 6px !important;
+  background:
+    linear-gradient(180deg, rgba(255, 248, 239, .22) 0%, rgba(255, 248, 239, 0) 44%),
+    linear-gradient(135deg, #bf5529 0%, #a43e1b 52%, #7a2b13 100%) !important;
+  color: #fffaf2 !important;
   box-shadow:
-    0 13px 0 #6f2811,
-    0 20px 32px rgba(176, 72, 30, .26),
-    inset 0 1px 0 rgba(255, 255, 255, .42),
-    inset 0 -2px 0 rgba(70, 24, 8, .28) !important;
+    0 12px 28px rgba(94, 56, 34, .14),
+    0 8px 18px rgba(176, 72, 30, .16),
+    inset 0 1px 0 rgba(255, 255, 255, .28),
+    inset 0 -1px 0 rgba(56, 20, 8, .18) !important;
   font-family: "IBM Plex Mono", "SF Mono", Menlo, monospace !important;
   font-size: 13px !important;
   font-weight: 600 !important;
   line-height: 1 !important;
-  letter-spacing: 1.6px !important;
+  letter-spacing: .14em !important;
   text-decoration: none !important;
-  text-shadow: 0 1px 0 rgba(255, 255, 255, .28) !important;
-  transform: translateY(-5px) !important;
-  animation: hero-web3-ember-pulse 2.8s ease-in-out infinite !important;
-  transition: transform .2s ease, filter .2s ease, box-shadow .2s ease !important;
+  text-shadow: 0 1px 1px rgba(48, 16, 6, .36) !important;
+  transform: translateY(0) !important;
+  animation: hero-web3-ember-breathe 3.6s ease-in-out infinite !important;
+  transition: transform .22s ease, filter .22s ease, box-shadow .22s ease, border-color .22s ease !important;
+}
+
+.template-hero .hero-web3-btn::before {
+  content: "" !important;
+  position: absolute !important;
+  inset: 1px !important;
+  z-index: -1 !important;
+  border-radius: 5px !important;
+  background:
+    linear-gradient(115deg, transparent 0%, rgba(255, 248, 239, .2) 42%, transparent 58%),
+    linear-gradient(180deg, rgba(255, 255, 255, .1), transparent 48%) !important;
+  background-size: 220% 100%, 100% 100% !important;
+  background-position: -120% 0, 0 0 !important;
+  opacity: .88 !important;
+  animation: hero-web3-ember-sheen 5.8s ease-in-out infinite !important;
 }
 
 .template-hero .hero-web3-btn:hover {
-  background: linear-gradient(180deg, #ffc28d 0%, #df743b 48%, #b0481e 100%) !important;
-  border-color: rgba(180, 72, 31, .58) !important;
+  background:
+    linear-gradient(180deg, rgba(255, 248, 239, .26) 0%, rgba(255, 248, 239, 0) 44%),
+    linear-gradient(135deg, #c96433 0%, #b0481e 52%, #83300f 100%) !important;
+  border-color: rgba(176, 72, 30, .66) !important;
   box-shadow:
-    0 10px 0 #6f2811,
-    0 22px 36px rgba(176, 72, 30, .34),
-    inset 0 1px 0 rgba(255, 255, 255, .48),
-    inset 0 -2px 0 rgba(70, 24, 8, .28) !important;
-  filter: saturate(1.07) !important;
-  transform: translateY(-2px) !important;
+    0 14px 30px rgba(94, 56, 34, .16),
+    0 10px 22px rgba(176, 72, 30, .22),
+    0 0 0 4px rgba(176, 72, 30, .06),
+    inset 0 1px 0 rgba(255, 255, 255, .32),
+    inset 0 -1px 0 rgba(56, 20, 8, .18) !important;
+  filter: saturate(1.04) !important;
+  transform: translateY(-1px) !important;
 }
 
-@keyframes hero-web3-ember-pulse {
+@keyframes hero-web3-ember-breathe {
   0%, 100% {
     box-shadow:
-      0 13px 0 #6f2811,
-      0 20px 32px rgba(176, 72, 30, .24),
-      0 0 0 0 rgba(176, 72, 30, .18),
-      inset 0 1px 0 rgba(255, 255, 255, .42),
-      inset 0 -2px 0 rgba(70, 24, 8, .28);
+      0 12px 28px rgba(94, 56, 34, .13),
+      0 8px 18px rgba(176, 72, 30, .15),
+      0 0 0 0 rgba(176, 72, 30, 0),
+      inset 0 1px 0 rgba(255, 255, 255, .28),
+      inset 0 -1px 0 rgba(56, 20, 8, .18);
+    transform: translateY(0) scale(1);
   }
   50% {
     box-shadow:
-      0 13px 0 #6f2811,
-      0 23px 38px rgba(176, 72, 30, .34),
-      0 0 0 7px rgba(176, 72, 30, .08),
-      inset 0 1px 0 rgba(255, 255, 255, .46),
-      inset 0 -2px 0 rgba(70, 24, 8, .28);
+      0 15px 32px rgba(94, 56, 34, .16),
+      0 11px 23px rgba(176, 72, 30, .23),
+      0 0 0 5px rgba(176, 72, 30, .07),
+      inset 0 1px 0 rgba(255, 255, 255, .33),
+      inset 0 -1px 0 rgba(56, 20, 8, .18);
+    transform: translateY(-1px) scale(1.012);
+  }
+}
+
+@keyframes hero-web3-ember-sheen {
+  0%, 64%, 100% {
+    background-position: -120% 0, 0 0;
+  }
+  78% {
+    background-position: 120% 0, 0 0;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .template-hero .hero-web3-btn {
+  .template-hero .hero-web3-btn,
+  .template-hero .hero-web3-btn::before {
     animation: none !important;
   }
 }
