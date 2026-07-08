@@ -1176,6 +1176,13 @@
           <p style="color:var(--muted);font-size:0.88rem;margin-bottom:14px;">Post ETH collateral to borrow IFR. Use it for product access, builder discounts, or lock in IFRLock.</p>
 
           <div class="lv-form-group">
+            <label>Offer to Accept</label>
+            <select id="lv-borrow-offer">
+              <option value="">Load offers first</option>
+            </select>
+          </div>
+
+          <div class="lv-form-group">
             <label>IFR Amount to Borrow</label>
             <input type="number" id="lv-borrow-amount" placeholder="e.g. 10000000" min="1" step="1">
           </div>
@@ -1393,6 +1400,8 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
     "function ifrPriceWei() view returns (uint256)",
     "function getOfferCount() view returns (uint256)",
     "function getOffer(uint256 offerId) view returns (tuple(address lender,uint256 availableIFR,uint256 lentIFR,bool active))",
+    "function getRequiredCollateral(uint256 ifrAmount) view returns (uint256)",
+    "function borrow(uint256 offerId,uint256 ifrAmount,uint256 durationDays) external payable",
     "function createOffer(uint256 amount) external",
     "function increaseOffer(uint256 amount) external",
     "function withdrawOffer(uint256 amount) external"
@@ -1407,6 +1416,7 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
   var lvOffer = null;
   var lvRate = ethers.BigNumber.from(200);
   var lvIfrPriceWei = ethers.BigNumber.from(0);
+  var lvBorrowOffers = [];
 
   function el(id) { return document.getElementById(id); }
   function shortAddr(a) { return a ? a.slice(0, 6) + "..." + a.slice(-4) : ""; }
@@ -1416,6 +1426,10 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
   function formatIFR(value, decimals) {
     var n = Number(ethers.utils.formatUnits(value || 0, IFR_DECIMALS));
     return n.toLocaleString("en-US", { maximumFractionDigits: decimals == null ? 3 : decimals });
+  }
+  function formatETH(value, decimals) {
+    var n = Number(ethers.utils.formatEther(value || 0));
+    return n.toLocaleString("en-US", { maximumFractionDigits: decimals == null ? 6 : decimals });
   }
   function formatInput(value) {
     return ethers.utils.formatUnits(value, IFR_DECIMALS).replace(/\.?0+$/, "");
@@ -1436,6 +1450,16 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
   function parseWithdrawAmountOrNull() {
     try {
       var input = el("lv-withdraw-amount");
+      var raw = normalizeAmount(input && input.value);
+      if (!raw || Number(raw) <= 0) return null;
+      return ethers.utils.parseUnits(raw, IFR_DECIMALS);
+    } catch(e) {
+      return null;
+    }
+  }
+  function parseBorrowAmountOrNull() {
+    try {
+      var input = el("lv-borrow-amount");
       var raw = normalizeAmount(input && input.value);
       if (!raw || Number(raw) <= 0) return null;
       return ethers.utils.parseUnits(raw, IFR_DECIMALS);
@@ -1753,6 +1777,7 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
       var totalAvailable = values[0];
       var totalLent = values[1];
       var rate = values[2];
+      lvRate = rate;
       lvIfrPriceWei = values[3];
       var count = values[4].toNumber();
       var total = totalAvailable.add(totalLent);
@@ -1780,11 +1805,13 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
       }
       var rows = [];
       var borrowerRows = [];
+      lvBorrowOffers = [];
       var max = Math.min(count, 50);
       for (var i = 0; i < max; i++) {
         try {
           var offer = await vault.getOffer(i);
           if (!offer.active) continue;
+          if (!offer.availableIFR.isZero()) lvBorrowOffers.push({ id: i, offer: offer });
           rows.push(
             "<div style='display:flex;justify-content:space-between;gap:12px;border-bottom:1px solid var(--border);padding:8px 0;'>" +
             "<span style='font-family:monospace;color:var(--muted);'>" + shortAddr(offer.lender) + "</span>" +
@@ -1806,11 +1833,20 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
           : "";
         borrowerOffersEl.innerHTML = borrowerRows.length ? borrowerRows.join("") + priceNote : "No active offers yet.";
       }
+      var borrowOfferSelect = el("lv-borrow-offer");
+      if (borrowOfferSelect) {
+        borrowOfferSelect.innerHTML = lvBorrowOffers.length
+          ? lvBorrowOffers.map(function(item) {
+              return "<option value='" + item.id + "'>Offer #" + item.id + " — " + formatIFR(item.offer.availableIFR, 3) + " IFR — " + shortAddr(item.offer.lender) + "</option>";
+            }).join("")
+          : "<option value=''>No active offers</option>";
+      }
       var borrowBtn = el("lv-borrow-btn");
       if (borrowBtn) {
         borrowBtn.disabled = lvIfrPriceWei.isZero() || rows.length === 0;
         borrowBtn.textContent = lvIfrPriceWei.isZero() ? "Borrow Disabled — Price Not Set" : "Request Loan";
       }
+      updateLoanPreview();
     } catch(e) {
       console.error("LV market:", e);
     }
@@ -1866,32 +1902,48 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
 
   // ── Loan Preview Calculator ──────────────────────────
   var borrowInput = document.getElementById("lv-borrow-amount");
+  var borrowOfferInput = document.getElementById("lv-borrow-offer");
   var durationSelect = document.getElementById("lv-duration");
   if (borrowInput) borrowInput.addEventListener("input", updateLoanPreview);
+  if (borrowOfferInput) borrowOfferInput.addEventListener("change", updateLoanPreview);
   if (durationSelect) durationSelect.addEventListener("change", updateLoanPreview);
 
-  function updateLoanPreview() {
-    var amount = parseFloat(document.getElementById("lv-borrow-amount").value) || 0;
+  async function updateLoanPreview() {
+    var amount = parseBorrowAmountOrNull();
     var days = parseInt(document.getElementById("lv-duration").value);
-    var el = document.getElementById("lv-loan-preview-content");
-    if (!amount || amount <= 0) { el.innerHTML = "Enter an amount to see preview"; return; }
-
+    var previewEl = document.getElementById("lv-loan-preview-content");
+    var selectedOfferId = document.getElementById("lv-borrow-offer") ? document.getElementById("lv-borrow-offer").value : "";
+    var selectedOffer = lvBorrowOffers.find(function(item) { return String(item.id) === String(selectedOfferId); });
+    if (!amount) { previewEl.innerHTML = "Enter an amount to see collateral required and total cost."; return; }
+    if (!selectedOffer) { previewEl.innerHTML = "Select a live offer first."; return; }
+    if (amount.gt(selectedOffer.offer.availableIFR)) {
+      previewEl.innerHTML = "Amount exceeds this offer's available IFR.";
+      return;
+    }
+    if (lvIfrPriceWei.isZero()) {
+      previewEl.innerHTML = "Borrow transactions are disabled until Governance sets <code>ifrPriceWei</code> for collateral calculation.";
+      return;
+    }
     var months = Math.ceil(days / 30);
-    var rate = 0.02; // 2% base rate
-    var interest = Math.round(amount * rate * months);
-    var totalRepay = amount + interest;
-    // Simplified collateral: assume 1 IFR = 0.000001 ETH for preview
-    var ifrValueETH = amount * 0.000001;
-    var collateral = ifrValueETH * 2; // 200%
-
-    el.innerHTML =
-      "<strong>Borrow:</strong> " + amount.toLocaleString() + " IFR<br>" +
+    var rateBps = lvRate || ethers.BigNumber.from(200);
+    var interest = amount.mul(rateBps).mul(months).div(10000);
+    var totalRepay = amount.add(interest);
+    try {
+      var provider = lvProvider || new ethers.providers.JsonRpcProvider("https://ethereum-rpc.publicnode.com");
+      var vault = new ethers.Contract(LV_ADDR, LV_ABI, provider);
+      var collateral = await vault.getRequiredCollateral(amount);
+      previewEl.innerHTML =
+      "<strong>Offer:</strong> #" + selectedOffer.id + " &mdash; " + shortAddr(selectedOffer.offer.lender) + "<br>" +
+      "<strong>Borrow:</strong> " + formatIFR(amount, 3) + " IFR<br>" +
       "<strong>Duration:</strong> " + days + " days (" + months + " month" + (months > 1 ? "s" : "") + ")<br>" +
-      "<strong>Interest Rate:</strong> ~2%/month (base rate)<br>" +
-      "<strong>Total Interest:</strong> ~" + interest.toLocaleString() + " IFR<br>" +
-      "<strong>Total Repay:</strong> ~" + totalRepay.toLocaleString() + " IFR<br>" +
-      "<strong>ETH Collateral (200%):</strong> ~" + collateral.toFixed(6) + " ETH<br>" +
-      "<span style='color:var(--muted);font-size:0.82rem;margin-top:6px;display:block;'>Final rates determined by contract at time of borrow. Collateral based on live IFR price.</span>";
+      "<strong>Interest Rate:</strong> " + (Number(rateBps.toString()) / 100).toFixed(2).replace(/\\.00$/, "") + "%/month<br>" +
+      "<strong>Total Interest:</strong> " + formatIFR(interest, 3) + " IFR<br>" +
+      "<strong>Total Repay:</strong> " + formatIFR(totalRepay, 3) + " IFR<br>" +
+      "<strong>ETH Collateral (200%):</strong> " + formatETH(collateral, 6) + " ETH<br>" +
+      "<span style='color:var(--muted);font-size:0.82rem;margin-top:6px;display:block;'>Final values are read from LendingVault at transaction time.</span>";
+    } catch(e) {
+      previewEl.innerHTML = e.message || "Could not calculate collateral.";
+    }
   }
 
   // ── Action Buttons ───────────────────────────────────
@@ -1974,16 +2026,49 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
   });
 
   var borrowBtn = document.getElementById("lv-borrow-btn");
-  if (borrowBtn) borrowBtn.addEventListener("click", function() {
+  if (borrowBtn) borrowBtn.addEventListener("click", async function() {
     var s = document.getElementById("lv-borrow-status");
     s.classList.remove("lv-hidden");
     s.style.background = "rgba(251,191,36,0.1)";
     s.style.border = "1px solid rgba(251,191,36,0.3)";
     s.style.color = "#fff7cc";
-    if (lvIfrPriceWei && lvIfrPriceWei.isZero()) {
-      s.innerHTML = "<strong>Borrowing is not active yet.</strong><br>LendingVault is deployed and lender offers are live, but borrow transactions require <code>ifrPriceWei</code> to be set for ETH collateral calculation.";
-    } else {
-      s.innerHTML = "<strong>Select an available offer first.</strong><br>The borrower transaction must reference a live offer and post the required ETH collateral.";
+    try {
+      if (!lvSigner || !lvAddress) throw new Error("Connect your wallet first.");
+      if (lvIfrPriceWei && lvIfrPriceWei.isZero()) {
+        throw new Error("Borrowing is not active yet. LendingVault requires ifrPriceWei for ETH collateral calculation.");
+      }
+      var selectedOfferId = document.getElementById("lv-borrow-offer") ? document.getElementById("lv-borrow-offer").value : "";
+      var selectedOffer = lvBorrowOffers.find(function(item) { return String(item.id) === String(selectedOfferId); });
+      if (!selectedOffer) throw new Error("Select an available offer first.");
+      if (selectedOffer.offer.lender.toLowerCase() === lvAddress.toLowerCase()) throw new Error("You cannot borrow from your own offer.");
+      var amount = parseBorrowAmountOrNull();
+      if (!amount) throw new Error("Enter an IFR amount greater than 0.");
+      if (amount.gt(selectedOffer.offer.availableIFR)) throw new Error("Amount exceeds this offer's available IFR.");
+      var days = parseInt(document.getElementById("lv-duration").value || "90");
+      var vault = new ethers.Contract(LV_ADDR, LV_ABI, lvSigner);
+      var collateral = await vault.getRequiredCollateral(amount);
+      borrowBtn.disabled = true;
+      s.style.background = "rgba(59,130,246,0.12)";
+      s.style.border = "1px solid rgba(59,130,246,0.35)";
+      s.style.color = "#dbeafe";
+      s.innerHTML = "Confirm borrow for offer #" + selectedOffer.id + " with " + formatETH(collateral, 6) + " ETH collateral.";
+      var tx = await vault.borrow(selectedOffer.id, amount, days, { value: collateral });
+      s.innerHTML = "Borrow transaction submitted: " + txLink(tx.hash) + "<br>Waiting for confirmation...";
+      await tx.wait();
+      s.style.background = "rgba(34,197,94,0.12)";
+      s.style.border = "1px solid rgba(34,197,94,0.35)";
+      s.style.color = "#dcfce7";
+      s.innerHTML = "Borrow confirmed. IFR was sent to your wallet.";
+      await loadLVState();
+      await loadMarketData();
+    } catch(e) {
+      if (e.code === 4001 || e.code === "ACTION_REJECTED") {
+        s.innerHTML = "Borrow transaction cancelled in wallet.";
+      } else {
+        s.innerHTML = e.message || "Borrow transaction failed.";
+      }
+    } finally {
+      borrowBtn.disabled = lvIfrPriceWei.isZero() || !lvBorrowOffers.length;
     }
   });
 })();
