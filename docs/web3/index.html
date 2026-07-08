@@ -1153,6 +1153,21 @@
       gap: 20px;
     }
 
+    .footer-mark {
+      display: grid;
+      gap: 4px;
+    }
+
+    .footer-mark span {
+      font-weight: 700;
+      color: var(--ink);
+    }
+
+    .footer-mark small {
+      color: var(--ink-soft);
+      font-size: 12px;
+    }
+
     .footer-links {
       display: flex;
       align-items: center;
@@ -1595,7 +1610,10 @@
 
   <footer class="footer">
     <div class="footer-inner shell">
-      <span>Inferno Protocol</span>
+      <div class="footer-mark">
+        <span>Inferno Protocol &mdash; On-chain symbol IFR &middot; Social cashtag $IFRp</span>
+        <small>&copy; 2026 Inferno Protocol. All rights reserved.</small>
+      </div>
       <div class="footer-links">
         <a href="https://ifrunit.tech">IFR Unit</a>
         <a href="/wiki/">Wiki</a>
