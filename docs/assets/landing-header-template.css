@@ -628,6 +628,22 @@ nav #connect {
   filter: drop-shadow(0 10px 22px rgba(62, 69, 77, .1));
 }
 
+#token-flow svg text {
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+@supports (-webkit-touch-callout: none) {
+  #token-flow .token-flow-panel svg {
+    filter: none !important;
+  }
+
+  #token-flow svg text {
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+  }
+}
+
 #token-flow svg rect[fill="#0d1117"],
 #token-flow svg circle[fill="#0d1117"] {
   fill: #fffaf2 !important;

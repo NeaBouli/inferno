@@ -1258,7 +1258,7 @@
 <script src="assets/wallet-core.js?v=20260708-readable-mobile-modal"></script>
 <script src="assets/ifr-state.js"></script>
   <link rel="stylesheet" href="assets/redesign-skin.css">
-  <link rel="stylesheet" href="assets/landing-header-template.css?v=20260708-0330">
+  <link rel="stylesheet" href="assets/landing-header-template.css?v=20260708-1855">
 </head>
 <body id="top">
 
@@ -3116,6 +3116,23 @@ if (isLocked) {
   }, { threshold: 0.15 });
 
   reveals.forEach(el => observer.observe(el));
+
+  function revealRestoredViewport() {
+    reveals.forEach(el => {
+      const rect = el.getBoundingClientRect();
+      const nearViewport = rect.top < window.innerHeight * 1.25 && rect.bottom > -window.innerHeight * 0.5;
+      if (nearViewport) {
+        el.classList.add('visible');
+        el.querySelectorAll('.alloc-row-fill').forEach(bar => {
+          bar.style.width = bar.dataset.width + '%';
+        });
+      }
+    });
+  }
+
+  requestAnimationFrame(revealRestoredViewport);
+  window.addEventListener('pageshow', revealRestoredViewport);
+  window.addEventListener('load', revealRestoredViewport);
 
 </script>
 
