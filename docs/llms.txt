@@ -13,6 +13,7 @@ IFR includes an AI Copilot assistant. Free users can ask general protocol questi
 - Primary Web3 app: https://web3.ifrunit.tech/
 - User execution surface: simple users should connect wallets and operate live user flows directly on Web3.
 - Direct Web3 user actions: connect wallet, buy IFR, add IFR to wallet, check IFR balance, check CommitmentVault lock state, lock IFR in CommitmentVault, unlock matured CommitmentVault tranches, create/increase LendingVault offers, withdraw unlent IFR, and track the live GeckoTerminal pool.
+- Planned commerce app: `shop.ifrunit.tech` is a proposed future customer/seller PWA, not live yet. Scope is customer wallet, ETH/IFR swap, IFR locking, QR proof, seller scanner, seller discount rules, and verified seller rewards through PartnerVault after governance approval.
 - Role routing: Builders, developers, and deeper community/research users should use the Wiki pages for documentation instead of using Wiki pages as the primary transaction surface.
 - Builder routing: https://ifrunit.tech/wiki/integration.html, https://ifrunit.tech/wiki/business-onboarding.html, https://ifrunit.tech/wiki/ecosystem.html
 - Developer routing: https://ifrunit.tech/wiki/contracts.html, https://ifrunit.tech/wiki/integration.html, https://ifrunit.tech/wiki/wallet-guide.html
@@ -96,6 +97,7 @@ IFR includes an AI Copilot assistant. Free users can ask general protocol questi
 ## Integration Builder (Phase 5)
 
 - Builder Tool: https://ifrunit.tech/builder.html — Generate secure IFR integration code (contract + SDK + deploy guide) in 60 seconds
+- IFRp Commerce App architecture: future customer/seller app for QR-based discounts and seller rewards. Architecture draft: docs/ifrp-commerce-app/MASTER_ARCHITECTURE.md
 - Generator API: POST /api/builder/generate — accepts JSON config, returns contract code + security score
 - IFR SDK: npm install ifr-sdk — IFRClient with checkAccess(), getTier(), getBalance(), isBuilder()
 - Access Check API: GET /api/ifr/check?wallet=0x...&required=1000 — REST API for SDK-less integration

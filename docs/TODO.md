@@ -134,6 +134,10 @@ On errors: fix immediately, commit with `seo:` prefix.
 - [ ] Trust Wallet / Rainbow / Phantom / Zerion visibility follow-up
       Docs: docs/WALLET_ICON_DISTRIBUTION_STATUS_20260708.md
       Status: Trust Wallet not yet worth fee submission until CMC/activity improves; Rainbow depends on upstream lists/market data; Phantom and several wallets are indirect trust/indexing paths.
+- [ ] IFRp Commerce App / shop.ifrunit.tech architecture
+      Docs: docs/ifrp-commerce-app/MASTER_ARCHITECTURE.md
+      Goal: installable customer/seller app with wallet, ETH/IFR swap, IFR locking, QR proof, seller scanner, seller discount rules, and verified seller rewards via PartnerVault after governance approval.
+      MVP path: extend apps/benefits-network, add role chooser, seller rule builder, customer wallet/lock status, QR verification, and deploy preview on shop.ifrunit.tech.
 
 ## ✅ ERLEDIGT — Proposal #13 executed (16.04.2026)
 

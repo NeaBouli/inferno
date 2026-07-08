@@ -632,6 +632,7 @@
           <li class="check-item">PartnerVault v2 (authorizedCaller, anti-double-count, algo throttle)</li>
           <li class="check-item">FeeRouterV1 (EIP-712 vouchers, protocol fee routing)</li>
           <li class="check-item">Benefits Network (QR-based lock verification)</li>
+          <li class="pending-item">IFRp Commerce App / <code>shop.ifrunit.tech</code> &mdash; planned customer/seller PWA with wallet, swap, lock, QR proof, seller scanner, discount rules, and PartnerVault reward path</li>
           <li class="check-item">Creator Gateway (YouTube &times; IFR Lock Bridge)</li>
           <li class="check-item">Points Backend (SIWE auth, EIP-712 voucher issuance)</li>
           <li class="check-item">AI Copilot (RAG knowledge base, 3 modes)</li>
@@ -699,6 +700,7 @@
           <li class="pending-item"><strong>June/July 2026:</strong> C1/C3 top up ETH and lock 50% in CommitmentVault</li>
           <li class="pending-item"><strong>Improvement:</strong> Batch lock UX &mdash; add contract/UI path for one approval plus one split-lock transaction instead of 10 separate lock confirmations</li>
           <li class="pending-item"><strong>June/July 2026:</strong> First Builder loans via LendingVault after active offers exist and <code>ifrPriceWei</code> is set for ETH collateral calculation</li>
+          <li class="pending-item"><strong>Commerce App Architecture:</strong> finalize the IFRp customer/seller app plan and decide whether to extend <code>apps/benefits-network</code> or create a dedicated <code>shop.ifrunit.tech</code> app surface</li>
           <li class="pending-item"><strong>September 2026:</strong> LiquidityReserve unlock (200M IFR available) &mdash; Governance decides LP addition</li>
           <li class="pending-item"><strong>March 2027:</strong> Vesting Cliff &mdash; Core Dev receives first IFR (public announcement before each claim)</li>
           <li class="check-item"><strong>April 2026:</strong> BuybackController deployed + verified &mdash; Proposal #13 (feeExempt) executed 16.04.2026, Proposal #14 (setFeeCollector) executed 18.04.2026 &mdash; Buyback system fully active &#x2705;</li>
@@ -722,6 +724,7 @@
           <li class="pending-item">Wallet-based Telegram Access &mdash; Users connect wallet via WalletConnect on ifrunit.tech, sign once, get whitelisted. Bot grants access to gated topics (Vote, Council, Core Dev) based on on-chain IFR lock status. No manual wallet entry &mdash; cryptographically verified.</li>
           <li class="pending-item">Community signer expansion after community voting is live &mdash; evolve the current 3-of-5 Safe model toward a broader 4-of-7 or 5-of-9 signer set. Recommended model: mixed selection, not pure whale voting and not pure random selection. Candidates should pass identity/contact verification, security-readiness checks, conflict review, public acceptance of signer duties, community vote/nomination, and periodic rotation or replacement rules. <a href="https://ifrunit.tech/wiki/community-signer-expansion.html" style="color:var(--accent);">Full plan</a></li>
           <li class="pending-item">Builder token voting rights</li>
+          <li class="pending-item">Seller/customer commerce app scaling: embedded wallet, App Store / Play Store wrapper, product catalog, reward analytics</li>
           <li class="pending-item">Bug bounty program (Immunefi)</li>
           <li class="pending-item">Full DAO transition (Admin &rarr; Multisig &rarr; DAO)</li>
           <li class="pending-item">Cross-protocol integrations</li>
@@ -777,7 +780,7 @@
 
       <h2>Current Focus</h2>
       <p>
-        <strong>Phase 4 complete &mdash; All Governance Executed &#x2705;</strong> &mdash; 17 mainnet on-chain components deployed, verified. finalise() executed 05.06.2026, Uniswap V2 LP live, LP locked 12 months. Proposal #15 (feeExempt LP Token) EXECUTED 08.06.2026. Proposal #16 (setP0 CommitmentVault) EXECUTED 09.06.2026 &mdash; P0 = 300,000,000 wei. CommitmentVault self-service locking is live and C2 is verified on-chain. LendingVault guided lender offers and Market live data are wired; C2 offer is active on-chain. Next implementation focus: batch-lock UX and borrower-side loan execution after <code>ifrPriceWei</code> activation.
+        <strong>Phase 4 complete &mdash; All Governance Executed &#x2705;</strong> &mdash; 17 mainnet on-chain components deployed, verified. finalise() executed 05.06.2026, Uniswap V2 LP live, LP locked 12 months. Proposal #15 (feeExempt LP Token) EXECUTED 08.06.2026. Proposal #16 (setP0 CommitmentVault) EXECUTED 09.06.2026 &mdash; P0 = 300,000,000 wei. CommitmentVault self-service locking is live and C2 is verified on-chain. LendingVault guided lender offers and Market live data are wired; C2 offer is active on-chain. Next implementation focus: batch-lock UX, borrower-side loan execution after <code>ifrPriceWei</code> activation, and the planned IFRp Commerce App architecture for customer/seller QR benefits.
       </p>
 
       <div class="callout-green callout">
