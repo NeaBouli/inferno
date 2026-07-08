@@ -35,3 +35,37 @@
 
 - Dependabot wird diese PRs erneut öffnen — ggf. `ignore` Regeln in `.github/dependabot.yml` setzen
 - Vor jeder Migration: lokalen Branch erstellen, vollständige Testsuite durchlaufen
+
+## 2026-07-08 Operational Note
+
+The root audit backlog is still mostly toolchain debt, not production contract runtime code.
+
+Current constraints:
+
+- `hardhat@2`
+- `ethers@5`
+- `@nomiclabs/hardhat-waffle`
+- `ethereum-waffle`
+- Ganache/transitive test dependencies
+
+Do not run `npm audit fix --force` on `main`. A forced fix would cross multiple breaking boundaries at once and would likely touch Hardhat config, test helpers, scripts, deploy flows, and ethers BigNumber usage.
+
+Recommended separate branch:
+
+```bash
+git checkout -b chore/dependency-modernization
+```
+
+Suggested order:
+
+1. Remove Waffle usage from tests and replace matcher assumptions with Hardhat/Chai equivalents.
+2. Remove Ganache/Waffle transitive dependency path.
+3. Migrate Hardhat plugins to the current Nomic Foundation stack.
+4. Migrate ethers v5 scripts/tests to ethers v6 or confirm Hardhat plugin compatibility first.
+5. Run the full contract suite after each step:
+   - `npm ci`
+   - `npx hardhat test`
+   - `npx hardhat test test/*.test.js`
+   - `node scripts/docs-validator.js`
+
+Keep this separate from protocol governance and Web3 UX changes.

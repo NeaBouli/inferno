@@ -8,9 +8,12 @@ Status: prepared, not executed.
 
 - `LendingVault.ifrPriceWei()` is still `0`, so the contract intentionally blocks borrower transactions.
 - `scripts/prepare-lending-price-governance.js` dry-runs the full Safe/Governance path.
-- Latest dry-run candidate from the thin Uniswap V2 spot pool: `9281498741` wei per IFR.
+- Latest dry-run candidate from the thin Uniswap V2 spot pool, rechecked 2026-07-08: `9281498741` wei per IFR.
 - Current pool read used by the script: `18,020,208.679814493 IFR` and `0.16725454417891158 ETH`.
 - The Safe Transaction Builder payload is written to `/tmp/inferno/lending-price-safe-tx.json`.
+- Latest script validation:
+  - `node scripts/prepare-lending-price-governance.js --self-test`: PASS
+  - `node scripts/prepare-lending-price-governance.js --write-safe-json`: PASS
 
 Open next step: choose a final price policy, submit the Safe transaction to `Governance.propose(LendingVault, setIFRPrice(candidate))`, wait 48 hours, execute, then verify Web3/Wiki borrowing.
 
@@ -24,6 +27,10 @@ Status: intentionally disabled for price conditions.
 - Setting a nonzero `priceOracle` address alone would not make price-based unlocks functional.
 
 Open next step: deploy or replace with a compatible oracle-enabled implementation path before enabling price-only, time-or-price, or time-and-price locks in UX.
+
+Design note added:
+
+- `docs/COMMITMENT_PRICE_LOCK_ORACLE_PATH.md`
 
 ## 3. Dependency Security Backlog
 
@@ -40,12 +47,18 @@ Open next step: plan a separate dependency modernization branch. Do not run `npm
 
 Status: improved, still has follow-up items.
 
-- Uniswap Default Token List issue #2509 is still open.
+- Uniswap Default Token List issue #2509 is still open and was updated with Etherscan Neutral plus live metadata/icon links.
 - Official token lists are live:
   - `https://ifrunit.tech/token-list.json`
   - `https://ifrunit.tech/.well-known/token-list.json`
 - GeckoTerminal pool/profile is visible and includes IFR protocol copy.
 - Etherscan token reputation now reads `Neutral`, not `Unknown`.
+- MetaMask contract-metadata retry is now open:
+  - `https://github.com/MetaMask/contract-metadata/pull/1858`
+- ethereum-lists PR #1036 is still open with no maintainer review/comment:
+  - `https://github.com/ethereum-lists/tokens/pull/1036`
+- Wallet icon distribution status is documented:
+  - `docs/WALLET_ICON_DISTRIBUTION_STATUS_20260708.md`
 - CMC check script is present, but local `CMC_API_KEY` is not set, so CMC listing status was not queried.
 
 Open next step: resume MetaMask registry submission now that Etherscan is neutral, keep watching Uniswap issue #2509, and run CMC check only with a local key.

@@ -18,14 +18,24 @@ Last checked: 2026-07-08
 | Surface | Status | Notes |
 | --- | --- | --- |
 | Etherscan | Live | Token page uses `infernoprotocol_ifr.svg`. Reputation now shows `Neutral`. |
-| Uniswap Default Token List | Open | Request exists: https://github.com/Uniswap/default-token-list/issues/2509 |
+| Uniswap Default Token List | Open / updated | Request exists: https://github.com/Uniswap/default-token-list/issues/2509. Latest follow-up posted with Etherscan Neutral, token-list URLs, icon URLs, and GeckoTerminal pool. |
 | Uniswap Custom Token List | Ready | Hosted at `https://ifrunit.tech/token-list.json`. |
-| MetaMask Registry | Ready for retry | `MetaMask/contract-metadata` is effectively frozen for new tokens, but the former Etherscan `Unknown` blocker is cleared because IFR now shows `Neutral`. |
+| MetaMask Registry | PR open | Retry submitted after Etherscan moved to `Neutral`: https://github.com/MetaMask/contract-metadata/pull/1858. MetaMask still states the registry is effectively frozen, so merge is not guaranteed. |
 | MetaMask `wallet_watchAsset` | Implemented | Landing page can request MetaMask to add IFR with the official icon URL. |
+| ethereum-lists | Open | Token definition PR remains open with no maintainer review yet: https://github.com/ethereum-lists/tokens/pull/1036 |
+| Trust Wallet Assets | Not yet eligible / prepared | Official path is a `trustwallet/assets` PR plus fee, but Trust requirements currently include CMC price tracking and high holder/transaction thresholds. Prepare, but do not submit fee PR until CMC/on-chain activity improves. |
+| Rainbow Token List | Waiting on upstream sources | Rainbow builds from ethereum-lists, CoinGecko/CMC/token lists and overrides. Best path is to land ethereum-lists and market-data listings first. |
+| Zerion | Manual form path | Official path is Zerion app asset report / Typeform with 128x128 logo. Requires interactive web submission. |
+| Phantom | Indirect / trust-signal path | Phantom supports Ethereum, but token visibility relies on metadata and trust/safety signals rather than a public ERC-20 logo PR. Keep Etherscan, token lists, GeckoTerminal, CoinGecko/CMC, and Blockaid clean. |
+| Coinbase/Base Wallet | Indirect | No public ERC-20 logo PR path found; wallet visibility generally follows indexed market/explorer metadata and manual custom-token support. |
+| Rabby / OKX Wallet | Indirect | No stable public ERC-20 icon PR path confirmed. Track through Etherscan, token lists, market-data providers, and wallet support channels if IFR is missing after listings mature. |
 
 ## Next Actions
 
-1. Keep Uniswap issue #2509 updated after any CoinGecko/CoinMarketCap page goes live.
-2. Retry MetaMask registry/token metadata follow-up with Etherscan `Neutral` as supporting evidence.
-3. Keep monitoring Etherscan reputation for movement from `Neutral` to `OK`.
-4. Keep `docs/token-list.json` and `docs/.well-known/token-list.json` in sync when metadata changes.
+1. Watch MetaMask PR #1858 and answer maintainer feedback quickly.
+2. Keep Uniswap issue #2509 updated after any CoinGecko/CoinMarketCap page goes live.
+3. Keep ethereum-lists PR #1036 under watch.
+4. Do not pay/submit Trust Wallet fee PR until CMC and activity thresholds are closer to acceptance.
+5. Run Zerion's asset report manually if IFR is missing in Zerion after market-data indexing.
+6. Keep monitoring Etherscan reputation for movement from `Neutral` to `OK`.
+7. Keep `docs/token-list.json` and `docs/.well-known/token-list.json` in sync when metadata changes.
