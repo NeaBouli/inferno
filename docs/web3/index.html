@@ -1788,6 +1788,14 @@
       const lendingRefresh = document.querySelector("[data-lending-refresh]");
       const lendingDeposit = document.querySelector("[data-lending-deposit]");
       const lendingWithdraw = document.querySelector("[data-lending-withdraw]");
+
+      function isIOSDevice() {
+        return /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+      }
+
+      function isSafariBrowser() {
+        return /^((?!chrome|android|crios|fxios|edgios).)*safari/i.test(navigator.userAgent);
+      }
       let deferredInstallPrompt = null;
       let walletConnectUri = "";
       let currentLockState = null;
@@ -2347,18 +2355,38 @@
 
       function showInstallButtons() {
         if (isStandalone()) return;
-        installButtons.forEach((button) => { button.hidden = false; });
+        const isiOS = isIOSDevice();
+        installButtons.forEach((button) => {
+          button.hidden = false;
+          if (isiOS) button.textContent = "Add to Home Screen";
+        });
       }
 
       function openInstallDialog() {
         if (!installDialog) return;
-        const isiOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+        const isiOS = isIOSDevice();
         if (isiOS) {
-          installCopy.textContent = "Install IFR Web3 from Safari for direct home screen access.";
+          installCopy.textContent = isSafariBrowser()
+            ? "iPad Safari installs web apps from the Share menu. This browser cannot open a native install prompt automatically."
+            : "On iPad, install IFR Web3 from Safari. Open this page in Safari first, then use the Share menu.";
           installSteps.innerHTML = [
-            "Tap Share in Safari.",
-            "Choose Add to Home Screen.",
-            "Open IFR Web3 from the new app icon."
+            "Open https://web3.ifrunit.tech in Safari.",
+            "Tap Share in the top toolbar.",
+            "Choose Add to Home Screen. If needed, scroll the share sheet.",
+            "Tap Add, then launch IFR Web3 from the new app icon."
+          ].map((step) => `<li>${step}</li>`).join("");
+        } else if (!deferredInstallPrompt) {
+          installCopy.textContent = "Your browser does not expose an automatic install prompt here. Use the browser menu to install IFR Web3.";
+          installSteps.innerHTML = [
+            "Open the browser menu.",
+            "Choose Install App or Add to Home Screen.",
+            "Launch IFR Web3 from the new app icon."
+          ].map((step) => `<li>${step}</li>`).join("");
+        } else {
+          installCopy.textContent = "Save the app to your home screen for direct wallet access.";
+          installSteps.innerHTML = [
+            "Confirm the install prompt.",
+            "Launch IFR Web3 from the new app icon."
           ].map((step) => `<li>${step}</li>`).join("");
         }
         installDialog.classList.add("is-open");
