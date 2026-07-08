@@ -1258,7 +1258,7 @@
 <script src="assets/wallet-core.js?v=20260708-readable-mobile-modal"></script>
 <script src="assets/ifr-state.js"></script>
   <link rel="stylesheet" href="assets/redesign-skin.css">
-  <link rel="stylesheet" href="assets/landing-header-template.css?v=20260708-1855">
+  <link rel="stylesheet" href="assets/landing-header-template.css?v=20260708-1915">
 </head>
 <body id="top">
 
@@ -2146,6 +2146,7 @@ render();
       <p style="color:#9ca3af;margin-bottom:32px;font-size:0.9rem;">How every IFR token moves through the protocol</p>
     </div>
     <div class="token-flow-panel" style="max-width:900px;margin:0 auto;background:rgba(13,17,23,0.8);border:1px solid #1e2730;border-radius:20px;padding:20px;overflow:hidden;">
+      <div class="token-flow-svg-wrap">
       <svg viewBox="0 0 800 540" style="width:100%;height:auto;" xmlns="http://www.w3.org/2000/svg">
         <defs>
           <filter id="glow"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
@@ -2266,8 +2267,8 @@ render();
         <line x1="442" y1="260" x2="640" y2="252" stroke="#1e2730" stroke-width="1.5"/>
         <line x1="705" y1="274" x2="705" y2="328" stroke="#1e2730" stroke-width="1.5"/>
         <rect x="640" y="232" width="130" height="42" rx="10" fill="#0d1117" stroke="#22c55e" stroke-width="1.5"/>
-        <text x="705" y="250" text-anchor="middle" fill="#22c55e" font-size="11" font-weight="bold">IFRLock</text>
-        <text x="705" y="266" text-anchor="middle" fill="#9ca3af" font-size="9">Lock &rarr; Access</text>
+        <text class="svg-ifrlock-fallback" x="705" y="250" text-anchor="middle" fill="#22c55e" font-size="11" font-weight="bold">IFRLock</text>
+        <text class="svg-ifrlock-fallback" x="705" y="266" text-anchor="middle" fill="#9ca3af" font-size="9">Lock &rarr; Access</text>
 
         <!-- User -->
         <rect x="640" y="328" width="130" height="42" rx="10" fill="#0d1117" stroke="#9ca3af" stroke-width="1" stroke-dasharray="4,3"/>
@@ -2306,6 +2307,11 @@ render();
           <rect x="345" y="4" width="14" height="8" fill="none" stroke="#9ca3af" stroke-width="1" stroke-dasharray="3,2" rx="2"/><text x="363" y="12" fill="#9ca3af" font-size="9">Phase 3</text>
         </g>
       </svg>
+      <div class="token-flow-ifrlock-html" aria-hidden="true">
+        <strong>IFRLock</strong>
+        <span>Lock &rarr; Access</span>
+      </div>
+      </div>
     </div>
     <div style="text-align:center;margin-top:24px;">
       <a href="wiki/protocol-plan.html" style="display:inline-flex;align-items:center;gap:8px;background:transparent;border:1.5px solid #f97316;color:#f97316;padding:12px 28px;border-radius:10px;text-decoration:none;font-weight:700;font-size:0.95rem;transition:background 0.2s;" onmouseover="this.style.background='rgba(249,115,22,0.1)'" onmouseout="this.style.background='transparent'">Full Protocol Plan &rarr;</a>

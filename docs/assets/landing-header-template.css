@@ -628,6 +628,48 @@ nav #connect {
   filter: drop-shadow(0 10px 22px rgba(62, 69, 77, .1));
 }
 
+#token-flow .token-flow-svg-wrap {
+  position: relative !important;
+  width: 100% !important;
+}
+
+#token-flow .svg-ifrlock-fallback {
+  opacity: 0 !important;
+}
+
+#token-flow .token-flow-ifrlock-html {
+  position: absolute !important;
+  left: 80% !important;
+  top: 42.96% !important;
+  width: 16.25% !important;
+  height: 7.78% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: min(.35vw, 4px) !important;
+  color: #2f6a45 !important;
+  font-family: var(--font-body, system-ui, sans-serif) !important;
+  line-height: 1.1 !important;
+  text-align: center !important;
+  pointer-events: none !important;
+  z-index: 3 !important;
+  transform: translateZ(0) !important;
+}
+
+#token-flow .token-flow-ifrlock-html strong {
+  color: #2f6a45 !important;
+  font-size: clamp(8px, 1.14vw, 13px) !important;
+  font-weight: 800 !important;
+}
+
+#token-flow .token-flow-ifrlock-html span {
+  color: #6f675d !important;
+  font-size: clamp(7px, .92vw, 10px) !important;
+  font-weight: 500 !important;
+  white-space: nowrap !important;
+}
+
 #token-flow svg text {
   opacity: 1 !important;
   visibility: visible !important;
