@@ -1,12 +1,15 @@
 name: Benefits Network CI
 
 on:
+  workflow_dispatch:
   push:
     paths:
       - 'apps/benefits-network/**'
+      - '.github/workflows/benefits-network.yml'
   pull_request:
     paths:
       - 'apps/benefits-network/**'
+      - '.github/workflows/benefits-network.yml'
 
 jobs:
   test-backend:
