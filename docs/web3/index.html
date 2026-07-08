@@ -4,10 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>IFR Web3 Access Layer | Inferno Protocol</title>
-  <meta name="description" content="IFR Web3 access layer for users: connect wallets, buy IFR, add IFR to wallet, lock IFR for Premium access, manage CommitmentVault tranches, create LendingVault offers, and route builders or developers to IFR Wiki docs.">
+  <meta name="description" content="IFR Web3 access layer for users: connect wallets, buy IFR, add IFR to wallet, lock IFR for Premium access, manage CommitmentVault tranches, create or accept LendingVault offers, and route builders or developers to IFR Wiki docs.">
   <meta name="robots" content="index, follow">
   <meta property="og:title" content="IFR Web3 Access Layer | Inferno Protocol">
-  <meta property="og:description" content="User execution surface for IFR: wallet connect, buy IFR, IFRLock Premium access, CommitmentVault lock/unlock, LendingVault offers, pool tracking, and Wiki routing for builders and developers.">
+  <meta property="og:description" content="User execution surface for IFR: wallet connect, buy IFR, IFRLock Premium access, CommitmentVault lock/unlock, LendingVault lender and borrower flows, pool tracking, and Wiki routing for builders and developers.">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://web3.ifrunit.tech/">
   <meta property="og:image" content="https://ifrunit.tech/assets/ifr_icon_4096_v2.png">
@@ -15,7 +15,7 @@
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:site" content="@IFRtoken">
   <meta name="twitter:title" content="IFR Web3 Access Layer | Inferno Protocol">
-  <meta name="twitter:description" content="Connect a wallet and use IFR directly on Web3: buy IFR, add it to wallet, lock for Premium access, and manage vault actions.">
+  <meta name="twitter:description" content="Connect a wallet and use IFR directly on Web3: buy IFR, add it to wallet, lock for Premium access, lend, borrow, and manage vault actions.">
   <meta name="twitter:image" content="https://ifrunit.tech/assets/ifr_icon_4096_v2.png">
   <meta name="theme-color" content="#f6f0e6">
   <meta name="application-name" content="IFR Web3">
@@ -42,7 +42,7 @@
     "applicationCategory": "FinanceApplication",
     "operatingSystem": "Web",
     "url": "https://web3.ifrunit.tech/",
-    "description": "User execution surface for Inferno Protocol: wallet connection, IFR token import, Uniswap buy link, IFRLock Premium access, CommitmentVault lock and unlock flows, LendingVault offer flows, and role-based Wiki routing for builders, developers, and community research.",
+    "description": "User execution surface for Inferno Protocol: wallet connection, IFR token import, Uniswap buy link, IFRLock Premium access, CommitmentVault lock and unlock flows, LendingVault lender and borrower flows, and role-based Wiki routing for builders, developers, and community research.",
     "creator": {
       "@type": "Organization",
       "name": "Inferno Protocol",
@@ -60,6 +60,7 @@
       "IFRLock Premium access",
       "CommitmentVault lock and unlock",
       "LendingVault offer creation and withdrawal",
+      "LendingVault borrower offer acceptance and loan management",
       "Builder and developer Wiki routing"
     ]
   }
@@ -255,6 +256,13 @@
     .btn:hover,
     .btn:focus-visible {
       transform: translateY(-1px);
+    }
+
+    .btn:disabled {
+      cursor: not-allowed;
+      opacity: 0.45;
+      transform: none;
+      box-shadow: none;
     }
 
     .btn-primary {
@@ -783,13 +791,17 @@
       font-weight: 700;
     }
 
-    .tranche-list {
+    .tranche-list,
+    .offer-list,
+    .loan-list {
       display: grid;
       gap: 10px;
       margin-top: 16px;
     }
 
-    .tranche-row {
+    .tranche-row,
+    .offer-row,
+    .loan-row {
       display: grid;
       grid-template-columns: minmax(0, 1fr) auto;
       gap: 14px;
@@ -797,13 +809,24 @@
       padding: 14px;
     }
 
-    .tranche-row strong {
+    .tranche-row strong,
+    .offer-row strong,
+    .loan-row strong {
       display: block;
       margin: 4px 0;
       color: var(--ink);
     }
 
-    .tranche-row .btn {
+    .offer-row,
+    .loan-row {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #fbf6ed;
+    }
+
+    .tranche-row .btn,
+    .offer-row .btn,
+    .loan-row .btn {
       min-height: 40px;
       padding: 0 14px;
       font-size: 13px;
@@ -1413,6 +1436,7 @@
             <button class="btn btn-primary" type="button" data-open-access-lock>Access lock</button>
             <button class="btn btn-mint" type="button" data-open-lock>Commitment lock</button>
             <button class="btn btn-mint" type="button" data-open-lending>Create offer</button>
+            <button class="btn btn-quiet" type="button" data-open-borrow>Borrow IFR</button>
             <button class="btn btn-quiet" type="button" data-add-token>Add IFR to wallet</button>
             <a class="btn btn-quiet" href="https://www.geckoterminal.com/eth/pools/0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0" target="_blank" rel="noopener">Track pool</a>
           </div>
@@ -1446,6 +1470,7 @@
               <button class="btn btn-primary" type="button" data-open-access-lock>Access lock</button>
               <button class="btn btn-mint" type="button" data-open-lock>Commitment lock</button>
               <button class="btn btn-mint" type="button" data-open-lending>Create offer</button>
+              <button class="btn btn-quiet" type="button" data-open-borrow>Borrow IFR</button>
               <a class="btn btn-quiet" href="https://app.uniswap.org/swap?outputCurrency=0x77e99917Eca8539c62F509ED1193ac36580A6e7B" target="_blank" rel="noopener">Buy IFR</a>
               <a class="btn btn-quiet" href="https://www.geckoterminal.com/eth/pools/0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0" target="_blank" rel="noopener">Track pool</a>
             </div>
@@ -1779,21 +1804,94 @@
     </div>
   </div>
 
+  <div class="protocol-dialog" data-borrow-dialog aria-hidden="true">
+    <div class="protocol-card" role="dialog" aria-modal="true" aria-labelledby="borrow-title">
+      <header>
+        <div>
+          <h2 id="borrow-title">Borrow IFR</h2>
+          <p>Accept a live LendingVault offer by selecting an offer, choosing IFR amount and duration, then posting the required ETH collateral from this Web3 page.</p>
+        </div>
+        <button class="protocol-close" type="button" aria-label="Close borrow panel" data-borrow-close>&times;</button>
+      </header>
+
+      <div class="protocol-grid">
+        <div class="protocol-stat">
+          <span>Borrow price</span>
+          <strong data-borrow-price>Connect</strong>
+        </div>
+        <div class="protocol-stat">
+          <span>Active offers</span>
+          <strong data-borrow-offer-count>Connect</strong>
+        </div>
+        <div class="protocol-stat">
+          <span>Required collateral</span>
+          <strong data-borrow-collateral>Connect</strong>
+        </div>
+      </div>
+
+      <div class="protocol-form protocol-form-wide">
+        <div class="protocol-field">
+          <label for="borrow-offer">Offer</label>
+          <select id="borrow-offer" data-borrow-offer>
+            <option value="">Load offers</option>
+          </select>
+        </div>
+        <div class="protocol-field">
+          <label for="borrow-duration">Duration</label>
+          <select id="borrow-duration" data-borrow-duration>
+            <option value="30">30 days</option>
+            <option value="60">60 days</option>
+            <option value="90" selected>90 days</option>
+            <option value="180">180 days</option>
+            <option value="365">365 days</option>
+          </select>
+        </div>
+        <div class="protocol-field">
+          <label for="borrow-amount">Amount</label>
+          <input id="borrow-amount" inputmode="decimal" autocomplete="off" placeholder="0.00 IFR" data-borrow-amount>
+        </div>
+        <div class="protocol-field">
+          <label for="borrow-loan">Your loan</label>
+          <select id="borrow-loan" data-borrow-loan>
+            <option value="">No active loans</option>
+          </select>
+        </div>
+        <div class="protocol-field protocol-field-full">
+          <label for="borrow-topup">Top-up collateral</label>
+          <input id="borrow-topup" inputmode="decimal" autocomplete="off" placeholder="0.00 ETH" data-borrow-topup>
+        </div>
+      </div>
+
+      <div class="protocol-actions">
+        <button class="btn btn-quiet" type="button" data-borrow-max>Use offer max</button>
+        <button class="btn btn-mint" type="button" data-borrow-refresh>Refresh</button>
+        <button class="btn btn-primary" type="button" data-borrow-submit>Borrow with ETH collateral</button>
+        <button class="btn btn-mint" type="button" data-borrow-repay>Approve / Repay loan</button>
+        <button class="btn btn-quiet" type="button" data-borrow-topup-submit>Top up collateral</button>
+      </div>
+      <p class="protocol-status" data-borrow-status>Connect a wallet to load borrowable offers.</p>
+      <div class="offer-list" data-borrow-offers></div>
+      <div class="loan-list" data-borrow-loans></div>
+      <p class="protocol-note">Borrowing requires LendingVault <code>ifrPriceWei</code> to be set on-chain. If the price is zero, offers can still be viewed but borrow transactions remain disabled by the contract.</p>
+    </div>
+  </div>
+
   <script>
     (function() {
       const audiences = {
         users: {
           title: "Lock once. Use across the ecosystem.",
-          copy: "Users can connect, buy IFR, add the token to their wallet, use the simple IFRLock access lock, manage CommitmentVault tranches, and create or withdraw LendingVault offers directly on this Web3 page.",
+          copy: "Users can connect, buy IFR, add the token to their wallet, use the simple IFRLock access lock, manage CommitmentVault tranches, and create, withdraw, or accept LendingVault offers directly on this Web3 page.",
           items: [
             "Use the access terminal for wallet, IFR balance, lock state, and token import.",
             "Buy IFR on Uniswap or track the live pool without leaving the user flow.",
-            "Use IFRLock for simple access, CommitmentVault for conditional tranches, or LendingVault for offers."
+            "Use IFRLock for simple access, CommitmentVault for conditional tranches, or LendingVault for lender and borrower flows."
           ],
           actions: [
             { label: "Access lock", kind: "button", variant: "btn-primary", data: "data-open-access-lock" },
             { label: "Commitment lock", kind: "button", variant: "btn-mint", data: "data-open-lock" },
             { label: "Create offer", kind: "button", variant: "btn-mint", data: "data-open-lending" },
+            { label: "Borrow IFR", kind: "button", variant: "btn-quiet", data: "data-open-borrow" },
             { label: "Buy IFR", kind: "link", variant: "btn-quiet", href: "https://app.uniswap.org/swap?outputCurrency=0x77e99917Eca8539c62F509ED1193ac36580A6e7B", external: true },
             { label: "Track pool", kind: "link", variant: "btn-quiet", href: "https://www.geckoterminal.com/eth/pools/0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0", external: true }
           ]
@@ -1935,6 +2033,24 @@
       const lendingRefresh = document.querySelector("[data-lending-refresh]");
       const lendingDeposit = document.querySelector("[data-lending-deposit]");
       const lendingWithdraw = document.querySelector("[data-lending-withdraw]");
+      const borrowDialog = document.querySelector("[data-borrow-dialog]");
+      const borrowClose = document.querySelector("[data-borrow-close]");
+      const borrowPrice = document.querySelector("[data-borrow-price]");
+      const borrowOfferCount = document.querySelector("[data-borrow-offer-count]");
+      const borrowCollateral = document.querySelector("[data-borrow-collateral]");
+      const borrowOffer = document.querySelector("[data-borrow-offer]");
+      const borrowDuration = document.querySelector("[data-borrow-duration]");
+      const borrowAmount = document.querySelector("[data-borrow-amount]");
+      const borrowLoan = document.querySelector("[data-borrow-loan]");
+      const borrowTopup = document.querySelector("[data-borrow-topup]");
+      const borrowStatus = document.querySelector("[data-borrow-status]");
+      const borrowOffers = document.querySelector("[data-borrow-offers]");
+      const borrowLoans = document.querySelector("[data-borrow-loans]");
+      const borrowMax = document.querySelector("[data-borrow-max]");
+      const borrowRefresh = document.querySelector("[data-borrow-refresh]");
+      const borrowSubmit = document.querySelector("[data-borrow-submit]");
+      const borrowRepay = document.querySelector("[data-borrow-repay]");
+      const borrowTopupSubmit = document.querySelector("[data-borrow-topup-submit]");
 
       function isIOSDevice() {
         return /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
@@ -1948,6 +2064,7 @@
       let currentAccessLockState = null;
       let currentLockState = null;
       let currentLendingState = null;
+      let currentBorrowState = null;
       const web3Url = "https://web3.ifrunit.tech/";
       const encodedWeb3Url = encodeURIComponent(web3Url);
       const IFR_TOKEN_ADDRESS = "0x77e99917Eca8539c62F509ED1193ac36580A6e7B";
@@ -1980,9 +2097,20 @@
         "function createOffer(uint256) external",
         "function increaseOffer(uint256) external",
         "function withdrawOffer(uint256) external",
+        "function borrow(uint256,uint256,uint256) external payable",
+        "function repay(uint256) external",
+        "function topUpCollateral(uint256) external payable",
         "function hasOffer(address) view returns (bool)",
         "function lenderOfferIndex(address) view returns (uint256)",
-        "function getOffer(uint256) view returns (tuple(address lender,uint256 availableIFR,uint256 lentIFR,bool active))"
+        "function ifrPriceWei() view returns (uint256)",
+        "function getRequiredCollateral(uint256) view returns (uint256)",
+        "function getInterestRate() view returns (uint256)",
+        "function getOfferCount() view returns (uint256)",
+        "function getOffer(uint256) view returns (tuple(address lender,uint256 availableIFR,uint256 lentIFR,bool active))",
+        "function getLoanCount() view returns (uint256)",
+        "function getLoan(uint256) view returns (tuple(address borrower,uint256 offerId,uint256 ifrAmount,uint256 ethCollateral,uint256 startTime,uint256 duration,uint256 monthlyRateBps,bool active))",
+        "function calculateInterest(uint256) view returns (uint256)",
+        "function getCollateralRatio(uint256) view returns (uint256)"
       ];
 
       function shortAddress(address) {
@@ -2043,6 +2171,20 @@
 
       function formatIFRInputValue(value) {
         return ethers.utils.formatUnits(value, IFR_DECIMALS).replace(/(\.\d*?)0+$/, "$1").replace(/\.$/, "");
+      }
+
+      function formatETH(value) {
+        if (!window.ethers || value == null) return "0 ETH";
+        const formatted = ethers.utils.formatEther(value);
+        const numeric = Number(formatted);
+        if (!Number.isFinite(numeric)) return `${formatted} ETH`;
+        return `${numeric.toLocaleString(undefined, { maximumFractionDigits: 6 })} ETH`;
+      }
+
+      function parseETHInput(input) {
+        const clean = String(input || "").replace(",", ".").trim();
+        if (!clean || Number(clean) <= 0) throw new Error("Enter an ETH amount greater than zero.");
+        return ethers.utils.parseEther(clean);
       }
 
       function parseIFRInput(input) {
@@ -2457,6 +2599,248 @@
         await Promise.all([loadLendingPanel(), refreshWalletState()]);
       }
 
+      function selectedBorrowOffer() {
+        if (!currentBorrowState || !borrowOffer.value) return null;
+        return currentBorrowState.offers.find((item) => String(item.id) === String(borrowOffer.value)) || null;
+      }
+
+      function selectedBorrowLoan() {
+        if (!currentBorrowState || !borrowLoan.value) return null;
+        return currentBorrowState.loans.find((item) => String(item.id) === String(borrowLoan.value)) || null;
+      }
+
+      async function updateBorrowPreview() {
+        if (!currentBorrowState) return;
+        const offer = selectedBorrowOffer();
+        const priceMissing = currentBorrowState.ifrPriceWei.isZero();
+        borrowSubmit.disabled = true;
+
+        if (priceMissing) {
+          borrowCollateral.textContent = "Price not set";
+          borrowStatus.textContent = "Borrowing is disabled until Governance sets LendingVault ifrPriceWei.";
+          return;
+        }
+
+        if (!offer) {
+          borrowCollateral.textContent = "Select offer";
+          borrowStatus.textContent = "Select an active offer.";
+          return;
+        }
+
+        if (offer.offer.lender.toLowerCase() === currentBorrowState.address.toLowerCase()) {
+          borrowCollateral.textContent = "Self offer";
+          borrowStatus.textContent = "You cannot borrow from your own LendingVault offer.";
+          return;
+        }
+
+        let amount;
+        try {
+          amount = parseIFRInput(borrowAmount.value);
+        } catch (error) {
+          borrowCollateral.textContent = "Enter amount";
+          borrowStatus.textContent = "Enter an IFR amount to calculate ETH collateral.";
+          return;
+        }
+
+        if (amount.gt(offer.offer.availableIFR)) {
+          borrowCollateral.textContent = "Too high";
+          borrowStatus.textContent = "Amount exceeds this offer's available IFR.";
+          return;
+        }
+
+        try {
+          const provider = IFRWallet.getProvider();
+          const { lending } = getContracts(provider);
+          const collateral = await lending.getRequiredCollateral(amount);
+          borrowCollateral.textContent = formatETH(collateral);
+          borrowSubmit.disabled = false;
+          borrowStatus.textContent = `Ready: borrow ${formatIFR(amount)} from offer #${offer.id} with ${formatETH(collateral)} collateral.`;
+        } catch (error) {
+          borrowCollateral.textContent = "Unavailable";
+          borrowStatus.textContent = error && error.message ? error.message : "Collateral preview failed.";
+        }
+      }
+
+      function renderBorrowState() {
+        if (!currentBorrowState) return;
+        const { address, offers, loans, ifrPriceWei, offerCount } = currentBorrowState;
+        const priceMissing = ifrPriceWei.isZero();
+        borrowPrice.textContent = priceMissing ? "Not set" : `${formatETH(ifrPriceWei)} / IFR`;
+        borrowOfferCount.textContent = `${offers.length} / ${offerCount}`;
+
+        borrowOffer.innerHTML = offers.length
+          ? offers.map((item) => `<option value="${item.id}">Offer #${item.id} - ${formatIFR(item.offer.availableIFR)} - ${shortAddress(item.offer.lender)}</option>`).join("")
+          : "<option value=\"\">No active offers</option>";
+
+        borrowLoan.innerHTML = loans.length
+          ? loans.map((item) => `<option value="${item.id}">Loan #${item.id} - ${formatIFR(item.loan.ifrAmount)}</option>`).join("")
+          : "<option value=\"\">No active loans</option>";
+
+        borrowOffers.innerHTML = offers.length
+          ? offers.map((item) => {
+              const isOwn = item.offer.lender.toLowerCase() === address.toLowerCase();
+              return `
+                <div class="offer-row">
+                  <div>
+                    <small>Offer #${item.id}${isOwn ? " - your offer" : ""}</small>
+                    <strong>${formatIFR(item.offer.availableIFR)}</strong>
+                    <span style="color:var(--ink-soft);font-family:var(--mono);font-size:12px;">${shortAddress(item.offer.lender)}</span>
+                  </div>
+                  <button class="btn ${isOwn ? "btn-quiet" : "btn-mint"}" type="button" data-select-borrow-offer="${item.id}" ${isOwn ? "disabled" : ""}>${isOwn ? "Own offer" : "Select"}</button>
+                </div>
+              `;
+            }).join("")
+          : "<p class=\"protocol-note\">No active LendingVault offers are currently available.</p>";
+
+        borrowLoans.innerHTML = loans.length
+          ? loans.map((item) => {
+              const repay = item.interest ? item.loan.ifrAmount.add(item.interest) : item.loan.ifrAmount;
+              const ratio = item.ratio && !item.ratio.eq(ethers.constants.MaxUint256) ? `${item.ratio.toString()}%` : "Safe";
+              return `
+                <div class="loan-row">
+                  <div>
+                    <small>Loan #${item.id} - offer #${item.loan.offerId.toString()}</small>
+                    <strong>${formatIFR(item.loan.ifrAmount)} borrowed</strong>
+                    <span style="color:var(--ink-soft);font-size:12px;">Collateral ${formatETH(item.loan.ethCollateral)} - repay ${formatIFR(repay)} - ratio ${ratio}</span>
+                  </div>
+                  <button class="btn btn-mint" type="button" data-select-borrow-loan="${item.id}">Manage</button>
+                </div>
+              `;
+            }).join("")
+          : "<p class=\"protocol-note\">No active borrower loans for this wallet.</p>";
+
+        borrowRepay.disabled = loans.length === 0;
+        borrowTopupSubmit.disabled = loans.length === 0;
+        borrowStatus.textContent = priceMissing
+          ? "Offers can be viewed, but borrowing is disabled until LendingVault ifrPriceWei is set on-chain."
+          : offers.length ? "Offers loaded. Select an offer and enter an amount." : "No active offers available.";
+        updateBorrowPreview().catch(() => null);
+      }
+
+      async function loadBorrowPanel() {
+        const address = await ensureWalletReady("Loading borrow");
+        const provider = IFRWallet.getProvider();
+        const { lending } = getContracts(provider);
+        borrowStatus.textContent = "Reading LendingVault offers and loans...";
+
+        const [ifrPriceWei, offerCountValue, loanCountValue, rate] = await Promise.all([
+          lending.ifrPriceWei(),
+          lending.getOfferCount(),
+          lending.getLoanCount(),
+          lending.getInterestRate().catch(() => ethers.BigNumber.from(200))
+        ]);
+
+        const offerCount = offerCountValue.toNumber();
+        const loanCount = loanCountValue.toNumber();
+        const offers = [];
+        const offerReads = [];
+        for (let i = 0; i < Math.min(offerCount, 80); i++) {
+          offerReads.push(
+            lending.getOffer(i)
+              .then((offer) => {
+                if (offer.active && !offer.availableIFR.isZero()) offers.push({ id: i, offer });
+              })
+              .catch(() => null)
+          );
+        }
+        await Promise.all(offerReads);
+
+        const loans = [];
+        const loanReads = [];
+        for (let i = 0; i < Math.min(loanCount, 120); i++) {
+          loanReads.push(
+            lending.getLoan(i)
+              .then(async (loan) => {
+                if (!loan.active || loan.borrower.toLowerCase() !== address.toLowerCase()) return;
+                const [interest, ratio] = await Promise.all([
+                  lending.calculateInterest(i).catch(() => ethers.BigNumber.from(0)),
+                  lending.getCollateralRatio(i).catch(() => ethers.constants.MaxUint256)
+                ]);
+                loans.push({ id: i, loan, interest, ratio });
+              })
+              .catch(() => null)
+          );
+        }
+        await Promise.all(loanReads);
+
+        currentBorrowState = { address, ifrPriceWei, offerCount, loanCount, offers, loans, rate };
+        renderBorrowState();
+      }
+
+      async function borrowLendingIFR() {
+        await ensureWalletReady("Preparing borrow");
+        if (!currentBorrowState) await loadBorrowPanel();
+        if (currentBorrowState.ifrPriceWei.isZero()) {
+          throw new Error("Borrowing is disabled until LendingVault ifrPriceWei is set on-chain.");
+        }
+        const offer = selectedBorrowOffer();
+        if (!offer) throw new Error("Select an active offer first.");
+        if (offer.offer.lender.toLowerCase() === currentBorrowState.address.toLowerCase()) {
+          throw new Error("You cannot borrow from your own LendingVault offer.");
+        }
+
+        const amount = parseIFRInput(borrowAmount.value);
+        if (amount.gt(offer.offer.availableIFR)) throw new Error("Amount exceeds this offer's available IFR.");
+        const durationDays = Number(borrowDuration.value || "90");
+        if (durationDays < 30 || durationDays > 365) throw new Error("Duration must be 30-365 days.");
+
+        const signer = IFRWallet.getSigner();
+        const { lending } = getContracts(signer);
+        borrowSubmit.disabled = true;
+        borrowStatus.textContent = "Calculating required ETH collateral...";
+        const collateral = await lending.getRequiredCollateral(amount);
+        borrowCollateral.textContent = formatETH(collateral);
+        borrowStatus.textContent = `Confirm borrow transaction with ${formatETH(collateral)} ETH collateral.`;
+        const tx = await lending.borrow(offer.id, amount, durationDays, { value: collateral });
+        borrowStatus.textContent = "Waiting for borrow confirmation...";
+        await tx.wait();
+        borrowAmount.value = "";
+        borrowStatus.textContent = "Borrow confirmed. IFR was sent to your wallet.";
+        await Promise.all([loadBorrowPanel(), loadLendingPanel().catch(() => null), refreshWalletState()]);
+      }
+
+      async function repayBorrowLoan() {
+        const address = await ensureWalletReady("Preparing repay");
+        const loan = selectedBorrowLoan();
+        if (!loan) throw new Error("Select an active loan first.");
+        const signer = IFRWallet.getSigner();
+        const { token, lending } = getContracts(signer);
+        borrowRepay.disabled = true;
+        borrowStatus.textContent = "Calculating IFR repayment amount...";
+        const interest = await lending.calculateInterest(loan.id);
+        const repayAmount = loan.loan.ifrAmount.add(interest);
+        const allowance = await token.allowance(address, LENDING_VAULT_ADDRESS);
+        if (allowance.lt(repayAmount)) {
+          borrowStatus.textContent = `Approve ${formatIFR(repayAmount)} for LendingVault repayment.`;
+          const approveTx = await token.approve(LENDING_VAULT_ADDRESS, repayAmount);
+          borrowStatus.textContent = "Waiting for repayment approval confirmation...";
+          await approveTx.wait();
+        }
+        borrowStatus.textContent = `Confirm repay for loan #${loan.id}.`;
+        const tx = await lending.repay(loan.id);
+        borrowStatus.textContent = "Waiting for repay confirmation...";
+        await tx.wait();
+        borrowStatus.textContent = "Loan repaid. ETH collateral returned by contract.";
+        await Promise.all([loadBorrowPanel(), loadLendingPanel().catch(() => null), refreshWalletState()]);
+      }
+
+      async function topUpBorrowLoan() {
+        await ensureWalletReady("Preparing collateral top-up");
+        const loan = selectedBorrowLoan();
+        if (!loan) throw new Error("Select an active loan first.");
+        const amount = parseETHInput(borrowTopup.value);
+        const signer = IFRWallet.getSigner();
+        const { lending } = getContracts(signer);
+        borrowTopupSubmit.disabled = true;
+        borrowStatus.textContent = `Confirm ${formatETH(amount)} collateral top-up for loan #${loan.id}.`;
+        const tx = await lending.topUpCollateral(loan.id, { value: amount });
+        borrowStatus.textContent = "Waiting for collateral top-up confirmation...";
+        await tx.wait();
+        borrowTopup.value = "";
+        borrowStatus.textContent = "Collateral top-up confirmed.";
+        await loadBorrowPanel();
+      }
+
       function renderState(state) {
         if (!state) return;
         if (state.address) {
@@ -2765,6 +3149,90 @@
           }
         } finally {
           lendingWithdraw.disabled = false;
+        }
+      });
+
+      document.addEventListener("click", async (event) => {
+        const button = event.target.closest("[data-open-borrow]");
+        if (!button) return;
+        event.preventDefault();
+        openProtocolDialog(borrowDialog);
+        try {
+          await loadBorrowPanel();
+        } catch (error) {
+          borrowStatus.textContent = error && error.message ? error.message : "Borrow panel could not load.";
+        }
+      });
+
+      borrowClose.addEventListener("click", () => closeProtocolDialog(borrowDialog));
+      borrowDialog.addEventListener("click", (event) => {
+        if (event.target === borrowDialog) closeProtocolDialog(borrowDialog);
+      });
+      borrowRefresh.addEventListener("click", async () => {
+        try {
+          await loadBorrowPanel();
+        } catch (error) {
+          borrowStatus.textContent = error && error.message ? error.message : "Borrow refresh failed.";
+        }
+      });
+      borrowOffer.addEventListener("change", () => updateBorrowPreview().catch(() => null));
+      borrowAmount.addEventListener("input", () => updateBorrowPreview().catch(() => null));
+      borrowDuration.addEventListener("change", () => updateBorrowPreview().catch(() => null));
+      borrowMax.addEventListener("click", () => {
+        const offer = selectedBorrowOffer();
+        if (!offer) return;
+        borrowAmount.value = formatIFRInputValue(offer.offer.availableIFR);
+        updateBorrowPreview().catch(() => null);
+      });
+      borrowOffers.addEventListener("click", (event) => {
+        const button = event.target.closest("[data-select-borrow-offer]");
+        if (!button || button.disabled) return;
+        borrowOffer.value = button.dataset.selectBorrowOffer;
+        updateBorrowPreview().catch(() => null);
+      });
+      borrowLoans.addEventListener("click", (event) => {
+        const button = event.target.closest("[data-select-borrow-loan]");
+        if (!button) return;
+        borrowLoan.value = button.dataset.selectBorrowLoan;
+        borrowStatus.textContent = `Loan #${button.dataset.selectBorrowLoan} selected.`;
+      });
+      borrowSubmit.addEventListener("click", async () => {
+        try {
+          await borrowLendingIFR();
+        } catch (error) {
+          if (error && (error.code === 4001 || error.code === "ACTION_REJECTED")) {
+            borrowStatus.textContent = "Borrow transaction rejected in wallet.";
+          } else {
+            borrowStatus.textContent = error && error.message ? error.message : "Borrow failed.";
+          }
+        } finally {
+          updateBorrowPreview().catch(() => null);
+        }
+      });
+      borrowRepay.addEventListener("click", async () => {
+        try {
+          await repayBorrowLoan();
+        } catch (error) {
+          if (error && (error.code === 4001 || error.code === "ACTION_REJECTED")) {
+            borrowStatus.textContent = "Repay transaction rejected in wallet.";
+          } else {
+            borrowStatus.textContent = error && error.message ? error.message : "Repay failed.";
+          }
+        } finally {
+          borrowRepay.disabled = currentBorrowState ? currentBorrowState.loans.length === 0 : false;
+        }
+      });
+      borrowTopupSubmit.addEventListener("click", async () => {
+        try {
+          await topUpBorrowLoan();
+        } catch (error) {
+          if (error && (error.code === 4001 || error.code === "ACTION_REJECTED")) {
+            borrowStatus.textContent = "Top-up transaction rejected in wallet.";
+          } else {
+            borrowStatus.textContent = error && error.message ? error.message : "Top-up failed.";
+          }
+        } finally {
+          borrowTopupSubmit.disabled = currentBorrowState ? currentBorrowState.loans.length === 0 : false;
         }
       });
 
