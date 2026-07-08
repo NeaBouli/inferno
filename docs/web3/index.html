@@ -2162,7 +2162,7 @@
         const formatted = ethers.utils.formatUnits(value, IFR_DECIMALS);
         const numeric = Number(formatted);
         if (!Number.isFinite(numeric)) return `${formatted} IFR`;
-        return `${numeric.toLocaleString(undefined, { maximumFractionDigits: 4 })} IFR`;
+        return `${numeric.toLocaleString("en-US", { maximumFractionDigits: 4 })} IFR`;
       }
 
       function formatIFRShort(value) {
@@ -2178,7 +2178,7 @@
         const formatted = ethers.utils.formatEther(value);
         const numeric = Number(formatted);
         if (!Number.isFinite(numeric)) return `${formatted} ETH`;
-        return `${numeric.toLocaleString(undefined, { maximumFractionDigits: 6 })} ETH`;
+        return `${numeric.toLocaleString("en-US", { maximumFractionDigits: 6 })} ETH`;
       }
 
       function parseETHInput(input) {
@@ -2191,6 +2191,54 @@
         const clean = String(input || "").replace(",", ".").trim();
         if (!clean || Number(clean) <= 0) throw new Error("Enter an IFR amount greater than zero.");
         return ethers.utils.parseUnits(clean, IFR_DECIMALS);
+      }
+
+      function accessLockErrorMessage(error) {
+        const message = (error && (error.reason || error.message)) || "";
+        if (
+          message.includes("insufficient balance") ||
+          message.includes("ERC20InsufficientBalance") ||
+          message.includes("UNPREDICTABLE_GAS_LIMIT") ||
+          message.includes("cannot estimate gas")
+        ) {
+          return "This wallet does not have enough free IFR for that lock amount. Refresh the panel and use only the free Wallet IFR balance.";
+        }
+        return message || "IFRLock failed.";
+      }
+
+      function syncAccessLockSubmitState(showMessage) {
+        if (!accessLockSubmit || !currentAccessLockState) return false;
+        accessLockSubmit.textContent = "Approve / Lock";
+
+        if (currentAccessLockState.balance.isZero()) {
+          accessLockSubmit.disabled = true;
+          accessLockSubmit.textContent = "No free IFR";
+          if (showMessage) {
+            accessLockStatus.textContent = "This wallet has 0 free IFR. Your existing IFRLock balance can be unlocked separately.";
+          }
+          return false;
+        }
+
+        let amount;
+        try {
+          amount = parseIFRInput(accessLockAmount.value);
+        } catch (_) {
+          accessLockSubmit.disabled = true;
+          return false;
+        }
+
+        if (amount.gt(currentAccessLockState.balance)) {
+          accessLockSubmit.disabled = true;
+          accessLockSubmit.textContent = "Amount exceeds wallet";
+          if (showMessage) {
+            accessLockStatus.textContent = `This wallet has ${formatIFR(currentAccessLockState.balance)} free. Lower the amount or buy more IFR first.`;
+          }
+          return false;
+        }
+
+        accessLockSubmit.disabled = false;
+        accessLockSubmit.textContent = currentAccessLockState.allowance.lt(amount) ? "Approve / Lock" : "Lock";
+        return true;
       }
 
       function openProtocolDialog(dialog) {
@@ -2347,7 +2395,13 @@
           accessLockPremium.textContent = premiumMissing.isZero() ? "Premium ready" : `Lock ${formatIFRShort(premiumMissing)} IFR for Premium`;
         }
         accessLockUnlock.disabled = locked.isZero();
-        accessLockStatus.textContent = locked.isZero() ? "No IFRLock balance yet." : "IFRLock state loaded.";
+        if (locked.gte(premiumMinimum) && balance.isZero()) {
+          accessLockAmount.value = "";
+          accessLockStatus.textContent = "Premium access is ready. This wallet has no free IFR left to lock.";
+        } else {
+          accessLockStatus.textContent = locked.isZero() ? "No IFRLock balance yet." : "IFRLock state loaded.";
+        }
+        syncAccessLockSubmitState(false);
       }
 
       async function lockPremiumAccessIFR() {
@@ -2390,8 +2444,14 @@
         const lockType = accessLockType.value;
 
         accessLockSubmit.disabled = true;
-        accessLockStatus.textContent = "Checking token allowance...";
-        const allowance = await token.allowance(address, IFR_LOCK_ADDRESS);
+        accessLockStatus.textContent = "Checking wallet balance and token allowance...";
+        const [balance, allowance] = await Promise.all([
+          token.balanceOf(address),
+          token.allowance(address, IFR_LOCK_ADDRESS)
+        ]);
+        if (balance.lt(amount)) {
+          throw new Error(`This wallet has ${formatIFR(balance)} free, but the lock amount is ${formatIFR(amount)}. Your existing IFRLock balance stays locked and can be unlocked separately.`);
+        }
         if (allowance.lt(amount)) {
           accessLockStatus.textContent = "Approve IFRLock 0x769928...3954Eb for the exact amount.";
           const approveTx = await token.approve(IFR_LOCK_ADDRESS, amount);
@@ -2996,18 +3056,30 @@
       });
       accessLockMax.addEventListener("click", () => {
         if (!currentAccessLockState || !currentAccessLockState.balance) return;
+        if (currentAccessLockState.balance.isZero()) {
+          accessLockAmount.value = "";
+          accessLockStatus.textContent = "This wallet has 0 free IFR. Nothing extra can be locked right now.";
+          syncAccessLockSubmitState(false);
+          return;
+        }
         accessLockAmount.value = formatIFRInputValue(currentAccessLockState.balance);
+        accessLockStatus.textContent = `Ready to lock max free balance: ${formatIFR(currentAccessLockState.balance)}.`;
+        syncAccessLockSubmitState(false);
       });
+      accessLockAmount.addEventListener("input", () => syncAccessLockSubmitState(true));
       accessLockPremium.addEventListener("click", async () => {
+        let finalStatus = "";
         try {
           await lockPremiumAccessIFR();
         } catch (error) {
           if (error && (error.code === 4001 || error.code === "ACTION_REJECTED")) {
-            accessLockStatus.textContent = "Premium lock rejected in wallet.";
+            finalStatus = "Premium lock rejected in wallet.";
           } else {
-            accessLockStatus.textContent = error && error.message ? error.message : "Premium lock failed.";
+            finalStatus = accessLockErrorMessage(error).replace("IFRLock failed.", "Premium lock failed.");
           }
         } finally {
+          await loadAccessLockPanel().catch(() => null);
+          if (finalStatus) accessLockStatus.textContent = finalStatus;
           if (currentAccessLockState && currentAccessLockState.premiumMissing) {
             accessLockPremium.disabled = currentAccessLockState.premiumMissing.isZero();
           } else {
@@ -3016,16 +3088,19 @@
         }
       });
       accessLockSubmit.addEventListener("click", async () => {
+        let finalStatus = "";
         try {
           await lockAccessIFR();
         } catch (error) {
           if (error && (error.code === 4001 || error.code === "ACTION_REJECTED")) {
-            accessLockStatus.textContent = "Transaction rejected in wallet.";
+            finalStatus = "Transaction rejected in wallet.";
           } else {
-            accessLockStatus.textContent = error && error.message ? error.message : "IFRLock failed.";
+            finalStatus = accessLockErrorMessage(error);
           }
         } finally {
-          accessLockSubmit.disabled = false;
+          await loadAccessLockPanel().catch(() => null);
+          if (finalStatus) accessLockStatus.textContent = finalStatus;
+          syncAccessLockSubmitState(false);
         }
       });
       accessLockUnlock.addEventListener("click", async () => {

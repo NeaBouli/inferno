@@ -3774,6 +3774,19 @@ function lpSetPremiumLockStatus(message, color) {
   status.innerHTML = message || "";
 }
 
+function lpPremiumLockErrorMessage(e) {
+  var message = (e && (e.reason || e.message)) || "";
+  if (
+    message.indexOf("insufficient balance") !== -1 ||
+    message.indexOf("ERC20InsufficientBalance") !== -1 ||
+    message.indexOf("UNPREDICTABLE_GAS_LIMIT") !== -1 ||
+    message.indexOf("cannot estimate gas") !== -1
+  ) {
+    return "Not enough free IFR for this lock. Your existing IFRLock balance remains active.";
+  }
+  return message || "Premium lock failed.";
+}
+
 async function lpLockPremium() {
   if (typeof ethers === "undefined" || typeof IFRWallet === "undefined" || typeof IFRState === "undefined") {
     lpSetPremiumLockStatus("Wallet modules not loaded. Please refresh.", "#fca5a5");
@@ -3816,7 +3829,12 @@ async function lpLockPremium() {
     var missing = minLock.sub(locked);
     var balance = await token.balanceOf(address);
     if (balance.lt(missing)) {
-      lpSetPremiumLockStatus("Not enough free IFR. Need " + ethers.utils.formatUnits(missing, 9).replace(/\.?0+$/, "") + " IFR.", "#fca5a5");
+      lpSetPremiumLockStatus(
+        "Premium needs " + ethers.utils.formatUnits(missing, 9).replace(/\.?0+$/, "") +
+        " more IFR, but this wallet has " + ethers.utils.formatUnits(balance, 9).replace(/\.?0+$/, "") +
+        " free. Existing IFRLock stays active.",
+        "#fca5a5"
+      );
       return false;
     }
     var allowance = await token.allowance(address, lockAddr);
@@ -3840,7 +3858,7 @@ async function lpLockPremium() {
     if (e.code === 4001 || e.code === "ACTION_REJECTED") {
       lpSetPremiumLockStatus("Transaction cancelled in wallet.", "#fbbf24");
     } else {
-      lpSetPremiumLockStatus(e.reason || e.message || "Premium lock failed.", "#fca5a5");
+      lpSetPremiumLockStatus(lpPremiumLockErrorMessage(e), "#fca5a5");
     }
   } finally {
     if (button) {
