@@ -23,6 +23,18 @@ const updateBusinessSchema = z.object({
   active: z.boolean().optional(),
 });
 
+const createBenefitRuleSchema = z.object({
+  label: z.string().min(1).max(80),
+  category: z.string().min(1).max(80),
+  productName: z.string().min(1).max(160),
+  discountPercent: z.number().int().min(0).max(100),
+  requiredLockIFR: z.number().int().positive(),
+  ttlSeconds: z.number().int().min(10).max(3600).optional(),
+  active: z.boolean().optional(),
+});
+
+const updateBenefitRuleSchema = createBenefitRuleSchema.partial();
+
 router.post('/businesses', adminAuth, validate(createBusinessSchema), async (req, res, next) => {
   try {
     const business = await prisma.business.create({ data: req.body });
@@ -43,6 +55,91 @@ router.patch('/businesses/:id', adminAuth, validate(updateBusinessSchema), async
       data: req.body,
     });
     res.json(business);
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.get('/businesses/:id/rules', adminAuth, async (req, res, next) => {
+  try {
+    const business = await prisma.business.findUnique({
+      where: { id: req.params.id },
+      select: { id: true },
+    });
+    if (!business) {
+      res.status(404).json({ error: 'Business not found' });
+      return;
+    }
+
+    const rules = await prisma.benefitRule.findMany({
+      where: { businessId: req.params.id },
+      orderBy: [{ active: 'desc' }, { requiredLockIFR: 'asc' }, { createdAt: 'asc' }],
+    });
+    res.json({ rules });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.post(
+  '/businesses/:id/rules',
+  adminAuth,
+  validate(createBenefitRuleSchema),
+  async (req, res, next) => {
+    try {
+      const business = await prisma.business.findUnique({
+        where: { id: req.params.id },
+        select: { id: true },
+      });
+      if (!business) {
+        res.status(404).json({ error: 'Business not found' });
+        return;
+      }
+
+      const rule = await prisma.benefitRule.create({
+        data: { ...req.body, businessId: req.params.id },
+      });
+      res.status(201).json(rule);
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
+router.patch('/rules/:id', adminAuth, validate(updateBenefitRuleSchema), async (req, res, next) => {
+  try {
+    const existing = await prisma.benefitRule.findUnique({
+      where: { id: req.params.id },
+      select: { id: true },
+    });
+    if (!existing) {
+      res.status(404).json({ error: 'Benefit rule not found' });
+      return;
+    }
+
+    const rule = await prisma.benefitRule.update({
+      where: { id: req.params.id },
+      data: req.body,
+    });
+    res.json(rule);
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.delete('/rules/:id', adminAuth, async (req, res, next) => {
+  try {
+    const existing = await prisma.benefitRule.findUnique({
+      where: { id: req.params.id },
+      select: { id: true },
+    });
+    if (!existing) {
+      res.status(404).json({ error: 'Benefit rule not found' });
+      return;
+    }
+
+    await prisma.benefitRule.delete({ where: { id: req.params.id } });
+    res.status(204).send();
   } catch (err) {
     next(err);
   }

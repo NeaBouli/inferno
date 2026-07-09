@@ -28,7 +28,12 @@ npm run dev            # http://localhost:3001
 |--------|------|------|-------------|
 | POST | `/api/admin/businesses` | Admin | Create business |
 | PATCH | `/api/admin/businesses/:id` | Admin | Update business |
+| GET | `/api/admin/businesses/:id/rules` | Admin | List all benefit rules for a business |
+| POST | `/api/admin/businesses/:id/rules` | Admin | Create a benefit rule |
+| PATCH | `/api/admin/rules/:id` | Admin | Update or pause a benefit rule |
+| DELETE | `/api/admin/rules/:id` | Admin | Delete a benefit rule |
 | GET | `/api/businesses/:id` | Public | Get business info |
+| GET | `/api/businesses/:id/rules` | Public | List active public benefit rules |
 | POST | `/api/sessions` | Public | Start verification session |
 | GET | `/api/sessions/:id` | Public | Poll session status |
 | GET | `/api/sessions/:id/challenge` | Public | Get signature challenge |
@@ -41,6 +46,23 @@ npm run dev            # http://localhost:3001
 2. Customer scans QR → connects wallet → signs challenge
 3. Backend verifies signature → checks IFRLock on-chain
 4. Merchant sees APPROVED → presses Redeem (one-time)
+
+## Benefit Rules
+
+Benefit rules are persisted seller offers tied to a business. They currently sit
+beside the legacy business-level discount so old QR sessions remain compatible.
+
+```json
+{
+  "label": "Bronze",
+  "category": "Coffee",
+  "productName": "Premium customer discount",
+  "discountPercent": 10,
+  "requiredLockIFR": 1000,
+  "ttlSeconds": 90,
+  "active": true
+}
+```
 
 ## Tests
 

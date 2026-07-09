@@ -42,6 +42,7 @@ beforeAll(async () => {
   // Clean DB
   await prisma.auditLog.deleteMany();
   await prisma.session.deleteMany();
+  await prisma.benefitRule.deleteMany();
   await prisma.business.deleteMany();
 
   // Create test business
@@ -60,6 +61,7 @@ beforeAll(async () => {
 afterAll(async () => {
   await prisma.auditLog.deleteMany();
   await prisma.session.deleteMany();
+  await prisma.benefitRule.deleteMany();
   await prisma.business.deleteMany();
   await prisma.$disconnect();
 });

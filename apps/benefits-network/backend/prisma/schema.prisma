@@ -17,6 +17,25 @@ model Business {
   active          Boolean   @default(true)
   createdAt       DateTime  @default(now())
   sessions        Session[]
+  benefitRules    BenefitRule[]
+}
+
+model BenefitRule {
+  id              String   @id @default(cuid())
+  businessId      String
+  business        Business @relation(fields: [businessId], references: [id])
+  label           String
+  category        String
+  productName     String
+  discountPercent Int
+  requiredLockIFR Int
+  ttlSeconds      Int      @default(90)
+  active          Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([businessId])
+  @@index([active])
 }
 
 model Session {

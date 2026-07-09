@@ -5,12 +5,23 @@ import QRCode from 'react-qr-code';
 import { AppShell } from '@/components/AppShell';
 import { Countdown } from '@/components/Countdown';
 import { StatusBadge } from '@/components/StatusBadge';
-import { BusinessInfo, SessionCreated, SessionStatus, createSession, getBusiness, getSessionStatus, redeemSession } from '@/lib/api';
+import {
+  BenefitRule,
+  BusinessInfo,
+  SessionCreated,
+  SessionStatus,
+  createSession,
+  getBusiness,
+  getBusinessRules,
+  getSessionStatus,
+  redeemSession,
+} from '@/lib/api';
 
 export default function BusinessConsole({ params }: { params: { businessId: string } }) {
   const [business, setBusiness] = useState<BusinessInfo | null>(null);
   const [session, setSession] = useState<SessionCreated | null>(null);
   const [status, setStatus] = useState<SessionStatus | null>(null);
+  const [rules, setRules] = useState<BenefitRule[]>([]);
   const [origin, setOrigin] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -18,8 +29,11 @@ export default function BusinessConsole({ params }: { params: { businessId: stri
 
   useEffect(() => {
     setOrigin(window.location.origin);
-    getBusiness(params.businessId)
-      .then(setBusiness)
+    Promise.all([getBusiness(params.businessId), getBusinessRules(params.businessId)])
+      .then(([nextBusiness, rulesResult]) => {
+        setBusiness(nextBusiness);
+        setRules(rulesResult.rules);
+      })
       .catch((err: Error) => setError(err.message));
   }, [params.businessId]);
 
@@ -95,6 +109,25 @@ export default function BusinessConsole({ params }: { params: { businessId: stri
               <strong className="text-white">{business?.tierLabel || 'Standard'}</strong>
             </div>
           </div>
+
+          {rules.length > 0 ? (
+            <div className="mt-4 grid gap-2 rounded-2xl border border-white/10 bg-black/20 p-4">
+              <p className="text-xs font-bold uppercase tracking-[0.16em] text-stone-400">
+                Active seller rules
+              </p>
+              {rules.map((rule) => (
+                <div key={rule.id} className="rounded-xl border border-white/10 bg-white/[0.04] p-3">
+                  <div className="flex justify-between gap-4">
+                    <span className="font-bold text-white">{rule.label}</span>
+                    <span className="text-orange-100">{rule.discountPercent}%</span>
+                  </div>
+                  <p className="mt-1 text-xs text-stone-400">
+                    {rule.productName} / {rule.requiredLockIFR.toLocaleString('en-US')} IFR locked
+                  </p>
+                </div>
+              ))}
+            </div>
+          ) : null}
 
           <button
             type="button"
