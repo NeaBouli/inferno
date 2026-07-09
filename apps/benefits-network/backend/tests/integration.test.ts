@@ -39,6 +39,7 @@ let testBusinessId: string;
 beforeAll(async () => {
   await prisma.auditLog.deleteMany();
   await prisma.session.deleteMany();
+  await prisma.benefitRule.deleteMany();
   await prisma.business.deleteMany();
 
   const biz = await prisma.business.create({
@@ -56,6 +57,7 @@ beforeAll(async () => {
 afterAll(async () => {
   await prisma.auditLog.deleteMany();
   await prisma.session.deleteMany();
+  await prisma.benefitRule.deleteMany();
   await prisma.business.deleteMany();
   await prisma.$disconnect();
 });

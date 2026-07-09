@@ -6,7 +6,7 @@ Next.js 14 PWA for the IFR Benefits Network.
 
 | Route | Purpose |
 |-------|---------|
-| `/` | Customer/Seller role chooser, wallet status, seller rule preview |
+| `/` | Customer/Seller role chooser, wallet status, seller rule manager |
 | `/b/:businessId` | Merchant Console — start verification, show QR, approve/redeem |
 | `/r/:sessionId` | Customer Flow — connect wallet, sign challenge, show result |
 
@@ -40,6 +40,17 @@ NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=...
 - wagmi v2 + viem (wallet connection)
 - react-qr-code (QR generation)
 - PWA (manifest.json + service worker)
+
+## Seller Rules
+
+The Seller mode panel can persist benefit rules through the guarded backend
+admin API. It requires:
+
+- Business ID
+- Admin bearer secret
+- Rule label, category, product/service, discount, required locked IFR, QR TTL
+
+Saved active rules are visible in the seller scanner route.
 
 ## PWA
 
