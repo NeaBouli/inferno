@@ -127,6 +127,41 @@ export default function BusinessConsole({ params }: { params: { businessId: stri
       `Customer link: ${customerUrl || 'not ready'}`,
     ].join('\n');
   }, [business?.name, customerUrl, params.businessId, session, status]);
+  const lastSessionStorageKey = useMemo(
+    () => `ifr.shop.lastCheckoutSession.${params.businessId}`,
+    [params.businessId]
+  );
+
+  function rememberSession(sessionId: string) {
+    try {
+      window.localStorage.setItem(lastSessionStorageKey, sessionId);
+    } catch {
+      // Storage is only a counter-device convenience; checkout still works without it.
+    }
+  }
+
+  function forgetRememberedSession() {
+    try {
+      window.localStorage.removeItem(lastSessionStorageKey);
+    } catch {
+      // Ignore private-mode storage failures.
+    }
+  }
+
+  function sessionFromStatus(sessionId: string, nextStatus: SessionStatus): SessionCreated {
+    return {
+      sessionId,
+      expiresAt: nextStatus.expiresAt,
+      qrUrl: `/r/${sessionId}`,
+      benefitRuleId: nextStatus.benefitRuleId,
+      label: nextStatus.benefit.label,
+      category: nextStatus.benefit.category,
+      productName: nextStatus.benefit.productName,
+      discountPercent: nextStatus.benefit.discountPercent,
+      requiredLockIFR: nextStatus.benefit.requiredLockIFR,
+      tierLabel: nextStatus.benefit.tierLabel,
+    };
+  }
 
   async function startSession() {
     setLoading(true);
@@ -135,6 +170,8 @@ export default function BusinessConsole({ params }: { params: { businessId: stri
       const nextSession = await createSession(params.businessId, selectedRuleId || undefined);
       setSession(nextSession);
       setStatus(null);
+      rememberSession(nextSession.sessionId);
+      setLinkStatus('Checkout session saved on this device.');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Session failed');
     } finally {
@@ -251,6 +288,40 @@ export default function BusinessConsole({ params }: { params: { businessId: stri
     }
   }
 
+  async function restoreLastSession() {
+    setError('');
+    setLinkStatus('');
+    let rememberedSessionId = '';
+    try {
+      rememberedSessionId = window.localStorage.getItem(lastSessionStorageKey) || '';
+    } catch {
+      setError('Local session recovery is not available in this browser.');
+      return;
+    }
+
+    if (!rememberedSessionId) {
+      setError('No checkout session is saved on this device yet.');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const nextStatus = await getSessionStatus(rememberedSessionId);
+      if (nextStatus.businessId !== params.businessId) {
+        forgetRememberedSession();
+        setError('Saved checkout session belongs to another seller profile.');
+        return;
+      }
+      setSession(sessionFromStatus(rememberedSessionId, nextStatus));
+      setStatus(nextStatus);
+      setLinkStatus(`Restored saved checkout session: ${nextStatus.status}`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not restore saved checkout session.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return (
     <AppShell>
       <section className="mx-auto grid w-full max-w-5xl gap-6 px-5 pb-16 pt-8 lg:grid-cols-[0.9fr_1.1fr]">
@@ -325,6 +396,27 @@ export default function BusinessConsole({ params }: { params: { businessId: stri
               >
                 Redeem
               </button>
+            </div>
+
+            <div className="mt-4 rounded-2xl border border-white/10 bg-black/20 p-3">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <p className="text-xs font-black uppercase tracking-[0.14em] text-orange-200/80">
+                    Session recovery
+                  </p>
+                  <p className="mt-1 text-xs leading-5 text-stone-400">
+                    This counter device remembers the last QR session for this seller profile. Use it after a browser refresh or tablet sleep.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={restoreLastSession}
+                  disabled={loading}
+                  className="rounded-xl border border-white/15 px-3 py-2 text-[11px] font-black uppercase tracking-[0.12em] text-stone-100 transition hover:border-orange-200/60 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  Restore last QR
+                </button>
+              </div>
             </div>
           </div>
 

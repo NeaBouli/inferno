@@ -162,6 +162,8 @@ async function verifyPage(contextOptions, label) {
     await expectText(page, 'Seller scanner');
     await expectText(page, 'Business console');
     await expectText(page, 'Checkout readiness');
+    await expectText(page, 'Session recovery');
+    await expectText(page, 'Restore last QR');
     await expectText(page, 'Load business');
     await expectText(page, 'Seller profile loaded');
     await expectText(page, 'Copy customer link');
