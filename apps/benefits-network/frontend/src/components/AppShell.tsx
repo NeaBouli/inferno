@@ -20,8 +20,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <a href="/#integrate" className="rounded-full border border-stone-500/30 px-4 py-2 text-xs font-bold uppercase tracking-[0.14em] text-stone-300 transition hover:border-orange-300/60 hover:text-orange-100">
             Integrate
           </a>
-          <a href="https://web3.ifrunit.tech" className="rounded-full border border-stone-500/30 px-4 py-2 text-xs font-bold uppercase tracking-[0.14em] text-stone-300 transition hover:border-orange-300/60 hover:text-orange-100">
-            Web3
+          <a href="/#customer-wallet" className="rounded-full border border-stone-500/30 px-4 py-2 text-xs font-bold uppercase tracking-[0.14em] text-stone-300 transition hover:border-orange-300/60 hover:text-orange-100">
+            Lock
           </a>
           <a
             href="https://ifrunit.tech"

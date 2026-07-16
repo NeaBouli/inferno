@@ -44,7 +44,12 @@ const sellerCategories = [
 function PwaInstallCard() {
   const [installEvent, setInstallEvent] = useState<BeforeInstallPromptEvent | null>(null);
   const [platformHint, setPlatformHint] = useState('Install from the browser menu when your device supports PWA install.');
+  const [installSteps, setInstallSteps] = useState<string[]>([
+    'Open the browser menu.',
+    'Choose Install app or Add to Home Screen.',
+  ]);
   const [isStandalone, setIsStandalone] = useState(false);
+  const [platform, setPlatform] = useState<'ios' | 'android' | 'desktop' | 'installed'>('desktop');
   const [message, setMessage] = useState('Ready for desktop, tablet and smartphone.');
 
   useEffect(() => {
@@ -57,13 +62,21 @@ function PwaInstallCard() {
 
     setIsStandalone(standalone);
     if (standalone) {
+      setPlatform('installed');
       setPlatformHint('Installed app mode is active on this device.');
+      setInstallSteps(['Launch it from the home screen whenever you need customer or seller mode.']);
     } else if (isIos) {
-      setPlatformHint('iPhone/iPad: tap Share, then Add to Home Screen. Safari supports the most reliable install flow.');
+      setPlatform('ios');
+      setPlatformHint('iPhone/iPad install is handled by Safari, not by an in-page button.');
+      setInstallSteps(['Open this page in Safari.', 'Tap Share.', 'Choose Add to Home Screen.', 'Open IFRp Shop from the new icon.']);
     } else if (isAndroid) {
+      setPlatform('android');
       setPlatformHint('Android: tap Install app here when available, or use the browser menu and choose Install app.');
+      setInstallSteps(['Tap Install app if this browser exposes it.', 'Otherwise open the browser menu.', 'Choose Install app or Add to Home Screen.']);
     } else {
+      setPlatform('desktop');
       setPlatformHint('Desktop: install from the browser address bar or use the button when it becomes available.');
+      setInstallSteps(['Use the install icon in the address bar when visible.', 'Or open the browser menu and choose Install app.']);
     }
 
     const handler = (event: Event) => {
@@ -77,7 +90,7 @@ function PwaInstallCard() {
 
   async function install() {
     if (!installEvent) {
-      setMessage(platformHint);
+      setMessage(platform === 'ios' ? 'Use Safari Share -> Add to Home Screen on iPhone or iPad.' : platformHint);
       return;
     }
     await installEvent.prompt();
@@ -96,13 +109,23 @@ function PwaInstallCard() {
       <div className="mt-4 rounded-2xl border border-[#d78962]/35 bg-white/55 p-4 text-sm leading-6 text-stone-700">
         <strong className="text-stone-950">{isStandalone ? 'Installed' : 'Install help'}</strong>
         <p className="mt-1">{platformHint}</p>
+        <ol className="mt-3 grid gap-2">
+          {installSteps.map((step, index) => (
+            <li key={step} className="flex gap-3">
+              <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-[#b84625] text-xs font-black text-white">
+                {index + 1}
+              </span>
+              <span>{step}</span>
+            </li>
+          ))}
+        </ol>
       </div>
       <button
         type="button"
         onClick={install}
         className="mt-5 w-full rounded-2xl bg-[#b84625] px-5 py-4 text-sm font-black uppercase tracking-[0.16em] text-white shadow-xl shadow-orange-900/30 transition hover:-translate-y-0.5 hover:bg-[#9f351b]"
       >
-        {isStandalone ? 'App installed' : 'Install app'}
+        {isStandalone ? 'App installed' : installEvent ? 'Install app' : platform === 'ios' ? 'Show iPad install steps' : 'Show install steps'}
       </button>
       <p className="mt-3 text-xs leading-5 text-stone-600">{message}</p>
     </section>
