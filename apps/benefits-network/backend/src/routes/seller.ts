@@ -2,6 +2,7 @@ import { NextFunction, Request, Response, Router } from 'express';
 import { z } from 'zod';
 import { prisma } from '../services/sessionService';
 import { buildSellerAuthMessage, normalizeAddress, verifySellerSignature } from '../services/sellerAuth';
+import { assertSellerBusinessLimit } from '../services/sellerLimits';
 import { sellerRateLimiter } from '../middleware/rateLimiter';
 import { validate } from '../middleware/validator';
 
@@ -57,6 +58,10 @@ function handleSellerError(err: unknown, res: Response, next: NextFunction) {
       res.status(404).json({ error: err.message });
       return;
     }
+    if (err.message.includes('profile limit reached')) {
+      res.status(429).json({ error: err.message });
+      return;
+    }
   }
   next(err);
 }
@@ -102,6 +107,8 @@ router.post('/businesses', sellerRateLimiter, validate(createBusinessSchema), as
       action: 'business:create',
       businessId: 'new',
     });
+
+    await assertSellerBusinessLimit(ownerAddress);
 
     const business = await prisma.business.create({
       data: {

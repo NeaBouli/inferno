@@ -281,7 +281,7 @@ export function SellerRuleBuilder() {
               {address ? `${address.slice(0, 6)}...${address.slice(-4)}` : 'Connect seller wallet'}
             </h3>
             <p className="mt-2 text-sm leading-6 text-stone-300">
-              Seller actions are authorized with short-lived wallet signatures. No customer tokens are moved and no private key is stored by the app.
+              Seller actions are authorized with short-lived wallet signatures. No customer tokens are moved, no private key is stored, and public profile creation is rate-limited.
             </p>
           </div>
           {address ? (

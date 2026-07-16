@@ -10,6 +10,7 @@ const envSchema = z.object({
   ADMIN_SECRET: z.string().min(8),
   DATABASE_URL: z.string().default('file:./dev.db'),
   PORT: z.coerce.number().int().positive().default(3001),
+  MAX_ACTIVE_SELLER_BUSINESSES_PER_WALLET: z.coerce.number().int().min(1).max(50).default(5),
 });
 
 const parsed = envSchema.safeParse(process.env);
