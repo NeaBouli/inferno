@@ -33,6 +33,7 @@ export default function BusinessConsole({ params }: { params: { businessId: stri
   const [error, setError] = useState('');
   const [linkStatus, setLinkStatus] = useState('');
   const [receiptStatus, setReceiptStatus] = useState('');
+  const [restoreInput, setRestoreInput] = useState('');
   const [loading, setLoading] = useState(false);
   const isDone = status && ['REDEEMED', 'EXPIRED', 'REJECTED'].includes(status.status);
 
@@ -163,6 +164,24 @@ export default function BusinessConsole({ params }: { params: { businessId: stri
     };
   }
 
+  function parseSessionId(value: string) {
+    const raw = value.trim();
+    if (!raw) return '';
+
+    const receiptMatch = raw.match(/^Session:\s*(\S+)/im);
+    if (receiptMatch?.[1]) return receiptMatch[1].trim();
+
+    try {
+      const url = new URL(raw);
+      const proofMatch = url.pathname.match(/\/r\/([^/?#]+)/);
+      if (proofMatch?.[1]) return proofMatch[1].trim();
+    } catch {
+      // Not a URL; treat as raw text below.
+    }
+
+    return raw.replace(/^\/?r\//, '').split(/[/?#\s]/)[0].trim();
+  }
+
   async function startSession() {
     setLoading(true);
     setError('');
@@ -288,9 +307,36 @@ export default function BusinessConsole({ params }: { params: { businessId: stri
     }
   }
 
-  async function restoreLastSession() {
+  async function restoreSessionById(candidateSessionId: string, successMessage: string) {
     setError('');
     setLinkStatus('');
+
+    const sessionId = parseSessionId(candidateSessionId);
+    if (!sessionId) {
+      setError('Paste a checkout session ID, customer link or receipt first.');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const nextStatus = await getSessionStatus(sessionId);
+      if (nextStatus.businessId !== params.businessId) {
+        forgetRememberedSession();
+        setError('Saved checkout session belongs to another seller profile.');
+        return;
+      }
+      setSession(sessionFromStatus(sessionId, nextStatus));
+      setStatus(nextStatus);
+      rememberSession(sessionId);
+      setLinkStatus(`${successMessage}: ${nextStatus.status}`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not restore checkout session.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function restoreLastSession() {
     let rememberedSessionId = '';
     try {
       rememberedSessionId = window.localStorage.getItem(lastSessionStorageKey) || '';
@@ -299,27 +345,11 @@ export default function BusinessConsole({ params }: { params: { businessId: stri
       return;
     }
 
-    if (!rememberedSessionId) {
-      setError('No checkout session is saved on this device yet.');
-      return;
-    }
+    await restoreSessionById(rememberedSessionId, 'Restored saved checkout session');
+  }
 
-    setLoading(true);
-    try {
-      const nextStatus = await getSessionStatus(rememberedSessionId);
-      if (nextStatus.businessId !== params.businessId) {
-        forgetRememberedSession();
-        setError('Saved checkout session belongs to another seller profile.');
-        return;
-      }
-      setSession(sessionFromStatus(rememberedSessionId, nextStatus));
-      setStatus(nextStatus);
-      setLinkStatus(`Restored saved checkout session: ${nextStatus.status}`);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not restore saved checkout session.');
-    } finally {
-      setLoading(false);
-    }
+  async function restorePastedSession() {
+    await restoreSessionById(restoreInput, 'Restored checkout session');
   }
 
   return (
@@ -399,13 +429,14 @@ export default function BusinessConsole({ params }: { params: { businessId: stri
             </div>
 
             <div className="mt-4 rounded-2xl border border-white/10 bg-black/20 p-3">
-              <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
                   <p className="text-xs font-black uppercase tracking-[0.14em] text-orange-200/80">
                     Session recovery
                   </p>
                   <p className="mt-1 text-xs leading-5 text-stone-400">
-                    This counter device remembers the last QR session for this seller profile. Use it after a browser refresh or tablet sleep.
+                    This counter device remembers the last QR session. You can also paste a receipt,
+                    customer link or session ID to reopen a checkout after refresh or tablet sleep.
                   </p>
                 </div>
                 <button
@@ -415,6 +446,22 @@ export default function BusinessConsole({ params }: { params: { businessId: stri
                   className="rounded-xl border border-white/15 px-3 py-2 text-[11px] font-black uppercase tracking-[0.12em] text-stone-100 transition hover:border-orange-200/60 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   Restore last QR
+                </button>
+              </div>
+              <div className="mt-3 grid gap-2 sm:grid-cols-[1fr_auto]">
+                <input
+                  value={restoreInput}
+                  onChange={(event) => setRestoreInput(event.target.value)}
+                  placeholder="Paste session ID, customer link or checkout receipt"
+                  className="rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-xs text-white outline-none focus:border-orange-300"
+                />
+                <button
+                  type="button"
+                  onClick={restorePastedSession}
+                  disabled={loading}
+                  className="rounded-xl border border-orange-200/35 px-3 py-2 text-[11px] font-black uppercase tracking-[0.12em] text-orange-50 transition hover:bg-orange-200/10 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  Restore pasted
                 </button>
               </div>
             </div>
