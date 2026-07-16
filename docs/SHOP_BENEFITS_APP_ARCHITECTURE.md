@@ -67,7 +67,7 @@ The app has two roles:
 - Generate seller scanner links.
 - Generate basic HTML button/link snippet.
 - Show API payload for rule-bound QR sessions.
-- Later: generate POS plugin snippets and SDK package examples.
+- Generate a server-side JavaScript/POS session helper that returns the short-lived customer proof URL. Packaged SDK/plugin examples remain future work.
 
 ## IFR Wallet Strategy
 
@@ -115,7 +115,7 @@ If `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` is missing, the frontend must show a s
 4. Add QR history and audit view for sellers. **Implemented for owner-wallet-protected recent sessions, restore receipts and activity metrics; export/retention policy remains future work.**
 5. Customer saved proof history locally without storing private data server-side. **Implemented for redacted QR proof history; benefit wallet/device acceptance still pending.**
 6. Add embedded-wallet provider evaluation and decision record.
-7. Add POS/plugin snippets to code generator.
+7. Add POS/plugin snippets to code generator. **Server-side JavaScript/POS session helper implemented; packaged SDK and platform-specific plugins remain future work.**
 8. Add mobile E2E checks for iPad Safari/Chrome and Android MetaMask browser.
 
 ## Security Notes

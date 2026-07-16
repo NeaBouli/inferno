@@ -120,6 +120,10 @@ so a customer can reopen the proof on the same device. The local entry excludes
 private keys, seed phrases, signatures and full wallet inventories; it is not a
 server-side evidence record and does not replace the device checklist.
 
+The landing integration generator also exposes a `pos` mode. Its generated server-side
+JavaScript creates a rule-bound session and returns a full `customerUrl` for the seller's
+QR renderer. Business IDs are URL-encoded in links and JSON-serialized in API snippets.
+
 The seller session-history response is protected by the owner-wallet signature and also
 returns activity metrics for today's and all-time checks, redemptions, open checks and
 approval rate. Today's redemptions use the redemption timestamp, and expired QR sessions
