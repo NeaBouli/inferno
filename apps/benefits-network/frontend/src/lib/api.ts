@@ -233,6 +233,13 @@ export function getSellerBusinessRules(businessId: string, auth: SellerAuth) {
   });
 }
 
+export function deleteSellerBusiness(businessId: string, auth: SellerAuth) {
+  return fetchJSON<void>(`/api/seller/businesses/${businessId}`, {
+    method: 'DELETE',
+    headers: sellerHeaders(auth),
+  });
+}
+
 export function createSellerBusinessRule(
   businessId: string,
   auth: SellerAuth,

@@ -184,6 +184,25 @@ router.get('/businesses/:id/rules', sellerRateLimiter, async (req, res, next) =>
   }
 });
 
+router.delete('/businesses/:id', sellerRateLimiter, async (req, res, next) => {
+  try {
+    await requireBusinessOwner(req, 'business:delete', req.params.id);
+    await prisma.$transaction([
+      prisma.benefitRule.updateMany({
+        where: { businessId: req.params.id, active: true },
+        data: { active: false },
+      }),
+      prisma.business.update({
+        where: { id: req.params.id },
+        data: { active: false },
+      }),
+    ]);
+    res.status(204).send();
+  } catch (err) {
+    handleSellerError(err, res, next);
+  }
+});
+
 router.post(
   '/businesses/:id/rules',
   sellerRateLimiter,

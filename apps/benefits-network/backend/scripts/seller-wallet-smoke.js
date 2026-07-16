@@ -23,7 +23,8 @@ What it checks:
   - public health endpoint
   - server-issued seller auth messages
   - signed seller profile list
-  - with MUTATE=true: create wallet-owned seller profile, reload it, create/list/delete a rule
+  - with MUTATE=true: create wallet-owned seller profile, reload it, create/list/delete a rule,
+    deactivate the seller profile
 
 No private key is read from env or disk. The script creates a throwaway wallet in memory.`);
 }
@@ -180,6 +181,25 @@ async function main() {
     console.log('Deleted smoke rule: OK');
   } else {
     console.log('Cleanup disabled; smoke rule left active.');
+  }
+
+  if (cleanup) {
+    const deleteBusinessAuth = await signSellerAction(wallet, 'business:delete', business.id);
+    await fetchNoContent(`/api/seller/businesses/${business.id}`, {
+      method: 'DELETE',
+      headers: sellerHeaders(deleteBusinessAuth),
+    });
+
+    const postCleanupAuth = await signSellerAction(wallet, 'business:list', 'seller');
+    const postCleanup = await fetchJson('/api/seller/businesses', {
+      headers: sellerHeaders(postCleanupAuth),
+    });
+    if (postCleanup.businesses.some((entry) => entry.id === business.id)) {
+      throw new Error(`Deactivated business ${business.id} is still returned by owner reload`);
+    }
+    console.log('Deactivated smoke seller profile: OK');
+  } else {
+    console.log('Cleanup disabled; smoke seller profile left active.');
   }
 
   console.log('Seller wallet smoke complete.');

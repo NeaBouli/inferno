@@ -86,6 +86,24 @@ describe('Seller wallet authorization', () => {
     ).toBe(wallet.address);
   });
 
+  it('verifies the seller profile delete action message', async () => {
+    const wallet = ethers.Wallet.createRandom();
+    const timestamp = Date.now().toString();
+    const signature = await wallet.signMessage(
+      buildSellerAuthMessage('business:delete', 'biz_delete', timestamp)
+    );
+
+    expect(
+      verifySellerSignature({
+        walletAddress: wallet.address,
+        signature,
+        timestamp,
+        action: 'business:delete',
+        businessId: 'biz_delete',
+      })
+    ).toBe(wallet.address);
+  });
+
   it('builds a seller profile limit error once the active profile cap is reached', () => {
     expect(buildSellerBusinessLimitError(4, 5)).toBeNull();
     expect(buildSellerBusinessLimitError(5, 5)?.message).toContain('profile limit reached: 5/5');

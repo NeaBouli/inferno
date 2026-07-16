@@ -13,6 +13,7 @@ import {
   createSellerBusiness,
   createSellerBusinessRule,
   deleteAdminBusinessRule,
+  deleteSellerBusiness,
   deleteSellerBusinessRule,
   getAdminBusinessRules,
   getSellerAuthMessage,
@@ -174,6 +175,29 @@ export function SellerRuleBuilder() {
     }
   }
 
+  async function deactivateSellerBusiness(targetBusinessId: string) {
+    if (!canUseWalletOwner) {
+      setError('Connect the seller wallet to deactivate a seller profile.');
+      return;
+    }
+    setLoading(true);
+    setError('');
+    setStatus('');
+    try {
+      await deleteSellerBusiness(targetBusinessId, await signSellerAction('business:delete', targetBusinessId));
+      setSellerBusinesses((current) => current.filter((item) => item.id !== targetBusinessId));
+      if (businessId === targetBusinessId) {
+        setBusinessId('');
+        setRules([]);
+      }
+      setStatus('Seller profile deactivated.');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to deactivate seller profile');
+    } finally {
+      setLoading(false);
+    }
+  }
+
   async function saveRule() {
     if (!businessId || !canManage) {
       setError('Business ID plus seller wallet or admin secret are required.');
@@ -325,26 +349,51 @@ export function SellerRuleBuilder() {
           <div className="mt-4 grid gap-2">
             <p className="text-xs font-bold uppercase tracking-[0.18em] text-green-100/70">My seller profiles</p>
             {sellerBusinesses.map((business) => (
-              <button
+              <div
                 key={business.id}
-                type="button"
-                onClick={() => {
-                  setBusinessId(business.id);
-                  setRules([]);
-                  setStatus(`${business.name} selected. Load rules when you need the current list.`);
-                }}
                 className={`rounded-2xl border p-3 text-left transition ${
                   business.id === businessId
                     ? 'border-green-200/60 bg-green-200/15'
                     : 'border-white/10 bg-black/20 hover:border-green-200/40'
                 }`}
               >
-                <span className="block text-sm font-black text-white">{business.name}</span>
-                <span className="mt-1 block text-xs leading-5 text-stone-300">
-                  {business.rulesCount} rule{business.rulesCount === 1 ? '' : 's'} / {business.discountPercent}% default / {business.requiredLockIFR.toLocaleString('en-US')} IFR
-                </span>
-                <span className="mt-1 block break-all font-mono text-[11px] text-stone-500">{business.id}</span>
-              </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setBusinessId(business.id);
+                    setRules([]);
+                    setStatus(`${business.name} selected. Load rules when you need the current list.`);
+                  }}
+                  className="block w-full text-left"
+                >
+                  <span className="block text-sm font-black text-white">{business.name}</span>
+                  <span className="mt-1 block text-xs leading-5 text-stone-300">
+                    {business.rulesCount} rule{business.rulesCount === 1 ? '' : 's'} / {business.discountPercent}% default / {business.requiredLockIFR.toLocaleString('en-US')} IFR
+                  </span>
+                  <span className="mt-1 block break-all font-mono text-[11px] text-stone-500">{business.id}</span>
+                </button>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setBusinessId(business.id);
+                      setRules([]);
+                      setStatus(`${business.name} selected. Load rules when you need the current list.`);
+                    }}
+                    className="rounded-xl border border-green-200/30 px-3 py-2 text-[11px] font-black uppercase tracking-[0.12em] text-green-50 transition hover:bg-green-200/10"
+                  >
+                    Select
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => deactivateSellerBusiness(business.id)}
+                    disabled={loading}
+                    className="rounded-xl border border-red-200/30 px-3 py-2 text-[11px] font-black uppercase tracking-[0.12em] text-red-100 transition hover:bg-red-200/10 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    Deactivate
+                  </button>
+                </div>
+              </div>
             ))}
           </div>
         ) : null}
