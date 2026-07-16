@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useAccount, useDisconnect, useSignMessage } from 'wagmi';
 import { AppShell } from '@/components/AppShell';
 import { Countdown } from '@/components/Countdown';
@@ -20,6 +20,7 @@ export default function CustomerSession({ params }: { params: { sessionId: strin
   const [result, setResult] = useState<AttestResult | null>(null);
   const [error, setError] = useState('');
   const [refreshMessage, setRefreshMessage] = useState('');
+  const [receiptStatus, setReceiptStatus] = useState('');
   const [loading, setLoading] = useState(false);
   const sessionLoaded = Boolean(status);
   const currentSessionStatus = status?.status || '';
@@ -60,6 +61,31 @@ export default function CustomerSession({ params }: { params: { sessionId: strin
     { label: 'IFR access approved', ready: proofApproved || sellerRedeemed },
     { label: 'Seller redeem complete', ready: sellerRedeemed },
   ];
+  const proofReceipt = useMemo(() => {
+    if (!status) return '';
+
+    const benefit = status.benefit;
+    const verifiedWallet = status.recoveredAddress
+      ? `${status.recoveredAddress.slice(0, 6)}...${status.recoveredAddress.slice(-4)}`
+      : address
+        ? `${address.slice(0, 6)}...${address.slice(-4)}`
+        : 'not connected';
+
+    return [
+      'IFRp Benefits Network customer proof',
+      `Session: ${params.sessionId}`,
+      `Seller: ${business?.name || status.businessId}`,
+      `Status: ${status.status}`,
+      `Benefit: ${benefit.discountPercent}%`,
+      `Required lock: ${benefit.requiredLockIFR.toLocaleString('en-US')} IFR`,
+      `Rule: ${benefit.label || 'Business default'}`,
+      `Product: ${benefit.productName || 'Business default benefit'}`,
+      `Customer wallet: ${verifiedWallet}`,
+      `Expires: ${status.expiresAt}`,
+      `Redeemed: ${status.redeemedAt || 'not redeemed'}`,
+      'Note: seller redemption still requires the seller scanner and seller wallet signature.',
+    ].join('\n');
+  }, [address, business?.name, params.sessionId, status]);
 
   const loadSession = useCallback(async (showMessage = false) => {
     const nextStatus = await getSessionStatus(params.sessionId);
@@ -110,6 +136,44 @@ export default function CustomerSession({ params }: { params: { sessionId: strin
       }
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function copyProofReceipt() {
+    if (!proofReceipt) {
+      setError('Load verification before copying a proof receipt.');
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(proofReceipt);
+      setError('');
+      setReceiptStatus('Proof receipt copied.');
+    } catch {
+      setReceiptStatus('');
+      setError('Could not copy the proof receipt in this browser.');
+    }
+  }
+
+  async function shareProofReceipt() {
+    if (!proofReceipt) {
+      setError('Load verification before sharing a proof receipt.');
+      return;
+    }
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: `${business?.name || 'IFRp'} customer proof`,
+          text: proofReceipt,
+        });
+        setError('');
+        setReceiptStatus('Proof receipt shared.');
+        return;
+      }
+      await copyProofReceipt();
+    } catch (err) {
+      if (err instanceof Error && err.name === 'AbortError') return;
+      setReceiptStatus('');
+      setError(err instanceof Error ? err.message : 'Could not share the proof receipt.');
     }
   }
 
@@ -240,6 +304,50 @@ export default function CustomerSession({ params }: { params: { sessionId: strin
               ) : null}
             </div>
           ) : null}
+
+          <div className="mt-5 rounded-2xl border border-orange-200/20 bg-[#20140c] p-4">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-[0.16em] text-orange-200/80">
+                  Customer proof receipt
+                </p>
+                <h2 className="mt-1 text-xl font-black text-white">
+                  {status ? `${status.status} evidence` : 'Waiting for verification'}
+                </h2>
+                <p className="mt-2 text-sm leading-6 text-stone-300">
+                  Copy or share a redacted proof summary for the seller counter or support.
+                  It never includes private keys, signatures or full wallet inventories.
+                </p>
+              </div>
+              {status ? <StatusBadge status={status.status} /> : null}
+            </div>
+
+            <div className="mt-4 rounded-2xl border border-white/10 bg-black/25 p-3">
+              <pre className="max-h-56 overflow-auto whitespace-pre-wrap text-xs leading-6 text-orange-50">
+                {proofReceipt || 'Load verification to generate a customer proof receipt.'}
+              </pre>
+            </div>
+
+            <div className="mt-4 grid gap-2 sm:grid-cols-2">
+              <button
+                type="button"
+                onClick={copyProofReceipt}
+                disabled={!proofReceipt}
+                className="rounded-2xl border border-orange-200/35 px-4 py-3 text-xs font-black uppercase tracking-[0.14em] text-orange-50 transition hover:bg-orange-200/10 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Copy proof
+              </button>
+              <button
+                type="button"
+                onClick={shareProofReceipt}
+                disabled={!proofReceipt}
+                className="rounded-2xl border border-white/15 px-4 py-3 text-xs font-black uppercase tracking-[0.14em] text-stone-100 transition hover:border-orange-200/60 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Share proof
+              </button>
+            </div>
+            {receiptStatus ? <p className="mt-3 text-xs font-semibold text-green-100">{receiptStatus}</p> : null}
+          </div>
 
           {refreshMessage ? <p className="mt-3 text-xs font-semibold text-green-100">{refreshMessage}</p> : null}
 
