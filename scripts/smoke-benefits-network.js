@@ -104,6 +104,13 @@ async function verifyPage(contextOptions, label) {
     await page.goto(`${baseUrl}/?smoke=${Date.now()}`, { waitUntil: 'networkidle', timeout: timeoutMs });
     await expectText(page, 'The shop layer for locked IFR access.');
     await expectText(page, 'Mobile app');
+    await expectText(page, 'Install once. Use as customer or seller.');
+    if (label === 'ipad') {
+      await expectText(page, 'iPad/iPhone steps');
+      await expectText(page, 'iOS does not show a real in-page install prompt');
+    } else {
+      await expectText(page, 'Install help');
+    }
     await expectText(page, 'Wallet entry');
     await expectText(page, 'Wallet diagnostics');
     await expectText(page, 'No injected provider');

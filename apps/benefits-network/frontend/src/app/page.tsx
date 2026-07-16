@@ -44,6 +44,7 @@ const sellerCategories = [
 function PwaInstallCard() {
   const [installEvent, setInstallEvent] = useState<BeforeInstallPromptEvent | null>(null);
   const [platformHint, setPlatformHint] = useState('Install from the browser menu when your device supports PWA install.');
+  const [platformTitle, setPlatformTitle] = useState('Browser install');
   const [installSteps, setInstallSteps] = useState<string[]>([
     'Open the browser menu.',
     'Choose Install app or Add to Home Screen.',
@@ -63,18 +64,27 @@ function PwaInstallCard() {
     setIsStandalone(standalone);
     if (standalone) {
       setPlatform('installed');
+      setPlatformTitle('Installed mode');
       setPlatformHint('Installed app mode is active on this device.');
       setInstallSteps(['Launch it from the home screen whenever you need customer or seller mode.']);
     } else if (isIos) {
       setPlatform('ios');
-      setPlatformHint('iPhone/iPad install is handled by Safari, not by an in-page button.');
-      setInstallSteps(['Open this page in Safari.', 'Tap Share.', 'Choose Add to Home Screen.', 'Open IFRp Shop from the new icon.']);
+      setPlatformTitle('iPhone / iPad install');
+      setPlatformHint('iOS does not show a real in-page install prompt. Add the app from the browser share sheet instead.');
+      setInstallSteps([
+        'Open shop.ifrunit.tech in Safari for the cleanest install path.',
+        'Tap the Share icon in the browser toolbar.',
+        'Choose Add to Home Screen. In Chrome on iPad, open Share first, then Add to Home Screen if iOS offers it.',
+        'Open IFRp Shop from the new home-screen icon.',
+      ]);
     } else if (isAndroid) {
       setPlatform('android');
+      setPlatformTitle('Android install');
       setPlatformHint('Android: tap Install app here when available, or use the browser menu and choose Install app.');
       setInstallSteps(['Tap Install app if this browser exposes it.', 'Otherwise open the browser menu.', 'Choose Install app or Add to Home Screen.']);
     } else {
       setPlatform('desktop');
+      setPlatformTitle('Desktop install');
       setPlatformHint('Desktop: install from the browser address bar or use the button when it becomes available.');
       setInstallSteps(['Use the install icon in the address bar when visible.', 'Or open the browser menu and choose Install app.']);
     }
@@ -100,14 +110,28 @@ function PwaInstallCard() {
   }
 
   return (
-    <section className="rounded-[2rem] border border-orange-200/20 bg-[#fff4e7] p-5 text-stone-950 shadow-2xl shadow-black/25">
-      <p className="text-xs font-black uppercase tracking-[0.18em] text-[#a34222]">Mobile app</p>
-      <h2 className="mt-2 text-2xl font-black">Install once. Use as customer or seller.</h2>
+    <section className="relative overflow-hidden rounded-[2rem] border border-orange-200/20 bg-[#fff4e7] p-5 text-stone-950 shadow-2xl shadow-black/25">
+      <div className="pointer-events-none absolute -right-12 -top-12 h-36 w-36 rounded-full bg-orange-300/30 blur-3xl" />
+      <div className="relative">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <p className="text-xs font-black uppercase tracking-[0.18em] text-[#a34222]">Mobile app</p>
+            <h2 className="mt-2 text-2xl font-black">Install once. Use as customer or seller.</h2>
+          </div>
+          <span className="rounded-full border border-[#d78962]/45 bg-white/65 px-3 py-2 text-[0.68rem] font-black uppercase tracking-[0.14em] text-[#8f3219]">
+            {platformTitle}
+          </span>
+        </div>
       <p className="mt-3 text-sm leading-6 text-stone-700">
         The same PWA works on desktop, tablet and smartphone. Customers use it for wallet status and QR proofs; sellers use it for rules, scanner links and redemptions.
       </p>
-      <div className="mt-4 rounded-2xl border border-[#d78962]/35 bg-white/55 p-4 text-sm leading-6 text-stone-700">
-        <strong className="text-stone-950">{isStandalone ? 'Installed' : 'Install help'}</strong>
+      <div className="mt-4 rounded-2xl border border-[#d78962]/35 bg-white/70 p-4 text-sm leading-6 text-stone-700 shadow-inner shadow-orange-900/5">
+        <div className="flex items-center gap-3">
+          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-[#b84625] text-lg font-black text-white shadow-lg shadow-orange-900/25">
+            {platform === 'ios' ? '↑' : platform === 'installed' ? '✓' : '+'}
+          </span>
+          <strong className="text-stone-950">{isStandalone ? 'Installed' : platform === 'ios' ? 'iPad/iPhone steps' : 'Install help'}</strong>
+        </div>
         <p className="mt-1">{platformHint}</p>
         <ol className="mt-3 grid gap-2">
           {installSteps.map((step, index) => (
@@ -128,6 +152,7 @@ function PwaInstallCard() {
         {isStandalone ? 'App installed' : installEvent ? 'Install app' : platform === 'ios' ? 'Show iPad install steps' : 'Show install steps'}
       </button>
       <p className="mt-3 text-xs leading-5 text-stone-600">{message}</p>
+      </div>
     </section>
   );
 }
