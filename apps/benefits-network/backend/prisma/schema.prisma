@@ -33,6 +33,7 @@ model BenefitRule {
   active          Boolean  @default(true)
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
+  sessions        Session[]
 
   @@index([businessId])
   @@index([active])
@@ -42,6 +43,8 @@ model Session {
   id               String     @id @default(cuid())
   businessId       String
   business         Business   @relation(fields: [businessId], references: [id])
+  benefitRuleId    String?
+  benefitRule      BenefitRule? @relation(fields: [benefitRuleId], references: [id])
   nonce            String     @unique
   expiresAt        DateTime
   status           String     @default("PENDING")
@@ -55,6 +58,7 @@ model Session {
   auditLogs        AuditLog[]
 
   @@index([businessId])
+  @@index([benefitRuleId])
   @@index([status])
 }
 

@@ -17,30 +17,83 @@ function auditLog(sessionId: string, type: string, payload: Record<string, unkno
   });
 }
 
+function benefitFromSession(session: {
+  business: {
+    discountPercent: number;
+    requiredLockIFR: number;
+    ttlSeconds: number;
+    tierLabel: string | null;
+  };
+  benefitRule: {
+    id: string;
+    label: string;
+    category: string;
+    productName: string;
+    discountPercent: number;
+    requiredLockIFR: number;
+    ttlSeconds: number;
+  } | null;
+}) {
+  if (!session.benefitRule) {
+    return {
+      benefitRuleId: null,
+      label: session.business.tierLabel,
+      category: null,
+      productName: null,
+      discountPercent: session.business.discountPercent,
+      requiredLockIFR: session.business.requiredLockIFR,
+      ttlSeconds: session.business.ttlSeconds,
+      tierLabel: session.business.tierLabel,
+    };
+  }
+
+  return {
+    benefitRuleId: session.benefitRule.id,
+    label: session.benefitRule.label,
+    category: session.benefitRule.category,
+    productName: session.benefitRule.productName,
+    discountPercent: session.benefitRule.discountPercent,
+    requiredLockIFR: session.benefitRule.requiredLockIFR,
+    ttlSeconds: session.benefitRule.ttlSeconds,
+    tierLabel: session.benefitRule.label,
+  };
+}
+
 /**
  * Create a new verification session for a business.
  */
-export async function createSession(businessId: string) {
+export async function createSession(businessId: string, benefitRuleId?: string) {
   const business = await prisma.business.findUnique({ where: { id: businessId } });
   if (!business || !business.active) {
     throw new Error('Business not found or inactive');
   }
 
+  const benefitRule = benefitRuleId
+    ? await prisma.benefitRule.findFirst({
+        where: { id: benefitRuleId, businessId, active: true },
+      })
+    : null;
+  if (benefitRuleId && !benefitRule) {
+    throw new Error('Benefit rule not found or inactive');
+  }
+
+  const ttlSeconds = benefitRule?.ttlSeconds ?? business.ttlSeconds;
   const nonce = crypto.randomBytes(32).toString('hex');
-  const expiresAt = new Date(Date.now() + business.ttlSeconds * 1000);
+  const expiresAt = new Date(Date.now() + ttlSeconds * 1000);
 
   const session = await prisma.session.create({
-    data: { businessId, nonce, expiresAt },
+    data: { businessId, benefitRuleId: benefitRule?.id, nonce, expiresAt },
+    include: { business: true, benefitRule: true },
   });
 
-  await auditLog(session.id, 'SESSION_CREATED', { businessId, nonce });
+  const benefit = benefitFromSession(session);
+
+  await auditLog(session.id, 'SESSION_CREATED', { businessId, benefitRuleId: benefit.benefitRuleId, nonce });
 
   return {
     sessionId: session.id,
     expiresAt: session.expiresAt,
-    discountPercent: business.discountPercent,
-    requiredLockIFR: business.requiredLockIFR,
-    tierLabel: business.tierLabel,
+    ...benefit,
   };
 }
 
@@ -50,13 +103,19 @@ export async function createSession(businessId: string) {
 export async function buildChallengeMessage(sessionId: string): Promise<string> {
   const session = await prisma.session.findUnique({
     where: { id: sessionId },
-    include: { business: true },
+    include: { business: true, benefitRule: true },
   });
   if (!session) throw new Error('Session not found');
+  const benefit = benefitFromSession(session);
 
   return [
     'IFR Benefits Network - Discount Verification',
     `Business: ${session.businessId}`,
+    `Benefit Rule: ${benefit.benefitRuleId ?? 'business-default'}`,
+    `Benefit: ${benefit.label ?? 'Standard'}`,
+    `Product: ${benefit.productName ?? 'Business default benefit'}`,
+    `Required Lock IFR: ${benefit.requiredLockIFR}`,
+    `Discount Percent: ${benefit.discountPercent}`,
     `Session: ${session.id}`,
     `Nonce: ${session.nonce}`,
     `Expires: ${session.expiresAt.toISOString()}`,
@@ -71,9 +130,10 @@ export async function buildChallengeMessage(sessionId: string): Promise<string> 
 export async function attest(sessionId: string, signature: string) {
   const session = await prisma.session.findUnique({
     where: { id: sessionId },
-    include: { business: true },
+    include: { business: true, benefitRule: true },
   });
   if (!session) throw new Error('Session not found');
+  const benefit = benefitFromSession(session);
 
   // Check status
   if (session.status !== 'PENDING') {
@@ -118,7 +178,7 @@ export async function attest(sessionId: string, signature: string) {
   // On-chain lock check
   let lockResult: { eligible: boolean; lockedAmount: string };
   try {
-    lockResult = await checkLock(recoveredAddress, session.business.requiredLockIFR);
+    lockResult = await checkLock(recoveredAddress, benefit.requiredLockIFR);
   } catch (err) {
     const msg = err instanceof Error ? err.message : 'RPC error';
     await auditLog(sessionId, 'ATTEST_FAIL', { reason: `On-chain error: ${msg}` });
@@ -132,19 +192,20 @@ export async function attest(sessionId: string, signature: string) {
         status: 'REJECTED',
         recoveredAddress,
         lockAmountRaw: lockResult.lockedAmount,
-        reason: `Insufficient lock: ${lockResult.lockedAmount} IFR < ${session.business.requiredLockIFR} IFR`,
+        reason: `Insufficient lock: ${lockResult.lockedAmount} IFR < ${benefit.requiredLockIFR} IFR`,
       },
     });
     await auditLog(sessionId, 'ATTEST_FAIL', {
       wallet: recoveredAddress,
       locked: lockResult.lockedAmount,
-      required: session.business.requiredLockIFR,
+      required: benefit.requiredLockIFR,
+      benefitRuleId: benefit.benefitRuleId,
     });
     return {
       status: 'REJECTED' as SessionStatus,
       wallet: recoveredAddress,
       eligible: false,
-      reason: `Insufficient lock: ${lockResult.lockedAmount} IFR locked, ${session.business.requiredLockIFR} IFR required`,
+      reason: `Insufficient lock: ${lockResult.lockedAmount} IFR locked, ${benefit.requiredLockIFR} IFR required`,
     };
   }
 
@@ -160,12 +221,14 @@ export async function attest(sessionId: string, signature: string) {
   await auditLog(sessionId, 'ATTEST_OK', {
     wallet: recoveredAddress,
     locked: lockResult.lockedAmount,
+    benefitRuleId: benefit.benefitRuleId,
   });
 
   return {
     status: 'APPROVED' as SessionStatus,
     wallet: recoveredAddress,
     eligible: true,
+    benefit,
   };
 }
 
@@ -206,8 +269,12 @@ export async function redeem(sessionId: string) {
  * Get session status (for merchant polling).
  */
 export async function getSession(sessionId: string) {
-  const session = await prisma.session.findUnique({ where: { id: sessionId } });
+  const session = await prisma.session.findUnique({
+    where: { id: sessionId },
+    include: { business: true, benefitRule: true },
+  });
   if (!session) throw new Error('Session not found');
+  const benefit = benefitFromSession(session);
 
   // Auto-expire stale sessions
   if (
@@ -218,8 +285,8 @@ export async function getSession(sessionId: string) {
       where: { id: sessionId },
       data: { status: 'EXPIRED' },
     });
-    return { ...session, status: 'EXPIRED' };
+    return { ...session, status: 'EXPIRED', benefit };
   }
 
-  return session;
+  return { ...session, benefit };
 }

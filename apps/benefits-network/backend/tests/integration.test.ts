@@ -109,6 +109,83 @@ describe('E2E: IFR Lock → Benefits Network Verification', () => {
     expect(result.reason).toContain('2000.0');
   });
 
+  it('binds a QR session to a selected benefit rule', async () => {
+    const rule = await prisma.benefitRule.create({
+      data: {
+        businessId: testBusinessId,
+        label: 'Cafe Partner',
+        category: 'Coffee',
+        productName: 'Flat white discount',
+        discountPercent: 25,
+        requiredLockIFR: 7500,
+        ttlSeconds: 120,
+      },
+    });
+
+    const session = await createSession(testBusinessId, rule.id);
+    expect(session.benefitRuleId).toBe(rule.id);
+    expect(session.label).toBe('Cafe Partner');
+    expect(session.productName).toBe('Flat white discount');
+    expect(session.discountPercent).toBe(25);
+    expect(session.requiredLockIFR).toBe(7500);
+    expect(session.tierLabel).toBe('Cafe Partner');
+
+    const challenge = await buildChallengeMessage(session.sessionId);
+    expect(challenge).toContain(`Benefit Rule: ${rule.id}`);
+    expect(challenge).toContain('Benefit: Cafe Partner');
+    expect(challenge).toContain('Product: Flat white discount');
+    expect(challenge).toContain('Required Lock IFR: 7500');
+    expect(challenge).toContain('Discount Percent: 25');
+
+    mockRecoverSigner.mockReturnValue(TEST_WALLET);
+    mockCheckLock.mockResolvedValue({ eligible: true, lockedAmount: '8000.0' });
+
+    const attestResult = await attest(session.sessionId, '0xmocksignature');
+    expect(attestResult.status).toBe('APPROVED');
+    expect(attestResult.benefit?.benefitRuleId).toBe(rule.id);
+    expect(mockCheckLock).toHaveBeenCalledWith(TEST_WALLET, 7500);
+  });
+
+  it('rejects inactive or unrelated benefit rules when creating a QR session', async () => {
+    const inactiveRule = await prisma.benefitRule.create({
+      data: {
+        businessId: testBusinessId,
+        label: 'Paused',
+        category: 'Food',
+        productName: 'Paused benefit',
+        discountPercent: 50,
+        requiredLockIFR: 100,
+        active: false,
+      },
+    });
+
+    const otherBusiness = await prisma.business.create({
+      data: {
+        name: 'Other Business',
+        discountPercent: 5,
+        requiredLockIFR: 100,
+        ttlSeconds: 60,
+      },
+    });
+    const otherRule = await prisma.benefitRule.create({
+      data: {
+        businessId: otherBusiness.id,
+        label: 'Other',
+        category: 'Other',
+        productName: 'Other benefit',
+        discountPercent: 10,
+        requiredLockIFR: 100,
+      },
+    });
+
+    await expect(createSession(testBusinessId, inactiveRule.id)).rejects.toThrow(
+      'Benefit rule not found or inactive'
+    );
+    await expect(createSession(testBusinessId, otherRule.id)).rejects.toThrow(
+      'Benefit rule not found or inactive'
+    );
+  });
+
   it('prevents replay of approved session', async () => {
     const session = await createSession(testBusinessId);
 

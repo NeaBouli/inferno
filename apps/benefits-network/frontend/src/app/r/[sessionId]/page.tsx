@@ -23,14 +23,7 @@ export default function CustomerSession({ params }: { params: { sessionId: strin
       try {
         const nextStatus = await getSessionStatus(params.sessionId);
         setStatus(nextStatus);
-        const challenge = await getChallenge(params.sessionId);
-        const businessLine = challenge.message
-          .split('\n')
-          .find((line) => line.startsWith('Business: '));
-        if (businessLine) {
-          const businessId = businessLine.replace('Business: ', '');
-          setBusiness(await getBusiness(businessId));
-        }
+        setBusiness(await getBusiness(nextStatus.businessId));
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load session');
       }
@@ -85,12 +78,24 @@ export default function CustomerSession({ params }: { params: { sessionId: strin
               </div>
               <div className="flex justify-between gap-4">
                 <span>Benefit</span>
-                <strong className="text-white">{business.discountPercent}%</strong>
+                <strong className="text-white">{status?.benefit.discountPercent ?? business.discountPercent}%</strong>
               </div>
               <div className="flex justify-between gap-4">
                 <span>Required lock</span>
-                <strong className="text-white">{business.requiredLockIFR.toLocaleString('en-US')} IFR</strong>
+                <strong className="text-white">{(status?.benefit.requiredLockIFR ?? business.requiredLockIFR).toLocaleString('en-US')} IFR</strong>
               </div>
+              {status?.benefit.productName ? (
+                <>
+                  <div className="flex justify-between gap-4">
+                    <span>Rule</span>
+                    <strong className="text-right text-white">{status.benefit.label || 'IFR Benefit'}</strong>
+                  </div>
+                  <div className="flex justify-between gap-4">
+                    <span>Product</span>
+                    <strong className="text-right text-white">{status.benefit.productName}</strong>
+                  </div>
+                </>
+              ) : null}
             </div>
           ) : null}
 
