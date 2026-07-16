@@ -100,6 +100,7 @@ async function verifyPage(contextOptions, label) {
     await expectText(page, 'Copy link');
     await expectText(page, 'Checkout readiness');
     await expectText(page, 'Current tier');
+    await expectText(page, 'Lock transaction path');
     await expectText(page, 'IFR amount to lock');
     await expectText(page, 'Allowance');
     await expectText(page, 'Unlock all');
