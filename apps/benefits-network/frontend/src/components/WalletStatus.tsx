@@ -121,6 +121,32 @@ export function WalletStatus() {
     { label: 'IFR in wallet', done: hasIFR || hasCustomerLock },
     { label: `${MIN_CUSTOMER_LOCK.toLocaleString('en-US')}+ IFR locked`, done: hasCustomerLock },
   ];
+  const transactionSteps = [
+    {
+      label: 'Connect',
+      detail: 'Use the wallet that holds IFR.',
+      done: isConnected,
+      active: !isConnected,
+    },
+    {
+      label: 'Approve',
+      detail: 'Allow IFRLock to move only the amount you enter.',
+      done: hasEnoughAllowance && amountValid,
+      active: isConnected && amountValid && hasEnoughIFR && !hasEnoughAllowance,
+    },
+    {
+      label: 'Lock',
+      detail: 'Confirm IFRLock.lock(amount) in your wallet.',
+      done: Boolean(lockedRaw && lockedRaw >= amountRaw && amountValid),
+      active: isConnected && amountValid && hasEnoughIFR && hasEnoughAllowance && !hasCustomerLock,
+    },
+    {
+      label: 'Ready',
+      detail: 'Use seller QR proofs and redeem benefits once.',
+      done: hasCustomerLock,
+      active: hasCustomerLock,
+    },
+  ];
 
   useEffect(() => {
     if (!pendingHash || !txReceipt.isSuccess) return;
@@ -320,6 +346,33 @@ export function WalletStatus() {
         </div>
 
         <div className="mt-4 rounded-2xl border border-white/10 bg-black/20 p-4">
+          <div className="mb-4 rounded-2xl border border-orange-200/15 bg-black/20 p-3">
+            <p className="text-xs font-black uppercase tracking-[0.16em] text-orange-200/80">
+              Lock transaction path
+            </p>
+            <div className="mt-3 grid gap-2 sm:grid-cols-4">
+              {transactionSteps.map((step, index) => (
+                <div
+                  key={step.label}
+                  className={`rounded-2xl border p-3 text-xs ${
+                    step.done
+                      ? 'border-green-300/25 bg-green-300/[0.08] text-green-50'
+                      : step.active
+                        ? 'border-orange-200/40 bg-orange-200/[0.1] text-orange-50'
+                        : 'border-white/10 bg-black/20 text-stone-400'
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="grid h-6 w-6 place-items-center rounded-full border border-current text-[0.65rem] font-black">
+                      {step.done ? 'OK' : index + 1}
+                    </span>
+                    <span className="font-black uppercase tracking-[0.12em]">{step.label}</span>
+                  </div>
+                  <p className="mt-2 leading-5 opacity-85">{step.detail}</p>
+                </div>
+              ))}
+            </div>
+          </div>
           <div className="grid gap-3 md:grid-cols-[1fr_auto] md:items-end">
             <label className="grid gap-2 text-sm font-semibold text-stone-200">
               IFR amount to lock
