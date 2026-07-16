@@ -109,6 +109,11 @@ async function verifyPage(contextOptions, label) {
   try {
     await gotoAppPage(page, '/');
     await expectText(page, 'The shop layer for locked IFR access.');
+    await expectText(page, 'System readiness');
+    await expectText(page, 'Live shop diagnostics');
+    await expectText(page, 'API + database');
+    await expectText(page, 'Ethereum Mainnet');
+    await expectText(page, 'WalletConnect');
     await expectText(page, 'Mobile app');
     await expectText(page, 'Install once. Use as customer or seller.');
     await expectText(page, 'Wallet starter kit');

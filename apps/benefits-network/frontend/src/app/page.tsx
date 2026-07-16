@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { AppShell } from '@/components/AppShell';
 import { SellerRuleBuilder } from '@/components/SellerRuleBuilder';
 import { WalletStatus } from '@/components/WalletStatus';
+import { hasWalletConnectProjectId } from '@/lib/wagmi';
 
 type Role = 'customer' | 'seller';
 type CodeMode = 'link' | 'button' | 'api';
@@ -56,6 +57,12 @@ const walletOnboardingSteps = [
     body: 'Approve only the entered IFR amount, lock it in IFRLock, then use the same wallet for seller QR proofs.',
   },
 ];
+
+interface ReadyStatus {
+  status: string;
+  chainId: number;
+  database: string;
+}
 
 function PwaInstallCard() {
   const [installEvent, setInstallEvent] = useState<BeforeInstallPromptEvent | null>(null);
@@ -345,6 +352,97 @@ function WalletStarterKit() {
   );
 }
 
+function SystemReadinessCard() {
+  const [ready, setReady] = useState<ReadyStatus | null>(null);
+  const [checkedAt, setCheckedAt] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  async function refreshReadiness() {
+    setLoading(true);
+    setError('');
+    try {
+      const response = await fetch('/api/ready', { headers: { accept: 'application/json' } });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data?.error || data?.status || `HTTP ${response.status}`);
+      }
+      setReady(data as ReadyStatus);
+      setCheckedAt(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
+    } catch (err) {
+      setReady(null);
+      setError(err instanceof Error ? err.message : 'Readiness check failed.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    void refreshReadiness();
+  }, []);
+
+  const apiReady = ready?.status === 'ready' && ready.database === 'ok';
+  const chainReady = Number(ready?.chainId) === 1;
+  const checks = [
+    {
+      label: 'API + database',
+      value: apiReady ? 'Ready' : ready ? 'Needs attention' : 'Checking',
+      ok: apiReady,
+    },
+    {
+      label: 'Ethereum Mainnet',
+      value: chainReady ? 'Chain 1' : ready?.chainId ? `Chain ${ready.chainId}` : 'Checking',
+      ok: chainReady,
+    },
+    {
+      label: 'WalletConnect',
+      value: hasWalletConnectProjectId ? 'Configured' : 'Not configured',
+      ok: hasWalletConnectProjectId,
+    },
+  ];
+
+  return (
+    <section className="rounded-[2rem] border border-white/10 bg-[linear-gradient(145deg,rgba(255,255,255,0.07),rgba(8,7,6,0.4))] p-5 shadow-2xl shadow-black/25 backdrop-blur">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <p className="text-xs font-black uppercase tracking-[0.18em] text-orange-200/80">System readiness</p>
+          <h2 className="mt-2 text-2xl font-black text-white">Live shop diagnostics</h2>
+        </div>
+        <button
+          type="button"
+          onClick={refreshReadiness}
+          disabled={loading}
+          className="rounded-full border border-white/15 px-3 py-2 text-xs font-black uppercase tracking-[0.14em] text-stone-100 transition hover:border-orange-200/60 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {loading ? 'Checking' : 'Refresh'}
+        </button>
+      </div>
+      <p className="mt-3 text-sm leading-6 text-stone-300">
+        Public readiness checks for the app layer. WalletConnect needs a real project ID before the full mobile wallet modal can be treated as production-ready.
+      </p>
+
+      <div className="mt-4 grid gap-2">
+        {checks.map((check) => (
+          <div
+            key={check.label}
+            className={`flex items-center justify-between gap-3 rounded-2xl border px-4 py-3 text-sm ${
+              check.ok
+                ? 'border-green-300/20 bg-green-300/[0.08] text-green-50'
+                : 'border-orange-200/20 bg-orange-200/[0.08] text-orange-50'
+            }`}
+          >
+            <span className="font-semibold">{check.label}</span>
+            <span className="font-black">{check.value}</span>
+          </div>
+        ))}
+      </div>
+
+      {checkedAt ? <p className="mt-3 text-xs text-stone-400">Last checked: {checkedAt}</p> : null}
+      {error ? <p className="mt-3 rounded-2xl border border-red-400/30 bg-red-500/10 p-3 text-xs text-red-200">{error}</p> : null}
+    </section>
+  );
+}
+
 export default function Home() {
   const [role, setRole] = useState<Role>('customer');
 
@@ -435,6 +533,7 @@ export default function Home() {
         </div>
 
         <div className="grid gap-5">
+          <SystemReadinessCard />
           <PwaInstallCard />
           <WalletStarterKit />
           {role === 'customer' ? <WalletStatus /> : <SellerRuleBuilder />}

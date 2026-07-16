@@ -35,6 +35,10 @@ The public shop defaults to Ethereum Mainnet. `NEXT_PUBLIC_CHAIN_ID=11155111` ca
 
 `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` enables the full WalletConnect/RainbowKit modal for compatible mobile wallets. Without it, the app intentionally falls back to browser-injected Ethereum wallets such as MetaMask and Coinbase Wallet instead of blocking the customer proof flow.
 
+The landing page includes a public `System readiness` card. It checks `/api/ready`,
+confirms Ethereum Mainnet (`chainId: 1`) and exposes whether WalletConnect was
+configured at build time. It does not expose secrets or server internals.
+
 ## Tech Stack
 
 - Next.js 14 (App Router)
@@ -87,9 +91,10 @@ BENEFITS_BASE_URL=http://localhost:3000 npm run smoke:benefits
 SCREENSHOT_DIR=/Users/gio/Desktop npm run smoke:benefits
 ```
 
-The smoke checks `shop.ifrunit.tech` by default: API health, PWA manifest,
-PWA icons, service worker, server-issued seller auth challenge, desktop landing,
-iPad landing, guide page, wallet-entry fallback and the seller scanner shell.
+The smoke checks `shop.ifrunit.tech` by default: API health/readiness, PWA
+manifest, PWA icons, service worker, server-issued seller auth challenge,
+desktop landing, iPad landing, public system-readiness UI, guide page,
+wallet-entry fallback and the seller scanner shell.
 It does not create sellers, rules, QR sessions or wallet transactions.
 
 ## Production Deploy
