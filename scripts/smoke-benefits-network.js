@@ -115,6 +115,10 @@ async function verifyPage(contextOptions, label) {
     });
     await expectText(page, 'Seller scanner');
     await expectText(page, 'Business console');
+    await expectText(page, 'Checkout readiness');
+    await expectText(page, 'Load business');
+    await expectText(page, 'Seller profile loaded');
+    await expectText(page, 'Copy customer link');
 
     assert(errors.length === 0, `${label} browser errors:\n${errors.join('\n')}`);
 
