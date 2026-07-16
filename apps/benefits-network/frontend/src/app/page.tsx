@@ -43,9 +43,29 @@ const sellerCategories = [
 
 function PwaInstallCard() {
   const [installEvent, setInstallEvent] = useState<BeforeInstallPromptEvent | null>(null);
-  const [message, setMessage] = useState('Install support appears when your browser exposes the PWA install prompt.');
+  const [platformHint, setPlatformHint] = useState('Install from the browser menu when your device supports PWA install.');
+  const [isStandalone, setIsStandalone] = useState(false);
+  const [message, setMessage] = useState('Ready for desktop, tablet and smartphone.');
 
   useEffect(() => {
+    const ua = window.navigator.userAgent.toLowerCase();
+    const isIos = /iphone|ipad|ipod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    const isAndroid = ua.includes('android');
+    const standalone =
+      window.matchMedia('(display-mode: standalone)').matches ||
+      ('standalone' in window.navigator && Boolean((window.navigator as Navigator & { standalone?: boolean }).standalone));
+
+    setIsStandalone(standalone);
+    if (standalone) {
+      setPlatformHint('Installed app mode is active on this device.');
+    } else if (isIos) {
+      setPlatformHint('iPhone/iPad: tap Share, then Add to Home Screen. Safari supports the most reliable install flow.');
+    } else if (isAndroid) {
+      setPlatformHint('Android: tap Install app here when available, or use the browser menu and choose Install app.');
+    } else {
+      setPlatformHint('Desktop: install from the browser address bar or use the button when it becomes available.');
+    }
+
     const handler = (event: Event) => {
       event.preventDefault();
       setInstallEvent(event as BeforeInstallPromptEvent);
@@ -57,7 +77,7 @@ function PwaInstallCard() {
 
   async function install() {
     if (!installEvent) {
-      setMessage('On iPhone or iPad: open Share, then Add to Home Screen. On Android: use Install app in the browser menu.');
+      setMessage(platformHint);
       return;
     }
     await installEvent.prompt();
@@ -73,12 +93,16 @@ function PwaInstallCard() {
       <p className="mt-3 text-sm leading-6 text-stone-700">
         The same PWA works on desktop, tablet and smartphone. Customers use it for wallet status and QR proofs; sellers use it for rules, scanner links and redemptions.
       </p>
+      <div className="mt-4 rounded-2xl border border-[#d78962]/35 bg-white/55 p-4 text-sm leading-6 text-stone-700">
+        <strong className="text-stone-950">{isStandalone ? 'Installed' : 'Install help'}</strong>
+        <p className="mt-1">{platformHint}</p>
+      </div>
       <button
         type="button"
         onClick={install}
         className="mt-5 w-full rounded-2xl bg-[#b84625] px-5 py-4 text-sm font-black uppercase tracking-[0.16em] text-white shadow-xl shadow-orange-900/30 transition hover:-translate-y-0.5 hover:bg-[#9f351b]"
       >
-        Install app
+        {isStandalone ? 'App installed' : 'Install app'}
       </button>
       <p className="mt-3 text-xs leading-5 text-stone-600">{message}</p>
     </section>

@@ -24,9 +24,12 @@ app.use('/api/sessions', sessionRoutes);
 app.use('/api', attestRoutes);
 
 // Health check
-app.get('/health', (_req, res) => {
+const healthPayload = (_req: express.Request, res: express.Response) => {
   res.json({ status: 'ok', chainId: config.CHAIN_ID });
-});
+};
+
+app.get('/health', healthPayload);
+app.get('/api/health', healthPayload);
 
 // Global error handler
 app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
