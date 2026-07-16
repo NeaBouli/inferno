@@ -25,6 +25,9 @@ Capacity-only guardrail check:
 scripts/deploy-benefits-network.sh capacity
 ```
 
+This mode is strictly read-only: it reports the guardrail result, compose status and Docker
+disk usage but never invokes a prune command, even when capacity is below a threshold.
+
 Detailed Docker inventory:
 
 ```bash
@@ -49,7 +52,7 @@ npm run smoke:benefits
 - `MIN_FREE_GB=4` as the warning floor.
 - `ABORT_FREE_GB=2` as the emergency hard floor for all checks.
 - `DEPLOY_ABORT_FREE_GB=4` as the default hard floor before any container rebuild.
-- Safe pruning only:
+- Explicit deploy modes may run safe pruning only:
   - Docker builder cache
   - stopped containers
   - dangling images

@@ -43,6 +43,7 @@ safe_prune() {
 ensure_space() {
   local phase="${1:-preflight}"
   local require_deploy_floor="${2:-0}"
+  local allow_prune="${3:-1}"
   local free
   free="$(free_mb)"
   if [[ -z "$free" ]]; then
@@ -50,27 +51,27 @@ ensure_space() {
     exit 1
   fi
 
-  if (( free < MIN_FREE_MB )); then
+  if (( free < MIN_FREE_MB )) && [[ "$allow_prune" == "1" ]]; then
     echo "Only ${free}M free on $REMOTE_VOLUME during $phase; pruning safe Docker caches."
     safe_prune
     free="$(free_mb)"
   fi
 
   if (( free < ABORT_FREE_MB )); then
-    echo "Only ${free}M free on $REMOTE_VOLUME after safe prune; aborting before deploy." >&2
+    echo "Only ${free}M free on $REMOTE_VOLUME during $phase; aborting before deploy." >&2
     echo "Raise disk capacity or explicitly lower ABORT_FREE_GB for this run." >&2
     exit 75
   fi
 
   if [[ "$require_deploy_floor" == "1" ]] && (( free < DEPLOY_ABORT_FREE_MB )); then
-    echo "Only ${free}M free on $REMOTE_VOLUME after safe prune; refusing to start container rebuild." >&2
+    echo "Only ${free}M free on $REMOTE_VOLUME during $phase; refusing to start container rebuild." >&2
     echo "Frontend deploys have dropped below 0.5G transiently from ~3.5G free." >&2
     echo "Free space to at least DEPLOY_ABORT_FREE_GB=${DEPLOY_ABORT_FREE_GB}G or set a one-off override after accepting the risk." >&2
     exit 75
   fi
 
   if (( free < MIN_FREE_MB )); then
-    echo "WARNING: ${free}M free on $REMOTE_VOLUME after safe prune; below MIN_FREE_GB=${MIN_FREE_GB}G." >&2
+    echo "WARNING: ${free}M free on $REMOTE_VOLUME during $phase; below MIN_FREE_GB=${MIN_FREE_GB}G." >&2
     echo "Deploy may still succeed, but production disk capacity needs cleanup or expansion." >&2
   fi
 }
@@ -115,7 +116,7 @@ if [[ "$MODE" == "status" ]]; then
 fi
 
 if [[ "$MODE" == "capacity" ]]; then
-  ensure_space "capacity-check"
+  ensure_space "capacity-check" 0 0
   post_status
   exit 0
 fi
