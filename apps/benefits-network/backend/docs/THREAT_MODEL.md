@@ -58,9 +58,13 @@
 
 **Mitigation:**
 - Seller actions require short-lived, server-issued wallet messages
-- The recovered signer must match `Business.ownerAddress`
+- Owner-only actions require the recovered signer to match `Business.ownerAddress`
 - Session history uses `Action: sessions:list` and is limited to the owned business
-- Redeem uses `Action: sessions:redeem` with the specific session id, then enforces one-time redemption
+- Checkout operators are unique per business, owner-managed, revocable and optionally expiring
+- Operators can only check their checkout role and redeem; profile, rule, history and delegation routes remain owner-only
+- Redeem uses `Action: sessions:redeem` with the specific session id and rechecks current owner/operator access
+- Redeem uses a conditional database update so concurrent requests still produce one redemption and one audit event
+- Audit data stores actor wallet/role but not the wallet signature
 
 ## 7. Session History Data Exposure
 

@@ -259,7 +259,10 @@ export async function attest(sessionId: string, signature: string) {
 /**
  * Redeem an approved session (one-time only).
  */
-export async function redeem(sessionId: string) {
+export async function redeem(
+  sessionId: string,
+  actor: { walletAddress: string; role: 'OWNER' | 'OPERATOR'; operatorId?: string | null }
+) {
   const session = await prisma.session.findUnique({ where: { id: sessionId } });
   if (!session) throw new Error('Session not found');
 
@@ -270,21 +273,76 @@ export async function redeem(sessionId: string) {
     throw new Error(`Session is ${session.status}, cannot redeem`);
   }
 
-  // Check expiry before redeem
-  if (new Date() > session.expiresAt) {
-    await prisma.session.update({
-      where: { id: sessionId },
-      data: { status: 'EXPIRED' },
+  const redeemedAt = new Date();
+  const update = await prisma.$transaction(async (tx) => {
+    const business = await tx.business.findUnique({
+      where: { id: session.businessId },
+      select: { ownerAddress: true, active: true },
     });
-    await auditLog(sessionId, 'EXPIRED', { reason: 'TTL expired before redeem' });
-    throw new Error('Session expired');
-  }
+    const ownerAuthorized = actor.role === 'OWNER' && Boolean(
+      business?.active && business.ownerAddress &&
+      business.ownerAddress.toLowerCase() === actor.walletAddress.toLowerCase()
+    );
+    const operatorAuthorized = actor.role === 'OPERATOR' && Boolean(await tx.checkoutOperator.findFirst({
+      where: {
+        id: actor.operatorId ?? undefined,
+        businessId: session.businessId,
+        walletAddress: actor.walletAddress,
+        active: true,
+        OR: [{ expiresAt: null }, { expiresAt: { gt: redeemedAt } }],
+      },
+      select: { id: true },
+    }));
+    if (!ownerAuthorized && !operatorAuthorized) {
+      throw new Error('Seller wallet is no longer authorized for checkout');
+    }
 
-  await prisma.session.update({
-    where: { id: sessionId },
-    data: { status: 'REDEEMED', redeemedAt: new Date() },
+    const result = await tx.session.updateMany({
+      where: { id: sessionId, status: 'APPROVED', expiresAt: { gt: redeemedAt } },
+      data: { status: 'REDEEMED', redeemedAt },
+    });
+    if (result.count === 1) {
+      await tx.auditLog.create({
+        data: {
+          sessionId,
+          type: 'REDEEMED',
+          payload: JSON.stringify({
+            redeemedAt: redeemedAt.toISOString(),
+            actorWallet: actor.walletAddress,
+            actorRole: actor.role,
+            operatorId: actor.operatorId ?? null,
+          }),
+        },
+      });
+    }
+    return result;
   });
-  await auditLog(sessionId, 'REDEEMED', { redeemedAt: new Date().toISOString() });
+
+  if (update.count !== 1) {
+    const latest = await prisma.session.findUnique({ where: { id: sessionId } });
+    if (!latest) throw new Error('Session not found');
+    if (latest.status === 'REDEEMED') throw new Error('Session already redeemed');
+    if (latest.expiresAt <= redeemedAt) {
+      await prisma.$transaction(async (tx) => {
+        const result = await tx.session.updateMany({
+          where: { id: sessionId, status: 'APPROVED' },
+          data: { status: 'EXPIRED' },
+        });
+        if (result.count === 1) {
+          await tx.auditLog.create({
+            data: {
+              sessionId,
+              type: 'EXPIRED',
+              payload: JSON.stringify({ reason: 'TTL expired before redeem' }),
+            },
+          });
+        }
+        return result;
+      });
+      throw new Error('Session expired');
+    }
+    throw new Error(`Session is ${latest.status}, cannot redeem`);
+  }
 
   return { status: 'REDEEMED' as SessionStatus };
 }

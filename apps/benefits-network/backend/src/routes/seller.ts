@@ -3,10 +3,12 @@ import { z } from 'zod';
 import { prisma } from '../services/sessionService';
 import { buildSellerAuthMessage, normalizeAddress, verifySellerSignature } from '../services/sellerAuth';
 import { assertSellerBusinessLimit } from '../services/sellerLimits';
+import { resolveCheckoutActor } from '../services/sellerAccess';
 import { sellerRateLimiter } from '../middleware/rateLimiter';
 import { validate } from '../middleware/validator';
 
 const router = Router();
+const MAX_ACTIVE_CHECKOUT_OPERATORS = 10;
 
 const createBusinessSchema = z.object({
   name: z.string().min(1).max(200),
@@ -30,6 +32,12 @@ const createBenefitRuleSchema = z.object({
 });
 
 const updateBenefitRuleSchema = createBenefitRuleSchema.partial();
+
+const createCheckoutOperatorSchema = z.object({
+  walletAddress: z.string().regex(/^0x[a-fA-F0-9]{40}$/),
+  label: z.string().trim().min(1).max(80).optional(),
+  expiresAt: z.string().datetime().nullable().optional(),
+});
 
 type SessionStatusCounts = Record<'PENDING' | 'APPROVED' | 'REJECTED' | 'EXPIRED' | 'REDEEMED', number>;
 
@@ -106,7 +114,7 @@ function handleSellerError(err: unknown, res: Response, next: NextFunction) {
       res.status(401).json({ error: err.message });
       return;
     }
-    if (err.message.includes('not the business owner')) {
+    if (err.message.includes('not the business owner') || err.message.includes('not authorized for checkout')) {
       res.status(403).json({ error: err.message });
       return;
     }
@@ -114,8 +122,12 @@ function handleSellerError(err: unknown, res: Response, next: NextFunction) {
       res.status(404).json({ error: err.message });
       return;
     }
-    if (err.message.includes('profile limit reached')) {
+    if (err.message.includes('profile limit reached') || err.message.includes('operator limit reached')) {
       res.status(429).json({ error: err.message });
+      return;
+    }
+    if (err.message.includes('must be in the future') || err.message.includes('already the business owner')) {
+      res.status(400).json({ error: err.message });
       return;
     }
   }
@@ -222,6 +234,115 @@ router.get('/businesses', sellerRateLimiter, async (req, res, next) => {
         qrUrl: `/b/${business.id}`,
       })),
     });
+  } catch (err) {
+    handleSellerError(err, res, next);
+  }
+});
+
+router.get('/businesses/:id/operator-status', sellerRateLimiter, async (req, res, next) => {
+  try {
+    const wallet = requireSellerAuth(req, 'operators:status', req.params.id);
+    const actor = await resolveCheckoutActor(req.params.id, wallet);
+    if (!actor) throw new Error('Seller wallet is not authorized for checkout');
+    res.json({ authorized: true, ...actor });
+  } catch (err) {
+    handleSellerError(err, res, next);
+  }
+});
+
+router.get('/businesses/:id/operators', sellerRateLimiter, async (req, res, next) => {
+  try {
+    await requireBusinessOwner(req, 'operators:list', req.params.id);
+    const operators = await prisma.checkoutOperator.findMany({
+      where: { businessId: req.params.id },
+      orderBy: [{ active: 'desc' }, { createdAt: 'asc' }],
+    });
+    res.json({ operators });
+  } catch (err) {
+    handleSellerError(err, res, next);
+  }
+});
+
+router.post(
+  '/businesses/:id/operators',
+  sellerRateLimiter,
+  validate(createCheckoutOperatorSchema),
+  async (req, res, next) => {
+    try {
+      const authorizationTimestamp = Number(getSellerAuth(req).timestamp);
+      const ownerWallet = await requireBusinessOwner(req, 'operators:create', req.params.id);
+      const walletAddress = normalizeAddress(req.body.walletAddress);
+      if (walletAddress === ownerWallet) {
+        throw new Error('The business owner is already authorized for checkout');
+      }
+
+      const expiresAt = req.body.expiresAt ? new Date(req.body.expiresAt) : null;
+      if (expiresAt && expiresAt <= new Date()) {
+        throw new Error('Checkout operator expiry must be in the future');
+      }
+
+      const now = new Date();
+      const { operator, existed } = await prisma.$transaction(async (tx) => {
+        const existing = await tx.checkoutOperator.findUnique({
+          where: { businessId_walletAddress: { businessId: req.params.id, walletAddress } },
+          select: { active: true, expiresAt: true, updatedAt: true },
+        });
+        if (existing && authorizationTimestamp <= existing.updatedAt.getTime()) {
+          throw new Error('Seller authorization predates the latest checkout operator change');
+        }
+
+        const alreadyConsumesSlot = Boolean(
+          existing?.active && (!existing.expiresAt || existing.expiresAt > now)
+        );
+        if (!alreadyConsumesSlot) {
+          const activeCount = await tx.checkoutOperator.count({
+            where: {
+              businessId: req.params.id,
+              active: true,
+              OR: [{ expiresAt: null }, { expiresAt: { gt: now } }],
+            },
+          });
+          if (activeCount >= MAX_ACTIVE_CHECKOUT_OPERATORS) {
+            throw new Error(`Checkout operator limit reached: ${MAX_ACTIVE_CHECKOUT_OPERATORS}`);
+          }
+        }
+
+        const saved = await tx.checkoutOperator.upsert({
+          where: { businessId_walletAddress: { businessId: req.params.id, walletAddress } },
+          update: { active: true, label: req.body.label ?? null, expiresAt },
+          create: {
+            businessId: req.params.id,
+            walletAddress,
+            label: req.body.label ?? null,
+            expiresAt,
+          },
+        });
+        return { operator: saved, existed: Boolean(existing) };
+      });
+      res.status(existed ? 200 : 201).json(operator);
+    } catch (err) {
+      handleSellerError(err, res, next);
+    }
+  }
+);
+
+router.delete('/operators/:id', sellerRateLimiter, async (req, res, next) => {
+  try {
+    const authorizationTimestamp = Number(getSellerAuth(req).timestamp);
+    const operator = await prisma.checkoutOperator.findUnique({
+      where: { id: req.params.id },
+      select: { id: true, businessId: true, updatedAt: true },
+    });
+    if (!operator) throw new Error('Checkout operator not found');
+    await requireBusinessOwner(req, 'operators:delete', operator.businessId);
+    if (authorizationTimestamp <= operator.updatedAt.getTime()) {
+      throw new Error('Seller authorization predates the latest checkout operator change');
+    }
+    await prisma.checkoutOperator.update({
+      where: { id: operator.id },
+      data: { active: false },
+    });
+    res.status(204).send();
   } catch (err) {
     handleSellerError(err, res, next);
   }

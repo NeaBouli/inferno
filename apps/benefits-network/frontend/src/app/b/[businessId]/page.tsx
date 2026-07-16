@@ -9,11 +9,13 @@ import { StatusBadge } from '@/components/StatusBadge';
 import {
   BenefitRule,
   BusinessInfo,
+  CheckoutAccess,
   SessionCreated,
   SessionStatus,
   createSession,
   getBusiness,
   getBusinessRules,
+  getCheckoutOperatorStatus,
   getSellerAuthMessage,
   getSessionStatus,
   redeemSession,
@@ -34,6 +36,8 @@ export default function BusinessConsole({ params }: { params: { businessId: stri
   const [linkStatus, setLinkStatus] = useState('');
   const [receiptStatus, setReceiptStatus] = useState('');
   const [restoreInput, setRestoreInput] = useState('');
+  const [checkoutAccess, setCheckoutAccess] = useState<CheckoutAccess | null>(null);
+  const [accessStatus, setAccessStatus] = useState('');
   const [loading, setLoading] = useState(false);
   const isDone = status && ['REDEEMED', 'EXPIRED', 'REJECTED'].includes(status.status);
 
@@ -47,6 +51,24 @@ export default function BusinessConsole({ params }: { params: { businessId: stri
       })
       .catch((err: Error) => setError(err.message));
   }, [params.businessId]);
+
+  useEffect(() => {
+    setCheckoutAccess(null);
+    setAccessStatus('');
+  }, [address, params.businessId]);
+
+  useEffect(() => {
+    if (!checkoutAccess?.expiresAt) return;
+    const clearExpiredAccess = () => {
+      if (new Date(checkoutAccess.expiresAt as string) <= new Date()) {
+        setCheckoutAccess(null);
+        setAccessStatus('Checkout operator access expired. Ask the owner to renew it.');
+      }
+    };
+    clearExpiredAccess();
+    const timer = window.setInterval(clearExpiredAccess, 30_000);
+    return () => window.clearInterval(timer);
+  }, [checkoutAccess]);
 
   useEffect(() => {
     if (!session) return;
@@ -75,14 +97,19 @@ export default function BusinessConsole({ params }: { params: { businessId: stri
   const sessionActive = Boolean(session && !isDone);
   const customerApproved = status?.status === 'APPROVED';
   const sellerWalletReady = Boolean(address && isConnected);
+  const checkoutAuthorized = Boolean(
+    checkoutAccess?.authorized && address && checkoutAccess.walletAddress.toLowerCase() === address.toLowerCase()
+  );
   const scannerStatus = !business
     ? 'Load business'
     : !previewBenefit
       ? 'Select benefit'
       : !session
         ? 'Create QR session'
-        : customerApproved && sellerWalletReady
+        : customerApproved && checkoutAuthorized
           ? 'Ready to redeem'
+          : customerApproved && sellerWalletReady
+            ? 'Check seller access'
           : customerApproved
             ? 'Connect seller wallet'
             : isDone
@@ -92,8 +119,10 @@ export default function BusinessConsole({ params }: { params: { businessId: stri
     ? 'The scanner is waiting for a valid seller profile before checkout can start.'
     : !session
       ? 'Choose the benefit rule, then create a QR session for the customer standing at checkout.'
-      : customerApproved && sellerWalletReady
+      : customerApproved && checkoutAuthorized
         ? 'Grant the benefit, then redeem this session so it cannot be reused.'
+        : customerApproved && sellerWalletReady
+          ? 'Confirm this wallet as the business owner or an active checkout operator.'
         : customerApproved
           ? 'The customer is approved. Connect the seller wallet to redeem once.'
           : isDone
@@ -104,7 +133,7 @@ export default function BusinessConsole({ params }: { params: { businessId: stri
     { label: 'Benefit or rule selected', ready: Boolean(previewBenefit) },
     { label: 'QR session active', ready: sessionActive },
     { label: 'Customer approved', ready: customerApproved },
-    { label: 'Seller wallet ready', ready: sellerWalletReady },
+    { label: 'Checkout access confirmed', ready: checkoutAuthorized },
   ];
   const checkoutReceipt = useMemo(() => {
     if (!session) return '';
@@ -205,6 +234,10 @@ export default function BusinessConsole({ params }: { params: { businessId: stri
       setError('Connect the seller wallet before redeeming an approved benefit.');
       return;
     }
+    if (!checkoutAuthorized) {
+      setError('Check this wallet\'s checkout access before redeeming.');
+      return;
+    }
     setLoading(true);
     setError('');
     try {
@@ -217,7 +250,41 @@ export default function BusinessConsole({ params }: { params: { businessId: stri
       });
       setStatus(await getSessionStatus(session.sessionId));
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Redeem failed');
+      const message = err instanceof Error ? err.message : 'Redeem failed';
+      if (message.includes('authorized for checkout')) {
+        setCheckoutAccess(null);
+        setAccessStatus('Checkout access changed. Ask the owner or check access again.');
+      }
+      setError(message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function checkCheckoutAccess() {
+    if (!address || !isConnected) {
+      setError('Connect the business owner or checkout operator wallet first.');
+      return;
+    }
+    setLoading(true);
+    setError('');
+    setAccessStatus('');
+    try {
+      const challenge = await getSellerAuthMessage('operators:status', params.businessId);
+      const signature = await signMessageAsync({ message: challenge.message });
+      const access = await getCheckoutOperatorStatus(params.businessId, {
+        walletAddress: address,
+        signature,
+        timestamp: challenge.timestamp,
+      });
+      setCheckoutAccess(access);
+      setAccessStatus(access.role === 'OWNER'
+        ? 'Business owner confirmed.'
+        : `${access.label || 'Checkout operator'} confirmed.`
+      );
+    } catch (err) {
+      setCheckoutAccess(null);
+      setError(err instanceof Error ? err.message : 'Checkout access check failed');
     } finally {
       setLoading(false);
     }
@@ -432,7 +499,7 @@ export default function BusinessConsole({ params }: { params: { businessId: stri
               <button
                 type="button"
                 onClick={redeem}
-                disabled={loading || !customerApproved || !sellerWalletReady}
+                disabled={loading || !customerApproved || !checkoutAuthorized}
                 className="rounded-2xl bg-orange-300 px-4 py-3 text-xs font-black uppercase tracking-[0.14em] text-stone-950 shadow-xl shadow-orange-950/30 transition hover:bg-orange-200 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 Redeem
@@ -480,18 +547,37 @@ export default function BusinessConsole({ params }: { params: { businessId: stri
 
           <div className="mt-5 rounded-2xl border border-green-300/20 bg-green-300/[0.07] p-4">
             <p className="text-xs font-bold uppercase tracking-[0.16em] text-green-100/80">
-              Seller wallet for redeem
+              Checkout wallet
             </p>
             <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
-              <p className="font-mono text-sm text-stone-200">{sellerWalletLabel}</p>
+              <div>
+                <p className="font-mono text-sm text-stone-200">{sellerWalletLabel}</p>
+                <p className={`mt-1 text-xs font-semibold ${checkoutAuthorized ? 'text-green-100' : 'text-stone-400'}`}>
+                  {checkoutAuthorized
+                    ? checkoutAccess?.role === 'OWNER'
+                      ? 'Authorized as business owner'
+                      : `Authorized operator: ${checkoutAccess?.label || 'Checkout operator'}`
+                    : address ? 'Access not checked on this device' : 'Connect owner or checkout operator'}
+                </p>
+              </div>
               {address ? (
-                <button
-                  type="button"
-                  onClick={() => disconnect()}
-                  className="rounded-xl border border-white/15 px-3 py-2 text-xs font-black uppercase tracking-[0.12em] text-stone-100 transition hover:border-green-200/60"
-                >
-                  Disconnect
-                </button>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={checkCheckoutAccess}
+                    disabled={loading}
+                    className="rounded-xl bg-green-300 px-3 py-2 text-xs font-black uppercase tracking-[0.12em] text-stone-950 transition hover:bg-green-200 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {checkoutAuthorized ? 'Recheck access' : 'Check access'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => disconnect()}
+                    className="rounded-xl border border-white/15 px-3 py-2 text-xs font-black uppercase tracking-[0.12em] text-stone-100 transition hover:border-green-200/60"
+                  >
+                    Disconnect
+                  </button>
+                </div>
               ) : (
                 <button
                   type="button"
@@ -504,8 +590,10 @@ export default function BusinessConsole({ params }: { params: { businessId: stri
               )}
             </div>
             <p className="mt-2 text-xs leading-5 text-stone-400">
-              Redeem is a seller action. The backend requires a fresh wallet signature from the business owner.
+              The owner can authorize checkout wallets in Seller mode. Operators can redeem approved sessions only;
+              the backend checks current access again for every redeem signature.
             </p>
+            {accessStatus ? <p className="mt-2 text-xs font-semibold text-green-100">{accessStatus}</p> : null}
           </div>
 
           <div className="mt-5 rounded-2xl border border-orange-200/20 bg-[#20140c] p-4">

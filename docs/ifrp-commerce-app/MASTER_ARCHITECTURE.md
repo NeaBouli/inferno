@@ -1,6 +1,6 @@
 # IFRp Commerce App - Master Architecture
 
-Status: product architecture draft, not yet implemented.
+Status: active implementation; M1/M2 core is deployed, M3-M5 remain incremental.
 
 ## 1. Product Goal
 
@@ -433,7 +433,7 @@ Critical rules:
 - Customer must sign every verification challenge.
 - Redeem is one-time per session.
 - Rate limits per seller and wallet.
-- Seller staff can scan/redeem but cannot change owner wallet or reward settings.
+- Seller staff can scan/redeem through owner-managed checkout wallets but cannot change owner wallet, profile, rule, history, delegation or reward settings.
 - Reward writes to PartnerVault only after seller is governance-approved.
 - Admin actions must be audited.
 - PII should be avoided. Wallet address and redemption history are enough for MVP.
@@ -547,7 +547,7 @@ MVP should be installable:
 - product/service CRUD;
 - categories;
 - rule templates;
-- staff scanner mode;
+- staff scanner mode; **implemented with owner-managed, expiring checkout operators and atomic role-audited redeem**
 - redemption history.
 
 ### M4 - Verified Seller Rewards

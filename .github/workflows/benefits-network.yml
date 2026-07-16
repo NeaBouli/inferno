@@ -46,6 +46,7 @@ jobs:
       - run: npx prisma generate
       - run: npx prisma migrate deploy
       - run: npx tsc --noEmit
+      - run: npm run test:migration-upgrade
       - run: npm test
       - run: npm run build
       - run: npm run smoke:http

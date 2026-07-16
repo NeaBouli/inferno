@@ -78,6 +78,7 @@
 - [ ] IFRp Commerce App / `shop.ifrunit.tech` customer/seller PWA
       Master architecture: `docs/ifrp-commerce-app/MASTER_ARCHITECTURE.md`
       Scope: customer wallet, ETH/IFR swap, IFR locking, QR proof, seller scanner, seller discount rules, and verified seller rewards through PartnerVault after governance approval.
+      Current implementation: deployed PWA foundation plus seller profile/rule/history flows, customer IFRLock and proof flows, POS helper, and owner-managed checkout operators. Remaining scope includes product catalog, verified rewards, embedded-wallet decision and real-device acceptance.
 - [ ] Guarded buyback automation (BuybackVault activation after 60 days)
 - [ ] Developer SDK + documentation (ethers.js, wagmi, Python)
 - [ ] Bug bounty program (Immunefi)

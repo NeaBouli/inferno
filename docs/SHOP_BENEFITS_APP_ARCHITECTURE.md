@@ -1,6 +1,6 @@
 # IFRp Shop Benefits App Architecture
 
-Status: draft implementation plan
+Status: active implementation and production handover plan
 Domain: `https://shop.ifrunit.tech`
 Scope: customer and seller app for IFR locked-access benefits
 
@@ -10,7 +10,7 @@ Scope: customer and seller app for IFR locked-access benefits
 
 The app has two roles:
 
-- Customer: connect wallet, see ETH/IFR status, lock IFR through the Web3 terminal, scan or open seller QR sessions, sign proof, receive benefit.
+- Customer: connect wallet, see ETH/IFR status, lock IFR directly in the shop app, scan or open seller QR sessions, sign proof, receive benefit.
 - Seller: create benefit rules, open scanner, choose a rule, create short-lived QR sessions, verify locked IFR, redeem approved benefit once.
 
 ## Current Implemented Base
@@ -62,6 +62,7 @@ The app has two roles:
 - Seller can open `/b/:businessId` scanner.
 - Scanner must list active rules and bind the selected rule to the next QR session.
 - Scanner must show customer approval/rejection and single-use redeem action.
+- Owner can delegate expiring checkout-only access to staff wallets. Operators can verify their role and redeem approved sessions, but cannot manage profiles, rules, history or other operators.
 
 ### Developer / Integration Flow
 
@@ -110,14 +111,15 @@ If `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` is missing, the frontend must show a s
 
 ## Open Build Tickets
 
-1. Replace static `shop.ifrunit.tech` placeholder with deployed Benefits Network frontend.
-2. Deploy or expose Benefits backend with HTTPS and production env.
-3. Add seller onboarding: create business from UI through a safer invitation/admin flow.
+1. Benefits Network frontend is deployed at `shop.ifrunit.tech`. **Implemented; future releases remain capacity-gated.**
+2. Benefits backend is exposed under the shop HTTPS origin. **Implemented with health/readiness smoke coverage.**
+3. Seller onboarding supports owner-wallet self-service creation with an anti-spam profile cap. **Implemented; invitation/review policy remains a future governance decision.**
 4. Add QR history and audit view for sellers. **Implemented for owner-wallet-protected recent sessions, restore receipts and activity metrics; export/retention policy remains future work.**
 5. Customer saved proof history locally without storing private data server-side. **Implemented for redacted QR proof history; benefit wallet/device acceptance still pending.**
 6. Add embedded-wallet provider evaluation and decision record.
 7. Add POS/plugin snippets to code generator. **Server-side JavaScript/POS session helper implemented; packaged SDK and platform-specific plugins remain future work.**
 8. Add mobile E2E checks for iPad Safari/Chrome and Android MetaMask browser.
+9. Checkout staff mode with owner-managed expiry/revocation and role-aware audit. **Implemented; live device acceptance remains pending.**
 
 ## Security Notes
 

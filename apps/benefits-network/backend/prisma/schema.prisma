@@ -19,8 +19,25 @@ model Business {
   createdAt       DateTime  @default(now())
   sessions        Session[]
   benefitRules    BenefitRule[]
+  checkoutOperators CheckoutOperator[]
 
   @@index([ownerAddress])
+}
+
+model CheckoutOperator {
+  id            String    @id @default(cuid())
+  businessId    String
+  business      Business  @relation(fields: [businessId], references: [id])
+  walletAddress String
+  label         String?
+  active        Boolean   @default(true)
+  expiresAt     DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@unique([businessId, walletAddress])
+  @@index([businessId, active])
+  @@index([walletAddress])
 }
 
 model BenefitRule {

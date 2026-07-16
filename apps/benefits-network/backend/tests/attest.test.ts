@@ -34,6 +34,8 @@ import {
 // ── Test Setup ─────────────────────────────────────────────────────
 
 const TEST_WALLET = '0x70997970C51812dc3A010C7d01b50e0d17dc79C8';
+const TEST_OWNER = ethers.Wallet.createRandom().address;
+const REDEEM_ACTOR = { walletAddress: TEST_OWNER, role: 'OWNER' as const };
 const TEST_SIGNATURE = '0xdeadbeef';
 
 let testBusinessId: string;
@@ -43,12 +45,14 @@ beforeAll(async () => {
   await prisma.auditLog.deleteMany();
   await prisma.session.deleteMany();
   await prisma.benefitRule.deleteMany();
+  await prisma.checkoutOperator.deleteMany();
   await prisma.business.deleteMany();
 
   // Create test business
   const biz = await prisma.business.create({
     data: {
       name: 'Test Business',
+      ownerAddress: TEST_OWNER,
       discountPercent: 20,
       requiredLockIFR: 5000,
       ttlSeconds: 60,
@@ -62,6 +66,7 @@ afterAll(async () => {
   await prisma.auditLog.deleteMany();
   await prisma.session.deleteMany();
   await prisma.benefitRule.deleteMany();
+  await prisma.checkoutOperator.deleteMany();
   await prisma.business.deleteMany();
   await prisma.$disconnect();
 });
@@ -143,11 +148,11 @@ describe('Redeem-Once', () => {
     await attest(session.sessionId, TEST_SIGNATURE);
 
     // First redeem succeeds
-    const result = await redeem(session.sessionId);
+    const result = await redeem(session.sessionId, REDEEM_ACTOR);
     expect(result.status).toBe('REDEEMED');
 
     // Second redeem fails
-    await expect(redeem(session.sessionId)).rejects.toThrow('already redeemed');
+    await expect(redeem(session.sessionId, REDEEM_ACTOR)).rejects.toThrow('already redeemed');
   });
 });
 
