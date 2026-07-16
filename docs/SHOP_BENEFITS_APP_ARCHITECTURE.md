@@ -58,6 +58,7 @@ The app has two roles:
 ### Seller Flow
 
 - Seller can create and manage rules through guarded admin API.
+- Seller can edit discount, category, product/service, required IFR and QR lifetime through the owner-wallet-signed PATCH flow without changing the active/paused state.
 - Seller can open `/b/:businessId` scanner.
 - Scanner must list active rules and bind the selected rule to the next QR session.
 - Scanner must show customer approval/rejection and single-use redeem action.

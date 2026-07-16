@@ -129,6 +129,9 @@ returns activity metrics for today's and all-time checks, redemptions, open chec
 approval rate. Today's redemptions use the redemption timestamp, and expired QR sessions
 are excluded from open checks and from the approval-rate denominator.
 
+Seller benefit rules support an explicit Edit -> Update / Cancel flow. Updates reuse the
+owner-wallet-protected PATCH route and preserve whether the rule was active or paused.
+
 ## Backend HTTP Smoke
 
 The Benefits Network CI also starts the built backend locally and runs the

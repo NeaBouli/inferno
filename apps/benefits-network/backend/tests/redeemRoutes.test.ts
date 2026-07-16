@@ -54,6 +54,18 @@ async function getSellerSessions(businessId: string, headers?: Record<string, st
   });
 }
 
+async function patchSellerRule(
+  ruleId: string,
+  payload: Record<string, unknown>,
+  headers?: Record<string, string>
+) {
+  return fetch(`${baseUrl()}/api/seller/rules/${ruleId}`, {
+    method: 'PATCH',
+    headers: headers ?? { 'content-type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+}
+
 describe('Redeem route authorization', () => {
   const seller = ethers.Wallet.createRandom();
   const otherSeller = ethers.Wallet.createRandom();
@@ -207,5 +219,78 @@ describe('Redeem route authorization', () => {
     expect(body.metrics.openChecks).toBe(2);
     expect(body.metrics.approvalRatePercent).toBe(75);
     expect(body.sessions).toHaveLength(7);
+  }, 15_000);
+
+  it('updates a benefit rule only for its seller owner and preserves paused state', async () => {
+    const rule = await prisma.benefitRule.create({
+      data: {
+        businessId,
+        label: 'Original benefit',
+        category: 'Retail',
+        productName: 'Original product',
+        discountPercent: 10,
+        requiredLockIFR: 1000,
+        ttlSeconds: 90,
+        active: false,
+      },
+    });
+    const payload = {
+      label: 'Updated benefit',
+      category: 'Local services',
+      productName: 'Updated service',
+      discountPercent: 20,
+      requiredLockIFR: 2500,
+      ttlSeconds: 180,
+    };
+
+    const missingAuth = await patchSellerRule(rule.id, payload);
+    expect(missingAuth.status).toBe(401);
+
+    const wrongHeaders = await sellerHeaders(otherSeller, 'rules:update', businessId);
+    const wrongSeller = await patchSellerRule(rule.id, payload, wrongHeaders);
+    expect(wrongSeller.status).toBe(403);
+
+    const otherBusiness = await prisma.business.create({
+      data: {
+        name: 'Other seller business',
+        ownerAddress: otherSeller.address,
+        discountPercent: 5,
+        requiredLockIFR: 500,
+        ttlSeconds: 120,
+      },
+    });
+    const otherRule = await prisma.benefitRule.create({
+      data: {
+        businessId: otherBusiness.id,
+        label: 'Other rule',
+        category: 'Retail',
+        productName: 'Other product',
+        discountPercent: 5,
+        requiredLockIFR: 500,
+        ttlSeconds: 120,
+      },
+    });
+
+    const wrongBusinessHeaders = await sellerHeaders(seller, 'rules:update', businessId);
+    const wrongBusiness = await patchSellerRule(otherRule.id, payload, wrongBusinessHeaders);
+    expect(wrongBusiness.status).toBe(401);
+
+    const nonOwnerHeaders = await sellerHeaders(seller, 'rules:update', otherBusiness.id);
+    const nonOwner = await patchSellerRule(otherRule.id, payload, nonOwnerHeaders);
+    expect(nonOwner.status).toBe(403);
+
+    const ownerHeaders = await sellerHeaders(seller, 'rules:update', businessId);
+    const response = await patchSellerRule(rule.id, payload, ownerHeaders);
+    const body = await response.json() as {
+      label: string;
+      productName: string;
+      discountPercent: number;
+      requiredLockIFR: number;
+      ttlSeconds: number;
+      active: boolean;
+    };
+
+    expect(response.status).toBe(200);
+    expect(body).toMatchObject({ ...payload, active: false });
   });
 });
