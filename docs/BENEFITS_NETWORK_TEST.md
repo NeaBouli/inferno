@@ -105,6 +105,26 @@ This verifies the real Express HTTP surface for `/api/health`,
 wallet. It does not mutate production or require secrets. `MUTATE=true` remains
 manual-only for create/rule/session/redeem path checks.
 
+## Backend Route Tests
+
+Backend Jest tests include service-level and HTTP-route coverage:
+
+```bash
+cd apps/benefits-network/backend
+npm test
+```
+
+Current route coverage includes `POST /api/sessions/:id/redeem` authorization:
+
+- missing seller signature -> HTTP 401
+- wrong seller wallet -> HTTP 403
+- owning seller wallet -> HTTP 200 and `REDEEMED`
+- repeated redeem -> HTTP 409
+
+This proves the backend redeem route is seller-owned and one-time at the HTTP
+boundary. A live `APPROVED -> REDEEMED` run with a real locked customer wallet
+is still a separate device acceptance item.
+
 ## Lock Tiers
 
 | Tier | Minimum Lock | Typical Discount |
