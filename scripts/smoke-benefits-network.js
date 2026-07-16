@@ -92,6 +92,9 @@ async function verifyPage(contextOptions, label) {
     await expectText(page, 'The shop layer for locked IFR access.');
     await expectText(page, 'Mobile app');
     await expectText(page, 'Wallet entry');
+    await expectText(page, 'Wallet diagnostics');
+    await expectText(page, 'No injected provider');
+    await expectText(page, 'WalletConnect modal is not configured yet');
     await expectText(page, 'Copy link');
     await expectText(page, 'Checkout readiness');
     await expectText(page, 'Current tier');
