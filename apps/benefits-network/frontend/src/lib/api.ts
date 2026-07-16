@@ -67,6 +67,25 @@ export interface SellerBusinessSummary extends AdminBusinessCreated {
   rulesCount: number;
 }
 
+export interface SellerSessionSummary {
+  id: string;
+  status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'EXPIRED' | 'REDEEMED';
+  recoveredAddress: string | null;
+  lockAmountRaw: string | null;
+  reason: string | null;
+  expiresAt: string;
+  createdAt: string;
+  updatedAt: string;
+  redeemedAt: string | null;
+  attestAttempts: number;
+  benefitRuleId: string | null;
+  label: string | null;
+  category: string | null;
+  productName: string | null;
+  discountPercent: number;
+  requiredLockIFR: number;
+}
+
 export interface SellerAuth {
   walletAddress: string;
   signature: string;
@@ -231,6 +250,13 @@ export function getSellerBusinessRules(businessId: string, auth: SellerAuth) {
   return fetchJSON<{ rules: BenefitRule[] }>(`/api/seller/businesses/${businessId}/rules`, {
     headers: sellerHeaders(auth),
   });
+}
+
+export function getSellerBusinessSessions(businessId: string, auth: SellerAuth, limit = 10) {
+  return fetchJSON<{ sessions: SellerSessionSummary[] }>(
+    `/api/seller/businesses/${businessId}/sessions?${new URLSearchParams({ limit: String(limit) }).toString()}`,
+    { headers: sellerHeaders(auth) }
+  );
 }
 
 export function deleteSellerBusiness(businessId: string, auth: SellerAuth) {
