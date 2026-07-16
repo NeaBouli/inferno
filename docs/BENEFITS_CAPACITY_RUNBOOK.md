@@ -42,13 +42,19 @@ npm run smoke:benefits
 `scripts/deploy-benefits-network.sh` uses:
 
 - `MIN_FREE_GB=4` as the warning floor.
-- `ABORT_FREE_GB=2` as the hard floor before container rebuild.
+- `ABORT_FREE_GB=2` as the emergency hard floor for all checks.
+- `DEPLOY_ABORT_FREE_GB=4` as the default hard floor before any container rebuild.
 - Safe pruning only:
   - Docker builder cache
   - stopped containers
   - dangling images
 
 The helper does not prune Docker volumes.
+
+Reason for the stricter deploy floor: frontend-only deploys have started with
+about `3.4-3.5 GB` free and then dropped below `0.5 GB` during Docker build
+before safe pruning recovered space. Treat deploys below `4 GB` free as blocked
+unless an operator explicitly accepts the risk for a one-off run.
 
 ## Current Largest Consumers
 
@@ -78,13 +84,14 @@ The latest audit also reported one unhealthy container:
 
 ## Safe Decision Path
 
-1. Keep using `scripts/deploy-benefits-network.sh frontend` for UI-only Benefits changes.
-2. Before backend/all deploys, run `scripts/deploy-benefits-network.sh capacity`.
-3. If free space remains below `MIN_FREE_GB`, inspect owners of large images/volumes.
-4. Confirm whether non-Benefits services can be stopped, migrated, archived or resized.
-5. Only after explicit approval, perform any destructive action such as volume removal,
+1. Keep using `scripts/deploy-benefits-network.sh capacity` for read-only capacity checks.
+2. Use `scripts/deploy-benefits-network.sh frontend` only when the deploy floor is met.
+3. Before backend/all deploys, run `scripts/deploy-benefits-network.sh capacity`.
+4. If free space remains below `MIN_FREE_GB`, inspect owners of large images/volumes.
+5. Confirm whether non-Benefits services can be stopped, migrated, archived or resized.
+6. Only after explicit approval, perform any destructive action such as volume removal,
    image removal for active services, database compaction or service migration.
-6. After any approved capacity change, run:
+7. After any approved capacity change, run:
 
 ```bash
 scripts/deploy-benefits-network.sh capacity
