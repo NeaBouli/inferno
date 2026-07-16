@@ -8,15 +8,20 @@ const router = Router();
 
 const createSessionSchema = z.object({
   businessId: z.string().min(1),
+  benefitRuleId: z.string().min(1).optional(),
 });
 
 router.post('/', sessionRateLimiter, validate(createSessionSchema), async (req, res, next) => {
   try {
-    const result = await createSession(req.body.businessId);
+    const result = await createSession(req.body.businessId, req.body.benefitRuleId);
     res.status(201).json({
       sessionId: result.sessionId,
       expiresAt: result.expiresAt,
       qrUrl: `/r/${result.sessionId}`,
+      benefitRuleId: result.benefitRuleId,
+      label: result.label,
+      category: result.category,
+      productName: result.productName,
       discountPercent: result.discountPercent,
       requiredLockIFR: result.requiredLockIFR,
       tierLabel: result.tierLabel,
@@ -39,6 +44,9 @@ router.get('/:id', async (req, res, next) => {
       reason: session.reason,
       redeemedAt: session.redeemedAt,
       expiresAt: session.expiresAt,
+      businessId: session.businessId,
+      benefitRuleId: session.benefit.benefitRuleId,
+      benefit: session.benefit,
     });
   } catch (err) {
     if (err instanceof Error && err.message.includes('not found')) {

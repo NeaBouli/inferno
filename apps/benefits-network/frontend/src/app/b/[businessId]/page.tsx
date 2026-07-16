@@ -22,6 +22,7 @@ export default function BusinessConsole({ params }: { params: { businessId: stri
   const [session, setSession] = useState<SessionCreated | null>(null);
   const [status, setStatus] = useState<SessionStatus | null>(null);
   const [rules, setRules] = useState<BenefitRule[]>([]);
+  const [selectedRuleId, setSelectedRuleId] = useState('');
   const [origin, setOrigin] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -33,6 +34,7 @@ export default function BusinessConsole({ params }: { params: { businessId: stri
       .then(([nextBusiness, rulesResult]) => {
         setBusiness(nextBusiness);
         setRules(rulesResult.rules);
+        setSelectedRuleId(rulesResult.rules[0]?.id ?? '');
       })
       .catch((err: Error) => setError(err.message));
   }, [params.businessId]);
@@ -54,11 +56,18 @@ export default function BusinessConsole({ params }: { params: { businessId: stri
     return `${origin}${session.qrUrl}`;
   }, [origin, session]);
 
+  const selectedRule = useMemo(
+    () => rules.find((rule) => rule.id === selectedRuleId) ?? null,
+    [rules, selectedRuleId]
+  );
+
+  const previewBenefit = session ?? selectedRule ?? business;
+
   async function startSession() {
     setLoading(true);
     setError('');
     try {
-      const nextSession = await createSession(params.businessId);
+      const nextSession = await createSession(params.businessId, selectedRuleId || undefined);
       setSession(nextSession);
       setStatus(null);
     } catch (err) {
@@ -98,17 +107,46 @@ export default function BusinessConsole({ params }: { params: { businessId: stri
           <div className="mt-6 grid gap-3 rounded-2xl border border-white/10 bg-black/25 p-4 text-sm text-stone-300">
             <div className="flex justify-between gap-4">
               <span>Benefit</span>
-              <strong className="text-white">{business ? `${business.discountPercent}%` : '-'}</strong>
+              <strong className="text-white">{previewBenefit ? `${previewBenefit.discountPercent}%` : '-'}</strong>
             </div>
             <div className="flex justify-between gap-4">
               <span>Required lock</span>
-              <strong className="text-white">{business ? `${business.requiredLockIFR.toLocaleString('en-US')} IFR` : '-'}</strong>
+              <strong className="text-white">{previewBenefit ? `${previewBenefit.requiredLockIFR.toLocaleString('en-US')} IFR` : '-'}</strong>
             </div>
             <div className="flex justify-between gap-4">
-              <span>Tier</span>
-              <strong className="text-white">{business?.tierLabel || 'Standard'}</strong>
+              <span>Selected rule</span>
+              <strong className="text-white">{selectedRule?.label || business?.tierLabel || 'Standard'}</strong>
             </div>
+            {selectedRule ? (
+              <div className="flex justify-between gap-4">
+                <span>Product</span>
+                <strong className="text-right text-white">{selectedRule.productName}</strong>
+              </div>
+            ) : null}
+            {session?.benefitRuleId ? (
+              <div className="flex justify-between gap-4">
+                <span>Session rule</span>
+                <strong className="break-all text-right text-white">{session.benefitRuleId}</strong>
+              </div>
+            ) : null}
           </div>
+
+          {rules.length > 0 ? (
+            <label className="mt-4 grid gap-2 text-sm font-semibold text-stone-200">
+              Rule for next QR session
+              <select
+                value={selectedRuleId}
+                onChange={(event) => setSelectedRuleId(event.target.value)}
+                className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none focus:border-orange-300"
+              >
+                {rules.map((rule) => (
+                  <option key={rule.id} value={rule.id}>
+                    {rule.label} - {rule.productName} - {rule.discountPercent}% / {rule.requiredLockIFR.toLocaleString('en-US')} IFR
+                  </option>
+                ))}
+              </select>
+            </label>
+          ) : null}
 
           {rules.length > 0 ? (
             <div className="mt-4 grid gap-2 rounded-2xl border border-white/10 bg-black/20 p-4">
@@ -158,7 +196,12 @@ export default function BusinessConsole({ params }: { params: { businessId: stri
                   <p className="mt-2 text-sm text-green-900">
                     {status.recoveredAddress ? `Wallet ${status.recoveredAddress.slice(0, 6)}...${status.recoveredAddress.slice(-4)} verified.` : 'Wallet verified.'}
                   </p>
-                  <p className="mt-4 text-2xl font-black">{business?.discountPercent}% benefit</p>
+                  <p className="mt-4 text-2xl font-black">{status.benefit.discountPercent}% benefit</p>
+                  {status.benefit.productName ? (
+                    <p className="mt-2 text-sm font-semibold text-green-900">
+                      {status.benefit.label} / {status.benefit.productName}
+                    </p>
+                  ) : null}
                 </div>
               ) : isDone ? (
                 <div className="rounded-3xl border border-stone-200 bg-white p-6 text-center">
@@ -178,6 +221,16 @@ export default function BusinessConsole({ params }: { params: { businessId: stri
                   <span className="text-stone-500">Expires in</span>
                   <strong><Countdown expiresAt={session.expiresAt} /></strong>
                 </div>
+                <div className="flex justify-between gap-4">
+                  <span className="text-stone-500">Benefit</span>
+                  <strong>{session.discountPercent}% / {session.requiredLockIFR.toLocaleString('en-US')} IFR</strong>
+                </div>
+                {session.productName ? (
+                  <div className="flex justify-between gap-4">
+                    <span className="text-stone-500">Rule</span>
+                    <strong className="text-right">{session.label} / {session.productName}</strong>
+                  </div>
+                ) : null}
                 <div className="break-all text-xs text-stone-500">{customerUrl}</div>
               </div>
 

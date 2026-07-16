@@ -7,8 +7,8 @@ Next.js 14 PWA for the IFR Benefits Network.
 | Route | Purpose |
 |-------|---------|
 | `/` | Customer/Seller role chooser, wallet status, seller rule manager |
-| `/b/:businessId` | Merchant Console — start verification, show QR, approve/redeem |
-| `/r/:sessionId` | Customer Flow — connect wallet, sign challenge, show result |
+| `/b/:businessId` | Merchant Console — select seller rule, start verification, show QR, approve/redeem |
+| `/r/:sessionId` | Customer Flow — connect wallet, review selected benefit, sign challenge, show result |
 
 ## Setup
 
@@ -50,7 +50,9 @@ admin API. It requires:
 - Admin bearer secret
 - Rule label, category, product/service, discount, required locked IFR, QR TTL
 
-Saved active rules are visible in the seller scanner route.
+Saved active rules are visible in the seller scanner route. The scanner binds the
+next QR session to the selected rule, and the customer verification screen shows
+the rule-specific product, discount, and required IFR lock before signing.
 
 ## PWA
 

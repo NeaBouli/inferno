@@ -47,8 +47,23 @@ export interface SessionCreated {
   sessionId: string;
   expiresAt: string;
   qrUrl: string;
+  benefitRuleId: string | null;
+  label: string | null;
+  category: string | null;
+  productName: string | null;
   discountPercent: number;
   requiredLockIFR: number;
+  tierLabel: string | null;
+}
+
+export interface SessionBenefit {
+  benefitRuleId: string | null;
+  label: string | null;
+  category: string | null;
+  productName: string | null;
+  discountPercent: number;
+  requiredLockIFR: number;
+  ttlSeconds: number;
   tierLabel: string | null;
 }
 
@@ -58,6 +73,9 @@ export interface SessionStatus {
   reason: string | null;
   redeemedAt: string | null;
   expiresAt: string;
+  businessId: string;
+  benefitRuleId: string | null;
+  benefit: SessionBenefit;
 }
 
 export interface ChallengeResponse {
@@ -69,6 +87,7 @@ export interface AttestResult {
   wallet?: string;
   eligible?: boolean;
   reason?: string;
+  benefit?: SessionBenefit;
 }
 
 export function getBusiness(id: string) {
@@ -120,10 +139,10 @@ export function deleteAdminBusinessRule(ruleId: string, adminSecret: string) {
   });
 }
 
-export function createSession(businessId: string) {
+export function createSession(businessId: string, benefitRuleId?: string) {
   return fetchJSON<SessionCreated>('/api/sessions', {
     method: 'POST',
-    body: JSON.stringify({ businessId }),
+    body: JSON.stringify({ businessId, benefitRuleId }),
   });
 }
 

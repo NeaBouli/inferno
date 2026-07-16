@@ -34,7 +34,7 @@ npm run dev            # http://localhost:3001
 | DELETE | `/api/admin/rules/:id` | Admin | Delete a benefit rule |
 | GET | `/api/businesses/:id` | Public | Get business info |
 | GET | `/api/businesses/:id/rules` | Public | List active public benefit rules |
-| POST | `/api/sessions` | Public | Start verification session |
+| POST | `/api/sessions` | Public | Start verification session, optionally bound to a seller benefit rule |
 | GET | `/api/sessions/:id` | Public | Poll session status |
 | GET | `/api/sessions/:id/challenge` | Public | Get signature challenge |
 | POST | `/api/attest` | Public | Submit signature + verify |
@@ -42,15 +42,18 @@ npm run dev            # http://localhost:3001
 
 ## Session Flow
 
-1. Merchant creates session → gets QR code URL
-2. Customer scans QR → connects wallet → signs challenge
-3. Backend verifies signature → checks IFRLock on-chain
-4. Merchant sees APPROVED → presses Redeem (one-time)
+1. Merchant selects a seller rule or falls back to the business default.
+2. Merchant creates session → gets QR code URL.
+3. Customer scans QR → connects wallet → signs challenge with the selected benefit details.
+4. Backend verifies signature → checks IFRLock on-chain against that rule's required IFR amount.
+5. Merchant sees APPROVED → presses Redeem (one-time).
 
 ## Benefit Rules
 
-Benefit rules are persisted seller offers tied to a business. They currently sit
-beside the legacy business-level discount so old QR sessions remain compatible.
+Benefit rules are persisted seller offers tied to a business. A QR session can
+now be bound to one active rule by passing `benefitRuleId` to `POST /api/sessions`.
+If no rule is passed, the legacy business-level discount remains the fallback so
+old QR sessions stay compatible.
 
 ```json
 {
@@ -61,6 +64,13 @@ beside the legacy business-level discount so old QR sessions remain compatible.
   "requiredLockIFR": 1000,
   "ttlSeconds": 90,
   "active": true
+}
+```
+
+```json
+{
+  "businessId": "business_cuid",
+  "benefitRuleId": "optional_active_rule_cuid"
 }
 ```
 
