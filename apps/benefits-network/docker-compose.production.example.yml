@@ -29,6 +29,8 @@ services:
       - ./.env.benefits
     environment:
       BENEFITS_API_INTERNAL_URL: http://benefits-backend:3001
+      HOSTNAME: 0.0.0.0
+      PORT: "3000"
     depends_on:
       benefits-backend:
         condition: service_healthy
