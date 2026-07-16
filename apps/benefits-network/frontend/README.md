@@ -76,3 +76,21 @@ seller credential.
 
 Installable on iOS and Android. Service worker caches static assets (cache-first)
 and uses network-first for API calls.
+
+## Production Deploy
+
+Use the repo-level deploy helper for `shop.ifrunit.tech`:
+
+```bash
+scripts/deploy-benefits-network.sh frontend
+```
+
+`frontend` is the default and rebuilds only `inferno-benefits-frontend` with
+`docker compose --no-deps`, so UI-only changes do not unnecessarily rebuild the
+backend image. The helper syncs `apps/benefits-network/`, checks server disk
+space, prunes Docker builder cache when the configured free-space floor is
+breached, and prints container/disk status after deploy.
+
+Use `scripts/deploy-benefits-network.sh backend` when backend code, Prisma
+schema/migrations or backend dependencies changed. Use `all` only when both
+sides need an intentional rebuild.
