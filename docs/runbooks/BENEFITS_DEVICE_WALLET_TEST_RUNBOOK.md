@@ -135,12 +135,14 @@ Pass criteria:
 3. Tap `Sign and verify`.
 4. Sign the one-time challenge.
 5. Confirm result is either approved or rejected with readable reason.
+6. Confirm `Customer proof receipt` appears and `Copy proof` / `Share proof` are visible.
 
 Pass criteria:
 
 - Wallet signature prompt clearly refers to IFR Benefits Network.
 - No token transfer or approval prompt appears.
 - Rejected wallets explain insufficient lock or invalid signature clearly.
+- Customer proof receipt is redacted and does not expose signatures, private keys or unrelated wallet inventory.
 
 ### 6. Seller Redeem
 

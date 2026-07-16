@@ -165,6 +165,9 @@ async function verifyPage(contextOptions, label) {
     await expectText(page, 'Load verification');
     await expectText(page, 'QR session loaded');
     await expectText(page, 'Refresh status');
+    await expectText(page, 'Customer proof receipt');
+    await expectText(page, 'Copy proof');
+    await expectText(page, 'Share proof');
 
     assert(errors.length === 0, `${label} browser errors:\n${errors.join('\n')}`);
 
