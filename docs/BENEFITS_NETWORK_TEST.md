@@ -68,7 +68,7 @@ Default target is `https://shop.ifrunit.tech`. The smoke is read-only and checks
 - `/api/health` on Ethereum Mainnet (`chainId: 1`)
 - PWA manifest, icons and service worker
 - Server-issued seller auth challenge
-- Desktop and iPad rendering for landing, guide and seller scanner shell
+- Desktop and iPad rendering for landing, guide, seller mode, seller scanner shell and customer proof shell
 - Wallet-entry fallback with copy/share controls
 
 It intentionally does not create businesses, rules or sessions. For signed
@@ -76,6 +76,22 @@ seller flows use `apps/benefits-network/backend/scripts/seller-wallet-smoke.js`.
 For the full approved-and-redeemed path, run that seller smoke with
 `CUSTOMER_PRIVATE_KEY=... MUTATE=true` using a real eligible locked customer
 wallet.
+
+## Backend HTTP Smoke
+
+The Benefits Network CI also starts the built backend locally and runs the
+seller wallet smoke in read-only mode:
+
+```bash
+cd apps/benefits-network/backend
+npm run build
+npm run smoke:http
+```
+
+This verifies the real Express HTTP surface for `/api/health`,
+`/api/seller/auth-message` and signed seller profile listing with a throwaway
+wallet. It does not mutate production or require secrets. `MUTATE=true` remains
+manual-only for create/rule/session/redeem path checks.
 
 ## Lock Tiers
 
@@ -113,7 +129,7 @@ wallet.
 | GET | `/api/sessions/:id` | - | Session status |
 | GET | `/api/sessions/:id/challenge` | - | Signature challenge |
 | POST | `/api/attest` | - | Verify wallet + signature |
-| POST | `/api/sessions/:id/redeem` | - | Redeem approved session |
+| POST | `/api/sessions/:id/redeem` | Seller wallet signature | Redeem approved session |
 
 ---
 *As of: July 2026 | Version 1.1*
