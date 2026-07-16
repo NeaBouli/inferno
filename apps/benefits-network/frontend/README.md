@@ -106,6 +106,18 @@ backend image. The helper syncs `apps/benefits-network/`, checks server disk
 space, prunes Docker builder cache when the configured free-space floor is
 breached, and prints container/disk status after deploy.
 
+For capacity-only checks, run:
+
+```bash
+scripts/deploy-benefits-network.sh capacity
+```
+
+The helper keeps `MIN_FREE_GB=4` as the warning floor and `ABORT_FREE_GB=2` as
+the hard safety floor by default. When free space drops below the warning floor,
+it prunes safe Docker caches only: builder cache, stopped containers and
+dangling images. It does not prune volumes. If free space stays below the hard
+floor after safe pruning, the deploy exits before rebuilding containers.
+
 Use `scripts/deploy-benefits-network.sh backend` when backend code, Prisma
 schema/migrations or backend dependencies changed. Use `all` only when both
 sides need an intentional rebuild.
