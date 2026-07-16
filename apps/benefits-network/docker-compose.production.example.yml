@@ -1,0 +1,41 @@
+services:
+  benefits-backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: inferno-benefits-backend
+    env_file:
+      - ./.env.benefits
+    environment:
+      DATABASE_URL: file:/data/benefits.db
+      PORT: "3001"
+    volumes:
+      - benefits-data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O- http://127.0.0.1:3001/health | grep -q ok"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  benefits-frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: inferno-benefits-frontend
+    env_file:
+      - ./.env.benefits
+    environment:
+      BENEFITS_API_INTERNAL_URL: http://benefits-backend:3001
+    depends_on:
+      benefits-backend:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O- http://127.0.0.1:3000/ >/dev/null || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+volumes:
+  benefits-data:
