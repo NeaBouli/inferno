@@ -5,7 +5,9 @@ RUN npm ci
 
 FROM node:20-alpine AS builder
 WORKDIR /app
+ARG BENEFITS_API_INTERNAL_URL=http://localhost:3001
 ENV NEXT_TELEMETRY_DISABLED=1
+ENV BENEFITS_API_INTERNAL_URL=${BENEFITS_API_INTERNAL_URL}
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 RUN npm run build
