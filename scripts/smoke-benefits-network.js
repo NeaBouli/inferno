@@ -47,6 +47,12 @@ async function verifyHttpSurface() {
   assert(Number(health.chainId) === 1, `/api/health chainId is ${health.chainId}, expected 1`);
   log('API health OK');
 
+  const ready = await fetchJson('/api/ready');
+  assert(ready.status === 'ready', `/api/ready status is ${ready.status}`);
+  assert(ready.database === 'ok', `/api/ready database is ${ready.database}`);
+  assert(Number(ready.chainId) === 1, `/api/ready chainId is ${ready.chainId}, expected 1`);
+  log('API readiness OK');
+
   const manifest = await fetchJson('/manifest.json');
   assert(manifest.name === 'IFRp Shop Benefits Network', 'manifest name mismatch');
   assert(manifest.display === 'standalone', 'manifest display must be standalone');

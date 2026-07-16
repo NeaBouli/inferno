@@ -21,6 +21,7 @@ trap cleanup EXIT
 
 for _ in $(seq 1 40); do
   if curl -fsS "http://127.0.0.1:${PORT}/api/health" >/dev/null 2>&1; then
+    curl -fsS "http://127.0.0.1:${PORT}/api/ready" >/dev/null
     BENEFITS_BASE_URL="http://127.0.0.1:${PORT}" node scripts/seller-wallet-smoke.js
     exit 0
   fi

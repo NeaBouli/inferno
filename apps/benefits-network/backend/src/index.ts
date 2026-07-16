@@ -7,6 +7,7 @@ import businessRoutes from './routes/businesses';
 import sessionRoutes from './routes/sessions';
 import attestRoutes from './routes/attest';
 import sellerRoutes from './routes/seller';
+import { prisma } from './services/sessionService';
 
 const app = express();
 
@@ -32,6 +33,18 @@ const healthPayload = (_req: express.Request, res: express.Response) => {
 
 app.get('/health', healthPayload);
 app.get('/api/health', healthPayload);
+
+const readyPayload = async (_req: express.Request, res: express.Response) => {
+  try {
+    await prisma.$queryRaw`SELECT 1`;
+    res.json({ status: 'ready', chainId: config.CHAIN_ID, database: 'ok' });
+  } catch {
+    res.status(503).json({ status: 'not_ready', chainId: config.CHAIN_ID, database: 'error' });
+  }
+};
+
+app.get('/ready', readyPayload);
+app.get('/api/ready', readyPayload);
 
 // Global error handler
 app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
