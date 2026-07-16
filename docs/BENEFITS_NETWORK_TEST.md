@@ -132,6 +132,11 @@ are excluded from open checks and from the approval-rate denominator.
 Seller benefit rules support an explicit Edit -> Update / Cancel flow. Updates reuse the
 owner-wallet-protected PATCH route and preserve whether the rule was active or paused.
 
+Business owners can add, list and revoke expiring checkout operators. Operators can only
+check their checkout role and redeem approved sessions; owner-only profile, rule, history
+and team-management routes reject them. Redemption is atomic under concurrent requests,
+and the audit payload records actor wallet/role without storing the signature.
+
 ## Backend HTTP Smoke
 
 The Benefits Network CI also starts the built backend locally and runs the
@@ -211,13 +216,26 @@ Current service coverage also verifies retryable failed attestations:
 | POST | `/api/admin/businesses/:id/rules` | Admin | Create seller benefit rule |
 | PATCH | `/api/admin/rules/:id` | Admin | Update or pause rule |
 | DELETE | `/api/admin/rules/:id` | Admin | Delete rule |
+| GET | `/api/seller/auth-message` | - | Issue a server-time seller wallet challenge |
+| POST | `/api/seller/businesses` | Seller owner signature | Create wallet-owned seller profile |
+| GET | `/api/seller/businesses` | Seller owner signature | List owned active profiles |
+| DELETE | `/api/seller/businesses/:id` | Seller owner signature | Deactivate owned profile |
+| GET | `/api/seller/businesses/:id/rules` | Seller owner signature | List owned rules |
+| POST | `/api/seller/businesses/:id/rules` | Seller owner signature | Create owned rule |
+| PATCH | `/api/seller/rules/:id` | Seller owner signature | Update owned rule |
+| DELETE | `/api/seller/rules/:id` | Seller owner signature | Delete owned rule |
+| GET | `/api/seller/businesses/:id/sessions` | Seller owner signature | List recent checkout history and metrics |
+| GET | `/api/seller/businesses/:id/operator-status` | Owner/operator signature | Confirm checkout role |
+| GET | `/api/seller/businesses/:id/operators` | Seller owner signature | List checkout operators |
+| POST | `/api/seller/businesses/:id/operators` | Seller owner signature | Add/reactivate checkout operator |
+| DELETE | `/api/seller/operators/:id` | Seller owner signature | Revoke checkout operator |
 | GET | `/api/businesses/:id` | - | Public business info |
 | GET | `/api/businesses/:id/rules` | - | Active public rules |
 | POST | `/api/sessions` | - | Start QR session, optionally with `benefitRuleId` |
 | GET | `/api/sessions/:id` | - | Session status |
 | GET | `/api/sessions/:id/challenge` | - | Signature challenge |
 | POST | `/api/attest` | - | Verify wallet + signature |
-| POST | `/api/sessions/:id/redeem` | Seller wallet signature | Redeem approved session |
+| POST | `/api/sessions/:id/redeem` | Owner/operator signature | Atomically redeem approved session |
 
 ---
 *As of: July 2026 | Version 1.1*

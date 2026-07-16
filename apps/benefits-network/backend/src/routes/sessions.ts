@@ -1,7 +1,8 @@
 import { Request, Router } from 'express';
 import { z } from 'zod';
 import { createSession, getSession, prisma, redeem } from '../services/sessionService';
-import { normalizeAddress, verifySellerSignature } from '../services/sellerAuth';
+import { verifySellerSignature } from '../services/sellerAuth';
+import { resolveCheckoutActor } from '../services/sellerAccess';
 import { validate } from '../middleware/validator';
 import { sessionRateLimiter } from '../middleware/rateLimiter';
 
@@ -25,6 +26,7 @@ async function requireSessionRedeemer(req: Request, sessionId: string) {
     where: { id: sessionId },
     select: {
       id: true,
+      businessId: true,
       business: {
         select: { ownerAddress: true },
       },
@@ -41,9 +43,9 @@ async function requireSessionRedeemer(req: Request, sessionId: string) {
     action: 'sessions:redeem',
     businessId: sessionId,
   });
-  if (normalizeAddress(session.business.ownerAddress) !== wallet) {
-    throw new Error('Seller wallet is not the business owner');
-  }
+  const actor = await resolveCheckoutActor(session.businessId, wallet);
+  if (!actor) throw new Error('Seller wallet is not authorized for checkout');
+  return actor;
 }
 
 router.post('/', sessionRateLimiter, validate(createSessionSchema), async (req, res, next) => {
@@ -95,8 +97,8 @@ router.get('/:id', async (req, res, next) => {
 
 router.post('/:id/redeem', async (req, res, next) => {
   try {
-    await requireSessionRedeemer(req, req.params.id);
-    const result = await redeem(req.params.id);
+    const actor = await requireSessionRedeemer(req, req.params.id);
+    const result = await redeem(req.params.id, actor);
     res.json(result);
   } catch (err) {
     if (err instanceof Error) {
@@ -104,7 +106,7 @@ router.post('/:id/redeem', async (req, res, next) => {
         res.status(401).json({ error: err.message });
         return;
       }
-      if (err.message.includes('not the business owner') || err.message.includes('Seller-owned business required')) {
+      if (err.message.includes('authorized for checkout') || err.message.includes('Seller-owned business required')) {
         res.status(403).json({ error: err.message });
         return;
       }

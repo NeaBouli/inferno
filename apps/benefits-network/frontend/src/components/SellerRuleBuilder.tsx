@@ -7,6 +7,7 @@ import {
   AdminBusinessCreated,
   BenefitRule,
   BenefitRuleInput,
+  CheckoutOperator,
   SellerAuth,
   SellerBusinessSummary,
   SellerActivityMetrics,
@@ -15,14 +16,17 @@ import {
   createAdminBusinessRule,
   createSellerBusiness,
   createSellerBusinessRule,
+  createSellerCheckoutOperator,
   deleteAdminBusinessRule,
   deleteSellerBusiness,
   deleteSellerBusinessRule,
+  deleteSellerCheckoutOperator,
   getAdminBusinessRules,
   getSellerAuthMessage,
   getSellerBusinesses,
   getSellerBusinessRules,
   getSellerBusinessSessions,
+  getSellerCheckoutOperators,
   updateAdminBusinessRule,
   updateSellerBusinessRule,
 } from '@/lib/api';
@@ -68,6 +72,10 @@ export function SellerRuleBuilder() {
   const [editingRuleId, setEditingRuleId] = useState<string | null>(null);
   const [sessions, setSessions] = useState<SellerSessionSummary[]>([]);
   const [activityMetrics, setActivityMetrics] = useState<SellerActivityMetrics | null>(null);
+  const [checkoutOperators, setCheckoutOperators] = useState<CheckoutOperator[]>([]);
+  const [operatorWallet, setOperatorWallet] = useState('');
+  const [operatorLabel, setOperatorLabel] = useState('Front counter');
+  const [operatorDuration, setOperatorDuration] = useState<'shift' | 'week' | 'month' | 'never'>('shift');
   const [sellerBusinesses, setSellerBusinesses] = useState<SellerBusinessSummary[]>([]);
   const [createdBusiness, setCreatedBusiness] = useState<AdminBusinessCreated | null>(null);
   const [restoreInput, setRestoreInput] = useState('');
@@ -186,6 +194,7 @@ export function SellerRuleBuilder() {
 
   useEffect(() => {
     setEditingRuleId(null);
+    setCheckoutOperators([]);
     resetRuleDraft();
   }, [businessId]);
 
@@ -327,6 +336,93 @@ export function SellerRuleBuilder() {
       setStatus(`Loaded ${result.businesses.length} seller profile${result.businesses.length === 1 ? '' : 's'}.`);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load seller profiles');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function checkoutOperatorExpiry() {
+    if (operatorDuration === 'never') return null;
+    const durationMs = operatorDuration === 'shift'
+      ? 8 * 60 * 60 * 1000
+      : operatorDuration === 'week'
+        ? 7 * 24 * 60 * 60 * 1000
+        : 30 * 24 * 60 * 60 * 1000;
+    return new Date(Date.now() + durationMs).toISOString();
+  }
+
+  async function loadCheckoutOperators() {
+    if (!businessId || !canUseWalletOwner) {
+      setError('Select a seller profile and connect its owner wallet to load the counter team.');
+      return;
+    }
+    setLoading(true);
+    setError('');
+    setStatus('');
+    try {
+      const result = await getSellerCheckoutOperators(
+        businessId,
+        await signSellerAction('operators:list', businessId)
+      );
+      setCheckoutOperators(result.operators);
+      setStatus(`Loaded ${result.operators.length} checkout operator${result.operators.length === 1 ? '' : 's'}.`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load checkout operators');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function addCheckoutOperator() {
+    if (!businessId || !canUseWalletOwner) {
+      setError('Select a seller profile and connect its owner wallet before adding counter staff.');
+      return;
+    }
+    setLoading(true);
+    setError('');
+    setStatus('');
+    try {
+      const operator = await createSellerCheckoutOperator(
+        businessId,
+        await signSellerAction('operators:create', businessId),
+        {
+          walletAddress: operatorWallet.trim(),
+          label: operatorLabel.trim() || undefined,
+          expiresAt: checkoutOperatorExpiry(),
+        }
+      );
+      setCheckoutOperators((current) => [
+        operator,
+        ...current.filter((item) => item.id !== operator.id),
+      ]);
+      setOperatorWallet('');
+      setStatus('Checkout operator added. The wallet can verify access and redeem approved sessions only.');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to add checkout operator');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function revokeCheckoutOperator(operator: CheckoutOperator) {
+    if (!businessId || !canUseWalletOwner) {
+      setError('Connect the seller profile owner wallet before revoking counter access.');
+      return;
+    }
+    setLoading(true);
+    setError('');
+    setStatus('');
+    try {
+      await deleteSellerCheckoutOperator(
+        operator.id,
+        await signSellerAction('operators:delete', businessId)
+      );
+      setCheckoutOperators((current) => current.map((item) => (
+        item.id === operator.id ? { ...item, active: false } : item
+      )));
+      setStatus('Checkout operator revoked. New redeem attempts from that wallet are blocked immediately.');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to revoke checkout operator');
     } finally {
       setLoading(false);
     }
@@ -850,7 +946,7 @@ export function SellerRuleBuilder() {
               type="password"
               value={adminSecret}
               onChange={(event) => setAdminSecret(event.target.value)}
-              placeholder="Operator fallback only"
+              placeholder="Admin fallback only"
               className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none focus:border-orange-300"
             />
           </label>
@@ -900,6 +996,117 @@ export function SellerRuleBuilder() {
           </div>
         ) : null}
       </div>
+
+      {businessId ? (
+        <div className="mb-5 rounded-3xl border border-green-300/20 bg-green-300/[0.06] p-4">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[0.18em] text-green-100/80">Counter team</p>
+              <h3 className="mt-1 text-xl font-black text-white">Delegate checkout access</h3>
+              <p className="mt-2 max-w-2xl text-sm leading-6 text-stone-300">
+                Add a staff wallet for checkout. Operators can verify their role and redeem an approved QR once;
+                they cannot change seller profiles, rules, history or team access.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={loadCheckoutOperators}
+              disabled={loading || !canUseWalletOwner}
+              className="rounded-2xl border border-green-200/35 px-4 py-3 text-xs font-black uppercase tracking-[0.14em] text-green-50 transition hover:bg-green-200/10 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Load team
+            </button>
+          </div>
+
+          <div className="mt-4 grid gap-3 lg:grid-cols-[1.2fr_0.8fr_0.7fr_auto]">
+            <label className="grid gap-2 text-sm font-semibold text-stone-200">
+              Staff wallet
+              <input
+                value={operatorWallet}
+                onChange={(event) => setOperatorWallet(event.target.value)}
+                placeholder="0x..."
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck={false}
+                className="min-w-0 rounded-2xl border border-white/10 bg-black/30 px-4 py-3 font-mono text-sm text-white outline-none focus:border-green-300"
+              />
+            </label>
+            <label className="grid gap-2 text-sm font-semibold text-stone-200">
+              Counter label
+              <input
+                value={operatorLabel}
+                onChange={(event) => setOperatorLabel(event.target.value)}
+                placeholder="Front counter"
+                className="min-w-0 rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none focus:border-green-300"
+              />
+            </label>
+            <label className="grid gap-2 text-sm font-semibold text-stone-200">
+              Access duration
+              <select
+                value={operatorDuration}
+                onChange={(event) => setOperatorDuration(event.target.value as typeof operatorDuration)}
+                className="min-w-0 rounded-2xl border border-white/10 bg-[#17110d] px-4 py-3 text-white outline-none focus:border-green-300"
+              >
+                <option value="shift">8-hour shift</option>
+                <option value="week">7 days</option>
+                <option value="month">30 days</option>
+                <option value="never">No expiry</option>
+              </select>
+            </label>
+            <button
+              type="button"
+              onClick={addCheckoutOperator}
+              disabled={loading || !canUseWalletOwner || !operatorWallet.trim()}
+              className="self-end rounded-2xl bg-green-300 px-5 py-3 text-xs font-black uppercase tracking-[0.14em] text-stone-950 shadow-xl shadow-green-950/25 transition hover:bg-green-200 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Add operator
+            </button>
+          </div>
+
+          {checkoutOperators.length > 0 ? (
+            <div className="mt-4 grid gap-3 md:grid-cols-2">
+              {checkoutOperators.map((operator) => {
+                const expired = Boolean(operator.expiresAt && new Date(operator.expiresAt) <= new Date());
+                const available = operator.active && !expired;
+                return (
+                  <div key={operator.id} className="rounded-2xl border border-white/10 bg-black/25 p-4">
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="text-sm font-black text-white">{operator.label || 'Checkout operator'}</p>
+                        <p className="mt-1 break-all font-mono text-[11px] leading-5 text-stone-400">{operator.walletAddress}</p>
+                      </div>
+                      <span className={`rounded-full px-3 py-1 text-[11px] font-bold uppercase tracking-[0.12em] ${
+                        available ? 'bg-green-400/15 text-green-100' : 'bg-red-400/15 text-red-100'
+                      }`}>
+                        {available ? 'Active' : expired ? 'Expired' : 'Revoked'}
+                      </span>
+                    </div>
+                    <p className="mt-3 text-xs leading-5 text-stone-400">
+                      {operator.expiresAt
+                        ? `Access until ${new Date(operator.expiresAt).toLocaleString()}`
+                        : 'No automatic expiry. Revoke manually when staff access ends.'}
+                    </p>
+                    {operator.active ? (
+                      <button
+                        type="button"
+                        onClick={() => revokeCheckoutOperator(operator)}
+                        disabled={loading || !canUseWalletOwner}
+                        className="mt-3 rounded-xl border border-red-200/30 px-3 py-2 text-[11px] font-black uppercase tracking-[0.12em] text-red-100 transition hover:bg-red-200/10 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        Revoke access
+                      </button>
+                    ) : null}
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <p className="mt-4 rounded-2xl border border-white/10 bg-black/20 p-4 text-sm text-stone-400">
+              No counter team loaded. The owner wallet remains authorized automatically.
+            </p>
+          )}
+        </div>
+      ) : null}
 
       {businessId ? (
         <div className="mb-5 rounded-3xl border border-white/10 bg-[#120d09] p-4">

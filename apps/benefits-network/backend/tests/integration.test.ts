@@ -36,17 +36,21 @@ import { assertSellerBusinessLimit } from '../src/services/sellerLimits';
 // ── Test Setup ──────────────────────────────────────────────────────
 
 const TEST_WALLET = '0x70997970C51812dc3A010C7d01b50e0d17dc79C8';
+const TEST_OWNER = ethers.Wallet.createRandom().address;
+const REDEEM_ACTOR = { walletAddress: TEST_OWNER, role: 'OWNER' as const };
 let testBusinessId: string;
 
 beforeAll(async () => {
   await prisma.auditLog.deleteMany();
   await prisma.session.deleteMany();
   await prisma.benefitRule.deleteMany();
+  await prisma.checkoutOperator.deleteMany();
   await prisma.business.deleteMany();
 
   const biz = await prisma.business.create({
     data: {
       name: 'Integration Test Business',
+      ownerAddress: TEST_OWNER,
       discountPercent: 15,
       requiredLockIFR: 5000,
       ttlSeconds: 60,
@@ -60,6 +64,7 @@ afterAll(async () => {
   await prisma.auditLog.deleteMany();
   await prisma.session.deleteMany();
   await prisma.benefitRule.deleteMany();
+  await prisma.checkoutOperator.deleteMany();
   await prisma.business.deleteMany();
   await prisma.$disconnect();
 });
@@ -125,7 +130,7 @@ describe('E2E: IFR Lock → Benefits Network Verification', () => {
     expect(attestResult.eligible).toBe(true);
 
     // Step 4: Business redeems the discount
-    const redeemResult = await redeem(session.sessionId);
+    const redeemResult = await redeem(session.sessionId, REDEEM_ACTOR);
     expect(redeemResult.status).toBe('REDEEMED');
   });
 
@@ -246,9 +251,58 @@ describe('E2E: IFR Lock → Benefits Network Verification', () => {
     mockCheckLock.mockResolvedValue({ eligible: true, lockedAmount: '5000.0' });
 
     await attest(session.sessionId, '0xmocksignature');
-    await redeem(session.sessionId);
+    await redeem(session.sessionId, REDEEM_ACTOR);
 
-    await expect(redeem(session.sessionId)).rejects.toThrow('already redeemed');
+    await expect(redeem(session.sessionId, REDEEM_ACTOR)).rejects.toThrow('already redeemed');
+  });
+
+  it('allows exactly one winner when approved redemption requests race', async () => {
+    const session = await createSession(testBusinessId);
+
+    mockRecoverSigner.mockReturnValue(TEST_WALLET);
+    mockCheckLock.mockResolvedValue({ eligible: true, lockedAmount: '5000.0' });
+    await attest(session.sessionId, '0xmocksignature');
+
+    const results = await Promise.allSettled([
+      redeem(session.sessionId, REDEEM_ACTOR),
+      redeem(session.sessionId, REDEEM_ACTOR),
+    ]);
+    expect(results.filter((result) => result.status === 'fulfilled')).toHaveLength(1);
+    expect(results.filter((result) => result.status === 'rejected')).toHaveLength(1);
+    expect(await prisma.auditLog.count({
+      where: { sessionId: session.sessionId, type: 'REDEEMED' },
+    })).toBe(1);
+  });
+
+  it('rechecks a checkout operator inside the redemption transaction', async () => {
+    const operatorWallet = ethers.Wallet.createRandom().address;
+    const business = await prisma.business.create({
+      data: {
+        name: 'Revocation race seller',
+        ownerAddress: ethers.Wallet.createRandom().address,
+        discountPercent: 10,
+        requiredLockIFR: 1000,
+      },
+    });
+    const operator = await prisma.checkoutOperator.create({
+      data: { businessId: business.id, walletAddress: operatorWallet, label: 'Counter' },
+    });
+    const session = await prisma.session.create({
+      data: {
+        businessId: business.id,
+        nonce: ethers.utils.hexlify(ethers.utils.randomBytes(32)).slice(2),
+        expiresAt: new Date(Date.now() + 60_000),
+        status: 'APPROVED',
+      },
+    });
+
+    await prisma.checkoutOperator.update({ where: { id: operator.id }, data: { active: false } });
+    await expect(redeem(session.id, {
+      walletAddress: operatorWallet,
+      role: 'OPERATOR',
+      operatorId: operator.id,
+    })).rejects.toThrow('no longer authorized for checkout');
+    expect((await prisma.session.findUniqueOrThrow({ where: { id: session.id } })).status).toBe('APPROVED');
   });
 
   it('handles invalid signature gracefully', async () => {

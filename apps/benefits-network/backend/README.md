@@ -39,6 +39,10 @@ npm run dev            # http://localhost:3001
 | DELETE | `/api/seller/businesses/:id` | Seller wallet signature | Soft-deactivate owned seller business and active rules |
 | GET | `/api/seller/businesses/:id/rules` | Seller wallet signature | List owned benefit rules |
 | GET | `/api/seller/businesses/:id/sessions` | Seller wallet signature | List recent QR sessions for an owned seller business |
+| GET | `/api/seller/businesses/:id/operator-status` | Owner/operator wallet signature | Confirm checkout role for the connected wallet |
+| GET | `/api/seller/businesses/:id/operators` | Owner wallet signature | List checkout operators |
+| POST | `/api/seller/businesses/:id/operators` | Owner wallet signature | Add or reactivate a checkout operator |
+| DELETE | `/api/seller/operators/:id` | Owner wallet signature | Revoke checkout access immediately |
 | POST | `/api/seller/businesses/:id/rules` | Seller wallet signature | Create owned benefit rule |
 | PATCH | `/api/seller/rules/:id` | Seller wallet signature | Update or pause owned benefit rule |
 | DELETE | `/api/seller/rules/:id` | Seller wallet signature | Delete owned benefit rule |
@@ -48,7 +52,7 @@ npm run dev            # http://localhost:3001
 | GET | `/api/sessions/:id` | Public | Poll session status |
 | GET | `/api/sessions/:id/challenge` | Public | Get signature challenge |
 | POST | `/api/attest` | Public | Submit signature + verify |
-| POST | `/api/sessions/:id/redeem` | Seller wallet signature | Mark an approved session as redeemed |
+| POST | `/api/sessions/:id/redeem` | Owner/operator wallet signature | Mark an approved session as redeemed |
 
 ## Session Flow
 
@@ -57,7 +61,7 @@ npm run dev            # http://localhost:3001
 3. Customer scans QR → connects wallet → signs challenge with the selected benefit details.
 4. Backend verifies signature → checks IFRLock on-chain against that rule's required IFR amount.
 5. If the wallet is not eligible yet, the customer response is `REJECTED` but the stored session stays `PENDING` until the three-attempt limit is exhausted, so the customer can lock more IFR and retry the same QR while it is valid.
-6. Merchant sees APPROVED → seller wallet signs Redeem → backend marks the session as redeemed once.
+6. Merchant sees APPROVED → owner or active checkout operator signs Redeem → backend atomically marks the session as redeemed once.
 
 ## Benefit Rules
 
@@ -92,7 +96,8 @@ The frontend first requests `/api/seller/auth-message` so the timestamp is issue
 by the backend, then the seller signs that short-lived EIP-191 message with the
 wallet that owns the business. The backend checks the recovered address against
 `Business.ownerAddress` before listing, creating, updating or deleting rules and
-before redeeming an approved customer session.
+before owner-only management actions. Approved checkout sessions may also be
+redeemed by an active, unexpired checkout operator delegated by that owner.
 
 Session history uses the same headers with `Action: sessions:list` and the
 business id as `Business`. The optional `limit` query parameter is clamped from
@@ -123,6 +128,18 @@ Redeem uses the same headers and signs `Action: sessions:redeem` with the
 session id as `Business`. This keeps the customer QR public while making the
 one-time discount redemption a seller-owned action.
 
+## Checkout Operators
+
+The owner can delegate checkout-only access to up to ten active wallets per
+business. Each operator may have a label and expiry. Operators can sign
+`operators:status` and `sessions:redeem`; they cannot list history, manage
+profiles or rules, or add/revoke other operators. Revocation is effective on
+the next server request. Redemption audit payloads record the actor wallet and
+`OWNER`/`OPERATOR` role, never the wallet signature.
+
+Session creation remains public and rate-limited so QR links and POS helpers do
+not need a seller secret. Redemption remains short-lived, signed and one-time.
+
 Admin routes remain available for operator setup and recovery, but the public
 seller UX should prefer wallet-owned businesses.
 
@@ -135,6 +152,7 @@ even if the original owner wallet signs the request.
 
 ```bash
 npm test   # resets local SQLite test DB, then runs signature, expiry, replay, redeem, threshold and seller-auth tests
+npm run test:migration-upgrade   # upgrades a populated pre-operator database and verifies data/FKs
 ```
 
 ## Seller Wallet Smoke

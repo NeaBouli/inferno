@@ -191,6 +191,10 @@ async function verifyPage(contextOptions, label) {
     await expectText(page, 'Load profiles');
     await expectText(page, 'Create profile');
     await page.getByPlaceholder('cuid...').fill('smoke-manual-business');
+    await expectText(page, 'Counter team');
+    await expectText(page, 'Delegate checkout access');
+    await expectText(page, 'Load team');
+    await expectText(page, 'Add operator');
     await expectText(page, 'Share with the counter team');
     await expectText(page, 'Staff scanner QR');
     await expectText(page, 'Show this QR at the counter.');
@@ -202,6 +206,13 @@ async function verifyPage(contextOptions, label) {
     await expectText(page, 'Session history');
     await expectText(page, 'proof links and restore receipts');
     await expectText(page, 'Seller activity');
+    if (shouldScreenshot) {
+      fs.mkdirSync(screenshotDir, { recursive: true });
+      await page.screenshot({
+        path: path.join(screenshotDir, `benefits-seller-${label}.png`),
+        fullPage: true,
+      });
+    }
 
     await gotoAppPage(page, '/guide');
     await expectText(page, 'IFRp Benefits Network Guide');
@@ -225,6 +236,14 @@ async function verifyPage(contextOptions, label) {
     await expectText(page, 'Copy customer link');
     await expectText(page, 'Checkout receipt');
     await expectText(page, 'Copy receipt');
+    await expectText(page, 'Checkout wallet');
+    await expectText(page, 'Connect owner or checkout operator');
+    if (shouldScreenshot) {
+      await page.screenshot({
+        path: path.join(screenshotDir, `benefits-scanner-${label}.png`),
+        fullPage: true,
+      });
+    }
 
     await gotoAppPage(page, '/r/smoke-missing-session');
     await expectText(page, 'Customer proof');

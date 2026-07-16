@@ -104,6 +104,26 @@ export interface SellerActivityMetrics {
   approvalRatePercent: number | null;
 }
 
+export interface CheckoutOperator {
+  id: string;
+  businessId: string;
+  walletAddress: string;
+  label: string | null;
+  active: boolean;
+  expiresAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CheckoutAccess {
+  authorized: true;
+  walletAddress: string;
+  role: 'OWNER' | 'OPERATOR';
+  operatorId: string | null;
+  label: string | null;
+  expiresAt: string | null;
+}
+
 export interface SellerAuth {
   walletAddress: string;
   signature: string;
@@ -277,6 +297,37 @@ export function getSellerBusinessSessions(businessId: string, auth: SellerAuth, 
     `/api/seller/businesses/${businessId}/sessions?${new URLSearchParams({ limit: String(limit) }).toString()}`,
     { headers: sellerHeaders(auth) }
   );
+}
+
+export function getSellerCheckoutOperators(businessId: string, auth: SellerAuth) {
+  return fetchJSON<{ operators: CheckoutOperator[] }>(`/api/seller/businesses/${businessId}/operators`, {
+    headers: sellerHeaders(auth),
+  });
+}
+
+export function createSellerCheckoutOperator(
+  businessId: string,
+  auth: SellerAuth,
+  input: { walletAddress: string; label?: string; expiresAt?: string | null }
+) {
+  return fetchJSON<CheckoutOperator>(`/api/seller/businesses/${businessId}/operators`, {
+    method: 'POST',
+    headers: sellerHeaders(auth),
+    body: JSON.stringify(input),
+  });
+}
+
+export function deleteSellerCheckoutOperator(operatorId: string, auth: SellerAuth) {
+  return fetchJSON<void>(`/api/seller/operators/${operatorId}`, {
+    method: 'DELETE',
+    headers: sellerHeaders(auth),
+  });
+}
+
+export function getCheckoutOperatorStatus(businessId: string, auth: SellerAuth) {
+  return fetchJSON<CheckoutAccess>(`/api/seller/businesses/${businessId}/operator-status`, {
+    headers: sellerHeaders(auth),
+  });
 }
 
 export function deleteSellerBusiness(businessId: string, auth: SellerAuth) {
