@@ -181,6 +181,16 @@ Before and after editing the checklist, validate it:
 npm run qa:benefits-devices
 ```
 
+Preferred recording command:
+
+```bash
+npm run qa:benefits-record -- \
+  --id ios-safari-pwa \
+  --status pass \
+  --note "iPadOS Safari install guidance visible; copy/share wallet entry readable." \
+  --screenshot-path /Users/gio/Desktop/example.png
+```
+
 Preferred evidence object:
 
 ```json

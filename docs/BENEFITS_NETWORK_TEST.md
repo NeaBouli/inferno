@@ -91,6 +91,16 @@ Validate the checklist structure before and after recording device evidence:
 npm run qa:benefits-devices
 ```
 
+Record real-device evidence through the safe recorder rather than editing JSON
+manually:
+
+```bash
+npm run qa:benefits-record -- \
+  --id ios-safari-pwa \
+  --status pass \
+  --note "iPadOS Safari install guidance visible; copy/share wallet entry readable."
+```
+
 The required matrix covers iPad/iPhone, Android, desktop extension wallets,
 MetaMask, Coinbase Wallet, Trust Wallet, OKX Wallet and Phantom fallback
 behavior. Do not record private keys, seed phrases or personal wallet data in
