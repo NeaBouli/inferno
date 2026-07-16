@@ -28,6 +28,16 @@ import {
 const categories = ['Coffee', 'Retail', 'Digital access', 'Events', 'Services'];
 const LAST_BUSINESS_STORAGE_KEY = 'ifr.shop.lastSellerBusinessId';
 
+function formatSessionLockedIFR(value: string | null) {
+  if (!value) return null;
+
+  const [whole = '0', fraction = ''] = value.split('.');
+  const groupedWhole = whole.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  const trimmedFraction = fraction.replace(/0+$/, '').slice(0, 3);
+
+  return trimmedFraction ? `${groupedWhole}.${trimmedFraction}` : groupedWhole;
+}
+
 export function SellerRuleBuilder() {
   const { address, isConnected } = useAccount();
   const { connectors, connectAsync, isPending: connecting } = useConnect();
@@ -611,38 +621,42 @@ export function SellerRuleBuilder() {
           </div>
           {sessions.length > 0 ? (
             <div className="mt-4 grid gap-3">
-              {sessions.map((session) => (
-                <div key={session.id} className="rounded-2xl border border-white/10 bg-black/25 p-4">
-                  <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div>
-                      <p className="text-sm font-black text-white">
-                        {session.label || 'Business default'} {session.productName ? `/ ${session.productName}` : ''}
-                      </p>
-                      <p className="mt-1 text-xs leading-5 text-stone-400">
-                        {new Date(session.createdAt).toLocaleString()} / {session.discountPercent}% / {session.requiredLockIFR.toLocaleString('en-US')} IFR
-                      </p>
+              {sessions.map((session) => {
+                const lockedIFR = formatSessionLockedIFR(session.lockAmountRaw);
+
+                return (
+                  <div key={session.id} className="rounded-2xl border border-white/10 bg-black/25 p-4">
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div>
+                        <p className="text-sm font-black text-white">
+                          {session.label || 'Business default'} {session.productName ? `/ ${session.productName}` : ''}
+                        </p>
+                        <p className="mt-1 text-xs leading-5 text-stone-400">
+                          {new Date(session.createdAt).toLocaleString()} / {session.discountPercent}% / {session.requiredLockIFR.toLocaleString('en-US')} IFR
+                        </p>
+                      </div>
+                      <span
+                        className={`rounded-full px-3 py-1 text-xs font-bold uppercase tracking-[0.14em] ${
+                          session.status === 'APPROVED' || session.status === 'REDEEMED'
+                            ? 'bg-green-400/15 text-green-100'
+                            : session.status === 'REJECTED' || session.status === 'EXPIRED'
+                              ? 'bg-red-400/15 text-red-100'
+                              : 'bg-orange-300/15 text-orange-100'
+                        }`}
+                      >
+                        {session.status}
+                      </span>
                     </div>
-                    <span
-                      className={`rounded-full px-3 py-1 text-xs font-bold uppercase tracking-[0.14em] ${
-                        session.status === 'APPROVED' || session.status === 'REDEEMED'
-                          ? 'bg-green-400/15 text-green-100'
-                          : session.status === 'REJECTED' || session.status === 'EXPIRED'
-                            ? 'bg-red-400/15 text-red-100'
-                            : 'bg-orange-300/15 text-orange-100'
-                      }`}
-                    >
-                      {session.status}
-                    </span>
+                    <div className="mt-3 grid gap-2 text-xs leading-5 text-stone-400">
+                      <p className="break-all font-mono">Session: {session.id}</p>
+                      {session.recoveredAddress ? <p className="break-all font-mono">Wallet: {session.recoveredAddress}</p> : null}
+                      {lockedIFR ? <p>Locked: {lockedIFR} IFR</p> : null}
+                      {session.reason ? <p className="text-red-100">Reason: {session.reason}</p> : null}
+                      {session.redeemedAt ? <p>Redeemed: {new Date(session.redeemedAt).toLocaleString()}</p> : null}
+                    </div>
                   </div>
-                  <div className="mt-3 grid gap-2 text-xs leading-5 text-stone-400">
-                    <p className="break-all font-mono">Session: {session.id}</p>
-                    {session.recoveredAddress ? <p className="break-all font-mono">Wallet: {session.recoveredAddress}</p> : null}
-                    {session.lockAmountRaw ? <p>Locked: {session.lockAmountRaw} IFR</p> : null}
-                    {session.reason ? <p className="text-red-100">Reason: {session.reason}</p> : null}
-                    {session.redeemedAt ? <p>Redeemed: {new Date(session.redeemedAt).toLocaleString()}</p> : null}
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           ) : (
             <p className="mt-4 rounded-2xl border border-white/10 bg-black/20 p-4 text-sm text-stone-400">
