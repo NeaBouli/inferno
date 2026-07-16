@@ -101,6 +101,45 @@ export function WalletStatus() {
   const hasEnoughAllowance = Boolean(allowanceRaw && allowanceRaw >= amountRaw);
   const isWaitingForReceipt = Boolean(pendingHash && txReceipt.isLoading);
   const txBusy = walletPromptOpen || isWaitingForReceipt;
+  const enteredAmount = amountValid
+    ? Number(formatUnits(amountRaw, IFR_DECIMALS)).toLocaleString('en-US', { maximumFractionDigits: 3 })
+    : '0';
+  const recommendedAction = !isConnected
+    ? {
+        label: 'Connect wallet',
+        detail: 'Start with the wallet that holds ETH and IFR.',
+        disabledReason: '',
+      }
+    : !hasContracts
+      ? {
+          label: 'Contracts unavailable',
+          detail: 'IFR token or IFRLock address is not configured for this deployment.',
+          disabledReason: 'Missing contract configuration.',
+        }
+      : !amountValid
+        ? {
+            label: 'Enter IFR amount',
+            detail: 'Choose a tier or enter the exact IFR amount you want to lock.',
+            disabledReason: 'Enter a positive IFR amount.',
+          }
+        : !hasEnoughIFR
+          ? {
+              label: 'Buy IFR',
+              detail: `This wallet needs ${enteredAmount} unlocked IFR before it can lock that amount.`,
+              disabledReason: '',
+            }
+          : !hasEnoughAllowance
+            ? {
+                label: `Approve ${enteredAmount} IFR`,
+                detail: 'One approval lets IFRLock move only the amount currently entered.',
+                disabledReason: '',
+              }
+            : {
+                label: `Lock ${enteredAmount} IFR`,
+                detail: 'Approval is ready. Confirm the IFRLock transaction in your wallet.',
+                disabledReason: '',
+              };
+  const recommendedActionDisabled = txBusy || Boolean(recommendedAction.disabledReason);
   const statusLabel = !isConnected
     ? 'Connect wallet'
     : hasCustomerLock
@@ -138,7 +177,7 @@ export function WalletStatus() {
       label: 'Lock',
       detail: 'Confirm IFRLock.lock(amount) in your wallet.',
       done: Boolean(lockedRaw && lockedRaw >= amountRaw && amountValid),
-      active: isConnected && amountValid && hasEnoughIFR && hasEnoughAllowance && !hasCustomerLock,
+      active: isConnected && amountValid && hasEnoughIFR && hasEnoughAllowance,
     },
     {
       label: 'Ready',
@@ -176,6 +215,25 @@ export function WalletStatus() {
 
   function setMaxLockAmount() {
     setLockAmount(formatInputAmount(ifrRaw));
+  }
+
+  function selectTierAmount(amount: number) {
+    setLockAmount(String(amount));
+    setLockError('');
+    setLockMessage(`Selected ${amount.toLocaleString('en-US')} IFR tier amount.`);
+  }
+
+  async function runRecommendedAction() {
+    if (!isConnected || !amountValid || !hasContracts) return;
+    if (!hasEnoughIFR) {
+      window.open(UNISWAP_IFR_URL, '_blank', 'noopener');
+      return;
+    }
+    if (!hasEnoughAllowance) {
+      await approveLockAmount();
+      return;
+    }
+    await lockIFR();
   }
 
   async function approveLockAmount() {
@@ -401,6 +459,30 @@ export function WalletStatus() {
             <p>Available: <span className="text-stone-200">{formatIFR(ifrRaw)} IFR</span></p>
             <p>Locked: <span className="text-stone-200">{formatIFR(lockedRaw)} IFR</span></p>
           </div>
+          <div className="mt-4 rounded-2xl border border-orange-200/20 bg-[linear-gradient(145deg,rgba(251,146,60,0.18),rgba(0,0,0,0.22))] p-4">
+            <p className="text-xs font-black uppercase tracking-[0.16em] text-orange-200/80">
+              Recommended next step
+            </p>
+            <div className="mt-3 grid gap-3 md:grid-cols-[1fr_auto] md:items-center">
+              <div>
+                <h4 className="text-xl font-black text-white">{recommendedAction.label}</h4>
+                <p className="mt-1 text-sm leading-6 text-stone-300">{recommendedAction.detail}</p>
+                {!hasEnoughIFR && amountValid && isConnected ? (
+                  <p className="mt-2 text-xs font-semibold text-orange-100">Not enough unlocked IFR for this amount.</p>
+                ) : recommendedAction.disabledReason ? (
+                  <p className="mt-2 text-xs font-semibold text-orange-100">{recommendedAction.disabledReason}</p>
+                ) : null}
+              </div>
+              <button
+                type="button"
+                onClick={runRecommendedAction}
+                disabled={recommendedActionDisabled || !isConnected}
+                className="rounded-2xl bg-orange-300 px-5 py-4 text-xs font-black uppercase tracking-[0.14em] text-stone-950 shadow-xl shadow-orange-950/25 transition hover:-translate-y-0.5 hover:bg-orange-200 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {txBusy ? 'Waiting...' : recommendedAction.label}
+              </button>
+            </div>
+          </div>
           <div className="mt-4 grid gap-3 sm:grid-cols-3">
             <button
               type="button"
@@ -442,22 +524,29 @@ export function WalletStatus() {
           </a>
         </div>
 
-        <div className="mt-4 flex flex-wrap gap-2">
+        <div className="mt-4">
+          <p className="text-xs font-black uppercase tracking-[0.16em] text-stone-400">
+            Quick tier amounts
+          </p>
+          <div className="mt-2 flex flex-wrap gap-2">
           {BENEFIT_TIERS.map((item) => {
             const active = Boolean(lockedRaw && lockedRaw >= BigInt(item.amount) * BigInt(10) ** BigInt(IFR_DECIMALS));
             return (
-              <span
+              <button
+                type="button"
                 key={item.label}
+                onClick={() => selectTierAmount(item.amount)}
                 className={`rounded-full border px-3 py-2 text-xs font-bold ${
                   active
                     ? 'border-green-300/25 bg-green-300/10 text-green-100'
-                    : 'border-white/10 bg-black/20 text-stone-400'
+                    : 'border-white/10 bg-black/20 text-stone-300 transition hover:border-orange-200/60 hover:text-orange-50'
                 }`}
               >
                 {item.label} / {item.amount.toLocaleString('en-US')} IFR
-              </span>
+              </button>
             );
           })}
+          </div>
         </div>
       </div>
     </section>

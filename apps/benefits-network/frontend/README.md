@@ -39,6 +39,12 @@ The landing page includes a public `System readiness` card. It checks `/api/read
 confirms Ethereum Mainnet (`chainId: 1`) and exposes whether WalletConnect was
 configured at build time. It does not expose secrets or server internals.
 
+The customer wallet panel includes a `Recommended next step` block for the
+approve/lock path. It derives the next action from connection state, configured
+contracts, entered IFR amount, unlocked IFR balance and allowance, then guides
+the user toward Buy IFR, Approve or Lock. Tier chips are buttons that set common
+lock amounts for seller benefit rules.
+
 ## Tech Stack
 
 - Next.js 14 (App Router)
