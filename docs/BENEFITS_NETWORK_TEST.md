@@ -77,6 +77,18 @@ For the full approved-and-redeemed path, run that seller smoke with
 `CUSTOMER_PRIVATE_KEY=... MUTATE=true` using a real eligible locked customer
 wallet.
 
+## Real Device Wallet Acceptance
+
+Use the dedicated runbook before closing the real wallet/device test gap:
+
+- `docs/runbooks/BENEFITS_DEVICE_WALLET_TEST_RUNBOOK.md`
+- `docs/qa/BENEFITS_DEVICE_WALLET_CHECKLIST.json`
+
+The required matrix covers iPad/iPhone, Android, desktop extension wallets,
+MetaMask, Coinbase Wallet, Trust Wallet, OKX Wallet and Phantom fallback
+behavior. Do not record private keys, seed phrases or personal wallet data in
+the checklist.
+
 ## Backend HTTP Smoke
 
 The Benefits Network CI also starts the built backend locally and runs the
