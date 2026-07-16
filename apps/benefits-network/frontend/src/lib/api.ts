@@ -6,8 +6,16 @@ async function fetchJSON<T>(url: string, opts?: RequestInit): Promise<T> {
     ...opts,
   });
   if (res.status === 204) return undefined as T;
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+  const contentType = res.headers.get('content-type') || '';
+  const data = contentType.includes('application/json')
+    ? await res.json()
+    : { error: (await res.text()).trim() };
+  if (!res.ok) {
+    const message = typeof data.error === 'string' && data.error
+      ? data.error
+      : `HTTP ${res.status}`;
+    throw new Error(message);
+  }
   return data as T;
 }
 

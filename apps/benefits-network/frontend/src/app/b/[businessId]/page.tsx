@@ -70,6 +70,40 @@ export default function BusinessConsole({ params }: { params: { businessId: stri
 
   const previewBenefit = session ?? selectedRule ?? business;
   const sellerWalletLabel = address ? `${address.slice(0, 6)}...${address.slice(-4)}` : 'Not connected';
+  const sessionActive = Boolean(session && !isDone);
+  const customerApproved = status?.status === 'APPROVED';
+  const sellerWalletReady = Boolean(address && isConnected);
+  const scannerStatus = !business
+    ? 'Load business'
+    : !previewBenefit
+      ? 'Select benefit'
+      : !session
+        ? 'Create QR session'
+        : customerApproved && sellerWalletReady
+          ? 'Ready to redeem'
+          : customerApproved
+            ? 'Connect seller wallet'
+            : isDone
+              ? 'Session closed'
+              : 'Waiting for customer';
+  const scannerNextStep = !business
+    ? 'The scanner is waiting for a valid seller profile before checkout can start.'
+    : !session
+      ? 'Choose the benefit rule, then create a QR session for the customer standing at checkout.'
+      : customerApproved && sellerWalletReady
+        ? 'Grant the benefit, then redeem this session so it cannot be reused.'
+        : customerApproved
+          ? 'The customer is approved. Connect the seller wallet to redeem once.'
+          : isDone
+            ? 'This QR session is closed. Create a new verification for the next customer.'
+            : 'Show the QR code or share the customer link. This screen updates when the customer signs.';
+  const scannerReadinessSteps = [
+    { label: 'Seller profile loaded', ready: Boolean(business) },
+    { label: 'Benefit or rule selected', ready: Boolean(previewBenefit) },
+    { label: 'QR session active', ready: sessionActive },
+    { label: 'Customer approved', ready: customerApproved },
+    { label: 'Seller wallet ready', ready: sellerWalletReady },
+  ];
 
   async function startSession() {
     setLoading(true);
@@ -167,6 +201,70 @@ export default function BusinessConsole({ params }: { params: { businessId: stri
             Start a short-lived verification session. The customer signs the QR challenge;
             the backend checks IFRLock on-chain and this screen updates automatically.
           </p>
+
+          <div className="mt-5 rounded-2xl border border-orange-200/20 bg-[#1d130c] p-4 shadow-xl shadow-black/20">
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <div>
+                <p className="text-xs font-black uppercase tracking-[0.16em] text-orange-200/80">
+                  Checkout readiness
+                </p>
+                <h2 className="mt-1 text-2xl font-black text-white">{scannerStatus}</h2>
+                <p className="mt-2 text-sm leading-6 text-stone-300">{scannerNextStep}</p>
+              </div>
+              <div className="rounded-2xl border border-white/10 bg-black/25 px-4 py-3 text-right">
+                <p className="text-xs uppercase tracking-[0.14em] text-stone-500">Current session</p>
+                <p className="mt-1 text-sm font-black text-white">{status?.status || (session ? 'PENDING' : 'Not started')}</p>
+                <p className="mt-1 text-xs text-stone-400">{session?.discountPercent ?? previewBenefit?.discountPercent ?? '-'}% benefit</p>
+              </div>
+            </div>
+
+            <div className="mt-4 grid gap-2 sm:grid-cols-2">
+              {scannerReadinessSteps.map((step) => (
+                <div
+                  key={step.label}
+                  className={`flex items-center gap-3 rounded-2xl border px-4 py-3 text-sm ${
+                    step.ready
+                      ? 'border-green-300/25 bg-green-300/[0.08] text-green-50'
+                      : 'border-white/10 bg-black/20 text-stone-300'
+                  }`}
+                >
+                  <span
+                    className={`h-2.5 w-2.5 shrink-0 rounded-full ${
+                      step.ready ? 'bg-green-300 shadow-[0_0_16px_rgba(134,239,172,0.75)]' : 'bg-stone-600'
+                    }`}
+                  />
+                  <span className="font-semibold">{step.label}</span>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-4 grid gap-2 sm:grid-cols-3">
+              <button
+                type="button"
+                onClick={startSession}
+                disabled={!business || loading}
+                className="rounded-2xl border border-orange-200/35 px-4 py-3 text-xs font-black uppercase tracking-[0.14em] text-orange-50 transition hover:bg-orange-200/10 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {session ? 'New session' : 'Create QR'}
+              </button>
+              <button
+                type="button"
+                onClick={copyCustomerUrl}
+                disabled={!customerUrl}
+                className="rounded-2xl border border-white/15 px-4 py-3 text-xs font-black uppercase tracking-[0.14em] text-stone-100 transition hover:border-orange-200/60 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Copy customer link
+              </button>
+              <button
+                type="button"
+                onClick={redeem}
+                disabled={loading || !customerApproved || !sellerWalletReady}
+                className="rounded-2xl bg-orange-300 px-4 py-3 text-xs font-black uppercase tracking-[0.14em] text-stone-950 shadow-xl shadow-orange-950/30 transition hover:bg-orange-200 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Redeem
+              </button>
+            </div>
+          </div>
 
           <div className="mt-5 rounded-2xl border border-green-300/20 bg-green-300/[0.07] p-4">
             <p className="text-xs font-bold uppercase tracking-[0.16em] text-green-100/80">
