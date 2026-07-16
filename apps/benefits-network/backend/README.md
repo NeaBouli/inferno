@@ -120,6 +120,23 @@ active seller profiles per owner wallet; inactive businesses do not count.
 npm test   # resets local SQLite test DB, then runs signature, expiry, replay, redeem, threshold and seller-auth tests
 ```
 
+## Seller Wallet Smoke
+
+Use the current seller-wallet path instead of the legacy admin-secret E2E script
+when checking `shop.ifrunit.tech` or a local backend.
+
+```bash
+node scripts/seller-wallet-smoke.js
+MUTATE=true node scripts/seller-wallet-smoke.js
+BENEFITS_BASE_URL=http://localhost:3001 MUTATE=true node scripts/seller-wallet-smoke.js
+```
+
+Default mode is read-only: health, server-issued seller auth and signed owned
+profile listing with a throwaway wallet. `MUTATE=true` creates a wallet-owned
+seller profile, reloads it, creates a benefit rule, lists the rule and deletes
+the smoke rule again. The throwaway wallet private key is generated in memory and
+is never read from env or disk.
+
 ## Security
 
 See [docs/THREAT_MODEL.md](docs/THREAT_MODEL.md) for the full threat model.
