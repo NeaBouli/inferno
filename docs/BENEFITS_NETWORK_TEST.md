@@ -32,8 +32,9 @@ bash apps/benefits-network/backend/scripts/e2e-test.sh
 2. Browser: `http://localhost:3000/b/{businessId}` (Merchant Console)
 3. "Create QR session" -> QR code appears
 4. Wallet app -> Scan QR -> Sign
-5. Merchant screen shows: APPROVED or DENIED
-6. Optional: "Redeem" -> Status changes to REDEEMED
+5. Merchant screen shows: APPROVED, pending retry guidance, or terminal REJECTED
+6. If the wallet needs more locked IFR, the customer can lock more IFR and retry the same QR session while it is still valid and attempts remain
+7. Optional: "Redeem" -> Status changes to REDEEMED
 
 ## E2E Test Script
 
@@ -144,6 +145,14 @@ This proves the backend redeem route is seller-owned and one-time at the HTTP
 boundary. A live `APPROVED -> REDEEMED` run with a real locked customer wallet
 is still a separate device acceptance item.
 
+Current service coverage also verifies retryable failed attestations:
+
+- insufficient locked IFR returns `REJECTED` to the customer response, but keeps
+  the stored session `PENDING` until the three-attempt limit is exhausted
+- invalid signatures behave the same way, so a customer can recover from a bad
+  wallet prompt without forcing the seller to create a new QR immediately
+- after the third failed attempt the session becomes terminal `REJECTED`
+
 ## Lock Tiers
 
 | Tier | Minimum Lock | Typical Discount |
@@ -160,7 +169,7 @@ is still a separate device acceptance item.
 | `isLocked returns false` | IFR not locked | Call `IFRLock.lock(amount)` |
 | `Decimals error` | 18 instead of 9 | Use `parseUnits(x, 9)` |
 | `Session expired` | >60s elapsed | Start a new session |
-| `Invalid signature` | Wrong chain | Switch to Sepolia (11155111) |
+| `Invalid signature` | Wrong wallet prompt or malformed signature | Retry the same QR while attempts remain; switch to the configured chain if the wallet is on the wrong network |
 | `ADMIN_SECRET mismatch` | `.env` not configured | Set `ADMIN_SECRET` in `.env` |
 
 ## API Endpoints

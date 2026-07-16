@@ -48,7 +48,9 @@
 - Session creation: max 100 per business per hour (express-rate-limit)
 - Attest attempts: max 3 per session (enforced in database)
 - Global attest rate limit: max 50 per IP per hour
-- After 3 failed attempts, the session is locked and cannot accept more attestations
+- Failed attestations before the third attempt keep the stored session PENDING so a real customer can recover from an insufficient lock or bad wallet prompt without asking the seller for a new QR
+- After 3 failed attempts, the session becomes terminal REJECTED and cannot accept more attestations
+- TTL, nonce binding and the three-attempt limit still bound the retry window
 
 ## 6. Seller Account Takeover / Unauthorized Staff Actions
 

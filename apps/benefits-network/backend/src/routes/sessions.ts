@@ -79,6 +79,7 @@ router.get('/:id', async (req, res, next) => {
       reason: session.reason,
       redeemedAt: session.redeemedAt,
       expiresAt: session.expiresAt,
+      attestAttempts: session.attestAttempts,
       businessId: session.businessId,
       benefitRuleId: session.benefit.benefitRuleId,
       benefit: session.benefit,

@@ -183,22 +183,29 @@ describe('Lock Threshold', () => {
 // ── Test 6: Attest Attempt Limit ───────────────────────────────────
 
 describe('Attest Attempt Limit', () => {
-  it('blocks after 3 failed attest attempts', async () => {
+  it('allows insufficient-lock retry before the attempt limit is exhausted', async () => {
     const session = await createSession(testBusinessId);
 
     mockRecoverSigner.mockReturnValue(TEST_WALLET);
-    mockCheckLock.mockResolvedValue({ eligible: false, lockedAmount: '0' });
+    mockCheckLock
+      .mockResolvedValueOnce({ eligible: false, lockedAmount: '0' })
+      .mockResolvedValueOnce({ eligible: true, lockedAmount: '5000.0' });
 
-    // 3 attempts (all rejected, but allowed)
-    await attest(session.sessionId, TEST_SIGNATURE);
+    const first = await attest(session.sessionId, TEST_SIGNATURE);
+    expect(first.status).toBe('REJECTED');
+    expect(first.attemptsRemaining).toBe(2);
 
-    // Session is now REJECTED, further attests fail with status error
-    await expect(attest(session.sessionId, TEST_SIGNATURE)).rejects.toThrow(
-      'Session is REJECTED, cannot attest'
-    );
+    const savedAfterFirst = await prisma.session.findUniqueOrThrow({
+      where: { id: session.sessionId },
+    });
+    expect(savedAfterFirst.status).toBe('PENDING');
+    expect(savedAfterFirst.reason).toContain('retry this QR session');
+
+    const second = await attest(session.sessionId, TEST_SIGNATURE);
+    expect(second.status).toBe('APPROVED');
   });
 
-  it('blocks after 3 attest attempts on a pending session', async () => {
+  it('marks the session rejected after 3 failed attest attempts', async () => {
     // Create business with high TTL to avoid expiry
     const biz = await prisma.business.create({
       data: {
@@ -215,11 +222,25 @@ describe('Attest Attempt Limit', () => {
       throw new Error('invalid signature');
     });
 
-    // Attempt 1: fails with REJECTED
     const r1 = await attest(session.sessionId, TEST_SIGNATURE);
     expect(r1.status).toBe('REJECTED');
+    expect(r1.attemptsRemaining).toBe(2);
+    const afterFirst = await prisma.session.findUniqueOrThrow({ where: { id: session.sessionId } });
+    expect(afterFirst.status).toBe('PENDING');
 
-    // Session is now REJECTED, can't attest again
+    const r2 = await attest(session.sessionId, TEST_SIGNATURE);
+    expect(r2.status).toBe('REJECTED');
+    expect(r2.attemptsRemaining).toBe(1);
+    const afterSecond = await prisma.session.findUniqueOrThrow({ where: { id: session.sessionId } });
+    expect(afterSecond.status).toBe('PENDING');
+
+    const r3 = await attest(session.sessionId, TEST_SIGNATURE);
+    expect(r3.status).toBe('REJECTED');
+    expect(r3.attemptsRemaining).toBe(0);
+    const afterThird = await prisma.session.findUniqueOrThrow({ where: { id: session.sessionId } });
+    expect(afterThird.status).toBe('REJECTED');
+    expect(afterThird.reason).toContain('attempts exhausted');
+
     await expect(attest(session.sessionId, TEST_SIGNATURE)).rejects.toThrow(
       'Session is REJECTED, cannot attest'
     );
