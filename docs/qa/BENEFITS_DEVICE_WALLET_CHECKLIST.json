@@ -1,0 +1,115 @@
+{
+  "name": "IFR Benefits Network Device Wallet Acceptance Checklist",
+  "target": "https://shop.ifrunit.tech",
+  "status": "open",
+  "lastUpdated": "2026-07-16",
+  "rules": {
+    "noSecrets": true,
+    "recordOnlyTestIds": true,
+    "walletConnectProjectIdRequiredForModal": true
+  },
+  "knownBlockers": [
+    "NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID is not set for production WalletConnect/RainbowKit modal support.",
+    "Full APPROVED -> REDEEMED proof requires an eligible locked customer wallet.",
+    "Server disk remains tight during deploys."
+  ],
+  "matrix": [
+    {
+      "id": "ios-safari-pwa",
+      "device": "iPadOS or iOS",
+      "surface": "Safari",
+      "wallet": "none",
+      "path": "Landing, PWA install guidance, copy/share wallet entry",
+      "status": "pending",
+      "evidence": []
+    },
+    {
+      "id": "ios-metamask-customer-proof",
+      "device": "iPadOS or iOS",
+      "surface": "MetaMask in-app browser",
+      "wallet": "MetaMask",
+      "path": "Customer QR proof sign and result",
+      "status": "pending",
+      "evidence": []
+    },
+    {
+      "id": "ios-coinbase-customer-proof",
+      "device": "iPadOS or iOS",
+      "surface": "Coinbase Wallet browser",
+      "wallet": "Coinbase Wallet",
+      "path": "Customer QR proof sign and result",
+      "status": "pending",
+      "evidence": []
+    },
+    {
+      "id": "android-chrome-pwa",
+      "device": "Android",
+      "surface": "Chrome",
+      "wallet": "none",
+      "path": "Landing, PWA install guidance, copy/share wallet entry",
+      "status": "pending",
+      "evidence": []
+    },
+    {
+      "id": "android-metamask-customer-proof",
+      "device": "Android",
+      "surface": "MetaMask in-app browser",
+      "wallet": "MetaMask",
+      "path": "Customer QR proof sign and result",
+      "status": "pending",
+      "evidence": []
+    },
+    {
+      "id": "android-trust-customer-proof",
+      "device": "Android",
+      "surface": "Trust Wallet browser",
+      "wallet": "Trust Wallet",
+      "path": "Customer QR proof sign and result or clear fallback",
+      "status": "pending",
+      "evidence": []
+    },
+    {
+      "id": "android-okx-customer-proof",
+      "device": "Android",
+      "surface": "OKX Wallet browser",
+      "wallet": "OKX Wallet",
+      "path": "Customer QR proof sign and result or clear fallback",
+      "status": "pending",
+      "evidence": []
+    },
+    {
+      "id": "phantom-evm-fallback",
+      "device": "iOS, Android or Desktop",
+      "surface": "Phantom EVM-capable browser/session",
+      "wallet": "Phantom",
+      "path": "Customer proof or clear fallback if Ethereum provider is unavailable",
+      "status": "pending",
+      "evidence": []
+    },
+    {
+      "id": "desktop-metamask-seller",
+      "device": "Desktop",
+      "surface": "Chrome + MetaMask extension",
+      "wallet": "MetaMask",
+      "path": "Seller profile, rule, scanner, redeem signature",
+      "status": "pending",
+      "evidence": []
+    },
+    {
+      "id": "approved-redeemed-eligible-wallet",
+      "device": "Any supported customer + seller pair",
+      "surface": "Wallet browser or extension",
+      "wallet": "Eligible locked customer wallet plus seller wallet",
+      "path": "APPROVED customer proof -> seller-signed REDEEMED",
+      "status": "pending",
+      "evidence": []
+    }
+  ],
+  "completionGate": [
+    "At least one iOS/iPadOS wallet-browser customer proof path passes.",
+    "At least one Android wallet-browser customer proof path passes.",
+    "At least one desktop injected seller wallet path passes.",
+    "A rejected or ineligible customer proof path is observed and readable.",
+    "An approved customer proof and seller redeem path is observed with an eligible locked test wallet."
+  ]
+}
