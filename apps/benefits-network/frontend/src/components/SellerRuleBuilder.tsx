@@ -65,6 +65,33 @@ export function SellerRuleBuilder() {
   const canUseWalletOwner = Boolean(address && isConnected);
   const canUseOperatorFallback = Boolean(adminSecret);
   const canManage = canUseWalletOwner || canUseOperatorFallback;
+  const activeRulesCount = rules.filter((rule) => rule.active).length;
+  const selectedBusiness = sellerBusinesses.find((business) => business.id === businessId) || null;
+  const businessReady = Boolean(businessId);
+  const scannerReady = Boolean(scannerUrl);
+  const ruleReady = activeRulesCount > 0;
+  const historyReady = sessions.length > 0;
+  const sellerStatus = !canManage
+    ? 'Connect seller wallet'
+    : !businessReady
+      ? 'Create seller profile'
+      : !ruleReady
+        ? 'Create benefit rule'
+        : 'Ready for checkout';
+  const nextSellerStep = !canManage
+    ? 'Connect the seller wallet, then load or create a wallet-owned seller profile.'
+    : !businessReady
+      ? 'Create a seller profile or load an existing profile owned by this wallet.'
+      : !ruleReady
+        ? 'Load existing rules or save a new active rule before sending staff to the scanner.'
+        : 'Open the scanner at checkout, create a QR session, and redeem approved benefits once.';
+  const sellerReadinessSteps = [
+    { label: 'Seller wallet or operator fallback', ready: canManage },
+    { label: 'Seller profile selected', ready: businessReady },
+    { label: 'Active benefit rule loaded', ready: ruleReady },
+    { label: 'Scanner link ready', ready: scannerReady },
+    { label: 'Recent customer checks loaded', ready: historyReady },
+  ];
   const checkoutKitText = useMemo(
     () => [
       `${businessName || 'IFR Partner Shop'} IFR checkout kit`,
@@ -485,6 +512,81 @@ export function SellerRuleBuilder() {
             ))}
           </div>
         ) : null}
+      </div>
+
+      <div className="mb-5 rounded-3xl border border-orange-200/20 bg-[#1d130c] p-4 shadow-xl shadow-black/20">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <p className="text-xs font-black uppercase tracking-[0.18em] text-orange-200/80">Seller readiness</p>
+            <h3 className="mt-1 text-2xl font-black text-white">{sellerStatus}</h3>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-stone-300">{nextSellerStep}</p>
+          </div>
+          <div className="rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-right">
+            <p className="text-xs uppercase tracking-[0.14em] text-stone-500">Current profile</p>
+            <p className="mt-1 text-sm font-black text-white">
+              {selectedBusiness?.name || (businessReady ? 'Manual business ID' : 'Not selected')}
+            </p>
+            <p className="mt-1 text-xs text-stone-400">
+              {activeRulesCount} active rule{activeRulesCount === 1 ? '' : 's'} / {sessions.length} recent check{sessions.length === 1 ? '' : 's'}
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-4 grid gap-2 sm:grid-cols-2">
+          {sellerReadinessSteps.map((step) => (
+            <div
+              key={step.label}
+              className={`flex items-center gap-3 rounded-2xl border px-4 py-3 text-sm ${
+                step.ready
+                  ? 'border-green-300/25 bg-green-300/[0.08] text-green-50'
+                  : 'border-white/10 bg-black/20 text-stone-300'
+              }`}
+            >
+              <span
+                className={`h-2.5 w-2.5 shrink-0 rounded-full ${
+                  step.ready ? 'bg-green-300 shadow-[0_0_16px_rgba(134,239,172,0.75)]' : 'bg-stone-600'
+                }`}
+              />
+              <span className="font-semibold">{step.label}</span>
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-4 grid gap-2 sm:grid-cols-3">
+          <button
+            type="button"
+            onClick={loadSellerBusinesses}
+            disabled={loading || !canUseWalletOwner}
+            className="rounded-2xl border border-green-200/35 px-4 py-3 text-xs font-black uppercase tracking-[0.14em] text-green-50 transition hover:bg-green-200/10 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            Load profiles
+          </button>
+          <button
+            type="button"
+            onClick={loadRules}
+            disabled={loading || !businessReady || !canManage}
+            className="rounded-2xl border border-orange-200/35 px-4 py-3 text-xs font-black uppercase tracking-[0.14em] text-orange-50 transition hover:bg-orange-200/10 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            Load rules
+          </button>
+          {scannerReady ? (
+            <a
+              href={scannerUrl}
+              className="rounded-2xl bg-orange-300 px-4 py-3 text-center text-xs font-black uppercase tracking-[0.14em] text-stone-950 shadow-xl shadow-orange-950/30 transition hover:bg-orange-200"
+            >
+              Open scanner
+            </a>
+          ) : (
+            <button
+              type="button"
+              onClick={createBusiness}
+              disabled={loading || !canManage}
+              className="rounded-2xl bg-orange-300 px-4 py-3 text-xs font-black uppercase tracking-[0.14em] text-stone-950 shadow-xl shadow-orange-950/30 transition hover:bg-orange-200 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Create profile
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="mb-5 rounded-3xl border border-white/10 bg-black/20 p-4">

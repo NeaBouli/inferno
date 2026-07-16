@@ -97,6 +97,12 @@ async function verifyPage(contextOptions, label) {
     await expectText(page, 'Current tier');
     await expectText(page, 'Create a seller entry point');
     await expectText(page, 'Seller categories');
+    await page.getByRole('button', { name: /Seller Offer discounts/i }).click();
+    await expectText(page, 'Seller readiness');
+    await page.getByRole('heading', { name: 'Connect seller wallet' }).first().waitFor({ timeout: timeoutMs });
+    await expectText(page, 'Active benefit rule loaded');
+    await expectText(page, 'Load profiles');
+    await expectText(page, 'Create profile');
 
     await page.goto(`${baseUrl}/guide?smoke=${Date.now()}`, { waitUntil: 'networkidle', timeout: timeoutMs });
     await expectText(page, 'IFRp Benefits Network Guide');
