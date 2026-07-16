@@ -3,6 +3,7 @@ const benefitsApiInternalUrl = process.env.BENEFITS_API_INTERNAL_URL || 'http://
 
 const nextConfig = {
   reactStrictMode: true,
+  output: 'standalone',
   async rewrites() {
     return [
       {
