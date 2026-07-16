@@ -58,6 +58,7 @@ export function SellerRuleBuilder() {
   const [sessions, setSessions] = useState<SellerSessionSummary[]>([]);
   const [sellerBusinesses, setSellerBusinesses] = useState<SellerBusinessSummary[]>([]);
   const [createdBusiness, setCreatedBusiness] = useState<AdminBusinessCreated | null>(null);
+  const [restoreInput, setRestoreInput] = useState('');
   const [status, setStatus] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -103,6 +104,29 @@ export function SellerRuleBuilder() {
     ].join('\n'),
     [businessName, category, discount, label, minLocked, product, scannerUrl]
   );
+  const sellerBackupText = useMemo(() => JSON.stringify(
+    {
+      app: 'IFRp Shop Benefits Network',
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      businessId: businessId || null,
+      scannerUrl: scannerUrl || null,
+      sellerName: selectedBusiness?.name || businessName || 'IFR Partner Shop',
+      ownerAddress: selectedBusiness?.ownerAddress || address || null,
+      defaultBenefit: {
+        label: label || 'IFR Benefit',
+        category,
+        productName: product || 'IFR Benefit',
+        discountPercent: discount,
+        requiredLockIFR: minLocked,
+        ttlSeconds: ttl,
+      },
+      activeRulesLoaded: activeRulesCount,
+      note: 'Public seller handoff only. No admin secret, private key, seed phrase or wallet signature is included.',
+    },
+    null,
+    2
+  ), [activeRulesCount, address, businessId, businessName, category, discount, label, minLocked, product, scannerUrl, selectedBusiness, ttl]);
 
   useEffect(() => {
     try {
@@ -419,6 +443,75 @@ export function SellerRuleBuilder() {
     } catch (err) {
       if (err instanceof Error && err.name === 'AbortError') return;
       setError(err instanceof Error ? err.message : 'Could not share checkout kit.');
+    }
+  }
+
+  async function shareSellerBackup() {
+    if (!businessId) {
+      setError('Create or select a seller profile before sharing a seller backup.');
+      return;
+    }
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: `${businessName || 'IFR Partner Shop'} IFR seller backup`,
+          text: sellerBackupText,
+          url: scannerUrl || undefined,
+        });
+        setError('');
+        setStatus('Seller backup shared.');
+        return;
+      }
+      await copyToClipboard('Seller backup', sellerBackupText);
+    } catch (err) {
+      if (err instanceof Error && err.name === 'AbortError') return;
+      setError(err instanceof Error ? err.message : 'Could not share seller backup.');
+    }
+  }
+
+  function restoreSellerBackup() {
+    const raw = restoreInput.trim();
+    if (!raw) {
+      setError('Paste a seller backup JSON or Business ID first.');
+      return;
+    }
+
+    try {
+      if (raw.startsWith('{')) {
+        const parsed = JSON.parse(raw) as { businessId?: unknown; sellerName?: unknown; defaultBenefit?: Partial<BenefitRuleInput> };
+        if (typeof parsed.businessId !== 'string' || !parsed.businessId.trim()) {
+          setError('Seller backup does not include a valid Business ID.');
+          return;
+        }
+        setBusinessId(parsed.businessId.trim());
+        if (typeof parsed.sellerName === 'string' && parsed.sellerName.trim()) setBusinessName(parsed.sellerName.trim());
+        if (parsed.defaultBenefit) {
+          if (typeof parsed.defaultBenefit.label === 'string') setLabel(parsed.defaultBenefit.label);
+          if (typeof parsed.defaultBenefit.category === 'string') setCategory(parsed.defaultBenefit.category);
+          if (typeof parsed.defaultBenefit.productName === 'string') setProduct(parsed.defaultBenefit.productName);
+          if (typeof parsed.defaultBenefit.discountPercent === 'number') setDiscount(parsed.defaultBenefit.discountPercent);
+          if (typeof parsed.defaultBenefit.requiredLockIFR === 'number') setMinLocked(parsed.defaultBenefit.requiredLockIFR);
+          if (typeof parsed.defaultBenefit.ttlSeconds === 'number') setTtl(parsed.defaultBenefit.ttlSeconds);
+        }
+        setRules([]);
+        setSessions([]);
+        setError('');
+        setStatus('Seller backup restored. Connect the owner wallet, then load rules or sessions.');
+        return;
+      }
+
+      const businessIdFromText = raw.replace(/^https?:\/\/shop\.ifrunit\.tech\/b\//, '').split(/[/?#\s]/)[0];
+      if (!businessIdFromText) {
+        setError('Could not read a Business ID from that backup.');
+        return;
+      }
+      setBusinessId(businessIdFromText);
+      setRules([]);
+      setSessions([]);
+      setError('');
+      setStatus('Business ID restored. Connect the owner wallet, then load rules or sessions.');
+    } catch {
+      setError('Could not parse seller backup JSON.');
     }
   }
 
@@ -744,6 +837,58 @@ export function SellerRuleBuilder() {
           </div>
         </div>
       ) : null}
+
+      <div className="mb-5 rounded-3xl border border-green-300/20 bg-[linear-gradient(145deg,rgba(134,239,172,0.08),rgba(255,255,255,0.045)_48%,rgba(249,115,22,0.08))] p-4">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-green-100/80">Seller recovery</p>
+            <h3 className="mt-1 text-xl font-black text-white">Move this seller setup to another device</h3>
+            <p className="mt-2 text-sm leading-6 text-stone-300">
+              Export a public seller backup for staff tablets or restore a saved Business ID. It never includes admin secrets, private keys, seed phrases or wallet signatures.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => copyToClipboard('Seller backup', sellerBackupText)}
+              disabled={!businessId}
+              className="rounded-2xl border border-green-200/35 px-4 py-3 text-xs font-black uppercase tracking-[0.14em] text-green-50 transition hover:bg-green-200/10 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Copy backup
+            </button>
+            <button
+              type="button"
+              onClick={shareSellerBackup}
+              disabled={!businessId}
+              className="rounded-2xl border border-orange-200/30 px-4 py-3 text-xs font-black uppercase tracking-[0.14em] text-orange-50 transition hover:bg-orange-200/10 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Share backup
+            </button>
+          </div>
+        </div>
+        <div className="mt-4 grid gap-3 lg:grid-cols-[1fr_auto]">
+          <label className="grid gap-2 text-sm font-semibold text-stone-200">
+            Restore Business ID or backup JSON
+            <textarea
+              value={restoreInput}
+              onChange={(event) => setRestoreInput(event.target.value)}
+              rows={3}
+              placeholder="Paste Business ID, scanner URL or seller backup JSON"
+              className="min-h-24 rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none focus:border-green-300"
+            />
+          </label>
+          <button
+            type="button"
+            onClick={restoreSellerBackup}
+            className="self-end rounded-2xl bg-green-300 px-5 py-4 text-sm font-black uppercase tracking-[0.14em] text-stone-950 shadow-xl shadow-green-950/25 transition hover:bg-green-200"
+          >
+            Restore setup
+          </button>
+        </div>
+        <pre className="mt-4 max-h-52 overflow-auto whitespace-pre-wrap rounded-2xl border border-white/10 bg-black/30 p-4 text-xs leading-6 text-green-50">
+          {businessId ? sellerBackupText : 'Create or select a seller profile to generate a public recovery backup.'}
+        </pre>
+      </div>
 
       {businessId ? (
         <div className="mb-5 rounded-3xl border border-green-300/20 bg-green-300/[0.06] p-4">

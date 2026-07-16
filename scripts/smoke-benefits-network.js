@@ -141,11 +141,15 @@ async function verifyPage(contextOptions, label) {
     await expectText(page, 'Active benefit rule loaded');
     await expectText(page, 'Load profiles');
     await expectText(page, 'Create profile');
-    await page.getByLabel('Business ID').first().fill('smoke-manual-business');
+    await page.getByPlaceholder('cuid...').fill('smoke-manual-business');
     await expectText(page, 'Share with the counter team');
     await expectText(page, 'Staff scanner QR');
     await expectText(page, 'Show this QR at the counter.');
     await expectText(page, 'Share kit');
+    await expectText(page, 'Seller recovery');
+    await expectText(page, 'Move this seller setup to another device');
+    await expectText(page, 'Copy backup');
+    await expectText(page, 'Restore setup');
 
     await gotoAppPage(page, '/guide');
     await expectText(page, 'IFRp Benefits Network Guide');
