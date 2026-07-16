@@ -82,8 +82,15 @@ async function requireBusinessOwner(req: Request, action: string, businessId: st
 router.get('/auth-message', (req, res) => {
   const action = String(req.query.action || 'business:create');
   const businessId = String(req.query.businessId || 'new');
-  const timestamp = String(req.query.timestamp || Date.now());
-  res.json({ message: buildSellerAuthMessage(action, businessId, timestamp) });
+  const timestamp = String(Date.now());
+  res.json({
+    action,
+    businessId,
+    timestamp,
+    issuedAt: new Date(Number(timestamp)).toISOString(),
+    expiresAt: new Date(Number(timestamp) + 10 * 60 * 1000).toISOString(),
+    message: buildSellerAuthMessage(action, businessId, timestamp),
+  });
 });
 
 router.post('/businesses', sellerRateLimiter, validate(createBusinessSchema), async (req, res, next) => {
