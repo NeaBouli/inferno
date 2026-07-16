@@ -72,6 +72,7 @@ Default target is `https://shop.ifrunit.tech`. The smoke is read-only and checks
 - Server-issued seller auth challenge
 - Desktop and iPad rendering for landing, guide, seller mode, seller scanner shell and customer proof shell
 - Wallet-entry fallback with copy/share controls
+- Empty-state rendering for local `Recent customer proofs` history
 
 It intentionally does not create businesses, rules or sessions. For signed
 seller flows use `apps/benefits-network/backend/scripts/seller-wallet-smoke.js`.
@@ -112,6 +113,12 @@ The required matrix covers iPad/iPhone, Android, desktop extension wallets,
 MetaMask, Coinbase Wallet, Trust Wallet, OKX Wallet and Phantom fallback
 behavior. Do not record private keys, seed phrases or personal wallet data in
 the checklist.
+
+Customer QR pages also write a redacted local browser history entry after a
+session loads or refreshes. The home page shows this as `Recent customer proofs`
+so a customer can reopen the proof on the same device. The local entry excludes
+private keys, seed phrases, signatures and full wallet inventories; it is not a
+server-side evidence record and does not replace the device checklist.
 
 ## Backend HTTP Smoke
 

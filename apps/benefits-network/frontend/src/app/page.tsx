@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { AppShell } from '@/components/AppShell';
+import { CustomerProofHistory } from '@/components/CustomerProofHistory';
 import { SellerRuleBuilder } from '@/components/SellerRuleBuilder';
 import { WalletStatus } from '@/components/WalletStatus';
 import { hasWalletConnectProjectId } from '@/lib/wagmi';
@@ -536,7 +537,14 @@ export default function Home() {
           <SystemReadinessCard />
           <PwaInstallCard />
           <WalletStarterKit />
-          {role === 'customer' ? <WalletStatus /> : <SellerRuleBuilder />}
+          {role === 'customer' ? (
+            <>
+              <WalletStatus />
+              <CustomerProofHistory />
+            </>
+          ) : (
+            <SellerRuleBuilder />
+          )}
           <section className="rounded-[2rem] border border-white/10 bg-black/20 p-5">
             <p className="text-xs font-bold uppercase tracking-[0.18em] text-stone-400">
               Seller categories
