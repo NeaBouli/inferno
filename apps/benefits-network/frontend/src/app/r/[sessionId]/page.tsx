@@ -1,13 +1,12 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { useAccount, useDisconnect, useSignMessage } from 'wagmi';
 import { AppShell } from '@/components/AppShell';
 import { Countdown } from '@/components/Countdown';
 import { StatusBadge } from '@/components/StatusBadge';
+import { WalletConnectControl } from '@/components/WalletConnectControl';
 import { AttestResult, BusinessInfo, SessionStatus, getBusiness, getChallenge, getSessionStatus, submitAttest } from '@/lib/api';
-import { hasWalletConnectProjectId } from '@/lib/wagmi';
 
 export default function CustomerSession({ params }: { params: { sessionId: string } }) {
   const { address, isConnected } = useAccount();
@@ -109,19 +108,13 @@ export default function CustomerSession({ params }: { params: { sessionId: strin
           ) : null}
 
           <div className="mt-6 rounded-2xl border border-white/10 bg-black/25 p-4">
-            {hasWalletConnectProjectId ? (
-              <ConnectButton />
-            ) : (
-              <p className="text-sm leading-6 text-stone-300">
-                Wallet connection requires `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` in production.
-              </p>
-            )}
+            <WalletConnectControl />
           </div>
 
           <button
             type="button"
             onClick={signAndVerify}
-            disabled={!hasWalletConnectProjectId || !isConnected || loading || Boolean(status && ['APPROVED', 'REDEEMED', 'REJECTED', 'EXPIRED'].includes(status.status))}
+            disabled={!isConnected || loading || Boolean(status && ['APPROVED', 'REDEEMED', 'REJECTED', 'EXPIRED'].includes(status.status))}
             className="mt-6 w-full rounded-2xl bg-orange-300 px-5 py-4 text-sm font-black uppercase tracking-[0.16em] text-stone-950 shadow-xl shadow-orange-950/40 transition hover:bg-orange-200 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {loading ? 'Verifying...' : 'Sign and verify'}

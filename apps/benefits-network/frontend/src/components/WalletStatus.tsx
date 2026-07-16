@@ -1,51 +1,16 @@
 'use client';
 
-import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { useAccount, useBalance, useReadContract } from 'wagmi';
 import { formatEther } from 'viem';
+import { WalletConnectControl } from '@/components/WalletConnectControl';
 import { IFRLOCK_ABI, IFRLOCK_ADDRESS, IFR_TOKEN_ADDRESS, formatIFR } from '@/lib/contracts';
-import { hasWalletConnectProjectId } from '@/lib/wagmi';
 
 function shortAddress(address?: string) {
   if (!address) return 'Not connected';
   return `${address.slice(0, 6)}...${address.slice(-4)}`;
 }
 
-function WalletConfigNotice() {
-  return (
-    <section className="rounded-[2rem] border border-white/10 bg-white/[0.06] p-5 shadow-2xl shadow-black/30 backdrop-blur">
-      <div>
-        <p className="text-xs font-bold uppercase tracking-[0.18em] text-orange-200/80">
-          Customer wallet
-        </p>
-        <h2 className="mt-1 text-2xl font-black text-white">Wallet connection is being prepared</h2>
-        <p className="mt-3 text-sm leading-6 text-stone-300">
-          This deployment still needs its WalletConnect project key before the multi-wallet connector is enabled.
-          After that, MetaMask, Rainbow, Trust Wallet, Coinbase, OKX and WalletConnect-compatible wallets can connect here.
-        </p>
-        <p className="mt-2 break-words text-xs leading-5 text-stone-500">
-          Operator note: set NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID.
-        </p>
-      </div>
-      <div className="mt-5 grid gap-3 sm:grid-cols-3">
-        <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
-          <p className="text-xs uppercase tracking-[0.14em] text-stone-400">Chain</p>
-          <p className="mt-2 text-lg font-bold">Ethereum Mainnet</p>
-        </div>
-        <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
-          <p className="text-xs uppercase tracking-[0.14em] text-stone-400">IFR token</p>
-          <p className="mt-2 break-all text-sm font-bold">{IFR_TOKEN_ADDRESS || 'Not configured'}</p>
-        </div>
-        <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
-          <p className="text-xs uppercase tracking-[0.14em] text-stone-400">IFRLock</p>
-          <p className="mt-2 break-all text-sm font-bold">{IFRLOCK_ADDRESS || 'Not configured'}</p>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function ConnectedWalletStatus() {
+export function WalletStatus() {
   const { address, isConnected } = useAccount();
   const ethBalance = useBalance({
     address,
@@ -73,7 +38,7 @@ function ConnectedWalletStatus() {
           </p>
           <h2 className="mt-1 text-2xl font-black text-white">Access status</h2>
         </div>
-        <ConnectButton />
+        <WalletConnectControl />
       </div>
 
       <div className="grid gap-3 sm:grid-cols-3">
@@ -101,12 +66,4 @@ function ConnectedWalletStatus() {
       </div>
     </section>
   );
-}
-
-export function WalletStatus() {
-  if (!hasWalletConnectProjectId) {
-    return <WalletConfigNotice />;
-  }
-
-  return <ConnectedWalletStatus />;
 }
