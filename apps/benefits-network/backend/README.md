@@ -161,6 +161,21 @@ smoke seller profile so it no longer appears in owned active profile reloads.
 Seller private keys are generated in memory. The optional customer private key
 is never printed.
 
+## Production Deploy
+
+Use the repo-level deploy helper for `shop.ifrunit.tech`:
+
+```bash
+scripts/deploy-benefits-network.sh backend
+```
+
+`backend` rebuilds/recreates `inferno-benefits-backend`, waits through Compose
+health dependencies, then rebuilds the frontend with `--no-deps` so the public
+shop uses the current API surface. For UI-only changes, use
+`scripts/deploy-benefits-network.sh frontend` instead; this avoids the repeated
+unnecessary backend rebuild that can push the production volume to 99-100%
+usage during deployments.
+
 ## Security
 
 See [docs/THREAT_MODEL.md](docs/THREAT_MODEL.md) for the full threat model.
