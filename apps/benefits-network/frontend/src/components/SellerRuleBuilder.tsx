@@ -28,6 +28,7 @@ import {
 
 const categories = ['Coffee', 'Retail', 'Digital access', 'Events', 'Services'];
 const LAST_BUSINESS_STORAGE_KEY = 'ifr.shop.lastSellerBusinessId';
+const SHOP_ORIGIN = 'https://shop.ifrunit.tech';
 
 function formatSessionLockedIFR(value: string | null) {
   if (!value) return null;
@@ -127,6 +128,31 @@ export function SellerRuleBuilder() {
     null,
     2
   ), [activeRulesCount, address, businessId, businessName, category, discount, label, minLocked, product, scannerUrl, selectedBusiness, ttl]);
+
+  function getCustomerProofUrl(sessionId: string) {
+    return `${SHOP_ORIGIN}/r/${sessionId}`;
+  }
+
+  function getSessionRestoreReceipt(session: SellerSessionSummary) {
+    const lockedIFR = formatSessionLockedIFR(session.lockAmountRaw);
+
+    return [
+      'IFRp Benefits Network session restore receipt',
+      `Seller: ${selectedBusiness?.name || businessName || businessId || 'IFR Partner Shop'}`,
+      `Session: ${session.id}`,
+      `Status: ${session.status}`,
+      `Benefit: ${session.discountPercent}%`,
+      `Required lock: ${session.requiredLockIFR.toLocaleString('en-US')} IFR`,
+      `Rule: ${session.label || 'Business default'}`,
+      `Product: ${session.productName || 'Business default benefit'}`,
+      `Customer wallet: ${session.recoveredAddress || 'not verified yet'}`,
+      `Locked: ${lockedIFR ? `${lockedIFR} IFR` : 'not verified yet'}`,
+      `Expires: ${session.expiresAt}`,
+      `Redeemed: ${session.redeemedAt || 'not redeemed'}`,
+      `Customer link: ${getCustomerProofUrl(session.id)}`,
+      'Paste this receipt into the seller scanner Session recovery field to reopen the checkout.',
+    ].join('\n');
+  }
 
   useEffect(() => {
     try {
@@ -897,7 +923,8 @@ export function SellerRuleBuilder() {
               <p className="text-xs font-bold uppercase tracking-[0.18em] text-green-100/80">Session history</p>
               <h3 className="mt-1 text-xl font-black text-white">Recent customer checks</h3>
               <p className="mt-2 text-sm leading-6 text-stone-300">
-                Load the latest QR sessions for this seller profile. This requires the owner wallet signature and shows no private customer data beyond the verified wallet address.
+                Load the latest QR sessions for this seller profile. Copy proof links or restore
+                receipts when staff needs to recover a checkout on another counter device.
               </p>
             </div>
             <button
@@ -944,13 +971,38 @@ export function SellerRuleBuilder() {
                       {session.reason ? <p className="text-red-100">Reason: {session.reason}</p> : null}
                       {session.redeemedAt ? <p>Redeemed: {new Date(session.redeemedAt).toLocaleString()}</p> : null}
                     </div>
+                    <div className="mt-4 grid gap-2 sm:grid-cols-3">
+                      <a
+                        href={getCustomerProofUrl(session.id)}
+                        target="_blank"
+                        rel="noopener"
+                        className="rounded-xl border border-green-200/30 px-3 py-2 text-center text-[11px] font-black uppercase tracking-[0.12em] text-green-50 transition hover:bg-green-200/10"
+                      >
+                        Open proof
+                      </a>
+                      <button
+                        type="button"
+                        onClick={() => copyToClipboard('Customer proof link', getCustomerProofUrl(session.id))}
+                        className="rounded-xl border border-white/15 px-3 py-2 text-[11px] font-black uppercase tracking-[0.12em] text-stone-100 transition hover:border-green-200/60"
+                      >
+                        Copy proof link
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => copyToClipboard('Session restore receipt', getSessionRestoreReceipt(session))}
+                        className="rounded-xl border border-orange-200/30 px-3 py-2 text-[11px] font-black uppercase tracking-[0.12em] text-orange-50 transition hover:bg-orange-200/10"
+                      >
+                        Copy restore receipt
+                      </button>
+                    </div>
                   </div>
                 );
               })}
             </div>
           ) : (
             <p className="mt-4 rounded-2xl border border-white/10 bg-black/20 p-4 text-sm text-stone-400">
-              No session history loaded yet.
+              No session history loaded yet. After loading sessions, proof links and restore receipts
+              appear here for counter recovery.
             </p>
           )}
         </div>

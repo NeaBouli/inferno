@@ -150,6 +150,8 @@ async function verifyPage(contextOptions, label) {
     await expectText(page, 'Move this seller setup to another device');
     await expectText(page, 'Copy backup');
     await expectText(page, 'Restore setup');
+    await expectText(page, 'Session history');
+    await expectText(page, 'proof links and restore receipts');
 
     await gotoAppPage(page, '/guide');
     await expectText(page, 'IFRp Benefits Network Guide');
