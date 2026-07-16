@@ -17,7 +17,7 @@ jobs:
     env:
       ANTHROPIC_API_KEY: "placeholder-not-used-in-build"
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - uses: actions/setup-node@v5
         with:
           node-version: '20'
