@@ -7,6 +7,7 @@ Next.js 14 PWA for the IFR Benefits Network.
 | Route | Purpose |
 |-------|---------|
 | `/` | Customer/Seller role chooser, wallet status, seller rule manager |
+| `/guide` | Customer, seller and developer operating guide for the live shop flow |
 | `/b/:businessId` | Merchant Console — select seller rule, start verification, show QR, approve/redeem |
 | `/r/:sessionId` | Customer Flow — connect wallet, review selected benefit, sign challenge, show result |
 
@@ -32,7 +33,7 @@ NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=...
 
 The public shop defaults to Ethereum Mainnet. `NEXT_PUBLIC_CHAIN_ID=11155111` can still be used for Sepolia testing if matching testnet contract addresses are supplied.
 
-`NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` is required for production wallet UX. Without it, the app shows a setup notice instead of firing failed WalletConnect requests.
+`NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` enables the full WalletConnect/RainbowKit modal for compatible mobile wallets. Without it, the app intentionally falls back to browser-injected Ethereum wallets such as MetaMask and Coinbase Wallet instead of blocking the customer proof flow.
 
 ## Tech Stack
 
