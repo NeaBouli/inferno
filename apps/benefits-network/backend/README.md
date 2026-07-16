@@ -56,7 +56,8 @@ npm run dev            # http://localhost:3001
 2. Merchant creates session → gets QR code URL.
 3. Customer scans QR → connects wallet → signs challenge with the selected benefit details.
 4. Backend verifies signature → checks IFRLock on-chain against that rule's required IFR amount.
-5. Merchant sees APPROVED → seller wallet signs Redeem → backend marks the session as redeemed once.
+5. If the wallet is not eligible yet, the customer response is `REJECTED` but the stored session stays `PENDING` until the three-attempt limit is exhausted, so the customer can lock more IFR and retry the same QR while it is valid.
+6. Merchant sees APPROVED → seller wallet signs Redeem → backend marks the session as redeemed once.
 
 ## Benefit Rules
 
@@ -154,12 +155,12 @@ seller profile, reloads it, creates a benefit rule, lists the rule and deletes
 the smoke rule again. It also creates a QR session for that rule, signs the
 customer challenge, submits `/api/attest` and signs the seller-owned redeem
 attempt. Without `CUSTOMER_PRIVATE_KEY` the customer wallet is throwaway and
-should be rejected by the live IFRLock check; signed redeem is expected to be
-blocked. With `CUSTOMER_PRIVATE_KEY`, use a real eligible customer wallet to
-verify the approved-and-redeemed path. The script then soft-deactivates the
-smoke seller profile so it no longer appears in owned active profile reloads.
-Seller private keys are generated in memory. The optional customer private key
-is never printed.
+should receive a retryable rejected attest response from the live IFRLock check;
+signed redeem is expected to be blocked because the session is not approved.
+With `CUSTOMER_PRIVATE_KEY`, use a real eligible customer wallet to verify the
+approved-and-redeemed path. The script then soft-deactivates the smoke seller
+profile so it no longer appears in owned active profile reloads. Seller private
+keys are generated in memory. The optional customer private key is never printed.
 
 ## Production Deploy
 

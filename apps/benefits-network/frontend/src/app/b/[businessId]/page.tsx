@@ -118,6 +118,7 @@ export default function BusinessConsole({ params }: { params: { businessId: stri
       `Seller: ${business?.name || params.businessId}`,
       `Session: ${session.sessionId}`,
       `Status: ${status?.status || 'PENDING'}`,
+      `Verification attempts: ${status?.attestAttempts ?? 0}/3`,
       `Benefit: ${benefit.discountPercent}%`,
       `Required lock: ${benefit.requiredLockIFR.toLocaleString('en-US')} IFR`,
       `Rule: ${benefit.label || 'Business default'}`,
@@ -377,7 +378,10 @@ export default function BusinessConsole({ params }: { params: { businessId: stri
               <div className="rounded-2xl border border-white/10 bg-black/25 px-4 py-3 text-right">
                 <p className="text-xs uppercase tracking-[0.14em] text-stone-500">Current session</p>
                 <p className="mt-1 text-sm font-black text-white">{status?.status || (session ? 'PENDING' : 'Not started')}</p>
-                <p className="mt-1 text-xs text-stone-400">{session?.discountPercent ?? previewBenefit?.discountPercent ?? '-'}% benefit</p>
+                <p className="mt-1 text-xs text-stone-400">
+                  {session?.discountPercent ?? previewBenefit?.discountPercent ?? '-'}% benefit
+                  {status ? ` · ${status.attestAttempts}/3 checks` : ''}
+                </p>
               </div>
             </div>
 
@@ -400,6 +404,13 @@ export default function BusinessConsole({ params }: { params: { businessId: stri
                 </div>
               ))}
             </div>
+
+            {status?.reason ? (
+              <div className="mt-4 rounded-2xl border border-orange-200/20 bg-orange-200/[0.07] p-3 text-xs leading-5 text-orange-50">
+                <span className="font-black">Customer verification note: </span>
+                {status.reason}
+              </div>
+            ) : null}
 
             <div className="mt-4 grid gap-2 sm:grid-cols-3">
               <button

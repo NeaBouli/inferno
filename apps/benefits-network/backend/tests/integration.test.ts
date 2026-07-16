@@ -140,6 +140,13 @@ describe('E2E: IFR Lock → Benefits Network Verification', () => {
     expect(result.status).toBe('REJECTED');
     expect(result.reason).toContain('Insufficient lock');
     expect(result.reason).toContain('2000.0');
+    expect(result.attemptsRemaining).toBe(2);
+
+    const saved = await prisma.session.findUniqueOrThrow({ where: { id: session.sessionId } });
+    expect(saved.status).toBe('PENDING');
+    expect(saved.recoveredAddress).toBe(TEST_WALLET);
+    expect(saved.lockAmountRaw).toBe('2000.0');
+    expect(saved.reason).toContain('retry this QR session');
   });
 
   it('binds a QR session to a selected benefit rule', async () => {
@@ -253,7 +260,11 @@ describe('E2E: IFR Lock → Benefits Network Verification', () => {
 
     const result = await attest(session.sessionId, '0xinvalid');
     expect(result.status).toBe('REJECTED');
-    expect(result.reason).toBe('Invalid signature');
+    expect(result.reason).toBe('Invalid signature. You can retry this QR session.');
+    expect(result.attemptsRemaining).toBe(2);
+
+    const saved = await prisma.session.findUniqueOrThrow({ where: { id: session.sessionId } });
+    expect(saved.status).toBe('PENDING');
   });
 });
 

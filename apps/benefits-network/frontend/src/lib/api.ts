@@ -140,6 +140,7 @@ export interface SessionStatus {
   reason: string | null;
   redeemedAt: string | null;
   expiresAt: string;
+  attestAttempts: number;
   businessId: string;
   benefitRuleId: string | null;
   benefit: SessionBenefit;
@@ -155,6 +156,7 @@ export interface AttestResult {
   eligible?: boolean;
   reason?: string;
   benefit?: SessionBenefit;
+  attemptsRemaining?: number;
 }
 
 export function getBusiness(id: string) {

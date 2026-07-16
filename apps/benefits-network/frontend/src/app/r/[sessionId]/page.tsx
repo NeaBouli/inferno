@@ -48,8 +48,10 @@ export default function CustomerSession({ params }: { params: { sessionId: strin
       ? 'This benefit was already redeemed by the seller. Ask for a new QR code for another checkout.'
       : proofApproved
         ? 'Show this screen to the seller. This page refreshes while they redeem the approved benefit once.'
-        : proofRejected
-          ? (status?.reason || result?.reason || 'This wallet does not meet the current locked IFR requirement.')
+          : proofRejected
+          ? (status?.status === 'PENDING' && result?.attemptsRemaining
+            ? `${result.reason || 'This wallet does not meet the current locked IFR requirement.'} Retry after locking more IFR. ${result.attemptsRemaining} verification attempt${result.attemptsRemaining === 1 ? '' : 's'} left.`
+            : status?.reason || result?.reason || 'This wallet does not meet the current locked IFR requirement.')
           : CLOSED_STATUSES.includes(currentSessionStatus)
             ? 'Ask the seller for a fresh QR code if you still need verification.'
             : !isConnected
@@ -77,6 +79,7 @@ export default function CustomerSession({ params }: { params: { sessionId: strin
       `Session: ${params.sessionId}`,
       `Seller: ${business?.name || status.businessId}`,
       `Status: ${status.status}`,
+      `Verification attempts: ${status.attestAttempts}/3`,
       `Benefit: ${benefit.discountPercent}%`,
       `Required lock: ${benefit.requiredLockIFR.toLocaleString('en-US')} IFR`,
       `Rule: ${benefit.label || 'Business default'}`,
@@ -250,6 +253,10 @@ export default function CustomerSession({ params }: { params: { sessionId: strin
                 <span>Required lock</span>
                 <strong className="text-white">{(status?.benefit.requiredLockIFR ?? business.requiredLockIFR).toLocaleString('en-US')} IFR</strong>
               </div>
+              <div className="flex justify-between gap-4">
+                <span>Verification attempts</span>
+                <strong className="text-white">{status?.attestAttempts ?? 0}/3</strong>
+              </div>
               {status?.benefit.productName ? (
                 <>
                   <div className="flex justify-between gap-4">
@@ -271,7 +278,7 @@ export default function CustomerSession({ params }: { params: { sessionId: strin
             </p>
             <h2 className="mt-1 text-xl font-black text-white">Need more locked IFR?</h2>
             <p className="mt-2 text-sm leading-6 text-stone-300">
-              If this wallet is rejected or the seller requires a higher tier, open the shop app with the same wallet, buy IFR if needed, lock access, then ask the seller for a fresh QR session.
+              If this wallet is rejected or the seller requires a higher tier, open the shop app with the same wallet, buy IFR if needed, lock access, then retry this QR session while it is still valid. Ask the seller for a fresh QR only after expiry or exhausted attempts.
             </p>
             <div className="mt-4 grid gap-2 sm:grid-cols-3">
               <a
@@ -315,7 +322,7 @@ export default function CustomerSession({ params }: { params: { sessionId: strin
             disabled={!canSign || loading}
             className="mt-6 w-full rounded-2xl bg-orange-300 px-5 py-4 text-sm font-black uppercase tracking-[0.16em] text-stone-950 shadow-xl shadow-orange-950/40 transition hover:bg-orange-200 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {loading ? 'Verifying...' : 'Sign and verify'}
+            {loading ? 'Verifying...' : proofRejected && canSign ? 'Retry verification' : 'Sign and verify'}
           </button>
 
           <button

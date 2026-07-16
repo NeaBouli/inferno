@@ -144,11 +144,13 @@ export async function attest(sessionId: string, signature: string) {
   if (session.attestAttempts >= 3) {
     throw new Error('Maximum attest attempts exceeded');
   }
+  const nextAttempts = session.attestAttempts + 1;
+  const attemptsExhausted = nextAttempts >= 3;
 
   // Increment attempt counter
   await prisma.session.update({
     where: { id: sessionId },
-    data: { attestAttempts: session.attestAttempts + 1 },
+    data: { attestAttempts: nextAttempts },
   });
 
   // Check expiry
@@ -169,10 +171,25 @@ export async function attest(sessionId: string, signature: string) {
   } catch {
     await prisma.session.update({
       where: { id: sessionId },
-      data: { status: 'REJECTED', reason: 'Invalid signature' },
+      data: {
+        status: attemptsExhausted ? 'REJECTED' : 'PENDING',
+        reason: attemptsExhausted
+          ? 'Invalid signature. Verification attempts exhausted.'
+          : 'Invalid signature. You can retry this QR session.',
+      },
     });
-    await auditLog(sessionId, 'ATTEST_FAIL', { reason: 'Invalid signature' });
-    return { status: 'REJECTED' as SessionStatus, reason: 'Invalid signature' };
+    await auditLog(sessionId, 'ATTEST_FAIL', {
+      reason: 'Invalid signature',
+      attempts: nextAttempts,
+      terminal: attemptsExhausted,
+    });
+    return {
+      status: 'REJECTED' as SessionStatus,
+      reason: attemptsExhausted
+        ? 'Invalid signature. Verification attempts exhausted.'
+        : 'Invalid signature. You can retry this QR session.',
+      attemptsRemaining: Math.max(0, 3 - nextAttempts),
+    };
   }
 
   // On-chain lock check
@@ -189,10 +206,12 @@ export async function attest(sessionId: string, signature: string) {
     await prisma.session.update({
       where: { id: sessionId },
       data: {
-        status: 'REJECTED',
+        status: attemptsExhausted ? 'REJECTED' : 'PENDING',
         recoveredAddress,
         lockAmountRaw: lockResult.lockedAmount,
-        reason: `Insufficient lock: ${lockResult.lockedAmount} IFR < ${benefit.requiredLockIFR} IFR`,
+        reason: attemptsExhausted
+          ? `Insufficient lock: ${lockResult.lockedAmount} IFR < ${benefit.requiredLockIFR} IFR. Verification attempts exhausted.`
+          : `Insufficient lock: ${lockResult.lockedAmount} IFR < ${benefit.requiredLockIFR} IFR. Lock more IFR and retry this QR session.`,
       },
     });
     await auditLog(sessionId, 'ATTEST_FAIL', {
@@ -200,12 +219,17 @@ export async function attest(sessionId: string, signature: string) {
       locked: lockResult.lockedAmount,
       required: benefit.requiredLockIFR,
       benefitRuleId: benefit.benefitRuleId,
+      attempts: nextAttempts,
+      terminal: attemptsExhausted,
     });
     return {
       status: 'REJECTED' as SessionStatus,
       wallet: recoveredAddress,
       eligible: false,
-      reason: `Insufficient lock: ${lockResult.lockedAmount} IFR locked, ${benefit.requiredLockIFR} IFR required`,
+      reason: attemptsExhausted
+        ? `Insufficient lock: ${lockResult.lockedAmount} IFR locked, ${benefit.requiredLockIFR} IFR required. Verification attempts exhausted.`
+        : `Insufficient lock: ${lockResult.lockedAmount} IFR locked, ${benefit.requiredLockIFR} IFR required. Lock more IFR and retry this QR session.`,
+      attemptsRemaining: Math.max(0, 3 - nextAttempts),
     };
   }
 
