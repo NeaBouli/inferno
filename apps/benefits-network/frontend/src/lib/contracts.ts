@@ -20,6 +20,43 @@ export const IFRLOCK_ABI = [
     inputs: [{ name: 'user', type: 'address' }],
     outputs: [{ name: '', type: 'uint256' }],
   },
+  {
+    type: 'function',
+    name: 'lock',
+    stateMutability: 'nonpayable',
+    inputs: [{ name: 'amount', type: 'uint256' }],
+    outputs: [],
+  },
+  {
+    type: 'function',
+    name: 'unlock',
+    stateMutability: 'nonpayable',
+    inputs: [],
+    outputs: [],
+  },
+] as const;
+
+export const IFR_TOKEN_ABI = [
+  {
+    type: 'function',
+    name: 'allowance',
+    stateMutability: 'view',
+    inputs: [
+      { name: 'owner', type: 'address' },
+      { name: 'spender', type: 'address' },
+    ],
+    outputs: [{ name: '', type: 'uint256' }],
+  },
+  {
+    type: 'function',
+    name: 'approve',
+    stateMutability: 'nonpayable',
+    inputs: [
+      { name: 'spender', type: 'address' },
+      { name: 'amount', type: 'uint256' },
+    ],
+    outputs: [{ name: '', type: 'bool' }],
+  },
 ] as const;
 
 export function formatIFR(raw?: bigint): string {

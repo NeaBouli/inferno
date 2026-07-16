@@ -1,9 +1,10 @@
 'use client';
 
-import { useAccount, useBalance, useReadContract } from 'wagmi';
-import { formatEther } from 'viem';
+import { useEffect, useMemo, useState } from 'react';
+import { useAccount, useBalance, useReadContract, useWaitForTransactionReceipt, useWriteContract } from 'wagmi';
+import { formatEther, formatUnits, parseUnits } from 'viem';
 import { WalletConnectControl } from '@/components/WalletConnectControl';
-import { IFR_DECIMALS, IFRLOCK_ABI, IFRLOCK_ADDRESS, IFR_TOKEN_ADDRESS, formatIFR } from '@/lib/contracts';
+import { IFR_DECIMALS, IFRLOCK_ABI, IFRLOCK_ADDRESS, IFR_TOKEN_ABI, IFR_TOKEN_ADDRESS, formatIFR } from '@/lib/contracts';
 
 const MIN_CUSTOMER_LOCK = 1000;
 const MIN_CUSTOMER_LOCK_RAW = BigInt(MIN_CUSTOMER_LOCK) * BigInt(10) ** BigInt(IFR_DECIMALS);
@@ -25,6 +26,16 @@ function formatTokenAmount(value?: string) {
   return `${Number(value).toLocaleString('en-US', { maximumFractionDigits: 3 })} IFR`;
 }
 
+function formatInputAmount(raw?: bigint) {
+  if (!raw) return '0';
+  return formatUnits(raw, IFR_DECIMALS);
+}
+
+function shortTx(hash?: `0x${string}`) {
+  if (!hash) return '';
+  return `${hash.slice(0, 10)}...${hash.slice(-6)}`;
+}
+
 function getTier(lockedRaw?: bigint) {
   if (!lockedRaw) return null;
   return [...BENEFIT_TIERS]
@@ -34,6 +45,16 @@ function getTier(lockedRaw?: bigint) {
 
 export function WalletStatus() {
   const { address, isConnected } = useAccount();
+  const [lockAmount, setLockAmount] = useState('1000');
+  const [lockMessage, setLockMessage] = useState('');
+  const [lockError, setLockError] = useState('');
+  const [pendingHash, setPendingHash] = useState<`0x${string}` | undefined>();
+  const [pendingAction, setPendingAction] = useState<'approve' | 'lock' | 'unlock' | ''>('');
+  const { writeContractAsync, isPending: walletPromptOpen } = useWriteContract();
+  const txReceipt = useWaitForTransactionReceipt({
+    hash: pendingHash,
+    query: { enabled: Boolean(pendingHash) },
+  });
   const ethBalance = useBalance({
     address,
     query: { enabled: Boolean(address) },
@@ -50,13 +71,36 @@ export function WalletStatus() {
     args: address ? [address] : undefined,
     query: { enabled: Boolean(address && IFRLOCK_ADDRESS) },
   });
+  const allowance = useReadContract({
+    address: IFR_TOKEN_ADDRESS || undefined,
+    abi: IFR_TOKEN_ABI,
+    functionName: 'allowance',
+    args: address && IFRLOCK_ADDRESS ? [address, IFRLOCK_ADDRESS] : undefined,
+    query: { enabled: Boolean(address && IFR_TOKEN_ADDRESS && IFRLOCK_ADDRESS) },
+  });
   const lockedRaw = lockedBalance.data as bigint | undefined;
+  const allowanceRaw = allowance.data as bigint | undefined;
   const ifrRaw = ifrBalance.data?.value;
   const ethRaw = ethBalance.data?.value;
+  const amountRaw = useMemo(() => {
+    try {
+      const normalized = lockAmount.trim().replace(/,/g, '');
+      if (!normalized || Number(normalized) <= 0) return BigInt(0);
+      return parseUnits(normalized, IFR_DECIMALS);
+    } catch {
+      return BigInt(0);
+    }
+  }, [lockAmount]);
   const tier = getTier(lockedRaw);
   const hasCustomerLock = Boolean(lockedRaw && lockedRaw >= MIN_CUSTOMER_LOCK_RAW);
   const hasIFR = Boolean(ifrRaw && ifrRaw > BigInt(0));
   const hasEth = Boolean(ethRaw && ethRaw > BigInt(0));
+  const hasContracts = Boolean(IFR_TOKEN_ADDRESS && IFRLOCK_ADDRESS);
+  const amountValid = amountRaw > BigInt(0);
+  const hasEnoughIFR = Boolean(ifrRaw && ifrRaw >= amountRaw);
+  const hasEnoughAllowance = Boolean(allowanceRaw && allowanceRaw >= amountRaw);
+  const isWaitingForReceipt = Boolean(pendingHash && txReceipt.isLoading);
+  const txBusy = walletPromptOpen || isWaitingForReceipt;
   const statusLabel = !isConnected
     ? 'Connect wallet'
     : hasCustomerLock
@@ -78,8 +122,138 @@ export function WalletStatus() {
     { label: `${MIN_CUSTOMER_LOCK.toLocaleString('en-US')}+ IFR locked`, done: hasCustomerLock },
   ];
 
+  useEffect(() => {
+    if (!pendingHash || !txReceipt.isSuccess) return;
+    const completedAction = pendingAction;
+    setPendingHash(undefined);
+    setPendingAction('');
+    setLockError('');
+    setLockMessage(
+      completedAction === 'approve'
+        ? 'Approval confirmed. You can lock IFR now.'
+        : completedAction === 'unlock'
+          ? 'Unlock confirmed. Wallet status is refreshing.'
+          : 'Lock confirmed. Wallet status is refreshing.'
+    );
+    void allowance.refetch();
+    void lockedBalance.refetch();
+    void ifrBalance.refetch();
+    void ethBalance.refetch();
+  }, [allowance, ethBalance, ifrBalance, lockedBalance, pendingAction, pendingHash, txReceipt.isSuccess]);
+
+  useEffect(() => {
+    if (!pendingHash || !txReceipt.isError) return;
+    setLockError(txReceipt.error?.message || 'Transaction failed.');
+    setPendingHash(undefined);
+    setPendingAction('');
+  }, [pendingHash, txReceipt.error, txReceipt.isError]);
+
+  function setMaxLockAmount() {
+    setLockAmount(formatInputAmount(ifrRaw));
+  }
+
+  async function approveLockAmount() {
+    if (!address || !isConnected) {
+      setLockError('Connect your wallet before approving IFR.');
+      return;
+    }
+    if (!hasContracts || !IFR_TOKEN_ADDRESS || !IFRLOCK_ADDRESS) {
+      setLockError('IFR token or IFRLock address is not configured.');
+      return;
+    }
+    if (!amountValid) {
+      setLockError('Enter a positive IFR amount.');
+      return;
+    }
+    setLockError('');
+    setLockMessage('Approve IFRLock in your wallet.');
+    try {
+      const hash = await writeContractAsync({
+        address: IFR_TOKEN_ADDRESS,
+        abi: IFR_TOKEN_ABI,
+        functionName: 'approve',
+        args: [IFRLOCK_ADDRESS, amountRaw],
+      });
+      setPendingHash(hash);
+      setPendingAction('approve');
+      setLockMessage(`Approval submitted: ${shortTx(hash)}`);
+    } catch (err) {
+      setLockError(err instanceof Error ? err.message : 'Approval failed.');
+      setLockMessage('');
+    }
+  }
+
+  async function lockIFR() {
+    if (!address || !isConnected) {
+      setLockError('Connect your wallet before locking IFR.');
+      return;
+    }
+    if (!hasContracts || !IFRLOCK_ADDRESS) {
+      setLockError('IFRLock address is not configured.');
+      return;
+    }
+    if (!amountValid) {
+      setLockError('Enter a positive IFR amount.');
+      return;
+    }
+    if (!hasEnoughIFR) {
+      setLockError('This wallet does not hold enough unlocked IFR for that lock amount.');
+      return;
+    }
+    if (!hasEnoughAllowance) {
+      setLockError('Approve IFRLock first, then lock.');
+      return;
+    }
+    setLockError('');
+    setLockMessage('Confirm the IFRLock transaction in your wallet.');
+    try {
+      const hash = await writeContractAsync({
+        address: IFRLOCK_ADDRESS,
+        abi: IFRLOCK_ABI,
+        functionName: 'lock',
+        args: [amountRaw],
+      });
+      setPendingHash(hash);
+      setPendingAction('lock');
+      setLockMessage(`Lock submitted: ${shortTx(hash)}`);
+    } catch (err) {
+      setLockError(err instanceof Error ? err.message : 'Lock failed.');
+      setLockMessage('');
+    }
+  }
+
+  async function unlockAll() {
+    if (!address || !isConnected) {
+      setLockError('Connect your wallet before unlocking IFR.');
+      return;
+    }
+    if (!hasContracts || !IFRLOCK_ADDRESS) {
+      setLockError('IFRLock address is not configured.');
+      return;
+    }
+    if (!lockedRaw || lockedRaw === BigInt(0)) {
+      setLockError('No IFRLock balance is available to unlock.');
+      return;
+    }
+    setLockError('');
+    setLockMessage('Confirm unlock in your wallet. This unlocks the full simple IFRLock balance.');
+    try {
+      const hash = await writeContractAsync({
+        address: IFRLOCK_ADDRESS,
+        abi: IFRLOCK_ABI,
+        functionName: 'unlock',
+      });
+      setPendingHash(hash);
+      setPendingAction('unlock');
+      setLockMessage(`Unlock submitted: ${shortTx(hash)}`);
+    } catch (err) {
+      setLockError(err instanceof Error ? err.message : 'Unlock failed.');
+      setLockMessage('');
+    }
+  }
+
   return (
-    <section className="rounded-[2rem] border border-white/10 bg-white/[0.06] p-5 shadow-2xl shadow-black/30 backdrop-blur">
+    <section id="customer-wallet" className="rounded-[2rem] border border-white/10 bg-white/[0.06] p-5 shadow-2xl shadow-black/30 backdrop-blur">
       <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
         <div>
           <p className="text-xs font-bold uppercase tracking-[0.18em] text-orange-200/80">
@@ -145,13 +319,66 @@ export function WalletStatus() {
           ))}
         </div>
 
+        <div className="mt-4 rounded-2xl border border-white/10 bg-black/20 p-4">
+          <div className="grid gap-3 md:grid-cols-[1fr_auto] md:items-end">
+            <label className="grid gap-2 text-sm font-semibold text-stone-200">
+              IFR amount to lock
+              <input
+                inputMode="decimal"
+                value={lockAmount}
+                onChange={(event) => {
+                  setLockAmount(event.target.value);
+                  setLockError('');
+                  setLockMessage('');
+                }}
+                className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none focus:border-orange-300"
+              />
+            </label>
+            <button
+              type="button"
+              onClick={setMaxLockAmount}
+              disabled={!ifrRaw}
+              className="rounded-2xl border border-white/15 px-4 py-3 text-xs font-black uppercase tracking-[0.14em] text-stone-100 transition hover:border-orange-200/60 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Use max
+            </button>
+          </div>
+          <div className="mt-3 grid gap-2 text-xs text-stone-400 sm:grid-cols-3">
+            <p>Allowance: <span className="text-stone-200">{formatIFR(allowanceRaw)} IFR</span></p>
+            <p>Available: <span className="text-stone-200">{formatIFR(ifrRaw)} IFR</span></p>
+            <p>Locked: <span className="text-stone-200">{formatIFR(lockedRaw)} IFR</span></p>
+          </div>
+          <div className="mt-4 grid gap-3 sm:grid-cols-3">
+            <button
+              type="button"
+              onClick={approveLockAmount}
+              disabled={!isConnected || !amountValid || txBusy}
+              className="rounded-2xl border border-orange-200/35 px-4 py-3 text-center text-xs font-black uppercase tracking-[0.14em] text-orange-50 transition hover:bg-orange-200/10 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Approve
+            </button>
+            <button
+              type="button"
+              onClick={lockIFR}
+              disabled={!isConnected || !amountValid || !hasEnoughIFR || !hasEnoughAllowance || txBusy}
+              className="rounded-2xl bg-orange-300 px-4 py-3 text-center text-xs font-black uppercase tracking-[0.14em] text-stone-950 shadow-xl shadow-orange-950/25 transition hover:-translate-y-0.5 hover:bg-orange-200 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Lock IFR
+            </button>
+            <button
+              type="button"
+              onClick={unlockAll}
+              disabled={!isConnected || !lockedRaw || lockedRaw === BigInt(0) || txBusy}
+              className="rounded-2xl border border-white/15 px-4 py-3 text-center text-xs font-black uppercase tracking-[0.14em] text-stone-100 transition hover:border-orange-200/60 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Unlock all
+            </button>
+          </div>
+          {lockMessage ? <p className="mt-3 text-xs font-semibold text-green-100">{lockMessage}</p> : null}
+          {lockError ? <p className="mt-3 rounded-xl border border-red-400/30 bg-red-500/10 p-3 text-xs text-red-100">{lockError}</p> : null}
+        </div>
+
         <div className="mt-4 grid gap-3 sm:grid-cols-2">
-          <a
-            href="https://web3.ifrunit.tech"
-            className="rounded-2xl bg-orange-300 px-4 py-3 text-center text-xs font-black uppercase tracking-[0.14em] text-stone-950 shadow-xl shadow-orange-950/25 transition hover:-translate-y-0.5 hover:bg-orange-200"
-          >
-            Lock IFR
-          </a>
           <a
             href={UNISWAP_IFR_URL}
             target="_blank"
