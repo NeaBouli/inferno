@@ -32,6 +32,7 @@ export default function BusinessConsole({ params }: { params: { businessId: stri
   const [origin, setOrigin] = useState('');
   const [error, setError] = useState('');
   const [linkStatus, setLinkStatus] = useState('');
+  const [receiptStatus, setReceiptStatus] = useState('');
   const [loading, setLoading] = useState(false);
   const isDone = status && ['REDEEMED', 'EXPIRED', 'REJECTED'].includes(status.status);
 
@@ -104,6 +105,28 @@ export default function BusinessConsole({ params }: { params: { businessId: stri
     { label: 'Customer approved', ready: customerApproved },
     { label: 'Seller wallet ready', ready: sellerWalletReady },
   ];
+  const checkoutReceipt = useMemo(() => {
+    if (!session) return '';
+
+    const benefit = status?.benefit ?? session;
+    const wallet = status?.recoveredAddress
+      ? `${status.recoveredAddress.slice(0, 6)}...${status.recoveredAddress.slice(-4)}`
+      : 'not verified yet';
+    return [
+      'IFRp Benefits Network checkout receipt',
+      `Seller: ${business?.name || params.businessId}`,
+      `Session: ${session.sessionId}`,
+      `Status: ${status?.status || 'PENDING'}`,
+      `Benefit: ${benefit.discountPercent}%`,
+      `Required lock: ${benefit.requiredLockIFR.toLocaleString('en-US')} IFR`,
+      `Rule: ${benefit.label || 'Business default'}`,
+      `Product: ${benefit.productName || 'Business default benefit'}`,
+      `Customer wallet: ${wallet}`,
+      `Expires: ${session.expiresAt}`,
+      `Redeemed: ${status?.redeemedAt || 'not redeemed'}`,
+      `Customer link: ${customerUrl || 'not ready'}`,
+    ].join('\n');
+  }, [business?.name, customerUrl, params.businessId, session, status]);
 
   async function startSession() {
     setLoading(true);
@@ -186,6 +209,45 @@ export default function BusinessConsole({ params }: { params: { businessId: stri
       if (err instanceof Error && err.name === 'AbortError') return;
       setLinkStatus('');
       setError(err instanceof Error ? err.message : 'Could not share the customer link.');
+    }
+  }
+
+  async function copyCheckoutReceipt() {
+    if (!checkoutReceipt) {
+      setError('Create a QR session before copying a checkout receipt.');
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(checkoutReceipt);
+      setError('');
+      setReceiptStatus('Checkout receipt copied.');
+    } catch {
+      setReceiptStatus('');
+      setError('Could not copy the checkout receipt in this browser.');
+    }
+  }
+
+  async function shareCheckoutReceipt() {
+    if (!checkoutReceipt) {
+      setError('Create a QR session before sharing a checkout receipt.');
+      return;
+    }
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: `${business?.name || 'IFRp'} checkout receipt`,
+          text: checkoutReceipt,
+          url: customerUrl || origin || undefined,
+        });
+        setError('');
+        setReceiptStatus('Checkout receipt shared.');
+        return;
+      }
+      await copyCheckoutReceipt();
+    } catch (err) {
+      if (err instanceof Error && err.name === 'AbortError') return;
+      setReceiptStatus('');
+      setError(err instanceof Error ? err.message : 'Could not share the checkout receipt.');
     }
   }
 
@@ -294,6 +356,50 @@ export default function BusinessConsole({ params }: { params: { businessId: stri
             <p className="mt-2 text-xs leading-5 text-stone-400">
               Redeem is a seller action. The backend requires a fresh wallet signature from the business owner.
             </p>
+          </div>
+
+          <div className="mt-5 rounded-2xl border border-orange-200/20 bg-[#20140c] p-4">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-[0.16em] text-orange-200/80">
+                  Checkout receipt
+                </p>
+                <h2 className="mt-1 text-xl font-black text-white">
+                  {session ? status?.status || 'PENDING' : 'Create QR first'}
+                </h2>
+                <p className="mt-2 text-sm leading-6 text-stone-300">
+                  Copy a redacted receipt for staff handoff, test evidence or customer support.
+                  It never includes private keys, signatures or full wallet inventories.
+                </p>
+              </div>
+              {status ? <StatusBadge status={status.status} /> : null}
+            </div>
+
+            <div className="mt-4 rounded-2xl border border-white/10 bg-black/25 p-3">
+              <pre className="max-h-56 overflow-auto whitespace-pre-wrap text-xs leading-6 text-orange-50">
+                {checkoutReceipt || 'Create a QR session to generate a checkout receipt.'}
+              </pre>
+            </div>
+
+            <div className="mt-4 grid gap-2 sm:grid-cols-2">
+              <button
+                type="button"
+                onClick={copyCheckoutReceipt}
+                disabled={!checkoutReceipt}
+                className="rounded-2xl border border-orange-200/35 px-4 py-3 text-xs font-black uppercase tracking-[0.14em] text-orange-50 transition hover:bg-orange-200/10 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Copy receipt
+              </button>
+              <button
+                type="button"
+                onClick={shareCheckoutReceipt}
+                disabled={!checkoutReceipt}
+                className="rounded-2xl border border-white/15 px-4 py-3 text-xs font-black uppercase tracking-[0.14em] text-stone-100 transition hover:border-orange-200/60 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Share receipt
+              </button>
+            </div>
+            {receiptStatus ? <p className="mt-3 text-xs font-semibold text-green-100">{receiptStatus}</p> : null}
           </div>
 
           <div className="mt-6 grid gap-3 rounded-2xl border border-white/10 bg-black/25 p-4 text-sm text-stone-300">
