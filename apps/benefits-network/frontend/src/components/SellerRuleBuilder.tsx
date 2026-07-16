@@ -3,11 +3,13 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useAccount, useConnect, useDisconnect, useSignMessage } from 'wagmi';
 import QRCode from 'react-qr-code';
+import { SellerCatalogManager } from '@/components/SellerCatalogManager';
 import {
   AdminBusinessCreated,
   BenefitRule,
   BenefitRuleInput,
   CheckoutOperator,
+  CatalogProduct,
   SellerAuth,
   SellerBusinessSummary,
   SellerActivityMetrics,
@@ -69,6 +71,8 @@ export function SellerRuleBuilder() {
   const [minLocked, setMinLocked] = useState(DEFAULT_RULE_DRAFT.minLocked);
   const [ttl, setTtl] = useState(DEFAULT_RULE_DRAFT.ttl);
   const [rules, setRules] = useState<BenefitRule[]>([]);
+  const [catalogProducts, setCatalogProducts] = useState<CatalogProduct[]>([]);
+  const [selectedProductId, setSelectedProductId] = useState('');
   const [editingRuleId, setEditingRuleId] = useState<string | null>(null);
   const [sessions, setSessions] = useState<SellerSessionSummary[]>([]);
   const [activityMetrics, setActivityMetrics] = useState<SellerActivityMetrics | null>(null);
@@ -195,12 +199,14 @@ export function SellerRuleBuilder() {
   useEffect(() => {
     setEditingRuleId(null);
     setCheckoutOperators([]);
+    setCatalogProducts([]);
     resetRuleDraft();
   }, [businessId]);
 
   const payload: BenefitRuleInput = useMemo(
     () => ({
       label: label || 'IFR Benefit',
+      productId: selectedProductId || null,
       category,
       productName: product || 'IFR Benefit',
       discountPercent: discount,
@@ -208,7 +214,7 @@ export function SellerRuleBuilder() {
       ttlSeconds: ttl,
       active: true,
     }),
-    [category, discount, label, minLocked, product, ttl]
+    [category, discount, label, minLocked, product, selectedProductId, ttl]
   );
 
   function resetRuleDraft() {
@@ -218,6 +224,7 @@ export function SellerRuleBuilder() {
     setDiscount(DEFAULT_RULE_DRAFT.discount);
     setMinLocked(DEFAULT_RULE_DRAFT.minLocked);
     setTtl(DEFAULT_RULE_DRAFT.ttl);
+    setSelectedProductId('');
   }
 
   async function createBusiness() {
@@ -256,6 +263,7 @@ export function SellerRuleBuilder() {
           tierLabel: input.tierLabel || null,
           createdAt: new Date().toISOString(),
           rulesCount: 0,
+          productsCount: 0,
         },
         ...current.filter((item) => item.id !== business.id),
       ]);
@@ -500,11 +508,23 @@ export function SellerRuleBuilder() {
     setLabel(rule.label);
     setCategory(rule.category);
     setProduct(rule.productName);
+    setSelectedProductId(rule.productId || '');
     setDiscount(rule.discountPercent);
     setMinLocked(rule.requiredLockIFR);
     setTtl(rule.ttlSeconds);
     setError('');
     setStatus(`Editing ${rule.label}. Changes apply only after the signed update is confirmed.`);
+    window.requestAnimationFrame(() => {
+      document.getElementById('seller-rule-editor')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  }
+
+  function useCatalogProduct(productItem: CatalogProduct) {
+    setSelectedProductId(productItem.id);
+    setProduct(productItem.name);
+    setCategory(productItem.category);
+    setError('');
+    setStatus(`${productItem.name} selected. Save the rule to bind a stable product snapshot.`);
     window.requestAnimationFrame(() => {
       document.getElementById('seller-rule-editor')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
@@ -538,7 +558,7 @@ export function SellerRuleBuilder() {
     }
   }
 
-  async function deleteRule(ruleId: string) {
+  async function archiveRule(ruleId: string) {
     const rule = rules.find((item) => item.id === ruleId);
     if (!canManage || !rule) {
       setError('Connect the seller wallet or use the operator admin fallback.');
@@ -555,9 +575,9 @@ export function SellerRuleBuilder() {
       }
       setRules((current) => current.filter((item) => item.id !== ruleId));
       if (editingRuleId === ruleId) setEditingRuleId(null);
-      setStatus('Rule deleted.');
+      setStatus('Rule archived. Existing checkout history remains available.');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to delete rule');
+      setError(err instanceof Error ? err.message : 'Failed to archive rule');
     } finally {
       setLoading(false);
     }
@@ -800,7 +820,7 @@ export function SellerRuleBuilder() {
                 >
                   <span className="block text-sm font-black text-white">{business.name}</span>
                   <span className="mt-1 block text-xs leading-5 text-stone-300">
-                    {business.rulesCount} rule{business.rulesCount === 1 ? '' : 's'} / {business.discountPercent}% default / {business.requiredLockIFR.toLocaleString('en-US')} IFR
+                    {business.productsCount} catalog item{business.productsCount === 1 ? '' : 's'} / {business.rulesCount} rule{business.rulesCount === 1 ? '' : 's'} / {business.discountPercent}% default / {business.requiredLockIFR.toLocaleString('en-US')} IFR
                   </span>
                   <span className="mt-1 block break-all font-mono text-[11px] text-stone-500">{business.id}</span>
                 </button>
@@ -1331,6 +1351,19 @@ export function SellerRuleBuilder() {
         </div>
       ) : null}
 
+      <SellerCatalogManager
+        businessId={businessId}
+        ownerReady={canUseWalletOwner}
+        products={catalogProducts}
+        signSellerAction={signSellerAction}
+        onProductsChange={setCatalogProducts}
+        onUseProduct={useCatalogProduct}
+        onProductArchived={(productId) => {
+          setRules((current) => current.map((rule) => rule.productId === productId ? { ...rule, active: false } : rule));
+          if (selectedProductId === productId) setSelectedProductId('');
+        }}
+      />
+
       <div id="seller-rule-editor" className="mb-4 scroll-mt-24 rounded-2xl border border-orange-200/20 bg-orange-200/[0.06] p-4">
         <p className="text-xs font-black uppercase tracking-[0.16em] text-orange-200/80">
           {editingRule ? 'Editing benefit rule' : 'New benefit rule'}
@@ -1380,6 +1413,30 @@ export function SellerRuleBuilder() {
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
+        <label className="grid gap-2 text-sm font-semibold text-stone-200 md:col-span-2">
+          Catalog binding
+          <select
+            value={selectedProductId}
+            onChange={(event) => {
+              const productId = event.target.value;
+              setSelectedProductId(productId);
+              const productItem = catalogProducts.find((item) => item.id === productId);
+              if (productItem) {
+                setProduct(productItem.name);
+                setCategory(productItem.category);
+              }
+            }}
+            className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none focus:border-orange-300"
+          >
+            <option value="">Custom rule without catalog item</option>
+            {catalogProducts.filter((item) => item.active).map((item) => (
+              <option key={item.id} value={item.id}>{item.category} / {item.name}</option>
+            ))}
+          </select>
+          <span className="text-xs font-normal leading-5 text-stone-400">
+            Bound rules copy the current catalog name and category into each new checkout snapshot.
+          </span>
+        </label>
         <label className="grid gap-2 text-sm font-semibold text-stone-200">
           Rule label
           <input
@@ -1393,6 +1450,7 @@ export function SellerRuleBuilder() {
           <select
             value={category}
             onChange={(event) => setCategory(event.target.value)}
+            disabled={Boolean(selectedProductId)}
             className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none focus:border-orange-300"
           >
             {categories.map((item) => (
@@ -1405,6 +1463,7 @@ export function SellerRuleBuilder() {
           <input
             value={product}
             onChange={(event) => setProduct(event.target.value)}
+            readOnly={Boolean(selectedProductId)}
             className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none focus:border-orange-300"
           />
         </label>
@@ -1502,11 +1561,11 @@ export function SellerRuleBuilder() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => deleteRule(rule.id)}
+                  onClick={() => archiveRule(rule.id)}
                   disabled={loading || !canManage}
                   className="rounded-full border border-red-300/30 px-4 py-2 text-xs font-bold uppercase tracking-[0.12em] text-red-100 hover:bg-red-500/10 disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  Delete
+                  Archive
                 </button>
               </div>
             </div>

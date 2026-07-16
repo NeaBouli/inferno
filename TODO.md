@@ -1,6 +1,10 @@
 # PROJEKT INFERNO — VOLLSTÄNDIGE TODO-LISTE
 Stand: 07.04.2026 | Konsolidiert (Claude + Core Dev)
 
+> **Legacy snapshot:** Diese Datei wird nicht mehr als aktueller Projektstatus gepflegt.
+> Verbindlich sind `docs/TODO.md` und die lokale `BRIDGE.md`; historische Eintraege unten
+> bleiben nur als Audit-/Planungsarchiv erhalten.
+
 ---
 
 ## KRITISCH — Governance Proposals Execute

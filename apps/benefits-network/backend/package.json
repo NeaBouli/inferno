@@ -7,7 +7,7 @@
     "build": "tsc",
     "start": "node dist/index.js",
     "test": "DATABASE_URL=file:./test.db node scripts/reset-test-db.cjs && DATABASE_URL=file:./test.db jest --forceExit --detectOpenHandles",
-    "test:migration-upgrade": "node scripts/verify-checkout-operator-upgrade.cjs",
+    "test:migration-upgrade": "node scripts/verify-populated-migration-upgrade.cjs",
     "smoke:http": "bash scripts/ci-http-smoke.sh",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev"

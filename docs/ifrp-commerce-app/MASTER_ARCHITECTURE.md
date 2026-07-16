@@ -544,11 +544,11 @@ MVP should be installable:
 
 ### M3 - Seller Catalog And Categories
 
-- product/service CRUD;
-- categories;
-- rule templates;
+- product/service CRUD; **implemented with owner-signed create/edit/soft-archive**
+- categories; **implemented for seller management and public customer browsing**
+- rule templates; **basic product-bound benefit rules implemented; reusable multi-rule templates remain incremental**
 - staff scanner mode; **implemented with owner-managed, expiring checkout operators and atomic role-audited redeem**
-- redemption history.
+- redemption history. **implemented as owner-protected recent sessions, metrics and receipts**
 
 ### M4 - Verified Seller Rewards
 

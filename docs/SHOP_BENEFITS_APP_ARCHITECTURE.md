@@ -120,6 +120,7 @@ If `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` is missing, the frontend must show a s
 7. Add POS/plugin snippets to code generator. **Server-side JavaScript/POS session helper implemented; packaged SDK and platform-specific plugins remain future work.**
 8. Add mobile E2E checks for iPad Safari/Chrome and Android MetaMask browser.
 9. Checkout staff mode with owner-managed expiry/revocation and role-aware audit. **Implemented; live device acceptance remains pending.**
+10. Seller product/service catalog and public customer benefit browsing. **Implemented with owner-signed soft-archive, cross-business rule protection and immutable QR-session snapshots.**
 
 ## Security Notes
 

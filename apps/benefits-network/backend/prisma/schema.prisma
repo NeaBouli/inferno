@@ -20,8 +20,25 @@ model Business {
   sessions        Session[]
   benefitRules    BenefitRule[]
   checkoutOperators CheckoutOperator[]
+  products        Product[]
 
   @@index([ownerAddress])
+}
+
+model Product {
+  id          String        @id @default(cuid())
+  businessId  String
+  business    Business      @relation(fields: [businessId], references: [id])
+  name        String
+  category    String
+  description String?
+  active      Boolean       @default(true)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  benefitRules BenefitRule[]
+
+  @@index([businessId, active])
+  @@index([category])
 }
 
 model CheckoutOperator {
@@ -44,6 +61,8 @@ model BenefitRule {
   id              String   @id @default(cuid())
   businessId      String
   business        Business @relation(fields: [businessId], references: [id])
+  productId       String?
+  product         Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
   label           String
   category        String
   productName     String
@@ -56,6 +75,7 @@ model BenefitRule {
   sessions        Session[]
 
   @@index([businessId])
+  @@index([productId])
   @@index([active])
 }
 
@@ -65,6 +85,13 @@ model Session {
   business         Business   @relation(fields: [businessId], references: [id])
   benefitRuleId    String?
   benefitRule      BenefitRule? @relation(fields: [benefitRuleId], references: [id])
+  benefitSnapshotVersion Int?
+  benefitLabel     String?
+  benefitCategory  String?
+  benefitProductName String?
+  benefitDiscountPercent Int?
+  benefitRequiredLockIFR Int?
+  benefitTtlSeconds Int?
   nonce            String     @unique
   expiresAt        DateTime
   status           String     @default("PENDING")

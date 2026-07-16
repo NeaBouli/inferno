@@ -432,6 +432,12 @@ export default function BusinessConsole({ params }: { params: { businessId: stri
             Start a short-lived verification session. The customer signs the QR challenge;
             the backend checks IFRLock on-chain and this screen updates automatically.
           </p>
+          <a
+            href={`/s/${encodeURIComponent(params.businessId)}`}
+            className="mt-4 inline-flex rounded-full border border-green-200/35 px-4 py-2 text-xs font-black uppercase tracking-[0.12em] text-green-50"
+          >
+            Open customer catalog
+          </a>
 
           <div className="mt-5 rounded-2xl border border-orange-200/20 bg-[#1d130c] p-4 shadow-xl shadow-black/20">
             <div className="flex flex-wrap items-start justify-between gap-4">

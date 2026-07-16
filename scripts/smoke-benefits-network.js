@@ -191,6 +191,11 @@ async function verifyPage(contextOptions, label) {
     await expectText(page, 'Load profiles');
     await expectText(page, 'Create profile');
     await page.getByPlaceholder('cuid...').fill('smoke-manual-business');
+    await expectText(page, 'Seller catalog');
+    await expectText(page, 'Products and services');
+    await expectText(page, 'Load catalog');
+    await expectText(page, 'Customer view');
+    await expectText(page, 'Catalog binding');
     await expectText(page, 'Counter team');
     await expectText(page, 'Delegate checkout access');
     await expectText(page, 'Load team');
@@ -238,9 +243,50 @@ async function verifyPage(contextOptions, label) {
     await expectText(page, 'Copy receipt');
     await expectText(page, 'Checkout wallet');
     await expectText(page, 'Connect owner or checkout operator');
+    await expectText(page, 'Open customer catalog');
     if (shouldScreenshot) {
       await page.screenshot({
         path: path.join(screenshotDir, `benefits-scanner-${label}.png`),
+        fullPage: true,
+      });
+    }
+
+    await page.route('**/api/businesses/smoke-catalog/products', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          business: { id: 'smoke-catalog', name: 'Smoke Coffee' },
+          products: [{
+            id: 'smoke-product',
+            businessId: 'smoke-catalog',
+            name: 'Reserve espresso',
+            category: 'Coffee',
+            description: 'A customer-facing catalog item.',
+            active: true,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            benefitRules: [{
+              id: 'smoke-rule',
+              label: 'Coffee member',
+              discountPercent: 15,
+              requiredLockIFR: 1000,
+              ttlSeconds: 90,
+            }],
+          }],
+        }),
+      });
+    });
+    await gotoAppPage(page, '/s/smoke-catalog');
+    await expectText(page, 'IFR member benefits');
+    await expectText(page, 'Smoke Coffee');
+    await expectText(page, 'Reserve espresso');
+    await expectText(page, '15% benefit');
+    await expectText(page, '1,000 locked IFR');
+    await expectText(page, 'Seller starts a one-time QR checkout');
+    if (shouldScreenshot) {
+      await page.screenshot({
+        path: path.join(screenshotDir, `benefits-catalog-${label}.png`),
         fullPage: true,
       });
     }

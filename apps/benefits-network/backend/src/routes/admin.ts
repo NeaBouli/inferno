@@ -110,19 +110,35 @@ router.patch('/rules/:id', adminAuth, validate(updateBenefitRuleSchema), async (
   try {
     const existing = await prisma.benefitRule.findUnique({
       where: { id: req.params.id },
-      select: { id: true },
+      select: { id: true, businessId: true, productId: true },
     });
     if (!existing) {
       res.status(404).json({ error: 'Benefit rule not found' });
       return;
     }
 
-    const rule = await prisma.benefitRule.update({
-      where: { id: req.params.id },
-      data: req.body,
+    const rule = await prisma.$transaction(async (tx) => {
+      if (req.body.active === true && existing.productId) {
+        const lockedProducts = await tx.$executeRaw`
+          UPDATE "Product"
+          SET "active" = "active"
+          WHERE "id" = ${existing.productId}
+            AND "businessId" = ${existing.businessId}
+            AND "active" = 1
+        `;
+        if (lockedProducts !== 1) throw new Error('Linked catalog product is archived');
+      }
+      return tx.benefitRule.update({
+        where: { id: req.params.id },
+        data: req.body,
+      });
     });
     res.json(rule);
   } catch (err) {
+    if (err instanceof Error && err.message.includes('catalog product is archived')) {
+      res.status(409).json({ error: err.message });
+      return;
+    }
     next(err);
   }
 });
@@ -138,7 +154,10 @@ router.delete('/rules/:id', adminAuth, async (req, res, next) => {
       return;
     }
 
-    await prisma.benefitRule.delete({ where: { id: req.params.id } });
+    await prisma.benefitRule.update({
+      where: { id: req.params.id },
+      data: { active: false },
+    });
     res.status(204).send();
   } catch (err) {
     next(err);

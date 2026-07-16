@@ -30,6 +30,7 @@ export interface BusinessInfo {
 export interface BenefitRule {
   id: string;
   businessId: string;
+  productId: string | null;
   label: string;
   category: string;
   productName: string;
@@ -42,6 +43,7 @@ export interface BenefitRule {
 }
 
 export interface BenefitRuleInput {
+  productId?: string | null;
   label: string;
   category: string;
   productName: string;
@@ -49,6 +51,35 @@ export interface BenefitRuleInput {
   requiredLockIFR: number;
   ttlSeconds: number;
   active?: boolean;
+}
+
+export interface CatalogProduct {
+  id: string;
+  businessId: string;
+  name: string;
+  category: string;
+  description: string | null;
+  active: boolean;
+  createdAt: string;
+  updatedAt: string;
+  _count?: { benefitRules: number };
+}
+
+export interface CatalogProductInput {
+  name: string;
+  category: string;
+  description?: string | null;
+  active?: boolean;
+}
+
+export interface PublicCatalogProduct extends CatalogProduct {
+  benefitRules: Array<{
+    id: string;
+    label: string;
+    discountPercent: number;
+    requiredLockIFR: number;
+    ttlSeconds: number;
+  }>;
 }
 
 export interface AdminBusinessInput {
@@ -73,6 +104,7 @@ export interface SellerBusinessSummary extends AdminBusinessCreated {
   tierLabel: string | null;
   createdAt: string;
   rulesCount: number;
+  productsCount: number;
 }
 
 export interface SellerSessionSummary {
@@ -196,6 +228,12 @@ export function getBusinessRules(id: string) {
   return fetchJSON<{ rules: BenefitRule[] }>(`/api/businesses/${id}/rules`);
 }
 
+export function getBusinessProducts(id: string) {
+  return fetchJSON<{ business: { id: string; name: string }; products: PublicCatalogProduct[] }>(
+    `/api/businesses/${id}/products`
+  );
+}
+
 function adminHeaders(adminSecret: string) {
   return { Authorization: `Bearer ${adminSecret}` };
 }
@@ -288,6 +326,43 @@ export function getSellerBusinesses(auth: SellerAuth) {
 
 export function getSellerBusinessRules(businessId: string, auth: SellerAuth) {
   return fetchJSON<{ rules: BenefitRule[] }>(`/api/seller/businesses/${businessId}/rules`, {
+    headers: sellerHeaders(auth),
+  });
+}
+
+export function getSellerBusinessProducts(businessId: string, auth: SellerAuth) {
+  return fetchJSON<{ products: CatalogProduct[] }>(`/api/seller/businesses/${businessId}/products`, {
+    headers: sellerHeaders(auth),
+  });
+}
+
+export function createSellerBusinessProduct(
+  businessId: string,
+  auth: SellerAuth,
+  input: CatalogProductInput
+) {
+  return fetchJSON<CatalogProduct>(`/api/seller/businesses/${businessId}/products`, {
+    method: 'POST',
+    headers: sellerHeaders(auth),
+    body: JSON.stringify(input),
+  });
+}
+
+export function updateSellerBusinessProduct(
+  productId: string,
+  auth: SellerAuth,
+  input: Partial<CatalogProductInput>
+) {
+  return fetchJSON<CatalogProduct>(`/api/seller/products/${productId}`, {
+    method: 'PATCH',
+    headers: sellerHeaders(auth),
+    body: JSON.stringify(input),
+  });
+}
+
+export function deleteSellerBusinessProduct(productId: string, auth: SellerAuth) {
+  return fetchJSON<void>(`/api/seller/products/${productId}`, {
+    method: 'DELETE',
     headers: sellerHeaders(auth),
   });
 }
