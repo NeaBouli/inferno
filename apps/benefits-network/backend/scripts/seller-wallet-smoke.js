@@ -193,6 +193,15 @@ async function main() {
   }
   console.log('List owned rules: OK');
 
+  const initialSessionsAuth = await signSellerAction(wallet, 'sessions:list', business.id);
+  const initialSessions = await fetchJson(`/api/seller/businesses/${business.id}/sessions`, {
+    headers: sellerHeaders(initialSessionsAuth),
+  });
+  if (!Array.isArray(initialSessions.sessions) || initialSessions.sessions.length !== 0) {
+    throw new Error(`Expected empty initial session history, got ${JSON.stringify(initialSessions)}`);
+  }
+  console.log('Initial session history: OK');
+
   const session = await fetchJson('/api/sessions', {
     method: 'POST',
     body: JSON.stringify({
@@ -204,6 +213,15 @@ async function main() {
     throw new Error(`Session ${session.sessionId} was not bound to rule ${rule.id}`);
   }
   console.log(`Created QR session: ${session.sessionId}`);
+
+  const sessionsAuth = await signSellerAction(wallet, 'sessions:list', business.id);
+  const sessionHistory = await fetchJson(`/api/seller/businesses/${business.id}/sessions`, {
+    headers: sellerHeaders(sessionsAuth),
+  });
+  if (!sessionHistory.sessions.some((entry) => entry.id === session.sessionId && entry.status === 'PENDING')) {
+    throw new Error(`Created session ${session.sessionId} was not returned by session history`);
+  }
+  console.log('Session history after QR: OK');
 
   const challenge = await fetchJson(`/api/sessions/${session.sessionId}/challenge`);
   const customerSignature = await customerWallet.signMessage(challenge.message);

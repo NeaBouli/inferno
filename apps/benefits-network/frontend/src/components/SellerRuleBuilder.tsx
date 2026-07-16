@@ -8,6 +8,7 @@ import {
   BenefitRuleInput,
   SellerAuth,
   SellerBusinessSummary,
+  SellerSessionSummary,
   createAdminBusiness,
   createAdminBusinessRule,
   createSellerBusiness,
@@ -19,6 +20,7 @@ import {
   getSellerAuthMessage,
   getSellerBusinesses,
   getSellerBusinessRules,
+  getSellerBusinessSessions,
   updateAdminBusinessRule,
   updateSellerBusinessRule,
 } from '@/lib/api';
@@ -42,6 +44,7 @@ export function SellerRuleBuilder() {
   const [minLocked, setMinLocked] = useState(1000);
   const [ttl, setTtl] = useState(90);
   const [rules, setRules] = useState<BenefitRule[]>([]);
+  const [sessions, setSessions] = useState<SellerSessionSummary[]>([]);
   const [sellerBusinesses, setSellerBusinesses] = useState<SellerBusinessSummary[]>([]);
   const [createdBusiness, setCreatedBusiness] = useState<AdminBusinessCreated | null>(null);
   const [status, setStatus] = useState('');
@@ -116,6 +119,7 @@ export function SellerRuleBuilder() {
       setCreatedBusiness(business);
       setBusinessId(business.id);
       setRules([]);
+      setSessions([]);
       setSellerBusinesses((current) => [
         {
           id: business.id,
@@ -163,6 +167,29 @@ export function SellerRuleBuilder() {
     }
   }
 
+  async function loadSessions() {
+    if (!businessId || !canUseWalletOwner) {
+      setError('Business ID plus seller wallet are required to load session history.');
+      return;
+    }
+    setLoading(true);
+    setError('');
+    setStatus('');
+    try {
+      const result = await getSellerBusinessSessions(
+        businessId,
+        await signSellerAction('sessions:list', businessId),
+        10
+      );
+      setSessions(result.sessions);
+      setStatus(`Loaded ${result.sessions.length} recent session${result.sessions.length === 1 ? '' : 's'}.`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load session history');
+    } finally {
+      setLoading(false);
+    }
+  }
+
   async function loadSellerBusinesses() {
     if (!canUseWalletOwner) {
       setError('Connect the seller wallet to load owned seller profiles.');
@@ -176,6 +203,7 @@ export function SellerRuleBuilder() {
       setSellerBusinesses(result.businesses);
       if (!businessId && result.businesses[0]) {
         setBusinessId(result.businesses[0].id);
+        setSessions([]);
       }
       setStatus(`Loaded ${result.businesses.length} seller profile${result.businesses.length === 1 ? '' : 's'}.`);
     } catch (err) {
@@ -199,6 +227,7 @@ export function SellerRuleBuilder() {
       if (businessId === targetBusinessId) {
         setBusinessId('');
         setRules([]);
+        setSessions([]);
       }
       setStatus('Seller profile deactivated.');
     } catch (err) {
@@ -409,6 +438,7 @@ export function SellerRuleBuilder() {
                   onClick={() => {
                     setBusinessId(business.id);
                     setRules([]);
+                    setSessions([]);
                     setStatus(`${business.name} selected. Load rules when you need the current list.`);
                   }}
                   className="block w-full text-left"
@@ -425,6 +455,7 @@ export function SellerRuleBuilder() {
                     onClick={() => {
                       setBusinessId(business.id);
                       setRules([]);
+                      setSessions([]);
                       setStatus(`${business.name} selected. Load rules when you need the current list.`);
                     }}
                     className="rounded-xl border border-green-200/30 px-3 py-2 text-[11px] font-black uppercase tracking-[0.12em] text-green-50 transition hover:bg-green-200/10"
@@ -556,6 +587,68 @@ export function SellerRuleBuilder() {
           <pre className="mt-4 overflow-x-auto whitespace-pre-wrap rounded-2xl border border-white/10 bg-black/35 p-4 text-xs leading-6 text-orange-50">
             {checkoutKitText}
           </pre>
+        </div>
+      ) : null}
+
+      {businessId ? (
+        <div className="mb-5 rounded-3xl border border-green-300/20 bg-green-300/[0.06] p-4">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[0.18em] text-green-100/80">Session history</p>
+              <h3 className="mt-1 text-xl font-black text-white">Recent customer checks</h3>
+              <p className="mt-2 text-sm leading-6 text-stone-300">
+                Load the latest QR sessions for this seller profile. This requires the owner wallet signature and shows no private customer data beyond the verified wallet address.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={loadSessions}
+              disabled={loading || !canUseWalletOwner}
+              className="rounded-2xl border border-green-200/40 px-4 py-3 text-xs font-black uppercase tracking-[0.14em] text-green-50 transition hover:bg-green-200/10 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Load sessions
+            </button>
+          </div>
+          {sessions.length > 0 ? (
+            <div className="mt-4 grid gap-3">
+              {sessions.map((session) => (
+                <div key={session.id} className="rounded-2xl border border-white/10 bg-black/25 p-4">
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-black text-white">
+                        {session.label || 'Business default'} {session.productName ? `/ ${session.productName}` : ''}
+                      </p>
+                      <p className="mt-1 text-xs leading-5 text-stone-400">
+                        {new Date(session.createdAt).toLocaleString()} / {session.discountPercent}% / {session.requiredLockIFR.toLocaleString('en-US')} IFR
+                      </p>
+                    </div>
+                    <span
+                      className={`rounded-full px-3 py-1 text-xs font-bold uppercase tracking-[0.14em] ${
+                        session.status === 'APPROVED' || session.status === 'REDEEMED'
+                          ? 'bg-green-400/15 text-green-100'
+                          : session.status === 'REJECTED' || session.status === 'EXPIRED'
+                            ? 'bg-red-400/15 text-red-100'
+                            : 'bg-orange-300/15 text-orange-100'
+                      }`}
+                    >
+                      {session.status}
+                    </span>
+                  </div>
+                  <div className="mt-3 grid gap-2 text-xs leading-5 text-stone-400">
+                    <p className="break-all font-mono">Session: {session.id}</p>
+                    {session.recoveredAddress ? <p className="break-all font-mono">Wallet: {session.recoveredAddress}</p> : null}
+                    {session.lockAmountRaw ? <p>Locked: {session.lockAmountRaw} IFR</p> : null}
+                    {session.reason ? <p className="text-red-100">Reason: {session.reason}</p> : null}
+                    {session.redeemedAt ? <p>Redeemed: {new Date(session.redeemedAt).toLocaleString()}</p> : null}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="mt-4 rounded-2xl border border-white/10 bg-black/20 p-4 text-sm text-stone-400">
+              No session history loaded yet.
+            </p>
+          )}
         </div>
       ) : null}
 

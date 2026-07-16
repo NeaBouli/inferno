@@ -184,6 +184,71 @@ router.get('/businesses/:id/rules', sellerRateLimiter, async (req, res, next) =>
   }
 });
 
+router.get('/businesses/:id/sessions', sellerRateLimiter, async (req, res, next) => {
+  try {
+    await requireBusinessOwner(req, 'sessions:list', req.params.id);
+    const requestedLimit = Number(req.query.limit || 10);
+    const limit = Math.min(Math.max(Number.isFinite(requestedLimit) ? requestedLimit : 10, 1), 50);
+    const sessions = await prisma.session.findMany({
+      where: { businessId: req.params.id },
+      orderBy: { createdAt: 'desc' },
+      take: limit,
+      select: {
+        id: true,
+        status: true,
+        recoveredAddress: true,
+        lockAmountRaw: true,
+        reason: true,
+        expiresAt: true,
+        createdAt: true,
+        updatedAt: true,
+        redeemedAt: true,
+        attestAttempts: true,
+        benefitRule: {
+          select: {
+            id: true,
+            label: true,
+            category: true,
+            productName: true,
+            discountPercent: true,
+            requiredLockIFR: true,
+          },
+        },
+        business: {
+          select: {
+            tierLabel: true,
+            discountPercent: true,
+            requiredLockIFR: true,
+          },
+        },
+      },
+    });
+
+    res.json({
+      sessions: sessions.map((session) => ({
+        id: session.id,
+        status: session.status,
+        recoveredAddress: session.recoveredAddress,
+        lockAmountRaw: session.lockAmountRaw,
+        reason: session.reason,
+        expiresAt: session.expiresAt,
+        createdAt: session.createdAt,
+        updatedAt: session.updatedAt,
+        redeemedAt: session.redeemedAt,
+        attestAttempts: session.attestAttempts,
+        benefitRuleId: session.benefitRule?.id ?? null,
+        label: session.benefitRule?.label ?? session.business.tierLabel,
+        category: session.benefitRule?.category ?? null,
+        productName: session.benefitRule?.productName ?? null,
+        discountPercent: session.benefitRule?.discountPercent ?? session.business.discountPercent,
+        requiredLockIFR: session.benefitRule?.requiredLockIFR ?? session.business.requiredLockIFR,
+      })),
+    });
+  } catch (err) {
+    handleSellerError(err, res, next);
+  }
+});
+
 router.delete('/businesses/:id', sellerRateLimiter, async (req, res, next) => {
   try {
     await requireBusinessOwner(req, 'business:delete', req.params.id);
