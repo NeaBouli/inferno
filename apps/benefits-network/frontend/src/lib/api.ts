@@ -43,6 +43,20 @@ export interface BenefitRuleInput {
   active?: boolean;
 }
 
+export interface AdminBusinessInput {
+  name: string;
+  discountPercent: number;
+  requiredLockIFR: number;
+  ttlSeconds?: number;
+  tierLabel?: string;
+}
+
+export interface AdminBusinessCreated {
+  id: string;
+  verifyUrl: string;
+  qrUrl: string;
+}
+
 export interface SessionCreated {
   sessionId: string;
   expiresAt: string;
@@ -100,6 +114,14 @@ export function getBusinessRules(id: string) {
 
 function adminHeaders(adminSecret: string) {
   return { Authorization: `Bearer ${adminSecret}` };
+}
+
+export function createAdminBusiness(adminSecret: string, input: AdminBusinessInput) {
+  return fetchJSON<AdminBusinessCreated>('/api/admin/businesses', {
+    method: 'POST',
+    headers: adminHeaders(adminSecret),
+    body: JSON.stringify(input),
+  });
 }
 
 export function getAdminBusinessRules(businessId: string, adminSecret: string) {
