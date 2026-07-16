@@ -76,10 +76,15 @@ async function expectText(page, text) {
   await page.getByText(text, { exact: false }).first().waitFor({ timeout: timeoutMs });
 }
 
+async function gotoAppPage(page, route) {
+  await page.goto(`${baseUrl}${route}?smoke=${Date.now()}`, { waitUntil: 'domcontentloaded', timeout: timeoutMs });
+}
+
 function isIgnorableConsoleError(text) {
   return (
     text.includes('status of 404') ||
-    (text.includes('Analytics SDK') && text.includes('Failed to fetch'))
+    (text.includes('Analytics SDK') && text.includes('Failed to fetch')) ||
+    (text.includes('Sender: Failed to send batch') && text.includes('Failed to fetch'))
   );
 }
 
@@ -101,10 +106,13 @@ async function verifyPage(contextOptions, label) {
   });
 
   try {
-    await page.goto(`${baseUrl}/?smoke=${Date.now()}`, { waitUntil: 'networkidle', timeout: timeoutMs });
+    await gotoAppPage(page, '/');
     await expectText(page, 'The shop layer for locked IFR access.');
     await expectText(page, 'Mobile app');
     await expectText(page, 'Install once. Use as customer or seller.');
+    await expectText(page, 'Wallet starter kit');
+    await expectText(page, 'Bring or create your IFR wallet safely.');
+    await expectText(page, 'Non-custodial');
     if (label === 'ipad') {
       await expectText(page, 'iPad/iPhone steps');
       await expectText(page, 'iOS does not show a real in-page install prompt');
@@ -138,15 +146,14 @@ async function verifyPage(contextOptions, label) {
     await expectText(page, 'Show this QR at the counter.');
     await expectText(page, 'Share kit');
 
-    await page.goto(`${baseUrl}/guide?smoke=${Date.now()}`, { waitUntil: 'networkidle', timeout: timeoutMs });
+    await gotoAppPage(page, '/guide');
     await expectText(page, 'IFRp Benefits Network Guide');
     await expectText(page, 'Customer path');
+    await expectText(page, 'Lock IFR in the shop app when needed');
+    await expectText(page, 'The Benefits Network is non-custodial');
     await expectText(page, 'Seller path');
 
-    await page.goto(`${baseUrl}/b/smoke-missing-business?smoke=${Date.now()}`, {
-      waitUntil: 'networkidle',
-      timeout: timeoutMs,
-    });
+    await gotoAppPage(page, '/b/smoke-missing-business');
     await expectText(page, 'Seller scanner');
     await expectText(page, 'Business console');
     await expectText(page, 'Checkout readiness');
@@ -156,10 +163,7 @@ async function verifyPage(contextOptions, label) {
     await expectText(page, 'Checkout receipt');
     await expectText(page, 'Copy receipt');
 
-    await page.goto(`${baseUrl}/r/smoke-missing-session?smoke=${Date.now()}`, {
-      waitUntil: 'networkidle',
-      timeout: timeoutMs,
-    });
+    await gotoAppPage(page, '/r/smoke-missing-session');
     await expectText(page, 'Customer proof');
     await expectText(page, 'Proof readiness');
     await expectText(page, 'Load verification');

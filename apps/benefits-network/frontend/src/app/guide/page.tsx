@@ -10,8 +10,8 @@ const customerSteps = [
     body: 'The app reads ETH, IFR and IFRLock status. Verification never transfers tokens; it only asks for a one-time signature.',
   },
   {
-    title: 'Lock IFR on Web3 when needed',
-    body: 'If a seller rule requires more locked IFR than the wallet has, use the Web3 app to lock IFR first, then return to the seller QR.',
+    title: 'Lock IFR in the shop app when needed',
+    body: 'If a seller rule requires more locked IFR than the wallet has, use the in-app Lock IFR panel, then return to the seller QR with the same wallet.',
   },
   {
     title: 'Scan, sign, receive the benefit',
@@ -123,7 +123,18 @@ export default function GuidePage() {
             <p className="mt-4 text-sm leading-7 text-stone-300">
               Production currently supports browser-injected Ethereum wallets such as MetaMask and Coinbase Wallet. The full WalletConnect modal for Rainbow, Trust, OKX and similar wallets needs a production WalletConnect Project ID before it can be enabled without brittle failures.
             </p>
+            <p className="mt-3 text-sm leading-7 text-stone-300">
+              New users should create or import their wallet inside a trusted wallet app first. The Benefits Network is non-custodial: it never asks for a seed phrase, never stores private keys, and only requests wallet signatures or explicit IFR approve/lock transactions.
+            </p>
             <div className="mt-5 grid gap-3 text-sm text-stone-300">
+              <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+                <strong className="text-white">New wallet setup</strong>
+                <p className="mt-1">Create an Ethereum wallet in MetaMask, Coinbase Wallet, Trust, OKX or another EVM-capable wallet, then connect it here.</p>
+              </div>
+              <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+                <strong className="text-white">IFR locking</strong>
+                <p className="mt-1">Use the shop app&apos;s Lock IFR panel to approve only the entered amount and lock it in IFRLock.</p>
+              </div>
               <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
                 <strong className="text-white">Customer signatures</strong>
                 <p className="mt-1">One-time QR challenge; no token transfer during verification.</p>
