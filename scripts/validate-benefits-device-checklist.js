@@ -4,7 +4,9 @@ const fs = require('fs');
 const path = require('path');
 
 const repoRoot = path.resolve(__dirname, '..');
-const checklistPath = path.join(repoRoot, 'docs/qa/BENEFITS_DEVICE_WALLET_CHECKLIST.json');
+const checklistPath = process.env.BENEFITS_DEVICE_CHECKLIST_PATH
+  ? path.resolve(process.env.BENEFITS_DEVICE_CHECKLIST_PATH)
+  : path.join(repoRoot, 'docs/qa/BENEFITS_DEVICE_WALLET_CHECKLIST.json');
 const validStatuses = new Set(['open', 'complete', 'blocked']);
 const validItemStatuses = new Set(['pending', 'pass', 'fail', 'blocked']);
 const requiredMatrixIds = [
