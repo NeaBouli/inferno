@@ -137,6 +137,9 @@ async function verifyPage(contextOptions, label) {
     await expectText(page, 'Lock transaction path');
     await expectText(page, 'IFR amount to lock');
     await expectText(page, 'Allowance');
+    await expectText(page, 'Recommended next step');
+    await expectText(page, 'Quick tier amounts');
+    await expectText(page, 'Silver / 5,000 IFR');
     await expectText(page, 'Unlock all');
     await expectText(page, 'Create a seller entry point');
     await expectText(page, 'Seller categories');
