@@ -164,6 +164,10 @@ async function verifyPage(contextOptions, label) {
     await expectText(page, 'Checkout readiness');
     await expectText(page, 'Session recovery');
     await expectText(page, 'Restore last QR');
+    await expectText(page, 'Restore pasted');
+    await page
+      .getByPlaceholder('Paste session ID, customer link or checkout receipt')
+      .fill('smoke-session-id');
     await expectText(page, 'Load business');
     await expectText(page, 'Seller profile loaded');
     await expectText(page, 'Copy customer link');
