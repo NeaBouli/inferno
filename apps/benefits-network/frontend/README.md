@@ -118,6 +118,9 @@ it prunes safe Docker caches only: builder cache, stopped containers and
 dangling images. It does not prune volumes. If free space stays below the hard
 floor after safe pruning, the deploy exits before rebuilding containers.
 
+For the full capacity decision process and latest known large Docker consumers,
+see `docs/BENEFITS_CAPACITY_RUNBOOK.md`.
+
 Use `scripts/deploy-benefits-network.sh backend` when backend code, Prisma
 schema/migrations or backend dependencies changed. Use `all` only when both
 sides need an intentional rebuild.
