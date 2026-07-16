@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import { useAccount, useConnect, useDisconnect, useSignMessage } from 'wagmi';
 import QRCode from 'react-qr-code';
 import { AppShell } from '@/components/AppShell';
 import { Countdown } from '@/components/Countdown';
@@ -13,11 +14,16 @@ import {
   createSession,
   getBusiness,
   getBusinessRules,
+  getSellerAuthMessage,
   getSessionStatus,
   redeemSession,
 } from '@/lib/api';
 
 export default function BusinessConsole({ params }: { params: { businessId: string } }) {
+  const { address, isConnected } = useAccount();
+  const { connectors, connectAsync, isPending: connecting } = useConnect();
+  const { disconnect } = useDisconnect();
+  const { signMessageAsync } = useSignMessage();
   const [business, setBusiness] = useState<BusinessInfo | null>(null);
   const [session, setSession] = useState<SessionCreated | null>(null);
   const [status, setStatus] = useState<SessionStatus | null>(null);
@@ -62,6 +68,7 @@ export default function BusinessConsole({ params }: { params: { businessId: stri
   );
 
   const previewBenefit = session ?? selectedRule ?? business;
+  const sellerWalletLabel = address ? `${address.slice(0, 6)}...${address.slice(-4)}` : 'Not connected';
 
   async function startSession() {
     setLoading(true);
@@ -79,16 +86,39 @@ export default function BusinessConsole({ params }: { params: { businessId: stri
 
   async function redeem() {
     if (!session) return;
+    if (!address || !isConnected) {
+      setError('Connect the seller wallet before redeeming an approved benefit.');
+      return;
+    }
     setLoading(true);
     setError('');
     try {
-      await redeemSession(session.sessionId);
+      const challenge = await getSellerAuthMessage('sessions:redeem', session.sessionId);
+      const signature = await signMessageAsync({ message: challenge.message });
+      await redeemSession(session.sessionId, {
+        walletAddress: address,
+        signature,
+        timestamp: challenge.timestamp,
+      });
       setStatus(await getSessionStatus(session.sessionId));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Redeem failed');
     } finally {
       setLoading(false);
     }
+  }
+
+  async function connectSellerWallet() {
+    setError('');
+    const connector =
+      connectors.find((item) => item.id === 'injected') ||
+      connectors.find((item) => item.id === 'metaMask') ||
+      connectors[0];
+    if (!connector) {
+      setError('No wallet connector is available in this browser.');
+      return;
+    }
+    await connectAsync({ connector });
   }
 
   return (
@@ -103,6 +133,36 @@ export default function BusinessConsole({ params }: { params: { businessId: stri
             Start a short-lived verification session. The customer signs the QR challenge;
             the backend checks IFRLock on-chain and this screen updates automatically.
           </p>
+
+          <div className="mt-5 rounded-2xl border border-green-300/20 bg-green-300/[0.07] p-4">
+            <p className="text-xs font-bold uppercase tracking-[0.16em] text-green-100/80">
+              Seller wallet for redeem
+            </p>
+            <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+              <p className="font-mono text-sm text-stone-200">{sellerWalletLabel}</p>
+              {address ? (
+                <button
+                  type="button"
+                  onClick={() => disconnect()}
+                  className="rounded-xl border border-white/15 px-3 py-2 text-xs font-black uppercase tracking-[0.12em] text-stone-100 transition hover:border-green-200/60"
+                >
+                  Disconnect
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={connectSellerWallet}
+                  disabled={connecting}
+                  className="rounded-xl bg-green-300 px-3 py-2 text-xs font-black uppercase tracking-[0.12em] text-stone-950 transition hover:bg-green-200 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {connecting ? 'Connecting...' : 'Connect'}
+                </button>
+              )}
+            </div>
+            <p className="mt-2 text-xs leading-5 text-stone-400">
+              Redeem is a seller action. The backend requires a fresh wallet signature from the business owner.
+            </p>
+          </div>
 
           <div className="mt-6 grid gap-3 rounded-2xl border border-white/10 bg-black/25 p-4 text-sm text-stone-300">
             <div className="flex justify-between gap-4">
@@ -238,7 +298,7 @@ export default function BusinessConsole({ params }: { params: { businessId: stri
                 <button
                   type="button"
                   onClick={redeem}
-                  disabled={loading || status?.status !== 'APPROVED'}
+                  disabled={loading || status?.status !== 'APPROVED' || !address}
                   className="rounded-2xl bg-stone-950 px-5 py-4 text-sm font-black uppercase tracking-[0.16em] text-white transition hover:bg-stone-800 disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   Redeem approved benefit

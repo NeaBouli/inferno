@@ -217,8 +217,10 @@ async function main() {
   console.log(`Customer attest result: ${attest.status}`);
 
   if (attest.status === 'APPROVED') {
+    const redeemAuth = await signSellerAction(wallet, 'sessions:redeem', session.sessionId);
     const redeemed = await fetchJson(`/api/sessions/${session.sessionId}/redeem`, {
       method: 'POST',
+      headers: sellerHeaders(redeemAuth),
     });
     if (redeemed.status !== 'REDEEMED') {
       throw new Error(`Expected redeemed session, got ${JSON.stringify(redeemed)}`);
@@ -228,7 +230,11 @@ async function main() {
     if (customerPrivateKey) {
       throw new Error(`Customer wallet was expected to be eligible, got rejected: ${attest.reason || 'no reason'}`);
     }
-    await expectHttpStatus(`/api/sessions/${session.sessionId}/redeem`, 409, { method: 'POST' });
+    const redeemAuth = await signSellerAction(wallet, 'sessions:redeem', session.sessionId);
+    await expectHttpStatus(`/api/sessions/${session.sessionId}/redeem`, 409, {
+      method: 'POST',
+      headers: sellerHeaders(redeemAuth),
+    });
     console.log(`Rejected throwaway customer as expected: ${attest.reason || 'not eligible'}`);
     console.log('Redeem rejected session blocked: OK');
   } else {

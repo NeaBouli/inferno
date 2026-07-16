@@ -293,8 +293,9 @@ export function submitAttest(sessionId: string, signature: string) {
   });
 }
 
-export function redeemSession(sessionId: string) {
+export function redeemSession(sessionId: string, auth: SellerAuth) {
   return fetchJSON<{ status: string }>(`/api/sessions/${sessionId}/redeem`, {
     method: 'POST',
+    headers: sellerHeaders(auth),
   });
 }

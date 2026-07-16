@@ -104,6 +104,24 @@ describe('Seller wallet authorization', () => {
     ).toBe(wallet.address);
   });
 
+  it('verifies the seller redeem action message', async () => {
+    const wallet = ethers.Wallet.createRandom();
+    const timestamp = Date.now().toString();
+    const signature = await wallet.signMessage(
+      buildSellerAuthMessage('sessions:redeem', 'session_redeem', timestamp)
+    );
+
+    expect(
+      verifySellerSignature({
+        walletAddress: wallet.address,
+        signature,
+        timestamp,
+        action: 'sessions:redeem',
+        businessId: 'session_redeem',
+      })
+    ).toBe(wallet.address);
+  });
+
   it('builds a seller profile limit error once the active profile cap is reached', () => {
     expect(buildSellerBusinessLimitError(4, 5)).toBeNull();
     expect(buildSellerBusinessLimitError(5, 5)?.message).toContain('profile limit reached: 5/5');
