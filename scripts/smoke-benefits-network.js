@@ -135,6 +135,8 @@ async function verifyPage(contextOptions, label) {
     await expectText(page, 'Load business');
     await expectText(page, 'Seller profile loaded');
     await expectText(page, 'Copy customer link');
+    await expectText(page, 'Checkout receipt');
+    await expectText(page, 'Copy receipt');
 
     await page.goto(`${baseUrl}/r/smoke-missing-session?smoke=${Date.now()}`, {
       waitUntil: 'networkidle',
