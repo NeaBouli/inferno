@@ -31,6 +31,7 @@ export default function BusinessConsole({ params }: { params: { businessId: stri
   const [selectedRuleId, setSelectedRuleId] = useState('');
   const [origin, setOrigin] = useState('');
   const [error, setError] = useState('');
+  const [linkStatus, setLinkStatus] = useState('');
   const [loading, setLoading] = useState(false);
   const isDone = status && ['REDEEMED', 'EXPIRED', 'REJECTED'].includes(status.status);
 
@@ -119,6 +120,39 @@ export default function BusinessConsole({ params }: { params: { businessId: stri
       return;
     }
     await connectAsync({ connector });
+  }
+
+  async function copyCustomerUrl() {
+    if (!customerUrl) return;
+    try {
+      await navigator.clipboard.writeText(customerUrl);
+      setError('');
+      setLinkStatus('Customer link copied.');
+    } catch {
+      setLinkStatus('');
+      setError('Could not copy the customer link in this browser.');
+    }
+  }
+
+  async function shareCustomerUrl() {
+    if (!customerUrl) return;
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: `${business?.name || 'IFR'} customer verification`,
+          text: 'Scan or open this link to verify locked IFR access for this checkout.',
+          url: customerUrl,
+        });
+        setError('');
+        setLinkStatus('Customer link shared.');
+        return;
+      }
+      await copyCustomerUrl();
+    } catch (err) {
+      if (err instanceof Error && err.name === 'AbortError') return;
+      setLinkStatus('');
+      setError(err instanceof Error ? err.message : 'Could not share the customer link.');
+    }
   }
 
   return (
@@ -247,6 +281,36 @@ export default function BusinessConsole({ params }: { params: { businessId: stri
                   <h2 className="mt-1 text-2xl font-black">Scan to verify</h2>
                 </div>
                 {status ? <StatusBadge status={status.status} /> : <StatusBadge status="PENDING" />}
+              </div>
+
+              <div className="grid gap-2 rounded-2xl border border-orange-200/40 bg-orange-50 p-4 text-sm">
+                <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#9f351b]">Customer link</p>
+                <p className="break-all font-mono text-xs text-stone-600">{customerUrl}</p>
+                <div className="grid gap-2 sm:grid-cols-3">
+                  <button
+                    type="button"
+                    onClick={copyCustomerUrl}
+                    className="rounded-xl border border-orange-300/50 px-3 py-2 text-xs font-black uppercase tracking-[0.12em] text-[#9f351b] transition hover:bg-orange-100"
+                  >
+                    Copy link
+                  </button>
+                  <button
+                    type="button"
+                    onClick={shareCustomerUrl}
+                    className="rounded-xl border border-orange-300/50 px-3 py-2 text-xs font-black uppercase tracking-[0.12em] text-[#9f351b] transition hover:bg-orange-100"
+                  >
+                    Share
+                  </button>
+                  <a
+                    href={customerUrl}
+                    target="_blank"
+                    rel="noopener"
+                    className="rounded-xl border border-orange-300/50 px-3 py-2 text-center text-xs font-black uppercase tracking-[0.12em] text-[#9f351b] transition hover:bg-orange-100"
+                  >
+                    Open
+                  </a>
+                </div>
+                {linkStatus ? <p className="text-xs font-semibold text-stone-600">{linkStatus}</p> : null}
               </div>
 
               {status?.status === 'APPROVED' ? (
