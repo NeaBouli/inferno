@@ -10,6 +10,11 @@ function shortAddress(address?: string) {
   return `${address.slice(0, 6)}...${address.slice(-4)}`;
 }
 
+function redactAddress(address?: string) {
+  if (!address) return 'not-connected';
+  return `${address.slice(0, 6)}...${address.slice(-4)}`;
+}
+
 function getWalletBrowserHint() {
   if (typeof window === 'undefined') return 'Open this page inside a wallet app browser, then connect.';
   const ua = window.navigator.userAgent.toLowerCase();
@@ -80,6 +85,7 @@ export function WalletConnectControl() {
   const [walletHint, setWalletHint] = useState('Open this page inside a wallet app browser, then connect.');
   const [environment, setEnvironment] = useState(DEFAULT_WALLET_ENVIRONMENT);
   const [copyStatus, setCopyStatus] = useState('');
+  const [evidenceStatus, setEvidenceStatus] = useState('');
 
   useEffect(() => {
     setCurrentUrl(window.location.href);
@@ -124,6 +130,49 @@ export function WalletConnectControl() {
     }
   }
 
+  function getEvidenceText() {
+    return [
+      'IFRp Benefits Network wallet test evidence',
+      `Time: ${new Date().toISOString()}`,
+      `URL: ${currentUrl}`,
+      `Surface: ${environment.surface}`,
+      `Provider: ${environment.provider}`,
+      `Chain: ${chainId === 1 ? 'Ethereum Mainnet' : `Chain ${chainId}`}`,
+      `Connector: ${connector?.name || 'not-connected'}`,
+      `Connected: ${isConnected ? 'yes' : 'no'}`,
+      `Wallet: ${redactAddress(address)}`,
+      `WalletConnect modal configured: ${hasWalletConnectProjectId ? 'yes' : 'no'}`,
+      'No private keys, seed phrases or full wallet inventories are included.',
+    ].join('\n');
+  }
+
+  async function copyEvidence() {
+    try {
+      await navigator.clipboard.writeText(getEvidenceText());
+      setEvidenceStatus('Test evidence copied.');
+    } catch {
+      setEvidenceStatus('Copy failed. Use Share evidence or take a screenshot without secrets.');
+    }
+  }
+
+  async function shareEvidence() {
+    const evidence = getEvidenceText();
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: 'IFRp wallet test evidence',
+          text: evidence,
+        });
+        setEvidenceStatus('Evidence share sheet opened.');
+        return;
+      }
+      await copyEvidence();
+    } catch (err) {
+      if (err instanceof Error && err.name === 'AbortError') return;
+      setEvidenceStatus('Share failed. Use Copy evidence instead.');
+    }
+  }
+
   if (hasWalletConnectProjectId) {
     return <ConnectButton />;
   }
@@ -164,6 +213,23 @@ export function WalletConnectControl() {
             WalletConnect modal is not configured yet; injected wallet browsers and browser extensions are active.
           </p>
         ) : null}
+        <div className="mt-3 flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={copyEvidence}
+            className="flex-1 rounded-xl border border-white/10 px-3 py-2 text-xs font-black uppercase tracking-[0.12em] text-stone-100 transition hover:border-orange-200/60"
+          >
+            Copy evidence
+          </button>
+          <button
+            type="button"
+            onClick={shareEvidence}
+            className="flex-1 rounded-xl border border-white/10 px-3 py-2 text-xs font-black uppercase tracking-[0.12em] text-stone-100 transition hover:border-orange-200/60"
+          >
+            Share evidence
+          </button>
+        </div>
+        {evidenceStatus ? <p className="mt-2 text-xs font-semibold text-orange-100">{evidenceStatus}</p> : null}
       </div>
 
       {!isConnected ? (
