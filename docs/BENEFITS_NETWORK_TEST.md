@@ -120,6 +120,11 @@ so a customer can reopen the proof on the same device. The local entry excludes
 private keys, seed phrases, signatures and full wallet inventories; it is not a
 server-side evidence record and does not replace the device checklist.
 
+The seller session-history response is protected by the owner-wallet signature and also
+returns activity metrics for today's and all-time checks, redemptions, open checks and
+approval rate. Today's redemptions use the redemption timestamp, and expired QR sessions
+are excluded from open checks and from the approval-rate denominator.
+
 ## Backend HTTP Smoke
 
 The Benefits Network CI also starts the built backend locally and runs the

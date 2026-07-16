@@ -95,6 +95,15 @@ export interface SellerSessionSummary {
   requiredLockIFR: number;
 }
 
+export interface SellerActivityMetrics {
+  generatedAt: string;
+  todayStartedAt: string;
+  today: { checks: number; approved: number; redeemed: number; rejected: number };
+  allTime: { checks: number; approved: number; redeemed: number; rejected: number };
+  openChecks: number;
+  approvalRatePercent: number | null;
+}
+
 export interface SellerAuth {
   walletAddress: string;
   signature: string;
@@ -264,7 +273,7 @@ export function getSellerBusinessRules(businessId: string, auth: SellerAuth) {
 }
 
 export function getSellerBusinessSessions(businessId: string, auth: SellerAuth, limit = 10) {
-  return fetchJSON<{ sessions: SellerSessionSummary[] }>(
+  return fetchJSON<{ sessions: SellerSessionSummary[]; metrics: SellerActivityMetrics }>(
     `/api/seller/businesses/${businessId}/sessions?${new URLSearchParams({ limit: String(limit) }).toString()}`,
     { headers: sellerHeaders(auth) }
   );

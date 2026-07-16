@@ -52,7 +52,7 @@ The app has two roles:
 - Connect as many wallets as practical through RainbowKit/WalletConnect.
 - Show wallet, IFR balance, ETH balance and locked IFR.
 - Explain that signing a QR proof does not move tokens.
-- Keep lock/swap actions on `web3.ifrunit.tech` until the shop app has fully audited write flows.
+- Keep the audited simple IFRLock approve, lock and unlock flow inside the shop app. Keep swaps as an explicit Uniswap handoff while the IFR pool remains thin.
 - QR session page must show seller, rule, product, discount and required IFR before signing.
 
 ### Seller Flow
@@ -112,7 +112,7 @@ If `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` is missing, the frontend must show a s
 1. Replace static `shop.ifrunit.tech` placeholder with deployed Benefits Network frontend.
 2. Deploy or expose Benefits backend with HTTPS and production env.
 3. Add seller onboarding: create business from UI through a safer invitation/admin flow.
-4. Add QR history and audit view for sellers.
+4. Add QR history and audit view for sellers. **Implemented for owner-wallet-protected recent sessions, restore receipts and activity metrics; export/retention policy remains future work.**
 5. Customer saved proof history locally without storing private data server-side. **Implemented for redacted QR proof history; benefit wallet/device acceptance still pending.**
 6. Add embedded-wallet provider evaluation and decision record.
 7. Add POS/plugin snippets to code generator.
