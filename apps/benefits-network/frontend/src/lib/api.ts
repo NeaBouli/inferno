@@ -71,6 +71,7 @@ export interface SellerSessionSummary {
   id: string;
   status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'EXPIRED' | 'REDEEMED';
   recoveredAddress: string | null;
+  /** Legacy API field name; value is a human-readable IFR amount from ethers.formatUnits(..., 9). */
   lockAmountRaw: string | null;
   reason: string | null;
   expiresAt: string;
