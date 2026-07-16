@@ -184,6 +184,8 @@ async function verifyPage(contextOptions, label) {
     await expectText(page, 'Server-side POS JavaScript');
     await page.getByRole('button', { name: /Seller Offer discounts/i }).click();
     await expectText(page, 'Seller readiness');
+    await expectText(page, 'New benefit rule');
+    await expectText(page, 'Save new rule');
     await page.getByRole('heading', { name: 'Connect seller wallet' }).first().waitFor({ timeout: timeoutMs });
     await expectText(page, 'Active benefit rule loaded');
     await expectText(page, 'Load profiles');

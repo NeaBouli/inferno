@@ -30,6 +30,14 @@ import {
 const categories = ['Coffee', 'Retail', 'Digital access', 'Events', 'Services'];
 const LAST_BUSINESS_STORAGE_KEY = 'ifr.shop.lastSellerBusinessId';
 const SHOP_ORIGIN = 'https://shop.ifrunit.tech';
+const DEFAULT_RULE_DRAFT = {
+  category: categories[0],
+  product: 'Premium customer discount',
+  label: 'Bronze',
+  discount: 10,
+  minLocked: 1000,
+  ttl: 90,
+};
 
 function formatSessionLockedIFR(value: string | null) {
   if (!value) return null;
@@ -50,13 +58,14 @@ export function SellerRuleBuilder() {
   const [adminSecret, setAdminSecret] = useState('');
   const [businessName, setBusinessName] = useState('IFR Partner Shop');
   const [defaultTier, setDefaultTier] = useState('IFR Access');
-  const [category, setCategory] = useState(categories[0]);
-  const [product, setProduct] = useState('Premium customer discount');
-  const [label, setLabel] = useState('Bronze');
-  const [discount, setDiscount] = useState(10);
-  const [minLocked, setMinLocked] = useState(1000);
-  const [ttl, setTtl] = useState(90);
+  const [category, setCategory] = useState(DEFAULT_RULE_DRAFT.category);
+  const [product, setProduct] = useState(DEFAULT_RULE_DRAFT.product);
+  const [label, setLabel] = useState(DEFAULT_RULE_DRAFT.label);
+  const [discount, setDiscount] = useState(DEFAULT_RULE_DRAFT.discount);
+  const [minLocked, setMinLocked] = useState(DEFAULT_RULE_DRAFT.minLocked);
+  const [ttl, setTtl] = useState(DEFAULT_RULE_DRAFT.ttl);
   const [rules, setRules] = useState<BenefitRule[]>([]);
+  const [editingRuleId, setEditingRuleId] = useState<string | null>(null);
   const [sessions, setSessions] = useState<SellerSessionSummary[]>([]);
   const [activityMetrics, setActivityMetrics] = useState<SellerActivityMetrics | null>(null);
   const [sellerBusinesses, setSellerBusinesses] = useState<SellerBusinessSummary[]>([]);
@@ -71,6 +80,7 @@ export function SellerRuleBuilder() {
   const canUseOperatorFallback = Boolean(adminSecret);
   const canManage = canUseWalletOwner || canUseOperatorFallback;
   const activeRulesCount = rules.filter((rule) => rule.active).length;
+  const editingRule = rules.find((rule) => rule.id === editingRuleId) || null;
   const selectedBusiness = sellerBusinesses.find((business) => business.id === businessId) || null;
   const businessReady = Boolean(businessId);
   const scannerReady = Boolean(scannerUrl);
@@ -174,6 +184,11 @@ export function SellerRuleBuilder() {
     }
   }, [businessId]);
 
+  useEffect(() => {
+    setEditingRuleId(null);
+    resetRuleDraft();
+  }, [businessId]);
+
   const payload: BenefitRuleInput = useMemo(
     () => ({
       label: label || 'IFR Benefit',
@@ -186,6 +201,15 @@ export function SellerRuleBuilder() {
     }),
     [category, discount, label, minLocked, product, ttl]
   );
+
+  function resetRuleDraft() {
+    setCategory(DEFAULT_RULE_DRAFT.category);
+    setProduct(DEFAULT_RULE_DRAFT.product);
+    setLabel(DEFAULT_RULE_DRAFT.label);
+    setDiscount(DEFAULT_RULE_DRAFT.discount);
+    setMinLocked(DEFAULT_RULE_DRAFT.minLocked);
+    setTtl(DEFAULT_RULE_DRAFT.ttl);
+  }
 
   async function createBusiness() {
     if (!canManage) {
@@ -250,6 +274,7 @@ export function SellerRuleBuilder() {
         ? await getSellerBusinessRules(businessId, await signSellerAction('rules:list', businessId))
         : await getAdminBusinessRules(businessId, adminSecret);
       setRules(result.rules);
+      setEditingRuleId((current) => current && result.rules.some((rule) => rule.id === current) ? current : null);
       setStatus(`Loaded ${result.rules.length} rule${result.rules.length === 1 ? '' : 's'}.`);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load rules');
@@ -341,16 +366,59 @@ export function SellerRuleBuilder() {
     setError('');
     setStatus('');
     try {
-      const rule = canUseWalletOwner
-        ? await createSellerBusinessRule(businessId, await signSellerAction('rules:create', businessId), payload)
-        : await createAdminBusinessRule(businessId, adminSecret, payload);
-      setRules((current) => [...current, rule].sort((a, b) => a.requiredLockIFR - b.requiredLockIFR));
-      setStatus('Rule saved.');
+      if (editingRuleId && !editingRule) {
+        throw new Error('The rule being edited is no longer loaded. Reload rules and try again.');
+      }
+
+      if (editingRule) {
+        const { active: _active, ...updatePayload } = payload;
+        const updated = canUseWalletOwner
+          ? await updateSellerBusinessRule(
+              editingRule.id,
+              await signSellerAction('rules:update', editingRule.businessId),
+              updatePayload
+            )
+          : await updateAdminBusinessRule(editingRule.id, adminSecret, updatePayload);
+        setRules((current) => current
+          .map((item) => (item.id === updated.id ? updated : item))
+          .sort((a, b) => a.requiredLockIFR - b.requiredLockIFR));
+        setEditingRuleId(null);
+        resetRuleDraft();
+        setStatus('Rule updated. New QR sessions will use the updated benefit.');
+      } else {
+        const rule = canUseWalletOwner
+          ? await createSellerBusinessRule(businessId, await signSellerAction('rules:create', businessId), payload)
+          : await createAdminBusinessRule(businessId, adminSecret, payload);
+        setRules((current) => [...current, rule].sort((a, b) => a.requiredLockIFR - b.requiredLockIFR));
+        setStatus('Rule saved.');
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to save rule');
     } finally {
       setLoading(false);
     }
+  }
+
+  function beginRuleEdit(rule: BenefitRule) {
+    setEditingRuleId(rule.id);
+    setLabel(rule.label);
+    setCategory(rule.category);
+    setProduct(rule.productName);
+    setDiscount(rule.discountPercent);
+    setMinLocked(rule.requiredLockIFR);
+    setTtl(rule.ttlSeconds);
+    setError('');
+    setStatus(`Editing ${rule.label}. Changes apply only after the signed update is confirmed.`);
+    window.requestAnimationFrame(() => {
+      document.getElementById('seller-rule-editor')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  }
+
+  function cancelRuleEdit() {
+    setEditingRuleId(null);
+    resetRuleDraft();
+    setError('');
+    setStatus('Rule edit cancelled.');
   }
 
   async function toggleRule(rule: BenefitRule) {
@@ -390,6 +458,7 @@ export function SellerRuleBuilder() {
         await deleteAdminBusinessRule(ruleId, adminSecret);
       }
       setRules((current) => current.filter((item) => item.id !== ruleId));
+      if (editingRuleId === ruleId) setEditingRuleId(null);
       setStatus('Rule deleted.');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to delete rule');
@@ -1055,6 +1124,29 @@ export function SellerRuleBuilder() {
         </div>
       ) : null}
 
+      <div id="seller-rule-editor" className="mb-4 scroll-mt-24 rounded-2xl border border-orange-200/20 bg-orange-200/[0.06] p-4">
+        <p className="text-xs font-black uppercase tracking-[0.16em] text-orange-200/80">
+          {editingRule ? 'Editing benefit rule' : 'New benefit rule'}
+        </p>
+        <div className="mt-2 flex flex-wrap items-center justify-between gap-3">
+          <p className="text-sm leading-6 text-stone-300">
+            {editingRule
+              ? `${editingRule.label} is ${editingRule.active ? 'active' : 'paused'}. Updating details preserves that state.`
+              : 'Create a checkout benefit or select Edit on a saved rule to update it.'}
+          </p>
+          {editingRule ? (
+            <button
+              type="button"
+              onClick={cancelRuleEdit}
+              disabled={loading}
+              className="rounded-full border border-white/15 px-4 py-2 text-xs font-bold uppercase tracking-[0.12em] text-stone-100 transition hover:border-orange-200/60 disabled:opacity-50"
+            >
+              Cancel edit
+            </button>
+          ) : null}
+        </div>
+      </div>
+
       <div className="mb-5 grid gap-3 md:grid-cols-[1fr_auto]">
         <label className="grid gap-2 text-sm font-semibold text-stone-200">
           Business ID
@@ -1157,7 +1249,7 @@ export function SellerRuleBuilder() {
         disabled={loading || !canManage}
         className="mt-5 w-full rounded-2xl bg-orange-300 px-5 py-4 text-sm font-black uppercase tracking-[0.16em] text-stone-950 shadow-xl shadow-orange-950/40 transition hover:bg-orange-200 disabled:cursor-not-allowed disabled:opacity-50"
       >
-        {loading ? 'Working...' : 'Save rule'}
+        {loading ? 'Working...' : editingRule ? 'Update rule' : 'Save new rule'}
       </button>
 
       {status ? <p className="mt-4 rounded-2xl border border-green-300/30 bg-green-500/10 p-3 text-sm text-green-100">{status}</p> : null}
@@ -1185,6 +1277,14 @@ export function SellerRuleBuilder() {
                 </span>
               </div>
               <div className="mt-4 flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => beginRuleEdit(rule)}
+                  disabled={loading || !canManage}
+                  className="rounded-full border border-orange-200/35 px-4 py-2 text-xs font-bold uppercase tracking-[0.12em] text-orange-100 transition hover:bg-orange-200/10 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  Edit
+                </button>
                 <button
                   type="button"
                   onClick={() => toggleRule(rule)}
