@@ -19,6 +19,7 @@ jest.mock('../src/config', () => ({
     IFRLOCK_ADDRESS: '0x0000000000000000000000000000000000000001',
     ADMIN_SECRET: 'test-secret-12345',
     DATABASE_URL: 'file:./test.db',
+    MAX_ACTIVE_SELLER_BUSINESSES_PER_WALLET: 5,
     PORT: 3001,
   },
 }));
@@ -30,6 +31,7 @@ import {
   redeem,
   prisma,
 } from '../src/services/sessionService';
+import { assertSellerBusinessLimit } from '../src/services/sellerLimits';
 
 // ── Test Setup ──────────────────────────────────────────────────────
 
@@ -69,6 +71,37 @@ beforeEach(() => {
 // ── E2E: Lock → Verify → Redeem Flow ─────────────────────────────
 
 describe('E2E: IFR Lock → Benefits Network Verification', () => {
+  it('caps active seller profiles per owner wallet and ignores inactive profiles', async () => {
+    const ownerAddress = '0x4f632748460E5277bF8435259cADce440AbAC254';
+
+    await prisma.business.create({
+      data: {
+        name: 'Inactive Seller Profile',
+        ownerAddress,
+        active: false,
+        discountPercent: 10,
+        requiredLockIFR: 1000,
+      },
+    });
+
+    await expect(assertSellerBusinessLimit(ownerAddress)).resolves.toBeUndefined();
+
+    for (let index = 0; index < 5; index += 1) {
+      await prisma.business.create({
+        data: {
+          name: `Active Seller Profile ${index + 1}`,
+          ownerAddress,
+          discountPercent: 10,
+          requiredLockIFR: 1000,
+        },
+      });
+    }
+
+    await expect(assertSellerBusinessLimit(ownerAddress)).rejects.toThrow(
+      'profile limit reached: 5/5'
+    );
+  });
+
   it('complete flow: create session → challenge → attest (locked) → redeem', async () => {
     // Step 1: Business creates a session (QR code generation)
     const session = await createSession(testBusinessId);
