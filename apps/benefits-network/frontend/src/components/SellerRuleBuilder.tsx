@@ -52,6 +52,16 @@ export function SellerRuleBuilder() {
   const canUseWalletOwner = Boolean(address && isConnected);
   const canUseOperatorFallback = Boolean(adminSecret);
   const canManage = canUseWalletOwner || canUseOperatorFallback;
+  const checkoutKitText = useMemo(
+    () => [
+      `${businessName || 'IFR Partner Shop'} IFR checkout kit`,
+      `Scanner: ${scannerUrl || 'Create or select a seller profile first.'}`,
+      `Default benefit: ${discount}% off when ${minLocked.toLocaleString('en-US')} IFR is locked`,
+      `Rule draft: ${label || 'IFR Benefit'} / ${category} / ${product || 'IFR Benefit'}`,
+      'At checkout: open scanner, create QR session, let the customer scan and sign, then redeem only after APPROVED.',
+    ].join('\n'),
+    [businessName, category, discount, label, minLocked, product, scannerUrl]
+  );
 
   useEffect(() => {
     try {
@@ -285,6 +295,43 @@ export function SellerRuleBuilder() {
     return { walletAddress: address, signature, timestamp: challenge.timestamp };
   }
 
+  async function copyToClipboard(labelText: string, value: string) {
+    if (!value) {
+      setError(`${labelText} is not ready yet.`);
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(value);
+      setError('');
+      setStatus(`${labelText} copied.`);
+    } catch {
+      setError(`Could not copy ${labelText.toLowerCase()} in this browser.`);
+    }
+  }
+
+  async function shareScannerLink() {
+    if (!scannerUrl) {
+      setError('Create or select a seller profile before sharing the scanner link.');
+      return;
+    }
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: `${businessName || 'IFR Partner Shop'} IFR scanner`,
+          text: 'Open this scanner at checkout to verify locked IFR access.',
+          url: scannerUrl,
+        });
+        setError('');
+        setStatus('Scanner link shared.');
+        return;
+      }
+      await copyToClipboard('Scanner link', scannerUrl);
+    } catch (err) {
+      if (err instanceof Error && err.name === 'AbortError') return;
+      setError(err instanceof Error ? err.message : 'Could not share scanner link.');
+    }
+  }
+
   return (
     <section className="rounded-[2rem] border border-orange-200/15 bg-orange-100/[0.06] p-5 shadow-2xl shadow-black/30 backdrop-blur">
       <div className="mb-5">
@@ -461,9 +508,56 @@ export function SellerRuleBuilder() {
                 {scannerUrl}
               </a>
             </p>
+            <div className="mt-4 grid gap-2 sm:grid-cols-3">
+              <button
+                type="button"
+                onClick={() => copyToClipboard('Business ID', businessId)}
+                className="rounded-xl border border-orange-200/30 px-3 py-2 text-[11px] font-black uppercase tracking-[0.12em] text-orange-50 transition hover:bg-orange-200/10"
+              >
+                Copy ID
+              </button>
+              <button
+                type="button"
+                onClick={() => copyToClipboard('Scanner link', scannerUrl)}
+                className="rounded-xl border border-orange-200/30 px-3 py-2 text-[11px] font-black uppercase tracking-[0.12em] text-orange-50 transition hover:bg-orange-200/10"
+              >
+                Copy link
+              </button>
+              <button
+                type="button"
+                onClick={shareScannerLink}
+                className="rounded-xl border border-orange-200/30 px-3 py-2 text-[11px] font-black uppercase tracking-[0.12em] text-orange-50 transition hover:bg-orange-200/10"
+              >
+                Share
+              </button>
+            </div>
           </div>
         ) : null}
       </div>
+
+      {businessId ? (
+        <div className="mb-5 rounded-3xl border border-white/10 bg-[#120d09] p-4">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[0.18em] text-stone-400">Checkout kit</p>
+              <h3 className="mt-1 text-xl font-black text-white">Share with the counter team</h3>
+              <p className="mt-2 text-sm leading-6 text-stone-300">
+                Keep this with the POS or send it to staff. It contains no secret and points the team to the seller scanner.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => copyToClipboard('Checkout kit', checkoutKitText)}
+              className="rounded-2xl border border-white/15 px-4 py-3 text-xs font-black uppercase tracking-[0.14em] text-stone-100 transition hover:border-orange-200/60"
+            >
+              Copy kit
+            </button>
+          </div>
+          <pre className="mt-4 overflow-x-auto whitespace-pre-wrap rounded-2xl border border-white/10 bg-black/35 p-4 text-xs leading-6 text-orange-50">
+            {checkoutKitText}
+          </pre>
+        </div>
+      ) : null}
 
       <div className="mb-5 grid gap-3 md:grid-cols-[1fr_auto]">
         <label className="grid gap-2 text-sm font-semibold text-stone-200">
