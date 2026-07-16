@@ -8,7 +8,7 @@ import { WalletStatus } from '@/components/WalletStatus';
 import { hasWalletConnectProjectId } from '@/lib/wagmi';
 
 type Role = 'customer' | 'seller';
-type CodeMode = 'link' | 'button' | 'api';
+type CodeMode = 'link' | 'button' | 'api' | 'pos';
 const UNISWAP_IFR_URL = 'https://app.uniswap.org/swap?outputCurrency=0x77e99917Eca8539c62F509ED1193ac36580A6e7B';
 
 interface BeforeInstallPromptEvent extends Event {
@@ -187,21 +187,48 @@ function CodeGenerator() {
   const [mode, setMode] = useState<CodeMode>('link');
   const [copyStatus, setCopyStatus] = useState('');
 
-  const scannerUrl = useMemo(() => `https://shop.ifrunit.tech/b/${businessId || 'your-business-id'}`, [businessId]);
+  const normalizedBusinessId = businessId.trim() || 'your-business-id';
+  const scannerUrl = useMemo(
+    () => `https://shop.ifrunit.tech/b/${encodeURIComponent(normalizedBusinessId)}`,
+    [normalizedBusinessId]
+  );
 
   const code = useMemo(() => {
     if (mode === 'button') {
       return `<a href="${scannerUrl}" target="_blank" rel="noopener">Verify IFR discount</a>`;
     }
     if (mode === 'api') {
-      return `POST /api/sessions
-{
-  "businessId": "${businessId || 'your-business-id'}",
-  "benefitRuleId": "selected-active-rule-id"
-}`;
+      return `POST https://shop.ifrunit.tech/api/sessions\n${JSON.stringify({
+        businessId: normalizedBusinessId,
+        benefitRuleId: 'selected-active-rule-id',
+      }, null, 2)}`;
+    }
+    if (mode === 'pos') {
+      return `async function createIFRCheckout(benefitRuleId) {
+  const response = await fetch("https://shop.ifrunit.tech/api/sessions", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({
+      businessId: ${JSON.stringify(normalizedBusinessId)},
+      benefitRuleId
+    })
+  });
+
+  if (!response.ok) {
+    throw new Error(\`IFR checkout failed: \${response.status}\`);
+  }
+
+  const session = await response.json();
+  return {
+    ...session,
+    customerUrl: new URL(session.qrUrl, "https://shop.ifrunit.tech").toString()
+  };
+}
+
+const checkout = await createIFRCheckout("selected-active-rule-id");`;
     }
     return scannerUrl;
-  }, [businessId, mode, scannerUrl]);
+  }, [mode, normalizedBusinessId, scannerUrl]);
 
   async function copySnippet() {
     try {
@@ -274,8 +301,8 @@ function CodeGenerator() {
         </label>
       </div>
 
-      <div className="mt-4 grid grid-cols-3 rounded-2xl border border-white/10 bg-black/25 p-1">
-        {(['link', 'button', 'api'] as CodeMode[]).map((item) => (
+      <div className="mt-4 grid grid-cols-2 rounded-2xl border border-white/10 bg-black/25 p-1 sm:grid-cols-4">
+        {(['link', 'button', 'api', 'pos'] as CodeMode[]).map((item) => (
           <button
             key={item}
             type="button"
@@ -298,6 +325,11 @@ function CodeGenerator() {
         </div>
         <pre className="overflow-x-auto whitespace-pre-wrap text-sm leading-6 text-orange-100">{code}</pre>
       </div>
+      {mode === 'pos' ? (
+        <p className="mt-3 text-xs leading-5 text-stone-400">
+          Server-side POS JavaScript. It returns the short-lived customer URL for your QR renderer; no seller secret or wallet key belongs in this snippet.
+        </p>
+      ) : null}
       {copyStatus ? <p className="mt-3 text-xs font-semibold text-stone-300">{copyStatus}</p> : null}
     </section>
   );

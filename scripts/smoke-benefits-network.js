@@ -174,6 +174,14 @@ async function verifyPage(contextOptions, label) {
     await expectText(page, 'No customer proofs saved on this device yet');
     await expectText(page, 'Create a seller entry point');
     await expectText(page, 'Seller categories');
+    const codeGenerator = page.locator('#integrate');
+    await codeGenerator.getByLabel('Business ID').fill('shop/"unsafe');
+    await codeGenerator.getByRole('button', { name: 'link', exact: true }).click();
+    await expectText(page, 'shop%2F%22unsafe');
+    await codeGenerator.getByRole('button', { name: 'pos', exact: true }).click();
+    await expectText(page, 'createIFRCheckout');
+    await expectText(page, 'customerUrl');
+    await expectText(page, 'Server-side POS JavaScript');
     await page.getByRole('button', { name: /Seller Offer discounts/i }).click();
     await expectText(page, 'Seller readiness');
     await page.getByRole('heading', { name: 'Connect seller wallet' }).first().waitFor({ timeout: timeoutMs });
