@@ -27,14 +27,15 @@ docker ps --format '{{.Image}}' \
       [ -n "$image" ] || continue
       size=$(docker image inspect "$image" --format '{{.Size}}' 2>/dev/null || echo 0)
       containers=$(docker ps --filter "ancestor=$image" --format '{{.ID}}' | wc -l | tr -d ' ')
-      awk -v bytes="$size" -v containers="$containers" -v image="$image" '
+      names=$(docker ps --filter "ancestor=$image" --format '{{.Names}}' | paste -sd ',' -)
+      awk -v bytes="$size" -v containers="$containers" -v image="$image" -v names="${names:-none}" '
         function human(n) {
           split("B KB MB GB TB", u, " ");
           i=1;
           while (n >= 1024 && i < 5) { n/=1024; i++ }
           return sprintf(i == 1 ? "%.0f%s" : "%.2f%s", n, u[i]);
         }
-        BEGIN { print bytes "\t" human(bytes) "\t" containers "\t" image }
+        BEGIN { print bytes "\t" human(bytes) "\t" containers "\t" image "\t" names }
       '
     done \
   | sort -nr \
@@ -54,6 +55,35 @@ docker system df -v \
     ' \
   | sort -hr \
   | head -n "$LIMIT"
+echo
+
+echo "== Top volumes with attached containers =="
+docker system df -v \
+  | awk '
+      BEGIN { in_volumes=0 }
+      /^Local Volumes space usage:/ { in_volumes=1; next }
+      /^Build cache usage:/ { in_volumes=0 }
+      in_volumes && $1 != "VOLUME" && NF >= 3 {
+        print $3 "\t" $2 "\t" $1
+      }
+    ' \
+  | sort -hr \
+  | head -n "$LIMIT" \
+  | while IFS=$'\t' read -r size links volume; do
+      [ -n "$volume" ] || continue
+      echo "$size	$links	$volume"
+      containers=$(docker ps -a --filter "volume=$volume" --format '{{.Names}}')
+      if [ -z "$containers" ]; then
+        echo "  containers=none"
+        continue
+      fi
+      printf '%s\n' "$containers" | while read -r container; do
+        [ -n "$container" ] || continue
+        image=$(docker inspect "$container" --format '{{.Config.Image}}' 2>/dev/null || echo unknown)
+        destinations=$(docker inspect "$container" --format "{{range .Mounts}}{{if eq .Name \"$volume\"}}{{.Destination}} {{end}}{{end}}" 2>/dev/null | xargs)
+        echo "  container=$container image=$image mount=${destinations:-unknown}"
+      done
+    done
 echo
 
 echo "== Containers not healthy/running cleanly =="

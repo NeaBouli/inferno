@@ -31,6 +31,11 @@ Detailed Docker inventory:
 LIMIT=20 scripts/audit-docker-capacity.sh
 ```
 
+The detailed inventory is read-only. It reports active image owners by container name and
+lists the containers and mount destinations attached to the largest Docker volumes. Use
+that ownership view before deciding whether a volume belongs to Benefits, Parlay,
+Plausible, Ekklesia/Ollama or another service.
+
 Benefits live smoke after any operational work:
 
 ```bash
@@ -60,23 +65,23 @@ unless an operator explicitly accepts the risk for a one-off run.
 
 Largest active images from the latest audit:
 
-| Size | Active containers | Image |
-|---:|---:|---|
-| 3.51 GB | 1 | `ollama/ollama:latest` |
-| 1.43 GB | 1 | `parlay-backend:latest` |
-| 1.24 GB | 1 | `local_discourse/app` |
-| 339 MB | 1 | `neo4j:5-community` |
-| 253 MB | 1 | `clickhouse/clickhouse-server:23.3.7.5-alpine` |
+| Size | Active containers | Image | Container names |
+|---:|---:|---|---|
+| 3.51 GB | 1 | `ollama/ollama:latest` | `ekklesia-ollama` |
+| 1.43 GB | 1 | `parlay-backend:latest` | `parlay-backend` |
+| 1.24 GB | 1 | `local_discourse/app` | `app` |
+| 339 MB | 1 | `neo4j:5-community` | `parlay-neo4j` |
+| 253 MB | 1 | `clickhouse/clickhouse-server:23.3.7.5-alpine` | `plausible-events` |
 
 Largest local volumes from the latest audit:
 
-| Size | Active refs | Volume |
-|---:|---:|---|
-| 3.215 GB | 1 | `plausible_plausible-events` |
-| 2.019 GB | 1 | `volumes_ekklesia_ollama` |
-| 1.245 GB | 1 | anonymous volume `ad8d889d...` |
-| 561 MB | 1 | `parlay_parlay_neo4j_data` |
-| 212 MB | 1 | `parlay_parlay_chroma_data` |
+| Size | Active refs | Volume | Attached containers / mountpoints |
+|---:|---:|---|---|
+| 3.129 GB | 1 | `plausible_plausible-events` | `plausible-events` -> `/var/lib/clickhouse` |
+| 2.019 GB | 1 | `volumes_ekklesia_ollama` | `ekklesia-ollama` -> `/root/.ollama` |
+| 1.245 GB | 1 | anonymous volume `ad8d889d...` | `plausible-events` -> `/var/log/clickhouse-server` |
+| 561 MB | 1 | `parlay_parlay_neo4j_data` | `parlay-neo4j` -> `/data` |
+| 212 MB | 1 | `parlay_parlay_chroma_data` | `parlay-chroma` -> `/chroma/chroma` |
 
 The latest audit also reported one unhealthy container:
 
