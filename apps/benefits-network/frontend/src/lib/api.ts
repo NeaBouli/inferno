@@ -53,8 +53,15 @@ export interface AdminBusinessInput {
 
 export interface AdminBusinessCreated {
   id: string;
+  ownerAddress?: string | null;
   verifyUrl: string;
   qrUrl: string;
+}
+
+export interface SellerAuth {
+  walletAddress: string;
+  signature: string;
+  timestamp: string;
 }
 
 export interface SessionCreated {
@@ -116,6 +123,24 @@ function adminHeaders(adminSecret: string) {
   return { Authorization: `Bearer ${adminSecret}` };
 }
 
+export function buildSellerAuthMessage(action: string, businessId: string, timestamp: string) {
+  return [
+    'IFR Benefits Network - Seller Authorization',
+    `Action: ${action}`,
+    `Business: ${businessId || 'new'}`,
+    `Timestamp: ${timestamp}`,
+    'Only sign this message inside shop.ifrunit.tech.',
+  ].join('\n');
+}
+
+function sellerHeaders(auth: SellerAuth) {
+  return {
+    'x-ifr-wallet': auth.walletAddress,
+    'x-ifr-signature': auth.signature,
+    'x-ifr-timestamp': auth.timestamp,
+  };
+}
+
 export function createAdminBusiness(adminSecret: string, input: AdminBusinessInput) {
   return fetchJSON<AdminBusinessCreated>('/api/admin/businesses', {
     method: 'POST',
@@ -158,6 +183,55 @@ export function deleteAdminBusinessRule(ruleId: string, adminSecret: string) {
   return fetchJSON<void>(`/api/admin/rules/${ruleId}`, {
     method: 'DELETE',
     headers: adminHeaders(adminSecret),
+  });
+}
+
+export function createSellerBusiness(auth: SellerAuth, input: AdminBusinessInput) {
+  return fetchJSON<AdminBusinessCreated>('/api/seller/businesses', {
+    method: 'POST',
+    body: JSON.stringify({
+      ...input,
+      ownerAddress: auth.walletAddress,
+      signature: auth.signature,
+      timestamp: auth.timestamp,
+    }),
+  });
+}
+
+export function getSellerBusinessRules(businessId: string, auth: SellerAuth) {
+  return fetchJSON<{ rules: BenefitRule[] }>(`/api/seller/businesses/${businessId}/rules`, {
+    headers: sellerHeaders(auth),
+  });
+}
+
+export function createSellerBusinessRule(
+  businessId: string,
+  auth: SellerAuth,
+  input: BenefitRuleInput
+) {
+  return fetchJSON<BenefitRule>(`/api/seller/businesses/${businessId}/rules`, {
+    method: 'POST',
+    headers: sellerHeaders(auth),
+    body: JSON.stringify(input),
+  });
+}
+
+export function updateSellerBusinessRule(
+  ruleId: string,
+  auth: SellerAuth,
+  input: Partial<BenefitRuleInput>
+) {
+  return fetchJSON<BenefitRule>(`/api/seller/rules/${ruleId}`, {
+    method: 'PATCH',
+    headers: sellerHeaders(auth),
+    body: JSON.stringify(input),
+  });
+}
+
+export function deleteSellerBusinessRule(ruleId: string, auth: SellerAuth) {
+  return fetchJSON<void>(`/api/seller/rules/${ruleId}`, {
+    method: 'DELETE',
+    headers: sellerHeaders(auth),
   });
 }
 

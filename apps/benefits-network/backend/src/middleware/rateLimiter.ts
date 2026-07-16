@@ -17,3 +17,12 @@ export const attestRateLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
 });
+
+export const sellerRateLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 60,
+  keyGenerator: (req) => req.header('x-ifr-wallet') || req.body?.ownerAddress || req.ip || 'unknown',
+  message: { error: 'Too many seller actions. Try again later.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});

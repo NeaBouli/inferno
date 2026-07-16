@@ -1,20 +1,32 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import { useAccount, useConnect, useDisconnect, useSignMessage } from 'wagmi';
 import {
   AdminBusinessCreated,
   BenefitRule,
   BenefitRuleInput,
+  SellerAuth,
+  buildSellerAuthMessage,
   createAdminBusiness,
   createAdminBusinessRule,
+  createSellerBusiness,
+  createSellerBusinessRule,
   deleteAdminBusinessRule,
+  deleteSellerBusinessRule,
   getAdminBusinessRules,
+  getSellerBusinessRules,
   updateAdminBusinessRule,
+  updateSellerBusinessRule,
 } from '@/lib/api';
 
 const categories = ['Coffee', 'Retail', 'Digital access', 'Events', 'Services'];
 
 export function SellerRuleBuilder() {
+  const { address, isConnected } = useAccount();
+  const { connectors, connectAsync, isPending: connecting } = useConnect();
+  const { disconnect } = useDisconnect();
+  const { signMessageAsync } = useSignMessage();
   const [businessId, setBusinessId] = useState('');
   const [adminSecret, setAdminSecret] = useState('');
   const [businessName, setBusinessName] = useState('IFR Partner Shop');
@@ -32,6 +44,9 @@ export function SellerRuleBuilder() {
   const [loading, setLoading] = useState(false);
 
   const scannerUrl = businessId ? `https://shop.ifrunit.tech/b/${businessId}` : '';
+  const canUseWalletOwner = Boolean(address && isConnected);
+  const canUseOperatorFallback = Boolean(adminSecret);
+  const canManage = canUseWalletOwner || canUseOperatorFallback;
 
   const payload: BenefitRuleInput = useMemo(
     () => ({
@@ -47,25 +62,31 @@ export function SellerRuleBuilder() {
   );
 
   async function createBusiness() {
-    if (!adminSecret) {
-      setError('Admin secret is required to create a seller profile.');
+    if (!canManage) {
+      setError('Connect a seller wallet or use the operator admin fallback.');
       return;
     }
     setLoading(true);
     setError('');
     setStatus('');
     try {
-      const business = await createAdminBusiness(adminSecret, {
+      const input = {
         name: businessName || 'IFR Partner Shop',
         discountPercent: discount,
         requiredLockIFR: minLocked,
         ttlSeconds: ttl,
         tierLabel: defaultTier || undefined,
-      });
+      };
+      const business = canUseWalletOwner
+        ? await createSellerBusiness(await signSellerAction('business:create', 'new'), input)
+        : await createAdminBusiness(adminSecret, input);
       setCreatedBusiness(business);
       setBusinessId(business.id);
       setRules([]);
-      setStatus('Seller profile created. Business ID and scanner link are ready.');
+      setStatus(canUseWalletOwner
+        ? 'Seller profile created and bound to your wallet. Business ID and scanner link are ready.'
+        : 'Operator-created seller profile is ready. Business ID and scanner link are ready.'
+      );
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create seller profile');
     } finally {
@@ -74,15 +95,17 @@ export function SellerRuleBuilder() {
   }
 
   async function loadRules() {
-    if (!businessId || !adminSecret) {
-      setError('Business ID and admin secret are required.');
+    if (!businessId || !canManage) {
+      setError('Business ID plus seller wallet or admin secret are required.');
       return;
     }
     setLoading(true);
     setError('');
     setStatus('');
     try {
-      const result = await getAdminBusinessRules(businessId, adminSecret);
+      const result = canUseWalletOwner
+        ? await getSellerBusinessRules(businessId, await signSellerAction('rules:list', businessId))
+        : await getAdminBusinessRules(businessId, adminSecret);
       setRules(result.rules);
       setStatus(`Loaded ${result.rules.length} rule${result.rules.length === 1 ? '' : 's'}.`);
     } catch (err) {
@@ -93,15 +116,17 @@ export function SellerRuleBuilder() {
   }
 
   async function saveRule() {
-    if (!businessId || !adminSecret) {
-      setError('Business ID and admin secret are required.');
+    if (!businessId || !canManage) {
+      setError('Business ID plus seller wallet or admin secret are required.');
       return;
     }
     setLoading(true);
     setError('');
     setStatus('');
     try {
-      const rule = await createAdminBusinessRule(businessId, adminSecret, payload);
+      const rule = canUseWalletOwner
+        ? await createSellerBusinessRule(businessId, await signSellerAction('rules:create', businessId), payload)
+        : await createAdminBusinessRule(businessId, adminSecret, payload);
       setRules((current) => [...current, rule].sort((a, b) => a.requiredLockIFR - b.requiredLockIFR));
       setStatus('Rule saved.');
     } catch (err) {
@@ -112,11 +137,17 @@ export function SellerRuleBuilder() {
   }
 
   async function toggleRule(rule: BenefitRule) {
+    if (!canManage) {
+      setError('Connect the seller wallet or use the operator admin fallback.');
+      return;
+    }
     setLoading(true);
     setError('');
     setStatus('');
     try {
-      const updated = await updateAdminBusinessRule(rule.id, adminSecret, { active: !rule.active });
+      const updated = canUseWalletOwner
+        ? await updateSellerBusinessRule(rule.id, await signSellerAction('rules:update', rule.businessId), { active: !rule.active })
+        : await updateAdminBusinessRule(rule.id, adminSecret, { active: !rule.active });
       setRules((current) => current.map((item) => (item.id === updated.id ? updated : item)));
       setStatus(updated.active ? 'Rule activated.' : 'Rule paused.');
     } catch (err) {
@@ -127,11 +158,20 @@ export function SellerRuleBuilder() {
   }
 
   async function deleteRule(ruleId: string) {
+    const rule = rules.find((item) => item.id === ruleId);
+    if (!canManage || !rule) {
+      setError('Connect the seller wallet or use the operator admin fallback.');
+      return;
+    }
     setLoading(true);
     setError('');
     setStatus('');
     try {
-      await deleteAdminBusinessRule(ruleId, adminSecret);
+      if (canUseWalletOwner) {
+        await deleteSellerBusinessRule(ruleId, await signSellerAction('rules:delete', rule.businessId));
+      } else {
+        await deleteAdminBusinessRule(ruleId, adminSecret);
+      }
       setRules((current) => current.filter((item) => item.id !== ruleId));
       setStatus('Rule deleted.');
     } catch (err) {
@@ -139,6 +179,28 @@ export function SellerRuleBuilder() {
     } finally {
       setLoading(false);
     }
+  }
+
+  async function connectSellerWallet() {
+    setError('');
+    setStatus('');
+    const connector =
+      connectors.find((item) => item.id === 'injected') ||
+      connectors.find((item) => item.id === 'metaMask') ||
+      connectors[0];
+    if (!connector) {
+      setError('No wallet connector is available in this browser.');
+      return;
+    }
+    await connectAsync({ connector });
+  }
+
+  async function signSellerAction(action: string, targetBusinessId: string): Promise<SellerAuth> {
+    if (!address) throw new Error('Connect the seller wallet first.');
+    const timestamp = Date.now().toString();
+    const message = buildSellerAuthMessage(action, targetBusinessId, timestamp);
+    const signature = await signMessageAsync({ message });
+    return { walletAddress: address, signature, timestamp };
   }
 
   return (
@@ -149,8 +211,40 @@ export function SellerRuleBuilder() {
         </p>
         <h2 className="mt-1 text-2xl font-black text-white">Benefit rule manager</h2>
         <p className="mt-2 text-sm leading-6 text-stone-300">
-          Create a seller profile and manage discount rules through the guarded admin API. The secret stays in this browser session and is never written to the repo.
+          Create a seller profile with a wallet signature, define discount rules, then open the scanner link at checkout. Operator admin fallback remains available for controlled setup.
         </p>
+      </div>
+
+      <div className="mb-5 rounded-3xl border border-green-300/20 bg-green-300/[0.07] p-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-green-100/80">Seller wallet owner</p>
+            <h3 className="mt-1 text-xl font-black text-white">
+              {address ? `${address.slice(0, 6)}...${address.slice(-4)}` : 'Connect seller wallet'}
+            </h3>
+            <p className="mt-2 text-sm leading-6 text-stone-300">
+              Seller actions are authorized with short-lived wallet signatures. No customer tokens are moved and no private key is stored by the app.
+            </p>
+          </div>
+          {address ? (
+            <button
+              type="button"
+              onClick={() => disconnect()}
+              className="rounded-2xl border border-white/15 px-5 py-3 text-sm font-black uppercase tracking-[0.14em] text-stone-100 hover:border-green-200/60"
+            >
+              Disconnect
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={connectSellerWallet}
+              disabled={connecting}
+              className="rounded-2xl bg-green-300 px-5 py-3 text-sm font-black uppercase tracking-[0.14em] text-stone-950 shadow-xl shadow-green-950/30 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {connecting ? 'Connecting...' : 'Connect wallet'}
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="mb-5 rounded-3xl border border-white/10 bg-black/20 p-4">
@@ -158,6 +252,9 @@ export function SellerRuleBuilder() {
           <div>
             <p className="text-xs font-bold uppercase tracking-[0.18em] text-stone-400">Seller onboarding</p>
             <h3 className="mt-1 text-xl font-black text-white">Create a seller profile</h3>
+            <p className="mt-2 text-sm leading-6 text-stone-300">
+              Preferred path: connect the seller wallet and sign. Admin secret is only the operator fallback.
+            </p>
           </div>
           {createdBusiness ? (
             <span className="rounded-full bg-green-400/15 px-3 py-1 text-xs font-bold uppercase tracking-[0.14em] text-green-100">
@@ -188,7 +285,7 @@ export function SellerRuleBuilder() {
               type="password"
               value={adminSecret}
               onChange={(event) => setAdminSecret(event.target.value)}
-              placeholder="Bearer secret"
+              placeholder="Operator fallback only"
               className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none focus:border-orange-300"
             />
           </label>
@@ -196,10 +293,10 @@ export function SellerRuleBuilder() {
         <button
           type="button"
           onClick={createBusiness}
-          disabled={loading || !adminSecret}
+          disabled={loading || !canManage}
           className="mt-4 w-full rounded-2xl border border-orange-200/40 px-5 py-3 text-sm font-black uppercase tracking-[0.14em] text-orange-100 transition hover:bg-orange-200/10 disabled:cursor-not-allowed disabled:opacity-50"
         >
-          Create seller profile
+          {canUseWalletOwner ? 'Create wallet-owned seller profile' : 'Create seller profile'}
         </button>
         {businessId ? (
           <div className="mt-4 rounded-2xl border border-orange-200/20 bg-orange-200/10 p-4 text-sm leading-6 text-orange-50">
@@ -308,9 +405,9 @@ export function SellerRuleBuilder() {
       </div>
 
       <button
-        type="button"
-        onClick={saveRule}
-        disabled={loading}
+          type="button"
+          onClick={saveRule}
+        disabled={loading || !canManage}
         className="mt-5 w-full rounded-2xl bg-orange-300 px-5 py-4 text-sm font-black uppercase tracking-[0.16em] text-stone-950 shadow-xl shadow-orange-950/40 transition hover:bg-orange-200 disabled:cursor-not-allowed disabled:opacity-50"
       >
         {loading ? 'Working...' : 'Save rule'}
@@ -344,7 +441,7 @@ export function SellerRuleBuilder() {
                 <button
                   type="button"
                   onClick={() => toggleRule(rule)}
-                  disabled={loading || !adminSecret}
+                  disabled={loading || !canManage}
                   className="rounded-full border border-white/15 px-4 py-2 text-xs font-bold uppercase tracking-[0.12em] text-stone-100 hover:border-orange-200/60 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {rule.active ? 'Pause' : 'Activate'}
@@ -352,7 +449,7 @@ export function SellerRuleBuilder() {
                 <button
                   type="button"
                   onClick={() => deleteRule(rule.id)}
-                  disabled={loading || !adminSecret}
+                  disabled={loading || !canManage}
                   className="rounded-full border border-red-300/30 px-4 py-2 text-xs font-bold uppercase tracking-[0.12em] text-red-100 hover:bg-red-500/10 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   Delete
