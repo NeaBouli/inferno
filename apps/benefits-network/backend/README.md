@@ -32,7 +32,7 @@ npm run dev            # http://localhost:3001
 | POST | `/api/admin/businesses/:id/rules` | Admin | Create a benefit rule |
 | PATCH | `/api/admin/rules/:id` | Admin | Update or pause a benefit rule |
 | DELETE | `/api/admin/rules/:id` | Admin | Delete a benefit rule |
-| GET | `/api/seller/auth-message` | Public | Preview the wallet message format for seller actions |
+| GET | `/api/seller/auth-message` | Public | Issue server-time wallet message for seller actions |
 | POST | `/api/seller/businesses` | Seller wallet signature | Create wallet-owned seller business |
 | GET | `/api/seller/businesses` | Seller wallet signature | List active seller businesses owned by the wallet |
 | GET | `/api/seller/businesses/:id/rules` | Seller wallet signature | List owned benefit rules |
@@ -84,9 +84,10 @@ old QR sessions stay compatible.
 ## Seller Wallet Ownership
 
 Normal seller actions can be authorized without sharing the global admin secret.
-A seller signs a short-lived EIP-191 message with the wallet that owns the
-business. The backend checks the recovered address against `Business.ownerAddress`
-before listing, creating, updating or deleting rules.
+The frontend first requests `/api/seller/auth-message` so the timestamp is issued
+by the backend, then the seller signs that short-lived EIP-191 message with the
+wallet that owns the business. The backend checks the recovered address against
+`Business.ownerAddress` before listing, creating, updating or deleting rules.
 
 Seller write requests use these headers:
 

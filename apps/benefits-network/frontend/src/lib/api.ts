@@ -73,6 +73,15 @@ export interface SellerAuth {
   timestamp: string;
 }
 
+export interface SellerAuthMessage {
+  action: string;
+  businessId: string;
+  timestamp: string;
+  issuedAt: string;
+  expiresAt: string;
+  message: string;
+}
+
 export interface SessionCreated {
   sessionId: string;
   expiresAt: string;
@@ -140,6 +149,11 @@ export function buildSellerAuthMessage(action: string, businessId: string, times
     `Timestamp: ${timestamp}`,
     'Only sign this message inside shop.ifrunit.tech.',
   ].join('\n');
+}
+
+export function getSellerAuthMessage(action: string, businessId: string) {
+  const query = new URLSearchParams({ action, businessId: businessId || 'new' });
+  return fetchJSON<SellerAuthMessage>(`/api/seller/auth-message?${query.toString()}`);
 }
 
 function sellerHeaders(auth: SellerAuth) {

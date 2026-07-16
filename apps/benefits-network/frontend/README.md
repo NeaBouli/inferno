@@ -46,7 +46,7 @@ The public shop defaults to Ethereum Mainnet. `NEXT_PUBLIC_CHAIN_ID=11155111` ca
 ## Seller Rules
 
 The Seller mode panel can create wallet-owned seller profiles and persist
-benefit rules with short-lived wallet signatures. The normal seller path
+benefit rules with server-issued, short-lived wallet signatures. The normal seller path
 requires:
 
 - Seller wallet connection

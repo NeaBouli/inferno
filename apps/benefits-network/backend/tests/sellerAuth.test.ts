@@ -2,6 +2,18 @@ import { ethers } from 'ethers';
 import { buildSellerAuthMessage, verifySellerSignature } from '../src/services/sellerAuth';
 
 describe('Seller wallet authorization', () => {
+  it('builds the deterministic seller auth message format', () => {
+    const message = buildSellerAuthMessage('business:list', 'seller', '1784154000000');
+
+    expect(message).toBe([
+      'IFR Benefits Network - Seller Authorization',
+      'Action: business:list',
+      'Business: seller',
+      'Timestamp: 1784154000000',
+      'Only sign this message inside shop.ifrunit.tech.',
+    ].join('\n'));
+  });
+
   it('verifies a seller wallet signature for a business action', async () => {
     const wallet = ethers.Wallet.createRandom();
     const timestamp = Date.now().toString();

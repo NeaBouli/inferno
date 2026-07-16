@@ -8,7 +8,6 @@ import {
   BenefitRuleInput,
   SellerAuth,
   SellerBusinessSummary,
-  buildSellerAuthMessage,
   createAdminBusiness,
   createAdminBusinessRule,
   createSellerBusiness,
@@ -16,6 +15,7 @@ import {
   deleteAdminBusinessRule,
   deleteSellerBusinessRule,
   getAdminBusinessRules,
+  getSellerAuthMessage,
   getSellerBusinesses,
   getSellerBusinessRules,
   updateAdminBusinessRule,
@@ -256,10 +256,9 @@ export function SellerRuleBuilder() {
 
   async function signSellerAction(action: string, targetBusinessId: string): Promise<SellerAuth> {
     if (!address) throw new Error('Connect the seller wallet first.');
-    const timestamp = Date.now().toString();
-    const message = buildSellerAuthMessage(action, targetBusinessId, timestamp);
-    const signature = await signMessageAsync({ message });
-    return { walletAddress: address, signature, timestamp };
+    const challenge = await getSellerAuthMessage(action, targetBusinessId);
+    const signature = await signMessageAsync({ message: challenge.message });
+    return { walletAddress: address, signature, timestamp: challenge.timestamp };
   }
 
   return (
