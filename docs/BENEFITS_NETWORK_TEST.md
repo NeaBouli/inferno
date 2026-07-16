@@ -53,6 +53,30 @@ The script (`apps/benefits-network/backend/scripts/e2e-test.sh`) runs automatica
 | `BASE_URL` | `http://localhost:3001` | Backend URL |
 | `ADMIN_SECRET` | from `.env` | Admin token for business creation |
 
+## Read-only Live Smoke
+
+Use the repo-level live smoke for the current public Shop surface:
+
+```bash
+npm run smoke:benefits
+BENEFITS_BASE_URL=http://localhost:3000 npm run smoke:benefits
+SCREENSHOT_DIR=/Users/gio/Desktop npm run smoke:benefits
+```
+
+Default target is `https://shop.ifrunit.tech`. The smoke is read-only and checks:
+
+- `/api/health` on Ethereum Mainnet (`chainId: 1`)
+- PWA manifest, icons and service worker
+- Server-issued seller auth challenge
+- Desktop and iPad rendering for landing, guide and seller scanner shell
+- Wallet-entry fallback with copy/share controls
+
+It intentionally does not create businesses, rules or sessions. For signed
+seller flows use `apps/benefits-network/backend/scripts/seller-wallet-smoke.js`.
+For the full approved-and-redeemed path, run that seller smoke with
+`CUSTOMER_PRIVATE_KEY=... MUTATE=true` using a real eligible locked customer
+wallet.
+
 ## Lock Tiers
 
 | Tier | Minimum Lock | Typical Discount |
