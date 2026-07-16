@@ -113,6 +113,7 @@ function CodeGenerator() {
   const [businessId, setBusinessId] = useState('your-business-id');
   const [ruleLabel, setRuleLabel] = useState('Bronze 10%');
   const [mode, setMode] = useState<CodeMode>('link');
+  const [copyStatus, setCopyStatus] = useState('');
 
   const scannerUrl = useMemo(() => `https://shop.ifrunit.tech/b/${businessId || 'your-business-id'}`, [businessId]);
 
@@ -130,6 +131,33 @@ function CodeGenerator() {
     return scannerUrl;
   }, [businessId, mode, scannerUrl]);
 
+  async function copySnippet() {
+    try {
+      await navigator.clipboard.writeText(code);
+      setCopyStatus('Copied.');
+    } catch {
+      setCopyStatus('Copy failed in this browser.');
+    }
+  }
+
+  async function shareSnippet() {
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: `IFR checkout entry - ${ruleLabel || 'Benefit'}`,
+          text: code,
+          url: mode === 'link' ? code : scannerUrl,
+        });
+        setCopyStatus('Share sheet opened.');
+        return;
+      }
+      await copySnippet();
+    } catch (err) {
+      if (err instanceof Error && err.name === 'AbortError') return;
+      setCopyStatus('Share failed in this browser.');
+    }
+  }
+
   return (
     <section id="integrate" className="rounded-[2rem] border border-white/10 bg-white/[0.055] p-5 shadow-2xl shadow-black/25 backdrop-blur">
       <div className="flex flex-wrap items-start justify-between gap-4">
@@ -137,9 +165,22 @@ function CodeGenerator() {
           <p className="text-xs font-black uppercase tracking-[0.18em] text-orange-200/80">Code generator</p>
           <h2 className="mt-2 text-2xl font-black text-white">Create a seller entry point</h2>
         </div>
-        <span className="rounded-full border border-green-300/25 bg-green-300/10 px-3 py-1 text-xs font-bold uppercase tracking-[0.14em] text-green-100">
-          No secret in snippet
-        </span>
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={copySnippet}
+            className="rounded-full border border-green-300/25 bg-green-300/10 px-3 py-2 text-xs font-bold uppercase tracking-[0.14em] text-green-100 transition hover:bg-green-300/15"
+          >
+            Copy
+          </button>
+          <button
+            type="button"
+            onClick={shareSnippet}
+            className="rounded-full border border-orange-200/25 bg-orange-200/10 px-3 py-2 text-xs font-bold uppercase tracking-[0.14em] text-orange-100 transition hover:bg-orange-200/15"
+          >
+            Share
+          </button>
+        </div>
       </div>
 
       <div className="mt-5 grid gap-3 sm:grid-cols-2">
@@ -185,6 +226,7 @@ function CodeGenerator() {
         </div>
         <pre className="overflow-x-auto whitespace-pre-wrap text-sm leading-6 text-orange-100">{code}</pre>
       </div>
+      {copyStatus ? <p className="mt-3 text-xs font-semibold text-stone-300">{copyStatus}</p> : null}
     </section>
   );
 }
@@ -252,6 +294,12 @@ export default function Home() {
               className="rounded-full border border-white/15 px-5 py-3 text-sm font-black uppercase tracking-[0.16em] text-stone-100 transition hover:border-orange-200/60"
             >
               Generate shop link
+            </a>
+            <a
+              href="/guide"
+              className="rounded-full border border-white/15 px-5 py-3 text-sm font-black uppercase tracking-[0.16em] text-stone-100 transition hover:border-orange-200/60"
+            >
+              Open guide
             </a>
             <a
               href="https://ifrunit.tech"

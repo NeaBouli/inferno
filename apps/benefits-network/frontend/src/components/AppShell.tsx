@@ -14,7 +14,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <Link href="/" className="rounded-full border border-stone-500/30 px-4 py-2 text-xs font-bold uppercase tracking-[0.14em] text-stone-300 transition hover:border-orange-300/60 hover:text-orange-100">
             App
           </Link>
-          <a href="#integrate" className="rounded-full border border-stone-500/30 px-4 py-2 text-xs font-bold uppercase tracking-[0.14em] text-stone-300 transition hover:border-orange-300/60 hover:text-orange-100">
+          <Link href="/guide" className="rounded-full border border-stone-500/30 px-4 py-2 text-xs font-bold uppercase tracking-[0.14em] text-stone-300 transition hover:border-orange-300/60 hover:text-orange-100">
+            Guide
+          </Link>
+          <a href="/#integrate" className="rounded-full border border-stone-500/30 px-4 py-2 text-xs font-bold uppercase tracking-[0.14em] text-stone-300 transition hover:border-orange-300/60 hover:text-orange-100">
             Integrate
           </a>
           <a href="https://web3.ifrunit.tech" className="rounded-full border border-stone-500/30 px-4 py-2 text-xs font-bold uppercase tracking-[0.14em] text-stone-300 transition hover:border-orange-300/60 hover:text-orange-100">
