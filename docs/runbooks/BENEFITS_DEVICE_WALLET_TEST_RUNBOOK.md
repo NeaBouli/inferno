@@ -181,6 +181,12 @@ Before and after editing the checklist, validate it:
 npm run qa:benefits-devices
 ```
 
+Print the current open/pass/blocked status:
+
+```bash
+npm run qa:benefits-report
+```
+
 Preferred recording command:
 
 ```bash

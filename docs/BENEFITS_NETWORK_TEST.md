@@ -92,6 +92,12 @@ Validate the checklist structure before and after recording device evidence:
 npm run qa:benefits-devices
 ```
 
+Print the current acceptance status without changing evidence:
+
+```bash
+npm run qa:benefits-report
+```
+
 Record real-device evidence through the safe recorder rather than editing JSON
 manually:
 
