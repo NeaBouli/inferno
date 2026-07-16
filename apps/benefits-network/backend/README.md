@@ -129,15 +129,21 @@ when checking `shop.ifrunit.tech` or a local backend.
 ```bash
 node scripts/seller-wallet-smoke.js
 MUTATE=true node scripts/seller-wallet-smoke.js
+CUSTOMER_PRIVATE_KEY=0x... MUTATE=true node scripts/seller-wallet-smoke.js
 BENEFITS_BASE_URL=http://localhost:3001 MUTATE=true node scripts/seller-wallet-smoke.js
 ```
 
 Default mode is read-only: health, server-issued seller auth and signed owned
 profile listing with a throwaway wallet. `MUTATE=true` creates a wallet-owned
 seller profile, reloads it, creates a benefit rule, lists the rule and deletes
-the smoke rule again. It then soft-deactivates the smoke seller profile so it no
-longer appears in owned active profile reloads. The throwaway wallet private key
-is generated in memory and is never read from env or disk.
+the smoke rule again. It also creates a QR session for that rule, signs the
+customer challenge and submits `/api/attest`. Without `CUSTOMER_PRIVATE_KEY` the
+customer wallet is throwaway and should be rejected by the live IFRLock check;
+redeem is expected to be blocked. With `CUSTOMER_PRIVATE_KEY`, use a real
+eligible customer wallet to verify the approved-and-redeemed path. The script
+then soft-deactivates the smoke seller profile so it no longer appears in owned
+active profile reloads. Seller private keys are generated in memory. The optional
+customer private key is never printed.
 
 ## Security
 

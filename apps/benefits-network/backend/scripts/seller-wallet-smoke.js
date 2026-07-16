@@ -5,6 +5,7 @@ const { ethers } = require('ethers');
 const baseUrl = (process.env.BENEFITS_BASE_URL || 'https://shop.ifrunit.tech').replace(/\/$/, '');
 const mutate = process.env.MUTATE === 'true';
 const cleanup = process.env.CLEANUP !== 'false';
+const customerPrivateKey = process.env.CUSTOMER_PRIVATE_KEY || '';
 
 function usage() {
   console.log(`IFR Benefits Network seller wallet smoke
@@ -12,6 +13,7 @@ function usage() {
 Usage:
   node scripts/seller-wallet-smoke.js
   MUTATE=true node scripts/seller-wallet-smoke.js
+  CUSTOMER_PRIVATE_KEY=0x... MUTATE=true node scripts/seller-wallet-smoke.js
   BENEFITS_BASE_URL=http://localhost:3001 MUTATE=true node scripts/seller-wallet-smoke.js
 
 Defaults:
@@ -24,9 +26,11 @@ What it checks:
   - server-issued seller auth messages
   - signed seller profile list
   - with MUTATE=true: create wallet-owned seller profile, reload it, create/list/delete a rule,
+    create QR session, sign customer challenge, attest, redeem approved sessions,
     deactivate the seller profile
 
-No private key is read from env or disk. The script creates a throwaway wallet in memory.`);
+Seller keys are always throwaway and in-memory. CUSTOMER_PRIVATE_KEY is optional for testing
+an actually locked customer wallet; it is never printed.`);
 }
 
 async function fetchJson(path, options = {}) {
@@ -93,6 +97,21 @@ function sellerHeaders(auth) {
   };
 }
 
+async function expectHttpStatus(path, expectedStatus, options = {}) {
+  const response = await fetch(`${baseUrl}${path}`, {
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...(options.headers || {}),
+    },
+  });
+  const text = await response.text();
+  if (response.status !== expectedStatus) {
+    throw new Error(`Expected HTTP ${expectedStatus} ${path}, got ${response.status}: ${text}`);
+  }
+  return text;
+}
+
 async function main() {
   if (process.argv.includes('--help') || process.argv.includes('-h')) {
     usage();
@@ -100,6 +119,7 @@ async function main() {
   }
 
   const wallet = ethers.Wallet.createRandom();
+  const customerWallet = customerPrivateKey ? new ethers.Wallet(customerPrivateKey) : ethers.Wallet.createRandom();
   const stamp = new Date().toISOString().replace(/[:.]/g, '-');
   const businessName = `IFR Smoke Seller ${stamp}`;
 
@@ -107,6 +127,7 @@ async function main() {
   console.log(`Base URL: ${baseUrl}`);
   console.log(`Mode: ${mutate ? 'MUTATE' : 'READ_ONLY'}`);
   console.log(`Wallet: ${wallet.address}`);
+  console.log(`Customer wallet: ${customerWallet.address}${customerPrivateKey ? ' (env)' : ' (throwaway)'}`);
 
   const health = await fetchJson('/api/health');
   console.log(`Health: ${health.status} / chain ${health.chainId}`);
@@ -171,6 +192,48 @@ async function main() {
     throw new Error(`Created rule ${rule.id} was not returned by rule list`);
   }
   console.log('List owned rules: OK');
+
+  const session = await fetchJson('/api/sessions', {
+    method: 'POST',
+    body: JSON.stringify({
+      businessId: business.id,
+      benefitRuleId: rule.id,
+    }),
+  });
+  if (session.benefitRuleId !== rule.id) {
+    throw new Error(`Session ${session.sessionId} was not bound to rule ${rule.id}`);
+  }
+  console.log(`Created QR session: ${session.sessionId}`);
+
+  const challenge = await fetchJson(`/api/sessions/${session.sessionId}/challenge`);
+  const customerSignature = await customerWallet.signMessage(challenge.message);
+  const attest = await fetchJson('/api/attest', {
+    method: 'POST',
+    body: JSON.stringify({
+      sessionId: session.sessionId,
+      signature: customerSignature,
+    }),
+  });
+  console.log(`Customer attest result: ${attest.status}`);
+
+  if (attest.status === 'APPROVED') {
+    const redeemed = await fetchJson(`/api/sessions/${session.sessionId}/redeem`, {
+      method: 'POST',
+    });
+    if (redeemed.status !== 'REDEEMED') {
+      throw new Error(`Expected redeemed session, got ${JSON.stringify(redeemed)}`);
+    }
+    console.log('Redeemed approved session: OK');
+  } else if (attest.status === 'REJECTED') {
+    if (customerPrivateKey) {
+      throw new Error(`Customer wallet was expected to be eligible, got rejected: ${attest.reason || 'no reason'}`);
+    }
+    await expectHttpStatus(`/api/sessions/${session.sessionId}/redeem`, 409, { method: 'POST' });
+    console.log(`Rejected throwaway customer as expected: ${attest.reason || 'not eligible'}`);
+    console.log('Redeem rejected session blocked: OK');
+  } else {
+    throw new Error(`Unexpected attest status ${attest.status}`);
+  }
 
   if (cleanup) {
     const deleteRuleAuth = await signSellerAction(wallet, 'rules:delete', business.id);
