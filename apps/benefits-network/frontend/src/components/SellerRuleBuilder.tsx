@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useAccount, useConnect, useDisconnect, useSignMessage } from 'wagmi';
+import QRCode from 'react-qr-code';
 import {
   AdminBusinessCreated,
   BenefitRule,
@@ -398,6 +399,29 @@ export function SellerRuleBuilder() {
     }
   }
 
+  async function shareCheckoutKit() {
+    if (!scannerUrl) {
+      setError('Create or select a seller profile before sharing the checkout kit.');
+      return;
+    }
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: `${businessName || 'IFR Partner Shop'} IFR checkout kit`,
+          text: checkoutKitText,
+          url: scannerUrl,
+        });
+        setError('');
+        setStatus('Checkout kit shared.');
+        return;
+      }
+      await copyToClipboard('Checkout kit', checkoutKitText);
+    } catch (err) {
+      if (err instanceof Error && err.name === 'AbortError') return;
+      setError(err instanceof Error ? err.message : 'Could not share checkout kit.');
+    }
+  }
+
   return (
     <section className="rounded-[2rem] border border-orange-200/15 bg-orange-100/[0.06] p-5 shadow-2xl shadow-black/30 backdrop-blur">
       <div className="mb-5">
@@ -688,17 +712,36 @@ export function SellerRuleBuilder() {
                 Keep this with the POS or send it to staff. It contains no secret and points the team to the seller scanner.
               </p>
             </div>
-            <button
-              type="button"
-              onClick={() => copyToClipboard('Checkout kit', checkoutKitText)}
-              className="rounded-2xl border border-white/15 px-4 py-3 text-xs font-black uppercase tracking-[0.14em] text-stone-100 transition hover:border-orange-200/60"
-            >
-              Copy kit
-            </button>
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => copyToClipboard('Checkout kit', checkoutKitText)}
+                className="rounded-2xl border border-white/15 px-4 py-3 text-xs font-black uppercase tracking-[0.14em] text-stone-100 transition hover:border-orange-200/60"
+              >
+                Copy kit
+              </button>
+              <button
+                type="button"
+                onClick={shareCheckoutKit}
+                className="rounded-2xl border border-orange-200/30 px-4 py-3 text-xs font-black uppercase tracking-[0.14em] text-orange-50 transition hover:bg-orange-200/10"
+              >
+                Share kit
+              </button>
+            </div>
           </div>
-          <pre className="mt-4 overflow-x-auto whitespace-pre-wrap rounded-2xl border border-white/10 bg-black/35 p-4 text-xs leading-6 text-orange-50">
-            {checkoutKitText}
-          </pre>
+          <div className="mt-4 grid gap-4 lg:grid-cols-[0.86fr_1.14fr]">
+            <div className="rounded-2xl border border-orange-200/25 bg-stone-100 p-4 text-stone-950">
+              <p className="text-xs font-black uppercase tracking-[0.16em] text-[#9f351b]">Staff scanner QR</p>
+              <div className="mt-4 grid place-items-center rounded-2xl bg-white p-4">
+                <QRCode value={scannerUrl} size={168} />
+              </div>
+              <p className="mt-3 text-sm font-black">Show this QR at the counter.</p>
+              <p className="mt-1 break-all font-mono text-[11px] leading-5 text-stone-600">{scannerUrl}</p>
+            </div>
+            <pre className="overflow-x-auto whitespace-pre-wrap rounded-2xl border border-white/10 bg-black/35 p-4 text-xs leading-6 text-orange-50">
+              {checkoutKitText}
+            </pre>
+          </div>
         </div>
       ) : null}
 
