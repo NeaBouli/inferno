@@ -120,6 +120,15 @@ async function verifyPage(contextOptions, label) {
     await expectText(page, 'Seller profile loaded');
     await expectText(page, 'Copy customer link');
 
+    await page.goto(`${baseUrl}/r/smoke-missing-session?smoke=${Date.now()}`, {
+      waitUntil: 'networkidle',
+      timeout: timeoutMs,
+    });
+    await expectText(page, 'Customer proof');
+    await expectText(page, 'Proof readiness');
+    await expectText(page, 'Load verification');
+    await expectText(page, 'QR session loaded');
+
     assert(errors.length === 0, `${label} browser errors:\n${errors.join('\n')}`);
 
     if (shouldScreenshot) {
