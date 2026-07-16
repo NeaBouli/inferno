@@ -1,6 +1,7 @@
 {
   "scripts": {
     "smoke:benefits": "node scripts/smoke-benefits-network.js",
+    "qa:benefits-devices": "node scripts/validate-benefits-device-checklist.js",
     "post:x": "node scripts/post-x.js",
     "post:x:dry": "X_DRY_RUN=true node scripts/post-x.js docs/social/x-geckoterminal-thread.md",
     "post:x:daily:promo": "X_DRY_RUN=true node scripts/x-daily-bot.js promo",

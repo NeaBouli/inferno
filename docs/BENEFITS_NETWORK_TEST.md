@@ -85,6 +85,12 @@ Use the dedicated runbook before closing the real wallet/device test gap:
 - `docs/runbooks/BENEFITS_DEVICE_WALLET_TEST_RUNBOOK.md`
 - `docs/qa/BENEFITS_DEVICE_WALLET_CHECKLIST.json`
 
+Validate the checklist structure before and after recording device evidence:
+
+```bash
+npm run qa:benefits-devices
+```
+
 The required matrix covers iPad/iPhone, Android, desktop extension wallets,
 MetaMask, Coinbase Wallet, Trust Wallet, OKX Wallet and Phantom fallback
 behavior. Do not record private keys, seed phrases or personal wallet data in

@@ -175,6 +175,27 @@ For each device/wallet combination, record:
 
 Do not record private keys, seed phrases, full wallet balances unrelated to IFR, or personal account data.
 
+Before and after editing the checklist, validate it:
+
+```bash
+npm run qa:benefits-devices
+```
+
+Preferred evidence object:
+
+```json
+{
+  "dateTime": "2026-07-16T18:00:00Z",
+  "result": "PASS",
+  "note": "iPadOS Safari install guidance visible; copy/share wallet entry readable.",
+  "screenshotPath": "/Users/gio/Desktop/example.png",
+  "businessId": "test-business-id",
+  "sessionId": "test-session-id"
+}
+```
+
+Use only test business/session ids. Leave fields out when they do not apply.
+
 ## Known Blockers
 
 - `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` is not currently set for production WalletConnect/RainbowKit modal support.
