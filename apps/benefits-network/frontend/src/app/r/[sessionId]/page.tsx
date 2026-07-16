@@ -1,12 +1,15 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useAccount, useDisconnect, useSignMessage } from 'wagmi';
 import { AppShell } from '@/components/AppShell';
 import { Countdown } from '@/components/Countdown';
 import { StatusBadge } from '@/components/StatusBadge';
 import { WalletConnectControl } from '@/components/WalletConnectControl';
 import { AttestResult, BusinessInfo, SessionStatus, getBusiness, getChallenge, getSessionStatus, submitAttest } from '@/lib/api';
+
+const CLOSED_STATUSES = ['REDEEMED', 'REJECTED', 'EXPIRED'];
+const TERMINAL_STATUSES = ['APPROVED', ...CLOSED_STATUSES];
 
 export default function CustomerSession({ params }: { params: { sessionId: string } }) {
   const { address, isConnected } = useAccount();
@@ -16,15 +19,14 @@ export default function CustomerSession({ params }: { params: { sessionId: strin
   const [business, setBusiness] = useState<BusinessInfo | null>(null);
   const [result, setResult] = useState<AttestResult | null>(null);
   const [error, setError] = useState('');
+  const [refreshMessage, setRefreshMessage] = useState('');
   const [loading, setLoading] = useState(false);
-  const closedStatuses = ['REDEEMED', 'REJECTED', 'EXPIRED'];
-  const terminalStatuses = ['APPROVED', ...closedStatuses];
   const sessionLoaded = Boolean(status);
   const currentSessionStatus = status?.status || '';
   const proofApproved = status?.status === 'APPROVED' || result?.status === 'APPROVED';
   const proofRejected = status?.status === 'REJECTED' || result?.status === 'REJECTED';
   const sellerRedeemed = status?.status === 'REDEEMED';
-  const canSign = Boolean(isConnected && status && !terminalStatuses.includes(status.status));
+  const canSign = Boolean(isConnected && status && !TERMINAL_STATUSES.includes(status.status));
   const proofStatus = !sessionLoaded
     ? 'Load verification'
     : sellerRedeemed
@@ -33,7 +35,7 @@ export default function CustomerSession({ params }: { params: { sessionId: strin
         ? 'Approved - show seller'
         : proofRejected
           ? 'Not eligible'
-          : closedStatuses.includes(currentSessionStatus)
+          : CLOSED_STATUSES.includes(currentSessionStatus)
             ? 'Session closed'
             : !isConnected
               ? 'Connect wallet'
@@ -43,10 +45,10 @@ export default function CustomerSession({ params }: { params: { sessionId: strin
     : sellerRedeemed
       ? 'This benefit was already redeemed by the seller. Ask for a new QR code for another checkout.'
       : proofApproved
-        ? 'Show this screen to the seller. They can redeem the approved benefit once.'
+        ? 'Show this screen to the seller. This page refreshes while they redeem the approved benefit once.'
         : proofRejected
           ? (status?.reason || result?.reason || 'This wallet does not meet the current locked IFR requirement.')
-          : closedStatuses.includes(currentSessionStatus)
+          : CLOSED_STATUSES.includes(currentSessionStatus)
             ? 'Ask the seller for a fresh QR code if you still need verification.'
             : !isConnected
               ? 'Connect the wallet that holds or locks IFR. No tokens move during this check.'
@@ -54,23 +56,42 @@ export default function CustomerSession({ params }: { params: { sessionId: strin
   const proofReadinessSteps = [
     { label: 'QR session loaded', ready: sessionLoaded },
     { label: 'Wallet connected', ready: isConnected },
-    { label: 'One-time proof signed', ready: Boolean(result) || Boolean(status && terminalStatuses.includes(status.status)) },
+    { label: 'One-time proof signed', ready: Boolean(result) || Boolean(status && TERMINAL_STATUSES.includes(status.status)) },
     { label: 'IFR access approved', ready: proofApproved || sellerRedeemed },
     { label: 'Seller redeem complete', ready: sellerRedeemed },
   ];
 
-  useEffect(() => {
-    async function loadSession() {
-      try {
-        const nextStatus = await getSessionStatus(params.sessionId);
-        setStatus(nextStatus);
-        setBusiness(await getBusiness(nextStatus.businessId));
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to load session');
-      }
+  const loadSession = useCallback(async (showMessage = false) => {
+    const nextStatus = await getSessionStatus(params.sessionId);
+    setStatus(nextStatus);
+    if (business?.id !== nextStatus.businessId) {
+      setBusiness(await getBusiness(nextStatus.businessId));
     }
-    loadSession();
-  }, [params.sessionId]);
+    if (showMessage) setRefreshMessage(`Status refreshed: ${nextStatus.status}`);
+    return nextStatus;
+  }, [business?.id, params.sessionId]);
+
+  useEffect(() => {
+    loadSession().catch((err) => setError(err instanceof Error ? err.message : 'Failed to load session'));
+  }, [loadSession]);
+
+  useEffect(() => {
+    if (!status || CLOSED_STATUSES.includes(status.status)) return;
+    const timer = window.setInterval(() => {
+      loadSession().catch((err) => setError(err instanceof Error ? err.message : 'Failed to refresh session'));
+    }, 3000);
+    return () => window.clearInterval(timer);
+  }, [loadSession, status]);
+
+  async function refreshStatus() {
+    setError('');
+    setRefreshMessage('');
+    try {
+      await loadSession(true);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to refresh session');
+    }
+  }
 
   async function signAndVerify() {
     setLoading(true);
@@ -80,7 +101,7 @@ export default function CustomerSession({ params }: { params: { sessionId: strin
       const signature = await signMessageAsync({ message: challenge.message });
       const nextResult = await submitAttest(params.sessionId, signature);
       setResult(nextResult);
-      setStatus(await getSessionStatus(params.sessionId));
+      await loadSession(true);
     } catch (err) {
       if (err instanceof Error && err.message.toLowerCase().includes('rejected')) {
         setError('Signature rejected. Please try again.');
@@ -200,6 +221,15 @@ export default function CustomerSession({ params }: { params: { sessionId: strin
             {loading ? 'Verifying...' : 'Sign and verify'}
           </button>
 
+          <button
+            type="button"
+            onClick={refreshStatus}
+            disabled={!sessionLoaded || loading}
+            className="mt-3 w-full rounded-2xl border border-white/15 px-5 py-3 text-xs font-black uppercase tracking-[0.14em] text-stone-100 transition hover:border-orange-200/60 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            Refresh status
+          </button>
+
           {result ? (
             <div className="mt-5 rounded-2xl border border-white/10 bg-black/25 p-4 text-sm leading-6 text-stone-200">
               <p className="font-bold text-white">{result.status}</p>
@@ -210,6 +240,8 @@ export default function CustomerSession({ params }: { params: { sessionId: strin
               ) : null}
             </div>
           ) : null}
+
+          {refreshMessage ? <p className="mt-3 text-xs font-semibold text-green-100">{refreshMessage}</p> : null}
 
           {address ? (
             <button
