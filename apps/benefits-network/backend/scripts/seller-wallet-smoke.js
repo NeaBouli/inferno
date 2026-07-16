@@ -248,12 +248,26 @@ async function main() {
     if (customerPrivateKey) {
       throw new Error(`Customer wallet was expected to be eligible, got rejected: ${attest.reason || 'no reason'}`);
     }
+    if (attest.attemptsRemaining !== 2) {
+      throw new Error(`Expected 2 retry attempts after first rejected attest, got ${attest.attemptsRemaining}`);
+    }
+    const retryableStatus = await fetchJson(`/api/sessions/${session.sessionId}`);
+    if (retryableStatus.status !== 'PENDING') {
+      throw new Error(`Rejected throwaway attest should keep session retryable PENDING, got ${retryableStatus.status}`);
+    }
+    if (retryableStatus.attestAttempts !== 1) {
+      throw new Error(`Expected one recorded attest attempt, got ${retryableStatus.attestAttempts}`);
+    }
+    if (!String(retryableStatus.reason || '').includes('retry this QR session')) {
+      throw new Error(`Expected retry guidance in session reason, got ${retryableStatus.reason || '<empty>'}`);
+    }
     const redeemAuth = await signSellerAction(wallet, 'sessions:redeem', session.sessionId);
     await expectHttpStatus(`/api/sessions/${session.sessionId}/redeem`, 409, {
       method: 'POST',
       headers: sellerHeaders(redeemAuth),
     });
     console.log(`Rejected throwaway customer as expected: ${attest.reason || 'not eligible'}`);
+    console.log('Rejected customer session remains retryable: OK');
     console.log('Redeem rejected session blocked: OK');
   } else {
     throw new Error(`Unexpected attest status ${attest.status}`);
