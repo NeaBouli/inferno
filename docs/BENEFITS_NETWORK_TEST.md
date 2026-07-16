@@ -30,10 +30,10 @@ bash apps/benefits-network/backend/scripts/e2e-test.sh
 
 1. Start backend + frontend (see Quick Start)
 2. Browser: `http://localhost:3000/b/{businessId}` (Merchant Console)
-3. "Start Verification" → QR code appears
-4. Wallet app → Scan QR → Sign
+3. "Create QR session" -> QR code appears
+4. Wallet app -> Scan QR -> Sign
 5. Merchant screen shows: APPROVED or DENIED
-6. Optional: "Redeem" → Status changes to REDEEMED
+6. Optional: "Redeem" -> Status changes to REDEEMED
 
 ## E2E Test Script
 
@@ -41,8 +41,10 @@ The script (`apps/benefits-network/backend/scripts/e2e-test.sh`) runs automatica
 
 1. Health Check (`GET /health`)
 2. Create Business (`POST /api/admin/businesses`)
-3. Start QR Session (`POST /api/verification/start`)
-4. Check Session Status (`GET /api/verification/status/:id`)
+3. Start QR Session (`POST /api/sessions`)
+4. Get Challenge (`GET /api/sessions/:id/challenge`)
+5. Submit Attest (`POST /api/attest`)
+6. Check Session Status (`GET /api/sessions/:id`)
 
 ### Configuration
 
@@ -76,11 +78,18 @@ The script (`apps/benefits-network/backend/scripts/e2e-test.sh`) runs automatica
 |--------|------|------|-------------|
 | GET | `/health` | - | Health check |
 | POST | `/api/admin/businesses` | Admin | Create business |
-| GET | `/api/admin/businesses` | Admin | List all businesses |
-| POST | `/api/verification/start` | - | Start QR session |
-| GET | `/api/verification/status/:id` | - | Session status |
-| POST | `/api/verification/verify` | - | Verify wallet + signature |
-| POST | `/api/verification/redeem/:id` | - | Redeem session |
+| PATCH | `/api/admin/businesses/:id` | Admin | Update business |
+| GET | `/api/admin/businesses/:id/rules` | Admin | List seller benefit rules |
+| POST | `/api/admin/businesses/:id/rules` | Admin | Create seller benefit rule |
+| PATCH | `/api/admin/rules/:id` | Admin | Update or pause rule |
+| DELETE | `/api/admin/rules/:id` | Admin | Delete rule |
+| GET | `/api/businesses/:id` | - | Public business info |
+| GET | `/api/businesses/:id/rules` | - | Active public rules |
+| POST | `/api/sessions` | - | Start QR session, optionally with `benefitRuleId` |
+| GET | `/api/sessions/:id` | - | Session status |
+| GET | `/api/sessions/:id/challenge` | - | Signature challenge |
+| POST | `/api/attest` | - | Verify wallet + signature |
+| POST | `/api/sessions/:id/redeem` | - | Redeem approved session |
 
 ---
-*As of: February 2026 | Version 1.0*
+*As of: July 2026 | Version 1.1*

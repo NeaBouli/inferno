@@ -1,7 +1,7 @@
 {
-  "name": "IFR Benefits Network",
-  "short_name": "IFR Benefits",
-  "description": "Verify IFR lock status for discounts and premium access",
+  "name": "IFRp Shop Benefits Network",
+  "short_name": "IFRp Shop",
+  "description": "Customer and seller app for IFR locked-access benefits, QR verification and shop discounts",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0a0a0a",
