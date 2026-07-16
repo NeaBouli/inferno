@@ -95,6 +95,9 @@ async function verifyPage(contextOptions, label) {
     await expectText(page, 'Copy link');
     await expectText(page, 'Checkout readiness');
     await expectText(page, 'Current tier');
+    await expectText(page, 'IFR amount to lock');
+    await expectText(page, 'Allowance');
+    await expectText(page, 'Unlock all');
     await expectText(page, 'Create a seller entry point');
     await expectText(page, 'Seller categories');
     await page.getByRole('button', { name: /Seller Offer discounts/i }).click();

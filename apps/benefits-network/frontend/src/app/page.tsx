@@ -262,7 +262,7 @@ export default function Home() {
               <span className="text-xs font-bold uppercase tracking-[0.18em] text-orange-200">Customer</span>
               <span className="mt-3 block text-xl font-black text-white">Unlock benefits</span>
               <span className="mt-2 block text-sm leading-6 text-stone-300">
-                Connect wallet, read IFR status, lock access on Web3, and verify seller QR sessions.
+                Connect wallet, read IFR status, lock access in-app, and verify seller QR sessions.
               </span>
             </button>
             <button
@@ -284,7 +284,7 @@ export default function Home() {
 
           <div className="mt-8 flex flex-wrap gap-3">
             <a
-              href="https://web3.ifrunit.tech"
+              href="#customer-wallet"
               className="rounded-full bg-orange-300 px-5 py-3 text-sm font-black uppercase tracking-[0.16em] text-stone-950 shadow-xl shadow-orange-950/40 transition hover:-translate-y-0.5 hover:bg-orange-200"
             >
               Lock IFR

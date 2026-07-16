@@ -97,7 +97,7 @@ export default function GuidePage() {
               Open app
             </a>
             <a
-              href="https://web3.ifrunit.tech"
+              href="/#customer-wallet"
               className="rounded-full border border-white/15 px-5 py-3 text-sm font-black uppercase tracking-[0.16em] text-stone-100 transition hover:border-orange-200/60"
             >
               Lock IFR
