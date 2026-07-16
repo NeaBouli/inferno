@@ -21,6 +21,7 @@ npm run dev            # http://localhost:3001
 | `ADMIN_SECRET` | Bearer token for /api/admin/* | required |
 | `DATABASE_URL` | Prisma database URL | `file:./dev.db` |
 | `PORT` | Server port | `3001` |
+| `MAX_ACTIVE_SELLER_BUSINESSES_PER_WALLET` | Anti-spam cap for active wallet-owned seller profiles | `5` |
 
 ## API Endpoints
 
@@ -109,6 +110,9 @@ Only sign this message inside shop.ifrunit.tech.
 
 Admin routes remain available for operator setup and recovery, but the public
 seller UX should prefer wallet-owned businesses.
+
+Public seller creation is intentionally capped per wallet. The default is five
+active seller profiles per owner wallet; inactive businesses do not count.
 
 ## Tests
 

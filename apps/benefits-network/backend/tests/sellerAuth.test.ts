@@ -1,5 +1,6 @@
 import { ethers } from 'ethers';
 import { buildSellerAuthMessage, verifySellerSignature } from '../src/services/sellerAuth';
+import { buildSellerBusinessLimitError } from '../src/services/sellerLimitPolicy';
 
 describe('Seller wallet authorization', () => {
   it('builds the deterministic seller auth message format', () => {
@@ -83,5 +84,10 @@ describe('Seller wallet authorization', () => {
         businessId: 'seller',
       })
     ).toBe(wallet.address);
+  });
+
+  it('builds a seller profile limit error once the active profile cap is reached', () => {
+    expect(buildSellerBusinessLimitError(4, 5)).toBeNull();
+    expect(buildSellerBusinessLimitError(5, 5)?.message).toContain('profile limit reached: 5/5');
   });
 });
