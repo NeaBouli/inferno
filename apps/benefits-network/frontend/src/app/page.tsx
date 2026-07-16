@@ -7,6 +7,7 @@ import { WalletStatus } from '@/components/WalletStatus';
 
 type Role = 'customer' | 'seller';
 type CodeMode = 'link' | 'button' | 'api';
+const UNISWAP_IFR_URL = 'https://app.uniswap.org/swap?outputCurrency=0x77e99917Eca8539c62F509ED1193ac36580A6e7B';
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -39,6 +40,21 @@ const sellerCategories = [
   'Events',
   'Local services',
   'Creator rewards',
+];
+
+const walletOnboardingSteps = [
+  {
+    title: 'Choose a wallet',
+    body: 'Use an Ethereum wallet you control, such as MetaMask, Coinbase Wallet, Trust, OKX or an EVM-ready Phantom session.',
+  },
+  {
+    title: 'Fund gas and IFR',
+    body: 'Keep a small ETH balance for gas, then buy or receive IFR in the same wallet before locking access.',
+  },
+  {
+    title: 'Lock inside the app',
+    body: 'Approve only the entered IFR amount, lock it in IFRLock, then use the same wallet for seller QR proofs.',
+  },
 ];
 
 function PwaInstallCard() {
@@ -279,6 +295,56 @@ function CodeGenerator() {
   );
 }
 
+function WalletStarterKit() {
+  return (
+    <section className="rounded-[2rem] border border-green-300/20 bg-[radial-gradient(circle_at_top_left,rgba(134,239,172,0.16),transparent_34%),linear-gradient(145deg,rgba(255,255,255,0.07),rgba(8,7,6,0.38))] p-5 shadow-2xl shadow-black/25 backdrop-blur">
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <p className="text-xs font-black uppercase tracking-[0.18em] text-green-100/80">Wallet starter kit</p>
+          <h2 className="mt-2 text-2xl font-black text-white">Bring or create your IFR wallet safely.</h2>
+        </div>
+        <span className="rounded-full border border-green-200/25 bg-green-200/10 px-3 py-2 text-[0.68rem] font-black uppercase tracking-[0.14em] text-green-100">
+          Non-custodial
+        </span>
+      </div>
+      <p className="mt-3 text-sm leading-6 text-stone-300">
+        The shop app never creates, stores or asks for seed phrases. New users create a wallet in a trusted wallet app, then return here to connect, buy IFR, lock access and scan seller QR codes.
+      </p>
+      <div className="mt-5 grid gap-3">
+        {walletOnboardingSteps.map((step, index) => (
+          <article key={step.title} className="rounded-2xl border border-white/10 bg-black/20 p-4">
+            <div className="flex gap-3">
+              <span className="grid h-8 w-8 shrink-0 place-items-center rounded-xl border border-green-200/25 bg-green-200/10 font-mono text-xs font-black text-green-100">
+                {index + 1}
+              </span>
+              <div>
+                <h3 className="text-sm font-black text-white">{step.title}</h3>
+                <p className="mt-1 text-sm leading-6 text-stone-300">{step.body}</p>
+              </div>
+            </div>
+          </article>
+        ))}
+      </div>
+      <div className="mt-5 grid gap-3 sm:grid-cols-2">
+        <a
+          href="#customer-wallet"
+          className="rounded-2xl bg-green-200 px-4 py-3 text-center text-xs font-black uppercase tracking-[0.14em] text-stone-950 shadow-xl shadow-green-950/25 transition hover:-translate-y-0.5 hover:bg-green-100"
+        >
+          Connect or lock
+        </a>
+        <a
+          href={UNISWAP_IFR_URL}
+          target="_blank"
+          rel="noopener"
+          className="rounded-2xl border border-white/15 px-4 py-3 text-center text-xs font-black uppercase tracking-[0.14em] text-stone-100 transition hover:border-green-200/60"
+        >
+          Buy IFR
+        </a>
+      </div>
+    </section>
+  );
+}
+
 export default function Home() {
   const [role, setRole] = useState<Role>('customer');
 
@@ -370,6 +436,7 @@ export default function Home() {
 
         <div className="grid gap-5">
           <PwaInstallCard />
+          <WalletStarterKit />
           {role === 'customer' ? <WalletStatus /> : <SellerRuleBuilder />}
           <section className="rounded-[2rem] border border-white/10 bg-black/20 p-5">
             <p className="text-xs font-bold uppercase tracking-[0.18em] text-stone-400">
