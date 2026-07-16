@@ -54,4 +54,22 @@ describe('Seller wallet authorization', () => {
       })
     ).toThrow('expired');
   });
+
+  it('verifies the seller profile list action message', async () => {
+    const wallet = ethers.Wallet.createRandom();
+    const timestamp = Date.now().toString();
+    const signature = await wallet.signMessage(
+      buildSellerAuthMessage('business:list', 'seller', timestamp)
+    );
+
+    expect(
+      verifySellerSignature({
+        walletAddress: wallet.address,
+        signature,
+        timestamp,
+        action: 'business:list',
+        businessId: 'seller',
+      })
+    ).toBe(wallet.address);
+  });
 });

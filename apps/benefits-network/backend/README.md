@@ -34,6 +34,7 @@ npm run dev            # http://localhost:3001
 | DELETE | `/api/admin/rules/:id` | Admin | Delete a benefit rule |
 | GET | `/api/seller/auth-message` | Public | Preview the wallet message format for seller actions |
 | POST | `/api/seller/businesses` | Seller wallet signature | Create wallet-owned seller business |
+| GET | `/api/seller/businesses` | Seller wallet signature | List active seller businesses owned by the wallet |
 | GET | `/api/seller/businesses/:id/rules` | Seller wallet signature | List owned benefit rules |
 | POST | `/api/seller/businesses/:id/rules` | Seller wallet signature | Create owned benefit rule |
 | PATCH | `/api/seller/rules/:id` | Seller wallet signature | Update or pause owned benefit rule |

@@ -58,6 +58,15 @@ export interface AdminBusinessCreated {
   qrUrl: string;
 }
 
+export interface SellerBusinessSummary extends AdminBusinessCreated {
+  name: string;
+  discountPercent: number;
+  requiredLockIFR: number;
+  tierLabel: string | null;
+  createdAt: string;
+  rulesCount: number;
+}
+
 export interface SellerAuth {
   walletAddress: string;
   signature: string;
@@ -195,6 +204,12 @@ export function createSellerBusiness(auth: SellerAuth, input: AdminBusinessInput
       signature: auth.signature,
       timestamp: auth.timestamp,
     }),
+  });
+}
+
+export function getSellerBusinesses(auth: SellerAuth) {
+  return fetchJSON<{ businesses: SellerBusinessSummary[] }>('/api/seller/businesses', {
+    headers: sellerHeaders(auth),
   });
 }
 

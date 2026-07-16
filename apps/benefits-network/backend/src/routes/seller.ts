@@ -118,6 +118,45 @@ router.post('/businesses', sellerRateLimiter, validate(createBusinessSchema), as
   }
 });
 
+router.get('/businesses', sellerRateLimiter, async (req, res, next) => {
+  try {
+    const wallet = requireSellerAuth(req, 'business:list', 'seller');
+    const businesses = await prisma.business.findMany({
+      where: { ownerAddress: wallet, active: true },
+      orderBy: { createdAt: 'desc' },
+      select: {
+        id: true,
+        name: true,
+        ownerAddress: true,
+        discountPercent: true,
+        requiredLockIFR: true,
+        tierLabel: true,
+        createdAt: true,
+        _count: {
+          select: { benefitRules: true },
+        },
+      },
+    });
+
+    res.json({
+      businesses: businesses.map((business) => ({
+        id: business.id,
+        name: business.name,
+        ownerAddress: business.ownerAddress,
+        discountPercent: business.discountPercent,
+        requiredLockIFR: business.requiredLockIFR,
+        tierLabel: business.tierLabel,
+        createdAt: business.createdAt,
+        rulesCount: business._count.benefitRules,
+        verifyUrl: `/b/${business.id}`,
+        qrUrl: `/b/${business.id}`,
+      })),
+    });
+  } catch (err) {
+    handleSellerError(err, res, next);
+  }
+});
+
 router.get('/businesses/:id/rules', sellerRateLimiter, async (req, res, next) => {
   try {
     await requireBusinessOwner(req, 'rules:list', req.params.id);
