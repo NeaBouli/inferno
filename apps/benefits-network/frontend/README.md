@@ -123,11 +123,12 @@ For capacity-only checks, run:
 scripts/deploy-benefits-network.sh capacity
 ```
 
-The helper keeps `MIN_FREE_GB=4` as the warning floor and `ABORT_FREE_GB=2` as
-the hard safety floor by default. When free space drops below the warning floor,
-it prunes safe Docker caches only: builder cache, stopped containers and
-dangling images. It does not prune volumes. If free space stays below the hard
-floor after safe pruning, the deploy exits before rebuilding containers.
+The helper keeps `MIN_FREE_GB=4` as the warning floor, `ABORT_FREE_GB=2` as
+the emergency hard floor and `DEPLOY_ABORT_FREE_GB=4` as the default hard floor
+before any container rebuild. When free space drops below the warning floor, it
+prunes safe Docker caches only: builder cache, stopped containers and dangling
+images. It does not prune volumes. If free space stays below the deploy floor
+after safe pruning, the deploy exits before rebuilding containers.
 
 For the full capacity decision process and latest known large Docker consumers,
 see `docs/BENEFITS_CAPACITY_RUNBOOK.md`.

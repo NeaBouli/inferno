@@ -11,6 +11,8 @@ MIN_FREE_GB="${MIN_FREE_GB:-4}"
 MIN_FREE_MB="$((MIN_FREE_GB * 1024))"
 ABORT_FREE_GB="${ABORT_FREE_GB:-2}"
 ABORT_FREE_MB="$((ABORT_FREE_GB * 1024))"
+DEPLOY_ABORT_FREE_GB="${DEPLOY_ABORT_FREE_GB:-4}"
+DEPLOY_ABORT_FREE_MB="$((DEPLOY_ABORT_FREE_GB * 1024))"
 REMOTE_VOLUME="${REMOTE_VOLUME:-/mnt/HC_Volume_106164848}"
 
 case "$MODE" in
@@ -40,6 +42,7 @@ safe_prune() {
 
 ensure_space() {
   local phase="${1:-preflight}"
+  local require_deploy_floor="${2:-0}"
   local free
   free="$(free_mb)"
   if [[ -z "$free" ]]; then
@@ -56,6 +59,13 @@ ensure_space() {
   if (( free < ABORT_FREE_MB )); then
     echo "Only ${free}M free on $REMOTE_VOLUME after safe prune; aborting before deploy." >&2
     echo "Raise disk capacity or explicitly lower ABORT_FREE_GB for this run." >&2
+    exit 75
+  fi
+
+  if [[ "$require_deploy_floor" == "1" ]] && (( free < DEPLOY_ABORT_FREE_MB )); then
+    echo "Only ${free}M free on $REMOTE_VOLUME after safe prune; refusing to start container rebuild." >&2
+    echo "Frontend deploys have dropped below 0.5G transiently from ~3.5G free." >&2
+    echo "Free space to at least DEPLOY_ABORT_FREE_GB=${DEPLOY_ABORT_FREE_GB}G or set a one-off override after accepting the risk." >&2
     exit 75
   fi
 
@@ -110,7 +120,7 @@ if [[ "$MODE" == "capacity" ]]; then
   exit 0
 fi
 
-ensure_space "pre-deploy"
+ensure_space "pre-deploy" 1
 sync_app
 
 case "$MODE" in
