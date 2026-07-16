@@ -191,6 +191,7 @@ async function verifyPage(contextOptions, label) {
     await expectText(page, 'Restore setup');
     await expectText(page, 'Session history');
     await expectText(page, 'proof links and restore receipts');
+    await expectText(page, 'Seller activity');
 
     await gotoAppPage(page, '/guide');
     await expectText(page, 'IFRp Benefits Network Guide');

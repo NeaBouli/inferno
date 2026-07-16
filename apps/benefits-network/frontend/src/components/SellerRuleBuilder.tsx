@@ -9,6 +9,7 @@ import {
   BenefitRuleInput,
   SellerAuth,
   SellerBusinessSummary,
+  SellerActivityMetrics,
   SellerSessionSummary,
   createAdminBusiness,
   createAdminBusinessRule,
@@ -57,6 +58,7 @@ export function SellerRuleBuilder() {
   const [ttl, setTtl] = useState(90);
   const [rules, setRules] = useState<BenefitRule[]>([]);
   const [sessions, setSessions] = useState<SellerSessionSummary[]>([]);
+  const [activityMetrics, setActivityMetrics] = useState<SellerActivityMetrics | null>(null);
   const [sellerBusinesses, setSellerBusinesses] = useState<SellerBusinessSummary[]>([]);
   const [createdBusiness, setCreatedBusiness] = useState<AdminBusinessCreated | null>(null);
   const [restoreInput, setRestoreInput] = useState('');
@@ -208,6 +210,7 @@ export function SellerRuleBuilder() {
       setBusinessId(business.id);
       setRules([]);
       setSessions([]);
+      setActivityMetrics(null);
       setSellerBusinesses((current) => [
         {
           id: business.id,
@@ -261,6 +264,7 @@ export function SellerRuleBuilder() {
       return;
     }
     setLoading(true);
+    setActivityMetrics(null);
     setError('');
     setStatus('');
     try {
@@ -270,7 +274,8 @@ export function SellerRuleBuilder() {
         10
       );
       setSessions(result.sessions);
-      setStatus(`Loaded ${result.sessions.length} recent session${result.sessions.length === 1 ? '' : 's'}.`);
+      setActivityMetrics(result.metrics);
+      setStatus(`Loaded ${result.sessions.length} recent session${result.sessions.length === 1 ? '' : 's'} and seller activity.`);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load session history');
     } finally {
@@ -292,6 +297,7 @@ export function SellerRuleBuilder() {
       if (!businessId && result.businesses[0]) {
         setBusinessId(result.businesses[0].id);
         setSessions([]);
+        setActivityMetrics(null);
       }
       setStatus(`Loaded ${result.businesses.length} seller profile${result.businesses.length === 1 ? '' : 's'}.`);
     } catch (err) {
@@ -316,6 +322,7 @@ export function SellerRuleBuilder() {
         setBusinessId('');
         setRules([]);
         setSessions([]);
+        setActivityMetrics(null);
       }
       setStatus('Seller profile deactivated.');
     } catch (err) {
@@ -521,6 +528,7 @@ export function SellerRuleBuilder() {
         }
         setRules([]);
         setSessions([]);
+        setActivityMetrics(null);
         setError('');
         setStatus('Seller backup restored. Connect the owner wallet, then load rules or sessions.');
         return;
@@ -534,6 +542,7 @@ export function SellerRuleBuilder() {
       setBusinessId(businessIdFromText);
       setRules([]);
       setSessions([]);
+      setActivityMetrics(null);
       setError('');
       setStatus('Business ID restored. Connect the owner wallet, then load rules or sessions.');
     } catch {
@@ -619,6 +628,7 @@ export function SellerRuleBuilder() {
                     setBusinessId(business.id);
                     setRules([]);
                     setSessions([]);
+                    setActivityMetrics(null);
                     setStatus(`${business.name} selected. Load rules when you need the current list.`);
                   }}
                   className="block w-full text-left"
@@ -636,6 +646,7 @@ export function SellerRuleBuilder() {
                       setBusinessId(business.id);
                       setRules([]);
                       setSessions([]);
+                      setActivityMetrics(null);
                       setStatus(`${business.name} selected. Load rules when you need the current list.`);
                     }}
                     className="rounded-xl border border-green-200/30 px-3 py-2 text-[11px] font-black uppercase tracking-[0.12em] text-green-50 transition hover:bg-green-200/10"
@@ -1005,6 +1016,42 @@ export function SellerRuleBuilder() {
               appear here for counter recovery.
             </p>
           )}
+          {activityMetrics ? (
+            <div className="mt-4 rounded-2xl border border-orange-200/20 bg-[#1d130c] p-4">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <p className="text-xs font-black uppercase tracking-[0.16em] text-orange-200/80">Seller activity</p>
+                  <h4 className="mt-1 text-lg font-black text-white">Checkout performance</h4>
+                </div>
+                <p className="text-xs text-stone-400">
+                  UTC day from {new Date(activityMetrics.todayStartedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', timeZone: 'UTC' })}
+                </p>
+              </div>
+              <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+                {[
+                  ['Redeemed today', activityMetrics.today.redeemed],
+                  ['All redemptions', activityMetrics.allTime.redeemed],
+                  ['Open checks', activityMetrics.openChecks],
+                  ['Approval rate', activityMetrics.approvalRatePercent === null ? 'No data' : `${activityMetrics.approvalRatePercent}%`],
+                ].map(([metricLabel, value]) => (
+                  <div key={metricLabel} className="rounded-2xl border border-white/10 bg-black/20 p-3">
+                    <p className="text-xs uppercase tracking-[0.12em] text-stone-400">{metricLabel}</p>
+                    <p className="mt-2 text-2xl font-black text-white">{value}</p>
+                  </div>
+                ))}
+              </div>
+              <p className="mt-3 text-xs leading-5 text-stone-400">
+                {activityMetrics.today.checks} check{activityMetrics.today.checks === 1 ? '' : 's'} today / {activityMetrics.allTime.checks} all time. Approval rate counts approved or redeemed checks against completed approved, redeemed and rejected checks; expired QR sessions are excluded.
+              </p>
+            </div>
+          ) : (
+            <div className="mt-4 rounded-2xl border border-white/10 bg-black/20 p-4">
+              <p className="text-xs font-black uppercase tracking-[0.16em] text-stone-400">Seller activity</p>
+              <p className="mt-2 text-sm leading-6 text-stone-300">
+                Connect the owner wallet and load sessions to view redemptions, open checks and approval rate.
+              </p>
+            </div>
+          )}
         </div>
       ) : null}
 
@@ -1013,7 +1060,12 @@ export function SellerRuleBuilder() {
           Business ID
           <input
             value={businessId}
-            onChange={(event) => setBusinessId(event.target.value)}
+            onChange={(event) => {
+              setBusinessId(event.target.value);
+              setRules([]);
+              setSessions([]);
+              setActivityMetrics(null);
+            }}
             placeholder="cuid..."
             className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none focus:border-orange-300"
           />

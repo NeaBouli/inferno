@@ -31,6 +31,62 @@ const createBenefitRuleSchema = z.object({
 
 const updateBenefitRuleSchema = createBenefitRuleSchema.partial();
 
+type SessionStatusCounts = Record<'PENDING' | 'APPROVED' | 'REJECTED' | 'EXPIRED' | 'REDEEMED', number>;
+
+function sessionStatusCounts(groups: Array<{ status: string; _count: { _all: number } }>): SessionStatusCounts {
+  const counts: SessionStatusCounts = {
+    PENDING: 0,
+    APPROVED: 0,
+    REJECTED: 0,
+    EXPIRED: 0,
+    REDEEMED: 0,
+  };
+
+  for (const group of groups) {
+    if (group.status in counts) {
+      counts[group.status as keyof SessionStatusCounts] = group._count._all;
+    }
+  }
+
+  return counts;
+}
+
+function sellerActivityMetrics(
+  allTimeGroups: Array<{ status: string; _count: { _all: number } }>,
+  todayGroups: Array<{ status: string; _count: { _all: number } }>,
+  todayStartedAt: Date,
+  todayRedemptions: number,
+  openChecks: number
+) {
+  const allTime = sessionStatusCounts(allTimeGroups);
+  const today = sessionStatusCounts(todayGroups);
+  const allTimeChecks = Object.values(allTime).reduce((sum, count) => sum + count, 0);
+  const todayChecks = Object.values(today).reduce((sum, count) => sum + count, 0);
+  const completedVerifications = allTime.APPROVED + allTime.REDEEMED + allTime.REJECTED;
+  const successfulVerifications = allTime.APPROVED + allTime.REDEEMED;
+
+  return {
+    generatedAt: new Date().toISOString(),
+    todayStartedAt: todayStartedAt.toISOString(),
+    today: {
+      checks: todayChecks,
+      approved: today.APPROVED + today.REDEEMED,
+      redeemed: todayRedemptions,
+      rejected: today.REJECTED,
+    },
+    allTime: {
+      checks: allTimeChecks,
+      approved: successfulVerifications,
+      redeemed: allTime.REDEEMED,
+      rejected: allTime.REJECTED,
+    },
+    openChecks,
+    approvalRatePercent: completedVerifications > 0
+      ? Math.round((successfulVerifications / completedVerifications) * 100)
+      : null,
+  };
+}
+
 function getSellerAuth(req: Request) {
   return {
     walletAddress: String(req.header('x-ifr-wallet') || req.body?.ownerAddress || ''),
@@ -189,42 +245,74 @@ router.get('/businesses/:id/sessions', sellerRateLimiter, async (req, res, next)
     await requireBusinessOwner(req, 'sessions:list', req.params.id);
     const requestedLimit = Number(req.query.limit || 10);
     const limit = Math.min(Math.max(Number.isFinite(requestedLimit) ? requestedLimit : 10, 1), 50);
-    const sessions = await prisma.session.findMany({
-      where: { businessId: req.params.id },
-      orderBy: { createdAt: 'desc' },
-      take: limit,
-      select: {
-        id: true,
-        status: true,
-        recoveredAddress: true,
-        lockAmountRaw: true,
-        reason: true,
-        expiresAt: true,
-        createdAt: true,
-        updatedAt: true,
-        redeemedAt: true,
-        attestAttempts: true,
-        benefitRule: {
-          select: {
-            id: true,
-            label: true,
-            category: true,
-            productName: true,
-            discountPercent: true,
-            requiredLockIFR: true,
+    const todayStartedAt = new Date();
+    todayStartedAt.setUTCHours(0, 0, 0, 0);
+    const now = new Date();
+    const [sessions, allTimeGroups, todayGroups, todayRedemptions, openChecks] = await Promise.all([
+      prisma.session.findMany({
+        where: { businessId: req.params.id },
+        orderBy: { createdAt: 'desc' },
+        take: limit,
+        select: {
+          id: true,
+          status: true,
+          recoveredAddress: true,
+          lockAmountRaw: true,
+          reason: true,
+          expiresAt: true,
+          createdAt: true,
+          updatedAt: true,
+          redeemedAt: true,
+          attestAttempts: true,
+          benefitRule: {
+            select: {
+              id: true,
+              label: true,
+              category: true,
+              productName: true,
+              discountPercent: true,
+              requiredLockIFR: true,
+            },
+          },
+          business: {
+            select: {
+              tierLabel: true,
+              discountPercent: true,
+              requiredLockIFR: true,
+            },
           },
         },
-        business: {
-          select: {
-            tierLabel: true,
-            discountPercent: true,
-            requiredLockIFR: true,
-          },
+      }),
+      prisma.session.groupBy({
+        by: ['status'],
+        where: { businessId: req.params.id },
+        _count: { _all: true },
+      }),
+      prisma.session.groupBy({
+        by: ['status'],
+        where: { businessId: req.params.id, createdAt: { gte: todayStartedAt } },
+        _count: { _all: true },
+      }),
+      prisma.session.count({
+        where: { businessId: req.params.id, redeemedAt: { gte: todayStartedAt } },
+      }),
+      prisma.session.count({
+        where: {
+          businessId: req.params.id,
+          status: { in: ['PENDING', 'APPROVED'] },
+          expiresAt: { gt: now },
         },
-      },
-    });
+      }),
+    ]);
 
     res.json({
+      metrics: sellerActivityMetrics(
+        allTimeGroups,
+        todayGroups,
+        todayStartedAt,
+        todayRedemptions,
+        openChecks
+      ),
       sessions: sessions.map((session) => ({
         id: session.id,
         status: session.status,

@@ -48,9 +48,16 @@ async function postRedeem(sessionId: string, headers?: Record<string, string>) {
   });
 }
 
+async function getSellerSessions(businessId: string, headers?: Record<string, string>) {
+  return fetch(`${baseUrl()}/api/seller/businesses/${businessId}/sessions`, {
+    headers: headers ?? { 'content-type': 'application/json' },
+  });
+}
+
 describe('Redeem route authorization', () => {
   const seller = ethers.Wallet.createRandom();
   const otherSeller = ethers.Wallet.createRandom();
+  let businessId: string;
   let approvedSessionId: string;
 
   beforeEach(async () => {
@@ -69,6 +76,7 @@ describe('Redeem route authorization', () => {
         tierLabel: 'HTTP',
       },
     });
+    businessId = business.id;
 
     const session = await prisma.session.create({
       data: {
@@ -115,12 +123,89 @@ describe('Redeem route authorization', () => {
     const headers = await sellerHeaders(seller, 'sessions:redeem', approvedSessionId);
 
     const response = await postRedeem(approvedSessionId, headers);
-    const body = await response.json();
+    const body = await response.json() as { status: string };
 
     expect(response.status).toBe(200);
     expect(body).toEqual({ status: 'REDEEMED' });
 
     const secondResponse = await postRedeem(approvedSessionId, headers);
     expect(secondResponse.status).toBe(409);
+  });
+
+  it('keeps seller activity metrics owner-protected and calculates checkout status totals', async () => {
+    const missingAuth = await getSellerSessions(businessId);
+    expect(missingAuth.status).toBe(401);
+
+    const wrongHeaders = await sellerHeaders(otherSeller, 'sessions:list', businessId);
+    const wrongSeller = await getSellerSessions(businessId, wrongHeaders);
+    expect(wrongSeller.status).toBe(403);
+
+    const todayStartedAt = new Date();
+    todayStartedAt.setUTCHours(0, 0, 0, 0);
+
+    await prisma.session.createMany({
+      data: [
+        {
+          businessId,
+          nonce: ethers.utils.hexlify(ethers.utils.randomBytes(32)).slice(2),
+          expiresAt: new Date(Date.now() + 300_000),
+          status: 'REDEEMED',
+          recoveredAddress: ethers.Wallet.createRandom().address,
+          redeemedAt: new Date(),
+        },
+        {
+          businessId,
+          nonce: ethers.utils.hexlify(ethers.utils.randomBytes(32)).slice(2),
+          expiresAt: new Date(Date.now() + 300_000),
+          status: 'REJECTED',
+        },
+        {
+          businessId,
+          nonce: ethers.utils.hexlify(ethers.utils.randomBytes(32)).slice(2),
+          expiresAt: new Date(Date.now() + 300_000),
+          status: 'PENDING',
+        },
+        {
+          businessId,
+          nonce: ethers.utils.hexlify(ethers.utils.randomBytes(32)).slice(2),
+          expiresAt: new Date(todayStartedAt.getTime() - 1),
+          createdAt: new Date(todayStartedAt.getTime() - 1),
+          status: 'REDEEMED',
+          recoveredAddress: ethers.Wallet.createRandom().address,
+          redeemedAt: new Date(),
+        },
+        {
+          businessId,
+          nonce: ethers.utils.hexlify(ethers.utils.randomBytes(32)).slice(2),
+          expiresAt: new Date(Date.now() - 1),
+          status: 'EXPIRED',
+        },
+        {
+          businessId,
+          nonce: ethers.utils.hexlify(ethers.utils.randomBytes(32)).slice(2),
+          expiresAt: new Date(Date.now() - 1),
+          status: 'PENDING',
+        },
+      ],
+    });
+
+    const ownerHeaders = await sellerHeaders(seller, 'sessions:list', businessId);
+    const response = await getSellerSessions(businessId, ownerHeaders);
+    const body = await response.json() as {
+      metrics: {
+        today: { checks: number; approved: number; redeemed: number; rejected: number };
+        allTime: { checks: number; approved: number; redeemed: number; rejected: number };
+        openChecks: number;
+        approvalRatePercent: number | null;
+      };
+      sessions: unknown[];
+    };
+
+    expect(response.status).toBe(200);
+    expect(body.metrics.today).toMatchObject({ checks: 6, approved: 2, redeemed: 2, rejected: 1 });
+    expect(body.metrics.allTime).toMatchObject({ checks: 7, approved: 3, redeemed: 2, rejected: 1 });
+    expect(body.metrics.openChecks).toBe(2);
+    expect(body.metrics.approvalRatePercent).toBe(75);
+    expect(body.sessions).toHaveLength(7);
   });
 });
