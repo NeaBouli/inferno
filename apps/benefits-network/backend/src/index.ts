@@ -10,7 +10,10 @@ import attestRoutes from './routes/attest';
 const app = express();
 
 app.use(cors({
-  origin: (process.env.ALLOWED_ORIGINS || 'http://localhost:3000,http://localhost:3001').split(','),
+  origin: (
+    process.env.ALLOWED_ORIGINS ||
+    'http://localhost:3000,http://localhost:3001,https://shop.ifrunit.tech,https://web3.ifrunit.tech,https://ifrunit.tech'
+  ).split(','),
 }));
 app.use(express.json({ limit: '10kb' }));
 

@@ -20,13 +20,17 @@
 - [x] `POST /api/sessions` → Session created (id: `cmm3ayfd6...`)
   - Body: `{businessId}`
   - Response: `{sessionId, expiresAt, qrUrl, discountPercent, requiredLockIFR, tierLabel}`
+- [x] `POST /api/sessions` with `benefitRuleId` → Rule-bound session created
+  - Body: `{businessId, benefitRuleId}`
+  - Response includes rule `label`, `category`, `productName`, `discountPercent`, `requiredLockIFR`
 - [x] `GET /api/sessions/:id` → Session Status
-  - Response: `{status: "PENDING", recoveredAddress: null, expiresAt: "..."}`
+  - Response: `{status: "PENDING", recoveredAddress: null, expiresAt: "...", businessId, benefitRuleId, benefit}`
 
 ### Corrections from v1
 - Route is `/api/sessions` (not `/api/verification/start`)
 - Auth header is `Authorization: Bearer <secret>` (not `X-Admin-Secret`)
 - Schema: `discountPercent` + `requiredLockIFR` are required fields (not `address` + `minLockAmount`)
+- Benefit rules are first-class and can be bound to QR sessions via `benefitRuleId`
 
 ### Sepolia Integration
 - [x] isLocked() query configured (IFRLOCK_ADDRESS in .env)
@@ -41,4 +45,4 @@
 - Prisma update available (5.22.0 → 7.4.1) — not blocking
 
 ---
-*As of: 2026-02-26*
+*As of: 2026-07-16*

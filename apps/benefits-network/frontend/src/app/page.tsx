@@ -1,28 +1,186 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { AppShell } from '@/components/AppShell';
 import { SellerRuleBuilder } from '@/components/SellerRuleBuilder';
 import { WalletStatus } from '@/components/WalletStatus';
 
 type Role = 'customer' | 'seller';
+type CodeMode = 'link' | 'button' | 'api';
+
+interface BeforeInstallPromptEvent extends Event {
+  prompt: () => Promise<void>;
+  userChoice: Promise<{ outcome: 'accepted' | 'dismissed'; platform: string }>;
+}
+
+const flowSteps = [
+  {
+    title: 'Customer locks or holds IFR',
+    body: 'The app reads wallet status, IFR balance and IFRLock access without moving tokens during verification.',
+  },
+  {
+    title: 'Seller creates a rule',
+    body: 'A shop defines product, category, discount, required locked IFR and QR session lifetime.',
+  },
+  {
+    title: 'QR proof at checkout',
+    body: 'The customer scans, signs a one-time message, and the backend checks the selected rule on-chain.',
+  },
+  {
+    title: 'Redeem once',
+    body: 'The seller sees APPROVED, grants the benefit, and redeems the session so it cannot be reused.',
+  },
+];
+
+const sellerCategories = [
+  'Coffee and food',
+  'Retail',
+  'Digital access',
+  'Events',
+  'Local services',
+  'Creator rewards',
+];
+
+function PwaInstallCard() {
+  const [installEvent, setInstallEvent] = useState<BeforeInstallPromptEvent | null>(null);
+  const [message, setMessage] = useState('Install support appears when your browser exposes the PWA install prompt.');
+
+  useEffect(() => {
+    const handler = (event: Event) => {
+      event.preventDefault();
+      setInstallEvent(event as BeforeInstallPromptEvent);
+      setMessage('Ready to install on this device.');
+    };
+    window.addEventListener('beforeinstallprompt', handler);
+    return () => window.removeEventListener('beforeinstallprompt', handler);
+  }, []);
+
+  async function install() {
+    if (!installEvent) {
+      setMessage('On iPhone or iPad: open Share, then Add to Home Screen. On Android: use Install app in the browser menu.');
+      return;
+    }
+    await installEvent.prompt();
+    const choice = await installEvent.userChoice;
+    setInstallEvent(null);
+    setMessage(choice.outcome === 'accepted' ? 'Install accepted.' : 'Install dismissed. You can install later from the browser menu.');
+  }
+
+  return (
+    <section className="rounded-[2rem] border border-orange-200/20 bg-[#fff4e7] p-5 text-stone-950 shadow-2xl shadow-black/25">
+      <p className="text-xs font-black uppercase tracking-[0.18em] text-[#a34222]">Mobile app</p>
+      <h2 className="mt-2 text-2xl font-black">Install once. Use as customer or seller.</h2>
+      <p className="mt-3 text-sm leading-6 text-stone-700">
+        The same PWA works on desktop, tablet and smartphone. Customers use it for wallet status and QR proofs; sellers use it for rules, scanner links and redemptions.
+      </p>
+      <button
+        type="button"
+        onClick={install}
+        className="mt-5 w-full rounded-2xl bg-[#b84625] px-5 py-4 text-sm font-black uppercase tracking-[0.16em] text-white shadow-xl shadow-orange-900/30 transition hover:-translate-y-0.5 hover:bg-[#9f351b]"
+      >
+        Install app
+      </button>
+      <p className="mt-3 text-xs leading-5 text-stone-600">{message}</p>
+    </section>
+  );
+}
+
+function CodeGenerator() {
+  const [businessId, setBusinessId] = useState('your-business-id');
+  const [ruleLabel, setRuleLabel] = useState('Bronze 10%');
+  const [mode, setMode] = useState<CodeMode>('link');
+
+  const scannerUrl = useMemo(() => `https://shop.ifrunit.tech/b/${businessId || 'your-business-id'}`, [businessId]);
+
+  const code = useMemo(() => {
+    if (mode === 'button') {
+      return `<a href="${scannerUrl}" target="_blank" rel="noopener">Verify IFR discount</a>`;
+    }
+    if (mode === 'api') {
+      return `POST /api/sessions
+{
+  "businessId": "${businessId || 'your-business-id'}",
+  "benefitRuleId": "selected-active-rule-id"
+}`;
+    }
+    return scannerUrl;
+  }, [businessId, mode, scannerUrl]);
+
+  return (
+    <section id="integrate" className="rounded-[2rem] border border-white/10 bg-white/[0.055] p-5 shadow-2xl shadow-black/25 backdrop-blur">
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <p className="text-xs font-black uppercase tracking-[0.18em] text-orange-200/80">Code generator</p>
+          <h2 className="mt-2 text-2xl font-black text-white">Create a seller entry point</h2>
+        </div>
+        <span className="rounded-full border border-green-300/25 bg-green-300/10 px-3 py-1 text-xs font-bold uppercase tracking-[0.14em] text-green-100">
+          No secret in snippet
+        </span>
+      </div>
+
+      <div className="mt-5 grid gap-3 sm:grid-cols-2">
+        <label className="grid gap-2 text-sm font-semibold text-stone-200">
+          Business ID
+          <input
+            value={businessId}
+            onChange={(event) => setBusinessId(event.target.value)}
+            className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none focus:border-orange-300"
+          />
+        </label>
+        <label className="grid gap-2 text-sm font-semibold text-stone-200">
+          Rule label
+          <input
+            value={ruleLabel}
+            onChange={(event) => setRuleLabel(event.target.value)}
+            className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none focus:border-orange-300"
+          />
+        </label>
+      </div>
+
+      <div className="mt-4 grid grid-cols-3 rounded-2xl border border-white/10 bg-black/25 p-1">
+        {(['link', 'button', 'api'] as CodeMode[]).map((item) => (
+          <button
+            key={item}
+            type="button"
+            onClick={() => setMode(item)}
+            className={`rounded-xl px-3 py-2 text-xs font-black uppercase tracking-[0.12em] transition ${
+              mode === item ? 'bg-orange-300 text-stone-950' : 'text-stone-300 hover:text-white'
+            }`}
+          >
+            {item}
+          </button>
+        ))}
+      </div>
+
+      <div className="mt-4 rounded-2xl border border-white/10 bg-[#080706] p-4">
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+          <p className="text-xs uppercase tracking-[0.14em] text-stone-500">Generated for {ruleLabel || 'IFR Benefit'}</p>
+          <a href={scannerUrl} className="text-xs font-bold uppercase tracking-[0.14em] text-orange-200 hover:text-orange-100">
+            Open scanner
+          </a>
+        </div>
+        <pre className="overflow-x-auto whitespace-pre-wrap text-sm leading-6 text-orange-100">{code}</pre>
+      </div>
+    </section>
+  );
+}
 
 export default function Home() {
   const [role, setRole] = useState<Role>('customer');
 
   return (
     <AppShell>
-      <section className="mx-auto grid w-full max-w-6xl gap-8 px-5 pb-16 pt-8 lg:grid-cols-[1.05fr_0.95fr] lg:items-start">
-        <div className="pt-4">
-          <p className="text-sm font-bold uppercase tracking-[0.24em] text-orange-200/70">
-            Lock IFR. Prove access. Redeem benefits.
-          </p>
-          <h1 className="mt-5 max-w-3xl text-5xl font-black leading-[0.95] text-white md:text-7xl">
-            One IFRp app for customers and sellers.
+      <section className="mx-auto grid w-full max-w-7xl gap-8 px-5 pb-16 pt-4 lg:grid-cols-[1.03fr_0.97fr] lg:items-start">
+        <div className="pt-5">
+          <div className="inline-flex items-center gap-3 rounded-full border border-orange-200/20 bg-black/25 px-4 py-2 text-xs font-black uppercase tracking-[0.18em] text-orange-100">
+            <span className="h-2 w-2 rounded-full bg-green-300 shadow-[0_0_22px_rgba(134,239,172,0.9)]" />
+            IFRp Benefits Network
+          </div>
+          <h1 className="mt-6 max-w-4xl text-5xl font-black leading-[0.92] text-white md:text-7xl">
+            The shop layer for locked IFR access.
           </h1>
           <p className="mt-6 max-w-2xl text-lg leading-8 text-stone-300">
-            Customers connect a wallet, check ETH/IFR balances, lock IFR and sign QR proofs.
-            Sellers scan those proofs and apply their configured discount or service rule.
+            One app for customers and sellers: wallet status, QR proofs, discount rules, checkout redemption and developer handoff links for shops that want to accept IFR access.
           </p>
 
           <div className="mt-8 grid gap-3 sm:grid-cols-2">
@@ -35,12 +193,10 @@ export default function Home() {
                   : 'border-white/10 bg-white/[0.05] hover:border-orange-200/50'
               }`}
             >
-              <span className="text-xs font-bold uppercase tracking-[0.18em] text-orange-200">
-                Customer
-              </span>
-              <span className="mt-3 block text-xl font-black text-white">Use benefits</span>
+              <span className="text-xs font-bold uppercase tracking-[0.18em] text-orange-200">Customer</span>
+              <span className="mt-3 block text-xl font-black text-white">Unlock benefits</span>
               <span className="mt-2 block text-sm leading-6 text-stone-300">
-                Connect wallet, check IFR, lock access, and sign seller QR sessions.
+                Connect wallet, read IFR status, lock access on Web3, and verify seller QR sessions.
               </span>
             </button>
             <button
@@ -52,47 +208,83 @@ export default function Home() {
                   : 'border-white/10 bg-white/[0.05] hover:border-orange-200/50'
               }`}
             >
-              <span className="text-xs font-bold uppercase tracking-[0.18em] text-orange-200">
-                Seller
-              </span>
-              <span className="mt-3 block text-xl font-black text-white">Scan and redeem</span>
+              <span className="text-xs font-bold uppercase tracking-[0.18em] text-orange-200">Seller</span>
+              <span className="mt-3 block text-xl font-black text-white">Offer discounts</span>
               <span className="mt-2 block text-sm leading-6 text-stone-300">
-                Configure a benefit rule, open a merchant scanner, and redeem approved sessions.
+                Create benefit rules, launch a scanner, verify locked IFR and redeem each checkout once.
               </span>
             </button>
           </div>
 
           <div className="mt-8 flex flex-wrap gap-3">
             <a
-              href="https://app.uniswap.org/swap?outputCurrency=0x77e99917Eca8539c62F509ED1193ac36580A6e7B"
-              target="_blank"
-              rel="noopener"
+              href="https://web3.ifrunit.tech"
               className="rounded-full bg-orange-300 px-5 py-3 text-sm font-black uppercase tracking-[0.16em] text-stone-950 shadow-xl shadow-orange-950/40 transition hover:-translate-y-0.5 hover:bg-orange-200"
             >
-              Get IFR
+              Lock IFR
             </a>
             <a
-              href="https://web3.ifrunit.tech"
+              href="#integrate"
               className="rounded-full border border-white/15 px-5 py-3 text-sm font-black uppercase tracking-[0.16em] text-stone-100 transition hover:border-orange-200/60"
             >
-              Web3 terminal
+              Generate shop link
             </a>
+            <a
+              href="https://ifrunit.tech"
+              className="rounded-full border border-white/15 px-5 py-3 text-sm font-black uppercase tracking-[0.16em] text-stone-100 transition hover:border-orange-200/60"
+            >
+              IFR Project
+            </a>
+          </div>
+
+          <div className="mt-10 grid gap-3 sm:grid-cols-2">
+            {flowSteps.map((step, index) => (
+              <article key={step.title} className="rounded-3xl border border-white/10 bg-black/20 p-5">
+                <p className="font-mono text-sm text-orange-200">0{index + 1}</p>
+                <h2 className="mt-3 text-xl font-black text-white">{step.title}</h2>
+                <p className="mt-2 text-sm leading-6 text-stone-300">{step.body}</p>
+              </article>
+            ))}
           </div>
         </div>
 
         <div className="grid gap-5">
+          <PwaInstallCard />
           {role === 'customer' ? <WalletStatus /> : <SellerRuleBuilder />}
           <section className="rounded-[2rem] border border-white/10 bg-black/20 p-5">
             <p className="text-xs font-bold uppercase tracking-[0.18em] text-stone-400">
-              MVP flow
+              Seller categories
             </p>
-            <ol className="mt-4 grid gap-3 text-sm leading-6 text-stone-300">
-              <li><strong className="text-white">1.</strong> Seller opens <code>/b/&lt;businessId&gt;</code> and creates a QR session.</li>
-              <li><strong className="text-white">2.</strong> Customer scans <code>/r/&lt;sessionId&gt;</code>, connects wallet, and signs.</li>
-              <li><strong className="text-white">3.</strong> Backend verifies IFRLock on-chain and seller redeems once.</li>
-            </ol>
+            <div className="mt-4 flex flex-wrap gap-2">
+              {sellerCategories.map((item) => (
+                <span key={item} className="rounded-full border border-white/10 bg-white/[0.045] px-3 py-2 text-xs font-bold text-stone-200">
+                  {item}
+                </span>
+              ))}
+            </div>
           </section>
         </div>
+      </section>
+
+      <section className="mx-auto grid w-full max-w-7xl gap-5 px-5 pb-16 lg:grid-cols-[0.9fr_1.1fr]">
+        <div className="rounded-[2rem] border border-white/10 bg-[#160f0b] p-6">
+          <p className="text-xs font-black uppercase tracking-[0.18em] text-orange-200/80">For shops</p>
+          <h2 className="mt-3 text-3xl font-black text-white">A discount rule becomes a checkout proof.</h2>
+          <p className="mt-4 text-sm leading-7 text-stone-300">
+            Sellers do not need to custody customer tokens. They configure what a locked IFR balance unlocks, then the app issues a short-lived QR session. The customer signs, the backend checks IFRLock, and the seller redeems the approved benefit once.
+          </p>
+          <div className="mt-5 grid gap-3 text-sm text-stone-300">
+            <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+              <strong className="text-white">Rule data</strong>
+              <p className="mt-1">Category, product/service, discount, required IFR and TTL.</p>
+            </div>
+            <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+              <strong className="text-white">Proof data</strong>
+              <p className="mt-1">Business ID, rule ID, nonce, expiry, wallet signature and on-chain lock status.</p>
+            </div>
+          </div>
+        </div>
+        <CodeGenerator />
       </section>
     </AppShell>
   );

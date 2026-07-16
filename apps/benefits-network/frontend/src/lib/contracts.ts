@@ -1,4 +1,4 @@
-export const CHAIN_ID = Number(process.env.NEXT_PUBLIC_CHAIN_ID || 11155111);
+export const CHAIN_ID = Number(process.env.NEXT_PUBLIC_CHAIN_ID || 1);
 
 export const IFR_TOKEN_ADDRESS = (
   process.env.NEXT_PUBLIC_IFR_TOKEN_ADDRESS ||

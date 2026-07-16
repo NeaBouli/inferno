@@ -30,7 +30,9 @@ NEXT_PUBLIC_IFRLOCK_ADDRESS=0x769928aBDfc949D0718d8766a1C2d7dBb63954Eb
 NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=...
 ```
 
-`NEXT_PUBLIC_CHAIN_ID=11155111` can still be used for Sepolia testing if matching testnet contract addresses are supplied.
+The public shop defaults to Ethereum Mainnet. `NEXT_PUBLIC_CHAIN_ID=11155111` can still be used for Sepolia testing if matching testnet contract addresses are supplied.
+
+`NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` is required for production wallet UX. Without it, the app shows a setup notice instead of firing failed WalletConnect requests.
 
 ## Tech Stack
 

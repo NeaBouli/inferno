@@ -3,9 +3,19 @@ import { Providers } from './providers';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'IFR Benefits Network',
-  description: 'Verify IFR lock status for discounts and premium access',
+  title: 'IFRp Shop | Benefits Network',
+  description: 'Customer and seller app for IFR locked-access benefits, QR verification, discounts and shop integrations.',
   manifest: '/manifest.json',
+  alternates: {
+    canonical: 'https://shop.ifrunit.tech',
+  },
+  openGraph: {
+    title: 'IFRp Shop | Benefits Network',
+    description: 'Use locked IFR access at participating sellers. Create rules, scan QR proofs and redeem benefits.',
+    url: 'https://shop.ifrunit.tech',
+    siteName: 'Inferno Protocol',
+    type: 'website',
+  },
 };
 
 export const viewport: Viewport = {
