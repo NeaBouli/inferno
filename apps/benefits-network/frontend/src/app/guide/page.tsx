@@ -33,6 +33,10 @@ const sellerSteps = [
     body: 'Open /b/:businessId on the counter device. Use the Checkout kit or copied link for staff. Each checkout creates a fresh QR session.',
   },
   {
+    title: 'Review recent customer checks',
+    body: 'Load session history with the seller wallet to see recent QR sessions, approval status, verified wallet, locked amount and rejection reason.',
+  },
+  {
     title: 'Redeem only after APPROVED',
     body: 'The customer signs the QR challenge, the backend checks IFRLock on-chain, and the seller wallet signs the one-time redeem action.',
   },
@@ -41,6 +45,7 @@ const sellerSteps = [
 const developerItems = [
   ['Seller profile', 'POST /api/seller/businesses with a server-issued seller signature.'],
   ['Rules', 'GET/POST /api/seller/businesses/:id/rules and PATCH/DELETE /api/seller/rules/:id.'],
+  ['Session history', 'GET /api/seller/businesses/:id/sessions?limit=10 with Action: sessions:list.'],
   ['QR session', 'POST /api/sessions with businessId and optional benefitRuleId.'],
   ['Customer proof', 'GET /api/sessions/:id/challenge, then POST /api/attest with the customer signature.'],
   ['Redeem', 'POST /api/sessions/:id/redeem with a fresh seller signature for Action: sessions:redeem.'],
@@ -125,7 +130,7 @@ export default function GuidePage() {
               </div>
               <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
                 <strong className="text-white">Seller signatures</strong>
-                <p className="mt-1">Short-lived server-issued messages for profile, rules and redeem actions.</p>
+                <p className="mt-1">Short-lived server-issued messages for profile, rules, session history and redeem actions.</p>
               </div>
             </div>
           </div>
