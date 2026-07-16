@@ -266,7 +266,22 @@ async function main() {
     if (postCleanup.businesses.some((entry) => entry.id === business.id)) {
       throw new Error(`Deactivated business ${business.id} is still returned by owner reload`);
     }
+    const deactivatedRuleAuth = await signSellerAction(wallet, 'rules:create', business.id);
+    await expectHttpStatus(`/api/seller/businesses/${business.id}/rules`, 404, {
+      method: 'POST',
+      headers: sellerHeaders(deactivatedRuleAuth),
+      body: JSON.stringify({
+        label: 'Should not save',
+        category: 'Test',
+        productName: 'Deactivated seller rule',
+        discountPercent: 1,
+        requiredLockIFR: 1,
+        ttlSeconds: 60,
+        active: true,
+      }),
+    });
     console.log('Deactivated smoke seller profile: OK');
+    console.log('Deactivated seller rule writes blocked: OK');
   } else {
     console.log('Cleanup disabled; smoke seller profile left active.');
   }
