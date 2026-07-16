@@ -380,10 +380,13 @@
 | Field | Value |
 |-------|-------|
 | App | Benefits Network |
-| File | `apps/benefits-network/backend/src/routes/sessions.ts:52` |
-| Status | Documented |
+| File | `apps/benefits-network/backend/src/routes/sessions.ts` |
+| Status | **FIXED** |
 
-**Description:** `POST /api/sessions/:id/redeem` requires no auth. Session IDs (CUIDs) have timestamp component. Add HMAC token or adminAuth for production.
+**Fix:** `POST /api/sessions/:id/redeem` now requires a fresh seller wallet
+signature for `Action: sessions:redeem`, and the recovered signer must match the
+session business owner. HTTP route tests cover missing auth (401), wrong seller
+(403), successful owner redeem (200), and double redeem blocked (409).
 
 ---
 
@@ -429,9 +432,8 @@
 2. **Remove legacy `/auth/wallet` endpoint** — SIWE is the correct auth flow
 3. **Set `ALLOWED_ORIGINS` env var** in all production deployments
 4. **Set `JWT_SECRET` env var** with cryptographically random 32+ byte secret
-5. **Add authentication to Benefits Network redeem** (DF10)
-6. **Add per-IP rate limiting to AI Copilot** `/api/chat` (DF13)
-7. **Add structured logging** (e.g., winston/pino) for production observability
+5. **Add per-IP rate limiting to AI Copilot** `/api/chat` (DF13)
+6. **Add structured logging** (e.g., winston/pino) for production observability
 
 ---
 

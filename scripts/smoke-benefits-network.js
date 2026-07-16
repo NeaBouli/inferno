@@ -70,6 +70,13 @@ async function expectText(page, text) {
   await page.getByText(text, { exact: false }).first().waitFor({ timeout: timeoutMs });
 }
 
+function isIgnorableConsoleError(text) {
+  return (
+    text.includes('status of 404') ||
+    (text.includes('Analytics SDK') && text.includes('Failed to fetch'))
+  );
+}
+
 async function verifyPage(contextOptions, label) {
   const browser = await chromium.launch({ headless: true });
   const context = await browser.newContext({ ...contextOptions, serviceWorkers: 'block' });
@@ -78,7 +85,7 @@ async function verifyPage(contextOptions, label) {
   page.on('pageerror', (error) => errors.push(`pageerror: ${error.message}`));
   page.on('console', (message) => {
     const text = message.text();
-    if (message.type() === 'error' && !text.includes('status of 404')) {
+    if (message.type() === 'error' && !isIgnorableConsoleError(text)) {
       errors.push(`console: ${text}`);
     }
   });
