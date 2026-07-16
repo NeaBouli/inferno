@@ -7,6 +7,7 @@ import { Countdown } from '@/components/Countdown';
 import { StatusBadge } from '@/components/StatusBadge';
 import { WalletConnectControl } from '@/components/WalletConnectControl';
 import { AttestResult, BusinessInfo, SessionStatus, getBusiness, getChallenge, getSessionStatus, submitAttest } from '@/lib/api';
+import { saveCustomerProofHistoryItem } from '@/lib/customerHistory';
 
 const CLOSED_STATUSES = ['REDEEMED', 'REJECTED', 'EXPIRED'];
 const TERMINAL_STATUSES = ['APPROVED', ...CLOSED_STATUSES];
@@ -112,6 +113,16 @@ export default function CustomerSession({ params }: { params: { sessionId: strin
     }, 3000);
     return () => window.clearInterval(timer);
   }, [loadSession, status]);
+
+  useEffect(() => {
+    if (!status) return;
+    saveCustomerProofHistoryItem({
+      sessionId: params.sessionId,
+      sellerName: business?.name,
+      status,
+      walletAddress: address,
+    });
+  }, [address, business?.name, params.sessionId, status]);
 
   async function refreshStatus() {
     setError('');

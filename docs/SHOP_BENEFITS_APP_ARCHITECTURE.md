@@ -29,6 +29,10 @@ The app has two roles:
   5. Customer signs challenge.
   6. Backend checks IFRLock against the selected rule threshold.
   7. Seller sees approval and redeems the session once.
+- Customer proof history:
+  - Customer proof pages save a redacted local browser history entry after session load/refresh.
+  - Home shows `Recent customer proofs` for reopening checkout proofs on the same device.
+  - Stored data is local-only and excludes private keys, seed phrases, signatures and full wallet inventories.
 
 ## UX Requirements
 
@@ -109,7 +113,7 @@ If `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` is missing, the frontend must show a s
 2. Deploy or expose Benefits backend with HTTPS and production env.
 3. Add seller onboarding: create business from UI through a safer invitation/admin flow.
 4. Add QR history and audit view for sellers.
-5. Add customer saved benefits/history locally without storing private data server-side.
+5. Customer saved proof history locally without storing private data server-side. **Implemented for redacted QR proof history; benefit wallet/device acceptance still pending.**
 6. Add embedded-wallet provider evaluation and decision record.
 7. Add POS/plugin snippets to code generator.
 8. Add mobile E2E checks for iPad Safari/Chrome and Android MetaMask browser.

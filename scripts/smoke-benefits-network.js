@@ -141,6 +141,37 @@ async function verifyPage(contextOptions, label) {
     await expectText(page, 'Quick tier amounts');
     await expectText(page, 'Silver / 5,000 IFR');
     await expectText(page, 'Unlock all');
+    await expectText(page, 'Recent customer proofs');
+    await expectText(page, 'No customer proofs saved on this device yet');
+    await page.evaluate(() => {
+      window.localStorage.setItem(
+        'ifr.shop.customerProofHistory.v1',
+        JSON.stringify([
+          {
+            sessionId: 'smoke-customer-session',
+            businessId: 'smoke-business',
+            sellerName: 'Smoke Coffee',
+            status: 'APPROVED',
+            discountPercent: 12,
+            requiredLockIFR: 1000,
+            ruleLabel: 'Smoke Bronze',
+            productName: 'Counter checkout',
+            expiresAt: new Date(Date.now() + 60000).toISOString(),
+            redeemedAt: null,
+            walletLabel: '0x1234...abcd',
+            savedAt: new Date().toISOString(),
+          },
+        ])
+      );
+    });
+    await page.reload({ waitUntil: 'domcontentloaded', timeout: timeoutMs });
+    await expectText(page, 'Recent customer proofs');
+    await expectText(page, 'Smoke Coffee');
+    await expectText(page, 'Counter checkout / 12% / 1,000 IFR');
+    await expectText(page, '0x1234...abcd');
+    await expectText(page, 'Reopen proof');
+    await page.getByRole('button', { name: 'Clear' }).click();
+    await expectText(page, 'No customer proofs saved on this device yet');
     await expectText(page, 'Create a seller entry point');
     await expectText(page, 'Seller categories');
     await page.getByRole('button', { name: /Seller Offer discounts/i }).click();
