@@ -66,6 +66,7 @@ SCREENSHOT_DIR=/Users/gio/Desktop npm run smoke:benefits
 Default target is `https://shop.ifrunit.tech`. The smoke is read-only and checks:
 
 - `/api/health` on Ethereum Mainnet (`chainId: 1`)
+- `/api/ready` with a live database readiness probe
 - PWA manifest, icons and service worker
 - Server-issued seller auth challenge
 - Desktop and iPad rendering for landing, guide, seller mode, seller scanner shell and customer proof shell
@@ -100,10 +101,12 @@ npm run build
 npm run smoke:http
 ```
 
-This verifies the real Express HTTP surface for `/api/health`,
+This verifies the real Express HTTP surface for `/api/health`, `/api/ready`,
 `/api/seller/auth-message` and signed seller profile listing with a throwaway
-wallet. It does not mutate production or require secrets. `MUTATE=true` remains
-manual-only for create/rule/session/redeem path checks.
+wallet. `/api/ready` runs a database probe so CI catches a backend that can
+listen on HTTP but cannot serve sessions. It does not mutate production or
+require secrets. `MUTATE=true` remains manual-only for
+create/rule/session/redeem path checks.
 
 ## Backend Route Tests
 
@@ -149,6 +152,9 @@ is still a separate device acceptance item.
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
 | GET | `/health` | - | Health check |
+| GET | `/ready` | - | Readiness check with database probe |
+| GET | `/api/health` | - | API health check |
+| GET | `/api/ready` | - | API readiness check with database probe |
 | POST | `/api/admin/businesses` | Admin | Create business |
 | PATCH | `/api/admin/businesses/:id` | Admin | Update business |
 | GET | `/api/admin/businesses/:id/rules` | Admin | List seller benefit rules |
