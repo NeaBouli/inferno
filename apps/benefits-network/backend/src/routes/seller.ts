@@ -70,10 +70,10 @@ async function requireBusinessOwner(req: Request, action: string, businessId: st
   const wallet = requireSellerAuth(req, action, businessId);
   const business = await prisma.business.findUnique({
     where: { id: businessId },
-    select: { id: true, ownerAddress: true },
+    select: { id: true, ownerAddress: true, active: true },
   });
 
-  if (!business || !business.ownerAddress) {
+  if (!business || !business.ownerAddress || !business.active) {
     throw new Error('Seller-owned business not found');
   }
 

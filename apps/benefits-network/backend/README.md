@@ -119,6 +119,8 @@ seller UX should prefer wallet-owned businesses.
 
 Public seller creation is intentionally capped per wallet. The default is five
 active seller profiles per owner wallet; inactive businesses do not count.
+Deactivated seller profiles are also blocked from seller-owned rule writes,
+even if the original owner wallet signs the request.
 
 ## Tests
 
