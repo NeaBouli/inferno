@@ -2,8 +2,10 @@
 
 import { useMemo, useState } from 'react';
 import {
+  AdminBusinessCreated,
   BenefitRule,
   BenefitRuleInput,
+  createAdminBusiness,
   createAdminBusinessRule,
   deleteAdminBusinessRule,
   getAdminBusinessRules,
@@ -15,6 +17,8 @@ const categories = ['Coffee', 'Retail', 'Digital access', 'Events', 'Services'];
 export function SellerRuleBuilder() {
   const [businessId, setBusinessId] = useState('');
   const [adminSecret, setAdminSecret] = useState('');
+  const [businessName, setBusinessName] = useState('IFR Partner Shop');
+  const [defaultTier, setDefaultTier] = useState('IFR Access');
   const [category, setCategory] = useState(categories[0]);
   const [product, setProduct] = useState('Premium customer discount');
   const [label, setLabel] = useState('Bronze');
@@ -22,9 +26,12 @@ export function SellerRuleBuilder() {
   const [minLocked, setMinLocked] = useState(1000);
   const [ttl, setTtl] = useState(90);
   const [rules, setRules] = useState<BenefitRule[]>([]);
+  const [createdBusiness, setCreatedBusiness] = useState<AdminBusinessCreated | null>(null);
   const [status, setStatus] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  const scannerUrl = businessId ? `https://shop.ifrunit.tech/b/${businessId}` : '';
 
   const payload: BenefitRuleInput = useMemo(
     () => ({
@@ -38,6 +45,33 @@ export function SellerRuleBuilder() {
     }),
     [category, discount, label, minLocked, product, ttl]
   );
+
+  async function createBusiness() {
+    if (!adminSecret) {
+      setError('Admin secret is required to create a seller profile.');
+      return;
+    }
+    setLoading(true);
+    setError('');
+    setStatus('');
+    try {
+      const business = await createAdminBusiness(adminSecret, {
+        name: businessName || 'IFR Partner Shop',
+        discountPercent: discount,
+        requiredLockIFR: minLocked,
+        ttlSeconds: ttl,
+        tierLabel: defaultTier || undefined,
+      });
+      setCreatedBusiness(business);
+      setBusinessId(business.id);
+      setRules([]);
+      setStatus('Seller profile created. Business ID and scanner link are ready.');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to create seller profile');
+    } finally {
+      setLoading(false);
+    }
+  }
 
   async function loadRules() {
     if (!businessId || !adminSecret) {
@@ -115,27 +149,80 @@ export function SellerRuleBuilder() {
         </p>
         <h2 className="mt-1 text-2xl font-black text-white">Benefit rule manager</h2>
         <p className="mt-2 text-sm leading-6 text-stone-300">
-          Persist seller discounts through the guarded admin API. The secret stays in this browser session and is never written to the repo.
+          Create a seller profile and manage discount rules through the guarded admin API. The secret stays in this browser session and is never written to the repo.
         </p>
       </div>
 
-      <div className="mb-5 grid gap-3 md:grid-cols-[1fr_1fr_auto]">
+      <div className="mb-5 rounded-3xl border border-white/10 bg-black/20 p-4">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-stone-400">Seller onboarding</p>
+            <h3 className="mt-1 text-xl font-black text-white">Create a seller profile</h3>
+          </div>
+          {createdBusiness ? (
+            <span className="rounded-full bg-green-400/15 px-3 py-1 text-xs font-bold uppercase tracking-[0.14em] text-green-100">
+              Created
+            </span>
+          ) : null}
+        </div>
+        <div className="mt-4 grid gap-3 md:grid-cols-3">
+          <label className="grid gap-2 text-sm font-semibold text-stone-200">
+            Shop or seller name
+            <input
+              value={businessName}
+              onChange={(event) => setBusinessName(event.target.value)}
+              className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none focus:border-orange-300"
+            />
+          </label>
+          <label className="grid gap-2 text-sm font-semibold text-stone-200">
+            Access tier label
+            <input
+              value={defaultTier}
+              onChange={(event) => setDefaultTier(event.target.value)}
+              className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none focus:border-orange-300"
+            />
+          </label>
+          <label className="grid gap-2 text-sm font-semibold text-stone-200">
+            Admin secret
+            <input
+              type="password"
+              value={adminSecret}
+              onChange={(event) => setAdminSecret(event.target.value)}
+              placeholder="Bearer secret"
+              className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none focus:border-orange-300"
+            />
+          </label>
+        </div>
+        <button
+          type="button"
+          onClick={createBusiness}
+          disabled={loading || !adminSecret}
+          className="mt-4 w-full rounded-2xl border border-orange-200/40 px-5 py-3 text-sm font-black uppercase tracking-[0.14em] text-orange-100 transition hover:bg-orange-200/10 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          Create seller profile
+        </button>
+        {businessId ? (
+          <div className="mt-4 rounded-2xl border border-orange-200/20 bg-orange-200/10 p-4 text-sm leading-6 text-orange-50">
+            <p>
+              <strong>Business ID:</strong> <span className="break-all font-mono">{businessId}</span>
+            </p>
+            <p className="mt-1">
+              <strong>Scanner:</strong>{' '}
+              <a href={scannerUrl} className="break-all text-orange-100 underline underline-offset-4">
+                {scannerUrl}
+              </a>
+            </p>
+          </div>
+        ) : null}
+      </div>
+
+      <div className="mb-5 grid gap-3 md:grid-cols-[1fr_auto]">
         <label className="grid gap-2 text-sm font-semibold text-stone-200">
           Business ID
           <input
             value={businessId}
             onChange={(event) => setBusinessId(event.target.value)}
             placeholder="cuid..."
-            className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none focus:border-orange-300"
-          />
-        </label>
-        <label className="grid gap-2 text-sm font-semibold text-stone-200">
-          Admin secret
-          <input
-            type="password"
-            value={adminSecret}
-            onChange={(event) => setAdminSecret(event.target.value)}
-            placeholder="Bearer secret"
             className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none focus:border-orange-300"
           />
         </label>
