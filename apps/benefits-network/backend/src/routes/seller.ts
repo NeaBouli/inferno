@@ -1,4 +1,5 @@
 import { NextFunction, Request, Response, Router } from 'express';
+import { Prisma } from '@prisma/client';
 import { z } from 'zod';
 import { prisma } from '../services/sessionService';
 import { buildSellerAuthMessage, normalizeAddress, verifySellerSignature } from '../services/sellerAuth';
@@ -22,6 +23,7 @@ const createBusinessSchema = z.object({
 });
 
 const createBenefitRuleSchema = z.object({
+  productId: z.string().min(1).nullable().optional(),
   label: z.string().min(1).max(80),
   category: z.string().min(1).max(80),
   productName: z.string().min(1).max(160),
@@ -33,6 +35,15 @@ const createBenefitRuleSchema = z.object({
 
 const updateBenefitRuleSchema = createBenefitRuleSchema.partial();
 
+const createProductSchema = z.object({
+  name: z.string().trim().min(1).max(160),
+  category: z.string().trim().min(1).max(80),
+  description: z.string().trim().max(500).nullable().optional(),
+  active: z.boolean().optional(),
+});
+
+const updateProductSchema = createProductSchema.partial();
+
 const createCheckoutOperatorSchema = z.object({
   walletAddress: z.string().regex(/^0x[a-fA-F0-9]{40}$/),
   label: z.string().trim().min(1).max(80).optional(),
@@ -40,6 +51,16 @@ const createCheckoutOperatorSchema = z.object({
 });
 
 type SessionStatusCounts = Record<'PENDING' | 'APPROVED' | 'REJECTED' | 'EXPIRED' | 'REDEEMED', number>;
+type BenefitRuleWriteInput = {
+  productId?: string | null;
+  label?: string;
+  category?: string;
+  productName?: string;
+  discountPercent?: number;
+  requiredLockIFR?: number;
+  ttlSeconds?: number;
+  active?: boolean;
+};
 
 function sessionStatusCounts(groups: Array<{ status: string; _count: { _all: number } }>): SessionStatusCounts {
   const counts: SessionStatusCounts = {
@@ -126,7 +147,11 @@ function handleSellerError(err: unknown, res: Response, next: NextFunction) {
       res.status(429).json({ error: err.message });
       return;
     }
-    if (err.message.includes('must be in the future') || err.message.includes('already the business owner')) {
+    if (
+      err.message.includes('must be in the future') ||
+      err.message.includes('already the business owner') ||
+      err.message.includes('cannot be reactivated')
+    ) {
       res.status(400).json({ error: err.message });
       return;
     }
@@ -150,6 +175,48 @@ async function requireBusinessOwner(req: Request, action: string, businessId: st
   }
 
   return wallet;
+}
+
+async function withProductSnapshot(
+  businessId: string,
+  input: BenefitRuleWriteInput,
+  existingProductId?: string | null,
+  tx?: Prisma.TransactionClient
+) {
+  const db = tx ?? prisma;
+  const requestedProductId = input.productId;
+  const productId = requestedProductId === undefined ? existingProductId : requestedProductId;
+  const snapshotTouched = requestedProductId !== undefined || (
+    Boolean(productId) && (input.productName !== undefined || input.category !== undefined)
+  );
+  if (!productId || !snapshotTouched) return input;
+
+  const product = await db.product.findFirst({
+    where: { id: String(productId), businessId, active: true },
+    select: { id: true, name: true, category: true },
+  });
+  if (!product) throw new Error('Active product not found for this business');
+  return {
+    ...input,
+    productId: product.id,
+    productName: product.name,
+    category: product.category,
+  };
+}
+
+async function lockActiveProduct(
+  tx: Prisma.TransactionClient,
+  productId: string,
+  businessId: string
+) {
+  const lockedProducts = await tx.$executeRaw`
+    UPDATE "Product"
+    SET "active" = "active"
+    WHERE "id" = ${productId}
+      AND "businessId" = ${businessId}
+      AND "active" = 1
+  `;
+  if (lockedProducts !== 1) throw new Error('Active product not found for this business');
 }
 
 router.get('/auth-message', (req, res) => {
@@ -215,7 +282,7 @@ router.get('/businesses', sellerRateLimiter, async (req, res, next) => {
         tierLabel: true,
         createdAt: true,
         _count: {
-          select: { benefitRules: true },
+          select: { benefitRules: true, products: true },
         },
       },
     });
@@ -230,6 +297,7 @@ router.get('/businesses', sellerRateLimiter, async (req, res, next) => {
         tierLabel: business.tierLabel,
         createdAt: business.createdAt,
         rulesCount: business._count.benefitRules,
+        productsCount: business._count.products,
         verifyUrl: `/b/${business.id}`,
         qrUrl: `/b/${business.id}`,
       })),
@@ -361,6 +429,104 @@ router.get('/businesses/:id/rules', sellerRateLimiter, async (req, res, next) =>
   }
 });
 
+router.get('/businesses/:id/products', sellerRateLimiter, async (req, res, next) => {
+  try {
+    await requireBusinessOwner(req, 'products:list', req.params.id);
+    const products = await prisma.product.findMany({
+      where: { businessId: req.params.id },
+      orderBy: [{ active: 'desc' }, { category: 'asc' }, { name: 'asc' }],
+      include: { _count: { select: { benefitRules: true } } },
+    });
+    res.json({ products });
+  } catch (err) {
+    handleSellerError(err, res, next);
+  }
+});
+
+router.post(
+  '/businesses/:id/products',
+  sellerRateLimiter,
+  validate(createProductSchema),
+  async (req, res, next) => {
+    try {
+      await requireBusinessOwner(req, 'products:create', req.params.id);
+      const product = await prisma.product.create({
+        data: {
+          businessId: req.params.id,
+          name: req.body.name,
+          category: req.body.category,
+          description: req.body.description ?? null,
+          active: req.body.active ?? true,
+        },
+        include: { _count: { select: { benefitRules: true } } },
+      });
+      res.status(201).json(product);
+    } catch (err) {
+      handleSellerError(err, res, next);
+    }
+  }
+);
+
+router.patch('/products/:id', sellerRateLimiter, validate(updateProductSchema), async (req, res, next) => {
+  try {
+    const existing = await prisma.product.findUnique({
+      where: { id: req.params.id },
+      select: { id: true, businessId: true, active: true },
+    });
+    if (!existing) throw new Error('Product not found');
+    await requireBusinessOwner(req, 'products:update', existing.businessId);
+    const data = {
+      ...req.body,
+      description: req.body.description === undefined ? undefined : req.body.description,
+    };
+    const product = await prisma.$transaction(async (tx) => {
+      const lockedProducts = await tx.$executeRaw`
+        UPDATE "Product"
+        SET "active" = "active"
+        WHERE "id" = ${existing.id} AND "active" = 1
+      `;
+      if (lockedProducts !== 1) {
+        throw new Error('Archived products cannot be reactivated or edited; create a new catalog item');
+      }
+      if (req.body.active === false) {
+        await tx.benefitRule.updateMany({
+          where: { productId: existing.id, active: true },
+          data: { active: false },
+        });
+      }
+      return tx.product.update({
+        where: { id: existing.id },
+        data,
+        include: { _count: { select: { benefitRules: true } } },
+      });
+    });
+    res.json(product);
+  } catch (err) {
+    handleSellerError(err, res, next);
+  }
+});
+
+router.delete('/products/:id', sellerRateLimiter, async (req, res, next) => {
+  try {
+    const existing = await prisma.product.findUnique({
+      where: { id: req.params.id },
+      select: { id: true, businessId: true },
+    });
+    if (!existing) throw new Error('Product not found');
+    await requireBusinessOwner(req, 'products:delete', existing.businessId);
+    await prisma.$transaction([
+      prisma.benefitRule.updateMany({
+        where: { productId: existing.id, active: true },
+        data: { active: false },
+      }),
+      prisma.product.update({ where: { id: existing.id }, data: { active: false } }),
+    ]);
+    res.status(204).send();
+  } catch (err) {
+    handleSellerError(err, res, next);
+  }
+});
+
 router.get('/businesses/:id/sessions', sellerRateLimiter, async (req, res, next) => {
   try {
     await requireBusinessOwner(req, 'sessions:list', req.params.id);
@@ -395,6 +561,12 @@ router.get('/businesses/:id/sessions', sellerRateLimiter, async (req, res, next)
               requiredLockIFR: true,
             },
           },
+          benefitSnapshotVersion: true,
+          benefitLabel: true,
+          benefitCategory: true,
+          benefitProductName: true,
+          benefitDiscountPercent: true,
+          benefitRequiredLockIFR: true,
           business: {
             select: {
               tierLabel: true,
@@ -446,11 +618,21 @@ router.get('/businesses/:id/sessions', sellerRateLimiter, async (req, res, next)
         redeemedAt: session.redeemedAt,
         attestAttempts: session.attestAttempts,
         benefitRuleId: session.benefitRule?.id ?? null,
-        label: session.benefitRule?.label ?? session.business.tierLabel,
-        category: session.benefitRule?.category ?? null,
-        productName: session.benefitRule?.productName ?? null,
-        discountPercent: session.benefitRule?.discountPercent ?? session.business.discountPercent,
-        requiredLockIFR: session.benefitRule?.requiredLockIFR ?? session.business.requiredLockIFR,
+        label: session.benefitSnapshotVersion === 1
+          ? session.benefitLabel
+          : session.benefitRule?.label ?? session.business.tierLabel,
+        category: session.benefitSnapshotVersion === 1
+          ? session.benefitCategory
+          : session.benefitRule?.category ?? null,
+        productName: session.benefitSnapshotVersion === 1
+          ? session.benefitProductName
+          : session.benefitRule?.productName ?? null,
+        discountPercent: session.benefitSnapshotVersion === 1 && session.benefitDiscountPercent !== null
+          ? session.benefitDiscountPercent
+          : session.benefitRule?.discountPercent ?? session.business.discountPercent,
+        requiredLockIFR: session.benefitSnapshotVersion === 1 && session.benefitRequiredLockIFR !== null
+          ? session.benefitRequiredLockIFR
+          : session.benefitRule?.requiredLockIFR ?? session.business.requiredLockIFR,
       })),
     });
   } catch (err) {
@@ -463,6 +645,10 @@ router.delete('/businesses/:id', sellerRateLimiter, async (req, res, next) => {
     await requireBusinessOwner(req, 'business:delete', req.params.id);
     await prisma.$transaction([
       prisma.benefitRule.updateMany({
+        where: { businessId: req.params.id, active: true },
+        data: { active: false },
+      }),
+      prisma.product.updateMany({
         where: { businessId: req.params.id, active: true },
         data: { active: false },
       }),
@@ -484,8 +670,24 @@ router.post(
   async (req, res, next) => {
     try {
       await requireBusinessOwner(req, 'rules:create', req.params.id);
-      const rule = await prisma.benefitRule.create({
-        data: { ...req.body, businessId: req.params.id },
+      const rule = await prisma.$transaction(async (tx) => {
+        if (req.body.productId && req.body.active !== false) {
+          await lockActiveProduct(tx, req.body.productId, req.params.id);
+        }
+        const data = await withProductSnapshot(req.params.id, req.body, undefined, tx);
+        return tx.benefitRule.create({
+          data: {
+            businessId: req.params.id,
+            productId: data.productId ?? null,
+            label: req.body.label,
+            category: data.category ?? req.body.category,
+            productName: data.productName ?? req.body.productName,
+            discountPercent: req.body.discountPercent,
+            requiredLockIFR: req.body.requiredLockIFR,
+            ttlSeconds: req.body.ttlSeconds,
+            active: req.body.active,
+          },
+        });
       });
       res.status(201).json(rule);
     } catch (err) {
@@ -498,7 +700,7 @@ router.patch('/rules/:id', sellerRateLimiter, validate(updateBenefitRuleSchema),
   try {
     const existing = await prisma.benefitRule.findUnique({
       where: { id: req.params.id },
-      select: { id: true, businessId: true },
+      select: { id: true, businessId: true, productId: true },
     });
     if (!existing) {
       res.status(404).json({ error: 'Benefit rule not found' });
@@ -506,9 +708,16 @@ router.patch('/rules/:id', sellerRateLimiter, validate(updateBenefitRuleSchema),
     }
 
     await requireBusinessOwner(req, 'rules:update', existing.businessId);
-    const rule = await prisma.benefitRule.update({
-      where: { id: req.params.id },
-      data: req.body,
+    const targetProductId = req.body.productId === undefined ? existing.productId : req.body.productId;
+    const rule = await prisma.$transaction(async (tx) => {
+      if (req.body.active === true && targetProductId) {
+        await lockActiveProduct(tx, targetProductId, existing.businessId);
+      }
+      const data = await withProductSnapshot(existing.businessId, req.body, existing.productId, tx);
+      return tx.benefitRule.update({
+        where: { id: req.params.id },
+        data,
+      });
     });
     res.json(rule);
   } catch (err) {
@@ -528,7 +737,10 @@ router.delete('/rules/:id', sellerRateLimiter, async (req, res, next) => {
     }
 
     await requireBusinessOwner(req, 'rules:delete', existing.businessId);
-    await prisma.benefitRule.delete({ where: { id: req.params.id } });
+    await prisma.benefitRule.update({
+      where: { id: req.params.id },
+      data: { active: false },
+    });
     res.status(204).send();
   } catch (err) {
     handleSellerError(err, res, next);

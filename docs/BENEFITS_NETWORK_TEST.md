@@ -6,11 +6,11 @@
 # Start backend
 cd apps/benefits-network/backend
 cp .env.example .env
-npm install && npm run dev
+npm ci && npm run dev
 
 # Start frontend (new terminal)
 cd apps/benefits-network/frontend
-npm install && npm run dev
+npm ci && npm run dev
 
 # Run E2E test (new terminal)
 bash apps/benefits-network/backend/scripts/e2e-test.sh
@@ -70,7 +70,7 @@ Default target is `https://shop.ifrunit.tech`. The smoke is read-only and checks
 - `/api/ready` with a live database readiness probe
 - PWA manifest, icons and service worker
 - Server-issued seller auth challenge
-- Desktop and iPad rendering for landing, guide, seller mode, seller scanner shell and customer proof shell
+- Desktop and iPad rendering for landing, guide, seller mode, seller scanner shell, public seller catalog and customer proof shell
 - Wallet-entry fallback with copy/share controls
 - Empty-state rendering for local `Recent customer proofs` history
 
@@ -136,6 +136,13 @@ Business owners can add, list and revoke expiring checkout operators. Operators 
 check their checkout role and redeem approved sessions; owner-only profile, rule, history
 and team-management routes reject them. Redemption is atomic under concurrent requests,
 and the audit payload records actor wallet/role without storing the signature.
+
+Seller owners can create, edit and archive products/services, then bind rules to active
+catalog items. `tests/catalogRoutes.test.ts` covers owner authorization, cross-business
+binding rejection, public active-only reads, archive behavior and immutable session terms.
+The public customer catalog is available at `/s/{businessId}`. Run
+`npm run test:migration-upgrade` to verify a populated prior database keeps its business,
+rule, session and audit rows while adding the catalog and snapshot schema.
 
 ## Backend HTTP Smoke
 

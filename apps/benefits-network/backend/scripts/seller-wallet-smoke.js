@@ -25,7 +25,7 @@ What it checks:
   - public health endpoint
   - server-issued seller auth messages
   - signed seller profile list
-  - with MUTATE=true: create wallet-owned seller profile, reload it, create/list/delete a rule,
+  - with MUTATE=true: create wallet-owned seller profile, create/list/archive a catalog item and bound rule,
     create QR session, sign customer challenge, attest, redeem approved sessions,
     deactivate the seller profile
 
@@ -168,11 +168,24 @@ async function main() {
   }
   console.log('Reload owned profiles: OK');
 
+  const productAuth = await signSellerAction(wallet, 'products:create', business.id);
+  const product = await fetchJson(`/api/seller/businesses/${business.id}/products`, {
+    method: 'POST',
+    headers: sellerHeaders(productAuth),
+    body: JSON.stringify({
+      name: 'Smoke checkout benefit',
+      category: 'Test',
+      description: 'Temporary catalog item created by the seller smoke.',
+    }),
+  });
+  console.log(`Created catalog item: ${product.id}`);
+
   const ruleAuth = await signSellerAction(wallet, 'rules:create', business.id);
   const rule = await fetchJson(`/api/seller/businesses/${business.id}/rules`, {
     method: 'POST',
     headers: sellerHeaders(ruleAuth),
     body: JSON.stringify({
+      productId: product.id,
       label: 'Smoke 12%',
       category: 'Test',
       productName: 'Smoke checkout benefit',
@@ -183,6 +196,24 @@ async function main() {
     }),
   });
   console.log(`Created benefit rule: ${rule.id}`);
+  if (rule.productId !== product.id || rule.productName !== product.name) {
+    throw new Error(`Rule ${rule.id} was not snapshotted from product ${product.id}`);
+  }
+
+  const listProductsAuth = await signSellerAction(wallet, 'products:list', business.id);
+  const products = await fetchJson(`/api/seller/businesses/${business.id}/products`, {
+    headers: sellerHeaders(listProductsAuth),
+  });
+  if (!products.products.some((entry) => entry.id === product.id)) {
+    throw new Error(`Created product ${product.id} was not returned by owner catalog list`);
+  }
+  const publicCatalog = await fetchJson(`/api/businesses/${business.id}/products`);
+  if (!publicCatalog.products.some((entry) =>
+    entry.id === product.id && entry.benefitRules.some((benefit) => benefit.id === rule.id)
+  )) {
+    throw new Error(`Public catalog did not expose product ${product.id} with rule ${rule.id}`);
+  }
+  console.log('Owner and public catalog reads: OK');
 
   const listRulesAuth = await signSellerAction(wallet, 'rules:list', business.id);
   const rules = await fetchJson(`/api/seller/businesses/${business.id}/rules`, {
@@ -274,14 +305,18 @@ async function main() {
   }
 
   if (cleanup) {
-    const deleteRuleAuth = await signSellerAction(wallet, 'rules:delete', business.id);
-    await fetchNoContent(`/api/seller/rules/${rule.id}`, {
+    const archiveProductAuth = await signSellerAction(wallet, 'products:delete', business.id);
+    await fetchNoContent(`/api/seller/products/${product.id}`, {
       method: 'DELETE',
-      headers: sellerHeaders(deleteRuleAuth),
+      headers: sellerHeaders(archiveProductAuth),
     });
-    console.log('Deleted smoke rule: OK');
+    const archivedCatalog = await fetchJson(`/api/businesses/${business.id}/products`);
+    if (archivedCatalog.products.some((entry) => entry.id === product.id)) {
+      throw new Error(`Archived product ${product.id} is still public`);
+    }
+    console.log('Archived smoke catalog item and linked rule: OK');
   } else {
-    console.log('Cleanup disabled; smoke rule left active.');
+    console.log('Cleanup disabled; smoke catalog item and rule left active.');
   }
 
   if (cleanup) {

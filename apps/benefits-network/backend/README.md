@@ -32,12 +32,16 @@ npm run dev            # http://localhost:3001
 | GET | `/api/admin/businesses/:id/rules` | Admin | List all benefit rules for a business |
 | POST | `/api/admin/businesses/:id/rules` | Admin | Create a benefit rule |
 | PATCH | `/api/admin/rules/:id` | Admin | Update or pause a benefit rule |
-| DELETE | `/api/admin/rules/:id` | Admin | Delete a benefit rule |
+| DELETE | `/api/admin/rules/:id` | Admin | Archive a benefit rule while preserving checkout history |
 | GET | `/api/seller/auth-message` | Public | Issue server-time wallet message for seller actions |
 | POST | `/api/seller/businesses` | Seller wallet signature | Create wallet-owned seller business |
 | GET | `/api/seller/businesses` | Seller wallet signature | List active seller businesses owned by the wallet |
 | DELETE | `/api/seller/businesses/:id` | Seller wallet signature | Soft-deactivate owned seller business and active rules |
 | GET | `/api/seller/businesses/:id/rules` | Seller wallet signature | List owned benefit rules |
+| GET | `/api/seller/businesses/:id/products` | Owner wallet signature | List owned catalog items, including archived ones |
+| POST | `/api/seller/businesses/:id/products` | Owner wallet signature | Create a product or service |
+| PATCH | `/api/seller/products/:id` | Owner wallet signature | Update or archive a product/service |
+| DELETE | `/api/seller/products/:id` | Owner wallet signature | Soft-archive a product and pause linked rules |
 | GET | `/api/seller/businesses/:id/sessions` | Seller wallet signature | List recent QR sessions for an owned seller business |
 | GET | `/api/seller/businesses/:id/operator-status` | Owner/operator wallet signature | Confirm checkout role for the connected wallet |
 | GET | `/api/seller/businesses/:id/operators` | Owner wallet signature | List checkout operators |
@@ -45,9 +49,10 @@ npm run dev            # http://localhost:3001
 | DELETE | `/api/seller/operators/:id` | Owner wallet signature | Revoke checkout access immediately |
 | POST | `/api/seller/businesses/:id/rules` | Seller wallet signature | Create owned benefit rule |
 | PATCH | `/api/seller/rules/:id` | Seller wallet signature | Update or pause owned benefit rule |
-| DELETE | `/api/seller/rules/:id` | Seller wallet signature | Delete owned benefit rule |
+| DELETE | `/api/seller/rules/:id` | Seller wallet signature | Archive owned benefit rule while preserving checkout history |
 | GET | `/api/businesses/:id` | Public | Get business info |
 | GET | `/api/businesses/:id/rules` | Public | List active public benefit rules |
+| GET | `/api/businesses/:id/products` | Public | List active products/services with active benefits |
 | POST | `/api/sessions` | Public | Start verification session, optionally bound to a seller benefit rule |
 | GET | `/api/sessions/:id` | Public | Poll session status |
 | GET | `/api/sessions/:id/challenge` | Public | Get signature challenge |
@@ -57,7 +62,7 @@ npm run dev            # http://localhost:3001
 ## Session Flow
 
 1. Merchant selects a seller rule or falls back to the business default.
-2. Merchant creates session → gets QR code URL.
+2. Merchant creates session → gets QR code URL. Benefit text, discount, required lock and TTL are frozen into that session.
 3. Customer scans QR → connects wallet → signs challenge with the selected benefit details.
 4. Backend verifies signature → checks IFRLock on-chain against that rule's required IFR amount.
 5. If the wallet is not eligible yet, the customer response is `REJECTED` but the stored session stays `PENDING` until the three-attempt limit is exhausted, so the customer can lock more IFR and retry the same QR while it is valid.
@@ -70,8 +75,14 @@ now be bound to one active rule by passing `benefitRuleId` to `POST /api/session
 If no rule is passed, the legacy business-level discount remains the fallback so
 old QR sessions stay compatible.
 
+Seller-owned rules may also carry `productId`. The backend accepts only an active product
+from the same business and copies its current name/category into the rule. Product edits do
+not rewrite old rule or session snapshots. Archiving a product soft-deactivates its linked
+active rules while preserving sessions and audit history.
+
 ```json
 {
+  "productId": "optional-product-cuid",
   "label": "Bronze",
   "category": "Coffee",
   "productName": "Premium customer discount",
@@ -152,7 +163,7 @@ even if the original owner wallet signs the request.
 
 ```bash
 npm test   # resets local SQLite test DB, then runs signature, expiry, replay, redeem, threshold and seller-auth tests
-npm run test:migration-upgrade   # upgrades a populated pre-operator database and verifies data/FKs
+npm run test:migration-upgrade   # upgrades a populated prior database and verifies data/schema/FKs
 ```
 
 ## Seller Wallet Smoke

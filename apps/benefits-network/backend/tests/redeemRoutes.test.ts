@@ -108,6 +108,7 @@ describe('Redeem route authorization', () => {
     await prisma.auditLog.deleteMany();
     await prisma.session.deleteMany();
     await prisma.benefitRule.deleteMany();
+    await prisma.product.deleteMany();
     await prisma.checkoutOperator.deleteMany();
     await prisma.business.deleteMany();
 
@@ -140,6 +141,7 @@ describe('Redeem route authorization', () => {
     await prisma.auditLog.deleteMany();
     await prisma.session.deleteMany();
     await prisma.benefitRule.deleteMany();
+    await prisma.product.deleteMany();
     await prisma.checkoutOperator.deleteMany();
     await prisma.business.deleteMany();
     await prisma.$disconnect();

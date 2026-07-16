@@ -45,6 +45,7 @@ beforeAll(async () => {
   await prisma.auditLog.deleteMany();
   await prisma.session.deleteMany();
   await prisma.benefitRule.deleteMany();
+  await prisma.product.deleteMany();
   await prisma.checkoutOperator.deleteMany();
   await prisma.business.deleteMany();
 
@@ -66,6 +67,7 @@ afterAll(async () => {
   await prisma.auditLog.deleteMany();
   await prisma.session.deleteMany();
   await prisma.benefitRule.deleteMany();
+  await prisma.product.deleteMany();
   await prisma.checkoutOperator.deleteMany();
   await prisma.business.deleteMany();
   await prisma.$disconnect();

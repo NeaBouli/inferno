@@ -75,3 +75,17 @@
 - The endpoint returns recent operational fields only: status, recovered wallet, locked amount, reason, timestamps and benefit metadata
 - Customer signatures and raw challenge messages are not returned in the seller history response
 - The `limit` query is clamped to 1-50 to prevent large bulk exports
+
+## 8. Catalog Tampering / Mutable Checkout Terms
+
+**Threat:** A seller binds a rule to another business's product, or edits a product/rule after
+creating a QR so the customer signs different terms than the seller originally presented.
+
+**Mitigation:**
+- Product CRUD is owner-wallet protected and scoped to the owned business
+- Rule binding accepts only an active product from the same business
+- Product name/category are copied into the rule as display snapshots
+- QR creation copies label, category, product, discount, required IFR and TTL into a versioned session snapshot
+- Challenge, attest, status and seller history read the immutable session snapshot for new sessions
+- Product archive is a soft archive and atomically pauses active linked rules; historical sessions/audits remain intact
+- Legacy sessions without a snapshot version use the prior relation fallback for backward compatibility

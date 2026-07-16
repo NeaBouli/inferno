@@ -18,6 +18,14 @@ function auditLog(sessionId: string, type: string, payload: Record<string, unkno
 }
 
 function benefitFromSession(session: {
+  benefitRuleId: string | null;
+  benefitSnapshotVersion: number | null;
+  benefitLabel: string | null;
+  benefitCategory: string | null;
+  benefitProductName: string | null;
+  benefitDiscountPercent: number | null;
+  benefitRequiredLockIFR: number | null;
+  benefitTtlSeconds: number | null;
   business: {
     discountPercent: number;
     requiredLockIFR: number;
@@ -34,6 +42,24 @@ function benefitFromSession(session: {
     ttlSeconds: number;
   } | null;
 }) {
+  if (
+    session.benefitSnapshotVersion === 1 &&
+    session.benefitDiscountPercent !== null &&
+    session.benefitRequiredLockIFR !== null &&
+    session.benefitTtlSeconds !== null
+  ) {
+    return {
+      benefitRuleId: session.benefitRuleId,
+      label: session.benefitLabel,
+      category: session.benefitCategory,
+      productName: session.benefitProductName,
+      discountPercent: session.benefitDiscountPercent,
+      requiredLockIFR: session.benefitRequiredLockIFR,
+      ttlSeconds: session.benefitTtlSeconds,
+      tierLabel: session.benefitLabel,
+    };
+  }
+
   if (!session.benefitRule) {
     return {
       benefitRuleId: null,
@@ -63,32 +89,93 @@ function benefitFromSession(session: {
  * Create a new verification session for a business.
  */
 export async function createSession(businessId: string, benefitRuleId?: string) {
-  const business = await prisma.business.findUnique({ where: { id: businessId } });
-  if (!business || !business.active) {
-    throw new Error('Business not found or inactive');
-  }
-
-  const benefitRule = benefitRuleId
-    ? await prisma.benefitRule.findFirst({
-        where: { id: benefitRuleId, businessId, active: true },
-      })
-    : null;
-  if (benefitRuleId && !benefitRule) {
-    throw new Error('Benefit rule not found or inactive');
-  }
-
-  const ttlSeconds = benefitRule?.ttlSeconds ?? business.ttlSeconds;
   const nonce = crypto.randomBytes(32).toString('hex');
-  const expiresAt = new Date(Date.now() + ttlSeconds * 1000);
+  const session = await prisma.$transaction(async (tx) => {
+    // Acquire SQLite's write lock before reading mutable checkout eligibility.
+    // Product/rule archival therefore linearizes either before or after this session.
+    if (benefitRuleId) {
+      const lockedRules = await tx.$executeRaw`
+        UPDATE "BenefitRule"
+        SET "active" = "active"
+        WHERE "id" = ${benefitRuleId}
+          AND "businessId" = ${businessId}
+          AND "active" = 1
+          AND (
+            "productId" IS NULL
+            OR EXISTS (
+              SELECT 1
+              FROM "Product"
+              WHERE "Product"."id" = "BenefitRule"."productId"
+                AND "Product"."active" = 1
+            )
+          )
+      `;
+      if (lockedRules !== 1) throw new Error('Benefit rule not found or inactive');
+    } else {
+      const lockedBusinesses = await tx.$executeRaw`
+        UPDATE "Business"
+        SET "active" = "active"
+        WHERE "id" = ${businessId} AND "active" = 1
+      `;
+      if (lockedBusinesses !== 1) throw new Error('Business not found or inactive');
+    }
 
-  const session = await prisma.session.create({
-    data: { businessId, benefitRuleId: benefitRule?.id, nonce, expiresAt },
-    include: { business: true, benefitRule: true },
+    const business = await tx.business.findUnique({ where: { id: businessId } });
+    if (!business || !business.active) throw new Error('Business not found or inactive');
+
+    const benefitRule = benefitRuleId
+      ? await tx.benefitRule.findFirst({
+          where: {
+            id: benefitRuleId,
+            businessId,
+            active: true,
+            OR: [{ productId: null }, { product: { active: true } }],
+          },
+        })
+      : null;
+    if (benefitRuleId && !benefitRule) throw new Error('Benefit rule not found or inactive');
+
+    const ttlSeconds = benefitRule?.ttlSeconds ?? business.ttlSeconds;
+    const benefitSnapshot = benefitRule
+      ? {
+          benefitLabel: benefitRule.label,
+          benefitCategory: benefitRule.category,
+          benefitProductName: benefitRule.productName,
+          benefitDiscountPercent: benefitRule.discountPercent,
+          benefitRequiredLockIFR: benefitRule.requiredLockIFR,
+          benefitTtlSeconds: benefitRule.ttlSeconds,
+        }
+      : {
+          benefitLabel: business.tierLabel,
+          benefitCategory: null,
+          benefitProductName: null,
+          benefitDiscountPercent: business.discountPercent,
+          benefitRequiredLockIFR: business.requiredLockIFR,
+          benefitTtlSeconds: business.ttlSeconds,
+        };
+    const expiresAt = new Date(Date.now() + ttlSeconds * 1000);
+    const created = await tx.session.create({
+      data: {
+        businessId,
+        benefitRuleId: benefitRule?.id,
+        benefitSnapshotVersion: 1,
+        ...benefitSnapshot,
+        nonce,
+        expiresAt,
+      },
+      include: { business: true, benefitRule: true },
+    });
+    await tx.auditLog.create({
+      data: {
+        sessionId: created.id,
+        type: 'SESSION_CREATED',
+        payload: JSON.stringify({ businessId, benefitRuleId: benefitRule?.id ?? null, nonce }),
+      },
+    });
+    return created;
   });
 
   const benefit = benefitFromSession(session);
-
-  await auditLog(session.id, 'SESSION_CREATED', { businessId, benefitRuleId: benefit.benefitRuleId, nonce });
 
   return {
     sessionId: session.id,

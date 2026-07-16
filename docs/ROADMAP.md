@@ -76,9 +76,10 @@
 - [ ] Creator Gateway live (YouTube monetization bridge)
 - [ ] Benefits Network live (merchant onboarding)
 - [ ] IFRp Commerce App / `shop.ifrunit.tech` customer/seller PWA
+  - Core customer/seller PWA, owner-managed staff checkout and basic product/service catalog are implemented; live device acceptance, verified rewards and embedded-wallet decision remain.
       Master architecture: `docs/ifrp-commerce-app/MASTER_ARCHITECTURE.md`
       Scope: customer wallet, ETH/IFR swap, IFR locking, QR proof, seller scanner, seller discount rules, and verified seller rewards through PartnerVault after governance approval.
-      Current implementation: deployed PWA foundation plus seller profile/rule/history flows, customer IFRLock and proof flows, POS helper, and owner-managed checkout operators. Remaining scope includes product catalog, verified rewards, embedded-wallet decision and real-device acceptance.
+      Current implementation: deployed PWA foundation plus seller profile/rule/history flows, customer IFRLock and proof flows, POS helper, owner-managed checkout operators and product catalog. Remaining scope includes verified rewards, embedded-wallet decision and real-device acceptance.
 - [ ] Guarded buyback automation (BuybackVault activation after 60 days)
 - [ ] Developer SDK + documentation (ethers.js, wagmi, Python)
 - [ ] Bug bounty program (Immunefi)
@@ -110,7 +111,7 @@
 
 - [ ] Advanced lock types (tiered, time-based, NFT-gated)
 - [ ] Builder self-service portal
-- [ ] Seller/customer commerce app scaling: embedded wallet, App Store / Play Store wrapper, product catalog, reward analytics
+- [ ] Seller/customer commerce app scaling: embedded wallet, App Store / Play Store wrapper, advanced catalog search/inventory, reward analytics
 - [ ] Cross-protocol integrations
 - [ ] Advanced analytics dashboard
 - [ ] Community grants program
