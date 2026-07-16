@@ -7,7 +7,7 @@ Next.js 14 PWA for the IFR Benefits Network.
 | Route | Purpose |
 |-------|---------|
 | `/` | Customer/Seller role chooser, wallet status, seller rule manager |
-| `/guide` | Customer, seller and developer operating guide for the live shop flow |
+| `/guide` | Customer, seller and developer operating guide for the live shop flow, including session history |
 | `/b/:businessId` | Merchant Console — select seller rule, start verification, show QR, approve/redeem |
 | `/r/:sessionId` | Customer Flow — connect wallet, review selected benefit, sign challenge, show result |
 
@@ -62,6 +62,11 @@ the rule-specific product, discount, and required IFR lock before signing.
 Connected sellers can load the active seller profiles owned by their wallet and
 the app remembers the last selected Business ID locally for reloads. This is only
 a convenience cache; ownership is still enforced by the backend signature check.
+
+Connected sellers can also load recent session history for the selected Business
+ID. This uses the same seller wallet signature model and shows checkout status,
+verified customer wallet, locked amount, rejection reason, redeem time and the
+rule/default benefit attached to each QR session.
 
 The admin bearer secret is still available in the UI as an operator fallback for
 controlled setup and recovery. Do not use the global admin secret as a public

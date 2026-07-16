@@ -38,6 +38,7 @@ npm run dev            # http://localhost:3001
 | GET | `/api/seller/businesses` | Seller wallet signature | List active seller businesses owned by the wallet |
 | DELETE | `/api/seller/businesses/:id` | Seller wallet signature | Soft-deactivate owned seller business and active rules |
 | GET | `/api/seller/businesses/:id/rules` | Seller wallet signature | List owned benefit rules |
+| GET | `/api/seller/businesses/:id/sessions` | Seller wallet signature | List recent QR sessions for an owned seller business |
 | POST | `/api/seller/businesses/:id/rules` | Seller wallet signature | Create owned benefit rule |
 | PATCH | `/api/seller/rules/:id` | Seller wallet signature | Update or pause owned benefit rule |
 | DELETE | `/api/seller/rules/:id` | Seller wallet signature | Delete owned benefit rule |
@@ -91,6 +92,13 @@ by the backend, then the seller signs that short-lived EIP-191 message with the
 wallet that owns the business. The backend checks the recovered address against
 `Business.ownerAddress` before listing, creating, updating or deleting rules and
 before redeeming an approved customer session.
+
+Session history uses the same headers with `Action: sessions:list` and the
+business id as `Business`. The optional `limit` query parameter is clamped from
+1 to 50. Responses include the session status, recovered customer wallet,
+locked amount, rejection reason, redeem timestamp and the attached rule/default
+benefit fields so sellers can reconcile recent checkout checks without exposing
+customer signatures.
 
 Seller write requests use these headers:
 

@@ -49,3 +49,23 @@
 - Attest attempts: max 3 per session (enforced in database)
 - Global attest rate limit: max 50 per IP per hour
 - After 3 failed attempts, the session is locked and cannot accept more attestations
+
+## 6. Seller Account Takeover / Unauthorized Staff Actions
+
+**Threat:** A non-owner tries to list rules, inspect session history or redeem a customer benefit for a seller business.
+
+**Mitigation:**
+- Seller actions require short-lived, server-issued wallet messages
+- The recovered signer must match `Business.ownerAddress`
+- Session history uses `Action: sessions:list` and is limited to the owned business
+- Redeem uses `Action: sessions:redeem` with the specific session id, then enforces one-time redemption
+
+## 7. Session History Data Exposure
+
+**Threat:** Session history reveals more customer or checkout data than the seller needs.
+
+**Mitigation:**
+- Session history is not public; it requires the business owner wallet signature
+- The endpoint returns recent operational fields only: status, recovered wallet, locked amount, reason, timestamps and benefit metadata
+- Customer signatures and raw challenge messages are not returned in the seller history response
+- The `limit` query is clamped to 1-50 to prevent large bulk exports
