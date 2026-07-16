@@ -45,16 +45,22 @@ The public shop defaults to Ethereum Mainnet. `NEXT_PUBLIC_CHAIN_ID=11155111` ca
 
 ## Seller Rules
 
-The Seller mode panel can persist benefit rules through the guarded backend
-admin API. It requires:
+The Seller mode panel can create wallet-owned seller profiles and persist
+benefit rules with short-lived wallet signatures. The normal seller path
+requires:
 
-- Business ID
-- Admin bearer secret
+- Seller wallet connection
+- Signed seller action message
+- Business ID after profile creation
 - Rule label, category, product/service, discount, required locked IFR, QR TTL
 
 Saved active rules are visible in the seller scanner route. The scanner binds the
 next QR session to the selected rule, and the customer verification screen shows
 the rule-specific product, discount, and required IFR lock before signing.
+
+The admin bearer secret is still available in the UI as an operator fallback for
+controlled setup and recovery. Do not use the global admin secret as a public
+seller credential.
 
 ## PWA
 

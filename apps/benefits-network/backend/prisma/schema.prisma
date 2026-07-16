@@ -10,6 +10,7 @@ datasource db {
 model Business {
   id              String    @id @default(cuid())
   name            String
+  ownerAddress    String?
   discountPercent Int
   requiredLockIFR Int
   ttlSeconds      Int       @default(60)
@@ -18,6 +19,8 @@ model Business {
   createdAt       DateTime  @default(now())
   sessions        Session[]
   benefitRules    BenefitRule[]
+
+  @@index([ownerAddress])
 }
 
 model BenefitRule {

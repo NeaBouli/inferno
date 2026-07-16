@@ -32,6 +32,12 @@ npm run dev            # http://localhost:3001
 | POST | `/api/admin/businesses/:id/rules` | Admin | Create a benefit rule |
 | PATCH | `/api/admin/rules/:id` | Admin | Update or pause a benefit rule |
 | DELETE | `/api/admin/rules/:id` | Admin | Delete a benefit rule |
+| GET | `/api/seller/auth-message` | Public | Preview the wallet message format for seller actions |
+| POST | `/api/seller/businesses` | Seller wallet signature | Create wallet-owned seller business |
+| GET | `/api/seller/businesses/:id/rules` | Seller wallet signature | List owned benefit rules |
+| POST | `/api/seller/businesses/:id/rules` | Seller wallet signature | Create owned benefit rule |
+| PATCH | `/api/seller/rules/:id` | Seller wallet signature | Update or pause owned benefit rule |
+| DELETE | `/api/seller/rules/:id` | Seller wallet signature | Delete owned benefit rule |
 | GET | `/api/businesses/:id` | Public | Get business info |
 | GET | `/api/businesses/:id/rules` | Public | List active public benefit rules |
 | POST | `/api/sessions` | Public | Start verification session, optionally bound to a seller benefit rule |
@@ -74,10 +80,38 @@ old QR sessions stay compatible.
 }
 ```
 
+## Seller Wallet Ownership
+
+Normal seller actions can be authorized without sharing the global admin secret.
+A seller signs a short-lived EIP-191 message with the wallet that owns the
+business. The backend checks the recovered address against `Business.ownerAddress`
+before listing, creating, updating or deleting rules.
+
+Seller write requests use these headers:
+
+```http
+x-ifr-wallet: 0xSellerWallet
+x-ifr-signature: 0xSignature
+x-ifr-timestamp: 1784210000000
+```
+
+The signed message format is deterministic:
+
+```text
+IFR Benefits Network - Seller Authorization
+Action: rules:create
+Business: business_cuid
+Timestamp: 1784210000000
+Only sign this message inside shop.ifrunit.tech.
+```
+
+Admin routes remain available for operator setup and recovery, but the public
+seller UX should prefer wallet-owned businesses.
+
 ## Tests
 
 ```bash
-npm test   # 8 tests: signature, expiry, replay, redeem, threshold, rate-limit
+npm test   # resets local SQLite test DB, then runs signature, expiry, replay, redeem, threshold and seller-auth tests
 ```
 
 ## Security

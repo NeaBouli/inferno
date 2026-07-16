@@ -6,6 +6,7 @@ import adminRoutes from './routes/admin';
 import businessRoutes from './routes/businesses';
 import sessionRoutes from './routes/sessions';
 import attestRoutes from './routes/attest';
+import sellerRoutes from './routes/seller';
 
 const app = express();
 
@@ -19,6 +20,7 @@ app.use(express.json({ limit: '10kb' }));
 
 // Mount routes
 app.use('/api/admin', adminRoutes);
+app.use('/api/seller', sellerRoutes);
 app.use('/api/businesses', businessRoutes);
 app.use('/api/sessions', sessionRoutes);
 app.use('/api', attestRoutes);
