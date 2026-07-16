@@ -84,7 +84,8 @@ function isIgnorableConsoleError(text) {
   return (
     text.includes('status of 404') ||
     (text.includes('Analytics SDK') && text.includes('Failed to fetch')) ||
-    (text.includes('Sender: Failed to send batch') && text.includes('Failed to fetch'))
+    (text.includes('Sender: Failed to send batch') && text.includes('Failed to fetch')) ||
+    (text.includes('Failed to fetch RSC payload') && text.includes('Falling back to browser navigation'))
   );
 }
 
