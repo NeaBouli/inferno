@@ -9,6 +9,7 @@ on:
       - 'docs/qa/BENEFITS_DEVICE_WALLET_CHECKLIST.json'
       - 'docs/runbooks/BENEFITS_DEVICE_WALLET_TEST_RUNBOOK.md'
       - 'scripts/smoke-benefits-network.js'
+      - 'scripts/report-benefits-device-checklist.js'
       - 'scripts/record-benefits-device-evidence.js'
       - 'scripts/validate-benefits-device-checklist.js'
       - 'package.json'
@@ -20,6 +21,7 @@ on:
       - 'docs/qa/BENEFITS_DEVICE_WALLET_CHECKLIST.json'
       - 'docs/runbooks/BENEFITS_DEVICE_WALLET_TEST_RUNBOOK.md'
       - 'scripts/smoke-benefits-network.js'
+      - 'scripts/report-benefits-device-checklist.js'
       - 'scripts/record-benefits-device-evidence.js'
       - 'scripts/validate-benefits-device-checklist.js'
       - 'package.json'
@@ -72,3 +74,4 @@ jobs:
         with:
           node-version: '20'
       - run: npm run qa:benefits-devices
+      - run: npm run qa:benefits-report
