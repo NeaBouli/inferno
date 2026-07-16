@@ -58,6 +58,10 @@ Saved active rules are visible in the seller scanner route. The scanner binds th
 next QR session to the selected rule, and the customer verification screen shows
 the rule-specific product, discount, and required IFR lock before signing.
 
+Connected sellers can load the active seller profiles owned by their wallet and
+the app remembers the last selected Business ID locally for reloads. This is only
+a convenience cache; ownership is still enforced by the backend signature check.
+
 The admin bearer secret is still available in the UI as an operator fallback for
 controlled setup and recovery. Do not use the global admin secret as a public
 seller credential.

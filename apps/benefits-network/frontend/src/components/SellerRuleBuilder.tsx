@@ -1,12 +1,13 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useAccount, useConnect, useDisconnect, useSignMessage } from 'wagmi';
 import {
   AdminBusinessCreated,
   BenefitRule,
   BenefitRuleInput,
   SellerAuth,
+  SellerBusinessSummary,
   buildSellerAuthMessage,
   createAdminBusiness,
   createAdminBusinessRule,
@@ -15,12 +16,14 @@ import {
   deleteAdminBusinessRule,
   deleteSellerBusinessRule,
   getAdminBusinessRules,
+  getSellerBusinesses,
   getSellerBusinessRules,
   updateAdminBusinessRule,
   updateSellerBusinessRule,
 } from '@/lib/api';
 
 const categories = ['Coffee', 'Retail', 'Digital access', 'Events', 'Services'];
+const LAST_BUSINESS_STORAGE_KEY = 'ifr.shop.lastSellerBusinessId';
 
 export function SellerRuleBuilder() {
   const { address, isConnected } = useAccount();
@@ -38,6 +41,7 @@ export function SellerRuleBuilder() {
   const [minLocked, setMinLocked] = useState(1000);
   const [ttl, setTtl] = useState(90);
   const [rules, setRules] = useState<BenefitRule[]>([]);
+  const [sellerBusinesses, setSellerBusinesses] = useState<SellerBusinessSummary[]>([]);
   const [createdBusiness, setCreatedBusiness] = useState<AdminBusinessCreated | null>(null);
   const [status, setStatus] = useState('');
   const [error, setError] = useState('');
@@ -47,6 +51,24 @@ export function SellerRuleBuilder() {
   const canUseWalletOwner = Boolean(address && isConnected);
   const canUseOperatorFallback = Boolean(adminSecret);
   const canManage = canUseWalletOwner || canUseOperatorFallback;
+
+  useEffect(() => {
+    try {
+      const lastBusinessId = window.localStorage.getItem(LAST_BUSINESS_STORAGE_KEY);
+      if (lastBusinessId) setBusinessId(lastBusinessId);
+    } catch {
+      // Local storage can be unavailable in private modes; the manual field still works.
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!businessId) return;
+    try {
+      window.localStorage.setItem(LAST_BUSINESS_STORAGE_KEY, businessId);
+    } catch {
+      // Ignore storage failures; this is only a convenience cache.
+    }
+  }, [businessId]);
 
   const payload: BenefitRuleInput = useMemo(
     () => ({
@@ -83,6 +105,21 @@ export function SellerRuleBuilder() {
       setCreatedBusiness(business);
       setBusinessId(business.id);
       setRules([]);
+      setSellerBusinesses((current) => [
+        {
+          id: business.id,
+          ownerAddress: business.ownerAddress,
+          verifyUrl: business.verifyUrl,
+          qrUrl: business.qrUrl,
+          name: input.name,
+          discountPercent: input.discountPercent,
+          requiredLockIFR: input.requiredLockIFR,
+          tierLabel: input.tierLabel || null,
+          createdAt: new Date().toISOString(),
+          rulesCount: 0,
+        },
+        ...current.filter((item) => item.id !== business.id),
+      ]);
       setStatus(canUseWalletOwner
         ? 'Seller profile created and bound to your wallet. Business ID and scanner link are ready.'
         : 'Operator-created seller profile is ready. Business ID and scanner link are ready.'
@@ -110,6 +147,28 @@ export function SellerRuleBuilder() {
       setStatus(`Loaded ${result.rules.length} rule${result.rules.length === 1 ? '' : 's'}.`);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load rules');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function loadSellerBusinesses() {
+    if (!canUseWalletOwner) {
+      setError('Connect the seller wallet to load owned seller profiles.');
+      return;
+    }
+    setLoading(true);
+    setError('');
+    setStatus('');
+    try {
+      const result = await getSellerBusinesses(await signSellerAction('business:list', 'seller'));
+      setSellerBusinesses(result.businesses);
+      if (!businessId && result.businesses[0]) {
+        setBusinessId(result.businesses[0].id);
+      }
+      setStatus(`Loaded ${result.businesses.length} seller profile${result.businesses.length === 1 ? '' : 's'}.`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load seller profiles');
     } finally {
       setLoading(false);
     }
@@ -245,6 +304,51 @@ export function SellerRuleBuilder() {
             </button>
           )}
         </div>
+        <div className="mt-4 flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={loadSellerBusinesses}
+            disabled={loading || !canUseWalletOwner}
+            className="rounded-2xl border border-green-200/40 px-5 py-3 text-xs font-black uppercase tracking-[0.14em] text-green-50 transition hover:bg-green-200/10 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            Load my seller profiles
+          </button>
+          {businessId ? (
+            <a
+              href={scannerUrl}
+              className="rounded-2xl border border-white/15 px-5 py-3 text-xs font-black uppercase tracking-[0.14em] text-stone-100 transition hover:border-green-200/60"
+            >
+              Open scanner
+            </a>
+          ) : null}
+        </div>
+        {sellerBusinesses.length > 0 ? (
+          <div className="mt-4 grid gap-2">
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-green-100/70">My seller profiles</p>
+            {sellerBusinesses.map((business) => (
+              <button
+                key={business.id}
+                type="button"
+                onClick={() => {
+                  setBusinessId(business.id);
+                  setRules([]);
+                  setStatus(`${business.name} selected. Load rules when you need the current list.`);
+                }}
+                className={`rounded-2xl border p-3 text-left transition ${
+                  business.id === businessId
+                    ? 'border-green-200/60 bg-green-200/15'
+                    : 'border-white/10 bg-black/20 hover:border-green-200/40'
+                }`}
+              >
+                <span className="block text-sm font-black text-white">{business.name}</span>
+                <span className="mt-1 block text-xs leading-5 text-stone-300">
+                  {business.rulesCount} rule{business.rulesCount === 1 ? '' : 's'} / {business.discountPercent}% default / {business.requiredLockIFR.toLocaleString('en-US')} IFR
+                </span>
+                <span className="mt-1 block break-all font-mono text-[11px] text-stone-500">{business.id}</span>
+              </button>
+            ))}
+          </div>
+        ) : null}
       </div>
 
       <div className="mb-5 rounded-3xl border border-white/10 bg-black/20 p-4">
