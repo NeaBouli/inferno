@@ -36,6 +36,7 @@ npm run dev            # http://localhost:3001
 | GET | `/api/seller/auth-message` | Public | Issue server-time wallet message for seller actions |
 | POST | `/api/seller/businesses` | Seller wallet signature | Create wallet-owned seller business |
 | GET | `/api/seller/businesses` | Seller wallet signature | List active seller businesses owned by the wallet |
+| DELETE | `/api/seller/businesses/:id` | Seller wallet signature | Soft-deactivate owned seller business and active rules |
 | GET | `/api/seller/businesses/:id/rules` | Seller wallet signature | List owned benefit rules |
 | POST | `/api/seller/businesses/:id/rules` | Seller wallet signature | Create owned benefit rule |
 | PATCH | `/api/seller/rules/:id` | Seller wallet signature | Update or pause owned benefit rule |
@@ -134,8 +135,9 @@ BENEFITS_BASE_URL=http://localhost:3001 MUTATE=true node scripts/seller-wallet-s
 Default mode is read-only: health, server-issued seller auth and signed owned
 profile listing with a throwaway wallet. `MUTATE=true` creates a wallet-owned
 seller profile, reloads it, creates a benefit rule, lists the rule and deletes
-the smoke rule again. The throwaway wallet private key is generated in memory and
-is never read from env or disk.
+the smoke rule again. It then soft-deactivates the smoke seller profile so it no
+longer appears in owned active profile reloads. The throwaway wallet private key
+is generated in memory and is never read from env or disk.
 
 ## Security
 
