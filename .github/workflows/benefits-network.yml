@@ -5,10 +5,22 @@ on:
   push:
     paths:
       - 'apps/benefits-network/**'
+      - 'docs/BENEFITS_NETWORK_TEST.md'
+      - 'docs/qa/BENEFITS_DEVICE_WALLET_CHECKLIST.json'
+      - 'docs/runbooks/BENEFITS_DEVICE_WALLET_TEST_RUNBOOK.md'
+      - 'scripts/smoke-benefits-network.js'
+      - 'scripts/validate-benefits-device-checklist.js'
+      - 'package.json'
       - '.github/workflows/benefits-network.yml'
   pull_request:
     paths:
       - 'apps/benefits-network/**'
+      - 'docs/BENEFITS_NETWORK_TEST.md'
+      - 'docs/qa/BENEFITS_DEVICE_WALLET_CHECKLIST.json'
+      - 'docs/runbooks/BENEFITS_DEVICE_WALLET_TEST_RUNBOOK.md'
+      - 'scripts/smoke-benefits-network.js'
+      - 'scripts/validate-benefits-device-checklist.js'
+      - 'package.json'
       - '.github/workflows/benefits-network.yml'
 
 jobs:
@@ -49,3 +61,12 @@ jobs:
       - run: npm ci
       - run: npm run typecheck
       - run: npm run build
+
+  test-device-checklist:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm run qa:benefits-devices
