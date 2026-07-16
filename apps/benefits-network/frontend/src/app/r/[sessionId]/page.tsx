@@ -17,6 +17,47 @@ export default function CustomerSession({ params }: { params: { sessionId: strin
   const [result, setResult] = useState<AttestResult | null>(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const closedStatuses = ['REDEEMED', 'REJECTED', 'EXPIRED'];
+  const terminalStatuses = ['APPROVED', ...closedStatuses];
+  const sessionLoaded = Boolean(status);
+  const currentSessionStatus = status?.status || '';
+  const proofApproved = status?.status === 'APPROVED' || result?.status === 'APPROVED';
+  const proofRejected = status?.status === 'REJECTED' || result?.status === 'REJECTED';
+  const sellerRedeemed = status?.status === 'REDEEMED';
+  const canSign = Boolean(isConnected && status && !terminalStatuses.includes(status.status));
+  const proofStatus = !sessionLoaded
+    ? 'Load verification'
+    : sellerRedeemed
+      ? 'Benefit redeemed'
+      : proofApproved
+        ? 'Approved - show seller'
+        : proofRejected
+          ? 'Not eligible'
+          : closedStatuses.includes(currentSessionStatus)
+            ? 'Session closed'
+            : !isConnected
+              ? 'Connect wallet'
+              : 'Sign proof';
+  const proofNextStep = !sessionLoaded
+    ? 'The app is loading the QR session from the seller.'
+    : sellerRedeemed
+      ? 'This benefit was already redeemed by the seller. Ask for a new QR code for another checkout.'
+      : proofApproved
+        ? 'Show this screen to the seller. They can redeem the approved benefit once.'
+        : proofRejected
+          ? (status?.reason || result?.reason || 'This wallet does not meet the current locked IFR requirement.')
+          : closedStatuses.includes(currentSessionStatus)
+            ? 'Ask the seller for a fresh QR code if you still need verification.'
+            : !isConnected
+              ? 'Connect the wallet that holds or locks IFR. No tokens move during this check.'
+              : 'Sign the one-time challenge. The backend checks IFRLock on-chain and returns the result.';
+  const proofReadinessSteps = [
+    { label: 'QR session loaded', ready: sessionLoaded },
+    { label: 'Wallet connected', ready: isConnected },
+    { label: 'One-time proof signed', ready: Boolean(result) || Boolean(status && terminalStatuses.includes(status.status)) },
+    { label: 'IFR access approved', ready: proofApproved || sellerRedeemed },
+    { label: 'Seller redeem complete', ready: sellerRedeemed },
+  ];
 
   useEffect(() => {
     async function loadSession() {
@@ -70,6 +111,45 @@ export default function CustomerSession({ params }: { params: { sessionId: strin
             No tokens move during verification.
           </p>
 
+          <div className="mt-5 rounded-2xl border border-orange-200/20 bg-[#1d130c] p-4 shadow-xl shadow-black/20">
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <div>
+                <p className="text-xs font-black uppercase tracking-[0.16em] text-orange-200/80">
+                  Proof readiness
+                </p>
+                <h2 className="mt-1 text-2xl font-black text-white">{proofStatus}</h2>
+                <p className="mt-2 text-sm leading-6 text-stone-300">{proofNextStep}</p>
+              </div>
+              <div className="rounded-2xl border border-white/10 bg-black/25 px-4 py-3 text-right">
+                <p className="text-xs uppercase tracking-[0.14em] text-stone-500">Customer wallet</p>
+                <p className="mt-1 font-mono text-sm font-black text-white">
+                  {address ? `${address.slice(0, 6)}...${address.slice(-4)}` : 'Not connected'}
+                </p>
+                <p className="mt-1 text-xs text-stone-400">{status?.status || 'Loading'}</p>
+              </div>
+            </div>
+
+            <div className="mt-4 grid gap-2 sm:grid-cols-2">
+              {proofReadinessSteps.map((step) => (
+                <div
+                  key={step.label}
+                  className={`flex items-center gap-3 rounded-2xl border px-4 py-3 text-sm ${
+                    step.ready
+                      ? 'border-green-300/25 bg-green-300/[0.08] text-green-50'
+                      : 'border-white/10 bg-black/20 text-stone-300'
+                  }`}
+                >
+                  <span
+                    className={`h-2.5 w-2.5 shrink-0 rounded-full ${
+                      step.ready ? 'bg-green-300 shadow-[0_0_16px_rgba(134,239,172,0.75)]' : 'bg-stone-600'
+                    }`}
+                  />
+                  <span className="font-semibold">{step.label}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
           {business ? (
             <div className="mt-5 grid gap-3 rounded-2xl border border-white/10 bg-black/25 p-4 text-sm text-stone-300">
               <div className="flex justify-between gap-4">
@@ -114,7 +194,7 @@ export default function CustomerSession({ params }: { params: { sessionId: strin
           <button
             type="button"
             onClick={signAndVerify}
-            disabled={!isConnected || loading || Boolean(status && ['APPROVED', 'REDEEMED', 'REJECTED', 'EXPIRED'].includes(status.status))}
+            disabled={!canSign || loading}
             className="mt-6 w-full rounded-2xl bg-orange-300 px-5 py-4 text-sm font-black uppercase tracking-[0.16em] text-stone-950 shadow-xl shadow-orange-950/40 transition hover:bg-orange-200 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {loading ? 'Verifying...' : 'Sign and verify'}
