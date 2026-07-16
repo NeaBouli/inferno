@@ -93,6 +93,8 @@ async function verifyPage(contextOptions, label) {
     await expectText(page, 'Mobile app');
     await expectText(page, 'Wallet entry');
     await expectText(page, 'Copy link');
+    await expectText(page, 'Checkout readiness');
+    await expectText(page, 'Current tier');
     await expectText(page, 'Create a seller entry point');
     await expectText(page, 'Seller categories');
 
