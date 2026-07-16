@@ -77,6 +77,21 @@ seller credential.
 Installable on iOS and Android. Service worker caches static assets (cache-first)
 and uses network-first for API calls.
 
+## Live Smoke
+
+Run the repo-level read-only smoke before and after public Shop deploys:
+
+```bash
+npm run smoke:benefits
+BENEFITS_BASE_URL=http://localhost:3000 npm run smoke:benefits
+SCREENSHOT_DIR=/Users/gio/Desktop npm run smoke:benefits
+```
+
+The smoke checks `shop.ifrunit.tech` by default: API health, PWA manifest,
+PWA icons, service worker, server-issued seller auth challenge, desktop landing,
+iPad landing, guide page, wallet-entry fallback and the seller scanner shell.
+It does not create sellers, rules, QR sessions or wallet transactions.
+
 ## Production Deploy
 
 Use the repo-level deploy helper for `shop.ifrunit.tech`:
