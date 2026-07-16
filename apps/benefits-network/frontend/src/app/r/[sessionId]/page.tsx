@@ -10,6 +10,7 @@ import { AttestResult, BusinessInfo, SessionStatus, getBusiness, getChallenge, g
 
 const CLOSED_STATUSES = ['REDEEMED', 'REJECTED', 'EXPIRED'];
 const TERMINAL_STATUSES = ['APPROVED', ...CLOSED_STATUSES];
+const UNISWAP_IFR_URL = 'https://app.uniswap.org/swap?outputCurrency=0x77e99917Eca8539c62F509ED1193ac36580A6e7B';
 
 export default function CustomerSession({ params }: { params: { sessionId: string } }) {
   const { address, isConnected } = useAccount();
@@ -263,6 +264,38 @@ export default function CustomerSession({ params }: { params: { sessionId: strin
               ) : null}
             </div>
           ) : null}
+
+          <div className="mt-5 rounded-2xl border border-green-300/20 bg-[linear-gradient(145deg,rgba(134,239,172,0.08),rgba(255,255,255,0.045)_48%,rgba(249,115,22,0.08))] p-4">
+            <p className="text-xs font-bold uppercase tracking-[0.16em] text-green-100/80">
+              Customer recovery
+            </p>
+            <h2 className="mt-1 text-xl font-black text-white">Need more locked IFR?</h2>
+            <p className="mt-2 text-sm leading-6 text-stone-300">
+              If this wallet is rejected or the seller requires a higher tier, open the shop app with the same wallet, buy IFR if needed, lock access, then ask the seller for a fresh QR session.
+            </p>
+            <div className="mt-4 grid gap-2 sm:grid-cols-3">
+              <a
+                href="/#customer-wallet"
+                className="rounded-2xl bg-green-300 px-4 py-3 text-center text-xs font-black uppercase tracking-[0.14em] text-stone-950 shadow-xl shadow-green-950/25 transition hover:bg-green-200"
+              >
+                Lock IFR
+              </a>
+              <a
+                href={UNISWAP_IFR_URL}
+                target="_blank"
+                rel="noopener"
+                className="rounded-2xl border border-green-200/35 px-4 py-3 text-center text-xs font-black uppercase tracking-[0.14em] text-green-50 transition hover:bg-green-200/10"
+              >
+                Buy IFR
+              </a>
+              <a
+                href="/guide"
+                className="rounded-2xl border border-white/15 px-4 py-3 text-center text-xs font-black uppercase tracking-[0.14em] text-stone-100 transition hover:border-green-200/60"
+              >
+                Open guide
+              </a>
+            </div>
+          </div>
 
           {status && ['APPROVED', 'REDEEMED', 'REJECTED', 'EXPIRED'].includes(status.status) && !result ? (
             <div className="mt-5 rounded-2xl border border-white/10 bg-black/25 p-4 text-sm leading-6 text-stone-200">
