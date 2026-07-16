@@ -47,7 +47,7 @@ npm run dev            # http://localhost:3001
 | GET | `/api/sessions/:id` | Public | Poll session status |
 | GET | `/api/sessions/:id/challenge` | Public | Get signature challenge |
 | POST | `/api/attest` | Public | Submit signature + verify |
-| POST | `/api/sessions/:id/redeem` | Public | Mark session as redeemed |
+| POST | `/api/sessions/:id/redeem` | Seller wallet signature | Mark an approved session as redeemed |
 
 ## Session Flow
 
@@ -55,7 +55,7 @@ npm run dev            # http://localhost:3001
 2. Merchant creates session → gets QR code URL.
 3. Customer scans QR → connects wallet → signs challenge with the selected benefit details.
 4. Backend verifies signature → checks IFRLock on-chain against that rule's required IFR amount.
-5. Merchant sees APPROVED → presses Redeem (one-time).
+5. Merchant sees APPROVED → seller wallet signs Redeem → backend marks the session as redeemed once.
 
 ## Benefit Rules
 
@@ -89,7 +89,8 @@ Normal seller actions can be authorized without sharing the global admin secret.
 The frontend first requests `/api/seller/auth-message` so the timestamp is issued
 by the backend, then the seller signs that short-lived EIP-191 message with the
 wallet that owns the business. The backend checks the recovered address against
-`Business.ownerAddress` before listing, creating, updating or deleting rules.
+`Business.ownerAddress` before listing, creating, updating or deleting rules and
+before redeeming an approved customer session.
 
 Seller write requests use these headers:
 
@@ -108,6 +109,10 @@ Business: business_cuid
 Timestamp: 1784210000000
 Only sign this message inside shop.ifrunit.tech.
 ```
+
+Redeem uses the same headers and signs `Action: sessions:redeem` with the
+session id as `Business`. This keeps the customer QR public while making the
+one-time discount redemption a seller-owned action.
 
 Admin routes remain available for operator setup and recovery, but the public
 seller UX should prefer wallet-owned businesses.
@@ -137,13 +142,14 @@ Default mode is read-only: health, server-issued seller auth and signed owned
 profile listing with a throwaway wallet. `MUTATE=true` creates a wallet-owned
 seller profile, reloads it, creates a benefit rule, lists the rule and deletes
 the smoke rule again. It also creates a QR session for that rule, signs the
-customer challenge and submits `/api/attest`. Without `CUSTOMER_PRIVATE_KEY` the
-customer wallet is throwaway and should be rejected by the live IFRLock check;
-redeem is expected to be blocked. With `CUSTOMER_PRIVATE_KEY`, use a real
-eligible customer wallet to verify the approved-and-redeemed path. The script
-then soft-deactivates the smoke seller profile so it no longer appears in owned
-active profile reloads. Seller private keys are generated in memory. The optional
-customer private key is never printed.
+customer challenge, submits `/api/attest` and signs the seller-owned redeem
+attempt. Without `CUSTOMER_PRIVATE_KEY` the customer wallet is throwaway and
+should be rejected by the live IFRLock check; signed redeem is expected to be
+blocked. With `CUSTOMER_PRIVATE_KEY`, use a real eligible customer wallet to
+verify the approved-and-redeemed path. The script then soft-deactivates the
+smoke seller profile so it no longer appears in owned active profile reloads.
+Seller private keys are generated in memory. The optional customer private key
+is never printed.
 
 ## Security
 
