@@ -156,6 +156,65 @@ export interface CheckoutAccess {
   expiresAt: string | null;
 }
 
+export interface SellerRewardLink {
+  id: string;
+  businessId: string;
+  status: 'APPLIED' | 'VERIFIED' | 'STALE' | 'REVOKED';
+  partnerId: string | null;
+  builderWallet: string | null;
+  requestedAt: string;
+  verifiedAt: string | null;
+  lastCheckedAt: string | null;
+  verificationBlock: string | null;
+  reason: string | null;
+}
+
+export interface RewardOnChainStatus {
+  checkedAt: string;
+  blockNumber: number;
+  chainId: number;
+  contractCodeVerified: boolean;
+  governanceAligned: boolean;
+  partnerId: string;
+  builderRegistered: boolean;
+  builderActive: boolean;
+  builderName: string;
+  partnerExists: boolean;
+  partnerActive: boolean;
+  beneficiary: string | null;
+  beneficiaryMatchesOwner: boolean;
+  maxAllocationRaw: string;
+  rewardAccruedRaw: string;
+  claimedTotalRaw: string;
+  vestedRaw: string;
+  claimableRaw: string;
+  rewardCallerConfigured: boolean;
+  rewardCallerAuthorized: boolean;
+  verified: boolean;
+  submissionReady: boolean;
+  reason: string | null;
+}
+
+export interface RewardEventSummary {
+  id: string;
+  sessionId: string;
+  partnerId: string;
+  customerWallet: string;
+  lockAmountRaw: string;
+  status: 'PENDING' | 'READY' | 'BLOCKED_CALLER' | 'BLOCKED_GOVERNANCE' | 'SUBMITTED' | 'CONFIRMED' | 'SKIPPED' | 'FAILED';
+  reason: string | null;
+  txHash: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SellerRewardStatus {
+  link: SellerRewardLink | null;
+  onChain: RewardOnChainStatus | null;
+  onChainError: string | null;
+  events: RewardEventSummary[];
+}
+
 export interface SellerAuth {
   walletAddress: string;
   signature: string;
@@ -372,6 +431,19 @@ export function getSellerBusinessSessions(businessId: string, auth: SellerAuth, 
     `/api/seller/businesses/${businessId}/sessions?${new URLSearchParams({ limit: String(limit) }).toString()}`,
     { headers: sellerHeaders(auth) }
   );
+}
+
+export function applyForSellerRewards(businessId: string, auth: SellerAuth) {
+  return fetchJSON<{ link: SellerRewardLink }>(`/api/seller/businesses/${businessId}/rewards/apply`, {
+    method: 'POST',
+    headers: sellerHeaders(auth),
+  });
+}
+
+export function getSellerRewardStatus(businessId: string, auth: SellerAuth) {
+  return fetchJSON<SellerRewardStatus>(`/api/seller/businesses/${businessId}/rewards`, {
+    headers: sellerHeaders(auth),
+  });
 }
 
 export function getSellerCheckoutOperators(businessId: string, auth: SellerAuth) {

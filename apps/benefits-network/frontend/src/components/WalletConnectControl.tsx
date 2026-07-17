@@ -116,8 +116,8 @@ export function WalletConnectControl() {
     try {
       if (navigator.share) {
         await navigator.share({
-          title: 'IFRp Benefits Network',
-          text: 'Open IFRp Benefits Network in your wallet browser.',
+          title: 'IFR Benefits Network',
+          text: 'Open IFR Benefits Network in your wallet browser.',
           url: currentUrl,
         });
         setCopyStatus('Share sheet opened.');
@@ -132,7 +132,7 @@ export function WalletConnectControl() {
 
   function getEvidenceText() {
     return [
-      'IFRp Benefits Network wallet test evidence',
+      'IFR Benefits Network wallet test evidence',
       `Time: ${new Date().toISOString()}`,
       `URL: ${currentUrl}`,
       `Surface: ${environment.surface}`,

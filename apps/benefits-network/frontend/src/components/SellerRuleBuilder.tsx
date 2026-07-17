@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useAccount, useConnect, useDisconnect, useSignMessage } from 'wagmi';
 import QRCode from 'react-qr-code';
 import { SellerCatalogManager } from '@/components/SellerCatalogManager';
+import { SellerRewardStatus } from '@/components/SellerRewardStatus';
 import {
   AdminBusinessCreated,
   BenefitRule,
@@ -131,7 +132,7 @@ export function SellerRuleBuilder() {
   );
   const sellerBackupText = useMemo(() => JSON.stringify(
     {
-      app: 'IFRp Shop Benefits Network',
+      app: 'IFR Benefits Network',
       version: 1,
       exportedAt: new Date().toISOString(),
       businessId: businessId || null,
@@ -161,7 +162,7 @@ export function SellerRuleBuilder() {
     const lockedIFR = formatSessionLockedIFR(session.lockAmountRaw);
 
     return [
-      'IFRp Benefits Network session restore receipt',
+      'IFR Benefits Network session restore receipt',
       `Seller: ${selectedBusiness?.name || businessName || businessId || 'IFR Partner Shop'}`,
       `Session: ${session.id}`,
       `Status: ${session.status}`,
@@ -927,6 +928,8 @@ export function SellerRuleBuilder() {
           )}
         </div>
       </div>
+
+      <SellerRewardStatus businessId={businessId} />
 
       <div className="mb-5 rounded-3xl border border-white/10 bg-black/20 p-4">
         <div className="flex flex-wrap items-start justify-between gap-3">

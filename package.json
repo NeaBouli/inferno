@@ -1,6 +1,7 @@
 {
   "scripts": {
     "smoke:benefits": "node scripts/smoke-benefits-network.js",
+    "test:benefits-sw": "node scripts/test-benefits-service-worker.js",
     "ops:benefits-capacity": "scripts/deploy-benefits-network.sh capacity && LIMIT=20 scripts/audit-docker-capacity.sh",
     "qa:benefits-devices": "node scripts/validate-benefits-device-checklist.js",
     "qa:benefits-report": "node scripts/report-benefits-device-checklist.js",

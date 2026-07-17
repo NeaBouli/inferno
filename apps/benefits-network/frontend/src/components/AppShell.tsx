@@ -2,36 +2,54 @@ import Link from 'next/link';
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   return (
-    <main className="min-h-screen bg-[radial-gradient(circle_at_16%_8%,rgba(230,126,34,0.2),transparent_30rem),radial-gradient(circle_at_82%_18%,rgba(39,174,96,0.12),transparent_26rem),linear-gradient(135deg,#080807,#15110f_48%,#090909)] text-stone-50">
-      <header className="mx-auto flex w-full max-w-7xl flex-wrap items-center justify-between gap-4 px-5 py-5">
-        <Link href="/" className="flex items-center gap-3 text-sm font-black uppercase tracking-[0.18em]">
-          <span className="grid h-9 w-9 place-items-center rounded-full border border-orange-300/40 bg-orange-200/10 text-orange-200">
-            IFR
-          </span>
-          <span>IFRp Shop</span>
-        </Link>
-        <nav className="flex flex-wrap items-center gap-2">
-          <Link href="/" className="rounded-full border border-stone-500/30 px-4 py-2 text-xs font-bold uppercase tracking-[0.14em] text-stone-300 transition hover:border-orange-300/60 hover:text-orange-100">
-            App
+    <main className="shop-shell min-h-screen text-stone-50">
+      <header className="shop-header">
+        <div className="shop-header-inner">
+          <Link href="/" className="shop-brand" aria-label="IFR Benefits Network home">
+            <img src="/icons/icon-192.png" alt="Inferno Protocol" width="40" height="40" />
+            <span className="shop-brand-copy">
+              <strong>IFR BENEFITS</strong>
+              <small>Inferno Protocol · $IFRp</small>
+            </span>
           </Link>
-          <Link href="/guide" className="rounded-full border border-stone-500/30 px-4 py-2 text-xs font-bold uppercase tracking-[0.14em] text-stone-300 transition hover:border-orange-300/60 hover:text-orange-100">
+          <nav className="shop-nav" aria-label="Benefits Network navigation">
+          <Link href="/" className="shop-nav-link">
+            Benefits
+          </Link>
+          <a href="/#seller-workspace" className="shop-nav-link">
+            For sellers
+          </a>
+          <Link href="/guide" className="shop-nav-link">
             Guide
           </Link>
-          <a href="/#integrate" className="rounded-full border border-stone-500/30 px-4 py-2 text-xs font-bold uppercase tracking-[0.14em] text-stone-300 transition hover:border-orange-300/60 hover:text-orange-100">
-            Integrate
-          </a>
-          <a href="/#customer-wallet" className="rounded-full border border-stone-500/30 px-4 py-2 text-xs font-bold uppercase tracking-[0.14em] text-stone-300 transition hover:border-orange-300/60 hover:text-orange-100">
-            Lock
+          <a href="/#customer-wallet" className="shop-nav-link">
+            Lock IFR
           </a>
           <a
-            href="https://ifrunit.tech"
-            className="rounded-full bg-orange-300 px-4 py-2 text-xs font-black uppercase tracking-[0.14em] text-stone-950 transition hover:bg-orange-200"
+            href="https://ifrunit.tech/"
+            className="shop-nav-project"
           >
-            IFR Project
+            IFR Unit
           </a>
         </nav>
+        </div>
       </header>
       {children}
+      <footer className="shop-footer">
+        <div className="shop-footer-inner">
+          <div>
+            <strong>Inferno Protocol</strong>
+            <p>IFR Benefits Network · on-chain symbol IFR · social cashtag $IFRp</p>
+          </div>
+          <nav aria-label="Protocol links">
+            <a href="https://ifrunit.tech/">IFR Unit</a>
+            <a href="https://web3.ifrunit.tech/">Web3</a>
+            <a href="https://ifrunit.tech/wiki/">Wiki</a>
+            <a href="https://ifrunit.tech/#contracts">Contracts</a>
+          </nav>
+          <p>© 2026 IFR Protocol · Inferno Protocol</p>
+        </div>
+      </footer>
     </main>
   );
 }

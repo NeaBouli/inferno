@@ -76,10 +76,10 @@
 - [ ] Creator Gateway live (YouTube monetization bridge)
 - [ ] Benefits Network live (merchant onboarding)
 - [ ] IFRp Commerce App / `shop.ifrunit.tech` customer/seller PWA
-  - Core customer/seller PWA, owner-managed staff checkout and basic product/service catalog are implemented; live device acceptance, verified rewards and embedded-wallet decision remain.
+  - Core customer/seller PWA, owner-managed staff checkout, basic product/service catalog and the fail-closed verified-reward foundation are implemented; live device acceptance, governance partner activation, authorized reward submission and embedded-wallet decision remain.
       Master architecture: `docs/ifrp-commerce-app/MASTER_ARCHITECTURE.md`
       Scope: customer wallet, ETH/IFR swap, IFR locking, QR proof, seller scanner, seller discount rules, and verified seller rewards through PartnerVault after governance approval.
-      Current implementation: deployed PWA foundation plus seller profile/rule/history flows, customer IFRLock and proof flows, POS helper, owner-managed checkout operators and product catalog. Remaining scope includes verified rewards, embedded-wallet decision and real-device acceptance.
+      Current implementation: deployed PWA foundation plus seller profile/rule/history flows, customer IFRLock and proof flows, POS helper, owner-managed checkout operators and product catalog. The local M4 foundation adds applications, live governance linkage checks, an atomic reward outbox and read-only vesting status; no Mainnet seller/partner or reward caller is active. Remaining scope includes governance activation/submission, embedded-wallet decision and real-device acceptance.
 - [ ] Guarded buyback automation (BuybackVault activation after 60 days)
 - [ ] Developer SDK + documentation (ethers.js, wagmi, Python)
 - [ ] Bug bounty program (Immunefi)

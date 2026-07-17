@@ -54,7 +54,7 @@ async function verifyHttpSurface() {
   log('API readiness OK');
 
   const manifest = await fetchJson('/manifest.json');
-  assert(manifest.name === 'IFRp Shop Benefits Network', 'manifest name mismatch');
+  assert(manifest.name === 'IFR Benefits Network', 'manifest name mismatch');
   assert(manifest.display === 'standalone', 'manifest display must be standalone');
   assert(manifest.start_url === '/', 'manifest start_url must be /');
   assert(Array.isArray(manifest.icons) && manifest.icons.length >= 2, 'manifest must expose PWA icons');
@@ -62,7 +62,8 @@ async function verifyHttpSurface() {
 
   await fetchOk('/icons/icon-192.png', 'image/png');
   await fetchOk('/icons/icon-512.png', 'image/png');
-  await fetchOk('/sw.js', 'javascript');
+  const serviceWorker = await fetchOk('/sw.js', 'javascript');
+  assert((await serviceWorker.text()).includes("ifr-benefits-v2"), 'service worker cache version mismatch');
   log('PWA assets OK');
 
   const auth = await fetchJson('/api/seller/auth-message?action=business:list&businessId=seller');
@@ -108,12 +109,12 @@ async function verifyPage(contextOptions, label) {
 
   try {
     await gotoAppPage(page, '/');
-    await expectText(page, 'The shop layer for locked IFR access.');
+    await expectText(page, 'Locked IFR. Benefits at checkout.');
     await expectText(page, 'System readiness');
     await expectText(page, 'Live shop diagnostics');
     await expectText(page, 'API + database');
     await expectText(page, 'Ethereum Mainnet');
-    await expectText(page, 'WalletConnect');
+    await expectText(page, 'Wallet coverage');
     await expectText(page, 'Mobile app');
     await expectText(page, 'Install once. Use as customer or seller.');
     await expectText(page, 'Wallet starter kit');
@@ -172,6 +173,7 @@ async function verifyPage(contextOptions, label) {
     await expectText(page, 'Reopen proof');
     await page.getByRole('button', { name: 'Clear' }).click();
     await expectText(page, 'No customer proofs saved on this device yet');
+    await page.getByRole('button', { name: /Seller Offer discounts/i }).click();
     await expectText(page, 'Create a seller entry point');
     await expectText(page, 'Seller categories');
     const codeGenerator = page.locator('#integrate');
@@ -182,7 +184,6 @@ async function verifyPage(contextOptions, label) {
     await expectText(page, 'createIFRCheckout');
     await expectText(page, 'customerUrl');
     await expectText(page, 'Server-side POS JavaScript');
-    await page.getByRole('button', { name: /Seller Offer discounts/i }).click();
     await expectText(page, 'Seller readiness');
     await expectText(page, 'New benefit rule');
     await expectText(page, 'Save new rule');
@@ -211,6 +212,7 @@ async function verifyPage(contextOptions, label) {
     await expectText(page, 'Session history');
     await expectText(page, 'proof links and restore receipts');
     await expectText(page, 'Seller activity');
+    await expectText(page, 'Inferno Protocol');
     if (shouldScreenshot) {
       fs.mkdirSync(screenshotDir, { recursive: true });
       await page.screenshot({
@@ -220,7 +222,7 @@ async function verifyPage(contextOptions, label) {
     }
 
     await gotoAppPage(page, '/guide');
-    await expectText(page, 'IFRp Benefits Network Guide');
+    await expectText(page, 'IFR Benefits Network Guide');
     await expectText(page, 'Customer path');
     await expectText(page, 'Lock IFR in the shop app when needed');
     await expectText(page, 'The Benefits Network is non-custodial');

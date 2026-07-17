@@ -21,6 +21,8 @@ model Business {
   benefitRules    BenefitRule[]
   checkoutOperators CheckoutOperator[]
   products        Product[]
+  rewardLink      SellerRewardLink?
+  rewardEvents    RewardEvent[]
 
   @@index([ownerAddress])
 }
@@ -103,10 +105,49 @@ model Session {
   redeemedAt       DateTime?
   attestAttempts   Int        @default(0)
   auditLogs        AuditLog[]
+  rewardEvent      RewardEvent?
 
   @@index([businessId])
   @@index([benefitRuleId])
   @@index([status])
+}
+
+model SellerRewardLink {
+  id                String   @id @default(cuid())
+  businessId        String   @unique
+  business          Business @relation(fields: [businessId], references: [id])
+  status            String   @default("APPLIED")
+  partnerId         String?  @unique
+  builderWallet     String?
+  requestedAt       DateTime @default(now())
+  verifiedAt        DateTime?
+  lastCheckedAt     DateTime?
+  verificationBlock String?
+  governanceReference String?
+  reason            String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+model RewardEvent {
+  id               String   @id @default(cuid())
+  businessId       String
+  business         Business @relation(fields: [businessId], references: [id])
+  sessionId        String   @unique
+  session          Session  @relation(fields: [sessionId], references: [id])
+  partnerId        String
+  customerWallet   String
+  lockAmountRaw    String
+  chainId          Int
+  status           String   @default("PENDING")
+  reason           String?
+  txHash           String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@unique([customerWallet, partnerId])
+  @@index([businessId, status])
+  @@index([partnerId])
 }
 
 model AuditLog {

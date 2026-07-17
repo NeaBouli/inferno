@@ -1,4 +1,4 @@
-# IFRp Shop Benefits App Architecture
+# IFR Benefits Network App Architecture
 
 Status: active implementation and production handover plan
 Domain: `https://shop.ifrunit.tech`
@@ -38,14 +38,14 @@ The app has two roles:
 
 ### Home / App Hub
 
-- Explain that this is the IFRp Shop / Benefits Network.
+- Explain that this is the IFR Benefits Network; `$IFRp` remains the social cashtag.
 - Show customer and seller role selector.
 - Show PWA install flow and mobile guidance.
 - Show wallet status for customers.
 - Show seller rule manager for sellers.
 - Show integration/code generator for shops.
 - Link to Web3 terminal for lock/swap actions.
-- Link to IFR Project for protocol-level context.
+- Link to IFR Unit for protocol-level context.
 
 ### Customer Flow
 
@@ -121,6 +121,7 @@ If `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` is missing, the frontend must show a s
 8. Add mobile E2E checks for iPad Safari/Chrome and Android MetaMask browser.
 9. Checkout staff mode with owner-managed expiry/revocation and role-aware audit. **Implemented; live device acceptance remains pending.**
 10. Seller product/service catalog and public customer benefit browsing. **Implemented with owner-signed soft-archive, cross-business rule protection and immutable QR-session snapshots.**
+11. Governance-gated seller reward foundation. **Implemented locally: owner application, live BuilderRegistry/PartnerVault linkage checks, atomic redeem outbox and read-only vesting/claim status. Mainnet currently has no registered builders/partners; dedicated authorized submission remains disabled.**
 
 ## Security Notes
 

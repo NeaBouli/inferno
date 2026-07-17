@@ -10,7 +10,7 @@ export const hasWalletConnectProjectId = Boolean(process.env.NEXT_PUBLIC_WALLETC
 
 export const wagmiConfig = hasWalletConnectProjectId
   ? getDefaultConfig({
-      appName: 'IFRp Shop',
+      appName: 'IFR Benefits Network',
       projectId: process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID as string,
       chains,
     })
@@ -19,7 +19,7 @@ export const wagmiConfig = hasWalletConnectProjectId
       connectors: [
         injected(),
         metaMask(),
-        coinbaseWallet({ appName: 'IFRp Shop' }),
+        coinbaseWallet({ appName: 'IFR Benefits Network' }),
       ],
       transports: {
         [mainnet.id]: http(),
