@@ -18,6 +18,9 @@ npm run dev            # http://localhost:3001
 | `CHAIN_ID` | Ethereum chain ID | `11155111` (Sepolia) |
 | `RPC_URL` | JSON-RPC endpoint | required |
 | `IFRLOCK_ADDRESS` | IFRLock contract address | required |
+| `PARTNER_VAULT_ADDRESS` | Optional PartnerVault address for read-only M4 verification | unset |
+| `BUILDER_REGISTRY_ADDRESS` | Optional BuilderRegistry address for read-only M4 verification | unset |
+| `REWARD_CALLER_ADDRESS` | Optional public caller address checked with `authorizedCaller`; never a private key | unset |
 | `ADMIN_SECRET` | Bearer token for /api/admin/* | required |
 | `DATABASE_URL` | Prisma database URL | `file:./dev.db` |
 | `PORT` | Server port | `3001` |
@@ -33,6 +36,9 @@ npm run dev            # http://localhost:3001
 | POST | `/api/admin/businesses/:id/rules` | Admin | Create a benefit rule |
 | PATCH | `/api/admin/rules/:id` | Admin | Update or pause a benefit rule |
 | DELETE | `/api/admin/rules/:id` | Admin | Archive a benefit rule while preserving checkout history |
+| POST | `/api/admin/businesses/:id/rewards/verify` | Admin | Verify a requested PartnerVault/BuilderRegistry link from live contract state |
+| POST | `/api/admin/businesses/:id/rewards/revoke` | Admin | Revoke a local seller reward link |
+| POST | `/api/admin/businesses/:id/rewards/queue` | Admin | Reconcile pending reward outbox rows without submitting a transaction |
 | GET | `/api/seller/auth-message` | Public | Issue server-time wallet message for seller actions |
 | POST | `/api/seller/businesses` | Seller wallet signature | Create wallet-owned seller business |
 | GET | `/api/seller/businesses` | Seller wallet signature | List active seller businesses owned by the wallet |
@@ -43,6 +49,8 @@ npm run dev            # http://localhost:3001
 | PATCH | `/api/seller/products/:id` | Owner wallet signature | Update or archive a product/service |
 | DELETE | `/api/seller/products/:id` | Owner wallet signature | Soft-archive a product and pause linked rules |
 | GET | `/api/seller/businesses/:id/sessions` | Seller wallet signature | List recent QR sessions for an owned seller business |
+| POST | `/api/seller/businesses/:id/rewards/apply` | Owner wallet signature | Apply for governance review; does not create an on-chain partner |
+| GET | `/api/seller/businesses/:id/rewards` | Owner wallet signature | Read local reward events and live PartnerVault vesting/claim status |
 | GET | `/api/seller/businesses/:id/operator-status` | Owner/operator wallet signature | Confirm checkout role for the connected wallet |
 | GET | `/api/seller/businesses/:id/operators` | Owner wallet signature | List checkout operators |
 | POST | `/api/seller/businesses/:id/operators` | Owner wallet signature | Add or reactivate a checkout operator |
@@ -150,6 +158,28 @@ the next server request. Redemption audit payloads record the actor wallet and
 
 Session creation remains public and rate-limited so QR links and POS helpers do
 not need a seller secret. Redemption remains short-lived, signed and one-time.
+
+## Verified Seller Rewards Foundation
+
+M4 reward support is governance-gated and fail-closed. A seller owner may submit
+an application, but only the admin verification route can bind a `bytes32`
+PartnerVault ID. Verification reads the configured chain and requires deployed
+contract bytecode, matching BuilderRegistry owner / PartnerVault admin, an active
+BuilderRegistry entry, an active PartnerVault partner and a beneficiary equal to
+the seller owner wallet.
+
+A successful redeem creates a `PENDING` reward outbox row in the same SQLite
+transaction only for a locally verified link. Seller owner and active checkout
+operator wallets are excluded from reward eligibility. The admin reconciliation
+route repeats all live governance checks, checks PartnerVault anti-double-count
+state and moves the event to `READY`, `BLOCKED_CALLER` or `CONFIRMED`. It never
+signs or broadcasts `recordLockReward`.
+
+`REWARD_CALLER_ADDRESS` is only a public address used for the read-only
+`authorizedCaller` check. No private key, mnemonic or transaction signer belongs
+in this backend. `READY` means contract preconditions were observed; it does not
+mean submitted, confirmed, vested or paid. Reward amounts remain dynamic until an
+authorized transaction executes.
 
 Admin routes remain available for operator setup and recovery, but the public
 seller UX should prefer wallet-owned businesses.

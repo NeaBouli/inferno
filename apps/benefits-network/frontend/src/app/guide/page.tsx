@@ -81,7 +81,7 @@ export default function GuidePage() {
       <section className="mx-auto w-full max-w-7xl px-5 pb-16 pt-6">
         <div className="rounded-[2.25rem] border border-orange-200/15 bg-[linear-gradient(135deg,rgba(248,164,92,0.16),rgba(255,255,255,0.055)_44%,rgba(49,151,103,0.12))] p-6 shadow-2xl shadow-black/30 md:p-10">
           <div className="max-w-4xl">
-            <p className="text-xs font-black uppercase tracking-[0.2em] text-orange-100">IFRp Benefits Network guide</p>
+            <p className="text-xs font-black uppercase tracking-[0.2em] text-orange-100">IFR Benefits Network guide</p>
             <h1 className="mt-4 text-5xl font-black leading-[0.95] text-white md:text-7xl">
               Customer proof and seller checkout, without ceremony.
             </h1>
@@ -94,7 +94,7 @@ export default function GuidePage() {
               href="/"
               className="rounded-full bg-orange-300 px-5 py-3 text-sm font-black uppercase tracking-[0.16em] text-stone-950 shadow-xl shadow-orange-950/40 transition hover:-translate-y-0.5 hover:bg-orange-200"
             >
-              Open app
+              Open benefits
             </a>
             <a
               href="/#customer-wallet"
@@ -106,7 +106,7 @@ export default function GuidePage() {
               href="https://ifrunit.tech"
               className="rounded-full border border-white/15 px-5 py-3 text-sm font-black uppercase tracking-[0.16em] text-stone-100 transition hover:border-orange-200/60"
             >
-              IFR Project
+              IFR Unit
             </a>
           </div>
         </div>

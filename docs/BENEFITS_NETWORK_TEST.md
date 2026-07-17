@@ -142,7 +142,13 @@ catalog items. `tests/catalogRoutes.test.ts` covers owner authorization, cross-b
 binding rejection, public active-only reads, archive behavior and immutable session terms.
 The public customer catalog is available at `/s/{businessId}`. Run
 `npm run test:migration-upgrade` to verify a populated prior database keeps its business,
-rule, session and audit rows while adding the catalog and snapshot schema.
+rule, session and audit rows while adding the catalog, snapshot and reward-ledger schema.
+
+`tests/rewardRoutes.test.ts` covers the M4 reward foundation: owner-only application,
+admin-only live verification, fail-closed governance changes, atomic redeem/outbox creation,
+one reward event per wallet/partner, 9-decimal base-unit conversion, owner self-dealing
+exclusion and owner-only reward visibility. The production backend does not contain a
+transaction signer and cannot submit `recordLockReward`.
 
 ## Backend HTTP Smoke
 

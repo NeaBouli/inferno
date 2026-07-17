@@ -76,7 +76,7 @@ export default function CustomerSession({ params }: { params: { sessionId: strin
         : 'not connected';
 
     return [
-      'IFRp Benefits Network customer proof',
+      'IFR Benefits Network customer proof',
       `Session: ${params.sessionId}`,
       `Seller: ${business?.name || status.businessId}`,
       `Status: ${status.status}`,
@@ -177,7 +177,7 @@ export default function CustomerSession({ params }: { params: { sessionId: strin
     try {
       if (navigator.share) {
         await navigator.share({
-          title: `${business?.name || 'IFRp'} customer proof`,
+          title: `${business?.name || 'IFR'} customer proof`,
           text: proofReceipt,
         });
         setError('');

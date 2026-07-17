@@ -3,10 +3,18 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
+const optionalAddress = z.preprocess(
+  (value) => value === '' ? undefined : value,
+  z.string().regex(/^0x[a-fA-F0-9]{40}$/).optional()
+);
+
 const envSchema = z.object({
   CHAIN_ID: z.coerce.number().int().positive().default(11155111),
   RPC_URL: z.string().url(),
   IFRLOCK_ADDRESS: z.string().regex(/^0x[a-fA-F0-9]{40}$/),
+  PARTNER_VAULT_ADDRESS: optionalAddress,
+  BUILDER_REGISTRY_ADDRESS: optionalAddress,
+  REWARD_CALLER_ADDRESS: optionalAddress,
   ADMIN_SECRET: z.string().min(8),
   DATABASE_URL: z.string().default('file:./dev.db'),
   PORT: z.coerce.number().int().positive().default(3001),

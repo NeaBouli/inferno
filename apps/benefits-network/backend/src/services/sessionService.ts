@@ -2,6 +2,7 @@ import crypto from 'crypto';
 import { PrismaClient } from '@prisma/client';
 import { config } from '../config';
 import { checkLock, recoverSigner } from './ifrLockService';
+import { toIFRBaseUnits } from './rewardService';
 
 const prisma = new PrismaClient();
 
@@ -364,7 +365,7 @@ export async function redeem(
   const update = await prisma.$transaction(async (tx) => {
     const business = await tx.business.findUnique({
       where: { id: session.businessId },
-      select: { ownerAddress: true, active: true },
+      select: { ownerAddress: true, active: true, rewardLink: true },
     });
     const ownerAuthorized = actor.role === 'OWNER' && Boolean(
       business?.active && business.ownerAddress &&
@@ -401,6 +402,59 @@ export async function redeem(
           }),
         },
       });
+
+      const rewardLink = business?.rewardLink;
+      if (rewardLink?.status === 'VERIFIED' && rewardLink.partnerId && session.recoveredAddress && session.lockAmountRaw) {
+        const customerWallet = session.recoveredAddress;
+        const ownerIsCustomer = Boolean(
+          business?.ownerAddress && business.ownerAddress.toLowerCase() === customerWallet.toLowerCase()
+        );
+        const operatorIsCustomer = Boolean(await tx.checkoutOperator.findFirst({
+          where: {
+            businessId: session.businessId,
+            walletAddress: customerWallet,
+            active: true,
+            OR: [{ expiresAt: null }, { expiresAt: { gt: redeemedAt } }],
+          },
+          select: { id: true },
+        }));
+
+        if (ownerIsCustomer || operatorIsCustomer) {
+          await tx.auditLog.create({
+            data: {
+              sessionId,
+              type: 'REWARD_SKIPPED_POLICY',
+              payload: JSON.stringify({ reason: ownerIsCustomer ? 'seller owner wallet' : 'active checkout operator wallet' }),
+            },
+          });
+        } else {
+          let lockAmountBaseUnits: string | null = null;
+          try {
+            lockAmountBaseUnits = toIFRBaseUnits(session.lockAmountRaw);
+          } catch {
+            await tx.auditLog.create({
+              data: {
+                sessionId,
+                type: 'REWARD_OUTBOX_SKIPPED',
+                payload: JSON.stringify({ reason: 'invalid lock amount' }),
+              },
+            });
+          }
+          if (lockAmountBaseUnits) {
+            const now = new Date();
+            await tx.$executeRaw`
+              INSERT OR IGNORE INTO "RewardEvent" (
+                "id", "businessId", "sessionId", "partnerId", "customerWallet",
+                "lockAmountRaw", "chainId", "status", "reason", "createdAt", "updatedAt"
+              ) VALUES (
+                ${crypto.randomUUID()}, ${session.businessId}, ${sessionId}, ${rewardLink.partnerId},
+                ${customerWallet}, ${lockAmountBaseUnits}, ${config.CHAIN_ID},
+                'PENDING', 'Awaiting live governance and caller reconciliation', ${now}, ${now}
+              )
+            `;
+          }
+        }
+      }
     }
     return result;
   });

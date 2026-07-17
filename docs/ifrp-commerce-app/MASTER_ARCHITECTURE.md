@@ -1,6 +1,6 @@
 # IFRp Commerce App - Master Architecture
 
-Status: active implementation; M1/M2 core is deployed, M3-M5 remain incremental.
+Status: active implementation; M1/M2 core is deployed, M3 and the safe M4 foundation are implemented locally, M4 governance activation and M5 remain incremental.
 
 ## 1. Product Goal
 
@@ -552,11 +552,17 @@ MVP should be installable:
 
 ### M4 - Verified Seller Rewards
 
-- governance approval workflow;
-- BuilderRegistry/PartnerVault linkage;
-- authorized reward caller;
-- reward event queue;
-- PartnerVault record/claim visibility.
+- governance approval workflow; **seller application and admin live-verification flow implemented locally; no Mainnet seller is approved yet**
+- BuilderRegistry/PartnerVault linkage; **runtime checks require aligned Governance owner/admin, active builder, active partner and matching beneficiary**
+- authorized reward caller; **read-only authorization check implemented; no signer or automated transaction path enabled**
+- reward event queue; **atomic redeem outbox plus idempotent reconciliation implemented; events remain blocked until caller authorization**
+- PartnerVault record/claim visibility. **owner-only Seller UI reads accrued, vested and claimable state; no claim/write button**
+
+Mainnet read-only evidence on 17.07.2026 at block 25,545,631 showed BuilderRegistry count `0`,
+PartnerVault `totalAllocated = 0`, `totalRewarded = 0`, `totalClaimed = 0`, and no configured
+reward caller in the Benefits backend. PartnerVault holds 40M IFR, but this is a governed pool,
+not an active or promised seller payout. Governance registration, a dedicated authorized adapter
+and production deployment remain required before any reward event may be submitted.
 
 ### M5 - Native Wrapper / Embedded Wallet
 

@@ -409,12 +409,20 @@ nav #connect {
   margin-top: 34px !important;
 }
 
+.template-hero .hero-platform-actions {
+  display: flex !important;
+  width: 100% !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 12px !important;
+}
+
 .template-hero .hero-web3-btn {
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
   align-self: center !important;
-  width: min(100%, 240px) !important;
+  width: min(48%, 220px) !important;
   min-height: 48px !important;
   padding: 12px 22px !important;
   position: relative !important;
@@ -471,6 +479,32 @@ nav #connect {
     inset 0 -1px 0 rgba(56, 20, 8, .18) !important;
   filter: saturate(1.04) !important;
   transform: translateY(-1px) !important;
+}
+
+.template-hero .hero-benefits-btn {
+  border-color: rgba(47, 106, 69, .54) !important;
+  background:
+    linear-gradient(180deg, rgba(255, 248, 239, .2) 0%, rgba(255, 248, 239, 0) 44%),
+    linear-gradient(135deg, #417b55 0%, #2f6a45 52%, #204c31 100%) !important;
+  box-shadow:
+    0 12px 28px rgba(47, 106, 69, .12),
+    0 8px 18px rgba(47, 106, 69, .15),
+    inset 0 1px 0 rgba(255, 255, 255, .25),
+    inset 0 -1px 0 rgba(17, 55, 32, .2) !important;
+  animation-delay: 1.1s !important;
+}
+
+.template-hero .hero-benefits-btn:hover {
+  border-color: rgba(47, 106, 69, .72) !important;
+  background:
+    linear-gradient(180deg, rgba(255, 248, 239, .25) 0%, rgba(255, 248, 239, 0) 44%),
+    linear-gradient(135deg, #4b8960 0%, #356f4b 52%, #245437 100%) !important;
+  box-shadow:
+    0 14px 30px rgba(47, 106, 69, .15),
+    0 10px 22px rgba(47, 106, 69, .2),
+    0 0 0 4px rgba(47, 106, 69, .06),
+    inset 0 1px 0 rgba(255, 255, 255, .3),
+    inset 0 -1px 0 rgba(17, 55, 32, .2) !important;
 }
 
 @keyframes hero-web3-ember-breathe {
@@ -836,7 +870,7 @@ nav #connect {
   }
 
   .template-hero .hero-web3-btn {
-    width: min(100%, 220px) !important;
+    width: min(48%, 210px) !important;
     min-height: 44px !important;
     padding: 12px 20px !important;
   }
@@ -851,5 +885,18 @@ nav #connect {
 @media (min-width: 700px) and (max-width: 900px) {
   .template-hero .hero-ledger-stack {
     margin-top: 50px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .template-hero .hero-platform-actions {
+    gap: 8px !important;
+  }
+
+  .template-hero .hero-web3-btn {
+    width: calc(50% - 4px) !important;
+    min-width: 0 !important;
+    padding: 11px 10px !important;
+    font-size: 11px !important;
   }
 }

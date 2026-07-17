@@ -143,7 +143,7 @@ export default function BusinessConsole({ params }: { params: { businessId: stri
       ? `${status.recoveredAddress.slice(0, 6)}...${status.recoveredAddress.slice(-4)}`
       : 'not verified yet';
     return [
-      'IFRp Benefits Network checkout receipt',
+      'IFR Benefits Network checkout receipt',
       `Seller: ${business?.name || params.businessId}`,
       `Session: ${session.sessionId}`,
       `Status: ${status?.status || 'PENDING'}`,

@@ -7,6 +7,7 @@ import { assertSellerBusinessLimit } from '../services/sellerLimits';
 import { resolveCheckoutActor } from '../services/sellerAccess';
 import { sellerRateLimiter } from '../middleware/rateLimiter';
 import { validate } from '../middleware/validator';
+import { getRewardOnChainStatus } from '../services/rewardService';
 
 const router = Router();
 const MAX_ACTIVE_CHECKOUT_OPERATORS = 10;
@@ -635,6 +636,76 @@ router.get('/businesses/:id/sessions', sellerRateLimiter, async (req, res, next)
           : session.benefitRule?.requiredLockIFR ?? session.business.requiredLockIFR,
       })),
     });
+  } catch (err) {
+    handleSellerError(err, res, next);
+  }
+});
+
+router.post('/businesses/:id/rewards/apply', sellerRateLimiter, async (req, res, next) => {
+  try {
+    const owner = await requireBusinessOwner(req, 'rewards:apply', req.params.id);
+    const existing = await prisma.sellerRewardLink.findUnique({ where: { businessId: req.params.id } });
+    if (existing?.status === 'VERIFIED') {
+      res.status(409).json({ error: 'Seller reward link is already verified' });
+      return;
+    }
+    const link = await prisma.sellerRewardLink.upsert({
+      where: { businessId: req.params.id },
+      create: {
+        businessId: req.params.id,
+        status: 'APPLIED',
+        builderWallet: owner,
+        reason: 'Awaiting BuilderRegistry and PartnerVault governance approval',
+      },
+      update: {
+        status: 'APPLIED',
+        partnerId: null,
+        builderWallet: owner,
+        requestedAt: new Date(),
+        verifiedAt: null,
+        lastCheckedAt: null,
+        verificationBlock: null,
+        reason: 'Awaiting BuilderRegistry and PartnerVault governance approval',
+      },
+    });
+    res.status(existing ? 200 : 201).json({ link });
+  } catch (err) {
+    handleSellerError(err, res, next);
+  }
+});
+
+router.get('/businesses/:id/rewards', sellerRateLimiter, async (req, res, next) => {
+  try {
+    const owner = await requireBusinessOwner(req, 'rewards:read', req.params.id);
+    const link = await prisma.sellerRewardLink.findUnique({ where: { businessId: req.params.id } });
+    const events = await prisma.rewardEvent.findMany({
+      where: { businessId: req.params.id },
+      orderBy: { createdAt: 'desc' },
+      take: 50,
+      select: {
+        id: true,
+        sessionId: true,
+        partnerId: true,
+        customerWallet: true,
+        lockAmountRaw: true,
+        status: true,
+        reason: true,
+        txHash: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+
+    let onChain = null;
+    let onChainError: string | null = null;
+    if (link?.partnerId) {
+      try {
+        onChain = await getRewardOnChainStatus(owner, link.partnerId);
+      } catch {
+        onChainError = 'On-chain reward status is temporarily unavailable';
+      }
+    }
+    res.json({ link, onChain, onChainError, events });
   } catch (err) {
     handleSellerError(err, res, next);
   }

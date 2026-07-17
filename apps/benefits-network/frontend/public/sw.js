@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ifr-benefits-v1';
+const CACHE_NAME = 'ifr-benefits-v2';
 const PRECACHE_URLS = ['/', '/manifest.json'];
 
 self.addEventListener('install', (event) => {
@@ -20,7 +20,7 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  // Network-first for API calls
+  // API responses and page navigations must not be pinned to an old app release.
   if (event.request.url.includes('/api/')) {
     event.respondWith(
       fetch(event.request).catch(() =>
@@ -33,7 +33,23 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Cache-first for static assets
+  if (event.request.mode === 'navigate') {
+    event.respondWith(
+      fetch(event.request)
+        .then(async (response) => {
+          const requestUrl = new URL(event.request.url);
+          if (response.ok && requestUrl.origin === self.location.origin && requestUrl.pathname === '/') {
+            const cache = await caches.open(CACHE_NAME);
+            await cache.put('/', response.clone());
+          }
+          return response;
+        })
+        .catch(() => caches.match('/'))
+    );
+    return;
+  }
+
+  // Versioned static assets can remain cache-first.
   event.respondWith(
     caches.match(event.request).then((cached) => cached || fetch(event.request))
   );

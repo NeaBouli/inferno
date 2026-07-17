@@ -99,7 +99,7 @@ function PwaInstallCard() {
         'Open shop.ifrunit.tech in Safari for the cleanest install path.',
         'Tap the Share icon in the browser toolbar.',
         'Choose Add to Home Screen. In Chrome on iPad, open Share first, then Add to Home Screen if iOS offers it.',
-        'Open IFRp Shop from the new home-screen icon.',
+        'Open IFR Benefits from the new home-screen icon.',
       ]);
     } else if (isAndroid) {
       setPlatform('android');
@@ -428,8 +428,8 @@ function SystemReadinessCard() {
       ok: chainReady,
     },
     {
-      label: 'WalletConnect',
-      value: hasWalletConnectProjectId ? 'Configured' : 'Not configured',
+      label: 'Wallet coverage',
+      value: hasWalletConnectProjectId ? 'Multi-wallet ready' : 'Browser wallets active',
       ok: hasWalletConnectProjectId,
     },
   ];
@@ -451,7 +451,7 @@ function SystemReadinessCard() {
         </button>
       </div>
       <p className="mt-3 text-sm leading-6 text-stone-300">
-        Public readiness checks for the app layer. WalletConnect needs a real project ID before the full mobile wallet modal can be treated as production-ready.
+        Public checks for this app. Browser wallet apps and extensions are active; universal WalletConnect coverage still requires its production project configuration.
       </p>
 
       <div className="mt-4 grid gap-2">
@@ -479,105 +479,100 @@ function SystemReadinessCard() {
 export default function Home() {
   const [role, setRole] = useState<Role>('customer');
 
+  useEffect(() => {
+    const syncRoleFromHash = () => {
+      if (window.location.hash === '#seller-workspace') setRole('seller');
+    };
+    syncRoleFromHash();
+    window.addEventListener('hashchange', syncRoleFromHash);
+    return () => window.removeEventListener('hashchange', syncRoleFromHash);
+  }, []);
+
   return (
     <AppShell>
-      <section className="mx-auto grid w-full max-w-7xl gap-8 px-5 pb-16 pt-4 lg:grid-cols-[1.03fr_0.97fr] lg:items-start">
-        <div className="pt-5">
+      <section className="mx-auto grid w-full max-w-7xl gap-8 px-5 pb-10 pt-6 sm:pt-10 lg:grid-cols-[0.82fr_1.18fr] lg:items-start">
+        <div>
           <div className="inline-flex items-center gap-3 rounded-full border border-orange-200/20 bg-black/25 px-4 py-2 text-xs font-black uppercase tracking-[0.18em] text-orange-100">
             <span className="h-2 w-2 rounded-full bg-green-300 shadow-[0_0_22px_rgba(134,239,172,0.9)]" />
-            IFRp Benefits Network
+            Inferno Protocol · IFR Benefits Network
           </div>
-          <h1 className="mt-6 max-w-4xl text-5xl font-black leading-[0.92] text-white md:text-7xl">
-            The shop layer for locked IFR access.
+          <h1 className="mt-4 max-w-4xl text-4xl font-black leading-[0.98] text-white sm:mt-6 sm:text-5xl md:text-6xl">
+            Locked IFR. Benefits at checkout.
           </h1>
-          <p className="mt-6 max-w-2xl text-lg leading-8 text-stone-300">
-            One app for customers and sellers: wallet status, QR proofs, discount rules, checkout redemption and developer handoff links for shops that want to accept IFR access.
+          <p className="mt-4 max-w-2xl text-base leading-7 text-stone-300 sm:mt-6 sm:text-lg sm:leading-8">
+            Customers prove access without sending tokens. Sellers publish offers, create a one-time QR checkout and redeem an approved benefit once.
           </p>
 
-          <div className="mt-8 grid gap-3 sm:grid-cols-2">
+          <div id="choose-mode" className="mt-6 grid scroll-mt-36 grid-cols-2 gap-3 sm:mt-8" aria-label="Choose app mode">
             <button
               type="button"
               onClick={() => setRole('customer')}
-              className={`rounded-3xl border p-5 text-left transition ${
+              aria-pressed={role === 'customer'}
+              className={`rounded-3xl border p-4 text-left transition sm:p-5 ${
                 role === 'customer'
                   ? 'border-orange-300 bg-orange-300/15 shadow-2xl shadow-orange-950/40'
                   : 'border-white/10 bg-white/[0.05] hover:border-orange-200/50'
               }`}
             >
               <span className="text-xs font-bold uppercase tracking-[0.18em] text-orange-200">Customer</span>
-              <span className="mt-3 block text-xl font-black text-white">Unlock benefits</span>
-              <span className="mt-2 block text-sm leading-6 text-stone-300">
+              <span className="mt-2 block text-base font-black text-white sm:mt-3 sm:text-xl">Unlock benefits</span>
+              <span className="mt-2 hidden text-sm leading-6 text-stone-300 sm:block">
                 Connect wallet, read IFR status, lock access in-app, and verify seller QR sessions.
               </span>
             </button>
             <button
               type="button"
               onClick={() => setRole('seller')}
-              className={`rounded-3xl border p-5 text-left transition ${
+              aria-pressed={role === 'seller'}
+              className={`rounded-3xl border p-4 text-left transition sm:p-5 ${
                 role === 'seller'
                   ? 'border-orange-300 bg-orange-300/15 shadow-2xl shadow-orange-950/40'
                   : 'border-white/10 bg-white/[0.05] hover:border-orange-200/50'
               }`}
             >
               <span className="text-xs font-bold uppercase tracking-[0.18em] text-orange-200">Seller</span>
-              <span className="mt-3 block text-xl font-black text-white">Offer discounts</span>
-              <span className="mt-2 block text-sm leading-6 text-stone-300">
+              <span className="mt-2 block text-base font-black text-white sm:mt-3 sm:text-xl">Offer discounts</span>
+              <span className="mt-2 hidden text-sm leading-6 text-stone-300 sm:block">
                 Create benefit rules, launch a scanner, verify locked IFR and redeem each checkout once.
               </span>
             </button>
           </div>
 
-          <div className="mt-8 flex flex-wrap gap-3">
+          <div className="mt-6 flex flex-wrap gap-3 sm:mt-8">
             <a
-              href="#customer-wallet"
+              href={role === 'customer' ? '#customer-wallet' : '#seller-workspace'}
               className="rounded-full bg-orange-300 px-5 py-3 text-sm font-black uppercase tracking-[0.16em] text-stone-950 shadow-xl shadow-orange-950/40 transition hover:-translate-y-0.5 hover:bg-orange-200"
             >
-              Lock IFR
-            </a>
-            <a
-              href="#integrate"
-              className="rounded-full border border-white/15 px-5 py-3 text-sm font-black uppercase tracking-[0.16em] text-stone-100 transition hover:border-orange-200/60"
-            >
-              Generate shop link
+              {role === 'customer' ? 'Open wallet' : 'Open seller tools'}
             </a>
             <a
               href="/guide"
               className="rounded-full border border-white/15 px-5 py-3 text-sm font-black uppercase tracking-[0.16em] text-stone-100 transition hover:border-orange-200/60"
             >
-              Open guide
-            </a>
-            <a
-              href="https://ifrunit.tech"
-              className="rounded-full border border-white/15 px-5 py-3 text-sm font-black uppercase tracking-[0.16em] text-stone-100 transition hover:border-orange-200/60"
-            >
-              IFR Project
+              How it works
             </a>
           </div>
-
-          <div className="mt-10 grid gap-3 sm:grid-cols-2">
-            {flowSteps.map((step, index) => (
-              <article key={step.title} className="rounded-3xl border border-white/10 bg-black/20 p-5">
-                <p className="font-mono text-sm text-orange-200">0{index + 1}</p>
-                <h2 className="mt-3 text-xl font-black text-white">{step.title}</h2>
-                <p className="mt-2 text-sm leading-6 text-stone-300">{step.body}</p>
-              </article>
-            ))}
-          </div>
+          <p className="mt-4 max-w-xl text-xs leading-5 text-stone-400 sm:mt-6 sm:text-sm sm:leading-6">
+            Non-custodial: the app never asks for a seed phrase and never moves tokens during a benefit check.
+          </p>
         </div>
 
-        <div className="grid gap-5">
-          <SystemReadinessCard />
-          <PwaInstallCard />
-          <WalletStarterKit />
+        <div id="seller-workspace" className="grid scroll-mt-36 gap-5">
           {role === 'customer' ? (
             <>
               <WalletStatus />
+              <PwaInstallCard />
               <CustomerProofHistory />
+              <WalletStarterKit />
             </>
           ) : (
-            <SellerRuleBuilder />
+            <>
+              <SellerRuleBuilder />
+              <CodeGenerator />
+              <PwaInstallCard />
+            </>
           )}
-          <section className="rounded-[2rem] border border-white/10 bg-black/20 p-5">
+          {role === 'seller' ? <section className="rounded-[2rem] border border-white/10 bg-black/20 p-5">
             <p className="text-xs font-bold uppercase tracking-[0.18em] text-stone-400">
               Seller categories
             </p>
@@ -588,29 +583,44 @@ export default function Home() {
                 </span>
               ))}
             </div>
-          </section>
+          </section> : null}
         </div>
       </section>
 
-      <section className="mx-auto grid w-full max-w-7xl gap-5 px-5 pb-16 lg:grid-cols-[0.9fr_1.1fr]">
+      <section className="mx-auto w-full max-w-7xl px-5 pb-12">
+        <div className="border-y border-white/10 py-8">
+          <p className="text-xs font-black uppercase tracking-[0.18em] text-orange-200/80">One checkout, four clear steps</p>
+          <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {flowSteps.map((step, index) => (
+              <article key={step.title} className="rounded-3xl border border-white/10 bg-black/20 p-5">
+                <p className="font-mono text-sm text-orange-200">0{index + 1}</p>
+                <h2 className="mt-3 text-xl font-black text-white">{step.title}</h2>
+                <p className="mt-2 text-sm leading-6 text-stone-300">{step.body}</p>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="mx-auto grid w-full max-w-7xl gap-5 px-5 pb-16 lg:grid-cols-[1.08fr_0.92fr]">
         <div className="rounded-[2rem] border border-white/10 bg-[#160f0b] p-6">
-          <p className="text-xs font-black uppercase tracking-[0.18em] text-orange-200/80">For shops</p>
-          <h2 className="mt-3 text-3xl font-black text-white">A discount rule becomes a checkout proof.</h2>
+          <p className="text-xs font-black uppercase tracking-[0.18em] text-orange-200/80">For customers and sellers</p>
+          <h2 className="mt-3 text-3xl font-black text-white">A lock check, not a token payment.</h2>
           <p className="mt-4 text-sm leading-7 text-stone-300">
-            Sellers do not need to custody customer tokens. They configure what a locked IFR balance unlocks, then the app issues a short-lived QR session. The customer signs, the backend checks IFRLock, and the seller redeems the approved benefit once.
+            The customer keeps custody of IFR. A short-lived signed proof checks the selected seller rule against IFRLock; the seller grants the benefit and redeems that checkout once.
           </p>
-          <div className="mt-5 grid gap-3 text-sm text-stone-300">
+          <div className="mt-5 grid gap-3 text-sm text-stone-300 sm:grid-cols-2">
             <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
-              <strong className="text-white">Rule data</strong>
-              <p className="mt-1">Category, product/service, discount, required IFR and TTL.</p>
+              <strong className="text-white">What the seller sees</strong>
+              <p className="mt-1">Product, discount, required locked IFR, approval state and expiry.</p>
             </div>
             <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
-              <strong className="text-white">Proof data</strong>
-              <p className="mt-1">Business ID, rule ID, nonce, expiry, wallet signature and on-chain lock status.</p>
+              <strong className="text-white">What stays private</strong>
+              <p className="mt-1">No seed phrase, no private key and no transfer during verification.</p>
             </div>
           </div>
         </div>
-        <CodeGenerator />
+        <SystemReadinessCard />
       </section>
     </AppShell>
   );

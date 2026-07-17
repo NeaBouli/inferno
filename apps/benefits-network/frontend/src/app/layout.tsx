@@ -3,14 +3,14 @@ import { Providers } from './providers';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'IFRp Shop | Benefits Network',
+  title: 'IFR Benefits | Customer & Seller App',
   description: 'Customer and seller app for IFR locked-access benefits, QR verification, discounts and shop integrations.',
   manifest: '/manifest.json',
   alternates: {
     canonical: 'https://shop.ifrunit.tech',
   },
   openGraph: {
-    title: 'IFRp Shop | Benefits Network',
+    title: 'IFR Benefits | Customer & Seller App',
     description: 'Use locked IFR access at participating sellers. Create rules, scan QR proofs and redeem benefits.',
     url: 'https://shop.ifrunit.tech',
     siteName: 'Inferno Protocol',
@@ -19,7 +19,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: '#C0392B',
+  themeColor: '#F5F1E8',
   width: 'device-width',
   initialScale: 1,
   maximumScale: 1,
@@ -32,7 +32,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="icon" href="/icons/icon-192.png" />
         <link rel="apple-touch-icon" href="/icons/icon-192.png" />
       </head>
-      <body className="min-h-screen bg-[#0a0a0a] text-white antialiased">
+      <body className="shop-body min-h-screen antialiased">
         <Providers>{children}</Providers>
         <script
           dangerouslySetInnerHTML={{

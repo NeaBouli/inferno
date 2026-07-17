@@ -5,7 +5,7 @@ const path = require('path');
 
 const root = path.resolve(__dirname, '..');
 const migrationsDir = path.join(root, 'prisma', 'migrations');
-const targetMigration = '20260717015000_add_product_catalog';
+const targetMigration = '20260717030000_add_verified_seller_rewards';
 const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'benefits-populated-upgrade-'));
 const dbPath = path.join(tempDir, 'upgrade.db');
 
@@ -68,9 +68,9 @@ try {
 
   const tables = sqlite(`
     SELECT COUNT(*) FROM sqlite_master
-    WHERE type = 'table' AND name IN ('CheckoutOperator', 'Product');
+    WHERE type = 'table' AND name IN ('CheckoutOperator', 'Product', 'SellerRewardLink', 'RewardEvent');
   `);
-  if (tables !== '2') throw new Error(`Expected CheckoutOperator and Product tables, got ${tables}`);
+  if (tables !== '4') throw new Error(`Expected CheckoutOperator, Product and reward tables, got ${tables}`);
 
   const productIdColumn = sqlite("SELECT COUNT(*) FROM pragma_table_info('BenefitRule') WHERE name='productId';");
   const snapshotColumns = sqlite(`
@@ -92,6 +92,13 @@ try {
       CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
     );
     UPDATE BenefitRule SET productId = 'upgrade-product' WHERE id = 'existing-rule';
+    INSERT INTO SellerRewardLink (
+      id, businessId, status, builderWallet, requestedAt, createdAt, updatedAt
+    ) VALUES (
+      'upgrade-reward-link', 'migration-fixture', 'APPLIED',
+      '0x4f632748460E5277bF8435259cADce440AbAC254', CURRENT_TIMESTAMP,
+      CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+    );
   `);
   const foreignKeyErrors = sqlite('PRAGMA foreign_key_check;');
   if (foreignKeyErrors) throw new Error(`Foreign-key errors after migration:\n${foreignKeyErrors}`);
