@@ -1,9 +1,9 @@
-const CACHE_NAME = 'ifr-benefits-v3';
+const CACHE_NAME = 'ifr-benefits-v4';
 const PRECACHE_URLS = [
   '/',
   '/manifest.json',
-  '/icons/ifr-icon-192-v1.png',
-  '/icons/ifr-icon-512-v1.png',
+  '/icons/ifr-icon-192-v2.png',
+  '/icons/ifr-icon-512-v2.png',
 ];
 
 self.addEventListener('install', (event) => {
