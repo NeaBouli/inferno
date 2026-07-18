@@ -2,6 +2,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const { createHash } = require('crypto');
 const { chromium, devices } = require('playwright');
 
 const baseUrl = (process.env.BENEFITS_BASE_URL || 'https://shop.ifrunit.tech').replace(/\/$/, '');
@@ -41,6 +42,12 @@ async function fetchOk(route, expectedContentType) {
   return response;
 }
 
+async function expectSha256(route, expectedHash) {
+  const response = await fetchOk(route);
+  const digest = createHash('sha256').update(Buffer.from(await response.arrayBuffer())).digest('hex');
+  assert(digest === expectedHash, `${route} does not match the official IFR brand asset`);
+}
+
 async function verifyHttpSurface() {
   const health = await fetchJson('/api/health');
   assert(health.status === 'ok', `/api/health status is ${health.status}`);
@@ -58,12 +65,20 @@ async function verifyHttpSurface() {
   assert(manifest.display === 'standalone', 'manifest display must be standalone');
   assert(manifest.start_url === '/', 'manifest start_url must be /');
   assert(Array.isArray(manifest.icons) && manifest.icons.length >= 2, 'manifest must expose PWA icons');
+  assert(manifest.icons[0].src === '/icons/ifr-icon-192-v1.png', 'manifest 192 icon mismatch');
+  assert(manifest.icons[1].src === '/icons/ifr-icon-512-v1.png', 'manifest 512 icon mismatch');
+  assert(manifest.icons.every((icon) => icon.purpose === 'any'), 'official icons must not claim maskable safe-zone support');
   log('PWA manifest OK');
 
-  await fetchOk('/icons/icon-192.png', 'image/png');
-  await fetchOk('/icons/icon-512.png', 'image/png');
+  await expectSha256('/icons/ifr-icon-32-v1.png', 'cd4f5ca2b84ee3c188c1a9940e51febd966b0796fe078a4489b413b680ff54e8');
+  await expectSha256('/icons/ifr-icon-180-v1.png', '66efa6b6551151367639f4f92eb9c9766b295b12c3792c2e65bf47a0a446af76');
+  await expectSha256('/icons/ifr-icon-192-v1.png', 'c2e06aa93d6ba47f30d0ccd14d2a8d9a16c04841e56cb7f4f2bb783e86fdf203');
+  await expectSha256('/icons/ifr-icon-512-v1.png', '6f029513ff76f3482418da9792e6f9f3545f0cc18b88740fe1f61db50fbe87f1');
+  await expectSha256('/icons/icon-192.png', 'c2e06aa93d6ba47f30d0ccd14d2a8d9a16c04841e56cb7f4f2bb783e86fdf203');
+  await expectSha256('/icons/icon-512.png', '6f029513ff76f3482418da9792e6f9f3545f0cc18b88740fe1f61db50fbe87f1');
+  await fetchOk('/icons/favicon-v1.ico', 'image/x-icon');
   const serviceWorker = await fetchOk('/sw.js', 'javascript');
-  assert((await serviceWorker.text()).includes("ifr-benefits-v2"), 'service worker cache version mismatch');
+  assert((await serviceWorker.text()).includes("ifr-benefits-v3"), 'service worker cache version mismatch');
   log('PWA assets OK');
 
   const auth = await fetchJson('/api/seller/auth-message?action=business:list&businessId=seller');
