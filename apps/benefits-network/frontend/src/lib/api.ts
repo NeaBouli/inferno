@@ -313,14 +313,21 @@ function adminHeaders(adminSecret: string) {
   return { Authorization: `Bearer ${adminSecret}` };
 }
 
-export function buildSellerAuthMessage(action: string, businessId: string, timestamp: string) {
-  return [
+export function buildSellerAuthMessage(
+  action: string,
+  businessId: string,
+  timestamp: string,
+  binding?: { nonce: string; scope: string }
+) {
+  const lines = [
     'IFR Benefits Network - Seller Authorization',
     `Action: ${action}`,
     `Business: ${businessId || 'new'}`,
     `Timestamp: ${timestamp}`,
-    'Only sign this message inside shop.ifrunit.tech.',
-  ].join('\n');
+  ];
+  if (binding) lines.push(`Scope: ${binding.scope}`, `Nonce: ${binding.nonce}`);
+  lines.push('Only sign this message inside shop.ifrunit.tech.');
+  return lines.join('\n');
 }
 
 export function getSellerAuthMessage(
@@ -399,6 +406,7 @@ export function createSellerBusiness(auth: SellerAuth, input: AdminBusinessInput
       ownerAddress: auth.walletAddress,
       signature: auth.signature,
       timestamp: auth.timestamp,
+      nonce: auth.nonce,
     }),
   });
 }

@@ -102,10 +102,12 @@ SCREENSHOT_DIR=/Users/gio/Desktop npm run smoke:benefits
 ```
 
 The smoke checks `shop.ifrunit.tech` by default: API health/readiness, PWA
-manifest, PWA icons, service worker, server-issued seller auth challenge,
+manifest, PWA icons, service worker, the stateless read-only seller auth message,
 desktop landing, iPad landing, public system-readiness UI, guide page,
 wallet-entry fallback and the seller scanner shell.
 It does not create sellers, rules, QR sessions or wallet transactions.
+Mutating seller actions use separate server-issued, resource-bound one-time
+challenges and are covered by backend route tests and the opt-in seller wallet smoke.
 
 ## Production Deploy
 

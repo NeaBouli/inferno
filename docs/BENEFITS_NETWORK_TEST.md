@@ -164,7 +164,7 @@ npm run smoke:http
 ```
 
 This verifies the real Express HTTP surface for `/api/health`, `/api/ready`,
-`/api/seller/auth-message` and signed seller profile listing with a throwaway
+the stateless read-only `/api/seller/auth-message` path and signed seller profile listing with a throwaway
 wallet. `/api/ready` runs a database probe so CI catches a backend that can
 listen on HTTP but cannot serve sessions. It does not mutate production or
 require secrets. `MUTATE=true` remains manual-only for
@@ -184,11 +184,16 @@ Current route coverage includes `POST /api/sessions/:id/redeem` authorization:
 - missing seller signature -> HTTP 401
 - wrong seller wallet -> HTTP 403
 - owning seller wallet -> HTTP 200 and `REDEEMED`
-- repeated redeem -> HTTP 409
+- replaying the same redeem nonce -> HTTP 401
 
 This proves the backend redeem route is seller-owned and one-time at the HTTP
 boundary. A live `APPROVED -> REDEEMED` run with a real locked customer wallet
 is still a separate device acceptance item.
+
+Mutation-route coverage also requests server-issued challenges for business,
+operator, product, rule, reward, session-create and session-redeem actions. Tests
+assert exact resource scope, single-use replay rejection, wrong-owner denial,
+concurrency behavior and that read-only authorization requests create no challenge rows.
 
 Current service coverage also verifies retryable failed attestations:
 
@@ -246,7 +251,7 @@ Current service coverage also verifies retryable failed attestations:
 | DELETE | `/api/seller/operators/:id` | Seller owner signature | Revoke checkout operator |
 | GET | `/api/businesses/:id` | - | Public business info |
 | GET | `/api/businesses/:id/rules` | - | Active public rules |
-| POST | `/api/sessions` | - | Start QR session, optionally with `benefitRuleId` |
+| POST | `/api/sessions` | Owner/operator one-time signature | Start QR session, optionally with `benefitRuleId` |
 | GET | `/api/sessions/:id` | - | Session status |
 | GET | `/api/sessions/:id/challenge` | - | Signature challenge |
 | POST | `/api/attest` | - | Verify wallet + signature |

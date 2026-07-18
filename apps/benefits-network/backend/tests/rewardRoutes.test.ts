@@ -1,5 +1,4 @@
 import { ethers } from 'ethers';
-import { buildSellerAuthMessage } from '../src/services/sellerAuth';
 
 const mockGetRewardOnChainStatus = jest.fn();
 const mockIsWalletAlreadyRewarded = jest.fn();
@@ -48,14 +47,27 @@ function baseUrl() {
   return `http://127.0.0.1:${address.port}`;
 }
 
-async function sellerHeaders(wallet: ethers.Wallet, action: string, businessId: string) {
-  const timestamp = Date.now().toString();
-  return {
+async function sellerHeaders(wallet: ethers.Wallet, action: string, businessId: string, scope = businessId) {
+  const query = new URLSearchParams({ action, businessId });
+  if (['rewards:apply', 'sessions:redeem'].includes(action)) {
+    query.set('walletAddress', wallet.address);
+    query.set('scope', scope);
+  }
+  const challengeResponse = await fetch(`${baseUrl()}/api/seller/auth-message?${query}`);
+  expect(challengeResponse.status).toBe(200);
+  const challenge = await challengeResponse.json() as {
+    message: string;
+    timestamp: string;
+    nonce?: string;
+  };
+  const headers: Record<string, string> = {
     'content-type': 'application/json',
     'x-ifr-wallet': wallet.address,
-    'x-ifr-signature': await wallet.signMessage(buildSellerAuthMessage(action, businessId, timestamp)),
-    'x-ifr-timestamp': timestamp,
+    'x-ifr-signature': await wallet.signMessage(challenge.message),
+    'x-ifr-timestamp': challenge.timestamp,
   };
+  if (challenge.nonce) headers['x-ifr-nonce'] = challenge.nonce;
+  return headers;
 }
 
 function chainStatus(overrides: Record<string, unknown> = {}) {

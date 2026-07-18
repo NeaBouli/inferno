@@ -43,12 +43,12 @@ const sellerSteps = [
 ];
 
 const developerItems = [
-  ['Seller profile', 'POST /api/seller/businesses with a server-issued seller signature.'],
-  ['Rules', 'GET/POST /api/seller/businesses/:id/rules and PATCH/DELETE /api/seller/rules/:id.'],
+  ['Seller profile', 'Request a resource-bound one-time business:create challenge, sign it, then POST /api/seller/businesses with x-ifr-nonce.'],
+  ['Rules', 'Read with timestamp-signed GET. Every POST/PATCH/DELETE uses a fresh nonce bound to the business or exact rule.'],
   ['Session history', 'GET /api/seller/businesses/:id/sessions?limit=10 with Action: sessions:list.'],
   ['QR session', 'Request a one-time Action: sessions:create message bound to owner/operator, business and rule; sign it, then POST /api/sessions with x-ifr-nonce.'],
   ['Customer proof', 'GET /api/sessions/:id/challenge, then POST /api/attest with the customer signature.'],
-  ['Redeem', 'POST /api/sessions/:id/redeem with a fresh seller signature for Action: sessions:redeem.'],
+  ['Redeem', 'Request a one-time sessions:redeem challenge bound to the session ID, sign it, then POST /api/sessions/:id/redeem with x-ifr-nonce.'],
 ];
 
 function StepList({ title, eyebrow, steps }: { title: string; eyebrow: string; steps: typeof customerSteps }) {

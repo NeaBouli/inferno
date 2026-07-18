@@ -256,7 +256,7 @@ export function SellerRuleBuilder() {
         tierLabel: defaultTier || undefined,
       };
       const business = canUseWalletOwner
-        ? await createSellerBusiness(await signSellerAction('business:create', 'new'), input)
+        ? await createSellerBusiness(await signSellerAction('business:create', 'new', 'new'), input)
         : await createAdminBusiness(adminSecret, input);
       setCreatedBusiness(business);
       setBusinessId(business.id);
@@ -404,7 +404,7 @@ export function SellerRuleBuilder() {
     try {
       const operator = await createSellerCheckoutOperator(
         businessId,
-        await signSellerAction('operators:create', businessId),
+        await signSellerAction('operators:create', businessId, operatorWallet.trim().toLowerCase()),
         {
           walletAddress: operatorWallet.trim(),
           label: operatorLabel.trim() || undefined,
@@ -435,7 +435,7 @@ export function SellerRuleBuilder() {
     try {
       await deleteSellerCheckoutOperator(
         operator.id,
-        await signSellerAction('operators:delete', businessId)
+        await signSellerAction('operators:delete', businessId, operator.id)
       );
       setCheckoutOperators((current) => current.map((item) => (
         item.id === operator.id ? { ...item, active: false } : item
@@ -457,7 +457,10 @@ export function SellerRuleBuilder() {
     setError('');
     setStatus('');
     try {
-      await deleteSellerBusiness(targetBusinessId, await signSellerAction('business:delete', targetBusinessId));
+      await deleteSellerBusiness(
+        targetBusinessId,
+        await signSellerAction('business:delete', targetBusinessId, targetBusinessId)
+      );
       setSellerBusinesses((current) => current.filter((item) => item.id !== targetBusinessId));
       if (businessId === targetBusinessId) {
         setBusinessId('');
@@ -498,7 +501,7 @@ export function SellerRuleBuilder() {
         const updated = canUseWalletOwner
           ? await updateSellerBusinessRule(
               editingRule.id,
-              await signSellerAction('rules:update', editingRule.businessId),
+              await signSellerAction('rules:update', editingRule.businessId, editingRule.id),
               updatePayload
             )
           : await updateAdminBusinessRule(editingRule.id, adminSecret, updatePayload);
@@ -510,7 +513,11 @@ export function SellerRuleBuilder() {
         setStatus('Rule updated. New QR sessions will use the updated benefit.');
       } else {
         const rule = canUseWalletOwner
-          ? await createSellerBusinessRule(businessId, await signSellerAction('rules:create', businessId), payload)
+          ? await createSellerBusinessRule(
+              businessId,
+              await signSellerAction('rules:create', businessId, businessId),
+              payload
+            )
           : await createAdminBusinessRule(businessId, adminSecret, payload);
         setRules((current) => [...current, rule].sort((a, b) => a.requiredLockIFR - b.requiredLockIFR));
         setStatus('Rule saved.');
@@ -568,7 +575,11 @@ export function SellerRuleBuilder() {
     setStatus('');
     try {
       const updated = canUseWalletOwner
-        ? await updateSellerBusinessRule(rule.id, await signSellerAction('rules:update', rule.businessId), { active: !rule.active })
+        ? await updateSellerBusinessRule(
+            rule.id,
+            await signSellerAction('rules:update', rule.businessId, rule.id),
+            { active: !rule.active }
+          )
         : await updateAdminBusinessRule(rule.id, adminSecret, { active: !rule.active });
       setRules((current) => current.map((item) => (item.id === updated.id ? updated : item)));
       setStatus(updated.active ? 'Rule activated.' : 'Rule paused.');
@@ -590,7 +601,10 @@ export function SellerRuleBuilder() {
     setStatus('');
     try {
       if (canUseWalletOwner) {
-        await deleteSellerBusinessRule(ruleId, await signSellerAction('rules:delete', rule.businessId));
+        await deleteSellerBusinessRule(
+          ruleId,
+          await signSellerAction('rules:delete', rule.businessId, rule.id)
+        );
       } else {
         await deleteAdminBusinessRule(ruleId, adminSecret);
       }
@@ -618,11 +632,25 @@ export function SellerRuleBuilder() {
     await connectAsync({ connector });
   }
 
-  async function signSellerAction(action: string, targetBusinessId: string): Promise<SellerAuth> {
+  async function signSellerAction(
+    action: string,
+    targetBusinessId: string,
+    scope?: string
+  ): Promise<SellerAuth> {
     if (!address) throw new Error('Connect the seller wallet first.');
-    const challenge = await getSellerAuthMessage(action, targetBusinessId);
+    const challenge = await getSellerAuthMessage(
+      action,
+      targetBusinessId,
+      scope ? { walletAddress: address, scope } : undefined
+    );
+    if (scope && !challenge.nonce) throw new Error('Seller authorization challenge is incomplete');
     const signature = await signMessageAsync({ message: challenge.message });
-    return { walletAddress: address, signature, timestamp: challenge.timestamp };
+    return {
+      walletAddress: address,
+      signature,
+      timestamp: challenge.timestamp,
+      nonce: challenge.nonce,
+    };
   }
 
   async function copyToClipboard(labelText: string, value: string) {

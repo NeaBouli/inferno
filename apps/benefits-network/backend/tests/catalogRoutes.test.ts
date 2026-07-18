@@ -1,5 +1,4 @@
 import { ethers } from 'ethers';
-import { buildSellerAuthMessage } from '../src/services/sellerAuth';
 
 const mockCheckLock = jest.fn();
 const mockRecoverSigner = jest.fn();
@@ -35,18 +34,27 @@ async function sellerHeaders(
   wallet: ethers.Wallet,
   action: string,
   businessId: string,
-  scope = 'default'
+  scope?: string
 ): Promise<Record<string, string>> {
-  if (action === 'sessions:create') {
+  const mutations = new Set([
+    'business:create', 'business:delete', 'operators:create', 'operators:delete',
+    'products:create', 'products:update', 'products:delete', 'rewards:apply',
+    'rules:create', 'rules:update', 'rules:delete', 'sessions:create', 'sessions:redeem',
+  ]);
+  if (mutations.has(action)) {
     const query = new URLSearchParams({
       action,
       businessId,
       walletAddress: wallet.address,
-      scope,
+      scope: scope || (action === 'sessions:create' ? 'default' : businessId),
     });
-    const challenge = await (
-      await fetch(`${baseUrl()}/api/seller/auth-message?${query}`)
-    ).json() as { message: string; timestamp: string; nonce: string };
+    const challengeResponse = await fetch(`${baseUrl()}/api/seller/auth-message?${query}`);
+    expect(challengeResponse.status).toBe(200);
+    const challenge = await challengeResponse.json() as {
+      message: string;
+      timestamp: string;
+      nonce: string;
+    };
     return {
       'content-type': 'application/json',
       'x-ifr-wallet': wallet.address,
@@ -55,13 +63,16 @@ async function sellerHeaders(
       'x-ifr-nonce': challenge.nonce,
     };
   }
-  const timestamp = Date.now().toString();
-  const signature = await wallet.signMessage(buildSellerAuthMessage(action, businessId, timestamp));
+  const challengeResponse = await fetch(
+    `${baseUrl()}/api/seller/auth-message?${new URLSearchParams({ action, businessId })}`
+  );
+  expect(challengeResponse.status).toBe(200);
+  const challenge = await challengeResponse.json() as { message: string; timestamp: string };
   return {
     'content-type': 'application/json',
     'x-ifr-wallet': wallet.address,
-    'x-ifr-signature': signature,
-    'x-ifr-timestamp': timestamp,
+    'x-ifr-signature': await wallet.signMessage(challenge.message),
+    'x-ifr-timestamp': challenge.timestamp,
   };
 }
 
@@ -133,6 +144,70 @@ describe('Seller catalog routes', () => {
     });
   });
 
+  it('requires a resource-bound one-time challenge for seller profile creation', async () => {
+    const auth = await sellerHeaders(owner, 'business:create', 'new', 'new');
+    const body = {
+      name: 'Nonce protected seller',
+      discountPercent: 8,
+      requiredLockIFR: 800,
+      ownerAddress: owner.address,
+      signature: auth['x-ifr-signature'],
+      timestamp: auth['x-ifr-timestamp'],
+      nonce: auth['x-ifr-nonce'],
+    };
+    const create = () => fetch(`${baseUrl()}/api/seller/businesses`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+
+    expect((await create()).status).toBe(201);
+    expect((await create()).status).toBe(401);
+    expect(await prisma.business.count({ where: { ownerAddress: owner.address } })).toBe(2);
+
+    const wrongScope = await sellerHeaders(owner, 'business:create', 'new', 'not-new');
+    const wrongScopeResponse = await fetch(`${baseUrl()}/api/seller/businesses`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        ...body,
+        name: 'Wrong scope seller',
+        signature: wrongScope['x-ifr-signature'],
+        timestamp: wrongScope['x-ifr-timestamp'],
+        nonce: wrongScope['x-ifr-nonce'],
+      }),
+    });
+    expect(wrongScopeResponse.status).toBe(401);
+    expect(await prisma.business.count({ where: { ownerAddress: owner.address } })).toBe(2);
+
+    const unknown = await fetch(
+      `${baseUrl()}/api/seller/auth-message?${new URLSearchParams({
+        action: 'business:transfer',
+        businessId: businessId,
+      })}`
+    );
+    expect(unknown.status).toBe(400);
+
+    const unsafeScope = await fetch(
+      `${baseUrl()}/api/seller/auth-message?${new URLSearchParams({
+        action: 'business:create',
+        businessId: 'new',
+        walletAddress: owner.address,
+        scope: 'new\nNonce: misleading',
+      })}`
+    );
+    expect(unsafeScope.status).toBe(400);
+  });
+
+  it('keeps read-only authorizations stateless', async () => {
+    expect(await prisma.sellerAuthorizationChallenge.count()).toBe(0);
+    const headers = await sellerHeaders(owner, 'business:list', 'seller');
+    expect(headers['x-ifr-nonce']).toBeUndefined();
+    expect(await prisma.sellerAuthorizationChallenge.count()).toBe(0);
+    expect((await fetch(`${baseUrl()}/api/seller/businesses`, { headers })).status).toBe(200);
+    expect(await prisma.sellerAuthorizationChallenge.count()).toBe(0);
+  });
+
   it('keeps catalog management owner-only', async () => {
     const url = `${baseUrl()}/api/seller/businesses/${businessId}/products`;
     expect((await fetch(url, {
@@ -157,6 +232,12 @@ describe('Seller catalog routes', () => {
     expect(createdResponse.status).toBe(201);
     const created = await createdResponse.json() as { id: string; active: boolean; name: string };
     expect(created).toMatchObject({ active: true, name: 'Premium espresso' });
+    expect((await fetch(url, {
+      method: 'POST',
+      headers: ownerHeaders,
+      body: JSON.stringify(productPayload('Replay product')),
+    })).status).toBe(401);
+    expect(await prisma.product.count({ where: { businessId } })).toBe(1);
     const publicWithoutBenefit = await fetch(`${baseUrl()}/api/businesses/${businessId}/products`);
     expect((await publicWithoutBenefit.json() as { products: unknown[] }).products).toHaveLength(0);
 
@@ -165,19 +246,19 @@ describe('Seller catalog routes', () => {
     expect(listResponse.status).toBe(200);
     expect((await listResponse.json() as { products: unknown[] }).products).toHaveLength(1);
 
-    const outsiderUpdate = await sellerHeaders(otherOwner, 'products:update', businessId);
+    const outsiderUpdate = await sellerHeaders(otherOwner, 'products:update', businessId, created.id);
     expect((await fetch(`${baseUrl()}/api/seller/products/${created.id}`, {
       method: 'PATCH',
       headers: outsiderUpdate,
       body: JSON.stringify({ name: 'Hijacked name' }),
     })).status).toBe(403);
 
-    const archiveHeaders = await sellerHeaders(owner, 'products:delete', businessId);
+    const archiveHeaders = await sellerHeaders(owner, 'products:delete', businessId, created.id);
     expect((await fetch(`${baseUrl()}/api/seller/products/${created.id}`, {
       method: 'DELETE',
       headers: archiveHeaders,
     })).status).toBe(204);
-    const reactivateHeaders = await sellerHeaders(owner, 'products:update', businessId);
+    const reactivateHeaders = await sellerHeaders(owner, 'products:update', businessId, created.id);
     expect((await fetch(`${baseUrl()}/api/seller/products/${created.id}`, {
       method: 'PATCH',
       headers: reactivateHeaders,
@@ -187,8 +268,8 @@ describe('Seller catalog routes', () => {
 
   it('keeps a product archived when archive races an active update', async () => {
     const product = await prisma.product.create({ data: { businessId, ...productPayload() } });
-    const updateHeaders = await sellerHeaders(owner, 'products:update', businessId);
-    const archiveHeaders = await sellerHeaders(owner, 'products:delete', businessId);
+    const updateHeaders = await sellerHeaders(owner, 'products:update', businessId, product.id);
+    const archiveHeaders = await sellerHeaders(owner, 'products:delete', businessId, product.id);
     const [updateResponse, archiveResponse] = await Promise.all([
       fetch(`${baseUrl()}/api/seller/products/${product.id}`, {
         method: 'PATCH',
@@ -243,7 +324,7 @@ describe('Seller catalog routes', () => {
     const session = await createSession(businessId, rule.id);
     expect(await buildChallengeMessage(session.sessionId)).toContain('Product: Premium espresso');
 
-    const productUpdateHeaders = await sellerHeaders(owner, 'products:update', businessId);
+    const productUpdateHeaders = await sellerHeaders(owner, 'products:update', businessId, product.id);
     const updateResponse = await fetch(`${baseUrl()}/api/seller/products/${product.id}`, {
       method: 'PATCH',
       headers: productUpdateHeaders,
@@ -255,7 +336,7 @@ describe('Seller catalog routes', () => {
     expect(storedSnapshot.productName).toBe('Premium espresso');
     expect(await buildChallengeMessage(session.sessionId)).toContain('Product: Premium espresso');
 
-    const refreshHeaders = await sellerHeaders(owner, 'rules:update', businessId);
+    const refreshHeaders = await sellerHeaders(owner, 'rules:update', businessId, rule.id);
     const refreshResponse = await fetch(`${baseUrl()}/api/seller/rules/${rule.id}`, {
       method: 'PATCH',
       headers: refreshHeaders,
@@ -320,7 +401,7 @@ describe('Seller catalog routes', () => {
     });
     const session = await createSession(businessId, rule.id);
 
-    const deleteHeaders = await sellerHeaders(owner, 'products:delete', businessId);
+    const deleteHeaders = await sellerHeaders(owner, 'products:delete', businessId, product.id);
     expect((await fetch(`${baseUrl()}/api/seller/products/${product.id}`, {
       method: 'DELETE',
       headers: deleteHeaders,
@@ -342,7 +423,7 @@ describe('Seller catalog routes', () => {
     const publicRules = await fetch(`${baseUrl()}/api/businesses/${businessId}/rules`);
     expect((await publicRules.json() as { rules: unknown[] }).rules).toHaveLength(0);
 
-    const reactivateHeaders = await sellerHeaders(owner, 'rules:update', businessId);
+    const reactivateHeaders = await sellerHeaders(owner, 'rules:update', businessId, rule.id);
     expect((await fetch(`${baseUrl()}/api/seller/rules/${rule.id}`, {
       method: 'PATCH',
       headers: reactivateHeaders,
@@ -377,7 +458,7 @@ describe('Seller catalog routes', () => {
       },
     });
     const session = await createSession(businessId, rule.id);
-    const deleteHeaders = await sellerHeaders(owner, 'rules:delete', businessId);
+    const deleteHeaders = await sellerHeaders(owner, 'rules:delete', businessId, rule.id);
 
     expect((await fetch(`${baseUrl()}/api/seller/rules/${rule.id}`, {
       method: 'DELETE',
@@ -448,7 +529,7 @@ describe('Seller catalog routes', () => {
         requiredLockIFR: 1000,
       },
     });
-    const archiveHeaders = await sellerHeaders(owner, 'products:delete', businessId);
+    const archiveHeaders = await sellerHeaders(owner, 'products:delete', businessId, product.id);
     const createHeaders = await sellerHeaders(owner, 'sessions:create', businessId, rule.id);
     const [createResponse, archiveResponse] = await Promise.all([
       fetch(`${baseUrl()}/api/sessions`, {

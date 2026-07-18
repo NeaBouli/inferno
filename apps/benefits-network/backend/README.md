@@ -118,11 +118,13 @@ active rules while preserving sessions and audit history.
 
 Normal seller actions can be authorized without sharing the global admin secret.
 The frontend first requests `/api/seller/auth-message` so the timestamp is issued
-by the backend, then the seller signs that short-lived EIP-191 message with the
-wallet that owns the business. The backend checks the recovered address against
-`Business.ownerAddress` before listing, creating, updating or deleting rules and
-before owner-only management actions. Approved checkout sessions may also be
-redeemed by an active, unexpired checkout operator delegated by that owner.
+by the backend, then the seller signs that short-lived EIP-191 message. Read-only
+actions remain timestamp-bound and do not create authorization rows. Every seller
+mutation receives a random server-issued nonce bound to the recovered wallet,
+action, business and exact resource scope; the nonce is consumed once. The backend
+also checks the recovered address against `Business.ownerAddress` before owner-only
+management actions. Active, unexpired checkout operators may create and redeem QR
+sessions but cannot perform owner-only mutations.
 
 Session history uses the same headers with `Action: sessions:list` and the
 business id as `Business`. The optional `limit` query parameter is clamped from
@@ -137,6 +139,7 @@ Seller write requests use these headers:
 x-ifr-wallet: 0xSellerWallet
 x-ifr-signature: 0xSignature
 x-ifr-timestamp: 1784210000000
+x-ifr-nonce: 64-character-server-nonce
 ```
 
 The signed message format is deterministic:
@@ -146,12 +149,16 @@ IFR Benefits Network - Seller Authorization
 Action: rules:create
 Business: business_cuid
 Timestamp: 1784210000000
+Scope: business_cuid
+Nonce: 64-character-server-nonce
 Only sign this message inside shop.ifrunit.tech.
 ```
 
-Redeem uses the same headers and signs `Action: sessions:redeem` with the
-session id as `Business`. This keeps the customer QR public while making the
-one-time discount redemption a seller-owned action.
+The nonce and scope lines are present only for mutations. Read-only actions use
+the same deterministic prefix without those lines. Redeem signs
+`Action: sessions:redeem` with the session id as both `Business` and `Scope`.
+This keeps the customer QR public while making redemption seller-owned and
+prevents a captured seller mutation signature from being replayed.
 
 ## Checkout Operators
 
@@ -162,10 +169,12 @@ profiles or rules, or add/revoke other operators. Revocation is effective on
 the next server request. Redemption audit payloads record the actor wallet and
 `OWNER`/`OPERATOR` role, never the wallet signature.
 
-Session creation requires a single-use nonce in `x-ifr-nonce` in addition to the
-wallet, signature and timestamp headers. Redemption requires a fresh short-lived
-wallet signature. Both require a current owner/operator role. POS helpers receive only public integration code;
-they never embed a seller private key or reusable seller secret.
+Every seller mutation requires a resource-bound single-use nonce in `x-ifr-nonce`
+in addition to the wallet, signature and timestamp headers. Session creation
+consumes the nonce atomically with the current owner/operator recheck and session
+insert. Redemption and all owner-management mutations reject replayed, expired or
+wrong-scope nonces before changing state. POS helpers receive only public
+integration code; they never embed a seller private key or reusable seller secret.
 
 ## Rate-limit identities
 

@@ -24,7 +24,7 @@ The app has two roles:
 - QR flow:
   1. Seller opens `/b/:businessId`.
   2. Seller selects active benefit rule.
-  3. Frontend calls `POST /api/sessions` with `businessId` and optional `benefitRuleId`.
+  3. Frontend requests and signs a one-time `sessions:create` challenge bound to seller wallet, business and selected rule, then calls `POST /api/sessions` with the nonce.
   4. Customer opens `/r/:sessionId`.
   5. Customer signs challenge.
   6. Backend checks IFRLock against the selected rule threshold.
@@ -57,12 +57,12 @@ The app has two roles:
 
 ### Seller Flow
 
-- Seller can create and manage rules through guarded admin API.
+- Seller can create and manage profiles, products, rules, operators and reward applications through owner-wallet authorization; every mutation uses a fresh resource-bound one-time challenge.
 - Seller can edit discount, category, product/service, required IFR and QR lifetime through the owner-wallet-signed PATCH flow without changing the active/paused state.
 - Seller can open `/b/:businessId` scanner.
 - Scanner must list active rules and bind the selected rule to the next QR session.
 - Scanner must show customer approval/rejection and single-use redeem action.
-- Owner can delegate expiring checkout-only access to staff wallets. Operators can verify their role and redeem approved sessions, but cannot manage profiles, rules, history or other operators.
+- Owner can delegate expiring checkout-only access to staff wallets. Operators can verify their role and create/redeem QR sessions, but cannot manage profiles, rules, history or other operators.
 
 ### Developer / Integration Flow
 
@@ -128,5 +128,6 @@ If `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` is missing, the frontend must show a s
 - Never expose `ADMIN_SECRET` in public docs, Bridge, screenshots or client bundles.
 - Seller admin secret must remain user-entered or be replaced by proper seller auth.
 - QR sessions must remain short-lived and single-use.
+- Every seller mutation must remain bound to a persisted random nonce, wallet, action, business and exact resource scope; read-only seller actions must not create challenge rows.
 - Challenge text must include rule metadata so the user signs exactly what is being verified.
 - Production logs must avoid storing full signatures unless required for audit and retention is defined.
