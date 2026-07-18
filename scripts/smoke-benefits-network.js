@@ -49,6 +49,14 @@ async function expectSha256(route, expectedHash) {
 }
 
 async function verifyHttpSurface() {
+  const rootHead = await fetch(joinUrl('/'), { method: 'HEAD' });
+  assert(rootHead.ok, `/ HEAD returned HTTP ${rootHead.status}`);
+  assert(
+    rootHead.headers.get('cross-origin-opener-policy') !== 'same-origin',
+    'Shop must not use Cross-Origin-Opener-Policy: same-origin because Coinbase Wallet needs popup communication'
+  );
+  log('Coinbase Wallet popup policy OK');
+
   const health = await fetchJson('/api/health');
   assert(health.status === 'ok', `/api/health status is ${health.status}`);
   assert(Number(health.chainId) === 1, `/api/health chainId is ${health.chainId}, expected 1`);
@@ -146,6 +154,7 @@ async function gotoAppPage(page, route) {
 function isIgnorableConsoleError(text) {
   return (
     text.includes('status of 404') ||
+    text === 'Error checking Cross-Origin-Opener-Policy: Failed to fetch' ||
     (text.includes('Analytics SDK') && text.includes('Failed to fetch')) ||
     (text.includes('Sender: Failed to send batch') && text.includes('Failed to fetch')) ||
     (text.includes('Failed to fetch RSC payload') && text.includes('Falling back to browser navigation'))
