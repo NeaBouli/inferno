@@ -198,16 +198,22 @@ function CodeGenerator() {
       return `<a href="${scannerUrl}" target="_blank" rel="noopener">Verify IFR discount</a>`;
     }
     if (mode === 'api') {
-      return `POST https://shop.ifrunit.tech/api/sessions\n${JSON.stringify({
+      return `GET https://shop.ifrunit.tech/api/seller/auth-message?action=sessions%3Acreate&businessId=${encodeURIComponent(normalizedBusinessId)}&walletAddress=<seller-wallet>&scope=<benefit-rule-id-or-default>\n\nSign the returned one-time message, then:\nPOST https://shop.ifrunit.tech/api/sessions\nAction: sessions:create\nBusiness: ${normalizedBusinessId}\nRequired signed headers: x-ifr-wallet, x-ifr-signature, x-ifr-timestamp, x-ifr-nonce\n\n${JSON.stringify({
         businessId: normalizedBusinessId,
         benefitRuleId: 'selected-active-rule-id',
       }, null, 2)}`;
     }
     if (mode === 'pos') {
-      return `async function createIFRCheckout(benefitRuleId) {
+      return `async function createIFRCheckout(benefitRuleId, sellerAuth) {
   const response = await fetch("https://shop.ifrunit.tech/api/sessions", {
     method: "POST",
-    headers: { "content-type": "application/json" },
+    headers: {
+      "content-type": "application/json",
+      "x-ifr-wallet": sellerAuth.walletAddress,
+      "x-ifr-signature": sellerAuth.signature,
+      "x-ifr-timestamp": sellerAuth.timestamp,
+      "x-ifr-nonce": sellerAuth.nonce
+    },
     body: JSON.stringify({
       businessId: ${JSON.stringify(normalizedBusinessId)},
       benefitRuleId
@@ -225,7 +231,8 @@ function CodeGenerator() {
   };
 }
 
-const checkout = await createIFRCheckout("selected-active-rule-id");`;
+// sellerAuth signs the server-issued one-time message bound to this rule ID.
+const checkout = await createIFRCheckout("selected-active-rule-id", sellerAuth);`;
     }
     return scannerUrl;
   }, [mode, normalizedBusinessId, scannerUrl]);

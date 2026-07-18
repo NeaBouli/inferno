@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { buildChallengeMessage, attest } from '../services/sessionService';
 import { validate } from '../middleware/validator';
-import { attestRateLimiter } from '../middleware/rateLimiter';
+import { attestRateLimiter, challengeRateLimiter } from '../middleware/rateLimiter';
 
 const router = Router();
 
@@ -13,7 +13,7 @@ const attestSchema = z.object({
 
 // GET /api/sessions/:id/challenge — mounted on sessions router would be cleaner,
 // but spec puts it here. We mount this separately in index.ts.
-router.get('/sessions/:id/challenge', async (req, res, next) => {
+router.get('/sessions/:id/challenge', challengeRateLimiter, async (req, res, next) => {
   try {
     const message = await buildChallengeMessage(req.params.id);
     res.json({ message });

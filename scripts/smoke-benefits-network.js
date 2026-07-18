@@ -87,6 +87,14 @@ async function verifyHttpSurface() {
   assert(auth.message.includes('Only sign this message inside shop.ifrunit.tech.'), 'seller auth safety line missing');
   assert(auth.timestamp && auth.expiresAt, 'seller auth challenge missing timestamp/expiry');
   log('Seller auth challenge OK');
+
+  const unsignedSession = await fetch(joinUrl('/api/sessions'), {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ businessId: 'smoke-read-only-missing-business' }),
+  });
+  assert(unsignedSession.status === 401, `unsigned session creation returned HTTP ${unsignedSession.status}`);
+  log('Unsigned session creation blocked OK');
 }
 
 async function expectText(page, text) {
@@ -239,6 +247,10 @@ async function verifyPage(contextOptions, label) {
     await codeGenerator.getByLabel('Business ID').fill('shop/"unsafe');
     await codeGenerator.getByRole('button', { name: 'link', exact: true }).click();
     await expectText(page, 'shop%2F%22unsafe');
+    await codeGenerator.getByRole('button', { name: 'api', exact: true }).click();
+    await expectText(page, 'Action: sessions:create');
+    await expectText(page, 'Required signed headers');
+    await expectText(page, 'x-ifr-nonce');
     await codeGenerator.getByRole('button', { name: 'pos', exact: true }).click();
     await expectText(page, 'createIFRCheckout');
     await expectText(page, 'customerUrl');

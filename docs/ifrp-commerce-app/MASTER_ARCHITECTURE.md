@@ -166,7 +166,7 @@ Recommended QR payload:
 
 Verification:
 
-1. Seller creates a scan session.
+1. Seller owner or active checkout operator signs a server-issued one-time `sessions:create` challenge bound to wallet, business and selected rule; the backend atomically consumes it while rechecking current access and creating the scan session.
 2. Customer signs the session challenge.
 3. Backend verifies signature.
 4. Backend reads on-chain IFR balance/lock state.

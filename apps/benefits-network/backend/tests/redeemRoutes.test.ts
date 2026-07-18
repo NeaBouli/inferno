@@ -1,5 +1,6 @@
 import { ethers } from 'ethers';
 import { buildSellerAuthMessage } from '../src/services/sellerAuth';
+import * as authenticatedRateLimiter from '../src/services/authenticatedRateLimiter';
 
 jest.mock('../src/services/ifrLockService', () => ({
   checkLock: jest.fn(),
@@ -20,7 +21,7 @@ jest.mock('../src/config', () => ({
 }));
 
 import { prisma } from '../src/services/sessionService';
-import { server } from '../src/index';
+import { app, server } from '../src/index';
 
 function baseUrl() {
   const address = server.address();
@@ -30,7 +31,33 @@ function baseUrl() {
   return `http://127.0.0.1:${address.port}`;
 }
 
-async function sellerHeaders(wallet: ethers.Wallet, action: string, businessId: string) {
+async function sellerHeaders(
+  wallet: ethers.Wallet,
+  action: string,
+  businessId: string,
+  scope = 'default'
+): Promise<Record<string, string>> {
+  if (action === 'sessions:create') {
+    const query = new URLSearchParams({
+      action,
+      businessId,
+      walletAddress: wallet.address,
+      scope,
+    });
+    const challengeResponse = await fetch(`${baseUrl()}/api/seller/auth-message?${query}`);
+    const challenge = await challengeResponse.json() as {
+      message: string;
+      timestamp: string;
+      nonce: string;
+    };
+    return {
+      'content-type': 'application/json',
+      'x-ifr-wallet': wallet.address,
+      'x-ifr-signature': await wallet.signMessage(challenge.message),
+      'x-ifr-timestamp': challenge.timestamp,
+      'x-ifr-nonce': challenge.nonce,
+    };
+  }
   const timestamp = Date.now().toString();
   const signature = await wallet.signMessage(buildSellerAuthMessage(action, businessId, timestamp));
   return {
@@ -45,6 +72,18 @@ async function postRedeem(sessionId: string, headers?: Record<string, string>) {
   return fetch(`${baseUrl()}/api/sessions/${sessionId}/redeem`, {
     method: 'POST',
     headers: headers ?? { 'content-type': 'application/json' },
+  });
+}
+
+async function postCreateSession(
+  businessId: string,
+  headers?: Record<string, string>,
+  benefitRuleId?: string
+) {
+  return fetch(`${baseUrl()}/api/sessions`, {
+    method: 'POST',
+    headers: headers ?? { 'content-type': 'application/json' },
+    body: JSON.stringify({ businessId, benefitRuleId }),
   });
 }
 
@@ -105,6 +144,7 @@ describe('Redeem route authorization', () => {
   let approvedSessionId: string;
 
   beforeEach(async () => {
+    await prisma.sellerAuthorizationChallenge.deleteMany();
     await prisma.auditLog.deleteMany();
     await prisma.session.deleteMany();
     await prisma.benefitRule.deleteMany();
@@ -138,6 +178,7 @@ describe('Redeem route authorization', () => {
   });
 
   afterAll(async () => {
+    await prisma.sellerAuthorizationChallenge.deleteMany();
     await prisma.auditLog.deleteMany();
     await prisma.session.deleteMany();
     await prisma.benefitRule.deleteMany();
@@ -157,6 +198,172 @@ describe('Redeem route authorization', () => {
     const response = await postRedeem(approvedSessionId);
 
     expect(response.status).toBe(401);
+  });
+
+  it('requires a current owner or operator signature before creating a QR session', async () => {
+    const initialCount = await prisma.session.count({ where: { businessId } });
+
+    expect((await postCreateSession(businessId)).status).toBe(401);
+    expect((await postCreateSession(
+      businessId,
+      await sellerHeaders(otherSeller, 'sessions:create', businessId)
+    )).status).toBe(403);
+    expect(await prisma.session.count({ where: { businessId } })).toBe(initialCount);
+
+    const ownerResponse = await postCreateSession(
+      businessId,
+      await sellerHeaders(seller, 'sessions:create', businessId)
+    );
+    const ownerBody = await ownerResponse.json() as {
+      sessionId: string;
+      createdBy: { authorized: boolean; walletAddress: string; role: string };
+    };
+    expect(ownerResponse.status).toBe(201);
+    expect(ownerBody.createdBy).toMatchObject({
+      authorized: true,
+      walletAddress: seller.address,
+      role: 'OWNER',
+    });
+    const ownerAudit = await prisma.auditLog.findFirstOrThrow({
+      where: { sessionId: ownerBody.sessionId, type: 'SESSION_CREATED' },
+    });
+    expect(JSON.parse(ownerAudit.payload)).toMatchObject({
+      createdBy: { walletAddress: seller.address, role: 'OWNER', operatorId: null },
+    });
+
+    await prisma.checkoutOperator.create({
+      data: { businessId, walletAddress: checkoutOperator.address, label: 'Counter tablet' },
+    });
+    const operatorResponse = await postCreateSession(
+      businessId,
+      await sellerHeaders(checkoutOperator, 'sessions:create', businessId)
+    );
+    const operatorBody = await operatorResponse.json() as {
+      createdBy: { authorized: boolean; walletAddress: string; role: string; label: string };
+    };
+    expect(operatorResponse.status).toBe(201);
+    expect(operatorBody.createdBy).toMatchObject({
+      authorized: true,
+      walletAddress: checkoutOperator.address,
+      role: 'OPERATOR',
+      label: 'Counter tablet',
+    });
+  });
+
+  it('consumes a rule-bound session authorization exactly once', async () => {
+    const rule = await prisma.benefitRule.create({
+      data: {
+        businessId,
+        label: 'Replay-safe rule',
+        category: 'Retail',
+        productName: 'Replay-safe item',
+        discountPercent: 10,
+        requiredLockIFR: 1000,
+        ttlSeconds: 120,
+      },
+    });
+    const otherRule = await prisma.benefitRule.create({
+      data: {
+        businessId,
+        label: 'Other rule',
+        category: 'Retail',
+        productName: 'Other item',
+        discountPercent: 20,
+        requiredLockIFR: 2000,
+        ttlSeconds: 120,
+      },
+    });
+    const headers = await sellerHeaders(seller, 'sessions:create', businessId, rule.id);
+
+    expect((await postCreateSession(businessId, headers, otherRule.id)).status).toBe(401);
+    expect((await postCreateSession(businessId, headers, rule.id)).status).toBe(201);
+    expect((await postCreateSession(businessId, headers, rule.id)).status).toBe(401);
+    expect(await prisma.session.count({ where: { businessId, benefitRuleId: rule.id } })).toBe(1);
+  });
+
+  it('rechecks operator access atomically when consuming the session challenge', async () => {
+    const initialCount = await prisma.session.count({ where: { businessId } });
+    const operator = await prisma.checkoutOperator.create({
+      data: { businessId, walletAddress: checkoutOperator.address, label: 'Revoked counter' },
+    });
+    const headers = await sellerHeaders(checkoutOperator, 'sessions:create', businessId);
+    await prisma.checkoutOperator.update({
+      where: { id: operator.id },
+      data: { active: false },
+    });
+
+    expect((await postCreateSession(businessId, headers)).status).toBe(403);
+    expect(await prisma.session.count({ where: { businessId } })).toBe(initialCount);
+  });
+
+  it('returns authentication errors and authenticated limits without HTTP 500', async () => {
+    const malformed = await postCreateSession(businessId, {
+      'content-type': 'application/json',
+      'x-ifr-wallet': seller.address,
+      'x-ifr-signature': '0x00',
+      'x-ifr-timestamp': 'not-a-time',
+      'x-ifr-nonce': 'missing',
+    });
+    expect(malformed.status).toBe(401);
+
+    const limiterSpy = jest
+      .spyOn(authenticatedRateLimiter, 'assertSellerWalletActionAllowed')
+      .mockImplementation(() => {
+        throw new authenticatedRateLimiter.AuthenticatedRateLimitError(42);
+      });
+    try {
+      const limited = await postCreateSession(
+        businessId,
+        await sellerHeaders(seller, 'sessions:create', businessId)
+      );
+      expect(limited.status).toBe(429);
+      expect(limited.headers.get('retry-after')).toBe('42');
+    } finally {
+      limiterSpy.mockRestore();
+    }
+  });
+
+  it('trusts private proxy hops but not public client addresses', () => {
+    const trustProxy = app.get('trust proxy fn') as (address: string, hop: number) => boolean;
+    expect(trustProxy('127.0.0.1', 0)).toBe(true);
+    expect(trustProxy('172.27.0.6', 1)).toBe(true);
+    expect(trustProxy('8.8.8.8', 2)).toBe(false);
+  });
+
+  it('charges the wallet limiter only after a valid signature recovers the claimed seller', async () => {
+    const limiterSpy = jest
+      .spyOn(authenticatedRateLimiter, 'assertSellerWalletActionAllowed')
+      .mockImplementation(() => undefined);
+    const query = new URLSearchParams({
+      action: 'sessions:create',
+      businessId,
+      walletAddress: seller.address,
+      scope: 'default',
+    });
+    const challenge = await (
+      await fetch(`${baseUrl()}/api/seller/auth-message?${query}`)
+    ).json() as { message: string; timestamp: string; nonce: string };
+    const forgedHeaders = {
+      'content-type': 'application/json',
+      'x-ifr-wallet': seller.address,
+      'x-ifr-signature': await otherSeller.signMessage(challenge.message),
+      'x-ifr-timestamp': challenge.timestamp,
+      'x-ifr-nonce': challenge.nonce,
+    };
+
+    try {
+      expect((await postCreateSession(businessId, forgedHeaders)).status).toBe(401);
+      expect(limiterSpy).not.toHaveBeenCalled();
+
+      expect((await postCreateSession(
+        businessId,
+        await sellerHeaders(seller, 'sessions:create', businessId)
+      )).status).toBe(201);
+      expect(limiterSpy).toHaveBeenCalledTimes(1);
+      expect(limiterSpy).toHaveBeenCalledWith(seller.address);
+    } finally {
+      limiterSpy.mockRestore();
+    }
   });
 
   it('rejects redeem when the signer is not the seller business owner', async () => {
@@ -398,6 +605,34 @@ describe('Redeem route authorization', () => {
     expect(await prisma.checkoutOperator.count({
       where: { businessId, active: true },
     })).toBe(10);
+  }, 30_000);
+
+  it('serializes concurrent operator reactivation and revocation', async () => {
+    const operator = await prisma.checkoutOperator.create({
+      data: {
+        businessId,
+        walletAddress: checkoutOperator.address,
+        label: 'Concurrent counter',
+        active: true,
+      },
+    });
+    await new Promise((resolve) => setTimeout(resolve, 5));
+    const createHeaders = await sellerHeaders(seller, 'operators:create', businessId);
+    const deleteHeaders = await sellerHeaders(seller, 'operators:delete', businessId);
+
+    const [createResponse, deleteResponse] = await Promise.all([
+      postCheckoutOperator(businessId, {
+        walletAddress: checkoutOperator.address,
+        label: 'Concurrent counter updated',
+      }, createHeaders),
+      deleteCheckoutOperator(operator.id, deleteHeaders),
+    ]);
+
+    const statuses = [createResponse.status, deleteResponse.status];
+    expect(statuses.filter((status) => status === 401)).toHaveLength(1);
+    expect([200, 204]).toContain(statuses.find((status) => status !== 401));
+    const stored = await prisma.checkoutOperator.findUniqueOrThrow({ where: { id: operator.id } });
+    expect(stored.active).toBe(createResponse.status === 200);
   }, 30_000);
 
   it('keeps seller activity metrics owner-protected and calculates checkout status totals', async () => {

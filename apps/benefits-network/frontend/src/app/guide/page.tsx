@@ -46,7 +46,7 @@ const developerItems = [
   ['Seller profile', 'POST /api/seller/businesses with a server-issued seller signature.'],
   ['Rules', 'GET/POST /api/seller/businesses/:id/rules and PATCH/DELETE /api/seller/rules/:id.'],
   ['Session history', 'GET /api/seller/businesses/:id/sessions?limit=10 with Action: sessions:list.'],
-  ['QR session', 'POST /api/sessions with businessId and optional benefitRuleId.'],
+  ['QR session', 'Request a one-time Action: sessions:create message bound to owner/operator, business and rule; sign it, then POST /api/sessions with x-ifr-nonce.'],
   ['Customer proof', 'GET /api/sessions/:id/challenge, then POST /api/attest with the customer signature.'],
   ['Redeem', 'POST /api/sessions/:id/redeem with a fresh seller signature for Action: sessions:redeem.'],
 ];

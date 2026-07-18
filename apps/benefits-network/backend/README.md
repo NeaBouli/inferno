@@ -61,7 +61,7 @@ npm run dev            # http://localhost:3001
 | GET | `/api/businesses/:id` | Public | Get business info |
 | GET | `/api/businesses/:id/rules` | Public | List active public benefit rules |
 | GET | `/api/businesses/:id/products` | Public | List active products/services with active benefits |
-| POST | `/api/sessions` | Public | Start verification session, optionally bound to a seller benefit rule |
+| POST | `/api/sessions` | Owner/operator wallet signature | Start verification session, optionally bound to a seller benefit rule |
 | GET | `/api/sessions/:id` | Public | Poll session status |
 | GET | `/api/sessions/:id/challenge` | Public | Get signature challenge |
 | POST | `/api/attest` | Public | Submit signature + verify |
@@ -70,7 +70,7 @@ npm run dev            # http://localhost:3001
 ## Session Flow
 
 1. Merchant selects a seller rule or falls back to the business default.
-2. Merchant creates session → gets QR code URL. Benefit text, discount, required lock and TTL are frozen into that session.
+2. Owner or active checkout operator requests and signs a one-time `sessions:create` challenge bound to wallet, business and selected rule. The backend atomically consumes it, rechecks current checkout access and creates the QR. Benefit text, discount, required lock and TTL are frozen into that session.
 3. Customer scans QR → connects wallet → signs challenge with the selected benefit details.
 4. Backend verifies signature → checks IFRLock on-chain against that rule's required IFR amount.
 5. If the wallet is not eligible yet, the customer response is `REJECTED` but the stored session stays `PENDING` until the three-attempt limit is exhausted, so the customer can lock more IFR and retry the same QR while it is valid.
@@ -157,13 +157,24 @@ one-time discount redemption a seller-owned action.
 
 The owner can delegate checkout-only access to up to ten active wallets per
 business. Each operator may have a label and expiry. Operators can sign
-`operators:status` and `sessions:redeem`; they cannot list history, manage
+`operators:status`, `sessions:create` and `sessions:redeem`; they cannot list history, manage
 profiles or rules, or add/revoke other operators. Revocation is effective on
 the next server request. Redemption audit payloads record the actor wallet and
 `OWNER`/`OPERATOR` role, never the wallet signature.
 
-Session creation remains public and rate-limited so QR links and POS helpers do
-not need a seller secret. Redemption remains short-lived, signed and one-time.
+Session creation requires a single-use nonce in `x-ifr-nonce` in addition to the
+wallet, signature and timestamp headers. Redemption requires a fresh short-lived
+wallet signature. Both require a current owner/operator role. POS helpers receive only public integration code;
+they never embed a seller private key or reusable seller secret.
+
+## Rate-limit identities
+
+Public and pre-authenticated endpoints use the client IP resolved through trusted
+private/loopback proxy hops only. Client-supplied business IDs and wallet headers
+are never used as pre-auth limiter keys. After a seller signature is recovered,
+an additional process-local fixed-window budget is charged to the recovered wallet.
+The production backend currently runs as one instance; a shared external store is
+required before horizontal scaling.
 
 ## Per-wallet redemption limits
 
