@@ -111,8 +111,10 @@ npm run qa:benefits-record -- \
 
 The required matrix covers iPad/iPhone, Android, desktop extension wallets,
 MetaMask, Coinbase Wallet, Trust Wallet, OKX Wallet and Phantom fallback
-behavior. Do not record private keys, seed phrases or personal wallet data in
-the checklist.
+behavior. Automated browser smokes validate the official MetaMask, Trust, OKX
+and Phantom launch domains on emulated iPad and Android, but this does not
+replace a real installed-wallet connection, signature and transaction test.
+Do not record private keys, seed phrases or personal wallet data in the checklist.
 
 Customer QR pages also write a redacted local browser history entry after a
 session loads or refreshes. The home page shows this as `Recent customer proofs`

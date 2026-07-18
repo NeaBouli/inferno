@@ -104,6 +104,9 @@ Open app
 Wallet options:
 
 - MVP: external wallet connection through WalletConnect / MetaMask / Coinbase / Trust.
+- Current web fallback: injected EVM providers plus official mobile browser-launch links for
+  MetaMask, Trust Wallet, OKX and Phantom. A launch link is onboarding only and is not proof of
+  connection; WalletConnect breadth remains configuration-gated.
 - V1: embedded wallet using a battle-tested wallet provider.
 - V2: account abstraction / gas sponsorship for selected actions.
 

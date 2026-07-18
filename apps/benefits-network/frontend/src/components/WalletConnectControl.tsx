@@ -3,6 +3,7 @@
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { useEffect, useState } from 'react';
 import { useAccount, useChainId, useConnect, useDisconnect } from 'wagmi';
+import { getMobileWalletLaunches } from '@/lib/walletLaunch';
 import { hasWalletConnectProjectId } from '@/lib/wagmi';
 
 function shortAddress(address?: string) {
@@ -86,6 +87,7 @@ export function WalletConnectControl() {
   const [environment, setEnvironment] = useState(DEFAULT_WALLET_ENVIRONMENT);
   const [copyStatus, setCopyStatus] = useState('');
   const [evidenceStatus, setEvidenceStatus] = useState('');
+  const mobileWalletLaunches = getMobileWalletLaunches(currentUrl);
 
   useEffect(() => {
     setCurrentUrl(window.location.href);
@@ -235,12 +237,35 @@ export function WalletConnectControl() {
       {!isConnected ? (
         <div className="grid gap-3 rounded-2xl border border-white/10 bg-black/20 p-3">
           <div className="grid grid-cols-2 gap-2 text-[0.68rem] font-black uppercase tracking-[0.12em] text-stone-300 sm:grid-cols-4">
-            {['MetaMask', 'Coinbase', 'Trust', 'OKX'].map((wallet) => (
+            {['MetaMask', 'Coinbase', 'Trust', 'OKX', 'Rainbow', 'Phantom'].map((wallet) => (
               <span key={wallet} className="rounded-full border border-white/10 bg-white/[0.06] px-3 py-2 text-center">
                 {wallet}
               </span>
             ))}
           </div>
+          {environment.surface !== 'Desktop' && environment.surface !== 'Checking browser' ? (
+            <div className="grid gap-2" aria-label="Open the shop in a mobile wallet browser">
+              <p className="text-xs font-black uppercase tracking-[0.16em] text-orange-200/80">
+                Open in wallet app
+              </p>
+              <div className="grid gap-2 sm:grid-cols-2">
+                {mobileWalletLaunches.map((wallet) => (
+                  <a
+                    key={wallet.id}
+                    data-wallet-launch={wallet.id}
+                    href={wallet.href}
+                    rel="noopener"
+                    className="rounded-xl border border-orange-200/20 bg-white/[0.07] px-3 py-3 text-center text-xs font-black uppercase tracking-[0.1em] text-stone-100 transition hover:border-orange-200/60 hover:bg-orange-200/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-200"
+                  >
+                    {wallet.label}
+                  </a>
+                ))}
+              </div>
+              <p className="text-xs leading-5 text-stone-400">
+                Coinbase and Rainbow users can use Share or Copy link, then open it in the wallet browser.
+              </p>
+            </div>
+          ) : null}
           <div className="flex flex-wrap gap-2">
             <button
               type="button"

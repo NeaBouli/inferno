@@ -33,7 +33,11 @@ NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=...
 
 The public shop defaults to Ethereum Mainnet. `NEXT_PUBLIC_CHAIN_ID=11155111` can still be used for Sepolia testing if matching testnet contract addresses are supplied.
 
-`NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` enables the full WalletConnect/RainbowKit modal for compatible mobile wallets. Without it, the app intentionally falls back to browser-injected Ethereum wallets such as MetaMask and Coinbase Wallet instead of blocking the customer proof flow.
+`NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` enables the full WalletConnect/RainbowKit modal for compatible mobile wallets. Without it, the app intentionally falls back to browser-injected Ethereum wallets such as MetaMask and Coinbase Wallet instead of blocking the customer proof flow. On iOS/iPadOS and Android, the fallback also exposes official HTTPS wallet-browser launch links for MetaMask, Trust Wallet, OKX and Phantom. Coinbase and Rainbow remain on the injected-provider or Copy/Share path until the WalletConnect project is configured.
+
+Wallet launch targets are always reduced to an HTTPS path on
+`https://shop.ifrunit.tech`; foreign origins and query strings are discarded
+before a wallet link is generated.
 
 The landing page includes a public `System readiness` card. It checks `/api/ready`,
 confirms Ethereum Mainnet (`chainId: 1`) and exposes whether WalletConnect was
