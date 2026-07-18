@@ -111,7 +111,7 @@ If `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` is missing, the frontend must show a s
 
 ## Open Build Tickets
 
-1. Benefits Network frontend is deployed at `shop.ifrunit.tech`. **Implemented; future releases remain capacity-gated.**
+1. Benefits Network frontend is deployed at `shop.ifrunit.tech`. **Implemented and live; release `72a12526` passed production health, PWA, desktop and iPad smoke checks on 18 July 2026. Future deployments retain the capacity gate.**
 2. Benefits backend is exposed under the shop HTTPS origin. **Implemented with health/readiness smoke coverage.**
 3. Seller onboarding supports owner-wallet self-service creation with an anti-spam profile cap. **Implemented; invitation/review policy remains a future governance decision.**
 4. Add QR history and audit view for sellers. **Implemented for owner-wallet-protected recent sessions, restore receipts and activity metrics; export/retention policy remains future work.**
