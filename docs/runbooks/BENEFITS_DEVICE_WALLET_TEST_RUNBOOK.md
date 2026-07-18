@@ -216,7 +216,7 @@ Use only test business/session ids. Leave fields out when they do not apply.
 
 - `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` is not currently set for production WalletConnect/RainbowKit modal support.
 - Full live APPROVED -> REDEEMED proof requires an eligible locked customer wallet.
-- Server disk remains tight during deploys; do not run unnecessary rebuilds while conducting device tests.
+- Production capacity must still be checked read-only before deploys. The 2026-07-18 redemption-cap release left 17 GB free; keep the 4-GB hard deploy floor and avoid unrelated rebuilds during device tests.
 
 ## Completion Gate
 
