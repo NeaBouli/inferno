@@ -74,12 +74,14 @@ async function verifyHttpSurface() {
   await expectSha256('/icons/ifr-icon-180-v2.png', '66efa6b6551151367639f4f92eb9c9766b295b12c3792c2e65bf47a0a446af76');
   await expectSha256('/icons/ifr-icon-192-v2.png', 'c2e06aa93d6ba47f30d0ccd14d2a8d9a16c04841e56cb7f4f2bb783e86fdf203');
   await expectSha256('/icons/ifr-icon-512-v2.png', '6f029513ff76f3482418da9792e6f9f3545f0cc18b88740fe1f61db50fbe87f1');
+  await expectSha256('/icons/ifr-official-64-v3.png', '81b6502f5d9e8ccf610edbce49c8a28333edf3740fe1748fd39160d5fe8e4bf0');
+  await expectSha256('/icons/ifr-official-256-v3.png', 'e16d4ed9e2fdd6907ad718e57700ae3931fbef1843a05f578413b08c947f3d48');
   await expectSha256('/icons/icon-192.png', 'c2e06aa93d6ba47f30d0ccd14d2a8d9a16c04841e56cb7f4f2bb783e86fdf203');
   await expectSha256('/icons/icon-512.png', '6f029513ff76f3482418da9792e6f9f3545f0cc18b88740fe1f61db50fbe87f1');
   await fetchOk('/icons/favicon-v2.ico', 'image/x-icon');
   await fetchOk('/favicon.ico', 'image/x-icon');
   const serviceWorker = await fetchOk('/sw.js', 'javascript');
-  assert((await serviceWorker.text()).includes("ifr-benefits-v4"), 'service worker cache version mismatch');
+  assert((await serviceWorker.text()).includes("ifr-benefits-v5"), 'service worker cache version mismatch');
   log('PWA assets OK');
 
   const auth = await fetchJson('/api/seller/auth-message?action=business:list&businessId=seller');
@@ -169,7 +171,7 @@ async function verifyPage(contextOptions, label) {
     const officialIcon = page.getByRole('img', { name: 'Official Inferno Protocol IFR icon' });
     assert(await officialIcon.count() === 1, `${label} must render exactly one official IFR header icon`);
     assert(
-      await officialIcon.getAttribute('src') === '/icons/ifr-icon-192-v2.png',
+      await officialIcon.getAttribute('src') === '/icons/ifr-official-256-v3.png',
       `${label} header does not use the current official IFR icon`
     );
     await expectText(page, 'Locked IFR. Benefits at checkout.');
