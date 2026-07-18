@@ -78,23 +78,30 @@ async function fetchNoContent(path, options = {}) {
   }
 }
 
-async function signSellerAction(wallet, action, businessId) {
+async function signSellerAction(wallet, action, businessId, scope) {
   const query = new URLSearchParams({ action, businessId });
+  if (action === 'sessions:create') {
+    query.set('walletAddress', wallet.address);
+    query.set('scope', scope || 'default');
+  }
   const challenge = await fetchJson(`/api/seller/auth-message?${query.toString()}`);
   const signature = await wallet.signMessage(challenge.message);
   return {
     walletAddress: wallet.address,
     signature,
     timestamp: challenge.timestamp,
+    nonce: challenge.nonce,
   };
 }
 
 function sellerHeaders(auth) {
-  return {
+  const headers = {
     'x-ifr-wallet': auth.walletAddress,
     'x-ifr-signature': auth.signature,
     'x-ifr-timestamp': auth.timestamp,
   };
+  if (auth.nonce) headers['x-ifr-nonce'] = auth.nonce;
+  return headers;
 }
 
 async function expectHttpStatus(path, expectedStatus, options = {}) {
@@ -233,8 +240,10 @@ async function main() {
   }
   console.log('Initial session history: OK');
 
+  const createSessionAuth = await signSellerAction(wallet, 'sessions:create', business.id, rule.id);
   const session = await fetchJson('/api/sessions', {
     method: 'POST',
+    headers: sellerHeaders(createSessionAuth),
     body: JSON.stringify({
       businessId: business.id,
       benefitRuleId: rule.id,

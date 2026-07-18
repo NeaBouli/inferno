@@ -45,9 +45,13 @@
 **Threat:** Attacker floods the API with session creation or attest attempts.
 
 **Mitigation:**
-- Session creation: max 100 per business per hour (express-rate-limit)
+- Session creation: pre-auth IP budget plus a post-auth budget charged only to the recovered seller wallet
+- QR creation requires a server-issued, single-use `sessions:create` challenge bound to the recovered wallet, business and selected rule
+- Challenge consumption, current owner/operator recheck and session creation share one database transaction
 - Attest attempts: max 3 per session (enforced in database)
 - Global attest rate limit: max 50 per IP per hour
+- Auth-message and challenge reads are IP-limited
+- Only private/loopback proxy hops are trusted when resolving the public client IP; arbitrary forwarded headers are not trusted directly
 - Failed attestations before the third attempt keep the stored session PENDING so a real customer can recover from an insufficient lock or bad wallet prompt without asking the seller for a new QR
 - After 3 failed attempts, the session becomes terminal REJECTED and cannot accept more attestations
 - TTL, nonce binding and the three-attempt limit still bound the retry window
@@ -58,6 +62,7 @@
 
 **Mitigation:**
 - Seller actions require short-lived, server-issued wallet messages
+- Pre-auth rate limits never key on the claimed wallet; wallet budgets are charged only after signature recovery
 - Owner-only actions require the recovered signer to match `Business.ownerAddress`
 - Session history uses `Action: sessions:list` and is limited to the owned business
 - Checkout operators are unique per business, owner-managed, revocable and optionally expiring

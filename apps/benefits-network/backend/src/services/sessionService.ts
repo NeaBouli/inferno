@@ -3,6 +3,7 @@ import { Prisma, PrismaClient } from '@prisma/client';
 import { config } from '../config';
 import { checkLock, recoverSigner } from './ifrLockService';
 import { toIFRBaseUnits } from './rewardService';
+import { normalizeAddress } from './sellerAuth';
 
 const prisma = new PrismaClient();
 
@@ -169,9 +170,88 @@ async function getRedemptionLimitDecision(
 /**
  * Create a new verification session for a business.
  */
-export async function createSession(businessId: string, benefitRuleId?: string) {
+type SessionCreatorAuthorization = {
+  walletAddress: string;
+  nonce: string;
+  scope: string;
+};
+
+type SessionCreator = {
+  walletAddress: string;
+  role: 'OWNER' | 'OPERATOR';
+  operatorId: string | null;
+  label: string | null;
+  expiresAt: Date | null;
+};
+
+async function resolveSessionCreator(
+  tx: Prisma.TransactionClient,
+  businessId: string,
+  walletAddress: string
+): Promise<SessionCreator | null> {
+  const normalizedWallet = normalizeAddress(walletAddress);
+  const business = await tx.business.findUnique({
+    where: { id: businessId },
+    select: { ownerAddress: true, active: true },
+  });
+  if (!business?.active || !business.ownerAddress) return null;
+  if (normalizeAddress(business.ownerAddress) === normalizedWallet) {
+    return {
+      walletAddress: normalizedWallet,
+      role: 'OWNER',
+      operatorId: null,
+      label: 'Business owner',
+      expiresAt: null,
+    };
+  }
+
+  const operator = await tx.checkoutOperator.findFirst({
+    where: {
+      businessId,
+      walletAddress: normalizedWallet,
+      active: true,
+      OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }],
+    },
+    select: { id: true, label: true, expiresAt: true },
+  });
+  if (!operator) return null;
+  return {
+    walletAddress: normalizedWallet,
+    role: 'OPERATOR',
+    operatorId: operator.id,
+    label: operator.label,
+    expiresAt: operator.expiresAt,
+  };
+}
+
+async function createSessionInternal(
+  businessId: string,
+  benefitRuleId?: string,
+  creatorAuthorization?: SessionCreatorAuthorization
+) {
   const nonce = crypto.randomBytes(32).toString('hex');
   const session = await prisma.$transaction(async (tx) => {
+    let creator: SessionCreator | null = null;
+    if (creatorAuthorization) {
+      const consumed = await tx.sellerAuthorizationChallenge.updateMany({
+        where: {
+          nonce: creatorAuthorization.nonce,
+          walletAddress: creatorAuthorization.walletAddress,
+          action: 'sessions:create',
+          businessId,
+          scope: creatorAuthorization.scope,
+          consumedAt: null,
+          expiresAt: { gt: new Date() },
+        },
+        data: { consumedAt: new Date() },
+      });
+      if (consumed.count !== 1) {
+        throw new Error('Seller authorization challenge is invalid, expired, or already used');
+      }
+      creator = await resolveSessionCreator(tx, businessId, creatorAuthorization.walletAddress);
+      if (!creator) throw new Error('Seller wallet is not authorized for checkout');
+    }
+
     // Acquire SQLite's write lock before reading mutable checkout eligibility.
     // Product/rule archival therefore linearizes either before or after this session.
     if (benefitRuleId) {
@@ -254,19 +334,41 @@ export async function createSession(businessId: string, benefitRuleId?: string) 
       data: {
         sessionId: created.id,
         type: 'SESSION_CREATED',
-        payload: JSON.stringify({ businessId, benefitRuleId: benefitRule?.id ?? null, nonce }),
+        payload: JSON.stringify({
+          businessId,
+          benefitRuleId: benefitRule?.id ?? null,
+          nonce,
+          createdBy: creator ? {
+            walletAddress: creator.walletAddress,
+            role: creator.role,
+            operatorId: creator.operatorId,
+          } : null,
+        }),
       },
     });
-    return created;
+    return { created, creator };
   });
 
-  const benefit = benefitFromSession(session);
+  const benefit = benefitFromSession(session.created);
 
   return {
-    sessionId: session.id,
-    expiresAt: session.expiresAt,
+    sessionId: session.created.id,
+    expiresAt: session.created.expiresAt,
+    createdBy: session.creator,
     ...benefit,
   };
+}
+
+export function createSession(businessId: string, benefitRuleId?: string) {
+  return createSessionInternal(businessId, benefitRuleId);
+}
+
+export function createAuthorizedSession(
+  businessId: string,
+  benefitRuleId: string | undefined,
+  creatorAuthorization: SessionCreatorAuthorization
+) {
+  return createSessionInternal(businessId, benefitRuleId, creatorAuthorization);
 }
 
 /**

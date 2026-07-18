@@ -3,14 +3,35 @@ import { ethers } from 'ethers';
 const MAX_SIGNATURE_AGE_MS = 10 * 60 * 1000;
 const MAX_FUTURE_SKEW_MS = 2 * 60 * 1000;
 
-export function buildSellerAuthMessage(action: string, businessId: string, timestamp: string): string {
-  return [
+export class SellerAuthError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'SellerAuthError';
+  }
+}
+
+export type SellerAuthBinding = {
+  nonce: string;
+  scope: string;
+};
+
+export function buildSellerAuthMessage(
+  action: string,
+  businessId: string,
+  timestamp: string,
+  binding?: SellerAuthBinding
+): string {
+  const lines = [
     'IFR Benefits Network - Seller Authorization',
     `Action: ${action}`,
     `Business: ${businessId || 'new'}`,
     `Timestamp: ${timestamp}`,
-    'Only sign this message inside shop.ifrunit.tech.',
-  ].join('\n');
+  ];
+  if (binding) {
+    lines.push(`Scope: ${binding.scope}`, `Nonce: ${binding.nonce}`);
+  }
+  lines.push('Only sign this message inside shop.ifrunit.tech.');
+  return lines.join('\n');
 }
 
 export function normalizeAddress(address: string): string {
@@ -23,23 +44,38 @@ export function verifySellerSignature(input: {
   timestamp: string;
   action: string;
   businessId?: string;
+  nonce?: string;
+  scope?: string;
 }): string {
   const timestampMs = Number(input.timestamp);
   if (!Number.isFinite(timestampMs)) {
-    throw new Error('Invalid seller auth timestamp');
+    throw new SellerAuthError('Invalid seller authorization timestamp');
   }
 
   const now = Date.now();
   if (timestampMs < now - MAX_SIGNATURE_AGE_MS || timestampMs > now + MAX_FUTURE_SKEW_MS) {
-    throw new Error('Seller authorization expired');
+    throw new SellerAuthError('Seller authorization expired');
   }
 
-  const expectedAddress = normalizeAddress(input.walletAddress);
-  const message = buildSellerAuthMessage(input.action, input.businessId || 'new', input.timestamp);
-  const recoveredAddress = normalizeAddress(ethers.utils.verifyMessage(message, input.signature));
-  if (recoveredAddress !== expectedAddress) {
-    throw new Error('Seller authorization signature mismatch');
-  }
+  try {
+    const expectedAddress = normalizeAddress(input.walletAddress);
+    const binding = input.nonce && input.scope
+      ? { nonce: input.nonce, scope: input.scope }
+      : undefined;
+    const message = buildSellerAuthMessage(
+      input.action,
+      input.businessId || 'new',
+      input.timestamp,
+      binding
+    );
+    const recoveredAddress = normalizeAddress(ethers.utils.verifyMessage(message, input.signature));
+    if (recoveredAddress !== expectedAddress) {
+      throw new SellerAuthError('Seller authorization signature mismatch');
+    }
 
-  return expectedAddress;
+    return expectedAddress;
+  } catch (err) {
+    if (err instanceof SellerAuthError) throw err;
+    throw new SellerAuthError('Invalid seller authorization');
+  }
 }

@@ -31,7 +31,30 @@ function baseUrl() {
   return `http://127.0.0.1:${address.port}`;
 }
 
-async function sellerHeaders(wallet: ethers.Wallet, action: string, businessId: string) {
+async function sellerHeaders(
+  wallet: ethers.Wallet,
+  action: string,
+  businessId: string,
+  scope = 'default'
+): Promise<Record<string, string>> {
+  if (action === 'sessions:create') {
+    const query = new URLSearchParams({
+      action,
+      businessId,
+      walletAddress: wallet.address,
+      scope,
+    });
+    const challenge = await (
+      await fetch(`${baseUrl()}/api/seller/auth-message?${query}`)
+    ).json() as { message: string; timestamp: string; nonce: string };
+    return {
+      'content-type': 'application/json',
+      'x-ifr-wallet': wallet.address,
+      'x-ifr-signature': await wallet.signMessage(challenge.message),
+      'x-ifr-timestamp': challenge.timestamp,
+      'x-ifr-nonce': challenge.nonce,
+    };
+  }
   const timestamp = Date.now().toString();
   const signature = await wallet.signMessage(buildSellerAuthMessage(action, businessId, timestamp));
   return {
@@ -68,6 +91,7 @@ describe('Seller catalog routes', () => {
 
   beforeEach(async () => {
     jest.clearAllMocks();
+    await prisma.sellerAuthorizationChallenge.deleteMany();
     await prisma.auditLog.deleteMany();
     await prisma.session.deleteMany();
     await prisma.benefitRule.deleteMany();
@@ -425,10 +449,11 @@ describe('Seller catalog routes', () => {
       },
     });
     const archiveHeaders = await sellerHeaders(owner, 'products:delete', businessId);
+    const createHeaders = await sellerHeaders(owner, 'sessions:create', businessId, rule.id);
     const [createResponse, archiveResponse] = await Promise.all([
       fetch(`${baseUrl()}/api/sessions`, {
         method: 'POST',
-        headers: { 'content-type': 'application/json' },
+        headers: createHeaders,
         body: JSON.stringify({ businessId, benefitRuleId: rule.id }),
       }),
       fetch(`${baseUrl()}/api/seller/products/${product.id}`, {

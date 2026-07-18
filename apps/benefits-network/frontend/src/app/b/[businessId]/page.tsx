@@ -104,10 +104,12 @@ export default function BusinessConsole({ params }: { params: { businessId: stri
   );
   const scannerStatus = !business
     ? 'Load business'
+    : !sellerWalletReady
+      ? 'Connect seller wallet'
     : !previewBenefit
       ? 'Select benefit'
       : !session
-        ? 'Create QR session'
+        ? 'Authorize QR session'
         : customerApproved && checkoutAuthorized
           ? 'Ready to redeem'
           : customerApproved && sellerWalletReady
@@ -119,8 +121,10 @@ export default function BusinessConsole({ params }: { params: { businessId: stri
               : 'Waiting for customer';
   const scannerNextStep = !business
     ? 'The scanner is waiting for a valid seller profile before checkout can start.'
+    : !sellerWalletReady
+      ? 'Connect the business owner or an active checkout operator. The app verifies current access when creating the QR.'
     : !session
-      ? 'Choose the benefit rule, then create a QR session for the customer standing at checkout.'
+      ? 'Choose the benefit rule, then sign one short authorization to create the customer QR.'
       : customerApproved && checkoutAuthorized
         ? 'Redeem first to enforce this wallet\'s usage limit. Grant the benefit only after redemption succeeds.'
         : customerApproved && sellerWalletReady
@@ -133,9 +137,10 @@ export default function BusinessConsole({ params }: { params: { businessId: stri
   const scannerReadinessSteps = [
     { label: 'Seller profile loaded', ready: Boolean(business) },
     { label: 'Benefit or rule selected', ready: Boolean(previewBenefit) },
+    { label: 'Checkout wallet connected', ready: sellerWalletReady },
+    { label: 'Checkout access confirmed', ready: checkoutAuthorized },
     { label: 'QR session active', ready: sessionActive },
     { label: 'Customer approved', ready: customerApproved },
-    { label: 'Checkout access confirmed', ready: checkoutAuthorized },
   ];
   const checkoutReceipt = useMemo(() => {
     if (!session) return '';
@@ -218,16 +223,38 @@ export default function BusinessConsole({ params }: { params: { businessId: stri
   }
 
   async function startSession() {
+    if (!address || !isConnected) {
+      setError('Connect the business owner or checkout operator wallet before creating a QR session.');
+      return;
+    }
     setLoading(true);
     setError('');
     try {
-      const nextSession = await createSession(params.businessId, selectedRuleId || undefined);
+      const scope = selectedRuleId || 'default';
+      const challenge = await getSellerAuthMessage('sessions:create', params.businessId, {
+        walletAddress: address,
+        scope,
+      });
+      if (!challenge.nonce) throw new Error('Seller authorization challenge is incomplete');
+      const signature = await signMessageAsync({ message: challenge.message });
+      const nextSession = await createSession(params.businessId, selectedRuleId || undefined, {
+        walletAddress: address,
+        signature,
+        timestamp: challenge.timestamp,
+        nonce: challenge.nonce,
+      });
       setSession(nextSession);
       setStatus(null);
+      if (nextSession.createdBy) setCheckoutAccess(nextSession.createdBy);
       rememberSession(nextSession.sessionId);
       setLinkStatus('Checkout session saved on this device.');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Session failed');
+      const message = err instanceof Error ? err.message : 'Session failed';
+      if (message.includes('authorized for checkout')) {
+        setCheckoutAccess(null);
+        setAccessStatus('Checkout access changed. Ask the owner or check access again.');
+      }
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -494,7 +521,7 @@ export default function BusinessConsole({ params }: { params: { businessId: stri
               <button
                 type="button"
                 onClick={startSession}
-                disabled={!business || loading}
+                disabled={!business || !sellerWalletReady || loading}
                 className="rounded-2xl border border-orange-200/35 px-4 py-3 text-xs font-black uppercase tracking-[0.14em] text-orange-50 transition hover:bg-orange-200/10 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {session ? 'New session' : 'Create QR'}
@@ -723,7 +750,7 @@ export default function BusinessConsole({ params }: { params: { businessId: stri
           <button
             type="button"
             onClick={startSession}
-            disabled={!business || loading}
+            disabled={!business || !sellerWalletReady || loading}
             className="mt-6 w-full rounded-2xl bg-orange-300 px-5 py-4 text-sm font-black uppercase tracking-[0.16em] text-stone-950 shadow-xl shadow-orange-950/40 transition hover:bg-orange-200 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {loading ? 'Working...' : session ? 'Create new QR session' : 'Create QR session'}
@@ -832,7 +859,7 @@ export default function BusinessConsole({ params }: { params: { businessId: stri
                 <button
                   type="button"
                   onClick={startSession}
-                  disabled={loading}
+                  disabled={loading || !sellerWalletReady}
                   className="rounded-2xl border border-stone-300 px-5 py-4 text-sm font-black uppercase tracking-[0.16em] text-stone-950 transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   New verification

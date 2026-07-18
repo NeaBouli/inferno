@@ -165,3 +165,17 @@ model AuditLog {
 
   @@index([sessionId])
 }
+
+model SellerAuthorizationChallenge {
+  nonce         String   @id
+  walletAddress String
+  action        String
+  businessId    String
+  scope         String
+  expiresAt     DateTime
+  consumedAt    DateTime?
+  createdAt     DateTime @default(now())
+
+  @@index([expiresAt])
+  @@index([walletAddress, action, businessId])
+}

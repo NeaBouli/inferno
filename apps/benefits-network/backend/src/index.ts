@@ -11,6 +11,10 @@ import { prisma } from './services/sessionService';
 
 const app = express();
 
+// Production traffic crosses Traefik and the Next.js frontend on private Docker networks.
+// Trust only private/loopback proxy hops so req.ip resolves to the first public client hop.
+app.set('trust proxy', ['loopback', 'linklocal', 'uniquelocal']);
+
 app.use(cors({
   origin: (
     process.env.ALLOWED_ORIGINS ||

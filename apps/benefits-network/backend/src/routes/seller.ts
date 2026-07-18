@@ -1,13 +1,23 @@
 import { NextFunction, Request, Response, Router } from 'express';
+import crypto from 'crypto';
 import { Prisma } from '@prisma/client';
 import { z } from 'zod';
 import { prisma } from '../services/sessionService';
-import { buildSellerAuthMessage, normalizeAddress, verifySellerSignature } from '../services/sellerAuth';
+import {
+  SellerAuthError,
+  buildSellerAuthMessage,
+  normalizeAddress,
+  verifySellerSignature,
+} from '../services/sellerAuth';
 import { assertSellerBusinessLimit } from '../services/sellerLimits';
 import { resolveCheckoutActor } from '../services/sellerAccess';
-import { sellerRateLimiter } from '../middleware/rateLimiter';
+import { challengeRateLimiter, sellerRateLimiter } from '../middleware/rateLimiter';
 import { validate } from '../middleware/validator';
 import { getRewardOnChainStatus } from '../services/rewardService';
+import {
+  AuthenticatedRateLimitError,
+  assertSellerWalletActionAllowed,
+} from '../services/authenticatedRateLimiter';
 
 const router = Router();
 const MAX_ACTIVE_CHECKOUT_OPERATORS = 10;
@@ -131,15 +141,22 @@ function getSellerAuth(req: Request) {
 
 function requireSellerAuth(req: Request, action: string, businessId: string) {
   const auth = getSellerAuth(req);
-  return verifySellerSignature({ ...auth, action, businessId });
+  const wallet = verifySellerSignature({ ...auth, action, businessId });
+  assertSellerWalletActionAllowed(wallet);
+  return wallet;
 }
 
 function handleSellerError(err: unknown, res: Response, next: NextFunction) {
+  if (err instanceof AuthenticatedRateLimitError) {
+    res.set('Retry-After', String(err.retryAfterSeconds));
+    res.status(429).json({ error: err.message });
+    return;
+  }
+  if (err instanceof SellerAuthError) {
+    res.status(401).json({ error: err.message });
+    return;
+  }
   if (err instanceof Error) {
-    if (err.message.includes('authorization') || err.message.includes('signature')) {
-      res.status(401).json({ error: err.message });
-      return;
-    }
     if (err.message.includes('not the business owner') || err.message.includes('not authorized for checkout')) {
       res.status(403).json({ error: err.message });
       return;
@@ -224,18 +241,53 @@ async function lockActiveProduct(
   if (lockedProducts !== 1) throw new Error('Active product not found for this business');
 }
 
-router.get('/auth-message', (req, res) => {
-  const action = String(req.query.action || 'business:create');
-  const businessId = String(req.query.businessId || 'new');
-  const timestamp = String(Date.now());
-  res.json({
-    action,
-    businessId,
-    timestamp,
-    issuedAt: new Date(Number(timestamp)).toISOString(),
-    expiresAt: new Date(Number(timestamp) + 10 * 60 * 1000).toISOString(),
-    message: buildSellerAuthMessage(action, businessId, timestamp),
-  });
+router.get('/auth-message', challengeRateLimiter, async (req, res, next) => {
+  try {
+    const action = String(req.query.action || 'business:create');
+    const businessId = String(req.query.businessId || 'new');
+    const timestamp = String(Date.now());
+    const response: Record<string, string> = {
+      action,
+      businessId,
+      timestamp,
+      issuedAt: new Date(Number(timestamp)).toISOString(),
+      expiresAt: new Date(Number(timestamp) + 10 * 60 * 1000).toISOString(),
+      message: buildSellerAuthMessage(action, businessId, timestamp),
+    };
+
+    if (action === 'sessions:create') {
+      let walletAddress: string;
+      try {
+        walletAddress = normalizeAddress(String(req.query.walletAddress || ''));
+      } catch {
+        res.status(400).json({ error: 'Valid walletAddress is required for this authorization' });
+        return;
+      }
+      const scope = String(req.query.scope || 'default');
+      if (businessId.length > 200 || scope.length > 200) {
+        res.status(400).json({ error: 'Invalid seller authorization scope' });
+        return;
+      }
+      const nonce = crypto.randomBytes(32).toString('hex');
+      const expiresAt = new Date(Number(timestamp) + 10 * 60 * 1000);
+      await prisma.$transaction([
+        prisma.sellerAuthorizationChallenge.deleteMany({
+          where: { expiresAt: { lt: new Date() } },
+        }),
+        prisma.sellerAuthorizationChallenge.create({
+          data: { nonce, walletAddress, action, businessId, scope, expiresAt },
+        }),
+      ]);
+      response.walletAddress = walletAddress;
+      response.scope = scope;
+      response.nonce = nonce;
+      response.message = buildSellerAuthMessage(action, businessId, timestamp, { nonce, scope });
+    }
+
+    res.json(response);
+  } catch (err) {
+    next(err);
+  }
 });
 
 router.post('/businesses', sellerRateLimiter, validate(createBusinessSchema), async (req, res, next) => {
@@ -247,6 +299,7 @@ router.post('/businesses', sellerRateLimiter, validate(createBusinessSchema), as
       action: 'business:create',
       businessId: 'new',
     });
+    assertSellerWalletActionAllowed(ownerAddress);
 
     await assertSellerBusinessLimit(ownerAddress);
 
@@ -356,12 +409,18 @@ router.post(
 
       const now = new Date();
       const { operator, existed } = await prisma.$transaction(async (tx) => {
+        // Acquire SQLite's writer lock before reading mutable operator state.
+        await tx.$executeRaw`
+          UPDATE "CheckoutOperator"
+          SET "active" = "active"
+          WHERE "businessId" = ${req.params.id} AND "walletAddress" = ${walletAddress}
+        `;
         const existing = await tx.checkoutOperator.findUnique({
           where: { businessId_walletAddress: { businessId: req.params.id, walletAddress } },
           select: { active: true, expiresAt: true, updatedAt: true },
         });
         if (existing && authorizationTimestamp <= existing.updatedAt.getTime()) {
-          throw new Error('Seller authorization predates the latest checkout operator change');
+          throw new SellerAuthError('Seller authorization predates the latest checkout operator change');
         }
 
         const alreadyConsumesSlot = Boolean(
@@ -407,14 +466,25 @@ router.delete('/operators/:id', sellerRateLimiter, async (req, res, next) => {
       select: { id: true, businessId: true, updatedAt: true },
     });
     if (!operator) throw new Error('Checkout operator not found');
-    await requireBusinessOwner(req, 'operators:delete', operator.businessId);
-    if (authorizationTimestamp <= operator.updatedAt.getTime()) {
-      throw new Error('Seller authorization predates the latest checkout operator change');
-    }
-    await prisma.checkoutOperator.update({
-      where: { id: operator.id },
-      data: { active: false },
+    const ownerWallet = await requireBusinessOwner(req, 'operators:delete', operator.businessId);
+    const changed = await prisma.$transaction(async (tx) => {
+      const result = await tx.checkoutOperator.updateMany({
+        where: {
+          id: operator.id,
+          businessId: operator.businessId,
+          updatedAt: { lt: new Date(authorizationTimestamp) },
+          business: {
+            active: true,
+            ownerAddress: ownerWallet,
+          },
+        },
+        data: { active: false },
+      });
+      return result.count;
     });
+    if (changed !== 1) {
+      throw new SellerAuthError('Seller authorization predates the latest checkout operator change');
+    }
     res.status(204).send();
   } catch (err) {
     handleSellerError(err, res, next);

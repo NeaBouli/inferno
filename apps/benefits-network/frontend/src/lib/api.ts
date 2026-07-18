@@ -227,6 +227,7 @@ export interface SellerAuth {
   walletAddress: string;
   signature: string;
   timestamp: string;
+  nonce?: string;
 }
 
 export interface SellerAuthMessage {
@@ -236,6 +237,8 @@ export interface SellerAuthMessage {
   issuedAt: string;
   expiresAt: string;
   message: string;
+  nonce?: string;
+  scope?: string;
 }
 
 export interface SessionCreated {
@@ -251,6 +254,7 @@ export interface SessionCreated {
   dailyRedemptionLimit: number;
   monthlyRedemptionLimit: number;
   tierLabel: string | null;
+  createdBy?: CheckoutAccess;
 }
 
 export interface SessionBenefit {
@@ -319,17 +323,27 @@ export function buildSellerAuthMessage(action: string, businessId: string, times
   ].join('\n');
 }
 
-export function getSellerAuthMessage(action: string, businessId: string) {
+export function getSellerAuthMessage(
+  action: string,
+  businessId: string,
+  binding?: { walletAddress: string; scope: string }
+) {
   const query = new URLSearchParams({ action, businessId: businessId || 'new' });
+  if (binding) {
+    query.set('walletAddress', binding.walletAddress);
+    query.set('scope', binding.scope);
+  }
   return fetchJSON<SellerAuthMessage>(`/api/seller/auth-message?${query.toString()}`);
 }
 
 function sellerHeaders(auth: SellerAuth) {
-  return {
+  const headers: Record<string, string> = {
     'x-ifr-wallet': auth.walletAddress,
     'x-ifr-signature': auth.signature,
     'x-ifr-timestamp': auth.timestamp,
   };
+  if (auth.nonce) headers['x-ifr-nonce'] = auth.nonce;
+  return headers;
 }
 
 export function createAdminBusiness(adminSecret: string, input: AdminBusinessInput) {
@@ -527,9 +541,10 @@ export function deleteSellerBusinessRule(ruleId: string, auth: SellerAuth) {
   });
 }
 
-export function createSession(businessId: string, benefitRuleId?: string) {
+export function createSession(businessId: string, benefitRuleId: string | undefined, auth: SellerAuth) {
   return fetchJSON<SessionCreated>('/api/sessions', {
     method: 'POST',
+    headers: sellerHeaders(auth),
     body: JSON.stringify({ businessId, benefitRuleId }),
   });
 }

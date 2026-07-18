@@ -1,10 +1,14 @@
-import { Request, Router } from 'express';
+import { Request, Response, Router } from 'express';
 import { z } from 'zod';
-import { createSession, getSession, prisma, redeem } from '../services/sessionService';
-import { verifySellerSignature } from '../services/sellerAuth';
+import { createAuthorizedSession, getSession, prisma, redeem } from '../services/sessionService';
+import { SellerAuthError, verifySellerSignature } from '../services/sellerAuth';
 import { resolveCheckoutActor } from '../services/sellerAccess';
 import { validate } from '../middleware/validator';
 import { sessionRateLimiter } from '../middleware/rateLimiter';
+import {
+  AuthenticatedRateLimitError,
+  assertSellerWalletActionAllowed,
+} from '../services/authenticatedRateLimiter';
 
 const router = Router();
 
@@ -18,6 +22,7 @@ function getSellerAuth(req: Request) {
     walletAddress: String(req.header('x-ifr-wallet') || ''),
     signature: String(req.header('x-ifr-signature') || ''),
     timestamp: String(req.header('x-ifr-timestamp') || ''),
+    nonce: String(req.header('x-ifr-nonce') || ''),
   };
 }
 
@@ -43,14 +48,58 @@ async function requireSessionRedeemer(req: Request, sessionId: string) {
     action: 'sessions:redeem',
     businessId: sessionId,
   });
+  assertSellerWalletActionAllowed(wallet);
   const actor = await resolveCheckoutActor(session.businessId, wallet);
   if (!actor) throw new Error('Seller wallet is not authorized for checkout');
   return actor;
 }
 
+function requireSessionCreator(req: Request, businessId: string, scope: string) {
+  const auth = getSellerAuth(req);
+  if (!auth.nonce) throw new SellerAuthError('Seller authorization nonce is required');
+  const wallet = verifySellerSignature({
+    ...auth,
+    action: 'sessions:create',
+    businessId,
+    scope,
+  });
+  assertSellerWalletActionAllowed(wallet);
+  return { walletAddress: wallet, nonce: auth.nonce, scope };
+}
+
+function handleSessionAuthError(err: unknown, res: Response) {
+  if (err instanceof AuthenticatedRateLimitError) {
+    res.set('Retry-After', String(err.retryAfterSeconds));
+    res.status(429).json({ error: err.message });
+    return true;
+  }
+  if (err instanceof SellerAuthError) {
+    res.status(401).json({ error: err.message });
+    return true;
+  }
+  if (err instanceof Error) {
+    if (err.message.includes('authorization challenge')) {
+      res.status(401).json({ error: err.message });
+      return true;
+    }
+    if (err.message.includes('authorized for checkout') || err.message.includes('Seller-owned business required')) {
+      res.status(403).json({ error: err.message });
+      return true;
+    }
+  }
+  return false;
+}
+
 router.post('/', sessionRateLimiter, validate(createSessionSchema), async (req, res, next) => {
   try {
-    const result = await createSession(req.body.businessId, req.body.benefitRuleId);
+    const scope = req.body.benefitRuleId || 'default';
+    const creatorAuthorization = requireSessionCreator(req, req.body.businessId, scope);
+    const result = await createAuthorizedSession(
+      req.body.businessId,
+      req.body.benefitRuleId,
+      creatorAuthorization
+    );
+    if (!result.createdBy) throw new Error('Authorized session creator was not recorded');
     res.status(201).json({
       sessionId: result.sessionId,
       expiresAt: result.expiresAt,
@@ -64,8 +113,10 @@ router.post('/', sessionRateLimiter, validate(createSessionSchema), async (req, 
       dailyRedemptionLimit: result.dailyRedemptionLimit,
       monthlyRedemptionLimit: result.monthlyRedemptionLimit,
       tierLabel: result.tierLabel,
+      createdBy: { authorized: true, ...result.createdBy },
     });
   } catch (err) {
+    if (handleSessionAuthError(err, res)) return;
     if (err instanceof Error && err.message.includes('not found')) {
       res.status(404).json({ error: err.message });
       return;
@@ -103,15 +154,8 @@ router.post('/:id/redeem', async (req, res, next) => {
     const result = await redeem(req.params.id, actor);
     res.json(result);
   } catch (err) {
+    if (handleSessionAuthError(err, res)) return;
     if (err instanceof Error) {
-      if (err.message.includes('authorization') || err.message.includes('signature')) {
-        res.status(401).json({ error: err.message });
-        return;
-      }
-      if (err.message.includes('authorized for checkout') || err.message.includes('Seller-owned business required')) {
-        res.status(403).json({ error: err.message });
-        return;
-      }
       if (err.message.includes('not found')) {
         res.status(404).json({ error: err.message });
         return;
