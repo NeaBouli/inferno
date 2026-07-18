@@ -58,7 +58,9 @@ async function navigate(url) {
 
 async function main() {
   assert(listeners.has('fetch'), 'service worker must register a fetch handler');
-  assert(source.includes("const CACHE_NAME = 'ifr-benefits-v4'"), 'service worker cache version must be v4');
+  assert(source.includes("const CACHE_NAME = 'ifr-benefits-v5'"), 'service worker cache version must be v5');
+  assert(source.includes("'/icons/ifr-official-64-v3.png'"), 'service worker must precache the canonical official favicon');
+  assert(source.includes("'/icons/ifr-official-256-v3.png'"), 'service worker must precache the canonical official header icon');
   assert(source.includes("'/icons/ifr-icon-192-v2.png'"), 'service worker must precache the v2 official 192 icon');
   assert(source.includes("'/icons/ifr-icon-512-v2.png'"), 'service worker must precache the v2 official 512 icon');
   assert(layoutSource.includes("updateViaCache:'none'"), 'registration must bypass stale service-worker HTTP caches');
