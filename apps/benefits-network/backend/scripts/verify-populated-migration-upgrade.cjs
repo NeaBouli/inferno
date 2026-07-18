@@ -5,7 +5,7 @@ const path = require('path');
 
 const root = path.resolve(__dirname, '..');
 const migrationsDir = path.join(root, 'prisma', 'migrations');
-const targetMigration = '20260717030000_add_verified_seller_rewards';
+const targetMigration = '20260718210000_add_redemption_limits';
 const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'benefits-populated-upgrade-'));
 const dbPath = path.join(tempDir, 'upgrade.db');
 
@@ -77,11 +77,23 @@ try {
     SELECT COUNT(*) FROM pragma_table_info('Session')
     WHERE name IN (
       'benefitSnapshotVersion', 'benefitLabel', 'benefitCategory', 'benefitProductName',
-      'benefitDiscountPercent', 'benefitRequiredLockIFR', 'benefitTtlSeconds'
+      'benefitDiscountPercent', 'benefitRequiredLockIFR', 'benefitTtlSeconds',
+      'benefitDailyRedemptionLimit', 'benefitMonthlyRedemptionLimit'
     );
   `);
-  if (productIdColumn !== '1' || snapshotColumns !== '7') {
-    throw new Error(`Missing catalog/snapshot columns: productId=${productIdColumn}, snapshots=${snapshotColumns}`);
+  const ruleLimitColumns = sqlite(`
+    SELECT COUNT(*) FROM pragma_table_info('BenefitRule')
+    WHERE name IN ('dailyRedemptionLimit', 'monthlyRedemptionLimit');
+  `);
+  const existingRuleLimits = sqlite(`
+    SELECT dailyRedemptionLimit || '|' || monthlyRedemptionLimit
+    FROM BenefitRule WHERE id = 'existing-rule';
+  `);
+  if (productIdColumn !== '1' || snapshotColumns !== '9' || ruleLimitColumns !== '2' || existingRuleLimits !== '0|0') {
+    throw new Error(
+      `Missing catalog/cap snapshot state: productId=${productIdColumn}, snapshots=${snapshotColumns}, ` +
+      `ruleLimits=${ruleLimitColumns}, existingLimits=${existingRuleLimits}`
+    );
   }
 
   sqlite(`

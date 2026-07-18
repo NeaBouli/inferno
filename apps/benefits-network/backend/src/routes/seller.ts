@@ -30,6 +30,8 @@ const createBenefitRuleSchema = z.object({
   productName: z.string().min(1).max(160),
   discountPercent: z.number().int().min(0).max(100),
   requiredLockIFR: z.number().int().positive(),
+  dailyRedemptionLimit: z.number().int().min(0).max(1000).optional(),
+  monthlyRedemptionLimit: z.number().int().min(0).max(10000).optional(),
   ttlSeconds: z.number().int().min(10).max(3600).optional(),
   active: z.boolean().optional(),
 });
@@ -59,6 +61,8 @@ type BenefitRuleWriteInput = {
   productName?: string;
   discountPercent?: number;
   requiredLockIFR?: number;
+  dailyRedemptionLimit?: number;
+  monthlyRedemptionLimit?: number;
   ttlSeconds?: number;
   active?: boolean;
 };
@@ -560,6 +564,8 @@ router.get('/businesses/:id/sessions', sellerRateLimiter, async (req, res, next)
               productName: true,
               discountPercent: true,
               requiredLockIFR: true,
+              dailyRedemptionLimit: true,
+              monthlyRedemptionLimit: true,
             },
           },
           benefitSnapshotVersion: true,
@@ -568,6 +574,8 @@ router.get('/businesses/:id/sessions', sellerRateLimiter, async (req, res, next)
           benefitProductName: true,
           benefitDiscountPercent: true,
           benefitRequiredLockIFR: true,
+          benefitDailyRedemptionLimit: true,
+          benefitMonthlyRedemptionLimit: true,
           business: {
             select: {
               tierLabel: true,
@@ -619,21 +627,27 @@ router.get('/businesses/:id/sessions', sellerRateLimiter, async (req, res, next)
         redeemedAt: session.redeemedAt,
         attestAttempts: session.attestAttempts,
         benefitRuleId: session.benefitRule?.id ?? null,
-        label: session.benefitSnapshotVersion === 1
+        label: (session.benefitSnapshotVersion ?? 0) >= 1
           ? session.benefitLabel
           : session.benefitRule?.label ?? session.business.tierLabel,
-        category: session.benefitSnapshotVersion === 1
+        category: (session.benefitSnapshotVersion ?? 0) >= 1
           ? session.benefitCategory
           : session.benefitRule?.category ?? null,
-        productName: session.benefitSnapshotVersion === 1
+        productName: (session.benefitSnapshotVersion ?? 0) >= 1
           ? session.benefitProductName
           : session.benefitRule?.productName ?? null,
-        discountPercent: session.benefitSnapshotVersion === 1 && session.benefitDiscountPercent !== null
+        discountPercent: (session.benefitSnapshotVersion ?? 0) >= 1 && session.benefitDiscountPercent !== null
           ? session.benefitDiscountPercent
           : session.benefitRule?.discountPercent ?? session.business.discountPercent,
-        requiredLockIFR: session.benefitSnapshotVersion === 1 && session.benefitRequiredLockIFR !== null
+        requiredLockIFR: (session.benefitSnapshotVersion ?? 0) >= 1 && session.benefitRequiredLockIFR !== null
           ? session.benefitRequiredLockIFR
           : session.benefitRule?.requiredLockIFR ?? session.business.requiredLockIFR,
+        dailyRedemptionLimit: (session.benefitSnapshotVersion ?? 0) >= 1
+          ? session.benefitDailyRedemptionLimit ?? 0
+          : session.benefitRule?.dailyRedemptionLimit ?? 0,
+        monthlyRedemptionLimit: (session.benefitSnapshotVersion ?? 0) >= 1
+          ? session.benefitMonthlyRedemptionLimit ?? 0
+          : session.benefitRule?.monthlyRedemptionLimit ?? 0,
       })),
     });
   } catch (err) {
@@ -755,6 +769,8 @@ router.post(
             productName: data.productName ?? req.body.productName,
             discountPercent: req.body.discountPercent,
             requiredLockIFR: req.body.requiredLockIFR,
+            dailyRedemptionLimit: req.body.dailyRedemptionLimit,
+            monthlyRedemptionLimit: req.body.monthlyRedemptionLimit,
             ttlSeconds: req.body.ttlSeconds,
             active: req.body.active,
           },

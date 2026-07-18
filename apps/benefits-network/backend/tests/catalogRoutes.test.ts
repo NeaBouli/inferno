@@ -55,6 +55,8 @@ function rulePayload(productId: string) {
     discountPercent: 20,
     requiredLockIFR: 1000,
     ttlSeconds: 90,
+    dailyRedemptionLimit: 1,
+    monthlyRedemptionLimit: 10,
   };
 }
 
@@ -246,7 +248,13 @@ describe('Seller catalog routes', () => {
     expect(await buildChallengeMessage(session.sessionId)).toContain('Required Lock IFR: 1000');
     const oldSessionStatus = await fetch(`${baseUrl()}/api/sessions/${session.sessionId}`);
     expect(await oldSessionStatus.json()).toMatchObject({
-      benefit: { productName: 'Premium espresso', discountPercent: 20, requiredLockIFR: 1000 },
+      benefit: {
+        productName: 'Premium espresso',
+        discountPercent: 20,
+        requiredLockIFR: 1000,
+        dailyRedemptionLimit: 1,
+        monthlyRedemptionLimit: 10,
+      },
     });
     const historyHeaders = await sellerHeaders(owner, 'sessions:list', businessId);
     const historyResponse = await fetch(`${baseUrl()}/api/seller/businesses/${businessId}/sessions`, {
@@ -258,6 +266,8 @@ describe('Seller catalog routes', () => {
       category: 'Coffee',
       discountPercent: 20,
       requiredLockIFR: 1000,
+      dailyRedemptionLimit: 1,
+      monthlyRedemptionLimit: 10,
     });
     mockRecoverSigner.mockReturnValue(owner.address);
     mockCheckLock.mockResolvedValue({ eligible: true, lockedAmount: '1000.0' });
@@ -355,7 +365,7 @@ describe('Seller catalog routes', () => {
     });
     expect(await prisma.session.findUniqueOrThrow({ where: { id: session.sessionId } })).toMatchObject({
       benefitRuleId: rule.id,
-      benefitSnapshotVersion: 1,
+      benefitSnapshotVersion: 2,
       benefitProductName: 'Consultation',
     });
     expect(await buildChallengeMessage(session.sessionId)).toContain('Product: Consultation');
@@ -438,7 +448,7 @@ describe('Seller catalog routes', () => {
       ]);
       expect(savedSession).toMatchObject({
         benefitRuleId: rule.id,
-        benefitSnapshotVersion: 1,
+        benefitSnapshotVersion: 2,
         benefitProductName: 'Premium espresso',
       });
       expect(archivedProduct.active).toBe(false);

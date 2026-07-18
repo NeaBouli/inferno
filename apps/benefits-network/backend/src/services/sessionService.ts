@@ -1,5 +1,5 @@
 import crypto from 'crypto';
-import { PrismaClient } from '@prisma/client';
+import { Prisma, PrismaClient } from '@prisma/client';
 import { config } from '../config';
 import { checkLock, recoverSigner } from './ifrLockService';
 import { toIFRBaseUnits } from './rewardService';
@@ -27,6 +27,8 @@ function benefitFromSession(session: {
   benefitDiscountPercent: number | null;
   benefitRequiredLockIFR: number | null;
   benefitTtlSeconds: number | null;
+  benefitDailyRedemptionLimit: number | null;
+  benefitMonthlyRedemptionLimit: number | null;
   business: {
     discountPercent: number;
     requiredLockIFR: number;
@@ -41,10 +43,12 @@ function benefitFromSession(session: {
     discountPercent: number;
     requiredLockIFR: number;
     ttlSeconds: number;
+    dailyRedemptionLimit: number;
+    monthlyRedemptionLimit: number;
   } | null;
 }) {
   if (
-    session.benefitSnapshotVersion === 1 &&
+    (session.benefitSnapshotVersion ?? 0) >= 1 &&
     session.benefitDiscountPercent !== null &&
     session.benefitRequiredLockIFR !== null &&
     session.benefitTtlSeconds !== null
@@ -57,6 +61,8 @@ function benefitFromSession(session: {
       discountPercent: session.benefitDiscountPercent,
       requiredLockIFR: session.benefitRequiredLockIFR,
       ttlSeconds: session.benefitTtlSeconds,
+      dailyRedemptionLimit: session.benefitDailyRedemptionLimit ?? 0,
+      monthlyRedemptionLimit: session.benefitMonthlyRedemptionLimit ?? 0,
       tierLabel: session.benefitLabel,
     };
   }
@@ -70,6 +76,8 @@ function benefitFromSession(session: {
       discountPercent: session.business.discountPercent,
       requiredLockIFR: session.business.requiredLockIFR,
       ttlSeconds: session.business.ttlSeconds,
+      dailyRedemptionLimit: 0,
+      monthlyRedemptionLimit: 0,
       tierLabel: session.business.tierLabel,
     };
   }
@@ -82,8 +90,79 @@ function benefitFromSession(session: {
     discountPercent: session.benefitRule.discountPercent,
     requiredLockIFR: session.benefitRule.requiredLockIFR,
     ttlSeconds: session.benefitRule.ttlSeconds,
+    dailyRedemptionLimit: session.benefitRule.dailyRedemptionLimit,
+    monthlyRedemptionLimit: session.benefitRule.monthlyRedemptionLimit,
     tierLabel: session.benefitRule.label,
   };
+}
+
+type RedemptionLimitDecision = {
+  period: 'daily' | 'monthly';
+  used: number;
+  limit: number;
+  resetsAt: Date;
+  message: string;
+};
+
+function utcRedemptionPeriods(now: Date) {
+  const dayStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+  const nextDay = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1));
+  const monthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
+  const nextMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1));
+  return { dayStart, nextDay, monthStart, nextMonth };
+}
+
+async function getRedemptionLimitDecision(
+  tx: Prisma.TransactionClient,
+  session: {
+    businessId: string;
+    benefitRuleId: string | null;
+    recoveredAddress: string | null;
+    benefitDailyRedemptionLimit: number | null;
+    benefitMonthlyRedemptionLimit: number | null;
+  },
+  now: Date
+): Promise<RedemptionLimitDecision | null> {
+  const dailyLimit = Math.max(0, session.benefitDailyRedemptionLimit ?? 0);
+  const monthlyLimit = Math.max(0, session.benefitMonthlyRedemptionLimit ?? 0);
+  if ((!dailyLimit && !monthlyLimit) || !session.benefitRuleId || !session.recoveredAddress) {
+    return null;
+  }
+
+  const { dayStart, nextDay, monthStart, nextMonth } = utcRedemptionPeriods(now);
+  const [usage] = await tx.$queryRaw<Array<{ dailyCount: bigint | number; monthlyCount: bigint | number }>>`
+    SELECT
+      SUM(CASE WHEN "redeemedAt" >= ${dayStart} THEN 1 ELSE 0 END) AS "dailyCount",
+      COUNT(*) AS "monthlyCount"
+    FROM "Session"
+    WHERE "businessId" = ${session.businessId}
+      AND "benefitRuleId" = ${session.benefitRuleId}
+      AND "status" = 'REDEEMED'
+      AND "redeemedAt" >= ${monthStart}
+      AND LOWER("recoveredAddress") = LOWER(${session.recoveredAddress})
+  `;
+  const dailyUsed = Number(usage?.dailyCount ?? 0);
+  const monthlyUsed = Number(usage?.monthlyCount ?? 0);
+
+  if (dailyLimit > 0 && dailyUsed >= dailyLimit) {
+    return {
+      period: 'daily',
+      used: dailyUsed,
+      limit: dailyLimit,
+      resetsAt: nextDay,
+      message: `Daily redemption limit reached for this wallet (${dailyUsed}/${dailyLimit}); resets ${nextDay.toISOString()}`,
+    };
+  }
+  if (monthlyLimit > 0 && monthlyUsed >= monthlyLimit) {
+    return {
+      period: 'monthly',
+      used: monthlyUsed,
+      limit: monthlyLimit,
+      resetsAt: nextMonth,
+      message: `Monthly redemption limit reached for this wallet (${monthlyUsed}/${monthlyLimit}); resets ${nextMonth.toISOString()}`,
+    };
+  }
+  return null;
 }
 
 /**
@@ -145,6 +224,8 @@ export async function createSession(businessId: string, benefitRuleId?: string) 
           benefitDiscountPercent: benefitRule.discountPercent,
           benefitRequiredLockIFR: benefitRule.requiredLockIFR,
           benefitTtlSeconds: benefitRule.ttlSeconds,
+          benefitDailyRedemptionLimit: benefitRule.dailyRedemptionLimit,
+          benefitMonthlyRedemptionLimit: benefitRule.monthlyRedemptionLimit,
         }
       : {
           benefitLabel: business.tierLabel,
@@ -153,13 +234,15 @@ export async function createSession(businessId: string, benefitRuleId?: string) 
           benefitDiscountPercent: business.discountPercent,
           benefitRequiredLockIFR: business.requiredLockIFR,
           benefitTtlSeconds: business.ttlSeconds,
+          benefitDailyRedemptionLimit: 0,
+          benefitMonthlyRedemptionLimit: 0,
         };
     const expiresAt = new Date(Date.now() + ttlSeconds * 1000);
     const created = await tx.session.create({
       data: {
         businessId,
         benefitRuleId: benefitRule?.id,
-        benefitSnapshotVersion: 1,
+        benefitSnapshotVersion: 2,
         ...benefitSnapshot,
         nonce,
         expiresAt,
@@ -363,6 +446,15 @@ export async function redeem(
 
   const redeemedAt = new Date();
   const update = await prisma.$transaction(async (tx) => {
+    // SQLite permits only one writer. This no-op update acquires the write lock before
+    // reading cap usage, so concurrent counters cannot both redeem below the same limit.
+    const lockedBusiness = await tx.$executeRaw`
+      UPDATE "Business"
+      SET "active" = "active"
+      WHERE "id" = ${session.businessId} AND "active" = 1
+    `;
+    if (lockedBusiness !== 1) throw new Error('Seller business is no longer active');
+
     const business = await tx.business.findUnique({
       where: { id: session.businessId },
       select: { ownerAddress: true, active: true, rewardLink: true },
@@ -383,6 +475,33 @@ export async function redeem(
     }));
     if (!ownerAuthorized && !operatorAuthorized) {
       throw new Error('Seller wallet is no longer authorized for checkout');
+    }
+
+    const limitDecision = await getRedemptionLimitDecision(tx, session, redeemedAt);
+    if (limitDecision) {
+      const denied = await tx.session.updateMany({
+        where: { id: sessionId, status: 'APPROVED', expiresAt: { gt: redeemedAt } },
+        data: { status: 'REJECTED', reason: limitDecision.message },
+      });
+      if (denied.count === 1) {
+        await tx.auditLog.create({
+          data: {
+            sessionId,
+            type: 'REDEEM_DENIED_LIMIT',
+            payload: JSON.stringify({
+              period: limitDecision.period,
+              used: limitDecision.used,
+              limit: limitDecision.limit,
+              resetsAt: limitDecision.resetsAt.toISOString(),
+              wallet: session.recoveredAddress,
+              benefitRuleId: session.benefitRuleId,
+              actorWallet: actor.walletAddress,
+              actorRole: actor.role,
+            }),
+          },
+        });
+        return { count: 0, limitError: limitDecision.message };
+      }
     }
 
     const result = await tx.session.updateMany({
@@ -456,8 +575,10 @@ export async function redeem(
         }
       }
     }
-    return result;
+    return { count: result.count, limitError: null as string | null };
   });
+
+  if (update.limitError) throw new Error(update.limitError);
 
   if (update.count !== 1) {
     const latest = await prisma.session.findUnique({ where: { id: sessionId } });

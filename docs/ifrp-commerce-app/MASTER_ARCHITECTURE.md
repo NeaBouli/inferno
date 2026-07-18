@@ -308,6 +308,7 @@ minIFRLocked
 lockSource: ifrlock | commitment_time_only | either
 ttlSeconds
 dailyWalletLimit
+monthlyWalletLimit
 active
 createdAt
 updatedAt
@@ -432,6 +433,9 @@ Critical rules:
 - QR proofs expire quickly.
 - Customer must sign every verification challenge.
 - Redeem is one-time per session.
+- Per-rule daily and monthly limits are enforced per customer wallet on UTC calendar boundaries.
+- Limit values are frozen into each QR session; later rule edits cannot change an issued checkout.
+- Concurrent redemption attempts serialize before counting usage, so a limit cannot be overrun by two counters.
 - Rate limits per seller and wallet.
 - Seller staff can scan/redeem through owner-managed checkout wallets but cannot change owner wallet, profile, rule, history, delegation or reward settings.
 - Reward writes to PartnerVault only after seller is governance-approved.
@@ -549,6 +553,7 @@ MVP should be installable:
 - rule templates; **basic product-bound benefit rules implemented; reusable multi-rule templates remain incremental**
 - staff scanner mode; **implemented with owner-managed, expiring checkout operators and atomic role-audited redeem**
 - redemption history. **implemented as owner-protected recent sessions, metrics and receipts**
+- per-wallet redemption limits. **implemented per rule for UTC day/month with immutable session snapshots, atomic enforcement and audited denials**
 
 ### M4 - Verified Seller Rewards
 

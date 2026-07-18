@@ -180,6 +180,50 @@ describe('Redeem route authorization', () => {
     expect(secondResponse.status).toBe(409);
   });
 
+  it('returns 429 and audits a per-wallet daily redemption limit', async () => {
+    const customer = ethers.Wallet.createRandom().address;
+    const rule = await prisma.benefitRule.create({
+      data: {
+        businessId,
+        label: 'One per day',
+        category: 'Retail',
+        productName: 'Daily benefit',
+        discountPercent: 10,
+        requiredLockIFR: 1000,
+        dailyRedemptionLimit: 1,
+      },
+    });
+    const sessions = await Promise.all([0, 1].map(() => prisma.session.create({
+      data: {
+        businessId,
+        benefitRuleId: rule.id,
+        benefitSnapshotVersion: 2,
+        benefitDailyRedemptionLimit: 1,
+        benefitMonthlyRedemptionLimit: 0,
+        nonce: ethers.utils.hexlify(ethers.utils.randomBytes(32)).slice(2),
+        expiresAt: new Date(Date.now() + 300_000),
+        status: 'APPROVED',
+        recoveredAddress: customer,
+      },
+    })));
+
+    const firstHeaders = await sellerHeaders(seller, 'sessions:redeem', sessions[0].id);
+    expect((await postRedeem(sessions[0].id, firstHeaders)).status).toBe(200);
+    const secondHeaders = await sellerHeaders(seller, 'sessions:redeem', sessions[1].id);
+    const denied = await postRedeem(sessions[1].id, secondHeaders);
+    const body = await denied.json() as { error: string };
+
+    expect(denied.status).toBe(429);
+    expect(body.error).toContain('Daily redemption limit reached');
+    expect(await prisma.session.findUniqueOrThrow({ where: { id: sessions[1].id } })).toMatchObject({
+      status: 'REJECTED',
+      reason: expect.stringContaining('Daily redemption limit reached'),
+    });
+    expect(await prisma.auditLog.count({
+      where: { sessionId: sessions[1].id, type: 'REDEEM_DENIED_LIMIT' },
+    })).toBe(1);
+  });
+
   it('allows an active checkout operator to redeem and records the actor without a signature', async () => {
     const operator = await prisma.checkoutOperator.create({
       data: {
@@ -453,6 +497,8 @@ describe('Redeem route authorization', () => {
       discountPercent: 20,
       requiredLockIFR: 2500,
       ttlSeconds: 180,
+      dailyRedemptionLimit: 2,
+      monthlyRedemptionLimit: 12,
     };
 
     const missingAuth = await patchSellerRule(rule.id, payload);
@@ -499,6 +545,8 @@ describe('Redeem route authorization', () => {
       discountPercent: number;
       requiredLockIFR: number;
       ttlSeconds: number;
+      dailyRedemptionLimit: number;
+      monthlyRedemptionLimit: number;
       active: boolean;
     };
 

@@ -201,6 +201,9 @@ async function verifyPage(contextOptions, label) {
     await expectText(page, 'Server-side POS JavaScript');
     await expectText(page, 'Seller readiness');
     await expectText(page, 'New benefit rule');
+    await expectText(page, 'Uses per wallet / UTC day');
+    await expectText(page, 'Uses per wallet / UTC month');
+    await expectText(page, 'Per wallet: 1 / UTC day and 10 / UTC month');
     await expectText(page, 'Save new rule');
     await page.getByRole('heading', { name: 'Connect seller wallet' }).first().waitFor({ timeout: timeoutMs });
     await expectText(page, 'Active benefit rule loaded');
@@ -289,6 +292,8 @@ async function verifyPage(contextOptions, label) {
               discountPercent: 15,
               requiredLockIFR: 1000,
               ttlSeconds: 90,
+              dailyRedemptionLimit: 1,
+              monthlyRedemptionLimit: 10,
             }],
           }],
         }),
@@ -300,6 +305,7 @@ async function verifyPage(contextOptions, label) {
     await expectText(page, 'Reserve espresso');
     await expectText(page, '15% benefit');
     await expectText(page, '1,000 locked IFR');
+    await expectText(page, 'Per wallet: 1 / UTC day and 10 / UTC month');
     await expectText(page, 'Seller starts a one-time QR checkout');
     if (shouldScreenshot) {
       await page.screenshot({

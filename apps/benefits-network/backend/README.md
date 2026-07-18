@@ -159,6 +159,20 @@ the next server request. Redemption audit payloads record the actor wallet and
 Session creation remains public and rate-limited so QR links and POS helpers do
 not need a seller secret. Redemption remains short-lived, signed and one-time.
 
+## Per-wallet redemption limits
+
+Each benefit rule can set `dailyRedemptionLimit` and `monthlyRedemptionLimit`.
+Both use UTC calendar boundaries and `0` means unlimited. New QR sessions copy
+the two values into immutable session snapshots, so editing a rule does not
+change an already issued checkout. Legacy sessions without these fields remain
+unlimited.
+
+Redeem acquires the SQLite writer lock before counting successful redemptions
+for the same business, benefit rule and customer wallet. A concurrent checkout
+therefore cannot exceed the configured cap. A denied session becomes
+`REJECTED`, returns HTTP `429`, and records `REDEEM_DENIED_LIMIT` without storing
+wallet signatures.
+
 ## Verified Seller Rewards Foundation
 
 M4 reward support is governance-gated and fail-closed. A seller owner may submit

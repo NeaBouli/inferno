@@ -36,6 +36,8 @@ export interface BenefitRule {
   productName: string;
   discountPercent: number;
   requiredLockIFR: number;
+  dailyRedemptionLimit: number;
+  monthlyRedemptionLimit: number;
   ttlSeconds: number;
   active: boolean;
   createdAt: string;
@@ -49,6 +51,8 @@ export interface BenefitRuleInput {
   productName: string;
   discountPercent: number;
   requiredLockIFR: number;
+  dailyRedemptionLimit: number;
+  monthlyRedemptionLimit: number;
   ttlSeconds: number;
   active?: boolean;
 }
@@ -78,6 +82,8 @@ export interface PublicCatalogProduct extends CatalogProduct {
     label: string;
     discountPercent: number;
     requiredLockIFR: number;
+    dailyRedemptionLimit: number;
+    monthlyRedemptionLimit: number;
     ttlSeconds: number;
   }>;
 }
@@ -125,6 +131,8 @@ export interface SellerSessionSummary {
   productName: string | null;
   discountPercent: number;
   requiredLockIFR: number;
+  dailyRedemptionLimit: number;
+  monthlyRedemptionLimit: number;
 }
 
 export interface SellerActivityMetrics {
@@ -240,6 +248,8 @@ export interface SessionCreated {
   productName: string | null;
   discountPercent: number;
   requiredLockIFR: number;
+  dailyRedemptionLimit: number;
+  monthlyRedemptionLimit: number;
   tierLabel: string | null;
 }
 
@@ -250,6 +260,8 @@ export interface SessionBenefit {
   productName: string | null;
   discountPercent: number;
   requiredLockIFR: number;
+  dailyRedemptionLimit: number;
+  monthlyRedemptionLimit: number;
   ttlSeconds: number;
   tierLabel: string | null;
 }
