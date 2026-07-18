@@ -1,6 +1,6 @@
 # IFRp Commerce App - Master Architecture
 
-Status: active implementation; M1/M2 core is deployed, M3 and the safe M4 foundation are implemented locally, M4 governance activation and M5 remain incremental.
+Status: active implementation; M1/M2 core, M3 and the fail-closed M4 foundation are deployed, while M4 governance activation and M5 remain incremental.
 
 ## 1. Product Goal
 
@@ -552,7 +552,7 @@ MVP should be installable:
 
 ### M4 - Verified Seller Rewards
 
-- governance approval workflow; **seller application and admin live-verification flow implemented locally; no Mainnet seller is approved yet**
+- governance approval workflow; **seller application and admin live-verification flow deployed fail-closed; no Mainnet seller is approved yet**
 - BuilderRegistry/PartnerVault linkage; **runtime checks require aligned Governance owner/admin, active builder, active partner and matching beneficiary**
 - authorized reward caller; **read-only authorization check implemented; no signer or automated transaction path enabled**
 - reward event queue; **atomic redeem outbox plus idempotent reconciliation implemented; events remain blocked until caller authorization**
