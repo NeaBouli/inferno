@@ -70,6 +70,8 @@ model BenefitRule {
   productName     String
   discountPercent Int
   requiredLockIFR Int
+  dailyRedemptionLimit Int @default(0)
+  monthlyRedemptionLimit Int @default(0)
   ttlSeconds      Int      @default(90)
   active          Boolean  @default(true)
   createdAt       DateTime @default(now())
@@ -94,6 +96,8 @@ model Session {
   benefitDiscountPercent Int?
   benefitRequiredLockIFR Int?
   benefitTtlSeconds Int?
+  benefitDailyRedemptionLimit Int?
+  benefitMonthlyRedemptionLimit Int?
   nonce            String     @unique
   expiresAt        DateTime
   status           String     @default("PENDING")
@@ -109,6 +113,7 @@ model Session {
 
   @@index([businessId])
   @@index([benefitRuleId])
+  @@index([benefitRuleId, status, redeemedAt], map: "Session_redemptionLimitLookup_idx")
   @@index([status])
 }
 

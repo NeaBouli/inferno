@@ -93,6 +93,8 @@ export default function BusinessConsole({ params }: { params: { businessId: stri
   );
 
   const previewBenefit = session ?? selectedRule ?? business;
+  const previewDailyLimit = session?.dailyRedemptionLimit ?? selectedRule?.dailyRedemptionLimit ?? 0;
+  const previewMonthlyLimit = session?.monthlyRedemptionLimit ?? selectedRule?.monthlyRedemptionLimit ?? 0;
   const sellerWalletLabel = address ? `${address.slice(0, 6)}...${address.slice(-4)}` : 'Not connected';
   const sessionActive = Boolean(session && !isDone);
   const customerApproved = status?.status === 'APPROVED';
@@ -120,7 +122,7 @@ export default function BusinessConsole({ params }: { params: { businessId: stri
     : !session
       ? 'Choose the benefit rule, then create a QR session for the customer standing at checkout.'
       : customerApproved && checkoutAuthorized
-        ? 'Grant the benefit, then redeem this session so it cannot be reused.'
+        ? 'Redeem first to enforce this wallet\'s usage limit. Grant the benefit only after redemption succeeds.'
         : customerApproved && sellerWalletReady
           ? 'Confirm this wallet as the business owner or an active checkout operator.'
         : customerApproved
@@ -150,6 +152,7 @@ export default function BusinessConsole({ params }: { params: { businessId: stri
       `Verification attempts: ${status?.attestAttempts ?? 0}/3`,
       `Benefit: ${benefit.discountPercent}%`,
       `Required lock: ${benefit.requiredLockIFR.toLocaleString('en-US')} IFR`,
+      `Wallet limit: ${benefit.dailyRedemptionLimit || 'unlimited'}/UTC day / ${benefit.monthlyRedemptionLimit || 'unlimited'}/UTC month`,
       `Rule: ${benefit.label || 'Business default'}`,
       `Product: ${benefit.productName || 'Business default benefit'}`,
       `Customer wallet: ${wallet}`,
@@ -190,6 +193,8 @@ export default function BusinessConsole({ params }: { params: { businessId: stri
       productName: nextStatus.benefit.productName,
       discountPercent: nextStatus.benefit.discountPercent,
       requiredLockIFR: nextStatus.benefit.requiredLockIFR,
+      dailyRedemptionLimit: nextStatus.benefit.dailyRedemptionLimit,
+      monthlyRedemptionLimit: nextStatus.benefit.monthlyRedemptionLimit,
       tierLabel: nextStatus.benefit.tierLabel,
     };
   }
@@ -656,6 +661,12 @@ export default function BusinessConsole({ params }: { params: { businessId: stri
               <strong className="text-white">{previewBenefit ? `${previewBenefit.requiredLockIFR.toLocaleString('en-US')} IFR` : '-'}</strong>
             </div>
             <div className="flex justify-between gap-4">
+              <span>Per-wallet use</span>
+              <strong className="text-right text-white">
+                {previewDailyLimit || 'unlimited'} / UTC day · {previewMonthlyLimit || 'unlimited'} / UTC month
+              </strong>
+            </div>
+            <div className="flex justify-between gap-4">
               <span>Selected rule</span>
               <strong className="text-white">{selectedRule?.label || business?.tierLabel || 'Standard'}</strong>
             </div>
@@ -769,6 +780,9 @@ export default function BusinessConsole({ params }: { params: { businessId: stri
                     {status.recoveredAddress ? `Wallet ${status.recoveredAddress.slice(0, 6)}...${status.recoveredAddress.slice(-4)} verified.` : 'Wallet verified.'}
                   </p>
                   <p className="mt-4 text-2xl font-black">{status.benefit.discountPercent}% benefit</p>
+                  <p className="mt-2 text-sm font-semibold text-green-900">
+                    Redeem now to reserve this use before granting the benefit.
+                  </p>
                   {status.benefit.productName ? (
                     <p className="mt-2 text-sm font-semibold text-green-900">
                       {status.benefit.label} / {status.benefit.productName}

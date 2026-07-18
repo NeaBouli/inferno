@@ -30,6 +30,8 @@ const createBenefitRuleSchema = z.object({
   productName: z.string().min(1).max(160),
   discountPercent: z.number().int().min(0).max(100),
   requiredLockIFR: z.number().int().positive(),
+  dailyRedemptionLimit: z.number().int().min(0).max(1000).optional(),
+  monthlyRedemptionLimit: z.number().int().min(0).max(10000).optional(),
   ttlSeconds: z.number().int().min(10).max(3600).optional(),
   active: z.boolean().optional(),
 });

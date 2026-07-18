@@ -61,6 +61,8 @@ router.post('/', sessionRateLimiter, validate(createSessionSchema), async (req, 
       productName: result.productName,
       discountPercent: result.discountPercent,
       requiredLockIFR: result.requiredLockIFR,
+      dailyRedemptionLimit: result.dailyRedemptionLimit,
+      monthlyRedemptionLimit: result.monthlyRedemptionLimit,
       tierLabel: result.tierLabel,
     });
   } catch (err) {
@@ -112,6 +114,10 @@ router.post('/:id/redeem', async (req, res, next) => {
       }
       if (err.message.includes('not found')) {
         res.status(404).json({ error: err.message });
+        return;
+      }
+      if (err.message.includes('redemption limit reached')) {
+        res.status(429).json({ error: err.message });
         return;
       }
       if (err.message.includes('already redeemed') || err.message.includes('cannot redeem') || err.message.includes('expired')) {

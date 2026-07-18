@@ -113,6 +113,9 @@ export default function SellerCatalogPage({ params }: { params: { businessId: st
                             <p className="mt-1 text-sm text-stone-300">
                               Verify at least {rule.requiredLockIFR.toLocaleString('en-US')} locked IFR at checkout.
                             </p>
+                            <p className="mt-1 text-xs text-stone-400">
+                              Per wallet: {rule.dailyRedemptionLimit || 'unlimited'} / UTC day and {rule.monthlyRedemptionLimit || 'unlimited'} / UTC month.
+                            </p>
                           </div>
                         ))}
                       </div>

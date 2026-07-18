@@ -276,6 +276,144 @@ describe('E2E: IFR Lock → Benefits Network Verification', () => {
     })).toBe(1);
   });
 
+  it('freezes redemption limits in the QR session snapshot', async () => {
+    const rule = await prisma.benefitRule.create({
+      data: {
+        businessId: testBusinessId,
+        label: 'Snapshot limits',
+        category: 'Retail',
+        productName: 'Snapshot benefit',
+        discountPercent: 15,
+        requiredLockIFR: 5000,
+        dailyRedemptionLimit: 1,
+        monthlyRedemptionLimit: 7,
+      },
+    });
+    const session = await createSession(testBusinessId, rule.id);
+    await prisma.benefitRule.update({
+      where: { id: rule.id },
+      data: { dailyRedemptionLimit: 3, monthlyRedemptionLimit: 30 },
+    });
+
+    expect(session).toMatchObject({ dailyRedemptionLimit: 1, monthlyRedemptionLimit: 7 });
+    expect(await prisma.session.findUniqueOrThrow({ where: { id: session.sessionId } })).toMatchObject({
+      benefitSnapshotVersion: 2,
+      benefitDailyRedemptionLimit: 1,
+      benefitMonthlyRedemptionLimit: 7,
+    });
+  });
+
+  it('enforces daily limits per wallet while allowing a different wallet', async () => {
+    const rule = await prisma.benefitRule.create({
+      data: {
+        businessId: testBusinessId,
+        label: 'Daily cap',
+        category: 'Retail',
+        productName: 'Daily capped benefit',
+        discountPercent: 15,
+        requiredLockIFR: 5000,
+        dailyRedemptionLimit: 1,
+      },
+    });
+    const createApproved = (wallet: string) => prisma.session.create({
+      data: {
+        businessId: testBusinessId,
+        benefitRuleId: rule.id,
+        benefitSnapshotVersion: 2,
+        benefitDailyRedemptionLimit: 1,
+        benefitMonthlyRedemptionLimit: 0,
+        nonce: ethers.utils.hexlify(ethers.utils.randomBytes(32)).slice(2),
+        expiresAt: new Date(Date.now() + 60_000),
+        status: 'APPROVED',
+        recoveredAddress: wallet,
+      },
+    });
+    const first = await createApproved(TEST_WALLET);
+    const second = await createApproved(TEST_WALLET.toLowerCase());
+    const other = await createApproved(ethers.Wallet.createRandom().address);
+
+    await expect(redeem(first.id, REDEEM_ACTOR)).resolves.toEqual({ status: 'REDEEMED' });
+    await expect(redeem(second.id, REDEEM_ACTOR)).rejects.toThrow('Daily redemption limit reached');
+    await expect(redeem(other.id, REDEEM_ACTOR)).resolves.toEqual({ status: 'REDEEMED' });
+    expect(await prisma.session.findUniqueOrThrow({ where: { id: second.id } })).toMatchObject({
+      status: 'REJECTED',
+      reason: expect.stringContaining('Daily redemption limit reached'),
+    });
+  });
+
+  it('enforces monthly limits and keeps legacy null snapshots unlimited', async () => {
+    const rule = await prisma.benefitRule.create({
+      data: {
+        businessId: testBusinessId,
+        label: 'Monthly cap',
+        category: 'Retail',
+        productName: 'Monthly capped benefit',
+        discountPercent: 15,
+        requiredLockIFR: 5000,
+        monthlyRedemptionLimit: 1,
+      },
+    });
+    const createApproved = (snapshot: boolean) => prisma.session.create({
+      data: {
+        businessId: testBusinessId,
+        benefitRuleId: rule.id,
+        benefitSnapshotVersion: snapshot ? 2 : null,
+        benefitDailyRedemptionLimit: snapshot ? 0 : null,
+        benefitMonthlyRedemptionLimit: snapshot ? 1 : null,
+        nonce: ethers.utils.hexlify(ethers.utils.randomBytes(32)).slice(2),
+        expiresAt: new Date(Date.now() + 60_000),
+        status: 'APPROVED',
+        recoveredAddress: TEST_WALLET,
+      },
+    });
+    const first = await createApproved(true);
+    const second = await createApproved(true);
+    await redeem(first.id, REDEEM_ACTOR);
+    await expect(redeem(second.id, REDEEM_ACTOR)).rejects.toThrow('Monthly redemption limit reached');
+
+    const legacyA = await createApproved(false);
+    const legacyB = await createApproved(false);
+    await expect(redeem(legacyA.id, REDEEM_ACTOR)).resolves.toEqual({ status: 'REDEEMED' });
+    await expect(redeem(legacyB.id, REDEEM_ACTOR)).resolves.toEqual({ status: 'REDEEMED' });
+  });
+
+  it('never exceeds a daily cap when two approved sessions redeem concurrently', async () => {
+    const rule = await prisma.benefitRule.create({
+      data: {
+        businessId: testBusinessId,
+        label: 'Race cap',
+        category: 'Retail',
+        productName: 'Race capped benefit',
+        discountPercent: 15,
+        requiredLockIFR: 5000,
+        dailyRedemptionLimit: 1,
+      },
+    });
+    const sessions = await Promise.all([0, 1].map(() => prisma.session.create({
+      data: {
+        businessId: testBusinessId,
+        benefitRuleId: rule.id,
+        benefitSnapshotVersion: 2,
+        benefitDailyRedemptionLimit: 1,
+        benefitMonthlyRedemptionLimit: 0,
+        nonce: ethers.utils.hexlify(ethers.utils.randomBytes(32)).slice(2),
+        expiresAt: new Date(Date.now() + 60_000),
+        status: 'APPROVED',
+        recoveredAddress: TEST_WALLET,
+      },
+    })));
+
+    const results = await Promise.allSettled(sessions.map((session) => redeem(session.id, REDEEM_ACTOR)));
+    expect(results.filter((result) => result.status === 'fulfilled')).toHaveLength(1);
+    expect(results.filter((result) => result.status === 'rejected')).toHaveLength(1);
+    expect(await prisma.session.count({
+      where: { id: { in: sessions.map((session) => session.id) }, status: 'REDEEMED' },
+    })).toBe(1);
+    expect(await prisma.session.count({
+      where: { id: { in: sessions.map((session) => session.id) }, status: 'REJECTED' },
+    })).toBe(1);
+  });
+
   it('rechecks a checkout operator inside the redemption transaction', async () => {
     const operatorWallet = ethers.Wallet.createRandom().address;
     const business = await prisma.business.create({

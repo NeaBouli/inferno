@@ -43,6 +43,8 @@ const DEFAULT_RULE_DRAFT = {
   label: 'Bronze',
   discount: 10,
   minLocked: 1000,
+  dailyLimit: 1,
+  monthlyLimit: 10,
   ttl: 90,
 };
 
@@ -70,6 +72,8 @@ export function SellerRuleBuilder() {
   const [label, setLabel] = useState(DEFAULT_RULE_DRAFT.label);
   const [discount, setDiscount] = useState(DEFAULT_RULE_DRAFT.discount);
   const [minLocked, setMinLocked] = useState(DEFAULT_RULE_DRAFT.minLocked);
+  const [dailyLimit, setDailyLimit] = useState(DEFAULT_RULE_DRAFT.dailyLimit);
+  const [monthlyLimit, setMonthlyLimit] = useState(DEFAULT_RULE_DRAFT.monthlyLimit);
   const [ttl, setTtl] = useState(DEFAULT_RULE_DRAFT.ttl);
   const [rules, setRules] = useState<BenefitRule[]>([]);
   const [catalogProducts, setCatalogProducts] = useState<CatalogProduct[]>([]);
@@ -125,10 +129,11 @@ export function SellerRuleBuilder() {
       `${businessName || 'IFR Partner Shop'} IFR checkout kit`,
       `Scanner: ${scannerUrl || 'Create or select a seller profile first.'}`,
       `Default benefit: ${discount}% off when ${minLocked.toLocaleString('en-US')} IFR is locked`,
+      `Wallet limit: ${dailyLimit || 'unlimited'}/day / ${monthlyLimit || 'unlimited'}/month (UTC)`,
       `Rule draft: ${label || 'IFR Benefit'} / ${category} / ${product || 'IFR Benefit'}`,
       'At checkout: open scanner, create QR session, let the customer scan and sign, then redeem only after APPROVED.',
     ].join('\n'),
-    [businessName, category, discount, label, minLocked, product, scannerUrl]
+    [businessName, category, dailyLimit, discount, label, minLocked, monthlyLimit, product, scannerUrl]
   );
   const sellerBackupText = useMemo(() => JSON.stringify(
     {
@@ -145,6 +150,8 @@ export function SellerRuleBuilder() {
         productName: product || 'IFR Benefit',
         discountPercent: discount,
         requiredLockIFR: minLocked,
+        dailyRedemptionLimit: dailyLimit,
+        monthlyRedemptionLimit: monthlyLimit,
         ttlSeconds: ttl,
       },
       activeRulesLoaded: activeRulesCount,
@@ -152,7 +159,7 @@ export function SellerRuleBuilder() {
     },
     null,
     2
-  ), [activeRulesCount, address, businessId, businessName, category, discount, label, minLocked, product, scannerUrl, selectedBusiness, ttl]);
+  ), [activeRulesCount, address, businessId, businessName, category, dailyLimit, discount, label, minLocked, monthlyLimit, product, scannerUrl, selectedBusiness, ttl]);
 
   function getCustomerProofUrl(sessionId: string) {
     return `${SHOP_ORIGIN}/r/${sessionId}`;
@@ -212,10 +219,12 @@ export function SellerRuleBuilder() {
       productName: product || 'IFR Benefit',
       discountPercent: discount,
       requiredLockIFR: minLocked,
+      dailyRedemptionLimit: dailyLimit,
+      monthlyRedemptionLimit: monthlyLimit,
       ttlSeconds: ttl,
       active: true,
     }),
-    [category, discount, label, minLocked, product, selectedProductId, ttl]
+    [category, dailyLimit, discount, label, minLocked, monthlyLimit, product, selectedProductId, ttl]
   );
 
   function resetRuleDraft() {
@@ -224,6 +233,8 @@ export function SellerRuleBuilder() {
     setLabel(DEFAULT_RULE_DRAFT.label);
     setDiscount(DEFAULT_RULE_DRAFT.discount);
     setMinLocked(DEFAULT_RULE_DRAFT.minLocked);
+    setDailyLimit(DEFAULT_RULE_DRAFT.dailyLimit);
+    setMonthlyLimit(DEFAULT_RULE_DRAFT.monthlyLimit);
     setTtl(DEFAULT_RULE_DRAFT.ttl);
     setSelectedProductId('');
   }
@@ -467,6 +478,13 @@ export function SellerRuleBuilder() {
       setError('Business ID plus seller wallet or admin secret are required.');
       return;
     }
+    if (
+      !Number.isInteger(dailyLimit) || dailyLimit < 0 || dailyLimit > 1000 ||
+      !Number.isInteger(monthlyLimit) || monthlyLimit < 0 || monthlyLimit > 10000
+    ) {
+      setError('Wallet limits must be whole numbers. Use 0 for unlimited, up to 1,000/day and 10,000/month.');
+      return;
+    }
     setLoading(true);
     setError('');
     setStatus('');
@@ -512,6 +530,8 @@ export function SellerRuleBuilder() {
     setSelectedProductId(rule.productId || '');
     setDiscount(rule.discountPercent);
     setMinLocked(rule.requiredLockIFR);
+    setDailyLimit(rule.dailyRedemptionLimit);
+    setMonthlyLimit(rule.monthlyRedemptionLimit);
     setTtl(rule.ttlSeconds);
     setError('');
     setStatus(`Editing ${rule.label}. Changes apply only after the signed update is confirmed.`);
@@ -710,6 +730,8 @@ export function SellerRuleBuilder() {
           if (typeof parsed.defaultBenefit.productName === 'string') setProduct(parsed.defaultBenefit.productName);
           if (typeof parsed.defaultBenefit.discountPercent === 'number') setDiscount(parsed.defaultBenefit.discountPercent);
           if (typeof parsed.defaultBenefit.requiredLockIFR === 'number') setMinLocked(parsed.defaultBenefit.requiredLockIFR);
+          if (typeof parsed.defaultBenefit.dailyRedemptionLimit === 'number') setDailyLimit(parsed.defaultBenefit.dailyRedemptionLimit);
+          if (typeof parsed.defaultBenefit.monthlyRedemptionLimit === 'number') setMonthlyLimit(parsed.defaultBenefit.monthlyRedemptionLimit);
           if (typeof parsed.defaultBenefit.ttlSeconds === 'number') setTtl(parsed.defaultBenefit.ttlSeconds);
         }
         setRules([]);
@@ -1261,6 +1283,9 @@ export function SellerRuleBuilder() {
                         <p className="mt-1 text-xs leading-5 text-stone-400">
                           {new Date(session.createdAt).toLocaleString()} / {session.discountPercent}% / {session.requiredLockIFR.toLocaleString('en-US')} IFR
                         </p>
+                        <p className="mt-1 text-xs leading-5 text-stone-400">
+                          Wallet use: {session.dailyRedemptionLimit || 'unlimited'} / UTC day and {session.monthlyRedemptionLimit || 'unlimited'} / UTC month
+                        </p>
                       </div>
                       <span
                         className={`rounded-full px-3 py-1 text-xs font-bold uppercase tracking-[0.14em] ${
@@ -1502,6 +1527,30 @@ export function SellerRuleBuilder() {
             className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none focus:border-orange-300"
           />
         </label>
+        <label className="grid gap-2 text-sm font-semibold text-stone-200">
+          Uses per wallet / UTC day
+          <input
+            type="number"
+            min="0"
+            max="1000"
+            value={dailyLimit}
+            onChange={(event) => setDailyLimit(Number(event.target.value))}
+            className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none focus:border-orange-300"
+          />
+          <span className="text-xs font-normal text-stone-400">0 means unlimited.</span>
+        </label>
+        <label className="grid gap-2 text-sm font-semibold text-stone-200">
+          Uses per wallet / UTC month
+          <input
+            type="number"
+            min="0"
+            max="10000"
+            value={monthlyLimit}
+            onChange={(event) => setMonthlyLimit(Number(event.target.value))}
+            className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none focus:border-orange-300"
+          />
+          <span className="text-xs font-normal text-stone-400">0 means unlimited.</span>
+        </label>
       </div>
 
       <div className="mt-5 rounded-2xl border border-white/10 bg-black/25 p-4">
@@ -1510,6 +1559,9 @@ export function SellerRuleBuilder() {
           {discount}% off when {minLocked.toLocaleString('en-US')} IFR is locked
         </p>
         <p className="mt-2 text-sm text-stone-300">{label} / {category} / {product}</p>
+        <p className="mt-2 text-xs text-stone-400">
+          Per wallet: {dailyLimit || 'unlimited'} / UTC day and {monthlyLimit || 'unlimited'} / UTC month.
+        </p>
       </div>
 
       <button
@@ -1539,6 +1591,9 @@ export function SellerRuleBuilder() {
                   </p>
                   <p className="mt-2 text-sm text-orange-100">
                     {rule.discountPercent}% off at {rule.requiredLockIFR.toLocaleString('en-US')} locked IFR
+                  </p>
+                  <p className="mt-1 text-xs text-stone-400">
+                    Per wallet: {rule.dailyRedemptionLimit || 'unlimited'} / UTC day and {rule.monthlyRedemptionLimit || 'unlimited'} / UTC month
                   </p>
                 </div>
                 <span className={`rounded-full px-3 py-1 text-xs font-bold uppercase tracking-[0.14em] ${rule.active ? 'bg-green-400/15 text-green-100' : 'bg-stone-500/20 text-stone-300'}`}>
