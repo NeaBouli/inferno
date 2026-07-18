@@ -47,6 +47,7 @@ jobs:
           cache: 'npm'
           cache-dependency-path: apps/benefits-network/backend/package-lock.json
       - run: npm ci
+      - run: npm audit --audit-level=moderate
       - run: npx prisma generate
       - run: npx prisma migrate deploy
       - run: npx tsc --noEmit
@@ -68,6 +69,7 @@ jobs:
           cache: 'npm'
           cache-dependency-path: apps/benefits-network/frontend/package-lock.json
       - run: npm ci
+      - run: npm audit --audit-level=low
       - run: npm run typecheck
       - run: npm run build
 

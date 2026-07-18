@@ -69,3 +69,19 @@ Suggested order:
    - `node scripts/docs-validator.js`
 
 Keep this separate from protocol governance and Web3 UX changes.
+
+## 2026-07-19 Benefits Network Update
+
+The production Shop dependency slice is separated from the root contract toolchain migration:
+
+- Frontend upgraded to Next.js 15.5 and wagmi 3 with direct injected, Coinbase Wallet and
+  optional WalletConnect connectors. RainbowKit was removed from this surface.
+- Frontend clean install and `npm audit --audit-level=low`: no known vulnerabilities.
+- Backend pins the patched `ws` release through an npm override. Clean install and
+  `npm audit --audit-level=moderate`: no moderate, high or critical findings.
+- The remaining backend low findings are in the ethers v5 elliptic dependency path and require
+  a separately tested ethers v6 migration.
+- Benefits CI enforces those two audit thresholds before typechecks, tests and builds.
+
+The root Hardhat/Waffle/Ganache lock remains a separate migration. Do not apply the Shop lockfile
+changes to the contract toolchain and do not use `npm audit fix --force`.

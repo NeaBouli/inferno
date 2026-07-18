@@ -78,7 +78,7 @@ inferno/
 │   ├── creator-gateway/              [x] Express + ethers v5 + googleapis + JWT (YouTube x IFR Lock Bridge, Port 3005, 41 Tests)
 │   ├── benefits-network/
 │   │   ├── backend/                   [x] Express + Prisma + SQLite (16 Tests)
-│   │   └── frontend/                  [x] Next.js 14 + Tailwind + wagmi v2 (PWA)
+│   │   └── frontend/                  [x] Next.js 15 + Tailwind + wagmi 3 (PWA)
 │   └── telegram/telegram-bot/         [x] Telegraf Bot (16 commands: start, lock, burns, tokenomics, ask, partner, bootstrap, roadmap, rules, admin, announce, ban, warn, pin, price, verify)
 ├── docs/
 │   ├── DOCS.md                         This document

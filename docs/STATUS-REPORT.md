@@ -85,7 +85,7 @@ Sepolia deployment served as the full testnet validation phase prior to mainnet.
 | 4 | Points Backend | 3004 | Express + Prisma + SQLite + SIWE + jose |
 | 5 | Creator Gateway | 3005 | Express + ethers v5 + googleapis + JWT |
 | 6 | Benefits Network Backend | 3001 | Express + Prisma + SQLite + ethers v5 |
-| 7 | Benefits Network Frontend | 3000 | Next.js 14 + Tailwind + wagmi v2 (PWA) |
+| 7 | Benefits Network Frontend | 3000 | Next.js 15 + Tailwind + wagmi 3 (PWA) |
 
 ---
 
@@ -199,7 +199,7 @@ Sepolia deployment served as the full testnet validation phase prior to mainnet.
 | Slither | v0.11.5 |
 | React | 18 |
 | Vite | latest |
-| Next.js | 14 |
+| Next.js | 15 |
 | Prisma | latest |
 
 ---
