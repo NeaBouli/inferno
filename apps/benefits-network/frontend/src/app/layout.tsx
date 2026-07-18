@@ -29,8 +29,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <head>
-        <link rel="icon" href="/icons/icon-192.png" />
-        <link rel="apple-touch-icon" href="/icons/icon-192.png" />
+        <link rel="icon" href="/icons/favicon-v1.ico" sizes="32x32" />
+        <link rel="icon" href="/icons/ifr-icon-32-v1.png" type="image/png" sizes="32x32" />
+        <link rel="apple-touch-icon" href="/icons/ifr-icon-180-v1.png" sizes="180x180" />
       </head>
       <body className="shop-body min-h-screen antialiased">
         <Providers>{children}</Providers>
