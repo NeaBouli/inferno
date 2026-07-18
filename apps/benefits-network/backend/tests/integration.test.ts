@@ -120,6 +120,7 @@ describe('E2E: IFR Lock → Benefits Network Verification', () => {
     // Step 2: Customer gets challenge message (nonce is internal, fetched from DB)
     const challenge = await buildChallengeMessage(session.sessionId);
     expect(challenge).toContain('IFR Benefits Network');
+    expect(challenge).toContain('Domain: shop.ifrunit.tech');
     expect(challenge).toContain(session.sessionId);
 
     // Step 3: Customer signs challenge and submits → on-chain lock check

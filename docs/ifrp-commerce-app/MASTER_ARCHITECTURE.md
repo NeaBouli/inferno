@@ -449,7 +449,7 @@ Replay protection:
 
 - nonce per session;
 - expiration;
-- signature bound to domain, seller, sessionId, and chainId;
+- signature bound to domain, seller, sessionId, and chainId; **canonical Shop domain implemented**
 - redeemed sessions cannot be reused.
 
 Suggested challenge message:

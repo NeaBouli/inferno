@@ -76,6 +76,12 @@ npm run dev            # http://localhost:3001
 5. If the wallet is not eligible yet, the customer response is `REJECTED` but the stored session stays `PENDING` until the three-attempt limit is exhausted, so the customer can lock more IFR and retry the same QR while it is valid.
 6. Merchant sees APPROVED → owner or active checkout operator signs Redeem → backend atomically marks the session as redeemed once.
 
+Customer signatures are bound to the fixed canonical domain
+`shop.ifrunit.tech` as well as the selected business/rule snapshot, session,
+nonce, expiry and chain ID. The backend does not derive this boundary from a
+request Host header. A signature over an older or foreign-domain challenge
+therefore does not authenticate the same wallet against the current challenge.
+
 ## Benefit Rules
 
 Benefit rules are persisted seller offers tied to a business. A QR session can

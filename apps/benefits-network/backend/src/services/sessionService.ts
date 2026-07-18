@@ -11,6 +11,7 @@ export { prisma };
 // ── Session State Machine ──────────────────────────────────
 
 type SessionStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'EXPIRED' | 'REDEEMED';
+export const CUSTOMER_CHALLENGE_DOMAIN = 'shop.ifrunit.tech';
 
 function auditLog(sessionId: string, type: string, payload: Record<string, unknown>) {
   return prisma.auditLog.create({
@@ -281,6 +282,7 @@ export async function buildChallengeMessage(sessionId: string): Promise<string> 
 
   return [
     'IFR Benefits Network - Discount Verification',
+    `Domain: ${CUSTOMER_CHALLENGE_DOMAIN}`,
     `Business: ${session.businessId}`,
     `Benefit Rule: ${benefit.benefitRuleId ?? 'business-default'}`,
     `Benefit: ${benefit.label ?? 'Standard'}`,

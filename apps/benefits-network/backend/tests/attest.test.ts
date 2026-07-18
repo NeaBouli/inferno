@@ -26,6 +26,7 @@ jest.mock('../src/config', () => ({
 import {
   createSession,
   buildChallengeMessage,
+  CUSTOMER_CHALLENGE_DOMAIN,
   attest,
   redeem,
   prisma,
@@ -88,6 +89,25 @@ describe('Signature Verification', () => {
     const recovered = ethers.utils.verifyMessage(message, signature);
 
     expect(recovered).toBe(wallet.address);
+  });
+
+  it('binds customer signatures to the canonical Shop domain', async () => {
+    const session = await createSession(testBusinessId);
+    const challenge = await buildChallengeMessage(session.sessionId);
+    const domainLines = challenge.split('\n').filter((line) => line.startsWith('Domain: '));
+
+    expect(domainLines).toEqual([`Domain: ${CUSTOMER_CHALLENGE_DOMAIN}`]);
+
+    const wallet = ethers.Wallet.createRandom();
+    const currentSignature = await wallet.signMessage(challenge);
+    expect(ethers.utils.verifyMessage(challenge, currentSignature)).toBe(wallet.address);
+
+    const formerDomainlessChallenge = challenge
+      .split('\n')
+      .filter((line) => !line.startsWith('Domain: '))
+      .join('\n');
+    const formerSignature = await wallet.signMessage(formerDomainlessChallenge);
+    expect(ethers.utils.verifyMessage(challenge, formerSignature)).not.toBe(wallet.address);
   });
 });
 
