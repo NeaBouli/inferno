@@ -39,6 +39,13 @@ export const IFRLOCK_ABI = [
 export const IFR_TOKEN_ABI = [
   {
     type: 'function',
+    name: 'balanceOf',
+    stateMutability: 'view',
+    inputs: [{ name: 'account', type: 'address' }],
+    outputs: [{ name: '', type: 'uint256' }],
+  },
+  {
+    type: 'function',
     name: 'allowance',
     stateMutability: 'view',
     inputs: [

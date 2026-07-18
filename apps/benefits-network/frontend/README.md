@@ -1,6 +1,6 @@
 # IFR Benefits Network — Frontend
 
-Next.js 14 PWA for the IFR Benefits Network.
+Next.js 15 PWA for the IFR Benefits Network.
 
 ## Routes
 
@@ -15,7 +15,7 @@ Next.js 14 PWA for the IFR Benefits Network.
 
 ```bash
 cp .env.local.example .env.local
-npm install
+npm ci
 npm run dev        # → http://localhost:3000
 ```
 
@@ -33,7 +33,7 @@ NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=...
 
 The public shop defaults to Ethereum Mainnet. `NEXT_PUBLIC_CHAIN_ID=11155111` can still be used for Sepolia testing if matching testnet contract addresses are supplied.
 
-`NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` enables the full WalletConnect/RainbowKit modal for compatible mobile wallets. Without it, the app intentionally falls back to browser-injected Ethereum wallets such as MetaMask and Coinbase Wallet instead of blocking the customer proof flow. On iOS/iPadOS and Android, the fallback also exposes official HTTPS wallet-browser launch links for MetaMask, Trust Wallet, OKX and Phantom. Coinbase and Rainbow remain on the injected-provider or Copy/Share path until the WalletConnect project is configured.
+`NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` enables the Wagmi WalletConnect QR connector for compatible mobile wallets. Without it, the app intentionally falls back to browser-injected Ethereum wallets such as MetaMask and Coinbase Wallet instead of blocking the customer proof flow. On iOS/iPadOS and Android, the fallback also exposes official HTTPS wallet-browser launch links for MetaMask, Trust Wallet, OKX and Phantom. Coinbase and Rainbow remain on the injected-provider or Copy/Share path until the WalletConnect project is configured.
 
 Wallet launch targets are always reduced to an HTTPS path on
 `https://shop.ifrunit.tech`; foreign origins and query strings are discarded
@@ -51,10 +51,10 @@ lock amounts for seller benefit rules.
 
 ## Tech Stack
 
-- Next.js 14 (App Router)
+- Next.js 15 (App Router)
 - React 18 + TypeScript
 - Tailwind CSS (IFR brand colors)
-- wagmi v2 + viem (wallet connection)
+- Wagmi v3 + Viem (injected, Coinbase and optional WalletConnect QR connectors)
 - react-qr-code (QR generation)
 - PWA (manifest.json + service worker)
 

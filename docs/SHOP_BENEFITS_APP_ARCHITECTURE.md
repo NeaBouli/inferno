@@ -17,7 +17,7 @@ The app has two roles:
 
 - Frontend: `apps/benefits-network/frontend`
 - Backend: `apps/benefits-network/backend`
-- Wallet stack: RainbowKit + Wagmi + WalletConnect
+- Wallet stack: Wagmi v3 + Viem with injected, Coinbase and optional WalletConnect QR connectors
 - On-chain access source: `IFRLock.lockedBalance` and backend `IFRLock.isLocked`
 - Rule model: `BenefitRule`
 - Session model: `Session` with optional `benefitRuleId`
@@ -49,7 +49,7 @@ The app has two roles:
 
 ### Customer Flow
 
-- Connect as many wallets as practical through RainbowKit/WalletConnect.
+- Connect as many wallets as practical through EIP-1193/EIP-6963 injection and WalletConnect.
 - Show wallet, IFR balance, ETH balance and locked IFR.
 - Explain that signing a QR proof does not move tokens.
 - Keep the audited simple IFRLock approve, lock and unlock flow inside the shop app. Keep swaps as an explicit Uniswap handoff while the IFR pool remains thin.
@@ -77,7 +77,7 @@ Do not implement a raw private-key wallet stored in browser localStorage.
 
 Accepted paths:
 
-1. WalletConnect/RainbowKit first:
+1. External wallet connectors first:
    - MetaMask, Rainbow, Trust Wallet, Coinbase Wallet, OKX, WalletConnect-compatible wallets.
    - Lowest security risk and fastest path.
 2. Embedded wallet provider later:

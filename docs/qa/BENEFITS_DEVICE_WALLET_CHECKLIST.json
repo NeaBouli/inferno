@@ -9,7 +9,7 @@
     "walletConnectProjectIdRequiredForModal": true
   },
   "knownBlockers": [
-    "NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID is not set for production WalletConnect/RainbowKit modal support.",
+    "NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID is not set for the production Wagmi WalletConnect QR connector.",
     "Full APPROVED -> REDEEMED proof requires an eligible locked customer wallet.",
     "Production capacity must still be checked read-only before deploys; 14 GB was last observed after the 2026-07-19 official-asset release."
   ],

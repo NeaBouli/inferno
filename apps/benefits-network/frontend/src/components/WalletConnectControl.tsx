@@ -1,6 +1,5 @@
 'use client';
 
-import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { useEffect, useState } from 'react';
 import { useAccount, useChainId, useConnect, useDisconnect } from 'wagmi';
 import { getMobileWalletLaunches } from '@/lib/walletLaunch';
@@ -87,6 +86,7 @@ export function WalletConnectControl() {
   const [environment, setEnvironment] = useState(DEFAULT_WALLET_ENVIRONMENT);
   const [copyStatus, setCopyStatus] = useState('');
   const [evidenceStatus, setEvidenceStatus] = useState('');
+  const [connectionStatus, setConnectionStatus] = useState('');
   const mobileWalletLaunches = getMobileWalletLaunches(currentUrl);
 
   useEffect(() => {
@@ -102,7 +102,27 @@ export function WalletConnectControl() {
       connectors.find((item) => item.id === 'coinbaseWalletSDK') ||
       connectors[0];
     if (!connector) return;
-    await connectAsync({ connector });
+    await connectWallet(connector);
+  }
+
+  async function connectWallet(targetConnector: (typeof connectors)[number]) {
+    setConnectionStatus('');
+    try {
+      await connectAsync({ connector: targetConnector });
+    } catch (err) {
+      if (err instanceof Error && /rejected|denied|cancel/i.test(err.message)) {
+        setConnectionStatus('Connection cancelled in the wallet.');
+        return;
+      }
+      setConnectionStatus(err instanceof Error ? err.message : 'Wallet connection failed.');
+    }
+  }
+
+  function connectorLabel(id: string, name: string) {
+    if (id === 'injected') return 'Browser wallet';
+    if (id === 'coinbaseWalletSDK') return 'Coinbase Wallet';
+    if (id === 'walletConnect') return 'WalletConnect';
+    return name;
   }
 
   async function copyCurrentLink() {
@@ -173,10 +193,6 @@ export function WalletConnectControl() {
       if (err instanceof Error && err.name === 'AbortError') return;
       setEvidenceStatus('Share failed. Use Copy evidence instead.');
     }
-  }
-
-  if (hasWalletConnectProjectId) {
-    return <ConnectButton />;
   }
 
   return (
@@ -283,6 +299,26 @@ export function WalletConnectControl() {
             </button>
           </div>
           {copyStatus ? <p className="text-xs font-semibold text-orange-100">{copyStatus}</p> : null}
+          {hasWalletConnectProjectId ? (
+            <div className="grid gap-2 sm:grid-cols-2" aria-label="Choose a wallet connection">
+              {connectors.map((availableConnector) => (
+                <button
+                  key={availableConnector.uid}
+                  type="button"
+                  onClick={() => connectWallet(availableConnector)}
+                  disabled={isPending}
+                  className="rounded-xl border border-orange-200/20 bg-orange-300 px-4 py-3 text-xs font-black uppercase tracking-[0.1em] text-stone-950 transition hover:bg-orange-200 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {isPending ? 'Connecting...' : connectorLabel(availableConnector.id, availableConnector.name)}
+                </button>
+              ))}
+            </div>
+          ) : null}
+          {connectionStatus ? (
+            <p role="status" className="text-xs font-semibold leading-5 text-orange-100">
+              {connectionStatus}
+            </p>
+          ) : null}
         </div>
       ) : null}
 
@@ -294,7 +330,7 @@ export function WalletConnectControl() {
         >
           Disconnect
         </button>
-      ) : (
+      ) : !hasWalletConnectProjectId ? (
         <button
           type="button"
           onClick={connectInjectedWallet}
@@ -303,7 +339,7 @@ export function WalletConnectControl() {
         >
           {isPending ? 'Connecting...' : 'Connect wallet'}
         </button>
-      )}
+      ) : null}
     </div>
   );
 }

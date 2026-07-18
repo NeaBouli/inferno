@@ -86,7 +86,7 @@ Threshold: 3-of-5 (5 active signers: A.K., M.G., A.M., Y.K., A.P.).
 | 4 | Points Backend | 3004 | Express + Prisma + SQLite + SIWE | Live |
 | 5 | Creator Gateway | 3005 | Express + ethers v5 + googleapis | Live |
 | 6 | Benefits Network Backend | 3001 | Express + Prisma + SQLite | Live |
-| 7 | Benefits Network Frontend | 3000 | Next.js 14 + Tailwind + wagmi v2 | Live |
+| 7 | Benefits Network Frontend | 3000 | Next.js 15 + Tailwind + wagmi 3 | Live |
 
 ## CI/CD
 

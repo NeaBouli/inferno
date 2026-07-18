@@ -4,6 +4,7 @@ const benefitsApiInternalUrl = process.env.BENEFITS_API_INTERNAL_URL || 'http://
 const nextConfig = {
   reactStrictMode: true,
   output: 'standalone',
+  outputFileTracingRoot: __dirname,
   webpack(config) {
     config.resolve.alias = {
       ...config.resolve.alias,

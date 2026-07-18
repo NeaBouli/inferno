@@ -21,11 +21,6 @@ function shortAddress(address?: string) {
   return `${address.slice(0, 6)}...${address.slice(-4)}`;
 }
 
-function formatTokenAmount(value?: string) {
-  if (!value) return '0 IFR';
-  return `${Number(value).toLocaleString('en-US', { maximumFractionDigits: 3 })} IFR`;
-}
-
 function formatInputAmount(raw?: bigint) {
   if (!raw) return '0';
   return formatUnits(raw, IFR_DECIMALS);
@@ -59,9 +54,11 @@ export function WalletStatus() {
     address,
     query: { enabled: Boolean(address) },
   });
-  const ifrBalance = useBalance({
-    address,
-    token: IFR_TOKEN_ADDRESS || undefined,
+  const ifrBalance = useReadContract({
+    address: IFR_TOKEN_ADDRESS || undefined,
+    abi: IFR_TOKEN_ABI,
+    functionName: 'balanceOf',
+    args: address ? [address] : undefined,
     query: { enabled: Boolean(address && IFR_TOKEN_ADDRESS) },
   });
   const lockedBalance = useReadContract({
@@ -80,7 +77,7 @@ export function WalletStatus() {
   });
   const lockedRaw = lockedBalance.data as bigint | undefined;
   const allowanceRaw = allowance.data as bigint | undefined;
-  const ifrRaw = ifrBalance.data?.value;
+  const ifrRaw = ifrBalance.data as bigint | undefined;
   const ethRaw = ethBalance.data?.value;
   const amountRaw = useMemo(() => {
     try {
@@ -357,7 +354,7 @@ export function WalletStatus() {
         <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
           <p className="text-xs uppercase tracking-[0.14em] text-stone-400">IFR balance</p>
           <p className="mt-2 text-lg font-bold">
-            {formatTokenAmount(ifrBalance.data?.formatted)}
+            {formatIFR(ifrRaw)} IFR
           </p>
           <p className="mt-1 break-words text-xs text-stone-400">
             {IFR_TOKEN_ADDRESS ? 'ERC-20' : 'Set NEXT_PUBLIC_IFR_TOKEN_ADDRESS'}

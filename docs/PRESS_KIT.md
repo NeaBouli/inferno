@@ -79,7 +79,7 @@ Users lock IFR tokens in the IFRLock contract -> receive lifetime premium access
 | Dashboard | React 18 + Vite + ethers v5 |
 | Governance UI | React 18 + TypeScript + Tailwind |
 | AI Copilot | Claude Haiku 4.5 + RAG |
-| Benefits Network | Next.js 14 + wagmi v2 (PWA) |
+| Benefits Network | Next.js 15 + wagmi 3 (PWA) |
 
 ## Roadmap (Summary)
 
