@@ -1,14 +1,21 @@
 import { NextFunction, Request, Response, Router } from 'express';
-import crypto from 'crypto';
 import { Prisma } from '@prisma/client';
 import { z } from 'zod';
 import { prisma } from '../services/sessionService';
 import {
   SellerAuthError,
+  SELLER_AUTH_TTL_MS,
   buildSellerAuthMessage,
   normalizeAddress,
   verifySellerSignature,
 } from '../services/sellerAuth';
+import {
+  consumeSellerAuthorizationChallenge,
+  isSafeSellerAuthorizationField,
+  isKnownSellerAction,
+  issueSellerAuthorizationChallenge,
+  requiresSingleUseSellerChallenge,
+} from '../services/sellerAuthorizationChallenge';
 import { assertSellerBusinessLimit } from '../services/sellerLimits';
 import { resolveCheckoutActor } from '../services/sellerAccess';
 import { challengeRateLimiter, sellerRateLimiter } from '../middleware/rateLimiter';
@@ -31,6 +38,7 @@ const createBusinessSchema = z.object({
   ownerAddress: z.string().regex(/^0x[a-fA-F0-9]{40}$/),
   signature: z.string().min(1),
   timestamp: z.string().min(1),
+  nonce: z.string().min(1).optional(),
 });
 
 const createBenefitRuleSchema = z.object({
@@ -136,13 +144,33 @@ function getSellerAuth(req: Request) {
     walletAddress: String(req.header('x-ifr-wallet') || req.body?.ownerAddress || ''),
     signature: String(req.header('x-ifr-signature') || req.body?.signature || ''),
     timestamp: String(req.header('x-ifr-timestamp') || req.body?.timestamp || ''),
+    nonce: String(req.header('x-ifr-nonce') || req.body?.nonce || ''),
   };
 }
 
-function requireSellerAuth(req: Request, action: string, businessId: string) {
+async function requireSellerAuth(req: Request, action: string, businessId: string, scope?: string) {
   const auth = getSellerAuth(req);
-  const wallet = verifySellerSignature({ ...auth, action, businessId });
+  const singleUse = requiresSingleUseSellerChallenge(action);
+  if (singleUse && (!auth.nonce || !scope)) {
+    throw new SellerAuthError('Seller authorization nonce and scope are required');
+  }
+  const wallet = verifySellerSignature({
+    ...auth,
+    action,
+    businessId,
+    nonce: singleUse ? auth.nonce : undefined,
+    scope: singleUse ? scope : undefined,
+  });
   assertSellerWalletActionAllowed(wallet);
+  if (singleUse) {
+    await consumeSellerAuthorizationChallenge(prisma, {
+      nonce: auth.nonce,
+      walletAddress: wallet,
+      action,
+      businessId,
+      scope: scope!,
+    });
+  }
   return wallet;
 }
 
@@ -181,8 +209,8 @@ function handleSellerError(err: unknown, res: Response, next: NextFunction) {
   next(err);
 }
 
-async function requireBusinessOwner(req: Request, action: string, businessId: string) {
-  const wallet = requireSellerAuth(req, action, businessId);
+async function requireBusinessOwner(req: Request, action: string, businessId: string, scope?: string) {
+  const wallet = await requireSellerAuth(req, action, businessId, scope);
   const business = await prisma.business.findUnique({
     where: { id: businessId },
     select: { id: true, ownerAddress: true, active: true },
@@ -245,17 +273,25 @@ router.get('/auth-message', challengeRateLimiter, async (req, res, next) => {
   try {
     const action = String(req.query.action || 'business:create');
     const businessId = String(req.query.businessId || 'new');
+    if (!isKnownSellerAction(action)) {
+      res.status(400).json({ error: 'Unknown seller authorization action' });
+      return;
+    }
+    if (!isSafeSellerAuthorizationField(businessId)) {
+      res.status(400).json({ error: 'Invalid seller authorization business' });
+      return;
+    }
     const timestamp = String(Date.now());
     const response: Record<string, string> = {
       action,
       businessId,
       timestamp,
       issuedAt: new Date(Number(timestamp)).toISOString(),
-      expiresAt: new Date(Number(timestamp) + 10 * 60 * 1000).toISOString(),
+      expiresAt: new Date(Number(timestamp) + SELLER_AUTH_TTL_MS).toISOString(),
       message: buildSellerAuthMessage(action, businessId, timestamp),
     };
 
-    if (action === 'sessions:create') {
+    if (requiresSingleUseSellerChallenge(action)) {
       let walletAddress: string;
       try {
         walletAddress = normalizeAddress(String(req.query.walletAddress || ''));
@@ -263,21 +299,19 @@ router.get('/auth-message', challengeRateLimiter, async (req, res, next) => {
         res.status(400).json({ error: 'Valid walletAddress is required for this authorization' });
         return;
       }
-      const scope = String(req.query.scope || 'default');
-      if (businessId.length > 200 || scope.length > 200) {
+      const scope = String(req.query.scope || '');
+      if (!isSafeSellerAuthorizationField(scope)) {
         res.status(400).json({ error: 'Invalid seller authorization scope' });
         return;
       }
-      const nonce = crypto.randomBytes(32).toString('hex');
-      const expiresAt = new Date(Number(timestamp) + 10 * 60 * 1000);
-      await prisma.$transaction([
-        prisma.sellerAuthorizationChallenge.deleteMany({
-          where: { expiresAt: { lt: new Date() } },
-        }),
-        prisma.sellerAuthorizationChallenge.create({
-          data: { nonce, walletAddress, action, businessId, scope, expiresAt },
-        }),
-      ]);
+      const expiresAt = new Date(Number(timestamp) + SELLER_AUTH_TTL_MS);
+      const nonce = await issueSellerAuthorizationChallenge(prisma, {
+        walletAddress,
+        action,
+        businessId,
+        scope,
+        expiresAt,
+      });
       response.walletAddress = walletAddress;
       response.scope = scope;
       response.nonce = nonce;
@@ -292,14 +326,7 @@ router.get('/auth-message', challengeRateLimiter, async (req, res, next) => {
 
 router.post('/businesses', sellerRateLimiter, validate(createBusinessSchema), async (req, res, next) => {
   try {
-    const ownerAddress = verifySellerSignature({
-      walletAddress: req.body.ownerAddress,
-      signature: req.body.signature,
-      timestamp: req.body.timestamp,
-      action: 'business:create',
-      businessId: 'new',
-    });
-    assertSellerWalletActionAllowed(ownerAddress);
+    const ownerAddress = await requireSellerAuth(req, 'business:create', 'new', 'new');
 
     await assertSellerBusinessLimit(ownerAddress);
 
@@ -327,7 +354,7 @@ router.post('/businesses', sellerRateLimiter, validate(createBusinessSchema), as
 
 router.get('/businesses', sellerRateLimiter, async (req, res, next) => {
   try {
-    const wallet = requireSellerAuth(req, 'business:list', 'seller');
+    const wallet = await requireSellerAuth(req, 'business:list', 'seller');
     const businesses = await prisma.business.findMany({
       where: { ownerAddress: wallet, active: true },
       orderBy: { createdAt: 'desc' },
@@ -367,7 +394,7 @@ router.get('/businesses', sellerRateLimiter, async (req, res, next) => {
 
 router.get('/businesses/:id/operator-status', sellerRateLimiter, async (req, res, next) => {
   try {
-    const wallet = requireSellerAuth(req, 'operators:status', req.params.id);
+    const wallet = await requireSellerAuth(req, 'operators:status', req.params.id);
     const actor = await resolveCheckoutActor(req.params.id, wallet);
     if (!actor) throw new Error('Seller wallet is not authorized for checkout');
     res.json({ authorized: true, ...actor });
@@ -396,8 +423,13 @@ router.post(
   async (req, res, next) => {
     try {
       const authorizationTimestamp = Number(getSellerAuth(req).timestamp);
-      const ownerWallet = await requireBusinessOwner(req, 'operators:create', req.params.id);
       const walletAddress = normalizeAddress(req.body.walletAddress);
+      const ownerWallet = await requireBusinessOwner(
+        req,
+        'operators:create',
+        req.params.id,
+        walletAddress.toLowerCase()
+      );
       if (walletAddress === ownerWallet) {
         throw new Error('The business owner is already authorized for checkout');
       }
@@ -466,7 +498,12 @@ router.delete('/operators/:id', sellerRateLimiter, async (req, res, next) => {
       select: { id: true, businessId: true, updatedAt: true },
     });
     if (!operator) throw new Error('Checkout operator not found');
-    const ownerWallet = await requireBusinessOwner(req, 'operators:delete', operator.businessId);
+    const ownerWallet = await requireBusinessOwner(
+      req,
+      'operators:delete',
+      operator.businessId,
+      operator.id
+    );
     const changed = await prisma.$transaction(async (tx) => {
       const result = await tx.checkoutOperator.updateMany({
         where: {
@@ -524,7 +561,7 @@ router.post(
   validate(createProductSchema),
   async (req, res, next) => {
     try {
-      await requireBusinessOwner(req, 'products:create', req.params.id);
+      await requireBusinessOwner(req, 'products:create', req.params.id, req.params.id);
       const product = await prisma.product.create({
         data: {
           businessId: req.params.id,
@@ -549,7 +586,7 @@ router.patch('/products/:id', sellerRateLimiter, validate(updateProductSchema), 
       select: { id: true, businessId: true, active: true },
     });
     if (!existing) throw new Error('Product not found');
-    await requireBusinessOwner(req, 'products:update', existing.businessId);
+    await requireBusinessOwner(req, 'products:update', existing.businessId, existing.id);
     const data = {
       ...req.body,
       description: req.body.description === undefined ? undefined : req.body.description,
@@ -588,7 +625,7 @@ router.delete('/products/:id', sellerRateLimiter, async (req, res, next) => {
       select: { id: true, businessId: true },
     });
     if (!existing) throw new Error('Product not found');
-    await requireBusinessOwner(req, 'products:delete', existing.businessId);
+    await requireBusinessOwner(req, 'products:delete', existing.businessId, existing.id);
     await prisma.$transaction([
       prisma.benefitRule.updateMany({
         where: { productId: existing.id, active: true },
@@ -727,7 +764,7 @@ router.get('/businesses/:id/sessions', sellerRateLimiter, async (req, res, next)
 
 router.post('/businesses/:id/rewards/apply', sellerRateLimiter, async (req, res, next) => {
   try {
-    const owner = await requireBusinessOwner(req, 'rewards:apply', req.params.id);
+    const owner = await requireBusinessOwner(req, 'rewards:apply', req.params.id, req.params.id);
     const existing = await prisma.sellerRewardLink.findUnique({ where: { businessId: req.params.id } });
     if (existing?.status === 'VERIFIED') {
       res.status(409).json({ error: 'Seller reward link is already verified' });
@@ -797,7 +834,7 @@ router.get('/businesses/:id/rewards', sellerRateLimiter, async (req, res, next) 
 
 router.delete('/businesses/:id', sellerRateLimiter, async (req, res, next) => {
   try {
-    await requireBusinessOwner(req, 'business:delete', req.params.id);
+    await requireBusinessOwner(req, 'business:delete', req.params.id, req.params.id);
     await prisma.$transaction([
       prisma.benefitRule.updateMany({
         where: { businessId: req.params.id, active: true },
@@ -824,7 +861,7 @@ router.post(
   validate(createBenefitRuleSchema),
   async (req, res, next) => {
     try {
-      await requireBusinessOwner(req, 'rules:create', req.params.id);
+      await requireBusinessOwner(req, 'rules:create', req.params.id, req.params.id);
       const rule = await prisma.$transaction(async (tx) => {
         if (req.body.productId && req.body.active !== false) {
           await lockActiveProduct(tx, req.body.productId, req.params.id);
@@ -864,7 +901,7 @@ router.patch('/rules/:id', sellerRateLimiter, validate(updateBenefitRuleSchema),
       return;
     }
 
-    await requireBusinessOwner(req, 'rules:update', existing.businessId);
+    await requireBusinessOwner(req, 'rules:update', existing.businessId, existing.id);
     const targetProductId = req.body.productId === undefined ? existing.productId : req.body.productId;
     const rule = await prisma.$transaction(async (tx) => {
       if (req.body.active === true && targetProductId) {
@@ -893,7 +930,7 @@ router.delete('/rules/:id', sellerRateLimiter, async (req, res, next) => {
       return;
     }
 
-    await requireBusinessOwner(req, 'rules:delete', existing.businessId);
+    await requireBusinessOwner(req, 'rules:delete', existing.businessId, existing.id);
     await prisma.benefitRule.update({
       where: { id: req.params.id },
       data: { active: false },

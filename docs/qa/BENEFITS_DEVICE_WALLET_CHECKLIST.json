@@ -11,7 +11,7 @@
   "knownBlockers": [
     "NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID is not set for production WalletConnect/RainbowKit modal support.",
     "Full APPROVED -> REDEEMED proof requires an eligible locked customer wallet.",
-    "Production capacity must still be checked read-only before deploys; 17 GB was free after the 2026-07-18 redemption-cap release."
+    "Production capacity must still be checked read-only before deploys; 14 GB was last observed after the 2026-07-19 official-asset release."
   ],
   "matrix": [
     {

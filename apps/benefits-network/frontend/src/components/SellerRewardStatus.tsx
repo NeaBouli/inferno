@@ -38,9 +38,20 @@ export function SellerRewardStatus({ businessId }: { businessId: string }) {
 
   async function signAction(action: string): Promise<SellerAuth> {
     if (!address || !isConnected) throw new Error('Connect the seller owner wallet first.');
-    const challenge = await getSellerAuthMessage(action, businessId);
+    const scope = action === 'rewards:apply' ? businessId : undefined;
+    const challenge = await getSellerAuthMessage(
+      action,
+      businessId,
+      scope ? { walletAddress: address, scope } : undefined
+    );
+    if (scope && !challenge.nonce) throw new Error('Seller authorization challenge is incomplete');
     const signature = await signMessageAsync({ message: challenge.message });
-    return { walletAddress: address, signature, timestamp: challenge.timestamp };
+    return {
+      walletAddress: address,
+      signature,
+      timestamp: challenge.timestamp,
+      nonce: challenge.nonce,
+    };
   }
 
   async function refresh() {

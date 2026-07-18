@@ -9,6 +9,7 @@ import {
   AuthenticatedRateLimitError,
   assertSellerWalletActionAllowed,
 } from '../services/authenticatedRateLimiter';
+import { consumeSellerAuthorizationChallenge } from '../services/sellerAuthorizationChallenge';
 
 const router = Router();
 
@@ -43,12 +44,22 @@ async function requireSessionRedeemer(req: Request, sessionId: string) {
     throw new Error('Seller-owned business required to redeem');
   }
 
+  const auth = getSellerAuth(req);
+  if (!auth.nonce) throw new SellerAuthError('Seller authorization nonce is required');
   const wallet = verifySellerSignature({
-    ...getSellerAuth(req),
+    ...auth,
     action: 'sessions:redeem',
     businessId: sessionId,
+    scope: sessionId,
   });
   assertSellerWalletActionAllowed(wallet);
+  await consumeSellerAuthorizationChallenge(prisma, {
+    nonce: auth.nonce,
+    walletAddress: wallet,
+    action: 'sessions:redeem',
+    businessId: sessionId,
+    scope: sessionId,
+  });
   const actor = await resolveCheckoutActor(session.businessId, wallet);
   if (!actor) throw new Error('Seller wallet is not authorized for checkout');
   return actor;

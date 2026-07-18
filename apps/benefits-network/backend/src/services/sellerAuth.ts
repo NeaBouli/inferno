@@ -1,6 +1,7 @@
 import { ethers } from 'ethers';
+import { requiresSingleUseSellerChallenge } from './sellerAuthorizationActions';
 
-const MAX_SIGNATURE_AGE_MS = 10 * 60 * 1000;
+export const SELLER_AUTH_TTL_MS = 10 * 60 * 1000;
 const MAX_FUTURE_SKEW_MS = 2 * 60 * 1000;
 
 export class SellerAuthError extends Error {
@@ -47,13 +48,19 @@ export function verifySellerSignature(input: {
   nonce?: string;
   scope?: string;
 }): string {
+  if (Boolean(input.nonce) !== Boolean(input.scope)) {
+    throw new SellerAuthError('Incomplete seller authorization binding');
+  }
+  if (requiresSingleUseSellerChallenge(input.action) && (!input.nonce || !input.scope)) {
+    throw new SellerAuthError('Seller authorization binding is required for mutations');
+  }
   const timestampMs = Number(input.timestamp);
   if (!Number.isFinite(timestampMs)) {
     throw new SellerAuthError('Invalid seller authorization timestamp');
   }
 
   const now = Date.now();
-  if (timestampMs < now - MAX_SIGNATURE_AGE_MS || timestampMs > now + MAX_FUTURE_SKEW_MS) {
+  if (timestampMs < now - SELLER_AUTH_TTL_MS || timestampMs > now + MAX_FUTURE_SKEW_MS) {
     throw new SellerAuthError('Seller authorization expired');
   }
 

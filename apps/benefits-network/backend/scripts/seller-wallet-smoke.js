@@ -80,9 +80,14 @@ async function fetchNoContent(path, options = {}) {
 
 async function signSellerAction(wallet, action, businessId, scope) {
   const query = new URLSearchParams({ action, businessId });
-  if (action === 'sessions:create') {
+  const mutatingActions = new Set([
+    'business:create', 'business:delete', 'operators:create', 'operators:delete',
+    'products:create', 'products:update', 'products:delete', 'rewards:apply',
+    'rules:create', 'rules:update', 'rules:delete', 'sessions:create', 'sessions:redeem',
+  ]);
+  if (mutatingActions.has(action)) {
     query.set('walletAddress', wallet.address);
-    query.set('scope', scope || 'default');
+    query.set('scope', scope || businessId);
   }
   const challenge = await fetchJson(`/api/seller/auth-message?${query.toString()}`);
   const signature = await wallet.signMessage(challenge.message);
@@ -162,6 +167,7 @@ async function main() {
       ownerAddress: wallet.address,
       signature: createAuth.signature,
       timestamp: createAuth.timestamp,
+      nonce: createAuth.nonce,
     }),
   });
   console.log(`Created seller profile: ${business.id}`);
@@ -314,7 +320,12 @@ async function main() {
   }
 
   if (cleanup) {
-    const archiveProductAuth = await signSellerAction(wallet, 'products:delete', business.id);
+    const archiveProductAuth = await signSellerAction(
+      wallet,
+      'products:delete',
+      business.id,
+      product.id
+    );
     await fetchNoContent(`/api/seller/products/${product.id}`, {
       method: 'DELETE',
       headers: sellerHeaders(archiveProductAuth),

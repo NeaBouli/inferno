@@ -4,6 +4,7 @@ import { config } from '../config';
 import { checkLock, recoverSigner } from './ifrLockService';
 import { toIFRBaseUnits } from './rewardService';
 import { normalizeAddress } from './sellerAuth';
+import { consumeSellerAuthorizationChallenge } from './sellerAuthorizationChallenge';
 
 const prisma = new PrismaClient();
 
@@ -233,21 +234,13 @@ async function createSessionInternal(
   const session = await prisma.$transaction(async (tx) => {
     let creator: SessionCreator | null = null;
     if (creatorAuthorization) {
-      const consumed = await tx.sellerAuthorizationChallenge.updateMany({
-        where: {
-          nonce: creatorAuthorization.nonce,
-          walletAddress: creatorAuthorization.walletAddress,
-          action: 'sessions:create',
-          businessId,
-          scope: creatorAuthorization.scope,
-          consumedAt: null,
-          expiresAt: { gt: new Date() },
-        },
-        data: { consumedAt: new Date() },
+      await consumeSellerAuthorizationChallenge(tx, {
+        nonce: creatorAuthorization.nonce,
+        walletAddress: creatorAuthorization.walletAddress,
+        action: 'sessions:create',
+        businessId,
+        scope: creatorAuthorization.scope,
       });
-      if (consumed.count !== 1) {
-        throw new Error('Seller authorization challenge is invalid, expired, or already used');
-      }
       creator = await resolveSessionCreator(tx, businessId, creatorAuthorization.walletAddress);
       if (!creator) throw new Error('Seller wallet is not authorized for checkout');
     }

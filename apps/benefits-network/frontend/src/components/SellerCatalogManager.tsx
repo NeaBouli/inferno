@@ -16,7 +16,7 @@ interface SellerCatalogManagerProps {
   businessId: string;
   ownerReady: boolean;
   products: CatalogProduct[];
-  signSellerAction: (action: string, businessId: string) => Promise<SellerAuth>;
+  signSellerAction: (action: string, businessId: string, scope?: string) => Promise<SellerAuth>;
   onProductsChange: (products: CatalogProduct[]) => void;
   onUseProduct: (product: CatalogProduct) => void;
   onProductArchived: (productId: string) => void;
@@ -85,12 +85,12 @@ export function SellerCatalogManager({
       const product = editingId
         ? await updateSellerBusinessProduct(
             editingId,
-            await signSellerAction('products:update', businessId),
+            await signSellerAction('products:update', businessId, editingId),
             input
           )
         : await createSellerBusinessProduct(
             businessId,
-            await signSellerAction('products:create', businessId),
+            await signSellerAction('products:create', businessId, businessId),
             input
           );
       const next = editingId
@@ -122,7 +122,7 @@ export function SellerCatalogManager({
     try {
       await deleteSellerBusinessProduct(
         product.id,
-        await signSellerAction('products:delete', businessId)
+        await signSellerAction('products:delete', businessId, product.id)
       );
       onProductsChange(products.map((item) => item.id === product.id ? { ...item, active: false } : item));
       onProductArchived(product.id);

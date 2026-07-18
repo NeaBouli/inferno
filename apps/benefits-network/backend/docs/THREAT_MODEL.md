@@ -62,12 +62,14 @@
 
 **Mitigation:**
 - Seller actions require short-lived, server-issued wallet messages
+- Every mutating seller action uses a persisted random nonce bound to wallet, action, business and exact target resource; replay, wrong-action and wrong-scope use are rejected
+- Read-only seller actions remain timestamp-bound and do not write challenge rows
 - Pre-auth rate limits never key on the claimed wallet; wallet budgets are charged only after signature recovery
 - Owner-only actions require the recovered signer to match `Business.ownerAddress`
 - Session history uses `Action: sessions:list` and is limited to the owned business
 - Checkout operators are unique per business, owner-managed, revocable and optionally expiring
-- Operators can only check their checkout role and redeem; profile, rule, history and delegation routes remain owner-only
-- Redeem uses `Action: sessions:redeem` with the specific session id and rechecks current owner/operator access
+- Operators can only check their checkout role and create/redeem QR sessions; profile, rule, history and delegation routes remain owner-only
+- Redeem uses a one-time `Action: sessions:redeem` challenge with the specific session id as both business and scope, then rechecks current owner/operator access
 - Redeem uses a conditional database update so concurrent requests still produce one redemption and one audit event
 - Audit data stores actor wallet/role but not the wallet signature
 

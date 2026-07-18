@@ -1,5 +1,4 @@
 import { ethers } from 'ethers';
-import { buildSellerAuthMessage } from '../src/services/sellerAuth';
 import * as authenticatedRateLimiter from '../src/services/authenticatedRateLimiter';
 
 jest.mock('../src/services/ifrLockService', () => ({
@@ -35,16 +34,22 @@ async function sellerHeaders(
   wallet: ethers.Wallet,
   action: string,
   businessId: string,
-  scope = 'default'
+  scope?: string
 ): Promise<Record<string, string>> {
-  if (action === 'sessions:create') {
+  const mutations = new Set([
+    'business:create', 'business:delete', 'operators:create', 'operators:delete',
+    'products:create', 'products:update', 'products:delete', 'rewards:apply',
+    'rules:create', 'rules:update', 'rules:delete', 'sessions:create', 'sessions:redeem',
+  ]);
+  if (mutations.has(action)) {
     const query = new URLSearchParams({
       action,
       businessId,
       walletAddress: wallet.address,
-      scope,
+      scope: scope || (action === 'sessions:create' ? 'default' : businessId),
     });
     const challengeResponse = await fetch(`${baseUrl()}/api/seller/auth-message?${query}`);
+    expect(challengeResponse.status).toBe(200);
     const challenge = await challengeResponse.json() as {
       message: string;
       timestamp: string;
@@ -58,13 +63,16 @@ async function sellerHeaders(
       'x-ifr-nonce': challenge.nonce,
     };
   }
-  const timestamp = Date.now().toString();
-  const signature = await wallet.signMessage(buildSellerAuthMessage(action, businessId, timestamp));
+  const challengeResponse = await fetch(
+    `${baseUrl()}/api/seller/auth-message?${new URLSearchParams({ action, businessId })}`
+  );
+  expect(challengeResponse.status).toBe(200);
+  const challenge = await challengeResponse.json() as { message: string; timestamp: string };
   return {
     'content-type': 'application/json',
     'x-ifr-wallet': wallet.address,
-    'x-ifr-signature': signature,
-    'x-ifr-timestamp': timestamp,
+    'x-ifr-signature': await wallet.signMessage(challenge.message),
+    'x-ifr-timestamp': challenge.timestamp,
   };
 }
 
@@ -140,10 +148,14 @@ describe('Redeem route authorization', () => {
   const seller = ethers.Wallet.createRandom();
   const otherSeller = ethers.Wallet.createRandom();
   const checkoutOperator = ethers.Wallet.createRandom();
+  let sellerWalletLimiterSpy: jest.SpyInstance;
   let businessId: string;
   let approvedSessionId: string;
 
   beforeEach(async () => {
+    sellerWalletLimiterSpy = jest
+      .spyOn(authenticatedRateLimiter, 'assertSellerWalletActionAllowed')
+      .mockImplementation(() => undefined);
     await prisma.sellerAuthorizationChallenge.deleteMany();
     await prisma.auditLog.deleteMany();
     await prisma.session.deleteMany();
@@ -175,6 +187,10 @@ describe('Redeem route authorization', () => {
       },
     });
     approvedSessionId = session.id;
+  });
+
+  afterEach(() => {
+    sellerWalletLimiterSpy.mockRestore();
   });
 
   afterAll(async () => {
@@ -306,21 +322,15 @@ describe('Redeem route authorization', () => {
     });
     expect(malformed.status).toBe(401);
 
-    const limiterSpy = jest
-      .spyOn(authenticatedRateLimiter, 'assertSellerWalletActionAllowed')
-      .mockImplementation(() => {
-        throw new authenticatedRateLimiter.AuthenticatedRateLimitError(42);
-      });
-    try {
-      const limited = await postCreateSession(
-        businessId,
-        await sellerHeaders(seller, 'sessions:create', businessId)
-      );
-      expect(limited.status).toBe(429);
-      expect(limited.headers.get('retry-after')).toBe('42');
-    } finally {
-      limiterSpy.mockRestore();
-    }
+    sellerWalletLimiterSpy.mockImplementationOnce(() => {
+      throw new authenticatedRateLimiter.AuthenticatedRateLimitError(42);
+    });
+    const limited = await postCreateSession(
+      businessId,
+      await sellerHeaders(seller, 'sessions:create', businessId)
+    );
+    expect(limited.status).toBe(429);
+    expect(limited.headers.get('retry-after')).toBe('42');
   });
 
   it('trusts private proxy hops but not public client addresses', () => {
@@ -331,9 +341,7 @@ describe('Redeem route authorization', () => {
   });
 
   it('charges the wallet limiter only after a valid signature recovers the claimed seller', async () => {
-    const limiterSpy = jest
-      .spyOn(authenticatedRateLimiter, 'assertSellerWalletActionAllowed')
-      .mockImplementation(() => undefined);
+    sellerWalletLimiterSpy.mockClear();
     const query = new URLSearchParams({
       action: 'sessions:create',
       businessId,
@@ -351,19 +359,15 @@ describe('Redeem route authorization', () => {
       'x-ifr-nonce': challenge.nonce,
     };
 
-    try {
-      expect((await postCreateSession(businessId, forgedHeaders)).status).toBe(401);
-      expect(limiterSpy).not.toHaveBeenCalled();
+    expect((await postCreateSession(businessId, forgedHeaders)).status).toBe(401);
+    expect(sellerWalletLimiterSpy).not.toHaveBeenCalled();
 
-      expect((await postCreateSession(
-        businessId,
-        await sellerHeaders(seller, 'sessions:create', businessId)
-      )).status).toBe(201);
-      expect(limiterSpy).toHaveBeenCalledTimes(1);
-      expect(limiterSpy).toHaveBeenCalledWith(seller.address);
-    } finally {
-      limiterSpy.mockRestore();
-    }
+    expect((await postCreateSession(
+      businessId,
+      await sellerHeaders(seller, 'sessions:create', businessId)
+    )).status).toBe(201);
+    expect(sellerWalletLimiterSpy).toHaveBeenCalledTimes(1);
+    expect(sellerWalletLimiterSpy).toHaveBeenCalledWith(seller.address);
   });
 
   it('rejects redeem when the signer is not the seller business owner', async () => {
@@ -384,7 +388,7 @@ describe('Redeem route authorization', () => {
     expect(body).toEqual({ status: 'REDEEMED' });
 
     const secondResponse = await postRedeem(approvedSessionId, headers);
-    expect(secondResponse.status).toBe(409);
+    expect(secondResponse.status).toBe(401);
   });
 
   it('returns 429 and audits a per-wallet daily redemption limit', async () => {
@@ -463,7 +467,7 @@ describe('Redeem route authorization', () => {
       postRedeem(approvedSessionId, headers),
       postRedeem(approvedSessionId, headers),
     ]);
-    expect(responses.map((response) => response.status).sort()).toEqual([200, 409]);
+    expect(responses.map((response) => response.status).sort()).toEqual([200, 401]);
     expect(await prisma.auditLog.count({
       where: { sessionId: approvedSessionId, type: 'REDEEMED' },
     })).toBe(1);
@@ -484,7 +488,12 @@ describe('Redeem route authorization', () => {
       where: { id: expired.id },
       data: { active: true, expiresAt: null },
     });
-    expect((await postRedeem(approvedSessionId, headers)).status).toBe(200);
+    const reactivatedHeaders = await sellerHeaders(
+      checkoutOperator,
+      'sessions:redeem',
+      approvedSessionId
+    );
+    expect((await postRedeem(approvedSessionId, reactivatedHeaders)).status).toBe(200);
 
     const nextSession = await prisma.session.create({
       data: {
@@ -508,10 +517,16 @@ describe('Redeem route authorization', () => {
     };
     expect((await postCheckoutOperator(businessId, payload)).status).toBe(401);
 
-    const outsiderCreateHeaders = await sellerHeaders(otherSeller, 'operators:create', businessId);
+    const operatorScope = payload.walletAddress.toLowerCase();
+    const outsiderCreateHeaders = await sellerHeaders(
+      otherSeller,
+      'operators:create',
+      businessId,
+      operatorScope
+    );
     expect((await postCheckoutOperator(businessId, payload, outsiderCreateHeaders)).status).toBe(403);
 
-    const ownerCreateHeaders = await sellerHeaders(seller, 'operators:create', businessId);
+    const ownerCreateHeaders = await sellerHeaders(seller, 'operators:create', businessId, operatorScope);
     const createdResponse = await postCheckoutOperator(businessId, payload, ownerCreateHeaders);
     expect(createdResponse.status).toBe(201);
     const created = await createdResponse.json() as { id: string; active: boolean; walletAddress: string };
@@ -537,19 +552,24 @@ describe('Redeem route authorization', () => {
       label: 'Evening shift',
     });
 
-    const operatorDeleteHeaders = await sellerHeaders(checkoutOperator, 'operators:delete', businessId);
+    const operatorDeleteHeaders = await sellerHeaders(
+      checkoutOperator,
+      'operators:delete',
+      businessId,
+      created.id
+    );
     expect((await deleteCheckoutOperator(created.id, operatorDeleteHeaders)).status).toBe(403);
 
-    const ownerDeleteHeaders = await sellerHeaders(seller, 'operators:delete', businessId);
+    const ownerDeleteHeaders = await sellerHeaders(seller, 'operators:delete', businessId, created.id);
     expect((await deleteCheckoutOperator(created.id, ownerDeleteHeaders)).status).toBe(204);
     const revokedStatusHeaders = await sellerHeaders(checkoutOperator, 'operators:status', businessId);
     expect((await getCheckoutOperatorStatus(businessId, revokedStatusHeaders)).status).toBe(403);
 
     expect((await postCheckoutOperator(businessId, payload, ownerCreateHeaders)).status).toBe(401);
-    const freshCreateHeaders = await sellerHeaders(seller, 'operators:create', businessId);
+    const freshCreateHeaders = await sellerHeaders(seller, 'operators:create', businessId, operatorScope);
     expect((await postCheckoutOperator(businessId, payload, freshCreateHeaders)).status).toBe(200);
     expect((await deleteCheckoutOperator(created.id, ownerDeleteHeaders)).status).toBe(401);
-  });
+  }, 30_000);
 
   it('enforces the active checkout operator cap when reactivating an expired record', async () => {
     const expiredWallet = ethers.Wallet.createRandom().address;
@@ -561,26 +581,36 @@ describe('Redeem route authorization', () => {
         expiresAt: new Date(Date.now() - 1),
       },
     });
-    const ownerHeaders = await sellerHeaders(seller, 'operators:create', businessId);
-
     for (let index = 0; index < 10; index += 1) {
+      const counterWallet = ethers.Wallet.createRandom().address;
+      const ownerHeaders = await sellerHeaders(
+        seller,
+        'operators:create',
+        businessId,
+        counterWallet.toLowerCase()
+      );
       const response = await postCheckoutOperator(businessId, {
-        walletAddress: ethers.Wallet.createRandom().address,
+        walletAddress: counterWallet,
         label: `Counter ${index + 1}`,
       }, ownerHeaders);
       expect(response.status).toBe(201);
     }
 
+    const reactivateHeaders = await sellerHeaders(
+      seller,
+      'operators:create',
+      businessId,
+      expiredWallet.toLowerCase()
+    );
     const reactivate = await postCheckoutOperator(businessId, {
       walletAddress: expiredWallet,
       label: 'Expired counter',
       expiresAt: null,
-    }, ownerHeaders);
+    }, reactivateHeaders);
     expect(reactivate.status).toBe(429);
   }, 30_000);
 
   it('never exceeds the checkout operator cap under concurrent owner requests', async () => {
-    const ownerHeaders = await sellerHeaders(seller, 'operators:create', businessId);
     await prisma.checkoutOperator.createMany({
       data: Array.from({ length: 9 }, (_, index) => ({
         businessId,
@@ -589,15 +619,21 @@ describe('Redeem route authorization', () => {
       })),
     });
 
+    const walletA = ethers.Wallet.createRandom().address;
+    const walletB = ethers.Wallet.createRandom().address;
+    const [headersA, headersB] = await Promise.all([
+      sellerHeaders(seller, 'operators:create', businessId, walletA.toLowerCase()),
+      sellerHeaders(seller, 'operators:create', businessId, walletB.toLowerCase()),
+    ]);
     const responses = await Promise.all([
       postCheckoutOperator(businessId, {
-        walletAddress: ethers.Wallet.createRandom().address,
+        walletAddress: walletA,
         label: 'Concurrent counter A',
-      }, ownerHeaders),
+      }, headersA),
       postCheckoutOperator(businessId, {
-        walletAddress: ethers.Wallet.createRandom().address,
+        walletAddress: walletB,
         label: 'Concurrent counter B',
-      }, ownerHeaders),
+      }, headersB),
     ]);
 
     expect(responses.filter((response) => response.status === 201)).toHaveLength(1);
@@ -617,8 +653,13 @@ describe('Redeem route authorization', () => {
       },
     });
     await new Promise((resolve) => setTimeout(resolve, 5));
-    const createHeaders = await sellerHeaders(seller, 'operators:create', businessId);
-    const deleteHeaders = await sellerHeaders(seller, 'operators:delete', businessId);
+    const createHeaders = await sellerHeaders(
+      seller,
+      'operators:create',
+      businessId,
+      checkoutOperator.address.toLowerCase()
+    );
+    const deleteHeaders = await sellerHeaders(seller, 'operators:delete', businessId, operator.id);
 
     const [createResponse, deleteResponse] = await Promise.all([
       postCheckoutOperator(businessId, {
@@ -739,7 +780,7 @@ describe('Redeem route authorization', () => {
     const missingAuth = await patchSellerRule(rule.id, payload);
     expect(missingAuth.status).toBe(401);
 
-    const wrongHeaders = await sellerHeaders(otherSeller, 'rules:update', businessId);
+    const wrongHeaders = await sellerHeaders(otherSeller, 'rules:update', businessId, rule.id);
     const wrongSeller = await patchSellerRule(rule.id, payload, wrongHeaders);
     expect(wrongSeller.status).toBe(403);
 
@@ -764,15 +805,15 @@ describe('Redeem route authorization', () => {
       },
     });
 
-    const wrongBusinessHeaders = await sellerHeaders(seller, 'rules:update', businessId);
+    const wrongBusinessHeaders = await sellerHeaders(seller, 'rules:update', businessId, otherRule.id);
     const wrongBusiness = await patchSellerRule(otherRule.id, payload, wrongBusinessHeaders);
     expect(wrongBusiness.status).toBe(401);
 
-    const nonOwnerHeaders = await sellerHeaders(seller, 'rules:update', otherBusiness.id);
+    const nonOwnerHeaders = await sellerHeaders(seller, 'rules:update', otherBusiness.id, otherRule.id);
     const nonOwner = await patchSellerRule(otherRule.id, payload, nonOwnerHeaders);
     expect(nonOwner.status).toBe(403);
 
-    const ownerHeaders = await sellerHeaders(seller, 'rules:update', businessId);
+    const ownerHeaders = await sellerHeaders(seller, 'rules:update', businessId, rule.id);
     const response = await patchSellerRule(rule.id, payload, ownerHeaders);
     const body = await response.json() as {
       label: string;

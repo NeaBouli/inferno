@@ -273,12 +273,17 @@ export default function BusinessConsole({ params }: { params: { businessId: stri
     setLoading(true);
     setError('');
     try {
-      const challenge = await getSellerAuthMessage('sessions:redeem', session.sessionId);
+      const challenge = await getSellerAuthMessage('sessions:redeem', session.sessionId, {
+        walletAddress: address,
+        scope: session.sessionId,
+      });
+      if (!challenge.nonce) throw new Error('Seller authorization challenge is incomplete');
       const signature = await signMessageAsync({ message: challenge.message });
       await redeemSession(session.sessionId, {
         walletAddress: address,
         signature,
         timestamp: challenge.timestamp,
+        nonce: challenge.nonce,
       });
       setStatus(await getSessionStatus(session.sessionId));
     } catch (err) {
