@@ -41,6 +41,10 @@ const source = fs.readFileSync(
   path.join(__dirname, '..', 'apps', 'benefits-network', 'frontend', 'public', 'sw.js'),
   'utf8'
 );
+const layoutSource = fs.readFileSync(
+  path.join(__dirname, '..', 'apps', 'benefits-network', 'frontend', 'src', 'app', 'layout.tsx'),
+  'utf8'
+);
 vm.runInNewContext(source, context, { filename: 'sw.js' });
 
 async function navigate(url) {
@@ -54,6 +58,11 @@ async function navigate(url) {
 
 async function main() {
   assert(listeners.has('fetch'), 'service worker must register a fetch handler');
+  assert(source.includes("const CACHE_NAME = 'ifr-benefits-v4'"), 'service worker cache version must be v4');
+  assert(source.includes("'/icons/ifr-icon-192-v2.png'"), 'service worker must precache the v2 official 192 icon');
+  assert(source.includes("'/icons/ifr-icon-512-v2.png'"), 'service worker must precache the v2 official 512 icon');
+  assert(layoutSource.includes("updateViaCache:'none'"), 'registration must bypass stale service-worker HTTP caches');
+  assert(layoutSource.includes("'controllerchange'"), 'controlled clients must reload after a service-worker update');
 
   await navigate('https://shop.ifrunit.tech/guide');
   assert.deepStrictEqual(cacheWrites, [], 'a subpage must not replace the offline app shell');
