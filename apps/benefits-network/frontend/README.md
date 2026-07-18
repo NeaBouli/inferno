@@ -49,6 +49,13 @@ contracts, entered IFR amount, unlocked IFR balance and allowance, then guides
 the user toward Buy IFR, Approve or Lock. Tier chips are buttons that set common
 lock amounts for seller benefit rules.
 
+`Add IFR to wallet` uses the active Wagmi connector first and never falls back
+to a different injected wallet while a connector is active. It requests the
+configured chain, then submits the EIP-747 token metadata with the canonical
+IFR address, 9 decimals and official HTTPS icon. Wallets without automatic
+asset import can use the displayed contract address. Every Buy IFR path keeps
+the Uniswap price-impact and user-controlled slippage warning visible.
+
 ## Tech Stack
 
 - Next.js 15 (App Router)

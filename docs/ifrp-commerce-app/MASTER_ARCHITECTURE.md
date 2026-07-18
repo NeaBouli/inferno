@@ -549,11 +549,11 @@ MVP should be installable:
 
 ### M2 - Wallet And Swap UX
 
-- add IFR token;
-- ETH/IFR balance;
-- Uniswap deep-link or embedded swap widget;
-- lock IFR from customer app;
-- QR proof after lock.
+- add IFR token; **implemented with connector-bound EIP-747 metadata, configured-chain check and official icon**
+- ETH/IFR balance; **implemented in the customer wallet panel**
+- Uniswap deep-link or embedded swap widget; **deep-link implemented with visible thin-liquidity, price-impact and slippage warning; embedded swap remains deferred**
+- lock IFR from customer app; **implemented as exact-amount approve, lock and full IFRLock unlock**
+- QR proof after lock. **implemented as seller-issued, customer-signed, short-lived session proof**
 
 ### M3 - Seller Catalog And Categories
 
