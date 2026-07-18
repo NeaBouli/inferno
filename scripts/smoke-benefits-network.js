@@ -92,6 +92,39 @@ async function expectText(page, text) {
   await page.getByText(text, { exact: false }).first().waitFor({ timeout: timeoutMs });
 }
 
+async function expectNoHorizontalOverflow(page, label) {
+  const widths = await page.evaluate(() => ({
+    viewport: document.documentElement.clientWidth,
+    content: document.documentElement.scrollWidth,
+  }));
+  assert(
+    widths.content <= widths.viewport + 1,
+    `${label} has horizontal overflow: content ${widths.content}px, viewport ${widths.viewport}px`
+  );
+}
+
+async function verifyMobileWalletLaunches(page) {
+  await expectText(page, 'Open in wallet app');
+  const expectedHosts = {
+    metamask: 'metamask.app.link',
+    trust: 'link.trustwallet.com',
+    okx: 'web3.okx.com',
+    phantom: 'phantom.app',
+  };
+
+  for (const [wallet, host] of Object.entries(expectedHosts)) {
+    const link = page.locator(`[data-wallet-launch="${wallet}"]`);
+    await link.waitFor({ timeout: timeoutMs });
+    const href = await link.getAttribute('href');
+    assert(href, `${wallet} wallet launch is missing href`);
+    const parsed = new URL(href);
+    assert(parsed.protocol === 'https:', `${wallet} wallet launch is not HTTPS`);
+    assert(parsed.hostname === host, `${wallet} wallet launch host is ${parsed.hostname}, expected ${host}`);
+    assert(href.includes('shop.ifrunit.tech'), `${wallet} wallet launch is not bound to the canonical Shop origin`);
+    assert(!href.includes('smoke='), `${wallet} wallet launch leaks the smoke query parameter`);
+  }
+}
+
 async function gotoAppPage(page, route) {
   await page.goto(`${baseUrl}${route}?smoke=${Date.now()}`, { waitUntil: 'domcontentloaded', timeout: timeoutMs });
 }
@@ -148,6 +181,10 @@ async function verifyPage(contextOptions, label) {
     await expectText(page, 'Copy evidence');
     await expectText(page, 'Share evidence');
     await expectText(page, 'Copy link');
+    if (label === 'ipad' || label === 'android') {
+      await verifyMobileWalletLaunches(page);
+    }
+    await expectNoHorizontalOverflow(page, `${label} home`);
     await expectText(page, 'Checkout readiness');
     await expectText(page, 'Current tier');
     await expectText(page, 'Lock transaction path');
@@ -347,6 +384,7 @@ async function main() {
   await verifyHttpSurface();
   await verifyPage({ viewport: { width: 1440, height: 1100 } }, 'desktop');
   await verifyPage(devices['iPad Pro 11'], 'ipad');
+  await verifyPage(devices['Pixel 7'], 'android');
   log('PASS');
 }
 

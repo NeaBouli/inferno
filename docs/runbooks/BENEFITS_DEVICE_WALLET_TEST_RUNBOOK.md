@@ -49,10 +49,10 @@ Use that command only with a deliberately prepared test wallet. Never paste the 
 
 | Device | Browser / Wallet Surface | Expected Result |
 |---|---|---|
-| iPadOS Safari | `shop.ifrunit.tech` | PWA install guidance is visible; Copy/Share wallet entry works. |
+| iPadOS Safari | `shop.ifrunit.tech` | PWA install guidance is visible; official MetaMask/Trust/OKX/Phantom launch links and Copy/Share are readable. |
 | iPadOS MetaMask in-app browser | `shop.ifrunit.tech` | Customer wallet connects; proof page can sign a QR challenge. |
 | iPadOS Coinbase Wallet browser | `shop.ifrunit.tech` | Customer wallet connects or displays a clear fallback path. |
-| Android Chrome | `shop.ifrunit.tech` | PWA install guidance is visible; Copy/Share wallet entry works. |
+| Android Chrome | `shop.ifrunit.tech` | PWA install guidance is visible; official MetaMask/Trust/OKX/Phantom launch links and Copy/Share are readable. |
 | Android MetaMask browser | `shop.ifrunit.tech` | Customer wallet connects; proof page can sign a QR challenge. |
 | Android Trust Wallet browser | `shop.ifrunit.tech` | Wallet entry works if Ethereum provider is exposed; otherwise fallback copy/share is clear. |
 | Android OKX Wallet browser | `shop.ifrunit.tech` | Wallet entry works if Ethereum provider is exposed; otherwise fallback copy/share is clear. |
@@ -60,7 +60,7 @@ Use that command only with a deliberately prepared test wallet. Never paste the 
 | Desktop Chrome + MetaMask | `shop.ifrunit.tech` | Seller and customer wallet actions work with injected provider. |
 | Desktop Chrome + Coinbase Wallet extension | `shop.ifrunit.tech` | Wallet entry works or provides a clear fallback. |
 
-WalletConnect modal support remains gated by `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID`. Until that production value is set, success criteria are injected wallet support plus clear mobile wallet-browser fallback.
+WalletConnect modal support remains gated by `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID`. Until that production value is set, success criteria are injected wallet support plus clear mobile wallet-browser fallback. Do not treat a successful wallet-app launch as a successful wallet connection; the injected provider, Ethereum Mainnet, signature and transaction steps must still be tested inside the opened wallet browser.
 
 ## Test Cases
 
@@ -71,7 +71,8 @@ WalletConnect modal support remains gated by `NEXT_PUBLIC_WALLETCONNECT_PROJECT_
 3. Confirm Mobile App / install guidance is visible.
 4. On iOS, confirm the copy explains Share -> Add to Home Screen.
 5. On Android, confirm browser install path is understandable.
-6. Tap Copy link and Share if available.
+6. On iOS/iPadOS and Android, confirm MetaMask, Trust Wallet, OKX and Phantom launch links use HTTPS vendor domains and retain only the canonical Shop path.
+7. Tap Copy link and Share if available.
 
 Pass criteria:
 
