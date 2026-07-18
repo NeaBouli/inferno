@@ -4,7 +4,9 @@ import { useEffect, useMemo, useState } from 'react';
 import { useAccount, useBalance, useReadContract, useWaitForTransactionReceipt, useWriteContract } from 'wagmi';
 import { formatEther, formatUnits, parseUnits } from 'viem';
 import { WalletConnectControl } from '@/components/WalletConnectControl';
-import { IFR_DECIMALS, IFRLOCK_ABI, IFRLOCK_ADDRESS, IFR_TOKEN_ABI, IFR_TOKEN_ADDRESS, formatIFR } from '@/lib/contracts';
+import { SwapRiskNotice } from '@/components/SwapRiskNotice';
+import { CHAIN_ID, IFR_DECIMALS, IFRLOCK_ABI, IFRLOCK_ADDRESS, IFR_TOKEN_ABI, IFR_TOKEN_ADDRESS, formatIFR } from '@/lib/contracts';
+import { requestWalletAsset, selectWalletAssetProvider } from '@/lib/walletAssetProvider.mjs';
 
 const MIN_CUSTOMER_LOCK = 1000;
 const MIN_CUSTOMER_LOCK_RAW = BigInt(MIN_CUSTOMER_LOCK) * BigInt(10) ** BigInt(IFR_DECIMALS);
@@ -15,6 +17,17 @@ const BENEFIT_TIERS = [
   { label: 'Diamond', amount: 100000 },
 ];
 const UNISWAP_IFR_URL = 'https://app.uniswap.org/swap?outputCurrency=0x77e99917Eca8539c62F509ED1193ac36580A6e7B';
+const IFR_ICON_URL = 'https://ifrunit.tech/assets/ifr_icon_256.png';
+
+function walletAssetError(error: unknown) {
+  const code = typeof error === 'object' && error && 'code' in error ? Number(error.code) : undefined;
+  const message = error instanceof Error ? error.message : '';
+  if (code === 4001 || /reject|denied|cancel/i.test(message)) return 'Token import cancelled in the wallet.';
+  if (code === -32601 || /unsupported|not supported|method not found/i.test(message)) {
+    return 'This wallet does not support automatic token import. Use the IFR contract address shown below.';
+  }
+  return message || 'The wallet could not add IFR automatically.';
+}
 
 function shortAddress(address?: string) {
   if (!address) return 'Not connected';
@@ -39,10 +52,13 @@ function getTier(lockedRaw?: bigint) {
 }
 
 export function WalletStatus() {
-  const { address, isConnected } = useAccount();
+  const { address, connector, isConnected } = useAccount();
   const [lockAmount, setLockAmount] = useState('1000');
   const [lockMessage, setLockMessage] = useState('');
   const [lockError, setLockError] = useState('');
+  const [assetMessage, setAssetMessage] = useState('');
+  const [assetError, setAssetError] = useState('');
+  const [assetPromptOpen, setAssetPromptOpen] = useState(false);
   const [pendingHash, setPendingHash] = useState<`0x${string}` | undefined>();
   const [pendingAction, setPendingAction] = useState<'approve' | 'lock' | 'unlock' | ''>('');
   const { writeContractAsync, isPending: walletPromptOpen } = useWriteContract();
@@ -333,6 +349,52 @@ export function WalletStatus() {
     }
   }
 
+  async function addIFRToWallet() {
+    if (!IFR_TOKEN_ADDRESS) {
+      setAssetError('IFR token address is not configured for this deployment.');
+      return;
+    }
+
+    setAssetError('');
+    setAssetMessage('');
+    setAssetPromptOpen(true);
+    try {
+      const connectorProvider = connector ? await connector.getProvider() : undefined;
+      const injectedProvider = (window as Window & { ethereum?: unknown }).ethereum;
+      const provider = selectWalletAssetProvider({
+        connectorActive: Boolean(connector),
+        connectorProvider,
+        injectedProvider,
+      });
+      if (!provider) {
+        setAssetError(
+          connector
+            ? 'The connected wallet does not expose automatic token import. Use the IFR contract address shown below.'
+            : 'Open this page inside a wallet app or browser with an Ethereum wallet, then try again.'
+        );
+        return;
+      }
+
+      const added = await requestWalletAsset({
+        provider,
+        chainId: CHAIN_ID,
+        address: IFR_TOKEN_ADDRESS,
+        symbol: 'IFR',
+        decimals: IFR_DECIMALS,
+        image: IFR_ICON_URL,
+      });
+      if (added === false) {
+        setAssetError('Token import cancelled in the wallet.');
+        return;
+      }
+      setAssetMessage('Wallet accepted the IFR token-import request.');
+    } catch (error) {
+      setAssetError(walletAssetError(error));
+    } finally {
+      setAssetPromptOpen(false);
+    }
+  }
+
   return (
     <section id="customer-wallet" className="rounded-[2rem] border border-white/10 bg-white/[0.06] p-5 shadow-2xl shadow-black/30 backdrop-blur">
       <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
@@ -519,7 +581,23 @@ export function WalletStatus() {
           >
             Buy IFR
           </a>
+          <button
+            type="button"
+            data-wallet-action="watch-ifr"
+            onClick={addIFRToWallet}
+            disabled={assetPromptOpen || !IFR_TOKEN_ADDRESS}
+            className="inline-flex items-center justify-center gap-2 rounded-2xl border border-orange-200/35 px-4 py-3 text-center text-xs font-black uppercase tracking-[0.14em] text-orange-50 transition hover:bg-orange-200/10 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <img src="/icons/ifr-official-64-v5.png" alt="" aria-hidden="true" width="22" height="22" />
+            {assetPromptOpen ? 'Open wallet...' : 'Add IFR to wallet'}
+          </button>
         </div>
+        <SwapRiskNotice />
+        <p className="mt-2 break-all text-xs leading-5 text-stone-400">
+          IFR on {CHAIN_ID === 1 ? 'Ethereum Mainnet' : `chain ${CHAIN_ID}`}: {IFR_TOKEN_ADDRESS || 'Not configured'}
+        </p>
+        {assetMessage ? <p role="status" className="mt-2 text-xs font-semibold text-green-100">{assetMessage}</p> : null}
+        {assetError ? <p role="alert" className="mt-2 rounded-xl border border-red-400/30 bg-red-500/10 p-3 text-xs text-red-100">{assetError}</p> : null}
 
         <div className="mt-4">
           <p className="text-xs font-black uppercase tracking-[0.16em] text-stone-400">

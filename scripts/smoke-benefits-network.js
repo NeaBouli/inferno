@@ -147,6 +147,85 @@ async function verifyMobileWalletLaunches(page) {
   }
 }
 
+async function verifyWalletAssetRequest() {
+  const browser = await chromium.launch({ headless: true });
+  const context = await browser.newContext({ serviceWorkers: 'block' });
+  await context.addInitScript(() => {
+    const requestLog = [];
+    Object.defineProperty(window, '__ifrWalletRequestLog', { value: requestLog, writable: false });
+    window.__ifrWalletAssetMode = 'success';
+    Object.defineProperty(window, 'ethereum', {
+      configurable: true,
+      value: {
+        request: async ({ method, params }) => {
+          requestLog.push({ method, params });
+          if (method === 'eth_chainId') return '0xaa36a7';
+          if (method === 'eth_accounts') return [];
+          if (method === 'wallet_switchEthereumChain') {
+            if (window.__ifrWalletAssetMode === 'reject') {
+              throw Object.assign(new Error('User rejected the request.'), { code: 4001 });
+            }
+            return null;
+          }
+          if (method === 'wallet_watchAsset') {
+            if (window.__ifrWalletAssetMode === 'decline') return false;
+            if (window.__ifrWalletAssetMode === 'unsupported') {
+              throw Object.assign(new Error('Method not found.'), { code: -32601 });
+            }
+            return true;
+          }
+          return null;
+        },
+        on: () => {},
+        removeListener: () => {},
+      },
+    });
+  });
+  const page = await context.newPage();
+
+  try {
+    await gotoAppPage(page, '/');
+    await page.locator('[data-wallet-action="watch-ifr"]').click();
+    await expectText(page, 'Wallet accepted the IFR token-import request.');
+    const requests = await page.evaluate(() => window.__ifrWalletRequestLog || []);
+    const switchChainIndex = requests.findIndex((request) => request.method === 'wallet_switchEthereumChain');
+    const watchAssetIndex = requests.findIndex((request) => request.method === 'wallet_watchAsset');
+    assert(switchChainIndex >= 0, 'Add IFR action did not request Ethereum Mainnet');
+    assert(
+      requests[switchChainIndex].params?.[0]?.chainId === '0x1',
+      'wallet_switchEthereumChain must target Ethereum Mainnet'
+    );
+    assert(watchAssetIndex > switchChainIndex, 'wallet_watchAsset ran before the Mainnet switch request');
+    const watchAsset = requests.find((request) => request.method === 'wallet_watchAsset');
+    assert(watchAsset, 'Add IFR action did not call wallet_watchAsset');
+    assert(watchAsset.params?.type === 'ERC20', 'wallet_watchAsset type must be ERC20');
+    assert(
+      watchAsset.params?.options?.address === '0x77e99917Eca8539c62F509ED1193ac36580A6e7B',
+      'wallet_watchAsset IFR address mismatch'
+    );
+    assert(watchAsset.params?.options?.symbol === 'IFR', 'wallet_watchAsset symbol mismatch');
+    assert(watchAsset.params?.options?.decimals === 9, 'wallet_watchAsset decimals mismatch');
+    assert(
+      watchAsset.params?.options?.image === 'https://ifrunit.tech/assets/ifr_icon_256.png',
+      'wallet_watchAsset official icon mismatch'
+    );
+
+    await page.evaluate(() => { window.__ifrWalletAssetMode = 'decline'; });
+    await page.locator('[data-wallet-action="watch-ifr"]').click();
+    await expectText(page, 'Token import cancelled in the wallet.');
+    await page.evaluate(() => { window.__ifrWalletAssetMode = 'unsupported'; });
+    await page.locator('[data-wallet-action="watch-ifr"]').click();
+    await expectText(page, 'This wallet does not support automatic token import.');
+    await page.evaluate(() => { window.__ifrWalletAssetMode = 'reject'; });
+    await page.locator('[data-wallet-action="watch-ifr"]').click();
+    await expectText(page, 'Token import cancelled in the wallet.');
+    log('Wallet token import payload OK');
+  } finally {
+    await context.close();
+    await browser.close();
+  }
+}
+
 async function gotoAppPage(page, route) {
   await page.goto(`${baseUrl}${route}?smoke=${Date.now()}`, { waitUntil: 'domcontentloaded', timeout: timeoutMs });
 }
@@ -205,6 +284,8 @@ async function verifyPage(contextOptions, label) {
     await expectText(page, 'Wallet starter kit');
     await expectText(page, 'Bring or create your IFR wallet safely.');
     await expectText(page, 'Non-custodial');
+    await expectText(page, 'Protect recovery');
+    await expectText(page, 'IFR liquidity can be thin.');
     if (label === 'ipad') {
       await expectText(page, 'iPad/iPhone steps');
       await expectText(page, 'iOS does not show a real in-page install prompt');
@@ -322,6 +403,7 @@ async function verifyPage(contextOptions, label) {
     await expectText(page, 'Customer path');
     await expectText(page, 'Lock IFR in the shop app when needed');
     await expectText(page, 'The Benefits Network is non-custodial');
+    await expectText(page, 'Recovery and phishing safety');
     await expectText(page, 'Seller path');
 
     await gotoAppPage(page, '/b/smoke-missing-business');
@@ -423,6 +505,7 @@ async function verifyPage(contextOptions, label) {
 async function main() {
   log(`Target ${baseUrl}`);
   await verifyHttpSurface();
+  await verifyWalletAssetRequest();
   await verifyPage({ viewport: { width: 1440, height: 1100 } }, 'desktop');
   await verifyPage(devices['iPad Pro 11'], 'ipad');
   await verifyPage(devices['Pixel 7'], 'android');

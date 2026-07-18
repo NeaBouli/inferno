@@ -132,6 +132,10 @@ export default function GuidePage() {
                 <p className="mt-1">Create an Ethereum wallet in MetaMask, Coinbase Wallet, Trust, OKX or another EVM-capable wallet, then connect it here.</p>
               </div>
               <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+                <strong className="text-white">Recovery and phishing safety</strong>
+                <p className="mt-1">Back up the recovery phrase offline inside the wallet setup, never paste it into a website, verify shop.ifrunit.tech and Ethereum Mainnet, and disconnect after using a shared device.</p>
+              </div>
+              <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
                 <strong className="text-white">IFR locking</strong>
                 <p className="mt-1">Use the shop app&apos;s Lock IFR panel to approve only the entered amount and lock it in IFRLock.</p>
               </div>

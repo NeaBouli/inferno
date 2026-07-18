@@ -10,6 +10,7 @@ on:
       - 'docs/runbooks/BENEFITS_DEVICE_WALLET_TEST_RUNBOOK.md'
       - 'scripts/smoke-benefits-network.js'
       - 'scripts/test-benefits-service-worker.js'
+      - 'scripts/test-benefits-wallet-asset-provider.mjs'
       - 'scripts/test-deploy-benefits-capacity.sh'
       - 'scripts/report-benefits-device-checklist.js'
       - 'scripts/record-benefits-device-evidence.js'
@@ -24,6 +25,7 @@ on:
       - 'docs/runbooks/BENEFITS_DEVICE_WALLET_TEST_RUNBOOK.md'
       - 'scripts/smoke-benefits-network.js'
       - 'scripts/test-benefits-service-worker.js'
+      - 'scripts/test-benefits-wallet-asset-provider.mjs'
       - 'scripts/test-deploy-benefits-capacity.sh'
       - 'scripts/report-benefits-device-checklist.js'
       - 'scripts/record-benefits-device-evidence.js'
@@ -83,4 +85,5 @@ jobs:
       - run: npm run qa:benefits-devices
       - run: npm run qa:benefits-report
       - run: npm run test:benefits-sw
+      - run: npm run test:benefits-wallet-asset
       - run: bash scripts/test-deploy-benefits-capacity.sh

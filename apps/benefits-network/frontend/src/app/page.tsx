@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { AppShell } from '@/components/AppShell';
 import { CustomerProofHistory } from '@/components/CustomerProofHistory';
 import { SellerRuleBuilder } from '@/components/SellerRuleBuilder';
+import { SwapRiskNotice } from '@/components/SwapRiskNotice';
 import { WalletStatus } from '@/components/WalletStatus';
 import { hasWalletConnectProjectId } from '@/lib/wagmi';
 
@@ -56,6 +57,10 @@ const walletOnboardingSteps = [
   {
     title: 'Lock inside the app',
     body: 'Approve only the entered IFR amount, lock it in IFRLock, then use the same wallet for seller QR proofs.',
+  },
+  {
+    title: 'Protect recovery',
+    body: 'Back up the wallet recovery phrase offline during wallet setup, never paste it into this site, verify shop.ifrunit.tech and Ethereum Mainnet, and disconnect on shared devices.',
   },
 ];
 
@@ -388,6 +393,7 @@ function WalletStarterKit() {
           Buy IFR
         </a>
       </div>
+      <SwapRiskNotice />
     </section>
   );
 }

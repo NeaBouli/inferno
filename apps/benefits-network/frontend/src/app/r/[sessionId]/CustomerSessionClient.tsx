@@ -5,6 +5,7 @@ import { useAccount, useDisconnect, useSignMessage } from 'wagmi';
 import { AppShell } from '@/components/AppShell';
 import { Countdown } from '@/components/Countdown';
 import { StatusBadge } from '@/components/StatusBadge';
+import { SwapRiskNotice } from '@/components/SwapRiskNotice';
 import { WalletConnectControl } from '@/components/WalletConnectControl';
 import { AttestResult, BusinessInfo, SessionStatus, getBusiness, getChallenge, getSessionStatus, submitAttest } from '@/lib/api';
 import { saveCustomerProofHistoryItem } from '@/lib/customerHistory';
@@ -313,6 +314,7 @@ export function CustomerSessionClient({ sessionId }: { sessionId: string }) {
                 Open guide
               </a>
             </div>
+            <SwapRiskNotice />
           </div>
 
           {status && ['APPROVED', 'REDEEMED', 'REJECTED', 'EXPIRED'].includes(status.status) && !result ? (
