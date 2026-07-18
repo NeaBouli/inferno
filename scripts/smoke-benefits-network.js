@@ -185,6 +185,7 @@ async function verifyWalletAssetRequest() {
 
   try {
     await gotoAppPage(page, '/');
+    await expectText(page, 'Injected Ethereum provider');
     await page.locator('[data-wallet-action="watch-ifr"]').click();
     await expectText(page, 'Wallet accepted the IFR token-import request.');
     const requests = await page.evaluate(() => window.__ifrWalletRequestLog || []);
