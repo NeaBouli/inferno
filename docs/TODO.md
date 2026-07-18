@@ -137,7 +137,7 @@ On errors: fix immediately, commit with `seo:` prefix.
 - [ ] IFRp Commerce App / shop.ifrunit.tech architecture
       Docs: docs/ifrp-commerce-app/MASTER_ARCHITECTURE.md
       Goal: installable customer/seller app with wallet, ETH/IFR swap, IFR locking, QR proof, seller scanner, seller discount rules, and verified seller rewards via PartnerVault after governance approval.
-      Current: role chooser, customer wallet/IFRLock flow, QR proof/redeem, seller profiles/rules/history, POS helper, checkout operators and a public product/service catalog are implemented. The local M4 foundation now covers seller applications, live BuilderRegistry/PartnerVault checks, an atomic reward outbox and read-only vesting status. Production release remains capacity-gated; Mainnet partner activation, a dedicated authorized reward caller, embedded-wallet decision, redemption caps and real-device acceptance remain open.
+      Current: the production PWA has a role chooser, external-wallet/IFRLock flow, QR proof/redeem, seller profiles/rules/history, POS helper, checkout operators and a public product/service catalog. The deployed M4 foundation covers seller applications, live BuilderRegistry/PartnerVault checks, an atomic reward outbox and read-only vesting status. Mainnet partner activation, a dedicated authorized reward caller, embedded-wallet decision, redemption caps and real-device acceptance remain open.
 
 ## ✅ ERLEDIGT — Proposal #13 executed (16.04.2026)
 
