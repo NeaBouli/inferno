@@ -77,7 +77,8 @@ export function getIFRKnowledge() {
         "check ETH, IFR and IFRLock state",
         "lock or unlock IFR through the simple IFRLock access flow",
         "discover public seller offers, filter by a seller-published city, region or Online service area, and preview eligibility",
-        "scan a seller-issued checkout QR with camera, local image or proof-link fallback",
+        "create and share an opaque short-lived customer pass from shop.ifrunit.tech/#customer-pass, then complete checkout in the original tab",
+        "scan a seller-issued checkout QR with camera, local image, or proof-link fallback",
         "review and sign a short-lived one-time customer proof",
         "sign an explicit read-only request to load only that wallet's verified My benefits history across devices"
       ],
@@ -89,7 +90,7 @@ export function getIFRKnowledge() {
         "see approved or denied and redeem an approval once",
         "review protected recent sessions and masked local CSV"
       ],
-      security: "The QR contains only a canonical shop.ifrunit.tech/r/:sessionId URL. Authoritative seller, rule, nonce, expiry and signature state remain server-side. Public proof-link polling is non-cacheable and never returns the recovered customer address, exact lock amount or detailed rejection reason. The signing customer receives their own details in the direct attest response; seller operational details remain owner-wallet protected. Camera and selected QR images are decoded locally. My benefits uses a separate single-use read-only signature and a ten-minute access token held only in browser memory; it cannot move tokens and returns only the signer's history. The app never asks for a seed phrase or private key.",
+      security: "Customer-initiated flow: the pass is created from shop.ifrunit.tech/#customer-pass and its QR contains only an opaque, short-lived shop.ifrunit.tech/p/:passId URL; it exposes no wallet, lock, signature, control token, rule, or internal session ID. The seller selects one exact rule, and the customer confirms the exact seller, product, discount, and IFRLock threshold in the original tab before one-time redeem. Seller-issued flow remains compatible and uses a short-lived shop.ifrunit.tech/r/:sessionId URL. Authoritative seller, rule, nonce, expiry, signature, and lock state stay server-side. Public proof-link polling is non-cacheable and never returns the recovered customer address, exact lock amount, or detailed rejection reason. The signing customer receives their own details in the direct attest response; seller operational details remain owner-wallet protected. Camera and selected QR images are decoded locally. My benefits uses a separate single-use read-only signature and a ten-minute access token held only in browser memory; it cannot move tokens and returns only the signer's history. The app never asks for a seed phrase or private key.",
       rewards: "The verified seller reward foundation is fail-closed. PartnerVault rewards are not active for an unregistered seller and require governance registration plus an authorized reward caller.",
       docs: "https://ifrunit.tech/wiki/business-onboarding.html"
     },
