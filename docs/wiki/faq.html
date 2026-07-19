@@ -1110,7 +1110,7 @@ const hasLock = await ifrLock.isLocked(walletAddress, ethers.utils.parseUnits("1
 
         <div class="faq-item">
           <button class="faq-q"><span>How does the merchant verification work?</span><span class="icon">+</span></button>
-          <div class="faq-a">Three steps:<br><br>1. The seller or authorized checkout operator selects a benefit rule and creates a short-lived QR code<br>2. The customer scans it in the <a href="https://shop.ifrunit.tech/">IFR Benefits app</a>, connects their wallet, reviews the exact benefit and signs a one-time message<br>3. The backend checks the selected IFRLock threshold on-chain. The seller sees APPROVED or DENIED and redeems an approval once.<br><br>The proof uses the rule-defined short lifetime and is single-use. A screenshot alone cannot approve or redeem a checkout.</div>
+          <div class="faq-a">The recommended flow has four steps:<br><br>1. The customer creates a private short-lived pass in the <a href="https://shop.ifrunit.tech/">IFR Benefits app</a><br>2. The seller or authorized checkout operator scans it and selects the exact benefit rule<br>3. The customer reviews seller, product, discount and required IFR in the original tab, then confirms<br>4. The backend checks the selected IFRLock threshold on-chain. The seller sees APPROVED or REJECTED and redeems an approval once.<br><br>The pass QR contains only an opaque short-lived URL, not the wallet, lock amount, signature or control token. The compatible seller-issued QR flow remains available. Both flows are short-lived and single-use; a screenshot alone cannot approve or redeem a checkout.</div>
         </div>
 
         <div class="faq-item">

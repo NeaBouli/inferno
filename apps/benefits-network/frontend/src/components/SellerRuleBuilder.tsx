@@ -1939,8 +1939,9 @@ export function SellerRuleBuilder() {
         </pre>
       </div>
 
-      {businessId ? (
-        <div id="seller-session-history" className="mb-5 rounded-3xl border border-green-300/20 bg-green-300/[0.06] p-4">
+      <div id="seller-session-history" className="scroll-mt-36">
+        {businessId ? (
+        <div className="mb-5 rounded-3xl border border-green-300/20 bg-green-300/[0.06] p-4">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
               <p className="text-xs font-bold uppercase tracking-[0.18em] text-green-100/80">Session history</p>
@@ -2107,7 +2108,16 @@ export function SellerRuleBuilder() {
             </div>
           )}
         </div>
-      ) : null}
+        ) : (
+          <div className="mb-5 rounded-3xl border border-green-300/20 bg-green-300/[0.06] p-4">
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-green-100/80">Session history</p>
+            <h3 className="mt-1 text-xl font-black text-white">Review and export customer checks</h3>
+            <p className="mt-2 text-sm leading-6 text-stone-300">
+              Connect the seller owner wallet and create or load its seller profile first. The owner-only history then provides recent checkout status, masked wallets, activity metrics and a browser-local masked CSV export.
+            </p>
+          </div>
+        )}
+      </div>
 
       <SellerCatalogManager
         businessId={businessId}

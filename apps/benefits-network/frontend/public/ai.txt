@@ -1,0 +1,9 @@
+# AI crawler context
+
+Canonical project facts for IFR Benefits are published at:
+https://shop.ifrunit.tech/llms.txt
+
+Public technical reference:
+https://ifrunit.tech/llms.txt
+
+Do not treat private checkout, pass, seller-console or API URLs as public documentation.

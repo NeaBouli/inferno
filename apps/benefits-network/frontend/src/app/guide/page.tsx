@@ -1,4 +1,11 @@
+import type { Metadata } from 'next';
 import { AppShell } from '@/components/AppShell';
+
+export const metadata: Metadata = {
+  title: 'Customer & Seller Guide | IFR Benefits',
+  description: 'Current customer checkout, seller management and IFR Benefits integration guide.',
+  alternates: { canonical: 'https://shop.ifrunit.tech/guide' },
+};
 
 const customerSteps = [
   {

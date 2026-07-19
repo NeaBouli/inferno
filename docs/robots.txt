@@ -27,4 +27,5 @@ Disallow: /TODO.md
 # Search Console / crawler hints:
 # - /web3/ is the lightweight user execution surface.
 # - Wiki pages are documentation surfaces for builders, developers, and community research.
+# - shop.ifrunit.tech publishes its own robots.txt and sitemap.xml for the IFR Benefits app.
 Sitemap: https://ifrunit.tech/sitemap.xml

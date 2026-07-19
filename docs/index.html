@@ -1652,14 +1652,32 @@ develop:{q:"What do you need as a developer?",sub:"Use verified protocol referen
 {i:"&#x1F4B3;",t:"Wallet integration",d:"Token metadata, wallet import and safe connection guidance",a:"wiki/wallet-guide.html"},
 {i:"&#x1F6E1;&#xFE0F;",t:"Security and audits",d:"Review verified contracts, test evidence and public audit material",a:"wiki/open-audit.html"}
 ]},
-benefits:{q:"How do you want to use IFR Benefits?",sub:"The customer and seller tools are live at shop.ifrunit.tech:",s:2,t:2,o:[
+benefits:{q:"How will you use IFR Benefits?",sub:"Choose a role so we can show only the relevant tools:",s:2,t:3,o:[
+{i:"&#x1F6CD;&#xFE0F;",t:"Customer",d:"Find offers, prove locked IFR and manage my benefits",n:"benefits_customer",h:1},
+{i:"&#x1F3EA;",t:"Seller or checkout staff",d:"Publish offers, verify customers and redeem benefits",n:"benefits_seller"},
+{i:"&#x1F9E9;",t:"Integrate IFR Benefits",d:"Use the seller entry generator, API reference and onboarding guide",n:"benefits_integrate"}
+]},
+benefits_customer:{q:"What do you want to do as a customer?",sub:"All current customer tools are available in the installable IFR Benefits app:",s:3,t:3,o:[
 {i:"&#x1F50E;",t:"Discover customer offers",d:"Browse by category or seller service area, then preview lock eligibility",a:"https://shop.ifrunit.tech/",h:1},
 {i:"&#x1F4F1;",t:"Present my customer pass",d:"Create a private short-lived QR, let the seller choose the exact offer, then confirm it in your own tab",a:"https://shop.ifrunit.tech/#customer-pass"},
-{i:"&#x1F4F7;",t:"Scan a seller QR",d:"Use the compatible seller-issued checkout flow with camera, image, or link fallback",a:"https://shop.ifrunit.tech/scan"},
-{i:"&#x1F4F2;",t:"Install the Benefits App",d:"Use the same PWA as a customer or seller on phone, tablet, or desktop",a:"https://shop.ifrunit.tech/#install-app"},
-{i:"&#x1F4DC;",t:"Open My benefits",d:"Load your own verified checkout history with a read-only wallet signature",a:"https://shop.ifrunit.tech/#my-benefits"},
-{i:"&#x1F3EA;",t:"Offer benefits as a seller",d:"Publish a service area, catalog and rules; scan customer passes or issue compatible checkout QR codes",a:"https://shop.ifrunit.tech/#seller-workspace"},
-{i:"&#x1F4D6;",t:"Read the seller guide",d:"Understand onboarding, security, QR checkout, and governance-gated rewards",a:"wiki/business-onboarding.html"}
+{i:"&#x1F4F7;",t:"Scan a seller QR",d:"Use camera, image upload or link fallback for a compatible seller QR",a:"https://shop.ifrunit.tech/scan"},
+{i:"&#x1F512;",t:"Check or lock IFR",d:"Connect an external wallet, read IFRLock access and lock the entered amount in the app",a:"https://shop.ifrunit.tech/#customer-wallet"},
+{i:"&#x1F4DC;",t:"Open My benefits",d:"Load my verified checkout history with an explicit read-only wallet signature",a:"https://shop.ifrunit.tech/#my-benefits"},
+{i:"&#x1F4F2;",t:"Install the Benefits App",d:"Use the same PWA on phone, tablet or desktop",a:"https://shop.ifrunit.tech/#install-app"}
+]},
+benefits_seller:{q:"What do you want to do as a seller?",sub:"Seller management and checkout run in the same IFR Benefits app:",s:3,t:3,o:[
+{i:"&#x1F3EA;",t:"Manage seller profile and offers",d:"Publish service area, catalog, products and configurable benefit rules",a:"https://shop.ifrunit.tech/?mode=seller#seller-workspace",h:1},
+{i:"&#x1F4F7;",t:"Open the checkout scanner",d:"Scan a customer pass, choose the exact rule, verify locked IFR and redeem once",a:"https://shop.ifrunit.tech/?mode=seller#seller-workspace"},
+{i:"&#x1F465;",t:"Manage checkout staff",d:"Add or revoke restricted checkout operators without granting profile administration",a:"https://shop.ifrunit.tech/?mode=seller#seller-workspace"},
+{i:"&#x1F4CA;",t:"Review and export checks",d:"Load owner-only recent history and create a masked browser-local CSV",a:"https://shop.ifrunit.tech/?mode=seller#seller-session-history"},
+{i:"&#x1F4F2;",t:"Install the seller app",d:"Add the same PWA to the checkout phone, tablet or desktop",a:"https://shop.ifrunit.tech/?mode=seller#install-app"},
+{i:"&#x1F4D6;",t:"Read the seller guide",d:"Understand onboarding, security, QR checkout and governance-gated rewards",a:"wiki/business-onboarding.html"}
+]},
+benefits_integrate:{q:"How do you want to integrate IFR Benefits?",sub:"Start with the live generator or use the complete technical reference:",s:3,t:3,o:[
+{i:"&#x26A1;",t:"Generate a seller entry point",d:"Create a scanner link, website button or authenticated POS/API starter",a:"https://shop.ifrunit.tech/?mode=seller#integrate",h:1},
+{i:"&#x1F4D6;",t:"Open the Benefits guide",d:"Review customer, seller and current API flows",a:"https://shop.ifrunit.tech/guide"},
+{i:"&#x1F91D;",t:"Business onboarding",d:"Read seller requirements, operating procedure and reward limits",a:"wiki/business-onboarding.html"},
+{i:"&#x1F9E9;",t:"Protocol integration",d:"Use verified IFRLock, contract and SDK references",a:"wiki/integration.html"}
 ]},
 lend_choice:{q:"What do you want to do in LendingVault?",sub:"Lender offers and market data are live. Borrowing opens after price collateral is activated:",s:2,t:2,o:[
 {i:"&#x1F4B8;",t:"Offer IFR as Lender",d:"Connect, approve, create or increase an offer, and withdraw available IFR",a:"https://web3.ifrunit.tech/?action=lending-offer#access",h:1},
