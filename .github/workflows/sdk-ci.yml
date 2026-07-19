@@ -43,7 +43,7 @@ jobs:
         run: |
           source_dir="$(mktemp -d)"
           consumer_dir="$(mktemp -d)"
-          git archive HEAD apps/sdk | tar -x -C "$source_dir" --strip-components=2
+          git -C ../.. archive HEAD apps/sdk | tar -x -C "$source_dir" --strip-components=2
           cd "$consumer_dir"
           npm init -y >/dev/null
           npm install --install-links "$source_dir"
