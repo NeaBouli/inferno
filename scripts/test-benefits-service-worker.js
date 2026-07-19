@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 const assert = require('assert');
+const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
 const vm = require('vm');
@@ -45,6 +46,14 @@ const layoutSource = fs.readFileSync(
   path.join(__dirname, '..', 'apps', 'benefits-network', 'frontend', 'src', 'app', 'layout.tsx'),
   'utf8'
 );
+const repoRoot = path.join(__dirname, '..');
+const publicIcons = path.join(repoRoot, 'apps', 'benefits-network', 'frontend', 'public', 'icons');
+const publicRoot = path.join(repoRoot, 'apps', 'benefits-network', 'frontend', 'public');
+const canonicalAssets = path.join(repoRoot, 'docs', 'assets');
+
+function sha256(filePath) {
+  return crypto.createHash('sha256').update(fs.readFileSync(filePath)).digest('hex');
+}
 vm.runInNewContext(source, context, { filename: 'sw.js' });
 
 async function navigate(url) {
@@ -58,16 +67,32 @@ async function navigate(url) {
 
 async function main() {
   assert(listeners.has('fetch'), 'service worker must register a fetch handler');
-  assert(source.includes("const CACHE_NAME = 'ifr-benefits-v10'"), 'service worker cache version must be v10');
-  assert(source.includes("'/icons/ifr-official-64-v8.png'"), 'service worker must precache the official favicon');
-  assert(source.includes("'/icons/ifr-official-180-v8.png'"), 'service worker must precache the official Apple touch icon');
-  assert(source.includes("'/icons/ifr-official-192-v8.png'"), 'service worker must precache the official 192 icon');
-  assert(source.includes("'/icons/ifr-official-256-v8.png'"), 'service worker must precache the official header icon');
-  assert(source.includes("'/icons/ifr-official-512-v8.png'"), 'service worker must precache the official 512 icon');
-  assert(source.includes("'/icons/favicon-v8.ico'"), 'service worker must precache the versioned browser favicon');
+  assert(source.includes("const CACHE_NAME = 'ifr-benefits-v11'"), 'service worker cache version must be v11');
+  assert(source.includes("'/icons/ifr-token-64-v9.png'"), 'service worker must precache the canonical favicon');
+  assert(source.includes("'/icons/ifr-token-180-v9.png'"), 'service worker must precache the canonical Apple touch icon');
+  assert(source.includes("'/icons/ifr-token-192-v9.png'"), 'service worker must precache the canonical 192 icon');
+  assert(source.includes("'/icons/ifr-token-256-v9.png'"), 'service worker must precache the canonical header icon');
+  assert(source.includes("'/icons/ifr-token-512-v9.png'"), 'service worker must precache the canonical 512 icon');
+  assert(source.includes("'/icons/favicon-v9.ico'"), 'service worker must precache the versioned browser favicon');
   assert(!source.includes("favicon-v4.ico"), 'service worker must not precache the competing ICO favicon');
+  assert(layoutSource.includes("'/sw.js?v=11'"), 'layout must register the current service-worker release');
   assert(layoutSource.includes("updateViaCache:'none'"), 'registration must bypass stale service-worker HTTP caches');
   assert(layoutSource.includes("'controllerchange'"), 'controlled clients must reload after a service-worker update');
+  assert.strictEqual(
+    sha256(path.join(publicIcons, 'ifr-token-64-v9.png')),
+    sha256(path.join(canonicalAssets, 'ifr_icon_64.png')),
+    'Shop favicon PNG must be byte-identical to the canonical IFR 64px asset'
+  );
+  assert.strictEqual(
+    sha256(path.join(publicIcons, 'ifr-token-256-v9.png')),
+    sha256(path.join(canonicalAssets, 'ifr_icon_256.png')),
+    'Shop header icon must be byte-identical to the token-list IFR asset'
+  );
+  assert.strictEqual(
+    sha256(path.join(publicRoot, 'favicon.ico')),
+    sha256(path.join(publicIcons, 'favicon-v9.ico')),
+    'root favicon and versioned favicon must remain byte-identical'
+  );
 
   await navigate('https://shop.ifrunit.tech/guide');
   assert.deepStrictEqual(cacheWrites, [], 'a subpage must not replace the offline app shell');

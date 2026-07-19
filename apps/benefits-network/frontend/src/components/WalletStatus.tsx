@@ -588,7 +588,7 @@ export function WalletStatus() {
             disabled={assetPromptOpen || !IFR_TOKEN_ADDRESS}
             className="inline-flex items-center justify-center gap-2 rounded-2xl border border-orange-200/35 px-4 py-3 text-center text-xs font-black uppercase tracking-[0.14em] text-orange-50 transition hover:bg-orange-200/10 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            <img src="/icons/ifr-official-64-v8.png" alt="" aria-hidden="true" width="22" height="22" />
+            <img src="/icons/ifr-token-64-v9.png" alt="" aria-hidden="true" width="22" height="22" />
             {assetPromptOpen ? 'Open wallet...' : 'Add IFR to wallet'}
           </button>
         </div>
