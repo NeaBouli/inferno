@@ -12,10 +12,19 @@ import passRoutes from './routes/passes';
 import { prisma } from './services/sessionService';
 
 const app = express();
+app.disable('x-powered-by');
 
 // Production traffic crosses Traefik and the Next.js frontend on private Docker networks.
 // Trust only private/loopback proxy hops so req.ip resolves to the first public client hop.
 app.set('trust proxy', ['loopback', 'linklocal', 'uniquelocal']);
+
+app.use((_req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('Referrer-Policy', 'no-referrer');
+  res.setHeader('Permissions-Policy', 'camera=(self), microphone=(), geolocation=(), payment=(), usb=()');
+  next();
+});
 
 app.use(cors({
   origin: (

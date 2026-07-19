@@ -52,11 +52,27 @@ async function expectSha256(route, expectedHash) {
 async function verifyHttpSurface() {
   const rootHead = await fetch(joinUrl('/'), { method: 'HEAD' });
   assert(rootHead.ok, `/ HEAD returned HTTP ${rootHead.status}`);
+  for (const [header, expected] of [
+    ['x-content-type-options', 'nosniff'],
+    ['x-frame-options', 'DENY'],
+    ['referrer-policy', 'no-referrer'],
+  ]) {
+    assert(rootHead.headers.get(header) === expected, `Shop ${header} must be ${expected}`);
+  }
+  assert(rootHead.headers.get('permissions-policy')?.includes('camera=(self)'), 'Shop camera policy must allow only this origin');
+  assert(rootHead.headers.get('strict-transport-security')?.includes('max-age=63072000'), 'Shop HSTS policy is missing');
+  assert(!rootHead.headers.has('x-powered-by'), 'Shop must not disclose the Next.js powered-by header');
   assert(
     rootHead.headers.get('cross-origin-opener-policy') !== 'same-origin',
     'Shop must not use Cross-Origin-Opener-Policy: same-origin because Coinbase Wallet needs popup communication'
   );
-  log('Coinbase Wallet popup policy OK');
+  const apiHead = await fetch(joinUrl('/api/health'), { method: 'HEAD' });
+  assert(apiHead.ok, `/api/health HEAD returned HTTP ${apiHead.status}`);
+  assert(apiHead.headers.get('x-content-type-options') === 'nosniff', 'Benefits API must send nosniff');
+  assert(apiHead.headers.get('x-frame-options') === 'DENY', 'Benefits API must deny framing');
+  assert(apiHead.headers.get('referrer-policy') === 'no-referrer', 'Benefits API must suppress referrers');
+  assert(!apiHead.headers.has('x-powered-by'), 'Benefits API must not disclose Express or Next.js');
+  log('Response security and Coinbase Wallet popup policy OK');
 
   const health = await fetchJson('/api/health');
   assert(health.status === 'ok', `/api/health status is ${health.status}`);

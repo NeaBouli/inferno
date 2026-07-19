@@ -58,6 +58,17 @@ It asserts pass creation, seller/rule binding, exact-offer customer confirmation
 headers, `APPROVED`, one-time `REDEEMED`, and the disabled replay action. It complements rather
 than replaces backend route/race tests or the physical device acceptance matrix.
 
+The customer wallet transaction contract test runs the actual Shop controls against an isolated
+EIP-1193 wallet and deterministic JSON-RPC state:
+
+```bash
+npm run test:benefits-wallet-ui
+```
+
+It verifies exact 9-decimal approval calldata, IFRLock spender and contract addresses, receipt-
+driven allowance/balance refresh, the `1,000 IFR` access transition, full simple-lock unlock and
+restored balances. No Mainnet transaction or external wallet is used.
+
 ### Configuration
 
 | Variable | Default | Description |

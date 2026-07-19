@@ -562,7 +562,8 @@ MVP should be installable:
 - add IFR token; **implemented with connector-bound EIP-747 metadata, configured-chain check and official icon**
 - ETH/IFR balance; **implemented in the customer wallet panel**
 - Uniswap deep-link or embedded swap widget; **deep-link implemented with visible thin-liquidity, price-impact and slippage warning; embedded swap remains deferred**
-- lock IFR from customer app; **implemented as exact-amount approve, lock and full IFRLock unlock**
+- lock IFR from customer app; **implemented as exact-amount approve, lock and full IFRLock unlock,
+  with deterministic browser coverage for calldata, receipts and refreshed 9-decimal balances**
 - QR proof after lock. **implemented as seller-issued, customer-signed, short-lived session proof,
   with an opt-in in-app camera scanner, local image decoding and manual link/session-ID fallback**
 

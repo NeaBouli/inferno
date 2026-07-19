@@ -98,6 +98,16 @@ describe('Seller catalog routes', () => {
   const owner = ethers.Wallet.createRandom();
   const otherOwner = ethers.Wallet.createRandom();
   let businessId: string;
+
+  it('sets the API response security baseline without framework disclosure', async () => {
+    const response = await fetch(`${baseUrl()}/api/health`);
+    expect(response.status).toBe(200);
+    expect(response.headers.get('x-powered-by')).toBeNull();
+    expect(response.headers.get('x-content-type-options')).toBe('nosniff');
+    expect(response.headers.get('x-frame-options')).toBe('DENY');
+    expect(response.headers.get('referrer-policy')).toBe('no-referrer');
+    expect(response.headers.get('permissions-policy')).toContain('camera=(self)');
+  });
   let otherBusinessId: string;
 
   beforeEach(async () => {

@@ -97,8 +97,9 @@ export function WalletConnectControl() {
 
   async function connectInjectedWallet() {
     const connector =
+      connectors.find((item) => item.type === 'injected') ||
       connectors.find((item) => item.id === 'injected') ||
-      connectors.find((item) => item.id === 'metaMask') ||
+      connectors.find((item) => /metamask|injected|browser wallet/i.test(`${item.id} ${item.name}`)) ||
       connectors.find((item) => item.id === 'coinbaseWalletSDK') ||
       connectors[0];
     if (!connector) return;
@@ -333,6 +334,7 @@ export function WalletConnectControl() {
       ) : !hasWalletConnectProjectId ? (
         <button
           type="button"
+          data-wallet-action="connect"
           onClick={connectInjectedWallet}
           disabled={isPending || connectors.length === 0}
           className="rounded-2xl bg-orange-300 px-5 py-3 text-sm font-black uppercase tracking-[0.14em] text-stone-950 shadow-xl shadow-orange-950/30 transition hover:bg-orange-200 disabled:cursor-not-allowed disabled:opacity-50"

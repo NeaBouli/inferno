@@ -199,3 +199,6 @@ If `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` is missing, the frontend must show a s
 - Every seller mutation must remain bound to a persisted random nonce, wallet, action, business and exact resource scope; read-only seller actions must not create challenge rows.
 - Challenge text must include rule metadata so the user signs exactly what is being verified.
 - Production logs must avoid storing full signatures unless required for audit and retention is defined.
+- Shop and API responses must suppress framework disclosure and enforce tested MIME, framing,
+  referrer and browser-permission policies. A restrictive CSP remains a separate compatibility-
+  tested step because Coinbase, WalletConnect, camera and external swap handoffs must keep working.

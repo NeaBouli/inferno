@@ -16,6 +16,7 @@ const sellerConsole = read('src', 'app', 'b', '[businessId]', 'page.tsx');
 const customerPass = read('src', 'app', 'p', '[passId]', 'page.tsx');
 const checkoutProof = read('src', 'app', 'r', '[sessionId]', 'page.tsx');
 const sellerCatalog = read('src', 'app', 's', '[businessId]', 'page.tsx');
+const nextConfig = read('next.config.js');
 
 assert.ok(layout.includes("'@type': 'WebApplication'"), 'Shop WebApplication structured data is missing');
 assert.ok(layout.includes('Contextual IFR Copilot help'), 'Structured data must describe contextual help');
@@ -35,6 +36,10 @@ assert.ok(sellerCatalog.includes('encodeURIComponent(businessId)'), 'Public sell
 assert.ok(shell.includes('<CopilotWidget />'), 'Every AppShell route must render the IFR Copilot');
 assert.ok(widget.includes('surface=benefits'), 'Shop Copilot must retain Benefits context');
 assert.ok(widget.includes('referrerPolicy="no-referrer"'), 'Shop Copilot must suppress referrer data');
+assert.ok(nextConfig.includes('poweredByHeader: false'), 'Shop must suppress the Next.js powered-by header');
+for (const header of ['X-Content-Type-Options', 'X-Frame-Options', 'Referrer-Policy', 'Permissions-Policy', 'Strict-Transport-Security']) {
+  assert.ok(nextConfig.includes(header), `Shop security header missing from Next config: ${header}`);
+}
 for (const file of ['llms.txt', 'ai.txt']) {
   assert.ok(fs.statSync(path.join(root, 'public', file)).size > 0, `${file} must be published`);
 }
