@@ -12,6 +12,8 @@ model Business {
   name            String
   description     String?
   website         String?
+  serviceArea     String?
+  serviceAreaKey  String?
   categoriesJson  String    @default("[]")
   ownerAddress    String?
   discountPercent Int
@@ -28,6 +30,7 @@ model Business {
   rewardEvents    RewardEvent[]
 
   @@index([ownerAddress])
+  @@index([active, serviceAreaKey])
 }
 
 model Product {

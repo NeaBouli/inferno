@@ -72,6 +72,7 @@ async function verifyHttpSurface() {
   const discovery = await fetchJson('/api/businesses?limit=1&page=1');
   assert(Array.isArray(discovery.offers), 'public offer discovery must return offers');
   assert(Array.isArray(discovery.categories), 'public offer discovery must return categories');
+  assert(Array.isArray(discovery.serviceAreas), 'public offer discovery must return service areas');
   assert(discovery.pagination?.limit === 1, 'public offer discovery must honor bounded pagination');
   assert(typeof discovery.pagination?.total === 'number', 'public offer discovery total is missing');
   log('Public offer discovery OK');
@@ -242,6 +243,7 @@ function eligibilityDiscoveryResponse() {
     name: 'Eligibility Coffee',
     description: 'Wallet-local eligibility preview.',
     website: null,
+    serviceArea: 'Online',
     categories: ['Coffee'],
   };
   return {
@@ -272,6 +274,7 @@ function eligibilityDiscoveryResponse() {
       },
     ],
     categories: ['Coffee'],
+    serviceAreas: ['Online'],
     pagination: { page: 1, limit: 8, total: 2, totalPages: 1, hasNext: false },
   };
 }
@@ -737,7 +740,12 @@ async function verifyRuleTemplateAuthorization() {
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify({ offers: [], categories: [], pagination: { page: 1, limit: 8, total: 0, totalPages: 0, hasNext: false } }),
+      body: JSON.stringify({
+        offers: [],
+        categories: [],
+        serviceAreas: [],
+        pagination: { page: 1, limit: 8, total: 0, totalPages: 0, hasNext: false },
+      }),
     });
   });
   await page.route('**/api/seller/**', async (route) => {
@@ -1162,6 +1170,7 @@ async function verifyPage(contextOptions, label) {
     const requestUrl = new URL(route.request().url());
     const search = (requestUrl.searchParams.get('query') || '').toLowerCase();
     const category = requestUrl.searchParams.get('category') || '';
+    const serviceArea = requestUrl.searchParams.get('serviceArea') || '';
     const allOffers = [
       {
         id: 'smoke-discovery-coffee',
@@ -1177,6 +1186,7 @@ async function verifyPage(contextOptions, label) {
           name: 'Smoke Coffee',
           description: 'Neighborhood roaster for IFR members.',
           website: 'https://seller.example.com/members',
+          serviceArea: 'Athens / Attica',
           categories: ['Food & drink', 'Events'],
         },
         product: { id: 'smoke-product', name: 'Reserve espresso', description: 'A customer-facing catalog item.' },
@@ -1195,6 +1205,7 @@ async function verifyPage(contextOptions, label) {
           name: 'Smoke Studio',
           description: 'Private sessions for verified IFR members.',
           website: null,
+          serviceArea: 'Online',
           categories: ['Services'],
         },
         product: null,
@@ -1215,8 +1226,9 @@ async function verifyPage(contextOptions, label) {
         ? [allOffers[1]]
         : allOffers.filter((offer) => {
       const matchesCategory = !category || offer.category === category;
+      const matchesServiceArea = !serviceArea || offer.business.serviceArea === serviceArea;
       const searchable = `${offer.business.name} ${offer.business.description || ''} ${offer.business.categories.join(' ')} ${offer.productName} ${offer.label} ${offer.category}`.toLowerCase();
-      return matchesCategory && (!search || searchable.includes(search));
+      return matchesCategory && matchesServiceArea && (!search || searchable.includes(search));
         });
     await route.fulfill({
       status: 200,
@@ -1224,6 +1236,7 @@ async function verifyPage(contextOptions, label) {
       body: JSON.stringify({
         offers,
         categories: ['Coffee', 'Services'],
+        serviceAreas: ['Athens / Attica', 'Online'],
         pagination: { page: 1, limit: 8, total: offers.length, totalPages: offers.length ? 1 : 0, hasNext: false },
       }),
     });
@@ -1255,10 +1268,15 @@ async function verifyPage(contextOptions, label) {
     await expectText(page, 'Find an IFR benefit');
     await expectText(page, 'Smoke Coffee');
     await expectText(page, 'Neighborhood roaster for IFR members.');
+    await expectText(page, 'Available in Athens / Attica');
     await expectText(page, 'Food & drink');
     await expectText(page, 'Reserve espresso');
     await expectText(page, '15% benefit');
     const offerDiscovery = page.locator('#offers');
+    await offerDiscovery.getByLabel('Available in').selectOption('Online');
+    await expectText(page, 'Private consultation');
+    await page.getByText('Reserve espresso', { exact: true }).waitFor({ state: 'hidden', timeout: timeoutMs });
+    await offerDiscovery.getByLabel('Available in').selectOption('');
     await offerDiscovery.getByLabel('Category').selectOption('Services');
     await expectText(page, 'Private consultation');
     await page.getByText('Reserve espresso', { exact: true }).waitFor({ state: 'hidden', timeout: timeoutMs });
@@ -1455,6 +1473,8 @@ async function verifyPage(contextOptions, label) {
     await expectText(page, 'Create a seller profile');
     await expectText(page, 'Public description');
     await expectText(page, 'Seller website');
+    await expectText(page, 'City, region or Online');
+    await expectText(page, 'This exact text is stored and shown publicly.');
     await expectText(page, 'Business categories');
     await page.getByPlaceholder('Add another category').waitFor({ timeout: timeoutMs });
     await page.getByPlaceholder('cuid...').fill('smoke-manual-business');
@@ -1577,6 +1597,7 @@ async function verifyPage(contextOptions, label) {
             name: 'Smoke Coffee',
             description: 'Neighborhood roaster for IFR members.',
             website: 'https://seller.example.com/members',
+            serviceArea: 'Athens / Attica',
             categories: ['Food & drink', 'Events'],
           },
           products: [{
@@ -1605,6 +1626,7 @@ async function verifyPage(contextOptions, label) {
     await expectText(page, 'IFR member benefits');
     await expectText(page, 'Smoke Coffee');
     await expectText(page, 'Neighborhood roaster for IFR members.');
+    await expectText(page, 'Available in Athens / Attica');
     await expectText(page, 'Food & drink');
     await expectText(page, 'Reserve espresso');
     await expectText(page, '15% benefit');

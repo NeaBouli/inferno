@@ -50,6 +50,11 @@ contracts, entered IFR amount, unlocked IFR balance and allowance, then guides
 the user toward Buy IFR, Approve or Lock. Tier chips are buttons that set common
 lock amounts for seller benefit rules.
 
+Public offer discovery can be filtered by a seller-published city, region or `Online` service
+area. The exact seller-entered text is stored and public, so the app requires an explicit
+confirmation that it contains only a broad area and no private or street address. Customers are
+never asked for GPS access. Profiles without a service area remain discoverable through `All areas`.
+
 `My benefits` combines two deliberately separate histories. The redacted recent-proof list stays
 local to the current browser for offline checkout recovery. A connected customer can additionally
 sign one read-only message to load their verified benefit history across devices. The resulting

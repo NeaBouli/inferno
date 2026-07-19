@@ -137,6 +137,8 @@ export function SellerRuleBuilder() {
   const [businessName, setBusinessName] = useState('IFR Partner Shop');
   const [businessDescription, setBusinessDescription] = useState('');
   const [businessWebsite, setBusinessWebsite] = useState('');
+  const [businessServiceArea, setBusinessServiceArea] = useState('');
+  const [serviceAreaDisclosureConfirmed, setServiceAreaDisclosureConfirmed] = useState(false);
   const [businessCategories, setBusinessCategories] = useState<string[]>([]);
   const [profileCategoryDraft, setProfileCategoryDraft] = useState('');
   const [defaultTier, setDefaultTier] = useState('IFR Access');
@@ -234,12 +236,13 @@ export function SellerRuleBuilder() {
     () => [
       `${businessName || 'IFR Partner Shop'} IFR checkout kit`,
       `Scanner: ${scannerUrl || 'Create or select a seller profile first.'}`,
+      `Available in: ${businessServiceArea.trim() || 'not published'}`,
       `Default benefit: ${discount}% off when ${minLocked.toLocaleString('en-US')} IFR is locked`,
       `Wallet limit: ${dailyLimit || 'unlimited'}/day / ${monthlyLimit || 'unlimited'}/month (UTC)`,
       `Rule draft: ${label || 'IFR Benefit'} / ${category} / ${product || 'IFR Benefit'}`,
       'At checkout: open scanner, create QR session, let the customer scan and sign, then redeem only after APPROVED.',
     ].join('\n'),
-    [businessName, category, dailyLimit, discount, label, minLocked, monthlyLimit, product, scannerUrl]
+    [businessName, businessServiceArea, category, dailyLimit, discount, label, minLocked, monthlyLimit, product, scannerUrl]
   );
   const sellerBackupText = useMemo(() => JSON.stringify(
     {
@@ -251,6 +254,7 @@ export function SellerRuleBuilder() {
       sellerName: selectedBusiness?.name || businessName || 'IFR Partner Shop',
       sellerDescription: selectedBusiness?.description || businessDescription || null,
       sellerWebsite: selectedBusiness?.website || businessWebsite || null,
+      sellerServiceArea: selectedBusiness?.serviceArea || businessServiceArea || null,
       sellerCategories: selectedBusiness?.categories || businessCategories,
       ownerAddress: selectedBusiness?.ownerAddress || address || null,
       defaultBenefit: {
@@ -268,7 +272,7 @@ export function SellerRuleBuilder() {
     },
     null,
     2
-  ), [activeRulesCount, address, businessCategories, businessDescription, businessId, businessName, businessWebsite, category, dailyLimit, discount, label, minLocked, monthlyLimit, product, scannerUrl, selectedBusiness, ttl]);
+  ), [activeRulesCount, address, businessCategories, businessDescription, businessId, businessName, businessServiceArea, businessWebsite, category, dailyLimit, discount, label, minLocked, monthlyLimit, product, scannerUrl, selectedBusiness, ttl]);
 
   function getCustomerProofUrl(sessionId: string) {
     return `${SHOP_ORIGIN}/r/${sessionId}`;
@@ -382,6 +386,8 @@ export function SellerRuleBuilder() {
     setBusinessName(business.name);
     setBusinessDescription(business.description || '');
     setBusinessWebsite(business.website || '');
+    setBusinessServiceArea(business.serviceArea || '');
+    setServiceAreaDisclosureConfirmed(Boolean(business.serviceArea));
     setBusinessCategories(business.categories);
     setProfileCategoryDraft('');
   }
@@ -402,6 +408,8 @@ export function SellerRuleBuilder() {
     setBusinessName('IFR Partner Shop');
     setBusinessDescription('');
     setBusinessWebsite('');
+    setBusinessServiceArea('');
+    setServiceAreaDisclosureConfirmed(false);
     setBusinessCategories([]);
     setProfileCategoryDraft('');
     setCreatedBusiness(null);
@@ -450,6 +458,10 @@ export function SellerRuleBuilder() {
       setError('Connect a seller wallet or use the operator admin fallback.');
       return;
     }
+    if (businessServiceArea.trim() && !serviceAreaDisclosureConfirmed) {
+      setError('Confirm that the service-area text is public and contains no private address.');
+      return;
+    }
     setLoading(true);
     setError('');
     setStatus('');
@@ -458,6 +470,7 @@ export function SellerRuleBuilder() {
         name: businessName.trim() || 'IFR Partner Shop',
         description: businessDescription.trim() || null,
         website: businessWebsite.trim() || null,
+        serviceArea: businessServiceArea.trim() || null,
         categories: businessCategories,
         discountPercent: discount,
         requiredLockIFR: minLocked,
@@ -481,6 +494,7 @@ export function SellerRuleBuilder() {
           name: input.name,
           description: input.description,
           website: input.website,
+          serviceArea: input.serviceArea,
           categories: input.categories,
           discountPercent: input.discountPercent,
           requiredLockIFR: input.requiredLockIFR,
@@ -510,6 +524,10 @@ export function SellerRuleBuilder() {
       );
       return;
     }
+    if (businessServiceArea.trim() && !serviceAreaDisclosureConfirmed) {
+      setError('Confirm that the service-area text is public and contains no private address.');
+      return;
+    }
     const name = businessName.trim();
     if (!name) {
       setError('Seller name is required.');
@@ -524,6 +542,7 @@ export function SellerRuleBuilder() {
         name,
         description: businessDescription.trim() || null,
         website: businessWebsite.trim() || null,
+        serviceArea: businessServiceArea.trim() || null,
         categories: businessCategories,
       };
       const updated = selectedBusinessUsesWalletOwner
@@ -540,6 +559,8 @@ export function SellerRuleBuilder() {
         setBusinessName(updated.name);
         setBusinessDescription(updated.description || '');
         setBusinessWebsite(updated.website || '');
+        setBusinessServiceArea(updated.serviceArea || '');
+        setServiceAreaDisclosureConfirmed(Boolean(updated.serviceArea));
         setBusinessCategories(updated.categories);
         setStatus('Public seller profile saved. The catalog and offer search now use these details.');
       }
@@ -1342,6 +1363,11 @@ export function SellerRuleBuilder() {
                       {business.categories.join(' · ')}
                     </span>
                   ) : null}
+                  {business.serviceArea ? (
+                    <span className="mt-2 block text-xs font-semibold text-orange-100/85">
+                      Available in {business.serviceArea}
+                    </span>
+                  ) : null}
                   <span className="mt-1 block break-all font-mono text-[11px] text-stone-500">{business.id}</span>
                 </button>
                 <div className="mt-3 flex flex-wrap gap-2">
@@ -1508,6 +1534,36 @@ export function SellerRuleBuilder() {
               className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none focus:border-orange-300 disabled:cursor-not-allowed disabled:opacity-50"
             />
           </label>
+          <div className="grid gap-2 text-sm font-semibold text-stone-200">
+            <label htmlFor="seller-service-area">City, region or Online</label>
+            <input
+              id="seller-service-area"
+              value={businessServiceArea}
+              onChange={(event) => {
+                setBusinessServiceArea(event.target.value);
+                setServiceAreaDisclosureConfirmed(false);
+              }}
+              maxLength={80}
+              placeholder="Athens, Attica or Online"
+              disabled={loading || profileNeedsLoading}
+              className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none focus:border-orange-300 disabled:cursor-not-allowed disabled:opacity-50"
+            />
+            <span className="text-xs font-normal leading-5 text-stone-500">
+              This exact text is stored and shown publicly. Enter only a broad service area, never a private or street address.
+            </span>
+            {businessServiceArea.trim() ? (
+              <label className="flex items-start gap-3 rounded-2xl border border-orange-200/20 bg-orange-200/[0.06] px-4 py-3 text-xs font-medium leading-5 text-stone-300">
+                <input
+                  type="checkbox"
+                  checked={serviceAreaDisclosureConfirmed}
+                  onChange={(event) => setServiceAreaDisclosureConfirmed(event.target.checked)}
+                  disabled={loading || profileNeedsLoading}
+                  className="mt-0.5 h-4 w-4 shrink-0 accent-orange-400"
+                />
+                <span>I understand this text is public and confirm it contains only a city, region or Online label.</span>
+              </label>
+            ) : null}
+          </div>
           <label className="grid gap-2 text-sm font-semibold text-stone-200">
             {selectedBusiness ? 'Profile authorization' : 'Access tier label'}
             {selectedBusiness ? (

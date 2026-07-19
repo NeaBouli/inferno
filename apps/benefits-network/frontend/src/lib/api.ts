@@ -24,6 +24,7 @@ export interface PublicBusinessProfile {
   name: string;
   description: string | null;
   website: string | null;
+  serviceArea: string | null;
   categories: string[];
 }
 
@@ -110,6 +111,7 @@ export interface PublicOffer {
 export interface PublicOfferDiscovery {
   offers: PublicOffer[];
   categories: string[];
+  serviceAreas: string[];
   pagination: {
     page: number;
     limit: number;
@@ -123,6 +125,7 @@ export interface AdminBusinessInput {
   name: string;
   description?: string | null;
   website?: string | null;
+  serviceArea?: string | null;
   categories?: string[];
   discountPercent: number;
   requiredLockIFR: number;
@@ -135,6 +138,7 @@ export interface AdminBusinessCreated {
   name?: string;
   description?: string | null;
   website?: string | null;
+  serviceArea?: string | null;
   categories?: string[];
   ownerAddress?: string | null;
   verifyUrl: string;
@@ -145,6 +149,7 @@ export interface SellerBusinessSummary extends AdminBusinessCreated {
   name: string;
   description: string | null;
   website: string | null;
+  serviceArea: string | null;
   categories: string[];
   discountPercent: number;
   requiredLockIFR: number;
@@ -386,10 +391,17 @@ export function getBusiness(id: string) {
   return fetchJSON<BusinessInfo>(`/api/businesses/${id}`);
 }
 
-export function discoverOffers(filters: { query?: string; category?: string; page?: number; limit?: number } = {}) {
+export function discoverOffers(filters: {
+  query?: string;
+  category?: string;
+  serviceArea?: string;
+  page?: number;
+  limit?: number;
+} = {}) {
   const query = new URLSearchParams();
   if (filters.query) query.set('query', filters.query);
   if (filters.category) query.set('category', filters.category);
+  if (filters.serviceArea) query.set('serviceArea', filters.serviceArea);
   if (filters.page) query.set('page', String(filters.page));
   if (filters.limit) query.set('limit', String(filters.limit));
   const suffix = query.toString();
@@ -468,7 +480,7 @@ export function getAdminBusinessProfile(businessId: string, adminSecret: string)
 export function updateAdminBusinessProfile(
   businessId: string,
   adminSecret: string,
-  input: Pick<PublicBusinessProfile, 'name' | 'description' | 'website' | 'categories'>
+  input: Pick<PublicBusinessProfile, 'name' | 'description' | 'website' | 'serviceArea' | 'categories'>
 ) {
   return fetchJSON<PublicBusinessProfile>(`/api/admin/businesses/${businessId}`, {
     method: 'PATCH',
@@ -536,7 +548,7 @@ export function getSellerBusinesses(auth: SellerAuth) {
 export function updateSellerBusinessProfile(
   businessId: string,
   auth: SellerAuth,
-  input: Pick<PublicBusinessProfile, 'name' | 'description' | 'website' | 'categories'>
+  input: Pick<PublicBusinessProfile, 'name' | 'description' | 'website' | 'serviceArea' | 'categories'>
 ) {
   return fetchJSON<PublicBusinessProfile>(`/api/seller/businesses/${businessId}`, {
     method: 'PATCH',

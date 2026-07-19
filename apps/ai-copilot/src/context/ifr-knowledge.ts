@@ -74,13 +74,13 @@ export function getIFRKnowledge() {
         "connect an external Ethereum wallet",
         "check ETH, IFR and IFRLock state",
         "lock or unlock IFR through the simple IFRLock access flow",
-        "discover public seller offers and preview eligibility",
+        "discover public seller offers, filter by a seller-published city, region or Online service area, and preview eligibility",
         "scan a seller-issued checkout QR with camera, local image or proof-link fallback",
         "review and sign a short-lived one-time customer proof",
         "sign an explicit read-only request to load only that wallet's verified My benefits history across devices"
       ],
       sellerActions: [
-        "create and manage a public seller profile",
+        "create and manage a public seller profile with an optional broad city, region or Online service area, never a street address",
         "manage products, services and benefit rules",
         "delegate expiring checkout-operator wallets",
         "create a short-lived checkout QR bound to one rule",
