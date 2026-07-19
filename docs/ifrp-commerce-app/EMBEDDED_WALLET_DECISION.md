@@ -1,6 +1,6 @@
 # Embedded Wallet Decision
 
-Status: DECISION RECORDED - production integration deferred
+Status: PROTOTYPE PROVIDER SELECTED - isolated CDP EOA lab implemented; production integration deferred
 
 Date: 2026-07-19
 
@@ -8,11 +8,14 @@ Date: 2026-07-19
 
 The IFR Benefits Network keeps external user-controlled wallets as its production baseline.
 No embedded-wallet SDK, generated private key, server signer or custodial recovery path will be
-added to `shop.ifrunit.tech` until a separate prototype passes the gates in this document.
+added to `shop.ifrunit.tech` until the separate prototype passes the gates in this document.
 
-Privy and Coinbase CDP are the current prototype shortlist. This is not a provider contract or a
-production selection. Dynamic and MetaMask Embedded Wallets must provide equally explicit,
-currently reachable export and recovery evidence before entering the final comparison.
+Coinbase CDP is selected for the first isolated browser prototype, using an EVM EOA rather than a
+smart account. This selection is based on the current direct Wagmi connector, explicit Sepolia
+transport support and provider-isolated EOA export component. It is not a provider contract or a
+production selection. Privy remains the comparison candidate. Dynamic and MetaMask Embedded
+Wallets must provide equally explicit, currently reachable export and recovery evidence before
+entering a future production comparison.
 
 ## Why
 
@@ -28,8 +31,8 @@ dependent on one app login.
 
 | Provider | Relevant current capability | Decision impact |
 | --- | --- | --- |
-| Privy | Client-created embedded wallets support user key export under strict web-browser guarantees; native clients require a separate secure web export flow. New-device provisioning and multiple recovery models are documented. | Prototype candidate only after one recovery trust model is selected and secure mobile export is proven. |
-| Coinbase CDP | EVM EOA key export uses an isolated iframe; application code does not receive raw key material. Smart accounts require separate ownership/export explanations. | Prototype candidate, provided EOA versus smart-account ownership is explicit. |
+| Privy | Client-created embedded wallets support user key export under strict web-browser guarantees; native clients require a separate secure web export flow. New-device provisioning and multiple recovery models are documented. | Production comparison candidate only after one recovery trust model is selected and secure mobile export is proven. |
+| Coinbase CDP | EVM EOA key export uses an isolated iframe; application code does not receive raw key material. Smart accounts require separate ownership/export explanations. | Selected for the isolated EOA prototype only. Production remains blocked by the acceptance matrix below. |
 | Dynamic | No current capability claim is accepted because the previously reviewed official export URL is no longer reachable. | Hold until working official export, recovery and portability documentation is reviewed. |
 | MetaMask Embedded Wallets | Social/custom-auth embedded onboarding is documented. | Hold until export, recovery and portability evidence is reviewed to the same depth. |
 
@@ -41,6 +44,50 @@ Primary references:
 - [Coinbase CDP wallet import and export](https://docs.cdp.coinbase.com/wallets/using-wallets/import-and-export)
 - [Coinbase CDP export component](https://docs.cdp.coinbase.com/sdks/cdp-sdks-v2/frontend/%40coinbase/cdp-react/Components/ExportWallet.README)
 - [MetaMask developer documentation](https://docs.metamask.io/)
+
+## Implemented Prototype Boundary
+
+The separate app at `apps/benefits-wallet-prototype` implements only the first technical lab:
+
+- fail-closed preflight if `VITE_CDP_PROJECT_ID` is absent;
+- dedicated CDP Project ID and origin allowlist required;
+- email and one-time-code sign-in;
+- automatic EVM EOA creation with `createOnLogin: "eoa"`;
+- Ethereum Sepolia as the only configured chain;
+- provider analytics disabled;
+- address, network and account-type display;
+- provider-owned export modal with MFA bypass explicitly disabled;
+- sign-out.
+
+The prototype has no Mainnet import, IFR contract address, send, approve, lock, swap, QR, seller,
+redeem or reward capability. A static invariant test enforces this boundary. It is not deployed or
+linked from the production Shop. The production Shop remains on its existing external-wallet
+stack.
+
+Current local evidence:
+
+- clean `npm ci` from the committed lockfile;
+- `npm audit --audit-level=moderate`: zero vulnerabilities after compatible `ws` and `uuid`
+  overrides;
+- security-boundary test: pass;
+- strict TypeScript and Vite production build: pass.
+
+This evidence proves only source integration and the unconfigured/fail-closed lab. It does not
+prove provider login, wallet creation, export, recovery or behavior on a real device because no
+dedicated CDP test project has been configured.
+
+## Threat Model For This Lab
+
+Protected assets are the user's authentication identity, wallet ownership and exported key.
+Primary threats are account takeover through email or linked authentication, key exposure to host
+JavaScript or an in-app WebView, provider outage or lock-in, accidental Mainnet funding, and users
+mistaking a smart-account owner key for the account itself.
+
+Controls in the lab are a dedicated test identity, Sepolia-only chain list, EOA-only creation,
+provider-isolated export, retained MFA gate, analytics opt-out, no transaction APIs and no browser
+persistence written by IFR source code. Residual risks remain provider-controlled authentication
+and storage, dependency supply chain, unavailable recovery evidence, email compromise, user key
+handling after export and provider availability. These risks block production.
 
 ## Mandatory Prototype Gates
 
@@ -63,7 +110,8 @@ Primary references:
 
 ## Acceptance Matrix
 
-The prototype may advance only when all rows have evidence:
+The prototype may advance toward production only when all rows have evidence. None of these rows
+is satisfied by a source build alone:
 
 - wallet creation and repeat login;
 - key export or equivalent owner-controlled escape hatch;
@@ -73,10 +121,13 @@ The prototype may advance only when all rows have evidence:
 - provider outage and SDK failure behavior;
 - secure mobile export without an in-app WebView or host-app access to key material;
 - the selected recovery trust model, including takeover and lockout tests;
-- Ethereum Mainnet chain selection without a transaction;
-- IFR token discovery without an approval or transfer;
 - account deletion and data export;
 - accessible, readable recovery warnings on mobile.
+
+Future production-candidate tests, in a separate application and review phase, must include
+Ethereum Mainnet chain selection without a transaction and IFR token discovery without an
+approval or transfer. These tests must not add Mainnet or IFR configuration to the isolated
+Sepolia lab.
 
 ## Production Rollout Boundary
 

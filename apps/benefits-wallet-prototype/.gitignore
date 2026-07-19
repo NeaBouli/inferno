@@ -1,0 +1,9 @@
+/.env
+/.env.local
+!/.env.example
+node_modules/
+dist/
+!/package-lock.json
+*.tsbuildinfo
+vite.config.js
+vite.config.d.ts
