@@ -331,7 +331,6 @@ export interface SessionBenefit {
 
 export interface SessionStatus {
   status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'EXPIRED' | 'REDEEMED';
-  recoveredAddress: string | null;
   reason: string | null;
   redeemedAt: string | null;
   expiresAt: string;

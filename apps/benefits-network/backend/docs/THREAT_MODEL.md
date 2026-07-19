@@ -83,6 +83,18 @@
 - Customer signatures and raw challenge messages are not returned in the seller history response
 - The `limit` query is clamped to 1-50 to prevent large bulk exports
 
+## 7a. Public Proof-Link Privacy
+
+**Threat:** Anyone who receives or later discovers a customer proof link correlates a wallet
+address with a seller, benefit rule, exact lock amount or detailed rejection reason.
+
+**Mitigation:**
+- Public session status never returns the recovered customer address or exact rejection details
+- Rejected and expired sessions expose only a generic terminal message
+- Public status, challenge and attest responses use `Cache-Control: private, no-store`
+- The signing customer receives their own detailed attest result only in the direct response
+- Detailed operational history remains behind the business owner's wallet signature
+
 ## 8. Catalog Tampering / Mutable Checkout Terms
 
 **Threat:** A seller binds a rule to another business's product, or edits a product/rule after

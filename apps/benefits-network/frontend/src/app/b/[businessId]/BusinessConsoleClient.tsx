@@ -146,8 +146,8 @@ export function BusinessConsoleClient({ businessId }: { businessId: string }) {
     if (!session) return '';
 
     const benefit = status?.benefit ?? session;
-    const wallet = status?.recoveredAddress
-      ? `${status.recoveredAddress.slice(0, 6)}...${status.recoveredAddress.slice(-4)}`
+    const wallet = status?.status === 'APPROVED' || status?.status === 'REDEEMED'
+      ? 'verified (private)'
       : 'not verified yet';
     return [
       'IFR Benefits Network checkout receipt',
@@ -808,9 +808,7 @@ export function BusinessConsoleClient({ businessId }: { businessId: string }) {
                 <div className="rounded-3xl border border-green-300/40 bg-green-50 p-6 text-center">
                   <p className="text-5xl">✓</p>
                   <h3 className="mt-3 text-3xl font-black text-green-800">Approved</h3>
-                  <p className="mt-2 text-sm text-green-900">
-                    {status.recoveredAddress ? `Wallet ${status.recoveredAddress.slice(0, 6)}...${status.recoveredAddress.slice(-4)} verified.` : 'Wallet verified.'}
-                  </p>
+                  <p className="mt-2 text-sm text-green-900">Customer wallet verified privately.</p>
                   <p className="mt-4 text-2xl font-black">{status.benefit.discountPercent}% benefit</p>
                   <p className="mt-2 text-sm font-semibold text-green-900">
                     Redeem now to reserve this use before granting the benefit.

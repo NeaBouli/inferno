@@ -8,7 +8,7 @@ import { StatusBadge } from '@/components/StatusBadge';
 import { SwapRiskNotice } from '@/components/SwapRiskNotice';
 import { WalletConnectControl } from '@/components/WalletConnectControl';
 import { AttestResult, BusinessInfo, SessionStatus, getBusiness, getChallenge, getSessionStatus, submitAttest } from '@/lib/api';
-import { saveCustomerProofHistoryItem } from '@/lib/customerHistory';
+import { redactVerifiedAddress, saveCustomerProofHistoryItem } from '@/lib/customerHistory';
 
 const CLOSED_STATUSES = ['REDEEMED', 'REJECTED', 'EXPIRED'];
 const TERMINAL_STATUSES = ['APPROVED', ...CLOSED_STATUSES];
@@ -70,11 +70,9 @@ export function CustomerSessionClient({ sessionId }: { sessionId: string }) {
     if (!status) return '';
 
     const benefit = status.benefit;
-    const verifiedWallet = status.recoveredAddress
-      ? `${status.recoveredAddress.slice(0, 6)}...${status.recoveredAddress.slice(-4)}`
-      : address
-        ? `${address.slice(0, 6)}...${address.slice(-4)}`
-        : 'not connected';
+    const verifiedWallet = result?.wallet
+      ? redactVerifiedAddress(result.wallet)
+      : 'private - reconnecting does not re-identify this proof';
 
     return [
       'IFR Benefits Network customer proof',
@@ -91,7 +89,7 @@ export function CustomerSessionClient({ sessionId }: { sessionId: string }) {
       `Redeemed: ${status.redeemedAt || 'not redeemed'}`,
       'Note: seller redemption still requires the seller scanner and seller wallet signature.',
     ].join('\n');
-  }, [address, business?.name, sessionId, status]);
+  }, [business?.name, result?.wallet, sessionId, status]);
 
   const loadSession = useCallback(async (showMessage = false) => {
     const nextStatus = await getSessionStatus(sessionId);
@@ -121,9 +119,9 @@ export function CustomerSessionClient({ sessionId }: { sessionId: string }) {
       sessionId,
       sellerName: business?.name,
       status,
-      walletAddress: address,
+      verifiedWalletAddress: result?.wallet,
     });
-  }, [address, business?.name, sessionId, status]);
+  }, [business?.name, result?.wallet, sessionId, status]);
 
   async function refreshStatus() {
     setError('');

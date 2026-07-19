@@ -101,6 +101,14 @@ function handleSessionAuthError(err: unknown, res: Response) {
   return false;
 }
 
+function publicSessionReason(status: string) {
+  if (status === 'EXPIRED') return 'Session expired.';
+  if (status === 'REJECTED') {
+    return 'Verification was not approved. The customer can review details on their device.';
+  }
+  return null;
+}
+
 router.post('/', sessionRateLimiter, validate(createSessionSchema), async (req, res, next) => {
   try {
     const scope = req.body.benefitRuleId || 'default';
@@ -137,12 +145,13 @@ router.post('/', sessionRateLimiter, validate(createSessionSchema), async (req, 
 });
 
 router.get('/:id', async (req, res, next) => {
+  res.set('Cache-Control', 'private, no-store');
+  res.set('Pragma', 'no-cache');
   try {
     const session = await getSession(req.params.id);
     res.json({
       status: session.status,
-      recoveredAddress: session.recoveredAddress,
-      reason: session.reason,
+      reason: publicSessionReason(session.status),
       redeemedAt: session.redeemedAt,
       expiresAt: session.expiresAt,
       attestAttempts: session.attestAttempts,

@@ -1348,7 +1348,7 @@ async function verifyPage(contextOptions, label) {
     const copilotPanel = page.locator('#shop-copilot-panel');
     await copilotPanel.waitFor({ state: 'visible', timeout: timeoutMs });
     assert(
-      await copilotPanel.locator('iframe').getAttribute('src') === 'https://copilot-api.ifrunit.tech',
+      await copilotPanel.locator('iframe').getAttribute('src') === 'https://copilot-api.ifrunit.tech?embedded=1&surface=benefits',
       `${label} IFR Copilot iframe must use the canonical API origin`
     );
     await copilotPanel.getByRole('button', { name: 'Close IFR Copilot' }).click();

@@ -22,7 +22,7 @@ function canUseStorage() {
   return typeof window !== 'undefined' && Boolean(window.localStorage);
 }
 
-function redactAddress(address?: string | null) {
+export function redactVerifiedAddress(address?: string | null) {
   if (!address) return 'not verified';
   return `${address.slice(0, 6)}...${address.slice(-4)}`;
 }
@@ -66,7 +66,7 @@ export function saveCustomerProofHistoryItem(args: {
   sessionId: string;
   sellerName?: string | null;
   status: SessionStatus;
-  walletAddress?: string | null;
+  verifiedWalletAddress?: string | null;
 }) {
   if (!canUseStorage()) return;
 
@@ -84,7 +84,9 @@ export function saveCustomerProofHistoryItem(args: {
     productName: benefit.productName || 'Business default benefit',
     expiresAt: args.status.expiresAt,
     redeemedAt: args.status.redeemedAt,
-    walletLabel: redactAddress(args.status.recoveredAddress || args.walletAddress),
+    walletLabel: args.verifiedWalletAddress
+      ? redactVerifiedAddress(args.verifiedWalletAddress)
+      : existing?.walletLabel || 'not verified',
     savedAt: existing?.savedAt || new Date().toISOString(),
   };
 
