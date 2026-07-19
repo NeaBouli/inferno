@@ -558,6 +558,7 @@ async function verifyCustomerWalletHistory() {
 }
 
 async function connectEligibilityWallet(page) {
+  await page.waitForLoadState('networkidle', { timeout: timeoutMs });
   const connectButton = page.getByRole('button', { name: 'Connect wallet', exact: true }).first();
   if (await connectButton.isVisible()) await connectButton.click();
 }
