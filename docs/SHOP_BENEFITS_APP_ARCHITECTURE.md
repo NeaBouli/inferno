@@ -121,7 +121,7 @@ If `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` is missing, the frontend must show a s
 3. Seller onboarding supports owner-wallet self-service creation with an anti-spam profile cap. **Implemented; invitation/review policy remains a future governance decision.**
 4. Add QR history and audit view for sellers. **Implemented for owner-wallet-protected recent sessions, restore receipts, activity metrics and a local masked CSV of the latest 50 checks. Full-history export and retention/compliance policy remain future work.**
 5. Customer saved proof history locally without storing private data server-side. **Implemented for redacted QR proof history; benefit wallet/device acceptance still pending.**
-6. Add embedded-wallet provider evaluation and decision record.
+6. Add embedded-wallet provider evaluation and decision record. **Preliminary evaluation and the safety decision are recorded in `docs/ifrp-commerce-app/EMBEDDED_WALLET_DECISION.md`: external wallets remain the production baseline; Privy and Coinbase CDP are prototype candidates, and provider selection remains deferred until export/recovery, native isolation, device, privacy and independent-security gates pass.**
 7. Add POS/plugin snippets to code generator. **Server-side JavaScript/POS session helper implemented; packaged SDK and platform-specific plugins remain future work.**
 8. Add mobile E2E checks for iPad Safari/Chrome and Android MetaMask browser.
 9. Checkout staff mode with owner-managed expiry/revocation and role-aware audit. **Implemented; live device acceptance remains pending.**

@@ -584,7 +584,7 @@ and production deployment remain required before any reward event may be submitt
 ### M5 - Native Wrapper / Embedded Wallet
 
 - evaluate Expo/Capacitor wrapper;
-- embedded wallet provider;
+- embedded wallet provider; **provider evaluation and security decision recorded in `EMBEDDED_WALLET_DECISION.md`; external wallets remain the production baseline and any embedded-wallet work starts as a no-Mainnet prototype**
 - push notifications;
 - biometric unlock;
 - optional gas abstraction.
