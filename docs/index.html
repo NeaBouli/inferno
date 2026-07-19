@@ -1624,8 +1624,9 @@ var S={
 start:{q:"What brings you here today?",sub:"Choose what fits you best:",s:1,t:2,o:[
 {i:"&#x1F4B0;",t:"Buy / Invest in IFR",d:"Bootstrap ENDED — buy IFR on Uniswap V2",n:"buy"},
 {i:"&#x1F512;",t:"Lock IFR",d:"Choose simple refundable access or an advanced CommitmentVault lock",n:"lock"},
-{i:"&#x1F4F2;",t:"Use IFR Benefits",d:"Discover offers, scan a seller QR, or configure benefits",n:"benefits"},
+{i:"&#x1F4F2;",t:"Use IFR Benefits",d:"Discover offers, present or scan a checkout QR, or configure seller benefits",n:"benefits"},
 {i:"&#x1F6E0;&#xFE0F;",t:"Build with IFR",d:"Integrate IFR access into your product",n:"build"},
+{i:"&#x1F4BB;",t:"Develop with IFR",d:"Contracts, SDK, APIs and verified integration references",n:"develop"},
 {i:"&#x1F4B8;",t:"Lend / Borrow / Market",d:"Offer IFR as lender, browse market, or prepare to borrow",n:"lend_choice"},
 {i:"&#x1F91D;",t:"Contribute / Community",d:"Write, build, vote or connect",n:"community"},
 {i:"&#x1F50D;",t:"Research / Press",d:"Audits, docs, press kit, deep dive",n:"research"}
@@ -1645,12 +1646,19 @@ build:{q:"What do you want to build?",sub:"We tailor the guide to your use case:
 {i:"&#x1F4D6;",t:"I want to understand the tech first",d:"Full docs: API, ABIs, contracts",a:"wiki/integration.html"},
 {i:"&#x1F91D;",t:"I represent a business / team",d:"Full onboarding with BuilderRegistry",a:"wiki/business-onboarding.html"}
 ]},
+develop:{q:"What do you need as a developer?",sub:"Use verified protocol references before integrating:",s:2,t:2,o:[
+{i:"&#x1F9E9;",t:"Integration guide and SDK",d:"Access patterns, ethers examples and IFR SDK references",a:"wiki/integration.html",h:1},
+{i:"&#x1F4DC;",t:"Verified contracts and ABIs",d:"Canonical Mainnet addresses, Etherscan links and contract interfaces",a:"wiki/contracts.html"},
+{i:"&#x1F4B3;",t:"Wallet integration",d:"Token metadata, wallet import and safe connection guidance",a:"wiki/wallet-guide.html"},
+{i:"&#x1F6E1;&#xFE0F;",t:"Security and audits",d:"Review verified contracts, test evidence and public audit material",a:"wiki/open-audit.html"}
+]},
 benefits:{q:"How do you want to use IFR Benefits?",sub:"The customer and seller tools are live at shop.ifrunit.tech:",s:2,t:2,o:[
 {i:"&#x1F50E;",t:"Discover customer offers",d:"Browse by category or seller service area, then preview lock eligibility",a:"https://shop.ifrunit.tech/",h:1},
-{i:"&#x1F4F7;",t:"Scan a seller QR",d:"Open a short-lived checkout proof with camera, image, or link fallback",a:"https://shop.ifrunit.tech/scan"},
+{i:"&#x1F4F1;",t:"Present my customer pass",d:"Create a private short-lived QR, let the seller choose the exact offer, then confirm it in your own tab",a:"https://shop.ifrunit.tech/#customer-pass"},
+{i:"&#x1F4F7;",t:"Scan a seller QR",d:"Use the compatible seller-issued checkout flow with camera, image, or link fallback",a:"https://shop.ifrunit.tech/scan"},
 {i:"&#x1F4F2;",t:"Install the Benefits App",d:"Use the same PWA as a customer or seller on phone, tablet, or desktop",a:"https://shop.ifrunit.tech/#install-app"},
 {i:"&#x1F4DC;",t:"Open My benefits",d:"Load your own verified checkout history with a read-only wallet signature",a:"https://shop.ifrunit.tech/#my-benefits"},
-{i:"&#x1F3EA;",t:"Offer benefits as a seller",d:"Publish a service area, catalog, rules, operators, and checkout QR",a:"https://shop.ifrunit.tech/#seller-workspace"},
+{i:"&#x1F3EA;",t:"Offer benefits as a seller",d:"Publish a service area, catalog and rules; scan customer passes or issue compatible checkout QR codes",a:"https://shop.ifrunit.tech/#seller-workspace"},
 {i:"&#x1F4D6;",t:"Read the seller guide",d:"Understand onboarding, security, QR checkout, and governance-gated rewards",a:"wiki/business-onboarding.html"}
 ]},
 lend_choice:{q:"What do you want to do in LendingVault?",sub:"Lender offers and market data are live. Borrowing opens after price collateral is activated:",s:2,t:2,o:[
