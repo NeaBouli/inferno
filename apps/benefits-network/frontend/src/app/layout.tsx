@@ -37,7 +37,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <Providers>{children}</Providers>
         <script
           dangerouslySetInnerHTML={{
-            __html: `if('serviceWorker' in navigator){const hadController=Boolean(navigator.serviceWorker.controller);let refreshing=false;if(hadController){navigator.serviceWorker.addEventListener('controllerchange',()=>{if(refreshing)return;refreshing=true;window.location.reload()})}window.addEventListener('load',()=>{navigator.serviceWorker.register('/sw.js?v=13',{updateViaCache:'none'}).then(registration=>registration.update()).catch(()=>{})})}`,
+            __html: `if('serviceWorker' in navigator){const hadController=Boolean(navigator.serviceWorker.controller);let refreshing=false;if(hadController){navigator.serviceWorker.addEventListener('controllerchange',()=>{if(refreshing)return;refreshing=true;window.location.reload()})}window.addEventListener('load',()=>{navigator.serviceWorker.register('/sw.js?v=14',{updateViaCache:'none'}).then(registration=>registration.update()).catch(()=>{})})}`,
           }}
         />
       </body>

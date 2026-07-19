@@ -1110,7 +1110,7 @@ const hasLock = await ifrLock.isLocked(walletAddress, ethers.utils.parseUnits("1
 
         <div class="faq-item">
           <button class="faq-q"><span>How does the merchant verification work?</span><span class="icon">+</span></button>
-          <div class="faq-a">Three steps:<br><br>1. The merchant opens their business link and clicks &ldquo;Start Verification&rdquo; &mdash; a QR code appears<br>2. The customer scans the QR code, connects their wallet, and signs a message (no app installation needed)<br>3. The system checks on-chain if the customer has enough IFR locked. If yes: APPROVED (green screen). The merchant clicks &ldquo;Redeem&rdquo;.<br><br>The verification is single-use and expires after 60 seconds &mdash; screenshots and videos cannot be reused.</div>
+          <div class="faq-a">Three steps:<br><br>1. The seller or authorized checkout operator selects a benefit rule and creates a short-lived QR code<br>2. The customer scans it in the <a href="https://shop.ifrunit.tech/">IFR Benefits app</a>, connects their wallet, reviews the exact benefit and signs a one-time message<br>3. The backend checks the selected IFRLock threshold on-chain. The seller sees APPROVED or DENIED and redeems an approval once.<br><br>The proof uses the rule-defined short lifetime and is single-use. A screenshot alone cannot approve or redeem a checkout.</div>
         </div>
 
         <div class="faq-item">
@@ -1120,7 +1120,7 @@ const hasLock = await ifrLock.isLocked(walletAddress, ethers.utils.parseUnits("1
 
         <div class="faq-item">
           <button class="faq-q"><span>Does the merchant need crypto knowledge?</span><span class="icon">+</span></button>
-          <div class="faq-a">No. The merchant sees a simple web interface: &ldquo;Start Verification&rdquo; button, QR code, and green/red result screen. They never interact with wallets, blockchains, or smart contracts. The entire crypto layer is abstracted away. The merchant only needs a browser and an internet connection. See <a href="https://ifrunit.tech/wiki/business-onboarding.html">Business Onboarding</a> for the setup guide.</div>
+          <div class="faq-a">No blockchain knowledge is required. The seller sees a rule selector, QR code and clear approved/denied result. The owner or an authorized checkout operator uses a wallet signature for protected seller actions, but the app never asks staff to handle customer tokens, seed phrases or contract calls. See <a href="https://ifrunit.tech/wiki/business-onboarding.html">Business Onboarding</a> for the setup guide.</div>
         </div>
 
         <div class="faq-item">

@@ -65,7 +65,7 @@ Primary jobs:
 3. Get ETH.
 4. Swap ETH to IFR.
 5. Lock IFR in IFRLock or CommitmentVault.
-6. Generate QR proof for a seller.
+6. Scan or open a seller-issued QR proof.
 7. See available benefits, history, and lock status.
 
 Customer app must be simple enough for non-crypto users:
@@ -103,7 +103,7 @@ Open app
   -> show ETH and IFR balances
   -> prompt: buy/swap IFR if balance is low
   -> prompt: lock IFR for benefits
-  -> show QR proof button
+  -> show seller QR scanner
 ```
 
 Wallet options:
@@ -153,21 +153,11 @@ Do not expose CommitmentVault price-condition locks until a V2/PriceLockVault ex
 
 ### 4.4 Customer QR Proof
 
-The QR must not be just a static wallet address.
-
-Recommended QR payload:
-
-```json
-{
-  "type": "ifrp-benefit-proof",
-  "version": 1,
-  "sessionId": "server-generated-id",
-  "customer": "0x...",
-  "sellerId": "seller-id",
-  "nonce": "random",
-  "expiresAt": "ISO timestamp"
-}
-```
+The QR must not be just a static wallet address. The implemented payload is the canonical,
+short-lived customer URL `https://shop.ifrunit.tech/r/:sessionId`; authoritative seller, rule,
+nonce, expiry and customer-signature state remain server-side. The in-app `/scan` route decodes
+camera frames or a selected image locally and accepts only that exact HTTPS route. It also offers
+a manual proof-link/session-ID fallback. Foreign origins and URL additions fail closed.
 
 Verification:
 
@@ -558,7 +548,8 @@ MVP should be installable:
 - ETH/IFR balance; **implemented in the customer wallet panel**
 - Uniswap deep-link or embedded swap widget; **deep-link implemented with visible thin-liquidity, price-impact and slippage warning; embedded swap remains deferred**
 - lock IFR from customer app; **implemented as exact-amount approve, lock and full IFRLock unlock**
-- QR proof after lock. **implemented as seller-issued, customer-signed, short-lived session proof**
+- QR proof after lock. **implemented as seller-issued, customer-signed, short-lived session proof,
+  with an opt-in in-app camera scanner, local image decoding and manual link/session-ID fallback**
 
 ### M3 - Seller Catalog And Categories
 

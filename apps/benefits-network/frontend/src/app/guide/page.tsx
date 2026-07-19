@@ -91,8 +91,14 @@ export default function GuidePage() {
           </div>
           <div className="mt-8 flex flex-wrap gap-3">
             <a
-              href="/"
+              href="/scan"
               className="rounded-full bg-orange-300 px-5 py-3 text-sm font-black uppercase tracking-[0.16em] text-stone-950 shadow-xl shadow-orange-950/40 transition hover:-translate-y-0.5 hover:bg-orange-200"
+            >
+              Scan seller QR
+            </a>
+            <a
+              href="/"
+              className="rounded-full border border-white/15 px-5 py-3 text-sm font-black uppercase tracking-[0.16em] text-stone-100 transition hover:border-orange-200/60"
             >
               Open benefits
             </a>

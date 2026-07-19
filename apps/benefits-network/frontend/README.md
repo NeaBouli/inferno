@@ -10,6 +10,7 @@ Next.js 15 PWA for the IFR Benefits Network.
 | `/guide` | Customer, seller and developer operating guide for the live shop flow, including session history |
 | `/b/:businessId` | Merchant Console — select seller rule, start verification, show QR, approve/redeem |
 | `/r/:sessionId` | Customer Flow — connect wallet, review selected benefit, sign challenge, show result |
+| `/scan` | Customer QR entry — opt-in camera, local image scan or manual proof link/session ID |
 
 ## Setup
 

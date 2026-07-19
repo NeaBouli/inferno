@@ -72,6 +72,7 @@ jobs:
           cache-dependency-path: apps/benefits-network/frontend/package-lock.json
       - run: npm ci
       - run: npm audit --audit-level=low
+      - run: npm run test:proof-link
       - run: npm run typecheck
       - run: npm run build
 

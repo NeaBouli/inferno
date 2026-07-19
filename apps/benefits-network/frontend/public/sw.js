@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ifr-benefits-v13';
+const CACHE_NAME = 'ifr-benefits-v14';
 const PRECACHE_URLS = [
   '/',
   '/manifest.json',
@@ -8,6 +8,7 @@ const PRECACHE_URLS = [
   '/icons/ifr-token-256-v11.png',
   '/icons/ifr-token-512-v11.png',
   '/icons/favicon-v11.ico',
+  '/copilot-avatar.jpg',
 ];
 
 self.addEventListener('install', (event) => {

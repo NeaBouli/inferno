@@ -1362,6 +1362,119 @@
         display: grid;
       }
     }
+
+    .copilot-launcher {
+      position: fixed;
+      right: 20px;
+      bottom: max(20px, env(safe-area-inset-bottom));
+      z-index: 180;
+      width: 60px;
+      height: 60px;
+      overflow: hidden;
+      padding: 0;
+      border: 2px solid var(--ember);
+      border-radius: 50%;
+      background: var(--paper-3);
+      box-shadow: 0 12px 30px rgba(78, 37, 18, 0.28);
+      cursor: pointer;
+      transition: transform 160ms ease, box-shadow 160ms ease;
+    }
+
+    .copilot-launcher:hover,
+    .copilot-launcher:focus-visible {
+      transform: translateY(-2px);
+      box-shadow: 0 16px 34px rgba(78, 37, 18, 0.36);
+    }
+
+    .copilot-launcher img {
+      width: 100%;
+      height: 100%;
+      display: block;
+      object-fit: cover;
+    }
+
+    .copilot-panel {
+      position: fixed;
+      right: 20px;
+      bottom: max(92px, calc(72px + env(safe-area-inset-bottom)));
+      z-index: 179;
+      width: min(400px, calc(100vw - 32px));
+      height: min(620px, calc(100dvh - 124px));
+      overflow: hidden;
+      border: 1px solid rgba(180, 72, 31, 0.35);
+      border-radius: 16px;
+      background: var(--graphite);
+      box-shadow: 0 24px 70px rgba(33, 28, 23, 0.42);
+    }
+
+    .copilot-panel iframe {
+      display: block;
+      width: 100%;
+      height: calc(100% - 38px);
+      border: 0;
+    }
+
+    .copilot-toolbar {
+      display: flex;
+      height: 38px;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 8px 0 14px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+      background: var(--graphite);
+      color: #f4ded0;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .copilot-loading {
+      position: absolute;
+      inset: 38px 0 0;
+      z-index: 1;
+      display: grid;
+      margin: 0;
+      place-items: center;
+      background: var(--graphite);
+      color: #f4ded0;
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .copilot-loading[hidden] {
+      display: none;
+    }
+
+    .copilot-close {
+      width: 30px;
+      height: 30px;
+      border: 1px solid rgba(255, 255, 255, 0.24);
+      border-radius: 50%;
+      background: rgba(23, 27, 24, 0.9);
+      color: #fff;
+      font-size: 20px;
+      line-height: 28px;
+      cursor: pointer;
+    }
+
+    @media (max-width: 820px) {
+      .copilot-panel {
+        right: 0;
+        bottom: 0;
+        width: 100vw;
+        height: calc(100dvh - 72px);
+        border-right: 0;
+        border-bottom: 0;
+        border-left: 0;
+        border-radius: 16px 16px 0 0;
+      }
+
+      .copilot-launcher {
+        right: 16px;
+        width: 54px;
+        height: 54px;
+      }
+    }
   </style>
 </head>
 <body>
@@ -1657,6 +1770,18 @@
     </div>
   </footer>
 
+  <button class="copilot-launcher" type="button" data-copilot-open aria-label="Open IFR Copilot" aria-controls="web3-copilot-panel" aria-expanded="false">
+    <img src="/assets/CoPilot.jpg" alt="" width="60" height="60">
+  </button>
+  <section class="copilot-panel" id="web3-copilot-panel" data-copilot-panel role="dialog" aria-label="IFR Copilot help" aria-hidden="true" hidden>
+    <div class="copilot-toolbar">
+      <span>IFR Copilot</span>
+      <button class="copilot-close" type="button" data-copilot-close aria-label="Close IFR Copilot">&times;</button>
+    </div>
+    <p class="copilot-loading" data-copilot-loading role="status">Loading IFR Copilot...</p>
+    <iframe data-src="https://copilot-api.ifrunit.tech" title="IFR Copilot" loading="lazy" referrerpolicy="no-referrer"></iframe>
+  </section>
+
   <div class="install-dialog" data-install-dialog aria-hidden="true">
     <div class="install-card" role="dialog" aria-modal="true" aria-labelledby="install-title">
       <h2 id="install-title">Install IFR Web3</h2>
@@ -1930,6 +2055,33 @@
 
   <script>
     (function() {
+      const copilotOpen = document.querySelector("[data-copilot-open]");
+      const copilotPanel = document.querySelector("[data-copilot-panel]");
+      const copilotClose = document.querySelector("[data-copilot-close]");
+      const copilotFrame = copilotPanel ? copilotPanel.querySelector("iframe") : null;
+      const copilotLoading = document.querySelector("[data-copilot-loading]");
+
+      function setCopilotOpen(open) {
+        if (!copilotPanel || !copilotOpen) return;
+        if (open && copilotFrame && !copilotFrame.src) copilotFrame.src = copilotFrame.dataset.src;
+        if (!open && copilotFrame) copilotFrame.removeAttribute("src");
+        if (!open && copilotLoading) copilotLoading.hidden = false;
+        copilotPanel.hidden = !open;
+        copilotPanel.setAttribute("aria-hidden", open ? "false" : "true");
+        copilotOpen.hidden = open;
+        copilotOpen.setAttribute("aria-expanded", open ? "true" : "false");
+        if (open && copilotClose) copilotClose.focus();
+      }
+
+      if (copilotOpen) copilotOpen.addEventListener("click", () => setCopilotOpen(true));
+      if (copilotClose) copilotClose.addEventListener("click", () => setCopilotOpen(false));
+      if (copilotFrame) copilotFrame.addEventListener("load", () => {
+        if (copilotLoading) copilotLoading.hidden = true;
+      });
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && copilotPanel && !copilotPanel.hidden) setCopilotOpen(false);
+      });
+
       const audiences = {
         users: {
           title: "Lock once. Use across the ecosystem.",
