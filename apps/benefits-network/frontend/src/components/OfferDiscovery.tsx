@@ -2,11 +2,13 @@
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import { EligibilityLiveSummary, OfferEligibility, useIfrLockEligibility } from '@/components/OfferEligibility';
 import { discoverOffers, type PublicOffer } from '@/lib/api';
 
 const PAGE_SIZE = 8;
 
 export function OfferDiscovery() {
+  const eligibility = useIfrLockEligibility();
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState('');
   const [offers, setOffers] = useState<PublicOffer[]>([]);
@@ -57,6 +59,7 @@ export function OfferDiscovery() {
 
   return (
     <section id="offers" className="mx-auto w-full max-w-7xl scroll-mt-28 px-5 pb-12">
+      <EligibilityLiveSummary eligibility={eligibility} />
       <div className="border-y border-white/10 py-8 sm:py-10">
         <div className="flex flex-wrap items-end justify-between gap-5">
           <div>
@@ -138,6 +141,7 @@ export function OfferDiscovery() {
                 <span>{offer.label}</span>
                 <span>{offer.requiredLockIFR.toLocaleString('en-US')} IFR lock</span>
               </div>
+              <OfferEligibility requiredLockIFR={offer.requiredLockIFR} eligibility={eligibility} />
               <Link href={`/s/${encodeURIComponent(offer.business.id)}`} className="mt-5 inline-flex rounded-full bg-green-300 px-5 py-3 text-xs font-black uppercase tracking-[0.14em] text-stone-950 transition hover:-translate-y-0.5 hover:bg-green-200">
                 Open seller catalog
               </Link>

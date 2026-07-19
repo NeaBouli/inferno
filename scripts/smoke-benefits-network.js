@@ -3,6 +3,7 @@
 const fs = require('fs');
 const path = require('path');
 const { createHash } = require('crypto');
+const { utils: ethersUtils } = require('ethers');
 const { chromium, devices } = require('playwright');
 
 const baseUrl = (process.env.BENEFITS_BASE_URL || 'https://shop.ifrunit.tech').replace(/\/$/, '');
@@ -231,6 +232,293 @@ async function verifyWalletAssetRequest() {
     log('Wallet token import payload OK');
   } finally {
     await context.close();
+    await browser.close();
+  }
+}
+
+function eligibilityDiscoveryResponse() {
+  const business = {
+    id: 'smoke-eligibility-catalog',
+    name: 'Eligibility Coffee',
+    description: 'Wallet-local eligibility preview.',
+    website: null,
+    categories: ['Coffee'],
+  };
+  return {
+    offers: [
+      {
+        id: 'smoke-eligibility-ready',
+        label: 'Member cup',
+        category: 'Coffee',
+        productName: 'Member espresso',
+        discountPercent: 10,
+        requiredLockIFR: 1000,
+        dailyRedemptionLimit: 1,
+        monthlyRedemptionLimit: 10,
+        business,
+        product: null,
+      },
+      {
+        id: 'smoke-eligibility-more',
+        label: 'Premium roast',
+        category: 'Coffee',
+        productName: 'Premium reserve',
+        discountPercent: 15,
+        requiredLockIFR: 2500,
+        dailyRedemptionLimit: 1,
+        monthlyRedemptionLimit: 4,
+        business,
+        product: null,
+      },
+    ],
+    categories: ['Coffee'],
+    pagination: { page: 1, limit: 8, total: 2, totalPages: 1, hasNext: false },
+  };
+}
+
+async function installEligibilityRoutes(page) {
+  await page.route('**/api/businesses?**', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(eligibilityDiscoveryResponse()),
+    });
+  });
+  await page.route('**/api/businesses/smoke-eligibility-catalog/products', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        business: eligibilityDiscoveryResponse().offers[0].business,
+        products: [{
+          id: 'smoke-eligibility-product',
+          businessId: 'smoke-eligibility-catalog',
+          name: 'Premium reserve',
+          category: 'Coffee',
+          description: 'A deterministic eligibility catalog item.',
+          active: true,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          benefitRules: [{
+            id: 'smoke-eligibility-rule',
+            label: 'Premium roast',
+            discountPercent: 15,
+            requiredLockIFR: 2500,
+            ttlSeconds: 90,
+            dailyRedemptionLimit: 1,
+            monthlyRedemptionLimit: 4,
+          }],
+        }],
+      }),
+    });
+  });
+}
+
+async function installEligibilityRpc(page, { rpcError = false, lockedRaw = '1500125000000' } = {}) {
+  const multicall = new ethersUtils.Interface([
+    'function aggregate3((address target,bool allowFailure,bytes callData)[] calls) payable returns ((bool success,bytes returnData)[] returnData)',
+  ]);
+  const lockedResult = ethersUtils.defaultAbiCoder.encode(['uint256'], [lockedRaw]);
+  const rpcMethods = [];
+  await page.route('https://eth.merkle.io/', async (route) => {
+    const payload = route.request().postDataJSON();
+    rpcMethods.push(payload.method);
+    if (rpcError) {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ jsonrpc: '2.0', id: payload.id, error: { code: -32000, message: 'Eligibility RPC unavailable.' } }),
+      });
+      return;
+    }
+    const callData = payload.params?.[0]?.data || '';
+    const result = callData.startsWith(multicall.getSighash('aggregate3'))
+      ? multicall.encodeFunctionResult('aggregate3', [
+          multicall.decodeFunctionData('aggregate3', callData).calls.map(() => [true, lockedResult]),
+        ])
+      : lockedResult;
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ jsonrpc: '2.0', id: payload.id, result }),
+    });
+  });
+  return rpcMethods;
+}
+
+async function addEligibilityWallet(context, { rpcError = false } = {}) {
+  await context.addInitScript(({ shouldFail }) => {
+    const listeners = new Map();
+    const methods = [];
+    let currentChainId = '0x1';
+    const walletAddress = '0x2222222222222222222222222222222222222222';
+    const lockedRaw = BigInt('1500125000000');
+    Object.defineProperty(window, '__ifrSetEligibilityChain', {
+      configurable: false,
+      value: (chainId) => {
+        currentChainId = chainId;
+        const listener = listeners.get('chainChanged');
+        if (listener) listener(chainId);
+      },
+    });
+    Object.defineProperty(window, '__ifrEligibilityWalletMethods', {
+      configurable: false,
+      value: methods,
+    });
+    Object.defineProperty(window, 'ethereum', {
+      configurable: true,
+      value: {
+        isMetaMask: true,
+        request: async ({ method }) => {
+          methods.push(method);
+          if (method === 'eth_chainId') return currentChainId;
+          if (method === 'net_version') return String(Number.parseInt(currentChainId, 16));
+          if (method === 'eth_accounts' || method === 'eth_requestAccounts') return [walletAddress];
+          if (method === 'eth_call') {
+            if (shouldFail) throw Object.assign(new Error('Eligibility RPC unavailable.'), { code: -32000 });
+            return `0x${lockedRaw.toString(16).padStart(64, '0')}`;
+          }
+          if (method === 'eth_getBalance') return '0x0';
+          if (method === 'eth_blockNumber') return '0x1';
+          if (method === 'eth_getCode') return '0x01';
+          if (method === 'wallet_switchEthereumChain') return null;
+          if (method === 'wallet_getCapabilities') return {};
+          return null;
+        },
+        on: (event, listener) => listeners.set(event, listener),
+        removeListener: (event) => listeners.delete(event),
+      },
+    });
+  }, { shouldFail: rpcError });
+}
+
+async function connectEligibilityWallet(page) {
+  const connectButton = page.getByRole('button', { name: 'Connect wallet', exact: true }).first();
+  if (await connectButton.isVisible()) await connectButton.click();
+}
+
+async function verifyOfferEligibility() {
+  const browser = await chromium.launch({ headless: true });
+  const context = await browser.newContext({ serviceWorkers: 'block' });
+  await addEligibilityWallet(context);
+  const page = await context.newPage();
+  const writes = [];
+  page.on('request', (request) => {
+    if (request.url().includes('/api/') && request.method() !== 'GET') writes.push(request.url());
+  });
+  await installEligibilityRoutes(page);
+  const rpcMethods = await installEligibilityRpc(page);
+
+  try {
+    await gotoAppPage(page, '/');
+    await expectText(page, 'Member espresso');
+    await connectEligibilityWallet(page);
+    await expectText(page, 'Eligible with this wallet');
+    await expectText(page, 'Lock 999.875 more IFR');
+    assert(
+      await page.locator('[data-offer-eligibility="ready"]').count() === 2,
+      'both offer cards must share the successful IFRLock read'
+    );
+    await expectNoHorizontalOverflow(page, 'connected eligibility home');
+    if (shouldScreenshot) {
+      fs.mkdirSync(screenshotDir, { recursive: true });
+      await page.locator('#offers').screenshot({
+        animations: 'disabled',
+        path: path.join(screenshotDir, 'benefits-offer-eligibility-connected.png'),
+      });
+    }
+
+    await gotoAppPage(page, '/s/smoke-eligibility-catalog');
+    await expectText(page, 'Premium reserve');
+    await expectText(page, 'Lock 999.875 more IFR');
+    await expectNoHorizontalOverflow(page, 'connected eligibility catalog');
+    if (shouldScreenshot) {
+      await page.screenshot({
+        animations: 'disabled',
+        fullPage: true,
+        path: path.join(screenshotDir, 'benefits-catalog-eligibility-connected.png'),
+      });
+    }
+    await page.evaluate(() => window.__ifrSetEligibilityChain('0xaa36a7'));
+    await expectText(page, 'Switch to Ethereum Mainnet');
+    assert(
+      await page.getByText('Eligible with this wallet', { exact: true }).count() === 0,
+      'wrong-chain state must not retain an Eligible result'
+    );
+    assert(writes.length === 0, `eligibility preview triggered unexpected API writes: ${writes.join(', ')}`);
+    assert(rpcMethods.length > 0 && rpcMethods.every((method) => method === 'eth_call'), 'eligibility preview used a state-changing JSON-RPC method');
+    const walletMethods = await page.evaluate(() => window.__ifrEligibilityWalletMethods || []);
+    const readOnlyWalletMethods = new Set([
+      'wallet_requestPermissions',
+      'eth_requestAccounts',
+      'eth_accounts',
+      'eth_chainId',
+      'net_version',
+      'wallet_getCapabilities',
+      'eth_call',
+      'eth_getBalance',
+      'eth_blockNumber',
+      'eth_getCode',
+    ]);
+    const unexpectedWalletMethods = walletMethods.filter((method) => !readOnlyWalletMethods.has(method));
+    assert(unexpectedWalletMethods.length === 0, `eligibility preview used a non-read-only wallet method: ${unexpectedWalletMethods.join(', ')}`);
+  } finally {
+    await context.close();
+  }
+
+  const exactContext = await browser.newContext({ serviceWorkers: 'block' });
+  await addEligibilityWallet(exactContext);
+  const exactPage = await exactContext.newPage();
+  await installEligibilityRoutes(exactPage);
+  await installEligibilityRpc(exactPage, { lockedRaw: '1000000000000' });
+  try {
+    await gotoAppPage(exactPage, '/');
+    await expectText(exactPage, 'Member espresso');
+    await connectEligibilityWallet(exactPage);
+    await expectText(exactPage, 'Eligible with this wallet');
+    assert(
+      await exactPage.getByText('Eligible with this wallet', { exact: true }).count() === 1,
+      'exact requiredRaw equality must be eligible'
+    );
+  } finally {
+    await exactContext.close();
+  }
+
+  const belowContext = await browser.newContext({ serviceWorkers: 'block' });
+  await addEligibilityWallet(belowContext);
+  const belowPage = await belowContext.newPage();
+  await installEligibilityRoutes(belowPage);
+  await installEligibilityRpc(belowPage, { lockedRaw: '999999999999' });
+  try {
+    await gotoAppPage(belowPage, '/');
+    await expectText(belowPage, 'Member espresso');
+    await connectEligibilityWallet(belowPage);
+    await expectText(belowPage, 'Lock 0.001 more IFR');
+    assert(
+      await belowPage.getByText('Eligible with this wallet', { exact: true }).count() === 0,
+      'requiredRaw minus one unit must not be eligible'
+    );
+  } finally {
+    await belowContext.close();
+  }
+
+  const errorContext = await browser.newContext({ serviceWorkers: 'block' });
+  await addEligibilityWallet(errorContext, { rpcError: true });
+  const errorPage = await errorContext.newPage();
+  await installEligibilityRoutes(errorPage);
+  await installEligibilityRpc(errorPage, { rpcError: true });
+  try {
+    await gotoAppPage(errorPage, '/');
+    await expectText(errorPage, 'Member espresso');
+    await connectEligibilityWallet(errorPage);
+    await expectText(errorPage, 'Eligibility unavailable');
+    assert(
+      await errorPage.getByText('Eligible with this wallet', { exact: true }).count() === 0,
+      'RPC failure must never render Eligible'
+    );
+    log('Per-offer IFRLock eligibility fail-closed states OK');
+  } finally {
+    await errorContext.close();
     await browser.close();
   }
 }
@@ -853,6 +1141,7 @@ async function verifyPage(contextOptions, label) {
     await expectText(page, 'Reserve espresso');
     await expectText(page, '15% benefit');
     await expectText(page, '1,000 locked IFR');
+    await expectText(page, 'Connect wallet to check');
     await expectText(page, 'Per wallet: 1 / UTC day and 10 / UTC month');
     await expectText(page, 'Seller starts a one-time QR checkout');
     const sellerWebsite = page.getByRole('link', { name: 'Seller website' });
@@ -897,6 +1186,7 @@ async function main() {
   log(`Target ${baseUrl}`);
   await verifyHttpSurface();
   await verifyWalletAssetRequest();
+  await verifyOfferEligibility();
   await verifyRuleTemplateAuthorization();
   await verifyPage({ viewport: { width: 1440, height: 1100 } }, 'desktop');
   await verifyPage(devices['iPad Pro 11'], 'ipad');
