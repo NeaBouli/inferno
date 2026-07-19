@@ -7,6 +7,7 @@ import { AppShell } from '@/components/AppShell';
 import { Countdown } from '@/components/Countdown';
 import { StatusBadge } from '@/components/StatusBadge';
 import { SellerCustomerPassScanner } from '@/components/SellerCustomerPassScanner';
+import { parseCustomerPassQrPayload } from '@/lib/customerPassLink';
 import {
   BenefitRule,
   BusinessInfo,
@@ -307,12 +308,11 @@ export function BusinessConsoleClient({ businessId }: { businessId: string }) {
 
   function parseCustomerPassId(value: string) {
     const raw = value.trim();
-    try {
-      const url = new URL(raw);
-      return url.pathname.match(/\/p\/([A-Za-z0-9_-]{32})(?:\/|$)/)?.[1] || '';
-    } catch {
-      return raw.replace(/^\/?p\//, '').split(/[/?#\s]/)[0];
-    }
+    if (/^[A-Za-z0-9_-]{32}$/.test(raw)) return raw;
+    if (!origin) return '';
+    const candidate = raw.startsWith('/') ? `${origin}${raw}` : raw;
+    const parsed = parseCustomerPassQrPayload(candidate, origin);
+    return parsed.ok ? parsed.passId : '';
   }
 
   async function bindPresentedPass() {

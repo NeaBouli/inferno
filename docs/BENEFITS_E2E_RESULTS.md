@@ -1,6 +1,11 @@
 # Benefits Network — E2E Test Results
 
-## Test Date: 2026-02-26 (v2)
+## Historical Test Date: 2026-02-26 (v2)
+
+This section is retained as historical Sepolia evidence. The current Mainnet PWA additionally has
+backend route/race coverage and a deterministic browser contract test for customer pass creation,
+seller binding, exact-offer confirmation, `APPROVED`, and one-time `REDEEMED`. Current commands and
+external device gates are maintained in `docs/BENEFITS_NETWORK_TEST.md`.
 
 ## Local Test
 
@@ -35,7 +40,7 @@
 ### Sepolia Integration
 - [x] isLocked() query configured (IFRLOCK_ADDRESS in .env)
 - [ ] Wallet with Lock → APPROVED (requires frontend + wallet signature)
-- [ ] Wallet without Lock → DENIED (requires frontend + wallet signature)
+- [ ] Wallet without Lock → REJECTED (requires frontend + wallet signature)
 
 **Note:** Attest flow (`POST /api/attest`) requires an EIP-712 signature from the wallet. Local API test covers Health + Business + Session. Full QR flow requires frontend.
 

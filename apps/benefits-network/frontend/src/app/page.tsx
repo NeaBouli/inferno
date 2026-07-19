@@ -21,8 +21,8 @@ interface BeforeInstallPromptEvent extends Event {
 
 const flowSteps = [
   {
-    title: 'Customer locks or holds IFR',
-    body: 'The app reads wallet status, IFR balance and IFRLock access without moving tokens during verification.',
+    title: 'Customer locks IFR for access',
+    body: 'The app reads wallet status, IFR balance and the exact IFRLock threshold without moving tokens during verification.',
   },
   {
     title: 'Seller creates a rule',

@@ -184,7 +184,7 @@ Compatible seller-QR verification:
 3. Backend verifies signature.
 4. Backend reads on-chain IFR balance/lock state.
 5. Backend evaluates seller benefit policy.
-6. Seller screen shows approved/denied and benefit.
+6. Seller screen shows `APPROVED` or `REJECTED` and the selected benefit.
 7. Seller redeems session once.
 
 This prevents screenshots/replay from being enough.
@@ -196,15 +196,13 @@ timestamp-signed without persisting a challenge row.
 
 ### 4.5 Seller Benefit Rules
 
-Seller can configure:
+The deployed seller rule model configures:
 
 - category;
 - product/service name;
 - discount percent;
 - fixed benefit text;
-- minimum IFR held;
 - minimum IFR locked in IFRLock;
-- optional minimum CommitmentVault time-lock amount;
 - per-wallet daily/monthly redemption limits;
 - redemption TTL;
 - staff notes.
@@ -344,9 +342,8 @@ productId optional
 benefitRuleId
 nonce
 expiresAt
-status: pending | approved | denied | redeemed | expired
+status: PENDING | APPROVED | REJECTED | REDEEMED | EXPIRED
 customerWallet
-ifrHeldRaw
 ifrLockedRaw
 signature
 reason
@@ -441,9 +438,7 @@ Use guided controls:
 - category selector;
 - product/service selector;
 - discount slider;
-- minimum IFR held input;
-- minimum IFR locked input;
-- lock required toggle;
+- minimum IFR locked in IFRLock input;
 - preview result.
 
 ## 9. Security Model
@@ -559,7 +554,7 @@ MVP should be installable:
 - IFRLock lock status;
 - seller QR session;
 - customer signature;
-- approved/denied/redeem flow;
+- `APPROVED` / `REJECTED` / one-time `REDEEMED` flow;
 - deploy to `shop.ifrunit.tech`.
 
 ### M2 - Wallet And Swap UX

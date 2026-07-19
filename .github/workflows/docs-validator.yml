@@ -6,11 +6,17 @@ on:
     paths:
       - 'docs/**'
       - '*.md'
+      - 'apps/ai-copilot/src/context/ifr-knowledge.ts'
+      - 'scripts/test-benefits-doc-consistency.cjs'
+      - '.github/workflows/docs-validator.yml'
   pull_request:
     branches: [main, master]
     paths:
       - 'docs/**'
       - '*.md'
+      - 'apps/ai-copilot/src/context/ifr-knowledge.ts'
+      - 'scripts/test-benefits-doc-consistency.cjs'
+      - '.github/workflows/docs-validator.yml'
   schedule:
     - cron: '0 6 * * 1'
 
@@ -81,6 +87,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '20'
 
       - name: Check required doc files exist
         run: |
@@ -104,6 +113,9 @@ jobs:
             fi
           done
           echo "Found $EMPTY empty doc files"
+
+      - name: Check Benefits documentation consistency
+        run: node scripts/test-benefits-doc-consistency.cjs
 
   docs-summary:
     name: Docs Summary

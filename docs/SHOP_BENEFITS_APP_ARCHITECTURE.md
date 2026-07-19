@@ -181,10 +181,12 @@ If `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` is missing, the frontend must show a s
     updates, bounded categories, HTTPS-only websites, an optional privacy-preserving city/region/
     Online service-area filter, defensive legacy-data sanitization and controlled admin reload by
     Business ID.**
-13. Customer-presented two-phase checkout pass. **Implemented locally with an additive migration,
+13. Customer-presented two-phase checkout pass. **Implemented with an additive migration,
     opaque short-lived QR, hashed tab control token, atomic one-seller binding, exact-offer customer
     confirmation, signer equality, cancel-before-approval and replay/race regression coverage.
-    Production deploy and physical device acceptance remain pending for this release slice.**
+    The backend migration, customer/seller UI and privacy-safe public projections are live in
+    production. Automated browser coverage verifies create, bind, exact-offer confirm and one-time
+    redeem; physical device/wallet acceptance remains pending.**
 
 ## Security Notes
 

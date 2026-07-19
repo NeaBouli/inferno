@@ -24,11 +24,11 @@ on-chain lock status, without requiring crypto knowledge from cashier staff.
 ## Step 2: Technical Setup
 
 ### Option A: Hosted Solution (recommended)
-1. Business receives access to the IFR Builder Dashboard
-2. Registration: name, logo, discount %, required lock
-3. QR code is generated (unique businessId)
-4. Cashier staff opens scanner URL on smartphone
-5. Done — no technical knowledge required
+1. Open seller mode at `https://shop.ifrunit.tech` and connect the owner wallet
+2. Create the public seller profile and keep its Business ID
+3. Add products or services and configure at least one active IFRLock benefit rule
+4. Authorize expiring checkout-operator wallets for cashier devices when needed
+5. Bookmark the seller scanner URL on each point-of-sale device
 
 ### Option B: Self-Hosted (for developers)
 1. Clone Docker image: `git clone https://github.com/NeaBouli/inferno`
@@ -51,23 +51,27 @@ Recommendation: offer at least Bronze (lowest barrier for customers).
 
 ## Step 4: Cashier Staff Training (5 Minutes)
 
-### The QR Flow (3 Steps):
-1. **Business opens** scanner URL on tablet/smartphone
-2. **Customer scans** QR code with their wallet app
-3. **Screen shows**: APPROVED (green) or DENIED (red)
-4. **Optional**: click "Redeem" → status REDEEMED
+### The Recommended Customer-Presented Flow (4 Steps)
+1. **Customer creates** an opaque, short-lived pass in IFR Benefits
+2. **Seller scans** the pass, selects the exact active rule, and signs with the owner or authorized checkout-operator wallet
+3. **Customer reviews and confirms** seller, product, discount, and required IFRLock amount in the original browser tab
+4. **Seller sees** `APPROVED` or `REJECTED`; an approval must be redeemed once before granting the benefit
+
+The compatible seller-issued QR flow remains available. It is also short-lived and requires a
+customer signature before the seller can redeem an approval.
 
 ### What Cashier Staff Does NOT Need:
 - No crypto knowledge
-- No MetaMask/wallet
+- No handling of customer wallets, tokens, seed phrases, or private keys
+- The checkout device does require the business owner wallet or an active checkout-operator wallet for protected seller actions
 - No understanding of blockchain
 - No internet banking access
 
 ## Step 5: Go-Live Checklist
 
 - [ ] businessId created and verified
-- [ ] QR code saved on smartphone/tablet
-- [ ] Test scan performed with own wallet
+- [ ] Scanner URL bookmarked on smartphone/tablet
+- [ ] Test pass completed with a known locked customer wallet
 - [ ] Cashier staff briefed (5-minute training)
 - [ ] Discount configured in POS/register
 - [ ] IFR Builder badge placed on website/storefront
@@ -76,7 +80,7 @@ Recommendation: offer at least Bronze (lowest barrier for customers).
 ## Step 6: Ongoing Operations
 
 ### Monthly Checks:
-- QR code still active? (test scan)
+- Scanner URL and checkout-operator access still active?
 - Discount conditions still appropriate?
 - New tier options available?
 
@@ -91,15 +95,18 @@ No — the IFR Benefits Network is free for builders.
 Businesses only pay for their own hosting (Option B).
 
 **What if a customer removes their lock?**
-The next scan automatically shows DENIED — no manual intervention required.
+The next fresh verification returns `REJECTED` when the current IFRLock balance is below the
+selected rule threshold. The service fails closed when it cannot obtain a fresh on-chain result.
 
 **Can we choose which tier we accept?**
 Yes — each business independently configures tier and discount.
 
-**Is the customer verification GDPR-compliant?**
-Yes — no personal data is stored.
-Only: wallet address (public on-chain), lock status (public on-chain),
-verification timestamp (temporary, 60s TTL).
+**What customer data is processed?**
+The short-lived pass QR contains no wallet, lock amount, signature, control token, rule, or
+internal session ID. The backend processes the wallet address and current IFRLock result to verify
+eligibility; checkout and history API responses are bounded. This data-minimizing design is not a
+legal compliance guarantee; each operator remains responsible for its applicable privacy and
+retention obligations.
 
 ---
-*As of: March 2026 | Version 1.0*
+*As of: July 2026 | Version 2.0*
