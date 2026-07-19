@@ -42,5 +42,8 @@
   },
   "optionalDependencies": {
     "@rollup/rollup-linux-x64-gnu": "^4.59.0"
+  },
+  "overrides": {
+    "shell-quote": "1.8.4"
   }
 }

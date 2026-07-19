@@ -85,3 +85,20 @@ The production Shop dependency slice is separated from the root contract toolcha
 
 The root Hardhat/Waffle/Ganache lock remains a separate migration. Do not apply the Shop lockfile
 changes to the contract toolchain and do not use `npm audit fix --force`.
+
+## 2026-07-19 Critical Patch Update
+
+Two repository-wide critical alerts can be removed without a breaking migration:
+
+- AI Copilot overrides the exact `concurrently` pin from vulnerable `shell-quote@1.8.3` to
+  patched `1.8.4`. A clean install reports 22 remaining findings, with zero critical.
+- Creator Gateway resolves the `ts-jest` development dependency from vulnerable
+  `handlebars@4.7.8` to patched `4.7.9`. A clean install reports 29 remaining findings, with
+  zero critical; TypeScript build and all 41 tests pass.
+
+The remaining root critical alert cannot be fixed by the existing global `elliptic@6.6.1`
+override. `@ethereum-waffle/provider@4.0.5` pins `ganache@7.4.3`, and Ganache bundles its own
+`secp256k1 -> elliptic@6.5.4` tree. Even `ganache@7.9.2` still ships that bundled vulnerable
+path, so a Ganache override would not close the alert and would create broad unrelated lockfile
+churn. Remove Waffle/Ganache as described above; do not claim the root alert fixed before that
+migration and its full contract-suite evidence exist.
