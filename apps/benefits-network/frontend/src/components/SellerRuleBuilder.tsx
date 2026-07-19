@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useAccount, useConnect, useDisconnect, useSignMessage } from 'wagmi';
 import QRCode from 'react-qr-code';
 import { SellerCatalogManager } from '@/components/SellerCatalogManager';
@@ -25,16 +25,29 @@ import {
   deleteSellerBusinessRule,
   deleteSellerCheckoutOperator,
   getAdminBusinessRules,
+  getAdminBusinessProfile,
   getSellerAuthMessage,
   getSellerBusinesses,
   getSellerBusinessRules,
   getSellerBusinessSessions,
   getSellerCheckoutOperators,
+  updateAdminBusinessProfile,
   updateAdminBusinessRule,
+  updateSellerBusinessProfile,
   updateSellerBusinessRule,
 } from '@/lib/api';
 
 const categories = ['Coffee', 'Retail', 'Digital access', 'Events', 'Services'];
+const profileCategorySuggestions = [
+  'Food & drink',
+  'Retail',
+  'Services',
+  'Digital access',
+  'Events',
+  'Wellness',
+  'Travel',
+  'Education',
+];
 const LAST_BUSINESS_STORAGE_KEY = 'ifr.shop.lastSellerBusinessId';
 const SHOP_ORIGIN = 'https://shop.ifrunit.tech';
 const DEFAULT_RULE_DRAFT = {
@@ -66,6 +79,10 @@ export function SellerRuleBuilder() {
   const [businessId, setBusinessId] = useState('');
   const [adminSecret, setAdminSecret] = useState('');
   const [businessName, setBusinessName] = useState('IFR Partner Shop');
+  const [businessDescription, setBusinessDescription] = useState('');
+  const [businessWebsite, setBusinessWebsite] = useState('');
+  const [businessCategories, setBusinessCategories] = useState<string[]>([]);
+  const [profileCategoryDraft, setProfileCategoryDraft] = useState('');
   const [defaultTier, setDefaultTier] = useState('IFR Access');
   const [category, setCategory] = useState(DEFAULT_RULE_DRAFT.category);
   const [product, setProduct] = useState(DEFAULT_RULE_DRAFT.product);
@@ -91,6 +108,12 @@ export function SellerRuleBuilder() {
   const [status, setStatus] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const activeBusinessIdRef = useRef(businessId);
+
+  function setActiveBusinessId(nextBusinessId: string) {
+    activeBusinessIdRef.current = nextBusinessId;
+    setBusinessId(nextBusinessId);
+  }
 
   const scannerUrl = businessId ? `https://shop.ifrunit.tech/b/${businessId}` : '';
   const canUseWalletOwner = Boolean(address && isConnected);
@@ -99,12 +122,20 @@ export function SellerRuleBuilder() {
   const activeRulesCount = rules.filter((rule) => rule.active).length;
   const editingRule = rules.find((rule) => rule.id === editingRuleId) || null;
   const selectedBusiness = sellerBusinesses.find((business) => business.id === businessId) || null;
+  const selectedBusinessUsesWalletOwner = Boolean(selectedBusiness?.ownerAddress);
+  const profileNeedsLoading = Boolean(businessId && !selectedBusiness);
+  const canEditSelectedProfile = Boolean(selectedBusiness) && (
+    selectedBusinessUsesWalletOwner ? canUseWalletOwner : canUseOperatorFallback
+  );
   const businessReady = Boolean(businessId);
+  const profileReady = Boolean(selectedBusiness);
   const scannerReady = Boolean(scannerUrl);
   const ruleReady = activeRulesCount > 0;
   const historyReady = sessions.length > 0;
   const sellerStatus = !canManage
     ? 'Connect seller wallet'
+    : profileNeedsLoading
+      ? 'Load seller profile'
     : !businessReady
       ? 'Create seller profile'
       : !ruleReady
@@ -112,6 +143,8 @@ export function SellerRuleBuilder() {
         : 'Ready for checkout';
   const nextSellerStep = !canManage
     ? 'Connect the seller wallet, then load or create a wallet-owned seller profile.'
+    : profileNeedsLoading
+      ? 'Load the existing Business ID with its owner wallet or the controlled operator fallback.'
     : !businessReady
       ? 'Create a seller profile or load an existing profile owned by this wallet.'
       : !ruleReady
@@ -119,7 +152,7 @@ export function SellerRuleBuilder() {
         : 'Open the scanner at checkout, create a QR session, and redeem approved benefits once.';
   const sellerReadinessSteps = [
     { label: 'Seller wallet or operator fallback', ready: canManage },
-    { label: 'Seller profile selected', ready: businessReady },
+    { label: 'Seller profile selected', ready: profileReady },
     { label: 'Active benefit rule loaded', ready: ruleReady },
     { label: 'Scanner link ready', ready: scannerReady },
     { label: 'Recent customer checks loaded', ready: historyReady },
@@ -143,6 +176,9 @@ export function SellerRuleBuilder() {
       businessId: businessId || null,
       scannerUrl: scannerUrl || null,
       sellerName: selectedBusiness?.name || businessName || 'IFR Partner Shop',
+      sellerDescription: selectedBusiness?.description || businessDescription || null,
+      sellerWebsite: selectedBusiness?.website || businessWebsite || null,
+      sellerCategories: selectedBusiness?.categories || businessCategories,
       ownerAddress: selectedBusiness?.ownerAddress || address || null,
       defaultBenefit: {
         label: label || 'IFR Benefit',
@@ -159,7 +195,7 @@ export function SellerRuleBuilder() {
     },
     null,
     2
-  ), [activeRulesCount, address, businessId, businessName, category, dailyLimit, discount, label, minLocked, monthlyLimit, product, scannerUrl, selectedBusiness, ttl]);
+  ), [activeRulesCount, address, businessCategories, businessDescription, businessId, businessName, businessWebsite, category, dailyLimit, discount, label, minLocked, monthlyLimit, product, scannerUrl, selectedBusiness, ttl]);
 
   function getCustomerProofUrl(sessionId: string) {
     return `${SHOP_ORIGIN}/r/${sessionId}`;
@@ -189,7 +225,7 @@ export function SellerRuleBuilder() {
   useEffect(() => {
     try {
       const lastBusinessId = window.localStorage.getItem(LAST_BUSINESS_STORAGE_KEY);
-      if (lastBusinessId) setBusinessId(lastBusinessId);
+      if (lastBusinessId) setActiveBusinessId(lastBusinessId);
     } catch {
       // Local storage can be unavailable in private modes; the manual field still works.
     }
@@ -239,6 +275,73 @@ export function SellerRuleBuilder() {
     setSelectedProductId('');
   }
 
+  function setBusinessProfileDraft(business: SellerBusinessSummary) {
+    setBusinessName(business.name);
+    setBusinessDescription(business.description || '');
+    setBusinessWebsite(business.website || '');
+    setBusinessCategories(business.categories);
+    setProfileCategoryDraft('');
+  }
+
+  function selectSellerBusiness(business: SellerBusinessSummary, announce = true) {
+    setActiveBusinessId(business.id);
+    setBusinessProfileDraft(business);
+    setRules([]);
+    setSessions([]);
+    setActivityMetrics(null);
+    if (announce) {
+      setStatus(`${business.name} selected. Load rules when you need the current list.`);
+    }
+  }
+
+  function startNewSellerProfile() {
+    setActiveBusinessId('');
+    setBusinessName('IFR Partner Shop');
+    setBusinessDescription('');
+    setBusinessWebsite('');
+    setBusinessCategories([]);
+    setProfileCategoryDraft('');
+    setCreatedBusiness(null);
+    setRules([]);
+    setSessions([]);
+    setActivityMetrics(null);
+    setStatus('New seller profile draft started.');
+    setError('');
+  }
+
+  function addBusinessCategory(rawCategory: string) {
+    const nextCategory = rawCategory.trim();
+    if (!nextCategory) return;
+    if (nextCategory.length > 80) {
+      setError('Business categories can contain at most 80 characters.');
+      return;
+    }
+    if (businessCategories.some((item) => item.toLocaleLowerCase('en-US') === nextCategory.toLocaleLowerCase('en-US'))) {
+      setProfileCategoryDraft('');
+      return;
+    }
+    if (businessCategories.length >= 8) {
+      setError('Choose up to 8 business categories.');
+      return;
+    }
+    setBusinessCategories((current) => [...current, nextCategory]);
+    setProfileCategoryDraft('');
+    setError('');
+  }
+
+  function toggleBusinessCategory(profileCategory: string) {
+    const selected = businessCategories.some(
+      (item) => item.toLocaleLowerCase('en-US') === profileCategory.toLocaleLowerCase('en-US')
+    );
+    if (selected) {
+      setBusinessCategories((current) => current.filter(
+        (item) => item.toLocaleLowerCase('en-US') !== profileCategory.toLocaleLowerCase('en-US')
+      ));
+      return;
+    }
+    addBusinessCategory(profileCategory);
+  }
+
   async function createBusiness() {
     if (!canManage) {
       setError('Connect a seller wallet or use the operator admin fallback.');
@@ -249,7 +352,10 @@ export function SellerRuleBuilder() {
     setStatus('');
     try {
       const input = {
-        name: businessName || 'IFR Partner Shop',
+        name: businessName.trim() || 'IFR Partner Shop',
+        description: businessDescription.trim() || null,
+        website: businessWebsite.trim() || null,
+        categories: businessCategories,
         discountPercent: discount,
         requiredLockIFR: minLocked,
         ttlSeconds: ttl,
@@ -259,7 +365,7 @@ export function SellerRuleBuilder() {
         ? await createSellerBusiness(await signSellerAction('business:create', 'new', 'new'), input)
         : await createAdminBusiness(adminSecret, input);
       setCreatedBusiness(business);
-      setBusinessId(business.id);
+      setActiveBusinessId(business.id);
       setRules([]);
       setSessions([]);
       setActivityMetrics(null);
@@ -270,6 +376,9 @@ export function SellerRuleBuilder() {
           verifyUrl: business.verifyUrl,
           qrUrl: business.qrUrl,
           name: input.name,
+          description: input.description,
+          website: input.website,
+          categories: input.categories,
           discountPercent: input.discountPercent,
           requiredLockIFR: input.requiredLockIFR,
           tierLabel: input.tierLabel || null,
@@ -285,6 +394,54 @@ export function SellerRuleBuilder() {
       );
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create seller profile');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function saveSellerProfile() {
+    if (!selectedBusiness || !canEditSelectedProfile) {
+      setError(selectedBusinessUsesWalletOwner
+        ? 'Connect the profile owner wallet before saving public details.'
+        : 'Enter the operator admin fallback before saving this profile.'
+      );
+      return;
+    }
+    const name = businessName.trim();
+    if (!name) {
+      setError('Seller name is required.');
+      return;
+    }
+    setLoading(true);
+    setError('');
+    setStatus('');
+    try {
+      const targetBusinessId = selectedBusiness.id;
+      const profileInput = {
+        name,
+        description: businessDescription.trim() || null,
+        website: businessWebsite.trim() || null,
+        categories: businessCategories,
+      };
+      const updated = selectedBusinessUsesWalletOwner
+        ? await updateSellerBusinessProfile(
+            targetBusinessId,
+            await signSellerAction('business:update', targetBusinessId, targetBusinessId),
+            profileInput
+          )
+        : await updateAdminBusinessProfile(targetBusinessId, adminSecret, profileInput);
+      setSellerBusinesses((current) => current.map((business) => (
+        business.id === targetBusinessId ? { ...business, ...updated } : business
+      )));
+      if (activeBusinessIdRef.current === targetBusinessId) {
+        setBusinessName(updated.name);
+        setBusinessDescription(updated.description || '');
+        setBusinessWebsite(updated.website || '');
+        setBusinessCategories(updated.categories);
+        setStatus('Public seller profile saved. The catalog and offer search now use these details.');
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to save seller profile');
     } finally {
       setLoading(false);
     }
@@ -348,17 +505,51 @@ export function SellerRuleBuilder() {
     try {
       const result = await getSellerBusinesses(await signSellerAction('business:list', 'seller'));
       setSellerBusinesses(result.businesses);
-      if (!businessId && result.businesses[0]) {
-        setBusinessId(result.businesses[0].id);
-        setSessions([]);
-        setActivityMetrics(null);
-      }
+      const preferredBusiness = result.businesses.find((business) => business.id === businessId)
+        || result.businesses[0];
+      if (preferredBusiness) selectSellerBusiness(preferredBusiness, false);
       setStatus(`Loaded ${result.businesses.length} seller profile${result.businesses.length === 1 ? '' : 's'}.`);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load seller profiles');
     } finally {
       setLoading(false);
     }
+  }
+
+  async function loadAdminBusinessProfile() {
+    const targetBusinessId = businessId.trim();
+    if (!targetBusinessId || !adminSecret) {
+      setError('Business ID and operator admin fallback are required.');
+      return;
+    }
+    setLoading(true);
+    setError('');
+    setStatus('');
+    try {
+      const business = await getAdminBusinessProfile(targetBusinessId, adminSecret);
+      setSellerBusinesses((current) => [
+        business,
+        ...current.filter((item) => item.id !== business.id),
+      ]);
+      selectSellerBusiness(business, false);
+      setStatus(`${business.name} loaded through the operator fallback.`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load seller profile');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function loadRestoredBusinessProfile() {
+    if (adminSecret) {
+      await loadAdminBusinessProfile();
+      return;
+    }
+    if (canUseWalletOwner) {
+      await loadSellerBusinesses();
+      return;
+    }
+    setError('Connect the profile owner wallet or enter the operator admin fallback first.');
   }
 
   function checkoutOperatorExpiry() {
@@ -463,7 +654,7 @@ export function SellerRuleBuilder() {
       );
       setSellerBusinesses((current) => current.filter((item) => item.id !== targetBusinessId));
       if (businessId === targetBusinessId) {
-        setBusinessId('');
+        setActiveBusinessId('');
         setRules([]);
         setSessions([]);
         setActivityMetrics(null);
@@ -750,7 +941,7 @@ export function SellerRuleBuilder() {
           setError('Seller backup does not include a valid Business ID.');
           return;
         }
-        setBusinessId(parsed.businessId.trim());
+        setActiveBusinessId(parsed.businessId.trim());
         if (typeof parsed.sellerName === 'string' && parsed.sellerName.trim()) setBusinessName(parsed.sellerName.trim());
         if (parsed.defaultBenefit) {
           if (typeof parsed.defaultBenefit.label === 'string') setLabel(parsed.defaultBenefit.label);
@@ -775,7 +966,7 @@ export function SellerRuleBuilder() {
         setError('Could not read a Business ID from that backup.');
         return;
       }
-      setBusinessId(businessIdFromText);
+      setActiveBusinessId(businessIdFromText);
       setRules([]);
       setSessions([]);
       setActivityMetrics(null);
@@ -860,32 +1051,27 @@ export function SellerRuleBuilder() {
               >
                 <button
                   type="button"
-                  onClick={() => {
-                    setBusinessId(business.id);
-                    setRules([]);
-                    setSessions([]);
-                    setActivityMetrics(null);
-                    setStatus(`${business.name} selected. Load rules when you need the current list.`);
-                  }}
-                  className="block w-full text-left"
+                  onClick={() => selectSellerBusiness(business)}
+                  disabled={loading}
+                  className="block w-full text-left disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <span className="block text-sm font-black text-white">{business.name}</span>
                   <span className="mt-1 block text-xs leading-5 text-stone-300">
                     {business.productsCount} catalog item{business.productsCount === 1 ? '' : 's'} / {business.rulesCount} rule{business.rulesCount === 1 ? '' : 's'} / {business.discountPercent}% default / {business.requiredLockIFR.toLocaleString('en-US')} IFR
                   </span>
+                  {business.categories.length ? (
+                    <span className="mt-2 block text-xs font-semibold text-green-100/80">
+                      {business.categories.join(' · ')}
+                    </span>
+                  ) : null}
                   <span className="mt-1 block break-all font-mono text-[11px] text-stone-500">{business.id}</span>
                 </button>
                 <div className="mt-3 flex flex-wrap gap-2">
                   <button
                     type="button"
-                    onClick={() => {
-                      setBusinessId(business.id);
-                      setRules([]);
-                      setSessions([]);
-                      setActivityMetrics(null);
-                      setStatus(`${business.name} selected. Load rules when you need the current list.`);
-                    }}
-                    className="rounded-xl border border-green-200/30 px-3 py-2 text-[11px] font-black uppercase tracking-[0.12em] text-green-50 transition hover:bg-green-200/10"
+                    onClick={() => selectSellerBusiness(business)}
+                    disabled={loading}
+                    className="rounded-xl border border-green-200/30 px-3 py-2 text-[11px] font-black uppercase tracking-[0.12em] text-green-50 transition hover:bg-green-200/10 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     Select
                   </button>
@@ -985,9 +1171,19 @@ export function SellerRuleBuilder() {
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <p className="text-xs font-bold uppercase tracking-[0.18em] text-stone-400">Seller onboarding</p>
-            <h3 className="mt-1 text-xl font-black text-white">Create a seller profile</h3>
+            <h3 className="mt-1 text-xl font-black text-white">
+              {selectedBusiness
+                ? 'Manage public seller profile'
+                : profileNeedsLoading
+                  ? 'Load existing seller profile'
+                  : 'Create a seller profile'}
+            </h3>
             <p className="mt-2 text-sm leading-6 text-stone-300">
-              Preferred path: connect the seller wallet and sign. Admin secret is only the operator fallback.
+              {selectedBusiness
+                ? 'These public details help customers find and recognize your offers. Saving requires the owner wallet or the controlled admin fallback used to create it.'
+                : profileNeedsLoading
+                  ? 'This Business ID already exists in local recovery state. Load it with the owner wallet or controlled admin fallback before editing.'
+                  : 'Preferred path: connect the seller wallet and sign. Admin secret is only the operator fallback.'}
             </p>
           </div>
           {createdBusiness ? (
@@ -996,24 +1192,62 @@ export function SellerRuleBuilder() {
             </span>
           ) : null}
         </div>
-        <div className="mt-4 grid gap-3 md:grid-cols-3">
+        <div className="mt-4 grid gap-3 md:grid-cols-2">
           <label className="grid gap-2 text-sm font-semibold text-stone-200">
             Shop or seller name
             <input
               value={businessName}
               onChange={(event) => setBusinessName(event.target.value)}
-              className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none focus:border-orange-300"
+              disabled={loading || profileNeedsLoading}
+              className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none focus:border-orange-300 disabled:cursor-not-allowed disabled:opacity-50"
             />
           </label>
+          <label className="grid gap-2 text-sm font-semibold text-stone-200 md:col-span-2">
+            Public description
+            <textarea
+              value={businessDescription}
+              onChange={(event) => setBusinessDescription(event.target.value)}
+              maxLength={500}
+              rows={3}
+              disabled={loading || profileNeedsLoading}
+              placeholder="What customers can find here and why IFR members benefit."
+              className="resize-y rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none focus:border-orange-300 disabled:cursor-not-allowed disabled:opacity-50"
+            />
+            <span className="text-xs font-normal text-stone-500">{businessDescription.length}/500</span>
+          </label>
           <label className="grid gap-2 text-sm font-semibold text-stone-200">
-            Access tier label
+            Seller website
             <input
-              value={defaultTier}
-              onChange={(event) => setDefaultTier(event.target.value)}
-              className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none focus:border-orange-300"
+              type="url"
+              value={businessWebsite}
+              onChange={(event) => setBusinessWebsite(event.target.value)}
+              maxLength={300}
+              placeholder="https://example.com"
+              autoCapitalize="none"
+              autoCorrect="off"
+              spellCheck={false}
+              disabled={loading || profileNeedsLoading}
+              className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none focus:border-orange-300 disabled:cursor-not-allowed disabled:opacity-50"
             />
           </label>
           <label className="grid gap-2 text-sm font-semibold text-stone-200">
+            {selectedBusiness ? 'Profile authorization' : 'Access tier label'}
+            {selectedBusiness ? (
+              <span className="rounded-2xl border border-green-200/20 bg-green-200/[0.08] px-4 py-3 text-sm font-semibold text-green-50">
+                {selectedBusinessUsesWalletOwner
+                  ? 'Connect the profile owner wallet to save changes.'
+                  : 'This operator-created profile uses the admin fallback below.'}
+              </span>
+            ) : (
+              <input
+                value={defaultTier}
+                onChange={(event) => setDefaultTier(event.target.value)}
+                disabled={loading || profileNeedsLoading}
+                className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none focus:border-orange-300 disabled:cursor-not-allowed disabled:opacity-50"
+              />
+            )}
+          </label>
+          {(!selectedBusiness || !selectedBusinessUsesWalletOwner) ? <label className="grid gap-2 text-sm font-semibold text-stone-200 md:col-span-2">
             Admin secret
             <input
               type="password"
@@ -1022,16 +1256,103 @@ export function SellerRuleBuilder() {
               placeholder="Admin fallback only"
               className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none focus:border-orange-300"
             />
-          </label>
+          </label> : null}
+          {!selectedBusiness && businessId ? (
+            <button
+              type="button"
+              onClick={loadAdminBusinessProfile}
+              disabled={loading || !adminSecret}
+              className="rounded-2xl border border-green-200/35 px-4 py-3 text-xs font-black uppercase tracking-[0.12em] text-green-50 transition hover:bg-green-200/10 disabled:cursor-not-allowed disabled:opacity-40 md:col-span-2"
+            >
+              Load existing profile by ID
+            </button>
+          ) : null}
         </div>
-        <button
-          type="button"
-          onClick={createBusiness}
-          disabled={loading || !canManage}
-          className="mt-4 w-full rounded-2xl border border-orange-200/40 px-5 py-3 text-sm font-black uppercase tracking-[0.14em] text-orange-100 transition hover:bg-orange-200/10 disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          {canUseWalletOwner ? 'Create wallet-owned seller profile' : 'Create seller profile'}
-        </button>
+        <div className="mt-4 rounded-2xl border border-white/10 bg-black/20 p-4">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <p className="text-sm font-black text-white">Business categories</p>
+            <span className="text-xs text-stone-500">{businessCategories.length}/8 selected</span>
+          </div>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {profileCategorySuggestions.map((profileCategory) => {
+              const selected = businessCategories.some(
+                (item) => item.toLocaleLowerCase('en-US') === profileCategory.toLocaleLowerCase('en-US')
+              );
+              return (
+                <button
+                  key={profileCategory}
+                  type="button"
+                  aria-pressed={selected}
+                  onClick={() => toggleBusinessCategory(profileCategory)}
+                  disabled={loading || profileNeedsLoading}
+                  className={`rounded-full border px-3 py-2 text-xs font-bold transition disabled:cursor-not-allowed disabled:opacity-50 ${
+                    selected
+                      ? 'border-green-200/50 bg-green-200/15 text-green-50'
+                      : 'border-white/10 text-stone-300 hover:border-green-200/30'
+                  }`}
+                >
+                  {profileCategory}
+                </button>
+              );
+            })}
+          </div>
+          <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+            <label className="sr-only" htmlFor="seller-custom-category">Custom business category</label>
+            <input
+              id="seller-custom-category"
+              value={profileCategoryDraft}
+              onChange={(event) => setProfileCategoryDraft(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter') {
+                  event.preventDefault();
+                  addBusinessCategory(profileCategoryDraft);
+                }
+              }}
+              maxLength={80}
+              placeholder="Add another category"
+              disabled={loading || profileNeedsLoading}
+              className="min-w-0 flex-1 rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none focus:border-green-300 disabled:cursor-not-allowed disabled:opacity-50"
+            />
+            <button
+              type="button"
+              onClick={() => addBusinessCategory(profileCategoryDraft)}
+              disabled={loading || profileNeedsLoading || !profileCategoryDraft.trim() || businessCategories.length >= 8}
+              className="rounded-2xl border border-green-200/35 px-4 py-3 text-xs font-black uppercase tracking-[0.12em] text-green-50 disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              Add category
+            </button>
+          </div>
+        </div>
+        <div className="mt-4 grid gap-2 sm:grid-cols-2">
+          <button
+            type="button"
+            onClick={selectedBusiness
+              ? saveSellerProfile
+              : profileNeedsLoading
+                ? loadRestoredBusinessProfile
+                : createBusiness}
+            disabled={loading || (selectedBusiness ? !canEditSelectedProfile : !canManage)}
+            className="rounded-2xl border border-orange-200/40 px-5 py-3 text-sm font-black uppercase tracking-[0.14em] text-orange-100 transition hover:bg-orange-200/10 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {selectedBusiness
+              ? 'Save public profile'
+              : profileNeedsLoading
+                ? 'Load existing profile'
+              : canUseWalletOwner
+                ? 'Create wallet-owned seller profile'
+                : 'Create seller profile'}
+          </button>
+          {selectedBusiness ? (
+            <button
+              type="button"
+              onClick={startNewSellerProfile}
+              disabled={loading}
+              className="rounded-2xl border border-white/15 px-5 py-3 text-sm font-black uppercase tracking-[0.14em] text-stone-100 transition hover:border-orange-200/40 disabled:opacity-50"
+            >
+              New seller profile
+            </button>
+          ) : null}
+        </div>
         {businessId ? (
           <div className="mt-4 rounded-2xl border border-orange-200/20 bg-orange-200/10 p-4 text-sm leading-6 text-orange-50">
             <p>
@@ -1065,6 +1386,14 @@ export function SellerRuleBuilder() {
               >
                 Share
               </button>
+              {selectedBusiness ? (
+                <a
+                  href={`/s/${encodeURIComponent(selectedBusiness.id)}`}
+                  className="rounded-xl border border-green-200/30 px-3 py-2 text-center text-[11px] font-black uppercase tracking-[0.12em] text-green-50 transition hover:bg-green-200/10 sm:col-span-3"
+                >
+                  Open public catalog
+                </a>
+              ) : null}
             </div>
           </div>
         ) : null}
@@ -1449,13 +1778,14 @@ export function SellerRuleBuilder() {
           <input
             value={businessId}
             onChange={(event) => {
-              setBusinessId(event.target.value);
+              setActiveBusinessId(event.target.value);
               setRules([]);
               setSessions([]);
               setActivityMetrics(null);
             }}
             placeholder="cuid..."
-            className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none focus:border-orange-300"
+            disabled={loading}
+            className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none focus:border-orange-300 disabled:cursor-not-allowed disabled:opacity-50"
           />
         </label>
         <button

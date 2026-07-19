@@ -5,7 +5,7 @@ const path = require('path');
 
 const root = path.resolve(__dirname, '..');
 const migrationsDir = path.join(root, 'prisma', 'migrations');
-const targetMigration = '20260718210000_add_redemption_limits';
+const targetMigration = '20260719041500_add_business_public_profile';
 const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'benefits-populated-upgrade-'));
 const dbPath = path.join(tempDir, 'upgrade.db');
 
@@ -93,6 +93,24 @@ try {
     throw new Error(
       `Missing catalog/cap snapshot state: productId=${productIdColumn}, snapshots=${snapshotColumns}, ` +
       `ruleLimits=${ruleLimitColumns}, existingLimits=${existingRuleLimits}`
+    );
+  }
+
+  const businessProfileColumns = sqlite(`
+    SELECT COUNT(*) FROM pragma_table_info('Business')
+    WHERE name IN ('description', 'website', 'categoriesJson');
+  `);
+  const existingBusinessProfile = sqlite(`
+    SELECT
+      (description IS NULL) || '|' ||
+      (website IS NULL) || '|' ||
+      categoriesJson
+    FROM Business WHERE id = 'migration-fixture';
+  `);
+  if (businessProfileColumns !== '3' || existingBusinessProfile !== '1|1|[]') {
+    throw new Error(
+      `Missing seller profile migration state: columns=${businessProfileColumns}, ` +
+      `existingProfile=${existingBusinessProfile}`
     );
   }
 

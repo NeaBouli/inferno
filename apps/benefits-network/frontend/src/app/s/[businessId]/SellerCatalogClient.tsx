@@ -3,25 +3,33 @@
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import { AppShell } from '@/components/AppShell';
-import { PublicCatalogProduct, getBusinessProducts } from '@/lib/api';
+import { PublicBusinessProfile, PublicCatalogProduct, getBusinessProducts } from '@/lib/api';
 
 export function SellerCatalogClient({ businessId }: { businessId: string }) {
-  const [businessName, setBusinessName] = useState('Seller catalog');
+  const [business, setBusiness] = useState<PublicBusinessProfile | null>(null);
   const [products, setProducts] = useState<PublicCatalogProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [shareStatus, setShareStatus] = useState('');
 
   useEffect(() => {
+    const controller = new AbortController();
     setLoading(true);
     setError('');
-    getBusinessProducts(businessId)
+    setBusiness(null);
+    setProducts([]);
+    getBusinessProducts(businessId, controller.signal)
       .then((result) => {
-        setBusinessName(result.business.name);
+        setBusiness(result.business);
         setProducts(result.products);
       })
-      .catch((err: Error) => setError(err.message))
-      .finally(() => setLoading(false));
+      .catch((err: Error) => {
+        if (err.name !== 'AbortError') setError(err.message);
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setLoading(false);
+      });
+    return () => controller.abort();
   }, [businessId]);
 
   const categories = useMemo(() => {
@@ -38,7 +46,7 @@ export function SellerCatalogClient({ businessId }: { businessId: string }) {
     const url = window.location.href;
     try {
       if (navigator.share) {
-        await navigator.share({ title: `${businessName} IFR benefits`, url });
+        await navigator.share({ title: `${business?.name || 'Seller'} IFR benefits`, url });
         setShareStatus('Catalog shared.');
         return;
       }
@@ -57,14 +65,38 @@ export function SellerCatalogClient({ businessId }: { businessId: string }) {
           <p className="text-xs font-black uppercase tracking-[0.18em] text-orange-200/80">IFR member benefits</p>
           <div className="mt-3 flex flex-wrap items-end justify-between gap-5">
             <div>
-              <h1 className="text-4xl font-black tracking-tight text-white sm:text-5xl">{businessName}</h1>
+              <h1 className="text-4xl font-black tracking-tight text-white sm:text-5xl">
+                {business?.name || 'Seller catalog'}
+              </h1>
               <p className="mt-3 max-w-2xl text-base leading-7 text-stone-300">
-                Browse active products and services with benefits for customers who verify locked IFR at checkout.
+                {business?.description
+                  || 'Browse active products and services with benefits for customers who verify locked IFR at checkout.'}
               </p>
+              {business?.categories.length ? (
+                <div className="mt-4 flex flex-wrap gap-2" aria-label="Seller categories">
+                  {business.categories.map((category) => (
+                    <span key={category} className="rounded-full border border-green-200/25 bg-green-200/[0.08] px-3 py-2 text-xs font-bold text-green-50">
+                      {category}
+                    </span>
+                  ))}
+                </div>
+              ) : null}
             </div>
-            <button type="button" onClick={shareCatalog} className="rounded-full border border-orange-200/40 px-5 py-3 text-xs font-black uppercase tracking-[0.14em] text-orange-50">
-              Share catalog
-            </button>
+            <div className="flex flex-wrap gap-2">
+              {business?.website ? (
+                <a
+                  href={business.website}
+                  target="_blank"
+                  rel="noopener"
+                  className="rounded-full border border-green-200/35 px-5 py-3 text-xs font-black uppercase tracking-[0.14em] text-green-50"
+                >
+                  Seller website
+                </a>
+              ) : null}
+              <button type="button" onClick={shareCatalog} className="rounded-full border border-orange-200/40 px-5 py-3 text-xs font-black uppercase tracking-[0.14em] text-orange-50">
+                Share catalog
+              </button>
+            </div>
           </div>
           {shareStatus ? <p className="mt-3 text-sm text-green-100">{shareStatus}</p> : null}
         </section>

@@ -58,6 +58,7 @@ The app has two roles:
 ### Seller Flow
 
 - Seller can create and manage profiles, products, rules, operators and reward applications through owner-wallet authorization; every mutation uses a fresh resource-bound one-time challenge.
+- Public seller identity includes a short description, canonical HTTPS website and up to eight categories. Owners can reload and edit it with their wallet; controlled operator-created profiles can be reopened by Business ID with the user-entered admin fallback. Public catalog and offer discovery expose only the sanitized profile fields.
 - Seller can edit discount, category, product/service, required IFR and QR lifetime through the owner-wallet-signed PATCH flow without changing the active/paused state.
 - Seller can open `/b/:businessId` scanner.
 - Scanner must list active rules and bind the selected rule to the next QR session.
@@ -122,6 +123,7 @@ If `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` is missing, the frontend must show a s
 9. Checkout staff mode with owner-managed expiry/revocation and role-aware audit. **Implemented; live device acceptance remains pending.**
 10. Seller product/service catalog and public customer benefit browsing. **Implemented with owner-signed soft-archive, cross-business rule protection and immutable QR-session snapshots.**
 11. Governance-gated seller reward foundation. **Deployed fail-closed: owner application, live BuilderRegistry/PartnerVault linkage checks, atomic redeem outbox and read-only vesting/claim status. Mainnet currently has no registered builders/partners; dedicated authorized submission remains disabled.**
+12. Public seller identity and discovery metadata. **Implemented with owner-signed single-use updates, bounded categories, HTTPS-only websites, defensive legacy-data sanitization and controlled admin reload by Business ID.**
 
 ## Security Notes
 

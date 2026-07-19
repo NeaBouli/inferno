@@ -19,9 +19,15 @@ async function fetchJSON<T>(url: string, opts?: RequestInit): Promise<T> {
   return data as T;
 }
 
-export interface BusinessInfo {
+export interface PublicBusinessProfile {
   id: string;
   name: string;
+  description: string | null;
+  website: string | null;
+  categories: string[];
+}
+
+export interface BusinessInfo extends PublicBusinessProfile {
   discountPercent: number;
   requiredLockIFR: number;
   tierLabel: string | null;
@@ -97,7 +103,7 @@ export interface PublicOffer {
   requiredLockIFR: number;
   dailyRedemptionLimit: number;
   monthlyRedemptionLimit: number;
-  business: { id: string; name: string };
+  business: PublicBusinessProfile;
   product: { id: string; name: string; description: string | null } | null;
 }
 
@@ -115,6 +121,9 @@ export interface PublicOfferDiscovery {
 
 export interface AdminBusinessInput {
   name: string;
+  description?: string | null;
+  website?: string | null;
+  categories?: string[];
   discountPercent: number;
   requiredLockIFR: number;
   ttlSeconds?: number;
@@ -123,6 +132,10 @@ export interface AdminBusinessInput {
 
 export interface AdminBusinessCreated {
   id: string;
+  name?: string;
+  description?: string | null;
+  website?: string | null;
+  categories?: string[];
   ownerAddress?: string | null;
   verifyUrl: string;
   qrUrl: string;
@@ -130,6 +143,9 @@ export interface AdminBusinessCreated {
 
 export interface SellerBusinessSummary extends AdminBusinessCreated {
   name: string;
+  description: string | null;
+  website: string | null;
+  categories: string[];
   discountPercent: number;
   requiredLockIFR: number;
   tierLabel: string | null;
@@ -338,9 +354,10 @@ export function getBusinessRules(id: string) {
   return fetchJSON<{ rules: BenefitRule[] }>(`/api/businesses/${id}/rules`);
 }
 
-export function getBusinessProducts(id: string) {
-  return fetchJSON<{ business: { id: string; name: string }; products: PublicCatalogProduct[] }>(
-    `/api/businesses/${id}/products`
+export function getBusinessProducts(id: string, signal?: AbortSignal) {
+  return fetchJSON<{ business: PublicBusinessProfile; products: PublicCatalogProduct[] }>(
+    `/api/businesses/${id}/products`,
+    { signal }
   );
 }
 
@@ -391,6 +408,24 @@ function sellerHeaders(auth: SellerAuth) {
 export function createAdminBusiness(adminSecret: string, input: AdminBusinessInput) {
   return fetchJSON<AdminBusinessCreated>('/api/admin/businesses', {
     method: 'POST',
+    headers: adminHeaders(adminSecret),
+    body: JSON.stringify(input),
+  });
+}
+
+export function getAdminBusinessProfile(businessId: string, adminSecret: string) {
+  return fetchJSON<SellerBusinessSummary>(`/api/admin/businesses/${businessId}`, {
+    headers: adminHeaders(adminSecret),
+  });
+}
+
+export function updateAdminBusinessProfile(
+  businessId: string,
+  adminSecret: string,
+  input: Pick<PublicBusinessProfile, 'name' | 'description' | 'website' | 'categories'>
+) {
+  return fetchJSON<PublicBusinessProfile>(`/api/admin/businesses/${businessId}`, {
+    method: 'PATCH',
     headers: adminHeaders(adminSecret),
     body: JSON.stringify(input),
   });
@@ -449,6 +484,18 @@ export function createSellerBusiness(auth: SellerAuth, input: AdminBusinessInput
 export function getSellerBusinesses(auth: SellerAuth) {
   return fetchJSON<{ businesses: SellerBusinessSummary[] }>('/api/seller/businesses', {
     headers: sellerHeaders(auth),
+  });
+}
+
+export function updateSellerBusinessProfile(
+  businessId: string,
+  auth: SellerAuth,
+  input: Pick<PublicBusinessProfile, 'name' | 'description' | 'website' | 'categories'>
+) {
+  return fetchJSON<PublicBusinessProfile>(`/api/seller/businesses/${businessId}`, {
+    method: 'PATCH',
+    headers: sellerHeaders(auth),
+    body: JSON.stringify(input),
   });
 }
 

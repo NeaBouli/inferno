@@ -10,6 +10,7 @@ export const READ_ONLY_SELLER_ACTIONS = [
 
 export const MUTATING_SELLER_ACTIONS = [
   'business:create',
+  'business:update',
   'business:delete',
   'operators:create',
   'operators:delete',

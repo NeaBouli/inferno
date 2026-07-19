@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { Prisma } from '@prisma/client';
 import { prisma } from '../services/sessionService';
 import { discoveryRateLimiter } from '../middleware/rateLimiter';
+import { publicBusinessProfile } from '../services/businessProfile';
 
 const router = Router();
 
@@ -39,6 +40,8 @@ router.get('/', discoveryRateLimiter, async (req, res, next) => {
             { category: { contains: query } },
             { productName: { contains: query } },
             { business: { name: { contains: query } } },
+            { business: { description: { contains: query } } },
+            { business: { categoriesJson: { contains: query } } },
             { product: { name: { contains: query } } },
             { product: { description: { contains: query } } },
           ],
@@ -67,7 +70,15 @@ router.get('/', discoveryRateLimiter, async (req, res, next) => {
           requiredLockIFR: true,
           dailyRedemptionLimit: true,
           monthlyRedemptionLimit: true,
-          business: { select: { id: true, name: true } },
+          business: {
+            select: {
+              id: true,
+              name: true,
+              description: true,
+              website: true,
+              categoriesJson: true,
+            },
+          },
           product: { select: { id: true, name: true, description: true } },
         },
       }),
@@ -81,7 +92,10 @@ router.get('/', discoveryRateLimiter, async (req, res, next) => {
     const totalPages = total === 0 ? 0 : Math.ceil(total / limit);
 
     res.json({
-      offers,
+      offers: offers.map((offer) => ({
+        ...offer,
+        business: publicBusinessProfile(offer.business),
+      })),
       categories: categoryRows.map((row) => row.category),
       pagination: {
         page,
@@ -103,6 +117,9 @@ router.get('/:id', async (req, res, next) => {
       select: {
         id: true,
         name: true,
+        description: true,
+        website: true,
+        categoriesJson: true,
         discountPercent: true,
         requiredLockIFR: true,
         tierLabel: true,
@@ -115,7 +132,7 @@ router.get('/:id', async (req, res, next) => {
       return;
     }
 
-    res.json(business);
+    res.json(publicBusinessProfile(business));
   } catch (err) {
     next(err);
   }
@@ -168,7 +185,14 @@ router.get('/:id/products', async (req, res, next) => {
   try {
     const business = await prisma.business.findUnique({
       where: { id: req.params.id },
-      select: { id: true, name: true, active: true },
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        website: true,
+        categoriesJson: true,
+        active: true,
+      },
     });
     if (!business || !business.active) {
       res.status(404).json({ error: 'Business not found' });
@@ -206,7 +230,16 @@ router.get('/:id/products', async (req, res, next) => {
         },
       },
     });
-    res.json({ business: { id: business.id, name: business.name }, products });
+    res.json({
+      business: publicBusinessProfile({
+        id: business.id,
+        name: business.name,
+        description: business.description,
+        website: business.website,
+        categoriesJson: business.categoriesJson,
+      }),
+      products,
+    });
   } catch (err) {
     next(err);
   }

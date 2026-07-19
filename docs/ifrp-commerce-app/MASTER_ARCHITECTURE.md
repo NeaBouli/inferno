@@ -78,7 +78,7 @@ Primary jobs:
 
 1. Install/open app or `shop.ifrunit.tech`.
 2. Create seller profile.
-3. Choose categories.
+3. Add a public description and HTTPS website, then choose up to eight categories.
 4. Add products/services.
 5. Configure discount/access rules.
 6. Scan customer QR.
@@ -558,7 +558,8 @@ MVP should be installable:
 ### M3 - Seller Catalog And Categories
 
 - product/service CRUD; **implemented with owner-signed create/edit/soft-archive**
-- categories; **implemented for seller management and public customer browsing**
+- public seller profile; **implemented with owner-signed description, HTTPS website and bounded categories, plus controlled admin reload for operator-created profiles**
+- categories; **implemented for seller management, public catalogs and customer offer discovery**
 - rule templates; **basic product-bound benefit rules implemented; reusable multi-rule templates remain incremental**
 - staff scanner mode; **implemented with owner-managed, expiring checkout operators and atomic role-audited redeem**
 - redemption history. **implemented as owner-protected recent sessions, metrics and receipts**
