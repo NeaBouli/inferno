@@ -87,7 +87,7 @@ export function getIFRKnowledge() {
         "manage products, services and benefit rules",
         "delegate expiring checkout-operator wallets",
         "create a short-lived checkout QR bound to one rule",
-        "see approved or denied and redeem an approval once",
+        "see approved or rejected and redeem an approval once",
         "review protected recent sessions and masked local CSV"
       ],
       security: "Customer-initiated flow: the pass is created from shop.ifrunit.tech/#customer-pass and its QR contains only an opaque, short-lived shop.ifrunit.tech/p/:passId URL; it exposes no wallet, lock, signature, control token, rule, or internal session ID. The seller selects one exact rule, and the customer confirms the exact seller, product, discount, and IFRLock threshold in the original tab before one-time redeem. Seller-issued flow remains compatible and uses a short-lived shop.ifrunit.tech/r/:sessionId URL. Authoritative seller, rule, nonce, expiry, signature, and lock state stay server-side. Public proof-link polling is non-cacheable and never returns the recovered customer address, exact lock amount, or detailed rejection reason. The signing customer receives their own details in the direct attest response; seller operational details remain owner-wallet protected. Camera and selected QR images are decoded locally. My benefits uses a separate single-use read-only signature and a ten-minute access token held only in browser memory; it cannot move tokens and returns only the signer's history. The app never asks for a seed phrase or private key.",

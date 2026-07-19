@@ -1120,7 +1120,7 @@ const hasLock = await ifrLock.isLocked(walletAddress, ethers.utils.parseUnits("1
 
         <div class="faq-item">
           <button class="faq-q"><span>Does the merchant need crypto knowledge?</span><span class="icon">+</span></button>
-          <div class="faq-a">No blockchain knowledge is required. The seller sees a rule selector, QR code and clear approved/denied result. The owner or an authorized checkout operator uses a wallet signature for protected seller actions, but the app never asks staff to handle customer tokens, seed phrases or contract calls. See <a href="https://ifrunit.tech/wiki/business-onboarding.html">Business Onboarding</a> for the setup guide.</div>
+          <div class="faq-a">No blockchain knowledge is required. The seller sees a rule selector, QR code and clear APPROVED or REJECTED result. The owner or an authorized checkout operator uses a wallet signature for protected seller actions, but the app never asks staff to handle customer tokens, seed phrases or contract calls. If a fresh on-chain check is unavailable, checkout fails closed instead of using stale eligibility. See <a href="https://ifrunit.tech/wiki/business-onboarding.html">Business Onboarding</a> for the setup guide.</div>
         </div>
 
         <div class="faq-item">

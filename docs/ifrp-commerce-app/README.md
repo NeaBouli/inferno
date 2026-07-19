@@ -7,8 +7,8 @@ Core idea:
 - One installable app.
 - User chooses `Customer` or `Seller` mode.
 - Customer can create/connect a wallet, hold ETH/IFR, swap ETH to IFR, lock IFR, and show a QR proof.
-- Seller scans the QR proof, verifies held or locked IFR against their own benefit rules, and grants discounts or services.
-- Seller can configure categories, products, discounts, and lock/hold thresholds in-app or through `shop.ifrunit.tech`.
+- Seller scans the QR proof, verifies the exact IFRLock threshold for the selected benefit rule, and grants discounts or services only after one-time redemption.
+- Seller can configure categories, products, discounts, and IFRLock thresholds in-app or through `shop.ifrunit.tech`.
 - Verified sellers/builders can receive IFR partner rewards from the protocol pool once governance and reward automation are ready.
 
 Primary document:

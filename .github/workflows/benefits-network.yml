@@ -9,6 +9,8 @@ on:
       - 'docs/qa/BENEFITS_DEVICE_WALLET_CHECKLIST.json'
       - 'docs/runbooks/BENEFITS_DEVICE_WALLET_TEST_RUNBOOK.md'
       - 'scripts/smoke-benefits-network.js'
+      - 'scripts/test-benefits-customer-pass-ui.js'
+      - 'scripts/test-benefits-doc-consistency.cjs'
       - 'scripts/test-benefits-service-worker.js'
       - 'scripts/test-benefits-wallet-asset-provider.mjs'
       - 'scripts/test-deploy-benefits-capacity.sh'
@@ -24,6 +26,8 @@ on:
       - 'docs/qa/BENEFITS_DEVICE_WALLET_CHECKLIST.json'
       - 'docs/runbooks/BENEFITS_DEVICE_WALLET_TEST_RUNBOOK.md'
       - 'scripts/smoke-benefits-network.js'
+      - 'scripts/test-benefits-customer-pass-ui.js'
+      - 'scripts/test-benefits-doc-consistency.cjs'
       - 'scripts/test-benefits-service-worker.js'
       - 'scripts/test-benefits-wallet-asset-provider.mjs'
       - 'scripts/test-deploy-benefits-capacity.sh'
@@ -74,6 +78,7 @@ jobs:
       - run: npm audit --audit-level=low
       - run: npm run test:proof-link
       - run: npm run test:discoverability
+      - run: node ../../../scripts/test-benefits-doc-consistency.cjs
       - run: npm run typecheck
       - run: npm run build
 
@@ -89,3 +94,16 @@ jobs:
       - run: npm run test:benefits-sw
       - run: npm run test:benefits-wallet-asset
       - run: bash scripts/test-deploy-benefits-capacity.sh
+
+  test-customer-pass-ui:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - run: npm ci
+      - run: npm ci --prefix apps/benefits-network/frontend
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:benefits-pass-ui

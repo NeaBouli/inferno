@@ -47,6 +47,17 @@ The script (`apps/benefits-network/backend/scripts/e2e-test.sh`) runs automatica
 5. Submit Attest (`POST /api/attest`)
 6. Check Session Status (`GET /api/sessions/:id`)
 
+The browser contract test covers the complete recommended two-phase UI flow with isolated
+customer and seller wallet providers and deterministic no-Mainnet API fixtures:
+
+```bash
+npm run test:benefits-pass-ui
+```
+
+It asserts pass creation, seller/rule binding, exact-offer customer confirmation, seller-auth
+headers, `APPROVED`, one-time `REDEEMED`, and the disabled replay action. It complements rather
+than replaces backend route/race tests or the physical device acceptance matrix.
+
 ### Configuration
 
 | Variable | Default | Description |

@@ -861,7 +861,7 @@ npm run dev
         <li>Discount tiers configured (at least one tier active)</li>
         <li>Scanner URL bookmarked on POS device(s)</li>
         <li>Test scan performed with a known locked wallet</li>
-        <li>Cashier staff briefed on the 3-step QR flow</li>
+        <li>Cashier staff briefed on the four-step customer-pass flow</li>
         <li>Business signage or sticker placed at point of sale (optional but recommended)</li>
         <li>Support contact saved for troubleshooting</li>
       </ul>
@@ -897,14 +897,14 @@ npm run dev
       <div class="faq-item">
         <button class="faq-question">What happens if the blockchain is down or slow?</button>
         <div class="faq-answer">
-          <p>The verification system uses cached lock states with a configurable TTL. If the Ethereum network is temporarily unreachable, the last known lock status is used. In practice, Ethereum has 99.99% uptime.</p>
+          <p>The checkout fails closed when a fresh IFRLock result cannot be obtained. The seller must retry after Ethereum or the configured RPC recovers; a stale lock result never authorizes a discount.</p>
         </div>
       </div>
 
       <div class="faq-item">
         <button class="faq-question">Can customers fake their lock status?</button>
         <div class="faq-answer">
-          <p>No. The lock status is verified directly on-chain via the <code>IFRLock</code> smart contract. It is cryptographically impossible to fake an on-chain state. The QR code links to a wallet address, and the contract returns the true locked balance.</p>
+          <p>The backend verifies the current threshold directly through the <code>IFRLock</code> smart contract. The recommended QR contains only an opaque short-lived <code>/p/:passId</code> URL, not a wallet address, lock amount, signature, control token, rule or internal session ID. Separate customer and authorized-seller signatures bind the exact offer, and only an approved checkout can be redeemed once.</p>
         </div>
       </div>
 
