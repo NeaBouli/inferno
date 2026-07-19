@@ -11,11 +11,11 @@ const customerSteps = [
   },
   {
     title: 'Lock IFR in the shop app when needed',
-    body: 'If a seller rule requires more locked IFR than the wallet has, use the in-app Lock IFR panel, then return to the seller QR with the same wallet.',
+    body: 'If a seller rule requires more locked IFR than the wallet has, use the in-app Lock IFR panel, then return with the same wallet.',
   },
   {
-    title: 'Scan, sign, receive the benefit',
-    body: 'Scan the seller QR, review seller, product, discount and required IFR, then sign. The seller screen shows APPROVED or the reason for rejection.',
+    title: 'Present your QR and confirm',
+    body: 'Create a short-lived customer QR. After the seller scans it and chooses a rule, review seller, product, discount and required IFR on your device, then approve the exact checkout. You can still scan a compatible seller QR instead.',
   },
   {
     title: 'Review My benefits anywhere',
@@ -34,7 +34,7 @@ const sellerSteps = [
   },
   {
     title: 'Put the scanner at checkout',
-    body: 'Open /b/:businessId on the counter device. Use the Checkout kit or copied link for staff. Each checkout creates a fresh QR session.',
+    body: 'Open /b/:businessId on the counter device. Scan or paste the customer pass, select the intended active rule and sign its one-time binding. Compatible seller-issued QR sessions remain available.',
   },
   {
     title: 'Review recent customer checks',
@@ -51,6 +51,7 @@ const developerItems = [
   ['Rules', 'Read with timestamp-signed GET. Every POST/PATCH/DELETE uses a fresh nonce bound to the business or exact rule.'],
   ['Session history', 'GET /api/seller/businesses/:id/sessions?limit=50&cursor=...&snapshot=... with Action: sessions:list. Preserve the first response snapshot across pages.'],
   ['QR session', 'Request a one-time Action: sessions:create message bound to owner/operator, business and rule; sign it, then POST /api/sessions with x-ifr-nonce.'],
+  ['Customer pass', 'POST /api/passes/challenge, sign and create an opaque pass; seller signs passes:bind scoped to pass and rule; customer confirms through the private control-token endpoints.'],
   ['Customer proof', 'GET /api/sessions/:id/challenge, then POST /api/attest with the customer signature.'],
   ['Customer history', 'POST /api/customer/history/challenge, sign once, exchange at /authorize, then use the memory-only read token for signer-bound snapshot pages.'],
   ['Redeem', 'Request a one-time sessions:redeem challenge bound to the session ID, sign it, then POST /api/sessions/:id/redeem with x-ifr-nonce.'],
@@ -91,15 +92,15 @@ export default function GuidePage() {
               Customer proof and seller checkout, without ceremony.
             </h1>
             <p className="mt-6 max-w-3xl text-lg leading-8 text-stone-300">
-              This is the operating guide for the current shop app: customer QR proof, wallet-owned seller profiles, rule-based discounts and seller-signed redemption.
+              This is the operating guide for the current shop app: customer-presented checkout passes, compatible seller QR proofs, wallet-owned seller profiles, rule-based discounts and seller-signed redemption.
             </p>
           </div>
           <div className="mt-8 flex flex-wrap gap-3">
             <a
-              href="/scan"
+              href="/#customer-pass"
               className="rounded-full bg-orange-300 px-5 py-3 text-sm font-black uppercase tracking-[0.16em] text-stone-950 shadow-xl shadow-orange-950/40 transition hover:-translate-y-0.5 hover:bg-orange-200"
             >
-              Scan seller QR
+              Create customer QR
             </a>
             <a
               href="/"
@@ -152,7 +153,7 @@ export default function GuidePage() {
               </div>
               <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
                 <strong className="text-white">Customer signatures</strong>
-                <p className="mt-1">One-time QR proof or read-only My benefits authorization; neither moves tokens.</p>
+                <p className="mt-1">Pass creation, exact-offer confirmation, compatible seller-QR proof or read-only My benefits authorization; none moves tokens.</p>
               </div>
               <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
                 <strong className="text-white">Seller signatures</strong>

@@ -114,6 +114,8 @@ model Session {
   updatedAt        DateTime   @updatedAt
   redeemedAt       DateTime?
   attestAttempts   Int        @default(0)
+  customerPassId   String?    @unique
+  customerPass     CustomerPass? @relation(fields: [customerPassId], references: [id])
   auditLogs        AuditLog[]
   rewardEvent      RewardEvent?
 
@@ -122,6 +124,34 @@ model Session {
   @@index([benefitRuleId, status, redeemedAt], map: "Session_redemptionLimitLookup_idx")
   @@index([recoveredAddress, createdAt, id], map: "Session_customerHistory_idx")
   @@index([status])
+}
+
+model CustomerPass {
+  id            String   @id
+  walletAddress String
+  controlHash   String   @unique
+  status        String   @default("OPEN")
+  expiresAt     DateTime
+  boundAt       DateTime?
+  cancelledAt   DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  session       Session?
+
+  @@index([status, expiresAt])
+  @@index([walletAddress, createdAt])
+}
+
+model CustomerPassChallenge {
+  nonce         String   @id
+  walletAddress String
+  issuedAt      DateTime
+  expiresAt     DateTime
+  consumedAt    DateTime?
+  createdAt     DateTime @default(now())
+
+  @@index([expiresAt])
+  @@index([walletAddress, consumedAt])
 }
 
 model SellerRewardLink {

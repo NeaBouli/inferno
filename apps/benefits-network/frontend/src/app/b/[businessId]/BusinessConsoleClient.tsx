@@ -6,6 +6,7 @@ import QRCode from 'react-qr-code';
 import { AppShell } from '@/components/AppShell';
 import { Countdown } from '@/components/Countdown';
 import { StatusBadge } from '@/components/StatusBadge';
+import { SellerCustomerPassScanner } from '@/components/SellerCustomerPassScanner';
 import {
   BenefitRule,
   BusinessInfo,
@@ -13,6 +14,7 @@ import {
   SessionCreated,
   SessionStatus,
   createSession,
+  bindCustomerPass,
   getBusiness,
   getBusinessRules,
   getCheckoutOperatorStatus,
@@ -36,6 +38,8 @@ export function BusinessConsoleClient({ businessId }: { businessId: string }) {
   const [linkStatus, setLinkStatus] = useState('');
   const [receiptStatus, setReceiptStatus] = useState('');
   const [restoreInput, setRestoreInput] = useState('');
+  const [customerPassInput, setCustomerPassInput] = useState('');
+  const [customerPresented, setCustomerPresented] = useState(false);
   const [checkoutAccess, setCheckoutAccess] = useState<CheckoutAccess | null>(null);
   const [accessStatus, setAccessStatus] = useState('');
   const [loading, setLoading] = useState(false);
@@ -43,6 +47,8 @@ export function BusinessConsoleClient({ businessId }: { businessId: string }) {
 
   useEffect(() => {
     setOrigin(window.location.origin);
+    const incomingPass = new URLSearchParams(window.location.search).get('pass');
+    if (incomingPass) setCustomerPassInput(incomingPass);
     Promise.all([getBusiness(businessId), getBusinessRules(businessId)])
       .then(([nextBusiness, rulesResult]) => {
         setBusiness(nextBusiness);
@@ -83,9 +89,9 @@ export function BusinessConsoleClient({ businessId }: { businessId: string }) {
   }, [session]);
 
   const customerUrl = useMemo(() => {
-    if (!session || !origin) return '';
+    if (!session || !origin || customerPresented) return '';
     return `${origin}${session.qrUrl}`;
-  }, [origin, session]);
+  }, [customerPresented, origin, session]);
 
   const selectedRule = useMemo(
     () => rules.find((rule) => rule.id === selectedRuleId) ?? null,
@@ -244,6 +250,7 @@ export function BusinessConsoleClient({ businessId }: { businessId: string }) {
         nonce: challenge.nonce,
       });
       setSession(nextSession);
+      setCustomerPresented(false);
       setStatus(null);
       if (nextSession.createdBy) setCheckoutAccess(nextSession.createdBy);
       rememberSession(nextSession.sessionId);
@@ -293,6 +300,61 @@ export function BusinessConsoleClient({ businessId }: { businessId: string }) {
         setAccessStatus('Checkout access changed. Ask the owner or check access again.');
       }
       setError(message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function parseCustomerPassId(value: string) {
+    const raw = value.trim();
+    try {
+      const url = new URL(raw);
+      return url.pathname.match(/\/p\/([A-Za-z0-9_-]{32})(?:\/|$)/)?.[1] || '';
+    } catch {
+      return raw.replace(/^\/?p\//, '').split(/[/?#\s]/)[0];
+    }
+  }
+
+  async function bindPresentedPass() {
+    const passId = parseCustomerPassId(customerPassInput);
+    if (!/^[A-Za-z0-9_-]{32}$/.test(passId)) {
+      setError('Scan or paste a valid IFR customer checkout pass first.');
+      return;
+    }
+    if (!address || !isConnected) {
+      setError('Connect the business owner or checkout operator wallet first.');
+      return;
+    }
+    if (!selectedRuleId) {
+      setError('Select an active benefit rule before binding the customer pass.');
+      return;
+    }
+    setLoading(true);
+    setError('');
+    try {
+      const scope = `${passId}:${selectedRuleId}`;
+      const challenge = await getSellerAuthMessage('passes:bind', businessId, {
+        walletAddress: address,
+        scope,
+      });
+      if (!challenge.nonce) throw new Error('Seller authorization challenge is incomplete');
+      const signature = await signMessageAsync({ message: challenge.message });
+      const bound = await bindCustomerPass(passId, businessId, selectedRuleId, {
+        walletAddress: address,
+        signature,
+        timestamp: challenge.timestamp,
+        nonce: challenge.nonce,
+      });
+      const nextStatus = await getSessionStatus(bound.sessionId);
+      setSession(sessionFromStatus(bound.sessionId, nextStatus));
+      setStatus(nextStatus);
+      setCustomerPresented(true);
+      setCustomerPassInput('');
+      if (bound.createdBy) setCheckoutAccess(bound.createdBy);
+      rememberSession(bound.sessionId);
+      setLinkStatus('Customer pass bound. Waiting for the customer to approve this exact offer.');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not bind customer checkout pass.');
     } finally {
       setLoading(false);
     }
@@ -431,6 +493,7 @@ export function BusinessConsoleClient({ businessId }: { businessId: string }) {
         return;
       }
       setSession(sessionFromStatus(sessionId, nextStatus));
+      setCustomerPresented(nextStatus.presentation === 'CUSTOMER_PASS');
       setStatus(nextStatus);
       rememberSession(sessionId);
       setLinkStatus(`${successMessage}: ${nextStatus.status}`);
@@ -466,8 +529,8 @@ export function BusinessConsoleClient({ businessId }: { businessId: string }) {
           </p>
           <h1 className="mt-2 text-4xl font-black text-white">{business?.name || 'Business console'}</h1>
           <p className="mt-4 text-sm leading-6 text-stone-300">
-            Start a short-lived verification session. The customer signs the QR challenge;
-            the backend checks IFRLock on-chain and this screen updates automatically.
+            Scan a customer-presented pass or create a legacy seller QR. The customer approves the exact
+            seller rule, the backend checks IFRLock on-chain and this screen updates automatically.
           </p>
           <a
             href={`/s/${encodeURIComponent(businessId)}`}
@@ -521,6 +584,37 @@ export function BusinessConsoleClient({ businessId }: { businessId: string }) {
                 {status.reason}
               </div>
             ) : null}
+
+            <div className="mt-4 rounded-2xl border border-green-300/20 bg-green-300/[0.07] p-4">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <p className="text-xs font-black uppercase tracking-[0.14em] text-green-100/80">Customer-presented QR</p>
+                  <p className="mt-1 text-xs leading-5 text-stone-300">
+                    Scan the customer&apos;s pass with the phone camera, or paste its link here. The customer must approve the selected rule after you bind it.
+                  </p>
+                </div>
+                <span className="rounded-full border border-green-200/25 px-3 py-2 text-[10px] font-black uppercase text-green-50">Recommended</span>
+              </div>
+              <div className="mt-3 grid gap-2 sm:grid-cols-[1fr_auto]">
+                <input
+                  value={customerPassInput}
+                  onChange={(event) => setCustomerPassInput(event.target.value)}
+                  placeholder="Paste https://shop.ifrunit.tech/p/... or pass ID"
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  className="min-w-0 rounded-xl border border-white/10 bg-black/30 px-3 py-3 text-xs text-white outline-none focus:border-green-300"
+                />
+                <button
+                  type="button"
+                  onClick={bindPresentedPass}
+                  disabled={!sellerWalletReady || !selectedRuleId || loading}
+                  className="rounded-xl bg-green-300 px-4 py-3 text-xs font-black uppercase tracking-[0.12em] text-stone-950 transition hover:bg-green-200 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  Bind selected rule
+                </button>
+              </div>
+              <SellerCustomerPassScanner onPass={setCustomerPassInput} />
+            </div>
 
             <div className="mt-4 grid gap-2 sm:grid-cols-3">
               <button
@@ -764,17 +858,17 @@ export function BusinessConsoleClient({ businessId }: { businessId: string }) {
         </div>
 
         <div className="rounded-[2rem] border border-white/10 bg-stone-100 p-6 text-stone-950 shadow-2xl shadow-black/30">
-          {session && customerUrl ? (
+          {session && (customerUrl || customerPresented) ? (
             <div className="grid gap-5">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
-                  <p className="text-xs font-bold uppercase tracking-[0.18em] text-stone-500">Customer QR</p>
-                  <h2 className="mt-1 text-2xl font-black">Scan to verify</h2>
+                  <p className="text-xs font-bold uppercase tracking-[0.18em] text-stone-500">Customer confirmation</p>
+                  <h2 className="mt-1 text-2xl font-black">{customerPresented ? 'Waiting on customer device' : 'Scan to verify'}</h2>
                 </div>
                 {status ? <StatusBadge status={status.status} /> : <StatusBadge status="PENDING" />}
               </div>
 
-              <div className="grid gap-2 rounded-2xl border border-orange-200/40 bg-orange-50 p-4 text-sm">
+              {customerUrl ? <div className="grid gap-2 rounded-2xl border border-orange-200/40 bg-orange-50 p-4 text-sm">
                 <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#9f351b]">Customer link</p>
                 <p className="break-all font-mono text-xs text-stone-600">{customerUrl}</p>
                 <div className="grid gap-2 sm:grid-cols-3">
@@ -802,7 +896,12 @@ export function BusinessConsoleClient({ businessId }: { businessId: string }) {
                   </a>
                 </div>
                 {linkStatus ? <p className="text-xs font-semibold text-stone-600">{linkStatus}</p> : null}
-              </div>
+              </div> : (
+                <div className="rounded-2xl border border-green-300/30 bg-green-50 p-4 text-sm leading-6 text-green-950">
+                  The customer QR is already bound to this selected rule. No customer session link is exposed here.
+                  Ask the customer to review and confirm the offer on the device that created the pass.
+                </div>
+              )}
 
               {status?.status === 'APPROVED' ? (
                 <div className="rounded-3xl border border-green-300/40 bg-green-50 p-6 text-center">
@@ -826,6 +925,14 @@ export function BusinessConsoleClient({ businessId }: { businessId: string }) {
                     {status.reason || 'Create a new session for the next customer.'}
                   </p>
                 </div>
+              ) : customerPresented ? (
+                <div className="grid min-h-[15rem] place-items-center rounded-3xl border border-green-200 bg-green-50 p-6 text-center">
+                  <div>
+                    <p className="text-4xl text-green-800">✓</p>
+                    <h3 className="mt-3 text-2xl font-black text-green-900">Rule bound securely</h3>
+                    <p className="mt-2 max-w-sm text-sm leading-6 text-green-900">Waiting for the original customer wallet to approve this seller and offer.</p>
+                  </div>
+                </div>
               ) : (
                 <div className="grid place-items-center rounded-3xl bg-white p-6">
                   <QRCode value={customerUrl} size={240} />
@@ -847,7 +954,7 @@ export function BusinessConsoleClient({ businessId }: { businessId: string }) {
                     <strong className="text-right">{session.label} / {session.productName}</strong>
                   </div>
                 ) : null}
-                <div className="break-all text-xs text-stone-500">{customerUrl}</div>
+                {customerUrl ? <div className="break-all text-xs text-stone-500">{customerUrl}</div> : null}
               </div>
 
               <div className="grid gap-3 sm:grid-cols-2">

@@ -23,6 +23,7 @@ export const MUTATING_SELLER_ACTIONS = [
   'rules:delete',
   'sessions:create',
   'sessions:redeem',
+  'passes:bind',
 ] as const;
 
 const knownActions = new Set<string>([

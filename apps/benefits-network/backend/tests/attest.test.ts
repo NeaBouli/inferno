@@ -156,6 +156,28 @@ describe('Replay Prevention', () => {
       'Session is APPROVED, cannot attest'
     );
   });
+
+  it('atomically binds concurrent attest attempts to only one customer wallet', async () => {
+    const session = await createSession(testBusinessId);
+    const otherWallet = ethers.Wallet.createRandom().address;
+    mockRecoverSigner
+      .mockReturnValueOnce(TEST_WALLET)
+      .mockReturnValueOnce(otherWallet);
+    mockCheckLock.mockImplementation(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 20));
+      return { eligible: true, lockedAmount: '10000.0' };
+    });
+
+    const outcomes = await Promise.allSettled([
+      attest(session.sessionId, '0xfirst'),
+      attest(session.sessionId, '0xsecond'),
+    ]);
+    expect(outcomes.filter((outcome) => outcome.status === 'fulfilled')).toHaveLength(1);
+    expect(outcomes.filter((outcome) => outcome.status === 'rejected')).toHaveLength(1);
+    const stored = await prisma.session.findUniqueOrThrow({ where: { id: session.sessionId } });
+    expect(stored.status).toBe('APPROVED');
+    expect([TEST_WALLET, otherWallet]).toContain(stored.recoveredAddress);
+  });
 });
 
 // ── Test 4: Redeem-Once ────────────────────────────────────────────

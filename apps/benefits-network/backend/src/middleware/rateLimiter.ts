@@ -41,6 +41,14 @@ export const customerHistoryRateLimiter = rateLimit({
   legacyHeaders: false,
 });
 
+export const customerPassRateLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 120,
+  message: { error: 'Too many checkout pass requests. Try again later.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
 export const discoveryRateLimiter = rateLimit({
   windowMs: 60 * 1000,
   max: 60,

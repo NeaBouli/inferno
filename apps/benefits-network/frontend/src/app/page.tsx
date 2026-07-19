@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { AppShell } from '@/components/AppShell';
 import { CustomerProofHistory } from '@/components/CustomerProofHistory';
+import { CustomerCheckoutPass } from '@/components/CustomerCheckoutPass';
 import { OfferDiscovery } from '@/components/OfferDiscovery';
 import { SellerRuleBuilder } from '@/components/SellerRuleBuilder';
 import { SwapRiskNotice } from '@/components/SwapRiskNotice';
@@ -28,12 +29,12 @@ const flowSteps = [
     body: 'A shop defines product, category, discount, required locked IFR and QR session lifetime.',
   },
   {
-    title: 'QR proof at checkout',
-    body: 'The customer scans, signs a one-time message, and the backend checks the selected rule on-chain.',
+    title: 'Present or scan a QR',
+    body: 'The customer can present a short-lived pass, or use the compatible seller-QR flow. Neither QR is reusable proof.',
   },
   {
-    title: 'Redeem once',
-    body: 'The seller sees APPROVED, grants the benefit, and redeems the session so it cannot be reused.',
+    title: 'Confirm and redeem once',
+    body: 'The customer approves the exact seller rule, then the seller redeems the approved checkout once.',
   },
 ];
 
@@ -514,7 +515,7 @@ export default function Home() {
             Locked IFR. Benefits at checkout.
           </h1>
           <p className="mt-4 max-w-2xl text-base leading-7 text-stone-300 sm:mt-6 sm:text-lg sm:leading-8">
-            Customers prove access without sending tokens. Sellers publish offers, create a one-time QR checkout and redeem an approved benefit once.
+            Customers prove access without sending tokens. Present a short-lived customer QR, approve the exact seller offer, and let the seller redeem it once.
           </p>
 
           <div id="choose-mode" className="mt-6 grid scroll-mt-36 grid-cols-2 gap-3 sm:mt-8" aria-label="Choose app mode">
@@ -531,7 +532,7 @@ export default function Home() {
               <span className="text-xs font-bold uppercase tracking-[0.18em] text-orange-200">Customer</span>
               <span className="mt-2 block text-base font-black text-white sm:mt-3 sm:text-xl">Unlock benefits</span>
               <span className="mt-2 hidden text-sm leading-6 text-stone-300 sm:block">
-                Connect wallet, read IFR status, lock access in-app, and verify seller QR sessions.
+                Connect wallet, read IFR status, create your checkout QR, or verify a compatible seller QR.
               </span>
             </button>
             <button
@@ -554,16 +555,16 @@ export default function Home() {
 
           <div className="mt-6 flex flex-wrap gap-3 sm:mt-8">
             <a
-              href={role === 'customer' ? '/scan' : '#seller-workspace'}
+              href={role === 'customer' ? '#customer-pass' : '#seller-workspace'}
               className="rounded-full bg-orange-300 px-5 py-3 text-sm font-black uppercase tracking-[0.16em] text-stone-950 shadow-xl shadow-orange-950/40 transition hover:-translate-y-0.5 hover:bg-orange-200"
             >
-              {role === 'customer' ? 'Scan seller QR' : 'Open seller tools'}
+              {role === 'customer' ? 'Create checkout QR' : 'Open seller tools'}
             </a>
             <a
-              href={role === 'customer' ? '#customer-wallet' : '/guide'}
+              href={role === 'customer' ? '/scan' : '/guide'}
               className="rounded-full border border-white/15 px-5 py-3 text-sm font-black uppercase tracking-[0.16em] text-stone-100 transition hover:border-orange-200/60"
             >
-              {role === 'customer' ? 'Open wallet' : 'Seller guide'}
+              {role === 'customer' ? 'Scan seller QR' : 'Seller guide'}
             </a>
             <a
               href="/guide"
@@ -581,6 +582,7 @@ export default function Home() {
           {role === 'customer' ? (
             <>
               <WalletStatus />
+              <CustomerCheckoutPass />
               <div id="install-app" className="scroll-mt-36">
                 <PwaInstallCard />
               </div>
@@ -635,7 +637,7 @@ export default function Home() {
           <p className="text-xs font-black uppercase tracking-[0.18em] text-orange-200/80">For customers and sellers</p>
           <h2 className="mt-3 text-3xl font-black text-white">A lock check, not a token payment.</h2>
           <p className="mt-4 text-sm leading-7 text-stone-300">
-            The customer keeps custody of IFR. A short-lived signed proof checks the selected seller rule against IFRLock; the seller grants the benefit and redeems that checkout once.
+            The customer keeps custody of IFR. A short-lived two-phase pass binds one seller rule, requires explicit customer approval, checks IFRLock and can be redeemed only once. The compatible seller-QR flow remains available.
           </p>
           <div className="mt-5 grid gap-3 text-sm text-stone-300 sm:grid-cols-2">
             <div className="rounded-2xl border border-white/10 bg-black/20 p-4">

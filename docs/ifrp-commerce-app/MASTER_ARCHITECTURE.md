@@ -154,13 +154,30 @@ Do not expose CommitmentVault price-condition locks until a V2/PriceLockVault ex
 
 ### 4.4 Customer QR Proof
 
-The QR must not be just a static wallet address. The implemented payload is the canonical,
-short-lived customer URL `https://shop.ifrunit.tech/r/:sessionId`; authoritative seller, rule,
-nonce, expiry and customer-signature state remain server-side. The in-app `/scan` route decodes
-camera frames or a selected image locally and accepts only that exact HTTPS route. It also offers
-a manual proof-link/session-ID fallback. Foreign origins and URL additions fail closed.
+The QR must not be a static wallet address or reusable eligibility credential. The recommended
+flow uses an opaque, five-minute `https://shop.ifrunit.tech/p/:passId` customer pass. The QR contains
+no wallet, signature, rule, lock balance, control token or internal session ID. A separate random
+control token stays on the customer's originating browser tab, and only its SHA-256 hash is stored.
 
-Verification:
+Two-phase verification:
+
+1. Customer signs a one-time pass-creation challenge.
+2. Seller scans the pass, selects an active rule and signs a one-time `passes:bind` challenge scoped
+   to the exact pass and rule.
+3. Backend atomically rechecks owner/operator access, claims the pass once and freezes the rule in a
+   linked `Session`.
+4. Customer reviews seller, product, discount and required IFRLock on the originating device and
+   signs the exact linked session challenge.
+5. Backend requires the signer to equal the pass-creation wallet, atomically binds the pending
+   session to that wallet and checks IFRLock on-chain.
+6. Seller redeems once.
+
+The previous seller-issued `https://shop.ifrunit.tech/r/:sessionId` flow remains implemented as a
+compatible fallback. The in-app `/scan` route decodes it locally and fails closed on foreign or
+modified URLs. Public challenge/attest endpoints reject sessions created from a customer pass, so a
+leaked linked session ID cannot bypass the customer's private confirmation path.
+
+Compatible seller-QR verification:
 
 1. Seller owner or active checkout operator signs a server-issued one-time `sessions:create` challenge bound to wallet, business and selected rule; the backend atomically consumes it while rechecking current access and creating the scan session.
 2. Customer signs the session challenge.
