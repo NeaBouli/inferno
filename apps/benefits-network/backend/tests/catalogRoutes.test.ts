@@ -148,6 +148,7 @@ describe('Seller catalog routes', () => {
     const auth = await sellerHeaders(owner, 'business:create', 'new', 'new');
     const body = {
       name: 'Nonce protected seller',
+      serviceArea: '  Athens   /   Attica  ',
       discountPercent: 8,
       requiredLockIFR: 800,
       ownerAddress: owner.address,
@@ -164,6 +165,10 @@ describe('Seller catalog routes', () => {
     expect((await create()).status).toBe(201);
     expect((await create()).status).toBe(401);
     expect(await prisma.business.count({ where: { ownerAddress: owner.address } })).toBe(2);
+    expect(await prisma.business.findFirstOrThrow({ where: { name: body.name } })).toMatchObject({
+      serviceArea: 'Athens / Attica',
+      serviceAreaKey: 'athens / attica',
+    });
 
     const wrongScope = await sellerHeaders(owner, 'business:create', 'new', 'not-new');
     const wrongScopeResponse = await fetch(`${baseUrl()}/api/seller/businesses`, {
@@ -214,6 +219,7 @@ describe('Seller catalog routes', () => {
       name: 'Catalog Seller Athens',
       description: 'Independent coffee and member workshops in central Athens.',
       website: 'https://seller.example.com/members',
+      serviceArea: 'Athens / Attica',
       categories: ['Food & drink', 'Events'],
     };
 
@@ -233,6 +239,8 @@ describe('Seller catalog routes', () => {
     for (const invalidProfile of [
       { website: 'http://seller.example.com' },
       { website: 'https://user:secret@seller.example.com' },
+      { serviceArea: '' },
+      { serviceArea: 'x'.repeat(81) },
       { categories: ['Coffee', 'coffee'] },
       { categories: Array.from({ length: 9 }, (_, index) => `Category ${index}`) },
       { unknownPublicField: 'must not be accepted' },
@@ -257,6 +265,7 @@ describe('Seller catalog routes', () => {
       name: validProfile.name,
       description: validProfile.description,
       website: 'https://seller.example.com/members',
+      serviceArea: validProfile.serviceArea,
       categories: validProfile.categories,
     });
     expect((await fetch(url, {
@@ -269,6 +278,8 @@ describe('Seller catalog routes', () => {
       name: validProfile.name,
       description: validProfile.description,
       website: validProfile.website,
+      serviceArea: validProfile.serviceArea,
+      serviceAreaKey: 'athens / attica',
       categoriesJson: JSON.stringify(validProfile.categories),
     });
 
@@ -280,9 +291,10 @@ describe('Seller catalog routes', () => {
       name: validProfile.name,
       description: validProfile.description,
       website: validProfile.website,
+      serviceArea: validProfile.serviceArea,
       categories: validProfile.categories,
     });
-    expect(JSON.stringify(publicProfile)).not.toMatch(/ownerAddress|categoriesJson|adminSecret/);
+    expect(JSON.stringify(publicProfile)).not.toMatch(/ownerAddress|categoriesJson|serviceAreaKey|adminSecret/);
 
     const publicProductsResponse = await fetch(`${baseUrl()}/api/businesses/${businessId}/products`);
     expect(publicProductsResponse.status).toBe(200);
@@ -295,9 +307,10 @@ describe('Seller catalog routes', () => {
       name: validProfile.name,
       description: validProfile.description,
       website: validProfile.website,
+      serviceArea: validProfile.serviceArea,
       categories: validProfile.categories,
     });
-    expect(JSON.stringify(publicProducts)).not.toMatch(/ownerAddress|categoriesJson|adminSecret/);
+    expect(JSON.stringify(publicProducts)).not.toMatch(/ownerAddress|categoriesJson|serviceAreaKey|adminSecret/);
   });
 
   it('keeps the operator admin fallback aligned with public profile validation', async () => {
@@ -319,6 +332,7 @@ describe('Seller catalog routes', () => {
         name: 'Operator managed seller',
         description: 'Managed through the controlled operator fallback.',
         website: 'https://operator.example.com/ifr',
+        serviceArea: '  Online   and   Athens  ',
         categories: ['Retail', 'Events'],
       }),
     });
@@ -328,9 +342,12 @@ describe('Seller catalog routes', () => {
       name: 'Operator managed seller',
       description: 'Managed through the controlled operator fallback.',
       website: 'https://operator.example.com/ifr',
+      serviceArea: 'Online and Athens',
       categories: ['Retail', 'Events'],
     });
     expect(await prisma.business.findUniqueOrThrow({ where: { id: businessId } })).toMatchObject({
+      serviceArea: 'Online and Athens',
+      serviceAreaKey: 'online and athens',
       categoriesJson: JSON.stringify(['Retail', 'Events']),
     });
 
@@ -342,6 +359,7 @@ describe('Seller catalog routes', () => {
       name: 'Operator managed seller',
       description: 'Managed through the controlled operator fallback.',
       website: 'https://operator.example.com/ifr',
+      serviceArea: 'Online and Athens',
       categories: ['Retail', 'Events'],
       ownerAddress: owner.address,
       verifyUrl: `/b/${businessId}`,
@@ -349,7 +367,7 @@ describe('Seller catalog routes', () => {
       rulesCount: 0,
       productsCount: 0,
     });
-    expect(JSON.stringify(reloaded)).not.toMatch(/categoriesJson|adminSecret/);
+    expect(JSON.stringify(reloaded)).not.toMatch(/categoriesJson|serviceAreaKey|adminSecret/);
   });
 
   it('sanitizes malformed legacy profile values before returning public data', async () => {
@@ -357,6 +375,8 @@ describe('Seller catalog routes', () => {
       where: { id: businessId },
       data: {
         website: 'javascript:alert(1)',
+        serviceArea: 'x'.repeat(81),
+        serviceAreaKey: 'must-not-leak',
         categoriesJson: JSON.stringify([
           ' Retail ',
           'retail',
@@ -373,6 +393,7 @@ describe('Seller catalog routes', () => {
     expect(await profileResponse.json()).toMatchObject({
       id: businessId,
       website: null,
+      serviceArea: null,
       categories: ['Retail', 'Events'],
     });
 
@@ -382,9 +403,10 @@ describe('Seller catalog routes', () => {
     expect(products.business).toMatchObject({
       id: businessId,
       website: null,
+      serviceArea: null,
       categories: ['Retail', 'Events'],
     });
-    expect(JSON.stringify(products)).not.toMatch(/javascript:|categoriesJson|ownerAddress|adminSecret/);
+    expect(JSON.stringify(products)).not.toMatch(/javascript:|categoriesJson|serviceAreaKey|ownerAddress|adminSecret/);
   });
 
   it('keeps catalog management owner-only', async () => {
@@ -474,6 +496,8 @@ describe('Seller catalog routes', () => {
       data: {
         description: 'Neighborhood roaster and quiet member workspace.',
         website: 'https://catalog.example.com',
+        serviceArea: 'Athens / Attica',
+        serviceAreaKey: 'athens / attica',
         categoriesJson: JSON.stringify(['Hospitality', 'Coworking']),
       },
     });
@@ -539,7 +563,10 @@ describe('Seller catalog routes', () => {
           requiredLockIFR: 1,
         },
       }),
-      prisma.business.update({ where: { id: otherBusinessId }, data: { active: false } }),
+      prisma.business.update({
+        where: { id: otherBusinessId },
+        data: { active: false, serviceArea: 'Online', serviceAreaKey: 'online' },
+      }),
     ]);
 
     const response = await fetch(`${baseUrl()}/api/businesses?limit=1&page=1`);
@@ -547,17 +574,19 @@ describe('Seller catalog routes', () => {
     const firstPage = await response.json() as {
       offers: Array<Record<string, unknown>>;
       categories: string[];
+      serviceAreas: string[];
       pagination: { page: number; limit: number; total: number; totalPages: number; hasNext: boolean };
     };
     expect(firstPage.offers).toHaveLength(1);
     expect(firstPage.categories).toEqual(['Coffee', 'Services']);
+    expect(firstPage.serviceAreas).toEqual(['Athens / Attica']);
     expect(firstPage.pagination).toEqual({ page: 1, limit: 1, total: 2, totalPages: 2, hasNext: true });
     expect(Object.keys(firstPage.offers[0]).sort()).toEqual([
       'business', 'category', 'dailyRedemptionLimit', 'discountPercent', 'id', 'label',
       'monthlyRedemptionLimit', 'product', 'productName', 'requiredLockIFR',
     ]);
     expect(Object.keys(firstPage.offers[0].business as Record<string, unknown>).sort()).toEqual([
-      'categories', 'description', 'id', 'name', 'website',
+      'categories', 'description', 'id', 'name', 'serviceArea', 'website',
     ]);
     const firstProduct = firstPage.offers[0].product;
     if (firstProduct !== null) {
@@ -565,7 +594,7 @@ describe('Seller catalog routes', () => {
     }
     for (const offer of firstPage.offers) {
       expect(JSON.stringify(offer)).not.toMatch(
-        /ownerAddress|checkoutOperators|sellerAuthorizationChallenges|sessions|auditLogs|rewardEvents/
+        /ownerAddress|serviceAreaKey|checkoutOperators|sellerAuthorizationChallenges|sessions|auditLogs|rewardEvents/
       );
     }
 
@@ -590,9 +619,21 @@ describe('Seller catalog routes', () => {
     const categoryBody = await category.json() as { offers: Array<{ id: string }> };
     expect(categoryBody.offers.map((offer) => offer.id)).toEqual([serviceRule.id]);
 
+    const serviceArea = await fetch(`${baseUrl()}/api/businesses?serviceArea=ATHENS%20%2F%20ATTICA`);
+    const serviceAreaBody = await serviceArea.json() as { offers: Array<{ id: string }> };
+    expect(serviceAreaBody.offers.map((offer) => offer.id)).toEqual(expect.arrayContaining([
+      coffeeRule.id,
+      serviceRule.id,
+    ]));
+    const inactiveAreaResponse = await fetch(`${baseUrl()}/api/businesses?serviceArea=Online`);
+    expect(inactiveAreaResponse.status).toBe(200);
+    expect((await inactiveAreaResponse.json() as { offers: unknown[] }).offers).toHaveLength(0);
+
     expect((await fetch(`${baseUrl()}/api/businesses?page=0`)).status).toBe(400);
     expect((await fetch(`${baseUrl()}/api/businesses?limit=25`)).status).toBe(400);
     expect((await fetch(`${baseUrl()}/api/businesses?query=${'x'.repeat(81)}`)).status).toBe(400);
+    expect((await fetch(`${baseUrl()}/api/businesses?serviceArea=${'x'.repeat(81)}`)).status).toBe(400);
+    expect((await fetch(`${baseUrl()}/api/businesses?serviceArea=one&serviceArea=two`)).status).toBe(400);
     expect((await fetch(`${baseUrl()}/api/businesses?query=one&query=two`)).status).toBe(400);
   });
 

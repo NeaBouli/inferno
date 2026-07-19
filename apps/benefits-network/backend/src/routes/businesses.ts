@@ -2,7 +2,12 @@ import { Router } from 'express';
 import { Prisma } from '@prisma/client';
 import { prisma } from '../services/sessionService';
 import { discoveryRateLimiter } from '../middleware/rateLimiter';
-import { publicBusinessProfile } from '../services/businessProfile';
+import {
+  businessServiceAreaKey,
+  MAX_BUSINESS_SERVICE_AREA_LENGTH,
+  normalizeBusinessServiceArea,
+  publicBusinessProfile,
+} from '../services/businessProfile';
 
 const router = Router();
 
@@ -19,18 +24,28 @@ router.get('/', discoveryRateLimiter, async (req, res, next) => {
     const limit = parsePositiveInteger(req.query.limit, 12, 24);
     const query = typeof req.query.query === 'string' ? req.query.query.trim() : '';
     const category = typeof req.query.category === 'string' ? req.query.category.trim() : '';
+    const serviceAreaInput = typeof req.query.serviceArea === 'string' ? req.query.serviceArea : '';
+    const serviceArea = normalizeBusinessServiceArea(serviceAreaInput);
+    const serviceAreaKey = businessServiceAreaKey(serviceAreaInput);
     const invalidTextFilter =
       (req.query.query !== undefined && typeof req.query.query !== 'string') ||
-      (req.query.category !== undefined && typeof req.query.category !== 'string');
+      (req.query.category !== undefined && typeof req.query.category !== 'string') ||
+      (req.query.serviceArea !== undefined && typeof req.query.serviceArea !== 'string');
 
-    if (!page || !limit || invalidTextFilter || query.length > 80 || category.length > 80) {
+    if (
+      !page || !limit || invalidTextFilter || query.length > 80 || category.length > 80 ||
+      serviceAreaInput.length > MAX_BUSINESS_SERVICE_AREA_LENGTH || (serviceAreaInput.trim() && !serviceArea)
+    ) {
       res.status(400).json({ error: 'Invalid discovery filters' });
       return;
     }
 
     const visibleOfferFilter: Prisma.BenefitRuleWhereInput = {
       active: true,
-      business: { active: true },
+      business: {
+        active: true,
+        ...(serviceAreaKey ? { serviceAreaKey } : {}),
+      },
       AND: [
         { OR: [{ productId: null }, { product: { active: true } }] },
         ...(category ? [{ category }] : []),
@@ -41,6 +56,7 @@ router.get('/', discoveryRateLimiter, async (req, res, next) => {
             { productName: { contains: query } },
             { business: { name: { contains: query } } },
             { business: { description: { contains: query } } },
+            { business: { serviceArea: { contains: query } } },
             { business: { categoriesJson: { contains: query } } },
             { product: { name: { contains: query } } },
             { product: { description: { contains: query } } },
@@ -54,7 +70,7 @@ router.get('/', discoveryRateLimiter, async (req, res, next) => {
       OR: [{ productId: null }, { product: { active: true } }],
     };
 
-    const [total, offers, categoryRows] = await Promise.all([
+    const [total, offers, categoryRows, serviceAreaRows] = await Promise.all([
       prisma.benefitRule.count({ where: visibleOfferFilter }),
       prisma.benefitRule.findMany({
         where: visibleOfferFilter,
@@ -76,6 +92,8 @@ router.get('/', discoveryRateLimiter, async (req, res, next) => {
               name: true,
               description: true,
               website: true,
+              serviceArea: true,
+              serviceAreaKey: true,
               categoriesJson: true,
             },
           },
@@ -88,8 +106,30 @@ router.get('/', discoveryRateLimiter, async (req, res, next) => {
         orderBy: { category: 'asc' },
         select: { category: true },
       }),
+      prisma.business.findMany({
+        where: {
+          active: true,
+          serviceArea: { not: null },
+          serviceAreaKey: { not: null },
+          benefitRules: {
+            some: {
+              active: true,
+              OR: [{ productId: null }, { product: { active: true } }],
+            },
+          },
+        },
+        orderBy: { serviceArea: 'asc' },
+        select: { serviceArea: true, serviceAreaKey: true },
+      }),
     ]);
     const totalPages = total === 0 ? 0 : Math.ceil(total / limit);
+    const serviceAreas = Array.from(new Map(
+      serviceAreaRows.flatMap((row) => {
+        const label = normalizeBusinessServiceArea(row.serviceArea);
+        const key = businessServiceAreaKey(row.serviceArea);
+        return label && key ? [[key, label] as const] : [];
+      })
+    ).values()).sort((left, right) => left.localeCompare(right, 'en'));
 
     res.json({
       offers: offers.map((offer) => ({
@@ -97,6 +137,7 @@ router.get('/', discoveryRateLimiter, async (req, res, next) => {
         business: publicBusinessProfile(offer.business),
       })),
       categories: categoryRows.map((row) => row.category),
+      serviceAreas,
       pagination: {
         page,
         limit,
@@ -119,6 +160,8 @@ router.get('/:id', async (req, res, next) => {
         name: true,
         description: true,
         website: true,
+        serviceArea: true,
+        serviceAreaKey: true,
         categoriesJson: true,
         discountPercent: true,
         requiredLockIFR: true,
@@ -190,6 +233,8 @@ router.get('/:id/products', async (req, res, next) => {
         name: true,
         description: true,
         website: true,
+        serviceArea: true,
+        serviceAreaKey: true,
         categoriesJson: true,
         active: true,
       },
@@ -236,6 +281,8 @@ router.get('/:id/products', async (req, res, next) => {
         name: business.name,
         description: business.description,
         website: business.website,
+        serviceArea: business.serviceArea,
+        serviceAreaKey: business.serviceAreaKey,
         categoriesJson: business.categoriesJson,
       }),
       products,

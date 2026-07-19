@@ -75,6 +75,11 @@ export function SellerCatalogClient({ businessId }: { businessId: string }) {
                 {business?.description
                   || 'Browse active products and services with benefits for customers who verify locked IFR at checkout.'}
               </p>
+              {business?.serviceArea ? (
+                <p className="mt-4 text-sm font-black uppercase tracking-[0.13em] text-orange-100">
+                  Available in {business.serviceArea}
+                </p>
+              ) : null}
               {business?.categories.length ? (
                 <div className="mt-4 flex flex-wrap gap-2" aria-label="Seller categories">
                   {business.categories.map((category) => (

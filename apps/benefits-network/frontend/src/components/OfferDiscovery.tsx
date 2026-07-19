@@ -11,8 +11,10 @@ export function OfferDiscovery() {
   const eligibility = useIfrLockEligibility();
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState('');
+  const [serviceArea, setServiceArea] = useState('');
   const [offers, setOffers] = useState<PublicOffer[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
+  const [serviceAreas, setServiceAreas] = useState<string[]>([]);
   const [page, setPage] = useState(1);
   const [hasNext, setHasNext] = useState(false);
   const [total, setTotal] = useState(0);
@@ -26,10 +28,17 @@ export function OfferDiscovery() {
       setLoading(true);
       setError('');
       try {
-        const result = await discoverOffers({ query: query.trim(), category, page, limit: PAGE_SIZE });
+        const result = await discoverOffers({
+          query: query.trim(),
+          category,
+          serviceArea,
+          page,
+          limit: PAGE_SIZE,
+        });
         if (cancelled) return;
         setOffers(result.offers);
         setCategories(result.categories);
+        setServiceAreas(result.serviceAreas);
         setHasNext(result.pagination.hasNext);
         setTotal(result.pagination.total);
       } catch (err) {
@@ -45,7 +54,7 @@ export function OfferDiscovery() {
       cancelled = true;
       window.clearTimeout(timer);
     };
-  }, [query, category, page, reloadKey]);
+  }, [query, category, serviceArea, page, reloadKey]);
 
   function updateQuery(value: string) {
     setQuery(value);
@@ -54,6 +63,11 @@ export function OfferDiscovery() {
 
   function updateCategory(value: string) {
     setCategory(value);
+    setPage(1);
+  }
+
+  function updateServiceArea(value: string) {
+    setServiceArea(value);
     setPage(1);
   }
 
@@ -66,13 +80,13 @@ export function OfferDiscovery() {
             <p className="text-xs font-black uppercase tracking-[0.18em] text-green-100/80">Live member offers</p>
             <h2 className="mt-2 text-3xl font-black text-white sm:text-4xl">Find an IFR benefit</h2>
             <p className="mt-3 max-w-2xl text-sm leading-6 text-stone-300">
-              Browse active seller offers, then open the seller catalog for checkout details.
+              Browse active seller offers by category and availability, then open the seller catalog for checkout details.
             </p>
           </div>
           <p role="status" aria-live="polite" className="font-mono text-sm text-stone-400">{loading ? 'Loading...' : `${total} active offer${total === 1 ? '' : 's'}`}</p>
         </div>
 
-        <div className="mt-6 grid gap-3 sm:grid-cols-[1fr_15rem]">
+        <div className="mt-6 grid gap-3 md:grid-cols-[minmax(0,1fr)_14rem_14rem]">
           <label className="grid gap-2 text-xs font-black uppercase tracking-[0.14em] text-stone-300">
             Search offers
             <input
@@ -95,6 +109,17 @@ export function OfferDiscovery() {
               {categories.map((item) => <option key={item} value={item}>{item}</option>)}
             </select>
           </label>
+          <label className="grid gap-2 text-xs font-black uppercase tracking-[0.14em] text-stone-300">
+            Available in
+            <select
+              value={serviceArea}
+              onChange={(event) => updateServiceArea(event.target.value)}
+              className="min-w-0 rounded-2xl border border-white/10 bg-[#160f0b] px-4 py-3 text-sm font-medium normal-case tracking-[0] text-white outline-none transition focus:border-orange-300"
+            >
+              <option value="">All areas</option>
+              {serviceAreas.map((item) => <option key={item} value={item}>{item}</option>)}
+            </select>
+          </label>
         </div>
 
         {error ? (
@@ -107,7 +132,7 @@ export function OfferDiscovery() {
         {!loading && !error && offers.length === 0 ? (
           <div role="status" className="mt-8 border-l-2 border-orange-300 pl-5">
             <h3 className="text-xl font-black text-white">No matching active offers</h3>
-            <p className="mt-2 text-sm text-stone-300">Try another search or select all categories.</p>
+            <p className="mt-2 text-sm text-stone-300">Try another search, category or service area.</p>
           </div>
         ) : null}
 
@@ -119,6 +144,11 @@ export function OfferDiscovery() {
                   <p className="text-xs font-black uppercase tracking-[0.16em] text-green-100/80">{offer.category}</p>
                   <h3 className="mt-2 text-2xl font-black text-white">{offer.productName}</h3>
                   <p className="mt-1 text-sm font-semibold text-stone-300">{offer.business.name}</p>
+                  {offer.business.serviceArea ? (
+                    <p className="mt-2 text-xs font-bold uppercase tracking-[0.12em] text-orange-100/85">
+                      Available in {offer.business.serviceArea}
+                    </p>
+                  ) : null}
                   {offer.business.description ? (
                     <p className="mt-2 max-w-xl text-sm leading-6 text-stone-400">{offer.business.description}</p>
                   ) : null}

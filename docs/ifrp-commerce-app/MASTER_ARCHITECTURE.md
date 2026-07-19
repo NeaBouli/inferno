@@ -66,7 +66,7 @@ Primary jobs:
 4. Swap ETH to IFR.
 5. Lock IFR in IFRLock or CommitmentVault.
 6. Scan or open a seller-issued QR proof.
-7. See available benefits, history, and lock status.
+7. Filter available benefits by a seller-published service area and review history and lock status.
 
 Customer app must be simple enough for non-crypto users:
 
@@ -83,7 +83,8 @@ Primary jobs:
 
 1. Install/open app or `shop.ifrunit.tech`.
 2. Create seller profile.
-3. Add a public description and HTTPS website, then choose up to eight categories.
+3. Add a public description and HTTPS website, choose up to eight categories, and optionally
+   publish a broad city, region or `Online` service area without a street address.
 4. Add products/services.
 5. Configure discount/access rules.
 6. Scan customer QR.

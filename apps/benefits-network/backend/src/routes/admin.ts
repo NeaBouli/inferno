@@ -5,7 +5,10 @@ import { adminAuth } from '../middleware/auth';
 import { validate } from '../middleware/validator';
 import { getRewardOnChainStatus, isWalletAlreadyRewarded } from '../services/rewardService';
 import {
+  businessServiceAreaKey,
   MAX_BUSINESS_CATEGORIES,
+  MAX_BUSINESS_SERVICE_AREA_LENGTH,
+  normalizeBusinessServiceArea,
   publicBusinessProfile,
   serializeBusinessCategories,
 } from '../services/businessProfile';
@@ -13,6 +16,7 @@ import {
 const router = Router();
 
 const businessDescriptionSchema = z.string().trim().max(500).nullable();
+const businessServiceAreaSchema = z.string().trim().min(2).max(MAX_BUSINESS_SERVICE_AREA_LENGTH).nullable();
 const businessWebsiteSchema = z.string().trim().max(300).url().refine((value) => {
   const parsed = new URL(value);
   return parsed.protocol === 'https:' && !parsed.username && !parsed.password;
@@ -32,6 +36,7 @@ const createBusinessSchema = z.object({
   tierLabel: z.string().max(50).optional(),
   description: businessDescriptionSchema.optional(),
   website: businessWebsiteSchema.optional(),
+  serviceArea: businessServiceAreaSchema.optional(),
   categories: businessCategoriesSchema.optional(),
 }).strict();
 
@@ -43,6 +48,7 @@ const updateBusinessSchema = z.object({
   tierLabel: z.string().max(50).nullable().optional(),
   description: businessDescriptionSchema.optional(),
   website: businessWebsiteSchema.optional(),
+  serviceArea: businessServiceAreaSchema.optional(),
   categories: businessCategoriesSchema.optional(),
   active: z.boolean().optional(),
 }).strict().refine((value) => Object.keys(value).length > 0, 'At least one field is required');
@@ -77,6 +83,8 @@ router.post('/businesses', adminAuth, validate(createBusinessSchema), async (req
         tierLabel: req.body.tierLabel,
         description: req.body.description ?? null,
         website: req.body.website ?? null,
+        serviceArea: normalizeBusinessServiceArea(req.body.serviceArea),
+        serviceAreaKey: businessServiceAreaKey(req.body.serviceArea),
         categoriesJson: serializeBusinessCategories(req.body.categories ?? []),
       },
     });
@@ -84,6 +92,7 @@ router.post('/businesses', adminAuth, validate(createBusinessSchema), async (req
       id: business.id,
       verifyUrl: `/b/${business.id}`,
       qrUrl: `/b/${business.id}`,
+      serviceArea: business.serviceArea,
     });
   } catch (err) {
     next(err);
@@ -99,6 +108,8 @@ router.get('/businesses/:id', adminAuth, async (req, res, next) => {
         name: true,
         description: true,
         website: true,
+        serviceArea: true,
+        serviceAreaKey: true,
         categoriesJson: true,
         ownerAddress: true,
         discountPercent: true,
@@ -118,6 +129,8 @@ router.get('/businesses/:id', adminAuth, async (req, res, next) => {
       name: business.name,
       description: business.description,
       website: business.website,
+      serviceArea: business.serviceArea,
+      serviceAreaKey: business.serviceAreaKey,
       categoriesJson: business.categoriesJson,
       ownerAddress: business.ownerAddress,
       discountPercent: business.discountPercent,
@@ -146,6 +159,12 @@ router.patch('/businesses/:id', adminAuth, validate(updateBusinessSchema), async
         tierLabel: req.body.tierLabel,
         description: req.body.description,
         website: req.body.website,
+        serviceArea: req.body.serviceArea === undefined
+          ? undefined
+          : normalizeBusinessServiceArea(req.body.serviceArea),
+        serviceAreaKey: req.body.serviceArea === undefined
+          ? undefined
+          : businessServiceAreaKey(req.body.serviceArea),
         categoriesJson: req.body.categories === undefined
           ? undefined
           : serializeBusinessCategories(req.body.categories),
@@ -156,6 +175,8 @@ router.patch('/businesses/:id', adminAuth, validate(updateBusinessSchema), async
         name: true,
         description: true,
         website: true,
+        serviceArea: true,
+        serviceAreaKey: true,
         categoriesJson: true,
         discountPercent: true,
         requiredLockIFR: true,

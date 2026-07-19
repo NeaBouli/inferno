@@ -5,7 +5,7 @@ const path = require('path');
 
 const root = path.resolve(__dirname, '..');
 const migrationsDir = path.join(root, 'prisma', 'migrations');
-const targetMigration = '20260719044500_add_customer_history_auth';
+const targetMigration = '20260719050000_add_business_service_area';
 const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'benefits-populated-upgrade-'));
 const dbPath = path.join(tempDir, 'upgrade.db');
 
@@ -125,6 +125,27 @@ try {
   if (customerHistoryTables !== '2' || customerHistoryIndex !== '1') {
     throw new Error(
       `Missing customer history auth state: tables=${customerHistoryTables}, index=${customerHistoryIndex}`
+    );
+  }
+
+  const serviceAreaColumns = sqlite(`
+    SELECT COUNT(*) FROM pragma_table_info('Business')
+    WHERE name IN ('serviceArea', 'serviceAreaKey');
+  `);
+  const serviceAreaIndex = sqlite(`
+    SELECT group_concat(name, '|') FROM pragma_index_info('Business_active_serviceAreaKey_idx')
+    ORDER BY seqno;
+  `);
+  const existingServiceArea = sqlite(`
+    SELECT
+      (serviceArea IS NULL) || '|' ||
+      (serviceAreaKey IS NULL)
+    FROM Business WHERE id = 'migration-fixture';
+  `);
+  if (serviceAreaColumns !== '2' || serviceAreaIndex !== 'active|serviceAreaKey' || existingServiceArea !== '1|1') {
+    throw new Error(
+      `Missing service area migration state: columns=${serviceAreaColumns}, ` +
+      `index=${serviceAreaIndex}, existing=${existingServiceArea}`
     );
   }
 

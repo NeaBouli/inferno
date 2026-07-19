@@ -581,15 +581,21 @@ export default function Home() {
           {role === 'customer' ? (
             <>
               <WalletStatus />
-              <PwaInstallCard />
-              <CustomerProofHistory />
+              <div id="install-app" className="scroll-mt-36">
+                <PwaInstallCard />
+              </div>
+              <div id="my-benefits" className="scroll-mt-36">
+                <CustomerProofHistory />
+              </div>
               <WalletStarterKit />
             </>
           ) : (
             <>
               <SellerRuleBuilder />
               <CodeGenerator />
-              <PwaInstallCard />
+              <div id="install-app" className="scroll-mt-36">
+                <PwaInstallCard />
+              </div>
             </>
           )}
           {role === 'seller' ? <section className="rounded-[2rem] border border-white/10 bg-black/20 p-5">

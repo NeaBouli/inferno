@@ -26,7 +26,10 @@ import {
   assertSellerWalletActionAllowed,
 } from '../services/authenticatedRateLimiter';
 import {
+  businessServiceAreaKey,
   MAX_BUSINESS_CATEGORIES,
+  MAX_BUSINESS_SERVICE_AREA_LENGTH,
+  normalizeBusinessServiceArea,
   parseBusinessCategories,
   publicBusinessProfile,
   serializeBusinessCategories,
@@ -36,6 +39,7 @@ const router = Router();
 const MAX_ACTIVE_CHECKOUT_OPERATORS = 10;
 
 const businessDescriptionSchema = z.string().trim().max(500).nullable();
+const businessServiceAreaSchema = z.string().trim().min(2).max(MAX_BUSINESS_SERVICE_AREA_LENGTH).nullable();
 const businessWebsiteSchema = z.string().trim().max(300).url().refine((value) => {
   const parsed = new URL(value);
   return parsed.protocol === 'https:' && !parsed.username && !parsed.password;
@@ -55,6 +59,7 @@ const createBusinessSchema = z.object({
   tierLabel: z.string().max(50).optional(),
   description: businessDescriptionSchema.optional(),
   website: businessWebsiteSchema.optional(),
+  serviceArea: businessServiceAreaSchema.optional(),
   categories: businessCategoriesSchema.optional(),
   ownerAddress: z.string().regex(/^0x[a-fA-F0-9]{40}$/),
   signature: z.string().min(1),
@@ -66,6 +71,7 @@ const updateBusinessProfileSchema = z.object({
   name: z.string().trim().min(1).max(200).optional(),
   description: businessDescriptionSchema.optional(),
   website: businessWebsiteSchema.optional(),
+  serviceArea: businessServiceAreaSchema.optional(),
   categories: businessCategoriesSchema.optional(),
 }).strict().refine((value) => Object.keys(value).length > 0, 'At least one profile field is required');
 
@@ -374,6 +380,8 @@ router.post('/businesses', sellerRateLimiter, validate(createBusinessSchema), as
         tierLabel: req.body.tierLabel,
         description: req.body.description ?? null,
         website: req.body.website ?? null,
+        serviceArea: normalizeBusinessServiceArea(req.body.serviceArea),
+        serviceAreaKey: businessServiceAreaKey(req.body.serviceArea),
         categoriesJson: serializeBusinessCategories(req.body.categories ?? []),
       },
     });
@@ -386,6 +394,7 @@ router.post('/businesses', sellerRateLimiter, validate(createBusinessSchema), as
       name: business.name,
       description: business.description,
       website: business.website,
+      serviceArea: business.serviceArea,
       categories: parseBusinessCategories(business.categoriesJson),
     });
   } catch (err) {
@@ -408,6 +417,8 @@ router.get('/businesses', sellerRateLimiter, async (req, res, next) => {
         tierLabel: true,
         description: true,
         website: true,
+        serviceArea: true,
+        serviceAreaKey: true,
         categoriesJson: true,
         createdAt: true,
         _count: {
@@ -422,6 +433,8 @@ router.get('/businesses', sellerRateLimiter, async (req, res, next) => {
         name: business.name,
         description: business.description,
         website: business.website,
+        serviceArea: business.serviceArea,
+        serviceAreaKey: business.serviceAreaKey,
         categoriesJson: business.categoriesJson,
         ownerAddress: business.ownerAddress,
         discountPercent: business.discountPercent,
@@ -452,6 +465,12 @@ router.patch(
           name: req.body.name,
           description: req.body.description,
           website: req.body.website,
+          serviceArea: req.body.serviceArea === undefined
+            ? undefined
+            : normalizeBusinessServiceArea(req.body.serviceArea),
+          serviceAreaKey: req.body.serviceArea === undefined
+            ? undefined
+            : businessServiceAreaKey(req.body.serviceArea),
           categoriesJson: req.body.categories === undefined
             ? undefined
             : serializeBusinessCategories(req.body.categories),
@@ -461,6 +480,8 @@ router.patch(
           name: true,
           description: true,
           website: true,
+          serviceArea: true,
+          serviceAreaKey: true,
           categoriesJson: true,
         },
       });

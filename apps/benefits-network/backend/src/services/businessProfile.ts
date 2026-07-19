@@ -1,4 +1,16 @@
 export const MAX_BUSINESS_CATEGORIES = 8;
+export const MAX_BUSINESS_SERVICE_AREA_LENGTH = 80;
+
+export function normalizeBusinessServiceArea(value: string | null | undefined): string | null {
+  if (typeof value !== 'string') return null;
+  const normalized = value.normalize('NFKC').replace(/\s+/gu, ' ').trim();
+  if (!normalized || normalized.length > MAX_BUSINESS_SERVICE_AREA_LENGTH) return null;
+  return normalized;
+}
+
+export function businessServiceAreaKey(value: string | null | undefined): string | null {
+  return normalizeBusinessServiceArea(value)?.toLocaleLowerCase('en-US') ?? null;
+}
 
 export function serializeBusinessCategories(categories: string[]) {
   return JSON.stringify(categories);
@@ -38,12 +50,17 @@ export function safeBusinessWebsite(value: string | null): string | null {
 export function publicBusinessProfile<T extends {
   categoriesJson: string;
   website?: string | null;
+  serviceArea?: string | null;
+  serviceAreaKey?: string | null;
 }>(business: T) {
-  const { categoriesJson, ...publicFields } = business;
+  const { categoriesJson, serviceAreaKey: _serviceAreaKey, ...publicFields } = business;
   return {
     ...publicFields,
     ...(Object.prototype.hasOwnProperty.call(business, 'website')
       ? { website: safeBusinessWebsite(business.website ?? null) }
+      : {}),
+    ...(Object.prototype.hasOwnProperty.call(business, 'serviceArea')
+      ? { serviceArea: normalizeBusinessServiceArea(business.serviceArea ?? null) }
       : {}),
     categories: parseBusinessCategories(categoriesJson),
   };

@@ -70,6 +70,14 @@ npm run dev            # http://localhost:3001
 | POST | `/api/customer/history/authorize` | Customer wallet signature | Exchange the signed one-time challenge for a ten-minute read token |
 | GET | `/api/customer/history?limit=20&cursor=...&snapshot=...` | Customer history read token | Return only the signer's verified benefit history, maximum 50 rows per page |
 
+Public offer discovery accepts an optional exact `serviceArea` filter and returns the available
+`serviceAreas` represented by active sellers with active visible offers. Seller owners can publish
+a broad city, region or `Online` label as part of their signed profile update. The value is bounded
+to 80 characters and is stored and returned publicly exactly as normalized. The first-party UI
+requires sellers to confirm that they entered no private or street address. The service never asks
+customers for location or coordinates. Legacy profiles without a service area remain visible under
+`All areas`.
+
 ## Session Flow
 
 1. Merchant selects a seller rule or falls back to the business default.
