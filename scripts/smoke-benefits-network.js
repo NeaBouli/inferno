@@ -531,9 +531,21 @@ async function verifyRuleTemplateAuthorization() {
   const productId = 'smoke-template-product';
   const mutatingRequests = [];
   const challengeRequests = [];
+  let historyRequestCount = 0;
 
   await context.addInitScript(({ walletAddress }) => {
     const listeners = new Map();
+    let activeWalletAddress = walletAddress;
+    window.__setSmokeSellerWallet = (nextWalletAddress) => {
+      activeWalletAddress = nextWalletAddress;
+      const listener = listeners.get('accountsChanged');
+      if (listener) listener([nextWalletAddress]);
+    };
+    window.__disconnectSmokeSellerWallet = () => {
+      activeWalletAddress = '';
+      const listener = listeners.get('accountsChanged');
+      if (listener) listener([]);
+    };
     Object.defineProperty(window, 'ethereum', {
       configurable: true,
       value: {
@@ -541,7 +553,7 @@ async function verifyRuleTemplateAuthorization() {
         request: async ({ method }) => {
           if (method === 'eth_chainId') return '0x1';
           if (method === 'net_version') return '1';
-          if (method === 'eth_accounts' || method === 'eth_requestAccounts') return [walletAddress];
+          if (method === 'eth_accounts' || method === 'eth_requestAccounts') return [activeWalletAddress];
           if (method === 'personal_sign') return `0x${'11'.repeat(64)}1b`;
           if (method === 'eth_call') return `0x${'00'.repeat(32)}`;
           if (method === 'eth_getBalance') return '0x0';
@@ -624,6 +636,67 @@ async function verifyRuleTemplateAuthorization() {
       });
       return;
     }
+    if (url.pathname === `/api/seller/businesses/${businessId}/sessions` && method === 'GET') {
+      historyRequestCount += 1;
+      if (historyRequestCount > 1) await new Promise((resolve) => setTimeout(resolve, 300));
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          sessions: [
+            {
+              id: 'session-redeemed-csv',
+              status: 'REDEEMED',
+              recoveredAddress: '0x2222222222222222222222222222222222222222',
+              lockAmountRaw: '1500.000000000',
+              reason: null,
+              expiresAt: '2026-07-19T08:30:00.000Z',
+              createdAt: '2026-07-19T08:28:00.000Z',
+              updatedAt: '2026-07-19T08:29:00.000Z',
+              redeemedAt: '2026-07-19T08:29:30.000Z',
+              attestAttempts: 1,
+              benefitRuleId: 'rule-csv-1',
+              label: '=HYPERLINK("https://evil.test","open")',
+              category: 'Coffee',
+              productName: 'Coffee, "Premium"\nMembership',
+              discountPercent: 15,
+              requiredLockIFR: 1000,
+              dailyRedemptionLimit: 1,
+              monthlyRedemptionLimit: 4,
+            },
+            {
+              id: 'session-rejected-csv',
+              status: 'REJECTED',
+              recoveredAddress: null,
+              lockAmountRaw: null,
+              reason: '+SUM(1,1)',
+              expiresAt: '2026-07-19T08:35:00.000Z',
+              createdAt: '2026-07-19T08:31:00.000Z',
+              updatedAt: '2026-07-19T08:32:00.000Z',
+              redeemedAt: null,
+              attestAttempts: 2,
+              benefitRuleId: null,
+              label: null,
+              category: null,
+              productName: null,
+              discountPercent: 5,
+              requiredLockIFR: 500,
+              dailyRedemptionLimit: 1,
+              monthlyRedemptionLimit: 1,
+            },
+          ],
+          metrics: {
+            generatedAt: '2026-07-19T08:36:00.000Z',
+            todayStartedAt: '2026-07-19T00:00:00.000Z',
+            today: { checks: 2, approved: 0, redeemed: 1, rejected: 1 },
+            allTime: { checks: 2, approved: 0, redeemed: 1, rejected: 1 },
+            openChecks: 0,
+            approvalRatePercent: 50,
+          },
+        }),
+      });
+      return;
+    }
     if (url.pathname === `/api/seller/businesses/${businessId}/rules` && method === 'POST') {
       const body = request.postDataJSON();
       await route.fulfill({
@@ -702,7 +775,126 @@ async function verifyRuleTemplateAuthorization() {
       'signed Save did not request the resource-bound rules:create challenge'
     );
     assert(await page.locator('[role="status"][aria-live="polite"]').count() > 0, 'template/save status is not announced');
-    log('Rule template authorization and catalog binding OK');
+
+    const historyRequestPromise = page.waitForRequest((request) => (
+      request.method() === 'GET' && new URL(request.url()).pathname === `/api/seller/businesses/${businessId}/sessions`
+    ));
+    await page.getByRole('button', { name: 'Load recent 50', exact: true }).click();
+    const historyRequest = await historyRequestPromise;
+    assert(new URL(historyRequest.url()).searchParams.get('limit') === '50', 'recent export must request the bounded 50-row history');
+    await expectText(page, 'Loaded 2 recent sessions and seller activity.');
+    assert(
+      challengeRequests.some((challenge) => challenge.action === 'sessions:list' && challenge.businessId === businessId),
+      'history export did not use the owner-signed sessions:list read'
+    );
+    assert(mutatingRequests.length === 1, 'loading/exporting history must not produce another seller API mutation');
+    const sessionHistory = page.locator('#seller-session-history');
+    assert(
+      await sessionHistory.getByText('session-redeemed-csv', { exact: false }).count() === 1,
+      'loaded owner history did not render the redeemed session'
+    );
+    assert(
+      await sessionHistory.getByText('0x2222...2222', { exact: false }).count() === 1,
+      'rendered history must mask the customer wallet'
+    );
+    assert(
+      await sessionHistory.getByText('0x2222222222222222222222222222222222222222', { exact: false }).count() === 0,
+      'rendered history leaked the full customer wallet'
+    );
+
+    const downloadPromise = page.waitForEvent('download');
+    await page.getByRole('button', { name: 'Download CSV', exact: true }).click();
+    const download = await downloadPromise;
+    const downloadedPath = await download.path();
+    assert(downloadedPath, 'recent session CSV download path is unavailable');
+    const csv = fs.readFileSync(downloadedPath, 'utf8');
+    assert(csv.charCodeAt(0) === 0xfeff, 'downloaded CSV must include a UTF-8 BOM for spreadsheet compatibility');
+    assert(csv.includes('"session-redeemed-csv","REDEEMED"'), 'CSV is missing the redeemed session snapshot');
+    assert(csv.includes('"0x2222...2222"'), 'CSV must contain only the masked customer wallet');
+    assert(!csv.includes('0x2222222222222222222222222222222222222222'), 'CSV leaked the full customer wallet');
+    assert(csv.includes('"\'=HYPERLINK(""https://evil.test"",""open"")"'), 'CSV did not neutralize formula-prefixed rule text');
+    assert(csv.includes('"Coffee, ""Premium""\nMembership"'), 'CSV did not quote commas, quotes and newlines');
+    assert(csv.includes('"\'+SUM(1,1)"'), 'CSV did not neutralize formula-prefixed rejection text');
+    assert(!/signature|nonce|admin secret|\/r\//i.test(csv), 'CSV contains forbidden authorization or proof-link data');
+    assert(download.suggestedFilename().startsWith('ifr-benefits-ifr-partner-shop-recent-'), 'CSV filename is not seller-scoped');
+    await expectText(page, 'Downloaded 2 recent sessions with masked customer wallets.');
+    assert(mutatingRequests.length === 1, 'downloading history must remain local and read-only');
+    if (shouldScreenshot) {
+      await sessionHistory.scrollIntoViewIfNeeded();
+      await sessionHistory.screenshot({
+        animations: 'disabled',
+        path: path.join(screenshotDir, 'benefits-session-export-owner.png'),
+      });
+    }
+
+    const businessIdInput = page.getByPlaceholder('cuid...').last();
+    await businessIdInput.fill('business-other-owner');
+    assert(
+      await sessionHistory.getByText('session-redeemed-csv', { exact: false }).count() === 0,
+      'business switch exposed the previous business history'
+    );
+    assert(
+      await page.getByRole('button', { name: 'Download CSV', exact: true }).isDisabled(),
+      'business switch left the previous business export enabled'
+    );
+    assert(
+      await page.getByRole('button', { name: 'Copy CSV', exact: true }).isDisabled(),
+      'business switch left the previous business copy export enabled'
+    );
+    await businessIdInput.fill(businessId);
+
+    await page.getByRole('button', { name: 'Load recent 50', exact: true }).click();
+    await expectText(page, 'Loaded 2 recent sessions and seller activity.');
+    assert(
+      await sessionHistory.getByText('session-redeemed-csv', { exact: false }).count() === 1,
+      'history was not reloaded before the account-switch regression'
+    );
+
+    const replacementWallet = '0x3333333333333333333333333333333333333333';
+    await page.evaluate((walletAddress) => window.__setSmokeSellerWallet(walletAddress), replacementWallet);
+    await expectText(page, '0x3333...3333');
+    assert(
+      await sessionHistory.getByText('session-redeemed-csv', { exact: false }).count() === 0,
+      'account switch exposed the previous owner history'
+    );
+    assert(await page.getByRole('button', { name: 'Download CSV', exact: true }).isDisabled(), 'account switch left the previous owner export enabled');
+    assert(await page.getByRole('button', { name: 'Copy CSV', exact: true }).isDisabled(), 'account switch left copy export enabled');
+
+    await page.evaluate((walletAddress) => window.__setSmokeSellerWallet(walletAddress), sellerWallet);
+    await expectText(page, '0x1111...1111');
+    await page.getByRole('button', { name: 'Load recent 50', exact: true }).click();
+    await expectText(page, 'Loaded 2 recent sessions and seller activity.');
+    assert(
+      await sessionHistory.getByText('session-redeemed-csv', { exact: false }).count() === 1,
+      'history was not reloaded before the disconnect regression'
+    );
+    await page.evaluate(() => window.__disconnectSmokeSellerWallet());
+    await expectText(page, 'Connect seller wallet');
+    assert(
+      await sessionHistory.getByText('session-redeemed-csv', { exact: false }).count() === 0,
+      'wallet disconnect exposed the previous owner history'
+    );
+    assert(await page.getByRole('button', { name: 'Download CSV', exact: true }).isDisabled(), 'wallet disconnect left download export enabled');
+    assert(await page.getByRole('button', { name: 'Copy CSV', exact: true }).isDisabled(), 'wallet disconnect left copy export enabled');
+
+    await page.evaluate((walletAddress) => window.__setSmokeSellerWallet(walletAddress), sellerWallet);
+    await expectText(page, '0x1111...1111');
+    const staleHistoryRequest = page.waitForRequest((request) => (
+      request.method() === 'GET' && new URL(request.url()).pathname === `/api/seller/businesses/${businessId}/sessions`
+    ));
+    await page.getByRole('button', { name: 'Load recent 50', exact: true }).click();
+    await staleHistoryRequest;
+    await page.evaluate((walletAddress) => window.__setSmokeSellerWallet(walletAddress), replacementWallet);
+    await expectText(page, '0x3333...3333');
+    await page.waitForTimeout(400);
+    assert(
+      await sessionHistory.getByText('session-redeemed-csv', { exact: false }).count() === 0,
+      'stale history response was rendered after an account switch'
+    );
+    assert(await page.getByRole('button', { name: 'Download CSV', exact: true }).isDisabled(), 'stale history response re-enabled export for another wallet');
+    assert(await page.getByRole('button', { name: 'Copy CSV', exact: true }).isDisabled(), 'stale history response re-enabled copy export for another wallet');
+    assert(mutatingRequests.length === 1, 'account-switch history checks must remain read-only');
+    log('Rule templates and owner-only masked reconciliation export OK');
   } finally {
     await context.close();
     await browser.close();

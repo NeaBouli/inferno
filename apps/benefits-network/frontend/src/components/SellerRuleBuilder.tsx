@@ -6,6 +6,12 @@ import QRCode from 'react-qr-code';
 import { SellerCatalogManager } from '@/components/SellerCatalogManager';
 import { SellerRewardStatus } from '@/components/SellerRewardStatus';
 import {
+  buildSellerSessionCsv,
+  maskSellerSessionWallet,
+  RECENT_SESSION_EXPORT_LIMIT,
+  sellerSessionCsvFilename,
+} from '@/lib/sellerSessionExport';
+import {
   AdminBusinessCreated,
   BenefitRule,
   BenefitRuleInput,
@@ -148,6 +154,10 @@ export function SellerRuleBuilder() {
   const [editingRuleId, setEditingRuleId] = useState<string | null>(null);
   const [sessions, setSessions] = useState<SellerSessionSummary[]>([]);
   const [activityMetrics, setActivityMetrics] = useState<SellerActivityMetrics | null>(null);
+  const [sessionHistoryBinding, setSessionHistoryBinding] = useState<{
+    walletAddress: string;
+    businessId: string;
+  } | null>(null);
   const [checkoutOperators, setCheckoutOperators] = useState<CheckoutOperator[]>([]);
   const [operatorWallet, setOperatorWallet] = useState('');
   const [operatorLabel, setOperatorLabel] = useState('Front counter');
@@ -159,6 +169,7 @@ export function SellerRuleBuilder() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const activeBusinessIdRef = useRef(businessId);
+  const activeWalletAddressRef = useRef('');
 
   function setActiveBusinessId(nextBusinessId: string) {
     activeBusinessIdRef.current = nextBusinessId;
@@ -167,6 +178,8 @@ export function SellerRuleBuilder() {
 
   const scannerUrl = businessId ? `https://shop.ifrunit.tech/b/${businessId}` : '';
   const canUseWalletOwner = Boolean(address && isConnected);
+  const normalizedWalletAddress = canUseWalletOwner && address ? address.toLowerCase() : '';
+  activeWalletAddressRef.current = normalizedWalletAddress;
   const canUseOperatorFallback = Boolean(adminSecret);
   const canManage = canUseWalletOwner || canUseOperatorFallback;
   const activeRulesCount = rules.filter((rule) => rule.active).length;
@@ -181,7 +194,14 @@ export function SellerRuleBuilder() {
   const profileReady = Boolean(selectedBusiness);
   const scannerReady = Boolean(scannerUrl);
   const ruleReady = activeRulesCount > 0;
-  const historyReady = sessions.length > 0;
+  const sessionHistoryIsCurrent = Boolean(
+    sessionHistoryBinding &&
+    sessionHistoryBinding.walletAddress === normalizedWalletAddress &&
+    sessionHistoryBinding.businessId === businessId
+  );
+  const visibleSessions = sessionHistoryIsCurrent ? sessions : [];
+  const visibleActivityMetrics = sessionHistoryIsCurrent ? activityMetrics : null;
+  const historyReady = visibleSessions.length > 0;
   const sellerStatus = !canManage
     ? 'Connect seller wallet'
     : profileNeedsLoading
@@ -294,8 +314,17 @@ export function SellerRuleBuilder() {
     setEditingRuleId(null);
     setCheckoutOperators([]);
     setCatalogProducts([]);
+    setSessions([]);
+    setActivityMetrics(null);
+    setSessionHistoryBinding(null);
     resetRuleDraft();
   }, [businessId]);
+
+  useEffect(() => {
+    setSessions([]);
+    setActivityMetrics(null);
+    setSessionHistoryBinding(null);
+  }, [normalizedWalletAddress]);
 
   const payload: BenefitRuleInput = useMemo(
     () => ({
@@ -535,28 +564,76 @@ export function SellerRuleBuilder() {
   }
 
   async function loadSessions() {
-    if (!businessId || !canUseWalletOwner) {
+    if (!businessId || !canUseWalletOwner || !normalizedWalletAddress) {
       setError('Business ID plus seller wallet are required to load session history.');
       return;
     }
+    const requestBusinessId = businessId;
+    const requestWalletAddress = normalizedWalletAddress;
     setLoading(true);
+    setSessions([]);
     setActivityMetrics(null);
+    setSessionHistoryBinding(null);
     setError('');
     setStatus('');
     try {
       const result = await getSellerBusinessSessions(
-        businessId,
-        await signSellerAction('sessions:list', businessId),
-        10
+        requestBusinessId,
+        await signSellerAction('sessions:list', requestBusinessId),
+        RECENT_SESSION_EXPORT_LIMIT
       );
+      if (
+        activeBusinessIdRef.current !== requestBusinessId ||
+        activeWalletAddressRef.current !== requestWalletAddress
+      ) {
+        setStatus('Seller context changed. Load recent sessions again with the current owner wallet.');
+        return;
+      }
       setSessions(result.sessions);
       setActivityMetrics(result.metrics);
+      setSessionHistoryBinding({
+        walletAddress: requestWalletAddress,
+        businessId: requestBusinessId,
+      });
       setStatus(`Loaded ${result.sessions.length} recent session${result.sessions.length === 1 ? '' : 's'} and seller activity.`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load session history');
+      if (
+        activeBusinessIdRef.current === requestBusinessId &&
+        activeWalletAddressRef.current === requestWalletAddress
+      ) {
+        setError(err instanceof Error ? err.message : 'Failed to load session history');
+      }
     } finally {
       setLoading(false);
     }
+  }
+
+  function downloadSessionCsv() {
+    if (!sessionHistoryIsCurrent || visibleSessions.length === 0) {
+      setError('Connect the seller owner wallet and load recent sessions before exporting.');
+      return;
+    }
+    const sellerName = selectedBusiness?.name || businessName || businessId || 'IFR Partner Shop';
+    const csv = buildSellerSessionCsv(sellerName, visibleSessions);
+    const url = URL.createObjectURL(new Blob([`\uFEFF${csv}`], { type: 'text/csv;charset=utf-8' }));
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = sellerSessionCsvFilename(sellerName);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+    setError('');
+    setStatus(`Downloaded ${visibleSessions.length} recent session${visibleSessions.length === 1 ? '' : 's'} with masked customer wallets.`);
+  }
+
+  async function copySessionCsv() {
+    if (!sessionHistoryIsCurrent || visibleSessions.length === 0) {
+      setError('Connect the seller owner wallet and load recent sessions before copying an export.');
+      return;
+    }
+    const sellerName = selectedBusiness?.name || businessName || businessId || 'IFR Partner Shop';
+    await copyToClipboard('Recent session CSV', buildSellerSessionCsv(sellerName, visibleSessions));
   }
 
   async function loadSellerBusinesses() {
@@ -915,7 +992,20 @@ export function SellerRuleBuilder() {
       return;
     }
     try {
-      await navigator.clipboard.writeText(value);
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(value);
+      } else {
+        const fallback = document.createElement('textarea');
+        fallback.value = value;
+        fallback.readOnly = true;
+        fallback.style.position = 'fixed';
+        fallback.style.opacity = '0';
+        document.body.appendChild(fallback);
+        fallback.select();
+        const copied = document.execCommand('copy');
+        fallback.remove();
+        if (!copied) throw new Error('Copy command was rejected');
+      }
       setError('');
       setStatus(`${labelText} copied.`);
     } catch {
@@ -1168,7 +1258,7 @@ export function SellerRuleBuilder() {
               {selectedBusiness?.name || (businessReady ? 'Manual business ID' : 'Not selected')}
             </p>
             <p className="mt-1 text-xs text-stone-400">
-              {activeRulesCount} active rule{activeRulesCount === 1 ? '' : 's'} / {sessions.length} recent check{sessions.length === 1 ? '' : 's'}
+              {activeRulesCount} active rule{activeRulesCount === 1 ? '' : 's'} / {visibleSessions.length} recent check{visibleSessions.length === 1 ? '' : 's'}
             </p>
           </div>
         </div>
@@ -1671,7 +1761,7 @@ export function SellerRuleBuilder() {
       </div>
 
       {businessId ? (
-        <div className="mb-5 rounded-3xl border border-green-300/20 bg-green-300/[0.06] p-4">
+        <div id="seller-session-history" className="mb-5 rounded-3xl border border-green-300/20 bg-green-300/[0.06] p-4">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
               <p className="text-xs font-bold uppercase tracking-[0.18em] text-green-100/80">Session history</p>
@@ -1681,18 +1771,40 @@ export function SellerRuleBuilder() {
                 receipts when staff needs to recover a checkout on another counter device.
               </p>
             </div>
-            <button
-              type="button"
-              onClick={loadSessions}
-              disabled={loading || !canUseWalletOwner}
-              className="rounded-2xl border border-green-200/40 px-4 py-3 text-xs font-black uppercase tracking-[0.14em] text-green-50 transition hover:bg-green-200/10 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              Load sessions
-            </button>
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={loadSessions}
+                disabled={loading || !canUseWalletOwner}
+                className="rounded-2xl border border-green-200/40 px-4 py-3 text-xs font-black uppercase tracking-[0.14em] text-green-50 transition hover:bg-green-200/10 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Load recent 50
+              </button>
+              <button
+                type="button"
+                onClick={downloadSessionCsv}
+                disabled={loading || !sessionHistoryIsCurrent || visibleSessions.length === 0}
+                className="rounded-2xl border border-orange-200/35 px-4 py-3 text-xs font-black uppercase tracking-[0.14em] text-orange-50 transition hover:bg-orange-200/10 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Download CSV
+              </button>
+              <button
+                type="button"
+                onClick={copySessionCsv}
+                disabled={loading || !sessionHistoryIsCurrent || visibleSessions.length === 0}
+                className="rounded-2xl border border-white/15 px-4 py-3 text-xs font-black uppercase tracking-[0.14em] text-stone-100 transition hover:border-orange-200/60 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Copy CSV
+              </button>
+            </div>
           </div>
-          {sessions.length > 0 ? (
+          <p className="mt-3 text-xs leading-5 text-stone-400">
+            Recent export only: up to 50 owner-loaded sessions. Customer wallets are masked and the
+            file is generated locally without uploading or storing a copy.
+          </p>
+          {visibleSessions.length > 0 ? (
             <div className="mt-4 grid gap-3">
-              {sessions.map((session) => {
+              {visibleSessions.slice(0, 10).map((session) => {
                 const lockedIFR = formatSessionLockedIFR(session.lockAmountRaw);
 
                 return (
@@ -1723,7 +1835,7 @@ export function SellerRuleBuilder() {
                     </div>
                     <div className="mt-3 grid gap-2 text-xs leading-5 text-stone-400">
                       <p className="break-all font-mono">Session: {session.id}</p>
-                      {session.recoveredAddress ? <p className="break-all font-mono">Wallet: {session.recoveredAddress}</p> : null}
+                      {session.recoveredAddress ? <p className="font-mono">Wallet: {maskSellerSessionWallet(session.recoveredAddress)}</p> : null}
                       {lockedIFR ? <p>Locked: {lockedIFR} IFR</p> : null}
                       {session.reason ? <p className="text-red-100">Reason: {session.reason}</p> : null}
                       {session.redeemedAt ? <p>Redeemed: {new Date(session.redeemedAt).toLocaleString()}</p> : null}
@@ -1755,6 +1867,11 @@ export function SellerRuleBuilder() {
                   </div>
                 );
               })}
+              {visibleSessions.length > 10 ? (
+                <p className="rounded-2xl border border-white/10 bg-black/20 p-4 text-sm text-stone-300">
+                  Showing the newest 10 of {visibleSessions.length} loaded sessions. The CSV includes all loaded rows.
+                </p>
+              ) : null}
             </div>
           ) : (
             <p className="mt-4 rounded-2xl border border-white/10 bg-black/20 p-4 text-sm text-stone-400">
@@ -1762,7 +1879,7 @@ export function SellerRuleBuilder() {
               appear here for counter recovery.
             </p>
           )}
-          {activityMetrics ? (
+          {visibleActivityMetrics ? (
             <div className="mt-4 rounded-2xl border border-orange-200/20 bg-[#1d130c] p-4">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
@@ -1770,15 +1887,15 @@ export function SellerRuleBuilder() {
                   <h4 className="mt-1 text-lg font-black text-white">Checkout performance</h4>
                 </div>
                 <p className="text-xs text-stone-400">
-                  UTC day from {new Date(activityMetrics.todayStartedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', timeZone: 'UTC' })}
+                  UTC day from {new Date(visibleActivityMetrics.todayStartedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', timeZone: 'UTC' })}
                 </p>
               </div>
               <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
                 {[
-                  ['Redeemed today', activityMetrics.today.redeemed],
-                  ['All redemptions', activityMetrics.allTime.redeemed],
-                  ['Open checks', activityMetrics.openChecks],
-                  ['Approval rate', activityMetrics.approvalRatePercent === null ? 'No data' : `${activityMetrics.approvalRatePercent}%`],
+                  ['Redeemed today', visibleActivityMetrics.today.redeemed],
+                  ['All redemptions', visibleActivityMetrics.allTime.redeemed],
+                  ['Open checks', visibleActivityMetrics.openChecks],
+                  ['Approval rate', visibleActivityMetrics.approvalRatePercent === null ? 'No data' : `${visibleActivityMetrics.approvalRatePercent}%`],
                 ].map(([metricLabel, value]) => (
                   <div key={metricLabel} className="rounded-2xl border border-white/10 bg-black/20 p-3">
                     <p className="text-xs uppercase tracking-[0.12em] text-stone-400">{metricLabel}</p>
@@ -1787,7 +1904,7 @@ export function SellerRuleBuilder() {
                 ))}
               </div>
               <p className="mt-3 text-xs leading-5 text-stone-400">
-                {activityMetrics.today.checks} check{activityMetrics.today.checks === 1 ? '' : 's'} today / {activityMetrics.allTime.checks} all time. Approval rate counts approved or redeemed checks against completed approved, redeemed and rejected checks; expired QR sessions are excluded.
+                {visibleActivityMetrics.today.checks} check{visibleActivityMetrics.today.checks === 1 ? '' : 's'} today / {visibleActivityMetrics.allTime.checks} all time. Approval rate counts approved or redeemed checks against completed approved, redeemed and rejected checks; expired QR sessions are excluded.
               </p>
             </div>
           ) : (

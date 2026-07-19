@@ -564,7 +564,7 @@ MVP should be installable:
   discovery and public catalogs; checkout attestation remains authoritative**
 - rule templates; **four one-tap seller templates implemented as review-before-save drafts; product binding remains explicit, with owner-signed publication for wallet-owned profiles and the controlled admin fallback otherwise**
 - staff scanner mode; **implemented with owner-managed, expiring checkout operators and atomic role-audited redeem**
-- redemption history. **implemented as owner-protected recent sessions, metrics and receipts**
+- redemption history. **implemented as owner-protected recent sessions, metrics, receipts and a local masked CSV of the latest 50 checks; full-history retention remains policy-gated**
 - per-wallet redemption limits. **implemented per rule for UTC day/month with immutable session snapshots, atomic enforcement and audited denials**
 
 ### M4 - Verified Seller Rewards
