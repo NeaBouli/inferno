@@ -1,6 +1,16 @@
 import IFRCopilot from "./components/IFRCopilot";
 
 export default function App() {
+  const embedded = new URLSearchParams(window.location.search).get("embedded") === "1";
+
+  if (embedded) {
+    return (
+      <div className="h-screen overflow-hidden bg-ifr-dark text-white">
+        <IFRCopilot />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-ifr-dark text-white flex items-center justify-center">
       <div className="text-center">

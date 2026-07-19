@@ -29,6 +29,10 @@ The app has two roles:
   5. Customer signs challenge.
   6. Backend checks IFRLock against the selected rule threshold.
   7. Seller sees approval and redeems the session once.
+- Public proof-link polling is deliberately minimal and non-cacheable: it never exposes the
+  recovered customer address, exact lock amount or detailed rejection reason. The signing
+  customer receives details in the direct attest response; seller operational details remain
+  in owner-wallet-protected history.
 - Customer proof history:
   - Customer proof pages save a redacted local browser history entry after session load/refresh.
   - Home shows the local section `Recent proofs on this device` for reopening checkout proofs.

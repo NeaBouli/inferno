@@ -62,7 +62,7 @@ npm run dev            # http://localhost:3001
 | GET | `/api/businesses/:id/rules` | Public | List active public benefit rules |
 | GET | `/api/businesses/:id/products` | Public | List active products/services with active benefits |
 | POST | `/api/sessions` | Owner/operator wallet signature | Start verification session, optionally bound to a seller benefit rule |
-| GET | `/api/sessions/:id` | Public | Poll session status |
+| GET | `/api/sessions/:id` | Public | Poll minimal, non-cacheable session status; no customer address or detailed rejection data |
 | GET | `/api/sessions/:id/challenge` | Public | Get signature challenge |
 | POST | `/api/attest` | Public | Submit signature + verify |
 | POST | `/api/sessions/:id/redeem` | Owner/operator wallet signature | Mark an approved session as redeemed |
@@ -156,6 +156,11 @@ Responses include the session status, recovered customer wallet, locked amount,
 rejection reason, redeem timestamp and attached rule/default benefit fields. The
 frontend masks wallets and builds the full paginated CSV locally without exposing
 customer signatures or creating a server-side export file.
+
+The separate public `GET /api/sessions/:id` projection is intentionally smaller. It is
+served with `Cache-Control: private, no-store`, never returns the recovered customer
+address or exact lock/rejection details, and exposes only a generic terminal reason.
+Detailed operational fields remain available only through the owner-signed history API.
 
 Seller write requests use these headers:
 

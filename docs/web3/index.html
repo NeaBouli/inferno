@@ -1779,7 +1779,7 @@
       <button class="copilot-close" type="button" data-copilot-close aria-label="Close IFR Copilot">&times;</button>
     </div>
     <p class="copilot-loading" data-copilot-loading role="status">Loading IFR Copilot...</p>
-    <iframe data-src="https://copilot-api.ifrunit.tech" title="IFR Copilot" loading="lazy" referrerpolicy="no-referrer"></iframe>
+    <iframe data-src="https://copilot-api.ifrunit.tech?embedded=1&amp;surface=web3" title="IFR Copilot" loading="lazy" referrerpolicy="no-referrer"></iframe>
   </section>
 
   <div class="install-dialog" data-install-dialog aria-hidden="true">
@@ -2071,6 +2071,7 @@
         copilotOpen.hidden = open;
         copilotOpen.setAttribute("aria-expanded", open ? "true" : "false");
         if (open && copilotClose) copilotClose.focus();
+        if (!open) copilotOpen.focus();
       }
 
       if (copilotOpen) copilotOpen.addEventListener("click", () => setCopilotOpen(true));
@@ -3661,6 +3662,21 @@
 
       if (!isStandalone()) showInstallButtons();
       loadInitialState();
+
+      const requestedAction = new URLSearchParams(window.location.search).get("action");
+      const actionSelectors = {
+        "access-lock": "[data-open-access-lock]",
+        "commitment-lock": "[data-open-lock]",
+        "lending-offer": "[data-open-lending]",
+        borrow: "[data-open-borrow]"
+      };
+      const actionSelector = requestedAction ? actionSelectors[requestedAction] : null;
+      if (actionSelector) {
+        window.requestAnimationFrame(() => {
+          const actionButton = document.querySelector(actionSelector);
+          if (actionButton) actionButton.click();
+        });
+      }
     })();
   </script>
 </body>

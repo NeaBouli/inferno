@@ -771,6 +771,76 @@ describe('Seller catalog routes', () => {
     expect(await buildChallengeMessage(refreshedSession.sessionId)).toContain('Required Lock IFR: 5000');
   });
 
+  it('keeps customer identity and exact rejection details out of public proof links', async () => {
+    const approvedSession = await createSession(businessId);
+    mockRecoverSigner.mockReturnValue(owner.address);
+    mockCheckLock.mockResolvedValue({ eligible: true, lockedAmount: '2500.0' });
+
+    const challengeResponse = await fetch(
+      `${baseUrl()}/api/sessions/${approvedSession.sessionId}/challenge`
+    );
+    expect(challengeResponse.status).toBe(200);
+    expect(challengeResponse.headers.get('cache-control')).toContain('no-store');
+
+    const attestResponse = await fetch(`${baseUrl()}/api/attest`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ sessionId: approvedSession.sessionId, signature: '0x1234' }),
+    });
+    expect(attestResponse.status).toBe(200);
+    expect(attestResponse.headers.get('cache-control')).toContain('no-store');
+    expect(await attestResponse.json()).toMatchObject({
+      status: 'APPROVED',
+      wallet: owner.address,
+    });
+
+    const approvedStatusResponse = await fetch(
+      `${baseUrl()}/api/sessions/${approvedSession.sessionId}`
+    );
+    expect(approvedStatusResponse.headers.get('cache-control')).toContain('private');
+    expect(approvedStatusResponse.headers.get('cache-control')).toContain('no-store');
+    const approvedStatus = await approvedStatusResponse.json() as Record<string, unknown>;
+    expect(approvedStatus).not.toHaveProperty('recoveredAddress');
+    expect(approvedStatus).toMatchObject({ status: 'APPROVED', reason: null });
+
+    const rejectedSession = await createSession(businessId);
+    const detailedReason = 'Only 250.0 IFR locked; 1000 IFR required.';
+    await prisma.session.update({
+      where: { id: rejectedSession.sessionId },
+      data: {
+        status: 'REJECTED',
+        recoveredAddress: owner.address,
+        lockAmountRaw: '250.0',
+        reason: detailedReason,
+        attestAttempts: 3,
+      },
+    });
+
+    const rejectedStatusResponse = await fetch(
+      `${baseUrl()}/api/sessions/${rejectedSession.sessionId}`
+    );
+    const rejectedStatus = await rejectedStatusResponse.json() as Record<string, unknown>;
+    expect(rejectedStatus).not.toHaveProperty('recoveredAddress');
+    expect(JSON.stringify(rejectedStatus)).not.toContain(owner.address);
+    expect(JSON.stringify(rejectedStatus)).not.toContain('250.0');
+    expect(rejectedStatus).toMatchObject({
+      status: 'REJECTED',
+      reason: 'Verification was not approved. The customer can review details on their device.',
+    });
+
+    const historyHeaders = await sellerHeaders(owner, 'sessions:list', businessId);
+    const historyResponse = await fetch(`${baseUrl()}/api/seller/businesses/${businessId}/sessions`, {
+      headers: historyHeaders,
+    });
+    expect(historyResponse.status).toBe(200);
+    const history = await historyResponse.json() as { sessions: Array<Record<string, unknown>> };
+    expect(history.sessions.find((item) => item.id === rejectedSession.sessionId)).toMatchObject({
+      recoveredAddress: owner.address,
+      lockAmountRaw: '250.0',
+      reason: detailedReason,
+    });
+  });
+
   it('archives products and linked rules without deleting session history', async () => {
     const product = await prisma.product.create({ data: { businessId, ...productPayload() } });
     const rule = await prisma.benefitRule.create({

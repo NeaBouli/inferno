@@ -1326,7 +1326,7 @@
           <button id="lp-premium-lock-btn" onclick="lpLockPremium()" style="width:100%;background:#16a34a;color:white;border:none;border-radius:8px;padding:9px 10px;cursor:pointer;font-size:0.8rem;font-weight:700;">Lock 1,000 IFR for Premium</button>
         </div>
         <div id="lp-premium-lock-status" style="display:none;margin:-4px 0 12px;color:#fbbf24;font-size:0.72rem;line-height:1.35;"></div>
-        <a href="wiki/commitment-vault.html#lock-widget" style="display:block;text-align:center;padding:9px 10px;background:#1f2937;border:1px solid #374151;color:#e5e7eb;border-radius:8px;font-size:0.8rem;font-weight:700;text-decoration:none;margin-bottom:8px;">&#x1F512; CommitmentVault Lock</a>
+        <a href="https://web3.ifrunit.tech/?action=commitment-lock#access" style="display:block;text-align:center;padding:9px 10px;background:#1f2937;border:1px solid #374151;color:#e5e7eb;border-radius:8px;font-size:0.8rem;font-weight:700;text-decoration:none;margin-bottom:8px;">&#x1F512; CommitmentVault Lock</a>
         <div style="display:flex;gap:8px;flex-wrap:wrap;">
           <a href="https://app.uniswap.org/swap?outputCurrency=0x77e99917Eca8539c62F509ED1193ac36580A6e7B" target="_blank" rel="noopener" style="flex:1 1 80px;text-align:center;padding:8px;background:#f97316;color:white;border-radius:8px;font-size:0.8rem;font-weight:600;text-decoration:none;">&#x1F525; Buy IFR</a>
           <button onclick="lpAddIFRToken()" style="flex:1 1 80px;background:#e9ded0;color:#2f241d;border:none;border-radius:8px;padding:8px;cursor:pointer;font-size:0.8rem;font-weight:700;">Add IFR</button>
@@ -1623,7 +1623,7 @@ var hist=[],cur="start";
 var S={
 start:{q:"What brings you here today?",sub:"Choose what fits you best:",s:1,t:2,o:[
 {i:"&#x1F4B0;",t:"Buy / Invest in IFR",d:"Bootstrap ENDED — buy IFR on Uniswap V2",n:"buy"},
-{i:"&#x1F512;",t:"Lock IFR in CommitmentVault",d:"Connect MetaMask, approve IFR, and lock on-chain",n:"lock"},
+{i:"&#x1F512;",t:"Lock IFR",d:"Choose simple refundable access or an advanced CommitmentVault lock",n:"lock"},
 {i:"&#x1F4F2;",t:"Use IFR Benefits",d:"Discover offers, scan a seller QR, or configure benefits",n:"benefits"},
 {i:"&#x1F6E0;&#xFE0F;",t:"Build with IFR",d:"Integrate IFR access into your product",n:"build"},
 {i:"&#x1F4B8;",t:"Lend / Borrow / Market",d:"Offer IFR as lender, browse market, or prepare to borrow",n:"lend_choice"},
@@ -1634,10 +1634,10 @@ buy:{q:"Do you already have a crypto wallet?",sub:"This tells us where to start:
 {i:"&#x2705;",t:"Yes \u2014 I have MetaMask",d:"Buy IFR on Uniswap V2 \u2014 Bootstrap ENDED, LP is live",a:"https://app.uniswap.org/swap?outputCurrency=0x77e99917Eca8539c62F509ED1193ac36580A6e7B",h:1},
 {i:"&#x1F195;",t:"No \u2014 I am new to crypto",d:"We guide you from zero to IFR holder",a:"wizard/buy.html"}
 ]},
-lock:{q:"How do you want to lock IFR?",sub:"Open the live CommitmentVault dashboard and sign with your own wallet:",s:2,t:2,o:[
-{i:"&#x1F512;",t:"Open Lock Dashboard",d:"MetaMask flow: approve IFR, then lock in CommitmentVault",a:"wiki/commitment-vault.html#lock-widget",h:1},
-{i:"&#x2696;&#xFE0F;",t:"Lock 50% in 10 tranches",d:"Contributor-friendly split, with the rest available for LendingVault",a:"wiki/commitment-vault.html#lock-widget"},
-{i:"&#x23F1;&#xFE0F;",t:"Single time-based lock",d:"Choose amount and unlock date in one transaction after approval",a:"wiki/commitment-vault.html#lock-widget"},
+lock:{q:"How do you want to lock IFR?",sub:"Live wallet actions run in the Web3 app; the Wiki remains the reference guide:",s:2,t:2,o:[
+{i:"&#x1F513;",t:"Simple access lock",d:"Refundable IFRLock access: approve, lock, check Premium status, or unlock all",a:"https://web3.ifrunit.tech/?action=access-lock#access",h:1},
+{i:"&#x1F512;",t:"CommitmentVault lock",d:"Create time-, price-, combined-, or indefinite-lock tranches",a:"https://web3.ifrunit.tech/?action=commitment-lock#access"},
+{i:"&#x2696;&#xFE0F;",t:"Manage existing tranches",d:"Review conditions and unlock each matured CommitmentVault tranche",a:"https://web3.ifrunit.tech/?action=commitment-lock#access"},
 {i:"&#x1F4D6;",t:"Read how locking works",d:"CommitmentVault rules, conditions, and safety guarantees",a:"wiki/commitment-vault.html"}
 ]},
 build:{q:"What do you want to build?",sub:"We tailor the guide to your use case:",s:2,t:2,o:[
@@ -1654,9 +1654,10 @@ benefits:{q:"How do you want to use IFR Benefits?",sub:"The customer and seller 
 {i:"&#x1F4D6;",t:"Read the seller guide",d:"Understand onboarding, security, QR checkout, and governance-gated rewards",a:"wiki/business-onboarding.html"}
 ]},
 lend_choice:{q:"What do you want to do in LendingVault?",sub:"Lender offers and market data are live. Borrowing opens after price collateral is activated:",s:2,t:2,o:[
-{i:"&#x1F4B8;",t:"Offer IFR as Lender",d:"Guided 1-5 flow: connect, amount, approve, create offer, verify live",a:"wiki/lending-vault.html#lending-widget",h:1},
-{i:"&#x1F3EA;",t:"View Lending Market",d:"Live offers, available IFR, utilization, and current monthly rate",a:"wiki/lending-market.html#offers"},
-{i:"&#x1F3E6;",t:"Borrow IFR",d:"Browse offers now; borrow transactions unlock after ifrPriceWei is set",a:"wiki/lending-vault.html#lending-widget"}
+{i:"&#x1F4B8;",t:"Offer IFR as Lender",d:"Connect, approve, create or increase an offer, and withdraw available IFR",a:"https://web3.ifrunit.tech/?action=lending-offer#access",h:1},
+{i:"&#x1F3EA;",t:"View Lending Market",d:"Browse current offers, available IFR, rates, and your active loans",a:"https://web3.ifrunit.tech/?action=borrow#access"},
+{i:"&#x1F3E6;",t:"Borrow / Manage a Loan",d:"Select an offer, borrow, repay, or top up collateral when on-chain pricing permits",a:"https://web3.ifrunit.tech/?action=borrow#access"},
+{i:"&#x1F4D6;",t:"Read the LendingVault guide",d:"Contract rules, collateral thresholds, risks, and current activation status",a:"wiki/lending-vault.html"}
 ]},
 community:{q:"How do you want to contribute?",sub:"Every contribution helps IFR grow:",s:2,t:2,o:[
 {i:"&#x1F4AC;",t:"Join the Community",d:"Telegram community chat",a:"wizard/contribute.html",h:1},
@@ -2001,7 +2002,7 @@ render();
           </div>
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
             <a href="https://etherscan.io/address/0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3" target="_blank" rel="noopener" style="font-size:11px;font-family:monospace;color:#8a8a96;text-decoration:none;">0x0719d9eb...C4F73d3</a>
-            <a href="wiki/commitment-vault.html#lock-widget" style="font-size:10px;color:#f97316;text-decoration:none;">Lock IFR</a>
+            <a href="https://web3.ifrunit.tech/?action=commitment-lock#access" style="font-size:10px;color:#f97316;text-decoration:none;">Lock IFR</a>
           </div>
         <div style="font-size:13px;font-weight:600;color:#fbbf24;" data-live-key="card-commitment-locked">loading&hellip;</div>
         <div style="font-size:10px;color:#666;margin-top:2px;">Total CommitmentVault locked IFR. C2 verified: <span data-live-key="c2-commitment-lock">loading&hellip;</span>, <span data-live-key="c2-commitment-tranches">10 tranches</span>, unlock 29.07.2026.</div>
@@ -2036,7 +2037,7 @@ render();
           </div>
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
             <a href="https://etherscan.io/address/0x974305Ab0EC905172e697271C3d7d385194EB9DF" target="_blank" rel="noopener" style="font-size:11px;font-family:monospace;color:#8a8a96;text-decoration:none;">0x974305Ab...94EB9DF</a>
-            <a href="wiki/lending-vault.html#lending-widget" style="font-size:10px;color:#22c55e;text-decoration:none;">Offer IFR</a>
+            <a href="https://web3.ifrunit.tech/?action=lending-offer#access" style="font-size:10px;color:#22c55e;text-decoration:none;">Offer IFR</a>
           </div>
           <div style="font-size:13px;font-weight:600;color:#22c55e;"><span data-live-key="card-lending-available">loading&hellip;</span> available</div>
           <div style="font-size:10px;color:#666;margin-top:2px;"><span data-live-key="lending-offer-count">0</span> live offers. <span data-live-key="card-lending-lent">loading&hellip;</span> lent. Borrower transactions require <span data-live-key="lending-price-status">price check</span>.</div>
@@ -3199,10 +3200,50 @@ if (isLocked) {
   box-shadow: 0 8px 40px rgba(0,0,0,0.5);
   background: #1a1a1a;
 }
+#ifr-panel.is-open { display: block; }
+#ifr-panel[hidden] { display: none; }
+#ifr-panel-toolbar {
+  display: flex;
+  height: 38px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 8px 0 14px;
+  border-bottom: 1px solid rgba(255,255,255,0.14);
+  background: #171b18;
+  color: #f4ded0;
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
 #ifr-panel iframe {
   width: 100%;
-  height: 100%;
+  height: calc(100% - 38px);
   border: none;
+}
+#ifr-panel-loading {
+  position: absolute;
+  inset: 38px 0 0;
+  display: grid;
+  place-items: center;
+  margin: 0;
+  background: #171b18;
+  color: #f4ded0;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+#ifr-panel-loading[hidden] { display: none; }
+#ifr-panel-close {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  border: 1px solid rgba(255,255,255,0.24);
+  border-radius: 50%;
+  background: rgba(23,27,24,0.9);
+  color: #fff;
+  font-size: 1.25rem;
+  line-height: 1;
+  cursor: pointer;
 }
 @media (max-width: 768px) {
   #ifr-panel {
@@ -3227,28 +3268,56 @@ if (isLocked) {
   #ifr-btn.panel-open {
     display: none !important;
   }
-  #ifr-panel-close {
-    display: block !important;
-  }
 }
 </style>
 
-<button id="ifr-btn" onclick="
-  var p = document.getElementById('ifr-panel');
-  var isOpen = p.style.display === 'block';
-  p.style.display = isOpen ? 'none' : 'block';
-  this.classList.toggle('panel-open', !isOpen);
-"><img src="assets/CoPilot.jpg" alt="IFR Copilot"></button>
+<button id="ifr-btn" type="button" aria-label="Open IFR Copilot" aria-controls="ifr-panel" aria-expanded="false"><img src="assets/CoPilot.jpg" alt=""></button>
 
-<div id="ifr-panel">
-  <button onclick="document.getElementById('ifr-panel').style.display='none';document.getElementById('ifr-btn').classList.remove('panel-open');"
-    style="position:absolute;top:8px;right:8px;z-index:10;background:rgba(0,0,0,0.6);color:#fff;border:none;border-radius:50%;width:28px;height:28px;font-size:1.1rem;cursor:pointer;line-height:1;display:none;"
-    id="ifr-panel-close">&times;</button>
+<section id="ifr-panel" role="dialog" aria-label="IFR Copilot help" aria-hidden="true" hidden>
+  <div id="ifr-panel-toolbar">
+    <span>IFR Copilot</span>
+    <button type="button" id="ifr-panel-close" aria-label="Close IFR Copilot">&times;</button>
+  </div>
+  <p id="ifr-panel-loading" role="status">Loading IFR Copilot...</p>
   <iframe
-    src="https://copilot-api.ifrunit.tech"
-    allow="microphone">
+    data-src="https://copilot-api.ifrunit.tech?embedded=1&amp;surface=landing"
+    title="IFR Copilot"
+    loading="lazy"
+    referrerpolicy="no-referrer">
   </iframe>
-</div>
+</section>
+<script>
+(function() {
+  var launcher = document.getElementById('ifr-btn');
+  var panel = document.getElementById('ifr-panel');
+  var close = document.getElementById('ifr-panel-close');
+  var frame = panel ? panel.querySelector('iframe') : null;
+  var loading = document.getElementById('ifr-panel-loading');
+
+  function setOpen(open) {
+    if (!launcher || !panel) return;
+    if (open && frame && !frame.src) frame.src = frame.getAttribute('data-src');
+    if (!open && frame) frame.removeAttribute('src');
+    if (!open && loading) loading.hidden = false;
+    panel.hidden = !open;
+    panel.classList.toggle('is-open', open);
+    panel.setAttribute('aria-hidden', open ? 'false' : 'true');
+    launcher.classList.toggle('panel-open', open);
+    launcher.setAttribute('aria-expanded', open ? 'true' : 'false');
+    if (open && close) close.focus();
+    if (!open) launcher.focus();
+  }
+
+  launcher.addEventListener('click', function() { setOpen(true); });
+  close.addEventListener('click', function() { setOpen(false); });
+  if (frame) frame.addEventListener('load', function() {
+    if (loading) loading.hidden = true;
+  });
+  document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape' && panel && !panel.hidden) setOpen(false);
+  });
+})();
+</script>
 <!-- End Copilot Widget -->
 
 

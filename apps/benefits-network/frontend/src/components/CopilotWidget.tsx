@@ -1,16 +1,19 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 export function CopilotWidget() {
   const [open, setOpen] = useState(false);
   const [openedOnce, setOpenedOnce] = useState(false);
   const [loaded, setLoaded] = useState(false);
+  const launcherRef = useRef<HTMLButtonElement>(null);
+  const closeRef = useRef<HTMLButtonElement>(null);
 
   const closeCopilot = useCallback(() => {
     setOpen(false);
     setOpenedOnce(false);
     setLoaded(false);
+    window.requestAnimationFrame(() => launcherRef.current?.focus());
   }, []);
 
   useEffect(() => {
@@ -21,6 +24,10 @@ export function CopilotWidget() {
     window.addEventListener('keydown', closeOnEscape);
     return () => window.removeEventListener('keydown', closeOnEscape);
   }, [closeCopilot, open]);
+
+  useEffect(() => {
+    if (open) closeRef.current?.focus();
+  }, [open]);
 
   return (
     <div className="shop-copilot" data-testid="copilot-widget">
@@ -37,6 +44,7 @@ export function CopilotWidget() {
           <span>IFR Copilot</span>
           <button
             type="button"
+            ref={closeRef}
             className="shop-copilot-close"
             onClick={closeCopilot}
             aria-label="Close IFR Copilot"
@@ -51,7 +59,7 @@ export function CopilotWidget() {
         ) : null}
         {openedOnce ? (
           <iframe
-            src="https://copilot-api.ifrunit.tech"
+            src="https://copilot-api.ifrunit.tech?embedded=1&surface=benefits"
             title="IFR Copilot"
             loading="lazy"
             referrerPolicy="no-referrer"
@@ -61,6 +69,7 @@ export function CopilotWidget() {
       </section>
       <button
         type="button"
+        ref={launcherRef}
         className={`shop-copilot-button ${open ? 'is-hidden' : ''}`}
         onClick={() => {
           setOpenedOnce(true);

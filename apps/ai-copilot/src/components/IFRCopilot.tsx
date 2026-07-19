@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 
 type Mode = "customer" | "partner" | "developer";
+type Surface = "landing" | "web3" | "benefits" | "standalone";
 
 interface Message {
   role: "user" | "assistant";
@@ -19,8 +20,21 @@ const MODE_PLACEHOLDERS: Record<Mode, string> = {
   developer: "Show me isLocked() integration code",
 };
 
+const SURFACE_HELP: Record<Surface, string> = {
+  landing: "Ask about IFR, buying, access locks, benefits, lending, governance, or verified contracts.",
+  web3: "Ask about wallet connection, IFRLock access, CommitmentVault tranches, LendingVault actions, or token import.",
+  benefits: "Ask about offers, IFRLock eligibility, QR checkout, My benefits, seller setup, catalogs, operators, or redemption.",
+  standalone: "Ask about Inferno Protocol, IFR utility, access locks, benefits, lending, governance, or integrations.",
+};
+
 export default function IFRCopilot() {
-  const [isOpen, setIsOpen] = useState(false);
+  const query = new URLSearchParams(window.location.search);
+  const embedded = query.get("embedded") === "1";
+  const requestedSurface = query.get("surface");
+  const surface: Surface = requestedSurface === "landing" || requestedSurface === "web3" || requestedSurface === "benefits"
+    ? requestedSurface
+    : "standalone";
+  const [isOpen, setIsOpen] = useState(embedded);
   const [mode, setMode] = useState<Mode>("customer");
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
@@ -29,7 +43,9 @@ export default function IFRCopilot() {
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (messages.length > 0) {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
   }, [messages]);
 
   useEffect(() => {
@@ -111,7 +127,7 @@ export default function IFRCopilot() {
     setMessages([]);
   }
 
-  if (!isOpen) {
+  if (!isOpen && !embedded) {
     return (
       <button
         onClick={() => setIsOpen(true)}
@@ -128,7 +144,7 @@ export default function IFRCopilot() {
   }
 
   return (
-    <div className="fixed bottom-5 right-5 z-50 w-[400px] h-[600px] bg-ifr-dark border border-ifr-border rounded-2xl shadow-2xl shadow-black/60 flex flex-col overflow-hidden">
+    <div className={`${embedded ? "h-full w-full" : "fixed bottom-5 right-5 z-50 h-[600px] w-[400px] rounded-2xl border shadow-2xl shadow-black/60"} bg-ifr-dark border-ifr-border flex flex-col overflow-hidden`}>
       {/* Header */}
       <div className="bg-ifr-card border-b border-ifr-border p-3">
         <div className="flex items-center justify-between mb-2">
@@ -136,12 +152,15 @@ export default function IFRCopilot() {
             <div className="w-2 h-2 rounded-full bg-ifr-red animate-pulse" />
             <span className="text-white font-semibold text-sm">IFR Copilot</span>
           </div>
-          <button
-            onClick={() => setIsOpen(false)}
-            className="text-ifr-muted hover:text-white transition-colors text-lg leading-none"
-          >
-            &times;
-          </button>
+          {!embedded ? (
+            <button
+              onClick={() => setIsOpen(false)}
+              className="text-ifr-muted hover:text-white transition-colors text-lg leading-none"
+              aria-label="Close IFR Copilot"
+            >
+              &times;
+            </button>
+          ) : null}
         </div>
 
         {/* Mode selector */}
@@ -175,13 +194,13 @@ export default function IFRCopilot() {
             <div className="max-w-[92%] bg-ifr-card text-gray-200 border border-ifr-border rounded-xl px-4 py-3 text-sm leading-relaxed">
               <p className="mb-2">Welcome to IFR Copilot.</p>
               <p className="text-ifr-muted text-xs mb-3">
-                You&apos;re browsing without a connected wallet &mdash; no problem! I can still help you with everything about the IFR Protocol.
+                {SURFACE_HELP[surface]}
               </p>
 
               <p className="text-white font-semibold text-xs mb-1">Without a wallet, you can:</p>
               <ul className="text-ifr-muted text-xs mb-3 space-y-0.5 list-disc list-inside">
                 <li>Ask anything about IFR tokenomics, governance, or the lock mechanism</li>
-                <li>Learn how the Bootstrap phase works</li>
+                <li>Understand the finalized launch and live Uniswap market</li>
                 <li>Explore the roadmap and security model</li>
                 <li>Understand how IFR creates real utility</li>
               </ul>
@@ -200,13 +219,6 @@ export default function IFRCopilot() {
                 <li>AI Copilot Gate and builder onboarding pathway</li>
                 <li>Your lock is verified on-chain &mdash; no account needed</li>
               </ul>
-
-              <button
-                onClick={() => console.log("WalletConnect coming soon")}
-                className="w-full bg-ifr-dark border border-ifr-border text-ifr-muted rounded-lg py-2 text-xs font-medium mb-3 cursor-default opacity-60"
-              >
-                Connect Wallet (coming soon)
-              </button>
 
               <p className="text-ifr-muted text-xs italic">
                 Or just ask me anything! Try: &ldquo;{MODE_PLACEHOLDERS[mode]}&rdquo;

@@ -14,6 +14,8 @@ const attestSchema = z.object({
 // GET /api/sessions/:id/challenge — mounted on sessions router would be cleaner,
 // but spec puts it here. We mount this separately in index.ts.
 router.get('/sessions/:id/challenge', challengeRateLimiter, async (req, res, next) => {
+  res.set('Cache-Control', 'private, no-store');
+  res.set('Pragma', 'no-cache');
   try {
     const message = await buildChallengeMessage(req.params.id);
     res.json({ message });
@@ -27,6 +29,8 @@ router.get('/sessions/:id/challenge', challengeRateLimiter, async (req, res, nex
 });
 
 router.post('/attest', attestRateLimiter, validate(attestSchema), async (req, res, next) => {
+  res.set('Cache-Control', 'private, no-store');
+  res.set('Pragma', 'no-cache');
   try {
     const result = await attest(req.body.sessionId, req.body.signature);
     res.json(result);
