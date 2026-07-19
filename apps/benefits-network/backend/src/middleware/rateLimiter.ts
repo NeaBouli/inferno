@@ -33,6 +33,14 @@ export const challengeRateLimiter = rateLimit({
   legacyHeaders: false,
 });
 
+export const customerHistoryRateLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 180,
+  message: { error: 'Too many customer history requests. Try again later.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
 export const discoveryRateLimiter = rateLimit({
   windowMs: 60 * 1000,
   max: 60,

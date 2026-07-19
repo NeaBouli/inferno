@@ -351,7 +351,7 @@ async function addEligibilityWallet(context, { rpcError = false } = {}) {
     const listeners = new Map();
     const methods = [];
     let currentChainId = '0x1';
-    const walletAddress = '0x2222222222222222222222222222222222222222';
+    let walletAddress = '0x2222222222222222222222222222222222222222';
     const lockedRaw = BigInt('1500125000000');
     Object.defineProperty(window, '__ifrSetEligibilityChain', {
       configurable: false,
@@ -365,6 +365,14 @@ async function addEligibilityWallet(context, { rpcError = false } = {}) {
       configurable: false,
       value: methods,
     });
+    Object.defineProperty(window, '__ifrSetEligibilityWallet', {
+      configurable: false,
+      value: (nextWalletAddress) => {
+        walletAddress = nextWalletAddress;
+        const listener = listeners.get('accountsChanged');
+        if (listener) listener(nextWalletAddress ? [nextWalletAddress] : []);
+      },
+    });
     Object.defineProperty(window, 'ethereum', {
       configurable: true,
       value: {
@@ -374,6 +382,7 @@ async function addEligibilityWallet(context, { rpcError = false } = {}) {
           if (method === 'eth_chainId') return currentChainId;
           if (method === 'net_version') return String(Number.parseInt(currentChainId, 16));
           if (method === 'eth_accounts' || method === 'eth_requestAccounts') return [walletAddress];
+          if (method === 'personal_sign') return `0x${'44'.repeat(64)}1b`;
           if (method === 'eth_call') {
             if (shouldFail) throw Object.assign(new Error('Eligibility RPC unavailable.'), { code: -32000 });
             return `0x${lockedRaw.toString(16).padStart(64, '0')}`;
@@ -390,6 +399,159 @@ async function addEligibilityWallet(context, { rpcError = false } = {}) {
       },
     });
   }, { shouldFail: rpcError });
+}
+
+async function verifyCustomerWalletHistory() {
+  const browser = await chromium.launch({ headless: true });
+  const context = await browser.newContext({ serviceWorkers: 'block' });
+  await addEligibilityWallet(context);
+  const page = await context.newPage();
+  const expectedWallet = '0x2222222222222222222222222222222222222222';
+  let challengeCount = 0;
+  let authorizationCount = 0;
+  let historyRequestCount = 0;
+  const historyRequests = [];
+
+  await page.route('**/api/customer/history**', async (route) => {
+    const request = route.request();
+    const url = new URL(request.url());
+    if (url.pathname === '/api/customer/history/challenge') {
+      challengeCount += 1;
+      const body = request.postDataJSON();
+      assert(body.walletAddress.toLowerCase() === expectedWallet, 'customer history challenge used the wrong wallet');
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          message: `IFR Benefits Network - Customer History Authorization\nNonce: smoke-customer-${challengeCount}`,
+          nonce: `${String(challengeCount).padStart(64, '0')}`,
+          expiresAt: '2026-07-19T09:10:00.000Z',
+        }),
+      });
+      return;
+    }
+    if (url.pathname === '/api/customer/history/authorize') {
+      authorizationCount += 1;
+      const body = request.postDataJSON();
+      assert(body.walletAddress.toLowerCase() === expectedWallet, 'customer history authorization used the wrong wallet');
+      assert(Boolean(body.signature), 'customer history authorization omitted the wallet signature');
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ accessToken: `customer-access-token-${authorizationCount}`, expiresAt: '2026-07-19T09:15:00.000Z' }),
+      });
+      return;
+    }
+    if (url.pathname === '/api/customer/history' && request.method() === 'GET') {
+      historyRequestCount += 1;
+      historyRequests.push({
+        authorization: request.headers().authorization,
+        cursor: url.searchParams.get('cursor'),
+        snapshot: url.searchParams.get('snapshot'),
+      });
+      if (historyRequestCount === 2) {
+        await route.fulfill({
+          status: 401,
+          contentType: 'application/json',
+          body: JSON.stringify({ error: 'Customer history access expired' }),
+        });
+        return;
+      }
+      if (historyRequestCount === 4) await new Promise((resolve) => setTimeout(resolve, 300));
+      const older = Boolean(url.searchParams.get('cursor'));
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          sessions: older ? [{
+            id: 'customer-benefit-older',
+            status: 'APPROVED',
+            reason: null,
+            expiresAt: '2026-07-18T09:10:00.000Z',
+            createdAt: '2026-07-18T09:00:00.000Z',
+            updatedAt: '2026-07-18T09:01:00.000Z',
+            redeemedAt: null,
+            seller: { id: 'smoke-seller-older', name: 'Older IFR Studio' },
+            benefit: {
+              benefitRuleId: 'older-rule', label: 'Studio access', category: 'Services',
+              productName: 'Member session', discountPercent: 10, requiredLockIFR: 2500,
+              dailyRedemptionLimit: 0, monthlyRedemptionLimit: 0,
+            },
+          }] : [{
+            id: 'customer-benefit-redeemed',
+            status: 'REDEEMED',
+            reason: null,
+            expiresAt: '2026-07-19T09:10:00.000Z',
+            createdAt: '2026-07-19T09:00:00.000Z',
+            updatedAt: '2026-07-19T09:05:00.000Z',
+            redeemedAt: '2026-07-19T09:05:00.000Z',
+            seller: { id: 'smoke-seller-coffee', name: 'IFR Coffee House' },
+            benefit: {
+              benefitRuleId: 'coffee-rule', label: 'Premium coffee', category: 'Coffee',
+              productName: 'Reserve espresso', discountPercent: 15, requiredLockIFR: 1000,
+              dailyRedemptionLimit: 1, monthlyRedemptionLimit: 4,
+            },
+          }],
+          pagination: older
+            ? { limit: 20, hasMore: false, nextCursor: null, snapshot: '2026-07-19T09:06:00.000Z' }
+            : { limit: 20, hasMore: true, nextCursor: 'customer-benefit-redeemed', snapshot: '2026-07-19T09:06:00.000Z' },
+        }),
+      });
+      return;
+    }
+    await route.fulfill({ status: 404, contentType: 'application/json', body: JSON.stringify({ error: 'Not mocked' }) });
+  });
+  await installEligibilityRoutes(page);
+  await installEligibilityRpc(page);
+
+  try {
+    await gotoAppPage(page, '/');
+    await connectEligibilityWallet(page);
+    await expectText(page, 'Connected: 0x2222...2222');
+    await page.getByRole('button', { name: 'Load wallet history', exact: true }).click();
+    await expectText(page, 'IFR Coffee House');
+    await expectText(page, 'Loaded 1 verified benefit for this wallet.');
+    assert(challengeCount === 1 && authorizationCount === 1, 'initial customer history load did not use one signed access exchange');
+    assert(historyRequests[0].authorization === 'Bearer customer-access-token-1', 'customer history omitted its memory-only access token');
+
+    await page.getByRole('button', { name: 'Load older benefits', exact: true }).click();
+    await expectText(page, 'Older IFR Studio');
+    await expectText(page, 'Loaded 1 older benefit.');
+    assert(challengeCount === 2 && authorizationCount === 2, 'expired customer history access was not reauthorized once');
+    assert(historyRequests[1].cursor === 'customer-benefit-redeemed', 'older customer history used the wrong cursor');
+    assert(historyRequests[1].snapshot === '2026-07-19T09:06:00.000Z', 'older customer history lost the fixed snapshot');
+    assert(historyRequests[2].authorization === 'Bearer customer-access-token-2', 'reauthorized history did not use the refreshed token');
+    if (shouldScreenshot) {
+      fs.mkdirSync(screenshotDir, { recursive: true });
+      await page.getByRole('heading', { name: 'My benefits', exact: true })
+        .locator('xpath=ancestor::section[1]')
+        .screenshot({
+          animations: 'disabled',
+          path: path.join(screenshotDir, 'benefits-customer-wallet-history.png'),
+        });
+    }
+
+    await page.evaluate(() => window.__ifrSetEligibilityWallet('0x3333333333333333333333333333333333333333'));
+    await expectText(page, 'Connected: 0x3333...3333');
+    assert(await page.getByText('IFR Coffee House', { exact: true }).count() === 0, 'wallet switch exposed the previous customer history');
+
+    await page.evaluate((walletAddress) => window.__ifrSetEligibilityWallet(walletAddress), expectedWallet);
+    await expectText(page, 'Connected: 0x2222...2222');
+    await page.getByRole('button', { name: 'Load wallet history', exact: true }).click();
+    await page.waitForTimeout(50);
+    await page.evaluate(() => window.__ifrSetEligibilityWallet('0x3333333333333333333333333333333333333333'));
+    await page.waitForTimeout(400);
+    assert(await page.getByText('IFR Coffee House', { exact: true }).count() === 0, 'stale customer history rendered after a wallet switch');
+    assert(
+      await page.getByRole('button', { name: 'Load wallet history', exact: true }).isEnabled(),
+      'wallet switch left customer history stuck in a loading state'
+    );
+    assert(await page.getByText(expectedWallet, { exact: false }).count() === 0, 'customer history UI exposed a full wallet address');
+    log('Signed cross-device customer history OK');
+  } finally {
+    await context.close();
+    await browser.close();
+  }
 }
 
 async function connectEligibilityWallet(page) {
@@ -1159,7 +1321,7 @@ async function verifyPage(contextOptions, label) {
     await expectText(page, 'Quick tier amounts');
     await expectText(page, 'Silver / 5,000 IFR');
     await expectText(page, 'Unlock all');
-    await expectText(page, 'Recent customer proofs');
+    await expectText(page, 'My benefits');
     await expectText(page, 'No customer proofs saved on this device yet');
     await expectText(page, 'Scan seller QR');
     const copilotButton = page.getByTestId('open-copilot');
@@ -1198,7 +1360,7 @@ async function verifyPage(contextOptions, label) {
       );
     });
     await page.reload({ waitUntil: 'domcontentloaded', timeout: timeoutMs });
-    await expectText(page, 'Recent customer proofs');
+    await expectText(page, 'My benefits');
     await expectText(page, 'Smoke Coffee');
     await expectText(page, 'Counter checkout / 12% / 1,000 IFR');
     await expectText(page, '0x1234...abcd');
@@ -1493,6 +1655,7 @@ async function main() {
   await verifyHttpSurface();
   await verifyWalletAssetRequest();
   await verifyOfferEligibility();
+  await verifyCustomerWalletHistory();
   await verifyRuleTemplateAuthorization();
   await verifyPage({ viewport: { width: 1440, height: 1100 } }, 'desktop');
   await verifyPage(devices['iPad Pro 11'], 'ipad');

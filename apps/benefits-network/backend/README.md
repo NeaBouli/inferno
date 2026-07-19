@@ -66,6 +66,9 @@ npm run dev            # http://localhost:3001
 | GET | `/api/sessions/:id/challenge` | Public | Get signature challenge |
 | POST | `/api/attest` | Public | Submit signature + verify |
 | POST | `/api/sessions/:id/redeem` | Owner/operator wallet signature | Mark an approved session as redeemed |
+| POST | `/api/customer/history/challenge` | Public, rate limited | Issue a wallet-bound one-time message for customer history |
+| POST | `/api/customer/history/authorize` | Customer wallet signature | Exchange the signed one-time challenge for a ten-minute read token |
+| GET | `/api/customer/history?limit=20&cursor=...&snapshot=...` | Customer history read token | Return only the signer's verified benefit history, maximum 50 rows per page |
 
 ## Session Flow
 
@@ -81,6 +84,19 @@ Customer signatures are bound to the fixed canonical domain
 nonce, expiry and chain ID. The backend does not derive this boundary from a
 request Host header. A signature over an older or foreign-domain challenge
 therefore does not authenticate the same wallet against the current challenge.
+
+## Customer Benefits History
+
+Customer history is not authorized by a wallet query parameter. The customer first requests a
+server-time, random one-time challenge and signs its canonical `shop.ifrunit.tech` message. A
+successful exchange atomically consumes the challenge and returns a random ten-minute read token.
+Only its SHA-256 hash is stored; the frontend keeps the bearer token in memory and never writes it
+to local storage.
+
+The history endpoint is signer-bound and snapshot/cursor-paginated with a maximum of 50 rows per
+request. It returns seller identity, immutable benefit snapshots, status and timestamps for the
+signer's own verified sessions. It excludes recovered wallet addresses, signatures, challenge
+nonces, authorization tokens, audit logs, lock balances and seller-only data.
 
 ## Benefit Rules
 
@@ -126,12 +142,12 @@ also checks the recovered address against `Business.ownerAddress` before owner-o
 management actions. Active, unexpired checkout operators may create and redeem QR
 sessions but cannot perform owner-only mutations.
 
-Session history uses the same headers with `Action: sessions:list` and the
-business id as `Business`. The optional `limit` query parameter is clamped from
-1 to 50. Responses include the session status, recovered customer wallet,
-locked amount, rejection reason, redeem timestamp and the attached rule/default
-benefit fields so sellers can reconcile recent checkout checks without exposing
-customer signatures.
+Seller session history uses the same headers with `Action: sessions:list` and the
+business id as `Business`. Each snapshot/cursor page is clamped from 1 to 50 rows.
+Responses include the session status, recovered customer wallet, locked amount,
+rejection reason, redeem timestamp and attached rule/default benefit fields. The
+frontend masks wallets and builds the full paginated CSV locally without exposing
+customer signatures or creating a server-side export file.
 
 Seller write requests use these headers:
 

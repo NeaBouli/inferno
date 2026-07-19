@@ -5,7 +5,7 @@ const path = require('path');
 
 const root = path.resolve(__dirname, '..');
 const migrationsDir = path.join(root, 'prisma', 'migrations');
-const targetMigration = '20260719041500_add_business_public_profile';
+const targetMigration = '20260719044500_add_customer_history_auth';
 const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'benefits-populated-upgrade-'));
 const dbPath = path.join(tempDir, 'upgrade.db');
 
@@ -111,6 +111,20 @@ try {
     throw new Error(
       `Missing seller profile migration state: columns=${businessProfileColumns}, ` +
       `existingProfile=${existingBusinessProfile}`
+    );
+  }
+
+  const customerHistoryTables = sqlite(`
+    SELECT COUNT(*) FROM sqlite_master
+    WHERE type = 'table' AND name IN ('CustomerHistoryChallenge', 'CustomerHistoryAccess');
+  `);
+  const customerHistoryIndex = sqlite(`
+    SELECT COUNT(*) FROM sqlite_master
+    WHERE type = 'index' AND name = 'Session_customerHistory_idx';
+  `);
+  if (customerHistoryTables !== '2' || customerHistoryIndex !== '1') {
+    throw new Error(
+      `Missing customer history auth state: tables=${customerHistoryTables}, index=${customerHistoryIndex}`
     );
   }
 

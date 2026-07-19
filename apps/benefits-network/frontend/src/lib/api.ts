@@ -349,6 +349,39 @@ export interface AttestResult {
   attemptsRemaining?: number;
 }
 
+export interface CustomerHistoryChallenge {
+  message: string;
+  nonce: string;
+  expiresAt: string;
+}
+
+export interface CustomerHistoryAuthorization {
+  accessToken: string;
+  expiresAt: string;
+}
+
+export interface CustomerHistoryItem {
+  id: string;
+  status: SessionStatus['status'];
+  reason: string | null;
+  expiresAt: string;
+  createdAt: string;
+  updatedAt: string;
+  redeemedAt: string | null;
+  seller: { id: string; name: string };
+  benefit: Omit<SessionBenefit, 'ttlSeconds' | 'tierLabel'>;
+}
+
+export interface CustomerHistoryPage {
+  sessions: CustomerHistoryItem[];
+  pagination: {
+    limit: number;
+    hasMore: boolean;
+    nextCursor: string | null;
+    snapshot: string;
+  };
+}
+
 export function getBusiness(id: string) {
   return fetchJSON<BusinessInfo>(`/api/businesses/${id}`);
 }
@@ -673,6 +706,39 @@ export function submitAttest(sessionId: string, signature: string) {
   return fetchJSON<AttestResult>('/api/attest', {
     method: 'POST',
     body: JSON.stringify({ sessionId, signature }),
+  });
+}
+
+export function getCustomerHistoryChallenge(walletAddress: string) {
+  return fetchJSON<CustomerHistoryChallenge>('/api/customer/history/challenge', {
+    method: 'POST',
+    body: JSON.stringify({ walletAddress }),
+  });
+}
+
+export function authorizeCustomerHistory(input: {
+  walletAddress: string;
+  nonce: string;
+  signature: string;
+}) {
+  return fetchJSON<CustomerHistoryAuthorization>('/api/customer/history/authorize', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  });
+}
+
+export function getCustomerHistory(
+  accessToken: string,
+  limit = 20,
+  cursor?: string | null,
+  snapshot?: string | null
+) {
+  const query = new URLSearchParams({ limit: String(limit) });
+  if (cursor) query.set('cursor', cursor);
+  if (snapshot) query.set('snapshot', snapshot);
+  return fetchJSON<CustomerHistoryPage>(`/api/customer/history?${query.toString()}`, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+    cache: 'no-store',
   });
 }
 

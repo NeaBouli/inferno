@@ -117,6 +117,7 @@ model Session {
   @@index([businessId])
   @@index([benefitRuleId])
   @@index([benefitRuleId, status, redeemedAt], map: "Session_redemptionLimitLookup_idx")
+  @@index([recoveredAddress, createdAt, id], map: "Session_customerHistory_idx")
   @@index([status])
 }
 
@@ -181,4 +182,26 @@ model SellerAuthorizationChallenge {
 
   @@index([expiresAt])
   @@index([walletAddress, action, businessId])
+}
+
+model CustomerHistoryChallenge {
+  nonce         String   @id
+  walletAddress String
+  issuedAt      DateTime
+  expiresAt     DateTime
+  consumedAt    DateTime?
+  createdAt     DateTime @default(now())
+
+  @@index([expiresAt])
+  @@index([walletAddress, consumedAt])
+}
+
+model CustomerHistoryAccess {
+  tokenHash     String   @id
+  walletAddress String
+  expiresAt     DateTime
+  createdAt     DateTime @default(now())
+
+  @@index([expiresAt])
+  @@index([walletAddress, expiresAt])
 }

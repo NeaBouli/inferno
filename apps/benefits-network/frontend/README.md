@@ -50,6 +50,12 @@ contracts, entered IFR amount, unlocked IFR balance and allowance, then guides
 the user toward Buy IFR, Approve or Lock. Tier chips are buttons that set common
 lock amounts for seller benefit rules.
 
+`My benefits` combines two deliberately separate histories. The redacted recent-proof list stays
+local to the current browser for offline checkout recovery. A connected customer can additionally
+sign one read-only message to load their verified benefit history across devices. The resulting
+ten-minute access token remains in React memory only; it is cleared on disconnect or account
+change, and older pages stay bound to the original wallet and snapshot.
+
 `Add IFR to wallet` uses the active Wagmi connector first and never falls back
 to a different injected wallet while a connector is active. It requests the
 configured chain, then submits the EIP-747 token metadata with the canonical

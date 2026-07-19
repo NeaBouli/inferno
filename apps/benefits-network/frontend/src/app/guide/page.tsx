@@ -17,6 +17,10 @@ const customerSteps = [
     title: 'Scan, sign, receive the benefit',
     body: 'Scan the seller QR, review seller, product, discount and required IFR, then sign. The seller screen shows APPROVED or the reason for rejection.',
   },
+  {
+    title: 'Review My benefits anywhere',
+    body: 'On the home screen, sign the explicit read-only history request to load benefits verified by the same wallet across devices. The ten-minute access stays only in browser memory.',
+  },
 ];
 
 const sellerSteps = [
@@ -48,6 +52,7 @@ const developerItems = [
   ['Session history', 'GET /api/seller/businesses/:id/sessions?limit=50&cursor=...&snapshot=... with Action: sessions:list. Preserve the first response snapshot across pages.'],
   ['QR session', 'Request a one-time Action: sessions:create message bound to owner/operator, business and rule; sign it, then POST /api/sessions with x-ifr-nonce.'],
   ['Customer proof', 'GET /api/sessions/:id/challenge, then POST /api/attest with the customer signature.'],
+  ['Customer history', 'POST /api/customer/history/challenge, sign once, exchange at /authorize, then use the memory-only read token for signer-bound snapshot pages.'],
   ['Redeem', 'Request a one-time sessions:redeem challenge bound to the session ID, sign it, then POST /api/sessions/:id/redeem with x-ifr-nonce.'],
 ];
 
@@ -147,7 +152,7 @@ export default function GuidePage() {
               </div>
               <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
                 <strong className="text-white">Customer signatures</strong>
-                <p className="mt-1">One-time QR challenge; no token transfer during verification.</p>
+                <p className="mt-1">One-time QR proof or read-only My benefits authorization; neither moves tokens.</p>
               </div>
               <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
                 <strong className="text-white">Seller signatures</strong>
