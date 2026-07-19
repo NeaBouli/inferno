@@ -68,6 +68,13 @@ async function verifyHttpSurface() {
   assert(Number(ready.chainId) === 1, `/api/ready chainId is ${ready.chainId}, expected 1`);
   log('API readiness OK');
 
+  const discovery = await fetchJson('/api/businesses?limit=1&page=1');
+  assert(Array.isArray(discovery.offers), 'public offer discovery must return offers');
+  assert(Array.isArray(discovery.categories), 'public offer discovery must return categories');
+  assert(discovery.pagination?.limit === 1, 'public offer discovery must honor bounded pagination');
+  assert(typeof discovery.pagination?.total === 'number', 'public offer discovery total is missing');
+  log('Public offer discovery OK');
+
   const manifest = await fetchJson('/manifest.json');
   assert(manifest.name === 'IFR Benefits Network', 'manifest name mismatch');
   assert(manifest.display === 'standalone', 'manifest display must be standalone');
@@ -246,16 +253,86 @@ async function verifyPage(contextOptions, label) {
   const context = await browser.newContext({ ...contextOptions, serviceWorkers: 'block' });
   const page = await context.newPage();
   const errors = [];
+  let expectDiscovery503 = false;
   page.on('pageerror', (error) => errors.push(`pageerror: ${error.message}`));
   page.on('console', (message) => {
     const text = message.text();
-    if (message.type() === 'error' && !isIgnorableConsoleError(text)) {
+    const expectedDiscoveryError = expectDiscovery503 && text.includes('status of 503');
+    if (message.type() === 'error' && !expectedDiscoveryError && !isIgnorableConsoleError(text)) {
       errors.push(`console: ${text}`);
     }
   });
   page.on('response', (response) => {
     const status = response.status();
-    if (status >= 500) errors.push(`HTTP ${status}: ${response.url()}`);
+    if (status >= 500 && !response.url().includes('query=force-error')) {
+      errors.push(`HTTP ${status}: ${response.url()}`);
+    }
+  });
+
+  let releaseSlowDiscovery;
+  const slowDiscoveryGate = new Promise((resolve) => { releaseSlowDiscovery = resolve; });
+  let resolveSlowDiscoveryDone;
+  const slowDiscoveryDone = new Promise((resolve) => { resolveSlowDiscoveryDone = resolve; });
+  let forcedErrorAttempts = 0;
+
+  await page.route('**/api/businesses?**', async (route) => {
+    const requestUrl = new URL(route.request().url());
+    const search = (requestUrl.searchParams.get('query') || '').toLowerCase();
+    const category = requestUrl.searchParams.get('category') || '';
+    const allOffers = [
+      {
+        id: 'smoke-discovery-coffee',
+        label: 'Coffee member',
+        category: 'Coffee',
+        productName: 'Reserve espresso',
+        discountPercent: 15,
+        requiredLockIFR: 1000,
+        dailyRedemptionLimit: 1,
+        monthlyRedemptionLimit: 10,
+        business: { id: 'smoke-catalog', name: 'Smoke Coffee' },
+        product: { id: 'smoke-product', name: 'Reserve espresso', description: 'A customer-facing catalog item.' },
+      },
+      {
+        id: 'smoke-discovery-service',
+        label: 'Private member session',
+        category: 'Services',
+        productName: 'Private consultation',
+        discountPercent: 10,
+        requiredLockIFR: 2500,
+        dailyRedemptionLimit: 0,
+        monthlyRedemptionLimit: 0,
+        business: { id: 'smoke-services', name: 'Smoke Studio' },
+        product: null,
+      },
+    ];
+    if (search === 'race-old') await slowDiscoveryGate;
+    if (search === 'force-error' && forcedErrorAttempts++ === 0) {
+      await route.fulfill({
+        status: 503,
+        contentType: 'application/json',
+        body: JSON.stringify({ error: 'Discovery temporarily unavailable.' }),
+      });
+      return;
+    }
+    const offers = search === 'race-old'
+      ? [allOffers[0]]
+      : search === 'race-new' || search === 'force-error'
+        ? [allOffers[1]]
+        : allOffers.filter((offer) => {
+      const matchesCategory = !category || offer.category === category;
+      const searchable = `${offer.business.name} ${offer.productName} ${offer.label} ${offer.category}`.toLowerCase();
+      return matchesCategory && (!search || searchable.includes(search));
+        });
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        offers,
+        categories: ['Coffee', 'Services'],
+        pagination: { page: 1, limit: 8, total: offers.length, totalPages: offers.length ? 1 : 0, hasNext: false },
+      }),
+    });
+    if (search === 'race-old') resolveSlowDiscoveryDone();
   });
 
   try {
@@ -275,6 +352,36 @@ async function verifyPage(contextOptions, label) {
       `${label} must not expose a competing shortcut favicon`
     );
     await expectText(page, 'Locked IFR. Benefits at checkout.');
+    await expectText(page, 'Live member offers');
+    await expectText(page, 'Find an IFR benefit');
+    await expectText(page, 'Smoke Coffee');
+    await expectText(page, 'Reserve espresso');
+    await expectText(page, '15% benefit');
+    const offerDiscovery = page.locator('#offers');
+    await offerDiscovery.getByLabel('Category').selectOption('Services');
+    await expectText(page, 'Private consultation');
+    await page.getByText('Reserve espresso', { exact: true }).waitFor({ state: 'hidden', timeout: timeoutMs });
+    await offerDiscovery.getByLabel('Category').selectOption('');
+    await offerDiscovery.getByLabel('Search offers').fill('nothing matches this');
+    await expectText(page, 'No matching active offers');
+    await offerDiscovery.getByLabel('Search offers').fill('');
+    await expectText(page, 'Reserve espresso');
+    const staleRequestStarted = page.waitForRequest((request) => request.url().includes('query=race-old'));
+    await offerDiscovery.getByLabel('Search offers').fill('race-old');
+    await staleRequestStarted;
+    await offerDiscovery.getByLabel('Search offers').fill('race-new');
+    await expectText(page, 'Private consultation');
+    releaseSlowDiscovery();
+    await slowDiscoveryDone;
+    await page.getByText('Reserve espresso', { exact: true }).waitFor({ state: 'hidden', timeout: timeoutMs });
+    await expectText(page, 'Private consultation');
+    expectDiscovery503 = true;
+    await offerDiscovery.getByLabel('Search offers').fill('force-error');
+    await expectText(page, 'Discovery temporarily unavailable.');
+    expectDiscovery503 = false;
+    await offerDiscovery.getByRole('button', { name: 'Try again' }).click();
+    await expectText(page, 'Private consultation');
+    await offerDiscovery.getByLabel('Search offers').fill('');
     await expectText(page, 'System readiness');
     await expectText(page, 'Live shop diagnostics');
     await expectText(page, 'API + database');
@@ -344,6 +451,13 @@ async function verifyPage(contextOptions, label) {
     await expectText(page, 'Reopen proof');
     await page.getByRole('button', { name: 'Clear' }).click();
     await expectText(page, 'No customer proofs saved on this device yet');
+    if (shouldScreenshot) {
+      fs.mkdirSync(screenshotDir, { recursive: true });
+      await page.screenshot({
+        path: path.join(screenshotDir, `benefits-home-${label}.png`),
+        fullPage: true,
+      });
+    }
     await page.getByRole('button', { name: /Seller Offer discounts/i }).click();
     await expectText(page, 'Create a seller entry point');
     await expectText(page, 'Seller categories');

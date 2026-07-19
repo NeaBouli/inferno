@@ -32,3 +32,11 @@ export const challengeRateLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
 });
+
+export const discoveryRateLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 60,
+  message: { error: 'Too many offer searches. Try again shortly.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
