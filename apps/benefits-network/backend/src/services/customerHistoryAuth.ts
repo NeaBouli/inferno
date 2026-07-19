@@ -15,7 +15,7 @@ export class CustomerHistoryAuthError extends Error {
 
 export function normalizeCustomerAddress(address: string) {
   try {
-    return ethers.utils.getAddress(address);
+    return ethers.getAddress(address);
   } catch {
     throw new CustomerHistoryAuthError('Invalid customer wallet address');
   }
@@ -87,7 +87,7 @@ export async function authorizeCustomerHistory(db: PrismaClient, input: {
   });
   let recovered: string;
   try {
-    recovered = normalizeCustomerAddress(ethers.utils.verifyMessage(message, input.signature));
+    recovered = normalizeCustomerAddress(ethers.verifyMessage(message, input.signature));
   } catch (error) {
     if (error instanceof CustomerHistoryAuthError) throw error;
     throw new CustomerHistoryAuthError('Invalid customer history authorization');

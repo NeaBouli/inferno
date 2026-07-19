@@ -77,14 +77,17 @@ The production Shop dependency slice is separated from the root contract toolcha
 - Frontend upgraded to Next.js 15.5 and wagmi 3 with direct injected, Coinbase Wallet and
   optional WalletConnect connectors. RainbowKit was removed from this surface.
 - Frontend clean install and `npm audit --audit-level=low`: no known vulnerabilities.
-- Backend pins the patched `ws` release through an npm override. Clean install and
-  `npm audit --audit-level=moderate`: no moderate, high or critical findings.
-- The remaining backend low findings are in the ethers v5 elliptic dependency path and require
-  a separately tested ethers v6 migration.
-- Benefits CI enforces those two audit thresholds before typechecks, tests and builds.
+- Backend migrated its isolated runtime from Ethers 5 to Ethers 6.17. The former
+  `@ethersproject/signing-key -> elliptic` tree is absent after a clean install, and
+  `npm audit --audit-level=low` reports no known vulnerabilities.
+- Direct local JSON-RPC coverage verifies native-`bigint` IFRLock thresholds, reward tuple
+  decoding, real chain-ID comparison, zero-beneficiary handling and read-only reward checks.
+- Benefits CI enforces the low-severity audit threshold for both frontend and backend before
+  typechecks, tests and builds.
 
-The root Hardhat/Waffle/Ganache lock remains a separate migration. Do not apply the Shop lockfile
-changes to the contract toolchain and do not use `npm audit fix --force`.
+The root Hardhat/Waffle/Ganache lock and other apps that still use Ethers 5 remain separate
+migrations. Do not apply the Shop lockfile changes to the contract toolchain and do not use
+`npm audit fix --force`.
 
 ## 2026-07-19 Critical Patch Update
 

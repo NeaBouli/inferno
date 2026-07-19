@@ -1,5 +1,7 @@
 import { ethers } from 'ethers';
 
+type TestWallet = ReturnType<typeof ethers.Wallet.createRandom>;
+
 const mockCheckLock = jest.fn();
 const mockRecoverSigner = jest.fn();
 
@@ -31,7 +33,7 @@ function baseUrl() {
 }
 
 async function sellerHeaders(
-  wallet: ethers.Wallet,
+  wallet: TestWallet,
   action: string,
   businessId: string,
   scope?: string
@@ -957,7 +959,7 @@ describe('Seller catalog routes', () => {
       data: {
         businessId,
         benefitRuleId: rule.id,
-        nonce: ethers.utils.hexlify(ethers.utils.randomBytes(32)).slice(2),
+        nonce: ethers.hexlify(ethers.randomBytes(32)).slice(2),
         expiresAt: new Date(Date.now() + 60_000),
       },
     });

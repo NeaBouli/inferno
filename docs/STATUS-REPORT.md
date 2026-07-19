@@ -84,7 +84,7 @@ Sepolia deployment served as the full testnet validation phase prior to mainnet.
 | 3 | AI Copilot | 5175 + 3003 | React 18 + Vite + TS + Tailwind + Express |
 | 4 | Points Backend | 3004 | Express + Prisma + SQLite + SIWE + jose |
 | 5 | Creator Gateway | 3005 | Express + ethers v5 + googleapis + JWT |
-| 6 | Benefits Network Backend | 3001 | Express + Prisma + SQLite + ethers v5 |
+| 6 | Benefits Network Backend | 3001 | Express + Prisma + SQLite + ethers v6 |
 | 7 | Benefits Network Frontend | 3000 | Next.js 15 + Tailwind + wagmi 3 (PWA) |
 
 ---

@@ -1,5 +1,7 @@
 import { ethers } from 'ethers';
 
+type TestWallet = ReturnType<typeof ethers.Wallet.createRandom>;
+
 const mockGetRewardOnChainStatus = jest.fn();
 const mockIsWalletAlreadyRewarded = jest.fn();
 
@@ -47,7 +49,7 @@ function baseUrl() {
   return `http://127.0.0.1:${address.port}`;
 }
 
-async function sellerHeaders(wallet: ethers.Wallet, action: string, businessId: string, scope = businessId) {
+async function sellerHeaders(wallet: TestWallet, action: string, businessId: string, scope = businessId) {
   const query = new URLSearchParams({ action, businessId });
   if (['rewards:apply', 'sessions:redeem'].includes(action)) {
     query.set('walletAddress', wallet.address);
@@ -85,7 +87,7 @@ function chainStatus(overrides: Record<string, unknown> = {}) {
     partnerActive: true,
     beneficiary: owner.address,
     beneficiaryMatchesOwner: true,
-    maxAllocationRaw: ethers.utils.parseUnits('1000000', 9).toString(),
+    maxAllocationRaw: ethers.parseUnits('1000000', 9).toString(),
     rewardAccruedRaw: '0',
     claimedTotalRaw: '0',
     vestedRaw: '0',
@@ -194,7 +196,7 @@ describe('Verified seller reward foundation', () => {
     const first = await prisma.session.create({
       data: {
         businessId,
-        nonce: ethers.utils.hexlify(ethers.utils.randomBytes(32)).slice(2),
+        nonce: ethers.hexlify(ethers.randomBytes(32)).slice(2),
         expiresAt: new Date(Date.now() + 60_000),
         status: 'APPROVED',
         recoveredAddress: customer,
@@ -204,7 +206,7 @@ describe('Verified seller reward foundation', () => {
     await prisma.session.create({
       data: {
         businessId,
-        nonce: ethers.utils.hexlify(ethers.utils.randomBytes(32)).slice(2),
+        nonce: ethers.hexlify(ethers.randomBytes(32)).slice(2),
         expiresAt: new Date(Date.now() + 60_000),
         status: 'APPROVED',
         recoveredAddress: customer,
@@ -232,7 +234,7 @@ describe('Verified seller reward foundation', () => {
         customerWallet: customer,
         partnerId,
         chainId: 1,
-        lockAmountRaw: ethers.utils.parseUnits('2500.125', 9).toString(),
+        lockAmountRaw: ethers.parseUnits('2500.125', 9).toString(),
         status: 'PENDING',
       }),
     ]);
@@ -248,7 +250,7 @@ describe('Verified seller reward foundation', () => {
         sessionId: first.id,
         customerWallet: customer,
         partnerId,
-        lockAmountRaw: ethers.utils.parseUnits('2500.125', 9).toString(),
+        lockAmountRaw: ethers.parseUnits('2500.125', 9).toString(),
         status: 'READY',
       }),
     ]);
@@ -268,7 +270,7 @@ describe('Verified seller reward foundation', () => {
     const session = await prisma.session.create({
       data: {
         businessId,
-        nonce: ethers.utils.hexlify(ethers.utils.randomBytes(32)).slice(2),
+        nonce: ethers.hexlify(ethers.randomBytes(32)).slice(2),
         expiresAt: new Date(Date.now() + 60_000),
         status: 'APPROVED',
         recoveredAddress: owner.address,
@@ -292,7 +294,7 @@ describe('Verified seller reward foundation', () => {
     const session = await prisma.session.create({
       data: {
         businessId,
-        nonce: ethers.utils.hexlify(ethers.utils.randomBytes(32)).slice(2),
+        nonce: ethers.hexlify(ethers.randomBytes(32)).slice(2),
         expiresAt: new Date(Date.now() + 60_000),
         status: 'REDEEMED',
         recoveredAddress: rewardCustomer,
@@ -305,7 +307,7 @@ describe('Verified seller reward foundation', () => {
         sessionId: session.id,
         partnerId,
         customerWallet: rewardCustomer,
-        lockAmountRaw: ethers.utils.parseUnits('1000', 9).toString(),
+        lockAmountRaw: ethers.parseUnits('1000', 9).toString(),
         chainId: 1,
         status: 'READY',
       },
@@ -334,7 +336,7 @@ describe('Verified seller reward foundation', () => {
     const session = await prisma.session.create({
       data: {
         businessId,
-        nonce: ethers.utils.hexlify(ethers.utils.randomBytes(32)).slice(2),
+        nonce: ethers.hexlify(ethers.randomBytes(32)).slice(2),
         expiresAt: new Date(Date.now() + 60_000),
         status: 'REDEEMED',
         recoveredAddress: rewardCustomer,
@@ -347,7 +349,7 @@ describe('Verified seller reward foundation', () => {
         sessionId: session.id,
         partnerId,
         customerWallet: rewardCustomer,
-        lockAmountRaw: ethers.utils.parseUnits('1000', 9).toString(),
+        lockAmountRaw: ethers.parseUnits('1000', 9).toString(),
         chainId: 1,
         status: 'BLOCKED_CALLER',
       },
@@ -372,7 +374,7 @@ describe('Verified seller reward foundation', () => {
     const session = await prisma.session.create({
       data: {
         businessId,
-        nonce: ethers.utils.hexlify(ethers.utils.randomBytes(32)).slice(2),
+        nonce: ethers.hexlify(ethers.randomBytes(32)).slice(2),
         expiresAt: new Date(Date.now() + 60_000),
         status: 'REDEEMED',
         recoveredAddress: rewardCustomer,
@@ -385,7 +387,7 @@ describe('Verified seller reward foundation', () => {
         sessionId: session.id,
         partnerId,
         customerWallet: rewardCustomer,
-        lockAmountRaw: ethers.utils.parseUnits('1000', 9).toString(),
+        lockAmountRaw: ethers.parseUnits('1000', 9).toString(),
         chainId: 1,
         status: 'READY',
       },
@@ -427,7 +429,7 @@ describe('Verified seller reward foundation', () => {
         sessionId: session.id,
         partnerId,
         customerWallet: session.recoveredAddress,
-        lockAmountRaw: ethers.utils.parseUnits('1000', 9).toString(),
+        lockAmountRaw: ethers.parseUnits('1000', 9).toString(),
         chainId: 1,
         status: 'READY',
       })),
@@ -449,7 +451,7 @@ describe('Verified seller reward foundation', () => {
         sessionId: 'pending-after-ready-backlog',
         partnerId,
         customerWallet: `0x${'ff'.repeat(20)}`,
-        lockAmountRaw: ethers.utils.parseUnits('1000', 9).toString(),
+        lockAmountRaw: ethers.parseUnits('1000', 9).toString(),
         chainId: 1,
         status: 'PENDING',
       },

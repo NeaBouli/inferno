@@ -1,5 +1,5 @@
 import crypto from 'crypto';
-import { utils } from 'ethers';
+import { verifyMessage } from 'ethers';
 import { PrismaClient } from '@prisma/client';
 import { config } from '../config';
 import { normalizeAddress } from './sellerAuth';
@@ -76,7 +76,7 @@ export async function createCustomerPass(input: {
   const message = buildCreateMessage(challenge);
   let recovered: string;
   try {
-    recovered = normalizeAddress(utils.verifyMessage(message, input.signature));
+    recovered = normalizeAddress(verifyMessage(message, input.signature));
   } catch {
     throw new CustomerPassAuthError('Customer pass signature is invalid');
   }

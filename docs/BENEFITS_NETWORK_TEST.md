@@ -69,6 +69,19 @@ It verifies exact 9-decimal approval calldata, IFRLock spender and contract addr
 driven allowance/balance refresh, the `1,000 IFR` access transition, full simple-lock unlock and
 restored balances. No Mainnet transaction or external wallet is used.
 
+The backend suite includes a local JSON-RPC contract boundary for Ethers 6:
+
+```bash
+cd apps/benefits-network/backend
+npm test
+```
+
+It verifies IFRLock threshold conversion and balance formatting with native `bigint`, reward
+contract tuple decoding, the actual RPC chain ID, zero-beneficiary fail-closed behavior and
+read-only wallet-reward checks. The fixture never submits a transaction or contacts Mainnet.
+CI also runs `npm run test:ethers-v6-lifecycle` without Jest's `--forceExit`, including an RPC
+rejection followed by a successful read to cover provider cleanup on error and success paths.
+
 ### Configuration
 
 | Variable | Default | Description |

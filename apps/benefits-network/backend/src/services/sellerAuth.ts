@@ -36,7 +36,7 @@ export function buildSellerAuthMessage(
 }
 
 export function normalizeAddress(address: string): string {
-  return ethers.utils.getAddress(address);
+  return ethers.getAddress(address);
 }
 
 export function verifySellerSignature(input: {
@@ -75,7 +75,7 @@ export function verifySellerSignature(input: {
       input.timestamp,
       binding
     );
-    const recoveredAddress = normalizeAddress(ethers.utils.verifyMessage(message, input.signature));
+    const recoveredAddress = normalizeAddress(ethers.verifyMessage(message, input.signature));
     if (recoveredAddress !== expectedAddress) {
       throw new SellerAuthError('Seller authorization signature mismatch');
     }

@@ -86,7 +86,7 @@ describe('Signature Verification', () => {
     const wallet = ethers.Wallet.createRandom();
     const message = 'test message';
     const signature = await wallet.signMessage(message);
-    const recovered = ethers.utils.verifyMessage(message, signature);
+    const recovered = ethers.verifyMessage(message, signature);
 
     expect(recovered).toBe(wallet.address);
   });
@@ -100,14 +100,14 @@ describe('Signature Verification', () => {
 
     const wallet = ethers.Wallet.createRandom();
     const currentSignature = await wallet.signMessage(challenge);
-    expect(ethers.utils.verifyMessage(challenge, currentSignature)).toBe(wallet.address);
+    expect(ethers.verifyMessage(challenge, currentSignature)).toBe(wallet.address);
 
     const formerDomainlessChallenge = challenge
       .split('\n')
       .filter((line) => !line.startsWith('Domain: '))
       .join('\n');
     const formerSignature = await wallet.signMessage(formerDomainlessChallenge);
-    expect(ethers.utils.verifyMessage(challenge, formerSignature)).not.toBe(wallet.address);
+    expect(ethers.verifyMessage(challenge, formerSignature)).not.toBe(wallet.address);
   });
 });
 

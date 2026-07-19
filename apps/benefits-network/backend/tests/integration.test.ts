@@ -323,7 +323,7 @@ describe('E2E: IFR Lock → Benefits Network Verification', () => {
         benefitSnapshotVersion: 2,
         benefitDailyRedemptionLimit: 1,
         benefitMonthlyRedemptionLimit: 0,
-        nonce: ethers.utils.hexlify(ethers.utils.randomBytes(32)).slice(2),
+        nonce: ethers.hexlify(ethers.randomBytes(32)).slice(2),
         expiresAt: new Date(Date.now() + 60_000),
         status: 'APPROVED',
         recoveredAddress: wallet,
@@ -361,7 +361,7 @@ describe('E2E: IFR Lock → Benefits Network Verification', () => {
         benefitSnapshotVersion: snapshot ? 2 : null,
         benefitDailyRedemptionLimit: snapshot ? 0 : null,
         benefitMonthlyRedemptionLimit: snapshot ? 1 : null,
-        nonce: ethers.utils.hexlify(ethers.utils.randomBytes(32)).slice(2),
+        nonce: ethers.hexlify(ethers.randomBytes(32)).slice(2),
         expiresAt: new Date(Date.now() + 60_000),
         status: 'APPROVED',
         recoveredAddress: TEST_WALLET,
@@ -397,7 +397,7 @@ describe('E2E: IFR Lock → Benefits Network Verification', () => {
         benefitSnapshotVersion: 2,
         benefitDailyRedemptionLimit: 1,
         benefitMonthlyRedemptionLimit: 0,
-        nonce: ethers.utils.hexlify(ethers.utils.randomBytes(32)).slice(2),
+        nonce: ethers.hexlify(ethers.randomBytes(32)).slice(2),
         expiresAt: new Date(Date.now() + 60_000),
         status: 'APPROVED',
         recoveredAddress: TEST_WALLET,
@@ -431,7 +431,7 @@ describe('E2E: IFR Lock → Benefits Network Verification', () => {
     const session = await prisma.session.create({
       data: {
         businessId: business.id,
-        nonce: ethers.utils.hexlify(ethers.utils.randomBytes(32)).slice(2),
+        nonce: ethers.hexlify(ethers.randomBytes(32)).slice(2),
         expiresAt: new Date(Date.now() + 60_000),
         status: 'APPROVED',
       },
@@ -470,7 +470,7 @@ describe('EIP-191 Signature Verification', () => {
     const wallet = ethers.Wallet.createRandom();
     const message = 'IFR Benefits: verify-nonce-abc123';
     const signature = await wallet.signMessage(message);
-    const recovered = ethers.utils.verifyMessage(message, signature);
+    const recovered = ethers.verifyMessage(message, signature);
     expect(recovered).toBe(wallet.address);
   });
 
