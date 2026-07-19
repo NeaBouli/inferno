@@ -101,7 +101,7 @@ async function verifyHttpSurface() {
   await expectSha256('/icons/icon-512.png', '6f029513ff76f3482418da9792e6f9f3545f0cc18b88740fe1f61db50fbe87f1');
   await fetchOk('/favicon.ico', 'image/x-icon');
   const serviceWorker = await fetchOk('/sw.js', 'javascript');
-  assert((await serviceWorker.text()).includes("ifr-benefits-v13"), 'service worker cache version mismatch');
+  assert((await serviceWorker.text()).includes("ifr-benefits-v14"), 'service worker cache version mismatch');
   log('PWA assets OK');
 
   const auth = await fetchJson('/api/seller/auth-message?action=business:list&businessId=seller');
@@ -918,6 +918,14 @@ function isIgnorableConsoleError(text) {
 async function verifyPage(contextOptions, label) {
   const browser = await chromium.launch({ headless: true });
   const context = await browser.newContext({ ...contextOptions, serviceWorkers: 'block' });
+  await context.addInitScript(() => {
+    Object.defineProperty(navigator, 'mediaDevices', {
+      configurable: true,
+      value: {
+        enumerateDevices: async () => [],
+      },
+    });
+  });
   const page = await context.newPage();
   const errors = [];
   let expectDiscovery503 = false;
@@ -1107,6 +1115,21 @@ async function verifyPage(contextOptions, label) {
     await expectText(page, 'Unlock all');
     await expectText(page, 'Recent customer proofs');
     await expectText(page, 'No customer proofs saved on this device yet');
+    await expectText(page, 'Scan seller QR');
+    const copilotButton = page.getByTestId('open-copilot');
+    await copilotButton.click();
+    const copilotPanel = page.locator('#shop-copilot-panel');
+    await copilotPanel.waitFor({ state: 'visible', timeout: timeoutMs });
+    assert(
+      await copilotPanel.locator('iframe').getAttribute('src') === 'https://copilot-api.ifrunit.tech',
+      `${label} IFR Copilot iframe must use the canonical API origin`
+    );
+    await copilotPanel.getByRole('button', { name: 'Close IFR Copilot' }).click();
+    await copilotPanel.waitFor({ state: 'hidden', timeout: timeoutMs });
+    assert(
+      await copilotPanel.locator('iframe').count() === 0,
+      `${label} IFR Copilot iframe must be removed when the panel closes`
+    );
     await page.evaluate(() => {
       window.localStorage.setItem(
         'ifr.shop.customerProofHistory.v1',
@@ -1260,11 +1283,45 @@ async function verifyPage(contextOptions, label) {
 
     await gotoAppPage(page, '/guide');
     await expectText(page, 'IFR Benefits Network Guide');
+    await expectText(page, 'Scan seller QR');
     await expectText(page, 'Customer path');
     await expectText(page, 'Lock IFR in the shop app when needed');
     await expectText(page, 'The Benefits Network is non-custodial');
     await expectText(page, 'Recovery and phishing safety');
     await expectText(page, 'Seller path');
+
+    await gotoAppPage(page, '/scan');
+    await expectText(page, 'Customer checkout');
+    await expectText(page, 'Scan seller QR');
+    await expectText(page, 'Camera stays off until you start it.');
+    await expectText(page, 'Open proof manually');
+    await expectText(page, 'Only IFR Benefits proofs open.');
+    await expectNoHorizontalOverflow(page, `${label} customer QR scanner`);
+    const qrImageInput = page.getByTestId('qr-image-input');
+    assert(await qrImageInput.getAttribute('accept') === 'image/*', `${label} QR image fallback must accept images only`);
+    await page.getByTestId('start-camera').click();
+    await expectText(page, 'No browser camera was found.');
+    const proofInput = page.getByTestId('manual-proof-input');
+    await proofInput.fill('https://evil.example/r/cm1234567890abcdefghijkl');
+    await page.getByTestId('open-proof').click();
+    await expectText(page, 'Only proof links from shop.ifrunit.tech are accepted.');
+    assert(new URL(page.url()).pathname === '/scan', `${label} foreign QR link must stay on /scan`);
+    if (shouldScreenshot) {
+      await page.screenshot({
+        path: path.join(screenshotDir, `benefits-customer-qr-${label}.png`),
+        fullPage: true,
+      });
+    }
+    const validSessionId = 'cm1234567890abcdefghijkl';
+    await proofInput.fill(`https://shop.ifrunit.tech/r/${validSessionId}`);
+    await Promise.all([
+      page.waitForURL((url) => url.pathname === `/r/${validSessionId}`, { timeout: timeoutMs }),
+      page.getByTestId('open-proof').click(),
+    ]);
+    assert(
+      new URL(page.url()).pathname === `/r/${validSessionId}`,
+      `${label} canonical proof link must normalize to the local customer route`
+    );
 
     await gotoAppPage(page, '/b/smoke-missing-business');
     await expectText(page, 'Seller scanner');

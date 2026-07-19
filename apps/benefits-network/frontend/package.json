@@ -6,6 +6,7 @@
     "dev": "next dev --port 3000",
     "build": "next build",
     "start": "next start --port 3000",
+    "test:proof-link": "node scripts/test-customer-proof-link.cjs",
     "typecheck": "rm -f tsconfig.tsbuildinfo && tsc --noEmit"
   },
   "dependencies": {
@@ -16,6 +17,7 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-qr-code": "^2.0.12",
+    "qr-scanner": "1.4.2",
     "viem": "^2.7.12",
     "wagmi": "^3.7.3"
   },

@@ -736,12 +736,12 @@
         The IFR AI Copilot is an embedded AI assistant available on the Inferno website. It provides contextual, role-aware guidance to every user type &mdash; from first-time token holders to integration developers. Users can ask general questions for free. After wallet connection and IFR lock verification, Premium Copilot can communicate more personally because it can use wallet balance, lock status, tier, and on-chain context instead of only generic documentation. The copilot is powered by <strong>Claude Haiku 4.5</strong> and answers exclusively from the curated <code>IFR_KNOWLEDGE</code> base.
       </p>
       <p>
-        The copilot appears as a floating widget in the bottom-right corner of every page. It understands the Inferno protocol, token mechanics, lock system, governance, and builder integrations &mdash; and adapts its responses based on the selected mode.
+        The copilot appears as a floating widget in the bottom-right corner of the main site, Wiki, Web3 app and IFR Benefits app. It understands the Inferno protocol, token mechanics, lock system, governance, Benefits checkout and builder integrations &mdash; and adapts its responses based on the selected mode.
       </p>
 
       <div class="callout callout-green">
         <p>
-          <strong>Always available:</strong> The AI Copilot widget is embedded on every page of the Inferno website and documentation wiki. Click the button in the bottom-right corner to open it.
+          <strong>Always available:</strong> The AI Copilot widget is embedded on the Inferno website, documentation Wiki, <a href="https://web3.ifrunit.tech/">Web3 app</a> and <a href="https://shop.ifrunit.tech/">IFR Benefits app</a>. Click the button in the bottom-right corner to open it. The chat frame is loaded only after you open it on Web3 and IFR Benefits.
         </p>
       </div>
 
@@ -800,7 +800,7 @@
 
       <div class="callout">
         <p>
-          <strong>Security:</strong> The copilot runs in a sandboxed iframe with no access to the user's wallet, private keys, or browser storage. It is a read-only assistant that cannot initiate transactions.
+          <strong>Security:</strong> The copilot runs as an isolated cross-origin chat frame. It never needs a private key or seed phrase and is a read-only assistant that cannot initiate transactions. On Web3 and IFR Benefits the frame is not loaded until the user opens it.
         </p>
       </div>
 

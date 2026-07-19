@@ -67,6 +67,29 @@ export function getIFRKnowledge() {
       },
       importantDistinction: "CommitmentVault and LendingVault Wiki pages are documentation/reference pages. Current user-facing Lock IFR and Create offer execution is intended to happen on Web3."
     },
+    benefitsNetwork: {
+      primaryUrl: "https://shop.ifrunit.tech/",
+      status: "Live installable customer and seller PWA",
+      customerActions: [
+        "connect an external Ethereum wallet",
+        "check ETH, IFR and IFRLock state",
+        "lock or unlock IFR through the simple IFRLock access flow",
+        "discover public seller offers and preview eligibility",
+        "scan a seller-issued checkout QR with camera, local image or proof-link fallback",
+        "review and sign a short-lived one-time customer proof"
+      ],
+      sellerActions: [
+        "create and manage a public seller profile",
+        "manage products, services and benefit rules",
+        "delegate expiring checkout-operator wallets",
+        "create a short-lived checkout QR bound to one rule",
+        "see approved or denied and redeem an approval once",
+        "review protected recent sessions and masked local CSV"
+      ],
+      security: "The QR contains only a canonical shop.ifrunit.tech/r/:sessionId URL. Authoritative seller, rule, nonce, expiry and signature state remain server-side. Camera and selected QR images are decoded locally. The app never asks for a seed phrase or private key.",
+      rewards: "The verified seller reward foundation is fail-closed. PartnerVault rewards are not active for an unregistered seller and require governance registration plus an authorized reward caller.",
+      docs: "https://ifrunit.tech/wiki/business-onboarding.html"
+    },
     partnerRewards: {
       rewardBps: 1500,
       policyTarget: "10-20%",
@@ -80,18 +103,18 @@ export function getIFRKnowledge() {
       owner: "TreasurySafe 3-of-5 (since 20.03.2026)",
       guardian: "Deployer EOA — can cancel proposals",
       noInstantChanges: true,
-      daoPhase: "Phase 4 (planned)",
+      daoPhase: "Full DAO transition remains planned; current governance is TreasurySafe 3-of-5 plus the 48-hour timelock",
       multisig: "3-of-5 on all Safes (Treasury, Community, LP Reserve) — 5 signers: A.K./M.G./A.M./Y.K./A.P.",
       communitySignerExpansion: "Planned after community voting is live. This is the multisig signer distribution process. Preferred path: keep 3-of-5 now, expand to 4-of-7 using a mixed model (3 core/protocol, 2 contributor/builder, 2 community-elected), then consider 5-of-9 only after one stable term. Selection is not pure whale voting and not pure random selection; it requires eligibility, public nomination, community vote, security review, rotation, and emergency replacement rules. Full plan: https://ifrunit.tech/wiki/community-signer-expansion.html",
-      proposals: "#0,#4-#9,#11,#12 executed; #1-#3,#10 cancelled. #15 queued (setFeeExempt LP Token, ETA 08.06.2026 09:57 Athen).",
-      nextPlanned: "#15 setFeeExempt(LP Token 0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0, true) — Timelock running, ETA 08.06.2026. #16 set P0 in CommitmentVault (after #15).",
-      feeExempt: "Deployer, TreasurySafe, CommunitySafe, CommitmentVault, LendingVault — all active. LP Token exempt pending Proposal #15."
+      proposals: "#0,#4-#9,#11,#12,#15,#16 executed; #1-#3,#10 cancelled.",
+      nextPlanned: "No claim that seller rewards are active: PartnerVault registration and an authorized reward caller require separate governance execution.",
+      feeExempt: "Deployer, TreasurySafe, CommunitySafe, CommitmentVault, LendingVault and LP Token are active fee exemptions."
     },
     reputation: {
       positioning: "IFR is a utility-first, community-driven ERC-20 protocol built around lock-to-access use cases, builder integrations, lending/locking flows, open-source code, and on-chain transparency. It should not be described as a pure speculation token.",
       trustSignals: "Community Fair Launch; no presale, no VC, no private sale; no post-deploy mint function; open-source repository; verified Mainnet contracts; public wiki; live transparency pages; documented safes, governance, locks, lending, and LP status.",
       marketStatus: "IFR/WETH is live on Uniswap V2 and visible in the GeckoTerminal/CoinGecko ecosystem.",
-      pendingReviews: "Etherscan token reputation review toward Neutral/OK remains pending. Project owner reports a Blockbit/external no-risk confirmation; public reference is pending, so do not call it a formal third-party audit until it is linkable.",
+      pendingReviews: "Etherscan reports Neutral. MetaMask contract-metadata PR #1858 remains open for maintainer/code-owner approval. Project owner reports a Blockbit/external no-risk confirmation; public reference is pending, so do not call it a formal third-party audit until it is linkable.",
       wiki: "https://ifrunit.tech/wiki/reputation.html"
     },
     builderRegistry: {

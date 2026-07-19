@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { CopilotWidget } from './CopilotWidget';
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   return (
@@ -50,6 +51,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <p>© 2026 IFR Protocol · Inferno Protocol</p>
         </div>
       </footer>
+      <CopilotWidget />
     </main>
   );
 }

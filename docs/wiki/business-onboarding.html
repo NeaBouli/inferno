@@ -721,11 +721,11 @@
       <h3>Option A: Hosted Solution (Recommended)</h3>
       <p>The fastest way to get started. No technical knowledge required.</p>
       <ol>
-        <li>Register your business at the <a href="https://ifrunit.tech/wiki/integration.html">IFR Benefits Network portal</a></li>
-        <li>Receive your unique <strong>Business ID</strong> and QR scanner URL</li>
-        <li>Configure your discount tiers (see Step 3 below)</li>
-        <li>Add your business logo and display name</li>
-        <li>Bookmark the scanner URL on your point-of-sale device</li>
+        <li>Open seller mode in the live <a href="https://shop.ifrunit.tech/" target="_blank" rel="noopener">IFR Benefits app</a> and connect the owner wallet</li>
+        <li>Create the business profile and keep its <strong>Business ID</strong></li>
+        <li>Add products or services and configure benefit rules (see Step 3 below)</li>
+        <li>Authorize expiring checkout-operator wallets when staff need point-of-sale access</li>
+        <li>Bookmark the business checkout URL on the point-of-sale device</li>
       </ol>
 
       <h3>Option B: Self-Hosted (For Developers)</h3>
@@ -736,7 +736,7 @@
 cd inferno/apps/benefits-network</code></pre>
         </li>
         <li>Install dependencies and configure environment:
-          <pre><code>cd backend && npm install
+          <pre><code>cd backend && npm ci
 cp .env.example .env
 # Edit .env with your Business ID and API keys</code></pre>
         </li>
@@ -745,7 +745,7 @@ cp .env.example .env
 # Server runs on http://localhost:3001</code></pre>
         </li>
         <li>Start the frontend:
-          <pre><code>cd ../frontend && npm install
+          <pre><code>cd ../frontend && npm ci
 npm run dev
 # Frontend runs on http://localhost:3000</code></pre>
         </li>
@@ -808,17 +808,17 @@ npm run dev
       <div class="qr-flow">
         <div class="qr-flow-step">
           <div class="step-num">1</div>
-          <div class="step-text">Business opens scanner on POS device</div>
+          <div class="step-text">Seller selects a rule and creates a short-lived checkout QR</div>
         </div>
         <div class="qr-flow-arrow">&rarr;</div>
         <div class="qr-flow-step">
           <div class="step-num">2</div>
-          <div class="step-text">Customer shows their QR code</div>
+          <div class="step-text">Customer scans the seller QR and signs the proof</div>
         </div>
         <div class="qr-flow-arrow">&rarr;</div>
         <div class="qr-flow-step">
           <div class="step-num">3</div>
-          <div class="step-text">Screen shows APPROVED or DENIED</div>
+          <div class="step-text">Seller sees APPROVED or DENIED and redeems once</div>
         </div>
       </div>
 
@@ -827,9 +827,9 @@ npm run dev
       <h3>What Cashier Staff Does NOT Need</h3>
       <ul>
         <li>No crypto knowledge required</li>
-        <li>No MetaMask or wallet software</li>
+        <li>No handling of customer tokens or private keys</li>
         <li>No blockchain understanding</li>
-        <li>No handling of tokens or private keys</li>
+        <li>No contract-address entry during checkout</li>
         <li>No special hardware &mdash; any device with a camera works</li>
       </ul>
 
@@ -837,12 +837,13 @@ npm run dev
         <p><strong>Training tip:</strong> The QR flow is identical to scanning a loyalty card. If your staff can scan a barcode, they can operate the IFR Benefits scanner.</p>
       </div>
 
-      <h3>Future Seller App Flow</h3>
+      <h3>Current Seller App Flow</h3>
       <ul>
         <li>Seller chooses business categories and adds products or services.</li>
         <li>Seller defines discount rules by minimum IFR held or locked.</li>
-        <li>Customer shows a short-lived signed QR proof from the IFRp Commerce App.</li>
-        <li>Seller scans the QR, sees approved or denied, and applies the configured benefit.</li>
+        <li>Seller creates a short-lived checkout QR for the selected rule.</li>
+        <li>Customer scans the QR in the IFR Benefits app and signs the one-time proof.</li>
+        <li>Seller sees approved or denied, redeems an approval once, and applies the configured benefit.</li>
         <li>Verified sellers may later receive PartnerVault rewards for qualifying usage after governance registration.</li>
       </ul>
 

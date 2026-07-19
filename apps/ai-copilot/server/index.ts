@@ -339,9 +339,9 @@ function getBootstrapWelcomeText() {
   return "Bootstrap Event ended June 5, 2026. IFR now live on Uniswap";
 }
 var welcomes = {
-  explorer: "Welcome to IFR Copilot. &#x1f44b;\\n\\nYou're browsing without a connected wallet \\u2014 no problem!\\n\\n\\u2756 Without a wallet, you can:\\n\\u2022 Ask about IFR tokenomics, governance, or lock mechanism\\n\\u2022 " + getBootstrapWelcomeText() + "\\n\\u2022 Explore the roadmap and security model\\n\\n\\u2756 Connect your wallet to unlock (Phase 2):\\n\\u2022 Your personal IFR balance and lock position\\n\\u2022 Personalized guidance based on your on-chain state\\n\\n\\u2756 Lock \\u22651,000 IFR to unlock (Phase 2):\\n\\u2022 Premium Copilot with more personalized communication based on wallet and lock context\\n\\u2022 Deeper on-chain guidance for your IFR position\\n\\u2022 AI Copilot Gate and builder onboarding pathway\\n\\nOr just ask me anything! &#x1f525;",
+  explorer: "Welcome to IFR Copilot. &#x1f44b;\\n\\nYou're browsing without a connected wallet \\u2014 no problem!\\n\\n\\u2756 You can ask about:\\n\\u2022 IFR tokenomics, governance, contracts and security\\n\\u2022 " + getBootstrapWelcomeText() + "\\n\\u2022 Wallet, IFRLock and lending guidance on web3.ifrunit.tech\\n\\u2022 Customer offers, seller setup and QR checkout on shop.ifrunit.tech\\n\\n\\u2756 Connect your wallet on the relevant app to view your live on-chain IFR balance and lock position. IFR Copilot itself never asks for a seed phrase or private key.\\n\\nOr just ask me anything! &#x1f525;",
   user: "Hey! &#x1f48e; Ready to help you get the most out of your IFR tokens.\\n\\nI can assist with:\\n\\u2022 Locking IFR for benefits\\n\\u2022 Understanding your tier (Bronze/Silver/Gold/Platinum)\\n\\u2022 Partner discounts \\u0026 Benefits Network\\n\\u2022 Step-by-step guides",
-  dev: "Dev mode active. &#x2699;&#xfe0f;\\n\\n16 verified on-chain components \\u2022 544 tests \\u2022 91% branch coverage\\n\\nI can help with:\\n\\u2022 Contract addresses \\u0026 ABIs\\n\\u2022 Integration (ethers.js v5, 9 decimals)\\n\\u2022 Governance \\u0026 Timelock\\n\\u2022 Security audit results"
+  dev: "Dev mode active. &#x2699;&#xfe0f;\\n\\n17 verified on-chain components \\u2022 544 documented tests \\u2022 91% historical branch coverage\\n\\nI can help with:\\n\\u2022 Contract addresses \\u0026 ABIs\\n\\u2022 Wiki examples in ethers.js v5 and IFR SDK v0.2 in ethers v6\\n\\u2022 Governance \\u0026 Timelock\\n\\u2022 Security audit results"
 };
 var modeColors = { explorer: '#ff6600', user: '#9b59b6', dev: '#2ecc71' };
 
@@ -1292,7 +1292,7 @@ app.get("/api/lending/stats", async (_req, res) => {
         totalLent: 0,
         currentRate: 2,
         activeLoans: 0,
-        message: "LendingVault deploys after Bootstrap finalise — June 2026",
+        message: "LendingVault address is unavailable in this API deployment",
       });
     }
 
@@ -1506,7 +1506,7 @@ app.get("/api/commitment/p0", async (_req, res) => {
     res.json({
       p0Set: p0SetVal,
       p0ETH: p0Val ? ethersLib.utils.formatEther(p0Val) : null,
-      message: p0SetVal ? "P0 is set" : "P0 set after Bootstrap finalise()",
+      message: p0SetVal ? "P0 is set" : "P0 is not set",
     });
   } catch (err) {
     console.error("CV p0 error:", err);

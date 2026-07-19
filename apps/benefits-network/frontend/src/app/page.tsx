@@ -554,16 +554,22 @@ export default function Home() {
 
           <div className="mt-6 flex flex-wrap gap-3 sm:mt-8">
             <a
-              href={role === 'customer' ? '#customer-wallet' : '#seller-workspace'}
+              href={role === 'customer' ? '/scan' : '#seller-workspace'}
               className="rounded-full bg-orange-300 px-5 py-3 text-sm font-black uppercase tracking-[0.16em] text-stone-950 shadow-xl shadow-orange-950/40 transition hover:-translate-y-0.5 hover:bg-orange-200"
             >
-              {role === 'customer' ? 'Open wallet' : 'Open seller tools'}
+              {role === 'customer' ? 'Scan seller QR' : 'Open seller tools'}
+            </a>
+            <a
+              href={role === 'customer' ? '#customer-wallet' : '/guide'}
+              className="rounded-full border border-white/15 px-5 py-3 text-sm font-black uppercase tracking-[0.16em] text-stone-100 transition hover:border-orange-200/60"
+            >
+              {role === 'customer' ? 'Open wallet' : 'Seller guide'}
             </a>
             <a
               href="/guide"
               className="rounded-full border border-white/15 px-5 py-3 text-sm font-black uppercase tracking-[0.16em] text-stone-100 transition hover:border-orange-200/60"
             >
-              How it works
+              {role === 'customer' ? 'How it works' : 'Full guide'}
             </a>
           </div>
           <p className="mt-4 max-w-xl text-xs leading-5 text-stone-400 sm:mt-6 sm:text-sm sm:leading-6">

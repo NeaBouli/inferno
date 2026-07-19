@@ -25,7 +25,7 @@ The app has two roles:
   1. Seller opens `/b/:businessId`.
   2. Seller selects active benefit rule.
   3. Frontend requests and signs a one-time `sessions:create` challenge bound to seller wallet, business and selected rule, then calls `POST /api/sessions` with the nonce.
-  4. Customer opens `/r/:sessionId`.
+  4. Customer scans the seller QR in `/scan`, selects a local QR image, pastes the proof link/session ID, or opens `/r/:sessionId` directly.
   5. Customer signs challenge.
   6. Backend checks IFRLock against the selected rule threshold.
   7. Seller sees approval and redeems the session once.
@@ -33,6 +33,9 @@ The app has two roles:
   - Customer proof pages save a redacted local browser history entry after session load/refresh.
   - Home shows `Recent customer proofs` for reopening checkout proofs on the same device.
   - Stored data is local-only and excludes private keys, seed phrases, signatures and full wallet inventories.
+- Help surface:
+  - The IFR Copilot is available as an opt-in floating panel and loads only after the user opens it.
+  - The assistant is read-only, cannot initiate wallet transactions and must never request a seed phrase or private key.
 
 ## UX Requirements
 
@@ -53,6 +56,10 @@ The app has two roles:
 - Show wallet, IFR balance, ETH balance and locked IFR.
 - Explain that signing a QR proof does not move tokens.
 - Keep the audited simple IFRLock approve, lock and unlock flow inside the shop app. Keep swaps as an explicit Uniswap handoff while the IFR pool remains thin.
+- Keep camera access opt-in. Decode camera frames and selected images only in the browser, then
+  accept only a canonical `https://shop.ifrunit.tech/r/:sessionId` proof. Foreign origins,
+  insecure links, credentials, custom ports, query strings, fragments and invalid IDs fail closed.
+- Keep paste/session-ID fallback available when camera permission or hardware is unavailable.
 - QR session page must show seller, rule, product, discount and required IFR before signing.
 - Offer discovery and public seller catalogs show a wallet-local, read-only preview against each
   rule's exact IFRLock threshold. Disconnect, wrong-chain, loading and RPC/configuration failures
@@ -124,7 +131,9 @@ If `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` is missing, the frontend must show a s
 5. Customer saved proof history locally without storing private data server-side. **Implemented for redacted QR proof history; benefit wallet/device acceptance still pending.**
 6. Add embedded-wallet provider evaluation and decision record. **Preliminary evaluation and the safety decision are recorded in `docs/ifrp-commerce-app/EMBEDDED_WALLET_DECISION.md`: external wallets remain the production baseline; Privy and Coinbase CDP are prototype candidates, and provider selection remains deferred until export/recovery, native isolation, device, privacy and independent-security gates pass.**
 7. Add POS/plugin snippets to code generator. **Server-side JavaScript/POS helper and repository SDK `IFRBenefitsClient` are implemented and source-tested. npm publication and platform-specific plugins remain future release work.**
-8. Add mobile E2E checks for iPad Safari/Chrome and Android MetaMask browser.
+8. Add mobile E2E checks for iPad Safari/Chrome and Android MetaMask browser. **Automated
+   desktop/iPad/Android layout, unavailable-camera fallback, strict parser and fake-camera QR
+   decoding are implemented. Physical Safari/Chrome/MetaMask acceptance remains pending.**
 9. Checkout staff mode with owner-managed expiry/revocation and role-aware audit. **Implemented; live device acceptance remains pending.**
 10. Seller product/service catalog and public customer benefit browsing. **Implemented with owner-signed soft-archive, cross-business rule protection and immutable QR-session snapshots.**
 11. Governance-gated seller reward foundation. **Deployed fail-closed: owner application, live BuilderRegistry/PartnerVault linkage checks, atomic redeem outbox and read-only vesting/claim status. Mainnet currently has no registered builders/partners; dedicated authorized submission remains disabled.**

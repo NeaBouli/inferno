@@ -1624,6 +1624,7 @@ var S={
 start:{q:"What brings you here today?",sub:"Choose what fits you best:",s:1,t:2,o:[
 {i:"&#x1F4B0;",t:"Buy / Invest in IFR",d:"Bootstrap ENDED — buy IFR on Uniswap V2",n:"buy"},
 {i:"&#x1F512;",t:"Lock IFR in CommitmentVault",d:"Connect MetaMask, approve IFR, and lock on-chain",n:"lock"},
+{i:"&#x1F4F2;",t:"Use IFR Benefits",d:"Discover offers, scan a seller QR, or configure benefits",n:"benefits"},
 {i:"&#x1F6E0;&#xFE0F;",t:"Build with IFR",d:"Integrate IFR access into your product",n:"build"},
 {i:"&#x1F4B8;",t:"Lend / Borrow / Market",d:"Offer IFR as lender, browse market, or prepare to borrow",n:"lend_choice"},
 {i:"&#x1F91D;",t:"Contribute / Community",d:"Write, build, vote or connect",n:"community"},
@@ -1643,6 +1644,12 @@ build:{q:"What do you want to build?",sub:"We tailor the guide to your use case:
 {i:"&#x26A1;",t:"Quick integration (<60 min)",d:"Use the Integration Builder \u2014 get code now",a:"builder.html",h:1},
 {i:"&#x1F4D6;",t:"I want to understand the tech first",d:"Full docs: API, ABIs, contracts",a:"wiki/integration.html"},
 {i:"&#x1F91D;",t:"I represent a business / team",d:"Full onboarding with BuilderRegistry",a:"wiki/business-onboarding.html"}
+]},
+benefits:{q:"How do you want to use IFR Benefits?",sub:"The customer and seller tools are live at shop.ifrunit.tech:",s:2,t:2,o:[
+{i:"&#x1F50E;",t:"Discover customer offers",d:"Browse products and benefits, then check your lock eligibility",a:"https://shop.ifrunit.tech/",h:1},
+{i:"&#x1F4F7;",t:"Scan a seller QR",d:"Open a short-lived checkout proof with camera, image, or link fallback",a:"https://shop.ifrunit.tech/scan"},
+{i:"&#x1F3EA;",t:"Offer benefits as a seller",d:"Create a profile, catalog, rules, operators, and checkout QR",a:"https://shop.ifrunit.tech/#seller-workspace"},
+{i:"&#x1F4D6;",t:"Read the seller guide",d:"Understand onboarding, security, QR checkout, and governance-gated rewards",a:"wiki/business-onboarding.html"}
 ]},
 lend_choice:{q:"What do you want to do in LendingVault?",sub:"Lender offers and market data are live. Borrowing opens after price collateral is activated:",s:2,t:2,o:[
 {i:"&#x1F4B8;",t:"Offer IFR as Lender",d:"Guided 1-5 flow: connect, amount, approve, create offer, verify live",a:"wiki/lending-vault.html#lending-widget",h:1},
@@ -1670,12 +1677,13 @@ var h="";
 for(var j=0;j<s.o.length;j++){var o=s.o[j];
 var isA=!!o.a;var href=o.a||"";
 if(href&&!href.startsWith("http"))href="https://ifrunit.tech/"+href;
-var oc=isA?'onclick="location.href=\''+href+'\'"':'onclick="wzGo(\''+o.n+'\')"';
-h+='<div '+oc+' style="background:'+(o.h?"#fff3e7":"#fffaf2")+';border:1px solid '+(o.h?"#f97316":"#e4d8c7")+';border-radius:12px;padding:16px 18px;cursor:pointer;display:flex;align-items:center;gap:14px;margin-bottom:8px;transition:all .15s;box-shadow:0 8px 22px rgba(85,65,42,0.08)" onmouseover="this.style.borderColor=\'#ff6b00\';this.style.transform=\'translateY(-1px)\';this.style.background=\'#fff3e7\'" onmouseout="this.style.borderColor=\''+(o.h?"#f97316":"#e4d8c7")+'\';this.style.transform=\'none\';this.style.background=\''+(o.h?"#fff3e7":"#fffaf2")+'\'">';
+var open=isA?'<a href="'+href+'"':'<button type="button" onclick="wzGo(\''+o.n+'\')"';
+var close=isA?'</a>':'</button>';
+h+=open+' style="width:100%;background:'+(o.h?"#fff3e7":"#fffaf2")+';border:1px solid '+(o.h?"#f97316":"#e4d8c7")+';border-radius:12px;padding:16px 18px;cursor:pointer;display:flex;align-items:center;gap:14px;margin-bottom:8px;transition:all .15s;box-shadow:0 8px 22px rgba(85,65,42,0.08);font:inherit;text-align:left;text-decoration:none;color:inherit" onmouseover="this.style.borderColor=\'#ff6b00\';this.style.transform=\'translateY(-1px)\';this.style.background=\'#fff3e7\'" onmouseout="this.style.borderColor=\''+(o.h?"#f97316":"#e4d8c7")+'\';this.style.transform=\'none\';this.style.background=\''+(o.h?"#fff3e7":"#fffaf2")+'\'">';
 h+='<div style="font-size:1.6rem;flex-shrink:0">'+o.i+'</div>';
 h+='<div style="flex:1"><div style="font-weight:700;font-size:0.9rem;margin-bottom:2px;color:'+(o.h?"#b0481e":"#211c17")+'">'+o.t+'</div>';
 h+='<div style="color:#6f675d;font-size:0.8rem;line-height:1.4">'+o.d+'</div></div>';
-h+='<div style="color:#ff6b00;font-size:1rem;flex-shrink:0">&rarr;</div></div>';
+h+='<div style="color:#ff6b00;font-size:1rem;flex-shrink:0">&rarr;</div>'+close;
 }
 document.getElementById("wz-box").innerHTML='<div style="background:#fff8ef;border:1px solid #e4d8c7;border-radius:14px;padding:24px;box-shadow:0 14px 34px rgba(85,65,42,0.12)"><h3 style="font-size:1.15rem;font-weight:700;margin-bottom:4px;color:#211c17">'+s.q+'</h3><p style="color:#6f675d;font-size:0.85rem;margin-bottom:18px">'+s.sub+'</p>'+h+'</div>';
 }
@@ -2343,14 +2351,15 @@ render();
         <h3>Creator &amp; Channel Access</h3>
         <p>Content creators, YouTube channels and online communities can gate premium content behind IFR Lock &mdash; alongside or instead of traditional subscriptions. Fans lock IFR, creators earn rewards.</p>
       </a>
-      <a href="wiki/integration.html" class="eco-card reveal" style="text-decoration: none; color: inherit;">
+      <a href="https://shop.ifrunit.tech/" class="eco-card reveal" style="text-decoration: none; color: inherit;" aria-label="Open the live IFR Benefits customer and seller app">
         <span class="eco-tag">Use Case</span>
         <div style="width: 60px; height: 60px; border-radius: 12px; margin-bottom: 12px; display: flex; align-items: center; justify-content: center; background: rgba(255,107,0,0.12); font-size: 28px;">&#x1F3EA;</div>
         <h3>Business &amp; Retail Discounts</h3>
         <p>Any business &mdash; online or offline &mdash; can reward IFR lockers with exclusive discounts, early access or VIP benefits. Verified on-chain in seconds via QR scan. No crypto knowledge needed by staff.</p>
       </a>
     </div>
-    <div class="eco-cta reveal">
+    <div class="eco-cta reveal" style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+      <a href="https://shop.ifrunit.tech/" class="btn btn-primary">Open IFR Benefits &rarr;</a>
       <a href="wiki/integration.html" class="btn btn-secondary">Integrate Your Product &rarr;</a>
     </div>
 

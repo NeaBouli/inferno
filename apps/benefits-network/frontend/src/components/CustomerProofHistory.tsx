@@ -45,15 +45,23 @@ export function CustomerProofHistory() {
           </p>
           <h2 className="mt-2 text-2xl font-black text-white">Recent customer proofs</h2>
         </div>
-        {items.length > 0 ? (
-          <button
-            type="button"
-            onClick={clearHistory}
-            className="rounded-full border border-white/15 px-3 py-2 text-xs font-black uppercase tracking-[0.14em] text-stone-100 transition hover:border-orange-200/60"
+        <div className="flex flex-wrap gap-2">
+          <a
+            href="/scan"
+            className="rounded-full bg-orange-300 px-3 py-2 text-xs font-black uppercase text-stone-950 transition hover:bg-orange-200"
           >
-            Clear
-          </button>
-        ) : null}
+            Scan QR
+          </a>
+          {items.length > 0 ? (
+            <button
+              type="button"
+              onClick={clearHistory}
+              className="rounded-full border border-white/15 px-3 py-2 text-xs font-black uppercase tracking-[0.14em] text-stone-100 transition hover:border-orange-200/60"
+            >
+              Clear
+            </button>
+          ) : null}
+        </div>
       </div>
 
       <p className="mt-3 text-sm leading-6 text-stone-300">
