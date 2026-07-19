@@ -58,12 +58,12 @@ async function navigate(url) {
 
 async function main() {
   assert(listeners.has('fetch'), 'service worker must register a fetch handler');
-  assert(source.includes("const CACHE_NAME = 'ifr-benefits-v8'"), 'service worker cache version must be v8');
-  assert(source.includes("'/icons/ifr-official-64-v6.png'"), 'service worker must precache the official favicon');
-  assert(source.includes("'/icons/ifr-official-180-v6.png'"), 'service worker must precache the official Apple touch icon');
-  assert(source.includes("'/icons/ifr-official-192-v6.png'"), 'service worker must precache the official 192 icon');
-  assert(source.includes("'/icons/ifr-official-256-v6.png'"), 'service worker must precache the official header icon');
-  assert(source.includes("'/icons/ifr-official-512-v6.png'"), 'service worker must precache the official 512 icon');
+  assert(source.includes("const CACHE_NAME = 'ifr-benefits-v9'"), 'service worker cache version must be v9');
+  assert(source.includes("'/icons/ifr-official-64-v7.png'"), 'service worker must precache the official favicon');
+  assert(source.includes("'/icons/ifr-official-180-v7.png'"), 'service worker must precache the official Apple touch icon');
+  assert(source.includes("'/icons/ifr-official-192-v7.png'"), 'service worker must precache the official 192 icon');
+  assert(source.includes("'/icons/ifr-official-256-v7.png'"), 'service worker must precache the official header icon');
+  assert(source.includes("'/icons/ifr-official-512-v7.png'"), 'service worker must precache the official 512 icon');
   assert(!source.includes("favicon-v4.ico"), 'service worker must not precache the competing ICO favicon');
   assert(layoutSource.includes("updateViaCache:'none'"), 'registration must bypass stale service-worker HTTP caches');
   assert(layoutSource.includes("'controllerchange'"), 'controlled clients must reload after a service-worker update');

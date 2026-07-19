@@ -20,7 +20,7 @@ const connectors = [
           name: 'IFR Benefits Network',
           description: 'Verify locked IFR and redeem partner benefits.',
           url: 'https://shop.ifrunit.tech',
-          icons: ['https://shop.ifrunit.tech/icons/ifr-official-256-v6.png'],
+          icons: ['https://shop.ifrunit.tech/icons/ifr-official-256-v7.png'],
         },
       })]
     : []),
