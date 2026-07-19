@@ -290,6 +290,7 @@ async function run() {
     }
 
     await customer.goto(`${origin}/#customer-pass`, { waitUntil: 'domcontentloaded' });
+    await customer.getByText('MetaMask provider', { exact: true }).waitFor();
     await customer.getByRole('button', { name: 'Connect wallet', exact: true }).first().click();
     await customer.getByRole('button', { name: 'Disconnect', exact: true }).first().waitFor();
     const passPanel = customer.locator('#customer-pass');
