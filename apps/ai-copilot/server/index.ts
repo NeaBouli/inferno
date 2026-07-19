@@ -311,7 +311,7 @@ body {
 <div id="header">
   <div id="header-top">
     <span>&#x1f525; IFR Copilot</span>
-    <span style="color:#ff6600;font-size:11px;margin-left:auto;">Inferno Protocol</span>
+    <span id="surface-label" style="color:#ff6600;font-size:11px;margin-left:auto;">Inferno Protocol</span>
   </div>
   <div id="tabs">
     <button class="tab active-explorer" onclick="switchMode('explorer')" id="tab-explorer">&#x1f525; Explorer</button>
@@ -332,6 +332,20 @@ body {
 <script>
 var currentMode = 'explorer';
 var histories = { explorer: [], user: [], dev: [] };
+var requestedSurface = new URLSearchParams(window.location.search).get('surface');
+var surface = ['landing', 'web3', 'benefits'].indexOf(requestedSurface) >= 0 ? requestedSurface : 'standalone';
+var surfaceHelp = {
+  landing: "You're on the IFR Protocol landing page. I can explain the project, token flow, live status, listings, governance, Web3 tools and IFR Benefits.",
+  web3: "You're in the IFR Web3 app. I can guide wallet connection, buying or adding IFR, refundable IFRLock access, CommitmentVault tranches and LendingVault actions without asking for your seed phrase.",
+  benefits: "You're in IFR Benefits. I can guide customers through offers, PWA install, wallet entry and seller-issued QR proofs, or help sellers configure products, benefit rules, operators and redemption.",
+  standalone: "I can guide you across the IFR Protocol, Web3 app and IFR Benefits Network."
+};
+var surfaceLabels = {
+  landing: 'Landing help',
+  web3: 'Web3 help',
+  benefits: 'Benefits help',
+  standalone: 'Inferno Protocol'
+};
 function getBootstrapWelcomeText() {
   var now = Date.now();
   var END = new Date("2026-06-05T00:00:00Z").getTime();
@@ -339,7 +353,7 @@ function getBootstrapWelcomeText() {
   return "Bootstrap Event ended June 5, 2026. IFR now live on Uniswap";
 }
 var welcomes = {
-  explorer: "Welcome to IFR Copilot. &#x1f44b;\\n\\nYou're browsing without a connected wallet \\u2014 no problem!\\n\\n\\u2756 You can ask about:\\n\\u2022 IFR tokenomics, governance, contracts and security\\n\\u2022 " + getBootstrapWelcomeText() + "\\n\\u2022 Wallet, IFRLock and lending guidance on web3.ifrunit.tech\\n\\u2022 Customer offers, seller setup and QR checkout on shop.ifrunit.tech\\n\\n\\u2756 Connect your wallet on the relevant app to view your live on-chain IFR balance and lock position. IFR Copilot itself never asks for a seed phrase or private key.\\n\\nOr just ask me anything! &#x1f525;",
+  explorer: "Welcome to IFR Copilot. &#x1f44b;\\n\\n" + surfaceHelp[surface] + "\\n\\nYou're browsing without a wallet connected to the copilot \\u2014 no problem.\\n\\n\\u2756 You can ask about:\\n\\u2022 IFR tokenomics, governance, contracts and security\\n\\u2022 " + getBootstrapWelcomeText() + "\\n\\u2022 Wallet, IFRLock, CommitmentVault and LendingVault guidance on web3.ifrunit.tech\\n\\u2022 Customer offers, seller setup and privacy-preserving QR checkout on shop.ifrunit.tech\\n\\n\\u2756 Connect your wallet only in the relevant Web3 or Benefits app to view live on-chain status. IFR Copilot never asks for a seed phrase or private key.\\n\\nOr just ask me anything! &#x1f525;",
   user: "Hey! &#x1f48e; Ready to help you get the most out of your IFR tokens.\\n\\nI can assist with:\\n\\u2022 Locking IFR for benefits\\n\\u2022 Understanding your tier (Bronze/Silver/Gold/Platinum)\\n\\u2022 Partner discounts \\u0026 Benefits Network\\n\\u2022 Step-by-step guides",
   dev: "Dev mode active. &#x2699;&#xfe0f;\\n\\n17 verified on-chain components \\u2022 544 documented tests \\u2022 91% historical branch coverage\\n\\nI can help with:\\n\\u2022 Contract addresses \\u0026 ABIs\\n\\u2022 Wiki examples in ethers.js v5 and IFR SDK v0.2 in ethers v6\\n\\u2022 Governance \\u0026 Timelock\\n\\u2022 Security audit results"
 };
@@ -417,6 +431,7 @@ async function send() {
 }
 
 // Init
+document.getElementById('surface-label').textContent = surfaceLabels[surface];
 switchMode('explorer');
 </script>
 </body>
