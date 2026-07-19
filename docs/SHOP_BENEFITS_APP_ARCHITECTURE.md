@@ -74,7 +74,8 @@ The app has two roles:
 - Generate seller scanner links.
 - Generate basic HTML button/link snippet.
 - Show API payload for rule-bound QR sessions.
-- Generate a server-side JavaScript/POS session helper that returns the short-lived customer proof URL. Packaged SDK/plugin examples remain future work.
+- Generate a server-side JavaScript/POS session helper that returns the short-lived customer proof URL.
+- Use the signer-neutral `IFRBenefitsClient` in the repository SDK for one-time challenge checkout integrations. npm publication and platform-specific plugins remain future release work.
 
 ## IFR Wallet Strategy
 
@@ -122,7 +123,7 @@ If `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` is missing, the frontend must show a s
 4. Add QR history and audit view for sellers. **Implemented for owner-wallet-protected recent sessions, restore receipts, activity metrics and a local masked CSV of the latest 50 checks. Full-history export and retention/compliance policy remain future work.**
 5. Customer saved proof history locally without storing private data server-side. **Implemented for redacted QR proof history; benefit wallet/device acceptance still pending.**
 6. Add embedded-wallet provider evaluation and decision record. **Preliminary evaluation and the safety decision are recorded in `docs/ifrp-commerce-app/EMBEDDED_WALLET_DECISION.md`: external wallets remain the production baseline; Privy and Coinbase CDP are prototype candidates, and provider selection remains deferred until export/recovery, native isolation, device, privacy and independent-security gates pass.**
-7. Add POS/plugin snippets to code generator. **Server-side JavaScript/POS session helper implemented; packaged SDK and platform-specific plugins remain future work.**
+7. Add POS/plugin snippets to code generator. **Server-side JavaScript/POS helper and repository SDK `IFRBenefitsClient` are implemented and source-tested. npm publication and platform-specific plugins remain future release work.**
 8. Add mobile E2E checks for iPad Safari/Chrome and Android MetaMask browser.
 9. Checkout staff mode with owner-managed expiry/revocation and role-aware audit. **Implemented; live device acceptance remains pending.**
 10. Seller product/service catalog and public customer benefit browsing. **Implemented with owner-signed soft-archive, cross-business rule protection and immutable QR-session snapshots.**

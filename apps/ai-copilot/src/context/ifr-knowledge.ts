@@ -147,16 +147,17 @@ export function getIFRKnowledge() {
           "Tier System (Basic/Premium/Pro)",
           "Security Score (0-100, SAFE/MEDIUM/RISKY)",
           "Contract code generation",
-          "SDK snippet (npm install ifr-sdk)",
+          "SDK snippet (local repository package; npm publication pending)",
           "Deploy guide (Sepolia → BuilderRegistry → Mainnet)"
         ]
       },
       sdk: {
         package: "ifr-sdk",
-        version: "0.1.0",
-        install: "npm install ifr-sdk",
+        version: "0.2.0",
+        availability: "Local repository package; npm publication pending",
+        install: "From the Inferno repository root: npm install --install-links ./apps/sdk",
         methods: "checkAccess(), getTier(), getBalance(), getLockedBalance(), isBuilder(), getTotalSupply()",
-        restApi: "GET /api/ifr/check?wallet=0x...&required=1000"
+        restApi: "GET https://copilot-api.ifrunit.tech/api/ifr/check?wallet=0x...&required=1000"
       },
       contractLibrary: {
         path: "contracts/library/",
@@ -182,7 +183,7 @@ export function getIFRKnowledge() {
       },
       apiEndpoints: {
         builderGenerate: "POST /api/builder/generate — generate contract + SDK from JSON config",
-        ifrCheck: "GET /api/ifr/check?wallet=0x...&required=1000 — access check + tier"
+        ifrCheck: "GET https://copilot-api.ifrunit.tech/api/ifr/check?wallet=0x...&required=1000 — access check + tier"
       }
     },
     tiers: {
