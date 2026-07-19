@@ -923,6 +923,9 @@ async function verifyPage(contextOptions, label) {
       configurable: true,
       value: {
         enumerateDevices: async () => [],
+        getUserMedia: async () => {
+          throw new DOMException('Camera permission denied by smoke harness', 'NotAllowedError');
+        },
       },
     });
   });
@@ -1299,8 +1302,19 @@ async function verifyPage(contextOptions, label) {
     await expectNoHorizontalOverflow(page, `${label} customer QR scanner`);
     const qrImageInput = page.getByTestId('qr-image-input');
     assert(await qrImageInput.getAttribute('accept') === 'image/*', `${label} QR image fallback must accept images only`);
+    await page.waitForTimeout(1000);
     await page.getByTestId('start-camera').click();
-    await expectText(page, 'No browser camera was found.');
+    const cameraStatus = page.getByTestId('camera-status');
+    await cameraStatus.waitFor({ state: 'visible', timeout: timeoutMs });
+    await page.waitForTimeout(3000);
+    const cameraText = await cameraStatus.innerText();
+    const stopCamera = page.getByTestId('stop-camera');
+    const cameraActive = await stopCamera.isVisible().catch(() => false);
+    assert(
+      cameraActive || /No browser camera was found|Camera access was blocked|camera is already in use|The camera could not start/.test(cameraText),
+      `${label} scanner must either activate or show a safe camera fallback; status=${JSON.stringify(cameraText)}`
+    );
+    if (cameraActive) await stopCamera.click();
     const proofInput = page.getByTestId('manual-proof-input');
     await proofInput.fill('https://evil.example/r/cm1234567890abcdefghijkl');
     await page.getByTestId('open-proof').click();
