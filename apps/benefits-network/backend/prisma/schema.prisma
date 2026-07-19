@@ -10,6 +10,9 @@ datasource db {
 model Business {
   id              String    @id @default(cuid())
   name            String
+  description     String?
+  website         String?
+  categoriesJson  String    @default("[]")
   ownerAddress    String?
   discountPercent Int
   requiredLockIFR Int

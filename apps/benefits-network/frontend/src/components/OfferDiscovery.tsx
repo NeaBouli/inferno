@@ -116,12 +116,24 @@ export function OfferDiscovery() {
                   <p className="text-xs font-black uppercase tracking-[0.16em] text-green-100/80">{offer.category}</p>
                   <h3 className="mt-2 text-2xl font-black text-white">{offer.productName}</h3>
                   <p className="mt-1 text-sm font-semibold text-stone-300">{offer.business.name}</p>
+                  {offer.business.description ? (
+                    <p className="mt-2 max-w-xl text-sm leading-6 text-stone-400">{offer.business.description}</p>
+                  ) : null}
                 </div>
                 <span className="rounded-full border border-orange-200/30 bg-orange-200/10 px-3 py-2 text-sm font-black text-orange-100">
                   {offer.discountPercent}% benefit
                 </span>
               </div>
               {offer.product?.description ? <p className="mt-4 text-sm leading-6 text-stone-300">{offer.product.description}</p> : null}
+              {offer.business.categories.length ? (
+                <div className="mt-4 flex flex-wrap gap-2" aria-label={`${offer.business.name} categories`}>
+                  {offer.business.categories.slice(0, 4).map((businessCategory) => (
+                    <span key={businessCategory} className="rounded-full border border-green-200/20 px-3 py-1 text-xs font-bold text-green-50">
+                      {businessCategory}
+                    </span>
+                  ))}
+                </div>
+              ) : null}
               <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-xs text-stone-400">
                 <span>{offer.label}</span>
                 <span>{offer.requiredLockIFR.toLocaleString('en-US')} IFR lock</span>

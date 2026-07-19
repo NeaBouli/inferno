@@ -37,7 +37,7 @@ async function sellerHeaders(
   scope?: string
 ): Promise<Record<string, string>> {
   const mutations = new Set([
-    'business:create', 'business:delete', 'operators:create', 'operators:delete',
+    'business:create', 'business:update', 'business:delete', 'operators:create', 'operators:delete',
     'products:create', 'products:update', 'products:delete', 'rewards:apply',
     'rules:create', 'rules:update', 'rules:delete', 'sessions:create', 'sessions:redeem',
   ]);
@@ -208,6 +208,185 @@ describe('Seller catalog routes', () => {
     expect(await prisma.sellerAuthorizationChallenge.count()).toBe(0);
   });
 
+  it('lets only the owner update a bounded public seller profile with a one-time challenge', async () => {
+    const url = `${baseUrl()}/api/seller/businesses/${businessId}`;
+    const validProfile = {
+      name: 'Catalog Seller Athens',
+      description: 'Independent coffee and member workshops in central Athens.',
+      website: 'https://seller.example.com/members',
+      categories: ['Food & drink', 'Events'],
+    };
+
+    expect((await fetch(url, {
+      method: 'PATCH',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(validProfile),
+    })).status).toBe(401);
+
+    const wrongOwnerHeaders = await sellerHeaders(otherOwner, 'business:update', businessId, businessId);
+    expect((await fetch(url, {
+      method: 'PATCH',
+      headers: wrongOwnerHeaders,
+      body: JSON.stringify(validProfile),
+    })).status).toBe(403);
+
+    for (const invalidProfile of [
+      { website: 'http://seller.example.com' },
+      { website: 'https://user:secret@seller.example.com' },
+      { categories: ['Coffee', 'coffee'] },
+      { categories: Array.from({ length: 9 }, (_, index) => `Category ${index}`) },
+      { unknownPublicField: 'must not be accepted' },
+    ]) {
+      const invalidHeaders = await sellerHeaders(owner, 'business:update', businessId, businessId);
+      expect((await fetch(url, {
+        method: 'PATCH',
+        headers: invalidHeaders,
+        body: JSON.stringify(invalidProfile),
+      })).status).toBe(400);
+    }
+
+    const ownerHeaders = await sellerHeaders(owner, 'business:update', businessId, businessId);
+    const updatedResponse = await fetch(url, {
+      method: 'PATCH',
+      headers: ownerHeaders,
+      body: JSON.stringify(validProfile),
+    });
+    expect(updatedResponse.status).toBe(200);
+    expect(await updatedResponse.json()).toEqual({
+      id: businessId,
+      name: validProfile.name,
+      description: validProfile.description,
+      website: 'https://seller.example.com/members',
+      categories: validProfile.categories,
+    });
+    expect((await fetch(url, {
+      method: 'PATCH',
+      headers: ownerHeaders,
+      body: JSON.stringify({ description: 'Replay must fail.' }),
+    })).status).toBe(401);
+
+    expect(await prisma.business.findUniqueOrThrow({ where: { id: businessId } })).toMatchObject({
+      name: validProfile.name,
+      description: validProfile.description,
+      website: validProfile.website,
+      categoriesJson: JSON.stringify(validProfile.categories),
+    });
+
+    const publicProfileResponse = await fetch(`${baseUrl()}/api/businesses/${businessId}`);
+    expect(publicProfileResponse.status).toBe(200);
+    const publicProfile = await publicProfileResponse.json() as Record<string, unknown>;
+    expect(publicProfile).toMatchObject({
+      id: businessId,
+      name: validProfile.name,
+      description: validProfile.description,
+      website: validProfile.website,
+      categories: validProfile.categories,
+    });
+    expect(JSON.stringify(publicProfile)).not.toMatch(/ownerAddress|categoriesJson|adminSecret/);
+
+    const publicProductsResponse = await fetch(`${baseUrl()}/api/businesses/${businessId}/products`);
+    expect(publicProductsResponse.status).toBe(200);
+    const publicProducts = await publicProductsResponse.json() as {
+      business: Record<string, unknown>;
+      products: unknown[];
+    };
+    expect(publicProducts.business).toEqual({
+      id: businessId,
+      name: validProfile.name,
+      description: validProfile.description,
+      website: validProfile.website,
+      categories: validProfile.categories,
+    });
+    expect(JSON.stringify(publicProducts)).not.toMatch(/ownerAddress|categoriesJson|adminSecret/);
+  });
+
+  it('keeps the operator admin fallback aligned with public profile validation', async () => {
+    const url = `${baseUrl()}/api/admin/businesses/${businessId}`;
+    const authorization = { authorization: 'Bearer test-secret-12345' };
+
+    expect((await fetch(url)).status).toBe(401);
+
+    expect((await fetch(url, {
+      method: 'PATCH',
+      headers: { ...authorization, 'content-type': 'application/json' },
+      body: JSON.stringify({ website: 'http://seller.example.com' }),
+    })).status).toBe(400);
+
+    const updateResponse = await fetch(url, {
+      method: 'PATCH',
+      headers: { ...authorization, 'content-type': 'application/json' },
+      body: JSON.stringify({
+        name: 'Operator managed seller',
+        description: 'Managed through the controlled operator fallback.',
+        website: 'https://operator.example.com/ifr',
+        categories: ['Retail', 'Events'],
+      }),
+    });
+    expect(updateResponse.status).toBe(200);
+    expect(await updateResponse.json()).toMatchObject({
+      id: businessId,
+      name: 'Operator managed seller',
+      description: 'Managed through the controlled operator fallback.',
+      website: 'https://operator.example.com/ifr',
+      categories: ['Retail', 'Events'],
+    });
+    expect(await prisma.business.findUniqueOrThrow({ where: { id: businessId } })).toMatchObject({
+      categoriesJson: JSON.stringify(['Retail', 'Events']),
+    });
+
+    const reloadResponse = await fetch(url, { headers: authorization });
+    expect(reloadResponse.status).toBe(200);
+    const reloaded = await reloadResponse.json() as Record<string, unknown>;
+    expect(reloaded).toMatchObject({
+      id: businessId,
+      name: 'Operator managed seller',
+      description: 'Managed through the controlled operator fallback.',
+      website: 'https://operator.example.com/ifr',
+      categories: ['Retail', 'Events'],
+      ownerAddress: owner.address,
+      verifyUrl: `/b/${businessId}`,
+      qrUrl: `/b/${businessId}`,
+      rulesCount: 0,
+      productsCount: 0,
+    });
+    expect(JSON.stringify(reloaded)).not.toMatch(/categoriesJson|adminSecret/);
+  });
+
+  it('sanitizes malformed legacy profile values before returning public data', async () => {
+    await prisma.business.update({
+      where: { id: businessId },
+      data: {
+        website: 'javascript:alert(1)',
+        categoriesJson: JSON.stringify([
+          ' Retail ',
+          'retail',
+          '',
+          7,
+          'x'.repeat(81),
+          'Events',
+        ]),
+      },
+    });
+
+    const profileResponse = await fetch(`${baseUrl()}/api/businesses/${businessId}`);
+    expect(profileResponse.status).toBe(200);
+    expect(await profileResponse.json()).toMatchObject({
+      id: businessId,
+      website: null,
+      categories: ['Retail', 'Events'],
+    });
+
+    const productsResponse = await fetch(`${baseUrl()}/api/businesses/${businessId}/products`);
+    expect(productsResponse.status).toBe(200);
+    const products = await productsResponse.json() as { business: Record<string, unknown> };
+    expect(products.business).toMatchObject({
+      id: businessId,
+      website: null,
+      categories: ['Retail', 'Events'],
+    });
+    expect(JSON.stringify(products)).not.toMatch(/javascript:|categoriesJson|ownerAddress|adminSecret/);
+  });
+
   it('keeps catalog management owner-only', async () => {
     const url = `${baseUrl()}/api/seller/businesses/${businessId}/products`;
     expect((await fetch(url, {
@@ -290,6 +469,14 @@ describe('Seller catalog routes', () => {
   });
 
   it('discovers only active public offers with search, category and bounded pagination', async () => {
+    await prisma.business.update({
+      where: { id: businessId },
+      data: {
+        description: 'Neighborhood roaster and quiet member workspace.',
+        website: 'https://catalog.example.com',
+        categoriesJson: JSON.stringify(['Hospitality', 'Coworking']),
+      },
+    });
     const [coffee, pausedProduct] = await Promise.all([
       prisma.product.create({ data: { businessId, ...productPayload() } }),
       prisma.product.create({
@@ -369,7 +556,9 @@ describe('Seller catalog routes', () => {
       'business', 'category', 'dailyRedemptionLimit', 'discountPercent', 'id', 'label',
       'monthlyRedemptionLimit', 'product', 'productName', 'requiredLockIFR',
     ]);
-    expect(Object.keys(firstPage.offers[0].business as Record<string, unknown>).sort()).toEqual(['id', 'name']);
+    expect(Object.keys(firstPage.offers[0].business as Record<string, unknown>).sort()).toEqual([
+      'categories', 'description', 'id', 'name', 'website',
+    ]);
     const firstProduct = firstPage.offers[0].product;
     if (firstProduct !== null) {
       expect(Object.keys(firstProduct as Record<string, unknown>).sort()).toEqual(['description', 'id', 'name']);
@@ -389,6 +578,13 @@ describe('Seller catalog routes', () => {
     };
     expect(searchBody.offers.map((offer) => offer.id)).toEqual([coffeeRule.id]);
     expect(Object.keys(searchBody.offers[0].product || {}).sort()).toEqual(['description', 'id', 'name']);
+
+    const profileDescriptionSearch = await fetch(`${baseUrl()}/api/businesses?query=workspace`);
+    expect((await profileDescriptionSearch.json() as { offers: Array<{ id: string }> }).offers.map((offer) => offer.id))
+      .toEqual(expect.arrayContaining([coffeeRule.id, serviceRule.id]));
+    const profileCategorySearch = await fetch(`${baseUrl()}/api/businesses?query=Coworking`);
+    expect((await profileCategorySearch.json() as { offers: Array<{ id: string }> }).offers.map((offer) => offer.id))
+      .toEqual(expect.arrayContaining([coffeeRule.id, serviceRule.id]));
 
     const category = await fetch(`${baseUrl()}/api/businesses?category=Services`);
     const categoryBody = await category.json() as { offers: Array<{ id: string }> };

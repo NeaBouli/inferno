@@ -25,9 +25,27 @@ import {
   AuthenticatedRateLimitError,
   assertSellerWalletActionAllowed,
 } from '../services/authenticatedRateLimiter';
+import {
+  MAX_BUSINESS_CATEGORIES,
+  parseBusinessCategories,
+  publicBusinessProfile,
+  serializeBusinessCategories,
+} from '../services/businessProfile';
 
 const router = Router();
 const MAX_ACTIVE_CHECKOUT_OPERATORS = 10;
+
+const businessDescriptionSchema = z.string().trim().max(500).nullable();
+const businessWebsiteSchema = z.string().trim().max(300).url().refine((value) => {
+  const parsed = new URL(value);
+  return parsed.protocol === 'https:' && !parsed.username && !parsed.password;
+}, 'Website must be an HTTPS URL without credentials').nullable();
+const businessCategoriesSchema = z.array(z.string().trim().min(1).max(80))
+  .max(MAX_BUSINESS_CATEGORIES)
+  .refine(
+    (items) => new Set(items.map((item) => item.toLocaleLowerCase('en-US'))).size === items.length,
+    'Categories must be unique'
+  );
 
 const createBusinessSchema = z.object({
   name: z.string().min(1).max(200),
@@ -35,11 +53,21 @@ const createBusinessSchema = z.object({
   requiredLockIFR: z.number().int().positive(),
   ttlSeconds: z.number().int().min(10).max(3600).optional(),
   tierLabel: z.string().max(50).optional(),
+  description: businessDescriptionSchema.optional(),
+  website: businessWebsiteSchema.optional(),
+  categories: businessCategoriesSchema.optional(),
   ownerAddress: z.string().regex(/^0x[a-fA-F0-9]{40}$/),
   signature: z.string().min(1),
   timestamp: z.string().min(1),
   nonce: z.string().min(1).optional(),
 });
+
+const updateBusinessProfileSchema = z.object({
+  name: z.string().trim().min(1).max(200).optional(),
+  description: businessDescriptionSchema.optional(),
+  website: businessWebsiteSchema.optional(),
+  categories: businessCategoriesSchema.optional(),
+}).strict().refine((value) => Object.keys(value).length > 0, 'At least one profile field is required');
 
 const createBenefitRuleSchema = z.object({
   productId: z.string().min(1).nullable().optional(),
@@ -338,6 +366,9 @@ router.post('/businesses', sellerRateLimiter, validate(createBusinessSchema), as
         requiredLockIFR: req.body.requiredLockIFR,
         ttlSeconds: req.body.ttlSeconds,
         tierLabel: req.body.tierLabel,
+        description: req.body.description ?? null,
+        website: req.body.website ?? null,
+        categoriesJson: serializeBusinessCategories(req.body.categories ?? []),
       },
     });
 
@@ -346,6 +377,10 @@ router.post('/businesses', sellerRateLimiter, validate(createBusinessSchema), as
       ownerAddress: business.ownerAddress,
       verifyUrl: `/b/${business.id}`,
       qrUrl: `/b/${business.id}`,
+      name: business.name,
+      description: business.description,
+      website: business.website,
+      categories: parseBusinessCategories(business.categoriesJson),
     });
   } catch (err) {
     handleSellerError(err, res, next);
@@ -365,6 +400,9 @@ router.get('/businesses', sellerRateLimiter, async (req, res, next) => {
         discountPercent: true,
         requiredLockIFR: true,
         tierLabel: true,
+        description: true,
+        website: true,
+        categoriesJson: true,
         createdAt: true,
         _count: {
           select: { benefitRules: true, products: true },
@@ -373,9 +411,12 @@ router.get('/businesses', sellerRateLimiter, async (req, res, next) => {
     });
 
     res.json({
-      businesses: businesses.map((business) => ({
+      businesses: businesses.map((business) => publicBusinessProfile({
         id: business.id,
         name: business.name,
+        description: business.description,
+        website: business.website,
+        categoriesJson: business.categoriesJson,
         ownerAddress: business.ownerAddress,
         discountPercent: business.discountPercent,
         requiredLockIFR: business.requiredLockIFR,
@@ -391,6 +432,38 @@ router.get('/businesses', sellerRateLimiter, async (req, res, next) => {
     handleSellerError(err, res, next);
   }
 });
+
+router.patch(
+  '/businesses/:id',
+  sellerRateLimiter,
+  validate(updateBusinessProfileSchema),
+  async (req, res, next) => {
+    try {
+      await requireBusinessOwner(req, 'business:update', req.params.id, req.params.id);
+      const business = await prisma.business.update({
+        where: { id: req.params.id },
+        data: {
+          name: req.body.name,
+          description: req.body.description,
+          website: req.body.website,
+          categoriesJson: req.body.categories === undefined
+            ? undefined
+            : serializeBusinessCategories(req.body.categories),
+        },
+        select: {
+          id: true,
+          name: true,
+          description: true,
+          website: true,
+          categoriesJson: true,
+        },
+      });
+      res.json(publicBusinessProfile(business));
+    } catch (err) {
+      handleSellerError(err, res, next);
+    }
+  }
+);
 
 router.get('/businesses/:id/operator-status', sellerRateLimiter, async (req, res, next) => {
   try {

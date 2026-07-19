@@ -4,8 +4,25 @@ import { prisma } from '../services/sessionService';
 import { adminAuth } from '../middleware/auth';
 import { validate } from '../middleware/validator';
 import { getRewardOnChainStatus, isWalletAlreadyRewarded } from '../services/rewardService';
+import {
+  MAX_BUSINESS_CATEGORIES,
+  publicBusinessProfile,
+  serializeBusinessCategories,
+} from '../services/businessProfile';
 
 const router = Router();
+
+const businessDescriptionSchema = z.string().trim().max(500).nullable();
+const businessWebsiteSchema = z.string().trim().max(300).url().refine((value) => {
+  const parsed = new URL(value);
+  return parsed.protocol === 'https:' && !parsed.username && !parsed.password;
+}, 'Website must be an HTTPS URL without credentials').nullable();
+const businessCategoriesSchema = z.array(z.string().trim().min(1).max(80))
+  .max(MAX_BUSINESS_CATEGORIES)
+  .refine(
+    (items) => new Set(items.map((item) => item.toLocaleLowerCase('en-US'))).size === items.length,
+    'Categories must be unique'
+  );
 
 const createBusinessSchema = z.object({
   name: z.string().min(1).max(200),
@@ -13,7 +30,10 @@ const createBusinessSchema = z.object({
   requiredLockIFR: z.number().int().positive(),
   ttlSeconds: z.number().int().min(10).max(3600).optional(),
   tierLabel: z.string().max(50).optional(),
-});
+  description: businessDescriptionSchema.optional(),
+  website: businessWebsiteSchema.optional(),
+  categories: businessCategoriesSchema.optional(),
+}).strict();
 
 const updateBusinessSchema = z.object({
   name: z.string().min(1).max(200).optional(),
@@ -21,8 +41,11 @@ const updateBusinessSchema = z.object({
   requiredLockIFR: z.number().int().positive().optional(),
   ttlSeconds: z.number().int().min(10).max(3600).optional(),
   tierLabel: z.string().max(50).nullable().optional(),
+  description: businessDescriptionSchema.optional(),
+  website: businessWebsiteSchema.optional(),
+  categories: businessCategoriesSchema.optional(),
   active: z.boolean().optional(),
-});
+}).strict().refine((value) => Object.keys(value).length > 0, 'At least one field is required');
 
 const createBenefitRuleSchema = z.object({
   label: z.string().min(1).max(80),
@@ -45,7 +68,18 @@ const verifyRewardLinkSchema = z.object({
 
 router.post('/businesses', adminAuth, validate(createBusinessSchema), async (req, res, next) => {
   try {
-    const business = await prisma.business.create({ data: req.body });
+    const business = await prisma.business.create({
+      data: {
+        name: req.body.name,
+        discountPercent: req.body.discountPercent,
+        requiredLockIFR: req.body.requiredLockIFR,
+        ttlSeconds: req.body.ttlSeconds,
+        tierLabel: req.body.tierLabel,
+        description: req.body.description ?? null,
+        website: req.body.website ?? null,
+        categoriesJson: serializeBusinessCategories(req.body.categories ?? []),
+      },
+    });
     res.status(201).json({
       id: business.id,
       verifyUrl: `/b/${business.id}`,
@@ -56,13 +90,82 @@ router.post('/businesses', adminAuth, validate(createBusinessSchema), async (req
   }
 });
 
+router.get('/businesses/:id', adminAuth, async (req, res, next) => {
+  try {
+    const business = await prisma.business.findUnique({
+      where: { id: req.params.id },
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        website: true,
+        categoriesJson: true,
+        ownerAddress: true,
+        discountPercent: true,
+        requiredLockIFR: true,
+        tierLabel: true,
+        createdAt: true,
+        _count: { select: { benefitRules: true, products: true } },
+      },
+    });
+    if (!business) {
+      res.status(404).json({ error: 'Business not found' });
+      return;
+    }
+
+    res.json(publicBusinessProfile({
+      id: business.id,
+      name: business.name,
+      description: business.description,
+      website: business.website,
+      categoriesJson: business.categoriesJson,
+      ownerAddress: business.ownerAddress,
+      discountPercent: business.discountPercent,
+      requiredLockIFR: business.requiredLockIFR,
+      tierLabel: business.tierLabel,
+      createdAt: business.createdAt,
+      verifyUrl: `/b/${business.id}`,
+      qrUrl: `/b/${business.id}`,
+      rulesCount: business._count.benefitRules,
+      productsCount: business._count.products,
+    }));
+  } catch (err) {
+    next(err);
+  }
+});
+
 router.patch('/businesses/:id', adminAuth, validate(updateBusinessSchema), async (req, res, next) => {
   try {
     const business = await prisma.business.update({
       where: { id: req.params.id },
-      data: req.body,
+      data: {
+        name: req.body.name,
+        discountPercent: req.body.discountPercent,
+        requiredLockIFR: req.body.requiredLockIFR,
+        ttlSeconds: req.body.ttlSeconds,
+        tierLabel: req.body.tierLabel,
+        description: req.body.description,
+        website: req.body.website,
+        categoriesJson: req.body.categories === undefined
+          ? undefined
+          : serializeBusinessCategories(req.body.categories),
+        active: req.body.active,
+      },
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        website: true,
+        categoriesJson: true,
+        discountPercent: true,
+        requiredLockIFR: true,
+        ttlSeconds: true,
+        tierLabel: true,
+        active: true,
+        createdAt: true,
+      },
     });
-    res.json(business);
+    res.json(publicBusinessProfile(business));
   } catch (err) {
     next(err);
   }

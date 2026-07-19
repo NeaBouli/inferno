@@ -289,7 +289,13 @@ async function verifyPage(contextOptions, label) {
         requiredLockIFR: 1000,
         dailyRedemptionLimit: 1,
         monthlyRedemptionLimit: 10,
-        business: { id: 'smoke-catalog', name: 'Smoke Coffee' },
+        business: {
+          id: 'smoke-catalog',
+          name: 'Smoke Coffee',
+          description: 'Neighborhood roaster for IFR members.',
+          website: 'https://seller.example.com/members',
+          categories: ['Food & drink', 'Events'],
+        },
         product: { id: 'smoke-product', name: 'Reserve espresso', description: 'A customer-facing catalog item.' },
       },
       {
@@ -301,7 +307,13 @@ async function verifyPage(contextOptions, label) {
         requiredLockIFR: 2500,
         dailyRedemptionLimit: 0,
         monthlyRedemptionLimit: 0,
-        business: { id: 'smoke-services', name: 'Smoke Studio' },
+        business: {
+          id: 'smoke-services',
+          name: 'Smoke Studio',
+          description: 'Private sessions for verified IFR members.',
+          website: null,
+          categories: ['Services'],
+        },
         product: null,
       },
     ];
@@ -320,7 +332,7 @@ async function verifyPage(contextOptions, label) {
         ? [allOffers[1]]
         : allOffers.filter((offer) => {
       const matchesCategory = !category || offer.category === category;
-      const searchable = `${offer.business.name} ${offer.productName} ${offer.label} ${offer.category}`.toLowerCase();
+      const searchable = `${offer.business.name} ${offer.business.description || ''} ${offer.business.categories.join(' ')} ${offer.productName} ${offer.label} ${offer.category}`.toLowerCase();
       return matchesCategory && (!search || searchable.includes(search));
         });
     await route.fulfill({
@@ -355,6 +367,8 @@ async function verifyPage(contextOptions, label) {
     await expectText(page, 'Live member offers');
     await expectText(page, 'Find an IFR benefit');
     await expectText(page, 'Smoke Coffee');
+    await expectText(page, 'Neighborhood roaster for IFR members.');
+    await expectText(page, 'Food & drink');
     await expectText(page, 'Reserve espresso');
     await expectText(page, '15% benefit');
     const offerDiscovery = page.locator('#offers');
@@ -483,7 +497,14 @@ async function verifyPage(contextOptions, label) {
     await expectText(page, 'Active benefit rule loaded');
     await expectText(page, 'Load profiles');
     await expectText(page, 'Create profile');
+    await expectText(page, 'Create a seller profile');
+    await expectText(page, 'Public description');
+    await expectText(page, 'Seller website');
+    await expectText(page, 'Business categories');
+    await page.getByPlaceholder('Add another category').waitFor({ timeout: timeoutMs });
     await page.getByPlaceholder('cuid...').fill('smoke-manual-business');
+    await expectText(page, 'Load existing seller profile');
+    await expectText(page, 'Load existing profile');
     await expectText(page, 'Seller catalog');
     await expectText(page, 'Products and services');
     await expectText(page, 'Load catalog');
@@ -551,7 +572,13 @@ async function verifyPage(contextOptions, label) {
         status: 200,
         contentType: 'application/json',
         body: JSON.stringify({
-          business: { id: 'smoke-catalog', name: 'Smoke Coffee' },
+          business: {
+            id: 'smoke-catalog',
+            name: 'Smoke Coffee',
+            description: 'Neighborhood roaster for IFR members.',
+            website: 'https://seller.example.com/members',
+            categories: ['Food & drink', 'Events'],
+          },
           products: [{
             id: 'smoke-product',
             businessId: 'smoke-catalog',
@@ -577,11 +604,16 @@ async function verifyPage(contextOptions, label) {
     await gotoAppPage(page, '/s/smoke-catalog');
     await expectText(page, 'IFR member benefits');
     await expectText(page, 'Smoke Coffee');
+    await expectText(page, 'Neighborhood roaster for IFR members.');
+    await expectText(page, 'Food & drink');
     await expectText(page, 'Reserve espresso');
     await expectText(page, '15% benefit');
     await expectText(page, '1,000 locked IFR');
     await expectText(page, 'Per wallet: 1 / UTC day and 10 / UTC month');
     await expectText(page, 'Seller starts a one-time QR checkout');
+    const sellerWebsite = page.getByRole('link', { name: 'Seller website' });
+    assert(await sellerWebsite.getAttribute('href') === 'https://seller.example.com/members', 'seller website href mismatch');
+    assert(await sellerWebsite.getAttribute('rel') === 'noopener', 'seller website must use rel="noopener"');
     if (shouldScreenshot) {
       await page.screenshot({
         path: path.join(screenshotDir, `benefits-catalog-${label}.png`),
