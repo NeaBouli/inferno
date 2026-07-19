@@ -88,6 +88,31 @@ export interface PublicCatalogProduct extends CatalogProduct {
   }>;
 }
 
+export interface PublicOffer {
+  id: string;
+  label: string;
+  category: string;
+  productName: string;
+  discountPercent: number;
+  requiredLockIFR: number;
+  dailyRedemptionLimit: number;
+  monthlyRedemptionLimit: number;
+  business: { id: string; name: string };
+  product: { id: string; name: string; description: string | null } | null;
+}
+
+export interface PublicOfferDiscovery {
+  offers: PublicOffer[];
+  categories: string[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+    hasNext: boolean;
+  };
+}
+
 export interface AdminBusinessInput {
   name: string;
   discountPercent: number;
@@ -297,6 +322,16 @@ export interface AttestResult {
 
 export function getBusiness(id: string) {
   return fetchJSON<BusinessInfo>(`/api/businesses/${id}`);
+}
+
+export function discoverOffers(filters: { query?: string; category?: string; page?: number; limit?: number } = {}) {
+  const query = new URLSearchParams();
+  if (filters.query) query.set('query', filters.query);
+  if (filters.category) query.set('category', filters.category);
+  if (filters.page) query.set('page', String(filters.page));
+  if (filters.limit) query.set('limit', String(filters.limit));
+  const suffix = query.toString();
+  return fetchJSON<PublicOfferDiscovery>(`/api/businesses${suffix ? `?${suffix}` : ''}`);
 }
 
 export function getBusinessRules(id: string) {

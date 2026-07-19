@@ -289,6 +289,129 @@ describe('Seller catalog routes', () => {
     });
   });
 
+  it('discovers only active public offers with search, category and bounded pagination', async () => {
+    const [coffee, pausedProduct] = await Promise.all([
+      prisma.product.create({ data: { businessId, ...productPayload() } }),
+      prisma.product.create({
+        data: { businessId, name: 'Paused pastry', category: 'Coffee', active: false },
+      }),
+    ]);
+    const [coffeeRule, serviceRule] = await Promise.all([
+      prisma.benefitRule.create({
+        data: {
+          businessId,
+          productId: coffee.id,
+          label: 'Morning coffee',
+          category: coffee.category,
+          productName: coffee.name,
+          discountPercent: 20,
+          requiredLockIFR: 1000,
+        },
+      }),
+      prisma.benefitRule.create({
+        data: {
+          businessId,
+          label: 'Member consultation',
+          category: 'Services',
+          productName: 'Private consultation',
+          discountPercent: 15,
+          requiredLockIFR: 2500,
+        },
+      }),
+    ]);
+    await Promise.all([
+      prisma.benefitRule.create({
+        data: {
+          businessId,
+          productId: pausedProduct.id,
+          label: 'Hidden paused product',
+          category: pausedProduct.category,
+          productName: pausedProduct.name,
+          discountPercent: 50,
+          requiredLockIFR: 1,
+        },
+      }),
+      prisma.benefitRule.create({
+        data: {
+          businessId,
+          label: 'Hidden paused rule',
+          category: 'Coffee',
+          productName: 'Archived offer',
+          discountPercent: 90,
+          requiredLockIFR: 1,
+          active: false,
+        },
+      }),
+      prisma.benefitRule.create({
+        data: {
+          businessId: otherBusinessId,
+          label: 'Hidden inactive seller',
+          category: 'Retail',
+          productName: 'Private listing',
+          discountPercent: 90,
+          requiredLockIFR: 1,
+        },
+      }),
+      prisma.business.update({ where: { id: otherBusinessId }, data: { active: false } }),
+    ]);
+
+    const response = await fetch(`${baseUrl()}/api/businesses?limit=1&page=1`);
+    expect(response.status).toBe(200);
+    const firstPage = await response.json() as {
+      offers: Array<Record<string, unknown>>;
+      categories: string[];
+      pagination: { page: number; limit: number; total: number; totalPages: number; hasNext: boolean };
+    };
+    expect(firstPage.offers).toHaveLength(1);
+    expect(firstPage.categories).toEqual(['Coffee', 'Services']);
+    expect(firstPage.pagination).toEqual({ page: 1, limit: 1, total: 2, totalPages: 2, hasNext: true });
+    expect(Object.keys(firstPage.offers[0]).sort()).toEqual([
+      'business', 'category', 'dailyRedemptionLimit', 'discountPercent', 'id', 'label',
+      'monthlyRedemptionLimit', 'product', 'productName', 'requiredLockIFR',
+    ]);
+    expect(Object.keys(firstPage.offers[0].business as Record<string, unknown>).sort()).toEqual(['id', 'name']);
+    const firstProduct = firstPage.offers[0].product;
+    if (firstProduct !== null) {
+      expect(Object.keys(firstProduct as Record<string, unknown>).sort()).toEqual(['description', 'id', 'name']);
+    }
+    for (const offer of firstPage.offers) {
+      expect(JSON.stringify(offer)).not.toMatch(
+        /ownerAddress|checkoutOperators|sellerAuthorizationChallenges|sessions|auditLogs|rewardEvents/
+      );
+    }
+
+    const secondPage = await fetch(`${baseUrl()}/api/businesses?limit=1&page=2`);
+    expect((await secondPage.json() as { pagination: { hasNext: boolean } }).pagination.hasNext).toBe(false);
+
+    const search = await fetch(`${baseUrl()}/api/businesses?query=espresso`);
+    const searchBody = await search.json() as {
+      offers: Array<{ id: string; product: null | Record<string, unknown> }>;
+    };
+    expect(searchBody.offers.map((offer) => offer.id)).toEqual([coffeeRule.id]);
+    expect(Object.keys(searchBody.offers[0].product || {}).sort()).toEqual(['description', 'id', 'name']);
+
+    const category = await fetch(`${baseUrl()}/api/businesses?category=Services`);
+    const categoryBody = await category.json() as { offers: Array<{ id: string }> };
+    expect(categoryBody.offers.map((offer) => offer.id)).toEqual([serviceRule.id]);
+
+    expect((await fetch(`${baseUrl()}/api/businesses?page=0`)).status).toBe(400);
+    expect((await fetch(`${baseUrl()}/api/businesses?limit=25`)).status).toBe(400);
+    expect((await fetch(`${baseUrl()}/api/businesses?query=${'x'.repeat(81)}`)).status).toBe(400);
+    expect((await fetch(`${baseUrl()}/api/businesses?query=one&query=two`)).status).toBe(400);
+  });
+
+  it('rate limits public offer discovery by client IP', async () => {
+    const headers = { 'x-forwarded-for': '203.0.113.81' };
+    for (let request = 0; request < 60; request += 1) {
+      expect((await fetch(`${baseUrl()}/api/businesses?limit=1`, { headers })).status).toBe(200);
+    }
+
+    const limited = await fetch(`${baseUrl()}/api/businesses?limit=1`, { headers });
+    expect(limited.status).toBe(429);
+    expect(Number(limited.headers.get('retry-after'))).toBeGreaterThan(0);
+    expect(await limited.json()).toEqual({ error: 'Too many offer searches. Try again shortly.' });
+  });
+
   it('binds rules only to active products from the same business and preserves snapshots', async () => {
     const product = await prisma.product.create({
       data: { businessId, ...productPayload() },

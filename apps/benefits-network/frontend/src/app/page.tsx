@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { AppShell } from '@/components/AppShell';
 import { CustomerProofHistory } from '@/components/CustomerProofHistory';
+import { OfferDiscovery } from '@/components/OfferDiscovery';
 import { SellerRuleBuilder } from '@/components/SellerRuleBuilder';
 import { SwapRiskNotice } from '@/components/SwapRiskNotice';
 import { WalletStatus } from '@/components/WalletStatus';
@@ -599,6 +600,8 @@ export default function Home() {
           </section> : null}
         </div>
       </section>
+
+      <OfferDiscovery />
 
       <section className="mx-auto w-full max-w-7xl px-5 pb-12">
         <div className="border-y border-white/10 py-8">

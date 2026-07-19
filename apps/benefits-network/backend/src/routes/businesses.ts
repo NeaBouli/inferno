@@ -1,7 +1,100 @@
 import { Router } from 'express';
+import { Prisma } from '@prisma/client';
 import { prisma } from '../services/sessionService';
+import { discoveryRateLimiter } from '../middleware/rateLimiter';
 
 const router = Router();
+
+function parsePositiveInteger(value: unknown, fallback: number, maximum: number) {
+  if (value === undefined) return fallback;
+  if (typeof value !== 'string' || !/^\d+$/.test(value)) return null;
+  const parsed = Number(value);
+  return parsed >= 1 && parsed <= maximum ? parsed : null;
+}
+
+router.get('/', discoveryRateLimiter, async (req, res, next) => {
+  try {
+    const page = parsePositiveInteger(req.query.page, 1, 1_000);
+    const limit = parsePositiveInteger(req.query.limit, 12, 24);
+    const query = typeof req.query.query === 'string' ? req.query.query.trim() : '';
+    const category = typeof req.query.category === 'string' ? req.query.category.trim() : '';
+    const invalidTextFilter =
+      (req.query.query !== undefined && typeof req.query.query !== 'string') ||
+      (req.query.category !== undefined && typeof req.query.category !== 'string');
+
+    if (!page || !limit || invalidTextFilter || query.length > 80 || category.length > 80) {
+      res.status(400).json({ error: 'Invalid discovery filters' });
+      return;
+    }
+
+    const visibleOfferFilter: Prisma.BenefitRuleWhereInput = {
+      active: true,
+      business: { active: true },
+      AND: [
+        { OR: [{ productId: null }, { product: { active: true } }] },
+        ...(category ? [{ category }] : []),
+        ...(query ? [{
+          OR: [
+            { label: { contains: query } },
+            { category: { contains: query } },
+            { productName: { contains: query } },
+            { business: { name: { contains: query } } },
+            { product: { name: { contains: query } } },
+            { product: { description: { contains: query } } },
+          ],
+        }] : []),
+      ],
+    };
+    const categoryFilter: Prisma.BenefitRuleWhereInput = {
+      active: true,
+      business: { active: true },
+      OR: [{ productId: null }, { product: { active: true } }],
+    };
+
+    const [total, offers, categoryRows] = await Promise.all([
+      prisma.benefitRule.count({ where: visibleOfferFilter }),
+      prisma.benefitRule.findMany({
+        where: visibleOfferFilter,
+        orderBy: [{ createdAt: 'desc' }, { id: 'asc' }],
+        skip: (page - 1) * limit,
+        take: limit,
+        select: {
+          id: true,
+          label: true,
+          category: true,
+          productName: true,
+          discountPercent: true,
+          requiredLockIFR: true,
+          dailyRedemptionLimit: true,
+          monthlyRedemptionLimit: true,
+          business: { select: { id: true, name: true } },
+          product: { select: { id: true, name: true, description: true } },
+        },
+      }),
+      prisma.benefitRule.findMany({
+        where: categoryFilter,
+        distinct: ['category'],
+        orderBy: { category: 'asc' },
+        select: { category: true },
+      }),
+    ]);
+    const totalPages = total === 0 ? 0 : Math.ceil(total / limit);
+
+    res.json({
+      offers,
+      categories: categoryRows.map((row) => row.category),
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages,
+        hasNext: page < totalPages,
+      },
+    });
+  } catch (err) {
+    next(err);
+  }
+});
 
 router.get('/:id', async (req, res, next) => {
   try {
