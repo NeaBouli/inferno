@@ -1,4 +1,6 @@
 import { ethers } from 'ethers';
+
+type TestWallet = ReturnType<typeof ethers.Wallet.createRandom>;
 import * as authenticatedRateLimiter from '../src/services/authenticatedRateLimiter';
 
 const mockCheckLock = jest.fn();
@@ -31,7 +33,7 @@ function baseUrl() {
   return `http://127.0.0.1:${address.port}`;
 }
 
-async function createPass(wallet: ethers.Wallet) {
+async function createPass(wallet: TestWallet) {
   const challengeResponse = await fetch(`${baseUrl()}/api/passes/challenge`, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
@@ -55,7 +57,7 @@ async function createPass(wallet: ethers.Wallet) {
 }
 
 async function sellerHeaders(
-  seller: ethers.Wallet,
+  seller: TestWallet,
   businessId: string,
   passId: string,
   ruleId: string
@@ -77,7 +79,7 @@ async function sellerHeaders(
 }
 
 async function bindPass(
-  seller: ethers.Wallet,
+  seller: TestWallet,
   businessId: string,
   ruleId: string,
   passId: string

@@ -16,7 +16,7 @@
 
 **Mitigation:**
 - The customer must sign a challenge message with their private key
-- `ethers.utils.verifyMessage()` recovers the actual signer address deterministically
+- `ethers.verifyMessage()` recovers the actual signer address deterministically
 - Without the private key, it is cryptographically impossible to produce a valid signature
 - The recovered address (not the claimed address) is checked against IFRLock
 

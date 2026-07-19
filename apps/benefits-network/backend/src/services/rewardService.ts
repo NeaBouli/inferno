@@ -59,8 +59,8 @@ function validatePartnerId(partnerId: string): string {
 }
 
 export function toIFRBaseUnits(value: string): string {
-  const parsed = ethers.utils.parseUnits(value, 9);
-  if (parsed.lte(0)) throw new Error('Reward lock amount must be positive');
+  const parsed = ethers.parseUnits(value, 9);
+  if (parsed <= 0n) throw new Error('Reward lock amount must be positive');
   return parsed.toString();
 }
 
@@ -71,7 +71,7 @@ export async function getRewardOnChainStatus(
   const addresses = requireRewardConfig();
   const owner = normalizeAddress(ownerAddress);
   const partnerId = validatePartnerId(rawPartnerId);
-  const provider = new ethers.providers.JsonRpcProvider(config.RPC_URL, config.CHAIN_ID);
+  const provider = new ethers.JsonRpcProvider(config.RPC_URL);
   const partnerVault = new ethers.Contract(addresses.partnerVaultAddress, PARTNER_VAULT_ABI, provider);
   const builderRegistry = new ethers.Contract(addresses.builderRegistryAddress, BUILDER_REGISTRY_ABI, provider);
 
@@ -86,31 +86,32 @@ export async function getRewardOnChainStatus(
     builderRegistry.builders(owner) as Promise<{ name: string; active: boolean }>,
     partnerVault.partners(partnerId) as Promise<{
       beneficiary: string;
-      maxAllocation: ethers.BigNumber;
-      rewardAccrued: ethers.BigNumber;
-      claimedTotal: ethers.BigNumber;
+      maxAllocation: bigint;
+      rewardAccrued: bigint;
+      claimedTotal: bigint;
       active: boolean;
     }>,
-    partnerVault.vestedAmount(partnerId) as Promise<ethers.BigNumber>,
-    partnerVault.claimable(partnerId) as Promise<ethers.BigNumber>,
+    partnerVault.vestedAmount(partnerId) as Promise<bigint>,
+    partnerVault.claimable(partnerId) as Promise<bigint>,
     config.REWARD_CALLER_ADDRESS
       ? partnerVault.authorizedCaller(config.REWARD_CALLER_ADDRESS) as Promise<boolean>
       : Promise.resolve(false),
-  ]);
+  ]).finally(() => provider.destroy());
 
-  const zero = ethers.constants.AddressZero;
+  const networkChainId = Number(network.chainId);
+  const zero = ethers.ZeroAddress;
   const contractCodeVerified = partnerCode !== '0x' && registryCode !== '0x';
   const governanceAligned = normalizeAddress(partnerAdmin) === normalizeAddress(registryOwner);
   const partnerExists = normalizeAddress(partner.beneficiary) !== zero;
   const beneficiary = partnerExists ? normalizeAddress(partner.beneficiary) : null;
   const beneficiaryMatchesOwner = beneficiary === owner;
   const builderActive = Boolean(builderRegistered && builderInfo.active);
-  const verified = network.chainId === config.CHAIN_ID && contractCodeVerified && governanceAligned &&
+  const verified = networkChainId === config.CHAIN_ID && contractCodeVerified && governanceAligned &&
     builderActive && partnerExists && partner.active && beneficiaryMatchesOwner;
   const rewardCallerConfigured = Boolean(config.REWARD_CALLER_ADDRESS);
   const submissionReady = verified && rewardCallerConfigured && callerAuthorized;
   let reason: string | null = null;
-  if (network.chainId !== config.CHAIN_ID) reason = 'Reward RPC is connected to the wrong chain';
+  if (networkChainId !== config.CHAIN_ID) reason = 'Reward RPC is connected to the wrong chain';
   else if (!contractCodeVerified) reason = 'Configured reward contract bytecode is missing';
   else if (!governanceAligned) reason = 'BuilderRegistry owner and PartnerVault admin do not match';
   else if (!builderActive) reason = 'Seller owner is not active in BuilderRegistry';
@@ -123,7 +124,7 @@ export async function getRewardOnChainStatus(
   return {
     checkedAt: new Date().toISOString(),
     blockNumber,
-    chainId: network.chainId,
+    chainId: networkChainId,
     contractCodeVerified,
     governanceAligned,
     partnerId,
@@ -150,7 +151,8 @@ export async function getRewardOnChainStatus(
 export async function isWalletAlreadyRewarded(wallet: string, rawPartnerId: string): Promise<boolean> {
   const addresses = requireRewardConfig();
   const partnerId = validatePartnerId(rawPartnerId);
-  const provider = new ethers.providers.JsonRpcProvider(config.RPC_URL, config.CHAIN_ID);
+  const provider = new ethers.JsonRpcProvider(config.RPC_URL);
   const partnerVault = new ethers.Contract(addresses.partnerVaultAddress, PARTNER_VAULT_ABI, provider);
-  return partnerVault.walletRewardClaimed(normalizeAddress(wallet), partnerId) as Promise<boolean>;
+  return (partnerVault.walletRewardClaimed(normalizeAddress(wallet), partnerId) as Promise<boolean>)
+    .finally(() => provider.destroy());
 }

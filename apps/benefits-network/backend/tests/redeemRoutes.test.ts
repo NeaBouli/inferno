@@ -1,4 +1,6 @@
 import { ethers } from 'ethers';
+
+type TestWallet = ReturnType<typeof ethers.Wallet.createRandom>;
 import * as authenticatedRateLimiter from '../src/services/authenticatedRateLimiter';
 
 jest.mock('../src/services/ifrLockService', () => ({
@@ -31,7 +33,7 @@ function baseUrl() {
 }
 
 async function sellerHeaders(
-  wallet: ethers.Wallet,
+  wallet: TestWallet,
   action: string,
   businessId: string,
   scope?: string
@@ -187,7 +189,7 @@ describe('Redeem route authorization', () => {
     const session = await prisma.session.create({
       data: {
         businessId: business.id,
-        nonce: ethers.utils.hexlify(ethers.utils.randomBytes(32)).slice(2),
+        nonce: ethers.hexlify(ethers.randomBytes(32)).slice(2),
         expiresAt: new Date(Date.now() + 300_000),
         status: 'APPROVED',
         recoveredAddress: ethers.Wallet.createRandom().address,
@@ -419,7 +421,7 @@ describe('Redeem route authorization', () => {
         benefitSnapshotVersion: 2,
         benefitDailyRedemptionLimit: 1,
         benefitMonthlyRedemptionLimit: 0,
-        nonce: ethers.utils.hexlify(ethers.utils.randomBytes(32)).slice(2),
+        nonce: ethers.hexlify(ethers.randomBytes(32)).slice(2),
         expiresAt: new Date(Date.now() + 300_000),
         status: 'APPROVED',
         recoveredAddress: customer,
@@ -506,7 +508,7 @@ describe('Redeem route authorization', () => {
     const nextSession = await prisma.session.create({
       data: {
         businessId,
-        nonce: ethers.utils.hexlify(ethers.utils.randomBytes(32)).slice(2),
+        nonce: ethers.hexlify(ethers.randomBytes(32)).slice(2),
         expiresAt: new Date(Date.now() + 300_000),
         status: 'APPROVED',
         recoveredAddress: ethers.Wallet.createRandom().address,
@@ -699,7 +701,7 @@ describe('Redeem route authorization', () => {
       data: [
         {
           businessId,
-          nonce: ethers.utils.hexlify(ethers.utils.randomBytes(32)).slice(2),
+          nonce: ethers.hexlify(ethers.randomBytes(32)).slice(2),
           expiresAt: new Date(Date.now() + 300_000),
           status: 'REDEEMED',
           recoveredAddress: ethers.Wallet.createRandom().address,
@@ -707,19 +709,19 @@ describe('Redeem route authorization', () => {
         },
         {
           businessId,
-          nonce: ethers.utils.hexlify(ethers.utils.randomBytes(32)).slice(2),
+          nonce: ethers.hexlify(ethers.randomBytes(32)).slice(2),
           expiresAt: new Date(Date.now() + 300_000),
           status: 'REJECTED',
         },
         {
           businessId,
-          nonce: ethers.utils.hexlify(ethers.utils.randomBytes(32)).slice(2),
+          nonce: ethers.hexlify(ethers.randomBytes(32)).slice(2),
           expiresAt: new Date(Date.now() + 300_000),
           status: 'PENDING',
         },
         {
           businessId,
-          nonce: ethers.utils.hexlify(ethers.utils.randomBytes(32)).slice(2),
+          nonce: ethers.hexlify(ethers.randomBytes(32)).slice(2),
           expiresAt: new Date(todayStartedAt.getTime() - 1),
           createdAt: new Date(todayStartedAt.getTime() - 1),
           status: 'REDEEMED',
@@ -728,13 +730,13 @@ describe('Redeem route authorization', () => {
         },
         {
           businessId,
-          nonce: ethers.utils.hexlify(ethers.utils.randomBytes(32)).slice(2),
+          nonce: ethers.hexlify(ethers.randomBytes(32)).slice(2),
           expiresAt: new Date(Date.now() - 1),
           status: 'EXPIRED',
         },
         {
           businessId,
-          nonce: ethers.utils.hexlify(ethers.utils.randomBytes(32)).slice(2),
+          nonce: ethers.hexlify(ethers.randomBytes(32)).slice(2),
           expiresAt: new Date(Date.now() - 1),
           status: 'PENDING',
         },
@@ -766,7 +768,7 @@ describe('Redeem route authorization', () => {
     await prisma.session.createMany({
       data: Array.from({ length: 4 }, (_, index) => ({
         businessId,
-        nonce: ethers.utils.hexlify(ethers.utils.randomBytes(32)).slice(2),
+        nonce: ethers.hexlify(ethers.randomBytes(32)).slice(2),
         expiresAt: new Date(Date.now() + 300_000),
         createdAt: new Date(createdAtBase + index * 1000),
         status: 'PENDING',
@@ -801,7 +803,7 @@ describe('Redeem route authorization', () => {
         await prisma.session.create({
           data: {
             businessId,
-            nonce: ethers.utils.hexlify(ethers.utils.randomBytes(32)).slice(2),
+            nonce: ethers.hexlify(ethers.randomBytes(32)).slice(2),
             expiresAt: new Date(Date.now() + 300_000),
             status: 'PENDING',
           },
@@ -825,7 +827,7 @@ describe('Redeem route authorization', () => {
     const foreignSession = await prisma.session.create({
       data: {
         businessId: otherBusiness.id,
-        nonce: ethers.utils.hexlify(ethers.utils.randomBytes(32)).slice(2),
+        nonce: ethers.hexlify(ethers.randomBytes(32)).slice(2),
         expiresAt: new Date(Date.now() + 300_000),
       },
     });

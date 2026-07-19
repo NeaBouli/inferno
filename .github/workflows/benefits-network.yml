@@ -55,12 +55,13 @@ jobs:
           cache: 'npm'
           cache-dependency-path: apps/benefits-network/backend/package-lock.json
       - run: npm ci
-      - run: npm audit --audit-level=moderate
+      - run: npm audit --audit-level=low
       - run: npx prisma generate
       - run: npx prisma migrate deploy
       - run: npx tsc --noEmit
       - run: npm run test:migration-upgrade
       - run: npm test
+      - run: npm run test:ethers-v6-lifecycle
       - run: npm run build
       - run: npm run smoke:http
 

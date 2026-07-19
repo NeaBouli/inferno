@@ -9,11 +9,11 @@ const IFRLOCK_ABI = [
 
 const IFR_DECIMALS = 9;
 
-let provider: ethers.providers.JsonRpcProvider;
+let provider: ethers.JsonRpcProvider;
 let ifrLock: ethers.Contract;
 
 export function initProvider(): void {
-  provider = new ethers.providers.JsonRpcProvider(config.RPC_URL);
+  provider = new ethers.JsonRpcProvider(config.RPC_URL);
   ifrLock = new ethers.Contract(config.IFRLOCK_ADDRESS, IFRLOCK_ABI, provider);
 }
 
@@ -27,16 +27,14 @@ export async function checkLock(
   address: string,
   requiredIFR: number
 ): Promise<{ eligible: boolean; lockedAmount: string }> {
-  const minUnits = ethers.BigNumber.from(requiredIFR).mul(
-    ethers.BigNumber.from(10).pow(IFR_DECIMALS)
-  );
+  const minUnits = BigInt(requiredIFR) * 10n ** BigInt(IFR_DECIMALS);
 
   const [eligible, rawBalance] = await Promise.all([
     ifrLock.isLocked(address, minUnits) as Promise<boolean>,
-    ifrLock.lockedBalance(address) as Promise<ethers.BigNumber>,
+    ifrLock.lockedBalance(address) as Promise<bigint>,
   ]);
 
-  const lockedAmount = ethers.utils.formatUnits(rawBalance, IFR_DECIMALS);
+  const lockedAmount = ethers.formatUnits(rawBalance, IFR_DECIMALS);
 
   return { eligible, lockedAmount };
 }
@@ -46,5 +44,5 @@ export async function checkLock(
  * @returns The recovered wallet address (checksummed)
  */
 export function recoverSigner(message: string, signature: string): string {
-  return ethers.utils.verifyMessage(message, signature);
+  return ethers.verifyMessage(message, signature);
 }

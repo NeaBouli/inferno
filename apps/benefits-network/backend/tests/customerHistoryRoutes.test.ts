@@ -1,5 +1,7 @@
 import { ethers } from 'ethers';
 
+type TestWallet = ReturnType<typeof ethers.Wallet.createRandom>;
+
 jest.mock('../src/services/ifrLockService', () => ({
   checkLock: jest.fn(),
   recoverSigner: jest.fn(),
@@ -38,7 +40,7 @@ async function issueChallenge(walletAddress: string) {
   return { response, body: await response.json() as { message: string; nonce: string; expiresAt: string } };
 }
 
-async function authorize(wallet: ethers.Wallet, challenge?: { message: string; nonce: string }) {
+async function authorize(wallet: TestWallet, challenge?: { message: string; nonce: string }) {
   const issued = challenge ?? (await issueChallenge(wallet.address)).body;
   const signature = await wallet.signMessage(issued.message);
   const response = await fetch(`${baseUrl()}/api/customer/history/authorize`, {
