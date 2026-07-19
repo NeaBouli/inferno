@@ -235,6 +235,188 @@ async function verifyWalletAssetRequest() {
   }
 }
 
+async function verifyRuleTemplateAuthorization() {
+  const browser = await chromium.launch({ headless: true });
+  const context = await browser.newContext({ serviceWorkers: 'block' });
+  const sellerWallet = '0x1111111111111111111111111111111111111111';
+  const businessId = 'smoke-template-business';
+  const productId = 'smoke-template-product';
+  const mutatingRequests = [];
+  const challengeRequests = [];
+
+  await context.addInitScript(({ walletAddress }) => {
+    const listeners = new Map();
+    Object.defineProperty(window, 'ethereum', {
+      configurable: true,
+      value: {
+        isMetaMask: true,
+        request: async ({ method }) => {
+          if (method === 'eth_chainId') return '0x1';
+          if (method === 'net_version') return '1';
+          if (method === 'eth_accounts' || method === 'eth_requestAccounts') return [walletAddress];
+          if (method === 'personal_sign') return `0x${'11'.repeat(64)}1b`;
+          if (method === 'eth_call') return `0x${'00'.repeat(32)}`;
+          if (method === 'eth_getBalance') return '0x0';
+          if (method === 'eth_blockNumber') return '0x1';
+          if (method === 'eth_getCode') return '0x';
+          if (method === 'eth_estimateGas') return '0x5208';
+          if (method === 'wallet_switchEthereumChain') return null;
+          if (method === 'wallet_getCapabilities') return {};
+          return null;
+        },
+        on: (event, listener) => listeners.set(event, listener),
+        removeListener: (event) => listeners.delete(event),
+      },
+    });
+  }, { walletAddress: sellerWallet });
+
+  const page = await context.newPage();
+  await page.route('**/api/businesses?**', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ offers: [], categories: [], pagination: { page: 1, limit: 8, total: 0, totalPages: 0, hasNext: false } }),
+    });
+  });
+  await page.route('**/api/seller/**', async (route) => {
+    const request = route.request();
+    const url = new URL(request.url());
+    const method = request.method();
+    if (method !== 'GET') {
+      mutatingRequests.push({
+        url: url.pathname,
+        method,
+        headers: request.headers(),
+        body: request.postData() ? request.postDataJSON() : null,
+      });
+    }
+    if (url.pathname === '/api/seller/auth-message') {
+      const action = url.searchParams.get('action') || '';
+      const targetBusinessId = url.searchParams.get('businessId') || '';
+      const scope = url.searchParams.get('scope');
+      challengeRequests.push({ action, businessId: targetBusinessId, scope });
+      const timestamp = String(Date.now());
+      const nonce = scope ? `nonce-${action}` : undefined;
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          message: [
+            'IFR Benefits Network - Seller Authorization',
+            `Action: ${action}`,
+            `Business: ${targetBusinessId}`,
+            `Timestamp: ${timestamp}`,
+            ...(scope && nonce ? [`Scope: ${scope}`, `Nonce: ${nonce}`] : []),
+            'Only sign this message inside shop.ifrunit.tech.',
+          ].join('\n'),
+          timestamp,
+          expiresAt: new Date(Date.now() + 60000).toISOString(),
+          nonce,
+        }),
+      });
+      return;
+    }
+    if (url.pathname === `/api/seller/businesses/${businessId}/products` && method === 'GET') {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          products: [{
+            id: productId,
+            businessId,
+            name: 'Bound catalog service',
+            category: 'Coffee',
+            description: 'Stable product binding for the template authorization smoke.',
+            active: true,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            _count: { benefitRules: 0 },
+          }],
+        }),
+      });
+      return;
+    }
+    if (url.pathname === `/api/seller/businesses/${businessId}/rules` && method === 'POST') {
+      const body = request.postDataJSON();
+      await route.fulfill({
+        status: 201,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          id: 'smoke-template-rule',
+          businessId,
+          productId,
+          label: body.label,
+          category: body.category,
+          productName: body.productName,
+          discountPercent: body.discountPercent,
+          requiredLockIFR: body.requiredLockIFR,
+          dailyRedemptionLimit: body.dailyRedemptionLimit,
+          monthlyRedemptionLimit: body.monthlyRedemptionLimit,
+          ttlSeconds: body.ttlSeconds,
+          active: true,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        }),
+      });
+      return;
+    }
+    await route.fulfill({ status: 404, contentType: 'application/json', body: JSON.stringify({ error: 'Not mocked' }) });
+  });
+
+  try {
+    await gotoAppPage(page, '/');
+    await page.getByRole('button', { name: /Seller Offer discounts/i }).click();
+    await page.getByRole('button', { name: 'Connect wallet', exact: true }).last().click();
+    await expectText(page, '0x1111...1111');
+    await page.getByPlaceholder('cuid...').last().fill(businessId);
+    await page.getByRole('button', { name: 'Load catalog', exact: true }).click();
+    await expectText(page, 'Bound catalog service');
+    await page.getByRole('button', { name: 'Use in rule', exact: true }).click();
+    assert(await page.getByLabel('Catalog binding').inputValue() === productId, 'catalog product was not selected');
+
+    for (const [templateName, templateLabel] of [
+      ['Welcome benefit', 'Welcome'],
+      ['Member standard', 'Member'],
+      ['Premium access', 'Premium'],
+      ['Event pass', 'Event pass'],
+    ]) {
+      await page.getByRole('button', { name: new RegExp(`^${templateName}`) }).click();
+      assert(mutatingRequests.length === 0, `${templateName} triggered a write before Save`);
+      assert(await page.getByLabel('Catalog binding').inputValue() === productId, `${templateName} changed the catalog binding`);
+      await expectText(page, `${templateLabel} / Coffee / Bound catalog service`);
+    }
+
+    await page.getByRole('button', { name: /^Premium access/ }).click();
+    const saveRequest = page.waitForRequest((request) => (
+      request.method() === 'POST' && new URL(request.url()).pathname === `/api/seller/businesses/${businessId}/rules`
+    ));
+    await page.getByRole('button', { name: 'Save new rule', exact: true }).click();
+    await saveRequest;
+    await expectText(page, 'Rule saved.');
+    assert(mutatingRequests.length === 1, 'signed Save must produce exactly one rule write');
+    const saved = mutatingRequests[0];
+    assert(saved.body.productId === productId, 'signed Save did not preserve the catalog product ID');
+    assert(saved.body.category === 'Coffee', 'signed Save did not preserve the catalog category');
+    assert(saved.body.productName === 'Bound catalog service', 'signed Save did not preserve the catalog product name');
+    assert(saved.body.discountPercent === 15 && saved.body.requiredLockIFR === 5000, 'signed Save did not preserve template values');
+    assert(saved.headers['x-ifr-wallet'] === sellerWallet, 'signed Save is missing the seller wallet header');
+    assert(Boolean(saved.headers['x-ifr-signature']), 'signed Save is missing the seller signature header');
+    assert(Boolean(saved.headers['x-ifr-timestamp']), 'signed Save is missing the seller timestamp header');
+    assert(saved.headers['x-ifr-nonce'] === 'nonce-rules:create', 'signed Save is missing the resource-bound nonce');
+    assert(
+      challengeRequests.some((challenge) => (
+        challenge.action === 'rules:create' && challenge.businessId === businessId && challenge.scope === businessId
+      )),
+      'signed Save did not request the resource-bound rules:create challenge'
+    );
+    assert(await page.locator('[role="status"][aria-live="polite"]').count() > 0, 'template/save status is not announced');
+    log('Rule template authorization and catalog binding OK');
+  } finally {
+    await context.close();
+    await browser.close();
+  }
+}
+
 async function gotoAppPage(page, route) {
   await page.goto(`${baseUrl}${route}?smoke=${Date.now()}`, { waitUntil: 'domcontentloaded', timeout: timeoutMs });
 }
@@ -498,6 +680,59 @@ async function verifyPage(contextOptions, label) {
     await expectText(page, 'Uses per wallet / UTC month');
     await expectText(page, 'Per wallet: 1 / UTC day and 10 / UTC month');
     await expectText(page, 'Save new rule');
+    await expectText(page, 'Quick rule templates');
+    await expectText(page, 'Draft only');
+    const templateHelpFits = await page.locator('#seller-rule-template-help').evaluate((element) => (
+      element.scrollWidth <= element.clientWidth + 1
+    ));
+    if (!templateHelpFits) throw new Error(`[${label}] rule template help text overflows horizontally`);
+    await page.getByRole('button', { name: /Premium access Higher lock threshold 15% \/ 5,000 IFR/i }).click();
+    await expectText(page, 'Premium access applied to the draft. Review the values before saving.');
+    await expectText(page, '15% off when 5,000 IFR is locked');
+    await expectText(page, 'Premium / Services / Premium member access');
+    await expectText(page, 'Per wallet: 1 / UTC day and 4 / UTC month');
+    if (shouldScreenshot) {
+      const ruleTemplates = page.locator('#seller-rule-templates');
+      await ruleTemplates.scrollIntoViewIfNeeded();
+      const originalViewport = page.viewportSize();
+      const templateBounds = await ruleTemplates.boundingBox();
+      const expandViewport = Boolean(
+        originalViewport && templateBounds && templateBounds.height > originalViewport.height
+      );
+      if (expandViewport && originalViewport && templateBounds) {
+        await page.setViewportSize({
+          width: originalViewport.width,
+          height: Math.ceil(templateBounds.height + 40),
+        });
+        await ruleTemplates.scrollIntoViewIfNeeded();
+      }
+      const stickyHeader = page.locator('.shop-header');
+      await stickyHeader.evaluate((element) => {
+        element.dataset.smokeVisibility = element.style.visibility;
+        element.style.visibility = 'hidden';
+      });
+      try {
+        const bounds = await ruleTemplates.boundingBox();
+        if (!bounds) throw new Error(`[${label}] rule template bounds are unavailable`);
+        await page.screenshot({
+          animations: 'disabled',
+          clip: {
+            x: Math.max(0, bounds.x),
+            y: Math.max(0, bounds.y),
+            width: bounds.width,
+            height: bounds.height,
+          },
+          scale: 'css',
+          path: path.join(screenshotDir, `benefits-rule-templates-${label}.png`),
+        });
+      } finally {
+        await stickyHeader.evaluate((element) => {
+          element.style.visibility = element.dataset.smokeVisibility || '';
+          delete element.dataset.smokeVisibility;
+        });
+        if (expandViewport && originalViewport) await page.setViewportSize(originalViewport);
+      }
+    }
     await page.getByRole('heading', { name: 'Connect seller wallet' }).first().waitFor({ timeout: timeoutMs });
     await expectText(page, 'Active benefit rule loaded');
     await expectText(page, 'Load profiles');
@@ -658,6 +893,7 @@ async function main() {
   log(`Target ${baseUrl}`);
   await verifyHttpSurface();
   await verifyWalletAssetRequest();
+  await verifyRuleTemplateAuthorization();
   await verifyPage({ viewport: { width: 1440, height: 1100 } }, 'desktop');
   await verifyPage(devices['iPad Pro 11'], 'ipad');
   await verifyPage(devices['Pixel 7'], 'android');
