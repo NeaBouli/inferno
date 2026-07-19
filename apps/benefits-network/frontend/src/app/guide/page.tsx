@@ -34,7 +34,7 @@ const sellerSteps = [
   },
   {
     title: 'Review recent customer checks',
-    body: 'Load session history with the seller wallet to see recent QR sessions, approval status, verified wallet, locked amount and rejection reason.',
+    body: 'Load owner-only session history in pages of 50 to see QR status, masked verified wallet, locked amount and rejection reason, or create a browser-local masked full CSV export.',
   },
   {
     title: 'Redeem only after APPROVED',
@@ -45,7 +45,7 @@ const sellerSteps = [
 const developerItems = [
   ['Seller profile', 'Request a resource-bound one-time business:create challenge, sign it, then POST /api/seller/businesses with x-ifr-nonce.'],
   ['Rules', 'Read with timestamp-signed GET. Every POST/PATCH/DELETE uses a fresh nonce bound to the business or exact rule.'],
-  ['Session history', 'GET /api/seller/businesses/:id/sessions?limit=10 with Action: sessions:list.'],
+  ['Session history', 'GET /api/seller/businesses/:id/sessions?limit=50&cursor=...&snapshot=... with Action: sessions:list. Preserve the first response snapshot across pages.'],
   ['QR session', 'Request a one-time Action: sessions:create message bound to owner/operator, business and rule; sign it, then POST /api/sessions with x-ifr-nonce.'],
   ['Customer proof', 'GET /api/sessions/:id/challenge, then POST /api/attest with the customer signature.'],
   ['Redeem', 'Request a one-time sessions:redeem challenge bound to the session ID, sign it, then POST /api/sessions/:id/redeem with x-ifr-nonce.'],

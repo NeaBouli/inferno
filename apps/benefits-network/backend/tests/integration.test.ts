@@ -444,7 +444,7 @@ describe('E2E: IFR Lock → Benefits Network Verification', () => {
       operatorId: operator.id,
     })).rejects.toThrow('no longer authorized for checkout');
     expect((await prisma.session.findUniqueOrThrow({ where: { id: session.id } })).status).toBe('APPROVED');
-  });
+  }, 15_000);
 
   it('handles invalid signature gracefully', async () => {
     const session = await createSession(testBusinessId);

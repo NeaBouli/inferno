@@ -8,7 +8,7 @@ import { SellerRewardStatus } from '@/components/SellerRewardStatus';
 import {
   buildSellerSessionCsv,
   maskSellerSessionWallet,
-  RECENT_SESSION_EXPORT_LIMIT,
+  SELLER_SESSION_PAGE_LIMIT,
   sellerSessionCsvFilename,
 } from '@/lib/sellerSessionExport';
 import {
@@ -154,6 +154,9 @@ export function SellerRuleBuilder() {
   const [editingRuleId, setEditingRuleId] = useState<string | null>(null);
   const [sessions, setSessions] = useState<SellerSessionSummary[]>([]);
   const [activityMetrics, setActivityMetrics] = useState<SellerActivityMetrics | null>(null);
+  const [sessionNextCursor, setSessionNextCursor] = useState<string | null>(null);
+  const [sessionHasMore, setSessionHasMore] = useState(false);
+  const [sessionSnapshot, setSessionSnapshot] = useState<string | null>(null);
   const [sessionHistoryBinding, setSessionHistoryBinding] = useState<{
     walletAddress: string;
     businessId: string;
@@ -316,6 +319,9 @@ export function SellerRuleBuilder() {
     setCatalogProducts([]);
     setSessions([]);
     setActivityMetrics(null);
+    setSessionNextCursor(null);
+    setSessionHasMore(false);
+    setSessionSnapshot(null);
     setSessionHistoryBinding(null);
     resetRuleDraft();
   }, [businessId]);
@@ -323,6 +329,9 @@ export function SellerRuleBuilder() {
   useEffect(() => {
     setSessions([]);
     setActivityMetrics(null);
+    setSessionNextCursor(null);
+    setSessionHasMore(false);
+    setSessionSnapshot(null);
     setSessionHistoryBinding(null);
   }, [normalizedWalletAddress]);
 
@@ -573,6 +582,9 @@ export function SellerRuleBuilder() {
     setLoading(true);
     setSessions([]);
     setActivityMetrics(null);
+    setSessionNextCursor(null);
+    setSessionHasMore(false);
+    setSessionSnapshot(null);
     setSessionHistoryBinding(null);
     setError('');
     setStatus('');
@@ -580,7 +592,7 @@ export function SellerRuleBuilder() {
       const result = await getSellerBusinessSessions(
         requestBusinessId,
         await signSellerAction('sessions:list', requestBusinessId),
-        RECENT_SESSION_EXPORT_LIMIT
+        SELLER_SESSION_PAGE_LIMIT
       );
       if (
         activeBusinessIdRef.current !== requestBusinessId ||
@@ -591,6 +603,9 @@ export function SellerRuleBuilder() {
       }
       setSessions(result.sessions);
       setActivityMetrics(result.metrics);
+      setSessionNextCursor(result.pagination.nextCursor);
+      setSessionHasMore(result.pagination.hasMore);
+      setSessionSnapshot(result.pagination.snapshot);
       setSessionHistoryBinding({
         walletAddress: requestWalletAddress,
         businessId: requestBusinessId,
@@ -608,13 +623,47 @@ export function SellerRuleBuilder() {
     }
   }
 
-  function downloadSessionCsv() {
-    if (!sessionHistoryIsCurrent || visibleSessions.length === 0) {
-      setError('Connect the seller owner wallet and load recent sessions before exporting.');
+  async function loadOlderSessions() {
+    if (!sessionHistoryIsCurrent || !sessionNextCursor || !sessionHasMore || !sessionSnapshot) {
+      setError('Load the recent seller history before requesting older sessions.');
       return;
     }
-    const sellerName = selectedBusiness?.name || businessName || businessId || 'IFR Partner Shop';
-    const csv = buildSellerSessionCsv(sellerName, visibleSessions);
+    const requestBusinessId = businessId;
+    const requestWalletAddress = normalizedWalletAddress;
+    setLoading(true);
+    setError('');
+    setStatus('');
+    try {
+      const result = await getSellerBusinessSessions(
+        requestBusinessId,
+        await signSellerAction('sessions:list', requestBusinessId),
+        SELLER_SESSION_PAGE_LIMIT,
+        sessionNextCursor,
+        sessionSnapshot
+      );
+      if (
+        activeBusinessIdRef.current !== requestBusinessId ||
+        activeWalletAddressRef.current !== requestWalletAddress
+      ) {
+        setStatus('Seller context changed. Load session history again with the current owner wallet.');
+        return;
+      }
+      setSessions((current) => {
+        const known = new Set(current.map((session) => session.id));
+        return [...current, ...result.sessions.filter((session) => !known.has(session.id))];
+      });
+      setSessionNextCursor(result.pagination.nextCursor);
+      setSessionHasMore(result.pagination.hasMore);
+      setStatus(`Loaded ${result.sessions.length} older session${result.sessions.length === 1 ? '' : 's'}.`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load older session history');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function saveSessionCsv(sellerName: string, exportSessions: SellerSessionSummary[]) {
+    const csv = buildSellerSessionCsv(sellerName, exportSessions);
     const url = URL.createObjectURL(new Blob([`\uFEFF${csv}`], { type: 'text/csv;charset=utf-8' }));
     const link = document.createElement('a');
     link.href = url;
@@ -623,8 +672,82 @@ export function SellerRuleBuilder() {
     link.click();
     link.remove();
     window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+
+  async function downloadSessionCsv() {
+    if (!businessId || !canUseWalletOwner || !normalizedWalletAddress) {
+      setError('Connect the seller owner wallet before exporting session history.');
+      return;
+    }
+    const requestBusinessId = businessId;
+    const requestWalletAddress = normalizedWalletAddress;
+    setLoading(true);
     setError('');
-    setStatus(`Downloaded ${visibleSessions.length} recent session${visibleSessions.length === 1 ? '' : 's'} with masked customer wallets.`);
+    setStatus('Preparing the masked full history export...');
+    try {
+      let auth = await signSellerAction('sessions:list', requestBusinessId);
+      const exportSessions: SellerSessionSummary[] = [];
+      const seenSessions = new Set<string>();
+      const seenCursors = new Set<string>();
+      let cursor: string | null = null;
+      let snapshot: string | null = null;
+      let hasMore = true;
+
+      while (hasMore) {
+        let result: Awaited<ReturnType<typeof getSellerBusinessSessions>>;
+        try {
+          result = await getSellerBusinessSessions(
+            requestBusinessId,
+            auth,
+            SELLER_SESSION_PAGE_LIMIT,
+            cursor,
+            snapshot
+          );
+        } catch (err) {
+          if (!(err instanceof Error) || !err.message.toLowerCase().includes('authorization expired')) throw err;
+          auth = await signSellerAction('sessions:list', requestBusinessId);
+          result = await getSellerBusinessSessions(
+            requestBusinessId,
+            auth,
+            SELLER_SESSION_PAGE_LIMIT,
+            cursor,
+            snapshot
+          );
+        }
+        for (const session of result.sessions) {
+          if (!seenSessions.has(session.id)) {
+            seenSessions.add(session.id);
+            exportSessions.push(session);
+          }
+        }
+        hasMore = result.pagination.hasMore;
+        cursor = result.pagination.nextCursor;
+        snapshot = result.pagination.snapshot;
+        if (hasMore && (!cursor || seenCursors.has(cursor))) {
+          throw new Error('Session history pagination stopped safely because the server cursor did not advance.');
+        }
+        if (cursor) seenCursors.add(cursor);
+      }
+
+      if (
+        activeBusinessIdRef.current !== requestBusinessId ||
+        activeWalletAddressRef.current !== requestWalletAddress
+      ) {
+        setStatus('Seller context changed. Export cancelled before creating a file.');
+        return;
+      }
+      if (exportSessions.length === 0) {
+        setError('This seller profile has no session history to export.');
+        return;
+      }
+      const sellerName = selectedBusiness?.name || businessName || businessId || 'IFR Partner Shop';
+      saveSessionCsv(sellerName, exportSessions);
+      setStatus(`Downloaded ${exportSessions.length} session${exportSessions.length === 1 ? '' : 's'} with masked customer wallets.`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to export full session history');
+    } finally {
+      setLoading(false);
+    }
   }
 
   async function copySessionCsv() {
@@ -633,7 +756,7 @@ export function SellerRuleBuilder() {
       return;
     }
     const sellerName = selectedBusiness?.name || businessName || businessId || 'IFR Partner Shop';
-    await copyToClipboard('Recent session CSV', buildSellerSessionCsv(sellerName, visibleSessions));
+    await copyToClipboard('Loaded session CSV', buildSellerSessionCsv(sellerName, visibleSessions));
   }
 
   async function loadSellerBusinesses() {
@@ -1765,7 +1888,7 @@ export function SellerRuleBuilder() {
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
               <p className="text-xs font-bold uppercase tracking-[0.18em] text-green-100/80">Session history</p>
-              <h3 className="mt-1 text-xl font-black text-white">Recent customer checks</h3>
+              <h3 className="mt-1 text-xl font-black text-white">Customer check history</h3>
               <p className="mt-2 text-sm leading-6 text-stone-300">
                 Load the latest QR sessions for this seller profile. Copy proof links or restore
                 receipts when staff needs to recover a checkout on another counter device.
@@ -1783,10 +1906,10 @@ export function SellerRuleBuilder() {
               <button
                 type="button"
                 onClick={downloadSessionCsv}
-                disabled={loading || !sessionHistoryIsCurrent || visibleSessions.length === 0}
+                disabled={loading || !canUseWalletOwner || !businessId}
                 className="rounded-2xl border border-orange-200/35 px-4 py-3 text-xs font-black uppercase tracking-[0.14em] text-orange-50 transition hover:bg-orange-200/10 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                Download CSV
+                Download full CSV
               </button>
               <button
                 type="button"
@@ -1794,13 +1917,13 @@ export function SellerRuleBuilder() {
                 disabled={loading || !sessionHistoryIsCurrent || visibleSessions.length === 0}
                 className="rounded-2xl border border-white/15 px-4 py-3 text-xs font-black uppercase tracking-[0.14em] text-stone-100 transition hover:border-orange-200/60 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                Copy CSV
+                Copy loaded CSV
               </button>
             </div>
           </div>
           <p className="mt-3 text-xs leading-5 text-stone-400">
-            Recent export only: up to 50 owner-loaded sessions. Customer wallets are masked and the
-            file is generated locally without uploading or storing a copy.
+            History is owner-only and loaded in pages of 50. Full CSV export fetches every page,
+            masks customer wallets, and creates the file locally without uploading or storing a copy.
           </p>
           {visibleSessions.length > 0 ? (
             <div className="mt-4 grid gap-3">
@@ -1871,6 +1994,18 @@ export function SellerRuleBuilder() {
                 <p className="rounded-2xl border border-white/10 bg-black/20 p-4 text-sm text-stone-300">
                   Showing the newest 10 of {visibleSessions.length} loaded sessions. The CSV includes all loaded rows.
                 </p>
+              ) : null}
+              {sessionHistoryIsCurrent && sessionHasMore ? (
+                <button
+                  type="button"
+                  onClick={loadOlderSessions}
+                  disabled={loading || !sessionNextCursor || !sessionSnapshot}
+                  className="rounded-2xl border border-green-200/35 px-4 py-3 text-xs font-black uppercase tracking-[0.14em] text-green-50 transition hover:bg-green-200/10 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  Load 50 older checks
+                </button>
+              ) : sessionHistoryIsCurrent && visibleSessions.length > 0 ? (
+                <p className="text-center text-xs font-semibold text-stone-400">All available sessions are loaded.</p>
               ) : null}
             </div>
           ) : (

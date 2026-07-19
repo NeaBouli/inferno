@@ -1,6 +1,6 @@
 import type { SellerSessionSummary } from '@/lib/api';
 
-export const RECENT_SESSION_EXPORT_LIMIT = 50;
+export const SELLER_SESSION_PAGE_LIMIT = 50;
 
 export function maskSellerSessionWallet(address: string | null) {
   if (!address) return '';
@@ -66,5 +66,5 @@ export function sellerSessionCsvFilename(sellerName: string, now = new Date()) {
     .replace(/^-+|-+$/g, '')
     .toLowerCase()
     .slice(0, 48) || 'seller';
-  return `ifr-benefits-${safeSeller}-recent-${now.toISOString().slice(0, 10)}.csv`;
+  return `ifr-benefits-${safeSeller}-history-${now.toISOString().slice(0, 10)}.csv`;
 }
