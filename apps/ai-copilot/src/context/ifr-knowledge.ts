@@ -76,7 +76,8 @@ export function getIFRKnowledge() {
         "lock or unlock IFR through the simple IFRLock access flow",
         "discover public seller offers and preview eligibility",
         "scan a seller-issued checkout QR with camera, local image or proof-link fallback",
-        "review and sign a short-lived one-time customer proof"
+        "review and sign a short-lived one-time customer proof",
+        "sign an explicit read-only request to load only that wallet's verified My benefits history across devices"
       ],
       sellerActions: [
         "create and manage a public seller profile",
@@ -86,7 +87,7 @@ export function getIFRKnowledge() {
         "see approved or denied and redeem an approval once",
         "review protected recent sessions and masked local CSV"
       ],
-      security: "The QR contains only a canonical shop.ifrunit.tech/r/:sessionId URL. Authoritative seller, rule, nonce, expiry and signature state remain server-side. Camera and selected QR images are decoded locally. The app never asks for a seed phrase or private key.",
+      security: "The QR contains only a canonical shop.ifrunit.tech/r/:sessionId URL. Authoritative seller, rule, nonce, expiry and signature state remain server-side. Camera and selected QR images are decoded locally. My benefits uses a separate single-use read-only signature and a ten-minute access token held only in browser memory; it cannot move tokens and returns only the signer's history. The app never asks for a seed phrase or private key.",
       rewards: "The verified seller reward foundation is fail-closed. PartnerVault rewards are not active for an unregistered seller and require governance registration plus an authorized reward caller.",
       docs: "https://ifrunit.tech/wiki/business-onboarding.html"
     },

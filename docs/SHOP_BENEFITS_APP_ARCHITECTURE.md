@@ -31,8 +31,12 @@ The app has two roles:
   7. Seller sees approval and redeems the session once.
 - Customer proof history:
   - Customer proof pages save a redacted local browser history entry after session load/refresh.
-  - Home shows `Recent customer proofs` for reopening checkout proofs on the same device.
+  - Home shows the local section `Recent proofs on this device` for reopening checkout proofs.
   - Stored data is local-only and excludes private keys, seed phrases, signatures and full wallet inventories.
+  - A separate `My benefits` account history uses a server-issued one-time wallet signature and a
+    memory-only ten-minute read token to load the signer's verified sessions across devices.
+  - Account history is snapshot/cursor-paginated, bounded to 50 rows per API call and excludes
+    wallet addresses, signatures, nonces, audit logs, proof URLs and seller-only data.
 - Help surface:
   - The IFR Copilot is available as an opt-in floating panel and loads only after the user opens it.
   - The assistant is read-only, cannot initiate wallet transactions and must never request a seed phrase or private key.
@@ -55,6 +59,8 @@ The app has two roles:
 - Connect as many wallets as practical through EIP-1193/EIP-6963 injection and WalletConnect.
 - Show wallet, IFR balance, ETH balance and locked IFR.
 - Explain that signing a QR proof does not move tokens.
+- Let a connected customer load only their own verified benefit history across devices with one
+  explicit read-only signature; clear all account-history state on disconnect or wallet change.
 - Keep the audited simple IFRLock approve, lock and unlock flow inside the shop app. Keep swaps as an explicit Uniswap handoff while the IFR pool remains thin.
 - Keep camera access opt-in. Decode camera frames and selected images only in the browser, then
   accept only a canonical `https://shop.ifrunit.tech/r/:sessionId` proof. Foreign origins,
@@ -128,7 +134,9 @@ If `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` is missing, the frontend must show a s
 2. Benefits backend is exposed under the shop HTTPS origin. **Implemented with health/readiness smoke coverage.**
 3. Seller onboarding supports owner-wallet self-service creation with an anti-spam profile cap. **Implemented; invitation/review policy remains a future governance decision.**
 4. Add QR history and audit view for sellers. **Implemented with owner-wallet-protected, snapshot-anchored cursor pagination, restore receipts, activity metrics, incremental older-session loading and a browser-local masked full-history CSV export. The API remains bounded to 50 rows per request, refreshes an expired read authorization when needed and creates no server-side export file. Retention/compliance policy remains future work.**
-5. Customer saved proof history locally without storing private data server-side. **Implemented for redacted QR proof history; benefit wallet/device acceptance still pending.**
+5. Customer benefit history. **Implemented as both a redacted local recent-proof list and a
+   wallet-signed, cross-device `My benefits` history with one-time challenge exchange, memory-only
+   read token and snapshot pagination. Physical wallet/device acceptance remains pending.**
 6. Add embedded-wallet provider evaluation and decision record. **Preliminary evaluation and the safety decision are recorded in `docs/ifrp-commerce-app/EMBEDDED_WALLET_DECISION.md`: external wallets remain the production baseline; Privy and Coinbase CDP are prototype candidates, and provider selection remains deferred until export/recovery, native isolation, device, privacy and independent-security gates pass.**
 7. Add POS/plugin snippets to code generator. **Server-side JavaScript/POS helper and repository SDK `IFRBenefitsClient` are implemented and source-tested. npm publication and platform-specific plugins remain future release work.**
 8. Add mobile E2E checks for iPad Safari/Chrome and Android MetaMask browser. **Automated
