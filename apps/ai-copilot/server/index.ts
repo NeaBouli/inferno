@@ -1824,10 +1824,12 @@ ${useTier && useHardLock ? `
     }
 ` : ""}}`;
 
-  const sdkSnippet = `import { IFRClient } from "ifr-sdk";
+  const sdkSnippet = `// npm registry publication is pending.
+// From a cloned Inferno repository: npm install --install-links ./apps/sdk
+import { IFRClient } from "ifr-sdk";
 const ifr = new IFRClient({ network: "mainnet" });
-const hasAccess = await ifr.checkAccess({ wallet: userAddress, required: ${c.minAmount || 500} });
-${useTier ? 'const tier = await ifr.getTier(userAddress);\nif (tier >= 2) enablePremium();' : ""}if (hasAccess) enableAccess();`;
+const access = await ifr.checkAccess({ wallet: userAddress, required: ${c.minAmount || 500} });
+${useTier ? 'const { tier } = await ifr.getTier(userAddress);\nif (tier >= 2) enablePremium();' : ""}if (access.hasAccess) enableAccess();`;
 
   return { contractName, contractCode, sdkSnippet, deployGuide: "See: ifrunit.tech/wiki/business-onboarding.html" };
 }

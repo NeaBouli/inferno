@@ -812,12 +812,13 @@ On errors: fix immediately, commit with `seo:` prefix.
       POST /api/builder/generate endpoint active
       30 tests passing (test/builder/GeneratorEngine.test.js)
 
-- [x] ✅ IFR SDK — Phase 5c (07.04.2026)
-      apps/sdk/ — npm installable (ifr-sdk v0.1.0)
+- [x] ✅ IFR SDK — Phase 5c, hardened 19.07.2026
+      apps/sdk/ — local source package (ifr-sdk v0.2.0); npm publication pending
       IFRClient: checkAccess(), getTier(), getBalance(), getLockedBalance(), isBuilder()
+      IFRBenefitsClient: signer-neutral one-time seller checkout challenge
       Static: IFRClient.apiCheck() (no ethers needed)
-      GET /api/ifr/check?wallet=0x...&required=1000 — Hetzner API endpoint
-      36 tests passing (test/sdk/sdk.test.js)
+      GET https://copilot-api.ifrunit.tech/api/ifr/check?wallet=0x...&required=1000
+      Dist-importing source tests + dedicated SDK CI; npm publish remains a separate release gate
 
 - [x] ✅ Generator UI — Phase 5d (07.04.2026)
       docs/builder.html — live at ifrunit.tech/builder.html

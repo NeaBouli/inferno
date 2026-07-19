@@ -150,8 +150,8 @@ Phase 3 (DEPLOYED — April 2026):
 
 Phase 5 — Integration Builder (LIVE):
 - Builder Tool: ifrunit.tech/builder.html — generate contract + SDK + deploy guide in 60 seconds
-- IFR SDK: npm install ifr-sdk — checkAccess(), getTier(), getBalance(), isBuilder()
-- REST API: GET /api/ifr/check?wallet=0x...&required=1000
+- IFR SDK: local repository package v0.2.0; npm publication pending — checkAccess(), getTier(), getBalance(), isBuilder(), Benefits checkout client
+- REST API: GET https://copilot-api.ifrunit.tech/api/ifr/check?wallet=0x...&required=1000
 - Contract Library: BaseAccessModule, HardLockModule, TierModule, CooldownModule, IFRBuilderVault
 - Tier System: Tier 1 (500 IFR), Tier 2 (2000 IFR), Tier 3 (10000 IFR) — uses locked balance
 - Security Score: 0-100 (SAFE >= 80, MEDIUM >= 50, RISKY < 50)

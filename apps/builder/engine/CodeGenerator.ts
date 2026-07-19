@@ -118,27 +118,28 @@ ${tierBalanceOverride}${tierMethods}}
 `;
 
   // SDK Snippet
-  const sdkSnippet = `// npm install ifr-sdk
+  const sdkSnippet = `// npm registry publication is pending.
+// From a cloned Inferno repository: npm install --install-links ./apps/sdk
 import { IFRClient } from "ifr-sdk";
 
 const ifr = new IFRClient({ network: "mainnet" });
 
 // Check access:
-const hasAccess = await ifr.checkAccess({
+const access = await ifr.checkAccess({
   wallet: userAddress,
   required: ${config.minAmount}
 });
 ${useTier ? `
 // Tier check (1=basic, 2=premium, 3=pro):
-const tier = await ifr.getTier(userAddress);
+const { tier } = await ifr.getTier(userAddress);
 if (tier >= 2) enablePremiumFeatures();
 if (tier >= 3) enableProFeatures();
 ` : ""}
-if (hasAccess) enableAccess();
+if (access.hasAccess) enableAccess();
 else showLockPrompt(${config.minAmount});
 
 // REST API alternative:
-// GET /api/ifr/check?wallet=0x...&required=${config.minAmount}`;
+// GET https://copilot-api.ifrunit.tech/api/ifr/check?wallet=0x...&required=${config.minAmount}`;
 
   // Deploy Guide
   const deployGuide = `# ${contractName} — Deployment Guide
@@ -170,8 +171,10 @@ npx hardhat run scripts/deploy.js --network mainnet
 \`\`\`
 
 ## Step 6: Integrate SDK
+The SDK is currently a repository source package; npm registry publication is pending.
 \`\`\`bash
-npm install ifr-sdk
+git clone https://github.com/NeaBouli/inferno.git
+npm install --install-links ./inferno/apps/sdk
 \`\`\`
 
 ## Constructor Args

@@ -36,6 +36,11 @@ The repository already contains a useful base:
   - merchant route `/b/:businessId`
   - customer route `/r/:sessionId`
   - QR generation
+- `apps/sdk`
+  - exact 9-decimal IFR access helpers
+  - Mainnet-only contract configuration
+  - signer-neutral, one-time-challenge Benefits checkout client
+  - local repository package; npm publication remains a separate release gate
 - `docs/BUSINESS_ONBOARDING.md`
 - `docs/PARTNER_INTEGRATION_SPEC.md`
 - `PartnerVault`
