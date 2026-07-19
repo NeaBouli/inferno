@@ -29,15 +29,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <head>
-        <link rel="icon" href="/icons/ifr-official-64-v8.png" type="image/png" sizes="64x64" />
-        <link rel="shortcut icon" href="/icons/favicon-v8.ico" type="image/x-icon" />
-        <link rel="apple-touch-icon" href="/icons/ifr-official-180-v8.png" sizes="180x180" />
+        <link rel="icon" href="/icons/ifr-token-64-v9.png" type="image/png" sizes="64x64" />
+        <link rel="shortcut icon" href="/icons/favicon-v9.ico" type="image/x-icon" />
+        <link rel="apple-touch-icon" href="/icons/ifr-token-180-v9.png" sizes="180x180" />
       </head>
       <body className="shop-body min-h-screen antialiased">
         <Providers>{children}</Providers>
         <script
           dangerouslySetInnerHTML={{
-            __html: `if('serviceWorker' in navigator){const hadController=Boolean(navigator.serviceWorker.controller);let refreshing=false;if(hadController){navigator.serviceWorker.addEventListener('controllerchange',()=>{if(refreshing)return;refreshing=true;window.location.reload()})}window.addEventListener('load',()=>{navigator.serviceWorker.register('/sw.js?v=10',{updateViaCache:'none'}).then(registration=>registration.update()).catch(()=>{})})}`,
+            __html: `if('serviceWorker' in navigator){const hadController=Boolean(navigator.serviceWorker.controller);let refreshing=false;if(hadController){navigator.serviceWorker.addEventListener('controllerchange',()=>{if(refreshing)return;refreshing=true;window.location.reload()})}window.addEventListener('load',()=>{navigator.serviceWorker.register('/sw.js?v=11',{updateViaCache:'none'}).then(registration=>registration.update()).catch(()=>{})})}`,
           }}
         />
       </body>
