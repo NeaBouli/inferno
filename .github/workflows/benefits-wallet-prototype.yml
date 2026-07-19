@@ -1,0 +1,39 @@
+name: Benefits Wallet Prototype
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'apps/benefits-wallet-prototype/**'
+      - 'docs/ifrp-commerce-app/EMBEDDED_WALLET_DECISION.md'
+      - 'docs/ifrp-commerce-app/MASTER_ARCHITECTURE.md'
+      - 'docs/SHOP_BENEFITS_APP_ARCHITECTURE.md'
+      - '.github/workflows/benefits-wallet-prototype.yml'
+  pull_request:
+    paths:
+      - 'apps/benefits-wallet-prototype/**'
+      - 'docs/ifrp-commerce-app/EMBEDDED_WALLET_DECISION.md'
+      - 'docs/ifrp-commerce-app/MASTER_ARCHITECTURE.md'
+      - 'docs/SHOP_BENEFITS_APP_ARCHITECTURE.md'
+      - '.github/workflows/benefits-wallet-prototype.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: apps/benefits-wallet-prototype
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: apps/benefits-wallet-prototype/package-lock.json
+      - run: npm ci
+      - run: npm audit --audit-level=moderate
+      - run: npm test

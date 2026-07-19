@@ -122,6 +122,12 @@ Accepted paths:
    - MetaMask, Rainbow, Trust Wallet, Coinbase Wallet, OKX, WalletConnect-compatible wallets.
    - Lowest security risk and fastest path.
 2. Embedded wallet provider later:
+   - The isolated `apps/benefits-wallet-prototype` lab now uses Coinbase CDP to create an
+     exportable EOA on Ethereum Sepolia only. It has no transaction or IFR path and is not linked
+     from production.
+   - CDP is a prototype selection, not a production commitment. Production remains blocked until
+     login, export, second-device recovery, lost-auth, outage, deletion, mobile isolation,
+     privacy/legal and independent-security evidence is complete.
    - Privy, Web3Auth, Coinbase Embedded Wallet, Dynamic, or similar.
    - Must support export/recovery, clear custody model, passkey/social login, and no project-side custody.
 3. Native IFR Wallet later:
@@ -159,7 +165,11 @@ If `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` is missing, the frontend must show a s
 5. Customer benefit history. **Implemented as both a redacted local recent-proof list and a
    wallet-signed, cross-device `My benefits` history with one-time challenge exchange, memory-only
    read token and snapshot pagination. Physical wallet/device acceptance remains pending.**
-6. Add embedded-wallet provider evaluation and decision record. **Preliminary evaluation and the safety decision are recorded in `docs/ifrp-commerce-app/EMBEDDED_WALLET_DECISION.md`: external wallets remain the production baseline; Privy and Coinbase CDP are prototype candidates, and provider selection remains deferred until export/recovery, native isolation, device, privacy and independent-security gates pass.**
+6. Add embedded-wallet provider evaluation and decision record. **The decision record now selects
+   Coinbase CDP EOA only for an isolated Sepolia lab. The lab compiles and enforces a source-level
+   no-transaction/no-IFR boundary; external wallets remain the production baseline and all real
+   login, export/recovery, native isolation, device, privacy and independent-security gates remain
+   open.**
 7. Add POS/plugin snippets to code generator. **Server-side JavaScript/POS helper and repository SDK `IFRBenefitsClient` are implemented and source-tested. npm publication and platform-specific plugins remain future release work.**
 8. Add mobile E2E checks for iPad Safari/Chrome and Android MetaMask browser. **Automated
    desktop/iPad/Android layout, unavailable-camera fallback, strict parser and fake-camera QR

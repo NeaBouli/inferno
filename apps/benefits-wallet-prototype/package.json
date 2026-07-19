@@ -1,0 +1,37 @@
+{
+  "name": "ifr-benefits-wallet-prototype",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --port 3012",
+    "build": "npm run typecheck && vite build",
+    "preview": "vite preview --port 4012",
+    "typecheck": "tsc --noEmit -p tsconfig.app.json && tsc --noEmit -p tsconfig.node.json",
+    "test:security": "node scripts/verify-security-boundary.mjs",
+    "test": "npm run test:security && npm run build"
+  },
+  "dependencies": {
+    "@base-org/account": "2.5.7",
+    "@coinbase/cdp-core": "0.0.116",
+    "@coinbase/cdp-hooks": "0.0.116",
+    "@coinbase/cdp-react": "0.0.116",
+    "@coinbase/cdp-wagmi": "0.0.116",
+    "@tanstack/react-query": "5.101.2",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "viem": "2.55.2",
+    "wagmi": "2.19.5"
+  },
+  "devDependencies": {
+    "@types/react": "18.3.31",
+    "@types/react-dom": "18.3.7",
+    "@vitejs/plugin-react": "5.1.1",
+    "typescript": "5.9.3",
+    "vite": "7.3.6"
+  },
+  "overrides": {
+    "uuid@<11.1.1": "11.1.1",
+    "ws": "8.21.0"
+  }
+}

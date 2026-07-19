@@ -545,7 +545,9 @@ MVP should be installable:
 
 - This document.
 - Finalize domain decision.
-- Decide embedded wallet provider vs external-wallet-only MVP.
+- External-wallet MVP remains production baseline. Coinbase CDP EOA is selected only for the
+  isolated Sepolia lab in `apps/benefits-wallet-prototype`; production provider selection remains
+  gated by recovery, real-device, privacy/legal and independent-security evidence.
 - Decide whether to extend `apps/benefits-network` or create `apps/commerce-app`.
 
 ### M1 - MVP Customer/Seller PWA
@@ -603,7 +605,10 @@ and production deployment remain required before any reward event may be submitt
 ### M5 - Native Wrapper / Embedded Wallet
 
 - evaluate Expo/Capacitor wrapper;
-- embedded wallet provider; **provider evaluation and security decision recorded in `EMBEDDED_WALLET_DECISION.md`; external wallets remain the production baseline and any embedded-wallet work starts as a no-Mainnet prototype**
+- embedded wallet provider; **Coinbase CDP EOA selected for the separate Sepolia-only lab in
+  `apps/benefits-wallet-prototype`; fail-closed config, isolated export and source-level no-
+  transaction boundary are implemented. External wallets remain the production baseline;
+  provider login/export/recovery and the full real-device/security matrix remain unproven.**
 - push notifications;
 - biometric unlock;
 - optional gas abstraction.
