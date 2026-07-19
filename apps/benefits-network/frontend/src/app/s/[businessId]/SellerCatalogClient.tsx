@@ -3,9 +3,11 @@
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import { AppShell } from '@/components/AppShell';
+import { EligibilityLiveSummary, OfferEligibility, useIfrLockEligibility } from '@/components/OfferEligibility';
 import { PublicBusinessProfile, PublicCatalogProduct, getBusinessProducts } from '@/lib/api';
 
 export function SellerCatalogClient({ businessId }: { businessId: string }) {
+  const eligibility = useIfrLockEligibility();
   const [business, setBusiness] = useState<PublicBusinessProfile | null>(null);
   const [products, setProducts] = useState<PublicCatalogProduct[]>([]);
   const [loading, setLoading] = useState(true);
@@ -61,6 +63,7 @@ export function SellerCatalogClient({ businessId }: { businessId: string }) {
   return (
     <AppShell>
       <div className="mx-auto w-full max-w-6xl px-5 pb-20 pt-8">
+        <EligibilityLiveSummary eligibility={eligibility} />
         <section className="border-b border-orange-200/15 pb-8">
           <p className="text-xs font-black uppercase tracking-[0.18em] text-orange-200/80">IFR member benefits</p>
           <div className="mt-3 flex flex-wrap items-end justify-between gap-5">
@@ -145,6 +148,7 @@ export function SellerCatalogClient({ businessId }: { businessId: string }) {
                             <p className="mt-1 text-sm text-stone-300">
                               Verify at least {rule.requiredLockIFR.toLocaleString('en-US')} locked IFR at checkout.
                             </p>
+                            <OfferEligibility requiredLockIFR={rule.requiredLockIFR} eligibility={eligibility} />
                             <p className="mt-1 text-xs text-stone-400">
                               Per wallet: {rule.dailyRedemptionLimit || 'unlimited'} / UTC day and {rule.monthlyRedemptionLimit || 'unlimited'} / UTC month.
                             </p>

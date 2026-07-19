@@ -560,6 +560,8 @@ MVP should be installable:
 - product/service CRUD; **implemented with owner-signed create/edit/soft-archive**
 - public seller profile; **implemented with owner-signed description, HTTPS website and bounded categories, plus controlled admin reload for operator-created profiles**
 - categories; **implemented for seller management, public catalogs and customer offer discovery**
+- per-offer wallet eligibility; **implemented as a read-only, fail-closed IFRLock preview in offer
+  discovery and public catalogs; checkout attestation remains authoritative**
 - rule templates; **four one-tap seller templates implemented as review-before-save drafts; product binding remains explicit, with owner-signed publication for wallet-owned profiles and the controlled admin fallback otherwise**
 - staff scanner mode; **implemented with owner-managed, expiring checkout operators and atomic role-audited redeem**
 - redemption history. **implemented as owner-protected recent sessions, metrics and receipts**

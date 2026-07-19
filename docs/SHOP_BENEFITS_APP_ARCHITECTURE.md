@@ -54,6 +54,9 @@ The app has two roles:
 - Explain that signing a QR proof does not move tokens.
 - Keep the audited simple IFRLock approve, lock and unlock flow inside the shop app. Keep swaps as an explicit Uniswap handoff while the IFR pool remains thin.
 - QR session page must show seller, rule, product, discount and required IFR before signing.
+- Offer discovery and public seller catalogs show a wallet-local, read-only preview against each
+  rule's exact IFRLock threshold. Disconnect, wrong-chain, loading and RPC/configuration failures
+  fail closed; only the backend checkout attestation is authoritative.
 
 ### Seller Flow
 
