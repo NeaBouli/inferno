@@ -1,0 +1,35 @@
+# IFR Benefits
+
+> The installable Inferno Protocol customer and seller app for benefits based on locked IFR.
+
+## Canonical URLs
+
+- App: https://shop.ifrunit.tech/
+- Customer and seller guide: https://shop.ifrunit.tech/guide
+- Compatible seller QR scanner: https://shop.ifrunit.tech/scan
+- Protocol website: https://ifrunit.tech/
+- User Web3 actions: https://web3.ifrunit.tech/
+- Technical documentation: https://ifrunit.tech/wiki/
+
+## Current Capabilities
+
+- Customers connect an external Ethereum wallet, read IFR and IFRLock status, lock IFR, discover public seller offers, present a short-lived checkout pass, scan compatible seller QR codes and load their own signed benefit history.
+- Sellers create wallet-owned profiles, publish service areas, products and benefit rules, delegate checkout operators, bind customer passes, issue compatible checkout QR codes, redeem approved sessions once and export masked recent reconciliation data.
+- The app is a PWA for phone, tablet and desktop. It does not request seed phrases or private keys.
+- Benefit verification reads IFRLock on Ethereum Mainnet. It does not transfer customer tokens.
+- IFR Copilot is contextual read-only help. It cannot sign transactions or access wallet secrets.
+
+## Important Limits
+
+- PartnerVault seller rewards remain governance-gated and are not active for general sellers.
+- Embedded-wallet work is an isolated Sepolia prototype, not a production shop capability.
+- Private checkout, customer-pass, seller-console and API URLs are intentionally excluded from search indexing.
+
+## Token
+
+- Name: Inferno
+- On-chain symbol: IFR
+- Social cashtag: $IFRp
+- Chain: Ethereum Mainnet (chain ID 1)
+- Contract: 0x77e99917Eca8539c62F509ED1193ac36580A6e7B
+- IFRLock: 0x769928aBDfc949D0718d8766a1C2d7dBb63954Eb

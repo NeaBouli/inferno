@@ -14,6 +14,7 @@ for (const surface of ['landing', 'web3', 'benefits']) {
 assert.match(source, /new URLSearchParams\(window\.location\.search\)\.get\('surface'\)/);
 assert.match(source, /surfaceHelp\[surface\]/);
 assert.match(source, /surfaceLabels\[surface\]/);
+assert.match(source, /messages: histories\[currentMode\], mode: currentMode, surface: surface/);
 assert.match(source, /customer-pass/);
 assert.match(source, /one-time redeem/);
 assert.doesNotMatch(source, /Connect Wallet \(coming soon\)/);

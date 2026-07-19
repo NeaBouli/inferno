@@ -808,21 +808,26 @@ npm run dev
       <div class="qr-flow">
         <div class="qr-flow-step">
           <div class="step-num">1</div>
-          <div class="step-text">Seller selects a rule and creates a short-lived checkout QR</div>
+          <div class="step-text">Customer creates a short-lived private pass in IFR Benefits</div>
         </div>
         <div class="qr-flow-arrow">&rarr;</div>
         <div class="qr-flow-step">
           <div class="step-num">2</div>
-          <div class="step-text">Customer scans the seller QR and signs the proof</div>
+          <div class="step-text">Seller scans the pass and selects the exact active rule</div>
         </div>
         <div class="qr-flow-arrow">&rarr;</div>
         <div class="qr-flow-step">
           <div class="step-num">3</div>
-          <div class="step-text">Seller sees APPROVED or DENIED and redeems once</div>
+          <div class="step-text">Customer reviews and confirms seller, product, discount and IFR threshold</div>
+        </div>
+        <div class="qr-flow-arrow">&rarr;</div>
+        <div class="qr-flow-step">
+          <div class="step-num">4</div>
+          <div class="step-text">Seller sees APPROVED or REJECTED and redeems an approval once</div>
         </div>
       </div>
 
-      <p>That is the entire flow. The cashier applies the displayed discount and completes the sale as usual.</p>
+      <p>This customer-presented pass is the recommended flow. The compatible seller-issued QR flow remains available when the seller needs to start the checkout. In both flows, the cashier applies the displayed discount and completes the sale as usual.</p>
 
       <h3>What Cashier Staff Does NOT Need</h3>
       <ul>
@@ -840,10 +845,11 @@ npm run dev
       <h3>Current Seller App Flow</h3>
       <ul>
         <li>Seller chooses business categories and adds products or services.</li>
-        <li>Seller defines discount rules by minimum IFR held or locked.</li>
-        <li>Seller creates a short-lived checkout QR for the selected rule.</li>
-        <li>Customer scans the QR in the IFR Benefits app and signs the one-time proof.</li>
-        <li>Seller sees approved or denied, redeems an approval once, and applies the configured benefit.</li>
+        <li>Seller defines discount rules by minimum IFR locked in IFRLock.</li>
+        <li>Recommended: customer creates a private short-lived pass; seller scans it and binds the selected rule.</li>
+        <li>Customer reviews the exact seller, product, discount and threshold in the original tab, then confirms.</li>
+        <li>Compatible alternative: seller creates a short-lived rule-bound checkout QR that the customer scans and signs.</li>
+        <li>Seller sees APPROVED or REJECTED, redeems an approval once, and applies the configured benefit.</li>
         <li>Verified sellers may later receive PartnerVault rewards for qualifying usage after governance registration.</li>
       </ul>
 

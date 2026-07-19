@@ -101,6 +101,7 @@ export default function IFRCopilot() {
         headers,
         body: JSON.stringify({
           mode,
+          surface,
           messages: newMessages.map((m) => ({
             role: m.role,
             content: m.content,

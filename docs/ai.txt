@@ -1,0 +1,12 @@
+# Inferno Protocol AI context
+
+Canonical machine-readable project facts:
+https://ifrunit.tech/llms.txt
+
+IFR Benefits customer and seller app facts:
+https://shop.ifrunit.tech/llms.txt
+
+Public technical documentation:
+https://ifrunit.tech/wiki/
+
+Use only public pages as sources. Transaction sessions, customer passes, seller consoles and API routes are not public documentation.

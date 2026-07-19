@@ -496,12 +496,40 @@ export default function Home() {
 
   useEffect(() => {
     const syncRoleFromHash = () => {
-      if (window.location.hash === '#seller-workspace') setRole('seller');
+      const sellerHashes = new Set(['#seller-workspace', '#integrate', '#seller-session-history']);
+      const customerHashes = new Set(['#customer-pass', '#customer-wallet', '#my-benefits']);
+      const requestedMode = new URLSearchParams(window.location.search).get('mode');
+      if (sellerHashes.has(window.location.hash) || requestedMode === 'seller') setRole('seller');
+      if (customerHashes.has(window.location.hash) || requestedMode === 'customer') setRole('customer');
     };
     syncRoleFromHash();
     window.addEventListener('hashchange', syncRoleFromHash);
     return () => window.removeEventListener('hashchange', syncRoleFromHash);
   }, []);
+
+  useEffect(() => {
+    const rawTargetId = window.location.hash.slice(1);
+    if (!rawTargetId) return;
+    let targetId = rawTargetId;
+    try {
+      targetId = decodeURIComponent(rawTargetId);
+    } catch {
+      return;
+    }
+    let secondFrame = 0;
+    const scrollToTarget = () => document.getElementById(targetId)?.scrollIntoView({ block: 'start' });
+    const firstFrame = window.requestAnimationFrame(() => {
+      secondFrame = window.requestAnimationFrame(() => {
+        scrollToTarget();
+      });
+    });
+    const layoutRetry = window.setTimeout(scrollToTarget, 700);
+    return () => {
+      window.cancelAnimationFrame(firstFrame);
+      if (secondFrame) window.cancelAnimationFrame(secondFrame);
+      window.clearTimeout(layoutRetry);
+    };
+  }, [role]);
 
   return (
     <AppShell>

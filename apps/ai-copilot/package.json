@@ -10,6 +10,7 @@
     "prebuild": "node -e \"try{require('../../scripts/build-wiki-rag.js')}catch(e){console.log('prebuild skipped (wiki-content.json committed)');}\"",
     "check:server-imports": "tsx -e \"import('./src/context/system-prompts.ts')\"",
     "test:surface-ui": "node scripts/test-surface-ui.cjs",
+    "test:surface-context": "tsx scripts/test-surface-context.ts",
     "build": "vite build",
     "preview": "vite preview",
     "start": "tsx server/index.ts"

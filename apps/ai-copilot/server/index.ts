@@ -6,6 +6,7 @@ import { fileURLToPath } from "url";
 import { existsSync, readFileSync, writeFileSync } from "fs";
 import { SYSTEM_PROMPTS } from "../src/context/system-prompts.js";
 import { loadWikiDocs, buildSystemPrompt, WikiDoc } from "./wiki-rag.js";
+import { buildSurfaceContext, normalizeCopilotSurface } from "./surface-context.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -417,7 +418,7 @@ async function send() {
     var res = await fetch('/api/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ messages: histories[currentMode], mode: currentMode })
+      body: JSON.stringify({ messages: histories[currentMode], mode: currentMode, surface: surface })
     });
     var data = await res.json();
     var reply = data.reply || 'Sorry, please try again.';
@@ -453,7 +454,8 @@ app.post("/api/chat", async (req, res) => {
     return;
   }
 
-  const { mode, messages } = req.body;
+  const { mode, messages, surface: requestedSurface } = req.body;
+  const surface = normalizeCopilotSurface(requestedSurface);
 
   if (!messages || !Array.isArray(messages)) {
     res.status(400).json({ reply: "Invalid request: messages required." });
@@ -480,6 +482,7 @@ app.post("/api/chat", async (req, res) => {
   if (liveWiki) {
     systemPrompt += `\n\n--- LIVE WIKI CONTEXT (auto-fetched from ifrunit.tech) ---\n${liveWiki.slice(0, 80000)}\n--- END WIKI CONTEXT ---\nAlways prioritize this context for accurate IFR information.`;
   }
+  systemPrompt += `\n\n${buildSurfaceContext(surface)}`;
 
   try {
     const response = await fetch("https://api.anthropic.com/v1/messages", {
@@ -517,7 +520,7 @@ app.post("/api/chat", async (req, res) => {
     const usage = data.usage as { input_tokens?: number; output_tokens?: number } | undefined;
     if (usage) {
       trackCost(usage.input_tokens || 0, usage.output_tokens || 0);
-      console.log(`[API] ip=${clientIp} mode=${mode || "explorer"} in=${usage.input_tokens} out=${usage.output_tokens} cost_today=$${dailyCostEstimate.toFixed(4)}`);
+      console.log(`[API] ip=${clientIp} mode=${mode || "explorer"} surface=${surface} in=${usage.input_tokens} out=${usage.output_tokens} cost_today=$${dailyCostEstimate.toFixed(4)}`);
     }
 
     // Optional: record points for guide completion
