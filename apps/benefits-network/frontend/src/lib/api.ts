@@ -185,6 +185,19 @@ export interface SellerActivityMetrics {
   approvalRatePercent: number | null;
 }
 
+export interface SellerSessionPagination {
+  limit: number;
+  hasMore: boolean;
+  nextCursor: string | null;
+  snapshot: string;
+}
+
+export interface SellerSessionPage {
+  sessions: SellerSessionSummary[];
+  metrics: SellerActivityMetrics;
+  pagination: SellerSessionPagination;
+}
+
 export interface CheckoutOperator {
   id: string;
   businessId: string;
@@ -542,9 +555,18 @@ export function deleteSellerBusinessProduct(productId: string, auth: SellerAuth)
   });
 }
 
-export function getSellerBusinessSessions(businessId: string, auth: SellerAuth, limit = 10) {
-  return fetchJSON<{ sessions: SellerSessionSummary[]; metrics: SellerActivityMetrics }>(
-    `/api/seller/businesses/${businessId}/sessions?${new URLSearchParams({ limit: String(limit) }).toString()}`,
+export function getSellerBusinessSessions(
+  businessId: string,
+  auth: SellerAuth,
+  limit = 10,
+  cursor?: string | null,
+  snapshot?: string | null
+) {
+  const query = new URLSearchParams({ limit: String(limit) });
+  if (cursor) query.set('cursor', cursor);
+  if (snapshot) query.set('snapshot', snapshot);
+  return fetchJSON<SellerSessionPage>(
+    `/api/seller/businesses/${businessId}/sessions?${query.toString()}`,
     { headers: sellerHeaders(auth) }
   );
 }

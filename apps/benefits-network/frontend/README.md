@@ -85,10 +85,11 @@ Connected sellers can load the active seller profiles owned by their wallet and
 the app remembers the last selected Business ID locally for reloads. This is only
 a convenience cache; ownership is still enforced by the backend signature check.
 
-Connected sellers can also load recent session history for the selected Business
-ID. This uses the same seller wallet signature model and shows checkout status,
+Connected sellers can page through session history for the selected Business ID.
+This uses the same seller wallet signature model and shows checkout status, masked
 verified customer wallet, locked amount, rejection reason, redeem time and the
-rule/default benefit attached to each QR session.
+rule/default benefit attached to each QR session. Full CSV export fetches bounded
+pages of 50 and creates a masked file only in the browser.
 
 The admin bearer secret is still available in the UI as an operator fallback for
 controlled setup and recovery. Do not use the global admin secret as a public

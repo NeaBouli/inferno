@@ -93,6 +93,12 @@ const createProductSchema = z.object({
 
 const updateProductSchema = createProductSchema.partial();
 
+const sellerSessionHistoryQuerySchema = z.object({
+  limit: z.coerce.number().int().min(1).max(50).default(10),
+  cursor: z.string().trim().min(1).max(64).optional(),
+  snapshot: z.string().datetime({ offset: true }).optional(),
+});
+
 const createCheckoutOperatorSchema = z.object({
   walletAddress: z.string().regex(/^0x[a-fA-F0-9]{40}$/),
   label: z.string().trim().min(1).max(80).optional(),
@@ -715,16 +721,32 @@ router.delete('/products/:id', sellerRateLimiter, async (req, res, next) => {
 router.get('/businesses/:id/sessions', sellerRateLimiter, async (req, res, next) => {
   try {
     await requireBusinessOwner(req, 'sessions:list', req.params.id);
-    const requestedLimit = Number(req.query.limit || 10);
-    const limit = Math.min(Math.max(Number.isFinite(requestedLimit) ? requestedLimit : 10, 1), 50);
+    const parsedQuery = sellerSessionHistoryQuerySchema.safeParse(req.query);
+    if (!parsedQuery.success) {
+      res.status(400).json({ error: 'Invalid session history pagination' });
+      return;
+    }
+    const { limit, cursor, snapshot } = parsedQuery.data;
+    const snapshotAt = snapshot ? new Date(snapshot) : new Date();
+    if (cursor) {
+      const cursorSession = await prisma.session.findFirst({
+        where: { id: cursor, businessId: req.params.id, createdAt: { lte: snapshotAt } },
+        select: { id: true },
+      });
+      if (!cursorSession) {
+        res.status(400).json({ error: 'Invalid session history cursor' });
+        return;
+      }
+    }
     const todayStartedAt = new Date();
     todayStartedAt.setUTCHours(0, 0, 0, 0);
     const now = new Date();
     const [sessions, allTimeGroups, todayGroups, todayRedemptions, openChecks] = await Promise.all([
       prisma.session.findMany({
-        where: { businessId: req.params.id },
-        orderBy: { createdAt: 'desc' },
-        take: limit,
+        where: { businessId: req.params.id, createdAt: { lte: snapshotAt } },
+        orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+        take: limit + 1,
+        ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
         select: {
           id: true,
           status: true,
@@ -787,6 +809,9 @@ router.get('/businesses/:id/sessions', sellerRateLimiter, async (req, res, next)
       }),
     ]);
 
+    const hasMore = sessions.length > limit;
+    const pageSessions = sessions.slice(0, limit);
+
     res.json({
       metrics: sellerActivityMetrics(
         allTimeGroups,
@@ -795,7 +820,13 @@ router.get('/businesses/:id/sessions', sellerRateLimiter, async (req, res, next)
         todayRedemptions,
         openChecks
       ),
-      sessions: sessions.map((session) => ({
+      pagination: {
+        limit,
+        hasMore,
+        nextCursor: hasMore ? pageSessions[pageSessions.length - 1]?.id ?? null : null,
+        snapshot: snapshotAt.toISOString(),
+      },
+      sessions: pageSessions.map((session) => ({
         id: session.id,
         status: session.status,
         recoveredAddress: session.recoveredAddress,

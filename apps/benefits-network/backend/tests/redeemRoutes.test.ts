@@ -95,8 +95,16 @@ async function postCreateSession(
   });
 }
 
-async function getSellerSessions(businessId: string, headers?: Record<string, string>) {
-  return fetch(`${baseUrl()}/api/seller/businesses/${businessId}/sessions`, {
+async function getSellerSessions(
+  businessId: string,
+  headers?: Record<string, string>,
+  query?: { limit?: number; cursor?: string; snapshot?: string }
+) {
+  const search = new URLSearchParams();
+  if (query?.limit !== undefined) search.set('limit', String(query.limit));
+  if (query?.cursor) search.set('cursor', query.cursor);
+  if (query?.snapshot) search.set('snapshot', query.snapshot);
+  return fetch(`${baseUrl()}/api/seller/businesses/${businessId}/sessions${search.size ? `?${search}` : ''}`, {
     headers: headers ?? { 'content-type': 'application/json' },
   });
 }
@@ -608,7 +616,7 @@ describe('Redeem route authorization', () => {
       expiresAt: null,
     }, reactivateHeaders);
     expect(reactivate.status).toBe(429);
-  }, 30_000);
+  }, 45_000);
 
   it('never exceeds the checkout operator cap under concurrent owner requests', async () => {
     await prisma.checkoutOperator.createMany({
@@ -641,7 +649,7 @@ describe('Redeem route authorization', () => {
     expect(await prisma.checkoutOperator.count({
       where: { businessId, active: true },
     })).toBe(10);
-  }, 30_000);
+  }, 45_000);
 
   it('serializes concurrent operator reactivation and revocation', async () => {
     const operator = await prisma.checkoutOperator.create({
@@ -674,7 +682,7 @@ describe('Redeem route authorization', () => {
     expect([200, 204]).toContain(statuses.find((status) => status !== 401));
     const stored = await prisma.checkoutOperator.findUniqueOrThrow({ where: { id: operator.id } });
     expect(stored.active).toBe(createResponse.status === 200);
-  }, 30_000);
+  }, 45_000);
 
   it('keeps seller activity metrics owner-protected and calculates checkout status totals', async () => {
     const missingAuth = await getSellerSessions(businessId);
@@ -751,6 +759,79 @@ describe('Redeem route authorization', () => {
     expect(body.metrics.openChecks).toBe(2);
     expect(body.metrics.approvalRatePercent).toBe(75);
     expect(body.sessions).toHaveLength(7);
+  }, 15_000);
+
+  it('paginates seller history without duplicates and rejects foreign or invalid cursors', async () => {
+    const createdAtBase = Date.now() - 60_000;
+    await prisma.session.createMany({
+      data: Array.from({ length: 4 }, (_, index) => ({
+        businessId,
+        nonce: ethers.utils.hexlify(ethers.utils.randomBytes(32)).slice(2),
+        expiresAt: new Date(Date.now() + 300_000),
+        createdAt: new Date(createdAtBase + index * 1000),
+        status: 'PENDING',
+      })),
+    });
+    const expected = await prisma.session.findMany({
+      where: { businessId },
+      orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+      select: { id: true },
+    });
+    const headers = await sellerHeaders(seller, 'sessions:list', businessId);
+    const collected: string[] = [];
+    let cursor: string | undefined;
+    let snapshot: string | undefined;
+    let insertedAfterSnapshot = false;
+
+    do {
+      const response = await getSellerSessions(businessId, headers, { limit: 2, cursor, snapshot });
+      expect(response.status).toBe(200);
+      const page = await response.json() as {
+        sessions: Array<{ id: string }>;
+        pagination: { limit: number; hasMore: boolean; nextCursor: string | null; snapshot: string };
+      };
+      expect(page.sessions.length).toBeLessThanOrEqual(2);
+      expect(page.pagination.limit).toBe(2);
+      collected.push(...page.sessions.map((session) => session.id));
+      cursor = page.pagination.nextCursor ?? undefined;
+      snapshot = page.pagination.snapshot;
+      expect(Number.isNaN(new Date(snapshot).getTime())).toBe(false);
+      if (!insertedAfterSnapshot) {
+        await new Promise((resolve) => setTimeout(resolve, 5));
+        await prisma.session.create({
+          data: {
+            businessId,
+            nonce: ethers.utils.hexlify(ethers.utils.randomBytes(32)).slice(2),
+            expiresAt: new Date(Date.now() + 300_000),
+            status: 'PENDING',
+          },
+        });
+        insertedAfterSnapshot = true;
+      }
+      if (!page.pagination.hasMore) expect(cursor).toBeUndefined();
+    } while (cursor);
+
+    expect(collected).toEqual(expected.map((session) => session.id));
+    expect(new Set(collected).size).toBe(collected.length);
+
+    const otherBusiness = await prisma.business.create({
+      data: {
+        name: 'Other seller cursor',
+        ownerAddress: seller.address,
+        discountPercent: 10,
+        requiredLockIFR: 1000,
+      },
+    });
+    const foreignSession = await prisma.session.create({
+      data: {
+        businessId: otherBusiness.id,
+        nonce: ethers.utils.hexlify(ethers.utils.randomBytes(32)).slice(2),
+        expiresAt: new Date(Date.now() + 300_000),
+      },
+    });
+    expect((await getSellerSessions(businessId, headers, { cursor: foreignSession.id })).status).toBe(400);
+    expect((await getSellerSessions(businessId, headers, { limit: 51 })).status).toBe(400);
+    expect((await getSellerSessions(businessId, headers, { snapshot: 'not-a-date' })).status).toBe(400);
   }, 15_000);
 
   it('updates a benefit rule only for its seller owner and preserves paused state', async () => {

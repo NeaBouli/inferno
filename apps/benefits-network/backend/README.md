@@ -48,7 +48,7 @@ npm run dev            # http://localhost:3001
 | POST | `/api/seller/businesses/:id/products` | Owner wallet signature | Create a product or service |
 | PATCH | `/api/seller/products/:id` | Owner wallet signature | Update or archive a product/service |
 | DELETE | `/api/seller/products/:id` | Owner wallet signature | Soft-archive a product and pause linked rules |
-| GET | `/api/seller/businesses/:id/sessions` | Seller wallet signature | List recent QR sessions for an owned seller business |
+| GET | `/api/seller/businesses/:id/sessions?limit=50&cursor=...&snapshot=...` | Seller wallet signature | Snapshot-anchored cursor pagination for an owned seller business; maximum 50 rows per request |
 | POST | `/api/seller/businesses/:id/rewards/apply` | Owner wallet signature | Apply for governance review; does not create an on-chain partner |
 | GET | `/api/seller/businesses/:id/rewards` | Owner wallet signature | Read local reward events and live PartnerVault vesting/claim status |
 | GET | `/api/seller/businesses/:id/operator-status` | Owner/operator wallet signature | Confirm checkout role for the connected wallet |
