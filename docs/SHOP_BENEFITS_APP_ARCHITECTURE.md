@@ -119,7 +119,7 @@ If `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` is missing, the frontend must show a s
 1. Benefits Network frontend is deployed at `shop.ifrunit.tech`. **Implemented and live; release `72a12526` passed production health, PWA, desktop and iPad smoke checks on 18 July 2026. Future deployments retain the capacity gate.**
 2. Benefits backend is exposed under the shop HTTPS origin. **Implemented with health/readiness smoke coverage.**
 3. Seller onboarding supports owner-wallet self-service creation with an anti-spam profile cap. **Implemented; invitation/review policy remains a future governance decision.**
-4. Add QR history and audit view for sellers. **Implemented for owner-wallet-protected recent sessions, restore receipts and activity metrics; export/retention policy remains future work.**
+4. Add QR history and audit view for sellers. **Implemented for owner-wallet-protected recent sessions, restore receipts, activity metrics and a local masked CSV of the latest 50 checks. Full-history export and retention/compliance policy remain future work.**
 5. Customer saved proof history locally without storing private data server-side. **Implemented for redacted QR proof history; benefit wallet/device acceptance still pending.**
 6. Add embedded-wallet provider evaluation and decision record.
 7. Add POS/plugin snippets to code generator. **Server-side JavaScript/POS session helper implemented; packaged SDK and platform-specific plugins remain future work.**
