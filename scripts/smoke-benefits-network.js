@@ -81,8 +81,8 @@ async function verifyHttpSurface() {
   assert(manifest.display === 'standalone', 'manifest display must be standalone');
   assert(manifest.start_url === '/', 'manifest start_url must be /');
   assert(Array.isArray(manifest.icons) && manifest.icons.length >= 2, 'manifest must expose PWA icons');
-  assert(manifest.icons[0].src === '/icons/ifr-official-192-v10.png', 'manifest 192 icon mismatch');
-  assert(manifest.icons[1].src === '/icons/ifr-official-512-v10.png', 'manifest 512 icon mismatch');
+  assert(manifest.icons[0].src === '/icons/ifr-token-192-v11.png', 'manifest 192 icon mismatch');
+  assert(manifest.icons[1].src === '/icons/ifr-token-512-v11.png', 'manifest 512 icon mismatch');
   assert(manifest.icons.every((icon) => icon.purpose === 'any'), 'official icons must not claim maskable safe-zone support');
   log('PWA manifest OK');
 
@@ -90,19 +90,18 @@ async function verifyHttpSurface() {
   await expectSha256('/icons/ifr-icon-180-v2.png', '66efa6b6551151367639f4f92eb9c9766b295b12c3792c2e65bf47a0a446af76');
   await expectSha256('/icons/ifr-icon-192-v2.png', 'c2e06aa93d6ba47f30d0ccd14d2a8d9a16c04841e56cb7f4f2bb783e86fdf203');
   await expectSha256('/icons/ifr-icon-512-v2.png', '6f029513ff76f3482418da9792e6f9f3545f0cc18b88740fe1f61db50fbe87f1');
-  await expectSha256('/icons/ifr-official-v10.svg', '4d626d67fe336e72da8d81944f65258a0e475c72571871ca83d9deedb6f83e56');
-  await expectSha256('/icons/ifr-official-64-v10.png', 'c661ac2ef9a19962bbf29d57d5afa4558528ef64c4a1086af300d9241cd5b680');
-  await expectSha256('/icons/ifr-official-180-v10.png', '9c69d4ad1d88583f77943e4227ba44200cc1cf3bb075dfe58babc2cdc1f9426e');
-  await expectSha256('/icons/ifr-official-192-v10.png', '287a3220cfaef32f96cd7e9285d5a2283356230b09e1a08fbacd053ef2f0c771');
-  await expectSha256('/icons/ifr-official-256-v10.png', 'f3ce12edbd7238cd8c184c22c57218a6837b069b2ab599d3118d3fc365a02169');
-  await expectSha256('/icons/ifr-official-512-v10.png', '7479045b2616e884a38361420a31dc8d5b45fa50647a67685b55b94cf27f0065');
-  await expectSha256('/icons/favicon-v10.ico', 'faa4f6bcc9b4e2d38db3bf3b04d3f31799fb9f60bd74d029689df2b87b022407');
-  await expectSha256('/favicon.ico', 'faa4f6bcc9b4e2d38db3bf3b04d3f31799fb9f60bd74d029689df2b87b022407');
+  await expectSha256('/icons/ifr-token-64-v11.png', '81b6502f5d9e8ccf610edbce49c8a28333edf3740fe1748fd39160d5fe8e4bf0');
+  await expectSha256('/icons/ifr-token-180-v11.png', '66efa6b6551151367639f4f92eb9c9766b295b12c3792c2e65bf47a0a446af76');
+  await expectSha256('/icons/ifr-token-192-v11.png', 'c2e06aa93d6ba47f30d0ccd14d2a8d9a16c04841e56cb7f4f2bb783e86fdf203');
+  await expectSha256('/icons/ifr-token-256-v11.png', 'e16d4ed9e2fdd6907ad718e57700ae3931fbef1843a05f578413b08c947f3d48');
+  await expectSha256('/icons/ifr-token-512-v11.png', '6f029513ff76f3482418da9792e6f9f3545f0cc18b88740fe1f61db50fbe87f1');
+  await expectSha256('/icons/favicon-v11.ico', 'a3aed7b164e483413f361b08fbdd16465bc84a140109bdd552ec4e242f5c5d3c');
+  await expectSha256('/favicon.ico', 'a3aed7b164e483413f361b08fbdd16465bc84a140109bdd552ec4e242f5c5d3c');
   await expectSha256('/icons/icon-192.png', 'c2e06aa93d6ba47f30d0ccd14d2a8d9a16c04841e56cb7f4f2bb783e86fdf203');
   await expectSha256('/icons/icon-512.png', '6f029513ff76f3482418da9792e6f9f3545f0cc18b88740fe1f61db50fbe87f1');
   await fetchOk('/favicon.ico', 'image/x-icon');
   const serviceWorker = await fetchOk('/sw.js', 'javascript');
-  assert((await serviceWorker.text()).includes("ifr-benefits-v12"), 'service worker cache version mismatch');
+  assert((await serviceWorker.text()).includes("ifr-benefits-v13"), 'service worker cache version mismatch');
   log('PWA assets OK');
 
   const auth = await fetchJson('/api/seller/auth-message?action=business:list&businessId=seller');
@@ -1020,19 +1019,15 @@ async function verifyPage(contextOptions, label) {
     const officialIcon = page.getByRole('img', { name: 'Official Inferno Protocol IFR icon' });
     assert(await officialIcon.count() === 1, `${label} must render exactly one official IFR header icon`);
     assert(
-      await officialIcon.getAttribute('src') === '/icons/ifr-official-v10.svg',
+      await officialIcon.getAttribute('src') === '/icons/ifr-token-256-v11.png',
       `${label} header does not use the current official IFR icon`
     );
     assert(
-      await page.locator('link[rel="icon"][href="/icons/ifr-official-v10.svg"]').count() === 1,
-      `${label} must expose the exact official IFR SVG favicon`
+      await page.locator('link[rel="icon"][href="/icons/ifr-token-64-v11.png"]').count() === 1,
+      `${label} must expose the canonical IFR PNG favicon`
     );
     assert(
-      await page.locator('link[rel="icon"][href="/icons/ifr-official-64-v10.png"]').count() === 1,
-      `${label} must expose the official IFR PNG favicon fallback`
-    );
-    assert(
-      await page.locator('link[rel="shortcut icon"][href="/icons/favicon-v10.ico"]').count() === 1,
+      await page.locator('link[rel="shortcut icon"][href="/icons/favicon-v11.ico"]').count() === 1,
       `${label} must expose the versioned official IFR shortcut favicon`
     );
     assert(
