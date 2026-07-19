@@ -143,16 +143,17 @@ describe('Customer benefits history authorization and pagination', () => {
   });
 
   it('returns only the signer sessions and exposes no wallet or authorization material', async () => {
+    const now = Date.now();
     await prisma.session.createMany({ data: [
       {
         id: 'customer-history-own',
         businessId,
         nonce: 'customer-history-own-nonce',
-        expiresAt: new Date('2026-07-19T08:10:00.000Z'),
-        createdAt: new Date('2026-07-19T08:00:00.000Z'),
+        expiresAt: new Date(now + 10 * 60_000),
+        createdAt: new Date(now - 3 * 60_000),
         status: 'REDEEMED',
         recoveredAddress: customer.address,
-        redeemedAt: new Date('2026-07-19T08:05:00.000Z'),
+        redeemedAt: new Date(now - 2 * 60_000),
         benefitSnapshotVersion: 2,
         benefitLabel: 'Member coffee',
         benefitCategory: 'Coffee',
@@ -164,8 +165,8 @@ describe('Customer benefits history authorization and pagination', () => {
         id: 'customer-history-other',
         businessId,
         nonce: 'customer-history-other-nonce',
-        expiresAt: new Date('2026-07-19T08:11:00.000Z'),
-        createdAt: new Date('2026-07-19T08:01:00.000Z'),
+        expiresAt: new Date(now + 11 * 60_000),
+        createdAt: new Date(now - 2 * 60_000),
         status: 'APPROVED',
         recoveredAddress: otherCustomer.address,
       },
@@ -173,8 +174,8 @@ describe('Customer benefits history authorization and pagination', () => {
         id: 'customer-history-unverified',
         businessId,
         nonce: 'customer-history-unverified-nonce',
-        expiresAt: new Date('2026-07-19T08:12:00.000Z'),
-        createdAt: new Date('2026-07-19T08:02:00.000Z'),
+        expiresAt: new Date(now + 12 * 60_000),
+        createdAt: new Date(now - 60_000),
         status: 'PENDING',
       },
     ] });
@@ -205,15 +206,16 @@ describe('Customer benefits history authorization and pagination', () => {
   });
 
   it('keeps a stable snapshot and rejects another wallet cursor or invalid pagination', async () => {
-    const createdAt = ['08:03', '08:02', '08:01'];
+    const now = Date.now();
+    const createdAt = [now - 60_000, now - 2 * 60_000, now - 3 * 60_000];
     for (let index = 0; index < createdAt.length; index += 1) {
       await prisma.session.create({
         data: {
           id: `customer-page-${index + 1}`,
           businessId,
           nonce: `customer-page-nonce-${index + 1}`,
-          expiresAt: new Date(`2026-07-19T${createdAt[index]}:30.000Z`),
-          createdAt: new Date(`2026-07-19T${createdAt[index]}:00.000Z`),
+          expiresAt: new Date(now + (index + 1) * 60_000),
+          createdAt: new Date(createdAt[index]),
           status: 'APPROVED',
           recoveredAddress: customer.address,
         },
@@ -224,8 +226,8 @@ describe('Customer benefits history authorization and pagination', () => {
         id: 'other-customer-cursor',
         businessId,
         nonce: 'other-customer-cursor-nonce',
-        expiresAt: new Date('2026-07-19T08:04:30.000Z'),
-        createdAt: new Date('2026-07-19T08:04:00.000Z'),
+        expiresAt: new Date(now + 4 * 60_000),
+        createdAt: new Date(now - 30_000),
         status: 'APPROVED',
         recoveredAddress: otherCustomer.address,
       },
