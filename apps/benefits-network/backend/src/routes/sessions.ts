@@ -158,6 +158,7 @@ router.get('/:id', async (req, res, next) => {
       businessId: session.businessId,
       benefitRuleId: session.benefit.benefitRuleId,
       benefit: session.benefit,
+      presentation: session.customerPassId ? 'CUSTOMER_PASS' : 'SELLER_QR',
     });
   } catch (err) {
     if (err instanceof Error && err.message.includes('not found')) {

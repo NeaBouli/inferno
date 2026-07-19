@@ -10,8 +10,8 @@ Scope: customer and seller app for IFR locked-access benefits
 
 The app has two roles:
 
-- Customer: connect wallet, see ETH/IFR status, lock IFR directly in the shop app, scan or open seller QR sessions, sign proof, receive benefit.
-- Seller: create benefit rules, open scanner, choose a rule, create short-lived QR sessions, verify locked IFR, redeem approved benefit once.
+- Customer: connect wallet, see ETH/IFR status, lock IFR directly in the shop app, present a short-lived checkout pass or scan a compatible seller QR, approve the exact offer, receive benefit.
+- Seller: create benefit rules, scan and bind a customer pass or create a compatible seller QR, verify locked IFR, redeem approved benefit once.
 
 ## Current Implemented Base
 
@@ -20,8 +20,16 @@ The app has two roles:
 - Wallet stack: Wagmi v3 + Viem with injected, Coinbase and optional WalletConnect QR connectors
 - On-chain access source: `IFRLock.lockedBalance` and backend `IFRLock.isLocked`
 - Rule model: `BenefitRule`
-- Session model: `Session` with optional `benefitRuleId`
-- QR flow:
+- Session model: `Session` with optional `benefitRuleId` and additive one-to-one `CustomerPass`
+- Recommended customer-presented QR flow:
+  1. Customer signs a server-issued one-time `Create Checkout Pass` challenge.
+  2. Backend atomically consumes it and returns an opaque, five-minute `/p/:passId` QR plus a random control token. Only the SHA-256 token hash is stored; wallet, token, signature and session ID are absent from the QR.
+  3. Seller opens `/b/:businessId`, selects an active rule, scans/pastes the pass and signs a one-time `passes:bind` challenge bound to pass and rule.
+  4. Backend atomically rechecks current owner/operator access, claims the unexpired pass, freezes the rule snapshot and creates one linked `Session`.
+  5. Customer privately receives seller, product, discount and required IFRLock details through the control token, then explicitly signs the exact session challenge.
+  6. Backend requires the recovered signer to equal the wallet that created the pass and atomically binds the pending session to one wallet before the on-chain IFRLock check.
+  7. Seller sees approval and redeems once. Customer may cancel only while the pass is open or its linked checkout is still pending.
+- Compatible seller-issued QR flow:
   1. Seller opens `/b/:businessId`.
   2. Seller selects active benefit rule.
   3. Frontend requests and signs a one-time `sessions:create` challenge bound to seller wallet, business and selected rule, then calls `POST /api/sessions` with the nonce.
@@ -29,6 +37,7 @@ The app has two roles:
   5. Customer signs challenge.
   6. Backend checks IFRLock against the selected rule threshold.
   7. Seller sees approval and redeems the session once.
+- Pass QR copying is not authorization: a copied pass can at most be bound once. It cannot approve eligibility or redeem without the original customer wallet's second signature and a currently authorized seller signature.
 - Public proof-link polling is deliberately minimal and non-cacheable: it never exposes the
   recovered customer address, exact lock amount or detailed rejection reason. The signing
   customer receives details in the direct attest response; seller operational details remain
@@ -71,6 +80,7 @@ The app has two roles:
   insecure links, credentials, custom ports, query strings, fragments and invalid IDs fail closed.
 - Keep paste/session-ID fallback available when camera permission or hardware is unavailable.
 - QR session page must show seller, rule, product, discount and required IFR before signing.
+- Customer-presented pass must show the exact bound seller/rule on the originating device and require a second explicit signature. Its control token stays out of URLs, QR payloads, logs and local storage; the first-party UI limits restoration to the same browser tab.
 - Offer discovery and public seller catalogs show a wallet-local, read-only preview against each
   rule's exact IFRLock threshold. Disconnect, wrong-chain, loading and RPC/configuration failures
   fail closed; only the backend checkout attestation is authoritative.
@@ -90,7 +100,7 @@ The app has two roles:
 - Seller can edit discount, category, product/service, required IFR and QR lifetime through the owner-wallet-signed PATCH flow without changing the active/paused state.
 - Seller can apply built-in welcome, standard, premium or event templates to the current draft; templates never publish automatically and preserve an explicit catalog binding.
 - Seller can open `/b/:businessId` scanner.
-- Scanner must list active rules and bind the selected rule to the next QR session.
+- Scanner must list active rules, accept a canonical `/p/:passId` customer pass and bind the selected rule with a fresh seller signature. The existing seller-issued QR remains available for compatible integrations.
 - Scanner must show customer approval/rejection and single-use redeem action.
 - Owner can delegate expiring checkout-only access to staff wallets. Operators can verify their role and create/redeem QR sessions, but cannot manage profiles, rules, history or other operators.
 
@@ -161,12 +171,19 @@ If `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` is missing, the frontend must show a s
     updates, bounded categories, HTTPS-only websites, an optional privacy-preserving city/region/
     Online service-area filter, defensive legacy-data sanitization and controlled admin reload by
     Business ID.**
+13. Customer-presented two-phase checkout pass. **Implemented locally with an additive migration,
+    opaque short-lived QR, hashed tab control token, atomic one-seller binding, exact-offer customer
+    confirmation, signer equality, cancel-before-approval and replay/race regression coverage.
+    Production deploy and physical device acceptance remain pending for this release slice.**
 
 ## Security Notes
 
 - Never expose `ADMIN_SECRET` in public docs, Bridge, screenshots or client bundles.
 - Seller admin secret must remain user-entered or be replaced by proper seller auth.
 - QR sessions must remain short-lived and single-use.
+- A QR must never be treated as wallet ownership or eligibility. Customer-presented passes require
+  separate customer creation and exact-offer confirmation signatures; linked session challenge and
+  attest endpoints reject the public legacy path.
 - Every seller mutation must remain bound to a persisted random nonce, wallet, action, business and exact resource scope; read-only seller actions must not create challenge rows.
 - Challenge text must include rule metadata so the user signs exactly what is being verified.
 - Production logs must avoid storing full signatures unless required for audit and retention is defined.

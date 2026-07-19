@@ -8,6 +8,7 @@ import sessionRoutes from './routes/sessions';
 import attestRoutes from './routes/attest';
 import sellerRoutes from './routes/seller';
 import customerRoutes from './routes/customer';
+import passRoutes from './routes/passes';
 import { prisma } from './services/sessionService';
 
 const app = express();
@@ -28,6 +29,7 @@ app.use(express.json({ limit: '10kb' }));
 app.use('/api/admin', adminRoutes);
 app.use('/api/seller', sellerRoutes);
 app.use('/api/customer/history', customerRoutes);
+app.use('/api/passes', passRoutes);
 app.use('/api/businesses', businessRoutes);
 app.use('/api/sessions', sessionRoutes);
 app.use('/api', attestRoutes);

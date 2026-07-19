@@ -8,7 +8,8 @@ Next.js 15 PWA for the IFR Benefits Network.
 |-------|---------|
 | `/` | Customer/Seller role chooser, wallet status, seller rule manager |
 | `/guide` | Customer, seller and developer operating guide for the live shop flow, including session history |
-| `/b/:businessId` | Merchant Console — select seller rule, start verification, show QR, approve/redeem |
+| `/b/:businessId` | Seller Console — scan/paste customer pass, bind selected rule, or create compatible seller QR; redeem once |
+| `/p/:passId` | Privacy-minimal seller handoff for a customer-presented checkout pass |
 | `/r/:sessionId` | Customer Flow — connect wallet, review selected benefit, sign challenge, show result |
 | `/scan` | Customer QR entry — opt-in camera, local image scan or manual proof link/session ID |
 
@@ -50,6 +51,14 @@ contracts, entered IFR amount, unlocked IFR balance and allowance, then guides
 the user toward Buy IFR, Approve or Lock. Tier chips are buttons that set common
 lock amounts for seller benefit rules.
 
+The recommended checkout path is customer-presented and two-phase. A connected customer signs a
+one-time pass-creation message and displays an opaque `/p/:passId` QR. The seller scans or pastes it,
+selects an active rule and signs a fresh pass/rule-bound authorization. The customer then reviews
+the exact seller, product, discount and IFRLock threshold on the originating device and signs the
+confirmation. The QR contains no wallet or reusable eligibility proof. Its random control token is
+kept only in the same browser tab (`sessionStorage` for refresh recovery), never in the URL or
+durable `localStorage`; only its SHA-256 hash is stored by the backend.
+
 Public offer discovery can be filtered by a seller-published city, region or `Online` service
 area. The exact seller-entered text is stored and public, so the app requires an explicit
 confirmation that it contains only a broad area and no private or street address. Customers are
@@ -88,9 +97,10 @@ requires:
 - Business ID after profile creation
 - Rule label, category, product/service, discount, required locked IFR, QR TTL
 
-Saved active rules are visible in the seller scanner route. The scanner binds the
-next QR session to the selected rule, and the customer verification screen shows
-the rule-specific product, discount, and required IFR lock before signing.
+Saved active rules are visible in the seller scanner route. The scanner binds a customer-presented
+pass to the selected rule through an opt-in camera, local QR-image parser or paste fallback. The
+compatible seller-issued QR path remains available. Both flows freeze the rule-specific product,
+discount and required IFR lock before the customer signs.
 
 Connected sellers can load the active seller profiles owned by their wallet and
 the app remembers the last selected Business ID locally for reloads. This is only

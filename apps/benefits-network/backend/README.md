@@ -69,6 +69,14 @@ npm run dev            # http://localhost:3001
 | POST | `/api/customer/history/challenge` | Public, rate limited | Issue a wallet-bound one-time message for customer history |
 | POST | `/api/customer/history/authorize` | Customer wallet signature | Exchange the signed one-time challenge for a ten-minute read token |
 | GET | `/api/customer/history?limit=20&cursor=...&snapshot=...` | Customer history read token | Return only the signer's verified benefit history, maximum 50 rows per page |
+| POST | `/api/passes/challenge` | Public, rate limited | Issue a wallet-bound one-time customer-pass creation message |
+| POST | `/api/passes` | Customer wallet signature | Consume challenge and create an opaque short-lived pass plus control token |
+| GET | `/api/passes/:id` | Public, rate limited | Return only generic availability and expiry; no wallet, rule or session |
+| GET | `/api/passes/:id/control` | Customer pass control token | Return the exact seller/rule checkout to the originating customer tab |
+| POST | `/api/passes/:id/bind` | Owner/operator wallet signature | Atomically bind one active seller rule to one open pass |
+| POST | `/api/passes/:id/challenge` | Customer pass control token | Return the exact linked checkout challenge |
+| POST | `/api/passes/:id/confirm` | Customer pass control token + wallet signature | Verify the original pass wallet and IFRLock eligibility |
+| POST | `/api/passes/:id/cancel` | Customer pass control token | Cancel an open or still-pending checkout pass |
 
 Public offer discovery accepts an optional exact `serviceArea` filter and returns the available
 `serviceAreas` represented by active sellers with active visible offers. Seller owners can publish
@@ -79,6 +87,15 @@ customers for location or coordinates. Legacy profiles without a service area re
 `All areas`.
 
 ## Session Flow
+
+Recommended customer-presented flow:
+
+1. Customer creates a signed short-lived `/p/:passId` QR. It contains no wallet or reusable proof.
+2. Seller selects a rule and signs `passes:bind` scoped to `passId:benefitRuleId`; backend claims the pass and creates its immutable session in one transaction.
+3. Customer reviews the exact seller/rule through a random control token, signs the linked challenge, and backend requires the same wallet that created the pass.
+4. Seller sees `APPROVED` and redeems once. Public legacy challenge/attest routes cannot operate on the linked session.
+
+Compatible seller-issued flow:
 
 1. Merchant selects a seller rule or falls back to the business default.
 2. Owner or active checkout operator requests and signs a one-time `sessions:create` challenge bound to wallet, business and selected rule. The backend atomically consumes it, rechecks current checkout access and creates the QR. Benefit text, discount, required lock and TTL are frozen into that session.

@@ -5,7 +5,7 @@ const path = require('path');
 
 const root = path.resolve(__dirname, '..');
 const migrationsDir = path.join(root, 'prisma', 'migrations');
-const targetMigration = '20260719050000_add_business_service_area';
+const targetMigration = '20260719071000_add_customer_checkout_passes';
 const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'benefits-populated-upgrade-'));
 const dbPath = path.join(tempDir, 'upgrade.db');
 
@@ -146,6 +146,26 @@ try {
     throw new Error(
       `Missing service area migration state: columns=${serviceAreaColumns}, ` +
       `index=${serviceAreaIndex}, existing=${existingServiceArea}`
+    );
+  }
+
+  const passTables = sqlite(`
+    SELECT COUNT(*) FROM sqlite_master
+    WHERE type = 'table' AND name IN ('CustomerPass', 'CustomerPassChallenge');
+  `);
+  const passSessionColumn = sqlite("SELECT COUNT(*) FROM pragma_table_info('Session') WHERE name='customerPassId';");
+  const passIndexes = sqlite(`
+    SELECT COUNT(*) FROM sqlite_master
+    WHERE type = 'index' AND name IN (
+      'CustomerPass_status_expiresAt_idx',
+      'CustomerPass_walletAddress_createdAt_idx',
+      'Session_customerPassId_key'
+    );
+  `);
+  if (passTables !== '2' || passSessionColumn !== '1' || passIndexes !== '3') {
+    throw new Error(
+      `Missing customer pass migration state: tables=${passTables}, ` +
+      `sessionColumn=${passSessionColumn}, indexes=${passIndexes}`
     );
   }
 

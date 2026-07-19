@@ -338,6 +338,7 @@ export interface SessionStatus {
   businessId: string;
   benefitRuleId: string | null;
   benefit: SessionBenefit;
+  presentation: 'CUSTOMER_PASS' | 'SELLER_QR';
 }
 
 export interface ChallengeResponse {
@@ -384,6 +385,44 @@ export interface CustomerHistoryPage {
     nextCursor: string | null;
     snapshot: string;
   };
+}
+
+export interface CustomerPassCreated {
+  passId: string;
+  controlToken: string;
+  expiresAt: string;
+  qrUrl: string;
+}
+
+export interface CustomerPassControlStatus {
+  status: 'OPEN' | 'BOUND' | 'CANCELLED' | 'EXPIRED';
+  expiresAt: string;
+  checkout: null | {
+    status: SessionStatus['status'];
+    expiresAt: string;
+    sellerName: string;
+    benefit: {
+      label: string | null;
+      category: string | null;
+      productName: string | null;
+      discountPercent: number;
+      requiredLockIFR: number;
+    };
+    reason: string | null;
+  };
+}
+
+export interface BoundCustomerPass {
+  sessionId: string;
+  expiresAt: string;
+  benefit: {
+    label: string | null;
+    category: string | null;
+    productName: string | null;
+    discountPercent: number;
+    requiredLockIFR: number;
+  };
+  createdBy: CheckoutAccess;
 }
 
 export function getBusiness(id: string) {
@@ -749,6 +788,68 @@ export function getCustomerHistory(
   if (snapshot) query.set('snapshot', snapshot);
   return fetchJSON<CustomerHistoryPage>(`/api/customer/history?${query.toString()}`, {
     headers: { Authorization: `Bearer ${accessToken}` },
+    cache: 'no-store',
+  });
+}
+
+export function getCustomerPassChallenge(walletAddress: string) {
+  return fetchJSON<{ message: string; nonce: string; expiresAt: string }>('/api/passes/challenge', {
+    method: 'POST',
+    body: JSON.stringify({ walletAddress }),
+    cache: 'no-store',
+  });
+}
+
+export function createCustomerPass(input: { walletAddress: string; nonce: string; signature: string }) {
+  return fetchJSON<CustomerPassCreated>('/api/passes', {
+    method: 'POST', body: JSON.stringify(input), cache: 'no-store',
+  });
+}
+
+function passControlHeaders(controlToken: string) {
+  return { Authorization: `Bearer ${controlToken}` };
+}
+
+export function getCustomerPassStatus(passId: string, controlToken: string) {
+  return fetchJSON<CustomerPassControlStatus>(`/api/passes/${passId}/control`, {
+    headers: passControlHeaders(controlToken), cache: 'no-store',
+  });
+}
+
+export function getPublicCustomerPass(passId: string) {
+  return fetchJSON<{ available: boolean; expiresAt: string }>(`/api/passes/${passId}`, {
+    cache: 'no-store',
+  });
+}
+
+export function getCustomerPassConfirmationChallenge(passId: string, controlToken: string) {
+  return fetchJSON<ChallengeResponse>(`/api/passes/${passId}/challenge`, {
+    method: 'POST', headers: passControlHeaders(controlToken), cache: 'no-store',
+  });
+}
+
+export function confirmCustomerPass(passId: string, controlToken: string, signature: string) {
+  return fetchJSON<AttestResult>(`/api/passes/${passId}/confirm`, {
+    method: 'POST', headers: passControlHeaders(controlToken), body: JSON.stringify({ signature }), cache: 'no-store',
+  });
+}
+
+export function cancelCustomerPass(passId: string, controlToken: string) {
+  return fetchJSON<{ status: 'CANCELLED' }>(`/api/passes/${passId}/cancel`, {
+    method: 'POST', headers: passControlHeaders(controlToken), cache: 'no-store',
+  });
+}
+
+export function bindCustomerPass(
+  passId: string,
+  businessId: string,
+  benefitRuleId: string,
+  auth: SellerAuth
+) {
+  return fetchJSON<BoundCustomerPass>(`/api/passes/${passId}/bind`, {
+    method: 'POST',
+    headers: sellerHeaders(auth),
+    body: JSON.stringify({ businessId, benefitRuleId }),
     cache: 'no-store',
   });
 }

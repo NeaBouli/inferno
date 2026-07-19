@@ -20,6 +20,10 @@ router.get('/sessions/:id/challenge', challengeRateLimiter, async (req, res, nex
     const message = await buildChallengeMessage(req.params.id);
     res.json({ message });
   } catch (err) {
+    if (err instanceof Error && err.message.includes('Customer pass confirmation required')) {
+      res.status(403).json({ error: err.message });
+      return;
+    }
     if (err instanceof Error && err.message.includes('not found')) {
       res.status(404).json({ error: err.message });
       return;
@@ -36,6 +40,10 @@ router.post('/attest', attestRateLimiter, validate(attestSchema), async (req, re
     res.json(result);
   } catch (err) {
     if (err instanceof Error) {
+      if (err.message.includes('Customer pass confirmation required')) {
+        res.status(403).json({ error: err.message });
+        return;
+      }
       if (err.message.includes('not found')) {
         res.status(404).json({ error: err.message });
         return;

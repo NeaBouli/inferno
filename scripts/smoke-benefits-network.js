@@ -1342,6 +1342,10 @@ async function verifyPage(contextOptions, label) {
     await expectText(page, 'Unlock all');
     await expectText(page, 'My benefits');
     await expectText(page, 'No customer proofs saved on this device yet');
+    await expectText(page, 'Customer checkout pass');
+    await expectText(page, 'Show your QR. Approve the exact offer.');
+    await expectText(page, 'Connect wallet first');
+    await expectText(page, 'Create checkout QR');
     await expectText(page, 'Scan seller QR');
     const copilotButton = page.getByTestId('open-copilot');
     await copilotButton.click();
@@ -1512,12 +1516,27 @@ async function verifyPage(contextOptions, label) {
 
     await gotoAppPage(page, '/guide');
     await expectText(page, 'IFR Benefits Network Guide');
-    await expectText(page, 'Scan seller QR');
+    await expectText(page, 'Create customer QR');
+    await expectText(page, 'Present your QR and confirm');
     await expectText(page, 'Customer path');
     await expectText(page, 'Lock IFR in the shop app when needed');
     await expectText(page, 'The Benefits Network is non-custodial');
     await expectText(page, 'Recovery and phishing safety');
     await expectText(page, 'Seller path');
+
+    const smokePassId = 'AbCdEfGhIjKlMnOpQrStUvWxYz012345';
+    await page.route(`**/api/passes/${smokePassId}`, async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ available: true, expiresAt: new Date(Date.now() + 120000).toISOString() }),
+      });
+    });
+    await gotoAppPage(page, `/p/${smokePassId}`);
+    await expectText(page, 'Seller handoff');
+    await expectText(page, 'Customer checkout pass');
+    await expectText(page, 'Open seller checkout');
+    await expectNoHorizontalOverflow(page, `${label} customer pass handoff`);
 
     await gotoAppPage(page, '/scan');
     await expectText(page, 'Customer checkout');
@@ -1567,6 +1586,9 @@ async function verifyPage(contextOptions, label) {
     await expectText(page, 'Seller scanner');
     await expectText(page, 'Business console');
     await expectText(page, 'Checkout readiness');
+    await expectText(page, 'Customer-presented QR');
+    await expectText(page, 'Scan customer QR');
+    await expectText(page, 'Bind selected rule');
     await expectText(page, 'Session recovery');
     await expectText(page, 'Restore last QR');
     await expectText(page, 'Restore pasted');

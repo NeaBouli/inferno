@@ -185,7 +185,7 @@ type SessionCreator = {
   expiresAt: Date | null;
 };
 
-async function resolveSessionCreator(
+export async function resolveSessionCreator(
   tx: Prisma.TransactionClient,
   businessId: string,
   walletAddress: string
@@ -225,12 +225,116 @@ async function resolveSessionCreator(
   };
 }
 
+export async function createSessionSnapshot(
+  tx: Prisma.TransactionClient,
+  input: {
+    businessId: string;
+    benefitRuleId?: string;
+    creator: SessionCreator | null;
+    customerPassId?: string;
+  }
+) {
+  const { businessId, benefitRuleId, creator, customerPassId } = input;
+  const nonce = crypto.randomBytes(32).toString('hex');
+
+  // The no-op write takes SQLite's write lock before mutable rule state is read.
+  if (benefitRuleId) {
+    const lockedRules = await tx.$executeRaw`
+      UPDATE "BenefitRule"
+      SET "active" = "active"
+      WHERE "id" = ${benefitRuleId}
+        AND "businessId" = ${businessId}
+        AND "active" = 1
+        AND (
+          "productId" IS NULL
+          OR EXISTS (
+            SELECT 1 FROM "Product"
+            WHERE "Product"."id" = "BenefitRule"."productId"
+              AND "Product"."active" = 1
+          )
+        )
+    `;
+    if (lockedRules !== 1) throw new Error('Benefit rule not found or inactive');
+  } else {
+    const lockedBusinesses = await tx.$executeRaw`
+      UPDATE "Business" SET "active" = "active"
+      WHERE "id" = ${businessId} AND "active" = 1
+    `;
+    if (lockedBusinesses !== 1) throw new Error('Business not found or inactive');
+  }
+
+  const business = await tx.business.findUnique({ where: { id: businessId } });
+  if (!business || !business.active) throw new Error('Business not found or inactive');
+  const benefitRule = benefitRuleId
+    ? await tx.benefitRule.findFirst({
+        where: {
+          id: benefitRuleId,
+          businessId,
+          active: true,
+          OR: [{ productId: null }, { product: { active: true } }],
+        },
+      })
+    : null;
+  if (benefitRuleId && !benefitRule) throw new Error('Benefit rule not found or inactive');
+
+  const ttlSeconds = benefitRule?.ttlSeconds ?? business.ttlSeconds;
+  const benefitSnapshot = benefitRule
+    ? {
+        benefitLabel: benefitRule.label,
+        benefitCategory: benefitRule.category,
+        benefitProductName: benefitRule.productName,
+        benefitDiscountPercent: benefitRule.discountPercent,
+        benefitRequiredLockIFR: benefitRule.requiredLockIFR,
+        benefitTtlSeconds: benefitRule.ttlSeconds,
+        benefitDailyRedemptionLimit: benefitRule.dailyRedemptionLimit,
+        benefitMonthlyRedemptionLimit: benefitRule.monthlyRedemptionLimit,
+      }
+    : {
+        benefitLabel: business.tierLabel,
+        benefitCategory: null,
+        benefitProductName: null,
+        benefitDiscountPercent: business.discountPercent,
+        benefitRequiredLockIFR: business.requiredLockIFR,
+        benefitTtlSeconds: business.ttlSeconds,
+        benefitDailyRedemptionLimit: 0,
+        benefitMonthlyRedemptionLimit: 0,
+      };
+  const created = await tx.session.create({
+    data: {
+      businessId,
+      benefitRuleId: benefitRule?.id,
+      customerPassId,
+      benefitSnapshotVersion: 2,
+      ...benefitSnapshot,
+      nonce,
+      expiresAt: new Date(Date.now() + ttlSeconds * 1000),
+    },
+    include: { business: true, benefitRule: true },
+  });
+  await tx.auditLog.create({
+    data: {
+      sessionId: created.id,
+      type: customerPassId ? 'CUSTOMER_PASS_BOUND' : 'SESSION_CREATED',
+      payload: JSON.stringify({
+        businessId,
+        benefitRuleId: benefitRule?.id ?? null,
+        customerPassId: customerPassId ?? null,
+        createdBy: creator ? {
+          walletAddress: creator.walletAddress,
+          role: creator.role,
+          operatorId: creator.operatorId,
+        } : null,
+      }),
+    },
+  });
+  return created;
+}
+
 async function createSessionInternal(
   businessId: string,
   benefitRuleId?: string,
   creatorAuthorization?: SessionCreatorAuthorization
 ) {
-  const nonce = crypto.randomBytes(32).toString('hex');
   const session = await prisma.$transaction(async (tx) => {
     let creator: SessionCreator | null = null;
     if (creatorAuthorization) {
@@ -245,100 +349,7 @@ async function createSessionInternal(
       if (!creator) throw new Error('Seller wallet is not authorized for checkout');
     }
 
-    // Acquire SQLite's write lock before reading mutable checkout eligibility.
-    // Product/rule archival therefore linearizes either before or after this session.
-    if (benefitRuleId) {
-      const lockedRules = await tx.$executeRaw`
-        UPDATE "BenefitRule"
-        SET "active" = "active"
-        WHERE "id" = ${benefitRuleId}
-          AND "businessId" = ${businessId}
-          AND "active" = 1
-          AND (
-            "productId" IS NULL
-            OR EXISTS (
-              SELECT 1
-              FROM "Product"
-              WHERE "Product"."id" = "BenefitRule"."productId"
-                AND "Product"."active" = 1
-            )
-          )
-      `;
-      if (lockedRules !== 1) throw new Error('Benefit rule not found or inactive');
-    } else {
-      const lockedBusinesses = await tx.$executeRaw`
-        UPDATE "Business"
-        SET "active" = "active"
-        WHERE "id" = ${businessId} AND "active" = 1
-      `;
-      if (lockedBusinesses !== 1) throw new Error('Business not found or inactive');
-    }
-
-    const business = await tx.business.findUnique({ where: { id: businessId } });
-    if (!business || !business.active) throw new Error('Business not found or inactive');
-
-    const benefitRule = benefitRuleId
-      ? await tx.benefitRule.findFirst({
-          where: {
-            id: benefitRuleId,
-            businessId,
-            active: true,
-            OR: [{ productId: null }, { product: { active: true } }],
-          },
-        })
-      : null;
-    if (benefitRuleId && !benefitRule) throw new Error('Benefit rule not found or inactive');
-
-    const ttlSeconds = benefitRule?.ttlSeconds ?? business.ttlSeconds;
-    const benefitSnapshot = benefitRule
-      ? {
-          benefitLabel: benefitRule.label,
-          benefitCategory: benefitRule.category,
-          benefitProductName: benefitRule.productName,
-          benefitDiscountPercent: benefitRule.discountPercent,
-          benefitRequiredLockIFR: benefitRule.requiredLockIFR,
-          benefitTtlSeconds: benefitRule.ttlSeconds,
-          benefitDailyRedemptionLimit: benefitRule.dailyRedemptionLimit,
-          benefitMonthlyRedemptionLimit: benefitRule.monthlyRedemptionLimit,
-        }
-      : {
-          benefitLabel: business.tierLabel,
-          benefitCategory: null,
-          benefitProductName: null,
-          benefitDiscountPercent: business.discountPercent,
-          benefitRequiredLockIFR: business.requiredLockIFR,
-          benefitTtlSeconds: business.ttlSeconds,
-          benefitDailyRedemptionLimit: 0,
-          benefitMonthlyRedemptionLimit: 0,
-        };
-    const expiresAt = new Date(Date.now() + ttlSeconds * 1000);
-    const created = await tx.session.create({
-      data: {
-        businessId,
-        benefitRuleId: benefitRule?.id,
-        benefitSnapshotVersion: 2,
-        ...benefitSnapshot,
-        nonce,
-        expiresAt,
-      },
-      include: { business: true, benefitRule: true },
-    });
-    await tx.auditLog.create({
-      data: {
-        sessionId: created.id,
-        type: 'SESSION_CREATED',
-        payload: JSON.stringify({
-          businessId,
-          benefitRuleId: benefitRule?.id ?? null,
-          nonce,
-          createdBy: creator ? {
-            walletAddress: creator.walletAddress,
-            role: creator.role,
-            operatorId: creator.operatorId,
-          } : null,
-        }),
-      },
-    });
+    const created = await createSessionSnapshot(tx, { businessId, benefitRuleId, creator });
     return { created, creator };
   });
 
@@ -367,12 +378,18 @@ export function createAuthorizedSession(
 /**
  * Build the challenge message for the customer to sign.
  */
-export async function buildChallengeMessage(sessionId: string): Promise<string> {
+export async function buildChallengeMessage(
+  sessionId: string,
+  options: { allowCustomerPass?: boolean } = {}
+): Promise<string> {
   const session = await prisma.session.findUnique({
     where: { id: sessionId },
     include: { business: true, benefitRule: true },
   });
   if (!session) throw new Error('Session not found');
+  if (session.customerPassId && !options.allowCustomerPass) {
+    throw new Error('Customer pass confirmation required');
+  }
   const benefit = benefitFromSession(session);
 
   return [
@@ -395,70 +412,42 @@ export async function buildChallengeMessage(sessionId: string): Promise<string> 
 /**
  * Attest: verify signature, check expiry, check on-chain lock.
  */
-export async function attest(sessionId: string, signature: string) {
-  const session = await prisma.session.findUnique({
-    where: { id: sessionId },
-    include: { business: true, benefitRule: true },
+export async function attest(
+  sessionId: string,
+  signature: string,
+  options: { expectedWallet?: string } = {}
+) {
+  const message = await buildChallengeMessage(sessionId, {
+    allowCustomerPass: Boolean(options.expectedWallet),
   });
-  if (!session) throw new Error('Session not found');
-  const benefit = benefitFromSession(session);
-
-  // Check status
-  if (session.status !== 'PENDING') {
-    throw new Error(`Session is ${session.status}, cannot attest`);
-  }
-
-  // Check attest attempt limit
-  if (session.attestAttempts >= 3) {
-    throw new Error('Maximum attest attempts exceeded');
-  }
-  const nextAttempts = session.attestAttempts + 1;
-  const attemptsExhausted = nextAttempts >= 3;
-
-  // Increment attempt counter
-  await prisma.session.update({
-    where: { id: sessionId },
-    data: { attestAttempts: nextAttempts },
-  });
-
-  // Check expiry
-  if (new Date() > session.expiresAt) {
-    await prisma.session.update({
-      where: { id: sessionId },
-      data: { status: 'EXPIRED' },
-    });
-    await auditLog(sessionId, 'EXPIRED', { reason: 'TTL expired during attest' });
-    throw new Error('Session expired');
-  }
-
-  // Recover signer
-  const message = await buildChallengeMessage(sessionId);
   let recoveredAddress: string;
   try {
     recoveredAddress = recoverSigner(message, signature);
   } catch {
-    await prisma.session.update({
-      where: { id: sessionId },
-      data: {
-        status: attemptsExhausted ? 'REJECTED' : 'PENDING',
-        reason: attemptsExhausted
-          ? 'Invalid signature. Verification attempts exhausted.'
-          : 'Invalid signature. You can retry this QR session.',
-      },
+    const reserved = await reserveAttestAttempt(sessionId, null, options.expectedWallet);
+    const attemptsExhausted = reserved.nextAttempts >= 3;
+    const reason = attemptsExhausted
+      ? 'Invalid signature. Verification attempts exhausted.'
+      : 'Invalid signature. You can retry this QR session.';
+    await prisma.session.updateMany({
+      where: { id: sessionId, status: 'PENDING', attestAttempts: reserved.nextAttempts },
+      data: { status: attemptsExhausted ? 'REJECTED' : 'PENDING', reason },
     });
     await auditLog(sessionId, 'ATTEST_FAIL', {
       reason: 'Invalid signature',
-      attempts: nextAttempts,
+      attempts: reserved.nextAttempts,
       terminal: attemptsExhausted,
     });
     return {
       status: 'REJECTED' as SessionStatus,
-      reason: attemptsExhausted
-        ? 'Invalid signature. Verification attempts exhausted.'
-        : 'Invalid signature. You can retry this QR session.',
-      attemptsRemaining: Math.max(0, 3 - nextAttempts),
+      reason,
+      attemptsRemaining: Math.max(0, 3 - reserved.nextAttempts),
     };
   }
+
+  const reserved = await reserveAttestAttempt(sessionId, recoveredAddress, options.expectedWallet);
+  const { benefit, nextAttempts } = reserved;
+  const attemptsExhausted = nextAttempts >= 3;
 
   // On-chain lock check
   let lockResult: { eligible: boolean; lockedAmount: string };
@@ -471,8 +460,8 @@ export async function attest(sessionId: string, signature: string) {
   }
 
   if (!lockResult.eligible) {
-    await prisma.session.update({
-      where: { id: sessionId },
+    await prisma.session.updateMany({
+      where: { id: sessionId, status: 'PENDING', recoveredAddress },
       data: {
         status: attemptsExhausted ? 'REJECTED' : 'PENDING',
         recoveredAddress,
@@ -502,14 +491,18 @@ export async function attest(sessionId: string, signature: string) {
   }
 
   // Approved
-  await prisma.session.update({
-    where: { id: sessionId },
+  const approved = await prisma.session.updateMany({
+    where: { id: sessionId, status: 'PENDING', recoveredAddress },
     data: {
       status: 'APPROVED',
-      recoveredAddress,
       lockAmountRaw: lockResult.lockedAmount,
+      reason: null,
     },
   });
+  if (approved.count !== 1) {
+    const latest = await prisma.session.findUnique({ where: { id: sessionId } });
+    throw new Error(`Session is ${latest?.status ?? 'missing'}, cannot attest`);
+  }
   await auditLog(sessionId, 'ATTEST_OK', {
     wallet: recoveredAddress,
     locked: lockResult.lockedAmount,
@@ -522,6 +515,67 @@ export async function attest(sessionId: string, signature: string) {
     eligible: true,
     benefit,
   };
+}
+
+async function reserveAttestAttempt(
+  sessionId: string,
+  recoveredAddress: string | null,
+  expectedWallet?: string
+) {
+  return prisma.$transaction(async (tx) => {
+    const locked = await tx.$executeRaw`
+      UPDATE "Session" SET "attestAttempts" = "attestAttempts" WHERE "id" = ${sessionId}
+    `;
+    if (locked !== 1) throw new Error('Session not found');
+    const session = await tx.session.findUnique({
+      where: { id: sessionId },
+      include: { business: true, benefitRule: true, customerPass: true },
+    });
+    if (!session) throw new Error('Session not found');
+    if (session.customerPassId && !expectedWallet) {
+      throw new Error('Customer pass confirmation required');
+    }
+    if (session.status !== 'PENDING') {
+      throw new Error(`Session is ${session.status}, cannot attest`);
+    }
+    if (session.attestAttempts >= 3) throw new Error('Maximum attest attempts exceeded');
+    if (session.expiresAt <= new Date()) {
+      await tx.session.update({ where: { id: sessionId }, data: { status: 'EXPIRED' } });
+      await tx.auditLog.create({
+        data: {
+          sessionId,
+          type: 'EXPIRED',
+          payload: JSON.stringify({ reason: 'TTL expired during attest' }),
+        },
+      });
+      throw new Error('Session expired');
+    }
+
+    const normalizedExpected = expectedWallet ? normalizeAddress(expectedWallet) : null;
+    if (normalizedExpected && normalizeAddress(session.customerPass?.walletAddress || '') !== normalizedExpected) {
+      throw new Error('Customer pass wallet mismatch');
+    }
+    const normalizedRecovered = recoveredAddress ? normalizeAddress(recoveredAddress) : null;
+    if (normalizedExpected && normalizedRecovered && normalizedRecovered !== normalizedExpected) {
+      throw new Error('Customer signature does not match this checkout pass');
+    }
+    if (
+      normalizedRecovered && session.recoveredAddress &&
+      normalizeAddress(session.recoveredAddress) !== normalizedRecovered
+    ) {
+      throw new Error('Session is already bound to another customer wallet');
+    }
+
+    const nextAttempts = session.attestAttempts + 1;
+    await tx.session.update({
+      where: { id: sessionId },
+      data: {
+        attestAttempts: nextAttempts,
+        ...(normalizedRecovered ? { recoveredAddress: normalizedRecovered } : {}),
+      },
+    });
+    return { session, benefit: benefitFromSession(session), nextAttempts };
+  });
 }
 
 /**

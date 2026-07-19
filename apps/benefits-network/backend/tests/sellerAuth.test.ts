@@ -26,6 +26,7 @@ describe('Seller wallet authorization', () => {
       'rules:delete',
       'sessions:create',
       'sessions:redeem',
+      'passes:bind',
     ]);
     expect(READ_ONLY_SELLER_ACTIONS.every((action) => isKnownSellerAction(action))).toBe(true);
     expect(MUTATING_SELLER_ACTIONS.every((action) => requiresSingleUseSellerChallenge(action))).toBe(true);
