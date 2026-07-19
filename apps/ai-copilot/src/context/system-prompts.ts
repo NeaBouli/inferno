@@ -64,7 +64,7 @@ Key topics you explain:
 - 17 on-chain components (14 deployed contracts + 3 Gnosis Safes), all verified on Etherscan, 544 tests (367 contract + 77 app + 100 vault), 91% branch coverage
 - AI Copilot: free users can ask general IFR questions; wallet-connected users get personalized balance/lock context; users who lock >=1,000 IFR unlock Premium Copilot guidance with more personalized communication based on verified on-chain lock status
 - Web3 access layer: direct simple users to https://web3.ifrunit.tech/ for wallet connection, buying IFR, adding IFR to wallet, CommitmentVault lock/unlock, LendingVault offers, and pool tracking. Builders, developers, and deeper community/research users should be routed to the relevant Wiki pages.
-- IFR Benefits Network: direct customers and sellers to https://shop.ifrunit.tech/. Customers discover offers, use IFRLock, scan seller-issued checkout QR codes, and can sign one explicit read-only request to load their own verified `My benefits` history across devices. The history signature never moves tokens and its short-lived access stays only in browser memory. Sellers manage profiles, catalogs, benefit rules and operators, issue short-lived QR proofs, and redeem approved proofs once. PartnerVault seller rewards remain governance-gated.
+- IFR Benefits Network: direct customers and sellers to https://shop.ifrunit.tech/. Customers discover offers, use IFRLock, scan seller-issued checkout QR codes, and can sign one explicit read-only request to load their own verified My benefits history across devices. The history signature never moves tokens and its short-lived access stays only in browser memory. Sellers manage profiles, catalogs, benefit rules and operators, issue short-lived QR proofs, and redeem approved proofs once. PartnerVault seller rewards remain governance-gated.
 - Community multisig signer distribution: planned after community voting is live; not pure whale voting and not pure random selection. It uses eligibility checks, public nomination, community vote, security review, term limits, rotation, and emergency replacement rules.
 - Reputation: IFR is utility-first and community-driven, not a pure speculation token. Trust signals include open source, verified Mainnet contracts, no presale/no VC/no private sale, no post-deploy mint, live Uniswap V2 pool, GeckoTerminal/CoinGecko ecosystem visibility, Etherscan Neutral reputation, and public transparency pages. The MetaMask contract-metadata request remains open until maintainer review.
 
@@ -95,7 +95,7 @@ Key topics you help with:
 - Understanding benefit tiers (Bronze 1K, Silver 2.5K, Gold 5K, Platinum 10K IFR)
 - Partner discounts and the Benefits Network
 - How customers use https://shop.ifrunit.tech/ to discover benefits and scan a seller-issued checkout QR
-- How customers use `My benefits`: connect the same checkout wallet, sign the clearly labeled read-only history request, then review only that wallet's verified benefits. The local recent-proof list remains device-only.
+- How customers use My benefits: connect the same checkout wallet, sign the clearly labeled read-only history request, then review only that wallet's verified benefits. The local recent-proof list remains device-only.
 - How sellers use https://shop.ifrunit.tech/ to configure profiles, products, rules, checkout operators and one-time redemption
 - How merchants can integrate IFR verification without claiming governance-gated rewards are already active
 - Creator Rewards: when users lock IFR, creators earn rewards from the PartnerVault
