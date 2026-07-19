@@ -365,8 +365,12 @@ async function verifyRuleTemplateAuthorization() {
 
   try {
     await gotoAppPage(page, '/');
+    await page.waitForLoadState('networkidle', { timeout: timeoutMs });
     await page.getByRole('button', { name: /Seller Offer discounts/i }).click();
-    await page.getByRole('button', { name: 'Connect wallet', exact: true }).last().click();
+    const ruleManager = page
+      .getByRole('heading', { name: 'Benefit rule manager', exact: true })
+      .locator('xpath=ancestor::section[1]');
+    await ruleManager.getByRole('button', { name: 'Connect wallet', exact: true }).click();
     await expectText(page, '0x1111...1111');
     await page.getByPlaceholder('cuid...').last().fill(businessId);
     await page.getByRole('button', { name: 'Load catalog', exact: true }).click();
