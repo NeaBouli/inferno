@@ -26,4 +26,5 @@ jobs:
       - run: npm ci
       - run: npx tsc --noEmit
       - run: npm run check:server-imports
+      - run: npm run test:surface-ui
       - run: npm run build
