@@ -60,6 +60,7 @@ The app has two roles:
 - Seller can create and manage profiles, products, rules, operators and reward applications through owner-wallet authorization; every mutation uses a fresh resource-bound one-time challenge.
 - Public seller identity includes a short description, canonical HTTPS website and up to eight categories. Owners can reload and edit it with their wallet; controlled operator-created profiles can be reopened by Business ID with the user-entered admin fallback. Public catalog and offer discovery expose only the sanitized profile fields.
 - Seller can edit discount, category, product/service, required IFR and QR lifetime through the owner-wallet-signed PATCH flow without changing the active/paused state.
+- Seller can apply built-in welcome, standard, premium or event templates to the current draft; templates never publish automatically and preserve an explicit catalog binding.
 - Seller can open `/b/:businessId` scanner.
 - Scanner must list active rules and bind the selected rule to the next QR session.
 - Scanner must show customer approval/rejection and single-use redeem action.

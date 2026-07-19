@@ -622,6 +622,26 @@ describe('Seller catalog routes', () => {
     expect(crossBusinessResponse.status).toBe(404);
 
     const ownerHeaders = await sellerHeaders(owner, 'rules:create', businessId);
+    expect((await fetch(`${baseUrl()}/api/seller/businesses/${businessId}/rules`, {
+      method: 'POST',
+      headers: { ...ownerHeaders, 'x-ifr-signature': `0x${'00'.repeat(65)}` },
+      body: JSON.stringify(rulePayload(product.id)),
+    })).status).toBe(401);
+
+    const wrongOwnerHeaders = await sellerHeaders(otherOwner, 'rules:create', businessId);
+    expect((await fetch(`${baseUrl()}/api/seller/businesses/${businessId}/rules`, {
+      method: 'POST',
+      headers: wrongOwnerHeaders,
+      body: JSON.stringify(rulePayload(product.id)),
+    })).status).toBe(403);
+
+    const wrongScopeHeaders = await sellerHeaders(owner, 'rules:create', businessId, 'wrong-scope');
+    expect((await fetch(`${baseUrl()}/api/seller/businesses/${businessId}/rules`, {
+      method: 'POST',
+      headers: wrongScopeHeaders,
+      body: JSON.stringify(rulePayload(product.id)),
+    })).status).toBe(401);
+
     const createdResponse = await fetch(`${baseUrl()}/api/seller/businesses/${businessId}/rules`, {
       method: 'POST',
       headers: ownerHeaders,
@@ -639,6 +659,11 @@ describe('Seller catalog routes', () => {
       productName: 'Premium espresso',
       category: 'Coffee',
     });
+    expect((await fetch(`${baseUrl()}/api/seller/businesses/${businessId}/rules`, {
+      method: 'POST',
+      headers: ownerHeaders,
+      body: JSON.stringify(rulePayload(product.id)),
+    })).status).toBe(401);
 
     const session = await createSession(businessId, rule.id);
     expect(await buildChallengeMessage(session.sessionId)).toContain('Product: Premium espresso');

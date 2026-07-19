@@ -48,6 +48,56 @@ const profileCategorySuggestions = [
   'Travel',
   'Education',
 ];
+const ruleTemplates = [
+  {
+    name: 'Welcome benefit',
+    detail: 'Low-friction first visit',
+    label: 'Welcome',
+    category: 'Retail',
+    product: 'First visit benefit',
+    discount: 5,
+    minLocked: 500,
+    dailyLimit: 1,
+    monthlyLimit: 1,
+    ttl: 90,
+  },
+  {
+    name: 'Member standard',
+    detail: 'Everyday repeat benefit',
+    label: 'Member',
+    category: 'Retail',
+    product: 'Member discount',
+    discount: 10,
+    minLocked: 1000,
+    dailyLimit: 1,
+    monthlyLimit: 10,
+    ttl: 90,
+  },
+  {
+    name: 'Premium access',
+    detail: 'Higher lock threshold',
+    label: 'Premium',
+    category: 'Services',
+    product: 'Premium member access',
+    discount: 15,
+    minLocked: 5000,
+    dailyLimit: 1,
+    monthlyLimit: 4,
+    ttl: 120,
+  },
+  {
+    name: 'Event pass',
+    detail: 'Single-use monthly offer',
+    label: 'Event pass',
+    category: 'Events',
+    product: 'Event member benefit',
+    discount: 20,
+    minLocked: 10000,
+    dailyLimit: 1,
+    monthlyLimit: 1,
+    ttl: 120,
+  },
+] as const;
 const LAST_BUSINESS_STORAGE_KEY = 'ifr.shop.lastSellerBusinessId';
 const SHOP_ORIGIN = 'https://shop.ifrunit.tech';
 const DEFAULT_RULE_DRAFT = {
@@ -273,6 +323,21 @@ export function SellerRuleBuilder() {
     setMonthlyLimit(DEFAULT_RULE_DRAFT.monthlyLimit);
     setTtl(DEFAULT_RULE_DRAFT.ttl);
     setSelectedProductId('');
+  }
+
+  function applyRuleTemplate(template: (typeof ruleTemplates)[number]) {
+    setLabel(template.label);
+    setDiscount(template.discount);
+    setMinLocked(template.minLocked);
+    setDailyLimit(template.dailyLimit);
+    setMonthlyLimit(template.monthlyLimit);
+    setTtl(template.ttl);
+    if (!selectedProductId) {
+      setCategory(template.category);
+      setProduct(template.product);
+    }
+    setError('');
+    setStatus(`${template.name} applied to the draft. Review the values before saving.`);
   }
 
   function setBusinessProfileDraft(business: SellerBusinessSummary) {
@@ -1772,6 +1837,35 @@ export function SellerRuleBuilder() {
         </div>
       </div>
 
+      <div id="seller-rule-templates" className="mb-5 scroll-mt-24 border-y border-white/10 py-4">
+        <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <div className="w-full min-w-0 sm:flex-1">
+            <p className="text-xs font-black uppercase tracking-[0.16em] text-green-100/80">Quick rule templates</p>
+            <p id="seller-rule-template-help" className="mt-1 max-w-full break-words pr-4 text-sm leading-6 text-stone-300 sm:pr-0">
+              Apply a starting point, review every value,<br className="sm:hidden" /> then save through the normal authorization flow.
+            </p>
+          </div>
+          <span className="text-xs font-semibold text-stone-500">Draft only</span>
+        </div>
+        <div className="mt-3 grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+          {ruleTemplates.map((template) => (
+            <button
+              key={template.name}
+              type="button"
+              onClick={() => applyRuleTemplate(template)}
+              disabled={loading}
+              className="min-h-24 border-l-2 border-green-200/35 bg-green-200/[0.05] px-4 py-3 text-left transition hover:border-green-200/70 hover:bg-green-200/[0.09] disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <span className="block text-sm font-black text-green-50">{template.name}</span>
+              <span className="mt-1 block text-xs leading-5 text-stone-400">{template.detail}</span>
+              <span className="mt-2 block text-xs font-bold text-orange-100">
+                {template.discount}% / {template.minLocked.toLocaleString('en-US')} IFR
+              </span>
+            </button>
+          ))}
+        </div>
+      </div>
+
       <div className="mb-5 grid gap-3 md:grid-cols-[1fr_auto]">
         <label className="grid gap-2 text-sm font-semibold text-stone-200">
           Business ID
@@ -1931,7 +2025,7 @@ export function SellerRuleBuilder() {
         {loading ? 'Working...' : editingRule ? 'Update rule' : 'Save new rule'}
       </button>
 
-      {status ? <p className="mt-4 rounded-2xl border border-green-300/30 bg-green-500/10 p-3 text-sm text-green-100">{status}</p> : null}
+      {status ? <p role="status" aria-live="polite" className="mt-4 rounded-2xl border border-green-300/30 bg-green-500/10 p-3 text-sm text-green-100">{status}</p> : null}
       {error ? <p className="mt-4 rounded-2xl border border-red-400/30 bg-red-500/10 p-3 text-sm text-red-200">{error}</p> : null}
 
       {rules.length > 0 ? (
