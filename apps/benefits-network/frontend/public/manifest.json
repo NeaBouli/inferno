@@ -9,13 +9,13 @@
   "orientation": "portrait",
   "icons": [
     {
-      "src": "/icons/ifr-official-192-v7.png",
+      "src": "/icons/ifr-official-192-v8.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/icons/ifr-official-512-v7.png",
+      "src": "/icons/ifr-official-512-v8.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
