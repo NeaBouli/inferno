@@ -280,9 +280,8 @@ describe("IFRLock", function () {
       await lock.connect(guardian).pause();
 
       await token.connect(userA).approve(lock.address, parse("1000"));
-      await expect(lock.connect(userA).lock(parse("1000"))).to.be.revertedWith(
-        "EnforcedPause"
-      );
+      await expect(lock.connect(userA).lock(parse("1000")))
+        .to.be.revertedWithCustomError(lock, "EnforcedPause");
     });
 
     it("unlock still works when paused", async () => {

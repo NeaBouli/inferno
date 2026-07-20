@@ -1,0 +1,46 @@
+name: Contract Tests
+
+on:
+  push:
+    branches: [main, master, develop, dev]
+  pull_request:
+    branches: [main, master]
+
+permissions:
+  contents: read
+
+jobs:
+  contracts:
+    name: Hardhat contracts and tooling
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      HARDHAT_DISABLE_TELEMETRY_PROMPT: "true"
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install locked dependencies
+        run: npm ci
+
+      - name: Reject retired Waffle and Ganache runtime
+        run: |
+          retired="$(npm ls @nomiclabs/hardhat-waffle ethereum-waffle ganache --parseable --all 2>/dev/null || true)"
+          if [ -n "$retired" ]; then
+            echo "Retired dependencies present:"
+            echo "$retired"
+            exit 1
+          fi
+
+      - name: Compile contracts
+        run: npx hardhat compile
+
+      - name: Run contract and tooling tests
+        run: npm run test:contracts:all
+
+      - name: Block critical dependency advisories
+        run: npm audit --audit-level=critical

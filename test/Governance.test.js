@@ -26,6 +26,18 @@ describe("Governance", function () {
     await ethers.provider.send("evm_mine", []);
   }
 
+  async function expectNestedCallRevert(promise) {
+    let error;
+    try {
+      await promise;
+    } catch (caught) {
+      error = caught;
+    }
+
+    expect(error, "expected nested governance call to revert").to.be.instanceOf(Error);
+    expect(error.message).to.match(/revert/i);
+  }
+
   describe("Deployment", () => {
     it("sets owner, guardian, and delay correctly", async () => {
       expect(await gov.owner()).to.equal(owner.address);
@@ -166,7 +178,8 @@ describe("Governance", function () {
       await gov.propose(token.address, badData);
       await increaseTime(DELAY);
 
-      await expect(gov.execute(1)).to.be.reverted;
+      await expectNestedCallRevert(gov.execute(1));
+      expect((await gov.proposals(1)).executed).to.equal(false);
     });
   });
 
@@ -236,7 +249,8 @@ describe("Governance", function () {
       await gov.propose(gov.address, badData);
       await increaseTime(DELAY);
 
-      await expect(gov.execute(0)).to.be.reverted;
+      await expectNestedCallRevert(gov.execute(0));
+      expect((await gov.proposals(0)).executed).to.equal(false);
     });
   });
 
@@ -278,8 +292,9 @@ describe("Governance", function () {
       const data = gov.interface.encodeFunctionData("setOwner", [ethers.constants.AddressZero]);
       await gov.propose(gov.address, data);
       await increaseTime(DELAY);
-      // execute() propagates inner revert as string(returnData) — raw ABI bytes, no exact match
-      await expect(gov.execute(0)).to.be.reverted;
+      // execute() wraps the inner ABI bytes as a string, so no UTF-8 reason can be decoded.
+      await expectNestedCallRevert(gov.execute(0));
+      expect((await gov.proposals(0)).executed).to.equal(false);
     });
   });
 

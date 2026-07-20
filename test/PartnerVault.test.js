@@ -514,7 +514,7 @@ describe("PartnerVault", function () {
     it("reverts when paused", async () => {
       await advanceTime(VESTING + 1);
       await vault.connect(guardian).pause();
-      await expect(vault.claim(PID_A)).to.be.revertedWith("EnforcedPause");
+      await expect(vault.claim(PID_A)).to.be.revertedWithCustomError(vault, "EnforcedPause");
     });
 
     it("beneficiary change: future claims go to new address", async () => {
@@ -746,7 +746,7 @@ describe("PartnerVault", function () {
       await vault.recordMilestone(PID_A, MS_1, parse("100000"));
       await advanceTime(VESTING + 1);
 
-      await expect(vault.claim(PID_A)).to.be.revertedWith("EnforcedPause");
+      await expect(vault.claim(PID_A)).to.be.revertedWithCustomError(vault, "EnforcedPause");
 
       await vault.connect(guardian).unpause();
       await vault.claim(PID_A); // should work now
