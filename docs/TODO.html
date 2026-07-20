@@ -49,10 +49,10 @@
   <div class="container">
     <a href="wiki/roadmap.html" class="back" rel="nofollow">&larr; Roadmap</a>
     <h1>IFR Protocol &mdash; Developer TODO List</h1>
-    <div class="subtitle">Last updated: 2026-07-08 &middot; Branch: main</div>
+    <div class="subtitle">Last updated: 2026-07-20 &middot; Branch: main</div>
 
     <!-- ═══ CURRENT WATCHLIST ═══ -->
-    <h2><span class="priority-badge p-critical">WATCH</span> Current Watchlist &mdash; 2026-07-08</h2>
+    <h2><span class="priority-badge p-critical">WATCH</span> Current Watchlist &mdash; 2026-07-20</h2>
     <ul>
       <li><div class="cb"></div><strong>MetaMask Registry PR #1858</strong> &mdash; waiting for MetaMask code-owner review.<br>
         <span style="color:#6b7280;font-size:0.82rem;">Open, mergeable, bot checks green, follow-up posted 2026-07-08. Blocker: approving reviewer with write access and maintainer approval for pending fork workflows. <a href="https://github.com/MetaMask/contract-metadata/pull/1858" target="_blank" rel="noopener">PR #1858</a></span></li>
@@ -66,8 +66,8 @@
         <span style="color:#6b7280;font-size:0.82rem;">Current: <code>ifrPriceWei = 0</code>, Safe JSON ready at <code>/tmp/inferno/lending-price-safe-tx.json</code>. Default: keep borrowing disabled until deeper liquidity or explicit Governance pilot approval.</span></li>
       <li><div class="cb"></div><strong>CommitmentVault price-condition locks</strong> &mdash; V2/PriceLockVault needed.<br>
         <span style="color:#6b7280;font-size:0.82rem;">Time-only locks are live; price locks stay disabled because deployed <code>_getCurrentPrice()</code> returns 0.</span></li>
-      <li><div class="cb"></div><strong>Dependency modernization</strong> &mdash; dedicated branch required.<br>
-        <span style="color:#6b7280;font-size:0.82rem;">Hardhat/Ethers/Waffle/Ganache/toolchain migration. Do not run <code>npm audit fix --force</code> on main.</span></li>
+      <li><div class="cb"></div><strong>Dependency modernization</strong> &mdash; staged migration in progress.<br>
+        <span style="color:#6b7280;font-size:0.82rem;">Waffle/Ganache retired and replaced with the Ethers-5-compatible Hardhat Chai matcher plugin; critical audit and full contract CI are blocking. The broader Ethers 6 migration remains separate because deploy, task and test APIs still use Ethers 5. Do not run <code>npm audit fix --force</code> on main.</span></li>
       <li><div class="cb"></div><strong>Trust Wallet / Rainbow / Phantom / Zerion visibility</strong> &mdash; staged follow-up.<br>
         <span style="color:#6b7280;font-size:0.82rem;">Trust Wallet not yet worth fee submission until CMC/activity improves; Rainbow depends on upstream lists/market data; Phantom and several wallets are indirect trust/indexing paths.</span></li>
       <li><div class="cb"></div><strong>IFRp Commerce App / shop.ifrunit.tech architecture</strong> &mdash; customer/seller product plan.<br>
@@ -415,7 +415,7 @@
       <li><div class="cb cb-done">&#x2713;</div>&#x2705; DEPLOYER_PRIVATE_KEY in .env &mdash; Bewusste Entscheidung: behalten bis Projektabschluss (07.04.2026)<br>
         <span style="color:#6b7280;font-size:0.8rem;">Deployer hat keine Governance-Rechte mehr. Key f&uuml;r Sepolia-Deploys + Testnet-Scripts. Nie committed (.gitignore), kein Risiko.</span></li>
       <li><div class="cb cb-done">&#x2713;</div>&#x2705; ChatGPT External Audit published (04.04.2026) &mdash; security.html + faq.html + AUDIT_CHATGPT_19032026.md</li>
-        <li><div class="cb"></div>&#x1F512; npm audit: 61 vulns &mdash; safe package-lock-only fix applied; remaining Hardhat 2 / ethers v5 / Waffle-Ganache debt needs a dedicated migration branch</li>
+        <li><div class="cb"></div>&#x1F512; Root dependency modernization &mdash; Waffle/Ganache critical path removed; Hardhat 2 / Ethers 5 migration and remaining non-critical advisories continue as a separate compatibility project</li>
     </ul>
 
     <!-- ═══ MEDIUM: 400M ═══ -->

@@ -1,6 +1,15 @@
 # MIGRATION SECURITY MEMO
 ## Projekt: Inferno ($IFR)
-## Datum: 14.04.2026
+## Datum: 14.04.2026 (Status aktualisiert 20.07.2026)
+
+### Toolchain-Status 20.07.2026
+- Waffle/Ganache-Abhaengigkeiten wurden aus dem Root-Toolchain-Pfad entfernt.
+- Chai-Revert/Event-Matcher laufen ueber `@nomicfoundation/hardhat-chai-matchers` 1.x,
+  kompatibel mit Hardhat 2, Ethers 5 und Chai 4.
+- Root-Contract-CI fuehrt die Hardhat-, Generator- und SDK-Tests aus und blockiert kritische
+  npm-Advisories.
+- Die breite Ethers-6-Migration bleibt separat: Tests, Tasks und Deployment-Skripte verwenden
+  weiterhin Ethers-5-APIs und duerfen nicht mechanisch umgestellt werden.
 
 ### Was wurde gefixt
 - BuybackController: Zero-Slippage bei LP → minIFR/minETH Schutz hinzugefügt
@@ -20,7 +29,8 @@
 - [ ] Proposal B Execute nach weiteren 48h
 - [ ] Verify: InfernoToken.feeExempt(0x1e0547D5...) == true
 - [ ] Verify: FeeRouterV1.feeCollector() == 0x1e0547D5...
-- [ ] npm audit hat 67 Vulnerabilities (4 critical) — Hardhat 3 Upgrade separat planen
+- [x] Kritischen Waffle/Ganache/elliptic-Pfad entfernen und per CI gegen Rueckkehr absichern
+- [ ] Verbleibende Hardhat-2-/Ethers-5-Abhaengigkeiten kontrolliert migrieren; Hardhat 3 separat evaluieren
 - [ ] Alchemy API Key wird in 6+ lokalen .env Dateien wiederverwendet — separate Keys pro App empfohlen
 
 ### Benoetigte ENV-Variablen

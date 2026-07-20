@@ -38,9 +38,9 @@ jobs:
             echo "has_npm=false" >> $GITHUB_OUTPUT
           fi
 
-      - name: npm audit
+      - name: npm audit (critical gate)
         if: steps.check-npm.outputs.has_npm == 'true'
-        run: npm audit --audit-level=high || true
+        run: npm audit --audit-level=critical
 
       - name: Check for Cargo.toml
         id: check-cargo
@@ -54,8 +54,8 @@ jobs:
       - name: cargo audit
         if: steps.check-cargo.outputs.has_cargo == 'true'
         run: |
-          cargo install cargo-audit 2>/dev/null || true
-          cargo audit || true
+          cargo install cargo-audit
+          cargo audit
 
       - name: Check for requirements.txt
         id: check-pip
@@ -69,8 +69,8 @@ jobs:
       - name: pip audit
         if: steps.check-pip.outputs.has_pip == 'true'
         run: |
-          pip install pip-audit 2>/dev/null || true
-          find . -maxdepth 3 -name "requirements.txt" -exec pip-audit -r {} \; || true
+          python -m pip install pip-audit
+          find . -maxdepth 3 -name "requirements.txt" -exec pip-audit -r {} \;
 
   security-summary:
     name: Security Summary
