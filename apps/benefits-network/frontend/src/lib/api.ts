@@ -46,6 +46,7 @@ export interface BenefitRule {
   productName: string;
   discountPercent: number;
   requiredLockIFR: number;
+  minIFRHeld: number;
   dailyRedemptionLimit: number;
   monthlyRedemptionLimit: number;
   ttlSeconds: number;
@@ -61,6 +62,7 @@ export interface BenefitRuleInput {
   productName: string;
   discountPercent: number;
   requiredLockIFR: number;
+  minIFRHeld: number;
   dailyRedemptionLimit: number;
   monthlyRedemptionLimit: number;
   ttlSeconds: number;
@@ -96,6 +98,7 @@ export interface PublicCatalogProduct extends CatalogProduct {
     label: string;
     discountPercent: number;
     requiredLockIFR: number;
+    minIFRHeld: number;
     dailyRedemptionLimit: number;
     monthlyRedemptionLimit: number;
     ttlSeconds: number;
@@ -109,6 +112,7 @@ export interface PublicOffer {
   productName: string;
   discountPercent: number;
   requiredLockIFR: number;
+  minIFRHeld: number;
   dailyRedemptionLimit: number;
   monthlyRedemptionLimit: number;
   business: PublicBusinessProfile;
@@ -181,6 +185,8 @@ export interface SellerSessionSummary {
   recoveredAddress: string | null;
   /** Legacy API field name; value is a human-readable IFR amount from ethers.formatUnits(..., 9). */
   lockAmountRaw: string | null;
+  /** Exact ERC-20 base-unit balance observed for a positive minIFRHeld rule. */
+  walletBalanceRaw: string | null;
   reason: string | null;
   expiresAt: string;
   createdAt: string;
@@ -195,6 +201,7 @@ export interface SellerSessionSummary {
   currency: ProductCurrency | null;
   discountPercent: number;
   requiredLockIFR: number;
+  minIFRHeld: number;
   dailyRedemptionLimit: number;
   monthlyRedemptionLimit: number;
 }
@@ -330,6 +337,7 @@ export interface SessionCreated {
   currency: ProductCurrency | null;
   discountPercent: number;
   requiredLockIFR: number;
+  minIFRHeld: number;
   dailyRedemptionLimit: number;
   monthlyRedemptionLimit: number;
   tierLabel: string | null;
@@ -345,6 +353,7 @@ export interface SessionBenefit {
   currency: ProductCurrency | null;
   discountPercent: number;
   requiredLockIFR: number;
+  minIFRHeld: number;
   dailyRedemptionLimit: number;
   monthlyRedemptionLimit: number;
   ttlSeconds: number;
@@ -434,6 +443,7 @@ export interface CustomerPassControlStatus {
       currency: ProductCurrency | null;
       discountPercent: number;
       requiredLockIFR: number;
+      minIFRHeld: number;
     };
     reason: string | null;
   };
@@ -450,6 +460,7 @@ export interface BoundCustomerPass {
     currency: ProductCurrency | null;
     discountPercent: number;
     requiredLockIFR: number;
+    minIFRHeld: number;
   };
   createdBy: CheckoutAccess;
 }

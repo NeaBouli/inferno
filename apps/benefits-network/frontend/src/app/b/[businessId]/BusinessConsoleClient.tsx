@@ -108,6 +108,7 @@ export function BusinessConsoleClient({ businessId }: { businessId: string }) {
   );
 
   const previewBenefit = session ?? selectedRule ?? business;
+  const previewMinIFRHeld = session?.minIFRHeld ?? selectedRule?.minIFRHeld ?? 0;
   const previewDailyLimit = session?.dailyRedemptionLimit ?? selectedRule?.dailyRedemptionLimit ?? 0;
   const previewMonthlyLimit = session?.monthlyRedemptionLimit ?? selectedRule?.monthlyRedemptionLimit ?? 0;
   const sellerWalletLabel = address ? `${address.slice(0, 6)}...${address.slice(-4)}` : 'Not connected';
@@ -172,6 +173,9 @@ export function BusinessConsoleClient({ businessId }: { businessId: string }) {
       `Verification attempts: ${status?.attestAttempts ?? 0}/3`,
       `Benefit: ${benefit.discountPercent}%`,
       `Required lock: ${benefit.requiredLockIFR.toLocaleString('en-US')} IFR`,
+      ...(benefit.minIFRHeld > 0
+        ? [`Required held: ${benefit.minIFRHeld.toLocaleString('en-US')} IFR`]
+        : []),
       `Wallet limit: ${benefit.dailyRedemptionLimit || 'unlimited'}/UTC day / ${benefit.monthlyRedemptionLimit || 'unlimited'}/UTC month`,
       `Rule: ${benefit.label || 'Business default'}`,
       `Product: ${benefit.productName || 'Business default benefit'}`,
@@ -218,6 +222,7 @@ export function BusinessConsoleClient({ businessId }: { businessId: string }) {
       currency: nextStatus.benefit.currency,
       discountPercent: nextStatus.benefit.discountPercent,
       requiredLockIFR: nextStatus.benefit.requiredLockIFR,
+      minIFRHeld: nextStatus.benefit.minIFRHeld,
       dailyRedemptionLimit: nextStatus.benefit.dailyRedemptionLimit,
       monthlyRedemptionLimit: nextStatus.benefit.monthlyRedemptionLimit,
       tierLabel: nextStatus.benefit.tierLabel,
@@ -825,6 +830,12 @@ export function BusinessConsoleClient({ businessId }: { businessId: string }) {
               <span>Required lock</span>
               <strong className="text-white">{previewBenefit ? `${previewBenefit.requiredLockIFR.toLocaleString('en-US')} IFR` : '-'}</strong>
             </div>
+            {previewBenefit && previewMinIFRHeld > 0 ? (
+              <div className="flex justify-between gap-4">
+                <span>Required in wallet</span>
+                <strong className="text-white">{previewMinIFRHeld.toLocaleString('en-US')} IFR</strong>
+              </div>
+            ) : null}
             {session && formatProductPrice(session.basePriceMinor, session.currency) ? (
               <div className="flex justify-between gap-4">
                 <span>Reference price</span>
@@ -867,7 +878,8 @@ export function BusinessConsoleClient({ businessId }: { businessId: string }) {
               >
                 {rules.map((rule) => (
                   <option key={rule.id} value={rule.id}>
-                    {rule.label} - {rule.productName} - {rule.discountPercent}% / {rule.requiredLockIFR.toLocaleString('en-US')} IFR
+                    {rule.label} - {rule.productName} - {rule.discountPercent}% / {rule.requiredLockIFR.toLocaleString('en-US')} locked
+                    {rule.minIFRHeld > 0 ? ` + ${rule.minIFRHeld.toLocaleString('en-US')} held` : ''}
                   </option>
                 ))}
               </select>
@@ -887,6 +899,7 @@ export function BusinessConsoleClient({ businessId }: { businessId: string }) {
                   </div>
                   <p className="mt-1 text-xs text-stone-400">
                     {rule.productName} / {rule.requiredLockIFR.toLocaleString('en-US')} IFR locked
+                    {rule.minIFRHeld > 0 ? ` + ${rule.minIFRHeld.toLocaleString('en-US')} held` : ''}
                   </p>
                 </div>
               ))}
@@ -998,7 +1011,10 @@ export function BusinessConsoleClient({ businessId }: { businessId: string }) {
                 </div>
                 <div className="flex justify-between gap-4">
                   <span className="text-stone-500">Benefit</span>
-                  <strong>{session.discountPercent}% / {session.requiredLockIFR.toLocaleString('en-US')} IFR</strong>
+                  <strong>
+                    {session.discountPercent}% / {session.requiredLockIFR.toLocaleString('en-US')} locked
+                    {session.minIFRHeld > 0 ? ` + ${session.minIFRHeld.toLocaleString('en-US')} held` : ''}
+                  </strong>
                 </div>
                 {session.productName ? (
                   <div className="flex justify-between gap-4">

@@ -1,7 +1,7 @@
 import crypto from 'crypto';
 import { Prisma, PrismaClient } from '@prisma/client';
 import { config } from '../config';
-import { checkLock, recoverSigner } from './ifrLockService';
+import { checkBenefitEligibility, checkLock, recoverSigner } from './ifrLockService';
 import { toIFRBaseUnits } from './rewardService';
 import { normalizeAddress } from './sellerAuth';
 import { consumeSellerAuthorizationChallenge } from './sellerAuthorizationChallenge';
@@ -32,6 +32,7 @@ function benefitFromSession(session: {
   benefitCurrency: string | null;
   benefitDiscountPercent: number | null;
   benefitRequiredLockIFR: number | null;
+  benefitMinIFRHeld: number | null;
   benefitTtlSeconds: number | null;
   benefitDailyRedemptionLimit: number | null;
   benefitMonthlyRedemptionLimit: number | null;
@@ -48,6 +49,7 @@ function benefitFromSession(session: {
     productName: string;
     discountPercent: number;
     requiredLockIFR: number;
+    minIFRHeld: number;
     ttlSeconds: number;
     dailyRedemptionLimit: number;
     monthlyRedemptionLimit: number;
@@ -73,6 +75,9 @@ function benefitFromSession(session: {
       ...price,
       discountPercent: session.benefitDiscountPercent,
       requiredLockIFR: session.benefitRequiredLockIFR,
+      minIFRHeld: (session.benefitSnapshotVersion ?? 0) >= 4
+        ? session.benefitMinIFRHeld ?? 0
+        : 0,
       ttlSeconds: session.benefitTtlSeconds,
       dailyRedemptionLimit: session.benefitDailyRedemptionLimit ?? 0,
       monthlyRedemptionLimit: session.benefitMonthlyRedemptionLimit ?? 0,
@@ -90,6 +95,7 @@ function benefitFromSession(session: {
       currency: null,
       discountPercent: session.business.discountPercent,
       requiredLockIFR: session.business.requiredLockIFR,
+      minIFRHeld: 0,
       ttlSeconds: session.business.ttlSeconds,
       dailyRedemptionLimit: 0,
       monthlyRedemptionLimit: 0,
@@ -106,6 +112,7 @@ function benefitFromSession(session: {
     currency: null,
     discountPercent: session.benefitRule.discountPercent,
     requiredLockIFR: session.benefitRule.requiredLockIFR,
+    minIFRHeld: 0,
     ttlSeconds: session.benefitRule.ttlSeconds,
     dailyRedemptionLimit: session.benefitRule.dailyRedemptionLimit,
     monthlyRedemptionLimit: session.benefitRule.monthlyRedemptionLimit,
@@ -313,6 +320,7 @@ export async function createSessionSnapshot(
         benefitCurrency: productPrice.currency,
         benefitDiscountPercent: benefitRule.discountPercent,
         benefitRequiredLockIFR: benefitRule.requiredLockIFR,
+        benefitMinIFRHeld: benefitRule.minIFRHeld,
         benefitTtlSeconds: benefitRule.ttlSeconds,
         benefitDailyRedemptionLimit: benefitRule.dailyRedemptionLimit,
         benefitMonthlyRedemptionLimit: benefitRule.monthlyRedemptionLimit,
@@ -325,6 +333,7 @@ export async function createSessionSnapshot(
         benefitCurrency: null,
         benefitDiscountPercent: business.discountPercent,
         benefitRequiredLockIFR: business.requiredLockIFR,
+        benefitMinIFRHeld: 0,
         benefitTtlSeconds: business.ttlSeconds,
         benefitDailyRedemptionLimit: 0,
         benefitMonthlyRedemptionLimit: 0,
@@ -334,7 +343,7 @@ export async function createSessionSnapshot(
       businessId,
       benefitRuleId: benefitRule?.id,
       customerPassId,
-      benefitSnapshotVersion: 3,
+      benefitSnapshotVersion: 4,
       ...benefitSnapshot,
       nonce,
       expiresAt: new Date(Date.now() + ttlSeconds * 1000),
@@ -433,6 +442,7 @@ export async function buildChallengeMessage(
       ? [`Reference Price: ${benefit.currency} ${benefit.basePriceMinor} minor units`]
       : []),
     `Required Lock IFR: ${benefit.requiredLockIFR}`,
+    `Minimum Held IFR: ${benefit.minIFRHeld}`,
     `Discount Percent: ${benefit.discountPercent}`,
     `Session: ${session.id}`,
     `Nonce: ${session.nonce}`,
@@ -482,32 +492,77 @@ export async function attest(
   const { benefit, nextAttempts } = reserved;
   const attemptsExhausted = nextAttempts >= 3;
 
-  // On-chain lock check
-  let lockResult: { eligible: boolean; lockedAmount: string };
+  // Existing rules stay on the original two-read IFRLock path. A positive held
+  // threshold adds an exact ERC-20 balance check at the same block.
+  let eligibilityResult: {
+    eligible: boolean;
+    lockEligible: boolean;
+    heldEligible: boolean;
+    lockedAmount: string;
+    walletAmount: string | null;
+    walletBalanceRaw: string | null;
+  };
   try {
-    lockResult = await checkLock(recoveredAddress, benefit.requiredLockIFR);
+    if (benefit.minIFRHeld > 0) {
+      eligibilityResult = await checkBenefitEligibility(
+        recoveredAddress,
+        benefit.requiredLockIFR,
+        benefit.minIFRHeld
+      );
+    } else {
+      const lockResult = await checkLock(recoveredAddress, benefit.requiredLockIFR);
+      eligibilityResult = {
+        ...lockResult,
+        lockEligible: lockResult.eligible,
+        heldEligible: true,
+        walletAmount: null,
+        walletBalanceRaw: null,
+      };
+    }
   } catch (err) {
     const msg = err instanceof Error ? err.message : 'RPC error';
     await auditLog(sessionId, 'ATTEST_FAIL', { reason: `On-chain error: ${msg}` });
     throw new Error(`On-chain verification failed: ${msg}`);
   }
 
-  if (!lockResult.eligible) {
+  if (!eligibilityResult.eligible) {
+    const deficits = [
+      ...(!eligibilityResult.lockEligible
+        ? [`${eligibilityResult.lockedAmount} IFR locked < ${benefit.requiredLockIFR} IFR required`]
+        : []),
+      ...(!eligibilityResult.heldEligible
+        ? [`${eligibilityResult.walletAmount ?? '0'} IFR held < ${benefit.minIFRHeld} IFR required`]
+        : []),
+    ];
+    const retryAction = !eligibilityResult.lockEligible && !eligibilityResult.heldEligible
+      ? 'Increase both balances and retry this QR session.'
+      : !eligibilityResult.lockEligible
+        ? 'Lock more IFR and retry this QR session.'
+        : 'Keep more IFR in this wallet and retry this QR session.';
+    const reasonLabel = !eligibilityResult.lockEligible && !eligibilityResult.heldEligible
+      ? 'Insufficient eligibility'
+      : !eligibilityResult.lockEligible
+        ? 'Insufficient lock'
+        : 'Insufficient wallet balance';
+    const reason = `${reasonLabel}: ${deficits.join('; ')}. ${
+      attemptsExhausted ? 'Verification attempts exhausted.' : retryAction
+    }`;
     await prisma.session.updateMany({
       where: { id: sessionId, status: 'PENDING', recoveredAddress },
       data: {
         status: attemptsExhausted ? 'REJECTED' : 'PENDING',
         recoveredAddress,
-        lockAmountRaw: lockResult.lockedAmount,
-        reason: attemptsExhausted
-          ? `Insufficient lock: ${lockResult.lockedAmount} IFR < ${benefit.requiredLockIFR} IFR. Verification attempts exhausted.`
-          : `Insufficient lock: ${lockResult.lockedAmount} IFR < ${benefit.requiredLockIFR} IFR. Lock more IFR and retry this QR session.`,
+        lockAmountRaw: eligibilityResult.lockedAmount,
+        walletBalanceRaw: eligibilityResult.walletBalanceRaw,
+        reason,
       },
     });
     await auditLog(sessionId, 'ATTEST_FAIL', {
       wallet: recoveredAddress,
-      locked: lockResult.lockedAmount,
-      required: benefit.requiredLockIFR,
+      locked: eligibilityResult.lockedAmount,
+      requiredLockIFR: benefit.requiredLockIFR,
+      held: eligibilityResult.walletAmount,
+      minIFRHeld: benefit.minIFRHeld,
       benefitRuleId: benefit.benefitRuleId,
       attempts: nextAttempts,
       terminal: attemptsExhausted,
@@ -516,9 +571,7 @@ export async function attest(
       status: 'REJECTED' as SessionStatus,
       wallet: recoveredAddress,
       eligible: false,
-      reason: attemptsExhausted
-        ? `Insufficient lock: ${lockResult.lockedAmount} IFR locked, ${benefit.requiredLockIFR} IFR required. Verification attempts exhausted.`
-        : `Insufficient lock: ${lockResult.lockedAmount} IFR locked, ${benefit.requiredLockIFR} IFR required. Lock more IFR and retry this QR session.`,
+      reason,
       attemptsRemaining: Math.max(0, 3 - nextAttempts),
     };
   }
@@ -528,7 +581,8 @@ export async function attest(
     where: { id: sessionId, status: 'PENDING', recoveredAddress },
     data: {
       status: 'APPROVED',
-      lockAmountRaw: lockResult.lockedAmount,
+      lockAmountRaw: eligibilityResult.lockedAmount,
+      walletBalanceRaw: eligibilityResult.walletBalanceRaw,
       reason: null,
     },
   });
@@ -538,7 +592,9 @@ export async function attest(
   }
   await auditLog(sessionId, 'ATTEST_OK', {
     wallet: recoveredAddress,
-    locked: lockResult.lockedAmount,
+    locked: eligibilityResult.lockedAmount,
+    held: eligibilityResult.walletAmount,
+    minIFRHeld: benefit.minIFRHeld,
     benefitRuleId: benefit.benefitRuleId,
   });
 

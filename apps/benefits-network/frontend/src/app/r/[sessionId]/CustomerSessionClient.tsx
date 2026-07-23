@@ -10,6 +10,7 @@ import { SwapRiskNotice } from '@/components/SwapRiskNotice';
 import { WalletConnectControl } from '@/components/WalletConnectControl';
 import { AttestResult, BusinessInfo, SessionStatus, getBusiness, getChallenge, getSessionStatus, submitAttest } from '@/lib/api';
 import { redactVerifiedAddress, saveCustomerProofHistoryItem } from '@/lib/customerHistory';
+import { formatRetryGuidance } from '@/lib/customerProofGuidance';
 import { formatProductPrice } from '@/lib/money';
 
 const CLOSED_STATUSES = ['REDEEMED', 'REJECTED', 'EXPIRED'];
@@ -54,7 +55,7 @@ export function CustomerSessionClient({ sessionId }: { sessionId: string }) {
         ? 'Show this screen to the seller. This page refreshes while they redeem the approved benefit once.'
           : proofRejected
           ? (status?.status === 'PENDING' && result?.attemptsRemaining
-            ? `${result.reason || 'This wallet does not meet the current locked IFR requirement.'} Retry after locking more IFR. ${result.attemptsRemaining} verification attempt${result.attemptsRemaining === 1 ? '' : 's'} left.`
+            ? formatRetryGuidance(result.reason, result.attemptsRemaining)
             : status?.reason || result?.reason || 'This wallet does not meet the current locked IFR requirement.')
           : CLOSED_STATUSES.includes(currentSessionStatus)
             ? 'Ask the seller for a fresh QR code if you still need verification.'
@@ -84,6 +85,9 @@ export function CustomerSessionClient({ sessionId }: { sessionId: string }) {
       `Verification attempts: ${status.attestAttempts}/3`,
       `Benefit: ${benefit.discountPercent}%`,
       `Required lock: ${benefit.requiredLockIFR.toLocaleString('en-US')} IFR`,
+      ...(benefit.minIFRHeld > 0
+        ? [`Required held: ${benefit.minIFRHeld.toLocaleString('en-US')} IFR`]
+        : []),
       `Rule: ${benefit.label || 'Business default'}`,
       `Product: ${benefit.productName || 'Business default benefit'}`,
       ...(formatProductPrice(benefit.basePriceMinor, benefit.currency)
@@ -271,6 +275,12 @@ export function CustomerSessionClient({ sessionId }: { sessionId: string }) {
                 <span>Required lock</span>
                 <strong className="text-white">{(status?.benefit.requiredLockIFR ?? business.requiredLockIFR).toLocaleString('en-US')} IFR</strong>
               </div>
+              {(status?.benefit.minIFRHeld ?? 0) > 0 ? (
+                <div className="flex justify-between gap-4">
+                  <span>Required in wallet</span>
+                  <strong className="text-white">{status!.benefit.minIFRHeld.toLocaleString('en-US')} IFR</strong>
+                </div>
+              ) : null}
               <div className="flex justify-between gap-4">
                 <span>Verification attempts</span>
                 <strong className="text-white">{status?.attestAttempts ?? 0}/3</strong>

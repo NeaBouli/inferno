@@ -110,10 +110,14 @@ creating a QR so the customer signs different terms than the seller originally p
 - Product CRUD is owner-wallet protected and scoped to the owned business
 - Rule binding accepts only an active product from the same business
 - Product name/category are copied into the rule as display snapshots
-- QR creation copies label, category, product, discount, required IFR and TTL into a versioned session snapshot
+- QR creation copies label, category, product, discount, required locked IFR, optional minimum
+  wallet-held IFR and TTL into a versioned session snapshot
 - Challenge, attest, status and seller history read the immutable session snapshot for new sessions
 - Product archive is a soft archive and atomically pauses active linked rules; historical sessions/audits remain intact
 - Legacy sessions without a snapshot version use the prior relation fallback for backward compatibility
+- Positive wallet-held requirements are checked from the token returned by `IFRLock.token()` at
+  the same block as the lock reads, with exact 9-decimal base-unit comparisons. RPC or contract
+  resolution failures cannot approve a session.
 
 ## 9. Reward Fraud / Governance Drift / Double Submission
 
@@ -132,6 +136,7 @@ or retried worker causes an unauthorized or duplicate PartnerVault reward.
 - The Benefits backend contains no private key or transaction signer and never calls `recordLockReward`
 - `READY` is not a reward quote, submission, confirmation or payment; effective BPS, caps and vesting remain on-chain
 
-**Known policy boundary:** The verified amount is the customer's current IFRLock balance observed during checkout,
+**Known policy boundary:** The verified eligibility is a point-in-time observation of the
+customer's current IFRLock balance and, when configured, free IFR wallet balance during checkout,
 not cryptographic proof that a new lock transaction was caused by that seller. Governance must approve this
 one-wallet/one-partner usage policy or require a future event-indexed lock adapter before enabling submissions.

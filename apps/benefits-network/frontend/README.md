@@ -51,6 +51,11 @@ contracts, entered IFR amount, unlocked IFR balance and allowance, then guides
 the user toward Buy IFR, Approve or Lock. Tier chips are buttons that set common
 lock amounts for seller benefit rules.
 
+Public offers and checkout review show the mandatory locked-IFR threshold and any optional
+minimum IFR that must remain free in the customer wallet. The preview reads exact 9-decimal
+balances and fails closed while disconnected, on the wrong chain, or when a required RPC read is
+unavailable. `minIFRHeld=0` preserves the lock-only path without a second token-balance gate.
+
 The recommended checkout path is customer-presented and two-phase. A connected customer signs a
 one-time pass-creation message and displays an opaque `/p/:passId` QR. The seller scans or pastes it,
 selects an active rule and signs a fresh pass/rule-bound authorization. The customer then reviews

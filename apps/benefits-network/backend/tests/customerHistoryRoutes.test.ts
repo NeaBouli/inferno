@@ -156,12 +156,14 @@ describe('Customer benefits history authorization and pagination', () => {
         status: 'REDEEMED',
         recoveredAddress: customer.address,
         redeemedAt: new Date(now - 2 * 60_000),
-        benefitSnapshotVersion: 2,
+        benefitSnapshotVersion: 4,
         benefitLabel: 'Member coffee',
         benefitCategory: 'Coffee',
         benefitProductName: 'Reserve espresso',
         benefitDiscountPercent: 15,
         benefitRequiredLockIFR: 1000,
+        benefitMinIFRHeld: 250,
+        walletBalanceRaw: '250000000000',
       },
       {
         id: 'customer-history-other',
@@ -199,12 +201,13 @@ describe('Customer benefits history authorization and pagination', () => {
         productName: 'Reserve espresso',
         discountPercent: 15,
         requiredLockIFR: 1000,
+        minIFRHeld: 250,
       },
     });
     const serialized = JSON.stringify(body);
     expect(serialized).not.toContain(customer.address);
     expect(serialized).not.toContain(otherCustomer.address);
-    expect(serialized).not.toMatch(/signature|nonce|auditLog|accessToken|lockAmountRaw/);
+    expect(serialized).not.toMatch(/signature|nonce|auditLog|accessToken|lockAmountRaw|walletBalanceRaw/);
   });
 
   it('keeps a stable snapshot and rejects another wallet cursor or invalid pagination', async () => {

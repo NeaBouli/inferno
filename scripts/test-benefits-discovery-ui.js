@@ -17,6 +17,7 @@ const offer = {
   productName: 'IFR member coffee',
   discountPercent: 10,
   requiredLockIFR: 1000,
+  minIFRHeld: 500,
   dailyRedemptionLimit: 1,
   monthlyRedemptionLimit: 10,
   business: {
@@ -141,6 +142,7 @@ async function run() {
                 label: offer.label,
                 discountPercent: offer.discountPercent,
                 requiredLockIFR: offer.requiredLockIFR,
+                minIFRHeld: offer.minIFRHeld,
                 dailyRedemptionLimit: offer.dailyRedemptionLimit,
                 monthlyRedemptionLimit: offer.monthlyRedemptionLimit,
                 ttlSeconds: 90,
@@ -163,6 +165,7 @@ async function run() {
               productName: offer.productName,
               discountPercent: offer.discountPercent,
               requiredLockIFR: offer.requiredLockIFR,
+              minIFRHeld: offer.minIFRHeld,
               dailyRedemptionLimit: offer.dailyRedemptionLimit,
               monthlyRedemptionLimit: offer.monthlyRedemptionLimit,
               ttlSeconds: 90,
@@ -194,6 +197,7 @@ async function run() {
                 currency: 'USD',
                 discountPercent: 5,
                 requiredLockIFR: 500,
+                minIFRHeld: 0,
               },
               reason: null,
             },
@@ -246,6 +250,7 @@ async function run() {
     const offersSection = page.locator('#offers');
     await offersSection.getByText(offer.productName, { exact: true }).waitFor();
     await offersSection.getByText('Reference price: EUR 19.99', { exact: true }).waitFor();
+    await offersSection.getByText('500 IFR held', { exact: true }).waitFor();
     const discoveryLogo = offersSection.getByRole('img', { name: `${offer.business.name} logo`, exact: true });
     await discoveryLogo.waitFor();
     assert.equal(await discoveryLogo.getAttribute('referrerpolicy'), 'no-referrer');
@@ -255,6 +260,7 @@ async function run() {
     await waitForLocation(page, `/s/${offer.business.id}`);
     await page.getByText(offer.productName, { exact: true }).waitFor();
     await page.getByText('Reference price: EUR 19.99', { exact: true }).waitFor();
+    await page.getByText('Verify at least 1,000 locked IFR and 500 IFR held at checkout.', { exact: true }).first().waitFor();
     assert.equal(await page.getByRole('img', { name: `${offer.business.name} logo`, exact: true }).count(), 1);
     assert.equal(
       await page.getByText('No public offers yet', { exact: true }).count(),
@@ -268,6 +274,7 @@ async function run() {
     const selectedOffer = page.locator('#customer-pass');
     await selectedOffer.getByText('Selected public offer', { exact: true }).waitFor();
     await selectedOffer.getByText(`${offer.productName} · ${offer.business.name}`, { exact: true }).waitFor();
+    await selectedOffer.getByText('10% benefit · 1,000 IFR lock · 500 IFR held', { exact: true }).waitFor();
     await selectedOffer.getByText('Offer verified. The seller still binds it and you approve the exact checkout snapshot.', { exact: true }).waitFor();
     await page.evaluate(() => window.history.pushState({}, '', '/?seller=invalid!&offer=bad#customer-pass'));
     await selectedOffer.getByText('This offer link is invalid. Browse the current public offers below.', { exact: true }).waitFor();

@@ -95,6 +95,7 @@ const createBenefitRuleSchema = z.object({
   productName: z.string().min(1).max(160),
   discountPercent: z.number().int().min(0).max(100),
   requiredLockIFR: z.number().int().positive(),
+  minIFRHeld: z.number().int().min(0).max(1_000_000_000).optional(),
   dailyRedemptionLimit: z.number().int().min(0).max(1000).optional(),
   monthlyRedemptionLimit: z.number().int().min(0).max(10000).optional(),
   ttlSeconds: z.number().int().min(10).max(3600).optional(),
@@ -173,6 +174,7 @@ type BenefitRuleWriteInput = {
   productName?: string;
   discountPercent?: number;
   requiredLockIFR?: number;
+  minIFRHeld?: number;
   dailyRedemptionLimit?: number;
   monthlyRedemptionLimit?: number;
   ttlSeconds?: number;
@@ -844,6 +846,7 @@ router.get('/businesses/:id/sessions', sellerRateLimiter, async (req, res, next)
           status: true,
           recoveredAddress: true,
           lockAmountRaw: true,
+          walletBalanceRaw: true,
           reason: true,
           expiresAt: true,
           createdAt: true,
@@ -858,6 +861,7 @@ router.get('/businesses/:id/sessions', sellerRateLimiter, async (req, res, next)
               productName: true,
               discountPercent: true,
               requiredLockIFR: true,
+              minIFRHeld: true,
               dailyRedemptionLimit: true,
               monthlyRedemptionLimit: true,
             },
@@ -870,6 +874,7 @@ router.get('/businesses/:id/sessions', sellerRateLimiter, async (req, res, next)
           benefitCurrency: true,
           benefitDiscountPercent: true,
           benefitRequiredLockIFR: true,
+          benefitMinIFRHeld: true,
           benefitDailyRedemptionLimit: true,
           benefitMonthlyRedemptionLimit: true,
           business: {
@@ -925,6 +930,7 @@ router.get('/businesses/:id/sessions', sellerRateLimiter, async (req, res, next)
         status: session.status,
         recoveredAddress: session.recoveredAddress,
         lockAmountRaw: session.lockAmountRaw,
+        walletBalanceRaw: session.walletBalanceRaw,
         reason: session.reason,
         expiresAt: session.expiresAt,
         createdAt: session.createdAt,
@@ -953,6 +959,9 @@ router.get('/businesses/:id/sessions', sellerRateLimiter, async (req, res, next)
         requiredLockIFR: (session.benefitSnapshotVersion ?? 0) >= 1 && session.benefitRequiredLockIFR !== null
           ? session.benefitRequiredLockIFR
           : session.benefitRule?.requiredLockIFR ?? session.business.requiredLockIFR,
+        minIFRHeld: (session.benefitSnapshotVersion ?? 0) >= 4
+          ? session.benefitMinIFRHeld ?? 0
+          : 0,
         dailyRedemptionLimit: (session.benefitSnapshotVersion ?? 0) >= 1
           ? session.benefitDailyRedemptionLimit ?? 0
           : session.benefitRule?.dailyRedemptionLimit ?? 0,
@@ -1080,6 +1089,7 @@ router.post(
             productName: data.productName ?? req.body.productName,
             discountPercent: req.body.discountPercent,
             requiredLockIFR: req.body.requiredLockIFR,
+            minIFRHeld: req.body.minIFRHeld,
             dailyRedemptionLimit: req.body.dailyRedemptionLimit,
             monthlyRedemptionLimit: req.body.monthlyRedemptionLimit,
             ttlSeconds: req.body.ttlSeconds,

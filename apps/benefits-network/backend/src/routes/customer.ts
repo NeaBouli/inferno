@@ -106,6 +106,7 @@ router.get('/', customerHistoryRateLimiter, async (req, res, next) => {
         updatedAt: true,
         redeemedAt: true,
         benefitRuleId: true,
+        benefitSnapshotVersion: true,
         benefitLabel: true,
         benefitCategory: true,
         benefitProductName: true,
@@ -113,6 +114,7 @@ router.get('/', customerHistoryRateLimiter, async (req, res, next) => {
         benefitCurrency: true,
         benefitDiscountPercent: true,
         benefitRequiredLockIFR: true,
+        benefitMinIFRHeld: true,
         benefitDailyRedemptionLimit: true,
         benefitMonthlyRedemptionLimit: true,
         business: { select: { id: true, name: true } },
@@ -139,6 +141,9 @@ router.get('/', customerHistoryRateLimiter, async (req, res, next) => {
         }),
         discountPercent: session.benefitDiscountPercent ?? 0,
         requiredLockIFR: session.benefitRequiredLockIFR ?? 0,
+        minIFRHeld: (session.benefitSnapshotVersion ?? 0) >= 4
+          ? session.benefitMinIFRHeld ?? 0
+          : 0,
         dailyRedemptionLimit: session.benefitDailyRedemptionLimit ?? 0,
         monthlyRedemptionLimit: session.benefitMonthlyRedemptionLimit ?? 0,
       },

@@ -8,6 +8,7 @@ export interface CustomerProofHistoryItem {
   status: SessionStatus['status'];
   discountPercent: number;
   requiredLockIFR: number;
+  minIFRHeld: number;
   ruleLabel: string;
   productName: string;
   basePriceMinor: string | null;
@@ -23,6 +24,13 @@ const MAX_HISTORY_ITEMS = 12;
 
 function canUseStorage() {
   return typeof window !== 'undefined' && Boolean(window.localStorage);
+}
+
+function normalizeWholeIFR(value: unknown) {
+  const amount = Number(value);
+  return Number.isSafeInteger(amount) && amount >= 0 && amount <= 1_000_000_000
+    ? amount
+    : 0;
 }
 
 export function redactVerifiedAddress(address?: string | null) {
@@ -44,7 +52,8 @@ function normalizeItem(item: Partial<CustomerProofHistoryItem>): CustomerProofHi
     sellerName: item.sellerName || item.businessId,
     status: item.status,
     discountPercent: Number(item.discountPercent || 0),
-    requiredLockIFR: Number(item.requiredLockIFR || 0),
+    requiredLockIFR: normalizeWholeIFR(item.requiredLockIFR),
+    minIFRHeld: normalizeWholeIFR(item.minIFRHeld),
     ruleLabel: item.ruleLabel || 'Business default',
     productName: item.productName || 'Business default benefit',
     basePriceMinor: currency ? basePriceMinor : null,
@@ -91,6 +100,7 @@ export function saveCustomerProofHistoryItem(args: {
     status: args.status.status,
     discountPercent: benefit.discountPercent,
     requiredLockIFR: benefit.requiredLockIFR,
+    minIFRHeld: benefit.minIFRHeld,
     ruleLabel: benefit.label || 'Business default',
     productName: benefit.productName || 'Business default benefit',
     basePriceMinor: benefit.basePriceMinor,

@@ -46,7 +46,9 @@ bash apps/benefits-network/backend/scripts/e2e-test.sh
 3. "Create QR session" -> QR code appears
 4. Wallet app -> Scan QR -> Sign
 5. Merchant screen shows: APPROVED, pending retry guidance, or terminal REJECTED
-6. If the wallet needs more locked IFR, the customer can lock more IFR and retry the same QR session while it is still valid and attempts remain
+6. If the wallet needs more locked IFR or a configured free-wallet IFR minimum, the customer can
+   correct that exact condition and retry the same QR session while it is still valid and attempts
+   remain
 7. Optional: "Redeem" -> Status changes to REDEEMED
 
 ## E2E Test Script
@@ -139,7 +141,8 @@ cd apps/benefits-network/backend
 npm test
 ```
 
-It verifies IFRLock threshold conversion and balance formatting with native `bigint`, reward
+It verifies IFRLock and optional free-wallet IFR threshold conversion with native `bigint`,
+exact 9-decimal boundary comparisons, same-block reads and balance formatting, reward
 contract tuple decoding, the actual RPC chain ID, zero-beneficiary fail-closed behavior and
 read-only wallet-reward checks. The fixture never submits a transaction or contacts Mainnet.
 CI also runs `npm run test:ethers-v6-lifecycle` without Jest's `--forceExit`, including an RPC

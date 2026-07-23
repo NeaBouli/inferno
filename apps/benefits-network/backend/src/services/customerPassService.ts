@@ -162,6 +162,9 @@ export async function getControlledCustomerPass(passId: string, authorization?: 
           }),
           discountPercent: pass.session.benefitDiscountPercent ?? 0,
           requiredLockIFR: pass.session.benefitRequiredLockIFR ?? 0,
+          minIFRHeld: (pass.session.benefitSnapshotVersion ?? 0) >= 4
+            ? pass.session.benefitMinIFRHeld ?? 0
+            : 0,
         },
         reason: null,
       } : null,
@@ -188,6 +191,9 @@ export async function getControlledCustomerPass(passId: string, authorization?: 
         }),
         discountPercent: session.benefitDiscountPercent ?? 0,
         requiredLockIFR: session.benefitRequiredLockIFR ?? 0,
+        minIFRHeld: (session.benefitSnapshotVersion ?? 0) >= 4
+          ? session.benefitMinIFRHeld ?? 0
+          : 0,
       },
       reason: session.status === 'REJECTED' ? session.reason : null,
     } : null,
@@ -237,6 +243,9 @@ export async function bindCustomerPass(input: {
         }),
         discountPercent: session.benefitDiscountPercent ?? 0,
         requiredLockIFR: session.benefitRequiredLockIFR ?? 0,
+        minIFRHeld: (session.benefitSnapshotVersion ?? 0) >= 4
+          ? session.benefitMinIFRHeld ?? 0
+          : 0,
       },
       createdBy: creator,
     };

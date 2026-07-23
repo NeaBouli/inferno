@@ -2,7 +2,14 @@
 
 import Link from 'next/link';
 import { useAccount, useReadContract } from 'wagmi';
-import { CHAIN_ID, IFR_DECIMALS, IFRLOCK_ABI, IFRLOCK_ADDRESS } from '@/lib/contracts';
+import {
+  CHAIN_ID,
+  IFR_DECIMALS,
+  IFRLOCK_ABI,
+  IFRLOCK_ADDRESS,
+  IFR_TOKEN_ABI,
+  IFR_TOKEN_ADDRESS,
+} from '@/lib/contracts';
 
 const IFR_UNIT = BigInt(10) ** BigInt(IFR_DECIMALS);
 const DISPLAY_SCALE = BigInt(1_000);
@@ -13,7 +20,12 @@ export type IfrLockEligibility =
   | { status: 'wrong-chain' }
   | { status: 'checking' }
   | { status: 'unavailable' }
-  | { status: 'ready'; lockedRaw: bigint };
+  | {
+      status: 'ready';
+      lockedRaw: bigint;
+      walletBalanceStatus: 'checking' | 'unavailable' | 'ready';
+      walletRaw: bigint | null;
+    };
 
 export function useIfrLockEligibility(): IfrLockEligibility {
   const { address, chainId, isConnected } = useAccount();
@@ -30,17 +42,33 @@ export function useIfrLockEligibility(): IfrLockEligibility {
     args: address ? [address] : undefined,
     query: { enabled: canRead, retry: false },
   });
+  const walletBalance = useReadContract({
+    address: IFR_TOKEN_ADDRESS || undefined,
+    abi: IFR_TOKEN_ABI,
+    functionName: 'balanceOf',
+    args: address ? [address] : undefined,
+    query: { enabled: canRead && Boolean(IFR_TOKEN_ADDRESS), retry: false },
+  });
 
   if (!isConnected || !address) return { status: 'disconnected' };
   if (chainId !== CHAIN_ID) return { status: 'wrong-chain' };
   if (!IFRLOCK_ADDRESS || lockedBalance.isError) return { status: 'unavailable' };
   if (lockedBalance.isLoading || lockedBalance.data === undefined) return { status: 'checking' };
-  return { status: 'ready', lockedRaw: lockedBalance.data as bigint };
+  return {
+    status: 'ready',
+    lockedRaw: lockedBalance.data as bigint,
+    walletBalanceStatus: !IFR_TOKEN_ADDRESS || walletBalance.isError
+      ? 'unavailable'
+      : walletBalance.isLoading || walletBalance.data === undefined
+        ? 'checking'
+        : 'ready',
+    walletRaw: walletBalance.data === undefined ? null : walletBalance.data as bigint,
+  };
 }
 
-function requiredLockRaw(requiredLockIFR: number): bigint | null {
-  if (!Number.isSafeInteger(requiredLockIFR) || requiredLockIFR <= 0) return null;
-  return BigInt(requiredLockIFR) * IFR_UNIT;
+function requiredIFRRaw(requiredIFR: number, allowZero = false): bigint | null {
+  if (!Number.isSafeInteger(requiredIFR) || requiredIFR < (allowZero ? 0 : 1)) return null;
+  return BigInt(requiredIFR) * IFR_UNIT;
 }
 
 function formatAdditionalIFR(raw: bigint): string {
@@ -52,12 +80,15 @@ function formatAdditionalIFR(raw: bigint): string {
 
 export function OfferEligibility({
   requiredLockIFR,
+  minIFRHeld,
   eligibility,
 }: {
   requiredLockIFR: number;
+  minIFRHeld: number;
   eligibility: IfrLockEligibility;
 }) {
-  const requiredRaw = requiredLockRaw(requiredLockIFR);
+  const requiredRaw = requiredIFRRaw(requiredLockIFR);
+  const heldRequiredRaw = requiredIFRRaw(minIFRHeld, true);
   let tone = 'border-stone-500 text-stone-300';
   let label = 'Eligibility unavailable';
   let detail = 'Final eligibility is verified at checkout.';
@@ -75,16 +106,52 @@ export function OfferEligibility({
   } else if (eligibility.status === 'checking') {
     label = 'Checking locked IFR';
     detail = 'Reading IFRLock on Ethereum Mainnet.';
-  } else if (eligibility.status === 'ready' && requiredRaw !== null) {
-    if (eligibility.lockedRaw >= requiredRaw) {
+  } else if (
+    eligibility.status === 'ready' &&
+    requiredRaw !== null &&
+    heldRequiredRaw !== null &&
+    minIFRHeld > 0 &&
+    eligibility.walletBalanceStatus === 'checking'
+  ) {
+    label = 'Checking IFR balances';
+    detail = 'Reading IFRLock and the freely held wallet balance.';
+  } else if (
+    eligibility.status === 'ready' &&
+    requiredRaw !== null &&
+    heldRequiredRaw !== null &&
+    minIFRHeld > 0 &&
+    eligibility.walletBalanceStatus === 'unavailable'
+  ) {
+    label = 'Wallet balance unavailable';
+    detail = 'Final eligibility will fail closed unless both balances can be verified.';
+  } else if (eligibility.status === 'ready' && requiredRaw !== null && heldRequiredRaw !== null) {
+    const zero = BigInt(0);
+    const walletRaw = eligibility.walletRaw ?? zero;
+    const lockDeficit = eligibility.lockedRaw >= requiredRaw ? zero : requiredRaw - eligibility.lockedRaw;
+    const heldDeficit = walletRaw >= heldRequiredRaw ? zero : heldRequiredRaw - walletRaw;
+    if (lockDeficit === zero && heldDeficit === zero) {
       tone = 'border-green-300 text-green-100';
       label = 'Eligible with this wallet';
-      detail = 'The seller verifies the lock again at checkout.';
+      detail = minIFRHeld > 0
+        ? 'The seller verifies both balances again at checkout.'
+        : 'The seller verifies the lock again at checkout.';
     } else {
-      const additionalRaw = requiredRaw - eligibility.lockedRaw;
       tone = 'border-orange-300 text-orange-100';
-      label = `Lock ${formatAdditionalIFR(additionalRaw)} more IFR`;
-      detail = 'Increase the IFRLock balance before checkout.';
+      const purchaseDeficit = lockDeficit + heldRequiredRaw > walletRaw
+        ? lockDeficit + heldRequiredRaw - walletRaw
+        : zero;
+      if (purchaseDeficit > zero) {
+        label = `Add ${formatAdditionalIFR(purchaseDeficit)} IFR first`;
+        detail = `Then lock ${formatAdditionalIFR(lockDeficit)} IFR while retaining ${minIFRHeld.toLocaleString('en-US')} IFR in the wallet.`;
+      } else if (lockDeficit > zero) {
+        label = `Lock ${formatAdditionalIFR(lockDeficit)} more IFR`;
+        detail = minIFRHeld > 0
+          ? `Retain at least ${minIFRHeld.toLocaleString('en-US')} IFR in the wallet after locking.`
+          : 'Increase the IFRLock balance before checkout.';
+      } else {
+        label = `Hold ${formatAdditionalIFR(heldDeficit)} more IFR`;
+        detail = 'Keep the minimum free IFR balance in this wallet before checkout.';
+      }
       action = true;
     }
   }
