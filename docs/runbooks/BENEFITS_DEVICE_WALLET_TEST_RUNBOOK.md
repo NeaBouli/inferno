@@ -88,14 +88,14 @@ Pass criteria:
 3. Connect wallet in a wallet browser or extension.
 4. Confirm wallet address appears shortened.
 5. Confirm Checkout readiness reflects connected wallet, IFR balance, ETH gas and lock status.
-6. Tap `Lock IFR` and confirm it routes to `https://web3.ifrunit.tech`.
+6. Use `Approve IFR`, `Lock IFR` and `Unlock all` inside the Shop wallet panel; confirm balances and transaction feedback refresh without leaving `shop.ifrunit.tech`.
 7. Tap `Buy IFR` and confirm it opens the configured Uniswap path.
 
 Pass criteria:
 
 - App does not send tokens.
 - Readiness state is understandable.
-- Links open without losing the current app context unexpectedly.
+- Lock actions remain in the Shop app; external buy links open without losing the current app context unexpectedly.
 
 ### 3. Seller Profile And Rule
 

@@ -1426,6 +1426,37 @@ export function SellerRuleBuilder() {
         </p>
       </div>
 
+      <nav aria-label="Seller tasks" className="mb-5 overflow-x-auto rounded-2xl border border-orange-200/15 bg-black/20 p-2">
+        <div className="flex min-w-max gap-2">
+          {[
+            { href: '#seller-launch', label: 'Launch', ready: launchChecksReady === 4 },
+            { href: '#seller-profile', label: 'Profile', ready: profileReady },
+            { href: '#seller-catalog', label: 'Products', ready: activeCatalogCount > 0 },
+            { href: '#seller-rule-editor', label: 'Rules', ready: ruleReady },
+            ...(businessId ? [{ href: '#seller-team', label: 'Team' }] : []),
+            { href: '#seller-session-history', label: 'History' },
+            { href: '#seller-rewards', label: 'Rewards' },
+          ].map((task) => (
+            <a
+              key={task.href}
+              href={task.href}
+              className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-white/10 px-3 py-2 text-xs font-black uppercase tracking-[0.12em] text-stone-100 transition hover:border-orange-200/50 hover:bg-orange-200/10"
+            >
+              {'ready' in task ? (
+                <>
+                  <span
+                    aria-hidden="true"
+                    className={`h-2 w-2 rounded-full ${task.ready ? 'bg-green-300' : 'bg-stone-600'}`}
+                  />
+                  <span className="sr-only">{task.ready ? 'Ready' : 'Not ready'}: </span>
+                </>
+              ) : null}
+              {task.label}
+            </a>
+          ))}
+        </div>
+      </nav>
+
       <div className="mb-5 rounded-3xl border border-green-300/20 bg-green-300/[0.07] p-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
@@ -1651,7 +1682,9 @@ export function SellerRuleBuilder() {
         ) : null}
       </div>
 
-      <SellerRewardStatus businessId={businessId} />
+      <div id="seller-rewards" className="scroll-mt-28">
+        <SellerRewardStatus businessId={businessId} />
+      </div>
 
       <div id="seller-profile" className="mb-5 scroll-mt-28 rounded-3xl border border-white/10 bg-black/20 p-4">
         <div className="flex flex-wrap items-start justify-between gap-3">
@@ -1922,7 +1955,7 @@ export function SellerRuleBuilder() {
       </div>
 
       {businessId ? (
-        <div className="mb-5 rounded-3xl border border-green-300/20 bg-green-300/[0.06] p-4">
+        <div id="seller-team" className="mb-5 scroll-mt-28 rounded-3xl border border-green-300/20 bg-green-300/[0.06] p-4">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
               <p className="text-xs font-bold uppercase tracking-[0.18em] text-green-100/80">Counter team</p>

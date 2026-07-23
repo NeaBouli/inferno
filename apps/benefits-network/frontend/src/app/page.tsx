@@ -13,6 +13,40 @@ import { hasWalletConnectProjectId } from '@/lib/wagmi';
 type Role = 'customer' | 'seller';
 type CodeMode = 'link' | 'button' | 'api' | 'pos';
 const UNISWAP_IFR_URL = 'https://app.uniswap.org/swap?outputCurrency=0x77e99917Eca8539c62F509ED1193ac36580A6e7B';
+const ROLE_STORAGE_KEY = 'ifr.shop.preferredRole';
+const SELLER_HASHES = new Set([
+  '#seller-workspace',
+  '#seller-launch',
+  '#seller-profile',
+  '#seller-catalog',
+  '#seller-rule-editor',
+  '#seller-team',
+  '#seller-session-history',
+  '#seller-rewards',
+  '#integrate',
+]);
+const CUSTOMER_HASHES = new Set(['#customer-pass', '#customer-wallet', '#my-benefits']);
+
+function isRole(value: string | null): value is Role {
+  return value === 'customer' || value === 'seller';
+}
+
+function readStoredRole(): Role | null {
+  try {
+    const storedRole = window.localStorage.getItem(ROLE_STORAGE_KEY);
+    return isRole(storedRole) ? storedRole : null;
+  } catch {
+    return null;
+  }
+}
+
+function rememberRole(nextRole: Role) {
+  try {
+    window.localStorage.setItem(ROLE_STORAGE_KEY, nextRole);
+  } catch {
+    // Role persistence is optional when browser storage is unavailable.
+  }
+}
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -494,7 +528,18 @@ function SystemReadinessCard() {
 export default function Home() {
   const [role, setRole] = useState<Role>('customer');
 
+  function selectRole(nextRole: Role) {
+    setRole(nextRole);
+    rememberRole(nextRole);
+
+    const url = new URL(window.location.href);
+    url.searchParams.delete('mode');
+    if (SELLER_HASHES.has(url.hash) || CUSTOMER_HASHES.has(url.hash)) url.hash = '';
+    window.history.replaceState(window.history.state, '', `${url.pathname}${url.search}${url.hash}`);
+  }
+
   function openSellerTools() {
+    rememberRole('seller');
     if (window.location.hash === '#seller-workspace') {
       setRole('seller');
       return;
@@ -504,11 +549,17 @@ export default function Home() {
 
   useEffect(() => {
     const syncRoleFromHash = () => {
-      const sellerHashes = new Set(['#seller-workspace', '#integrate', '#seller-session-history']);
-      const customerHashes = new Set(['#customer-pass', '#customer-wallet', '#my-benefits']);
       const requestedMode = new URLSearchParams(window.location.search).get('mode');
-      if (sellerHashes.has(window.location.hash) || requestedMode === 'seller') setRole('seller');
-      else if (customerHashes.has(window.location.hash) || requestedMode === 'customer' || !window.location.hash) setRole('customer');
+      const storedRole = readStoredRole();
+      const nextRole = SELLER_HASHES.has(window.location.hash) || requestedMode === 'seller'
+        ? 'seller'
+        : CUSTOMER_HASHES.has(window.location.hash) || requestedMode === 'customer'
+          ? 'customer'
+          : storedRole
+            ? storedRole
+            : 'customer';
+      setRole(nextRole);
+      rememberRole(nextRole);
     };
     syncRoleFromHash();
     window.addEventListener('hashchange', syncRoleFromHash);
@@ -557,7 +608,7 @@ export default function Home() {
           <div id="choose-mode" className="mt-6 grid scroll-mt-36 grid-cols-2 gap-3 sm:mt-8" aria-label="Choose app mode">
             <button
               type="button"
-              onClick={() => setRole('customer')}
+              onClick={() => selectRole('customer')}
               aria-pressed={role === 'customer'}
               className={`rounded-3xl border p-4 text-left transition sm:p-5 ${
                 role === 'customer'
@@ -573,7 +624,7 @@ export default function Home() {
             </button>
             <button
               type="button"
-              onClick={() => setRole('seller')}
+              onClick={() => selectRole('seller')}
               aria-pressed={role === 'seller'}
               className={`rounded-3xl border p-4 text-left transition sm:p-5 ${
                 role === 'seller'
