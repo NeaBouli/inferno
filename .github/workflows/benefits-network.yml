@@ -15,6 +15,7 @@ on:
       - 'scripts/test-benefits-doc-consistency.cjs'
       - 'scripts/test-benefits-service-worker.js'
       - 'scripts/test-benefits-wallet-asset-provider.mjs'
+      - 'scripts/test-benefits-node-runtime.cjs'
       - 'scripts/test-deploy-benefits-capacity.sh'
       - 'scripts/report-benefits-device-checklist.js'
       - 'scripts/record-benefits-device-evidence.js'
@@ -34,6 +35,7 @@ on:
       - 'scripts/test-benefits-doc-consistency.cjs'
       - 'scripts/test-benefits-service-worker.js'
       - 'scripts/test-benefits-wallet-asset-provider.mjs'
+      - 'scripts/test-benefits-node-runtime.cjs'
       - 'scripts/test-deploy-benefits-capacity.sh'
       - 'scripts/report-benefits-device-checklist.js'
       - 'scripts/record-benefits-device-evidence.js'
@@ -53,7 +55,7 @@ jobs:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'npm'
           cache-dependency-path: apps/benefits-network/backend/package-lock.json
       - run: npm ci
@@ -66,6 +68,28 @@ jobs:
       - run: npm run test:ethers-v6-lifecycle
       - run: npm run build
       - run: npm run smoke:http
+      - name: Build and verify Node 22 backend image
+        run: |
+          set -euo pipefail
+          docker build -t inferno-benefits-backend:ci .
+          container="$(docker run -d --tmpfs /data -p 127.0.0.1:3001:3001 \
+            -e DATABASE_URL=file:/data/ci.db \
+            -e CHAIN_ID=11155111 \
+            -e RPC_URL=https://mock-rpc.example.com \
+            -e IFRLOCK_ADDRESS=0x0000000000000000000000000000000000000001 \
+            -e ADMIN_SECRET=ci-admin-secret \
+            inferno-benefits-backend:ci)"
+          cleanup() { docker rm -f "$container" >/dev/null 2>&1 || true; }
+          trap cleanup EXIT
+          ready=0
+          for _ in $(seq 1 60); do
+            if curl -fsS http://127.0.0.1:3001/api/ready >/dev/null; then ready=1; break; fi
+            sleep 1
+          done
+          if [ "$ready" != 1 ]; then docker logs "$container"; exit 1; fi
+          curl -fsS http://127.0.0.1:3001/api/health >/dev/null
+          curl -fsS 'http://127.0.0.1:3001/api/businesses?limit=1' >/dev/null
+          docker exec "$container" node --version | grep -E '^v22\.'
 
   test-frontend:
     runs-on: ubuntu-latest
@@ -76,7 +100,7 @@ jobs:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'npm'
           cache-dependency-path: apps/benefits-network/frontend/package-lock.json
       - run: npm ci
@@ -86,6 +110,22 @@ jobs:
       - run: node ../../../scripts/test-benefits-doc-consistency.cjs
       - run: npm run typecheck
       - run: npm run build
+      - name: Build and verify Node 22 frontend image
+        run: |
+          set -euo pipefail
+          docker build -t inferno-benefits-frontend:ci .
+          container="$(docker run -d -p 127.0.0.1:3000:3000 inferno-benefits-frontend:ci)"
+          cleanup() { docker rm -f "$container" >/dev/null 2>&1 || true; }
+          trap cleanup EXIT
+          ready=0
+          for _ in $(seq 1 60); do
+            if curl -fsS http://127.0.0.1:3000/ >/dev/null; then ready=1; break; fi
+            sleep 1
+          done
+          if [ "$ready" != 1 ]; then docker logs "$container"; exit 1; fi
+          curl -fsS http://127.0.0.1:3000/guide >/dev/null
+          curl -fsS http://127.0.0.1:3000/manifest.webmanifest >/dev/null
+          docker exec "$container" node --version | grep -E '^v22\.'
 
   test-device-checklist:
     runs-on: ubuntu-latest
@@ -93,11 +133,12 @@ jobs:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
         with:
-          node-version: '20'
+          node-version: '22'
       - run: npm run qa:benefits-devices
       - run: npm run qa:benefits-report
       - run: npm run test:benefits-sw
       - run: npm run test:benefits-wallet-asset
+      - run: npm run test:benefits-node-runtime
       - run: bash scripts/test-deploy-benefits-capacity.sh
 
   test-customer-pass-ui:
@@ -106,7 +147,7 @@ jobs:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'npm'
       - run: npm ci
       - run: npm ci --prefix apps/benefits-network/frontend
