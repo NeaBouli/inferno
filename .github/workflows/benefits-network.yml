@@ -107,6 +107,7 @@ jobs:
       - run: npm audit --audit-level=low
       - run: npm run test:proof-link
       - run: npm run test:discoverability
+      - run: npm run test:wallet-selection
       - run: node ../../../scripts/test-benefits-doc-consistency.cjs
       - run: npm run typecheck
       - run: npm run build

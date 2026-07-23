@@ -70,6 +70,9 @@ The app has two roles:
 ### Customer Flow
 
 - Connect as many wallets as practical through EIP-1193/EIP-6963 injection and WalletConnect.
+- Use the same provider-aware connector policy in customer, seller and checkout surfaces: prefer
+  a real injected provider, otherwise Coinbase Wallet SDK, then configured WalletConnect; retain
+  an explicit connector chooser and readable failure guidance.
 - Show wallet, IFR balance, ETH balance and locked IFR.
 - Explain that signing a QR proof does not move tokens.
 - Let a connected customer load only their own verified benefit history across devices with one

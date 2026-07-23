@@ -11,6 +11,7 @@
     "start": "next start --port 3000",
     "test:proof-link": "node scripts/test-customer-proof-link.cjs && node scripts/test-customer-history-wallet.cjs",
     "test:discoverability": "node scripts/test-discoverability.cjs",
+    "test:wallet-selection": "node scripts/test-wallet-connector-selection.mjs",
     "typecheck": "rm -f tsconfig.tsbuildinfo && tsc --noEmit"
   },
   "dependencies": {

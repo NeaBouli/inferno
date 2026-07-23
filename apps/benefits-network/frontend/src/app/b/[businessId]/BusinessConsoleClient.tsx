@@ -9,6 +9,11 @@ import { StatusBadge } from '@/components/StatusBadge';
 import { SellerCustomerPassScanner } from '@/components/SellerCustomerPassScanner';
 import { parseCustomerPassQrPayload } from '@/lib/customerPassLink';
 import {
+  selectPreferredWalletConnector,
+  walletConnectionErrorMessage,
+  walletConnectorLabel,
+} from '@/lib/walletConnectorSelection.mjs';
+import {
   BenefitRule,
   BusinessInfo,
   CheckoutAccess,
@@ -391,15 +396,21 @@ export function BusinessConsoleClient({ businessId }: { businessId: string }) {
 
   async function connectSellerWallet() {
     setError('');
-    const connector =
-      connectors.find((item) => item.id === 'injected') ||
-      connectors.find((item) => item.id === 'metaMask') ||
-      connectors[0];
+    const connector = await selectPreferredWalletConnector(connectors);
     if (!connector) {
       setError('No wallet connector is available in this browser.');
       return;
     }
-    await connectAsync({ connector });
+    await connectCheckoutConnector(connector);
+  }
+
+  async function connectCheckoutConnector(connector: (typeof connectors)[number]) {
+    setError('');
+    try {
+      await connectAsync({ connector });
+    } catch (err) {
+      setError(walletConnectionErrorMessage(err));
+    }
   }
 
   async function copyCustomerUrl() {
@@ -716,14 +727,34 @@ export function BusinessConsoleClient({ businessId }: { businessId: string }) {
                   </button>
                 </div>
               ) : (
-                <button
-                  type="button"
-                  onClick={connectSellerWallet}
-                  disabled={connecting}
-                  className="rounded-xl bg-green-300 px-3 py-2 text-xs font-black uppercase tracking-[0.12em] text-stone-950 transition hover:bg-green-200 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  {connecting ? 'Connecting...' : 'Connect'}
-                </button>
+                <div className="grid gap-2">
+                  <button
+                    type="button"
+                    onClick={connectSellerWallet}
+                    disabled={connecting}
+                    className="rounded-xl bg-green-300 px-3 py-2 text-xs font-black uppercase tracking-[0.12em] text-stone-950 transition hover:bg-green-200 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {connecting ? 'Connecting...' : 'Connect'}
+                  </button>
+                  {connectors.length > 1 ? (
+                    <details className="text-right">
+                      <summary className="cursor-pointer text-xs font-bold text-green-50">Choose wallet</summary>
+                      <div className="mt-2 grid gap-2">
+                        {connectors.map((availableConnector) => (
+                          <button
+                            key={availableConnector.uid}
+                            type="button"
+                            onClick={() => connectCheckoutConnector(availableConnector)}
+                            disabled={connecting}
+                            className="rounded-xl border border-green-200/30 px-3 py-2 text-xs font-black text-green-50 disabled:opacity-50"
+                          >
+                            {walletConnectorLabel(availableConnector)}
+                          </button>
+                        ))}
+                      </div>
+                    </details>
+                  ) : null}
+                </div>
               )}
             </div>
             <p className="mt-2 text-xs leading-5 text-stone-400">
@@ -854,7 +885,7 @@ export function BusinessConsoleClient({ businessId }: { businessId: string }) {
           >
             {loading ? 'Working...' : session ? 'Create new QR session' : 'Create QR session'}
           </button>
-          {error ? <p className="mt-4 rounded-2xl border border-red-400/30 bg-red-500/10 p-3 text-sm text-red-200">{error}</p> : null}
+          {error ? <p role="alert" className="mt-4 rounded-2xl border border-red-400/30 bg-red-500/10 p-3 text-sm text-red-200">{error}</p> : null}
         </div>
 
         <div className="rounded-[2rem] border border-white/10 bg-stone-100 p-6 text-stone-950 shadow-2xl shadow-black/30">

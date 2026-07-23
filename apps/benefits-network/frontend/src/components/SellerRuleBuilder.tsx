@@ -6,6 +6,11 @@ import QRCode from 'react-qr-code';
 import { SellerCatalogManager } from '@/components/SellerCatalogManager';
 import { SellerRewardStatus } from '@/components/SellerRewardStatus';
 import {
+  selectPreferredWalletConnector,
+  walletConnectionErrorMessage,
+  walletConnectorLabel,
+} from '@/lib/walletConnectorSelection.mjs';
+import {
   buildSellerSessionCsv,
   maskSellerSessionWallet,
   SELLER_SESSION_PAGE_LIMIT,
@@ -1236,15 +1241,22 @@ export function SellerRuleBuilder() {
   async function connectSellerWallet() {
     setError('');
     setStatus('');
-    const connector =
-      connectors.find((item) => item.id === 'injected') ||
-      connectors.find((item) => item.id === 'metaMask') ||
-      connectors[0];
+    const connector = await selectPreferredWalletConnector(connectors);
     if (!connector) {
       setError('No wallet connector is available in this browser.');
       return;
     }
-    await connectAsync({ connector });
+    await connectSellerConnector(connector);
+  }
+
+  async function connectSellerConnector(connector: (typeof connectors)[number]) {
+    setError('');
+    setStatus('');
+    try {
+      await connectAsync({ connector });
+    } catch (err) {
+      setError(walletConnectionErrorMessage(err));
+    }
   }
 
   async function signSellerAction(
@@ -1477,14 +1489,34 @@ export function SellerRuleBuilder() {
               Disconnect
             </button>
           ) : (
-            <button
-              type="button"
-              onClick={connectSellerWallet}
-              disabled={connecting}
-              className="rounded-2xl bg-green-300 px-5 py-3 text-sm font-black uppercase tracking-[0.14em] text-stone-950 shadow-xl shadow-green-950/30 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {connecting ? 'Connecting...' : 'Connect wallet'}
-            </button>
+            <div className="grid gap-2">
+              <button
+                type="button"
+                onClick={connectSellerWallet}
+                disabled={connecting}
+                className="rounded-2xl bg-green-300 px-5 py-3 text-sm font-black uppercase tracking-[0.14em] text-stone-950 shadow-xl shadow-green-950/30 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {connecting ? 'Connecting...' : 'Connect wallet'}
+              </button>
+              {connectors.length > 1 ? (
+                <details className="text-right">
+                  <summary className="cursor-pointer text-xs font-bold text-green-50">Choose wallet</summary>
+                  <div className="mt-2 grid gap-2">
+                    {connectors.map((availableConnector) => (
+                      <button
+                        key={availableConnector.uid}
+                        type="button"
+                        onClick={() => connectSellerConnector(availableConnector)}
+                        disabled={connecting}
+                        className="rounded-xl border border-green-200/30 px-3 py-2 text-xs font-black text-green-50 disabled:opacity-50"
+                      >
+                        {walletConnectorLabel(availableConnector)}
+                      </button>
+                    ))}
+                  </div>
+                </details>
+              ) : null}
+            </div>
           )}
         </div>
         <div className="mt-4 flex flex-wrap gap-2">
@@ -2566,7 +2598,7 @@ export function SellerRuleBuilder() {
       </button>
 
       {status ? <p role="status" aria-live="polite" className="mt-4 rounded-2xl border border-green-300/30 bg-green-500/10 p-3 text-sm text-green-100">{status}</p> : null}
-      {error ? <p className="mt-4 rounded-2xl border border-red-400/30 bg-red-500/10 p-3 text-sm text-red-200">{error}</p> : null}
+      {error ? <p role="alert" className="mt-4 rounded-2xl border border-red-400/30 bg-red-500/10 p-3 text-sm text-red-200">{error}</p> : null}
 
       {rules.length > 0 ? (
         <div className="mt-5 grid gap-3">
