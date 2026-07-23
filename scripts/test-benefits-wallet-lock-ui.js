@@ -263,6 +263,10 @@ async function run() {
       throw new Error(`Wallet state did not load. RPC calls: ${JSON.stringify(state.rpcCalls)}\n${await walletPanel.innerText()}`);
     }
     await walletPanel.getByText('10,000.000 IFR', { exact: true }).first().waitFor();
+    for (const tier of ['Bronze / 1,000 IFR', 'Silver / 2,500 IFR', 'Gold / 5,000 IFR', 'Platinum / 10,000 IFR']) {
+      await walletPanel.getByRole('button', { name: tier, exact: true }).waitFor();
+    }
+    await walletPanel.getByText('Sellers define each real rule and may use different thresholds.', { exact: true }).waitFor();
     await walletPanel.getByRole('button', { name: 'Approve 1,000 IFR', exact: true }).click();
     await walletPanel.getByText('Approval confirmed. You can lock IFR now.', { exact: true }).waitFor({ timeout: 15_000 });
     await walletPanel.getByText('1,000.000 IFR', { exact: true }).first().waitFor();
@@ -270,7 +274,7 @@ async function run() {
     await walletPanel.getByText('Lock confirmed. Wallet status is refreshing.', { exact: true }).waitFor({ timeout: 15_000 });
     await walletPanel.getByText('9,000.000 IFR', { exact: true }).first().waitFor();
     await walletPanel.getByText('Ready for checkout', { exact: true }).waitFor();
-    const currentTier = walletPanel.getByText('Current tier', { exact: true }).locator('xpath=..');
+    const currentTier = walletPanel.getByText('Example tier guide', { exact: true }).locator('xpath=..');
     await currentTier.getByText('Bronze', { exact: true }).waitFor();
     const unlock = walletPanel.getByRole('button', { name: 'Unlock all', exact: true });
     assert.equal(await unlock.isEnabled(), true, 'unlock must be enabled after the lock receipt refresh');

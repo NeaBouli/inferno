@@ -258,62 +258,63 @@ function PwaInstallCard() {
 }
 
 function CodeGenerator() {
-  const [businessId, setBusinessId] = useState('your-business-id');
-  const [ruleLabel, setRuleLabel] = useState('Bronze 10%');
+  const [businessId, setBusinessId] = useState('');
+  const [benefitRuleId, setBenefitRuleId] = useState('');
   const [mode, setMode] = useState<CodeMode>('link');
   const [copyStatus, setCopyStatus] = useState('');
 
-  const normalizedBusinessId = businessId.trim() || 'your-business-id';
+  const normalizedBusinessId = businessId.trim();
+  const normalizedRuleId = benefitRuleId.trim();
+  const validBusinessId = /^[A-Za-z0-9_-]{1,80}$/.test(normalizedBusinessId);
+  const validRuleId = /^[A-Za-z0-9_-]{1,80}$/.test(normalizedRuleId);
+  const needsRuleId = mode === 'api' || mode === 'pos';
+  const generatorReady = validBusinessId && (!needsRuleId || validRuleId);
+  const validationMessage = !validBusinessId
+    ? normalizedBusinessId ? 'Business ID may contain only letters, numbers, hyphens and underscores.' : 'Enter the Business ID from your seller workspace.'
+    : needsRuleId && !validRuleId
+      ? normalizedRuleId ? 'Benefit rule ID may contain only letters, numbers, hyphens and underscores.' : 'Enter the exact active Benefit rule ID for this checkout.'
+      : '';
   const scannerUrl = useMemo(
     () => `https://shop.ifrunit.tech/b/${encodeURIComponent(normalizedBusinessId)}`,
     [normalizedBusinessId]
   );
 
   const code = useMemo(() => {
+    if (!generatorReady) return validationMessage;
     if (mode === 'button') {
       return `<a href="${scannerUrl}" target="_blank" rel="noopener">Verify IFR discount</a>`;
     }
     if (mode === 'api') {
-      return `GET https://shop.ifrunit.tech/api/seller/auth-message?action=sessions%3Acreate&businessId=${encodeURIComponent(normalizedBusinessId)}&walletAddress=<seller-wallet>&scope=<benefit-rule-id-or-default>\n\nSign the returned one-time message, then:\nPOST https://shop.ifrunit.tech/api/sessions\nAction: sessions:create\nBusiness: ${normalizedBusinessId}\nRequired signed headers: x-ifr-wallet, x-ifr-signature, x-ifr-timestamp, x-ifr-nonce\n\n${JSON.stringify({
+      return `1. Request a one-time, rule-bound challenge:\nGET https://shop.ifrunit.tech/api/seller/auth-message?action=sessions%3Acreate&businessId=${encodeURIComponent(normalizedBusinessId)}&walletAddress=<seller-wallet>&scope=${encodeURIComponent(normalizedRuleId)}\n\n2. Verify action, businessId, walletAddress, scope, nonce and expiry in the response. Ask the authorized owner/operator wallet to sign the exact returned message.\n\n3. Create the checkout:\nPOST https://shop.ifrunit.tech/api/sessions\nRequired headers: content-type, x-ifr-wallet, x-ifr-signature, x-ifr-timestamp, x-ifr-nonce\nBody:\n${JSON.stringify({
         businessId: normalizedBusinessId,
-        benefitRuleId: 'selected-active-rule-id',
+        benefitRuleId: normalizedRuleId,
       }, null, 2)}`;
     }
     if (mode === 'pos') {
-      return `async function createIFRCheckout(benefitRuleId, sellerAuth) {
-  const response = await fetch("https://shop.ifrunit.tech/api/sessions", {
-    method: "POST",
-    headers: {
-      "content-type": "application/json",
-      "x-ifr-wallet": sellerAuth.walletAddress,
-      "x-ifr-signature": sellerAuth.signature,
-      "x-ifr-timestamp": sellerAuth.timestamp,
-      "x-ifr-nonce": sellerAuth.nonce
-    },
-    body: JSON.stringify({
-      businessId: ${JSON.stringify(normalizedBusinessId)},
-      benefitRuleId
-    })
+      return `import { IFRBenefitsClient } from "ifr-sdk";
+
+// npm publication is pending. Install the repository package with:
+// npm install --install-links ./apps/sdk
+const benefits = new IFRBenefitsClient({ baseUrl: "https://shop.ifrunit.tech" });
+
+export async function createIFRCheckout({ sellerWalletAddress, signMessage }) {
+  // signMessage must use an authorized owner/operator wallet. Never inline a key or seed phrase.
+  return benefits.createCheckout({
+    businessId: ${JSON.stringify(normalizedBusinessId)},
+    benefitRuleId: ${JSON.stringify(normalizedRuleId)},
+    walletAddress: sellerWalletAddress,
+    signMessage
   });
-
-  if (!response.ok) {
-    throw new Error(\`IFR checkout failed: \${response.status}\`);
-  }
-
-  const session = await response.json();
-  return {
-    ...session,
-    customerUrl: new URL(session.qrUrl, "https://shop.ifrunit.tech").toString()
-  };
-}
-
-// sellerAuth signs the server-issued one-time message bound to this rule ID.
-const checkout = await createIFRCheckout("selected-active-rule-id", sellerAuth);`;
+}`;
     }
     return scannerUrl;
-  }, [mode, normalizedBusinessId, scannerUrl]);
+  }, [generatorReady, mode, normalizedBusinessId, normalizedRuleId, scannerUrl, validationMessage]);
 
   async function copySnippet() {
+    if (!generatorReady) {
+      setCopyStatus(needsRuleId ? 'Enter valid Business and Benefit rule IDs first.' : 'Enter a valid Business ID first.');
+      return;
+    }
     try {
       await navigator.clipboard.writeText(code);
       setCopyStatus('Copied.');
@@ -323,10 +324,14 @@ const checkout = await createIFRCheckout("selected-active-rule-id", sellerAuth);
   }
 
   async function shareSnippet() {
+    if (!generatorReady) {
+      setCopyStatus(needsRuleId ? 'Enter valid Business and Benefit rule IDs first.' : 'Enter a valid Business ID first.');
+      return;
+    }
     try {
       if (navigator.share) {
         await navigator.share({
-          title: `IFR checkout entry - ${ruleLabel || 'Benefit'}`,
+          title: `IFR checkout entry - ${normalizedRuleId || normalizedBusinessId}`,
           text: code,
           url: mode === 'link' ? code : scannerUrl,
         });
@@ -351,14 +356,18 @@ const checkout = await createIFRCheckout("selected-active-rule-id", sellerAuth);
           <button
             type="button"
             onClick={copySnippet}
-            className="rounded-full border border-green-300/25 bg-green-300/10 px-3 py-2 text-xs font-bold uppercase tracking-[0.14em] text-green-100 transition hover:bg-green-300/15"
+            disabled={!generatorReady}
+            aria-describedby={!generatorReady ? 'integration-generator-validation' : undefined}
+            className="rounded-full border border-green-300/25 bg-green-300/10 px-3 py-2 text-xs font-bold uppercase tracking-[0.14em] text-green-100 transition hover:bg-green-300/15 disabled:cursor-not-allowed disabled:opacity-50"
           >
             Copy
           </button>
           <button
             type="button"
             onClick={shareSnippet}
-            className="rounded-full border border-orange-200/25 bg-orange-200/10 px-3 py-2 text-xs font-bold uppercase tracking-[0.14em] text-orange-100 transition hover:bg-orange-200/15"
+            disabled={!generatorReady}
+            aria-describedby={!generatorReady ? 'integration-generator-validation' : undefined}
+            className="rounded-full border border-orange-200/25 bg-orange-200/10 px-3 py-2 text-xs font-bold uppercase tracking-[0.14em] text-orange-100 transition hover:bg-orange-200/15 disabled:cursor-not-allowed disabled:opacity-50"
           >
             Share
           </button>
@@ -370,15 +379,21 @@ const checkout = await createIFRCheckout("selected-active-rule-id", sellerAuth);
           Business ID
           <input
             value={businessId}
-            onChange={(event) => setBusinessId(event.target.value)}
+            onChange={(event) => { setBusinessId(event.target.value); setCopyStatus(''); }}
+            placeholder="Seller workspace Business ID"
+            aria-invalid={Boolean(normalizedBusinessId) && !validBusinessId}
+            aria-describedby={!validBusinessId ? 'integration-generator-validation' : undefined}
             className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none focus:border-orange-300"
           />
         </label>
         <label className="grid gap-2 text-sm font-semibold text-stone-200">
-          Rule label
+          Benefit rule ID
           <input
-            value={ruleLabel}
-            onChange={(event) => setRuleLabel(event.target.value)}
+            value={benefitRuleId}
+            onChange={(event) => { setBenefitRuleId(event.target.value); setCopyStatus(''); }}
+            placeholder="Exact active rule ID"
+            aria-invalid={Boolean(normalizedRuleId) && !validRuleId}
+            aria-describedby={needsRuleId && !validRuleId ? 'integration-generator-validation' : undefined}
             className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none focus:border-orange-300"
           />
         </label>
@@ -389,28 +404,36 @@ const checkout = await createIFRCheckout("selected-active-rule-id", sellerAuth);
           <button
             key={item}
             type="button"
-            onClick={() => setMode(item)}
+            onClick={() => { setMode(item); setCopyStatus(''); }}
             className={`rounded-xl px-3 py-2 text-xs font-black uppercase tracking-[0.12em] transition ${
               mode === item ? 'bg-orange-300 text-stone-950' : 'text-stone-300 hover:text-white'
             }`}
           >
-            {item}
+            {{ link: 'Scanner', button: 'HTML', api: 'REST', pos: 'SDK / POS' }[item]}
           </button>
         ))}
       </div>
 
+      {!generatorReady ? (
+        <p id="integration-generator-validation" role="status" className="mt-3 text-xs font-semibold text-amber-100">
+          {validationMessage}
+        </p>
+      ) : null}
+
       <div className="mt-4 rounded-2xl border border-white/10 bg-[#080706] p-4">
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-          <p className="text-xs uppercase tracking-[0.14em] text-stone-500">Generated for {ruleLabel || 'IFR Benefit'}</p>
-          <a href={scannerUrl} className="text-xs font-bold uppercase tracking-[0.14em] text-orange-200 hover:text-orange-100">
-            Open scanner
-          </a>
+          <p className="text-xs uppercase tracking-[0.14em] text-stone-500">{needsRuleId ? 'Rule-bound checkout integration' : 'Seller scanner entry'}</p>
+          {validBusinessId ? (
+            <a href={scannerUrl} className="text-xs font-bold uppercase tracking-[0.14em] text-orange-200 hover:text-orange-100">
+              Open scanner
+            </a>
+          ) : <span className="text-xs font-bold uppercase tracking-[0.14em] text-stone-600">Business ID required</span>}
         </div>
         <pre className="overflow-x-auto whitespace-pre-wrap text-sm leading-6 text-orange-100">{code}</pre>
       </div>
       {mode === 'pos' ? (
         <p className="mt-3 text-xs leading-5 text-stone-400">
-          Server-side POS JavaScript. It returns the short-lived customer URL for your QR renderer; no seller secret or wallet key belongs in this snippet.
+          Signer-neutral SDK/POS JavaScript. The SDK validates the one-time challenge and returns the short-lived customer URL; npm publication and platform plugins remain pending.
         </p>
       ) : null}
       {copyStatus ? <p className="mt-3 text-xs font-semibold text-stone-300">{copyStatus}</p> : null}
