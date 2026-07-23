@@ -95,6 +95,18 @@ BENEFITS_BASE_URL=http://127.0.0.1:3000 npm run test:benefits-a11y
 It also rejects viewport metadata that disables browser zoom. Automated emulation does not replace
 the physical device and wallet acceptance matrix.
 
+The production build also has a role-scoped mobile bundle gate:
+
+```bash
+npm run build --prefix apps/benefits-network/frontend
+npm run test:benefits-bundle
+```
+
+It keeps Seller management out of the default Customer bundle, requires a separate on-demand
+Seller chunk, limits the home route chunk to 100,000 raw bytes and caps initial home JavaScript at
+240,000 gzip bytes. The budget is a regression guard for mobile entry, not a substitute for
+real-device network and interaction measurements.
+
 The same local production server is used for the CSP compatibility gate:
 
 ```bash

@@ -1,11 +1,11 @@
 'use client';
 
+import dynamic from 'next/dynamic';
 import { Suspense, useEffect, useMemo, useState } from 'react';
 import { AppShell } from '@/components/AppShell';
 import { CustomerProofHistory } from '@/components/CustomerProofHistory';
 import { CustomerCheckoutPass } from '@/components/CustomerCheckoutPass';
 import { OfferDiscovery } from '@/components/OfferDiscovery';
-import { SellerRuleBuilder } from '@/components/SellerRuleBuilder';
 import { SwapRiskNotice } from '@/components/SwapRiskNotice';
 import { WalletStatus } from '@/components/WalletStatus';
 import { hasWalletConnectProjectId } from '@/lib/wagmi';
@@ -14,6 +14,30 @@ type Role = 'customer' | 'seller';
 type CodeMode = 'link' | 'button' | 'api' | 'pos';
 const UNISWAP_IFR_URL = 'https://app.uniswap.org/swap?outputCurrency=0x77e99917Eca8539c62F509ED1193ac36580A6e7B';
 const ROLE_STORAGE_KEY = 'ifr.shop.preferredRole';
+const SellerRuleBuilder = dynamic(
+  () => import('@/components/SellerRuleBuilder').then((module) => module.SellerRuleBuilder),
+  {
+    loading: () => (
+      <section
+        role="status"
+        aria-label="Loading seller workspace"
+        className="min-h-[28rem] rounded-[2rem] border border-white/10 bg-white/[0.055] p-5 shadow-2xl shadow-black/25"
+      >
+        <p className="text-xs font-black uppercase tracking-[0.18em] text-orange-200/80">
+          Seller workspace
+        </p>
+        <h2 className="mt-2 text-2xl font-black text-white">Loading seller tools...</h2>
+        <p className="mt-3 max-w-xl text-sm leading-6 text-stone-300">
+          Preparing profiles, offers, checkout staff and redemption history.
+        </p>
+        <span
+          aria-hidden="true"
+          className="mt-6 block h-1.5 w-24 animate-pulse rounded-full bg-orange-300 shadow-lg shadow-orange-900/40"
+        />
+      </section>
+    ),
+  }
+);
 const SELLER_HASHES = new Set([
   '#seller-workspace',
   '#seller-launch',
