@@ -75,6 +75,10 @@ export function CustomerCheckoutPass() {
   const canConfirm = Boolean(
     walletMatches && status?.status === 'BOUND' && status.checkout?.status === 'PENDING'
   );
+  const checkoutClosed = Boolean(status?.checkout && CLOSED_CHECKOUT.has(status.checkout.status));
+  const mustCancelBeforeReset = status !== null && (
+    (status.status === 'OPEN' || status.status === 'BOUND') && !checkoutClosed
+  );
 
   function remember(next: StoredPass | null) {
     activePassRef.current = next;
@@ -128,22 +132,29 @@ export function CustomerCheckoutPass() {
     }
   }
 
-  async function cancel() {
+  async function cancel(startNewPass = false) {
     if (!pass) return;
     setLoading(true);
     setError('');
     try {
       await cancelCustomerPass(pass.passId, pass.controlToken);
-      setStatus((current) => ({ status: 'CANCELLED', expiresAt: current?.expiresAt || pass.expiresAt, checkout: current?.checkout || null }));
-      setMessage('Checkout pass cancelled. It cannot be bound or approved.');
+      if (startNewPass) {
+        remember(null);
+        setStatus(null);
+        setMessage('Previous pass cancelled. You can create a new customer QR.');
+      } else {
+        setStatus((current) => ({ status: 'CANCELLED', expiresAt: current?.expiresAt || pass.expiresAt, checkout: current?.checkout || null }));
+        setMessage('Checkout pass cancelled. It cannot be bound or approved.');
+      }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not cancel checkout pass.');
+      const detail = err instanceof Error ? ` ${err.message}` : '';
+      setError(`Could not cancel checkout pass. The current pass was kept.${detail}`);
     } finally {
       setLoading(false);
     }
   }
 
-  function startOver() {
+  function clearClosedPass() {
     remember(null);
     setStatus(null);
     setError('');
@@ -209,9 +220,16 @@ export function CustomerCheckoutPass() {
           <div className="grid gap-2 sm:grid-cols-3">
             <button type="button" onClick={() => refresh(pass, true)} disabled={loading} className="rounded-xl border border-white/15 px-3 py-3 text-xs font-black uppercase text-stone-100 disabled:opacity-50">Refresh</button>
             {status?.status === 'OPEN' || status?.status === 'BOUND' ? (
-              <button type="button" onClick={cancel} disabled={loading} className="rounded-xl border border-red-300/30 px-3 py-3 text-xs font-black uppercase text-red-100 disabled:opacity-50">Cancel</button>
+              <button type="button" onClick={() => void cancel()} disabled={loading} className="rounded-xl border border-red-300/30 px-3 py-3 text-xs font-black uppercase text-red-100 disabled:opacity-50">Cancel</button>
             ) : null}
-            <button type="button" onClick={startOver} disabled={loading} className="rounded-xl border border-white/15 px-3 py-3 text-xs font-black uppercase text-stone-100 disabled:opacity-50">New pass</button>
+            <button
+              type="button"
+              onClick={() => mustCancelBeforeReset ? void cancel(true) : clearClosedPass()}
+              disabled={loading || !status}
+              className="rounded-xl border border-white/15 px-3 py-3 text-xs font-black uppercase text-stone-100 disabled:opacity-50"
+            >
+              {!status ? 'Checking pass...' : loading && mustCancelBeforeReset ? 'Cancelling...' : mustCancelBeforeReset ? 'Cancel & new pass' : 'New pass'}
+            </button>
           </div>
         </div>
       )}

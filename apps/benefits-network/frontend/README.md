@@ -118,8 +118,11 @@ seller credential.
 
 ## PWA
 
-Installable on iOS and Android. Service worker caches static assets (cache-first)
-and uses network-first for API calls.
+Installable on iOS and Android. During service-worker installation, the current
+root app shell and its versioned Next.js JavaScript/CSS assets are cached so the
+installed role chooser remains usable offline. Same-origin static assets remain
+cache-first. API, wallet, checkout and redemption requests stay network-only and
+return an explicit offline error instead of serving cached transaction state.
 
 ## Live Smoke
 
