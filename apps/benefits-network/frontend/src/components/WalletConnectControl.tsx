@@ -4,6 +4,11 @@ import { useEffect, useState } from 'react';
 import { useAccount, useChainId, useConnect, useDisconnect } from 'wagmi';
 import { getMobileWalletLaunches } from '@/lib/walletLaunch';
 import { hasWalletConnectProjectId } from '@/lib/wagmi';
+import {
+  selectPreferredWalletConnector,
+  walletConnectionErrorMessage,
+  walletConnectorLabel,
+} from '@/lib/walletConnectorSelection.mjs';
 
 function shortAddress(address?: string) {
   if (!address) return 'Not connected';
@@ -96,13 +101,11 @@ export function WalletConnectControl() {
   }, []);
 
   async function connectInjectedWallet() {
-    const connector =
-      connectors.find((item) => item.type === 'injected') ||
-      connectors.find((item) => item.id === 'injected') ||
-      connectors.find((item) => /metamask|injected|browser wallet/i.test(`${item.id} ${item.name}`)) ||
-      connectors.find((item) => item.id === 'coinbaseWalletSDK') ||
-      connectors[0];
-    if (!connector) return;
+    const connector = await selectPreferredWalletConnector(connectors);
+    if (!connector) {
+      setConnectionStatus('No wallet connector is available in this browser.');
+      return;
+    }
     await connectWallet(connector);
   }
 
@@ -111,19 +114,8 @@ export function WalletConnectControl() {
     try {
       await connectAsync({ connector: targetConnector });
     } catch (err) {
-      if (err instanceof Error && /rejected|denied|cancel/i.test(err.message)) {
-        setConnectionStatus('Connection cancelled in the wallet.');
-        return;
-      }
-      setConnectionStatus(err instanceof Error ? err.message : 'Wallet connection failed.');
+      setConnectionStatus(walletConnectionErrorMessage(err));
     }
-  }
-
-  function connectorLabel(id: string, name: string) {
-    if (id === 'injected') return 'Browser wallet';
-    if (id === 'coinbaseWalletSDK') return 'Coinbase Wallet';
-    if (id === 'walletConnect') return 'WalletConnect';
-    return name;
   }
 
   async function copyCurrentLink() {
@@ -197,7 +189,7 @@ export function WalletConnectControl() {
   }
 
   return (
-    <div className="grid gap-4 rounded-2xl border border-orange-200/15 bg-[linear-gradient(145deg,rgba(255,255,255,0.08),rgba(236,118,51,0.08)_48%,rgba(0,0,0,0.2))] p-4 shadow-xl shadow-black/25">
+    <div data-wallet-connect-control className="grid gap-4 rounded-2xl border border-orange-200/15 bg-[linear-gradient(145deg,rgba(255,255,255,0.08),rgba(236,118,51,0.08)_48%,rgba(0,0,0,0.2))] p-4 shadow-xl shadow-black/25">
       <div>
         <p className="text-xs font-black uppercase tracking-[0.16em] text-orange-200/80">
           Wallet entry
@@ -300,20 +292,25 @@ export function WalletConnectControl() {
             </button>
           </div>
           {copyStatus ? <p className="text-xs font-semibold text-orange-100">{copyStatus}</p> : null}
-          {hasWalletConnectProjectId ? (
-            <div className="grid gap-2 sm:grid-cols-2" aria-label="Choose a wallet connection">
-              {connectors.map((availableConnector) => (
-                <button
-                  key={availableConnector.uid}
-                  type="button"
-                  onClick={() => connectWallet(availableConnector)}
-                  disabled={isPending}
-                  className="rounded-xl border border-orange-200/20 bg-orange-300 px-4 py-3 text-xs font-black uppercase tracking-[0.1em] text-stone-950 transition hover:bg-orange-200 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  {isPending ? 'Connecting...' : connectorLabel(availableConnector.id, availableConnector.name)}
-                </button>
-              ))}
-            </div>
+          {connectors.length > 1 ? (
+            <details className="rounded-xl border border-orange-200/15 bg-white/[0.04] p-3">
+              <summary className="cursor-pointer text-xs font-black uppercase tracking-[0.12em] text-orange-100">
+                Choose wallet connection
+              </summary>
+              <div className="mt-3 grid gap-2 sm:grid-cols-2" aria-label="Choose a wallet connection">
+                {connectors.map((availableConnector) => (
+                  <button
+                    key={availableConnector.uid}
+                    type="button"
+                    onClick={() => connectWallet(availableConnector)}
+                    disabled={isPending}
+                    className="rounded-xl border border-orange-200/20 bg-orange-300 px-4 py-3 text-xs font-black uppercase tracking-[0.1em] text-stone-950 transition hover:bg-orange-200 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {isPending ? 'Connecting...' : walletConnectorLabel(availableConnector)}
+                  </button>
+                ))}
+              </div>
+            </details>
           ) : null}
           {connectionStatus ? (
             <p role="status" className="text-xs font-semibold leading-5 text-orange-100">
@@ -331,7 +328,7 @@ export function WalletConnectControl() {
         >
           Disconnect
         </button>
-      ) : !hasWalletConnectProjectId ? (
+      ) : (
         <button
           type="button"
           data-wallet-action="connect"
@@ -341,7 +338,7 @@ export function WalletConnectControl() {
         >
           {isPending ? 'Connecting...' : 'Connect wallet'}
         </button>
-      ) : null}
+      )}
     </div>
   );
 }

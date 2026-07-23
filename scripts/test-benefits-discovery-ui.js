@@ -155,6 +155,10 @@ async function run() {
     page.on('pageerror', (error) => pageErrors.push(error.message));
     await page.goto(origin, { waitUntil: 'domcontentloaded' });
 
+    const walletControl = page.locator('[data-wallet-connect-control]').first();
+    await walletControl.getByText('Choose wallet connection', { exact: true }).click();
+    await walletControl.getByRole('button', { name: 'Coinbase Wallet', exact: true }).waitFor();
+
     const offersSection = page.locator('#offers');
     await offersSection.getByText(offer.productName, { exact: true }).waitFor();
     await offersSection.getByRole('link', { name: 'Open seller catalog', exact: true }).click();

@@ -111,8 +111,11 @@ Wallet options:
 
 - MVP: external wallet connection through WalletConnect / MetaMask / Coinbase / Trust.
 - Current web fallback: injected EVM providers plus official mobile browser-launch links for
-  MetaMask, Trust Wallet, OKX and Phantom. A launch link is onboarding only and is not proof of
-  connection; WalletConnect breadth remains configuration-gated.
+  MetaMask, Trust Wallet, OKX and Phantom. Customer, seller and checkout entry points verify that
+  an announced injected connector has a real provider before selecting it, otherwise they fall
+  back to Coinbase Wallet SDK and then configured WalletConnect. Users can also choose any exposed
+  connector explicitly. A launch link is onboarding only and is not proof of connection;
+  WalletConnect breadth remains configuration-gated.
 - V1: embedded wallet using a battle-tested wallet provider.
 - V2: account abstraction / gas sponsorship for selected actions.
 

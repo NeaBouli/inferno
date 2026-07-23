@@ -140,7 +140,7 @@ export default function GuidePage() {
             <p className="text-xs font-black uppercase tracking-[0.18em] text-green-100/80">Wallet support</p>
             <h2 className="mt-2 text-3xl font-black text-white">Use the wallet your browser exposes.</h2>
             <p className="mt-4 text-sm leading-7 text-stone-300">
-              Production currently supports browser-injected Ethereum wallets such as MetaMask and Coinbase Wallet. The full WalletConnect modal for Rainbow, Trust, OKX and similar wallets needs a production WalletConnect Project ID before it can be enabled without brittle failures.
+              Production checks browser-injected Ethereum wallets first and falls back to Coinbase Wallet when no injected provider is available. Customer, seller and checkout screens also let you choose an exposed connector explicitly. The full WalletConnect modal for Rainbow, Trust, OKX and similar wallets still needs a production WalletConnect Project ID before it can be enabled without brittle failures.
             </p>
             <p className="mt-3 text-sm leading-7 text-stone-300">
               New users should create or import their wallet inside a trusted wallet app first. The Benefits Network is non-custodial: it never asks for a seed phrase, never stores private keys, and only requests wallet signatures or explicit IFR approve/lock transactions.
