@@ -169,6 +169,9 @@ export function SellerCatalogClient({ businessId }: { businessId: string }) {
                             <p className="mt-1 text-xs text-stone-400">
                               Per wallet: {rule.dailyRedemptionLimit || 'unlimited'} / UTC day and {rule.monthlyRedemptionLimit || 'unlimited'} / UTC month.
                             </p>
+                            <Link href={`/?seller=${encodeURIComponent(businessId)}&offer=${encodeURIComponent(rule.id)}#customer-pass`} className="mt-3 inline-flex rounded-full bg-orange-300 px-4 py-2 text-xs font-black uppercase tracking-[0.12em] text-stone-950">
+                              Use this offer
+                            </Link>
                           </div>
                         ))}
                       </div>
@@ -200,6 +203,9 @@ export function SellerCatalogClient({ businessId }: { businessId: string }) {
                   <p className="mt-1 text-xs text-stone-400">
                     {rule.category} / Per wallet: {rule.dailyRedemptionLimit || 'unlimited'} / UTC day and {rule.monthlyRedemptionLimit || 'unlimited'} / UTC month.
                   </p>
+                  <Link href={`/?seller=${encodeURIComponent(businessId)}&offer=${encodeURIComponent(rule.id)}#customer-pass`} className="mt-3 inline-flex rounded-full bg-orange-300 px-4 py-2 text-xs font-black uppercase tracking-[0.12em] text-stone-950">
+                    Use this offer
+                  </Link>
                 </article>
               ))}
             </div>

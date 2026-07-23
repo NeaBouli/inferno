@@ -109,6 +109,13 @@ async function run() {
           body: JSON.stringify(discoveryResponse(offers)),
         });
       }
+      if (url.pathname === `/api/businesses/${offer.business.id}`) {
+        return route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({ ...offer.business, discountPercent: 10, requiredLockIFR: 1000, tierLabel: null }),
+        });
+      }
       if (url.pathname === `/api/businesses/${offer.business.id}/products`) {
         return route.fulfill({
           status: 200,
@@ -137,6 +144,31 @@ async function run() {
               createdAt: new Date().toISOString(),
               updatedAt: new Date().toISOString(),
             }],
+          }),
+        });
+      }
+      if (url.pathname === '/api/passes/test-pass/control') {
+        return route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            status: 'BOUND',
+            expiresAt: new Date(Date.now() + 60_000).toISOString(),
+            checkout: {
+              status: 'PENDING',
+              expiresAt: new Date(Date.now() + 60_000).toISOString(),
+              businessId: offer.business.id,
+              benefitRuleId: 'different-offer',
+              sellerName: offer.business.name,
+              benefit: {
+                label: 'Different member offer',
+                category: 'Coffee',
+                productName: 'Different coffee',
+                discountPercent: 5,
+                requiredLockIFR: 500,
+              },
+              reason: null,
+            },
           }),
         });
       }
@@ -172,7 +204,7 @@ async function run() {
 
     const offersSection = page.locator('#offers');
     await offersSection.getByText(offer.productName, { exact: true }).waitFor();
-    await offersSection.getByRole('link', { name: 'Open seller catalog', exact: true }).click();
+    await offersSection.getByRole('link', { name: 'Seller catalog', exact: true }).click();
     await waitForLocation(page, `/s/${offer.business.id}`);
     await page.getByText('Other member benefits', { exact: true }).waitFor();
     await page.getByText(offer.productName, { exact: true }).waitFor();
@@ -181,7 +213,35 @@ async function run() {
       0,
       'a standalone active rule must not produce an empty seller catalog'
     );
-    await page.goBack({ waitUntil: 'domcontentloaded' });
+    await page.getByRole('link', { name: 'Use this offer', exact: true }).click();
+    await waitForLocation(page, '/', '#customer-pass');
+    assert.equal(new URL(page.url()).searchParams.get('seller'), offer.business.id);
+    assert.equal(new URL(page.url()).searchParams.get('offer'), offer.id);
+    const selectedOffer = page.locator('#customer-pass');
+    await selectedOffer.getByText('Selected public offer', { exact: true }).waitFor();
+    await selectedOffer.getByText(`${offer.productName} · ${offer.business.name}`, { exact: true }).waitFor();
+    await selectedOffer.getByText('Offer verified. The seller still binds it and you approve the exact checkout snapshot.', { exact: true }).waitFor();
+    await page.evaluate(() => window.history.pushState({}, '', '/?seller=invalid!&offer=bad#customer-pass'));
+    await selectedOffer.getByText('This offer link is invalid. Browse the current public offers below.', { exact: true }).waitFor();
+    assert.equal(await selectedOffer.getByText('Selected public offer', { exact: true }).count(), 0, 'invalid same-route context must clear the prior verified offer');
+
+    await page.evaluate(({ businessId, offerId }) => {
+      window.sessionStorage.setItem('ifr.shop.activeCustomerPass', JSON.stringify({
+        passId: 'test-pass',
+        controlToken: 'x'.repeat(48),
+        expiresAt: new Date(Date.now() + 60_000).toISOString(),
+        qrUrl: '/p/test-pass',
+        walletAddress: '0x0000000000000000000000000000000000000001',
+      }));
+      window.history.pushState({}, '', `/?seller=${businessId}&offer=${offerId}#customer-pass`);
+    }, { businessId: offer.business.id, offerId: offer.id });
+    await page.reload({ waitUntil: 'domcontentloaded' });
+    await selectedOffer.getByText('The seller bound a different offer than the public offer you selected.', { exact: false }).waitFor();
+    await selectedOffer.getByRole('button', { name: 'Clear', exact: true }).click();
+    assert.equal(new URL(page.url()).searchParams.has('seller'), false);
+    assert.equal(new URL(page.url()).searchParams.has('offer'), false);
+    await page.evaluate(() => window.sessionStorage.removeItem('ifr.shop.activeCustomerPass'));
+    await page.goto(origin, { waitUntil: 'domcontentloaded' });
     await waitForLocation(page, '/');
     await offersSection.getByText(offer.productName, { exact: true }).waitFor();
     await offersSection.getByRole('searchbox', { name: 'Search offers', exact: true }).fill('missing');

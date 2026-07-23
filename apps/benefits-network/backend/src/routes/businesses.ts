@@ -10,6 +10,10 @@ import {
 } from '../services/businessProfile';
 
 const router = Router();
+const visibleCatalogRule: Prisma.BenefitRuleWhereInput = {
+  active: true,
+  OR: [{ productId: null }, { product: { active: true } }],
+};
 
 function parsePositiveInteger(value: unknown, fallback: number, maximum: number) {
   if (value === undefined) return fallback;
@@ -152,6 +156,41 @@ router.get('/', discoveryRateLimiter, async (req, res, next) => {
         totalPages,
         hasNext: page < totalPages,
       },
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.get('/catalog-index', discoveryRateLimiter, async (_req, res, next) => {
+  try {
+    const businesses = await prisma.business.findMany({
+      where: {
+        active: true,
+        ownerAddress: { not: null },
+        benefitRules: { some: visibleCatalogRule },
+      },
+      orderBy: { id: 'asc' },
+      take: 49_998,
+      select: {
+        id: true,
+        createdAt: true,
+        benefitRules: {
+          where: visibleCatalogRule,
+          orderBy: { updatedAt: 'desc' },
+          take: 1,
+          select: { updatedAt: true },
+        },
+      },
+    });
+    res.set('Cache-Control', 'public, max-age=300, stale-while-revalidate=3600');
+    res.json({
+      catalogs: businesses.slice(0, 49_997).map((business) => ({
+        businessId: business.id,
+        lastModified: (business.benefitRules[0]?.updatedAt || business.createdAt).toISOString(),
+      })),
+      truncated: businesses.length > 49_997,
+      urlLimit: 50_000,
     });
   } catch (err) {
     next(err);

@@ -229,9 +229,14 @@ export function OfferDiscovery({ mode, onOpenSellerTools }: OfferDiscoveryProps)
                 <span>{offer.requiredLockIFR.toLocaleString('en-US')} IFR lock</span>
               </div>
               <OfferEligibility requiredLockIFR={offer.requiredLockIFR} eligibility={eligibility} />
-              <Link href={`/s/${encodeURIComponent(offer.business.id)}`} className="mt-5 inline-flex rounded-full bg-green-300 px-5 py-3 text-xs font-black uppercase tracking-[0.14em] text-stone-950 transition hover:-translate-y-0.5 hover:bg-green-200">
-                Open seller catalog
-              </Link>
+              <div className="mt-5 flex flex-wrap gap-2">
+                <Link href={`/?seller=${encodeURIComponent(offer.business.id)}&offer=${encodeURIComponent(offer.id)}#customer-pass`} className="inline-flex rounded-full bg-orange-300 px-5 py-3 text-xs font-black uppercase tracking-[0.14em] text-stone-950 transition hover:-translate-y-0.5 hover:bg-orange-200">
+                  Use this offer
+                </Link>
+                <Link href={`/s/${encodeURIComponent(offer.business.id)}`} className="inline-flex rounded-full border border-green-200/35 px-5 py-3 text-xs font-black uppercase tracking-[0.14em] text-green-50 transition hover:border-green-200/70">
+                  Seller catalog
+                </Link>
+              </div>
             </article>
           ))}
         </div>

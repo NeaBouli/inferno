@@ -21,14 +21,21 @@ const customerPass = read('src', 'app', 'p', '[passId]', 'page.tsx');
 const checkoutProof = read('src', 'app', 'r', '[sessionId]', 'page.tsx');
 const sellerCatalog = read('src', 'app', 's', '[businessId]', 'page.tsx');
 const sellerCatalogClient = read('src', 'app', 's', '[businessId]', 'SellerCatalogClient.tsx');
+const customerCheckoutPass = read('src', 'components', 'CustomerCheckoutPass.tsx');
 const nextConfig = read('next.config.js');
 
 assert.ok(layout.includes("'@type': 'WebApplication'"), 'Shop WebApplication structured data is missing');
 assert.ok(layout.includes('Contextual IFR Copilot help'), 'Structured data must describe contextual help');
 assert.ok(robots.includes("disallow: ['/api/', '/b/', '/p/', '/r/']"), 'Private routes must stay out of crawler results');
-for (const route of ['https://shop.ifrunit.tech/', 'https://shop.ifrunit.tech/guide', 'https://shop.ifrunit.tech/scan']) {
+assert.ok(sitemap.includes("const siteOrigin = 'https://shop.ifrunit.tech'"), 'Sitemap origin must remain canonical');
+for (const route of ['`${siteOrigin}/`', '`${siteOrigin}/guide`', '`${siteOrigin}/scan`']) {
   assert.ok(sitemap.includes(route), `Public sitemap route missing: ${route}`);
 }
+assert.ok(sitemap.includes('/api/businesses/catalog-index'), 'Sitemap must load the bounded public catalog index');
+assert.ok(sitemap.includes("export const revalidate = 3600"), 'Dynamic catalog sitemap must use bounded revalidation');
+assert.ok(sitemap.includes("export const dynamic = 'force-dynamic'"), 'Catalog sitemap must resolve against the runtime backend');
+assert.ok(sitemap.includes('encodeURIComponent(catalog.businessId)'), 'Catalog IDs must be encoded in sitemap URLs');
+assert.ok(sitemap.includes('return staticRoutes'), 'Sitemap must fail open to static public routes');
 assert.ok(home.includes("'#integrate'"), 'Seller code-generator deep link must select seller mode');
 assert.ok(home.includes("'#seller-session-history'"), 'Seller history deep link must select seller mode');
 assert.ok(home.includes("window.setTimeout(scrollToTarget, 700)"), 'Deep links must retry after asynchronous layout settles');
@@ -37,6 +44,10 @@ assert.ok(home.includes('onOpenSellerTools={openSellerTools}'), 'Empty public ne
 assert.ok(offerDiscovery.includes('No active offer is being hidden or replaced with demo data.'), 'Empty network must not imply demo or hidden offers');
 assert.ok(offerDiscovery.includes('No offers match these filters'), 'Filtered empty results need a distinct explanation');
 assert.ok(offerDiscovery.includes('onClick={clearFilters}'), 'Filtered empty results must provide a one-action reset');
+assert.ok(offerDiscovery.includes('&offer=${encodeURIComponent(offer.id)}#customer-pass'), 'Discovery offers need a contextual checkout handoff');
+assert.ok(customerCheckoutPass.includes('useSearchParams()'), 'Offer context must react to same-route query changes');
+assert.ok(customerCheckoutPass.includes('status.checkout.benefitRuleId !== selectedOffer.rule.id'), 'Checkout confirmation must detect a selected-offer mismatch');
+assert.ok(customerCheckoutPass.includes('!selectedOfferMismatch'), 'A mismatched selected offer must block silent confirmation');
 assert.ok(apiClient.includes('businessId?: string'), 'Public discovery must accept an exact Business ID filter');
 assert.ok(apiClient.includes("query.set('businessId', filters.businessId)"), 'Business ID must be sent as an encoded query parameter');
 assert.ok(sellerRuleBuilder.includes('async function verifyPublicListing'), 'Seller launch must verify its public discovery result');
@@ -54,6 +65,7 @@ for (const [label, source] of [['seller console', sellerConsole], ['customer pas
 assert.ok(sellerCatalog.includes('encodeURIComponent(businessId)'), 'Public seller catalog canonical must encode its ID');
 assert.ok(sellerCatalogClient.includes('getBusinessRules(businessId, controller.signal)'), 'Seller catalog must load active standalone benefit rules');
 assert.ok(sellerCatalogClient.includes('Other member benefits'), 'Product-less public rules need a truthful catalog section');
+assert.ok(sellerCatalogClient.includes('&offer=${encodeURIComponent(rule.id)}#customer-pass'), 'Catalog rules need a contextual checkout handoff');
 assert.ok(sellerCatalogClient.includes('categories.length === 0 && standaloneRules.length === 0'), 'Catalog empty state must account for standalone rules');
 assert.ok(shell.includes('<CopilotWidget />'), 'Every AppShell route must render the IFR Copilot');
 assert.ok(widget.includes('surface=benefits'), 'Shop Copilot must retain Benefits context');

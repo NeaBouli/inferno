@@ -146,6 +146,8 @@ export async function getControlledCustomerPass(passId: string, authorization?: 
       checkout: pass.session ? {
         status: 'EXPIRED',
         expiresAt: pass.session.expiresAt,
+        businessId: pass.session.businessId,
+        benefitRuleId: pass.session.benefitRuleId,
         sellerName: pass.session.business.name,
         benefit: {
           label: pass.session.benefitLabel,
@@ -165,6 +167,8 @@ export async function getControlledCustomerPass(passId: string, authorization?: 
     checkout: session ? {
       status: session.status,
       expiresAt: session.expiresAt,
+      businessId: session.businessId,
+      benefitRuleId: session.benefitRuleId,
       sellerName: session.business.name,
       benefit: {
         label: session.benefitLabel,

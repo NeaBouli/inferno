@@ -400,6 +400,8 @@ export interface CustomerPassControlStatus {
   checkout: null | {
     status: SessionStatus['status'];
     expiresAt: string;
+    businessId: string;
+    benefitRuleId: string | null;
     sellerName: string;
     benefit: {
       label: string | null;
