@@ -59,6 +59,21 @@ for (const label of [
   assert.ok(landing.includes(label), `missing expanded Benefits route: ${label}`);
 }
 
+for (const contract of [
+  'appearance: none',
+  '-webkit-appearance: none',
+  '-webkit-tap-highlight-color: transparent',
+  '.wz-option:focus-visible',
+  'wz-option--featured',
+  'class="wz-option-title"',
+  'class="wz-option-description"',
+  'aria-hidden="true"',
+  '#wizard { scroll-margin-top: 141px; }',
+]) {
+  assert.ok(landing.includes(contract), `missing accessible wizard style contract: ${contract}`);
+}
+assert.ok(!landing.includes("this.style.background=\\'#fff3e7\\'"), 'wizard must not use fragile inline mouse hover state');
+
 assert.ok(landing.includes('lpAddIFRToken'), 'landing MetaMask action changed or missing');
 assert.ok(landing.includes('assets/wallet-core.js'), 'landing wallet core integration changed or missing');
 assert.ok(walletCore.includes('wallet_watchAsset'), 'MetaMask token import hook changed or missing');
