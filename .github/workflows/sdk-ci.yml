@@ -18,6 +18,10 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: ['20', '22']
     defaults:
       run:
         working-directory: apps/sdk
@@ -25,26 +29,16 @@ jobs:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
         with:
-          node-version: '20'
+          node-version: ${{ matrix.node-version }}
           cache: 'npm'
           cache-dependency-path: apps/sdk/package-lock.json
       - run: npm ci
       - run: npm audit --audit-level=moderate
       - run: npm test
+      - run: npm run test:package
       - run: git diff --exit-code -- dist
       - name: Test the real Builder generator source
         run: |
           npx tsc --target ES2020 --module commonjs --esModuleInterop --skipLibCheck \
             --outDir /tmp/ifr-builder-engine ../builder/engine/*.ts
           node ../../test/builder/CodeGeneratorSource.test.cjs /tmp/ifr-builder-engine
-      - run: npm pack --dry-run
-      - name: Verify fresh local package installation
-        shell: bash
-        run: |
-          source_dir="$(mktemp -d)"
-          consumer_dir="$(mktemp -d)"
-          git -C ../.. archive HEAD apps/sdk | tar -x -C "$source_dir" --strip-components=2
-          cd "$consumer_dir"
-          npm init -y >/dev/null
-          npm install --install-links "$source_dir"
-          node -e "const sdk=require('ifr-sdk'); if (!sdk.IFRClient || !sdk.IFRBenefitsClient) process.exit(1)"

@@ -318,7 +318,8 @@ function CodeGenerator() {
       return `import { IFRBenefitsClient } from "ifr-sdk";
 
 // npm publication is pending. Install the repository package with:
-// npm install --install-links ./apps/sdk
+// cd apps/sdk && npm ci && npm run build && npm pack --ignore-scripts
+// Add the generated .tgz to the POS application's package.json and lockfile, then run npm ci.
 const benefits = new IFRBenefitsClient({ baseUrl: "https://shop.ifrunit.tech" });
 
 export async function createIFRCheckout({ sellerWalletAddress, signMessage }) {
@@ -457,7 +458,7 @@ export async function createIFRCheckout({ sellerWalletAddress, signMessage }) {
       </div>
       {mode === 'pos' ? (
         <p className="mt-3 text-xs leading-5 text-stone-400">
-          Signer-neutral SDK/POS JavaScript. The SDK validates the one-time challenge and returns the short-lived customer URL; npm publication and platform plugins remain pending.
+          Signer-neutral SDK/POS JavaScript. The SDK validates the one-time challenge and returns the short-lived customer URL. Its repository tarball has locked npm-ci, CommonJS, ESM-import and TypeScript coverage on Node.js 20 and 22; npm publication and platform plugins remain pending.
         </p>
       ) : null}
       {copyStatus ? <p className="mt-3 text-xs font-semibold text-stone-300">{copyStatus}</p> : null}

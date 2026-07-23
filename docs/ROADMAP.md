@@ -81,7 +81,10 @@
       Scope: customer wallet, ETH/IFR swap, IFR locking, QR proof, seller scanner, seller discount rules, and verified seller rewards through PartnerVault after governance approval.
       Current implementation: the live PWA includes seller profile/rule/history flows, customer IFRLock and proof flows, POS helper, owner-managed checkout operators and product catalog. The deployed M4 foundation adds applications, live governance linkage checks, an atomic reward outbox and read-only vesting status; no Mainnet seller/partner or reward caller is active. Remaining scope includes governance activation/submission, embedded-wallet decision and real-device acceptance.
 - [ ] Guarded buyback automation (BuybackVault activation after 60 days)
-- [ ] Developer SDK publication + complete documentation (local `ifr-sdk` v0.2.0 is implemented and source-tested; npm release, wagmi and Python support remain)
+- [ ] Developer SDK publication + complete documentation (local `ifr-sdk` v0.2.0 is
+      implemented and its tarball is installed with locked `npm ci` and consumer-tested for
+      CommonJS, ESM named-import interoperability and TypeScript on Node.js 20/22;
+      license/ownership approval, npm release, wagmi and Python support remain)
 - [ ] Bug bounty program (Immunefi)
 - [ ] FeeRouter adapter ecosystem (DEX aggregators)
 - [ ] Mobile-optimized dashboard
