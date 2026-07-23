@@ -8,7 +8,8 @@ Next.js 15 PWA for the IFR Benefits Network.
 |-------|---------|
 | `/` | Customer/Seller role chooser, wallet status, seller rule manager |
 | `/guide` | Customer, seller and developer operating guide for the live shop flow, including session history |
-| `/b/:businessId` | Seller Console — scan/paste customer pass, bind selected rule, or create compatible seller QR; redeem once |
+| `/b/:businessIdOrSlug` | Seller Console — scan/paste customer pass, bind selected rule, or create compatible seller QR; redeem once |
+| `/s/:businessIdOrSlug` | Public seller catalog; legacy IDs redirect to the permanent slug when one exists |
 | `/p/:passId` | Privacy-minimal seller handoff for a customer-presented checkout pass |
 | `/r/:sessionId` | Customer Flow — connect wallet, review selected benefit, sign challenge, show result |
 | `/scan` | Customer QR entry — opt-in camera, local image scan or manual proof link/session ID |
@@ -103,7 +104,7 @@ requires:
 
 - Seller wallet connection
 - Signed seller action message
-- Business ID after profile creation
+- Permanent readable seller URL plus the internal Business ID after profile creation
 - Rule label, category, product/service, discount, required locked IFR, QR TTL
 
 Saved active rules are visible in the seller scanner route. The scanner binds a customer-presented
@@ -114,6 +115,12 @@ discount and required IFR lock before the customer signs.
 Connected sellers can load the active seller profiles owned by their wallet and
 the app remembers the last selected Business ID locally for reloads. This is only
 a convenience cache; ownership is still enforced by the backend signature check.
+
+New wallet-owned profiles sign their normalized public slug during creation. Existing owners can
+claim one permanent slug with a separate one-time signature. Public catalog, scanner, QR, discovery,
+backup and sitemap links then prefer that readable URL; old Business-ID links continue to resolve.
+The browser always resolves a public slug back to the internal Business ID before requesting a
+seller mutation or binding a checkout pass.
 
 Connected sellers can page through session history for the selected Business ID.
 This uses the same seller wallet signature model and shows checkout status, masked
@@ -130,8 +137,10 @@ seller credential.
 Installable on iOS and Android. During service-worker installation, the current
 root app shell and its versioned Next.js JavaScript/CSS assets are cached so the
 installed role chooser remains usable offline. Same-origin static assets remain
-cache-first. API, wallet, checkout and redemption requests stay network-only and
-return an explicit offline error instead of serving cached transaction state.
+cache-first. Offline seller/scanner deep links show a precached branded recovery
+page instead of a raw framework error and preserve the requested address for retry.
+API, wallet, checkout and redemption requests stay network-only and return an
+explicit offline error instead of serving cached transaction state.
 
 ## Live Smoke
 

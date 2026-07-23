@@ -5,7 +5,7 @@ const path = require('path');
 
 const root = path.resolve(__dirname, '..');
 const migrationsDir = path.join(root, 'prisma', 'migrations');
-const targetMigration = '20260724000500_add_commitment_lock_source';
+const targetMigration = '20260724015000_add_business_slug';
 const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'benefits-populated-upgrade-'));
 const dbPath = path.join(tempDir, 'upgrade.db');
 
@@ -245,6 +245,27 @@ try {
     throw new Error(
       `Missing lock-source migration state: ruleColumn=${lockSourceRuleColumn}, ` +
       `sessionColumns=${lockSourceSessionColumns}, existing=${existingLockSourceState}`
+    );
+  }
+
+  const businessSlugColumn = sqlite(
+    "SELECT COUNT(*) FROM pragma_table_info('Business') WHERE name='slug';"
+  );
+  const businessSlugIndex = sqlite(`
+    SELECT COUNT(*) FROM sqlite_master
+    WHERE type='index' AND name='Business_slug_key';
+  `);
+  const existingBusinessSlug = sqlite(`
+    SELECT slug IS NULL FROM Business WHERE id='migration-fixture';
+  `);
+  if (
+    businessSlugColumn !== '1' ||
+    businessSlugIndex !== '1' ||
+    existingBusinessSlug !== '1'
+  ) {
+    throw new Error(
+      `Missing stable seller slug migration state: column=${businessSlugColumn}, ` +
+      `index=${businessSlugIndex}, existing=${existingBusinessSlug}`
     );
   }
 

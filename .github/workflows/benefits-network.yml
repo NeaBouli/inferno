@@ -17,6 +17,8 @@ on:
       - 'scripts/test-benefits-fullstack-e2e.js'
       - 'scripts/test-benefits-bundle-budget.cjs'
       - 'scripts/test-benefits-doc-consistency.cjs'
+      - 'scripts/test-benefits-offline-shell.js'
+      - 'scripts/test-benefits-seller-loader.js'
       - 'scripts/test-benefits-service-worker.js'
       - 'scripts/test-benefits-wallet-asset-provider.mjs'
       - 'scripts/test-benefits-node-runtime.cjs'
@@ -41,6 +43,8 @@ on:
       - 'scripts/test-benefits-fullstack-e2e.js'
       - 'scripts/test-benefits-bundle-budget.cjs'
       - 'scripts/test-benefits-doc-consistency.cjs'
+      - 'scripts/test-benefits-offline-shell.js'
+      - 'scripts/test-benefits-seller-loader.js'
       - 'scripts/test-benefits-service-worker.js'
       - 'scripts/test-benefits-wallet-asset-provider.mjs'
       - 'scripts/test-benefits-node-runtime.cjs'
@@ -186,6 +190,7 @@ jobs:
           set -euo pipefail
           npm run build --prefix apps/benefits-network/frontend
           npm run test:benefits-seller-loader
+          npm run test:benefits-offline
           npm start --prefix apps/benefits-network/frontend >/tmp/benefits-a11y-next.log 2>&1 &
           server_pid="$!"
           cleanup() {

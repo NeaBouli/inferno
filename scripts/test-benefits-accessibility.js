@@ -4,7 +4,7 @@ const { chromium, devices } = require('playwright');
 const axeSource = require('axe-core').source;
 
 const BASE_URL = process.env.BENEFITS_BASE_URL || 'http://127.0.0.1:3000';
-const ROUTES = ['/', '/?mode=seller', '/guide', '/scan'];
+const ROUTES = ['/', '/?mode=seller', '/guide', '/scan', '/offline.html'];
 const TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'];
 const DEVICES = [
   {

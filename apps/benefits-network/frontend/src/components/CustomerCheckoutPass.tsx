@@ -72,7 +72,12 @@ export function CustomerCheckoutPass() {
       .then(([business, result]) => {
         const rule = result.rules.find((candidate) => candidate.id === ruleId && candidate.active);
         if (!rule) throw new Error('Selected offer is no longer active.');
-        setSelectedOffer({ businessId, sellerName: business.name, sellerLogoUrl: business.logoUrl, rule });
+        setSelectedOffer({
+          businessId: business.id,
+          sellerName: business.name,
+          sellerLogoUrl: business.logoUrl,
+          rule,
+        });
         setOfferMessage('Offer verified. The seller still binds it and you approve the exact checkout snapshot.');
       })
       .catch((err: Error) => {

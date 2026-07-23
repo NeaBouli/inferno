@@ -7,6 +7,7 @@ import { EligibilityLiveSummary, OfferEligibility, useIfrLockEligibility } from 
 import { discoverOffers, type PublicOffer } from '@/lib/api';
 import { lockSourceRequirement } from '@/lib/lockSource';
 import { formatProductPrice } from '@/lib/money';
+import { businessPublicReference } from '@/lib/businessSlug';
 
 const PAGE_SIZE = 8;
 
@@ -249,10 +250,10 @@ export function OfferDiscovery({ mode, onOpenSellerTools }: OfferDiscoveryProps)
                 eligibility={eligibility}
               />
               <div className="mt-5 flex flex-wrap gap-2">
-                <Link href={`/?seller=${encodeURIComponent(offer.business.id)}&offer=${encodeURIComponent(offer.id)}#customer-pass`} className="inline-flex rounded-full bg-orange-300 px-5 py-3 text-xs font-black uppercase tracking-[0.14em] text-stone-950 transition hover:-translate-y-0.5 hover:bg-orange-200">
+                <Link href={`/?seller=${encodeURIComponent(businessPublicReference(offer.business))}&offer=${encodeURIComponent(offer.id)}#customer-pass`} className="inline-flex rounded-full bg-orange-300 px-5 py-3 text-xs font-black uppercase tracking-[0.14em] text-stone-950 transition hover:-translate-y-0.5 hover:bg-orange-200">
                   Use this offer
                 </Link>
-                <Link href={`/s/${encodeURIComponent(offer.business.id)}`} className="inline-flex rounded-full border border-green-200/35 px-5 py-3 text-xs font-black uppercase tracking-[0.14em] text-green-50 transition hover:border-green-200/70">
+                <Link href={`/s/${encodeURIComponent(businessPublicReference(offer.business))}`} className="inline-flex rounded-full border border-green-200/35 px-5 py-3 text-xs font-black uppercase tracking-[0.14em] text-green-50 transition hover:border-green-200/70">
                   Seller catalog
                 </Link>
               </div>

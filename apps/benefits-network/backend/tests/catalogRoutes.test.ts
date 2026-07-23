@@ -54,7 +54,7 @@ async function sellerHeaders(
   scope?: string
 ): Promise<Record<string, string>> {
   const mutations = new Set([
-    'business:create', 'business:update', 'business:delete', 'operators:create', 'operators:delete',
+    'business:create', 'business:slug', 'business:update', 'business:delete', 'operators:create', 'operators:delete',
     'products:create', 'products:update', 'products:delete', 'rewards:apply',
     'rules:create', 'rules:update', 'rules:delete', 'sessions:create', 'sessions:redeem',
   ]);
@@ -235,6 +235,160 @@ describe('Seller catalog routes', () => {
     expect(unsafeScope.status).toBe(400);
   });
 
+  it('binds readable seller URLs to the signed create scope', async () => {
+    const slug = 'athens-ifr-cafe';
+    const wrongScope = await sellerHeaders(owner, 'business:create', 'new', 'new');
+    const body = {
+      name: 'Athens IFR Cafe',
+      slug,
+      discountPercent: 12,
+      requiredLockIFR: 1200,
+      ownerAddress: owner.address,
+    };
+    const wrongScopeResponse = await fetch(`${baseUrl()}/api/seller/businesses`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        ...body,
+        signature: wrongScope['x-ifr-signature'],
+        timestamp: wrongScope['x-ifr-timestamp'],
+        nonce: wrongScope['x-ifr-nonce'],
+      }),
+    });
+    expect(wrongScopeResponse.status).toBe(401);
+    expect(await prisma.business.findUnique({ where: { slug } })).toBeNull();
+
+    const auth = await sellerHeaders(owner, 'business:create', 'new', slug);
+    const response = await fetch(`${baseUrl()}/api/seller/businesses`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        ...body,
+        signature: auth['x-ifr-signature'],
+        timestamp: auth['x-ifr-timestamp'],
+        nonce: auth['x-ifr-nonce'],
+      }),
+    });
+    expect(response.status).toBe(201);
+    const created = await response.json() as {
+      id: string;
+      slug: string;
+      verifyUrl: string;
+      qrUrl: string;
+    };
+    expect(created).toMatchObject({
+      slug,
+      verifyUrl: `/b/${slug}`,
+      qrUrl: `/b/${slug}`,
+    });
+    expect((await fetch(`${baseUrl()}/api/businesses/${slug}`)).status).toBe(200);
+    expect((await fetch(`${baseUrl()}/api/businesses/${created.id}`)).status).toBe(200);
+
+    const reservedAuth = await sellerHeaders(owner, 'business:create', 'new', 'shop');
+    const reserved = await fetch(`${baseUrl()}/api/seller/businesses`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        ...body,
+        name: 'Reserved URL',
+        slug: 'shop',
+        signature: reservedAuth['x-ifr-signature'],
+        timestamp: reservedAuth['x-ifr-timestamp'],
+        nonce: reservedAuth['x-ifr-nonce'],
+      }),
+    });
+    expect(reserved.status).toBe(400);
+    expect(await reserved.json()).toEqual({ error: 'Seller URL is reserved' });
+  });
+
+  it('lets only the owner claim one permanent unique seller URL', async () => {
+    const slugUrl = `${baseUrl()}/api/seller/businesses/${businessId}/slug`;
+    const otherOwnerAuth = await sellerHeaders(otherOwner, 'business:slug', businessId, 'catalog-seller');
+    expect((await fetch(slugUrl, {
+      method: 'PATCH',
+      headers: otherOwnerAuth,
+      body: JSON.stringify({ slug: 'catalog-seller' }),
+    })).status).toBe(403);
+
+    await prisma.business.update({
+      where: { id: otherBusinessId },
+      data: { slug: 'claimed-seller' },
+    });
+    const conflictAuth = await sellerHeaders(owner, 'business:slug', businessId, 'claimed-seller');
+    expect((await fetch(slugUrl, {
+      method: 'PATCH',
+      headers: conflictAuth,
+      body: JSON.stringify({ slug: 'claimed-seller' }),
+    })).status).toBe(409);
+
+    const cuidLike = `c${'a'.repeat(24)}`;
+    const cuidAuth = await sellerHeaders(owner, 'business:slug', businessId, cuidLike);
+    const cuidResponse = await fetch(slugUrl, {
+      method: 'PATCH',
+      headers: cuidAuth,
+      body: JSON.stringify({ slug: cuidLike }),
+    });
+    expect(cuidResponse.status).toBe(400);
+
+    const auth = await sellerHeaders(owner, 'business:slug', businessId, 'catalog-seller');
+    const response = await fetch(slugUrl, {
+      method: 'PATCH',
+      headers: auth,
+      body: JSON.stringify({ slug: 'catalog-seller' }),
+    });
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({
+      id: businessId,
+      slug: 'catalog-seller',
+      verifyUrl: '/b/catalog-seller',
+      qrUrl: '/b/catalog-seller',
+      catalogUrl: '/s/catalog-seller',
+    });
+    const rule = await prisma.benefitRule.create({
+      data: {
+        businessId,
+        label: 'Slug-routed offer',
+        category: 'Retail',
+        productName: 'Slug-routed product',
+        discountPercent: 10,
+        requiredLockIFR: 1000,
+      },
+    });
+    const publicProfile = await fetch(`${baseUrl()}/api/businesses/catalog-seller`);
+    expect(publicProfile.status).toBe(200);
+    expect(await publicProfile.json()).toMatchObject({ id: businessId, slug: 'catalog-seller' });
+    expect((await fetch(`${baseUrl()}/api/businesses/catalog-seller/rules`)).status).toBe(200);
+    expect((await fetch(`${baseUrl()}/api/businesses/catalog-seller/products`)).status).toBe(200);
+    const discovery = await fetch(`${baseUrl()}/api/businesses?businessId=catalog-seller`);
+    expect(discovery.status).toBe(200);
+    expect((await discovery.json() as { offers: Array<{ id: string }> }).offers)
+      .toEqual([expect.objectContaining({ id: rule.id })]);
+    const catalogIndex = await fetch(`${baseUrl()}/api/businesses/catalog-index`);
+    expect((await catalogIndex.json() as {
+      catalogs: Array<{ businessId: string; businessRef: string }>;
+    }).catalogs).toContainEqual(expect.objectContaining({
+      businessId,
+      businessRef: 'catalog-seller',
+    }));
+
+    const sameAuth = await sellerHeaders(owner, 'business:slug', businessId, 'catalog-seller');
+    expect((await fetch(slugUrl, {
+      method: 'PATCH',
+      headers: sameAuth,
+      body: JSON.stringify({ slug: 'catalog-seller' }),
+    })).status).toBe(200);
+
+    const renameAuth = await sellerHeaders(owner, 'business:slug', businessId, 'renamed-seller');
+    const rename = await fetch(slugUrl, {
+      method: 'PATCH',
+      headers: renameAuth,
+      body: JSON.stringify({ slug: 'renamed-seller' }),
+    });
+    expect(rename.status).toBe(409);
+    expect(await prisma.business.findUniqueOrThrow({ where: { id: businessId } }))
+      .toMatchObject({ slug: 'catalog-seller' });
+  });
+
   it('keeps read-only authorizations stateless', async () => {
     expect(await prisma.sellerAuthorizationChallenge.count()).toBe(0);
     const headers = await sellerHeaders(owner, 'business:list', 'seller');
@@ -297,6 +451,7 @@ describe('Seller catalog routes', () => {
     expect(updatedResponse.status).toBe(200);
     expect(await updatedResponse.json()).toEqual({
       id: businessId,
+      slug: null,
       name: validProfile.name,
       description: validProfile.description,
       website: 'https://seller.example.com/members',
@@ -342,6 +497,7 @@ describe('Seller catalog routes', () => {
     };
     expect(publicProducts.business).toEqual({
       id: businessId,
+      slug: null,
       name: validProfile.name,
       description: validProfile.description,
       website: validProfile.website,
@@ -712,7 +868,7 @@ describe('Seller catalog routes', () => {
       'lockSource', 'minIFRHeld', 'monthlyRedemptionLimit', 'product', 'productName', 'requiredLockIFR',
     ]);
     expect(Object.keys(firstPage.offers[0].business as Record<string, unknown>).sort()).toEqual([
-      'categories', 'description', 'id', 'logoUrl', 'name', 'serviceArea', 'website',
+      'categories', 'description', 'id', 'logoUrl', 'name', 'serviceArea', 'slug', 'website',
     ]);
     const firstProduct = firstPage.offers[0].product;
     if (firstProduct !== null) {
@@ -813,11 +969,12 @@ describe('Seller catalog routes', () => {
     expect(catalogIndexResponse.status).toBe(200);
     expect(catalogIndexResponse.headers.get('cache-control')).toContain('public, max-age=300');
     const catalogIndex = await catalogIndexResponse.json() as {
-      catalogs: Array<{ businessId: string; lastModified: string }>;
+      catalogs: Array<{ businessId: string; businessRef: string; lastModified: string }>;
       truncated: boolean;
       urlLimit: number;
     };
     expect(catalogIndex.catalogs.map((catalog) => catalog.businessId)).toEqual([businessId, otherBusinessId].sort());
+    expect(catalogIndex.catalogs.map((catalog) => catalog.businessRef)).toEqual([businessId, otherBusinessId].sort());
     expect(catalogIndex.catalogs.every((catalog) => Number.isFinite(Date.parse(catalog.lastModified)))).toBe(true);
     expect(catalogIndex.truncated).toBe(false);
     expect(catalogIndex.urlLimit).toBe(50_000);

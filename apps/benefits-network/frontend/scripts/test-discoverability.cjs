@@ -24,6 +24,7 @@ const sellerCatalog = read('src', 'app', 's', '[businessId]', 'page.tsx');
 const sellerCatalogClient = read('src', 'app', 's', '[businessId]', 'SellerCatalogClient.tsx');
 const customerCheckoutPass = read('src', 'components', 'CustomerCheckoutPass.tsx');
 const walletStatus = read('src', 'components', 'WalletStatus.tsx');
+const businessSlug = read('src', 'lib', 'businessSlug.ts');
 const nextConfig = read('next.config.js');
 
 assert.ok(layout.includes("'@type': 'WebApplication'"), 'Shop WebApplication structured data is missing');
@@ -36,7 +37,7 @@ for (const route of ['`${siteOrigin}/`', '`${siteOrigin}/guide`', '`${siteOrigin
 assert.ok(sitemap.includes('/api/businesses/catalog-index'), 'Sitemap must load the bounded public catalog index');
 assert.ok(sitemap.includes("export const revalidate = 3600"), 'Dynamic catalog sitemap must use bounded revalidation');
 assert.ok(sitemap.includes("export const dynamic = 'force-dynamic'"), 'Catalog sitemap must resolve against the runtime backend');
-assert.ok(sitemap.includes('encodeURIComponent(catalog.businessId)'), 'Catalog IDs must be encoded in sitemap URLs');
+assert.ok(sitemap.includes('encodeURIComponent(businessRef)'), 'Stable catalog references must be encoded in sitemap URLs');
 assert.ok(sitemap.includes('return staticRoutes'), 'Sitemap must fail open to static public routes');
 assert.ok(home.includes("'#integrate'"), 'Seller code-generator deep link must select seller mode');
 assert.ok(home.includes("'#seller-session-history'"), 'Seller history deep link must select seller mode');
@@ -66,8 +67,17 @@ assert.ok(businessLogo.includes("parsed.protocol === 'https:'"), 'Seller logo re
 assert.ok(customerCheckoutPass.includes('useSearchParams()'), 'Offer context must react to same-route query changes');
 assert.ok(customerCheckoutPass.includes('status.checkout.benefitRuleId !== selectedOffer.rule.id'), 'Checkout confirmation must detect a selected-offer mismatch');
 assert.ok(customerCheckoutPass.includes('!selectedOfferMismatch'), 'A mismatched selected offer must block silent confirmation');
+assert.ok(businessSlug.includes("parsed.origin !== SHOP_ORIGIN"), 'Seller URL parsing must reject foreign origins');
+assert.ok(businessSlug.includes("parsed.search"), 'Seller URL parsing must reject query-bearing references');
+assert.ok(
+  businessSlug.includes('const match = parsed.pathname.match(') && businessSlug.includes('[bs]'),
+  'Seller URL parsing must accept only scanner or catalog paths'
+);
 assert.ok(apiClient.includes('businessId?: string'), 'Public discovery must accept an exact Business ID filter');
 assert.ok(apiClient.includes("query.set('businessId', filters.businessId)"), 'Business ID must be sent as an encoded query parameter');
+assert.ok(apiClient.includes('claimSellerBusinessSlug'), 'Seller API must expose the owner-signed permanent URL claim');
+assert.ok(sellerRuleBuilder.includes("'business:slug'"), 'Seller URL claims must use their dedicated signed action');
+assert.ok(sellerRuleBuilder.includes('Permanent seller URL'), 'Seller onboarding must expose its stable public URL');
 assert.ok(sellerRuleBuilder.includes('async function verifyPublicListing'), 'Seller launch must verify its public discovery result');
 assert.ok(sellerRuleBuilder.includes('getBusinessRules(targetBusinessId)'), 'Seller launch must verify exact rules beyond the first discovery page');
 assert.ok(sellerRuleBuilder.includes('Rule saved and verified in public discovery.'), 'Rule save must report authoritative public verification');
@@ -76,11 +86,20 @@ assert.ok(sellerRuleBuilder.includes('id="seller-launch"'), 'Seller launch statu
 assert.ok(sellerCatalogManager.includes('onUseProduct(product)'), 'A new catalog item must flow directly into rule authoring');
 assert.ok(sellerCatalogManager.includes('activeBusinessIdRef.current !== requestBusinessId'), 'Catalog writes must ignore stale seller-context responses');
 assert.ok(sellerCatalogManager.includes('id="seller-catalog"'), 'Seller catalog needs a stable onboarding target');
+assert.ok(
+  sellerCatalogManager.includes('href={`/s/${encodeURIComponent(publicBusinessRef)}`}'),
+  'Seller catalog manager must prefer the stable public seller reference'
+);
+assert.ok(
+  sellerRuleBuilder.includes('publicBusinessRef={publicBusinessRef}'),
+  'Seller onboarding must pass the stable public reference without replacing the internal mutation ID'
+);
 assert.ok(guide.includes('https://shop.ifrunit.tech/guide'), 'Guide must publish its own canonical URL');
 for (const [label, source] of [['seller console', sellerConsole], ['customer pass', customerPass], ['checkout proof', checkoutProof]]) {
   assert.ok(source.includes('index: false, follow: false'), `${label} must remain noindex/nofollow`);
 }
-assert.ok(sellerCatalog.includes('encodeURIComponent(businessId)'), 'Public seller catalog canonical must encode its ID');
+assert.ok(sellerCatalog.includes('encodeURIComponent(canonicalRef)'), 'Public seller catalog canonical must prefer its stable seller reference');
+assert.ok(sellerCatalog.includes('permanentRedirect'), 'Legacy catalog IDs must redirect to the canonical seller URL');
 assert.ok(sellerCatalogClient.includes('getBusinessRules(businessId, controller.signal)'), 'Seller catalog must load active standalone benefit rules');
 assert.ok(sellerCatalogClient.includes('Other member benefits'), 'Product-less public rules need a truthful catalog section');
 assert.ok(sellerCatalogClient.includes('&offer=${encodeURIComponent(rule.id)}#customer-pass'), 'Catalog rules need a contextual checkout handoff');

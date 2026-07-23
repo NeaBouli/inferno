@@ -13,6 +13,7 @@ describe('Seller wallet authorization', () => {
   it('allowlists every seller action and requires one-time challenges only for mutations', () => {
     expect(MUTATING_SELLER_ACTIONS).toEqual([
       'business:create',
+      'business:slug',
       'business:update',
       'business:delete',
       'operators:create',

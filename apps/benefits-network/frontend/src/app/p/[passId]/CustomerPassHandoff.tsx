@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { AppShell } from '@/components/AppShell';
 import { Countdown } from '@/components/Countdown';
 import { getPublicCustomerPass } from '@/lib/api';
+import { parseBusinessReference } from '@/lib/businessSlug';
 
 const LAST_BUSINESS_STORAGE_KEY = 'ifr.shop.lastSellerBusinessId';
 
@@ -31,13 +32,13 @@ export function CustomerPassHandoff({ passId }: { passId: string }) {
 
   function openSeller(event: FormEvent) {
     event.preventDefault();
-    const id = businessId.trim();
-    if (!id) {
-      setError('Enter or restore your seller profile ID first.');
+    const reference = parseBusinessReference(businessId);
+    if (!reference) {
+      setError('Enter a shop.ifrunit.tech seller URL, seller slug or profile ID.');
       return;
     }
-    try { window.localStorage.setItem(LAST_BUSINESS_STORAGE_KEY, id); } catch {}
-    router.push(`/b/${encodeURIComponent(id)}?pass=${encodeURIComponent(passId)}`);
+    try { window.localStorage.setItem(LAST_BUSINESS_STORAGE_KEY, reference); } catch {}
+    router.push(`/b/${encodeURIComponent(reference)}?pass=${encodeURIComponent(passId)}`);
   }
 
   return (
@@ -60,14 +61,14 @@ export function CustomerPassHandoff({ passId }: { passId: string }) {
 
           <form onSubmit={openSeller} className="mt-6 grid gap-3">
             <label className="grid gap-2 text-sm font-semibold text-stone-200">
-              Seller profile ID
+              Seller URL or profile ID
               <input
                 value={businessId}
                 onChange={(event) => setBusinessId(event.target.value)}
                 autoCapitalize="none"
                 autoCorrect="off"
                 className="min-w-0 rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none focus:border-orange-300"
-                placeholder="Your seller business ID"
+                placeholder="your-shop or business ID"
               />
             </label>
             <button type="submit" disabled={!available} className="rounded-2xl bg-orange-300 px-5 py-4 text-sm font-black uppercase tracking-[0.14em] text-stone-950 shadow-xl shadow-orange-950/35 transition hover:bg-orange-200 disabled:cursor-not-allowed disabled:opacity-50">

@@ -14,6 +14,7 @@ import {
   publicBusinessProfile,
   serializeBusinessCategories,
 } from '../services/businessProfile';
+import { publicBusinessReference } from '../services/businessSlug';
 
 const router = Router();
 
@@ -101,8 +102,9 @@ router.post('/businesses', adminAuth, validate(createBusinessSchema), async (req
     });
     res.status(201).json({
       id: business.id,
-      verifyUrl: `/b/${business.id}`,
-      qrUrl: `/b/${business.id}`,
+      slug: business.slug,
+      verifyUrl: `/b/${publicBusinessReference(business)}`,
+      qrUrl: `/b/${publicBusinessReference(business)}`,
       serviceArea: business.serviceArea,
     });
   } catch (err) {
@@ -116,6 +118,7 @@ router.get('/businesses/:id', adminAuth, async (req, res, next) => {
       where: { id: req.params.id },
       select: {
         id: true,
+        slug: true,
         name: true,
         description: true,
         website: true,
@@ -138,6 +141,7 @@ router.get('/businesses/:id', adminAuth, async (req, res, next) => {
 
     res.json(publicBusinessProfile({
       id: business.id,
+      slug: business.slug,
       name: business.name,
       description: business.description,
       website: business.website,
@@ -150,8 +154,8 @@ router.get('/businesses/:id', adminAuth, async (req, res, next) => {
       requiredLockIFR: business.requiredLockIFR,
       tierLabel: business.tierLabel,
       createdAt: business.createdAt,
-      verifyUrl: `/b/${business.id}`,
-      qrUrl: `/b/${business.id}`,
+      verifyUrl: `/b/${publicBusinessReference(business)}`,
+      qrUrl: `/b/${publicBusinessReference(business)}`,
       rulesCount: business._count.benefitRules,
       productsCount: business._count.products,
     }));
@@ -186,6 +190,7 @@ router.patch('/businesses/:id', adminAuth, validate(updateBusinessSchema), async
       },
       select: {
         id: true,
+        slug: true,
         name: true,
         description: true,
         website: true,

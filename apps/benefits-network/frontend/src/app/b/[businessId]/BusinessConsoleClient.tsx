@@ -31,6 +31,7 @@ import {
 } from '@/lib/api';
 import { lockSourceLabel, lockSourceRequirement } from '@/lib/lockSource';
 import { formatProductPrice } from '@/lib/money';
+import { businessPublicReference } from '@/lib/businessSlug';
 
 export function BusinessConsoleClient({ businessId }: { businessId: string }) {
   const { address, isConnected } = useAccount();
@@ -54,6 +55,7 @@ export function BusinessConsoleClient({ businessId }: { businessId: string }) {
   const [loading, setLoading] = useState(false);
   const { availableConnectors } = useAvailableWalletConnectors(connectors);
   const isDone = status && ['REDEEMED', 'EXPIRED', 'REJECTED'].includes(status.status);
+  const resolvedBusinessId = business?.id || '';
 
   useEffect(() => {
     setOrigin(window.location.origin);
@@ -71,7 +73,7 @@ export function BusinessConsoleClient({ businessId }: { businessId: string }) {
   useEffect(() => {
     setCheckoutAccess(null);
     setAccessStatus('');
-  }, [address, businessId]);
+  }, [address, resolvedBusinessId]);
 
   useEffect(() => {
     if (!checkoutAccess?.expiresAt) return;
@@ -192,8 +194,8 @@ export function BusinessConsoleClient({ businessId }: { businessId: string }) {
     ].join('\n');
   }, [business?.name, businessId, customerUrl, session, status]);
   const lastSessionStorageKey = useMemo(
-    () => `ifr.shop.lastCheckoutSession.${businessId}`,
-    [businessId]
+    () => `ifr.shop.lastCheckoutSession.${resolvedBusinessId || businessId}`,
+    [businessId, resolvedBusinessId]
   );
 
   function rememberSession(sessionId: string) {
@@ -252,6 +254,10 @@ export function BusinessConsoleClient({ businessId }: { businessId: string }) {
   }
 
   async function startSession() {
+    if (!resolvedBusinessId) {
+      setError('Wait for the seller profile to finish loading.');
+      return;
+    }
     if (!address || !isConnected) {
       setError('Connect the business owner or checkout operator wallet before creating a QR session.');
       return;
@@ -260,13 +266,13 @@ export function BusinessConsoleClient({ businessId }: { businessId: string }) {
     setError('');
     try {
       const scope = selectedRuleId || 'default';
-      const challenge = await getSellerAuthMessage('sessions:create', businessId, {
+      const challenge = await getSellerAuthMessage('sessions:create', resolvedBusinessId, {
         walletAddress: address,
         scope,
       });
       if (!challenge.nonce) throw new Error('Seller authorization challenge is incomplete');
       const signature = await signMessageAsync({ message: challenge.message });
-      const nextSession = await createSession(businessId, selectedRuleId || undefined, {
+      const nextSession = await createSession(resolvedBusinessId, selectedRuleId || undefined, {
         walletAddress: address,
         signature,
         timestamp: challenge.timestamp,
@@ -351,17 +357,21 @@ export function BusinessConsoleClient({ businessId }: { businessId: string }) {
       setError('Select an active benefit rule before binding the customer pass.');
       return;
     }
+    if (!resolvedBusinessId) {
+      setError('Wait for the seller profile to finish loading.');
+      return;
+    }
     setLoading(true);
     setError('');
     try {
       const scope = `${passId}:${selectedRuleId}`;
-      const challenge = await getSellerAuthMessage('passes:bind', businessId, {
+      const challenge = await getSellerAuthMessage('passes:bind', resolvedBusinessId, {
         walletAddress: address,
         scope,
       });
       if (!challenge.nonce) throw new Error('Seller authorization challenge is incomplete');
       const signature = await signMessageAsync({ message: challenge.message });
-      const bound = await bindCustomerPass(passId, businessId, selectedRuleId, {
+      const bound = await bindCustomerPass(passId, resolvedBusinessId, selectedRuleId, {
         walletAddress: address,
         signature,
         timestamp: challenge.timestamp,
@@ -387,13 +397,17 @@ export function BusinessConsoleClient({ businessId }: { businessId: string }) {
       setError('Connect the business owner or checkout operator wallet first.');
       return;
     }
+    if (!resolvedBusinessId) {
+      setError('Wait for the seller profile to finish loading.');
+      return;
+    }
     setLoading(true);
     setError('');
     setAccessStatus('');
     try {
-      const challenge = await getSellerAuthMessage('operators:status', businessId);
+      const challenge = await getSellerAuthMessage('operators:status', resolvedBusinessId);
       const signature = await signMessageAsync({ message: challenge.message });
-      const access = await getCheckoutOperatorStatus(businessId, {
+      const access = await getCheckoutOperatorStatus(resolvedBusinessId, {
         walletAddress: address,
         signature,
         timestamp: challenge.timestamp,
@@ -505,6 +519,10 @@ export function BusinessConsoleClient({ businessId }: { businessId: string }) {
   async function restoreSessionById(candidateSessionId: string, successMessage: string) {
     setError('');
     setLinkStatus('');
+    if (!resolvedBusinessId) {
+      setError('Wait for the seller profile to finish loading.');
+      return;
+    }
 
     const sessionId = parseSessionId(candidateSessionId);
     if (!sessionId) {
@@ -515,7 +533,7 @@ export function BusinessConsoleClient({ businessId }: { businessId: string }) {
     setLoading(true);
     try {
       const nextStatus = await getSessionStatus(sessionId);
-      if (nextStatus.businessId !== businessId) {
+      if (nextStatus.businessId !== resolvedBusinessId) {
         forgetRememberedSession();
         setError('Saved checkout session belongs to another seller profile.');
         return;
@@ -561,7 +579,7 @@ export function BusinessConsoleClient({ businessId }: { businessId: string }) {
             seller rule, the backend checks IFRLock on-chain and this screen updates automatically.
           </p>
           <a
-            href={`/s/${encodeURIComponent(businessId)}`}
+            href={`/s/${encodeURIComponent(business ? businessPublicReference(business) : businessId)}`}
             className="mt-4 inline-flex rounded-full border border-green-200/35 px-4 py-2 text-xs font-black uppercase tracking-[0.12em] text-green-50"
           >
             Open customer catalog
@@ -685,7 +703,7 @@ export function BusinessConsoleClient({ businessId }: { businessId: string }) {
                 <button
                   type="button"
                   onClick={restoreLastSession}
-                  disabled={loading}
+                  disabled={!business || loading}
                   className="rounded-xl border border-white/15 px-3 py-2 text-[11px] font-black uppercase tracking-[0.12em] text-stone-100 transition hover:border-orange-200/60 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   Restore last QR
@@ -701,7 +719,7 @@ export function BusinessConsoleClient({ businessId }: { businessId: string }) {
                 <button
                   type="button"
                   onClick={restorePastedSession}
-                  disabled={loading}
+                  disabled={!business || loading}
                   className="rounded-xl border border-orange-200/35 px-3 py-2 text-[11px] font-black uppercase tracking-[0.12em] text-orange-50 transition hover:bg-orange-200/10 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   Restore pasted

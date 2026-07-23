@@ -35,6 +35,7 @@ const benefit = {
 
 const business = {
   id: businessId,
+  slug: 'ui-e2e-seller',
   name: 'UI E2E Seller',
   description: 'Deterministic browser-flow fixture.',
   website: 'https://example.com',
@@ -125,10 +126,19 @@ function installApiMock(context, state, calls) {
         pagination: { page: 1, limit: 8, total: 0, totalPages: 0, hasNext: false },
       });
     }
-    if (method === 'GET' && pathname === `/api/businesses/${businessId}`) {
+    if (
+      method === 'GET' &&
+      (pathname === `/api/businesses/${businessId}` || pathname === `/api/businesses/${business.slug}`)
+    ) {
       return json(route, business);
     }
-    if (method === 'GET' && pathname === `/api/businesses/${businessId}/rules`) {
+    if (
+      method === 'GET' &&
+      (
+        pathname === `/api/businesses/${businessId}/rules` ||
+        pathname === `/api/businesses/${business.slug}/rules`
+      )
+    ) {
       return json(route, { rules: [rule] });
     }
     if (method === 'POST' && pathname === '/api/passes/challenge') {
@@ -345,7 +355,15 @@ async function run() {
     await customer.getByRole('button', { name: 'Connect wallet', exact: true }).first().click();
     await customer.getByRole('button', { name: 'Disconnect', exact: true }).first().waitFor();
 
-    await seller.goto(`${origin}/b/${businessId}`, { waitUntil: 'domcontentloaded' });
+    await seller.goto(`${origin}/p/${passId}`, { waitUntil: 'domcontentloaded' });
+    const sellerReference = seller.getByLabel('Seller URL or profile ID', { exact: true });
+    await sellerReference.fill(`https://attacker.example/b/${business.slug}`);
+    await seller.getByRole('button', { name: 'Open seller checkout', exact: true }).click();
+    await seller.getByText('Enter a shop.ifrunit.tech seller URL, seller slug or profile ID.', { exact: true }).waitFor();
+    assert.equal(new URL(seller.url()).pathname, `/p/${passId}`, 'foreign seller URLs must fail closed');
+    await sellerReference.fill(`https://shop.ifrunit.tech/s/${business.slug}`);
+    await seller.getByRole('button', { name: 'Open seller checkout', exact: true }).click();
+    await seller.waitForURL(`${origin}/b/${business.slug}?pass=${passId}`);
     await seller.getByRole('heading', { name: business.name }).waitFor();
     await seller.getByRole('button', { name: 'Connect', exact: true }).click();
     await seller.getByText(`${sellerWallet.slice(0, 6)}...${sellerWallet.slice(-4)}`).first().waitFor();

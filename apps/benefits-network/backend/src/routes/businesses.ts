@@ -9,6 +9,7 @@ import {
   publicBusinessProfile,
 } from '../services/businessProfile';
 import { safeProductPrice } from '../services/productPrice';
+import { publicBusinessReference, resolveBusinessReference } from '../services/businessSlug';
 
 const router = Router();
 const visibleCatalogRule: Prisma.BenefitRuleWhereInput = {
@@ -47,13 +48,15 @@ router.get('/', discoveryRateLimiter, async (req, res, next) => {
       res.status(400).json({ error: 'Invalid discovery filters' });
       return;
     }
+    const resolvedBusiness = businessId ? await resolveBusinessReference(businessId) : null;
+    const resolvedBusinessId = businessId ? resolvedBusiness?.id || '__missing_business__' : '';
 
     const visibleOfferFilter: Prisma.BenefitRuleWhereInput = {
       active: true,
       business: {
         active: true,
         ownerAddress: { not: null },
-        ...(businessId ? { id: businessId } : {}),
+        ...(businessId ? { id: resolvedBusinessId } : {}),
         ...(serviceAreaKey ? { serviceAreaKey } : {}),
       },
       AND: [
@@ -76,7 +79,11 @@ router.get('/', discoveryRateLimiter, async (req, res, next) => {
     };
     const categoryFilter: Prisma.BenefitRuleWhereInput = {
       active: true,
-      business: { active: true, ownerAddress: { not: null }, ...(businessId ? { id: businessId } : {}) },
+      business: {
+        active: true,
+        ownerAddress: { not: null },
+        ...(businessId ? { id: resolvedBusinessId } : {}),
+      },
       OR: [{ productId: null }, { product: { active: true } }],
     };
 
@@ -101,6 +108,7 @@ router.get('/', discoveryRateLimiter, async (req, res, next) => {
           business: {
             select: {
               id: true,
+              slug: true,
               name: true,
               description: true,
               website: true,
@@ -131,7 +139,7 @@ router.get('/', discoveryRateLimiter, async (req, res, next) => {
         where: {
           active: true,
           ownerAddress: { not: null },
-          ...(businessId ? { id: businessId } : {}),
+          ...(businessId ? { id: resolvedBusinessId } : {}),
           serviceArea: { not: null },
           serviceAreaKey: { not: null },
           benefitRules: {
@@ -189,6 +197,7 @@ router.get('/catalog-index', discoveryRateLimiter, async (_req, res, next) => {
       take: 49_998,
       select: {
         id: true,
+        slug: true,
         createdAt: true,
         benefitRules: {
           where: visibleCatalogRule,
@@ -202,6 +211,7 @@ router.get('/catalog-index', discoveryRateLimiter, async (_req, res, next) => {
     res.json({
       catalogs: businesses.slice(0, 49_997).map((business) => ({
         businessId: business.id,
+        businessRef: publicBusinessReference(business),
         lastModified: (business.benefitRules[0]?.updatedAt || business.createdAt).toISOString(),
       })),
       truncated: businesses.length > 49_997,
@@ -214,10 +224,16 @@ router.get('/catalog-index', discoveryRateLimiter, async (_req, res, next) => {
 
 router.get('/:id', async (req, res, next) => {
   try {
+    const resolved = await resolveBusinessReference(req.params.id);
+    if (!resolved) {
+      res.status(404).json({ error: 'Business not found' });
+      return;
+    }
     const business = await prisma.business.findUnique({
-      where: { id: req.params.id },
+      where: { id: resolved.id },
       select: {
         id: true,
+        slug: true,
         name: true,
         description: true,
         website: true,
@@ -247,8 +263,13 @@ router.get('/:id', async (req, res, next) => {
 
 router.get('/:id/rules', async (req, res, next) => {
   try {
+    const resolved = await resolveBusinessReference(req.params.id);
+    if (!resolved) {
+      res.status(404).json({ error: 'Business not found' });
+      return;
+    }
     const business = await prisma.business.findUnique({
-      where: { id: req.params.id },
+      where: { id: resolved.id },
       select: { id: true, active: true, ownerAddress: true },
     });
 
@@ -259,7 +280,7 @@ router.get('/:id/rules', async (req, res, next) => {
 
     const rules = await prisma.benefitRule.findMany({
       where: {
-        businessId: req.params.id,
+        businessId: resolved.id,
         active: true,
         OR: [{ productId: null }, { product: { active: true } }],
       },
@@ -292,10 +313,16 @@ router.get('/:id/rules', async (req, res, next) => {
 
 router.get('/:id/products', async (req, res, next) => {
   try {
+    const resolved = await resolveBusinessReference(req.params.id);
+    if (!resolved) {
+      res.status(404).json({ error: 'Business not found' });
+      return;
+    }
     const business = await prisma.business.findUnique({
-      where: { id: req.params.id },
+      where: { id: resolved.id },
       select: {
         id: true,
+        slug: true,
         name: true,
         description: true,
         website: true,
@@ -314,7 +341,7 @@ router.get('/:id/products', async (req, res, next) => {
 
     const products = await prisma.product.findMany({
       where: {
-        businessId: req.params.id,
+        businessId: resolved.id,
         active: true,
         benefitRules: { some: { active: true } },
       },
@@ -350,6 +377,7 @@ router.get('/:id/products', async (req, res, next) => {
     res.json({
       business: publicBusinessProfile({
         id: business.id,
+        slug: business.slug,
         name: business.name,
         description: business.description,
         website: business.website,

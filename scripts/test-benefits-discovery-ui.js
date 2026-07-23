@@ -23,6 +23,7 @@ const offer = {
   monthlyRedemptionLimit: 10,
   business: {
     id: 'seller-ui-e2e',
+    slug: 'ifr-test-cafe',
     name: 'IFR Test Cafe',
     description: 'Deterministic offer-discovery fixture.',
     website: 'https://example.com',
@@ -118,14 +119,20 @@ async function run() {
           body: JSON.stringify(discoveryResponse(offers)),
         });
       }
-      if (url.pathname === `/api/businesses/${offer.business.id}`) {
+      if (
+        url.pathname === `/api/businesses/${offer.business.slug}` ||
+        url.pathname === `/api/businesses/${offer.business.id}`
+      ) {
         return route.fulfill({
           status: 200,
           contentType: 'application/json',
           body: JSON.stringify({ ...offer.business, discountPercent: 10, requiredLockIFR: 1000, tierLabel: null }),
         });
       }
-      if (url.pathname === `/api/businesses/${offer.business.id}/products`) {
+      if (
+        url.pathname === `/api/businesses/${offer.business.slug}/products` ||
+        url.pathname === `/api/businesses/${offer.business.id}/products`
+      ) {
         return route.fulfill({
           status: 200,
           contentType: 'application/json',
@@ -153,7 +160,10 @@ async function run() {
           }),
         });
       }
-      if (url.pathname === `/api/businesses/${offer.business.id}/rules`) {
+      if (
+        url.pathname === `/api/businesses/${offer.business.slug}/rules` ||
+        url.pathname === `/api/businesses/${offer.business.id}/rules`
+      ) {
         return route.fulfill({
           status: 200,
           contentType: 'application/json',
@@ -262,7 +272,7 @@ async function run() {
     await discoveryLogo.evaluate((image) => image.dispatchEvent(new Event('error')));
     await offersSection.getByRole('img', { name: `${offer.business.name} logo placeholder`, exact: true }).waitFor();
     await offersSection.getByRole('link', { name: 'Seller catalog', exact: true }).click();
-    await waitForLocation(page, `/s/${offer.business.id}`);
+    await waitForLocation(page, `/s/${offer.business.slug}`);
     await page.getByText(offer.productName, { exact: true }).waitFor();
     await page.getByText('Reference price: EUR 19.99', { exact: true }).waitFor();
     await page.getByText('Verify at least 1,000 IFR in active TIME_ONLY commitments and 500 IFR held at checkout.', { exact: true }).first().waitFor();
@@ -274,7 +284,7 @@ async function run() {
     );
     await page.getByRole('link', { name: 'Use this offer', exact: true }).click();
     await waitForLocation(page, '/', '#customer-pass');
-    assert.equal(new URL(page.url()).searchParams.get('seller'), offer.business.id);
+    assert.equal(new URL(page.url()).searchParams.get('seller'), offer.business.slug);
     assert.equal(new URL(page.url()).searchParams.get('offer'), offer.id);
     const selectedOffer = page.locator('#customer-pass');
     await selectedOffer.getByText('Selected public offer', { exact: true }).waitFor();

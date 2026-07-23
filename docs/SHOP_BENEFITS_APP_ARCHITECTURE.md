@@ -73,7 +73,8 @@ The app has two roles:
 - Show PWA install flow and mobile guidance.
 - Describe offline support as a launcher shell for role choice and static guidance. API, wallet,
   chain, signature, checkout and redemption actions remain network-only and fail explicitly
-  while offline.
+  while offline. Direct seller/scanner links use a branded precached recovery page and never
+  expose raw framework errors.
 - Show wallet status for customers.
 - Show seller rule manager for sellers.
 - Show integration/code generator for shops.
@@ -117,13 +118,18 @@ The app has two roles:
   reload and edit it with their wallet; controlled operator-created profiles can be reopened by
   Business ID with the user-entered admin fallback. Public catalog and offer discovery expose only
   sanitized profile fields and never expose the internal normalized filter key.
+- Wallet-owned sellers choose one permanent lowercase public URL during profile creation, or claim
+  it later with the dedicated one-time `business:slug` signature. Public catalog, scanner, QR,
+  discovery and sitemap links prefer that slug. Existing Business-ID links remain valid, while old
+  catalog IDs redirect permanently to the canonical `/s/:slug` URL. Slugs cannot be renamed,
+  recycled, reserved-route names, or current CUID-shaped internal IDs.
 - Seller can edit discount, category, product/service, required locked IFR, optional minimum IFR
   kept in the customer wallet and QR lifetime through the owner-wallet-signed PATCH flow without
   changing the active/paused state.
 - Seller can attach or clear an optional reference price on a catalog item. Amount and currency
   are updated atomically, validated without floating point and remain informational.
 - Seller can apply built-in welcome, standard, premium or event templates to the current draft; templates never publish automatically and preserve an explicit catalog binding.
-- Seller can open `/b/:businessId` scanner.
+- Seller can open `/b/:businessId` or the equivalent readable `/b/:slug` scanner.
 - Scanner must list active rules, accept a canonical `/p/:passId` customer pass and bind the selected rule with a fresh seller signature. The existing seller-issued QR remains available for compatible integrations.
 - Scanner must show customer approval/rejection and single-use redeem action.
 - Owner can delegate expiring checkout-only access to staff wallets. Operators can verify their role and create/redeem QR sessions, but cannot manage profiles, rules, history or other operators.
@@ -229,6 +235,11 @@ If `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` is missing, the frontend must show a s
     The backend migration, customer/seller UI and privacy-safe public projections are live in
     production. Automated browser coverage verifies create, bind, exact-offer confirm and one-time
     redeem; physical device/wallet acceptance remains pending.**
+14. Stable public seller URLs. **Implemented with an additive nullable unique slug, exact
+    owner-signed create/claim scope, immutable aliases, reserved-name and takeover protection,
+    legacy Business-ID compatibility, canonical catalog redirects, slug-aware discovery/QR/backup
+    paths and sitemap entries. Production deployment remains gated by tests, exact-head CI,
+    rollback backup and device smoke.**
 
 ## Security Notes
 
