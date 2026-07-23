@@ -4,12 +4,19 @@ import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import { AppShell } from '@/components/AppShell';
 import { EligibilityLiveSummary, OfferEligibility, useIfrLockEligibility } from '@/components/OfferEligibility';
-import { PublicBusinessProfile, PublicCatalogProduct, getBusinessProducts } from '@/lib/api';
+import {
+  BenefitRule,
+  PublicBusinessProfile,
+  PublicCatalogProduct,
+  getBusinessProducts,
+  getBusinessRules,
+} from '@/lib/api';
 
 export function SellerCatalogClient({ businessId }: { businessId: string }) {
   const eligibility = useIfrLockEligibility();
   const [business, setBusiness] = useState<PublicBusinessProfile | null>(null);
   const [products, setProducts] = useState<PublicCatalogProduct[]>([]);
+  const [standaloneRules, setStandaloneRules] = useState<BenefitRule[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [shareStatus, setShareStatus] = useState('');
@@ -20,10 +27,15 @@ export function SellerCatalogClient({ businessId }: { businessId: string }) {
     setError('');
     setBusiness(null);
     setProducts([]);
-    getBusinessProducts(businessId, controller.signal)
-      .then((result) => {
-        setBusiness(result.business);
-        setProducts(result.products);
+    setStandaloneRules([]);
+    Promise.all([
+      getBusinessProducts(businessId, controller.signal),
+      getBusinessRules(businessId, controller.signal),
+    ])
+      .then(([catalogResult, rulesResult]) => {
+        setBusiness(catalogResult.business);
+        setProducts(catalogResult.products);
+        setStandaloneRules(rulesResult.rules.filter((rule) => rule.productId === null && rule.active));
       })
       .catch((err: Error) => {
         if (err.name !== 'AbortError') setError(err.message);
@@ -126,7 +138,7 @@ export function SellerCatalogClient({ businessId }: { businessId: string }) {
 
         {loading ? <p className="py-12 text-stone-300">Loading active catalog...</p> : null}
         {error ? <p className="my-8 border-l-2 border-red-400 pl-4 text-red-100">{error}</p> : null}
-        {!loading && !error && categories.length === 0 ? (
+        {!loading && !error && categories.length === 0 && standaloneRules.length === 0 ? (
           <section className="py-12">
             <h2 className="text-2xl font-black text-white">No public offers yet</h2>
             <p className="mt-2 text-stone-300">This seller has not published an active catalog item with benefits.</p>
@@ -169,6 +181,30 @@ export function SellerCatalogClient({ businessId }: { businessId: string }) {
             </section>
           ))}
         </div>
+
+        {standaloneRules.length > 0 ? (
+          <section className="border-t border-white/10 py-8">
+            <p className="text-xs font-black uppercase tracking-[0.18em] text-green-100/80">Other member benefits</p>
+            <div className="mt-4 grid gap-5 md:grid-cols-2">
+              {standaloneRules.map((rule) => (
+                <article key={rule.id} className="border-l-2 border-orange-200/40 bg-white/[0.03] p-5">
+                  <div className="flex flex-wrap items-baseline justify-between gap-2">
+                    <h2 className="text-2xl font-black text-white">{rule.productName}</h2>
+                    <p className="text-xs font-bold uppercase tracking-[0.12em] text-stone-400">{rule.label}</p>
+                  </div>
+                  <p className="mt-2 text-sm font-black text-orange-100">{rule.discountPercent}% benefit</p>
+                  <p className="mt-1 text-sm text-stone-300">
+                    Verify at least {rule.requiredLockIFR.toLocaleString('en-US')} locked IFR at checkout.
+                  </p>
+                  <OfferEligibility requiredLockIFR={rule.requiredLockIFR} eligibility={eligibility} />
+                  <p className="mt-1 text-xs text-stone-400">
+                    {rule.category} / Per wallet: {rule.dailyRedemptionLimit || 'unlimited'} / UTC day and {rule.monthlyRedemptionLimit || 'unlimited'} / UTC month.
+                  </p>
+                </article>
+              ))}
+            </div>
+          </section>
+        ) : null}
 
         <section className="mt-8 flex flex-wrap gap-3 border-t border-white/10 pt-6">
           <Link href="/#customer-wallet" className="rounded-full bg-green-300 px-5 py-3 text-xs font-black uppercase tracking-[0.14em] text-stone-950">Check or lock IFR</Link>

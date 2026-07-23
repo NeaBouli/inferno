@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   CatalogProduct,
   SellerAuth,
@@ -38,8 +38,11 @@ export function SellerCatalogManager({
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState('');
   const [error, setError] = useState('');
+  const activeBusinessIdRef = useRef(businessId);
+  activeBusinessIdRef.current = businessId;
 
   useEffect(() => {
+    setLoading(false);
     setEditingId(null);
     setStatus('');
     setError('');
@@ -59,17 +62,21 @@ export function SellerCatalogManager({
     }
     setLoading(true);
     setError('');
+    const requestBusinessId = businessId;
     try {
       const result = await getSellerBusinessProducts(
-        businessId,
-        await signSellerAction('products:list', businessId)
+        requestBusinessId,
+        await signSellerAction('products:list', requestBusinessId)
       );
+      if (activeBusinessIdRef.current !== requestBusinessId) return;
       onProductsChange(result.products);
       setStatus(`Loaded ${result.products.length} product${result.products.length === 1 ? '' : 's'} or service${result.products.length === 1 ? '' : 's'}.`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load seller catalog');
+      if (activeBusinessIdRef.current === requestBusinessId) {
+        setError(err instanceof Error ? err.message : 'Failed to load seller catalog');
+      }
     } finally {
-      setLoading(false);
+      if (activeBusinessIdRef.current === requestBusinessId) setLoading(false);
     }
   }
 
@@ -80,29 +87,35 @@ export function SellerCatalogManager({
     }
     setLoading(true);
     setError('');
+    const requestBusinessId = businessId;
+    const requestEditingId = editingId;
     try {
       const input = { name: name.trim(), category, description: description.trim() || null };
-      const product = editingId
+      const product = requestEditingId
         ? await updateSellerBusinessProduct(
-            editingId,
-            await signSellerAction('products:update', businessId, editingId),
+            requestEditingId,
+            await signSellerAction('products:update', requestBusinessId, requestEditingId),
             input
           )
         : await createSellerBusinessProduct(
-            businessId,
-            await signSellerAction('products:create', businessId, businessId),
+            requestBusinessId,
+            await signSellerAction('products:create', requestBusinessId, requestBusinessId),
             input
           );
-      const next = editingId
+      if (activeBusinessIdRef.current !== requestBusinessId) return;
+      const next = requestEditingId
         ? products.map((item) => item.id === product.id ? product : item)
         : [product, ...products];
       onProductsChange(next);
+      if (!requestEditingId) onUseProduct(product);
       resetDraft();
-      setStatus(editingId ? 'Catalog item updated. Existing checkout snapshots remain unchanged.' : 'Catalog item created. It can now be linked to a benefit rule.');
+      setStatus(requestEditingId ? 'Catalog item updated. Existing checkout snapshots remain unchanged.' : 'Catalog item created and selected for the new benefit rule.');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to save catalog item');
+      if (activeBusinessIdRef.current === requestBusinessId) {
+        setError(err instanceof Error ? err.message : 'Failed to save catalog item');
+      }
     } finally {
-      setLoading(false);
+      if (activeBusinessIdRef.current === requestBusinessId) setLoading(false);
     }
   }
 
@@ -119,24 +132,28 @@ export function SellerCatalogManager({
     if (!businessId || !ownerReady) return;
     setLoading(true);
     setError('');
+    const requestBusinessId = businessId;
     try {
       await deleteSellerBusinessProduct(
         product.id,
-        await signSellerAction('products:delete', businessId, product.id)
+        await signSellerAction('products:delete', requestBusinessId, product.id)
       );
+      if (activeBusinessIdRef.current !== requestBusinessId) return;
       onProductsChange(products.map((item) => item.id === product.id ? { ...item, active: false } : item));
       onProductArchived(product.id);
       if (editingId === product.id) resetDraft();
       setStatus('Catalog item archived. Its linked offers are paused; prior receipts and sessions remain available.');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to archive catalog item');
+      if (activeBusinessIdRef.current === requestBusinessId) {
+        setError(err instanceof Error ? err.message : 'Failed to archive catalog item');
+      }
     } finally {
-      setLoading(false);
+      if (activeBusinessIdRef.current === requestBusinessId) setLoading(false);
     }
   }
 
   return (
-    <section className="mb-5 border-y border-orange-200/15 py-5">
+    <section id="seller-catalog" className="mb-5 scroll-mt-28 border-y border-orange-200/15 py-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="text-xs font-black uppercase tracking-[0.16em] text-orange-200/80">Seller catalog</p>

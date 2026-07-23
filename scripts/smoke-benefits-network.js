@@ -331,6 +331,13 @@ async function installEligibilityRoutes(page) {
       }),
     });
   });
+  await page.route('**/api/businesses/smoke-eligibility-catalog/rules', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ rules: [] }),
+    });
+  });
 }
 
 async function installEligibilityRpc(page, { rpcError = false, lockedRaw = '1500125000000' } = {}) {
@@ -713,7 +720,10 @@ async function verifyRuleTemplateAuthorization() {
   const productId = 'smoke-template-product';
   const mutatingRequests = [];
   const challengeRequests = [];
+  const publicVerificationRequests = [];
   let historyRequestCount = 0;
+  let publishedOffer = null;
+  let publishedRule = null;
 
   await context.addInitScript(({ walletAddress }) => {
     const listeners = new Map();
@@ -754,15 +764,37 @@ async function verifyRuleTemplateAuthorization() {
 
   const page = await context.newPage();
   await page.route('**/api/businesses?**', async (route) => {
+    const requestUrl = new URL(route.request().url());
+    const requestedBusinessId = requestUrl.searchParams.get('businessId');
+    if (requestedBusinessId) publicVerificationRequests.push(requestedBusinessId);
+    const offers = requestedBusinessId === businessId && publishedOffer
+      ? Array.from({ length: 24 }, (_, index) => ({
+          ...publishedOffer,
+          id: `newer-public-rule-${index + 1}`,
+        }))
+      : [];
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
       body: JSON.stringify({
-        offers: [],
+        offers,
         categories: [],
         serviceAreas: [],
-        pagination: { page: 1, limit: 8, total: 0, totalPages: 0, hasNext: false },
+        pagination: {
+          page: 1,
+          limit: 24,
+          total: offers.length ? 25 : 0,
+          totalPages: offers.length ? 1 : 0,
+          hasNext: false,
+        },
       }),
+    });
+  });
+  await page.route(`**/api/businesses/${businessId}/rules`, async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ rules: publishedRule ? [publishedRule] : [] }),
     });
   });
   await page.route('**/api/seller/**', async (route) => {
@@ -918,6 +950,45 @@ async function verifyRuleTemplateAuthorization() {
     }
     if (url.pathname === `/api/seller/businesses/${businessId}/rules` && method === 'POST') {
       const body = request.postDataJSON();
+      publishedOffer = {
+        id: 'smoke-template-rule',
+        label: body.label,
+        category: body.category,
+        productName: body.productName,
+        discountPercent: body.discountPercent,
+        requiredLockIFR: body.requiredLockIFR,
+        dailyRedemptionLimit: body.dailyRedemptionLimit,
+        monthlyRedemptionLimit: body.monthlyRedemptionLimit,
+        business: {
+          id: businessId,
+          name: 'Smoke Template Seller',
+          description: 'Public verification fixture.',
+          website: null,
+          serviceArea: null,
+          categories: ['Coffee'],
+        },
+        product: {
+          id: productId,
+          name: 'Bound catalog service',
+          description: 'Stable product binding for the template authorization smoke.',
+        },
+      };
+      publishedRule = {
+        id: 'smoke-template-rule',
+        businessId,
+        productId,
+        label: body.label,
+        category: body.category,
+        productName: body.productName,
+        discountPercent: body.discountPercent,
+        requiredLockIFR: body.requiredLockIFR,
+        dailyRedemptionLimit: body.dailyRedemptionLimit,
+        monthlyRedemptionLimit: body.monthlyRedemptionLimit,
+        ttlSeconds: body.ttlSeconds,
+        active: true,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
       await route.fulfill({
         status: 201,
         contentType: 'application/json',
@@ -976,7 +1047,12 @@ async function verifyRuleTemplateAuthorization() {
     ));
     await page.getByRole('button', { name: 'Save new rule', exact: true }).click();
     await saveRequest;
-    await expectText(page, 'Rule saved.');
+    await expectText(page, 'Rule saved and verified in public discovery.');
+    await expectText(page, '25 public offers verified');
+    assert(
+      publicVerificationRequests.includes(businessId),
+      'signed Save must verify the exact seller Business ID in public discovery'
+    );
     assert(mutatingRequests.length === 1, 'signed Save must produce exactly one rule write');
     const saved = mutatingRequests[0];
     assert(saved.body.productId === productId, 'signed Save did not preserve the catalog product ID');
@@ -1488,9 +1564,11 @@ async function verifyPage(contextOptions, label) {
       }
     }
     await page.getByRole('heading', { name: 'Connect seller wallet' }).first().waitFor({ timeout: timeoutMs });
+    await expectText(page, 'Wallet-owned seller profile');
     await expectText(page, 'Active benefit rule loaded');
+    await expectText(page, 'Public offer verified');
     await expectText(page, 'Load profiles');
-    await expectText(page, 'Create profile');
+    await expectText(page, 'Create or load profile');
     await expectText(page, 'Create a seller profile');
     await expectText(page, 'Public description');
     await expectText(page, 'Seller website');
@@ -1659,6 +1737,13 @@ async function verifyPage(contextOptions, label) {
             }],
           }],
         }),
+      });
+    });
+    await page.route('**/api/businesses/smoke-catalog/rules', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ rules: [] }),
       });
     });
     await gotoAppPage(page, '/s/smoke-catalog');

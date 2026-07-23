@@ -24,16 +24,19 @@ router.get('/', discoveryRateLimiter, async (req, res, next) => {
     const limit = parsePositiveInteger(req.query.limit, 12, 24);
     const query = typeof req.query.query === 'string' ? req.query.query.trim() : '';
     const category = typeof req.query.category === 'string' ? req.query.category.trim() : '';
+    const businessId = typeof req.query.businessId === 'string' ? req.query.businessId.trim() : '';
     const serviceAreaInput = typeof req.query.serviceArea === 'string' ? req.query.serviceArea : '';
     const serviceArea = normalizeBusinessServiceArea(serviceAreaInput);
     const serviceAreaKey = businessServiceAreaKey(serviceAreaInput);
     const invalidTextFilter =
       (req.query.query !== undefined && typeof req.query.query !== 'string') ||
       (req.query.category !== undefined && typeof req.query.category !== 'string') ||
+      (req.query.businessId !== undefined && typeof req.query.businessId !== 'string') ||
       (req.query.serviceArea !== undefined && typeof req.query.serviceArea !== 'string');
 
     if (
       !page || !limit || invalidTextFilter || query.length > 80 || category.length > 80 ||
+      businessId.length > 80 || (businessId && !/^[A-Za-z0-9_-]+$/.test(businessId)) ||
       serviceAreaInput.length > MAX_BUSINESS_SERVICE_AREA_LENGTH || (serviceAreaInput.trim() && !serviceArea)
     ) {
       res.status(400).json({ error: 'Invalid discovery filters' });
@@ -44,6 +47,8 @@ router.get('/', discoveryRateLimiter, async (req, res, next) => {
       active: true,
       business: {
         active: true,
+        ownerAddress: { not: null },
+        ...(businessId ? { id: businessId } : {}),
         ...(serviceAreaKey ? { serviceAreaKey } : {}),
       },
       AND: [
@@ -66,7 +71,7 @@ router.get('/', discoveryRateLimiter, async (req, res, next) => {
     };
     const categoryFilter: Prisma.BenefitRuleWhereInput = {
       active: true,
-      business: { active: true },
+      business: { active: true, ownerAddress: { not: null }, ...(businessId ? { id: businessId } : {}) },
       OR: [{ productId: null }, { product: { active: true } }],
     };
 
@@ -109,6 +114,8 @@ router.get('/', discoveryRateLimiter, async (req, res, next) => {
       prisma.business.findMany({
         where: {
           active: true,
+          ownerAddress: { not: null },
+          ...(businessId ? { id: businessId } : {}),
           serviceArea: { not: null },
           serviceAreaKey: { not: null },
           benefitRules: {
@@ -167,15 +174,17 @@ router.get('/:id', async (req, res, next) => {
         requiredLockIFR: true,
         tierLabel: true,
         active: true,
+        ownerAddress: true,
       },
     });
 
-    if (!business || !business.active) {
+    if (!business || !business.active || !business.ownerAddress) {
       res.status(404).json({ error: 'Business not found' });
       return;
     }
 
-    res.json(publicBusinessProfile(business));
+    const { ownerAddress: _ownerAddress, ...publicBusiness } = business;
+    res.json(publicBusinessProfile(publicBusiness));
   } catch (err) {
     next(err);
   }
@@ -185,10 +194,10 @@ router.get('/:id/rules', async (req, res, next) => {
   try {
     const business = await prisma.business.findUnique({
       where: { id: req.params.id },
-      select: { id: true, active: true },
+      select: { id: true, active: true, ownerAddress: true },
     });
 
-    if (!business || !business.active) {
+    if (!business || !business.active || !business.ownerAddress) {
       res.status(404).json({ error: 'Business not found' });
       return;
     }
@@ -237,9 +246,10 @@ router.get('/:id/products', async (req, res, next) => {
         serviceAreaKey: true,
         categoriesJson: true,
         active: true,
+        ownerAddress: true,
       },
     });
-    if (!business || !business.active) {
+    if (!business || !business.active || !business.ownerAddress) {
       res.status(404).json({ error: 'Business not found' });
       return;
     }

@@ -21,17 +21,18 @@ import {
   SellerBusinessSummary,
   SellerActivityMetrics,
   SellerSessionSummary,
-  createAdminBusiness,
   createAdminBusinessRule,
   createSellerBusiness,
   createSellerBusinessRule,
   createSellerCheckoutOperator,
+  discoverOffers,
   deleteAdminBusinessRule,
   deleteSellerBusiness,
   deleteSellerBusinessRule,
   deleteSellerCheckoutOperator,
   getAdminBusinessRules,
   getAdminBusinessProfile,
+  getBusinessRules,
   getSellerAuthMessage,
   getSellerBusinesses,
   getSellerBusinessRules,
@@ -173,6 +174,14 @@ export function SellerRuleBuilder() {
   const [status, setStatus] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [verifyingPublicListing, setVerifyingPublicListing] = useState(false);
+  const [publicListing, setPublicListing] = useState<{
+    businessId: string;
+    offerCount: number;
+    expectedRuleVisible: boolean;
+    checkedAt: string;
+    error: string;
+  } | null>(null);
   const activeBusinessIdRef = useRef(businessId);
   const activeWalletAddressRef = useRef('');
 
@@ -188,17 +197,35 @@ export function SellerRuleBuilder() {
   const canUseOperatorFallback = Boolean(adminSecret);
   const canManage = canUseWalletOwner || canUseOperatorFallback;
   const activeRulesCount = rules.filter((rule) => rule.active).length;
+  const activeCatalogCount = catalogProducts.filter((item) => item.active).length;
   const editingRule = rules.find((rule) => rule.id === editingRuleId) || null;
   const selectedBusiness = sellerBusinesses.find((business) => business.id === businessId) || null;
   const selectedBusinessUsesWalletOwner = Boolean(selectedBusiness?.ownerAddress);
+  const selectedBusinessOwnerMatchesWallet = Boolean(
+    selectedBusiness?.ownerAddress &&
+    normalizedWalletAddress &&
+    selectedBusiness.ownerAddress.toLowerCase() === normalizedWalletAddress
+  );
   const profileNeedsLoading = Boolean(businessId && !selectedBusiness);
   const canEditSelectedProfile = Boolean(selectedBusiness) && (
-    selectedBusinessUsesWalletOwner ? canUseWalletOwner : canUseOperatorFallback
+    selectedBusinessUsesWalletOwner ? selectedBusinessOwnerMatchesWallet : canUseOperatorFallback
   );
+  const canManageSelectedBusiness = selectedBusiness ? canEditSelectedProfile : canManage;
   const businessReady = Boolean(businessId);
   const profileReady = Boolean(selectedBusiness);
-  const scannerReady = Boolean(scannerUrl);
+  const walletOwnedProfileReady = selectedBusinessOwnerMatchesWallet;
+  const publicProfileDetailsReady = Boolean(
+    selectedBusiness?.description && selectedBusiness.serviceArea && selectedBusiness.categories.length > 0
+  );
   const ruleReady = activeRulesCount > 0;
+  const publicListingReady = Boolean(
+    publicListing &&
+    publicListing.businessId === businessId &&
+    publicListing.offerCount > 0 &&
+    publicListing.expectedRuleVisible &&
+    !publicListing.error
+  );
+  const scannerReady = Boolean(scannerUrl && ruleReady);
   const sessionHistoryIsCurrent = Boolean(
     sessionHistoryBinding &&
     sessionHistoryBinding.walletAddress === normalizedWalletAddress &&
@@ -206,32 +233,51 @@ export function SellerRuleBuilder() {
   );
   const visibleSessions = sessionHistoryIsCurrent ? sessions : [];
   const visibleActivityMetrics = sessionHistoryIsCurrent ? activityMetrics : null;
-  const historyReady = visibleSessions.length > 0;
   const sellerStatus = !canManage
     ? 'Connect seller wallet'
     : profileNeedsLoading
       ? 'Load seller profile'
     : !businessReady
-      ? 'Create seller profile'
+      ? canUseWalletOwner ? 'Create seller profile' : 'Connect seller wallet'
+      : profileReady && selectedBusinessUsesWalletOwner && !selectedBusinessOwnerMatchesWallet
+        ? 'Connect profile owner wallet'
+      : profileReady && !selectedBusinessUsesWalletOwner
+        ? 'Owner wallet required for checkout'
+      : !ruleReady && activeCatalogCount === 0
+        ? 'Add first product or service'
       : !ruleReady
-        ? 'Create benefit rule'
-        : 'Ready for checkout';
+        ? 'Publish first benefit rule'
+        : !publicListingReady
+          ? 'Verify public offer'
+          : 'Public offer live';
   const nextSellerStep = !canManage
     ? 'Connect the seller wallet, then load or create a wallet-owned seller profile.'
     : profileNeedsLoading
       ? 'Load the existing Business ID with its owner wallet or the controlled operator fallback.'
     : !businessReady
-      ? 'Create a seller profile or load an existing profile owned by this wallet.'
+      ? canUseWalletOwner
+        ? 'Create a seller profile or load an existing profile owned by this wallet.'
+        : 'Connect a seller wallet to create a checkout-capable profile.'
+      : profileReady && selectedBusinessUsesWalletOwner && !selectedBusinessOwnerMatchesWallet
+        ? 'Switch to the wallet that owns this seller profile before editing rules or opening checkout.'
+      : profileReady && !selectedBusinessUsesWalletOwner
+        ? 'This operator-created profile cannot authorize checkout. Create or load a wallet-owned seller profile before publishing offers.'
+      : !ruleReady && activeCatalogCount === 0
+        ? 'Add the first customer-facing product or service. It will be selected automatically for the benefit rule.'
       : !ruleReady
-        ? 'Load existing rules or save a new active rule before sending staff to the scanner.'
-        : 'Open the scanner at checkout, create a QR session, and redeem approved benefits once.';
+        ? 'Review the selected product, benefit threshold and limits, then save the active rule.'
+        : !publicListingReady
+          ? 'Run the public check to prove this exact seller offer appears in customer discovery.'
+          : 'Open the scanner at checkout, create a QR session, and redeem approved benefits once.';
   const sellerReadinessSteps = [
-    { label: 'Seller wallet or operator fallback', ready: canManage },
+    { label: 'Wallet-owned seller profile', ready: walletOwnedProfileReady },
     { label: 'Seller profile selected', ready: profileReady },
+    { label: 'Public profile details filled', ready: publicProfileDetailsReady, optional: true },
+    { label: 'Catalog item linked', ready: activeCatalogCount > 0, optional: true },
     { label: 'Active benefit rule loaded', ready: ruleReady },
-    { label: 'Scanner link ready', ready: scannerReady },
-    { label: 'Recent customer checks loaded', ready: historyReady },
+    { label: 'Public offer verified', ready: publicListingReady },
   ];
+  const launchChecksReady = [walletOwnedProfileReady, profileReady, ruleReady, publicListingReady].filter(Boolean).length;
   const checkoutKitText = useMemo(
     () => [
       `${businessName || 'IFR Partner Shop'} IFR checkout kit`,
@@ -327,6 +373,8 @@ export function SellerRuleBuilder() {
     setSessionHasMore(false);
     setSessionSnapshot(null);
     setSessionHistoryBinding(null);
+    setVerifyingPublicListing(false);
+    setPublicListing(null);
     resetRuleDraft();
   }, [businessId]);
 
@@ -398,6 +446,7 @@ export function SellerRuleBuilder() {
     setRules([]);
     setSessions([]);
     setActivityMetrics(null);
+    setPublicListing(null);
     if (announce) {
       setStatus(`${business.name} selected. Load rules when you need the current list.`);
     }
@@ -416,6 +465,7 @@ export function SellerRuleBuilder() {
     setRules([]);
     setSessions([]);
     setActivityMetrics(null);
+    setPublicListing(null);
     setStatus('New seller profile draft started.');
     setError('');
   }
@@ -454,8 +504,8 @@ export function SellerRuleBuilder() {
   }
 
   async function createBusiness() {
-    if (!canManage) {
-      setError('Connect a seller wallet or use the operator admin fallback.');
+    if (!canUseWalletOwner) {
+      setError('Connect the seller wallet before creating a checkout-capable seller profile.');
       return;
     }
     if (businessServiceArea.trim() && !serviceAreaDisclosureConfirmed) {
@@ -477,14 +527,16 @@ export function SellerRuleBuilder() {
         ttlSeconds: ttl,
         tierLabel: defaultTier || undefined,
       };
-      const business = canUseWalletOwner
-        ? await createSellerBusiness(await signSellerAction('business:create', 'new', 'new'), input)
-        : await createAdminBusiness(adminSecret, input);
+      const business = await createSellerBusiness(
+        await signSellerAction('business:create', 'new', 'new'),
+        input
+      );
       setCreatedBusiness(business);
       setActiveBusinessId(business.id);
       setRules([]);
       setSessions([]);
       setActivityMetrics(null);
+      setPublicListing(null);
       setSellerBusinesses((current) => [
         {
           id: business.id,
@@ -505,10 +557,10 @@ export function SellerRuleBuilder() {
         },
         ...current.filter((item) => item.id !== business.id),
       ]);
-      setStatus(canUseWalletOwner
-        ? 'Seller profile created and bound to your wallet. Business ID and scanner link are ready.'
-        : 'Operator-created seller profile is ready. Business ID and scanner link are ready.'
-      );
+      setStatus('Seller profile created and bound to your wallet. Next: add the first product or service.');
+      window.requestAnimationFrame(() => {
+        document.getElementById('seller-catalog')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create seller profile');
     } finally {
@@ -572,24 +624,88 @@ export function SellerRuleBuilder() {
   }
 
   async function loadRules() {
-    if (!businessId || !canManage) {
+    if (!businessId || !canManageSelectedBusiness) {
       setError('Business ID plus seller wallet or admin secret are required.');
       return;
     }
     setLoading(true);
     setError('');
     setStatus('');
+    const targetBusinessId = businessId;
     try {
       const result = canUseWalletOwner
-        ? await getSellerBusinessRules(businessId, await signSellerAction('rules:list', businessId))
-        : await getAdminBusinessRules(businessId, adminSecret);
+        ? await getSellerBusinessRules(targetBusinessId, await signSellerAction('rules:list', targetBusinessId))
+        : await getAdminBusinessRules(targetBusinessId, adminSecret);
+      if (activeBusinessIdRef.current !== targetBusinessId) {
+        setStatus('Seller context changed. Load rules again for the selected profile.');
+        return;
+      }
       setRules(result.rules);
       setEditingRuleId((current) => current && result.rules.some((rule) => rule.id === current) ? current : null);
-      setStatus(`Loaded ${result.rules.length} rule${result.rules.length === 1 ? '' : 's'}.`);
+      const publicOfferVisible = result.rules.some((rule) => rule.active)
+        ? await verifyPublicListing(undefined, false)
+        : false;
+      setStatus(
+        `Loaded ${result.rules.length} rule${result.rules.length === 1 ? '' : 's'}.` +
+        (publicOfferVisible ? ' Public discovery is verified.' : '')
+      );
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load rules');
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function verifyPublicListing(expectedRuleId?: string, announce = true) {
+    const targetBusinessId = activeBusinessIdRef.current.trim();
+    if (!targetBusinessId) {
+      if (announce) setError('Select a seller profile before verifying its public offer.');
+      return false;
+    }
+
+    setVerifyingPublicListing(true);
+    if (announce) {
+      setError('');
+      setStatus('Checking this seller profile in public customer discovery...');
+    }
+    try {
+      const [result, publicRules] = await Promise.all([
+        discoverOffers({ businessId: targetBusinessId, page: 1, limit: 24 }),
+        getBusinessRules(targetBusinessId),
+      ]);
+      if (activeBusinessIdRef.current !== targetBusinessId) return false;
+      const exactOffers = result.offers.filter((offer) => offer.business.id === targetBusinessId);
+      const expectedRuleVisible = expectedRuleId
+        ? publicRules.rules.some((rule) => rule.id === expectedRuleId)
+        : result.pagination.total > 0 && exactOffers.length > 0;
+      setPublicListing({
+        businessId: targetBusinessId,
+        offerCount: result.pagination.total,
+        expectedRuleVisible,
+        checkedAt: new Date().toISOString(),
+        error: '',
+      });
+      if (announce) {
+        setStatus(expectedRuleVisible
+          ? `${exactOffers.length} public offer${exactOffers.length === 1 ? '' : 's'} verified for this seller.`
+          : 'No active public offer was found for this seller. Activate a rule, then verify again.'
+        );
+      }
+      return expectedRuleVisible;
+    } catch (err) {
+      if (activeBusinessIdRef.current !== targetBusinessId) return false;
+      const message = err instanceof Error ? err.message : 'Public discovery is unavailable';
+      setPublicListing({
+        businessId: targetBusinessId,
+        offerCount: 0,
+        expectedRuleVisible: false,
+        checkedAt: new Date().toISOString(),
+        error: message,
+      });
+      if (announce) setError(`Public listing check failed: ${message}`);
+      return false;
+    } finally {
+      if (activeBusinessIdRef.current === targetBusinessId) setVerifyingPublicListing(false);
     }
   }
 
@@ -944,6 +1060,7 @@ export function SellerRuleBuilder() {
         setRules([]);
         setSessions([]);
         setActivityMetrics(null);
+        setPublicListing(null);
       }
       setStatus('Seller profile deactivated.');
     } catch (err) {
@@ -954,7 +1071,7 @@ export function SellerRuleBuilder() {
   }
 
   async function saveRule() {
-    if (!businessId || !canManage) {
+    if (!businessId || !canManageSelectedBusiness) {
       setError('Business ID plus seller wallet or admin secret are required.');
       return;
     }
@@ -987,7 +1104,13 @@ export function SellerRuleBuilder() {
           .sort((a, b) => a.requiredLockIFR - b.requiredLockIFR));
         setEditingRuleId(null);
         resetRuleDraft();
-        setStatus('Rule updated. New QR sessions will use the updated benefit.');
+        const publicOfferVisible = updated.active
+          ? await verifyPublicListing(updated.id, false)
+          : await verifyPublicListing(undefined, false);
+        setStatus(updated.active && publicOfferVisible
+          ? 'Rule updated and verified in public discovery.'
+          : 'Rule updated. Public verification did not confirm this offer yet; use Verify public offer.'
+        );
       } else {
         const rule = canUseWalletOwner
           ? await createSellerBusinessRule(
@@ -997,7 +1120,13 @@ export function SellerRuleBuilder() {
             )
           : await createAdminBusinessRule(businessId, adminSecret, payload);
         setRules((current) => [...current, rule].sort((a, b) => a.requiredLockIFR - b.requiredLockIFR));
-        setStatus('Rule saved.');
+        const publicOfferVisible = rule.active
+          ? await verifyPublicListing(rule.id, false)
+          : false;
+        setStatus(publicOfferVisible
+          ? 'Rule saved and verified in public discovery.'
+          : 'Rule saved. Public verification did not confirm it yet; use Verify public offer.'
+        );
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to save rule');
@@ -1043,7 +1172,7 @@ export function SellerRuleBuilder() {
   }
 
   async function toggleRule(rule: BenefitRule) {
-    if (!canManage) {
+    if (!canManageSelectedBusiness) {
       setError('Connect the seller wallet or use the operator admin fallback.');
       return;
     }
@@ -1059,7 +1188,15 @@ export function SellerRuleBuilder() {
           )
         : await updateAdminBusinessRule(rule.id, adminSecret, { active: !rule.active });
       setRules((current) => current.map((item) => (item.id === updated.id ? updated : item)));
-      setStatus(updated.active ? 'Rule activated.' : 'Rule paused.');
+      const publicOfferVisible = updated.active
+        ? await verifyPublicListing(updated.id, false)
+        : await verifyPublicListing(undefined, false);
+      setStatus(updated.active
+        ? publicOfferVisible
+          ? 'Rule activated and verified in public discovery.'
+          : 'Rule activated. Public verification did not confirm it yet; use Verify public offer.'
+        : 'Rule paused. Public discovery status refreshed.'
+      );
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to update rule');
     } finally {
@@ -1069,7 +1206,7 @@ export function SellerRuleBuilder() {
 
   async function archiveRule(ruleId: string) {
     const rule = rules.find((item) => item.id === ruleId);
-    if (!canManage || !rule) {
+    if (!canManageSelectedBusiness || !rule) {
       setError('Connect the seller wallet or use the operator admin fallback.');
       return;
     }
@@ -1087,6 +1224,7 @@ export function SellerRuleBuilder() {
       }
       setRules((current) => current.filter((item) => item.id !== ruleId));
       if (editingRuleId === ruleId) setEditingRuleId(null);
+      await verifyPublicListing(undefined, false);
       setStatus('Rule archived. Existing checkout history remains available.');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to archive rule');
@@ -1394,7 +1532,7 @@ export function SellerRuleBuilder() {
         ) : null}
       </div>
 
-      <div className="mb-5 rounded-3xl border border-orange-200/20 bg-[#1d130c] p-4 shadow-xl shadow-black/20">
+      <div id="seller-launch" className="mb-5 scroll-mt-28 rounded-3xl border border-orange-200/20 bg-[#1d130c] p-4 shadow-xl shadow-black/20">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <p className="text-xs font-black uppercase tracking-[0.18em] text-orange-200/80">Seller readiness</p>
@@ -1402,12 +1540,12 @@ export function SellerRuleBuilder() {
             <p className="mt-2 max-w-2xl text-sm leading-6 text-stone-300">{nextSellerStep}</p>
           </div>
           <div className="rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-right">
-            <p className="text-xs uppercase tracking-[0.14em] text-stone-500">Current profile</p>
+            <p className="text-xs uppercase tracking-[0.14em] text-stone-400">Launch progress</p>
             <p className="mt-1 text-sm font-black text-white">
-              {selectedBusiness?.name || (businessReady ? 'Manual business ID' : 'Not selected')}
+              {launchChecksReady}/4 required checks
             </p>
             <p className="mt-1 text-xs text-stone-400">
-              {activeRulesCount} active rule{activeRulesCount === 1 ? '' : 's'} / {visibleSessions.length} recent check{visibleSessions.length === 1 ? '' : 's'}
+              {selectedBusiness?.name || (businessReady ? 'Manual business ID' : 'No profile selected')}
             </p>
           </div>
         </div>
@@ -1428,11 +1566,16 @@ export function SellerRuleBuilder() {
                 }`}
               />
               <span className="font-semibold">{step.label}</span>
+              {step.optional ? (
+                <span className="ml-auto rounded-full border border-white/10 px-2 py-1 text-[10px] font-black uppercase tracking-[0.1em] text-stone-400">
+                  Recommended
+                </span>
+              ) : null}
             </div>
           ))}
         </div>
 
-        <div className="mt-4 grid gap-2 sm:grid-cols-3">
+        <div className="mt-4 grid gap-2 sm:grid-cols-2">
           <button
             type="button"
             onClick={loadSellerBusinesses}
@@ -1444,34 +1587,73 @@ export function SellerRuleBuilder() {
           <button
             type="button"
             onClick={loadRules}
-            disabled={loading || !businessReady || !canManage}
+            disabled={loading || !businessReady || !canManageSelectedBusiness}
             className="rounded-2xl border border-orange-200/35 px-4 py-3 text-xs font-black uppercase tracking-[0.14em] text-orange-50 transition hover:bg-orange-200/10 disabled:cursor-not-allowed disabled:opacity-50"
           >
             Load rules
           </button>
-          {scannerReady ? (
+          {!profileReady ? (
             <a
-              href={scannerUrl}
+              href="#seller-profile"
               className="rounded-2xl bg-orange-300 px-4 py-3 text-center text-xs font-black uppercase tracking-[0.14em] text-stone-950 shadow-xl shadow-orange-950/30 transition hover:bg-orange-200"
             >
-              Open scanner
+              Create or load profile
             </a>
-          ) : (
+          ) : !ruleReady ? (
+            <a
+              href={activeCatalogCount > 0 ? '#seller-rule-editor' : '#seller-catalog'}
+              className="rounded-2xl bg-orange-300 px-4 py-3 text-center text-xs font-black uppercase tracking-[0.14em] text-stone-950 shadow-xl shadow-orange-950/30 transition hover:bg-orange-200"
+            >
+              {activeCatalogCount > 0 ? 'Create benefit rule' : 'Add product or service'}
+            </a>
+          ) : !publicListingReady ? (
             <button
               type="button"
-              onClick={createBusiness}
-              disabled={loading || !canManage}
+              onClick={() => verifyPublicListing()}
+              disabled={verifyingPublicListing}
               className="rounded-2xl bg-orange-300 px-4 py-3 text-xs font-black uppercase tracking-[0.14em] text-stone-950 shadow-xl shadow-orange-950/30 transition hover:bg-orange-200 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              Create profile
+              {verifyingPublicListing ? 'Checking public offer...' : 'Verify public offer'}
             </button>
+          ) : (
+            <a
+              href={`/s/${encodeURIComponent(businessId)}`}
+              className="rounded-2xl bg-orange-300 px-4 py-3 text-xs font-black uppercase tracking-[0.14em] text-stone-950 shadow-xl shadow-orange-950/30 transition hover:bg-orange-200 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Open public catalog
+            </a>
           )}
+          {scannerReady && publicListingReady ? (
+            <a
+              href={scannerUrl}
+              className="rounded-2xl border border-orange-200/45 px-4 py-3 text-center text-xs font-black uppercase tracking-[0.14em] text-orange-50 transition hover:bg-orange-200/10"
+            >
+              Open checkout scanner
+            </a>
+          ) : null}
         </div>
+
+        {publicListing ? (
+          <div className={`mt-4 rounded-2xl border p-3 text-sm ${
+            publicListingReady
+              ? 'border-green-300/30 bg-green-300/[0.08] text-green-50'
+              : 'border-orange-200/25 bg-orange-200/[0.06] text-orange-50'
+          }`}>
+            <p className="font-bold">
+              {publicListingReady
+                ? `${publicListing.offerCount} public offer${publicListing.offerCount === 1 ? '' : 's'} verified`
+                : publicListing.error || 'No active public offer verified yet'}
+            </p>
+            <p className="mt-1 text-xs text-stone-300">
+              Exact Business ID checked {new Date(publicListing.checkedAt).toLocaleString()}.
+            </p>
+          </div>
+        ) : null}
       </div>
 
       <SellerRewardStatus businessId={businessId} />
 
-      <div className="mb-5 rounded-3xl border border-white/10 bg-black/20 p-4">
+      <div id="seller-profile" className="mb-5 scroll-mt-28 rounded-3xl border border-white/10 bg-black/20 p-4">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <p className="text-xs font-bold uppercase tracking-[0.18em] text-stone-400">Seller onboarding</p>
@@ -1487,7 +1669,7 @@ export function SellerRuleBuilder() {
                 ? 'These public details help customers find and recognize your offers. Saving requires the owner wallet or the controlled admin fallback used to create it.'
                 : profileNeedsLoading
                   ? 'This Business ID already exists in local recovery state. Load it with the owner wallet or controlled admin fallback before editing.'
-                  : 'Preferred path: connect the seller wallet and sign. Admin secret is only the operator fallback.'}
+                  : 'Connect the seller wallet to create a checkout-capable profile. The admin secret is only a controlled fallback for existing profiles.'}
             </p>
           </div>
           {createdBusiness ? (
@@ -1665,7 +1847,13 @@ export function SellerRuleBuilder() {
               : profileNeedsLoading
                 ? loadRestoredBusinessProfile
                 : createBusiness}
-            disabled={loading || (selectedBusiness ? !canEditSelectedProfile : !canManage)}
+            disabled={loading || (
+              selectedBusiness
+                ? !canEditSelectedProfile
+                : profileNeedsLoading
+                  ? !canManage
+                  : !canUseWalletOwner
+            )}
             className="rounded-2xl border border-orange-200/40 px-5 py-3 text-sm font-black uppercase tracking-[0.14em] text-orange-100 transition hover:bg-orange-200/10 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {selectedBusiness
@@ -1674,7 +1862,7 @@ export function SellerRuleBuilder() {
                 ? 'Load existing profile'
               : canUseWalletOwner
                 ? 'Create wallet-owned seller profile'
-                : 'Create seller profile'}
+                : 'Connect wallet to create'}
           </button>
           {selectedBusiness ? (
             <button
@@ -2129,6 +2317,7 @@ export function SellerRuleBuilder() {
         onProductArchived={(productId) => {
           setRules((current) => current.map((rule) => rule.productId === productId ? { ...rule, active: false } : rule));
           if (selectedProductId === productId) setSelectedProductId('');
+          setPublicListing(null);
         }}
       />
 
@@ -2337,7 +2526,7 @@ export function SellerRuleBuilder() {
       <button
           type="button"
           onClick={saveRule}
-        disabled={loading || !canManage}
+        disabled={loading || !canManageSelectedBusiness}
         className="mt-5 w-full rounded-2xl bg-orange-300 px-5 py-4 text-sm font-black uppercase tracking-[0.16em] text-stone-950 shadow-xl shadow-orange-950/40 transition hover:bg-orange-200 disabled:cursor-not-allowed disabled:opacity-50"
       >
         {loading ? 'Working...' : editingRule ? 'Update rule' : 'Save new rule'}
@@ -2374,7 +2563,7 @@ export function SellerRuleBuilder() {
                 <button
                   type="button"
                   onClick={() => beginRuleEdit(rule)}
-                  disabled={loading || !canManage}
+                  disabled={loading || !canManageSelectedBusiness}
                   className="rounded-full border border-orange-200/35 px-4 py-2 text-xs font-bold uppercase tracking-[0.12em] text-orange-100 transition hover:bg-orange-200/10 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   Edit
@@ -2382,7 +2571,7 @@ export function SellerRuleBuilder() {
                 <button
                   type="button"
                   onClick={() => toggleRule(rule)}
-                  disabled={loading || !canManage}
+                  disabled={loading || !canManageSelectedBusiness}
                   className="rounded-full border border-white/15 px-4 py-2 text-xs font-bold uppercase tracking-[0.12em] text-stone-100 hover:border-orange-200/60 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {rule.active ? 'Pause' : 'Activate'}
@@ -2390,7 +2579,7 @@ export function SellerRuleBuilder() {
                 <button
                   type="button"
                   onClick={() => archiveRule(rule.id)}
-                  disabled={loading || !canManage}
+                  disabled={loading || !canManageSelectedBusiness}
                   className="rounded-full border border-red-300/30 px-4 py-2 text-xs font-bold uppercase tracking-[0.12em] text-red-100 hover:bg-red-500/10 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   Archive

@@ -91,6 +91,37 @@ async function run() {
           body: JSON.stringify(discoveryResponse(offers)),
         });
       }
+      if (url.pathname === `/api/businesses/${offer.business.id}/products`) {
+        return route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({ business: offer.business, products: [] }),
+        });
+      }
+      if (url.pathname === `/api/businesses/${offer.business.id}/rules`) {
+        return route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            rules: [{
+              id: offer.id,
+              businessId: offer.business.id,
+              productId: null,
+              label: offer.label,
+              category: offer.category,
+              productName: offer.productName,
+              discountPercent: offer.discountPercent,
+              requiredLockIFR: offer.requiredLockIFR,
+              dailyRedemptionLimit: offer.dailyRedemptionLimit,
+              monthlyRedemptionLimit: offer.monthlyRedemptionLimit,
+              ttlSeconds: 90,
+              active: true,
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
+            }],
+          }),
+        });
+      }
       if (url.pathname === '/api/ready') {
         return route.fulfill({
           status: 200,
@@ -107,6 +138,18 @@ async function run() {
     await page.goto(origin, { waitUntil: 'domcontentloaded' });
 
     const offersSection = page.locator('#offers');
+    await offersSection.getByText(offer.productName, { exact: true }).waitFor();
+    await offersSection.getByRole('link', { name: 'Open seller catalog', exact: true }).click();
+    await page.waitForURL(`${origin}/s/${offer.business.id}`);
+    await page.getByText('Other member benefits', { exact: true }).waitFor();
+    await page.getByText(offer.productName, { exact: true }).waitFor();
+    assert.equal(
+      await page.getByText('No public offers yet', { exact: true }).count(),
+      0,
+      'a standalone active rule must not produce an empty seller catalog'
+    );
+    await page.goBack({ waitUntil: 'domcontentloaded' });
+    await page.waitForURL(`${origin}/`);
     await offersSection.getByText(offer.productName, { exact: true }).waitFor();
     await offersSection.getByRole('searchbox', { name: 'Search offers', exact: true }).fill('missing');
     await offersSection.getByText('No offers match these filters', { exact: true }).waitFor();
@@ -147,7 +190,7 @@ async function run() {
 
     assert.deepEqual(pageErrors, []);
     await context.close();
-    console.log('[benefits-discovery-ui] PASS - offer filter/reset -> true empty network -> seller handoff/back');
+    console.log('[benefits-discovery-ui] PASS - standalone catalog -> filter/reset -> true empty network -> seller handoff/back');
   } finally {
     if (browser) await browser.close();
     server.kill('SIGTERM');

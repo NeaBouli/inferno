@@ -10,6 +10,9 @@ const robots = read('src', 'app', 'robots.ts');
 const sitemap = read('src', 'app', 'sitemap.ts');
 const home = read('src', 'app', 'page.tsx');
 const offerDiscovery = read('src', 'components', 'OfferDiscovery.tsx');
+const sellerRuleBuilder = read('src', 'components', 'SellerRuleBuilder.tsx');
+const sellerCatalogManager = read('src', 'components', 'SellerCatalogManager.tsx');
+const apiClient = read('src', 'lib', 'api.ts');
 const shell = read('src', 'components', 'AppShell.tsx');
 const widget = read('src', 'components', 'CopilotWidget.tsx');
 const guide = read('src', 'app', 'guide', 'page.tsx');
@@ -17,6 +20,7 @@ const sellerConsole = read('src', 'app', 'b', '[businessId]', 'page.tsx');
 const customerPass = read('src', 'app', 'p', '[passId]', 'page.tsx');
 const checkoutProof = read('src', 'app', 'r', '[sessionId]', 'page.tsx');
 const sellerCatalog = read('src', 'app', 's', '[businessId]', 'page.tsx');
+const sellerCatalogClient = read('src', 'app', 's', '[businessId]', 'SellerCatalogClient.tsx');
 const nextConfig = read('next.config.js');
 
 assert.ok(layout.includes("'@type': 'WebApplication'"), 'Shop WebApplication structured data is missing');
@@ -33,11 +37,24 @@ assert.ok(home.includes('onOpenSellerTools={openSellerTools}'), 'Empty public ne
 assert.ok(offerDiscovery.includes('No active offer is being hidden or replaced with demo data.'), 'Empty network must not imply demo or hidden offers');
 assert.ok(offerDiscovery.includes('No offers match these filters'), 'Filtered empty results need a distinct explanation');
 assert.ok(offerDiscovery.includes('onClick={clearFilters}'), 'Filtered empty results must provide a one-action reset');
+assert.ok(apiClient.includes('businessId?: string'), 'Public discovery must accept an exact Business ID filter');
+assert.ok(apiClient.includes("query.set('businessId', filters.businessId)"), 'Business ID must be sent as an encoded query parameter');
+assert.ok(sellerRuleBuilder.includes('async function verifyPublicListing'), 'Seller launch must verify its public discovery result');
+assert.ok(sellerRuleBuilder.includes('getBusinessRules(targetBusinessId)'), 'Seller launch must verify exact rules beyond the first discovery page');
+assert.ok(sellerRuleBuilder.includes('Rule saved and verified in public discovery.'), 'Rule save must report authoritative public verification');
+assert.ok(sellerRuleBuilder.includes('4 required checks'), 'Seller launch must expose required-check progress');
+assert.ok(sellerRuleBuilder.includes('id="seller-launch"'), 'Seller launch status needs a stable navigation target');
+assert.ok(sellerCatalogManager.includes('onUseProduct(product)'), 'A new catalog item must flow directly into rule authoring');
+assert.ok(sellerCatalogManager.includes('activeBusinessIdRef.current !== requestBusinessId'), 'Catalog writes must ignore stale seller-context responses');
+assert.ok(sellerCatalogManager.includes('id="seller-catalog"'), 'Seller catalog needs a stable onboarding target');
 assert.ok(guide.includes('https://shop.ifrunit.tech/guide'), 'Guide must publish its own canonical URL');
 for (const [label, source] of [['seller console', sellerConsole], ['customer pass', customerPass], ['checkout proof', checkoutProof]]) {
   assert.ok(source.includes('index: false, follow: false'), `${label} must remain noindex/nofollow`);
 }
 assert.ok(sellerCatalog.includes('encodeURIComponent(businessId)'), 'Public seller catalog canonical must encode its ID');
+assert.ok(sellerCatalogClient.includes('getBusinessRules(businessId, controller.signal)'), 'Seller catalog must load active standalone benefit rules');
+assert.ok(sellerCatalogClient.includes('Other member benefits'), 'Product-less public rules need a truthful catalog section');
+assert.ok(sellerCatalogClient.includes('categories.length === 0 && standaloneRules.length === 0'), 'Catalog empty state must account for standalone rules');
 assert.ok(shell.includes('<CopilotWidget />'), 'Every AppShell route must render the IFR Copilot');
 assert.ok(widget.includes('surface=benefits'), 'Shop Copilot must retain Benefits context');
 assert.ok(widget.includes('referrerPolicy="no-referrer"'), 'Shop Copilot must suppress referrer data');
