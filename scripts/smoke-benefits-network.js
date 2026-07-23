@@ -10,6 +10,7 @@ const baseUrl = (process.env.BENEFITS_BASE_URL || 'https://shop.ifrunit.tech').r
 const screenshotDir = process.env.SCREENSHOT_DIR || '';
 const shouldScreenshot = Boolean(screenshotDir);
 const timeoutMs = Number(process.env.SMOKE_TIMEOUT_MS || 15000);
+const screenshotTimeoutMs = Number(process.env.SMOKE_SCREENSHOT_TIMEOUT_MS || 90000);
 
 function log(message) {
   console.log(`[benefits-smoke] ${message}`);
@@ -553,6 +554,7 @@ async function verifyCustomerWalletHistory() {
         .locator('xpath=ancestor::section[1]')
         .screenshot({
           animations: 'disabled',
+          timeout: screenshotTimeoutMs,
           path: path.join(screenshotDir, 'benefits-customer-wallet-history.png'),
         });
     }
@@ -613,6 +615,7 @@ async function verifyOfferEligibility() {
       fs.mkdirSync(screenshotDir, { recursive: true });
       await page.locator('#offers').screenshot({
         animations: 'disabled',
+        timeout: screenshotTimeoutMs,
         path: path.join(screenshotDir, 'benefits-offer-eligibility-connected.png'),
       });
     }
@@ -625,6 +628,7 @@ async function verifyOfferEligibility() {
       await page.screenshot({
         animations: 'disabled',
         fullPage: true,
+        timeout: screenshotTimeoutMs,
         path: path.join(screenshotDir, 'benefits-catalog-eligibility-connected.png'),
       });
     }
@@ -1135,6 +1139,7 @@ async function verifyRuleTemplateAuthorization() {
       await sessionHistory.scrollIntoViewIfNeeded();
       await sessionHistory.screenshot({
         animations: 'disabled',
+        timeout: screenshotTimeoutMs,
         path: path.join(screenshotDir, 'benefits-session-export-owner.png'),
       });
     }
@@ -1487,6 +1492,7 @@ async function verifyPage(contextOptions, label) {
       await page.screenshot({
         path: path.join(screenshotDir, `benefits-home-${label}.png`),
         fullPage: true,
+        timeout: screenshotTimeoutMs,
       });
     }
     await page.getByRole('button', { name: /Seller Offer discounts/i }).click();
@@ -1553,6 +1559,7 @@ async function verifyPage(contextOptions, label) {
             height: bounds.height,
           },
           scale: 'css',
+          timeout: screenshotTimeoutMs,
           path: path.join(screenshotDir, `benefits-rule-templates-${label}.png`),
         });
       } finally {
@@ -1605,6 +1612,7 @@ async function verifyPage(contextOptions, label) {
       await page.screenshot({
         path: path.join(screenshotDir, `benefits-seller-${label}.png`),
         fullPage: true,
+        timeout: screenshotTimeoutMs,
       });
     }
 
@@ -1663,6 +1671,7 @@ async function verifyPage(contextOptions, label) {
       await page.screenshot({
         path: path.join(screenshotDir, `benefits-customer-qr-${label}.png`),
         fullPage: true,
+        timeout: screenshotTimeoutMs,
       });
     }
     const validSessionId = 'cm1234567890abcdefghijkl';
@@ -1701,6 +1710,7 @@ async function verifyPage(contextOptions, label) {
       await page.screenshot({
         path: path.join(screenshotDir, `benefits-scanner-${label}.png`),
         fullPage: true,
+        timeout: screenshotTimeoutMs,
       });
     }
 
@@ -1765,6 +1775,7 @@ async function verifyPage(contextOptions, label) {
       await page.screenshot({
         path: path.join(screenshotDir, `benefits-catalog-${label}.png`),
         fullPage: true,
+        timeout: screenshotTimeoutMs,
       });
     }
 
@@ -1787,6 +1798,7 @@ async function verifyPage(contextOptions, label) {
       await page.screenshot({
         path: path.join(screenshotDir, `benefits-smoke-${label}.png`),
         fullPage: true,
+        timeout: screenshotTimeoutMs,
       });
     }
     log(`${label} browser smoke OK`);
