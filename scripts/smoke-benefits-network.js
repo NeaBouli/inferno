@@ -62,6 +62,16 @@ async function verifyHttpSurface() {
   }
   assert(rootHead.headers.get('permissions-policy')?.includes('camera=(self)'), 'Shop camera policy must allow only this origin');
   assert(rootHead.headers.get('strict-transport-security')?.includes('max-age=63072000'), 'Shop HSTS policy is missing');
+  const enforcedCsp = rootHead.headers.get('content-security-policy') || '';
+  const reportOnlyCsp = rootHead.headers.get('content-security-policy-report-only') || '';
+  for (const directive of ["base-uri 'self'", "object-src 'none'", "frame-ancestors 'none'", "form-action 'self'"]) {
+    assert(enforcedCsp.includes(directive), `Shop enforced CSP is missing ${directive}`);
+  }
+  for (const directive of ["default-src 'self'", 'script-src', 'style-src', 'img-src', 'connect-src', 'worker-src', 'frame-src', 'manifest-src']) {
+    assert(reportOnlyCsp.includes(directive), `Shop report-only CSP is missing ${directive}`);
+  }
+  assert(!enforcedCsp.includes("'unsafe-eval'"), 'Shop enforced CSP must not allow unsafe-eval');
+  assert(!reportOnlyCsp.includes("'unsafe-eval'"), 'Shop report-only CSP must not allow unsafe-eval');
   assert(!rootHead.headers.has('x-powered-by'), 'Shop must not disclose the Next.js powered-by header');
   assert(
     rootHead.headers.get('cross-origin-opener-policy') !== 'same-origin',
