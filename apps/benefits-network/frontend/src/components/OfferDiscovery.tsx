@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import { BusinessLogo } from '@/components/BusinessLogo';
 import { EligibilityLiveSummary, OfferEligibility, useIfrLockEligibility } from '@/components/OfferEligibility';
 import { discoverOffers, type PublicOffer } from '@/lib/api';
 
@@ -197,18 +198,21 @@ export function OfferDiscovery({ mode, onOpenSellerTools }: OfferDiscoveryProps)
           {offers.map((offer) => (
             <article key={offer.id} className="rounded-3xl border border-white/10 bg-black/20 p-5">
               <div className="flex flex-wrap items-start justify-between gap-3">
-                <div>
-                  <p className="text-xs font-black uppercase tracking-[0.16em] text-green-100/80">{offer.category}</p>
-                  <h3 className="mt-2 text-2xl font-black text-white">{offer.productName}</h3>
-                  <p className="mt-1 text-sm font-semibold text-stone-300">{offer.business.name}</p>
-                  {offer.business.serviceArea ? (
-                    <p className="mt-2 text-xs font-bold uppercase tracking-[0.12em] text-orange-100/85">
-                      Available in {offer.business.serviceArea}
-                    </p>
-                  ) : null}
-                  {offer.business.description ? (
-                    <p className="mt-2 max-w-xl text-sm leading-6 text-stone-400">{offer.business.description}</p>
-                  ) : null}
+                <div className="flex min-w-0 gap-3">
+                  <BusinessLogo name={offer.business.name} logoUrl={offer.business.logoUrl} />
+                  <div className="min-w-0">
+                    <p className="text-xs font-black uppercase tracking-[0.16em] text-green-100/80">{offer.category}</p>
+                    <h3 className="mt-2 break-words text-2xl font-black text-white">{offer.productName}</h3>
+                    <p className="mt-1 break-words text-sm font-semibold text-stone-300">{offer.business.name}</p>
+                    {offer.business.serviceArea ? (
+                      <p className="mt-2 text-xs font-bold uppercase tracking-[0.12em] text-orange-100/85">
+                        Available in {offer.business.serviceArea}
+                      </p>
+                    ) : null}
+                    {offer.business.description ? (
+                      <p className="mt-2 max-w-xl text-sm leading-6 text-stone-400">{offer.business.description}</p>
+                    ) : null}
+                  </div>
                 </div>
                 <span className="rounded-full border border-orange-200/30 bg-orange-200/10 px-3 py-2 text-sm font-black text-orange-100">
                   {offer.discountPercent}% benefit

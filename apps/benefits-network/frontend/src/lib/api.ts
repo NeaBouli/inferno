@@ -24,6 +24,7 @@ export interface PublicBusinessProfile {
   name: string;
   description: string | null;
   website: string | null;
+  logoUrl: string | null;
   serviceArea: string | null;
   categories: string[];
 }
@@ -125,6 +126,7 @@ export interface AdminBusinessInput {
   name: string;
   description?: string | null;
   website?: string | null;
+  logoUrl?: string | null;
   serviceArea?: string | null;
   categories?: string[];
   discountPercent: number;
@@ -138,6 +140,7 @@ export interface AdminBusinessCreated {
   name?: string;
   description?: string | null;
   website?: string | null;
+  logoUrl?: string | null;
   serviceArea?: string | null;
   categories?: string[];
   ownerAddress?: string | null;
@@ -149,6 +152,7 @@ export interface SellerBusinessSummary extends AdminBusinessCreated {
   name: string;
   description: string | null;
   website: string | null;
+  logoUrl: string | null;
   serviceArea: string | null;
   categories: string[];
   discountPercent: number;
@@ -403,6 +407,7 @@ export interface CustomerPassControlStatus {
     businessId: string;
     benefitRuleId: string | null;
     sellerName: string;
+    sellerLogoUrl: string | null;
     benefit: {
       label: string | null;
       category: string | null;
@@ -522,7 +527,7 @@ export function getAdminBusinessProfile(businessId: string, adminSecret: string)
 export function updateAdminBusinessProfile(
   businessId: string,
   adminSecret: string,
-  input: Pick<PublicBusinessProfile, 'name' | 'description' | 'website' | 'serviceArea' | 'categories'>
+  input: Pick<PublicBusinessProfile, 'name' | 'description' | 'website' | 'logoUrl' | 'serviceArea' | 'categories'>
 ) {
   return fetchJSON<PublicBusinessProfile>(`/api/admin/businesses/${businessId}`, {
     method: 'PATCH',
@@ -590,7 +595,7 @@ export function getSellerBusinesses(auth: SellerAuth) {
 export function updateSellerBusinessProfile(
   businessId: string,
   auth: SellerAuth,
-  input: Pick<PublicBusinessProfile, 'name' | 'description' | 'website' | 'serviceArea' | 'categories'>
+  input: Pick<PublicBusinessProfile, 'name' | 'description' | 'website' | 'logoUrl' | 'serviceArea' | 'categories'>
 ) {
   return fetchJSON<PublicBusinessProfile>(`/api/seller/businesses/${businessId}`, {
     method: 'PATCH',

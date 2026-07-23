@@ -310,6 +310,11 @@ createdAt
 updatedAt
 ```
 
+Implementation note: optional `logoUrl` is implemented in the Benefits data path as a bounded HTTPS-only
+public profile field. It is rendered in discovery, catalog, checkout and proof surfaces with a
+fixed-size initials fallback and no Shop referrer. Upload/storage and seller lifecycle moderation
+remain separate future capabilities.
+
 ### ProductOrService
 
 ```text

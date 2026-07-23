@@ -160,6 +160,7 @@ describe('Seller catalog routes', () => {
     const auth = await sellerHeaders(owner, 'business:create', 'new', 'new');
     const body = {
       name: 'Nonce protected seller',
+      logoUrl: 'https://assets.example.com/nonce-seller.png',
       serviceArea: '  Athens   /   Attica  ',
       discountPercent: 8,
       requiredLockIFR: 800,
@@ -178,6 +179,7 @@ describe('Seller catalog routes', () => {
     expect((await create()).status).toBe(401);
     expect(await prisma.business.count({ where: { ownerAddress: owner.address } })).toBe(2);
     expect(await prisma.business.findFirstOrThrow({ where: { name: body.name } })).toMatchObject({
+      logoUrl: body.logoUrl,
       serviceArea: 'Athens / Attica',
       serviceAreaKey: 'athens / attica',
     });
@@ -231,6 +233,7 @@ describe('Seller catalog routes', () => {
       name: 'Catalog Seller Athens',
       description: 'Independent coffee and member workshops in central Athens.',
       website: 'https://seller.example.com/members',
+      logoUrl: 'https://assets.example.com/catalog-seller.png',
       serviceArea: 'Athens / Attica',
       categories: ['Food & drink', 'Events'],
     };
@@ -251,6 +254,9 @@ describe('Seller catalog routes', () => {
     for (const invalidProfile of [
       { website: 'http://seller.example.com' },
       { website: 'https://user:secret@seller.example.com' },
+      { logoUrl: 'http://assets.example.com/logo.png' },
+      { logoUrl: 'https://user:secret@assets.example.com/logo.png' },
+      { logoUrl: `https://assets.example.com/${'x'.repeat(500)}` },
       { serviceArea: '' },
       { serviceArea: 'x'.repeat(81) },
       { categories: ['Coffee', 'coffee'] },
@@ -277,6 +283,7 @@ describe('Seller catalog routes', () => {
       name: validProfile.name,
       description: validProfile.description,
       website: 'https://seller.example.com/members',
+      logoUrl: validProfile.logoUrl,
       serviceArea: validProfile.serviceArea,
       categories: validProfile.categories,
     });
@@ -290,6 +297,7 @@ describe('Seller catalog routes', () => {
       name: validProfile.name,
       description: validProfile.description,
       website: validProfile.website,
+      logoUrl: validProfile.logoUrl,
       serviceArea: validProfile.serviceArea,
       serviceAreaKey: 'athens / attica',
       categoriesJson: JSON.stringify(validProfile.categories),
@@ -303,6 +311,7 @@ describe('Seller catalog routes', () => {
       name: validProfile.name,
       description: validProfile.description,
       website: validProfile.website,
+      logoUrl: validProfile.logoUrl,
       serviceArea: validProfile.serviceArea,
       categories: validProfile.categories,
     });
@@ -319,10 +328,21 @@ describe('Seller catalog routes', () => {
       name: validProfile.name,
       description: validProfile.description,
       website: validProfile.website,
+      logoUrl: validProfile.logoUrl,
       serviceArea: validProfile.serviceArea,
       categories: validProfile.categories,
     });
     expect(JSON.stringify(publicProducts)).not.toMatch(/ownerAddress|categoriesJson|serviceAreaKey|adminSecret/);
+
+    const clearLogoHeaders = await sellerHeaders(owner, 'business:update', businessId, businessId);
+    const clearLogoResponse = await fetch(url, {
+      method: 'PATCH',
+      headers: clearLogoHeaders,
+      body: JSON.stringify({ logoUrl: null }),
+    });
+    expect(clearLogoResponse.status).toBe(200);
+    expect(await clearLogoResponse.json()).toMatchObject({ id: businessId, logoUrl: null });
+    expect((await prisma.business.findUniqueOrThrow({ where: { id: businessId } })).logoUrl).toBeNull();
   });
 
   it('keeps the operator admin fallback aligned with public profile validation', async () => {
@@ -344,6 +364,7 @@ describe('Seller catalog routes', () => {
         name: 'Operator managed seller',
         description: 'Managed through the controlled operator fallback.',
         website: 'https://operator.example.com/ifr',
+        logoUrl: 'https://operator.example.com/ifr-logo.svg',
         serviceArea: '  Online   and   Athens  ',
         categories: ['Retail', 'Events'],
       }),
@@ -354,6 +375,7 @@ describe('Seller catalog routes', () => {
       name: 'Operator managed seller',
       description: 'Managed through the controlled operator fallback.',
       website: 'https://operator.example.com/ifr',
+      logoUrl: 'https://operator.example.com/ifr-logo.svg',
       serviceArea: 'Online and Athens',
       categories: ['Retail', 'Events'],
     });
@@ -371,6 +393,7 @@ describe('Seller catalog routes', () => {
       name: 'Operator managed seller',
       description: 'Managed through the controlled operator fallback.',
       website: 'https://operator.example.com/ifr',
+      logoUrl: 'https://operator.example.com/ifr-logo.svg',
       serviceArea: 'Online and Athens',
       categories: ['Retail', 'Events'],
       ownerAddress: owner.address,
@@ -387,6 +410,7 @@ describe('Seller catalog routes', () => {
       where: { id: businessId },
       data: {
         website: 'javascript:alert(1)',
+        logoUrl: 'javascript:alert(2)',
         serviceArea: 'x'.repeat(81),
         serviceAreaKey: 'must-not-leak',
         categoriesJson: JSON.stringify([
@@ -405,6 +429,7 @@ describe('Seller catalog routes', () => {
     expect(await profileResponse.json()).toMatchObject({
       id: businessId,
       website: null,
+      logoUrl: null,
       serviceArea: null,
       categories: ['Retail', 'Events'],
     });
@@ -415,6 +440,7 @@ describe('Seller catalog routes', () => {
     expect(products.business).toMatchObject({
       id: businessId,
       website: null,
+      logoUrl: null,
       serviceArea: null,
       categories: ['Retail', 'Events'],
     });
@@ -617,7 +643,7 @@ describe('Seller catalog routes', () => {
       'monthlyRedemptionLimit', 'product', 'productName', 'requiredLockIFR',
     ]);
     expect(Object.keys(firstPage.offers[0].business as Record<string, unknown>).sort()).toEqual([
-      'categories', 'description', 'id', 'name', 'serviceArea', 'website',
+      'categories', 'description', 'id', 'logoUrl', 'name', 'serviceArea', 'website',
     ]);
     const firstProduct = firstPage.offers[0].product;
     if (firstProduct !== null) {

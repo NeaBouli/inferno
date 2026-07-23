@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useAccount, useConnect, useDisconnect, useSignMessage } from 'wagmi';
 import QRCode from 'react-qr-code';
+import { BusinessLogo } from '@/components/BusinessLogo';
 import { SellerCatalogManager } from '@/components/SellerCatalogManager';
 import { SellerRewardStatus } from '@/components/SellerRewardStatus';
 import { useAvailableWalletConnectors } from '@/hooks/useAvailableWalletConnectors';
@@ -145,6 +146,7 @@ export function SellerRuleBuilder() {
   const [businessName, setBusinessName] = useState('IFR Partner Shop');
   const [businessDescription, setBusinessDescription] = useState('');
   const [businessWebsite, setBusinessWebsite] = useState('');
+  const [businessLogoUrl, setBusinessLogoUrl] = useState('');
   const [businessServiceArea, setBusinessServiceArea] = useState('');
   const [serviceAreaDisclosureConfirmed, setServiceAreaDisclosureConfirmed] = useState(false);
   const [businessCategories, setBusinessCategories] = useState<string[]>([]);
@@ -307,6 +309,7 @@ export function SellerRuleBuilder() {
       sellerName: selectedBusiness?.name || businessName || 'IFR Partner Shop',
       sellerDescription: selectedBusiness?.description || businessDescription || null,
       sellerWebsite: selectedBusiness?.website || businessWebsite || null,
+      sellerLogoUrl: selectedBusiness?.logoUrl || businessLogoUrl || null,
       sellerServiceArea: selectedBusiness?.serviceArea || businessServiceArea || null,
       sellerCategories: selectedBusiness?.categories || businessCategories,
       ownerAddress: selectedBusiness?.ownerAddress || address || null,
@@ -325,7 +328,7 @@ export function SellerRuleBuilder() {
     },
     null,
     2
-  ), [activeRulesCount, address, businessCategories, businessDescription, businessId, businessName, businessServiceArea, businessWebsite, category, dailyLimit, discount, label, minLocked, monthlyLimit, product, scannerUrl, selectedBusiness, ttl]);
+  ), [activeRulesCount, address, businessCategories, businessDescription, businessId, businessLogoUrl, businessName, businessServiceArea, businessWebsite, category, dailyLimit, discount, label, minLocked, monthlyLimit, product, scannerUrl, selectedBusiness, ttl]);
 
   function getCustomerProofUrl(sessionId: string) {
     return `${SHOP_ORIGIN}/r/${sessionId}`;
@@ -441,6 +444,7 @@ export function SellerRuleBuilder() {
     setBusinessName(business.name);
     setBusinessDescription(business.description || '');
     setBusinessWebsite(business.website || '');
+    setBusinessLogoUrl(business.logoUrl || '');
     setBusinessServiceArea(business.serviceArea || '');
     setServiceAreaDisclosureConfirmed(Boolean(business.serviceArea));
     setBusinessCategories(business.categories);
@@ -464,6 +468,7 @@ export function SellerRuleBuilder() {
     setBusinessName('IFR Partner Shop');
     setBusinessDescription('');
     setBusinessWebsite('');
+    setBusinessLogoUrl('');
     setBusinessServiceArea('');
     setServiceAreaDisclosureConfirmed(false);
     setBusinessCategories([]);
@@ -527,6 +532,7 @@ export function SellerRuleBuilder() {
         name: businessName.trim() || 'IFR Partner Shop',
         description: businessDescription.trim() || null,
         website: businessWebsite.trim() || null,
+        logoUrl: businessLogoUrl.trim() || null,
         serviceArea: businessServiceArea.trim() || null,
         categories: businessCategories,
         discountPercent: discount,
@@ -553,6 +559,7 @@ export function SellerRuleBuilder() {
           name: input.name,
           description: input.description,
           website: input.website,
+          logoUrl: input.logoUrl,
           serviceArea: input.serviceArea,
           categories: input.categories,
           discountPercent: input.discountPercent,
@@ -601,6 +608,7 @@ export function SellerRuleBuilder() {
         name,
         description: businessDescription.trim() || null,
         website: businessWebsite.trim() || null,
+        logoUrl: businessLogoUrl.trim() || null,
         serviceArea: businessServiceArea.trim() || null,
         categories: businessCategories,
       };
@@ -618,6 +626,7 @@ export function SellerRuleBuilder() {
         setBusinessName(updated.name);
         setBusinessDescription(updated.description || '');
         setBusinessWebsite(updated.website || '');
+        setBusinessLogoUrl(updated.logoUrl || '');
         setBusinessServiceArea(updated.serviceArea || '');
         setServiceAreaDisclosureConfirmed(Boolean(updated.serviceArea));
         setBusinessCategories(updated.categories);
@@ -1557,7 +1566,10 @@ export function SellerRuleBuilder() {
                   disabled={loading}
                   className="block w-full text-left disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  <span className="block text-sm font-black text-white">{business.name}</span>
+                  <span className="flex items-center gap-3">
+                    <BusinessLogo name={business.name} logoUrl={business.logoUrl} size="sm" />
+                    <span className="min-w-0 break-words text-sm font-black text-white">{business.name}</span>
+                  </span>
                   <span className="mt-1 block text-xs leading-5 text-stone-300">
                     {business.productsCount} catalog item{business.productsCount === 1 ? '' : 's'} / {business.rulesCount} rule{business.rulesCount === 1 ? '' : 's'} / {business.discountPercent}% default / {business.requiredLockIFR.toLocaleString('en-US')} IFR
                   </span>
@@ -1745,6 +1757,19 @@ export function SellerRuleBuilder() {
             </span>
           ) : null}
         </div>
+        <div className="mt-4 flex items-center gap-4 rounded-2xl border border-orange-200/15 bg-orange-200/[0.05] p-4">
+          <BusinessLogo
+            name={businessName || 'IFR Partner Shop'}
+            logoUrl={businessLogoUrl || null}
+            size="lg"
+            eager
+          />
+          <div className="min-w-0">
+            <p className="text-xs font-black uppercase tracking-[0.14em] text-orange-100">Customer-facing identity</p>
+            <p className="mt-1 break-words text-sm font-bold text-white">{businessName || 'IFR Partner Shop'}</p>
+            <p className="mt-1 text-xs leading-5 text-stone-400">Preview used in offer search, catalog and checkout.</p>
+          </div>
+        </div>
         <div className="mt-4 grid gap-3 md:grid-cols-2">
           <label className="grid gap-2 text-sm font-semibold text-stone-200">
             Shop or seller name
@@ -1782,6 +1807,24 @@ export function SellerRuleBuilder() {
               disabled={loading || profileNeedsLoading}
               className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none focus:border-orange-300 disabled:cursor-not-allowed disabled:opacity-50"
             />
+          </label>
+          <label className="grid gap-2 text-sm font-semibold text-stone-200">
+            Seller logo URL
+            <input
+              type="url"
+              value={businessLogoUrl}
+              onChange={(event) => setBusinessLogoUrl(event.target.value)}
+              maxLength={500}
+              placeholder="https://example.com/logo.png"
+              autoCapitalize="none"
+              autoCorrect="off"
+              spellCheck={false}
+              disabled={loading || profileNeedsLoading}
+              className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none focus:border-orange-300 disabled:cursor-not-allowed disabled:opacity-50"
+            />
+            <span className="text-xs font-normal leading-5 text-stone-500">
+              Optional HTTPS image. Customer browsers load it from that host without sending the Shop referrer.
+            </span>
           </label>
           <div className="grid gap-2 text-sm font-semibold text-stone-200">
             <label htmlFor="seller-service-area">City, region or Online</label>

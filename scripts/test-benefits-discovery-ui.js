@@ -24,6 +24,7 @@ const offer = {
     name: 'IFR Test Cafe',
     description: 'Deterministic offer-discovery fixture.',
     website: 'https://example.com',
+    logoUrl: 'https://assets.example.com/ifr-seller-logo.png',
     serviceArea: 'Online',
     categories: ['Coffee'],
   },
@@ -186,6 +187,14 @@ async function run() {
       }
       return route.fulfill({ status: 404, contentType: 'application/json', body: JSON.stringify({ error: 'Not found' }) });
     });
+    await context.route('https://assets.example.com/ifr-seller-logo.png', (route) => route.fulfill({
+      status: 200,
+      contentType: 'image/png',
+      body: Buffer.from(
+        'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=',
+        'base64'
+      ),
+    }));
 
     const page = await context.newPage();
     const pageErrors = [];
@@ -209,10 +218,16 @@ async function run() {
 
     const offersSection = page.locator('#offers');
     await offersSection.getByText(offer.productName, { exact: true }).waitFor();
+    const discoveryLogo = offersSection.getByRole('img', { name: `${offer.business.name} logo`, exact: true });
+    await discoveryLogo.waitFor();
+    assert.equal(await discoveryLogo.getAttribute('referrerpolicy'), 'no-referrer');
+    await discoveryLogo.evaluate((image) => image.dispatchEvent(new Event('error')));
+    await offersSection.getByRole('img', { name: `${offer.business.name} logo placeholder`, exact: true }).waitFor();
     await offersSection.getByRole('link', { name: 'Seller catalog', exact: true }).click();
     await waitForLocation(page, `/s/${offer.business.id}`);
     await page.getByText('Other member benefits', { exact: true }).waitFor();
     await page.getByText(offer.productName, { exact: true }).waitFor();
+    assert.equal(await page.getByRole('img', { name: `${offer.business.name} logo`, exact: true }).count(), 1);
     assert.equal(
       await page.getByText('No public offers yet', { exact: true }).count(),
       0,

@@ -7,6 +7,7 @@ import { getRewardOnChainStatus, isWalletAlreadyRewarded } from '../services/rew
 import {
   businessServiceAreaKey,
   MAX_BUSINESS_CATEGORIES,
+  MAX_BUSINESS_LOGO_URL_LENGTH,
   MAX_BUSINESS_SERVICE_AREA_LENGTH,
   normalizeBusinessServiceArea,
   publicBusinessProfile,
@@ -21,6 +22,10 @@ const businessWebsiteSchema = z.string().trim().max(300).url().refine((value) =>
   const parsed = new URL(value);
   return parsed.protocol === 'https:' && !parsed.username && !parsed.password;
 }, 'Website must be an HTTPS URL without credentials').nullable();
+const businessLogoUrlSchema = z.string().trim().max(MAX_BUSINESS_LOGO_URL_LENGTH).url().refine((value) => {
+  const parsed = new URL(value);
+  return parsed.protocol === 'https:' && !parsed.username && !parsed.password;
+}, 'Logo must be an HTTPS URL without credentials').nullable();
 const businessCategoriesSchema = z.array(z.string().trim().min(1).max(80))
   .max(MAX_BUSINESS_CATEGORIES)
   .refine(
@@ -36,6 +41,7 @@ const createBusinessSchema = z.object({
   tierLabel: z.string().max(50).optional(),
   description: businessDescriptionSchema.optional(),
   website: businessWebsiteSchema.optional(),
+  logoUrl: businessLogoUrlSchema.optional(),
   serviceArea: businessServiceAreaSchema.optional(),
   categories: businessCategoriesSchema.optional(),
 }).strict();
@@ -48,6 +54,7 @@ const updateBusinessSchema = z.object({
   tierLabel: z.string().max(50).nullable().optional(),
   description: businessDescriptionSchema.optional(),
   website: businessWebsiteSchema.optional(),
+  logoUrl: businessLogoUrlSchema.optional(),
   serviceArea: businessServiceAreaSchema.optional(),
   categories: businessCategoriesSchema.optional(),
   active: z.boolean().optional(),
@@ -83,6 +90,7 @@ router.post('/businesses', adminAuth, validate(createBusinessSchema), async (req
         tierLabel: req.body.tierLabel,
         description: req.body.description ?? null,
         website: req.body.website ?? null,
+        logoUrl: req.body.logoUrl ?? null,
         serviceArea: normalizeBusinessServiceArea(req.body.serviceArea),
         serviceAreaKey: businessServiceAreaKey(req.body.serviceArea),
         categoriesJson: serializeBusinessCategories(req.body.categories ?? []),
@@ -108,6 +116,7 @@ router.get('/businesses/:id', adminAuth, async (req, res, next) => {
         name: true,
         description: true,
         website: true,
+        logoUrl: true,
         serviceArea: true,
         serviceAreaKey: true,
         categoriesJson: true,
@@ -129,6 +138,7 @@ router.get('/businesses/:id', adminAuth, async (req, res, next) => {
       name: business.name,
       description: business.description,
       website: business.website,
+      logoUrl: business.logoUrl,
       serviceArea: business.serviceArea,
       serviceAreaKey: business.serviceAreaKey,
       categoriesJson: business.categoriesJson,
@@ -159,6 +169,7 @@ router.patch('/businesses/:id', adminAuth, validate(updateBusinessSchema), async
         tierLabel: req.body.tierLabel,
         description: req.body.description,
         website: req.body.website,
+        logoUrl: req.body.logoUrl,
         serviceArea: req.body.serviceArea === undefined
           ? undefined
           : normalizeBusinessServiceArea(req.body.serviceArea),
@@ -175,6 +186,7 @@ router.patch('/businesses/:id', adminAuth, validate(updateBusinessSchema), async
         name: true,
         description: true,
         website: true,
+        logoUrl: true,
         serviceArea: true,
         serviceAreaKey: true,
         categoriesJson: true,
