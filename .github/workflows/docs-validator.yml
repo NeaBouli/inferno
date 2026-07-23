@@ -8,6 +8,7 @@ on:
       - '*.md'
       - 'apps/ai-copilot/src/context/ifr-knowledge.ts'
       - 'scripts/test-benefits-doc-consistency.cjs'
+      - 'scripts/test-wiki-head-integrity.cjs'
       - '.github/workflows/docs-validator.yml'
   pull_request:
     branches: [main, master]
@@ -16,6 +17,7 @@ on:
       - '*.md'
       - 'apps/ai-copilot/src/context/ifr-knowledge.ts'
       - 'scripts/test-benefits-doc-consistency.cjs'
+      - 'scripts/test-wiki-head-integrity.cjs'
       - '.github/workflows/docs-validator.yml'
   schedule:
     - cron: '0 6 * * 1'
@@ -116,6 +118,9 @@ jobs:
 
       - name: Check Benefits documentation consistency
         run: node scripts/test-benefits-doc-consistency.cjs
+
+      - name: Check Wiki head integrity
+        run: node scripts/test-wiki-head-integrity.cjs
 
   docs-summary:
     name: Docs Summary
