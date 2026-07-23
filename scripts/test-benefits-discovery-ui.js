@@ -3,7 +3,7 @@
 const assert = require('node:assert/strict');
 const { spawn } = require('node:child_process');
 const path = require('node:path');
-const { chromium } = require('playwright');
+const { chromium, devices } = require('playwright');
 
 const root = path.resolve(__dirname, '..');
 const frontend = path.join(root, 'apps', 'benefits-network', 'frontend');
@@ -252,6 +252,51 @@ async function run() {
         `seller layout must not overflow at ${viewport.width}px`
       );
     }
+
+    await page.goto(origin, { waitUntil: 'domcontentloaded' });
+    await page.locator('[data-pwa-install-listeners-ready="true"]').waitFor();
+    await page.evaluate(() => {
+      window.__benefitsInstallPrompted = false;
+      const event = new Event('beforeinstallprompt');
+      event.prompt = async () => { window.__benefitsInstallPrompted = true; };
+      event.userChoice = Promise.resolve({ outcome: 'accepted', platform: 'web' });
+      window.dispatchEvent(event);
+    });
+    await page.getByRole('button', { name: 'Install app', exact: true }).click();
+    assert.equal(await page.evaluate(() => window.__benefitsInstallPrompted), true, 'desktop install button must invoke the captured PWA prompt');
+    await page.getByText('Install accepted.', { exact: true }).waitFor();
+    await page.evaluate(() => window.dispatchEvent(new Event('appinstalled')));
+    await page.getByRole('button', { name: 'App installed', exact: true }).waitFor();
+
+    const ipadContext = await browser.newContext({ ...devices['iPad Pro 11'], serviceWorkers: 'block' });
+    await ipadContext.route('**/api/**', (route) => route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(route.request().url().includes('/api/ready')
+        ? { status: 'ready', chainId: 1, database: 'ok' }
+        : discoveryResponse([])),
+    }));
+    const ipadPage = await ipadContext.newPage();
+    await ipadPage.goto(origin, { waitUntil: 'domcontentloaded' });
+    await ipadPage.locator('[data-pwa-install-listeners-ready="true"]').waitFor();
+    assert.equal(await ipadPage.locator('[data-ios-install-steps="visible"]').count(), 0, 'iOS details should stay compact until requested');
+    const iosInstallButton = ipadPage.getByRole('button', { name: 'Show iPad / iPhone install steps', exact: true });
+    assert.equal(await iosInstallButton.getAttribute('aria-expanded'), 'false');
+    await iosInstallButton.click();
+    await ipadPage.locator('[data-ios-install-steps="visible"]').waitFor();
+    await ipadPage.getByText('Tap the Share icon in the browser toolbar.', { exact: true }).waitFor();
+    await ipadPage.getByText(/iOS requires this browser action and does not allow websites to start installation directly/).waitFor();
+    const iosHideButton = ipadPage.getByRole('button', { name: 'Hide iPad / iPhone steps', exact: true });
+    assert.equal(await iosHideButton.getAttribute('aria-expanded'), 'true');
+    assert.equal(await iosHideButton.getAttribute('aria-controls'), 'ios-pwa-install-steps');
+    await iosHideButton.click();
+    assert.equal(await ipadPage.locator('[data-ios-install-steps="visible"]').count(), 0, 'iOS install help must collapse again');
+    assert.equal(
+      await ipadPage.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth),
+      false,
+      'iPad install help must not cause horizontal overflow',
+    );
+    await ipadContext.close();
 
     assert.deepEqual(pageErrors, []);
     await context.close();

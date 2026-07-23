@@ -117,6 +117,8 @@ function PwaInstallCard() {
   const [isStandalone, setIsStandalone] = useState(false);
   const [platform, setPlatform] = useState<'ios' | 'android' | 'desktop' | 'installed'>('desktop');
   const [message, setMessage] = useState('Ready for desktop, tablet and smartphone.');
+  const [showIosInstallSteps, setShowIosInstallSteps] = useState(false);
+  const [installListenersReady, setInstallListenersReady] = useState(false);
 
   useEffect(() => {
     const ua = window.navigator.userAgent.toLowerCase();
@@ -159,13 +161,36 @@ function PwaInstallCard() {
       setInstallEvent(event as BeforeInstallPromptEvent);
       setMessage('Ready to install on this device.');
     };
+    const installedHandler = () => {
+      setInstallEvent(null);
+      setIsStandalone(true);
+      setPlatform('installed');
+      setPlatformTitle('Installed mode');
+      setPlatformHint('Installed app mode is active on this device.');
+      setInstallSteps(['Launch it from the home screen whenever you need customer or seller mode.']);
+      setMessage('IFR Benefits was installed on this device.');
+    };
     window.addEventListener('beforeinstallprompt', handler);
-    return () => window.removeEventListener('beforeinstallprompt', handler);
+    window.addEventListener('appinstalled', installedHandler);
+    setInstallListenersReady(true);
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handler);
+      window.removeEventListener('appinstalled', installedHandler);
+    };
   }, []);
 
   async function install() {
+    if (isStandalone) {
+      setMessage('IFR Benefits is already installed on this device.');
+      return;
+    }
+    if (platform === 'ios') {
+      setShowIosInstallSteps((current) => !current);
+      setMessage('Use the Share button in the browser toolbar, then choose Add to Home Screen. iOS requires this browser action and does not allow websites to start installation directly.');
+      return;
+    }
     if (!installEvent) {
-      setMessage(platform === 'ios' ? 'Use Safari Share -> Add to Home Screen on iPhone or iPad.' : platformHint);
+      setMessage(platformHint);
       return;
     }
     await installEvent.prompt();
@@ -175,7 +200,10 @@ function PwaInstallCard() {
   }
 
   return (
-    <section className="relative overflow-hidden rounded-[2rem] border border-orange-200/20 bg-[#fff4e7] p-5 text-stone-950 shadow-2xl shadow-black/25">
+    <section
+      data-pwa-install-listeners-ready={installListenersReady ? 'true' : 'false'}
+      className="relative overflow-hidden rounded-[2rem] border border-orange-200/20 bg-[#fff4e7] p-5 text-stone-950 shadow-2xl shadow-black/25"
+    >
       <div className="pointer-events-none absolute -right-12 -top-12 h-36 w-36 rounded-full bg-orange-300/30 blur-3xl" />
       <div className="relative">
         <div className="flex flex-wrap items-start justify-between gap-3">
@@ -198,7 +226,12 @@ function PwaInstallCard() {
           <strong className="text-stone-950">{isStandalone ? 'Installed' : platform === 'ios' ? 'iPad/iPhone steps' : 'Install help'}</strong>
         </div>
         <p className="mt-1">{platformHint}</p>
-        <ol className="mt-3 grid gap-2">
+        <ol
+          id="ios-pwa-install-steps"
+          hidden={platform === 'ios' && !showIosInstallSteps}
+          className="mt-3 grid gap-2"
+          data-ios-install-steps={platform === 'ios' && showIosInstallSteps ? 'visible' : undefined}
+        >
           {installSteps.map((step, index) => (
             <li key={step} className="flex gap-3">
               <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-[#b84625] text-xs font-black text-white">
@@ -212,11 +245,13 @@ function PwaInstallCard() {
       <button
         type="button"
         onClick={install}
+        aria-expanded={platform === 'ios' ? showIosInstallSteps : undefined}
+        aria-controls={platform === 'ios' ? 'ios-pwa-install-steps' : undefined}
         className="mt-5 w-full rounded-2xl bg-[#b84625] px-5 py-4 text-sm font-black uppercase tracking-[0.16em] text-white shadow-xl shadow-orange-900/30 transition hover:-translate-y-0.5 hover:bg-[#9f351b]"
       >
-        {isStandalone ? 'App installed' : installEvent ? 'Install app' : platform === 'ios' ? 'Show iPad install steps' : 'Show install steps'}
+        {isStandalone ? 'App installed' : installEvent ? 'Install app' : platform === 'ios' ? showIosInstallSteps ? 'Hide iPad / iPhone steps' : 'Show iPad / iPhone install steps' : 'Show install steps'}
       </button>
-      <p className="mt-3 text-xs leading-5 text-stone-600">{message}</p>
+      <p aria-live="polite" className="mt-3 text-xs leading-5 text-stone-600">{message}</p>
       </div>
     </section>
   );
