@@ -12,9 +12,9 @@ const MIN_CUSTOMER_LOCK = 1000;
 const MIN_CUSTOMER_LOCK_RAW = BigInt(MIN_CUSTOMER_LOCK) * BigInt(10) ** BigInt(IFR_DECIMALS);
 const BENEFIT_TIERS = [
   { label: 'Bronze', amount: 1000 },
-  { label: 'Silver', amount: 5000 },
-  { label: 'Gold', amount: 25000 },
-  { label: 'Diamond', amount: 100000 },
+  { label: 'Silver', amount: 2500 },
+  { label: 'Gold', amount: 5000 },
+  { label: 'Platinum', amount: 10000 },
 ];
 const UNISWAP_IFR_URL = 'https://app.uniswap.org/swap?outputCurrency=0x77e99917Eca8539c62F509ED1193ac36580A6e7B';
 const IFR_ICON_URL = 'https://ifrunit.tech/assets/ifr_icon_256.png';
@@ -441,7 +441,7 @@ export function WalletStatus() {
             <p className="mt-2 max-w-xl text-sm leading-6 text-stone-300">{statusText}</p>
           </div>
           <div className="rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-right">
-            <p className="text-xs uppercase tracking-[0.14em] text-stone-400">Current tier</p>
+            <p className="text-xs uppercase tracking-[0.14em] text-stone-400">Example tier guide</p>
             <p className="mt-1 text-lg font-black text-orange-100">{tier?.label || 'None'}</p>
           </div>
         </div>
@@ -601,8 +601,9 @@ export function WalletStatus() {
 
         <div className="mt-4">
           <p className="text-xs font-black uppercase tracking-[0.16em] text-stone-400">
-            Quick tier amounts
+            Example lock amounts
           </p>
+          <p className="mt-1 text-xs leading-5 text-stone-500">Sellers define each real rule and may use different thresholds.</p>
           <div className="mt-2 flex flex-wrap gap-2">
           {BENEFIT_TIERS.map((item) => {
             const active = Boolean(lockedRaw && lockedRaw >= BigInt(item.amount) * BigInt(10) ** BigInt(IFR_DECIMALS));

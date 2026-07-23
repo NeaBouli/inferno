@@ -22,6 +22,7 @@ const checkoutProof = read('src', 'app', 'r', '[sessionId]', 'page.tsx');
 const sellerCatalog = read('src', 'app', 's', '[businessId]', 'page.tsx');
 const sellerCatalogClient = read('src', 'app', 's', '[businessId]', 'SellerCatalogClient.tsx');
 const customerCheckoutPass = read('src', 'components', 'CustomerCheckoutPass.tsx');
+const walletStatus = read('src', 'components', 'WalletStatus.tsx');
 const nextConfig = read('next.config.js');
 
 assert.ok(layout.includes("'@type': 'WebApplication'"), 'Shop WebApplication structured data is missing');
@@ -41,6 +42,16 @@ assert.ok(home.includes("'#seller-session-history'"), 'Seller history deep link 
 assert.ok(home.includes("window.setTimeout(scrollToTarget, 700)"), 'Deep links must retry after asynchronous layout settles');
 assert.ok(!home.includes('document.querySelector(window.location.hash)'), 'Untrusted URL hashes must not be used as CSS selectors');
 assert.ok(home.includes('onOpenSellerTools={openSellerTools}'), 'Empty public network must route into seller setup');
+assert.ok(home.includes('Benefit rule ID'), 'Generator must request the exact rule ID instead of a display label');
+assert.ok(home.includes('IFRBenefitsClient'), 'POS generator must use the challenge-validating repository SDK');
+assert.ok(home.includes('Never inline a key or seed phrase.'), 'POS output must preserve the signer security boundary');
+assert.ok(home.includes('integration-generator-validation'), 'Disabled generator actions need an accessible validation reason');
+assert.ok(!home.includes("useState('Bronze 10%')"), 'Generator must not substitute a display label for a rule ID');
+for (const threshold of [1000, 2500, 5000, 10000]) {
+  assert.ok(walletStatus.includes(`amount: ${threshold}`), `Wallet tier guide missing documented ${threshold} IFR example`);
+}
+assert.ok(!walletStatus.includes('amount: 25000'), 'Wallet must not present an undocumented 25,000 IFR global tier');
+assert.ok(walletStatus.includes('Sellers define each real rule'), 'Wallet tier guide must state that seller rules are authoritative');
 assert.ok(offerDiscovery.includes('No active offer is being hidden or replaced with demo data.'), 'Empty network must not imply demo or hidden offers');
 assert.ok(offerDiscovery.includes('No offers match these filters'), 'Filtered empty results need a distinct explanation');
 assert.ok(offerDiscovery.includes('onClick={clearFilters}'), 'Filtered empty results must provide a one-action reset');
