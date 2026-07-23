@@ -18,6 +18,9 @@ The app has two roles:
 - Frontend: `apps/benefits-network/frontend`
 - Backend: `apps/benefits-network/backend`
 - Wallet stack: Wagmi v3 + Viem with injected, Coinbase and optional WalletConnect QR connectors
+- Production wallet boundary: customers connect self-custodied external wallets. New-wallet
+  guidance hands off to a trusted wallet app; the production Benefits app does not create,
+  import, custody or store wallet keys.
 - On-chain access source: `IFRLock.lockedBalance` and backend `IFRLock.isLocked`
 - Rule model: `BenefitRule`
 - Session model: `Session` with optional `benefitRuleId` and additive one-to-one `CustomerPass`
@@ -61,6 +64,9 @@ The app has two roles:
 - Explain that this is the IFR Benefits Network; `$IFRp` remains the social cashtag.
 - Show customer and seller role selector.
 - Show PWA install flow and mobile guidance.
+- Describe offline support as a launcher shell for role choice and static guidance. API, wallet,
+  chain, signature, checkout and redemption actions remain network-only and fail explicitly
+  while offline.
 - Show wallet status for customers.
 - Show seller rule manager for sellers.
 - Show integration/code generator for shops.
@@ -118,6 +124,10 @@ The app has two roles:
 ## IFR Wallet Strategy
 
 Do not implement a raw private-key wallet stored in browser localStorage.
+
+Current production connects self-custodied external wallets only. It may guide a new user to
+create or import a wallet inside a trusted wallet app, but it does not create or import wallet
+keys itself.
 
 Accepted paths:
 

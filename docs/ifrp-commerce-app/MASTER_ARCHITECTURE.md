@@ -6,7 +6,9 @@ Status: active implementation; M1/M2 core, M3 and the fail-closed M4 foundation 
 
 Build an installable IFRp commerce app where a person can act as:
 
-- `Customer`: create or connect an IFR wallet, hold ETH/IFR, swap ETH to IFR, lock IFR, and present a QR proof for discounts or access.
+- `Customer`: connect a self-custodied Ethereum wallet, or follow a safe handoff to create one
+  inside a trusted wallet app, then hold ETH/IFR, swap ETH to IFR, lock IFR, and present a QR
+  proof for discounts or access.
 - `Seller`: register a business, configure products/services and discount rules, scan a customer QR proof, verify IFR lock/holding status, and grant the configured benefit.
 
 The long-term product should work as both:
@@ -61,7 +63,8 @@ The master architecture extends this base instead of replacing it.
 Primary jobs:
 
 1. Install/open app.
-2. Create or connect an Ethereum wallet.
+2. Connect an existing Ethereum wallet, or create one inside a trusted wallet app before
+   returning to the Benefits app.
 3. Get ETH.
 4. Swap ETH to IFR.
 5. Lock IFR in IFRLock or CommitmentVault.
@@ -100,7 +103,8 @@ Seller must not need crypto knowledge at point of sale.
 ```text
 Open app
   -> choose Customer
-  -> create embedded wallet or connect external wallet
+  -> connect a self-custodied external wallet
+  -> if needed, open a trusted wallet app for wallet creation, then return
   -> show ETH and IFR balances
   -> prompt: buy/swap IFR if balance is low
   -> prompt: lock IFR for benefits
@@ -109,14 +113,17 @@ Open app
 
 Wallet options:
 
-- MVP: external wallet connection through WalletConnect / MetaMask / Coinbase / Trust.
+- Current production: external wallet connection through WalletConnect when configured,
+  MetaMask, Coinbase, Trust and other exposed EVM providers. The Benefits app does not create,
+  import or store wallet keys.
 - Current web fallback: injected EVM providers plus official mobile browser-launch links for
   MetaMask, Trust Wallet, OKX and Phantom. Customer, seller and checkout entry points verify that
   an announced injected connector has a real provider before selecting it, otherwise they fall
   back to Coinbase Wallet SDK and then configured WalletConnect. Users can also choose any exposed
   connector explicitly. A launch link is onboarding only and is not proof of connection;
   WalletConnect breadth remains configuration-gated.
-- V1: embedded wallet using a battle-tested wallet provider.
+- Future candidate: embedded wallet using a battle-tested provider only after the separate
+  recovery, device, privacy/legal and independent-security gates pass.
 - V2: account abstraction / gas sponsorship for selected actions.
 
 Hard rule: the app must never custody or log private keys.
@@ -242,7 +249,9 @@ Do not automate PartnerVault rewards for unverified sellers.
 
 ```text
 Customer PWA / App
-  - wallet connect / embedded wallet
+  - external wallet connect
+  - trusted-wallet creation handoff for new users
+  - embedded wallet only as a future gated release
   - ETH/IFR balances
   - swap
   - lock IFR
@@ -532,10 +541,14 @@ MVP should be installable:
 
 - manifest;
 - service worker;
-- offline shell;
+- offline launcher shell for the installed role chooser and static guidance;
 - network-first API calls;
 - home-screen icon;
 - iOS install instructions that do not pretend Safari exposes normal install prompts.
+
+API, wallet, chain, signature, checkout and redemption operations remain network-only. The
+offline launcher must show an explicit unavailable state and must never serve cached eligibility
+or transaction state as current.
 
 ## 12. Milestones
 
