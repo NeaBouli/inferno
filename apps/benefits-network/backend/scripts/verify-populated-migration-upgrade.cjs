@@ -5,7 +5,7 @@ const path = require('path');
 
 const root = path.resolve(__dirname, '..');
 const migrationsDir = path.join(root, 'prisma', 'migrations');
-const targetMigration = '20260723222000_add_min_ifr_held';
+const targetMigration = '20260724000500_add_commitment_lock_source';
 const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'benefits-populated-upgrade-'));
 const dbPath = path.join(tempDir, 'upgrade.db');
 
@@ -219,6 +219,32 @@ try {
     throw new Error(
       `Missing held-IFR migration state: ruleColumn=${heldRuleColumn}, ` +
       `sessionColumns=${heldSessionColumns}, existing=${existingHeldState}`
+    );
+  }
+
+  const lockSourceRuleColumn = sqlite(
+    "SELECT COUNT(*) FROM pragma_table_info('BenefitRule') WHERE name='lockSource';"
+  );
+  const lockSourceSessionColumns = sqlite(`
+    SELECT COUNT(*) FROM pragma_table_info('Session')
+    WHERE name IN ('benefitLockSource', 'verifiedLockSource', 'verificationBlock');
+  `);
+  const existingLockSourceState = sqlite(`
+    SELECT
+      lockSource || '|' ||
+      (SELECT benefitLockSource IS NULL FROM Session WHERE id = 'existing-session') || '|' ||
+      (SELECT verifiedLockSource IS NULL FROM Session WHERE id = 'existing-session') || '|' ||
+      (SELECT verificationBlock IS NULL FROM Session WHERE id = 'existing-session')
+    FROM BenefitRule WHERE id = 'existing-rule';
+  `);
+  if (
+    lockSourceRuleColumn !== '1' ||
+    lockSourceSessionColumns !== '3' ||
+    existingLockSourceState !== 'ifrlock|1|1|1'
+  ) {
+    throw new Error(
+      `Missing lock-source migration state: ruleColumn=${lockSourceRuleColumn}, ` +
+      `sessionColumns=${lockSourceSessionColumns}, existing=${existingLockSourceState}`
     );
   }
 

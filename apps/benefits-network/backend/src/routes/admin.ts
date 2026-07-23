@@ -4,6 +4,7 @@ import { prisma } from '../services/sessionService';
 import { adminAuth } from '../middleware/auth';
 import { validate } from '../middleware/validator';
 import { getRewardOnChainStatus, isWalletAlreadyRewarded } from '../services/rewardService';
+import { LOCK_SOURCES } from '../services/lockSource';
 import {
   businessServiceAreaKey,
   MAX_BUSINESS_CATEGORIES,
@@ -67,6 +68,7 @@ const createBenefitRuleSchema = z.object({
   discountPercent: z.number().int().min(0).max(100),
   requiredLockIFR: z.number().int().positive(),
   minIFRHeld: z.number().int().min(0).max(1_000_000_000).optional(),
+  lockSource: z.enum(LOCK_SOURCES).optional(),
   dailyRedemptionLimit: z.number().int().min(0).max(1000).optional(),
   monthlyRedemptionLimit: z.number().int().min(0).max(10000).optional(),
   ttlSeconds: z.number().int().min(10).max(3600).optional(),

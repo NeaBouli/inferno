@@ -115,6 +115,7 @@ router.get('/', customerHistoryRateLimiter, async (req, res, next) => {
         benefitDiscountPercent: true,
         benefitRequiredLockIFR: true,
         benefitMinIFRHeld: true,
+        benefitLockSource: true,
         benefitDailyRedemptionLimit: true,
         benefitMonthlyRedemptionLimit: true,
         business: { select: { id: true, name: true } },
@@ -144,6 +145,9 @@ router.get('/', customerHistoryRateLimiter, async (req, res, next) => {
         minIFRHeld: (session.benefitSnapshotVersion ?? 0) >= 4
           ? session.benefitMinIFRHeld ?? 0
           : 0,
+        lockSource: (session.benefitSnapshotVersion ?? 0) >= 5
+          ? session.benefitLockSource ?? 'ifrlock'
+          : 'ifrlock',
         dailyRedemptionLimit: session.benefitDailyRedemptionLimit ?? 0,
         monthlyRedemptionLimit: session.benefitMonthlyRedemptionLimit ?? 0,
       },

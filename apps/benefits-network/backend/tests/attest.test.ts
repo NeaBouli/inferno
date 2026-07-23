@@ -9,7 +9,20 @@ const mockRecoverSigner = jest.fn();
 
 jest.mock('../src/services/ifrLockService', () => ({
   checkLock: (...args: unknown[]) => mockCheckLock(...args),
-  checkBenefitEligibility: (...args: unknown[]) => mockCheckBenefitEligibility(...args),
+  checkBenefitEligibility: async (...args: unknown[]) => {
+    const result = await mockCheckBenefitEligibility(...args);
+    return {
+      lockEligible: result.eligible,
+      heldEligible: true,
+      walletAmount: null,
+      walletBalanceRaw: null,
+      ifrLockAmount: result.lockedAmount,
+      commitmentAmount: null,
+      verifiedLockSource: result.eligible ? 'ifrlock' : null,
+      verificationBlock: 1,
+      ...result,
+    };
+  },
   recoverSigner: (...args: unknown[]) => mockRecoverSigner(...args),
   initProvider: jest.fn(),
 }));
@@ -78,6 +91,7 @@ afterAll(async () => {
 
 beforeEach(() => {
   jest.clearAllMocks();
+  mockCheckBenefitEligibility.mockImplementation((...args: unknown[]) => mockCheckLock(...args));
 });
 
 // ── Test 1: Signature Verification ─────────────────────────────────
@@ -227,8 +241,8 @@ describe('Lock Threshold', () => {
     await attest(session.sessionId, TEST_SIGNATURE);
 
     // Verify checkLock was called with human units (5000), not base units
-    expect(mockCheckLock).toHaveBeenCalledWith(TEST_WALLET, 5000);
-    expect(mockCheckBenefitEligibility).not.toHaveBeenCalled();
+    expect(mockCheckBenefitEligibility).toHaveBeenCalledWith(TEST_WALLET, 5000, 0, 'ifrlock');
+    expect(mockCheckLock).toHaveBeenCalledWith(TEST_WALLET, 5000, 0, 'ifrlock');
   });
 
   it('requires both locked and freely held IFR for an opted-in rule', async () => {
@@ -264,12 +278,12 @@ describe('Lock Threshold', () => {
       attemptsRemaining: 2,
     });
     expect(rejected.reason).toContain('Insufficient wallet balance');
-    expect(mockCheckBenefitEligibility).toHaveBeenCalledWith(TEST_WALLET, 5000, 1250);
+    expect(mockCheckBenefitEligibility).toHaveBeenCalledWith(TEST_WALLET, 5000, 1250, 'ifrlock');
     expect(mockCheckLock).not.toHaveBeenCalled();
     const rejectedSession = await prisma.session.findUniqueOrThrow({ where: { id: insufficient.sessionId } });
     expect(rejectedSession).toMatchObject({
       status: 'PENDING',
-      benefitSnapshotVersion: 4,
+      benefitSnapshotVersion: 5,
       benefitMinIFRHeld: 1250,
       walletBalanceRaw: '1249999999999',
     });

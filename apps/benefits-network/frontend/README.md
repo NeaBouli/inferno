@@ -30,6 +30,7 @@ NEXT_PUBLIC_API_URL=http://localhost:3001
 NEXT_PUBLIC_CHAIN_ID=1
 NEXT_PUBLIC_IFR_TOKEN_ADDRESS=0x77e99917Eca8539c62F509ED1193ac36580A6e7B
 NEXT_PUBLIC_IFRLOCK_ADDRESS=0x769928aBDfc949D0718d8766a1C2d7dBb63954Eb
+NEXT_PUBLIC_COMMITMENT_VAULT_ADDRESS=0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3
 NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=...
 ```
 
@@ -51,15 +52,18 @@ contracts, entered IFR amount, unlocked IFR balance and allowance, then guides
 the user toward Buy IFR, Approve or Lock. Tier chips are buttons that set common
 lock amounts for seller benefit rules.
 
-Public offers and checkout review show the mandatory locked-IFR threshold and any optional
-minimum IFR that must remain free in the customer wallet. The preview reads exact 9-decimal
-balances and fails closed while disconnected, on the wrong chain, or when a required RPC read is
-unavailable. `minIFRHeld=0` preserves the lock-only path without a second token-balance gate.
+Public offers and checkout review show the mandatory locked-IFR threshold, its accepted source and
+any optional minimum IFR that must remain free in the customer wallet. Sellers may require
+IFRLock, active `TIME_ONLY` CommitmentVault tranches, or the full threshold in either source.
+Partial source balances are never combined, and price-conditioned commitments never qualify.
+The preview reads exact 9-decimal balances at one block and fails closed while disconnected, on
+the wrong chain, on token-identity mismatch, or when a required RPC read is unavailable.
+`minIFRHeld=0` preserves the lock-only path without a second token-balance read.
 
 The recommended checkout path is customer-presented and two-phase. A connected customer signs a
 one-time pass-creation message and displays an opaque `/p/:passId` QR. The seller scans or pastes it,
 selects an active rule and signs a fresh pass/rule-bound authorization. The customer then reviews
-the exact seller, product, discount and IFRLock threshold on the originating device and signs the
+the exact seller, product, discount, lock source and threshold on the originating device and signs the
 confirmation. The QR contains no wallet or reusable eligibility proof. Its random control token is
 kept only in the same browser tab (`sessionStorage` for refresh recovery), never in the URL or
 durable `localStorage`; only its SHA-256 hash is stored by the backend.

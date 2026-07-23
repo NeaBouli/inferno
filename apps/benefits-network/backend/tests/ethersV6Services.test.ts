@@ -4,6 +4,7 @@ import { ethers } from 'ethers';
 
 const IFR_LOCK = '0x0000000000000000000000000000000000000011';
 const IFR_TOKEN = '0x0000000000000000000000000000000000000066';
+const COMMITMENT_VAULT = '0x0000000000000000000000000000000000000077';
 const PARTNER_VAULT = '0x0000000000000000000000000000000000000022';
 const BUILDER_REGISTRY = '0x0000000000000000000000000000000000000033';
 const REWARD_CALLER = '0x0000000000000000000000000000000000000044';
@@ -13,7 +14,9 @@ const PARTNER_ID = `0x${'ab'.repeat(32)}`;
 const mockConfig = {
   CHAIN_ID: 1,
   RPC_URL: 'http://127.0.0.1:1',
+  IFR_TOKEN_ADDRESS: IFR_TOKEN,
   IFRLOCK_ADDRESS: IFR_LOCK,
+  COMMITMENT_VAULT_ADDRESS: COMMITMENT_VAULT,
   PARTNER_VAULT_ADDRESS: PARTNER_VAULT,
   BUILDER_REGISTRY_ADDRESS: BUILDER_REGISTRY,
   REWARD_CALLER_ADDRESS: REWARD_CALLER,
@@ -41,6 +44,10 @@ const ifrLockInterface = new ethers.Interface([
 const tokenInterface = new ethers.Interface([
   'function balanceOf(address account) view returns (uint256)',
 ]);
+const commitmentInterface = new ethers.Interface([
+  'function ifrToken() view returns (address)',
+  'function getTranches(address wallet) view returns (tuple(uint256 amount,uint8 cType,uint256 unlockTime,uint256 p0Multiplier,bool unlocked,uint256 conditionMetAt)[])',
+]);
 const partnerInterface = new ethers.Interface([
   'function admin() view returns (address)',
   'function partners(bytes32 partnerId) view returns (address beneficiary, uint256 maxAllocation, uint256 unlockedTotal, uint256 rewardAccrued, uint256 claimedTotal, uint32 vestingStart, uint32 vestingDuration, uint32 cliff, bool active, bool milestonesFinal, uint8 tier)',
@@ -59,10 +66,15 @@ type RpcState = {
   chainId: number;
   failNextWalletRewardRead: boolean;
   failNextTokenBalanceRead: boolean;
+  failNextCommitmentRead: boolean;
   partnerExists: boolean;
   methods: string[];
   callBlockTags: string[];
   walletBalanceRaw: bigint;
+  ifrLockBalanceRaw: bigint;
+  commitmentToken: string;
+  commitmentTranches: Array<[bigint, number, bigint, bigint, boolean, bigint]>;
+  missingCodeAddress?: string;
   observedLockThreshold?: bigint;
 };
 
@@ -70,10 +82,14 @@ const state: RpcState = {
   chainId: 1,
   failNextWalletRewardRead: false,
   failNextTokenBalanceRead: false,
+  failNextCommitmentRead: false,
   partnerExists: true,
   methods: [],
   callBlockTags: [],
   walletBalanceRaw: ethers.parseUnits('1250.000000001', 9),
+  ifrLockBalanceRaw: ethers.parseUnits('2500.125', 9),
+  commitmentToken: IFR_TOKEN,
+  commitmentTranches: [],
 };
 
 function encode(types: readonly string[], values: readonly unknown[]) {
@@ -91,10 +107,23 @@ function contractCall(to: string, data: string): string {
       return encode(['bool'], [true]);
     }
     if (selector === ifrLockInterface.getFunction('lockedBalance')!.selector) {
-      return encode(['uint256'], [ethers.parseUnits('2500.125', 9)]);
+      return encode(['uint256'], [state.ifrLockBalanceRaw]);
     }
     if (selector === ifrLockInterface.getFunction('token')!.selector) {
       return encode(['address'], [IFR_TOKEN]);
+    }
+  }
+
+  if (target === COMMITMENT_VAULT.toLowerCase()) {
+    if (state.failNextCommitmentRead) {
+      state.failNextCommitmentRead = false;
+      throw new Error('Simulated CommitmentVault RPC read failure');
+    }
+    if (selector === commitmentInterface.getFunction('ifrToken')!.selector) {
+      return encode(['address'], [state.commitmentToken]);
+    }
+    if (selector === commitmentInterface.getFunction('getTranches')!.selector) {
+      return commitmentInterface.encodeFunctionResult('getTranches', [state.commitmentTranches]);
     }
   }
 
@@ -167,7 +196,10 @@ function rpcResult(request: { method: string; params?: unknown[] }) {
   state.methods.push(request.method);
   if (request.method === 'eth_chainId') return `0x${state.chainId.toString(16)}`;
   if (request.method === 'eth_blockNumber') return '0x10';
-  if (request.method === 'eth_getCode') return '0x6000';
+  if (request.method === 'eth_getCode') {
+    const address = String(request.params?.[0] ?? '');
+    return address.toLowerCase() === state.missingCodeAddress?.toLowerCase() ? '0x' : '0x6000';
+  }
   if (request.method === 'eth_call') {
     const call = (request.params?.[0] || {}) as { to?: string; data?: string; input?: string };
     state.callBlockTags.push(String(request.params?.[1] ?? ''));
@@ -217,10 +249,15 @@ describe('Ethers v6 service boundaries', () => {
     state.chainId = 1;
     state.failNextWalletRewardRead = false;
     state.failNextTokenBalanceRead = false;
+    state.failNextCommitmentRead = false;
     state.partnerExists = true;
     state.methods = [];
     state.callBlockTags = [];
     state.walletBalanceRaw = ethers.parseUnits('1250.000000001', 9);
+    state.ifrLockBalanceRaw = ethers.parseUnits('2500.125', 9);
+    state.commitmentToken = IFR_TOKEN;
+    state.commitmentTranches = [];
+    state.missingCodeAddress = undefined;
     state.observedLockThreshold = undefined;
   });
 
@@ -230,6 +267,8 @@ describe('Ethers v6 service boundaries', () => {
 
     expect(state.observedLockThreshold).toBe(1000n * 10n ** 9n);
     expect(result).toEqual({ eligible: true, lockedAmount: '2500.125' });
+    expect(state.callBlockTags).toHaveLength(3);
+    expect(new Set(state.callBlockTags)).toEqual(new Set(['0x10']));
     expect(state.methods).not.toContain('eth_sendTransaction');
   });
 
@@ -245,6 +284,10 @@ describe('Ethers v6 service boundaries', () => {
       lockedAmount: '2500.125',
       walletAmount: '1250.000000001',
       walletBalanceRaw: ethers.parseUnits('1250.000000001', 9).toString(),
+      ifrLockAmount: '2500.125',
+      commitmentAmount: null,
+      verifiedLockSource: 'ifrlock',
+      verificationBlock: 16,
     });
     expect(state.methods).toContain('eth_blockNumber');
     expect(state.callBlockTags).toHaveLength(4);
@@ -265,6 +308,95 @@ describe('Ethers v6 service boundaries', () => {
     });
   });
 
+  it('sums only active TIME_ONLY CommitmentVault tranches', async () => {
+    state.commitmentTranches = [
+      [ethers.parseUnits('600', 9), 0, 100n, 0n, false, 0n],
+      [ethers.parseUnits('400', 9), 0, 200n, 0n, false, 0n],
+      [ethers.parseUnits('9000', 9), 1, 0n, 200n, false, 0n],
+      [ethers.parseUnits('9000', 9), 2, 300n, 200n, false, 0n],
+      [ethers.parseUnits('9000', 9), 3, 300n, 200n, false, 0n],
+      [ethers.parseUnits('500', 9), 0, 50n, 0n, true, 0n],
+    ];
+    initProvider();
+
+    await expect(checkBenefitEligibility(OWNER, 1000, 0, 'commitment_time_only'))
+      .resolves.toMatchObject({
+        eligible: true,
+        lockEligible: true,
+        heldEligible: true,
+        lockedAmount: '1000.0',
+        ifrLockAmount: null,
+        commitmentAmount: '1000.0',
+        verifiedLockSource: 'commitment_time_only',
+        verificationBlock: 16,
+      });
+    expect(state.observedLockThreshold).toBeUndefined();
+    expect(state.callBlockTags).toHaveLength(2);
+    expect(new Set(state.callBlockTags)).toEqual(new Set(['0x10']));
+  });
+
+  it('does not combine partial balances for either-source rules', async () => {
+    state.ifrLockBalanceRaw = ethers.parseUnits('600', 9);
+    state.commitmentTranches = [
+      [ethers.parseUnits('600', 9), 0, 100n, 0n, false, 0n],
+    ];
+    initProvider();
+
+    await expect(checkBenefitEligibility(OWNER, 1000, 0, 'either'))
+      .resolves.toMatchObject({
+        eligible: false,
+        lockEligible: false,
+        ifrLockAmount: '600.0',
+        commitmentAmount: '600.0',
+        verifiedLockSource: null,
+      });
+  });
+
+  it('fails closed on CommitmentVault token mismatch, RPC failure, and oversized tranche data', async () => {
+    state.commitmentToken = OWNER;
+    initProvider();
+    await expect(checkBenefitEligibility(OWNER, 1000, 0, 'commitment_time_only'))
+      .rejects.toThrow('CommitmentVault token does not match');
+
+    state.commitmentToken = IFR_TOKEN;
+    state.failNextCommitmentRead = true;
+    initProvider();
+    await expect(checkBenefitEligibility(OWNER, 1000, 0, 'commitment_time_only'))
+      .rejects.toThrow('missing revert data');
+
+    state.commitmentTranches = Array.from(
+      { length: 51 },
+      () => [1n, 0, 100n, 0n, false, 0n] as [bigint, number, bigint, bigint, boolean, bigint]
+    );
+    initProvider();
+    await expect(checkBenefitEligibility(OWNER, 1000, 0, 'commitment_time_only'))
+      .rejects.toThrow('too many tranches');
+  });
+
+  it('fails closed when selected lock or token contract bytecode is missing', async () => {
+    state.missingCodeAddress = IFR_TOKEN;
+    initProvider();
+    await expect(checkBenefitEligibility(OWNER, 1000, 0, 'ifrlock'))
+      .rejects.toThrow('IFR token bytecode is missing');
+
+    state.missingCodeAddress = IFR_LOCK;
+    initProvider();
+    await expect(checkBenefitEligibility(OWNER, 1000, 0, 'ifrlock'))
+      .rejects.toThrow('IFRLock bytecode is missing');
+
+    state.missingCodeAddress = COMMITMENT_VAULT;
+    initProvider();
+    await expect(checkBenefitEligibility(OWNER, 1000, 0, 'commitment_time_only'))
+      .rejects.toThrow('CommitmentVault bytecode is missing');
+  });
+
+  it('fails closed when the eligibility RPC is on the wrong chain', async () => {
+    state.chainId = 2;
+    initProvider();
+    await expect(checkBenefitEligibility(OWNER, 1000, 0, 'ifrlock'))
+      .rejects.toThrow('Eligibility RPC is on chain 2, expected 1');
+  });
+
   it('fails closed when the token balance RPC read fails', async () => {
     state.failNextTokenBalanceRead = true;
     initProvider();
@@ -277,9 +409,9 @@ describe('Ethers v6 service boundaries', () => {
     initProvider();
 
     await expect(checkBenefitEligibility(OWNER, 0, 1250))
-      .rejects.toThrow('Required IFRLock threshold must be a positive safe integer');
+      .rejects.toThrow('Required lock threshold must be a positive safe integer');
     await expect(checkBenefitEligibility(OWNER, 1000, Number.MAX_SAFE_INTEGER + 1))
-      .rejects.toThrow('Held IFR threshold must be a positive safe integer');
+      .rejects.toThrow('Held IFR threshold must be a nonnegative safe integer');
     expect(state.methods).toEqual([]);
   });
 

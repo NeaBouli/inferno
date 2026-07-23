@@ -29,6 +29,9 @@ Therefore setting `priceOracle` to any address is not enough. Price conditions w
 ## Safe Live Policy
 
 - Keep using `TIME_ONLY` CommitmentVault locks on Mainnet.
+- Benefits Network rules may read active, non-unlocked `TIME_ONLY` tranches as an access source.
+  This does not activate any price-conditioned lock: `PRICE_ONLY`, `TIME_OR_PRICE` and
+  `TIME_AND_PRICE` remain excluded from customer eligibility.
 - Do not expose price-only, time-or-price, or time-and-price locks as executable Web3 defaults.
 - Do not submit a governance proposal that only calls `setPriceOracle(address)` and claims price locks are live.
 

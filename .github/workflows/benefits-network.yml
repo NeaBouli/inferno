@@ -96,7 +96,9 @@ jobs:
             -e DATABASE_URL=file:/data/ci.db \
             -e CHAIN_ID=11155111 \
             -e RPC_URL=https://mock-rpc.example.com \
+            -e IFR_TOKEN_ADDRESS=0x0000000000000000000000000000000000000002 \
             -e IFRLOCK_ADDRESS=0x0000000000000000000000000000000000000001 \
+            -e COMMITMENT_VAULT_ADDRESS=0x0000000000000000000000000000000000000003 \
             -e ADMIN_SECRET=ci-admin-secret \
             inferno-benefits-backend:ci)"
           cleanup() { docker rm -f "$container" >/dev/null 2>&1 || true; }

@@ -29,6 +29,7 @@ import {
   getSessionStatus,
   redeemSession,
 } from '@/lib/api';
+import { lockSourceLabel, lockSourceRequirement } from '@/lib/lockSource';
 import { formatProductPrice } from '@/lib/money';
 
 export function BusinessConsoleClient({ businessId }: { businessId: string }) {
@@ -108,6 +109,7 @@ export function BusinessConsoleClient({ businessId }: { businessId: string }) {
   );
 
   const previewBenefit = session ?? selectedRule ?? business;
+  const previewLockSource = session?.lockSource ?? selectedRule?.lockSource ?? 'ifrlock';
   const previewMinIFRHeld = session?.minIFRHeld ?? selectedRule?.minIFRHeld ?? 0;
   const previewDailyLimit = session?.dailyRedemptionLimit ?? selectedRule?.dailyRedemptionLimit ?? 0;
   const previewMonthlyLimit = session?.monthlyRedemptionLimit ?? selectedRule?.monthlyRedemptionLimit ?? 0;
@@ -173,6 +175,7 @@ export function BusinessConsoleClient({ businessId }: { businessId: string }) {
       `Verification attempts: ${status?.attestAttempts ?? 0}/3`,
       `Benefit: ${benefit.discountPercent}%`,
       `Required lock: ${benefit.requiredLockIFR.toLocaleString('en-US')} IFR`,
+      `Accepted source: ${lockSourceLabel(benefit.lockSource)}`,
       ...(benefit.minIFRHeld > 0
         ? [`Required held: ${benefit.minIFRHeld.toLocaleString('en-US')} IFR`]
         : []),
@@ -223,6 +226,7 @@ export function BusinessConsoleClient({ businessId }: { businessId: string }) {
       discountPercent: nextStatus.benefit.discountPercent,
       requiredLockIFR: nextStatus.benefit.requiredLockIFR,
       minIFRHeld: nextStatus.benefit.minIFRHeld,
+      lockSource: nextStatus.benefit.lockSource,
       dailyRedemptionLimit: nextStatus.benefit.dailyRedemptionLimit,
       monthlyRedemptionLimit: nextStatus.benefit.monthlyRedemptionLimit,
       tierLabel: nextStatus.benefit.tierLabel,
@@ -827,6 +831,10 @@ export function BusinessConsoleClient({ businessId }: { businessId: string }) {
               <strong className="text-white">{previewBenefit ? `${previewBenefit.discountPercent}%` : '-'}</strong>
             </div>
             <div className="flex justify-between gap-4">
+              <span>Accepted lock source</span>
+              <strong className="text-right text-white">{previewBenefit ? lockSourceLabel(previewLockSource) : '-'}</strong>
+            </div>
+            <div className="flex justify-between gap-4">
               <span>Required lock</span>
               <strong className="text-white">{previewBenefit ? `${previewBenefit.requiredLockIFR.toLocaleString('en-US')} IFR` : '-'}</strong>
             </div>
@@ -879,6 +887,7 @@ export function BusinessConsoleClient({ businessId }: { businessId: string }) {
                 {rules.map((rule) => (
                   <option key={rule.id} value={rule.id}>
                     {rule.label} - {rule.productName} - {rule.discountPercent}% / {rule.requiredLockIFR.toLocaleString('en-US')} locked
+                    {' '}{lockSourceRequirement(rule.lockSource)}
                     {rule.minIFRHeld > 0 ? ` + ${rule.minIFRHeld.toLocaleString('en-US')} held` : ''}
                   </option>
                 ))}
@@ -899,6 +908,7 @@ export function BusinessConsoleClient({ businessId }: { businessId: string }) {
                   </div>
                   <p className="mt-1 text-xs text-stone-400">
                     {rule.productName} / {rule.requiredLockIFR.toLocaleString('en-US')} IFR locked
+                    {' '}{lockSourceRequirement(rule.lockSource)}
                     {rule.minIFRHeld > 0 ? ` + ${rule.minIFRHeld.toLocaleString('en-US')} held` : ''}
                   </p>
                 </div>
@@ -1008,6 +1018,10 @@ export function BusinessConsoleClient({ businessId }: { businessId: string }) {
                 <div className="flex justify-between gap-4">
                   <span className="text-stone-500">Expires in</span>
                   <strong><Countdown expiresAt={session.expiresAt} /></strong>
+                </div>
+                <div className="flex justify-between gap-4">
+                  <span className="text-stone-500">Accepted source</span>
+                  <strong className="text-right">{lockSourceLabel(session.lockSource)}</strong>
                 </div>
                 <div className="flex justify-between gap-4">
                   <span className="text-stone-500">Benefit</span>

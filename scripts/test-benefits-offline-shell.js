@@ -53,7 +53,7 @@ async function run() {
           setTimeout(resolve, 5000);
         });
       }
-      const cache = await caches.open('ifr-benefits-v18');
+      const cache = await caches.open('ifr-benefits-v19');
       const keys = await cache.keys();
       return keys.map((request) => new URL(request.url).pathname);
     });

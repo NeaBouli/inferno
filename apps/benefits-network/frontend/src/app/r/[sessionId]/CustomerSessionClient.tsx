@@ -11,6 +11,7 @@ import { WalletConnectControl } from '@/components/WalletConnectControl';
 import { AttestResult, BusinessInfo, SessionStatus, getBusiness, getChallenge, getSessionStatus, submitAttest } from '@/lib/api';
 import { redactVerifiedAddress, saveCustomerProofHistoryItem } from '@/lib/customerHistory';
 import { formatRetryGuidance } from '@/lib/customerProofGuidance';
+import { lockSourceLabel } from '@/lib/lockSource';
 import { formatProductPrice } from '@/lib/money';
 
 const CLOSED_STATUSES = ['REDEEMED', 'REJECTED', 'EXPIRED'];
@@ -61,7 +62,7 @@ export function CustomerSessionClient({ sessionId }: { sessionId: string }) {
             ? 'Ask the seller for a fresh QR code if you still need verification.'
             : !isConnected
               ? 'Connect the wallet that holds or locks IFR. No tokens move during this check.'
-              : 'Sign the one-time challenge. The backend checks IFRLock on-chain and returns the result.';
+              : 'Sign the one-time challenge. The backend checks the offer\'s accepted lock source on-chain and returns the result.';
   const proofReadinessSteps = [
     { label: 'QR session loaded', ready: sessionLoaded },
     { label: 'Wallet connected', ready: isConnected },
@@ -85,6 +86,7 @@ export function CustomerSessionClient({ sessionId }: { sessionId: string }) {
       `Verification attempts: ${status.attestAttempts}/3`,
       `Benefit: ${benefit.discountPercent}%`,
       `Required lock: ${benefit.requiredLockIFR.toLocaleString('en-US')} IFR`,
+      `Accepted source: ${lockSourceLabel(benefit.lockSource)}`,
       ...(benefit.minIFRHeld > 0
         ? [`Required held: ${benefit.minIFRHeld.toLocaleString('en-US')} IFR`]
         : []),
@@ -270,6 +272,10 @@ export function CustomerSessionClient({ sessionId }: { sessionId: string }) {
               <div className="flex justify-between gap-4">
                 <span>Benefit</span>
                 <strong className="text-white">{status?.benefit.discountPercent ?? business.discountPercent}%</strong>
+              </div>
+              <div className="flex justify-between gap-4">
+                <span>Accepted lock source</span>
+                <strong className="text-right text-white">{status ? lockSourceLabel(status.benefit.lockSource) : 'Loading'}</strong>
               </div>
               <div className="flex justify-between gap-4">
                 <span>Required lock</span>

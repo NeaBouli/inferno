@@ -12,6 +12,7 @@ import {
   getBusinessProducts,
   getBusinessRules,
 } from '@/lib/api';
+import { lockSourceRequirement } from '@/lib/lockSource';
 import { formatProductPrice } from '@/lib/money';
 
 export function SellerCatalogClient({ businessId }: { businessId: string }) {
@@ -178,7 +179,7 @@ export function SellerCatalogClient({ businessId }: { businessId: string }) {
                               <p className="text-xs font-bold uppercase tracking-[0.12em] text-stone-400">{rule.label}</p>
                             </div>
                             <p className="mt-1 text-sm text-stone-300">
-                              Verify at least {rule.requiredLockIFR.toLocaleString('en-US')} locked IFR
+                              Verify at least {rule.requiredLockIFR.toLocaleString('en-US')} IFR {lockSourceRequirement(rule.lockSource)}
                               {rule.minIFRHeld > 0
                                 ? ` and ${rule.minIFRHeld.toLocaleString('en-US')} IFR held`
                                 : ''} at checkout.
@@ -186,6 +187,7 @@ export function SellerCatalogClient({ businessId }: { businessId: string }) {
                             <OfferEligibility
                               requiredLockIFR={rule.requiredLockIFR}
                               minIFRHeld={rule.minIFRHeld}
+                              lockSource={rule.lockSource}
                               eligibility={eligibility}
                             />
                             <p className="mt-1 text-xs text-stone-400">
@@ -219,7 +221,7 @@ export function SellerCatalogClient({ businessId }: { businessId: string }) {
                   </div>
                   <p className="mt-2 text-sm font-black text-orange-100">{rule.discountPercent}% benefit</p>
                   <p className="mt-1 text-sm text-stone-300">
-                    Verify at least {rule.requiredLockIFR.toLocaleString('en-US')} locked IFR
+                    Verify at least {rule.requiredLockIFR.toLocaleString('en-US')} IFR {lockSourceRequirement(rule.lockSource)}
                     {rule.minIFRHeld > 0
                       ? ` and ${rule.minIFRHeld.toLocaleString('en-US')} IFR held`
                       : ''} at checkout.
@@ -227,6 +229,7 @@ export function SellerCatalogClient({ businessId }: { businessId: string }) {
                   <OfferEligibility
                     requiredLockIFR={rule.requiredLockIFR}
                     minIFRHeld={rule.minIFRHeld}
+                    lockSource={rule.lockSource}
                     eligibility={eligibility}
                   />
                   <p className="mt-1 text-xs text-stone-400">

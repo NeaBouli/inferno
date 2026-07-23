@@ -129,7 +129,7 @@ async function verifyHttpSurface() {
   await expectSha256('/icons/icon-512.png', '6f029513ff76f3482418da9792e6f9f3545f0cc18b88740fe1f61db50fbe87f1');
   await fetchOk('/favicon.ico', 'image/x-icon');
   const serviceWorker = await fetchOk('/sw.js', 'javascript');
-  assert((await serviceWorker.text()).includes("ifr-benefits-v18"), 'service worker cache version mismatch');
+  assert((await serviceWorker.text()).includes("ifr-benefits-v19"), 'service worker cache version mismatch');
   log('PWA assets OK');
 
   const auth = await fetchJson('/api/seller/auth-message?action=business:list&businessId=seller');
@@ -283,6 +283,7 @@ function eligibilityDiscoveryResponse() {
         discountPercent: 10,
         requiredLockIFR: 1000,
         minIFRHeld: 1000,
+        lockSource: 'ifrlock',
         dailyRedemptionLimit: 1,
         monthlyRedemptionLimit: 10,
         business,
@@ -296,6 +297,7 @@ function eligibilityDiscoveryResponse() {
         discountPercent: 15,
         requiredLockIFR: 2500,
         minIFRHeld: 0,
+        lockSource: 'ifrlock',
         dailyRedemptionLimit: 1,
         monthlyRedemptionLimit: 4,
         business,
@@ -337,6 +339,7 @@ async function installEligibilityRoutes(page) {
             discountPercent: 15,
             requiredLockIFR: 2500,
             minIFRHeld: 0,
+            lockSource: 'ifrlock',
             ttlSeconds: 90,
             dailyRedemptionLimit: 1,
             monthlyRedemptionLimit: 4,
@@ -516,6 +519,9 @@ async function verifyCustomerWalletHistory() {
               benefitRuleId: 'older-rule', label: 'Studio access', category: 'Services',
               productName: 'Member session', discountPercent: 10, requiredLockIFR: 2500,
               minIFRHeld: 0,
+              lockSource: 'ifrlock',
+              verifiedLockSource: null,
+              verificationBlock: null,
               dailyRedemptionLimit: 0, monthlyRedemptionLimit: 0,
             },
           }] : [{
@@ -531,6 +537,9 @@ async function verifyCustomerWalletHistory() {
               benefitRuleId: 'coffee-rule', label: 'Premium coffee', category: 'Coffee',
               productName: 'Reserve espresso', discountPercent: 15, requiredLockIFR: 1000,
               minIFRHeld: 250,
+              lockSource: 'commitment_time_only',
+              verifiedLockSource: 'commitment_time_only',
+              verificationBlock: 123,
               dailyRedemptionLimit: 1, monthlyRedemptionLimit: 4,
             },
           }],
@@ -913,6 +922,9 @@ async function verifyRuleTemplateAuthorization() {
               discountPercent: 5,
               requiredLockIFR: 500,
               minIFRHeld: 0,
+              lockSource: 'ifrlock',
+              verifiedLockSource: null,
+              verificationBlock: 123,
               dailyRedemptionLimit: 1,
               monthlyRedemptionLimit: 1,
             },
@@ -935,6 +947,9 @@ async function verifyRuleTemplateAuthorization() {
               discountPercent: 15,
               requiredLockIFR: 1000,
               minIFRHeld: 250,
+              lockSource: 'commitment_time_only',
+              verifiedLockSource: 'commitment_time_only',
+              verificationBlock: 123,
               walletBalanceRaw: '250000000000',
               dailyRedemptionLimit: 1,
               monthlyRedemptionLimit: 4,
@@ -957,6 +972,9 @@ async function verifyRuleTemplateAuthorization() {
               discountPercent: 5,
               requiredLockIFR: 500,
               minIFRHeld: 0,
+              lockSource: 'ifrlock',
+              verifiedLockSource: null,
+              verificationBlock: null,
               dailyRedemptionLimit: 1,
               monthlyRedemptionLimit: 1,
             },
@@ -986,6 +1004,7 @@ async function verifyRuleTemplateAuthorization() {
         discountPercent: body.discountPercent,
         requiredLockIFR: body.requiredLockIFR,
         minIFRHeld: body.minIFRHeld,
+        lockSource: body.lockSource,
         dailyRedemptionLimit: body.dailyRedemptionLimit,
         monthlyRedemptionLimit: body.monthlyRedemptionLimit,
         business: {
@@ -1012,6 +1031,7 @@ async function verifyRuleTemplateAuthorization() {
         discountPercent: body.discountPercent,
         requiredLockIFR: body.requiredLockIFR,
         minIFRHeld: body.minIFRHeld,
+        lockSource: body.lockSource,
         dailyRedemptionLimit: body.dailyRedemptionLimit,
         monthlyRedemptionLimit: body.monthlyRedemptionLimit,
         ttlSeconds: body.ttlSeconds,
@@ -1032,6 +1052,7 @@ async function verifyRuleTemplateAuthorization() {
           discountPercent: body.discountPercent,
           requiredLockIFR: body.requiredLockIFR,
           minIFRHeld: body.minIFRHeld,
+          lockSource: body.lockSource,
           dailyRedemptionLimit: body.dailyRedemptionLimit,
           monthlyRedemptionLimit: body.monthlyRedemptionLimit,
           ttlSeconds: body.ttlSeconds,
@@ -1091,6 +1112,7 @@ async function verifyRuleTemplateAuthorization() {
     assert(saved.body.productName === 'Bound catalog service', 'signed Save did not preserve the catalog product name');
     assert(saved.body.discountPercent === 15 && saved.body.requiredLockIFR === 5000, 'signed Save did not preserve template values');
     assert(saved.body.minIFRHeld === 0, 'signed Save did not preserve the disabled held-IFR gate');
+    assert(saved.body.lockSource === 'ifrlock', 'signed Save did not preserve the safe IFRLock template source');
     assert(saved.headers['x-ifr-wallet'] === sellerWallet, 'signed Save is missing the seller wallet header');
     assert(Boolean(saved.headers['x-ifr-signature']), 'signed Save is missing the seller signature header');
     assert(Boolean(saved.headers['x-ifr-timestamp']), 'signed Save is missing the seller timestamp header');
@@ -1306,6 +1328,7 @@ async function verifyPage(contextOptions, label) {
         discountPercent: 15,
         requiredLockIFR: 1000,
         minIFRHeld: 250,
+        lockSource: 'ifrlock',
         dailyRedemptionLimit: 1,
         monthlyRedemptionLimit: 10,
         business: {
@@ -1326,6 +1349,7 @@ async function verifyPage(contextOptions, label) {
         discountPercent: 10,
         requiredLockIFR: 2500,
         minIFRHeld: 0,
+        lockSource: 'ifrlock',
         dailyRedemptionLimit: 0,
         monthlyRedemptionLimit: 0,
         business: {
@@ -1776,6 +1800,7 @@ async function verifyPage(contextOptions, label) {
               discountPercent: 15,
               requiredLockIFR: 1000,
               minIFRHeld: 250,
+              lockSource: 'commitment_time_only',
               ttlSeconds: 90,
               dailyRedemptionLimit: 1,
               monthlyRedemptionLimit: 10,

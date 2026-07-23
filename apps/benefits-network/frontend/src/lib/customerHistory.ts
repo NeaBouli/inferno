@@ -1,4 +1,5 @@
-import { SessionStatus } from '@/lib/api';
+import { LockSource, SessionStatus } from '@/lib/api';
+import { isLockSource } from '@/lib/lockSource';
 import { ProductCurrency, productCurrencies } from '@/lib/money';
 
 export interface CustomerProofHistoryItem {
@@ -9,6 +10,7 @@ export interface CustomerProofHistoryItem {
   discountPercent: number;
   requiredLockIFR: number;
   minIFRHeld: number;
+  lockSource: LockSource;
   ruleLabel: string;
   productName: string;
   basePriceMinor: string | null;
@@ -54,6 +56,7 @@ function normalizeItem(item: Partial<CustomerProofHistoryItem>): CustomerProofHi
     discountPercent: Number(item.discountPercent || 0),
     requiredLockIFR: normalizeWholeIFR(item.requiredLockIFR),
     minIFRHeld: normalizeWholeIFR(item.minIFRHeld),
+    lockSource: isLockSource(item.lockSource) ? item.lockSource : 'ifrlock',
     ruleLabel: item.ruleLabel || 'Business default',
     productName: item.productName || 'Business default benefit',
     basePriceMinor: currency ? basePriceMinor : null,
@@ -101,6 +104,7 @@ export function saveCustomerProofHistoryItem(args: {
     discountPercent: benefit.discountPercent,
     requiredLockIFR: benefit.requiredLockIFR,
     minIFRHeld: benefit.minIFRHeld,
+    lockSource: benefit.lockSource,
     ruleLabel: benefit.label || 'Business default',
     productName: benefit.productName || 'Business default benefit',
     basePriceMinor: benefit.basePriceMinor,
