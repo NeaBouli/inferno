@@ -9,6 +9,7 @@ const layout = read('src', 'app', 'layout.tsx');
 const robots = read('src', 'app', 'robots.ts');
 const sitemap = read('src', 'app', 'sitemap.ts');
 const home = read('src', 'app', 'page.tsx');
+const offerDiscovery = read('src', 'components', 'OfferDiscovery.tsx');
 const shell = read('src', 'components', 'AppShell.tsx');
 const widget = read('src', 'components', 'CopilotWidget.tsx');
 const guide = read('src', 'app', 'guide', 'page.tsx');
@@ -28,6 +29,10 @@ assert.ok(home.includes("'#integrate'"), 'Seller code-generator deep link must s
 assert.ok(home.includes("'#seller-session-history'"), 'Seller history deep link must select seller mode');
 assert.ok(home.includes("window.setTimeout(scrollToTarget, 700)"), 'Deep links must retry after asynchronous layout settles');
 assert.ok(!home.includes('document.querySelector(window.location.hash)'), 'Untrusted URL hashes must not be used as CSS selectors');
+assert.ok(home.includes('onOpenSellerTools={openSellerTools}'), 'Empty public network must route into seller setup');
+assert.ok(offerDiscovery.includes('No active offer is being hidden or replaced with demo data.'), 'Empty network must not imply demo or hidden offers');
+assert.ok(offerDiscovery.includes('No offers match these filters'), 'Filtered empty results need a distinct explanation');
+assert.ok(offerDiscovery.includes('onClick={clearFilters}'), 'Filtered empty results must provide a one-action reset');
 assert.ok(guide.includes('https://shop.ifrunit.tech/guide'), 'Guide must publish its own canonical URL');
 for (const [label, source] of [['seller console', sellerConsole], ['customer pass', customerPass], ['checkout proof', checkoutProof]]) {
   assert.ok(source.includes('index: false, follow: false'), `${label} must remain noindex/nofollow`);

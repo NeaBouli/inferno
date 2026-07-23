@@ -10,6 +10,7 @@ on:
       - 'docs/runbooks/BENEFITS_DEVICE_WALLET_TEST_RUNBOOK.md'
       - 'scripts/smoke-benefits-network.js'
       - 'scripts/test-benefits-customer-pass-ui.js'
+      - 'scripts/test-benefits-discovery-ui.js'
       - 'scripts/test-benefits-wallet-lock-ui.js'
       - 'scripts/test-benefits-doc-consistency.cjs'
       - 'scripts/test-benefits-service-worker.js'
@@ -28,6 +29,7 @@ on:
       - 'docs/runbooks/BENEFITS_DEVICE_WALLET_TEST_RUNBOOK.md'
       - 'scripts/smoke-benefits-network.js'
       - 'scripts/test-benefits-customer-pass-ui.js'
+      - 'scripts/test-benefits-discovery-ui.js'
       - 'scripts/test-benefits-wallet-lock-ui.js'
       - 'scripts/test-benefits-doc-consistency.cjs'
       - 'scripts/test-benefits-service-worker.js'
@@ -110,4 +112,5 @@ jobs:
       - run: npm ci --prefix apps/benefits-network/frontend
       - run: npx playwright install --with-deps chromium
       - run: npm run test:benefits-pass-ui
+      - run: npm run test:benefits-discovery-ui
       - run: npm run test:benefits-wallet-ui

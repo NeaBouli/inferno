@@ -14,7 +14,7 @@
     "@coinbase/wallet-sdk": "^4.3.6",
     "@tanstack/react-query": "^5.22.2",
     "@walletconnect/ethereum-provider": "^2.23.10",
-    "next": "15.5.20",
+    "next": "15.5.21",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-qr-code": "^2.0.12",
@@ -32,11 +32,13 @@
     "typescript": "^5.9.3"
   },
   "optionalDependencies": {
-    "@next/swc-linux-x64-gnu": "15.5.20",
-    "@next/swc-linux-x64-musl": "15.5.20"
+    "@next/swc-linux-x64-gnu": "15.5.21",
+    "@next/swc-linux-x64-musl": "15.5.21"
   },
   "overrides": {
+    "axios": "1.18.1",
     "postcss": "$postcss",
+    "sharp": "0.35.3",
     "uuid": "11.1.1"
   }
 }

@@ -7,7 +7,12 @@ import { discoverOffers, type PublicOffer } from '@/lib/api';
 
 const PAGE_SIZE = 8;
 
-export function OfferDiscovery() {
+interface OfferDiscoveryProps {
+  mode: 'customer' | 'seller';
+  onOpenSellerTools: () => void;
+}
+
+export function OfferDiscovery({ mode, onOpenSellerTools }: OfferDiscoveryProps) {
   const eligibility = useIfrLockEligibility();
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState('');
@@ -57,19 +62,32 @@ export function OfferDiscovery() {
   }, [query, category, serviceArea, page, reloadKey]);
 
   function updateQuery(value: string) {
+    setLoading(true);
     setQuery(value);
     setPage(1);
   }
 
   function updateCategory(value: string) {
+    setLoading(true);
     setCategory(value);
     setPage(1);
   }
 
   function updateServiceArea(value: string) {
+    setLoading(true);
     setServiceArea(value);
     setPage(1);
   }
+
+  function clearFilters() {
+    setLoading(true);
+    setQuery('');
+    setCategory('');
+    setServiceArea('');
+    setPage(1);
+  }
+
+  const hasActiveFilters = Boolean(query.trim() || category || serviceArea);
 
   return (
     <section id="offers" className="mx-auto w-full max-w-7xl scroll-mt-28 px-5 pb-12">
@@ -129,10 +147,49 @@ export function OfferDiscovery() {
           </div>
         ) : null}
 
-        {!loading && !error && offers.length === 0 ? (
+        {!loading && !error && offers.length === 0 && hasActiveFilters ? (
           <div role="status" className="mt-8 border-l-2 border-orange-300 pl-5">
-            <h3 className="text-xl font-black text-white">No matching active offers</h3>
-            <p className="mt-2 text-sm text-stone-300">Try another search, category or service area.</p>
+            <p className="text-xs font-black uppercase tracking-[0.16em] text-orange-200/80">Search result</p>
+            <h3 className="mt-2 text-xl font-black text-white">No offers match these filters</h3>
+            <p className="mt-2 text-sm text-stone-300">Clear the search, category and area to see every active offer.</p>
+            <button
+              type="button"
+              onClick={clearFilters}
+              className="mt-4 rounded-full border border-orange-200/40 px-4 py-2 text-xs font-black uppercase tracking-[0.12em] text-orange-50 transition hover:bg-orange-200/10"
+            >
+              Clear filters
+            </button>
+          </div>
+        ) : null}
+
+        {!loading && !error && offers.length === 0 && !hasActiveFilters ? (
+          <div role="status" className="mt-8 border-y border-orange-200/25 py-7">
+            <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
+              <div>
+                <p className="text-xs font-black uppercase tracking-[0.16em] text-orange-200/80">Network launch</p>
+                <h3 className="mt-2 text-2xl font-black text-white">The first public seller offers are still being prepared.</h3>
+                <p className="mt-3 max-w-2xl text-sm leading-6 text-stone-300">
+                  No active offer is being hidden or replaced with demo data. Seller setup is live: connect the owner wallet, create a public profile, add a product and publish an active IFR benefit rule.
+                </p>
+              </div>
+              <div className="flex flex-col gap-3 sm:flex-row lg:flex-col">
+                <button
+                  type="button"
+                  onClick={onOpenSellerTools}
+                  className="rounded-full bg-orange-300 px-5 py-3 text-xs font-black uppercase tracking-[0.14em] text-stone-950 shadow-xl shadow-orange-950/35 transition hover:-translate-y-0.5 hover:bg-orange-200"
+                >
+                  {mode === 'seller' ? 'Continue seller setup' : 'Become a seller'}
+                </button>
+                {mode === 'customer' ? (
+                  <a
+                    href="#customer-wallet"
+                    className="rounded-full border border-white/15 px-5 py-3 text-center text-xs font-black uppercase tracking-[0.14em] text-stone-100 transition hover:border-green-200/50"
+                  >
+                    Prepare my IFR access
+                  </a>
+                ) : null}
+              </div>
+            </div>
           </div>
         ) : null}
 
