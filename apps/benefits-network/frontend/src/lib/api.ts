@@ -430,6 +430,7 @@ export function getBusiness(id: string) {
 }
 
 export function discoverOffers(filters: {
+  businessId?: string;
   query?: string;
   category?: string;
   serviceArea?: string;
@@ -437,6 +438,7 @@ export function discoverOffers(filters: {
   limit?: number;
 } = {}) {
   const query = new URLSearchParams();
+  if (filters.businessId) query.set('businessId', filters.businessId);
   if (filters.query) query.set('query', filters.query);
   if (filters.category) query.set('category', filters.category);
   if (filters.serviceArea) query.set('serviceArea', filters.serviceArea);
@@ -446,8 +448,8 @@ export function discoverOffers(filters: {
   return fetchJSON<PublicOfferDiscovery>(`/api/businesses${suffix ? `?${suffix}` : ''}`);
 }
 
-export function getBusinessRules(id: string) {
-  return fetchJSON<{ rules: BenefitRule[] }>(`/api/businesses/${id}/rules`);
+export function getBusinessRules(id: string, signal?: AbortSignal) {
+  return fetchJSON<{ rules: BenefitRule[] }>(`/api/businesses/${id}/rules`, { signal });
 }
 
 export function getBusinessProducts(id: string, signal?: AbortSignal) {

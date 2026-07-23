@@ -542,6 +542,25 @@ describe('Seller catalog routes', () => {
         },
       }),
     ]);
+    const ownerlessBusiness = await prisma.business.create({
+      data: {
+        name: 'Operator-only draft',
+        discountPercent: 10,
+        requiredLockIFR: 1000,
+        serviceArea: 'Online',
+        serviceAreaKey: 'online',
+      },
+    });
+    await prisma.benefitRule.create({
+      data: {
+        businessId: ownerlessBusiness.id,
+        label: 'Unusable checkout offer',
+        category: 'Services',
+        productName: 'Must remain private',
+        discountPercent: 10,
+        requiredLockIFR: 1000,
+      },
+    });
     await Promise.all([
       prisma.benefitRule.create({
         data: {
@@ -641,12 +660,53 @@ describe('Seller catalog routes', () => {
     expect(inactiveAreaResponse.status).toBe(200);
     expect((await inactiveAreaResponse.json() as { offers: unknown[] }).offers).toHaveLength(0);
 
+    await prisma.business.update({
+      where: { id: otherBusinessId },
+      data: { active: true },
+    });
+    const exactSellerResponse = await fetch(
+      `${baseUrl()}/api/businesses?businessId=${encodeURIComponent(businessId)}`
+    );
+    expect(exactSellerResponse.status).toBe(200);
+    const exactSellerBody = await exactSellerResponse.json() as {
+      offers: Array<{ id: string; business: { id: string } }>;
+      pagination: { total: number };
+    };
+    expect(exactSellerBody.offers.map((offer) => offer.id)).toEqual(expect.arrayContaining([
+      coffeeRule.id,
+      serviceRule.id,
+    ]));
+    expect(exactSellerBody.offers.every((offer) => offer.business.id === businessId)).toBe(true);
+    expect(exactSellerBody.pagination.total).toBe(2);
+
+    const exactOtherSeller = await fetch(
+      `${baseUrl()}/api/businesses?businessId=${encodeURIComponent(otherBusinessId)}`
+    );
+    const exactOtherSellerBody = await exactOtherSeller.json() as {
+      offers: Array<{ productName: string; business: { id: string } }>;
+    };
+    expect(exactOtherSellerBody.offers).toHaveLength(1);
+    expect(exactOtherSellerBody.offers[0]).toMatchObject({
+      productName: 'Private listing',
+      business: { id: otherBusinessId },
+    });
+    const ownerlessDiscovery = await fetch(
+      `${baseUrl()}/api/businesses?businessId=${encodeURIComponent(ownerlessBusiness.id)}`
+    );
+    expect((await ownerlessDiscovery.json() as { offers: unknown[] }).offers).toHaveLength(0);
+    expect((await fetch(`${baseUrl()}/api/businesses/${ownerlessBusiness.id}`)).status).toBe(404);
+    expect((await fetch(`${baseUrl()}/api/businesses/${ownerlessBusiness.id}/rules`)).status).toBe(404);
+    expect((await fetch(`${baseUrl()}/api/businesses/${ownerlessBusiness.id}/products`)).status).toBe(404);
+
     expect((await fetch(`${baseUrl()}/api/businesses?page=0`)).status).toBe(400);
     expect((await fetch(`${baseUrl()}/api/businesses?limit=25`)).status).toBe(400);
     expect((await fetch(`${baseUrl()}/api/businesses?query=${'x'.repeat(81)}`)).status).toBe(400);
     expect((await fetch(`${baseUrl()}/api/businesses?serviceArea=${'x'.repeat(81)}`)).status).toBe(400);
     expect((await fetch(`${baseUrl()}/api/businesses?serviceArea=one&serviceArea=two`)).status).toBe(400);
     expect((await fetch(`${baseUrl()}/api/businesses?query=one&query=two`)).status).toBe(400);
+    expect((await fetch(`${baseUrl()}/api/businesses?businessId=bad%20id`)).status).toBe(400);
+    expect((await fetch(`${baseUrl()}/api/businesses?businessId=${'x'.repeat(81)}`)).status).toBe(400);
+    expect((await fetch(`${baseUrl()}/api/businesses?businessId=one&businessId=two`)).status).toBe(400);
   });
 
   it('rate limits public offer discovery by client IP', async () => {
