@@ -4,11 +4,24 @@
   "description": "IFR Protocol SDK - exact access checks and signer-neutral Benefits checkout",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
   "files": ["dist"],
+  "sideEffects": false,
+  "engines": {
+    "node": ">=20 <23"
+  },
   "scripts": {
     "build": "tsc",
     "test": "npm run build && node test/sdk.test.cjs",
-    "prepublishOnly": "npm test"
+    "test:package": "npm run build && node test/package-consumer.cjs",
+    "prepublishOnly": "npm test && npm run test:package"
   },
   "keywords": ["ifr", "web3", "access-control", "lock", "defi", "ethereum"],
   "license": "MIT",

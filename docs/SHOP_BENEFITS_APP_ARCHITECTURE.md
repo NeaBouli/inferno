@@ -119,7 +119,11 @@ The app has two roles:
 - Generate basic HTML button/link snippet.
 - Show API payload for rule-bound QR sessions.
 - Generate a server-side JavaScript/POS session helper that returns the short-lived customer proof URL.
-- Use the signer-neutral `IFRBenefitsClient` in the repository SDK for one-time challenge checkout integrations. npm publication and platform-specific plugins remain future release work.
+- Use the signer-neutral `IFRBenefitsClient` in the repository SDK for one-time challenge
+  checkout integrations. The versioned tarball is installed with locked `npm ci` and tested
+  for CommonJS, ESM named-import interoperability and TypeScript on Node.js 20 and 22;
+  public npm publication remains gated by `docs/runbooks/IFR_SDK_NPM_RELEASE.md`, and
+  platform-specific plugins remain future release work.
 
 ## IFR Wallet Strategy
 
@@ -183,7 +187,11 @@ If `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` is missing, the frontend must show a s
    no-transaction/no-IFR boundary; external wallets remain the production baseline and all real
    login, export/recovery, native isolation, device, privacy and independent-security gates remain
    open.**
-7. Add POS/plugin snippets to code generator. **Server-side JavaScript/POS helper and repository SDK `IFRBenefitsClient` are implemented and source-tested. npm publication and platform-specific plugins remain future release work.**
+7. Add POS/plugin snippets to code generator. **Server-side JavaScript/POS helper and repository
+   SDK `IFRBenefitsClient` are implemented. The packed artifact is installed with locked
+   `npm ci` and tested for CommonJS, ESM named-import interoperability and TypeScript on
+   Node.js 20/22. Public npm publication remains blocked by the explicit release checklist;
+   platform-specific plugins remain future release work.**
 8. Add mobile E2E checks for iPad Safari/Chrome and Android MetaMask browser. **Automated
    desktop/iPad/Android layout, unavailable-camera fallback, strict parser and fake-camera QR
    decoding are implemented. Physical Safari/Chrome/MetaMask acceptance remains pending.**

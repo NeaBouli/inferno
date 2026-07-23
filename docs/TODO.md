@@ -818,7 +818,10 @@ On errors: fix immediately, commit with `seo:` prefix.
       IFRBenefitsClient: signer-neutral one-time seller checkout challenge
       Static: IFRClient.apiCheck() (no ethers needed)
       GET https://copilot-api.ifrunit.tech/api/ifr/check?wallet=0x...&required=1000
-      Dist-importing source tests + dedicated SDK CI; npm publish remains a separate release gate
+      Dist-importing source tests + locked npm-ci tarball consumers for CommonJS,
+      ESM named-import interoperability and TypeScript on Node 20/22
+      Release runbook: docs/runbooks/IFR_SDK_NPM_RELEASE.md
+      npm publish remains gated by approved LICENSE/owner, npm ownership/2FA and explicit review
 
 - [x] ✅ Generator UI — Phase 5d (07.04.2026)
       docs/builder.html — live at ifrunit.tech/builder.html

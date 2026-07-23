@@ -5,15 +5,22 @@ sessions. The package currently supports Ethereum Mainnet only.
 
 ## Availability
 
-The SDK is not yet published to the npm registry. From the Inferno repository root:
+The SDK is not yet published to the npm registry. Repository consumers build and pack the
+versioned artifact first:
 
 ```bash
-npm install --install-links ./apps/sdk
+cd apps/sdk
+npm ci
+npm run build
+npm pack --ignore-scripts
 ```
 
-The repository includes the generated package entrypoints and CI verifies that they match the
-TypeScript source. `--install-links` makes npm install the folder as a packed dependency instead
-of a symlink, so its runtime dependencies resolve correctly.
+Add the resulting `.tgz` path to the consuming application's `package.json` and committed
+lockfile, then use `npm ci`. Do not treat the repository package as a registry release.
+
+The tarball exports CommonJS with tested ESM named-import interoperability and supports Node.js
+20 and 22. CI verifies the exact package contents, installs the locked tarball with `npm ci`, and
+runs fresh CommonJS, ESM-import and TypeScript consumers.
 
 The canonical REST API is:
 
@@ -33,6 +40,10 @@ callback; the SDK never accepts or stores private keys, seed phrases or persiste
 cd apps/sdk
 npm ci
 npm test
+npm run test:package
 npm audit --audit-level=moderate
 npm pack --dry-run
 ```
+
+Publication remains blocked until the release checklist in
+`docs/runbooks/IFR_SDK_NPM_RELEASE.md` is complete.

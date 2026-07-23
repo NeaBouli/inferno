@@ -1,7 +1,7 @@
 /**
  * IFR SDK — Web3 Access Control for Builders
  *
- * Repository package: npm install --install-links ./apps/sdk (npm registry release pending)
+ * Repository package: build and pack apps/sdk, then consume the locked tarball
  *
  * import { IFRClient } from "ifr-sdk"
  * const ifr = new IFRClient({ network: "mainnet" })
