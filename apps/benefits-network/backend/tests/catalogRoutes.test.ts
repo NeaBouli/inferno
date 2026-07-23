@@ -8,7 +8,20 @@ const mockRecoverSigner = jest.fn();
 
 jest.mock('../src/services/ifrLockService', () => ({
   checkLock: (...args: unknown[]) => mockCheckLock(...args),
-  checkBenefitEligibility: (...args: unknown[]) => mockCheckBenefitEligibility(...args),
+  checkBenefitEligibility: async (...args: unknown[]) => {
+    const result = await mockCheckBenefitEligibility(...args);
+    return {
+      lockEligible: result.eligible,
+      heldEligible: true,
+      walletAmount: null,
+      walletBalanceRaw: null,
+      ifrLockAmount: result.lockedAmount,
+      commitmentAmount: null,
+      verifiedLockSource: result.eligible ? 'ifrlock' : null,
+      verificationBlock: 1,
+      ...result,
+    };
+  },
   recoverSigner: (...args: unknown[]) => mockRecoverSigner(...args),
   initProvider: jest.fn(),
 }));
@@ -117,6 +130,7 @@ describe('Seller catalog routes', () => {
 
   beforeEach(async () => {
     jest.clearAllMocks();
+    mockCheckBenefitEligibility.mockImplementation((...args: unknown[]) => mockCheckLock(...args));
     await prisma.sellerAuthorizationChallenge.deleteMany();
     await prisma.auditLog.deleteMany();
     await prisma.session.deleteMany();
@@ -695,7 +709,7 @@ describe('Seller catalog routes', () => {
     expect(firstPage.pagination).toEqual({ page: 1, limit: 1, total: 2, totalPages: 2, hasNext: true });
     expect(Object.keys(firstPage.offers[0]).sort()).toEqual([
       'business', 'category', 'dailyRedemptionLimit', 'discountPercent', 'id', 'label',
-      'minIFRHeld', 'monthlyRedemptionLimit', 'product', 'productName', 'requiredLockIFR',
+      'lockSource', 'minIFRHeld', 'monthlyRedemptionLimit', 'product', 'productName', 'requiredLockIFR',
     ]);
     expect(Object.keys(firstPage.offers[0].business as Record<string, unknown>).sort()).toEqual([
       'categories', 'description', 'id', 'logoUrl', 'name', 'serviceArea', 'website',
@@ -874,7 +888,10 @@ describe('Seller catalog routes', () => {
     const createdResponse = await fetch(`${baseUrl()}/api/seller/businesses/${businessId}/rules`, {
       method: 'POST',
       headers: ownerHeaders,
-      body: JSON.stringify(rulePayload(product.id)),
+      body: JSON.stringify({
+        ...rulePayload(product.id),
+        lockSource: 'commitment_time_only',
+      }),
     });
     expect(createdResponse.status).toBe(201);
     const rule = await createdResponse.json() as {
@@ -882,13 +899,21 @@ describe('Seller catalog routes', () => {
       productId: string;
       productName: string;
       category: string;
+      lockSource: string;
     };
     expect(rule).toMatchObject({
       productId: product.id,
       productName: 'Premium espresso',
       category: 'Coffee',
       minIFRHeld: 250,
+      lockSource: 'commitment_time_only',
     });
+    const invalidSourceHeaders = await sellerHeaders(owner, 'rules:create', businessId);
+    expect((await fetch(`${baseUrl()}/api/seller/businesses/${businessId}/rules`, {
+      method: 'POST',
+      headers: invalidSourceHeaders,
+      body: JSON.stringify({ ...rulePayload(product.id), lockSource: 'price_only' }),
+    })).status).toBe(400);
     expect((await fetch(`${baseUrl()}/api/seller/businesses/${businessId}/rules`, {
       method: 'POST',
       headers: ownerHeaders,
@@ -898,6 +923,8 @@ describe('Seller catalog routes', () => {
     const session = await createSession(businessId, rule.id);
     expect(await buildChallengeMessage(session.sessionId)).toContain('Product: Premium espresso');
     expect(await buildChallengeMessage(session.sessionId)).toContain('Reference Price: USD 1999 minor units');
+    expect(await buildChallengeMessage(session.sessionId)).toContain('Lock Source: commitment_time_only');
+    expect(await buildChallengeMessage(session.sessionId)).toContain('Action: Verify IFR Benefit Eligibility');
 
     const productUpdateHeaders = await sellerHeaders(owner, 'products:update', businessId, product.id);
     const updateResponse = await fetch(`${baseUrl()}/api/seller/products/${product.id}`, {
@@ -925,6 +952,7 @@ describe('Seller catalog routes', () => {
         discountPercent: 30,
         requiredLockIFR: 5000,
         minIFRHeld: 500,
+        lockSource: 'either',
       }),
     });
     expect(refreshResponse.status).toBe(200);
@@ -934,10 +962,12 @@ describe('Seller catalog routes', () => {
       discountPercent: 30,
       requiredLockIFR: 5000,
       minIFRHeld: 500,
+      lockSource: 'either',
     });
     expect(await buildChallengeMessage(session.sessionId)).toContain('Product: Premium espresso');
     expect(await buildChallengeMessage(session.sessionId)).toContain('Required Lock IFR: 1000');
     expect(await buildChallengeMessage(session.sessionId)).toContain('Minimum Held IFR: 250');
+    expect(await buildChallengeMessage(session.sessionId)).toContain('Lock Source: commitment_time_only');
     const oldSessionStatus = await fetch(`${baseUrl()}/api/sessions/${session.sessionId}`);
     expect(await oldSessionStatus.json()).toMatchObject({
       benefit: {
@@ -947,6 +977,7 @@ describe('Seller catalog routes', () => {
         discountPercent: 20,
         requiredLockIFR: 1000,
         minIFRHeld: 250,
+        lockSource: 'commitment_time_only',
         dailyRedemptionLimit: 1,
         monthlyRedemptionLimit: 10,
       },
@@ -964,6 +995,7 @@ describe('Seller catalog routes', () => {
       discountPercent: 20,
       requiredLockIFR: 1000,
       minIFRHeld: 250,
+      lockSource: 'commitment_time_only',
       dailyRedemptionLimit: 1,
       monthlyRedemptionLimit: 10,
     });
@@ -975,17 +1007,27 @@ describe('Seller catalog routes', () => {
       lockedAmount: '1000.0',
       walletAmount: '250.0',
       walletBalanceRaw: '250000000000',
+      ifrLockAmount: null,
+      commitmentAmount: '1000.0',
+      verifiedLockSource: 'commitment_time_only',
+      verificationBlock: 123,
     });
     await expect(attest(session.sessionId, '0xsnapshot-signature')).resolves.toMatchObject({
       status: 'APPROVED',
     });
-    expect(mockCheckBenefitEligibility).toHaveBeenCalledWith(owner.address, 1000, 250);
+    expect(mockCheckBenefitEligibility).toHaveBeenCalledWith(
+      owner.address,
+      1000,
+      250,
+      'commitment_time_only'
+    );
 
     const refreshedSession = await createSession(businessId, rule.id);
     expect(await buildChallengeMessage(refreshedSession.sessionId)).toContain('Product: Reserve espresso');
     expect(await buildChallengeMessage(refreshedSession.sessionId)).toContain('Reference Price: USD 2499 minor units');
     expect(await buildChallengeMessage(refreshedSession.sessionId)).toContain('Required Lock IFR: 5000');
     expect(await buildChallengeMessage(refreshedSession.sessionId)).toContain('Minimum Held IFR: 500');
+    expect(await buildChallengeMessage(refreshedSession.sessionId)).toContain('Lock Source: either');
     await prisma.session.update({
       where: { id: refreshedSession.sessionId },
       data: { benefitBasePriceMinor: '0', benefitCurrency: 'EUR' },
@@ -1148,7 +1190,7 @@ describe('Seller catalog routes', () => {
     });
     expect(await prisma.session.findUniqueOrThrow({ where: { id: session.sessionId } })).toMatchObject({
       benefitRuleId: rule.id,
-      benefitSnapshotVersion: 4,
+      benefitSnapshotVersion: 5,
       benefitProductName: 'Consultation',
     });
     expect(await buildChallengeMessage(session.sessionId)).toContain('Product: Consultation');
@@ -1233,17 +1275,23 @@ describe('Seller catalog routes', () => {
     mockRecoverSigner.mockReturnValue(owner.address);
     mockCheckLock.mockResolvedValue({ eligible: true, lockedAmount: '900.0' });
     for (const session of legacySessions) {
-      expect(await buildChallengeMessage(session.id)).toContain('Minimum Held IFR: 0');
+      const challenge = await buildChallengeMessage(session.id);
+      expect(challenge).toContain('Minimum Held IFR: 0');
+      expect(challenge).not.toContain('Lock Source:');
+      expect(challenge).toContain('Action: Verify IFR Lock Eligibility');
+      expect(challenge).not.toContain('Action: Verify IFR Benefit Eligibility');
       const statusResponse = await fetch(`${baseUrl()}/api/sessions/${session.id}`);
-      expect(await statusResponse.json()).toMatchObject({ benefit: { minIFRHeld: 0 } });
+      expect(await statusResponse.json()).toMatchObject({
+        benefit: { minIFRHeld: 0, lockSource: 'ifrlock' },
+      });
       await expect(attest(session.id, '0xlegacy-signature')).resolves.toMatchObject({
         status: 'APPROVED',
         benefit: { minIFRHeld: 0 },
       });
     }
 
-    expect(mockCheckLock).toHaveBeenCalledTimes(legacySessions.length);
-    expect(mockCheckBenefitEligibility).not.toHaveBeenCalled();
+    expect(mockCheckBenefitEligibility).toHaveBeenCalledTimes(legacySessions.length);
+    expect(mockCheckBenefitEligibility).toHaveBeenCalledWith(owner.address, 900, 0, 'ifrlock');
     const historyHeaders = await sellerHeaders(owner, 'sessions:list', businessId);
     const historyResponse = await fetch(`${baseUrl()}/api/seller/businesses/${businessId}/sessions`, {
       headers: historyHeaders,
@@ -1252,6 +1300,7 @@ describe('Seller catalog routes', () => {
     for (const session of legacySessions) {
       expect(history.sessions.find((item) => item.id === session.id)).toMatchObject({
         minIFRHeld: 0,
+        lockSource: 'ifrlock',
       });
     }
   });
@@ -1294,7 +1343,7 @@ describe('Seller catalog routes', () => {
       ]);
       expect(savedSession).toMatchObject({
         benefitRuleId: rule.id,
-        benefitSnapshotVersion: 4,
+        benefitSnapshotVersion: 5,
         benefitProductName: 'Premium espresso',
       });
       expect(archivedProduct.active).toBe(false);

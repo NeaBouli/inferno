@@ -10,9 +10,21 @@ export const IFRLOCK_ADDRESS = (
   (CHAIN_ID === 1 ? '0x769928aBDfc949D0718d8766a1C2d7dBb63954Eb' : '')
 ) as `0x${string}` | '';
 
+export const COMMITMENT_VAULT_ADDRESS = (
+  process.env.NEXT_PUBLIC_COMMITMENT_VAULT_ADDRESS ||
+  (CHAIN_ID === 1 ? '0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3' : '')
+) as `0x${string}` | '';
+
 export const IFR_DECIMALS = 9;
 
 export const IFRLOCK_ABI = [
+  {
+    type: 'function',
+    name: 'token',
+    stateMutability: 'view',
+    inputs: [],
+    outputs: [{ name: '', type: 'address' }],
+  },
   {
     type: 'function',
     name: 'lockedBalance',
@@ -33,6 +45,34 @@ export const IFRLOCK_ABI = [
     stateMutability: 'nonpayable',
     inputs: [],
     outputs: [],
+  },
+] as const;
+
+export const COMMITMENT_VAULT_ABI = [
+  {
+    type: 'function',
+    name: 'ifrToken',
+    stateMutability: 'view',
+    inputs: [],
+    outputs: [{ name: '', type: 'address' }],
+  },
+  {
+    type: 'function',
+    name: 'getTranches',
+    stateMutability: 'view',
+    inputs: [{ name: 'wallet', type: 'address' }],
+    outputs: [{
+      name: '',
+      type: 'tuple[]',
+      components: [
+        { name: 'amount', type: 'uint256' },
+        { name: 'cType', type: 'uint8' },
+        { name: 'unlockTime', type: 'uint256' },
+        { name: 'p0Multiplier', type: 'uint256' },
+        { name: 'unlocked', type: 'bool' },
+        { name: 'conditionMetAt', type: 'uint256' },
+      ],
+    }],
   },
 ] as const;
 

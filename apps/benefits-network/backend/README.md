@@ -17,7 +17,9 @@ npm run dev            # http://localhost:3001
 |----------|-------------|---------|
 | `CHAIN_ID` | Ethereum chain ID | `11155111` (Sepolia) |
 | `RPC_URL` | JSON-RPC endpoint | required |
-| `IFRLOCK_ADDRESS` | IFRLock contract address; its immutable `token()` reference is the canonical IFR token source | required |
+| `IFR_TOKEN_ADDRESS` | Expected IFR token address used for bytecode and vault-token identity checks | required |
+| `IFRLOCK_ADDRESS` | IFRLock contract address used by `ifrlock` and `either` rules | required |
+| `COMMITMENT_VAULT_ADDRESS` | CommitmentVault address used only for active `TIME_ONLY` tranches | required |
 | `PARTNER_VAULT_ADDRESS` | Optional PartnerVault address for read-only M4 verification | unset |
 | `BUILDER_REGISTRY_ADDRESS` | Optional BuilderRegistry address for read-only M4 verification | unset |
 | `REWARD_CALLER_ADDRESS` | Optional public caller address checked with `authorizedCaller`; never a private key | unset |
@@ -85,7 +87,7 @@ is not ready.
 | GET | `/api/passes/:id/control` | Customer pass control token | Return the exact seller/rule checkout to the originating customer tab |
 | POST | `/api/passes/:id/bind` | Owner/operator wallet signature | Atomically bind one active seller rule to one open pass |
 | POST | `/api/passes/:id/challenge` | Customer pass control token | Return the exact linked checkout challenge |
-| POST | `/api/passes/:id/confirm` | Customer pass control token + wallet signature | Verify the original pass wallet and IFRLock eligibility |
+| POST | `/api/passes/:id/confirm` | Customer pass control token + wallet signature | Verify the original pass wallet against the snapshotted lock source |
 | POST | `/api/passes/:id/cancel` | Customer pass control token | Cancel an open or still-pending checkout pass |
 
 Public offer discovery accepts an optional exact `serviceArea` filter and returns the available
@@ -110,7 +112,8 @@ Compatible seller-issued flow:
 1. Merchant selects a seller rule or falls back to the business default.
 2. Owner or active checkout operator requests and signs a one-time `sessions:create` challenge bound to wallet, business and selected rule. The backend atomically consumes it, rechecks current checkout access and creates the QR. Benefit text, discount, required lock and TTL are frozen into that session.
 3. Customer scans QR → connects wallet → signs challenge with the selected benefit details.
-4. Backend verifies signature → checks IFRLock on-chain against that rule's required IFR amount.
+4. Backend verifies signature → checks the rule's immutable `ifrlock`, `commitment_time_only` or
+   `either` source at one Ethereum block. `either` requires the full threshold in one source.
 5. If the wallet is not eligible yet, the customer response is `REJECTED` but the stored session stays `PENDING` until the three-attempt limit is exhausted, so the customer can lock more IFR and retry the same QR while it is valid.
 6. Merchant sees APPROVED → owner or active checkout operator signs Redeem → backend atomically marks the session as redeemed once.
 
@@ -154,16 +157,20 @@ active rules while preserving sessions and audit history.
   "discountPercent": 10,
   "requiredLockIFR": 1000,
   "minIFRHeld": 250,
+  "lockSource": "commitment_time_only",
   "ttlSeconds": 90,
   "active": true
 }
 ```
 
-`requiredLockIFR` is mandatory. `minIFRHeld` is an optional nonnegative whole-IFR amount;
-`0` or omission disables the free-wallet balance gate. For a positive value, checkout approval
-requires both the IFRLock threshold and the ERC-20 wallet balance threshold. The backend resolves
-the token from `IFRLock.token()`, reads both balances at one block, compares exact 9-decimal base
-units with `bigint`, and fails closed on RPC errors.
+`requiredLockIFR` is mandatory. `lockSource` defaults to `ifrlock`; it may be
+`commitment_time_only` or `either`. Commitment eligibility sums only non-unlocked `TIME_ONLY`
+tranches. `PRICE_ONLY`, `TIME_OR_PRICE` and `TIME_AND_PRICE` never qualify. `either` does not add
+partial balances across vaults. `minIFRHeld` is an optional nonnegative whole-IFR amount; `0` or
+omission disables the free-wallet balance gate. For a positive value, approval additionally
+requires the ERC-20 wallet threshold. The backend verifies deployed bytecode and each selected
+vault's token against `IFR_TOKEN_ADDRESS`, pins all reads to one block, compares exact 9-decimal
+base units with `bigint`, and fails closed on identity, ABI or RPC errors.
 
 ```json
 {
@@ -264,12 +271,12 @@ wallet signatures.
 
 ## Immutable eligibility snapshots
 
-New rule-bound sessions snapshot `requiredLockIFR` and `minIFRHeld` with the seller, product,
-discount, price and redemption terms. Later rule edits cannot change an issued checkout.
-Snapshot version 4 includes the held-balance threshold; older sessions interpret it as `0`.
-The exact challenge shown to the customer includes both thresholds. A positive held threshold
-stores the exact observed ERC-20 balance only in seller-authorized operational history; public
-proof status does not expose customer inventory.
+New rule-bound sessions snapshot `requiredLockIFR`, `minIFRHeld` and `lockSource` with the seller,
+product, discount, price and redemption terms. Later rule edits cannot change an issued checkout.
+Snapshot version 5 includes the lock source; versions 0-4 remain `ifrlock`, and versions 0-3
+interpret the held threshold as `0`. Version-5 challenges include the source without changing old
+challenge text. A positive held threshold stores the exact observed ERC-20 balance only in
+seller-authorized operational history; public proof status does not expose customer inventory.
 
 ## Verified Seller Rewards Foundation
 

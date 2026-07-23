@@ -8,6 +8,20 @@ const mockRecoverSigner = jest.fn();
 
 jest.mock('../src/services/ifrLockService', () => ({
   checkLock: (...args: unknown[]) => mockCheckLock(...args),
+  checkBenefitEligibility: async (...args: unknown[]) => {
+    const result = await mockCheckLock(...args);
+    return {
+      lockEligible: result.eligible,
+      heldEligible: true,
+      walletAmount: null,
+      walletBalanceRaw: null,
+      ifrLockAmount: result.lockedAmount,
+      commitmentAmount: null,
+      verifiedLockSource: result.eligible ? 'ifrlock' : null,
+      verificationBlock: 1,
+      ...result,
+    };
+  },
   recoverSigner: (...args: unknown[]) => mockRecoverSigner(...args),
   initProvider: jest.fn(),
 }));
@@ -191,7 +205,7 @@ describe('E2E: IFR Lock → Benefits Network Verification', () => {
     const attestResult = await attest(session.sessionId, '0xmocksignature');
     expect(attestResult.status).toBe('APPROVED');
     expect(attestResult.benefit?.benefitRuleId).toBe(rule.id);
-    expect(mockCheckLock).toHaveBeenCalledWith(TEST_WALLET, 7500);
+    expect(mockCheckLock).toHaveBeenCalledWith(TEST_WALLET, 7500, 0, 'ifrlock');
   });
 
   it('rejects inactive or unrelated benefit rules when creating a QR session', async () => {
@@ -298,7 +312,7 @@ describe('E2E: IFR Lock → Benefits Network Verification', () => {
 
     expect(session).toMatchObject({ dailyRedemptionLimit: 1, monthlyRedemptionLimit: 7 });
     expect(await prisma.session.findUniqueOrThrow({ where: { id: session.sessionId } })).toMatchObject({
-      benefitSnapshotVersion: 4,
+      benefitSnapshotVersion: 5,
       benefitDailyRedemptionLimit: 1,
       benefitMonthlyRedemptionLimit: 7,
     });
@@ -503,6 +517,6 @@ describe('IFR 9-Decimal Handling', () => {
     await attest(session.sessionId, '0xmocksignature');
 
     // Service should pass 5000 (human units), not 5000000000000 (base units)
-    expect(mockCheckLock).toHaveBeenCalledWith(TEST_WALLET, 5000);
+    expect(mockCheckLock).toHaveBeenCalledWith(TEST_WALLET, 5000, 0, 'ifrlock');
   });
 });

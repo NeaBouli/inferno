@@ -17,7 +17,9 @@ const optionalUrl = z.preprocess(
 const envSchema = z.object({
   CHAIN_ID: z.coerce.number().int().positive().default(11155111),
   RPC_URL: z.string().url(),
+  IFR_TOKEN_ADDRESS: z.string().regex(/^0x[a-fA-F0-9]{40}$/),
   IFRLOCK_ADDRESS: z.string().regex(/^0x[a-fA-F0-9]{40}$/),
+  COMMITMENT_VAULT_ADDRESS: z.string().regex(/^0x[a-fA-F0-9]{40}$/),
   PARTNER_VAULT_ADDRESS: optionalAddress,
   BUILDER_REGISTRY_ADDRESS: optionalAddress,
   REWARD_CALLER_ADDRESS: optionalAddress,

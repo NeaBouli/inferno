@@ -141,10 +141,13 @@ cd apps/benefits-network/backend
 npm test
 ```
 
-It verifies IFRLock and optional free-wallet IFR threshold conversion with native `bigint`,
-exact 9-decimal boundary comparisons, same-block reads and balance formatting, reward
-contract tuple decoding, the actual RPC chain ID, zero-beneficiary fail-closed behavior and
-read-only wallet-reward checks. The fixture never submits a transaction or contacts Mainnet.
+It verifies IFRLock, active `TIME_ONLY` CommitmentVault tranches and optional free-wallet IFR
+threshold conversion with native `bigint`, exact 9-decimal boundary comparisons, same-block reads
+and balance formatting. It proves that `either` never combines partial balances, price-conditioned
+tranches do not qualify, source token mismatches and malformed/oversized tranche data fail closed,
+and a Commitment-only rule does not depend on an IFRLock read. It also covers reward contract tuple
+decoding, the actual RPC chain ID, zero-beneficiary fail-closed behavior and read-only wallet-reward
+checks. The fixture never submits a transaction or contacts Mainnet.
 CI also runs `npm run test:ethers-v6-lifecycle` without Jest's `--forceExit`, including an RPC
 rejection followed by a successful read to cover provider cleanup on error and success paths.
 

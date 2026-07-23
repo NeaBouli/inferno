@@ -8,6 +8,20 @@ const mockRecoverSigner = jest.fn();
 
 jest.mock('../src/services/ifrLockService', () => ({
   checkLock: (...args: unknown[]) => mockCheckLock(...args),
+  checkBenefitEligibility: async (...args: unknown[]) => {
+    const result = await mockCheckLock(...args);
+    return {
+      lockEligible: result.eligible,
+      heldEligible: true,
+      walletAmount: null,
+      walletBalanceRaw: null,
+      ifrLockAmount: result.lockedAmount,
+      commitmentAmount: null,
+      verifiedLockSource: result.eligible ? 'ifrlock' : null,
+      verificationBlock: 1,
+      ...result,
+    };
+  },
   recoverSigner: (...args: unknown[]) => mockRecoverSigner(...args),
   initProvider: jest.fn(),
 }));

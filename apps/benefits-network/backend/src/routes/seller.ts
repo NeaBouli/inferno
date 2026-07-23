@@ -26,6 +26,7 @@ import {
   assertSellerWalletActionAllowed,
 } from '../services/authenticatedRateLimiter';
 import { RateLimitStoreUnavailableError } from '../services/rateLimitInfrastructure';
+import { LOCK_SOURCES, type LockSource } from '../services/lockSource';
 import {
   businessServiceAreaKey,
   MAX_BUSINESS_CATEGORIES,
@@ -96,6 +97,7 @@ const createBenefitRuleSchema = z.object({
   discountPercent: z.number().int().min(0).max(100),
   requiredLockIFR: z.number().int().positive(),
   minIFRHeld: z.number().int().min(0).max(1_000_000_000).optional(),
+  lockSource: z.enum(LOCK_SOURCES).optional(),
   dailyRedemptionLimit: z.number().int().min(0).max(1000).optional(),
   monthlyRedemptionLimit: z.number().int().min(0).max(10000).optional(),
   ttlSeconds: z.number().int().min(10).max(3600).optional(),
@@ -175,6 +177,7 @@ type BenefitRuleWriteInput = {
   discountPercent?: number;
   requiredLockIFR?: number;
   minIFRHeld?: number;
+  lockSource?: LockSource;
   dailyRedemptionLimit?: number;
   monthlyRedemptionLimit?: number;
   ttlSeconds?: number;
@@ -847,6 +850,8 @@ router.get('/businesses/:id/sessions', sellerRateLimiter, async (req, res, next)
           recoveredAddress: true,
           lockAmountRaw: true,
           walletBalanceRaw: true,
+          verifiedLockSource: true,
+          verificationBlock: true,
           reason: true,
           expiresAt: true,
           createdAt: true,
@@ -862,6 +867,7 @@ router.get('/businesses/:id/sessions', sellerRateLimiter, async (req, res, next)
               discountPercent: true,
               requiredLockIFR: true,
               minIFRHeld: true,
+              lockSource: true,
               dailyRedemptionLimit: true,
               monthlyRedemptionLimit: true,
             },
@@ -875,6 +881,7 @@ router.get('/businesses/:id/sessions', sellerRateLimiter, async (req, res, next)
           benefitDiscountPercent: true,
           benefitRequiredLockIFR: true,
           benefitMinIFRHeld: true,
+          benefitLockSource: true,
           benefitDailyRedemptionLimit: true,
           benefitMonthlyRedemptionLimit: true,
           business: {
@@ -931,6 +938,8 @@ router.get('/businesses/:id/sessions', sellerRateLimiter, async (req, res, next)
         recoveredAddress: session.recoveredAddress,
         lockAmountRaw: session.lockAmountRaw,
         walletBalanceRaw: session.walletBalanceRaw,
+        verifiedLockSource: session.verifiedLockSource,
+        verificationBlock: session.verificationBlock,
         reason: session.reason,
         expiresAt: session.expiresAt,
         createdAt: session.createdAt,
@@ -962,6 +971,9 @@ router.get('/businesses/:id/sessions', sellerRateLimiter, async (req, res, next)
         minIFRHeld: (session.benefitSnapshotVersion ?? 0) >= 4
           ? session.benefitMinIFRHeld ?? 0
           : 0,
+        lockSource: (session.benefitSnapshotVersion ?? 0) >= 5
+          ? session.benefitLockSource ?? 'ifrlock'
+          : 'ifrlock',
         dailyRedemptionLimit: (session.benefitSnapshotVersion ?? 0) >= 1
           ? session.benefitDailyRedemptionLimit ?? 0
           : session.benefitRule?.dailyRedemptionLimit ?? 0,
@@ -1090,6 +1102,7 @@ router.post(
             discountPercent: req.body.discountPercent,
             requiredLockIFR: req.body.requiredLockIFR,
             minIFRHeld: req.body.minIFRHeld,
+            lockSource: req.body.lockSource,
             dailyRedemptionLimit: req.body.dailyRedemptionLimit,
             monthlyRedemptionLimit: req.body.monthlyRedemptionLimit,
             ttlSeconds: req.body.ttlSeconds,

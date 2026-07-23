@@ -356,11 +356,13 @@ createdAt
 updatedAt
 ```
 
-Current production slice: `minIFRLocked` maps to mandatory `requiredLockIFR` in IFRLock.
-Optional `minIFRHeld` requires additional free IFR in the customer wallet; `0` disables that
-second condition. Both values are frozen in checkout snapshot version 4 and compared as exact
-9-decimal base units. CommitmentVault sources remain a future audited adapter, not a live seller
-rule option.
+Current production slice: `minIFRLocked` maps to mandatory `requiredLockIFR`. `lockSource`
+selects IFRLock, active non-unlocked `TIME_ONLY` CommitmentVault tranches, or either source.
+`either` requires the complete threshold in one source and never adds partial balances.
+`PRICE_ONLY`, `TIME_OR_PRICE` and `TIME_AND_PRICE` remain disabled until an audited
+V2/PriceLockVault with a real oracle path exists. Optional `minIFRHeld` requires additional free
+IFR in the customer wallet; `0` disables that second condition. Threshold and source are frozen
+in checkout snapshot version 5 and compared as exact 9-decimal base units at one block.
 
 ### VerificationSession
 

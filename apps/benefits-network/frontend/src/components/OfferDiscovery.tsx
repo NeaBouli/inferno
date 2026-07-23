@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { BusinessLogo } from '@/components/BusinessLogo';
 import { EligibilityLiveSummary, OfferEligibility, useIfrLockEligibility } from '@/components/OfferEligibility';
 import { discoverOffers, type PublicOffer } from '@/lib/api';
+import { lockSourceRequirement } from '@/lib/lockSource';
 import { formatProductPrice } from '@/lib/money';
 
 const PAGE_SIZE = 8;
@@ -236,7 +237,7 @@ export function OfferDiscovery({ mode, onOpenSellerTools }: OfferDiscoveryProps)
               ) : null}
               <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-xs text-stone-400">
                 <span>{offer.label}</span>
-                <span>{offer.requiredLockIFR.toLocaleString('en-US')} IFR lock</span>
+                <span>{offer.requiredLockIFR.toLocaleString('en-US')} IFR {lockSourceRequirement(offer.lockSource)}</span>
                 {offer.minIFRHeld > 0 ? (
                   <span>{offer.minIFRHeld.toLocaleString('en-US')} IFR held</span>
                 ) : null}
@@ -244,6 +245,7 @@ export function OfferDiscovery({ mode, onOpenSellerTools }: OfferDiscoveryProps)
               <OfferEligibility
                 requiredLockIFR={offer.requiredLockIFR}
                 minIFRHeld={offer.minIFRHeld}
+                lockSource={offer.lockSource}
                 eligibility={eligibility}
               />
               <div className="mt-5 flex flex-wrap gap-2">

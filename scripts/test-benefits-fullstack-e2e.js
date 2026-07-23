@@ -59,6 +59,8 @@ async function configureRuntime() {
     CHAIN_ID: '1',
     RPC_URL: 'http://127.0.0.1:1',
     IFRLOCK_ADDRESS: zeroAddress,
+    IFR_TOKEN_ADDRESS: '0x0000000000000000000000000000000000000002',
+    COMMITMENT_VAULT_ADDRESS: '0x0000000000000000000000000000000000000003',
     ADMIN_SECRET: adminSecret,
     DATABASE_URL: databaseUrl,
     PORT: String(backendPort),
@@ -195,6 +197,8 @@ async function seedRealApi() {
       categories: ['Coffee'],
       discountPercent: 14,
       requiredLockIFR: 1000,
+      minIFRHeld: 0,
+      lockSource: 'commitment_time_only',
       ttlSeconds: 300,
       tierLabel: 'Full-stack',
       ownerAddress: wallet.address,
@@ -226,6 +230,8 @@ async function seedRealApi() {
       productName: product.name,
       discountPercent: 14,
       requiredLockIFR: 1000,
+      minIFRHeld: 0,
+      lockSource: 'commitment_time_only',
       dailyRedemptionLimit: 1,
       monthlyRedemptionLimit: 10,
       ttlSeconds: 300,
@@ -255,6 +261,7 @@ async function verifyBrowser(fixture) {
     await offers.getByText(fixture.product.name, { exact: true }).waitFor({ timeout: 15_000 });
     await offers.getByText(fixture.business.name, { exact: true }).waitFor();
     await offers.getByText('14% benefit', { exact: true }).waitFor();
+    await offers.getByText('1,000 IFR in active TIME_ONLY commitments', { exact: true }).waitFor();
     await offers.getByRole('link', { name: 'Seller catalog', exact: true }).click();
     await page.waitForURL(`${frontendOrigin}/s/${fixture.business.id}`);
     await page.getByText(fixture.product.name, { exact: true }).waitFor();
@@ -269,6 +276,10 @@ async function verifyBrowser(fixture) {
     await pass.getByText('Selected public offer', { exact: true }).waitFor();
     await pass.getByText(
       `${fixture.product.name} · ${fixture.business.name}`,
+      { exact: true }
+    ).waitFor();
+    await pass.getByText(
+      '14% benefit · 1,000 IFR lock in active TIME_ONLY commitments',
       { exact: true }
     ).waitFor();
 

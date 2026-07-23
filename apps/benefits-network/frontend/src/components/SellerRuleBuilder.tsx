@@ -49,9 +49,16 @@ import {
   updateAdminBusinessRule,
   updateSellerBusinessProfile,
   updateSellerBusinessRule,
+  type LockSource,
 } from '@/lib/api';
 import { formatProductPrice } from '@/lib/money';
 import { formatIFR } from '@/lib/contracts';
+import {
+  isLockSource,
+  lockSourceLabel,
+  lockSourceRequirement,
+  verifiedLockSourceLabel,
+} from '@/lib/lockSource';
 
 const categories = ['Coffee', 'Retail', 'Digital access', 'Events', 'Services'];
 const profileCategorySuggestions = [
@@ -127,6 +134,7 @@ const DEFAULT_RULE_DRAFT = {
   discount: 10,
   minLocked: 1000,
   minHeld: 0,
+  lockSource: 'ifrlock' as const,
   dailyLimit: 1,
   monthlyLimit: 10,
   ttl: 90,
@@ -176,6 +184,7 @@ export function SellerRuleBuilder() {
   const [discount, setDiscount] = useState(DEFAULT_RULE_DRAFT.discount);
   const [minLocked, setMinLocked] = useState(DEFAULT_RULE_DRAFT.minLocked);
   const [minHeld, setMinHeld] = useState(DEFAULT_RULE_DRAFT.minHeld);
+  const [lockSource, setLockSource] = useState<LockSource>(DEFAULT_RULE_DRAFT.lockSource);
   const [dailyLimit, setDailyLimit] = useState(DEFAULT_RULE_DRAFT.dailyLimit);
   const [monthlyLimit, setMonthlyLimit] = useState(DEFAULT_RULE_DRAFT.monthlyLimit);
   const [ttl, setTtl] = useState(DEFAULT_RULE_DRAFT.ttl);
@@ -311,13 +320,13 @@ export function SellerRuleBuilder() {
       `${businessName || 'IFR Partner Shop'} IFR checkout kit`,
       `Scanner: ${scannerUrl || 'Create or select a seller profile first.'}`,
       `Available in: ${businessServiceArea.trim() || 'not published'}`,
-      `Default benefit: ${discount}% off when ${minLocked.toLocaleString('en-US')} IFR is locked`,
+      `Default benefit: ${discount}% off when ${minLocked.toLocaleString('en-US')} IFR is locked ${lockSourceRequirement(lockSource)}`,
       ...(minHeld > 0 ? [`Free wallet balance: ${minHeld.toLocaleString('en-US')} IFR`] : []),
       `Wallet limit: ${dailyLimit || 'unlimited'}/day / ${monthlyLimit || 'unlimited'}/month (UTC)`,
       `Rule draft: ${label || 'IFR Benefit'} / ${category} / ${product || 'IFR Benefit'}`,
       'At checkout: open scanner, create QR session, let the customer scan and sign, then redeem only after APPROVED.',
     ].join('\n'),
-    [businessName, businessServiceArea, category, dailyLimit, discount, label, minHeld, minLocked, monthlyLimit, product, scannerUrl]
+    [businessName, businessServiceArea, category, dailyLimit, discount, label, lockSource, minHeld, minLocked, monthlyLimit, product, scannerUrl]
   );
   const sellerBackupText = useMemo(() => JSON.stringify(
     {
@@ -340,6 +349,7 @@ export function SellerRuleBuilder() {
         discountPercent: discount,
         requiredLockIFR: minLocked,
         minIFRHeld: minHeld,
+        lockSource,
         dailyRedemptionLimit: dailyLimit,
         monthlyRedemptionLimit: monthlyLimit,
         ttlSeconds: ttl,
@@ -349,7 +359,7 @@ export function SellerRuleBuilder() {
     },
     null,
     2
-  ), [activeRulesCount, address, businessCategories, businessDescription, businessId, businessLogoUrl, businessName, businessServiceArea, businessWebsite, category, dailyLimit, discount, label, minHeld, minLocked, monthlyLimit, product, scannerUrl, selectedBusiness, ttl]);
+  ), [activeRulesCount, address, businessCategories, businessDescription, businessId, businessLogoUrl, businessName, businessServiceArea, businessWebsite, category, dailyLimit, discount, label, lockSource, minHeld, minLocked, monthlyLimit, product, scannerUrl, selectedBusiness, ttl]);
 
   function getCustomerProofUrl(sessionId: string) {
     return `${SHOP_ORIGIN}/r/${sessionId}`;
@@ -366,6 +376,7 @@ export function SellerRuleBuilder() {
       `Status: ${session.status}`,
       `Benefit: ${session.discountPercent}%`,
       `Required lock: ${session.requiredLockIFR.toLocaleString('en-US')} IFR`,
+      `Accepted source: ${lockSourceLabel(session.lockSource)}`,
       ...(session.minIFRHeld > 0
         ? [`Required held: ${session.minIFRHeld.toLocaleString('en-US')} IFR`]
         : []),
@@ -376,6 +387,8 @@ export function SellerRuleBuilder() {
         : []),
       `Customer wallet: ${session.recoveredAddress || 'not verified yet'}`,
       `Locked: ${lockedIFR ? `${lockedIFR} IFR` : 'not verified yet'}`,
+      `Verified source: ${verifiedLockSourceLabel(session.verifiedLockSource)}`,
+      ...(session.verificationBlock ? [`Verification block: ${session.verificationBlock}`] : []),
       ...(session.minIFRHeld > 0
         ? [`Held at verification: ${heldIFR ? `${heldIFR} IFR` : 'not verified yet'}`]
         : []),
@@ -437,12 +450,13 @@ export function SellerRuleBuilder() {
       discountPercent: discount,
       requiredLockIFR: minLocked,
       minIFRHeld: minHeld,
+      lockSource,
       dailyRedemptionLimit: dailyLimit,
       monthlyRedemptionLimit: monthlyLimit,
       ttlSeconds: ttl,
       active: true,
     }),
-    [category, dailyLimit, discount, label, minHeld, minLocked, monthlyLimit, product, selectedProductId, ttl]
+    [category, dailyLimit, discount, label, lockSource, minHeld, minLocked, monthlyLimit, product, selectedProductId, ttl]
   );
 
   function resetRuleDraft() {
@@ -452,6 +466,7 @@ export function SellerRuleBuilder() {
     setDiscount(DEFAULT_RULE_DRAFT.discount);
     setMinLocked(DEFAULT_RULE_DRAFT.minLocked);
     setMinHeld(DEFAULT_RULE_DRAFT.minHeld);
+    setLockSource(DEFAULT_RULE_DRAFT.lockSource);
     setDailyLimit(DEFAULT_RULE_DRAFT.dailyLimit);
     setMonthlyLimit(DEFAULT_RULE_DRAFT.monthlyLimit);
     setTtl(DEFAULT_RULE_DRAFT.ttl);
@@ -463,6 +478,7 @@ export function SellerRuleBuilder() {
     setDiscount(template.discount);
     setMinLocked(template.minLocked);
     setMinHeld(template.minHeld);
+    setLockSource(DEFAULT_RULE_DRAFT.lockSource);
     setDailyLimit(template.dailyLimit);
     setMonthlyLimit(template.monthlyLimit);
     setTtl(template.ttl);
@@ -1194,6 +1210,7 @@ export function SellerRuleBuilder() {
     setDiscount(rule.discountPercent);
     setMinLocked(rule.requiredLockIFR);
     setMinHeld(rule.minIFRHeld);
+    setLockSource(rule.lockSource);
     setDailyLimit(rule.dailyRedemptionLimit);
     setMonthlyLimit(rule.monthlyRedemptionLimit);
     setTtl(rule.ttlSeconds);
@@ -1445,6 +1462,7 @@ export function SellerRuleBuilder() {
           if (typeof parsed.defaultBenefit.discountPercent === 'number') setDiscount(parsed.defaultBenefit.discountPercent);
           if (typeof parsed.defaultBenefit.requiredLockIFR === 'number') setMinLocked(parsed.defaultBenefit.requiredLockIFR);
           if (typeof parsed.defaultBenefit.minIFRHeld === 'number') setMinHeld(parsed.defaultBenefit.minIFRHeld);
+          if (isLockSource(parsed.defaultBenefit.lockSource)) setLockSource(parsed.defaultBenefit.lockSource);
           if (typeof parsed.defaultBenefit.dailyRedemptionLimit === 'number') setDailyLimit(parsed.defaultBenefit.dailyRedemptionLimit);
           if (typeof parsed.defaultBenefit.monthlyRedemptionLimit === 'number') setMonthlyLimit(parsed.defaultBenefit.monthlyRedemptionLimit);
           if (typeof parsed.defaultBenefit.ttlSeconds === 'number') setTtl(parsed.defaultBenefit.ttlSeconds);
@@ -2357,6 +2375,13 @@ export function SellerRuleBuilder() {
                       <p className="break-all font-mono">Session: {session.id}</p>
                       {session.recoveredAddress ? <p className="font-mono">Wallet: {maskSellerSessionWallet(session.recoveredAddress)}</p> : null}
                       {lockedIFR ? <p>Locked: {lockedIFR} IFR</p> : null}
+                      <p>Accepted source: {lockSourceLabel(session.lockSource)}</p>
+                      {session.verifiedLockSource ? (
+                        <p>
+                          Verified source: {verifiedLockSourceLabel(session.verifiedLockSource)}
+                          {session.verificationBlock ? ` at block ${session.verificationBlock}` : ''}
+                        </p>
+                      ) : null}
                       {session.minIFRHeld > 0 && heldIFR ? (
                         <p>Held at verification: {heldIFR} IFR</p>
                       ) : null}
@@ -2631,6 +2656,24 @@ export function SellerRuleBuilder() {
           />
         </label>
         <label className="grid gap-2 text-sm font-semibold text-stone-200">
+          Accepted lock source
+          <select
+            aria-label="Accepted lock source"
+            value={lockSource}
+            onChange={(event) => {
+              if (isLockSource(event.target.value)) setLockSource(event.target.value);
+            }}
+            className="rounded-2xl border border-white/10 bg-stone-950 px-4 py-3 text-white outline-none focus:border-orange-300"
+          >
+            <option value="ifrlock">IFRLock - simple access lock</option>
+            <option value="commitment_time_only">CommitmentVault - TIME_ONLY only</option>
+            <option value="either">Either source - full amount in one source</option>
+          </select>
+          <span className="text-xs font-normal leading-5 text-stone-400">
+            Either source never combines partial balances. PRICE_ONLY, TIME_OR_PRICE and TIME_AND_PRICE commitments do not qualify.
+          </span>
+        </label>
+        <label className="grid gap-2 text-sm font-semibold text-stone-200">
           Minimum IFR kept in wallet
           <input
             type="number"
@@ -2642,7 +2685,7 @@ export function SellerRuleBuilder() {
             className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none focus:border-orange-300"
           />
           <span className="text-xs font-normal leading-5 text-stone-400">
-            Optional. Use 0 for lock-only access. A positive value requires both the IFRLock amount and this free wallet balance.
+            Optional. Use 0 for lock-only access. A positive value additionally requires this free wallet balance.
           </span>
         </label>
         <label className="grid gap-2 text-sm font-semibold text-stone-200">
@@ -2685,7 +2728,7 @@ export function SellerRuleBuilder() {
       <div className="mt-5 rounded-2xl border border-white/10 bg-black/25 p-4">
         <p className="text-xs uppercase tracking-[0.14em] text-stone-400">Customer result</p>
         <p className="mt-2 text-xl font-black text-orange-100">
-          {discount}% off when {minLocked.toLocaleString('en-US')} IFR is locked
+          {discount}% off when {minLocked.toLocaleString('en-US')} IFR is locked {lockSourceRequirement(lockSource)}
           {minHeld > 0 ? ` and ${minHeld.toLocaleString('en-US')} IFR stays in the wallet` : ''}
         </p>
         <p className="mt-2 text-sm text-stone-300">{label} / {category} / {product}</p>
@@ -2721,6 +2764,7 @@ export function SellerRuleBuilder() {
                   </p>
                   <p className="mt-2 text-sm text-orange-100">
                     {rule.discountPercent}% off at {rule.requiredLockIFR.toLocaleString('en-US')} locked IFR
+                    {' '}{lockSourceRequirement(rule.lockSource)}
                     {rule.minIFRHeld > 0
                       ? ` plus ${rule.minIFRHeld.toLocaleString('en-US')} IFR held`
                       : ''}

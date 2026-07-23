@@ -19,6 +19,7 @@ import {
   getBusiness,
   getBusinessRules,
 } from '@/lib/api';
+import { lockSourceLabel, lockSourceRequirement } from '@/lib/lockSource';
 import { formatProductPrice } from '@/lib/money';
 
 const TAB_STORAGE_KEY = 'ifr.shop.activeCustomerPass';
@@ -237,6 +238,7 @@ export function CustomerCheckoutPass() {
                 <p className="mt-2 break-words font-black text-white">{selectedOffer.rule.productName} · {selectedOffer.sellerName}</p>
                 <p className="mt-1 text-stone-300">
                   {selectedOffer.rule.discountPercent}% benefit · {selectedOffer.rule.requiredLockIFR.toLocaleString('en-US')} IFR lock
+                  {' '}{lockSourceRequirement(selectedOffer.rule.lockSource)}
                   {selectedOffer.rule.minIFRHeld > 0
                     ? ` · ${selectedOffer.rule.minIFRHeld.toLocaleString('en-US')} IFR held`
                     : ''}
@@ -288,7 +290,8 @@ export function CustomerCheckoutPass() {
                 </div>
               ) : null}
               <div className="flex justify-between gap-4"><span>Benefit</span><strong className="text-orange-100">{status.checkout.benefit.discountPercent}%</strong></div>
-              <div className="flex justify-between gap-4"><span>Required IFRLock</span><strong className="text-right text-white">{status.checkout.benefit.requiredLockIFR.toLocaleString('en-US')} IFR</strong></div>
+              <div className="flex justify-between gap-4"><span>Accepted lock source</span><strong className="text-right text-white">{lockSourceLabel(status.checkout.benefit.lockSource)}</strong></div>
+              <div className="flex justify-between gap-4"><span>Required locked IFR</span><strong className="text-right text-white">{status.checkout.benefit.requiredLockIFR.toLocaleString('en-US')} IFR</strong></div>
               {status.checkout.benefit.minIFRHeld > 0 ? (
                 <div className="flex justify-between gap-4"><span>Required in wallet</span><strong className="text-right text-white">{status.checkout.benefit.minIFRHeld.toLocaleString('en-US')} IFR</strong></div>
               ) : null}

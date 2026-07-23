@@ -24,6 +24,14 @@ new Function('module', 'exports', 'require', transpile(moneyPath))(
   require
 );
 
+const lockSourceModule = { exports: {} };
+const lockSourcePath = path.join(__dirname, '..', 'src', 'lib', 'lockSource.ts');
+new Function('module', 'exports', 'require', transpile(lockSourcePath))(
+  lockSourceModule,
+  lockSourceModule.exports,
+  require
+);
+
 const sourcePath = path.join(__dirname, '..', 'src', 'lib', 'customerHistory.ts');
 const moduleUnderTest = { exports: {} };
 new Function('module', 'exports', 'require', transpile(sourcePath))(
@@ -31,11 +39,13 @@ new Function('module', 'exports', 'require', transpile(sourcePath))(
   moduleUnderTest.exports,
   (specifier) => {
     if (specifier === '@/lib/money') return moneyModule.exports;
+    if (specifier === '@/lib/lockSource') return lockSourceModule.exports;
     throw new Error(`Unexpected test import: ${specifier}`);
   }
 );
 
 const { readCustomerProofHistory, redactVerifiedAddress, saveCustomerProofHistoryItem } = moduleUnderTest.exports;
+const { sumPreviewTimeOnlyTranches } = lockSourceModule.exports;
 const values = new Map();
 global.window = {
   localStorage: {
@@ -55,12 +65,30 @@ const status = {
   benefit: {
     discountPercent: 10,
     requiredLockIFR: 1000,
+    minIFRHeld: 0,
+    lockSource: 'commitment_time_only',
     label: 'Access',
     productName: 'Service',
     basePriceMinor: '1999',
     currency: 'EUR',
   },
 };
+
+assert.strictEqual(
+  sumPreviewTimeOnlyTranches([
+    { amount: 600n, cType: 0, unlocked: false },
+    { amount: 400n, cType: 0, unlocked: false },
+    { amount: 9000n, cType: 1, unlocked: false },
+    { amount: 500n, cType: 0, unlocked: true },
+  ]),
+  1000n,
+  'Only active TIME_ONLY commitments may count in the wallet preview.'
+);
+assert.strictEqual(sumPreviewTimeOnlyTranches([{ amount: 1n, cType: 4, unlocked: false }]), null);
+assert.strictEqual(
+  sumPreviewTimeOnlyTranches(Array.from({ length: 51 }, () => ({ amount: 1n, cType: 0, unlocked: false }))),
+  null
+);
 
 saveCustomerProofHistoryItem({
   sessionId: 'session-1',
@@ -70,6 +98,7 @@ saveCustomerProofHistoryItem({
 assert.strictEqual(readCustomerProofHistory()[0].walletLabel, redactVerifiedAddress(walletA));
 assert.strictEqual(readCustomerProofHistory()[0].basePriceMinor, '1999');
 assert.strictEqual(readCustomerProofHistory()[0].currency, 'EUR');
+assert.strictEqual(readCustomerProofHistory()[0].lockSource, 'commitment_time_only');
 
 saveCustomerProofHistoryItem({
   sessionId: 'session-1',

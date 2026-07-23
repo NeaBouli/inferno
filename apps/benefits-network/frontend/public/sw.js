@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ifr-benefits-v18';
+const CACHE_NAME = 'ifr-benefits-v19';
 const PRECACHE_URLS = [
   '/',
   '/manifest.json',
