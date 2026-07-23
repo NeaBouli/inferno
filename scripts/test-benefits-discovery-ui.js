@@ -156,8 +156,19 @@ async function run() {
     await page.goto(origin, { waitUntil: 'domcontentloaded' });
 
     const walletControl = page.locator('[data-wallet-connect-control]').first();
-    await walletControl.getByText('Choose wallet connection', { exact: true }).click();
-    await walletControl.getByRole('button', { name: 'Coinbase Wallet', exact: true }).waitFor();
+    await walletControl.getByRole('button', { name: 'Connect wallet', exact: true }).waitFor();
+    await waitForAttribute(walletControl, 'data-wallet-connectors-ready', 'true');
+    assert.equal(await walletControl.getAttribute('data-wallet-connector-ids'), 'coinbaseWalletSDK');
+    assert.equal(
+      await walletControl.getByRole('button', { name: 'Browser wallet', exact: true }).count(),
+      0,
+      'a browser without an injected provider must not offer the unusable injected connector',
+    );
+    assert.equal(
+      await walletControl.getByText('Choose wallet connection', { exact: true }).count(),
+      0,
+      'a single available Coinbase fallback must not render an unnecessary choice menu',
+    );
 
     const offersSection = page.locator('#offers');
     await offersSection.getByText(offer.productName, { exact: true }).waitFor();

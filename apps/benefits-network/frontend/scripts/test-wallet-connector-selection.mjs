@@ -6,6 +6,7 @@ import { mainnet } from 'wagmi/chains';
 import { coinbaseWallet } from 'wagmi/connectors/coinbaseWallet';
 import { injected } from 'wagmi/connectors/injected';
 import {
+  listAvailableWalletConnectors,
   selectPreferredWalletConnector,
   walletConnectionErrorMessage,
   walletConnectorLabel,
@@ -28,6 +29,8 @@ assert.equal(await selectPreferredWalletConnector([unavailableInjected, metamask
 assert.equal(await selectPreferredWalletConnector([unavailableInjected, coinbase]), coinbase);
 assert.equal(await selectPreferredWalletConnector([unavailableInjected, walletConnect]), walletConnect);
 assert.equal(await selectPreferredWalletConnector([]), undefined);
+assert.deepEqual(await listAvailableWalletConnectors([unavailableInjected, coinbase]), [coinbase]);
+assert.deepEqual(await listAvailableWalletConnectors([metamask, coinbase]), [metamask, coinbase]);
 
 const wagmiConfigWithoutInjectedProvider = createConfig({
   chains: [mainnet],
@@ -36,6 +39,10 @@ const wagmiConfigWithoutInjectedProvider = createConfig({
 });
 const realWagmiSelection = await selectPreferredWalletConnector(wagmiConfigWithoutInjectedProvider.connectors);
 assert.equal(realWagmiSelection?.id, 'coinbaseWalletSDK');
+assert.deepEqual(
+  (await listAvailableWalletConnectors(wagmiConfigWithoutInjectedProvider.connectors)).map(({ id }) => id),
+  ['coinbaseWalletSDK'],
+);
 
 const throwingInjected = {
   id: 'injected',

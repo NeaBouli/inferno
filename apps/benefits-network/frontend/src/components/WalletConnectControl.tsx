@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useAccount, useChainId, useConnect, useDisconnect } from 'wagmi';
 import { getMobileWalletLaunches } from '@/lib/walletLaunch';
 import { hasWalletConnectProjectId } from '@/lib/wagmi';
+import { useAvailableWalletConnectors } from '@/hooks/useAvailableWalletConnectors';
 import {
   selectPreferredWalletConnector,
   walletConnectionErrorMessage,
@@ -92,6 +93,7 @@ export function WalletConnectControl() {
   const [copyStatus, setCopyStatus] = useState('');
   const [evidenceStatus, setEvidenceStatus] = useState('');
   const [connectionStatus, setConnectionStatus] = useState('');
+  const { availableConnectors, resolved: connectorsResolved } = useAvailableWalletConnectors(connectors);
   const mobileWalletLaunches = getMobileWalletLaunches(currentUrl);
 
   useEffect(() => {
@@ -101,7 +103,7 @@ export function WalletConnectControl() {
   }, []);
 
   async function connectInjectedWallet() {
-    const connector = await selectPreferredWalletConnector(connectors);
+    const connector = await selectPreferredWalletConnector(connectors) as (typeof connectors)[number] | undefined;
     if (!connector) {
       setConnectionStatus('No wallet connector is available in this browser.');
       return;
@@ -189,7 +191,12 @@ export function WalletConnectControl() {
   }
 
   return (
-    <div data-wallet-connect-control className="grid gap-4 rounded-2xl border border-orange-200/15 bg-[linear-gradient(145deg,rgba(255,255,255,0.08),rgba(236,118,51,0.08)_48%,rgba(0,0,0,0.2))] p-4 shadow-xl shadow-black/25">
+    <div
+      data-wallet-connect-control
+      data-wallet-connectors-ready={connectorsResolved ? 'true' : 'false'}
+      data-wallet-connector-ids={availableConnectors.map(({ id }) => id).join(',')}
+      className="grid gap-4 rounded-2xl border border-orange-200/15 bg-[linear-gradient(145deg,rgba(255,255,255,0.08),rgba(236,118,51,0.08)_48%,rgba(0,0,0,0.2))] p-4 shadow-xl shadow-black/25"
+    >
       <div>
         <p className="text-xs font-black uppercase tracking-[0.16em] text-orange-200/80">
           Wallet entry
@@ -292,13 +299,13 @@ export function WalletConnectControl() {
             </button>
           </div>
           {copyStatus ? <p className="text-xs font-semibold text-orange-100">{copyStatus}</p> : null}
-          {connectors.length > 1 ? (
+          {availableConnectors.length > 1 ? (
             <details className="rounded-xl border border-orange-200/15 bg-white/[0.04] p-3">
               <summary className="cursor-pointer text-xs font-black uppercase tracking-[0.12em] text-orange-100">
                 Choose wallet connection
               </summary>
               <div className="mt-3 grid gap-2 sm:grid-cols-2" aria-label="Choose a wallet connection">
-                {connectors.map((availableConnector) => (
+                {availableConnectors.map((availableConnector) => (
                   <button
                     key={availableConnector.uid}
                     type="button"
