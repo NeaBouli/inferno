@@ -12,6 +12,7 @@ model Business {
   name            String
   description     String?
   website         String?
+  logoUrl         String?
   serviceArea     String?
   serviceAreaKey  String?
   categoriesJson  String    @default("[]")

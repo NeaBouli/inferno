@@ -118,7 +118,13 @@ describe('customer-presented checkout passes', () => {
     await prisma.business.deleteMany();
 
     const first = await prisma.business.create({
-      data: { name: 'Pass Seller', ownerAddress: seller.address, discountPercent: 10, requiredLockIFR: 1000 },
+      data: {
+        name: 'Pass Seller',
+        logoUrl: 'https://assets.example.com/pass-seller.png',
+        ownerAddress: seller.address,
+        discountPercent: 10,
+        requiredLockIFR: 1000,
+      },
     });
     businessId = first.id;
     ruleId = (await prisma.benefitRule.create({
@@ -208,7 +214,12 @@ describe('customer-presented checkout passes', () => {
     });
     expect(await controlled.json()).toMatchObject({
       status: 'BOUND',
-      checkout: { businessId, benefitRuleId: ruleId, sellerName: 'Pass Seller' },
+      checkout: {
+        businessId,
+        benefitRuleId: ruleId,
+        sellerName: 'Pass Seller',
+        sellerLogoUrl: 'https://assets.example.com/pass-seller.png',
+      },
     });
     const challengeResponse = await fetch(`${baseUrl()}/api/passes/${created.body.passId}/challenge`, {
       method: 'POST', headers: controlHeaders,

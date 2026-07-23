@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useAccount, useDisconnect, useSignMessage } from 'wagmi';
 import { AppShell } from '@/components/AppShell';
+import { BusinessLogo } from '@/components/BusinessLogo';
 import { Countdown } from '@/components/Countdown';
 import { StatusBadge } from '@/components/StatusBadge';
 import { SwapRiskNotice } from '@/components/SwapRiskNotice';
@@ -253,7 +254,10 @@ export function CustomerSessionClient({ sessionId }: { sessionId: string }) {
             <div className="mt-5 grid gap-3 rounded-2xl border border-white/10 bg-black/25 p-4 text-sm text-stone-300">
               <div className="flex justify-between gap-4">
                 <span>Seller</span>
-                <strong className="text-white">{business.name}</strong>
+                <span className="flex min-w-0 items-center justify-end gap-3">
+                  <BusinessLogo name={business.name} logoUrl={business.logoUrl} size="sm" />
+                  <strong className="break-words text-right text-white">{business.name}</strong>
+                </span>
               </div>
               <div className="flex justify-between gap-4">
                 <span>Benefit</span>

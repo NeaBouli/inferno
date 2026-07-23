@@ -203,9 +203,10 @@ If `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` is missing, the frontend must show a s
     flow through the production Next.js API rewrite without Mainnet.**
 11. Governance-gated seller reward foundation. **Deployed fail-closed: owner application, live BuilderRegistry/PartnerVault linkage checks, atomic redeem outbox and read-only vesting/claim status. Mainnet currently has no registered builders/partners; dedicated authorized submission remains disabled.**
 12. Public seller identity and discovery metadata. **Implemented with owner-signed single-use
-    updates, bounded categories, HTTPS-only websites, an optional privacy-preserving city/region/
-    Online service-area filter, defensive legacy-data sanitization and controlled admin reload by
-    Business ID.**
+    updates, bounded categories, HTTPS-only websites, optional HTTPS seller logos, an optional
+    privacy-preserving city/region/Online service-area filter, defensive legacy-data sanitization
+    and controlled admin reload by Business ID. External logo images are never fetched by the
+    backend; browsers suppress the Shop referrer and use a local seller-initial fallback.**
 13. Customer-presented two-phase checkout pass. **Implemented with an additive migration,
     opaque short-lived QR, hashed tab control token, atomic one-seller binding, exact-offer customer
     confirmation, signer equality, cancel-before-approval and replay/race regression coverage.

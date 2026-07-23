@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import { AppShell } from '@/components/AppShell';
+import { BusinessLogo } from '@/components/BusinessLogo';
 import { EligibilityLiveSummary, OfferEligibility, useIfrLockEligibility } from '@/components/OfferEligibility';
 import {
   BenefitRule,
@@ -79,28 +80,36 @@ export function SellerCatalogClient({ businessId }: { businessId: string }) {
         <section className="border-b border-orange-200/15 pb-8">
           <p className="text-xs font-black uppercase tracking-[0.18em] text-orange-200/80">IFR member benefits</p>
           <div className="mt-3 flex flex-wrap items-end justify-between gap-5">
-            <div>
-              <h1 className="text-4xl font-black tracking-tight text-white sm:text-5xl">
-                {business?.name || 'Seller catalog'}
-              </h1>
-              <p className="mt-3 max-w-2xl text-base leading-7 text-stone-300">
-                {business?.description
-                  || 'Browse active products and services with benefits for customers who verify locked IFR at checkout.'}
-              </p>
-              {business?.serviceArea ? (
-                <p className="mt-4 text-sm font-black uppercase tracking-[0.13em] text-orange-100">
-                  Available in {business.serviceArea}
+            <div className="flex min-w-0 items-start gap-4">
+              <BusinessLogo
+                name={business?.name || 'Seller catalog'}
+                logoUrl={business?.logoUrl}
+                size="lg"
+                eager
+              />
+              <div className="min-w-0">
+                <h1 className="break-words text-4xl font-black tracking-tight text-white sm:text-5xl">
+                  {business?.name || 'Seller catalog'}
+                </h1>
+                <p className="mt-3 max-w-2xl text-base leading-7 text-stone-300">
+                  {business?.description
+                    || 'Browse active products and services with benefits for customers who verify locked IFR at checkout.'}
                 </p>
-              ) : null}
-              {business?.categories.length ? (
-                <div className="mt-4 flex flex-wrap gap-2" aria-label="Seller categories">
-                  {business.categories.map((category) => (
-                    <span key={category} className="rounded-full border border-green-200/25 bg-green-200/[0.08] px-3 py-2 text-xs font-bold text-green-50">
-                      {category}
-                    </span>
-                  ))}
-                </div>
-              ) : null}
+                {business?.serviceArea ? (
+                  <p className="mt-4 text-sm font-black uppercase tracking-[0.13em] text-orange-100">
+                    Available in {business.serviceArea}
+                  </p>
+                ) : null}
+                {business?.categories.length ? (
+                  <div className="mt-4 flex flex-wrap gap-2" aria-label="Seller categories">
+                    {business.categories.map((category) => (
+                      <span key={category} className="rounded-full border border-green-200/25 bg-green-200/[0.08] px-3 py-2 text-xs font-bold text-green-50">
+                        {category}
+                      </span>
+                    ))}
+                  </div>
+                ) : null}
+              </div>
             </div>
             <div className="flex flex-wrap gap-2">
               {business?.website ? (

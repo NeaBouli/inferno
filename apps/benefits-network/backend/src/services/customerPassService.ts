@@ -11,6 +11,7 @@ import {
   prisma,
   resolveSessionCreator,
 } from './sessionService';
+import { safeBusinessLogoUrl } from './businessProfile';
 
 const CUSTOMER_PASS_CHALLENGE_TTL_MS = 5 * 60 * 1000;
 const CUSTOMER_PASS_TTL_MS = 5 * 60 * 1000;
@@ -149,6 +150,7 @@ export async function getControlledCustomerPass(passId: string, authorization?: 
         businessId: pass.session.businessId,
         benefitRuleId: pass.session.benefitRuleId,
         sellerName: pass.session.business.name,
+        sellerLogoUrl: safeBusinessLogoUrl(pass.session.business.logoUrl),
         benefit: {
           label: pass.session.benefitLabel,
           category: pass.session.benefitCategory,
@@ -170,6 +172,7 @@ export async function getControlledCustomerPass(passId: string, authorization?: 
       businessId: session.businessId,
       benefitRuleId: session.benefitRuleId,
       sellerName: session.business.name,
+      sellerLogoUrl: safeBusinessLogoUrl(session.business.logoUrl),
       benefit: {
         label: session.benefitLabel,
         category: session.benefitCategory,

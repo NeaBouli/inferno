@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import { useAccount, useSignMessage } from 'wagmi';
 import QRCode from 'react-qr-code';
 import { Countdown } from '@/components/Countdown';
+import { BusinessLogo } from '@/components/BusinessLogo';
 import {
   CustomerPassControlStatus,
   CustomerPassCreated,
@@ -23,7 +24,7 @@ const TAB_STORAGE_KEY = 'ifr.shop.activeCustomerPass';
 const CLOSED_CHECKOUT = new Set(['REDEEMED', 'REJECTED', 'EXPIRED']);
 
 type StoredPass = CustomerPassCreated & { walletAddress: string };
-type SelectedOffer = { businessId: string; sellerName: string; rule: BenefitRule };
+type SelectedOffer = { businessId: string; sellerName: string; sellerLogoUrl: string | null; rule: BenefitRule };
 
 export function CustomerCheckoutPass() {
   const { address, isConnected } = useAccount();
@@ -69,7 +70,7 @@ export function CustomerCheckoutPass() {
       .then(([business, result]) => {
         const rule = result.rules.find((candidate) => candidate.id === ruleId && candidate.active);
         if (!rule) throw new Error('Selected offer is no longer active.');
-        setSelectedOffer({ businessId, sellerName: business.name, rule });
+        setSelectedOffer({ businessId, sellerName: business.name, sellerLogoUrl: business.logoUrl, rule });
         setOfferMessage('Offer verified. The seller still binds it and you approve the exact checkout snapshot.');
       })
       .catch((err: Error) => {
@@ -228,10 +229,13 @@ export function CustomerCheckoutPass() {
       {selectedOffer ? (
         <div className="mt-4 rounded-2xl border border-orange-200/25 bg-orange-200/[0.08] p-4 text-sm text-stone-200">
           <div className="flex flex-wrap items-start justify-between gap-3">
-            <div>
-              <p className="text-xs font-black uppercase tracking-[0.14em] text-orange-100">Selected public offer</p>
-              <p className="mt-2 font-black text-white">{selectedOffer.rule.productName} · {selectedOffer.sellerName}</p>
-              <p className="mt-1 text-stone-300">{selectedOffer.rule.discountPercent}% benefit · {selectedOffer.rule.requiredLockIFR.toLocaleString('en-US')} IFR lock</p>
+            <div className="flex min-w-0 items-start gap-3">
+              <BusinessLogo name={selectedOffer.sellerName} logoUrl={selectedOffer.sellerLogoUrl} size="sm" />
+              <div className="min-w-0">
+                <p className="text-xs font-black uppercase tracking-[0.14em] text-orange-100">Selected public offer</p>
+                <p className="mt-2 break-words font-black text-white">{selectedOffer.rule.productName} · {selectedOffer.sellerName}</p>
+                <p className="mt-1 text-stone-300">{selectedOffer.rule.discountPercent}% benefit · {selectedOffer.rule.requiredLockIFR.toLocaleString('en-US')} IFR lock</p>
+              </div>
             </div>
             <button type="button" onClick={clearSelectedOffer} className="text-xs font-black uppercase tracking-[0.12em] text-orange-100">Clear</button>
           </div>
@@ -260,7 +264,13 @@ export function CustomerCheckoutPass() {
 
           {status?.checkout ? (
             <div className="grid gap-3 rounded-2xl border border-white/10 bg-black/25 p-4 text-sm text-stone-300">
-              <div className="flex justify-between gap-4"><span>Seller</span><strong className="text-right text-white">{status.checkout.sellerName}</strong></div>
+              <div className="flex items-center justify-between gap-4">
+                <span>Seller</span>
+                <span className="flex min-w-0 items-center justify-end gap-3">
+                  <BusinessLogo name={status.checkout.sellerName} logoUrl={status.checkout.sellerLogoUrl} size="sm" />
+                  <strong className="break-words text-right text-white">{status.checkout.sellerName}</strong>
+                </span>
+              </div>
               <div className="flex justify-between gap-4"><span>Offer</span><strong className="text-right text-white">{status.checkout.benefit.label || 'Standard benefit'}</strong></div>
               <div className="flex justify-between gap-4"><span>Product</span><strong className="text-right text-white">{status.checkout.benefit.productName || 'Seller benefit'}</strong></div>
               <div className="flex justify-between gap-4"><span>Benefit</span><strong className="text-orange-100">{status.checkout.benefit.discountPercent}%</strong></div>

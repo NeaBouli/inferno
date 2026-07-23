@@ -29,6 +29,7 @@ import { RateLimitStoreUnavailableError } from '../services/rateLimitInfrastruct
 import {
   businessServiceAreaKey,
   MAX_BUSINESS_CATEGORIES,
+  MAX_BUSINESS_LOGO_URL_LENGTH,
   MAX_BUSINESS_SERVICE_AREA_LENGTH,
   normalizeBusinessServiceArea,
   parseBusinessCategories,
@@ -45,6 +46,10 @@ const businessWebsiteSchema = z.string().trim().max(300).url().refine((value) =>
   const parsed = new URL(value);
   return parsed.protocol === 'https:' && !parsed.username && !parsed.password;
 }, 'Website must be an HTTPS URL without credentials').nullable();
+const businessLogoUrlSchema = z.string().trim().max(MAX_BUSINESS_LOGO_URL_LENGTH).url().refine((value) => {
+  const parsed = new URL(value);
+  return parsed.protocol === 'https:' && !parsed.username && !parsed.password;
+}, 'Logo must be an HTTPS URL without credentials').nullable();
 const businessCategoriesSchema = z.array(z.string().trim().min(1).max(80))
   .max(MAX_BUSINESS_CATEGORIES)
   .refine(
@@ -60,6 +65,7 @@ const createBusinessSchema = z.object({
   tierLabel: z.string().max(50).optional(),
   description: businessDescriptionSchema.optional(),
   website: businessWebsiteSchema.optional(),
+  logoUrl: businessLogoUrlSchema.optional(),
   serviceArea: businessServiceAreaSchema.optional(),
   categories: businessCategoriesSchema.optional(),
   ownerAddress: z.string().regex(/^0x[a-fA-F0-9]{40}$/),
@@ -72,6 +78,7 @@ const updateBusinessProfileSchema = z.object({
   name: z.string().trim().min(1).max(200).optional(),
   description: businessDescriptionSchema.optional(),
   website: businessWebsiteSchema.optional(),
+  logoUrl: businessLogoUrlSchema.optional(),
   serviceArea: businessServiceAreaSchema.optional(),
   categories: businessCategoriesSchema.optional(),
 }).strict().refine((value) => Object.keys(value).length > 0, 'At least one profile field is required');
@@ -385,6 +392,7 @@ router.post('/businesses', sellerRateLimiter, validate(createBusinessSchema), as
         tierLabel: req.body.tierLabel,
         description: req.body.description ?? null,
         website: req.body.website ?? null,
+        logoUrl: req.body.logoUrl ?? null,
         serviceArea: normalizeBusinessServiceArea(req.body.serviceArea),
         serviceAreaKey: businessServiceAreaKey(req.body.serviceArea),
         categoriesJson: serializeBusinessCategories(req.body.categories ?? []),
@@ -399,6 +407,7 @@ router.post('/businesses', sellerRateLimiter, validate(createBusinessSchema), as
       name: business.name,
       description: business.description,
       website: business.website,
+      logoUrl: business.logoUrl,
       serviceArea: business.serviceArea,
       categories: parseBusinessCategories(business.categoriesJson),
     });
@@ -422,6 +431,7 @@ router.get('/businesses', sellerRateLimiter, async (req, res, next) => {
         tierLabel: true,
         description: true,
         website: true,
+        logoUrl: true,
         serviceArea: true,
         serviceAreaKey: true,
         categoriesJson: true,
@@ -438,6 +448,7 @@ router.get('/businesses', sellerRateLimiter, async (req, res, next) => {
         name: business.name,
         description: business.description,
         website: business.website,
+        logoUrl: business.logoUrl,
         serviceArea: business.serviceArea,
         serviceAreaKey: business.serviceAreaKey,
         categoriesJson: business.categoriesJson,
@@ -470,6 +481,7 @@ router.patch(
           name: req.body.name,
           description: req.body.description,
           website: req.body.website,
+          logoUrl: req.body.logoUrl,
           serviceArea: req.body.serviceArea === undefined
             ? undefined
             : normalizeBusinessServiceArea(req.body.serviceArea),
@@ -485,6 +497,7 @@ router.patch(
           name: true,
           description: true,
           website: true,
+          logoUrl: true,
           serviceArea: true,
           serviceAreaKey: true,
           categoriesJson: true,

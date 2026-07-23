@@ -5,7 +5,7 @@ const path = require('path');
 
 const root = path.resolve(__dirname, '..');
 const migrationsDir = path.join(root, 'prisma', 'migrations');
-const targetMigration = '20260719071000_add_customer_checkout_passes';
+const targetMigration = '20260723201000_add_business_logo_url';
 const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'benefits-populated-upgrade-'));
 const dbPath = path.join(tempDir, 'upgrade.db');
 
@@ -166,6 +166,16 @@ try {
     throw new Error(
       `Missing customer pass migration state: tables=${passTables}, ` +
       `sessionColumn=${passSessionColumn}, indexes=${passIndexes}`
+    );
+  }
+
+  const businessLogoColumn = sqlite("SELECT COUNT(*) FROM pragma_table_info('Business') WHERE name='logoUrl';");
+  const existingBusinessLogo = sqlite(`
+    SELECT logoUrl IS NULL FROM Business WHERE id = 'migration-fixture';
+  `);
+  if (businessLogoColumn !== '1' || existingBusinessLogo !== '1') {
+    throw new Error(
+      `Missing seller logo migration state: column=${businessLogoColumn}, existing=${existingBusinessLogo}`
     );
   }
 
