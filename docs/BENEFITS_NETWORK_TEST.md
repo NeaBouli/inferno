@@ -1,5 +1,18 @@
 # Benefits Network — Test Guide
 
+## Runtime Contract
+
+Benefits frontend, backend, CI and production containers use Node.js 22.x. Verify the shared
+runtime contract before running the wider suite:
+
+```bash
+npm run test:benefits-node-runtime
+```
+
+The blocking Benefits CI builds both Alpine Docker images, starts them through their normal
+production commands and checks backend migration/readiness plus the Next.js server, guide and
+PWA manifest. A version-only image check is not sufficient.
+
 ## Quick Start (Local)
 
 ```bash
