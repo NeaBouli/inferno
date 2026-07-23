@@ -10,6 +10,7 @@ import { SwapRiskNotice } from '@/components/SwapRiskNotice';
 import { WalletConnectControl } from '@/components/WalletConnectControl';
 import { AttestResult, BusinessInfo, SessionStatus, getBusiness, getChallenge, getSessionStatus, submitAttest } from '@/lib/api';
 import { redactVerifiedAddress, saveCustomerProofHistoryItem } from '@/lib/customerHistory';
+import { formatProductPrice } from '@/lib/money';
 
 const CLOSED_STATUSES = ['REDEEMED', 'REJECTED', 'EXPIRED'];
 const TERMINAL_STATUSES = ['APPROVED', ...CLOSED_STATUSES];
@@ -85,6 +86,9 @@ export function CustomerSessionClient({ sessionId }: { sessionId: string }) {
       `Required lock: ${benefit.requiredLockIFR.toLocaleString('en-US')} IFR`,
       `Rule: ${benefit.label || 'Business default'}`,
       `Product: ${benefit.productName || 'Business default benefit'}`,
+      ...(formatProductPrice(benefit.basePriceMinor, benefit.currency)
+        ? [`Reference price: ${formatProductPrice(benefit.basePriceMinor, benefit.currency)}`]
+        : []),
       `Customer wallet: ${verifiedWallet}`,
       `Expires: ${status.expiresAt}`,
       `Redeemed: ${status.redeemedAt || 'not redeemed'}`,
@@ -281,6 +285,14 @@ export function CustomerSessionClient({ sessionId }: { sessionId: string }) {
                     <span>Product</span>
                     <strong className="text-right text-white">{status.benefit.productName}</strong>
                   </div>
+                  {formatProductPrice(status.benefit.basePriceMinor, status.benefit.currency) ? (
+                    <div className="flex justify-between gap-4">
+                      <span>Reference price</span>
+                      <strong className="text-right text-white">
+                        {formatProductPrice(status.benefit.basePriceMinor, status.benefit.currency)}
+                      </strong>
+                    </div>
+                  ) : null}
                 </>
               ) : null}
             </div>

@@ -36,6 +36,11 @@ import {
   publicBusinessProfile,
   serializeBusinessCategories,
 } from '../services/businessProfile';
+import {
+  PRODUCT_PRICE_MINOR_PATTERN,
+  safeProductPrice,
+  SUPPORTED_PRODUCT_CURRENCIES,
+} from '../services/productPrice';
 
 const router = Router();
 const MAX_ACTIVE_CHECKOUT_OPERATORS = 10;
@@ -98,14 +103,55 @@ const createBenefitRuleSchema = z.object({
 
 const updateBenefitRuleSchema = createBenefitRuleSchema.partial();
 
+const productPriceFields = {
+  basePriceMinor: z.string().regex(PRODUCT_PRICE_MINOR_PATTERN).nullable().optional(),
+  currency: z.enum(SUPPORTED_PRODUCT_CURRENCIES).nullable().optional(),
+};
+
+function hasOwn(value: object, key: string) {
+  return Object.prototype.hasOwnProperty.call(value, key);
+}
+
+function validateProductPricePair(
+  value: { basePriceMinor?: string | null; currency?: string | null },
+  ctx: z.RefinementCtx
+) {
+  const hasPrice = hasOwn(value, 'basePriceMinor');
+  const hasCurrency = hasOwn(value, 'currency');
+  if (hasPrice !== hasCurrency) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'basePriceMinor and currency must be provided together',
+      path: hasPrice ? ['currency'] : ['basePriceMinor'],
+    });
+    return;
+  }
+  if (hasPrice && ((value.basePriceMinor === null) !== (value.currency === null))) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'basePriceMinor and currency must both be values or both be null',
+      path: ['basePriceMinor'],
+    });
+  }
+}
+
 const createProductSchema = z.object({
   name: z.string().trim().min(1).max(160),
   category: z.string().trim().min(1).max(80),
   description: z.string().trim().max(500).nullable().optional(),
+  ...productPriceFields,
   active: z.boolean().optional(),
-});
+}).strict().superRefine(validateProductPricePair);
 
-const updateProductSchema = createProductSchema.partial();
+const updateProductSchema = z.object({
+  name: z.string().trim().min(1).max(160).optional(),
+  category: z.string().trim().min(1).max(80).optional(),
+  description: z.string().trim().max(500).nullable().optional(),
+  ...productPriceFields,
+  active: z.boolean().optional(),
+}).strict()
+  .refine((value) => Object.keys(value).length > 0, 'At least one field is required')
+  .superRefine(validateProductPricePair);
 
 const sellerSessionHistoryQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(50).default(10),
@@ -667,7 +713,12 @@ router.get('/businesses/:id/products', sellerRateLimiter, async (req, res, next)
       orderBy: [{ active: 'desc' }, { category: 'asc' }, { name: 'asc' }],
       include: { _count: { select: { benefitRules: true } } },
     });
-    res.json({ products });
+    res.json({
+      products: products.map((product) => ({
+        ...product,
+        ...safeProductPrice(product),
+      })),
+    });
   } catch (err) {
     handleSellerError(err, res, next);
   }
@@ -686,11 +737,13 @@ router.post(
           name: req.body.name,
           category: req.body.category,
           description: req.body.description ?? null,
+          basePriceMinor: req.body.basePriceMinor ?? null,
+          currency: req.body.currency ?? null,
           active: req.body.active ?? true,
         },
         include: { _count: { select: { benefitRules: true } } },
       });
-      res.status(201).json(product);
+      res.status(201).json({ ...product, ...safeProductPrice(product) });
     } catch (err) {
       handleSellerError(err, res, next);
     }
@@ -730,7 +783,7 @@ router.patch('/products/:id', sellerRateLimiter, validate(updateProductSchema), 
         include: { _count: { select: { benefitRules: true } } },
       });
     });
-    res.json(product);
+    res.json({ ...product, ...safeProductPrice(product) });
   } catch (err) {
     handleSellerError(err, res, next);
   }
@@ -813,6 +866,8 @@ router.get('/businesses/:id/sessions', sellerRateLimiter, async (req, res, next)
           benefitLabel: true,
           benefitCategory: true,
           benefitProductName: true,
+          benefitBasePriceMinor: true,
+          benefitCurrency: true,
           benefitDiscountPercent: true,
           benefitRequiredLockIFR: true,
           benefitDailyRedemptionLimit: true,
@@ -886,6 +941,12 @@ router.get('/businesses/:id/sessions', sellerRateLimiter, async (req, res, next)
         productName: (session.benefitSnapshotVersion ?? 0) >= 1
           ? session.benefitProductName
           : session.benefitRule?.productName ?? null,
+        ...((session.benefitSnapshotVersion ?? 0) >= 3
+          ? safeProductPrice({
+              basePriceMinor: session.benefitBasePriceMinor,
+              currency: session.benefitCurrency,
+            })
+          : { basePriceMinor: null, currency: null }),
         discountPercent: (session.benefitSnapshotVersion ?? 0) >= 1 && session.benefitDiscountPercent !== null
           ? session.benefitDiscountPercent
           : session.benefitRule?.discountPercent ?? session.business.discountPercent,

@@ -9,6 +9,13 @@ import {
   getSellerBusinessProducts,
   updateSellerBusinessProduct,
 } from '@/lib/api';
+import {
+  formatProductPrice,
+  majorPriceToMinor,
+  minorPriceToMajor,
+  ProductCurrency,
+  productCurrencies,
+} from '@/lib/money';
 
 const productCategories = ['Coffee', 'Retail', 'Digital access', 'Events', 'Services'];
 
@@ -34,6 +41,8 @@ export function SellerCatalogManager({
   const [name, setName] = useState('Premium customer service');
   const [category, setCategory] = useState(productCategories[0]);
   const [description, setDescription] = useState('Available to customers with verified locked IFR.');
+  const [basePrice, setBasePrice] = useState('');
+  const [currency, setCurrency] = useState<ProductCurrency>('EUR');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState('');
@@ -52,6 +61,8 @@ export function SellerCatalogManager({
     setName('Premium customer service');
     setCategory(productCategories[0]);
     setDescription('Available to customers with verified locked IFR.');
+    setBasePrice('');
+    setCurrency('EUR');
     setEditingId(null);
   }
 
@@ -89,8 +100,20 @@ export function SellerCatalogManager({
     setError('');
     const requestBusinessId = businessId;
     const requestEditingId = editingId;
+    const basePriceMinor = basePrice.trim() ? majorPriceToMinor(basePrice, currency) : null;
+    if (basePrice.trim() && basePriceMinor === null) {
+      setError(`Enter a valid ${currency} amount with ${currency === 'JPY' ? 'no decimal places' : 'up to two decimal places'}.`);
+      setLoading(false);
+      return;
+    }
     try {
-      const input = { name: name.trim(), category, description: description.trim() || null };
+      const input = {
+        name: name.trim(),
+        category,
+        description: description.trim() || null,
+        basePriceMinor,
+        currency: basePriceMinor === null ? null : currency,
+      };
       const product = requestEditingId
         ? await updateSellerBusinessProduct(
             requestEditingId,
@@ -124,6 +147,8 @@ export function SellerCatalogManager({
     setName(product.name);
     setCategory(product.category);
     setDescription(product.description || '');
+    setCurrency(product.currency || 'EUR');
+    setBasePrice(minorPriceToMajor(product.basePriceMinor, product.currency));
     setError('');
     setStatus('Editing catalog item. Existing checkout rule snapshots update only when that rule is saved again.');
   }
@@ -197,6 +222,30 @@ export function SellerCatalogManager({
           Short customer description
           <textarea value={description} onChange={(event) => setDescription(event.target.value)} maxLength={500} rows={3} className="resize-y rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none focus:border-orange-300" />
         </label>
+        <label className="grid gap-2 text-sm font-semibold text-stone-200">
+          Optional reference price
+          <input
+            value={basePrice}
+            onChange={(event) => setBasePrice(event.target.value)}
+            inputMode={currency === 'JPY' ? 'numeric' : 'decimal'}
+            autoComplete="off"
+            placeholder={currency === 'JPY' ? '2500' : '19.99'}
+            className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none focus:border-orange-300"
+          />
+        </label>
+        <label className="grid gap-2 text-sm font-semibold text-stone-200">
+          Currency
+          <select
+            value={currency}
+            onChange={(event) => setCurrency(event.target.value as ProductCurrency)}
+            className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none focus:border-orange-300"
+          >
+            {productCurrencies.map((item) => <option key={item}>{item}</option>)}
+          </select>
+        </label>
+        <p className="text-xs leading-5 text-stone-400 md:col-span-2">
+          Reference only. Checkout verifies IFR access and does not process this payment.
+        </p>
       </div>
       <div className="mt-3 flex flex-wrap gap-2">
         <button type="button" onClick={saveProduct} disabled={loading || !ownerReady || !businessId || !name.trim()} className="rounded-2xl bg-orange-300 px-5 py-3 text-xs font-black uppercase tracking-[0.14em] text-stone-950 disabled:opacity-50">
@@ -221,6 +270,11 @@ export function SellerCatalogManager({
                 <span className="text-xs font-bold uppercase tracking-[0.12em] text-stone-400">{product.active ? 'Active' : 'Archived'}</span>
               </div>
               {product.description ? <p className="mt-2 text-sm leading-6 text-stone-300">{product.description}</p> : null}
+              {formatProductPrice(product.basePriceMinor, product.currency) ? (
+                <p className="mt-2 text-sm font-black text-orange-100">
+                  Reference price: {formatProductPrice(product.basePriceMinor, product.currency)}
+                </p>
+              ) : null}
               <p className="mt-2 text-xs text-stone-500">{product._count?.benefitRules ?? 0} linked rule{product._count?.benefitRules === 1 ? '' : 's'}</p>
               <div className="mt-3 flex flex-wrap gap-2">
                 {product.active ? (

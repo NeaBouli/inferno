@@ -50,6 +50,7 @@ import {
   updateSellerBusinessProfile,
   updateSellerBusinessRule,
 } from '@/lib/api';
+import { formatProductPrice } from '@/lib/money';
 
 const categories = ['Coffee', 'Retail', 'Digital access', 'Events', 'Services'];
 const profileCategorySuggestions = [
@@ -346,6 +347,9 @@ export function SellerRuleBuilder() {
       `Required lock: ${session.requiredLockIFR.toLocaleString('en-US')} IFR`,
       `Rule: ${session.label || 'Business default'}`,
       `Product: ${session.productName || 'Business default benefit'}`,
+      ...(formatProductPrice(session.basePriceMinor, session.currency)
+        ? [`Reference price: ${formatProductPrice(session.basePriceMinor, session.currency)}`]
+        : []),
       `Customer wallet: ${session.recoveredAddress || 'not verified yet'}`,
       `Locked: ${lockedIFR ? `${lockedIFR} IFR` : 'not verified yet'}`,
       `Expires: ${session.expiresAt}`,
@@ -2295,6 +2299,11 @@ export function SellerRuleBuilder() {
                         <p className="mt-1 text-xs leading-5 text-stone-400">
                           {new Date(session.createdAt).toLocaleString()} / {session.discountPercent}% / {session.requiredLockIFR.toLocaleString('en-US')} IFR
                         </p>
+                        {formatProductPrice(session.basePriceMinor, session.currency) ? (
+                          <p className="mt-1 text-xs leading-5 text-stone-400">
+                            Reference price: {formatProductPrice(session.basePriceMinor, session.currency)}
+                          </p>
+                        ) : null}
                         <p className="mt-1 text-xs leading-5 text-stone-400">
                           Wallet use: {session.dailyRedemptionLimit || 'unlimited'} / UTC day and {session.monthlyRedemptionLimit || 'unlimited'} / UTC month
                         </p>

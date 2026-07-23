@@ -8,6 +8,7 @@ import {
   normalizeBusinessServiceArea,
   publicBusinessProfile,
 } from '../services/businessProfile';
+import { safeProductPrice } from '../services/productPrice';
 
 const router = Router();
 const visibleCatalogRule: Prisma.BenefitRuleWhereInput = {
@@ -107,7 +108,15 @@ router.get('/', discoveryRateLimiter, async (req, res, next) => {
               categoriesJson: true,
             },
           },
-          product: { select: { id: true, name: true, description: true } },
+          product: {
+            select: {
+              id: true,
+              name: true,
+              description: true,
+              basePriceMinor: true,
+              currency: true,
+            },
+          },
         },
       }),
       prisma.benefitRule.findMany({
@@ -147,6 +156,9 @@ router.get('/', discoveryRateLimiter, async (req, res, next) => {
       offers: offers.map((offer) => ({
         ...offer,
         business: publicBusinessProfile(offer.business),
+        product: offer.product
+          ? { ...offer.product, ...safeProductPrice(offer.product) }
+          : null,
       })),
       categories: categoryRows.map((row) => row.category),
       serviceAreas,
@@ -309,6 +321,8 @@ router.get('/:id/products', async (req, res, next) => {
         name: true,
         category: true,
         description: true,
+        basePriceMinor: true,
+        currency: true,
         active: true,
         createdAt: true,
         updatedAt: true,
@@ -338,7 +352,10 @@ router.get('/:id/products', async (req, res, next) => {
         serviceAreaKey: business.serviceAreaKey,
         categoriesJson: business.categoriesJson,
       }),
-      products,
+      products: products.map((product) => ({
+        ...product,
+        ...safeProductPrice(product),
+      })),
     });
   } catch (err) {
     next(err);

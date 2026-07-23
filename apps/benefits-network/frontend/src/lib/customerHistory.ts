@@ -1,4 +1,5 @@
 import { SessionStatus } from '@/lib/api';
+import { ProductCurrency, productCurrencies } from '@/lib/money';
 
 export interface CustomerProofHistoryItem {
   sessionId: string;
@@ -9,6 +10,8 @@ export interface CustomerProofHistoryItem {
   requiredLockIFR: number;
   ruleLabel: string;
   productName: string;
+  basePriceMinor: string | null;
+  currency: ProductCurrency | null;
   expiresAt: string;
   redeemedAt: string | null;
   walletLabel: string;
@@ -29,6 +32,12 @@ export function redactVerifiedAddress(address?: string | null) {
 
 function normalizeItem(item: Partial<CustomerProofHistoryItem>): CustomerProofHistoryItem | null {
   if (!item.sessionId || !item.businessId || !item.status || !item.expiresAt || !item.savedAt) return null;
+  const currency = typeof item.currency === 'string' && productCurrencies.includes(item.currency as ProductCurrency)
+    ? item.currency as ProductCurrency
+    : null;
+  const basePriceMinor = typeof item.basePriceMinor === 'string' && /^(0|[1-9][0-9]{0,17})$/.test(item.basePriceMinor)
+    ? item.basePriceMinor
+    : null;
   return {
     sessionId: item.sessionId,
     businessId: item.businessId,
@@ -38,6 +47,8 @@ function normalizeItem(item: Partial<CustomerProofHistoryItem>): CustomerProofHi
     requiredLockIFR: Number(item.requiredLockIFR || 0),
     ruleLabel: item.ruleLabel || 'Business default',
     productName: item.productName || 'Business default benefit',
+    basePriceMinor: currency ? basePriceMinor : null,
+    currency: basePriceMinor ? currency : null,
     expiresAt: item.expiresAt,
     redeemedAt: item.redeemedAt || null,
     walletLabel: item.walletLabel || 'not verified',
@@ -82,6 +93,8 @@ export function saveCustomerProofHistoryItem(args: {
     requiredLockIFR: benefit.requiredLockIFR,
     ruleLabel: benefit.label || 'Business default',
     productName: benefit.productName || 'Business default benefit',
+    basePriceMinor: benefit.basePriceMinor,
+    currency: benefit.currency,
     expiresAt: args.status.expiresAt,
     redeemedAt: args.status.redeemedAt,
     walletLabel: args.verifiedWalletAddress

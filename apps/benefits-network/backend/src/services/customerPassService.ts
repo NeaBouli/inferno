@@ -12,6 +12,7 @@ import {
   resolveSessionCreator,
 } from './sessionService';
 import { safeBusinessLogoUrl } from './businessProfile';
+import { safeProductPrice } from './productPrice';
 
 const CUSTOMER_PASS_CHALLENGE_TTL_MS = 5 * 60 * 1000;
 const CUSTOMER_PASS_TTL_MS = 5 * 60 * 1000;
@@ -155,6 +156,10 @@ export async function getControlledCustomerPass(passId: string, authorization?: 
           label: pass.session.benefitLabel,
           category: pass.session.benefitCategory,
           productName: pass.session.benefitProductName,
+          ...safeProductPrice({
+            basePriceMinor: pass.session.benefitBasePriceMinor,
+            currency: pass.session.benefitCurrency,
+          }),
           discountPercent: pass.session.benefitDiscountPercent ?? 0,
           requiredLockIFR: pass.session.benefitRequiredLockIFR ?? 0,
         },
@@ -177,6 +182,10 @@ export async function getControlledCustomerPass(passId: string, authorization?: 
         label: session.benefitLabel,
         category: session.benefitCategory,
         productName: session.benefitProductName,
+        ...safeProductPrice({
+          basePriceMinor: session.benefitBasePriceMinor,
+          currency: session.benefitCurrency,
+        }),
         discountPercent: session.benefitDiscountPercent ?? 0,
         requiredLockIFR: session.benefitRequiredLockIFR ?? 0,
       },
@@ -222,6 +231,10 @@ export async function bindCustomerPass(input: {
         label: session.benefitLabel,
         category: session.benefitCategory,
         productName: session.benefitProductName,
+        ...safeProductPrice({
+          basePriceMinor: session.benefitBasePriceMinor,
+          currency: session.benefitCurrency,
+        }),
         discountPercent: session.benefitDiscountPercent ?? 0,
         requiredLockIFR: session.benefitRequiredLockIFR ?? 0,
       },

@@ -12,6 +12,7 @@ import {
   getBusinessProducts,
   getBusinessRules,
 } from '@/lib/api';
+import { formatProductPrice } from '@/lib/money';
 
 export function SellerCatalogClient({ businessId }: { businessId: string }) {
   const eligibility = useIfrLockEligibility();
@@ -163,6 +164,11 @@ export function SellerCatalogClient({ businessId }: { businessId: string }) {
                   <article key={product.id} className="border-l-2 border-orange-200/40 bg-white/[0.03] p-5">
                     <h2 className="text-2xl font-black text-white">{product.name}</h2>
                     {product.description ? <p className="mt-2 text-sm leading-6 text-stone-300">{product.description}</p> : null}
+                    {formatProductPrice(product.basePriceMinor, product.currency) ? (
+                      <p className="mt-3 text-sm font-black text-orange-100">
+                        Reference price: {formatProductPrice(product.basePriceMinor, product.currency)}
+                      </p>
+                    ) : null}
                     {product.benefitRules.length > 0 ? (
                       <div className="mt-5 grid gap-3">
                         {product.benefitRules.map((rule) => (

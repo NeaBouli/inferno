@@ -127,9 +127,18 @@ describe('customer-presented checkout passes', () => {
       },
     });
     businessId = first.id;
+    const firstProduct = await prisma.product.create({
+      data: {
+        businessId,
+        name: 'Espresso',
+        category: 'Coffee',
+        basePriceMinor: '450',
+        currency: 'EUR',
+      },
+    });
     ruleId = (await prisma.benefitRule.create({
       data: {
-        businessId, label: 'Coffee benefit', category: 'Coffee', productName: 'Espresso',
+        businessId, productId: firstProduct.id, label: 'Coffee benefit', category: 'Coffee', productName: 'Espresso',
         discountPercent: 15, requiredLockIFR: 1000, ttlSeconds: 120,
       },
     })).id;
@@ -219,6 +228,25 @@ describe('customer-presented checkout passes', () => {
         benefitRuleId: ruleId,
         sellerName: 'Pass Seller',
         sellerLogoUrl: 'https://assets.example.com/pass-seller.png',
+        benefit: {
+          basePriceMinor: '450',
+          currency: 'EUR',
+        },
+      },
+    });
+    await prisma.product.updateMany({
+      where: { businessId },
+      data: { basePriceMinor: '500', currency: 'EUR' },
+    });
+    const controlledAfterPriceEdit = await fetch(`${baseUrl()}/api/passes/${created.body.passId}/control`, {
+      headers: controlHeaders,
+    });
+    expect(await controlledAfterPriceEdit.json()).toMatchObject({
+      checkout: {
+        benefit: {
+          basePriceMinor: '450',
+          currency: 'EUR',
+        },
       },
     });
     const challengeResponse = await fetch(`${baseUrl()}/api/passes/${created.body.passId}/challenge`, {
@@ -226,6 +254,7 @@ describe('customer-presented checkout passes', () => {
     });
     const challenge = await challengeResponse.json() as { message: string };
     expect(challenge.message).toContain(`Benefit Rule: ${ruleId}`);
+    expect(challenge.message).toContain('Reference Price: EUR 450 minor units');
     expect(challenge.message).toContain('Discount Percent: 15');
 
     mockRecoverSigner.mockReturnValue(otherCustomer.address);

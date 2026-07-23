@@ -88,7 +88,9 @@ The app has two roles:
   accept only a canonical `https://shop.ifrunit.tech/r/:sessionId` proof. Foreign origins,
   insecure links, credentials, custom ports, query strings, fragments and invalid IDs fail closed.
 - Keep paste/session-ID fallback available when camera permission or hardware is unavailable.
-- QR session page must show seller, rule, product, discount and required IFR before signing.
+- QR session page must show seller, rule, product, optional reference price, discount and required
+  IFR before signing. Reference prices use exact minor units plus an allowlisted ISO currency,
+  are frozen in the signed session snapshot and are never presented as an in-app payment.
 - Customer-presented pass must show the exact bound seller/rule on the originating device and require a second explicit signature. Its control token stays out of URLs, QR payloads, logs and local storage; the first-party UI limits restoration to the same browser tab.
 - Offer discovery and public seller catalogs show a wallet-local, read-only preview against each
   rule's exact IFRLock threshold. Disconnect, wrong-chain, loading and RPC/configuration failures
@@ -107,6 +109,8 @@ The app has two roles:
   Business ID with the user-entered admin fallback. Public catalog and offer discovery expose only
   sanitized profile fields and never expose the internal normalized filter key.
 - Seller can edit discount, category, product/service, required IFR and QR lifetime through the owner-wallet-signed PATCH flow without changing the active/paused state.
+- Seller can attach or clear an optional reference price on a catalog item. Amount and currency
+  are updated atomically, validated without floating point and remain informational.
 - Seller can apply built-in welcome, standard, premium or event templates to the current draft; templates never publish automatically and preserve an explicit catalog binding.
 - Seller can open `/b/:businessId` scanner.
 - Scanner must list active rules, accept a canonical `/p/:passId` customer pass and bind the selected rule with a fresh seller signature. The existing seller-issued QR remains available for compatible integrations.
@@ -197,7 +201,8 @@ If `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` is missing, the frontend must show a s
    decoding are implemented. Physical Safari/Chrome/MetaMask acceptance remains pending.**
 9. Checkout staff mode with owner-managed expiry/revocation and role-aware audit. **Implemented; live device acceptance remains pending.**
 10. Seller product/service catalog and public customer benefit browsing. **Implemented with
-    owner-signed soft-archive, cross-business rule protection and immutable QR-session snapshots.
+    owner-signed soft-archive, cross-business rule protection, exact optional reference prices
+    and immutable QR-session snapshots.
     A blocking composed test now builds the real frontend/backend, applies all migrations to a
     disposable SQLite database, seeds through signed seller APIs and verifies the public browser
     flow through the production Next.js API rewrite without Mainnet.**
