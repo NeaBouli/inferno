@@ -220,7 +220,7 @@ export function CustomerSessionClient({ sessionId }: { sessionId: string }) {
                 <p className="mt-2 text-sm leading-6 text-stone-300">{proofNextStep}</p>
               </div>
               <div className="rounded-2xl border border-white/10 bg-black/25 px-4 py-3 text-right">
-                <p className="text-xs uppercase tracking-[0.14em] text-stone-500">Customer wallet</p>
+                <p className="text-xs uppercase tracking-[0.14em] text-stone-300">Customer wallet</p>
                 <p className="mt-1 font-mono text-sm font-black text-white">
                   {address ? `${address.slice(0, 6)}...${address.slice(-4)}` : 'Not connected'}
                 </p>

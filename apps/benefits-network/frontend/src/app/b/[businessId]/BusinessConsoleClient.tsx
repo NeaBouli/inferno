@@ -562,7 +562,7 @@ export function BusinessConsoleClient({ businessId }: { businessId: string }) {
                 <p className="mt-2 text-sm leading-6 text-stone-300">{scannerNextStep}</p>
               </div>
               <div className="rounded-2xl border border-white/10 bg-black/25 px-4 py-3 text-right">
-                <p className="text-xs uppercase tracking-[0.14em] text-stone-500">Current session</p>
+                <p className="text-xs uppercase tracking-[0.14em] text-stone-300">Current session</p>
                 <p className="mt-1 text-sm font-black text-white">{status?.status || (session ? 'PENDING' : 'Not started')}</p>
                 <p className="mt-1 text-xs text-stone-400">
                   {session?.discountPercent ?? previewBenefit?.discountPercent ?? '-'}% benefit
