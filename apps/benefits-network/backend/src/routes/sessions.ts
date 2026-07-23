@@ -9,6 +9,7 @@ import {
   AuthenticatedRateLimitError,
   assertSellerWalletActionAllowed,
 } from '../services/authenticatedRateLimiter';
+import { RateLimitStoreUnavailableError } from '../services/rateLimitInfrastructure';
 import { consumeSellerAuthorizationChallenge } from '../services/sellerAuthorizationChallenge';
 
 const router = Router();
@@ -52,7 +53,7 @@ async function requireSessionRedeemer(req: Request, sessionId: string) {
     businessId: sessionId,
     scope: sessionId,
   });
-  assertSellerWalletActionAllowed(wallet);
+  await assertSellerWalletActionAllowed(wallet);
   await consumeSellerAuthorizationChallenge(prisma, {
     nonce: auth.nonce,
     walletAddress: wallet,
@@ -65,7 +66,7 @@ async function requireSessionRedeemer(req: Request, sessionId: string) {
   return actor;
 }
 
-function requireSessionCreator(req: Request, businessId: string, scope: string) {
+async function requireSessionCreator(req: Request, businessId: string, scope: string) {
   const auth = getSellerAuth(req);
   if (!auth.nonce) throw new SellerAuthError('Seller authorization nonce is required');
   const wallet = verifySellerSignature({
@@ -74,7 +75,7 @@ function requireSessionCreator(req: Request, businessId: string, scope: string) 
     businessId,
     scope,
   });
-  assertSellerWalletActionAllowed(wallet);
+  await assertSellerWalletActionAllowed(wallet);
   return { walletAddress: wallet, nonce: auth.nonce, scope };
 }
 
@@ -82,6 +83,10 @@ function handleSessionAuthError(err: unknown, res: Response) {
   if (err instanceof AuthenticatedRateLimitError) {
     res.set('Retry-After', String(err.retryAfterSeconds));
     res.status(429).json({ error: err.message });
+    return true;
+  }
+  if (err instanceof RateLimitStoreUnavailableError) {
+    res.status(503).json({ error: err.message });
     return true;
   }
   if (err instanceof SellerAuthError) {
@@ -112,7 +117,7 @@ function publicSessionReason(status: string) {
 router.post('/', sessionRateLimiter, validate(createSessionSchema), async (req, res, next) => {
   try {
     const scope = req.body.benefitRuleId || 'default';
-    const creatorAuthorization = requireSessionCreator(req, req.body.businessId, scope);
+    const creatorAuthorization = await requireSessionCreator(req, req.body.businessId, scope);
     const result = await createAuthorizedSession(
       req.body.businessId,
       req.body.benefitRuleId,

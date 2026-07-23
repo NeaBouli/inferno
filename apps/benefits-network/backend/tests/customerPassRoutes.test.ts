@@ -104,7 +104,7 @@ describe('customer-presented checkout passes', () => {
 
   beforeEach(async () => {
     limiterSpy = jest.spyOn(authenticatedRateLimiter, 'assertSellerWalletActionAllowed')
-      .mockImplementation(() => undefined);
+      .mockResolvedValue(undefined);
     await prisma.rewardEvent.deleteMany();
     await prisma.auditLog.deleteMany();
     await prisma.session.deleteMany();

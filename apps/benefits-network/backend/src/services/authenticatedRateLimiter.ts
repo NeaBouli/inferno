@@ -1,3 +1,9 @@
+import { config } from '../config';
+import {
+  RateLimitStoreUnavailableError,
+  sendRateLimitRedisCommand,
+} from './rateLimitInfrastructure';
+
 export class AuthenticatedRateLimitError extends Error {
   constructor(public readonly retryAfterSeconds: number) {
     super('Too many authenticated seller actions. Try again later.');
@@ -15,6 +21,10 @@ type FixedWindowLimiterOptions = {
 type WindowEntry = {
   count: number;
   resetAt: number;
+};
+
+type KeyLimiter = {
+  consume(rawKey: string): void | Promise<void>;
 };
 
 export class FixedWindowKeyLimiter {
@@ -59,11 +69,75 @@ export class FixedWindowKeyLimiter {
   }
 }
 
-const sellerWalletLimiter = new FixedWindowKeyLimiter({
-  windowMs: 60 * 60 * 1000,
-  max: 120,
-});
+type RedisFixedWindowKeyLimiterOptions = {
+  windowMs: number;
+  max: number;
+  prefix: string;
+  sendCommand?: typeof sendRateLimitRedisCommand;
+};
 
-export function assertSellerWalletActionAllowed(walletAddress: string) {
-  sellerWalletLimiter.consume(`seller:${walletAddress}`);
+const incrementFixedWindowScript = `
+local count = redis.call('INCR', KEYS[1])
+local ttl = redis.call('PTTL', KEYS[1])
+if count == 1 or ttl < 0 then
+  redis.call('PEXPIRE', KEYS[1], ARGV[1])
+  ttl = tonumber(ARGV[1])
+end
+return {count, ttl}
+`;
+
+export class RedisFixedWindowKeyLimiter implements KeyLimiter {
+  private readonly sendCommand: typeof sendRateLimitRedisCommand;
+
+  constructor(private readonly options: RedisFixedWindowKeyLimiterOptions) {
+    if (options.windowMs <= 0 || options.max <= 0) {
+      throw new Error('Authenticated limiter window and max must be positive');
+    }
+    this.sendCommand = options.sendCommand ?? sendRateLimitRedisCommand;
+  }
+
+  async consume(rawKey: string) {
+    const normalizedKey = rawKey.trim().toLowerCase();
+    if (!normalizedKey) throw new Error('Authenticated limiter key is required');
+
+    let reply;
+    try {
+      reply = await this.sendCommand(
+        'EVAL',
+        incrementFixedWindowScript,
+        '1',
+        `${this.options.prefix}${normalizedKey}`,
+        String(this.options.windowMs)
+      );
+    } catch {
+      throw new RateLimitStoreUnavailableError();
+    }
+
+    if (!Array.isArray(reply) || reply.length !== 2) {
+      throw new RateLimitStoreUnavailableError();
+    }
+    const count = Number(reply[0]);
+    const ttlMs = Number(reply[1]);
+    if (!Number.isFinite(count) || !Number.isFinite(ttlMs) || ttlMs <= 0) {
+      throw new RateLimitStoreUnavailableError();
+    }
+    if (count > this.options.max) {
+      throw new AuthenticatedRateLimitError(Math.max(1, Math.ceil(ttlMs / 1000)));
+    }
+  }
+}
+
+const sellerWalletLimiter: KeyLimiter = config.RATE_LIMIT_STORE === 'redis'
+  ? new RedisFixedWindowKeyLimiter({
+      windowMs: 60 * 60 * 1000,
+      max: 120,
+      prefix: 'ifr-benefits:seller-wallet:',
+    })
+  : new FixedWindowKeyLimiter({
+      windowMs: 60 * 60 * 1000,
+      max: 120,
+    });
+
+export async function assertSellerWalletActionAllowed(walletAddress: string) {
+  await sellerWalletLimiter.consume(`seller:${walletAddress}`);
 }

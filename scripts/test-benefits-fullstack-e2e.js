@@ -326,7 +326,12 @@ async function main() {
     await waitFor(frontendOrigin, frontendServer, 'frontend', /Ready in|Local:/);
 
     const proxiedReady = await fetchJson('/api/ready');
-    assert.deepEqual(proxiedReady, { status: 'ready', chainId: 1, database: 'ok' });
+    assert.deepEqual(proxiedReady, {
+      status: 'ready',
+      chainId: 1,
+      database: 'ok',
+      rateLimitStore: 'ok',
+    });
     const fixture = await seedRealApi();
     await verifyBrowser(fixture);
     console.log('[benefits-fullstack-e2e] PASS');
