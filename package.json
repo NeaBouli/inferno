@@ -4,6 +4,7 @@
     "test:contracts:all": "npm run test:contracts && node test/builder/GeneratorEngine.test.js && node test/sdk/sdk.test.js",
     "smoke:benefits": "node scripts/smoke-benefits-network.js",
     "test:benefits-sw": "node scripts/test-benefits-service-worker.js",
+    "test:benefits-offline": "node scripts/test-benefits-offline-shell.js",
     "test:benefits-wallet-asset": "node scripts/test-benefits-wallet-asset-provider.mjs",
     "test:benefits-pass-ui": "node scripts/test-benefits-customer-pass-ui.js",
     "test:benefits-discovery-ui": "node scripts/test-benefits-discovery-ui.js",

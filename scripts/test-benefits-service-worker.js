@@ -8,11 +8,17 @@ const vm = require('vm');
 
 const listeners = new Map();
 const cacheWrites = [];
+const precacheAdds = [];
 let responseStatus = 200;
+let networkOnline = true;
+
+function cacheKey(key) {
+  return typeof key === 'string' ? key : key.url;
+}
 
 const cache = {
-  addAll: async () => {},
-  put: async (key) => cacheWrites.push(key),
+  addAll: async (urls) => precacheAdds.push(...urls),
+  put: async (key) => cacheWrites.push(cacheKey(key)),
 };
 
 const context = {
@@ -25,11 +31,19 @@ const context = {
     delete: async () => true,
     match: async () => ({ source: 'offline-root' }),
   },
-  fetch: async () => ({
-    ok: responseStatus >= 200 && responseStatus < 300,
-    status: responseStatus,
-    clone() { return this; },
-  }),
+  fetch: async (request) => {
+    if (!networkOnline) throw new Error('offline');
+    const url = typeof request === 'string' ? request : request.url;
+    if (url === '/' || url === 'https://shop.ifrunit.tech/') {
+      return new Response(
+        '<html><head><link rel="stylesheet" href="/_next/static/css/app.css"></head>' +
+        "<body><script src='/_next/static/chunks/app.js'></script>" +
+        '<script src="https://third-party.example/tracker.js"></script></body></html>',
+        { status: responseStatus, headers: { 'content-type': 'text/html' } }
+      );
+    }
+    return new Response('asset', { status: responseStatus });
+  },
   self: {
     location: { origin: 'https://shop.ifrunit.tech' },
     addEventListener: (name, handler) => listeners.set(name, handler),
@@ -57,6 +71,12 @@ function sha256(filePath) {
 
 vm.runInNewContext(source, context, { filename: 'sw.js' });
 
+async function install() {
+  let installPromise;
+  listeners.get('install')({ waitUntil: (promise) => { installPromise = promise; } });
+  await installPromise;
+}
+
 async function navigate(url) {
   let responsePromise;
   listeners.get('fetch')({
@@ -68,7 +88,7 @@ async function navigate(url) {
 
 async function main() {
   assert(listeners.has('fetch'), 'service worker must register a fetch handler');
-  assert(source.includes("const CACHE_NAME = 'ifr-benefits-v14'"), 'service worker cache version must be v14');
+  assert(source.includes("const CACHE_NAME = 'ifr-benefits-v15'"), 'service worker cache version must be v15');
   assert(source.includes("'/icons/ifr-token-64-v11.png'"), 'service worker must precache the canonical PNG favicon');
   assert(source.includes("'/icons/ifr-token-180-v11.png'"), 'service worker must precache the canonical Apple touch icon');
   assert(source.includes("'/icons/ifr-token-192-v11.png'"), 'service worker must precache the canonical 192 icon');
@@ -76,7 +96,7 @@ async function main() {
   assert(source.includes("'/icons/ifr-token-512-v11.png'"), 'service worker must precache the canonical 512 icon');
   assert(source.includes("'/icons/favicon-v11.ico'"), 'service worker must precache the versioned browser favicon');
   assert(!source.includes("favicon-v4.ico"), 'service worker must not precache the competing ICO favicon');
-  assert(layoutSource.includes("'/sw.js?v=14'"), 'layout must register the current service-worker release');
+  assert(layoutSource.includes("'/sw.js?v=15'"), 'layout must register the current service-worker release');
   assert(source.includes("'/copilot-avatar.jpg'"), 'service worker must precache the Copilot launcher asset');
   assert(layoutSource.includes("updateViaCache:'none'"), 'registration must bypass stale service-worker HTTP caches');
   assert(layoutSource.includes("'controllerchange'"), 'controlled clients must reload after a service-worker update');
@@ -96,6 +116,15 @@ async function main() {
     'root favicon and versioned favicon must remain byte-identical'
   );
 
+  await install();
+  assert(!precacheAdds.includes('/'), 'root document must be fetched explicitly to discover its build assets');
+  assert(precacheAdds.includes('/manifest.json'), 'manifest must remain in the fixed precache');
+  assert(cacheWrites.includes('/'), 'install must cache the current root document');
+  assert(cacheWrites.includes('https://shop.ifrunit.tech/_next/static/css/app.css'), 'install must cache current Next.js CSS');
+  assert(cacheWrites.includes('https://shop.ifrunit.tech/_next/static/chunks/app.js'), 'install must cache current Next.js JavaScript');
+  assert(!cacheWrites.includes('https://third-party.example/tracker.js'), 'install must not cache third-party assets');
+  cacheWrites.length = 0;
+
   await navigate('https://shop.ifrunit.tech/guide');
   assert.deepStrictEqual(cacheWrites, [], 'a subpage must not replace the offline app shell');
 
@@ -106,6 +135,16 @@ async function main() {
   responseStatus = 200;
   await navigate('https://shop.ifrunit.tech/');
   assert.deepStrictEqual(cacheWrites, ['/'], 'a successful root response should refresh the offline app shell');
+
+  let apiResponsePromise;
+  networkOnline = false;
+  listeners.get('fetch')({
+    request: { method: 'GET', mode: 'cors', destination: '', url: 'https://shop.ifrunit.tech/api/health' },
+    respondWith: (promise) => { apiResponsePromise = promise; },
+  });
+  const apiResponse = await apiResponsePromise;
+  assert.strictEqual(apiResponse.status, 503, 'offline API requests must fail explicitly');
+  assert.deepStrictEqual(cacheWrites, ['/'], 'offline API responses must never be cached');
 
   console.log('[benefits-sw-test] PASS');
 }

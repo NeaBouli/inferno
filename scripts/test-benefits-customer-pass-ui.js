@@ -142,6 +142,7 @@ function installApiMock(context, state, calls) {
     }
     if (method === 'GET' && pathname === `/api/passes/${passId}/control`) {
       assert.equal(request.headers().authorization, `Bearer ${controlToken}`);
+      if (state.controlDelayMs) await new Promise((resolve) => setTimeout(resolve, state.controlDelayMs));
       return json(route, controlStatus(state));
     }
     if (method === 'GET' && pathname === `/api/passes/${passId}`) {
@@ -189,6 +190,16 @@ function installApiMock(context, state, calls) {
       assert.equal(request.postDataJSON().signature, dummySignature);
       state.checkout = 'APPROVED';
       return json(route, { status: 'APPROVED', reason: null, lockedAmount: '10000', wallet: customerWallet });
+    }
+    if (method === 'POST' && pathname === `/api/passes/${passId}/cancel`) {
+      assert.equal(request.headers().authorization, `Bearer ${controlToken}`);
+      state.cancelAttempts += 1;
+      if (state.cancelFailure) {
+        return json(route, { error: 'Cancellation temporarily unavailable' }, 503);
+      }
+      state.pass = 'CANCELLED';
+      if (state.checkout === 'PENDING') state.checkout = 'REJECTED';
+      return json(route, { status: 'CANCELLED' });
     }
     if (method === 'POST' && pathname === `/api/sessions/${sessionId}/redeem`) {
       state.redeemAttempts += 1;
@@ -278,7 +289,7 @@ async function run() {
   try {
     await waitForServer(server);
     browser = await chromium.launch({ headless: true });
-    const state = { pass: 'NONE', checkout: 'PENDING', redeemAttempts: 0 };
+    const state = { pass: 'NONE', checkout: 'PENDING', redeemAttempts: 0, cancelAttempts: 0, cancelFailure: false, controlDelayMs: 0 };
     const calls = [];
     const customerContext = await browser.newContext({ serviceWorkers: 'block' });
     const sellerContext = await browser.newContext({ serviceWorkers: 'block' });
@@ -306,6 +317,29 @@ async function run() {
     assert.equal(state.pass, 'OPEN');
     const renderedPassUrl = (await passPanel.locator('p.font-mono').textContent())?.trim();
     assert.equal(renderedPassUrl, `${origin}/p/${passId}`, 'rendered QR payload must be the canonical pass URL');
+
+    await passPanel.getByRole('button', { name: 'Cancel & new pass', exact: true }).click();
+    await passPanel.getByText('Previous pass cancelled. You can create a new customer QR.').waitFor();
+    assert.equal(state.cancelAttempts, 1, 'starting over must revoke the active backend pass');
+    await passPanel.getByRole('button', { name: 'Create customer QR', exact: true }).click();
+    await passPanel.getByText('Pass ready. Let the seller scan this QR, then review the exact offer here.').waitFor();
+    state.cancelFailure = true;
+    await passPanel.getByRole('button', { name: 'Cancel & new pass', exact: true }).click();
+    await passPanel.getByText('Cancellation temporarily unavailable').waitFor();
+    assert.equal(state.cancelAttempts, 2, 'failed cancellation must reach the backend once');
+    assert.equal(await passPanel.locator('p.font-mono').textContent(), renderedPassUrl, 'failed cancellation must retain the active pass and control state');
+    state.cancelFailure = false;
+    state.controlDelayMs = 750;
+    await customer.getByRole('button', { name: 'Disconnect', exact: true }).first().click();
+    await customer.getByRole('button', { name: 'Connect wallet', exact: true }).first().waitFor();
+    await customer.reload({ waitUntil: 'domcontentloaded' });
+    const checkingPass = passPanel.getByRole('button', { name: 'Checking pass...', exact: true });
+    await checkingPass.waitFor();
+    assert.equal(await checkingPass.isDisabled(), true, 'a restored pass must not be discarded before its status is known');
+    await passPanel.getByRole('button', { name: 'Cancel & new pass', exact: true }).waitFor();
+    state.controlDelayMs = 0;
+    await customer.getByRole('button', { name: 'Connect wallet', exact: true }).first().click();
+    await customer.getByRole('button', { name: 'Disconnect', exact: true }).first().waitFor();
 
     await seller.goto(`${origin}/b/${businessId}`, { waitUntil: 'domcontentloaded' });
     await seller.getByRole('heading', { name: business.name }).waitFor();
@@ -340,6 +374,10 @@ async function run() {
     await redeem.evaluate((button) => button.click());
     await seller.waitForTimeout(100);
     assert.equal(state.redeemAttempts, 1, 'disabled redeemed checkout must not submit a replay');
+    await passPanel.getByRole('button', { name: 'Refresh', exact: true }).click();
+    await passPanel.getByRole('button', { name: 'New pass', exact: true }).click();
+    await passPanel.getByRole('button', { name: 'Create customer QR', exact: true }).waitFor();
+    assert.equal(state.cancelAttempts, 2, 'a terminal checkout should clear locally without a redundant cancellation');
 
     for (const requiredCall of [
       'POST /api/passes/challenge',
@@ -347,6 +385,7 @@ async function run() {
       `POST /api/passes/${passId}/bind`,
       `POST /api/passes/${passId}/challenge`,
       `POST /api/passes/${passId}/confirm`,
+      `POST /api/passes/${passId}/cancel`,
       `POST /api/sessions/${sessionId}/redeem`,
     ]) {
       assert.ok(calls.includes(requiredCall), `missing API transition: ${requiredCall}`);
