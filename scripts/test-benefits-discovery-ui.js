@@ -58,6 +58,24 @@ async function waitForServer(child) {
   throw new Error('Timed out waiting for Benefits frontend');
 }
 
+async function waitForAttribute(locator, name, expected, timeoutMs = 5000) {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    if (await locator.getAttribute(name) === expected) return;
+    await new Promise((resolve) => setTimeout(resolve, 50));
+  }
+  assert.equal(await locator.getAttribute(name), expected);
+}
+
+async function waitForLocation(page, pathname, hash = '') {
+  await page.waitForFunction(
+    ({ expectedPathname, expectedHash }) => (
+      window.location.pathname === expectedPathname && window.location.hash === expectedHash
+    ),
+    { expectedPathname: pathname, expectedHash: hash }
+  );
+}
+
 async function run() {
   const serverOutput = [];
   const server = spawn(
@@ -140,7 +158,7 @@ async function run() {
     const offersSection = page.locator('#offers');
     await offersSection.getByText(offer.productName, { exact: true }).waitFor();
     await offersSection.getByRole('link', { name: 'Open seller catalog', exact: true }).click();
-    await page.waitForURL(`${origin}/s/${offer.business.id}`);
+    await waitForLocation(page, `/s/${offer.business.id}`);
     await page.getByText('Other member benefits', { exact: true }).waitFor();
     await page.getByText(offer.productName, { exact: true }).waitFor();
     assert.equal(
@@ -149,7 +167,7 @@ async function run() {
       'a standalone active rule must not produce an empty seller catalog'
     );
     await page.goBack({ waitUntil: 'domcontentloaded' });
-    await page.waitForURL(`${origin}/`);
+    await waitForLocation(page, '/');
     await offersSection.getByText(offer.productName, { exact: true }).waitFor();
     await offersSection.getByRole('searchbox', { name: 'Search offers', exact: true }).fill('missing');
     await offersSection.getByText('No offers match these filters', { exact: true }).waitFor();
@@ -167,15 +185,17 @@ async function run() {
     await page.reload({ waitUntil: 'domcontentloaded' });
     await offersSection.getByText('The first public seller offers are still being prepared.', { exact: true }).waitFor();
     await offersSection.getByRole('button', { name: 'Become a seller', exact: true }).click();
-    await page.waitForURL(`${origin}/#seller-workspace`);
-    await page.getByRole('button', { name: /Seller Offer discounts/ }).waitFor();
-    assert.equal(await page.getByRole('button', { name: /Seller Offer discounts/ }).getAttribute('aria-pressed'), 'true');
+    await waitForLocation(page, '/', '#seller-workspace');
+    const sellerModeButton = page.getByRole('button', { name: /Seller Offer discounts/ });
+    await sellerModeButton.waitFor();
+    await waitForAttribute(sellerModeButton, 'aria-pressed', 'true');
     await page.getByRole('heading', { name: 'Benefit rule manager', exact: true }).waitFor();
 
     await page.goBack({ waitUntil: 'domcontentloaded' });
-    await page.waitForURL(`${origin}/`);
-    await page.getByRole('button', { name: /Customer Unlock benefits/ }).waitFor();
-    assert.equal(await page.getByRole('button', { name: /Customer Unlock benefits/ }).getAttribute('aria-pressed'), 'true');
+    await waitForLocation(page, '/');
+    const customerModeButton = page.getByRole('button', { name: /Customer Unlock benefits/ });
+    await customerModeButton.waitFor();
+    await waitForAttribute(customerModeButton, 'aria-pressed', 'true');
 
     for (const viewport of [{ width: 375, height: 812 }, { width: 820, height: 1180 }]) {
       await page.setViewportSize(viewport);

@@ -207,16 +207,23 @@ function installApiMock(context, state, calls) {
 function installWallet(context, account) {
   return context.addInitScript(({ account, signature }) => {
     const listeners = new Map();
+    let connected = false;
     const provider = {
       isMetaMask: true,
       providers: [],
       request: async ({ method }) => {
-        if (method === 'eth_requestAccounts' || method === 'eth_accounts') return [account];
+        if (method === 'eth_requestAccounts') {
+          connected = true;
+          return [account];
+        }
+        if (method === 'eth_accounts') return connected ? [account] : [];
         if (method === 'eth_chainId') return '0x1';
         if (method === 'net_version') return '1';
         if (method === 'personal_sign' || method === 'eth_sign') return signature;
         if (method === 'wallet_switchEthereumChain' || method === 'wallet_requestPermissions') return null;
-        if (method === 'wallet_getPermissions') return [{ parentCapability: 'eth_accounts' }];
+        if (method === 'wallet_getPermissions') {
+          return connected ? [{ parentCapability: 'eth_accounts' }] : [];
+        }
         if (method === 'eth_getBalance') return '0x16345785d8a0000';
         if (method === 'eth_blockNumber') return '0x1';
         if (method === 'eth_call') return `0x${BigInt(10_000 * 1e9).toString(16).padStart(64, '0')}`;
