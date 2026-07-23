@@ -14,6 +14,7 @@ on:
       - 'scripts/test-benefits-wallet-lock-ui.js'
       - 'scripts/test-benefits-accessibility.js'
       - 'scripts/test-benefits-csp.js'
+      - 'scripts/test-benefits-fullstack-e2e.js'
       - 'scripts/test-benefits-doc-consistency.cjs'
       - 'scripts/test-benefits-service-worker.js'
       - 'scripts/test-benefits-wallet-asset-provider.mjs'
@@ -36,6 +37,7 @@ on:
       - 'scripts/test-benefits-wallet-lock-ui.js'
       - 'scripts/test-benefits-accessibility.js'
       - 'scripts/test-benefits-csp.js'
+      - 'scripts/test-benefits-fullstack-e2e.js'
       - 'scripts/test-benefits-doc-consistency.cjs'
       - 'scripts/test-benefits-service-worker.js'
       - 'scripts/test-benefits-wallet-asset-provider.mjs'
@@ -156,6 +158,7 @@ jobs:
           cache: 'npm'
       - run: npm ci
       - run: npm ci --prefix apps/benefits-network/frontend
+      - run: npm ci --prefix apps/benefits-network/backend
       - run: npx playwright install --with-deps chromium
       - run: npm run test:benefits-pass-ui
       - run: npm run test:benefits-discovery-ui
@@ -179,3 +182,5 @@ jobs:
           if [ "$ready" != 1 ]; then cat /tmp/benefits-a11y-next.log; exit 1; fi
           BENEFITS_BASE_URL=http://127.0.0.1:3000 npm run test:benefits-a11y
           BENEFITS_BASE_URL=http://127.0.0.1:3000 npm run test:benefits-csp
+      - name: Run composed Benefits full-stack browser E2E
+        run: npm run test:benefits-fullstack

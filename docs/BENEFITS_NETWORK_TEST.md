@@ -107,6 +107,19 @@ service worker; and fails on browser policy violations. Dynamic routes use a saf
 resource state, so promotion of the complete candidate policy to enforcement still requires the
 production WalletConnect Project ID and physical wallet/device evidence.
 
+The composed full-stack gate validates the production integration boundary without mocks:
+
+```bash
+npm run test:benefits-fullstack
+```
+
+It applies every SQLite migration to a unique disposable database, builds and starts the real
+Express and Next.js production servers on loopback, creates a seller, product and active offer
+through signed seller API calls, and verifies public discovery, seller catalog navigation and
+selected-offer handoff in Chromium through the real Next.js `/api` rewrite. The wallet and database
+are throwaway, cleanup is automatic, RPC points to a closed loopback port, and neither Mainnet nor
+production is contacted.
+
 The backend suite includes a local JSON-RPC contract boundary for Ethers 6:
 
 ```bash
