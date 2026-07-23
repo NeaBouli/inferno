@@ -5,18 +5,35 @@ const fs = require('node:fs');
 const path = require('node:path');
 const ts = require('typescript');
 
+function transpile(sourcePath) {
+  return ts.transpileModule(fs.readFileSync(sourcePath, 'utf8'), {
+    compilerOptions: {
+      module: ts.ModuleKind.CommonJS,
+      target: ts.ScriptTarget.ES2020,
+      strict: true,
+    },
+    fileName: sourcePath,
+  }).outputText;
+}
+
+const moneyModule = { exports: {} };
+const moneyPath = path.join(__dirname, '..', 'src', 'lib', 'money.ts');
+new Function('module', 'exports', 'require', transpile(moneyPath))(
+  moneyModule,
+  moneyModule.exports,
+  require
+);
+
 const sourcePath = path.join(__dirname, '..', 'src', 'lib', 'customerHistory.ts');
-const source = fs.readFileSync(sourcePath, 'utf8');
-const transpiled = ts.transpileModule(source, {
-  compilerOptions: {
-    module: ts.ModuleKind.CommonJS,
-    target: ts.ScriptTarget.ES2020,
-    strict: true,
-  },
-  fileName: sourcePath,
-});
 const moduleUnderTest = { exports: {} };
-new Function('module', 'exports', transpiled.outputText)(moduleUnderTest, moduleUnderTest.exports);
+new Function('module', 'exports', 'require', transpile(sourcePath))(
+  moduleUnderTest,
+  moduleUnderTest.exports,
+  (specifier) => {
+    if (specifier === '@/lib/money') return moneyModule.exports;
+    throw new Error(`Unexpected test import: ${specifier}`);
+  }
+);
 
 const { readCustomerProofHistory, redactVerifiedAddress, saveCustomerProofHistoryItem } = moduleUnderTest.exports;
 const values = new Map();
@@ -40,6 +57,8 @@ const status = {
     requiredLockIFR: 1000,
     label: 'Access',
     productName: 'Service',
+    basePriceMinor: '1999',
+    currency: 'EUR',
   },
 };
 
@@ -49,6 +68,8 @@ saveCustomerProofHistoryItem({
   verifiedWalletAddress: walletA,
 });
 assert.strictEqual(readCustomerProofHistory()[0].walletLabel, redactVerifiedAddress(walletA));
+assert.strictEqual(readCustomerProofHistory()[0].basePriceMinor, '1999');
+assert.strictEqual(readCustomerProofHistory()[0].currency, 'EUR');
 
 saveCustomerProofHistoryItem({
   sessionId: 'session-1',
