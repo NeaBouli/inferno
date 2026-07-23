@@ -10,6 +10,11 @@ import sellerRoutes from './routes/seller';
 import customerRoutes from './routes/customer';
 import passRoutes from './routes/passes';
 import { prisma } from './services/sessionService';
+import {
+  RateLimitStoreUnavailableError,
+  initializeRateLimitInfrastructure,
+  isRateLimitInfrastructureReady,
+} from './services/rateLimitInfrastructure';
 
 const app = express();
 app.disable('x-powered-by');
@@ -54,9 +59,15 @@ app.get('/api/health', healthPayload);
 const readyPayload = async (_req: express.Request, res: express.Response) => {
   try {
     await prisma.$queryRaw`SELECT 1`;
-    res.json({ status: 'ready', chainId: config.CHAIN_ID, database: 'ok' });
+    if (!await isRateLimitInfrastructureReady()) throw new RateLimitStoreUnavailableError();
+    res.json({
+      status: 'ready',
+      chainId: config.CHAIN_ID,
+      database: 'ok',
+      rateLimitStore: 'ok',
+    });
   } catch {
-    res.status(503).json({ status: 'not_ready', chainId: config.CHAIN_ID, database: 'error' });
+    res.status(503).json({ status: 'not_ready', chainId: config.CHAIN_ID });
   }
 };
 
@@ -65,15 +76,39 @@ app.get('/api/ready', readyPayload);
 
 // Global error handler
 app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+  if (err instanceof RateLimitStoreUnavailableError) {
+    res.status(503).json({ error: err.message });
+    return;
+  }
   console.error('Unhandled error:', err.message);
   res.status(500).json({ error: 'Internal server error' });
 });
 
-// Init on-chain provider and start server
-initProvider();
-const server = app.listen(config.PORT, () => {
-  console.log(`IFR Benefits Network backend running on port ${config.PORT}`);
-  console.log(`Chain ID: ${config.CHAIN_ID}`);
-});
+function listen() {
+  initProvider();
+  return app.listen(config.PORT, () => {
+    console.log(`IFR Benefits Network backend running on port ${config.PORT}`);
+    console.log(`Chain ID: ${config.CHAIN_ID}`);
+    console.log(`Rate limit store: ${config.RATE_LIMIT_STORE ?? 'memory'}`);
+  });
+}
+
+let server: ReturnType<typeof app.listen>;
+
+if (config.RATE_LIMIT_STORE === 'redis') {
+  void initializeRateLimitInfrastructure()
+    .then(() => {
+      server = listen();
+    })
+    .catch((error) => {
+      console.error(
+        'Backend startup refused: rate limit Redis unavailable:',
+        error instanceof Error ? error.message : 'unknown error'
+      );
+      process.exit(1);
+    });
+} else {
+  server = listen();
+}
 
 export { app, server };

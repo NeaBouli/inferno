@@ -4,6 +4,7 @@ import { validate } from '../middleware/validator';
 import { challengeRateLimiter, customerPassRateLimiter, sellerRateLimiter } from '../middleware/rateLimiter';
 import { SellerAuthError, verifySellerSignature } from '../services/sellerAuth';
 import { assertSellerWalletActionAllowed, AuthenticatedRateLimitError } from '../services/authenticatedRateLimiter';
+import { RateLimitStoreUnavailableError } from '../services/rateLimitInfrastructure';
 import {
   CustomerPassAuthError,
   bindCustomerPass,
@@ -43,6 +44,10 @@ function handleError(err: unknown, res: Response, next: (err: unknown) => void) 
   if (err instanceof AuthenticatedRateLimitError) {
     res.set('Retry-After', String(err.retryAfterSeconds));
     res.status(429).json({ error: err.message });
+    return;
+  }
+  if (err instanceof RateLimitStoreUnavailableError) {
+    res.status(503).json({ error: err.message });
     return;
   }
   if (err instanceof Error) {
@@ -107,7 +112,7 @@ router.post('/:id/bind', sellerRateLimiter, validate(z.object({
       businessId: req.body.businessId,
       scope,
     });
-    assertSellerWalletActionAllowed(sellerWallet);
+    await assertSellerWalletActionAllowed(sellerWallet);
     privateNoStore(res);
     res.status(201).json(await bindCustomerPass({
       passId: req.params.id,

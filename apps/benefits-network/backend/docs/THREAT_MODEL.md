@@ -51,6 +51,12 @@
 - Attest attempts: max 3 per session (enforced in database)
 - Global attest rate limit: max 50 per IP per hour
 - Auth-message and challenge reads are IP-limited
+- The current one-replica deployment uses bounded in-memory counters; declared multi-replica
+  deployments require a shared Redis store or startup is refused
+- Redis-backed public-IP and recovered-wallet counters fail closed, and Redis readiness is checked
+  before the HTTP listener starts and through `/ready`
+- SQLite is explicitly rejected when more than one backend replica is declared; a shared limiter
+  alone does not make the application database safe for horizontal scaling
 - Only private/loopback proxy hops are trusted when resolving the public client IP; arbitrary forwarded headers are not trusted directly
 - Failed attestations before the third attempt keep the stored session PENDING so a real customer can recover from an insufficient lock or bad wallet prompt without asking the seller for a new QR
 - After 3 failed attempts, the session becomes terminal REJECTED and cannot accept more attestations

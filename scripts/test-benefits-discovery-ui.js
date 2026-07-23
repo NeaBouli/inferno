@@ -176,7 +176,12 @@ async function run() {
         return route.fulfill({
           status: 200,
           contentType: 'application/json',
-          body: JSON.stringify({ status: 'ready', chainId: 1, database: 'ok' }),
+          body: JSON.stringify({
+            status: 'ready',
+            chainId: 1,
+            database: 'ok',
+            rateLimitStore: 'ok',
+          }),
         });
       }
       return route.fulfill({ status: 404, contentType: 'application/json', body: JSON.stringify({ error: 'Not found' }) });
@@ -357,7 +362,7 @@ async function run() {
       status: 200,
       contentType: 'application/json',
       body: JSON.stringify(route.request().url().includes('/api/ready')
-        ? { status: 'ready', chainId: 1, database: 'ok' }
+        ? { status: 'ready', chainId: 1, database: 'ok', rateLimitStore: 'ok' }
         : discoveryResponse([])),
     }));
     const ipadPage = await ipadContext.newPage();

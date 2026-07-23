@@ -165,7 +165,7 @@ describe('Redeem route authorization', () => {
   beforeEach(async () => {
     sellerWalletLimiterSpy = jest
       .spyOn(authenticatedRateLimiter, 'assertSellerWalletActionAllowed')
-      .mockImplementation(() => undefined);
+      .mockResolvedValue(undefined);
     await prisma.sellerAuthorizationChallenge.deleteMany();
     await prisma.auditLog.deleteMany();
     await prisma.session.deleteMany();
@@ -332,7 +332,7 @@ describe('Redeem route authorization', () => {
     });
     expect(malformed.status).toBe(401);
 
-    sellerWalletLimiterSpy.mockImplementationOnce(() => {
+    sellerWalletLimiterSpy.mockImplementationOnce(async () => {
       throw new authenticatedRateLimiter.AuthenticatedRateLimitError(42);
     });
     const limited = await postCreateSession(

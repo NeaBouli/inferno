@@ -52,11 +52,22 @@ on:
 jobs:
   test-backend:
     runs-on: ubuntu-latest
+    services:
+      redis:
+        image: redis:7.4.7-alpine@sha256:02f2cc4882f8bf87c79a220ac958f58c700bdec0dfb9b9ea61b62fb0e8f1bfcf
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
     defaults:
       run:
         working-directory: apps/benefits-network/backend
     env:
       DATABASE_URL: file:./test.db
+      TEST_REDIS_URL: redis://127.0.0.1:6379
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
@@ -73,6 +84,7 @@ jobs:
       - run: npm test
       - run: npm run test:ethers-v6-lifecycle
       - run: npm run build
+      - run: npm run test:rate-limit-startup
       - run: npm run smoke:http
       - name: Build and verify Node 22 backend image
         run: |

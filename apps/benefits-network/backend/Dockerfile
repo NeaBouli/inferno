@@ -29,5 +29,5 @@ COPY --from=builder /app/dist ./dist
 COPY package.json package-lock.json ./
 COPY prisma ./prisma
 EXPOSE 3001
-HEALTHCHECK --interval=30s --timeout=5s --retries=3 CMD wget -q -O- http://127.0.0.1:3001/health | grep -q ok || exit 1
+HEALTHCHECK --interval=30s --timeout=5s --retries=3 CMD wget -q -O- http://127.0.0.1:3001/ready | grep -q '"status":"ready"' || exit 1
 CMD ["sh", "-c", "npx prisma migrate deploy && node dist/index.js"]

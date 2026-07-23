@@ -25,6 +25,16 @@ npm run dev            # http://localhost:3001
 | `DATABASE_URL` | Prisma database URL | `file:./dev.db` |
 | `PORT` | Server port | `3001` |
 | `MAX_ACTIVE_SELLER_BUSINESSES_PER_WALLET` | Anti-spam cap for active wallet-owned seller profiles | `5` |
+| `RATE_LIMIT_STORE` | `memory` for one replica or `redis` for a shared rate-limit store | `memory` |
+| `RATE_LIMIT_REDIS_URL` | Redis/Rediss URL; required only when `RATE_LIMIT_STORE=redis` | unset |
+| `BACKEND_REPLICA_COUNT` | Declared backend replica count used by the startup safety guard | `1` |
+
+The default SQLite and in-memory configuration is intentionally single-replica. Before scaling
+above one backend replica, migrate the application database away from SQLite, configure a shared
+Redis rate-limit store, and set `BACKEND_REPLICA_COUNT` to the real replica count. Startup fails
+closed if multiple replicas are declared with SQLite or process-local limits. Redis is connected
+and pinged before the HTTP listener starts, and `/ready` becomes unavailable if the shared store
+is not ready.
 
 ## API Endpoints
 

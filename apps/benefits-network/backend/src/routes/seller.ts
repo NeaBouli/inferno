@@ -25,6 +25,7 @@ import {
   AuthenticatedRateLimitError,
   assertSellerWalletActionAllowed,
 } from '../services/authenticatedRateLimiter';
+import { RateLimitStoreUnavailableError } from '../services/rateLimitInfrastructure';
 import {
   businessServiceAreaKey,
   MAX_BUSINESS_CATEGORIES,
@@ -201,7 +202,7 @@ async function requireSellerAuth(req: Request, action: string, businessId: strin
     nonce: singleUse ? auth.nonce : undefined,
     scope: singleUse ? scope : undefined,
   });
-  assertSellerWalletActionAllowed(wallet);
+  await assertSellerWalletActionAllowed(wallet);
   if (singleUse) {
     await consumeSellerAuthorizationChallenge(prisma, {
       nonce: auth.nonce,
@@ -218,6 +219,10 @@ function handleSellerError(err: unknown, res: Response, next: NextFunction) {
   if (err instanceof AuthenticatedRateLimitError) {
     res.set('Retry-After', String(err.retryAfterSeconds));
     res.status(429).json({ error: err.message });
+    return;
+  }
+  if (err instanceof RateLimitStoreUnavailableError) {
+    res.status(503).json({ error: err.message });
     return;
   }
   if (err instanceof SellerAuthError) {

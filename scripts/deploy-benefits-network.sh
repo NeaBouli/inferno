@@ -110,18 +110,43 @@ post_status() {
   remote "cd '$REMOTE_ROOT' && docker compose ps benefits-backend benefits-frontend && df -h '$REMOTE_VOLUME' && docker system df"
 }
 
+backend_replica_count() {
+  remote "cd '$REMOTE_ROOT' && docker compose ps -aq benefits-backend | wc -l | tr -d ' '"
+}
+
+assert_single_backend() {
+  local require_running="${1:-0}"
+  local count
+  count="$(backend_replica_count)"
+  if [[ ! "$count" =~ ^[0-9]+$ ]]; then
+    echo "Could not determine Benefits backend replica count." >&2
+    exit 1
+  fi
+  if (( count > 1 )); then
+    echo "Refusing operation: found $count Benefits backend replicas; current SQLite topology permits exactly one." >&2
+    exit 78
+  fi
+  if [[ "$require_running" == "1" ]] && (( count != 1 )); then
+    echo "Expected exactly one running Benefits backend replica after deploy, found $count." >&2
+    exit 1
+  fi
+}
+
 if [[ "$MODE" == "status" ]]; then
+  assert_single_backend
   post_status
   exit 0
 fi
 
 if [[ "$MODE" == "capacity" ]]; then
   ensure_space "capacity-check" 0 0
+  assert_single_backend
   post_status
   exit 0
 fi
 
 ensure_space "pre-deploy" 1
+assert_single_backend
 sync_app
 
 case "$MODE" in
@@ -143,5 +168,6 @@ case "$MODE" in
     ;;
 esac
 
+assert_single_backend 1
 ensure_space "post-deploy"
 post_status
