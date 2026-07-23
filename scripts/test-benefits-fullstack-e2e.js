@@ -186,11 +186,13 @@ function sellerHeaders(auth) {
 
 async function seedRealApi() {
   const wallet = ethers.Wallet.createRandom();
-  const createAuth = await sellerAuth(wallet, 'business:create', 'new', 'new');
+  const slug = 'ifr-full-stack-cafe';
+  const createAuth = await sellerAuth(wallet, 'business:create', 'new', slug);
   const business = await fetchJson('/api/seller/businesses', {
     method: 'POST',
     body: JSON.stringify({
       name: 'IFR Full-Stack Cafe',
+      slug,
       description: 'Real API fixture for the composed Benefits browser gate.',
       website: 'https://ifrunit.tech/',
       serviceArea: 'Athens',
@@ -207,6 +209,7 @@ async function seedRealApi() {
       nonce: createAuth.nonce,
     }),
   });
+  assert.equal(business.slug, slug, 'real seller creation must retain the signed public slug');
 
   const productAuth = await sellerAuth(wallet, 'products:create', business.id);
   const product = await fetchJson(`/api/seller/businesses/${business.id}/products`, {
@@ -263,13 +266,13 @@ async function verifyBrowser(fixture) {
     await offers.getByText('14% benefit', { exact: true }).waitFor();
     await offers.getByText('1,000 IFR in active TIME_ONLY commitments', { exact: true }).waitFor();
     await offers.getByRole('link', { name: 'Seller catalog', exact: true }).click();
-    await page.waitForURL(`${frontendOrigin}/s/${fixture.business.id}`);
+    await page.waitForURL(`${frontendOrigin}/s/${fixture.business.slug}`);
     await page.getByText(fixture.product.name, { exact: true }).waitFor();
     await page.getByRole('link', { name: 'Use this offer', exact: true }).click();
     await page.waitForURL((url) => (
       url.pathname === '/' &&
       url.hash === '#customer-pass' &&
-      url.searchParams.get('seller') === fixture.business.id &&
+      url.searchParams.get('seller') === fixture.business.slug &&
       url.searchParams.get('offer') === fixture.rule.id
     ));
     const pass = page.locator('#customer-pass');
@@ -292,11 +295,14 @@ async function verifyBrowser(fixture) {
     );
     assert.ok(
       apiResponses.some(({ url, status }) => (
-        new URL(url).pathname === `/api/businesses/${fixture.business.id}/products` &&
+        new URL(url).pathname === `/api/businesses/${fixture.business.slug}/products` &&
         status === 200
       )),
       'Browser did not load the real seller catalog API'
     );
+    await page.goto(`${frontendOrigin}/s/${fixture.business.id}`, { waitUntil: 'domcontentloaded' });
+    await page.waitForURL(`${frontendOrigin}/s/${fixture.business.slug}`);
+    await page.getByText(fixture.product.name, { exact: true }).waitFor();
   } finally {
     await browser.close();
   }

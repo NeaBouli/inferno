@@ -39,7 +39,7 @@ async function sellerHeaders(
   scope?: string
 ): Promise<Record<string, string>> {
   const mutations = new Set([
-    'business:create', 'business:delete', 'operators:create', 'operators:delete',
+    'business:create', 'business:slug', 'business:delete', 'operators:create', 'operators:delete',
     'products:create', 'products:update', 'products:delete', 'rewards:apply',
     'rules:create', 'rules:update', 'rules:delete', 'sessions:create', 'sessions:redeem',
   ]);

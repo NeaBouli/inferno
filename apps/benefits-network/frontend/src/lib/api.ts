@@ -26,6 +26,7 @@ async function fetchJSON<T>(url: string, opts?: RequestInit): Promise<T> {
 
 export interface PublicBusinessProfile {
   id: string;
+  slug: string | null;
   name: string;
   description: string | null;
   website: string | null;
@@ -158,8 +159,13 @@ export interface AdminBusinessInput {
   tierLabel?: string;
 }
 
+export interface SellerBusinessInput extends AdminBusinessInput {
+  slug?: string;
+}
+
 export interface AdminBusinessCreated {
   id: string;
+  slug: string | null;
   name?: string;
   description?: string | null;
   website?: string | null;
@@ -184,6 +190,14 @@ export interface SellerBusinessSummary extends AdminBusinessCreated {
   createdAt: string;
   rulesCount: number;
   productsCount: number;
+}
+
+export interface SellerBusinessSlugClaim {
+  id: string;
+  slug: string;
+  verifyUrl: string;
+  qrUrl: string;
+  catalogUrl: string;
 }
 
 export interface SellerSessionSummary {
@@ -480,7 +494,7 @@ export interface BoundCustomerPass {
 }
 
 export function getBusiness(id: string) {
-  return fetchJSON<BusinessInfo>(`/api/businesses/${id}`);
+  return fetchJSON<BusinessInfo>(`/api/businesses/${encodeURIComponent(id)}`);
 }
 
 export function discoverOffers(filters: {
@@ -503,12 +517,15 @@ export function discoverOffers(filters: {
 }
 
 export function getBusinessRules(id: string, signal?: AbortSignal) {
-  return fetchJSON<{ rules: BenefitRule[] }>(`/api/businesses/${id}/rules`, { signal });
+  return fetchJSON<{ rules: BenefitRule[] }>(
+    `/api/businesses/${encodeURIComponent(id)}/rules`,
+    { signal }
+  );
 }
 
 export function getBusinessProducts(id: string, signal?: AbortSignal) {
   return fetchJSON<{ business: PublicBusinessProfile; products: PublicCatalogProduct[] }>(
-    `/api/businesses/${id}/products`,
+    `/api/businesses/${encodeURIComponent(id)}/products`,
     { signal }
   );
 }
@@ -620,7 +637,7 @@ export function deleteAdminBusinessRule(ruleId: string, adminSecret: string) {
   });
 }
 
-export function createSellerBusiness(auth: SellerAuth, input: AdminBusinessInput) {
+export function createSellerBusiness(auth: SellerAuth, input: SellerBusinessInput) {
   return fetchJSON<AdminBusinessCreated>('/api/seller/businesses', {
     method: 'POST',
     body: JSON.stringify({
@@ -648,6 +665,18 @@ export function updateSellerBusinessProfile(
     method: 'PATCH',
     headers: sellerHeaders(auth),
     body: JSON.stringify(input),
+  });
+}
+
+export function claimSellerBusinessSlug(
+  businessId: string,
+  auth: SellerAuth,
+  slug: string
+) {
+  return fetchJSON<SellerBusinessSlugClaim>(`/api/seller/businesses/${businessId}/slug`, {
+    method: 'PATCH',
+    headers: sellerHeaders(auth),
+    body: JSON.stringify({ slug }),
   });
 }
 

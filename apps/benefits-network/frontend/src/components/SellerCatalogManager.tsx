@@ -21,6 +21,7 @@ const productCategories = ['Coffee', 'Retail', 'Digital access', 'Events', 'Serv
 
 interface SellerCatalogManagerProps {
   businessId: string;
+  publicBusinessRef: string;
   ownerReady: boolean;
   products: CatalogProduct[];
   signSellerAction: (action: string, businessId: string, scope?: string) => Promise<SellerAuth>;
@@ -31,6 +32,7 @@ interface SellerCatalogManagerProps {
 
 export function SellerCatalogManager({
   businessId,
+  publicBusinessRef,
   ownerReady,
   products,
   signSellerAction,
@@ -196,9 +198,9 @@ export function SellerCatalogManager({
           >
             Load catalog
           </button>
-          {businessId ? (
+          {publicBusinessRef ? (
             <a
-              href={`/s/${encodeURIComponent(businessId)}`}
+              href={`/s/${encodeURIComponent(publicBusinessRef)}`}
               className="rounded-full border border-green-200/35 px-4 py-2 text-xs font-black uppercase tracking-[0.12em] text-green-50"
             >
               Customer view

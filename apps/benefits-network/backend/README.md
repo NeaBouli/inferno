@@ -54,6 +54,7 @@ is not ready.
 | GET | `/api/seller/auth-message` | Public | Issue server-time wallet message for seller actions |
 | POST | `/api/seller/businesses` | Seller wallet signature | Create wallet-owned seller business |
 | GET | `/api/seller/businesses` | Seller wallet signature | List active seller businesses owned by the wallet |
+| PATCH | `/api/seller/businesses/:id/slug` | Owner wallet signature | Claim the business's permanent public seller URL |
 | DELETE | `/api/seller/businesses/:id` | Seller wallet signature | Soft-deactivate owned seller business and active rules |
 | GET | `/api/seller/businesses/:id/rules` | Seller wallet signature | List owned benefit rules |
 | GET | `/api/seller/businesses/:id/products` | Owner wallet signature | List owned catalog items, including archived ones |
@@ -70,9 +71,9 @@ is not ready.
 | POST | `/api/seller/businesses/:id/rules` | Seller wallet signature | Create owned benefit rule |
 | PATCH | `/api/seller/rules/:id` | Seller wallet signature | Update or pause owned benefit rule |
 | DELETE | `/api/seller/rules/:id` | Seller wallet signature | Archive owned benefit rule while preserving checkout history |
-| GET | `/api/businesses/:id` | Public | Get business info |
-| GET | `/api/businesses/:id/rules` | Public | List active public benefit rules |
-| GET | `/api/businesses/:id/products` | Public | List active products/services with active benefits |
+| GET | `/api/businesses/:idOrSlug` | Public | Get business info by legacy ID or permanent public slug |
+| GET | `/api/businesses/:idOrSlug/rules` | Public | List active public benefit rules |
+| GET | `/api/businesses/:idOrSlug/products` | Public | List active products/services with active benefits |
 | POST | `/api/sessions` | Owner/operator wallet signature | Start verification session, optionally bound to a seller benefit rule |
 | GET | `/api/sessions/:id` | Public | Poll minimal, non-cacheable session status; no customer address or detailed rejection data |
 | GET | `/api/sessions/:id/challenge` | Public | Get signature challenge |
@@ -97,6 +98,14 @@ to 80 characters and is stored and returned publicly exactly as normalized. The 
 requires sellers to confirm that they entered no private or street address. The service never asks
 customers for location or coordinates. Legacy profiles without a service area remain visible under
 `All areas`.
+
+Wallet-owned businesses may also carry one immutable public `slug`. Creation signatures bind the
+exact requested slug as their one-time scope; existing businesses claim it with the separate
+`business:slug` action. Slugs use 3-48 lowercase ASCII letters, numbers and single hyphens.
+Reserved routes and CUID-shaped values are rejected, and uniqueness checks cover both existing
+slugs and internal IDs. Public profile, rule, product and discovery reads accept either reference,
+but every seller mutation, session and database relation continues to use the immutable internal
+Business ID. Existing ID links therefore remain valid without weakening checkout authorization.
 
 ## Session Flow
 

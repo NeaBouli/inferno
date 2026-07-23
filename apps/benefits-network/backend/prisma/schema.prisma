@@ -9,6 +9,7 @@ datasource db {
 
 model Business {
   id              String    @id @default(cuid())
+  slug            String?   @unique
   name            String
   description     String?
   website         String?

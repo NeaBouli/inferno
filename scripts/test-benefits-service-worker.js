@@ -88,7 +88,8 @@ async function navigate(url) {
 
 async function main() {
   assert(listeners.has('fetch'), 'service worker must register a fetch handler');
-  assert(source.includes("const CACHE_NAME = 'ifr-benefits-v19'"), 'service worker cache version must be v19');
+  assert(source.includes("const CACHE_NAME = 'ifr-benefits-v20'"), 'service worker cache version must be v20');
+  assert(source.includes("'/offline.html'"), 'service worker must precache the branded deep-link fallback');
   assert(source.includes("'/icons/ifr-token-64-v11.png'"), 'service worker must precache the canonical PNG favicon');
   assert(source.includes("'/icons/ifr-token-180-v11.png'"), 'service worker must precache the canonical Apple touch icon');
   assert(source.includes("'/icons/ifr-token-192-v11.png'"), 'service worker must precache the canonical 192 icon');
@@ -96,7 +97,7 @@ async function main() {
   assert(source.includes("'/icons/ifr-token-512-v11.png'"), 'service worker must precache the canonical 512 icon');
   assert(source.includes("'/icons/favicon-v11.ico'"), 'service worker must precache the versioned browser favicon');
   assert(!source.includes("favicon-v4.ico"), 'service worker must not precache the competing ICO favicon');
-  assert(layoutSource.includes("'/sw.js?v=19'"), 'layout must register the current service-worker release');
+  assert(layoutSource.includes("'/sw.js?v=20'"), 'layout must register the current service-worker release');
   assert(source.includes("'/copilot-avatar.jpg'"), 'service worker must precache the Copilot launcher asset');
   assert(layoutSource.includes("updateViaCache:'none'"), 'registration must bypass stale service-worker HTTP caches');
   assert(layoutSource.includes("'controllerchange'"), 'controlled clients must reload after a service-worker update');
@@ -119,6 +120,7 @@ async function main() {
   await install();
   assert(!precacheAdds.includes('/'), 'root document must be fetched explicitly to discover its build assets');
   assert(precacheAdds.includes('/manifest.json'), 'manifest must remain in the fixed precache');
+  assert(precacheAdds.includes('/offline.html'), 'offline fallback must be available before the first deep link');
   assert(cacheWrites.includes('/'), 'install must cache the current root document');
   assert(cacheWrites.includes('https://shop.ifrunit.tech/_next/static/css/app.css'), 'install must cache current Next.js CSS');
   assert(cacheWrites.includes('https://shop.ifrunit.tech/_next/static/chunks/app.js'), 'install must cache current Next.js JavaScript');

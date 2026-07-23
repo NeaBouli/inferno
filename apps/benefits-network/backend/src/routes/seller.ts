@@ -42,6 +42,12 @@ import {
   safeProductPrice,
   SUPPORTED_PRODUCT_CURRENCIES,
 } from '../services/productPrice';
+import {
+  assertBusinessSlugAvailable,
+  assertCanonicalBusinessSlug,
+  BusinessSlugError,
+  publicBusinessReference,
+} from '../services/businessSlug';
 
 const router = Router();
 const MAX_ACTIVE_CHECKOUT_OPERATORS = 10;
@@ -65,6 +71,7 @@ const businessCategoriesSchema = z.array(z.string().trim().min(1).max(80))
 
 const createBusinessSchema = z.object({
   name: z.string().min(1).max(200),
+  slug: z.string().min(3).max(48).optional(),
   discountPercent: z.number().int().min(0).max(100),
   requiredLockIFR: z.number().int().positive(),
   ttlSeconds: z.number().int().min(10).max(3600).optional(),
@@ -287,6 +294,14 @@ function handleSellerError(err: unknown, res: Response, next: NextFunction) {
     res.status(401).json({ error: err.message });
     return;
   }
+  if (err instanceof BusinessSlugError) {
+    res.status(err.status).json({ error: err.message });
+    return;
+  }
+  if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {
+    res.status(409).json({ error: 'Seller URL is already in use' });
+    return;
+  }
   if (err instanceof Error) {
     if (err.message.includes('not the business owner') || err.message.includes('not authorized for checkout')) {
       res.status(403).json({ error: err.message });
@@ -429,12 +444,15 @@ router.get('/auth-message', challengeRateLimiter, async (req, res, next) => {
 
 router.post('/businesses', sellerRateLimiter, validate(createBusinessSchema), async (req, res, next) => {
   try {
-    const ownerAddress = await requireSellerAuth(req, 'business:create', 'new', 'new');
+    const slug = req.body.slug ? assertCanonicalBusinessSlug(req.body.slug) : null;
+    const ownerAddress = await requireSellerAuth(req, 'business:create', 'new', slug || 'new');
 
     await assertSellerBusinessLimit(ownerAddress);
+    if (slug) await assertBusinessSlugAvailable(slug);
 
     const business = await prisma.business.create({
       data: {
+        slug,
         name: req.body.name,
         ownerAddress,
         discountPercent: req.body.discountPercent,
@@ -452,9 +470,10 @@ router.post('/businesses', sellerRateLimiter, validate(createBusinessSchema), as
 
     res.status(201).json({
       id: business.id,
+      slug: business.slug,
       ownerAddress: business.ownerAddress,
-      verifyUrl: `/b/${business.id}`,
-      qrUrl: `/b/${business.id}`,
+      verifyUrl: `/b/${publicBusinessReference(business)}`,
+      qrUrl: `/b/${publicBusinessReference(business)}`,
       name: business.name,
       description: business.description,
       website: business.website,
@@ -475,6 +494,7 @@ router.get('/businesses', sellerRateLimiter, async (req, res, next) => {
       orderBy: { createdAt: 'desc' },
       select: {
         id: true,
+        slug: true,
         name: true,
         ownerAddress: true,
         discountPercent: true,
@@ -496,6 +516,7 @@ router.get('/businesses', sellerRateLimiter, async (req, res, next) => {
     res.json({
       businesses: businesses.map((business) => publicBusinessProfile({
         id: business.id,
+        slug: business.slug,
         name: business.name,
         description: business.description,
         website: business.website,
@@ -510,8 +531,8 @@ router.get('/businesses', sellerRateLimiter, async (req, res, next) => {
         createdAt: business.createdAt,
         rulesCount: business._count.benefitRules,
         productsCount: business._count.products,
-        verifyUrl: `/b/${business.id}`,
-        qrUrl: `/b/${business.id}`,
+        verifyUrl: `/b/${publicBusinessReference(business)}`,
+        qrUrl: `/b/${publicBusinessReference(business)}`,
       })),
     });
   } catch (err) {
@@ -545,6 +566,7 @@ router.patch(
         },
         select: {
           id: true,
+          slug: true,
           name: true,
           description: true,
           website: true,
@@ -555,6 +577,51 @@ router.patch(
         },
       });
       res.json(publicBusinessProfile(business));
+    } catch (err) {
+      handleSellerError(err, res, next);
+    }
+  }
+);
+
+router.patch(
+  '/businesses/:id/slug',
+  sellerRateLimiter,
+  validate(z.object({ slug: z.string().min(3).max(48) }).strict()),
+  async (req, res, next) => {
+    try {
+      const slug = assertCanonicalBusinessSlug(req.body.slug);
+      await requireBusinessOwner(req, 'business:slug', req.params.id, slug);
+      const business = await prisma.$transaction(async (tx) => {
+        const locked = await tx.$executeRaw`
+          UPDATE "Business"
+          SET "active" = "active"
+          WHERE "id" = ${req.params.id}
+            AND "active" = 1
+        `;
+        if (locked !== 1) throw new Error('Seller-owned business not found');
+        const current = await tx.business.findUnique({
+          where: { id: req.params.id },
+          select: { id: true, slug: true },
+        });
+        if (!current) throw new Error('Seller-owned business not found');
+        if (current.slug && current.slug !== slug) {
+          throw new BusinessSlugError('Seller URL is permanent and cannot be changed', 409);
+        }
+        if (current.slug === slug) return current;
+        await assertBusinessSlugAvailable(slug, current.id, tx);
+        return tx.business.update({
+          where: { id: current.id },
+          data: { slug },
+          select: { id: true, slug: true },
+        });
+      });
+      res.json({
+        id: business.id,
+        slug: business.slug,
+        verifyUrl: `/b/${publicBusinessReference(business)}`,
+        qrUrl: `/b/${publicBusinessReference(business)}`,
+        catalogUrl: `/s/${publicBusinessReference(business)}`,
+      });
     } catch (err) {
       handleSellerError(err, res, next);
     }

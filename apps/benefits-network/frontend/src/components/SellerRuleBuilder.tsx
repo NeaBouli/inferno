@@ -28,6 +28,7 @@ import {
   SellerBusinessSummary,
   SellerActivityMetrics,
   SellerSessionSummary,
+  claimSellerBusinessSlug,
   createAdminBusinessRule,
   createSellerBusiness,
   createSellerBusinessRule,
@@ -39,6 +40,7 @@ import {
   deleteSellerCheckoutOperator,
   getAdminBusinessRules,
   getAdminBusinessProfile,
+  getBusiness,
   getBusinessRules,
   getSellerAuthMessage,
   getSellerBusinesses,
@@ -59,6 +61,13 @@ import {
   lockSourceRequirement,
   verifiedLockSourceLabel,
 } from '@/lib/lockSource';
+import {
+  businessPublicReference,
+  businessSlugError,
+  normalizeBusinessSlug,
+  parseBusinessReference,
+  suggestBusinessSlug,
+} from '@/lib/businessSlug';
 
 const categories = ['Coffee', 'Retail', 'Digital access', 'Events', 'Services'];
 const profileCategorySuggestions = [
@@ -168,6 +177,7 @@ export function SellerRuleBuilder() {
   const { signMessageAsync } = useSignMessage();
   const { availableConnectors } = useAvailableWalletConnectors(connectors);
   const [businessId, setBusinessId] = useState('');
+  const [businessSlugDraft, setBusinessSlugDraft] = useState('ifr-partner-shop');
   const [adminSecret, setAdminSecret] = useState('');
   const [businessName, setBusinessName] = useState('IFR Partner Shop');
   const [businessDescription, setBusinessDescription] = useState('');
@@ -227,7 +237,6 @@ export function SellerRuleBuilder() {
     setBusinessId(nextBusinessId);
   }
 
-  const scannerUrl = businessId ? `https://shop.ifrunit.tech/b/${businessId}` : '';
   const canUseWalletOwner = Boolean(address && isConnected);
   const normalizedWalletAddress = canUseWalletOwner && address ? address.toLowerCase() : '';
   activeWalletAddressRef.current = normalizedWalletAddress;
@@ -237,6 +246,11 @@ export function SellerRuleBuilder() {
   const activeCatalogCount = catalogProducts.filter((item) => item.active).length;
   const editingRule = rules.find((rule) => rule.id === editingRuleId) || null;
   const selectedBusiness = sellerBusinesses.find((business) => business.id === businessId) || null;
+  const publicBusinessRef = selectedBusiness
+    ? businessPublicReference(selectedBusiness)
+    : businessId;
+  const scannerUrl = publicBusinessRef ? `${SHOP_ORIGIN}/b/${publicBusinessRef}` : '';
+  const catalogUrl = publicBusinessRef ? `${SHOP_ORIGIN}/s/${publicBusinessRef}` : '';
   const selectedBusinessUsesWalletOwner = Boolean(selectedBusiness?.ownerAddress);
   const selectedBusinessOwnerMatchesWallet = Boolean(
     selectedBusiness?.ownerAddress &&
@@ -309,6 +323,7 @@ export function SellerRuleBuilder() {
   const sellerReadinessSteps = [
     { label: 'Wallet-owned seller profile', ready: walletOwnedProfileReady },
     { label: 'Seller profile selected', ready: profileReady },
+    { label: 'Readable permanent seller URL', ready: Boolean(selectedBusiness?.slug), optional: true },
     { label: 'Public profile details filled', ready: publicProfileDetailsReady, optional: true },
     { label: 'Catalog item linked', ready: activeCatalogCount > 0, optional: true },
     { label: 'Active benefit rule loaded', ready: ruleReady },
@@ -331,10 +346,12 @@ export function SellerRuleBuilder() {
   const sellerBackupText = useMemo(() => JSON.stringify(
     {
       app: 'IFR Benefits Network',
-      version: 1,
+      version: 2,
       exportedAt: new Date().toISOString(),
       businessId: businessId || null,
+      sellerSlug: selectedBusiness?.slug || null,
       scannerUrl: scannerUrl || null,
+      catalogUrl: catalogUrl || null,
       sellerName: selectedBusiness?.name || businessName || 'IFR Partner Shop',
       sellerDescription: selectedBusiness?.description || businessDescription || null,
       sellerWebsite: selectedBusiness?.website || businessWebsite || null,
@@ -359,7 +376,7 @@ export function SellerRuleBuilder() {
     },
     null,
     2
-  ), [activeRulesCount, address, businessCategories, businessDescription, businessId, businessLogoUrl, businessName, businessServiceArea, businessWebsite, category, dailyLimit, discount, label, lockSource, minHeld, minLocked, monthlyLimit, product, scannerUrl, selectedBusiness, ttl]);
+  ), [activeRulesCount, address, businessCategories, businessDescription, businessId, businessLogoUrl, businessName, businessServiceArea, businessWebsite, catalogUrl, category, dailyLimit, discount, label, lockSource, minHeld, minLocked, monthlyLimit, product, scannerUrl, selectedBusiness, ttl]);
 
   function getCustomerProofUrl(sessionId: string) {
     return `${SHOP_ORIGIN}/r/${sessionId}`;
@@ -492,6 +509,7 @@ export function SellerRuleBuilder() {
 
   function setBusinessProfileDraft(business: SellerBusinessSummary) {
     setBusinessName(business.name);
+    setBusinessSlugDraft(business.slug || suggestBusinessSlug(business.name));
     setBusinessDescription(business.description || '');
     setBusinessWebsite(business.website || '');
     setBusinessLogoUrl(business.logoUrl || '');
@@ -516,6 +534,7 @@ export function SellerRuleBuilder() {
   function startNewSellerProfile() {
     setActiveBusinessId('');
     setBusinessName('IFR Partner Shop');
+    setBusinessSlugDraft('ifr-partner-shop');
     setBusinessDescription('');
     setBusinessWebsite('');
     setBusinessLogoUrl('');
@@ -530,6 +549,16 @@ export function SellerRuleBuilder() {
     setPublicListing(null);
     setStatus('New seller profile draft started.');
     setError('');
+  }
+
+  function updateBusinessName(nextName: string) {
+    if (
+      !selectedBusiness &&
+      businessSlugDraft === suggestBusinessSlug(businessName)
+    ) {
+      setBusinessSlugDraft(suggestBusinessSlug(nextName));
+    }
+    setBusinessName(nextName);
   }
 
   function addBusinessCategory(rawCategory: string) {
@@ -578,8 +607,12 @@ export function SellerRuleBuilder() {
     setError('');
     setStatus('');
     try {
+      const slug = normalizeBusinessSlug(businessSlugDraft || businessName);
+      const slugValidationError = businessSlugError(slug);
+      if (slugValidationError) throw new Error(slugValidationError);
       const input = {
         name: businessName.trim() || 'IFR Partner Shop',
+        slug,
         description: businessDescription.trim() || null,
         website: businessWebsite.trim() || null,
         logoUrl: businessLogoUrl.trim() || null,
@@ -591,11 +624,12 @@ export function SellerRuleBuilder() {
         tierLabel: defaultTier || undefined,
       };
       const business = await createSellerBusiness(
-        await signSellerAction('business:create', 'new', 'new'),
+        await signSellerAction('business:create', 'new', slug),
         input
       );
       setCreatedBusiness(business);
       setActiveBusinessId(business.id);
+      setBusinessSlugDraft(business.slug || slug);
       setRules([]);
       setSessions([]);
       setActivityMetrics(null);
@@ -603,6 +637,7 @@ export function SellerRuleBuilder() {
       setSellerBusinesses((current) => [
         {
           id: business.id,
+          slug: business.slug,
           ownerAddress: business.ownerAddress,
           verifyUrl: business.verifyUrl,
           qrUrl: business.qrUrl,
@@ -627,6 +662,42 @@ export function SellerRuleBuilder() {
       });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create seller profile');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function claimSellerSlug() {
+    if (!selectedBusiness || !selectedBusinessUsesWalletOwner || !selectedBusinessOwnerMatchesWallet) {
+      setError('Connect the profile owner wallet before claiming its permanent seller URL.');
+      return;
+    }
+    if (selectedBusiness.slug) {
+      setStatus(`Permanent seller URL is already ${SHOP_ORIGIN}/s/${selectedBusiness.slug}.`);
+      return;
+    }
+    const slug = normalizeBusinessSlug(businessSlugDraft);
+    const slugValidationError = businessSlugError(slug);
+    if (slugValidationError) {
+      setError(slugValidationError);
+      return;
+    }
+    setLoading(true);
+    setError('');
+    setStatus('');
+    try {
+      const claimed = await claimSellerBusinessSlug(
+        selectedBusiness.id,
+        await signSellerAction('business:slug', selectedBusiness.id, slug),
+        slug
+      );
+      setSellerBusinesses((current) => current.map((business) => (
+        business.id === selectedBusiness.id ? { ...business, slug: claimed.slug } : business
+      )));
+      setBusinessSlugDraft(claimed.slug);
+      setStatus(`Permanent seller URL claimed: ${SHOP_ORIGIN}${claimed.catalogUrl}`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not claim seller URL');
     } finally {
       setLoading(false);
     }
@@ -1439,7 +1510,7 @@ export function SellerRuleBuilder() {
     }
   }
 
-  function restoreSellerBackup() {
+  async function restoreSellerBackup() {
     const raw = restoreInput.trim();
     if (!raw) {
       setError('Paste a seller backup JSON or Business ID first.');
@@ -1448,12 +1519,23 @@ export function SellerRuleBuilder() {
 
     try {
       if (raw.startsWith('{')) {
-        const parsed = JSON.parse(raw) as { businessId?: unknown; sellerName?: unknown; defaultBenefit?: Partial<BenefitRuleInput> };
-        if (typeof parsed.businessId !== 'string' || !parsed.businessId.trim()) {
+        const parsed = JSON.parse(raw) as {
+          businessId?: unknown;
+          sellerSlug?: unknown;
+          sellerName?: unknown;
+          defaultBenefit?: Partial<BenefitRuleInput>;
+        };
+        const restoredBusinessId = typeof parsed.businessId === 'string'
+          ? parseBusinessReference(parsed.businessId)
+          : '';
+        if (!restoredBusinessId) {
           setError('Seller backup does not include a valid Business ID.');
           return;
         }
-        setActiveBusinessId(parsed.businessId.trim());
+        setActiveBusinessId(restoredBusinessId);
+        if (typeof parsed.sellerSlug === 'string' && !businessSlugError(parsed.sellerSlug)) {
+          setBusinessSlugDraft(parsed.sellerSlug);
+        }
         if (typeof parsed.sellerName === 'string' && parsed.sellerName.trim()) setBusinessName(parsed.sellerName.trim());
         if (parsed.defaultBenefit) {
           if (typeof parsed.defaultBenefit.label === 'string') setLabel(parsed.defaultBenefit.label);
@@ -1475,17 +1557,25 @@ export function SellerRuleBuilder() {
         return;
       }
 
-      const businessIdFromText = raw.replace(/^https?:\/\/shop\.ifrunit\.tech\/b\//, '').split(/[/?#\s]/)[0];
-      if (!businessIdFromText) {
-        setError('Could not read a Business ID from that backup.');
+      const businessRefFromText = parseBusinessReference(raw);
+      if (!businessRefFromText) {
+        setError('Could not read a seller URL or Business ID from that backup.');
         return;
       }
-      setActiveBusinessId(businessIdFromText);
+      let resolvedBusinessId = businessRefFromText;
+      try {
+        const resolved = await getBusiness(businessRefFromText);
+        resolvedBusinessId = resolved.id;
+        if (resolved.slug) setBusinessSlugDraft(resolved.slug);
+      } catch {
+        // Legacy admin-created profiles may only be resolvable by their internal ID.
+      }
+      setActiveBusinessId(resolvedBusinessId);
       setRules([]);
       setSessions([]);
       setActivityMetrics(null);
       setError('');
-      setStatus('Business ID restored. Connect the owner wallet, then load rules or sessions.');
+      setStatus('Seller reference restored. Connect the owner wallet, then load the profile, rules or sessions.');
     } catch {
       setError('Could not parse seller backup JSON.');
     }
@@ -1637,6 +1727,11 @@ export function SellerRuleBuilder() {
                       Available in {business.serviceArea}
                     </span>
                   ) : null}
+                  {business.slug ? (
+                    <span className="mt-2 block text-xs font-bold text-green-100">
+                      shop.ifrunit.tech/s/{business.slug}
+                    </span>
+                  ) : null}
                   <span className="mt-1 block break-all font-mono text-[11px] text-stone-500">{business.id}</span>
                 </button>
                 <div className="mt-3 flex flex-wrap gap-2">
@@ -1748,7 +1843,7 @@ export function SellerRuleBuilder() {
             </button>
           ) : (
             <a
-              href={`/s/${encodeURIComponent(businessId)}`}
+              href={catalogUrl}
               className="rounded-2xl bg-orange-300 px-4 py-3 text-xs font-black uppercase tracking-[0.14em] text-stone-950 shadow-xl shadow-orange-950/30 transition hover:bg-orange-200 disabled:cursor-not-allowed disabled:opacity-50"
             >
               Open public catalog
@@ -1829,11 +1924,51 @@ export function SellerRuleBuilder() {
             Shop or seller name
             <input
               value={businessName}
-              onChange={(event) => setBusinessName(event.target.value)}
+              onChange={(event) => updateBusinessName(event.target.value)}
               disabled={loading || profileNeedsLoading}
               className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none focus:border-orange-300 disabled:cursor-not-allowed disabled:opacity-50"
             />
           </label>
+          <div className="grid gap-2 text-sm font-semibold text-stone-200 md:col-span-2">
+            <label htmlFor="seller-url-slug">Permanent seller URL</label>
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <span className="flex items-center rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-xs text-stone-400">
+                shop.ifrunit.tech/s/
+              </span>
+              <input
+                id="seller-url-slug"
+                value={selectedBusiness?.slug || businessSlugDraft}
+                onChange={(event) => setBusinessSlugDraft(normalizeBusinessSlug(event.target.value))}
+                maxLength={48}
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck={false}
+                readOnly={Boolean(selectedBusiness?.slug)}
+                disabled={loading || profileNeedsLoading}
+                className="min-w-0 flex-1 rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none focus:border-orange-300 read-only:cursor-default read-only:text-green-100 disabled:cursor-not-allowed disabled:opacity-50"
+              />
+              {selectedBusiness && !selectedBusiness.slug && selectedBusinessUsesWalletOwner ? (
+                <button
+                  type="button"
+                  onClick={claimSellerSlug}
+                  disabled={loading || !selectedBusinessOwnerMatchesWallet || Boolean(businessSlugError(businessSlugDraft))}
+                  className="rounded-2xl bg-green-300 px-5 py-3 text-xs font-black uppercase tracking-[0.12em] text-stone-950 disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  Claim URL
+                </button>
+              ) : null}
+            </div>
+            <span className="text-xs font-normal leading-5 text-stone-500">
+              {selectedBusiness?.slug
+                ? 'Permanent and active. Existing Business-ID links continue to work.'
+                : selectedBusiness
+                  ? 'Choose carefully: the owner signs this URL once and it cannot be renamed.'
+                  : 'This URL is signed during profile creation and remains stable when the shop name changes.'}
+            </span>
+            {!selectedBusiness?.slug && businessSlugError(businessSlugDraft) ? (
+              <span className="text-xs font-semibold text-orange-100">{businessSlugError(businessSlugDraft)}</span>
+            ) : null}
+          </div>
           <label className="grid gap-2 text-sm font-semibold text-stone-200 md:col-span-2">
             Public description
             <textarea
@@ -2050,7 +2185,15 @@ export function SellerRuleBuilder() {
                 {scannerUrl}
               </a>
             </p>
-            <div className="mt-4 grid gap-2 sm:grid-cols-3">
+            {selectedBusiness?.slug ? (
+              <p className="mt-1">
+                <strong>Public catalog:</strong>{' '}
+                <a href={catalogUrl} className="break-all text-green-100 underline underline-offset-4">
+                  {catalogUrl}
+                </a>
+              </p>
+            ) : null}
+            <div className="mt-4 grid gap-2 sm:grid-cols-4">
               <button
                 type="button"
                 onClick={() => copyToClipboard('Business ID', businessId)}
@@ -2072,10 +2215,18 @@ export function SellerRuleBuilder() {
               >
                 Share
               </button>
+              <button
+                type="button"
+                onClick={() => copyToClipboard('Catalog link', catalogUrl)}
+                disabled={!catalogUrl}
+                className="rounded-xl border border-green-200/30 px-3 py-2 text-[11px] font-black uppercase tracking-[0.12em] text-green-50 transition hover:bg-green-200/10 disabled:opacity-40"
+              >
+                Copy catalog
+              </button>
               {selectedBusiness ? (
                 <a
-                  href={`/s/${encodeURIComponent(selectedBusiness.id)}`}
-                  className="rounded-xl border border-green-200/30 px-3 py-2 text-center text-[11px] font-black uppercase tracking-[0.12em] text-green-50 transition hover:bg-green-200/10 sm:col-span-3"
+                  href={catalogUrl}
+                  className="rounded-xl border border-green-200/30 px-3 py-2 text-center text-[11px] font-black uppercase tracking-[0.12em] text-green-50 transition hover:bg-green-200/10 sm:col-span-4"
                 >
                   Open public catalog
                 </a>
@@ -2489,6 +2640,7 @@ export function SellerRuleBuilder() {
 
       <SellerCatalogManager
         businessId={businessId}
+        publicBusinessRef={publicBusinessRef}
         ownerReady={canUseWalletOwner}
         products={catalogProducts}
         signSellerAction={signSellerAction}

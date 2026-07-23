@@ -36,15 +36,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     });
     if (!response.ok) return staticRoutes;
     const payload = await response.json() as {
-      catalogs?: Array<{ businessId: string; lastModified: string }>;
+      catalogs?: Array<{ businessId: string; businessRef?: string; lastModified: string }>;
     };
     if (!Array.isArray(payload.catalogs)) return staticRoutes;
     const catalogs = payload.catalogs.flatMap((catalog) => {
-      if (!/^[A-Za-z0-9_-]{1,80}$/.test(catalog.businessId)) return [];
+      const businessRef = catalog.businessRef || catalog.businessId;
+      if (!/^[A-Za-z0-9_-]{1,80}$/.test(businessRef)) return [];
       const modified = new Date(catalog.lastModified);
       if (!Number.isFinite(modified.getTime())) return [];
       return [{
-        url: `${siteOrigin}/s/${encodeURIComponent(catalog.businessId)}`,
+        url: `${siteOrigin}/s/${encodeURIComponent(businessRef)}`,
         lastModified: modified,
         changeFrequency: 'weekly' as const,
         priority: 0.8,

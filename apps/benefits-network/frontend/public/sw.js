@@ -1,6 +1,7 @@
-const CACHE_NAME = 'ifr-benefits-v19';
+const CACHE_NAME = 'ifr-benefits-v20';
 const PRECACHE_URLS = [
   '/',
+  '/offline.html',
   '/manifest.json',
   '/icons/ifr-token-64-v11.png',
   '/icons/ifr-token-180-v11.png',
@@ -83,7 +84,7 @@ self.addEventListener('fetch', (event) => {
           }
           return response;
         })
-        .catch(() => caches.match('/'))
+        .catch(() => caches.match(requestUrl.pathname === '/' ? '/' : '/offline.html'))
     );
     return;
   }

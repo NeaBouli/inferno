@@ -53,7 +53,7 @@ async function run() {
           setTimeout(resolve, 5000);
         });
       }
-      const cache = await caches.open('ifr-benefits-v19');
+      const cache = await caches.open('ifr-benefits-v20');
       const keys = await cache.keys();
       return keys.map((request) => new URL(request.url).pathname);
     });
@@ -68,9 +68,35 @@ async function run() {
     await sellerMode.click();
     await page.getByRole('link', { name: 'Open seller tools', exact: true }).waitFor();
     assert.equal(await sellerMode.getAttribute('aria-pressed'), 'true', 'offline app shell must remain interactive');
+
+    for (const pathname of ['/b/offline-seller', '/s/offline-seller']) {
+      await context.setOffline(false);
+      await page.goto(origin, { waitUntil: 'networkidle' });
+      assert.ok(
+        await page.evaluate(() => Boolean(navigator.serviceWorker.controller)),
+        `installed app must control the client before testing offline ${pathname}`
+      );
+      await context.setOffline(true);
+      await page.goto(`${origin}${pathname}`, { waitUntil: 'domcontentloaded' });
+      await page.getByRole('heading', { name: "You're offline" }).waitFor();
+      await page.getByRole('link', { name: 'Open the offline app' }).waitFor();
+      assert.equal(
+        await page.getByText('Internal Server Error', { exact: true }).count(),
+        0,
+        `offline ${pathname} must not expose a raw server error`
+      );
+      assert.equal(
+        new URL(page.url()).pathname,
+        pathname,
+        `offline fallback must preserve the requested ${pathname} address`
+      );
+    }
+
     assert.deepEqual(pageErrors, []);
     await context.close();
-    console.log('[benefits-offline-shell] PASS - cached Next assets reload into an interactive offline role chooser');
+    console.log(
+      '[benefits-offline-shell] PASS - cached Next assets reload into an interactive offline role chooser from root and seller deep links'
+    );
   } finally {
     if (browser) await browser.close();
     server.kill('SIGTERM');
