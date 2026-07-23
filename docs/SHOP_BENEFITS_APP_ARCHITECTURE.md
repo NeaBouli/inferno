@@ -178,7 +178,11 @@ If `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` is missing, the frontend must show a s
    desktop/iPad/Android layout, unavailable-camera fallback, strict parser and fake-camera QR
    decoding are implemented. Physical Safari/Chrome/MetaMask acceptance remains pending.**
 9. Checkout staff mode with owner-managed expiry/revocation and role-aware audit. **Implemented; live device acceptance remains pending.**
-10. Seller product/service catalog and public customer benefit browsing. **Implemented with owner-signed soft-archive, cross-business rule protection and immutable QR-session snapshots.**
+10. Seller product/service catalog and public customer benefit browsing. **Implemented with
+    owner-signed soft-archive, cross-business rule protection and immutable QR-session snapshots.
+    A blocking composed test now builds the real frontend/backend, applies all migrations to a
+    disposable SQLite database, seeds through signed seller APIs and verifies the public browser
+    flow through the production Next.js API rewrite without Mainnet.**
 11. Governance-gated seller reward foundation. **Deployed fail-closed: owner application, live BuilderRegistry/PartnerVault linkage checks, atomic redeem outbox and read-only vesting/claim status. Mainnet currently has no registered builders/partners; dedicated authorized submission remains disabled.**
 12. Public seller identity and discovery metadata. **Implemented with owner-signed single-use
     updates, bounded categories, HTTPS-only websites, an optional privacy-preserving city/region/

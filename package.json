@@ -11,6 +11,7 @@
     "test:benefits-wallet-ui": "node scripts/test-benefits-wallet-lock-ui.js",
     "test:benefits-a11y": "node scripts/test-benefits-accessibility.js",
     "test:benefits-csp": "node scripts/test-benefits-csp.js",
+    "test:benefits-fullstack": "node scripts/test-benefits-fullstack-e2e.js",
     "test:benefits-docs": "node scripts/test-benefits-doc-consistency.cjs",
     "test:benefits-node-runtime": "node scripts/test-benefits-node-runtime.cjs",
     "ops:benefits-capacity": "scripts/deploy-benefits-network.sh capacity && LIMIT=20 scripts/audit-docker-capacity.sh",
