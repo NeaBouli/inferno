@@ -6,6 +6,8 @@
   <title>Reputation Status &mdash; Inferno (IFR)</title>
   <meta name="description" content="Current IFR Protocol reputation and trust status: utility-first ERC-20, fair launch, open source, verified contracts, live Uniswap V2 pool, GeckoTerminal/CoinGecko ecosystem profile, and neutral Etherscan token reputation.">
   <link rel="canonical" href="https://ifrunit.tech/wiki/reputation.html">
+  <link rel="alternate" hreflang="en" href="https://ifrunit.tech/wiki/reputation.html">
+  <link rel="alternate" hreflang="x-default" href="https://ifrunit.tech/wiki/reputation.html">
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -54,7 +56,20 @@
     .pending{color:var(--amber);font-weight:700}
     .info{color:var(--blue);font-weight:700}
     .footer{margin-top:48px;padding-top:18px;border-top:1px solid var(--line);color:#71717a;font-size:13px}
-    @media(max-width:760px){.grid{grid-template-columns:1fr}.top{align-items:flex-start;flex-direction:column}table{font-size:14px}}
+    @media(max-width:760px){
+      .grid{grid-template-columns:1fr}
+      .top{align-items:flex-start;flex-direction:column}
+      table,tbody,tr,td{display:block;width:100%}
+      table{background:transparent;font-size:14px}
+      thead{display:none}
+      tr{background:var(--panel);border:1px solid var(--line);border-radius:8px;margin-bottom:12px;overflow:hidden}
+      td{display:grid;grid-template-columns:minmax(76px,30%) minmax(0,1fr);gap:12px;overflow-wrap:anywhere}
+      td:last-child{border-bottom:0}
+      td::before{color:#d4d4d8;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+      td:nth-child(1)::before{content:"Area"}
+      td:nth-child(2)::before{content:"Status"}
+      td:nth-child(3)::before{content:"Notes"}
+    }
   </style>
 </head>
 <body>
