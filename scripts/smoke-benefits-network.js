@@ -1299,7 +1299,7 @@ async function verifyPage(contextOptions, label) {
     await page.getByText('Reserve espresso', { exact: true }).waitFor({ state: 'hidden', timeout: timeoutMs });
     await offerDiscovery.getByLabel('Category').selectOption('');
     await offerDiscovery.getByLabel('Search offers').fill('nothing matches this');
-    await expectText(page, 'No matching active offers');
+    await expectText(page, 'No offers match these filters');
     await offerDiscovery.getByLabel('Search offers').fill('');
     await expectText(page, 'Reserve espresso');
     const staleRequestStarted = page.waitForRequest((request) => request.url().includes('query=race-old'));
