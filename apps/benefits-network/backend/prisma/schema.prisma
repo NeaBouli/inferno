@@ -41,6 +41,8 @@ model Product {
   name        String
   category    String
   description String?
+  basePriceMinor String?
+  currency    String?
   active      Boolean       @default(true)
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
@@ -100,6 +102,8 @@ model Session {
   benefitLabel     String?
   benefitCategory  String?
   benefitProductName String?
+  benefitBasePriceMinor String?
+  benefitCurrency String?
   benefitDiscountPercent Int?
   benefitRequiredLockIFR Int?
   benefitTtlSeconds Int?

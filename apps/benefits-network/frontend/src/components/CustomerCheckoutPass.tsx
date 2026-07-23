@@ -19,6 +19,7 @@ import {
   getBusiness,
   getBusinessRules,
 } from '@/lib/api';
+import { formatProductPrice } from '@/lib/money';
 
 const TAB_STORAGE_KEY = 'ifr.shop.activeCustomerPass';
 const CLOSED_CHECKOUT = new Set(['REDEEMED', 'REJECTED', 'EXPIRED']);
@@ -273,6 +274,14 @@ export function CustomerCheckoutPass() {
               </div>
               <div className="flex justify-between gap-4"><span>Offer</span><strong className="text-right text-white">{status.checkout.benefit.label || 'Standard benefit'}</strong></div>
               <div className="flex justify-between gap-4"><span>Product</span><strong className="text-right text-white">{status.checkout.benefit.productName || 'Seller benefit'}</strong></div>
+              {formatProductPrice(status.checkout.benefit.basePriceMinor, status.checkout.benefit.currency) ? (
+                <div className="flex justify-between gap-4">
+                  <span>Reference price</span>
+                  <strong className="text-right text-white">
+                    {formatProductPrice(status.checkout.benefit.basePriceMinor, status.checkout.benefit.currency)}
+                  </strong>
+                </div>
+              ) : null}
               <div className="flex justify-between gap-4"><span>Benefit</span><strong className="text-orange-100">{status.checkout.benefit.discountPercent}%</strong></div>
               <div className="flex justify-between gap-4"><span>Required IFRLock</span><strong className="text-right text-white">{status.checkout.benefit.requiredLockIFR.toLocaleString('en-US')} IFR</strong></div>
               <div className="flex justify-between gap-4"><span>Expires in</span><strong className="text-white"><Countdown expiresAt={status.checkout.expiresAt} /></strong></div>

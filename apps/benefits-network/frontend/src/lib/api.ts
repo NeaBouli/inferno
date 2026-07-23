@@ -1,3 +1,5 @@
+import type { ProductCurrency } from '@/lib/money';
+
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || '';
 
 async function fetchJSON<T>(url: string, opts?: RequestInit): Promise<T> {
@@ -71,6 +73,8 @@ export interface CatalogProduct {
   name: string;
   category: string;
   description: string | null;
+  basePriceMinor: string | null;
+  currency: ProductCurrency | null;
   active: boolean;
   createdAt: string;
   updatedAt: string;
@@ -81,6 +85,8 @@ export interface CatalogProductInput {
   name: string;
   category: string;
   description?: string | null;
+  basePriceMinor?: string | null;
+  currency?: ProductCurrency | null;
   active?: boolean;
 }
 
@@ -106,7 +112,13 @@ export interface PublicOffer {
   dailyRedemptionLimit: number;
   monthlyRedemptionLimit: number;
   business: PublicBusinessProfile;
-  product: { id: string; name: string; description: string | null } | null;
+  product: {
+    id: string;
+    name: string;
+    description: string | null;
+    basePriceMinor: string | null;
+    currency: ProductCurrency | null;
+  } | null;
 }
 
 export interface PublicOfferDiscovery {
@@ -179,6 +191,8 @@ export interface SellerSessionSummary {
   label: string | null;
   category: string | null;
   productName: string | null;
+  basePriceMinor: string | null;
+  currency: ProductCurrency | null;
   discountPercent: number;
   requiredLockIFR: number;
   dailyRedemptionLimit: number;
@@ -312,6 +326,8 @@ export interface SessionCreated {
   label: string | null;
   category: string | null;
   productName: string | null;
+  basePriceMinor: string | null;
+  currency: ProductCurrency | null;
   discountPercent: number;
   requiredLockIFR: number;
   dailyRedemptionLimit: number;
@@ -325,6 +341,8 @@ export interface SessionBenefit {
   label: string | null;
   category: string | null;
   productName: string | null;
+  basePriceMinor: string | null;
+  currency: ProductCurrency | null;
   discountPercent: number;
   requiredLockIFR: number;
   dailyRedemptionLimit: number;
@@ -412,6 +430,8 @@ export interface CustomerPassControlStatus {
       label: string | null;
       category: string | null;
       productName: string | null;
+      basePriceMinor: string | null;
+      currency: ProductCurrency | null;
       discountPercent: number;
       requiredLockIFR: number;
     };
@@ -426,6 +446,8 @@ export interface BoundCustomerPass {
     label: string | null;
     category: string | null;
     productName: string | null;
+    basePriceMinor: string | null;
+    currency: ProductCurrency | null;
     discountPercent: number;
     requiredLockIFR: number;
   };

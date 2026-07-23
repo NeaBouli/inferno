@@ -7,6 +7,7 @@ import {
   clearCustomerProofHistory,
   readCustomerProofHistory,
 } from '@/lib/customerHistory';
+import { formatProductPrice } from '@/lib/money';
 import {
   CustomerHistoryItem,
   authorizeCustomerHistory,
@@ -225,6 +226,11 @@ export function CustomerProofHistory() {
                     <p className="mt-1 text-xs leading-5 text-stone-400">
                       {item.benefit.productName || 'Business benefit'} / {item.benefit.discountPercent}% / {item.benefit.requiredLockIFR.toLocaleString('en-US')} IFR
                     </p>
+                    {formatProductPrice(item.benefit.basePriceMinor, item.benefit.currency) ? (
+                      <p className="mt-1 text-xs text-stone-400">
+                        Reference price: {formatProductPrice(item.benefit.basePriceMinor, item.benefit.currency)}
+                      </p>
+                    ) : null}
                   </div>
                   <span className={`rounded-full border px-3 py-1 text-[0.68rem] font-black uppercase tracking-[0.12em] ${statusTone(item.status)}`}>
                     {item.status}
@@ -270,6 +276,11 @@ export function CustomerProofHistory() {
                   <p className="mt-1 text-xs leading-5 text-stone-400">
                     {item.productName} / {item.discountPercent}% / {item.requiredLockIFR.toLocaleString('en-US')} IFR
                   </p>
+                  {formatProductPrice(item.basePriceMinor, item.currency) ? (
+                    <p className="mt-1 text-xs text-stone-400">
+                      Reference price: {formatProductPrice(item.basePriceMinor, item.currency)}
+                    </p>
+                  ) : null}
                 </div>
                 <span className={`rounded-full border px-3 py-1 text-[0.68rem] font-black uppercase tracking-[0.12em] ${statusTone(item.status)}`}>
                   {item.status}

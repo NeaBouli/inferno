@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { BusinessLogo } from '@/components/BusinessLogo';
 import { EligibilityLiveSummary, OfferEligibility, useIfrLockEligibility } from '@/components/OfferEligibility';
 import { discoverOffers, type PublicOffer } from '@/lib/api';
+import { formatProductPrice } from '@/lib/money';
 
 const PAGE_SIZE = 8;
 
@@ -219,6 +220,11 @@ export function OfferDiscovery({ mode, onOpenSellerTools }: OfferDiscoveryProps)
                 </span>
               </div>
               {offer.product?.description ? <p className="mt-4 text-sm leading-6 text-stone-300">{offer.product.description}</p> : null}
+              {offer.product && formatProductPrice(offer.product.basePriceMinor, offer.product.currency) ? (
+                <p className="mt-3 text-sm font-black text-orange-100">
+                  Reference price: {formatProductPrice(offer.product.basePriceMinor, offer.product.currency)}
+                </p>
+              ) : null}
               {offer.business.categories.length ? (
                 <div className="mt-4 flex flex-wrap gap-2" aria-label={`${offer.business.name} categories`}>
                   {offer.business.categories.slice(0, 4).map((businessCategory) => (

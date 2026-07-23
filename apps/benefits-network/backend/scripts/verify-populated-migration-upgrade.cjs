@@ -5,7 +5,7 @@ const path = require('path');
 
 const root = path.resolve(__dirname, '..');
 const migrationsDir = path.join(root, 'prisma', 'migrations');
-const targetMigration = '20260723201000_add_business_logo_url';
+const targetMigration = '20260723204500_add_product_base_price';
 const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'benefits-populated-upgrade-'));
 const dbPath = path.join(tempDir, 'upgrade.db');
 
@@ -42,6 +42,13 @@ try {
       'existing-rule', 'migration-fixture', 'Existing benefit', 'Coffee', 'Legacy espresso',
       10, 1000, 90, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
     );
+    INSERT INTO Product (
+      id, businessId, name, category, active, createdAt, updatedAt
+    ) VALUES (
+      'upgrade-product', 'migration-fixture', 'Upgrade espresso', 'Coffee', 1,
+      CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+    );
+    UPDATE BenefitRule SET productId = 'upgrade-product' WHERE id = 'existing-rule';
     INSERT INTO Session (
       id, businessId, benefitRuleId, nonce, expiresAt, status, createdAt, updatedAt, attestAttempts
     ) VALUES (
@@ -179,14 +186,28 @@ try {
     );
   }
 
-  sqlite(`
-    INSERT INTO Product (
-      id, businessId, name, category, active, createdAt, updatedAt
-    ) VALUES (
-      'upgrade-product', 'migration-fixture', 'Upgrade espresso', 'Coffee', 1,
-      CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+  const productPriceColumns = sqlite(`
+    SELECT COUNT(*) FROM pragma_table_info('Product')
+    WHERE name IN ('basePriceMinor', 'currency');
+  `);
+  const sessionPriceColumns = sqlite(`
+    SELECT COUNT(*) FROM pragma_table_info('Session')
+    WHERE name IN ('benefitBasePriceMinor', 'benefitCurrency');
+  `);
+  const existingPriceState = sqlite(`
+    SELECT
+      (basePriceMinor IS NULL) || '|' ||
+      (currency IS NULL)
+    FROM Product WHERE id = 'upgrade-product';
+  `);
+  if (productPriceColumns !== '2' || sessionPriceColumns !== '2' || existingPriceState !== '1|1') {
+    throw new Error(
+      `Missing product price migration state: productColumns=${productPriceColumns}, ` +
+      `sessionColumns=${sessionPriceColumns}, existing=${existingPriceState}`
     );
-    UPDATE BenefitRule SET productId = 'upgrade-product' WHERE id = 'existing-rule';
+  }
+
+  sqlite(`
     INSERT INTO SellerRewardLink (
       id, businessId, status, builderWallet, requestedAt, createdAt, updatedAt
     ) VALUES (

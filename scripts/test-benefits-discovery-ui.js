@@ -28,7 +28,13 @@ const offer = {
     serviceArea: 'Online',
     categories: ['Coffee'],
   },
-  product: null,
+  product: {
+    id: 'product-ui-e2e',
+    name: 'IFR member coffee',
+    description: 'A priced catalog fixture.',
+    basePriceMinor: '1999',
+    currency: 'EUR',
+  },
 };
 
 function discoveryResponse(offers) {
@@ -121,7 +127,26 @@ async function run() {
         return route.fulfill({
           status: 200,
           contentType: 'application/json',
-          body: JSON.stringify({ business: offer.business, products: [] }),
+          body: JSON.stringify({
+            business: offer.business,
+            products: [{
+              ...offer.product,
+              businessId: offer.business.id,
+              category: offer.category,
+              active: true,
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
+              benefitRules: [{
+                id: offer.id,
+                label: offer.label,
+                discountPercent: offer.discountPercent,
+                requiredLockIFR: offer.requiredLockIFR,
+                dailyRedemptionLimit: offer.dailyRedemptionLimit,
+                monthlyRedemptionLimit: offer.monthlyRedemptionLimit,
+                ttlSeconds: 90,
+              }],
+            }],
+          }),
         });
       }
       if (url.pathname === `/api/businesses/${offer.business.id}/rules`) {
@@ -132,7 +157,7 @@ async function run() {
             rules: [{
               id: offer.id,
               businessId: offer.business.id,
-              productId: null,
+              productId: offer.product.id,
               label: offer.label,
               category: offer.category,
               productName: offer.productName,
@@ -165,6 +190,8 @@ async function run() {
                 label: 'Different member offer',
                 category: 'Coffee',
                 productName: 'Different coffee',
+                basePriceMinor: '1299',
+                currency: 'USD',
                 discountPercent: 5,
                 requiredLockIFR: 500,
               },
@@ -218,6 +245,7 @@ async function run() {
 
     const offersSection = page.locator('#offers');
     await offersSection.getByText(offer.productName, { exact: true }).waitFor();
+    await offersSection.getByText('Reference price: EUR 19.99', { exact: true }).waitFor();
     const discoveryLogo = offersSection.getByRole('img', { name: `${offer.business.name} logo`, exact: true });
     await discoveryLogo.waitFor();
     assert.equal(await discoveryLogo.getAttribute('referrerpolicy'), 'no-referrer');
@@ -225,8 +253,8 @@ async function run() {
     await offersSection.getByRole('img', { name: `${offer.business.name} logo placeholder`, exact: true }).waitFor();
     await offersSection.getByRole('link', { name: 'Seller catalog', exact: true }).click();
     await waitForLocation(page, `/s/${offer.business.id}`);
-    await page.getByText('Other member benefits', { exact: true }).waitFor();
     await page.getByText(offer.productName, { exact: true }).waitFor();
+    await page.getByText('Reference price: EUR 19.99', { exact: true }).waitFor();
     assert.equal(await page.getByRole('img', { name: `${offer.business.name} logo`, exact: true }).count(), 1);
     assert.equal(
       await page.getByText('No public offers yet', { exact: true }).count(),
@@ -257,6 +285,7 @@ async function run() {
     }, { businessId: offer.business.id, offerId: offer.id });
     await page.reload({ waitUntil: 'domcontentloaded' });
     await selectedOffer.getByText('The seller bound a different offer than the public offer you selected.', { exact: false }).waitFor();
+    await selectedOffer.getByText('USD 12.99', { exact: true }).waitFor();
     await selectedOffer.getByRole('button', { name: 'Clear', exact: true }).click();
     assert.equal(new URL(page.url()).searchParams.has('seller'), false);
     assert.equal(new URL(page.url()).searchParams.has('offer'), false);

@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { validate } from '../middleware/validator';
 import { challengeRateLimiter, customerHistoryRateLimiter } from '../middleware/rateLimiter';
 import { prisma } from '../services/sessionService';
+import { safeProductPrice } from '../services/productPrice';
 import {
   CustomerHistoryAuthError,
   authorizeCustomerHistory,
@@ -108,6 +109,8 @@ router.get('/', customerHistoryRateLimiter, async (req, res, next) => {
         benefitLabel: true,
         benefitCategory: true,
         benefitProductName: true,
+        benefitBasePriceMinor: true,
+        benefitCurrency: true,
         benefitDiscountPercent: true,
         benefitRequiredLockIFR: true,
         benefitDailyRedemptionLimit: true,
@@ -130,6 +133,10 @@ router.get('/', customerHistoryRateLimiter, async (req, res, next) => {
         label: session.benefitLabel,
         category: session.benefitCategory,
         productName: session.benefitProductName,
+        ...safeProductPrice({
+          basePriceMinor: session.benefitBasePriceMinor,
+          currency: session.benefitCurrency,
+        }),
         discountPercent: session.benefitDiscountPercent ?? 0,
         requiredLockIFR: session.benefitRequiredLockIFR ?? 0,
         dailyRedemptionLimit: session.benefitDailyRedemptionLimit ?? 0,

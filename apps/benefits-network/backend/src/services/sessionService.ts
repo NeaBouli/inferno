@@ -5,6 +5,7 @@ import { checkLock, recoverSigner } from './ifrLockService';
 import { toIFRBaseUnits } from './rewardService';
 import { normalizeAddress } from './sellerAuth';
 import { consumeSellerAuthorizationChallenge } from './sellerAuthorizationChallenge';
+import { safeProductPrice } from './productPrice';
 
 const prisma = new PrismaClient();
 
@@ -27,6 +28,8 @@ function benefitFromSession(session: {
   benefitLabel: string | null;
   benefitCategory: string | null;
   benefitProductName: string | null;
+  benefitBasePriceMinor: string | null;
+  benefitCurrency: string | null;
   benefitDiscountPercent: number | null;
   benefitRequiredLockIFR: number | null;
   benefitTtlSeconds: number | null;
@@ -56,11 +59,18 @@ function benefitFromSession(session: {
     session.benefitRequiredLockIFR !== null &&
     session.benefitTtlSeconds !== null
   ) {
+    const price = (session.benefitSnapshotVersion ?? 0) >= 3
+      ? safeProductPrice({
+          basePriceMinor: session.benefitBasePriceMinor,
+          currency: session.benefitCurrency,
+        })
+      : { basePriceMinor: null, currency: null };
     return {
       benefitRuleId: session.benefitRuleId,
       label: session.benefitLabel,
       category: session.benefitCategory,
       productName: session.benefitProductName,
+      ...price,
       discountPercent: session.benefitDiscountPercent,
       requiredLockIFR: session.benefitRequiredLockIFR,
       ttlSeconds: session.benefitTtlSeconds,
@@ -76,6 +86,8 @@ function benefitFromSession(session: {
       label: session.business.tierLabel,
       category: null,
       productName: null,
+      basePriceMinor: null,
+      currency: null,
       discountPercent: session.business.discountPercent,
       requiredLockIFR: session.business.requiredLockIFR,
       ttlSeconds: session.business.ttlSeconds,
@@ -90,6 +102,8 @@ function benefitFromSession(session: {
     label: session.benefitRule.label,
     category: session.benefitRule.category,
     productName: session.benefitRule.productName,
+    basePriceMinor: null,
+    currency: null,
     discountPercent: session.benefitRule.discountPercent,
     requiredLockIFR: session.benefitRule.requiredLockIFR,
     ttlSeconds: session.benefitRule.ttlSeconds,
@@ -273,16 +287,30 @@ export async function createSessionSnapshot(
           active: true,
           OR: [{ productId: null }, { product: { active: true } }],
         },
+        include: {
+          product: {
+            select: {
+              basePriceMinor: true,
+              currency: true,
+            },
+          },
+        },
       })
     : null;
   if (benefitRuleId && !benefitRule) throw new Error('Benefit rule not found or inactive');
 
   const ttlSeconds = benefitRule?.ttlSeconds ?? business.ttlSeconds;
+  const productPrice = safeProductPrice({
+    basePriceMinor: benefitRule?.product?.basePriceMinor,
+    currency: benefitRule?.product?.currency,
+  });
   const benefitSnapshot = benefitRule
     ? {
         benefitLabel: benefitRule.label,
         benefitCategory: benefitRule.category,
         benefitProductName: benefitRule.productName,
+        benefitBasePriceMinor: productPrice.basePriceMinor,
+        benefitCurrency: productPrice.currency,
         benefitDiscountPercent: benefitRule.discountPercent,
         benefitRequiredLockIFR: benefitRule.requiredLockIFR,
         benefitTtlSeconds: benefitRule.ttlSeconds,
@@ -293,6 +321,8 @@ export async function createSessionSnapshot(
         benefitLabel: business.tierLabel,
         benefitCategory: null,
         benefitProductName: null,
+        benefitBasePriceMinor: null,
+        benefitCurrency: null,
         benefitDiscountPercent: business.discountPercent,
         benefitRequiredLockIFR: business.requiredLockIFR,
         benefitTtlSeconds: business.ttlSeconds,
@@ -304,7 +334,7 @@ export async function createSessionSnapshot(
       businessId,
       benefitRuleId: benefitRule?.id,
       customerPassId,
-      benefitSnapshotVersion: 2,
+      benefitSnapshotVersion: 3,
       ...benefitSnapshot,
       nonce,
       expiresAt: new Date(Date.now() + ttlSeconds * 1000),
@@ -399,6 +429,9 @@ export async function buildChallengeMessage(
     `Benefit Rule: ${benefit.benefitRuleId ?? 'business-default'}`,
     `Benefit: ${benefit.label ?? 'Standard'}`,
     `Product: ${benefit.productName ?? 'Business default benefit'}`,
+    ...(benefit.basePriceMinor !== null && benefit.currency !== null
+      ? [`Reference Price: ${benefit.currency} ${benefit.basePriceMinor} minor units`]
+      : []),
     `Required Lock IFR: ${benefit.requiredLockIFR}`,
     `Discount Percent: ${benefit.discountPercent}`,
     `Session: ${session.id}`,

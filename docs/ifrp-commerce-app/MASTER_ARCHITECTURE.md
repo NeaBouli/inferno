@@ -330,6 +330,12 @@ createdAt
 updatedAt
 ```
 
+Implementation note: the Benefits Network stores the optional price as canonical
+`basePriceMinor` text plus an allowlisted ISO-4217 `currency`, never as a floating-point value.
+The customer UI formats the exact minor units locally. New checkout sessions snapshot both fields,
+so later catalog edits cannot alter an already presented offer. The value is a seller-published
+reference price only; the current app verifies IFR access and does not process payment.
+
 ### BenefitRule
 
 ```text

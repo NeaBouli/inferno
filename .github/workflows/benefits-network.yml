@@ -175,6 +175,7 @@ jobs:
       - run: npm ci --prefix apps/benefits-network/frontend
       - run: npm ci --prefix apps/benefits-network/backend
       - run: npx playwright install --with-deps chromium
+      - run: npm run test:benefits-money
       - run: npm run test:benefits-pass-ui
       - run: npm run test:benefits-discovery-ui
       - run: npm run test:benefits-wallet-ui
@@ -182,6 +183,7 @@ jobs:
         run: |
           set -euo pipefail
           npm run build --prefix apps/benefits-network/frontend
+          npm run test:benefits-seller-loader
           npm start --prefix apps/benefits-network/frontend >/tmp/benefits-a11y-next.log 2>&1 &
           server_pid="$!"
           cleanup() {

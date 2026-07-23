@@ -8,6 +8,8 @@
     "test:benefits-wallet-asset": "node scripts/test-benefits-wallet-asset-provider.mjs",
     "test:benefits-pass-ui": "node scripts/test-benefits-customer-pass-ui.js",
     "test:benefits-discovery-ui": "node scripts/test-benefits-discovery-ui.js",
+    "test:benefits-money": "node scripts/test-benefits-money.cjs",
+    "test:benefits-seller-loader": "node scripts/test-benefits-seller-loader.js",
     "test:benefits-wallet-ui": "node scripts/test-benefits-wallet-lock-ui.js",
     "test:benefits-a11y": "node scripts/test-benefits-accessibility.js",
     "test:benefits-csp": "node scripts/test-benefits-csp.js",

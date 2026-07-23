@@ -6,6 +6,10 @@ import { AppShell } from '@/components/AppShell';
 import { CustomerProofHistory } from '@/components/CustomerProofHistory';
 import { CustomerCheckoutPass } from '@/components/CustomerCheckoutPass';
 import { OfferDiscovery } from '@/components/OfferDiscovery';
+import {
+  markSellerWorkspaceReady,
+  SellerWorkspaceBoundary,
+} from '@/components/SellerWorkspaceBoundary';
 import { SwapRiskNotice } from '@/components/SwapRiskNotice';
 import { WalletStatus } from '@/components/WalletStatus';
 import { hasWalletConnectProjectId } from '@/lib/wagmi';
@@ -14,8 +18,29 @@ type Role = 'customer' | 'seller';
 type CodeMode = 'link' | 'button' | 'api' | 'pos';
 const UNISWAP_IFR_URL = 'https://app.uniswap.org/swap?outputCurrency=0x77e99917Eca8539c62F509ED1193ac36580A6e7B';
 const ROLE_STORAGE_KEY = 'ifr.shop.preferredRole';
+const SELLER_WORKSPACE_LOAD_TIMEOUT_MS = 12_000;
 const SellerRuleBuilder = dynamic(
-  () => import('@/components/SellerRuleBuilder').then((module) => module.SellerRuleBuilder),
+  async () => {
+    let timeout: ReturnType<typeof setTimeout> | undefined;
+    try {
+      const module = await Promise.race([
+        import('@/components/SellerRuleBuilder'),
+        new Promise<never>((_resolve, reject) => {
+          timeout = setTimeout(
+            () => reject(new Error('Seller workspace download timed out')),
+            SELLER_WORKSPACE_LOAD_TIMEOUT_MS
+          );
+        }),
+      ]);
+      const SellerRuleBuilderComponent = module.SellerRuleBuilder;
+      return function ReadySellerRuleBuilder() {
+        useEffect(markSellerWorkspaceReady, []);
+        return <SellerRuleBuilderComponent />;
+      };
+    } finally {
+      if (timeout) clearTimeout(timeout);
+    }
+  },
   {
     loading: () => (
       <section
@@ -765,7 +790,9 @@ export default function Home() {
             </>
           ) : (
             <>
-              <SellerRuleBuilder />
+              <SellerWorkspaceBoundary>
+                <SellerRuleBuilder />
+              </SellerWorkspaceBoundary>
               <CodeGenerator />
               <div id="install-app" className="scroll-mt-36">
                 <PwaInstallCard />

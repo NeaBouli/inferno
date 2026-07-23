@@ -505,6 +505,58 @@ describe('Seller catalog routes', () => {
     })).status).toBe(400);
   });
 
+  it('validates exact optional product prices as an atomic amount and currency pair', async () => {
+    const url = `${baseUrl()}/api/seller/businesses/${businessId}/products`;
+    const create = async (payload: Record<string, unknown>) => fetch(url, {
+      method: 'POST',
+      headers: await sellerHeaders(owner, 'products:create', businessId),
+      body: JSON.stringify({ ...productPayload('Priced item'), ...payload }),
+    });
+
+    const priced = await create({ basePriceMinor: '2500', currency: 'JPY' });
+    expect(priced.status).toBe(201);
+    expect(await priced.json()).toMatchObject({
+      basePriceMinor: '2500',
+      currency: 'JPY',
+    });
+
+    for (const invalid of [
+      { basePriceMinor: '1999' },
+      { currency: 'EUR' },
+      { basePriceMinor: 1999, currency: 'EUR' },
+      { basePriceMinor: '19.99', currency: 'EUR' },
+      { basePriceMinor: '01999', currency: 'EUR' },
+      { basePriceMinor: '1999', currency: 'eur' },
+      { basePriceMinor: '1999', currency: 'BTC' },
+      { basePriceMinor: '1999', currency: 'EUR', unexpected: true },
+    ]) {
+      expect((await create(invalid)).status).toBe(400);
+    }
+
+    const clearHeaders = await sellerHeaders(owner, 'products:update', businessId, (await prisma.product.findFirstOrThrow({
+      where: { businessId, name: 'Priced item' },
+      select: { id: true },
+    })).id);
+    const product = await prisma.product.findFirstOrThrow({ where: { businessId, name: 'Priced item' } });
+    const cleared = await fetch(`${baseUrl()}/api/seller/products/${product.id}`, {
+      method: 'PATCH',
+      headers: clearHeaders,
+      body: JSON.stringify({ basePriceMinor: null, currency: null }),
+    });
+    expect(cleared.status).toBe(200);
+    expect(await cleared.json()).toMatchObject({ basePriceMinor: null, currency: null });
+
+    await prisma.product.update({
+      where: { id: product.id },
+      data: { basePriceMinor: '19.99', currency: 'BTC' },
+    });
+    const listResponse = await fetch(url, {
+      headers: await sellerHeaders(owner, 'products:list', businessId),
+    });
+    expect((await listResponse.json() as { products: Array<Record<string, unknown>> }).products[0])
+      .toMatchObject({ basePriceMinor: null, currency: null });
+  });
+
   it('keeps a product archived when archive races an active update', async () => {
     const product = await prisma.product.create({ data: { businessId, ...productPayload() } });
     const updateHeaders = await sellerHeaders(owner, 'products:update', businessId, product.id);
@@ -647,7 +699,13 @@ describe('Seller catalog routes', () => {
     ]);
     const firstProduct = firstPage.offers[0].product;
     if (firstProduct !== null) {
-      expect(Object.keys(firstProduct as Record<string, unknown>).sort()).toEqual(['description', 'id', 'name']);
+      expect(Object.keys(firstProduct as Record<string, unknown>).sort()).toEqual([
+        'basePriceMinor',
+        'currency',
+        'description',
+        'id',
+        'name',
+      ]);
     }
     for (const offer of firstPage.offers) {
       expect(JSON.stringify(offer)).not.toMatch(
@@ -663,7 +721,17 @@ describe('Seller catalog routes', () => {
       offers: Array<{ id: string; product: null | Record<string, unknown> }>;
     };
     expect(searchBody.offers.map((offer) => offer.id)).toEqual([coffeeRule.id]);
-    expect(Object.keys(searchBody.offers[0].product || {}).sort()).toEqual(['description', 'id', 'name']);
+    expect(Object.keys(searchBody.offers[0].product || {}).sort()).toEqual([
+      'basePriceMinor',
+      'currency',
+      'description',
+      'id',
+      'name',
+    ]);
+    expect(searchBody.offers[0].product).toMatchObject({
+      basePriceMinor: null,
+      currency: null,
+    });
 
     const profileDescriptionSearch = await fetch(`${baseUrl()}/api/businesses?query=workspace`);
     expect((await profileDescriptionSearch.json() as { offers: Array<{ id: string }> }).offers.map((offer) => offer.id))
@@ -763,7 +831,12 @@ describe('Seller catalog routes', () => {
 
   it('binds rules only to active products from the same business and preserves snapshots', async () => {
     const product = await prisma.product.create({
-      data: { businessId, ...productPayload() },
+      data: {
+        businessId,
+        ...productPayload(),
+        basePriceMinor: '1999',
+        currency: 'USD',
+      },
     });
 
     const crossBusinessHeaders = await sellerHeaders(otherOwner, 'rules:create', otherBusinessId);
@@ -820,12 +893,18 @@ describe('Seller catalog routes', () => {
 
     const session = await createSession(businessId, rule.id);
     expect(await buildChallengeMessage(session.sessionId)).toContain('Product: Premium espresso');
+    expect(await buildChallengeMessage(session.sessionId)).toContain('Reference Price: USD 1999 minor units');
 
     const productUpdateHeaders = await sellerHeaders(owner, 'products:update', businessId, product.id);
     const updateResponse = await fetch(`${baseUrl()}/api/seller/products/${product.id}`, {
       method: 'PATCH',
       headers: productUpdateHeaders,
-      body: JSON.stringify({ name: 'Reserve espresso', category: 'Drinks' }),
+      body: JSON.stringify({
+        name: 'Reserve espresso',
+        category: 'Drinks',
+        basePriceMinor: '2499',
+        currency: 'USD',
+      }),
     });
     expect(updateResponse.status).toBe(200);
 
@@ -852,6 +931,8 @@ describe('Seller catalog routes', () => {
     expect(await oldSessionStatus.json()).toMatchObject({
       benefit: {
         productName: 'Premium espresso',
+        basePriceMinor: '1999',
+        currency: 'USD',
         discountPercent: 20,
         requiredLockIFR: 1000,
         dailyRedemptionLimit: 1,
@@ -866,6 +947,8 @@ describe('Seller catalog routes', () => {
     expect(history.sessions.find((item) => item.id === session.sessionId)).toMatchObject({
       productName: 'Premium espresso',
       category: 'Coffee',
+      basePriceMinor: '1999',
+      currency: 'USD',
       discountPercent: 20,
       requiredLockIFR: 1000,
       dailyRedemptionLimit: 1,
@@ -880,7 +963,14 @@ describe('Seller catalog routes', () => {
 
     const refreshedSession = await createSession(businessId, rule.id);
     expect(await buildChallengeMessage(refreshedSession.sessionId)).toContain('Product: Reserve espresso');
+    expect(await buildChallengeMessage(refreshedSession.sessionId)).toContain('Reference Price: USD 2499 minor units');
     expect(await buildChallengeMessage(refreshedSession.sessionId)).toContain('Required Lock IFR: 5000');
+    await prisma.session.update({
+      where: { id: refreshedSession.sessionId },
+      data: { benefitBasePriceMinor: '0', benefitCurrency: 'EUR' },
+    });
+    expect(await buildChallengeMessage(refreshedSession.sessionId))
+      .toContain('Reference Price: EUR 0 minor units');
   });
 
   it('keeps customer identity and exact rejection details out of public proof links', async () => {
@@ -1037,7 +1127,7 @@ describe('Seller catalog routes', () => {
     });
     expect(await prisma.session.findUniqueOrThrow({ where: { id: session.sessionId } })).toMatchObject({
       benefitRuleId: rule.id,
-      benefitSnapshotVersion: 2,
+      benefitSnapshotVersion: 3,
       benefitProductName: 'Consultation',
     });
     expect(await buildChallengeMessage(session.sessionId)).toContain('Product: Consultation');
@@ -1121,7 +1211,7 @@ describe('Seller catalog routes', () => {
       ]);
       expect(savedSession).toMatchObject({
         benefitRuleId: rule.id,
-        benefitSnapshotVersion: 2,
+        benefitSnapshotVersion: 3,
         benefitProductName: 'Premium espresso',
       });
       expect(archivedProduct.active).toBe(false);

@@ -29,6 +29,7 @@ import {
   getSessionStatus,
   redeemSession,
 } from '@/lib/api';
+import { formatProductPrice } from '@/lib/money';
 
 export function BusinessConsoleClient({ businessId }: { businessId: string }) {
   const { address, isConnected } = useAccount();
@@ -174,6 +175,9 @@ export function BusinessConsoleClient({ businessId }: { businessId: string }) {
       `Wallet limit: ${benefit.dailyRedemptionLimit || 'unlimited'}/UTC day / ${benefit.monthlyRedemptionLimit || 'unlimited'}/UTC month`,
       `Rule: ${benefit.label || 'Business default'}`,
       `Product: ${benefit.productName || 'Business default benefit'}`,
+      ...(formatProductPrice(benefit.basePriceMinor, benefit.currency)
+        ? [`Reference price: ${formatProductPrice(benefit.basePriceMinor, benefit.currency)}`]
+        : []),
       `Customer wallet: ${wallet}`,
       `Expires: ${session.expiresAt}`,
       `Redeemed: ${status?.redeemedAt || 'not redeemed'}`,
@@ -210,6 +214,8 @@ export function BusinessConsoleClient({ businessId }: { businessId: string }) {
       label: nextStatus.benefit.label,
       category: nextStatus.benefit.category,
       productName: nextStatus.benefit.productName,
+      basePriceMinor: nextStatus.benefit.basePriceMinor,
+      currency: nextStatus.benefit.currency,
       discountPercent: nextStatus.benefit.discountPercent,
       requiredLockIFR: nextStatus.benefit.requiredLockIFR,
       dailyRedemptionLimit: nextStatus.benefit.dailyRedemptionLimit,
@@ -819,6 +825,14 @@ export function BusinessConsoleClient({ businessId }: { businessId: string }) {
               <span>Required lock</span>
               <strong className="text-white">{previewBenefit ? `${previewBenefit.requiredLockIFR.toLocaleString('en-US')} IFR` : '-'}</strong>
             </div>
+            {session && formatProductPrice(session.basePriceMinor, session.currency) ? (
+              <div className="flex justify-between gap-4">
+                <span>Reference price</span>
+                <strong className="text-right text-white">
+                  {formatProductPrice(session.basePriceMinor, session.currency)}
+                </strong>
+              </div>
+            ) : null}
             <div className="flex justify-between gap-4">
               <span>Per-wallet use</span>
               <strong className="text-right text-white">
@@ -948,6 +962,11 @@ export function BusinessConsoleClient({ businessId }: { businessId: string }) {
                   {status.benefit.productName ? (
                     <p className="mt-2 text-sm font-semibold text-green-900">
                       {status.benefit.label} / {status.benefit.productName}
+                    </p>
+                  ) : null}
+                  {formatProductPrice(status.benefit.basePriceMinor, status.benefit.currency) ? (
+                    <p className="mt-2 text-sm font-semibold text-green-900">
+                      Reference price: {formatProductPrice(status.benefit.basePriceMinor, status.benefit.currency)}
                     </p>
                   ) : null}
                 </div>
