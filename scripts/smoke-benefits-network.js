@@ -360,12 +360,63 @@ async function installEligibilityRoutes(page) {
 async function installEligibilityRpc(page, { rpcError = false, lockedRaw = '1500125000000' } = {}) {
   const multicall = new ethersUtils.Interface([
     'function aggregate3((address target,bool allowFailure,bytes callData)[] calls) payable returns ((bool success,bytes returnData)[] returnData)',
+    'function getEthBalance(address) view returns (uint256)',
+  ]);
+  const ifrLock = new ethersUtils.Interface([
+    'function token() view returns (address)',
+    'function lockedBalance(address) view returns (uint256)',
+  ]);
+  const commitmentVault = new ethersUtils.Interface([
+    'function ifrToken() view returns (address)',
+    'function getTranches(address) view returns ((uint256 amount,uint8 cType,uint256 unlockTime,uint256 p0Multiplier,bool unlocked,uint256 conditionMetAt)[])',
+  ]);
+  const ifrToken = new ethersUtils.Interface([
+    'function balanceOf(address) view returns (uint256)',
+    'function allowance(address,address) view returns (uint256)',
   ]);
   const lockedResult = ethersUtils.defaultAbiCoder.encode(['uint256'], [lockedRaw]);
+  const zeroResult = ethersUtils.defaultAbiCoder.encode(['uint256'], [0]);
+  const tokenResult = ethersUtils.defaultAbiCoder.encode(
+    ['address'],
+    ['0x77e99917Eca8539c62F509ED1193ac36580A6e7B']
+  );
+  const emptyTranchesResult = commitmentVault.encodeFunctionResult('getTranches', [[]]);
+  const responseForCall = (data) => {
+    if (
+      data.startsWith(ifrLock.getSighash('token')) ||
+      data.startsWith(commitmentVault.getSighash('ifrToken'))
+    ) {
+      return tokenResult;
+    }
+    if (data.startsWith(commitmentVault.getSighash('getTranches'))) {
+      return emptyTranchesResult;
+    }
+    if (
+      data.startsWith(ifrLock.getSighash('lockedBalance')) ||
+      data.startsWith(ifrToken.getSighash('balanceOf'))
+    ) {
+      return lockedResult;
+    }
+    if (data.startsWith(multicall.getSighash('getEthBalance'))) {
+      return zeroResult;
+    }
+    if (data.startsWith(ifrToken.getSighash('allowance'))) {
+      return zeroResult;
+    }
+    throw new Error(`Unexpected eligibility eth_call selector: ${data.slice(0, 10)}`);
+  };
   const rpcMethods = [];
   await page.route('https://eth.merkle.io/', async (route) => {
     const payload = route.request().postDataJSON();
     rpcMethods.push(payload.method);
+    if (payload.method === 'eth_blockNumber') {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ jsonrpc: '2.0', id: payload.id, result: '0x1' }),
+      });
+      return;
+    }
     if (rpcError) {
       await route.fulfill({
         status: 200,
@@ -377,9 +428,10 @@ async function installEligibilityRpc(page, { rpcError = false, lockedRaw = '1500
     const callData = payload.params?.[0]?.data || '';
     const result = callData.startsWith(multicall.getSighash('aggregate3'))
       ? multicall.encodeFunctionResult('aggregate3', [
-          multicall.decodeFunctionData('aggregate3', callData).calls.map(() => [true, lockedResult]),
+          multicall.decodeFunctionData('aggregate3', callData).calls
+            .map((call) => [true, responseForCall(call.callData)]),
         ])
-      : lockedResult;
+      : responseForCall(callData);
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
@@ -668,7 +720,11 @@ async function verifyOfferEligibility() {
       'wrong-chain state must not retain an Eligible result'
     );
     assert(writes.length === 0, `eligibility preview triggered unexpected API writes: ${writes.join(', ')}`);
-    assert(rpcMethods.length > 0 && rpcMethods.every((method) => method === 'eth_call'), 'eligibility preview used a state-changing JSON-RPC method');
+    const readOnlyRpcMethods = new Set(['eth_blockNumber', 'eth_call']);
+    assert(
+      rpcMethods.length > 0 && rpcMethods.every((method) => readOnlyRpcMethods.has(method)),
+      'eligibility preview used a state-changing JSON-RPC method'
+    );
     const walletMethods = await page.evaluate(() => window.__ifrEligibilityWalletMethods || []);
     const readOnlyWalletMethods = new Set([
       'wallet_requestPermissions',
@@ -715,7 +771,7 @@ async function verifyOfferEligibility() {
     await gotoAppPage(belowPage, '/');
     await expectText(belowPage, 'Member espresso');
     await connectEligibilityWallet(belowPage);
-    await expectText(belowPage, 'Add 0.001 IFR first');
+    await expectText(belowPage, 'Lock 0.001 more IFR');
     assert(
       await belowPage.getByText('Eligible with this wallet', { exact: true }).count() === 0,
       'lock and held raw balances one unit below the dual threshold must not be eligible'
@@ -733,7 +789,7 @@ async function verifyOfferEligibility() {
     await gotoAppPage(errorPage, '/');
     await expectText(errorPage, 'Member espresso');
     await connectEligibilityWallet(errorPage);
-    await expectText(errorPage, 'Eligibility unavailable');
+    await expectText(errorPage, 'Lock preview unavailable');
     assert(
       await errorPage.getByText('Eligible with this wallet', { exact: true }).count() === 0,
       'RPC failure must never render Eligible'
@@ -1824,7 +1880,10 @@ async function verifyPage(contextOptions, label) {
     await expectText(page, 'Food & drink');
     await expectText(page, 'Reserve espresso');
     await expectText(page, '15% benefit');
-    await expectText(page, '1,000 locked IFR');
+    await expectText(
+      page,
+      'Verify at least 1,000 IFR in active TIME_ONLY commitments and 250 IFR held at checkout.'
+    );
     await expectText(page, 'Connect wallet to check');
     await expectText(page, 'Per wallet: 1 / UTC day and 10 / UTC month');
     await expectText(page, 'Seller starts a one-time QR checkout');
