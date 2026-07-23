@@ -129,7 +129,7 @@ async function verifyHttpSurface() {
   await expectSha256('/icons/icon-512.png', '6f029513ff76f3482418da9792e6f9f3545f0cc18b88740fe1f61db50fbe87f1');
   await fetchOk('/favicon.ico', 'image/x-icon');
   const serviceWorker = await fetchOk('/sw.js', 'javascript');
-  assert((await serviceWorker.text()).includes("ifr-benefits-v17"), 'service worker cache version mismatch');
+  assert((await serviceWorker.text()).includes("ifr-benefits-v18"), 'service worker cache version mismatch');
   log('PWA assets OK');
 
   const auth = await fetchJson('/api/seller/auth-message?action=business:list&businessId=seller');
@@ -282,6 +282,7 @@ function eligibilityDiscoveryResponse() {
         productName: 'Member espresso',
         discountPercent: 10,
         requiredLockIFR: 1000,
+        minIFRHeld: 1000,
         dailyRedemptionLimit: 1,
         monthlyRedemptionLimit: 10,
         business,
@@ -294,6 +295,7 @@ function eligibilityDiscoveryResponse() {
         productName: 'Premium reserve',
         discountPercent: 15,
         requiredLockIFR: 2500,
+        minIFRHeld: 0,
         dailyRedemptionLimit: 1,
         monthlyRedemptionLimit: 4,
         business,
@@ -334,6 +336,7 @@ async function installEligibilityRoutes(page) {
             label: 'Premium roast',
             discountPercent: 15,
             requiredLockIFR: 2500,
+            minIFRHeld: 0,
             ttlSeconds: 90,
             dailyRedemptionLimit: 1,
             monthlyRedemptionLimit: 4,
@@ -512,6 +515,7 @@ async function verifyCustomerWalletHistory() {
             benefit: {
               benefitRuleId: 'older-rule', label: 'Studio access', category: 'Services',
               productName: 'Member session', discountPercent: 10, requiredLockIFR: 2500,
+              minIFRHeld: 0,
               dailyRedemptionLimit: 0, monthlyRedemptionLimit: 0,
             },
           }] : [{
@@ -526,6 +530,7 @@ async function verifyCustomerWalletHistory() {
             benefit: {
               benefitRuleId: 'coffee-rule', label: 'Premium coffee', category: 'Coffee',
               productName: 'Reserve espresso', discountPercent: 15, requiredLockIFR: 1000,
+              minIFRHeld: 250,
               dailyRedemptionLimit: 1, monthlyRedemptionLimit: 4,
             },
           }],
@@ -594,7 +599,11 @@ async function verifyCustomerWalletHistory() {
 
 async function connectEligibilityWallet(page) {
   await page.waitForLoadState('networkidle', { timeout: timeoutMs });
-  const connectButton = page.getByRole('button', { name: 'Connect wallet', exact: true }).first();
+  const walletControl = page.locator(
+    '[data-wallet-connect-control][data-wallet-connectors-ready="true"]'
+  ).first();
+  await walletControl.waitFor({ timeout: timeoutMs });
+  const connectButton = walletControl.getByRole('button', { name: 'Connect wallet', exact: true });
   if (await connectButton.isVisible()) await connectButton.click();
 }
 
@@ -613,6 +622,7 @@ async function verifyOfferEligibility() {
   try {
     await gotoAppPage(page, '/');
     await expectText(page, 'Member espresso');
+    await expectText(page, '1,000 IFR held');
     await connectEligibilityWallet(page);
     await expectText(page, 'Eligible with this wallet');
     await expectText(page, 'Lock 999.875 more IFR');
@@ -696,10 +706,10 @@ async function verifyOfferEligibility() {
     await gotoAppPage(belowPage, '/');
     await expectText(belowPage, 'Member espresso');
     await connectEligibilityWallet(belowPage);
-    await expectText(belowPage, 'Lock 0.001 more IFR');
+    await expectText(belowPage, 'Add 0.001 IFR first');
     assert(
       await belowPage.getByText('Eligible with this wallet', { exact: true }).count() === 0,
-      'requiredRaw minus one unit must not be eligible'
+      'lock and held raw balances one unit below the dual threshold must not be eligible'
     );
   } finally {
     await belowContext.close();
@@ -902,6 +912,7 @@ async function verifyRuleTemplateAuthorization() {
               productName: 'Older product',
               discountPercent: 5,
               requiredLockIFR: 500,
+              minIFRHeld: 0,
               dailyRedemptionLimit: 1,
               monthlyRedemptionLimit: 1,
             },
@@ -923,6 +934,8 @@ async function verifyRuleTemplateAuthorization() {
               productName: 'Coffee, "Premium"\nMembership',
               discountPercent: 15,
               requiredLockIFR: 1000,
+              minIFRHeld: 250,
+              walletBalanceRaw: '250000000000',
               dailyRedemptionLimit: 1,
               monthlyRedemptionLimit: 4,
             },
@@ -943,6 +956,7 @@ async function verifyRuleTemplateAuthorization() {
               productName: null,
               discountPercent: 5,
               requiredLockIFR: 500,
+              minIFRHeld: 0,
               dailyRedemptionLimit: 1,
               monthlyRedemptionLimit: 1,
             },
@@ -971,6 +985,7 @@ async function verifyRuleTemplateAuthorization() {
         productName: body.productName,
         discountPercent: body.discountPercent,
         requiredLockIFR: body.requiredLockIFR,
+        minIFRHeld: body.minIFRHeld,
         dailyRedemptionLimit: body.dailyRedemptionLimit,
         monthlyRedemptionLimit: body.monthlyRedemptionLimit,
         business: {
@@ -996,6 +1011,7 @@ async function verifyRuleTemplateAuthorization() {
         productName: body.productName,
         discountPercent: body.discountPercent,
         requiredLockIFR: body.requiredLockIFR,
+        minIFRHeld: body.minIFRHeld,
         dailyRedemptionLimit: body.dailyRedemptionLimit,
         monthlyRedemptionLimit: body.monthlyRedemptionLimit,
         ttlSeconds: body.ttlSeconds,
@@ -1015,6 +1031,7 @@ async function verifyRuleTemplateAuthorization() {
           productName: body.productName,
           discountPercent: body.discountPercent,
           requiredLockIFR: body.requiredLockIFR,
+          minIFRHeld: body.minIFRHeld,
           dailyRedemptionLimit: body.dailyRedemptionLimit,
           monthlyRedemptionLimit: body.monthlyRedemptionLimit,
           ttlSeconds: body.ttlSeconds,
@@ -1073,6 +1090,7 @@ async function verifyRuleTemplateAuthorization() {
     assert(saved.body.category === 'Coffee', 'signed Save did not preserve the catalog category');
     assert(saved.body.productName === 'Bound catalog service', 'signed Save did not preserve the catalog product name');
     assert(saved.body.discountPercent === 15 && saved.body.requiredLockIFR === 5000, 'signed Save did not preserve template values');
+    assert(saved.body.minIFRHeld === 0, 'signed Save did not preserve the disabled held-IFR gate');
     assert(saved.headers['x-ifr-wallet'] === sellerWallet, 'signed Save is missing the seller wallet header');
     assert(Boolean(saved.headers['x-ifr-signature']), 'signed Save is missing the seller signature header');
     assert(Boolean(saved.headers['x-ifr-timestamp']), 'signed Save is missing the seller timestamp header');
@@ -1287,6 +1305,7 @@ async function verifyPage(contextOptions, label) {
         productName: 'Reserve espresso',
         discountPercent: 15,
         requiredLockIFR: 1000,
+        minIFRHeld: 250,
         dailyRedemptionLimit: 1,
         monthlyRedemptionLimit: 10,
         business: {
@@ -1306,6 +1325,7 @@ async function verifyPage(contextOptions, label) {
         productName: 'Private consultation',
         discountPercent: 10,
         requiredLockIFR: 2500,
+        minIFRHeld: 0,
         dailyRedemptionLimit: 0,
         monthlyRedemptionLimit: 0,
         business: {
@@ -1481,6 +1501,7 @@ async function verifyPage(contextOptions, label) {
             status: 'APPROVED',
             discountPercent: 12,
             requiredLockIFR: 1000,
+            minIFRHeld: 250,
             ruleLabel: 'Smoke Bronze',
             productName: 'Counter checkout',
             expiresAt: new Date(Date.now() + 60000).toISOString(),
@@ -1754,6 +1775,7 @@ async function verifyPage(contextOptions, label) {
               label: 'Coffee member',
               discountPercent: 15,
               requiredLockIFR: 1000,
+              minIFRHeld: 250,
               ttlSeconds: 90,
               dailyRedemptionLimit: 1,
               monthlyRedemptionLimit: 10,

@@ -79,6 +79,7 @@ model BenefitRule {
   productName     String
   discountPercent Int
   requiredLockIFR Int
+  minIFRHeld      Int      @default(0)
   dailyRedemptionLimit Int @default(0)
   monthlyRedemptionLimit Int @default(0)
   ttlSeconds      Int      @default(90)
@@ -106,6 +107,7 @@ model Session {
   benefitCurrency String?
   benefitDiscountPercent Int?
   benefitRequiredLockIFR Int?
+  benefitMinIFRHeld Int?
   benefitTtlSeconds Int?
   benefitDailyRedemptionLimit Int?
   benefitMonthlyRedemptionLimit Int?
@@ -114,6 +116,7 @@ model Session {
   status           String     @default("PENDING")
   recoveredAddress String?
   lockAmountRaw    String?
+  walletBalanceRaw String?
   reason           String?
   createdAt        DateTime   @default(now())
   updatedAt        DateTime   @updatedAt

@@ -21,7 +21,10 @@ The app has two roles:
 - Production wallet boundary: customers connect self-custodied external wallets. New-wallet
   guidance hands off to a trusted wallet app; the production Benefits app does not create,
   import, custody or store wallet keys.
-- On-chain access source: `IFRLock.lockedBalance` and backend `IFRLock.isLocked`
+- On-chain access sources: mandatory `IFRLock.lockedBalance` / `IFRLock.isLocked` plus an
+  optional free-wallet IFR balance threshold. The backend resolves the canonical token through
+  the deployed IFRLock contract's immutable `token()` reference and reads both requirements at
+  one block.
 - Rule model: `BenefitRule`
 - Session model: `Session` with optional `benefitRuleId` and additive one-to-one `CustomerPass`
 - Recommended customer-presented QR flow:
@@ -29,7 +32,9 @@ The app has two roles:
   2. Backend atomically consumes it and returns an opaque, five-minute `/p/:passId` QR plus a random control token. Only the SHA-256 token hash is stored; wallet, token, signature and session ID are absent from the QR.
   3. Seller opens `/b/:businessId`, selects an active rule, scans/pastes the pass and signs a one-time `passes:bind` challenge bound to pass and rule.
   4. Backend atomically rechecks current owner/operator access, claims the unexpired pass, freezes the rule snapshot and creates one linked `Session`.
-  5. Customer privately receives seller, product, discount and required IFRLock details through the control token, then explicitly signs the exact session challenge.
+  5. Customer privately receives seller, product, discount, required IFRLock and optional
+     free-wallet IFR details through the control token, then explicitly signs the exact session
+     challenge.
   6. Backend requires the recovered signer to equal the wallet that created the pass and atomically binds the pending session to one wallet before the on-chain IFRLock check.
   7. Seller sees approval and redeems once. Customer may cancel only while the pass is open or its linked checkout is still pending.
 - Compatible seller-issued QR flow:
@@ -38,7 +43,8 @@ The app has two roles:
   3. Frontend requests and signs a one-time `sessions:create` challenge bound to seller wallet, business and selected rule, then calls `POST /api/sessions` with the nonce.
   4. Customer scans the seller QR in `/scan`, selects a local QR image, pastes the proof link/session ID, or opens `/r/:sessionId` directly.
   5. Customer signs challenge.
-  6. Backend checks IFRLock against the selected rule threshold.
+  6. Backend checks IFRLock and, when configured, the free wallet IFR balance against the frozen
+     selected-rule thresholds.
   7. Seller sees approval and redeems the session once.
 - Pass QR copying is not authorization: a copied pass can at most be bound once. It cannot approve eligibility or redeem without the original customer wallet's second signature and a currently authorized seller signature.
 - Public proof-link polling is deliberately minimal and non-cacheable: it never exposes the
@@ -88,13 +94,14 @@ The app has two roles:
   accept only a canonical `https://shop.ifrunit.tech/r/:sessionId` proof. Foreign origins,
   insecure links, credentials, custom ports, query strings, fragments and invalid IDs fail closed.
 - Keep paste/session-ID fallback available when camera permission or hardware is unavailable.
-- QR session page must show seller, rule, product, optional reference price, discount and required
-  IFR before signing. Reference prices use exact minor units plus an allowlisted ISO currency,
+- QR session page must show seller, rule, product, optional reference price, discount, required
+  locked IFR and any optional free-wallet IFR minimum before signing. Reference prices use exact minor units plus an allowlisted ISO currency,
   are frozen in the signed session snapshot and are never presented as an in-app payment.
 - Customer-presented pass must show the exact bound seller/rule on the originating device and require a second explicit signature. Its control token stays out of URLs, QR payloads, logs and local storage; the first-party UI limits restoration to the same browser tab.
 - Offer discovery and public seller catalogs show a wallet-local, read-only preview against each
-  rule's exact IFRLock threshold. Disconnect, wrong-chain, loading and RPC/configuration failures
-  fail closed; only the backend checkout attestation is authoritative.
+  rule's exact IFRLock and optional wallet-balance thresholds. `minIFRHeld=0` disables the second
+  gate without an additional token RPC read. Disconnect, wrong-chain, loading and
+  RPC/configuration failures fail closed; only the backend checkout attestation is authoritative.
 - Customers can narrow discovery by a seller-published city, region or `Online` service area.
   This is an exact public-label filter, not customer geolocation: the app requests no customer GPS,
   coordinates, map permission or geocoding service. Seller-entered text is stored and public; the
@@ -108,7 +115,9 @@ The app has two roles:
   reload and edit it with their wallet; controlled operator-created profiles can be reopened by
   Business ID with the user-entered admin fallback. Public catalog and offer discovery expose only
   sanitized profile fields and never expose the internal normalized filter key.
-- Seller can edit discount, category, product/service, required IFR and QR lifetime through the owner-wallet-signed PATCH flow without changing the active/paused state.
+- Seller can edit discount, category, product/service, required locked IFR, optional minimum IFR
+  kept in the customer wallet and QR lifetime through the owner-wallet-signed PATCH flow without
+  changing the active/paused state.
 - Seller can attach or clear an optional reference price on a catalog item. Amount and currency
   are updated atomically, validated without floating point and remain informational.
 - Seller can apply built-in welcome, standard, premium or event templates to the current draft; templates never publish automatically and preserve an explicit catalog binding.

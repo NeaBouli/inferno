@@ -5,7 +5,7 @@ const path = require('path');
 
 const root = path.resolve(__dirname, '..');
 const migrationsDir = path.join(root, 'prisma', 'migrations');
-const targetMigration = '20260723204500_add_product_base_price';
+const targetMigration = '20260723222000_add_min_ifr_held';
 const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'benefits-populated-upgrade-'));
 const dbPath = path.join(tempDir, 'upgrade.db');
 
@@ -204,6 +204,21 @@ try {
     throw new Error(
       `Missing product price migration state: productColumns=${productPriceColumns}, ` +
       `sessionColumns=${sessionPriceColumns}, existing=${existingPriceState}`
+    );
+  }
+
+  const heldRuleColumn = sqlite("SELECT COUNT(*) FROM pragma_table_info('BenefitRule') WHERE name='minIFRHeld';");
+  const heldSessionColumns = sqlite(`
+    SELECT COUNT(*) FROM pragma_table_info('Session')
+    WHERE name IN ('benefitMinIFRHeld', 'walletBalanceRaw');
+  `);
+  const existingHeldState = sqlite(`
+    SELECT minIFRHeld FROM BenefitRule WHERE id = 'existing-rule';
+  `);
+  if (heldRuleColumn !== '1' || heldSessionColumns !== '2' || existingHeldState !== '0') {
+    throw new Error(
+      `Missing held-IFR migration state: ruleColumn=${heldRuleColumn}, ` +
+      `sessionColumns=${heldSessionColumns}, existing=${existingHeldState}`
     );
   }
 

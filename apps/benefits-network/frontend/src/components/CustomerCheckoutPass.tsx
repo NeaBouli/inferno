@@ -235,7 +235,12 @@ export function CustomerCheckoutPass() {
               <div className="min-w-0">
                 <p className="text-xs font-black uppercase tracking-[0.14em] text-orange-100">Selected public offer</p>
                 <p className="mt-2 break-words font-black text-white">{selectedOffer.rule.productName} · {selectedOffer.sellerName}</p>
-                <p className="mt-1 text-stone-300">{selectedOffer.rule.discountPercent}% benefit · {selectedOffer.rule.requiredLockIFR.toLocaleString('en-US')} IFR lock</p>
+                <p className="mt-1 text-stone-300">
+                  {selectedOffer.rule.discountPercent}% benefit · {selectedOffer.rule.requiredLockIFR.toLocaleString('en-US')} IFR lock
+                  {selectedOffer.rule.minIFRHeld > 0
+                    ? ` · ${selectedOffer.rule.minIFRHeld.toLocaleString('en-US')} IFR held`
+                    : ''}
+                </p>
               </div>
             </div>
             <button type="button" onClick={clearSelectedOffer} className="text-xs font-black uppercase tracking-[0.12em] text-orange-100">Clear</button>
@@ -284,6 +289,9 @@ export function CustomerCheckoutPass() {
               ) : null}
               <div className="flex justify-between gap-4"><span>Benefit</span><strong className="text-orange-100">{status.checkout.benefit.discountPercent}%</strong></div>
               <div className="flex justify-between gap-4"><span>Required IFRLock</span><strong className="text-right text-white">{status.checkout.benefit.requiredLockIFR.toLocaleString('en-US')} IFR</strong></div>
+              {status.checkout.benefit.minIFRHeld > 0 ? (
+                <div className="flex justify-between gap-4"><span>Required in wallet</span><strong className="text-right text-white">{status.checkout.benefit.minIFRHeld.toLocaleString('en-US')} IFR</strong></div>
+              ) : null}
               <div className="flex justify-between gap-4"><span>Expires in</span><strong className="text-white"><Countdown expiresAt={status.checkout.expiresAt} /></strong></div>
             </div>
           ) : null}

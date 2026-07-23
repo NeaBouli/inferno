@@ -51,6 +51,7 @@ import {
   updateSellerBusinessRule,
 } from '@/lib/api';
 import { formatProductPrice } from '@/lib/money';
+import { formatIFR } from '@/lib/contracts';
 
 const categories = ['Coffee', 'Retail', 'Digital access', 'Events', 'Services'];
 const profileCategorySuggestions = [
@@ -72,6 +73,7 @@ const ruleTemplates = [
     product: 'First visit benefit',
     discount: 5,
     minLocked: 500,
+    minHeld: 0,
     dailyLimit: 1,
     monthlyLimit: 1,
     ttl: 90,
@@ -84,6 +86,7 @@ const ruleTemplates = [
     product: 'Member discount',
     discount: 10,
     minLocked: 1000,
+    minHeld: 0,
     dailyLimit: 1,
     monthlyLimit: 10,
     ttl: 90,
@@ -96,6 +99,7 @@ const ruleTemplates = [
     product: 'Premium member access',
     discount: 15,
     minLocked: 5000,
+    minHeld: 0,
     dailyLimit: 1,
     monthlyLimit: 4,
     ttl: 120,
@@ -108,6 +112,7 @@ const ruleTemplates = [
     product: 'Event member benefit',
     discount: 20,
     minLocked: 10000,
+    minHeld: 0,
     dailyLimit: 1,
     monthlyLimit: 1,
     ttl: 120,
@@ -121,6 +126,7 @@ const DEFAULT_RULE_DRAFT = {
   label: 'Bronze',
   discount: 10,
   minLocked: 1000,
+  minHeld: 0,
   dailyLimit: 1,
   monthlyLimit: 10,
   ttl: 90,
@@ -130,10 +136,21 @@ function formatSessionLockedIFR(value: string | null) {
   if (!value) return null;
 
   const [whole = '0', fraction = ''] = value.split('.');
+  if (!/^\d+$/.test(whole) || (fraction && !/^\d+$/.test(fraction))) return null;
   const groupedWhole = whole.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
   const trimmedFraction = fraction.replace(/0+$/, '').slice(0, 3);
 
   return trimmedFraction ? `${groupedWhole}.${trimmedFraction}` : groupedWhole;
+}
+
+function formatSessionHeldIFR(value: string | null) {
+  if (!value || !/^\d+$/.test(value)) return null;
+
+  try {
+    return formatIFR(BigInt(value));
+  } catch {
+    return null;
+  }
 }
 
 export function SellerRuleBuilder() {
@@ -158,6 +175,7 @@ export function SellerRuleBuilder() {
   const [label, setLabel] = useState(DEFAULT_RULE_DRAFT.label);
   const [discount, setDiscount] = useState(DEFAULT_RULE_DRAFT.discount);
   const [minLocked, setMinLocked] = useState(DEFAULT_RULE_DRAFT.minLocked);
+  const [minHeld, setMinHeld] = useState(DEFAULT_RULE_DRAFT.minHeld);
   const [dailyLimit, setDailyLimit] = useState(DEFAULT_RULE_DRAFT.dailyLimit);
   const [monthlyLimit, setMonthlyLimit] = useState(DEFAULT_RULE_DRAFT.monthlyLimit);
   const [ttl, setTtl] = useState(DEFAULT_RULE_DRAFT.ttl);
@@ -294,11 +312,12 @@ export function SellerRuleBuilder() {
       `Scanner: ${scannerUrl || 'Create or select a seller profile first.'}`,
       `Available in: ${businessServiceArea.trim() || 'not published'}`,
       `Default benefit: ${discount}% off when ${minLocked.toLocaleString('en-US')} IFR is locked`,
+      ...(minHeld > 0 ? [`Free wallet balance: ${minHeld.toLocaleString('en-US')} IFR`] : []),
       `Wallet limit: ${dailyLimit || 'unlimited'}/day / ${monthlyLimit || 'unlimited'}/month (UTC)`,
       `Rule draft: ${label || 'IFR Benefit'} / ${category} / ${product || 'IFR Benefit'}`,
       'At checkout: open scanner, create QR session, let the customer scan and sign, then redeem only after APPROVED.',
     ].join('\n'),
-    [businessName, businessServiceArea, category, dailyLimit, discount, label, minLocked, monthlyLimit, product, scannerUrl]
+    [businessName, businessServiceArea, category, dailyLimit, discount, label, minHeld, minLocked, monthlyLimit, product, scannerUrl]
   );
   const sellerBackupText = useMemo(() => JSON.stringify(
     {
@@ -320,6 +339,7 @@ export function SellerRuleBuilder() {
         productName: product || 'IFR Benefit',
         discountPercent: discount,
         requiredLockIFR: minLocked,
+        minIFRHeld: minHeld,
         dailyRedemptionLimit: dailyLimit,
         monthlyRedemptionLimit: monthlyLimit,
         ttlSeconds: ttl,
@@ -329,7 +349,7 @@ export function SellerRuleBuilder() {
     },
     null,
     2
-  ), [activeRulesCount, address, businessCategories, businessDescription, businessId, businessLogoUrl, businessName, businessServiceArea, businessWebsite, category, dailyLimit, discount, label, minLocked, monthlyLimit, product, scannerUrl, selectedBusiness, ttl]);
+  ), [activeRulesCount, address, businessCategories, businessDescription, businessId, businessLogoUrl, businessName, businessServiceArea, businessWebsite, category, dailyLimit, discount, label, minHeld, minLocked, monthlyLimit, product, scannerUrl, selectedBusiness, ttl]);
 
   function getCustomerProofUrl(sessionId: string) {
     return `${SHOP_ORIGIN}/r/${sessionId}`;
@@ -337,6 +357,7 @@ export function SellerRuleBuilder() {
 
   function getSessionRestoreReceipt(session: SellerSessionSummary) {
     const lockedIFR = formatSessionLockedIFR(session.lockAmountRaw);
+    const heldIFR = formatSessionHeldIFR(session.walletBalanceRaw);
 
     return [
       'IFR Benefits Network session restore receipt',
@@ -345,6 +366,9 @@ export function SellerRuleBuilder() {
       `Status: ${session.status}`,
       `Benefit: ${session.discountPercent}%`,
       `Required lock: ${session.requiredLockIFR.toLocaleString('en-US')} IFR`,
+      ...(session.minIFRHeld > 0
+        ? [`Required held: ${session.minIFRHeld.toLocaleString('en-US')} IFR`]
+        : []),
       `Rule: ${session.label || 'Business default'}`,
       `Product: ${session.productName || 'Business default benefit'}`,
       ...(formatProductPrice(session.basePriceMinor, session.currency)
@@ -352,6 +376,9 @@ export function SellerRuleBuilder() {
         : []),
       `Customer wallet: ${session.recoveredAddress || 'not verified yet'}`,
       `Locked: ${lockedIFR ? `${lockedIFR} IFR` : 'not verified yet'}`,
+      ...(session.minIFRHeld > 0
+        ? [`Held at verification: ${heldIFR ? `${heldIFR} IFR` : 'not verified yet'}`]
+        : []),
       `Expires: ${session.expiresAt}`,
       `Redeemed: ${session.redeemedAt || 'not redeemed'}`,
       `Customer link: ${getCustomerProofUrl(session.id)}`,
@@ -409,12 +436,13 @@ export function SellerRuleBuilder() {
       productName: product || 'IFR Benefit',
       discountPercent: discount,
       requiredLockIFR: minLocked,
+      minIFRHeld: minHeld,
       dailyRedemptionLimit: dailyLimit,
       monthlyRedemptionLimit: monthlyLimit,
       ttlSeconds: ttl,
       active: true,
     }),
-    [category, dailyLimit, discount, label, minLocked, monthlyLimit, product, selectedProductId, ttl]
+    [category, dailyLimit, discount, label, minHeld, minLocked, monthlyLimit, product, selectedProductId, ttl]
   );
 
   function resetRuleDraft() {
@@ -423,6 +451,7 @@ export function SellerRuleBuilder() {
     setLabel(DEFAULT_RULE_DRAFT.label);
     setDiscount(DEFAULT_RULE_DRAFT.discount);
     setMinLocked(DEFAULT_RULE_DRAFT.minLocked);
+    setMinHeld(DEFAULT_RULE_DRAFT.minHeld);
     setDailyLimit(DEFAULT_RULE_DRAFT.dailyLimit);
     setMonthlyLimit(DEFAULT_RULE_DRAFT.monthlyLimit);
     setTtl(DEFAULT_RULE_DRAFT.ttl);
@@ -433,6 +462,7 @@ export function SellerRuleBuilder() {
     setLabel(template.label);
     setDiscount(template.discount);
     setMinLocked(template.minLocked);
+    setMinHeld(template.minHeld);
     setDailyLimit(template.dailyLimit);
     setMonthlyLimit(template.monthlyLimit);
     setTtl(template.ttl);
@@ -1163,6 +1193,7 @@ export function SellerRuleBuilder() {
     setSelectedProductId(rule.productId || '');
     setDiscount(rule.discountPercent);
     setMinLocked(rule.requiredLockIFR);
+    setMinHeld(rule.minIFRHeld);
     setDailyLimit(rule.dailyRedemptionLimit);
     setMonthlyLimit(rule.monthlyRedemptionLimit);
     setTtl(rule.ttlSeconds);
@@ -1413,6 +1444,7 @@ export function SellerRuleBuilder() {
           if (typeof parsed.defaultBenefit.productName === 'string') setProduct(parsed.defaultBenefit.productName);
           if (typeof parsed.defaultBenefit.discountPercent === 'number') setDiscount(parsed.defaultBenefit.discountPercent);
           if (typeof parsed.defaultBenefit.requiredLockIFR === 'number') setMinLocked(parsed.defaultBenefit.requiredLockIFR);
+          if (typeof parsed.defaultBenefit.minIFRHeld === 'number') setMinHeld(parsed.defaultBenefit.minIFRHeld);
           if (typeof parsed.defaultBenefit.dailyRedemptionLimit === 'number') setDailyLimit(parsed.defaultBenefit.dailyRedemptionLimit);
           if (typeof parsed.defaultBenefit.monthlyRedemptionLimit === 'number') setMonthlyLimit(parsed.defaultBenefit.monthlyRedemptionLimit);
           if (typeof parsed.defaultBenefit.ttlSeconds === 'number') setTtl(parsed.defaultBenefit.ttlSeconds);
@@ -2288,6 +2320,7 @@ export function SellerRuleBuilder() {
             <div className="mt-4 grid gap-3">
               {visibleSessions.slice(0, 10).map((session) => {
                 const lockedIFR = formatSessionLockedIFR(session.lockAmountRaw);
+                const heldIFR = formatSessionHeldIFR(session.walletBalanceRaw);
 
                 return (
                   <div key={session.id} className="rounded-2xl border border-white/10 bg-black/25 p-4">
@@ -2324,6 +2357,9 @@ export function SellerRuleBuilder() {
                       <p className="break-all font-mono">Session: {session.id}</p>
                       {session.recoveredAddress ? <p className="font-mono">Wallet: {maskSellerSessionWallet(session.recoveredAddress)}</p> : null}
                       {lockedIFR ? <p>Locked: {lockedIFR} IFR</p> : null}
+                      {session.minIFRHeld > 0 && heldIFR ? (
+                        <p>Held at verification: {heldIFR} IFR</p>
+                      ) : null}
                       {session.reason ? <p className="text-red-100">Reason: {session.reason}</p> : null}
                       {session.redeemedAt ? <p>Redeemed: {new Date(session.redeemedAt).toLocaleString()}</p> : null}
                     </div>
@@ -2595,6 +2631,21 @@ export function SellerRuleBuilder() {
           />
         </label>
         <label className="grid gap-2 text-sm font-semibold text-stone-200">
+          Minimum IFR kept in wallet
+          <input
+            type="number"
+            min="0"
+            max="1000000000"
+            step="1"
+            value={minHeld}
+            onChange={(event) => setMinHeld(Number(event.target.value))}
+            className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none focus:border-orange-300"
+          />
+          <span className="text-xs font-normal leading-5 text-stone-400">
+            Optional. Use 0 for lock-only access. A positive value requires both the IFRLock amount and this free wallet balance.
+          </span>
+        </label>
+        <label className="grid gap-2 text-sm font-semibold text-stone-200">
           QR session TTL
           <input
             type="number"
@@ -2635,6 +2686,7 @@ export function SellerRuleBuilder() {
         <p className="text-xs uppercase tracking-[0.14em] text-stone-400">Customer result</p>
         <p className="mt-2 text-xl font-black text-orange-100">
           {discount}% off when {minLocked.toLocaleString('en-US')} IFR is locked
+          {minHeld > 0 ? ` and ${minHeld.toLocaleString('en-US')} IFR stays in the wallet` : ''}
         </p>
         <p className="mt-2 text-sm text-stone-300">{label} / {category} / {product}</p>
         <p className="mt-2 text-xs text-stone-400">
@@ -2669,6 +2721,9 @@ export function SellerRuleBuilder() {
                   </p>
                   <p className="mt-2 text-sm text-orange-100">
                     {rule.discountPercent}% off at {rule.requiredLockIFR.toLocaleString('en-US')} locked IFR
+                    {rule.minIFRHeld > 0
+                      ? ` plus ${rule.minIFRHeld.toLocaleString('en-US')} IFR held`
+                      : ''}
                   </p>
                   <p className="mt-1 text-xs text-stone-400">
                     Per wallet: {rule.dailyRedemptionLimit || 'unlimited'} / UTC day and {rule.monthlyRedemptionLimit || 'unlimited'} / UTC month

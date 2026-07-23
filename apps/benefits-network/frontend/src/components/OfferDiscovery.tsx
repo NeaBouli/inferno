@@ -237,8 +237,15 @@ export function OfferDiscovery({ mode, onOpenSellerTools }: OfferDiscoveryProps)
               <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-xs text-stone-400">
                 <span>{offer.label}</span>
                 <span>{offer.requiredLockIFR.toLocaleString('en-US')} IFR lock</span>
+                {offer.minIFRHeld > 0 ? (
+                  <span>{offer.minIFRHeld.toLocaleString('en-US')} IFR held</span>
+                ) : null}
               </div>
-              <OfferEligibility requiredLockIFR={offer.requiredLockIFR} eligibility={eligibility} />
+              <OfferEligibility
+                requiredLockIFR={offer.requiredLockIFR}
+                minIFRHeld={offer.minIFRHeld}
+                eligibility={eligibility}
+              />
               <div className="mt-5 flex flex-wrap gap-2">
                 <Link href={`/?seller=${encodeURIComponent(offer.business.id)}&offer=${encodeURIComponent(offer.id)}#customer-pass`} className="inline-flex rounded-full bg-orange-300 px-5 py-3 text-xs font-black uppercase tracking-[0.14em] text-stone-950 transition hover:-translate-y-0.5 hover:bg-orange-200">
                   Use this offer

@@ -94,6 +94,7 @@ router.get('/', discoveryRateLimiter, async (req, res, next) => {
           productName: true,
           discountPercent: true,
           requiredLockIFR: true,
+          minIFRHeld: true,
           dailyRedemptionLimit: true,
           monthlyRedemptionLimit: true,
           business: {
@@ -271,6 +272,7 @@ router.get('/:id/rules', async (req, res, next) => {
         productName: true,
         discountPercent: true,
         requiredLockIFR: true,
+        minIFRHeld: true,
         dailyRedemptionLimit: true,
         monthlyRedemptionLimit: true,
         ttlSeconds: true,
@@ -334,6 +336,7 @@ router.get('/:id/products', async (req, res, next) => {
             label: true,
             discountPercent: true,
             requiredLockIFR: true,
+            minIFRHeld: true,
             dailyRedemptionLimit: true,
             monthlyRedemptionLimit: true,
             ttlSeconds: true,

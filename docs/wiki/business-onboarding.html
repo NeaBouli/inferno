@@ -763,7 +763,7 @@ npm run dev
       <!-- ========== Step 3: Tier Configuration ========== -->
       <h2>Step 3: Tier Configuration</h2>
 
-      <p>Configure the discount tiers your customers can access based on their IFR lock amount. These are recommended starting values &mdash; you can customize them for your business.</p>
+      <p>Configure the discount tiers your customers can access based on their IFR lock amount. You may also require a separate minimum IFR balance that remains free in the customer wallet. These are recommended starting values &mdash; you can customize them for your business.</p>
 
       <table>
         <thead>
@@ -798,7 +798,7 @@ npm run dev
       </table>
 
       <div class="callout">
-        <p><strong>How it works:</strong> The system calls <code>IFRLock.isLocked(wallet, minAmount)</code> on-chain to verify the customer's lock status. No tokens are transferred during verification &mdash; it is a read-only check.</p>
+        <p><strong>How it works:</strong> The system calls <code>IFRLock.isLocked(wallet, minAmount)</code> on-chain to verify the customer's lock status. If the seller configured a wallet-held minimum, the same checkout also reads the customer's free IFR balance. Both conditions are frozen in the signed offer and verified together. No tokens are transferred during verification &mdash; these are read-only checks.</p>
       </div>
 
       <!-- ========== Step 4: Cashier Staff Training ========== -->
@@ -848,7 +848,7 @@ npm run dev
         <li>Seller chooses business categories and adds products or services.</li>
         <li>Seller defines discount rules by minimum IFR locked in IFRLock.</li>
         <li>Recommended: customer creates a private short-lived pass; seller scans it and binds the selected rule.</li>
-        <li>Customer reviews the exact seller, product, discount and threshold in the original tab, then confirms.</li>
+        <li>Customer reviews the exact seller, product, discount, locked-IFR threshold and any optional wallet-held IFR threshold in the original tab, then confirms.</li>
         <li>Compatible alternative: seller creates a short-lived rule-bound checkout QR that the customer scans and signs.</li>
         <li>Seller sees APPROVED or REJECTED, redeems an approval once, and applies the configured benefit.</li>
         <li>Verified sellers may later receive PartnerVault rewards for qualifying usage after governance registration.</li>

@@ -298,7 +298,7 @@ describe('E2E: IFR Lock → Benefits Network Verification', () => {
 
     expect(session).toMatchObject({ dailyRedemptionLimit: 1, monthlyRedemptionLimit: 7 });
     expect(await prisma.session.findUniqueOrThrow({ where: { id: session.sessionId } })).toMatchObject({
-      benefitSnapshotVersion: 3,
+      benefitSnapshotVersion: 4,
       benefitDailyRedemptionLimit: 1,
       benefitMonthlyRedemptionLimit: 7,
     });

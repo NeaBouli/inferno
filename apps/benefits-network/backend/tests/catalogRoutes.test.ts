@@ -3,10 +3,12 @@ import { ethers } from 'ethers';
 type TestWallet = ReturnType<typeof ethers.Wallet.createRandom>;
 
 const mockCheckLock = jest.fn();
+const mockCheckBenefitEligibility = jest.fn();
 const mockRecoverSigner = jest.fn();
 
 jest.mock('../src/services/ifrLockService', () => ({
   checkLock: (...args: unknown[]) => mockCheckLock(...args),
+  checkBenefitEligibility: (...args: unknown[]) => mockCheckBenefitEligibility(...args),
   recoverSigner: (...args: unknown[]) => mockRecoverSigner(...args),
   initProvider: jest.fn(),
 }));
@@ -90,6 +92,7 @@ function rulePayload(productId: string) {
     productName: 'Untrusted product name',
     discountPercent: 20,
     requiredLockIFR: 1000,
+    minIFRHeld: 250,
     ttlSeconds: 90,
     dailyRedemptionLimit: 1,
     monthlyRedemptionLimit: 10,
@@ -692,7 +695,7 @@ describe('Seller catalog routes', () => {
     expect(firstPage.pagination).toEqual({ page: 1, limit: 1, total: 2, totalPages: 2, hasNext: true });
     expect(Object.keys(firstPage.offers[0]).sort()).toEqual([
       'business', 'category', 'dailyRedemptionLimit', 'discountPercent', 'id', 'label',
-      'monthlyRedemptionLimit', 'product', 'productName', 'requiredLockIFR',
+      'minIFRHeld', 'monthlyRedemptionLimit', 'product', 'productName', 'requiredLockIFR',
     ]);
     expect(Object.keys(firstPage.offers[0].business as Record<string, unknown>).sort()).toEqual([
       'categories', 'description', 'id', 'logoUrl', 'name', 'serviceArea', 'website',
@@ -884,6 +887,7 @@ describe('Seller catalog routes', () => {
       productId: product.id,
       productName: 'Premium espresso',
       category: 'Coffee',
+      minIFRHeld: 250,
     });
     expect((await fetch(`${baseUrl()}/api/seller/businesses/${businessId}/rules`, {
       method: 'POST',
@@ -916,7 +920,12 @@ describe('Seller catalog routes', () => {
     const refreshResponse = await fetch(`${baseUrl()}/api/seller/rules/${rule.id}`, {
       method: 'PATCH',
       headers: refreshHeaders,
-      body: JSON.stringify({ productId: product.id, discountPercent: 30, requiredLockIFR: 5000 }),
+      body: JSON.stringify({
+        productId: product.id,
+        discountPercent: 30,
+        requiredLockIFR: 5000,
+        minIFRHeld: 500,
+      }),
     });
     expect(refreshResponse.status).toBe(200);
     expect(await refreshResponse.json()).toMatchObject({
@@ -924,9 +933,11 @@ describe('Seller catalog routes', () => {
       category: 'Drinks',
       discountPercent: 30,
       requiredLockIFR: 5000,
+      minIFRHeld: 500,
     });
     expect(await buildChallengeMessage(session.sessionId)).toContain('Product: Premium espresso');
     expect(await buildChallengeMessage(session.sessionId)).toContain('Required Lock IFR: 1000');
+    expect(await buildChallengeMessage(session.sessionId)).toContain('Minimum Held IFR: 250');
     const oldSessionStatus = await fetch(`${baseUrl()}/api/sessions/${session.sessionId}`);
     expect(await oldSessionStatus.json()).toMatchObject({
       benefit: {
@@ -935,6 +946,7 @@ describe('Seller catalog routes', () => {
         currency: 'USD',
         discountPercent: 20,
         requiredLockIFR: 1000,
+        minIFRHeld: 250,
         dailyRedemptionLimit: 1,
         monthlyRedemptionLimit: 10,
       },
@@ -951,20 +963,29 @@ describe('Seller catalog routes', () => {
       currency: 'USD',
       discountPercent: 20,
       requiredLockIFR: 1000,
+      minIFRHeld: 250,
       dailyRedemptionLimit: 1,
       monthlyRedemptionLimit: 10,
     });
     mockRecoverSigner.mockReturnValue(owner.address);
-    mockCheckLock.mockResolvedValue({ eligible: true, lockedAmount: '1000.0' });
+    mockCheckBenefitEligibility.mockResolvedValue({
+      eligible: true,
+      lockEligible: true,
+      heldEligible: true,
+      lockedAmount: '1000.0',
+      walletAmount: '250.0',
+      walletBalanceRaw: '250000000000',
+    });
     await expect(attest(session.sessionId, '0xsnapshot-signature')).resolves.toMatchObject({
       status: 'APPROVED',
     });
-    expect(mockCheckLock).toHaveBeenCalledWith(owner.address, 1000);
+    expect(mockCheckBenefitEligibility).toHaveBeenCalledWith(owner.address, 1000, 250);
 
     const refreshedSession = await createSession(businessId, rule.id);
     expect(await buildChallengeMessage(refreshedSession.sessionId)).toContain('Product: Reserve espresso');
     expect(await buildChallengeMessage(refreshedSession.sessionId)).toContain('Reference Price: USD 2499 minor units');
     expect(await buildChallengeMessage(refreshedSession.sessionId)).toContain('Required Lock IFR: 5000');
+    expect(await buildChallengeMessage(refreshedSession.sessionId)).toContain('Minimum Held IFR: 500');
     await prisma.session.update({
       where: { id: refreshedSession.sessionId },
       data: { benefitBasePriceMinor: '0', benefitCurrency: 'EUR' },
@@ -1127,7 +1148,7 @@ describe('Seller catalog routes', () => {
     });
     expect(await prisma.session.findUniqueOrThrow({ where: { id: session.sessionId } })).toMatchObject({
       benefitRuleId: rule.id,
-      benefitSnapshotVersion: 3,
+      benefitSnapshotVersion: 4,
       benefitProductName: 'Consultation',
     });
     expect(await buildChallengeMessage(session.sessionId)).toContain('Product: Consultation');
@@ -1170,7 +1191,69 @@ describe('Seller catalog routes', () => {
       productName: 'Legacy service',
       discountPercent: 9,
       requiredLockIFR: 900,
+      minIFRHeld: 0,
     });
+  });
+
+  it('never applies a new held-IFR rule to legacy v0-v3 sessions', async () => {
+    const rule = await prisma.benefitRule.create({
+      data: {
+        businessId,
+        label: 'Legacy lock-only benefit',
+        category: 'Legacy category',
+        productName: 'Legacy member service',
+        discountPercent: 9,
+        requiredLockIFR: 900,
+      },
+    });
+    const legacySessions = await Promise.all([0, 1, 2, 3].map((version) => prisma.session.create({
+      data: {
+        businessId,
+        benefitRuleId: rule.id,
+        benefitSnapshotVersion: version === 0 ? null : version,
+        ...(version > 0
+          ? {
+              benefitLabel: 'Legacy lock-only benefit',
+              benefitCategory: 'Legacy category',
+              benefitProductName: 'Legacy member service',
+              benefitDiscountPercent: 9,
+              benefitRequiredLockIFR: 900,
+              benefitTtlSeconds: 90,
+            }
+          : {}),
+        nonce: ethers.hexlify(ethers.randomBytes(32)).slice(2),
+        expiresAt: new Date(Date.now() + 60_000),
+      },
+    })));
+    await prisma.benefitRule.update({
+      where: { id: rule.id },
+      data: { minIFRHeld: 500 },
+    });
+
+    mockRecoverSigner.mockReturnValue(owner.address);
+    mockCheckLock.mockResolvedValue({ eligible: true, lockedAmount: '900.0' });
+    for (const session of legacySessions) {
+      expect(await buildChallengeMessage(session.id)).toContain('Minimum Held IFR: 0');
+      const statusResponse = await fetch(`${baseUrl()}/api/sessions/${session.id}`);
+      expect(await statusResponse.json()).toMatchObject({ benefit: { minIFRHeld: 0 } });
+      await expect(attest(session.id, '0xlegacy-signature')).resolves.toMatchObject({
+        status: 'APPROVED',
+        benefit: { minIFRHeld: 0 },
+      });
+    }
+
+    expect(mockCheckLock).toHaveBeenCalledTimes(legacySessions.length);
+    expect(mockCheckBenefitEligibility).not.toHaveBeenCalled();
+    const historyHeaders = await sellerHeaders(owner, 'sessions:list', businessId);
+    const historyResponse = await fetch(`${baseUrl()}/api/seller/businesses/${businessId}/sessions`, {
+      headers: historyHeaders,
+    });
+    const history = await historyResponse.json() as { sessions: Array<Record<string, unknown>> };
+    for (const session of legacySessions) {
+      expect(history.sessions.find((item) => item.id === session.id)).toMatchObject({
+        minIFRHeld: 0,
+      });
+    }
   });
 
   it('serializes product archive against new checkout session creation', async () => {
@@ -1211,7 +1294,7 @@ describe('Seller catalog routes', () => {
       ]);
       expect(savedSession).toMatchObject({
         benefitRuleId: rule.id,
-        benefitSnapshotVersion: 3,
+        benefitSnapshotVersion: 4,
         benefitProductName: 'Premium espresso',
       });
       expect(archivedProduct.active).toBe(false);

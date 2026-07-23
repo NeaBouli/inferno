@@ -356,6 +356,12 @@ createdAt
 updatedAt
 ```
 
+Current production slice: `minIFRLocked` maps to mandatory `requiredLockIFR` in IFRLock.
+Optional `minIFRHeld` requires additional free IFR in the customer wallet; `0` disables that
+second condition. Both values are frozen in checkout snapshot version 4 and compared as exact
+9-decimal base units. CommitmentVault sources remain a future audited adapter, not a live seller
+rule option.
+
 ### VerificationSession
 
 ```text
@@ -368,6 +374,7 @@ expiresAt
 status: PENDING | APPROVED | REJECTED | REDEEMED | EXPIRED
 customerWallet
 ifrLockedRaw
+walletIFRRaw optional
 signature
 reason
 redeemedAt

@@ -4,10 +4,12 @@ import { PrismaClient } from '@prisma/client';
 // ── Mock ifrLockService BEFORE importing sessionService ────────────
 
 const mockCheckLock = jest.fn();
+const mockCheckBenefitEligibility = jest.fn();
 const mockRecoverSigner = jest.fn();
 
 jest.mock('../src/services/ifrLockService', () => ({
   checkLock: (...args: unknown[]) => mockCheckLock(...args),
+  checkBenefitEligibility: (...args: unknown[]) => mockCheckBenefitEligibility(...args),
   recoverSigner: (...args: unknown[]) => mockRecoverSigner(...args),
   initProvider: jest.fn(),
 }));
@@ -226,6 +228,73 @@ describe('Lock Threshold', () => {
 
     // Verify checkLock was called with human units (5000), not base units
     expect(mockCheckLock).toHaveBeenCalledWith(TEST_WALLET, 5000);
+    expect(mockCheckBenefitEligibility).not.toHaveBeenCalled();
+  });
+
+  it('requires both locked and freely held IFR for an opted-in rule', async () => {
+    const rule = await prisma.benefitRule.create({
+      data: {
+        businessId: testBusinessId,
+        label: 'Lock and hold',
+        category: 'Retail',
+        productName: 'Member bundle',
+        discountPercent: 15,
+        requiredLockIFR: 5000,
+        minIFRHeld: 1250,
+        ttlSeconds: 120,
+      },
+    });
+    const insufficient = await createSession(testBusinessId, rule.id);
+    expect(await buildChallengeMessage(insufficient.sessionId)).toContain('Minimum Held IFR: 1250');
+
+    mockRecoverSigner.mockReturnValue(TEST_WALLET);
+    mockCheckBenefitEligibility.mockResolvedValue({
+      eligible: false,
+      lockEligible: true,
+      heldEligible: false,
+      lockedAmount: '5000.0',
+      walletAmount: '1249.999999999',
+      walletBalanceRaw: '1249999999999',
+    });
+
+    const rejected = await attest(insufficient.sessionId, TEST_SIGNATURE);
+    expect(rejected).toMatchObject({
+      status: 'REJECTED',
+      eligible: false,
+      attemptsRemaining: 2,
+    });
+    expect(rejected.reason).toContain('Insufficient wallet balance');
+    expect(mockCheckBenefitEligibility).toHaveBeenCalledWith(TEST_WALLET, 5000, 1250);
+    expect(mockCheckLock).not.toHaveBeenCalled();
+    const rejectedSession = await prisma.session.findUniqueOrThrow({ where: { id: insufficient.sessionId } });
+    expect(rejectedSession).toMatchObject({
+      status: 'PENDING',
+      benefitSnapshotVersion: 4,
+      benefitMinIFRHeld: 1250,
+      walletBalanceRaw: '1249999999999',
+    });
+
+    jest.clearAllMocks();
+    const sufficient = await createSession(testBusinessId, rule.id);
+    mockRecoverSigner.mockReturnValue(TEST_WALLET);
+    mockCheckBenefitEligibility.mockResolvedValue({
+      eligible: true,
+      lockEligible: true,
+      heldEligible: true,
+      lockedAmount: '5000.0',
+      walletAmount: '1250.0',
+      walletBalanceRaw: '1250000000000',
+    });
+    await expect(attest(sufficient.sessionId, TEST_SIGNATURE)).resolves.toMatchObject({
+      status: 'APPROVED',
+      eligible: true,
+      benefit: { minIFRHeld: 1250 },
+    });
+    const approvedSession = await prisma.session.findUniqueOrThrow({ where: { id: sufficient.sessionId } });
+    expect(approvedSession).toMatchObject({
+      status: 'APPROVED',
+      walletBalanceRaw: '1250000000000',
+    });
   });
 });
 

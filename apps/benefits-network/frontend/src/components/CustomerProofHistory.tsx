@@ -224,7 +224,8 @@ export function CustomerProofHistory() {
                   <div>
                     <h4 className="text-sm font-black text-white">{item.seller.name}</h4>
                     <p className="mt-1 text-xs leading-5 text-stone-400">
-                      {item.benefit.productName || 'Business benefit'} / {item.benefit.discountPercent}% / {item.benefit.requiredLockIFR.toLocaleString('en-US')} IFR
+                      {item.benefit.productName || 'Business benefit'} / {item.benefit.discountPercent}% / {item.benefit.requiredLockIFR.toLocaleString('en-US')} IFR locked
+                      {item.benefit.minIFRHeld > 0 ? ` + ${item.benefit.minIFRHeld.toLocaleString('en-US')} held` : ''}
                     </p>
                     {formatProductPrice(item.benefit.basePriceMinor, item.benefit.currency) ? (
                       <p className="mt-1 text-xs text-stone-400">
@@ -274,7 +275,8 @@ export function CustomerProofHistory() {
                 <div>
                   <h3 className="text-sm font-black text-white">{item.sellerName}</h3>
                   <p className="mt-1 text-xs leading-5 text-stone-400">
-                    {item.productName} / {item.discountPercent}% / {item.requiredLockIFR.toLocaleString('en-US')} IFR
+                    {item.productName} / {item.discountPercent}% / {item.requiredLockIFR.toLocaleString('en-US')} IFR locked
+                    {item.minIFRHeld > 0 ? ` + ${item.minIFRHeld.toLocaleString('en-US')} held` : ''}
                   </p>
                   {formatProductPrice(item.basePriceMinor, item.currency) ? (
                     <p className="mt-1 text-xs text-stone-400">

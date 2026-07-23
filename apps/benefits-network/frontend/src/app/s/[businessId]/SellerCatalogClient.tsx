@@ -178,9 +178,16 @@ export function SellerCatalogClient({ businessId }: { businessId: string }) {
                               <p className="text-xs font-bold uppercase tracking-[0.12em] text-stone-400">{rule.label}</p>
                             </div>
                             <p className="mt-1 text-sm text-stone-300">
-                              Verify at least {rule.requiredLockIFR.toLocaleString('en-US')} locked IFR at checkout.
+                              Verify at least {rule.requiredLockIFR.toLocaleString('en-US')} locked IFR
+                              {rule.minIFRHeld > 0
+                                ? ` and ${rule.minIFRHeld.toLocaleString('en-US')} IFR held`
+                                : ''} at checkout.
                             </p>
-                            <OfferEligibility requiredLockIFR={rule.requiredLockIFR} eligibility={eligibility} />
+                            <OfferEligibility
+                              requiredLockIFR={rule.requiredLockIFR}
+                              minIFRHeld={rule.minIFRHeld}
+                              eligibility={eligibility}
+                            />
                             <p className="mt-1 text-xs text-stone-400">
                               Per wallet: {rule.dailyRedemptionLimit || 'unlimited'} / UTC day and {rule.monthlyRedemptionLimit || 'unlimited'} / UTC month.
                             </p>
@@ -212,9 +219,16 @@ export function SellerCatalogClient({ businessId }: { businessId: string }) {
                   </div>
                   <p className="mt-2 text-sm font-black text-orange-100">{rule.discountPercent}% benefit</p>
                   <p className="mt-1 text-sm text-stone-300">
-                    Verify at least {rule.requiredLockIFR.toLocaleString('en-US')} locked IFR at checkout.
+                    Verify at least {rule.requiredLockIFR.toLocaleString('en-US')} locked IFR
+                    {rule.minIFRHeld > 0
+                      ? ` and ${rule.minIFRHeld.toLocaleString('en-US')} IFR held`
+                      : ''} at checkout.
                   </p>
-                  <OfferEligibility requiredLockIFR={rule.requiredLockIFR} eligibility={eligibility} />
+                  <OfferEligibility
+                    requiredLockIFR={rule.requiredLockIFR}
+                    minIFRHeld={rule.minIFRHeld}
+                    eligibility={eligibility}
+                  />
                   <p className="mt-1 text-xs text-stone-400">
                     {rule.category} / Per wallet: {rule.dailyRedemptionLimit || 'unlimited'} / UTC day and {rule.monthlyRedemptionLimit || 'unlimited'} / UTC month.
                   </p>

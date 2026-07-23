@@ -17,7 +17,7 @@ npm run dev            # http://localhost:3001
 |----------|-------------|---------|
 | `CHAIN_ID` | Ethereum chain ID | `11155111` (Sepolia) |
 | `RPC_URL` | JSON-RPC endpoint | required |
-| `IFRLOCK_ADDRESS` | IFRLock contract address | required |
+| `IFRLOCK_ADDRESS` | IFRLock contract address; its immutable `token()` reference is the canonical IFR token source | required |
 | `PARTNER_VAULT_ADDRESS` | Optional PartnerVault address for read-only M4 verification | unset |
 | `BUILDER_REGISTRY_ADDRESS` | Optional BuilderRegistry address for read-only M4 verification | unset |
 | `REWARD_CALLER_ADDRESS` | Optional public caller address checked with `authorizedCaller`; never a private key | unset |
@@ -153,10 +153,17 @@ active rules while preserving sessions and audit history.
   "productName": "Premium customer discount",
   "discountPercent": 10,
   "requiredLockIFR": 1000,
+  "minIFRHeld": 250,
   "ttlSeconds": 90,
   "active": true
 }
 ```
+
+`requiredLockIFR` is mandatory. `minIFRHeld` is an optional nonnegative whole-IFR amount;
+`0` or omission disables the free-wallet balance gate. For a positive value, checkout approval
+requires both the IFRLock threshold and the ERC-20 wallet balance threshold. The backend resolves
+the token from `IFRLock.token()`, reads both balances at one block, compares exact 9-decimal base
+units with `bigint`, and fails closed on RPC errors.
 
 ```json
 {
@@ -179,8 +186,8 @@ sessions but cannot perform owner-only mutations.
 
 Seller session history uses the same headers with `Action: sessions:list` and the
 business id as `Business`. Each snapshot/cursor page is clamped from 1 to 50 rows.
-Responses include the session status, recovered customer wallet, locked amount,
-rejection reason, redeem timestamp and attached rule/default benefit fields. The
+Responses include the session status, recovered customer wallet, locked amount, any verified
+free-wallet IFR balance, rejection reason, redeem timestamp and attached rule/default benefit fields. The
 frontend masks wallets and builds the full paginated CSV locally without exposing
 customer signatures or creating a server-side export file.
 
@@ -254,6 +261,15 @@ for the same business, benefit rule and customer wallet. A concurrent checkout
 therefore cannot exceed the configured cap. A denied session becomes
 `REJECTED`, returns HTTP `429`, and records `REDEEM_DENIED_LIMIT` without storing
 wallet signatures.
+
+## Immutable eligibility snapshots
+
+New rule-bound sessions snapshot `requiredLockIFR` and `minIFRHeld` with the seller, product,
+discount, price and redemption terms. Later rule edits cannot change an issued checkout.
+Snapshot version 4 includes the held-balance threshold; older sessions interpret it as `0`.
+The exact challenge shown to the customer includes both thresholds. A positive held threshold
+stores the exact observed ERC-20 balance only in seller-authorized operational history; public
+proof status does not expose customer inventory.
 
 ## Verified Seller Rewards Foundation
 

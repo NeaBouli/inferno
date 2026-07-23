@@ -3,6 +3,7 @@ import { AddressInfo } from 'node:net';
 import { ethers } from 'ethers';
 
 const IFR_LOCK = '0x0000000000000000000000000000000000000011';
+const IFR_TOKEN = '0x0000000000000000000000000000000000000066';
 const PARTNER_VAULT = '0x0000000000000000000000000000000000000022';
 const BUILDER_REGISTRY = '0x0000000000000000000000000000000000000033';
 const REWARD_CALLER = '0x0000000000000000000000000000000000000044';
@@ -24,7 +25,7 @@ const mockConfig = {
 
 jest.mock('../src/config', () => ({ config: mockConfig }));
 
-import { checkLock, initProvider } from '../src/services/ifrLockService';
+import { checkBenefitEligibility, checkLock, initProvider } from '../src/services/ifrLockService';
 import {
   getRewardOnChainStatus,
   isWalletAlreadyRewarded,
@@ -35,6 +36,10 @@ const coder = ethers.AbiCoder.defaultAbiCoder();
 const ifrLockInterface = new ethers.Interface([
   'function isLocked(address user, uint256 minAmount) view returns (bool)',
   'function lockedBalance(address user) view returns (uint256)',
+  'function token() view returns (address)',
+]);
+const tokenInterface = new ethers.Interface([
+  'function balanceOf(address account) view returns (uint256)',
 ]);
 const partnerInterface = new ethers.Interface([
   'function admin() view returns (address)',
@@ -53,16 +58,22 @@ const registryInterface = new ethers.Interface([
 type RpcState = {
   chainId: number;
   failNextWalletRewardRead: boolean;
+  failNextTokenBalanceRead: boolean;
   partnerExists: boolean;
   methods: string[];
+  callBlockTags: string[];
+  walletBalanceRaw: bigint;
   observedLockThreshold?: bigint;
 };
 
 const state: RpcState = {
   chainId: 1,
   failNextWalletRewardRead: false,
+  failNextTokenBalanceRead: false,
   partnerExists: true,
   methods: [],
+  callBlockTags: [],
+  walletBalanceRaw: ethers.parseUnits('1250.000000001', 9),
 };
 
 function encode(types: readonly string[], values: readonly unknown[]) {
@@ -81,6 +92,19 @@ function contractCall(to: string, data: string): string {
     }
     if (selector === ifrLockInterface.getFunction('lockedBalance')!.selector) {
       return encode(['uint256'], [ethers.parseUnits('2500.125', 9)]);
+    }
+    if (selector === ifrLockInterface.getFunction('token')!.selector) {
+      return encode(['address'], [IFR_TOKEN]);
+    }
+  }
+
+  if (target === IFR_TOKEN.toLowerCase()) {
+    if (selector === tokenInterface.getFunction('balanceOf')!.selector) {
+      if (state.failNextTokenBalanceRead) {
+        state.failNextTokenBalanceRead = false;
+        throw new Error('Simulated token balance RPC read failure');
+      }
+      return encode(['uint256'], [state.walletBalanceRaw]);
     }
   }
 
@@ -146,6 +170,7 @@ function rpcResult(request: { method: string; params?: unknown[] }) {
   if (request.method === 'eth_getCode') return '0x6000';
   if (request.method === 'eth_call') {
     const call = (request.params?.[0] || {}) as { to?: string; data?: string; input?: string };
+    state.callBlockTags.push(String(request.params?.[1] ?? ''));
     return contractCall(call.to || '', call.data || call.input || '0x');
   }
   throw new Error(`Unexpected JSON-RPC method ${request.method}`);
@@ -191,8 +216,11 @@ describe('Ethers v6 service boundaries', () => {
   beforeEach(() => {
     state.chainId = 1;
     state.failNextWalletRewardRead = false;
+    state.failNextTokenBalanceRead = false;
     state.partnerExists = true;
     state.methods = [];
+    state.callBlockTags = [];
+    state.walletBalanceRaw = ethers.parseUnits('1250.000000001', 9);
     state.observedLockThreshold = undefined;
   });
 
@@ -203,6 +231,56 @@ describe('Ethers v6 service boundaries', () => {
     expect(state.observedLockThreshold).toBe(1000n * 10n ** 9n);
     expect(result).toEqual({ eligible: true, lockedAmount: '2500.125' });
     expect(state.methods).not.toContain('eth_sendTransaction');
+  });
+
+  it('checks locked and freely held IFR exactly at one block', async () => {
+    initProvider();
+    const result = await checkBenefitEligibility(OWNER, 1000, 1250);
+
+    expect(state.observedLockThreshold).toBe(1000n * 10n ** 9n);
+    expect(result).toEqual({
+      eligible: true,
+      lockEligible: true,
+      heldEligible: true,
+      lockedAmount: '2500.125',
+      walletAmount: '1250.000000001',
+      walletBalanceRaw: ethers.parseUnits('1250.000000001', 9).toString(),
+    });
+    expect(state.methods).toContain('eth_blockNumber');
+    expect(state.callBlockTags).toHaveLength(4);
+    expect(new Set(state.callBlockTags)).toEqual(new Set(['0x10']));
+    expect(state.methods).not.toContain('eth_sendTransaction');
+  });
+
+  it('rejects one base unit below the held threshold without rounding', async () => {
+    state.walletBalanceRaw = ethers.parseUnits('1250', 9) - 1n;
+    initProvider();
+
+    await expect(checkBenefitEligibility(OWNER, 1000, 1250)).resolves.toMatchObject({
+      eligible: false,
+      lockEligible: true,
+      heldEligible: false,
+      walletAmount: '1249.999999999',
+      walletBalanceRaw: state.walletBalanceRaw.toString(),
+    });
+  });
+
+  it('fails closed when the token balance RPC read fails', async () => {
+    state.failNextTokenBalanceRead = true;
+    initProvider();
+
+    await expect(checkBenefitEligibility(OWNER, 1000, 1250))
+      .rejects.toThrow('missing revert data');
+  });
+
+  it('rejects unsafe or non-positive eligibility thresholds before RPC reads', async () => {
+    initProvider();
+
+    await expect(checkBenefitEligibility(OWNER, 0, 1250))
+      .rejects.toThrow('Required IFRLock threshold must be a positive safe integer');
+    await expect(checkBenefitEligibility(OWNER, 1000, Number.MAX_SAFE_INTEGER + 1))
+      .rejects.toThrow('Held IFR threshold must be a positive safe integer');
+    expect(state.methods).toEqual([]);
   });
 
   it('maps v6 bigint reward results without changing string API fields', async () => {
