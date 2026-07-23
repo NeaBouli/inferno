@@ -15,6 +15,7 @@ on:
       - 'scripts/test-benefits-accessibility.js'
       - 'scripts/test-benefits-csp.js'
       - 'scripts/test-benefits-fullstack-e2e.js'
+      - 'scripts/test-benefits-bundle-budget.cjs'
       - 'scripts/test-benefits-doc-consistency.cjs'
       - 'scripts/test-benefits-service-worker.js'
       - 'scripts/test-benefits-wallet-asset-provider.mjs'
@@ -38,6 +39,7 @@ on:
       - 'scripts/test-benefits-accessibility.js'
       - 'scripts/test-benefits-csp.js'
       - 'scripts/test-benefits-fullstack-e2e.js'
+      - 'scripts/test-benefits-bundle-budget.cjs'
       - 'scripts/test-benefits-doc-consistency.cjs'
       - 'scripts/test-benefits-service-worker.js'
       - 'scripts/test-benefits-wallet-asset-provider.mjs'
@@ -129,6 +131,7 @@ jobs:
       - run: node ../../../scripts/test-benefits-doc-consistency.cjs
       - run: npm run typecheck
       - run: npm run build
+      - run: node ../../../scripts/test-benefits-bundle-budget.cjs
       - name: Build and verify Node 22 frontend image
         run: |
           set -euo pipefail
