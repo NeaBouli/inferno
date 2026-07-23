@@ -6,6 +6,7 @@
     "test:benefits-sw": "node scripts/test-benefits-service-worker.js",
     "test:benefits-wallet-asset": "node scripts/test-benefits-wallet-asset-provider.mjs",
     "test:benefits-pass-ui": "node scripts/test-benefits-customer-pass-ui.js",
+    "test:benefits-discovery-ui": "node scripts/test-benefits-discovery-ui.js",
     "test:benefits-wallet-ui": "node scripts/test-benefits-wallet-lock-ui.js",
     "test:benefits-docs": "node scripts/test-benefits-doc-consistency.cjs",
     "ops:benefits-capacity": "scripts/deploy-benefits-network.sh capacity && LIMIT=20 scripts/audit-docker-capacity.sh",

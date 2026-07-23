@@ -494,13 +494,21 @@ function SystemReadinessCard() {
 export default function Home() {
   const [role, setRole] = useState<Role>('customer');
 
+  function openSellerTools() {
+    if (window.location.hash === '#seller-workspace') {
+      setRole('seller');
+      return;
+    }
+    window.location.hash = 'seller-workspace';
+  }
+
   useEffect(() => {
     const syncRoleFromHash = () => {
       const sellerHashes = new Set(['#seller-workspace', '#integrate', '#seller-session-history']);
       const customerHashes = new Set(['#customer-pass', '#customer-wallet', '#my-benefits']);
       const requestedMode = new URLSearchParams(window.location.search).get('mode');
       if (sellerHashes.has(window.location.hash) || requestedMode === 'seller') setRole('seller');
-      if (customerHashes.has(window.location.hash) || requestedMode === 'customer') setRole('customer');
+      else if (customerHashes.has(window.location.hash) || requestedMode === 'customer' || !window.location.hash) setRole('customer');
     };
     syncRoleFromHash();
     window.addEventListener('hashchange', syncRoleFromHash);
@@ -643,7 +651,7 @@ export default function Home() {
         </div>
       </section>
 
-      <OfferDiscovery />
+      <OfferDiscovery mode={role} onOpenSellerTools={openSellerTools} />
 
       <section className="mx-auto w-full max-w-7xl px-5 pb-12">
         <div className="border-y border-white/10 py-8">
