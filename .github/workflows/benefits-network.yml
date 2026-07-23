@@ -124,7 +124,7 @@ jobs:
           done
           if [ "$ready" != 1 ]; then docker logs "$container"; exit 1; fi
           curl -fsS http://127.0.0.1:3000/guide >/dev/null
-          curl -fsS http://127.0.0.1:3000/manifest.webmanifest >/dev/null
+          curl -fsS http://127.0.0.1:3000/manifest.json >/dev/null
           docker exec "$container" node --version | grep -E '^v22\.'
 
   test-device-checklist:
