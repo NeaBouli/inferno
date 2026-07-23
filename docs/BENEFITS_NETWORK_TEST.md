@@ -95,6 +95,18 @@ BENEFITS_BASE_URL=http://127.0.0.1:3000 npm run test:benefits-a11y
 It also rejects viewport metadata that disables browser zoom. Automated emulation does not replace
 the physical device and wallet acceptance matrix.
 
+The same local production server is used for the CSP compatibility gate:
+
+```bash
+BENEFITS_BASE_URL=http://127.0.0.1:3000 npm run test:benefits-csp
+```
+
+It requires the enforced baseline and the broader Report-Only candidate on the Customer/Seller,
+guide, scanner, business, catalog, session and pass route shells; exercises the manifest and
+service worker; and fails on browser policy violations. Dynamic routes use a safe nonexistent
+resource state, so promotion of the complete candidate policy to enforcement still requires the
+production WalletConnect Project ID and physical wallet/device evidence.
+
 The backend suite includes a local JSON-RPC contract boundary for Ethers 6:
 
 ```bash

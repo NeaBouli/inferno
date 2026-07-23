@@ -202,6 +202,9 @@ If `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` is missing, the frontend must show a s
 - Every seller mutation must remain bound to a persisted random nonce, wallet, action, business and exact resource scope; read-only seller actions must not create challenge rows.
 - Challenge text must include rule metadata so the user signs exactly what is being verified.
 - Production logs must avoid storing full signatures unless required for audit and retention is defined.
-- Shop and API responses must suppress framework disclosure and enforce tested MIME, framing,
-  referrer and browser-permission policies. A restrictive CSP remains a separate compatibility-
-  tested step because Coinbase, WalletConnect, camera and external swap handoffs must keep working.
+- Shop and API responses suppress framework disclosure and enforce tested MIME, framing,
+  referrer and browser-permission policies. The Shop also enforces low-risk CSP protection for
+  base URLs, objects, framing and form targets. The broader script, style, image, connection,
+  worker, frame and manifest policy remains Report-Only until production WalletConnect and the
+  physical wallet/device matrix prove that Coinbase, WalletConnect, camera and PWA flows stay
+  compatible; the blocking browser gate rejects observed policy violations and `unsafe-eval`.
