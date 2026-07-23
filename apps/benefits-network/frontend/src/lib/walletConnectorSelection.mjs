@@ -3,25 +3,42 @@
  * @param {readonly T[]} connectors
  * @returns {Promise<T | undefined>}
  */
-export async function selectPreferredWalletConnector(connectors) {
-  const injected = connectors.filter((connector) => (
+function isInjectedWalletConnector(connector) {
+  return (
     connector.type === 'injected' ||
     /injected|metamask|browser wallet/i.test(`${connector.id} ${connector.name}`)
-  ));
+  );
+}
 
-  for (const connector of injected) {
-    if (!connector.getProvider) continue;
+/**
+ * Hide injected connectors that cannot provide a wallet in the current browser.
+ * Universal connectors remain available because they can open their own handoff UI.
+ * @template {{ id: string, name: string, type?: string, getProvider?: () => Promise<unknown> }} T
+ * @param {readonly T[]} connectors
+ * @returns {Promise<T[]>}
+ */
+export async function listAvailableWalletConnectors(connectors) {
+  const availability = await Promise.all(connectors.map(async (connector) => {
+    if (!isInjectedWalletConnector(connector)) return true;
+    if (!connector.getProvider) return false;
     try {
-      if (await connector.getProvider()) return connector;
+      return Boolean(await connector.getProvider());
     } catch {
-      // Try the next announced provider or a universal connector.
+      return false;
     }
-  }
+  }));
 
-  return connectors.find((connector) => connector.id === 'coinbaseWalletSDK') ||
-    connectors.find((connector) => connector.id === 'walletConnect') ||
-    connectors.find((connector) => !injected.includes(connector)) ||
-    connectors[0];
+  return connectors.filter((_, index) => availability[index]);
+}
+
+export async function selectPreferredWalletConnector(connectors) {
+  const available = await listAvailableWalletConnectors(connectors);
+  const injected = available.filter(isInjectedWalletConnector);
+
+  return injected[0] ||
+    available.find((connector) => connector.id === 'coinbaseWalletSDK') ||
+    available.find((connector) => connector.id === 'walletConnect') ||
+    available[0];
 }
 
 /**

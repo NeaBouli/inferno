@@ -5,6 +5,7 @@ import { useAccount, useConnect, useDisconnect, useSignMessage } from 'wagmi';
 import QRCode from 'react-qr-code';
 import { SellerCatalogManager } from '@/components/SellerCatalogManager';
 import { SellerRewardStatus } from '@/components/SellerRewardStatus';
+import { useAvailableWalletConnectors } from '@/hooks/useAvailableWalletConnectors';
 import {
   selectPreferredWalletConnector,
   walletConnectionErrorMessage,
@@ -138,6 +139,7 @@ export function SellerRuleBuilder() {
   const { connectors, connectAsync, isPending: connecting } = useConnect();
   const { disconnect } = useDisconnect();
   const { signMessageAsync } = useSignMessage();
+  const { availableConnectors } = useAvailableWalletConnectors(connectors);
   const [businessId, setBusinessId] = useState('');
   const [adminSecret, setAdminSecret] = useState('');
   const [businessName, setBusinessName] = useState('IFR Partner Shop');
@@ -1241,7 +1243,7 @@ export function SellerRuleBuilder() {
   async function connectSellerWallet() {
     setError('');
     setStatus('');
-    const connector = await selectPreferredWalletConnector(connectors);
+    const connector = await selectPreferredWalletConnector(connectors) as (typeof connectors)[number] | undefined;
     if (!connector) {
       setError('No wallet connector is available in this browser.');
       return;
@@ -1498,11 +1500,11 @@ export function SellerRuleBuilder() {
               >
                 {connecting ? 'Connecting...' : 'Connect wallet'}
               </button>
-              {connectors.length > 1 ? (
+              {availableConnectors.length > 1 ? (
                 <details className="text-right">
                   <summary className="cursor-pointer text-xs font-bold text-green-50">Choose wallet</summary>
                   <div className="mt-2 grid gap-2">
-                    {connectors.map((availableConnector) => (
+                    {availableConnectors.map((availableConnector) => (
                       <button
                         key={availableConnector.uid}
                         type="button"
