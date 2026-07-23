@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { Suspense, useEffect, useMemo, useState } from 'react';
 import { AppShell } from '@/components/AppShell';
 import { CustomerProofHistory } from '@/components/CustomerProofHistory';
 import { CustomerCheckoutPass } from '@/components/CustomerCheckoutPass';
@@ -704,7 +704,9 @@ export default function Home() {
           {role === 'customer' ? (
             <>
               <WalletStatus />
-              <CustomerCheckoutPass />
+              <Suspense fallback={<div className="min-h-48 rounded-[2rem] border border-white/10 bg-white/[0.04]" aria-label="Loading customer checkout pass" />}>
+                <CustomerCheckoutPass />
+              </Suspense>
               <div id="install-app" className="scroll-mt-36">
                 <PwaInstallCard />
               </div>

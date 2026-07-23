@@ -119,7 +119,7 @@ async function verifyHttpSurface() {
   await expectSha256('/icons/icon-512.png', '6f029513ff76f3482418da9792e6f9f3545f0cc18b88740fe1f61db50fbe87f1');
   await fetchOk('/favicon.ico', 'image/x-icon');
   const serviceWorker = await fetchOk('/sw.js', 'javascript');
-  assert((await serviceWorker.text()).includes("ifr-benefits-v15"), 'service worker cache version mismatch');
+  assert((await serviceWorker.text()).includes("ifr-benefits-v16"), 'service worker cache version mismatch');
   log('PWA assets OK');
 
   const auth = await fetchJson('/api/seller/auth-message?action=business:list&businessId=seller');

@@ -698,6 +698,20 @@ describe('Seller catalog routes', () => {
     expect((await fetch(`${baseUrl()}/api/businesses/${ownerlessBusiness.id}/rules`)).status).toBe(404);
     expect((await fetch(`${baseUrl()}/api/businesses/${ownerlessBusiness.id}/products`)).status).toBe(404);
 
+    const catalogIndexResponse = await fetch(`${baseUrl()}/api/businesses/catalog-index`);
+    expect(catalogIndexResponse.status).toBe(200);
+    expect(catalogIndexResponse.headers.get('cache-control')).toContain('public, max-age=300');
+    const catalogIndex = await catalogIndexResponse.json() as {
+      catalogs: Array<{ businessId: string; lastModified: string }>;
+      truncated: boolean;
+      urlLimit: number;
+    };
+    expect(catalogIndex.catalogs.map((catalog) => catalog.businessId)).toEqual([businessId, otherBusinessId].sort());
+    expect(catalogIndex.catalogs.every((catalog) => Number.isFinite(Date.parse(catalog.lastModified)))).toBe(true);
+    expect(catalogIndex.truncated).toBe(false);
+    expect(catalogIndex.urlLimit).toBe(50_000);
+    expect(JSON.stringify(catalogIndex)).not.toMatch(/ownerAddress|wallet|description|website|discount/i);
+
     expect((await fetch(`${baseUrl()}/api/businesses?page=0`)).status).toBe(400);
     expect((await fetch(`${baseUrl()}/api/businesses?limit=25`)).status).toBe(400);
     expect((await fetch(`${baseUrl()}/api/businesses?query=${'x'.repeat(81)}`)).status).toBe(400);

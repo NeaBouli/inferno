@@ -203,6 +203,13 @@ describe('customer-presented checkout passes', () => {
     })).status).toBe(403);
 
     const controlHeaders = { authorization: `Bearer ${created.body.controlToken}` };
+    const controlled = await fetch(`${baseUrl()}/api/passes/${created.body.passId}/control`, {
+      headers: controlHeaders,
+    });
+    expect(await controlled.json()).toMatchObject({
+      status: 'BOUND',
+      checkout: { businessId, benefitRuleId: ruleId, sellerName: 'Pass Seller' },
+    });
     const challengeResponse = await fetch(`${baseUrl()}/api/passes/${created.body.passId}/challenge`, {
       method: 'POST', headers: controlHeaders,
     });
