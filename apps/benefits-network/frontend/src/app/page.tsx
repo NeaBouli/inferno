@@ -422,12 +422,12 @@ export async function createIFRCheckout({ sellerWalletAddress, signMessage }) {
 
       <div className="mt-4 rounded-2xl border border-white/10 bg-[#080706] p-4">
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-          <p className="text-xs uppercase tracking-[0.14em] text-stone-500">{needsRuleId ? 'Rule-bound checkout integration' : 'Seller scanner entry'}</p>
+          <p className="text-xs uppercase tracking-[0.14em] text-stone-300">{needsRuleId ? 'Rule-bound checkout integration' : 'Seller scanner entry'}</p>
           {validBusinessId ? (
             <a href={scannerUrl} className="text-xs font-bold uppercase tracking-[0.14em] text-orange-200 hover:text-orange-100">
               Open scanner
             </a>
-          ) : <span className="text-xs font-bold uppercase tracking-[0.14em] text-stone-600">Business ID required</span>}
+          ) : <span className="text-xs font-bold uppercase tracking-[0.14em] text-stone-300">Business ID required</span>}
         </div>
         <pre className="overflow-x-auto whitespace-pre-wrap text-sm leading-6 text-orange-100">{code}</pre>
       </div>

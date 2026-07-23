@@ -10,6 +10,7 @@ const files = {
   wikiOnboarding: 'docs/wiki/business-onboarding.html',
   wikiFaq: 'docs/wiki/faq.html',
   whitepaper: 'docs/WHITEPAPER.md',
+  testGuide: 'docs/BENEFITS_NETWORK_TEST.md',
   copilotKnowledge: 'apps/ai-copilot/src/context/ifr-knowledge.ts',
 };
 
@@ -49,5 +50,9 @@ assert.ok(content.wikiOnboarding.includes('opaque short-lived'), 'Wiki must expl
 assert.ok(content.wikiFaq.includes('APPROVED or REJECTED'), 'FAQ must use backend status terms');
 assert.ok(content.master.includes('minimum IFR locked in IFRLock'), 'master architecture must use the deployed eligibility source');
 assert.ok(content.copilotKnowledge.includes('approved or rejected'), 'Copilot knowledge must use backend status terms');
+assert.ok(content.testGuide.includes('| Silver | 2,500 IFR |'), 'test guide must use the current Silver example');
+assert.ok(content.testGuide.includes('| Platinum | 10,000 IFR |'), 'test guide must use the current Platinum example');
+assert.ok(!content.testGuide.includes('| Gold | 25,000 IFR |'), 'test guide contains the retired 25,000 IFR example');
+assert.ok(!content.testGuide.includes('| Diamond | 100,000 IFR |'), 'test guide contains the retired 100,000 IFR example');
 
 console.log('[benefits-doc-consistency] PASS');

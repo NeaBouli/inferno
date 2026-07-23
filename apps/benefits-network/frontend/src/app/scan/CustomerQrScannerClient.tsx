@@ -228,7 +228,7 @@ export function CustomerQrScannerClient() {
                   <p className="mt-4 text-lg font-black text-white">
                     {cameraState === 'found' ? 'Proof found' : 'Camera ready when you are'}
                   </p>
-                  <p className="mt-2 text-sm leading-6 text-stone-400">No recording. No image upload.</p>
+                  <p className="mt-2 text-sm leading-6 text-stone-300">No recording. No image upload.</p>
                 </div>
               </div>
             ) : null}

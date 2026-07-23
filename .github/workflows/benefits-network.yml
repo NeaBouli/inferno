@@ -12,6 +12,7 @@ on:
       - 'scripts/test-benefits-customer-pass-ui.js'
       - 'scripts/test-benefits-discovery-ui.js'
       - 'scripts/test-benefits-wallet-lock-ui.js'
+      - 'scripts/test-benefits-accessibility.js'
       - 'scripts/test-benefits-doc-consistency.cjs'
       - 'scripts/test-benefits-service-worker.js'
       - 'scripts/test-benefits-wallet-asset-provider.mjs'
@@ -32,6 +33,7 @@ on:
       - 'scripts/test-benefits-customer-pass-ui.js'
       - 'scripts/test-benefits-discovery-ui.js'
       - 'scripts/test-benefits-wallet-lock-ui.js'
+      - 'scripts/test-benefits-accessibility.js'
       - 'scripts/test-benefits-doc-consistency.cjs'
       - 'scripts/test-benefits-service-worker.js'
       - 'scripts/test-benefits-wallet-asset-provider.mjs'
@@ -156,3 +158,21 @@ jobs:
       - run: npm run test:benefits-pass-ui
       - run: npm run test:benefits-discovery-ui
       - run: npm run test:benefits-wallet-ui
+      - name: Build and run WCAG accessibility gate
+        run: |
+          set -euo pipefail
+          npm run build --prefix apps/benefits-network/frontend
+          npm start --prefix apps/benefits-network/frontend >/tmp/benefits-a11y-next.log 2>&1 &
+          server_pid="$!"
+          cleanup() {
+            pkill -TERM -P "$server_pid" >/dev/null 2>&1 || true
+            kill "$server_pid" >/dev/null 2>&1 || true
+          }
+          trap cleanup EXIT
+          ready=0
+          for _ in $(seq 1 60); do
+            if curl -fsS http://127.0.0.1:3000/ >/dev/null; then ready=1; break; fi
+            sleep 1
+          done
+          if [ "$ready" != 1 ]; then cat /tmp/benefits-a11y-next.log; exit 1; fi
+          BENEFITS_BASE_URL=http://127.0.0.1:3000 npm run test:benefits-a11y

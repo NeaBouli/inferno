@@ -82,6 +82,19 @@ It verifies exact 9-decimal approval calldata, IFRLock spender and contract addr
 driven allowance/balance refresh, the `1,000 IFR` access transition, full simple-lock unlock and
 restored balances. No Mainnet transaction or external wallet is used.
 
+The blocking accessibility gate audits Customer and Seller home modes, guide and QR scanner with
+Axe WCAG 2.0/2.1 A/AA rules on desktop, iPad and Android emulation. Build and start the frontend
+before running it locally:
+
+```bash
+npm run build --prefix apps/benefits-network/frontend
+npm start --prefix apps/benefits-network/frontend
+BENEFITS_BASE_URL=http://127.0.0.1:3000 npm run test:benefits-a11y
+```
+
+It also rejects viewport metadata that disables browser zoom. Automated emulation does not replace
+the physical device and wallet acceptance matrix.
+
 The backend suite includes a local JSON-RPC contract boundary for Ethers 6:
 
 ```bash
@@ -251,14 +264,17 @@ Current service coverage also verifies retryable failed attestations:
   wallet prompt without forcing the seller to create a new QR immediately
 - after the third failed attempt the session becomes terminal `REJECTED`
 
-## Lock Tiers
+## Example Lock Tiers
 
-| Tier | Minimum Lock | Typical Discount |
-|------|-------------|-----------------|
-| Bronze | 1,000 IFR | 5-10% |
-| Silver | 5,000 IFR | 10-15% |
-| Gold | 25,000 IFR | 15-25% |
-| Diamond | 100,000 IFR | 25%+ |
+These values are a wallet guidance example, not protocol-wide discount promises. Each seller
+publishes the exact IFRLock threshold and benefit for every real offer.
+
+| Example tier | Minimum IFRLock |
+|--------------|-----------------|
+| Bronze | 1,000 IFR |
+| Silver | 2,500 IFR |
+| Gold | 5,000 IFR |
+| Platinum | 10,000 IFR |
 
 ## Common Errors
 
