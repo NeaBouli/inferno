@@ -195,22 +195,52 @@ async function run() {
     await waitForLocation(page, '/');
     const customerModeButton = page.getByRole('button', { name: /Customer Unlock benefits/ });
     await customerModeButton.waitFor();
+    await waitForAttribute(sellerModeButton, 'aria-pressed', 'true');
+    await page.reload({ waitUntil: 'domcontentloaded' });
+    await waitForAttribute(sellerModeButton, 'aria-pressed', 'true');
+
+    await customerModeButton.click();
     await waitForAttribute(customerModeButton, 'aria-pressed', 'true');
+    await page.reload({ waitUntil: 'domcontentloaded' });
+    await waitForAttribute(customerModeButton, 'aria-pressed', 'true');
+
+    await page.goto(`${origin}/?mode=seller`, { waitUntil: 'domcontentloaded' });
+    await waitForAttribute(sellerModeButton, 'aria-pressed', 'true');
+    await customerModeButton.click();
+    assert.equal(new URL(page.url()).searchParams.has('mode'), false, 'manual role choice must clear the mode override');
+    await page.reload({ waitUntil: 'domcontentloaded' });
+    await waitForAttribute(customerModeButton, 'aria-pressed', 'true');
+
+    await page.goto(`${origin}/#seller-workspace`, { waitUntil: 'domcontentloaded' });
+    await waitForAttribute(sellerModeButton, 'aria-pressed', 'true');
+    await customerModeButton.click();
+    assert.equal(new URL(page.url()).hash, '', 'manual role choice must clear a role-specific hash override');
+    await page.reload({ waitUntil: 'domcontentloaded' });
+    await waitForAttribute(customerModeButton, 'aria-pressed', 'true');
+
+    await context.clearCookies();
+    await page.evaluate(() => window.localStorage.clear());
+    await page.goto(`${origin}/#seller-catalog`, { waitUntil: 'domcontentloaded' });
+    await waitForAttribute(sellerModeButton, 'aria-pressed', 'true');
+    const sellerTasks = page.getByRole('navigation', { name: 'Seller tasks', exact: true });
+    await sellerTasks.getByRole('link', { name: /Products/ }).waitFor();
+    assert.equal(await page.locator('#seller-catalog').count(), 1, 'seller task deep link must render its target');
+    assert.equal(await sellerTasks.getByRole('link', { name: 'Team', exact: true }).count(), 0, 'team task must stay hidden until a profile exists');
 
     for (const viewport of [{ width: 375, height: 812 }, { width: 820, height: 1180 }]) {
       await page.setViewportSize(viewport);
       await page.reload({ waitUntil: 'domcontentloaded' });
-      await offersSection.getByRole('button', { name: 'Become a seller', exact: true }).waitFor();
+      await sellerTasks.getByRole('link', { name: /Products/ }).waitFor();
       assert.equal(
         await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth),
         false,
-        `discovery layout must not overflow at ${viewport.width}px`
+        `seller layout must not overflow at ${viewport.width}px`
       );
     }
 
     assert.deepEqual(pageErrors, []);
     await context.close();
-    console.log('[benefits-discovery-ui] PASS - standalone catalog -> filter/reset -> true empty network -> seller handoff/back');
+    console.log('[benefits-discovery-ui] PASS - catalog/filter/empty network -> seller handoff -> persistent role overrides');
   } finally {
     if (browser) await browser.close();
     server.kill('SIGTERM');
