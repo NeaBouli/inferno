@@ -5,6 +5,7 @@ import { Component, type ErrorInfo, type ReactNode } from 'react';
 const RETRY_STORAGE_KEY = 'ifr.shop.sellerWorkspaceRetryAt';
 const REFRESH_QUERY_KEY = '_app_refresh';
 const RETRY_WINDOW_MS = 60_000;
+export const SELLER_WORKSPACE_READY_EVENT = 'ifr:seller-workspace-ready';
 
 function reloadSellerWorkspace() {
   const url = new URL(window.location.href);
@@ -26,13 +27,15 @@ export function markSellerWorkspaceReady() {
   }
 
   const url = new URL(window.location.href);
-  if (!url.searchParams.has(REFRESH_QUERY_KEY)) return;
-  url.searchParams.delete(REFRESH_QUERY_KEY);
-  window.history.replaceState(
-    window.history.state,
-    '',
-    `${url.pathname}${url.search}${url.hash}`
-  );
+  if (url.searchParams.has(REFRESH_QUERY_KEY)) {
+    url.searchParams.delete(REFRESH_QUERY_KEY);
+    window.history.replaceState(
+      window.history.state,
+      '',
+      `${url.pathname}${url.search}${url.hash}`
+    );
+  }
+  window.dispatchEvent(new Event(SELLER_WORKSPACE_READY_EVENT));
 }
 
 interface SellerWorkspaceBoundaryProps {
