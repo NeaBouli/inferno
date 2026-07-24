@@ -112,6 +112,13 @@ The app has two roles:
 
 ### Seller Flow
 
+- Keep the first seller-manager visit progressive: before a profile is loaded, show only wallet
+  ownership, launch status, profile creation and public-backup restore inside the manager. Reveal
+  catalog, rules, checkout, team, history and rewards only after the exact seller profile has been
+  loaded. Optional public discovery fields and categories remain available through explicit
+  disclosure controls rather than expanding the entire mobile workspace by default. The separate
+  read-only integration generator remains visible for developers, but keeps copy/export actions
+  disabled until valid seller and rule identifiers are supplied.
 - Seller can create and manage profiles, products, rules, operators and reward applications through owner-wallet authorization; every mutation uses a fresh resource-bound one-time challenge.
 - Public seller identity includes a short description, canonical HTTPS website, up to eight
   categories and an optional broad service area such as a city, region or `Online`. Owners can
@@ -238,8 +245,15 @@ If `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` is missing, the frontend must show a s
 14. Stable public seller URLs. **Implemented with an additive nullable unique slug, exact
     owner-signed create/claim scope, immutable aliases, reserved-name and takeover protection,
     legacy Business-ID compatibility, canonical catalog redirects, slug-aware discovery/QR/backup
-    paths and sitemap entries. Production deployment remains gated by tests, exact-head CI,
-    rollback backup and device smoke.**
+    paths and sitemap entries. Live in production from commit `06180698` with 18/18 migrations,
+    rollback backup and desktop/iPad/Android smoke evidence.**
+15. Progressive seller onboarding. **Implemented as a profile-gated seller manager: disconnected
+    sellers see wallet ownership, launch status, profile creation and restore there; optional
+    discovery fields are collapsed, and catalog/rules/team/history/rewards appear after loading
+    the exact profile. The separate non-mutating integration generator remains available with
+    actions disabled until valid identifiers are entered. PWA cache v21 prevents installed devices
+    from retaining the previous expanded mobile entry. Production deployment remains gated by
+    tests, exact-head CI, rollback and device smoke.**
 
 ## Security Notes
 

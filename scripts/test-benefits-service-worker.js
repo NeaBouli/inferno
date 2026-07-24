@@ -88,7 +88,7 @@ async function navigate(url) {
 
 async function main() {
   assert(listeners.has('fetch'), 'service worker must register a fetch handler');
-  assert(source.includes("const CACHE_NAME = 'ifr-benefits-v20'"), 'service worker cache version must be v20');
+  assert(source.includes("const CACHE_NAME = 'ifr-benefits-v21'"), 'service worker cache version must be v21');
   assert(source.includes("'/offline.html'"), 'service worker must precache the branded deep-link fallback');
   assert(source.includes("'/icons/ifr-token-64-v11.png'"), 'service worker must precache the canonical PNG favicon');
   assert(source.includes("'/icons/ifr-token-180-v11.png'"), 'service worker must precache the canonical Apple touch icon');
@@ -97,7 +97,7 @@ async function main() {
   assert(source.includes("'/icons/ifr-token-512-v11.png'"), 'service worker must precache the canonical 512 icon');
   assert(source.includes("'/icons/favicon-v11.ico'"), 'service worker must precache the versioned browser favicon');
   assert(!source.includes("favicon-v4.ico"), 'service worker must not precache the competing ICO favicon');
-  assert(layoutSource.includes("'/sw.js?v=20'"), 'layout must register the current service-worker release');
+  assert(layoutSource.includes("'/sw.js?v=21'"), 'layout must register the current service-worker release');
   assert(source.includes("'/copilot-avatar.jpg'"), 'service worker must precache the Copilot launcher asset');
   assert(layoutSource.includes("updateViaCache:'none'"), 'registration must bypass stale service-worker HTTP caches');
   assert(layoutSource.includes("'controllerchange'"), 'controlled clients must reload after a service-worker update');

@@ -9,6 +9,10 @@ const root = path.resolve(__dirname, '..');
 const frontend = path.join(root, 'apps', 'benefits-network', 'frontend');
 const port = Number(process.env.BENEFITS_DISCOVERY_UI_PORT || 3212);
 const origin = `http://127.0.0.1:${port}`;
+const sellerWallet = '0x1000000000000000000000000000000000000001';
+const sellerSignature = `0x${'11'.repeat(65)}`;
+const sellerAuthMessage = 'IFR Benefits Network deterministic seller UI authorization';
+const sellerAuthMessageHex = `0x${Buffer.from(sellerAuthMessage, 'utf8').toString('hex')}`;
 
 const offer = {
   id: 'offer-ui-e2e',
@@ -53,6 +57,52 @@ function discoveryResponse(offers) {
       hasNext: false,
     },
   };
+}
+
+function installSellerWallet(context) {
+  return context.addInitScript(({ account, signature }) => {
+    const listeners = new Map();
+    const signedMessages = [];
+    let connected = false;
+    Object.defineProperty(window, '__ifrSellerSignedMessages', { value: signedMessages });
+    const provider = {
+      isMetaMask: true,
+      providers: [],
+      request: async ({ method, params }) => {
+        if (method === 'eth_requestAccounts') {
+          connected = true;
+          return [account];
+        }
+        if (method === 'eth_accounts') return connected ? [account] : [];
+        if (method === 'eth_chainId') return '0x1';
+        if (method === 'net_version') return '1';
+        if (method === 'personal_sign' || method === 'eth_sign') {
+          signedMessages.push(params?.[0]);
+          return signature;
+        }
+        if (method === 'wallet_switchEthereumChain' || method === 'wallet_requestPermissions') return null;
+        if (method === 'wallet_getPermissions') {
+          return connected ? [{ parentCapability: 'eth_accounts' }] : [];
+        }
+        if (method === 'eth_getBalance') return '0x16345785d8a0000';
+        if (method === 'eth_blockNumber') return '0x1';
+        if (method === 'eth_call') return `0x${'0'.repeat(64)}`;
+        if (method === 'eth_getCode') return '0x01';
+        throw new Error(`Unsupported seller test wallet method: ${method}`);
+      },
+      on: (event, listener) => {
+        const current = listeners.get(event) || [];
+        current.push(listener);
+        listeners.set(event, current);
+      },
+      removeListener: (event, listener) => {
+        listeners.set(event, (listeners.get(event) || []).filter((item) => item !== listener));
+      },
+    };
+    provider.providers = [provider];
+    Object.defineProperty(window, 'ethereum', { configurable: true, value: provider });
+    window.dispatchEvent(new Event('ethereum#initialized'));
+  }, { account: sellerWallet, signature: sellerSignature });
 }
 
 async function waitForServer(child) {
@@ -336,8 +386,12 @@ async function run() {
     await sellerModeButton.waitFor();
     await waitForAttribute(sellerModeButton, 'aria-pressed', 'true');
     await page.getByRole('heading', { name: 'Benefit rule manager', exact: true }).waitFor();
-    await page.getByLabel('Accepted lock source', { exact: true }).selectOption('either');
-    await page.getByText('Either source never combines partial balances. PRICE_ONLY, TIME_OR_PRICE and TIME_AND_PRICE commitments do not qualify.', { exact: true }).waitFor();
+    await page.getByRole('heading', { name: 'Finish the seller profile first', exact: true }).waitFor();
+    assert.equal(
+      await page.getByLabel('Accepted lock source', { exact: true }).count(),
+      0,
+      'rule controls must stay hidden until a seller profile is loaded'
+    );
     const integrationGenerator = page.locator('#integrate');
     const generatorCopy = integrationGenerator.getByRole('button', { name: 'Copy', exact: true });
     await integrationGenerator.getByRole('heading', { name: 'Create a seller entry point', exact: true }).waitFor();
@@ -392,23 +446,163 @@ async function run() {
 
     await context.clearCookies();
     await page.evaluate(() => window.localStorage.clear());
-    await page.goto(`${origin}/#seller-catalog`, { waitUntil: 'domcontentloaded' });
-    await waitForAttribute(sellerModeButton, 'aria-pressed', 'true');
+    const gatedSellerHashes = [
+      '#seller-catalog',
+      '#seller-rule-editor',
+      '#seller-team',
+      '#seller-session-history',
+      '#seller-rewards',
+    ];
+    for (const gatedHash of gatedSellerHashes) {
+      await page.goto(`${origin}/${gatedHash}`, { waitUntil: 'domcontentloaded' });
+      await waitForAttribute(sellerModeButton, 'aria-pressed', 'true');
+      const gatedTarget = page.locator(`[id="${gatedHash.slice(1)}"]`);
+      await gatedTarget.waitFor({ state: 'attached' });
+      assert.equal(
+        await gatedTarget.count(),
+        1,
+        `${gatedHash} must retain a profile-gate anchor before seller setup`
+      );
+      const sellerProfileGate = page.locator('[data-seller-profile-gate]');
+      await sellerProfileGate.getByRole('heading', { name: 'Finish the seller profile first', exact: true }).waitFor();
+      await page.waitForFunction(() => {
+        const gate = document.querySelector('[data-seller-profile-gate]');
+        if (!gate) return false;
+        const bounds = gate.getBoundingClientRect();
+        return bounds.top < window.innerHeight && bounds.bottom > 0;
+      });
+    }
     const sellerTasks = page.getByRole('navigation', { name: 'Seller tasks', exact: true });
-    await sellerTasks.getByRole('link', { name: /Products/ }).waitFor();
-    assert.equal(await page.locator('#seller-catalog').count(), 1, 'seller task deep link must render its target');
+    await sellerTasks.getByRole('link', { name: /Profile/ }).waitFor();
+    assert.equal(await sellerTasks.getByRole('link', { name: /Products/ }).count(), 0, 'product task must stay hidden until a profile exists');
     assert.equal(await sellerTasks.getByRole('link', { name: 'Team', exact: true }).count(), 0, 'team task must stay hidden until a profile exists');
 
     for (const viewport of [{ width: 375, height: 812 }, { width: 820, height: 1180 }]) {
       await page.setViewportSize(viewport);
       await page.reload({ waitUntil: 'domcontentloaded' });
-      await sellerTasks.getByRole('link', { name: /Products/ }).waitFor();
+      await sellerTasks.getByRole('link', { name: /Profile/ }).waitFor();
       assert.equal(
         await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth),
         false,
         `seller layout must not overflow at ${viewport.width}px`
       );
     }
+
+    const sellerContext = await browser.newContext({ serviceWorkers: 'block' });
+    await installSellerWallet(sellerContext);
+    await sellerContext.route('**/api/**', async (route) => {
+      const request = route.request();
+      const url = new URL(request.url());
+      if (url.pathname === '/api/ready') {
+        return route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({ status: 'ready', chainId: 1, database: 'ok', rateLimitStore: 'ok' }),
+        });
+      }
+      if (url.pathname === '/api/businesses') {
+        return route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify(discoveryResponse([])),
+        });
+      }
+      if (url.pathname === '/api/seller/auth-message') {
+        assert.equal(url.searchParams.get('action'), 'business:list');
+        assert.equal(url.searchParams.get('businessId'), 'seller');
+        assert.equal(url.searchParams.has('scope'), false, 'read-only profile listing must not invent a mutation scope');
+        assert.equal(url.searchParams.has('walletAddress'), false, 'read-only profile listing does not issue a single-use mutation challenge');
+        const timestamp = String(Date.now());
+        return route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            action: url.searchParams.get('action'),
+            businessId: url.searchParams.get('businessId'),
+            scope: url.searchParams.get('scope'),
+            timestamp,
+            issuedAt: new Date(Number(timestamp)).toISOString(),
+            expiresAt: new Date(Number(timestamp) + 60_000).toISOString(),
+            message: sellerAuthMessage,
+          }),
+        });
+      }
+      if (url.pathname === '/api/seller/businesses' && request.method() === 'GET') {
+        assert.equal(request.headers()['x-ifr-wallet'], sellerWallet.toLowerCase());
+        assert.equal(request.headers()['x-ifr-signature'], sellerSignature);
+        assert.equal(request.headers()['x-ifr-nonce'], undefined, 'read-only profile listing must not send a mutation nonce');
+        return route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            businesses: [{
+              id: offer.business.id,
+              slug: offer.business.slug,
+              name: offer.business.name,
+              description: offer.business.description,
+              website: offer.business.website,
+              logoUrl: offer.business.logoUrl,
+              serviceArea: offer.business.serviceArea,
+              categories: offer.business.categories,
+              ownerAddress: sellerWallet,
+              verifyUrl: `/b/${offer.business.slug}`,
+              qrUrl: `/b/${offer.business.slug}`,
+              discountPercent: offer.discountPercent,
+              requiredLockIFR: offer.requiredLockIFR,
+              tierLabel: null,
+              createdAt: new Date().toISOString(),
+              rulesCount: 1,
+              productsCount: 1,
+            }],
+          }),
+        });
+      }
+      return route.fulfill({
+        status: 404,
+        contentType: 'application/json',
+        body: JSON.stringify({ error: `Unexpected seller transition request: ${request.method()} ${url.pathname}` }),
+      });
+    });
+    await sellerContext.route('https://assets.example.com/ifr-seller-logo.png', (route) => route.fulfill({
+      status: 200,
+      contentType: 'image/png',
+      body: Buffer.from(
+        'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=',
+        'base64'
+      ),
+    }));
+    const sellerPage = await sellerContext.newPage();
+    const sellerPageErrors = [];
+    sellerPage.on('pageerror', (error) => sellerPageErrors.push(error.message));
+    await sellerPage.goto(`${origin}/#seller-workspace`, { waitUntil: 'domcontentloaded' });
+    await sellerPage.getByRole('heading', { name: 'Benefit rule manager', exact: true }).waitFor();
+    await sellerPage.getByRole('button', { name: 'Connect wallet', exact: true }).click();
+    await sellerPage.getByRole('button', { name: 'Disconnect', exact: true }).waitFor();
+    await sellerPage.getByRole('button', { name: 'Load my seller profiles', exact: true }).click();
+    await sellerPage.getByText('Loaded 1 seller profile.', { exact: true }).waitFor();
+    assert.deepEqual(
+      await sellerPage.evaluate(() => window.__ifrSellerSignedMessages),
+      [sellerAuthMessageHex],
+      'the wallet must sign the exact challenge returned for profile listing'
+    );
+    assert.equal(
+      await sellerPage.getByRole('heading', { name: 'Finish the seller profile first', exact: true }).count(),
+      0,
+      'profile gate must disappear after the owner loads a seller profile'
+    );
+    const loadedSellerTasks = sellerPage.getByRole('navigation', { name: 'Seller tasks', exact: true });
+    await loadedSellerTasks.getByRole('link', { name: /Products/ }).waitFor();
+    await loadedSellerTasks.getByRole('link', { name: 'Team', exact: true }).waitFor();
+    for (const gatedHash of gatedSellerHashes) {
+      assert.equal(
+        await sellerPage.locator(gatedHash).count(),
+        1,
+        `${gatedHash} must expose its advanced tool after profile load`
+      );
+    }
+    await sellerPage.getByLabel('Accepted lock source', { exact: true }).waitFor();
+    assert.deepEqual(sellerPageErrors, []);
+    await sellerContext.close();
 
     await page.goto(origin, { waitUntil: 'domcontentloaded' });
     await page.locator('[data-pwa-install-listeners-ready="true"]').waitFor();
