@@ -330,6 +330,17 @@ export function SellerRuleBuilder() {
     { label: 'Public offer verified', ready: publicListingReady },
   ];
   const launchChecksReady = [walletOwnedProfileReady, profileReady, ruleReady, publicListingReady].filter(Boolean).length;
+  const sellerTasks = [
+    { href: '#seller-launch', label: 'Launch', ready: launchChecksReady === 4 },
+    { href: '#seller-profile', label: 'Profile', ready: profileReady },
+    ...(profileReady ? [
+      { href: '#seller-catalog', label: 'Products', ready: activeCatalogCount > 0 },
+      { href: '#seller-rule-editor', label: 'Rules', ready: ruleReady },
+      ...(businessId ? [{ href: '#seller-team', label: 'Team' }] : []),
+      { href: '#seller-session-history', label: 'History' },
+      { href: '#seller-rewards', label: 'Rewards' },
+    ] : []),
+  ];
   const checkoutKitText = useMemo(
     () => [
       `${businessName || 'IFR Partner Shop'} IFR checkout kit`,
@@ -1595,15 +1606,7 @@ export function SellerRuleBuilder() {
 
       <nav aria-label="Seller tasks" className="mb-5 overflow-x-auto rounded-2xl border border-orange-200/15 bg-black/20 p-2">
         <div className="flex min-w-max gap-2">
-          {[
-            { href: '#seller-launch', label: 'Launch', ready: launchChecksReady === 4 },
-            { href: '#seller-profile', label: 'Profile', ready: profileReady },
-            { href: '#seller-catalog', label: 'Products', ready: activeCatalogCount > 0 },
-            { href: '#seller-rule-editor', label: 'Rules', ready: ruleReady },
-            ...(businessId ? [{ href: '#seller-team', label: 'Team' }] : []),
-            { href: '#seller-session-history', label: 'History' },
-            { href: '#seller-rewards', label: 'Rewards' },
-          ].map((task) => (
+          {sellerTasks.map((task) => (
             <a
               key={task.href}
               href={task.href}
@@ -1877,10 +1880,6 @@ export function SellerRuleBuilder() {
         ) : null}
       </div>
 
-      <div id="seller-rewards" className="scroll-mt-28">
-        <SellerRewardStatus businessId={businessId} />
-      </div>
-
       <div id="seller-profile" className="mb-5 scroll-mt-28 rounded-3xl border border-white/10 bg-black/20 p-4">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
@@ -1906,6 +1905,36 @@ export function SellerRuleBuilder() {
             </span>
           ) : null}
         </div>
+        {!selectedBusiness ? (
+          <details className="mt-4 rounded-2xl border border-green-200/20 bg-green-200/[0.06] p-4">
+            <summary className="cursor-pointer text-sm font-black text-green-50">
+              Open an existing seller setup
+            </summary>
+            <p className="mt-2 text-xs leading-5 text-stone-400">
+              Paste a Business ID, scanner/catalog URL or public seller backup. Secrets and wallet signatures never belong in this field.
+            </p>
+            <label className="mt-3 grid gap-2 text-sm font-semibold text-stone-200">
+              Existing seller reference
+              <textarea
+                value={restoreInput}
+                onChange={(event) => setRestoreInput(event.target.value)}
+                rows={3}
+                placeholder="Business ID, seller URL or backup JSON"
+                className="min-h-24 rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none focus:border-green-300"
+              />
+            </label>
+            <button
+              type="button"
+              onClick={restoreSellerBackup}
+              disabled={!restoreInput.trim()}
+              className="mt-3 w-full rounded-2xl border border-green-200/35 px-5 py-3 text-xs font-black uppercase tracking-[0.14em] text-green-50 transition hover:bg-green-200/10 disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              Restore seller reference
+            </button>
+          </details>
+        ) : null}
+        {canUseWalletOwner || profileNeedsLoading || selectedBusiness ? (
+          <>
         <div className="mt-4 flex items-center gap-4 rounded-2xl border border-orange-200/15 bg-orange-200/[0.05] p-4">
           <BusinessLogo
             name={businessName || 'IFR Partner Shop'}
@@ -1969,82 +1998,92 @@ export function SellerRuleBuilder() {
               <span className="text-xs font-semibold text-orange-100">{businessSlugError(businessSlugDraft)}</span>
             ) : null}
           </div>
-          <label className="grid gap-2 text-sm font-semibold text-stone-200 md:col-span-2">
-            Public description
-            <textarea
-              value={businessDescription}
-              onChange={(event) => setBusinessDescription(event.target.value)}
-              maxLength={500}
-              rows={3}
-              disabled={loading || profileNeedsLoading}
-              placeholder="What customers can find here and why IFR members benefit."
-              className="resize-y rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none focus:border-orange-300 disabled:cursor-not-allowed disabled:opacity-50"
-            />
-            <span className="text-xs font-normal text-stone-500">{businessDescription.length}/500</span>
-          </label>
-          <label className="grid gap-2 text-sm font-semibold text-stone-200">
-            Seller website
-            <input
-              type="url"
-              value={businessWebsite}
-              onChange={(event) => setBusinessWebsite(event.target.value)}
-              maxLength={300}
-              placeholder="https://example.com"
-              autoCapitalize="none"
-              autoCorrect="off"
-              spellCheck={false}
-              disabled={loading || profileNeedsLoading}
-              className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none focus:border-orange-300 disabled:cursor-not-allowed disabled:opacity-50"
-            />
-          </label>
-          <label className="grid gap-2 text-sm font-semibold text-stone-200">
-            Seller logo URL
-            <input
-              type="url"
-              value={businessLogoUrl}
-              onChange={(event) => setBusinessLogoUrl(event.target.value)}
-              maxLength={500}
-              placeholder="https://example.com/logo.png"
-              autoCapitalize="none"
-              autoCorrect="off"
-              spellCheck={false}
-              disabled={loading || profileNeedsLoading}
-              className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none focus:border-orange-300 disabled:cursor-not-allowed disabled:opacity-50"
-            />
-            <span className="text-xs font-normal leading-5 text-stone-500">
-              Optional HTTPS image. Customer browsers load it from that host without sending the Shop referrer.
-            </span>
-          </label>
-          <div className="grid gap-2 text-sm font-semibold text-stone-200">
-            <label htmlFor="seller-service-area">City, region or Online</label>
-            <input
-              id="seller-service-area"
-              value={businessServiceArea}
-              onChange={(event) => {
-                setBusinessServiceArea(event.target.value);
-                setServiceAreaDisclosureConfirmed(false);
-              }}
-              maxLength={80}
-              placeholder="Athens, Attica or Online"
-              disabled={loading || profileNeedsLoading}
-              className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none focus:border-orange-300 disabled:cursor-not-allowed disabled:opacity-50"
-            />
-            <span className="text-xs font-normal leading-5 text-stone-500">
-              This exact text is stored and shown publicly. Enter only a broad service area, never a private or street address.
-            </span>
-            {businessServiceArea.trim() ? (
-              <label className="flex items-start gap-3 rounded-2xl border border-orange-200/20 bg-orange-200/[0.06] px-4 py-3 text-xs font-medium leading-5 text-stone-300">
-                <input
-                  type="checkbox"
-                  checked={serviceAreaDisclosureConfirmed}
-                  onChange={(event) => setServiceAreaDisclosureConfirmed(event.target.checked)}
+          <details className="rounded-2xl border border-white/10 bg-black/20 p-4 md:col-span-2">
+            <summary className="cursor-pointer text-sm font-black text-white">
+              Public discovery details <span className="font-semibold text-stone-400">(recommended)</span>
+            </summary>
+            <p className="mt-2 text-xs leading-5 text-stone-400">
+              Add a description, website, logo and broad service area so customers can recognize and find this seller.
+            </p>
+            <div className="mt-4 grid gap-3 md:grid-cols-2">
+              <label className="grid gap-2 text-sm font-semibold text-stone-200 md:col-span-2">
+                Public description
+                <textarea
+                  value={businessDescription}
+                  onChange={(event) => setBusinessDescription(event.target.value)}
+                  maxLength={500}
+                  rows={3}
                   disabled={loading || profileNeedsLoading}
-                  className="mt-0.5 h-4 w-4 shrink-0 accent-orange-400"
+                  placeholder="What customers can find here and why IFR members benefit."
+                  className="resize-y rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none focus:border-orange-300 disabled:cursor-not-allowed disabled:opacity-50"
                 />
-                <span>I understand this text is public and confirm it contains only a city, region or Online label.</span>
+                <span className="text-xs font-normal text-stone-500">{businessDescription.length}/500</span>
               </label>
-            ) : null}
-          </div>
+              <label className="grid gap-2 text-sm font-semibold text-stone-200">
+                Seller website
+                <input
+                  type="url"
+                  value={businessWebsite}
+                  onChange={(event) => setBusinessWebsite(event.target.value)}
+                  maxLength={300}
+                  placeholder="https://example.com"
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  spellCheck={false}
+                  disabled={loading || profileNeedsLoading}
+                  className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none focus:border-orange-300 disabled:cursor-not-allowed disabled:opacity-50"
+                />
+              </label>
+              <label className="grid gap-2 text-sm font-semibold text-stone-200">
+                Seller logo URL
+                <input
+                  type="url"
+                  value={businessLogoUrl}
+                  onChange={(event) => setBusinessLogoUrl(event.target.value)}
+                  maxLength={500}
+                  placeholder="https://example.com/logo.png"
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  spellCheck={false}
+                  disabled={loading || profileNeedsLoading}
+                  className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none focus:border-orange-300 disabled:cursor-not-allowed disabled:opacity-50"
+                />
+                <span className="text-xs font-normal leading-5 text-stone-500">
+                  Optional HTTPS image. Customer browsers load it from that host without sending the Shop referrer.
+                </span>
+              </label>
+              <div className="grid gap-2 text-sm font-semibold text-stone-200 md:col-span-2">
+                <label htmlFor="seller-service-area">City, region or Online</label>
+                <input
+                  id="seller-service-area"
+                  value={businessServiceArea}
+                  onChange={(event) => {
+                    setBusinessServiceArea(event.target.value);
+                    setServiceAreaDisclosureConfirmed(false);
+                  }}
+                  maxLength={80}
+                  placeholder="Athens, Attica or Online"
+                  disabled={loading || profileNeedsLoading}
+                  className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none focus:border-orange-300 disabled:cursor-not-allowed disabled:opacity-50"
+                />
+                <span className="text-xs font-normal leading-5 text-stone-500">
+                  This exact text is stored and shown publicly. Enter only a broad service area, never a private or street address.
+                </span>
+                {businessServiceArea.trim() ? (
+                  <label className="flex items-start gap-3 rounded-2xl border border-orange-200/20 bg-orange-200/[0.06] px-4 py-3 text-xs font-medium leading-5 text-stone-300">
+                    <input
+                      type="checkbox"
+                      checked={serviceAreaDisclosureConfirmed}
+                      onChange={(event) => setServiceAreaDisclosureConfirmed(event.target.checked)}
+                      disabled={loading || profileNeedsLoading}
+                      className="mt-0.5 h-4 w-4 shrink-0 accent-orange-400"
+                    />
+                    <span>I understand this text is public and confirm it contains only a city, region or Online label.</span>
+                  </label>
+                ) : null}
+              </div>
+            </div>
+          </details>
           <label className="grid gap-2 text-sm font-semibold text-stone-200">
             {selectedBusiness ? 'Profile authorization' : 'Access tier label'}
             {selectedBusiness ? (
@@ -2083,11 +2122,11 @@ export function SellerRuleBuilder() {
             </button>
           ) : null}
         </div>
-        <div className="mt-4 rounded-2xl border border-white/10 bg-black/20 p-4">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <p className="text-sm font-black text-white">Business categories</p>
-            <span className="text-xs text-stone-500">{businessCategories.length}/8 selected</span>
-          </div>
+        <details className="mt-4 rounded-2xl border border-white/10 bg-black/20 p-4">
+          <summary className="cursor-pointer text-sm font-black text-white">
+            Business categories
+            <span className="ml-2 text-xs font-semibold text-stone-500">{businessCategories.length}/8 selected</span>
+          </summary>
           <div className="mt-3 flex flex-wrap gap-2">
             {profileCategorySuggestions.map((profileCategory) => {
               const selected = businessCategories.some(
@@ -2137,7 +2176,7 @@ export function SellerRuleBuilder() {
               Add category
             </button>
           </div>
-        </div>
+        </details>
         <div className="mt-4 grid gap-2 sm:grid-cols-2">
           <button
             type="button"
@@ -2234,6 +2273,32 @@ export function SellerRuleBuilder() {
             </div>
           </div>
         ) : null}
+          </>
+        ) : (
+          <div className="mt-4 rounded-2xl border border-orange-200/20 bg-orange-200/[0.06] p-4">
+            <p className="text-sm font-black text-white">Connect before entering a new seller profile</p>
+            <p className="mt-2 text-xs leading-5 text-stone-400">
+              The connected wallet becomes the profile owner and signs every later profile, catalog and benefit-rule change.
+            </p>
+            <button
+              type="button"
+              onClick={connectSellerWallet}
+              disabled={connecting}
+              className="mt-3 w-full rounded-2xl bg-green-300 px-5 py-3 text-xs font-black uppercase tracking-[0.14em] text-stone-950 shadow-xl shadow-green-950/25 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {connecting ? 'Connecting...' : 'Connect seller wallet'}
+            </button>
+          </div>
+        )}
+      </div>
+
+      {status ? <p role="status" aria-live="polite" className="mb-5 rounded-2xl border border-green-300/30 bg-green-500/10 p-3 text-sm text-green-100">{status}</p> : null}
+      {error ? <p role="alert" className="mb-5 rounded-2xl border border-red-400/30 bg-red-500/10 p-3 text-sm text-red-200">{error}</p> : null}
+
+      {profileReady ? (
+        <>
+      <div id="seller-rewards" className="scroll-mt-28">
+        <SellerRewardStatus businessId={businessId} />
       </div>
 
       {businessId ? (
@@ -2898,9 +2963,6 @@ export function SellerRuleBuilder() {
         {loading ? 'Working...' : editingRule ? 'Update rule' : 'Save new rule'}
       </button>
 
-      {status ? <p role="status" aria-live="polite" className="mt-4 rounded-2xl border border-green-300/30 bg-green-500/10 p-3 text-sm text-green-100">{status}</p> : null}
-      {error ? <p role="alert" className="mt-4 rounded-2xl border border-red-400/30 bg-red-500/10 p-3 text-sm text-red-200">{error}</p> : null}
-
       {rules.length > 0 ? (
         <div className="mt-5 grid gap-3">
           <p className="text-xs font-bold uppercase tracking-[0.18em] text-stone-400">
@@ -2959,6 +3021,27 @@ export function SellerRuleBuilder() {
           ))}
         </div>
       ) : null}
+        </>
+      ) : (
+        <>
+          {['seller-catalog', 'seller-rule-editor', 'seller-team', 'seller-session-history', 'seller-rewards'].map((targetId) => (
+            <span key={targetId} id={targetId} className="block scroll-mt-28" aria-hidden="true" />
+          ))}
+          <div data-seller-profile-gate className="rounded-3xl border border-orange-200/20 bg-[#1d130c] p-4">
+            <p className="text-xs font-black uppercase tracking-[0.18em] text-orange-200/80">Seller workspace</p>
+            <h3 className="mt-1 text-xl font-black text-white">Finish the seller profile first</h3>
+            <p className="mt-2 text-sm leading-6 text-stone-300">
+              Create a wallet-owned profile or restore and load an existing setup. Products, benefit rules, checkout tools, team access, history and rewards then become available for that exact seller.
+            </p>
+            <a
+              href="#seller-profile"
+              className="mt-4 inline-flex rounded-2xl bg-orange-300 px-5 py-3 text-xs font-black uppercase tracking-[0.14em] text-stone-950 shadow-xl shadow-orange-950/30 transition hover:bg-orange-200"
+            >
+              Continue seller profile
+            </a>
+          </div>
+        </>
+      )}
     </section>
   );
 }
