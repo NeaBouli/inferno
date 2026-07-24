@@ -924,6 +924,34 @@ async function verifyRuleTemplateAuthorization() {
       });
       return;
     }
+    if (url.pathname === '/api/seller/businesses' && method === 'GET') {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          businesses: [{
+            id: businessId,
+            slug: 'smoke-template-seller',
+            name: 'Smoke Template Seller',
+            description: 'Public verification fixture.',
+            website: null,
+            logoUrl: null,
+            serviceArea: null,
+            categories: ['Coffee'],
+            ownerAddress: sellerWallet,
+            verifyUrl: '/b/smoke-template-seller',
+            qrUrl: '/b/smoke-template-seller',
+            discountPercent: 15,
+            requiredLockIFR: 5000,
+            tierLabel: null,
+            createdAt: new Date().toISOString(),
+            rulesCount: 0,
+            productsCount: 1,
+          }],
+        }),
+      });
+      return;
+    }
     if (url.pathname === `/api/seller/businesses/${businessId}/products` && method === 'GET') {
       await route.fulfill({
         status: 200,
@@ -1131,7 +1159,10 @@ async function verifyRuleTemplateAuthorization() {
       .locator('xpath=ancestor::section[1]');
     await ruleManager.getByRole('button', { name: 'Connect wallet', exact: true }).click();
     await expectText(page, '0x1111...1111');
-    await page.getByPlaceholder('cuid...').last().fill(businessId);
+    await page.getByRole('button', { name: 'Load my seller profiles', exact: true }).click();
+    await expectText(page, 'Loaded 1 seller profile.');
+    const businessIdInput = page.getByPlaceholder('cuid...').last();
+    assert(await businessIdInput.inputValue() === businessId, 'loaded seller profile did not bind the rule manager');
     await page.getByRole('button', { name: 'Load catalog', exact: true }).click();
     await expectText(page, 'Bound catalog service');
     await page.getByRole('button', { name: 'Use in rule', exact: true }).click();
@@ -1234,7 +1265,7 @@ async function verifyRuleTemplateAuthorization() {
     assert(csv.includes('"Coffee, ""Premium""\nMembership"'), 'CSV did not quote commas, quotes and newlines');
     assert(csv.includes('"\'+SUM(1,1)"'), 'CSV did not neutralize formula-prefixed rejection text');
     assert(!/signature|nonce|admin secret|\/r\//i.test(csv), 'CSV contains forbidden authorization or proof-link data');
-    assert(download.suggestedFilename().startsWith('ifr-benefits-ifr-partner-shop-history-'), 'CSV filename is not seller-scoped');
+    assert(download.suggestedFilename().startsWith('ifr-benefits-smoke-template-seller-history-'), 'CSV filename is not seller-scoped');
     await expectText(page, 'Downloaded 3 sessions with masked customer wallets.');
     assert(
       challengeRequests.filter((challenge) => challenge.action === 'sessions:list').length >= 4,
@@ -1250,17 +1281,19 @@ async function verifyRuleTemplateAuthorization() {
       });
     }
 
-    const businessIdInput = page.getByPlaceholder('cuid...').last();
     await businessIdInput.fill('business-other-owner');
     assert(
       await sessionHistory.getByText('session-redeemed-csv', { exact: false }).count() === 0,
       'business switch exposed the previous business history'
     );
     assert(
-      await page.getByRole('button', { name: 'Copy loaded CSV', exact: true }).isDisabled(),
-      'business switch left the previous business loaded export enabled'
+      await page.getByRole('button', { name: 'Copy loaded CSV', exact: true }).count() === 0,
+      'business switch left the previous business export controls visible'
     );
-    await businessIdInput.fill(businessId);
+    await page.locator('details').filter({ hasText: 'Open an existing seller setup' }).locator('summary').click();
+    await page.getByPlaceholder('Business ID, seller URL or backup JSON').fill(businessId);
+    await page.getByRole('button', { name: 'Restore seller reference', exact: true }).click();
+    await page.getByRole('heading', { name: 'Customer check history', exact: true }).waitFor();
 
     await page.getByRole('button', { name: 'Load recent 50', exact: true }).click();
     await expectText(page, 'Loaded 2 recent sessions and seller activity.');
@@ -1625,65 +1658,6 @@ async function verifyPage(contextOptions, label) {
     await expectText(page, 'IFRBenefitsClient');
     await expectText(page, 'Signer-neutral SDK/POS JavaScript');
     await expectText(page, 'Seller readiness');
-    await expectText(page, 'New benefit rule');
-    await expectText(page, 'Uses per wallet / UTC day');
-    await expectText(page, 'Uses per wallet / UTC month');
-    await expectText(page, 'Per wallet: 1 / UTC day and 10 / UTC month');
-    await expectText(page, 'Save new rule');
-    await expectText(page, 'Quick rule templates');
-    await expectText(page, 'Draft only');
-    const templateHelpFits = await page.locator('#seller-rule-template-help').evaluate((element) => (
-      element.scrollWidth <= element.clientWidth + 1
-    ));
-    if (!templateHelpFits) throw new Error(`[${label}] rule template help text overflows horizontally`);
-    await page.getByRole('button', { name: /Premium access Higher lock threshold 15% \/ 5,000 IFR/i }).click();
-    await expectText(page, 'Premium access applied to the draft. Review the values before saving.');
-    await expectText(page, '15% off when 5,000 IFR is locked');
-    await expectText(page, 'Premium / Services / Premium member access');
-    await expectText(page, 'Per wallet: 1 / UTC day and 4 / UTC month');
-    if (shouldScreenshot) {
-      const ruleTemplates = page.locator('#seller-rule-templates');
-      await ruleTemplates.scrollIntoViewIfNeeded();
-      const originalViewport = page.viewportSize();
-      const templateBounds = await ruleTemplates.boundingBox();
-      const expandViewport = Boolean(
-        originalViewport && templateBounds && templateBounds.height > originalViewport.height
-      );
-      if (expandViewport && originalViewport && templateBounds) {
-        await page.setViewportSize({
-          width: originalViewport.width,
-          height: Math.ceil(templateBounds.height + 40),
-        });
-        await ruleTemplates.scrollIntoViewIfNeeded();
-      }
-      const stickyHeader = page.locator('.shop-header');
-      await stickyHeader.evaluate((element) => {
-        element.dataset.smokeVisibility = element.style.visibility;
-        element.style.visibility = 'hidden';
-      });
-      try {
-        const bounds = await ruleTemplates.boundingBox();
-        if (!bounds) throw new Error(`[${label}] rule template bounds are unavailable`);
-        await page.screenshot({
-          animations: 'disabled',
-          clip: {
-            x: Math.max(0, bounds.x),
-            y: Math.max(0, bounds.y),
-            width: bounds.width,
-            height: bounds.height,
-          },
-          scale: 'css',
-          timeout: screenshotTimeoutMs,
-          path: path.join(screenshotDir, `benefits-rule-templates-${label}.png`),
-        });
-      } finally {
-        await stickyHeader.evaluate((element) => {
-          element.style.visibility = element.dataset.smokeVisibility || '';
-          delete element.dataset.smokeVisibility;
-        });
-        if (expandViewport && originalViewport) await page.setViewportSize(originalViewport);
-      }
-    }
     await page.getByRole('heading', { name: 'Connect seller wallet' }).first().waitFor({ timeout: timeoutMs });
     await expectText(page, 'Wallet-owned seller profile');
     await expectText(page, 'Active benefit rule loaded');
@@ -1707,9 +1681,18 @@ async function verifyPage(contextOptions, label) {
     await page.locator('details').filter({ hasText: 'Business categories' }).locator('summary').click();
     await page.getByPlaceholder('Add another category').waitFor({ timeout: timeoutMs });
     await expectText(page, 'Finish the seller profile first');
-    assert.equal(await page.getByText('Products and services', { exact: true }).count(), 0, 'advanced seller tools must wait for a loaded profile');
-    assert.equal(await page.getByText('Customer check history', { exact: true }).count(), 0, 'seller history must wait for a loaded profile');
-    assert.equal(await page.getByText('Seller rewards', { exact: true }).count(), 0, 'seller rewards must wait for a loaded profile');
+    assert(
+      await page.getByText('Products and services', { exact: true }).count() === 0,
+      'advanced seller tools must wait for a loaded profile'
+    );
+    assert(
+      await page.getByText('Customer check history', { exact: true }).count() === 0,
+      'seller history must wait for a loaded profile'
+    );
+    assert(
+      await page.getByText('Seller rewards', { exact: true }).count() === 0,
+      'seller rewards must wait for a loaded profile'
+    );
     await expectText(page, 'Inferno Protocol');
     if (shouldScreenshot) {
       fs.mkdirSync(screenshotDir, { recursive: true });

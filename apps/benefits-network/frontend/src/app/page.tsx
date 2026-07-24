@@ -8,6 +8,7 @@ import { CustomerCheckoutPass } from '@/components/CustomerCheckoutPass';
 import { OfferDiscovery } from '@/components/OfferDiscovery';
 import {
   markSellerWorkspaceReady,
+  SELLER_WORKSPACE_READY_EVENT,
   SellerWorkspaceBoundary,
 } from '@/components/SellerWorkspaceBoundary';
 import { SwapRiskNotice } from '@/components/SwapRiskNotice';
@@ -675,23 +676,36 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    const rawTargetId = window.location.hash.slice(1);
-    if (!rawTargetId) return;
-    let targetId = rawTargetId;
-    try {
-      targetId = decodeURIComponent(rawTargetId);
-    } catch {
-      return;
-    }
     let secondFrame = 0;
-    const scrollToTarget = () => document.getElementById(targetId)?.scrollIntoView({ block: 'start' });
-    const firstFrame = window.requestAnimationFrame(() => {
-      secondFrame = window.requestAnimationFrame(() => {
-        scrollToTarget();
+    let firstFrame = 0;
+    let layoutRetry = 0;
+    const scheduleScroll = () => {
+      window.cancelAnimationFrame(firstFrame);
+      if (secondFrame) window.cancelAnimationFrame(secondFrame);
+      window.clearTimeout(layoutRetry);
+
+      const rawTargetId = window.location.hash.slice(1);
+      if (!rawTargetId) return;
+      let targetId = rawTargetId;
+      try {
+        targetId = decodeURIComponent(rawTargetId);
+      } catch {
+        return;
+      }
+      const scrollToTarget = () => document.getElementById(targetId)?.scrollIntoView({ block: 'start' });
+      firstFrame = window.requestAnimationFrame(() => {
+        secondFrame = window.requestAnimationFrame(() => {
+          scrollToTarget();
+        });
       });
-    });
-    const layoutRetry = window.setTimeout(scrollToTarget, 700);
+      layoutRetry = window.setTimeout(scrollToTarget, 700);
+    };
+    scheduleScroll();
+    window.addEventListener('hashchange', scheduleScroll);
+    window.addEventListener(SELLER_WORKSPACE_READY_EVENT, scheduleScroll);
     return () => {
+      window.removeEventListener('hashchange', scheduleScroll);
+      window.removeEventListener(SELLER_WORKSPACE_READY_EVENT, scheduleScroll);
       window.cancelAnimationFrame(firstFrame);
       if (secondFrame) window.cancelAnimationFrame(secondFrame);
       window.clearTimeout(layoutRetry);

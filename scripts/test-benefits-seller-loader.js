@@ -70,16 +70,23 @@ async function run() {
       return route.continue();
     });
 
-    await page.goto(`${origin}/#seller-workspace`, {
+    await page.goto(`${origin}/#seller-catalog`, {
       waitUntil: 'domcontentloaded',
       timeout: 45_000,
     });
     await page.getByRole('heading', { name: 'Benefit rule manager', exact: true }).waitFor({
       timeout: 35_000,
     });
+    await page.waitForFunction(() => {
+      const gate = document.querySelector('[data-seller-profile-gate]');
+      if (!gate) return false;
+      const bounds = gate.getBoundingClientRect();
+      return bounds.top < window.innerHeight && bounds.bottom > 0;
+    }, null, { timeout: 35_000 });
 
     assert.ok(sellerChunkAttempts >= 2, 'seller chunk must be requested again after recovery');
     assert.ok(navigations >= 2, 'seller loader must perform one recovery navigation');
+    assert.equal(new URL(page.url()).hash, '#seller-catalog', 'seller recovery must preserve the requested task hash');
     assert.equal(
       new URL(page.url()).searchParams.has('_app_refresh'),
       false,
