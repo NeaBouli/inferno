@@ -14,7 +14,6 @@ import {
 } from '@/lib/walletConnectorSelection.mjs';
 import {
   buildSellerSessionCsv,
-  maskSellerSessionWallet,
   SELLER_SESSION_PAGE_LIMIT,
   sellerSessionCsvFilename,
 } from '@/lib/sellerSessionExport';
@@ -413,7 +412,7 @@ export function SellerRuleBuilder() {
       ...(formatProductPrice(session.basePriceMinor, session.currency)
         ? [`Reference price: ${formatProductPrice(session.basePriceMinor, session.currency)}`]
         : []),
-      `Customer wallet: ${session.recoveredAddress || 'not verified yet'}`,
+      `Customer wallet: ${session.customerWalletMasked || 'not verified yet'}`,
       `Locked: ${lockedIFR ? `${lockedIFR} IFR` : 'not verified yet'}`,
       `Verified source: ${verifiedLockSourceLabel(session.verifiedLockSource)}`,
       ...(session.verificationBlock ? [`Verification block: ${session.verificationBlock}`] : []),
@@ -2589,7 +2588,7 @@ export function SellerRuleBuilder() {
                     </div>
                     <div className="mt-3 grid gap-2 text-xs leading-5 text-stone-400">
                       <p className="break-all font-mono">Session: {session.id}</p>
-                      {session.recoveredAddress ? <p className="font-mono">Wallet: {maskSellerSessionWallet(session.recoveredAddress)}</p> : null}
+                      {session.customerWalletMasked ? <p className="font-mono">Wallet: {session.customerWalletMasked}</p> : null}
                       {lockedIFR ? <p>Locked: {lockedIFR} IFR</p> : null}
                       <p>Accepted source: {lockSourceLabel(session.lockSource)}</p>
                       {session.verifiedLockSource ? (

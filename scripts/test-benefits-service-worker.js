@@ -9,6 +9,7 @@ const vm = require('vm');
 const listeners = new Map();
 const cacheWrites = [];
 const precacheAdds = [];
+const deletedCaches = [];
 let responseStatus = 200;
 let networkOnline = true;
 
@@ -27,8 +28,11 @@ const context = {
   Promise,
   caches: {
     open: async () => cache,
-    keys: async () => [],
-    delete: async () => true,
+    keys: async () => ['ifr-benefits-v21', 'ifr-benefits-v22', 'unrelated-cache'],
+    delete: async (name) => {
+      deletedCaches.push(name);
+      return true;
+    },
     match: async () => ({ source: 'offline-root' }),
   },
   fetch: async (request) => {
@@ -75,6 +79,12 @@ async function install() {
   let installPromise;
   listeners.get('install')({ waitUntil: (promise) => { installPromise = promise; } });
   await installPromise;
+}
+
+async function activate() {
+  let activatePromise;
+  listeners.get('activate')({ waitUntil: (promise) => { activatePromise = promise; } });
+  await activatePromise;
 }
 
 async function navigate(url) {
@@ -126,6 +136,13 @@ async function main() {
   assert(cacheWrites.includes('https://shop.ifrunit.tech/_next/static/chunks/app.js'), 'install must cache current Next.js JavaScript');
   assert(!cacheWrites.includes('https://third-party.example/tracker.js'), 'install must not cache third-party assets');
   cacheWrites.length = 0;
+
+  await activate();
+  assert.deepStrictEqual(
+    deletedCaches,
+    ['ifr-benefits-v21'],
+    'activation must delete only stale IFR Benefits caches and preserve unrelated origin caches'
+  );
 
   await navigate('https://shop.ifrunit.tech/guide');
   assert.deepStrictEqual(cacheWrites, [], 'a subpage must not replace the offline app shell');

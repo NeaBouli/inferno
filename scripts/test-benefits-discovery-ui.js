@@ -650,6 +650,50 @@ async function run() {
     );
     await ipadContext.close();
 
+    await page.goto(`${origin}/privacy`, { waitUntil: 'domcontentloaded' });
+    await page.getByRole('heading', { name: 'Privacy & data, stated plainly.', exact: true }).waitFor();
+    await page.evaluate(async () => {
+      window.localStorage.setItem('ifr.shop.test-local', 'remove-me');
+      window.localStorage.setItem('wallet.provider.test', 'preserve-me');
+      window.sessionStorage.setItem('ifr.shop.test-session', 'remove-me');
+      window.sessionStorage.setItem('unrelated.session.test', 'preserve-me');
+      await window.caches.open('ifr-benefits-test');
+      await window.caches.open('unrelated-cache-test');
+    });
+    await page.reload({ waitUntil: 'domcontentloaded' });
+    await page.getByText('ifr.shop.test-local', { exact: false }).waitFor();
+    await page.getByText('ifr.shop.test-session', { exact: false }).waitFor();
+    await page.getByText('ifr-benefits-test', { exact: false }).waitFor();
+    const clearLocalData = page.getByRole('button', { name: 'Clear local IFR data', exact: true });
+    await clearLocalData.click();
+    const confirmClear = page.getByRole('button', { name: 'Yes, clear local data', exact: true });
+    await confirmClear.waitFor();
+    assert.equal(await confirmClear.evaluate((element) => document.activeElement === element), true);
+    await page.getByRole('button', { name: 'Cancel', exact: true }).click();
+    assert.equal(await clearLocalData.evaluate((element) => document.activeElement === element), true);
+    await page.evaluate(() => window.localStorage.setItem('ifr.shop.added-after-snapshot', 'remove-me-too'));
+    await clearLocalData.click();
+    await confirmClear.waitFor();
+    await confirmClear.click();
+    const clearedStatus = page.getByText(/Cleared \d+ ifr\.shop\.\* storage keys? and \d+ ifr-benefits-\* caches? from this browser\./);
+    await clearedStatus.waitFor();
+    assert.equal(await clearedStatus.evaluate((element) => document.activeElement === element), true);
+    const localDataResult = await page.evaluate(async () => ({
+      appLocalKeys: Object.keys(window.localStorage).filter((key) => key.startsWith('ifr.shop.')),
+      appSessionKeys: Object.keys(window.sessionStorage).filter((key) => key.startsWith('ifr.shop.')),
+      appCaches: (await window.caches.keys()).filter((name) => name.startsWith('ifr-benefits-')),
+      unrelatedLocal: window.localStorage.getItem('wallet.provider.test'),
+      unrelatedSession: window.sessionStorage.getItem('unrelated.session.test'),
+      unrelatedCachePresent: (await window.caches.keys()).includes('unrelated-cache-test'),
+    }));
+    assert.deepEqual(localDataResult.appLocalKeys, [], 'privacy control must remove all and only ifr.shop.* localStorage keys');
+    assert.deepEqual(localDataResult.appSessionKeys, [], 'privacy control must remove all and only ifr.shop.* sessionStorage keys');
+    assert.deepEqual(localDataResult.appCaches, [], 'privacy control must remove all and only ifr-benefits-* caches');
+    assert.equal(localDataResult.unrelatedLocal, 'preserve-me', 'privacy control must preserve wallet-provider localStorage');
+    assert.equal(localDataResult.unrelatedSession, 'preserve-me', 'privacy control must preserve unrelated sessionStorage');
+    assert.equal(localDataResult.unrelatedCachePresent, true, 'privacy control must preserve unrelated caches');
+    await page.getByRole('link', { name: 'Privacy & data', exact: true }).waitFor();
+
     assert.deepEqual(pageErrors, []);
     await context.close();
     console.log('[benefits-discovery-ui] PASS - catalog/filter/empty network -> seller handoff -> persistent role overrides');

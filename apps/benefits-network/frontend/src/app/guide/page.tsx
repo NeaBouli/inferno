@@ -122,6 +122,12 @@ export default function GuidePage() {
               Lock IFR
             </a>
             <a
+              href="/privacy"
+              className="rounded-full border border-white/15 px-5 py-3 text-sm font-black uppercase tracking-[0.16em] text-stone-100 transition hover:border-orange-200/60"
+            >
+              Privacy &amp; data
+            </a>
+            <a
               href="https://ifrunit.tech/wiki/business-onboarding.html"
               target="_blank"
               rel="noopener"

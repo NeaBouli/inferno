@@ -472,12 +472,41 @@ describe('Verified seller reward foundation', () => {
     await prisma.sellerRewardLink.create({
       data: { businessId, status: 'VERIFIED', partnerId, builderWallet: owner.address, verifiedAt: new Date() },
     });
+    const session = await prisma.session.create({
+      data: {
+        businessId,
+        nonce: ethers.hexlify(ethers.randomBytes(32)).slice(2),
+        expiresAt: new Date(Date.now() + 60_000),
+        status: 'REDEEMED',
+        recoveredAddress: rewardCustomer,
+        lockAmountRaw: '1000',
+      },
+    });
+    await prisma.rewardEvent.create({
+      data: {
+        businessId,
+        sessionId: session.id,
+        partnerId,
+        customerWallet: rewardCustomer,
+        lockAmountRaw: ethers.parseUnits('1000', 9).toString(),
+        chainId: 1,
+        status: 'READY',
+      },
+    });
     const url = `${baseUrl()}/api/seller/businesses/${businessId}/rewards`;
     expect((await fetch(url, { headers: await sellerHeaders(outsider, 'rewards:read', businessId) })).status).toBe(403);
     const response = await fetch(url, { headers: await sellerHeaders(owner, 'rewards:read', businessId) });
     expect(response.status).toBe(200);
-    const body = await response.json() as Record<string, unknown>;
+    expect(response.headers.get('cache-control')).toBe('private, no-store, max-age=0');
+    const body = await response.json() as {
+      link: { status: string; partnerId: string };
+      onChain: { verified: boolean };
+      eventCount: number;
+    };
     expect(JSON.stringify(body)).not.toContain('signature');
+    expect(JSON.stringify(body)).not.toContain(rewardCustomer);
+    expect(body).not.toHaveProperty('events');
+    expect(body.eventCount).toBe(1);
     expect(body).toMatchObject({ link: { status: 'VERIFIED', partnerId }, onChain: { verified: true } });
   });
 });

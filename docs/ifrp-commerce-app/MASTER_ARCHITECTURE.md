@@ -628,7 +628,9 @@ or transaction state as current.
 - rule templates; **four one-tap seller templates implemented as review-before-save drafts; product binding remains explicit, with owner-signed publication for wallet-owned profiles and the controlled admin fallback otherwise**
 - staff scanner mode; **implemented with owner-managed, expiring checkout operators and atomic role-audited redeem**
 - redemption history. **implemented as owner-protected snapshot/cursor pages, metrics, receipts,
-  incremental older checks and a browser-local masked full-history CSV; long-term retention policy
+  incremental older checks and a browser-local masked full-history CSV. Seller-facing API responses
+  expose only a server-masked customer wallet identifier and use private no-store caching; the full
+  wallet remains backend-only for eligibility, limits and rewards. Long-term retention policy
   remains separate**
 - per-wallet redemption limits. **implemented per rule for UTC day/month with immutable session snapshots, atomic enforcement and audited denials**
 - customer benefits history. **implemented as a wallet-signed, cross-device `My benefits` view

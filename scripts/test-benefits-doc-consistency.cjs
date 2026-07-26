@@ -17,7 +17,10 @@ const files = {
   frontendReadme: 'apps/benefits-network/frontend/README.md',
   frontendHome: 'apps/benefits-network/frontend/src/app/page.tsx',
   frontendGuide: 'apps/benefits-network/frontend/src/app/guide/page.tsx',
+  frontendPrivacy: 'apps/benefits-network/frontend/src/app/privacy/page.tsx',
+  localDataControls: 'apps/benefits-network/frontend/src/components/LocalDataControls.tsx',
   frontendSitemap: 'apps/benefits-network/frontend/src/app/sitemap.ts',
+  sellerRoutes: 'apps/benefits-network/backend/src/routes/seller.ts',
   walletConnectProjectId: 'apps/benefits-network/frontend/src/lib/walletConnectProjectId.mjs',
   benefitsWorkflow: '.github/workflows/benefits-network.yml',
 };
@@ -154,6 +157,26 @@ assert.ok(
 assert.ok(
   content.frontendGuide.includes('https://ifrunit.tech/wiki/business-onboarding.html'),
   'Shop guide must link to the canonical seller onboarding page'
+);
+assert.ok(
+  content.frontendPrivacy.includes('not a finalized legal policy') &&
+    content.frontendPrivacy.includes('retention, deletion and support policy is not finalized') &&
+    content.frontendPrivacy.includes('Masking is a display choice in seller views, not anonymity'),
+  'Shop privacy route must preserve the evidence-only policy and masking boundary'
+);
+assert.ok(
+  content.localDataControls.includes("const STORAGE_PREFIX = 'ifr.shop.'") &&
+    content.localDataControls.includes("const CACHE_PREFIX = 'ifr-benefits-'") &&
+    !content.localDataControls.includes('localStorage.clear(') &&
+    !content.localDataControls.includes('sessionStorage.clear('),
+  'local data control must stay prefix-scoped and preserve unrelated browser data'
+);
+assert.ok(
+  content.sellerRoutes.includes('customerWalletMasked: maskCustomerWallet(session.recoveredAddress)') &&
+    content.sellerRoutes.includes('eventCount,') &&
+    !content.sellerRoutes.includes('events.map(({ customerWallet, ...event })') &&
+    content.sellerRoutes.includes("res.set('Cache-Control', 'private, no-store, max-age=0')"),
+  'seller history and reward responses must remain masked and private no-store'
 );
 assert.ok(
   !content.frontendSitemap.includes("new Date('2026-07-19T00:00:00Z')") &&

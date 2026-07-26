@@ -52,6 +52,16 @@ import {
 const router = Router();
 const MAX_ACTIVE_CHECKOUT_OPERATORS = 10;
 
+function setPrivateNoStore(res: Response) {
+  res.set('Cache-Control', 'private, no-store, max-age=0');
+}
+
+function maskCustomerWallet(address: string | null) {
+  if (!address) return null;
+  if (!/^0x[a-fA-F0-9]{40}$/.test(address)) return 'verified';
+  return `${address.slice(0, 6)}...${address.slice(-4)}`;
+}
+
 const businessDescriptionSchema = z.string().trim().max(500).nullable();
 const businessServiceAreaSchema = z.string().trim().min(2).max(MAX_BUSINESS_SERVICE_AREA_LENGTH).nullable();
 const businessWebsiteSchema = z.string().trim().max(300).url().refine((value) => {
@@ -883,6 +893,7 @@ router.delete('/products/:id', sellerRateLimiter, async (req, res, next) => {
 });
 
 router.get('/businesses/:id/sessions', sellerRateLimiter, async (req, res, next) => {
+  setPrivateNoStore(res);
   try {
     await requireBusinessOwner(req, 'sessions:list', req.params.id);
     const parsedQuery = sellerSessionHistoryQuerySchema.safeParse(req.query);
@@ -1002,7 +1013,7 @@ router.get('/businesses/:id/sessions', sellerRateLimiter, async (req, res, next)
       sessions: pageSessions.map((session) => ({
         id: session.id,
         status: session.status,
-        recoveredAddress: session.recoveredAddress,
+        customerWalletMasked: maskCustomerWallet(session.recoveredAddress),
         lockAmountRaw: session.lockAmountRaw,
         walletBalanceRaw: session.walletBalanceRaw,
         verifiedLockSource: session.verifiedLockSource,
@@ -1088,25 +1099,12 @@ router.post('/businesses/:id/rewards/apply', sellerRateLimiter, async (req, res,
 });
 
 router.get('/businesses/:id/rewards', sellerRateLimiter, async (req, res, next) => {
+  setPrivateNoStore(res);
   try {
     const owner = await requireBusinessOwner(req, 'rewards:read', req.params.id);
     const link = await prisma.sellerRewardLink.findUnique({ where: { businessId: req.params.id } });
-    const events = await prisma.rewardEvent.findMany({
+    const eventCount = await prisma.rewardEvent.count({
       where: { businessId: req.params.id },
-      orderBy: { createdAt: 'desc' },
-      take: 50,
-      select: {
-        id: true,
-        sessionId: true,
-        partnerId: true,
-        customerWallet: true,
-        lockAmountRaw: true,
-        status: true,
-        reason: true,
-        txHash: true,
-        createdAt: true,
-        updatedAt: true,
-      },
     });
 
     let onChain = null;
@@ -1118,7 +1116,12 @@ router.get('/businesses/:id/rewards', sellerRateLimiter, async (req, res, next) 
         onChainError = 'On-chain reward status is temporarily unavailable';
       }
     }
-    res.json({ link, onChain, onChainError, events });
+    res.json({
+      link,
+      onChain,
+      onChainError,
+      eventCount,
+    });
   } catch (err) {
     handleSellerError(err, res, next);
   }
