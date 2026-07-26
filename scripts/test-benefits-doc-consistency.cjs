@@ -108,6 +108,14 @@ assert.ok(
   'Shop wallet must prioritize a private external Get ETH recovery for a confirmed zero balance'
 );
 assert.ok(
+  content.walletStatus.includes('wrongChain') &&
+    content.walletStatus.includes('Switch to Ethereum Mainnet') &&
+    content.walletStatus.includes('switchChainAsync') &&
+    content.frontendReadme.includes('IFR/IFRLock reads and Approve, Lock and Unlock remain') &&
+    content.deviceRunbook.includes('performs no IFR/IFRLock reads'),
+  'Shop wallet must fail closed and document recovery on the wrong Ethereum chain'
+);
+assert.ok(
   content.frontendReadme.includes('confirmed zero-ETH balance takes priority') &&
     content.master.includes('the Benefits app does not sell, broker or custody ETH'),
   'Benefits documentation must preserve the provider-neutral non-custodial gas boundary'

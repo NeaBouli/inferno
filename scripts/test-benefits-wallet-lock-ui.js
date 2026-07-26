@@ -17,6 +17,7 @@ const decimals = 9n;
 const unit = 10n ** decimals;
 const amount = 1000n * unit;
 const zeroEthOnly = process.env.BENEFITS_WALLET_ZERO_ETH_ONLY === '1';
+const wrongChainOnly = process.env.BENEFITS_WALLET_WRONG_CHAIN_ONLY === '1';
 const selectors = {
   approve: ethers.utils.id('approve(address,uint256)').slice(0, 10),
   balanceOf: ethers.utils.id('balanceOf(address)').slice(0, 10),
@@ -174,20 +175,27 @@ async function run() {
     await waitForServer(server);
     browser = await chromium.launch({ headless: true });
     const context = await browser.newContext({ serviceWorkers: 'block' });
-    await context.addInitScript(({ account, methodSelectors, initialEth }) => {
+    await context.addInitScript(({ account, methodSelectors, initialEth, wrongChainOnly }) => {
       const listeners = new Map();
       const methods = [];
+      let currentChainId = wrongChainOnly ? '0xaa36a7' : '0x1';
       Object.defineProperty(window, '__ifrWalletLockMethods', { value: methods });
+      Object.defineProperty(window, '__ifrWalletChainId', { get: () => currentChainId });
       const provider = {
         isMetaMask: true,
         providers: [],
         request: async ({ method, params }) => {
           methods.push(method);
           if (method === 'eth_requestAccounts' || method === 'eth_accounts') return [account];
-          if (method === 'eth_chainId') return '0x1';
-          if (method === 'net_version') return '1';
+          if (method === 'eth_chainId') return currentChainId;
+          if (method === 'net_version') return String(Number.parseInt(currentChainId, 16));
           if (method === 'wallet_getCapabilities') return {};
-          if (method === 'wallet_switchEthereumChain' || method === 'wallet_requestPermissions') return null;
+          if (method === 'wallet_switchEthereumChain') {
+            currentChainId = params?.[0]?.chainId || currentChainId;
+            for (const listener of listeners.get('chainChanged') || []) listener(currentChainId);
+            return null;
+          }
+          if (method === 'wallet_requestPermissions') return null;
           if (method === 'wallet_getPermissions') return [{ parentCapability: 'eth_accounts' }];
           if (method === 'eth_estimateGas') return '0x186a0';
           if (method === 'eth_getTransactionCount') return '0x0';
@@ -222,6 +230,7 @@ async function run() {
       account: wallet,
       methodSelectors: selectors,
       initialEth: `0x${state.eth.toString(16)}`,
+      wrongChainOnly,
     });
 
     const page = await context.newPage();
@@ -286,6 +295,45 @@ async function run() {
       throw new Error(`Wallet did not connect. Methods: ${JSON.stringify(await page.evaluate(() => window.__ifrWalletLockMethods || []))}`);
     });
     await page.waitForTimeout(2000);
+    if (wrongChainOnly) {
+      const switchAction = walletPanel.getByRole('button', { name: 'Switch to Ethereum Mainnet', exact: true });
+      await switchAction.waitFor();
+      assert.equal(await walletPanel.getByRole('button', { name: 'Approve', exact: true }).isEnabled(), false);
+      assert.equal(await walletPanel.getByRole('button', { name: 'Lock IFR', exact: true }).isEnabled(), false);
+      assert.equal(state.transactions.length, 0, 'wrong-chain state must not submit a transaction');
+      assert.equal(
+        state.readCalls.some((item) => item.target === token.toLowerCase() || item.target === lock.toLowerCase()),
+        false,
+        'wrong-chain state must not read IFR or IFRLock contracts'
+      );
+      await switchAction.click();
+      await walletPanel.getByText('10,000.000 IFR', { exact: true }).first().waitFor({ timeout: 10_000 });
+      assert.equal(await page.evaluate(() => window.__ifrWalletChainId), '0x1');
+      assert.ok(
+        await page.evaluate(() => window.__ifrWalletLockMethods.includes('wallet_switchEthereumChain')),
+        'Mainnet recovery must ask the connected wallet to switch chain'
+      );
+      assert.equal(state.transactions.length, 0, 'chain recovery must not submit a contract transaction');
+      await page.evaluate(async () => {
+        await window.ethereum.request({
+          method: 'wallet_switchEthereumChain',
+          params: [{ chainId: '0xaa36a7' }],
+        });
+      });
+      await switchAction.waitFor();
+      const allowanceStatus = walletPanel.locator('p').filter({ hasText: 'Allowance:' }).first();
+      await allowanceStatus.waitFor();
+      assert.match(await allowanceStatus.innerText(), /Allowance:\s*-- IFR/);
+      assert.equal(
+        await walletPanel.getByText('Example tier guide').locator('..').getByText('None', { exact: true }).isVisible(),
+        true,
+        'cached Mainnet tier data must be masked after switching away'
+      );
+      assert.equal(state.transactions.length, 0, 'switching away must not submit a contract transaction');
+      assert.deepEqual(pageErrors, []);
+      console.log('[benefits-wallet-lock-ui] PASS - wrong chain fails closed and recovers through Mainnet switch');
+      return;
+    }
     if (zeroEthOnly) {
       const zeroGasAction = walletPanel.getByRole('link', { name: 'Get ETH for gas', exact: true });
       await zeroGasAction.waitFor();

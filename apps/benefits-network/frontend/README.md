@@ -62,7 +62,9 @@ allowance. A confirmed zero-ETH balance takes priority over Buy, Approve and
 Lock and links only to the provider-neutral official Ethereum `Get ETH` guide.
 The app does not sell or custody ETH, append a wallet address to that link or
 request a wallet transaction. Tier chips are buttons that set common lock
-amounts for seller benefit rules.
+amounts for seller benefit rules. A connected wallet on the wrong chain sees a
+dedicated switch action; IFR/IFRLock reads and Approve, Lock and Unlock remain
+disabled until the wallet confirms the configured Ethereum chain.
 
 Public offers and checkout review show the mandatory locked-IFR threshold, its accepted source and
 any optional minimum IFR that must remain free in the customer wallet. Sellers may require
