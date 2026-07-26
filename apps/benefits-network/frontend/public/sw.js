@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ifr-benefits-v21';
+const CACHE_NAME = 'ifr-benefits-v22';
 const PRECACHE_URLS = [
   '/',
   '/offline.html',
