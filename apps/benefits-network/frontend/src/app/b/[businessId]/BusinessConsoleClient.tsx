@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useAccount, useConnect, useDisconnect, useSignMessage } from 'wagmi';
 import QRCode from 'react-qr-code';
 import { AppShell } from '@/components/AppShell';
@@ -53,22 +53,35 @@ export function BusinessConsoleClient({ businessId }: { businessId: string }) {
   const [checkoutAccess, setCheckoutAccess] = useState<CheckoutAccess | null>(null);
   const [accessStatus, setAccessStatus] = useState('');
   const [loading, setLoading] = useState(false);
+  const [businessLoading, setBusinessLoading] = useState(true);
   const { availableConnectors } = useAvailableWalletConnectors(connectors);
   const isDone = status && ['REDEEMED', 'EXPIRED', 'REJECTED'].includes(status.status);
   const resolvedBusinessId = business?.id || '';
+
+  const loadBusinessProfile = useCallback(async () => {
+    setBusinessLoading(true);
+    setError('');
+    try {
+      const [nextBusiness, rulesResult] = await Promise.all([
+        getBusiness(businessId),
+        getBusinessRules(businessId),
+      ]);
+      setBusiness(nextBusiness);
+      setRules(rulesResult.rules);
+      setSelectedRuleId(rulesResult.rules[0]?.id ?? '');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not load the seller profile.');
+    } finally {
+      setBusinessLoading(false);
+    }
+  }, [businessId]);
 
   useEffect(() => {
     setOrigin(window.location.origin);
     const incomingPass = new URLSearchParams(window.location.search).get('pass');
     if (incomingPass) setCustomerPassInput(incomingPass);
-    Promise.all([getBusiness(businessId), getBusinessRules(businessId)])
-      .then(([nextBusiness, rulesResult]) => {
-        setBusiness(nextBusiness);
-        setRules(rulesResult.rules);
-        setSelectedRuleId(rulesResult.rules[0]?.id ?? '');
-      })
-      .catch((err: Error) => setError(err.message));
-  }, [businessId]);
+    void loadBusinessProfile();
+  }, [loadBusinessProfile]);
 
   useEffect(() => {
     setCheckoutAccess(null);
@@ -123,7 +136,9 @@ export function BusinessConsoleClient({ businessId }: { businessId: string }) {
     checkoutAccess?.authorized && address && checkoutAccess.walletAddress.toLowerCase() === address.toLowerCase()
   );
   const scannerStatus = !business
-    ? 'Load business'
+    ? businessLoading
+      ? 'Loading seller profile'
+      : 'Seller profile unavailable'
     : !sellerWalletReady
       ? 'Connect seller wallet'
     : !previewBenefit
@@ -140,7 +155,9 @@ export function BusinessConsoleClient({ businessId }: { businessId: string }) {
               ? 'Session closed'
               : 'Waiting for customer';
   const scannerNextStep = !business
-    ? 'The scanner is waiting for a valid seller profile before checkout can start.'
+    ? businessLoading
+      ? 'The scanner is loading the seller profile and active checkout rules.'
+      : 'The seller profile did not load. Check the connection and retry before checkout.'
     : !sellerWalletReady
       ? 'Connect the business owner or an active checkout operator. The app verifies current access when creating the QR.'
     : !session
@@ -942,7 +959,21 @@ export function BusinessConsoleClient({ businessId }: { businessId: string }) {
           >
             {loading ? 'Working...' : session ? 'Create new QR session' : 'Create QR session'}
           </button>
-          {error ? <p role="alert" className="mt-4 rounded-2xl border border-red-400/30 bg-red-500/10 p-3 text-sm text-red-200">{error}</p> : null}
+          {error && !business ? (
+            <div role="alert" className="mt-4 rounded-2xl border border-red-400/30 bg-red-500/10 p-3 text-sm text-red-200">
+              <p>{error}</p>
+              <button
+                type="button"
+                onClick={loadBusinessProfile}
+                disabled={businessLoading}
+                className="mt-3 font-black uppercase tracking-[0.12em] underline underline-offset-4 disabled:opacity-50"
+              >
+                {businessLoading ? 'Loading seller profile...' : 'Retry seller profile'}
+              </button>
+            </div>
+          ) : error ? (
+            <p role="alert" className="mt-4 rounded-2xl border border-red-400/30 bg-red-500/10 p-3 text-sm text-red-200">{error}</p>
+          ) : null}
         </div>
 
         <div className="rounded-[2rem] border border-white/10 bg-stone-100 p-6 text-stone-950 shadow-2xl shadow-black/30">

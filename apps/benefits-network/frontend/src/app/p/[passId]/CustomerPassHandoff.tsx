@@ -1,6 +1,6 @@
 'use client';
 
-import { FormEvent, useEffect, useState } from 'react';
+import { FormEvent, useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { AppShell } from '@/components/AppShell';
 import { Countdown } from '@/components/Countdown';
@@ -15,6 +15,25 @@ export function CustomerPassHandoff({ passId }: { passId: string }) {
   const [available, setAvailable] = useState<boolean | null>(null);
   const [expiresAt, setExpiresAt] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [lookupFailed, setLookupFailed] = useState(false);
+
+  const loadPass = useCallback(async () => {
+    setLoading(true);
+    setAvailable(null);
+    setError('');
+    setLookupFailed(false);
+    try {
+      const pass = await getPublicCustomerPass(passId);
+      setAvailable(pass.available);
+      setExpiresAt(pass.expiresAt);
+    } catch (err) {
+      setLookupFailed(true);
+      setError(err instanceof Error ? err.message : 'Could not read checkout pass.');
+    } finally {
+      setLoading(false);
+    }
+  }, [passId]);
 
   useEffect(() => {
     try {
@@ -22,18 +41,14 @@ export function CustomerPassHandoff({ passId }: { passId: string }) {
     } catch {
       // Manual seller profile entry remains available.
     }
-    getPublicCustomerPass(passId)
-      .then((pass) => {
-        setAvailable(pass.available);
-        setExpiresAt(pass.expiresAt);
-      })
-      .catch((err) => setError(err instanceof Error ? err.message : 'Could not read checkout pass.'));
-  }, [passId]);
+    void loadPass();
+  }, [loadPass]);
 
   function openSeller(event: FormEvent) {
     event.preventDefault();
     const reference = parseBusinessReference(businessId);
     if (!reference) {
+      setLookupFailed(false);
       setError('Enter a shop.ifrunit.tech seller URL, seller slug or profile ID.');
       return;
     }
@@ -51,12 +66,17 @@ export function CustomerPassHandoff({ passId }: { passId: string }) {
               <h1 className="mt-2 text-4xl font-black text-white">Customer checkout pass</h1>
             </div>
             <span className={`rounded-full border px-3 py-2 text-xs font-black uppercase ${available ? 'border-green-300/25 bg-green-300/[0.08] text-green-50' : 'border-white/10 bg-black/20 text-stone-300'}`}>
-              {available === null ? 'Checking' : available ? 'Ready' : 'Unavailable'}
+              {loading ? 'Checking' : lookupFailed ? 'Retry needed' : available ? 'Ready' : 'Unavailable'}
             </span>
           </div>
           <p className="mt-4 text-sm leading-6 text-stone-300">
             The customer is presenting a short-lived IFR checkout pass. Open it in the correct seller profile, select the intended active rule and sign the binding request. The customer must then approve the exact offer on their own device.
           </p>
+          {available === false && !error ? (
+            <p className="mt-3 rounded-2xl border border-orange-200/20 bg-orange-200/[0.07] p-3 text-sm leading-6 text-orange-50">
+              This pass is expired, cancelled or already bound. Ask the customer to create a fresh checkout pass.
+            </p>
+          ) : null}
           {expiresAt ? <p className="mt-3 text-sm text-stone-400">Pass expires in <strong className="text-white"><Countdown expiresAt={expiresAt} /></strong></p> : null}
 
           <form onSubmit={openSeller} className="mt-6 grid gap-3">
@@ -76,7 +96,16 @@ export function CustomerPassHandoff({ passId }: { passId: string }) {
             </button>
           </form>
           <p className="mt-4 break-all font-mono text-[11px] text-stone-500">Pass {passId}</p>
-          {error ? <p className="mt-4 rounded-2xl border border-red-300/25 bg-red-300/[0.08] p-3 text-sm text-red-100">{error}</p> : null}
+          {error && lookupFailed ? (
+            <div role="alert" className="mt-4 rounded-2xl border border-red-300/25 bg-red-300/[0.08] p-3 text-sm text-red-100">
+              <p>{error}</p>
+              <button type="button" onClick={loadPass} disabled={loading} className="mt-3 font-black uppercase tracking-[0.12em] underline underline-offset-4 disabled:opacity-50">
+                {loading ? 'Checking pass...' : 'Retry pass lookup'}
+              </button>
+            </div>
+          ) : error ? (
+            <p role="alert" className="mt-4 rounded-2xl border border-red-300/25 bg-red-300/[0.08] p-3 text-sm text-red-100">{error}</p>
+          ) : null}
         </section>
       </main>
     </AppShell>
