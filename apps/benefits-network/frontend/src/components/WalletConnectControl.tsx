@@ -10,6 +10,7 @@ import {
   walletConnectionErrorMessage,
   walletConnectorLabel,
 } from '@/lib/walletConnectorSelection.mjs';
+import { detectWalletEnvironment } from '@/lib/walletEnvironment.mjs';
 
 function shortAddress(address?: string) {
   if (!address) return 'Not connected';
@@ -40,40 +41,17 @@ function getWalletEnvironment() {
     };
   }
 
-  const ua = window.navigator.userAgent.toLowerCase();
-  const ethereum = (window as Window & {
-    ethereum?: {
-      isMetaMask?: boolean;
-      isCoinbaseWallet?: boolean;
-      isTrust?: boolean;
-      isOkxWallet?: boolean;
-      isPhantom?: boolean;
-      providers?: unknown[];
-    };
-  }).ethereum;
-  const isIos = /iphone|ipad|ipod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-  const isAndroid = ua.includes('android');
-  const surface = isIos ? 'iPad/iPhone' : isAndroid ? 'Android' : 'Desktop';
-  const provider =
-    ethereum?.isMetaMask
-      ? 'MetaMask provider'
-      : ethereum?.isCoinbaseWallet
-        ? 'Coinbase provider'
-        : ethereum?.isTrust
-          ? 'Trust provider'
-          : ethereum?.isOkxWallet
-            ? 'OKX provider'
-            : ethereum?.isPhantom
-              ? 'Phantom provider'
-              : ethereum
-                ? 'Injected Ethereum provider'
-                : 'No injected provider';
-  const providerCount = Array.isArray(ethereum?.providers) ? ethereum.providers.length : ethereum ? 1 : 0;
-  const detail = ethereum
-    ? `${providerCount} provider${providerCount === 1 ? '' : 's'} available in this browser.`
-    : 'Open this page inside MetaMask, Coinbase, Trust, OKX or another EVM wallet browser.';
-
-  return { surface, provider, detail };
+  const browserWindow = window as Window & {
+    ethereum?: unknown;
+    phantom?: { ethereum?: unknown };
+  };
+  return detectWalletEnvironment({
+    userAgent: navigator.userAgent,
+    platform: navigator.platform,
+    maxTouchPoints: navigator.maxTouchPoints,
+    ethereum: browserWindow.ethereum,
+    phantomEthereum: browserWindow.phantom?.ethereum,
+  });
 }
 
 const DEFAULT_WALLET_ENVIRONMENT = {

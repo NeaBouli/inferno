@@ -13,6 +13,11 @@ const axeSource = require('axe-core').source;
 const AXE_TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'];
 
 async function assertNoAxeViolations(page, stateLabel) {
+  await page.waitForFunction(
+    () => typeof document.title === 'string' && document.title.trim().length > 0,
+    undefined,
+    { timeout: 15_000 },
+  );
   await page.addScriptTag({ content: axeSource });
   const { violations } = await page.evaluate(async (tags) => (
     window.axe.run(document, {
@@ -40,7 +45,7 @@ const databaseName = `fullstack-e2e-${process.pid}-${randomUUID()}.db`;
 const databasePath = path.join(backend, 'prisma', databaseName);
 const databaseUrl = `file:./${databaseName}`;
 const zeroAddress = '0x0000000000000000000000000000000000000001';
-const adminSecret = 'fullstack-e2e-admin-secret';
+const adminSecret = 'fullstack-e2e-admin-secret-0123456789abcdef';
 const childLogs = new Map();
 const children = [];
 let backendPort;

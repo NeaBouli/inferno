@@ -47,6 +47,13 @@ The public shop defaults to Ethereum Mainnet. `NEXT_PUBLIC_CHAIN_ID=11155111` ca
 
 `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` enables the Wagmi WalletConnect QR connector for compatible mobile wallets only when it is a syntactically valid 32-character hexadecimal Reown project ID. Missing, malformed and placeholder values fail closed to browser-injected Ethereum wallets such as MetaMask and Coinbase Wallet instead of claiming multi-wallet readiness. On iOS/iPadOS and Android, the fallback also exposes official HTTPS wallet-browser launch links for MetaMask, Trust Wallet, OKX and Phantom. Coinbase and Rainbow remain on the injected-provider or Copy/Share path until the WalletConnect project is configured.
 
+Injected wallets are discovered through EIP-6963 where available. If a generic
+injected connector and a wallet-specific connector resolve to the same provider,
+the wallet-specific connector is shown once and preferred. A dedicated Phantom
+namespace fallback also supports EVM sessions that expose
+`window.phantom.ethereum` without `window.ethereum`. This automated support does
+not replace the physical wallet/device acceptance matrix.
+
 Wallet launch targets are always reduced to an HTTPS path on
 `https://shop.ifrunit.tech`; foreign origins and query strings are discarded
 before a wallet link is generated.

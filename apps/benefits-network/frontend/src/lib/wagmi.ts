@@ -15,6 +15,7 @@ export const hasWalletConnectProjectId = Boolean(walletConnectProjectId);
 
 const connectors = [
   injected(),
+  injected({ target: 'phantom' }),
   coinbaseWallet({ appName: 'IFR Benefits Network' }),
   ...(hasWalletConnectProjectId
     ? [walletConnect({
