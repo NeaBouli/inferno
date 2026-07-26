@@ -16,6 +16,7 @@ const lock = '0x769928aBDfc949D0718d8766a1C2d7dBb63954Eb';
 const decimals = 9n;
 const unit = 10n ** decimals;
 const amount = 1000n * unit;
+const zeroEthOnly = process.env.BENEFITS_WALLET_ZERO_ETH_ONLY === '1';
 const selectors = {
   approve: ethers.utils.id('approve(address,uint256)').slice(0, 10),
   balanceOf: ethers.utils.id('balanceOf(address)').slice(0, 10),
@@ -23,7 +24,9 @@ const selectors = {
   lockedBalance: ethers.utils.id('lockedBalance(address)').slice(0, 10),
   lock: ethers.utils.id('lock(uint256)').slice(0, 10),
   unlock: ethers.utils.id('unlock()').slice(0, 10),
+  getEthBalance: ethers.utils.id('getEthBalance(address)').slice(0, 10),
 };
+const multicallAddress = '0xca11bde05977b3631167028862be2a173976ca11';
 const multicall = new ethers.utils.Interface([
   'function aggregate3((address target,bool allowFailure,bytes callData)[] calls) payable returns ((bool success,bytes returnData)[] returnData)',
 ]);
@@ -40,9 +43,11 @@ function decodeAmount(data) {
 function callResult(state, target, data) {
   const normalizedTarget = String(target).toLowerCase();
   const selector = String(data).slice(0, 10).toLowerCase();
+  state.readCalls.push({ target: normalizedTarget, selector });
   if (normalizedTarget === token.toLowerCase() && selector === selectors.balanceOf) return encodeUint(state.ifr);
   if (normalizedTarget === token.toLowerCase() && selector === selectors.allowance) return encodeUint(state.allowance);
   if (normalizedTarget === lock.toLowerCase() && selector === selectors.lockedBalance) return encodeUint(state.locked);
+  if (normalizedTarget === multicallAddress && selector === selectors.getEthBalance) return encodeUint(state.eth);
   return encodeUint(0n);
 }
 
@@ -144,9 +149,10 @@ async function run() {
     ifr: 10_000n * unit,
     locked: 0n,
     allowance: 0n,
-    eth: 10n ** 18n,
+    eth: zeroEthOnly ? 0n : 10n ** 18n,
     transactions: [],
     rpcCalls: [],
+    readCalls: [],
   };
   const serverOutput = [];
   const server = spawn(process.execPath, [path.join(frontend, 'node_modules', 'next', 'dist', 'bin', 'next'), 'dev', '--hostname', '127.0.0.1', '--port', String(port)], {
@@ -168,7 +174,7 @@ async function run() {
     await waitForServer(server);
     browser = await chromium.launch({ headless: true });
     const context = await browser.newContext({ serviceWorkers: 'block' });
-    await context.addInitScript(({ account, methodSelectors }) => {
+    await context.addInitScript(({ account, methodSelectors, initialEth }) => {
       const listeners = new Map();
       const methods = [];
       Object.defineProperty(window, '__ifrWalletLockMethods', { value: methods });
@@ -194,7 +200,7 @@ async function run() {
             if (!response.ok) throw new Error(await response.text());
             return (await response.json()).hash;
           }
-          if (method === 'eth_getBalance') return '0xde0b6b3a7640000';
+          if (method === 'eth_getBalance') return initialEth;
           if (method === 'eth_blockNumber') return '0x10';
           if (method === 'eth_getCode') return '0x01';
           if (method === 'eth_call') return `0x${'0'.repeat(64)}`;
@@ -212,7 +218,11 @@ async function run() {
       provider.providers = [provider];
       Object.defineProperty(window, 'ethereum', { configurable: true, value: provider });
       window.dispatchEvent(new Event('ethereum#initialized'));
-    }, { account: wallet, methodSelectors: selectors });
+    }, {
+      account: wallet,
+      methodSelectors: selectors,
+      initialEth: `0x${state.eth.toString(16)}`,
+    });
 
     const page = await context.newPage();
     const pageErrors = [];
@@ -225,10 +235,27 @@ async function run() {
         await route.fulfill({ status: 400, contentType: 'text/plain', body: error.stack || error.message });
       }
     });
-    await page.route('https://eth.merkle.io/', async (route) => {
-      const payload = route.request().postDataJSON();
+    await page.route(/^https:\/\/.+/, async (route) => {
+      if (route.request().method() !== 'POST') {
+        return route.continue();
+      }
+      let payload;
+      try {
+        payload = route.request().postDataJSON();
+      } catch {
+        return route.continue();
+      }
+      const requests = Array.isArray(payload) ? payload : [payload];
+      if (!requests.every((item) => item && typeof item.method === 'string')) {
+        return route.continue();
+      }
       const respond = (item) => {
-        state.rpcCalls.push({ method: item.method, to: item.params?.[0]?.to, data: item.params?.[0]?.data?.slice(0, 10) });
+        state.rpcCalls.push({
+          method: item.method,
+          rpcOrigin: new URL(route.request().url()).origin,
+          to: item.params?.[0]?.to,
+          data: item.params?.[0]?.data?.slice(0, 10),
+        });
         try {
           return { jsonrpc: '2.0', id: item.id, result: rpcResult(item, state) };
         } catch (error) {
@@ -259,6 +286,37 @@ async function run() {
       throw new Error(`Wallet did not connect. Methods: ${JSON.stringify(await page.evaluate(() => window.__ifrWalletLockMethods || []))}`);
     });
     await page.waitForTimeout(2000);
+    if (zeroEthOnly) {
+      const zeroGasAction = walletPanel.getByRole('link', { name: 'Get ETH for gas', exact: true });
+      await zeroGasAction.waitFor();
+      const zeroGasGuide = walletPanel.getByRole('link', { name: 'Open official ETH guide', exact: true });
+      await zeroGasGuide.waitFor();
+      assert.equal(await zeroGasGuide.getAttribute('href'), 'https://ethereum.org/get-eth/');
+      assert.equal(await zeroGasGuide.getAttribute('target'), '_blank');
+      assert.deepEqual((await zeroGasGuide.getAttribute('rel')).split(/\s+/).sort(), ['noopener', 'noreferrer']);
+      assert.equal(new URL(await zeroGasGuide.getAttribute('href')).search, '', 'Get ETH URL must not contain wallet or tracking data');
+      assert.equal(await walletPanel.getByRole('button', { name: 'Approve', exact: true }).isEnabled(), false);
+      assert.equal(await walletPanel.getByRole('button', { name: 'Lock IFR', exact: true }).isEnabled(), false);
+      const methodsBeforeGuideClick = await page.evaluate(() => [...window.__ifrWalletLockMethods]);
+      await zeroGasGuide.evaluate((element) => {
+        element.addEventListener('click', (event) => event.preventDefault(), { once: true });
+        element.click();
+      });
+      assert.deepEqual(
+        await page.evaluate(() => [...window.__ifrWalletLockMethods]),
+        methodsBeforeGuideClick,
+        'Get ETH navigation must not call the wallet provider'
+      );
+      assert.equal(state.transactions.length, 0, 'zero-ETH guidance must not submit a transaction');
+      assert.ok(
+        state.readCalls.some((item) => item.target === multicallAddress && item.selector === selectors.getEthBalance),
+        'zero-ETH state must come from Multicall3.getEthBalance'
+      );
+      assert.deepEqual(pageErrors, []);
+      console.log('[benefits-wallet-lock-ui] PASS - zero-ETH recovery is provider-neutral and transaction-free');
+      return;
+    }
+
     if (!await walletPanel.getByText('10,000.000 IFR', { exact: true }).count()) {
       throw new Error(`Wallet state did not load. RPC calls: ${JSON.stringify(state.rpcCalls)}\n${await walletPanel.innerText()}`);
     }
@@ -267,7 +325,18 @@ async function run() {
       await walletPanel.getByRole('button', { name: tier, exact: true }).waitFor();
     }
     await walletPanel.getByText('Sellers define each real rule and may use different thresholds.', { exact: true }).waitFor();
-    await walletPanel.getByRole('button', { name: 'Approve 1,000 IFR', exact: true }).click();
+    const approveRecommended = walletPanel.getByRole('button', { name: 'Approve 1,000 IFR', exact: true });
+    await approveRecommended.waitFor({ timeout: 10_000 }).catch(async () => {
+      const walletDebug = await page.evaluate(async () => ({
+        methods: [...window.__ifrWalletLockMethods],
+        directBalance: await window.ethereum.request({ method: 'eth_getBalance', params: [window.ethereum.selectedAddress || '', 'latest'] }),
+      }));
+      throw new Error(
+        `Funded wallet did not reach approve state (zeroOnly=${zeroEthOnly}, stateEth=${state.eth}).\n` +
+        `${await walletPanel.innerText()}\nWallet: ${JSON.stringify(walletDebug)}\nRPC: ${JSON.stringify(state.rpcCalls.slice(-20))}`
+      );
+    });
+    await approveRecommended.click();
     await walletPanel.getByText('Approval confirmed. You can lock IFR now.', { exact: true }).waitFor({ timeout: 15_000 });
     await walletPanel.getByText('1,000.000 IFR', { exact: true }).first().waitFor();
     await walletPanel.getByRole('button', { name: 'Lock 1,000 IFR', exact: true }).click();
@@ -291,6 +360,10 @@ async function run() {
     assert.equal(state.ifr, 10_000n * unit);
     assert.equal(state.locked, 0n);
     assert.equal(state.allowance, 0n);
+    assert.ok(
+      state.readCalls.some((item) => item.target === multicallAddress && item.selector === selectors.getEthBalance),
+      'funded state must come from Multicall3.getEthBalance'
+    );
     assert.deepEqual(pageErrors, []);
     await context.close();
     console.log('[benefits-wallet-lock-ui] PASS - approve -> lock -> refreshed access -> unlock');

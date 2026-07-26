@@ -6,6 +6,7 @@ import { formatEther, formatUnits, parseUnits } from 'viem';
 import { WalletConnectControl } from '@/components/WalletConnectControl';
 import { SwapRiskNotice } from '@/components/SwapRiskNotice';
 import { CHAIN_ID, IFR_DECIMALS, IFRLOCK_ABI, IFRLOCK_ADDRESS, IFR_TOKEN_ABI, IFR_TOKEN_ADDRESS, formatIFR } from '@/lib/contracts';
+import { ETHEREUM_GET_ETH_URL } from '@/lib/onboardingLinks';
 import { requestWalletAsset, selectWalletAssetProvider } from '@/lib/walletAssetProvider.mjs';
 
 const MIN_CUSTOMER_LOCK = 1000;
@@ -18,6 +19,14 @@ const BENEFIT_TIERS = [
 ];
 const UNISWAP_IFR_URL = 'https://app.uniswap.org/swap?outputCurrency=0x77e99917Eca8539c62F509ED1193ac36580A6e7B';
 const IFR_ICON_URL = 'https://ifrunit.tech/assets/ifr_icon_256.png';
+
+type RecommendedAction = {
+  label: string;
+  detail: string;
+  disabledReason: string;
+  externalHref?: string;
+  action?: 'retry-eth';
+};
 
 function walletAssetError(error: unknown) {
   const code = typeof error === 'object' && error && 'code' in error ? Number(error.code) : undefined;
@@ -108,6 +117,11 @@ export function WalletStatus() {
   const hasCustomerLock = Boolean(lockedRaw && lockedRaw >= MIN_CUSTOMER_LOCK_RAW);
   const hasIFR = Boolean(ifrRaw && ifrRaw > BigInt(0));
   const hasEth = Boolean(ethRaw && ethRaw > BigInt(0));
+  const ethBalanceReady = typeof ethRaw === 'bigint';
+  const ethBalanceFailed = Boolean(isConnected && ethBalance.isError);
+  const ethBalanceChecking = Boolean(isConnected && !ethBalanceReady && !ethBalanceFailed);
+  const ethKnownEmpty = Boolean(isConnected && ethBalanceReady && !hasEth);
+  const canPayGas = Boolean(isConnected && ethBalanceReady && hasEth);
   const hasContracts = Boolean(IFR_TOKEN_ADDRESS && IFRLOCK_ADDRESS);
   const amountValid = amountRaw > BigInt(0);
   const hasEnoughIFR = Boolean(ifrRaw && ifrRaw >= amountRaw);
@@ -117,7 +131,7 @@ export function WalletStatus() {
   const enteredAmount = amountValid
     ? Number(formatUnits(amountRaw, IFR_DECIMALS)).toLocaleString('en-US', { maximumFractionDigits: 3 })
     : '0';
-  const recommendedAction = !isConnected
+  const recommendedAction: RecommendedAction = !isConnected
     ? {
         label: 'Connect wallet',
         detail: 'Start with the wallet that holds ETH and IFR.',
@@ -129,54 +143,93 @@ export function WalletStatus() {
           detail: 'IFR token or IFRLock address is not configured for this deployment.',
           disabledReason: 'Missing contract configuration.',
         }
-      : !amountValid
+      : ethBalanceChecking
         ? {
-            label: 'Enter IFR amount',
-            detail: 'Choose a tier or enter the exact IFR amount you want to lock.',
-            disabledReason: 'Enter a positive IFR amount.',
+            label: 'Checking ETH balance',
+            detail: 'Confirming that this wallet can pay Ethereum network fees.',
+            disabledReason: 'Wait for the ETH balance check.',
           }
-        : !hasEnoughIFR
+        : ethBalanceFailed
           ? {
-              label: 'Buy IFR',
-              detail: `This wallet needs ${enteredAmount} unlocked IFR before it can lock that amount.`,
+              label: 'Retry ETH check',
+              detail: 'The ETH balance could not be read. Retry before approving, locking or unlocking IFR.',
               disabledReason: '',
+              action: 'retry-eth',
             }
-          : !hasEnoughAllowance
+          : ethKnownEmpty
             ? {
-                label: `Approve ${enteredAmount} IFR`,
-                detail: 'One approval lets IFRLock move only the amount currently entered.',
-                disabledReason: '',
+                label: CHAIN_ID === 1 ? 'Get ETH for gas' : 'Get test ETH for gas',
+                detail: `Ethereum transactions need ETH for network fees. Add ETH to this same wallet on ${
+                  CHAIN_ID === 1 ? 'Ethereum Mainnet' : `chain ${CHAIN_ID}`
+                }, then return and refresh.`,
+                disabledReason: CHAIN_ID === 1
+                  ? ''
+                  : 'Use the faucet supplied by the test operator. Never send real funds to a test network.',
+                externalHref: CHAIN_ID === 1 ? ETHEREUM_GET_ETH_URL : undefined,
               }
-            : {
-                label: `Lock ${enteredAmount} IFR`,
-                detail: 'Approval is ready. Confirm the IFRLock transaction in your wallet.',
-                disabledReason: '',
-              };
+            : !amountValid
+              ? {
+                  label: 'Enter IFR amount',
+                  detail: 'Choose a tier or enter the exact IFR amount you want to lock.',
+                  disabledReason: 'Enter a positive IFR amount.',
+                }
+              : !hasEnoughIFR
+                ? {
+                    label: 'Buy IFR',
+                    detail: `This wallet needs ${enteredAmount} unlocked IFR before it can lock that amount.`,
+                    disabledReason: '',
+                  }
+                : !hasEnoughAllowance
+                  ? {
+                      label: `Approve ${enteredAmount} IFR`,
+                      detail: 'One approval lets IFRLock move only the amount currently entered.',
+                      disabledReason: '',
+                    }
+                  : {
+                      label: `Lock ${enteredAmount} IFR`,
+                      detail: 'Approval is ready. Confirm the IFRLock transaction in your wallet.',
+                      disabledReason: '',
+                    };
   const recommendedActionDisabled = txBusy || Boolean(recommendedAction.disabledReason);
   const statusLabel = !isConnected
     ? 'Connect wallet'
     : hasCustomerLock
       ? 'Ready for checkout'
-      : hasIFR
-        ? 'Lock IFR'
-        : 'Get IFR';
+      : ethBalanceChecking
+        ? 'Checking ETH balance'
+        : ethKnownEmpty
+          ? 'Get ETH for gas'
+          : ethBalanceFailed
+            ? 'Check ETH balance'
+            : hasIFR
+              ? 'Lock IFR'
+              : 'Get IFR';
   const statusText = !isConnected
     ? 'Connect a wallet to read IFR balance, ETH gas and locked access.'
     : hasCustomerLock
       ? `Eligible for typical ${MIN_CUSTOMER_LOCK.toLocaleString('en-US')} IFR customer rules. Some sellers may require a higher tier.`
-      : hasIFR
-        ? 'You hold IFR, but it is not locked for access yet. Lock IFR before scanning seller QR codes.'
-        : 'No IFR detected in this wallet. Buy IFR first, then lock it for benefits.';
+      : ethBalanceChecking
+        ? 'Confirming ETH network-fee readiness before enabling wallet transactions.'
+        : ethKnownEmpty
+          ? 'This wallet needs ETH for Ethereum network fees before it can swap, approve or lock IFR.'
+          : ethBalanceFailed
+            ? 'The app could not confirm the ETH balance. Retry the check before starting a transaction.'
+            : hasIFR
+              ? 'You hold IFR, but it is not locked for access yet. Lock IFR before scanning seller QR codes.'
+              : 'No IFR detected in this wallet. Buy IFR first, then lock it for benefits.';
   const checklist = [
-    { label: 'Wallet connected', done: isConnected },
-    { label: 'ETH for gas', done: hasEth },
-    { label: 'IFR in wallet', done: hasIFR || hasCustomerLock },
-    { label: `${MIN_CUSTOMER_LOCK.toLocaleString('en-US')}+ IFR locked`, done: hasCustomerLock },
+    { label: 'Wallet connected', status: isConnected ? 'Ready' : 'Needed' },
+    {
+      label: 'ETH for gas',
+      status: ethBalanceChecking ? 'Checking' : ethBalanceFailed ? 'Check failed' : hasEth ? 'Ready' : 'Needed',
+    },
+    { label: 'IFR in wallet', status: hasIFR || hasCustomerLock ? 'Ready' : 'Needed' },
+    { label: `${MIN_CUSTOMER_LOCK.toLocaleString('en-US')}+ IFR locked`, status: hasCustomerLock ? 'Ready' : 'Needed' },
   ];
   const transactionSteps = [
     {
       label: 'Connect',
-      detail: 'Use the wallet that holds IFR.',
+      detail: 'Use the wallet that holds IFR and ETH for network fees.',
       done: isConnected,
       active: !isConnected,
     },
@@ -184,13 +237,13 @@ export function WalletStatus() {
       label: 'Approve',
       detail: 'Allow IFRLock to move only the amount you enter.',
       done: hasEnoughAllowance && amountValid,
-      active: isConnected && amountValid && hasEnoughIFR && !hasEnoughAllowance,
+      active: canPayGas && amountValid && hasEnoughIFR && !hasEnoughAllowance,
     },
     {
       label: 'Lock',
       detail: 'Confirm IFRLock.lock(amount) in your wallet.',
       done: Boolean(lockedRaw && lockedRaw >= amountRaw && amountValid),
-      active: isConnected && amountValid && hasEnoughIFR && hasEnoughAllowance,
+      active: canPayGas && amountValid && hasEnoughIFR && hasEnoughAllowance,
     },
     {
       label: 'Ready',
@@ -237,7 +290,13 @@ export function WalletStatus() {
   }
 
   async function runRecommendedAction() {
-    if (!isConnected || !amountValid || !hasContracts) return;
+    if (!isConnected || !hasContracts) return;
+    if (recommendedAction.action === 'retry-eth') {
+      setLockError('');
+      await ethBalance.refetch();
+      return;
+    }
+    if (!ethBalanceReady || ethKnownEmpty || !amountValid) return;
     if (!hasEnoughIFR) {
       window.open(UNISWAP_IFR_URL, '_blank', 'noopener');
       return;
@@ -260,6 +319,14 @@ export function WalletStatus() {
     }
     if (!amountValid) {
       setLockError('Enter a positive IFR amount.');
+      return;
+    }
+    if (!ethBalanceReady) {
+      setLockError('Wait for the ETH balance check before approving IFR.');
+      return;
+    }
+    if (!hasEth) {
+      setLockError('Add ETH to this wallet for Ethereum network fees before approving IFR.');
       return;
     }
     setLockError('');
@@ -291,6 +358,14 @@ export function WalletStatus() {
     }
     if (!amountValid) {
       setLockError('Enter a positive IFR amount.');
+      return;
+    }
+    if (!ethBalanceReady) {
+      setLockError('Wait for the ETH balance check before locking IFR.');
+      return;
+    }
+    if (!hasEth) {
+      setLockError('Add ETH to this wallet for Ethereum network fees before locking IFR.');
       return;
     }
     if (!hasEnoughIFR) {
@@ -330,6 +405,14 @@ export function WalletStatus() {
     }
     if (!lockedRaw || lockedRaw === BigInt(0)) {
       setLockError('No IFRLock balance is available to unlock.');
+      return;
+    }
+    if (!ethBalanceReady) {
+      setLockError('Wait for the ETH balance check before unlocking IFR.');
+      return;
+    }
+    if (!hasEth) {
+      setLockError('Add ETH to this wallet for Ethereum network fees before unlocking IFR.');
       return;
     }
     setLockError('');
@@ -451,16 +534,37 @@ export function WalletStatus() {
             <div
               key={item.label}
               className={`rounded-2xl border px-3 py-3 text-sm ${
-                item.done
+                item.status === 'Ready'
                   ? 'border-green-300/20 bg-green-300/10 text-green-100'
                   : 'border-white/10 bg-black/20 text-stone-300'
               }`}
             >
-              <span className="font-black">{item.done ? 'Ready' : 'Needed'}</span>
+              <span className="font-black">{item.status}</span>
               <p className="mt-1 text-xs leading-5 opacity-85">{item.label}</p>
             </div>
           ))}
         </div>
+
+        {ethKnownEmpty ? (
+          <div role="status" className="mt-3 rounded-2xl border border-green-200/25 bg-green-200/[0.08] p-4 text-sm leading-6 text-green-50">
+            <p className="font-black">ETH is required only for Ethereum network fees.</p>
+            <p className="mt-1 text-stone-300">
+              {CHAIN_ID === 1
+                ? 'Use the official, provider-neutral Ethereum guide, fund this same wallet, and never share your recovery phrase. IFR Benefits does not sell or custody ETH; third-party availability and fees vary by region.'
+                : `Use test ETH from the faucet supplied by the chain ${CHAIN_ID} test operator. Never send real funds to a test network or share your recovery phrase.`}
+            </p>
+            {CHAIN_ID === 1 ? (
+              <a
+                href={ETHEREUM_GET_ETH_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-3 inline-flex min-h-11 items-center rounded-xl border border-green-200/35 px-4 py-2 text-xs font-black uppercase tracking-[0.14em] text-green-50 transition hover:bg-green-200/10"
+              >
+                Open official ETH guide
+              </a>
+            ) : null}
+          </div>
+        ) : null}
 
         <div className="mt-4 rounded-2xl border border-white/10 bg-black/20 p-4">
           <div className="mb-4 rounded-2xl border border-orange-200/15 bg-black/20 p-3">
@@ -526,27 +630,38 @@ export function WalletStatus() {
               <div>
                 <h4 className="text-xl font-black text-white">{recommendedAction.label}</h4>
                 <p className="mt-1 text-sm leading-6 text-stone-300">{recommendedAction.detail}</p>
-                {!hasEnoughIFR && amountValid && isConnected ? (
+                {recommendedAction.label === 'Buy IFR' ? (
                   <p className="mt-2 text-xs font-semibold text-orange-100">Not enough unlocked IFR for this amount.</p>
                 ) : recommendedAction.disabledReason ? (
                   <p className="mt-2 text-xs font-semibold text-orange-100">{recommendedAction.disabledReason}</p>
                 ) : null}
               </div>
-              <button
-                type="button"
-                onClick={runRecommendedAction}
-                disabled={recommendedActionDisabled || !isConnected}
-                className="rounded-2xl bg-orange-300 px-5 py-4 text-xs font-black uppercase tracking-[0.14em] text-stone-950 shadow-xl shadow-orange-950/25 transition hover:-translate-y-0.5 hover:bg-orange-200 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {txBusy ? 'Waiting...' : recommendedAction.label}
-              </button>
+              {recommendedAction.externalHref ? (
+                <a
+                  href={recommendedAction.externalHref}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="rounded-2xl bg-orange-300 px-5 py-4 text-center text-xs font-black uppercase tracking-[0.14em] text-stone-950 shadow-xl shadow-orange-950/25 transition hover:-translate-y-0.5 hover:bg-orange-200"
+                >
+                  {recommendedAction.label}
+                </a>
+              ) : (
+                <button
+                  type="button"
+                  onClick={runRecommendedAction}
+                  disabled={recommendedActionDisabled || !isConnected}
+                  className="rounded-2xl bg-orange-300 px-5 py-4 text-xs font-black uppercase tracking-[0.14em] text-stone-950 shadow-xl shadow-orange-950/25 transition hover:-translate-y-0.5 hover:bg-orange-200 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {txBusy ? 'Waiting...' : recommendedAction.label}
+                </button>
+              )}
             </div>
           </div>
           <div className="mt-4 grid gap-3 sm:grid-cols-3">
             <button
               type="button"
               onClick={approveLockAmount}
-              disabled={!isConnected || !amountValid || txBusy}
+              disabled={!isConnected || !amountValid || !canPayGas || txBusy}
               className="rounded-2xl border border-orange-200/35 px-4 py-3 text-center text-xs font-black uppercase tracking-[0.14em] text-orange-50 transition hover:bg-orange-200/10 disabled:cursor-not-allowed disabled:opacity-50"
             >
               Approve
@@ -554,7 +669,7 @@ export function WalletStatus() {
             <button
               type="button"
               onClick={lockIFR}
-              disabled={!isConnected || !amountValid || !hasEnoughIFR || !hasEnoughAllowance || txBusy}
+              disabled={!isConnected || !amountValid || !hasEnoughIFR || !hasEnoughAllowance || !canPayGas || txBusy}
               className="rounded-2xl bg-orange-300 px-4 py-3 text-center text-xs font-black uppercase tracking-[0.14em] text-stone-950 shadow-xl shadow-orange-950/25 transition hover:-translate-y-0.5 hover:bg-orange-200 disabled:cursor-not-allowed disabled:opacity-50"
             >
               Lock IFR
@@ -562,7 +677,7 @@ export function WalletStatus() {
             <button
               type="button"
               onClick={unlockAll}
-              disabled={!isConnected || !lockedRaw || lockedRaw === BigInt(0) || txBusy}
+              disabled={!isConnected || !lockedRaw || lockedRaw === BigInt(0) || !canPayGas || txBusy}
               className="rounded-2xl border border-white/15 px-4 py-3 text-center text-xs font-black uppercase tracking-[0.14em] text-stone-100 transition hover:border-orange-200/60 disabled:cursor-not-allowed disabled:opacity-50"
             >
               Unlock all

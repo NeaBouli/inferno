@@ -57,9 +57,12 @@ configured at build time. It does not expose secrets or server internals.
 
 The customer wallet panel includes a `Recommended next step` block for the
 approve/lock path. It derives the next action from connection state, configured
-contracts, entered IFR amount, unlocked IFR balance and allowance, then guides
-the user toward Buy IFR, Approve or Lock. Tier chips are buttons that set common
-lock amounts for seller benefit rules.
+contracts, ETH gas readiness, entered IFR amount, unlocked IFR balance and
+allowance. A confirmed zero-ETH balance takes priority over Buy, Approve and
+Lock and links only to the provider-neutral official Ethereum `Get ETH` guide.
+The app does not sell or custody ETH, append a wallet address to that link or
+request a wallet transaction. Tier chips are buttons that set common lock
+amounts for seller benefit rules.
 
 Public offers and checkout review show the mandatory locked-IFR threshold, its accepted source and
 any optional minimum IFR that must remain free in the customer wallet. Sellers may require

@@ -19,6 +19,8 @@ const files = {
   frontendGuide: 'apps/benefits-network/frontend/src/app/guide/page.tsx',
   frontendPrivacy: 'apps/benefits-network/frontend/src/app/privacy/page.tsx',
   frontendSupport: 'apps/benefits-network/frontend/src/app/support/page.tsx',
+  walletStatus: 'apps/benefits-network/frontend/src/components/WalletStatus.tsx',
+  onboardingLinks: 'apps/benefits-network/frontend/src/lib/onboardingLinks.ts',
   supportDiagnostics: 'apps/benefits-network/frontend/src/components/SupportDiagnostics.tsx',
   localDataControls: 'apps/benefits-network/frontend/src/components/LocalDataControls.tsx',
   frontendSitemap: 'apps/benefits-network/frontend/src/app/sitemap.ts',
@@ -93,6 +95,22 @@ assert.ok(
 assert.ok(
   content.frontendGuide.includes('create or import their wallet inside a trusted wallet app first'),
   'Shop guide must explain trusted external wallet creation'
+);
+assert.equal(
+  content.onboardingLinks.trim(),
+  "export const ETHEREUM_GET_ETH_URL = 'https://ethereum.org/get-eth/';",
+  'Shop must use the exact provider-neutral official Ethereum Get ETH URL'
+);
+assert.ok(
+  content.walletStatus.includes('ethKnownEmpty') &&
+    content.walletStatus.includes('Get ETH for gas') &&
+    content.walletStatus.includes('rel="noopener noreferrer"'),
+  'Shop wallet must prioritize a private external Get ETH recovery for a confirmed zero balance'
+);
+assert.ok(
+  content.frontendReadme.includes('confirmed zero-ETH balance takes priority') &&
+    content.master.includes('the Benefits app does not sell, broker or custody ETH'),
+  'Benefits documentation must preserve the provider-neutral non-custodial gas boundary'
 );
 
 assert.ok(

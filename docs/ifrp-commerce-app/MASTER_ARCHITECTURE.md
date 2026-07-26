@@ -65,7 +65,10 @@ Primary jobs:
 1. Install/open app.
 2. Connect an existing Ethereum wallet, or create one inside a trusted wallet app before
    returning to the Benefits app.
-3. Get ETH.
+3. Get ETH. A confirmed zero balance must lead to the provider-neutral official
+   Ethereum `https://ethereum.org/get-eth/` guide before any gas-bound action;
+   the Benefits app does not sell, broker or custody ETH and never appends the
+   wallet address to that link.
 4. Swap ETH to IFR.
 5. Lock IFR in IFRLock or CommitmentVault.
 6. Scan or open a seller-issued QR proof.
@@ -76,6 +79,8 @@ Customer app must be simple enough for non-crypto users:
 - plain balances;
 - clear lock status;
 - direct "Get IFR" flow;
+- a clear gas-first "Get ETH" recovery when the connected balance is confirmed
+  as zero, without naming or embedding a payment provider;
 - no contract terminology unless expanded;
 - no seed phrase shown casually;
 - recovery/security guidance during wallet setup.

@@ -99,8 +99,9 @@ Pass criteria:
 3. Connect wallet in a wallet browser or extension.
 4. Confirm wallet address appears shortened.
 5. Confirm Checkout readiness reflects connected wallet, IFR balance, ETH gas and lock status.
-6. Use `Approve IFR`, `Lock IFR` and `Unlock all` inside the Shop wallet panel; confirm balances and transaction feedback refresh without leaving `shop.ifrunit.tech`.
-7. Tap `Buy IFR` and confirm it opens the configured Uniswap path.
+6. With a wallet that reports exactly `0 ETH`, confirm `Get ETH for gas` takes priority, the official `https://ethereum.org/get-eth/` guide opens without a wallet request, and Approve/Lock/Unlock stay disabled.
+7. With ETH available, use `Approve IFR`, `Lock IFR` and `Unlock all` inside the Shop wallet panel; confirm balances and transaction feedback refresh without leaving `shop.ifrunit.tech`.
+8. Tap `Buy IFR` and confirm it opens the configured Uniswap path.
 
 Pass criteria:
 

@@ -13,6 +13,8 @@ import {
 } from '@/components/SellerWorkspaceBoundary';
 import { SwapRiskNotice } from '@/components/SwapRiskNotice';
 import { WalletStatus } from '@/components/WalletStatus';
+import { CHAIN_ID } from '@/lib/contracts';
+import { ETHEREUM_GET_ETH_URL } from '@/lib/onboardingLinks';
 import { hasWalletConnectProjectId } from '@/lib/wagmi';
 
 type Role = 'customer' | 'seller';
@@ -522,13 +524,27 @@ function WalletStarterKit() {
           </article>
         ))}
       </div>
-      <div className="mt-5 grid gap-3 sm:grid-cols-2">
+      <div className="mt-5 grid gap-3 sm:grid-cols-3">
         <a
           href="#customer-wallet"
           className="rounded-2xl bg-green-200 px-4 py-3 text-center text-xs font-black uppercase tracking-[0.14em] text-stone-950 shadow-xl shadow-green-950/25 transition hover:-translate-y-0.5 hover:bg-green-100"
         >
           Connect or lock
         </a>
+        {CHAIN_ID === 1 ? (
+          <a
+            href={ETHEREUM_GET_ETH_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="rounded-2xl border border-green-200/35 px-4 py-3 text-center text-xs font-black uppercase tracking-[0.14em] text-green-50 transition hover:bg-green-200/10"
+          >
+            Get ETH guide
+          </a>
+        ) : (
+          <span className="rounded-2xl border border-green-200/20 px-4 py-3 text-center text-xs font-black uppercase tracking-[0.14em] text-stone-400">
+            Test ETH required
+          </span>
+        )}
         <a
           href={UNISWAP_IFR_URL}
           target="_blank"
@@ -538,6 +554,11 @@ function WalletStarterKit() {
           Buy IFR
         </a>
       </div>
+      <p className="mt-4 text-xs leading-5 text-stone-400">
+        {CHAIN_ID === 1
+          ? 'Ethereum network fees are paid in ETH. Fund the same Ethereum Mainnet wallet you connect here. The official guide lists independent third-party options; availability and fees vary by region. IFR Benefits does not receive purchase details or custody funds. Never share your recovery phrase.'
+          : `This test build uses chain ${CHAIN_ID}. Use only test ETH from the faucet supplied by the test operator, never send real funds, and never share your recovery phrase.`}
+      </p>
       <SwapRiskNotice />
     </section>
   );
