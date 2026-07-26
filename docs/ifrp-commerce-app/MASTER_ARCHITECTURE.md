@@ -125,8 +125,11 @@ Wallet options:
   MetaMask, Trust Wallet, OKX and Phantom. Customer, seller and checkout entry points verify that
   an announced injected connector has a real provider before selecting it, otherwise they fall
   back to Coinbase Wallet SDK and then configured WalletConnect. Users can also choose any exposed
-  connector explicitly. A launch link is onboarding only and is not proof of connection;
-  WalletConnect breadth remains configuration-gated.
+  connector explicitly. Duplicate generic/EIP-6963 connectors resolving to the same provider are
+  collapsed in favor of the wallet-specific connector. Phantom additionally has a targeted
+  `window.phantom.ethereum` fallback for EVM sessions without `window.ethereum`. A launch link is
+  onboarding only and is not proof of connection; WalletConnect breadth and physical-device
+  acceptance remain configuration/evidence gated.
 - Future candidate: embedded wallet using a battle-tested provider only after the separate
   recovery, device, privacy/legal and independent-security gates pass.
 - V2: account abstraction / gas sponsorship for selected actions.

@@ -4,31 +4,60 @@
  * @returns {Promise<T | undefined>}
  */
 function isInjectedWalletConnector(connector) {
+  if (connector.type) return connector.type === 'injected';
   return (
-    connector.type === 'injected' ||
     /injected|metamask|browser wallet/i.test(`${connector.id} ${connector.name}`)
   );
 }
 
+function injectedConnectorSpecificity(connector) {
+  if (connector.id === 'injected') return 0;
+  return connector.id.includes('.') ? 2 : 1;
+}
+
 /**
  * Hide injected connectors that cannot provide a wallet in the current browser.
+ * Prefer an EIP-6963 connector when multiple connectors resolve to the same provider.
  * Universal connectors remain available because they can open their own handoff UI.
  * @template {{ id: string, name: string, type?: string, getProvider?: () => Promise<unknown> }} T
  * @param {readonly T[]} connectors
  * @returns {Promise<T[]>}
  */
 export async function listAvailableWalletConnectors(connectors) {
-  const availability = await Promise.all(connectors.map(async (connector) => {
-    if (!isInjectedWalletConnector(connector)) return true;
-    if (!connector.getProvider) return false;
+  const resolved = await Promise.all(connectors.map(async (connector) => {
+    if (!isInjectedWalletConnector(connector)) return { connector, provider: undefined };
+    if (!connector.getProvider) return { connector, unavailable: true };
     try {
-      return Boolean(await connector.getProvider());
+      const provider = await connector.getProvider();
+      return provider ? { connector, provider } : { connector, unavailable: true };
     } catch {
-      return false;
+      return { connector, unavailable: true };
     }
   }));
 
-  return connectors.filter((_, index) => availability[index]);
+  const available = [];
+  const providerIndexes = new Map();
+  for (const result of resolved) {
+    if (result.unavailable) continue;
+    if (!isInjectedWalletConnector(result.connector)) {
+      available.push(result.connector);
+      continue;
+    }
+
+    const existingIndex = providerIndexes.get(result.provider);
+    if (existingIndex === undefined) {
+      providerIndexes.set(result.provider, available.length);
+      available.push(result.connector);
+      continue;
+    }
+    if (
+      injectedConnectorSpecificity(result.connector) >
+      injectedConnectorSpecificity(available[existingIndex])
+    ) {
+      available[existingIndex] = result.connector;
+    }
+  }
+  return available;
 }
 
 export async function selectPreferredWalletConnector(connectors) {

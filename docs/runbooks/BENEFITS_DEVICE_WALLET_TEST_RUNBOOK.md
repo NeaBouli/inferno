@@ -67,7 +67,7 @@ Use that command only with a deliberately prepared test wallet. Never paste the 
 | Android MetaMask browser | `shop.ifrunit.tech` | Customer creates a `/p` pass, reviews the seller-bound offer and signs the exact confirmation. |
 | Android Trust Wallet browser | `shop.ifrunit.tech` | `/p` pass entry works if an Ethereum provider is exposed; otherwise fallback copy/share is clear. |
 | Android OKX Wallet browser | `shop.ifrunit.tech` | `/p` pass entry works if an Ethereum provider is exposed; otherwise fallback copy/share is clear. |
-| Phantom | EVM-capable browser/session | `/p` pass entry works with an EVM provider, or the app fails gracefully without claiming a connection. |
+| Phantom | EVM-capable browser/session | `/p` pass entry works through EIP-6963, `window.ethereum` or the targeted `window.phantom.ethereum` fallback; otherwise the app fails gracefully without claiming a connection. |
 | Desktop Chrome + MetaMask | `shop.ifrunit.tech` | Seller profile, permanent `/s` URL, pass binding, compatible seller QR and redeem signature work. |
 | Desktop Chrome + Coinbase Wallet extension | `shop.ifrunit.tech` | Wallet entry works or provides a clear fallback. |
 

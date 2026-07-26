@@ -105,6 +105,47 @@ function installSellerWallet(context) {
   }, { account: sellerWallet, signature: sellerSignature });
 }
 
+function installPhantomNamespaceWallet(context) {
+  const account = '0x2000000000000000000000000000000000000002';
+  return context.addInitScript(({ walletAddress }) => {
+    const listeners = new Map();
+    const methods = [];
+    let connected = false;
+    const provider = {
+      isPhantom: true,
+      request: async ({ method }) => {
+        methods.push(method);
+        if (method === 'eth_requestAccounts') {
+          connected = true;
+          return [walletAddress];
+        }
+        if (method === 'eth_accounts') return connected ? [walletAddress] : [];
+        if (method === 'eth_chainId') return '0x1';
+        if (method === 'net_version') return '1';
+        if (method === 'wallet_requestPermissions') return null;
+        if (method === 'wallet_getPermissions') {
+          return connected ? [{ parentCapability: 'eth_accounts' }] : [];
+        }
+        if (method === 'wallet_getCapabilities') return {};
+        throw new Error(`Unsupported Phantom test wallet method: ${method}`);
+      },
+      on: (event, listener) => {
+        const current = listeners.get(event) || [];
+        current.push(listener);
+        listeners.set(event, current);
+      },
+      removeListener: (event, listener) => {
+        listeners.set(event, (listeners.get(event) || []).filter((item) => item !== listener));
+      },
+    };
+    Object.defineProperty(window, '__ifrPhantomWalletMethods', { value: methods });
+    Object.defineProperty(window, 'phantom', {
+      configurable: true,
+      value: { ethereum: provider },
+    });
+  }, { walletAddress: account });
+}
+
 async function waitForServer(child) {
   const deadline = Date.now() + 60_000;
   while (Date.now() < deadline) {
@@ -649,6 +690,38 @@ async function run() {
       'iPad install help must not cause horizontal overflow',
     );
     await ipadContext.close();
+
+    const phantomContext = await browser.newContext({
+      ...devices['Galaxy S9+'],
+      serviceWorkers: 'block',
+    });
+    await installPhantomNamespaceWallet(phantomContext);
+    await phantomContext.route('**/api/**', (route) => route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(route.request().url().includes('/api/ready')
+        ? { status: 'ready', chainId: 1, database: 'ok', rateLimitStore: 'ok' }
+        : discoveryResponse([])),
+    }));
+    const phantomPage = await phantomContext.newPage();
+    await phantomPage.goto(origin, { waitUntil: 'domcontentloaded' });
+    const phantomWalletControl = phantomPage.locator('[data-wallet-connect-control]').first();
+    await waitForAttribute(phantomWalletControl, 'data-wallet-connectors-ready', 'true');
+    assert.equal(
+      await phantomWalletControl.getAttribute('data-wallet-connector-ids'),
+      'phantom,coinbaseWalletSDK',
+      'Phantom namespace provider must be offered once alongside the universal Coinbase fallback',
+    );
+    await phantomWalletControl.getByText('Phantom provider', { exact: true }).waitFor();
+    await phantomWalletControl.getByRole('button', { name: 'Connect wallet', exact: true }).click();
+    await phantomWalletControl.getByText('0x2000...0002', { exact: true }).waitFor();
+    await phantomWalletControl.getByText('Phantom', { exact: true }).last().waitFor();
+    assert.equal(
+      await phantomPage.evaluate(() => window.__ifrPhantomWalletMethods.includes('eth_requestAccounts')),
+      true,
+      'Phantom namespace provider must receive the account request',
+    );
+    await phantomContext.close();
 
     await page.goto(`${origin}/privacy`, { waitUntil: 'domcontentloaded' });
     await page.getByRole('heading', { name: 'Privacy & data, stated plainly.', exact: true }).waitFor();

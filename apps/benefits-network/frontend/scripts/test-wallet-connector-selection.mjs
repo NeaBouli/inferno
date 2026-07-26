@@ -15,6 +15,7 @@ import {
   hasValidWalletConnectProjectId,
   normalizeWalletConnectProjectId,
 } from '../src/lib/walletConnectProjectId.mjs';
+import { detectWalletEnvironment } from '../src/lib/walletEnvironment.mjs';
 
 const connector = (id, name, provider, type) => ({
   id,
@@ -27,6 +28,12 @@ const unavailableInjected = connector('injected', 'Injected', undefined, 'inject
 const metamask = connector('io.metamask', 'MetaMask', { request() {} }, 'injected');
 const coinbase = connector('coinbaseWalletSDK', 'Coinbase Wallet', { request() {} });
 const walletConnect = connector('walletConnect', 'WalletConnect', { request() {} });
+const unavailablePhantom = connector('app.phantom', 'Phantom', undefined, 'injected');
+const trustUniversal = { id: 'trustUniversal', name: 'Trust Wallet', type: 'walletConnect' };
+const sharedPhantomProvider = { isPhantom: true, request() {} };
+const genericSharedProvider = connector('injected', 'Injected', sharedPhantomProvider, 'injected');
+const targetedSharedProvider = connector('phantom', 'Phantom', sharedPhantomProvider, 'injected');
+const announcedSharedProvider = connector('app.phantom', 'Phantom', sharedPhantomProvider, 'injected');
 
 assert.equal(await selectPreferredWalletConnector([metamask, coinbase]), metamask);
 assert.equal(await selectPreferredWalletConnector([unavailableInjected, metamask, coinbase]), metamask);
@@ -35,6 +42,25 @@ assert.equal(await selectPreferredWalletConnector([unavailableInjected, walletCo
 assert.equal(await selectPreferredWalletConnector([]), undefined);
 assert.deepEqual(await listAvailableWalletConnectors([unavailableInjected, coinbase]), [coinbase]);
 assert.deepEqual(await listAvailableWalletConnectors([metamask, coinbase]), [metamask, coinbase]);
+assert.deepEqual(await listAvailableWalletConnectors([unavailablePhantom, coinbase]), [coinbase]);
+assert.deepEqual(await listAvailableWalletConnectors([trustUniversal, coinbase]), [trustUniversal, coinbase]);
+assert.deepEqual(
+  await listAvailableWalletConnectors([
+    genericSharedProvider,
+    targetedSharedProvider,
+    announcedSharedProvider,
+    coinbase,
+  ]),
+  [announcedSharedProvider, coinbase],
+);
+assert.equal(
+  await selectPreferredWalletConnector([
+    genericSharedProvider,
+    announcedSharedProvider,
+    coinbase,
+  ]),
+  announcedSharedProvider,
+);
 
 const wagmiConfigWithoutInjectedProvider = createConfig({
   chains: [mainnet],
@@ -71,5 +97,92 @@ assert.equal(
   normalizeWalletConnectProjectId(' 0123456789ABCDEF0123456789ABCDEF '),
   '0123456789abcdef0123456789abcdef',
 );
+
+const phantomProvider = { isPhantom: true, request() {} };
+assert.deepEqual(
+  detectWalletEnvironment({
+    userAgent: 'Mozilla/5.0 (iPad; CPU OS 18_0 like Mac OS X)',
+    platform: 'MacIntel',
+    maxTouchPoints: 5,
+    phantomEthereum: phantomProvider,
+  }),
+  {
+    surface: 'iPad/iPhone',
+    provider: 'Phantom provider',
+    detail: '1 provider available in this browser.',
+    providerCount: 1,
+    providerNames: ['Phantom'],
+  },
+);
+assert.deepEqual(
+  detectWalletEnvironment({
+    userAgent: 'Mozilla/5.0 (Linux; Android 15)',
+    platform: 'Linux armv8l',
+    maxTouchPoints: 5,
+    ethereum: { isMetaMask: true, isPhantom: true, request() {} },
+  }).providerNames,
+  ['Phantom'],
+);
+
+const metamaskProvider = { isMetaMask: true, request() {} };
+const trustProvider = { isTrust: true, request() {} };
+const providerAggregator = {
+  providers: [metamaskProvider, trustProvider, phantomProvider],
+  request() {},
+};
+assert.deepEqual(
+  detectWalletEnvironment({
+    userAgent: 'Mozilla/5.0 (Linux; Android 15)',
+    platform: 'Linux armv8l',
+    maxTouchPoints: 5,
+    ethereum: providerAggregator,
+    phantomEthereum: phantomProvider,
+  }),
+  {
+    surface: 'Android',
+    provider: 'MetaMask, Trust and Phantom providers',
+    detail: '3 providers available in this browser.',
+    providerCount: 3,
+    providerNames: ['MetaMask', 'Trust', 'Phantom'],
+  },
+);
+
+const coinbaseProvider = { isCoinbaseWallet: true, request() {} };
+const okxProvider = { isOkxWallet: true, request() {} };
+const rainbowProvider = { isRainbow: true, request() {} };
+assert.deepEqual(
+  detectWalletEnvironment({
+    userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X)',
+    platform: 'MacIntel',
+    maxTouchPoints: 0,
+    ethereum: {
+      providers: [coinbaseProvider, okxProvider, rainbowProvider],
+      request() {},
+    },
+  }),
+  {
+    surface: 'Desktop',
+    provider: 'Coinbase, OKX and Rainbow providers',
+    detail: '3 providers available in this browser.',
+    providerCount: 3,
+    providerNames: ['Coinbase', 'OKX', 'Rainbow'],
+  },
+);
+
+const arrayAt = Array.prototype.at;
+try {
+  Object.defineProperty(Array.prototype, 'at', { configurable: true, value: undefined });
+  assert.equal(
+    detectWalletEnvironment({
+      ethereum: {
+        providers: [coinbaseProvider, okxProvider, rainbowProvider],
+        request() {},
+      },
+    }).provider,
+    'Coinbase, OKX and Rainbow providers',
+  );
+} finally {
+  Object.defineProperty(Array.prototype, 'at', { configurable: true, value: arrayAt });
+}
 
 console.log('[wallet-connector-selection] PASS');

@@ -236,8 +236,11 @@ npm run qa:benefits-record -- \
 The required matrix covers iPad/iPhone, Android, desktop extension wallets,
 MetaMask, Coinbase Wallet, Trust Wallet, OKX Wallet and Phantom fallback
 behavior. Automated browser smokes validate the official MetaMask, Trust, OKX
-and Phantom launch domains on emulated iPad and Android, but this does not
-replace a real installed-wallet connection, signature and transaction test.
+and Phantom launch domains on emulated iPad and Android. The local discovery
+browser test also proves that a Phantom-only `window.phantom.ethereum` provider
+is detected once, selected over the universal fallback and receives the account
+request. These automated checks do not replace a real installed-wallet
+connection, signature and transaction test.
 Do not record private keys, seed phrases or personal wallet data in the checklist.
 
 Customer QR pages also write a redacted local browser history entry after a
