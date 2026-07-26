@@ -14,6 +14,8 @@
     "test:ethers-v6-lifecycle": "DATABASE_URL=file:./test.db jest tests/ethersV6Services.test.ts --runInBand --detectOpenHandles",
     "test:rate-limit-startup": "node scripts/test-rate-limit-startup.cjs",
     "test:migration-upgrade": "node scripts/verify-populated-migration-upgrade.cjs",
+    "retention:report": "npm run build --silent && node dist/retentionCli.js report",
+    "retention:prune": "npm run build --silent && node dist/retentionCli.js apply",
     "smoke:http": "bash scripts/ci-http-smoke.sh",
     "prisma:generate": "prisma generate",
     "prisma:deploy": "prisma migrate deploy",

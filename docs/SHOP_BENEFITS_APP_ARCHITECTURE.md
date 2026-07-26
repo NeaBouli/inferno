@@ -266,7 +266,11 @@ those remain production configuration and physical-wallet acceptance gates.
     server-masked customer wallet identifiers; reward status exposes only an event count. Both use
     `private, no-store`, while full addresses remain backend-only for eligibility, limits and
     rewards. The page explicitly leaves long-term
-    server retention, deletion handling, legal review and a dedicated support channel open.**
+    server retention, deletion handling, legal review and a dedicated support channel open.
+    A repository-local phase-one operator tool now reports and, only with an exact manual
+    confirmation, prunes old admin audit rows plus expired unlinked auth artifacts in bounded
+    batches. It cannot prune Sessions, session AuditLogs, RewardEvents or linked passes and
+    establishes no production schedule or legal retention window.**
 
 ## Security Notes
 

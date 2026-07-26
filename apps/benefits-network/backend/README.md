@@ -199,8 +199,13 @@ record before the response. Audit rows contain only route/action metadata plus
 SHA-256 role and client digests; request bodies, bearer values, secrets and raw
 IP addresses are never stored.
 
-The audit table has no automatic SQLite TTL. Operators must define and document
-a retention window and prune by `createdAt`. Reward verification reads chain
+The audit table has no automatic SQLite TTL. The manual phase-one retention
+tool provides an authenticated count report and an explicitly confirmed,
+bounded CLI prune for old admin audit rows and expired unlinked auth artifacts.
+It never runs at startup and deliberately excludes Session, session AuditLog,
+RewardEvent, and linked CustomerPass records. See
+`../../../docs/BENEFITS_RETENTION_RUNBOOK.md`. The actual retention windows and
+production schedule still require approval. Reward verification reads chain
 state before its database transaction, and reward queue reconciliation updates
 individual events before its final summary audit; those external/iterative
 boundaries cannot be made one atomic database operation.

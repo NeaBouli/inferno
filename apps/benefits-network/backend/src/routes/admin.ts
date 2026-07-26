@@ -16,6 +16,7 @@ import {
 } from '../services/businessProfile';
 import { publicBusinessReference } from '../services/businessSlug';
 import { recordAdminAudit } from '../services/adminAudit';
+import { getRetentionReport } from '../services/retention';
 
 const router = Router();
 
@@ -82,6 +83,31 @@ const updateBenefitRuleSchema = createBenefitRuleSchema.partial();
 const verifyRewardLinkSchema = z.object({
   partnerId: z.string().regex(/^0x[a-fA-F0-9]{64}$/),
   governanceReference: z.string().trim().min(1).max(200).optional(),
+});
+
+const retentionReportQuerySchema = z.object({
+  olderThanDays: z.preprocess(
+    (value) => typeof value === 'string' && /^\d+$/.test(value) ? Number(value) : value,
+    z.number().int().min(1).max(3650),
+  ),
+}).strict();
+
+router.get('/retention/report', adminAuth, async (req, res, next) => {
+  const parsed = retentionReportQuerySchema.safeParse(req.query);
+  if (!parsed.success) {
+    res.status(400).json({ error: 'olderThanDays must be one integer between 1 and 3650' });
+    return;
+  }
+  try {
+    const generatedAt = new Date();
+    const cutoff = new Date(
+      generatedAt.getTime() - parsed.data.olderThanDays * 24 * 60 * 60 * 1000,
+    );
+    res.set('Cache-Control', 'private, no-store, max-age=0');
+    res.json(await getRetentionReport(prisma, cutoff, generatedAt));
+  } catch (err) {
+    next(err);
+  }
 });
 
 router.post('/businesses', adminAuth, validate(createBusinessSchema), async (req, res, next) => {

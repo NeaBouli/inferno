@@ -157,8 +157,12 @@ correlated without retaining sensitive request data.
 - Request bodies, raw bearer values, secrets and raw IP addresses are never written to the audit table
 
 **Known operational boundaries:** SQLite does not prune `AdminAuditLog`
-automatically, so deployment operations must define a retention window and
-delete old rows by `createdAt`. Reward verification observes external chain
-state before the paired database mutation and audit transaction. Reward queue
-reconciliation updates individual events before its final summary audit, so an
-interruption can leave partial event progress without a final summary row.
+automatically. A manual, bounded retention tool can report and explicitly prune
+old admin audit rows plus expired unlinked authorization artifacts, but it has
+no startup hook or scheduler and cannot delete Session, session AuditLog,
+RewardEvent, or linked CustomerPass records. Production retention periods and
+execution still require approval; see `../../../../docs/BENEFITS_RETENTION_RUNBOOK.md`.
+Reward verification observes external chain state before the paired database
+mutation and audit transaction. Reward queue reconciliation updates individual
+events before its final summary audit, so an interruption can leave partial
+event progress without a final summary row.
