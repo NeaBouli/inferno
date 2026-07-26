@@ -75,6 +75,10 @@ The app has two roles:
   chain, signature, checkout and redemption actions remain network-only and fail explicitly
   while offline. Direct seller/scanner links use a branded precached recovery page and never
   expose raw framework errors.
+- Keep initial customer-session, seller-profile and customer-pass loads recoverable in place:
+  transient network failures must show accurate failure copy and an enabled retry instead of a
+  permanent loading state. Root-layout failures use a minimal branded global recovery that does
+  not expose provider errors, wallet data or framework diagnostics.
 - Show wallet status for customers.
 - Show seller rule manager for sellers.
 - Show integration/code generator for shops.

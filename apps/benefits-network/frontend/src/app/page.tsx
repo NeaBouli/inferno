@@ -791,7 +791,7 @@ export default function Home() {
           {role === 'customer' ? (
             <>
               <WalletStatus />
-              <Suspense fallback={<div className="min-h-48 rounded-[2rem] border border-white/10 bg-white/[0.04]" aria-label="Loading customer checkout pass" />}>
+              <Suspense fallback={<div role="status" className="min-h-48 rounded-[2rem] border border-white/10 bg-white/[0.04]" aria-label="Loading customer checkout pass" />}>
                 <CustomerCheckoutPass />
               </Suspense>
               <div id="install-app" className="scroll-mt-36">

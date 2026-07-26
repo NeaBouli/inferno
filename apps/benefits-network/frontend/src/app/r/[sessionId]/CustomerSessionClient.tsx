@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useAccount, useDisconnect, useSignMessage } from 'wagmi';
 import { AppShell } from '@/components/AppShell';
 import { BusinessLogo } from '@/components/BusinessLogo';
@@ -29,6 +29,9 @@ export function CustomerSessionClient({ sessionId }: { sessionId: string }) {
   const [refreshMessage, setRefreshMessage] = useState('');
   const [receiptStatus, setReceiptStatus] = useState('');
   const [loading, setLoading] = useState(false);
+  const [sessionLoading, setSessionLoading] = useState(true);
+  const businessIdRef = useRef('');
+  const sessionRequestRef = useRef(0);
   const sessionLoaded = Boolean(status);
   const currentSessionStatus = status?.status || '';
   const proofApproved = status?.status === 'APPROVED' || result?.status === 'APPROVED';
@@ -36,7 +39,9 @@ export function CustomerSessionClient({ sessionId }: { sessionId: string }) {
   const sellerRedeemed = status?.status === 'REDEEMED';
   const canSign = Boolean(isConnected && status && !TERMINAL_STATUSES.includes(status.status));
   const proofStatus = !sessionLoaded
-    ? 'Load verification'
+    ? error
+      ? 'Verification unavailable'
+      : 'Loading verification'
     : sellerRedeemed
       ? 'Benefit redeemed'
       : proofApproved
@@ -49,7 +54,9 @@ export function CustomerSessionClient({ sessionId }: { sessionId: string }) {
               ? 'Connect wallet'
               : 'Sign proof';
   const proofNextStep = !sessionLoaded
-    ? 'The app is loading the QR session from the seller.'
+    ? error
+      ? 'The session did not load. Check your connection and retry this checkout link.'
+      : 'The app is loading the QR session from the seller.'
     : sellerRedeemed
       ? 'This benefit was already redeemed by the seller. Ask for a new QR code for another checkout.'
       : proofApproved
@@ -103,17 +110,34 @@ export function CustomerSessionClient({ sessionId }: { sessionId: string }) {
   }, [business?.name, result?.wallet, sessionId, status]);
 
   const loadSession = useCallback(async (showMessage = false) => {
-    const nextStatus = await getSessionStatus(sessionId);
-    setStatus(nextStatus);
-    if (business?.id !== nextStatus.businessId) {
-      setBusiness(await getBusiness(nextStatus.businessId));
+    const requestId = ++sessionRequestRef.current;
+    try {
+      const nextStatus = await getSessionStatus(sessionId);
+      if (requestId !== sessionRequestRef.current) return null;
+      setStatus(nextStatus);
+      if (businessIdRef.current !== nextStatus.businessId) {
+        const nextBusiness = await getBusiness(nextStatus.businessId);
+        if (requestId !== sessionRequestRef.current) return null;
+        businessIdRef.current = nextStatus.businessId;
+        setBusiness(nextBusiness);
+      }
+      if (showMessage) setRefreshMessage(`Status refreshed: ${nextStatus.status}`);
+      return nextStatus;
+    } catch (err) {
+      if (requestId !== sessionRequestRef.current) return null;
+      throw err;
     }
-    if (showMessage) setRefreshMessage(`Status refreshed: ${nextStatus.status}`);
-    return nextStatus;
-  }, [business?.id, sessionId]);
+  }, [sessionId]);
 
   useEffect(() => {
-    loadSession().catch((err) => setError(err instanceof Error ? err.message : 'Failed to load session'));
+    businessIdRef.current = '';
+    setSessionLoading(true);
+    loadSession()
+      .then((nextStatus) => {
+        if (nextStatus) setError('');
+      })
+      .catch((err) => setError(err instanceof Error ? err.message : 'Failed to load session'))
+      .finally(() => setSessionLoading(false));
   }, [loadSession]);
 
   useEffect(() => {
@@ -135,12 +159,15 @@ export function CustomerSessionClient({ sessionId }: { sessionId: string }) {
   }, [business?.name, result?.wallet, sessionId, status]);
 
   async function refreshStatus() {
+    setSessionLoading(true);
     setError('');
     setRefreshMessage('');
     try {
       await loadSession(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to refresh session');
+    } finally {
+      setSessionLoading(false);
     }
   }
 
@@ -227,7 +254,7 @@ export function CustomerSessionClient({ sessionId }: { sessionId: string }) {
                 <p className="text-xs font-black uppercase tracking-[0.16em] text-orange-200/80">
                   Proof readiness
                 </p>
-                <h2 className="mt-1 text-2xl font-black text-white">{proofStatus}</h2>
+                <h2 aria-live="polite" className="mt-1 text-2xl font-black text-white">{proofStatus}</h2>
                 <p className="mt-2 text-sm leading-6 text-stone-300">{proofNextStep}</p>
               </div>
               <div className="rounded-2xl border border-white/10 bg-black/25 px-4 py-3 text-right">
@@ -371,10 +398,10 @@ export function CustomerSessionClient({ sessionId }: { sessionId: string }) {
           <button
             type="button"
             onClick={refreshStatus}
-            disabled={!sessionLoaded || loading}
+            disabled={sessionLoading || loading}
             className="mt-3 w-full rounded-2xl border border-white/15 px-5 py-3 text-xs font-black uppercase tracking-[0.14em] text-stone-100 transition hover:border-orange-200/60 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            Refresh status
+            {sessionLoading ? 'Loading verification...' : sessionLoaded ? 'Refresh status' : 'Retry loading verification'}
           </button>
 
           {result ? (
@@ -444,7 +471,7 @@ export function CustomerSessionClient({ sessionId }: { sessionId: string }) {
             </button>
           ) : null}
 
-          {error ? <p className="mt-4 rounded-2xl border border-red-400/30 bg-red-500/10 p-3 text-sm text-red-200">{error}</p> : null}
+          {error ? <p role="alert" className="mt-4 rounded-2xl border border-red-400/30 bg-red-500/10 p-3 text-sm text-red-200">{error}</p> : null}
         </div>
       </section>
     </AppShell>
