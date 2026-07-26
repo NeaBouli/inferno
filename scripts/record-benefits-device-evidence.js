@@ -80,6 +80,9 @@ function main() {
   assertString(itemId, '--id');
   assertString(note, '--note');
   assertString(dateTime, '--date-time');
+  if (!/^\d{4}-\d{2}-\d{2}T/.test(dateTime) || !Number.isFinite(Date.parse(dateTime))) {
+    fail('--date-time must be a valid ISO-8601 timestamp');
+  }
   if (screenshotPath !== undefined) assertString(screenshotPath, '--screenshot-path');
   if (businessId !== undefined) assertString(businessId, '--business-id');
   if (sessionId !== undefined) assertString(sessionId, '--session-id');
@@ -105,7 +108,10 @@ function main() {
     item.evidence = [...item.evidence, evidence];
   }
 
-  checklist.lastUpdated = dateTime.slice(0, 10);
+  const evidenceDate = dateTime.slice(0, 10);
+  checklist.lastUpdated = checklist.lastUpdated > evidenceDate
+    ? checklist.lastUpdated
+    : evidenceDate;
   if (checklist.matrix.every((entry) => entry.status === 'pass')) {
     checklist.status = 'complete';
   } else if (checklist.matrix.some((entry) => entry.status === 'blocked')) {

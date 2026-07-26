@@ -68,6 +68,7 @@ function printReport(checklist) {
     console.log(`- ${statusIcon(item.status)} ${item.id}`);
     console.log(`  ${item.device} / ${item.surface} / ${item.wallet}`);
     console.log(`  Path: ${item.path}`);
+    console.log(`  Capabilities: ${item.capabilities.join(', ')}`);
     console.log(`  Evidence: ${latestEvidence(item)}`);
   });
   console.log('');

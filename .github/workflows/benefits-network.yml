@@ -5,7 +5,14 @@ on:
   push:
     paths:
       - 'apps/benefits-network/**'
+      - 'docs/SHOP_BENEFITS_APP_ARCHITECTURE.md'
+      - 'docs/ifrp-commerce-app/MASTER_ARCHITECTURE.md'
+      - 'docs/BUSINESS_ONBOARDING.md'
+      - 'docs/wiki/business-onboarding.html'
+      - 'docs/wiki/faq.html'
+      - 'docs/WHITEPAPER.md'
       - 'docs/BENEFITS_NETWORK_TEST.md'
+      - 'docs/BENEFITS_CAPACITY_RUNBOOK.md'
       - 'docs/qa/BENEFITS_DEVICE_WALLET_CHECKLIST.json'
       - 'docs/runbooks/BENEFITS_DEVICE_WALLET_TEST_RUNBOOK.md'
       - 'scripts/smoke-benefits-network.js'
@@ -26,13 +33,22 @@ on:
       - 'scripts/test-deploy-benefits-capacity.sh'
       - 'scripts/report-benefits-device-checklist.js'
       - 'scripts/record-benefits-device-evidence.js'
+      - 'scripts/test-benefits-device-checklist.js'
+      - 'scripts/preflight-benefits-release.sh'
       - 'scripts/validate-benefits-device-checklist.js'
       - 'package.json'
       - '.github/workflows/benefits-network.yml'
   pull_request:
     paths:
       - 'apps/benefits-network/**'
+      - 'docs/SHOP_BENEFITS_APP_ARCHITECTURE.md'
+      - 'docs/ifrp-commerce-app/MASTER_ARCHITECTURE.md'
+      - 'docs/BUSINESS_ONBOARDING.md'
+      - 'docs/wiki/business-onboarding.html'
+      - 'docs/wiki/faq.html'
+      - 'docs/WHITEPAPER.md'
       - 'docs/BENEFITS_NETWORK_TEST.md'
+      - 'docs/BENEFITS_CAPACITY_RUNBOOK.md'
       - 'docs/qa/BENEFITS_DEVICE_WALLET_CHECKLIST.json'
       - 'docs/runbooks/BENEFITS_DEVICE_WALLET_TEST_RUNBOOK.md'
       - 'scripts/smoke-benefits-network.js'
@@ -53,6 +69,8 @@ on:
       - 'scripts/test-deploy-benefits-capacity.sh'
       - 'scripts/report-benefits-device-checklist.js'
       - 'scripts/record-benefits-device-evidence.js'
+      - 'scripts/test-benefits-device-checklist.js'
+      - 'scripts/preflight-benefits-release.sh'
       - 'scripts/validate-benefits-device-checklist.js'
       - 'package.json'
       - '.github/workflows/benefits-network.yml'
@@ -144,7 +162,7 @@ jobs:
         run: |
           set -euo pipefail
           docker build \
-            --build-arg NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=ci-walletconnect-project-id \
+            --build-arg NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=0123456789abcdef0123456789abcdef \
             -t inferno-benefits-frontend:ci .
           container="$(docker run -d -p 127.0.0.1:3000:3000 inferno-benefits-frontend:ci)"
           cleanup() { docker rm -f "$container" >/dev/null 2>&1 || true; }
@@ -159,21 +177,16 @@ jobs:
           curl -fsS http://127.0.0.1:3000/manifest.json >/dev/null
           docker exec "$container" node --version | grep -E '^v22\.'
           docker exec "$container" sh -c \
-            "grep -R -F 'ci-walletconnect-project-id' .next/static >/dev/null"
+            "grep -R -F '0123456789abcdef0123456789abcdef' .next/static >/dev/null"
 
-  test-device-checklist:
+  test-release-evidence-static:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
         with:
           node-version: '22'
-      - run: npm run qa:benefits-devices
-      - run: npm run qa:benefits-report
-      - run: npm run test:benefits-sw
-      - run: npm run test:benefits-wallet-asset
-      - run: npm run test:benefits-node-runtime
-      - run: bash scripts/test-deploy-benefits-capacity.sh
+      - run: npm run preflight:benefits -- --static
 
   test-customer-pass-ui:
     runs-on: ubuntu-latest

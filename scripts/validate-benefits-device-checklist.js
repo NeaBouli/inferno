@@ -21,6 +21,47 @@ const requiredMatrixIds = [
   'desktop-metamask-seller',
   'approved-redeemed-eligible-wallet',
 ];
+const requiredCapabilitiesById = {
+  'ios-safari-pwa': ['pwa-install-guidance', 'wallet-launch-fallback', 'recovery-guidance'],
+  'ios-metamask-customer-proof': ['wallet-connect', 'customer-pass-create', 'exact-offer-confirm', 'readable-result'],
+  'ios-coinbase-customer-proof': [
+    'wallet-connect-or-clear-fallback',
+    'customer-pass-create-or-clear-fallback',
+    'exact-offer-confirm-or-clear-fallback',
+  ],
+  'android-chrome-pwa': ['pwa-install-guidance', 'wallet-launch-fallback', 'recovery-guidance'],
+  'android-metamask-customer-proof': ['wallet-connect', 'customer-pass-create', 'exact-offer-confirm', 'readable-result'],
+  'android-trust-customer-proof': [
+    'wallet-connect-or-clear-fallback',
+    'customer-pass-create-or-clear-fallback',
+    'honest-wallet-status',
+  ],
+  'android-okx-customer-proof': [
+    'wallet-connect-or-clear-fallback',
+    'customer-pass-create-or-clear-fallback',
+    'honest-wallet-status',
+  ],
+  'phantom-evm-fallback': [
+    'wallet-connect-or-clear-fallback',
+    'customer-pass-create-or-clear-fallback',
+    'honest-wallet-status',
+  ],
+  'desktop-metamask-seller': [
+    'seller-profile',
+    'stable-seller-slug',
+    'public-seller-catalog',
+    'customer-pass-bind',
+    'seller-issued-qr-compatibility',
+    'seller-signed-redeem',
+  ],
+  'approved-redeemed-eligible-wallet': [
+    'customer-pass-create',
+    'customer-pass-bind',
+    'exact-offer-confirm',
+    'approved-to-redeemed',
+    'replay-blocked',
+  ],
+};
 const suspiciousEvidencePatterns = [
   /private[_ -]?key/i,
   /seed phrase/i,
@@ -76,11 +117,24 @@ function validateEvidence(item) {
     if (entry.sessionId !== undefined) assertString(entry.sessionId, `${label}.sessionId`);
     assertNoSensitiveEvidence(entry, label);
   });
+
+  if (item.status !== 'pending') {
+    const latest = item.evidence[item.evidence.length - 1];
+    if (!latest || typeof latest !== 'object' || Array.isArray(latest)) {
+      fail(`${item.id} latest evidence must be a structured recorder entry`);
+    }
+    if (latest.result.toLowerCase() !== item.status) {
+      fail(`${item.id} latest evidence result must match status ${item.status}`);
+    }
+  }
 }
 
 function validateChecklist(checklist) {
   assertString(checklist.name, 'name');
   assertString(checklist.target, 'target');
+  if (checklist.target !== 'https://shop.ifrunit.tech') {
+    fail('target must be the canonical https://shop.ifrunit.tech origin');
+  }
   if (!validStatuses.has(checklist.status)) {
     fail(`status must be one of ${[...validStatuses].join(', ')}`);
   }
@@ -92,6 +146,9 @@ function validateChecklist(checklist) {
   if (!checklist.rules || typeof checklist.rules !== 'object') fail('rules must be an object');
   if (checklist.rules.noSecrets !== true) fail('rules.noSecrets must be true');
   if (checklist.rules.recordOnlyTestIds !== true) fail('rules.recordOnlyTestIds must be true');
+  if (checklist.rules.walletConnectProjectIdRequiredForModal !== true) {
+    fail('rules.walletConnectProjectIdRequiredForModal must be true');
+  }
 
   assertArray(checklist.knownBlockers, 'knownBlockers');
   checklist.knownBlockers.forEach((item, index) => {
@@ -110,6 +167,18 @@ function validateChecklist(checklist) {
     assertString(item.surface, `${item.id}.surface`);
     assertString(item.wallet, `${item.id}.wallet`);
     assertString(item.path, `${item.id}.path`);
+    assertArray(item.capabilities, `${item.id}.capabilities`);
+    const capabilities = new Set();
+    item.capabilities.forEach((capability, index) => {
+      assertString(capability, `${item.id}.capabilities[${index}]`);
+      if (capabilities.has(capability)) fail(`${item.id} has duplicate capability: ${capability}`);
+      capabilities.add(capability);
+    });
+    for (const capability of requiredCapabilitiesById[item.id] || []) {
+      if (!capabilities.has(capability)) {
+        fail(`${item.id} is missing required capability: ${capability}`);
+      }
+    }
     if (!validItemStatuses.has(item.status)) {
       fail(`${item.id}.status must be one of ${[...validItemStatuses].join(', ')}`);
     }
@@ -126,6 +195,14 @@ function validateChecklist(checklist) {
     assertString(item, `completionGate[${index}]`);
     assertNoSensitiveEvidence(item, `completionGate[${index}]`);
   });
+  if (!checklist.completionGate.some((item) => (
+    item.includes('/p pass') &&
+    item.includes('exact seller offer') &&
+    item.includes('REDEEMED') &&
+    item.includes('replay')
+  ))) {
+    fail('completionGate must require the primary /p pass exact-offer redeem and replay path');
+  }
 
   if (checklist.status === 'complete') {
     for (const item of checklist.matrix) {

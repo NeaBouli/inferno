@@ -11,11 +11,15 @@ const files = {
   wikiFaq: 'docs/wiki/faq.html',
   whitepaper: 'docs/WHITEPAPER.md',
   testGuide: 'docs/BENEFITS_NETWORK_TEST.md',
+  deviceRunbook: 'docs/runbooks/BENEFITS_DEVICE_WALLET_TEST_RUNBOOK.md',
+  deviceChecklist: 'docs/qa/BENEFITS_DEVICE_WALLET_CHECKLIST.json',
   copilotKnowledge: 'apps/ai-copilot/src/context/ifr-knowledge.ts',
   frontendReadme: 'apps/benefits-network/frontend/README.md',
   frontendHome: 'apps/benefits-network/frontend/src/app/page.tsx',
   frontendGuide: 'apps/benefits-network/frontend/src/app/guide/page.tsx',
   frontendSitemap: 'apps/benefits-network/frontend/src/app/sitemap.ts',
+  walletConnectProjectId: 'apps/benefits-network/frontend/src/lib/walletConnectProjectId.mjs',
+  benefitsWorkflow: '.github/workflows/benefits-network.yml',
 };
 
 const content = Object.fromEntries(Object.entries(files).map(([key, file]) => [
@@ -155,6 +159,53 @@ assert.ok(
   !content.frontendSitemap.includes("new Date('2026-07-19T00:00:00Z')") &&
     !content.frontendSitemap.includes('lastModified,'),
   'static Shop routes must not publish a frozen last-modified timestamp'
+);
+for (const requiredRoute of ['/p/{passId}', '/s/{sellerSlug}', '/scan', '/guide']) {
+  assert.ok(
+    content.deviceRunbook.includes(requiredRoute),
+    `device runbook is missing current route: ${requiredRoute}`
+  );
+}
+for (const requiredStep of [
+  'passes:bind',
+  'Exact-Offer Customer Confirmation',
+  'blocked on replay',
+  'Compatible Seller-Issued QR',
+]) {
+  assert.ok(
+    content.deviceRunbook.includes(requiredStep),
+    `device runbook is missing current checkout evidence: ${requiredStep}`
+  );
+}
+const deviceChecklist = JSON.parse(content.deviceChecklist);
+assert.ok(
+  deviceChecklist.lastUpdated >= '2026-07-26',
+  'device checklist predates the primary-pass and stable-seller-route acceptance schema'
+);
+assert.ok(
+  deviceChecklist.matrix.some((item) => item.capabilities?.includes('customer-pass-bind')),
+  'device checklist must cover customer pass binding'
+);
+assert.ok(
+  deviceChecklist.matrix.some((item) => item.capabilities?.includes('approved-to-redeemed')),
+  'device checklist must cover approved-to-redeemed'
+);
+assert.ok(
+  deviceChecklist.completionGate.some((item) => item.includes('/p pass') && item.includes('replay')),
+  'device completion gate must name the primary pass and replay boundary'
+);
+assert.ok(
+  content.walletConnectProjectId.includes('/^[a-f0-9]{32}$/i'),
+  'WalletConnect configuration must reject malformed or placeholder project IDs'
+);
+assert.ok(
+  content.benefitsWorkflow.includes('0123456789abcdef0123456789abcdef') &&
+    !content.benefitsWorkflow.includes('ci-walletconnect-project-id'),
+  'Benefits image CI must exercise a syntactically valid WalletConnect project ID'
+);
+assert.ok(
+  !content.architecture.includes('Seller admin secret must remain user-entered'),
+  'architecture contains the retired seller admin-secret model'
 );
 
 console.log('[benefits-doc-consistency] PASS');

@@ -11,6 +11,10 @@ import {
   walletConnectionErrorMessage,
   walletConnectorLabel,
 } from '../src/lib/walletConnectorSelection.mjs';
+import {
+  hasValidWalletConnectProjectId,
+  normalizeWalletConnectProjectId,
+} from '../src/lib/walletConnectProjectId.mjs';
 
 const connector = (id, name, provider, type) => ({
   id,
@@ -58,5 +62,14 @@ assert.equal(walletConnectorLabel(walletConnect), 'WalletConnect');
 assert.equal(walletConnectionErrorMessage(new Error('User rejected request')), 'Connection cancelled in the wallet.');
 assert.match(walletConnectionErrorMessage(new Error('Provider not found')), /wallet provider was found/);
 assert.equal(walletConnectionErrorMessage(null), 'Wallet connection failed. Open this page in your wallet app browser and try again.');
+assert.equal(hasValidWalletConnectProjectId(undefined), false);
+assert.equal(hasValidWalletConnectProjectId(''), false);
+assert.equal(hasValidWalletConnectProjectId('your_walletconnect_project_id'), false);
+assert.equal(hasValidWalletConnectProjectId('ci-walletconnect-project-id'), false);
+assert.equal(hasValidWalletConnectProjectId('0123456789abcdef0123456789abcdef'), true);
+assert.equal(
+  normalizeWalletConnectProjectId(' 0123456789ABCDEF0123456789ABCDEF '),
+  '0123456789abcdef0123456789abcdef',
+);
 
 console.log('[wallet-connector-selection] PASS');

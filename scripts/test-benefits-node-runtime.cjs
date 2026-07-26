@@ -27,6 +27,7 @@ for (const app of apps) {
 }
 
 const workflow = fs.readFileSync(path.join(root, '.github', 'workflows', 'benefits-network.yml'), 'utf8');
+const walletConnectCiProjectId = '0123456789abcdef0123456789abcdef';
 const workflowNodeVersions = [...workflow.matchAll(/node-version:\s*['"]?(\d+)['"]?/g)].map((match) => match[1]);
 assert.equal(workflowNodeVersions.length, 4, 'Benefits CI must define four explicit Node runtimes');
 assert.ok(workflowNodeVersions.every((version) => version === '22'), 'Every Benefits CI job must use Node 22');
@@ -77,11 +78,11 @@ assert.ok(
   'production Compose example must state how build-argument interpolation receives its env values'
 );
 assert.ok(
-  workflow.includes('--build-arg NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=ci-walletconnect-project-id'),
-  'Benefits CI must build the frontend with a non-secret WalletConnect test identifier'
+  workflow.includes(`--build-arg NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=${walletConnectCiProjectId}`),
+  'Benefits CI must build the frontend with a syntactically valid non-secret WalletConnect test identifier'
 );
 assert.ok(
-  workflow.includes("grep -R -F 'ci-walletconnect-project-id' .next/static"),
+  workflow.includes(`grep -R -F '${walletConnectCiProjectId}' .next/static`),
   'Benefits CI must prove the WalletConnect identifier reached the browser bundle'
 );
 

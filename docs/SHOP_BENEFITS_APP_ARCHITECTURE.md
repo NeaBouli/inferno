@@ -203,7 +203,10 @@ Required deployment state:
   - `NEXT_PUBLIC_IFRLOCK_ADDRESS=0x769928aBDfc949D0718d8766a1C2d7dBb63954Eb`
   - `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID`
 
-If `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` is missing, the frontend must show a setup notice instead of using a fake WalletConnect project ID that produces failed external requests.
+If `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` is missing, malformed or a placeholder, the frontend
+must show a setup notice instead of enabling a connector that produces failed external requests.
+Syntactic validation does not prove the Reown project exists or that the Shop origin is allowlisted;
+those remain production configuration and physical-wallet acceptance gates.
 
 ## Open Build Tickets
 
@@ -262,7 +265,9 @@ If `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` is missing, the frontend must show a s
 ## Security Notes
 
 - Never expose `ADMIN_SECRET` in public docs, Bridge, screenshots or client bundles.
-- Seller admin secret must remain user-entered or be replaced by proper seller auth.
+- Normal seller-owned setup and management uses wallet-signed, resource-bound one-time
+  challenges. The legacy controlled admin fallback is operational recovery only; no admin secret
+  may be embedded in the public client, generated snippets, URLs or documentation.
 - QR sessions must remain short-lived and single-use.
 - A QR must never be treated as wallet ownership or eligibility. Customer-presented passes require
   separate customer creation and exact-offer confirmation signatures; linked session challenge and

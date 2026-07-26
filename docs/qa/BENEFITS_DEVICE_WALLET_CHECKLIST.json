@@ -2,7 +2,7 @@
   "name": "IFR Benefits Network Device Wallet Acceptance Checklist",
   "target": "https://shop.ifrunit.tech",
   "status": "open",
-  "lastUpdated": "2026-07-18",
+  "lastUpdated": "2026-07-26",
   "rules": {
     "noSecrets": true,
     "recordOnlyTestIds": true,
@@ -19,7 +19,12 @@
       "device": "iPadOS or iOS",
       "surface": "Safari",
       "wallet": "none",
-      "path": "Landing, PWA install guidance, copy/share wallet entry",
+      "path": "Landing and /guide PWA install guidance, copy/share wallet entry",
+      "capabilities": [
+        "pwa-install-guidance",
+        "wallet-launch-fallback",
+        "recovery-guidance"
+      ],
       "status": "pending",
       "evidence": []
     },
@@ -28,7 +33,13 @@
       "device": "iPadOS or iOS",
       "surface": "MetaMask in-app browser",
       "wallet": "MetaMask",
-      "path": "Customer QR proof sign and result",
+      "path": "Customer creates /p pass, seller binds exact offer, customer confirms and reads result",
+      "capabilities": [
+        "wallet-connect",
+        "customer-pass-create",
+        "exact-offer-confirm",
+        "readable-result"
+      ],
       "status": "pending",
       "evidence": []
     },
@@ -37,7 +48,12 @@
       "device": "iPadOS or iOS",
       "surface": "Coinbase Wallet browser",
       "wallet": "Coinbase Wallet",
-      "path": "Customer QR proof sign and result",
+      "path": "Customer creates /p pass and confirms exact seller offer, or receives explicit connector fallback",
+      "capabilities": [
+        "wallet-connect-or-clear-fallback",
+        "customer-pass-create-or-clear-fallback",
+        "exact-offer-confirm-or-clear-fallback"
+      ],
       "status": "pending",
       "evidence": []
     },
@@ -46,7 +62,12 @@
       "device": "Android",
       "surface": "Chrome",
       "wallet": "none",
-      "path": "Landing, PWA install guidance, copy/share wallet entry",
+      "path": "Landing and /guide PWA install guidance, copy/share wallet entry",
+      "capabilities": [
+        "pwa-install-guidance",
+        "wallet-launch-fallback",
+        "recovery-guidance"
+      ],
       "status": "pending",
       "evidence": []
     },
@@ -55,7 +76,13 @@
       "device": "Android",
       "surface": "MetaMask in-app browser",
       "wallet": "MetaMask",
-      "path": "Customer QR proof sign and result",
+      "path": "Customer creates /p pass, seller binds exact offer, customer confirms and reads result",
+      "capabilities": [
+        "wallet-connect",
+        "customer-pass-create",
+        "exact-offer-confirm",
+        "readable-result"
+      ],
       "status": "pending",
       "evidence": []
     },
@@ -64,7 +91,12 @@
       "device": "Android",
       "surface": "Trust Wallet browser",
       "wallet": "Trust Wallet",
-      "path": "Customer QR proof sign and result or clear fallback",
+      "path": "Customer /p pass flow or clear wallet-browser fallback without false connection success",
+      "capabilities": [
+        "wallet-connect-or-clear-fallback",
+        "customer-pass-create-or-clear-fallback",
+        "honest-wallet-status"
+      ],
       "status": "pending",
       "evidence": []
     },
@@ -73,7 +105,12 @@
       "device": "Android",
       "surface": "OKX Wallet browser",
       "wallet": "OKX Wallet",
-      "path": "Customer QR proof sign and result or clear fallback",
+      "path": "Customer /p pass flow or clear wallet-browser fallback without false connection success",
+      "capabilities": [
+        "wallet-connect-or-clear-fallback",
+        "customer-pass-create-or-clear-fallback",
+        "honest-wallet-status"
+      ],
       "status": "pending",
       "evidence": []
     },
@@ -82,7 +119,12 @@
       "device": "iOS, Android or Desktop",
       "surface": "Phantom EVM-capable browser/session",
       "wallet": "Phantom",
-      "path": "Customer proof or clear fallback if Ethereum provider is unavailable",
+      "path": "Customer /p pass proof or clear fallback if an Ethereum provider is unavailable",
+      "capabilities": [
+        "wallet-connect-or-clear-fallback",
+        "customer-pass-create-or-clear-fallback",
+        "honest-wallet-status"
+      ],
       "status": "pending",
       "evidence": []
     },
@@ -91,7 +133,15 @@
       "device": "Desktop",
       "surface": "Chrome + MetaMask extension",
       "wallet": "MetaMask",
-      "path": "Seller profile, rule, scanner, redeem signature",
+      "path": "Seller profile and /s slug, customer /p pass bind, /b scanner, legacy /r compatibility and redeem signature",
+      "capabilities": [
+        "seller-profile",
+        "stable-seller-slug",
+        "public-seller-catalog",
+        "customer-pass-bind",
+        "seller-issued-qr-compatibility",
+        "seller-signed-redeem"
+      ],
       "status": "pending",
       "evidence": []
     },
@@ -100,7 +150,14 @@
       "device": "Any supported customer + seller pair",
       "surface": "Wallet browser or extension",
       "wallet": "Eligible locked customer wallet plus seller wallet",
-      "path": "APPROVED customer proof -> seller-signed REDEEMED",
+      "path": "Customer /p pass -> seller bind -> exact-offer confirm -> APPROVED -> seller-signed REDEEMED -> replay blocked",
+      "capabilities": [
+        "customer-pass-create",
+        "customer-pass-bind",
+        "exact-offer-confirm",
+        "approved-to-redeemed",
+        "replay-blocked"
+      ],
       "status": "pending",
       "evidence": []
     }
@@ -110,6 +167,6 @@
     "At least one Android wallet-browser customer proof path passes.",
     "At least one desktop injected seller wallet path passes.",
     "A rejected or ineligible customer proof path is observed and readable.",
-    "An approved customer proof and seller redeem path is observed with an eligible locked test wallet."
+    "The primary customer /p pass flow is bound to an exact seller offer, approved with an eligible locked test wallet, seller-signed REDEEMED and blocked on replay."
   ]
 }
