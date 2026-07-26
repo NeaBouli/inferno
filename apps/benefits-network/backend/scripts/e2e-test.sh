@@ -4,7 +4,7 @@
 set -e
 
 BASE_URL="${BASE_URL:-http://localhost:3001}"
-ADMIN_SECRET="${ADMIN_SECRET:-change-me-to-a-random-secret}"
+ADMIN_SECRET="${ADMIN_SECRET:-replace-with-a-long-random-admin-secret}"
 
 echo "============================================================"
 echo "  IFR Benefits Network — E2E Test"

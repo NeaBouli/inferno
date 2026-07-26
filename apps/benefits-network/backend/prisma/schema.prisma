@@ -216,6 +216,23 @@ model AuditLog {
   @@index([sessionId])
 }
 
+model AdminAuditLog {
+  id            String   @id @default(cuid())
+  action        String
+  method        String
+  routeTemplate String
+  targetType    String?
+  targetId      String?
+  actorDigest   String
+  clientDigest  String
+  statusCode    Int
+  createdAt     DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([targetType, targetId])
+  @@index([action, createdAt])
+}
+
 model SellerAuthorizationChallenge {
   nonce         String   @id
   walletAddress String

@@ -15,6 +15,7 @@ import {
   initializeRateLimitInfrastructure,
   isRateLimitInfrastructureReady,
 } from './services/rateLimitInfrastructure';
+import { adminRateLimiter } from './middleware/rateLimiter';
 
 const app = express();
 app.disable('x-powered-by');
@@ -37,6 +38,7 @@ app.use(cors({
     'http://localhost:3000,http://localhost:3001,https://shop.ifrunit.tech,https://web3.ifrunit.tech,https://ifrunit.tech'
   ).split(','),
 }));
+app.use('/api/admin', adminRateLimiter);
 app.use(express.json({ limit: '10kb' }));
 
 // Mount routes
@@ -75,7 +77,15 @@ app.get('/ready', readyPayload);
 app.get('/api/ready', readyPayload);
 
 // Global error handler
-app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+app.use((err: Error & { type?: string }, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+  if (err.type === 'entity.parse.failed') {
+    res.status(400).json({ error: 'Malformed JSON body' });
+    return;
+  }
+  if (err.type === 'entity.too.large') {
+    res.status(413).json({ error: 'Request body too large' });
+    return;
+  }
   if (err instanceof RateLimitStoreUnavailableError) {
     res.status(503).json({ error: err.message });
     return;

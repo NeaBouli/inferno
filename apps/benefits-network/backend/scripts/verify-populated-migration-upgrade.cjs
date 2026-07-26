@@ -5,7 +5,7 @@ const path = require('path');
 
 const root = path.resolve(__dirname, '..');
 const migrationsDir = path.join(root, 'prisma', 'migrations');
-const targetMigration = '20260724015000_add_business_slug';
+const targetMigration = '20260726000100_add_admin_audit_log';
 const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'benefits-populated-upgrade-'));
 const dbPath = path.join(tempDir, 'upgrade.db');
 
@@ -61,6 +61,24 @@ try {
   `);
 
   sqlite(`.read ${path.join(migrationsDir, targetMigration, 'migration.sql')}`);
+
+  const adminAuditTable = sqlite(`
+    SELECT COUNT(*) FROM sqlite_master
+    WHERE type = 'table' AND name = 'AdminAuditLog';
+  `);
+  const adminAuditIndexes = sqlite(`
+    SELECT COUNT(*) FROM sqlite_master
+    WHERE type = 'index' AND name IN (
+      'AdminAuditLog_createdAt_idx',
+      'AdminAuditLog_targetType_targetId_idx',
+      'AdminAuditLog_action_createdAt_idx'
+    );
+  `);
+  if (adminAuditTable !== '1' || adminAuditIndexes !== '3') {
+    throw new Error(
+      `Missing admin audit migration state: table=${adminAuditTable}, indexes=${adminAuditIndexes}`
+    );
+  }
 
   const preservedRows = sqlite(`
     SELECT
