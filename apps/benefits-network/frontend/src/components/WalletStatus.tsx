@@ -1,7 +1,14 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { useAccount, useBalance, useReadContract, useWaitForTransactionReceipt, useWriteContract } from 'wagmi';
+import {
+  useAccount,
+  useBalance,
+  useReadContract,
+  useSwitchChain,
+  useWaitForTransactionReceipt,
+  useWriteContract,
+} from 'wagmi';
 import { formatEther, formatUnits, parseUnits } from 'viem';
 import { WalletConnectControl } from '@/components/WalletConnectControl';
 import { SwapRiskNotice } from '@/components/SwapRiskNotice';
@@ -25,7 +32,7 @@ type RecommendedAction = {
   detail: string;
   disabledReason: string;
   externalHref?: string;
-  action?: 'retry-eth';
+  action?: 'retry-eth' | 'switch-chain';
 };
 
 function walletAssetError(error: unknown) {
@@ -36,6 +43,15 @@ function walletAssetError(error: unknown) {
     return 'This wallet does not support automatic token import. Use the IFR contract address shown below.';
   }
   return message || 'The wallet could not add IFR automatically.';
+}
+
+function networkSwitchError(error: unknown) {
+  const code = typeof error === 'object' && error && 'code' in error ? Number(error.code) : undefined;
+  const message = error instanceof Error ? error.message : '';
+  if (code === 4001 || /reject|denied|cancel/i.test(message)) {
+    return 'Network switch cancelled in the wallet. Switch to the required Ethereum network to continue.';
+  }
+  return 'The wallet could not switch networks. Switch networks in the wallet, then retry.';
 }
 
 function shortAddress(address?: string) {
@@ -61,7 +77,7 @@ function getTier(lockedRaw?: bigint) {
 }
 
 export function WalletStatus() {
-  const { address, connector, isConnected } = useAccount();
+  const { address, chainId, connector, isConnected } = useAccount();
   const [lockAmount, setLockAmount] = useState('1000');
   const [lockMessage, setLockMessage] = useState('');
   const [lockError, setLockError] = useState('');
@@ -71,39 +87,46 @@ export function WalletStatus() {
   const [pendingHash, setPendingHash] = useState<`0x${string}` | undefined>();
   const [pendingAction, setPendingAction] = useState<'approve' | 'lock' | 'unlock' | ''>('');
   const { writeContractAsync, isPending: walletPromptOpen } = useWriteContract();
+  const { switchChainAsync, isPending: switchingChain } = useSwitchChain();
+  const chainReady = Boolean(isConnected && chainId === CHAIN_ID);
+  const wrongChain = Boolean(isConnected && chainId !== CHAIN_ID);
   const txReceipt = useWaitForTransactionReceipt({
     hash: pendingHash,
     query: { enabled: Boolean(pendingHash) },
   });
   const ethBalance = useBalance({
     address,
-    query: { enabled: Boolean(address) },
+    chainId: CHAIN_ID,
+    query: { enabled: Boolean(address && chainReady) },
   });
   const ifrBalance = useReadContract({
+    chainId: CHAIN_ID,
     address: IFR_TOKEN_ADDRESS || undefined,
     abi: IFR_TOKEN_ABI,
     functionName: 'balanceOf',
     args: address ? [address] : undefined,
-    query: { enabled: Boolean(address && IFR_TOKEN_ADDRESS) },
+    query: { enabled: Boolean(address && chainReady && IFR_TOKEN_ADDRESS) },
   });
   const lockedBalance = useReadContract({
+    chainId: CHAIN_ID,
     address: IFRLOCK_ADDRESS || undefined,
     abi: IFRLOCK_ABI,
     functionName: 'lockedBalance',
     args: address ? [address] : undefined,
-    query: { enabled: Boolean(address && IFRLOCK_ADDRESS) },
+    query: { enabled: Boolean(address && chainReady && IFRLOCK_ADDRESS) },
   });
   const allowance = useReadContract({
+    chainId: CHAIN_ID,
     address: IFR_TOKEN_ADDRESS || undefined,
     abi: IFR_TOKEN_ABI,
     functionName: 'allowance',
     args: address && IFRLOCK_ADDRESS ? [address, IFRLOCK_ADDRESS] : undefined,
-    query: { enabled: Boolean(address && IFR_TOKEN_ADDRESS && IFRLOCK_ADDRESS) },
+    query: { enabled: Boolean(address && chainReady && IFR_TOKEN_ADDRESS && IFRLOCK_ADDRESS) },
   });
-  const lockedRaw = lockedBalance.data as bigint | undefined;
-  const allowanceRaw = allowance.data as bigint | undefined;
-  const ifrRaw = ifrBalance.data as bigint | undefined;
-  const ethRaw = ethBalance.data?.value;
+  const lockedRaw = chainReady ? lockedBalance.data as bigint | undefined : undefined;
+  const allowanceRaw = chainReady ? allowance.data as bigint | undefined : undefined;
+  const ifrRaw = chainReady ? ifrBalance.data as bigint | undefined : undefined;
+  const ethRaw = chainReady ? ethBalance.data?.value : undefined;
   const amountRaw = useMemo(() => {
     try {
       const normalized = lockAmount.trim().replace(/,/g, '');
@@ -121,7 +144,7 @@ export function WalletStatus() {
   const ethBalanceFailed = Boolean(isConnected && ethBalance.isError);
   const ethBalanceChecking = Boolean(isConnected && !ethBalanceReady && !ethBalanceFailed);
   const ethKnownEmpty = Boolean(isConnected && ethBalanceReady && !hasEth);
-  const canPayGas = Boolean(isConnected && ethBalanceReady && hasEth);
+  const canPayGas = Boolean(chainReady && ethBalanceReady && hasEth);
   const hasContracts = Boolean(IFR_TOKEN_ADDRESS && IFRLOCK_ADDRESS);
   const amountValid = amountRaw > BigInt(0);
   const hasEnoughIFR = Boolean(ifrRaw && ifrRaw >= amountRaw);
@@ -143,88 +166,118 @@ export function WalletStatus() {
           detail: 'IFR token or IFRLock address is not configured for this deployment.',
           disabledReason: 'Missing contract configuration.',
         }
-      : ethBalanceChecking
+      : wrongChain
         ? {
-            label: 'Checking ETH balance',
-            detail: 'Confirming that this wallet can pay Ethereum network fees.',
-            disabledReason: 'Wait for the ETH balance check.',
+            label: CHAIN_ID === 1 ? 'Switch to Ethereum Mainnet' : `Switch to chain ${CHAIN_ID}`,
+            detail: `IFR balances and transactions stay disabled until this wallet uses ${
+              CHAIN_ID === 1 ? 'Ethereum Mainnet' : `chain ${CHAIN_ID}`
+            }.`,
+            disabledReason: '',
+            action: 'switch-chain',
           }
-        : ethBalanceFailed
+        : ethBalanceChecking
           ? {
-              label: 'Retry ETH check',
-              detail: 'The ETH balance could not be read. Retry before approving, locking or unlocking IFR.',
-              disabledReason: '',
-              action: 'retry-eth',
+              label: 'Checking ETH balance',
+              detail: 'Confirming that this wallet can pay Ethereum network fees.',
+              disabledReason: 'Wait for the ETH balance check.',
             }
-          : ethKnownEmpty
+          : ethBalanceFailed
             ? {
-                label: CHAIN_ID === 1 ? 'Get ETH for gas' : 'Get test ETH for gas',
-                detail: `Ethereum transactions need ETH for network fees. Add ETH to this same wallet on ${
-                  CHAIN_ID === 1 ? 'Ethereum Mainnet' : `chain ${CHAIN_ID}`
-                }, then return and refresh.`,
-                disabledReason: CHAIN_ID === 1
-                  ? ''
-                  : 'Use the faucet supplied by the test operator. Never send real funds to a test network.',
-                externalHref: CHAIN_ID === 1 ? ETHEREUM_GET_ETH_URL : undefined,
+                label: 'Retry ETH check',
+                detail: 'The ETH balance could not be read. Retry before approving, locking or unlocking IFR.',
+                disabledReason: '',
+                action: 'retry-eth',
               }
-            : !amountValid
+            : ethKnownEmpty
               ? {
-                  label: 'Enter IFR amount',
-                  detail: 'Choose a tier or enter the exact IFR amount you want to lock.',
-                  disabledReason: 'Enter a positive IFR amount.',
+                  label: CHAIN_ID === 1 ? 'Get ETH for gas' : 'Get test ETH for gas',
+                  detail: `Ethereum transactions need ETH for network fees. Add ETH to this same wallet on ${
+                    CHAIN_ID === 1 ? 'Ethereum Mainnet' : `chain ${CHAIN_ID}`
+                  }, then return and refresh.`,
+                  disabledReason: CHAIN_ID === 1
+                    ? ''
+                    : 'Use the faucet supplied by the test operator. Never send real funds to a test network.',
+                  externalHref: CHAIN_ID === 1 ? ETHEREUM_GET_ETH_URL : undefined,
                 }
-              : !hasEnoughIFR
+              : !amountValid
                 ? {
-                    label: 'Buy IFR',
-                    detail: `This wallet needs ${enteredAmount} unlocked IFR before it can lock that amount.`,
-                    disabledReason: '',
+                    label: 'Enter IFR amount',
+                    detail: 'Choose a tier or enter the exact IFR amount you want to lock.',
+                    disabledReason: 'Enter a positive IFR amount.',
                   }
-                : !hasEnoughAllowance
+                : !hasEnoughIFR
                   ? {
-                      label: `Approve ${enteredAmount} IFR`,
-                      detail: 'One approval lets IFRLock move only the amount currently entered.',
+                      label: 'Buy IFR',
+                      detail: `This wallet needs ${enteredAmount} unlocked IFR before it can lock that amount.`,
                       disabledReason: '',
                     }
-                  : {
-                      label: `Lock ${enteredAmount} IFR`,
-                      detail: 'Approval is ready. Confirm the IFRLock transaction in your wallet.',
-                      disabledReason: '',
-                    };
-  const recommendedActionDisabled = txBusy || Boolean(recommendedAction.disabledReason);
+                  : !hasEnoughAllowance
+                    ? {
+                        label: `Approve ${enteredAmount} IFR`,
+                        detail: 'One approval lets IFRLock move only the amount currently entered.',
+                        disabledReason: '',
+                      }
+                    : {
+                        label: `Lock ${enteredAmount} IFR`,
+                        detail: 'Approval is ready. Confirm the IFRLock transaction in your wallet.',
+                        disabledReason: '',
+                      };
+  const recommendedActionDisabled = txBusy || switchingChain || Boolean(recommendedAction.disabledReason);
   const statusLabel = !isConnected
     ? 'Connect wallet'
-    : hasCustomerLock
-      ? 'Ready for checkout'
-      : ethBalanceChecking
-        ? 'Checking ETH balance'
-        : ethKnownEmpty
-          ? 'Get ETH for gas'
-          : ethBalanceFailed
-            ? 'Check ETH balance'
-            : hasIFR
-              ? 'Lock IFR'
-              : 'Get IFR';
+    : wrongChain
+      ? (CHAIN_ID === 1 ? 'Switch to Ethereum Mainnet' : `Switch to chain ${CHAIN_ID}`)
+      : hasCustomerLock
+        ? 'Ready for checkout'
+        : ethBalanceChecking
+          ? 'Checking ETH balance'
+          : ethKnownEmpty
+            ? 'Get ETH for gas'
+            : ethBalanceFailed
+              ? 'Check ETH balance'
+              : hasIFR
+                ? 'Lock IFR'
+                : 'Get IFR';
   const statusText = !isConnected
     ? 'Connect a wallet to read IFR balance, ETH gas and locked access.'
-    : hasCustomerLock
-      ? `Eligible for typical ${MIN_CUSTOMER_LOCK.toLocaleString('en-US')} IFR customer rules. Some sellers may require a higher tier.`
-      : ethBalanceChecking
-        ? 'Confirming ETH network-fee readiness before enabling wallet transactions.'
-        : ethKnownEmpty
-          ? 'This wallet needs ETH for Ethereum network fees before it can swap, approve or lock IFR.'
-          : ethBalanceFailed
-            ? 'The app could not confirm the ETH balance. Retry the check before starting a transaction.'
-            : hasIFR
-              ? 'You hold IFR, but it is not locked for access yet. Lock IFR before scanning seller QR codes.'
-              : 'No IFR detected in this wallet. Buy IFR first, then lock it for benefits.';
+    : wrongChain
+      ? `The connected wallet is on ${chainId ? `chain ${chainId}` : 'an unknown network'}. Contract reads and transactions are disabled until you switch to ${
+          CHAIN_ID === 1 ? 'Ethereum Mainnet' : `chain ${CHAIN_ID}`
+        }.`
+      : hasCustomerLock
+        ? `Eligible for typical ${MIN_CUSTOMER_LOCK.toLocaleString('en-US')} IFR customer rules. Some sellers may require a higher tier.`
+        : ethBalanceChecking
+          ? 'Confirming ETH network-fee readiness before enabling wallet transactions.'
+          : ethKnownEmpty
+            ? 'This wallet needs ETH for Ethereum network fees before it can swap, approve or lock IFR.'
+            : ethBalanceFailed
+              ? 'The app could not confirm the ETH balance. Retry the check before starting a transaction.'
+              : hasIFR
+                ? 'You hold IFR, but it is not locked for access yet. Lock IFR before scanning seller QR codes.'
+                : 'No IFR detected in this wallet. Buy IFR first, then lock it for benefits.';
   const checklist = [
     { label: 'Wallet connected', status: isConnected ? 'Ready' : 'Needed' },
+    { label: CHAIN_ID === 1 ? 'Ethereum Mainnet' : `Chain ${CHAIN_ID}`, status: chainReady ? 'Ready' : 'Needed' },
     {
       label: 'ETH for gas',
-      status: ethBalanceChecking ? 'Checking' : ethBalanceFailed ? 'Check failed' : hasEth ? 'Ready' : 'Needed',
+      status: wrongChain
+        ? 'Blocked'
+        : ethBalanceChecking
+          ? 'Checking'
+          : ethBalanceFailed
+            ? 'Check failed'
+            : hasEth
+              ? 'Ready'
+              : 'Needed',
     },
-    { label: 'IFR in wallet', status: hasIFR || hasCustomerLock ? 'Ready' : 'Needed' },
-    { label: `${MIN_CUSTOMER_LOCK.toLocaleString('en-US')}+ IFR locked`, status: hasCustomerLock ? 'Ready' : 'Needed' },
+    {
+      label: 'IFR in wallet',
+      status: wrongChain ? 'Blocked' : hasIFR || hasCustomerLock ? 'Ready' : 'Needed',
+    },
+    {
+      label: `${MIN_CUSTOMER_LOCK.toLocaleString('en-US')}+ IFR locked`,
+      status: wrongChain ? 'Blocked' : hasCustomerLock ? 'Ready' : 'Needed',
+    },
   ];
   const transactionSteps = [
     {
@@ -291,6 +344,17 @@ export function WalletStatus() {
 
   async function runRecommendedAction() {
     if (!isConnected || !hasContracts) return;
+    if (recommendedAction.action === 'switch-chain') {
+      setLockError('');
+      setLockMessage('');
+      try {
+        await switchChainAsync({ chainId: CHAIN_ID });
+        setLockMessage(`Wallet switched to ${CHAIN_ID === 1 ? 'Ethereum Mainnet' : `chain ${CHAIN_ID}`}. Reading IFR status...`);
+      } catch (err) {
+        setLockError(networkSwitchError(err));
+      }
+      return;
+    }
     if (recommendedAction.action === 'retry-eth') {
       setLockError('');
       await ethBalance.refetch();
@@ -317,6 +381,10 @@ export function WalletStatus() {
       setLockError('IFR token or IFRLock address is not configured.');
       return;
     }
+    if (!chainReady) {
+      setLockError(`Switch this wallet to ${CHAIN_ID === 1 ? 'Ethereum Mainnet' : `chain ${CHAIN_ID}`} before approving IFR.`);
+      return;
+    }
     if (!amountValid) {
       setLockError('Enter a positive IFR amount.');
       return;
@@ -333,6 +401,7 @@ export function WalletStatus() {
     setLockMessage('Approve IFRLock in your wallet.');
     try {
       const hash = await writeContractAsync({
+        chainId: CHAIN_ID,
         address: IFR_TOKEN_ADDRESS,
         abi: IFR_TOKEN_ABI,
         functionName: 'approve',
@@ -354,6 +423,10 @@ export function WalletStatus() {
     }
     if (!hasContracts || !IFRLOCK_ADDRESS) {
       setLockError('IFRLock address is not configured.');
+      return;
+    }
+    if (!chainReady) {
+      setLockError(`Switch this wallet to ${CHAIN_ID === 1 ? 'Ethereum Mainnet' : `chain ${CHAIN_ID}`} before locking IFR.`);
       return;
     }
     if (!amountValid) {
@@ -380,6 +453,7 @@ export function WalletStatus() {
     setLockMessage('Confirm the IFRLock transaction in your wallet.');
     try {
       const hash = await writeContractAsync({
+        chainId: CHAIN_ID,
         address: IFRLOCK_ADDRESS,
         abi: IFRLOCK_ABI,
         functionName: 'lock',
@@ -403,6 +477,10 @@ export function WalletStatus() {
       setLockError('IFRLock address is not configured.');
       return;
     }
+    if (!chainReady) {
+      setLockError(`Switch this wallet to ${CHAIN_ID === 1 ? 'Ethereum Mainnet' : `chain ${CHAIN_ID}`} before unlocking IFR.`);
+      return;
+    }
     if (!lockedRaw || lockedRaw === BigInt(0)) {
       setLockError('No IFRLock balance is available to unlock.');
       return;
@@ -419,6 +497,7 @@ export function WalletStatus() {
     setLockMessage('Confirm unlock in your wallet. This unlocks the full simple IFRLock balance.');
     try {
       const hash = await writeContractAsync({
+        chainId: CHAIN_ID,
         address: IFRLOCK_ADDRESS,
         abi: IFRLOCK_ABI,
         functionName: 'unlock',
@@ -499,7 +578,7 @@ export function WalletStatus() {
         <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
           <p className="text-xs uppercase tracking-[0.14em] text-stone-400">IFR balance</p>
           <p className="mt-2 text-lg font-bold">
-            {formatIFR(ifrRaw)} IFR
+            {wrongChain ? '--' : formatIFR(ifrRaw)} IFR
           </p>
           <p className="mt-1 break-words text-xs text-stone-400">
             {IFR_TOKEN_ADDRESS ? 'ERC-20' : 'Set NEXT_PUBLIC_IFR_TOKEN_ADDRESS'}
@@ -507,9 +586,13 @@ export function WalletStatus() {
         </div>
         <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
           <p className="text-xs uppercase tracking-[0.14em] text-stone-400">IFR locked</p>
-          <p className="mt-2 text-lg font-bold">{formatIFR(lockedBalance.data as bigint | undefined)} IFR</p>
+          <p className="mt-2 text-lg font-bold">{wrongChain ? '--' : formatIFR(lockedBalance.data as bigint | undefined)} IFR</p>
           <p className="mt-1 text-xs text-stone-400">
-            ETH {ethBalance.data ? Number(formatEther(ethBalance.data.value)).toLocaleString('en-US', { maximumFractionDigits: 5 }) : '0'}
+            ETH {wrongChain
+              ? '--'
+              : ethBalance.data
+                ? Number(formatEther(ethBalance.data.value)).toLocaleString('en-US', { maximumFractionDigits: 5 })
+                : '0'}
           </p>
         </div>
       </div>
@@ -529,7 +612,7 @@ export function WalletStatus() {
           </div>
         </div>
 
-        <div className="mt-4 grid gap-2 sm:grid-cols-4">
+        <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-5">
           {checklist.map((item) => (
             <div
               key={item.label}
@@ -618,9 +701,9 @@ export function WalletStatus() {
             </button>
           </div>
           <div className="mt-3 grid gap-2 text-xs text-stone-400 sm:grid-cols-3">
-            <p>Allowance: <span className="text-stone-200">{formatIFR(allowanceRaw)} IFR</span></p>
-            <p>Available: <span className="text-stone-200">{formatIFR(ifrRaw)} IFR</span></p>
-            <p>Locked: <span className="text-stone-200">{formatIFR(lockedRaw)} IFR</span></p>
+            <p>Allowance: <span className="text-stone-200">{wrongChain ? '--' : formatIFR(allowanceRaw)} IFR</span></p>
+            <p>Available: <span className="text-stone-200">{wrongChain ? '--' : formatIFR(ifrRaw)} IFR</span></p>
+            <p>Locked: <span className="text-stone-200">{wrongChain ? '--' : formatIFR(lockedRaw)} IFR</span></p>
           </div>
           <div className="mt-4 rounded-2xl border border-orange-200/20 bg-[linear-gradient(145deg,rgba(251,146,60,0.18),rgba(0,0,0,0.22))] p-4">
             <p className="text-xs font-black uppercase tracking-[0.16em] text-orange-200/80">
@@ -652,7 +735,7 @@ export function WalletStatus() {
                   disabled={recommendedActionDisabled || !isConnected}
                   className="rounded-2xl bg-orange-300 px-5 py-4 text-xs font-black uppercase tracking-[0.14em] text-stone-950 shadow-xl shadow-orange-950/25 transition hover:-translate-y-0.5 hover:bg-orange-200 disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  {txBusy ? 'Waiting...' : recommendedAction.label}
+                  {switchingChain ? 'Switching...' : txBusy ? 'Waiting...' : recommendedAction.label}
                 </button>
               )}
             </div>
