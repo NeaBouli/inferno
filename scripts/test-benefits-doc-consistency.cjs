@@ -100,6 +100,7 @@ assert.ok(
 );
 
 for (const variable of [
+  'BENEFITS_API_INTERNAL_URL',
   'NEXT_PUBLIC_API_URL',
   'NEXT_PUBLIC_CHAIN_ID',
   'NEXT_PUBLIC_IFR_TOKEN_ADDRESS',
@@ -116,6 +117,21 @@ for (const variable of [
     `master architecture is missing the deployed configuration name: ${variable}`
   );
 }
+assert.ok(
+  content.frontendReadme.includes('Every `NEXT_PUBLIC_*` value is') &&
+    content.frontendReadme.includes('embedded into the browser bundle at build time'),
+  'frontend README must explain the Next.js public build-time configuration boundary'
+);
+assert.ok(
+  content.frontendReadme.includes('docker compose --env-file .env.benefits') &&
+    content.frontendReadme.includes('does not') &&
+    content.frontendReadme.includes('supply `${...}` interpolation for `build.args`'),
+  'frontend README must explain the Compose interpolation source'
+);
+assert.ok(
+  content.master.includes('browser-visible build-time configuration'),
+  'master architecture must preserve the production frontend build-time boundary'
+);
 for (const staleVariable of ['SHOP_API_URL', 'MAINNET_RPC_URL']) {
   assert.ok(
     !content.master.includes(staleVariable),

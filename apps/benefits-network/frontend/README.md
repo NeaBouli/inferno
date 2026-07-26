@@ -27,6 +27,7 @@ Backend must be running on `localhost:3001` (API proxy via Next.js rewrites).
 ## Environment
 
 ```bash
+BENEFITS_API_INTERNAL_URL=http://localhost:3001
 NEXT_PUBLIC_API_URL=http://localhost:3001
 NEXT_PUBLIC_CHAIN_ID=1
 NEXT_PUBLIC_IFR_TOKEN_ADDRESS=0x77e99917Eca8539c62F509ED1193ac36580A6e7B
@@ -34,6 +35,13 @@ NEXT_PUBLIC_IFRLOCK_ADDRESS=0x769928aBDfc949D0718d8766a1C2d7dBb63954Eb
 NEXT_PUBLIC_COMMITMENT_VAULT_ADDRESS=0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3
 NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=...
 ```
+
+`BENEFITS_API_INTERNAL_URL` is server-only and drives the Next.js API rewrite,
+seller metadata and dynamic sitemap reads. Every `NEXT_PUBLIC_*` value is
+embedded into the browser bundle at build time. Production Docker builds must
+pass those values as build arguments; changing only the running container
+environment does not update the client bundle. The WalletConnect project ID is
+a public application identifier, not a wallet secret.
 
 The public shop defaults to Ethereum Mainnet. `NEXT_PUBLIC_CHAIN_ID=11155111` can still be used for Sepolia testing if matching testnet contract addresses are supplied.
 
@@ -173,6 +181,20 @@ scripts/deploy-benefits-network.sh frontend
 backend image. The helper syncs `apps/benefits-network/`, checks server disk
 space, prunes Docker builder cache when the configured free-space floor is
 breached, and prints container/disk status after deploy.
+
+The helper passes `/opt/inferno/.env.benefits` to Compose with `--env-file`, so
+the public frontend values are available while Docker builds the Next.js
+bundle. Set `REMOTE_COMPOSE_ENV_FILE` only when the server uses a different
+protected environment-file path. For a manual build from the production example
+directory, use:
+
+```bash
+docker compose --env-file .env.benefits \
+  -f docker-compose.production.example.yml build benefits-frontend
+```
+
+The service-level `env_file` configures the running container but does not
+supply `${...}` interpolation for `build.args`.
 
 For capacity-only checks, run:
 

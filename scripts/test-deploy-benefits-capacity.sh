@@ -14,7 +14,7 @@ set -euo pipefail
 printf '%s\n' "$*" >> "$SSH_LOG"
 if [[ "$*" == *"df -BM --output=avail"* ]]; then
   printf '3098\n'
-elif [[ "$*" == *"docker compose ps -aq benefits-backend"* ]]; then
+elif [[ "$*" == *"docker compose --env-file "*" ps -aq benefits-backend"* ]]; then
   printf '%s\n' "${BACKEND_COUNT:-1}"
 else
   printf 'fake remote status ok\n'
@@ -36,8 +36,11 @@ if grep -Eq 'docker (builder|container|image) prune' "$SSH_LOG"; then
 fi
 
 grep -Fq 'below MIN_FREE_GB=4G' <<< "$OUTPUT"
-grep -Fq 'docker compose ps -aq benefits-backend' "$SSH_LOG"
-grep -Fq 'docker compose ps benefits-backend benefits-frontend' "$SSH_LOG"
+grep -Fq -- "--env-file '/opt/inferno/.env.benefits'" "$SSH_LOG"
+grep -Fq 'ps -aq benefits-backend' "$SSH_LOG"
+grep -Fq 'ps benefits-backend benefits-frontend' "$SSH_LOG"
+grep -Fq "docker compose --env-file '\$REMOTE_COMPOSE_ENV_FILE' \$*" \
+  "$ROOT/scripts/deploy-benefits-network.sh"
 
 set +e
 UNSAFE_OUTPUT="$({

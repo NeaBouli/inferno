@@ -34,4 +34,55 @@ assert.equal((workflow.match(/docker run -d/g) || []).length, 2, 'Both Benefits 
 assert.ok(workflow.includes('/api/ready'), 'Backend runner image must pass database readiness in CI');
 assert.equal((workflow.match(/docker exec \"\$container\" node --version/g) || []).length, 2, 'Both running images must report Node 22');
 
+const frontendDockerfile = fs.readFileSync(
+  path.join(root, 'apps', 'benefits-network', 'frontend', 'Dockerfile'),
+  'utf8'
+);
+const productionCompose = fs.readFileSync(
+  path.join(root, 'apps', 'benefits-network', 'docker-compose.production.example.yml'),
+  'utf8'
+);
+const frontendBuildIndex = frontendDockerfile.indexOf('RUN npm run build');
+const frontendServiceIndex = productionCompose.indexOf('  benefits-frontend:');
+const frontendService = productionCompose.slice(frontendServiceIndex);
+const frontendArgsIndex = frontendService.indexOf('      args:');
+const frontendContainerIndex = frontendService.indexOf('    container_name:');
+const frontendBuildArgs = frontendService.slice(frontendArgsIndex, frontendContainerIndex);
+const publicBuildVariables = [
+  'NEXT_PUBLIC_API_URL',
+  'NEXT_PUBLIC_CHAIN_ID',
+  'NEXT_PUBLIC_IFR_TOKEN_ADDRESS',
+  'NEXT_PUBLIC_IFRLOCK_ADDRESS',
+  'NEXT_PUBLIC_COMMITMENT_VAULT_ADDRESS',
+  'NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID',
+];
+
+for (const variable of publicBuildVariables) {
+  const argIndex = frontendDockerfile.indexOf(`ARG ${variable}`);
+  const envIndex = frontendDockerfile.indexOf(`ENV ${variable}=\${${variable}}`);
+  assert.ok(argIndex >= 0 && argIndex < frontendBuildIndex, `${variable} must be a frontend Docker build argument`);
+  assert.ok(
+    envIndex >= 0 && envIndex < frontendBuildIndex,
+    `${variable} must be available to the Next.js build before it runs`
+  );
+  assert.match(
+    frontendBuildArgs,
+    new RegExp(`^\\s{8}${variable}:`, 'm'),
+    `production Compose must forward ${variable} as a build argument`
+  );
+}
+
+assert.ok(
+  productionCompose.includes('docker compose --env-file .env.benefits'),
+  'production Compose example must state how build-argument interpolation receives its env values'
+);
+assert.ok(
+  workflow.includes('--build-arg NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=ci-walletconnect-project-id'),
+  'Benefits CI must build the frontend with a non-secret WalletConnect test identifier'
+);
+assert.ok(
+  workflow.includes("grep -R -F 'ci-walletconnect-project-id' .next/static"),
+  'Benefits CI must prove the WalletConnect identifier reached the browser bundle'
+);
+
 console.log('Benefits Node 22 runtime contract OK');

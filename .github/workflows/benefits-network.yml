@@ -141,7 +141,9 @@ jobs:
       - name: Build and verify Node 22 frontend image
         run: |
           set -euo pipefail
-          docker build -t inferno-benefits-frontend:ci .
+          docker build \
+            --build-arg NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=ci-walletconnect-project-id \
+            -t inferno-benefits-frontend:ci .
           container="$(docker run -d -p 127.0.0.1:3000:3000 inferno-benefits-frontend:ci)"
           cleanup() { docker rm -f "$container" >/dev/null 2>&1 || true; }
           trap cleanup EXIT
@@ -154,6 +156,8 @@ jobs:
           curl -fsS http://127.0.0.1:3000/guide >/dev/null
           curl -fsS http://127.0.0.1:3000/manifest.json >/dev/null
           docker exec "$container" node --version | grep -E '^v22\.'
+          docker exec "$container" sh -c \
+            "grep -R -F 'ci-walletconnect-project-id' .next/static >/dev/null"
 
   test-device-checklist:
     runs-on: ubuntu-latest
