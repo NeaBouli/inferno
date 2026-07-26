@@ -18,6 +18,8 @@ const files = {
   frontendHome: 'apps/benefits-network/frontend/src/app/page.tsx',
   frontendGuide: 'apps/benefits-network/frontend/src/app/guide/page.tsx',
   frontendPrivacy: 'apps/benefits-network/frontend/src/app/privacy/page.tsx',
+  frontendSupport: 'apps/benefits-network/frontend/src/app/support/page.tsx',
+  supportDiagnostics: 'apps/benefits-network/frontend/src/components/SupportDiagnostics.tsx',
   localDataControls: 'apps/benefits-network/frontend/src/components/LocalDataControls.tsx',
   frontendSitemap: 'apps/benefits-network/frontend/src/app/sitemap.ts',
   sellerRoutes: 'apps/benefits-network/backend/src/routes/seller.ts',
@@ -163,6 +165,32 @@ assert.ok(
     content.frontendPrivacy.includes('retention, deletion and support policy is not finalized') &&
     content.frontendPrivacy.includes('Masking is a display choice in seller views, not anonymity'),
   'Shop privacy route must preserve the evidence-only policy and masking boundary'
+);
+assert.ok(
+  content.frontendSupport.includes('Nothing here connects a wallet') &&
+    content.frontendSupport.includes('does not send') &&
+    content.frontendSupport.includes('does not promise a dedicated support response'),
+  'Shop support route must preserve its wallet-passive and no-SLA boundary'
+);
+for (const forbiddenDiagnosticInput of [
+  'eth_requestAccounts',
+  'eth_accounts',
+  'personal_sign',
+  'eth_sendTransaction',
+  'location.href',
+  'navigator.userAgent',
+  'localStorage',
+  'sessionStorage',
+]) {
+  assert.ok(
+    !content.supportDiagnostics.includes(forbiddenDiagnosticInput),
+    `support diagnostics contains forbidden input: ${forbiddenDiagnosticInput}`
+  );
+}
+assert.ok(
+  content.supportDiagnostics.includes("route: '/support'") &&
+    content.supportDiagnostics.includes("schema: 'ifr-benefits-support-v1'"),
+  'support diagnostics must use its fixed allowlisted report contract'
 );
 assert.ok(
   content.localDataControls.includes("const STORAGE_PREFIX = 'ifr.shop.'") &&

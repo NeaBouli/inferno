@@ -617,6 +617,10 @@ or transaction state as current.
   with deterministic browser coverage for calldata, receipts and refreshed 9-decimal balances**
 - QR proof after lock. **implemented as seller-issued, customer-signed, short-lived session proof,
   with an opt-in in-app camera scanner, local image decoding and manual link/session-ID fallback**
+- self-service recovery; **implemented as a wallet-passive `/support` route with public API,
+  network, PWA and connector-capability checks plus an allowlisted redacted report. It never
+  requests accounts, signatures or transactions and excludes wallet addresses, URLs and
+  browser-storage values. A staffed support channel and service-level policy remain separate**
 
 ### M3 - Seller Catalog And Categories
 

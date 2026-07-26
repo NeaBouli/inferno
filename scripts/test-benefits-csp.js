@@ -8,6 +8,7 @@ const ROUTES = [
   '/?mode=seller',
   '/guide',
   '/privacy',
+  '/support',
   '/scan',
   '/b/csp-compatibility-check',
   '/s/csp-compatibility-check',

@@ -28,6 +28,7 @@ on:
       - 'scripts/test-benefits-route-recovery.js'
       - 'scripts/test-benefits-seller-loader.js'
       - 'scripts/test-benefits-service-worker.js'
+      - 'scripts/test-benefits-support-ui.js'
       - 'scripts/test-benefits-wallet-asset-provider.mjs'
       - 'scripts/test-benefits-node-runtime.cjs'
       - 'scripts/test-deploy-benefits-capacity.sh'
@@ -64,6 +65,7 @@ on:
       - 'scripts/test-benefits-route-recovery.js'
       - 'scripts/test-benefits-seller-loader.js'
       - 'scripts/test-benefits-service-worker.js'
+      - 'scripts/test-benefits-support-ui.js'
       - 'scripts/test-benefits-wallet-asset-provider.mjs'
       - 'scripts/test-benefits-node-runtime.cjs'
       - 'scripts/test-deploy-benefits-capacity.sh'
@@ -174,6 +176,7 @@ jobs:
           done
           if [ "$ready" != 1 ]; then docker logs "$container"; exit 1; fi
           curl -fsS http://127.0.0.1:3000/guide >/dev/null
+          curl -fsS http://127.0.0.1:3000/support >/dev/null
           curl -fsS http://127.0.0.1:3000/manifest.json >/dev/null
           docker exec "$container" node --version | grep -E '^v22\.'
           docker exec "$container" sh -c \
@@ -203,6 +206,7 @@ jobs:
       - run: npm run test:benefits-money
       - run: npm run test:benefits-pass-ui
       - run: npm run test:benefits-discovery-ui
+      - run: npm run test:benefits-support
       - run: npm run test:benefits-wallet-ui
       - name: Build and run WCAG accessibility gate
         run: |

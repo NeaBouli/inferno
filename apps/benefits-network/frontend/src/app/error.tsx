@@ -43,6 +43,12 @@ export default function RootError({
               Open benefits
             </Link>
             <Link
+              href="/support"
+              className="rounded-full border border-white/15 px-5 py-3 text-sm font-black uppercase tracking-[0.14em] text-stone-100 transition hover:border-orange-200/60"
+            >
+              Run diagnostics
+            </Link>
+            <Link
               href="/guide"
               className="rounded-full border border-white/15 px-5 py-3 text-sm font-black uppercase tracking-[0.14em] text-stone-100 transition hover:border-orange-200/60"
             >
