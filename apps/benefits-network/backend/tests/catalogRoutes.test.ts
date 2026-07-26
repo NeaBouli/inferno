@@ -1255,9 +1255,13 @@ describe('Seller catalog routes', () => {
       headers: historyHeaders,
     });
     expect(historyResponse.status).toBe(200);
+    expect(historyResponse.headers.get('cache-control')).toBe('private, no-store, max-age=0');
     const history = await historyResponse.json() as { sessions: Array<Record<string, unknown>> };
-    expect(history.sessions.find((item) => item.id === rejectedSession.sessionId)).toMatchObject({
-      recoveredAddress: owner.address,
+    const rejectedHistory = history.sessions.find((item) => item.id === rejectedSession.sessionId);
+    expect(rejectedHistory).not.toHaveProperty('recoveredAddress');
+    expect(JSON.stringify(rejectedHistory)).not.toContain(owner.address);
+    expect(rejectedHistory).toMatchObject({
+      customerWalletMasked: `${owner.address.slice(0, 6)}...${owner.address.slice(-4)}`,
       lockAmountRaw: '250.0',
       reason: detailedReason,
     });

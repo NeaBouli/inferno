@@ -47,6 +47,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <a href="https://web3.ifrunit.tech/">Web3</a>
             <a href="https://ifrunit.tech/wiki/">Wiki</a>
             <a href="https://ifrunit.tech/#contracts">Contracts</a>
+            <Link href="/privacy">Privacy &amp; data</Link>
           </nav>
           <p>© 2026 IFR Protocol · Inferno Protocol</p>
         </div>

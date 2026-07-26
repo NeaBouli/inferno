@@ -2,12 +2,6 @@ import type { SellerSessionSummary } from '@/lib/api';
 
 export const SELLER_SESSION_PAGE_LIMIT = 50;
 
-export function maskSellerSessionWallet(address: string | null) {
-  if (!address) return '';
-  if (address.length <= 12) return 'verified';
-  return `${address.slice(0, 6)}...${address.slice(-4)}`;
-}
-
 function csvCell(value: string | number | null | undefined) {
   const raw = value === null || value === undefined ? '' : String(value);
   const spreadsheetSafe = /^[\s]*[=+\-@\t\r]/.test(raw) ? `'${raw}` : raw;
@@ -65,7 +59,7 @@ export function buildSellerSessionCsv(sellerName: string, sessions: SellerSessio
     session.verificationBlock || '',
     session.minIFRHeld,
     session.walletBalanceRaw || '',
-    maskSellerSessionWallet(session.recoveredAddress),
+    session.customerWalletMasked || '',
     session.reason || '',
     session.attestAttempts,
   ]);

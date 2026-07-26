@@ -17,6 +17,7 @@ const ROUTES = [
   '/',
   '/?mode=seller',
   '/guide',
+  '/privacy',
   '/scan',
   '/offline.html',
   `/b/${NONEXISTENT_BUSINESS_REF}`,

@@ -203,7 +203,7 @@ export interface SellerBusinessSlugClaim {
 export interface SellerSessionSummary {
   id: string;
   status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'EXPIRED' | 'REDEEMED';
-  recoveredAddress: string | null;
+  customerWalletMasked: string | null;
   /** Legacy API field name; value is a human-readable IFR amount from ethers.formatUnits(..., 9). */
   lockAmountRaw: string | null;
   /** Exact ERC-20 base-unit balance observed for a positive minIFRHeld rule. */
@@ -311,24 +311,11 @@ export interface RewardOnChainStatus {
   reason: string | null;
 }
 
-export interface RewardEventSummary {
-  id: string;
-  sessionId: string;
-  partnerId: string;
-  customerWallet: string;
-  lockAmountRaw: string;
-  status: 'PENDING' | 'READY' | 'BLOCKED_CALLER' | 'BLOCKED_GOVERNANCE' | 'SUBMITTED' | 'CONFIRMED' | 'SKIPPED' | 'FAILED';
-  reason: string | null;
-  txHash: string | null;
-  createdAt: string;
-  updatedAt: string;
-}
-
 export interface SellerRewardStatus {
   link: SellerRewardLink | null;
   onChain: RewardOnChainStatus | null;
   onChainError: string | null;
-  events: RewardEventSummary[];
+  eventCount: number;
 }
 
 export interface SellerAuth {

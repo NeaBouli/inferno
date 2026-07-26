@@ -752,15 +752,31 @@ describe('Redeem route authorization', () => {
         openChecks: number;
         approvalRatePercent: number | null;
       };
-      sessions: unknown[];
+      sessions: Array<{
+        recoveredAddress?: string;
+        customerWalletMasked: string | null;
+      }>;
     };
+    const storedCustomerSession = await prisma.session.findFirstOrThrow({
+      where: { businessId, recoveredAddress: { not: null } },
+      orderBy: { createdAt: 'asc' },
+      select: { recoveredAddress: true },
+    });
 
     expect(response.status).toBe(200);
+    expect(response.headers.get('cache-control')).toBe('private, no-store, max-age=0');
     expect(body.metrics.today).toMatchObject({ checks: 6, approved: 2, redeemed: 2, rejected: 1 });
     expect(body.metrics.allTime).toMatchObject({ checks: 7, approved: 3, redeemed: 2, rejected: 1 });
     expect(body.metrics.openChecks).toBe(2);
     expect(body.metrics.approvalRatePercent).toBe(75);
     expect(body.sessions).toHaveLength(7);
+    expect(body.sessions.some((session) =>
+      Object.prototype.hasOwnProperty.call(session, 'recoveredAddress')
+    )).toBe(false);
+    expect(JSON.stringify(body)).not.toContain(storedCustomerSession.recoveredAddress);
+    expect(body.sessions).toContainEqual(expect.objectContaining({
+      customerWalletMasked: `${storedCustomerSession.recoveredAddress!.slice(0, 6)}...${storedCustomerSession.recoveredAddress!.slice(-4)}`,
+    }));
   }, 15_000);
 
   it('paginates seller history without duplicates and rejects foreign or invalid cursors', async () => {

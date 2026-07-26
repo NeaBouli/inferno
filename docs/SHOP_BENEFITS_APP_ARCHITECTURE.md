@@ -261,6 +261,12 @@ those remain production configuration and physical-wallet acceptance gates.
     actions disabled until valid identifiers are entered. PWA cache v22 prevents installed devices
     from retaining the previous expanded mobile entry. Production deployment remains gated by
     tests, exact-head CI, rollback and device smoke.**
+16. User-visible data boundary. **Implemented locally as `/privacy` with a factual data-flow
+    explanation and selective browser-data controls. Seller session responses expose only
+    server-masked customer wallet identifiers; reward status exposes only an event count. Both use
+    `private, no-store`, while full addresses remain backend-only for eligibility, limits and
+    rewards. The page explicitly leaves long-term
+    server retention, deletion handling, legal review and a dedicated support channel open.**
 
 ## Security Notes
 

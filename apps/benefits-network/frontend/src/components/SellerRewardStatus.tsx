@@ -83,7 +83,7 @@ export function SellerRewardStatus({ businessId }: { businessId: string }) {
     setError('');
     try {
       const result = await applyForSellerRewards(businessId, await signAction('rewards:apply'));
-      setData({ link: result.link, onChain: null, onChainError: null, events: [] });
+      setData({ link: result.link, onChain: null, onChainError: null, eventCount: 0 });
       setMessage('Application recorded. Governance registration and PartnerVault activation are still required.');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not submit the reward application.');
@@ -163,9 +163,9 @@ export function SellerRewardStatus({ businessId }: { businessId: string }) {
       ) : null}
       {data?.onChainError ? <p className="mt-3 px-3 text-sm text-amber-200">{data.onChainError}</p> : null}
       {link?.reason ? <p className="mt-3 px-3 text-sm text-stone-300">{link.reason}</p> : null}
-      {data?.events.length ? (
+      {data?.eventCount ? (
         <p className="mt-3 px-3 text-xs text-stone-400">
-          {data.events.length} local reward event{data.events.length === 1 ? '' : 's'} recorded. PENDING or READY does not mean submitted or paid.
+          {data.eventCount} local reward event{data.eventCount === 1 ? '' : 's'} recorded. PENDING or READY does not mean submitted or paid.
         </p>
       ) : null}
       {message ? <p className="mt-3 px-3 text-sm text-green-200">{message}</p> : null}

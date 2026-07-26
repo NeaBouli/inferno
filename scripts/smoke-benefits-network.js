@@ -991,7 +991,7 @@ async function verifyRuleTemplateAuthorization() {
             {
               id: 'session-older-csv',
               status: 'EXPIRED',
-              recoveredAddress: null,
+              customerWalletMasked: null,
               lockAmountRaw: null,
               reason: 'QR session expired',
               expiresAt: '2026-07-18T08:35:00.000Z',
@@ -1016,7 +1016,7 @@ async function verifyRuleTemplateAuthorization() {
             {
               id: 'session-redeemed-csv',
               status: 'REDEEMED',
-              recoveredAddress: '0x2222222222222222222222222222222222222222',
+              customerWalletMasked: '0x2222...2222',
               lockAmountRaw: '1500.000000000',
               reason: null,
               expiresAt: '2026-07-19T08:30:00.000Z',
@@ -1041,7 +1041,7 @@ async function verifyRuleTemplateAuthorization() {
             {
               id: 'session-rejected-csv',
               status: 'REJECTED',
-              recoveredAddress: null,
+              customerWalletMasked: null,
               lockAmountRaw: null,
               reason: '+SUM(1,1)',
               expiresAt: '2026-07-19T08:35:00.000Z',
