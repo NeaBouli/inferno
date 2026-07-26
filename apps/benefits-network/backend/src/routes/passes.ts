@@ -1,7 +1,13 @@
-import { Request, Response, Router } from 'express';
+import { NextFunction, Request, Response, Router } from 'express';
 import { z } from 'zod';
 import { validate } from '../middleware/validator';
-import { challengeRateLimiter, customerPassRateLimiter, sellerRateLimiter } from '../middleware/rateLimiter';
+import {
+  challengeRateLimiter,
+  customerPassRateLimiter,
+  customerPassReadIpRateLimiter,
+  customerPassReadRateLimiter,
+  sellerRateLimiter,
+} from '../middleware/rateLimiter';
 import { SellerAuthError, verifySellerSignature } from '../services/sellerAuth';
 import { assertSellerWalletActionAllowed, AuthenticatedRateLimitError } from '../services/authenticatedRateLimiter';
 import { RateLimitStoreUnavailableError } from '../services/rateLimitInfrastructure';
@@ -25,6 +31,14 @@ const walletSchema = z.string().regex(/^0x[a-fA-F0-9]{40}$/);
 function privateNoStore(res: Response) {
   res.set('Cache-Control', 'private, no-store, max-age=0');
   res.set('Pragma', 'no-cache');
+}
+
+function requirePassId(req: Request, res: Response, next: NextFunction) {
+  if (!passIdSchema.safeParse(req.params.id).success) {
+    res.status(404).json({ error: 'Customer pass not found' });
+    return;
+  }
+  next();
 }
 
 function auth(req: Request) {
@@ -81,9 +95,8 @@ router.post('/', customerPassRateLimiter, validate(z.object({
   } catch (err) { handleError(err, res, next); }
 });
 
-router.get('/:id', customerPassRateLimiter, async (req, res, next) => {
+router.get('/:id', customerPassRateLimiter, requirePassId, async (req, res, next) => {
   try {
-    if (!passIdSchema.safeParse(req.params.id).success) return void res.status(404).json({ error: 'Customer pass not found' });
     privateNoStore(res);
     const pass = await getPublicCustomerPass(req.params.id);
     if (!pass) return void res.status(404).json({ error: 'Customer pass not found' });
@@ -91,12 +104,18 @@ router.get('/:id', customerPassRateLimiter, async (req, res, next) => {
   } catch (err) { handleError(err, res, next); }
 });
 
-router.get('/:id/control', customerPassRateLimiter, async (req, res, next) => {
-  try {
-    privateNoStore(res);
-    res.json(await getControlledCustomerPass(req.params.id, req.header('authorization')));
-  } catch (err) { handleError(err, res, next); }
-});
+router.get(
+  '/:id/control',
+  customerPassReadIpRateLimiter,
+  requirePassId,
+  customerPassReadRateLimiter,
+  async (req, res, next) => {
+    try {
+      privateNoStore(res);
+      res.json(await getControlledCustomerPass(req.params.id, req.header('authorization')));
+    } catch (err) { handleError(err, res, next); }
+  }
+);
 
 router.post('/:id/bind', sellerRateLimiter, validate(z.object({
   businessId: z.string().min(1).max(200),

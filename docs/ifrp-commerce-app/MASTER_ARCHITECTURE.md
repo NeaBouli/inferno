@@ -187,6 +187,12 @@ compatible fallback. The in-app `/scan` route decodes it locally and fails close
 modified URLs. Public challenge/attest endpoints reject sessions created from a customer pass, so a
 leaked linked session ID cannot bypass the customer's private confirmation path.
 
+Customer-pass status polling uses read-only budgets separate from pass creation, confirmation and
+cancellation, so normal polling cannot consume the stricter mutation allowance. The per-control
+budget is keyed by the pass ID and a SHA-256 digest of the private control token; raw control tokens
+never enter the rate-limit store. A separate IP-wide ceiling limits invalid-token spray without
+letting those requests consume the legitimate control token's polling budget.
+
 Compatible seller-QR verification:
 
 1. Seller owner or active checkout operator signs a server-issued one-time `sessions:create` challenge bound to wallet, business and selected rule; the backend atomically consumes it while rechecking current access and creating the scan session.

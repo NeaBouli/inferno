@@ -461,6 +461,33 @@ textarea {
   }
 }
 
+@media (max-width: 420px) {
+  .shop-header-inner {
+    gap: 6px;
+    padding: 8px 12px 7px;
+  }
+
+  .shop-nav {
+    display: grid;
+    width: calc(100vw - 24px);
+    grid-template-columns: repeat(5, max-content);
+    justify-content: space-between;
+    overflow-x: visible;
+    padding-bottom: 0;
+  }
+
+  .shop-nav-link,
+  .shop-nav-project {
+    min-height: 36px;
+    padding: 6px 4px;
+    font-size: 0.7rem;
+  }
+
+  .shop-nav-project {
+    margin-left: 0;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
