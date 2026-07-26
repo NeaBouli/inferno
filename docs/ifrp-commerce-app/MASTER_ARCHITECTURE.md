@@ -544,12 +544,18 @@ Infrastructure options:
   - `inferno-shop-frontend`
   - `inferno-shop-api`
 - frontend environment:
+  - `BENEFITS_API_INTERNAL_URL` (server-only API rewrite, metadata and sitemap reads)
   - `NEXT_PUBLIC_API_URL`
   - `NEXT_PUBLIC_CHAIN_ID`
   - `NEXT_PUBLIC_IFR_TOKEN_ADDRESS`
   - `NEXT_PUBLIC_IFRLOCK_ADDRESS`
   - `NEXT_PUBLIC_COMMITMENT_VAULT_ADDRESS`
   - `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` (optional until a production project ID is provisioned)
+- all `NEXT_PUBLIC_*` values are browser-visible build-time configuration and
+  must be passed to the production Docker build; runtime-only container changes
+  do not rewrite the generated client bundle. Compose must be invoked with the
+  protected environment file via `--env-file`; a service-level `env_file` alone
+  does not populate `${...}` build-argument interpolation.
 - backend environment:
   - `CHAIN_ID`
   - `RPC_URL`

@@ -14,6 +14,7 @@ ABORT_FREE_MB="$((ABORT_FREE_GB * 1024))"
 DEPLOY_ABORT_FREE_GB="${DEPLOY_ABORT_FREE_GB:-4}"
 DEPLOY_ABORT_FREE_MB="$((DEPLOY_ABORT_FREE_GB * 1024))"
 REMOTE_VOLUME="${REMOTE_VOLUME:-/mnt/HC_Volume_106164848}"
+REMOTE_COMPOSE_ENV_FILE="${REMOTE_COMPOSE_ENV_FILE:-$REMOTE_ROOT/.env.benefits}"
 
 case "$MODE" in
   frontend|backend|all|status|capacity) ;;
@@ -87,7 +88,7 @@ sync_app() {
 }
 
 compose() {
-  remote "cd '$REMOTE_ROOT' && docker compose $*"
+  remote "cd '$REMOTE_ROOT' && docker compose --env-file '$REMOTE_COMPOSE_ENV_FILE' $*"
 }
 
 wait_healthy() {
@@ -107,11 +108,11 @@ wait_healthy() {
 }
 
 post_status() {
-  remote "cd '$REMOTE_ROOT' && docker compose ps benefits-backend benefits-frontend && df -h '$REMOTE_VOLUME' && docker system df"
+  remote "cd '$REMOTE_ROOT' && docker compose --env-file '$REMOTE_COMPOSE_ENV_FILE' ps benefits-backend benefits-frontend && df -h '$REMOTE_VOLUME' && docker system df"
 }
 
 backend_replica_count() {
-  remote "cd '$REMOTE_ROOT' && docker compose ps -aq benefits-backend | wc -l | tr -d ' '"
+  remote "cd '$REMOTE_ROOT' && docker compose --env-file '$REMOTE_COMPOSE_ENV_FILE' ps -aq benefits-backend | wc -l | tr -d ' '"
 }
 
 assert_single_backend() {
