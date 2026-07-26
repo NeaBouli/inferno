@@ -4,7 +4,7 @@ export default function robots(): MetadataRoute.Robots {
   return {
     rules: {
       userAgent: '*',
-      allow: ['/', '/guide', '/scan', '/s/', '/privacy'],
+      allow: ['/', '/guide', '/scan', '/s/', '/privacy', '/support'],
       disallow: ['/api/', '/b/', '/p/', '/r/'],
     },
     sitemap: 'https://shop.ifrunit.tech/sitemap.xml',

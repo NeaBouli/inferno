@@ -14,6 +14,7 @@
     "test:benefits-a11y": "node scripts/test-benefits-accessibility.js",
     "test:benefits-recovery": "node scripts/test-benefits-route-recovery.js",
     "test:benefits-csp": "node scripts/test-benefits-csp.js",
+    "test:benefits-support": "node scripts/test-benefits-support-ui.js",
     "test:benefits-fullstack": "node scripts/test-benefits-fullstack-e2e.js",
     "test:benefits-bundle": "node scripts/test-benefits-bundle-budget.cjs",
     "test:benefits-docs": "node scripts/test-benefits-doc-consistency.cjs",

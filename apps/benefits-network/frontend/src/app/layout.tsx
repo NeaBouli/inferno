@@ -56,6 +56,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       'Short-lived customer and seller QR checkout',
       'Seller profiles, catalogs and benefit rules',
       'Installable progressive web app',
+      'Private self-service diagnostics and recovery guidance',
       'Contextual IFR Copilot help',
     ],
   };
