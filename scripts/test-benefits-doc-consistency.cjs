@@ -15,6 +15,7 @@ const files = {
   frontendReadme: 'apps/benefits-network/frontend/README.md',
   frontendHome: 'apps/benefits-network/frontend/src/app/page.tsx',
   frontendGuide: 'apps/benefits-network/frontend/src/app/guide/page.tsx',
+  frontendSitemap: 'apps/benefits-network/frontend/src/app/sitemap.ts',
 };
 
 const content = Object.fromEntries(Object.entries(files).map(([key, file]) => [
@@ -96,6 +97,48 @@ assert.ok(
 assert.ok(
   /API, wallet, checkout and redemption requests stay network-only/.test(content.frontendReadme),
   'frontend README must preserve the network-only PWA boundary'
+);
+
+for (const variable of [
+  'NEXT_PUBLIC_API_URL',
+  'NEXT_PUBLIC_CHAIN_ID',
+  'NEXT_PUBLIC_IFR_TOKEN_ADDRESS',
+  'NEXT_PUBLIC_IFRLOCK_ADDRESS',
+  'NEXT_PUBLIC_COMMITMENT_VAULT_ADDRESS',
+  'NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID',
+  'CHAIN_ID',
+  'RPC_URL',
+  'RATE_LIMIT_STORE',
+  'BACKEND_REPLICA_COUNT',
+]) {
+  assert.ok(
+    content.master.includes(`\`${variable}\``),
+    `master architecture is missing the deployed configuration name: ${variable}`
+  );
+}
+for (const staleVariable of ['SHOP_API_URL', 'MAINNET_RPC_URL']) {
+  assert.ok(
+    !content.master.includes(staleVariable),
+    `master architecture contains stale configuration name: ${staleVariable}`
+  );
+}
+assert.ok(
+  content.master.includes('The scoped external-wallet MVP on `shop.ifrunit.tech` is implemented.'),
+  'master architecture must not describe the deployed MVP as future work'
+);
+assert.ok(
+  content.master.includes('first real wallet-owned seller profile') &&
+    content.master.includes('physical iPhone/iPad/Android wallet matrix'),
+  'master architecture must document the current real-world release gates'
+);
+assert.ok(
+  content.frontendGuide.includes('https://ifrunit.tech/wiki/business-onboarding.html'),
+  'Shop guide must link to the canonical seller onboarding page'
+);
+assert.ok(
+  !content.frontendSitemap.includes("new Date('2026-07-19T00:00:00Z')") &&
+    !content.frontendSitemap.includes('lastModified,'),
+  'static Shop routes must not publish a frozen last-modified timestamp'
 );
 
 console.log('[benefits-doc-consistency] PASS');
