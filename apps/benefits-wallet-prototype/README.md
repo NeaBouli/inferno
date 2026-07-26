@@ -19,7 +19,8 @@ QR actions, seller APIs or reward actions in this app.
 ## Local setup
 
 1. Create a dedicated test project in the Coinbase Developer Platform.
-2. In Embedded Wallet Configuration, allowlist `http://localhost:3012`.
+2. In Embedded Wallet Configuration, allowlist both `http://localhost:3012` and
+   `http://127.0.0.1:3012`. Vite binds the IPv4 loopback address and CDP matches origins exactly.
 3. Copy `.env.example` to `.env.local` and set the public `VITE_CDP_PROJECT_ID`.
 4. Use only a test email and an empty test wallet.
 5. Run `npm ci`, `npm test`, then `npm run dev`.
@@ -33,3 +34,7 @@ This prototype must not be linked from or merged into the production Benefits wa
 all gates in `docs/ifrp-commerce-app/EMBEDDED_WALLET_DECISION.md` have current evidence. In
 particular: second-device recovery, lost-auth behavior, provider outage, account deletion,
 mobile browser export, legal/privacy review and independent security review.
+
+Record future non-secret results in
+`docs/ifrp-commerce-app/EMBEDDED_WALLET_EVIDENCE.md`. The security test validates that record
+and rejects unsupported `passed` states.

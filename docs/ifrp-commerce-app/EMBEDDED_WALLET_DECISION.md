@@ -110,6 +110,11 @@ handling after export and provider availability. These risks block production.
 
 ## Acceptance Matrix
 
+The current machine-checkable gate state is recorded in
+[`EMBEDDED_WALLET_EVIDENCE.md`](EMBEDDED_WALLET_EVIDENCE.md). The prototype security test rejects
+unknown gates, unsupported statuses, secret-like material and any `passed` gate without result,
+reviewer, timestamp and artifact references.
+
 The prototype may advance toward production only when all rows have evidence. None of these rows
 is satisfied by a source build alone:
 

@@ -36,13 +36,13 @@ function ConfigurationGate() {
           <h2 id="preflight-title">Wallet creation is locked</h2>
           <p>
             Add a dedicated CDP test Project ID to <code>VITE_CDP_PROJECT_ID</code> and allowlist
-            <code>http://localhost:3012</code>. Never reuse a production credential or import an
-            existing wallet into this prototype.
+            both <code>http://localhost:3012</code> and <code>http://127.0.0.1:3012</code>. Never
+            reuse a production credential or import an existing wallet into this prototype.
           </p>
         </div>
         <div className="gate-list" aria-label="Prototype safety gates">
           <span><b>1</b> Dedicated CDP test project</span>
-          <span><b>2</b> Local origin allowlisted</span>
+          <span><b>2</b> Local origins allowlisted</span>
           <span><b>3</b> Test identity only</span>
         </div>
       </section>
@@ -58,7 +58,13 @@ function ConfigurationGate() {
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     {projectId ? (
-      <Suspense fallback={<div className="loading-screen">Preparing secure wallet lab...</div>}>
+      <Suspense
+        fallback={
+          <div className="loading-screen" role="status">
+            Preparing secure wallet lab...
+          </div>
+        }
+      >
         <WalletPrototype projectId={projectId} />
       </Suspense>
     ) : (
