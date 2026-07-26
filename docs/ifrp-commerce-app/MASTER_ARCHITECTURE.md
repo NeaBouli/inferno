@@ -649,8 +649,10 @@ or transaction state as current.
 - redemption history. **implemented as owner-protected snapshot/cursor pages, metrics, receipts,
   incremental older checks and a browser-local masked full-history CSV. Seller-facing API responses
   expose only a server-masked customer wallet identifier and use private no-store caching; the full
-  wallet remains backend-only for eligibility, limits and rewards. Long-term retention policy
-  remains separate**
+  wallet remains backend-only for eligibility, limits and rewards. A manual phase-one
+  report/prune tool now covers old admin audit rows and expired unlinked auth artifacts only;
+  it is bounded, confirmation-gated, unscheduled and excludes Sessions, session AuditLogs,
+  RewardEvents and linked passes. Long-term retention and deletion policy remains separate**
 - per-wallet redemption limits. **implemented per rule for UTC day/month with immutable session snapshots, atomic enforcement and audited denials**
 - customer benefits history. **implemented as a wallet-signed, cross-device `My benefits` view
   with single-use challenge exchange, memory-only read access, signer-bound snapshot pagination

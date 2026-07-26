@@ -166,7 +166,7 @@ export default function PrivacyPage() {
             <p className="text-xs font-black uppercase tracking-[0.18em] text-orange-200/80">Open items</p>
             <h2 className="mt-2 text-3xl font-black text-white">What is not decided yet</h2>
             <p className="mt-4 max-w-3xl text-sm leading-7 text-stone-300">
-              The long-term server-side retention, deletion and support policy is not finalized. This page therefore makes no promise that backend records can be deleted on request, and it does not claim compliance with GDPR or any other specific legal framework. There is no dedicated privacy support channel at this time. When a final policy exists, this page will be updated to match it.
+              The backend has a manual operator tool for counting and removing expired, unlinked authorization artifacts after an approved cutoff. It does not automatically delete checkout sessions, session audit records, reward records or passes linked to sessions. The long-term server-side retention, deletion and support policy is not finalized. This page therefore makes no promise that backend records can be deleted on request, and it does not claim compliance with GDPR or any other specific legal framework. There is no dedicated privacy support channel at this time. When a final policy exists, this page will be updated to match it.
             </p>
             <p className="mt-3 max-w-3xl text-sm leading-7 text-stone-300">
               What you can always do today: clear this browser&apos;s local app data with the controls above, disconnect your wallet in your wallet app, and simply stop using the service. On-chain transactions you have already signed remain public on Ethereum and cannot be altered or removed by anyone.
