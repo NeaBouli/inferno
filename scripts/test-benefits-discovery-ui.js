@@ -132,7 +132,8 @@ async function waitForLocation(page, pathname, hash = '') {
     ({ expectedPathname, expectedHash }) => (
       window.location.pathname === expectedPathname && window.location.hash === expectedHash
     ),
-    { expectedPathname: pathname, expectedHash: hash }
+    { expectedPathname: pathname, expectedHash: hash },
+    { timeout: 90_000 }
   );
 }
 

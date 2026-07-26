@@ -8,6 +8,30 @@ const path = require('node:path');
 const { spawn, spawnSync } = require('node:child_process');
 const { chromium } = require('playwright');
 const { ethers } = require('ethers');
+const axeSource = require('axe-core').source;
+
+const AXE_TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'];
+
+async function assertNoAxeViolations(page, stateLabel) {
+  await page.addScriptTag({ content: axeSource });
+  const { violations } = await page.evaluate(async (tags) => (
+    window.axe.run(document, {
+      runOnly: { type: 'tag', values: tags },
+      resultTypes: ['violations'],
+    })
+  ), AXE_TAGS);
+  const details = violations.map((violation) => [
+    `Rule: ${violation.id} (${violation.impact || 'impact-unknown'})`,
+    `Description: ${violation.description}`,
+    `Targets: ${violation.nodes?.map((node) => node.target.join(' ')).join(' | ') || 'n/a'}`,
+    `Help: ${violation.help}`,
+  ].join('\n')).join('\n--\n');
+  assert.equal(
+    violations.length,
+    0,
+    `Axe WCAG 2.0/2.1 A/AA violations on ${stateLabel}:\n${details}`
+  );
+}
 
 const root = path.resolve(__dirname, '..');
 const backend = path.join(root, 'apps', 'benefits-network', 'backend');
@@ -265,9 +289,11 @@ async function verifyBrowser(fixture) {
     await offers.getByText(fixture.business.name, { exact: true }).waitFor();
     await offers.getByText('14% benefit', { exact: true }).waitFor();
     await offers.getByText('1,000 IFR in active TIME_ONLY commitments', { exact: true }).waitFor();
+    await assertNoAxeViolations(page, `home with seeded offer visible (${frontendOrigin}/)`);
     await offers.getByRole('link', { name: 'Seller catalog', exact: true }).click();
     await page.waitForURL(`${frontendOrigin}/s/${fixture.business.slug}`);
     await page.getByText(fixture.product.name, { exact: true }).waitFor();
+    await assertNoAxeViolations(page, `public seller catalog with product visible (/s/${fixture.business.slug})`);
     await page.getByRole('link', { name: 'Use this offer', exact: true }).click();
     await page.waitForURL((url) => (
       url.pathname === '/' &&
@@ -285,6 +311,10 @@ async function verifyBrowser(fixture) {
       '14% benefit · 1,000 IFR lock in active TIME_ONLY commitments',
       { exact: true }
     ).waitFor();
+    await assertNoAxeViolations(
+      page,
+      `selected-offer customer-pass handoff (/?seller=${fixture.business.slug}&offer=${fixture.rule.id}#customer-pass)`
+    );
 
     assert.equal(pageErrors.length, 0, `Browser errors: ${pageErrors.join('; ')}`);
     assert.ok(

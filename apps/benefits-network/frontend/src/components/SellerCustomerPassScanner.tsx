@@ -89,7 +89,7 @@ export function SellerCustomerPassScanner({ onPass }: { onPass: (passId: string)
       <div className={`mt-3 overflow-hidden rounded-2xl border border-white/10 bg-black/30 ${active ? 'aspect-[4/3]' : 'h-0 border-0'}`}>
         <video ref={videoRef} playsInline muted className="h-full w-full object-cover" aria-label="Customer pass camera preview" />
       </div>
-      <p className="mt-2 text-xs leading-5 text-stone-400" aria-live="polite">{message}</p>
+      <p className="mt-2 text-xs leading-5 text-stone-300" aria-live="polite">{message}</p>
     </div>
   );
 }

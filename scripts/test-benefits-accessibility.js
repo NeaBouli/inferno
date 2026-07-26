@@ -4,7 +4,25 @@ const { chromium, devices } = require('playwright');
 const axeSource = require('axe-core').source;
 
 const BASE_URL = process.env.BENEFITS_BASE_URL || 'http://127.0.0.1:3000';
-const ROUTES = ['/', '/?mode=seller', '/guide', '/scan', '/offline.html'];
+// Deterministic valid-looking but nonexistent resource IDs: they exercise the
+// real not-found states of the checkout surfaces without touching real data.
+// Business/session references are cuid-shaped (25 chars), the seller reference
+// is a valid slug, and the pass ID matches the 32-char base64url pass format.
+const NONEXISTENT_BUSINESS_REF = 'clza11ynonexistentbiz0001';
+const NONEXISTENT_SELLER_SLUG = 'a11y-nonexistent-seller';
+const NONEXISTENT_SESSION_ID = 'clza11ynonexistentsess001';
+const NONEXISTENT_PASS_ID = 'a11yNonexistentPass0000000000000';
+const ROUTES = [
+  '/',
+  '/?mode=seller',
+  '/guide',
+  '/scan',
+  '/offline.html',
+  `/b/${NONEXISTENT_BUSINESS_REF}`,
+  `/s/${NONEXISTENT_SELLER_SLUG}`,
+  `/r/${NONEXISTENT_SESSION_ID}`,
+  `/p/${NONEXISTENT_PASS_ID}`,
+];
 const TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'];
 const DEVICES = [
   {
