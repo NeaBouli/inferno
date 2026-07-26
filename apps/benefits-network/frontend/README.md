@@ -45,7 +45,7 @@ a public application identifier, not a wallet secret.
 
 The public shop defaults to Ethereum Mainnet. `NEXT_PUBLIC_CHAIN_ID=11155111` can still be used for Sepolia testing if matching testnet contract addresses are supplied.
 
-`NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` enables the Wagmi WalletConnect QR connector for compatible mobile wallets. Without it, the app intentionally falls back to browser-injected Ethereum wallets such as MetaMask and Coinbase Wallet instead of blocking the customer proof flow. On iOS/iPadOS and Android, the fallback also exposes official HTTPS wallet-browser launch links for MetaMask, Trust Wallet, OKX and Phantom. Coinbase and Rainbow remain on the injected-provider or Copy/Share path until the WalletConnect project is configured.
+`NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` enables the Wagmi WalletConnect QR connector for compatible mobile wallets only when it is a syntactically valid 32-character hexadecimal Reown project ID. Missing, malformed and placeholder values fail closed to browser-injected Ethereum wallets such as MetaMask and Coinbase Wallet instead of claiming multi-wallet readiness. On iOS/iPadOS and Android, the fallback also exposes official HTTPS wallet-browser launch links for MetaMask, Trust Wallet, OKX and Phantom. Coinbase and Rainbow remain on the injected-provider or Copy/Share path until the WalletConnect project is configured.
 
 Wallet launch targets are always reduced to an HTTPS path on
 `https://shop.ifrunit.tech`; foreign origins and query strings are discarded
@@ -103,6 +103,25 @@ the Uniswap price-impact and user-controlled slippage warning visible.
 - Wagmi v3 + Viem (injected, Coinbase and optional WalletConnect QR connectors)
 - react-qr-code (QR generation)
 - PWA (manifest.json + service worker)
+
+## Release Preflight
+
+From the repository root, run the fail-closed static evidence gates with:
+
+```bash
+npm run preflight:benefits -- --static
+```
+
+Before push or deployment, run the complete sequential local gate battery from a clean worktree:
+
+```bash
+npm run preflight:benefits
+```
+
+The full preflight audits both package trees, checks backend and frontend contracts, exercises the
+customer/seller browser flows, rebuilds the production frontend and finishes with WCAG, recovery
+and CSP checks against one local server. It does not contact production, supply secrets, run a
+wallet transaction or replace exact-head CI and the physical device matrix.
 
 ## Seller Rules
 

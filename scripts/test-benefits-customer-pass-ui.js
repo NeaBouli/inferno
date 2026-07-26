@@ -380,7 +380,10 @@ async function run() {
     await customer.getByRole('button', { name: 'Connect wallet', exact: true }).first().click();
     await customer.getByRole('button', { name: 'Disconnect', exact: true }).first().waitFor();
 
-    await seller.goto(`${origin}/p/${passId}`, { waitUntil: 'domcontentloaded' });
+    await seller.goto(`${origin}/p/${passId}`, {
+      waitUntil: 'domcontentloaded',
+      timeout: 60_000,
+    });
     const sellerReference = seller.getByLabel('Seller URL or profile ID', { exact: true });
     await sellerReference.fill(`https://attacker.example/b/${business.slug}`);
     await seller.getByRole('button', { name: 'Open seller checkout', exact: true }).click();

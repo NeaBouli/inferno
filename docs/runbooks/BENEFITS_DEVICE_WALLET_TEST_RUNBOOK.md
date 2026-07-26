@@ -9,19 +9,30 @@ This runbook is intentionally operational. Do not record private keys, seed phra
 Test the live Benefits Network PWA at:
 
 - `https://shop.ifrunit.tech`
+- `https://shop.ifrunit.tech/guide`
 - `https://shop.ifrunit.tech/b/{businessId}`
+- `https://shop.ifrunit.tech/s/{sellerSlug}`
+- `https://shop.ifrunit.tech/p/{passId}`
 - `https://shop.ifrunit.tech/r/{sessionId}`
+- `https://shop.ifrunit.tech/scan`
 
 Required paths:
 
 1. Customer wallet entry and install guidance.
 2. Seller wallet entry and seller profile/rule management.
-3. Seller scanner creates a QR session.
-4. Customer scans/opens QR, connects wallet and signs proof.
-5. Seller sees result and redeems approved sessions.
-6. Rejected or ineligible wallets produce clear, non-technical messages.
+3. Customer creates a short-lived pass; seller scans it and binds the exact offer.
+4. Customer reviews and signs the exact bound offer.
+5. Seller sees the result and redeems an approved checkout once; replay remains blocked.
+6. The compatible seller-issued `/r/{sessionId}` QR flow still works through `/scan`.
+7. Rejected, unavailable or transiently failed checks produce clear recovery guidance.
 
 ## Preconditions
+
+- The local release evidence preflight passes before a candidate commit is pushed:
+
+```bash
+npm run preflight:benefits
+```
 
 - Live health check passes:
 
@@ -50,14 +61,14 @@ Use that command only with a deliberately prepared test wallet. Never paste the 
 | Device | Browser / Wallet Surface | Expected Result |
 |---|---|---|
 | iPadOS Safari | `shop.ifrunit.tech` | PWA install guidance is visible; official MetaMask/Trust/OKX/Phantom launch links and Copy/Share are readable. |
-| iPadOS MetaMask in-app browser | `shop.ifrunit.tech` | Customer wallet connects; proof page can sign a QR challenge. |
-| iPadOS Coinbase Wallet browser | `shop.ifrunit.tech` | Customer wallet connects or displays a clear fallback path. |
+| iPadOS MetaMask in-app browser | `shop.ifrunit.tech` | Customer creates a `/p` pass, reviews the seller-bound offer and signs the exact confirmation. |
+| iPadOS Coinbase Wallet browser | `shop.ifrunit.tech` | Customer completes the `/p` pass flow or receives a clear connector fallback. |
 | Android Chrome | `shop.ifrunit.tech` | PWA install guidance is visible; official MetaMask/Trust/OKX/Phantom launch links and Copy/Share are readable. |
-| Android MetaMask browser | `shop.ifrunit.tech` | Customer wallet connects; proof page can sign a QR challenge. |
-| Android Trust Wallet browser | `shop.ifrunit.tech` | Wallet entry works if Ethereum provider is exposed; otherwise fallback copy/share is clear. |
-| Android OKX Wallet browser | `shop.ifrunit.tech` | Wallet entry works if Ethereum provider is exposed; otherwise fallback copy/share is clear. |
-| Phantom | EVM-capable browser/session | If Ethereum provider is unavailable, app must fail gracefully and not block non-Phantom wallets. |
-| Desktop Chrome + MetaMask | `shop.ifrunit.tech` | Seller and customer wallet actions work with injected provider. |
+| Android MetaMask browser | `shop.ifrunit.tech` | Customer creates a `/p` pass, reviews the seller-bound offer and signs the exact confirmation. |
+| Android Trust Wallet browser | `shop.ifrunit.tech` | `/p` pass entry works if an Ethereum provider is exposed; otherwise fallback copy/share is clear. |
+| Android OKX Wallet browser | `shop.ifrunit.tech` | `/p` pass entry works if an Ethereum provider is exposed; otherwise fallback copy/share is clear. |
+| Phantom | EVM-capable browser/session | `/p` pass entry works with an EVM provider, or the app fails gracefully without claiming a connection. |
+| Desktop Chrome + MetaMask | `shop.ifrunit.tech` | Seller profile, permanent `/s` URL, pass binding, compatible seller QR and redeem signature work. |
 | Desktop Chrome + Coinbase Wallet extension | `shop.ifrunit.tech` | Wallet entry works or provides a clear fallback. |
 
 WalletConnect modal support remains gated by `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID`. Until that production value is set, success criteria are injected wallet support plus clear mobile wallet-browser fallback. Do not treat a successful wallet-app launch as a successful wallet connection; the injected provider, Ethereum Mainnet, signature and transaction steps must still be tested inside the opened wallet browser.
@@ -113,37 +124,38 @@ Pass criteria:
 - No admin secret is required for normal seller-owned setup.
 - Created seller profile appears when reloaded with the same wallet.
 
-### 4. Scanner And Customer QR
+### 4. Customer-Presented Pass And Seller Bind
 
-1. Open scanner from Seller readiness or `/b/{businessId}`.
-2. Confirm Checkout readiness appears.
-3. Select the intended rule.
-4. Create QR session.
-5. Confirm QR code and customer link appear.
-6. Copy/share customer link.
-7. Open the customer link on the customer device or wallet browser.
+1. On the customer device, select Customer and connect the wallet that will be verified.
+2. Create a checkout pass and confirm the QR points to canonical `/p/{passId}` without a control token.
+3. On the seller device, open `/b/{businessId}` or `/b/{sellerSlug}` and select the intended active rule.
+4. Scan the customer pass, choose its QR image or paste the canonical pass link.
+5. Sign the seller `passes:bind` challenge.
+6. Confirm the originating customer tab shows seller, product/service, reference price when present, discount, lock source and exact thresholds.
 
 Pass criteria:
 
-- Seller scanner shows `Waiting for customer`.
-- Customer proof page shows `Proof readiness`.
-- Missing/invalid business or session IDs produce readable messages such as `Business not found` or `Session not found`.
+- A copied pass can be bound only once and is not proof of wallet ownership.
+- No customer control token appears in URL, QR payload, persistent `localStorage` or seller UI;
+  the originating tab may retain it in `sessionStorage` for same-tab recovery.
+- Missing, expired, cancelled or already-bound passes show readable recovery guidance.
+- A transient pass or seller-profile load failure exposes an enabled in-place retry.
 
-### 5. Customer Proof
+### 5. Exact-Offer Customer Confirmation
 
-1. On `/r/{sessionId}`, connect customer wallet.
-2. Confirm Proof readiness marks wallet connected.
-3. Tap `Sign and verify`.
+1. On the originating customer tab, compare the bound seller and rule with the intended checkout.
+2. Confirm the connected wallet matches the wallet that created the pass.
+3. Tap the exact-offer confirmation action.
 4. Sign the one-time challenge.
-5. Confirm result is either approved or rejected with readable reason.
-6. Confirm `Customer proof receipt` appears and `Copy proof` / `Share proof` are visible.
+5. Confirm the result is APPROVED or a readable ineligible/retry state.
 
 Pass criteria:
 
 - Wallet signature prompt clearly refers to IFR Benefits Network.
 - No token transfer or approval prompt appears.
-- Rejected wallets explain insufficient lock or invalid signature clearly.
-- Customer proof receipt is redacted and does not expose signatures, private keys or unrelated wallet inventory.
+- A different wallet cannot confirm the pass.
+- A changed or mismatched seller/rule is not silently accepted.
+- Rejected wallets explain the relevant lock or wallet condition without exposing private data.
 
 ### 6. Seller Redeem
 
@@ -160,6 +172,33 @@ Pass criteria:
 - Approved benefit can be redeemed once.
 - Reuse is blocked.
 
+### 7. Compatible Seller-Issued QR
+
+1. From Seller readiness or `/b/{businessId}`, select an active rule and create a seller QR session.
+2. Open the canonical `/r/{sessionId}` link directly or scan it through `/scan`.
+3. Connect the customer wallet and confirm `Proof readiness`.
+4. Sign the one-time customer challenge and observe the readable result.
+5. For an approved session, complete the seller-signed redeem once.
+
+Pass criteria:
+
+- `/scan` rejects foreign origins, insecure URLs, credentials, ports, queries and fragments.
+- Camera denial still leaves image and paste/session-ID fallbacks.
+- The compatibility flow cannot bypass the exact rule snapshot or one-time redeem boundary.
+
+### 8. Public Seller URL And Guide
+
+1. Open the seller's canonical `/s/{sellerSlug}` catalog.
+2. Confirm legacy `/s/{businessId}` resolves to the permanent seller URL.
+3. Open an active offer and confirm the customer handoff preserves seller and rule identifiers.
+4. Open `/guide` and verify install, customer-pass, seller and recovery instructions are readable.
+
+Pass criteria:
+
+- Public catalog content matches the selected seller and active offers.
+- Stable seller URLs do not expose internal-only data.
+- Guide and recovery links stay on the canonical Shop origin.
+
 ## Evidence To Record
 
 For each device/wallet combination, record:
@@ -169,6 +208,7 @@ For each device/wallet combination, record:
 - Browser or wallet app version.
 - Wallet type.
 - Test path covered.
+- Checklist capabilities covered by that matrix row.
 - Result: PASS / FAIL / BLOCKED.
 - Short note.
 - Screenshot path if saved locally.
@@ -217,7 +257,7 @@ Use only test business/session ids. Leave fields out when they do not apply.
 
 - `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` is not currently set for the production WalletConnect QR modal.
 - Full live APPROVED -> REDEEMED proof requires an eligible locked customer wallet.
-- Production capacity must still be checked read-only before deploys. The 2026-07-18 redemption-cap release left 17 GB free; keep the 4-GB hard deploy floor and avoid unrelated rebuilds during device tests.
+- Production capacity must still be checked read-only immediately before every deploy; keep the 4-GB hard deploy floor and never rely on an earlier free-space snapshot.
 
 ## Completion Gate
 
@@ -227,5 +267,5 @@ The real-device wallet test gap can be closed only when:
 - At least one Android wallet-browser customer proof path passes.
 - At least one desktop injected seller wallet path passes.
 - A rejected/ineligible customer proof path is observed and readable.
-- An approved customer proof and seller redeem path is observed with an eligible locked test wallet.
+- The primary customer `/p` pass is seller-bound to an exact offer, confirmed by an eligible locked test wallet, seller-signed REDEEMED once and blocked on replay.
 - All results are recorded in `docs/qa/BENEFITS_DEVICE_WALLET_CHECKLIST.json` or a dated derivative file.

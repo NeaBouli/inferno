@@ -13,6 +13,26 @@ The blocking Benefits CI builds both Alpine Docker images, starts them through t
 production commands and checks backend migration/readiness plus the Next.js server, guide and
 PWA manifest. A version-only image check is not sufficient.
 
+## Release Preflight
+
+Run the same static release-evidence bundle used by the device-checklist CI job:
+
+```bash
+npm run preflight:benefits -- --static
+```
+
+Before push or deployment, use a clean worktree with installed dependencies and run the full
+sequential local battery:
+
+```bash
+npm run preflight:benefits
+```
+
+The command fails closed on uncommitted files, stale or incomplete acceptance contracts, test
+failures, audits, builds and browser gates. A green local preflight does not satisfy the physical
+device/wallet matrix, provision a production WalletConnect Project ID, authorize rewards, run
+Mainnet transactions, prove exact-head CI or authorize deployment.
+
 ## Quick Start (Local)
 
 ```bash
