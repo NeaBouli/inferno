@@ -15,6 +15,7 @@ import {
   serializeBusinessCategories,
 } from '../services/businessProfile';
 import { publicBusinessReference } from '../services/businessSlug';
+import { recordAdminAudit } from '../services/adminAudit';
 
 const router = Router();
 
@@ -85,20 +86,24 @@ const verifyRewardLinkSchema = z.object({
 
 router.post('/businesses', adminAuth, validate(createBusinessSchema), async (req, res, next) => {
   try {
-    const business = await prisma.business.create({
-      data: {
-        name: req.body.name,
-        discountPercent: req.body.discountPercent,
-        requiredLockIFR: req.body.requiredLockIFR,
-        ttlSeconds: req.body.ttlSeconds,
-        tierLabel: req.body.tierLabel,
-        description: req.body.description ?? null,
-        website: req.body.website ?? null,
-        logoUrl: req.body.logoUrl ?? null,
-        serviceArea: normalizeBusinessServiceArea(req.body.serviceArea),
-        serviceAreaKey: businessServiceAreaKey(req.body.serviceArea),
-        categoriesJson: serializeBusinessCategories(req.body.categories ?? []),
-      },
+    const business = await prisma.$transaction(async (tx) => {
+      const created = await tx.business.create({
+        data: {
+          name: req.body.name,
+          discountPercent: req.body.discountPercent,
+          requiredLockIFR: req.body.requiredLockIFR,
+          ttlSeconds: req.body.ttlSeconds,
+          tierLabel: req.body.tierLabel,
+          description: req.body.description ?? null,
+          website: req.body.website ?? null,
+          logoUrl: req.body.logoUrl ?? null,
+          serviceArea: normalizeBusinessServiceArea(req.body.serviceArea),
+          serviceAreaKey: businessServiceAreaKey(req.body.serviceArea),
+          categoriesJson: serializeBusinessCategories(req.body.categories ?? []),
+        },
+      });
+      await recordAdminAudit(tx, req, 'business:create', 201, { type: 'Business', id: created.id });
+      return created;
     });
     res.status(201).json({
       id: business.id,
@@ -166,45 +171,49 @@ router.get('/businesses/:id', adminAuth, async (req, res, next) => {
 
 router.patch('/businesses/:id', adminAuth, validate(updateBusinessSchema), async (req, res, next) => {
   try {
-    const business = await prisma.business.update({
-      where: { id: req.params.id },
-      data: {
-        name: req.body.name,
-        discountPercent: req.body.discountPercent,
-        requiredLockIFR: req.body.requiredLockIFR,
-        ttlSeconds: req.body.ttlSeconds,
-        tierLabel: req.body.tierLabel,
-        description: req.body.description,
-        website: req.body.website,
-        logoUrl: req.body.logoUrl,
-        serviceArea: req.body.serviceArea === undefined
-          ? undefined
-          : normalizeBusinessServiceArea(req.body.serviceArea),
-        serviceAreaKey: req.body.serviceArea === undefined
-          ? undefined
-          : businessServiceAreaKey(req.body.serviceArea),
-        categoriesJson: req.body.categories === undefined
-          ? undefined
-          : serializeBusinessCategories(req.body.categories),
-        active: req.body.active,
-      },
-      select: {
-        id: true,
-        slug: true,
-        name: true,
-        description: true,
-        website: true,
-        logoUrl: true,
-        serviceArea: true,
-        serviceAreaKey: true,
-        categoriesJson: true,
-        discountPercent: true,
-        requiredLockIFR: true,
-        ttlSeconds: true,
-        tierLabel: true,
-        active: true,
-        createdAt: true,
-      },
+    const business = await prisma.$transaction(async (tx) => {
+      const updated = await tx.business.update({
+        where: { id: req.params.id },
+        data: {
+          name: req.body.name,
+          discountPercent: req.body.discountPercent,
+          requiredLockIFR: req.body.requiredLockIFR,
+          ttlSeconds: req.body.ttlSeconds,
+          tierLabel: req.body.tierLabel,
+          description: req.body.description,
+          website: req.body.website,
+          logoUrl: req.body.logoUrl,
+          serviceArea: req.body.serviceArea === undefined
+            ? undefined
+            : normalizeBusinessServiceArea(req.body.serviceArea),
+          serviceAreaKey: req.body.serviceArea === undefined
+            ? undefined
+            : businessServiceAreaKey(req.body.serviceArea),
+          categoriesJson: req.body.categories === undefined
+            ? undefined
+            : serializeBusinessCategories(req.body.categories),
+          active: req.body.active,
+        },
+        select: {
+          id: true,
+          slug: true,
+          name: true,
+          description: true,
+          website: true,
+          logoUrl: true,
+          serviceArea: true,
+          serviceAreaKey: true,
+          categoriesJson: true,
+          discountPercent: true,
+          requiredLockIFR: true,
+          ttlSeconds: true,
+          tierLabel: true,
+          active: true,
+          createdAt: true,
+        },
+      });
+      await recordAdminAudit(tx, req, 'business:update', 200, { type: 'Business', id: updated.id });
+      return updated;
     });
     res.json(publicBusinessProfile(business));
   } catch (err) {
@@ -248,8 +257,12 @@ router.post(
         return;
       }
 
-      const rule = await prisma.benefitRule.create({
-        data: { ...req.body, businessId: req.params.id },
+      const rule = await prisma.$transaction(async (tx) => {
+        const created = await tx.benefitRule.create({
+          data: { ...req.body, businessId: req.params.id },
+        });
+        await recordAdminAudit(tx, req, 'rule:create', 201, { type: 'BenefitRule', id: created.id });
+        return created;
       });
       res.status(201).json(rule);
     } catch (err) {
@@ -280,10 +293,12 @@ router.patch('/rules/:id', adminAuth, validate(updateBenefitRuleSchema), async (
         `;
         if (lockedProducts !== 1) throw new Error('Linked catalog product is archived');
       }
-      return tx.benefitRule.update({
+      const updated = await tx.benefitRule.update({
         where: { id: req.params.id },
         data: req.body,
       });
+      await recordAdminAudit(tx, req, 'rule:update', 200, { type: 'BenefitRule', id: updated.id });
+      return updated;
     });
     res.json(rule);
   } catch (err) {
@@ -306,9 +321,12 @@ router.delete('/rules/:id', adminAuth, async (req, res, next) => {
       return;
     }
 
-    await prisma.benefitRule.update({
-      where: { id: req.params.id },
-      data: { active: false },
+    await prisma.$transaction(async (tx) => {
+      await tx.benefitRule.update({
+        where: { id: req.params.id },
+        data: { active: false },
+      });
+      await recordAdminAudit(tx, req, 'rule:archive', 204, { type: 'BenefitRule', id: req.params.id });
     });
     res.status(204).send();
   } catch (err) {
@@ -333,53 +351,60 @@ router.post(
 
       const onChain = await getRewardOnChainStatus(business.ownerAddress, req.body.partnerId);
       if (!onChain.verified) {
-        await prisma.sellerRewardLink.upsert({
-          where: { businessId: business.id },
-          create: {
-            businessId: business.id,
-            status: 'APPLIED',
-            builderWallet: business.ownerAddress,
-            lastCheckedAt: new Date(onChain.checkedAt),
-            verificationBlock: String(onChain.blockNumber),
-            reason: onChain.reason,
-          },
-          update: {
-            status: 'APPLIED',
-            partnerId: null,
-            builderWallet: business.ownerAddress,
-            verifiedAt: null,
-            lastCheckedAt: new Date(onChain.checkedAt),
-            verificationBlock: String(onChain.blockNumber),
-            reason: onChain.reason,
-          },
+        await prisma.$transaction(async (tx) => {
+          await tx.sellerRewardLink.upsert({
+            where: { businessId: business.id },
+            create: {
+              businessId: business.id,
+              status: 'APPLIED',
+              builderWallet: business.ownerAddress,
+              lastCheckedAt: new Date(onChain.checkedAt),
+              verificationBlock: String(onChain.blockNumber),
+              reason: onChain.reason,
+            },
+            update: {
+              status: 'APPLIED',
+              partnerId: null,
+              builderWallet: business.ownerAddress,
+              verifiedAt: null,
+              lastCheckedAt: new Date(onChain.checkedAt),
+              verificationBlock: String(onChain.blockNumber),
+              reason: onChain.reason,
+            },
+          });
+          await recordAdminAudit(tx, req, 'rewards:verify', 409, { type: 'Business', id: business.id });
         });
         res.status(409).json({ error: onChain.reason || 'Seller is not governance verified', onChain });
         return;
       }
 
-      const link = await prisma.sellerRewardLink.upsert({
-        where: { businessId: business.id },
-        create: {
-          businessId: business.id,
-          status: 'VERIFIED',
-          partnerId: onChain.partnerId,
-          builderWallet: business.ownerAddress,
-          verifiedAt: new Date(onChain.checkedAt),
-          lastCheckedAt: new Date(onChain.checkedAt),
-          verificationBlock: String(onChain.blockNumber),
-          reason: onChain.reason,
-          governanceReference: req.body.governanceReference,
-        },
-        update: {
-          status: 'VERIFIED',
-          partnerId: onChain.partnerId,
-          builderWallet: business.ownerAddress,
-          verifiedAt: new Date(onChain.checkedAt),
-          lastCheckedAt: new Date(onChain.checkedAt),
-          verificationBlock: String(onChain.blockNumber),
-          reason: onChain.reason,
-          governanceReference: req.body.governanceReference,
-        },
+      const link = await prisma.$transaction(async (tx) => {
+        const verified = await tx.sellerRewardLink.upsert({
+          where: { businessId: business.id },
+          create: {
+            businessId: business.id,
+            status: 'VERIFIED',
+            partnerId: onChain.partnerId,
+            builderWallet: business.ownerAddress,
+            verifiedAt: new Date(onChain.checkedAt),
+            lastCheckedAt: new Date(onChain.checkedAt),
+            verificationBlock: String(onChain.blockNumber),
+            reason: onChain.reason,
+            governanceReference: req.body.governanceReference,
+          },
+          update: {
+            status: 'VERIFIED',
+            partnerId: onChain.partnerId,
+            builderWallet: business.ownerAddress,
+            verifiedAt: new Date(onChain.checkedAt),
+            lastCheckedAt: new Date(onChain.checkedAt),
+            verificationBlock: String(onChain.blockNumber),
+            reason: onChain.reason,
+            governanceReference: req.body.governanceReference,
+          },
+        });
+        await recordAdminAudit(tx, req, 'rewards:verify', 200, { type: 'Business', id: business.id });
+        return verified;
       });
       res.json({ link, onChain });
     } catch (err) {
@@ -395,9 +420,13 @@ router.post('/businesses/:id/rewards/revoke', adminAuth, async (req, res, next) 
       res.status(404).json({ error: 'Seller reward application not found' });
       return;
     }
-    const revoked = await prisma.sellerRewardLink.update({
-      where: { businessId: req.params.id },
-      data: { status: 'REVOKED', reason: 'Revoked by benefits administrator' },
+    const revoked = await prisma.$transaction(async (tx) => {
+      const updated = await tx.sellerRewardLink.update({
+        where: { businessId: req.params.id },
+        data: { status: 'REVOKED', reason: 'Revoked by benefits administrator' },
+      });
+      await recordAdminAudit(tx, req, 'rewards:revoke', 200, { type: 'Business', id: req.params.id });
+      return updated;
     });
     res.json({ link: revoked });
   } catch (err) {
@@ -439,6 +468,7 @@ router.post('/businesses/:id/rewards/queue', adminAuth, async (req, res, next) =
             reason: onChain.reason || 'On-chain reward link is no longer valid',
           },
         });
+        await recordAdminAudit(tx, req, 'rewards:queue', 409, { type: 'Business', id: business.id });
       });
       res.status(409).json({ error: onChain.reason || 'On-chain reward link is no longer valid', onChain });
       return;
@@ -488,13 +518,16 @@ router.post('/businesses/:id/rewards/queue', adminAuth, async (req, res, next) =
       else blocked += 1;
     }
 
-    await prisma.sellerRewardLink.update({
-      where: { businessId: business.id },
-      data: {
-        lastCheckedAt: new Date(onChain.checkedAt),
-        verificationBlock: String(onChain.blockNumber),
-        reason: onChain.reason,
-      },
+    await prisma.$transaction(async (tx) => {
+      await tx.sellerRewardLink.update({
+        where: { businessId: business.id },
+        data: {
+          lastCheckedAt: new Date(onChain.checkedAt),
+          verificationBlock: String(onChain.blockNumber),
+          reason: onChain.reason,
+        },
+      });
+      await recordAdminAudit(tx, req, 'rewards:queue', 200, { type: 'Business', id: business.id });
     });
     res.json({ ready, confirmed, blocked, scanned: events.length, submissionReady: onChain.submissionReady });
   } catch (err) {

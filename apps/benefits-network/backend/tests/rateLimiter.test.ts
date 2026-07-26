@@ -4,6 +4,8 @@ jest.mock('../src/config', () => ({
   },
 }));
 
+import express from 'express';
+import type { Server } from 'node:http';
 import {
   AuthenticatedRateLimitError,
   FixedWindowKeyLimiter,
@@ -11,7 +13,7 @@ import {
 } from '../src/services/authenticatedRateLimiter';
 import { RateLimitStoreUnavailableError } from '../src/services/rateLimitInfrastructure';
 import { getRateLimitTopologyIssues } from '../src/services/rateLimitTopology';
-import { customerPassControlRateLimitKey } from '../src/middleware/rateLimiter';
+import { createAdminRateLimiter, customerPassControlRateLimitKey } from '../src/middleware/rateLimiter';
 
 describe('Authenticated seller wallet limiter', () => {
   it('isolates customer-pass read budgets without storing bearer tokens', () => {
@@ -149,5 +151,33 @@ describe('Authenticated seller wallet limiter', () => {
       replicaCount: 2,
       databaseUrl: 'postgresql://benefits-db/benefits',
     })).toEqual([]);
+  });
+});
+
+describe('Admin pre-auth limiter', () => {
+  it('shares one IP budget across different guessed bearer tokens and emits standard headers', async () => {
+    const app = express();
+    app.use(createAdminRateLimiter({ windowMs: 60_000, max: 2 }));
+    app.get('/probe', (_req, res) => res.json({ ok: true }));
+    const probeServer = await new Promise<Server>((resolve) => {
+      const listening = app.listen(0, '127.0.0.1', () => resolve(listening));
+    });
+
+    try {
+      const address = probeServer.address();
+      if (!address || typeof address === 'string') throw new Error('Probe server did not bind');
+      const url = `http://127.0.0.1:${address.port}/probe`;
+      expect((await fetch(url, { headers: { authorization: 'Bearer guess-a' } })).status).toBe(200);
+      expect((await fetch(url, { headers: { authorization: 'Bearer guess-b' } })).status).toBe(200);
+      const limited = await fetch(url);
+      expect(limited.status).toBe(429);
+      expect(limited.headers.get('ratelimit-limit')).toBe('2');
+      expect(limited.headers.get('ratelimit-remaining')).toBe('0');
+      expect(await limited.json()).toEqual({ error: 'Too many admin requests. Try again later.' });
+    } finally {
+      await new Promise<void>((resolve, reject) => {
+        probeServer.close((error) => error ? reject(error) : resolve());
+      });
+    }
   });
 });

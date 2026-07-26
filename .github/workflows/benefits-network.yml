@@ -125,7 +125,7 @@ jobs:
             -e IFR_TOKEN_ADDRESS=0x0000000000000000000000000000000000000002 \
             -e IFRLOCK_ADDRESS=0x0000000000000000000000000000000000000001 \
             -e COMMITMENT_VAULT_ADDRESS=0x0000000000000000000000000000000000000003 \
-            -e ADMIN_SECRET=ci-admin-secret \
+            -e ADMIN_SECRET=ci-admin-secret-0123456789abcdef0123456789 \
             inferno-benefits-backend:ci)"
           cleanup() { docker rm -f "$container" >/dev/null 2>&1 || true; }
           trap cleanup EXIT

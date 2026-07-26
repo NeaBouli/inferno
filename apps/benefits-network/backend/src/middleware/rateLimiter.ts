@@ -98,3 +98,22 @@ export const discoveryRateLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
 });
+
+type AdminRateLimiterOptions = {
+  windowMs?: number;
+  max?: number;
+};
+
+export function createAdminRateLimiter(options: AdminRateLimiterOptions = {}) {
+  return rateLimit({
+    windowMs: options.windowMs ?? 60 * 60 * 1000,
+    max: options.max ?? 60,
+    keyGenerator: (req) => req.ip || 'unknown',
+    store: createPublicRateLimitStore('admin'),
+    message: { error: 'Too many admin requests. Try again later.' },
+    standardHeaders: true,
+    legacyHeaders: false,
+  });
+}
+
+export const adminRateLimiter = createAdminRateLimiter();

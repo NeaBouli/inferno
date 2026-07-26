@@ -23,7 +23,7 @@ npm run dev            # http://localhost:3001
 | `PARTNER_VAULT_ADDRESS` | Optional PartnerVault address for read-only M4 verification | unset |
 | `BUILDER_REGISTRY_ADDRESS` | Optional BuilderRegistry address for read-only M4 verification | unset |
 | `REWARD_CALLER_ADDRESS` | Optional public caller address checked with `authorizedCaller`; never a private key | unset |
-| `ADMIN_SECRET` | Bearer token for /api/admin/* | required |
+| `ADMIN_SECRET` | Bearer token for `/api/admin/*`; minimum 32 characters and no documented placeholder | required |
 | `DATABASE_URL` | Prisma database URL | `file:./dev.db` |
 | `PORT` | Server port | `3001` |
 | `MAX_ACTIVE_SELLER_BUSINESSES_PER_WALLET` | Anti-spam cap for active wallet-owned seller profiles | `5` |
@@ -191,6 +191,19 @@ base units with `bigint`, and fails closed on identity, ABI or RPC errors.
 ## Seller Wallet Ownership
 
 Normal seller actions can be authorized without sharing the global admin secret.
+
+Admin requests are rate-limited by resolved client IP before authentication.
+Missing, malformed and invalid bearer credentials return the same `401` challenge.
+Successful admin mutations and mutating conflict outcomes write an `AdminAuditLog`
+record before the response. Audit rows contain only route/action metadata plus
+SHA-256 role and client digests; request bodies, bearer values, secrets and raw
+IP addresses are never stored.
+
+The audit table has no automatic SQLite TTL. Operators must define and document
+a retention window and prune by `createdAt`. Reward verification reads chain
+state before its database transaction, and reward queue reconciliation updates
+individual events before its final summary audit; those external/iterative
+boundaries cannot be made one atomic database operation.
 The frontend first requests `/api/seller/auth-message` so the timestamp is issued
 by the backend, then the seller signs that short-lived EIP-191 message. Read-only
 actions remain timestamp-bound and do not create authorization rows. Every seller

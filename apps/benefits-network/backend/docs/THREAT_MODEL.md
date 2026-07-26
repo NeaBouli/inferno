@@ -140,3 +140,25 @@ or retried worker causes an unauthorized or duplicate PartnerVault reward.
 customer's current IFRLock balance and, when configured, free IFR wallet balance during checkout,
 not cryptographic proof that a new lock transaction was caused by that seller. Governance must approve this
 one-wallet/one-partner usage policy or require a future event-indexed lock adapter before enabling submissions.
+
+## 10. Admin Credential Brute Force / Untracked Mutations
+
+**Threat:** An attacker repeatedly guesses the shared admin credential, malformed
+payloads create noisy server failures, or an operator mutation cannot later be
+correlated without retaining sensitive request data.
+
+**Mitigation:**
+- Admin traffic is rate-limited by resolved client IP before bearer authentication
+- Admin secrets shorter than 32 characters and documented placeholder defaults stop startup
+- Missing, malformed and incorrect credentials share one generic `401` Bearer challenge
+- Malformed and oversized JSON return safe `400` and `413` responses
+- Admin mutations persist route, action, target and status metadata before the response
+- The fixed admin role and client IPs are stored only as domain-separated SHA-256 digests
+- Request bodies, raw bearer values, secrets and raw IP addresses are never written to the audit table
+
+**Known operational boundaries:** SQLite does not prune `AdminAuditLog`
+automatically, so deployment operations must define a retention window and
+delete old rows by `createdAt`. Reward verification observes external chain
+state before the paired database mutation and audit transaction. Reward queue
+reconciliation updates individual events before its final summary audit, so an
+interruption can leave partial event progress without a final summary row.
