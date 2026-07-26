@@ -1,5 +1,20 @@
+import { createHash } from 'node:crypto';
 import rateLimit from 'express-rate-limit';
 import { createPublicRateLimitStore } from '../services/rateLimitInfrastructure';
+
+type CustomerPassControlRateLimitRequest = {
+  params: Record<string, string | undefined>;
+  get(name: 'authorization'): string | undefined;
+};
+
+export function customerPassControlRateLimitKey(
+  request: CustomerPassControlRateLimitRequest
+) {
+  const authorizationDigest = createHash('sha256')
+    .update(request.get('authorization') || '')
+    .digest('hex');
+  return `${String(request.params.id || 'unknown')}:${authorizationDigest}`;
+}
 
 export const sessionRateLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 hour
@@ -52,6 +67,25 @@ export const customerPassRateLimiter = rateLimit({
   max: 120,
   store: createPublicRateLimitStore('customer-pass'),
   message: { error: 'Too many checkout pass requests. Try again later.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+export const customerPassReadIpRateLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 36000,
+  store: createPublicRateLimitStore('customer-pass-read-ip'),
+  message: { error: 'Too many checkout pass status requests. Try again later.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+export const customerPassReadRateLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 1800,
+  keyGenerator: customerPassControlRateLimitKey,
+  store: createPublicRateLimitStore('customer-pass-read'),
+  message: { error: 'Too many checkout pass status requests. Try again later.' },
   standardHeaders: true,
   legacyHeaders: false,
 });

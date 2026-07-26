@@ -11,8 +11,34 @@ import {
 } from '../src/services/authenticatedRateLimiter';
 import { RateLimitStoreUnavailableError } from '../src/services/rateLimitInfrastructure';
 import { getRateLimitTopologyIssues } from '../src/services/rateLimitTopology';
+import { customerPassControlRateLimitKey } from '../src/middleware/rateLimiter';
 
 describe('Authenticated seller wallet limiter', () => {
+  it('isolates customer-pass read budgets without storing bearer tokens', () => {
+    const first = customerPassControlRateLimitKey({
+      params: { id: 'pass-a' },
+      get: () => 'Bearer private-control-token-a',
+    });
+    const same = customerPassControlRateLimitKey({
+      params: { id: 'pass-a' },
+      get: () => 'Bearer private-control-token-a',
+    });
+    const differentToken = customerPassControlRateLimitKey({
+      params: { id: 'pass-a' },
+      get: () => 'Bearer private-control-token-b',
+    });
+    const differentPass = customerPassControlRateLimitKey({
+      params: { id: 'pass-b' },
+      get: () => 'Bearer private-control-token-a',
+    });
+
+    expect(first).toBe(same);
+    expect(first).not.toBe(differentToken);
+    expect(first).not.toBe(differentPass);
+    expect(first).toMatch(/^pass-a:[a-f0-9]{64}$/);
+    expect(first).not.toContain('private-control-token');
+  });
+
   it('limits one normalized recovered-wallet key without affecting another wallet', () => {
     let now = 1_000;
     const limiter = new FixedWindowKeyLimiter({ windowMs: 10_000, max: 2, now: () => now });

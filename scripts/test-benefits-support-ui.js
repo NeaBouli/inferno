@@ -127,6 +127,42 @@ function assertReportContract(reportText, expectedApiAvailable) {
   }
 }
 
+async function assertMobileHeaderFits(page) {
+  const layout = await page.evaluate(() => {
+    const nav = document.querySelector('.shop-nav');
+    const links = Array.from(document.querySelectorAll('.shop-nav a'));
+    return {
+      viewportWidth: document.documentElement.clientWidth,
+      documentScrollWidth: document.documentElement.scrollWidth,
+      navClientWidth: nav?.clientWidth || 0,
+      navScrollWidth: nav?.scrollWidth || 0,
+      links: links.map((link) => {
+        const rect = link.getBoundingClientRect();
+        return {
+          text: link.textContent?.trim() || '',
+          left: rect.left,
+          right: rect.right,
+          clientHeight: link.clientHeight,
+          scrollHeight: link.scrollHeight,
+        };
+      }),
+    };
+  });
+  assert.equal(layout.documentScrollWidth, layout.viewportWidth, 'shop shell must not overflow the mobile viewport');
+  assert.ok(layout.navScrollWidth <= layout.navClientWidth, 'all mobile navigation links must fit without scrolling');
+  assert.deepEqual(layout.links.map((link) => link.text), [
+    'Benefits',
+    'For sellers',
+    'Guide',
+    'Lock IFR',
+    'IFR Unit',
+  ]);
+  for (const link of layout.links) {
+    assert.ok(link.left >= 0 && link.right <= layout.viewportWidth, `${link.text} must remain inside the viewport`);
+    assert.ok(link.scrollHeight <= link.clientHeight, `${link.text} must remain on one line`);
+  }
+}
+
 async function verifyAvailableState(browser) {
   const context = await createContext(browser);
   await context.route('**/api/ready', (route) => route.fulfill({
@@ -149,6 +185,7 @@ async function verifyAvailableState(browser) {
   });
   await page.getByRole('heading', { name: 'Find the problem without exposing your wallet.' }).waitFor();
   await page.getByText('Available', { exact: true }).waitFor();
+  await assertMobileHeaderFits(page);
 
   const reportText = await page.getByTestId('support-report').textContent();
   assertReportContract(reportText, true);

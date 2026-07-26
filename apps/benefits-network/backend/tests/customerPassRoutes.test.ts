@@ -209,6 +209,42 @@ describe('customer-presented checkout passes', () => {
     expect(replay.status).toBe(401);
   });
 
+  it('keeps control polling separate from the mutation budget', async () => {
+    const clientIp = '198.51.100.29';
+    const created = await createPass(customer);
+    const controlHeaders = {
+      authorization: `Bearer ${created.body.controlToken}`,
+      'x-forwarded-for': clientIp,
+    };
+
+    for (let index = 0; index < 121; index += 1) {
+      const response = await fetch(`${baseUrl()}/api/passes/${created.body.passId}/control`, {
+        headers: controlHeaders,
+      });
+      expect(response.status).toBe(200);
+      expect(response.headers.get('ratelimit-limit')).toBe('1800');
+    }
+
+    const cancelResponse = await fetch(`${baseUrl()}/api/passes/${created.body.passId}/cancel`, {
+      method: 'POST',
+      headers: controlHeaders,
+    });
+    expect(cancelResponse.status).toBe(200);
+    expect(cancelResponse.headers.get('ratelimit-limit')).toBe('120');
+  }, 15_000);
+
+  it('IP-limits malformed control references without allocating a private read bucket', async () => {
+    const response = await fetch(`${baseUrl()}/api/passes/not-a-pass/control`, {
+      headers: { authorization: 'Bearer invalid-control-token' },
+    });
+    expect(response.status).toBe(404);
+    expect(response.headers.get('ratelimit-limit')).toBe('36000');
+
+    const publicResponse = await fetch(`${baseUrl()}/api/passes/not-a-pass`);
+    expect(publicResponse.status).toBe(404);
+    expect(publicResponse.headers.get('ratelimit-limit')).toBe('120');
+  });
+
   it('atomically lets exactly one seller bind a copied pass', async () => {
     const created = await createPass(customer);
     const [first, second] = await Promise.all([
