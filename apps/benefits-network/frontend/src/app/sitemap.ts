@@ -1,6 +1,5 @@
 import type { MetadataRoute } from 'next';
 
-const lastModified = new Date('2026-07-19T00:00:00Z');
 const siteOrigin = 'https://shop.ifrunit.tech';
 const apiOrigin = process.env.BENEFITS_API_INTERNAL_URL || 'http://localhost:3001';
 
@@ -11,19 +10,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticRoutes: MetadataRoute.Sitemap = [
     {
       url: `${siteOrigin}/`,
-      lastModified,
       changeFrequency: 'weekly',
       priority: 1,
     },
     {
       url: `${siteOrigin}/guide`,
-      lastModified,
       changeFrequency: 'monthly',
       priority: 0.8,
     },
     {
       url: `${siteOrigin}/scan`,
-      lastModified,
       changeFrequency: 'monthly',
       priority: 0.7,
     },

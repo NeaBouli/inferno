@@ -543,17 +543,26 @@ Infrastructure options:
 - separate container:
   - `inferno-shop-frontend`
   - `inferno-shop-api`
-- environment:
-  - `SHOP_API_URL`
-  - `MAINNET_RPC_URL`
+- frontend environment:
+  - `NEXT_PUBLIC_API_URL`
+  - `NEXT_PUBLIC_CHAIN_ID`
+  - `NEXT_PUBLIC_IFR_TOKEN_ADDRESS`
+  - `NEXT_PUBLIC_IFRLOCK_ADDRESS`
+  - `NEXT_PUBLIC_COMMITMENT_VAULT_ADDRESS`
+  - `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` (optional until a production project ID is provisioned)
+- backend environment:
+  - `CHAIN_ID`
+  - `RPC_URL`
   - `IFR_TOKEN_ADDRESS`
   - `IFRLOCK_ADDRESS`
   - `COMMITMENT_VAULT_ADDRESS`
-  - `PARTNER_VAULT_ADDRESS`
-  - `BUILDER_REGISTRY_ADDRESS`
+  - `PARTNER_VAULT_ADDRESS` (optional, read-only reward verification)
+  - `BUILDER_REGISTRY_ADDRESS` (optional, read-only reward verification)
+  - `REWARD_CALLER_ADDRESS` (optional public address; never a private key)
   - `DATABASE_URL`
   - `ADMIN_SECRET`
   - `ALLOWED_ORIGINS=https://shop.ifrunit.tech,https://web3.ifrunit.tech`
+  - `RATE_LIMIT_STORE`, `RATE_LIMIT_REDIS_URL` and `BACKEND_REPLICA_COUNT` when running more than one backend replica
 
 ### PWA
 
@@ -691,11 +700,10 @@ Mitigation:
 
 ## 14. Recommended Next Step
 
-Start with a scoped MVP on top of `apps/benefits-network`:
+The scoped external-wallet MVP on `shop.ifrunit.tech` is implemented. The next release gates are:
 
-1. Rename product surface to IFRp Commerce / Benefits App in docs only.
-2. Add role chooser.
-3. Add seller rule builder.
-4. Add customer wallet status and IFRLock status.
-5. Deploy preview under `shop.ifrunit.tech`.
-6. Only after the MVP works, decide embedded wallet and PartnerVault automation.
+1. Publish and verify the first real wallet-owned seller profile, permanent slug, product and active benefit rule.
+2. Complete the physical iPhone/iPad/Android wallet matrix and record one real customer-presented `APPROVED` to seller-signed `REDEEMED` checkout.
+3. Provision a production WalletConnect Project ID before enabling the full Rainbow, Trust, OKX and compatible-wallet modal.
+4. Keep seller rewards read-only until governance has registered the seller/builders, authorized a dedicated reward caller and verified the PartnerVault linkage.
+5. Keep the embedded-wallet prototype isolated from production until recovery, privacy/legal, real-device and independent security evidence is complete.
