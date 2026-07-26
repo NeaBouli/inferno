@@ -10,7 +10,7 @@
     "test:benefits-discovery-ui": "node scripts/test-benefits-discovery-ui.js",
     "test:benefits-money": "node scripts/test-benefits-money.cjs",
     "test:benefits-seller-loader": "node scripts/test-benefits-seller-loader.js",
-    "test:benefits-wallet-ui": "node scripts/test-benefits-wallet-lock-ui.js",
+    "test:benefits-wallet-ui": "BENEFITS_WALLET_ZERO_ETH_ONLY=1 node scripts/test-benefits-wallet-lock-ui.js && node scripts/test-benefits-wallet-lock-ui.js",
     "test:benefits-a11y": "node scripts/test-benefits-accessibility.js",
     "test:benefits-recovery": "node scripts/test-benefits-route-recovery.js",
     "test:benefits-csp": "node scripts/test-benefits-csp.js",
