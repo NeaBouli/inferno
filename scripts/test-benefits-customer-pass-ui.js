@@ -4,6 +4,30 @@ const assert = require('node:assert/strict');
 const { spawn } = require('node:child_process');
 const path = require('node:path');
 const { chromium } = require('playwright');
+const axeSource = require('axe-core').source;
+
+const AXE_TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'];
+
+async function assertNoAxeViolations(page, stateLabel) {
+  await page.addScriptTag({ content: axeSource });
+  const { violations } = await page.evaluate(async (tags) => (
+    window.axe.run(document, {
+      runOnly: { type: 'tag', values: tags },
+      resultTypes: ['violations'],
+    })
+  ), AXE_TAGS);
+  const details = violations.map((violation) => [
+    `Rule: ${violation.id} (${violation.impact || 'impact-unknown'})`,
+    `Description: ${violation.description}`,
+    `Targets: ${violation.nodes?.map((node) => node.target.join(' ')).join(' | ') || 'n/a'}`,
+    `Help: ${violation.help}`,
+  ].join('\n')).join('\n--\n');
+  assert.equal(
+    violations.length,
+    0,
+    `Axe WCAG 2.0/2.1 A/AA violations on ${stateLabel}:\n${details}`
+  );
+}
 
 const root = path.resolve(__dirname, '..');
 const frontend = path.join(root, 'apps', 'benefits-network', 'frontend');
@@ -331,6 +355,7 @@ async function run() {
     assert.equal(state.pass, 'OPEN');
     const renderedPassUrl = (await passPanel.locator('p.font-mono').textContent())?.trim();
     assert.equal(renderedPassUrl, `${origin}/p/${passId}`, 'rendered QR payload must be the canonical pass URL');
+    await assertNoAxeViolations(customer, `connected customer pass creation (${origin}/#customer-pass, pass OPEN)`);
 
     await passPanel.getByRole('button', { name: 'Cancel & new pass', exact: true }).click();
     await passPanel.getByText('Previous pass cancelled. You can create a new customer QR.').waitFor();
@@ -383,6 +408,7 @@ async function run() {
     await passPanel.getByText(benefit.productName).waitFor();
     await passPanel.getByText('15%').waitFor();
     await passPanel.getByText('5,000 IFR').waitFor();
+    await assertNoAxeViolations(customer, `exact bound-offer confirmation (${origin}/#customer-pass, offer bound)`);
     await passPanel.getByRole('button', { name: 'Confirm this seller and offer', exact: true }).click();
     await passPanel.getByText('IFR access approved. The seller can now redeem this checkout once.').waitFor();
     assert.equal(state.checkout, 'APPROVED');
