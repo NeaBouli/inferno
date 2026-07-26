@@ -12,6 +12,7 @@ const NONEXISTENT_BUSINESS_REF = 'clza11ynonexistentbiz0001';
 const NONEXISTENT_SELLER_SLUG = 'a11y-nonexistent-seller';
 const NONEXISTENT_SESSION_ID = 'clza11ynonexistentsess001';
 const NONEXISTENT_PASS_ID = 'a11yNonexistentPass0000000000000';
+const BRANDED_NOT_FOUND_ROUTE = '/r';
 const ROUTES = [
   '/',
   '/?mode=seller',
@@ -22,6 +23,7 @@ const ROUTES = [
   `/s/${NONEXISTENT_SELLER_SLUG}`,
   `/r/${NONEXISTENT_SESSION_ID}`,
   `/p/${NONEXISTENT_PASS_ID}`,
+  BRANDED_NOT_FOUND_ROUTE,
 ];
 const TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'];
 const DEVICES = [
@@ -102,13 +104,42 @@ async function runRoute(route, deviceName, page) {
     timeout: 60_000,
   });
 
-  if (!response || response.status() >= 400) {
+  const expectedStatus = route === BRANDED_NOT_FOUND_ROUTE ? 404 : 200;
+  if (!response || response.status() !== expectedStatus) {
     failures.push({
       type: 'navigation',
       route,
       device: deviceName,
-      message: `${route} returned HTTP ${response ? response.status() : 'no-response'}`,
+      message: `${route} returned HTTP ${response ? response.status() : 'no-response'}; expected ${expectedStatus}`,
     });
+  }
+
+  if (route === BRANDED_NOT_FOUND_ROUTE) {
+    const recovery = await page.evaluate(() => {
+      const root = document.querySelector('[data-testid="shop-not-found"]');
+      const links = root
+        ? [...root.querySelectorAll('a')].map((link) => link.getAttribute('href'))
+        : [];
+      return {
+        present: Boolean(root),
+        text: root?.textContent || '',
+        links,
+      };
+    });
+    const requiredLinks = ['/', '/scan', '/guide'];
+    if (
+      !recovery.present ||
+      !recovery.text.includes('This benefits link is incomplete.') ||
+      recovery.text.includes('This page could not be found') ||
+      requiredLinks.some((href) => !recovery.links.includes(href))
+    ) {
+      failures.push({
+        type: 'recovery',
+        route,
+        device: deviceName,
+        message: `${route} did not render the complete branded recovery surface`,
+      });
+    }
   }
 
   await page.addScriptTag({ content: axeSource });
@@ -179,10 +210,11 @@ async function main() {
       const axeFailures = allFailures.filter((entry) => entry.type === 'axe').length;
       const navFailures = allFailures.filter((entry) => entry.type === 'navigation').length;
       const viewportFailures = allFailures.filter((entry) => entry.type === 'viewport-scaling').length;
+      const recoveryFailures = allFailures.filter((entry) => entry.type === 'recovery').length;
 
       console.error('[benefits-accessibility-gate] FAIL');
       console.error(
-        `summary: axe=${axeFailures}, navigation=${navFailures}, viewport-scaling=${viewportFailures}, total=${allFailures.length}`,
+        `summary: axe=${axeFailures}, navigation=${navFailures}, viewport-scaling=${viewportFailures}, recovery=${recoveryFailures}, total=${allFailures.length}`,
       );
       for (const failure of allFailures) {
         console.error(`--\n${failure.message}`);
