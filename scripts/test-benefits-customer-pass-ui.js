@@ -89,6 +89,14 @@ function json(route, body, status = 200) {
   });
 }
 
+function deferred() {
+  let resolve;
+  const promise = new Promise((next) => {
+    resolve = next;
+  });
+  return { promise, resolve };
+}
+
 function sessionStatus(state) {
   return {
     status: state.checkout,
@@ -180,7 +188,7 @@ function installApiMock(context, state, calls) {
     }
     if (method === 'GET' && pathname === `/api/passes/${passId}/control`) {
       assert.equal(request.headers().authorization, `Bearer ${controlToken}`);
-      if (state.controlDelayMs) await new Promise((resolve) => setTimeout(resolve, state.controlDelayMs));
+      if (state.controlGate) await state.controlGate.promise;
       return json(route, controlStatus(state));
     }
     if (method === 'GET' && pathname === `/api/passes/${passId}`) {
@@ -327,7 +335,14 @@ async function run() {
   try {
     await waitForServer(server);
     browser = await chromium.launch({ headless: true });
-    const state = { pass: 'NONE', checkout: 'PENDING', redeemAttempts: 0, cancelAttempts: 0, cancelFailure: false, controlDelayMs: 0 };
+    const state = {
+      pass: 'NONE',
+      checkout: 'PENDING',
+      redeemAttempts: 0,
+      cancelAttempts: 0,
+      cancelFailure: false,
+      controlGate: null,
+    };
     const calls = [];
     const customerContext = await browser.newContext({ serviceWorkers: 'block' });
     const sellerContext = await browser.newContext({ serviceWorkers: 'block' });
@@ -368,15 +383,20 @@ async function run() {
     assert.equal(state.cancelAttempts, 2, 'failed cancellation must reach the backend once');
     assert.equal(await passPanel.locator('p.font-mono').textContent(), renderedPassUrl, 'failed cancellation must retain the active pass and control state');
     state.cancelFailure = false;
-    state.controlDelayMs = 750;
+    const controlGate = deferred();
+    state.controlGate = controlGate;
     await customer.getByRole('button', { name: 'Disconnect', exact: true }).first().click();
     await customer.getByRole('button', { name: 'Connect wallet', exact: true }).first().waitFor();
     await customer.reload({ waitUntil: 'domcontentloaded' });
     const checkingPass = passPanel.getByRole('button', { name: 'Checking pass...', exact: true });
-    await checkingPass.waitFor();
-    assert.equal(await checkingPass.isDisabled(), true, 'a restored pass must not be discarded before its status is known');
+    try {
+      await checkingPass.waitFor();
+      assert.equal(await checkingPass.isDisabled(), true, 'a restored pass must not be discarded before its status is known');
+    } finally {
+      controlGate.resolve();
+      state.controlGate = null;
+    }
     await passPanel.getByRole('button', { name: 'Cancel & new pass', exact: true }).waitFor();
-    state.controlDelayMs = 0;
     await customer.getByRole('button', { name: 'Connect wallet', exact: true }).first().click();
     await customer.getByRole('button', { name: 'Disconnect', exact: true }).first().waitFor();
 
