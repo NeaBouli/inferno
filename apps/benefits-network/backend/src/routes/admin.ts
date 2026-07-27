@@ -15,6 +15,7 @@ import {
   serializeBusinessCategories,
 } from '../services/businessProfile';
 import { publicBusinessReference } from '../services/businessSlug';
+import { pauseSellerBusinessDependents } from '../services/businessLifecycle';
 import { recordAdminAudit } from '../services/adminAudit';
 import { getRetentionReport } from '../services/retention';
 
@@ -198,6 +199,11 @@ router.get('/businesses/:id', adminAuth, async (req, res, next) => {
 router.patch('/businesses/:id', adminAuth, validate(updateBusinessSchema), async (req, res, next) => {
   try {
     const business = await prisma.$transaction(async (tx) => {
+      // Deactivation pauses the catalog, benefit rules and checkout operators
+      // atomically; reactivation restores only the business itself.
+      if (req.body.active === false) {
+        await pauseSellerBusinessDependents(tx, req.params.id);
+      }
       const updated = await tx.business.update({
         where: { id: req.params.id },
         data: {

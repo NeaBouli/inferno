@@ -153,11 +153,13 @@ discount and required IFR lock before the customer signs.
 
 Connected sellers can load active and deactivated seller profiles owned by their wallet.
 Deactivation requires an explicit consequence confirmation, hides the public catalog and
-scanner, pauses products and rules, and preserves the permanent seller URL. The original
-owner wallet can reactivate only the profile with a fresh one-time signature; products and
-rules remain paused until reviewed and activated individually. The app remembers the last
-selected active Business ID locally for reloads. This is only a convenience cache; ownership
-is still enforced by the backend signature check.
+scanner, pauses products, rules and checkout operators, and preserves the permanent seller
+URL. The original owner wallet can reactivate only the profile with a fresh one-time signature;
+products and rules remain paused until reviewed and activated individually, and each checkout
+operator needs a fresh authorization before regaining access. The default policy caps creation at
+five active and 25 total profiles per owner wallet, including deactivated profiles. The app
+remembers the last selected active Business ID locally for reloads. This is only a convenience cache;
+ownership is still enforced by the backend signature check.
 
 New wallet-owned profiles sign their normalized public slug during creation. Existing owners can
 claim one permanent slug with a separate one-time signature. Public catalog, scanner, QR, discovery,

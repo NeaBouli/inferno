@@ -123,12 +123,14 @@ The app has two roles:
   disclosure controls rather than expanding the entire mobile workspace by default. The separate
   read-only integration generator remains visible for developers, but keeps copy/export actions
   disabled until valid seller and rule identifiers are supplied.
-- Seller can create and manage profiles, products, rules, operators and reward applications through owner-wallet authorization; every mutation uses a fresh resource-bound one-time challenge.
+- Seller can create and manage profiles, products, rules, operators and reward applications through owner-wallet authorization; every mutation uses a fresh resource-bound one-time challenge. The default abuse bounds allow five active and 25 total profiles per owner wallet, including inactive profiles.
 - Seller profile deactivation requires an explicit consequence confirmation. The owner-signed
-  operation hides the public catalog/scanner and pauses products and rules but preserves history
+  operation hides the public catalog/scanner and atomically pauses products, rules and checkout
+  operators but preserves history
   and the permanent slug. The original owner can list the inactive profile and reactivate only
   the profile with a fresh one-time signature; products and rules stay paused until individually
-  reviewed and activated.
+  reviewed and activated. Every checkout operator requires a fresh owner authorization, and
+  deactivation atomically invalidates unused pre-deactivation operator grants.
 - Public seller identity includes a short description, canonical HTTPS website, up to eight
   categories and an optional broad service area such as a city, region or `Online`. Owners can
   reload and edit it with their wallet; controlled operator-created profiles can be reopened by
@@ -148,7 +150,7 @@ The app has two roles:
 - Seller can open `/b/:businessId` or the equivalent readable `/b/:slug` scanner.
 - Scanner must list active rules, accept a canonical `/p/:passId` customer pass and bind the selected rule with a fresh seller signature. The existing seller-issued QR remains available for compatible integrations.
 - Scanner must show customer approval/rejection and single-use redeem action.
-- Owner can delegate expiring checkout-only access to staff wallets. Operators can verify their role and create/redeem QR sessions, but cannot manage profiles, rules, history or other operators.
+- Owner can delegate expiring checkout-only access to staff wallets. Operators can verify their role and create/redeem QR sessions, but cannot manage profiles, rules, history or other operators. Profile deactivation revokes this delegated authority; profile reactivation alone never restores it.
 
 ### Developer / Integration Flow
 
@@ -222,8 +224,10 @@ those remain production configuration and physical-wallet acceptance gates.
 3. Seller onboarding supports owner-wallet self-service creation with an anti-spam profile cap.
    **Implemented with explicit reversible profile deactivation: owner lists separate active and
    inactive profiles, confirms the public impact, and can restore the profile/permanent slug
-   without automatically restoring products or rules. Invitation/review policy remains a future
-   governance decision.**
+   without automatically restoring products, rules or checkout operators. Creation defaults to
+   five active and 25 total profiles per owner wallet; each paused operator requires a fresh owner
+   authorization after profile reactivation. Invitation/review policy remains a future governance
+   decision.**
 4. Add QR history and audit view for sellers. **Implemented with owner-wallet-protected, snapshot-anchored cursor pagination, restore receipts, activity metrics, incremental older-session loading and a browser-local masked full-history CSV export. The API remains bounded to 50 rows per request, refreshes an expired read authorization when needed and creates no server-side export file. Retention/compliance policy remains future work.**
 5. Customer benefit history. **Implemented as both a redacted local recent-proof list and a
    wallet-signed, cross-device `My benefits` history with one-time challenge exchange, memory-only

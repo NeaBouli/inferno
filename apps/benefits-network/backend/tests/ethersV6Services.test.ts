@@ -23,6 +23,7 @@ const mockConfig = {
   ADMIN_SECRET: 'test-secret-12345',
   DATABASE_URL: 'file:./test.db',
   MAX_ACTIVE_SELLER_BUSINESSES_PER_WALLET: 5,
+  MAX_TOTAL_SELLER_BUSINESSES_PER_WALLET: 25,
   PORT: 0,
 };
 

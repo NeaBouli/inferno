@@ -16,7 +16,8 @@ import {
   issueSellerAuthorizationChallenge,
   requiresSingleUseSellerChallenge,
 } from '../services/sellerAuthorizationChallenge';
-import { assertSellerBusinessLimit } from '../services/sellerLimits';
+import { assertSellerBusinessCreationLimit, assertSellerBusinessLimit } from '../services/sellerLimits';
+import { pauseSellerBusinessDependents } from '../services/businessLifecycle';
 import { resolveCheckoutActor } from '../services/sellerAccess';
 import { challengeRateLimiter, sellerRateLimiter } from '../middleware/rateLimiter';
 import { validate } from '../middleware/validator';
@@ -328,6 +329,7 @@ function handleSellerError(err: unknown, res: Response, next: NextFunction) {
     if (
       err.message.includes('must be in the future') ||
       err.message.includes('already the business owner') ||
+      err.message.includes('already authorized for checkout') ||
       err.message.includes('cannot be reactivated')
     ) {
       res.status(400).json({ error: err.message });
@@ -458,7 +460,7 @@ router.post('/businesses', sellerRateLimiter, validate(createBusinessSchema), as
     const ownerAddress = await requireSellerAuth(req, 'business:create', 'new', slug || 'new');
 
     const business = await prisma.$transaction(async (tx) => {
-      await assertSellerBusinessLimit(ownerAddress, tx);
+      await assertSellerBusinessCreationLimit(ownerAddress, tx);
       if (slug) await assertBusinessSlugAvailable(slug, undefined, tx);
       return tx.business.create({
         data: {
@@ -686,15 +688,12 @@ router.post(
     try {
       const authorizationTimestamp = Number(getSellerAuth(req).timestamp);
       const walletAddress = normalizeAddress(req.body.walletAddress);
-      const ownerWallet = await requireBusinessOwner(
+      const ownerWallet = await requireSellerAuth(
         req,
         'operators:create',
         req.params.id,
         walletAddress.toLowerCase()
       );
-      if (walletAddress === ownerWallet) {
-        throw new Error('The business owner is already authorized for checkout');
-      }
 
       const expiresAt = req.body.expiresAt ? new Date(req.body.expiresAt) : null;
       if (expiresAt && expiresAt <= new Date()) {
@@ -703,6 +702,28 @@ router.post(
 
       const now = new Date();
       const { operator, existed } = await prisma.$transaction(async (tx) => {
+        // Acquire SQLite's writer lock on the business row, then revalidate the
+        // active owned business inside this transaction so a concurrent profile
+        // deactivation cannot leave a freshly activated operator behind.
+        const lockedBusinesses = await tx.$executeRaw`
+          UPDATE "Business"
+          SET "active" = "active"
+          WHERE "id" = ${req.params.id}
+            AND "active" = 1
+        `;
+        if (lockedBusinesses !== 1) throw new Error('Seller-owned business not found');
+        const business = await tx.business.findUnique({
+          where: { id: req.params.id },
+          select: { ownerAddress: true },
+        });
+        if (!business?.ownerAddress) throw new Error('Seller-owned business not found');
+        if (normalizeAddress(business.ownerAddress) !== ownerWallet) {
+          throw new Error('Seller wallet is not the business owner');
+        }
+        if (walletAddress === ownerWallet) {
+          throw new Error('The business owner is already authorized for checkout');
+        }
+
         // Acquire SQLite's writer lock before reading mutable operator state.
         await tx.$executeRaw`
           UPDATE "CheckoutOperator"
@@ -1145,21 +1166,31 @@ router.get('/businesses/:id/rewards', sellerRateLimiter, async (req, res, next) 
 
 router.delete('/businesses/:id', sellerRateLimiter, async (req, res, next) => {
   try {
-    await requireBusinessOwner(req, 'business:delete', req.params.id, req.params.id);
-    await prisma.$transaction([
-      prisma.benefitRule.updateMany({
-        where: { businessId: req.params.id, active: true },
-        data: { active: false },
-      }),
-      prisma.product.updateMany({
-        where: { businessId: req.params.id, active: true },
-        data: { active: false },
-      }),
-      prisma.business.update({
+    const wallet = await requireSellerAuth(req, 'business:delete', req.params.id, req.params.id);
+    await prisma.$transaction(async (tx) => {
+      // Lock the business row before re-reading owner and state so a stale
+      // pre-transaction check cannot race a concurrent lifecycle change.
+      const locked = await tx.$executeRaw`
+        UPDATE "Business"
+        SET "active" = "active"
+        WHERE "id" = ${req.params.id}
+          AND "active" = 1
+      `;
+      if (locked !== 1) throw new Error('Seller-owned business not found');
+      const existing = await tx.business.findUnique({
         where: { id: req.params.id },
+        select: { id: true, ownerAddress: true },
+      });
+      if (!existing?.ownerAddress) throw new Error('Seller-owned business not found');
+      if (normalizeAddress(existing.ownerAddress) !== wallet) {
+        throw new Error('Seller wallet is not the business owner');
+      }
+      await pauseSellerBusinessDependents(tx, existing.id);
+      await tx.business.update({
+        where: { id: existing.id },
         data: { active: false },
-      }),
-    ]);
+      });
+    });
     res.status(204).send();
   } catch (err) {
     handleSellerError(err, res, next);

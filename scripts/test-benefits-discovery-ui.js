@@ -660,6 +660,7 @@ async function run() {
     await sellerPage.getByRole('heading', { name: 'Benefit rule manager', exact: true }).waitFor();
     await sellerPage.getByRole('button', { name: 'Connect wallet', exact: true }).click();
     await sellerPage.getByRole('button', { name: 'Disconnect', exact: true }).waitFor();
+    await sellerPage.getByText('up to five active and 25 total seller profiles', { exact: false }).waitFor();
     await sellerPage.getByRole('button', { name: 'Load my seller profiles', exact: true }).click();
     await sellerPage.getByText('Loaded 1 seller profile.', { exact: true }).waitFor();
     assert.deepEqual(
@@ -688,6 +689,7 @@ async function run() {
     const deactivationDialog = sellerPage.getByRole('dialog', { name: `Take ${offer.business.name} offline?` });
     await deactivationDialog.waitFor();
     await deactivationDialog.getByText('public catalog and scanner will stop working immediately', { exact: false }).waitFor();
+    await deactivationDialog.getByText('every checkout staff wallet will be paused', { exact: false }).waitFor();
     await deactivationDialog.getByRole('button', { name: 'Keep profile active', exact: true }).waitFor();
     assert.equal(
       await sellerPage.evaluate(() => document.activeElement?.textContent?.trim()),
@@ -705,6 +707,9 @@ async function run() {
     await deactivationDialog.getByRole('button', { name: 'Keep profile active', exact: true }).click();
     await deactivationDialog.waitFor({ state: 'hidden' });
     assert.equal(sellerLifecycle.deactivateCalls, 0, 'cancelling the warning must preserve the active profile');
+    await sellerPage.waitForFunction(
+      () => document.activeElement?.textContent?.trim() === 'Deactivate'
+    );
     assert.equal(
       await sellerPage.evaluate(() => document.activeElement?.textContent?.trim()),
       'Deactivate',
@@ -713,7 +718,7 @@ async function run() {
 
     await sellerPage.getByRole('button', { name: 'Deactivate', exact: true }).click();
     await deactivationDialog.getByRole('button', { name: 'Deactivate profile', exact: true }).click();
-    await sellerPage.getByText('Seller profile deactivated. Its public catalog and scanner are offline; its permanent seller URL remains reserved.', { exact: true }).waitFor();
+    await sellerPage.getByText('Seller profile deactivated. Catalog, scanner, products, rules and checkout staff are paused; the permanent seller URL remains reserved.', { exact: true }).waitFor();
     assert.equal(sellerLifecycle.deactivateCalls, 1, 'confirmed deactivation must reach the API exactly once');
     await sellerPage.getByText('Deactivated profiles', { exact: true }).waitFor();
     await sellerPage.getByText(`Reserved URL: shop.ifrunit.tech/s/${offer.business.slug}`, { exact: true }).waitFor();
@@ -725,7 +730,7 @@ async function run() {
     );
 
     await sellerPage.getByRole('button', { name: 'Reactivate', exact: true }).click();
-    await sellerPage.getByText('Seller profile reactivated. Its permanent URL is restored; review and activate products and benefit rules individually.', { exact: true }).waitFor();
+    await sellerPage.getByText('Seller profile reactivated. Its permanent URL is restored. Products and rules remain paused, and each checkout staff wallet must be authorized again.', { exact: true }).waitFor();
     assert.equal(sellerLifecycle.reactivateCalls, 1, 'reactivation must reach the API exactly once');
     await sellerPage.getByRole('button', { name: 'Deactivate', exact: true }).waitFor();
     assert.equal(await sellerPage.getByText('Deactivated profiles', { exact: true }).count(), 0);

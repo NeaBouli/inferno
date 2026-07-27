@@ -34,6 +34,7 @@ jest.mock('../src/config', () => ({
     ADMIN_SECRET: 'test-secret-12345',
     DATABASE_URL: 'file:./test.db',
     MAX_ACTIVE_SELLER_BUSINESSES_PER_WALLET: 5,
+    MAX_TOTAL_SELLER_BUSINESSES_PER_WALLET: 25,
     PORT: 3001,
   },
 }));
@@ -45,7 +46,11 @@ import {
   redeem,
   prisma,
 } from '../src/services/sessionService';
-import { assertSellerBusinessLimit } from '../src/services/sellerLimits';
+import { assertSellerBusinessCreationLimit, assertSellerBusinessLimit } from '../src/services/sellerLimits';
+import {
+  buildSellerBusinessTotalLimitError,
+  getSellerBusinessLimitConfigIssue,
+} from '../src/services/sellerLimitPolicy';
 
 // ── Test Setup ──────────────────────────────────────────────────────
 
@@ -121,6 +126,100 @@ describe('E2E: IFR Lock → Benefits Network Verification', () => {
     await expect(assertSellerBusinessLimit(ownerAddress)).rejects.toThrow(
       'profile limit reached: 5/5'
     );
+  });
+
+  it('builds a distinct total-cap error and validates the cap config relationship', () => {
+    expect(buildSellerBusinessTotalLimitError(24, 25)).toBeNull();
+    expect(buildSellerBusinessTotalLimitError(25, 25)?.message).toBe(
+      'Seller profile limit reached: 25/25 total profiles (including deactivated)'
+    );
+    expect(getSellerBusinessLimitConfigIssue(5, 25)).toBeNull();
+    expect(getSellerBusinessLimitConfigIssue(5, 5)).toBeNull();
+    expect(getSellerBusinessLimitConfigIssue(26, 25)).toContain(
+      'must be greater than or equal to MAX_ACTIVE_SELLER_BUSINESSES_PER_WALLET'
+    );
+  });
+
+  it('caps persisted seller profiles per owner wallet including deactivated profiles', async () => {
+    const ownerAddress = '0x8Ba1f109551bD432803012645Ac136ddd64DBA72';
+
+    await prisma.business.createMany({
+      data: Array.from({ length: 25 }, (_, index) => ({
+        name: `Lifetime Seller Profile ${index + 1}`,
+        ownerAddress,
+        discountPercent: 10,
+        requiredLockIFR: 1000,
+        active: false,
+      })),
+    });
+
+    await prisma.$transaction(async (tx) => {
+      await expect(assertSellerBusinessCreationLimit(ownerAddress, tx)).rejects.toThrow(
+        'Seller profile limit reached: 25/25 total profiles (including deactivated)'
+      );
+    });
+
+    // The active-only reactivation check ignores the lifetime backlog.
+    await expect(assertSellerBusinessLimit(ownerAddress)).resolves.toBeUndefined();
+  });
+
+  it('reports the active cap before the total cap when both are near', async () => {
+    const ownerAddress = '0x2B5AD5c4795c026514f8317c7a215E218DcCD6cF';
+
+    await prisma.business.createMany({
+      data: [
+        ...Array.from({ length: 5 }, (_, index) => ({
+          name: `Active Cap Seller ${index + 1}`,
+          ownerAddress,
+          discountPercent: 10,
+          requiredLockIFR: 1000,
+          active: true,
+        })),
+        ...Array.from({ length: 19 }, (_, index) => ({
+          name: `Paused Cap Seller ${index + 1}`,
+          ownerAddress,
+          discountPercent: 10,
+          requiredLockIFR: 1000,
+          active: false,
+        })),
+      ],
+    });
+
+    await prisma.$transaction(async (tx) => {
+      await expect(assertSellerBusinessCreationLimit(ownerAddress, tx)).rejects.toThrow(
+        'profile limit reached: 5/5 active profiles'
+      );
+    });
+  });
+
+  it('keeps legacy over-total owners on the active-only check and blocks creation', async () => {
+    const ownerAddress = '0x6813Eb9362372EEF6200f3b1dbC3f819671cBA69';
+
+    await prisma.business.createMany({
+      data: [
+        {
+          name: 'Legacy Active Seller',
+          ownerAddress,
+          discountPercent: 10,
+          requiredLockIFR: 1000,
+          active: true,
+        },
+        ...Array.from({ length: 25 }, (_, index) => ({
+          name: `Legacy Paused Seller ${index + 1}`,
+          ownerAddress,
+          discountPercent: 10,
+          requiredLockIFR: 1000,
+          active: false,
+        })),
+      ],
+    });
+
+    await expect(assertSellerBusinessLimit(ownerAddress)).resolves.toBeUndefined();
+    await prisma.$transaction(async (tx) => {
+      await expect(assertSellerBusinessCreationLimit(ownerAddress, tx)).rejects.toThrow(
+        'Seller profile limit reached: 26/25 total profiles (including deactivated)'
+      );
+    });
   });
 
   it('complete flow: create session → challenge → attest (locked) → redeem', async () => {

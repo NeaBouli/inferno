@@ -27,6 +27,7 @@ npm run dev            # http://localhost:3001
 | `DATABASE_URL` | Prisma database URL | `file:./dev.db` |
 | `PORT` | Server port | `3001` |
 | `MAX_ACTIVE_SELLER_BUSINESSES_PER_WALLET` | Anti-spam cap for active wallet-owned seller profiles | `5` |
+| `MAX_TOTAL_SELLER_BUSINESSES_PER_WALLET` | Lifetime cap for wallet-owned seller profiles, including inactive profiles | `25` |
 | `RATE_LIMIT_STORE` | `memory` for one replica or `redis` for a shared rate-limit store | `memory` |
 | `RATE_LIMIT_REDIS_URL` | Redis/Rediss URL; required only when `RATE_LIMIT_STORE=redis` | unset |
 | `BACKEND_REPLICA_COUNT` | Declared backend replica count used by the startup safety guard | `1` |
@@ -55,8 +56,8 @@ is not ready.
 | POST | `/api/seller/businesses` | Seller wallet signature | Create wallet-owned seller business |
 | GET | `/api/seller/businesses` | Seller wallet signature | Privately list active and inactive seller businesses owned by the wallet |
 | PATCH | `/api/seller/businesses/:id/slug` | Owner wallet signature | Claim the business's permanent public seller URL |
-| DELETE | `/api/seller/businesses/:id` | Seller wallet signature | Soft-deactivate an owned seller business and pause active products and rules |
-| POST | `/api/seller/businesses/:id/reactivate` | Owner wallet signature | Reactivate only the owned seller profile; products and rules remain paused |
+| DELETE | `/api/seller/businesses/:id` | Seller wallet signature | Soft-deactivate an owned seller business and pause products, rules and checkout operators |
+| POST | `/api/seller/businesses/:id/reactivate` | Owner wallet signature | Reactivate only the owned seller profile; products, rules and checkout operators remain paused |
 | GET | `/api/seller/businesses/:id/rules` | Seller wallet signature | List owned benefit rules |
 | GET | `/api/seller/businesses/:id/products` | Owner wallet signature | List owned catalog items, including archived ones |
 | POST | `/api/seller/businesses/:id/products` | Owner wallet signature | Create a product or service |
@@ -221,9 +222,10 @@ sessions but cannot perform owner-only mutations.
 
 The private owner profile list returns active and inactive profiles separately with
 `Cache-Control: private, no-store`. Deactivation preserves history and the permanent
-slug while pausing active products and rules. A fresh, one-time
+slug while pausing active products, rules and checkout operators. A fresh, one-time
 `business:reactivate` authorization can restore only the profile, subject to the
-active-profile cap; products and rules must be reviewed and reactivated individually.
+active-profile cap; products and rules must be reviewed and reactivated individually,
+and each checkout operator requires a fresh owner authorization.
 
 Seller session history uses the same headers with `Action: sessions:list` and the
 business id as `Business`. Each snapshot/cursor page is clamped from 1 to 50 rows.
@@ -272,6 +274,12 @@ business. Each operator may have a label and expiry. Operators can sign
 profiles or rules, or add/revoke other operators. Revocation is effective on
 the next server request. Redemption audit payloads record the actor wallet and
 `OWNER`/`OPERATOR` role, never the wallet signature.
+
+Deactivating a seller profile also deactivates every checkout operator in the same
+database transaction and invalidates every unused `operators:create` challenge for that
+business. Reactivating the profile does not restore delegated authority: the owner must
+issue a fresh `operators:create` authorization for each staff wallet that should regain
+checkout access.
 
 Every seller mutation requires a resource-bound single-use nonce in `x-ifr-nonce`
 in addition to the wallet, signature and timestamp headers. Session creation
@@ -337,8 +345,10 @@ authorized transaction executes.
 Admin routes remain available for operator setup and recovery, but the public
 seller UX should prefer wallet-owned businesses.
 
-Public seller creation is intentionally capped per wallet. The default is five
-active seller profiles per owner wallet; inactive businesses do not count.
+Public seller creation is intentionally capped per wallet. The defaults are five
+active and 25 total seller profiles per owner wallet; inactive businesses count toward
+the total cap. Existing wallets above a newly lowered total cap can still list,
+deactivate and reactivate existing profiles but cannot create another profile.
 Deactivated seller profiles are also blocked from seller-owned rule writes,
 even if the original owner wallet signs the request.
 

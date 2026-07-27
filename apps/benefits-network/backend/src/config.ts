@@ -2,6 +2,7 @@ import { z } from 'zod';
 import dotenv from 'dotenv';
 import { getRateLimitTopologyIssues } from './services/rateLimitTopology';
 import { getAdminSecretPolicyIssue } from './services/adminSecretPolicy';
+import { getSellerBusinessLimitConfigIssue } from './services/sellerLimitPolicy';
 
 dotenv.config();
 
@@ -28,10 +29,22 @@ const envSchema = z.object({
   DATABASE_URL: z.string().default('file:./dev.db'),
   PORT: z.coerce.number().int().positive().default(3001),
   MAX_ACTIVE_SELLER_BUSINESSES_PER_WALLET: z.coerce.number().int().min(1).max(50).default(5),
+  MAX_TOTAL_SELLER_BUSINESSES_PER_WALLET: z.coerce.number().int().min(1).max(100).default(25),
   RATE_LIMIT_STORE: z.enum(['memory', 'redis']).default('memory'),
   RATE_LIMIT_REDIS_URL: optionalUrl,
   BACKEND_REPLICA_COUNT: z.coerce.number().int().min(1).max(100).default(1),
 }).superRefine((env, context) => {
+  const sellerBusinessLimitIssue = getSellerBusinessLimitConfigIssue(
+    env.MAX_ACTIVE_SELLER_BUSINESSES_PER_WALLET,
+    env.MAX_TOTAL_SELLER_BUSINESSES_PER_WALLET
+  );
+  if (sellerBusinessLimitIssue) {
+    context.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['MAX_TOTAL_SELLER_BUSINESSES_PER_WALLET'],
+      message: sellerBusinessLimitIssue,
+    });
+  }
   const adminSecretIssue = getAdminSecretPolicyIssue(env.ADMIN_SECRET);
   if (adminSecretIssue) {
     context.addIssue({
