@@ -188,8 +188,22 @@ function installApiMock(context, state, calls) {
     }
     if (method === 'GET' && pathname === `/api/passes/${passId}/control`) {
       assert.equal(request.headers().authorization, `Bearer ${controlToken}`);
+      const snapshot = controlStatus(state);
+      if (state.nextControlHold) {
+        const hold = state.nextControlHold;
+        state.nextControlHold = null;
+        hold.started.resolve();
+        await hold.release.promise;
+        await json(
+          route,
+          hold.error ? { error: hold.error } : snapshot,
+          hold.error ? 503 : 200
+        );
+        hold.completed.resolve();
+        return;
+      }
       if (state.controlGate) await state.controlGate.promise;
-      return json(route, controlStatus(state));
+      return json(route, snapshot);
     }
     if (method === 'GET' && pathname === `/api/passes/${passId}`) {
       return json(route, { available: state.pass === 'OPEN', expiresAt });
@@ -342,6 +356,7 @@ async function run() {
       cancelAttempts: 0,
       cancelFailure: false,
       controlGate: null,
+      nextControlHold: null,
     };
     const calls = [];
     const customerContext = await browser.newContext({ serviceWorkers: 'block' });
@@ -383,6 +398,27 @@ async function run() {
     assert.equal(state.cancelAttempts, 2, 'failed cancellation must reach the backend once');
     assert.equal(await passPanel.locator('p.font-mono').textContent(), renderedPassUrl, 'failed cancellation must retain the active pass and control state');
     state.cancelFailure = false;
+    const staleCancelHold = {
+      started: deferred(),
+      release: deferred(),
+      completed: deferred(),
+    };
+    state.nextControlHold = staleCancelHold;
+    await passPanel.getByRole('button', { name: 'Refresh', exact: true }).click();
+    await staleCancelHold.started.promise;
+    await passPanel.getByRole('button', { name: 'Cancel', exact: true }).click();
+    await passPanel.getByText('Checkout pass cancelled. It cannot be bound or approved.').waitFor();
+    const cancelRecoveryGate = deferred();
+    state.controlGate = cancelRecoveryGate;
+    staleCancelHold.release.resolve();
+    await staleCancelHold.completed.promise;
+    await customer.waitForTimeout(150);
+    await passPanel.getByText('CANCELLED', { exact: true }).waitFor();
+    cancelRecoveryGate.resolve();
+    state.controlGate = null;
+    await passPanel.getByRole('button', { name: 'New pass', exact: true }).click();
+    await passPanel.getByRole('button', { name: 'Create customer QR', exact: true }).click();
+    await passPanel.getByText('Pass ready. Let the seller scan this QR, then review the exact offer here.').waitFor();
     const controlGate = deferred();
     state.controlGate = controlGate;
     await customer.getByRole('button', { name: 'Disconnect', exact: true }).first().click();
@@ -399,6 +435,14 @@ async function run() {
     await passPanel.getByRole('button', { name: 'Cancel & new pass', exact: true }).waitFor();
     await customer.getByRole('button', { name: 'Connect wallet', exact: true }).first().click();
     await customer.getByRole('button', { name: 'Disconnect', exact: true }).first().waitFor();
+    const staleOpenHold = {
+      started: deferred(),
+      release: deferred(),
+      completed: deferred(),
+    };
+    state.nextControlHold = staleOpenHold;
+    await passPanel.getByRole('button', { name: 'Refresh', exact: true }).click();
+    await staleOpenHold.started.promise;
 
     await seller.goto(`${origin}/p/${passId}`, {
       waitUntil: 'domcontentloaded',
@@ -431,8 +475,46 @@ async function run() {
     await passPanel.getByText(benefit.productName).waitFor();
     await passPanel.getByText('15%').waitFor();
     await passPanel.getByText('5,000 IFR').waitFor();
+    const confirmOffer = passPanel.getByRole('button', { name: 'Confirm this seller and offer', exact: true });
+    await confirmOffer.waitFor();
+
+    const recoveryGate = deferred();
+    state.controlGate = recoveryGate;
+    staleOpenHold.release.resolve();
+    await staleOpenHold.completed.promise;
+    await customer.waitForTimeout(150);
+    assert.equal(
+      await confirmOffer.isVisible(),
+      true,
+      'a stale OPEN response must not replace a newer BOUND checkout'
+    );
+    recoveryGate.resolve();
+    state.controlGate = null;
+
+    const staleErrorHold = {
+      started: deferred(),
+      release: deferred(),
+      completed: deferred(),
+      error: 'Delayed stale control failure',
+    };
+    state.nextControlHold = staleErrorHold;
+    await passPanel.getByRole('button', { name: 'Refresh', exact: true }).click();
+    await staleErrorHold.started.promise;
+    await passPanel.getByRole('button', { name: 'Refresh', exact: true }).click();
+    const errorRecoveryGate = deferred();
+    state.controlGate = errorRecoveryGate;
+    staleErrorHold.release.resolve();
+    await staleErrorHold.completed.promise;
+    await customer.waitForTimeout(150);
+    assert.equal(
+      await passPanel.getByText('Delayed stale control failure', { exact: false }).count(),
+      0,
+      'a stale refresh failure must not replace a newer healthy status'
+    );
+    errorRecoveryGate.resolve();
+    state.controlGate = null;
     await assertNoAxeViolations(customer, `exact bound-offer confirmation (${origin}/#customer-pass, offer bound)`);
-    await passPanel.getByRole('button', { name: 'Confirm this seller and offer', exact: true }).click();
+    await confirmOffer.click();
     await passPanel.getByText('IFR access approved. The seller can now redeem this checkout once.').waitFor();
     assert.equal(state.checkout, 'APPROVED');
 
@@ -448,7 +530,7 @@ async function run() {
     await passPanel.getByRole('button', { name: 'Refresh', exact: true }).click();
     await passPanel.getByRole('button', { name: 'New pass', exact: true }).click();
     await passPanel.getByRole('button', { name: 'Create customer QR', exact: true }).waitFor();
-    assert.equal(state.cancelAttempts, 2, 'a terminal checkout should clear locally without a redundant cancellation');
+    assert.equal(state.cancelAttempts, 3, 'a terminal checkout should clear locally without a redundant cancellation');
 
     for (const requiredCall of [
       'POST /api/passes/challenge',
