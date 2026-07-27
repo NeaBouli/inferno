@@ -147,6 +147,9 @@ export function CustomerCheckoutPass() {
   const mustCancelBeforeReset = status !== null && (
     (status.status === 'OPEN' || status.status === 'BOUND') && !checkoutClosed
   );
+  const displayStatus = status?.status === 'CANCELLED' || status?.status === 'EXPIRED'
+    ? status.status
+    : status?.checkout?.status || status?.status || 'Not started';
 
   function remember(next: StoredPass | null) {
     passRequestRef.current += 1;
@@ -213,7 +216,15 @@ export function CustomerCheckoutPass() {
         setStatus(null);
         setMessage('Previous pass cancelled. You can create a new customer QR.');
       } else {
-        setStatus((current) => ({ status: 'CANCELLED', expiresAt: current?.expiresAt || pass.expiresAt, checkout: current?.checkout || null }));
+        setStatus((current) => ({
+          status: 'CANCELLED',
+          expiresAt: current?.expiresAt || pass.expiresAt,
+          checkout: current?.checkout ? {
+            ...current.checkout,
+            status: 'REJECTED',
+            reason: 'Customer cancelled checkout confirmation.',
+          } : null,
+        }));
         setMessage('Checkout pass cancelled. It cannot be bound or approved.');
       }
     } catch (err) {
@@ -248,7 +259,7 @@ export function CustomerCheckoutPass() {
           <h2 className="mt-2 text-2xl font-black text-white">Show your QR. Approve the exact offer.</h2>
         </div>
         <span className="rounded-full border border-green-300/25 bg-green-300/[0.08] px-3 py-2 text-xs font-black uppercase text-green-50">
-          {status?.checkout?.status || status?.status || 'Not started'}
+          {displayStatus}
         </span>
       </div>
       <p className="mt-3 text-sm leading-6 text-stone-300">
@@ -308,6 +319,7 @@ export function CustomerCheckoutPass() {
               </div>
               <div className="flex justify-between gap-4"><span>Offer</span><strong className="text-right text-white">{status.checkout.benefit.label || 'Standard benefit'}</strong></div>
               <div className="flex justify-between gap-4"><span>Product</span><strong className="text-right text-white">{status.checkout.benefit.productName || 'Seller benefit'}</strong></div>
+              <div className="flex justify-between gap-4"><span>Checkout status</span><strong className="text-right text-white">{status.checkout.status}</strong></div>
               {formatProductPrice(status.checkout.benefit.basePriceMinor, status.checkout.benefit.currency) ? (
                 <div className="flex justify-between gap-4">
                   <span>Reference price</span>
