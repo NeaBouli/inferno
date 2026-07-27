@@ -172,6 +172,293 @@ async function assertChallengeRejectedBeforeSigning(overrides, expectedPattern) 
   assert.equal(signed, false);
 }
 
+function buildSellerMessage(action, businessId, timestamp, scope, nonce) {
+  return [
+    "IFR Benefits Network - Seller Authorization",
+    `Action: ${action}`,
+    `Business: ${businessId}`,
+    `Timestamp: ${timestamp}`,
+    `Scope: ${scope}`,
+    `Nonce: ${nonce}`,
+    "Only sign this message inside shop.ifrunit.tech.",
+  ].join("\n");
+}
+
+function validRedeemChallenge(sessionId, walletAddress, overrides = {}) {
+  const timestamp = String(Date.now());
+  const nonce = "ab".repeat(32);
+  return {
+    action: "sessions:redeem",
+    businessId: sessionId,
+    walletAddress,
+    scope: sessionId,
+    timestamp,
+    issuedAt: new Date(Number(timestamp)).toISOString(),
+    expiresAt: new Date(Number(timestamp) + 10 * 60 * 1000).toISOString(),
+    nonce,
+    message: buildSellerMessage("sessions:redeem", sessionId, timestamp, sessionId, nonce),
+    ...overrides,
+  };
+}
+
+async function testGetCheckoutStatus() {
+  const requests = [];
+  const expiresAt = new Date(Date.now() + 5 * 60 * 1000).toISOString();
+  const client = new IFRBenefitsClient({
+    fetch: async (url, init = {}) => {
+      requests.push({ url, init });
+      return jsonResponse(200, {
+        status: "APPROVED",
+        reason: null,
+        redeemedAt: null,
+        expiresAt,
+        attestAttempts: 1,
+        businessId: "coffee-shop",
+        benefitRuleId: "rule-premium",
+        benefit: { label: "Premium" },
+        presentation: "SELLER_QR",
+      });
+    },
+  });
+  const status = await client.getCheckoutStatus("session-1");
+  assert.equal(requests.length, 1);
+  assert.equal(requests[0].url, `${DEFAULT_BENEFITS_API}/api/sessions/session-1`);
+  assert.equal(requests[0].init.method, "GET");
+  assert.equal(requests[0].init.cache, "no-store");
+  assert.deepEqual(status, {
+    status: "APPROVED",
+    reason: null,
+    redeemedAt: null,
+    expiresAt,
+    attestAttempts: 1,
+    businessId: "coffee-shop",
+    benefitRuleId: "rule-premium",
+    presentation: "SELLER_QR",
+  });
+}
+
+async function testGetCheckoutStatusRedeemed() {
+  const redeemedAt = new Date().toISOString();
+  const client = new IFRBenefitsClient({
+    fetch: async () =>
+      jsonResponse(200, {
+        status: "REDEEMED",
+        reason: null,
+        redeemedAt,
+        expiresAt: new Date(Date.now() + 60000).toISOString(),
+        attestAttempts: 2,
+        businessId: "coffee-shop",
+        benefitRuleId: null,
+        presentation: "CUSTOMER_PASS",
+      }),
+  });
+  const status = await client.getCheckoutStatus("session-9");
+  assert.equal(status.status, "REDEEMED");
+  assert.equal(status.redeemedAt, redeemedAt);
+  assert.equal(status.presentation, "CUSTOMER_PASS");
+}
+
+async function assertStatusRejected(body) {
+  const client = new IFRBenefitsClient({
+    fetch: async () => jsonResponse(200, body),
+  });
+  await assert.rejects(client.getCheckoutStatus("session-1"), /invalid checkout status/);
+}
+
+async function testGetCheckoutStatusMalformed() {
+  const valid = {
+    status: "PENDING",
+    reason: null,
+    redeemedAt: null,
+    expiresAt: new Date(Date.now() + 60000).toISOString(),
+    attestAttempts: 0,
+    businessId: "coffee-shop",
+    benefitRuleId: "rule-premium",
+    presentation: "SELLER_QR",
+  };
+  await assertStatusRejected(null);
+  await assertStatusRejected({ ...valid, status: "UNKNOWN" });
+  await assertStatusRejected({ ...valid, status: undefined });
+  await assertStatusRejected({ ...valid, expiresAt: "not-a-date" });
+  await assertStatusRejected({ ...valid, expiresAt: "2026-07-27" });
+  await assertStatusRejected({ ...valid, expiresAt: undefined });
+  await assertStatusRejected({ ...valid, redeemedAt: "not-a-date" });
+  await assertStatusRejected({ ...valid, redeemedAt: "2026-07-27T00:00:00+00:00" });
+  await assertStatusRejected({ ...valid, redeemedAt: undefined });
+  await assertStatusRejected({ ...valid, attestAttempts: -1 });
+  await assertStatusRejected({ ...valid, attestAttempts: 1.5 });
+  await assertStatusRejected({ ...valid, businessId: "" });
+  await assertStatusRejected({ ...valid, reason: 42 });
+  await assertStatusRejected({ ...valid, benefitRuleId: 42 });
+  await assertStatusRejected({ ...valid, presentation: "UNKNOWN" });
+}
+
+async function testInvalidSessionIdRejectedBeforeRequest() {
+  let requests = 0;
+  const client = new IFRBenefitsClient({
+    fetch: async () => {
+      requests += 1;
+      return jsonResponse(200, {});
+    },
+  });
+  const signMessage = async () => `0x${"11".repeat(65)}`;
+  for (const bad of ["a/b", "..", "a..b", " a", "a ", "", "a?b", "a#b", "a\\b", "a\nb"]) {
+    await assert.rejects(client.getCheckoutStatus(bad), /Invalid checkout session ID/);
+    await assert.rejects(
+      client.redeemCheckout({ sessionId: bad, walletAddress: "0x1111111111111111111111111111111111111111", signMessage }),
+      /Invalid checkout session ID/
+    );
+  }
+  assert.equal(requests, 0);
+}
+
+async function testRedeemCheckout() {
+  const requests = [];
+  const sellerWallet = "0x1111111111111111111111111111111111111111";
+  const signature = `0x${"22".repeat(65)}`;
+  const sessionId = "session-1";
+  const challenge = validRedeemChallenge(sessionId, sellerWallet);
+  const mockFetch = async (url, init = {}) => {
+    requests.push({ url, init });
+    if (requests.length === 1) return jsonResponse(200, challenge);
+    return jsonResponse(200, { status: "REDEEMED" });
+  };
+  const client = new IFRBenefitsClient({ fetch: mockFetch });
+  const result = await client.redeemCheckout({
+    sessionId,
+    walletAddress: sellerWallet,
+    signMessage: async (message) => {
+      assert.equal(message, challenge.message);
+      return signature;
+    },
+  });
+
+  assert.equal(requests.length, 2);
+  const challengeUrl = new URL(requests[0].url);
+  assert.equal(challengeUrl.origin, DEFAULT_BENEFITS_API);
+  assert.equal(challengeUrl.pathname, "/api/seller/auth-message");
+  assert.equal(challengeUrl.searchParams.get("action"), "sessions:redeem");
+  assert.equal(challengeUrl.searchParams.get("businessId"), sessionId);
+  assert.equal(challengeUrl.searchParams.get("scope"), sessionId);
+  assert.equal(challengeUrl.searchParams.get("walletAddress"), sellerWallet);
+  assert.equal(requests[1].url, `${DEFAULT_BENEFITS_API}/api/sessions/session-1/redeem`);
+  assert.equal(requests[1].init.method, "POST");
+  assert.equal(requests[1].init.headers["x-ifr-wallet"], sellerWallet);
+  assert.equal(requests[1].init.headers["x-ifr-signature"], signature);
+  assert.equal(requests[1].init.headers["x-ifr-timestamp"], challenge.timestamp);
+  assert.equal(requests[1].init.headers["x-ifr-nonce"], challenge.nonce);
+  assert.deepEqual(result, { status: "REDEEMED" });
+}
+
+async function assertRedeemChallengeRejectedBeforeSigning(overrides, expectedPattern) {
+  let requests = 0;
+  let signed = false;
+  const walletAddress = "0x1111111111111111111111111111111111111111";
+  const sessionId = "session-1";
+  const challenge = validRedeemChallenge(sessionId, walletAddress, overrides);
+  const client = new IFRBenefitsClient({
+    fetch: async () => {
+      requests += 1;
+      return jsonResponse(200, challenge);
+    },
+  });
+  await assert.rejects(
+    client.redeemCheckout({
+      sessionId,
+      walletAddress,
+      signMessage: async () => {
+        signed = true;
+        return `0x${"11".repeat(65)}`;
+      },
+    }),
+    expectedPattern
+  );
+  assert.equal(requests, 1);
+  assert.equal(signed, false);
+}
+
+async function testRedeemChallengeMismatchFailsBeforeSigning() {
+  const sessionId = "session-1";
+  await assertRedeemChallengeRejectedBeforeSigning({ action: "sessions:create" }, /mismatched/);
+  await assertRedeemChallengeRejectedBeforeSigning({ businessId: "other-session" }, /mismatched/);
+  await assertRedeemChallengeRejectedBeforeSigning({ scope: "other-scope" }, /mismatched/);
+  await assertRedeemChallengeRejectedBeforeSigning(
+    { walletAddress: "0x2222222222222222222222222222222222222222" },
+    /mismatched/
+  );
+  await assertRedeemChallengeRejectedBeforeSigning({ nonce: undefined }, /mismatched/);
+  await assertRedeemChallengeRejectedBeforeSigning({ message: "Sign an unrelated message" }, /mismatched/);
+  const staleTimestamp = String(Date.now() - 11 * 60 * 1000);
+  const staleNonce = "cd".repeat(32);
+  await assertRedeemChallengeRejectedBeforeSigning(
+    {
+      timestamp: staleTimestamp,
+      issuedAt: new Date(Number(staleTimestamp)).toISOString(),
+      expiresAt: new Date(Number(staleTimestamp) + 10 * 60 * 1000).toISOString(),
+      nonce: staleNonce,
+      message: buildSellerMessage("sessions:redeem", sessionId, staleTimestamp, sessionId, staleNonce),
+    },
+    /mismatched/
+  );
+  // Redeem must also reject a challenge that would be valid for createCheckout.
+  const createTimestamp = String(Date.now());
+  const createNonce = "ef".repeat(32);
+  await assertRedeemChallengeRejectedBeforeSigning(
+    {
+      action: "sessions:create",
+      message: buildSellerMessage("sessions:create", sessionId, createTimestamp, sessionId, createNonce),
+      timestamp: createTimestamp,
+      issuedAt: new Date(Number(createTimestamp)).toISOString(),
+      expiresAt: new Date(Number(createTimestamp) + 10 * 60 * 1000).toISOString(),
+      nonce: createNonce,
+    },
+    /mismatched/
+  );
+}
+
+async function testRedeemInvalidSignatureRejectedBeforePost() {
+  let requests = 0;
+  const walletAddress = "0x1111111111111111111111111111111111111111";
+  const sessionId = "session-1";
+  const client = new IFRBenefitsClient({
+    fetch: async () => {
+      requests += 1;
+      return jsonResponse(200, validRedeemChallenge(sessionId, walletAddress));
+    },
+  });
+  await assert.rejects(
+    client.redeemCheckout({
+      sessionId,
+      walletAddress,
+      signMessage: async () => "not-a-signature",
+    }),
+    /invalid signature/
+  );
+  assert.equal(requests, 1);
+}
+
+async function testRedeemMalformedResultRejected() {
+  const walletAddress = "0x1111111111111111111111111111111111111111";
+  const sessionId = "session-1";
+  let requests = 0;
+  const client = new IFRBenefitsClient({
+    fetch: async () => {
+      requests += 1;
+      if (requests === 1) return jsonResponse(200, validRedeemChallenge(sessionId, walletAddress));
+      return jsonResponse(200, { status: "APPROVED" });
+    },
+  });
+  await assert.rejects(
+    client.redeemCheckout({
+      sessionId,
+      walletAddress,
+      signMessage: async () => `0x${"11".repeat(65)}`,
+    }),
+    /invalid checkout redemption/
+  );
+  assert.equal(requests, 2);
+}
+
 async function main() {
   assert.equal(IFR_API, "https://copilot-api.ifrunit.tech");
   assert.throws(() => new IFRClient({ network: "sepolia" }), /Mainnet only/);
@@ -217,6 +504,14 @@ async function main() {
     },
     /mismatched/
   );
+  await testGetCheckoutStatus();
+  await testGetCheckoutStatusRedeemed();
+  await testGetCheckoutStatusMalformed();
+  await testInvalidSessionIdRejectedBeforeRequest();
+  await testRedeemCheckout();
+  await testRedeemChallengeMismatchFailsBeforeSigning();
+  await testRedeemInvalidSignatureRejectedBeforePost();
+  await testRedeemMalformedResultRejected();
   console.log("[ifr-sdk-test] PASS");
 }
 

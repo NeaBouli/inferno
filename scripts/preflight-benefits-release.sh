@@ -4,6 +4,7 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 FRONTEND="$ROOT/apps/benefits-network/frontend"
 BACKEND="$ROOT/apps/benefits-network/backend"
+SDK="$ROOT/apps/sdk"
 MODE="${1:---full}"
 REQUIRE_CLEAN="${BENEFITS_PREFLIGHT_REQUIRE_CLEAN:-1}"
 SERVER_PID=""
@@ -84,12 +85,16 @@ if [[ "$MODE" == "--static" ]]; then
   exit 0
 fi
 
-for directory in "$ROOT/node_modules" "$FRONTEND/node_modules" "$BACKEND/node_modules"; do
+for directory in "$ROOT/node_modules" "$FRONTEND/node_modules" "$BACKEND/node_modules" "$SDK/node_modules"; do
   if [[ ! -d "$directory" ]]; then
     echo "[benefits-preflight] FAIL missing dependencies at $directory; run the matching npm ci first." >&2
     exit 2
   fi
 done
+
+run "sdk unit tests" npm --prefix "$SDK" test
+run "sdk package consumer tests" npm --prefix "$SDK" run test:package
+run "sdk generated dist is committed" git diff --exit-code -- apps/sdk/dist
 
 run "frontend dependency audit" npm --prefix "$FRONTEND" audit --audit-level=low
 run "frontend proof-link contract" npm --prefix "$FRONTEND" run test:proof-link

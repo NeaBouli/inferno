@@ -2,8 +2,10 @@ export const DEFAULT_BENEFITS_API = "https://shop.ifrunit.tech";
 const SELLER_AUTH_TTL_MS = 10 * 60 * 1000;
 const MAX_FUTURE_SKEW_MS = 2 * 60 * 1000;
 
+export type SellerAuthorizationAction = "sessions:create" | "sessions:redeem";
+
 export interface SellerAuthorizationChallenge {
-  action: "sessions:create";
+  action: SellerAuthorizationAction;
   businessId: string;
   walletAddress: string;
   scope: string;
@@ -37,6 +39,42 @@ export interface CreateBenefitsCheckoutParams {
   signMessage: (message: string) => Promise<string>;
 }
 
+export interface RedeemBenefitsCheckoutParams {
+  sessionId: string;
+  walletAddress: string;
+  signMessage: (message: string) => Promise<string>;
+}
+
+export type BenefitsCheckoutStatusValue =
+  | "PENDING"
+  | "APPROVED"
+  | "REJECTED"
+  | "REDEEMED"
+  | "EXPIRED";
+
+const BENEFITS_CHECKOUT_STATUSES: readonly BenefitsCheckoutStatusValue[] = [
+  "PENDING",
+  "APPROVED",
+  "REJECTED",
+  "REDEEMED",
+  "EXPIRED",
+];
+
+export interface BenefitsCheckoutStatus {
+  status: BenefitsCheckoutStatusValue;
+  reason: string | null;
+  redeemedAt: string | null;
+  expiresAt: string;
+  attestAttempts: number;
+  businessId: string;
+  benefitRuleId: string | null;
+  presentation: "CUSTOMER_PASS" | "SELLER_QR";
+}
+
+export interface BenefitsCheckoutRedemption {
+  status: "REDEEMED";
+}
+
 export interface IFRBenefitsClientConfig {
   baseUrl?: string;
   fetch?: typeof fetch;
@@ -47,6 +85,20 @@ function safeAuthorizationField(value: string, label: string) {
     throw new Error(`Invalid ${label}`);
   }
   return value;
+}
+
+function safeSessionPathSegment(value: string) {
+  if (
+    !value ||
+    value.length > 200 ||
+    value !== value.trim() ||
+    /[\u0000-\u001f\u007f]/.test(value) ||
+    /[/?#\\]/.test(value) ||
+    value.includes("..")
+  ) {
+    throw new Error("Invalid checkout session ID");
+  }
+  return encodeURIComponent(value);
 }
 
 function normalizeBaseUrl(value: string) {
@@ -66,12 +118,19 @@ function isAddress(value: string) {
   return /^0x[0-9a-fA-F]{40}$/.test(value);
 }
 
+function isCanonicalIsoDate(value: unknown): value is string {
+  if (typeof value !== "string") return false;
+  const timestamp = Date.parse(value);
+  return !Number.isNaN(timestamp) && new Date(timestamp).toISOString() === value;
+}
+
 async function readJson<T>(response: Response): Promise<T> {
   if (!response.ok) throw new Error(`IFR Benefits API request failed (${response.status})`);
   return response.json() as Promise<T>;
 }
 
 function buildSellerAuthorizationMessage(
+  action: SellerAuthorizationAction,
   businessId: string,
   timestamp: string,
   scope: string,
@@ -79,7 +138,7 @@ function buildSellerAuthorizationMessage(
 ) {
   return [
     "IFR Benefits Network - Seller Authorization",
-    "Action: sessions:create",
+    `Action: ${action}`,
     `Business: ${businessId}`,
     `Timestamp: ${timestamp}`,
     `Scope: ${scope}`,
@@ -97,17 +156,17 @@ export class IFRBenefitsClient {
     this.fetchImpl = config.fetch || fetch;
   }
 
-  async createCheckout(params: CreateBenefitsCheckoutParams): Promise<BenefitsCheckoutSession> {
-    const businessId = safeAuthorizationField(params.businessId, "business ID");
-    const scope = safeAuthorizationField(params.benefitRuleId || "default", "benefit rule ID");
-    if (!isAddress(params.walletAddress)) throw new Error("Invalid seller wallet address");
-    if (typeof params.signMessage !== "function") throw new Error("Seller wallet signer is required");
-
+  private async requestSellerChallenge(
+    action: SellerAuthorizationAction,
+    businessId: string,
+    scope: string,
+    walletAddress: string
+  ): Promise<SellerAuthorizationChallenge> {
     const challengeUrl = new URL("/api/seller/auth-message", this.baseUrl);
     challengeUrl.search = new URLSearchParams({
-      action: "sessions:create",
+      action,
       businessId,
-      walletAddress: params.walletAddress,
+      walletAddress,
       scope,
     }).toString();
     const challenge = await readJson<SellerAuthorizationChallenge>(
@@ -119,11 +178,11 @@ export class IFRBenefitsClient {
     const now = Date.now();
 
     if (
-      challenge.action !== "sessions:create" ||
+      challenge.action !== action ||
       challenge.businessId !== businessId ||
       challenge.scope !== scope ||
       !/^0x[0-9a-fA-F]{40}$/.test(challenge.walletAddress || "") ||
-      challenge.walletAddress.toLowerCase() !== params.walletAddress.toLowerCase() ||
+      challenge.walletAddress.toLowerCase() !== walletAddress.toLowerCase() ||
       !/^\d{10,16}$/.test(challenge.timestamp || "") ||
       !Number.isSafeInteger(timestampMs) ||
       issuedAtMs !== timestampMs ||
@@ -133,6 +192,7 @@ export class IFRBenefitsClient {
       expiresAtMs <= now ||
       !/^[0-9a-f]{64}$/.test(challenge.nonce || "") ||
       challenge.message !== buildSellerAuthorizationMessage(
+        action,
         businessId,
         challenge.timestamp,
         scope,
@@ -141,11 +201,33 @@ export class IFRBenefitsClient {
     ) {
       throw new Error("IFR Benefits API returned a mismatched seller authorization challenge");
     }
+    return challenge;
+  }
 
-    const signature = await params.signMessage(challenge.message);
+  private async signSellerChallenge(
+    challenge: SellerAuthorizationChallenge,
+    signMessage: (message: string) => Promise<string>
+  ) {
+    const signature = await signMessage(challenge.message);
     if (!/^0x[0-9a-fA-F]{130}$/.test(signature)) {
       throw new Error("Seller wallet returned an invalid signature");
     }
+    return signature;
+  }
+
+  async createCheckout(params: CreateBenefitsCheckoutParams): Promise<BenefitsCheckoutSession> {
+    const businessId = safeAuthorizationField(params.businessId, "business ID");
+    const scope = safeAuthorizationField(params.benefitRuleId || "default", "benefit rule ID");
+    if (!isAddress(params.walletAddress)) throw new Error("Invalid seller wallet address");
+    if (typeof params.signMessage !== "function") throw new Error("Seller wallet signer is required");
+
+    const challenge = await this.requestSellerChallenge(
+      "sessions:create",
+      businessId,
+      scope,
+      params.walletAddress
+    );
+    const signature = await this.signSellerChallenge(challenge, params.signMessage);
 
     const sessionUrl = new URL("/api/sessions", this.baseUrl);
     const session = await readJson<Omit<BenefitsCheckoutSession, "customerUrl">>(
@@ -181,5 +263,72 @@ export class IFRBenefitsClient {
       ...session,
       customerUrl: customerUrl.toString(),
     };
+  }
+
+  async getCheckoutStatus(sessionId: string): Promise<BenefitsCheckoutStatus> {
+    const segment = safeSessionPathSegment(sessionId);
+    const statusUrl = new URL(`/api/sessions/${segment}`, this.baseUrl);
+    const session = await readJson<BenefitsCheckoutStatus>(
+      await this.fetchImpl(statusUrl.toString(), { method: "GET", cache: "no-store" })
+    );
+    if (!session || typeof session !== "object") {
+      throw new Error("IFR Benefits API returned an invalid checkout status");
+    }
+
+    if (
+      !BENEFITS_CHECKOUT_STATUSES.includes(session.status) ||
+      !(session.reason === null || typeof session.reason === "string") ||
+      !(session.redeemedAt === null || isCanonicalIsoDate(session.redeemedAt)) ||
+      !isCanonicalIsoDate(session.expiresAt) ||
+      !Number.isSafeInteger(session.attestAttempts) ||
+      session.attestAttempts < 0 ||
+      typeof session.businessId !== "string" ||
+      !session.businessId ||
+      !(session.benefitRuleId === null || typeof session.benefitRuleId === "string") ||
+      (session.presentation !== "CUSTOMER_PASS" && session.presentation !== "SELLER_QR")
+    ) {
+      throw new Error("IFR Benefits API returned an invalid checkout status");
+    }
+    return {
+      status: session.status,
+      reason: session.reason,
+      redeemedAt: session.redeemedAt,
+      expiresAt: session.expiresAt,
+      attestAttempts: session.attestAttempts,
+      businessId: session.businessId,
+      benefitRuleId: session.benefitRuleId,
+      presentation: session.presentation,
+    };
+  }
+
+  async redeemCheckout(params: RedeemBenefitsCheckoutParams): Promise<BenefitsCheckoutRedemption> {
+    const segment = safeSessionPathSegment(params.sessionId);
+    if (!isAddress(params.walletAddress)) throw new Error("Invalid seller wallet address");
+    if (typeof params.signMessage !== "function") throw new Error("Seller wallet signer is required");
+
+    const challenge = await this.requestSellerChallenge(
+      "sessions:redeem",
+      params.sessionId,
+      params.sessionId,
+      params.walletAddress
+    );
+    const signature = await this.signSellerChallenge(challenge, params.signMessage);
+
+    const redeemUrl = new URL(`/api/sessions/${segment}/redeem`, this.baseUrl);
+    const result = await readJson<BenefitsCheckoutRedemption>(
+      await this.fetchImpl(redeemUrl.toString(), {
+        method: "POST",
+        headers: {
+          "x-ifr-wallet": params.walletAddress,
+          "x-ifr-signature": signature,
+          "x-ifr-timestamp": challenge.timestamp,
+          "x-ifr-nonce": challenge.nonce,
+        },
+      })
+    );
+    if (!result || result.status !== "REDEEMED") {
+      throw new Error("IFR Benefits API returned an invalid checkout redemption");
+    }
+    return { status: "REDEEMED" };
   }
 }

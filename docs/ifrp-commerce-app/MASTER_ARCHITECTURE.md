@@ -41,7 +41,7 @@ The repository already contains a useful base:
 - `apps/sdk`
   - exact 9-decimal IFR access helpers
   - Mainnet-only contract configuration
-  - signer-neutral, one-time-challenge Benefits checkout client
+  - signer-neutral, one-time-challenge Benefits checkout client (create, status polling, one-time redeem)
   - local repository package; npm publication remains a separate release gate
 - `docs/BUSINESS_ONBOARDING.md`
 - `docs/PARTNER_INTEGRATION_SPEC.md`

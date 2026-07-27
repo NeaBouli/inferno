@@ -31,7 +31,15 @@ https://copilot-api.ifrunit.tech/api/ifr/check
 ## Benefits Checkout
 
 `IFRBenefitsClient.createCheckout()` requests a one-time `sessions:create` challenge bound to
-the seller wallet, business and benefit rule. The caller supplies a wallet-native `signMessage`
+the seller wallet, business and benefit rule, then creates the session.
+`IFRBenefitsClient.getCheckoutStatus(sessionId)` polls `GET /api/sessions/:id` and fail-closed
+validates the public status response (`PENDING`, `APPROVED`, `REJECTED`, `REDEEMED`, `EXPIRED`).
+`IFRBenefitsClient.redeemCheckout({ sessionId, walletAddress, signMessage })` requests a fresh
+one-time `sessions:redeem` challenge bound to the session ID and posts the signed redemption to
+`POST /api/sessions/:id/redeem`; it resolves only after the API confirms `REDEEMED`.
+
+Both signed flows validate action, business, wallet, scope, timestamp, nonce and the exact
+challenge message before any signature is requested. The caller supplies a wallet-native `signMessage`
 callback; the SDK never accepts or stores private keys, seed phrases or persistent seller secrets.
 
 ## Verification
