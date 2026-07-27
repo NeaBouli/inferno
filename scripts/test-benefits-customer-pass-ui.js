@@ -398,6 +398,10 @@ async function run() {
     assert.equal(state.cancelAttempts, 2, 'failed cancellation must reach the backend once');
     assert.equal(await passPanel.locator('p.font-mono').textContent(), renderedPassUrl, 'failed cancellation must retain the active pass and control state');
     state.cancelFailure = false;
+    state.pass = 'BOUND';
+    state.checkout = 'PENDING';
+    await passPanel.getByRole('button', { name: 'Refresh', exact: true }).click();
+    await passPanel.locator('span').filter({ hasText: /^PENDING$/ }).waitFor();
     const staleCancelHold = {
       started: deferred(),
       release: deferred(),
@@ -414,6 +418,7 @@ async function run() {
     await staleCancelHold.completed.promise;
     await customer.waitForTimeout(150);
     await passPanel.getByText('CANCELLED', { exact: true }).waitFor();
+    await passPanel.getByText('REJECTED', { exact: true }).waitFor();
     cancelRecoveryGate.resolve();
     state.controlGate = null;
     await passPanel.getByRole('button', { name: 'New pass', exact: true }).click();
