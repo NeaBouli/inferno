@@ -1263,7 +1263,7 @@ export function SellerRuleBuilder() {
       window.requestAnimationFrame(() => {
         document.getElementById(`reactivate-business-${targetBusiness.id}`)?.focus();
       });
-      setStatus('Seller profile deactivated. Its public catalog and scanner are offline; its permanent seller URL remains reserved.');
+      setStatus('Seller profile deactivated. Catalog, scanner, products, rules and checkout staff are paused; the permanent seller URL remains reserved.');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to deactivate seller profile');
     } finally {
@@ -1290,7 +1290,7 @@ export function SellerRuleBuilder() {
         ...current.filter((item) => item.id !== reactivated.id),
       ]);
       selectSellerBusiness(reactivated, false);
-      setStatus('Seller profile reactivated. Its permanent URL is restored; review and activate products and benefit rules individually.');
+      setStatus('Seller profile reactivated. Its permanent URL is restored. Products and rules remain paused, and each checkout staff wallet must be authorized again.');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to reactivate seller profile');
     } finally {
@@ -1715,7 +1715,7 @@ export function SellerRuleBuilder() {
               {address ? `${address.slice(0, 6)}...${address.slice(-4)}` : 'Connect seller wallet'}
             </h3>
             <p className="mt-2 text-sm leading-6 text-stone-300">
-              Seller actions are authorized with short-lived wallet signatures. No customer tokens are moved, no private key is stored, and public profile creation is rate-limited.
+              Seller actions are authorized with short-lived wallet signatures. No customer tokens are moved and no private key is stored. The default network policy allows each owner wallet up to five active and 25 total seller profiles, including deactivated profiles.
             </p>
           </div>
           {address ? (
@@ -1846,7 +1846,7 @@ export function SellerRuleBuilder() {
           <div className="mt-4 grid gap-2">
             <p className="text-xs font-bold uppercase tracking-[0.18em] text-stone-400">Deactivated profiles</p>
             <p className="text-xs leading-5 text-stone-400">
-              These profiles are hidden from customers. Reactivation restores the profile and permanent seller URL, while products and benefit rules stay paused.
+              These profiles are hidden from customers. Reactivation restores the profile and permanent seller URL, while products, benefit rules and checkout staff stay paused. Authorize each staff wallet again only when it should regain access.
             </p>
             {inactiveSellerBusinesses.map((business) => (
               <div key={business.id} className="rounded-2xl border border-white/10 bg-black/20 p-3">
@@ -3171,10 +3171,10 @@ export function SellerRuleBuilder() {
               Take {deactivationCandidate.name} offline?
             </h3>
             <p className="mt-3 text-sm leading-6 text-stone-300">
-              Its public catalog and scanner will stop working immediately. Products and benefit rules will be paused, while checkout history and the permanent seller URL stay reserved.
+              Its public catalog and scanner will stop working immediately. Products, benefit rules and every checkout staff wallet will be paused, while checkout history and the permanent seller URL stay reserved.
             </p>
             <p className="mt-3 text-sm leading-6 text-stone-300">
-              The original owner wallet can reactivate the profile later. Products and rules must then be reviewed and activated individually.
+              The original owner wallet can reactivate the profile later. Products and rules must then be reviewed and activated individually, and each checkout staff wallet must receive a fresh authorization.
             </p>
             <div className="mt-5 grid gap-2 sm:grid-cols-2">
               <button

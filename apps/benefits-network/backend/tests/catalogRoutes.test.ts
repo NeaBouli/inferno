@@ -34,11 +34,13 @@ jest.mock('../src/config', () => ({
     ADMIN_SECRET: 'test-secret-12345',
     DATABASE_URL: 'file:./test.db',
     MAX_ACTIVE_SELLER_BUSINESSES_PER_WALLET: 5,
+    MAX_TOTAL_SELLER_BUSINESSES_PER_WALLET: 25,
     PORT: 0,
   },
 }));
 
 import { attest, buildChallengeMessage, createSession, prisma } from '../src/services/sessionService';
+import { config as backendConfig } from '../src/config';
 import { server } from '../src/index';
 
 function baseUrl() {
@@ -629,6 +631,201 @@ describe('Seller catalog routes', () => {
       where: { ownerAddress: owner.address, active: true },
     })).toBe(5);
   });
+
+  it('blocks profile creation at the lifetime cap even with only deactivated profiles', async () => {
+    const lifetimeOwner = ethers.Wallet.createRandom();
+    await prisma.business.createMany({
+      data: Array.from({ length: 25 }, (_, index) => ({
+        name: `Lifetime Seller ${index + 1}`,
+        ownerAddress: lifetimeOwner.address,
+        discountPercent: 5,
+        requiredLockIFR: 100,
+        active: false,
+      })),
+    });
+
+    const headers = await sellerHeaders(lifetimeOwner, 'business:create', 'new', 'new');
+    const response = await fetch(`${baseUrl()}/api/seller/businesses`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        name: 'One profile too many',
+        discountPercent: 5,
+        requiredLockIFR: 100,
+        ownerAddress: lifetimeOwner.address,
+        signature: headers['x-ifr-signature'],
+        timestamp: headers['x-ifr-timestamp'],
+        nonce: headers['x-ifr-nonce'],
+      }),
+    });
+
+    expect(response.status).toBe(429);
+    expect(await response.json()).toEqual({
+      error: 'Seller profile limit reached: 25/25 total profiles (including deactivated)',
+    });
+    expect(await prisma.business.count({ where: { ownerAddress: lifetimeOwner.address } })).toBe(25);
+  });
+
+  it('keeps legacy over-cap profiles listable, deactivatable and reactivatable', async () => {
+    const legacyOwner = ethers.Wallet.createRandom();
+    const activeProfile = await prisma.business.create({
+      data: {
+        name: 'Legacy Active Seller',
+        ownerAddress: legacyOwner.address,
+        discountPercent: 5,
+        requiredLockIFR: 100,
+      },
+    });
+    await prisma.business.createMany({
+      data: Array.from({ length: 25 }, (_, index) => ({
+        name: `Legacy Paused Seller ${index + 1}`,
+        ownerAddress: legacyOwner.address,
+        discountPercent: 5,
+        requiredLockIFR: 100,
+        active: false,
+      })),
+    });
+
+    const listHeaders = await sellerHeaders(legacyOwner, 'business:list', 'seller');
+    const listResponse = await fetch(`${baseUrl()}/api/seller/businesses`, { headers: listHeaders });
+    expect(listResponse.status).toBe(200);
+    const listBody = await listResponse.json() as {
+      businesses: Array<{ id: string }>;
+      inactiveBusinesses: Array<{ id: string }>;
+    };
+    expect(listBody.businesses.map((business) => business.id)).toEqual([activeProfile.id]);
+    expect(listBody.inactiveBusinesses).toHaveLength(25);
+
+    const deleteHeaders = await sellerHeaders(
+      legacyOwner,
+      'business:delete',
+      activeProfile.id,
+      activeProfile.id
+    );
+    expect((await fetch(`${baseUrl()}/api/seller/businesses/${activeProfile.id}`, {
+      method: 'DELETE',
+      headers: deleteHeaders,
+    })).status).toBe(204);
+
+    const reactivateHeaders = await sellerHeaders(
+      legacyOwner,
+      'business:reactivate',
+      activeProfile.id,
+      activeProfile.id
+    );
+    expect((await fetch(`${baseUrl()}/api/seller/businesses/${activeProfile.id}/reactivate`, {
+      method: 'POST',
+      headers: reactivateHeaders,
+    })).status).toBe(200);
+    expect((await prisma.business.findUniqueOrThrow({ where: { id: activeProfile.id } })).active).toBe(true);
+
+    const createHeaders = await sellerHeaders(legacyOwner, 'business:create', 'new', 'new');
+    const createResponse = await fetch(`${baseUrl()}/api/seller/businesses`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        name: 'Legacy overflow',
+        discountPercent: 5,
+        requiredLockIFR: 100,
+        ownerAddress: legacyOwner.address,
+        signature: createHeaders['x-ifr-signature'],
+        timestamp: createHeaders['x-ifr-timestamp'],
+        nonce: createHeaders['x-ifr-nonce'],
+      }),
+    });
+    expect(createResponse.status).toBe(429);
+    expect(await createResponse.json()).toEqual({
+      error: 'Seller profile limit reached: 26/25 total profiles (including deactivated)',
+    });
+  });
+
+  it('serializes two concurrent first-ever profile creates when no business row exists', async () => {
+    const freshOwner = ethers.Wallet.createRandom();
+    const previousTotal = backendConfig.MAX_TOTAL_SELLER_BUSINESSES_PER_WALLET;
+    backendConfig.MAX_TOTAL_SELLER_BUSINESSES_PER_WALLET = 1;
+    try {
+      const [headersA, headersB] = await Promise.all([
+        sellerHeaders(freshOwner, 'business:create', 'new', 'new'),
+        sellerHeaders(freshOwner, 'business:create', 'new', 'new'),
+      ]);
+      const createWith = (headers: Record<string, string>, name: string) => fetch(
+        `${baseUrl()}/api/seller/businesses`,
+        {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({
+            name,
+            discountPercent: 5,
+            requiredLockIFR: 100,
+            ownerAddress: freshOwner.address,
+            signature: headers['x-ifr-signature'],
+            timestamp: headers['x-ifr-timestamp'],
+            nonce: headers['x-ifr-nonce'],
+          }),
+        }
+      );
+
+      const [responseA, responseB] = await Promise.all([
+        createWith(headersA, 'First profile A'),
+        createWith(headersB, 'First profile B'),
+      ]);
+
+      expect([responseA.status, responseB.status].sort()).toEqual([201, 429]);
+      const loser = responseA.status === 429 ? responseA : responseB;
+      expect(await loser.json()).toEqual({
+        error: 'Seller profile limit reached: 1/1 total profiles (including deactivated)',
+      });
+      expect(await prisma.business.count({ where: { ownerAddress: freshOwner.address } })).toBe(1);
+    } finally {
+      backendConfig.MAX_TOTAL_SELLER_BUSINESSES_PER_WALLET = previousTotal;
+    }
+  }, 45_000);
+
+  it('serializes two creates racing for the final lifetime profile slot', async () => {
+    const slotOwner = ethers.Wallet.createRandom();
+    await prisma.business.createMany({
+      data: Array.from({ length: 24 }, (_, index) => ({
+        name: `Slot Seller ${index + 1}`,
+        ownerAddress: slotOwner.address,
+        discountPercent: 5,
+        requiredLockIFR: 100,
+        active: false,
+      })),
+    });
+
+    const [headersA, headersB] = await Promise.all([
+      sellerHeaders(slotOwner, 'business:create', 'new', 'new'),
+      sellerHeaders(slotOwner, 'business:create', 'new', 'new'),
+    ]);
+    const createWith = (headers: Record<string, string>, name: string) => fetch(
+      `${baseUrl()}/api/seller/businesses`,
+      {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          name,
+          discountPercent: 5,
+          requiredLockIFR: 100,
+          ownerAddress: slotOwner.address,
+          signature: headers['x-ifr-signature'],
+          timestamp: headers['x-ifr-timestamp'],
+          nonce: headers['x-ifr-nonce'],
+        }),
+      }
+    );
+
+    const [responseA, responseB] = await Promise.all([
+      createWith(headersA, 'Final slot A'),
+      createWith(headersB, 'Final slot B'),
+    ]);
+
+    expect([responseA.status, responseB.status].sort()).toEqual([201, 429]);
+    const loser = responseA.status === 429 ? responseA : responseB;
+    expect(await loser.json()).toEqual({
+      error: 'Seller profile limit reached: 25/25 total profiles (including deactivated)',
+    });
+    expect(await prisma.business.count({ where: { ownerAddress: slotOwner.address } })).toBe(25);
+  }, 45_000);
 
   it('lets only the owner update a bounded public seller profile with a one-time challenge', async () => {
     const url = `${baseUrl()}/api/seller/businesses/${businessId}`;

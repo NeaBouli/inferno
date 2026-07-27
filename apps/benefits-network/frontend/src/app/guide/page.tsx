@@ -33,11 +33,11 @@ const customerSteps = [
 const sellerSteps = [
   {
     title: 'Create a seller profile',
-    body: 'Connect the seller wallet, create a profile, and keep the Business ID. The profile is owned by that wallet and active profiles are rate-limited.',
+    body: 'Connect the seller wallet, create a profile, and keep the Business ID. The default network policy allows each owner wallet up to five active and 25 total profiles, including deactivated profiles.',
   },
   {
     title: 'Take a profile offline safely',
-    body: 'Deactivation hides the public catalog and scanner and pauses products and rules. The original owner wallet can reactivate the profile and permanent URL later, then review and activate products and rules individually.',
+    body: 'Deactivation hides the public catalog and scanner and pauses products, rules and checkout staff. Reactivation restores only the profile and permanent URL; review products and rules, then authorize each staff wallet again only when needed.',
   },
   {
     title: 'Create benefit rules',
@@ -59,7 +59,7 @@ const sellerSteps = [
 
 const developerItems = [
   ['Seller profile', 'Request a resource-bound one-time business:create challenge, sign it, then POST /api/seller/businesses with x-ifr-nonce.'],
-  ['Profile lifecycle', 'List active and inactive owned profiles with business:list. Deactivate with business:delete and restore only the profile with a fresh business:reactivate challenge scoped to its Business ID.'],
+  ['Profile lifecycle', 'List active and inactive owned profiles with business:list. Deactivate with business:delete to atomically pause the profile, products, rules and operators. Restore only the profile with a fresh business:reactivate challenge scoped to its Business ID.'],
   ['Rules', 'Read with timestamp-signed GET. Every POST/PATCH/DELETE uses a fresh nonce bound to the business or exact rule.'],
   ['Session history', 'GET /api/seller/businesses/:id/sessions?limit=50&cursor=...&snapshot=... with Action: sessions:list. Preserve the first response snapshot across pages.'],
   ['QR session', 'Request a one-time Action: sessions:create message bound to owner/operator, business and rule; sign it, then POST /api/sessions with x-ifr-nonce.'],

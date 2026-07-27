@@ -3,6 +3,8 @@ import { ethers } from 'ethers';
 type TestWallet = ReturnType<typeof ethers.Wallet.createRandom>;
 import * as authenticatedRateLimiter from '../src/services/authenticatedRateLimiter';
 
+jest.setTimeout(15_000);
+
 jest.mock('../src/services/ifrLockService', () => ({
   checkLock: jest.fn(),
   recoverSigner: jest.fn(),
@@ -17,6 +19,7 @@ jest.mock('../src/config', () => ({
     ADMIN_SECRET: 'test-secret-12345',
     DATABASE_URL: 'file:./test.db',
     MAX_ACTIVE_SELLER_BUSINESSES_PER_WALLET: 5,
+    MAX_TOTAL_SELLER_BUSINESSES_PER_WALLET: 25,
     PORT: 0,
   },
 }));
@@ -39,7 +42,8 @@ async function sellerHeaders(
   scope?: string
 ): Promise<Record<string, string>> {
   const mutations = new Set([
-    'business:create', 'business:slug', 'business:delete', 'operators:create', 'operators:delete',
+    'business:create', 'business:slug', 'business:delete', 'business:reactivate',
+    'operators:create', 'operators:delete',
     'products:create', 'products:update', 'products:delete', 'rewards:apply',
     'rules:create', 'rules:update', 'rules:delete', 'sessions:create', 'sessions:redeem',
   ]);
@@ -536,6 +540,17 @@ describe('Redeem route authorization', () => {
     );
     expect((await postCheckoutOperator(businessId, payload, outsiderCreateHeaders)).status).toBe(403);
 
+    const ownerAsOperatorHeaders = await sellerHeaders(
+      seller,
+      'operators:create',
+      businessId,
+      seller.address.toLowerCase()
+    );
+    expect((await postCheckoutOperator(businessId, {
+      walletAddress: seller.address,
+      label: 'Business owner',
+    }, ownerAsOperatorHeaders)).status).toBe(400);
+
     const ownerCreateHeaders = await sellerHeaders(seller, 'operators:create', businessId, operatorScope);
     const createdResponse = await postCheckoutOperator(businessId, payload, ownerCreateHeaders);
     expect(createdResponse.status).toBe(201);
@@ -928,4 +943,103 @@ describe('Redeem route authorization', () => {
     expect(response.status).toBe(200);
     expect(body).toMatchObject({ ...payload, active: false });
   });
+
+  it('pauses operators with the profile and requires fresh owner reauthorization after reactivation', async () => {
+    const operatorScope = checkoutOperator.address.toLowerCase();
+    const payload = { walletAddress: checkoutOperator.address, label: 'Lifecycle counter' };
+
+    const createHeaders = await sellerHeaders(seller, 'operators:create', businessId, operatorScope);
+    const createdResponse = await postCheckoutOperator(businessId, payload, createHeaders);
+    expect(createdResponse.status).toBe(201);
+    const created = await createdResponse.json() as { id: string };
+
+    const operatorSessionHeaders = await sellerHeaders(checkoutOperator, 'sessions:create', businessId);
+    expect((await postCreateSession(businessId, operatorSessionHeaders)).status).toBe(201);
+
+    // A reauthorization signed before the deactivation must fail closed later.
+    const staleHeaders = await sellerHeaders(seller, 'operators:create', businessId, operatorScope);
+    const neverAddedWallet = ethers.Wallet.createRandom().address;
+    const staleNewOperatorHeaders = await sellerHeaders(
+      seller,
+      'operators:create',
+      businessId,
+      neverAddedWallet.toLowerCase()
+    );
+
+    const deleteHeaders = await sellerHeaders(seller, 'business:delete', businessId, businessId);
+    expect((await fetch(`${baseUrl()}/api/seller/businesses/${businessId}`, {
+      method: 'DELETE',
+      headers: deleteHeaders,
+    })).status).toBe(204);
+    expect(await prisma.checkoutOperator.findUniqueOrThrow({ where: { id: created.id } }))
+      .toMatchObject({ active: false });
+
+    const pausedStatusHeaders = await sellerHeaders(checkoutOperator, 'operators:status', businessId);
+    expect((await getCheckoutOperatorStatus(businessId, pausedStatusHeaders)).status).toBe(403);
+
+    const reactivateHeaders = await sellerHeaders(seller, 'business:reactivate', businessId, businessId);
+    expect((await fetch(`${baseUrl()}/api/seller/businesses/${businessId}/reactivate`, {
+      method: 'POST',
+      headers: reactivateHeaders,
+    })).status).toBe(200);
+
+    // Reactivation restores only the business: the operator stays paused.
+    expect(await prisma.business.findUniqueOrThrow({ where: { id: businessId } }))
+      .toMatchObject({ active: true });
+    expect(await prisma.checkoutOperator.findUniqueOrThrow({ where: { id: created.id } }))
+      .toMatchObject({ active: false });
+    const restoredStatusHeaders = await sellerHeaders(checkoutOperator, 'operators:status', businessId);
+    expect((await getCheckoutOperatorStatus(businessId, restoredStatusHeaders)).status).toBe(403);
+    const blockedSessionHeaders = await sellerHeaders(checkoutOperator, 'sessions:create', businessId);
+    expect((await postCreateSession(businessId, blockedSessionHeaders)).status).toBe(403);
+
+    expect((await postCheckoutOperator(businessId, payload, staleHeaders)).status).toBe(401);
+    expect(await prisma.checkoutOperator.findUniqueOrThrow({ where: { id: created.id } }))
+      .toMatchObject({ active: false });
+    expect((await postCheckoutOperator(businessId, {
+      walletAddress: neverAddedWallet,
+      label: 'Never authorized counter',
+    }, staleNewOperatorHeaders)).status).toBe(401);
+    expect(await prisma.checkoutOperator.findUnique({
+      where: { businessId_walletAddress: { businessId, walletAddress: neverAddedWallet } },
+    })).toBeNull();
+
+    const freshHeaders = await sellerHeaders(seller, 'operators:create', businessId, operatorScope);
+    expect((await postCheckoutOperator(businessId, payload, freshHeaders)).status).toBe(200);
+    expect(await prisma.checkoutOperator.findUniqueOrThrow({ where: { id: created.id } }))
+      .toMatchObject({ active: true });
+    const reauthorizedHeaders = await sellerHeaders(checkoutOperator, 'sessions:create', businessId);
+    expect((await postCreateSession(businessId, reauthorizedHeaders)).status).toBe(201);
+  }, 30_000);
+
+  it('never leaves an operator active when the upsert races profile deactivation', async () => {
+    const racingWallet = ethers.Wallet.createRandom().address;
+    const createHeaders = await sellerHeaders(
+      seller,
+      'operators:create',
+      businessId,
+      racingWallet.toLowerCase()
+    );
+    const deleteHeaders = await sellerHeaders(seller, 'business:delete', businessId, businessId);
+
+    const [createResponse, deleteResponse] = await Promise.all([
+      postCheckoutOperator(businessId, {
+        walletAddress: racingWallet,
+        label: 'Racing counter',
+      }, createHeaders),
+      fetch(`${baseUrl()}/api/seller/businesses/${businessId}`, {
+        method: 'DELETE',
+        headers: deleteHeaders,
+      }),
+    ]);
+
+    expect(deleteResponse.status).toBe(204);
+    expect([201, 401, 404]).toContain(createResponse.status);
+    const stored = await prisma.checkoutOperator.findUnique({
+      where: { businessId_walletAddress: { businessId, walletAddress: racingWallet } },
+    });
+    expect(stored?.active ?? false).toBe(false);
+    expect(await prisma.business.findUniqueOrThrow({ where: { id: businessId } }))
+      .toMatchObject({ active: false });
+  }, 45_000);
 });

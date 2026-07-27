@@ -18,6 +18,7 @@ jest.mock('../src/config', () => ({
     DATABASE_URL: 'file:./test.db',
     RATE_LIMIT_STORE: 'memory',
     MAX_ACTIVE_SELLER_BUSINESSES_PER_WALLET: 5,
+    MAX_TOTAL_SELLER_BUSINESSES_PER_WALLET: 25,
     PORT: 0,
   },
 }));

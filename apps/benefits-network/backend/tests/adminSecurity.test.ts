@@ -1,5 +1,7 @@
 import { createHash } from 'node:crypto';
 
+jest.setTimeout(15_000);
+
 jest.mock('../src/services/ifrLockService', () => ({
   checkLock: jest.fn(),
   checkBenefitEligibility: jest.fn(),
@@ -27,6 +29,7 @@ jest.mock('../src/config', () => ({
     DATABASE_URL: 'file:./test.db',
     RATE_LIMIT_STORE: 'memory',
     MAX_ACTIVE_SELLER_BUSINESSES_PER_WALLET: 5,
+    MAX_TOTAL_SELLER_BUSINESSES_PER_WALLET: 25,
     PORT: 0,
   },
 }));
@@ -191,6 +194,70 @@ describe('Admin API security baseline', () => {
       targetId: business.id,
       statusCode: 409,
     });
+  });
+
+  it('pauses catalog dependents atomically on deactivation and restores only the business', async () => {
+    const business = await prisma.business.create({
+      data: {
+        name: 'Lifecycle Admin Shop',
+        ownerAddress: '0x00000000000000000000000000000000000000bb',
+        discountPercent: 10,
+        requiredLockIFR: 1000,
+      },
+    });
+    const product = await prisma.product.create({
+      data: { businessId: business.id, name: 'Admin lifecycle item', category: 'Retail' },
+    });
+    const rule = await prisma.benefitRule.create({
+      data: {
+        businessId: business.id,
+        label: 'Admin lifecycle rule',
+        category: 'Retail',
+        productName: 'Admin lifecycle item',
+        discountPercent: 10,
+        requiredLockIFR: 1000,
+      },
+    });
+    const operator = await prisma.checkoutOperator.create({
+      data: {
+        businessId: business.id,
+        walletAddress: '0x00000000000000000000000000000000000000cc',
+      },
+    });
+
+    const deactivate = await fetch(`${baseUrl()}/api/admin/businesses/${business.id}`, {
+      method: 'PATCH',
+      headers: adminHeaders,
+      body: JSON.stringify({ active: false }),
+    });
+    expect(deactivate.status).toBe(200);
+    expect(await prisma.business.findUniqueOrThrow({ where: { id: business.id } }))
+      .toMatchObject({ active: false });
+    expect(await prisma.product.findUniqueOrThrow({ where: { id: product.id } }))
+      .toMatchObject({ active: false });
+    expect(await prisma.benefitRule.findUniqueOrThrow({ where: { id: rule.id } }))
+      .toMatchObject({ active: false });
+    expect(await prisma.checkoutOperator.findUniqueOrThrow({ where: { id: operator.id } }))
+      .toMatchObject({ active: false });
+
+    const reactivate = await fetch(`${baseUrl()}/api/admin/businesses/${business.id}`, {
+      method: 'PATCH',
+      headers: adminHeaders,
+      body: JSON.stringify({ active: true }),
+    });
+    expect(reactivate.status).toBe(200);
+    expect(await prisma.business.findUniqueOrThrow({ where: { id: business.id } }))
+      .toMatchObject({ active: true });
+    expect(await prisma.product.findUniqueOrThrow({ where: { id: product.id } }))
+      .toMatchObject({ active: false });
+    expect(await prisma.benefitRule.findUniqueOrThrow({ where: { id: rule.id } }))
+      .toMatchObject({ active: false });
+    expect(await prisma.checkoutOperator.findUniqueOrThrow({ where: { id: operator.id } }))
+      .toMatchObject({ active: false });
+
+    expect(await prisma.adminAuditLog.count({
+      where: { action: 'business:update', targetId: business.id, statusCode: 200 },
+    })).toBe(2);
   });
 });
 
