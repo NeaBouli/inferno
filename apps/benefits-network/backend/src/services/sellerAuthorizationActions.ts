@@ -13,6 +13,7 @@ export const MUTATING_SELLER_ACTIONS = [
   'business:slug',
   'business:update',
   'business:delete',
+  'business:reactivate',
   'operators:create',
   'operators:delete',
   'products:create',

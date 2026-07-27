@@ -638,7 +638,10 @@ export function createSellerBusiness(auth: SellerAuth, input: SellerBusinessInpu
 }
 
 export function getSellerBusinesses(auth: SellerAuth) {
-  return fetchJSON<{ businesses: SellerBusinessSummary[] }>('/api/seller/businesses', {
+  return fetchJSON<{
+    businesses: SellerBusinessSummary[];
+    inactiveBusinesses: SellerBusinessSummary[];
+  }>('/api/seller/businesses', {
     headers: sellerHeaders(auth),
   });
 }
@@ -773,6 +776,13 @@ export function getCheckoutOperatorStatus(businessId: string, auth: SellerAuth) 
 export function deleteSellerBusiness(businessId: string, auth: SellerAuth) {
   return fetchJSON<void>(`/api/seller/businesses/${businessId}`, {
     method: 'DELETE',
+    headers: sellerHeaders(auth),
+  });
+}
+
+export function reactivateSellerBusiness(businessId: string, auth: SellerAuth) {
+  return fetchJSON<SellerBusinessSummary>(`/api/seller/businesses/${businessId}/reactivate`, {
+    method: 'POST',
     headers: sellerHeaders(auth),
   });
 }

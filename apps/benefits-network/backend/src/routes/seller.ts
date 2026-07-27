@@ -457,25 +457,26 @@ router.post('/businesses', sellerRateLimiter, validate(createBusinessSchema), as
     const slug = req.body.slug ? assertCanonicalBusinessSlug(req.body.slug) : null;
     const ownerAddress = await requireSellerAuth(req, 'business:create', 'new', slug || 'new');
 
-    await assertSellerBusinessLimit(ownerAddress);
-    if (slug) await assertBusinessSlugAvailable(slug);
-
-    const business = await prisma.business.create({
-      data: {
-        slug,
-        name: req.body.name,
-        ownerAddress,
-        discountPercent: req.body.discountPercent,
-        requiredLockIFR: req.body.requiredLockIFR,
-        ttlSeconds: req.body.ttlSeconds,
-        tierLabel: req.body.tierLabel,
-        description: req.body.description ?? null,
-        website: req.body.website ?? null,
-        logoUrl: req.body.logoUrl ?? null,
-        serviceArea: normalizeBusinessServiceArea(req.body.serviceArea),
-        serviceAreaKey: businessServiceAreaKey(req.body.serviceArea),
-        categoriesJson: serializeBusinessCategories(req.body.categories ?? []),
-      },
+    const business = await prisma.$transaction(async (tx) => {
+      await assertSellerBusinessLimit(ownerAddress, tx);
+      if (slug) await assertBusinessSlugAvailable(slug, undefined, tx);
+      return tx.business.create({
+        data: {
+          slug,
+          name: req.body.name,
+          ownerAddress,
+          discountPercent: req.body.discountPercent,
+          requiredLockIFR: req.body.requiredLockIFR,
+          ttlSeconds: req.body.ttlSeconds,
+          tierLabel: req.body.tierLabel,
+          description: req.body.description ?? null,
+          website: req.body.website ?? null,
+          logoUrl: req.body.logoUrl ?? null,
+          serviceArea: normalizeBusinessServiceArea(req.body.serviceArea),
+          serviceAreaKey: businessServiceAreaKey(req.body.serviceArea),
+          categoriesJson: serializeBusinessCategories(req.body.categories ?? []),
+        },
+      });
     });
 
     res.status(201).json({
@@ -496,54 +497,69 @@ router.post('/businesses', sellerRateLimiter, validate(createBusinessSchema), as
   }
 });
 
+const sellerBusinessSummarySelect = {
+  id: true,
+  active: true,
+  slug: true,
+  name: true,
+  ownerAddress: true,
+  discountPercent: true,
+  requiredLockIFR: true,
+  tierLabel: true,
+  description: true,
+  website: true,
+  logoUrl: true,
+  serviceArea: true,
+  serviceAreaKey: true,
+  categoriesJson: true,
+  createdAt: true,
+  _count: {
+    select: { benefitRules: true, products: true },
+  },
+} as const;
+
+type SellerBusinessSummaryRecord = Prisma.BusinessGetPayload<{
+  select: typeof sellerBusinessSummarySelect;
+}>;
+
+function sellerBusinessSummary(business: SellerBusinessSummaryRecord) {
+  return publicBusinessProfile({
+    id: business.id,
+    slug: business.slug,
+    name: business.name,
+    description: business.description,
+    website: business.website,
+    logoUrl: business.logoUrl,
+    serviceArea: business.serviceArea,
+    serviceAreaKey: business.serviceAreaKey,
+    categoriesJson: business.categoriesJson,
+    ownerAddress: business.ownerAddress,
+    discountPercent: business.discountPercent,
+    requiredLockIFR: business.requiredLockIFR,
+    tierLabel: business.tierLabel,
+    createdAt: business.createdAt,
+    rulesCount: business._count.benefitRules,
+    productsCount: business._count.products,
+    verifyUrl: `/b/${publicBusinessReference(business)}`,
+    qrUrl: `/b/${publicBusinessReference(business)}`,
+  });
+}
+
 router.get('/businesses', sellerRateLimiter, async (req, res, next) => {
+  setPrivateNoStore(res);
   try {
     const wallet = await requireSellerAuth(req, 'business:list', 'seller');
-    const businesses = await prisma.business.findMany({
-      where: { ownerAddress: wallet, active: true },
+    const ownedBusinesses = await prisma.business.findMany({
+      where: { ownerAddress: wallet },
       orderBy: { createdAt: 'desc' },
-      select: {
-        id: true,
-        slug: true,
-        name: true,
-        ownerAddress: true,
-        discountPercent: true,
-        requiredLockIFR: true,
-        tierLabel: true,
-        description: true,
-        website: true,
-        logoUrl: true,
-        serviceArea: true,
-        serviceAreaKey: true,
-        categoriesJson: true,
-        createdAt: true,
-        _count: {
-          select: { benefitRules: true, products: true },
-        },
-      },
+      select: sellerBusinessSummarySelect,
     });
+    const activeBusinesses = ownedBusinesses.filter((business) => business.active);
+    const inactiveBusinesses = ownedBusinesses.filter((business) => !business.active);
 
     res.json({
-      businesses: businesses.map((business) => publicBusinessProfile({
-        id: business.id,
-        slug: business.slug,
-        name: business.name,
-        description: business.description,
-        website: business.website,
-        logoUrl: business.logoUrl,
-        serviceArea: business.serviceArea,
-        serviceAreaKey: business.serviceAreaKey,
-        categoriesJson: business.categoriesJson,
-        ownerAddress: business.ownerAddress,
-        discountPercent: business.discountPercent,
-        requiredLockIFR: business.requiredLockIFR,
-        tierLabel: business.tierLabel,
-        createdAt: business.createdAt,
-        rulesCount: business._count.benefitRules,
-        productsCount: business._count.products,
-        verifyUrl: `/b/${publicBusinessReference(business)}`,
-        qrUrl: `/b/${publicBusinessReference(business)}`,
-      })),
+      businesses: activeBusinesses.map(sellerBusinessSummary),
+      inactiveBusinesses: inactiveBusinesses.map(sellerBusinessSummary),
     });
   } catch (err) {
     handleSellerError(err, res, next);
@@ -1145,6 +1161,46 @@ router.delete('/businesses/:id', sellerRateLimiter, async (req, res, next) => {
       }),
     ]);
     res.status(204).send();
+  } catch (err) {
+    handleSellerError(err, res, next);
+  }
+});
+
+router.post('/businesses/:id/reactivate', sellerRateLimiter, async (req, res, next) => {
+  try {
+    const wallet = await requireSellerAuth(req, 'business:reactivate', req.params.id, req.params.id);
+    const business = await prisma.$transaction(async (tx) => {
+      // Acquire SQLite's writer lock before reading mutable business state.
+      await tx.$executeRaw`
+        UPDATE "Business"
+        SET "active" = "active"
+        WHERE "id" = ${req.params.id}
+      `;
+      const existing = await tx.business.findUnique({
+        where: { id: req.params.id },
+        select: { id: true, ownerAddress: true, active: true },
+      });
+      if (!existing || !existing.ownerAddress) {
+        throw new Error('Seller-owned business not found');
+      }
+      if (normalizeAddress(existing.ownerAddress) !== wallet) {
+        throw new Error('Seller wallet is not the business owner');
+      }
+      if (existing.active) {
+        throw new Error('An active seller profile cannot be reactivated');
+      }
+      await assertSellerBusinessLimit(wallet, tx);
+      return tx.business.update({
+        where: { id: existing.id },
+        data: { active: true },
+        select: sellerBusinessSummarySelect,
+      });
+    });
+    const summary = sellerBusinessSummary(business);
+    res.json({
+      ...summary,
+      catalogUrl: `/s/${publicBusinessReference(summary)}`,
+    });
   } catch (err) {
     handleSellerError(err, res, next);
   }

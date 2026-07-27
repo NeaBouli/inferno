@@ -12,7 +12,6 @@ const origin = `http://127.0.0.1:${port}`;
 const sellerWallet = '0x1000000000000000000000000000000000000001';
 const sellerSignature = `0x${'11'.repeat(65)}`;
 const sellerAuthMessage = 'IFR Benefits Network deterministic seller UI authorization';
-const sellerAuthMessageHex = `0x${Buffer.from(sellerAuthMessage, 'utf8').toString('hex')}`;
 
 const offer = {
   id: 'offer-ui-e2e',
@@ -532,6 +531,30 @@ async function run() {
 
     const sellerContext = await browser.newContext({ serviceWorkers: 'block' });
     await installSellerWallet(sellerContext);
+    const sellerLifecycle = {
+      active: true,
+      deactivateCalls: 0,
+      reactivateCalls: 0,
+    };
+    const sellerSummary = {
+      id: offer.business.id,
+      slug: offer.business.slug,
+      name: offer.business.name,
+      description: offer.business.description,
+      website: offer.business.website,
+      logoUrl: offer.business.logoUrl,
+      serviceArea: offer.business.serviceArea,
+      categories: offer.business.categories,
+      ownerAddress: sellerWallet,
+      verifyUrl: `/b/${offer.business.slug}`,
+      qrUrl: `/b/${offer.business.slug}`,
+      discountPercent: offer.discountPercent,
+      requiredLockIFR: offer.requiredLockIFR,
+      tierLabel: null,
+      createdAt: new Date().toISOString(),
+      rulesCount: 1,
+      productsCount: 1,
+    };
     await sellerContext.route('**/api/**', async (route) => {
       const request = route.request();
       const url = new URL(request.url());
@@ -550,22 +573,30 @@ async function run() {
         });
       }
       if (url.pathname === '/api/seller/auth-message') {
-        assert.equal(url.searchParams.get('action'), 'business:list');
-        assert.equal(url.searchParams.get('businessId'), 'seller');
-        assert.equal(url.searchParams.has('scope'), false, 'read-only profile listing must not invent a mutation scope');
-        assert.equal(url.searchParams.has('walletAddress'), false, 'read-only profile listing does not issue a single-use mutation challenge');
+        const action = url.searchParams.get('action');
+        const mutating = action === 'business:delete' || action === 'business:reactivate';
+        assert.ok(action === 'business:list' || mutating, `unexpected seller lifecycle action: ${action}`);
+        assert.equal(url.searchParams.get('businessId'), mutating ? offer.business.id : 'seller');
+        assert.equal(url.searchParams.has('scope'), mutating, 'only lifecycle mutations require an exact scope');
+        assert.equal(url.searchParams.has('walletAddress'), mutating, 'only lifecycle mutations issue a single-use challenge');
+        if (mutating) {
+          assert.equal(url.searchParams.get('scope'), offer.business.id);
+          assert.equal(url.searchParams.get('walletAddress')?.toLowerCase(), sellerWallet.toLowerCase());
+        }
         const timestamp = String(Date.now());
+        const message = `${sellerAuthMessage}:${action}`;
         return route.fulfill({
           status: 200,
           contentType: 'application/json',
           body: JSON.stringify({
-            action: url.searchParams.get('action'),
+            action,
             businessId: url.searchParams.get('businessId'),
             scope: url.searchParams.get('scope'),
             timestamp,
             issuedAt: new Date(Number(timestamp)).toISOString(),
             expiresAt: new Date(Number(timestamp) + 60_000).toISOString(),
-            message: sellerAuthMessage,
+            nonce: mutating ? `nonce-${action}` : undefined,
+            message,
           }),
         });
       }
@@ -577,26 +608,35 @@ async function run() {
           status: 200,
           contentType: 'application/json',
           body: JSON.stringify({
-            businesses: [{
-              id: offer.business.id,
-              slug: offer.business.slug,
-              name: offer.business.name,
-              description: offer.business.description,
-              website: offer.business.website,
-              logoUrl: offer.business.logoUrl,
-              serviceArea: offer.business.serviceArea,
-              categories: offer.business.categories,
-              ownerAddress: sellerWallet,
-              verifyUrl: `/b/${offer.business.slug}`,
-              qrUrl: `/b/${offer.business.slug}`,
-              discountPercent: offer.discountPercent,
-              requiredLockIFR: offer.requiredLockIFR,
-              tierLabel: null,
-              createdAt: new Date().toISOString(),
-              rulesCount: 1,
-              productsCount: 1,
-            }],
+            businesses: sellerLifecycle.active ? [sellerSummary] : [],
+            inactiveBusinesses: sellerLifecycle.active ? [] : [sellerSummary],
           }),
+        });
+      }
+      if (
+        url.pathname === `/api/seller/businesses/${offer.business.id}` &&
+        request.method() === 'DELETE'
+      ) {
+        assert.equal(request.headers()['x-ifr-wallet'], sellerWallet.toLowerCase());
+        assert.equal(request.headers()['x-ifr-signature'], sellerSignature);
+        assert.equal(request.headers()['x-ifr-nonce'], 'nonce-business:delete');
+        sellerLifecycle.deactivateCalls += 1;
+        sellerLifecycle.active = false;
+        return route.fulfill({ status: 204, body: '' });
+      }
+      if (
+        url.pathname === `/api/seller/businesses/${offer.business.id}/reactivate` &&
+        request.method() === 'POST'
+      ) {
+        assert.equal(request.headers()['x-ifr-wallet'], sellerWallet.toLowerCase());
+        assert.equal(request.headers()['x-ifr-signature'], sellerSignature);
+        assert.equal(request.headers()['x-ifr-nonce'], 'nonce-business:reactivate');
+        sellerLifecycle.reactivateCalls += 1;
+        sellerLifecycle.active = true;
+        return route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify(sellerSummary),
         });
       }
       return route.fulfill({
@@ -624,7 +664,7 @@ async function run() {
     await sellerPage.getByText('Loaded 1 seller profile.', { exact: true }).waitFor();
     assert.deepEqual(
       await sellerPage.evaluate(() => window.__ifrSellerSignedMessages),
-      [sellerAuthMessageHex],
+      [`0x${Buffer.from(`${sellerAuthMessage}:business:list`, 'utf8').toString('hex')}`],
       'the wallet must sign the exact challenge returned for profile listing'
     );
     assert.equal(
@@ -643,6 +683,66 @@ async function run() {
       );
     }
     await sellerPage.getByLabel('Accepted lock source', { exact: true }).waitFor();
+
+    await sellerPage.getByRole('button', { name: 'Deactivate', exact: true }).click();
+    const deactivationDialog = sellerPage.getByRole('dialog', { name: `Take ${offer.business.name} offline?` });
+    await deactivationDialog.waitFor();
+    await deactivationDialog.getByText('public catalog and scanner will stop working immediately', { exact: false }).waitFor();
+    await deactivationDialog.getByRole('button', { name: 'Keep profile active', exact: true }).waitFor();
+    assert.equal(
+      await sellerPage.evaluate(() => document.activeElement?.textContent?.trim()),
+      'Keep profile active',
+      'the safe action must receive initial dialog focus'
+    );
+    await sellerPage.keyboard.press('Shift+Tab');
+    assert.equal(
+      await sellerPage.evaluate(() => document.activeElement?.textContent?.trim()),
+      'Deactivate profile',
+      'backward tabbing must remain inside the modal'
+    );
+    await sellerPage.keyboard.press('Tab');
+    assert.equal(sellerLifecycle.deactivateCalls, 0, 'opening the warning must not deactivate the profile');
+    await deactivationDialog.getByRole('button', { name: 'Keep profile active', exact: true }).click();
+    await deactivationDialog.waitFor({ state: 'hidden' });
+    assert.equal(sellerLifecycle.deactivateCalls, 0, 'cancelling the warning must preserve the active profile');
+    assert.equal(
+      await sellerPage.evaluate(() => document.activeElement?.textContent?.trim()),
+      'Deactivate',
+      'cancelling the modal must return focus to its trigger'
+    );
+
+    await sellerPage.getByRole('button', { name: 'Deactivate', exact: true }).click();
+    await deactivationDialog.getByRole('button', { name: 'Deactivate profile', exact: true }).click();
+    await sellerPage.getByText('Seller profile deactivated. Its public catalog and scanner are offline; its permanent seller URL remains reserved.', { exact: true }).waitFor();
+    assert.equal(sellerLifecycle.deactivateCalls, 1, 'confirmed deactivation must reach the API exactly once');
+    await sellerPage.getByText('Deactivated profiles', { exact: true }).waitFor();
+    await sellerPage.getByText(`Reserved URL: shop.ifrunit.tech/s/${offer.business.slug}`, { exact: true }).waitFor();
+    await sellerPage.getByRole('heading', { name: 'Finish the seller profile first', exact: true }).waitFor();
+    assert.equal(
+      await sellerPage.evaluate(() => window.localStorage.getItem('ifr.shop.lastSellerBusinessId')),
+      null,
+      'deactivation must not leave an inactive profile selected for the next reload'
+    );
+
+    await sellerPage.getByRole('button', { name: 'Reactivate', exact: true }).click();
+    await sellerPage.getByText('Seller profile reactivated. Its permanent URL is restored; review and activate products and benefit rules individually.', { exact: true }).waitFor();
+    assert.equal(sellerLifecycle.reactivateCalls, 1, 'reactivation must reach the API exactly once');
+    await sellerPage.getByRole('button', { name: 'Deactivate', exact: true }).waitFor();
+    assert.equal(await sellerPage.getByText('Deactivated profiles', { exact: true }).count(), 0);
+    assert.equal(
+      await sellerPage.evaluate(() => window.localStorage.getItem('ifr.shop.lastSellerBusinessId')),
+      offer.business.id,
+      'reactivation must restore the active profile selection'
+    );
+    assert.deepEqual(
+      await sellerPage.evaluate(() => window.__ifrSellerSignedMessages),
+      [
+        `0x${Buffer.from(`${sellerAuthMessage}:business:list`, 'utf8').toString('hex')}`,
+        `0x${Buffer.from(`${sellerAuthMessage}:business:delete`, 'utf8').toString('hex')}`,
+        `0x${Buffer.from(`${sellerAuthMessage}:business:reactivate`, 'utf8').toString('hex')}`,
+      ],
+      'seller lifecycle mutations must sign their exact one-time challenges'
+    );
     assert.deepEqual(sellerPageErrors, []);
     await sellerContext.close();
 
