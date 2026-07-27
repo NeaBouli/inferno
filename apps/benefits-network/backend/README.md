@@ -53,9 +53,10 @@ is not ready.
 | POST | `/api/admin/businesses/:id/rewards/queue` | Admin | Reconcile pending reward outbox rows without submitting a transaction |
 | GET | `/api/seller/auth-message` | Public | Issue server-time wallet message for seller actions |
 | POST | `/api/seller/businesses` | Seller wallet signature | Create wallet-owned seller business |
-| GET | `/api/seller/businesses` | Seller wallet signature | List active seller businesses owned by the wallet |
+| GET | `/api/seller/businesses` | Seller wallet signature | Privately list active and inactive seller businesses owned by the wallet |
 | PATCH | `/api/seller/businesses/:id/slug` | Owner wallet signature | Claim the business's permanent public seller URL |
-| DELETE | `/api/seller/businesses/:id` | Seller wallet signature | Soft-deactivate owned seller business and active rules |
+| DELETE | `/api/seller/businesses/:id` | Seller wallet signature | Soft-deactivate an owned seller business and pause active products and rules |
+| POST | `/api/seller/businesses/:id/reactivate` | Owner wallet signature | Reactivate only the owned seller profile; products and rules remain paused |
 | GET | `/api/seller/businesses/:id/rules` | Seller wallet signature | List owned benefit rules |
 | GET | `/api/seller/businesses/:id/products` | Owner wallet signature | List owned catalog items, including archived ones |
 | POST | `/api/seller/businesses/:id/products` | Owner wallet signature | Create a product or service |
@@ -217,6 +218,12 @@ action, business and exact resource scope; the nonce is consumed once. The backe
 also checks the recovered address against `Business.ownerAddress` before owner-only
 management actions. Active, unexpired checkout operators may create and redeem QR
 sessions but cannot perform owner-only mutations.
+
+The private owner profile list returns active and inactive profiles separately with
+`Cache-Control: private, no-store`. Deactivation preserves history and the permanent
+slug while pausing active products and rules. A fresh, one-time
+`business:reactivate` authorization can restore only the profile, subject to the
+active-profile cap; products and rules must be reviewed and reactivated individually.
 
 Seller session history uses the same headers with `Action: sessions:list` and the
 business id as `Business`. Each snapshot/cursor page is clamped from 1 to 50 rows.

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { type KeyboardEvent as ReactKeyboardEvent, useEffect, useMemo, useRef, useState } from 'react';
 import { useAccount, useConnect, useDisconnect, useSignMessage } from 'wagmi';
 import QRCode from 'react-qr-code';
 import { BusinessLogo } from '@/components/BusinessLogo';
@@ -46,6 +46,7 @@ import {
   getSellerBusinessRules,
   getSellerBusinessSessions,
   getSellerCheckoutOperators,
+  reactivateSellerBusiness,
   updateAdminBusinessProfile,
   updateAdminBusinessRule,
   updateSellerBusinessProfile,
@@ -215,6 +216,8 @@ export function SellerRuleBuilder() {
   const [operatorLabel, setOperatorLabel] = useState('Front counter');
   const [operatorDuration, setOperatorDuration] = useState<'shift' | 'week' | 'month' | 'never'>('shift');
   const [sellerBusinesses, setSellerBusinesses] = useState<SellerBusinessSummary[]>([]);
+  const [inactiveSellerBusinesses, setInactiveSellerBusinesses] = useState<SellerBusinessSummary[]>([]);
+  const [deactivationCandidate, setDeactivationCandidate] = useState<SellerBusinessSummary | null>(null);
   const [createdBusiness, setCreatedBusiness] = useState<AdminBusinessCreated | null>(null);
   const [restoreInput, setRestoreInput] = useState('');
   const [status, setStatus] = useState('');
@@ -230,10 +233,39 @@ export function SellerRuleBuilder() {
   } | null>(null);
   const activeBusinessIdRef = useRef(businessId);
   const activeWalletAddressRef = useRef('');
+  const deactivationDialogRef = useRef<HTMLDivElement | null>(null);
+  const deactivationReturnFocusRef = useRef<HTMLButtonElement | null>(null);
 
   function setActiveBusinessId(nextBusinessId: string) {
     activeBusinessIdRef.current = nextBusinessId;
     setBusinessId(nextBusinessId);
+  }
+
+  function closeDeactivationDialog() {
+    setDeactivationCandidate(null);
+    window.requestAnimationFrame(() => deactivationReturnFocusRef.current?.focus());
+  }
+
+  function handleDeactivationDialogKeyDown(event: ReactKeyboardEvent<HTMLDivElement>) {
+    if (event.key === 'Escape' && !loading) {
+      event.preventDefault();
+      closeDeactivationDialog();
+      return;
+    }
+    if (event.key !== 'Tab') return;
+    const focusable = Array.from(
+      deactivationDialogRef.current?.querySelectorAll<HTMLButtonElement>('button:not(:disabled)') || []
+    );
+    if (focusable.length === 0) return;
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus();
+    }
   }
 
   const canUseWalletOwner = Boolean(address && isConnected);
@@ -436,9 +468,12 @@ export function SellerRuleBuilder() {
   }, []);
 
   useEffect(() => {
-    if (!businessId) return;
     try {
-      window.localStorage.setItem(LAST_BUSINESS_STORAGE_KEY, businessId);
+      if (businessId) {
+        window.localStorage.setItem(LAST_BUSINESS_STORAGE_KEY, businessId);
+      } else {
+        window.localStorage.removeItem(LAST_BUSINESS_STORAGE_KEY);
+      }
     } catch {
       // Ignore storage failures; this is only a convenience cache.
     }
@@ -466,6 +501,7 @@ export function SellerRuleBuilder() {
     setSessionHasMore(false);
     setSessionSnapshot(null);
     setSessionHistoryBinding(null);
+    setDeactivationCandidate(null);
   }, [normalizedWalletAddress]);
 
   const payload: BenefitRuleInput = useMemo(
@@ -1054,10 +1090,18 @@ export function SellerRuleBuilder() {
     try {
       const result = await getSellerBusinesses(await signSellerAction('business:list', 'seller'));
       setSellerBusinesses(result.businesses);
+      setInactiveSellerBusinesses(result.inactiveBusinesses || []);
       const preferredBusiness = result.businesses.find((business) => business.id === businessId)
         || result.businesses[0];
-      if (preferredBusiness) selectSellerBusiness(preferredBusiness, false);
-      setStatus(`Loaded ${result.businesses.length} seller profile${result.businesses.length === 1 ? '' : 's'}.`);
+      if (preferredBusiness) {
+        selectSellerBusiness(preferredBusiness, false);
+      } else {
+        setActiveBusinessId('');
+      }
+      const totalProfiles = result.businesses.length + result.inactiveBusinesses.length;
+      setStatus(result.inactiveBusinesses.length
+        ? `Loaded ${result.businesses.length} active and ${result.inactiveBusinesses.length} deactivated seller profile${totalProfiles === 1 ? '' : 's'}.`
+        : `Loaded ${result.businesses.length} seller profile${result.businesses.length === 1 ? '' : 's'}.`);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load seller profiles');
     } finally {
@@ -1188,30 +1232,67 @@ export function SellerRuleBuilder() {
     }
   }
 
-  async function deactivateSellerBusiness(targetBusinessId: string) {
+  async function deactivateSellerBusiness() {
+    if (!deactivationCandidate) return;
     if (!canUseWalletOwner) {
       setError('Connect the seller wallet to deactivate a seller profile.');
       return;
     }
+    const targetBusiness = deactivationCandidate;
     setLoading(true);
     setError('');
     setStatus('');
     try {
       await deleteSellerBusiness(
-        targetBusinessId,
-        await signSellerAction('business:delete', targetBusinessId, targetBusinessId)
+        targetBusiness.id,
+        await signSellerAction('business:delete', targetBusiness.id, targetBusiness.id)
       );
-      setSellerBusinesses((current) => current.filter((item) => item.id !== targetBusinessId));
-      if (businessId === targetBusinessId) {
+      setSellerBusinesses((current) => current.filter((item) => item.id !== targetBusiness.id));
+      setInactiveSellerBusinesses((current) => [
+        targetBusiness,
+        ...current.filter((item) => item.id !== targetBusiness.id),
+      ]);
+      if (businessId === targetBusiness.id) {
         setActiveBusinessId('');
         setRules([]);
         setSessions([]);
         setActivityMetrics(null);
         setPublicListing(null);
       }
-      setStatus('Seller profile deactivated.');
+      setDeactivationCandidate(null);
+      window.requestAnimationFrame(() => {
+        document.getElementById(`reactivate-business-${targetBusiness.id}`)?.focus();
+      });
+      setStatus('Seller profile deactivated. Its public catalog and scanner are offline; its permanent seller URL remains reserved.');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to deactivate seller profile');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function reactivateBusiness(targetBusiness: SellerBusinessSummary) {
+    if (!canUseWalletOwner) {
+      setError('Connect the original seller wallet to reactivate this profile.');
+      return;
+    }
+    setLoading(true);
+    setError('');
+    setStatus('');
+    try {
+      const reactivated = await reactivateSellerBusiness(
+        targetBusiness.id,
+        await signSellerAction('business:reactivate', targetBusiness.id, targetBusiness.id)
+      );
+      setInactiveSellerBusinesses((current) => current.filter((item) => item.id !== reactivated.id));
+      setSellerBusinesses((current) => [
+        reactivated,
+        ...current.filter((item) => item.id !== reactivated.id),
+      ]);
+      selectSellerBusiness(reactivated, false);
+      setStatus('Seller profile reactivated. Its permanent URL is restored; review and activate products and benefit rules individually.');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to reactivate seller profile');
     } finally {
       setLoading(false);
     }
@@ -1747,13 +1828,47 @@ export function SellerRuleBuilder() {
                   </button>
                   <button
                     type="button"
-                    onClick={() => deactivateSellerBusiness(business.id)}
+                    onClick={(event) => {
+                      deactivationReturnFocusRef.current = event.currentTarget;
+                      setDeactivationCandidate(business);
+                    }}
                     disabled={loading}
                     className="rounded-xl border border-red-200/30 px-3 py-2 text-[11px] font-black uppercase tracking-[0.12em] text-red-100 transition hover:bg-red-200/10 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     Deactivate
                   </button>
                 </div>
+              </div>
+            ))}
+          </div>
+        ) : null}
+        {inactiveSellerBusinesses.length > 0 ? (
+          <div className="mt-4 grid gap-2">
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-stone-400">Deactivated profiles</p>
+            <p className="text-xs leading-5 text-stone-400">
+              These profiles are hidden from customers. Reactivation restores the profile and permanent seller URL, while products and benefit rules stay paused.
+            </p>
+            {inactiveSellerBusinesses.map((business) => (
+              <div key={business.id} className="rounded-2xl border border-white/10 bg-black/20 p-3">
+                <div className="flex min-w-0 items-center gap-3">
+                  <BusinessLogo name={business.name} logoUrl={business.logoUrl} size="sm" />
+                  <div className="min-w-0">
+                    <p className="break-words text-sm font-black text-white">{business.name}</p>
+                    <p className="mt-1 break-all font-mono text-[11px] text-stone-500">{business.id}</p>
+                    {business.slug ? (
+                      <p className="mt-1 break-words text-xs font-bold text-stone-300">Reserved URL: shop.ifrunit.tech/s/{business.slug}</p>
+                    ) : null}
+                  </div>
+                </div>
+                <button
+                  id={`reactivate-business-${business.id}`}
+                  type="button"
+                  onClick={() => reactivateBusiness(business)}
+                  disabled={loading}
+                  className="mt-3 rounded-xl border border-green-200/35 px-3 py-2 text-[11px] font-black uppercase tracking-[0.12em] text-green-50 transition hover:bg-green-200/10 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  Reactivate
+                </button>
               </div>
             ))}
           </div>
@@ -3041,6 +3156,48 @@ export function SellerRuleBuilder() {
           </div>
         </>
       )}
+      {deactivationCandidate ? (
+        <div
+          ref={deactivationDialogRef}
+          className="fixed inset-0 z-50 grid place-items-center bg-black/75 p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="deactivate-seller-title"
+          onKeyDown={handleDeactivationDialogKeyDown}
+        >
+          <div className="w-full max-w-lg rounded-3xl border border-red-200/30 bg-[#1d130c] p-5 shadow-2xl shadow-black/60">
+            <p className="text-xs font-black uppercase tracking-[0.18em] text-red-100">Seller profile deactivation</p>
+            <h3 id="deactivate-seller-title" className="mt-2 text-2xl font-black text-white">
+              Take {deactivationCandidate.name} offline?
+            </h3>
+            <p className="mt-3 text-sm leading-6 text-stone-300">
+              Its public catalog and scanner will stop working immediately. Products and benefit rules will be paused, while checkout history and the permanent seller URL stay reserved.
+            </p>
+            <p className="mt-3 text-sm leading-6 text-stone-300">
+              The original owner wallet can reactivate the profile later. Products and rules must then be reviewed and activated individually.
+            </p>
+            <div className="mt-5 grid gap-2 sm:grid-cols-2">
+              <button
+                type="button"
+                onClick={closeDeactivationDialog}
+                disabled={loading}
+                autoFocus
+                className="rounded-2xl border border-white/15 px-4 py-3 text-sm font-black text-stone-100 disabled:opacity-50"
+              >
+                Keep profile active
+              </button>
+              <button
+                type="button"
+                onClick={() => void deactivateSellerBusiness()}
+                disabled={loading}
+                className="rounded-2xl bg-red-300 px-4 py-3 text-sm font-black text-stone-950 disabled:opacity-50"
+              >
+                {loading ? 'Deactivating...' : 'Deactivate profile'}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </section>
   );
 }

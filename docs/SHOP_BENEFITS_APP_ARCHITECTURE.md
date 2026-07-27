@@ -124,6 +124,11 @@ The app has two roles:
   read-only integration generator remains visible for developers, but keeps copy/export actions
   disabled until valid seller and rule identifiers are supplied.
 - Seller can create and manage profiles, products, rules, operators and reward applications through owner-wallet authorization; every mutation uses a fresh resource-bound one-time challenge.
+- Seller profile deactivation requires an explicit consequence confirmation. The owner-signed
+  operation hides the public catalog/scanner and pauses products and rules but preserves history
+  and the permanent slug. The original owner can list the inactive profile and reactivate only
+  the profile with a fresh one-time signature; products and rules stay paused until individually
+  reviewed and activated.
 - Public seller identity includes a short description, canonical HTTPS website, up to eight
   categories and an optional broad service area such as a city, region or `Online`. Owners can
   reload and edit it with their wallet; controlled operator-created profiles can be reopened by
@@ -214,7 +219,11 @@ those remain production configuration and physical-wallet acceptance gates.
 
 1. Benefits Network frontend is deployed at `shop.ifrunit.tech`. **Implemented and live; release `72a12526` passed production health, PWA, desktop and iPad smoke checks on 18 July 2026. Future deployments retain the capacity gate.**
 2. Benefits backend is exposed under the shop HTTPS origin. **Implemented with health/readiness smoke coverage.**
-3. Seller onboarding supports owner-wallet self-service creation with an anti-spam profile cap. **Implemented; invitation/review policy remains a future governance decision.**
+3. Seller onboarding supports owner-wallet self-service creation with an anti-spam profile cap.
+   **Implemented with explicit reversible profile deactivation: owner lists separate active and
+   inactive profiles, confirms the public impact, and can restore the profile/permanent slug
+   without automatically restoring products or rules. Invitation/review policy remains a future
+   governance decision.**
 4. Add QR history and audit view for sellers. **Implemented with owner-wallet-protected, snapshot-anchored cursor pagination, restore receipts, activity metrics, incremental older-session loading and a browser-local masked full-history CSV export. The API remains bounded to 50 rows per request, refreshes an expired read authorization when needed and creates no server-side export file. Retention/compliance policy remains future work.**
 5. Customer benefit history. **Implemented as both a redacted local recent-proof list and a
    wallet-signed, cross-device `My benefits` history with one-time challenge exchange, memory-only

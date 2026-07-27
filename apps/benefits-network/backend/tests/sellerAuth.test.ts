@@ -16,6 +16,7 @@ describe('Seller wallet authorization', () => {
       'business:slug',
       'business:update',
       'business:delete',
+      'business:reactivate',
       'operators:create',
       'operators:delete',
       'products:create',
@@ -175,6 +176,26 @@ describe('Seller wallet authorization', () => {
         timestamp,
         action: 'business:delete',
         businessId: 'biz_delete',
+        ...binding,
+      })
+    ).toBe(wallet.address);
+  });
+
+  it('verifies the seller profile reactivate action message', async () => {
+    const wallet = ethers.Wallet.createRandom();
+    const timestamp = Date.now().toString();
+    const binding = { nonce: 'nonce_business_reactivate', scope: 'biz_reactivate' };
+    const signature = await wallet.signMessage(
+      buildSellerAuthMessage('business:reactivate', 'biz_reactivate', timestamp, binding)
+    );
+
+    expect(
+      verifySellerSignature({
+        walletAddress: wallet.address,
+        signature,
+        timestamp,
+        action: 'business:reactivate',
+        businessId: 'biz_reactivate',
         ...binding,
       })
     ).toBe(wallet.address);

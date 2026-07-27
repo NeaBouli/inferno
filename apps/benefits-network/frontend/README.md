@@ -151,9 +151,13 @@ pass to the selected rule through an opt-in camera, local QR-image parser or pas
 compatible seller-issued QR path remains available. Both flows freeze the rule-specific product,
 discount and required IFR lock before the customer signs.
 
-Connected sellers can load the active seller profiles owned by their wallet and
-the app remembers the last selected Business ID locally for reloads. This is only
-a convenience cache; ownership is still enforced by the backend signature check.
+Connected sellers can load active and deactivated seller profiles owned by their wallet.
+Deactivation requires an explicit consequence confirmation, hides the public catalog and
+scanner, pauses products and rules, and preserves the permanent seller URL. The original
+owner wallet can reactivate only the profile with a fresh one-time signature; products and
+rules remain paused until reviewed and activated individually. The app remembers the last
+selected active Business ID locally for reloads. This is only a convenience cache; ownership
+is still enforced by the backend signature check.
 
 New wallet-owned profiles sign their normalized public slug during creation. Existing owners can
 claim one permanent slug with a separate one-time signature. Public catalog, scanner, QR, discovery,

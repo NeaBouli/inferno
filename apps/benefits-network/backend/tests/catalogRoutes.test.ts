@@ -54,7 +54,8 @@ async function sellerHeaders(
   scope?: string
 ): Promise<Record<string, string>> {
   const mutations = new Set([
-    'business:create', 'business:slug', 'business:update', 'business:delete', 'operators:create', 'operators:delete',
+    'business:create', 'business:slug', 'business:update', 'business:delete', 'business:reactivate',
+    'operators:create', 'operators:delete',
     'products:create', 'products:update', 'products:delete', 'rewards:apply',
     'rules:create', 'rules:update', 'rules:delete', 'sessions:create', 'sessions:redeem',
   ]);
@@ -396,6 +397,237 @@ describe('Seller catalog routes', () => {
     expect(await prisma.sellerAuthorizationChallenge.count()).toBe(0);
     expect((await fetch(`${baseUrl()}/api/seller/businesses`, { headers })).status).toBe(200);
     expect(await prisma.sellerAuthorizationChallenge.count()).toBe(0);
+  });
+
+  it('separates active and inactive seller profiles in the owner list', async () => {
+    const inactive = await prisma.business.create({
+      data: {
+        name: 'Paused Seller',
+        ownerAddress: owner.address,
+        discountPercent: 5,
+        requiredLockIFR: 250,
+        active: false,
+      },
+    });
+
+    const headers = await sellerHeaders(owner, 'business:list', 'seller');
+    const response = await fetch(`${baseUrl()}/api/seller/businesses`, { headers });
+    expect(response.status).toBe(200);
+    expect(response.headers.get('cache-control')).toBe('private, no-store, max-age=0');
+    const body = await response.json() as {
+      businesses: Array<Record<string, unknown>>;
+      inactiveBusinesses: Array<Record<string, unknown>>;
+    };
+    expect(body.businesses.map((business) => business.id)).toEqual([businessId]);
+    expect(body.inactiveBusinesses.map((business) => business.id)).toEqual([inactive.id]);
+    expect(body.inactiveBusinesses[0]).toMatchObject({
+      id: inactive.id,
+      slug: null,
+      name: 'Paused Seller',
+      ownerAddress: owner.address,
+      rulesCount: 0,
+      productsCount: 0,
+    });
+    expect(Object.keys(body.inactiveBusinesses[0]).sort())
+      .toEqual(Object.keys(body.businesses[0]).sort());
+    expect(JSON.stringify(body)).not.toContain(otherBusinessId);
+  });
+
+  it('lets only the owner reactivate a deactivated profile with a one-time challenge', async () => {
+    await prisma.business.update({
+      where: { id: businessId },
+      data: { slug: 'reactivate-cafe', description: 'Member roaster in Athens.' },
+    });
+    const product = await prisma.product.create({ data: { businessId, ...productPayload() } });
+    const rule = await prisma.benefitRule.create({
+      data: {
+        businessId,
+        productId: product.id,
+        label: 'Morning coffee',
+        category: product.category,
+        productName: product.name,
+        discountPercent: 20,
+        requiredLockIFR: 1000,
+      },
+    });
+    const publicUrl = `${baseUrl()}/api/businesses/${businessId}`;
+    const reactivateUrl = `${baseUrl()}/api/seller/businesses/${businessId}/reactivate`;
+    expect((await fetch(publicUrl)).status).toBe(200);
+
+    const deleteHeaders = await sellerHeaders(owner, 'business:delete', businessId, businessId);
+    expect((await fetch(`${baseUrl()}/api/seller/businesses/${businessId}`, {
+      method: 'DELETE',
+      headers: deleteHeaders,
+    })).status).toBe(204);
+    expect((await fetch(publicUrl)).status).toBe(404);
+
+    const listHeaders = await sellerHeaders(owner, 'business:list', 'seller');
+    const listBody = await (await fetch(`${baseUrl()}/api/seller/businesses`, {
+      headers: listHeaders,
+    })).json() as { businesses: Array<{ id: string }>; inactiveBusinesses: Array<{ id: string }> };
+    expect(listBody.businesses).toEqual([]);
+    expect(listBody.inactiveBusinesses.map((business) => business.id)).toEqual([businessId]);
+
+    expect((await fetch(reactivateUrl, { method: 'POST' })).status).toBe(401);
+
+    const wrongOwnerHeaders = await sellerHeaders(otherOwner, 'business:reactivate', businessId, businessId);
+    expect((await fetch(reactivateUrl, {
+      method: 'POST',
+      headers: wrongOwnerHeaders,
+    })).status).toBe(403);
+
+    const missingHeaders = await sellerHeaders(owner, 'business:reactivate', 'missing-business', 'missing-business');
+    expect((await fetch(`${baseUrl()}/api/seller/businesses/missing-business/reactivate`, {
+      method: 'POST',
+      headers: missingHeaders,
+    })).status).toBe(404);
+
+    const stillActiveHeaders = await sellerHeaders(otherOwner, 'business:reactivate', otherBusinessId, otherBusinessId);
+    expect((await fetch(`${baseUrl()}/api/seller/businesses/${otherBusinessId}/reactivate`, {
+      method: 'POST',
+      headers: stillActiveHeaders,
+    })).status).toBe(400);
+
+    const ownerHeaders = await sellerHeaders(owner, 'business:reactivate', businessId, businessId);
+    const reactivatedResponse = await fetch(reactivateUrl, {
+      method: 'POST',
+      headers: ownerHeaders,
+    });
+    expect(reactivatedResponse.status).toBe(200);
+    expect(await reactivatedResponse.json()).toMatchObject({
+      id: businessId,
+      slug: 'reactivate-cafe',
+      name: 'Catalog Seller',
+      description: 'Member roaster in Athens.',
+      ownerAddress: owner.address,
+      rulesCount: 1,
+      productsCount: 1,
+      verifyUrl: '/b/reactivate-cafe',
+      qrUrl: '/b/reactivate-cafe',
+      catalogUrl: '/s/reactivate-cafe',
+    });
+    expect((await fetch(reactivateUrl, {
+      method: 'POST',
+      headers: ownerHeaders,
+    })).status).toBe(401);
+
+    const publicProfileResponse = await fetch(publicUrl);
+    expect(publicProfileResponse.status).toBe(200);
+    expect(await publicProfileResponse.json()).toMatchObject({
+      id: businessId,
+      slug: 'reactivate-cafe',
+      description: 'Member roaster in Athens.',
+    });
+
+    expect((await prisma.business.findUniqueOrThrow({ where: { id: businessId } })).active).toBe(true);
+    expect((await prisma.product.findUniqueOrThrow({ where: { id: product.id } })).active).toBe(false);
+    expect((await prisma.benefitRule.findUniqueOrThrow({ where: { id: rule.id } })).active).toBe(false);
+  });
+
+  it('enforces the active seller profile cap during reactivation', async () => {
+    for (let index = 0; index < 4; index += 1) {
+      await prisma.business.create({
+        data: {
+          name: `Cap Seller ${index + 1}`,
+          ownerAddress: owner.address,
+          discountPercent: 5,
+          requiredLockIFR: 100,
+        },
+      });
+    }
+    const paused = await prisma.business.create({
+      data: {
+        name: 'Paused Cap Seller',
+        ownerAddress: owner.address,
+        discountPercent: 5,
+        requiredLockIFR: 100,
+        active: false,
+      },
+    });
+    const reactivateUrl = `${baseUrl()}/api/seller/businesses/${paused.id}/reactivate`;
+
+    const cappedHeaders = await sellerHeaders(owner, 'business:reactivate', paused.id, paused.id);
+    const cappedResponse = await fetch(reactivateUrl, {
+      method: 'POST',
+      headers: cappedHeaders,
+    });
+    expect(cappedResponse.status).toBe(429);
+    expect(await cappedResponse.json()).toEqual({
+      error: 'Seller profile limit reached: 5/5 active profiles',
+    });
+    expect((await prisma.business.findUniqueOrThrow({ where: { id: paused.id } })).active).toBe(false);
+
+    const deleteHeaders = await sellerHeaders(owner, 'business:delete', businessId, businessId);
+    expect((await fetch(`${baseUrl()}/api/seller/businesses/${businessId}`, {
+      method: 'DELETE',
+      headers: deleteHeaders,
+    })).status).toBe(204);
+
+    const retryHeaders = await sellerHeaders(owner, 'business:reactivate', paused.id, paused.id);
+    expect((await fetch(reactivateUrl, {
+      method: 'POST',
+      headers: retryHeaders,
+    })).status).toBe(200);
+    expect((await prisma.business.findUniqueOrThrow({ where: { id: paused.id } })).active).toBe(true);
+  });
+
+  it('serializes concurrent profile creation and reactivation at the active cap', async () => {
+    for (let index = 0; index < 3; index += 1) {
+      await prisma.business.create({
+        data: {
+          name: `Concurrent Cap Seller ${index + 1}`,
+          ownerAddress: owner.address,
+          discountPercent: 5,
+          requiredLockIFR: 100,
+        },
+      });
+    }
+    const paused = await prisma.business.create({
+      data: {
+        name: 'Concurrent Paused Seller',
+        ownerAddress: owner.address,
+        discountPercent: 5,
+        requiredLockIFR: 100,
+        active: false,
+      },
+    });
+    const createHeaders = await sellerHeaders(owner, 'business:create', 'new', 'new');
+    const reactivateHeaders = await sellerHeaders(
+      owner,
+      'business:reactivate',
+      paused.id,
+      paused.id
+    );
+
+    const [createResponse, reactivateResponse] = await Promise.all([
+      fetch(`${baseUrl()}/api/seller/businesses`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          name: 'Concurrent New Seller',
+          discountPercent: 5,
+          requiredLockIFR: 100,
+          ownerAddress: owner.address,
+          signature: createHeaders['x-ifr-signature'],
+          timestamp: createHeaders['x-ifr-timestamp'],
+          nonce: createHeaders['x-ifr-nonce'],
+        }),
+      }),
+      fetch(`${baseUrl()}/api/seller/businesses/${paused.id}/reactivate`, {
+        method: 'POST',
+        headers: reactivateHeaders,
+      }),
+    ]);
+
+    expect([201, 429]).toContain(createResponse.status);
+    expect([200, 429]).toContain(reactivateResponse.status);
+    expect([createResponse.status, reactivateResponse.status].filter(
+      (status) => status >= 200 && status < 300
+    )).toHaveLength(1);
+    expect([createResponse.status, reactivateResponse.status]).toContain(429);
+    expect(await prisma.business.count({
+      where: { ownerAddress: owner.address, active: true },
+    })).toBe(5);
   });
 
   it('lets only the owner update a bounded public seller profile with a one-time challenge', async () => {
