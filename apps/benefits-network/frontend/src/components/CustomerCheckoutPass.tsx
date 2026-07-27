@@ -41,6 +41,7 @@ export function CustomerCheckoutPass() {
   const [selectedOffer, setSelectedOffer] = useState<SelectedOffer | null>(null);
   const [offerMessage, setOfferMessage] = useState('');
   const activePassRef = useRef<StoredPass | null>(null);
+  const passRequestRef = useRef(0);
 
   useEffect(() => {
     setOrigin(window.location.origin);
@@ -87,14 +88,33 @@ export function CustomerCheckoutPass() {
   }, [searchParams]);
 
   const refresh = useCallback(async (activePass: StoredPass, announce = false) => {
-    const next = await getCustomerPassStatus(activePass.passId, activePass.controlToken);
-    const current = activePassRef.current;
-    if (!current || current.passId !== activePass.passId || current.controlToken !== activePass.controlToken) {
+    const requestId = ++passRequestRef.current;
+    try {
+      const next = await getCustomerPassStatus(activePass.passId, activePass.controlToken);
+      const current = activePassRef.current;
+      if (
+        requestId !== passRequestRef.current ||
+        !current ||
+        current.passId !== activePass.passId ||
+        current.controlToken !== activePass.controlToken
+      ) {
+        return null;
+      }
+      setStatus(next);
+      if (announce) setMessage(`Pass refreshed: ${next.checkout?.status || next.status}`);
       return next;
+    } catch (err) {
+      const current = activePassRef.current;
+      if (
+        requestId !== passRequestRef.current ||
+        !current ||
+        current.passId !== activePass.passId ||
+        current.controlToken !== activePass.controlToken
+      ) {
+        return null;
+      }
+      throw err;
     }
-    setStatus(next);
-    if (announce) setMessage(`Pass refreshed: ${next.checkout?.status || next.status}`);
-    return next;
   }, []);
 
   useEffect(() => {
@@ -129,6 +149,7 @@ export function CustomerCheckoutPass() {
   );
 
   function remember(next: StoredPass | null) {
+    passRequestRef.current += 1;
     activePassRef.current = next;
     setPass(next);
     try {
@@ -186,6 +207,7 @@ export function CustomerCheckoutPass() {
     setError('');
     try {
       await cancelCustomerPass(pass.passId, pass.controlToken);
+      passRequestRef.current += 1;
       if (startNewPass) {
         remember(null);
         setStatus(null);
@@ -327,7 +349,19 @@ export function CustomerCheckoutPass() {
           ) : null}
 
           <div className="grid gap-2 sm:grid-cols-3">
-            <button type="button" onClick={() => refresh(pass, true)} disabled={loading} className="rounded-xl border border-white/15 px-3 py-3 text-xs font-black uppercase text-stone-100 disabled:opacity-50">Refresh</button>
+            <button
+              type="button"
+              onClick={() => {
+                setError('');
+                refresh(pass, true).catch((err) => {
+                  setError(err instanceof Error ? err.message : 'Could not refresh checkout pass.');
+                });
+              }}
+              disabled={loading}
+              className="rounded-xl border border-white/15 px-3 py-3 text-xs font-black uppercase text-stone-100 disabled:opacity-50"
+            >
+              Refresh
+            </button>
             {status?.status === 'OPEN' || status?.status === 'BOUND' ? (
               <button type="button" onClick={() => void cancel()} disabled={loading} className="rounded-xl border border-red-300/30 px-3 py-3 text-xs font-black uppercase text-red-100 disabled:opacity-50">Cancel</button>
             ) : null}
