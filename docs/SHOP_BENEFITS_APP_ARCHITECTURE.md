@@ -152,7 +152,9 @@ The app has two roles:
 - Show API payload for rule-bound QR sessions.
 - Generate a server-side JavaScript/POS session helper that returns the short-lived customer proof URL.
 - Use the signer-neutral `IFRBenefitsClient` in the repository SDK for one-time challenge
-  checkout integrations. The versioned tarball is installed with locked `npm ci` and tested
+  checkout integrations: create a session, poll its fail-closed validated public status and
+  redeem an approved session once with a fresh session-bound `sessions:redeem` challenge.
+  The versioned tarball is installed with locked `npm ci` and tested
   for CommonJS, ESM named-import interoperability and TypeScript on Node.js 20 and 22;
   public npm publication remains gated by `docs/runbooks/IFR_SDK_NPM_RELEASE.md`, and
   platform-specific plugins remain future release work.
