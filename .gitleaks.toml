@@ -10,6 +10,10 @@ title = "Inferno Custom Gitleaks Config"
     '''artifacts''',
     '''cache'''
   ]
+  regexes = [
+    # Public BootstrapVaultV3 finalise() transaction hash, not key material.
+    '''0x949848bdd09f4c867a2593afffb0137c7db2c1457d8a8f5ff4428f8ecce69c5f'''
+  ]
 
 [[rules]]
   description = "Ethereum Private Key"
