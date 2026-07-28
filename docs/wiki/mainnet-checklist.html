@@ -647,15 +647,15 @@
 
       <p>These items MUST be completed before public launch.</p>
 
-      <h3>LP Token Lock (HIGHEST PRIORITY)</h3>
+      <h3>LP Token Custody (HIGHEST PRIORITY)</h3>
       <ul class="checklist">
         <li>
           <span class="badge-done">Done</span>
-          <span class="item-text">LP Tokens locked via Team.Finance for 12 months during Bootstrap finalise()</span>
+          <span class="item-text">Mainnet Team.Finance locker verified disabled; LP retained in BootstrapVaultV3 with no LP withdrawal function</span>
         </li>
         <li>
           <span class="badge-done">Done</span>
-          <span class="item-text">LP lock recorded from finalise() transaction on Etherscan</span>
+          <span class="item-text">LP creation and BootstrapVaultV3 custody recorded from finalise() transaction and token balances on Etherscan</span>
         </li>
         <li>
           <span class="badge-done">Done</span>
@@ -705,7 +705,7 @@
 
       <!-- ========== Current Status ========== -->
       <div class="callout-green callout">
-        <p><strong>Current Status (updated 2026-06-16):</strong> Mainnet Deploy: 17 on-chain components deployed + verified. Token Distribution complete. Governance owner transferred to TreasurySafe 3-of-5. BootstrapVaultV3 finalized 05.06.2026 with 0.030 ETH raised. Uniswap V2 LP is live at <code>0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0</code> and LP tokens are locked for 12 months. Proposal #15 feeExempt(LP Token) and Proposal #16 setP0(CommitmentVault) are executed. <strong>OPEN:</strong> contributor buys, 50% locks, 50% LendingVault offers, listings, and integrations.</p>
+        <p><strong>Current Status:</strong> Mainnet Deploy: 17 on-chain components deployed + verified. Token Distribution complete. Governance owner transferred to TreasurySafe 3-of-5. BootstrapVaultV3 finalized 05.06.2026 with 0.030 ETH raised. Uniswap V2 LP is live at <code>0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0</code>. Mainnet Team.Finance was disabled; LP remains in BootstrapVaultV3, which exposes no LP withdrawal function. Proposal #15 feeExempt(LP Token) and Proposal #16 setP0(CommitmentVault) are executed. CommitmentVault locking and LendingVault lender offers are active; Lending borrowing remains gated while <code>ifrPriceWei=0</code>.</p>
       </div>
 
       <!-- ========== Sepolia Testnet ========== -->
@@ -752,7 +752,7 @@
             <td><span class="badge-done">Done</span></td>
           </tr>
           <tr>
-            <td>solidity-coverage: 99% Stmts, 91% Branch</td>
+            <td>Historical March 2026 solidity-coverage snapshot: 99% Stmts, 91% Branch for the recorded contract subset</td>
             <td><span class="badge-done">Done</span></td>
           </tr>
           <tr>
@@ -781,7 +781,7 @@
         </li>
         <li>
           <span class="badge-done">Done</span>
-          <span class="item-text">solidity-coverage report generated (99% Stmts, 91% Branch)</span>
+          <span class="item-text">Historical solidity-coverage snapshot recorded (99% Stmts, 91% Branch for that contract subset); current results require current CI</span>
         </li>
         <li>
           <span class="badge-pending">Pending</span>
@@ -1100,7 +1100,7 @@
         </li>
         <li>
           <span class="badge-done">Done</span>
-          <span class="item-text">LP tokens locked via Team.Finance for 12 months</span>
+          <span class="item-text">LP custody verified in withdrawal-less BootstrapVaultV3; <code>teamFinanceLocker=0</code> and <code>lpLockId=0</code></span>
         </li>
         <li>
           <span class="badge-done">Done</span>

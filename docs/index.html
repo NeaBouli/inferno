@@ -1412,7 +1412,7 @@
     <div class="reveal">
       <div class="hero-eyebrow"><span class="dot"></span> Deflationary ERC-20 · Ethereum Mainnet · Verified</div>
       <h1>A token that grows <em>scarcer</em> with every transaction.</h1>
-      <p class="sub">Inferno ($IFRp on socials) is a deflationary utility token. Lock it once for lifetime access across an ecosystem of products — no subscriptions, no recurring fees. Every transfer permanently burns 2.5% of the transferred amount.</p>
+      <p class="sub">Inferno ($IFRp on socials) is a deflationary utility token. Lock IFR for access across an ecosystem of products without a recurring subscription; access remains active while each product&rsquo;s required IFR stays locked and that integration remains available. Every transfer permanently burns 2.5% of the transferred amount.</p>
       <p class="ticker-note"><strong>On-chain symbol: IFR.</strong> Social cashtag: <strong>$IFRp</strong>. The social cashtag helps avoid unrelated ticker collisions; contracts, token lists, wallets and DEX pools may still display IFR.</p>
       <div class="hero-actions">
         <a class="btn btn-primary" href="#how">Lock IFR for access</a>
@@ -1630,8 +1630,8 @@
         </p>
         <p>
           Beyond its deflationary mechanics, IFR serves as a <strong>universal utility lock</strong>. Users lock
-          IFR tokens to gain lifetime access to premium features across an ecosystem of builder products &mdash;
-          no subscriptions, no recurring fees.
+          IFR tokens to gain premium access across an ecosystem of builder products without a recurring subscription.
+          Access remains active while the required IFR stays locked and the product integration remains available.
         </p>
         <p>
           Built on the <strong>Community Fair Launch Model</strong>: no presale, no VC rounds, no insider advantages.
@@ -1752,7 +1752,7 @@ community:{q:"How do you want to contribute?",sub:"Every contribution helps IFR 
 {i:"&#x1F41B;",t:"Report a Bug",d:"GitHub Issues \u2014 all feedback welcome",a:"https://github.com/NeaBouli/inferno/issues/new"}
 ]},
 research:{q:"What are you looking for?",sub:"We have everything documented:",s:2,t:2,o:[
-{i:"&#x1F50D;",t:"Security Audits",d:"Grok 10/10, SKYWALKER, Slither reports",a:"wiki/open-audit.html"},
+{i:"&#x1F50D;",t:"Security Audits",d:"Full internal audits, static analysis and open reports",a:"wiki/open-audit.html"},
 {i:"&#x1F4CA;",t:"Tokenomics Deep Dive",d:"Supply, allocation, burn mechanics",a:"wiki/tokenomics.html"},
 {i:"&#x1F4F0;",t:"Press Kit",d:"Logos, facts, quotes for media",a:"wiki/press-kit.html"},
 {i:"&#x1F4D6;",t:"Full Documentation",d:"Complete wiki with 33 pages",a:"wiki/index.html"}
@@ -1789,7 +1789,7 @@ render();
   <div class="container">
     <div class="reveal" style="text-align:center">
       <p class="section-label">How It Works</p>
-      <h2 class="section-title">Three steps to lifetime access</h2>
+      <h2 class="section-title">Three steps to lock-based access</h2>
     </div>
     <div class="how-cards">
       <div class="how-card reveal">
@@ -1820,7 +1820,7 @@ render();
         <span class="flow-arrow">&rarr;</span>
       </div>
       <div class="flow-step">
-        <div class="flow-box">Lifetime Active</div>
+        <div class="flow-box">Access Active</div>
         <span class="flow-arrow">&rarr;</span>
       </div>
       <div class="flow-step">
@@ -2432,8 +2432,8 @@ render();
       <a href="wiki/integration.html" class="eco-card reveal" style="text-decoration: none; color: inherit;">
         <span class="eco-tag">Use Case</span>
         <div style="width: 60px; height: 60px; border-radius: 12px; margin-bottom: 12px; display: flex; align-items: center; justify-content: center; background: rgba(255,107,0,0.12); font-size: 28px;">&#x1F513;</div>
-        <h3>Lifetime Product Access</h3>
-        <p>Lock IFR once &mdash; access forever. Any software, platform or service can offer permanent premium access to IFR lockers. No subscription. No renewal. One lock, lifetime benefit.</p>
+        <h3>Lock-Based Product Access</h3>
+        <p>Lock IFR once to activate premium access without a recurring subscription. Access remains active while the product&rsquo;s required IFR stays locked and the integration remains available; unlocking returns the user to standard access.</p>
       </a>
       <a href="wiki/integration.html" class="eco-card reveal" style="text-decoration: none; color: inherit;">
         <span class="eco-tag">Use Case</span>
@@ -2456,7 +2456,7 @@ render();
     <!-- Partner Integration Steps -->
     <div class="reveal" style="text-align:center; margin-top: 80px;">
       <h3 style="font-size: 22px; font-weight: 700; margin-bottom: 8px;">Integrate IFR into Your Product</h3>
-      <p style="color: var(--text-muted); font-size: 15px;">Three steps to lifetime access for your users.</p>
+      <p style="color: var(--text-muted); font-size: 15px;">Three steps to verifiable lock-based access for your users.</p>
     </div>
 
     <div class="partner-steps reveal">
@@ -2473,7 +2473,7 @@ render();
       <div class="partner-step">
         <div class="partner-step-num">3</div>
         <h3>Launch</h3>
-        <p>Your users lock IFR for lifetime premium access. No subscriptions, no recurring fees.</p>
+        <p>Your users lock IFR for premium access without a recurring subscription. Access remains active while the required IFR stays locked and your integration remains available.</p>
       </div>
     </div>
 
@@ -2490,7 +2490,7 @@ const minAmount = ethers.utils.parseUnits("5000", 9);
 
 const isLocked = await ifrLock.isLocked(userWallet, minAmount);
 if (isLocked) {
-  grantLifetimeAccess(user);
+  grantLockedAccess(user);
 }</pre>
     </div>
 
@@ -2645,16 +2645,15 @@ if (isLocked) {
       <div class="trust-item reveal">
         <div class="trust-check">&check;</div>
         <div>
-          <!-- TODO: IFR_UPDATE — TEST_COUNT -->
-          <h4>544 tests</h4>
-          <p>367 contract + 77 app + 100 vault tests. Comprehensive coverage: contracts, bootstrap, wallet verification, browser testing.</p>
+          <h4>Automated Test Suites</h4>
+          <p>Contract, vault, application, wallet, browser and integration checks are maintained in the public repository. Exact results belong to reproducible CI and release records.</p>
         </div>
       </div>
       <div class="trust-item reveal">
         <div class="trust-check">&check;</div>
         <div>
-          <h4>Security Audit</h4>
-          <p>Slither static analysis: 0 high/critical findings. 15 fixes applied, 36 accepted informational. Professional third-party audit planned as next security milestone.</p>
+          <h4>Full Internal Audits</h4>
+          <p>Full internal contract reviews, static analysis and documented remediation rounds are public. These are not an independent professional certification; a professional third-party audit remains a planned security milestone.</p>
         </div>
       </div>
       <div class="trust-item reveal">
@@ -2668,7 +2667,7 @@ if (isLocked) {
         <div class="trust-check">&check;</div>
         <div>
           <h4>Fair Launch</h4>
-          <p>No presale, no private rounds. Team tokens vested over 48 months with 12-month cliff. Liquidity locked for 6 months.</p>
+          <p>No presale, no private rounds. Team tokens follow a 12-month cliff and 36-month linear release, 48 months total. Bootstrap LP remains in BootstrapVaultV3, which exposes no LP withdrawal function; Team.Finance was not configured.</p>
         </div>
       </div>
       <div class="trust-item reveal">
@@ -2681,8 +2680,8 @@ if (isLocked) {
       <div class="trust-item reveal">
         <div class="trust-check">&check;</div>
         <div>
-          <h4>Community Audit Open</h4>
-          <p>Open source contracts &mdash; security findings welcome via GitHub Issues. Claude security audit: 0 FAIL, 12 WARN, 78 PASS.
+          <h4>Internal Audit Record Open</h4>
+          <p>Open-source contracts and full internal audit records are public; security findings remain welcome via GitHub Issues. Independent professional third-party review is still pending.
             <a href="https://github.com/NeaBouli/inferno/issues/new?template=security-audit.md" style="color:#e67e22;font-weight:600;">Submit Finding</a>
           </p>
         </div>
@@ -2703,7 +2702,7 @@ if (isLocked) {
       <div style="background:#1a1a2e;border:1px solid #333;border-radius:12px;padding:28px 24px;text-align:center;">
         <div style="font-size:32px;font-weight:700;color:#ff6a00;">150M IFR</div>
         <div style="color:#aaa;margin-top:8px;">Team Vesting</div>
-        <div style="color:#666;font-size:13px;margin-top:4px;">12-month cliff, 4-year linear</div>
+        <div style="color:#666;font-size:13px;margin-top:4px;">12-month cliff, then 36-month linear release</div>
       </div>
       <div style="background:#1a1a2e;border:1px solid #333;border-radius:12px;padding:28px 24px;text-align:center;">
         <div style="font-size:32px;font-weight:700;color:#ff6a00;"><span data-live-key="burned-stat">1.5M</span></div>
@@ -2726,9 +2725,9 @@ if (isLocked) {
         <div style="color:#666;font-size:13px;margin-top:4px;">48h timelock, no deployer control</div>
       </div>
       <div style="background:#1a1a2e;border:1px solid #333;border-radius:12px;padding:28px 24px;text-align:center;">
-        <div style="font-size:32px;font-weight:700;color:#ff6a00;">544</div>
-        <div style="color:#aaa;margin-top:8px;">Tests Passing</div>
-        <div style="color:#666;font-size:13px;margin-top:4px;">99% statement coverage</div>
+        <div style="font-size:32px;font-weight:700;color:#ff6a00;">CI</div>
+        <div style="color:#aaa;margin-top:8px;">Automated Evidence</div>
+        <div style="color:#666;font-size:13px;margin-top:4px;">Current results in release records</div>
       </div>
     </div>
     <div class="reveal" style="text-align:center;margin-top:32px;">
@@ -2770,7 +2769,7 @@ if (isLocked) {
     {q:"What is IFR / $IFRp and what makes it deflationary?",
      a:"IFR is the on-chain token symbol. $IFRp is used for social posts. Fixed supply of 1 billion IFR \u2014 no minting ever. Every transfer burns 2.5% of the transferred amount permanently. A buyback loop from protocol fees adds further pressure. Supply can only decrease over time."},
     {q:"Can the team rug the liquidity?",
-     a:"No. BootstrapVaultV3 has no admin withdraw function. LP is locked 12 months via Team.Finance automatically on finalisation. No team ETH is used. <a href='wiki/faq.html#rugpull'>Full details \u2192</a>"},
+     a:"BootstrapVaultV3 has no admin or LP withdrawal function. Team.Finance was not configured on Mainnet; the LP tokens created by finalise() remain in the vault and are not withdrawable by the team. <a href='wiki/faq.html#rugpull'>Full details \u2192</a>"},
     {q:"What is the lock mechanism?",
      a:"Any wallet locks IFR in IFRLock. Locked tokens cannot be sold or transferred. The on-chain lock state is the canonical source for access control, builder discounts, and governance power."},
     {q:"How does the Bootstrap work?",
@@ -2780,7 +2779,7 @@ if (isLocked) {
     {q:"What is the token distribution?",
      a:"1B IFR fixed. 6 buckets: 40% DEX Liquidity \u00b7 20% LiqRes (locked) \u00b7 15% Team Vesting (12m cliff) \u00b7 15% Treasury \u00b7 6% Community \u00b7 4% BuilderVault. <a href='wiki/tokenomics.html'>Tokenomics \u2192</a>"},
     {q:"Is the code open source and audited?",
-     a:"Yes \u2014 fully. 544 tests (367 contract + 77 app + 100 vault), 91% branch coverage, 0 critical findings. All contracts verified on Etherscan. <a href='https://github.com/NeaBouli/inferno' target='_blank'>github.com/NeaBouli/inferno</a>"},
+     a:"The code is open source and the project publishes full internal audits, static-analysis records and automated test evidence. These do not constitute independent professional certification; a professional third-party audit remains pending. <a href='wiki/open-audit.html'>Audit record \u2192</a>"},
     {q:"Where can I buy IFR?",
      a:"IFR is live on Uniswap V2 as of 05.06.2026. Bootstrap ENDED. Social posts use $IFRp, but wallets and DEX pools may show the on-chain symbol IFR. <a href='https://app.uniswap.org/swap?outputCurrency=0x77e99917Eca8539c62F509ED1193ac36580A6e7B' target='_blank'>Buy IFR on Uniswap</a>. LP Token: 0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0."}
   ];
@@ -2830,14 +2829,14 @@ if (isLocked) {
         <div class="roadmap-dot done">&check;</div>
         <div class="roadmap-body">
           <h4>Phase 1 &mdash; Foundation <span class="badge-done">Complete</span></h4>
-          <p>Smart Contract Development (17 on-chain components, 544 tests). Security Audit (Slither, 0 high/critical). Mainnet Deployment (16/16 verified). Governance Dashboard deployed.</p>
+          <p>Smart Contract Development (17 documented on-chain components). Full internal audits, static analysis and automated test evidence published. Independent professional third-party audit pending. Mainnet deployment and Governance Dashboard completed.</p>
         </div>
       </div>
       <div class="roadmap-item">
         <div class="roadmap-dot done">&check;</div>
         <div class="roadmap-body">
           <h4>Phase 2 &mdash; Launch <span class="badge-done">Complete</span></h4>
-          <p>Ownership Transfer to Governance (Done). Bootstrap ENDED 05.06.2026 &mdash; 0.030 ETH raised. Uniswap V2 LP live. LP locked 12m via Team.Finance. Dashboard Launch. First Builder Integrations.</p>
+          <p>Ownership Transfer to Governance (Done). Bootstrap ENDED 05.06.2026 &mdash; 0.030 ETH raised. Uniswap V2 LP live. Mainnet Team.Finance locker disabled; LP retained in withdrawal-less BootstrapVaultV3. Dashboard Launch. First Builder Integrations.</p>
         </div>
       </div>
       <div class="roadmap-item">

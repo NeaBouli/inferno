@@ -221,7 +221,7 @@ export function getIFRKnowledge() {
     bootstrap: {
       status: getBootstrapStatus(),
       phase: "ENDED — Bootstrap closed 05.06.2026 23:51 UTC. finalise() executed. IFR is live on Uniswap V2.",
-      currentState: "Bootstrap FINALIZED. finalise() TX: 0x949848bdd09f4c867a2593afffb0137c7db2c1457d8a8f5ff4428f8ecce69c5f (Block 25254575). 200M IFR + 0.030 ETH paired as Uniswap V2 LP. LP locked 12 months via Team.Finance.",
+      currentState: "Bootstrap FINALIZED. finalise() TX: 0x949848bdd09f4c867a2593afffb0137c7db2c1457d8a8f5ff4428f8ecce69c5f (Block 25254575). 100M IFR + 0.030 ETH paired as Uniswap V2 LP; 100M IFR reserved for contributor claims. Team.Finance was disabled on Mainnet. LP remains in BootstrapVaultV3, which exposes no LP withdrawal function.",
       startDate: "07.03.2026 (on-chain startTime) — ENDED 05.06.2026",
       endDate: "05.06.2026 23:51 UTC (finalise() executed on-chain)",
       vault: "0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141",
@@ -234,7 +234,7 @@ export function getIFRKnowledge() {
       minContribution: "0.01 ETH",
       maxContribution: "2 ETH per wallet",
       mechanism: "Pro-rata IFR distribution — no fixed price, community-driven",
-      lpLock: "12 months via Team.Finance",
+      lpLock: "Mainnet Team.Finance disabled; LP retained in BootstrapVaultV3 with no LP withdrawal function",
       securityReview: "Internal review March 2026: 11/14 secure, 3/14 low risk, 0 critical",
       url: "https://ifrunit.tech/wiki/bootstrap.html"
     },

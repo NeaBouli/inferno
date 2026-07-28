@@ -624,7 +624,7 @@
       <h2>What is Inferno?</h2>
 
       <p>
-        Inferno (IFR) is a deflationary ERC-20 utility token on Ethereum. Every transfer permanently burns a portion of the tokens, continuously reducing the total supply. Users lock IFR on-chain to unlock lifetime premium access across a growing network of partner products and services. There is no presale, no VC funding, and no mint function &mdash; launched via a Community Fair Launch Model (CFLM).
+        Inferno (IFR) is a deflationary ERC-20 utility token on Ethereum. Every transfer permanently burns a portion of the tokens, continuously reducing the total supply. Users lock IFR on-chain to activate premium access without a recurring subscription; access remains active while each product&rsquo;s required IFR stays locked and that integration remains available. There is no presale, no VC funding, and no mint function &mdash; launched via a Community Fair Launch Model (CFLM).
       </p>
 
       <!-- ========== Key Numbers ========== -->
@@ -644,11 +644,11 @@
           </tr>
           <tr>
             <td>Burn Rate</td>
-            <td>3.5% per transfer (2% sender + 0.5% recipient + 1% pool)</td>
+            <td>2.5% permanent burn + 1% pool fee (3.5% total transfer fee)</td>
           </tr>
           <tr>
             <td>Team Vesting</td>
-            <td>150M IFR &mdash; 12-month cliff, 48-month linear</td>
+            <td>150M IFR &mdash; 12-month cliff, then 36-month linear release (48 months total)</td>
           </tr>
           <tr>
             <td>LP Liquidity</td>
@@ -696,7 +696,7 @@
       <ul>
         <li><strong>Ethereum Mainnet</strong> &mdash; deployed and verified on March 5, 2026.</li>
         <li><strong>Solidity 0.8.20 + OpenZeppelin v5</strong> &mdash; battle-tested base contracts with modern security patterns.</li>
-        <li><strong>Slither audit + 544 tests</strong> &mdash; zero High/Critical findings, 99% statement coverage.</li>
+        <li><strong>Full internal audits + automated test evidence</strong> &mdash; public source records; independent professional third-party audit pending.</li>
         <li><strong>48h Timelock + Guardian</strong> &mdash; all parameter changes are delayed and publicly visible before execution.</li>
       </ul>
 
@@ -709,7 +709,7 @@
         <li><span class="badge-done">DONE</span> Gnosis Safe multisig created</li>
         <li><span class="badge-done">DONE</span> Wiki documentation &mdash; 33 pages</li>
         <li><span class="badge-done">DONE</span> Uniswap V2 LP creation via BootstrapVaultV3.finalise() (100M IFR + 0.030 ETH)</li>
-        <li><span class="badge-done">DONE</span> LP token lock via Team.Finance (12 months)</li>
+        <li><span class="badge-done">DONE</span> LP custody verified: retained in withdrawal-less BootstrapVaultV3; Team.Finance disabled</li>
         <li><span class="badge-done">DONE</span> Transfer InfernoToken ownership to Governance / TreasurySafe control</li>
         <li><span class="badge-done">DONE</span> Transfer Governance owner to Treasury Safe 3-of-5 &#x2705; (20.03.2026 &mdash; <a href="https://etherscan.io/tx/0xcd9f99d2e5df5c28b81f885c7ebf7e2d42a873bd1c81bef9d94aa5c2d19c46c3" target="_blank">TX</a>)</li>
         <li><span class="badge-done">DONE</span> Gnosis Safe 3-of-5 on all Safes (Treasury, Community, LP Reserve) &#x2705;</li>

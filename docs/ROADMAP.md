@@ -19,7 +19,7 @@
 - [x] 544 total tests (521 protocol + 57 ecosystem)
 - [x] 91% branch coverage, 99% statement coverage
 - [x] Slither static analysis: 0 high/critical findings
-- [x] Claude Security Audit: 0 FAIL, 12 WARN, 78 PASS
+- [x] Full internal security audits completed, including static analysis and documented findings
 - [x] Community Audit open via GitHub Issues
 
 ### Governance (Sepolia)
@@ -54,10 +54,10 @@
 - [x] Mainnet feeExempt configuration (8 addresses set, deployer removed)
 - [x] Etherscan verification (mainnet, all 9 contracts)
 - [x] Ownership transfer to Governance (InfernoToken, LiquidityReserve, BuybackVault, BurnReserve)
-- [x] ~~BootstrapVault V1~~ deployed + verified (`0xA820540936d18e1377C39dd9445E5b36F3F1261a`) — **DEPRECATED**, use V3: `0x16086d4f7F191047d8A4fFf2090126E12e865A7E`
+- [x] ~~BootstrapVault V1/V2~~ deprecated; BootstrapVaultV3 deployed and finalized (`0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141`)
 - [x] Governance Proposal #0 submitted (feeExempt BootstrapVault, ETA 07.03.2026)
-- [ ] Mainnet Uniswap V2 LP pairing (IFR/WETH)
-- [ ] LP Token lock/burn (Unicrypt, 12 months minimum)
+- [x] Mainnet Uniswap V2 IFR/WETH pool created and bootstrap finalized (05.06.2026)
+- [x] LP custody finalized in BootstrapVaultV3; Mainnet Team.Finance path disabled and no LP withdrawal/recovery function exists
 - [x] Multisig upgraded to 3-of-5 (15.03.2026) — 5 signers on all 3 Safes
 - [ ] Community wallet + team beneficiary addresses finalized
 
@@ -125,8 +125,8 @@
 
 ## Current Focus
 
-**Phase 2 completion** — mainnet contracts deployed, verified, and ownership transferred to Governance (March 2026). Next: LP pairing, LP lock, Governance owner → Multisig.
+**Phase 3 execution** — Phase 2 is complete: mainnet contracts are deployed and verified, BootstrapVaultV3 finalized on 05.06.2026, and the IFR/WETH pool is live. Current work focuses on production integrations, the Benefits Network, builder tooling, listings and governance-controlled activation.
 See [Mainnet Checklist](MAINNET_CHECKLIST.md) for detailed progress.
 
 ---
-*Last updated: 30 June 2026*
+*Last updated: 28 July 2026*

@@ -11,7 +11,7 @@ Partner apps use the IFR Lock Mechanism as an access system:
 1️⃣ User buys IFR on Uniswap
 2️⃣ User locks IFR in the IFRLock contract
 3️⃣ Partner checks: \`isLocked(wallet, minAmount)\`
-4️⃣ User gets lifetime access
+4️⃣ Access remains active while the required IFR stays locked and the integration remains available
 
 *For developers — 5 lines of code:*
 \`\`\`

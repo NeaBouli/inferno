@@ -1,6 +1,6 @@
 # Inferno ($IFR) — Mainnet Deployment Checklist
 
-> **Status:** Mainnet Deployed (2026-03-05) | **Mainnet:** 13 Contracts deployed + verified | **Tests:** 367 Contract + 77 App + 100 Vault = 544 Total | **Coverage:** 99% Stmts, 91% Branch
+> **Status:** Historical deployment checklist. Current security claims use full internal audits and public automated test evidence; exact current results belong to CI/release records. Independent professional third-party audit pending.
 
 ## CRITICAL — Before Any Public Launch
 
@@ -158,7 +158,7 @@ These items MUST be completed before public launch:
 ### Step 6 — Uniswap V2 LP
 - [ ] DEX Liquidity wallet approves Router for 400M IFR
 - [ ] LP created: IFR/ETH pair
-- [ ] LP tokens locked (liquidity lock service, min. 6 months)
+- [x] LP custody verified: Mainnet Team.Finance disabled; LP retained in BootstrapVaultV3 with no LP withdrawal function
 - [ ] LP Pair address recorded: [LP_PAIR_ADDRESS]
 
 ### Step 7 — FeeRouter Setup

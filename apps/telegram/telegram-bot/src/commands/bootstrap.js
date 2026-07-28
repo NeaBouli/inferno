@@ -5,23 +5,23 @@ async function bootstrapCommand(ctx) {
   const reply = `🚀 *IFR Bootstrap — Community Liquidity*
 ━━━━━━━━━━━━━━━━━━━━━
 
-*Was ist der Bootstrap?*
-Ein trustloser 90-Tage-Zeitraum in dem die Community gemeinsam Liquidität für das IFR/ETH Uniswap V2 Pair aufbaut.
+*Status: FINALISIERT am 05.06.2026*
+Der 90-Tage-Bootstrap ist beendet. Die Community-Liquidität für das IFR/ETH Uniswap-V2-Pair wurde erstellt.
 
 *Fakten:*
-• 📦 100.000.000 IFR bereitgestellt (10% des Supplies)
-• 💰 0.01 – 2 ETH pro Wallet
-• 🔒 LP-Token 12 Monate locked via Team.Finance
-• ⚙️ Vollständig permissionless (kein Admin-Zugriff)
-• 📅 90 Tage Laufzeit nach Start
+• 📦 100.000.000 IFR + 0.030 ETH im LP
+• 🎁 100.000.000 IFR für Contributor-Claims reserviert
+• 🔒 Team.Finance war auf Mainnet deaktiviert
+• 🏦 LP verbleibt im BootstrapVaultV3 ohne LP-Auszahlungsfunktion
+• ⚙️ finalise() war permissionless
 
 *Wie es funktioniert:*
-1️⃣ ETH einzahlen (\`contribute()\`)
-2️⃣ Nach 90 Tagen: automatisch LP erstellt
-3️⃣ LP-Token 12 Mon. locked
-4️⃣ Community claimt LP-Anteile (\`claim()\`)
+1️⃣ Bootstrap wurde finalisiert
+2️⃣ Uniswap-V2-LP wurde erstellt
+3️⃣ LP-Custody ist on-chain im BootstrapVaultV3 prüfbar
+4️⃣ Alle drei Contributor-Claims wurden ausgeführt
 
-*Status:* Sepolia Testnet ✅ | Mainnet ⏳ (nach Proposal #0)
+*Status:* Ethereum Mainnet ✅ | Trading live
 
 📖 [Bootstrap Wiki](https://ifrunit.tech/wiki/bootstrap.html)`;
 

@@ -50,7 +50,7 @@ Then update ALL of these if counts changed:
 - `audit/test-audit.md` — test audit
 - `audit/contracts/token-audit.md` — token audit
 - `audit/BOOTSTRAP_SECURITY_REVIEW_13032026.md` — bootstrap review
-- `docs/TODO.md` + `docs/TODO.html` — always
+- `internal/operations/TODO.md` + `internal/operations/TODO.html` — operational archive outside the public website deployment
 
 **2. Wiki/Contract Count Sync**
 If a new wiki page or contract was added:

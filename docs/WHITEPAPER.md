@@ -2,13 +2,15 @@
 
 ## Executive Summary
 IFR is a deflationary ERC-20 utility token on Ethereum.
-Core idea: Users lock IFR tokens once and receive permanent premium
-access to builder products — no subscriptions, no recurring payments.
+Core idea: Users lock IFR tokens once and receive premium access to
+builder products without recurring subscription payments. Access remains
+active while the product's required IFR stays locked and that integration
+remains available.
 Every transfer automatically burns 2.5% of tokens permanently.
 The supply decreases with every transaction.
 
 3 sentences for everyone:
-- For users: Lock once, access forever.
+- For users: Lock once and keep access active while the required IFR remains locked and the product integration remains available.
 - For builders: Acquire loyal users who have real skin in the game.
 - For the protocol: More utility = more locking = less supply = more scarcity.
 
@@ -189,7 +191,7 @@ Integration: 5 lines of code. Fully decoupled.
 
 - Open source: All smart contracts public on GitHub
 - Slither static analysis: 0 high/critical findings
-- 544 tests (521 protocol + 57 ecosystem), all passing, 99% statement coverage
+- Full internal audits and public automated test evidence; current exact results belong to CI/release records, and an independent professional third-party audit remains pending
 - Professional third-party audit: recommended as next security milestone
 - Timelock: 48h mandatory waiting period on all changes
 - No minting: technically impossible after launch

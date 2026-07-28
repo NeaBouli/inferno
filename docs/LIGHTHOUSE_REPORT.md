@@ -9,7 +9,7 @@ As of: 26 February 2026
 | Meta Tag | Value |
 |----------|-------|
 | `og:title` | Inferno ($IFR) — The Deflationary Utility Token |
-| `og:description` | Lock IFR to unlock lifetime premium access. 2.5% burned per transfer. Community Fair Launch. |
+| `og:description` | Lock IFR for access while the required amount remains locked and the integration remains available. 2.5% burned per transfer. |
 | `og:type` | website |
 | `og:url` | https://ifrunit.tech/ |
 | `og:image` | https://ifrunit.tech/assets/ifr_icon_4096.png |
@@ -17,7 +17,7 @@ As of: 26 February 2026
 | `twitter:card` | summary_large_image |
 | `twitter:site` | @IFRtoken |
 | `twitter:title` | Inferno ($IFR) — The Deflationary Utility Token |
-| `twitter:description` | Lock IFR to unlock lifetime premium access. 2.5% burned per transfer. Community Fair Launch. |
+| `twitter:description` | Lock IFR for access while the required amount remains locked and the integration remains available. 2.5% burned per transfer. |
 | `twitter:image` | https://ifrunit.tech/assets/ifr_icon_4096.png |
 | `robots` | index, follow |
 | `theme-color` | #ff4500 |

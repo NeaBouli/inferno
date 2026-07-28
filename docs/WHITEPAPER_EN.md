@@ -6,7 +6,7 @@
 # Inferno – Whitepaper (EN)
 
 ## Abstract
-Inferno ($IFR) is a deflationary ERC-20 token on Ethereum. Supply reduction is achieved through fee-based burns on transfers (2.5% per transfer) and an on-chain buyback mechanism. Governance controls parameters via a 48-hour timelock. The token serves as a universal utility lock: users lock IFR on-chain to access lifetime premium features across builder products.
+Inferno ($IFR) is a deflationary ERC-20 token on Ethereum. Supply reduction is achieved through fee-based burns on transfers (2.5% per transfer) and an on-chain buyback mechanism. Governance controls parameters via a 48-hour timelock. The token serves as a universal utility lock: users lock IFR on-chain to activate premium features while each product's required amount remains locked and that integration remains available.
 
 ## 1. Rationale & Goals
 - **Deflation:** Predictable, transparent reduction of circulating supply.

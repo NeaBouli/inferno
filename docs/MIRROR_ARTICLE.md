@@ -8,7 +8,7 @@ Most DeFi tokens follow the same pattern: raise money from VCs, give insiders a 
 
 Inferno ($IFR) was built on a single principle: **your wallet is your identity**.
 
-Lock IFR once. Get lifetime access. No subscriptions. No recurring fees. No company in the middle.
+Lock IFR once. Keep product access active while the required IFR remains locked and the integration remains available. No recurring subscription.
 
 ## The Technical Foundation
 
@@ -32,7 +32,7 @@ The formula is simple:
 
 **IFR price = total ETH raised / 200,000,000 IFR**
 
-The community sets the price. Not us. More ETH = higher price AND deeper liquidity. The LP is locked for 12 months via Team.Finance.
+The community set the initial price. The finalised pool paired 100M IFR with 0.030 ETH and reserved 100M IFR for contributor claims. Team.Finance was disabled on Mainnet; LP remains in BootstrapVaultV3, which exposes no LP withdrawal function.
 
 Bootstrap ends June 5, 2026. Anyone can trigger `finalise()` — permissionlessly.
 
@@ -40,9 +40,9 @@ Bootstrap ends June 5, 2026. Anyone can trigger `finalise()` — permissionlessl
 
 IFR is not a trading token. It's an access key.
 
-Lock IFR in the IFRLock contract. Any builder product can verify your status on-chain. Lifetime premium access, no renewal needed.
+Lock IFR in the IFRLock contract. Any builder product can verify your status on-chain. Access remains active while that product's required amount stays locked and the integration remains available.
 
-One lock. Every product. Forever.
+One lock. Every participating product, while the required IFR remains locked and the integration remains available.
 
 ## What's Next
 

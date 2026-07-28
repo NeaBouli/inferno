@@ -3,6 +3,12 @@
 > **HISTORICAL DOCUMENT** — Based on V1 architecture (ifrSource / LiquidityReserve funding).
 > Superseded by BootstrapVaultV3 + Plan B (Treasury Safe + Community Safe funding).
 > See [DEPLOYMENTS.md](DEPLOYMENTS.md) for current architecture.
+>
+> **Mainnet outcome (05.06.2026):** Mainnet BootstrapVaultV3 was deployed
+> with `teamFinanceLocker = address(0)` and `lpLockId = 0`. `finalise()`
+> retained the LP tokens in BootstrapVaultV3, which exposes no LP withdrawal
+> or recovery function. The 12-month Team.Finance path below is the historical
+> design, not the Mainnet custody state.
 
 **Version:** 1.0
 **Date:** 2026-03-03
@@ -43,7 +49,7 @@ No admin keys. No team ETH. No presale. Pure community bootstrap.
 | IFR allocation | 100,000,000 IFR | 10% of supply, from LiquidityReserve |
 | Soft cap | None | LP always created |
 | Hard cap | None | More ETH = deeper liquidity |
-| LP lock | 12 months | Via Team.Finance after finalisation |
+| Historical LP-lock design | 12 months | Optional Team.Finance path; not configured on Mainnet |
 | Fee exempt | Yes | BootstrapVault is feeExempt on IFR token |
 
 ---
@@ -111,7 +117,8 @@ function finalise() external
 // - Checks: endTime passed, not already finalised
 // - Pulls 100M IFR from LiquidityReserve (requires prior approval)
 // - Creates Uniswap V2 LP: totalETHRaised + ifrAllocation
-// - Locks LP tokens via Team.Finance (12 months)
+// - Optionally locks LP via Team.Finance when configured; Mainnet retained LP
+//   in BootstrapVaultV3 because the locker was address(0)
 // - Sets finalised = true
 // - Emits Finalised(totalETHRaised, ifrPrice, lpTokenAddress)
 
@@ -185,7 +192,7 @@ event EmergencyTriggered(address indexed caller, string reason); // governance o
 
 - [x] Treasury Safe sends 144.75M IFR + Community Safe sends 50M IFR → BootstrapVaultV3 (~194.75M total)
 - [ ] Governance proposal: setFeeExempt(BootstrapVault, true)
-- [ ] Team.Finance locker address verified on Mainnet
+- [x] Mainnet locker configuration verified as `address(0)`; `lpLockId = 0`
 - [ ] Uniswap V2 Router address verified on Mainnet
 - [ ] IFR/ETH pair does NOT exist yet on Uniswap
 
@@ -243,7 +250,7 @@ event EmergencyTriggered(address indexed caller, string reason); // governance o
 - [ ] Succeeds after endTime (permissionless)
 - [ ] Reverts if called twice
 - [ ] Creates Uniswap V2 LP
-- [ ] Locks LP via Team.Finance
+- [x] Mainnet fallback retains LP in BootstrapVaultV3 with no withdrawal path
 - [ ] Emits Finalised event with correct params
 
 ### Claim

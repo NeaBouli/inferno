@@ -8,7 +8,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Security &mdash; Inferno (IFR) Documentation</title>
   <meta name="keywords" content="security audit, Slither, test coverage, OpenZeppelin, immutable contracts">
-  <meta name="description" content="Slither audit (0 high/critical), 544 tests, 99% statement coverage, 91% branch coverage. All contracts immutable — no proxy.">
+  <meta name="description" content="Full internal IFR Protocol audit record: contract review, static analysis, remediation evidence and automated tests. Independent professional third-party audit pending.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -491,19 +491,19 @@
   <meta property="og:type" content="article">
   <meta property="og:site_name" content="Inferno Protocol">
   <meta property="og:title" content="Security and Audit — Inferno Protocol (IFR)">
-  <meta property="og:description" content="Slither audit (0 high/critical), 544 tests, 99% statement coverage, 91% branch coverage. All contracts immutable — no proxy pattern.">
+  <meta property="og:description" content="Full internal IFR Protocol audit record with contract review, static analysis, remediation evidence and automated tests. Professional third-party audit pending.">
   <meta property="og:url" content="https://ifrunit.tech/wiki/security.html">
   <meta property="og:image" content="https://ifrunit.tech/assets/ifr_icon_256.png">
   <meta name="twitter:card" content="summary">
   <meta name="twitter:title" content="Security and Audit — Inferno Protocol (IFR)">
-  <meta name="twitter:description" content="Slither audit, 544 tests, 99% coverage. Immutable contracts, no proxy upgrades.">
+  <meta name="twitter:description" content="Full internal audits, static analysis and automated test evidence. Independent professional third-party audit pending.">
   <meta name="twitter:site" content="@IFRtoken">
   <meta name="twitter:image" content="https://ifrunit.tech/assets/ifr_icon_256.png">  <script type="application/ld+json">
   {
     "@context": "https://schema.org",
     "@type": "TechArticle",
     "headline": "Security and Audit",
-    "description": "Multi-layer security: Slither static analysis (0 high/critical), 544 automated tests, 99% statement and 91% branch coverage. All contracts immutable.",
+    "description": "Full internal security audits, static analysis, remediation records and automated test evidence. Independent professional third-party audit pending.",
     "url": "https://ifrunit.tech/wiki/security.html",
     "isPartOf": {"@id": "https://ifrunit.tech/#website"},
     "publisher": {"@id": "https://ifrunit.tech/#organization"},
@@ -660,8 +660,8 @@
 
       <div style="margin-bottom:24px;padding:16px 20px;background:rgba(63,185,80,0.06);border:1px solid rgba(63,185,80,0.3);border-radius:10px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
         <div>
-          <strong style="color:#3fb950">&#x1F50D; Grok (xAI) Audit &mdash; 10/10 Coherence</strong><br>
-          <span style="font-size:0.85rem;color:var(--muted)">Full on-chain + GitHub + Wiki review. All claims verified. Zero discrepancies.</span>
+          <strong style="color:#3fb950">&#x1F50D; Full Internal Audit Record</strong><br>
+          <span style="font-size:0.85rem;color:var(--muted)">Full internal contract, on-chain, repository and documentation reviews. Independent professional third-party audit remains pending.</span>
         </div>
         <a href="https://ifrunit.tech/wiki/open-audit.html" style="background:#3fb950;color:#000;padding:8px 20px;border-radius:8px;text-decoration:none;font-weight:700;font-size:0.85rem;white-space:nowrap">View All Audits &rarr;</a>
       </div>
@@ -673,12 +673,12 @@
           <span class="stat-label">High / Critical</span>
         </div>
         <div class="stat-item">
-          <span class="stat-value">544</span>
-          <span class="stat-label">Tests Passing</span>
+          <span class="stat-value">CI</span>
+          <span class="stat-label">Test Evidence</span>
         </div>
         <div class="stat-item">
-          <span class="stat-value">18</span>
-          <span class="stat-label">Test Suites</span>
+          <span class="stat-value">Full</span>
+          <span class="stat-label">Internal Review</span>
         </div>
         <div class="stat-item">
           <span class="stat-value">15</span>
@@ -745,12 +745,12 @@
       </div>
 
       <!-- ============================================================
-           2. Claude Security Audit (Internal)
+           2. Full Internal Contract Security Audit
            ============================================================ -->
-      <h2><span class="section-num">2.</span> Claude Security Audit (Internal)</h2>
+      <h2><span class="section-num">2.</span> Full Internal Contract Security Audit</h2>
 
       <p>
-        All 14 contracts were reviewed line-by-line by <strong>Claude Opus 4.6</strong> across 10 check categories:
+        The contract set in this recorded review was examined line-by-line across 10 internal check categories:
         reentrancy, access control, integer overflow, front-running, DoS, centralization, fee edge cases, timelock bypass, feeExempt manipulation, and owner privileges.
       </p>
 
@@ -759,6 +759,10 @@
           <strong>Result:</strong> 0 FAIL &mdash; 12 WARN &mdash; 78 PASS &mdash;
           <a href="https://github.com/NeaBouli/inferno/blob/main/docs/SECURITY_AUDIT_SKYWALKER.md">Full Report</a>
         </p>
+      </div>
+
+      <div class="callout" style="border-left-color:#fbbf24;background:rgba(251,191,36,0.08);">
+        <p><strong>Scope notice:</strong> These are full internal audits and static-analysis records. They do not constitute independent professional certification. A professional third-party audit remains pending, and current source changes require current CI and analysis evidence.</p>
       </div>
 
       <h3>Top Findings (Medium)</h3>
@@ -833,14 +837,13 @@
            ============================================================ -->
       <h2><span class="section-num">3.</span> Test Coverage</h2>
 
-      <!-- TODO: IFR_UPDATE — TEST_COUNT — update on each sprint -->
       <p>
-        The project maintains <strong>544 tests</strong> (367 contract + 77 app + 100 vault) across <strong>18 test suites</strong>, all passing. Tests cover deployment, core logic, edge cases, access control, pause mechanisms, cross-contract integration, wallet verification, governance announcements, and browser testing.
+        The repository maintains contract, vault, application, wallet, browser and integration checks. Current exact results are recorded by CI and release preflights. The detailed counts below are a <strong>March 2026 internal snapshot</strong>, not a current deduplicated repository total.
       </p>
 
       <div class="callout callout-green">
         <p>
-          <strong>544 / 544 tests passing</strong> &mdash; 20 test suites, 0 failures.
+          <strong>Historical internal snapshot:</strong> 544 recorded checks passed at that review point. Use current CI and release records for current results.
         </p>
       </div>
 
@@ -925,7 +928,7 @@
       <h3>Solidity Coverage (solidity-coverage)</h3>
 
       <p>
-        Code coverage measured with <code>solidity-coverage</code>. Overall: <strong>99% statements</strong>, <strong>91% branches</strong>, <strong>98% functions</strong>, <strong>99% lines</strong>.
+        Historical coverage was measured with <code>solidity-coverage</code> for the contract subset recorded in March 2026: <strong>99% statements</strong>, <strong>91% branches</strong>, <strong>98% functions</strong>, <strong>99% lines</strong>. This is not a current full-repository coverage claim.
       </p>
 
       <div class="table-wrap">
@@ -1014,7 +1017,7 @@
       <div class="audit-block" style="background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.3);border-radius:12px;padding:24px;margin:32px 0;">
         <h3 style="color:#22c55e;margin-top:0;">Internal Security Review &mdash; Bootstrap Flow</h3>
         <p><strong>Date:</strong> 13 March 2026 &nbsp;|&nbsp; <strong>Scope:</strong> BootstrapVaultV3, InfernoToken, FeeRouterV1, Governance/Timelock</p>
-        <p><strong>Method:</strong> Manual code review + 544 automated tests (91% branch coverage)</p>
+        <p><strong>Method:</strong> Manual internal code review plus the automated-test and coverage snapshot available on 13 March 2026</p>
         <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:16px 0;text-align:center;">
           <div style="background:rgba(34,197,94,0.15);border-radius:8px;padding:12px;">
             <div style="font-size:2rem;font-weight:700;color:#22c55e;">11</div>
@@ -1312,7 +1315,7 @@
       <ul>
         <li>Balance: 150,000,000 IFR (15%)</li>
         <li>Cliff: 365 days (~March 2027)</li>
-        <li>Duration: 1,460 days (4 years linear)</li>
+        <li>Duration: 1,460 days total (12-month cliff + 36-month linear release)</li>
         <li>Released: 0 IFR</li>
       </ul>
 
@@ -1337,15 +1340,17 @@
       </div>
 
       <!-- ============================================================
-           External Security Audit — InfernoToken.sol (March 2026)
+           Full Internal Token Security Review — InfernoToken.sol (March 2026)
            ============================================================ -->
-      <section id="external-audit" style="margin-top:3rem;">
-        <h2 style="font-size:1.5rem;font-weight:700;margin-bottom:0.5rem;">External Security Audit &mdash; InfernoToken.sol</h2>
+      <section id="internal-token-review" style="margin-top:3rem;">
+        <h2 style="font-size:1.5rem;font-weight:700;margin-bottom:0.5rem;">Full Internal Token Security Review &mdash; InfernoToken.sol</h2>
         <p style="color:var(--muted);font-size:0.85rem;margin-bottom:1.5rem;">
           Date: March 19, 2026 &nbsp;|&nbsp;
-          Type: Independent AI Security Analysis &nbsp;|&nbsp;
+          Type: Full internal security review &nbsp;|&nbsp;
           Scope: InfernoToken.sol (ERC-20 with fee-on-transfer)
         </p>
+        <p class="callout"><strong>Scope notice:</strong> This is an internal engineering audit with public evidence, not an independent professional third-party certification. A professional third-party audit remains pending.</p>
+        <p class="callout"><strong>Community review:</strong> The OKComputer community audit submitted on 27 July 2026 is preserved unchanged with a separate factual status note in the <a href="https://ifrunit.tech/wiki/open-audit.html">Open Audit Log</a>.</p>
 
         <!-- Summary Box -->
         <div style="background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.25);border-radius:12px;padding:1.25rem;margin-bottom:1.5rem;">

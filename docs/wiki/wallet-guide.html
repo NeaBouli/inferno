@@ -851,7 +851,7 @@
           <div class="wg-field"><strong>Owner:</strong> Guardian = Deployer (pause-only)</div>
           <div class="wg-field"><strong>feeExempt:</strong> <span class="wg-fee-status wg-fee-yes">&#x2705; Yes</span></div>
           <div class="wg-role-box">
-            <strong>Function:</strong> Users lock IFR here to gain lifetime premium access. Any builder product can query <code>isLocked()</code> to verify access. No admin can touch user funds.
+            <strong>Function:</strong> Users lock IFR here to activate premium access while the product-required amount remains locked and that integration remains available. Any builder product can query <code>isLocked()</code> to verify access. No admin can touch user funds.
           </div>
           <div class="wg-field"><strong>Phase:</strong> Active &mdash; gateway to all premium features</div>
         </div>
@@ -870,7 +870,7 @@
           <div class="wg-field"><strong>Owner:</strong> Permissionless (no admin)</div>
           <div class="wg-field"><strong>feeExempt:</strong> <span class="wg-fee-status wg-fee-yes">&#x2705; Yes (since Proposal #4)</span></div>
           <div class="wg-role-box">
-            <strong>Function:</strong> Community price discovery. 100M IFR paired with 0.030 ETH raised &rarr; Uniswap V2 LP created; 100M IFR reserved for contributor claims. LP locked 12 months via Team.Finance.<br>
+            <strong>Function:</strong> Community price discovery. 100M IFR paired with 0.030 ETH raised &rarr; Uniswap V2 LP created; 100M IFR reserved for contributor claims. Team.Finance was disabled on Mainnet; LP remains in BootstrapVaultV3, which exposes no LP withdrawal function.<br>
             <strong>&#x2705; FINALIZED 05.06.2026 23:51 UTC</strong> &mdash; Block 25254575 &mdash; TX: <a href="https://etherscan.io/tx/0x949848bdd09f4c867a2593afffb0137c7db2c1457d8a8f5ff4428f8ecce69c5f" target="_blank" style="color:#22c55e;font-size:11px;">0x949848bd&hellip;</a><br>
             LP Token: <code style="font-size:11px;">0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0</code>
           </div>
@@ -1056,7 +1056,7 @@
           <div class="wg-field"><strong>Created via:</strong> <code>BootstrapVaultV3.finalise()</code></div>
           <div class="wg-field"><strong>Timeline:</strong> Created 05.06.2026</div>
           <div class="wg-role-box">
-            <strong>Function:</strong> IFR/ETH trading pair on Uniswap V2. Created by BootstrapVaultV3.finalise() with 100M IFR + 0.030 ETH. LP tokens locked for 12 months.
+            <strong>Function:</strong> IFR/ETH trading pair on Uniswap V2. Created by BootstrapVaultV3.finalise() with 100M IFR + 0.030 ETH. LP tokens remain in BootstrapVaultV3; Team.Finance was not configured and the vault exposes no LP withdrawal function.
           </div>
         </div>
 

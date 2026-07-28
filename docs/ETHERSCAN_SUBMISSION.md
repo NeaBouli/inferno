@@ -39,9 +39,9 @@
 
    **UTILITY — LOCK-TO-ACCESS:**
    - Users lock IFR in IFRLock contract
-   - Locked IFR = lifetime premium access to integrated builder products
+   - Locked IFR = access to integrated builder products while the required amount remains locked and the integration remains available
    - No subscription, no recurring payment
-   - One-time lock = permanent access
+   - One-time lock = access while the required IFR remains locked and the integration remains available
 
    **FAIR LAUNCH:**
    - No presale, no VC, no private sale

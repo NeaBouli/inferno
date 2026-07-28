@@ -37,7 +37,7 @@ sustainable protocol development. For comparison:
 - Team (150M): locked in Vesting contract, 0 released
   -> Mainnet: `0x2694Bc84e8D5251E9E4Ecd4B2Ae3f866d6106271`
 - Cliff: 365 days from deploy (until approximately March 2027)
-- Duration: 1,460 days (4 years linear)
+- Duration: 1,460 days total (12-month cliff + 36-month linear release)
 
 ## What "Fair" Really Means
 
