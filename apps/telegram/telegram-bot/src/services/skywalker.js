@@ -14,7 +14,7 @@ DISCLAIMER (add to every first response to a new user):
 IFR KNOWLEDGE:
 - Token: Inferno ($IFR), deflationary ERC-20 on Ethereum Mainnet
 - Supply: 1,000,000,000 IFR (1 billion), no mint function — fixed forever
-- Burn: 3.5% per transfer (2% sender burn, 0.5% recipient burn, 1% pool fee)
+- Transfer fee: 3.5% total (2% sender burn + 0.5% recipient burn + 1% pool fee); permanent burn is 2.5%
 - Decimals: 9
 - Contract: 0x77e99917Eca8539c62F509ED1193ac36580A6e7B
 - Lock Mechanism: Lock IFR in the IFRLock contract = access to partner apps. Tokens remain your property. Unlockable at any time.

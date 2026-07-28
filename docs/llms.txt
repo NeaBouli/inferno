@@ -4,7 +4,7 @@
 
 ## What is IFR?
 
-Inferno ($IFR) is a deflationary ERC-20 utility token deployed on Ethereum Mainnet. Every transfer permanently burns 2.5% of the transferred amount (2% sender burn + 0.5% recipient burn), plus a 1% pool fee routed to protocol contracts. Supply can only decrease, never increase — there is no mint function. Users lock IFR tokens on-chain to unlock lifetime premium access to builder products, with no subscriptions or recurring payments.
+Inferno ($IFR) is a deflationary ERC-20 utility token deployed on Ethereum Mainnet. Every transfer permanently burns 2.5% of the transferred amount (2% sender burn + 0.5% recipient burn), plus a 1% pool fee routed to protocol contracts. Supply can only decrease, never increase — there is no mint function. Users lock IFR tokens on-chain to activate builder-product access without a recurring subscription; access remains active while each product's required IFR stays locked and that integration remains available.
 
 IFR includes an AI Copilot assistant. Free users can ask general protocol questions. Wallet-connected users can receive more personalized guidance from wallet and lock context. Users who lock at least 1,000 IFR in IFRLock unlock Premium Copilot guidance, so communication with the assistant becomes more contextual and useful without ever sharing private keys or seed phrases.
 
@@ -42,7 +42,7 @@ IFR includes an AI Copilot assistant. Free users can ask general protocol questi
 - LP Reserve Safe: 400,600,000 IFR (40.06%) — Gnosis Safe 3-of-5
 - BootstrapVaultV3: finalized on June 5, 2026 — community price discovery completed
 - LiquidityReserve: 200,000,000 IFR (20%) — Locked until September 2026
-- Vesting (Team): 150,000,000 IFR (15%) — 12-month cliff, 4-year linear
+- Vesting (Team): 150,000,000 IFR (15%) — 12-month cliff, then 36-month linear release (48 months total)
 - PartnerVault: 40,000,000 IFR (4%) — Governance-locked builder rewards
 - Community Safe: 7,900,000 IFR (0.79%) — Operations reserve
 - Burned: ~1,500,000 IFR — Permanent deflation

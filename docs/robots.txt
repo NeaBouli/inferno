@@ -21,8 +21,6 @@ Allow: /
 
 Disallow: /.env
 Disallow: /node_modules/
-Disallow: /TODO.html
-Disallow: /TODO.md
 
 # Search Console / crawler hints:
 # - /web3/ is the lightweight user execution surface.

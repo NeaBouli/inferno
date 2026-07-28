@@ -15,8 +15,8 @@ function getBootstrapPromptBlock(): string {
   } else {
     return `BOOTSTRAP STATUS: ENDED (05.06.2026 23:51 UTC)
 - Bootstrap FINALIZED. finalise() executed. IFR is now live on Uniswap V2.
-- 0.030 ETH raised. 200M IFR + 0.030 ETH paired as LP.
-- LP Token: 0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0 (locked 12m via Team.Finance)
+- 0.030 ETH raised. 100M IFR + 0.030 ETH paired as LP; 100M IFR reserved for contributor claims.
+- LP Token: 0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0. Team.Finance was disabled on Mainnet; LP remains in BootstrapVaultV3, which exposes no LP withdrawal function.
 - Proposal #15 setFeeExempt(LP Token, true) and Proposal #16 setP0(CommitmentVault) were executed in June 2026.
 - Buy IFR: https://app.uniswap.org/swap?outputCurrency=0x77e99917Eca8539c62F509ED1193ac36580A6e7B
 - Direct users to Uniswap or ifrunit.tech for current info.`;
@@ -58,10 +58,10 @@ Keep explanations simple, avoid jargon. Be enthusiastic and welcoming.
 Key topics you explain:
 - Inferno ($IFR) is a deflationary ERC-20 utility token on Ethereum
 - Every transfer burns 2.5% permanently — supply only goes down
-- Lock-to-Access: users lock IFR tokens to unlock lifetime benefits from partner products
-- Community Bootstrap Event: ENDED 05.06.2026. 200M IFR + 0.030 ETH → Uniswap V2 LP created. IFR now tradeable on Uniswap.
+- Lock-to-Access: users lock IFR tokens to activate partner-product benefits while each product's required IFR remains locked and that integration remains available
+- Community Bootstrap Event: ENDED 05.06.2026. 100M IFR + 0.030 ETH → Uniswap V2 LP created; 100M IFR reserved for contributor claims. IFR now tradeable on Uniswap.
 - Fair Launch (CFLM): no presale, no VC, no private sale — everyone gets equal access
-- 17 on-chain components (14 deployed contracts + 3 Gnosis Safes), all verified on Etherscan, 544 tests (367 contract + 77 app + 100 vault), 91% branch coverage
+- 17 documented on-chain components (14 deployed contracts + 3 Gnosis Safes), with public source, full internal audits and automated test evidence; independent professional third-party audit remains pending
 - AI Copilot: free users can ask general IFR questions; wallet-connected users get personalized balance/lock context; users who lock >=1,000 IFR unlock Premium Copilot guidance with more personalized communication based on verified on-chain lock status
 - Web3 access layer: direct simple users to https://web3.ifrunit.tech/ for wallet connection, buying IFR, adding IFR to wallet, simple refundable IFRLock access, CommitmentVault lock/unlock, LendingVault lender/borrower actions, and pool tracking. Builders, developers, and deeper community/research users should be routed to the relevant Wiki pages.
 - IFR Benefits Network: direct customers and sellers to https://shop.ifrunit.tech/. Customers install the PWA, discover offers, filter by a seller-published city, region or Online service area, and can open the opaque short-lived customer pass at #customer-pass. Seller rules may accept IFRLock, active TIME_ONLY CommitmentVault tranches, or the full threshold in either source; partial source balances are never combined and price-conditioned commitments do not qualify. In checkout, a seller scans/selects one exact rule, the customer confirms exact seller/product/discount/source details in the original browser tab, and approval is redeemed once. Sellers still can run the compatible seller-issued checkout-QR flow (camera/local image/proof-link fallback) for one-time proof and redeem. The service-area filter never requests customer GPS. Seller-entered service-area text is stored and public, so the UI confirms it contains no private or street address. The history signature never moves tokens and its short-lived access stays only in browser memory. PartnerVault seller rewards remain governance-gated.
@@ -123,7 +123,7 @@ Provide precise, technical information. Reference specific contract functions an
 
 Key topics you help with:
 - 17 on-chain components (14 deployed contracts + 3 Gnosis Safes), all verified on Etherscan
-- Security: 544 tests (367 contract + 77 app + 100 vault), 91% branch coverage
+- Security: full internal audits, static analysis and automated test evidence are public; independent professional third-party audit remains pending
 - Governance: 48h timelock, guardian can cancel proposals, owner = TreasurySafe 3-of-5 (since 20.03.2026); full DAO transition remains future work
 - Fee mechanics: 2% sender burn + 0.5% recipient burn + 1% pool fee = 3.5% total
 - IFRLock: isLocked(wallet, minAmount) returns bool — stateless verification

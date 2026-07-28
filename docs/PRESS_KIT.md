@@ -2,7 +2,7 @@
 
 ## Summary
 
-Inferno ($IFR) is a deflationary ERC-20 utility token on Ethereum. Users lock IFR tokens on-chain and receive lifetime premium access to builder products -- no subscriptions, no recurring payments.
+Inferno ($IFR) is a deflationary ERC-20 utility token on Ethereum. Users lock IFR tokens on-chain to activate builder-product access without recurring subscription payments; access remains active while the required IFR stays locked and that integration remains available.
 
 **Model:** Community Fair Launch (CFLM) -- no presale, no VC, no insider allocation.
 
@@ -44,7 +44,7 @@ Every transfer: -2.5% permanently burned + 1% BuybackVault.
 
 ## Lock-to-Access Model
 
-Users lock IFR tokens in the IFRLock contract -> receive lifetime premium access to builder products. Tokens remain owned by the user and can be unlocked at any time.
+Users lock IFR tokens in IFRLock -> receive builder-product access while the required amount remains locked and that integration remains available. Tokens remain owned by the user and can be unlocked at any time; unlocking ends lock-based access.
 
 | Tier | Min. Lock | Example Access |
 |------|-----------|----------------|
@@ -75,7 +75,7 @@ Users lock IFR tokens in the IFRLock contract -> receive lifetime premium access
 |-----------|-------|
 | Contracts | Solidity 0.8.20, OpenZeppelin v5 |
 | Framework | Hardhat v2, ethers v5 |
-| Tests | Chai v4, 544 tests, 99% coverage |
+| Verification | Full internal audits plus public contract, application, wallet, browser and integration test evidence; independent professional third-party audit pending |
 | Dashboard | React 18 + Vite + ethers v5 |
 | Governance UI | React 18 + TypeScript + Tailwind |
 | AI Copilot | Claude Haiku 4.5 + RAG |
@@ -83,7 +83,7 @@ Users lock IFR tokens in the IFRLock contract -> receive lifetime premium access
 
 ## Roadmap (Summary)
 
-- **Q1 2026:** Testnet complete, 544 tests, all apps built, mainnet deployed (2026-03-05)
+- **Q1 2026:** Testnet completed, internal test snapshot recorded, applications built, Mainnet deployed (2026-03-05)
 - **Q2 2026:** LP creation, security audit, first builders
 - **Q3 2026:** 10+ builders, Creator Gateway MVP, apps live
 - **Q4 2026:** Community governance, CEX outreach

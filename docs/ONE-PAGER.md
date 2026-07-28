@@ -37,7 +37,7 @@ Deflationary + Utility:
 
 - Blockchain: Ethereum Mainnet (deployed 2026-03-05)
 - Contracts: Solidity 0.8.20, OpenZeppelin v5
-- Security: Slither 0 High/Critical, 544 tests, 99% coverage
+- Security: full internal audits, static analysis and public automated test evidence; independent professional third-party audit pending
 - Governance: 48h Timelock, Guardian Cancel, Gnosis Safe Multisig
 
 ## Post-Launch Roadmap

@@ -204,7 +204,7 @@ inferno/
 
 ### 10. BootstrapVault (`contracts/bootstrap/BootstrapVault.sol`) -- 225 LOC, 22 Tests
 - **Purpose:** Trustless community bootstrap for initial IFR/ETH liquidity pool creation
-- **Features:** contribute() (0.01-2 ETH/wallet), finalise() (permissionless LP creation), claim() (pro-rata IFR share), LP lock via Team.Finance, anti-whale max 2 ETH, 90-day window, no admin keys, no pause, no withdrawal
+- **Features:** contribute() (0.01-2 ETH/wallet), finalise() (permissionless LP creation), claim() (pro-rata IFR share), optional Team.Finance integration. Mainnet used no locker, so LP remains in BootstrapVaultV3 with no LP withdrawal function; anti-whale max 2 ETH, 90-day window, no admin keys, no pause, no withdrawal
 - **Mainnet:** Deployed
 
 ### Removed

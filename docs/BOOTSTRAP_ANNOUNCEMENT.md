@@ -60,7 +60,7 @@ Ends June 5, 2026.
 4️⃣ Claim your IFR proportionally
 
 No admin keys. No pause. No rug.
-LP locked 12 months via Team.Finance.
+Mainnet Team.Finance was disabled. LP remains in BootstrapVaultV3, which exposes no LP withdrawal function.
 ```
 
 **Tweet 3:**
@@ -68,9 +68,9 @@ LP locked 12 months via Team.Finance.
 🔒 Why $IFR?
 
 - 2.5% burned on every transfer — forever
-- Lock IFR once → lifetime premium access
+- Lock IFR once → access while the product-required amount remains locked and the integration remains available
 - Fair launch: no presale, no VC, no IDO
-- 544 tests, 0 critical audit findings
+- Full internal audits and public automated test evidence; independent professional third-party audit pending
 - 17 on-chain components, all verified
 
 Not a trading token. A utility lock.
@@ -104,13 +104,13 @@ $IFR $ETH #DeFi #FairLaunch
 We launched a community bootstrap event for $IFR, a deflationary ERC-20 utility token on Ethereum Mainnet.
 
 **What is IFR?**
-Every transfer burns 2.5% permanently. Users lock IFR to gain lifetime premium access to builder products — no subscriptions, no renewals.
+Every transfer burns 2.5% permanently. Users lock IFR to activate builder-product access without a recurring subscription; access remains active while the required IFR stays locked and the integration remains available.
 
 **Bootstrap mechanics:**
 - 200M IFR pre-funded in BootstrapVaultV3 (on-chain)
 - Contribute 0.01–2 ETH per wallet (anti-whale)
 - 100% of ETH → Uniswap V2 LP via permissionless finalise()
-- LP locked 12 months via Team.Finance
+- Mainnet Team.Finance disabled; LP retained in BootstrapVaultV3 with no LP withdrawal function
 - No soft cap — LP always created regardless of ETH raised
 - If not finalised within 30 days: full ETH refund available
 
@@ -118,7 +118,7 @@ Every transfer burns 2.5% permanently. Users lock IFR to gain lifetime premium a
 No presale. No VC. No IDO. Team tokens vested 4 years with 12-month cliff. All on-chain, all verifiable.
 
 **Security:**
-- 544 automated tests, 91% branch coverage
+- Full internal audits and public automated test evidence; current results belong to CI/release records
 - Slither audit: 0 high/critical findings
 - All 17 contracts verified on Etherscan
 - 48h governance timelock on all parameter changes
@@ -144,13 +144,13 @@ Ends June 5, 2026. Happy to answer questions.
 
 Every transfer burns 2.5% — permanently. No mint function. Supply can only go down.
 
-But IFR isn't just deflationary — it's a universal access token. Lock IFR once → lifetime premium access to any integrated product. No subscription. No renewal.
+But IFR isn't just deflationary — it's a universal access token. Lock IFR once to activate access while the integrated product's required IFR remains locked and that integration remains available.
 
 **The Bootstrap:**
 - 200,000,000 IFR in vault (funded by community treasury)
 - Contribute 0.01–2 ETH — max 2 ETH per wallet (fair distribution)
 - 100% of ETH → Uniswap liquidity — zero team cut
-- LP locked 12 months
+- LP retained in BootstrapVaultV3; Team.Finance disabled and no LP withdrawal function
 - Price = ETH raised ÷ 200M IFR (community decides)
 
 **Tokenomics:**
@@ -160,7 +160,7 @@ But IFR isn't just deflationary — it's a universal access token. Lock IFR once
 - 4% builder ecosystem rewards
 
 **Not a meme. Not a rugpull.**
-- 544 tests, Slither audit 0 critical
+- Full internal audits, static-analysis records and public test evidence; professional third-party audit pending
 - Open source: github.com/NeaBouli/inferno
 - 48h governance timelock
 - Fair launch: no presale, no VC
@@ -179,10 +179,10 @@ Ends June 5, 2026.
 
 200M IFR vault. Community price discovery.
 0.01–2 ETH per wallet. 100% → Uniswap LP.
-No team ETH. LP locked 12 months.
+No team ETH. Team.Finance was disabled; LP remains in BootstrapVaultV3 without an LP withdrawal function.
 
 Every $IFR transfer burns 2.5% permanently.
-Lock IFR → lifetime product access. No subscriptions.
+Lock IFR → product access while the required amount remains locked and the integration remains available. No recurring subscription.
 
 Ends June 5, 2026.
 ↗ ifrunit.tech/wiki/bootstrap

@@ -2,7 +2,7 @@
 Stand: 07.04.2026 | Konsolidiert (Claude + Core Dev)
 
 > **Legacy snapshot:** Diese Datei wird nicht mehr als aktueller Projektstatus gepflegt.
-> Verbindlich sind `docs/TODO.md` und die lokale `BRIDGE.md`; historische Eintraege unten
+> Verbindlich sind `internal/operations/TODO.md` und die lokale `BRIDGE.md`; historische Eintraege unten
 > bleiben nur als Audit-/Planungsarchiv erhalten.
 
 ---
@@ -194,7 +194,7 @@ Stand: 07.04.2026 | Konsolidiert (Claude + Core Dev)
       LP Reserve Safe → Uniswap (150M Phase 3)
       Timing: Team-Entscheidung
 
-- [ ] 🔵 Nach Bootstrap finalise(): LP Tokens bei Team.Finance verifizieren (12-Monate Lock)
+- [x] LP custody verified after finalise(): Mainnet Team.Finance disabled; LP retained in BootstrapVaultV3 with no LP withdrawal function
 
 ## MITTEL — Builder Registry
 

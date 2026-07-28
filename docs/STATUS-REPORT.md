@@ -4,7 +4,7 @@
 **Branch:** `main`
 **Model:** Community Fair Launch (CFLM) -- no presale
 **Ticker:** $IFR
-**Status:** 16 On-Chain Components deployed + verified on Ethereum Mainnet | 544 tests | 7 Apps
+**Status:** Historical snapshot. Current verification uses full internal audits plus public automated test evidence; independent professional third-party audit pending.
 
 ---
 
@@ -144,7 +144,7 @@ Sepolia deployment served as the full testnet validation phase prior to mainnet.
 | Check | Status |
 |-------|--------|
 | Slither v0.11.5 | **PASS** -- 0 High/Critical, 15 fixes, 36 accepted |
-| solidity-coverage | **99% Stmts, 91% Branch** |
+| Historical solidity-coverage snapshot | **99% Stmts, 91% Branch** for the recorded March 2026 contract subset; not current full-repository coverage |
 | 367 Contract Tests | **PASS** -- 0 Failures |
 | Governance Lifecycle | **PASS** -- Proposal #0 + #1 executed via 48h Timelock (Sepolia) |
 | Third-party Audit | **Recommended** -- not yet conducted |

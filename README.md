@@ -6,12 +6,11 @@
 
 > Deflationary ERC-20 utility token on Ethereum Mainnet.
 > Every transfer burns 2.5% permanently.
-> Lock IFR once — unlock lifetime premium access.
+> Lock IFR once — activate premium access while the required IFR remains locked and the integration remains available.
 
 **Contract:** [`0x77e99917Eca8539c62F509ED1193ac36580A6e7B`](https://etherscan.io/address/0x77e99917Eca8539c62F509ED1193ac36580A6e7B#code) | **Network:** Ethereum Mainnet | **Bootstrap:** FINALIZED ✅ June 5, 2026 | **LP Token:** [`0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0`](https://etherscan.io/address/0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0)
 
-<!-- TODO: IFR_UPDATE — TEST_COUNT + CONTRACT_COUNT — update on each sprint -->
-**17 on-chain components** | **544 tests** | **91% branch coverage** | **14 verified contracts + 3 Gnosis Safes**
+**17 documented on-chain components** | **Full internal audits** | **Public automated test evidence** | **Independent professional third-party audit pending**
 
 ### Quick Links
 
@@ -32,7 +31,7 @@
 
 ## What is Inferno?
 
-Inferno (IFR) is a deflationary ERC-20 utility token on Ethereum. Every transfer burns 2.5% permanently, reducing total supply over time. Users lock IFR tokens on-chain to unlock lifetime premium access to builder products — no subscriptions, no recurring payments.
+Inferno (IFR) is a deflationary ERC-20 utility token on Ethereum. Every transfer burns 2.5% permanently, reducing total supply over time. Users lock IFR tokens on-chain to activate builder-product access without a recurring subscription; access remains active while each product's required IFR stays locked and that integration remains available.
 
 **Community Fair Launch Model** — No presale, no VC, no insider allocations.
 
@@ -49,12 +48,12 @@ Inferno (IFR) is a deflationary ERC-20 utility token on Ethereum. Every transfer
 | Current Supply | ~998.5M (decreasing) |
 | Burned | ~1.5M IFR since March 5, 2026 |
 | Burn Rate | 2.5% per transfer (permanent) |
-| Max Fee | 3.5% (hardcoded cap: 5%) |
+| Default Transfer Fee | 3.5% total (2.5% burn + 1% pool fee; hardcoded cap: 5%) |
 
 ## Key Features
 
 - **Deflationary**: 2.5% burned per transfer (2% sender + 0.5% recipient). 1% pool fee. Hard cap: 5% max.
-- **Utility Lock**: Lock IFR → lifetime premium access across builder products → unlock anytime.
+- **Utility Lock**: Lock IFR → access while the required amount remains locked and the integration remains available → unlock anytime.
 - **Timelock Governance**: 48-hour delay on all changes. Guardian cancel. No instant admin access.
 - **No Mint Function**: Supply can only decrease, never increase.
 - **Fair Launch**: No presale, no VC. Transparent allocation from day one.
@@ -63,7 +62,7 @@ Inferno (IFR) is a deflationary ERC-20 utility token on Ethereum. Every transfer
 
 | Allocation | Share | Amount | Note |
 |-----------|-------|--------|------|
-| DEX Liquidity | 40% | 400M IFR | Held by deployer. Paired on Uniswap V2 via BootstrapVaultV3.finalise() after Bootstrap completion. |
+| DEX Liquidity | 40% | 400M IFR | Held by the LP Reserve Safe (3-of-5) for governance-controlled LP expansion. The Bootstrap pool was created separately with 100M IFR + 0.030 ETH. |
 | Liquidity Reserve | 20% | 200M IFR | Smart-contract-locked until 01.09.2026. Phase 2 LP expansion. NOT used for Bootstrap. |
 | Team Vesting | 15% | 150M IFR | 12-month cliff, 36-month linear vesting. 0 tokens available before March 2027. |
 | Treasury | 15% | 150M IFR | Gnosis Safe multisig (0x5ad6193...). 150M committed to Bootstrap. Refills via protocol fees (Phase 3). |
@@ -93,7 +92,7 @@ with a 1-year cliff. See [Fair Launch Statement](docs/FAIR_LAUNCH.md).
 | Vesting | [`0x2694Bc84e8D5251E9E4Ecd4B2Ae3f866d6106271`](https://etherscan.io/address/0x2694Bc84e8D5251E9E4Ecd4B2Ae3f866d6106271#code) |
 | LiquidityReserve | [`0xdc0309804803b3A105154f6073061E3185018f64`](https://etherscan.io/address/0xdc0309804803b3A105154f6073061E3185018f64#code) |
 | BootstrapVaultV3 | [`0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141`](https://etherscan.io/address/0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141#code) **[FINALIZED ✅ 05.06.2026]** |
-| LP Token (IFR/WETH) | [`0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0`](https://etherscan.io/address/0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0) — locked 12mo via Team.Finance |
+| LP Token (IFR/WETH) | [`0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0`](https://etherscan.io/address/0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0) — retained in BootstrapVaultV3; Mainnet Team.Finance locker disabled and the vault exposes no LP withdrawal function |
 | CommitmentVault | [`0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3`](https://etherscan.io/address/0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3#code) |
 | BuilderRegistry | [`0xdfe6636DA47F8949330697e1dC5391267CEf0EE3`](https://etherscan.io/address/0xdfe6636DA47F8949330697e1dC5391267CEf0EE3#code) |
 | CommitmentVault | [`0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3`](https://etherscan.io/address/0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3#code) |
@@ -128,7 +127,7 @@ The ecosystem is open and permissionless. Any product can integrate IFR Lock.
 
 ## Testing & Security
 
-**544 tests** — all passing
+**Automated test evidence** — current exact results are recorded by CI and release preflights. The tables below preserve an older internal inventory and must not be read as a current deduplicated total.
 
 ### Protocol Tests — 521
 | Suite | Count | Framework |
@@ -146,7 +145,7 @@ The ecosystem is open and permissionless. Any product can integrate IFR Lock.
 | Bot Announcements | 10 | Mocha |
 | Browser / WalletConnect | 12 | Playwright |
 
-- Branch coverage: 91% (99% statements)
+- Historical coverage snapshot: 91% branches / 99% statements for the contract subset recorded in `docs/COVERAGE_REPORT.md`; not a current full-repository coverage claim
 - GitHub Actions CI: Creator Gateway, Points Backend, AI Copilot
 - Slither security audit: 0 high/critical findings
 - Internal security audit: 0 FAIL, 12 WARN, 78 PASS ([full report](docs/SECURITY_AUDIT_SKYWALKER.md))
@@ -160,6 +159,7 @@ The ecosystem is open and permissionless. Any product can integrate IFR Lock.
 All smart contracts are open source and community review is explicitly encouraged.
 
 - **Internal Audit:** [docs/SECURITY_AUDIT_SKYWALKER.md](docs/SECURITY_AUDIT_SKYWALKER.md) — 0 FAIL, 12 WARN, 78 PASS
+- **OKComputer Community Audit (27.07.2026):** [editorial status and original report](docs/community-audits/README.md) — published unchanged with dated corrections; not a professional third-party certification
 - **Submit a Finding:** [GitHub Issues → Security Audit Template](https://github.com/NeaBouli/inferno/issues/new?template=security-audit.md)
 - **Security Policy:** [SECURITY.md](SECURITY.md)
 
@@ -230,14 +230,15 @@ SIWE authentication, points tracking, and EIP-712 signed voucher issuance for pr
 - [Builder Integration Spec](docs/PARTNER_INTEGRATION_SPEC.md) — Technical spec: IFRLock + PartnerVault ABI, Rewards, Algo Throttle
 - [Mainnet Checklist](docs/MAINNET_CHECKLIST.md) — Deployment order, verification, post-deploy
 - [Security Audit Brief](docs/AUDIT_BRIEF.md) — Scope, audit areas, auditor recommendations
+- [OKComputer Community Audit](docs/community-audits/README.md) — Editorial status, source hash and unchanged report submitted on 27.07.2026
 - [Multisig Setup Guide](docs/MULTISIG_SETUP.md) — Gnosis Safe, signer structure, ownership transfer
 - [Whitepaper / One-Pager](docs/WHITEPAPER.md) — Project overview for builders & investors
 - [Creator Gateway Spec](docs/CREATOR_GATEWAY.md) — YouTube Hybrid Model, Docker Quickstart, Entitlement Engine
 - [SDK / Developer Quickstart](docs/SDK_QUICKSTART.md) — ethers.js, wagmi, Python, Tier System, Wallet Verification
 - [Testnet E2E Guide](docs/TESTNET_GUIDE.md) — Full Lock/Benefit/Governance/FeeRouter flow on Sepolia
 - [Changelog](docs/CHANGELOG.md) — All changes chronologically
-- [ChatGPT Audit Prompt V3](docs/CHATGPT_AUDIT_PROMPT_V3.md) — Independent audit checklist (12 audit areas)
-- [ChatGPT Audit Prompt V4](docs/CHATGPT_AUDIT_PROMPT_V4.md) — Anti-Sybil, SIWE, Integration, number consistency (8 self-checks)
+- [Internal Audit Checklist V3](docs/CHATGPT_AUDIT_PROMPT_V3.md) — Internal checklist (12 audit areas)
+- [Internal Audit Checklist V4](docs/CHATGPT_AUDIT_PROMPT_V4.md) — Anti-Sybil, SIWE, integration and number-consistency checks
 - [Investor One-Pager](docs/ONE-PAGER.md) — Key numbers, products, technology, pre-mainnet checklist
 - [E2E Flow: Points → Voucher → FeeRouter](docs/E2E_FLOW.md) — Complete end-to-end flow
 - [YouTube Integration Guide](docs/YOUTUBE_INTEGRATION.md) — Hybrid Model B, Creator Gateway, Entitlement Config
@@ -255,19 +256,19 @@ SIWE authentication, points tracking, and EIP-712 signed voucher issuance for pr
 - [Audit Submission](docs/AUDIT_SUBMISSION.md) — Code4rena/Sherlock prep (9 contracts, 1697 SLOC, scope, known issues)
 - [Press Kit](docs/PRESS_KIT.md) — Key facts, token allocation, roadmap, links
 - [GitHub Secrets Guide](docs/GITHUB_SECRETS.md) — Required secrets for GitHub Actions CI/CD
-- [ChatGPT Audit V3 Results](docs/CHATGPT_AUDIT_V3_RESULTS.md) — Audit V3 results (12/12 self-check PASS)
+- [Internal Audit V3 Results](docs/CHATGPT_AUDIT_V3_RESULTS.md) — Internal V3 self-check record
 - [Railway Env Guide](docs/RAILWAY_ENV.md) — Points Backend Railway deploy (env vars, CLI setup)
 - [Vercel Env Guide](docs/VERCEL_ENV.md) — AI Copilot Vercel + Railway deploy (two-app, proxy config)
 - [Roadmap](docs/ROADMAP.md) — 6-phase roadmap (Foundation → Governance → Ecosystem → Mainnet → Growth → DAO)
 - [Page Update Checklist](docs/PAGE_UPDATE_CHECKLIST.md) — Which files to update for each event
 - [Deployment Stats](docs/stats.json) — Auto-generated on-chain stats (via update-stats.js)
-- [Project Summary](docs/PROJECT-SUMMARY.md) — Complete overview (9 mainnet contracts, 544 tests, 7 apps)
+- [Project Summary](docs/PROJECT-SUMMARY.md) — Historical project snapshot; use current Wiki, CI and release records for live counts
 - [Release Notes v0.1.0](docs/RELEASE_NOTES_v0.1.0.md) — First tagged release (Sepolia testnet)
 - [Lighthouse Report](docs/LIGHTHOUSE_REPORT.md) — SEO optimizations (OG, Twitter Card, meta tags, sitemap, robots.txt)
 - [AI Copilot Test Results](docs/COPILOT_TEST_RESULTS.md) — RAG system test (6 questions, 3 modes, safety guards)
 - [Roadmap v0.2.0](docs/ROADMAP_v0.2.0.md) — Mainnet-ready milestones (audit, multisig, deploy, post-launch)
-- [ChatGPT Audit V4 Results](docs/CHATGPT_AUDIT_V4_RESULTS.md) — Audit V4 self-check (8/8 PASS)
-- [ChatGPT Audit V5 Results](docs/CHATGPT_AUDIT_V5_RESULTS.md) — Cross-audit: W15-W21 (7 new findings, W16 fixed)
+- [Internal Audit V4 Results](docs/CHATGPT_AUDIT_V4_RESULTS.md) — Internal V4 self-check record
+- [Internal Audit V5 Results](docs/CHATGPT_AUDIT_V5_RESULTS.md) — Internal cross-audit record for W15-W21
 - [GitHub Setup](docs/GITHUB_SETUP.md) — Repository settings (Discussions, Topics, Pages)
 - [App Security Review](docs/APP_SECURITY_REVIEW.md) — Full app review (12 findings, 7 fixed: CORS, JWT, ABI, wallet validation)
 

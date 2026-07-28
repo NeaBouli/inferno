@@ -22,7 +22,7 @@ As of: February 26, 2026
 - Status: Manual verification required
 
 **Q2:** "How do I lock IFR for premium access?"
-- Expected: IFRLock.lock() explanation, tier system, "Lock once, access forever"
+- Expected: IFRLock.lock() explanation, tier system, and the condition that access remains active only while the required IFR stays locked and the integration remains available
 - RAG source: lock-mechanism.html
 - Status: Manual verification required
 

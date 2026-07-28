@@ -744,7 +744,8 @@
       <h3>The Lock Mechanism</h3>
       <p>
         IFR serves as a universal access token. Users lock IFR in the IFRLock contract to gain
-        lifetime premium access to any product that integrates the lock check. No subscription.
+        premium access to any product that integrates the lock check, without a recurring subscription.
+        Access remains active while the product-required IFR stays locked and that integration remains available.
         No renewal. While tokens are locked, the holder gets access. Unlocking is always possible
         &mdash; no penalty, no forced lock period.
       </p>
@@ -993,7 +994,7 @@
         <li>Bootstrap ENDED 05.06.2026 23:51 UTC &#x2705; &mdash; Contributors contributed 0.01&ndash;2 ETH during the 90-day window. Claims open via <code>claim()</code>.</li>
         <li><code>finalise()</code> executed 05.06.2026 23:51 UTC &mdash; Block 25254575 &mdash; LP Token: 0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0</li>
         <li><code>finalise()</code> created the Uniswap V2 IFR/ETH pool with all raised ETH + 100M IFR and reserved 100M IFR for contributor claims</li>
-        <li>LP tokens are locked via Team.Finance for 12 months</li>
+        <li>Mainnet Team.Finance locker was disabled; LP tokens remain in BootstrapVaultV3, which exposes no LP withdrawal function</li>
         <li>Contributors claim their IFR proportional to their ETH contribution</li>
       </ol>
 
@@ -1011,7 +1012,7 @@
           <ul style="font-size:13px;color:var(--muted);padding-left:16px;margin:0;">
             <li>ETH contributed by community</li>
             <li>finalise() creates LP automatically</li>
-            <li>LP tokens locked 12 months</li>
+            <li>LP retained in BootstrapVaultV3 with no LP withdrawal function</li>
             <li>Contributors claim IFR pro-rata</li>
             <li>IFR tradeable on Uniswap</li>
           </ul>
@@ -1048,7 +1049,7 @@
         <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">
           <div>
             <div style="font-size:11px;color:#22c55e;font-weight:600;">Phase 1 &mdash; Automatic</div>
-            <div style="font-size:12px;color:var(--muted);">Executed 05.06.2026. 100M IFR + 0.030 ETH &rarr; Uniswap V2 LP. LP locked 12 months via Team.Finance.</div>
+            <div style="font-size:12px;color:var(--muted);">Executed 05.06.2026. 100M IFR + 0.030 ETH &rarr; Uniswap V2 LP. Team.Finance disabled; LP retained in withdrawal-less BootstrapVaultV3.</div>
           </div>
           <div>
             <div style="font-size:11px;color:#3b82f6;font-weight:600;">Phase 2 &mdash; Governance</div>

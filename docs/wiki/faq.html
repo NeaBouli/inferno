@@ -494,7 +494,7 @@
     {
       "@type": "Question",
       "name": "Has the protocol been audited?",
-      "acceptedAnswer": {"@type":"Answer","text":"Yes — Slither static analysis (0 high/critical), Claude security audit (0 FAIL), ChatGPT audit V4 (7/7 PASS), 544 automated tests (367 contract + 77 app + 100 vault) with 99% statement and 91% branch coverage. Internal security review March 2026: Bootstrap flow 11/14 secure, 3/14 low risk, 0 critical. Professional third-party audit planned."}
+      "acceptedAnswer": {"@type":"Answer","text":"Full internal contract audits, static analysis, remediation records and automated test evidence are public. These internal reviews are not an independent professional certification. A professional third-party audit remains pending."}
     },
     {
       "@type": "Question",
@@ -509,7 +509,7 @@
     {
       "@type": "Question",
       "name": "Can the team rug the liquidity?",
-      "acceptedAnswer": {"@type":"Answer","text":"No. LP tokens are locked for 12+ months via Team.Finance. All contracts are immutable (no proxy). Ownership transferred to Governance with 48h timelock. Guardian can only cancel, not execute."}
+      "acceptedAnswer": {"@type":"Answer","text":"BootstrapVaultV3 was deployed with Team.Finance disabled. The LP tokens created by finalise() remain in BootstrapVaultV3, which exposes no LP withdrawal function. The team therefore has no LP withdrawal path from that vault."}
     },
     {
       "@type": "Question",
@@ -805,7 +805,7 @@
       <div class="faq-section">
         <div class="faq-item">
           <button class="faq-q"><span>Has the protocol been audited?</span><span class="icon">+</span></button>
-          <div class="faq-a">Yes. The protocol has undergone multiple layers of security analysis:<br><br>&bull; <strong>External AI Security Audit (March 19, 2026)</strong>: Independent analysis of InfernoToken.sol &mdash; 2 critical/high findings identified and mitigated by Governance architecture (48h Timelock + TreasurySafe 3-of-5). No exploitable bugs found. <a href="security.html#external-audit">Full report</a><br>&bull; <strong>Slither static analysis</strong>: 0 high/critical findings across all contracts<br>&bull; <strong>Claude security audit</strong>: 0 FAIL, 12 WARN, 78 PASS<br>&bull; <strong>ChatGPT audit V4</strong>: 7/7 areas PASS<br>&bull; <strong>544 automated tests</strong> (367 contract + 77 app + 100 vault) with 99% statement coverage and 91% branch coverage<br>&bull; <strong>App security review</strong>: 20/25 findings fixed, 5 documented<br>&bull; <strong>Internal Security Review (March 2026)</strong>: Bootstrap flow &mdash; 11/14 secure, 3/14 low risk, 0 critical<br><br>All 17 on-chain components are deployed and verified on Ethereum Mainnet. A professional third-party audit (Code4rena, Sherlock, or Cyfrin) is planned for Phase 2.</div>
+          <div class="faq-a">The protocol has completed full internal contract audits, static-analysis rounds, remediation reviews and automated test suites. The source records and findings are public on the <a href="security.html">Security page</a> and in the repository. These are internal audits, not an independent professional certification. A professional third-party audit remains pending, and current release claims must be supported by current CI and analysis evidence.</div>
         </div>
 
         <div class="faq-item">
@@ -925,7 +925,7 @@
 
         <div class="faq-item">
           <button class="faq-q"><span>How are LP tokens locked?</span><span class="icon">+</span></button>
-          <div class="faq-a">After finalisation, LP tokens will be locked for a minimum of 12 months via Team.Finance or a similar LP lock provider. This prevents the team from pulling liquidity (rug-pull protection). The lock transaction is publicly verifiable on Etherscan.</div>
+          <div class="faq-a">On Mainnet, Team.Finance was not configured: <code>teamFinanceLocker</code> is the zero address and <code>lpLockId</code> is zero. The LP tokens created by <code>finalise()</code> remain in BootstrapVaultV3. That contract exposes no LP withdrawal or recovery function, so the team has no path to remove the retained LP. The vault and LP balances are publicly verifiable on Etherscan.</div>
         </div>
 
         <div class="faq-item">
@@ -945,12 +945,12 @@
       <div class="faq-section">
         <div class="faq-item">
           <button class="faq-q"><span>Can the team rug the liquidity?</span><span class="icon">+</span></button>
-          <div class="faq-a">No. The BootstrapVaultV3 contract has no admin withdraw function for contributed ETH. LP tokens are locked after finalisation. The team cannot pull liquidity at any point. The finalise() function is permissionless &mdash; anyone can trigger it. The contract code is verified and open-source on Etherscan.</div>
+          <div class="faq-a">BootstrapVaultV3 has no admin withdrawal function for contributed ETH and no LP withdrawal or recovery function. Team.Finance was not configured on Mainnet; the LP created by <code>finalise()</code> remains in the vault. The finalise() function was permissionless, and the contract code and current LP custody are publicly verifiable on Etherscan.</div>
         </div>
 
         <div class="faq-item">
           <button class="faq-q"><span>Can the team dump their tokens?</span><span class="icon">+</span></button>
-          <div class="faq-a">No. The team allocation (15%, 150M IFR) is locked in the Vesting contract with a 12-month cliff and 36-month linear vesting. Zero tokens are available to the team for the first 12 months. After the cliff, tokens release gradually over the remaining 24 months. The Vesting contract is on-chain and verified &mdash; the schedule cannot be accelerated.</div>
+          <div class="faq-a">No. The team allocation (15%, 150M IFR) is locked in the Vesting contract with a 12-month cliff followed by 36 months of linear release, 48 months total. Zero tokens are available to the team during the cliff. The Vesting contract is on-chain and verified &mdash; the schedule cannot be accelerated.</div>
         </div>
 
         <div class="faq-item">
@@ -970,7 +970,7 @@
 
         <div class="faq-item">
           <button class="faq-q"><span>What are common scam indicators and does IFR pass?</span><span class="icon">+</span></button>
-          <div class="faq-a"><strong>Anonymous team?</strong> &mdash; Pseudonymous but consistent identity across platforms.<br><strong>Closed source?</strong> &mdash; No, 100% open-source, all contracts verified.<br><strong>Mint function?</strong> &mdash; No, structurally impossible.<br><strong>Admin withdraw?</strong> &mdash; No admin can access user funds or Bootstrap ETH.<br><strong>Upgradeable proxy?</strong> &mdash; No, all contracts immutable.<br><strong>Unlocked liquidity?</strong> &mdash; LP will be locked 12+ months.<br><strong>Unrealistic promises?</strong> &mdash; No price predictions, no &ldquo;moon&rdquo; language, utility-only narrative.</div>
+          <div class="faq-a"><strong>Anonymous team?</strong> &mdash; Pseudonymous but consistent identity across platforms.<br><strong>Closed source?</strong> &mdash; No, 100% open-source, all contracts verified.<br><strong>Mint function?</strong> &mdash; No, structurally impossible.<br><strong>Admin withdraw?</strong> &mdash; No admin can access contributed Bootstrap ETH or the LP retained by BootstrapVaultV3.<br><strong>Upgradeable proxy?</strong> &mdash; No, all contracts immutable.<br><strong>LP custody?</strong> &mdash; Mainnet Team.Finance was disabled; LP remains in the withdrawal-less BootstrapVaultV3.<br><strong>Unrealistic promises?</strong> &mdash; No price predictions, no &ldquo;moon&rdquo; language, utility-only narrative.</div>
         </div>
       </div>
 
@@ -985,7 +985,7 @@
 
         <div class="faq-item">
           <button class="faq-q"><span>Can the team sell immediately?</span><span class="icon">+</span></button>
-          <div class="faq-a">No. The Vesting contract enforces a <strong>12-month cliff</strong>: zero tokens are available for the first 12 months after deployment (March 2026 &rarr; March 2027). After the cliff, tokens vest linearly over 24 additional months. The team can only claim what has vested. The schedule is enforced by immutable smart contract code.</div>
+          <div class="faq-a">No. The Vesting contract enforces a <strong>12-month cliff</strong>: zero tokens are available for the first 12 months after deployment (March 2026 &rarr; March 2027). After the cliff, tokens vest linearly over 36 additional months, for 48 months total. The team can only claim what has vested. The schedule is enforced by immutable smart contract code.</div>
         </div>
 
         <div class="faq-item">
@@ -999,8 +999,8 @@
         </div>
 
         <div class="faq-item">
-          <button class="faq-q"><span>Why only 10M IFR for the team for 9 months?</span><span class="icon">+</span></button>
-          <div class="faq-a">This is an intentional self-restriction as a trust signal. The team vesting schedule means roughly 10M IFR becomes available in the first 9 months after the cliff ends. This demonstrates long-term commitment: the team earns alongside the community over 36 months, not upfront. If the project fails, the team loses too.</div>
+          <button class="faq-q"><span>How much team IFR vests after the cliff?</span><span class="icon">+</span></button>
+          <div class="faq-a">After the 12-month cliff, the 150M IFR team allocation vests linearly over 36 months. That is approximately 4.17M IFR per month, or 37.5M IFR during the first 9 months after the cliff. Nothing is released before the cliff, and only the amount vested at the time of a release can be claimed.</div>
         </div>
       </div>
 

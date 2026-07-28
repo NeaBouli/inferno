@@ -3,7 +3,7 @@
 ## Project Overview
 Inferno ($IFR) is a deflationary ERC-20 utility token on Ethereum.
 Core mechanisms: Fee-on-Transfer (2.5% Burn + 1% Pool), On-chain Lock for
-Lifetime Access, Milestone-based PartnerVault, 48h Timelock Governance.
+Lock-based access while required IFR remains locked and the integration remains available, milestone-based PartnerVault, 48h Timelock Governance.
 
 **Status:** Mainnet deployed and verified (2026-03-05).
 
@@ -28,7 +28,7 @@ Lifetime Access, Milestone-based PartnerVault, 48h Timelock Governance.
 - OpenZeppelin v5 (ERC20, Ownable, ReentrancyGuard, Pausable, SafeERC20)
 - Hardhat v2
 - ethers v5
-- 544 tests (367 contract + 77 app + 100 vault)
+- Full internal audits and public automated test evidence; exact current results are taken from CI and release records
 
 ## Known Design Decisions (no finding expected)
 - 9 Decimals (not 18) — intentional decision
@@ -52,7 +52,7 @@ Lifetime Access, Milestone-based PartnerVault, 48h Timelock Governance.
 ## Previous Analysis
 - Slither v0.11.5: 0 high/critical findings
 - 15 fixes applied, 36 accepted informational
-- ChatGPT independent audit: 15/15 PASS
+- Full internal verification round: recorded 15/15 PASS at that snapshot; not an independent professional certification
 
 ## Recommended Auditors
 - **Code4rena** (contest format, broad, cost-effective)

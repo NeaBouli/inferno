@@ -1059,10 +1059,10 @@
             <tr>
               <td>05.06.2026</td>
               <td>Uniswap V2 LP</td>
-              <td>Team.Finance</td>
+              <td>BootstrapVaultV3</td>
               <td>LP tokens</td>
               <td>&mdash;</td>
-              <td>12-month LP lock &mdash; locked via finalise()</td>
+              <td>LP retained by finalise(); Team.Finance disabled and no LP withdrawal function</td>
               <td class="status-ok">&#x2705; Done</td>
             </tr>
             <tr>
@@ -1344,7 +1344,7 @@
           Between contract deployment and Proposal #6 execution (13.03.2026), the Pool Fee Receiver was set to the Deployer EOA. Approximately ~21,000 IFR in pool fees accumulated there during this period (1% of ~2.1M total fees from genesis transfers). <strong style="color:#22c55e;">Proposal #6 executed 13.03.2026 &mdash; setPoolFeeReceiver(FeeRouterV1) &#x2705;</strong>
         </p>
         <p style="margin:8px 0 0 0; font-size:13px; color:#94a3b8;">
-          <strong style="color:#e2e8f0;">Decision:</strong> These fees will not be manually re-routed to FeeRouterV1. A manual transfer would incur an additional 3.5% fee-on-transfer burn (~735 IFR), creating more harm than benefit for a negligible amount (0.002% of total supply). This is documented here for full transparency.
+          <strong style="color:#e2e8f0;">Decision:</strong> These fees will not be manually re-routed to FeeRouterV1. A manual transfer would incur an additional 3.5% fee impact (~735 IFR total: 2.5% burned and 1% routed to the pool-fee receiver), creating more harm than benefit for a negligible amount (0.002% of total supply). This is documented here for full transparency.
         </p>
         <p style="margin:8px 0 0 0; font-size:12px; color:#64748b;">
           From Proposal #6 onwards, all pool fees route correctly to FeeRouterV1 &rarr; BuybackVault + BurnReserve.
@@ -1382,7 +1382,7 @@
           <tbody>
             <tr><td>LP Reserve Safe (ex-Deployer)</td><td>400,600,000</td><td>40.06%</td><td>Transferred to LP Reserve Safe 0x5D93... on 18.03.2026</td></tr>
             <tr><td>LiquidityReserve</td><td>200,000,000</td><td>20.00%</td><td>6-month lock, staged release</td></tr>
-            <tr><td>Vesting (Team)</td><td>150,000,000</td><td>15.00%</td><td>12-month cliff, 4-year linear</td></tr>
+            <tr><td>Vesting (Team)</td><td>150,000,000</td><td>15.00%</td><td>12-month cliff, then 36-month linear release (48 months total)</td></tr>
             <tr><td>Treasury Safe</td><td>0</td><td>0.00%</td><td>144.75M transferred to Bootstrap (Plan B). Balance: 0 IFR.</td></tr>
             <tr><td>Community Safe</td><td>7,900,000</td><td>0.79%</td><td>50M sent to Bootstrap. 7.9M operations reserve remaining.</td></tr>
             <tr><td>PartnerVault</td><td>40,000,000</td><td>4.00%</td><td>Builder ecosystem rewards</td></tr>

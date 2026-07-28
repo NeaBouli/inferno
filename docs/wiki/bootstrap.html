@@ -679,7 +679,7 @@
     "additionalType": "https://schema.org/InvestmentOrDeposit"
   }
   </script>
-  <meta name="ai-summary" content="IFR Bootstrap ENDED 05.06.2026 23:51 UTC. finalise() executed (TX 0x949848bdd09f4c867a2593afffb0137c7db2c1457d8a8f5ff4428f8ecce69c5f, Block 25254575). 0.030 ETH raised. LP Token 0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0 live on Uniswap V2. LP locked 12 months via Team.Finance. Contributors claim pro-rata IFR via claim(). No admin keys, fully permissionless.">
+  <meta name="ai-summary" content="IFR Bootstrap ENDED 05.06.2026 23:51 UTC. finalise() executed (TX 0x949848bdd09f4c867a2593afffb0137c7db2c1457d8a8f5ff4428f8ecce69c5f, Block 25254575). 0.030 ETH raised. LP Token 0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0 live on Uniswap V2. Mainnet Team.Finance locker was disabled; LP remains in BootstrapVaultV3, which exposes no LP withdrawal function. Contributors claimed pro-rata IFR via claim().">
 <script type="application/ld+json">
   {
   "@context": "https://schema.org",
@@ -946,7 +946,7 @@
       <ul>
         <li>Uses IFR from its balance for LP pairing (pre-funded by Treasury &amp; Community Safe)</li>
         <li>Pairs all contributed ETH with the IFR to create the Uniswap V2 LP</li>
-        <li>Locks the LP tokens via Team.Finance for 12 months</li>
+        <li>Retains the LP tokens in BootstrapVaultV3 because the Mainnet Team.Finance locker was disabled; the vault exposes no LP withdrawal function</li>
       </ul>
 
       <div class="callout" style="margin:20px 0;padding:16px;background:rgba(249,115,22,0.08);border:1px solid rgba(249,115,22,0.3);border-radius:10px;">
@@ -1135,22 +1135,22 @@
       </div>
 
       <!-- ============================================================
-           LP Lock
+           LP Custody
            ============================================================ -->
-      <h2>LP Lock</h2>
+      <h2>LP Custody</h2>
 
       <p>
-        After finalisation, 100% of the LP tokens are locked via Team.Finance for 12 months. This means:
+        On Mainnet, Team.Finance was not configured: <code>teamFinanceLocker</code> is the zero address and <code>lpLockId</code> is zero. The LP tokens created by <code>finalise()</code> therefore remained in BootstrapVaultV3. This means:
       </p>
 
       <ul>
-        <li>No one can pull the liquidity (rug pull protection)</li>
-        <li>The lock is verifiable on-chain via Team.Finance</li>
-        <li>After 12 months, LP tokens are returned to the BootstrapVault contract</li>
+        <li>BootstrapVaultV3 exposes no LP withdrawal or recovery function</li>
+        <li>The team has no contract path to remove the retained LP</li>
+        <li>Custody is verifiable directly from the LP-token balance of BootstrapVaultV3</li>
       </ul>
 
       <div class="callout-green callout">
-        <p><strong>Testnet note:</strong> On Sepolia, Team.Finance locker is disabled (no locker contract on testnet). LP tokens remain in the vault contract, which has no withdrawal function &mdash; effectively permanently locked.</p>
+        <p><strong>Mainnet and testnet distinction:</strong> Mainnet and Sepolia were both deployed without a Team.Finance locker. In each deployment, LP remains in the vault when no locker is configured. The current Mainnet contract has no function that can transfer that retained LP out.</p>
       </div>
 
       <!-- ============================================================
@@ -1173,7 +1173,7 @@
           <tr><td>IFR allocation</td><td>~200M IFR</td><td>Funded by Treasury Safe (150M) + Community Safe (50M)</td></tr>
           <tr><td>Soft cap</td><td>None</td><td>LP always created regardless of ETH amount</td></tr>
           <tr><td>Hard cap</td><td>None</td><td>More ETH = deeper liquidity</td></tr>
-          <tr><td>LP lock</td><td>12 months</td><td>Via Team.Finance after finalisation</td></tr>
+          <tr><td>LP custody</td><td>BootstrapVaultV3</td><td>Team.Finance disabled on Mainnet; no LP withdrawal function</td></tr>
           <tr><td>Fee exempt</td><td>Yes &#x2705;</td><td>BootstrapVaultV3 feeExempt since Proposal #4 execution (11.03.2026 08:45 CET)</td></tr>
         </tbody>
       </table>

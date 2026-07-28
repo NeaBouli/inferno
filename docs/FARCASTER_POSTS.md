@@ -11,7 +11,7 @@
 Inferno ($IFR) — a deflationary utility token on Ethereum.
 
 Every transfer burns 2.5% permanently.
-Lock IFR once -> lifetime access to any integrated product.
+Lock IFR once -> access to an integrated product while its required IFR remains locked and the integration remains available.
 No subscriptions. No renewals.
 
 Community Bootstrap live -> ends June 5, 2026.
@@ -27,7 +27,7 @@ $IFR #DeFi #Ethereum #FairLaunch
 ## Post 2 — Technical
 
 ```
-544 tests. 0 critical audit findings.
+Full internal audits and public automated test evidence. Independent professional third-party audit pending.
 48h governance timelock. No mint function.
 
 That's the security foundation of $IFR.
@@ -49,7 +49,7 @@ $IFR Bootstrap Event is live.
 200M IFR vault funded by community treasury.
 Contribute 0.01-2 ETH -> receive IFR pro-rata.
 100% of ETH -> Uniswap V2 LP.
-LP locked 12 months.
+Mainnet Team.Finance was disabled. LP remains in BootstrapVaultV3, which exposes no LP withdrawal function.
 
 Price = ETH raised / 200M IFR.
 Community decides. Not the team.
