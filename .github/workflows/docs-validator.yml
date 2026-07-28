@@ -7,8 +7,14 @@ on:
       - 'docs/**'
       - '*.md'
       - 'apps/ai-copilot/src/context/ifr-knowledge.ts'
+      - 'apps/ai-copilot/src/context/wiki-content.json'
+      - 'scripts/build-wiki-rag.js'
       - 'scripts/test-benefits-doc-consistency.cjs'
+      - 'scripts/test-content-trust.cjs'
+      - 'scripts/test-docs-workflow.cjs'
       - 'scripts/test-wiki-head-integrity.cjs'
+      - 'scripts/test-surface-routing.cjs'
+      - 'package.json'
       - '.github/workflows/docs-validator.yml'
   pull_request:
     branches: [main, master]
@@ -16,8 +22,14 @@ on:
       - 'docs/**'
       - '*.md'
       - 'apps/ai-copilot/src/context/ifr-knowledge.ts'
+      - 'apps/ai-copilot/src/context/wiki-content.json'
+      - 'scripts/build-wiki-rag.js'
       - 'scripts/test-benefits-doc-consistency.cjs'
+      - 'scripts/test-content-trust.cjs'
+      - 'scripts/test-docs-workflow.cjs'
       - 'scripts/test-wiki-head-integrity.cjs'
+      - 'scripts/test-surface-routing.cjs'
+      - 'package.json'
       - '.github/workflows/docs-validator.yml'
   schedule:
     - cron: '0 6 * * 1'
@@ -117,10 +129,22 @@ jobs:
           echo "Found $EMPTY empty doc files"
 
       - name: Check Benefits documentation consistency
-        run: node scripts/test-benefits-doc-consistency.cjs
+        run: npm run test:benefits-docs
+
+      - name: Check Docs workflow contract
+        run: npm run test:docs-ci
+
+      - name: Check public content trust
+        run: npm run test:content-trust
+
+      - name: Check Wiki RAG freshness
+        run: npm run test:wiki-rag
 
       - name: Check Wiki head integrity
-        run: node scripts/test-wiki-head-integrity.cjs
+        run: npm run test:wiki-heads
+
+      - name: Check public surface routing
+        run: npm run test:surface-routing
 
   docs-summary:
     name: Docs Summary

@@ -11,6 +11,7 @@
  *
  * Usage:
  *   node scripts/build-wiki-rag.js
+ *   node scripts/build-wiki-rag.js --check
  *
  * Output:
  *   apps/ai-copilot/src/context/wiki-content.json
@@ -66,6 +67,8 @@ function stripHtml(html) {
 }
 
 function main() {
+  const checkOnly = process.argv.includes("--check");
+
   if (!fs.existsSync(WIKI_DIR)) {
     console.error(`ERROR: Wiki directory not found: ${WIKI_DIR}`);
     process.exit(1);
@@ -108,13 +111,32 @@ function main() {
     docs.push({ slug, title, content: truncated });
   }
 
+  const generated = JSON.stringify(docs, null, 2);
+
+  if (checkOnly) {
+    if (!fs.existsSync(OUTPUT_FILE)) {
+      console.error(`ERROR: Generated Wiki RAG file is missing: ${OUTPUT_FILE}`);
+      process.exit(1);
+    }
+
+    const committed = fs.readFileSync(OUTPUT_FILE, "utf-8");
+    if (committed !== generated) {
+      console.error("ERROR: Wiki RAG content is stale.");
+      console.error("Run: node scripts/build-wiki-rag.js");
+      process.exit(1);
+    }
+
+    console.log(`[wiki-rag-freshness] PASS (${docs.length} pages)`);
+    return;
+  }
+
   // Ensure output directory exists
   const outputDir = path.dirname(OUTPUT_FILE);
   if (!fs.existsSync(outputDir)) {
     fs.mkdirSync(outputDir, { recursive: true });
   }
 
-  fs.writeFileSync(OUTPUT_FILE, JSON.stringify(docs, null, 2), "utf-8");
+  fs.writeFileSync(OUTPUT_FILE, generated, "utf-8");
 
   console.log("=".repeat(50));
   console.log("  INFERNO — Wiki RAG Build");
