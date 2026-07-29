@@ -230,7 +230,8 @@ docs/wiki/
 #### Root Ethers Runtime
 - Root-Tests, Tasks und Hardhat-Skripte verwenden Ethers 6.17 mit nativen `bigint`-Werten.
 - Die frueheren Ethers-v5-Formatter-Patches fuer Alchemy wurden entfernt.
-- Hardhat bleibt bis zur separaten Migration auf 2.28.6.
+- Die Root-Toolchain verwendet Hardhat 3.11.1, Chai 6 und Node.js >=22.13.0.
+- Legacy-CommonJS-Tools bleiben durch explizite lokale Paketgrenzen ausfuehrbar.
 
 #### Legacy-Ordner im Repository
 `backend/`, `indexer/`, `infra/`, `patches/`, `testing/`, `logs/`, `reports/` — Legacy-Artefakte, kein aktiver Code.

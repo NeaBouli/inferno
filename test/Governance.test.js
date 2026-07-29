@@ -1,5 +1,5 @@
-const { expect } = require("chai");
-const { ethers } = require("hardhat");
+import { expect } from "chai";
+import { ethers } from "./helpers/hardhat.js";
 
 describe("Governance", function () {
   let owner, guardian, user;
@@ -336,7 +336,7 @@ describe("Governance", function () {
     it("direct calls to token revert (Governance is owner, not deployer)", async () => {
       await expect(
         token.setFeeRates(100, 50, 50)
-      ).to.be.reverted;
+      ).to.be.revert(ethers);
     });
   });
 });

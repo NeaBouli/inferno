@@ -21,7 +21,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
 
       - name: Install locked dependencies
@@ -38,6 +38,9 @@ jobs:
 
       - name: Compile contracts
         run: npx hardhat compile
+
+      - name: Verify Hardhat 3 script runtime
+        run: npm run test:hardhat-runtime
 
       - name: Run contract and tooling tests
         run: npm run test:contracts:all

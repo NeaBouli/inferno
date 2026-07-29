@@ -1,5 +1,5 @@
-const { expect } = require("chai");
-const { ethers } = require("hardhat");
+import { expect } from "chai";
+import { ethers } from "./helpers/hardhat.js";
 
 describe("BuybackController", function () {
   let owner, guardian, burnReserve, lpReceiver, user, user2;

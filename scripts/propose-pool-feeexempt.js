@@ -1,4 +1,7 @@
-const { ethers } = require("hardhat");
+const { connectHardhat } = require("./lib/hardhat-runtime");
+
+(async () => {
+const { ethers } = await connectHardhat();
 
 /**
  * INFERNO — Propose setFeeExempt for Uniswap LP Token (Proposal #11)
@@ -113,3 +116,8 @@ main()
     console.error("\n❌ Error:", e.message);
     process.exit(1);
   });
+
+})().catch((error) => {
+  console.error(error);
+  process.exitCode = 1;
+});

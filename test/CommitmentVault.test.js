@@ -1,5 +1,5 @@
-const { expect } = require("chai");
-const { ethers } = require("hardhat");
+import { expect } from "chai";
+import { ethers } from "./helpers/hardhat.js";
 
 describe("CommitmentVault", function () {
   let owner, governance, userA, userB, userC;
@@ -102,7 +102,7 @@ describe("CommitmentVault", function () {
     it("T09: non-governance cannot set P0", async () => {
       await expect(
         vault.connect(userA).setP0(1000)
-      ).to.be.reverted;
+      ).to.be.revert(ethers);
     });
 
     it("T10: P0 value persists correctly", async () => {
@@ -430,7 +430,7 @@ describe("CommitmentVault", function () {
     it("T37: setPriceOracle only by governance", async () => {
       await expect(
         vault.connect(userA).setPriceOracle(userB.address)
-      ).to.be.reverted;
+      ).to.be.revert(ethers);
 
       await vault.connect(governance).setPriceOracle(userB.address);
       expect(await vault.priceOracle()).to.equal(userB.address);
@@ -487,7 +487,7 @@ describe("CommitmentVault", function () {
       const now = await getTimestamp();
       await expect(
         vault.connect(userA).lock(parse("10000"), 0, now + ONE_DAY, 0)
-      ).to.be.reverted;
+      ).to.be.revert(ethers);
     });
 
     it("T43: isConditionMet reverts on invalid trancheId", async () => {

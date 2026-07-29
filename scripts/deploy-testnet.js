@@ -1,4 +1,7 @@
-const { ethers } = require("hardhat");
+const { connectHardhat } = require("./lib/hardhat-runtime");
+
+(async () => {
+const { ethers } = await connectHardhat();
 
 async function main() {
   const [deployer] = await ethers.getSigners();
@@ -229,3 +232,8 @@ main()
     console.error(err);
     process.exit(1);
   });
+
+})().catch((error) => {
+  console.error(error);
+  process.exitCode = 1;
+});

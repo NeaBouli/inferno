@@ -7,7 +7,10 @@
  *   Sepolia:  npx hardhat run scripts/deploy-lending-vault.js --network sepolia
  *   Mainnet:  npx hardhat run scripts/deploy-lending-vault.js --network mainnet
  */
-const hre = require("hardhat");
+const { connectHardhat } = require("./lib/hardhat-runtime");
+
+(async () => {
+const hre = await connectHardhat();
 
 async function main() {
   const [deployer] = await hre.ethers.getSigners();
@@ -38,7 +41,11 @@ async function main() {
   console.log("");
 
   // Etherscan verification
-  if (network !== "hardhat" && network !== "localhost") {
+  if (
+    network !== "default" &&
+    network !== "hardhat" &&
+    network !== "localhost"
+  ) {
     console.log("Waiting 30s for Etherscan indexing...");
     await new Promise(r => setTimeout(r, 30000));
     try {
@@ -56,3 +63,8 @@ async function main() {
 }
 
 main().catch(err => { console.error(err); process.exit(1); });
+
+})().catch((error) => {
+  console.error(error);
+  process.exitCode = 1;
+});

@@ -1,4 +1,7 @@
-const { ethers, run } = require("hardhat");
+const { connectHardhat } = require("./lib/hardhat-runtime");
+
+(async () => {
+const { ethers, run } = await connectHardhat();
 const fs = require("fs");
 const path = require("path");
 
@@ -162,11 +165,16 @@ async function main() {
   console.log("     → Leitet Protocol-Fees an BuybackController");
   console.log("     → 48h Timelock, dann Execute via TreasurySafe 3-of-5");
   console.log("");
-  console.log("  Script: node scripts/propose-buyback-wiring.js");
+  console.log("  Script: npx hardhat run scripts/propose-buyback-wiring.js --network mainnet");
   console.log("═══════════════════════════════════════════════");
 }
 
 main().catch((err) => {
   console.error(err);
   process.exit(1);
+});
+
+})().catch((error) => {
+  console.error(error);
+  process.exitCode = 1;
 });

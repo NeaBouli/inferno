@@ -1,4 +1,7 @@
-const { ethers } = require("hardhat");
+const { connectHardhat } = require("./lib/hardhat-runtime");
+
+(async () => {
+const { ethers } = await connectHardhat();
 
 const ADDRESSES = {
   token:    "0x3Bd71947F288d1dd8B21129B1bE4FF16EDd5d1F4",
@@ -62,3 +65,8 @@ async function main() {
 }
 
 main().catch(console.error);
+
+})().catch((error) => {
+  console.error(error);
+  process.exitCode = 1;
+});

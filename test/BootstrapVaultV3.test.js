@@ -1,5 +1,5 @@
-const { expect } = require("chai");
-const { ethers } = require("hardhat");
+import { expect } from "chai";
+import { ethers } from "./helpers/hardhat.js";
 
 describe("BootstrapVaultV3", function () {
   let owner, userA, userB, userC;
@@ -197,7 +197,7 @@ describe("BootstrapVaultV3", function () {
       await ethers.provider.send("evm_mine", []);
 
       // Anyone can call finalise — using userB (not owner)
-      await expect(vault.connect(userB).finalise()).to.not.be.reverted;
+      await expect(vault.connect(userB).finalise()).to.not.revert(ethers);
       expect(await vault.finalised()).to.equal(true);
     });
 

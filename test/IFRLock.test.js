@@ -1,5 +1,5 @@
-const { expect } = require("chai");
-const { ethers } = require("hardhat");
+import { expect } from "chai";
+import { ethers } from "./helpers/hardhat.js";
 
 describe("IFRLock", function () {
   let owner, guardian, userA, userB;
@@ -91,7 +91,7 @@ describe("IFRLock", function () {
     });
 
     it("reverts without approval", async () => {
-      await expect(lock.connect(userA).lock(parse("1000"))).to.be.reverted;
+      await expect(lock.connect(userA).lock(parse("1000"))).to.be.revert(ethers);
     });
   });
 
@@ -383,7 +383,7 @@ describe("IFRLock", function () {
       const balance = await token.balanceOf(userA.address);
       const tooMuch = BigInt(balance)+BigInt(1);
       await token.connect(userA).approve(lock.target, tooMuch);
-      await expect(lock.connect(userA).lock(tooMuch)).to.be.reverted;
+      await expect(lock.connect(userA).lock(tooMuch)).to.be.revert(ethers);
     });
 
     it("unlock returns exact locked amount (fee-exempt round trip)", async () => {

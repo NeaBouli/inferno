@@ -1,4 +1,7 @@
-const { ethers } = require("hardhat");
+const { connectHardhat } = require("./lib/hardhat-runtime");
+
+(async () => {
+const { ethers } = await connectHardhat();
 
 /**
  * INFERNO — Propose BuilderRegistry registration through Governance.
@@ -169,4 +172,9 @@ async function main() {
 main().catch((e) => {
   console.error("\nERROR:", e.message);
   process.exit(1);
+});
+
+})().catch((error) => {
+  console.error(error);
+  process.exitCode = 1;
 });

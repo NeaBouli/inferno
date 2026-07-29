@@ -1,5 +1,5 @@
-const { expect } = require("chai");
-const { ethers } = require("hardhat");
+import { expect } from "chai";
+import { ethers } from "./helpers/hardhat.js";
 
 describe("Vesting", function () {
   let deployer, beneficiary, guardian, other;
@@ -39,7 +39,7 @@ describe("Vesting", function () {
   }
 
   it("verhindert Release vor Cliff", async () => {
-    await expect(vesting.connect(beneficiary).release()).to.be.reverted;
+    await expect(vesting.connect(beneficiary).release()).to.be.revert(ethers);
   });
 
   it("~0% vested at cliff end (post-cliff formula)", async () => {
@@ -101,13 +101,13 @@ describe("Vesting", function () {
 
   it("nur Beneficiary darf release() aufrufen", async () => {
     await increaseTime(DURATION + 1);
-    await expect(vesting.connect(other).release()).to.be.reverted;
+    await expect(vesting.connect(other).release()).to.be.revert(ethers);
   });
 
   it("Guardian kann pausieren und fortsetzen", async () => {
     await increaseTime(DURATION / 2);
     await expect(vesting.connect(guardian).pause()).to.emit(vesting, "Paused");
-    await expect(vesting.connect(beneficiary).release()).to.be.reverted;
+    await expect(vesting.connect(beneficiary).release()).to.be.revert(ethers);
     await expect(vesting.connect(guardian).unpause()).to.emit(vesting, "Unpaused");
     await expect(vesting.connect(beneficiary).release()).to.emit(vesting, "Released");
   });
@@ -155,11 +155,11 @@ describe("Vesting", function () {
 
   describe("Guardian access", () => {
     it("non-guardian cannot pause", async () => {
-      await expect(vesting.connect(other).pause()).to.be.reverted;
+      await expect(vesting.connect(other).pause()).to.be.revert(ethers);
     });
 
     it("non-guardian cannot unpause", async () => {
-      await expect(vesting.connect(other).unpause()).to.be.reverted;
+      await expect(vesting.connect(other).unpause()).to.be.revert(ethers);
     });
 
     it("pause when already paused is no-op (no event)", async () => {
@@ -198,11 +198,11 @@ describe("Vesting", function () {
 
     it("old guardian cannot pause after transfer", async () => {
       await vesting.connect(guardian).transferGuardian(other.address);
-      await expect(vesting.connect(guardian).pause()).to.be.reverted;
+      await expect(vesting.connect(guardian).pause()).to.be.revert(ethers);
     });
 
     it("non-guardian cannot transfer", async () => {
-      await expect(vesting.connect(other).transferGuardian(other.address)).to.be.reverted;
+      await expect(vesting.connect(other).transferGuardian(other.address)).to.be.revert(ethers);
     });
 
     it("reverts with zero address", async () => {
@@ -218,7 +218,7 @@ describe("Vesting", function () {
     it("release when paused reverts with IsPaused", async () => {
       await increaseTime(DURATION / 2);
       await vesting.connect(guardian).pause();
-      await expect(vesting.connect(beneficiary).release()).to.be.reverted;
+      await expect(vesting.connect(beneficiary).release()).to.be.revert(ethers);
     });
 
     it("releasableAmount returns 0 when nothing vested yet", async () => {

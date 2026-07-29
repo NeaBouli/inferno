@@ -1,5 +1,5 @@
-const { expect } = require("chai");
-const { ethers } = require("hardhat");
+import { expect } from "chai";
+import { ethers } from "./helpers/hardhat.js";
 
 describe("LendingVault", function () {
   let owner, governance, lenderA, lenderB, borrowerA, borrowerB, liquidator;
@@ -540,7 +540,7 @@ describe("LendingVault", function () {
     it("T48: setIFRPrice only by governance", async () => {
       await expect(
         vault.connect(borrowerA).setIFRPrice(1000)
-      ).to.be.reverted;
+      ).to.be.revert(ethers);
     });
 
     it("T49: setIFRPrice reverts on 0", async () => {
@@ -552,7 +552,7 @@ describe("LendingVault", function () {
     it("T50: setProtocolFeeReceiver only by governance", async () => {
       await expect(
         vault.connect(borrowerA).setProtocolFeeReceiver(borrowerA.address)
-      ).to.be.reverted;
+      ).to.be.revert(ethers);
 
       await vault.connect(governance).setProtocolFeeReceiver(lenderB.address);
       expect(await vault.protocolFeeReceiver()).to.equal(lenderB.address);

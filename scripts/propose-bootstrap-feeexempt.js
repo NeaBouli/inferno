@@ -1,7 +1,10 @@
 // DEPRECATED — targets BootstrapVault V1 (0xA820...)
 // feeExempt for BootstrapVaultV3 was handled via propose-feeexempt-vesting.js pattern
 // Proposal #3 already queued for BootstrapVaultV3 (0xf72565...e141)
-const { ethers } = require("hardhat");
+const { connectHardhat } = require("./lib/hardhat-runtime");
+
+(async () => {
+const { ethers } = await connectHardhat();
 
 /**
  * DEPRECATED — INFERNO — Create Governance Proposal: setFeeExempt(BootstrapVault V1, true)
@@ -82,4 +85,9 @@ async function main() {
 main().catch((err) => {
   console.error(err);
   process.exit(1);
+});
+
+})().catch((error) => {
+  console.error(error);
+  process.exitCode = 1;
 });
