@@ -5,10 +5,13 @@
   "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js",
-    "dev": "node --watch src/index.js"
+    "dev": "node --watch src/index.js",
+    "test": "node --test test/*.test.js && npm run test:imports",
+    "test:imports": "node test/import-smoke.js",
+    "test:syntax": "find src test -type f -name '*.js' -exec node --check {} +"
   },
   "dependencies": {
-    "axios": "^1.6.7",
+    "axios": "1.18.1",
     "dotenv": "^16.4.5",
     "ethers": "^5.7.2",
     "express": "^5.2.1",
