@@ -111,6 +111,9 @@ toolchain and do not use `npm audit fix --force`.
   matchers. Existing Hardhat scripts connect through the shared runtime adapter.
 - Contract-related CI uses Node.js 22. `solidity-coverage` was removed in favor of Hardhat 3's
   built-in `--coverage` mode.
+- The unrelated root browser-test dependency remains pinned to `@playwright/test@1.58.2`.
+  This preserves the previously green browser matrix and prevents a Hardhat lockfile refresh
+  from silently advancing Playwright across its separate browser/platform boundary.
 - The current root audit backlog is limited to transitive upstream packages; no Critical
   finding remains and no force-upgrade or untested override is permitted.
 
