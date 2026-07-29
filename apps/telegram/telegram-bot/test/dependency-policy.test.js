@@ -148,6 +148,11 @@ test('Telegram bot locks the approved Axios dependency set', () => {
     isAtLeast(lock.packages['node_modules/form-data'].version, '4.0.6'),
     true
   );
+  assert.equal(manifest.overrides['@ethersproject/providers'].ws, '8.21.0');
+  const wsPackage = lock.packages['node_modules/@ethersproject/providers/node_modules/ws']
+    || lock.packages['node_modules/ws'];
+  assert.ok(wsPackage, 'Telegram lockfile must resolve ws');
+  assert.equal(wsPackage.version, '8.21.0');
 });
 
 test('Axios GET and POST call shapes work without network access', async () => {

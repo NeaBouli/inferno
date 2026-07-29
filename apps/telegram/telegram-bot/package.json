@@ -23,6 +23,11 @@
   "engines": {
     "node": ">=18.0.0"
   },
+  "overrides": {
+    "@ethersproject/providers": {
+      "ws": "8.21.0"
+    }
+  },
   "author": "IFR Protocol",
   "license": "MIT"
 }
