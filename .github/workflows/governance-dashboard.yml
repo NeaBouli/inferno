@@ -1,0 +1,29 @@
+name: Governance Dashboard CI
+
+on:
+  push:
+    paths:
+      - 'apps/governance-dashboard/**'
+      - '.github/workflows/governance-dashboard.yml'
+  pull_request:
+    paths:
+      - 'apps/governance-dashboard/**'
+      - '.github/workflows/governance-dashboard.yml'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/governance-dashboard
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: apps/governance-dashboard/package-lock.json
+      - run: npm ci --ignore-scripts
+      - run: npm run build
+      - run: npm audit signatures
+      - run: npm audit --audit-level=critical
