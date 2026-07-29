@@ -1,13 +1,14 @@
 import "dotenv/config";
-import { PrismaClient } from "../generated/prisma/client";
-import { createToken } from "../middleware/auth";
-import { POINTS_CONFIG } from "../config/points";
-import { signVoucher, getSignerAddress } from "../services/voucher-signer";
+import type { Server } from "node:http";
+import app from "../app.js";
+import { prisma } from "../db.js";
+import { createToken } from "../middleware/auth.js";
+import { POINTS_CONFIG } from "../config/points.js";
+import { getSignerAddress } from "../services/voucher-signer.js";
 import { ethers } from "ethers";
 
-const prisma = new PrismaClient();
-
-const BASE_URL = "http://localhost:3004";
+let server: Server;
+let baseUrl: string;
 
 let authToken: string;
 const TEST_WALLET = "0x" + "a".repeat(40);
@@ -15,7 +16,7 @@ const TEST_WALLET = "0x" + "a".repeat(40);
 async function api(method: string, path: string, body?: object, token?: string) {
   const headers: Record<string, string> = { "Content-Type": "application/json" };
   if (token) headers["Authorization"] = `Bearer ${token}`;
-  const res = await fetch(`${BASE_URL}${path}`, {
+  const res = await fetch(`${baseUrl}${path}`, {
     method,
     headers,
     body: body ? JSON.stringify(body) : undefined,
@@ -44,6 +45,17 @@ function assert(condition: boolean, name: string) {
 
 async function run() {
   console.log("\n🔥 Points Backend Tests\n");
+
+  server = app.listen(0, "127.0.0.1");
+  await new Promise<void>((resolve, reject) => {
+    server.once("listening", resolve);
+    server.once("error", reject);
+  });
+  const address = server.address();
+  if (!address || typeof address === "string") {
+    throw new Error("Test server did not expose a TCP port");
+  }
+  baseUrl = `http://127.0.0.1:${address.port}`;
 
   // Setup: create test wallet in DB and get JWT
   await cleanup();
@@ -166,11 +178,18 @@ async function run() {
 
   await cleanup();
   await prisma.$disconnect();
+  await new Promise<void>((resolve, reject) => {
+    server.close((error) => error ? reject(error) : resolve());
+  });
 
   if (failed > 0) process.exit(1);
 }
 
-run().catch((err) => {
+run().catch(async (err) => {
   console.error("Test runner error:", err);
+  await prisma.$disconnect().catch(() => undefined);
+  if (server?.listening) {
+    await new Promise<void>((resolve) => server.close(() => resolve()));
+  }
   process.exit(1);
 });

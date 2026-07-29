@@ -1,6 +1,6 @@
 import { Response, NextFunction } from "express";
 import { ethers } from "ethers";
-import { AuthRequest } from "./auth";
+import { AuthRequest } from "./auth.js";
 
 const RPC_URL = process.env.SEPOLIA_RPC_URL || "https://rpc.sepolia.org";
 const IFR_LOCK_ADDRESS = process.env.IFR_LOCK_ADDRESS || "0x0Cab0A9440643128540222acC6eF5028736675d3";

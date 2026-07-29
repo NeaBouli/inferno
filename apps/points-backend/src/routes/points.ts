@@ -1,8 +1,8 @@
 import { Router, Response } from "express";
-import { prisma } from "../db";
-import { AuthRequest, requireAuth } from "../middleware/auth";
-import { POINTS_CONFIG } from "../config/points";
-import { requireCaptcha } from "../middleware/captcha";
+import { prisma } from "../db.js";
+import { AuthRequest, requireAuth } from "../middleware/auth.js";
+import { POINTS_CONFIG } from "../config/points.js";
+import { requireCaptcha } from "../middleware/captcha.js";
 
 const router = Router();
 

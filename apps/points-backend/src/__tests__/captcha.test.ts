@@ -41,7 +41,7 @@ async function run() {
   // Test 1: no CAPTCHA_SECRET → skip (dev bypass)
   // CAPTCHA_SECRET is not set in test env by default
   {
-    const { requireCaptcha } = await import("../middleware/captcha");
+    const { requireCaptcha } = await import("../middleware/captcha.js");
     const req = { body: {} } as any;
     const res = mockRes();
     let nextCalled = false;
@@ -52,7 +52,7 @@ async function run() {
 
   // Test 2: no captchaToken in body → still bypassed in dev mode
   {
-    const { requireCaptcha } = await import("../middleware/captcha");
+    const { requireCaptcha } = await import("../middleware/captcha.js");
     const req = { body: { captchaToken: undefined } } as any;
     const res = mockRes();
     let nextCalled = false;
@@ -62,7 +62,7 @@ async function run() {
 
   // Test 3: empty body → still bypassed in dev mode
   {
-    const { requireCaptcha } = await import("../middleware/captcha");
+    const { requireCaptcha } = await import("../middleware/captcha.js");
     const req = { body: undefined } as any;
     const res = mockRes();
     let nextCalled = false;
@@ -72,7 +72,7 @@ async function run() {
 
   // Test 4: middleware function exists and is async
   {
-    const { requireCaptcha } = await import("../middleware/captcha");
+    const { requireCaptcha } = await import("../middleware/captcha.js");
     assert(typeof requireCaptcha === "function", "requireCaptcha is a function");
     const result = requireCaptcha({ body: {} } as any, mockRes() as any, () => {});
     assert(result instanceof Promise, "requireCaptcha returns a Promise");

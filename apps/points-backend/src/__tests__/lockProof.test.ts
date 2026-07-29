@@ -48,7 +48,7 @@ async function run() {
 
   // Test 1: no wallet → 401
   {
-    const { requireLockProof } = await import("../middleware/lockProof");
+    const { requireLockProof } = await import("../middleware/lockProof.js");
     const req = { wallet: undefined } as any;
     const res = mockRes();
     let nextCalled = false;
@@ -59,7 +59,7 @@ async function run() {
 
   // Test 2: empty wallet string → 401 (falsy)
   {
-    const { requireLockProof } = await import("../middleware/lockProof");
+    const { requireLockProof } = await import("../middleware/lockProof.js");
     const req = { wallet: "" } as any;
     const res = mockRes();
     let nextCalled = false;
@@ -70,7 +70,7 @@ async function run() {
 
   // Test 3: error response shape
   {
-    const { requireLockProof } = await import("../middleware/lockProof");
+    const { requireLockProof } = await import("../middleware/lockProof.js");
     const req = { wallet: undefined } as any;
     const res = mockRes();
     await requireLockProof(req, res as any, () => {});
@@ -80,7 +80,7 @@ async function run() {
 
   // Test 4: middleware is async function
   {
-    const { requireLockProof } = await import("../middleware/lockProof");
+    const { requireLockProof } = await import("../middleware/lockProof.js");
     assert(typeof requireLockProof === "function", "requireLockProof is a function");
     const result = requireLockProof({ wallet: undefined } as any, mockRes() as any, () => {});
     assert(result instanceof Promise, "requireLockProof returns a Promise");
@@ -89,7 +89,7 @@ async function run() {
 
   // Test 5: RPC failure → fail-closed (503), with timeout for CI
   {
-    const { requireLockProof } = await import("../middleware/lockProof");
+    const { requireLockProof } = await import("../middleware/lockProof.js");
     const req = { wallet: "0x" + "b".repeat(40) } as any;
     const res = mockRes();
     let nextCalled = false;
