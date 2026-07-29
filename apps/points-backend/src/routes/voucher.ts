@@ -1,11 +1,11 @@
 import { Router, Response } from "express";
 import { ethers } from "ethers";
-import { prisma } from "../db";
-import { AuthRequest, requireAuth } from "../middleware/auth";
-import { POINTS_CONFIG } from "../config/points";
-import { signVoucher } from "../services/voucher-signer";
-import { voucherWalletLimit } from "../middleware/rate-limit";
-import { requireLockProof } from "../middleware/lockProof";
+import { prisma } from "../db.js";
+import { AuthRequest, requireAuth } from "../middleware/auth.js";
+import { POINTS_CONFIG } from "../config/points.js";
+import { signVoucher } from "../services/voucher-signer.js";
+import { voucherWalletLimit } from "../middleware/rate-limit.js";
+import { requireLockProof } from "../middleware/lockProof.js";
 
 const router = Router();
 

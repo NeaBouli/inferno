@@ -1,8 +1,8 @@
 import { Router, Request, Response } from "express";
 import { SiweMessage, generateNonce } from "siwe";
-import { prisma } from "../db";
-import { createToken } from "../middleware/auth";
-import { siweVerifyLimit } from "../middleware/rate-limit";
+import { prisma } from "../db.js";
+import { createToken } from "../middleware/auth.js";
+import { siweVerifyLimit } from "../middleware/rate-limit.js";
 
 const router = Router();
 
