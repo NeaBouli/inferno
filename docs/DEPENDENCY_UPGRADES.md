@@ -120,6 +120,27 @@ toolchain and do not use `npm audit fix --force`.
 - The current root audit backlog is limited to transitive upstream packages; no Critical
   finding remains and no force-upgrade or untested override is permitted.
 
+### Deterministic local networks
+
+`MAINNET_RPC_URL` configures the named `mainnet` HTTP network but does not implicitly fork the
+local `default` or `hardhat` EDR networks. Normal contract tests therefore remain local and
+deterministic even when a developer's `.env` contains a Mainnet provider URL.
+
+Forking is an explicit, block-pinned diagnostic mode:
+
+```bash
+HARDHAT_FORK=true \
+HARDHAT_FORK_BLOCK_NUMBER=<positive-mainnet-block> \
+npm run test:contracts
+```
+
+`MAINNET_RPC_URL` must also be present in the environment. Configuration fails before a test
+starts when the opt-in flag, RPC URL or pinned block number is invalid. The offline regression
+gate is `npm run test:hardhat-config`; it uses a non-routable placeholder URL and performs no
+RPC request. Remove or set `HARDHAT_FORK=false` after a fork diagnostic; a stale
+`HARDHAT_FORK=true` intentionally blocks every Hardhat command until a valid pinned block is
+provided.
+
 ## 2026-07-19 Critical Patch Update
 
 Two repository-wide critical alerts can be removed without a breaking migration:

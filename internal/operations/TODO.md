@@ -134,13 +134,13 @@ On errors: fix immediately, commit with `seo:` prefix.
       Waffle/Ganache were removed. Final exact-head CI passed on `f350bd44`.
       Residual root audit: 21 transitive findings (13 high, 8 low, 0 critical).
       Do not run `npm audit fix --force`; remaining upstream paths need bounded updates.
-- [ ] Deterministic local Hardhat test network
-      Current: a locally set MAINNET_RPC_URL automatically enables an unpinned
-      fork on the `default`/`hardhat` networks. The canonical CI-equivalent run
-      is `env MAINNET_RPC_URL= SEPOLIA_RPC_URL= npm run test:contracts`.
-      Evidence 29.07.2026: canonical local EDR run 642/642 in 33s; the
-      environment-selected fork run was slow and non-deterministic. Fix config
-      and add a regression test in a separate runtime-tooling task.
+- [x] Deterministic local Hardhat test network — completed 2026-07-29
+      A locally set MAINNET_RPC_URL now configures only the named `mainnet`
+      HTTP network; it no longer changes `default` or `hardhat`.
+      A local fork requires both `HARDHAT_FORK=true` and a positive pinned
+      `HARDHAT_FORK_BLOCK_NUMBER`. The config fails closed if either the RPC
+      URL or block number is missing or invalid.
+      Regression gate: `npm run test:hardhat-config`.
 - [ ] Trust Wallet / Rainbow / Phantom / Zerion visibility follow-up
       Docs: docs/WALLET_ICON_DISTRIBUTION_STATUS_20260708.md
       Status: Trust Wallet not yet worth fee submission until CMC/activity improves; Rainbow depends on upstream lists/market data; Phantom and several wallets are indirect trust/indexing paths.

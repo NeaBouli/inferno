@@ -51,6 +51,10 @@ assert.ok(
   !todo.includes("- [ ] Dependency modernization"),
   "Dependency modernization must not remain open"
 );
+assert.ok(
+  !todo.includes("- [ ] Deterministic local Hardhat test network"),
+  "Deterministic local Hardhat test network must not remain open"
+);
 
 requireText("BACKLOG.md", [
   "**Legacy snapshot updated for closure on 2026-07-29.**",
@@ -59,13 +63,16 @@ requireText("BACKLOG.md", [
 requireText("SKYWALKER.md", [
   "**Hinweis 29.07.2026:**",
   "Hardhat 3.11.1",
-  "env MAINNET_RPC_URL= SEPOLIA_RPC_URL= npm run test:contracts",
+  "lokale Tests forken nicht automatisch",
+  "HARDHAT_FORK_BLOCK_NUMBER=<block>",
   "## Historischer Stand (05.03.2026)",
   "## 8. Historischer nächster Schritt (Stand 05.03.2026)",
 ]);
 requireText("docs/DEPENDENCY_UPGRADES.md", [
   "## Historical Operational Note — 2026-07-08",
   "## 2026-07-29 Hardhat 3 Completion",
+  "### Deterministic local networks",
+  "HARDHAT_FORK_BLOCK_NUMBER=<positive-mainnet-block>",
 ]);
 
 console.log("[status-baseline] PASS");
