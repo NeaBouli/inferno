@@ -1,5 +1,5 @@
-const { expect } = require("chai");
-const { ethers } = require("hardhat");
+import { expect } from "chai";
+import { ethers } from "./helpers/hardhat.js";
 
 describe("BurnReserve", function () {
   let owner, guardian, user;
@@ -68,7 +68,7 @@ describe("BurnReserve", function () {
 
     it("reverts without approval", async () => {
       const amount = ethers.parseUnits("1000", 9);
-      await expect(burnReserve.deposit(amount)).to.be.reverted;
+      await expect(burnReserve.deposit(amount)).to.be.revert(ethers);
     });
   });
 

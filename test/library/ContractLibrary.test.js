@@ -1,5 +1,5 @@
-const { expect } = require("chai");
-const { ethers } = require("hardhat");
+import { expect } from "chai";
+import { ethers } from "../helpers/hardhat.js";
 
 describe("Phase 5 — Contract Library", function () {
   let owner, user, user2, governance;
@@ -227,7 +227,7 @@ describe("Phase 5 — Contract Library", function () {
 
   it("T31: updateProduct() only owner", async () => {
     await expect(Vault.connect(user).updateProduct("X", "https://x.com"))
-      .to.be.reverted;
+      .to.be.revert(ethers);
     await Vault.connect(governance).updateProduct("NewName", "https://new.com");
     expect(await Vault.productName()).to.equal("NewName");
   });
@@ -267,19 +267,19 @@ describe("Phase 5 — Contract Library", function () {
   });
 
   it("T36: setMinRequired() only owner", async () => {
-    await expect(Vault.connect(user).setMinRequired(100)).to.be.reverted;
+    await expect(Vault.connect(user).setMinRequired(100)).to.be.revert(ethers);
     await Vault.connect(governance).setMinRequired(ethers.parseUnits("1000", 9));
     expect(await Vault.minRequired()).to.equal(ethers.parseUnits("1000", 9));
   });
 
   it("T37: setMinLockDuration() only owner", async () => {
-    await expect(Vault.connect(user).setMinLockDuration(30 * 86400)).to.be.reverted;
+    await expect(Vault.connect(user).setMinLockDuration(30 * 86400)).to.be.revert(ethers);
     await Vault.connect(governance).setMinLockDuration(30 * 86400);
     expect(await Vault.minLockDuration()).to.equal(30 * 86400);
   });
 
   it("T38: setTierThresholds() only owner + ascending", async () => {
-    await expect(Vault.connect(user).setTierThresholds(1, 2, 3)).to.be.reverted;
+    await expect(Vault.connect(user).setTierThresholds(1, 2, 3)).to.be.revert(ethers);
     await expect(Vault.connect(governance).setTierThresholds(1000, 500, 2000))
       .to.be.revertedWith("Thresholds must be ascending");
     await Vault.connect(governance).setTierThresholds(100e9, 500e9, 1000e9);
@@ -287,7 +287,7 @@ describe("Phase 5 — Contract Library", function () {
   });
 
   it("T39: setCooldownDuration() only owner", async () => {
-    await expect(Vault.connect(user).setCooldownDuration(3600)).to.be.reverted;
+    await expect(Vault.connect(user).setCooldownDuration(3600)).to.be.revert(ethers);
     await Vault.connect(governance).setCooldownDuration(2 * 3600);
     expect(await Vault.cooldownDuration()).to.equal(2 * 3600);
   });

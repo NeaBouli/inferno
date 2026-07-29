@@ -1,4 +1,7 @@
-const { ethers } = require("hardhat");
+const { connectHardhat } = require("./lib/hardhat-runtime");
+
+(async () => {
+const { ethers } = await connectHardhat();
 async function main() {
   const [deployer] = await ethers.getSigners();
   const balance = await ethers.provider.getBalance(deployer.address);
@@ -8,3 +11,8 @@ async function main() {
   console.log("Balance:", ethers.formatEther(balance), "ETH");
 }
 main().then(() => process.exit(0)).catch(e => { console.error(e); process.exit(1); });
+
+})().catch((error) => {
+  console.error(error);
+  process.exitCode = 1;
+});

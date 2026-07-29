@@ -1,4 +1,7 @@
-const { ethers } = require("hardhat");
+const { connectHardhat } = require("./lib/hardhat-runtime");
+
+(async () => {
+const { ethers } = await connectHardhat();
 
 /**
  * INFERNO — Create Governance Proposal: setFeeExempt(Vesting, true)
@@ -77,4 +80,9 @@ async function main() {
 main().catch((err) => {
   console.error(err);
   process.exit(1);
+});
+
+})().catch((error) => {
+  console.error(error);
+  process.exitCode = 1;
 });

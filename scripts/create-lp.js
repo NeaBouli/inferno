@@ -1,4 +1,7 @@
-const { ethers } = require("hardhat");
+const { connectHardhat } = require("./lib/hardhat-runtime");
+
+(async () => {
+const { ethers } = await connectHardhat();
 
 // ── Deployed contract addresses (Sepolia) ──────────────────
 const INFERNO_TOKEN = "0x3Bd71947F288d1dd8B21129B1bE4FF16EDd5d1F4";
@@ -210,3 +213,8 @@ main()
     console.error(err);
     process.exit(1);
   });
+
+})().catch((error) => {
+  console.error(error);
+  process.exitCode = 1;
+});

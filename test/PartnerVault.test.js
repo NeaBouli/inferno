@@ -1,5 +1,5 @@
-const { expect } = require("chai");
-const { ethers } = require("hardhat");
+import { expect } from "chai";
+import { ethers } from "./helpers/hardhat.js";
 
 describe("PartnerVault", function () {
   let owner, guardian, beneficiaryA, beneficiaryB, userA;
@@ -1177,7 +1177,7 @@ describe("PartnerVault", function () {
 
       // Pause
       await vault.connect(guardian).pause();
-      await expect(vault.claim(PID_A)).to.be.reverted;
+      await expect(vault.claim(PID_A)).to.be.revert(ethers);
 
       // Unpause
       await vault.connect(guardian).unpause();

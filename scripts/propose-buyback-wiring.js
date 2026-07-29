@@ -11,9 +11,12 @@
 
 'use strict';
 require('dotenv').config();
-const { ethers } = require('hardhat');
+const { connectHardhat } = require('./lib/hardhat-runtime');
 const fs = require('fs');
 const path = require('path');
+
+(async () => {
+const { ethers } = await connectHardhat();
 
 // ── Mainnet Addresses ────────────────────────────────────────
 const GOV_ADDRESS       = '0xc43d48E7FDA576C5022d0670B652A622E8caD041';
@@ -146,4 +149,9 @@ async function main() {
 main().catch((err) => {
   console.error(err);
   process.exit(1);
+});
+
+})().catch((error) => {
+  console.error(error);
+  process.exitCode = 1;
 });

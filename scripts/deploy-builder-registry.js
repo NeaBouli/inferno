@@ -6,7 +6,10 @@
  *   Sepolia:  npx hardhat run scripts/deploy-builder-registry.js --network sepolia
  *   Mainnet:  npx hardhat run scripts/deploy-builder-registry.js --network mainnet
  */
-const hre = require("hardhat");
+const { connectHardhat } = require("./lib/hardhat-runtime");
+
+(async () => {
+const hre = await connectHardhat();
 
 async function main() {
   const [deployer] = await hre.ethers.getSigners();
@@ -27,7 +30,11 @@ async function main() {
   console.log("Network:", hre.network.name);
 
   // Etherscan verification
-  if (hre.network.name !== "hardhat" && hre.network.name !== "localhost") {
+  if (
+    hre.network.name !== "default" &&
+    hre.network.name !== "hardhat" &&
+    hre.network.name !== "localhost"
+  ) {
     console.log("Waiting 5 blocks for Etherscan...");
     await new Promise(r => setTimeout(r, 30000));
     await hre.run("verify:verify", {
@@ -41,3 +48,8 @@ async function main() {
 }
 
 main().catch(err => { console.error(err); process.exit(1); });
+
+})().catch((error) => {
+  console.error(error);
+  process.exitCode = 1;
+});

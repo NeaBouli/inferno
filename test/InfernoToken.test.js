@@ -1,5 +1,5 @@
-const { expect } = require("chai");
-const { ethers } = require("hardhat");
+import { expect } from "chai";
+import { ethers } from "./helpers/hardhat.js";
 
 describe("InfernoToken", function () {
   let deployer, poolFeeReceiver, alice, bob, exempt;
@@ -154,7 +154,7 @@ describe("InfernoToken", function () {
     it("setFeeExempt reverts for non-owner", async () => {
       await expect(
         token.connect(alice).setFeeExempt(alice.address, true)
-      ).to.be.reverted;
+      ).to.be.revert(ethers);
     });
 
     it("setPoolFeeReceiver updates and emits", async () => {
@@ -174,7 +174,7 @@ describe("InfernoToken", function () {
     it("setPoolFeeReceiver reverts for non-owner", async () => {
       await expect(
         token.connect(alice).setPoolFeeReceiver(bob.address)
-      ).to.be.reverted;
+      ).to.be.revert(ethers);
     });
 
     it("setFeeRates updates and emits FeesUpdated", async () => {
@@ -194,13 +194,13 @@ describe("InfernoToken", function () {
     });
 
     it("setFeeRates allows exactly 5%", async () => {
-      await expect(token.setFeeRates(200, 100, 200)).to.not.be.reverted; // 500 bps = 5%
+      await expect(token.setFeeRates(200, 100, 200)).to.not.revert(ethers); // 500 bps = 5%
     });
 
     it("setFeeRates reverts for non-owner", async () => {
       await expect(
         token.connect(alice).setFeeRates(100, 100, 50)
-      ).to.be.reverted;
+      ).to.be.revert(ethers);
     });
   });
 
@@ -223,7 +223,7 @@ describe("InfernoToken", function () {
       await token.setFeeExempt(deployer.address, false);
 
       // Transfer 1 raw unit — fees round to 0
-      await expect(token.connect(alice).transfer(bob.address, 1)).to.not.be.reverted;
+      await expect(token.connect(alice).transfer(bob.address, 1)).to.not.revert(ethers);
     });
 
     it("zero fee rates means no fees deducted", async () => {

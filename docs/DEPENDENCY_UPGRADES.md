@@ -8,9 +8,9 @@
 |----|---------|-----|----|---------|-----------|
 | #2 | actions/setup-node | 4 | 6 | Gering | 1 |
 | #3 | actions/checkout | 4 | 6 | Gering | 1 |
-| #8 | hardhat | 2.28.6 | 3.1.12 | Mittel | 3 |
-| #5 | @nomicfoundation/hardhat-verify | 2.1.3 | 3.0.12 | Mittel | 3 |
-| #7 | chai | 4.5.0 | 6.2.2 | Mittel | 3 |
+| #8 | hardhat | 2.28.6 | 3.11.1 | Erledigt 29.07.2026 | - |
+| #5 | @nomicfoundation/hardhat-verify | 2.1.3 | 3.0.21 | Erledigt 29.07.2026 | - |
+| #7 | chai | 4.5.0 | 6.2.2 | Erledigt 29.07.2026 | - |
 | #4 | ethers | 5.8.0 | 6.17.0 | Erledigt 29.07.2026 | - |
 
 ## Migrationsreihenfolge
@@ -25,11 +25,10 @@
    - Root bleibt fuer diesen isolierten Schritt auf Hardhat 2.28.6
    - Vollstaendige Contract-, Generator-, SDK- und Wallet-UI-Gates bestanden
 
-3. **#8 + #5 + #7 — Hardhat 3 + Verify 3 + Chai 6** — MITTEL
-   - Hardhat 3: neues Plugin-System, Config-Format ändert sich
-   - Chai 6: ESM-only, `expect` Import-Änderungen
-   - hardhat-verify 3 hängt von Hardhat 3 ab → zusammen migrieren
-   - Alle Tests müssen angepasst werden
+3. **#8 + #5 + #7 — Hardhat 3 + Verify 3 + Chai 6** — ERLEDIGT
+   - Root-Projekt auf ESM und Node.js `>=22.13.0` umgestellt
+   - Hardhat-Plugins, Config, Tasks, Tests und Laufzeitskripte migriert
+   - Native Hardhat-3-Coverage ersetzt die alte `solidity-coverage`-Abhängigkeit
 
 ## Hinweise
 
@@ -92,13 +91,28 @@ toolchain and do not use `npm audit fix --force`.
 ## 2026-07-29 Root Ethers 6 Completion
 
 - Root runtime: `ethers@6.17.0` with `@nomicfoundation/hardhat-ethers@3.1.3`.
-- Hardhat intentionally remains at `2.28.6` until the separately tested Hardhat 3 migration.
+- Hardhat remained at `2.28.6` for this isolated step and was migrated separately afterward.
 - The obsolete Ethers 5 formatter patches and direct `@ethersproject/providers` dependency
   were removed.
 - Verification: clean install, compile, 642 contract tests, 30 generator tests, 36 SDK tests,
   12 vote-announcement tests, Lending price self-test and all three Benefits Wallet UI paths.
 - Remaining root audit findings are transitive Hardhat 2 / coverage toolchain debt. There are
   no critical findings; do not use `npm audit fix --force`.
+
+## 2026-07-29 Hardhat 3 Completion
+
+- Root toolchain: `hardhat@3.11.1`, `@nomicfoundation/hardhat-ethers@4.0.15`,
+  `@nomicfoundation/hardhat-ethers-chai-matchers@3.0.11`,
+  `@nomicfoundation/hardhat-mocha@3.0.21`,
+  `@nomicfoundation/hardhat-verify@3.0.21`, `chai@6.2.2` and `mocha@11.7.6`.
+- Root package and Hardhat configuration use ESM. Explicit nested CommonJS package boundaries
+  preserve legacy scripts and non-Hardhat tests.
+- Contract tests use explicit Hardhat 3 network connections and the new asynchronous revert
+  matchers. Existing Hardhat scripts connect through the shared runtime adapter.
+- Contract-related CI uses Node.js 22. `solidity-coverage` was removed in favor of Hardhat 3's
+  built-in `--coverage` mode.
+- The current root audit backlog is limited to transitive upstream packages; no Critical
+  finding remains and no force-upgrade or untested override is permitted.
 
 ## 2026-07-19 Critical Patch Update
 

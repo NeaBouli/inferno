@@ -1,5 +1,5 @@
-const { expect } = require("chai");
-const { ethers } = require("hardhat");
+import { expect } from "chai";
+import { ethers } from "./helpers/hardhat.js";
 
 describe("BuilderRegistry", function () {
   let governance, user, builder1, builder2, builder3;
@@ -51,25 +51,25 @@ describe("BuilderRegistry", function () {
       await registry.registerBuilder(builder1.address, "First", "", "creator");
       await expect(
         registry.registerBuilder(builder1.address, "Second", "", "creator")
-      ).to.be.reverted;
+      ).to.be.revert(ethers);
     });
 
     it("T07 — reverts InvalidAddress for address(0)", async () => {
       await expect(
         registry.registerBuilder(ethers.ZeroAddress, "X", "", "creator")
-      ).to.be.reverted;
+      ).to.be.revert(ethers);
     });
 
     it("T08 — reverts EmptyName for empty string", async () => {
       await expect(
         registry.registerBuilder(builder1.address, "", "", "creator")
-      ).to.be.reverted;
+      ).to.be.revert(ethers);
     });
 
     it("T09 — reverts InvalidCategory for unknown category", async () => {
       await expect(
         registry.registerBuilder(builder1.address, "X", "", "hacker")
-      ).to.be.reverted;
+      ).to.be.revert(ethers);
     });
 
     it("T10 — accepts all 4 valid categories", async () => {
@@ -107,7 +107,7 @@ describe("BuilderRegistry", function () {
     it("T14 — reverts NotRegistered for unknown address", async () => {
       await expect(
         registry.removeBuilder(builder2.address)
-      ).to.be.reverted;
+      ).to.be.revert(ethers);
     });
   });
 
@@ -134,19 +134,19 @@ describe("BuilderRegistry", function () {
     it("T17 — reverts NotRegistered for unknown address", async () => {
       await expect(
         registry.updateBuilder(builder2.address, "X", "", "creator")
-      ).to.be.reverted;
+      ).to.be.revert(ethers);
     });
 
     it("T18 — reverts EmptyName", async () => {
       await expect(
         registry.updateBuilder(builder1.address, "", "", "creator")
-      ).to.be.reverted;
+      ).to.be.revert(ethers);
     });
 
     it("T19 — reverts InvalidCategory", async () => {
       await expect(
         registry.updateBuilder(builder1.address, "X", "", "exploit")
-      ).to.be.reverted;
+      ).to.be.revert(ethers);
     });
   });
 
@@ -189,14 +189,14 @@ describe("BuilderRegistry", function () {
     it("T24 — registerBuilder reverts for non-owner", async () => {
       await expect(
         registry.connect(user).registerBuilder(builder1.address, "X", "", "creator")
-      ).to.be.reverted;
+      ).to.be.revert(ethers);
     });
 
     it("T25 — removeBuilder reverts for non-owner", async () => {
       await registry.registerBuilder(builder1.address, "X", "", "creator");
       await expect(
         registry.connect(user).removeBuilder(builder1.address)
-      ).to.be.reverted;
+      ).to.be.revert(ethers);
     });
   });
 

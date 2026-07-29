@@ -1,4 +1,7 @@
-const { ethers } = require("hardhat");
+const { connectHardhat } = require("./lib/hardhat-runtime");
+
+(async () => {
+const { ethers } = await connectHardhat();
 
 // ── Mainnet Addresses ──────────────────────────────────────
 const GOVERNANCE = "0xc43d48E7FDA576C5022d0670B652A622E8caD041";
@@ -142,3 +145,8 @@ main()
     console.error(err);
     process.exit(1);
   });
+
+})().catch((error) => {
+  console.error(error);
+  process.exitCode = 1;
+});

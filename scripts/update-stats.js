@@ -1,4 +1,7 @@
-const { ethers } = require("hardhat");
+const { connectHardhat } = require("./lib/hardhat-runtime");
+
+(async () => {
+const { ethers } = await connectHardhat();
 const fs = require("fs");
 const path = require("path");
 
@@ -123,3 +126,8 @@ async function main() {
 }
 
 main().catch(console.error);
+
+})().catch((error) => {
+  console.error(error);
+  process.exitCode = 1;
+});
