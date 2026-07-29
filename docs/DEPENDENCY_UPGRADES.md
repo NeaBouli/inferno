@@ -35,11 +35,14 @@
 - Dependabot wird diese PRs erneut öffnen — ggf. `ignore` Regeln in `.github/dependabot.yml` setzen
 - Vor jeder Migration: lokalen Branch erstellen, vollständige Testsuite durchlaufen
 
-## 2026-07-08 Operational Note
+## Historical Operational Note — 2026-07-08
 
-The root audit backlog is still mostly toolchain debt, not production contract runtime code.
+At that date, the root audit backlog was mostly toolchain debt, not production
+contract runtime code. The constraints and migration plan below are retained
+as historical rationale; the completion sections dated 2026-07-29 are
+authoritative.
 
-Current constraints:
+Constraints at that time:
 
 - `hardhat@2`
 - `ethers@5`

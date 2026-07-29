@@ -1,14 +1,42 @@
 # IFR Project Status Report
 
-**Date:** 5 March 2026
+**Current engineering baseline:** 29 July 2026
 **Branch:** `main`
 **Model:** Community Fair Launch (CFLM) -- no presale
 **Ticker:** $IFR
-**Status:** 17 documented on-chain components on Ethereum Mainnet | full internal audits + public automated test evidence | independent professional third-party audit pending
+**Status:** Mainnet live; bootstrap finalized; current repository verification
+uses full internal audits plus public automated test evidence. Independent
+professional third-party audit remains pending.
 
 ---
 
-## On-Chain (Ethereum Mainnet)
+## Current Engineering Baseline
+
+- Root: Node.js `>=22.13.0`, Ethers `6.17.0`, Hardhat `3.11.1`,
+  Chai `6.2.2`, Mocha `11.7.6`, OpenZeppelin Contracts `5.6.x`.
+- Root is ESM with explicit CommonJS boundaries for legacy scripts and
+  standalone test packages. Waffle, Ganache and `solidity-coverage` are no
+  longer active root dependencies; native Hardhat 3 coverage is used.
+- Latest verified suites on exact HEAD `f350bd44`: contracts `642/642`,
+  Generator Engine `30/30`, IFR SDK `36/36`.
+- Final exact-head CI passed for Contract Tests, Benefits Network, Security
+  Audit, Docs Validator and Pages.
+- Root `npm audit`: 21 transitive findings (13 high, 8 low, 0 critical).
+  No forced fix or unverified override is approved.
+- Benefits frontend: Next.js `15.5.21`, Wagmi `3.7.x`, Node 22. Benefits
+  backend and every active application manifest that depends on Ethers use
+  Ethers 6.
+- Current operational work and exact evidence are tracked in
+  `internal/operations/TODO.md`, `docs/DEPENDENCY_UPGRADES.md` and the local
+  append-only `BRIDGE.md`.
+
+## Historical Snapshot — 5 March 2026
+
+The detailed inventory below is retained as a dated project snapshot. Its
+test counts, dependency versions, governance queue and next-step list are not
+the current operational state and must not override the baseline above.
+
+### On-Chain (Ethereum Mainnet)
 
 17 on-chain components (14 deployed contracts + 3 Gnosis Safes). All verified on Etherscan. Ownership transferred to Governance (48h Timelock).
 

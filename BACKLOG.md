@@ -1,9 +1,15 @@
 # inferno — Backlog
 
+> **Legacy snapshot updated for closure on 2026-07-29.** Current operational
+> priorities live in `internal/operations/TODO.md` and the local `BRIDGE.md`.
+> Historical entries are retained below; completed launch/toolchain items are
+> marked explicitly so they are not mistaken for active work.
+
 ## 🔴 Aktiv (diese Session)
-- [ ] Bootstrap finalise() aufrufen — **Deadline: 05.06.2026** (~13 Tage!) — Script: `scripts/finalise-bootstrap.js`
-- [ ] Proposal #11 (Uniswap Pool feeExempt) — SOFORT nach finalise() ausführen!
-- [ ] npm audit: ethers@5→@6 Migration für restliche 3 criticals (dev-only)
+- [x] Bootstrap `finalise()` ausgeführt — 05.06.2026
+- [x] LP Token feeExempt — als Proposal #15 am 08.06.2026 ausgeführt
+- [x] Ethers 6 / Hardhat 3 / Chai 6 / Node 22 Migration — 29.07.2026
+      Rest: 21 transitive npm findings (13 high, 8 low, 0 critical); kein Force-Fix.
 
 ## 🟡 Nächste Session
 - [ ] .env cleanup (DEPLOYER_PRIVATE_KEY Konsistenz prüfen)
@@ -39,4 +45,4 @@
 - [x] scripts/propose-pool-feeexempt.js — erstellt 2026-05-10 (LP_TOKEN env var → Proposal #11)
 
 ---
-*Zuletzt aktualisiert: 2026-05-10*
+*Historischer Stand: 2026-05-10 | Abschlussvermerke: 2026-07-29*
