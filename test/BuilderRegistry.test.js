@@ -10,7 +10,7 @@ describe("BuilderRegistry", function () {
 
     const BuilderRegistry = await ethers.getContractFactory("BuilderRegistry");
     registry = await BuilderRegistry.deploy(governance.address);
-    await registry.deployed();
+    await registry.waitForDeployment();
   });
 
   // ── T01: Deploy ─────────────────────────────────────
@@ -56,7 +56,7 @@ describe("BuilderRegistry", function () {
 
     it("T07 — reverts InvalidAddress for address(0)", async () => {
       await expect(
-        registry.registerBuilder(ethers.constants.AddressZero, "X", "", "creator")
+        registry.registerBuilder(ethers.ZeroAddress, "X", "", "creator")
       ).to.be.reverted;
     });
 

@@ -38,12 +38,12 @@ function mockProposal(overrides = {}) {
   return {
     target: '0x77e99917Eca8539c62F509ED1193ac36580A6e7B',
     data: '0xb3ab15fb000000000000000000000000f72565c4cdb9575c9d3aee6b9ae3fdbd7f56e141',
-    eta: ethers.BigNumber.from(overrides.eta || Math.floor(Date.now() / 1000) + 3600),
+    eta: BigInt(overrides.eta || Math.floor(Date.now() / 1000) + 3600),
     executed: overrides.executed || false,
     cancelled: overrides.cancelled || false,
     ...overrides,
-    // Ensure eta is always BigNumber
-    ...(overrides.eta ? { eta: ethers.BigNumber.from(overrides.eta) } : {})
+    // Keep eta in the bigint form returned by Ethers 6 contracts.
+    ...(overrides.eta ? { eta: BigInt(overrides.eta) } : {})
   };
 }
 
@@ -55,18 +55,18 @@ function createMockProvider(proposals) {
     getNetwork: async () => ({ chainId: 1 }),
     // ethers.Contract will call through the provider
     call: async (tx) => {
-      const iface = new ethers.utils.Interface([
+      const iface = new ethers.Interface([
         'function proposalCount() view returns (uint256)',
         'function getProposal(uint256) view returns (address target, bytes data, uint256 eta, bool executed, bool cancelled)'
       ]);
       const selector = tx.data.slice(0, 10);
 
-      if (selector === iface.getSighash('proposalCount')) {
+      if (selector === iface.getFunction('proposalCount').selector) {
         return iface.encodeFunctionResult('proposalCount', [count]);
       }
-      if (selector === iface.getSighash('getProposal')) {
+      if (selector === iface.getFunction('getProposal').selector) {
         const [id] = iface.decodeFunctionData('getProposal', tx.data);
-        const p = proposals[id.toNumber()];
+        const p = proposals[Number(id)];
         if (!p) throw new Error('Proposal not found');
         return iface.encodeFunctionResult('getProposal', [
           p.target, p.data, p.eta, p.executed, p.cancelled

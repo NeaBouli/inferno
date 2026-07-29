@@ -14,7 +14,7 @@ const ADDRESSES = {
 };
 
 async function main() {
-  const fmt = (n) => ethers.utils.formatUnits(n, 9);
+  const fmt = (n) => ethers.formatUnits(n, 9);
   const token = await ethers.getContractAt("InfernoToken", ADDRESSES.token);
 
   console.log("\n========== IFR ON-CHAIN AUDIT (Sepolia) ==========\n");
@@ -69,9 +69,9 @@ async function main() {
     const releasable = await vesting.releasableAmount();
     const vPaused = await vesting.paused();
     console.log(`Beneficiary: ${beneficiary}`);
-    console.log(`Start: ${new Date(start.toNumber()*1000).toISOString()}`);
-    console.log(`Cliff: ${cliff.toNumber()/86400} days`);
-    console.log(`Duration: ${duration.toNumber()/86400} days`);
+    console.log(`Start: ${new Date(Number(start)*1000).toISOString()}`);
+    console.log(`Cliff: ${Number(cliff)/86400} days`);
+    console.log(`Duration: ${Number(duration)/86400} days`);
     console.log(`Released: ${fmt(released)} IFR`);
     console.log(`Releasable now: ${fmt(releasable)} IFR`);
     console.log(`Paused: ${vPaused}`);
@@ -107,7 +107,7 @@ async function main() {
     console.log(`SlippageBps: ${slippage} (${slippage/100}%)`);
     console.log(`Cooldown: ${cool}s`);
     console.log(`BurnShare: ${burnShare/100}%`);
-    console.log(`ActivationTime: ${new Date(activation.toNumber()*1000).toISOString()}`);
+    console.log(`ActivationTime: ${new Date(Number(activation)*1000).toISOString()}`);
     console.log(`Paused: ${bPaused}`);
   } catch(e) {
     console.log(`BuybackVault detail error: ${e.message}`);
@@ -156,7 +156,7 @@ async function main() {
     console.log(`rewardBps: ${bps} (${bps/100}%)`);
     console.log(`annualCap: ${fmt(cap)} IFR`);
     console.log(`totalRewarded: ${fmt(total)} IFR`);
-    console.log(`ifrLock: ${lockAddr} (algo throttle ${lockAddr !== ethers.constants.AddressZero ? 'ACTIVE' : 'OFF'})`);
+    console.log(`ifrLock: ${lockAddr} (algo throttle ${lockAddr !== ethers.ZeroAddress ? 'ACTIVE' : 'OFF'})`);
   } catch(e) {
     console.log(`PartnerVault detail error: ${e.message}`);
   }
@@ -177,7 +177,7 @@ async function main() {
   ];
   for (const [name, addr] of balances) {
     const bal = await token.balanceOf(addr);
-    const pct = bal.mul(10000).div(totalSupply);
+    const pct = BigInt(BigInt(bal)*BigInt(10000))/BigInt(totalSupply);
     console.log(`${name}: ${fmt(bal)} IFR (${pct/100}%)`);
   }
 

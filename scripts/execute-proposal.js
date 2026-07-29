@@ -81,11 +81,11 @@ async function main() {
 
   const proposal = await governance.getProposal(PROPOSAL_ID);
   const { target, data, eta, executed, cancelled } = proposal;
-  const etaNum = eta.toNumber();
+  const etaNum = Number(eta);
   const etaDate = new Date(etaNum * 1000);
 
   // Decode the calldata
-  const iface = new ethers.utils.Interface([
+  const iface = new ethers.Interface([
     "function setFeeExempt(address,bool)",
   ]);
   let decodedAddr, decodedBool;

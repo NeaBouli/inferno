@@ -5,7 +5,7 @@ describe("IFRLock", function () {
   let owner, guardian, userA, userB;
   let token, lock;
 
-  const parse = (s) => ethers.utils.parseUnits(s, 9);
+  const parse = (s) => ethers.parseUnits(s, 9);
   const INITIAL_SUPPLY = parse("1000000000");
 
   beforeEach(async () => {
@@ -13,17 +13,17 @@ describe("IFRLock", function () {
 
     const InfernoToken = await ethers.getContractFactory("InfernoToken");
     token = await InfernoToken.deploy(owner.address);
-    await token.deployed();
+    await token.waitForDeployment();
 
     // Make owner fee-exempt for clean test transfers
     await token.setFeeExempt(owner.address, true);
 
     const IFRLock = await ethers.getContractFactory("IFRLock");
-    lock = await IFRLock.deploy(token.address, guardian.address);
-    await lock.deployed();
+    lock = await IFRLock.deploy(token.target, guardian.address);
+    await lock.waitForDeployment();
 
     // Make lock contract fee-exempt (required for production use)
-    await token.setFeeExempt(lock.address, true);
+    await token.setFeeExempt(lock.target, true);
 
     // Give userA and userB some IFR for testing
     await token.transfer(userA.address, parse("100000"));
@@ -38,7 +38,7 @@ describe("IFRLock", function () {
 
   describe("Deployment", () => {
     it("sets token, guardian, and totalLocked correctly", async () => {
-      expect(await lock.token()).to.equal(token.address);
+      expect(await lock.token()).to.equal(token.target);
       expect(await lock.guardian()).to.equal(guardian.address);
       expect(await lock.totalLocked()).to.equal(0);
     });
@@ -46,14 +46,14 @@ describe("IFRLock", function () {
     it("reverts if token is zero address", async () => {
       const IFRLock = await ethers.getContractFactory("IFRLock");
       await expect(
-        IFRLock.deploy(ethers.constants.AddressZero, guardian.address)
+        IFRLock.deploy(ethers.ZeroAddress, guardian.address)
       ).to.be.revertedWith("token=0");
     });
 
     it("reverts if guardian is zero address", async () => {
       const IFRLock = await ethers.getContractFactory("IFRLock");
       await expect(
-        IFRLock.deploy(token.address, ethers.constants.AddressZero)
+        IFRLock.deploy(token.target, ethers.ZeroAddress)
       ).to.be.revertedWith("guardian=0");
     });
   });
@@ -63,27 +63,27 @@ describe("IFRLock", function () {
   describe("lock()", () => {
     it("locks tokens and emits Locked event", async () => {
       const amount = parse("10000");
-      await token.connect(userA).approve(lock.address, amount);
+      await token.connect(userA).approve(lock.target, amount);
 
       await expect(lock.connect(userA).lock(amount))
         .to.emit(lock, "Locked")
-        .withArgs(userA.address, amount, ethers.constants.HashZero);
+        .withArgs(userA.address, amount, ethers.ZeroHash);
 
       expect(await lock.lockedBalance(userA.address)).to.equal(amount);
       expect(await lock.totalLocked()).to.equal(amount);
-      expect(await token.balanceOf(lock.address)).to.equal(amount);
+      expect(await token.balanceOf(lock.target)).to.equal(amount);
     });
 
     it("accumulates on multiple locks", async () => {
       const first = parse("5000");
       const second = parse("3000");
 
-      await token.connect(userA).approve(lock.address, first.add(second));
+      await token.connect(userA).approve(lock.target, BigInt(first)+BigInt(second));
       await lock.connect(userA).lock(first);
       await lock.connect(userA).lock(second);
 
-      expect(await lock.lockedBalance(userA.address)).to.equal(first.add(second));
-      expect(await lock.totalLocked()).to.equal(first.add(second));
+      expect(await lock.lockedBalance(userA.address)).to.equal(BigInt(first)+BigInt(second));
+      expect(await lock.totalLocked()).to.equal(BigInt(first)+BigInt(second));
     });
 
     it("reverts on zero amount", async () => {
@@ -100,9 +100,9 @@ describe("IFRLock", function () {
   describe("lockWithType()", () => {
     it("locks with a custom lockType tag", async () => {
       const amount = parse("10000");
-      const lockType = ethers.utils.id("premium");
+      const lockType = ethers.id("premium");
 
-      await token.connect(userA).approve(lock.address, amount);
+      await token.connect(userA).approve(lock.target, amount);
 
       await expect(lock.connect(userA).lockWithType(amount, lockType))
         .to.emit(lock, "Locked")
@@ -118,7 +118,7 @@ describe("IFRLock", function () {
     const lockAmount = parse("20000");
 
     beforeEach(async () => {
-      await token.connect(userA).approve(lock.address, lockAmount);
+      await token.connect(userA).approve(lock.target, lockAmount);
       await lock.connect(userA).lock(lockAmount);
     });
 
@@ -129,7 +129,7 @@ describe("IFRLock", function () {
         .to.emit(lock, "Unlocked")
         .withArgs(userA.address, lockAmount);
 
-      expect(await token.balanceOf(userA.address)).to.equal(balBefore.add(lockAmount));
+      expect(await token.balanceOf(userA.address)).to.equal(BigInt(balBefore)+BigInt(lockAmount));
       expect(await lock.lockedBalance(userA.address)).to.equal(0);
       expect(await lock.totalLocked()).to.equal(0);
     });
@@ -151,7 +151,7 @@ describe("IFRLock", function () {
       const amount = parse("10000");
 
       // Lock
-      await token.connect(userA).approve(lock.address, amount.mul(2));
+      await token.connect(userA).approve(lock.target, BigInt(amount)*BigInt(2));
       await lock.connect(userA).lock(amount);
 
       // Unlock
@@ -170,7 +170,7 @@ describe("IFRLock", function () {
   describe("isLocked()", () => {
     it("returns true when locked amount >= minAmount", async () => {
       const amount = parse("10000");
-      await token.connect(userA).approve(lock.address, amount);
+      await token.connect(userA).approve(lock.target, amount);
       await lock.connect(userA).lock(amount);
 
       expect(await lock.isLocked(userA.address, amount)).to.equal(true);
@@ -180,7 +180,7 @@ describe("IFRLock", function () {
 
     it("returns false when locked amount < minAmount", async () => {
       const amount = parse("10000");
-      await token.connect(userA).approve(lock.address, amount);
+      await token.connect(userA).approve(lock.target, amount);
       await lock.connect(userA).lock(amount);
 
       expect(await lock.isLocked(userA.address, parse("10001"))).to.equal(false);
@@ -201,7 +201,7 @@ describe("IFRLock", function () {
   describe("lockInfo()", () => {
     it("returns amount and lockedAt timestamp", async () => {
       const amount = parse("15000");
-      await token.connect(userA).approve(lock.address, amount);
+      await token.connect(userA).approve(lock.target, amount);
       await lock.connect(userA).lock(amount);
 
       const info = await lock.lockInfo(userA.address);
@@ -216,7 +216,7 @@ describe("IFRLock", function () {
     });
 
     it("updates lockedAt on additional lock", async () => {
-      await token.connect(userA).approve(lock.address, parse("20000"));
+      await token.connect(userA).approve(lock.target, parse("20000"));
       await lock.connect(userA).lock(parse("10000"));
 
       const info1 = await lock.lockInfo(userA.address);
@@ -239,10 +239,10 @@ describe("IFRLock", function () {
       const amount = parse("10000");
       const balBefore = await token.balanceOf(userA.address);
 
-      await token.connect(userA).approve(lock.address, amount);
+      await token.connect(userA).approve(lock.target, amount);
       await lock.connect(userA).lock(amount);
 
-      expect(await token.balanceOf(userA.address)).to.equal(balBefore.sub(amount));
+      expect(await token.balanceOf(userA.address)).to.equal(BigInt(balBefore)-BigInt(amount));
 
       await lock.connect(userA).unlock();
 
@@ -252,18 +252,18 @@ describe("IFRLock", function () {
 
     it("lock without feeExempt deducts fees (user receives less on unlock)", async () => {
       // Remove fee exemption from lock contract
-      await token.setFeeExempt(lock.address, false);
+      await token.setFeeExempt(lock.target, false);
       // Remove user exemption too
       await token.setFeeExempt(userA.address, false);
 
       const amount = parse("10000");
       const balBefore = await token.balanceOf(userA.address);
 
-      await token.connect(userA).approve(lock.address, amount);
+      await token.connect(userA).approve(lock.target, amount);
       await lock.connect(userA).lock(amount);
 
       // Contract receives less than amount due to fees
-      const contractBal = await token.balanceOf(lock.address);
+      const contractBal = await token.balanceOf(lock.target);
       expect(contractBal).to.be.lt(amount);
 
       // The lock records the original amount (from transferFrom)
@@ -279,14 +279,14 @@ describe("IFRLock", function () {
     it("guardian can pause and lock reverts", async () => {
       await lock.connect(guardian).pause();
 
-      await token.connect(userA).approve(lock.address, parse("1000"));
+      await token.connect(userA).approve(lock.target, parse("1000"));
       await expect(lock.connect(userA).lock(parse("1000")))
         .to.be.revertedWithCustomError(lock, "EnforcedPause");
     });
 
     it("unlock still works when paused", async () => {
       const amount = parse("10000");
-      await token.connect(userA).approve(lock.address, amount);
+      await token.connect(userA).approve(lock.target, amount);
       await lock.connect(userA).lock(amount);
 
       await lock.connect(guardian).pause();
@@ -302,7 +302,7 @@ describe("IFRLock", function () {
       await lock.connect(guardian).unpause();
 
       const amount = parse("1000");
-      await token.connect(userA).approve(lock.address, amount);
+      await token.connect(userA).approve(lock.target, amount);
       await expect(lock.connect(userA).lock(amount)).to.emit(lock, "Locked");
     });
 
@@ -330,7 +330,7 @@ describe("IFRLock", function () {
 
     it("reverts on zero address", async () => {
       await expect(
-        lock.connect(guardian).setGuardian(ethers.constants.AddressZero)
+        lock.connect(guardian).setGuardian(ethers.ZeroAddress)
       ).to.be.revertedWith("guardian=0");
     });
   });
@@ -342,15 +342,15 @@ describe("IFRLock", function () {
       const amountA = parse("10000");
       const amountB = parse("25000");
 
-      await token.connect(userA).approve(lock.address, amountA);
-      await token.connect(userB).approve(lock.address, amountB);
+      await token.connect(userA).approve(lock.target, amountA);
+      await token.connect(userB).approve(lock.target, amountB);
 
       await lock.connect(userA).lock(amountA);
       await lock.connect(userB).lock(amountB);
 
       expect(await lock.lockedBalance(userA.address)).to.equal(amountA);
       expect(await lock.lockedBalance(userB.address)).to.equal(amountB);
-      expect(await lock.totalLocked()).to.equal(amountA.add(amountB));
+      expect(await lock.totalLocked()).to.equal(BigInt(amountA)+BigInt(amountB));
 
       // UserA unlocks — should not affect userB
       await lock.connect(userA).unlock();
@@ -364,16 +364,16 @@ describe("IFRLock", function () {
 
   describe("Edge Cases", () => {
     it("lock with 1 wei (minimum possible amount)", async () => {
-      await token.connect(userA).approve(lock.address, 1);
+      await token.connect(userA).approve(lock.target, 1);
       await expect(lock.connect(userA).lock(1))
         .to.emit(lock, "Locked")
-        .withArgs(userA.address, 1, ethers.constants.HashZero);
+        .withArgs(userA.address, 1, ethers.ZeroHash);
       expect(await lock.lockedBalance(userA.address)).to.equal(1);
     });
 
     it("lock with max balance succeeds", async () => {
       const balance = await token.balanceOf(userA.address);
-      await token.connect(userA).approve(lock.address, balance);
+      await token.connect(userA).approve(lock.target, balance);
       await lock.connect(userA).lock(balance);
       expect(await lock.lockedBalance(userA.address)).to.equal(balance);
       expect(await token.balanceOf(userA.address)).to.equal(0);
@@ -381,8 +381,8 @@ describe("IFRLock", function () {
 
     it("lock exceeding balance reverts", async () => {
       const balance = await token.balanceOf(userA.address);
-      const tooMuch = balance.add(1);
-      await token.connect(userA).approve(lock.address, tooMuch);
+      const tooMuch = BigInt(balance)+BigInt(1);
+      await token.connect(userA).approve(lock.target, tooMuch);
       await expect(lock.connect(userA).lock(tooMuch)).to.be.reverted;
     });
 
@@ -390,7 +390,7 @@ describe("IFRLock", function () {
       const amount = parse("12345");
       const balBefore = await token.balanceOf(userA.address);
 
-      await token.connect(userA).approve(lock.address, amount);
+      await token.connect(userA).approve(lock.target, amount);
       await lock.connect(userA).lock(amount);
       await lock.connect(userA).unlock();
 
@@ -399,7 +399,7 @@ describe("IFRLock", function () {
 
     it("multiple lock-unlock cycles work correctly", async () => {
       const amount = parse("5000");
-      await token.connect(userA).approve(lock.address, amount.mul(3));
+      await token.connect(userA).approve(lock.target, BigInt(amount)*BigInt(3));
 
       // Cycle 1
       await lock.connect(userA).lock(amount);
@@ -418,25 +418,25 @@ describe("IFRLock", function () {
 
     it("isLocked boundary: exact amount returns true", async () => {
       const amount = parse("10000");
-      await token.connect(userA).approve(lock.address, amount);
+      await token.connect(userA).approve(lock.target, amount);
       await lock.connect(userA).lock(amount);
 
       expect(await lock.isLocked(userA.address, amount)).to.equal(true);
-      expect(await lock.isLocked(userA.address, amount.add(1))).to.equal(false);
+      expect(await lock.isLocked(userA.address, BigInt(amount)+BigInt(1))).to.equal(false);
     });
 
     it("totalLocked tracks across multiple users and unlocks", async () => {
       const amountA = parse("10000");
       const amountB = parse("20000");
 
-      await token.connect(userA).approve(lock.address, amountA);
-      await token.connect(userB).approve(lock.address, amountB);
+      await token.connect(userA).approve(lock.target, amountA);
+      await token.connect(userB).approve(lock.target, amountB);
 
       await lock.connect(userA).lock(amountA);
       expect(await lock.totalLocked()).to.equal(amountA);
 
       await lock.connect(userB).lock(amountB);
-      expect(await lock.totalLocked()).to.equal(amountA.add(amountB));
+      expect(await lock.totalLocked()).to.equal(BigInt(amountA)+BigInt(amountB));
 
       await lock.connect(userA).unlock();
       expect(await lock.totalLocked()).to.equal(amountB);
@@ -447,7 +447,7 @@ describe("IFRLock", function () {
 
     it("lockInfo resets after unlock", async () => {
       const amount = parse("10000");
-      await token.connect(userA).approve(lock.address, amount);
+      await token.connect(userA).approve(lock.target, amount);
       await lock.connect(userA).lock(amount);
 
       const infoBefore = await lock.lockInfo(userA.address);

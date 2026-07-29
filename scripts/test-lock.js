@@ -10,8 +10,8 @@ const { ethers } = require("hardhat");
  */
 
 const DECIMALS = 9;
-const fmt = (bn) => ethers.utils.formatUnits(bn, DECIMALS);
-const parse = (s) => ethers.utils.parseUnits(s, DECIMALS);
+const fmt = (bn) => ethers.formatUnits(bn, DECIMALS);
+const parse = (s) => ethers.parseUnits(s, DECIMALS);
 
 const ADDRESSES = {
   token:    "0x3Bd71947F288d1dd8B21129B1bE4FF16EDd5d1F4",
@@ -67,13 +67,13 @@ async function main() {
 
   // ── Step 0b: Clear stale lock if exists (from pre-feeExempt test) ──
   const existingLock = await lock.lockedBalance(deployer.address);
-  if (existingLock.gt(0)) {
+  if (BigInt(existingLock)>BigInt(0)) {
     hr("0b. CLEARING STALE LOCK");
     console.log(`  Existing lock: ${fmt(existingLock)} IFR`);
     const contractBal0 = await token.balanceOf(ADDRESSES.lock);
     console.log(`  Contract holds: ${fmt(contractBal0)} IFR`);
-    const deficit = existingLock.sub(contractBal0);
-    if (deficit.gt(0)) {
+    const deficit = BigInt(existingLock)-BigInt(contractBal0);
+    if (BigInt(deficit)>BigInt(0)) {
       console.log(`  Deficit: ${fmt(deficit)} IFR — topping up (fee-free since IFRLock is exempt)...`);
       const topUpTx = await token.transfer(ADDRESSES.lock, deficit);
       await topUpTx.wait();
@@ -116,7 +116,7 @@ async function main() {
 
   results.push(result(
     "lockedBalance == 5000 IFR",
-    lockedBal.eq(lockAmount),
+    BigInt(lockedBal)===BigInt(lockAmount),
     `Expected: ${fmt(lockAmount)} | Actual: ${fmt(lockedBal)}`
   ));
 
@@ -150,11 +150,11 @@ async function main() {
 
   const info = await lock.lockInfo(deployer.address);
   console.log(`  amount:   ${fmt(info.amount)} IFR`);
-  console.log(`  lockedAt: ${info.lockedAt.toString()} (${new Date(info.lockedAt.toNumber() * 1000).toISOString()})`);
+  console.log(`  lockedAt: ${info.lockedAt.toString()} (${new Date(Number(info.lockedAt) * 1000).toISOString()})`);
 
   results.push(result(
     "lockInfo.amount == 5000 IFR",
-    info.amount.eq(lockAmount),
+    BigInt(info.amount)===BigInt(lockAmount),
     `Actual: ${fmt(info.amount)}`
   ));
 
@@ -179,7 +179,7 @@ async function main() {
 
     results.push(result(
       "lockedBalance == 0 after unlock",
-      lockedAfter.eq(0),
+      BigInt(lockedAfter)===BigInt(0),
       `Actual: ${fmt(lockedAfter)}`
     ));
 
@@ -191,7 +191,7 @@ async function main() {
 
     results.push(result(
       "Balance restored after unlock",
-      balAfterUnlock.eq(balBefore),
+      BigInt(balAfterUnlock)===BigInt(balBefore),
       `Before: ${fmt(balBefore)} | After: ${fmt(balAfterUnlock)}`
     ));
   } else {

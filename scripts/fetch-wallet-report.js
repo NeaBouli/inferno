@@ -90,10 +90,10 @@ function fetchJSON(url) {
 }
 
 function fmtIFR(raw) {
-  return ethers.utils.formatUnits(raw, DECIMALS);
+  return ethers.formatUnits(raw, DECIMALS);
 }
 function fmtETH(raw) {
-  return ethers.utils.formatEther(raw);
+  return ethers.formatEther(raw);
 }
 function fmtNum(str) {
   const num = parseFloat(str);
@@ -146,7 +146,7 @@ async function main() {
     process.exit(1);
   }
 
-  const provider = new ethers.providers.JsonRpcProvider(rpcUrl);
+  const provider = new ethers.JsonRpcProvider(rpcUrl);
   const blockNum = await provider.getBlockNumber();
   const token = new ethers.Contract(
     IFR_TOKEN,
@@ -158,8 +158,8 @@ async function main() {
   );
 
   const totalSupply = await token.totalSupply();
-  const initialSupply = ethers.BigNumber.from("1000000000000000000"); // 1B * 1e9
-  const burned = initialSupply.sub(totalSupply);
+  const initialSupply = BigInt('1000000000000000000'); // 1B * 1e9
+  const burned = BigInt(initialSupply)-BigInt(totalSupply);
 
   console.log(`Block: ${blockNum}`);
   console.log(`Total Supply: ${fmtNum(fmtIFR(totalSupply))} IFR`);
@@ -192,7 +192,7 @@ async function main() {
           ...entry,
           ethBalance: "ERROR",
           ifrBalance: "ERROR",
-          ifrRaw: ethers.BigNumber.from(0),
+          ifrRaw: BigInt(0),
           txCount: null,
         });
       }
@@ -260,13 +260,13 @@ async function main() {
     govContract.delay(),
   ]);
 
-  console.log(`  Proposal Count: ${proposalCount.toNumber()}`);
+  console.log(`  Proposal Count: ${Number(proposalCount)}`);
   console.log(`  Owner: ${labelFor(govOwner)} (${govOwner})`);
   console.log(`  Guardian: ${labelFor(govGuardian)} (${govGuardian})`);
-  console.log(`  Delay: ${govDelay.toNumber()}s (${(govDelay.toNumber() / 3600).toFixed(1)}h)`);
+  console.log(`  Delay: ${Number(govDelay)}s (${(Number(govDelay) / 3600).toFixed(1)}h)`);
 
   const proposals = [];
-  const count = proposalCount.toNumber();
+  const count = Number(proposalCount);
   for (let i = 0; i < count; i++) {
     try {
       const p = await govContract.getProposal(i);
@@ -274,7 +274,7 @@ async function main() {
       let status = "PENDING";
       if (p.cancelled) status = "CANCELLED";
       else if (p.executed) status = "EXECUTED";
-      else if (p.eta.toNumber() <= nowTs) status = "READY TO EXECUTE";
+      else if (Number(p.eta) <= nowTs) status = "READY TO EXECUTE";
 
       const decoded = decodeSel(p.data);
 
@@ -283,16 +283,16 @@ async function main() {
         target: p.target,
         data: p.data,
         decoded,
-        eta: p.eta.toNumber(),
-        etaDate: tsToDate(p.eta.toNumber()),
-        etaCET: tsToCET(p.eta.toNumber()),
+        eta: Number(p.eta),
+        etaDate: tsToDate(Number(p.eta)),
+        etaCET: tsToCET(Number(p.eta)),
         executed: p.executed,
         cancelled: p.cancelled,
         status,
       });
 
       console.log(
-        `  Proposal #${i}: ${status} | Target: ${labelFor(p.target)} | Fn: ${decoded} | ETA: ${tsToCET(p.eta.toNumber())}`
+        `  Proposal #${i}: ${status} | Target: ${labelFor(p.target)} | Fn: ${decoded} | ETA: ${tsToCET(Number(p.eta))}`
       );
     } catch (err) {
       console.error(`  Proposal #${i}: ERROR — ${err.message}`);
@@ -359,41 +359,41 @@ async function main() {
   const contractTokenTxs = {};
   for (const c of CONTRACTS) {
     try {
-      contractTxs[c.address] = await etherscanGet(
-        { module: "account", action: "txlist", address: c.address, startblock: 0, endblock: 99999999, page: 1, offset: 30, sort: "desc" },
+      contractTxs[c.target] = await etherscanGet(
+        { module: "account", action: "txlist", address: c.target, startblock: 0, endblock: 99999999, page: 1, offset: 30, sort: "desc" },
         etherscanKey
       );
-      contractTokenTxs[c.address] = await etherscanGet(
-        { module: "account", action: "tokentx", contractaddress: IFR_TOKEN, address: c.address, page: 1, offset: 30, sort: "desc" },
+      contractTokenTxs[c.target] = await etherscanGet(
+        { module: "account", action: "tokentx", contractaddress: IFR_TOKEN, address: c.target, page: 1, offset: 30, sort: "desc" },
         etherscanKey
       );
-      console.log(`  ${c.label}: ${contractTxs[c.address].length} TXs + ${contractTokenTxs[c.address].length} token transfers`);
+      console.log(`  ${c.label}: ${contractTxs[c.target].length} TXs + ${contractTokenTxs[c.target].length} token transfers`);
     } catch (err) {
-      contractTxs[c.address] = [];
-      contractTokenTxs[c.address] = [];
+      contractTxs[c.target] = [];
+      contractTokenTxs[c.target] = [];
       console.error(`  ${c.label}: ERROR — ${err.message}`);
     }
   }
 
   // ── 5. IFR Supply Check ───────────────────────────────
   const allResults = [...eoaResults, ...safeResults, ...contractResults];
-  let totalTracked = ethers.BigNumber.from(0);
-  for (const r of allResults) totalTracked = totalTracked.add(r.ifrRaw);
+  let totalTracked = BigInt(0);
+  for (const r of allResults) totalTracked = BigInt(totalTracked)+BigInt(r.ifrRaw);
 
-  let eoaTotal = ethers.BigNumber.from(0);
-  for (const r of eoaResults) eoaTotal = eoaTotal.add(r.ifrRaw);
-  let safeTotal = ethers.BigNumber.from(0);
-  for (const r of safeResults) safeTotal = safeTotal.add(r.ifrRaw);
-  let contractTotal = ethers.BigNumber.from(0);
-  for (const r of contractResults) contractTotal = contractTotal.add(r.ifrRaw);
+  let eoaTotal = BigInt(0);
+  for (const r of eoaResults) eoaTotal = BigInt(eoaTotal)+BigInt(r.ifrRaw);
+  let safeTotal = BigInt(0);
+  for (const r of safeResults) safeTotal = BigInt(safeTotal)+BigInt(r.ifrRaw);
+  let contractTotal = BigInt(0);
+  for (const r of contractResults) contractTotal = BigInt(contractTotal)+BigInt(r.ifrRaw);
 
-  const untracked = totalSupply.sub(totalTracked);
+  const untracked = BigInt(totalSupply)-BigInt(totalTracked);
 
   console.log(`\n── Supply Check ──`);
   console.log(`  Tracked:   ${fmtNum(fmtIFR(totalTracked))} IFR`);
   console.log(`  Supply:    ${fmtNum(fmtIFR(totalSupply))} IFR`);
   console.log(`  Untracked: ${fmtNum(fmtIFR(untracked))} IFR`);
-  if (!untracked.isZero()) {
+  if (!BigInt(untracked)===BigInt(0)) {
     console.log(`  ⚠ WARNING: ${fmtNum(fmtIFR(untracked))} IFR not accounted for!`);
   }
 
@@ -424,7 +424,7 @@ async function main() {
   if (govOwner.toLowerCase() !== SAFE_WALLETS[0].address.toLowerCase()) {
     actions.push(`- **Governance Owner** is ${labelFor(govOwner)} (\`${shortAddr(govOwner)}\`) — transfer to Gnosis Safe pending`);
   }
-  if (!untracked.isZero()) {
+  if (!BigInt(untracked)===BigInt(0)) {
     actions.push(`- **${fmtNum(fmtIFR(untracked))} IFR untracked** — not in any monitored wallet/contract`);
   }
   if (actions.length === 0) {
@@ -466,7 +466,7 @@ async function main() {
   md += `## 4. Governance — Proposal Overview\n\n`;
   md += `**Owner:** ${labelFor(govOwner)} (\`${govOwner}\`)\n`;
   md += `**Guardian:** ${labelFor(govGuardian)} (\`${govGuardian}\`)\n`;
-  md += `**Delay:** ${govDelay.toNumber()}s (${(govDelay.toNumber() / 3600).toFixed(1)}h)\n`;
+  md += `**Delay:** ${Number(govDelay)}s (${(Number(govDelay) / 3600).toFixed(1)}h)\n`;
   md += `**Proposals:** ${count}\n\n`;
 
   if (count > 0) {
@@ -511,7 +511,7 @@ async function main() {
       const isOut = tx.from.toLowerCase() === deployerAddr;
       const dir = isOut ? "OUT" : "IN";
       const cp = isOut ? tx.to : tx.from;
-      const ethVal = fmtNum(ethers.utils.formatEther(tx.value || "0"));
+      const ethVal = fmtNum(ethers.formatEther(tx.value || "0"));
       const fn = tx.functionName ? tx.functionName.split("(")[0] : decodeSel(tx.input);
       md += `| ${tsToDate(tx.timeStamp)} | ${dir} | ${labelFor(cp)} [\`${shortAddr(cp)}\`](https://etherscan.io/address/${cp}) | ${ethVal} | ${fn} | [\`${tx.hash.slice(0, 10)}...\`](https://etherscan.io/tx/${tx.hash}) |\n`;
     }
@@ -532,7 +532,7 @@ async function main() {
       const isOut = tx.from.toLowerCase() === eoa.address.toLowerCase();
       const dir = isOut ? "OUT" : "IN";
       const cp = isOut ? tx.to : tx.from;
-      const ifrVal = fmtNum(ethers.utils.formatUnits(tx.value || "0", DECIMALS));
+      const ifrVal = fmtNum(ethers.formatUnits(tx.value || "0", DECIMALS));
       const cpLabel = labelFor(cp);
       md += `| ${tsToDate(tx.timeStamp)} | ${dir} | ${cpLabel} [\`${shortAddr(cp)}\`](https://etherscan.io/address/${cp}) | ${ifrVal} | [\`${tx.hash.slice(0, 10)}...\`](https://etherscan.io/tx/${tx.hash}) |\n`;
     }
@@ -542,11 +542,11 @@ async function main() {
   // ── 7. Smart Contract TX Histories ──
   md += `## 7. Smart Contract TX Histories\n\n`;
   for (const c of CONTRACTS) {
-    const txs = contractTxs[c.address] || [];
-    const tokenTx = contractTokenTxs[c.address] || [];
+    const txs = contractTxs[c.target] || [];
+    const tokenTx = contractTokenTxs[c.target] || [];
     if (txs.length === 0 && tokenTx.length === 0) continue;
 
-    md += `### ${c.label} (\`${shortAddr(c.address)}\`)\n\n`;
+    md += `### ${c.label} (\`${shortAddr(c.target)}\`)\n\n`;
 
     if (txs.length > 0) {
       md += `**Function Calls:**\n\n`;
@@ -565,10 +565,10 @@ async function main() {
       md += `| Date | Dir | Counterparty | IFR Amount | TX |\n`;
       md += `|------|-----|--------------|------------|----|\n`;
       for (const tx of tokenTx.slice(0, 20)) {
-        const isOut = tx.from.toLowerCase() === c.address.toLowerCase();
+        const isOut = tx.from.toLowerCase() === c.target.toLowerCase();
         const dir = isOut ? "OUT" : "IN";
         const cp = isOut ? tx.to : tx.from;
-        const ifrVal = fmtNum(ethers.utils.formatUnits(tx.value || "0", DECIMALS));
+        const ifrVal = fmtNum(ethers.formatUnits(tx.value || "0", DECIMALS));
         md += `| ${tsToDate(tx.timeStamp)} | ${dir} | ${labelFor(cp)} | ${ifrVal} | [\`${tx.hash.slice(0, 10)}...\`](https://etherscan.io/tx/${tx.hash}) |\n`;
       }
       md += `\n`;
@@ -580,7 +580,7 @@ async function main() {
   md += `| Category | IFR Balance |\n`;
   md += `|----------|-------------|\n`;
   for (const r of [...eoaResults, ...safeResults, ...contractResults]) {
-    if (r.ifrRaw.isZero()) continue;
+    if (BigInt(r.ifrRaw)===BigInt(0)) continue;
     md += `| ${r.label} | ${fmtNum(r.ifrBalance)} |\n`;
   }
   md += `| | |\n`;
@@ -590,11 +590,11 @@ async function main() {
   md += `| **Tracked Total** | **${fmtNum(fmtIFR(totalTracked))}** |\n`;
   md += `| On-Chain Supply | ${fmtNum(fmtIFR(totalSupply))} |\n`;
   md += `| Burned (from 1B) | ${fmtNum(fmtIFR(burned))} |\n`;
-  if (!untracked.isZero()) {
+  if (!BigInt(untracked)===BigInt(0)) {
     md += `| **Untracked** | **${fmtNum(fmtIFR(untracked))}** |\n`;
   }
   md += `\n`;
-  if (untracked.isZero()) {
+  if (BigInt(untracked)===BigInt(0)) {
     md += `**Supply verified: ${fmtNum(fmtIFR(totalTracked))} IFR tracked = ${fmtNum(fmtIFR(totalSupply))} on-chain supply.**\n\n`;
   } else {
     md += `**WARNING: ${fmtNum(fmtIFR(untracked))} IFR unaccounted for.**\n\n`;
@@ -605,12 +605,12 @@ async function main() {
   md += `| From | To | ETH | Purpose |\n`;
   md += `|------|----|-----|---------|\n`;
   for (const tx of dTxs) {
-    const ethVal = parseFloat(ethers.utils.formatEther(tx.value || "0"));
+    const ethVal = parseFloat(ethers.formatEther(tx.value || "0"));
     if (ethVal <= 0) continue;
     const isOut = tx.from.toLowerCase() === deployerAddr;
     if (!isOut) continue;
     const fn = tx.functionName ? tx.functionName.split("(")[0] : "ETH transfer";
-    md += `| Deployer | ${labelFor(tx.to)} | ${fmtNum(ethers.utils.formatEther(tx.value))} | ${fn} |\n`;
+    md += `| Deployer | ${labelFor(tx.to)} | ${fmtNum(ethers.formatEther(tx.value))} | ${fn} |\n`;
   }
   md += `\n`;
 

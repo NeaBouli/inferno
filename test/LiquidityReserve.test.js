@@ -5,8 +5,8 @@ describe("LiquidityReserve", function () {
   let owner, guardian, recipient, user;
   let token, reserve;
 
-  const RESERVE_AMOUNT = ethers.utils.parseUnits("200000000", 9); // 200M IFR
-  const MAX_PER_PERIOD = ethers.utils.parseUnits("50000000", 9);  // 50M IFR
+  const RESERVE_AMOUNT = ethers.parseUnits("200000000", 9); // 200M IFR
+  const MAX_PER_PERIOD = ethers.parseUnits("50000000", 9);  // 50M IFR
   const LOCK_DURATION = 180 * 86400;  // 180 days
   const PERIOD_DURATION = 90 * 86400; // 90 days
 
@@ -15,29 +15,29 @@ describe("LiquidityReserve", function () {
 
     const InfernoToken = await ethers.getContractFactory("InfernoToken");
     token = await InfernoToken.deploy(owner.address);
-    await token.deployed();
+    await token.waitForDeployment();
 
     await token.setFeeExempt(owner.address, true);
 
     const LiquidityReserve = await ethers.getContractFactory("LiquidityReserve");
     reserve = await LiquidityReserve.deploy(
-      token.address,
+      token.target,
       LOCK_DURATION,
       MAX_PER_PERIOD,
       PERIOD_DURATION,
       guardian.address
     );
-    await reserve.deployed();
+    await reserve.waitForDeployment();
 
-    await token.setFeeExempt(reserve.address, true);
-    await token.transfer(reserve.address, RESERVE_AMOUNT);
+    await token.setFeeExempt(reserve.target, true);
+    await token.transfer(reserve.target, RESERVE_AMOUNT);
   });
 
   describe("Deployment", () => {
     it("sets all parameters correctly", async () => {
       expect(await reserve.owner()).to.equal(owner.address);
       expect(await reserve.guardian()).to.equal(guardian.address);
-      expect(await reserve.token()).to.equal(token.address);
+      expect(await reserve.token()).to.equal(token.target);
       expect(await reserve.periodDuration()).to.equal(PERIOD_DURATION);
       expect(await reserve.maxWithdrawPerPeriod()).to.equal(MAX_PER_PERIOD);
       expect(await reserve.totalWithdrawn()).to.equal(0);
@@ -51,35 +51,35 @@ describe("LiquidityReserve", function () {
     it("reverts if token is zero address", async () => {
       const LR = await ethers.getContractFactory("LiquidityReserve");
       await expect(
-        LR.deploy(ethers.constants.AddressZero, LOCK_DURATION, MAX_PER_PERIOD, PERIOD_DURATION, guardian.address)
+        LR.deploy(ethers.ZeroAddress, LOCK_DURATION, MAX_PER_PERIOD, PERIOD_DURATION, guardian.address)
       ).to.be.revertedWith("token=0");
     });
 
     it("reverts if guardian is zero address", async () => {
       const LR = await ethers.getContractFactory("LiquidityReserve");
       await expect(
-        LR.deploy(token.address, LOCK_DURATION, MAX_PER_PERIOD, PERIOD_DURATION, ethers.constants.AddressZero)
+        LR.deploy(token.target, LOCK_DURATION, MAX_PER_PERIOD, PERIOD_DURATION, ethers.ZeroAddress)
       ).to.be.revertedWith("guardian=0");
     });
 
     it("reverts if lockDuration is zero", async () => {
       const LR = await ethers.getContractFactory("LiquidityReserve");
       await expect(
-        LR.deploy(token.address, 0, MAX_PER_PERIOD, PERIOD_DURATION, guardian.address)
+        LR.deploy(token.target, 0, MAX_PER_PERIOD, PERIOD_DURATION, guardian.address)
       ).to.be.revertedWith("lockDuration=0");
     });
 
     it("reverts if periodDuration is zero", async () => {
       const LR = await ethers.getContractFactory("LiquidityReserve");
       await expect(
-        LR.deploy(token.address, LOCK_DURATION, MAX_PER_PERIOD, 0, guardian.address)
+        LR.deploy(token.target, LOCK_DURATION, MAX_PER_PERIOD, 0, guardian.address)
       ).to.be.revertedWith("periodDuration=0");
     });
 
     it("reverts if maxWithdrawPerPeriod is zero", async () => {
       const LR = await ethers.getContractFactory("LiquidityReserve");
       await expect(
-        LR.deploy(token.address, LOCK_DURATION, 0, PERIOD_DURATION, guardian.address)
+        LR.deploy(token.target, LOCK_DURATION, 0, PERIOD_DURATION, guardian.address)
       ).to.be.revertedWith("maxWithdraw=0");
     });
   });
@@ -108,7 +108,7 @@ describe("LiquidityReserve", function () {
     });
 
     it("allows withdrawal up to period limit", async () => {
-      const amount = ethers.utils.parseUnits("30000000", 9); // 30M
+      const amount = ethers.parseUnits("30000000", 9); // 30M
 
       await expect(reserve.withdraw(recipient.address, amount))
         .to.emit(reserve, "Withdrawn")
@@ -119,18 +119,18 @@ describe("LiquidityReserve", function () {
     });
 
     it("allows multiple withdrawals up to period limit", async () => {
-      const amount1 = ethers.utils.parseUnits("20000000", 9); // 20M
-      const amount2 = ethers.utils.parseUnits("30000000", 9); // 30M
+      const amount1 = ethers.parseUnits("20000000", 9); // 20M
+      const amount2 = ethers.parseUnits("30000000", 9); // 30M
 
       await reserve.withdraw(recipient.address, amount1);
       await reserve.withdraw(recipient.address, amount2);
 
-      expect(await reserve.totalWithdrawn()).to.equal(amount1.add(amount2));
-      expect(await token.balanceOf(recipient.address)).to.equal(amount1.add(amount2));
+      expect(await reserve.totalWithdrawn()).to.equal(BigInt(amount1)+BigInt(amount2));
+      expect(await token.balanceOf(recipient.address)).to.equal(BigInt(amount1)+BigInt(amount2));
     });
 
     it("reverts if exceeding period limit", async () => {
-      const tooMuch = MAX_PER_PERIOD.add(1);
+      const tooMuch = BigInt(MAX_PER_PERIOD)+BigInt(1);
       await expect(
         reserve.withdraw(recipient.address, tooMuch)
       ).to.be.revertedWith("exceeds period limit");
@@ -155,7 +155,7 @@ describe("LiquidityReserve", function () {
       await expect(reserve.withdraw(recipient.address, MAX_PER_PERIOD))
         .to.emit(reserve, "Withdrawn");
 
-      expect(await reserve.totalWithdrawn()).to.equal(MAX_PER_PERIOD.mul(2));
+      expect(await reserve.totalWithdrawn()).to.equal(BigInt(MAX_PER_PERIOD)*BigInt(2));
     });
 
     it("full staged withdrawal over 4 periods", async () => {
@@ -185,12 +185,12 @@ describe("LiquidityReserve", function () {
 
     it("reverts on zero address", async () => {
       await expect(
-        reserve.withdraw(ethers.constants.AddressZero, MAX_PER_PERIOD)
+        reserve.withdraw(ethers.ZeroAddress, MAX_PER_PERIOD)
       ).to.be.revertedWith("to=0");
     });
 
     it("reverts if amount exceeds balance", async () => {
-      const tooMuch = RESERVE_AMOUNT.add(1);
+      const tooMuch = BigInt(RESERVE_AMOUNT)+BigInt(1);
       // Update period limit to allow it
       await reserve.setMaxWithdrawPerPeriod(tooMuch);
       await expect(
@@ -211,10 +211,10 @@ describe("LiquidityReserve", function () {
       await ethers.provider.send("evm_increaseTime", [LOCK_DURATION]);
       await ethers.provider.send("evm_mine", []);
 
-      const amount = ethers.utils.parseUnits("20000000", 9);
+      const amount = ethers.parseUnits("20000000", 9);
       await reserve.withdraw(recipient.address, amount);
 
-      expect(await reserve.availableToWithdraw()).to.equal(MAX_PER_PERIOD.sub(amount));
+      expect(await reserve.availableToWithdraw()).to.equal(BigInt(MAX_PER_PERIOD)-BigInt(amount));
     });
 
     it("returns 0 when paused", async () => {
@@ -254,7 +254,7 @@ describe("LiquidityReserve", function () {
 
   describe("setMaxWithdrawPerPeriod()", () => {
     it("owner can update", async () => {
-      const newMax = ethers.utils.parseUnits("75000000", 9);
+      const newMax = ethers.parseUnits("75000000", 9);
       await expect(reserve.setMaxWithdrawPerPeriod(newMax))
         .to.emit(reserve, "MaxWithdrawPerPeriodUpdated")
         .withArgs(newMax);
@@ -294,12 +294,12 @@ describe("LiquidityReserve", function () {
     it("returns balance when balance < periodRemaining", async () => {
       // Deploy reserve with very small balance
       const LR = await ethers.getContractFactory("LiquidityReserve");
-      const smallReserve = await LR.deploy(token.address, 1, MAX_PER_PERIOD, PERIOD_DURATION, guardian.address);
-      await smallReserve.deployed();
-      await token.setFeeExempt(smallReserve.address, true);
+      const smallReserve = await LR.deploy(token.target, 1, MAX_PER_PERIOD, PERIOD_DURATION, guardian.address);
+      await smallReserve.waitForDeployment();
+      await token.setFeeExempt(smallReserve.target, true);
 
-      const smallAmount = ethers.utils.parseUnits("100", 9);
-      await token.transfer(smallReserve.address, smallAmount);
+      const smallAmount = ethers.parseUnits("100", 9);
+      await token.transfer(smallReserve.target, smallAmount);
 
       // Advance past lock
       await ethers.provider.send("evm_increaseTime", [2]);
@@ -326,7 +326,7 @@ describe("LiquidityReserve", function () {
 
     it("reverts for zero address", async () => {
       await expect(
-        reserve.setGuardian(ethers.constants.AddressZero)
+        reserve.setGuardian(ethers.ZeroAddress)
       ).to.be.revertedWith("guardian=0");
     });
   });
@@ -365,7 +365,7 @@ describe("LiquidityReserve", function () {
 
     it("reverts with zero address", async () => {
       await expect(
-        reserve.transferOwnership(ethers.constants.AddressZero)
+        reserve.transferOwnership(ethers.ZeroAddress)
       ).to.be.revertedWith("newOwner=0");
     });
   });

@@ -5,6 +5,6 @@ async function main() {
   const network = await ethers.provider.getNetwork();
   console.log("Network:", network.name, `(chainId: ${network.chainId})`);
   console.log("Address:", deployer.address);
-  console.log("Balance:", ethers.utils.formatEther(balance), "ETH");
+  console.log("Balance:", ethers.formatEther(balance), "ETH");
 }
 main().then(() => process.exit(0)).catch(e => { console.error(e); process.exit(1); });

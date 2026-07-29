@@ -66,7 +66,7 @@ async function main() {
   ).toLowerCase();
 
   const rpcUrl   = process.env.MAINNET_RPC_URL || 'https://ethereum-rpc.publicnode.com';
-  const provider = new ethers.providers.JsonRpcProvider(rpcUrl);
+  const provider = new ethers.JsonRpcProvider(rpcUrl);
 
   console.log('=== contributor1-lending-allowance.js ===');
   console.log('Mode:', DRY_RUN ? 'DRY_RUN' : IS_MAINNET ? 'MAINNET (LIVE)' : 'DRY_RUN (default)');
@@ -94,40 +94,40 @@ async function main() {
 
   console.log('--- LendingVault state ---');
   console.log('owner:', lvOwner);
-  console.log('totalAvailable:', ethers.utils.formatUnits(totalAvailable, IFR_DECIMALS), 'IFR');
-  console.log('totalLent:', ethers.utils.formatUnits(totalLent, IFR_DECIMALS), 'IFR');
-  console.log('interestRate:', interestRate.toString(), 'bps/month (' + (interestRate.toNumber() / 100) + '% /month)');
+  console.log('totalAvailable:', ethers.formatUnits(totalAvailable, IFR_DECIMALS), 'IFR');
+  console.log('totalLent:', ethers.formatUnits(totalLent, IFR_DECIMALS), 'IFR');
+  console.log('interestRate:', interestRate.toString(), 'bps/month (' + (Number(interestRate) / 100) + '% /month)');
   console.log('');
   console.log('--- Contributor state ---');
-  console.log('IFR balance:', ethers.utils.formatUnits(ifrBal, IFR_DECIMALS), 'IFR');
-  console.log('LV allowance:', ethers.utils.formatUnits(lvAllowance, IFR_DECIMALS), 'IFR');
+  console.log('IFR balance:', ethers.formatUnits(ifrBal, IFR_DECIMALS), 'IFR');
+  console.log('LV allowance:', ethers.formatUnits(lvAllowance, IFR_DECIMALS), 'IFR');
   console.log('Has existing offer:', hasOffer);
 
   if (hasOffer) {
     const offerIdx = await lv.lenderOfferIndex(contributor);
     const offer    = await lv.offers(offerIdx);
     console.log('  Offer ID:', offerIdx.toString());
-    console.log('  Available:', ethers.utils.formatUnits(offer.availableIFR, IFR_DECIMALS), 'IFR');
-    console.log('  Lent:', ethers.utils.formatUnits(offer.lentIFR, IFR_DECIMALS), 'IFR');
+    console.log('  Available:', ethers.formatUnits(offer.availableIFR, IFR_DECIMALS), 'IFR');
+    console.log('  Lent:', ethers.formatUnits(offer.lentIFR, IFR_DECIMALS), 'IFR');
     console.log('  Active:', offer.active);
   }
   console.log('');
 
-  if (ifrBal.isZero()) {
+  if (BigInt(ifrBal)===BigInt(0)) {
     console.error('ERROR: IFR balance is 0. Ensure claim() has been called on BootstrapVault first.');
     process.exit(1);
   }
 
   // ── Dynamic lending amount: 50% of IFR balance ───────────────────────────────
-  const lendingAmount = ifrBal.div(LENDING_SHARE);
+  const lendingAmount = BigInt(ifrBal)/BigInt(LENDING_SHARE);
 
   console.log('--- Lending plan ---');
-  console.log('Offer amount (50% of balance):', ethers.utils.formatUnits(lendingAmount, IFR_DECIMALS), 'IFR');
+  console.log('Offer amount (50% of balance):', ethers.formatUnits(lendingAmount, IFR_DECIMALS), 'IFR');
   console.log('');
 
   // ── Build calldata ───────────────────────────────────────────────────────────
-  const lvIface    = new ethers.utils.Interface(LV_ABI);
-  const erc20Iface = new ethers.utils.Interface(ERC20_ABI);
+  const lvIface    = new ethers.Interface(LV_ABI);
+  const erc20Iface = new ethers.Interface(ERC20_ABI);
 
   const approveCalldata = erc20Iface.encodeFunctionData('approve', [LENDING_VAULT, lendingAmount]);
   const offerFnName    = hasOffer ? 'increaseOffer' : 'createOffer';
@@ -135,17 +135,17 @@ async function main() {
 
   console.log('--- Transactions to execute ---');
   console.log('');
-  console.log('[TX 0] ERC-20 approve(LendingVault,', ethers.utils.formatUnits(lendingAmount, IFR_DECIMALS), 'IFR)');
+  console.log('[TX 0] ERC-20 approve(LendingVault,', ethers.formatUnits(lendingAmount, IFR_DECIMALS), 'IFR)');
   console.log('  to:', IFR_TOKEN);
   console.log('  calldata:', approveCalldata);
   console.log('');
-  console.log('[TX 1] LendingVault.' + offerFnName + '(' + ethers.utils.formatUnits(lendingAmount, IFR_DECIMALS) + ' IFR)');
+  console.log('[TX 1] LendingVault.' + offerFnName + '(' + ethers.formatUnits(lendingAmount, IFR_DECIMALS) + ' IFR)');
   console.log('  to:', LENDING_VAULT);
   console.log('  calldata:', offerCalldata);
   console.log('  access: permissionless — any address can call createOffer()');
   console.log('');
 
-  if (ifrBal.lt(lendingAmount)) {
+  if (BigInt(ifrBal)<BigInt(lendingAmount)) {
     console.warn('WARNING: IFR balance insufficient for lending amount.');
   }
 
@@ -166,8 +166,8 @@ async function main() {
   const ifrSigned = ifr.connect(signer);
   const lvSigned  = lv.connect(signer);
 
-  if (lvAllowance.lt(lendingAmount)) {
-    console.log('Approving LendingVault to spend', ethers.utils.formatUnits(lendingAmount, IFR_DECIMALS), 'IFR...');
+  if (BigInt(lvAllowance)<BigInt(lendingAmount)) {
+    console.log('Approving LendingVault to spend', ethers.formatUnits(lendingAmount, IFR_DECIMALS), 'IFR...');
     const approveTx = await ifrSigned.approve(LENDING_VAULT, lendingAmount);
     console.log('approve tx:', approveTx.hash);
     await approveTx.wait();
@@ -177,13 +177,13 @@ async function main() {
   }
 
   if (hasOffer) {
-    console.log('Increasing existing offer by', ethers.utils.formatUnits(lendingAmount, IFR_DECIMALS), 'IFR...');
+    console.log('Increasing existing offer by', ethers.formatUnits(lendingAmount, IFR_DECIMALS), 'IFR...');
     const tx = await lvSigned.increaseOffer(lendingAmount);
     console.log('increaseOffer tx:', tx.hash);
     await tx.wait();
     console.log('increaseOffer confirmed');
   } else {
-    console.log('Creating new lending offer with', ethers.utils.formatUnits(lendingAmount, IFR_DECIMALS), 'IFR...');
+    console.log('Creating new lending offer with', ethers.formatUnits(lendingAmount, IFR_DECIMALS), 'IFR...');
     const tx = await lvSigned.createOffer(lendingAmount);
     console.log('createOffer tx:', tx.hash);
     await tx.wait();
@@ -195,7 +195,7 @@ async function main() {
   console.log('');
   console.log('=== Done ===');
   console.log('Offer ID:', newOfferIdx.toString());
-  console.log('Available:', ethers.utils.formatUnits(newOffer.availableIFR, IFR_DECIMALS), 'IFR');
+  console.log('Available:', ethers.formatUnits(newOffer.availableIFR, IFR_DECIMALS), 'IFR');
 }
 
 main().catch((err) => {

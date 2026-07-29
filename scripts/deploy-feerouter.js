@@ -1,14 +1,14 @@
 const { ethers } = require("hardhat");
 
 const DECIMALS = 9;
-const fmt = (v) => ethers.utils.formatUnits(v, DECIMALS);
+const fmt = (v) => ethers.formatUnits(v, DECIMALS);
 
 async function main() {
   const [deployer] = await ethers.getSigners();
   console.log("Deployer:", deployer.address);
 
   const balance = await deployer.getBalance();
-  console.log("ETH Balance:", ethers.utils.formatEther(balance));
+  console.log("ETH Balance:", ethers.formatEther(balance));
 
   // --- Config ---
   const GOVERNANCE = "0xc43d48E7FDA576C5022d0670B652A622E8caD041";
@@ -22,8 +22,8 @@ async function main() {
 
   const FeeRouter = await ethers.getContractFactory("FeeRouterV1");
   const router = await FeeRouter.deploy(GOVERNANCE, FEE_COLLECTOR, VOUCHER_SIGNER);
-  await router.deployed();
-  console.log("\nFeeRouterV1 deployed:", router.address);
+  await router.waitForDeployment();
+  console.log("\nFeeRouterV1 deployed:", router.target);
 
   // --- Verify state ---
   console.log("\n--- Verification ---");
@@ -37,7 +37,7 @@ async function main() {
   console.log("\n✅ FeeRouterV1 deployed and verified!");
   console.log("\nNext steps:");
   console.log("1. Verify on Etherscan:");
-  console.log(`   npx hardhat verify --network sepolia ${router.address} "${GOVERNANCE}" "${FEE_COLLECTOR}" "${VOUCHER_SIGNER}"`);
+  console.log(`   npx hardhat verify --network sepolia ${router.target} "${GOVERNANCE}" "${FEE_COLLECTOR}" "${VOUCHER_SIGNER}"`);
   console.log("2. Whitelist adapters via Governance proposal");
   console.log("3. Update FEE_ROUTER_ADDRESS in apps/points-backend/.env");
 }

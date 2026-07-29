@@ -29,7 +29,7 @@ async function main() {
     process.exit(1);
   }
 
-  const provider = new ethers.providers.JsonRpcProvider(
+  const provider = new ethers.JsonRpcProvider(
     process.env.RPC_URL || 'https://ethereum-rpc.publicnode.com'
   );
   const signer = new ethers.Wallet(process.env.DEPLOYER_PRIVATE_KEY, provider);
@@ -44,11 +44,11 @@ async function main() {
 
   const network = await provider.getNetwork();
   console.log('Signer: ', signer.address);
-  console.log('Network:', network.chainId === 1 ? 'Ethereum Mainnet' : `Chain ${network.chainId}`);
+  console.log('Network:', network.chainId === 1n ? 'Ethereum Mainnet' : `Chain ${network.chainId}`);
   console.log('');
 
   const gov = new ethers.Contract(GOV_ADDRESS, GOV_ABI, signer);
-  const iface = new ethers.utils.Interface(['function setFeeExempt(address,bool)']);
+  const iface = new ethers.Interface(['function setFeeExempt(address,bool)']);
   const results = [];
 
   for (const t of TARGETS) {
@@ -60,10 +60,10 @@ async function main() {
     console.log('  TX:', tx.hash);
     const receipt = await tx.wait();
 
-    const event = receipt.events.find(function(e) { return e.event === 'ProposalCreated'; });
+    const event = receipt.logs.find((entry) => entry.fragment?.name === 'ProposalCreated');
     if (event) {
       const id = event.args.proposalId.toString();
-      const eta = new Date(event.args.eta.toNumber() * 1000);
+      const eta = new Date(Number(event.args.eta) * 1000);
       console.log('  Proposal ID:', id);
       console.log('  Execute after:', eta.toISOString());
       results.push({ name: t.name, id, eta: eta.toISOString() });
@@ -82,7 +82,7 @@ async function main() {
   console.log('');
   console.log('To execute after 48h:');
   console.log('  node -e "require(\'dotenv\').config();const{ethers}=require(\'ethers\');' +
-    'const p=new ethers.providers.JsonRpcProvider(process.env.RPC_URL||\'https://ethereum-rpc.publicnode.com\');' +
+    'const p=new ethers.JsonRpcProvider(process.env.RPC_URL||\'https://ethereum-rpc.publicnode.com\');' +
     'const s=new ethers.Wallet(process.env.DEPLOYER_PRIVATE_KEY,p);' +
     'const g=new ethers.Contract(\'' + GOV_ADDRESS + '\',[\'function execute(uint256)\'],s);' +
     'g.execute(PROPOSAL_ID).then(tx=>tx.wait()).then(()=>console.log(\'Done\'))"');

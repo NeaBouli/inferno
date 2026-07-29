@@ -1,4 +1,4 @@
-# Ausstehende Major Upgrades
+# Major-Upgrade-Status
 
 > Erstellt: 2026-04-14 | Alle PRs geschlossen mit Verweis auf diese Datei.
 
@@ -11,7 +11,7 @@
 | #8 | hardhat | 2.28.6 | 3.1.12 | Mittel | 3 |
 | #5 | @nomicfoundation/hardhat-verify | 2.1.3 | 3.0.12 | Mittel | 3 |
 | #7 | chai | 4.5.0 | 6.2.2 | Mittel | 3 |
-| #4 | ethers | 5.8.0 | 6.16.0 | Gross | 4 |
+| #4 | ethers | 5.8.0 | 6.17.0 | Erledigt 29.07.2026 | - |
 
 ## Migrationsreihenfolge
 
@@ -19,17 +19,17 @@
    - Node.js Runtime-Update, keine Code-Änderungen nötig
    - Kann sofort gemacht werden
 
-2. **#8 + #5 + #7 — Hardhat 3 + Verify 3 + Chai 6** — MITTEL
+2. **#4 — ethers v6** — ERLEDIGT
+   - Alle Root-Tests, Admin-Tasks und Hardhat-/Governance-Skripte auf
+     native `bigint` und die Ethers-6-APIs migriert
+   - Root bleibt fuer diesen isolierten Schritt auf Hardhat 2.28.6
+   - Vollstaendige Contract-, Generator-, SDK- und Wallet-UI-Gates bestanden
+
+3. **#8 + #5 + #7 — Hardhat 3 + Verify 3 + Chai 6** — MITTEL
    - Hardhat 3: neues Plugin-System, Config-Format ändert sich
    - Chai 6: ESM-only, `expect` Import-Änderungen
    - hardhat-verify 3 hängt von Hardhat 3 ab → zusammen migrieren
    - Alle Tests müssen angepasst werden
-
-3. **#4 — ethers v6** — GROSS
-   - `BigNumber` → native `bigint`
-   - `Provider`/`Signer` API komplett überarbeitet
-   - Alle Contract-Interaktionen und Tests betroffen
-   - Nach Hardhat 3 Migration durchführen
 
 ## Hinweise
 
@@ -85,9 +85,20 @@ The production Shop dependency slice is separated from the root contract toolcha
 - Benefits CI enforces the low-severity audit threshold for both frontend and backend before
   typechecks, tests and builds.
 
-The root Hardhat/Waffle/Ganache lock and other apps that still use Ethers 5 remain separate
-migrations. Do not apply the Shop lockfile changes to the contract toolchain and do not use
-`npm audit fix --force`.
+The root Hardhat migration remains separate. Waffle/Ganache have since been removed and all
+active app manifests now use Ethers 6. Do not apply the Shop lockfile changes to the contract
+toolchain and do not use `npm audit fix --force`.
+
+## 2026-07-29 Root Ethers 6 Completion
+
+- Root runtime: `ethers@6.17.0` with `@nomicfoundation/hardhat-ethers@3.1.3`.
+- Hardhat intentionally remains at `2.28.6` until the separately tested Hardhat 3 migration.
+- The obsolete Ethers 5 formatter patches and direct `@ethersproject/providers` dependency
+  were removed.
+- Verification: clean install, compile, 642 contract tests, 30 generator tests, 36 SDK tests,
+  12 vote-announcement tests, Lending price self-test and all three Benefits Wallet UI paths.
+- Remaining root audit findings are transitive Hardhat 2 / coverage toolchain debt. There are
+  no critical findings; do not use `npm audit fix --force`.
 
 ## 2026-07-19 Critical Patch Update
 

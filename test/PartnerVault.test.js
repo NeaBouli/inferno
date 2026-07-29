@@ -5,15 +5,15 @@ describe("PartnerVault", function () {
   let owner, guardian, beneficiaryA, beneficiaryB, userA;
   let token, vault;
 
-  const parse = (s) => ethers.utils.parseUnits(s, 9);
+  const parse = (s) => ethers.parseUnits(s, 9);
   const PARTNER_POOL = parse("40000000");
   const DAY = 86400;
   const YEAR = 365 * DAY;
 
-  const PID_A = ethers.utils.id("partner-alpha");
-  const PID_B = ethers.utils.id("partner-beta");
-  const MS_1 = ethers.utils.id("milestone-1");
-  const MS_2 = ethers.utils.id("milestone-2");
+  const PID_A = ethers.id("partner-alpha");
+  const PID_B = ethers.id("partner-beta");
+  const MS_1 = ethers.id("milestone-1");
+  const MS_2 = ethers.id("milestone-2");
 
   // Default partner params
   const MAX_ALLOC = parse("1000000"); // 1M IFR
@@ -28,23 +28,23 @@ describe("PartnerVault", function () {
   async function deployVault() {
     const InfernoToken = await ethers.getContractFactory("InfernoToken");
     token = await InfernoToken.deploy(owner.address);
-    await token.deployed();
+    await token.waitForDeployment();
     await token.setFeeExempt(owner.address, true);
 
     const PartnerVault = await ethers.getContractFactory("PartnerVault");
     vault = await PartnerVault.deploy(
-      token.address,
+      token.target,
       owner.address,
       guardian.address,
       REWARD_BPS,
       ANNUAL_CAP
     );
-    await vault.deployed();
+    await vault.waitForDeployment();
 
     // Fund vault with 40M IFR
-    await token.transfer(vault.address, PARTNER_POOL);
+    await token.transfer(vault.target, PARTNER_POOL);
     // Make vault fee-exempt
-    await token.setFeeExempt(vault.address, true);
+    await token.setFeeExempt(vault.target, true);
   }
 
   async function createAndActivate(partnerId, beneficiary, maxAlloc) {
@@ -74,7 +74,7 @@ describe("PartnerVault", function () {
 
   describe("Deployment", () => {
     it("sets initial parameters correctly", async () => {
-      expect(await vault.ifrToken()).to.equal(token.address);
+      expect(await vault.ifrToken()).to.equal(token.target);
       expect(await vault.admin()).to.equal(owner.address);
       expect(await vault.guardian()).to.equal(guardian.address);
       expect(await vault.rewardBps()).to.equal(REWARD_BPS);
@@ -95,34 +95,34 @@ describe("PartnerVault", function () {
     it("reverts on zero token address", async () => {
       const F = await ethers.getContractFactory("PartnerVault");
       await expect(
-        F.deploy(ethers.constants.AddressZero, owner.address, guardian.address, REWARD_BPS, ANNUAL_CAP)
+        F.deploy(ethers.ZeroAddress, owner.address, guardian.address, REWARD_BPS, ANNUAL_CAP)
       ).to.be.revertedWith("token=0");
     });
 
     it("reverts on zero admin", async () => {
       const F = await ethers.getContractFactory("PartnerVault");
       await expect(
-        F.deploy(token.address, ethers.constants.AddressZero, guardian.address, REWARD_BPS, ANNUAL_CAP)
+        F.deploy(token.target, ethers.ZeroAddress, guardian.address, REWARD_BPS, ANNUAL_CAP)
       ).to.be.revertedWith("admin=0");
     });
 
     it("reverts on rewardBps out of range", async () => {
       const F = await ethers.getContractFactory("PartnerVault");
       await expect(
-        F.deploy(token.address, owner.address, guardian.address, 100, ANNUAL_CAP)
+        F.deploy(token.target, owner.address, guardian.address, 100, ANNUAL_CAP)
       ).to.be.revertedWith("bps out of range");
       await expect(
-        F.deploy(token.address, owner.address, guardian.address, 3000, ANNUAL_CAP)
+        F.deploy(token.target, owner.address, guardian.address, 3000, ANNUAL_CAP)
       ).to.be.revertedWith("bps out of range");
     });
 
     it("reverts on annualEmissionCap out of range", async () => {
       const F = await ethers.getContractFactory("PartnerVault");
       await expect(
-        F.deploy(token.address, owner.address, guardian.address, REWARD_BPS, parse("500000"))
+        F.deploy(token.target, owner.address, guardian.address, REWARD_BPS, parse("500000"))
       ).to.be.revertedWith("cap out of range");
       await expect(
-        F.deploy(token.address, owner.address, guardian.address, REWARD_BPS, parse("20000000"))
+        F.deploy(token.target, owner.address, guardian.address, REWARD_BPS, parse("20000000"))
       ).to.be.revertedWith("cap out of range");
     });
   });
@@ -162,13 +162,13 @@ describe("PartnerVault", function () {
 
     it("reverts on zero beneficiary", async () => {
       await expect(
-        vault.createPartner(PID_A, ethers.constants.AddressZero, MAX_ALLOC, VESTING, CLIFF, TIER)
+        vault.createPartner(PID_A, ethers.ZeroAddress, MAX_ALLOC, VESTING, CLIFF, TIER)
       ).to.be.revertedWith("beneficiary=0");
     });
 
     it("reverts if exceeds PARTNER_POOL", async () => {
       await expect(
-        vault.createPartner(PID_A, beneficiaryA.address, PARTNER_POOL.add(1), VESTING, CLIFF, TIER)
+        vault.createPartner(PID_A, beneficiaryA.address, BigInt(PARTNER_POOL)+BigInt(1), VESTING, CLIFF, TIER)
       ).to.be.revertedWith("exceeds pool");
     });
 
@@ -270,7 +270,7 @@ describe("PartnerVault", function () {
 
     it("reverts if exceeds maxAllocation", async () => {
       await expect(
-        vault.recordMilestone(PID_A, MS_1, MAX_ALLOC.add(1))
+        vault.recordMilestone(PID_A, MS_1, BigInt(MAX_ALLOC)+BigInt(1))
       ).to.be.revertedWith("exceeds allocation");
     });
 
@@ -297,7 +297,7 @@ describe("PartnerVault", function () {
 
     it("calculates reward correctly (lockAmount * rewardBps / 10000)", async () => {
       const lockAmount = parse("10000"); // 10,000 IFR
-      const expectedReward = lockAmount.mul(REWARD_BPS).div(10000); // 1,500 IFR
+      const expectedReward = BigInt(BigInt(lockAmount)*BigInt(REWARD_BPS))/BigInt(10000); // 1,500 IFR
 
       await expect(vault.recordLockReward(PID_A, lockAmount, userA.address))
         .to.emit(vault, "LockRewardRecorded")
@@ -415,10 +415,10 @@ describe("PartnerVault", function () {
 
       const vested = await vault.vestedAmount(PID_A);
       // Should be approximately 50% of amount
-      const halfAmount = amount.div(2);
+      const halfAmount = BigInt(amount)/BigInt(2);
       const tolerance = parse("2000"); // small tolerance for block time
-      expect(vested).to.be.gte(halfAmount.sub(tolerance));
-      expect(vested).to.be.lte(halfAmount.add(tolerance));
+      expect(vested).to.be.gte(BigInt(halfAmount)-BigInt(tolerance));
+      expect(vested).to.be.lte(BigInt(halfAmount)+BigInt(tolerance));
     });
 
     it("full vesting after vestingDuration", async () => {
@@ -431,12 +431,12 @@ describe("PartnerVault", function () {
     it("milestone + reward combined in vesting calculation", async () => {
       const milestoneAmt = parse("200000");
       const lockAmount = parse("100000");
-      const rewardAmt = lockAmount.mul(REWARD_BPS).div(10000); // 15000
+      const rewardAmt = BigInt(BigInt(lockAmount)*BigInt(REWARD_BPS))/BigInt(10000); // 15000
 
       await vault.recordMilestone(PID_A, MS_1, milestoneAmt);
       await vault.recordLockReward(PID_A, lockAmount, userA.address);
 
-      const totalEarned = milestoneAmt.add(rewardAmt);
+      const totalEarned = BigInt(milestoneAmt)+BigInt(rewardAmt);
 
       // After full vesting
       await advanceTime(VESTING + 1);
@@ -445,7 +445,7 @@ describe("PartnerVault", function () {
 
     it("vesting with zero cliff starts immediately", async () => {
       // Create partner with no cliff
-      const pid = ethers.utils.id("no-cliff");
+      const pid = ethers.id("no-cliff");
       await vault.createPartner(pid, beneficiaryA.address, MAX_ALLOC, VESTING, 0, TIER);
       await vault.activatePartner(pid);
 
@@ -457,8 +457,8 @@ describe("PartnerVault", function () {
       const vested = await vault.vestedAmount(pid);
       const half = parse("90000");
       const tolerance = parse("1000");
-      expect(vested).to.be.gte(half.sub(tolerance));
-      expect(vested).to.be.lte(half.add(tolerance));
+      expect(vested).to.be.gte(BigInt(half)-BigInt(tolerance));
+      expect(vested).to.be.lte(BigInt(half)+BigInt(tolerance));
     });
   });
 
@@ -479,7 +479,7 @@ describe("PartnerVault", function () {
         .withArgs(PID_A, beneficiaryA.address, parse("300000"));
 
       const balAfter = await token.balanceOf(beneficiaryA.address);
-      expect(balAfter.sub(balBefore)).to.equal(parse("300000"));
+      expect(BigInt(balAfter)-BigInt(balBefore)).to.equal(parse("300000"));
 
       const p = await vault.partners(PID_A);
       expect(p.claimedTotal).to.equal(parse("300000"));
@@ -527,7 +527,7 @@ describe("PartnerVault", function () {
       await vault.claim(PID_A);
       const balAfter = await token.balanceOf(beneficiaryB.address);
 
-      expect(balAfter.sub(balBefore)).to.equal(parse("300000"));
+      expect(BigInt(balAfter)-BigInt(balBefore)).to.equal(parse("300000"));
     });
 
     it("anyone can call claim (permissionless)", async () => {
@@ -538,7 +538,7 @@ describe("PartnerVault", function () {
       await vault.connect(userA).claim(PID_A);
       const balAfter = await token.balanceOf(beneficiaryA.address);
 
-      expect(balAfter.sub(balBefore)).to.equal(parse("300000"));
+      expect(BigInt(balAfter)-BigInt(balBefore)).to.equal(parse("300000"));
     });
   });
 
@@ -615,7 +615,7 @@ describe("PartnerVault", function () {
     it("revert: allocation increase exceeds pool", async () => {
       await vault.createPartner(PID_A, beneficiaryA.address, PARTNER_POOL, VESTING, CLIFF, TIER);
       await expect(
-        vault.setPartnerAllocation(PID_A, PARTNER_POOL.add(1))
+        vault.setPartnerAllocation(PID_A, BigInt(PARTNER_POOL)+BigInt(1))
       ).to.be.revertedWith("exceeds pool");
     });
   });
@@ -636,12 +636,12 @@ describe("PartnerVault", function () {
       await vault.claim(PID_A);
       const balAfter = await token.balanceOf(beneficiaryA.address);
 
-      expect(balAfter.sub(balBefore)).to.equal(parse("100000"));
+      expect(BigInt(balAfter)-BigInt(balBefore)).to.equal(parse("100000"));
     });
 
     it("claim delivers less without feeExempt (fees deducted)", async () => {
       // Remove fee exemption
-      await token.setFeeExempt(vault.address, false);
+      await token.setFeeExempt(vault.target, false);
 
       await createAndActivate(PID_A, beneficiaryA.address);
       await vault.recordMilestone(PID_A, MS_1, parse("100000"));
@@ -652,7 +652,7 @@ describe("PartnerVault", function () {
       const balAfter = await token.balanceOf(beneficiaryA.address);
 
       // Beneficiary receives less due to fees
-      const received = balAfter.sub(balBefore);
+      const received = BigInt(balAfter)-BigInt(balBefore);
       expect(received).to.be.lt(parse("100000"));
     });
   });
@@ -682,7 +682,7 @@ describe("PartnerVault", function () {
       await vault.recordLockReward(PID_A, parse("100000"), userA.address); // 15000 reward
       await advanceTime(VESTING + 1);
 
-      const expectedReward = parse("100000").mul(REWARD_BPS).div(10000);
+      const expectedReward = BigInt(BigInt(parse('100000'))*BigInt(REWARD_BPS))/BigInt(10000);
       await vault.claim(PID_A);
       const p = await vault.partners(PID_A);
       expect(p.claimedTotal).to.equal(expectedReward);
@@ -709,7 +709,7 @@ describe("PartnerVault", function () {
       await vault.claim(PID_B);
 
       expect(await vault.totalClaimed()).to.equal(parse("500000"));
-      expect(await vault.totalAllocated()).to.equal(MAX_ALLOC.mul(2));
+      expect(await vault.totalAllocated()).to.equal(BigInt(MAX_ALLOC)*BigInt(2));
     });
 
     it("finalizeMilestones prevents further milestones", async () => {
@@ -733,7 +733,7 @@ describe("PartnerVault", function () {
       // Lock rewards should still work
       await vault.recordLockReward(PID_A, parse("50000"), userA.address);
       const p = await vault.partners(PID_A);
-      expect(p.rewardAccrued).to.equal(parse("50000").mul(REWARD_BPS).div(10000));
+      expect(p.rewardAccrued).to.equal(BigInt(BigInt(parse('50000'))*BigInt(REWARD_BPS))/BigInt(10000));
     });
   });
 
@@ -801,14 +801,14 @@ describe("PartnerVault", function () {
 
     it("setAuthorizedCaller reverts on zero address", async () => {
       await expect(
-        vault.setAuthorizedCaller(ethers.constants.AddressZero, true)
+        vault.setAuthorizedCaller(ethers.ZeroAddress, true)
       ).to.be.revertedWith("caller=0");
     });
 
     it("authorized caller can call recordLockReward", async () => {
       await vault.setAuthorizedCaller(userA.address, true);
       const lockAmount = parse("10000");
-      const expectedReward = lockAmount.mul(REWARD_BPS).div(10000);
+      const expectedReward = BigInt(BigInt(lockAmount)*BigInt(REWARD_BPS))/BigInt(10000);
 
       await expect(
         vault.connect(userA).recordLockReward(PID_A, lockAmount, beneficiaryA.address)
@@ -882,7 +882,7 @@ describe("PartnerVault", function () {
 
     it("zero wallet address reverts", async () => {
       await expect(
-        vault.recordLockReward(PID_A, parse("10000"), ethers.constants.AddressZero)
+        vault.recordLockReward(PID_A, parse("10000"), ethers.ZeroAddress)
       ).to.be.revertedWith("wallet=0");
     });
   });
@@ -897,17 +897,17 @@ describe("PartnerVault", function () {
 
       // Deploy real IFRLock for throttle tests
       const IFRLock = await ethers.getContractFactory("IFRLock");
-      ifrLock = await IFRLock.deploy(token.address, guardian.address);
-      await ifrLock.deployed();
+      ifrLock = await IFRLock.deploy(token.target, guardian.address);
+      await ifrLock.waitForDeployment();
 
       // Make IFRLock fee-exempt for lock/unlock
-      await token.setFeeExempt(ifrLock.address, true);
+      await token.setFeeExempt(ifrLock.target, true);
     });
 
     it("without ifrLock set, uses flat rewardBps (backward compat)", async () => {
       // ifrLock not set → _effectiveRewardBps() = rewardBps
       const lockAmount = parse("10000");
-      const expectedReward = lockAmount.mul(REWARD_BPS).div(10000);
+      const expectedReward = BigInt(BigInt(lockAmount)*BigInt(REWARD_BPS))/BigInt(10000);
 
       await vault.recordLockReward(PID_A, lockAmount, userA.address);
       const p = await vault.partners(PID_A);
@@ -915,15 +915,15 @@ describe("PartnerVault", function () {
     });
 
     it("setIFRLock works as admin and emits event", async () => {
-      await expect(vault.setIFRLock(ifrLock.address))
+      await expect(vault.setIFRLock(ifrLock.target))
         .to.emit(vault, "IFRLockUpdated")
-        .withArgs(ethers.constants.AddressZero, ifrLock.address);
-      expect(await vault.ifrLock()).to.equal(ifrLock.address);
+        .withArgs(ethers.ZeroAddress, ifrLock.target);
+      expect(await vault.ifrLock()).to.equal(ifrLock.target);
     });
 
     it("setIFRLock reverts for non-admin", async () => {
       await expect(
-        vault.connect(userA).setIFRLock(ifrLock.address)
+        vault.connect(userA).setIFRLock(ifrLock.target)
       ).to.be.revertedWith("not admin");
     });
 
@@ -932,13 +932,13 @@ describe("PartnerVault", function () {
       // Lock 5M IFR (0.5%)
       await token.setFeeExempt(userA.address, true);
       await token.transfer(userA.address, parse("5000000"));
-      await token.connect(userA).approve(ifrLock.address, parse("5000000"));
+      await token.connect(userA).approve(ifrLock.target, parse("5000000"));
       await ifrLock.connect(userA).lock(parse("5000000"));
 
-      await vault.setIFRLock(ifrLock.address);
+      await vault.setIFRLock(ifrLock.target);
 
       const lockAmount = parse("10000");
-      const expectedReward = lockAmount.mul(REWARD_BPS).div(10000); // full rate
+      const expectedReward = BigInt(BigInt(lockAmount)*BigInt(REWARD_BPS))/BigInt(10000); // full rate
 
       await vault.recordLockReward(PID_A, lockAmount, beneficiaryA.address);
       const p = await vault.partners(PID_A);
@@ -949,13 +949,13 @@ describe("PartnerVault", function () {
       // Lock 50% of 1B = 500M IFR
       // Owner has most tokens, make fee-exempt
       await token.setFeeExempt(owner.address, true);
-      await token.approve(ifrLock.address, parse("500000000"));
+      await token.approve(ifrLock.target, parse("500000000"));
       await ifrLock.connect(owner).lock(parse("500000000"));
 
-      await vault.setIFRLock(ifrLock.address);
+      await vault.setIFRLock(ifrLock.target);
 
       const lockAmount = parse("10000");
-      const minReward = lockAmount.mul(500).div(10000); // MIN_REWARD_BPS = 500
+      const minReward = BigInt(BigInt(lockAmount)*BigInt(500))/BigInt(10000); // MIN_REWARD_BPS = 500
 
       await vault.recordLockReward(PID_A, lockAmount, beneficiaryA.address);
       const p = await vault.partners(PID_A);
@@ -968,13 +968,13 @@ describe("PartnerVault", function () {
       // drop = (1500 - 500) * (2550 - 100) / (5000 - 100) = 1000 * 2450 / 4900 = 500
       // effective = 1500 - 500 = 1000
       await token.setFeeExempt(owner.address, true);
-      await token.approve(ifrLock.address, parse("255000000"));
+      await token.approve(ifrLock.target, parse("255000000"));
       await ifrLock.connect(owner).lock(parse("255000000"));
 
-      await vault.setIFRLock(ifrLock.address);
+      await vault.setIFRLock(ifrLock.target);
 
       const lockAmount = parse("10000");
-      const expectedReward = lockAmount.mul(1000).div(10000); // effective BPS = 1000
+      const expectedReward = BigInt(BigInt(lockAmount)*BigInt(1000))/BigInt(10000); // effective BPS = 1000
 
       await vault.recordLockReward(PID_A, lockAmount, beneficiaryA.address);
       const p = await vault.partners(PID_A);
@@ -984,13 +984,13 @@ describe("PartnerVault", function () {
     it("effective BPS always >= MIN_REWARD_BPS", async () => {
       // Lock 90% — well above 50% threshold, should still get MIN_REWARD_BPS
       await token.setFeeExempt(owner.address, true);
-      await token.approve(ifrLock.address, parse("900000000"));
+      await token.approve(ifrLock.target, parse("900000000"));
       await ifrLock.connect(owner).lock(parse("900000000"));
 
-      await vault.setIFRLock(ifrLock.address);
+      await vault.setIFRLock(ifrLock.target);
 
       const lockAmount = parse("10000");
-      const minReward = lockAmount.mul(500).div(10000); // MIN_REWARD_BPS = 500
+      const minReward = BigInt(BigInt(lockAmount)*BigInt(500))/BigInt(10000); // MIN_REWARD_BPS = 500
 
       await vault.recordLockReward(PID_A, lockAmount, beneficiaryA.address);
       const p = await vault.partners(PID_A);
@@ -999,10 +999,10 @@ describe("PartnerVault", function () {
 
     it("effective BPS never exceeds rewardBps", async () => {
       // No locks at all → should use rewardBps
-      await vault.setIFRLock(ifrLock.address);
+      await vault.setIFRLock(ifrLock.target);
 
       const lockAmount = parse("10000");
-      const maxReward = lockAmount.mul(REWARD_BPS).div(10000);
+      const maxReward = BigInt(BigInt(lockAmount)*BigInt(REWARD_BPS))/BigInt(10000);
 
       await vault.recordLockReward(PID_A, lockAmount, beneficiaryA.address);
       const p = await vault.partners(PID_A);
@@ -1014,11 +1014,11 @@ describe("PartnerVault", function () {
     });
 
     it("setIFRLock to zero address disables throttle", async () => {
-      await vault.setIFRLock(ifrLock.address);
+      await vault.setIFRLock(ifrLock.target);
 
       // Lock 50% to activate throttle
       await token.setFeeExempt(owner.address, true);
-      await token.approve(ifrLock.address, parse("500000000"));
+      await token.approve(ifrLock.target, parse("500000000"));
       await ifrLock.connect(owner).lock(parse("500000000"));
 
       // Record with throttled rate
@@ -1027,12 +1027,12 @@ describe("PartnerVault", function () {
       const throttledReward = p1.rewardAccrued;
 
       // Reset ifrLock to zero → disables throttle
-      await vault.setIFRLock(ethers.constants.AddressZero);
+      await vault.setIFRLock(ethers.ZeroAddress);
 
       // Record again (different wallet) with flat rate
       await vault.recordLockReward(PID_A, parse("10000"), beneficiaryA.address);
       const p2 = await vault.partners(PID_A);
-      const secondReward = p2.rewardAccrued.sub(throttledReward);
+      const secondReward = BigInt(p2.rewardAccrued)-BigInt(throttledReward);
 
       // Flat rate should be higher than throttled rate
       expect(secondReward).to.be.gt(throttledReward);
@@ -1058,9 +1058,9 @@ describe("PartnerVault", function () {
       const lockAmount = parse("10000");
       await vault.recordLockReward(PID_A, lockAmount, userA.address);
       const p1 = await vault.partners(PID_A);
-      const expectedReward = lockAmount.mul(REWARD_BPS).div(10000);
+      const expectedReward = BigInt(BigInt(lockAmount)*BigInt(REWARD_BPS))/BigInt(10000);
       expect(p1.rewardAccrued).to.equal(expectedReward);
-      expect(p1.unlockedTotal.add(p1.rewardAccrued)).to.equal(milestoneAmount.add(expectedReward));
+      expect(BigInt(p1.unlockedTotal)+BigInt(p1.rewardAccrued)).to.equal(BigInt(milestoneAmount)+BigInt(expectedReward));
 
       // 4. Advance past cliff + half vesting
       await advanceTime(CLIFF + VESTING / 2);
@@ -1069,7 +1069,7 @@ describe("PartnerVault", function () {
       const balBefore = await token.balanceOf(beneficiaryA.address);
       await vault.claim(PID_A);
       const balAfter = await token.balanceOf(beneficiaryA.address);
-      expect(balAfter.sub(balBefore)).to.be.gt(0);
+      expect(BigInt(balAfter)-BigInt(balBefore)).to.be.gt(0);
 
       // 6. Advance past full vesting
       await advanceTime(VESTING);
@@ -1122,7 +1122,7 @@ describe("PartnerVault", function () {
       const balBefore = await token.balanceOf(beneficiaryA.address);
       await vault.connect(userA).claim(PID_A);
       const balAfter = await token.balanceOf(beneficiaryA.address);
-      expect(balAfter.sub(balBefore)).to.be.gt(0);
+      expect(BigInt(balAfter)-BigInt(balBefore)).to.be.gt(0);
     });
 
     it("milestone + lock reward + anti-double-count + claim", async () => {
@@ -1166,8 +1166,8 @@ describe("PartnerVault", function () {
       // Lock rewards still work
       await vault.recordLockReward(PID_A, parse("5000"), userA.address);
       const p = await vault.partners(PID_A);
-      const expectedReward = parse("5000").mul(REWARD_BPS).div(10000);
-      expect(p.unlockedTotal.add(p.rewardAccrued)).to.equal(parse("100000").add(expectedReward));
+      const expectedReward = BigInt(BigInt(parse('5000'))*BigInt(REWARD_BPS))/BigInt(10000);
+      expect(BigInt(p.unlockedTotal)+BigInt(p.rewardAccrued)).to.equal(BigInt(parse('100000'))+BigInt(expectedReward));
     });
 
     it("guardian pause blocks claim, unpause resumes", async () => {

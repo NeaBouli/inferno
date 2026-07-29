@@ -11,8 +11,8 @@ const { ethers } = require("hardhat");
  */
 
 const DECIMALS = 9;
-const parse = (n) => ethers.utils.parseUnits(String(n), DECIMALS);
-const fmt = (bn) => ethers.utils.formatUnits(bn, DECIMALS);
+const parse = (n) => ethers.parseUnits(String(n), DECIMALS);
+const fmt = (bn) => ethers.formatUnits(bn, DECIMALS);
 
 const ADDRESSES = {
   token:      "0x3Bd71947F288d1dd8B21129B1bE4FF16EDd5d1F4",
@@ -24,8 +24,8 @@ const ADDRESSES = {
 // Bootstrap parameters
 const DURATION      = 90 * 24 * 60 * 60;   // 90 days
 const IFR_ALLOC     = parse(100_000_000);   // 100M IFR (9 decimals)
-const MIN_CONTRIB   = ethers.utils.parseEther("0.01");
-const MAX_CONTRIB   = ethers.utils.parseEther("2");
+const MIN_CONTRIB   = ethers.parseEther("0.01");
+const MAX_CONTRIB   = ethers.parseEther("2");
 const LP_LOCK_DUR   = 365 * 24 * 60 * 60;  // 12 months
 
 async function main() {
@@ -37,7 +37,7 @@ async function main() {
   console.log("  INFERNO — Deploy BootstrapVault");
   console.log("=".repeat(60));
   console.log(`  Deployer:  ${deployer.address}`);
-  console.log(`  Balance:   ${ethers.utils.formatEther(balance)} ETH`);
+  console.log(`  Balance:   ${ethers.formatEther(balance)} ETH`);
   console.log(`  Network:   ${network.name} (${network.chainId})`);
 
   // ── Step 1: Get startTime from current block ─────────────
@@ -53,7 +53,7 @@ async function main() {
 
   // teamFinanceLocker = address(0) on testnet (no Team.Finance on Sepolia)
   // LP tokens stay in vault contract (effectively locked)
-  const TF_LOCKER = ethers.constants.AddressZero;
+  const TF_LOCKER = ethers.ZeroAddress;
 
   const BootstrapVault = await ethers.getContractFactory("BootstrapVault");
   const vault = await BootstrapVault.deploy(
@@ -68,10 +68,10 @@ async function main() {
     MAX_CONTRIB,
     LP_LOCK_DUR
   );
-  await vault.deployed();
+  await vault.waitForDeployment();
 
-  console.log(`  BootstrapVault: ${vault.address}`);
-  console.log(`  TX:             ${vault.deployTransaction.hash}`);
+  console.log(`  BootstrapVault: ${vault.target}`);
+  console.log(`  TX:             ${vault.deploymentTransaction().hash}`);
 
   // ── Step 3: Verify deployment state ──────────────────────
   console.log("\n[2/2] Verifying deployment...");
@@ -80,13 +80,13 @@ async function main() {
   console.log(`  ifrSource:       ${await vault.ifrSource()}`);
   console.log(`  uniswapRouter:   ${await vault.uniswapRouter()}`);
   console.log(`  teamFinanceLocker: ${await vault.teamFinanceLocker()}`);
-  console.log(`  startTime:       ${(await vault.startTime()).toNumber()} (${new Date((await vault.startTime()).toNumber() * 1000).toISOString()})`);
-  console.log(`  endTime:         ${(await vault.endTime()).toNumber()} (${new Date((await vault.endTime()).toNumber() * 1000).toISOString()})`);
+  console.log(`  startTime:       ${Number(await vault.startTime())} (${new Date(Number(await vault.startTime()) * 1000).toISOString()})`);
+  console.log(`  endTime:         ${Number(await vault.endTime())} (${new Date(Number(await vault.endTime()) * 1000).toISOString()})`);
   console.log(`  ifrAllocation:   ${fmt(await vault.ifrAllocation())} IFR`);
-  console.log(`  minContribution: ${ethers.utils.formatEther(await vault.minContribution())} ETH`);
-  console.log(`  maxContribution: ${ethers.utils.formatEther(await vault.maxContribution())} ETH`);
-  console.log(`  lpLockDuration:  ${(await vault.lpLockDuration()).toNumber() / 86400} days`);
-  console.log(`  totalETHRaised:  ${ethers.utils.formatEther(await vault.totalETHRaised())} ETH`);
+  console.log(`  minContribution: ${ethers.formatEther(await vault.minContribution())} ETH`);
+  console.log(`  maxContribution: ${ethers.formatEther(await vault.maxContribution())} ETH`);
+  console.log(`  lpLockDuration:  ${Number(await vault.lpLockDuration()) / 86400} days`);
+  console.log(`  totalETHRaised:  ${ethers.formatEther(await vault.totalETHRaised())} ETH`);
   console.log(`  finalised:       ${await vault.finalised()}`);
   console.log(`  OK — BootstrapVault deployed successfully.`);
 
@@ -95,7 +95,7 @@ async function main() {
   console.log("  DEPLOYMENT COMPLETE");
   console.log("=".repeat(60));
   console.log(`
-  BootstrapVault:  ${vault.address}
+  BootstrapVault:  ${vault.target}
   IFR Source:      ${ADDRESSES.ifrSource} (LiquidityReserve v2)
   TF Locker:       ${TF_LOCKER} (disabled on testnet)
   Start:           ${new Date(startTime * 1000).toISOString()}
@@ -105,7 +105,7 @@ async function main() {
 
   Next steps:
   1. Verify on Etherscan:
-     npx hardhat verify --network sepolia ${vault.address} \\
+     npx hardhat verify --network sepolia ${vault.target} \\
        "${ADDRESSES.token}" "${ADDRESSES.ifrSource}" "${ADDRESSES.router}" \\
        "${TF_LOCKER}" "${startTime}" "${DURATION}" \\
        "${IFR_ALLOC.toString()}" "${MIN_CONTRIB.toString()}" \\
@@ -114,7 +114,7 @@ async function main() {
   2. Create Governance proposal: setFeeExempt(BootstrapVault, true)
      (Required before finalise() can work correctly)
 
-  3. LiquidityReserve must approve BootstrapVault for ${fmt(IFR_ALLOC.mul(2))} IFR
+  3. LiquidityReserve must approve BootstrapVault for ${fmt(BigInt(IFR_ALLOC)*BigInt(2))} IFR
      (2x allocation: half for LP, half for claims)
 `);
 }

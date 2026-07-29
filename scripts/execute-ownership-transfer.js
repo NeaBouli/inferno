@@ -30,15 +30,15 @@ async function main() {
 
     console.log(`\n--- ${NAMES[i]} (Proposal #${id}) ---`);
     console.log(`Target: ${target}`);
-    console.log(`ETA: ${new Date(eta.toNumber() * 1000).toISOString()}`);
-    console.log(`Status: ${executed ? "EXECUTED" : cancelled ? "CANCELLED" : now >= eta.toNumber() ? "READY" : "PENDING"}`);
+    console.log(`ETA: ${new Date(Number(eta) * 1000).toISOString()}`);
+    console.log(`Status: ${executed ? "EXECUTED" : cancelled ? "CANCELLED" : now >= Number(eta) ? "READY" : "PENDING"}`);
 
     if (executed || cancelled) {
       console.log(`⏭️  Skipping — already ${executed ? "executed" : "cancelled"}`);
       continue;
     }
-    if (now < eta.toNumber()) {
-      console.log(`⏳ Not ready yet — ${Math.ceil((eta.toNumber() - now) / 60)} min remaining`);
+    if (now < Number(eta)) {
+      console.log(`⏳ Not ready yet — ${Math.ceil((Number(eta) - now) / 60)} min remaining`);
       continue;
     }
 

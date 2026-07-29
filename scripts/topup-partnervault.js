@@ -20,11 +20,11 @@ const ADDRESSES = {
 const TOPUP_AMOUNT = "1400000"; // 1.4M IFR
 
 function fmt(bn) {
-  return ethers.utils.formatUnits(bn, DECIMALS);
+  return ethers.formatUnits(bn, DECIMALS);
 }
 
 function parse(str) {
-  return ethers.utils.parseUnits(str, DECIMALS);
+  return ethers.parseUnits(str, DECIMALS);
 }
 
 function hr(title) {
@@ -59,7 +59,7 @@ async function main() {
   console.log(`  Vault feeExempt:     ${feeExempt}`);
 
   const amount = parse(TOPUP_AMOUNT);
-  if (deployerBalance.lt(amount)) {
+  if (BigInt(deployerBalance)<BigInt(amount)) {
     console.log(`\n  ERROR — Deployer has insufficient balance!`);
     console.log(`  Required: ${TOPUP_AMOUNT} IFR`);
     console.log(`  Available: ${fmt(deployerBalance)} IFR`);
@@ -92,14 +92,14 @@ async function main() {
 
   const vaultBalanceAfter = await token.balanceOf(ADDRESSES.partnerVault);
   const deployerBalanceAfter = await token.balanceOf(deployer.address);
-  const received = vaultBalanceAfter.sub(vaultBalanceBefore);
+  const received = BigInt(vaultBalanceAfter)-BigInt(vaultBalanceBefore);
 
   console.log(`  Vault balance BEFORE: ${fmt(vaultBalanceBefore)} IFR`);
   console.log(`  Vault balance AFTER:  ${fmt(vaultBalanceAfter)} IFR`);
   console.log(`  Received:             ${fmt(received)} IFR`);
   console.log(`  Deployer balance:     ${fmt(deployerBalanceAfter)} IFR`);
 
-  if (received.eq(amount)) {
+  if (BigInt(received)===BigInt(amount)) {
     console.log(`\n  SUCCESS — Full ${TOPUP_AMOUNT} IFR received (feeExempt transfer)`);
   } else {
     console.log(`\n  WARNING — Received ${fmt(received)} IFR instead of ${TOPUP_AMOUNT} IFR`);

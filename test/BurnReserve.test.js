@@ -5,7 +5,7 @@ describe("BurnReserve", function () {
   let owner, guardian, user;
   let token, burnReserve;
 
-  const INITIAL_SUPPLY = ethers.utils.parseUnits("1000000000", 9); // 1B IFR
+  const INITIAL_SUPPLY = ethers.parseUnits("1000000000", 9); // 1B IFR
 
   beforeEach(async () => {
     [owner, guardian, user] = await ethers.getSigners();
@@ -13,53 +13,53 @@ describe("BurnReserve", function () {
     // Deploy InfernoToken (owner is poolFeeReceiver + gets full supply)
     const InfernoToken = await ethers.getContractFactory("InfernoToken");
     token = await InfernoToken.deploy(owner.address);
-    await token.deployed();
+    await token.waitForDeployment();
 
     // Make owner fee-exempt so transfers in tests aren't taxed
     await token.setFeeExempt(owner.address, true);
 
     // Deploy BurnReserve
     const BurnReserve = await ethers.getContractFactory("BurnReserve");
-    burnReserve = await BurnReserve.deploy(token.address, guardian.address);
-    await burnReserve.deployed();
+    burnReserve = await BurnReserve.deploy(token.target, guardian.address);
+    await burnReserve.waitForDeployment();
 
     // Make BurnReserve fee-exempt
-    await token.setFeeExempt(burnReserve.address, true);
+    await token.setFeeExempt(burnReserve.target, true);
   });
 
   describe("Deployment", () => {
     it("sets owner, guardian, and token correctly", async () => {
       expect(await burnReserve.owner()).to.equal(owner.address);
       expect(await burnReserve.guardian()).to.equal(guardian.address);
-      expect(await burnReserve.token()).to.equal(token.address);
+      expect(await burnReserve.token()).to.equal(token.target);
       expect(await burnReserve.totalBurned()).to.equal(0);
     });
 
     it("reverts if token is zero address", async () => {
       const BurnReserve = await ethers.getContractFactory("BurnReserve");
       await expect(
-        BurnReserve.deploy(ethers.constants.AddressZero, guardian.address)
+        BurnReserve.deploy(ethers.ZeroAddress, guardian.address)
       ).to.be.revertedWith("token=0");
     });
 
     it("reverts if guardian is zero address", async () => {
       const BurnReserve = await ethers.getContractFactory("BurnReserve");
       await expect(
-        BurnReserve.deploy(token.address, ethers.constants.AddressZero)
+        BurnReserve.deploy(token.target, ethers.ZeroAddress)
       ).to.be.revertedWith("guardian=0");
     });
   });
 
   describe("deposit()", () => {
     it("accepts deposits via transferFrom and emits Deposited", async () => {
-      const amount = ethers.utils.parseUnits("1000", 9);
-      await token.approve(burnReserve.address, amount);
+      const amount = ethers.parseUnits("1000", 9);
+      await token.approve(burnReserve.target, amount);
 
       await expect(burnReserve.deposit(amount))
         .to.emit(burnReserve, "Deposited")
         .withArgs(owner.address, amount);
 
-      expect(await token.balanceOf(burnReserve.address)).to.equal(amount);
+      expect(await token.balanceOf(burnReserve.target)).to.equal(amount);
     });
 
     it("reverts on zero amount", async () => {
@@ -67,36 +67,36 @@ describe("BurnReserve", function () {
     });
 
     it("reverts without approval", async () => {
-      const amount = ethers.utils.parseUnits("1000", 9);
+      const amount = ethers.parseUnits("1000", 9);
       await expect(burnReserve.deposit(amount)).to.be.reverted;
     });
   });
 
   describe("burn()", () => {
-    const depositAmount = ethers.utils.parseUnits("10000", 9);
+    const depositAmount = ethers.parseUnits("10000", 9);
 
     beforeEach(async () => {
       // Send tokens directly to BurnReserve (simulating BuybackVault sending tokens)
-      await token.transfer(burnReserve.address, depositAmount);
+      await token.transfer(burnReserve.target, depositAmount);
     });
 
     it("owner can burn a specific amount and totalSupply decreases", async () => {
-      const burnAmount = ethers.utils.parseUnits("3000", 9);
+      const burnAmount = ethers.parseUnits("3000", 9);
       const supplyBefore = await token.totalSupply();
 
       await expect(burnReserve.burn(burnAmount))
         .to.emit(burnReserve, "Burned")
         .withArgs(burnAmount, burnAmount);
 
-      expect(await token.totalSupply()).to.equal(supplyBefore.sub(burnAmount));
+      expect(await token.totalSupply()).to.equal(BigInt(supplyBefore)-BigInt(burnAmount));
       expect(await burnReserve.totalBurned()).to.equal(burnAmount);
-      expect(await token.balanceOf(burnReserve.address)).to.equal(
-        depositAmount.sub(burnAmount)
+      expect(await token.balanceOf(burnReserve.target)).to.equal(
+        BigInt(depositAmount)-BigInt(burnAmount)
       );
     });
 
     it("guardian can burn", async () => {
-      const burnAmount = ethers.utils.parseUnits("5000", 9);
+      const burnAmount = ethers.parseUnits("5000", 9);
       await expect(burnReserve.connect(guardian).burn(burnAmount))
         .to.emit(burnReserve, "Burned");
 
@@ -105,7 +105,7 @@ describe("BurnReserve", function () {
 
     it("reverts if caller is not owner or guardian", async () => {
       await expect(
-        burnReserve.connect(user).burn(ethers.utils.parseUnits("100", 9))
+        burnReserve.connect(user).burn(ethers.parseUnits("100", 9))
       ).to.be.revertedWith("not authorized");
     });
 
@@ -114,25 +114,25 @@ describe("BurnReserve", function () {
     });
 
     it("reverts if amount exceeds balance", async () => {
-      const tooMuch = depositAmount.add(1);
+      const tooMuch = BigInt(depositAmount)+BigInt(1);
       await expect(burnReserve.burn(tooMuch)).to.be.revertedWith("exceeds balance");
     });
 
     it("accumulates totalBurned across multiple burns", async () => {
-      const burn1 = ethers.utils.parseUnits("2000", 9);
-      const burn2 = ethers.utils.parseUnits("3000", 9);
+      const burn1 = ethers.parseUnits("2000", 9);
+      const burn2 = ethers.parseUnits("3000", 9);
 
       await burnReserve.burn(burn1);
       await burnReserve.burn(burn2);
 
-      expect(await burnReserve.totalBurned()).to.equal(burn1.add(burn2));
+      expect(await burnReserve.totalBurned()).to.equal(BigInt(burn1)+BigInt(burn2));
     });
   });
 
   describe("burnAll()", () => {
     it("burns the entire balance and emits Burned", async () => {
-      const amount = ethers.utils.parseUnits("50000", 9);
-      await token.transfer(burnReserve.address, amount);
+      const amount = ethers.parseUnits("50000", 9);
+      await token.transfer(burnReserve.target, amount);
 
       const supplyBefore = await token.totalSupply();
 
@@ -140,14 +140,14 @@ describe("BurnReserve", function () {
         .to.emit(burnReserve, "Burned")
         .withArgs(amount, amount);
 
-      expect(await token.balanceOf(burnReserve.address)).to.equal(0);
-      expect(await token.totalSupply()).to.equal(supplyBefore.sub(amount));
+      expect(await token.balanceOf(burnReserve.target)).to.equal(0);
+      expect(await token.totalSupply()).to.equal(BigInt(supplyBefore)-BigInt(amount));
       expect(await burnReserve.totalBurned()).to.equal(amount);
     });
 
     it("guardian can call burnAll", async () => {
-      const amount = ethers.utils.parseUnits("10000", 9);
-      await token.transfer(burnReserve.address, amount);
+      const amount = ethers.parseUnits("10000", 9);
+      await token.transfer(burnReserve.target, amount);
 
       await expect(burnReserve.connect(guardian).burnAll())
         .to.emit(burnReserve, "Burned");
@@ -158,8 +158,8 @@ describe("BurnReserve", function () {
     });
 
     it("reverts if caller is not authorized", async () => {
-      const amount = ethers.utils.parseUnits("1000", 9);
-      await token.transfer(burnReserve.address, amount);
+      const amount = ethers.parseUnits("1000", 9);
+      await token.transfer(burnReserve.target, amount);
 
       await expect(
         burnReserve.connect(user).burnAll()
@@ -171,20 +171,20 @@ describe("BurnReserve", function () {
     it("returns the current token balance", async () => {
       expect(await burnReserve.pendingBurn()).to.equal(0);
 
-      const amount = ethers.utils.parseUnits("25000", 9);
-      await token.transfer(burnReserve.address, amount);
+      const amount = ethers.parseUnits("25000", 9);
+      await token.transfer(burnReserve.target, amount);
 
       expect(await burnReserve.pendingBurn()).to.equal(amount);
     });
 
     it("decreases after a burn", async () => {
-      const amount = ethers.utils.parseUnits("10000", 9);
-      await token.transfer(burnReserve.address, amount);
+      const amount = ethers.parseUnits("10000", 9);
+      await token.transfer(burnReserve.target, amount);
 
-      const burnAmount = ethers.utils.parseUnits("4000", 9);
+      const burnAmount = ethers.parseUnits("4000", 9);
       await burnReserve.burn(burnAmount);
 
-      expect(await burnReserve.pendingBurn()).to.equal(amount.sub(burnAmount));
+      expect(await burnReserve.pendingBurn()).to.equal(BigInt(amount)-BigInt(burnAmount));
     });
   });
 
@@ -205,7 +205,7 @@ describe("BurnReserve", function () {
 
     it("reverts if new guardian is zero address", async () => {
       await expect(
-        burnReserve.setGuardian(ethers.constants.AddressZero)
+        burnReserve.setGuardian(ethers.ZeroAddress)
       ).to.be.revertedWith("guardian=0");
     });
   });
@@ -244,7 +244,7 @@ describe("BurnReserve", function () {
 
     it("reverts with zero address", async () => {
       await expect(
-        burnReserve.transferOwnership(ethers.constants.AddressZero)
+        burnReserve.transferOwnership(ethers.ZeroAddress)
       ).to.be.revertedWith("newOwner=0");
     });
   });

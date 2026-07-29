@@ -24,7 +24,7 @@ async function main() {
   console.log("  INFERNO — Deploy IFRLock");
   console.log("=".repeat(60));
   console.log(`  Deployer:  ${deployer.address}`);
-  console.log(`  Balance:   ${ethers.utils.formatEther(balance)} ETH`);
+  console.log(`  Balance:   ${ethers.formatEther(balance)} ETH`);
   console.log(`  Network:   ${network.name} (${network.chainId})`);
 
   // ── Step 1: Deploy IFRLock ────────────────────────────────
@@ -32,12 +32,12 @@ async function main() {
 
   const IFRLock = await ethers.getContractFactory("IFRLock");
   const lock = await IFRLock.deploy(ADDRESSES.token, deployer.address);
-  await lock.deployed();
+  await lock.waitForDeployment();
 
-  console.log(`  IFRLock:   ${lock.address}`);
+  console.log(`  IFRLock:   ${lock.target}`);
   console.log(`  Token:     ${await lock.token()}`);
   console.log(`  Guardian:  ${await lock.guardian()}`);
-  console.log(`  TX:        ${lock.deployTransaction.hash}`);
+  console.log(`  TX:        ${lock.deploymentTransaction().hash}`);
 
   // ── Step 2: Verify deployment ─────────────────────────────
   console.log("\n[2/3] Verifying deployment...");
@@ -51,24 +51,24 @@ async function main() {
   console.log("\n[3/3] Creating Governance proposal: setFeeExempt(IFRLock, true)...");
 
   const governance = await ethers.getContractAt("Governance", ADDRESSES.governance);
-  const iface = new ethers.utils.Interface([
+  const iface = new ethers.Interface([
     "function setFeeExempt(address,bool)",
   ]);
-  const calldata = iface.encodeFunctionData("setFeeExempt", [lock.address, true]);
+  const calldata = iface.encodeFunctionData("setFeeExempt", [lock.target, true]);
 
   const tx = await governance.propose(ADDRESSES.token, calldata);
   const receipt = await tx.wait();
 
   // Parse ProposalCreated event
-  const govIface = new ethers.utils.Interface([
+  const govIface = new ethers.Interface([
     "event ProposalCreated(uint256 indexed id, address target, bytes data, uint256 eta)",
   ]);
   let proposalId, eta;
   for (const log of receipt.logs) {
     try {
       const parsed = govIface.parseLog(log);
-      proposalId = parsed.args.id.toNumber();
-      eta = parsed.args.eta.toNumber();
+      proposalId = Number(parsed.args.id);
+      eta = Number(parsed.args.eta);
       break;
     } catch { /* skip */ }
   }
@@ -77,8 +77,8 @@ async function main() {
   const delay = await governance.delay();
 
   console.log(`  Proposal ID: ${proposalId}`);
-  console.log(`  Action:      setFeeExempt(${lock.address}, true)`);
-  console.log(`  Delay:       ${delay.toNumber() / 3600}h`);
+  console.log(`  Action:      setFeeExempt(${lock.target}, true)`);
+  console.log(`  Delay:       ${Number(delay) / 3600}h`);
   console.log(`  ETA:         ${etaDate.toISOString()}`);
   console.log(`               ${etaDate.toLocaleString("de-DE", { timeZone: "Europe/Berlin" })} (Berlin)`);
   console.log(`  TX:          ${tx.hash}`);
@@ -88,14 +88,14 @@ async function main() {
   console.log("  DEPLOYMENT COMPLETE");
   console.log("=".repeat(60));
   console.log(`
-  IFRLock:      ${lock.address}
+  IFRLock:      ${lock.target}
   Guardian:     ${deployer.address}
   Proposal #${proposalId}: setFeeExempt(IFRLock, true)
   ETA:          ${etaDate.toLocaleString("de-DE", { timeZone: "Europe/Berlin" })} (Berlin)
 
   Next steps:
   1. Verify on Etherscan:
-     npx hardhat verify --network sepolia ${lock.address} ${ADDRESSES.token} ${deployer.address}
+     npx hardhat verify --network sepolia ${lock.target} ${ADDRESSES.token} ${deployer.address}
 
   2. After ETA, execute the proposal:
      npx hardhat run scripts/execute-proposal.js --network sepolia

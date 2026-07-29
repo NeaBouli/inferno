@@ -50,11 +50,11 @@ function envFlag(name, defaultValue) {
 
 function requireAddress(value, name) {
   if (!value) throw new Error(`${name} is required`);
-  return ethers.utils.getAddress(value);
+  return ethers.getAddress(value);
 }
 
 function formatIFR(value) {
-  return ethers.utils.formatUnits(value, IFR_DECIMALS);
+  return ethers.formatUnits(value, IFR_DECIMALS);
 }
 
 async function main() {
@@ -66,7 +66,7 @@ async function main() {
     throw new Error('LOCK_BPS must be an integer from 1 to 10000');
   }
 
-  const provider = new ethers.providers.JsonRpcProvider(
+  const provider = new ethers.JsonRpcProvider(
     process.env.MAINNET_RPC_URL || 'https://ethereum-rpc.publicnode.com'
   );
   const token = new ethers.Contract(IFR_TOKEN, ERC20_ABI, provider);
@@ -79,17 +79,17 @@ async function main() {
     vault.lockedBalance(contributor),
   ]);
 
-  if (balance.isZero()) {
+  if (BigInt(balance)===BigInt(0)) {
     throw new Error('Contributor IFR balance is 0. Buy/claim IFR before locking.');
   }
 
-  const totalLock = balance.mul(lockBps).div(10000);
-  if (totalLock.isZero()) {
+  const totalLock = BigInt(BigInt(balance)*BigInt(lockBps))/BigInt(10000);
+  if (BigInt(totalLock)===BigInt(0)) {
     throw new Error('Calculated lock amount is 0');
   }
 
-  const trancheAmount = totalLock.div(NUM_TRANCHES);
-  const lastTranche = totalLock.sub(trancheAmount.mul(NUM_TRANCHES - 1));
+  const trancheAmount = BigInt(totalLock)/BigInt(NUM_TRANCHES);
+  const lastTranche = BigInt(totalLock)-BigInt(BigInt(trancheAmount)*BigInt(NUM_TRANCHES-1));
   const unlockTime = Math.floor(Date.now() / 1000) + UNLOCK_SECONDS;
   const unlockDate = new Date(unlockTime * 1000).toISOString();
 
@@ -116,8 +116,8 @@ async function main() {
     console.log('');
   }
 
-  const cvIface = new ethers.utils.Interface(CV_ABI);
-  const erc20Iface = new ethers.utils.Interface(ERC20_ABI);
+  const cvIface = new ethers.Interface(CV_ABI);
+  const erc20Iface = new ethers.Interface(ERC20_ABI);
   console.log('[TX 0] approve CommitmentVault');
   console.log('to:', IFR_TOKEN);
   console.log('data:', erc20Iface.encodeFunctionData('approve', [COMMITMENT_VAULT, totalLock]));
@@ -145,17 +145,17 @@ async function main() {
   }
 
   const signer = new ethers.Wallet(process.env.PRIVATE_KEY || '', provider);
-  if (ethers.utils.getAddress(signer.address) !== contributor) {
+  if (ethers.getAddress(signer.address) !== contributor) {
     throw new Error(`PRIVATE_KEY signer ${signer.address} does not match CONTRIBUTOR_ADDR ${contributor}`);
   }
 
   const overrides = {};
-  if (process.env.GAS_LIMIT) overrides.gasLimit = ethers.BigNumber.from(process.env.GAS_LIMIT);
+  if (process.env.GAS_LIMIT) overrides.gasLimit = BigInt(process.env.GAS_LIMIT);
 
   const tokenWithSigner = token.connect(signer);
   const vaultWithSigner = vault.connect(signer);
 
-  if (allowance.lt(totalLock)) {
+  if (BigInt(allowance)<BigInt(totalLock)) {
     const approveTx = await tokenWithSigner.approve(COMMITMENT_VAULT, totalLock, overrides);
     console.log('approve tx:', approveTx.hash);
     await approveTx.wait();

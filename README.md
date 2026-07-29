@@ -167,14 +167,14 @@ All smart contracts are open source and community review is explicitly encourage
 
 | App | Path | Port | Stack |
 |-----|------|------|-------|
-| Token Dashboard | `apps/dashboard/` | 5173 | React 18 + Vite + ethers v5 |
-| Governance Dashboard | `apps/governance-dashboard/` | 5174 | React 18 + Vite + TypeScript + Tailwind + ethers v5 |
-| AI Copilot | `apps/ai-copilot/` | 5175 | React 18 + Vite + TypeScript + Tailwind + Express |
-| Points Backend | `apps/points-backend/` | 3004 | Express + Prisma + SQLite + ethers v5 + siwe + jose |
-| Creator Gateway | `apps/creator-gateway/` | 3005 | Express + ethers v5 + googleapis + JWT |
-| Benefits Network Backend | `apps/benefits-network/backend/` | 3001 | Express + Prisma + SQLite + ethers v5 |
-| Benefits Network Frontend | `apps/benefits-network/frontend/` | 3000 | Next.js 14 + Tailwind + wagmi v2 (PWA) |
-| Telegram Bot | `apps/telegram/telegram-bot/` | — | Telegraf + Railway (16 commands, moderation, governance notifier) |
+| Token Dashboard | `apps/dashboard/` | 5173 | React 18 + Vite + ethers v6 + wagmi v2 |
+| Governance Dashboard | `apps/governance-dashboard/` | 5174 | React 18 + Vite + TypeScript + Tailwind + ethers v6 |
+| AI Copilot | `apps/ai-copilot/` | 5175 | React 18 + Vite + TypeScript + Tailwind + Express + ethers v6 |
+| Points Backend | `apps/points-backend/` | 3004 | Express + Prisma 7 + SQLite + ethers v6 + siwe + jose |
+| Creator Gateway | `apps/creator-gateway/` | 3005 | Express + ethers v6 + googleapis + JWT |
+| Benefits Network Backend | `apps/benefits-network/backend/` | 3001 | Express + Prisma + SQLite + ethers v6 |
+| Benefits Network Frontend | `apps/benefits-network/frontend/` | 3000 | Next.js 15 + Tailwind + wagmi v3 (PWA) |
+| Telegram Bot | `apps/telegram/telegram-bot/` | — | Telegraf + ethers v6 + Railway (16 commands, moderation, governance notifier) |
 
 ### Token Dashboard
 

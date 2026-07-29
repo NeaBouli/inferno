@@ -25,12 +25,12 @@ async function main() {
 
   const CommitmentVault = await hre.ethers.getContractFactory("CommitmentVault");
   const cv = await CommitmentVault.deploy(IFR_TOKEN, GOVERNANCE);
-  await cv.deployed();
+  await cv.waitForDeployment();
 
-  console.log("CommitmentVault deployed:", cv.address);
+  console.log("CommitmentVault deployed:", cv.target);
   console.log("");
   console.log("NEXT STEPS:");
-  console.log("1. Governance Proposal: setFeeExempt(", cv.address, ", true) — BEFORE users lock!");
+  console.log("1. Governance Proposal: setFeeExempt(", cv.target, ", true) — BEFORE users lock!");
   console.log("2. Governance Proposal: setP0(value) — AFTER Bootstrap finalise()");
   console.log("");
 
@@ -40,7 +40,7 @@ async function main() {
     await new Promise(r => setTimeout(r, 30000));
     try {
       await hre.run("verify:verify", {
-        address: cv.address,
+        address: cv.target,
         constructorArguments: [IFR_TOKEN, GOVERNANCE],
       });
       console.log("Verified on Etherscan ✅");
@@ -49,7 +49,7 @@ async function main() {
     }
   }
 
-  return cv.address;
+  return cv.target;
 }
 
 main().catch(err => { console.error(err); process.exit(1); });

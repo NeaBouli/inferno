@@ -40,8 +40,8 @@ const IFR_ABI = [
 
 const IFR_MAINNET = "0x77e99917Eca8539c62F509ED1193ac36580A6e7B";
 const DECIMALS = 9;
-const fmt = (bn) => ethers.utils.formatUnits(bn, DECIMALS);
-const fmtEth = (bn) => ethers.utils.formatEther(bn);
+const fmt = (bn) => ethers.formatUnits(bn, DECIMALS);
+const fmtEth = (bn) => ethers.formatEther(bn);
 
 async function optionalBool(contract, fnName) {
   try {
@@ -65,7 +65,7 @@ async function main() {
   console.log(`  Network:   ${network.name} (chainId ${network.chainId})`);
   console.log(`  Vault:     ${BOOTSTRAP_V3_MAINNET}`);
 
-  if (network.chainId !== 1) {
+  if (network.chainId !== 1n) {
     throw new Error(`Wrong network: expected mainnet chainId 1, got ${network.chainId}.`);
   }
 
@@ -84,8 +84,8 @@ async function main() {
   const hasRefund = await optionalBool(vault, "hasRefundOccurred");
 
   const ifrBalance = await token.balanceOf(BOOTSTRAP_V3_MAINNET);
-  const endDate = new Date(endTime.toNumber() * 1000).toISOString();
-  const secondsLeft = endTime.toNumber() - now;
+  const endDate = new Date(Number(endTime) * 1000).toISOString();
+  const secondsLeft = Number(endTime) - now;
 
   console.log(`  Finalised:         ${finalised}`);
   console.log(`  endTime:           ${endDate}`);
@@ -93,7 +93,7 @@ async function main() {
   console.log(`  totalETHRaised:    ${fmtEth(totalETH)} ETH`);
   console.log(`  ifrAllocation:     ${fmt(ifrAlloc)} IFR`);
   console.log(`  IFR in vault:      ${fmt(ifrBalance)} IFR`);
-  console.log(`  Required IFR:      ${fmt(ifrAlloc.mul(2))} IFR (2x allocation)`);
+  console.log(`  Required IFR:      ${fmt(BigInt(ifrAlloc)*BigInt(2))} IFR (2x allocation)`);
   console.log(`  hasRefundOccurred: ${hasRefund === null ? "n/a (getter not exposed)" : hasRefund}`);
 
   if (finalised) {
@@ -109,15 +109,15 @@ async function main() {
     throw new Error("Refund has already occurred — finalise() is permanently blocked.");
   }
 
-  if (totalETH.isZero()) {
+  if (BigInt(totalETH)===BigInt(0)) {
     console.log("\n⚠️  No ETH raised. finalise() will emit Finalised(0,0,0,0) without creating LP.");
     console.log("   Proceeding anyway (permissionless call still valid).");
   } else {
-    const required = ifrAlloc.mul(2);
-    if (ifrBalance.lt(required)) {
+    const required = BigInt(ifrAlloc)*BigInt(2);
+    if (BigInt(ifrBalance)<BigInt(required)) {
       throw new Error(
         `Insufficient IFR in vault. Has: ${fmt(ifrBalance)} IFR, needs: ${fmt(required)} IFR. ` +
-        `Transfer ${fmt(required.sub(ifrBalance))} more IFR to vault before calling finalise().`
+        `Transfer ${fmt(BigInt(required)-BigInt(ifrBalance))} more IFR to vault before calling finalise().`
       );
     }
   }
@@ -126,7 +126,7 @@ async function main() {
   console.log("\n[2/3] Estimating gas...");
   let gasEstimate;
   try {
-    gasEstimate = await vault.estimateGas.finalise();
+    gasEstimate = await vault.finalise.estimateGas();
     console.log(`  Gas estimate: ${gasEstimate.toString()}`);
   } catch (e) {
     throw new Error(`Gas estimation failed: ${e.message}. Contract would revert.`);
@@ -135,7 +135,7 @@ async function main() {
   // ── Execute finalise() ────────────────────────────────────
   console.log("\n[3/3] Calling finalise()...");
   const tx = await vault.finalise({
-    gasLimit: gasEstimate.mul(130).div(100), // 30% buffer
+    gasLimit: BigInt(BigInt(gasEstimate)*BigInt(130))/BigInt(100), // 30% buffer
   });
   console.log(`  TX hash:  ${tx.hash}`);
   console.log("  Waiting for confirmation...");

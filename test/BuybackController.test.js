@@ -5,23 +5,23 @@ describe("BuybackController", function () {
   let owner, guardian, burnReserve, lpReceiver, user, user2;
   let IFR, WETH, Router, Controller;
 
-  const RATE_IFR_PER_ETH = ethers.utils.parseEther("1000"); // 1 ETH → 1000 IFR
-  const ONE_ETH = ethers.utils.parseEther("1");
-  const HALF_ETH = ethers.utils.parseEther("0.5");
-  const MIN_TRIGGER = ethers.utils.parseEther("0.01");
+  const RATE_IFR_PER_ETH = ethers.parseEther("1000"); // 1 ETH → 1000 IFR
+  const ONE_ETH = ethers.parseEther("1");
+  const HALF_ETH = ethers.parseEther("0.5");
+  const MIN_TRIGGER = ethers.parseEther("0.01");
   const DAY = 86400;
 
   async function deployController() {
     const BuybackController = await ethers.getContractFactory("BuybackController");
     const controller = await BuybackController.deploy(
-      IFR.address,
+      IFR.target,
       burnReserve.address,
-      Router.address,
+      Router.target,
       lpReceiver.address,
       guardian.address,
       owner.address
     );
-    await controller.deployed();
+    await controller.waitForDeployment();
     return controller;
   }
 
@@ -30,14 +30,14 @@ describe("BuybackController", function () {
 
     const MockToken = await ethers.getContractFactory("MockToken");
     IFR = await MockToken.deploy("Inferno Token", "IFR");
-    await IFR.deployed();
+    await IFR.waitForDeployment();
 
     WETH = await MockToken.deploy("Wrapped ETH", "WETH");
-    await WETH.deployed();
+    await WETH.waitForDeployment();
 
     const MockRouter = await ethers.getContractFactory("MockRouter");
-    Router = await MockRouter.deploy(WETH.address, IFR.address, RATE_IFR_PER_ETH);
-    await Router.deployed();
+    Router = await MockRouter.deploy(WETH.target, IFR.target, RATE_IFR_PER_ETH);
+    await Router.waitForDeployment();
 
     Controller = await deployController();
   });
@@ -46,7 +46,7 @@ describe("BuybackController", function () {
 
   it("T01: deploys with correct parameters", async () => {
     expect(await Controller.owner()).to.equal(owner.address);
-    expect(await Controller.token()).to.equal(IFR.address);
+    expect(await Controller.token()).to.equal(IFR.target);
     expect(await Controller.burnReserve()).to.equal(burnReserve.address);
     expect(await Controller.lpReceiver()).to.equal(lpReceiver.address);
     expect(await Controller.guardian()).to.equal(guardian.address);
@@ -56,12 +56,12 @@ describe("BuybackController", function () {
   });
 
   it("T02: receives ETH via receive()", async () => {
-    await user.sendTransaction({ to: Controller.address, value: ONE_ETH });
-    expect(await ethers.provider.getBalance(Controller.address)).to.equal(ONE_ETH);
+    await user.sendTransaction({ to: Controller.target, value: ONE_ETH });
+    expect(await ethers.provider.getBalance(Controller.target)).to.equal(ONE_ETH);
   });
 
   it("T03: execute() reverts when cooldown not passed", async () => {
-    await user.sendTransaction({ to: Controller.address, value: ONE_ETH });
+    await user.sendTransaction({ to: Controller.target, value: ONE_ETH });
     await Controller.connect(user).execute();
 
     await expect(Controller.connect(user).execute()).to.be.revertedWith("cooldown");
@@ -72,14 +72,14 @@ describe("BuybackController", function () {
   });
 
   it("T05: execute() succeeds with sufficient ETH after cooldown", async () => {
-    await user.sendTransaction({ to: Controller.address, value: ONE_ETH });
+    await user.sendTransaction({ to: Controller.target, value: ONE_ETH });
     await expect(Controller.connect(user).execute()).to.emit(Controller, "BuybackExecuted");
   });
 
   // ── T06–T10: Events & Split ──────────────────────────────────
 
   it("T06: BuybackExecuted event emitted with correct values", async () => {
-    await user.sendTransaction({ to: Controller.address, value: ONE_ETH });
+    await user.sendTransaction({ to: Controller.target, value: ONE_ETH });
 
     // No IFR in contract → LP fallback → all ETH goes to buyback
     // 0.5 ETH for burn share + 0.5 ETH LP fallback = 1 ETH total
@@ -89,15 +89,15 @@ describe("BuybackController", function () {
 
   it("T07: LiquidityAdded event emitted when IFR available", async () => {
     // Send IFR to controller for LP
-    await IFR.transfer(Controller.address, ethers.utils.parseEther("100"));
-    await user.sendTransaction({ to: Controller.address, value: ONE_ETH });
+    await IFR.transfer(Controller.target, ethers.parseEther("100"));
+    await user.sendTransaction({ to: Controller.target, value: ONE_ETH });
 
     await expect(Controller.connect(user).execute())
       .to.emit(Controller, "LiquidityAdded");
   });
 
   it("T08: 50/50 split — burn receives IFR from buyback", async () => {
-    await user.sendTransaction({ to: Controller.address, value: ONE_ETH });
+    await user.sendTransaction({ to: Controller.target, value: ONE_ETH });
 
     const burnBefore = await IFR.balanceOf(burnReserve.address);
     await Controller.connect(user).execute();
@@ -105,19 +105,19 @@ describe("BuybackController", function () {
 
     // All ETH goes to buyback (no IFR for LP → fallback)
     // 1 ETH * 1000 IFR/ETH = 1000 IFR total to burn
-    const totalBurned = burnAfter.sub(burnBefore);
-    expect(totalBurned).to.equal(ethers.utils.parseEther("1000"));
+    const totalBurned = BigInt(burnAfter)-BigInt(burnBefore);
+    expect(totalBurned).to.equal(ethers.parseEther("1000"));
   });
 
   it("T09: lastExecution updated after execute()", async () => {
-    await user.sendTransaction({ to: Controller.address, value: ONE_ETH });
+    await user.sendTransaction({ to: Controller.target, value: ONE_ETH });
     expect(await Controller.lastExecution()).to.equal(0);
     await Controller.connect(user).execute();
     expect(await Controller.lastExecution()).to.be.gt(0);
   });
 
   it("T10: canExecute() returns false before cooldown, true after", async () => {
-    await user.sendTransaction({ to: Controller.address, value: ONE_ETH });
+    await user.sendTransaction({ to: Controller.target, value: ONE_ETH });
     expect(await Controller.canExecute()).to.equal(true);
 
     await Controller.connect(user).execute();
@@ -127,7 +127,7 @@ describe("BuybackController", function () {
     await ethers.provider.send("evm_mine", []);
 
     // Need more ETH for next execution
-    await user.sendTransaction({ to: Controller.address, value: ONE_ETH });
+    await user.sendTransaction({ to: Controller.target, value: ONE_ETH });
     expect(await Controller.canExecute()).to.equal(true);
   });
 
@@ -155,9 +155,9 @@ describe("BuybackController", function () {
   // ── T15–T18: Config — setMinTrigger, setSlippage ─────────────
 
   it("T15: setMinTrigger() works for owner", async () => {
-    await expect(Controller.setMinTrigger(ethers.utils.parseEther("0.1")))
+    await expect(Controller.setMinTrigger(ethers.parseEther("0.1")))
       .to.emit(Controller, "MinTriggerUpdated");
-    expect(await Controller.minTriggerAmount()).to.equal(ethers.utils.parseEther("0.1"));
+    expect(await Controller.minTriggerAmount()).to.equal(ethers.parseEther("0.1"));
   });
 
   it("T16: setMinTrigger() reverts for non-owner", async () => {
@@ -179,16 +179,16 @@ describe("BuybackController", function () {
   // ── T19–T22: Emergency Withdraw ──────────────────────────────
 
   it("T19: withdrawETH() only owner", async () => {
-    await user.sendTransaction({ to: Controller.address, value: ONE_ETH });
+    await user.sendTransaction({ to: Controller.target, value: ONE_ETH });
     await expect(Controller.connect(user).withdrawETH(user.address, ONE_ETH))
       .to.be.revertedWith("not owner");
   });
 
   it("T20: withdrawETH() works for owner", async () => {
-    await user.sendTransaction({ to: Controller.address, value: ONE_ETH });
+    await user.sendTransaction({ to: Controller.target, value: ONE_ETH });
     const balBefore = await ethers.provider.getBalance(owner.address);
     await Controller.withdrawETH(owner.address, ONE_ETH);
-    expect(await ethers.provider.getBalance(Controller.address)).to.equal(0);
+    expect(await ethers.provider.getBalance(Controller.target)).to.equal(0);
   });
 
   it("T21: withdrawIFR() only owner", async () => {
@@ -197,21 +197,21 @@ describe("BuybackController", function () {
   });
 
   it("T22: withdrawIFR() works for owner", async () => {
-    await IFR.transfer(Controller.address, ethers.utils.parseEther("100"));
-    await Controller.withdrawIFR(owner.address, ethers.utils.parseEther("100"));
-    expect(await IFR.balanceOf(Controller.address)).to.equal(0);
+    await IFR.transfer(Controller.target, ethers.parseEther("100"));
+    await Controller.withdrawIFR(owner.address, ethers.parseEther("100"));
+    expect(await IFR.balanceOf(Controller.target)).to.equal(0);
   });
 
   // ── T23–T26: View Functions & Stats ───────────────────────────
 
   it("T23: pendingETH() returns correct balance", async () => {
     expect(await Controller.pendingETH()).to.equal(0);
-    await user.sendTransaction({ to: Controller.address, value: ONE_ETH });
+    await user.sendTransaction({ to: Controller.target, value: ONE_ETH });
     expect(await Controller.pendingETH()).to.equal(ONE_ETH);
   });
 
   it("T24: stats() tracks cumulative values", async () => {
-    await user.sendTransaction({ to: Controller.address, value: ONE_ETH });
+    await user.sendTransaction({ to: Controller.target, value: ONE_ETH });
     await Controller.connect(user).execute();
 
     const [totalETH, totalBurned, totalLP, count] = await Controller.stats();
@@ -221,20 +221,20 @@ describe("BuybackController", function () {
   });
 
   it("T25: executionCount increments", async () => {
-    await user.sendTransaction({ to: Controller.address, value: ONE_ETH });
+    await user.sendTransaction({ to: Controller.target, value: ONE_ETH });
     await Controller.connect(user).execute();
     expect(await Controller.executionCount()).to.equal(1);
 
     await ethers.provider.send("evm_increaseTime", [24 * 3600]);
     await ethers.provider.send("evm_mine", []);
 
-    await user.sendTransaction({ to: Controller.address, value: ONE_ETH });
+    await user.sendTransaction({ to: Controller.target, value: ONE_ETH });
     await Controller.connect(user).execute();
     expect(await Controller.executionCount()).to.equal(2);
   });
 
   it("T26: canExecute() false when paused", async () => {
-    await user.sendTransaction({ to: Controller.address, value: ONE_ETH });
+    await user.sendTransaction({ to: Controller.target, value: ONE_ETH });
     expect(await Controller.canExecute()).to.equal(true);
     await Controller.connect(guardian).pause();
     expect(await Controller.canExecute()).to.equal(false);
@@ -258,7 +258,7 @@ describe("BuybackController", function () {
   });
 
   it("T30: execute() reverts when paused", async () => {
-    await user.sendTransaction({ to: Controller.address, value: ONE_ETH });
+    await user.sendTransaction({ to: Controller.target, value: ONE_ETH });
     await Controller.connect(guardian).pause();
     await expect(Controller.connect(user).execute()).to.be.revertedWith("Pausable: paused");
   });
@@ -266,23 +266,23 @@ describe("BuybackController", function () {
   // ── T31–T35: LP + Fallback ───────────────────────────────────
 
   it("T31: LP fallback — no IFR → all ETH goes to buyback+burn", async () => {
-    await user.sendTransaction({ to: Controller.address, value: ONE_ETH });
+    await user.sendTransaction({ to: Controller.target, value: ONE_ETH });
 
     await expect(Controller.connect(user).execute())
       .to.emit(Controller, "LiquidityFallback");
   });
 
   it("T32: LP add — IFR in contract triggers addLiquidityETH", async () => {
-    await IFR.transfer(Controller.address, ethers.utils.parseEther("500"));
-    await user.sendTransaction({ to: Controller.address, value: ONE_ETH });
+    await IFR.transfer(Controller.target, ethers.parseEther("500"));
+    await user.sendTransaction({ to: Controller.target, value: ONE_ETH });
 
     await expect(Controller.connect(user).execute())
       .to.emit(Controller, "LiquidityAdded");
   });
 
   it("T33: LP failure → fallback to buyback", async () => {
-    await IFR.transfer(Controller.address, ethers.utils.parseEther("500"));
-    await user.sendTransaction({ to: Controller.address, value: ONE_ETH });
+    await IFR.transfer(Controller.target, ethers.parseEther("500"));
+    await user.sendTransaction({ to: Controller.target, value: ONE_ETH });
 
     // Make addLiquidity revert
     await Router.setAddLiquidityReverts(true);
@@ -292,7 +292,7 @@ describe("BuybackController", function () {
   });
 
   it("T34: slippage protection — revert when exceeded", async () => {
-    await user.sendTransaction({ to: Controller.address, value: ONE_ETH });
+    await user.sendTransaction({ to: Controller.target, value: ONE_ETH });
     // 6% slippage exceeds 5% tolerance
     await Router.setSlippageBpsNextSwap(600);
     await expect(Controller.connect(user).execute()).to.be.revertedWith("slippage");
@@ -300,7 +300,7 @@ describe("BuybackController", function () {
 
   it("T35: multiple executions accumulate stats", async () => {
     for (let i = 0; i < 3; i++) {
-      await user.sendTransaction({ to: Controller.address, value: ONE_ETH });
+      await user.sendTransaction({ to: Controller.target, value: ONE_ETH });
       await Controller.connect(user).execute();
       if (i < 2) {
         await ethers.provider.send("evm_increaseTime", [24 * 3600]);
@@ -309,7 +309,7 @@ describe("BuybackController", function () {
     }
 
     const [totalETH, , , count] = await Controller.stats();
-    expect(totalETH).to.equal(ONE_ETH.mul(3));
+    expect(totalETH).to.equal(BigInt(ONE_ETH)*BigInt(3));
     expect(count).to.equal(3);
   });
 
@@ -319,7 +319,7 @@ describe("BuybackController", function () {
     it("T36: reverts if token is zero address", async () => {
       const F = await ethers.getContractFactory("BuybackController");
       await expect(F.deploy(
-        ethers.constants.AddressZero, burnReserve.address, Router.address,
+        ethers.ZeroAddress, burnReserve.address, Router.target,
         lpReceiver.address, guardian.address, owner.address
       )).to.be.revertedWith("token=0");
     });
@@ -327,7 +327,7 @@ describe("BuybackController", function () {
     it("T37: reverts if burnReserve is zero address", async () => {
       const F = await ethers.getContractFactory("BuybackController");
       await expect(F.deploy(
-        IFR.address, ethers.constants.AddressZero, Router.address,
+        IFR.target, ethers.ZeroAddress, Router.target,
         lpReceiver.address, guardian.address, owner.address
       )).to.be.revertedWith("burnReserve=0");
     });
@@ -335,16 +335,16 @@ describe("BuybackController", function () {
     it("T38: reverts if guardian is zero address", async () => {
       const F = await ethers.getContractFactory("BuybackController");
       await expect(F.deploy(
-        IFR.address, burnReserve.address, Router.address,
-        lpReceiver.address, ethers.constants.AddressZero, owner.address
+        IFR.target, burnReserve.address, Router.target,
+        lpReceiver.address, ethers.ZeroAddress, owner.address
       )).to.be.revertedWith("guardian=0");
     });
 
     it("T39: reverts if governance is zero address", async () => {
       const F = await ethers.getContractFactory("BuybackController");
       await expect(F.deploy(
-        IFR.address, burnReserve.address, Router.address,
-        lpReceiver.address, guardian.address, ethers.constants.AddressZero
+        IFR.target, burnReserve.address, Router.target,
+        lpReceiver.address, guardian.address, ethers.ZeroAddress
       )).to.be.revertedWith("governance=0");
     });
   });
@@ -368,7 +368,7 @@ describe("BuybackController", function () {
     });
 
     it("T43: transferOwnership reverts with zero address", async () => {
-      await expect(Controller.transferOwnership(ethers.constants.AddressZero))
+      await expect(Controller.transferOwnership(ethers.ZeroAddress))
         .to.be.revertedWith("newOwner=0");
     });
   });
@@ -376,19 +376,19 @@ describe("BuybackController", function () {
   // ── T44–T46: setRouter, setLpReceiver, withdrawETH edge ──────
 
   it("T44: setRouter() works for owner, reverts for zero", async () => {
-    await expect(Controller.setRouter(ethers.constants.AddressZero)).to.be.revertedWith("router=0");
+    await expect(Controller.setRouter(ethers.ZeroAddress)).to.be.revertedWith("router=0");
     await Controller.setRouter(user.address); // any non-zero address
   });
 
   it("T45: setLpReceiver() works for owner, reverts for zero", async () => {
-    await expect(Controller.setLpReceiver(ethers.constants.AddressZero)).to.be.revertedWith("lpReceiver=0");
+    await expect(Controller.setLpReceiver(ethers.ZeroAddress)).to.be.revertedWith("lpReceiver=0");
     await Controller.setLpReceiver(user2.address);
     expect(await Controller.lpReceiver()).to.equal(user2.address);
   });
 
   it("T46: withdrawETH() reverts with zero address", async () => {
-    await user.sendTransaction({ to: Controller.address, value: ONE_ETH });
-    await expect(Controller.withdrawETH(ethers.constants.AddressZero, ONE_ETH))
+    await user.sendTransaction({ to: Controller.target, value: ONE_ETH });
+    await expect(Controller.withdrawETH(ethers.ZeroAddress, ONE_ETH))
       .to.be.revertedWith("to=0");
   });
 
@@ -398,7 +398,7 @@ describe("BuybackController", function () {
   });
 
   it("T48: withdrawIFR() reverts with zero address", async () => {
-    await expect(Controller.withdrawIFR(ethers.constants.AddressZero, 1))
+    await expect(Controller.withdrawIFR(ethers.ZeroAddress, 1))
       .to.be.revertedWith("to=0");
   });
 
@@ -407,7 +407,7 @@ describe("BuybackController", function () {
   });
 
   it("T50: permissionless — anyone can call execute()", async () => {
-    await user.sendTransaction({ to: Controller.address, value: ONE_ETH });
+    await user.sendTransaction({ to: Controller.target, value: ONE_ETH });
     // user2 (random address) can execute
     await expect(Controller.connect(user2).execute()).to.emit(Controller, "BuybackExecuted");
   });

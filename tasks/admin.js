@@ -11,11 +11,11 @@ task("lock-check", "Check if wallet has IFR locked")
   .addOptionalParam("min", "Minimum IFR amount", "1000")
   .setAction(async (args, hre) => {
     const lock = await hre.ethers.getContractAt("IFRLock", process.env.IFRLOCK_ADDRESS);
-    const min = hre.ethers.utils.parseUnits(args.min, 9);
+    const min = hre.ethers.parseUnits(args.min, 9);
     const isLocked = await lock.isLocked(args.wallet, min);
     const amount = await lock.lockedAmount(args.wallet);
     console.log(`Wallet: ${args.wallet}`);
-    console.log(`Locked: ${hre.ethers.utils.formatUnits(amount, 9)} IFR`);
+    console.log(`Locked: ${hre.ethers.formatUnits(amount, 9)} IFR`);
     console.log(`isLocked(>=${args.min}): ${isLocked}`);
   });
 
@@ -26,9 +26,9 @@ task("vault-status", "Show PartnerVault status")
     const rewardBps = await vault.rewardBps();
     const totalRewarded = await vault.totalRewarded();
     const annualCap = await vault.annualEmissionCap();
-    console.log(`rewardBps: ${rewardBps} (${rewardBps / 100}%)`);
-    console.log(`totalRewarded: ${hre.ethers.utils.formatUnits(totalRewarded, 9)} IFR`);
-    console.log(`annualCap: ${hre.ethers.utils.formatUnits(annualCap, 9)} IFR`);
+    console.log(`rewardBps: ${rewardBps} (${Number(rewardBps) / 100}%)`);
+    console.log(`totalRewarded: ${hre.ethers.formatUnits(totalRewarded, 9)} IFR`);
+    console.log(`annualCap: ${hre.ethers.formatUnits(annualCap, 9)} IFR`);
   });
 
 task("vault-set-caller", "Set authorized caller for PartnerVault")
@@ -48,7 +48,7 @@ task("feerouter-status", "Show FeeRouterV1 status")
     const feeBps = await router.protocolFeeBps();
     const paused = await router.paused();
     const signer = await router.voucherSigner();
-    console.log(`protocolFeeBps: ${feeBps} (${feeBps / 100}%)`);
+    console.log(`protocolFeeBps: ${feeBps} (${Number(feeBps) / 100}%)`);
     console.log(`paused: ${paused}`);
     console.log(`voucherSigner: ${signer}`);
   });
@@ -70,12 +70,12 @@ task("gov-queue", "Show all governance proposals with status")
     console.log(`Total proposals: ${count}\n`);
     for (let i = 0; i < count; i++) {
       const [target, data, eta, executed, cancelled] = await gov.getProposal(i);
-      const etaDate = new Date(eta.toNumber() * 1000);
+      const etaDate = new Date(Number(eta) * 1000);
       const now = Date.now();
       let status = "PENDING";
       if (executed) status = "EXECUTED";
       else if (cancelled) status = "CANCELLED";
-      else if (now >= eta.toNumber() * 1000) status = "READY";
+      else if (now >= Number(eta) * 1000) status = "READY";
       const fnSig = data.slice(0, 10);
       console.log(`#${i} | ${status} | ETA: ${etaDate.toISOString()} | Target: ${target} | Selector: ${fnSig}`);
     }
@@ -89,9 +89,9 @@ task("token-stats", "Show IFRToken stats")
     const senderBurn = await token.senderBurnBps();
     const recipientBurn = await token.recipientBurnBps();
     const poolFee = await token.poolFeeBps();
-    console.log(`totalSupply: ${hre.ethers.utils.formatUnits(supply, 9)} IFR`);
-    console.log(`senderBurnBps: ${senderBurn} (${senderBurn / 100}%)`);
-    console.log(`recipientBurnBps: ${recipientBurn} (${recipientBurn / 100}%)`);
-    console.log(`poolFeeBps: ${poolFee} (${poolFee / 100}%)`);
+    console.log(`totalSupply: ${hre.ethers.formatUnits(supply, 9)} IFR`);
+    console.log(`senderBurnBps: ${senderBurn} (${Number(senderBurn) / 100}%)`);
+    console.log(`recipientBurnBps: ${recipientBurn} (${Number(recipientBurn) / 100}%)`);
+    console.log(`poolFeeBps: ${poolFee} (${Number(poolFee) / 100}%)`);
     console.log(`totalFeeBps: ${Number(senderBurn) + Number(recipientBurn) + Number(poolFee)} (${(Number(senderBurn) + Number(recipientBurn) + Number(poolFee)) / 100}%)`);
   });

@@ -181,13 +181,13 @@ scripts/
 
 ```
 apps/
-├── dashboard/                      # Port 5173, React 18 + Vite + ethers v5
+├── dashboard/                      # Port 5173, React 18 + Vite + ethers v6
 ├── governance-dashboard/           # Port 5174, React 18 + Vite + TS + Tailwind
 ├── ai-copilot/                     # Port 5175/3003, React 18 + Vite + Express
 ├── points-backend/                 # Port 3004, Express + Prisma + SQLite + siwe
-├── creator-gateway/                # Port 3005, Express + ethers v5 + googleapis
+├── creator-gateway/                # Port 3005, Express + ethers v6 + googleapis
 ├── benefits-network/backend/       # Port 3001, Express + Prisma + SQLite
-└── benefits-network/frontend/      # Port 3000, Next.js 14 + wagmi v2
+└── benefits-network/frontend/      # Port 3000, Next.js 15 + wagmi v3
 ```
 
 ### Wiki (32 HTML Pages)
@@ -227,10 +227,10 @@ docs/wiki/
 
 ## 5. Bekannte Probleme & technische Hinweise
 
-#### ethers v5 + Alchemy Bug
-- Alchemy returns `to=""` for contract creation TXs — ethers v5 Formatter rejects this
-- Fix: Monkey-patch `Formatter.prototype.transactionResponse` → convert `to=""` to `to=null`
-- Applied in `scripts/deploy-mainnet-continue.js` und `scripts/deploy-bootstrap-mainnet.js`
+#### Root Ethers Runtime
+- Root-Tests, Tasks und Hardhat-Skripte verwenden Ethers 6.17 mit nativen `bigint`-Werten.
+- Die frueheren Ethers-v5-Formatter-Patches fuer Alchemy wurden entfernt.
+- Hardhat bleibt bis zur separaten Migration auf 2.28.6.
 
 #### Legacy-Ordner im Repository
 `backend/`, `indexer/`, `infra/`, `patches/`, `testing/`, `logs/`, `reports/` — Legacy-Artefakte, kein aktiver Code.
@@ -270,7 +270,7 @@ Vesting (12-Monat Cliff), LiquidityReserve (6-Monat Lock), BuybackVault (60-Tag 
 
 - **Framework:** Hardhat v2 (Solidity ^0.8.20, OpenZeppelin v5, Chai v4)
 - **Network:** Ethereum Mainnet + Sepolia Testnet (Alchemy RPC)
-- **Frontend:** React + Vite + ethers.js v5
+- **Frontend:** React + Vite + ethers.js v6
 - **CJS-only** (Hardhat v2), kein ESM
 - **Config:** `.env` (Sepolia) + `.env.mainnet` (Mainnet) — NICHT committed
 
@@ -291,7 +291,7 @@ npx hardhat test test/IFRLock.test.js  # Einzelner Test
 ```
 
 - Tests in JavaScript (nicht TypeScript)
-- ethers.js v5 Syntax (`ethers.utils.parseUnits("1000", 9)`)
+- ethers.js v6 Syntax (`ethers.parseUnits("1000", 9)`)
 - **IMMER 9 Decimals** in parseUnits
 
 #### Deploy-Workflow

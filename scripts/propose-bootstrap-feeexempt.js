@@ -35,7 +35,7 @@ async function main() {
   console.log(`  BootstrapVault: ${BOOTSTRAP}`);
 
   // ── Encode calldata ────────────────────────────────────────
-  const iface = new ethers.utils.Interface([
+  const iface = new ethers.Interface([
     "function setFeeExempt(address account, bool exempt)",
   ]);
   const calldata = iface.encodeFunctionData("setFeeExempt", [BOOTSTRAP, true]);
@@ -57,10 +57,10 @@ async function main() {
   // ── Read proposal details ──────────────────────────────────
   // Read proposal ID from proposalCount (event parsing unreliable with some ABIs)
   const count = await governance.proposalCount();
-  const proposalId = count.toNumber() - 1;
+  const proposalId = Number(count) - 1;
 
   const proposal = await governance.getProposal(proposalId);
-  const etaDate = new Date(proposal.eta.toNumber() * 1000);
+  const etaDate = new Date(Number(proposal.eta) * 1000);
 
   console.log(`\n  Proposal ID:  ${proposalId}`);
   console.log(`  ETA:          ${etaDate.toISOString()}`);

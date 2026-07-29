@@ -13,7 +13,7 @@ async function main() {
   console.log("INFERNO — Redeploy Reserves (transferOwnership upgrade)");
   console.log("=".repeat(60));
   console.log(`Deployer:  ${deployer.address}`);
-  console.log(`Balance:   ${ethers.utils.formatEther(balance)} ETH`);
+  console.log(`Balance:   ${ethers.formatEther(balance)} ETH`);
   console.log(`Network:   ${(await ethers.provider.getNetwork()).name}`);
   console.log(`Token:     ${TOKEN_ADDRESS}`);
   console.log(`Governance: ${GOVERNANCE_ADDRESS}`);
@@ -28,8 +28,8 @@ async function main() {
     TOKEN_ADDRESS,
     deployer.address   // guardian
   );
-  await burnReserve.deployed();
-  console.log(`  BurnReserve:   ${burnReserve.address}`);
+  await burnReserve.waitForDeployment();
+  console.log(`  BurnReserve:   ${burnReserve.target}`);
 
   // ── 2. Deploy BuybackVault ──
   console.log("\n[2/3] Deploying BuybackVault...");
@@ -37,21 +37,21 @@ async function main() {
   const BuybackVault = await ethers.getContractFactory("BuybackVault");
   const vault = await BuybackVault.deploy(
     TOKEN_ADDRESS,
-    burnReserve.address,
+    burnReserve.target,
     TREASURY_ADDR,
     deployer.address,    // router (placeholder — update via setParams)
     deployer.address,    // guardian
     ACTIVATION_DELAY
   );
-  await vault.deployed();
-  console.log(`  BuybackVault:  ${vault.address}`);
-  console.log(`  BurnReserve:   ${burnReserve.address} (linked)`);
+  await vault.waitForDeployment();
+  console.log(`  BuybackVault:  ${vault.target}`);
+  console.log(`  BurnReserve:   ${burnReserve.target} (linked)`);
   console.log(`  Activation:    60 days`);
 
   // ── 3. Deploy LiquidityReserve ──
   console.log("\n[3/3] Deploying LiquidityReserve...");
   const LOCK_DURATION = 180 * 86400;   // 180 days
-  const MAX_PER_PERIOD = ethers.utils.parseUnits("50000000", 9);  // 50M IFR
+  const MAX_PER_PERIOD = ethers.parseUnits("50000000", 9);  // 50M IFR
   const PERIOD_DURATION = 90 * 86400;  // 90 days
 
   const LiquidityReserve = await ethers.getContractFactory("LiquidityReserve");
@@ -62,8 +62,8 @@ async function main() {
     PERIOD_DURATION,
     deployer.address   // guardian
   );
-  await liquidityReserve.deployed();
-  console.log(`  LiquidityReserve: ${liquidityReserve.address}`);
+  await liquidityReserve.waitForDeployment();
+  console.log(`  LiquidityReserve: ${liquidityReserve.target}`);
   console.log(`  Lock:          180 days`);
   console.log(`  Max/Period:    50M IFR per 90 days`);
 
@@ -89,36 +89,36 @@ async function main() {
   const token = await ethers.getContractAt("InfernoToken", TOKEN_ADDRESS);
 
   const targets = [
-    { name: "LiquidityReserve", addr: liquidityReserve.address },
-    { name: "BuybackVault", addr: vault.address },
-    { name: "BurnReserve", addr: burnReserve.address },
+    { name: "LiquidityReserve", addr: liquidityReserve.target },
+    { name: "BuybackVault", addr: vault.target },
+    { name: "BurnReserve", addr: burnReserve.target },
   ];
 
   for (const { name, addr } of targets) {
     const calldata = token.interface.encodeFunctionData("setFeeExempt", [addr, true]);
     tx = await governance.propose(TOKEN_ADDRESS, calldata);
     const receipt = await tx.wait();
-    const event = receipt.events.find(e => e.event === "ProposalQueued");
+    const event = receipt.logs.find((entry) => entry.fragment?.name === "ProposalCreated");
     const propId = event ? event.args.proposalId.toString() : "?";
-    console.log(`  Proposal #${propId}: setFeeExempt(${name}, true) — TX ${receipt.transactionHash}`);
+    console.log(`  Proposal #${propId}: setFeeExempt(${name}, true) — TX ${receipt.hash}`);
   }
 
   // ── Summary ──
   console.log("\n" + "=".repeat(60));
   console.log("DEPLOYMENT COMPLETE");
   console.log("=".repeat(60));
-  console.log(`BurnReserve (NEW):       ${burnReserve.address}`);
-  console.log(`BuybackVault (NEW):      ${vault.address}`);
-  console.log(`LiquidityReserve (NEW):  ${liquidityReserve.address}`);
+  console.log(`BurnReserve (NEW):       ${burnReserve.target}`);
+  console.log(`BuybackVault (NEW):      ${vault.target}`);
+  console.log(`LiquidityReserve (NEW):  ${liquidityReserve.target}`);
   console.log("-".repeat(60));
   console.log("Ownership: all 3 transferred to Governance");
   console.log("feeExempt: 3 proposals queued (48h timelock)");
   console.log("-".repeat(60));
   console.log("\nNEXT STEPS:");
   console.log("1. Verify on Etherscan:");
-  console.log(`   npx hardhat verify --network sepolia ${burnReserve.address} ${TOKEN_ADDRESS} ${deployer.address}`);
-  console.log(`   npx hardhat verify --network sepolia ${vault.address} ${TOKEN_ADDRESS} ${burnReserve.address} ${TREASURY_ADDR} ${deployer.address} ${deployer.address} ${ACTIVATION_DELAY}`);
-  console.log(`   npx hardhat verify --network sepolia ${liquidityReserve.address} ${TOKEN_ADDRESS} ${LOCK_DURATION} ${MAX_PER_PERIOD} ${PERIOD_DURATION} ${deployer.address}`);
+  console.log(`   npx hardhat verify --network sepolia ${burnReserve.target} ${TOKEN_ADDRESS} ${deployer.address}`);
+  console.log(`   npx hardhat verify --network sepolia ${vault.target} ${TOKEN_ADDRESS} ${burnReserve.target} ${TREASURY_ADDR} ${deployer.address} ${deployer.address} ${ACTIVATION_DELAY}`);
+  console.log(`   npx hardhat verify --network sepolia ${liquidityReserve.target} ${TOKEN_ADDRESS} ${LOCK_DURATION} ${MAX_PER_PERIOD} ${PERIOD_DURATION} ${deployer.address}`);
   console.log("2. Wait 48h for proposals, then execute");
   console.log("3. Update docs/DEPLOYMENTS.md with new addresses");
 }

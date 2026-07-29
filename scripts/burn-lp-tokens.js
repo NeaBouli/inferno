@@ -20,9 +20,9 @@ async function main() {
 
   console.log(`LP Balance (Deployer): ${balance.toString()}`);
   console.log(`LP Total Supply:       ${total.toString()}`);
-  console.log(`Percentage:            ${balance.mul(10000).div(total).toNumber()/100}%`);
+  console.log(`Percentage:            ${Number(BigInt(BigInt(balance)*BigInt(10000))/BigInt(total))/100}%`);
 
-  if (balance.isZero()) {
+  if (BigInt(balance)===BigInt(0)) {
     console.log("Kein LP Balance — nichts zu burnen.");
     return;
   }

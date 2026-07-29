@@ -25,7 +25,7 @@ describe("FeeRouterV1", function () {
       chainId: (await ethers.provider.getNetwork()).chainId,
       verifyingContract: routerAddress,
     };
-    return signer._signTypedData(domain, VOUCHER_TYPES, voucher);
+    return signer.signTypedData(domain, VOUCHER_TYPES, voucher);
   }
 
   async function blockTimestamp() {
@@ -35,7 +35,7 @@ describe("FeeRouterV1", function () {
 
   function emptyVoucher() {
     return {
-      user: ethers.constants.AddressZero,
+      user: ethers.ZeroAddress,
       discountBps: 0,
       maxUses: 0,
       expiry: 0,
@@ -48,14 +48,14 @@ describe("FeeRouterV1", function () {
 
     const Router = await ethers.getContractFactory("FeeRouterV1");
     router = await Router.deploy(governance.address, feeCollector.address, voucherSigner.address);
-    await router.deployed();
+    await router.waitForDeployment();
 
     const Adapter = await ethers.getContractFactory("MockAdapter");
     adapter = await Adapter.deploy();
-    await adapter.deployed();
+    await adapter.waitForDeployment();
 
     // Whitelist the adapter
-    await router.connect(governance).setAdapter(adapter.address, true);
+    await router.connect(governance).setAdapter(adapter.target, true);
   });
 
   // --- Test 1: Deployment ---
@@ -96,34 +96,34 @@ describe("FeeRouterV1", function () {
     await expect(
       router.connect(userA).swapWithFee(
         userB.address, "0x", emptyVoucher(), "0x", false,
-        { value: ethers.utils.parseEther("1") }
+        { value: ethers.parseEther("1") }
       )
     ).to.be.revertedWith("Adapter not whitelisted");
   });
 
   // --- Test 6: swapWithFee without voucher → full fee ---
   it("charges full protocol fee without voucher", async function () {
-    const swapAmount = ethers.utils.parseEther("1"); // 1 ETH
+    const swapAmount = ethers.parseEther("1"); // 1 ETH
     const feeBps = await router.protocolFeeBps(); // 5 bps = 0.05%
-    const expectedFee = swapAmount.mul(feeBps).div(10000);
+    const expectedFee = BigInt(BigInt(swapAmount)*BigInt(feeBps))/BigInt(10000);
 
     const collectorBefore = await ethers.provider.getBalance(feeCollector.address);
 
     await router.connect(userA).swapWithFee(
-      adapter.address, "0x", emptyVoucher(), "0x", false,
+      adapter.target, "0x", emptyVoucher(), "0x", false,
       { value: swapAmount }
     );
 
     const collectorAfter = await ethers.provider.getBalance(feeCollector.address);
-    expect(collectorAfter.sub(collectorBefore)).to.equal(expectedFee);
+    expect(BigInt(collectorAfter)-BigInt(collectorBefore)).to.equal(expectedFee);
 
     // Adapter should receive swapAmount - fee
-    expect(await adapter.lastReceived()).to.equal(swapAmount.sub(expectedFee));
+    expect(await adapter.lastReceived()).to.equal(BigInt(swapAmount)-BigInt(expectedFee));
   });
 
   // --- Test 7: swapWithFee with valid voucher → reduced fee ---
   it("reduces fee with valid voucher", async function () {
-    const swapAmount = ethers.utils.parseEther("1");
+    const swapAmount = ethers.parseEther("1");
     const discountBps = 3; // 3 bps discount → effective 2 bps
     const nonce = 42;
     const expiry = await blockTimestamp() + 3600; // 1h from now
@@ -136,20 +136,20 @@ describe("FeeRouterV1", function () {
       nonce,
     };
 
-    const sig = await signVoucher(voucherSigner, voucher, router.address);
+    const sig = await signVoucher(voucherSigner, voucher, router.target);
 
-    const expectedFee = swapAmount.mul(5 - discountBps).div(10000); // 2 bps
+    const expectedFee = BigInt(BigInt(swapAmount)*BigInt(5-discountBps))/BigInt(10000); // 2 bps
     const collectorBefore = await ethers.provider.getBalance(feeCollector.address);
 
     await expect(
       router.connect(userA).swapWithFee(
-        adapter.address, "0x", voucher, sig, true,
+        adapter.target, "0x", voucher, sig, true,
         { value: swapAmount }
       )
     ).to.emit(router, "VoucherUsed").withArgs(userA.address, nonce, discountBps);
 
     const collectorAfter = await ethers.provider.getBalance(feeCollector.address);
-    expect(collectorAfter.sub(collectorBefore)).to.equal(expectedFee);
+    expect(BigInt(collectorAfter)-BigInt(collectorBefore)).to.equal(expectedFee);
   });
 
   // --- Test 8: expired voucher ---
@@ -162,12 +162,12 @@ describe("FeeRouterV1", function () {
       nonce: 100,
     };
 
-    const sig = await signVoucher(voucherSigner, voucher, router.address);
+    const sig = await signVoucher(voucherSigner, voucher, router.target);
 
     await expect(
       router.connect(userA).swapWithFee(
-        adapter.address, "0x", voucher, sig, true,
-        { value: ethers.utils.parseEther("1") }
+        adapter.target, "0x", voucher, sig, true,
+        { value: ethers.parseEther("1") }
       )
     ).to.be.revertedWith("Voucher expired");
   });
@@ -183,19 +183,19 @@ describe("FeeRouterV1", function () {
       nonce: 200,
     };
 
-    const sig = await signVoucher(voucherSigner, voucher, router.address);
+    const sig = await signVoucher(voucherSigner, voucher, router.target);
 
     // First use: success
     await router.connect(userA).swapWithFee(
-      adapter.address, "0x", voucher, sig, true,
-      { value: ethers.utils.parseEther("1") }
+      adapter.target, "0x", voucher, sig, true,
+      { value: ethers.parseEther("1") }
     );
 
     // Second use: replay → revert
     await expect(
       router.connect(userA).swapWithFee(
-        adapter.address, "0x", voucher, sig, true,
-        { value: ethers.utils.parseEther("1") }
+        adapter.target, "0x", voucher, sig, true,
+        { value: ethers.parseEther("1") }
       )
     ).to.be.revertedWith("Nonce already used");
   });
@@ -212,19 +212,19 @@ describe("FeeRouterV1", function () {
     };
 
     // Sign with userB instead of voucherSigner
-    const badSig = await signVoucher(userB, voucher, router.address);
+    const badSig = await signVoucher(userB, voucher, router.target);
 
     await expect(
       router.connect(userA).swapWithFee(
-        adapter.address, "0x", voucher, badSig, true,
-        { value: ethers.utils.parseEther("1") }
+        adapter.target, "0x", voucher, badSig, true,
+        { value: ethers.parseEther("1") }
       )
     ).to.be.revertedWith("Invalid voucher signature");
   });
 
   // --- Test 11: discount >= protocolFee → fee clamps to 0 ---
   it("clamps fee to 0 when discount >= protocolFee", async function () {
-    const swapAmount = ethers.utils.parseEther("1");
+    const swapAmount = ethers.parseEther("1");
     const expiry = await blockTimestamp() + 3600;
     const voucher = {
       user: userA.address,
@@ -234,18 +234,18 @@ describe("FeeRouterV1", function () {
       nonce: 400,
     };
 
-    const sig = await signVoucher(voucherSigner, voucher, router.address);
+    const sig = await signVoucher(voucherSigner, voucher, router.target);
 
     const collectorBefore = await ethers.provider.getBalance(feeCollector.address);
 
     await router.connect(userA).swapWithFee(
-      adapter.address, "0x", voucher, sig, true,
+      adapter.target, "0x", voucher, sig, true,
       { value: swapAmount }
     );
 
     // No fee should be charged
     const collectorAfter = await ethers.provider.getBalance(feeCollector.address);
-    expect(collectorAfter.sub(collectorBefore)).to.equal(0);
+    expect(BigInt(collectorAfter)-BigInt(collectorBefore)).to.equal(0);
 
     // Adapter gets full amount
     expect(await adapter.lastReceived()).to.equal(swapAmount);
@@ -257,8 +257,8 @@ describe("FeeRouterV1", function () {
 
     await expect(
       router.connect(userA).swapWithFee(
-        adapter.address, "0x", emptyVoucher(), "0x", false,
-        { value: ethers.utils.parseEther("1") }
+        adapter.target, "0x", emptyVoucher(), "0x", false,
+        { value: ethers.parseEther("1") }
       )
     ).to.be.revertedWith("FeeRouter paused");
   });
@@ -316,13 +316,13 @@ describe("FeeRouterV1", function () {
       nonce: 500,
     };
 
-    const sig = await signVoucher(voucherSigner, voucher, router.address);
+    const sig = await signVoucher(voucherSigner, voucher, router.target);
 
     // userA tries to use userB's voucher
     await expect(
       router.connect(userA).swapWithFee(
-        adapter.address, "0x", voucher, sig, true,
-        { value: ethers.utils.parseEther("1") }
+        adapter.target, "0x", voucher, sig, true,
+        { value: ethers.parseEther("1") }
       )
     ).to.be.revertedWith("Voucher not for sender");
   });
@@ -338,21 +338,21 @@ describe("FeeRouterV1", function () {
       nonce: 600,
     };
 
-    const sig = await signVoucher(voucherSigner, voucher, router.address);
+    const sig = await signVoucher(voucherSigner, voucher, router.target);
 
     await expect(
       router.connect(userA).swapWithFee(
-        adapter.address, "0x", voucher, sig, true,
-        { value: ethers.utils.parseEther("1") }
+        adapter.target, "0x", voucher, sig, true,
+        { value: ethers.parseEther("1") }
       )
     ).to.be.revertedWith("Discount exceeds fee");
   });
 
   // --- Test 22: receive() accepts ETH ---
   it("contract can receive ETH via receive()", async function () {
-    const amount = ethers.utils.parseEther("0.1");
-    await userA.sendTransaction({ to: router.address, value: amount });
-    expect(await ethers.provider.getBalance(router.address)).to.equal(amount);
+    const amount = ethers.parseEther("0.1");
+    await userA.sendTransaction({ to: router.target, value: amount });
+    expect(await ethers.provider.getBalance(router.target)).to.equal(amount);
   });
 
   // --- Test 23: swapWithFee with value=0 ---
@@ -360,12 +360,12 @@ describe("FeeRouterV1", function () {
     const collectorBefore = await ethers.provider.getBalance(feeCollector.address);
 
     await router.connect(userA).swapWithFee(
-      adapter.address, "0x", emptyVoucher(), "0x", false,
+      adapter.target, "0x", emptyVoucher(), "0x", false,
       { value: 0 }
     );
 
     const collectorAfter = await ethers.provider.getBalance(feeCollector.address);
-    expect(collectorAfter.sub(collectorBefore)).to.equal(0);
+    expect(BigInt(collectorAfter)-BigInt(collectorBefore)).to.equal(0);
   });
 
   // --- Test 24: setPaused emits event ---
@@ -387,7 +387,7 @@ describe("FeeRouterV1", function () {
         nonce: 700,
       };
 
-      const sig = await signVoucher(voucherSigner, voucher, router.address);
+      const sig = await signVoucher(voucherSigner, voucher, router.target);
       const [valid, reason] = await router.connect(userA).isVoucherValid(voucher, sig);
       expect(valid).to.equal(true);
       expect(reason).to.equal("Valid");
@@ -404,7 +404,7 @@ describe("FeeRouterV1", function () {
         nonce: 701,
       };
 
-      const sig = await signVoucher(voucherSigner, voucher, router.address);
+      const sig = await signVoucher(voucherSigner, voucher, router.target);
       const [valid, reason] = await router.connect(userA).isVoucherValid(voucher, sig);
       expect(valid).to.equal(false);
       expect(reason).to.equal("Wrong user");
@@ -420,7 +420,7 @@ describe("FeeRouterV1", function () {
         nonce: 702,
       };
 
-      const sig = await signVoucher(voucherSigner, voucher, router.address);
+      const sig = await signVoucher(voucherSigner, voucher, router.target);
       const [valid, reason] = await router.connect(userA).isVoucherValid(voucher, sig);
       expect(valid).to.equal(false);
       expect(reason).to.equal("Expired");
@@ -437,12 +437,12 @@ describe("FeeRouterV1", function () {
         nonce: 703,
       };
 
-      const sig = await signVoucher(voucherSigner, voucher, router.address);
+      const sig = await signVoucher(voucherSigner, voucher, router.target);
 
       // Use the voucher first
       await router.connect(userA).swapWithFee(
-        adapter.address, "0x", voucher, sig, true,
-        { value: ethers.utils.parseEther("1") }
+        adapter.target, "0x", voucher, sig, true,
+        { value: ethers.parseEther("1") }
       );
 
       // Now check validity — nonce is used
@@ -462,7 +462,7 @@ describe("FeeRouterV1", function () {
         nonce: 704,
       };
 
-      const sig = await signVoucher(voucherSigner, voucher, router.address);
+      const sig = await signVoucher(voucherSigner, voucher, router.target);
       const [valid, reason] = await router.connect(userA).isVoucherValid(voucher, sig);
       expect(valid).to.equal(false);
       expect(reason).to.equal("Discount too high");
@@ -480,7 +480,7 @@ describe("FeeRouterV1", function () {
       };
 
       // Sign with wrong key
-      const badSig = await signVoucher(userB, voucher, router.address);
+      const badSig = await signVoucher(userB, voucher, router.target);
       const [valid, reason] = await router.connect(userA).isVoucherValid(voucher, badSig);
       expect(valid).to.equal(false);
       expect(reason).to.equal("Invalid signature");
@@ -502,12 +502,12 @@ describe("FeeRouterV1", function () {
     };
 
     // Sign with new signer (userB)
-    const sig = await signVoucher(userB, voucher, router.address);
+    const sig = await signVoucher(userB, voucher, router.target);
 
     await expect(
       router.connect(userA).swapWithFee(
-        adapter.address, "0x", voucher, sig, true,
-        { value: ethers.utils.parseEther("1") }
+        adapter.target, "0x", voucher, sig, true,
+        { value: ethers.parseEther("1") }
       )
     ).to.emit(router, "VoucherUsed");
   });
@@ -516,18 +516,18 @@ describe("FeeRouterV1", function () {
   it("fee goes to new collector after setFeeCollector", async function () {
     await router.connect(governance).setFeeCollector(userB.address);
 
-    const swapAmount = ethers.utils.parseEther("1");
+    const swapAmount = ethers.parseEther("1");
     const feeBps = await router.protocolFeeBps();
-    const expectedFee = swapAmount.mul(feeBps).div(10000);
+    const expectedFee = BigInt(BigInt(swapAmount)*BigInt(feeBps))/BigInt(10000);
 
     const collectorBefore = await ethers.provider.getBalance(userB.address);
 
     await router.connect(userA).swapWithFee(
-      adapter.address, "0x", emptyVoucher(), "0x", false,
+      adapter.target, "0x", emptyVoucher(), "0x", false,
       { value: swapAmount }
     );
 
     const collectorAfter = await ethers.provider.getBalance(userB.address);
-    expect(collectorAfter.sub(collectorBefore)).to.equal(expectedFee);
+    expect(BigInt(collectorAfter)-BigInt(collectorBefore)).to.equal(expectedFee);
   });
 });

@@ -7,12 +7,12 @@ describe("BootstrapVault", function () {
   let startTime;
 
   const DURATION = 90 * 24 * 60 * 60; // 90 days
-  const IFR_ALLOCATION = ethers.utils.parseEther("100000000"); // 100M IFR
-  const MIN_CONTRIBUTION = ethers.utils.parseEther("0.01");
-  const MAX_CONTRIBUTION = ethers.utils.parseEther("2");
+  const IFR_ALLOCATION = ethers.parseEther("100000000"); // 100M IFR
+  const MIN_CONTRIBUTION = ethers.parseEther("0.01");
+  const MAX_CONTRIBUTION = ethers.parseEther("2");
   const LP_LOCK_DURATION = 365 * 24 * 60 * 60; // 12 months
 
-  const pe = (s) => ethers.utils.parseEther(s);
+  const pe = (s) => ethers.parseEther(s);
 
   beforeEach(async () => {
     [owner, userA, userB, userC, ifrSource] = await ethers.getSigners();
@@ -20,20 +20,20 @@ describe("BootstrapVault", function () {
     // Deploy mock tokens
     const MockToken = await ethers.getContractFactory("MockToken");
     ifrToken = await MockToken.deploy("Inferno Token", "IFR");
-    await ifrToken.deployed();
+    await ifrToken.waitForDeployment();
 
     weth = await MockToken.deploy("Wrapped ETH", "WETH");
-    await weth.deployed();
+    await weth.waitForDeployment();
 
     // Deploy mock router (also acts as factory)
     const MockBootstrapRouter = await ethers.getContractFactory("MockBootstrapRouter");
-    router = await MockBootstrapRouter.deploy(weth.address);
-    await router.deployed();
+    router = await MockBootstrapRouter.deploy(weth.target);
+    await router.waitForDeployment();
 
     // Deploy mock Team.Finance locker
     const MockTeamFinanceLocker = await ethers.getContractFactory("MockTeamFinanceLocker");
     locker = await MockTeamFinanceLocker.deploy();
-    await locker.deployed();
+    await locker.waitForDeployment();
 
     // Deploy BootstrapVault
     const block = await ethers.provider.getBlock("latest");
@@ -41,10 +41,10 @@ describe("BootstrapVault", function () {
 
     const BootstrapVault = await ethers.getContractFactory("BootstrapVault");
     vault = await BootstrapVault.deploy(
-      ifrToken.address,
+      ifrToken.target,
       ifrSource.address,
-      router.address,
-      locker.address,
+      router.target,
+      locker.target,
       startTime,
       DURATION,
       IFR_ALLOCATION,
@@ -52,11 +52,11 @@ describe("BootstrapVault", function () {
       MAX_CONTRIBUTION,
       LP_LOCK_DURATION
     );
-    await vault.deployed();
+    await vault.waitForDeployment();
 
     // Fund ifrSource with 2x allocation and approve vault
-    await ifrToken.mint(ifrSource.address, IFR_ALLOCATION.mul(2));
-    await ifrToken.connect(ifrSource).approve(vault.address, IFR_ALLOCATION.mul(2));
+    await ifrToken.mint(ifrSource.address, BigInt(IFR_ALLOCATION)*BigInt(2));
+    await ifrToken.connect(ifrSource).approve(vault.target, BigInt(IFR_ALLOCATION)*BigInt(2));
 
     // Advance to startTime
     await ethers.provider.send("evm_setNextBlockTimestamp", [startTime]);
@@ -67,10 +67,10 @@ describe("BootstrapVault", function () {
 
   describe("Deployment", () => {
     it("sets all immutable parameters correctly", async () => {
-      expect(await vault.ifrToken()).to.equal(ifrToken.address);
+      expect(await vault.ifrToken()).to.equal(ifrToken.target);
       expect(await vault.ifrSource()).to.equal(ifrSource.address);
-      expect(await vault.uniswapRouter()).to.equal(router.address);
-      expect(await vault.teamFinanceLocker()).to.equal(locker.address);
+      expect(await vault.uniswapRouter()).to.equal(router.target);
+      expect(await vault.teamFinanceLocker()).to.equal(locker.target);
       expect(await vault.startTime()).to.equal(startTime);
       expect(await vault.endTime()).to.equal(startTime + DURATION);
       expect(await vault.ifrAllocation()).to.equal(IFR_ALLOCATION);
@@ -83,22 +83,22 @@ describe("BootstrapVault", function () {
 
     it("reverts with zero address or invalid parameters", async () => {
       const BootstrapVault = await ethers.getContractFactory("BootstrapVault");
-      const args = [ifrToken.address, ifrSource.address, router.address, locker.address,
+      const args = [ifrToken.target, ifrSource.address, router.target, locker.target,
         startTime, DURATION, IFR_ALLOCATION, MIN_CONTRIBUTION, MAX_CONTRIBUTION, LP_LOCK_DURATION];
 
       // ifrToken=0
       await expect(BootstrapVault.deploy(
-        ethers.constants.AddressZero, args[1], args[2], args[3], args[4], args[5], args[6], args[7], args[8], args[9]
+        ethers.ZeroAddress, args[1], args[2], args[3], args[4], args[5], args[6], args[7], args[8], args[9]
       )).to.be.revertedWith("ifrToken=0");
 
       // ifrSource=0
       await expect(BootstrapVault.deploy(
-        args[0], ethers.constants.AddressZero, args[2], args[3], args[4], args[5], args[6], args[7], args[8], args[9]
+        args[0], ethers.ZeroAddress, args[2], args[3], args[4], args[5], args[6], args[7], args[8], args[9]
       )).to.be.revertedWith("ifrSource=0");
 
       // router=0
       await expect(BootstrapVault.deploy(
-        args[0], args[1], ethers.constants.AddressZero, args[3], args[4], args[5], args[6], args[7], args[8], args[9]
+        args[0], args[1], ethers.ZeroAddress, args[3], args[4], args[5], args[6], args[7], args[8], args[9]
       )).to.be.revertedWith("router=0");
 
       // max < min
@@ -180,8 +180,8 @@ describe("BootstrapVault", function () {
       await vault.connect(userB).contribute({ value: pe("1") });
 
       // userA contributed 50%, so estimate = 50M IFR
-      expect(await vault.getEstimatedIFR(userA.address)).to.equal(IFR_ALLOCATION.div(2));
-      expect(await vault.getEstimatedIFR(userB.address)).to.equal(IFR_ALLOCATION.div(2));
+      expect(await vault.getEstimatedIFR(userA.address)).to.equal(BigInt(IFR_ALLOCATION)/BigInt(2));
+      expect(await vault.getEstimatedIFR(userB.address)).to.equal(BigInt(IFR_ALLOCATION)/BigInt(2));
       // non-contributor
       expect(await vault.getEstimatedIFR(userC.address)).to.equal(0);
     });
@@ -223,13 +223,13 @@ describe("BootstrapVault", function () {
 
       // LP token address should be set
       const lpAddr = await vault.lpTokenAddress();
-      expect(lpAddr).to.not.equal(ethers.constants.AddressZero);
+      expect(lpAddr).to.not.equal(ethers.ZeroAddress);
 
       // Router should have received ifrAllocation IFR
-      expect(await ifrToken.balanceOf(router.address)).to.equal(IFR_ALLOCATION);
+      expect(await ifrToken.balanceOf(router.target)).to.equal(IFR_ALLOCATION);
 
       // Router should have received all ETH
-      expect(await ethers.provider.getBalance(router.address)).to.equal(pe("1"));
+      expect(await ethers.provider.getBalance(router.target)).to.equal(pe("1"));
     });
 
     it("locks LP via Team.Finance", async () => {
@@ -244,8 +244,8 @@ describe("BootstrapVault", function () {
       // LP tokens should be in the locker, not the vault
       const lpAddr = await vault.lpTokenAddress();
       const lpTokenContract = await ethers.getContractAt("MockLPToken", lpAddr);
-      expect(await lpTokenContract.balanceOf(locker.address)).to.equal(pe("1"));
-      expect(await lpTokenContract.balanceOf(vault.address)).to.equal(0);
+      expect(await lpTokenContract.balanceOf(locker.target)).to.equal(pe("1"));
+      expect(await lpTokenContract.balanceOf(vault.target)).to.equal(0);
     });
 
     it("emits Finalised event with correct params", async () => {
@@ -253,7 +253,7 @@ describe("BootstrapVault", function () {
       await ethers.provider.send("evm_mine", []);
 
       const lpAddr = await router.lpToken();
-      const expectedIfrPerETH = IFR_ALLOCATION.mul(pe("1")).div(pe("1")); // 100M * 1e18 / 1e18
+      const expectedIfrPerETH = BigInt(BigInt(IFR_ALLOCATION)*BigInt(pe('1')))/BigInt(pe('1')); // 100M * 1e18 / 1e18
 
       await expect(vault.finalise())
         .to.emit(vault, "Finalised")
@@ -283,7 +283,7 @@ describe("BootstrapVault", function () {
       const balAfter = await ifrToken.balanceOf(userA.address);
 
       // userA contributed 50%, gets 50M IFR
-      expect(balAfter.sub(balBefore)).to.equal(IFR_ALLOCATION.div(2));
+      expect(BigInt(balAfter)-BigInt(balBefore)).to.equal(BigInt(IFR_ALLOCATION)/BigInt(2));
     });
 
     it("reverts if called twice (already claimed)", async () => {
@@ -313,10 +313,10 @@ describe("BootstrapVault", function () {
 
       await expect(vault.finalise())
         .to.emit(vault, "Finalised")
-        .withArgs(0, 0, ethers.constants.AddressZero, 0);
+        .withArgs(0, 0, ethers.ZeroAddress, 0);
 
       expect(await vault.finalised()).to.equal(true);
-      expect(await vault.lpTokenAddress()).to.equal(ethers.constants.AddressZero);
+      expect(await vault.lpTokenAddress()).to.equal(ethers.ZeroAddress);
     });
 
     it("single contributor gets 100% IFR", async () => {
@@ -331,7 +331,7 @@ describe("BootstrapVault", function () {
       const balAfter = await ifrToken.balanceOf(userA.address);
 
       // Single contributor gets 100% of ifrAllocation
-      expect(balAfter.sub(balBefore)).to.equal(IFR_ALLOCATION);
+      expect(BigInt(balAfter)-BigInt(balBefore)).to.equal(IFR_ALLOCATION);
     });
   });
 });

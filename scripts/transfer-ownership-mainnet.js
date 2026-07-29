@@ -39,7 +39,7 @@ async function main() {
 
   let transferred = 0;
   let skipped = 0;
-  let totalGas = ethers.BigNumber.from(0);
+  let totalGas = BigInt(0);
 
   // ── Transfer owner contracts ────────────────────────────
   for (const c of ownerContracts) {
@@ -63,9 +63,9 @@ async function main() {
 
     const tx = await contract.transferOwnership(GOVERNANCE);
     const receipt = await tx.wait();
-    console.log(`  TX: ${receipt.transactionHash}`);
+    console.log(`  TX: ${receipt.hash}`);
     console.log(`  Gas: ${receipt.gasUsed.toString()}`);
-    totalGas = totalGas.add(receipt.gasUsed);
+    totalGas = BigInt(totalGas)+BigInt(receipt.gasUsed);
 
     // Verify
     const newOwner = await contract.owner();
@@ -99,9 +99,9 @@ async function main() {
 
     const tx = await contract.setAdmin(GOVERNANCE);
     const receipt = await tx.wait();
-    console.log(`  TX: ${receipt.transactionHash}`);
+    console.log(`  TX: ${receipt.hash}`);
     console.log(`  Gas: ${receipt.gasUsed.toString()}`);
-    totalGas = totalGas.add(receipt.gasUsed);
+    totalGas = BigInt(totalGas)+BigInt(receipt.gasUsed);
 
     // Verify
     const newAdmin = await contract.admin();
@@ -121,12 +121,12 @@ async function main() {
   console.log(`  Skipped:     ${skipped} (already Governance)`);
   console.log(`  Total Gas:   ${totalGas.toString()}`);
 
-  if (network.chainId === 31337) {
+  if (network.chainId === 31337n) {
     // Hardhat fork — estimate ETH cost
-    const gasPrice = await ethers.provider.getGasPrice();
-    const cost = totalGas.mul(gasPrice);
-    console.log(`  Gas Price:   ${ethers.utils.formatUnits(gasPrice, "gwei")} gwei`);
-    console.log(`  Est. Cost:   ${ethers.utils.formatEther(cost)} ETH`);
+    const gasPrice = (await ethers.provider.getFeeData()).gasPrice;
+    const cost = BigInt(totalGas)*BigInt(gasPrice);
+    console.log(`  Gas Price:   ${ethers.formatUnits(gasPrice, "gwei")} gwei`);
+    console.log(`  Est. Cost:   ${ethers.formatEther(cost)} ETH`);
   }
 
   console.log("=".repeat(60));

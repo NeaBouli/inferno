@@ -18,7 +18,7 @@ const CV_ADDR = "0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3";
 const LV_ADDR = "0x974305Ab0EC905172e697271C3d7d385194EB9DF";
 
 async function main() {
-  const provider = new ethers.providers.JsonRpcProvider(
+  const provider = new ethers.JsonRpcProvider(
     process.env.MAINNET_RPC_URL || "https://ethereum-rpc.publicnode.com"
   );
   const signer = new ethers.Wallet(process.env.DEPLOYER_PRIVATE_KEY, provider);

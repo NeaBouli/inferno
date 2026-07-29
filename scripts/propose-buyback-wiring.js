@@ -51,7 +51,7 @@ async function main() {
   console.log('═══════════════════════════════════════════════');
   console.log('  BuybackController Governance Wiring');
   console.log('═══════════════════════════════════════════════');
-  console.log('Network:           ', network.chainId === 1 ? 'Ethereum Mainnet' : 'Chain ' + network.chainId);
+  console.log('Network:           ', network.chainId === 1n ? 'Ethereum Mainnet' : 'Chain ' + network.chainId);
   console.log('Signer:            ', signer.address);
   console.log('BuybackController: ', controllerAddress);
   console.log('');
@@ -68,8 +68,8 @@ async function main() {
     console.log('Safe TX Builder calldata for copy-paste:');
     console.log('');
 
-    const ifaceToken = new ethers.utils.Interface(['function setFeeExempt(address,bool)']);
-    const ifaceRouter = new ethers.utils.Interface(['function setFeeCollector(address)']);
+    const ifaceToken = new ethers.Interface(['function setFeeExempt(address,bool)']);
+    const ifaceRouter = new ethers.Interface(['function setFeeCollector(address)']);
 
     const calldataA = ifaceToken.encodeFunctionData('setFeeExempt', [controllerAddress, true]);
     const calldataB = ifaceRouter.encodeFunctionData('setFeeCollector', [controllerAddress]);
@@ -91,7 +91,7 @@ async function main() {
 
   // ── Proposal A: setFeeExempt ────────────────────────────────
   console.log('Submitting Proposal A: setFeeExempt(BuybackController, true)...');
-  const ifaceToken = new ethers.utils.Interface(['function setFeeExempt(address,bool)']);
+  const ifaceToken = new ethers.Interface(['function setFeeExempt(address,bool)']);
   const calldataA = ifaceToken.encodeFunctionData('setFeeExempt', [controllerAddress, true]);
   console.log('  Target:  ', TOKEN_ADDRESS, '(InfernoToken)');
   console.log('  Calldata:', calldataA);
@@ -100,12 +100,12 @@ async function main() {
   console.log('  TX:', txA.hash);
   const receiptA = await txA.wait();
 
-  const eventA = receiptA.events.find(function (e) { return e.event === 'ProposalCreated'; });
+  const eventA = receiptA.logs.find((entry) => entry.fragment?.name === 'ProposalCreated');
   let proposalIdA;
   let etaA;
   if (eventA) {
     proposalIdA = eventA.args.proposalId.toString();
-    etaA = new Date(eventA.args.eta.toNumber() * 1000);
+    etaA = new Date(Number(eventA.args.eta) * 1000);
     console.log('  Proposal ID:', proposalIdA);
     console.log('  Execute after:', etaA.toISOString());
   } else {
@@ -130,7 +130,7 @@ async function main() {
   console.log('');
 
   // Print Proposal B info for later
-  const ifaceRouter = new ethers.utils.Interface(['function setFeeCollector(address)']);
+  const ifaceRouter = new ethers.Interface(['function setFeeCollector(address)']);
   const calldataB = ifaceRouter.encodeFunctionData('setFeeCollector', [controllerAddress]);
 
   console.log('── Proposal B (submit AFTER A is executed) ──');

@@ -37,7 +37,7 @@ async function main() {
 
   // Resolve LP token address: env var takes precedence, then auto-fetch from vault
   let lpToken = process.env.LP_TOKEN;
-  if (!lpToken || !ethers.utils.isAddress(lpToken)) {
+  if (!lpToken || !ethers.isAddress(lpToken)) {
     console.log("  LP_TOKEN not set — auto-fetching from BootstrapVaultV3...");
     const vault = new ethers.Contract(
       VAULT_V3,
@@ -48,7 +48,7 @@ async function main() {
     if (!finalised) {
       throw new Error("BootstrapVaultV3 is not finalised yet. Run finalise-bootstrap.js first.");
     }
-    if (!vaultLp || vaultLp === ethers.constants.AddressZero) {
+    if (!vaultLp || vaultLp === ethers.ZeroAddress) {
       throw new Error("Vault finalised but LP address is zero — something went wrong in finalise().");
     }
     lpToken = vaultLp;
@@ -60,13 +60,13 @@ async function main() {
   console.log("=".repeat(60));
   console.log(`  Proposer:    ${deployer.address}`);
   console.log(`  Network:     ${network.name} (chainId: ${network.chainId})`);
-  console.log(`  Balance:     ${ethers.utils.formatEther(await deployer.getBalance())} ETH`);
+  console.log(`  Balance:     ${ethers.formatEther(await deployer.getBalance())} ETH`);
   console.log(`  Governance:  ${GOV}`);
   console.log(`  Token:       ${TOKEN}`);
   console.log(`  LP Token:    ${lpToken}`);
 
   const governance = new ethers.Contract(GOV, GOV_ABI, deployer);
-  const iface = new ethers.utils.Interface(TOKEN_ABI);
+  const iface = new ethers.Interface(TOKEN_ABI);
   const token = new ethers.Contract(TOKEN, TOKEN_ABI, deployer.provider);
 
   // Pre-check: is LP already exempt?
@@ -89,9 +89,9 @@ async function main() {
   console.log(`  Gas used:  ${receipt.gasUsed.toString()}`);
 
   const count = await governance.proposalCount();
-  const proposalId = count.toNumber() - 1;
+  const proposalId = Number(count) - 1;
   const p = await governance.getProposal(proposalId);
-  const eta = new Date(p.eta.toNumber() * 1000);
+  const eta = new Date(Number(p.eta) * 1000);
 
   console.log(`\n  Proposal:  #${proposalId}`);
   console.log(`  ETA:       ${eta.toISOString()} (48h timelock)`);

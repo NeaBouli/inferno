@@ -12,7 +12,7 @@ async function main() {
   const [deployer] = await ethers.getSigners();
   console.log("Deployer:", deployer.address);
 
-  const iface = new ethers.utils.Interface([
+  const iface = new ethers.Interface([
     "function transferOwnership(address newOwner)"
   ]);
 
@@ -26,13 +26,14 @@ async function main() {
   const gov = await ethers.getContractAt([
     "function propose(address target, bytes calldata data) external returns (uint256)",
     "function delay() view returns (uint256)",
-    "function proposalCount() view returns (uint256)"
+    "function proposalCount() view returns (uint256)",
+    "event ProposalCreated(uint256 indexed id, address target, bytes data, uint256 eta)"
   ], ADDRESSES.gov);
 
   const delay = await gov.delay();
   const count = await gov.proposalCount();
-  console.log(`Timelock delay: ${delay.toNumber()}s (${delay.toNumber()/3600}h)`);
-  console.log(`Current proposalCount: ${count.toNumber()}`);
+  console.log(`Timelock delay: ${Number(delay)}s (${Number(delay)/3600}h)`);
+  console.log(`Current proposalCount: ${Number(count)}`);
 
   for (let i = 0; i < targets.length; i++) {
     const calldata = iface.encodeFunctionData("transferOwnership", [ADDRESSES.gov]);
@@ -41,7 +42,7 @@ async function main() {
     console.log(`Target: ${targets[i]}`);
     console.log(`Calldata: ${calldata}`);
     console.log(`[DRY RUN] propose(${targets[i]}, calldata)`);
-    console.log(`Will become Proposal #${count.toNumber() + i}`);
+    console.log(`Will become Proposal #${Number(count) + i}`);
   }
 
   console.log("\n=== DRY RUN COMPLETE ===");
@@ -53,8 +54,8 @@ async function main() {
       const calldata = iface.encodeFunctionData("transferOwnership", [ADDRESSES.gov]);
       const tx = await gov.propose(targets[i], calldata);
       const receipt = await tx.wait();
-      const event = receipt.events.find(e => e.event === "ProposalCreated");
-      const proposalId = event ? event.args.id.toNumber() : "?";
+      const event = receipt.logs.find((entry) => entry.fragment?.name === "ProposalCreated");
+      const proposalId = event ? Number(event.args.id) : "?";
       console.log(`✅ ${names[i]} proposed (Proposal #${proposalId}). TX: ${tx.hash}`);
     }
   }
