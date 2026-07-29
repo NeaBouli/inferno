@@ -298,11 +298,14 @@ Vesting (12-Monat Cliff), LiquidityReserve (6-Monat Lock), BuybackVault (60-Tag 
 #### Testing
 
 ```bash
-env MAINNET_RPC_URL= SEPOLIA_RPC_URL= npm run test:contracts
-                                     # 642 Contract Tests am 29.07.2026
+npm run test:contracts               # 642 Contract Tests am 29.07.2026
 npx hardhat test test/IFRLock.test.js  # Einzelner Test
 ```
 
+- Eine gesetzte `MAINNET_RPC_URL` konfiguriert nur das benannte
+  `mainnet`-Netz; lokale Tests forken nicht automatisch.
+- Fork-Diagnosen sind nur explizit und blockgepinnt erlaubt:
+  `HARDHAT_FORK=true HARDHAT_FORK_BLOCK_NUMBER=<block> npm run test:contracts`.
 - Tests in JavaScript (nicht TypeScript)
 - ethers.js v6 Syntax (`ethers.parseUnits("1000", 9)`)
 - **IMMER 9 Decimals** in parseUnits

@@ -39,6 +39,9 @@ jobs:
       - name: Compile contracts
         run: npx hardhat compile
 
+      - name: Verify deterministic Hardhat network selection
+        run: npm run test:hardhat-config
+
       - name: Verify Hardhat 3 script runtime
         run: npm run test:hardhat-runtime
 
