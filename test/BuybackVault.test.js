@@ -5,20 +5,20 @@ describe("BuybackVault", function () {
   let owner, treasury, burnReserve, guardian, user;
   let IFR, WETH, Router, Vault;
 
-  const RATE_IFR_PER_ETH = ethers.utils.parseEther("1000"); // 1 ETH -> 1000 IFR
+  const RATE_IFR_PER_ETH = ethers.parseEther("1000"); // 1 ETH -> 1000 IFR
   const ACTIVATION_DELAY = 0; // 0 for most tests (immediate)
 
   async function deployVault(activationDelay) {
     const BuybackVault = await ethers.getContractFactory("BuybackVault");
     const vault = await BuybackVault.deploy(
-      IFR.address,
+      IFR.target,
       burnReserve.address,
       treasury.address,
-      Router.address,
+      Router.target,
       guardian.address,
       activationDelay
     );
-    await vault.deployed();
+    await vault.waitForDeployment();
     return vault;
   }
 
@@ -27,30 +27,30 @@ describe("BuybackVault", function () {
 
     const MockToken = await ethers.getContractFactory("MockToken");
     IFR = await MockToken.deploy("Inferno Token", "IFR");
-    await IFR.deployed();
+    await IFR.waitForDeployment();
 
     // Mock WETH as plain ERC20 (nur als Address-Marker)
     WETH = await MockToken.deploy("Wrapped ETH", "WETH");
-    await WETH.deployed();
+    await WETH.waitForDeployment();
 
     const MockRouter = await ethers.getContractFactory("MockRouter");
-    Router = await MockRouter.deploy(WETH.address, IFR.address, RATE_IFR_PER_ETH);
-    await Router.deployed();
+    Router = await MockRouter.deploy(WETH.target, IFR.target, RATE_IFR_PER_ETH);
+    await Router.waitForDeployment();
 
     Vault = await deployVault(ACTIVATION_DELAY);
   });
 
   it("deposits ETH and emits Deposited", async () => {
-    await expect(Vault.connect(user).depositETH({ value: ethers.utils.parseEther("2") }))
+    await expect(Vault.connect(user).depositETH({ value: ethers.parseEther("2") }))
       .to.emit(Vault, "Deposited")
-      .withArgs(user.address, ethers.utils.parseEther("2"));
+      .withArgs(user.address, ethers.parseEther("2"));
 
-    const bal = await ethers.provider.getBalance(Vault.address);
-    expect(bal).to.equal(ethers.utils.parseEther("2"));
+    const bal = await ethers.provider.getBalance(Vault.target);
+    expect(bal).to.equal(ethers.parseEther("2"));
   });
 
   it("executes buyback with default params; splits 50/50 to burnReserve and treasury", async () => {
-    await Vault.connect(user).depositETH({ value: ethers.utils.parseEther("1") });
+    await Vault.connect(user).depositETH({ value: ethers.parseEther("1") });
 
     const burnBefore = await IFR.balanceOf(burnReserve.address);
     const treasBefore = await IFR.balanceOf(treasury.address);
@@ -61,19 +61,19 @@ describe("BuybackVault", function () {
     const burnAfter = await IFR.balanceOf(burnReserve.address);
     const treasAfter = await IFR.balanceOf(treasury.address);
 
-    const totalOut = ethers.utils.parseEther("1000"); // gemäß RATE_IFR_PER_ETH
-    const expectedBurn = totalOut.div(2);
-    const expectedTreas = totalOut.sub(expectedBurn);
+    const totalOut = ethers.parseEther("1000"); // gemäß RATE_IFR_PER_ETH
+    const expectedBurn = BigInt(totalOut)/BigInt(2);
+    const expectedTreas = BigInt(totalOut)-BigInt(expectedBurn);
 
-    expect(burnAfter.sub(burnBefore)).to.equal(expectedBurn);
-    expect(treasAfter.sub(treasBefore)).to.equal(expectedTreas);
+    expect(BigInt(burnAfter)-BigInt(burnBefore)).to.equal(expectedBurn);
+    expect(BigInt(treasAfter)-BigInt(treasBefore)).to.equal(expectedTreas);
 
     const lastBuybackAt = await Vault.lastBuybackAt();
     expect(lastBuybackAt).to.be.gt(0);
   });
 
   it("enforces cooldown between buybacks", async () => {
-    await Vault.depositETH({ value: ethers.utils.parseEther("1") });
+    await Vault.depositETH({ value: ethers.parseEther("1") });
     await Vault.connect(owner).executeBuyback();
 
     await expect(Vault.connect(owner).executeBuyback()).to.be.revertedWith("cooldown");
@@ -85,7 +85,7 @@ describe("BuybackVault", function () {
   });
 
   it("respects slippage protection when swap output deviates from quote", async () => {
-    await Vault.depositETH({ value: ethers.utils.parseEther("1") });
+    await Vault.depositETH({ value: ethers.parseEther("1") });
 
     // Künstliche Slippage 6% — übersteigt die 5% Toleranz, daher revert
     await Router.setSlippageBpsNextSwap(600);
@@ -93,7 +93,7 @@ describe("BuybackVault", function () {
   });
 
   it("guardian can pause/unpause to block actions", async () => {
-    await Vault.depositETH({ value: ethers.utils.parseEther("1") });
+    await Vault.depositETH({ value: ethers.parseEther("1") });
 
     await expect(Vault.connect(guardian).pause()).to.emit(Vault, "Paused");
     await expect(Vault.connect(owner).executeBuyback()).to.be.revertedWith("Pausable: paused");
@@ -108,7 +108,7 @@ describe("BuybackVault", function () {
     const newSlip = 400;       // 4%
 
     await expect(
-      Vault.connect(owner).setParams(newBps, newCooldown, newSlip, Router.address, treasury.address)
+      Vault.connect(owner).setParams(newBps, newCooldown, newSlip, Router.target, treasury.address)
     ).to.emit(Vault, "ParamsUpdated");
 
     expect(await Vault.burnShareBps()).to.equal(newBps);
@@ -122,21 +122,21 @@ describe("BuybackVault", function () {
     it("reverts if burnReserve is zero address", async () => {
       const BuybackVault = await ethers.getContractFactory("BuybackVault");
       await expect(
-        BuybackVault.deploy(IFR.address, ethers.constants.AddressZero, treasury.address, Router.address, guardian.address, 0)
+        BuybackVault.deploy(IFR.target, ethers.ZeroAddress, treasury.address, Router.target, guardian.address, 0)
       ).to.be.revertedWith("burnReserve=0");
     });
 
     it("reverts if treasury is zero address", async () => {
       const BuybackVault = await ethers.getContractFactory("BuybackVault");
       await expect(
-        BuybackVault.deploy(IFR.address, burnReserve.address, ethers.constants.AddressZero, Router.address, guardian.address, 0)
+        BuybackVault.deploy(IFR.target, burnReserve.address, ethers.ZeroAddress, Router.target, guardian.address, 0)
       ).to.be.revertedWith("treasury=0");
     });
 
     it("reverts if guardian is zero address", async () => {
       const BuybackVault = await ethers.getContractFactory("BuybackVault");
       await expect(
-        BuybackVault.deploy(IFR.address, burnReserve.address, treasury.address, Router.address, ethers.constants.AddressZero, 0)
+        BuybackVault.deploy(IFR.target, burnReserve.address, treasury.address, Router.target, ethers.ZeroAddress, 0)
       ).to.be.revertedWith("guardian=0");
     });
   });
@@ -148,7 +148,7 @@ describe("BuybackVault", function () {
 
     it("non-owner cannot call setParams", async () => {
       await expect(
-        Vault.connect(user).setParams(5000, 3600, 500, Router.address, treasury.address)
+        Vault.connect(user).setParams(5000, 3600, 500, Router.target, treasury.address)
       ).to.be.revertedWith("not owner");
     });
 
@@ -173,13 +173,13 @@ describe("BuybackVault", function () {
     });
 
     it("can receive ETH directly via receive()", async () => {
-      await owner.sendTransaction({ to: Vault.address, value: ethers.utils.parseEther("1") });
-      expect(await ethers.provider.getBalance(Vault.address)).to.equal(ethers.utils.parseEther("1"));
+      await owner.sendTransaction({ to: Vault.target, value: ethers.parseEther("1") });
+      expect(await ethers.provider.getBalance(Vault.target)).to.equal(ethers.parseEther("1"));
     });
 
     it("setParams reverts if treasury is zero", async () => {
       await expect(
-        Vault.connect(owner).setParams(5000, 3600, 500, Router.address, ethers.constants.AddressZero)
+        Vault.connect(owner).setParams(5000, 3600, 500, Router.target, ethers.ZeroAddress)
       ).to.be.revertedWith("treasury=0");
     });
   });
@@ -189,7 +189,7 @@ describe("BuybackVault", function () {
 
     it("reverts executeBuyback before activation time", async () => {
       const delayedVault = await deployVault(SIXTY_DAYS);
-      await delayedVault.connect(user).depositETH({ value: ethers.utils.parseEther("1") });
+      await delayedVault.connect(user).depositETH({ value: ethers.parseEther("1") });
 
       await expect(
         delayedVault.connect(owner).executeBuyback()
@@ -198,7 +198,7 @@ describe("BuybackVault", function () {
 
     it("allows executeBuyback after activation time", async () => {
       const delayedVault = await deployVault(SIXTY_DAYS);
-      await delayedVault.connect(user).depositETH({ value: ethers.utils.parseEther("1") });
+      await delayedVault.connect(user).depositETH({ value: ethers.parseEther("1") });
 
       await ethers.provider.send("evm_increaseTime", [SIXTY_DAYS]);
       await ethers.provider.send("evm_mine", []);
@@ -230,14 +230,14 @@ describe("BuybackVault", function () {
     it("new owner can call onlyOwner functions", async () => {
       await Vault.transferOwnership(user.address);
       await expect(
-        Vault.connect(user).setParams(5000, 3600, 500, Router.address, treasury.address)
+        Vault.connect(user).setParams(5000, 3600, 500, Router.target, treasury.address)
       ).to.emit(Vault, "ParamsUpdated");
     });
 
     it("old owner is rejected after transfer", async () => {
       await Vault.transferOwnership(user.address);
       await expect(
-        Vault.setParams(5000, 3600, 500, Router.address, treasury.address)
+        Vault.setParams(5000, 3600, 500, Router.target, treasury.address)
       ).to.be.revertedWith("not owner");
     });
 
@@ -249,7 +249,7 @@ describe("BuybackVault", function () {
 
     it("reverts with zero address", async () => {
       await expect(
-        Vault.transferOwnership(ethers.constants.AddressZero)
+        Vault.transferOwnership(ethers.ZeroAddress)
       ).to.be.revertedWith("newOwner=0");
     });
   });

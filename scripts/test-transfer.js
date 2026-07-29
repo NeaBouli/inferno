@@ -57,7 +57,7 @@ async function main() {
   }
 
   // ── Snapshot BEFORE ───────────────────────────────────────
-  const amount = ethers.utils.parseUnits(TRANSFER_AMOUNT, DECIMALS);
+  const amount = ethers.parseUnits(TRANSFER_AMOUNT, DECIMALS);
   const [supplyBefore, senderBefore, recipientBefore, poolBefore] = await Promise.all([
     token.totalSupply(),
     token.balanceOf(deployer.address),
@@ -68,26 +68,26 @@ async function main() {
   ]);
 
   console.log("\n[Before Transfer]");
-  console.log(`  Total Supply:   ${ethers.utils.formatUnits(supplyBefore, DECIMALS)} IFR`);
-  console.log(`  Sender Balance: ${ethers.utils.formatUnits(senderBefore, DECIMALS)} IFR`);
-  console.log(`  Recipient Bal:  ${ethers.utils.formatUnits(recipientBefore, DECIMALS)} IFR`);
+  console.log(`  Total Supply:   ${ethers.formatUnits(supplyBefore, DECIMALS)} IFR`);
+  console.log(`  Sender Balance: ${ethers.formatUnits(senderBefore, DECIMALS)} IFR`);
+  console.log(`  Recipient Bal:  ${ethers.formatUnits(recipientBefore, DECIMALS)} IFR`);
   if (!senderIsPool) {
-    console.log(`  Pool Bal:       ${ethers.utils.formatUnits(poolBefore, DECIMALS)} IFR`);
+    console.log(`  Pool Bal:       ${ethers.formatUnits(poolBefore, DECIMALS)} IFR`);
   }
 
   // ── Calculate expected values ─────────────────────────────
-  const expectedBurnSender = amount.mul(senderBurnBps).div(10000);
-  const expectedBurnRecipient = amount.mul(recipientBurnBps).div(10000);
-  const expectedPoolFee = amount.mul(poolFeeBps).div(10000);
-  const expectedTotalBurn = expectedBurnSender.add(expectedBurnRecipient);
-  const expectedNet = amount.sub(expectedTotalBurn).sub(expectedPoolFee);
+  const expectedBurnSender = BigInt(BigInt(amount)*BigInt(senderBurnBps))/BigInt(10000);
+  const expectedBurnRecipient = BigInt(BigInt(amount)*BigInt(recipientBurnBps))/BigInt(10000);
+  const expectedPoolFee = BigInt(BigInt(amount)*BigInt(poolFeeBps))/BigInt(10000);
+  const expectedTotalBurn = BigInt(expectedBurnSender)+BigInt(expectedBurnRecipient);
+  const expectedNet = BigInt(BigInt(amount)-BigInt(expectedTotalBurn))-BigInt(expectedPoolFee);
 
   console.log("\n[Expected Fees for", TRANSFER_AMOUNT, "IFR]");
-  console.log(`  Sender Burn:    ${ethers.utils.formatUnits(expectedBurnSender, DECIMALS)} IFR`);
-  console.log(`  Recipient Burn: ${ethers.utils.formatUnits(expectedBurnRecipient, DECIMALS)} IFR`);
-  console.log(`  Total Burned:   ${ethers.utils.formatUnits(expectedTotalBurn, DECIMALS)} IFR`);
-  console.log(`  Pool Fee:       ${ethers.utils.formatUnits(expectedPoolFee, DECIMALS)} IFR`);
-  console.log(`  Net to Recip:   ${ethers.utils.formatUnits(expectedNet, DECIMALS)} IFR`);
+  console.log(`  Sender Burn:    ${ethers.formatUnits(expectedBurnSender, DECIMALS)} IFR`);
+  console.log(`  Recipient Burn: ${ethers.formatUnits(expectedBurnRecipient, DECIMALS)} IFR`);
+  console.log(`  Total Burned:   ${ethers.formatUnits(expectedTotalBurn, DECIMALS)} IFR`);
+  console.log(`  Pool Fee:       ${ethers.formatUnits(expectedPoolFee, DECIMALS)} IFR`);
+  console.log(`  Net to Recip:   ${ethers.formatUnits(expectedNet, DECIMALS)} IFR`);
 
   // ── Execute transfer ──────────────────────────────────────
   console.log("\n[Sending Transfer...]");
@@ -107,16 +107,16 @@ async function main() {
       : token.balanceOf(poolFeeReceiver),
   ]);
 
-  const actualSenderLoss = senderBefore.sub(senderAfter);
-  const actualRecipientGain = recipientAfter.sub(recipientBefore);
-  const actualBurned = supplyBefore.sub(supplyAfter);
+  const actualSenderLoss = BigInt(senderBefore)-BigInt(senderAfter);
+  const actualRecipientGain = BigInt(recipientAfter)-BigInt(recipientBefore);
+  const actualBurned = BigInt(supplyBefore)-BigInt(supplyAfter);
 
   console.log("\n[After Transfer]");
-  console.log(`  Total Supply:   ${ethers.utils.formatUnits(supplyAfter, DECIMALS)} IFR`);
-  console.log(`  Sender Balance: ${ethers.utils.formatUnits(senderAfter, DECIMALS)} IFR`);
-  console.log(`  Recipient Bal:  ${ethers.utils.formatUnits(recipientAfter, DECIMALS)} IFR`);
+  console.log(`  Total Supply:   ${ethers.formatUnits(supplyAfter, DECIMALS)} IFR`);
+  console.log(`  Sender Balance: ${ethers.formatUnits(senderAfter, DECIMALS)} IFR`);
+  console.log(`  Recipient Bal:  ${ethers.formatUnits(recipientAfter, DECIMALS)} IFR`);
   if (!senderIsPool) {
-    console.log(`  Pool Bal:       ${ethers.utils.formatUnits(poolAfter, DECIMALS)} IFR`);
+    console.log(`  Pool Bal:       ${ethers.formatUnits(poolAfter, DECIMALS)} IFR`);
   }
 
   // ── Verify results ────────────────────────────────────────
@@ -127,7 +127,7 @@ async function main() {
   // When sender == poolFeeReceiver, pool fee returns to sender
   // so sender net loss = amount - poolFee
   const expectedSenderLoss = senderIsPool
-    ? amount.sub(expectedPoolFee)
+    ? BigInt(amount)-BigInt(expectedPoolFee)
     : amount;
 
   const checks = [
@@ -154,17 +154,17 @@ async function main() {
     checks.splice(2, 0, {
       name: "Pool got 1% fee",
       expected: expectedPoolFee,
-      actual: poolAfter.sub(poolBefore),
+      actual: BigInt(poolAfter)-BigInt(poolBefore),
     });
   }
 
   let allPassed = true;
   for (const check of checks) {
-    const pass = check.expected.eq(check.actual);
+    const pass = BigInt(check.expected)===BigInt(check.actual);
     const icon = pass ? "PASS" : "FAIL";
     console.log(`  [${icon}] ${check.name}`);
-    console.log(`         Expected: ${ethers.utils.formatUnits(check.expected, DECIMALS)} IFR`);
-    console.log(`         Actual:   ${ethers.utils.formatUnits(check.actual, DECIMALS)} IFR`);
+    console.log(`         Expected: ${ethers.formatUnits(check.expected, DECIMALS)} IFR`);
+    console.log(`         Actual:   ${ethers.formatUnits(check.actual, DECIMALS)} IFR`);
     if (!pass) allPassed = false;
   }
 

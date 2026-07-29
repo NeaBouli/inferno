@@ -20,9 +20,9 @@ async function main() {
 
   const BuilderRegistry = await hre.ethers.getContractFactory("BuilderRegistry");
   const registry = await BuilderRegistry.deploy(GOVERNANCE_ADDR);
-  await registry.deployed();
+  await registry.waitForDeployment();
 
-  const addr = registry.address;
+  const addr = registry.target;
   console.log("BuilderRegistry deployed:", addr);
   console.log("Network:", hre.network.name);
 

@@ -5,7 +5,7 @@ describe("CommitmentVault", function () {
   let owner, governance, userA, userB, userC;
   let token, vault;
 
-  const parse = (s) => ethers.utils.parseUnits(s, 9);
+  const parse = (s) => ethers.parseUnits(s, 9);
   const ONE_DAY = 86400;
   const THIRTY_DAYS = 30 * ONE_DAY;
 
@@ -24,17 +24,17 @@ describe("CommitmentVault", function () {
 
     const InfernoToken = await ethers.getContractFactory("InfernoToken");
     token = await InfernoToken.deploy(owner.address);
-    await token.deployed();
+    await token.waitForDeployment();
 
     // Make owner fee-exempt for clean transfers
     await token.setFeeExempt(owner.address, true);
 
     const CommitmentVault = await ethers.getContractFactory("CommitmentVault");
-    vault = await CommitmentVault.deploy(token.address, governance.address);
-    await vault.deployed();
+    vault = await CommitmentVault.deploy(token.target, governance.address);
+    await vault.waitForDeployment();
 
     // Make vault fee-exempt (required for production)
-    await token.setFeeExempt(vault.address, true);
+    await token.setFeeExempt(vault.target, true);
 
     // Fund users
     await token.transfer(userA.address, parse("1000000"));
@@ -51,7 +51,7 @@ describe("CommitmentVault", function () {
 
   describe("Deployment", () => {
     it("T01: sets ifrToken correctly", async () => {
-      expect(await vault.ifrToken()).to.equal(token.address);
+      expect(await vault.ifrToken()).to.equal(token.target);
     });
 
     it("T02: sets owner to governance", async () => {
@@ -70,7 +70,7 @@ describe("CommitmentVault", function () {
     it("T05: reverts on zero token address", async () => {
       const CV = await ethers.getContractFactory("CommitmentVault");
       await expect(
-        CV.deploy(ethers.constants.AddressZero, governance.address)
+        CV.deploy(ethers.ZeroAddress, governance.address)
       ).to.be.revertedWith("token=0");
     });
   });
@@ -79,7 +79,7 @@ describe("CommitmentVault", function () {
 
   describe("P0 Management", () => {
     it("T06: governance can set P0", async () => {
-      const p0 = ethers.utils.parseEther("0.000001"); // 1 IFR = 0.000001 ETH
+      const p0 = ethers.parseEther("0.000001"); // 1 IFR = 0.000001 ETH
       await expect(vault.connect(governance).setP0(p0))
         .to.emit(vault, "P0Set").withArgs(p0);
       expect(await vault.p0()).to.equal(p0);
@@ -106,7 +106,7 @@ describe("CommitmentVault", function () {
     });
 
     it("T10: P0 value persists correctly", async () => {
-      const val = ethers.utils.parseEther("0.00000123");
+      const val = ethers.parseEther("0.00000123");
       await vault.connect(governance).setP0(val);
       expect(await vault.p0()).to.equal(val);
     });
@@ -118,7 +118,7 @@ describe("CommitmentVault", function () {
     it("T11: lock TIME_ONLY creates tranche", async () => {
       const now = await getTimestamp();
       const unlockTime = now + 365 * ONE_DAY;
-      await token.connect(userA).approve(vault.address, parse("10000"));
+      await token.connect(userA).approve(vault.target, parse("10000"));
 
       await expect(vault.connect(userA).lock(parse("10000"), 0, unlockTime, 0))
         .to.emit(vault, "Locked")
@@ -129,7 +129,7 @@ describe("CommitmentVault", function () {
     });
 
     it("T12: lock PRICE_ONLY creates tranche", async () => {
-      await token.connect(userA).approve(vault.address, parse("5000"));
+      await token.connect(userA).approve(vault.target, parse("5000"));
       await vault.connect(userA).lock(parse("5000"), 1, 0, 200); // 2x P0
       const t = await vault.getTranche(userA.address, 0);
       expect(t.cType).to.equal(1);
@@ -138,7 +138,7 @@ describe("CommitmentVault", function () {
 
     it("T13: lock TIME_OR_PRICE creates tranche", async () => {
       const now = await getTimestamp();
-      await token.connect(userA).approve(vault.address, parse("5000"));
+      await token.connect(userA).approve(vault.target, parse("5000"));
       await vault.connect(userA).lock(parse("5000"), 2, now + 365 * ONE_DAY, 500);
       const t = await vault.getTranche(userA.address, 0);
       expect(t.cType).to.equal(2);
@@ -146,7 +146,7 @@ describe("CommitmentVault", function () {
 
     it("T14: lock TIME_AND_PRICE creates tranche", async () => {
       const now = await getTimestamp();
-      await token.connect(userA).approve(vault.address, parse("5000"));
+      await token.connect(userA).approve(vault.target, parse("5000"));
       await vault.connect(userA).lock(parse("5000"), 3, now + 365 * ONE_DAY, 1000);
       const t = await vault.getTranche(userA.address, 0);
       expect(t.cType).to.equal(3);
@@ -161,14 +161,14 @@ describe("CommitmentVault", function () {
 
     it("T16: reverts TIME_ONLY with past unlock time", async () => {
       const now = await getTimestamp();
-      await token.connect(userA).approve(vault.address, parse("1000"));
+      await token.connect(userA).approve(vault.target, parse("1000"));
       await expect(
         vault.connect(userA).lock(parse("1000"), 0, now - 100, 0)
       ).to.be.revertedWith("unlockTime must be future");
     });
 
     it("T17: reverts PRICE_ONLY with multiplier=0", async () => {
-      await token.connect(userA).approve(vault.address, parse("1000"));
+      await token.connect(userA).approve(vault.target, parse("1000"));
       await expect(
         vault.connect(userA).lock(parse("1000"), 1, 0, 0)
       ).to.be.revertedWith("multiplier=0");
@@ -176,11 +176,11 @@ describe("CommitmentVault", function () {
 
     it("T18: transfers tokens from user to vault", async () => {
       const before = await token.balanceOf(userA.address);
-      await token.connect(userA).approve(vault.address, parse("10000"));
+      await token.connect(userA).approve(vault.target, parse("10000"));
       await vault.connect(userA).lock(parse("10000"), 0, (await getTimestamp()) + ONE_DAY, 0);
       const after = await token.balanceOf(userA.address);
-      expect(before.sub(after)).to.equal(parse("10000"));
-      expect(await token.balanceOf(vault.address)).to.equal(parse("10000"));
+      expect(BigInt(before)-BigInt(after)).to.equal(parse("10000"));
+      expect(await token.balanceOf(vault.target)).to.equal(parse("10000"));
     });
   });
 
@@ -189,7 +189,7 @@ describe("CommitmentVault", function () {
   describe("Unlock", () => {
     it("T19: unlock TIME_ONLY after time passed", async () => {
       const now = await getTimestamp();
-      await token.connect(userA).approve(vault.address, parse("10000"));
+      await token.connect(userA).approve(vault.target, parse("10000"));
       await vault.connect(userA).lock(parse("10000"), 0, now + ONE_DAY, 0);
 
       await advanceTime(ONE_DAY + 1);
@@ -198,12 +198,12 @@ describe("CommitmentVault", function () {
       await expect(vault.connect(userA).unlock(userA.address, 0))
         .to.emit(vault, "Unlocked");
       const after = await token.balanceOf(userA.address);
-      expect(after.sub(before)).to.equal(parse("10000"));
+      expect(BigInt(after)-BigInt(before)).to.equal(parse("10000"));
     });
 
     it("T20: revert unlock before time condition met", async () => {
       const now = await getTimestamp();
-      await token.connect(userA).approve(vault.address, parse("10000"));
+      await token.connect(userA).approve(vault.target, parse("10000"));
       await vault.connect(userA).lock(parse("10000"), 0, now + 365 * ONE_DAY, 0);
 
       await expect(
@@ -213,7 +213,7 @@ describe("CommitmentVault", function () {
 
     it("T21: tokens always go to original wallet, not caller", async () => {
       const now = await getTimestamp();
-      await token.connect(userA).approve(vault.address, parse("10000"));
+      await token.connect(userA).approve(vault.target, parse("10000"));
       await vault.connect(userA).lock(parse("10000"), 0, now + ONE_DAY, 0);
 
       await advanceTime(ONE_DAY + 1);
@@ -232,13 +232,13 @@ describe("CommitmentVault", function () {
       const afterA = await token.balanceOf(userA.address);
       const afterB = await token.balanceOf(userB.address);
 
-      expect(afterA.sub(beforeA)).to.equal(parse("10000")); // userA gets tokens
-      expect(afterB.sub(beforeB)).to.equal(0); // userB gets nothing
+      expect(BigInt(afterA)-BigInt(beforeA)).to.equal(parse("10000")); // userA gets tokens
+      expect(BigInt(afterB)-BigInt(beforeB)).to.equal(0); // userB gets nothing
     });
 
     it("T22: revert double unlock", async () => {
       const now = await getTimestamp();
-      await token.connect(userA).approve(vault.address, parse("10000"));
+      await token.connect(userA).approve(vault.target, parse("10000"));
       await vault.connect(userA).lock(parse("10000"), 0, now + ONE_DAY, 0);
       await advanceTime(ONE_DAY + 1);
       await vault.connect(userA).unlock(userA.address, 0);
@@ -250,7 +250,7 @@ describe("CommitmentVault", function () {
 
     it("T23: totalLocked decreases after unlock", async () => {
       const now = await getTimestamp();
-      await token.connect(userA).approve(vault.address, parse("10000"));
+      await token.connect(userA).approve(vault.target, parse("10000"));
       await vault.connect(userA).lock(parse("10000"), 0, now + ONE_DAY, 0);
       expect(await vault.totalLocked()).to.equal(parse("10000"));
 
@@ -267,7 +267,7 @@ describe("CommitmentVault", function () {
 
     it("T25: tranche marked as unlocked after unlock", async () => {
       const now = await getTimestamp();
-      await token.connect(userA).approve(vault.address, parse("10000"));
+      await token.connect(userA).approve(vault.target, parse("10000"));
       await vault.connect(userA).lock(parse("10000"), 0, now + ONE_DAY, 0);
       await advanceTime(ONE_DAY + 1);
       await vault.connect(userA).unlock(userA.address, 0);
@@ -283,7 +283,7 @@ describe("CommitmentVault", function () {
   describe("Auto-Unlock", () => {
     it("T26: third party cannot unlock before 30 day delay", async () => {
       const now = await getTimestamp();
-      await token.connect(userA).approve(vault.address, parse("10000"));
+      await token.connect(userA).approve(vault.target, parse("10000"));
       await vault.connect(userA).lock(parse("10000"), 0, now + ONE_DAY, 0);
       await advanceTime(ONE_DAY + 1);
 
@@ -295,7 +295,7 @@ describe("CommitmentVault", function () {
 
     it("T27: third party can unlock after markConditionMet + 30 days", async () => {
       const now = await getTimestamp();
-      await token.connect(userA).approve(vault.address, parse("10000"));
+      await token.connect(userA).approve(vault.target, parse("10000"));
       await vault.connect(userA).lock(parse("10000"), 0, now + ONE_DAY, 0);
 
       await advanceTime(ONE_DAY + 1);
@@ -308,7 +308,7 @@ describe("CommitmentVault", function () {
 
     it("T28: markConditionMet emits event", async () => {
       const now = await getTimestamp();
-      await token.connect(userA).approve(vault.address, parse("10000"));
+      await token.connect(userA).approve(vault.target, parse("10000"));
       await vault.connect(userA).lock(parse("10000"), 0, now + ONE_DAY, 0);
       await advanceTime(ONE_DAY + 1);
 
@@ -318,7 +318,7 @@ describe("CommitmentVault", function () {
 
     it("T29: markConditionMet reverts if condition not met", async () => {
       const now = await getTimestamp();
-      await token.connect(userA).approve(vault.address, parse("10000"));
+      await token.connect(userA).approve(vault.target, parse("10000"));
       await vault.connect(userA).lock(parse("10000"), 0, now + 365 * ONE_DAY, 0);
 
       await expect(
@@ -328,7 +328,7 @@ describe("CommitmentVault", function () {
 
     it("T30: markConditionMet reverts if already marked", async () => {
       const now = await getTimestamp();
-      await token.connect(userA).approve(vault.address, parse("10000"));
+      await token.connect(userA).approve(vault.target, parse("10000"));
       await vault.connect(userA).lock(parse("10000"), 0, now + ONE_DAY, 0);
       await advanceTime(ONE_DAY + 1);
       await vault.markConditionMet(userA.address, 0);
@@ -344,7 +344,7 @@ describe("CommitmentVault", function () {
   describe("Multiple Tranches", () => {
     it("T31: user can have multiple tranches", async () => {
       const now = await getTimestamp();
-      await token.connect(userA).approve(vault.address, parse("30000"));
+      await token.connect(userA).approve(vault.target, parse("30000"));
 
       await vault.connect(userA).lock(parse("10000"), 0, now + ONE_DAY, 0);
       await vault.connect(userA).lock(parse("10000"), 0, now + 2 * ONE_DAY, 0);
@@ -356,7 +356,7 @@ describe("CommitmentVault", function () {
 
     it("T32: unlocking one tranche doesn't affect others", async () => {
       const now = await getTimestamp();
-      await token.connect(userA).approve(vault.address, parse("20000"));
+      await token.connect(userA).approve(vault.target, parse("20000"));
 
       await vault.connect(userA).lock(parse("10000"), 0, now + ONE_DAY, 0);
       await vault.connect(userA).lock(parse("10000"), 0, now + 365 * ONE_DAY, 0);
@@ -374,7 +374,7 @@ describe("CommitmentVault", function () {
 
     it("T33: getTranches returns all tranches", async () => {
       const now = await getTimestamp();
-      await token.connect(userA).approve(vault.address, parse("20000"));
+      await token.connect(userA).approve(vault.target, parse("20000"));
       await vault.connect(userA).lock(parse("10000"), 0, now + ONE_DAY, 0);
       await vault.connect(userA).lock(parse("10000"), 1, 0, 200);
 
@@ -386,7 +386,7 @@ describe("CommitmentVault", function () {
 
     it("T34: lockedBalance sums active tranches only", async () => {
       const now = await getTimestamp();
-      await token.connect(userA).approve(vault.address, parse("30000"));
+      await token.connect(userA).approve(vault.target, parse("30000"));
       await vault.connect(userA).lock(parse("10000"), 0, now + ONE_DAY, 0);
       await vault.connect(userA).lock(parse("20000"), 0, now + 365 * ONE_DAY, 0);
 
@@ -402,7 +402,7 @@ describe("CommitmentVault", function () {
       expect(await vault.hasActiveLock(userA.address)).to.be.false;
 
       const now = await getTimestamp();
-      await token.connect(userA).approve(vault.address, parse("10000"));
+      await token.connect(userA).approve(vault.target, parse("10000"));
       await vault.connect(userA).lock(parse("10000"), 0, now + ONE_DAY, 0);
 
       expect(await vault.hasActiveLock(userA.address)).to.be.true;
@@ -418,11 +418,11 @@ describe("CommitmentVault", function () {
 
   describe("Edge Cases & Oracle", () => {
     it("T36: PRICE_ONLY with no oracle returns condition not met", async () => {
-      await token.connect(userA).approve(vault.address, parse("10000"));
+      await token.connect(userA).approve(vault.target, parse("10000"));
       await vault.connect(userA).lock(parse("10000"), 1, 0, 200);
 
       // Set P0 but no oracle
-      await vault.connect(governance).setP0(ethers.utils.parseEther("0.000001"));
+      await vault.connect(governance).setP0(ethers.parseEther("0.000001"));
 
       expect(await vault.isConditionMet(userA.address, 0)).to.be.false;
     });
@@ -443,7 +443,7 @@ describe("CommitmentVault", function () {
 
     it("T39: isConditionMet on already-unlocked tranche returns true", async () => {
       const now = await getTimestamp();
-      await token.connect(userA).approve(vault.address, parse("10000"));
+      await token.connect(userA).approve(vault.target, parse("10000"));
       await vault.connect(userA).lock(parse("10000"), 0, now + ONE_DAY, 0);
       await advanceTime(ONE_DAY + 1);
       await vault.connect(userA).unlock(userA.address, 0);
@@ -453,8 +453,8 @@ describe("CommitmentVault", function () {
 
     it("T40: multiple users can lock independently", async () => {
       const now = await getTimestamp();
-      await token.connect(userA).approve(vault.address, parse("10000"));
-      await token.connect(userB).approve(vault.address, parse("20000"));
+      await token.connect(userA).approve(vault.target, parse("10000"));
+      await token.connect(userB).approve(vault.target, parse("20000"));
 
       await vault.connect(userA).lock(parse("10000"), 0, now + ONE_DAY, 0);
       await vault.connect(userB).lock(parse("20000"), 0, now + 2 * ONE_DAY, 0);
@@ -469,7 +469,7 @@ describe("CommitmentVault", function () {
     it("T41: MAX_TRANCHES limit enforced", async () => {
       const now = await getTimestamp();
       const amount = parse("100");
-      await token.connect(userA).approve(vault.address, amount.mul(51));
+      await token.connect(userA).approve(vault.target, BigInt(amount)*BigInt(51));
 
       // Lock 50 tranches (max)
       for (let i = 0; i < 50; i++) {
@@ -498,7 +498,7 @@ describe("CommitmentVault", function () {
 
     it("T44: TIME_OR_PRICE unlocks on time alone", async () => {
       const now = await getTimestamp();
-      await token.connect(userA).approve(vault.address, parse("10000"));
+      await token.connect(userA).approve(vault.target, parse("10000"));
       await vault.connect(userA).lock(parse("10000"), 2, now + ONE_DAY, 500);
 
       // Time passes, no price oracle
@@ -511,7 +511,7 @@ describe("CommitmentVault", function () {
 
     it("T45: TIME_AND_PRICE requires both (time alone not enough)", async () => {
       const now = await getTimestamp();
-      await token.connect(userA).approve(vault.address, parse("10000"));
+      await token.connect(userA).approve(vault.target, parse("10000"));
       await vault.connect(userA).lock(parse("10000"), 3, now + ONE_DAY, 500);
 
       await advanceTime(ONE_DAY + 1);

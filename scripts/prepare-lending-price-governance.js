@@ -15,9 +15,9 @@ const ADDR = {
 };
 
 const IFR_DECIMALS = 9;
-const IFR_UNIT = ethers.BigNumber.from(10).pow(IFR_DECIMALS);
-const BPS = ethers.BigNumber.from(10000);
-const INITIAL_COLLATERAL_PCT = ethers.BigNumber.from(200);
+const IFR_UNIT = BigInt(BigInt(10))**BigInt(IFR_DECIMALS);
+const BPS = BigInt(10000);
+const INITIAL_COLLATERAL_PCT = BigInt(200);
 
 const LENDING_ABI = [
   "function owner() view returns (address)",
@@ -61,23 +61,29 @@ Env:
 `);
 }
 
+function commify(value) {
+  const [integer, fraction] = String(value).split(".");
+  const grouped = integer.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  return fraction === undefined ? grouped : `${grouped}.${fraction}`;
+}
+
 function formatIFR(value) {
-  return ethers.utils.commify(ethers.utils.formatUnits(value, IFR_DECIMALS));
+  return commify(ethers.formatUnits(value, IFR_DECIMALS));
 }
 
 function formatDuration(seconds) {
-  const n = ethers.BigNumber.from(seconds).toNumber();
+  const n = Number(BigInt(seconds));
   const hours = n / 3600;
   return `${hours} hours (${(hours / 24).toFixed(2)} days)`;
 }
 
 function priceFromReserves(wethReserveWei, ifrReserveBaseUnits) {
-  if (ifrReserveBaseUnits.isZero()) throw new Error("IFR reserve is zero");
-  return wethReserveWei.mul(IFR_UNIT).div(ifrReserveBaseUnits);
+  if (BigInt(ifrReserveBaseUnits)===BigInt(0)) throw new Error("IFR reserve is zero");
+  return BigInt(BigInt(wethReserveWei)*BigInt(IFR_UNIT))/BigInt(ifrReserveBaseUnits);
 }
 
 function requiredCollateralWei(ifrAmountBaseUnits, priceWei) {
-  return ifrAmountBaseUnits.mul(priceWei).mul(INITIAL_COLLATERAL_PCT).div(IFR_UNIT.mul(100));
+  return BigInt(BigInt(BigInt(ifrAmountBaseUnits)*BigInt(priceWei))*BigInt(INITIAL_COLLATERAL_PCT))/BigInt(BigInt(IFR_UNIT)*BigInt(100));
 }
 
 function safeTxBuilderJson(governanceData, setPriceData, candidatePriceWei) {
@@ -119,24 +125,24 @@ function safeTxBuilderJson(governanceData, setPriceData, candidatePriceWei) {
 }
 
 function runSelfTest() {
-  const wethReserve = ethers.utils.parseEther("1");
-  const ifrReserve = ethers.utils.parseUnits("1000000", IFR_DECIMALS);
+  const wethReserve = ethers.parseEther("1");
+  const ifrReserve = ethers.parseUnits("1000000", IFR_DECIMALS);
   const price = priceFromReserves(wethReserve, ifrReserve);
-  const expectedPrice = ethers.BigNumber.from("1000000000000");
-  if (!price.eq(expectedPrice)) {
+  const expectedPrice = BigInt('1000000000000');
+  if (!BigInt(price)===BigInt(expectedPrice)) {
     throw new Error(`price formula failed: got ${price.toString()}, expected ${expectedPrice.toString()}`);
   }
 
-  const collateral = requiredCollateralWei(ethers.utils.parseUnits("10000", IFR_DECIMALS), price);
-  const expectedCollateral = ethers.utils.parseEther("0.02");
-  if (!collateral.eq(expectedCollateral)) {
+  const collateral = requiredCollateralWei(ethers.parseUnits("10000", IFR_DECIMALS), price);
+  const expectedCollateral = ethers.parseEther("0.02");
+  if (!BigInt(collateral)===BigInt(expectedCollateral)) {
     throw new Error(`collateral formula failed: got ${collateral.toString()}, expected ${expectedCollateral.toString()}`);
   }
 
-  const lendingIface = new ethers.utils.Interface(LENDING_ABI);
+  const lendingIface = new ethers.Interface(LENDING_ABI);
   const data = lendingIface.encodeFunctionData("setIFRPrice", [price]);
   const decoded = lendingIface.decodeFunctionData("setIFRPrice", data);
-  if (!decoded[0].eq(price)) {
+  if (!BigInt(decoded[0])===BigInt(price)) {
     throw new Error("setIFRPrice calldata roundtrip failed");
   }
 
@@ -159,11 +165,11 @@ async function readSpotPrice(provider) {
   let wethReserve;
   let ifrReserve;
   if (token0Lower === wethLower && token1Lower === ifrLower) {
-    wethReserve = ethers.BigNumber.from(reserves.reserve0);
-    ifrReserve = ethers.BigNumber.from(reserves.reserve1);
+    wethReserve = BigInt(reserves.reserve0);
+    ifrReserve = BigInt(reserves.reserve1);
   } else if (token0Lower === ifrLower && token1Lower === wethLower) {
-    ifrReserve = ethers.BigNumber.from(reserves.reserve0);
-    wethReserve = ethers.BigNumber.from(reserves.reserve1);
+    ifrReserve = BigInt(reserves.reserve0);
+    wethReserve = BigInt(reserves.reserve1);
   } else {
     throw new Error(`Unexpected pair tokens: token0=${token0}, token1=${token1}`);
   }
@@ -189,16 +195,16 @@ async function main() {
   }
 
   const rpcUrl = process.env.MAINNET_RPC_URL || "https://ethereum-rpc.publicnode.com";
-  const provider = new ethers.providers.JsonRpcProvider(rpcUrl);
+  const provider = new ethers.JsonRpcProvider(rpcUrl);
   const network = await provider.getNetwork();
-  if (network.chainId !== 1) {
+  if (network.chainId !== 1n) {
     throw new Error(`Expected Ethereum Mainnet chainId 1, got ${network.chainId}`);
   }
 
   const lending = new ethers.Contract(ADDR.LENDING_VAULT, LENDING_ABI, provider);
   const governance = new ethers.Contract(ADDR.GOVERNANCE, GOVERNANCE_ABI, provider);
-  const lendingIface = new ethers.utils.Interface(LENDING_ABI);
-  const governanceIface = new ethers.utils.Interface(GOVERNANCE_ABI);
+  const lendingIface = new ethers.Interface(LENDING_ABI);
+  const governanceIface = new ethers.Interface(GOVERNANCE_ABI);
 
   const [
     lendingOwner,
@@ -221,8 +227,8 @@ async function main() {
   ]);
 
   const source = (process.env.PRICE_SOURCE || (process.env.IFR_PRICE_WEI ? "manual" : "spot")).toLowerCase();
-  const haircutBps = ethers.BigNumber.from(process.env.PRICE_HAIRCUT_BPS || "10000");
-  if (haircutBps.lte(0) || haircutBps.gt(BPS)) {
+  const haircutBps = BigInt(process.env.PRICE_HAIRCUT_BPS||'10000');
+  if (BigInt(haircutBps)<=BigInt(0) || BigInt(haircutBps)>BigInt(BPS)) {
     throw new Error("PRICE_HAIRCUT_BPS must be between 1 and 10000");
   }
 
@@ -232,15 +238,15 @@ async function main() {
     if (!process.env.IFR_PRICE_WEI) {
       throw new Error("PRICE_SOURCE=manual requires IFR_PRICE_WEI");
     }
-    candidatePriceWei = ethers.BigNumber.from(process.env.IFR_PRICE_WEI);
+    candidatePriceWei = BigInt(process.env.IFR_PRICE_WEI);
   } else if (source === "spot") {
     spot = await readSpotPrice(provider);
-    candidatePriceWei = spot.spotPriceWei.mul(haircutBps).div(BPS);
+    candidatePriceWei = BigInt(BigInt(spot.spotPriceWei)*BigInt(haircutBps))/BigInt(BPS);
   } else {
     throw new Error("PRICE_SOURCE must be spot or manual");
   }
 
-  if (candidatePriceWei.lte(0)) {
+  if (BigInt(candidatePriceWei)<=BigInt(0)) {
     throw new Error("candidate ifrPriceWei must be greater than zero");
   }
 
@@ -271,7 +277,7 @@ async function main() {
     console.log(`  Pair:             ${ADDR.IFR_WETH_PAIR}`);
     console.log(`  token0:           ${spot.token0}`);
     console.log(`  token1:           ${spot.token1}`);
-    console.log(`  WETH reserve:     ${ethers.utils.formatEther(spot.wethReserve)} ETH`);
+    console.log(`  WETH reserve:     ${ethers.formatEther(spot.wethReserve)} ETH`);
     console.log(`  IFR reserve:      ${formatIFR(spot.ifrReserve)} IFR`);
     console.log(`  spot ifrPriceWei: ${spot.spotPriceWei.toString()}`);
     console.log(`  haircut bps:      ${haircutBps.toString()}`);
@@ -281,14 +287,14 @@ async function main() {
   console.log("Candidate price");
   console.log(`  source:           ${source}`);
   console.log(`  ifrPriceWei:      ${candidatePriceWei.toString()}`);
-  console.log(`  ETH per IFR:      ${ethers.utils.formatEther(candidatePriceWei)}`);
+  console.log(`  ETH per IFR:      ${ethers.formatEther(candidatePriceWei)}`);
 
   console.log("");
   console.log("Collateral previews at 200%");
   for (const amount of ["1000", "10000", "1000000"]) {
-    const ifrAmount = ethers.utils.parseUnits(amount, IFR_DECIMALS);
+    const ifrAmount = ethers.parseUnits(amount, IFR_DECIMALS);
     const collateral = requiredCollateralWei(ifrAmount, candidatePriceWei);
-    console.log(`  ${ethers.utils.commify(amount)} IFR -> ${ethers.utils.formatEther(collateral)} ETH`);
+    console.log(`  ${commify(amount)} IFR -> ${ethers.formatEther(collateral)} ETH`);
   }
 
   const expectedLendingOwner = ADDR.GOVERNANCE.toLowerCase();
@@ -300,12 +306,8 @@ async function main() {
     throw new Error(`Ownership mismatch: Governance owner is ${governanceOwner}, expected ${ADDR.TREASURY_SAFE}`);
   }
 
-  await lending.callStatic.setIFRPrice(candidatePriceWei, { from: ADDR.GOVERNANCE });
-  const simulatedProposalId = await governance.callStatic.propose(
-    ADDR.LENDING_VAULT,
-    setPriceData,
-    { from: ADDR.TREASURY_SAFE }
-  );
+  await lending.setIFRPrice.staticCall(candidatePriceWei,{from:ADDR.GOVERNANCE});
+  const simulatedProposalId = await governance.propose.staticCall(ADDR.LENDING_VAULT,setPriceData,{from:ADDR.TREASURY_SAFE});
 
   console.log("");
   console.log("Simulation");
@@ -336,7 +338,7 @@ async function main() {
 
   console.log("");
   console.log("DRY RUN COMPLETE - no transaction was sent.");
-  if (spot && spot.wethReserve.lt(ethers.utils.parseEther("1"))) {
+  if (spot && BigInt(spot.wethReserve)<BigInt(ethers.parseEther('1'))) {
     console.log("WARNING: WETH reserve is below 1 ETH. Treat spot price as thin-liquidity input and review manually.");
   }
 }

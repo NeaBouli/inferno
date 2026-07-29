@@ -31,7 +31,7 @@ async function main() {
   console.log(`  Description:   Grant feeExempt to BurnReserve — ensures full burn amount reaches 0xdead`);
 
   // ── Encode calldata ────────────────────────────────────────
-  const iface = new ethers.utils.Interface([
+  const iface = new ethers.Interface([
     "function setFeeExempt(address account, bool exempt)",
   ]);
   const calldata = iface.encodeFunctionData("setFeeExempt", [BURN_RESERVE, true]);
@@ -52,10 +52,10 @@ async function main() {
 
   // ── Read proposal details ──────────────────────────────────
   const count = await governance.proposalCount();
-  const proposalId = count.toNumber() - 1;
+  const proposalId = Number(count) - 1;
 
   const proposal = await governance.getProposal(proposalId);
-  const etaDate = new Date(proposal.eta.toNumber() * 1000);
+  const etaDate = new Date(Number(proposal.eta) * 1000);
 
   console.log(`\n  Proposal ID:  ${proposalId}`);
   console.log(`  ETA:          ${etaDate.toISOString()}`);

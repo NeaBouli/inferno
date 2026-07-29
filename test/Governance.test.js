@@ -13,12 +13,12 @@ describe("Governance", function () {
 
     const Governance = await ethers.getContractFactory("Governance");
     gov = await Governance.deploy(DELAY, guardian.address);
-    await gov.deployed();
+    await gov.waitForDeployment();
 
     // Deploy InfernoToken with Governance as future owner
     const InfernoToken = await ethers.getContractFactory("InfernoToken");
     token = await InfernoToken.deploy(owner.address);
-    await token.deployed();
+    await token.waitForDeployment();
   });
 
   async function increaseTime(seconds) {
@@ -58,20 +58,20 @@ describe("Governance", function () {
 
     it("reverts if guardian is zero address", async () => {
       const Gov = await ethers.getContractFactory("Governance");
-      await expect(Gov.deploy(DELAY, ethers.constants.AddressZero)).to.be.revertedWith("guardian=0");
+      await expect(Gov.deploy(DELAY, ethers.ZeroAddress)).to.be.revertedWith("guardian=0");
     });
 
     it("accepts MIN_DELAY", async () => {
       const Gov = await ethers.getContractFactory("Governance");
       const g = await Gov.deploy(ONE_HOUR, guardian.address);
-      await g.deployed();
+      await g.waitForDeployment();
       expect(await g.delay()).to.equal(ONE_HOUR);
     });
 
     it("accepts MAX_DELAY", async () => {
       const Gov = await ethers.getContractFactory("Governance");
       const g = await Gov.deploy(30 * 86400, guardian.address);
-      await g.deployed();
+      await g.waitForDeployment();
       expect(await g.delay()).to.equal(30 * 86400);
     });
   });
@@ -80,14 +80,14 @@ describe("Governance", function () {
     it("creates proposal with correct eta and emits event", async () => {
       const data = token.interface.encodeFunctionData("setFeeRates", [100, 50, 50]);
 
-      const tx = await gov.propose(token.address, data);
+      const tx = await gov.propose(token.target, data);
       const receipt = await tx.wait();
       const block = await ethers.provider.getBlock(receipt.blockNumber);
 
       expect(await gov.proposalCount()).to.equal(1);
 
       const proposal = await gov.getProposal(0);
-      expect(proposal.target).to.equal(token.address);
+      expect(proposal.target).to.equal(token.target);
       expect(proposal.data).to.equal(data);
       expect(proposal.eta).to.equal(block.timestamp + DELAY);
       expect(proposal.executed).to.equal(false);
@@ -96,26 +96,26 @@ describe("Governance", function () {
 
     it("emits ProposalCreated", async () => {
       const data = token.interface.encodeFunctionData("setFeeRates", [100, 50, 50]);
-      await expect(gov.propose(token.address, data))
+      await expect(gov.propose(token.target, data))
         .to.emit(gov, "ProposalCreated");
     });
 
     it("increments proposalCount", async () => {
       const data = "0x12345678";
-      await gov.propose(token.address, data);
-      await gov.propose(token.address, data);
+      await gov.propose(token.target, data);
+      await gov.propose(token.target, data);
       expect(await gov.proposalCount()).to.equal(2);
     });
 
     it("reverts for non-owner", async () => {
       await expect(
-        gov.connect(user).propose(token.address, "0x12345678")
+        gov.connect(user).propose(token.target, "0x12345678")
       ).to.be.revertedWith("not owner");
     });
 
     it("reverts for zero target", async () => {
       await expect(
-        gov.propose(ethers.constants.AddressZero, "0x12345678")
+        gov.propose(ethers.ZeroAddress, "0x12345678")
       ).to.be.revertedWith("target=0");
     });
   });
@@ -125,10 +125,10 @@ describe("Governance", function () {
 
     beforeEach(async () => {
       // Transfer token ownership to Governance
-      await token.transferOwnership(gov.address);
+      await token.transferOwnership(gov.target);
 
       data = token.interface.encodeFunctionData("setFeeRates", [100, 25, 75]);
-      await gov.propose(token.address, data);
+      await gov.propose(token.target, data);
     });
 
     it("executes proposal after delay", async () => {
@@ -175,7 +175,7 @@ describe("Governance", function () {
     it("reverts if target call fails", async () => {
       // Propose fee rates > 5% which will revert
       const badData = token.interface.encodeFunctionData("setFeeRates", [300, 200, 200]);
-      await gov.propose(token.address, badData);
+      await gov.propose(token.target, badData);
       await increaseTime(DELAY);
 
       await expectNestedCallRevert(gov.execute(1));
@@ -186,7 +186,7 @@ describe("Governance", function () {
   describe("cancel()", () => {
     beforeEach(async () => {
       const data = "0x12345678";
-      await gov.propose(token.address, data);
+      await gov.propose(token.target, data);
     });
 
     it("owner can cancel", async () => {
@@ -209,10 +209,10 @@ describe("Governance", function () {
     });
 
     it("reverts if already executed", async () => {
-      await token.transferOwnership(gov.address);
+      await token.transferOwnership(gov.target);
 
       const data = token.interface.encodeFunctionData("setFeeRates", [100, 25, 75]);
-      await gov.propose(token.address, data);
+      await gov.propose(token.target, data);
       await increaseTime(DELAY);
       await gov.execute(1);
 
@@ -230,7 +230,7 @@ describe("Governance", function () {
       const newDelay = 4 * 86400; // 4 days
       const data = gov.interface.encodeFunctionData("setDelay", [newDelay]);
 
-      await gov.propose(gov.address, data);
+      await gov.propose(gov.target, data);
       await increaseTime(DELAY);
 
       await expect(gov.execute(0))
@@ -246,7 +246,7 @@ describe("Governance", function () {
 
     it("reverts for invalid delay via timelock", async () => {
       const badData = gov.interface.encodeFunctionData("setDelay", [60]); // < MIN_DELAY
-      await gov.propose(gov.address, badData);
+      await gov.propose(gov.target, badData);
       await increaseTime(DELAY);
 
       await expectNestedCallRevert(gov.execute(0));
@@ -268,14 +268,14 @@ describe("Governance", function () {
     });
 
     it("reverts for zero address", async () => {
-      await expect(gov.setGuardian(ethers.constants.AddressZero)).to.be.revertedWith("guardian=0");
+      await expect(gov.setGuardian(ethers.ZeroAddress)).to.be.revertedWith("guardian=0");
     });
   });
 
   describe("setOwner()", () => {
     it("transfers ownership via timelock", async () => {
       const data = gov.interface.encodeFunctionData("setOwner", [user.address]);
-      await gov.propose(gov.address, data);
+      await gov.propose(gov.target, data);
       await increaseTime(DELAY);
       await expect(gov.execute(0))
         .to.emit(gov, "OwnerUpdated")
@@ -289,8 +289,8 @@ describe("Governance", function () {
     });
 
     it("reverts for zero address via timelock", async () => {
-      const data = gov.interface.encodeFunctionData("setOwner", [ethers.constants.AddressZero]);
-      await gov.propose(gov.address, data);
+      const data = gov.interface.encodeFunctionData("setOwner", [ethers.ZeroAddress]);
+      await gov.propose(gov.target, data);
       await increaseTime(DELAY);
       // execute() wraps the inner ABI bytes as a string, so no UTF-8 reason can be decoded.
       await expectNestedCallRevert(gov.execute(0));
@@ -301,12 +301,12 @@ describe("Governance", function () {
   describe("Integration: Governance as protocol owner", () => {
     beforeEach(async () => {
       // Transfer InfernoToken ownership to Governance
-      await token.transferOwnership(gov.address);
+      await token.transferOwnership(gov.target);
     });
 
     it("can change fee rates via timelock", async () => {
       const data = token.interface.encodeFunctionData("setFeeRates", [150, 30, 120]);
-      await gov.propose(token.address, data);
+      await gov.propose(token.target, data);
       await increaseTime(DELAY);
       await gov.execute(0);
 
@@ -317,7 +317,7 @@ describe("Governance", function () {
 
     it("can set feeExempt via timelock", async () => {
       const data = token.interface.encodeFunctionData("setFeeExempt", [user.address, true]);
-      await gov.propose(token.address, data);
+      await gov.propose(token.target, data);
       await increaseTime(DELAY);
       await gov.execute(0);
 
@@ -326,7 +326,7 @@ describe("Governance", function () {
 
     it("can update poolFeeReceiver via timelock", async () => {
       const data = token.interface.encodeFunctionData("setPoolFeeReceiver", [user.address]);
-      await gov.propose(token.address, data);
+      await gov.propose(token.target, data);
       await increaseTime(DELAY);
       await gov.execute(0);
 

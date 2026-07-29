@@ -25,12 +25,12 @@ async function main() {
 
   const LendingVault = await hre.ethers.getContractFactory("LendingVault");
   const lv = await LendingVault.deploy(IFR_TOKEN, GOVERNANCE);
-  await lv.deployed();
+  await lv.waitForDeployment();
 
-  console.log("LendingVault deployed:", lv.address);
+  console.log("LendingVault deployed:", lv.target);
   console.log("");
   console.log("NEXT STEPS:");
-  console.log("1. Governance Proposal: setFeeExempt(", lv.address, ", true) — BEFORE users deposit!");
+  console.log("1. Governance Proposal: setFeeExempt(", lv.target, ", true) — BEFORE users deposit!");
   console.log("2. Governance Proposal: setIFRPrice(weiPer1e9IFR) — AFTER Bootstrap finalise()");
   console.log("3. Governance Proposal: setProtocolFeeReceiver(address)");
   console.log("4. Railway: set LENDING_VAULT_ADDR env var");
@@ -43,7 +43,7 @@ async function main() {
     await new Promise(r => setTimeout(r, 30000));
     try {
       await hre.run("verify:verify", {
-        address: lv.address,
+        address: lv.target,
         constructorArguments: [IFR_TOKEN, GOVERNANCE],
       });
       console.log("Verified on Etherscan ✅");
@@ -52,7 +52,7 @@ async function main() {
     }
   }
 
-  return lv.address;
+  return lv.target;
 }
 
 main().catch(err => { console.error(err); process.exit(1); });

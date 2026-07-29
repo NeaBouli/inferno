@@ -32,8 +32,8 @@ const TOKEN_ABI = [
 ];
 
 const DECIMALS = 9;
-const fmt = (bn) => ethers.utils.formatUnits(bn, DECIMALS);
-const fmtEth = (bn) => ethers.utils.formatEther(bn);
+const fmt = (bn) => ethers.formatUnits(bn, DECIMALS);
+const fmtEth = (bn) => ethers.formatEther(bn);
 const PUBLIC_MAINNET_RPC = "https://ethereum-rpc.publicnode.com";
 
 async function optionalBool(contract, fnName) {
@@ -46,7 +46,7 @@ async function optionalBool(contract, fnName) {
 
 async function main() {
   const rpcUrl = process.env.MAINNET_RPC_URL || PUBLIC_MAINNET_RPC;
-  const provider = new ethers.providers.JsonRpcProvider(rpcUrl);
+  const provider = new ethers.JsonRpcProvider(rpcUrl);
   const network = await provider.getNetwork();
   const now = Math.floor(Date.now() / 1000);
   const nowDate = new Date(now * 1000).toISOString();
@@ -77,14 +77,14 @@ async function main() {
   const hasRefund = await optionalBool(vault, "hasRefundOccurred");
 
   const ifrBalance = await token.balanceOf(BOOTSTRAP_V3);
-  const ifrRequired = ifrAlloc.mul(2);
-  const ifrMissing = ifrRequired.gt(ifrBalance) ? ifrRequired.sub(ifrBalance) : ethers.BigNumber.from(0);
+  const ifrRequired = BigInt(ifrAlloc)*BigInt(2);
+  const ifrMissing = BigInt(ifrRequired)>BigInt(ifrBalance) ? BigInt(ifrRequired)-BigInt(ifrBalance) : BigInt(0);
 
-  const start = new Date(startTime.toNumber() * 1000).toISOString();
-  const end = new Date(endTime.toNumber() * 1000).toISOString();
-  const secondsLeft = endTime.toNumber() - now;
+  const start = new Date(Number(startTime) * 1000).toISOString();
+  const end = new Date(Number(endTime) * 1000).toISOString();
+  const secondsLeft = Number(endTime) - now;
   const daysLeft = (secondsLeft / 86400).toFixed(1);
-  const isActive = now >= startTime.toNumber() && now < endTime.toNumber() && !finalised;
+  const isActive = now >= Number(startTime) && now < Number(endTime) && !finalised;
 
   console.log("\n── STATE ─────────────────────────────────────────────");
   console.log(`  Finalised:         ${finalised ? "✅ YES" : "❌ NO"}`);
@@ -108,7 +108,7 @@ async function main() {
   console.log(`  ETH raised:        ${fmtEth(totalETH)} ETH`);
   console.log(`  IFR in vault:      ${fmt(ifrBalance)} IFR`);
   console.log(`  IFR required:      ${fmt(ifrRequired)} IFR (2x ${fmt(ifrAlloc)} allocation)`);
-  if (ifrMissing.gt(0)) {
+  if (BigInt(ifrMissing)>BigInt(0)) {
     console.log(`  IFR missing:       ${fmt(ifrMissing)} IFR ⚠️`);
   } else {
     console.log(`  IFR sufficient:    ✅`);
@@ -125,12 +125,12 @@ async function main() {
   } else if (secondsLeft > 0) {
     console.log(`  Status:            ⏳ Bootstrap active — ${daysLeft} days until finalise() possible`);
     console.log(`  Ready on:          ${end}`);
-    if (ifrMissing.gt(0)) {
+    if (BigInt(ifrMissing)>BigInt(0)) {
       console.log(`\n  ⚠️  ACTION NEEDED: Transfer ${fmt(ifrMissing)} more IFR to vault before endTime!`);
     }
   } else {
     console.log(`  Status:            ⚡ READY FOR FINALISE`);
-    if (ifrMissing.gt(0)) {
+    if (BigInt(ifrMissing)>BigInt(0)) {
       console.log(`\n  ⚠️  BLOCKER: ${fmt(ifrMissing)} IFR missing in vault. Must transfer before finalise().`);
     } else {
       console.log(`\n  Run: npx hardhat run scripts/finalise-bootstrap.js --network mainnet`);

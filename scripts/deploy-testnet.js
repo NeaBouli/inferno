@@ -8,7 +8,7 @@ async function main() {
   console.log("INFERNO — CFLM Testnet Deployment");
   console.log("=".repeat(60));
   console.log(`Deployer:  ${deployer.address}`);
-  console.log(`Balance:   ${ethers.utils.formatEther(balance)} ETH`);
+  console.log(`Balance:   ${ethers.formatEther(balance)} ETH`);
   console.log(`Network:   ${(await ethers.provider.getNetwork()).name}`);
   console.log("-".repeat(60));
 
@@ -24,9 +24,9 @@ async function main() {
   console.log("\n[1/9] Deploying InfernoToken...");
   const InfernoToken = await ethers.getContractFactory("InfernoToken");
   const token = await InfernoToken.deploy(deployer.address);
-  await token.deployed();
-  console.log(`  InfernoToken:  ${token.address}`);
-  console.log(`  Supply:        ${ethers.utils.formatUnits(await token.totalSupply(), 9)} IFR`);
+  await token.waitForDeployment();
+  console.log(`  InfernoToken:  ${token.target}`);
+  console.log(`  Supply:        ${ethers.formatUnits(await token.totalSupply(), 9)} IFR`);
 
   // ──────────────────────────────────────────────────────────────
   // 2. Deploy LiquidityReserve
@@ -34,19 +34,19 @@ async function main() {
   // ──────────────────────────────────────────────────────────────
   console.log("\n[2/9] Deploying LiquidityReserve...");
   const LOCK_DURATION = 180 * 86400;   // 180 days
-  const MAX_PER_PERIOD = ethers.utils.parseUnits("50000000", 9);  // 50M IFR
+  const MAX_PER_PERIOD = ethers.parseUnits("50000000", 9);  // 50M IFR
   const PERIOD_DURATION = 90 * 86400;  // 90 days
 
   const LiquidityReserve = await ethers.getContractFactory("LiquidityReserve");
   const liquidityReserve = await LiquidityReserve.deploy(
-    token.address,
+    token.target,
     LOCK_DURATION,
     MAX_PER_PERIOD,
     PERIOD_DURATION,
     deployer.address   // guardian
   );
-  await liquidityReserve.deployed();
-  console.log(`  LiquidityReserve: ${liquidityReserve.address}`);
+  await liquidityReserve.waitForDeployment();
+  console.log(`  LiquidityReserve: ${liquidityReserve.target}`);
   console.log(`  Lock:          180 days`);
   console.log(`  Max/Period:    50,000,000 IFR per 90 days`);
 
@@ -57,19 +57,19 @@ async function main() {
   console.log("\n[3/9] Deploying Vesting (Team)...");
   const CLIFF_DURATION = 365 * 86400;      // 12 months
   const TOTAL_DURATION = 4 * 365 * 86400;  // 48 months (12mo cliff + 36mo linear)
-  const TEAM_ALLOCATION = ethers.utils.parseUnits("150000000", 9); // 150M IFR
+  const TEAM_ALLOCATION = ethers.parseUnits("150000000", 9); // 150M IFR
 
   const Vesting = await ethers.getContractFactory("Vesting");
   const vesting = await Vesting.deploy(
-    token.address,
+    token.target,
     TEAM_BENEFICIARY,
     CLIFF_DURATION,
     TOTAL_DURATION,
     TEAM_ALLOCATION,
     deployer.address   // guardian
   );
-  await vesting.deployed();
-  console.log(`  Vesting:       ${vesting.address}`);
+  await vesting.waitForDeployment();
+  console.log(`  Vesting:       ${vesting.target}`);
   console.log(`  Beneficiary:   ${TEAM_BENEFICIARY}`);
   console.log(`  Cliff:         12 months`);
   console.log(`  Linear:        36 months (after cliff)`);
@@ -84,23 +84,23 @@ async function main() {
 
   const BurnReserveFactory = await ethers.getContractFactory("BurnReserve");
   const burnReserve = await BurnReserveFactory.deploy(
-    token.address,
+    token.target,
     deployer.address   // guardian
   );
-  await burnReserve.deployed();
-  console.log(`  BurnReserve:   ${burnReserve.address}`);
+  await burnReserve.waitForDeployment();
+  console.log(`  BurnReserve:   ${burnReserve.target}`);
 
   const BuybackVault = await ethers.getContractFactory("BuybackVault");
   const vault = await BuybackVault.deploy(
-    token.address,
-    burnReserve.address,
+    token.target,
+    burnReserve.target,
     TREASURY_ADDR,
     deployer.address,    // router (placeholder — set real router via setParams)
     deployer.address,    // guardian
     ACTIVATION_DELAY
   );
-  await vault.deployed();
-  console.log(`  BuybackVault:  ${vault.address}`);
+  await vault.waitForDeployment();
+  console.log(`  BuybackVault:  ${vault.target}`);
   console.log(`  Activation:    60 days after deploy`);
   console.log(`  (!) Router is set to deployer — update via setParams()`);
 
@@ -118,8 +118,8 @@ async function main() {
 
   const GovernanceFactory = await ethers.getContractFactory("Governance");
   const governance = await GovernanceFactory.deploy(GOV_DELAY, deployer.address);
-  await governance.deployed();
-  console.log(`  Governance:    ${governance.address}`);
+  await governance.waitForDeployment();
+  console.log(`  Governance:    ${governance.target}`);
   console.log(`  Delay:         48 hours`);
   console.log(`  (!) Transfer contract ownership to Governance after setup`);
 
@@ -128,11 +128,11 @@ async function main() {
   // ──────────────────────────────────────────────────────────────
   console.log("\n[7/9] Setting feeExempt...");
   const exemptAddresses = [
-    { name: "Vesting", addr: vesting.address },
-    { name: "LiquidityReserve", addr: liquidityReserve.address },
+    { name: "Vesting", addr: vesting.target },
+    { name: "LiquidityReserve", addr: liquidityReserve.target },
     { name: "Treasury", addr: TREASURY_ADDR },
-    { name: "BuybackVault", addr: vault.address },
-    { name: "BurnReserve", addr: burnReserve.address },
+    { name: "BuybackVault", addr: vault.target },
+    { name: "BurnReserve", addr: burnReserve.target },
     { name: "Deployer", addr: deployer.address },
   ];
 
@@ -147,19 +147,19 @@ async function main() {
   // ──────────────────────────────────────────────────────────────
   console.log("\n[8/9] Distributing IFR (CFLM allocation)...");
 
-  const LIQUIDITY_RESERVE_ALLOC = ethers.utils.parseUnits("200000000", 9);  // 200M
-  const TREASURY_ALLOC = ethers.utils.parseUnits("150000000", 9);           // 150M
-  const COMMUNITY_ALLOC = ethers.utils.parseUnits("100000000", 9);          // 100M
+  const LIQUIDITY_RESERVE_ALLOC = ethers.parseUnits("200000000", 9);  // 200M
+  const TREASURY_ALLOC = ethers.parseUnits("150000000", 9);           // 150M
+  const COMMUNITY_ALLOC = ethers.parseUnits("100000000", 9);          // 100M
   // DEX_LIQUIDITY = 400M stays with deployer for manual pairing
   // TEAM_ALLOCATION = 150M already defined above
 
   let tx;
 
-  tx = await token.transfer(liquidityReserve.address, LIQUIDITY_RESERVE_ALLOC);
+  tx = await token.transfer(liquidityReserve.target, LIQUIDITY_RESERVE_ALLOC);
   await tx.wait();
   console.log(`  LiquidityReserve: 200,000,000 IFR (20%)`);
 
-  tx = await token.transfer(vesting.address, TEAM_ALLOCATION);
+  tx = await token.transfer(vesting.target, TEAM_ALLOCATION);
   await tx.wait();
   console.log(`  Team Vesting:     150,000,000 IFR (15%)`);
 
@@ -172,7 +172,7 @@ async function main() {
   console.log(`  Community:        100,000,000 IFR (10%)`);
 
   const deployerBal = await token.balanceOf(deployer.address);
-  console.log(`  Deployer (DEX):   ${ethers.utils.formatUnits(deployerBal, 9)} IFR (40% for DEX liquidity)`);
+  console.log(`  Deployer (DEX):   ${ethers.formatUnits(deployerBal, 9)} IFR (40% for DEX liquidity)`);
 
   // ──────────────────────────────────────────────────────────────
   // 9. Remove deployer feeExempt
@@ -189,12 +189,12 @@ async function main() {
   console.log("CFLM DEPLOYMENT COMPLETE");
   console.log("=".repeat(60));
   console.log(`
-  InfernoToken:      ${token.address}
-  LiquidityReserve:  ${liquidityReserve.address}
-  Vesting (Team):    ${vesting.address}
-  BuybackVault:      ${vault.address}
-  BurnReserve:       ${burnReserve.address}
-  Governance:        ${governance.address}
+  InfernoToken:      ${token.target}
+  LiquidityReserve:  ${liquidityReserve.target}
+  Vesting (Team):    ${vesting.target}
+  BuybackVault:      ${vault.target}
+  BurnReserve:       ${burnReserve.target}
+  Governance:        ${governance.target}
 
   Token Distribution (CFLM):
     DEX Liquidity:       400,000,000 IFR  (40%) — held by deployer
@@ -208,11 +208,11 @@ async function main() {
 
   Governance:
     Timelock delay: 48 hours
-    Address: ${governance.address}
+    Address: ${governance.target}
 
   BuybackVault:
     Activation: 60 days after deploy
-    BurnReserve wired: ${burnReserve.address}
+    BurnReserve wired: ${burnReserve.target}
 
   NEXT STEPS:
     1. Pair 400M IFR + ETH on Uniswap (create LP)

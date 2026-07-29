@@ -30,7 +30,7 @@ async function main() {
     process.exit(1);
   }
 
-  const provider = new ethers.providers.JsonRpcProvider(
+  const provider = new ethers.JsonRpcProvider(
     process.env.RPC_URL || 'https://ethereum-rpc.publicnode.com'
   );
   const signer = new ethers.Wallet(process.env.DEPLOYER_PRIVATE_KEY, provider);
@@ -48,7 +48,7 @@ async function main() {
   console.log('Signer:', signer.address, '(Deployer)');
 
   const network = await provider.getNetwork();
-  console.log('Network:', network.chainId === 1 ? 'Ethereum Mainnet' : 'Chain ' + network.chainId);
+  console.log('Network:', network.chainId === 1n ? 'Ethereum Mainnet' : 'Chain ' + network.chainId);
   console.log('');
 
   const gov = new ethers.Contract(GOV_ADDRESS, GOV_ABI, signer);
@@ -99,7 +99,7 @@ async function main() {
   await new Promise(function(r) { setTimeout(r, 15000); });
 
   // Encode setOwner(TreasurySafe)
-  const iface = new ethers.utils.Interface(['function setOwner(address)']);
+  const iface = new ethers.Interface(['function setOwner(address)']);
   const calldata = iface.encodeFunctionData('setOwner', [TREASURY_SAFE]);
 
   console.log('');
@@ -113,10 +113,10 @@ async function main() {
   console.log('  TX:', tx.hash);
   const receipt = await tx.wait();
 
-  var event = receipt.events.find(function(e) { return e.event === 'ProposalCreated'; });
+  var event = receipt.logs.find((entry) => entry.fragment?.name === 'ProposalCreated');
   if (event) {
     var id = event.args.proposalId.toString();
-    var eta = new Date(event.args.eta.toNumber() * 1000);
+    var eta = new Date(Number(event.args.eta) * 1000);
     console.log('');
     console.log('════════════════════════════════════════');
     console.log('  PROPOSAL SUBMITTED');

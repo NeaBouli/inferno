@@ -74,7 +74,7 @@ async function main() {
   ).toLowerCase();
 
   const rpcUrl   = process.env.MAINNET_RPC_URL || 'https://ethereum-rpc.publicnode.com';
-  const provider = new ethers.providers.JsonRpcProvider(rpcUrl);
+  const provider = new ethers.JsonRpcProvider(rpcUrl);
 
   console.log('=== contributor1-lock.js ===');
   console.log('Mode:', DRY_RUN ? 'DRY_RUN' : IS_MAINNET ? 'MAINNET (LIVE)' : 'DRY_RUN (default)');
@@ -98,14 +98,14 @@ async function main() {
   ]);
 
   console.log('--- CommitmentVault state ---');
-  console.log('p0:', p0.toString(), 'wei', '(=', ethers.utils.formatUnits(p0, 9), 'Gwei)');
+  console.log('p0:', p0.toString(), 'wei', '(=', ethers.formatUnits(p0, 9), 'Gwei)');
   console.log('p0Set:', p0Set);
   console.log('owner:', cvOwner);
-  console.log('totalLocked:', ethers.utils.formatUnits(totalLocked, IFR_DECIMALS), 'IFR');
+  console.log('totalLocked:', ethers.formatUnits(totalLocked, IFR_DECIMALS), 'IFR');
   console.log('');
   console.log('--- Contributor state ---');
-  console.log('IFR balance:', ethers.utils.formatUnits(ifrBal, IFR_DECIMALS), 'IFR');
-  console.log('CV allowance:', ethers.utils.formatUnits(cvAllowance, IFR_DECIMALS), 'IFR');
+  console.log('IFR balance:', ethers.formatUnits(ifrBal, IFR_DECIMALS), 'IFR');
+  console.log('CV allowance:', ethers.formatUnits(cvAllowance, IFR_DECIMALS), 'IFR');
   console.log('Existing tranches:', trancheCount.toString());
   console.log('');
 
@@ -113,22 +113,22 @@ async function main() {
     console.warn('WARNING: p0 not set on CommitmentVault — price conditions will not resolve');
   }
 
-  if (ifrBal.isZero()) {
+  if (BigInt(ifrBal)===BigInt(0)) {
     console.error('ERROR: IFR balance is 0. Ensure claim() has been called on BootstrapVault first.');
     process.exit(1);
   }
 
   // ── Dynamic tranche calculation ──────────────────────────────────────────────
   // Split balance evenly into NUM_TRANCHES; last tranche absorbs rounding dust
-  const trancheAmount = ifrBal.div(NUM_TRANCHES);
-  const lastTranche   = ifrBal.sub(trancheAmount.mul(NUM_TRANCHES - 1));
-  const totalLock     = trancheAmount.mul(NUM_TRANCHES - 1).add(lastTranche); // = ifrBal
+  const trancheAmount = BigInt(ifrBal)/BigInt(NUM_TRANCHES);
+  const lastTranche   = BigInt(ifrBal)-BigInt(BigInt(trancheAmount)*BigInt(NUM_TRANCHES-1));
+  const totalLock     = BigInt(BigInt(trancheAmount)*BigInt(NUM_TRANCHES-1))+BigInt(lastTranche); // = ifrBal
 
   console.log('--- Lock plan ---');
   console.log('Tranches:', NUM_TRANCHES);
-  console.log('Tranche size (1-9):', ethers.utils.formatUnits(trancheAmount, IFR_DECIMALS), 'IFR');
-  console.log('Last tranche (10):', ethers.utils.formatUnits(lastTranche, IFR_DECIMALS), 'IFR');
-  console.log('Total to lock:', ethers.utils.formatUnits(totalLock, IFR_DECIMALS), 'IFR');
+  console.log('Tranche size (1-9):', ethers.formatUnits(trancheAmount, IFR_DECIMALS), 'IFR');
+  console.log('Last tranche (10):', ethers.formatUnits(lastTranche, IFR_DECIMALS), 'IFR');
+  console.log('Total to lock:', ethers.formatUnits(totalLock, IFR_DECIMALS), 'IFR');
   console.log('Condition: TIME_ONLY (0) — unlock after 30 days');
   console.log('p0Multiplier: 0 (not used for TIME_ONLY)');
   console.log('');
@@ -137,8 +137,8 @@ async function main() {
   const now        = Math.floor(Date.now() / 1000);
   const unlockTime = now + UNLOCK_SECONDS;
 
-  const cvIface   = new ethers.utils.Interface(CV_ABI);
-  const erc20Iface = new ethers.utils.Interface(ERC20_ABI);
+  const cvIface   = new ethers.Interface(CV_ABI);
+  const erc20Iface = new ethers.Interface(ERC20_ABI);
 
   const approveCalldata = erc20Iface.encodeFunctionData('approve', [COMMITMENT_VAULT, totalLock]);
 
@@ -155,7 +155,7 @@ async function main() {
 
   console.log('--- Transactions to execute ---');
   console.log('');
-  console.log('[TX 0] ERC-20 approve(CommitmentVault,', ethers.utils.formatUnits(totalLock, IFR_DECIMALS), 'IFR)');
+  console.log('[TX 0] ERC-20 approve(CommitmentVault,', ethers.formatUnits(totalLock, IFR_DECIMALS), 'IFR)');
   console.log('  to:', IFR_TOKEN);
   console.log('  calldata:', approveCalldata);
   console.log('');
@@ -165,7 +165,7 @@ async function main() {
     console.log('[TX ' + (i + 1) + '] CommitmentVault.lock() — tranche', i);
     console.log('  to:', COMMITMENT_VAULT);
     console.log('  calldata:', lockCalldatas[i]);
-    console.log('  decoded: lock(amount=' + ethers.utils.formatUnits(amount, IFR_DECIMALS) +
+    console.log('  decoded: lock(amount=' + ethers.formatUnits(amount, IFR_DECIMALS) +
       ' IFR, cType=TIME_ONLY(0), unlockTime=' + unlockTime + ', p0Multiplier=0)');
     console.log('');
   }
@@ -188,8 +188,8 @@ async function main() {
   const cvSigned  = cv.connect(signer);
 
   // Step 1: Approve if needed
-  if (cvAllowance.lt(totalLock)) {
-    console.log('Approving CommitmentVault to spend', ethers.utils.formatUnits(totalLock, IFR_DECIMALS), 'IFR...');
+  if (BigInt(cvAllowance)<BigInt(totalLock)) {
+    console.log('Approving CommitmentVault to spend', ethers.formatUnits(totalLock, IFR_DECIMALS), 'IFR...');
     const approveTx = await ifrSigned.approve(COMMITMENT_VAULT, totalLock);
     console.log('approve tx:', approveTx.hash);
     await approveTx.wait();
@@ -201,7 +201,7 @@ async function main() {
   // Step 2: Lock NUM_TRANCHES tranches
   for (let i = 0; i < NUM_TRANCHES; i++) {
     const amount = i === NUM_TRANCHES - 1 ? lastTranche : trancheAmount;
-    console.log('Locking tranche', i, '(' + ethers.utils.formatUnits(amount, IFR_DECIMALS) + ' IFR)...');
+    console.log('Locking tranche', i, '(' + ethers.formatUnits(amount, IFR_DECIMALS) + ' IFR)...');
     const lockTx = await cvSigned.lock(amount, CTYPE_TIME_ONLY, unlockTime, P0_MULTIPLIER);
     console.log('lock tx:', lockTx.hash);
     await lockTx.wait();
@@ -213,7 +213,7 @@ async function main() {
   console.log('');
   console.log('=== Done ===');
   console.log('Tranches:', newTrancheCount.toString());
-  console.log('Locked balance:', ethers.utils.formatUnits(newLocked, IFR_DECIMALS), 'IFR');
+  console.log('Locked balance:', ethers.formatUnits(newLocked, IFR_DECIMALS), 'IFR');
 }
 
 main().catch((err) => {

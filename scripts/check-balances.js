@@ -7,7 +7,7 @@ const DECIMALS = 9;
 
 async function main() {
   const rpcUrl = process.env.MAINNET_RPC_URL || "https://eth.llamarpc.com";
-  const provider = new ethers.providers.JsonRpcProvider(rpcUrl);
+  const provider = new ethers.JsonRpcProvider(rpcUrl);
 
   const erc20Abi = [
     "function balanceOf(address) view returns (uint256)",
@@ -27,10 +27,10 @@ async function main() {
   console.log("  INFERNO — Deployer Balances");
   console.log("=".repeat(50));
   console.log(`  Deployer:      ${DEPLOYER}`);
-  console.log(`  ETH Balance:   ${ethers.utils.formatEther(ethBal)} ETH`);
-  console.log(`  IFR Balance:   ${ethers.utils.formatUnits(ifrBal, decimals)} IFR`);
+  console.log(`  ETH Balance:   ${ethers.formatEther(ethBal)} ETH`);
+  console.log(`  IFR Balance:   ${ethers.formatUnits(ifrBal, decimals)} IFR`);
   console.log(`  IFR Decimals:  ${decimals}`);
-  console.log(`  Total Supply:  ${ethers.utils.formatUnits(totalSupply, decimals)} IFR`);
+  console.log(`  Total Supply:  ${ethers.formatUnits(totalSupply, decimals)} IFR`);
   console.log("=".repeat(50));
 }
 

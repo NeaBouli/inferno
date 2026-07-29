@@ -28,7 +28,7 @@ const guardianContracts = [
 async function main() {
   // Use MAINNET_RPC_URL or fallback to public endpoint
   const rpcUrl = process.env.MAINNET_RPC_URL || "https://eth.llamarpc.com";
-  const provider = new ethers.providers.JsonRpcProvider(rpcUrl);
+  const provider = new ethers.JsonRpcProvider(rpcUrl);
   const network = await provider.getNetwork();
 
   console.log("=".repeat(60));

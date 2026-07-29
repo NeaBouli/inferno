@@ -25,13 +25,13 @@ async function main() {
   console.log("=".repeat(60));
   console.log(`  Deployer:    ${deployer.address}`);
   console.log(`  Network:     ${network.name} (chainId: ${network.chainId})`);
-  console.log(`  Balance:     ${ethers.utils.formatEther(await deployer.getBalance())} ETH`);
+  console.log(`  Balance:     ${ethers.formatEther(await deployer.getBalance())} ETH`);
   console.log(`  Governance:  ${GOV}`);
   console.log(`  Token:       ${TOKEN}`);
 
   const governance = await ethers.getContractAt("Governance", GOV);
   const token = await ethers.getContractAt("InfernoToken", TOKEN);
-  const iface = new ethers.utils.Interface([
+  const iface = new ethers.Interface([
     "function setFeeExempt(address account, bool exempt)",
   ]);
 
@@ -58,9 +58,9 @@ async function main() {
     console.log(`  Gas:       ${receipt.gasUsed.toString()}`);
 
     const count = await governance.proposalCount();
-    const proposalId = count.toNumber() - 1;
+    const proposalId = Number(count) - 1;
     const p = await governance.getProposal(proposalId);
-    const eta = new Date(p.eta.toNumber() * 1000);
+    const eta = new Date(Number(p.eta) * 1000);
 
     console.log(`  Proposal:  #${proposalId}`);
     console.log(`  ETA:       ${eta.toLocaleString("de-DE", { timeZone: "Europe/Berlin" })} CET`);

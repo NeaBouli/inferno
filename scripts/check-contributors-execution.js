@@ -27,7 +27,7 @@ const LENDING_VAULT = "0x974305Ab0EC905172e697271C3d7d385194EB9DF";
 const LP_TOKEN = "0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0";
 
 const IFR_DECIMALS = 9;
-const CLAIM_BALANCE = ethers.utils.parseUnits("33333333.333333333", IFR_DECIMALS);
+const CLAIM_BALANCE = ethers.parseUnits("33333333.333333333", IFR_DECIMALS);
 const PUBLIC_MAINNET_RPC = "https://ethereum-rpc.publicnode.com";
 
 const ERC20_ABI = [
@@ -61,11 +61,11 @@ function envFlag(name, defaultValue) {
 }
 
 function fmtIFR(value) {
-  return ethers.utils.formatUnits(value, IFR_DECIMALS);
+  return ethers.formatUnits(value, IFR_DECIMALS);
 }
 
 function fmtEth(value) {
-  return ethers.utils.formatEther(value);
+  return ethers.formatEther(value);
 }
 
 function short(addr) {
@@ -75,15 +75,15 @@ function short(addr) {
 function nextAction(row, minBuyEth, minGasEth) {
   if (!row.claimed) return "claim bootstrap IFR";
   if (!row.buyDetected) {
-    if (row.eth.lt(minBuyEth)) return "top up ETH for buy + gas";
+    if (BigInt(row.eth)<BigInt(minBuyEth)) return "top up ETH for buy + gas";
     return "buy IFR on Uniswap";
   }
-  if (row.tranches.isZero()) {
-    if (row.eth.lt(minGasEth)) return "top up ETH for lock/lending gas";
+  if (BigInt(row.tranches)===BigInt(0)) {
+    if (BigInt(row.eth)<BigInt(minGasEth)) return "top up ETH for lock/lending gas";
     return "run LOCK_BPS=5000 lock";
   }
   if (!row.hasOffer) {
-    if (row.eth.lt(minGasEth)) return "top up ETH for lending gas";
+    if (BigInt(row.eth)<BigInt(minGasEth)) return "top up ETH for lending gas";
     return "run LendingVault offer with LENDING_BPS=10000";
   }
   return "done";
@@ -91,9 +91,9 @@ function nextAction(row, minBuyEth, minGasEth) {
 
 async function main() {
   const strict = envFlag("STRICT", false);
-  const minBuyEth = ethers.utils.parseEther(process.env.MIN_CONTRIBUTOR_ETH || "0.05");
-  const minGasEth = ethers.utils.parseEther(process.env.MIN_GAS_ETH || "0.005");
-  const provider = new ethers.providers.JsonRpcProvider(
+  const minBuyEth = ethers.parseEther(process.env.MIN_CONTRIBUTOR_ETH || "0.05");
+  const minGasEth = ethers.parseEther(process.env.MIN_GAS_ETH || "0.005");
+  const provider = new ethers.JsonRpcProvider(
     process.env.MAINNET_RPC_URL || PUBLIC_MAINNET_RPC
   );
 
@@ -121,7 +121,7 @@ async function main() {
 
   const rows = [];
   for (let i = 0; i < contributors.length; i += 1) {
-    const address = ethers.utils.getAddress(contributors[i]);
+    const address = ethers.getAddress(contributors[i]);
     const [
       eth,
       ifr,
@@ -148,10 +148,7 @@ async function main() {
       offer = await lending.offers(offerIndex);
     }
 
-    const accountedIfr = ifr
-      .add(locked)
-      .add(offer ? offer.availableIFR : 0)
-      .add(offer ? offer.lentIFR : 0);
+    const accountedIfr = BigInt(BigInt(BigInt(ifr)+BigInt(locked))+BigInt(offer?offer.availableIFR:0))+BigInt(offer?offer.lentIFR:0);
 
     rows.push({
       name: `C${i + 1}`,
@@ -166,7 +163,7 @@ async function main() {
       lendingAllowance,
       hasOffer,
       offer,
-      buyDetected: accountedIfr.gt(CLAIM_BALANCE),
+      buyDetected: BigInt(accountedIfr)>BigInt(CLAIM_BALANCE),
     });
   }
 

@@ -33,10 +33,10 @@ async function main() {
 
   // ── Config ─────────────────────────────────────────────────
   const ROUTER_ADDR = process.env.UNISWAP_V2_ROUTER || DEFAULT_ROUTER;
-  const IFR_AMOUNT = ethers.utils.parseUnits(
+  const IFR_AMOUNT = ethers.parseUnits(
     process.env.LP_IFR_AMOUNT || DEFAULT_IFR_AMOUNT, 9
   );
-  const ETH_AMOUNT = ethers.utils.parseEther(
+  const ETH_AMOUNT = ethers.parseEther(
     process.env.LP_ETH_AMOUNT || DEFAULT_ETH_AMOUNT
   );
 
@@ -44,11 +44,11 @@ async function main() {
   console.log("INFERNO — Uniswap V2 LP Pairing");
   console.log("=".repeat(60));
   console.log(`Deployer:  ${deployer.address}`);
-  console.log(`Balance:   ${ethers.utils.formatEther(ethBalance)} ETH`);
+  console.log(`Balance:   ${ethers.formatEther(ethBalance)} ETH`);
   console.log(`Network:   ${network.name} (${network.chainId})`);
   console.log(`Router:    ${ROUTER_ADDR}`);
-  console.log(`IFR:       ${ethers.utils.formatUnits(IFR_AMOUNT, 9)} IFR`);
-  console.log(`ETH:       ${ethers.utils.formatEther(ETH_AMOUNT)} ETH`);
+  console.log(`IFR:       ${ethers.formatUnits(IFR_AMOUNT, 9)} IFR`);
+  console.log(`ETH:       ${ethers.formatEther(ETH_AMOUNT)} ETH`);
   console.log("-".repeat(60));
 
   // ══════════════════════════════════════════════════════════
@@ -57,24 +57,24 @@ async function main() {
   console.log("\n[1/4] Pre-flight checks...");
 
   // ETH balance (need LP amount + gas buffer)
-  const MIN_ETH = ETH_AMOUNT.add(ethers.utils.parseEther("0.005"));
-  if (ethBalance.lt(MIN_ETH)) {
-    console.error(`  ERROR: Need at least ${ethers.utils.formatEther(MIN_ETH)} ETH`);
-    console.error(`  Current balance: ${ethers.utils.formatEther(ethBalance)} ETH`);
+  const MIN_ETH = BigInt(ETH_AMOUNT)+BigInt(ethers.parseEther('0.005'));
+  if (BigInt(ethBalance)<BigInt(MIN_ETH)) {
+    console.error(`  ERROR: Need at least ${ethers.formatEther(MIN_ETH)} ETH`);
+    console.error(`  Current balance: ${ethers.formatEther(ethBalance)} ETH`);
     console.error(`  Get Sepolia ETH from a faucet and try again.`);
     process.exit(1);
   }
-  console.log(`  ETH balance OK (${ethers.utils.formatEther(ethBalance)} >= ${ethers.utils.formatEther(MIN_ETH)})`);
+  console.log(`  ETH balance OK (${ethers.formatEther(ethBalance)} >= ${ethers.formatEther(MIN_ETH)})`);
 
   // IFR balance
   const ifrToken = new ethers.Contract(INFERNO_TOKEN, ERC20_ABI, deployer);
   const ifrBalance = await ifrToken.balanceOf(deployer.address);
-  if (ifrBalance.lt(IFR_AMOUNT)) {
-    console.error(`  ERROR: Need ${ethers.utils.formatUnits(IFR_AMOUNT, 9)} IFR`);
-    console.error(`  Current balance: ${ethers.utils.formatUnits(ifrBalance, 9)} IFR`);
+  if (BigInt(ifrBalance)<BigInt(IFR_AMOUNT)) {
+    console.error(`  ERROR: Need ${ethers.formatUnits(IFR_AMOUNT, 9)} IFR`);
+    console.error(`  Current balance: ${ethers.formatUnits(ifrBalance, 9)} IFR`);
     process.exit(1);
   }
-  console.log(`  IFR balance OK (${ethers.utils.formatUnits(ifrBalance, 9)} IFR)`);
+  console.log(`  IFR balance OK (${ethers.formatUnits(ifrBalance, 9)} IFR)`);
 
   // Router reachable
   const router = new ethers.Contract(ROUTER_ADDR, ROUTER_ABI, deployer);
@@ -107,7 +107,7 @@ async function main() {
   // Approve router to spend IFR
   tx = await ifrToken.approve(ROUTER_ADDR, IFR_AMOUNT);
   await tx.wait();
-  console.log(`  Approved router for ${ethers.utils.formatUnits(IFR_AMOUNT, 9)} IFR`);
+  console.log(`  Approved router for ${ethers.formatUnits(IFR_AMOUNT, 9)} IFR`);
 
   // ══════════════════════════════════════════════════════════
   // Step 3/4 — addLiquidityETH
@@ -115,14 +115,14 @@ async function main() {
   console.log("\n[3/4] Adding liquidity (IFR + ETH)...");
 
   // 2% slippage tolerance
-  const amountTokenMin = IFR_AMOUNT.mul(98).div(100);
-  const amountETHMin = ETH_AMOUNT.mul(98).div(100);
+  const amountTokenMin = BigInt(BigInt(IFR_AMOUNT)*BigInt(98))/BigInt(100);
+  const amountETHMin = BigInt(BigInt(ETH_AMOUNT)*BigInt(98))/BigInt(100);
   const block = await ethers.provider.getBlock("latest");
   const deadline = block.timestamp + 300; // 5 minutes
 
-  console.log(`  amountTokenDesired: ${ethers.utils.formatUnits(IFR_AMOUNT, 9)} IFR`);
-  console.log(`  amountTokenMin:     ${ethers.utils.formatUnits(amountTokenMin, 9)} IFR (2% slippage)`);
-  console.log(`  amountETHMin:       ${ethers.utils.formatEther(amountETHMin)} ETH (2% slippage)`);
+  console.log(`  amountTokenDesired: ${ethers.formatUnits(IFR_AMOUNT, 9)} IFR`);
+  console.log(`  amountTokenMin:     ${ethers.formatUnits(amountTokenMin, 9)} IFR (2% slippage)`);
+  console.log(`  amountETHMin:       ${ethers.formatEther(amountETHMin)} ETH (2% slippage)`);
   console.log(`  deadline:           ${deadline} (block.timestamp + 300s)`);
 
   tx = await router.addLiquidityETH(
@@ -135,7 +135,7 @@ async function main() {
     { value: ETH_AMOUNT }
   );
   const receipt = await tx.wait();
-  console.log(`  TX: ${receipt.transactionHash}`);
+  console.log(`  TX: ${receipt.hash}`);
   console.log(`  Gas used: ${receipt.gasUsed.toString()}`);
 
   // Remove deployer feeExempt
@@ -151,13 +151,13 @@ async function main() {
   // LP token balance
   const lpToken = new ethers.Contract(pairAddr, ERC20_ABI, deployer);
   const lpBalance = await lpToken.balanceOf(deployer.address);
-  console.log(`  LP Tokens: ${ethers.utils.formatUnits(lpBalance, 18)}`);
+  console.log(`  LP Tokens: ${ethers.formatUnits(lpBalance, 18)}`);
 
   // Remaining balances
   const ifrAfter = await ifrToken.balanceOf(deployer.address);
   const ethAfter = await ethers.provider.getBalance(deployer.address);
-  console.log(`  IFR remaining: ${ethers.utils.formatUnits(ifrAfter, 9)}`);
-  console.log(`  ETH remaining: ${ethers.utils.formatEther(ethAfter)}`);
+  console.log(`  IFR remaining: ${ethers.formatUnits(ifrAfter, 9)}`);
+  console.log(`  ETH remaining: ${ethers.formatEther(ethAfter)}`);
 
   // ══════════════════════════════════════════════════════════
   // Step 4/4 — Update BuybackVault router
@@ -192,9 +192,9 @@ async function main() {
   console.log("=".repeat(60));
   console.log(`
   LP Pair:           ${pairAddr}
-  LP Tokens:         ${ethers.utils.formatUnits(lpBalance, 18)}
-  IFR in Pool:       ${ethers.utils.formatUnits(IFR_AMOUNT, 9)} IFR
-  ETH in Pool:       ${ethers.utils.formatEther(ETH_AMOUNT)} ETH
+  LP Tokens:         ${ethers.formatUnits(lpBalance, 18)}
+  IFR in Pool:       ${ethers.formatUnits(IFR_AMOUNT, 9)} IFR
+  ETH in Pool:       ${ethers.formatEther(ETH_AMOUNT)} ETH
   BuybackVault:      Router updated to ${ROUTER_ADDR}
 
   NEXT STEPS:

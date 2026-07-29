@@ -6,7 +6,7 @@ describe("Vesting", function () {
   let token, vesting;
 
   const DECIMALS = 9;
-  const toUnits = (n) => ethers.utils.parseUnits(n.toString(), DECIMALS);
+  const toUnits = (n) => ethers.parseUnits(n.toString(), DECIMALS);
 
   const CLIFF = 90 * 24 * 3600;       // 90 days
   const DURATION = 365 * 24 * 3600;   // 365 days total (90d cliff + 275d linear)
@@ -17,20 +17,20 @@ describe("Vesting", function () {
 
     const Token = await ethers.getContractFactory("MockInfernoToken");
     token = await Token.deploy();
-    await token.deployed();
+    await token.waitForDeployment();
 
     const Vesting = await ethers.getContractFactory("Vesting");
     vesting = await Vesting.deploy(
-      token.address,
+      token.target,
       beneficiary.address,
       CLIFF,
       DURATION,
       ALLOCATION,
       guardian.address
     );
-    await vesting.deployed();
+    await vesting.waitForDeployment();
 
-    await (await token.transfer(vesting.address, ALLOCATION)).wait();
+    await (await token.transfer(vesting.target, ALLOCATION)).wait();
   });
 
   async function increaseTime(seconds) {
@@ -48,8 +48,8 @@ describe("Vesting", function () {
     const vested = await vesting.vestedAmount();
     // Post-cliff: vestingElapsed is ~0-1s, so vested should be negligible
     // Max 1 second of vesting: ALLOCATION / vestingDuration ≈ 42 units
-    const oneSecondVesting = ALLOCATION.div(DURATION - CLIFF);
-    expect(vested).to.be.lte(oneSecondVesting.mul(2)); // allow 2s tolerance
+    const oneSecondVesting = BigInt(ALLOCATION)/BigInt(DURATION-CLIFF);
+    expect(vested).to.be.lte(BigInt(oneSecondVesting)*BigInt(2)); // allow 2s tolerance
   });
 
   it("releast linear nach dem Cliff", async () => {
@@ -62,17 +62,18 @@ describe("Vesting", function () {
 
     // Post-cliff formula: vested = (ALLOCATION * 30d) / (DURATION - CLIFF)
     const vestingDuration = DURATION - CLIFF;
-    const expected = ALLOCATION.mul(extraDays).div(vestingDuration);
+    const expected = BigInt(BigInt(ALLOCATION)*BigInt(extraDays))/BigInt(vestingDuration);
 
     // Allow 0.5% tolerance for block timestamp rounding
-    const tolerance = expected.div(200);
-    expect(releasable.sub(expected).abs()).to.be.lte(tolerance);
+    const tolerance = BigInt(expected)/BigInt(200);
+    const delta = releasable >= expected ? releasable - expected : expected - releasable;
+    expect(delta).to.be.lte(tolerance);
 
     const balBefore = await token.balanceOf(beneficiary.address);
     await expect(vesting.connect(beneficiary).release()).to.emit(vesting, "Released");
     const balAfter = await token.balanceOf(beneficiary.address);
     // Released amount may be slightly more than queried releasable (1 block later)
-    expect(balAfter.sub(balBefore)).to.be.gte(releasable);
+    expect(BigInt(balAfter)-BigInt(balBefore)).to.be.gte(releasable);
   });
 
   it("50% vested at midpoint of linear phase", async () => {
@@ -81,11 +82,12 @@ describe("Vesting", function () {
     await increaseTime(CLIFF + halfVesting);
 
     const vested = await vesting.vestedAmount();
-    const expected = ALLOCATION.div(2);
+    const expected = BigInt(ALLOCATION)/BigInt(2);
 
     // 0.5% tolerance
-    const tolerance = expected.div(200);
-    expect(vested.sub(expected).abs()).to.be.lte(tolerance);
+    const tolerance = BigInt(expected)/BigInt(200);
+    const delta = vested >= expected ? vested - expected : expected - vested;
+    expect(delta).to.be.lte(tolerance);
   });
 
   it("gibt alles am Ende frei", async () => {
@@ -93,7 +95,7 @@ describe("Vesting", function () {
     const releasable = await vesting.releasableAmount();
     expect(releasable).to.equal(ALLOCATION);
     await expect(vesting.connect(beneficiary).release()).to.emit(vesting, "Released");
-    const contractBal = await token.balanceOf(vesting.address);
+    const contractBal = await token.balanceOf(vesting.target);
     expect(contractBal).to.equal(0);
   });
 
@@ -116,35 +118,35 @@ describe("Vesting", function () {
     it("reverts if token is zero address", async () => {
       const Vesting = await ethers.getContractFactory("Vesting");
       await expect(
-        Vesting.deploy(ethers.constants.AddressZero, beneficiary.address, CLIFF, DURATION, ALLOCATION, guardian.address)
+        Vesting.deploy(ethers.ZeroAddress, beneficiary.address, CLIFF, DURATION, ALLOCATION, guardian.address)
       ).to.be.revertedWith("token=0");
     });
 
     it("reverts if beneficiary is zero address", async () => {
       const Vesting = await ethers.getContractFactory("Vesting");
       await expect(
-        Vesting.deploy(token.address, ethers.constants.AddressZero, CLIFF, DURATION, ALLOCATION, guardian.address)
+        Vesting.deploy(token.target, ethers.ZeroAddress, CLIFF, DURATION, ALLOCATION, guardian.address)
       ).to.be.revertedWith("beneficiary=0");
     });
 
     it("reverts if guardian is zero address", async () => {
       const Vesting = await ethers.getContractFactory("Vesting");
       await expect(
-        Vesting.deploy(token.address, beneficiary.address, CLIFF, DURATION, ALLOCATION, ethers.constants.AddressZero)
+        Vesting.deploy(token.target, beneficiary.address, CLIFF, DURATION, ALLOCATION, ethers.ZeroAddress)
       ).to.be.revertedWith("guardian=0");
     });
 
     it("reverts if duration < cliff", async () => {
       const Vesting = await ethers.getContractFactory("Vesting");
       await expect(
-        Vesting.deploy(token.address, beneficiary.address, DURATION, CLIFF, ALLOCATION, guardian.address)
+        Vesting.deploy(token.target, beneficiary.address, DURATION, CLIFF, ALLOCATION, guardian.address)
       ).to.be.revertedWith("duration<cliff");
     });
 
     it("reverts if allocation is zero", async () => {
       const Vesting = await ethers.getContractFactory("Vesting");
       await expect(
-        Vesting.deploy(token.address, beneficiary.address, CLIFF, DURATION, 0, guardian.address)
+        Vesting.deploy(token.target, beneficiary.address, CLIFF, DURATION, 0, guardian.address)
       ).to.be.revertedWith("allocation=0");
     });
   });
@@ -165,13 +167,13 @@ describe("Vesting", function () {
       const tx = await vesting.connect(guardian).pause();
       const receipt = await tx.wait();
       // No Paused event emitted on second call
-      expect(receipt.events?.filter(e => e.event === "Paused") || []).to.have.length(0);
+      expect(receipt.logs.filter((entry) => entry.fragment?.name === "Paused")).to.have.length(0);
     });
 
     it("unpause when already unpaused is no-op (no event)", async () => {
       const tx = await vesting.connect(guardian).unpause();
       const receipt = await tx.wait();
-      expect(receipt.events?.filter(e => e.event === "Unpaused") || []).to.have.length(0);
+      expect(receipt.logs.filter((entry) => entry.fragment?.name === "Unpaused")).to.have.length(0);
     });
   });
 
@@ -205,7 +207,7 @@ describe("Vesting", function () {
 
     it("reverts with zero address", async () => {
       await expect(
-        vesting.connect(guardian).transferGuardian(ethers.constants.AddressZero)
+        vesting.connect(guardian).transferGuardian(ethers.ZeroAddress)
       ).to.be.revertedWith("newGuardian=0");
     });
   });

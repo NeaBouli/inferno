@@ -1,15 +1,5 @@
 const { ethers } = require("hardhat");
 
-// ── Monkey-patch ethers v5 Formatter ─────────────────────────
-// Alchemy returns to="" for contract creation TXs instead of to=null.
-// ethers v5 Formatter.transactionResponse() rejects "" as invalid address.
-const { Formatter } = require("@ethersproject/providers");
-const _origTxResponse = Formatter.prototype.transactionResponse;
-Formatter.prototype.transactionResponse = function (tx) {
-  if (tx.to === "" || tx.to === "0x") tx.to = null;
-  return _origTxResponse.call(this, tx);
-};
-
 /**
  * INFERNO — Deploy BootstrapVault to Ethereum Mainnet
  *
@@ -23,8 +13,8 @@ Formatter.prototype.transactionResponse = function (tx) {
  */
 
 const DECIMALS = 9;
-const parse = (n) => ethers.utils.parseUnits(String(n), DECIMALS);
-const fmt = (bn) => ethers.utils.formatUnits(bn, DECIMALS);
+const parse = (n) => ethers.parseUnits(String(n), DECIMALS);
+const fmt = (bn) => ethers.formatUnits(bn, DECIMALS);
 
 // ── Mainnet Addresses ────────────────────────────────────────
 const ADDRESSES = {
@@ -37,10 +27,10 @@ const ADDRESSES = {
 // ── Bootstrap Parameters ─────────────────────────────────────
 const DURATION      = 90 * 24 * 60 * 60;                     // 90 days
 const IFR_ALLOC     = parse(100_000_000);                     // 100M IFR (finalise pulls 2x = 200M from LiquidityReserve)
-const MIN_CONTRIB   = ethers.utils.parseEther("0.01");        // 0.01 ETH
-const MAX_CONTRIB   = ethers.utils.parseEther("2");           // 2 ETH
+const MIN_CONTRIB   = ethers.parseEther("0.01");        // 0.01 ETH
+const MAX_CONTRIB   = ethers.parseEther("2");           // 2 ETH
 const LP_LOCK_DUR   = 365 * 24 * 60 * 60;                    // 12 months
-const TF_LOCKER     = ethers.constants.AddressZero;           // Team.Finance disabled for now
+const TF_LOCKER     = ethers.ZeroAddress;           // Team.Finance disabled for now
 
 async function main() {
   const [deployer] = await ethers.getSigners();
@@ -51,7 +41,7 @@ async function main() {
   console.log("  INFERNO — Deploy BootstrapVault (Mainnet)");
   console.log("=".repeat(60));
   console.log(`  Deployer:  ${deployer.address}`);
-  console.log(`  Balance:   ${ethers.utils.formatEther(balance)} ETH`);
+  console.log(`  Balance:   ${ethers.formatEther(balance)} ETH`);
   console.log(`  Network:   ${network.name} (chainId: ${network.chainId})`);
 
   // ── Step 1: Compute startTime from latest block ────────────
@@ -65,7 +55,7 @@ async function main() {
   console.log(`  End:       ${endDate}`);
   console.log(`  Duration:  ${DURATION / 86400} days`);
   console.log(`  IFR Alloc: ${fmt(IFR_ALLOC)} IFR (claims)`);
-  console.log(`  Total IFR: ${fmt(IFR_ALLOC.mul(2))} IFR (LP + claims)`);
+  console.log(`  Total IFR: ${fmt(BigInt(IFR_ALLOC)*BigInt(2))} IFR (LP + claims)`);
   console.log(`  Min/Max:   0.01 — 2 ETH`);
 
   // ── Step 2: Deploy BootstrapVault ──────────────────────────
@@ -84,20 +74,21 @@ async function main() {
     MAX_CONTRIB,
     LP_LOCK_DUR
   );
-  await vault.deployed();
+  await vault.waitForDeployment();
 
-  const receipt = await vault.deployTransaction.wait();
+  const deploymentTx = vault.deploymentTransaction();
+  const receipt = await deploymentTx.wait();
 
-  console.log(`  BootstrapVault: ${vault.address}`);
-  console.log(`  TX:             ${vault.deployTransaction.hash}`);
+  console.log(`  BootstrapVault: ${vault.target}`);
+  console.log(`  TX:             ${deploymentTx.hash}`);
   console.log(`  Block:          ${receipt.blockNumber}`);
   console.log(`  Gas Used:       ${receipt.gasUsed.toString()}`);
 
   // Estimate cost
-  const gasPrice = vault.deployTransaction.gasPrice || (await ethers.provider.getGasPrice());
-  const cost = receipt.gasUsed.mul(gasPrice);
-  console.log(`  Gas Price:      ${ethers.utils.formatUnits(gasPrice, "gwei")} gwei`);
-  console.log(`  Deploy Cost:    ${ethers.utils.formatEther(cost)} ETH`);
+  const gasPrice = deploymentTx.gasPrice || (await ethers.provider.getFeeData()).gasPrice;
+  const cost = BigInt(receipt.gasUsed)*BigInt(gasPrice);
+  console.log(`  Gas Price:      ${ethers.formatUnits(gasPrice, "gwei")} gwei`);
+  console.log(`  Deploy Cost:    ${ethers.formatEther(cost)} ETH`);
 
   // ── Step 3: Verify deployment state ────────────────────────
   console.log("\n[2/2] Verifying deployment...");
@@ -106,13 +97,13 @@ async function main() {
   console.log(`  ifrSource:        ${await vault.ifrSource()}`);
   console.log(`  uniswapRouter:    ${await vault.uniswapRouter()}`);
   console.log(`  teamFinanceLocker: ${await vault.teamFinanceLocker()}`);
-  console.log(`  startTime:        ${(await vault.startTime()).toNumber()} (${new Date((await vault.startTime()).toNumber() * 1000).toISOString()})`);
-  console.log(`  endTime:          ${(await vault.endTime()).toNumber()} (${new Date((await vault.endTime()).toNumber() * 1000).toISOString()})`);
+  console.log(`  startTime:        ${Number(await vault.startTime())} (${new Date(Number(await vault.startTime()) * 1000).toISOString()})`);
+  console.log(`  endTime:          ${Number(await vault.endTime())} (${new Date(Number(await vault.endTime()) * 1000).toISOString()})`);
   console.log(`  ifrAllocation:    ${fmt(await vault.ifrAllocation())} IFR`);
-  console.log(`  minContribution:  ${ethers.utils.formatEther(await vault.minContribution())} ETH`);
-  console.log(`  maxContribution:  ${ethers.utils.formatEther(await vault.maxContribution())} ETH`);
-  console.log(`  lpLockDuration:   ${(await vault.lpLockDuration()).toNumber() / 86400} days`);
-  console.log(`  totalETHRaised:   ${ethers.utils.formatEther(await vault.totalETHRaised())} ETH`);
+  console.log(`  minContribution:  ${ethers.formatEther(await vault.minContribution())} ETH`);
+  console.log(`  maxContribution:  ${ethers.formatEther(await vault.maxContribution())} ETH`);
+  console.log(`  lpLockDuration:   ${Number(await vault.lpLockDuration()) / 86400} days`);
+  console.log(`  totalETHRaised:   ${ethers.formatEther(await vault.totalETHRaised())} ETH`);
   console.log(`  finalised:        ${await vault.finalised()}`);
   console.log(`  OK — BootstrapVault deployed successfully.`);
 
@@ -121,19 +112,19 @@ async function main() {
   console.log("  DEPLOYMENT COMPLETE");
   console.log("=".repeat(60));
   console.log(`
-  BootstrapVault:  ${vault.address}
+  BootstrapVault:  ${vault.target}
   IFR Source:      ${ADDRESSES.ifrSource} (LiquidityReserve)
   TF Locker:       ${TF_LOCKER} (disabled)
   Start:           ${startDate}
   End:             ${endDate}
   IFR Allocation:  ${fmt(IFR_ALLOC)} IFR (claims)
-  Total IFR Pull:  ${fmt(IFR_ALLOC.mul(2))} IFR (LP + claims)
+  Total IFR Pull:  ${fmt(BigInt(IFR_ALLOC)*BigInt(2))} IFR (LP + claims)
   Min/Max:         0.01 — 2 ETH
-  Deploy Cost:     ${ethers.utils.formatEther(cost)} ETH
+  Deploy Cost:     ${ethers.formatEther(cost)} ETH
 
   Next steps:
   1. Verify on Etherscan:
-     npx hardhat verify --network mainnet ${vault.address} \\
+     npx hardhat verify --network mainnet ${vault.target} \\
        "${ADDRESSES.token}" "${ADDRESSES.ifrSource}" "${ADDRESSES.router}" \\
        "${TF_LOCKER}" "${startTime}" "${DURATION}" \\
        "${IFR_ALLOC.toString()}" "${MIN_CONTRIB.toString()}" \\
@@ -142,7 +133,7 @@ async function main() {
   2. Create Governance proposal: setFeeExempt(BootstrapVault, true)
      (Required before finalise() can work correctly)
 
-  3. LiquidityReserve must approve BootstrapVault for ${fmt(IFR_ALLOC.mul(2))} IFR
+  3. LiquidityReserve must approve BootstrapVault for ${fmt(BigInt(IFR_ALLOC)*BigInt(2))} IFR
      (2x allocation: half for LP, half for claims)
 `);
 }

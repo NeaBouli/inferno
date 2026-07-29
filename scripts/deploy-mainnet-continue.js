@@ -4,25 +4,12 @@ const { ethers } = require("hardhat");
  * INFERNO — Mainnet Deploy CONTINUE (Steps 3-12)
  *
  * Resumes from after InfernoToken + Governance deployment.
- * Patches ethers v5 Formatter to handle Alchemy's empty 'to' field
- * on contract creation transactions.
- *
  * Usage: npx hardhat run scripts/deploy-mainnet-continue.js --network mainnet
  */
 
-// ── Monkey-patch ethers v5 Formatter ─────────────────────────
-// Alchemy returns to="" for contract creation TXs instead of to=null.
-// ethers v5 Formatter.transactionResponse() rejects "" as invalid address.
-const { Formatter } = require("@ethersproject/providers");
-const _origTxResponse = Formatter.prototype.transactionResponse;
-Formatter.prototype.transactionResponse = function (tx) {
-  if (tx.to === "" || tx.to === "0x") tx.to = null;
-  return _origTxResponse.call(this, tx);
-};
-
 const DECIMALS = 9;
-const parse = (n) => ethers.utils.parseUnits(String(n), DECIMALS);
-const fmt = (bn) => ethers.utils.formatUnits(bn, DECIMALS);
+const parse = (n) => ethers.parseUnits(String(n), DECIMALS);
+const fmt = (bn) => ethers.formatUnits(bn, DECIMALS);
 
 // ── Already deployed ─────────────────────────────────────────
 const INFERNO_TOKEN = "0x77e99917Eca8539c62F509ED1193ac36580A6e7B";
@@ -59,8 +46,8 @@ const PARAMS = {
  */
 async function safeDeploy(factory, args, label) {
   const contract = await factory.deploy(...args);
-  await contract.deployed();
-  console.log(`  ${label}: ${contract.address}`);
+  await contract.waitForDeployment();
+  console.log(`  ${label}: ${contract.target}`);
   return contract;
 }
 
@@ -90,7 +77,7 @@ async function main() {
   console.log("  INFERNO — MAINNET DEPLOY CONTINUE (Steps 3-12)");
   console.log("=".repeat(60));
   console.log(`  Deployer:       ${deployer.address}`);
-  console.log(`  Balance:        ${ethers.utils.formatEther(balance)} ETH`);
+  console.log(`  Balance:        ${ethers.formatEther(balance)} ETH`);
   console.log(`  Network:        ${network.name} (chainId: ${network.chainId})`);
   console.log(`  InfernoToken:   ${INFERNO_TOKEN} (already deployed)`);
   console.log(`  Governance:     ${GOVERNANCE} (already deployed)`);
@@ -112,11 +99,11 @@ async function main() {
 
   console.log(`\n[2/12] Governance — ALREADY DEPLOYED`);
   console.log(`  Address:          ${GOVERNANCE}`);
-  console.log(`  Delay:            ${(await governance.delay()).toNumber() / 3600}h`);
+  console.log(`  Delay:            ${Number(await governance.delay()) / 3600}h`);
   console.log(`  Owner:            ${await governance.owner()}`);
 
   // Verify deployer has all tokens
-  if (!deployerBal.eq(supply)) {
+  if (!BigInt(deployerBal)===BigInt(supply)) {
     console.error(`  ERROR: Deployer doesn't hold full supply. Already distributed?`);
     console.error(`  Expected: ${fmt(supply)}, Got: ${fmt(deployerBal)}`);
     process.exit(1);
@@ -127,16 +114,16 @@ async function main() {
   // ════════════════════════════════════════════════════════════
   console.log("\n[3/12] Deploying IFRLock...");
   const IFRLock = await ethers.getContractFactory("IFRLock");
-  const ifrLock = await safeDeploy(IFRLock, [token.address, GUARDIAN_ADDR], "IFRLock");
-  deployed.ifrLock = ifrLock.address;
+  const ifrLock = await safeDeploy(IFRLock, [token.target, GUARDIAN_ADDR], "IFRLock");
+  deployed.ifrLock = ifrLock.target;
 
   // ════════════════════════════════════════════════════════════
   // [4/12] BurnReserve
   // ════════════════════════════════════════════════════════════
   console.log("\n[4/12] Deploying BurnReserve...");
   const BurnReserve = await ethers.getContractFactory("BurnReserve");
-  const burnReserve = await safeDeploy(BurnReserve, [token.address, GUARDIAN_ADDR], "BurnReserve");
-  deployed.burnReserve = burnReserve.address;
+  const burnReserve = await safeDeploy(BurnReserve, [token.target, GUARDIAN_ADDR], "BurnReserve");
+  deployed.burnReserve = burnReserve.target;
 
   // ════════════════════════════════════════════════════════════
   // [5/12] BuybackVault
@@ -144,10 +131,10 @@ async function main() {
   console.log("\n[5/12] Deploying BuybackVault...");
   const BuybackVault = await ethers.getContractFactory("BuybackVault");
   const buybackVault = await safeDeploy(BuybackVault, [
-    token.address, burnReserve.address, TREASURY_ADDR,
+    token.target, burnReserve.target, TREASURY_ADDR,
     UNISWAP_ROUTER, GUARDIAN_ADDR, PARAMS.ACTIVATION_DELAY
   ], "BuybackVault");
-  deployed.buybackVault = buybackVault.address;
+  deployed.buybackVault = buybackVault.target;
   console.log(`  Activation:       60 days after deploy`);
 
   // ════════════════════════════════════════════════════════════
@@ -156,11 +143,11 @@ async function main() {
   console.log("\n[6/12] Deploying PartnerVault...");
   const PartnerVault = await ethers.getContractFactory("PartnerVault");
   const partnerVault = await safeDeploy(PartnerVault, [
-    token.address, governance.address, GUARDIAN_ADDR,
+    token.target, governance.target, GUARDIAN_ADDR,
     PARAMS.REWARD_BPS, PARAMS.ANNUAL_CAP
   ], "PartnerVault");
-  deployed.partnerVault = partnerVault.address;
-  console.log(`  Admin:            ${governance.address} (Governance)`);
+  deployed.partnerVault = partnerVault.target;
+  console.log(`  Admin:            ${governance.target} (Governance)`);
   console.log(`  RewardBps:        ${PARAMS.REWARD_BPS} (${PARAMS.REWARD_BPS / 100}%)`);
 
   // ════════════════════════════════════════════════════════════
@@ -169,9 +156,9 @@ async function main() {
   console.log("\n[7/12] Deploying FeeRouterV1...");
   const FeeRouterV1 = await ethers.getContractFactory("FeeRouterV1");
   const feeRouter = await safeDeploy(FeeRouterV1, [
-    governance.address, TREASURY_ADDR, VOUCHER_SIGNER
+    governance.target, TREASURY_ADDR, VOUCHER_SIGNER
   ], "FeeRouterV1");
-  deployed.feeRouter = feeRouter.address;
+  deployed.feeRouter = feeRouter.target;
 
   // ════════════════════════════════════════════════════════════
   // [8/12] Vesting
@@ -179,10 +166,10 @@ async function main() {
   console.log("\n[8/12] Deploying Vesting (Team)...");
   const Vesting = await ethers.getContractFactory("Vesting");
   const vesting = await safeDeploy(Vesting, [
-    token.address, TEAM_BENEFICIARY, PARAMS.CLIFF_DURATION,
+    token.target, TEAM_BENEFICIARY, PARAMS.CLIFF_DURATION,
     PARAMS.TOTAL_DURATION, ALLOC.TEAM_VESTING, GUARDIAN_ADDR
   ], "Vesting");
-  deployed.vesting = vesting.address;
+  deployed.vesting = vesting.target;
   console.log(`  Beneficiary:      ${TEAM_BENEFICIARY}`);
 
   // ════════════════════════════════════════════════════════════
@@ -191,22 +178,22 @@ async function main() {
   console.log("\n[9/12] Deploying LiquidityReserve...");
   const LiquidityReserve = await ethers.getContractFactory("LiquidityReserve");
   const liquidityReserve = await safeDeploy(LiquidityReserve, [
-    token.address, PARAMS.LOCK_DURATION, PARAMS.MAX_PER_PERIOD,
+    token.target, PARAMS.LOCK_DURATION, PARAMS.MAX_PER_PERIOD,
     PARAMS.PERIOD_DURATION, GUARDIAN_ADDR
   ], "LiquidityReserve");
-  deployed.liquidityReserve = liquidityReserve.address;
+  deployed.liquidityReserve = liquidityReserve.target;
 
   // ════════════════════════════════════════════════════════════
   // [10/12] Set feeExempt
   // ════════════════════════════════════════════════════════════
   console.log("\n[10/12] Setting feeExempt (BEFORE distribution)...");
   const exemptions = [
-    { name: "Vesting",          addr: vesting.address },
-    { name: "LiquidityReserve", addr: liquidityReserve.address },
-    { name: "BuybackVault",     addr: buybackVault.address },
-    { name: "BurnReserve",      addr: burnReserve.address },
-    { name: "IFRLock",          addr: ifrLock.address },
-    { name: "PartnerVault",     addr: partnerVault.address },
+    { name: "Vesting",          addr: vesting.target },
+    { name: "LiquidityReserve", addr: liquidityReserve.target },
+    { name: "BuybackVault",     addr: buybackVault.target },
+    { name: "BurnReserve",      addr: burnReserve.target },
+    { name: "IFRLock",          addr: ifrLock.target },
+    { name: "PartnerVault",     addr: partnerVault.target },
     { name: "Treasury",         addr: TREASURY_ADDR },
     { name: "Deployer",         addr: deployer.address },
   ];
@@ -221,11 +208,11 @@ async function main() {
   console.log("\n[11/12] Distributing IFR (CFLM allocation)...");
 
   const distributions = [
-    { name: "LiquidityReserve",  addr: liquidityReserve.address, amount: ALLOC.LIQUIDITY_RESERVE, pct: "20%" },
-    { name: "Vesting (Team)",    addr: vesting.address,          amount: ALLOC.TEAM_VESTING,      pct: "15%" },
+    { name: "LiquidityReserve",  addr: liquidityReserve.target, amount: ALLOC.LIQUIDITY_RESERVE, pct: "20%" },
+    { name: "Vesting (Team)",    addr: vesting.target,          amount: ALLOC.TEAM_VESTING,      pct: "15%" },
     { name: "Treasury",          addr: TREASURY_ADDR,            amount: ALLOC.TREASURY,          pct: "15%" },
     { name: "Community & Grants",addr: COMMUNITY_ADDR,           amount: ALLOC.COMMUNITY,         pct: " 6%" },
-    { name: "PartnerVault",      addr: partnerVault.address,     amount: ALLOC.PARTNER,           pct: " 4%" },
+    { name: "PartnerVault",      addr: partnerVault.target,     amount: ALLOC.PARTNER,           pct: " 4%" },
   ];
 
   for (const { name, addr, amount, pct } of distributions) {
@@ -237,7 +224,7 @@ async function main() {
   const finalDeployerBal = await token.balanceOf(deployer.address);
   console.log(`  Deployer (DEX):   ${fmt(finalDeployerBal)} IFR (40% for LP pairing)`);
 
-  if (finalDeployerBal.eq(ALLOC.DEX_LIQUIDITY)) {
+  if (BigInt(finalDeployerBal)===BigInt(ALLOC.DEX_LIQUIDITY)) {
     console.log("  OK — Distribution matches expected allocation.");
   } else {
     console.warn(`  WARNING: Expected ${fmt(ALLOC.DEX_LIQUIDITY)}, got ${fmt(finalDeployerBal)}`);

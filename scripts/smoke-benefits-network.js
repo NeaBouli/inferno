@@ -3,7 +3,7 @@
 const fs = require('fs');
 const path = require('path');
 const { createHash } = require('crypto');
-const { utils: ethersUtils } = require('ethers');
+const { ethers: ethersUtils } = require('ethers');
 const { chromium, devices } = require('playwright');
 
 const baseUrl = (process.env.BENEFITS_BASE_URL || 'https://shop.ifrunit.tech').replace(/\/$/, '');
@@ -374,33 +374,34 @@ async function installEligibilityRpc(page, { rpcError = false, lockedRaw = '1500
     'function balanceOf(address) view returns (uint256)',
     'function allowance(address,address) view returns (uint256)',
   ]);
-  const lockedResult = ethersUtils.defaultAbiCoder.encode(['uint256'], [lockedRaw]);
-  const zeroResult = ethersUtils.defaultAbiCoder.encode(['uint256'], [0]);
-  const tokenResult = ethersUtils.defaultAbiCoder.encode(
+  const coder = ethersUtils.AbiCoder.defaultAbiCoder();
+  const lockedResult = coder.encode(['uint256'], [lockedRaw]);
+  const zeroResult = coder.encode(['uint256'], [0]);
+  const tokenResult = coder.encode(
     ['address'],
     ['0x77e99917Eca8539c62F509ED1193ac36580A6e7B']
   );
   const emptyTranchesResult = commitmentVault.encodeFunctionResult('getTranches', [[]]);
   const responseForCall = (data) => {
     if (
-      data.startsWith(ifrLock.getSighash('token')) ||
-      data.startsWith(commitmentVault.getSighash('ifrToken'))
+      data.startsWith(ifrLock.getFunction('token').selector) ||
+      data.startsWith(commitmentVault.getFunction('ifrToken').selector)
     ) {
       return tokenResult;
     }
-    if (data.startsWith(commitmentVault.getSighash('getTranches'))) {
+    if (data.startsWith(commitmentVault.getFunction('getTranches').selector)) {
       return emptyTranchesResult;
     }
     if (
-      data.startsWith(ifrLock.getSighash('lockedBalance')) ||
-      data.startsWith(ifrToken.getSighash('balanceOf'))
+      data.startsWith(ifrLock.getFunction('lockedBalance').selector) ||
+      data.startsWith(ifrToken.getFunction('balanceOf').selector)
     ) {
       return lockedResult;
     }
-    if (data.startsWith(multicall.getSighash('getEthBalance'))) {
+    if (data.startsWith(multicall.getFunction('getEthBalance').selector)) {
       return zeroResult;
     }
-    if (data.startsWith(ifrToken.getSighash('allowance'))) {
+    if (data.startsWith(ifrToken.getFunction('allowance').selector)) {
       return zeroResult;
     }
     throw new Error(`Unexpected eligibility eth_call selector: ${data.slice(0, 10)}`);
@@ -426,7 +427,7 @@ async function installEligibilityRpc(page, { rpcError = false, lockedRaw = '1500
       return;
     }
     const callData = payload.params?.[0]?.data || '';
-    const result = callData.startsWith(multicall.getSighash('aggregate3'))
+    const result = callData.startsWith(multicall.getFunction('aggregate3').selector)
       ? multicall.encodeFunctionResult('aggregate3', [
           multicall.decodeFunctionData('aggregate3', callData).calls
             .map((call) => [true, responseForCall(call.callData)]),

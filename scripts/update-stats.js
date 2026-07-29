@@ -13,8 +13,8 @@ const ADDRESSES = {
   dead:     "0x000000000000000000000000000000000000dEaD",
 };
 
-const fmt = (n, d=9) => parseFloat(ethers.utils.formatUnits(n, d)).toLocaleString("de-DE");
-const fmtRaw = (n, d=9) => parseFloat(ethers.utils.formatUnits(n, d)).toFixed(0);
+const fmt = (n, d=9) => parseFloat(ethers.formatUnits(n, d)).toLocaleString("de-DE");
+const fmtRaw = (n, d=9) => parseFloat(ethers.formatUnits(n, d)).toFixed(0);
 
 async function fetchStats() {
   const token = await ethers.getContractAt("InfernoToken", ADDRESSES.token);
@@ -29,8 +29,8 @@ async function fetchStats() {
   ], ADDRESSES.feerouter);
 
   const supply      = await token.totalSupply();
-  const initial     = ethers.utils.parseUnits("1000000000", 9);
-  const burned      = initial.sub(supply);
+  const initial     = ethers.parseUnits("1000000000", 9);
+  const burned      = BigInt(initial)-BigInt(supply);
   const lpBal       = await token.balanceOf(ADDRESSES.lp);
   const vaultBal    = await token.balanceOf(ADDRESSES.vault);
   const reserveBal  = await token.balanceOf(ADDRESSES.reserve);
@@ -49,7 +49,7 @@ async function fetchStats() {
       supplyFormatted: fmt(supply),
       burned: fmtRaw(burned),
       burnedFormatted: fmt(burned),
-      burnedPct: (burned.mul(10000).div(initial).toNumber()/100).toFixed(2),
+      burnedPct: (Number(BigInt(BigInt(burned)*BigInt(10000))/BigInt(initial))/100).toFixed(2),
     },
     distribution: {
       lp: fmtRaw(lpBal),
@@ -58,12 +58,12 @@ async function fetchStats() {
       vesting: fmtRaw(vestingBal),
     },
     partnerVault: {
-      rewardBps: rewardBps.toNumber(),
+      rewardBps: Number(rewardBps),
       totalRewarded: fmtRaw(totalRew),
       annualCap: fmtRaw(annualCap),
     },
     feeRouter: {
-      protocolFeeBps: feeBps.toNumber(),
+      protocolFeeBps: Number(feeBps),
       paused: paused,
     },
   };

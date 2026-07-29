@@ -11,8 +11,8 @@ const { ethers } = require("hardhat");
  */
 
 const DECIMALS = 9;
-const parse = (n) => ethers.utils.parseUnits(String(n), DECIMALS);
-const fmt = (bn) => ethers.utils.formatUnits(bn, DECIMALS);
+const parse = (n) => ethers.parseUnits(String(n), DECIMALS);
+const fmt = (bn) => ethers.formatUnits(bn, DECIMALS);
 
 const ADDRESSES = {
   token:      "0x3Bd71947F288d1dd8B21129B1bE4FF16EDd5d1F4",
@@ -33,7 +33,7 @@ async function main() {
   console.log("  INFERNO — Deploy PartnerVault");
   console.log("=".repeat(60));
   console.log(`  Deployer:    ${deployer.address}`);
-  console.log(`  Balance:     ${ethers.utils.formatEther(balance)} ETH`);
+  console.log(`  Balance:     ${ethers.formatEther(balance)} ETH`);
   console.log(`  Network:     ${network.name} (${network.chainId})`);
 
   // Check deployer IFR balance
@@ -42,7 +42,7 @@ async function main() {
   console.log(`  IFR Balance: ${fmt(ifrBalance)} IFR`);
   console.log(`  Need:        ${fmt(PARTNER_POOL)} IFR (for funding)`);
 
-  if (ifrBalance.lt(PARTNER_POOL)) {
+  if (BigInt(ifrBalance)<BigInt(PARTNER_POOL)) {
     console.error("\n  ERROR: Insufficient IFR balance for 40M transfer!");
     process.exit(1);
   }
@@ -58,14 +58,14 @@ async function main() {
     REWARD_BPS,              // 15% reward rate
     ANNUAL_CAP               // 4M IFR annual emission cap
   );
-  await vault.deployed();
+  await vault.waitForDeployment();
 
-  console.log(`  PartnerVault: ${vault.address}`);
+  console.log(`  PartnerVault: ${vault.target}`);
   console.log(`  Admin:        ${await vault.admin()}`);
   console.log(`  Guardian:     ${await vault.guardian()}`);
   console.log(`  RewardBps:    ${await vault.rewardBps()}`);
   console.log(`  AnnualCap:    ${fmt(await vault.annualEmissionCap())} IFR`);
-  console.log(`  TX:           ${vault.deployTransaction.hash}`);
+  console.log(`  TX:           ${vault.deploymentTransaction().hash}`);
 
   // ── Step 2: Verify deployment ───────────────────────────────
   console.log("\n[2/4] Verifying deployment...");
@@ -79,24 +79,24 @@ async function main() {
   console.log("\n[3/4] Creating Governance proposal: setFeeExempt(PartnerVault, true)...");
 
   const governance = await ethers.getContractAt("Governance", ADDRESSES.governance);
-  const iface = new ethers.utils.Interface([
+  const iface = new ethers.Interface([
     "function setFeeExempt(address,bool)",
   ]);
-  const calldata = iface.encodeFunctionData("setFeeExempt", [vault.address, true]);
+  const calldata = iface.encodeFunctionData("setFeeExempt", [vault.target, true]);
 
   const tx = await governance.propose(ADDRESSES.token, calldata);
   const receipt = await tx.wait();
 
   // Parse ProposalCreated event
-  const govIface = new ethers.utils.Interface([
+  const govIface = new ethers.Interface([
     "event ProposalCreated(uint256 indexed id, address target, bytes data, uint256 eta)",
   ]);
   let proposalId, eta;
   for (const log of receipt.logs) {
     try {
       const parsed = govIface.parseLog(log);
-      proposalId = parsed.args.id.toNumber();
-      eta = parsed.args.eta.toNumber();
+      proposalId = Number(parsed.args.id);
+      eta = Number(parsed.args.eta);
       break;
     } catch { /* skip */ }
   }
@@ -105,8 +105,8 @@ async function main() {
   const delay = await governance.delay();
 
   console.log(`  Proposal ID: ${proposalId}`);
-  console.log(`  Action:      setFeeExempt(${vault.address}, true)`);
-  console.log(`  Delay:       ${delay.toNumber() / 3600}h`);
+  console.log(`  Action:      setFeeExempt(${vault.target}, true)`);
+  console.log(`  Delay:       ${Number(delay) / 3600}h`);
   console.log(`  ETA:         ${etaDate.toISOString()}`);
   console.log(`               ${etaDate.toLocaleString("de-DE", { timeZone: "Europe/Berlin" })} (Berlin)`);
   console.log(`  TX:          ${tx.hash}`);
@@ -117,15 +117,15 @@ async function main() {
   console.log(`  The vault must be feeExempt BEFORE claims, not before funding.`);
   console.log(`  Sending ${fmt(PARTNER_POOL)} IFR...`);
 
-  const transferTx = await token.transfer(vault.address, PARTNER_POOL);
+  const transferTx = await token.transfer(vault.target, PARTNER_POOL);
   await transferTx.wait();
 
-  const vaultBalance = await token.balanceOf(vault.address);
+  const vaultBalance = await token.balanceOf(vault.target);
   console.log(`  Vault balance: ${fmt(vaultBalance)} IFR`);
   console.log(`  TX:            ${transferTx.hash}`);
 
-  if (vaultBalance.lt(PARTNER_POOL)) {
-    const lost = PARTNER_POOL.sub(vaultBalance);
+  if (BigInt(vaultBalance)<BigInt(PARTNER_POOL)) {
+    const lost = BigInt(PARTNER_POOL)-BigInt(vaultBalance);
     console.log(`  Fee deducted:  ${fmt(lost)} IFR (burned + pool fee)`);
     console.log(`  NOTE: After feeExempt proposal executes, top up the`);
     console.log(`        difference: ${fmt(lost)} IFR (fee-free transfer)`);
@@ -136,7 +136,7 @@ async function main() {
   console.log("  DEPLOYMENT COMPLETE");
   console.log("=".repeat(60));
   console.log(`
-  PartnerVault:   ${vault.address}
+  PartnerVault:   ${vault.target}
   Admin:          ${ADDRESSES.governance} (Governance)
   Guardian:       ${deployer.address}
   RewardBps:      ${REWARD_BPS} (${REWARD_BPS / 100}%)
@@ -148,13 +148,13 @@ async function main() {
 
   Next steps:
   1. Verify on Etherscan:
-     npx hardhat verify --network sepolia ${vault.address} ${ADDRESSES.token} ${ADDRESSES.governance} ${deployer.address} ${REWARD_BPS} ${ANNUAL_CAP.toString()}
+     npx hardhat verify --network sepolia ${vault.target} ${ADDRESSES.token} ${ADDRESSES.governance} ${deployer.address} ${REWARD_BPS} ${ANNUAL_CAP.toString()}
 
   2. After ETA, execute the proposal:
      npx hardhat run scripts/execute-proposal.js --network sepolia
 
   3. Top up vault to exactly 40M IFR (fee-free after feeExempt):
-     Transfer ${vaultBalance.lt(PARTNER_POOL) ? fmt(PARTNER_POOL.sub(vaultBalance)) : "0"} IFR
+     Transfer ${BigInt(vaultBalance)<BigInt(PARTNER_POOL) ? fmt(BigInt(PARTNER_POOL)-BigInt(vaultBalance)) : "0"} IFR
 `);
 }
 

@@ -38,8 +38,7 @@ const IFR_ALLOCATION_TOKENS  = "100000000";             // 100M IFR (whole token
 
 // P0 = totalETHRaised_wei / ifrAllocation_whole_tokens
 // = 30_000_000_000_000_000 / 100_000_000 = 300_000_000 wei per 1 IFR
-const P0_DEFAULT = ethers.BigNumber.from(TOTAL_ETH_RAISED_WEI)
-  .div(ethers.BigNumber.from(IFR_ALLOCATION_TOKENS));  // = 300_000_000
+const P0_DEFAULT = BigInt(BigInt(TOTAL_ETH_RAISED_WEI))/BigInt(BigInt(IFR_ALLOCATION_TOKENS));  // = 300_000_000
 
 // ── ABIs ─────────────────────────────────────────────────────────────────────
 
@@ -66,12 +65,12 @@ async function main() {
 
   // Resolve P0 value
   const p0Value = process.env.P0_VALUE
-    ? ethers.BigNumber.from(process.env.P0_VALUE)
+    ? BigInt(process.env.P0_VALUE)
     : P0_DEFAULT;
 
   // Resolve CommitmentVault address
   const vaultAddress = process.env.COMMITMENT_VAULT;
-  if (!vaultAddress || !ethers.utils.isAddress(vaultAddress)) {
+  if (!vaultAddress || !ethers.isAddress(vaultAddress)) {
     throw new Error(
       "COMMITMENT_VAULT env var missing or invalid.\n" +
       "Set COMMITMENT_VAULT=0x<address> in your .env or environment."
@@ -92,8 +91,8 @@ async function main() {
   console.log(`    totalETHRaised = ${TOTAL_ETH_RAISED_WEI} wei (0.030 ETH)`);
   console.log(`    ifrAllocation  = ${IFR_ALLOCATION_TOKENS} IFR (whole tokens)`);
   console.log(`    P0             = ${p0Value.toString()} wei/IFR`);
-  console.log(`                   = ${ethers.utils.formatUnits(p0Value, 9)} ETH/IFR`);
-  console.log(`                   = ${ethers.utils.formatUnits(p0Value, 9)} ETH per 1 IFR token`);
+  console.log(`                   = ${ethers.formatUnits(p0Value, 9)} ETH/IFR`);
+  console.log(`                   = ${ethers.formatUnits(p0Value, 9)} ETH per 1 IFR token`);
   console.log();
 
   // Read current state from CommitmentVault
@@ -126,7 +125,7 @@ async function main() {
   console.log();
 
   // Encode the setP0 calldata
-  const vaultIface  = new ethers.utils.Interface(VAULT_ABI);
+  const vaultIface  = new ethers.Interface(VAULT_ABI);
   const setP0Calldata = vaultIface.encodeFunctionData("setP0", [p0Value]);
 
   console.log("  Calldata for setP0:");
@@ -135,7 +134,7 @@ async function main() {
   console.log();
 
   // Encode Governance.propose() calldata (for Gnosis Safe UI)
-  const govIface = new ethers.utils.Interface(GOV_ABI);
+  const govIface = new ethers.Interface(GOV_ABI);
   const proposeCalldata = govIface.encodeFunctionData("propose", [vaultAddress, setP0Calldata]);
 
   console.log("=".repeat(64));
@@ -174,9 +173,9 @@ async function main() {
   console.log(`  Gas used:  ${receipt.gasUsed.toString()}`);
 
   const count = await gov.proposalCount();
-  const proposalId = count.toNumber() - 1;
+  const proposalId = Number(count) - 1;
   const proposal = await gov.getProposal(proposalId);
-  const eta = new Date(proposal.eta.toNumber() * 1000);
+  const eta = new Date(Number(proposal.eta) * 1000);
 
   console.log();
   console.log("=".repeat(64));

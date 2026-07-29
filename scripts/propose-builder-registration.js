@@ -53,7 +53,7 @@ async function main() {
     category: env("BUILDER_CATEGORY", DEFAULT_BUILDER.category),
   };
 
-  if (!ethers.utils.isAddress(builder.wallet)) {
+  if (!ethers.isAddress(builder.wallet)) {
     throw new Error(`Invalid BUILDER_WALLET: ${builder.wallet}`);
   }
   if (!builder.name) throw new Error("BUILDER_NAME must not be empty");
@@ -108,7 +108,7 @@ async function main() {
     throw new Error(`Unexpected registry owner: ${registryOwner}`);
   }
 
-  const registryIface = new ethers.utils.Interface(REGISTRY_ABI);
+  const registryIface = new ethers.Interface(REGISTRY_ABI);
   const registerCalldata = registryIface.encodeFunctionData("registerBuilder", [
     builder.wallet,
     builder.name,
@@ -116,7 +116,7 @@ async function main() {
     builder.category,
   ]);
 
-  const govIface = new ethers.utils.Interface(GOV_ABI);
+  const govIface = new ethers.Interface(GOV_ABI);
   const proposeCalldata = govIface.encodeFunctionData("propose", [
     BUILDER_REGISTRY,
     registerCalldata,
@@ -153,7 +153,7 @@ async function main() {
   const tx = await gov.propose(BUILDER_REGISTRY, registerCalldata);
   const receipt = await tx.wait();
   const countAfter = await gov.proposalCount();
-  const proposalId = countAfter.toNumber() - 1;
+  const proposalId = Number(countAfter) - 1;
   const proposal = await gov.getProposal(proposalId);
 
   console.log("");
@@ -163,7 +163,7 @@ async function main() {
   console.log(`  TX:          ${tx.hash}`);
   console.log(`  Gas used:    ${receipt.gasUsed.toString()}`);
   console.log(`  Proposal ID: #${proposalId}`);
-  console.log(`  ETA:         ${new Date(proposal.eta.toNumber() * 1000).toISOString()}`);
+  console.log(`  ETA:         ${new Date(Number(proposal.eta) * 1000).toISOString()}`);
 }
 
 main().catch((e) => {

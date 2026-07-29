@@ -41,7 +41,7 @@ async function main() {
 
   const tx = await token.transferOwnership(GOVERNANCE);
   const receipt = await tx.wait();
-  console.log(`  TX: ${receipt.transactionHash}`);
+  console.log(`  TX: ${receipt.hash}`);
   console.log(`  Gas used: ${receipt.gasUsed.toString()}`);
 
   // ── Step 3: Verify new owner ────────────────────────────

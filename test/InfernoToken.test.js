@@ -6,7 +6,7 @@ describe("InfernoToken", function () {
   let token;
 
   const DECIMALS = 9;
-  const toUnits = (n) => ethers.utils.parseUnits(n.toString(), DECIMALS);
+  const toUnits = (n) => ethers.parseUnits(n.toString(), DECIMALS);
   const TOTAL_SUPPLY = toUnits(1_000_000_000);
 
   beforeEach(async () => {
@@ -14,7 +14,7 @@ describe("InfernoToken", function () {
 
     const InfernoToken = await ethers.getContractFactory("InfernoToken");
     token = await InfernoToken.deploy(poolFeeReceiver.address);
-    await token.deployed();
+    await token.waitForDeployment();
   });
 
   // ─── Deployment ───────────────────────────────────────────────
@@ -56,10 +56,10 @@ describe("InfernoToken", function () {
 
     it("deducts correct fees on transfer (2% burn + 0.5% burn + 1% pool)", async () => {
       const amount = toUnits(1000);
-      const expectedSenderBurn = amount.mul(200).div(10000);      // 20 IFR
-      const expectedRecipientBurn = amount.mul(50).div(10000);    // 5 IFR
-      const expectedPoolFee = amount.mul(100).div(10000);         // 10 IFR
-      const expectedNet = amount.sub(expectedSenderBurn).sub(expectedRecipientBurn).sub(expectedPoolFee);
+      const expectedSenderBurn = BigInt(BigInt(amount)*BigInt(200))/BigInt(10000);      // 20 IFR
+      const expectedRecipientBurn = BigInt(BigInt(amount)*BigInt(50))/BigInt(10000);    // 5 IFR
+      const expectedPoolFee = BigInt(BigInt(amount)*BigInt(100))/BigInt(10000);         // 10 IFR
+      const expectedNet = BigInt(BigInt(BigInt(amount)-BigInt(expectedSenderBurn))-BigInt(expectedRecipientBurn))-BigInt(expectedPoolFee);
 
       const supplyBefore = await token.totalSupply();
       const poolBefore = await token.balanceOf(poolFeeReceiver.address);
@@ -71,15 +71,15 @@ describe("InfernoToken", function () {
 
       // Pool fee receiver gets pool fee
       const poolAfter = await token.balanceOf(poolFeeReceiver.address);
-      expect(poolAfter.sub(poolBefore)).to.equal(expectedPoolFee);
+      expect(BigInt(poolAfter)-BigInt(poolBefore)).to.equal(expectedPoolFee);
 
       // Total supply decreased by burns
       const supplyAfter = await token.totalSupply();
-      expect(supplyBefore.sub(supplyAfter)).to.equal(expectedSenderBurn.add(expectedRecipientBurn));
+      expect(BigInt(supplyBefore)-BigInt(supplyAfter)).to.equal(BigInt(expectedSenderBurn)+BigInt(expectedRecipientBurn));
 
       // Sender lost exact amount
       const aliceBal = await token.balanceOf(alice.address);
-      expect(aliceBal).to.equal(AMOUNT.sub(amount));
+      expect(aliceBal).to.equal(BigInt(AMOUNT)-BigInt(amount));
     });
 
     it("applies fees on transferFrom too", async () => {
@@ -89,12 +89,12 @@ describe("InfernoToken", function () {
       const supplyBefore = await token.totalSupply();
       await token.connect(bob).transferFrom(alice.address, bob.address, amount);
 
-      const expectedBurn = amount.mul(200 + 50).div(10000); // 2.5%
-      const expectedPoolFee = amount.mul(100).div(10000);     // 1%
-      const expectedNet = amount.sub(expectedBurn).sub(expectedPoolFee);
+      const expectedBurn = BigInt(BigInt(amount)*BigInt(200+50))/BigInt(10000); // 2.5%
+      const expectedPoolFee = BigInt(BigInt(amount)*BigInt(100))/BigInt(10000);     // 1%
+      const expectedNet = BigInt(BigInt(amount)-BigInt(expectedBurn))-BigInt(expectedPoolFee);
 
       expect(await token.balanceOf(bob.address)).to.equal(expectedNet);
-      expect(supplyBefore.sub(await token.totalSupply())).to.equal(expectedBurn);
+      expect(BigInt(supplyBefore)-BigInt(await token.totalSupply())).to.equal(expectedBurn);
     });
   });
 
@@ -167,7 +167,7 @@ describe("InfernoToken", function () {
 
     it("setPoolFeeReceiver reverts for address(0)", async () => {
       await expect(
-        token.setPoolFeeReceiver(ethers.constants.AddressZero)
+        token.setPoolFeeReceiver(ethers.ZeroAddress)
       ).to.be.revertedWith("poolFeeReceiver=0");
     });
 
@@ -248,8 +248,8 @@ describe("InfernoToken", function () {
       await token.setFeeRates(400, 100, 0); // 4% + 1% + 0% = 5%
 
       const amount = toUnits(1000);
-      const expectedBurn = amount.mul(500).div(10000); // 5% total burn
-      const expectedNet = amount.sub(expectedBurn);
+      const expectedBurn = BigInt(BigInt(amount)*BigInt(500))/BigInt(10000); // 5% total burn
+      const expectedNet = BigInt(amount)-BigInt(expectedBurn);
 
       await token.connect(alice).transfer(bob.address, amount);
       expect(await token.balanceOf(bob.address)).to.equal(expectedNet);

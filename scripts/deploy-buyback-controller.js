@@ -42,8 +42,8 @@ async function main() {
   const [deployer] = await ethers.getSigners();
   const network = await ethers.provider.getNetwork();
   const chainId = network.chainId;
-  const isMainnet = chainId === 1;
-  const isSepolia = chainId === 11155111;
+  const isMainnet = chainId === 1n;
+  const isSepolia = chainId === 11155111n;
   const networkName = isMainnet ? "Ethereum Mainnet" : isSepolia ? "Sepolia Testnet" : `Chain ${chainId}`;
 
   // Resolve addresses — fallback to mainnet for local hardhat dry-runs
@@ -80,11 +80,12 @@ async function main() {
     deployer.address,  // guardian
     GOVERNANCE         // owner
   );
-  await controller.deployed();
+  await controller.waitForDeployment();
+  const deploymentTx = controller.deploymentTransaction();
 
-  console.log("  TX:      ", controller.deployTransaction.hash);
-  console.log("  Address: ", controller.address);
-  console.log("  Gas:     ", (await controller.deployTransaction.wait()).gasUsed.toString());
+  console.log("  TX:      ", deploymentTx.hash);
+  console.log("  Address: ", controller.target);
+  console.log("  Gas:     ", (await deploymentTx.wait()).gasUsed.toString());
   console.log("");
 
   // Verify on Etherscan
@@ -92,7 +93,7 @@ async function main() {
     console.log("Verifying on Etherscan...");
     try {
       await run("verify:verify", {
-        address: controller.address,
+        address: controller.target,
         constructorArguments: [
           TOKEN,
           BURN_RESERVE,
@@ -109,7 +110,7 @@ async function main() {
       } else {
         console.log("  Verification failed:", err.message);
         console.log("  Retry manually:");
-        console.log(`  npx hardhat verify --network mainnet ${controller.address} ${TOKEN} ${BURN_RESERVE} ${ROUTER} ${LP_RECEIVER} ${deployer.address} ${GOVERNANCE}`);
+        console.log(`  npx hardhat verify --network mainnet ${controller.target} ${TOKEN} ${BURN_RESERVE} ${ROUTER} ${LP_RECEIVER} ${deployer.address} ${GOVERNANCE}`);
       }
     }
     console.log("");
@@ -126,9 +127,9 @@ async function main() {
     existing = JSON.parse(fs.readFileSync(outFile, "utf8"));
   }
   existing.BuybackController = {
-    address: controller.address,
+    address: controller.target,
     deployer: deployer.address,
-    tx: controller.deployTransaction.hash,
+    tx: deploymentTx.hash,
     timestamp: new Date().toISOString(),
     network: isMainnet ? "mainnet" : isSepolia ? "sepolia" : `chain-${chainId}`,
   };
@@ -140,11 +141,11 @@ async function main() {
   console.log("═══════════════════════════════════════════════");
   console.log("  DEPLOYMENT COMPLETE");
   console.log("═══════════════════════════════════════════════");
-  console.log("  BuybackController:", controller.address);
+  console.log("  BuybackController:", controller.target);
   if (isMainnet) {
-    console.log("  Etherscan: https://etherscan.io/address/" + controller.address + "#code");
+    console.log("  Etherscan: https://etherscan.io/address/" + controller.target + "#code");
   } else if (isSepolia) {
-    console.log("  Etherscan: https://sepolia.etherscan.io/address/" + controller.address + "#code");
+    console.log("  Etherscan: https://sepolia.etherscan.io/address/" + controller.target + "#code");
   }
   console.log("");
   console.log("═══════════════════════════════════════════════");

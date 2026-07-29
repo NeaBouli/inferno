@@ -5,12 +5,12 @@ describe("LendingVault", function () {
   let owner, governance, lenderA, lenderB, borrowerA, borrowerB, liquidator;
   let token, vault;
 
-  const parse = (s) => ethers.utils.parseUnits(s, 9);
+  const parse = (s) => ethers.parseUnits(s, 9);
   const ONE_DAY = 86400;
   const THIRTY_DAYS = 30 * ONE_DAY;
 
   // 1 IFR = 0.000001 ETH → price = 1e12 wei per 1e9 IFR
-  const IFR_PRICE = ethers.utils.parseUnits("1000000000000", "wei"); // 1e12
+  const IFR_PRICE = ethers.parseUnits("1000000000000", "wei"); // 1e12
 
   async function advanceTime(seconds) {
     await ethers.provider.send("evm_increaseTime", [seconds]);
@@ -22,15 +22,15 @@ describe("LendingVault", function () {
 
     const InfernoToken = await ethers.getContractFactory("InfernoToken");
     token = await InfernoToken.deploy(owner.address);
-    await token.deployed();
+    await token.waitForDeployment();
 
     await token.setFeeExempt(owner.address, true);
 
     const LendingVault = await ethers.getContractFactory("LendingVault");
-    vault = await LendingVault.deploy(token.address, governance.address);
-    await vault.deployed();
+    vault = await LendingVault.deploy(token.target, governance.address);
+    await vault.waitForDeployment();
 
-    await token.setFeeExempt(vault.address, true);
+    await token.setFeeExempt(vault.target, true);
 
     // Fund lenders and borrowers
     await token.transfer(lenderA.address, parse("500000"));
@@ -52,7 +52,7 @@ describe("LendingVault", function () {
 
   describe("Deployment", () => {
     it("T01: sets ifrToken correctly", async () => {
-      expect(await vault.ifrToken()).to.equal(token.address);
+      expect(await vault.ifrToken()).to.equal(token.target);
     });
 
     it("T02: sets owner to governance", async () => {
@@ -75,7 +75,7 @@ describe("LendingVault", function () {
     it("T05: reverts on zero token address", async () => {
       const LV = await ethers.getContractFactory("LendingVault");
       await expect(
-        LV.deploy(ethers.constants.AddressZero, governance.address)
+        LV.deploy(ethers.ZeroAddress, governance.address)
       ).to.be.revertedWith("token=0");
     });
   });
@@ -84,7 +84,7 @@ describe("LendingVault", function () {
 
   describe("Lending Offers", () => {
     it("T06: createOffer deposits IFR", async () => {
-      await token.connect(lenderA).approve(vault.address, parse("100000"));
+      await token.connect(lenderA).approve(vault.target, parse("100000"));
       await expect(vault.connect(lenderA).createOffer(parse("100000")))
         .to.emit(vault, "OfferCreated");
 
@@ -97,16 +97,16 @@ describe("LendingVault", function () {
     });
 
     it("T07: createOffer reverts on duplicate", async () => {
-      await token.connect(lenderA).approve(vault.address, parse("100000"));
+      await token.connect(lenderA).approve(vault.target, parse("100000"));
       await vault.connect(lenderA).createOffer(parse("100000"));
-      await token.connect(lenderA).approve(vault.address, parse("50000"));
+      await token.connect(lenderA).approve(vault.target, parse("50000"));
       await expect(
         vault.connect(lenderA).createOffer(parse("50000"))
       ).to.be.revertedWith("offer exists");
     });
 
     it("T08: increaseOffer adds to existing", async () => {
-      await token.connect(lenderA).approve(vault.address, parse("200000"));
+      await token.connect(lenderA).approve(vault.target, parse("200000"));
       await vault.connect(lenderA).createOffer(parse("100000"));
       await vault.connect(lenderA).increaseOffer(parse("50000"));
 
@@ -116,19 +116,19 @@ describe("LendingVault", function () {
     });
 
     it("T09: withdrawOffer returns IFR to lender", async () => {
-      await token.connect(lenderA).approve(vault.address, parse("100000"));
+      await token.connect(lenderA).approve(vault.target, parse("100000"));
       await vault.connect(lenderA).createOffer(parse("100000"));
 
       const before = await token.balanceOf(lenderA.address);
       await vault.connect(lenderA).withdrawOffer(parse("40000"));
       const after = await token.balanceOf(lenderA.address);
 
-      expect(after.sub(before)).to.equal(parse("40000"));
+      expect(BigInt(after)-BigInt(before)).to.equal(parse("40000"));
       expect(await vault.totalAvailable()).to.equal(parse("60000"));
     });
 
     it("T10: withdrawOffer deactivates when fully withdrawn and no loans", async () => {
-      await token.connect(lenderA).approve(vault.address, parse("100000"));
+      await token.connect(lenderA).approve(vault.target, parse("100000"));
       await vault.connect(lenderA).createOffer(parse("100000"));
       await vault.connect(lenderA).withdrawOffer(parse("100000"));
 
@@ -137,7 +137,7 @@ describe("LendingVault", function () {
     });
 
     it("T11: withdrawOffer reverts on insufficient", async () => {
-      await token.connect(lenderA).approve(vault.address, parse("100000"));
+      await token.connect(lenderA).approve(vault.target, parse("100000"));
       await vault.connect(lenderA).createOffer(parse("100000"));
       await expect(
         vault.connect(lenderA).withdrawOffer(parse("200000"))
@@ -155,7 +155,7 @@ describe("LendingVault", function () {
 
   describe("Borrowing", () => {
     beforeEach(async () => {
-      await token.connect(lenderA).approve(vault.address, parse("200000"));
+      await token.connect(lenderA).approve(vault.target, parse("200000"));
       await vault.connect(lenderA).createOffer(parse("200000"));
     });
 
@@ -168,7 +168,7 @@ describe("LendingVault", function () {
         .to.emit(vault, "LoanCreated");
       const after = await token.balanceOf(borrowerA.address);
 
-      expect(after.sub(before)).to.equal(borrowAmount);
+      expect(BigInt(after)-BigInt(before)).to.equal(borrowAmount);
     });
 
     it("T14: borrow updates offer and totals", async () => {
@@ -252,7 +252,7 @@ describe("LendingVault", function () {
       await vault.connect(borrowerB).borrow(0, amount, 60, { value: collateral });
 
       expect(await vault.getLoanCount()).to.equal(2);
-      expect(await vault.totalLent()).to.equal(amount.mul(2));
+      expect(await vault.totalLent()).to.equal(BigInt(amount)*BigInt(2));
     });
   });
 
@@ -262,7 +262,7 @@ describe("LendingVault", function () {
     let borrowAmount, collateral;
 
     beforeEach(async () => {
-      await token.connect(lenderA).approve(vault.address, parse("200000"));
+      await token.connect(lenderA).approve(vault.target, parse("200000"));
       await vault.connect(lenderA).createOffer(parse("200000"));
 
       borrowAmount = parse("10000");
@@ -274,22 +274,22 @@ describe("LendingVault", function () {
       await advanceTime(THIRTY_DAYS);
 
       const interest = await vault.calculateInterest(0);
-      const totalRepay = borrowAmount.add(interest);
-      await token.connect(borrowerA).approve(vault.address, totalRepay);
+      const totalRepay = BigInt(borrowAmount)+BigInt(interest);
+      await token.connect(borrowerA).approve(vault.target, totalRepay);
 
       const beforeETH = await ethers.provider.getBalance(borrowerA.address);
       const tx = await vault.connect(borrowerA).repay(0);
       const receipt = await tx.wait();
-      const gasCost = receipt.gasUsed.mul(receipt.effectiveGasPrice);
+      const gasCost = BigInt(receipt.gasUsed)*BigInt(receipt.gasPrice);
       const afterETH = await ethers.provider.getBalance(borrowerA.address);
 
-      expect(afterETH.add(gasCost).sub(beforeETH)).to.equal(collateral);
+      expect(BigInt(BigInt(afterETH)+BigInt(gasCost))-BigInt(beforeETH)).to.equal(collateral);
     });
 
     it("T24: repay deactivates loan", async () => {
       await advanceTime(THIRTY_DAYS);
       const interest = await vault.calculateInterest(0);
-      await token.connect(borrowerA).approve(vault.address, borrowAmount.add(interest));
+      await token.connect(borrowerA).approve(vault.target, BigInt(borrowAmount)+BigInt(interest));
       await vault.connect(borrowerA).repay(0);
 
       const loan = await vault.getLoan(0);
@@ -299,7 +299,7 @@ describe("LendingVault", function () {
     it("T25: repay restores offer availability", async () => {
       await advanceTime(THIRTY_DAYS);
       const interest = await vault.calculateInterest(0);
-      await token.connect(borrowerA).approve(vault.address, borrowAmount.add(interest));
+      await token.connect(borrowerA).approve(vault.target, BigInt(borrowAmount)+BigInt(interest));
       await vault.connect(borrowerA).repay(0);
 
       const offer = await vault.getOffer(0);
@@ -330,21 +330,21 @@ describe("LendingVault", function () {
     it("T29: lender receives interest share on repay", async () => {
       await advanceTime(THIRTY_DAYS);
       const interest = await vault.calculateInterest(0);
-      await token.connect(borrowerA).approve(vault.address, borrowAmount.add(interest));
+      await token.connect(borrowerA).approve(vault.target, BigInt(borrowAmount)+BigInt(interest));
 
       const beforeLender = await token.balanceOf(lenderA.address);
       await vault.connect(borrowerA).repay(0);
       const afterLender = await token.balanceOf(lenderA.address);
 
       // Lender gets 50% of interest = 100 IFR
-      const lenderInterest = interest.div(2);
-      expect(afterLender.sub(beforeLender)).to.equal(lenderInterest);
+      const lenderInterest = BigInt(interest)/BigInt(2);
+      expect(BigInt(afterLender)-BigInt(beforeLender)).to.equal(lenderInterest);
     });
 
     it("T30: repay reverts if not borrower", async () => {
       await advanceTime(THIRTY_DAYS);
       const interest = await vault.calculateInterest(0);
-      await token.connect(lenderA).approve(vault.address, borrowAmount.add(interest));
+      await token.connect(lenderA).approve(vault.target, BigInt(borrowAmount)+BigInt(interest));
       await expect(
         vault.connect(lenderA).repay(0)
       ).to.be.revertedWith("not borrower");
@@ -357,7 +357,7 @@ describe("LendingVault", function () {
     let borrowAmount, collateral;
 
     beforeEach(async () => {
-      await token.connect(lenderA).approve(vault.address, parse("200000"));
+      await token.connect(lenderA).approve(vault.target, parse("200000"));
       await vault.connect(lenderA).createOffer(parse("200000"));
 
       borrowAmount = parse("10000");
@@ -373,7 +373,7 @@ describe("LendingVault", function () {
 
     it("T32: liquidatable after price increase makes ratio < 120%", async () => {
       // Increase IFR price by 2x → collateral ratio drops to 100%
-      await vault.connect(governance).setIFRPrice(IFR_PRICE.mul(2));
+      await vault.connect(governance).setIFRPrice(BigInt(IFR_PRICE)*BigInt(2));
 
       const ratio = await vault.getCollateralRatio(0);
       expect(ratio).to.equal(100); // Now undercollateralized
@@ -383,31 +383,31 @@ describe("LendingVault", function () {
     });
 
     it("T33: liquidator receives 5% bonus", async () => {
-      await vault.connect(governance).setIFRPrice(IFR_PRICE.mul(2));
+      await vault.connect(governance).setIFRPrice(BigInt(IFR_PRICE)*BigInt(2));
 
       const beforeETH = await ethers.provider.getBalance(liquidator.address);
       const tx = await vault.connect(liquidator).liquidate(0);
       const receipt = await tx.wait();
-      const gasCost = receipt.gasUsed.mul(receipt.effectiveGasPrice);
+      const gasCost = BigInt(receipt.gasUsed)*BigInt(receipt.gasPrice);
       const afterETH = await ethers.provider.getBalance(liquidator.address);
 
-      const expectedBonus = collateral.mul(5).div(100);
-      expect(afterETH.add(gasCost).sub(beforeETH)).to.equal(expectedBonus);
+      const expectedBonus = BigInt(BigInt(collateral)*BigInt(5))/BigInt(100);
+      expect(BigInt(BigInt(afterETH)+BigInt(gasCost))-BigInt(beforeETH)).to.equal(expectedBonus);
     });
 
     it("T34: lender receives remaining collateral after liquidation", async () => {
-      await vault.connect(governance).setIFRPrice(IFR_PRICE.mul(2));
+      await vault.connect(governance).setIFRPrice(BigInt(IFR_PRICE)*BigInt(2));
 
       const beforeLender = await ethers.provider.getBalance(lenderA.address);
       await vault.connect(liquidator).liquidate(0);
       const afterLender = await ethers.provider.getBalance(lenderA.address);
 
-      const expectedLender = collateral.mul(95).div(100);
-      expect(afterLender.sub(beforeLender)).to.equal(expectedLender);
+      const expectedLender = BigInt(BigInt(collateral)*BigInt(95))/BigInt(100);
+      expect(BigInt(afterLender)-BigInt(beforeLender)).to.equal(expectedLender);
     });
 
     it("T35: loan deactivated after liquidation", async () => {
-      await vault.connect(governance).setIFRPrice(IFR_PRICE.mul(2));
+      await vault.connect(governance).setIFRPrice(BigInt(IFR_PRICE)*BigInt(2));
       await vault.connect(liquidator).liquidate(0);
 
       const loan = await vault.getLoan(0);
@@ -416,15 +416,15 @@ describe("LendingVault", function () {
     });
 
     it("T36: totalLent decreases after liquidation", async () => {
-      await vault.connect(governance).setIFRPrice(IFR_PRICE.mul(2));
+      await vault.connect(governance).setIFRPrice(BigInt(IFR_PRICE)*BigInt(2));
       const before = await vault.totalLent();
       await vault.connect(liquidator).liquidate(0);
       const after = await vault.totalLent();
-      expect(before.sub(after)).to.equal(borrowAmount);
+      expect(BigInt(before)-BigInt(after)).to.equal(borrowAmount);
     });
 
     it("T37: cannot liquidate same loan twice", async () => {
-      await vault.connect(governance).setIFRPrice(IFR_PRICE.mul(2));
+      await vault.connect(governance).setIFRPrice(BigInt(IFR_PRICE)*BigInt(2));
       await vault.connect(liquidator).liquidate(0);
       await expect(
         vault.connect(liquidator).liquidate(0)
@@ -438,7 +438,7 @@ describe("LendingVault", function () {
     let borrowAmount, collateral;
 
     beforeEach(async () => {
-      await token.connect(lenderA).approve(vault.address, parse("200000"));
+      await token.connect(lenderA).approve(vault.target, parse("200000"));
       await vault.connect(lenderA).createOffer(parse("200000"));
 
       borrowAmount = parse("10000");
@@ -447,11 +447,11 @@ describe("LendingVault", function () {
     });
 
     it("T38: topUpCollateral increases collateral", async () => {
-      const extra = ethers.utils.parseEther("0.001");
+      const extra = ethers.parseEther("0.001");
       await vault.connect(borrowerA).topUpCollateral(0, { value: extra });
 
       const loan = await vault.getLoan(0);
-      expect(loan.ethCollateral).to.equal(collateral.add(extra));
+      expect(loan.ethCollateral).to.equal(BigInt(collateral)+BigInt(extra));
     });
 
     it("T39: topUpCollateral only by borrower", async () => {
@@ -462,7 +462,7 @@ describe("LendingVault", function () {
 
     it("T40: checkHealth emits MarginCallWarning when ratio < 150%", async () => {
       // Increase price by ~40% → ratio drops to ~143%
-      const newPrice = IFR_PRICE.mul(140).div(100);
+      const newPrice = BigInt(BigInt(IFR_PRICE)*BigInt(140))/BigInt(100);
       await vault.connect(governance).setIFRPrice(newPrice);
 
       await expect(vault.checkHealth(0))
@@ -476,7 +476,7 @@ describe("LendingVault", function () {
 
     it("T42: topUpCollateral makes loan healthy again", async () => {
       // Make undercollateralized
-      await vault.connect(governance).setIFRPrice(IFR_PRICE.mul(2));
+      await vault.connect(governance).setIFRPrice(BigInt(IFR_PRICE)*BigInt(2));
       expect(await vault.getCollateralRatio(0)).to.equal(100);
 
       // Top up to bring back to 200%
@@ -494,7 +494,7 @@ describe("LendingVault", function () {
 
     it("T44: ~25% utilization = 200 bps", async () => {
       // Create 200k offer, borrow 50k → 25% util
-      await token.connect(lenderA).approve(vault.address, parse("200000"));
+      await token.connect(lenderA).approve(vault.target, parse("200000"));
       await vault.connect(lenderA).createOffer(parse("200000"));
       const amount = parse("50000");
       const col = await vault.getRequiredCollateral(amount);
@@ -504,7 +504,7 @@ describe("LendingVault", function () {
     });
 
     it("T45: ~50% utilization = 300 bps", async () => {
-      await token.connect(lenderA).approve(vault.address, parse("200000"));
+      await token.connect(lenderA).approve(vault.target, parse("200000"));
       await vault.connect(lenderA).createOffer(parse("200000"));
       const amount = parse("100000");
       const col = await vault.getRequiredCollateral(amount);
@@ -514,7 +514,7 @@ describe("LendingVault", function () {
     });
 
     it("T46: ~75% utilization = 500 bps", async () => {
-      await token.connect(lenderA).approve(vault.address, parse("200000"));
+      await token.connect(lenderA).approve(vault.target, parse("200000"));
       await vault.connect(lenderA).createOffer(parse("200000"));
       const amount = parse("150000");
       const col = await vault.getRequiredCollateral(amount);
@@ -524,7 +524,7 @@ describe("LendingVault", function () {
     });
 
     it("T47: high utilization = higher rate", async () => {
-      await token.connect(lenderA).approve(vault.address, parse("200000"));
+      await token.connect(lenderA).approve(vault.target, parse("200000"));
       await vault.connect(lenderA).createOffer(parse("200000"));
       const amount = parse("180000"); // 90%
       const col = await vault.getRequiredCollateral(amount);
@@ -561,7 +561,7 @@ describe("LendingVault", function () {
     it("T51: protocol fee receiver gets interest share on repay", async () => {
       await vault.connect(governance).setProtocolFeeReceiver(lenderB.address);
 
-      await token.connect(lenderA).approve(vault.address, parse("200000"));
+      await token.connect(lenderA).approve(vault.target, parse("200000"));
       await vault.connect(lenderA).createOffer(parse("200000"));
       const amount = parse("10000");
       const col = await vault.getRequiredCollateral(amount);
@@ -569,14 +569,14 @@ describe("LendingVault", function () {
 
       await advanceTime(THIRTY_DAYS);
       const interest = await vault.calculateInterest(0);
-      await token.connect(borrowerA).approve(vault.address, amount.add(interest));
+      await token.connect(borrowerA).approve(vault.target, BigInt(amount)+BigInt(interest));
 
       const beforeFee = await token.balanceOf(lenderB.address);
       await vault.connect(borrowerA).repay(0);
       const afterFee = await token.balanceOf(lenderB.address);
 
-      const protocolShare = interest.sub(interest.div(2)); // 50%
-      expect(afterFee.sub(beforeFee)).to.equal(protocolShare);
+      const protocolShare = BigInt(interest)-BigInt(BigInt(interest)/BigInt(2)); // 50%
+      expect(BigInt(afterFee)-BigInt(beforeFee)).to.equal(protocolShare);
     });
 
     it("T52: getRequiredCollateral calculates correctly", async () => {
@@ -584,14 +584,14 @@ describe("LendingVault", function () {
       // = 10000e9 * 1e12 * 200 / (1e9 * 100) = 20000e12 = 0.00002 ETH
       const amount = parse("10000");
       const required = await vault.getRequiredCollateral(amount);
-      const expected = amount.mul(IFR_PRICE).mul(200).div(ethers.BigNumber.from("1000000000").mul(100));
+      const expected = BigInt(BigInt(BigInt(amount)*BigInt(IFR_PRICE))*BigInt(200))/BigInt(BigInt(BigInt('1000000000'))*BigInt(100));
       expect(required).to.equal(expected);
     });
 
     it("T53: getRequiredCollateral reverts when price not set", async () => {
       const LV = await ethers.getContractFactory("LendingVault");
-      const v2 = await LV.deploy(token.address, governance.address);
-      await v2.deployed();
+      const v2 = await LV.deploy(token.target, governance.address);
+      await v2.waitForDeployment();
       // Price not set
       await expect(
         v2.getRequiredCollateral(parse("10000"))
@@ -599,7 +599,7 @@ describe("LendingVault", function () {
     });
 
     it("T54: MAX_LOANS_PER_BORROWER enforced", async () => {
-      await token.connect(lenderA).approve(vault.address, parse("500000"));
+      await token.connect(lenderA).approve(vault.target, parse("500000"));
       await vault.connect(lenderA).createOffer(parse("500000"));
 
       const amount = parse("1000");
@@ -614,7 +614,7 @@ describe("LendingVault", function () {
     });
 
     it("T55: activeLoanCount decreases after repay", async () => {
-      await token.connect(lenderA).approve(vault.address, parse("200000"));
+      await token.connect(lenderA).approve(vault.target, parse("200000"));
       await vault.connect(lenderA).createOffer(parse("200000"));
       const amount = parse("10000");
       const col = await vault.getRequiredCollateral(amount);
@@ -624,7 +624,7 @@ describe("LendingVault", function () {
 
       await advanceTime(THIRTY_DAYS);
       const interest = await vault.calculateInterest(0);
-      await token.connect(borrowerA).approve(vault.address, amount.add(interest));
+      await token.connect(borrowerA).approve(vault.target, BigInt(amount)+BigInt(interest));
       await vault.connect(borrowerA).repay(0);
 
       expect(await vault.activeLoanCount(borrowerA.address)).to.equal(0);

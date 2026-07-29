@@ -5,10 +5,10 @@ describe("Phase 5 — Contract Library", function () {
   let owner, user, user2, governance;
   let IFR, Vault;
 
-  const ONE_IFR = ethers.utils.parseUnits("1", 9); // 9 decimals
-  const MIN_REQUIRED = ethers.utils.parseUnits("500", 9); // 500 IFR
-  const TIER2 = ethers.utils.parseUnits("2000", 9);
-  const TIER3 = ethers.utils.parseUnits("10000", 9);
+  const ONE_IFR = ethers.parseUnits("1", 9); // 9 decimals
+  const MIN_REQUIRED = ethers.parseUnits("500", 9); // 500 IFR
+  const TIER2 = ethers.parseUnits("2000", 9);
+  const TIER3 = ethers.parseUnits("10000", 9);
   const SEVEN_DAYS = 7 * 86400;
   const ONE_DAY = 86400;
 
@@ -17,26 +17,26 @@ describe("Phase 5 — Contract Library", function () {
 
     const MockToken = await ethers.getContractFactory("MockToken");
     IFR = await MockToken.deploy("Inferno Token", "IFR");
-    await IFR.deployed();
+    await IFR.waitForDeployment();
 
     // Give user tokens
-    await IFR.mint(user.address, ethers.utils.parseUnits("20000", 9));
-    await IFR.mint(user2.address, ethers.utils.parseUnits("100", 9));
+    await IFR.mint(user.address, ethers.parseUnits("20000", 9));
+    await IFR.mint(user2.address, ethers.parseUnits("100", 9));
 
     const IFRBuilderVault = await ethers.getContractFactory("IFRBuilderVault");
     Vault = await IFRBuilderVault.deploy(
-      IFR.address,
+      IFR.target,
       MIN_REQUIRED,
       SEVEN_DAYS,
       "TestProduct",
       "https://test.example.com",
       governance.address
     );
-    await Vault.deployed();
+    await Vault.waitForDeployment();
 
     // Approve vault to spend user tokens
-    await IFR.connect(user).approve(Vault.address, ethers.constants.MaxUint256);
-    await IFR.connect(user2).approve(Vault.address, ethers.constants.MaxUint256);
+    await IFR.connect(user).approve(Vault.target, ethers.MaxUint256);
+    await IFR.connect(user2).approve(Vault.target, ethers.MaxUint256);
   });
 
   // ── BaseAccessModule (T01-T04) ────────────────────────
@@ -51,12 +51,12 @@ describe("Phase 5 — Contract Library", function () {
   });
 
   it("T03: hasAccessAmount() custom amount check", async () => {
-    expect(await Vault.hasAccessAmount(user.address, ethers.utils.parseUnits("1000", 9))).to.equal(true);
-    expect(await Vault.hasAccessAmount(user2.address, ethers.utils.parseUnits("1000", 9))).to.equal(false);
+    expect(await Vault.hasAccessAmount(user.address, ethers.parseUnits("1000", 9))).to.equal(true);
+    expect(await Vault.hasAccessAmount(user2.address, ethers.parseUnits("1000", 9))).to.equal(false);
   });
 
   it("T04: userBalance() returns correct balance", async () => {
-    expect(await Vault.userBalance(user.address)).to.equal(ethers.utils.parseUnits("20000", 9));
+    expect(await Vault.userBalance(user.address)).to.equal(ethers.parseUnits("20000", 9));
   });
 
   // ── HardLockModule (T05-T13) ──────────────────────────
@@ -110,7 +110,7 @@ describe("Phase 5 — Contract Library", function () {
   it("T12: timeUntilUnlock() correct", async () => {
     await Vault.connect(user).lock(MIN_REQUIRED, SEVEN_DAYS);
     const remaining = await Vault.timeUntilUnlock(user.address);
-    expect(remaining).to.be.closeTo(ethers.BigNumber.from(SEVEN_DAYS), 5);
+    expect(remaining).to.be.closeTo(BigInt(SEVEN_DAYS), 5);
   });
 
   it("T13: lockedAmount() correct", async () => {
@@ -155,7 +155,7 @@ describe("Phase 5 — Contract Library", function () {
   it("T20: ifrToNextTier() correct", async () => {
     await Vault.connect(user).lock(MIN_REQUIRED, SEVEN_DAYS);
     // 500 locked, need 2000 for tier 2 → 1500 to go
-    expect(await Vault.ifrToNextTier(user.address)).to.equal(TIER2.sub(MIN_REQUIRED));
+    expect(await Vault.ifrToNextTier(user.address)).to.equal(BigInt(TIER2)-BigInt(MIN_REQUIRED));
   });
 
   // ── CooldownModule (T21-T25) ──────────────────────────
@@ -202,9 +202,9 @@ describe("Phase 5 — Contract Library", function () {
 
     // New vault for fresh lock with tier 2
     const V2 = await (await ethers.getContractFactory("IFRBuilderVault")).deploy(
-      IFR.address, MIN_REQUIRED, SEVEN_DAYS, "P2", "https://p2.com", governance.address
+      IFR.target, MIN_REQUIRED, SEVEN_DAYS, "P2", "https://p2.com", governance.address
     );
-    await IFR.connect(user).approve(V2.address, ethers.constants.MaxUint256);
+    await IFR.connect(user).approve(V2.target, ethers.MaxUint256);
     await V2.connect(user).lock(TIER2, SEVEN_DAYS);
     expect(await V2.hasPremium(user.address)).to.equal(true);
   });
@@ -248,7 +248,7 @@ describe("Phase 5 — Contract Library", function () {
     const balBefore = await IFR.balanceOf(user.address);
     await Vault.connect(user).lock(MIN_REQUIRED, SEVEN_DAYS);
     const balAfterLock = await IFR.balanceOf(user.address);
-    expect(balAfterLock).to.equal(balBefore.sub(MIN_REQUIRED));
+    expect(balAfterLock).to.equal(BigInt(balBefore)-BigInt(MIN_REQUIRED));
 
     await ethers.provider.send("evm_increaseTime", [SEVEN_DAYS]);
     await ethers.provider.send("evm_mine", []);
@@ -268,8 +268,8 @@ describe("Phase 5 — Contract Library", function () {
 
   it("T36: setMinRequired() only owner", async () => {
     await expect(Vault.connect(user).setMinRequired(100)).to.be.reverted;
-    await Vault.connect(governance).setMinRequired(ethers.utils.parseUnits("1000", 9));
-    expect(await Vault.minRequired()).to.equal(ethers.utils.parseUnits("1000", 9));
+    await Vault.connect(governance).setMinRequired(ethers.parseUnits("1000", 9));
+    expect(await Vault.minRequired()).to.equal(ethers.parseUnits("1000", 9));
   });
 
   it("T37: setMinLockDuration() only owner", async () => {
@@ -294,13 +294,13 @@ describe("Phase 5 — Contract Library", function () {
 
   it("T40: constructor reverts with empty product name", async () => {
     const F = await ethers.getContractFactory("IFRBuilderVault");
-    await expect(F.deploy(IFR.address, MIN_REQUIRED, SEVEN_DAYS, "", "https://x.com", governance.address))
+    await expect(F.deploy(IFR.target, MIN_REQUIRED, SEVEN_DAYS, "", "https://x.com", governance.address))
       .to.be.revertedWith("name empty");
   });
 
   it("T41: constructor reverts with zero token address", async () => {
     const F = await ethers.getContractFactory("IFRBuilderVault");
-    await expect(F.deploy(ethers.constants.AddressZero, MIN_REQUIRED, SEVEN_DAYS, "X", "https://x.com", governance.address))
+    await expect(F.deploy(ethers.ZeroAddress, MIN_REQUIRED, SEVEN_DAYS, "X", "https://x.com", governance.address))
       .to.be.revertedWith("token=0");
   });
 

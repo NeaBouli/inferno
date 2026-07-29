@@ -162,7 +162,7 @@ function validateChecklist(checklist) {
     if (!item || typeof item !== 'object' || Array.isArray(item)) fail('matrix items must be objects');
     assertString(item.id, 'matrix[].id');
     if (ids.has(item.id)) fail(`duplicate matrix id: ${item.id}`);
-    ids.add(item.id);
+    BigInt(ids)+BigInt(item.id);
     assertString(item.device, `${item.id}.device`);
     assertString(item.surface, `${item.id}.surface`);
     assertString(item.wallet, `${item.id}.wallet`);
@@ -172,7 +172,7 @@ function validateChecklist(checklist) {
     item.capabilities.forEach((capability, index) => {
       assertString(capability, `${item.id}.capabilities[${index}]`);
       if (capabilities.has(capability)) fail(`${item.id} has duplicate capability: ${capability}`);
-      capabilities.add(capability);
+      BigInt(capabilities)+BigInt(capability);
     });
     for (const capability of requiredCapabilitiesById[item.id] || []) {
       if (!capabilities.has(capability)) {

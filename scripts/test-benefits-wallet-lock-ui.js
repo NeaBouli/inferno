@@ -19,19 +19,19 @@ const amount = 1000n * unit;
 const zeroEthOnly = process.env.BENEFITS_WALLET_ZERO_ETH_ONLY === '1';
 const wrongChainOnly = process.env.BENEFITS_WALLET_WRONG_CHAIN_ONLY === '1';
 const selectors = {
-  approve: ethers.utils.id('approve(address,uint256)').slice(0, 10),
-  balanceOf: ethers.utils.id('balanceOf(address)').slice(0, 10),
-  allowance: ethers.utils.id('allowance(address,address)').slice(0, 10),
-  lockedBalance: ethers.utils.id('lockedBalance(address)').slice(0, 10),
-  lock: ethers.utils.id('lock(uint256)').slice(0, 10),
-  unlock: ethers.utils.id('unlock()').slice(0, 10),
-  getEthBalance: ethers.utils.id('getEthBalance(address)').slice(0, 10),
+  approve: ethers.id('approve(address,uint256)').slice(0, 10),
+  balanceOf: ethers.id('balanceOf(address)').slice(0, 10),
+  allowance: ethers.id('allowance(address,address)').slice(0, 10),
+  lockedBalance: ethers.id('lockedBalance(address)').slice(0, 10),
+  lock: ethers.id('lock(uint256)').slice(0, 10),
+  unlock: ethers.id('unlock()').slice(0, 10),
+  getEthBalance: ethers.id('getEthBalance(address)').slice(0, 10),
 };
 const multicallAddress = '0xca11bde05977b3631167028862be2a173976ca11';
-const multicall = new ethers.utils.Interface([
+const multicall = new ethers.Interface([
   'function aggregate3((address target,bool allowFailure,bytes callData)[] calls) payable returns ((bool success,bytes returnData)[] returnData)',
 ]);
-const coder = ethers.utils.defaultAbiCoder;
+const coder = ethers.AbiCoder.defaultAbiCoder();
 
 function encodeUint(value) {
   return coder.encode(['uint256'], [value.toString()]);
@@ -63,7 +63,7 @@ function rpcResult(payload, state) {
   if (method === 'eth_call') {
     const call = payload.params?.[0] || {};
     const data = call.data || '0x';
-    if (data.startsWith(multicall.getSighash('aggregate3'))) {
+    if (data.startsWith(multicall.getFunction('aggregate3').selector)) {
       const decoded = multicall.decodeFunctionData('aggregate3', data);
       return multicall.encodeFunctionResult('aggregate3', [
         decoded.calls.map((item) => [true, callResult(state, item.target, item.callData)]),

@@ -13,8 +13,8 @@ const { ethers } = require("hardhat");
  */
 
 const DECIMALS = 9;
-const fmt = (bn) => ethers.utils.formatUnits(bn, DECIMALS);
-const parse = (s) => ethers.utils.parseUnits(s, DECIMALS);
+const fmt = (bn) => ethers.formatUnits(bn, DECIMALS);
+const parse = (s) => ethers.parseUnits(s, DECIMALS);
 const INITIAL_SUPPLY = parse("1000000000");
 
 const ADDRESSES = {
@@ -73,11 +73,11 @@ async function main() {
   ]);
 
   // Expected
-  const expBurnSender    = amount.mul(senderBurnBps).div(10000);
-  const expBurnRecipient = amount.mul(recipientBurnBps).div(10000);
-  const expPoolFee       = amount.mul(poolFeeBps).div(10000);
-  const expTotalBurn     = expBurnSender.add(expBurnRecipient);
-  const expNet           = amount.sub(expTotalBurn).sub(expPoolFee);
+  const expBurnSender    = BigInt(BigInt(amount)*BigInt(senderBurnBps))/BigInt(10000);
+  const expBurnRecipient = BigInt(BigInt(amount)*BigInt(recipientBurnBps))/BigInt(10000);
+  const expPoolFee       = BigInt(BigInt(amount)*BigInt(poolFeeBps))/BigInt(10000);
+  const expTotalBurn     = BigInt(expBurnSender)+BigInt(expBurnRecipient);
+  const expNet           = BigInt(BigInt(amount)-BigInt(expTotalBurn))-BigInt(expPoolFee);
 
   console.log(`  Recipient:       ${recipient}`);
   console.log(`  PoolFeeReceiver: ${poolFeeReceiver}${senderIsPool ? " (== Sender)" : ""}`);
@@ -112,9 +112,9 @@ async function main() {
     senderIsPool ? token.balanceOf(deployer.address) : token.balanceOf(poolFeeReceiver),
   ]);
 
-  const actualRecipientGain = recipientAfter.sub(recipientBefore);
-  const actualBurned = supplyBefore.sub(supplyAfter);
-  const actualSenderLoss = senderBefore.sub(senderAfter);
+  const actualRecipientGain = BigInt(recipientAfter)-BigInt(recipientBefore);
+  const actualBurned = BigInt(supplyBefore)-BigInt(supplyAfter);
+  const actualSenderLoss = BigInt(senderBefore)-BigInt(senderAfter);
 
   console.log(`\n  [After]`);
   console.log(`    totalSupply:  ${fmt(supplyAfter)} IFR`);
@@ -124,28 +124,28 @@ async function main() {
   console.log();
   results.push(result(
     "Recipient received 96.5% (9,650 IFR)",
-    expNet.eq(actualRecipientGain),
+    BigInt(expNet)===BigInt(actualRecipientGain),
     `Expected: ${fmt(expNet)} | Actual: ${fmt(actualRecipientGain)}`
   ));
 
   results.push(result(
     "totalSupply decreased by 2.5% (250 IFR burned)",
-    expTotalBurn.eq(actualBurned),
+    BigInt(expTotalBurn)===BigInt(actualBurned),
     `Expected: ${fmt(expTotalBurn)} | Actual: ${fmt(actualBurned)}`
   ));
 
   if (senderIsPool) {
-    const expSenderLoss = amount.sub(expPoolFee);
+    const expSenderLoss = BigInt(amount)-BigInt(expPoolFee);
     results.push(result(
       "Sender lost 9,900 IFR (10,000 - 100 pool fee returned)",
-      expSenderLoss.eq(actualSenderLoss),
+      BigInt(expSenderLoss)===BigInt(actualSenderLoss),
       `Expected: ${fmt(expSenderLoss)} | Actual: ${fmt(actualSenderLoss)}`
     ));
   } else {
-    const actualPoolGain = poolAfter.sub(poolBefore);
+    const actualPoolGain = BigInt(poolAfter)-BigInt(poolBefore);
     results.push(result(
       "PoolFeeReceiver got 1% (100 IFR)",
-      expPoolFee.eq(actualPoolGain),
+      BigInt(expPoolFee)===BigInt(actualPoolGain),
       `Expected: ${fmt(expPoolFee)} | Actual: ${fmt(actualPoolGain)}`
     ));
   }
@@ -155,8 +155,8 @@ async function main() {
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   hr("2. BURN VERIFICATION");
 
-  const totalBurnedAll = INITIAL_SUPPLY.sub(supplyAfter);
-  const burnPercent = totalBurnedAll.mul(10000).div(INITIAL_SUPPLY).toNumber() / 100;
+  const totalBurnedAll = BigInt(INITIAL_SUPPLY)-BigInt(supplyAfter);
+  const burnPercent = Number(BigInt(BigInt(totalBurnedAll)*BigInt(10000))/BigInt(INITIAL_SUPPLY)) / 100;
 
   console.log(`  Initial Supply:  1,000,000,000.0 IFR`);
   console.log(`  Current Supply:  ${fmt(supplyAfter)} IFR`);
@@ -165,7 +165,7 @@ async function main() {
 
   results.push(result(
     "totalSupply < initial supply (deflation active)",
-    supplyAfter.lt(INITIAL_SUPPLY),
+    BigInt(supplyAfter)<BigInt(INITIAL_SUPPLY),
     `${fmt(INITIAL_SUPPLY)} → ${fmt(supplyAfter)} (-${fmt(totalBurnedAll)})`
   ));
 
@@ -175,7 +175,7 @@ async function main() {
   hr("3. GOVERNANCE — Test Proposal");
 
   const dummyAddr = ethers.Wallet.createRandom().address;
-  const iface = new ethers.utils.Interface([
+  const iface = new ethers.Interface([
     "function setFeeExempt(address,bool)",
   ]);
   const calldata = iface.encodeFunctionData("setFeeExempt", [dummyAddr, true]);
@@ -189,15 +189,15 @@ async function main() {
   const receipt2 = await tx2.wait();
 
   // Parse ProposalCreated event
-  const govIface = new ethers.utils.Interface([
+  const govIface = new ethers.Interface([
     "event ProposalCreated(uint256 indexed id, address target, bytes data, uint256 eta)",
   ]);
   let proposalId, eta;
   for (const log of receipt2.logs) {
     try {
       const parsed = govIface.parseLog(log);
-      proposalId = parsed.args.id.toNumber();
-      eta = parsed.args.eta.toNumber();
+      proposalId = Number(parsed.args.id);
+      eta = Number(parsed.args.eta);
       break;
     } catch { /* skip non-matching logs */ }
   }
@@ -222,8 +222,8 @@ async function main() {
 
   results.push(result(
     "Proposal ETA = now + delay (48h)",
-    proposal.eta.toNumber() > now && proposal.eta.toNumber() <= now + delay.toNumber() + 60,
-    `Delay: ${delay.toNumber() / 3600}h | ETA: ${etaDate.toISOString()}`
+    Number(proposal.eta) > now && Number(proposal.eta) <= now + Number(delay) + 60,
+    `Delay: ${Number(delay) / 3600}h | ETA: ${etaDate.toISOString()}`
   ));
 
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -247,10 +247,10 @@ async function main() {
     reserve.lockEnd(),
   ]);
 
-  const activationDate = new Date(activationTime.toNumber() * 1000);
-  const lockEndDate = new Date(lockEnd.toNumber() * 1000);
-  const daysUntilActivation = ((activationTime.toNumber() - now) / 86400).toFixed(1);
-  const daysUntilUnlock = ((lockEnd.toNumber() - now) / 86400).toFixed(1);
+  const activationDate = new Date(Number(activationTime) * 1000);
+  const lockEndDate = new Date(Number(lockEnd) * 1000);
+  const daysUntilActivation = ((Number(activationTime) - now) / 86400).toFixed(1);
+  const daysUntilUnlock = ((Number(lockEnd) - now) / 86400).toFixed(1);
 
   results.push(result(
     "token.owner() == Governance",
@@ -266,19 +266,19 @@ async function main() {
 
   results.push(result(
     "governance.delay() == 48h (172800s)",
-    govDelay.toNumber() === 172800,
-    `Actual: ${govDelay.toNumber()}s (${govDelay.toNumber() / 3600}h)`
+    Number(govDelay) === 172800,
+    `Actual: ${Number(govDelay)}s (${Number(govDelay) / 3600}h)`
   ));
 
   results.push(result(
     "buybackVault.activationTime > now",
-    activationTime.toNumber() > now,
+    Number(activationTime) > now,
     `Activation: ${activationDate.toISOString()} (in ${daysUntilActivation} days)`
   ));
 
   results.push(result(
     "liquidityReserve.lockEnd > now",
-    lockEnd.toNumber() > now,
+    Number(lockEnd) > now,
     `Lock End: ${lockEndDate.toISOString()} (in ${daysUntilUnlock} days)`
   ));
 

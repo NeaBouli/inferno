@@ -43,7 +43,7 @@ cd "$REPO" || exit 1
 node -e "
 require('dotenv').config();
 const{ethers}=require('ethers');
-const provider=new ethers.providers.JsonRpcProvider(process.env.MAINNET_RPC_URL);
+const provider=new ethers.JsonRpcProvider(process.env.MAINNET_RPC_URL);
 const GOV='0xc43d48E7FDA576C5022d0670B652A622E8caD041';
 const IFR='0x77e99917Eca8539c62F509ED1193ac36580A6e7B';
 const LP='0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0';
@@ -54,7 +54,7 @@ const tokAbi=['function feeExempt(address) view returns (bool)'];
   const tok=new ethers.Contract(IFR,tokAbi,provider);
   const [p, exempt] = await Promise.all([gov.proposals(15), tok.feeExempt(LP)]);
   const now=Math.floor(Date.now()/1000);
-  const eta=p.eta.toNumber();
+  const eta=Number(p.eta);
   console.log('Proposal #15:');
   console.log('  executed:  ', p.executed);
   console.log('  cancelled: ', p.cancelled);
