@@ -10,15 +10,15 @@ export function useWallet() {
 
   const updateState = useCallback(async () => {
     if (!window.ethereum) return;
-    const p = new ethers.providers.Web3Provider(window.ethereum);
+    const p = new ethers.BrowserProvider(window.ethereum);
     const network = await p.getNetwork();
-    setChainId(network.chainId);
+    setChainId(Number(network.chainId));
     setProvider(p);
 
-    const accounts = await p.listAccounts();
+    const accounts = await p.send("eth_accounts", []);
     if (accounts.length > 0) {
       setAccount(accounts[0]);
-      setSigner(p.getSigner());
+      setSigner(await p.getSigner(accounts[0]));
     }
   }, []);
 
@@ -26,11 +26,11 @@ export function useWallet() {
     updateState();
     if (!window.ethereum) return;
 
-    const handleAccountsChanged = (accounts) => {
+    const handleAccountsChanged = async (accounts) => {
       setAccount(accounts[0] || null);
       if (accounts[0]) {
-        const p = new ethers.providers.Web3Provider(window.ethereum);
-        setSigner(p.getSigner());
+        const p = new ethers.BrowserProvider(window.ethereum);
+        setSigner(await p.getSigner(accounts[0]));
         setProvider(p);
       } else {
         setSigner(null);

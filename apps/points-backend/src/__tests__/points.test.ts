@@ -166,8 +166,8 @@ async function run() {
   console.log("\nEIP-712 Signer:");
   if (process.env.VOUCHER_SIGNER_PRIVATE_KEY) {
     const addr = getSignerAddress();
-    assert(ethers.utils.isAddress(addr), "signer address is valid");
-    assert(addr !== ethers.constants.AddressZero, "signer address is not zero");
+    assert(ethers.isAddress(addr), "signer address is valid");
+    assert(addr !== ethers.ZeroAddress, "signer address is not zero");
   } else {
     console.log("  ⊘ signer tests skipped (no VOUCHER_SIGNER_PRIVATE_KEY)");
   }

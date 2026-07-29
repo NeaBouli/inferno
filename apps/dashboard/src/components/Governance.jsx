@@ -12,7 +12,7 @@ const ACTION_TEMPLATES = [
       { name: "poolFeeBps", label: "Pool Fee (bps)", placeholder: "100" },
     ],
     encode: (values) =>
-      new ethers.utils.Interface([
+      new ethers.Interface([
         "function setFeeRates(uint256,uint256,uint256)",
       ]).encodeFunctionData("setFeeRates", [
         values.senderBurnBps,
@@ -27,7 +27,7 @@ const ACTION_TEMPLATES = [
       { name: "exempt", label: "Exempt (true/false)", placeholder: "true" },
     ],
     encode: (values) =>
-      new ethers.utils.Interface([
+      new ethers.Interface([
         "function setFeeExempt(address,bool)",
       ]).encodeFunctionData("setFeeExempt", [
         values.account,
@@ -40,7 +40,7 @@ const ACTION_TEMPLATES = [
       { name: "receiver", label: "New Receiver", placeholder: "0x..." },
     ],
     encode: (values) =>
-      new ethers.utils.Interface([
+      new ethers.Interface([
         "function setPoolFeeReceiver(address)",
       ]).encodeFunctionData("setPoolFeeReceiver", [values.receiver]),
   },
@@ -76,7 +76,7 @@ function formatCountdown(eta, now) {
 }
 
 function decodeCalldata(data) {
-  const iface = new ethers.utils.Interface([
+  const iface = new ethers.Interface([
     "function setFeeRates(uint256,uint256,uint256)",
     "function setFeeExempt(address,bool)",
     "function setPoolFeeReceiver(address)",
@@ -87,7 +87,7 @@ function decodeCalldata(data) {
   try {
     const parsed = iface.parseTransaction({ data });
     const args = parsed.args.map((a) =>
-      ethers.BigNumber.isBigNumber(a) ? a.toString() : String(a)
+      typeof a === "bigint" ? a.toString() : String(a)
     );
     return `${parsed.name}(${args.join(", ")})`;
   } catch {
@@ -123,11 +123,11 @@ export default function Governance({ contracts, account, signer }) {
         contracts.governance.proposalCount(),
       ]);
 
-      const count = countVal.toNumber();
+      const count = Number(countVal);
       setGovInfo({
         owner: ownerAddr,
         guardian: guardianAddr,
-        delay: delayVal.toNumber(),
+        delay: Number(delayVal),
         count,
       });
 
@@ -142,7 +142,7 @@ export default function Governance({ contracts, account, signer }) {
             id: i,
             target: r.target,
             data: r.data,
-            eta: r.eta.toNumber(),
+            eta: Number(r.eta),
             executed: r.executed,
             cancelled: r.cancelled,
           }))

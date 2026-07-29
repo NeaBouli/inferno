@@ -29,7 +29,7 @@ const CACHE_TTL = 5 * 60 * 1000;
 let signerCache = { owners: [], ts: 0 };
 
 function getProvider() {
-  return new ethers.providers.JsonRpcProvider(RPC_URL);
+  return new ethers.JsonRpcProvider(RPC_URL);
 }
 
 // ── Gnosis Safe: getSignerWallets() ─────────────────
@@ -65,7 +65,7 @@ async function getLockedBalance(wallet) {
     const provider = getProvider();
     const lock = new ethers.Contract(IFRLOCK_ADDR, ABI_LOCK, provider);
     const bal = await lock.getLockAmount(wallet);
-    const result = parseFloat(ethers.utils.formatUnits(bal, 9));
+    const result = parseFloat(ethers.formatUnits(bal, 9));
     cache.set(key, { val: result, ts: Date.now() });
     return result;
   } catch (e) {

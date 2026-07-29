@@ -30,11 +30,11 @@ function getRpcUrl() {
 }
 
 function fmtETH(bn) {
-  return parseFloat(ethers.utils.formatEther(bn)).toFixed(4);
+  return parseFloat(ethers.formatEther(bn)).toFixed(4);
 }
 
 function fmtIFR(bn) {
-  var n = parseFloat(ethers.utils.formatUnits(bn, 9));
+  var n = parseFloat(ethers.formatUnits(bn, 9));
   if (n >= 1e6) return (n / 1e6).toFixed(2) + 'M';
   if (n >= 1e3) return (n / 1e3).toFixed(1) + 'K';
   return n.toFixed(0);
@@ -53,9 +53,9 @@ async function sendAlert(bot, diffETH, totalETH, contributors, ifrAlloc) {
 
   // Price calculation
   var priceInfo = '';
-  if (totalETH.gt(0) && ifrAlloc.gt(0)) {
-    var price = parseFloat(ethers.utils.formatEther(totalETH)) /
-      parseFloat(ethers.utils.formatUnits(ifrAlloc, 9));
+  if (totalETH > 0n && ifrAlloc > 0n) {
+    var price = parseFloat(ethers.formatEther(totalETH)) /
+      parseFloat(ethers.formatUnits(ifrAlloc, 9));
     priceInfo = '\n\u{1F4B1} Current IFR Price: ' + price.toFixed(10) + ' ETH';
   }
 
@@ -99,7 +99,7 @@ async function sendAlert(bot, diffETH, totalETH, contributors, ifrAlloc) {
 
 async function poll(bot) {
   try {
-    var provider = new ethers.providers.JsonRpcProvider(getRpcUrl());
+    var provider = new ethers.JsonRpcProvider(getRpcUrl());
     var vault = new ethers.Contract(BOOTSTRAP_VAULT, ABI, provider);
 
     var totalETH = await vault.totalETHRaised();
@@ -109,20 +109,20 @@ async function poll(bot) {
     // First poll — set baseline, no alert
     if (lastTotalETH === null) {
       lastTotalETH = totalETH;
-      lastContributors = contributors.toNumber();
+      lastContributors = Number(contributors);
       logger.info({ totalETH: fmtETH(totalETH), contributors: lastContributors },
         'Bootstrap listener baseline set');
       return;
     }
 
     // Check for new contribution
-    if (totalETH.gt(lastTotalETH)) {
-      var diff = totalETH.sub(lastTotalETH);
+    if (totalETH > lastTotalETH) {
+      var diff = totalETH - lastTotalETH;
       logger.info({ diff: fmtETH(diff), total: fmtETH(totalETH) },
         'New bootstrap contribution detected');
       await sendAlert(bot, diff, totalETH, contributors.toString(), ifrAlloc);
       lastTotalETH = totalETH;
-      lastContributors = contributors.toNumber();
+      lastContributors = Number(contributors);
     }
   } catch (e) {
     logger.warn({ err: e.message }, 'Bootstrap poll failed — will retry');

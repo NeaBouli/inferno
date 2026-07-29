@@ -24,14 +24,11 @@ jest.mock('ethers', () => {
     ...actual,
     ethers: {
       ...actual.ethers,
-      providers: {
-        JsonRpcProvider: jest.fn().mockImplementation(() => ({})),
-      },
+      JsonRpcProvider: jest.fn().mockImplementation(() => ({})),
       Contract: jest.fn().mockImplementation(() => ({
         isLocked: jest.fn(),
         lockedBalance: jest.fn(),
       })),
-      utils: actual.ethers.utils,
     },
   };
 });
@@ -54,8 +51,8 @@ describe('Security Fixes', () => {
 
     test('lockedBalance returns formatted value on success', async () => {
       const checker = new LockChecker();
-      const { ethers } = jest.requireActual('ethers');
-      const mockBalance = ethers.utils.parseUnits('5000', 9);
+      const { parseUnits } = jest.requireActual('ethers');
+      const mockBalance = parseUnits('5000', 9);
       (checker as any).contract.lockedBalance = jest.fn().mockResolvedValue(mockBalance);
       const result = await checker.lockedBalance('0x1234567890123456789012345678901234567890');
       expect(result).toBe('5000.0');

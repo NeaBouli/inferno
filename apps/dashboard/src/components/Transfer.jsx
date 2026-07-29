@@ -24,10 +24,10 @@ export default function Transfer({ contracts, account, signer }) {
         ]);
 
         const parsed = parseIFR(amount);
-        const senderBurn = parsed.mul(senderBps).div(10000);
-        const recipientBurn = parsed.mul(recipientBps).div(10000);
-        const poolFee = parsed.mul(poolBps).div(10000);
-        const net = parsed.sub(senderBurn).sub(recipientBurn).sub(poolFee);
+        const senderBurn = (parsed * senderBps) / 10000n;
+        const recipientBurn = (parsed * recipientBps) / 10000n;
+        const poolFee = (parsed * poolBps) / 10000n;
+        const net = parsed - senderBurn - recipientBurn - poolFee;
 
         setFees({ senderBurn, recipientBurn, poolFee, net, total: parsed });
       } catch {
@@ -46,7 +46,7 @@ export default function Transfer({ contracts, account, signer }) {
     setSending(true);
 
     try {
-      if (!ethers.utils.isAddress(to)) {
+      if (!ethers.isAddress(to)) {
         throw new Error("Invalid address");
       }
       const parsed = parseIFR(amount);

@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { ethers } from "ethers";
+import { Contract, JsonRpcProvider } from "ethers";
 import {
   ADDRESSES,
   InfernoTokenABI,
@@ -14,16 +14,16 @@ const RPC_URL =
   "https://eth-sepolia.g.alchemy.com/v2/demo";
 
 function getProvider() {
-  return new ethers.providers.JsonRpcProvider(RPC_URL);
+  return new JsonRpcProvider(RPC_URL);
 }
 
 export interface Contracts {
-  provider: ethers.providers.JsonRpcProvider;
-  token: ethers.Contract;
-  ifrLock: ethers.Contract;
-  partnerVault: ethers.Contract;
-  governance: ethers.Contract;
-  feeRouter: ethers.Contract;
+  provider: JsonRpcProvider;
+  token: Contract;
+  ifrLock: Contract;
+  partnerVault: Contract;
+  governance: Contract;
+  feeRouter: Contract;
 }
 
 export function useContracts(): Contracts {
@@ -31,11 +31,11 @@ export function useContracts(): Contracts {
     const provider = getProvider();
     return {
       provider,
-      token: new ethers.Contract(ADDRESSES.InfernoToken, InfernoTokenABI, provider),
-      ifrLock: new ethers.Contract(ADDRESSES.IFRLock, IFRLockABI, provider),
-      partnerVault: new ethers.Contract(ADDRESSES.PartnerVault, PartnerVaultABI, provider),
-      governance: new ethers.Contract(ADDRESSES.Governance, GovernanceABI, provider),
-      feeRouter: new ethers.Contract(ADDRESSES.FeeRouter, FeeRouterABI, provider),
+      token: new Contract(ADDRESSES.InfernoToken, InfernoTokenABI, provider),
+      ifrLock: new Contract(ADDRESSES.IFRLock, IFRLockABI, provider),
+      partnerVault: new Contract(ADDRESSES.PartnerVault, PartnerVaultABI, provider),
+      governance: new Contract(ADDRESSES.Governance, GovernanceABI, provider),
+      feeRouter: new Contract(ADDRESSES.FeeRouter, FeeRouterABI, provider),
     };
   }, []);
 }

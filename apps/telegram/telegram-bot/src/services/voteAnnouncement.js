@@ -79,7 +79,7 @@ function announceNewProposal(bot, id, proposal, govAddress) {
   if (hasAnnounced(id, 'new')) return Promise.resolve();
   markAnnounced(id, 'new');
 
-  const eta = new Date(proposal.eta.toNumber() * 1000);
+  const eta = new Date(Number(proposal.eta) * 1000);
   const etaStr = eta.toISOString().replace('T', ' ').slice(0, 16) + ' UTC';
   const action = decodeAction(proposal.data);
   const target = typeof proposal.target === 'string'
@@ -144,14 +144,14 @@ function announceCancelled(bot, id, govAddress) {
 async function checkAndAnnounceProposals(bot, provider, govAddress) {
   try {
     const governance = new ethers.Contract(govAddress, GOV_ABI, provider);
-    const count = (await governance.proposalCount()).toNumber();
+    const count = Number(await governance.proposalCount());
     if (count === 0) return;
 
     const now = Math.floor(Date.now() / 1000);
 
     for (let id = 0; id < count; id++) {
       const p = await governance.getProposal(id);
-      const eta = p.eta.toNumber();
+      const eta = Number(p.eta);
 
       // New proposal (not yet announced)
       if (!p.executed && !p.cancelled && !hasAnnounced(id, 'new')) {
@@ -189,7 +189,7 @@ function startVoteAnnouncements(bot) {
     return;
   }
 
-  const provider = new ethers.providers.JsonRpcProvider(rpcUrl);
+  const provider = new ethers.JsonRpcProvider(rpcUrl);
   const POLL_MS = 30 * 60 * 1000; // 30 minutes
 
   // Check if contract is deployed before starting; avoid 30-min error spam
@@ -206,13 +206,13 @@ function startVoteAnnouncements(bot) {
       if (!initialized) {
         try {
           const governance = new ethers.Contract(govAddress, GOV_ABI, provider);
-          const count = (await governance.proposalCount()).toNumber();
+          const count = Number(await governance.proposalCount());
           for (let id = 0; id < count; id++) {
             const p = await governance.getProposal(id);
             markAnnounced(id, 'new');
             if (p.executed) markAnnounced(id, 'executed');
             if (p.cancelled) markAnnounced(id, 'cancelled');
-            if (!p.executed && !p.cancelled && Math.floor(Date.now() / 1000) >= p.eta.toNumber()) {
+            if (!p.executed && !p.cancelled && Math.floor(Date.now() / 1000) >= Number(p.eta)) {
               markAnnounced(id, 'executable');
             }
           }

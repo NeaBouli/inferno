@@ -1,25 +1,24 @@
 import { useEffect, useState } from "react";
-import { BigNumber } from "ethers";
 import { Contracts } from "../hooks/useContracts";
 import { formatIFR, formatIFRFull, bpsToPercent } from "../utils/format";
 
 interface Stats {
-  totalSupply: BigNumber;
-  totalLocked: BigNumber;
+  totalSupply: bigint;
+  totalLocked: bigint;
   rewardBps: number;
-  annualEmissionCap: BigNumber;
-  totalRewarded: BigNumber;
-  yearlyEmitted: BigNumber;
-  totalAllocated: BigNumber;
-  totalClaimed: BigNumber;
+  annualEmissionCap: bigint;
+  totalRewarded: bigint;
+  yearlyEmitted: bigint;
+  totalAllocated: bigint;
+  totalClaimed: bigint;
   ifrLockAddr: string;
-  partnerPool: BigNumber;
+  partnerPool: bigint;
   feeRouterBps: number;
   feeRouterPaused: boolean;
 }
 
-function ProgressBar({ value, max, label, color }: { value: BigNumber; max: BigNumber; label: string; color: string }) {
-  const pct = max.gt(0) ? value.mul(10000).div(max).toNumber() / 100 : 0;
+function ProgressBar({ value, max, label, color }: { value: bigint; max: bigint; label: string; color: string }) {
+  const pct = max > 0n ? Number((value * 10000n) / max) / 100 : 0;
   return (
     <div>
       <div className="flex justify-between text-xs mb-1">
@@ -76,7 +75,7 @@ export default function Overview({ contracts }: { contracts: Contracts }) {
           setStats({
             totalSupply,
             totalLocked,
-            rewardBps: rewardBps.toNumber(),
+            rewardBps: Number(rewardBps),
             annualEmissionCap,
             totalRewarded,
             yearlyEmitted,
@@ -84,7 +83,7 @@ export default function Overview({ contracts }: { contracts: Contracts }) {
             totalClaimed,
             ifrLockAddr,
             partnerPool,
-            feeRouterBps: feeRouterBps,
+            feeRouterBps: Number(feeRouterBps),
             feeRouterPaused: feeRouterPaused,
           });
         }
@@ -104,8 +103,8 @@ export default function Overview({ contracts }: { contracts: Contracts }) {
     return <div className="text-ifr-muted text-center py-12">Loading on-chain data...</div>;
   }
 
-  const lockRatioBps = stats.totalSupply.gt(0)
-    ? stats.totalLocked.mul(10000).div(stats.totalSupply).toNumber()
+  const lockRatioBps = stats.totalSupply > 0n
+    ? Number((stats.totalLocked * 10000n) / stats.totalSupply)
     : 0;
   const lockRatioPct = (lockRatioBps / 100).toFixed(2);
 

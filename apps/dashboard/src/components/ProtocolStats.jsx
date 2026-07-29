@@ -14,7 +14,7 @@ export default function ProtocolStats({ contracts }) {
         const [totalLocked, vaultBalance, feeBps, feeRouterPaused, rewardBps, totalRewarded] =
           await Promise.all([
             contracts.ifrLock.totalLocked(),
-            contracts.token.balanceOf(contracts.partnerVault.address),
+            contracts.token.balanceOf(contracts.partnerVault.target),
             contracts.feeRouter.protocolFeeBps(),
             contracts.feeRouter.paused(),
             contracts.partnerVault.rewardBps(),

@@ -16,7 +16,7 @@ import {
 const SEPOLIA_RPC = import.meta.env.VITE_SEPOLIA_RPC_URL || "https://rpc.sepolia.org";
 
 function getReadProvider() {
-  return new ethers.providers.JsonRpcProvider(SEPOLIA_RPC);
+  return new ethers.JsonRpcProvider(SEPOLIA_RPC);
 }
 
 export function useContracts(signer) {

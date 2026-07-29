@@ -21,7 +21,7 @@ function startGovernanceNotifier(bot) {
     return;
   }
 
-  const provider = new ethers.providers.JsonRpcProvider(rpcUrl);
+  const provider = new ethers.JsonRpcProvider(rpcUrl);
 
   // Check if contract is deployed before starting; avoid 30-min error spam
   provider.getCode(govAddress).then((code) => {
@@ -34,7 +34,7 @@ function startGovernanceNotifier(bot) {
 
     async function poll() {
       try {
-        const count = (await governance.proposalCount()).toNumber();
+        const count = Number(await governance.proposalCount());
 
         // First run — just record current count
         if (lastSeenProposalId === -1) {
@@ -46,7 +46,7 @@ function startGovernanceNotifier(bot) {
         // Check for new proposals
         for (let i = lastSeenProposalId + 1; i < count; i++) {
           const prop = await governance.proposals(i);
-          const eta = new Date(prop.eta.toNumber() * 1000).toISOString().replace('T', ' ').slice(0, 16);
+          const eta = new Date(Number(prop.eta) * 1000).toISOString().replace('T', ' ').slice(0, 16);
 
           const text =
             `📜 *New Governance Proposal #${i}*\n\n` +

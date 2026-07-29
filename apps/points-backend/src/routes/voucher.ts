@@ -47,11 +47,11 @@ router.post("/issue", requireAuth, requireLockProof, async (req: AuthRequest, re
   }
 
   // Generate voucher
-  const nonce = ethers.BigNumber.from(ethers.utils.randomBytes(32)).toString();
+  const nonce = ethers.toBigInt(ethers.randomBytes(32)).toString();
   const expiresAt = new Date(Date.now() + POINTS_CONFIG.voucher.expiryDays * 86400_000);
 
   const voucherData = {
-    user: ethers.utils.getAddress(wallet),
+    user: ethers.getAddress(wallet),
     discountBps: POINTS_CONFIG.voucher.discountBps,
     maxUses: 1,
     expiry: Math.floor(expiresAt.getTime() / 1000),

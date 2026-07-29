@@ -44,13 +44,13 @@ export default function TokenOverview({ contracts, account }) {
           contracts.burnReserve.pendingBurn(),
         ]);
 
-        let userBalance = ethers.BigNumber.from(0);
+        let userBalance = 0n;
         if (account) {
           userBalance = await contracts.token.balanceOf(account);
         }
 
-        const initial = ethers.utils.parseUnits(INITIAL_SUPPLY, IFR_DECIMALS);
-        const burned = initial.sub(totalSupply);
+        const initial = ethers.parseUnits(INITIAL_SUPPLY, IFR_DECIMALS);
+        const burned = initial - totalSupply;
 
         if (!cancelled) {
           setData({
@@ -137,7 +137,7 @@ export default function TokenOverview({ contracts, account }) {
           <tr><td>Pool Fee</td><td>{bpsToPercent(data.poolFeeBps)}</td></tr>
           <tr>
             <td>Total</td>
-            <td>{bpsToPercent(data.senderBurnBps.add(data.recipientBurnBps).add(data.poolFeeBps))}</td>
+            <td>{bpsToPercent(data.senderBurnBps + data.recipientBurnBps + data.poolFeeBps)}</td>
           </tr>
         </tbody>
       </table>
