@@ -7,17 +7,17 @@ const IFRLOCK_ABI = [
 ];
 
 export class LockChecker {
-  private provider: ethers.providers.JsonRpcProvider;
+  private provider: ethers.JsonRpcProvider;
   private contract: ethers.Contract;
 
   constructor() {
-    this.provider = new ethers.providers.JsonRpcProvider(CONFIG.rpcUrl);
+    this.provider = new ethers.JsonRpcProvider(CONFIG.rpcUrl);
     this.contract = new ethers.Contract(CONFIG.ifrLockAddress, IFRLOCK_ABI, this.provider);
   }
 
   async isLocked(walletAddress: string, minIFR: string = CONFIG.minLockIFR): Promise<boolean> {
     try {
-      const minAmount = ethers.utils.parseUnits(minIFR, CONFIG.decimals);
+      const minAmount = ethers.parseUnits(minIFR, CONFIG.decimals);
       return await this.contract.isLocked(walletAddress, minAmount);
     } catch (err) {
       console.error('LockChecker.isLocked failed:', (err as Error).message);
@@ -28,7 +28,7 @@ export class LockChecker {
   async lockedBalance(walletAddress: string): Promise<string> {
     try {
       const raw = await this.contract.lockedBalance(walletAddress);
-      return ethers.utils.formatUnits(raw, CONFIG.decimals);
+      return ethers.formatUnits(raw, CONFIG.decimals);
     } catch (err) {
       console.error('LockChecker.lockedBalance failed:', (err as Error).message);
       return '0';

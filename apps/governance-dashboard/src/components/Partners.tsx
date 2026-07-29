@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { BigNumber } from "ethers";
 import { Contracts } from "../hooks/useContracts";
 import { formatIFR, shortenAddress, shortenBytes32, formatTimestamp } from "../utils/format";
 import { ETHERSCAN_BASE, DEPLOY_BLOCK } from "../config";
@@ -7,17 +6,17 @@ import { ETHERSCAN_BASE, DEPLOY_BLOCK } from "../config";
 interface PartnerRow {
   id: string;
   beneficiary: string;
-  maxAllocation: BigNumber;
-  unlockedTotal: BigNumber;
-  rewardAccrued: BigNumber;
-  claimedTotal: BigNumber;
+  maxAllocation: bigint;
+  unlockedTotal: bigint;
+  rewardAccrued: bigint;
+  claimedTotal: bigint;
   vestingStart: number;
   vestingDuration: number;
   cliff: number;
   active: boolean;
   milestonesFinal: boolean;
   tier: number;
-  claimable: BigNumber;
+  claimable: bigint;
 }
 
 export default function Partners({ contracts }: { contracts: Contracts }) {
@@ -34,7 +33,9 @@ export default function Partners({ contracts }: { contracts: Contracts }) {
         try {
           const filter = contracts.partnerVault.filters.PartnerCreated();
           const events = await contracts.partnerVault.queryFilter(filter, DEPLOY_BLOCK, "latest");
-          partnerIds = events.map((ev) => ev.args!.partnerId as string);
+          partnerIds = events
+            .filter((event) => "args" in event)
+            .map((event) => event.args.partnerId as string);
         } catch {
           // Alchemy free tier rejects large block ranges — graceful fallback
           partnerIds = [];
@@ -53,12 +54,12 @@ export default function Partners({ contracts }: { contracts: Contracts }) {
             unlockedTotal: info.unlockedTotal,
             rewardAccrued: info.rewardAccrued,
             claimedTotal: info.claimedTotal,
-            vestingStart: info.vestingStart,
-            vestingDuration: info.vestingDuration,
-            cliff: info.cliff,
+            vestingStart: Number(info.vestingStart),
+            vestingDuration: Number(info.vestingDuration),
+            cliff: Number(info.cliff),
             active: info.active,
             milestonesFinal: info.milestonesFinal,
-            tier: info.tier,
+            tier: Number(info.tier),
             claimable,
           });
         }
@@ -126,7 +127,7 @@ export default function Partners({ contracts }: { contracts: Contracts }) {
               <td className="px-4 py-3 text-right">{formatIFR(p.rewardAccrued)}</td>
               <td className="px-4 py-3 text-right">{formatIFR(p.claimedTotal)}</td>
               <td className="px-4 py-3 text-right font-medium text-ifr-green">
-                {p.claimable.gt(0) ? formatIFR(p.claimable) : "—"}
+                {p.claimable > 0n ? formatIFR(p.claimable) : "—"}
               </td>
               <td className="px-4 py-3 text-center text-xs">
                 {p.vestingStart > 0 ? formatTimestamp(p.vestingStart) : "—"}

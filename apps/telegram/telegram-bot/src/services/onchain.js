@@ -26,7 +26,7 @@ let lockContract = null;
 
 function getProvider() {
   if (!provider) {
-    provider = new ethers.providers.JsonRpcProvider(process.env.ALCHEMY_RPC_URL);
+    provider = new ethers.JsonRpcProvider(process.env.ALCHEMY_RPC_URL);
   }
   return provider;
 }
@@ -58,7 +58,7 @@ function getLockContract() {
  * Gibt { isLocked, lockAmount (IFR als String), wallet } zurück.
  */
 async function getLockStatus(wallet) {
-  if (!ethers.utils.isAddress(wallet)) {
+  if (!ethers.isAddress(wallet)) {
     throw new Error('Ungültige Ethereum-Adresse');
   }
 
@@ -68,9 +68,8 @@ async function getLockStatus(wallet) {
 
   const contract = getLockContract();
 
-  // ethers v5: 0 als normale Zahl, KEIN 0n (BigInt-Literal)
-  const locked = await contract.isLocked(wallet, ethers.BigNumber.from(0));
-  let amount = ethers.BigNumber.from(0);
+  const locked = await contract.isLocked(wallet, 0n);
+  let amount = 0n;
   try {
     amount = await contract.getLockAmount(wallet);
   } catch (e) {
@@ -80,7 +79,7 @@ async function getLockStatus(wallet) {
   const result = {
     wallet,
     isLocked: locked,
-    lockAmount: ethers.utils.formatUnits(amount, 9), // 9 Decimals!
+    lockAmount: ethers.formatUnits(amount, 9), // 9 Decimals!
   };
 
   cache.set(cacheKey, result, parseInt(process.env.CACHE_TTL_SECONDS || '60'));
@@ -121,7 +120,7 @@ async function getBurnStats() {
   // Fallback: direkt via RPC
   const contract = getTokenContract();
   const rawSupply = await contract.totalSupply();
-  const totalSupply = parseFloat(ethers.utils.formatUnits(rawSupply, 9));
+  const totalSupply = parseFloat(ethers.formatUnits(rawSupply, 9));
   const burned = INITIAL_SUPPLY - totalSupply;
   const burnedPercent = (burned / INITIAL_SUPPLY) * 100;
 

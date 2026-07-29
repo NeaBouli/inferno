@@ -10,7 +10,7 @@ const TIERS = [
 ];
 
 function getTier(amount) {
-  const num = parseFloat(ethers.utils.formatUnits(amount, IFR_DECIMALS));
+  const num = parseFloat(ethers.formatUnits(amount, IFR_DECIMALS));
   for (let i = TIERS.length - 1; i >= 0; i--) {
     if (num >= TIERS[i].min) return TIERS[i].name;
   }
@@ -34,7 +34,7 @@ export default function LockPanel({ contracts, account, signer }) {
       const [bal, loc, allow] = await Promise.all([
         contracts.token.balanceOf(account),
         contracts.ifrLock.lockedBalance(account),
-        contracts.token.allowance(account, contracts.ifrLock.address),
+        contracts.token.allowance(account, contracts.ifrLock.target),
       ]);
       setBalance(bal);
       setLocked(loc);
@@ -54,7 +54,7 @@ export default function LockPanel({ contracts, account, signer }) {
     if (!amount || isNaN(amount) || parseFloat(amount) <= 0) return false;
     if (!allowance) return true;
     try {
-      return parseIFR(amount).gt(allowance);
+      return parseIFR(amount) > allowance;
     } catch {
       return false;
     }
@@ -68,8 +68,8 @@ export default function LockPanel({ contracts, account, signer }) {
     try {
       const tokenWithSigner = contracts.token.connect(signer);
       const tx = await tokenWithSigner.approve(
-        contracts.ifrLock.address,
-        ethers.constants.MaxUint256
+        contracts.ifrLock.target,
+        ethers.MaxUint256
       );
       setTxHash(tx.hash);
       await tx.wait();
@@ -120,7 +120,7 @@ export default function LockPanel({ contracts, account, signer }) {
   }
 
   const tier = locked ? getTier(locked) : "None";
-  const hasLocked = locked && locked.gt(0);
+  const hasLocked = locked && locked > 0n;
 
   return (
     <div className="card">
@@ -162,7 +162,7 @@ export default function LockPanel({ contracts, account, signer }) {
               <tbody>
                 {TIERS.map((t) => {
                   const reached = locked
-                    ? parseFloat(ethers.utils.formatUnits(locked, IFR_DECIMALS)) >= t.min
+                    ? parseFloat(ethers.formatUnits(locked, IFR_DECIMALS)) >= t.min
                     : false;
                   return (
                     <tr key={t.name}>

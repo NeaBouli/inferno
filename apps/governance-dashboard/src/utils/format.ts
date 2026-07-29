@@ -1,26 +1,26 @@
-import { ethers, BigNumber } from "ethers";
+import { formatUnits, parseUnits, type BigNumberish } from "ethers";
 
 export const IFR_DECIMALS = 9;
 export const INITIAL_SUPPLY = "1000000000";
 
-export function formatIFR(bn: BigNumber): string {
-  const val = parseFloat(ethers.utils.formatUnits(bn, IFR_DECIMALS));
+export function formatIFR(value: BigNumberish): string {
+  const val = parseFloat(formatUnits(value, IFR_DECIMALS));
   if (val >= 1_000_000) return (val / 1_000_000).toFixed(2) + "M";
   if (val >= 1_000) return (val / 1_000).toFixed(1) + "K";
   return val.toFixed(2);
 }
 
-export function formatIFRFull(bn: BigNumber): string {
-  const val = parseFloat(ethers.utils.formatUnits(bn, IFR_DECIMALS));
+export function formatIFRFull(value: BigNumberish): string {
+  const val = parseFloat(formatUnits(value, IFR_DECIMALS));
   return val.toLocaleString("en-US", { maximumFractionDigits: 2 });
 }
 
-export function parseIFR(amount: string): BigNumber {
-  return ethers.utils.parseUnits(amount, IFR_DECIMALS);
+export function parseIFR(amount: string): bigint {
+  return parseUnits(amount, IFR_DECIMALS);
 }
 
-export function bpsToPercent(bps: number | BigNumber): string {
-  const val = typeof bps === "number" ? bps : bps.toNumber();
+export function bpsToPercent(bps: number | bigint): string {
+  const val = Number(bps);
   return (val / 100).toFixed(1) + "%";
 }
 

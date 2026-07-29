@@ -41,7 +41,7 @@ router.get('/google/callback', async (req, res) => {
     let validatedWallet: string | undefined;
     if (walletAddress) {
       try {
-        validatedWallet = ethers.utils.getAddress(walletAddress);
+        validatedWallet = ethers.getAddress(walletAddress);
       } catch {
         res.status(400).json({ error: 'Invalid wallet address in OAuth state' });
         return;
@@ -118,7 +118,7 @@ router.post('/wallet', (req, res) => {
   // Validate address format
   let checksumAddress: string;
   try {
-    checksumAddress = ethers.utils.getAddress(walletAddress);
+    checksumAddress = ethers.getAddress(walletAddress);
   } catch {
     res.status(400).json({ error: 'Invalid wallet address' });
     return;

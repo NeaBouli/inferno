@@ -221,7 +221,7 @@ verifyApp.post('/api/verify', async (req, res) => {
 
     let recovered;
     try {
-      recovered = ethers.utils.verifyMessage(nonce, signature);
+      recovered = ethers.verifyMessage(nonce, signature);
     } catch (e) {
       return res.status(400).json({ success: false, error: 'Invalid signature' });
     }

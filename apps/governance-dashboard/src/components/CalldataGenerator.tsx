@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ethers } from "ethers";
+import { Interface } from "ethers";
 import { ADDRESSES } from "../config";
 import { PartnerVaultABI, FeeRouterABI } from "../config/abis";
 
@@ -136,7 +136,7 @@ export default function CalldataGenerator() {
     setResult(null);
     try {
       const abi = fn.target === ADDRESSES.FeeRouter ? FeeRouterABI : PartnerVaultABI;
-      const iface = new ethers.utils.Interface(abi);
+      const iface = new Interface(abi);
       const args = fn.params.map((p) => {
         const raw = values[p.name]?.trim() || "";
         if (!raw) throw new Error(`Missing: ${p.name}`);

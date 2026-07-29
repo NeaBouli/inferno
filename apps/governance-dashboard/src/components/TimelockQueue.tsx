@@ -35,9 +35,9 @@ export default function TimelockQueue({ contracts }: { contracts: Contracts }) {
           contracts.governance.proposalCount(),
           contracts.governance.delay(),
         ]);
-        setDelay(d.toNumber());
+        setDelay(Number(d));
 
-        const n = count.toNumber();
+        const n = Number(count);
         const rows: Proposal[] = [];
         for (let i = 0; i < n; i++) {
           const p = await contracts.governance.getProposal(i);
@@ -45,7 +45,7 @@ export default function TimelockQueue({ contracts }: { contracts: Contracts }) {
             id: i,
             target: p.target,
             data: p.data,
-            eta: p.eta.toNumber(),
+            eta: Number(p.eta),
             executed: p.executed,
             cancelled: p.cancelled,
           });

@@ -3,7 +3,7 @@ import { ethers } from "ethers";
 const CHAIN_ID = parseInt(process.env.CHAIN_ID || "11155111", 10);
 const FEE_ROUTER_ADDRESS = process.env.FEE_ROUTER_ADDRESS || (() => {
   if (process.env.NODE_ENV === "production") throw new Error("FEE_ROUTER_ADDRESS is required in production");
-  return ethers.constants.AddressZero;
+  return ethers.ZeroAddress;
 })();
 
 const domain = {
@@ -36,11 +36,11 @@ export async function signVoucher(voucher: VoucherData): Promise<string> {
   if (!privateKey) throw new Error("VOUCHER_SIGNER_PRIVATE_KEY not configured");
 
   const signer = new ethers.Wallet(privateKey);
-  return signer._signTypedData(domain, types, voucher);
+  return signer.signTypedData(domain, types, voucher);
 }
 
 export function getSignerAddress(): string {
   const privateKey = process.env.VOUCHER_SIGNER_PRIVATE_KEY;
-  if (!privateKey) return ethers.constants.AddressZero;
+  if (!privateKey) return ethers.ZeroAddress;
   return new ethers.Wallet(privateKey).address;
 }

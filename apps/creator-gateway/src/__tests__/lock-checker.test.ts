@@ -6,14 +6,11 @@ jest.mock('ethers', () => {
     ...actual,
     ethers: {
       ...actual.ethers,
-      providers: {
-        JsonRpcProvider: jest.fn().mockImplementation(() => ({})),
-      },
+      JsonRpcProvider: jest.fn().mockImplementation(() => ({})),
       Contract: jest.fn().mockImplementation(() => ({
         isLocked: jest.fn(),
         lockedBalance: jest.fn(),
       })),
-      utils: actual.ethers.utils,
     },
   };
 });

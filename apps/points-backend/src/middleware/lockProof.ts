@@ -10,7 +10,7 @@ const IFR_LOCK_ABI = [
   "function lockedBalance(address wallet) view returns (uint256)",
 ];
 
-const MIN_LOCK_AMOUNT = ethers.utils.parseUnits("1000", 9); // Bronze tier minimum
+const MIN_LOCK_AMOUNT = ethers.parseUnits("1000", 9); // Bronze tier minimum
 
 // Cache lock status to avoid excessive RPC calls (5 min TTL)
 const lockCache = new Map<string, { locked: boolean; ts: number }>();
@@ -44,8 +44,8 @@ export async function requireLockProof(req: AuthRequest, res: Response, next: Ne
     return;
   }
 
+  const provider = new ethers.JsonRpcProvider(RPC_URL);
   try {
-    const provider = new ethers.providers.JsonRpcProvider(RPC_URL);
     const lockContract = new ethers.Contract(IFR_LOCK_ADDRESS, IFR_LOCK_ABI, provider);
     const isLocked: boolean = await lockContract.isLocked(wallet, MIN_LOCK_AMOUNT);
 
@@ -61,5 +61,7 @@ export async function requireLockProof(req: AuthRequest, res: Response, next: Ne
     console.error("[lockProof] RPC check failed:", err);
     // Fail-open would be insecure — fail-closed
     res.status(503).json({ error: "Lock verification temporarily unavailable" });
+  } finally {
+    provider.destroy();
   }
 }

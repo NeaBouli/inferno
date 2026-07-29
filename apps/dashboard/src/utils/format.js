@@ -4,7 +4,7 @@ const IFR_DECIMALS = 9;
 const INITIAL_SUPPLY = "1000000000"; // 1B
 
 export function formatIFR(bigNumber) {
-  const str = ethers.utils.formatUnits(bigNumber, IFR_DECIMALS);
+  const str = ethers.formatUnits(bigNumber, IFR_DECIMALS);
   const num = parseFloat(str);
   if (num >= 1_000_000) {
     return (num / 1_000_000).toFixed(2) + "M";
@@ -16,14 +16,14 @@ export function formatIFR(bigNumber) {
 }
 
 export function formatIFRFull(bigNumber) {
-  const str = ethers.utils.formatUnits(bigNumber, IFR_DECIMALS);
+  const str = ethers.formatUnits(bigNumber, IFR_DECIMALS);
   return parseFloat(str).toLocaleString("en-US", {
     maximumFractionDigits: 2,
   });
 }
 
 export function parseIFR(amount) {
-  return ethers.utils.parseUnits(amount, IFR_DECIMALS);
+  return ethers.parseUnits(amount, IFR_DECIMALS);
 }
 
 export function shortenAddress(addr) {
@@ -36,9 +36,9 @@ export function bpsToPercent(bps) {
 }
 
 export function calcBurnedPercent(totalSupply) {
-  const initial = ethers.utils.parseUnits(INITIAL_SUPPLY, IFR_DECIMALS);
-  const burned = initial.sub(totalSupply);
-  return (burned.mul(10000).div(initial).toNumber() / 100).toFixed(2);
+  const initial = ethers.parseUnits(INITIAL_SUPPLY, IFR_DECIMALS);
+  const burned = initial - totalSupply;
+  return (Number((burned * 10000n) / initial) / 100).toFixed(2);
 }
 
 export { IFR_DECIMALS, INITIAL_SUPPLY };

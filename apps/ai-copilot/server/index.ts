@@ -617,7 +617,7 @@ function setCache(key: string, data: unknown): void {
 async function fetchBalancesData() {
   const entries = Object.entries(PROTOCOL_ADDRESSES) as [string, string][];
   const ethersLib = (await import("ethers")).ethers;
-  const provider = new ethersLib.providers.JsonRpcProvider(ETH_RPC_URL);
+  const provider = new ethersLib.JsonRpcProvider(ETH_RPC_URL);
   const token = new ethersLib.Contract(
     IFR_TOKEN,
     ["function balanceOf(address wallet) view returns (uint256)"],
@@ -629,25 +629,25 @@ async function fetchBalancesData() {
     provider
   );
   async function fetchIFRLockUnlockedTotal() {
-    const topic = ifrLock.interface.getEventTopic("Unlocked");
-    let total = ethersLib.BigNumber.from(0);
+    const topic = ifrLock.interface.getEvent("Unlocked")!.topicHash;
+    let total = 0n;
     const data = await esApiFetch(
       `&module=logs&action=getLogs&fromBlock=${IFRLOCK_DEPLOY_BLOCK}&toBlock=latest&address=${PROTOCOL_ADDRESSES.IFRLock}&topic0=${topic}`
     ) as { status?: string; result?: Array<{ data: string }> };
     if (data.status !== "1" || !Array.isArray(data.result)) return total;
     for (const log of data.result) {
-      if (log.data) total = total.add(ethersLib.BigNumber.from(log.data));
+      if (log.data) total += ethersLib.toBigInt(log.data);
     }
     return total;
   }
-  const unlockedTotalPromise = fetchIFRLockUnlockedTotal().catch(() => ethersLib.BigNumber.from(0));
+  const unlockedTotalPromise = fetchIFRLockUnlockedTotal().catch(() => 0n);
   const results: Record<string, { raw: string; formatted: number }> = {};
   for (let i = 0; i < entries.length; i += 4) {
     const batch = entries.slice(i, i + 4);
     const values = await Promise.all(batch.map(async ([label, addr]) => {
       try {
         const raw = label === "IFRLock" ? await ifrLock.totalLocked() : await token.balanceOf(addr);
-        return [label, { raw: raw.toString(), formatted: parseFloat(ethersLib.utils.formatUnits(raw, IFR_DECIMALS)) }] as const;
+        return [label, { raw: raw.toString(), formatted: parseFloat(ethersLib.formatUnits(raw, IFR_DECIMALS)) }] as const;
       } catch {
         return [label, { raw: "0", formatted: 0 }] as const;
       }
@@ -663,7 +663,7 @@ async function fetchBalancesData() {
       lockedRaw: results.IFRLock?.raw || "0",
       lockedFormatted: results.IFRLock?.formatted || 0,
       unlockedRaw: unlockedTotal.toString(),
-      unlockedFormatted: parseFloat(ethersLib.utils.formatUnits(unlockedTotal, IFR_DECIMALS)),
+      unlockedFormatted: parseFloat(ethersLib.formatUnits(unlockedTotal, IFR_DECIMALS)),
     },
     timestamp: new Date().toISOString(),
     fetchedAt: Date.now(),
@@ -676,32 +676,32 @@ async function fetchBalancesData() {
 async function fetchBalancesDataEtherscanFallback() {
   const entries = Object.entries(PROTOCOL_ADDRESSES) as [string, string][];
   const ethersLib = (await import("ethers")).ethers;
-  const provider = new ethersLib.providers.JsonRpcProvider(ETH_RPC_URL);
+  const provider = new ethersLib.JsonRpcProvider(ETH_RPC_URL);
   const ifrLock = new ethersLib.Contract(
     PROTOCOL_ADDRESSES.IFRLock,
     ["function totalLocked() view returns (uint256)", "event Unlocked(address indexed user, uint256 amount)"],
     provider
   );
   async function fetchIFRLockUnlockedTotal() {
-    const topic = ifrLock.interface.getEventTopic("Unlocked");
-    let total = ethersLib.BigNumber.from(0);
+    const topic = ifrLock.interface.getEvent("Unlocked")!.topicHash;
+    let total = 0n;
     const data = await esApiFetch(
       `&module=logs&action=getLogs&fromBlock=${IFRLOCK_DEPLOY_BLOCK}&toBlock=latest&address=${PROTOCOL_ADDRESSES.IFRLock}&topic0=${topic}`
     ) as { status?: string; result?: Array<{ data: string }> };
     if (data.status !== "1" || !Array.isArray(data.result)) return total;
     for (const log of data.result) {
-      if (log.data) total = total.add(ethersLib.BigNumber.from(log.data));
+      if (log.data) total += ethersLib.toBigInt(log.data);
     }
     return total;
   }
-  const unlockedTotalPromise = fetchIFRLockUnlockedTotal().catch(() => ethersLib.BigNumber.from(0));
+  const unlockedTotalPromise = fetchIFRLockUnlockedTotal().catch(() => 0n);
   const results: Record<string, { raw: string; formatted: number }> = {};
   for (let i = 0; i < entries.length; i++) {
     const [label, addr] = entries[i];
     try {
       if (label === "IFRLock") {
         const raw = await ifrLock.totalLocked();
-        results[label] = { raw: raw.toString(), formatted: parseFloat(ethersLib.utils.formatUnits(raw, IFR_DECIMALS)) };
+        results[label] = { raw: raw.toString(), formatted: parseFloat(ethersLib.formatUnits(raw, IFR_DECIMALS)) };
       } else {
         const data = await esApiFetch(
           `&module=account&action=tokenbalance&contractaddress=${IFR_TOKEN}&address=${addr}&tag=latest`
@@ -722,7 +722,7 @@ async function fetchBalancesDataEtherscanFallback() {
       lockedRaw: results.IFRLock?.raw || "0",
       lockedFormatted: results.IFRLock?.formatted || 0,
       unlockedRaw: unlockedTotal.toString(),
-      unlockedFormatted: parseFloat(ethersLib.utils.formatUnits(unlockedTotal, IFR_DECIMALS)),
+      unlockedFormatted: parseFloat(ethersLib.formatUnits(unlockedTotal, IFR_DECIMALS)),
     },
     timestamp: new Date().toISOString(),
     fetchedAt: Date.now(),
@@ -930,9 +930,9 @@ async function fetchLockEventsPage(page: number, limit: number, type: string, q:
 
   for (const source of LOCK_EVENT_SOURCES) {
     if (normalizedType && source.contract.toLowerCase() !== normalizedType) continue;
-    const iface = new ethersLib.utils.Interface(source.events);
-    for (const fragment of Object.values(iface.events)) {
-      const topic0 = iface.getEventTopic(fragment);
+    const iface = new ethersLib.Interface(source.events);
+    for (const event of source.events) {
+      const topic0 = iface.getEvent(event)!.topicHash;
       const data = await esApiFetch(
         `&module=logs&action=getLogs&fromBlock=${source.fromBlock}&toBlock=latest&address=${source.address}&topic0=${topic0}&page=1&offset=${perSourceOffset}`
       ) as { status?: string; result?: Array<Record<string, unknown>> };
@@ -943,12 +943,13 @@ async function fetchLockEventsPage(page: number, limit: number, type: string, q:
             topics: toEtherscanTopics(rawLog),
             data: String(rawLog.data || "0x"),
           });
+          if (!parsed) continue;
           const blockNumber = parseInt(String(rawLog.blockNumber || "0"), 16) || Number(rawLog.blockNumber || 0);
           const timestampRaw = rawLog.timeStamp ? String(rawLog.timeStamp) : "";
           const timestamp = timestampRaw ? (parseInt(timestampRaw, 16) || Number(timestampRaw)) : null;
           const wallet = String(parsed.args.user || parsed.args.wallet || parsed.args.lender || parsed.args.borrower || parsed.args.liquidator || "");
-          const amountRaw = parsed.args.amount || parsed.args.addedAmount || parsed.args.ifrAmount || parsed.args.principal || parsed.args.lenderReceived || ethersLib.BigNumber.from(0);
-          const amount = ethersLib.utils.formatUnits(amountRaw, IFR_DECIMALS);
+          const amountRaw = parsed.args.amount || parsed.args.addedAmount || parsed.args.ifrAmount || parsed.args.principal || parsed.args.lenderReceived || 0n;
+          const amount = ethersLib.formatUnits(amountRaw, IFR_DECIMALS);
           const action = parsed.name;
           const detail = parsed.args.trancheId != null ? `Tranche ${parsed.args.trancheId.toString()}` :
             parsed.args.offerId != null ? `Offer ${parsed.args.offerId.toString()}` :
@@ -1046,7 +1047,7 @@ app.get("/api/ifr/price", async (_req, res) => {
   if (cached) { res.json(cached); return; }
   try {
     const ethersLib = (await import("ethers")).ethers;
-    const provider = new ethersLib.providers.JsonRpcProvider(ETH_RPC_URL);
+    const provider = new ethersLib.JsonRpcProvider(ETH_RPC_URL);
     const pairAbi = [
       "function token0() view returns (address)",
       "function token1() view returns (address)",
@@ -1071,8 +1072,8 @@ app.get("/api/ifr/price", async (_req, res) => {
 
     const ifrReserveRaw = token0Lower === ifrLower ? reserves.reserve0 : reserves.reserve1;
     const wethReserveRaw = token0Lower === wethLower ? reserves.reserve0 : reserves.reserve1;
-    const ifrReserve = parseFloat(ethersLib.utils.formatUnits(ifrReserveRaw, IFR_DECIMALS));
-    const ethReserve = parseFloat(ethersLib.utils.formatEther(wethReserveRaw));
+    const ifrReserve = parseFloat(ethersLib.formatUnits(ifrReserveRaw, IFR_DECIMALS));
+    const ethReserve = parseFloat(ethersLib.formatEther(wethReserveRaw));
     const price = ifrReserve > 0 ? ethReserve / ifrReserve : null;
 
     const response = {
@@ -1324,7 +1325,7 @@ app.get("/api/lending/stats", async (_req, res) => {
     ];
 
     const ethersLib = (await import("ethers")).ethers;
-    const provider = new ethersLib.providers.JsonRpcProvider(ETH_RPC_URL);
+    const provider = new ethersLib.JsonRpcProvider(ETH_RPC_URL);
     const lv = new ethersLib.Contract(LENDING_VAULT_ADDR, lvAbi, provider);
 
     const [lent, available, rate, loans, offers, price] = await Promise.all([
@@ -1338,14 +1339,14 @@ app.get("/api/lending/stats", async (_req, res) => {
 
     res.json({
       status: "active",
-      totalLent: parseFloat(ethersLib.utils.formatUnits(lent, IFR_DECIMALS)),
-      totalAvailable: parseFloat(ethersLib.utils.formatUnits(available, IFR_DECIMALS)),
-      currentRate: rate.toNumber() / 100,
-      activeLoans: loans.toNumber(),
-      offerCount: offers.toNumber(),
+      totalLent: parseFloat(ethersLib.formatUnits(lent, IFR_DECIMALS)),
+      totalAvailable: parseFloat(ethersLib.formatUnits(available, IFR_DECIMALS)),
+      currentRate: Number(rate) / 100,
+      activeLoans: Number(loans),
+      offerCount: Number(offers),
       ifrPriceWei: price.toString(),
-      priceSet: !price.isZero(),
-      borrowingEnabled: offers.gt(0) && !price.isZero(),
+      priceSet: price !== 0n,
+      borrowingEnabled: offers > 0n && price !== 0n,
       cachedAt: new Date().toISOString(),
     });
   } catch (err) {
@@ -1370,26 +1371,26 @@ app.get("/api/lending/offers", async (_req, res) => {
     ];
 
     const ethersLib = (await import("ethers")).ethers;
-    const provider = new ethersLib.providers.JsonRpcProvider(ETH_RPC_URL);
+    const provider = new ethersLib.JsonRpcProvider(ETH_RPC_URL);
     const lv = new ethersLib.Contract(LENDING_VAULT_ADDR, lvAbi, provider);
 
-    const count = (await lv.getOfferCount()).toNumber();
-    const rate = (await lv.getInterestRate()).toNumber() / 100;
+    const count = Number(await lv.getOfferCount());
+    const rate = Number(await lv.getInterestRate()) / 100;
     const price = await lv.ifrPriceWei();
     const offers: Array<Record<string, unknown>> = [];
 
     for (let i = 0; i < Math.min(count, 50); i++) {
       try {
         const o = await lv.getOffer(i);
-        if (o.active && o.availableIFR.gt(0)) {
+        if (o.active && o.availableIFR > 0n) {
           offers.push({
             id: i,
             lender: o.lender,
-            availableAmount: parseFloat(ethersLib.utils.formatUnits(o.availableIFR, IFR_DECIMALS)),
-            lentAmount: parseFloat(ethersLib.utils.formatUnits(o.lentIFR, IFR_DECIMALS)),
+            availableAmount: parseFloat(ethersLib.formatUnits(o.availableIFR, IFR_DECIMALS)),
+            lentAmount: parseFloat(ethersLib.formatUnits(o.lentIFR, IFR_DECIMALS)),
             rate,
-            borrowEnabled: !price.isZero(),
-            priceSet: !price.isZero(),
+            borrowEnabled: price !== 0n,
+            priceSet: price !== 0n,
           });
         }
       } catch { /* skip invalid */ }
@@ -1437,20 +1438,20 @@ app.get("/api/commitment/tranches/:address", async (req, res) => {
     }
 
     const ethersLib = (await import("ethers")).ethers;
-    const provider = new ethersLib.providers.JsonRpcProvider(ETH_RPC_URL);
+    const provider = new ethersLib.JsonRpcProvider(ETH_RPC_URL);
     const cv = new ethersLib.Contract(COMMITMENT_VAULT_ADDR, CV_ABI, provider);
 
     const [tranches, p0SetVal] = await Promise.all([cv.getTranches(addr), cv.p0Set()]);
     const p0Val = p0SetVal ? await cv.p0() : null;
 
-    const formatted = tranches.map((t: { amount: { toString: () => string }; cType: number; unlockTime: { toNumber: () => number }; p0Multiplier: { toNumber: () => number }; unlocked: boolean; conditionMetAt: { toNumber: () => number } }, i: number) => {
-      const condMetAt = t.conditionMetAt.toNumber();
+    const formatted = tranches.map((t: { amount: bigint; cType: bigint; unlockTime: bigint; p0Multiplier: bigint; unlocked: boolean; conditionMetAt: bigint }, i: number) => {
+      const condMetAt = Number(t.conditionMetAt);
       return {
         id: i,
-        amount: ethersLib.utils.formatUnits(t.amount, IFR_DECIMALS),
-        conditionType: CONDITION_TYPES[t.cType] || "UNKNOWN",
-        unlockTime: t.unlockTime.toNumber() || null,
-        p0Multiplier: t.p0Multiplier.toNumber(),
+        amount: ethersLib.formatUnits(t.amount, IFR_DECIMALS),
+        conditionType: CONDITION_TYPES[Number(t.cType)] || "UNKNOWN",
+        unlockTime: Number(t.unlockTime) || null,
+        p0Multiplier: Number(t.p0Multiplier),
         unlocked: t.unlocked,
         conditionMetAt: condMetAt || null,
         autoUnlockAt: condMetAt > 0 ? condMetAt + AUTO_UNLOCK_DELAY : null,
@@ -1459,7 +1460,7 @@ app.get("/api/commitment/tranches/:address", async (req, res) => {
 
     const totalLocked = tranches
       .filter((t: { unlocked: boolean }) => !t.unlocked)
-      .reduce((sum: number, t: { amount: { toString: () => string } }) => sum + parseFloat(ethersLib.utils.formatUnits(t.amount, IFR_DECIMALS)), 0);
+      .reduce((sum: number, t: { amount: bigint }) => sum + parseFloat(ethersLib.formatUnits(t.amount, IFR_DECIMALS)), 0);
 
     res.json({
       wallet: addr,
@@ -1467,7 +1468,7 @@ app.get("/api/commitment/tranches/:address", async (req, res) => {
       tranches: formatted,
       totalLocked: totalLocked.toFixed(0),
       p0Set: p0SetVal,
-      p0ETH: p0Val ? ethersLib.utils.formatEther(p0Val) : null,
+      p0ETH: p0Val ? ethersLib.formatEther(p0Val) : null,
     });
   } catch (err) {
     console.error("CV tranches error:", err);
@@ -1488,11 +1489,11 @@ app.get("/api/commitment/status/:address", async (req, res) => {
     }
 
     const ethersLib = (await import("ethers")).ethers;
-    const provider = new ethersLib.providers.JsonRpcProvider(ETH_RPC_URL);
+    const provider = new ethersLib.JsonRpcProvider(ETH_RPC_URL);
     const cv = new ethersLib.Contract(COMMITMENT_VAULT_ADDR, CV_ABI, provider);
 
     const [locked, hasLock] = await Promise.all([cv.lockedBalance(addr), cv.hasActiveLock(addr)]);
-    const lockedNum = parseFloat(ethersLib.utils.formatUnits(locked, IFR_DECIMALS));
+    const lockedNum = parseFloat(ethersLib.formatUnits(locked, IFR_DECIMALS));
 
     let tier = 0;
     if (lockedNum >= 10000) tier = 3;
@@ -1515,7 +1516,7 @@ app.get("/api/commitment/p0", async (_req, res) => {
     }
 
     const ethersLib = (await import("ethers")).ethers;
-    const provider = new ethersLib.providers.JsonRpcProvider(ETH_RPC_URL);
+    const provider = new ethersLib.JsonRpcProvider(ETH_RPC_URL);
     const cv = new ethersLib.Contract(COMMITMENT_VAULT_ADDR, CV_ABI, provider);
 
     const p0SetVal = await cv.p0Set();
@@ -1523,7 +1524,7 @@ app.get("/api/commitment/p0", async (_req, res) => {
 
     res.json({
       p0Set: p0SetVal,
-      p0ETH: p0Val ? ethersLib.utils.formatEther(p0Val) : null,
+      p0ETH: p0Val ? ethersLib.formatEther(p0Val) : null,
       message: p0SetVal ? "P0 is set" : "P0 is not set",
     });
   } catch (err) {
@@ -1541,7 +1542,7 @@ app.get("/api/commitment/leaderboard", async (_req, res) => {
     }
 
     const ethersLib = (await import("ethers")).ethers;
-    const provider = new ethersLib.providers.JsonRpcProvider(ETH_RPC_URL);
+    const provider = new ethersLib.JsonRpcProvider(ETH_RPC_URL);
     const cv = new ethersLib.Contract(COMMITMENT_VAULT_ADDR, CV_ABI, provider);
 
     const totalLocked = await cv.totalLocked();
@@ -1549,7 +1550,7 @@ app.get("/api/commitment/leaderboard", async (_req, res) => {
     // Leaderboard requires event indexing (Phase 2) — return protocol total for now
     res.json({
       leaderboard: [],
-      totalLockedProtocol: ethersLib.utils.formatUnits(totalLocked, IFR_DECIMALS),
+      totalLockedProtocol: ethersLib.formatUnits(totalLocked, IFR_DECIMALS),
       message: "Individual rankings available after first locks are created",
     });
   } catch (err) {
@@ -1586,24 +1587,24 @@ app.get("/api/lending/loans/:address", async (req, res) => {
     }
 
     const ethersLib = (await import("ethers")).ethers;
-    const provider = new ethersLib.providers.JsonRpcProvider(ETH_RPC_URL);
+    const provider = new ethersLib.JsonRpcProvider(ETH_RPC_URL);
     const lv = new ethersLib.Contract(LENDING_VAULT_ADDR, LV_LOAN_ABI, provider);
 
-    const count = (await lv.getLoanCount()).toNumber();
+    const count = Number(await lv.getLoanCount());
     const myLoans: Array<Record<string, unknown>> = [];
 
     for (let i = 0; i < Math.min(count, 100); i++) {
       try {
         const loan = await lv.getLoan(i);
         if (loan.active && loan.borrower.toLowerCase() === addr.toLowerCase()) {
-          const dueTs = loan.startTime.toNumber() + loan.duration.toNumber();
+          const dueTs = Number(loan.startTime) + Number(loan.duration);
           myLoans.push({
             id: i,
-            ifrAmount: ethersLib.utils.formatUnits(loan.ifrAmount, IFR_DECIMALS),
-            ethCollateral: ethersLib.utils.formatEther(loan.ethCollateral),
-            startTime: loan.startTime.toNumber(),
+            ifrAmount: ethersLib.formatUnits(loan.ifrAmount, IFR_DECIMALS),
+            ethCollateral: ethersLib.formatEther(loan.ethCollateral),
+            startTime: Number(loan.startTime),
             dueDate: new Date(dueTs * 1000).toISOString().split("T")[0],
-            monthlyRate: loan.monthlyRateBps.toNumber() / 100 + "%",
+            monthlyRate: Number(loan.monthlyRateBps) / 100 + "%",
             active: loan.active,
           });
         }
@@ -1630,7 +1631,7 @@ app.get("/api/lending/health/:loanId", async (req, res) => {
     }
 
     const ethersLib = (await import("ethers")).ethers;
-    const provider = new ethersLib.providers.JsonRpcProvider(ETH_RPC_URL);
+    const provider = new ethersLib.JsonRpcProvider(ETH_RPC_URL);
     const lv = new ethersLib.Contract(LENDING_VAULT_ADDR, LV_LOAN_ABI, provider);
 
     const loan = await lv.getLoan(loanId);
@@ -1641,7 +1642,7 @@ app.get("/api/lending/health/:loanId", async (req, res) => {
     let collateralRatio = 0;
     let health: "HEALTHY" | "WARNING" | "CRITICAL" = "HEALTHY";
     try {
-      collateralRatio = (await lv.getCollateralRatio(loanId)).toNumber();
+      collateralRatio = Number(await lv.getCollateralRatio(loanId));
       if (collateralRatio < 120) health = "CRITICAL";
       else if (collateralRatio < 150) health = "WARNING";
     } catch {
@@ -1650,8 +1651,8 @@ app.get("/api/lending/health/:loanId", async (req, res) => {
 
     res.json({
       loanId,
-      ethCollateral: ethersLib.utils.formatEther(loan.ethCollateral),
-      ifrAmount: ethersLib.utils.formatUnits(loan.ifrAmount, IFR_DECIMALS),
+      ethCollateral: ethersLib.formatEther(loan.ethCollateral),
+      ifrAmount: ethersLib.formatUnits(loan.ifrAmount, IFR_DECIMALS),
       collateralRatio: collateralRatio > 0 ? collateralRatio + "%" : "N/A (price not set)",
       health,
       warningThreshold: "150%",
@@ -1683,7 +1684,7 @@ app.get("/api/lending/lender/:address", async (req, res) => {
     ];
 
     const ethersLib = (await import("ethers")).ethers;
-    const provider = new ethersLib.providers.JsonRpcProvider(ETH_RPC_URL);
+    const provider = new ethersLib.JsonRpcProvider(ETH_RPC_URL);
     const lv = new ethersLib.Contract(LENDING_VAULT_ADDR, lvAbi, provider);
 
     const has = await lv.hasOffer(addr);
@@ -1691,11 +1692,11 @@ app.get("/api/lending/lender/:address", async (req, res) => {
       return res.json({ wallet: addr, hasOffer: false });
     }
 
-    const idx = (await lv.lenderOfferIndex(addr)).toNumber();
+    const idx = Number(await lv.lenderOfferIndex(addr));
     const offer = await lv.getOffer(idx);
-    const rate = (await lv.getInterestRate()).toNumber() / 100;
-    const availNum = parseFloat(ethersLib.utils.formatUnits(offer.availableIFR, IFR_DECIMALS));
-    const lentNum = parseFloat(ethersLib.utils.formatUnits(offer.lentIFR, IFR_DECIMALS));
+    const rate = Number(await lv.getInterestRate()) / 100;
+    const availNum = parseFloat(ethersLib.formatUnits(offer.availableIFR, IFR_DECIMALS));
+    const lentNum = parseFloat(ethersLib.formatUnits(offer.lentIFR, IFR_DECIMALS));
     const total = availNum + lentNum;
 
     res.json({
@@ -1721,10 +1722,10 @@ async function checkLoanHealth() {
   if (!LENDING_VAULT_ADDR || LENDING_VAULT_ADDR.startsWith("0x000")) return;
   try {
     const ethersLib = (await import("ethers")).ethers;
-    const provider = new ethersLib.providers.JsonRpcProvider(ETH_RPC_URL);
+    const provider = new ethersLib.JsonRpcProvider(ETH_RPC_URL);
     const lv = new ethersLib.Contract(LENDING_VAULT_ADDR, LV_LOAN_ABI, provider);
 
-    const count = (await lv.getLoanCount()).toNumber();
+    const count = Number(await lv.getLoanCount());
     let warnings = 0;
 
     for (let i = 0; i < count; i++) {
@@ -1732,7 +1733,7 @@ async function checkLoanHealth() {
         const loan = await lv.getLoan(i);
         if (!loan.active) continue;
 
-        const ratio = (await lv.getCollateralRatio(i)).toNumber();
+        const ratio = Number(await lv.getCollateralRatio(i));
         if (ratio < 150) {
           warnings++;
           console.warn(`[Liquidation] Loan #${i}: collateral ratio ${ratio}% — ${ratio < 120 ? "CRITICAL" : "WARNING"}`);
@@ -1892,7 +1893,7 @@ app.get("/api/ifr/check", async (req, res) => {
     }
 
     const ethersLib = (await import("ethers")).ethers;
-    const provider = new ethersLib.providers.JsonRpcProvider(ETH_RPC_URL);
+    const provider = new ethersLib.JsonRpcProvider(ETH_RPC_URL);
 
     const tokenAbi = ["function balanceOf(address) view returns (uint256)"];
     const lockAbi = ["function lockedBalance(address) view returns (uint256)"];
@@ -1902,11 +1903,11 @@ app.get("/api/ifr/check", async (req, res) => {
 
     const [balRaw, lockedRaw] = await Promise.all([
       token.balanceOf(wallet),
-      lock.lockedBalance(wallet).catch(() => ethersLib.BigNumber.from(0)),
+      lock.lockedBalance(wallet).catch(() => 0n),
     ]);
 
-    const balance = parseFloat(ethersLib.utils.formatUnits(balRaw, IFR_DECIMALS));
-    const locked = parseFloat(ethersLib.utils.formatUnits(lockedRaw, IFR_DECIMALS));
+    const balance = parseFloat(ethersLib.formatUnits(balRaw, IFR_DECIMALS));
+    const locked = parseFloat(ethersLib.formatUnits(lockedRaw, IFR_DECIMALS));
     const total = balance + locked;
 
     const tier = total >= 10000 ? 3 : total >= 2000 ? 2 : total >= 500 ? 1 : 0;

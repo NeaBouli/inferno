@@ -18,14 +18,14 @@ export default function ProposalAlert({ contracts }: { contracts: Contracts }) {
 
     async function load() {
       try {
-        const count = (await contracts.governance.proposalCount()).toNumber();
+        const count = Number(await contracts.governance.proposalCount());
         const active: AlertProposal[] = [];
 
         for (let i = 0; i < count; i++) {
           const p = await contracts.governance.getProposal(i);
           if (p.executed || p.cancelled) continue;
 
-          const eta = p.eta.toNumber();
+          const eta = Number(p.eta);
           const now = Math.floor(Date.now() / 1000);
           const status = now >= eta ? "ready" : "pending";
           active.push({ id: i, eta, status });
