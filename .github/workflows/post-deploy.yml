@@ -26,16 +26,31 @@ jobs:
 
       - run: npm ci
 
+      - name: Check Sepolia RPC availability
+        id: rpc
+        env:
+          SEPOLIA_RPC_URL: ${{ secrets.SEPOLIA_RPC_URL }}
+        run: |
+          if [ -n "$SEPOLIA_RPC_URL" ]; then
+            echo "available=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "available=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::SEPOLIA_RPC_URL is unavailable; skipping post-deploy stats update."
+          fi
+
       - name: Wait for chain finality
+        if: steps.rpc.outputs.available == 'true'
         run: sleep 30
 
       - name: Update stats after deploy
+        if: steps.rpc.outputs.available == 'true'
         run: npx hardhat run scripts/update-stats.js --network sepolia
         env:
           SEPOLIA_RPC_URL: ${{ secrets.SEPOLIA_RPC_URL }}
           PRIVATE_KEY: ${{ secrets.DEPLOYER_PRIVATE_KEY }}
 
       - name: Commit stats
+        if: steps.rpc.outputs.available == 'true'
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
