@@ -11,6 +11,7 @@ on:
       - 'scripts/build-wiki-rag.js'
       - 'scripts/test-benefits-doc-consistency.cjs'
       - 'scripts/test-content-trust.cjs'
+      - 'scripts/test-status-baseline.cjs'
       - 'scripts/test-docs-workflow.cjs'
       - 'scripts/test-wiki-head-integrity.cjs'
       - 'scripts/test-surface-routing.cjs'
@@ -26,6 +27,7 @@ on:
       - 'scripts/build-wiki-rag.js'
       - 'scripts/test-benefits-doc-consistency.cjs'
       - 'scripts/test-content-trust.cjs'
+      - 'scripts/test-status-baseline.cjs'
       - 'scripts/test-docs-workflow.cjs'
       - 'scripts/test-wiki-head-integrity.cjs'
       - 'scripts/test-surface-routing.cjs'
@@ -136,6 +138,9 @@ jobs:
 
       - name: Check public content trust
         run: npm run test:content-trust
+
+      - name: Check current status baseline
+        run: npm run test:status-baseline
 
       - name: Check Wiki RAG freshness
         run: npm run test:wiki-rag

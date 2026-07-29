@@ -1,5 +1,5 @@
 # IFR Protocol — Developer TODO List
-> Last updated: 2026-06-16 | Branch: main
+> Last updated: 2026-07-29 | Branch: main
 
 ---
 
@@ -128,9 +128,19 @@ On errors: fix immediately, commit with `seo:` prefix.
 - [ ] CommitmentVault price-condition locks — V2/PriceLockVault needed
       Design: docs/COMMITMENT_PRICE_LOCK_ORACLE_PATH.md
       Current: time-only locks live; price locks must stay disabled because deployed `_getCurrentPrice()` returns 0.
-- [ ] Dependency modernization — dedicated branch required
+- [x] Dependency modernization — completed 2026-07-29
       Docs: docs/DEPENDENCY_UPGRADES.md
-      Scope: Hardhat/Ethers/Waffle/Ganache/toolchain migration. Do not run `npm audit fix --force` on main.
+      Root now uses Ethers 6.17, Hardhat 3.11.1, Chai 6 and Node >=22.13.
+      Waffle/Ganache were removed. Final exact-head CI passed on `f350bd44`.
+      Residual root audit: 21 transitive findings (13 high, 8 low, 0 critical).
+      Do not run `npm audit fix --force`; remaining upstream paths need bounded updates.
+- [ ] Deterministic local Hardhat test network
+      Current: a locally set MAINNET_RPC_URL automatically enables an unpinned
+      fork on the `default`/`hardhat` networks. The canonical CI-equivalent run
+      is `env MAINNET_RPC_URL= SEPOLIA_RPC_URL= npm run test:contracts`.
+      Evidence 29.07.2026: canonical local EDR run 642/642 in 33s; the
+      environment-selected fork run was slow and non-deterministic. Fix config
+      and add a regression test in a separate runtime-tooling task.
 - [ ] Trust Wallet / Rainbow / Phantom / Zerion visibility follow-up
       Docs: docs/WALLET_ICON_DISTRIBUTION_STATUS_20260708.md
       Status: Trust Wallet not yet worth fee submission until CMC/activity improves; Rainbow depends on upstream lists/market data; Phantom and several wallets are indirect trust/indexing paths.
@@ -232,11 +242,12 @@ On errors: fix immediately, commit with `seo:` prefix.
 - [x] ✅ Blockaid Unflag bestätigt (10.06.2026)
       IFR Contract unflagged — Propagation ~24h ab 10.06.2026 02:25 UTC
       Nach 24h: MetaMask+WalletConnect testen
-- [ ] npm audit: 61 vulnerabilities (1 critical, 9 high, 26 moderate, 25 low) — migration branch needed
+- [x] npm audit toolchain migration completed — residual upstream findings tracked
       Link: https://github.com/NeaBouli/inferno/security/dependabot
-      Status 08.07.2026: non-forced `npm audit fix --package-lock-only` applied safely.
-      Remaining findings are mostly Hardhat 2 / ethers v5 / Waffle-Ganache / solc / undici toolchain debt.
-      Do not run `npm audit fix --force` on main; handle via dedicated modernization branch.
+      Status 29.07.2026: Ethers 6 / Hardhat 3 / Chai 6 / Node 22 migration
+      completed and exact-head CI passed. Current root audit is 21 transitive
+      findings (13 high, 8 low, 0 critical) in upstream Hardhat, Verify, Mocha
+      and Serve paths. Do not run `npm audit fix --force`.
 - [x] Bootstrap public stats: PublicNode RPC fallback + _publicStatsLoaded race guard ✅
 - [x] Recent Votes: loadSavedVotes() on DOMContentLoaded ✅ (bc18c85a)
 - [x] WalletConnect placeholder text removed ✅
@@ -901,7 +912,7 @@ Strategic goal: "IFR = Stripe for Web3 Access — Web3 SaaS Standard"
       Total Lent/Available, Utilization, Interest Rate, Active Loans/Offers
       Data: direct LendingVault reads + /api/lending/stats + /api/lending/offers fallback
 
-Technical: WalletConnect v2 + ethers.js v5, ABI: abi/LendingVault.json
+Technical: WalletConnect v2 + ethers.js v6, ABI: abi/LendingVault.json
 Hetzner API endpoints already live: stats, offers, loans/:addr, health/:id, lender/:addr
 
 ### Interactive Onboarding Wizard
@@ -914,4 +925,4 @@ Hetzner API endpoints already live: stats, offers, loans/:addr, health/:id, lend
 
 ---
 
-*Last updated: 2026-06-10*
+*Last updated: 2026-07-29*

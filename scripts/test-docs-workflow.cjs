@@ -14,6 +14,7 @@ for (const watchedPath of [
   "apps/ai-copilot/src/context/wiki-content.json",
   "scripts/build-wiki-rag.js",
   "scripts/test-content-trust.cjs",
+  "scripts/test-status-baseline.cjs",
   "scripts/test-docs-workflow.cjs",
   "package.json",
 ]) {
@@ -26,6 +27,7 @@ for (const watchedPath of [
 for (const command of [
   "npm run test:docs-ci",
   "npm run test:content-trust",
+  "npm run test:status-baseline",
   "npm run test:wiki-rag",
   "npm run test:wiki-heads",
   "npm run test:surface-routing",

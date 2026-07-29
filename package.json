@@ -27,6 +27,7 @@
     "test:wiki-heads": "node scripts/test-wiki-head-integrity.cjs",
     "test:wiki-rag": "node scripts/build-wiki-rag.js --check",
     "test:content-trust": "node scripts/test-content-trust.cjs",
+    "test:status-baseline": "node scripts/test-status-baseline.cjs",
     "test:docs-ci": "node scripts/test-docs-workflow.cjs",
     "ops:benefits-capacity": "scripts/deploy-benefits-network.sh capacity && LIMIT=20 scripts/audit-docker-capacity.sh",
     "qa:benefits-devices": "node scripts/validate-benefits-device-checklist.js",

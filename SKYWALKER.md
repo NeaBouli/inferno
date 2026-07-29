@@ -8,6 +8,14 @@
 > **Live-Seite:** https://neabouli.github.io/inferno/
 > **Wiki:** https://neabouli.github.io/inferno/wiki/
 
+> **Hinweis 29.07.2026:** Dieses Dokument erhaelt den historischen
+> Maerz-Handover. Fuer den aktuellen operativen Stand gelten
+> `internal/operations/TODO.md`, `docs/DEPENDENCY_UPGRADES.md` und die lokale
+> append-only `BRIDGE.md`. Aktuelle Root-Baseline: Node `>=22.13.0`, Ethers
+> `6.17.0`, Hardhat `3.11.1`, Chai `6.2.2`; Contract-Suite `642/642`,
+> Generator Engine `30/30`, IFR SDK `36/36`; Root-Audit `13 high / 8 low /
+> 0 critical`.
+
 ---
 
 ## 1. Projektstatus
@@ -16,7 +24,7 @@ Inferno ($IFR) ist ein **deflationärer ERC-20 Utility-Token** auf Ethereum. Jed
 
 **Phase:** MAINNET DEPLOYED (05.03.2026) — 10 Contracts deployed + verified, Ownership transferred to Governance.
 
-## Aktueller Stand (05.03.2026)
+## Historischer Stand (05.03.2026)
 
 ### Deployed Mainnet Contracts (10 total, alle verifiziert)
 
@@ -267,12 +275,15 @@ Vesting (12-Monat Cliff), LiquidityReserve (6-Monat Lock), BuybackVault (60-Tag 
 
 ### Zusammenfassung
 
-#### Entwicklungsumgebung
+#### Entwicklungsumgebung (aktualisiert 29.07.2026)
 
-- **Framework:** Hardhat v2 (Solidity ^0.8.20, OpenZeppelin v5, Chai v4)
+- **Framework:** Hardhat 3.11.1 (Solidity 0.8.20 + 0.8.28,
+  OpenZeppelin 5.6.x, Chai 6.2.2, Mocha 11.7.6)
 - **Network:** Ethereum Mainnet + Sepolia Testnet (Alchemy RPC)
 - **Frontend:** React + Vite + ethers.js v6
-- **CJS-only** (Hardhat v2), kein ESM
+- **Root ESM** mit expliziten CommonJS-Untergrenzen fuer Legacy-Skripte und
+  eigenstaendige Testpakete
+- **Node.js:** `>=22.13.0` fuer die Root-Toolchain
 - **Config:** `.env` (Sepolia) + `.env.mainnet` (Mainnet) — NICHT committed
 
 #### Solidity-Konventionen
@@ -287,7 +298,8 @@ Vesting (12-Monat Cliff), LiquidityReserve (6-Monat Lock), BuybackVault (60-Tag 
 #### Testing
 
 ```bash
-npx hardhat test                    # Alle 367 Contract Tests
+env MAINNET_RPC_URL= SEPOLIA_RPC_URL= npm run test:contracts
+                                     # 642 Contract Tests am 29.07.2026
 npx hardhat test test/IFRLock.test.js  # Einzelner Test
 ```
 
@@ -336,7 +348,7 @@ npx hardhat verify --network sepolia <CONTRACT_ADDR> <CONSTRUCTOR_ARGS>
 
 ---
 
-## 8. Nächster konkreter Schritt
+## 8. Historischer nächster Schritt (Stand 05.03.2026)
 
 **Stand: 05.03.2026** — Mainnet deployed, Ownership transferred, BootstrapVault deployed.
 
