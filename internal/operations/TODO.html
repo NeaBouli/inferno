@@ -54,26 +54,44 @@
     <!-- ═══ CURRENT WATCHLIST ═══ -->
     <h2><span class="priority-badge p-critical">WATCH</span> Current Watchlist &mdash; verified 2026-07-30</h2>
     <ul>
-      <li><div class="cb"></div><strong>MetaMask Registry PR #1858</strong> &mdash; waiting for MetaMask code-owner review.<br>
-        <span style="color:#6b7280;font-size:0.82rem;">Verified 2026-07-30: open, review required, mergeable but blocked, with no submitted review or maintainer activity since the project follow-up on 2026-07-08. The three visible reported checks are successful; maintainer/code-owner action is pending. <a href="https://github.com/MetaMask/contract-metadata/pull/1858" target="_blank" rel="noopener">PR #1858</a></span></li>
-      <li><div class="cb"></div><strong>Uniswap Default Token List Issue #2509</strong> &mdash; waiting for maintainer response.<br>
-        <span style="color:#6b7280;font-size:0.82rem;">Verified 2026-07-30: open with no maintainer comment. Last activity remains the project update on 2026-07-08 with Etherscan Neutral, token-list URLs, icon URLs, and GeckoTerminal pool. Do not double-comment until maintainer response or new proof appears. <a href="https://github.com/Uniswap/default-token-list/issues/2509" target="_blank" rel="noopener">Issue #2509</a></span></li>
-      <li><div class="cb"></div><strong>ethereum-lists PR #1036</strong> &mdash; waiting for maintainer response.<br>
-        <span style="color:#6b7280;font-size:0.82rem;">Verified 2026-07-30: open, mergeable but blocked, with no submitted review, reported check, or maintainer comment. Last activity remains the project follow-up posted 2026-07-08. <a href="https://github.com/ethereum-lists/tokens/pull/1036" target="_blank" rel="noopener">PR #1036</a></span></li>
-      <li><div class="cb"></div><strong>CoinMarketCap listing/check</strong> &mdash; requires local <code>CMC_API_KEY</code> or Gio browser session.<br>
-        <span style="color:#6b7280;font-size:0.82rem;">Script: <code>bash scripts/cmc/check_ifr_listing.sh</code>. Never commit or paste the key.</span></li>
       <li><div class="cb"></div><strong>LendingVault borrow activation</strong> &mdash; price policy decision needed.<br>
         <span style="color:#6b7280;font-size:0.82rem;">Current: <code>ifrPriceWei = 0</code>, Safe JSON ready at <code>/tmp/inferno/lending-price-safe-tx.json</code>. Default: keep borrowing disabled until deeper liquidity or explicit Governance pilot approval.</span></li>
       <li><div class="cb"></div><strong>CommitmentVault price-condition locks</strong> &mdash; V2/PriceLockVault needed.<br>
         <span style="color:#6b7280;font-size:0.82rem;">Time-only locks are live; price locks stay disabled because deployed <code>_getCurrentPrice()</code> returns 0.</span></li>
+      <li><div class="cb"></div><strong>IFRp Commerce App / shop.ifrunit.tech production decisions</strong><br>
+        <span style="color:#6b7280;font-size:0.82rem;">Core customer/seller, QR, catalog, rules, operator, registry/vault and reward-outbox flows are implemented. Mainnet partner activation, a dedicated authorized reward caller, embedded-wallet decision and real-device acceptance remain open. Docs: <code>docs/ifrp-commerce-app/MASTER_ARCHITECTURE.md</code></span></li>
+    </ul>
+
+    <h2><span class="priority-badge p-medium">LATER</span> Deferred / Waiting &mdash; resume only when the trigger occurs</h2>
+    <ul>
+      <li><div class="cb"></div><strong>MetaMask Registry PR #1858</strong> &mdash; external maintainer wait.<br>
+        <span style="color:#6b7280;font-size:0.82rem;">Open, review required, mergeable but blocked. Resume on maintainer review, requested change, workflow approval or status change; do not post another reminder without new evidence. <a href="https://github.com/MetaMask/contract-metadata/pull/1858" target="_blank" rel="noopener">PR #1858</a></span></li>
+      <li><div class="cb"></div><strong>Uniswap Default Token List Issue #2509</strong> &mdash; external maintainer wait.<br>
+        <span style="color:#6b7280;font-size:0.82rem;">Resume on maintainer response or new CoinGecko/CMC/listing proof. <a href="https://github.com/Uniswap/default-token-list/issues/2509" target="_blank" rel="noopener">Issue #2509</a></span></li>
+      <li><div class="cb"></div><strong>ethereum-lists PR #1036</strong> &mdash; external maintainer wait.<br>
+        <span style="color:#6b7280;font-size:0.82rem;">Open, mergeable but blocked. Resume on maintainer review, CI approval or status change. <a href="https://github.com/ethereum-lists/tokens/pull/1036" target="_blank" rel="noopener">PR #1036</a></span></li>
+      <li><div class="cb"></div><strong>CoinGecko standalone listing</strong> &mdash; application submitted.<br>
+        <span style="color:#6b7280;font-size:0.82rem;">Exact-contract API still returns <code>coin not found</code>; GeckoTerminal is live separately. Resume on CoinGecko response or public exact-contract coin page.</span></li>
+      <li><div class="cb"></div><strong>CoinMarketCap listing/check</strong> &mdash; account/key-gated.<br>
+        <span style="color:#6b7280;font-size:0.82rem;">Resume with a local <code>CMC_API_KEY</code>, authorized browser session or public IFR asset page. Never commit or paste the key.</span></li>
+      <li><div class="cb"></div><strong>Trust Wallet / Rainbow / Phantom / Zerion visibility</strong><br>
+        <span style="color:#6b7280;font-size:0.82rem;">Trust Wallet waits for CMC, professional audit, activity criteria and explicit fee approval. Phantom waits for CoinGecko/market-data coverage. Rainbow waits for broader upstream-list coverage. Zerion waits for confirmed missing metadata and explicit submission approval.</span></li>
+      <li><div class="cb"></div><strong>Blockaid/MetaMask warning retest</strong><br>
+        <span style="color:#6b7280;font-size:0.82rem;">Blockaid review is approved. Resume only if a current device still shows a warning, with version, timestamp and screenshot evidence.</span></li>
+      <li><div class="cb"></div><strong>Residual dependency audit findings</strong><br>
+        <span style="color:#6b7280;font-size:0.82rem;">21 transitive findings remain (13 high, 8 low, 0 critical). Resume on upstream fixes or a bounded runtime-path remediation; never use <code>npm audit fix --force</code>.</span></li>
+      <li><div class="cb"></div><strong>CommitmentVault native batch-lock UX</strong><br>
+        <span style="color:#6b7280;font-size:0.82rem;">Current self-service works but needs one approval plus multiple lock confirmations. Resume with an audited V2 <code>lockBatch</code>/<code>lockSplit</code> scope and deployment approval.</span></li>
+      <li><div class="cb"></div><strong>Global LendingVault liquidation dashboard and Telegram alerts</strong><br>
+        <span style="color:#6b7280;font-size:0.82rem;">Wallet-level health, top-up and repay flows are implemented. Resume after borrowing activation is approved and live loans exist.</span></li>
+    </ul>
+
+    <h2><span class="priority-badge p-done">RECENT</span> Recently Completed</h2>
+    <ul>
       <li><div class="cb cb-done">&#x2713;</div><strong>Dependency modernization</strong> &mdash; completed 2026-07-29.<br>
         <span style="color:#6b7280;font-size:0.82rem;">Root now uses Ethers 6.17, Hardhat 3.11.1, Chai 6 and Node &gt;=22.13. Waffle/Ganache were removed; exact-head CI passed. Residual root audit: 21 transitive findings (13 high, 8 low, 0 critical). Do not run <code>npm audit fix --force</code>.</span></li>
       <li><div class="cb cb-done">&#x2713;</div><strong>Deterministic local Hardhat test network</strong> &mdash; completed 2026-07-29.<br>
         <span style="color:#6b7280;font-size:0.82rem;"><code>MAINNET_RPC_URL</code> configures only the named mainnet network. Local forks require explicit <code>HARDHAT_FORK=true</code> plus a positive pinned <code>HARDHAT_FORK_BLOCK_NUMBER</code>; regression gate: <code>npm run test:hardhat-config</code>.</span></li>
-      <li><div class="cb"></div><strong>Trust Wallet / Rainbow / Phantom / Zerion visibility</strong> &mdash; staged follow-up.<br>
-        <span style="color:#6b7280;font-size:0.82rem;">Verified 2026-07-30: do not pay Trust Wallet's non-refundable 500 TWT / 2.5 BNB fee before CMC, professional audit and activity criteria are met. Phantom has no verification form and IFR is not yet a CoinGecko coin. Rainbow needs broader upstream-list coverage; Zerion requires a confirmed missing asset/logo before an approved manual 128x128 report.</span></li>
-      <li><div class="cb"></div><strong>IFRp Commerce App / shop.ifrunit.tech architecture</strong> &mdash; customer/seller product plan.<br>
-        <span style="color:#6b7280;font-size:0.82rem;">The production PWA includes the role chooser, external-wallet/IFRLock and proof flows, seller profiles/rules/history, POS helper, checkout operators, a public product/service catalog and atomic per-wallet UTC day/month redemption caps. The deployed M4 foundation adds governance-gated applications, live contract checks, an atomic reward outbox and read-only vesting status; Mainnet partner activation, an authorized reward caller, embedded-wallet decision and real-device acceptance remain open. Docs: <code>docs/ifrp-commerce-app/MASTER_ARCHITECTURE.md</code></span></li>
     </ul>
 
     <!-- ═══ ERLEDIGT: Proposal #13 ═══ -->
@@ -209,20 +227,20 @@
         <span style="color:#22c55e;font-size:0.82rem;">Runbook: <code>docs/CONTRIBUTOR_RUNBOOK.md</code><br>
         Monitor: <code>node scripts/check-contributors-execution.js</code><br>
         On-chain gepr&uuml;ft: Buy detected = true f&uuml;r C1/C2/C3; Pool = 0.143261656128757442 ETH / 21028676.626442057 IFR</span></li>
-      <li><div class="cb"></div>&#x1F534; <strong>Blockaid Retest</strong> (nach 24h Propagation)<br>
-        <span style="color:#ef4444;font-size:0.82rem;">Checkliste: <code>BRIDGE.md</code></span></li>
-      <li><div class="cb"></div>&#x1F534; <strong>CommitmentVault Lock ausf&uuml;hren</strong> (nach K&auml;ufen)<br>
+      <li><div class="cb"></div><strong>Blockaid/MetaMask warning retest</strong> &mdash; deferred.<br>
+        <span style="color:#6b7280;font-size:0.82rem;">Blockaid review is approved. Resume only if a current device still shows a warning; see the trigger under Deferred / Waiting.</span></li>
+      <li><div class="cb cb-done">&#x2713;</div>&#x2705; <strong>Contributor CommitmentVault Locks abgeschlossen</strong><br>
         <span style="color:#6b7280;font-size:0.82rem;">Script: <code>scripts/contributors-lock.js</code> &mdash; TIME_ONLY(0), 30d, balance/10 pro Tranche<br>
         DRY_RUN &#x2705; &mdash; 10 Tranchen, TIME_ONLY(0), p0Multiplier=0<br>
-        Status 29.06.2026: C2 &#x2705; locked 20,156,940.952845656 IFR in 10 TIME_ONLY tranches via self-service MetaMask UI; C1/C3 need gas top-up, then 50% lock.<br>
+        Mainnet recheck 30.07.2026 at block 25641174: C1 locked 19,735,135.849220732 IFR (2 tranches), C2 locked 20,156,940.952845656 IFR (10 tranches), C3 locked 8,060,400.069727987 IFR (11 tranches). Monitor reports <code>Next: done</code> for all three.<br>
         LIVE script fallback: <code>CONTRIBUTOR_ADDR=0x... PRIVATE_KEY=0x... DRY_RUN=false MAINNET=true LOCK_BPS=5000 node scripts/contributors-lock.js</code></span></li>
-      <li><div class="cb"></div>&#x1F534; <strong>LendingVault createOffer() ausf&uuml;hren</strong><br>
+      <li><div class="cb cb-done">&#x2713;</div>&#x2705; <strong>Contributor LendingVault Offers abgeschlossen</strong><br>
         <span style="color:#6b7280;font-size:0.82rem;">Script: <code>scripts/contributors-lending-offer.js</code><br>
         Nach 50% Lock den verbleibenden Rest mit <code>LENDING_BPS=10000</code> anbieten.<br>
         DRY_RUN &#x2705; &mdash; approve + createOffer korrekt<br>
-        Status 29.06.2026: C2 active offer on-chain: 20,156,940.952845656 IFR available, 0 IFR lent. C1/C3 lending follows after lock/gas steps.<br>
+        Mainnet recheck 30.07.2026 at block 25641174: C1 16,999,000 IFR, C2 20,156,940.952845656 IFR, C3 14,999,500 IFR available; all offers active, totalAvailable 52,155,440.952845656 IFR, totalLent 0 IFR.<br>
         LIVE script fallback: <code>CONTRIBUTOR_ADDR=0x... PRIVATE_KEY=0x... DRY_RUN=false MAINNET=true LENDING_BPS=10000 node scripts/contributors-lending-offer.js</code></span></li>
-      <li><div class="cb"></div>&#x1F7E0; <strong>CommitmentVault Batch Lock UX verbessern</strong><br>
+      <li><div class="cb"></div>&#x1F7E0; <strong>CommitmentVault Batch Lock UX verbessern &mdash; deferred</strong><br>
         <span style="color:#6b7280;font-size:0.82rem;">Status 08.07.2026: Web3 supports direct CommitmentVault locking, but batch UX still needs a native contract path; price-condition locks remain disabled because the deployed <code>_getCurrentPrice()</code> returns 0.<br>
         Ziel: 10-Tranchen-Split nicht mehr als 10 separate <code>lock()</code> Wallet-Confirmations.<br>
         Vorschlag: native Vault-Erweiterung <code>lockBatch(...)</code> / <code>lockSplit(totalAmount, splitCount, ...)</code>.<br>
@@ -281,7 +299,7 @@
       <li><div class="cb cb-done">&#x2713;</div>&#x2705; CommitmentVault UI &mdash; WalletConnect + tranche configurator + dashboard (04.04.2026)</li>
       <li><div class="cb cb-done">&#x2713;</div>&#x2705; LendingVault UI &mdash; Lender + Borrower + Market tabs + loan calculator (04.04.2026)</li>
       <li><div class="cb cb-done">&#x2713;</div>&#x2705; P2P Lending Market &mdash; <code>lending-market.html</code> + Railway endpoints (04.04.2026)</li>
-      <li><div class="cb cb-done">&#x2713;</div>&#x2705; Collateral Health Monitor in Web3 Borrow panel (wallet loan badges); global liquidation dashboard remains separate</li>
+      <li><div class="cb cb-done">&#x2713;</div>&#x2705; Collateral Health Monitor in Web3 Borrow panel (wallet loan badges); global liquidation dashboard is deferred until borrowing is active</li>
     </ul>
 
     <h3>Railway &rarr; Hetzner Migration</h3>
@@ -483,7 +501,7 @@
       <li><div class="cb cb-done">&#x2713;</div>&#x2705; Lender Interface &mdash; guided 1-5 flow: connect, amount, approve, createOffer/increaseOffer, verify market (29.06.2026)</li>
       <li><div class="cb cb-done">&#x2713;</div>&#x2705; Borrower Interface &mdash; Web3 + Wiki browse offers, preview ETH collateral, borrow, repay, and top up; transactions remain gated until <code>ifrPriceWei</code> is set</li>
       <li><div class="cb cb-done">&#x2713;</div>&#x2705; Collateral Health Monitor UI &mdash; Web3 Borrow panel shows Healthy / Warning / Liquidation / Price not set per active wallet loan</li>
-      <li><div class="cb"></div>&#x1F535; Liquidation Interface &mdash; liquidatable loans, 5% bonus</li>
+      <li><div class="cb"></div>&#x1F535; Liquidation Interface &mdash; deferred until borrowing is active; liquidatable loans, 5% bonus</li>
       <li><div class="cb cb-done">&#x2713;</div>&#x2705; Market Overview Dashboard &mdash; direct LendingVault stats, utilization, rates (29.06.2026)</li>
     </ul>
 

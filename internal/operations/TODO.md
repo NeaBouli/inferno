@@ -106,26 +106,6 @@ On errors: fix immediately, commit with `seo:` prefix.
 
 ## CURRENT WATCHLIST — verified 2026-07-30
 
-- [ ] MetaMask Registry PR #1858 — waiting for MetaMask code-owner review
-      PR: https://github.com/MetaMask/contract-metadata/pull/1858
-      Status verified 2026-07-30: open, REVIEW_REQUIRED, no submitted
-      reviews or maintainer activity since the project follow-up on 2026-07-08.
-      The three visible reported checks are successful. GitHub reports the PR
-      as MERGEABLE but BLOCKED while maintainer/code-owner action is pending.
-- [ ] Uniswap Default Token List Issue #2509 — waiting for maintainer response
-      Issue: https://github.com/Uniswap/default-token-list/issues/2509
-      Status verified 2026-07-30: open with no maintainer comment. Last
-      activity remains the project update on 2026-07-08 with Etherscan
-      Neutral, token-list URLs, icon URLs, and GeckoTerminal pool.
-      Do not double-comment until maintainer response or new external proof appears.
-- [ ] ethereum-lists PR #1036 — waiting for maintainer response
-      PR: https://github.com/ethereum-lists/tokens/pull/1036
-      Status verified 2026-07-30: open, MERGEABLE but BLOCKED, with no
-      submitted review, reported check, or maintainer comment. Last activity
-      remains the project follow-up posted 2026-07-08.
-- [ ] CoinMarketCap listing/check — requires local CMC_API_KEY or Gio browser session
-      Script: `bash scripts/cmc/check_ifr_listing.sh`
-      Status: intentionally blocked without local key. Never commit or paste the key.
 - [ ] LendingVault borrow activation — price policy decision needed
       Runbook: docs/LENDING_PRICE_GOVERNANCE_RUNBOOK.md
       Policy: docs/LENDING_PRICE_POLICY_20260708.md
@@ -134,6 +114,71 @@ On errors: fix immediately, commit with `seo:` prefix.
 - [ ] CommitmentVault price-condition locks — V2/PriceLockVault needed
       Design: docs/COMMITMENT_PRICE_LOCK_ORACLE_PATH.md
       Current: time-only locks live; price locks must stay disabled because deployed `_getCurrentPrice()` returns 0.
+- [ ] IFRp Commerce App / shop.ifrunit.tech production decisions
+      Docs: docs/ifrp-commerce-app/MASTER_ARCHITECTURE.md
+      Current: role chooser, external-wallet/IFRLock flow, QR proof/redeem,
+      seller profiles/rules/history, POS helper, checkout operators, public
+      catalog, redemption caps, seller applications, live registry/vault
+      checks, atomic reward outbox and read-only vesting are implemented.
+      Open: Mainnet partner activation, dedicated authorized reward caller,
+      embedded-wallet decision and real-device acceptance.
+
+## DEFERRED / LATER — resume only when its trigger occurs
+
+- [ ] MetaMask Registry PR #1858 — external maintainer wait
+      PR: https://github.com/MetaMask/contract-metadata/pull/1858
+      Status verified 2026-07-30: open, REVIEW_REQUIRED, no submitted
+      reviews or maintainer activity since the project follow-up on 2026-07-08.
+      The three visible reported checks are successful. GitHub reports the PR
+      as MERGEABLE but BLOCKED.
+      Resume trigger: maintainer review, requested change, workflow approval
+      or status change. Do not post another reminder without new evidence.
+- [ ] Uniswap Default Token List Issue #2509 — external maintainer wait
+      Issue: https://github.com/Uniswap/default-token-list/issues/2509
+      Status verified 2026-07-30: open with no maintainer comment. Last
+      activity remains the project update on 2026-07-08.
+      Resume trigger: maintainer response or new CoinGecko/CMC/listing proof.
+- [ ] ethereum-lists PR #1036 — external maintainer wait
+      PR: https://github.com/ethereum-lists/tokens/pull/1036
+      Status verified 2026-07-30: open, MERGEABLE but BLOCKED, with no
+      submitted review, reported check or maintainer comment.
+      Resume trigger: maintainer review, CI approval or status change.
+- [ ] CoinGecko standalone coin listing — application submitted
+      Exact-contract API still returns `coin not found`; GeckoTerminal is live
+      separately.
+      Resume trigger: CoinGecko response or a public exact-contract coin page.
+- [ ] CoinMarketCap listing/check — account/key-gated
+      Script: `bash scripts/cmc/check_ifr_listing.sh`
+      Resume trigger: locally available `CMC_API_KEY`, authorized browser
+      session or public IFR asset page. Never commit or paste the key.
+- [ ] Trust Wallet / Rainbow / Phantom / Zerion visibility follow-up
+      Docs: docs/WALLET_ICON_DISTRIBUTION_STATUS_20260708.md
+      Trust Wallet: resume only after CMC, professional audit and activity
+      criteria are met and the non-refundable fee is explicitly approved.
+      Phantom: no verification form; resume after CoinGecko/market-data
+      coverage changes. Rainbow: resume after broader upstream-list coverage.
+      Zerion: resume after IFR/logo is confirmed missing and an interactive
+      submission is explicitly approved.
+- [ ] Blockaid/MetaMask warning retest
+      Blockaid review is approved. Resume only if a current device still shows
+      a warning; capture wallet/browser version, timestamp and screenshot.
+- [ ] Residual dependency audit findings
+      Root audit after modernization: 21 transitive findings
+      (13 high, 8 low, 0 critical).
+      Resume trigger: upstream fixes or a bounded runtime-path remediation.
+      Never run `npm audit fix --force`.
+- [ ] CommitmentVault native batch-lock UX
+      Current self-service works but requires one approval plus multiple
+      `lock()` confirmations.
+      Resume trigger: V2 contract scope with native `lockBatch`/`lockSplit`
+      design, audit and deployment approval.
+- [ ] Global LendingVault liquidation dashboard and Telegram alerts
+      Wallet-level collateral health, top-up and repay flows are implemented.
+      Resume trigger: borrowing activation policy is approved and live loans
+      exist; then add global liquidator discovery and alerting.
+
+## RECENTLY COMPLETED
+
 - [x] Dependency modernization — completed 2026-07-29
       Docs: docs/DEPENDENCY_UPGRADES.md
       Root now uses Ethers 6.17, Hardhat 3.11.1, Chai 6 and Node >=22.13.
@@ -147,19 +192,6 @@ On errors: fix immediately, commit with `seo:` prefix.
       `HARDHAT_FORK_BLOCK_NUMBER`. The config fails closed if either the RPC
       URL or block number is missing or invalid.
       Regression gate: `npm run test:hardhat-config`.
-- [ ] Trust Wallet / Rainbow / Phantom / Zerion visibility follow-up
-      Docs: docs/WALLET_ICON_DISTRIBUTION_STATUS_20260708.md
-      Verified 2026-07-30: Trust Wallet requires a non-refundable 500 TWT /
-      2.5 BNB fee plus CMC, professional audit and activity criteria; do not
-      submit. Phantom has no verification form and depends on external data;
-      CoinGecko exact-contract API still returns `coin not found`. Rainbow
-      requires broader upstream-list coverage and has no documented direct
-      submission route. Zerion offers an interactive 128x128 logo report only
-      after confirming IFR is missing.
-- [ ] IFRp Commerce App / shop.ifrunit.tech architecture
-      Docs: docs/ifrp-commerce-app/MASTER_ARCHITECTURE.md
-      Goal: installable customer/seller app with wallet, ETH/IFR swap, IFR locking, QR proof, seller scanner, seller discount rules, and verified seller rewards via PartnerVault after governance approval.
-      Current: the production PWA has a role chooser, external-wallet/IFRLock flow, QR proof/redeem, seller profiles/rules/history, POS helper, checkout operators, a public product/service catalog and atomic per-wallet UTC day/month redemption caps. The deployed M4 foundation covers seller applications, live BuilderRegistry/PartnerVault checks, an atomic reward outbox and read-only vesting status. Mainnet partner activation, a dedicated authorized reward caller, embedded-wallet decision and real-device acceptance remain open.
 
 ## ✅ ERLEDIGT — Proposal #13 executed (16.04.2026)
 
@@ -339,27 +371,35 @@ On errors: fix immediately, commit with `seo:` prefix.
       → Monitor: node scripts/check-contributors-execution.js
       → On-chain geprüft: Buy detected = true für C1/C2/C3; Pool = 0.143261656128757442 ETH / 21028676.626442057 IFR
 
-- [ ] 🔴 Blockaid Retest (nach 24h Propagation)
-      → Checkliste: BRIDGE.md
+- [ ] Blockaid/MetaMask warning retest — deferred
+      Blockaid review is approved. Retest only if a current device still
+      shows a warning; capture version, timestamp and screenshot. See the
+      trigger in `DEFERRED / LATER`.
 
-- [ ] 🔴 CommitmentVault Lock ausführen (NACH Käufen)
+- [x] ✅ Contributor CommitmentVault Locks abgeschlossen
       Script: scripts/contributors-lock.js (dynamisch: balance/10, TIME_ONLY 30d)
       DRY_RUN: CONTRIBUTOR_ADDR=0x... LOCK_BPS=5000 DRY_RUN=true node scripts/contributors-lock.js ✅
       LIVE:    CONTRIBUTOR_ADDR=0x... PRIVATE_KEY=0x... DRY_RUN=false MAINNET=true LOCK_BPS=5000 node scripts/contributors-lock.js
       Dry Run Output: 10 Tranchen, TIME_ONLY(0), unlockTime+30d, p0Multiplier=0 ✅
-      Status 29.06.2026:
-      - C2 ✅ locked 20,156,940.952845656 IFR in 10 TIME_ONLY tranches via self-service MetaMask UI
-      - C1/C3 ⏳ gas top-up, then 50% lock
+      Read-only Mainnet recheck at block 25641174 on 30.07.2026:
+      - C1: 19,735,135.849220732 IFR locked, 2 tranches
+      - C2: 20,156,940.952845656 IFR locked, 10 tranches
+      - C3: 8,060,400.069727987 IFR locked, 11 tranches
+      Monitor reports `Next: done` for C1/C2/C3.
 
-- [x] ✅ C2 LendingVault createOffer() ausgeführt
+- [x] ✅ Contributor LendingVault Offers abgeschlossen
       Script: scripts/contributors-lending-offer.js
       Nach 50% Lock den verbleibenden Rest mit LENDING_BPS=10000 anbieten.
       DRY_RUN: CONTRIBUTOR_ADDR=0x... LENDING_BPS=10000 DRY_RUN=true node scripts/contributors-lending-offer.js ✅
       LIVE:    CONTRIBUTOR_ADDR=0x... PRIVATE_KEY=0x... DRY_RUN=false MAINNET=true LENDING_BPS=10000 node scripts/contributors-lending-offer.js
-      Status 29.06.2026: C2 active offer on-chain: 20,156,940.952845656 IFR available, 0 IFR lent.
-      C1/C3 lending follows after their lock/gas steps.
+      Read-only Mainnet recheck at block 25641174 on 30.07.2026:
+      - C1: 16,999,000 IFR available
+      - C2: 20,156,940.952845656 IFR available
+      - C3: 14,999,500 IFR available
+      All three offers are active; totalAvailable is
+      52,155,440.952845656 IFR and totalLent is 0 IFR.
 
-- [ ] 🟠 CommitmentVault Batch Lock UX verbessern
+- [ ] 🟠 CommitmentVault Batch Lock UX verbessern — deferred
       Status 29.06.2026: bewusst auf Backlog gesetzt; aktueller Self-service Flow bleibt 1x approve + 10x lock fuer 10 Tranchen.
       Status 08.07.2026: Web3 supports direct CommitmentVault locking, but batch UX still needs a native contract path.
       Ziel: 10-Tranchen-Split nicht mehr als 10 separate `lock()` Wallet-Confirmations.
@@ -472,11 +512,12 @@ On errors: fix immediately, commit with `seo:` prefix.
       lending-market.html: live offers table + stats direct from LendingVault with copilot-api fallback
       /api/lending/stats + /api/lending/offers endpoints expose offerCount, priceSet, borrowingEnabled
       How It Works, Interest Rate Curve, Collateral & Safety
-- [ ] 🔵 Collateral Health Monitor
+- [x] ✅ Wallet-level Collateral Health Monitor
       Borrower sees collateral ratio, warning at <150% (red),
       "Top Up" button for margin calls
       Status 08.07.2026: Web3 Borrow panel shows collateral health badges for active wallet loans.
-      Remaining: global liquidation/liquidator dashboard and Telegram alert UX.
+      Remaining deferred item: global liquidation/liquidator dashboard and
+      Telegram alert UX.
 
 ### Phase 3 — Railway Extensions
 - [x] ✅ Lending Endpoints (07.04.2026)
@@ -921,7 +962,7 @@ Strategic goal: "IFR = Stripe for Web3 Access — Web3 SaaS Standard"
 - [x] ✅ Collateral Health Monitor UI
       Web3 Borrow panel shows live ratio state per active wallet loan: Healthy / Warning / Liquidation / Price not set.
       Remaining separate item: global liquidator dashboard and Telegram alert integration.
-- [ ] 🔵 Liquidation Interface
+- [ ] 🔵 Liquidation Interface — deferred until borrowing is active
       All liquidatable loans, 5% liquidator bonus, permissionless
 - [x] ✅ Market Overview Dashboard
       Total Lent/Available, Utilization, Interest Rate, Active Loans/Offers
