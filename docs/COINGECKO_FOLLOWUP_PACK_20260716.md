@@ -4,6 +4,15 @@ Prepared: 2026-07-16 09:13 EEST
 Status: draft only, not sent  
 Scope: exact-contract evidence pack for Inferno / IFR on Ethereum Mainnet
 
+## Recheck - 2026-07-30
+
+- Exact-contract endpoint still returns `{"error":"coin not found"}`.
+- Search for `Inferno IFR` still returns an empty `coins` array.
+- Therefore the application/submission is complete, but a canonical
+  CoinGecko coin listing is not yet approved or publicly indexed.
+- GeckoTerminal pool visibility remains a separate product/status and must
+  not be described as a standalone CoinGecko coin listing.
+
 ## Do Not Send Before Review
 
 This file is a local preparation pack. Do not submit, email, upload, paste into a

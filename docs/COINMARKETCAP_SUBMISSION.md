@@ -4,7 +4,9 @@ Updated: 2026-07-02
 
 ## Status
 
-- CoinGecko / GeckoTerminal: done per project status; verified pool URL available.
+- GeckoTerminal: live, verified pool URL available.
+- CoinGecko: application submitted, but exact-contract API still returns
+  `coin not found` as of 2026-07-30; no standalone coin listing is confirmed.
 - CoinMarketCap: ready to submit through the official request form.
 - Official request URL: https://coinmarketcap.com/request/
 - Direct CMC support URL: https://support.coinmarketcap.com/hc/en-us/requests/new?ticket_form_id=360000493112

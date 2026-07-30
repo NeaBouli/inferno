@@ -66,6 +66,8 @@ requireText("internal/operations/TODO.html", [
   "open, mergeable but blocked",
   "Dependency modernization</strong> &mdash; completed 2026-07-29",
   "Deterministic local Hardhat test network",
+  "Trust Wallet's non-refundable 500 TWT / 2.5 BNB fee",
+  "Submission completed, not approval",
 ]);
 
 requireText("BACKLOG.md", [
@@ -90,11 +92,17 @@ requireText("docs/WALLET_ICON_DISTRIBUTION_STATUS_20260708.md", [
   "Last verified: 2026-07-30",
   "Open; `REVIEW_REQUIRED`",
   "Open, `MERGEABLE` but `BLOCKED`",
+  "there is no",
+  "500 TWT",
+  "at least three outside token lists",
+  "CoinGecko exact-contract endpoint: `coin not found`",
 ]);
 requireText("docs/TOKEN_ICON_DISTRIBUTION.md", [
   "Last checked: 2026-07-30",
   "PR open / review required",
   "Open / blocked",
+  "External-data path / no verification form",
+  "Not eligible / do not pay",
 ]);
 requireText("docs/PHASE3_OPEN_ITEMS_STATUS_20260708.md", [
   "Sections 3 and 4 were reverified on 2026-07-30",
@@ -102,6 +110,15 @@ requireText("docs/PHASE3_OPEN_ITEMS_STATUS_20260708.md", [
   "13 high / 8 low / 0 critical",
   "Status verified 2026-07-30",
   "keep all three external threads under watch without duplicate",
+]);
+requireText("docs/COINGECKO_FOLLOWUP_PACK_20260716.md", [
+  "## Recheck - 2026-07-30",
+  "CoinGecko coin listing is not yet approved or publicly indexed.",
+]);
+requireText("docs/COINMARKETCAP_SUBMISSION.md", [
+  "GeckoTerminal: live",
+  "CoinGecko: application submitted",
+  "`coin not found` as of 2026-07-30",
 ]);
 
 console.log("[status-baseline] PASS");
