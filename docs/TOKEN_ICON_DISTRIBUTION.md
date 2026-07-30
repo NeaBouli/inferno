@@ -25,7 +25,7 @@ Last checked: 2026-07-30
 | ethereum-lists | Open / blocked | Token definition PR remains open and `MERGEABLE` but `BLOCKED`: https://github.com/ethereum-lists/tokens/pull/1036. No submitted review, reported check, or maintainer comment since the 2026-07-08 project follow-up. |
 | Trust Wallet Assets | Not eligible / do not pay | Official path requires 500 TWT or 2.5 BNB non-refundable fee, reputable full audit, CMC tracking, and guideline thresholds of 10,000 holders / 15,000 transactions. IFR is absent from the repository; the prepared 256x256 PNG is technically compliant, but submission is not justified. |
 | Rainbow Token List | Waiting on upstream sources | Rainbow's UI says verification requires appearance on at least three outside token lists. Its bundled list is refreshed from a private backend URL; IFR is absent and no public direct submission path is documented. |
-| Zerion | Missing / support draft prepared | Exact-contract search returns `Nothing was found`. The normal logo Typeform requires an existing token page, so a missing-asset support request is needed. Canonical 128x128 PNG and draft are prepared; nothing was sent. |
+| Zerion | Submitted / awaiting human review | Exact-contract search returns `Nothing was found`. The missing-asset request and canonical 128x128 PNG were submitted through official Zerion Intercom support on 2026-07-30. Zer AI confirmed handoff to a human agent; no ticket/reference number or review result is available yet. |
 | Phantom | External-data path / no verification form | Phantom uses trusted sources such as CoinGecko and does not provide a verification form or timeline. IFR's CoinGecko exact-contract endpoint still returns `coin not found`; GeckoTerminal alone is not a CoinGecko coin listing. |
 | Coinbase/Base Wallet | Indirect | No public ERC-20 logo PR path found; wallet visibility generally follows indexed market/explorer metadata and manual custom-token support. |
 | Rabby / OKX Wallet | Indirect | No stable public ERC-20 icon PR path confirmed. Track through Etherscan, token lists, market-data providers, and wallet support channels if IFR is missing after listings mature. |
@@ -36,7 +36,7 @@ Last checked: 2026-07-30
 2. Keep Uniswap issue #2509 updated after any CoinGecko/CoinMarketCap page goes live.
 3. Keep ethereum-lists PR #1036 under watch.
 4. Do not pay/submit a Trust Wallet PR until CMC, professional audit and activity criteria are met.
-5. Review the prepared Zerion missing-asset support draft, then submit only
-   after explicit approval.
+5. Wait for Zerion's human support response; do not submit a duplicate or send
+   another reminder without new evidence or a reasonable follow-up interval.
 6. Keep monitoring Etherscan reputation for movement from `Neutral` to `OK`.
 7. Keep `docs/token-list.json` and `docs/.well-known/token-list.json` in sync when metadata changes.
