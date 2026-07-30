@@ -49,25 +49,27 @@
   <div class="container">
     <a href="wiki/roadmap.html" class="back" rel="nofollow">&larr; Roadmap</a>
     <h1>IFR Protocol &mdash; Developer TODO List</h1>
-    <div class="subtitle">Last updated: 2026-07-20 &middot; Branch: main</div>
+    <div class="subtitle">Last updated: 2026-07-30 &middot; Branch: main</div>
 
     <!-- ═══ CURRENT WATCHLIST ═══ -->
-    <h2><span class="priority-badge p-critical">WATCH</span> Current Watchlist &mdash; 2026-07-20</h2>
+    <h2><span class="priority-badge p-critical">WATCH</span> Current Watchlist &mdash; verified 2026-07-30</h2>
     <ul>
       <li><div class="cb"></div><strong>MetaMask Registry PR #1858</strong> &mdash; waiting for MetaMask code-owner review.<br>
-        <span style="color:#6b7280;font-size:0.82rem;">Open, mergeable, bot checks green, follow-up posted 2026-07-08. Blocker: approving reviewer with write access and maintainer approval for pending fork workflows. <a href="https://github.com/MetaMask/contract-metadata/pull/1858" target="_blank" rel="noopener">PR #1858</a></span></li>
+        <span style="color:#6b7280;font-size:0.82rem;">Verified 2026-07-30: open, review required, mergeable but blocked, with no submitted review or maintainer activity since the project follow-up on 2026-07-08. The three visible reported checks are successful; maintainer/code-owner action is pending. <a href="https://github.com/MetaMask/contract-metadata/pull/1858" target="_blank" rel="noopener">PR #1858</a></span></li>
       <li><div class="cb"></div><strong>Uniswap Default Token List Issue #2509</strong> &mdash; waiting for maintainer response.<br>
-        <span style="color:#6b7280;font-size:0.82rem;">Updated 2026-07-08 with Etherscan Neutral, token-list URLs, icon URLs, and GeckoTerminal pool. Do not double-comment until maintainer response or new proof appears. <a href="https://github.com/Uniswap/default-token-list/issues/2509" target="_blank" rel="noopener">Issue #2509</a></span></li>
+        <span style="color:#6b7280;font-size:0.82rem;">Verified 2026-07-30: open with no maintainer comment. Last activity remains the project update on 2026-07-08 with Etherscan Neutral, token-list URLs, icon URLs, and GeckoTerminal pool. Do not double-comment until maintainer response or new proof appears. <a href="https://github.com/Uniswap/default-token-list/issues/2509" target="_blank" rel="noopener">Issue #2509</a></span></li>
       <li><div class="cb"></div><strong>ethereum-lists PR #1036</strong> &mdash; waiting for maintainer response.<br>
-        <span style="color:#6b7280;font-size:0.82rem;">Follow-up posted 2026-07-08. <a href="https://github.com/ethereum-lists/tokens/pull/1036" target="_blank" rel="noopener">PR #1036</a></span></li>
+        <span style="color:#6b7280;font-size:0.82rem;">Verified 2026-07-30: open, mergeable but blocked, with no submitted review, reported check, or maintainer comment. Last activity remains the project follow-up posted 2026-07-08. <a href="https://github.com/ethereum-lists/tokens/pull/1036" target="_blank" rel="noopener">PR #1036</a></span></li>
       <li><div class="cb"></div><strong>CoinMarketCap listing/check</strong> &mdash; requires local <code>CMC_API_KEY</code> or Gio browser session.<br>
         <span style="color:#6b7280;font-size:0.82rem;">Script: <code>bash scripts/cmc/check_ifr_listing.sh</code>. Never commit or paste the key.</span></li>
       <li><div class="cb"></div><strong>LendingVault borrow activation</strong> &mdash; price policy decision needed.<br>
         <span style="color:#6b7280;font-size:0.82rem;">Current: <code>ifrPriceWei = 0</code>, Safe JSON ready at <code>/tmp/inferno/lending-price-safe-tx.json</code>. Default: keep borrowing disabled until deeper liquidity or explicit Governance pilot approval.</span></li>
       <li><div class="cb"></div><strong>CommitmentVault price-condition locks</strong> &mdash; V2/PriceLockVault needed.<br>
         <span style="color:#6b7280;font-size:0.82rem;">Time-only locks are live; price locks stay disabled because deployed <code>_getCurrentPrice()</code> returns 0.</span></li>
-      <li><div class="cb"></div><strong>Dependency modernization</strong> &mdash; staged migration in progress.<br>
-        <span style="color:#6b7280;font-size:0.82rem;">Waffle/Ganache retired and replaced with the Ethers-5-compatible Hardhat Chai matcher plugin; critical audit and full contract CI are blocking. The broader Ethers 6 migration remains separate because deploy, task and test APIs still use Ethers 5. Do not run <code>npm audit fix --force</code> on main.</span></li>
+      <li><div class="cb cb-done">&#x2713;</div><strong>Dependency modernization</strong> &mdash; completed 2026-07-29.<br>
+        <span style="color:#6b7280;font-size:0.82rem;">Root now uses Ethers 6.17, Hardhat 3.11.1, Chai 6 and Node &gt;=22.13. Waffle/Ganache were removed; exact-head CI passed. Residual root audit: 21 transitive findings (13 high, 8 low, 0 critical). Do not run <code>npm audit fix --force</code>.</span></li>
+      <li><div class="cb cb-done">&#x2713;</div><strong>Deterministic local Hardhat test network</strong> &mdash; completed 2026-07-29.<br>
+        <span style="color:#6b7280;font-size:0.82rem;"><code>MAINNET_RPC_URL</code> configures only the named mainnet network. Local forks require explicit <code>HARDHAT_FORK=true</code> plus a positive pinned <code>HARDHAT_FORK_BLOCK_NUMBER</code>; regression gate: <code>npm run test:hardhat-config</code>.</span></li>
       <li><div class="cb"></div><strong>Trust Wallet / Rainbow / Phantom / Zerion visibility</strong> &mdash; staged follow-up.<br>
         <span style="color:#6b7280;font-size:0.82rem;">Trust Wallet not yet worth fee submission until CMC/activity improves; Rainbow depends on upstream lists/market data; Phantom and several wallets are indirect trust/indexing paths.</span></li>
       <li><div class="cb"></div><strong>IFRp Commerce App / shop.ifrunit.tech architecture</strong> &mdash; customer/seller product plan.<br>

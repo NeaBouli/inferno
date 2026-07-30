@@ -39,13 +39,16 @@ requireText("STATUS-REPORT.md", currentBaseline);
 requireText("docs/STATUS-REPORT.md", currentBaseline);
 
 const todo = requireText("internal/operations/TODO.md", [
-  "> Last updated: 2026-07-29 | Branch: main",
+  "> Last updated: 2026-07-30 | Branch: main",
+  "CURRENT WATCHLIST — verified 2026-07-30",
+  "Status verified 2026-07-30: open, REVIEW_REQUIRED",
+  "open, MERGEABLE but BLOCKED",
   "Dependency modernization — completed 2026-07-29",
   "Ethers 6 / Hardhat 3 / Chai 6 / Node 22 migration",
   "13 high, 8 low, 0 critical",
   "Deterministic local Hardhat test network",
   "Technical: WalletConnect v2 + ethers.js v6",
-  "*Last updated: 2026-07-29*",
+  "*Last updated: 2026-07-30*",
 ]);
 assert.ok(
   !todo.includes("- [ ] Dependency modernization"),
@@ -55,6 +58,15 @@ assert.ok(
   !todo.includes("- [ ] Deterministic local Hardhat test network"),
   "Deterministic local Hardhat test network must not remain open"
 );
+
+requireText("internal/operations/TODO.html", [
+  "Last updated: 2026-07-30",
+  "Current Watchlist &mdash; verified 2026-07-30",
+  "open, review required",
+  "open, mergeable but blocked",
+  "Dependency modernization</strong> &mdash; completed 2026-07-29",
+  "Deterministic local Hardhat test network",
+]);
 
 requireText("BACKLOG.md", [
   "**Legacy snapshot updated for closure on 2026-07-29.**",
@@ -73,6 +85,23 @@ requireText("docs/DEPENDENCY_UPGRADES.md", [
   "## 2026-07-29 Hardhat 3 Completion",
   "### Deterministic local networks",
   "HARDHAT_FORK_BLOCK_NUMBER=<positive-mainnet-block>",
+]);
+requireText("docs/WALLET_ICON_DISTRIBUTION_STATUS_20260708.md", [
+  "Last verified: 2026-07-30",
+  "Open; `REVIEW_REQUIRED`",
+  "Open, `MERGEABLE` but `BLOCKED`",
+]);
+requireText("docs/TOKEN_ICON_DISTRIBUTION.md", [
+  "Last checked: 2026-07-30",
+  "PR open / review required",
+  "Open / blocked",
+]);
+requireText("docs/PHASE3_OPEN_ITEMS_STATUS_20260708.md", [
+  "Sections 3 and 4 were reverified on 2026-07-30",
+  "Status verified 2026-07-30: migration completed",
+  "13 high / 8 low / 0 critical",
+  "Status verified 2026-07-30",
+  "keep all three external threads under watch without duplicate",
 ]);
 
 console.log("[status-baseline] PASS");
