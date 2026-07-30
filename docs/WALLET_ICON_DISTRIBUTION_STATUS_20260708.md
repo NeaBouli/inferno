@@ -129,9 +129,19 @@ Verified 2026-07-30:
 - `docs/assets/ifr_icon_128.png` is prepared from the canonical 256px icon:
   `128x128`, PNG, 10,766 bytes.
 
-Action: use the prepared support draft in
-`docs/ZERION_SUBMISSION_PACK_20260730.md`. Sending it is an external action and
-requires review immediately before submission. No request was sent.
+Submitted 2026-07-30:
+
+- The reviewed missing-asset message was sent through Zerion's official
+  Intercom support chat.
+- The canonical `128x128` PNG was uploaded as a separate visible attachment.
+- `Zer AI Agent` confirmed that the request will be connected to a human
+  agent. Support reported that it will be back online tomorrow.
+- No human ticket/reference number or requested change is available yet.
+
+Action: wait for the human support response. Do not submit a duplicate or send
+another reminder without a response, requested change or reasonable follow-up
+interval. Submission details remain in
+`docs/ZERION_SUBMISSION_PACK_20260730.md`.
 
 Official source:
 
@@ -155,5 +165,5 @@ No stable public ERC-20 icon PR path was confirmed for these wallets. Treat them
 4. CoinGecko application response; exact-contract API still says
    `coin not found`.
 5. CMC status once a local `CMC_API_KEY` is available.
-6. Zerion support request for the missing asset; draft and 128px icon are
-   prepared, but nothing has been sent.
+6. Zerion missing-asset request is submitted with the 128px icon and queued
+   for human support review; wait for a response or reference number.

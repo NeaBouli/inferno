@@ -127,6 +127,8 @@ requireText("docs/WALLET_ICON_DISTRIBUTION_STATUS_20260708.md", [
   "CoinGecko exact-contract endpoint: `coin not found`",
   "Searching Zerion by the exact IFR contract returns `Nothing was found`",
   "docs/assets/ifr_icon_128.png",
+  "Submitted 2026-07-30",
+  "queued",
 ]);
 requireText("docs/TOKEN_ICON_DISTRIBUTION.md", [
   "Last checked: 2026-07-30",
@@ -134,7 +136,13 @@ requireText("docs/TOKEN_ICON_DISTRIBUTION.md", [
   "Open / blocked",
   "External-data path / no verification form",
   "Not eligible / do not pay",
-  "Missing / support draft prepared",
+  "Submitted / awaiting human review",
+]);
+requireText("docs/ZERION_SUBMISSION_PACK_20260730.md", [
+  "Status: submitted 2026-07-30, awaiting human support review",
+  "docs/assets/ifr_icon_128.png",
+  "support will be back online tomorrow",
+  "Do not submit a duplicate",
 ]);
 requireText("docs/PHASE3_OPEN_ITEMS_STATUS_20260708.md", [
   "Sections 3 and 4 were reverified on 2026-07-30",

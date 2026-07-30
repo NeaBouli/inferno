@@ -1,7 +1,7 @@
 # Zerion Missing-Asset Support Pack - Inferno (IFR)
 
 Prepared: 2026-07-30
-Status: draft only, not sent
+Status: submitted 2026-07-30, awaiting human support review
 
 ## Verified State
 
@@ -67,8 +67,16 @@ as its social cashtag; IFR remains the on-chain token symbol.
 Thank you.
 ```
 
-## Submission Gate
+## Submission Record
 
-Do not send this draft or upload the icon without explicit approval at
-action time. Verify the destination is official Zerion support and recheck the
-contract address before submission.
+- The message above was reviewed and explicitly approved immediately before
+  submission.
+- It was sent through the official Zerion Intercom support chat.
+- `docs/assets/ifr_icon_128.png` was uploaded and appeared as a separate
+  visible user attachment in the conversation.
+- `Zer AI Agent` confirmed that the request will be connected to a human
+  agent and reported that support will be back online tomorrow.
+- No human ticket/reference number or review result is available yet.
+
+Next action: wait for the human response. Do not submit a duplicate. Any new
+free-text follow-up must be reviewed before it is sent.
