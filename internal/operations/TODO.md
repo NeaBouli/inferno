@@ -1,5 +1,5 @@
 # IFR Protocol — Developer TODO List
-> Last updated: 2026-07-29 | Branch: main
+> Last updated: 2026-07-30 | Branch: main
 
 ---
 
@@ -104,19 +104,25 @@ On errors: fix immediately, commit with `seo:` prefix.
 - [x] MetaMask Mobile: centralized deep-link + pending connect ✅
 - [x] Protocol Plan wiki page created (26 pages) ✅
 
-## CURRENT WATCHLIST — 2026-07-08
+## CURRENT WATCHLIST — verified 2026-07-30
 
 - [ ] MetaMask Registry PR #1858 — waiting for MetaMask code-owner review
       PR: https://github.com/MetaMask/contract-metadata/pull/1858
-      Status: open, mergeable, bot checks green, follow-up posted 2026-07-08.
-      Blocker: at least one approving MetaMask reviewer with write access and maintainer approval for pending fork workflows.
+      Status verified 2026-07-30: open, REVIEW_REQUIRED, no submitted
+      reviews or maintainer activity since the project follow-up on 2026-07-08.
+      The three visible reported checks are successful. GitHub reports the PR
+      as MERGEABLE but BLOCKED while maintainer/code-owner action is pending.
 - [ ] Uniswap Default Token List Issue #2509 — waiting for maintainer response
       Issue: https://github.com/Uniswap/default-token-list/issues/2509
-      Status: open, updated 2026-07-08 with Etherscan Neutral, token-list URLs, icon URLs, and GeckoTerminal pool.
+      Status verified 2026-07-30: open with no maintainer comment. Last
+      activity remains the project update on 2026-07-08 with Etherscan
+      Neutral, token-list URLs, icon URLs, and GeckoTerminal pool.
       Do not double-comment until maintainer response or new external proof appears.
 - [ ] ethereum-lists PR #1036 — waiting for maintainer response
       PR: https://github.com/ethereum-lists/tokens/pull/1036
-      Status: open, follow-up posted 2026-07-08.
+      Status verified 2026-07-30: open, MERGEABLE but BLOCKED, with no
+      submitted review, reported check, or maintainer comment. Last activity
+      remains the project follow-up posted 2026-07-08.
 - [ ] CoinMarketCap listing/check — requires local CMC_API_KEY or Gio browser session
       Script: `bash scripts/cmc/check_ifr_listing.sh`
       Status: intentionally blocked without local key. Never commit or paste the key.
@@ -925,4 +931,4 @@ Hetzner API endpoints already live: stats, offers, loans/:addr, health/:id, lend
 
 ---
 
-*Last updated: 2026-07-29*
+*Last updated: 2026-07-30*

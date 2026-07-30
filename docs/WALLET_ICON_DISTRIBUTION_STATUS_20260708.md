@@ -1,4 +1,7 @@
-# Wallet Icon Distribution Status - 2026-07-08
+# Wallet Icon Distribution Status
+
+Last verified: 2026-07-30. The filename is retained because this status record
+was originally created on 2026-07-08.
 
 This note records where IFR token metadata and icon visibility can realistically be pushed next.
 
@@ -22,9 +25,9 @@ This note records where IFR token metadata and icon visibility can realistically
 | Surface | Status | Link |
 | --- | --- | --- |
 | Etherscan | Live, reputation `Neutral` | `https://etherscan.io/token/0x77e99917Eca8539c62F509ED1193ac36580A6e7B` |
-| Uniswap Default Token List | Open, updated with Neutral/Icon/List evidence | `https://github.com/Uniswap/default-token-list/issues/2509` |
-| MetaMask contract metadata | PR opened after Neutral reputation cleared the old blocker; polite follow-up posted because review is still required | `https://github.com/MetaMask/contract-metadata/pull/1858` |
-| ethereum-lists | PR open; polite follow-up posted after no maintainer response | `https://github.com/ethereum-lists/tokens/pull/1036` |
+| Uniswap Default Token List | Open; no maintainer comment; last activity is the project evidence update from 2026-07-08 | `https://github.com/Uniswap/default-token-list/issues/2509` |
+| MetaMask contract metadata | Open; `REVIEW_REQUIRED`; `MERGEABLE` but `BLOCKED`; no submitted review or maintainer activity since 2026-07-08; three visible reported checks successful | `https://github.com/MetaMask/contract-metadata/pull/1858` |
+| ethereum-lists | Open, `MERGEABLE` but `BLOCKED`; no submitted review, reported check, or maintainer comment since the project follow-up on 2026-07-08 | `https://github.com/ethereum-lists/tokens/pull/1036` |
 
 ## Wallet-Specific Reality Check
 

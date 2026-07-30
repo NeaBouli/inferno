@@ -1,6 +1,8 @@
-# Phase 3 Open Items Status - 2026-07-08
+# Phase 3 Open Items Status
 
-This note records the current state of the six active operational items after the Web3 user-surface audit.
+Created 2026-07-08. Sections 3 and 4 were reverified on 2026-07-30; other
+sections retain their dated evidence and are not presented as fresh
+on-chain verification.
 
 ## 1. LendingVault Borrow Activation
 
@@ -38,30 +40,40 @@ Design note added:
 
 ## 3. Dependency Security Backlog
 
-Status: partially reduced, larger migration remains.
+Status verified 2026-07-30: migration completed; upstream audit findings remain.
 
-- `npm audit` before safe lockfile update: 62 vulnerabilities.
-- Non-forced `npm audit fix --package-lock-only` reduced the current audit to 61 vulnerabilities.
-- Remaining critical/high findings are mostly inherited through the Hardhat 2, Ethers v5, Waffle/Ganache, Solc, and Undici toolchain.
-- Force-fixing would require breaking migrations such as Hardhat 3 / Ethers 6 or Waffle removal and must be handled as a dedicated engineering branch.
+- Root now uses Ethers 6.17, Hardhat 3.11.1, Chai 6 and Node `>=22.13.0`.
+- Waffle and Ganache were removed; contract and tooling CI passed on the exact
+  published head.
+- Current root `npm audit`: 21 transitive findings
+  (`13 high / 8 low / 0 critical`).
+- Remaining findings are current upstream dependency paths. Do not apply
+  untested overrides or `npm audit fix --force`.
 
-Open next step: plan a separate dependency modernization branch. Do not run `npm audit fix --force` on `main` without full contract test coverage.
+Open next step: monitor bounded upstream updates and test each remediation as
+an isolated dependency wave.
 
 ## 4. External Listings And Reputation
 
-Status: improved, still has follow-up items.
+Status verified 2026-07-30: improved, still waiting on external maintainers.
 
-- Uniswap Default Token List issue #2509 is still open and was updated with Etherscan Neutral plus live metadata/icon links.
+- Uniswap Default Token List issue #2509 is still open with no maintainer
+  comment. Last activity remains the project update on 2026-07-08 with
+  Etherscan Neutral plus live metadata/icon links.
 - Official token lists are live:
   - `https://ifrunit.tech/token-list.json`
   - `https://ifrunit.tech/.well-known/token-list.json`
 - GeckoTerminal pool/profile is visible and includes IFR protocol copy.
 - Etherscan token reputation now reads `Neutral`, not `Unknown`.
-- MetaMask contract-metadata retry is now open:
+- MetaMask contract-metadata PR #1858 is open with `REVIEW_REQUIRED`, no
+  submitted review or maintainer activity since 2026-07-08, and three visible
+  reported checks successful. GitHub reports it as `MERGEABLE` but `BLOCKED`
+  while code-owner action is pending:
   - `https://github.com/MetaMask/contract-metadata/pull/1858`
 - MetaMask follow-up comment posted on 2026-07-08 because the PR is waiting for code-owner review:
   - `https://github.com/MetaMask/contract-metadata/pull/1858#issuecomment-4912859782`
-- ethereum-lists PR #1036 is still open with no maintainer review/comment:
+- ethereum-lists PR #1036 is open and `MERGEABLE` but `BLOCKED`, with no
+  submitted review, reported check, or maintainer comment:
   - `https://github.com/ethereum-lists/tokens/pull/1036`
 - ethereum-lists follow-up comment posted on 2026-07-08:
   - `https://github.com/ethereum-lists/tokens/pull/1036#issuecomment-4912862731`
@@ -69,7 +81,9 @@ Status: improved, still has follow-up items.
   - `docs/WALLET_ICON_DISTRIBUTION_STATUS_20260708.md`
 - CMC check script is present, but local `CMC_API_KEY` is not set, so CMC listing status was not queried.
 
-Open next step: resume MetaMask registry submission now that Etherscan is neutral, keep watching Uniswap issue #2509, and run CMC check only with a local key.
+Open next step: keep all three external threads under watch without duplicate
+comments, answer maintainer feedback when it appears, and run the CMC check
+only with a local key.
 
 ## 5. Web3 UX Backlog
 

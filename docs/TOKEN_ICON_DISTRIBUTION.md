@@ -1,6 +1,6 @@
 # IFR Token Icon Distribution
 
-Last checked: 2026-07-08
+Last checked: 2026-07-30
 
 ## Canonical Token Metadata
 
@@ -18,11 +18,11 @@ Last checked: 2026-07-08
 | Surface | Status | Notes |
 | --- | --- | --- |
 | Etherscan | Live | Token page uses `infernoprotocol_ifr.svg`. Reputation now shows `Neutral`. |
-| Uniswap Default Token List | Open / updated | Request exists: https://github.com/Uniswap/default-token-list/issues/2509. Latest follow-up posted with Etherscan Neutral, token-list URLs, icon URLs, and GeckoTerminal pool. |
+| Uniswap Default Token List | Open / waiting | Request exists: https://github.com/Uniswap/default-token-list/issues/2509. No maintainer comment; last activity remains the 2026-07-08 project update with Etherscan Neutral, token-list URLs, icon URLs, and GeckoTerminal pool. |
 | Uniswap Custom Token List | Ready | Hosted at `https://ifrunit.tech/token-list.json`. |
-| MetaMask Registry | PR open / followed up | Retry submitted after Etherscan moved to `Neutral`: https://github.com/MetaMask/contract-metadata/pull/1858. Follow-up comment posted: https://github.com/MetaMask/contract-metadata/pull/1858#issuecomment-4912859782. MetaMask still requires code-owner review, so merge is not guaranteed. |
+| MetaMask Registry | PR open / review required | Retry submitted after Etherscan moved to `Neutral`: https://github.com/MetaMask/contract-metadata/pull/1858. The PR is `MERGEABLE` but `BLOCKED`, with no submitted review or maintainer activity since the 2026-07-08 follow-up. Three visible reported checks are successful; code-owner action is pending. |
 | MetaMask `wallet_watchAsset` | Implemented | Landing page can request MetaMask to add IFR with the official icon URL. |
-| ethereum-lists | Open / followed up | Token definition PR remains open: https://github.com/ethereum-lists/tokens/pull/1036. Follow-up comment posted: https://github.com/ethereum-lists/tokens/pull/1036#issuecomment-4912862731 |
+| ethereum-lists | Open / blocked | Token definition PR remains open and `MERGEABLE` but `BLOCKED`: https://github.com/ethereum-lists/tokens/pull/1036. No submitted review, reported check, or maintainer comment since the 2026-07-08 project follow-up. |
 | Trust Wallet Assets | Not yet eligible / prepared | Official path is a `trustwallet/assets` PR plus fee, but Trust requirements currently include CMC price tracking and high holder/transaction thresholds. Prepare, but do not submit fee PR until CMC/on-chain activity improves. |
 | Rainbow Token List | Waiting on upstream sources | Rainbow builds from ethereum-lists, CoinGecko/CMC/token lists and overrides. Best path is to land ethereum-lists and market-data listings first. |
 | Zerion | Manual form path | Official path is Zerion app asset report / Typeform with 128x128 logo. Requires interactive web submission. |
