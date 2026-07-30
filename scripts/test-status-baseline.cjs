@@ -51,6 +51,9 @@ const todo = requireText("internal/operations/TODO.md", [
   "52,155,440.952845656 IFR",
   "CommitmentVault native batch-lock UX",
   "Global LendingVault liquidation dashboard and Telegram alerts",
+  "Ticket `1390230` is submitted",
+  "not verified by CoinMarketCap",
+  "128px icon",
   "Wallet-level Collateral Health Monitor",
   "Dependency modernization — completed 2026-07-29",
   "Ethers 6 / Hardhat 3 / Chai 6 / Node 22 migration",
@@ -89,6 +92,8 @@ requireText("internal/operations/TODO.html", [
   "52,155,440.952845656 IFR",
   "CommitmentVault native batch-lock UX",
   "Global LendingVault liquidation dashboard and Telegram alerts",
+  "Ticket <code>1390230</code> is submitted",
+  "not verified by CoinMarketCap",
   "Dependency modernization</strong> &mdash; completed 2026-07-29",
   "Deterministic local Hardhat test network",
   "Submission completed, not approval",
@@ -120,6 +125,8 @@ requireText("docs/WALLET_ICON_DISTRIBUTION_STATUS_20260708.md", [
   "500 TWT",
   "at least three outside token lists",
   "CoinGecko exact-contract endpoint: `coin not found`",
+  "Searching Zerion by the exact IFR contract returns `Nothing was found`",
+  "docs/assets/ifr_icon_128.png",
 ]);
 requireText("docs/TOKEN_ICON_DISTRIBUTION.md", [
   "Last checked: 2026-07-30",
@@ -127,6 +134,7 @@ requireText("docs/TOKEN_ICON_DISTRIBUTION.md", [
   "Open / blocked",
   "External-data path / no verification form",
   "Not eligible / do not pay",
+  "Missing / support draft prepared",
 ]);
 requireText("docs/PHASE3_OPEN_ITEMS_STATUS_20260708.md", [
   "Sections 3 and 4 were reverified on 2026-07-30",
@@ -143,6 +151,9 @@ requireText("docs/COINMARKETCAP_SUBMISSION.md", [
   "GeckoTerminal: live",
   "CoinGecko: application submitted",
   "`coin not found` as of 2026-07-30",
+  "submitted as ticket `1390230`",
+  "not verified by CoinMarketCap",
+  "is not a standalone tracked CMC coin listing",
 ]);
 
 console.log("[status-baseline] PASS");

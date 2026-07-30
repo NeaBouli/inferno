@@ -1,20 +1,29 @@
 # CoinMarketCap Submission Pack — Inferno (IFR)
 
-Updated: 2026-07-02
+Updated: 2026-07-30
 
 ## Status
 
 - GeckoTerminal: live, verified pool URL available.
 - CoinGecko: application submitted, but exact-contract API still returns
   `coin not found` as of 2026-07-30; no standalone coin listing is confirmed.
-- CoinMarketCap: ready to submit through the official request form.
+- CoinMarketCap standard listing request: submitted as ticket `1390230`;
+  response/approval remains pending.
+- CoinMarketCap DexScan: IFR token and IFR/WETH pool pages are live, but CMC
+  explicitly labels IFR as `not verified by CoinMarketCap`. DexScan visibility
+  is not a standalone tracked CMC coin listing.
+- DexScan token URL:
+  https://dex.coinmarketcap.com/token/ethereum/0x77e99917eca8539c62f509ed1193ac36580a6e7b/
 - Official request URL: https://coinmarketcap.com/request/
 - Direct CMC support URL: https://support.coinmarketcap.com/hc/en-us/requests/new?ticket_form_id=360000493112
 - Required form choice: `1 - [New Listing] Add cryptoasset`
-- Submission attempt note, 2026-07-02: automated/browser-agent submission is blocked by CoinMarketCap Cloudflare human verification. Final submission must be completed by Gio in a normal browser session with the official project account/email.
+- Historical submission note, 2026-07-02: browser automation was blocked by
+  Cloudflare verification. Gio subsequently completed the standard request;
+  do not submit a duplicate.
 
 CoinMarketCap states that the online submission form is the only official way to request listings or updates. Do not use third-party listing agents or unofficial contacts.
-CoinMarketCap also discourages duplicate requests. Submit once, then wait for the CMC response.
+CoinMarketCap discourages duplicate requests. Ticket `1390230` is the
+canonical request; wait for its response.
 
 ## Copy/Paste Submission
 
@@ -307,6 +316,10 @@ Contract, metadata, docs, and explorer proof are on the official site and in the
 
 CMC DexScan: not available yet
 ```
+
+The line above is preserved because it is the exact text posted at the time.
+As of 2026-07-30, IFR is visible on CMC DexScan at the URL in the Status
+section, but remains explicitly unverified by CoinMarketCap.
 
 Note: X rejected a version containing the raw Ethereum address with `Crypto addresses are prohibited for the first 7 days after authentication.` The CMC email reply should therefore include the public post URL plus the official website, Etherscan token URL, verified source URL, token metadata, and Uniswap/GeckoTerminal links as proof.
 

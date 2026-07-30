@@ -147,18 +147,20 @@ On errors: fix immediately, commit with `seo:` prefix.
       Exact-contract API still returns `coin not found`; GeckoTerminal is live
       separately.
       Resume trigger: CoinGecko response or a public exact-contract coin page.
-- [ ] CoinMarketCap listing/check — account/key-gated
+- [ ] CoinMarketCap standard listing — ticket pending
       Script: `bash scripts/cmc/check_ifr_listing.sh`
-      Resume trigger: locally available `CMC_API_KEY`, authorized browser
-      session or public IFR asset page. Never commit or paste the key.
+      Ticket `1390230` is submitted. CMC DexScan is live but marks IFR as
+      `not verified by CoinMarketCap`; this is not a standalone CMC listing.
+      Resume trigger: CMC response or verification/status change. Do not
+      submit a duplicate and never commit or paste an API key.
 - [ ] Trust Wallet / Rainbow / Phantom / Zerion visibility follow-up
       Docs: docs/WALLET_ICON_DISTRIBUTION_STATUS_20260708.md
       Trust Wallet: resume only after CMC, professional audit and activity
       criteria are met and the non-refundable fee is explicitly approved.
       Phantom: no verification form; resume after CoinGecko/market-data
       coverage changes. Rainbow: resume after broader upstream-list coverage.
-      Zerion: resume after IFR/logo is confirmed missing and an interactive
-      submission is explicitly approved.
+      Zerion: exact-contract search confirms IFR is missing. The 128px icon
+      and support draft are prepared; resume after explicit approval to send.
 - [ ] Blockaid/MetaMask warning retest
       Blockaid review is approved. Resume only if a current device still shows
       a warning; capture wallet/browser version, timestamp and screenshot.

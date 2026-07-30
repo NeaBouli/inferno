@@ -121,9 +121,17 @@ Official source evidence:
 
 Zerion has an official in-app asset report flow for missing or incorrect token logos. It requires searching the token in `https://app.zerion.io/`, opening the asset report, selecting logo correction, and uploading a `128x128` logo.
 
-Action: first confirm interactively that IFR or its logo is missing. A manual
-submission then requires explicit approval and a prepared `128x128` PNG; no
-submission was made in this task.
+Verified 2026-07-30:
+
+- Searching Zerion by the exact IFR contract returns `Nothing was found`.
+- Zerion's normal `Report asset` / logo Typeform starts from an existing token
+  page, so it cannot be opened for IFR while the asset itself is absent.
+- `docs/assets/ifr_icon_128.png` is prepared from the canonical 256px icon:
+  `128x128`, PNG, 10,766 bytes.
+
+Action: use the prepared support draft in
+`docs/ZERION_SUBMISSION_PACK_20260730.md`. Sending it is an external action and
+requires review immediately before submission. No request was sent.
 
 Official source:
 
@@ -147,4 +155,5 @@ No stable public ERC-20 icon PR path was confirmed for these wallets. Treat them
 4. CoinGecko application response; exact-contract API still says
    `coin not found`.
 5. CMC status once a local `CMC_API_KEY` is available.
-6. Zerion interactive presence/logo check before any approved report.
+6. Zerion support request for the missing asset; draft and 128px icon are
+   prepared, but nothing has been sent.
