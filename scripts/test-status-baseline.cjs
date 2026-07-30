@@ -41,8 +41,17 @@ requireText("docs/STATUS-REPORT.md", currentBaseline);
 const todo = requireText("internal/operations/TODO.md", [
   "> Last updated: 2026-07-30 | Branch: main",
   "CURRENT WATCHLIST — verified 2026-07-30",
+  "DEFERRED / LATER — resume only when its trigger occurs",
   "Status verified 2026-07-30: open, REVIEW_REQUIRED",
   "open, MERGEABLE but BLOCKED",
+  "IFRp Commerce App / shop.ifrunit.tech production decisions",
+  "Contributor CommitmentVault Locks abgeschlossen",
+  "Contributor LendingVault Offers abgeschlossen",
+  "Monitor reports `Next: done` for C1/C2/C3",
+  "52,155,440.952845656 IFR",
+  "CommitmentVault native batch-lock UX",
+  "Global LendingVault liquidation dashboard and Telegram alerts",
+  "Wallet-level Collateral Health Monitor",
   "Dependency modernization — completed 2026-07-29",
   "Ethers 6 / Hardhat 3 / Chai 6 / Node 22 migration",
   "13 high, 8 low, 0 critical",
@@ -58,15 +67,30 @@ assert.ok(
   !todo.includes("- [ ] Deterministic local Hardhat test network"),
   "Deterministic local Hardhat test network must not remain open"
 );
+assert.ok(
+  !todo.includes("- [ ] 🔴 CommitmentVault Lock ausführen"),
+  "Contributor CommitmentVault locks must not remain open"
+);
+assert.ok(
+  !todo.includes("- [ ] 🔴 LendingVault createOffer() ausführen"),
+  "Contributor LendingVault offers must not remain open"
+);
 
 requireText("internal/operations/TODO.html", [
   "Last updated: 2026-07-30",
   "Current Watchlist &mdash; verified 2026-07-30",
-  "open, review required",
-  "open, mergeable but blocked",
+  "Deferred / Waiting &mdash; resume only when the trigger occurs",
+  "Open, review required",
+  "Open, mergeable but blocked",
+  "IFRp Commerce App / shop.ifrunit.tech production decisions",
+  "Contributor CommitmentVault Locks abgeschlossen",
+  "Contributor LendingVault Offers abgeschlossen",
+  "Next: done",
+  "52,155,440.952845656 IFR",
+  "CommitmentVault native batch-lock UX",
+  "Global LendingVault liquidation dashboard and Telegram alerts",
   "Dependency modernization</strong> &mdash; completed 2026-07-29",
   "Deterministic local Hardhat test network",
-  "Trust Wallet's non-refundable 500 TWT / 2.5 BNB fee",
   "Submission completed, not approval",
 ]);
 
