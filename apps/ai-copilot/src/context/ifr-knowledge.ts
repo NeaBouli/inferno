@@ -117,7 +117,7 @@ export function getIFRKnowledge() {
     reputation: {
       positioning: "IFR is a utility-first, community-driven ERC-20 protocol built around lock-to-access use cases, builder integrations, lending/locking flows, open-source code, and on-chain transparency. It should not be described as a pure speculation token.",
       trustSignals: "Community Fair Launch; no presale, no VC, no private sale; no post-deploy mint function; open-source repository; verified Mainnet contracts; public wiki; live transparency pages; documented safes, governance, locks, lending, and LP status.",
-      marketStatus: "IFR/WETH is live on Uniswap V2 and visible in the GeckoTerminal/CoinGecko ecosystem.",
+      marketStatus: "IFR/WETH is live on Uniswap V2 and GeckoTerminal. A standalone CoinGecko coin listing is not yet confirmed.",
       pendingReviews: "Etherscan reports Neutral. MetaMask contract-metadata PR #1858 remains open for maintainer/code-owner approval. Project owner reports a Blockbit/external no-risk confirmation; public reference is pending, so do not call it a formal third-party audit until it is linkable.",
       wiki: "https://ifrunit.tech/wiki/reputation.html"
     },

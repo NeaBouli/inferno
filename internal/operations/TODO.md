@@ -149,7 +149,13 @@ On errors: fix immediately, commit with `seo:` prefix.
       Regression gate: `npm run test:hardhat-config`.
 - [ ] Trust Wallet / Rainbow / Phantom / Zerion visibility follow-up
       Docs: docs/WALLET_ICON_DISTRIBUTION_STATUS_20260708.md
-      Status: Trust Wallet not yet worth fee submission until CMC/activity improves; Rainbow depends on upstream lists/market data; Phantom and several wallets are indirect trust/indexing paths.
+      Verified 2026-07-30: Trust Wallet requires a non-refundable 500 TWT /
+      2.5 BNB fee plus CMC, professional audit and activity criteria; do not
+      submit. Phantom has no verification form and depends on external data;
+      CoinGecko exact-contract API still returns `coin not found`. Rainbow
+      requires broader upstream-list coverage and has no documented direct
+      submission route. Zerion offers an interactive 128x128 logo report only
+      after confirming IFR is missing.
 - [ ] IFRp Commerce App / shop.ifrunit.tech architecture
       Docs: docs/ifrp-commerce-app/MASTER_ARCHITECTURE.md
       Goal: installable customer/seller app with wallet, ETH/IFR swap, IFR locking, QR proof, seller scanner, seller discount rules, and verified seller rewards via PartnerVault after governance approval.
@@ -746,7 +752,10 @@ On errors: fix immediately, commit with `seo:` prefix.
 ## AFTER LP LIVE (after 05.06.2026)
 
 - [x] Apply for CoinGecko listing
-      Submitted by Gio; CoinGecko email received; response expected in about 5 days.
+      Submission completed by Gio; this does not mean the listing was
+      approved. Rechecked 2026-07-30: exact-contract endpoint returns
+      `coin not found`, search returns no IFR coin, while GeckoTerminal remains
+      live separately.
 - [ ] Apply for CoinMarketCap listing
       Submission pack updated 02.07.2026: docs/COINMARKETCAP_SUBMISSION.md
       Submit via official CMC form: https://coinmarketcap.com/request/

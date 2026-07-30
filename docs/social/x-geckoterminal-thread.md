@@ -1,4 +1,4 @@
-Inferno $IFRp on Ethereum is visible in the CoinGecko / GeckoTerminal ecosystem as a verified Ethereum token pool.
+Inferno $IFRp on Ethereum has a live GeckoTerminal profile for its verified IFR/WETH pool. A standalone CoinGecko coin listing is still pending.
 
 IFR/WETH is live on Uniswap V2:
 https://www.geckoterminal.com/eth/pools/0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0
