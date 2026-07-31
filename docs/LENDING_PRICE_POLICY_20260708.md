@@ -1,6 +1,7 @@
 # LendingVault Price Policy - 2026-07-08
 
-Status: policy decision pending. Governance package is technically prepared, but should not be submitted blindly.
+Status: safety review completed 2026-07-31. Keep V1 borrowing disabled; do
+not submit the prepared Governance package.
 
 ## Current Mainnet State
 
@@ -20,6 +21,22 @@ Latest Uniswap V2 spot read:
 - WETH reserve: `0.16725454417891158 ETH`
 - Spot-derived `ifrPriceWei`: `9281498741`
 
+Read-only recheck 2026-07-31 11:34 EEST:
+
+- `ifrPriceWei`: `0`
+- Active offers: `3`
+- Total available: `52,155,440.952845656 IFR`
+- Total lent: `0 IFR`
+- WETH reserve: `0.185153585219916653 ETH`
+- IFR reserve: `16,282,990.808786243 IFR`
+- Spot-derived `ifrPriceWei`: `11370981375`
+- Spot change from the previous documented read: approximately `+22.51%`
+- Collateral required to borrow all currently available IFR at 200%:
+  approximately `1.1861 ETH`
+
+Ownership, 48-hour timelock, `setIFRPrice` simulation and Governance
+`propose` simulation all passed. No transaction was sent.
+
 ## What `ifrPriceWei` Controls
 
 `ifrPriceWei` is wei per 1 full IFR token (`1e9` base units).
@@ -34,63 +51,59 @@ If `ifrPriceWei` is too low, borrowers can borrow IFR with too little ETH collat
 
 If `ifrPriceWei` is too high, borrowers need more ETH collateral. That is conservative for lenders, but can make borrowing unattractive and can affect health/liquidation math after loans exist.
 
+## V1 Safety Findings
+
+The deployed V1 cannot support a genuinely bounded pilot:
+
+1. `setIFRPrice(0)` reverts, so borrowing cannot be disabled again through the
+   price after the first non-zero activation.
+2. One global mutable price applies immediately to all active loans. A price
+   increase can reduce every collateral ratio and trigger liquidation.
+3. The contract has no oracle timestamp or stale-price check.
+4. The contract has no protocol-wide borrow cap, per-offer pilot cap,
+   borrower allowlist or emergency pause.
+5. The current spot source is a thin Uniswap V2 pool. Its WETH reserve remains
+   far below the existing `1 ETH` minimum-depth recommendation.
+
 ## Recommended Policy
 
-Do not activate borrowing from the current thin-pool spot price as an automatic production policy.
+Keep deployed V1 borrowing disabled with `ifrPriceWei = 0`. Do not import or
+submit `/tmp/inferno/lending-price-safe-tx.json`.
 
-Recommended gate before Safe submission:
+Before production borrowing, build and audit a V2 lending path with:
 
-1. WETH reserve should be materially deeper than today, preferably at least `1 ETH`.
-2. Governance should explicitly choose either:
-   - a manually reviewed price, or
-   - a TWAP/oracle-based price path.
-3. No haircut below spot should be used for initial borrowing, because a lower price reduces required borrower collateral.
+- an explicit pause/disable mechanism;
+- a manipulation-resistant oracle or TWAP with freshness bounds;
+- protocol-wide and per-borrower pilot caps;
+- price-change safeguards for active loans;
+- monitored liquidation discovery and alerting;
+- deeper market liquidity, preferably at least `1 ETH` WETH reserve before a
+  production price is considered.
 
-## If A Small Pilot Is Explicitly Approved
-
-If governance wants to run a controlled pilot before deeper liquidity, use the existing Safe JSON only as a reviewed governance action.
-
-Pilot guidance:
-
-- Use no haircut below spot.
-- Prefer a manually reviewed value at or above the current spot-derived value.
-- Keep borrower UX warnings visible until liquidity is deeper.
-- Monitor every loan after activation.
-- Be ready to update `ifrPriceWei` again through Governance if liquidity or price changes materially.
-
-Current generated value:
+Current read-only collateral preview at the spot-derived candidate:
 
 ```text
-ifrPriceWei = 9281498741
-```
-
-Collateral preview at 200%:
-
-```text
-1,000 IFR      -> 0.000018562997482 ETH
-10,000 IFR     -> 0.00018562997482 ETH
-1,000,000 IFR  -> 0.018562997482 ETH
+1,000 IFR      -> 0.00002274196275 ETH
+10,000 IFR     -> 0.0002274196275 ETH
+1,000,000 IFR  -> 0.02274196275 ETH
 ```
 
 ## Safe/Governance Flow
 
-1. Review and approve final price policy.
-2. Generate Safe JSON:
+The current script, calldata and Safe JSON target deployed V1. They are
+reference material only and must not be submitted or reused for V2.
 
-```bash
-node scripts/prepare-lending-price-governance.js --write-safe-json
-```
+Any V2 activation needs a separate reviewed runbook and dedicated tooling
+that use the audited V2 address and interface. That future flow must include:
 
-3. Import `/tmp/inferno/lending-price-safe-tx.json` into TreasurySafe.
-4. Submit `Governance.propose(LendingVault, setIFRPrice(candidate))`.
-5. Wait 48 hours.
-6. Execute proposal.
-7. Verify:
-
-```text
-LendingVault.ifrPriceWei() == selected price
-```
+1. completed V2 implementation, audit and contract tests;
+2. a reviewed price and oracle policy;
+3. action-specific Governance authorization;
+4. newly generated V2 calldata and independent simulation;
+5. the full timelock, execution and postcondition checks for the V2 contract.
 
 ## Current Decision
 
-The safe default is to keep borrowing disabled until liquidity is deeper or governance explicitly accepts a pilot price.
+Deployed V1 borrowing remains disabled. The current Safe JSON is not approved
+for submission. Reconsider only after a bounded, pausable and oracle-safe V2
+path is implemented and audited.

@@ -49,13 +49,13 @@
   <div class="container">
     <a href="wiki/roadmap.html" class="back" rel="nofollow">&larr; Roadmap</a>
     <h1>IFR Protocol &mdash; Developer TODO List</h1>
-    <div class="subtitle">Last updated: 2026-07-30 &middot; Branch: main</div>
+    <div class="subtitle">Last updated: 2026-07-31 &middot; Branch: main</div>
 
     <!-- ═══ CURRENT WATCHLIST ═══ -->
-    <h2><span class="priority-badge p-critical">WATCH</span> Current Watchlist &mdash; verified 2026-07-30</h2>
+    <h2><span class="priority-badge p-critical">WATCH</span> Current Watchlist &mdash; verified 2026-07-31</h2>
     <ul>
-      <li><div class="cb"></div><strong>LendingVault borrow activation</strong> &mdash; price policy decision needed.<br>
-        <span style="color:#6b7280;font-size:0.82rem;">Current: <code>ifrPriceWei = 0</code>, Safe JSON ready at <code>/tmp/inferno/lending-price-safe-tx.json</code>. Default: keep borrowing disabled until deeper liquidity or explicit Governance pilot approval.</span></li>
+      <li><div class="cb cb-done">&#x2713;</div><strong>LendingVault V1 borrow activation policy</strong> &mdash; keep disabled.<br>
+        <span style="color:#6b7280;font-size:0.82rem;">Decision 2026-07-31: keep <code>ifrPriceWei = 0</code>; do not submit the current Safe JSON. V1 cannot set the price back to zero and has no pause, borrow cap, allowlist or price-freshness check. Reconsider only after an audited, bounded and pausable V2 plus deeper liquidity.</span></li>
       <li><div class="cb"></div><strong>CommitmentVault price-condition locks</strong> &mdash; V2/PriceLockVault needed.<br>
         <span style="color:#6b7280;font-size:0.82rem;">Time-only locks are live; price locks stay disabled because deployed <code>_getCurrentPrice()</code> returns 0.</span></li>
       <li><div class="cb"></div><strong>IFRp Commerce App / shop.ifrunit.tech production decisions</strong><br>

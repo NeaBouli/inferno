@@ -1,5 +1,5 @@
 # IFR Protocol — Developer TODO List
-> Last updated: 2026-07-30 | Branch: main
+> Last updated: 2026-07-31 | Branch: main
 
 ---
 
@@ -104,13 +104,15 @@ On errors: fix immediately, commit with `seo:` prefix.
 - [x] MetaMask Mobile: centralized deep-link + pending connect ✅
 - [x] Protocol Plan wiki page created (26 pages) ✅
 
-## CURRENT WATCHLIST — verified 2026-07-30
+## CURRENT WATCHLIST — verified 2026-07-31
 
-- [ ] LendingVault borrow activation — price policy decision needed
+- [x] LendingVault V1 borrow activation policy — keep disabled
       Runbook: docs/LENDING_PRICE_GOVERNANCE_RUNBOOK.md
       Policy: docs/LENDING_PRICE_POLICY_20260708.md
-      Current: `ifrPriceWei = 0`, Safe JSON ready at `/tmp/inferno/lending-price-safe-tx.json`.
-      Default decision: keep borrowing disabled until deeper liquidity or explicit Governance pilot approval.
+      Decision 2026-07-31: keep `ifrPriceWei = 0`; do not submit the current
+      Safe JSON. V1 cannot set price back to zero and has no pause, borrow cap,
+      allowlist or price-freshness check. Reconsider only after an audited,
+      bounded and pausable V2 plus deeper liquidity.
 - [ ] CommitmentVault price-condition locks — V2/PriceLockVault needed
       Design: docs/COMMITMENT_PRICE_LOCK_ORACLE_PATH.md
       Current: time-only locks live; price locks must stay disabled because deployed `_getCurrentPrice()` returns 0.
@@ -985,4 +987,4 @@ Hetzner API endpoints already live: stats, offers, loans/:addr, health/:id, lend
 
 ---
 
-*Last updated: 2026-07-30*
+*Last updated: 2026-07-31*
