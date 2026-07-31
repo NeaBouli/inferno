@@ -40,6 +40,8 @@ const forbidden = [
   [/\baccess\s+lifetime\s+premium\b/i, "unqualified lifetime-access claim"],
   [/\bIndependent AI Security Analysis\b/i, "model-based audit claim"],
   [/\b(?:Claude|ChatGPT|Grok)\s+(?:Security\s+)?Audit\b/i, "model-branded current audit claim"],
+  [/\bexternal\s+no-risk\b/i, "unverifiable external no-risk claim"],
+  [/\bharmlessness\s+confirmation\b/i, "unverifiable harmlessness claim"],
 ];
 
 const failures = [];

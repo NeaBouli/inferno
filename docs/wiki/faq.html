@@ -1086,12 +1086,12 @@ const hasLock = await ifrLock.isLocked(walletAddress, ethers.utils.parseUnits("1
 
         <div class="faq-item">
           <button class="faq-q"><span>What tech stack does the project use?</span><span class="icon">+</span></button>
-          <div class="faq-a">&bull; <strong>Smart contracts</strong>: Solidity 0.8.20, Hardhat v2, OpenZeppelin v5, ethers v5<br>&bull; <strong>Testing</strong>: Chai v4, Hardhat, contract/app/vault suites<br>&bull; <strong>Frontend apps</strong>: React 18, Vite, TypeScript, Tailwind CSS where app tooling is used; static docs are served through GitHub Pages<br>&bull; <strong>Backend apps</strong>: Express.js, Prisma, SQLite, SIWE authentication<br>&bull; <strong>Infrastructure</strong>: GitHub Pages (docs), Hetzner-hosted APIs at <code>copilot-api.ifrunit.tech</code> and <code>points-api.ifrunit.tech</code>, Ethereum RPC providers</div>
+          <div class="faq-a">&bull; <strong>Smart contracts</strong>: Solidity 0.8.20, Hardhat 3, OpenZeppelin v5, ethers v6<br>&bull; <strong>Testing</strong>: Chai 6, Hardhat, contract/app/vault suites<br>&bull; <strong>Frontend apps</strong>: React, Next.js, Vite, TypeScript and wagmi/viem where app tooling is used; legacy static wallet widgets use ethers.js v5 and static docs are served through GitHub Pages<br>&bull; <strong>Backend apps</strong>: Express.js, Prisma, SQLite, SIWE authentication and ethers v6<br>&bull; <strong>Infrastructure</strong>: GitHub Pages (docs), Hetzner-hosted APIs at <code>copilot-api.ifrunit.tech</code> and <code>points-api.ifrunit.tech</code>, Ethereum RPC providers</div>
         </div>
 
         <div class="faq-item">
           <button class="faq-q"><span>How do I contribute to the repository?</span><span class="icon">+</span></button>
-          <div class="faq-a">Fork the repository, create a feature branch, and submit a pull request. Read the <a href="https://ifrunit.tech/wiki/contributing.html">Contributing Guide</a> for coding standards, commit message conventions (<code>feat:</code>, <code>fix:</code>, <code>docs:</code>, <code>test:</code>), and the PR template. All contributions must include tests where applicable. The project uses CJS-only (Hardhat v2 requirement).</div>
+          <div class="faq-a">Fork the repository, create a feature branch, and submit a pull request. Read the <a href="https://ifrunit.tech/wiki/contributing.html">Contributing Guide</a> for coding standards, commit message conventions (<code>feat:</code>, <code>fix:</code>, <code>docs:</code>, <code>test:</code>), and the PR template. All contributions must include tests where applicable. Follow the module format already used by the package you change; the current contract toolchain runs on Hardhat 3.</div>
         </div>
 
         <div class="faq-item">

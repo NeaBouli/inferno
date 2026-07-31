@@ -1,4 +1,11 @@
-# Contributor Runbook — updated 28.06.2026
+# Contributor Runbook — updated 30.07.2026
+
+## Current completion status 30.07.2026
+- C1/C2/C3 purchases, CommitmentVault locks and LendingVault offers are complete and verified.
+- The monitor reports `Next: done` for all three contributor wallets.
+- Three active LendingVault offers provide `52,155,440.952845656 IFR`; `totalLent` remains `0 IFR`.
+- LendingVault V1 borrowing remains intentionally disabled with `ifrPriceWei = 0`. Do not prepare or submit a V1 activation transaction.
+- The execution steps below are retained as the completed operational procedure and should not be repeated unless a new, explicitly approved contributor operation is opened.
 
 ## Vorbereitung (heute Abend ✅)
 - [x] Scripts generalisiert
@@ -21,7 +28,7 @@ Empfohlen für die Live-Ausführung:
 - Wenn Contributor nur locken soll: Standard `LOCK_BPS=10000` verwenden.
 - Wenn Contributor nur lender sein soll: Lock überspringen und nur Lending Offer ausführen.
 
-## Aktueller Stand 28.06.2026
+## Historical pre-execution snapshot 28.06.2026
 - C1/C2/C3 haben je `0.02 ETH` auf Uniswap in IFR geswapt.
 - `node scripts/check-contributors-execution.js` erkennt `Buy detected: true` für alle drei Contributor.
 - C1/C2/C3 haben noch keine CommitmentVault Locks.

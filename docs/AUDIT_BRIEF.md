@@ -26,8 +26,8 @@ Lock-based access while required IFR remains locked and the integration remains 
 ## Tech Stack
 - Solidity 0.8.20
 - OpenZeppelin v5 (ERC20, Ownable, ReentrancyGuard, Pausable, SafeERC20)
-- Hardhat v2
-- ethers v5
+- Hardhat 3
+- ethers v6
 - Full internal audits and public automated test evidence; exact current results are taken from CI and release records
 
 ## Known Design Decisions (no finding expected)

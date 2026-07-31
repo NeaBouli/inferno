@@ -74,9 +74,10 @@ Users lock IFR tokens in IFRLock -> receive builder-product access while the req
 | Component | Stack |
 |-----------|-------|
 | Contracts | Solidity 0.8.20, OpenZeppelin v5 |
-| Framework | Hardhat v2, ethers v5 |
+| Contract toolchain | Hardhat 3, ethers v6 |
 | Verification | Full internal audits plus public contract, application, wallet, browser and integration test evidence; independent professional third-party audit pending |
-| Dashboard | React 18 + Vite + ethers v5 |
+| Dashboard | React 18 + Vite + ethers v6 |
+| Legacy static wiki/landing wallet widgets | ethers.js v5 |
 | Governance UI | React 18 + TypeScript + Tailwind |
 | AI Copilot | Claude Haiku 4.5 + RAG |
 | Benefits Network | Next.js 15 + wagmi 3 (PWA) |
