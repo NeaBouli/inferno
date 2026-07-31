@@ -159,10 +159,10 @@ On errors: fix immediately, commit with `seo:` prefix.
       criteria are met and the non-refundable fee is explicitly approved.
       Phantom: no verification form; resume after CoinGecko/market-data
       coverage changes. Rainbow: resume after broader upstream-list coverage.
-      Zerion: missing-asset request and canonical 128px icon (PNG) submitted
-      through official Intercom support on 2026-07-30. Zer AI confirmed
-      handoff to a human agent; support is offline until tomorrow. Resume on
-      human response, ticket/reference number or requested changes.
+      Zerion: resolved 2026-07-31. Human support added the canonical 128px icon
+      and enabled IFR tracking. The live Zerion token page was verified with
+      IFR icon, Inferno name, price and supply data. Resume only if the token
+      page or icon regresses.
 - [ ] Blockaid/MetaMask warning retest
       Blockaid review is approved. Resume only if a current device still shows
       a warning; capture wallet/browser version, timestamp and screenshot.

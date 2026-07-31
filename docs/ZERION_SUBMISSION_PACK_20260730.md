@@ -1,7 +1,7 @@
 # Zerion Missing-Asset Support Pack - Inferno (IFR)
 
 Prepared: 2026-07-30
-Status: submitted 2026-07-30, awaiting human support review
+Status: resolved and live 2026-07-31
 
 ## Verified State
 
@@ -78,5 +78,16 @@ Thank you.
   agent and reported that support will be back online tomorrow.
 - No human ticket/reference number or review result is available yet.
 
-Next action: wait for the human response. Do not submit a duplicate. Any new
-free-text follow-up must be reviewed before it is sent.
+## Resolution Record
+
+- On 2026-07-31, human support agent Sebastien confirmed that the IFR logo was
+  added and the token should now be tracked correctly.
+- Canonical Zerion token page:
+  `https://app.zerion.io/tokens/IFR-8f9ccb3d-2e3b-4c3c-bda1-5040d80548f6?inputChain=ethereum&inputFungibleId=eth`
+- A read-only check confirmed the official IFR icon, `Inferno Price (IFR)`,
+  price data and circulating/total supply data.
+- After explicit review and approval, a thank-you response was sent to
+  Sebastien and appeared as a visible user message.
+
+Next action: none. Do not submit a duplicate. Reopen only if Zerion's token
+page, metadata or icon regresses.

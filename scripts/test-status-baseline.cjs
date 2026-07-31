@@ -128,7 +128,8 @@ requireText("docs/WALLET_ICON_DISTRIBUTION_STATUS_20260708.md", [
   "Searching Zerion by the exact IFR contract returns `Nothing was found`",
   "docs/assets/ifr_icon_128.png",
   "Submitted 2026-07-30",
-  "queued",
+  "Resolved and verified 2026-07-31",
+  "IFR-8f9ccb3d-2e3b-4c3c-bda1-5040d80548f6",
 ]);
 requireText("docs/TOKEN_ICON_DISTRIBUTION.md", [
   "Last checked: 2026-07-30",
@@ -136,12 +137,13 @@ requireText("docs/TOKEN_ICON_DISTRIBUTION.md", [
   "Open / blocked",
   "External-data path / no verification form",
   "Not eligible / do not pay",
-  "Submitted / awaiting human review",
+  "Live / verified",
 ]);
 requireText("docs/ZERION_SUBMISSION_PACK_20260730.md", [
-  "Status: submitted 2026-07-30, awaiting human support review",
+  "Status: resolved and live 2026-07-31",
   "docs/assets/ifr_icon_128.png",
-  "support will be back online tomorrow",
+  "human support agent Sebastien",
+  "IFR-8f9ccb3d-2e3b-4c3c-bda1-5040d80548f6",
   "Do not submit a duplicate",
 ]);
 requireText("docs/PHASE3_OPEN_ITEMS_STATUS_20260708.md", [
