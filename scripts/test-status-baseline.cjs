@@ -39,8 +39,10 @@ requireText("STATUS-REPORT.md", currentBaseline);
 requireText("docs/STATUS-REPORT.md", currentBaseline);
 
 const todo = requireText("internal/operations/TODO.md", [
-  "> Last updated: 2026-07-30 | Branch: main",
-  "CURRENT WATCHLIST — verified 2026-07-30",
+  "> Last updated: 2026-07-31 | Branch: main",
+  "CURRENT WATCHLIST — verified 2026-07-31",
+  "LendingVault V1 borrow activation policy — keep disabled",
+  "V1 cannot set price back to zero",
   "DEFERRED / LATER — resume only when its trigger occurs",
   "Status verified 2026-07-30: open, REVIEW_REQUIRED",
   "open, MERGEABLE but BLOCKED",
@@ -60,7 +62,7 @@ const todo = requireText("internal/operations/TODO.md", [
   "13 high, 8 low, 0 critical",
   "Deterministic local Hardhat test network",
   "Technical: WalletConnect v2 + ethers.js v6",
-  "*Last updated: 2026-07-30*",
+  "*Last updated: 2026-07-31*",
 ]);
 assert.ok(
   !todo.includes("- [ ] Dependency modernization"),
@@ -80,8 +82,10 @@ assert.ok(
 );
 
 requireText("internal/operations/TODO.html", [
-  "Last updated: 2026-07-30",
-  "Current Watchlist &mdash; verified 2026-07-30",
+  "Last updated: 2026-07-31",
+  "Current Watchlist &mdash; verified 2026-07-31",
+  "LendingVault V1 borrow activation policy",
+  "V1 cannot set the price back to zero",
   "Deferred / Waiting &mdash; resume only when the trigger occurs",
   "Open, review required",
   "Open, mergeable but blocked",

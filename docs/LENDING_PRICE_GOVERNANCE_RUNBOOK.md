@@ -1,12 +1,19 @@
 # LendingVault ifrPriceWei Governance Runbook
 
-Status: preparation only. Do not submit or execute on-chain transactions without multisig review.
+Status: reference and read-only verification only. The 2026-07-31 safety
+review decided to keep deployed V1 borrowing disabled. Do not import, submit
+or execute the current Safe payload.
 
 ## Why This Is Needed
 
 Web3 and Wiki borrower flows are wired to `LendingVault.borrow(offerId, amount, durationDays)`.
 The contract correctly blocks borrowing until `LendingVault.ifrPriceWei()` is greater than zero,
 because ETH collateral is calculated from that value.
+
+Important V1 limitation: `setIFRPrice(0)` reverts. After the first non-zero
+price is set, this mechanism cannot disable borrowing again. The same global
+price also applies immediately to every active loan, and V1 has no pause,
+freshness check or protocol-wide borrow cap.
 
 `ifrPriceWei` means wei per 1 full IFR token (`1e9` base units).
 Example: if `1 IFR = 0.000001 ETH`, then `ifrPriceWei = 1000000000000`.
@@ -73,13 +80,18 @@ Output:
 /tmp/inferno/lending-price-safe-tx.json
 ```
 
-Import that JSON into the TreasurySafe Transaction Builder only after the printed checks pass
-and the price policy has been reviewed.
+Do not import the current JSON into TreasurySafe. Passing simulations prove
+only that the calldata and ownership route are valid; they do not make V1
+operationally safe.
 
 ## Governance Flow
 
-1. Run dry run and review all output.
-2. If accepted, submit the Safe transaction to call:
+The following sequence records the historical V1 route for review only. It is
+not authorized for current V1 and must not be copied to V2 without replacing
+the target address and interface with the audited V2 deployment:
+
+1. Run the dry run and review all output.
+2. After a new safety review, submit the Safe transaction to call:
    - `Governance.propose(LendingVault, setIFRPrice(candidate))`
 3. Collect required TreasurySafe signatures.
 4. Wait for the Governance timelock.
@@ -95,4 +107,8 @@ and the price policy has been reviewed.
 - Do not call `LendingVault.setIFRPrice` directly from an EOA. It must be executed by Governance.
 - Do not use a stale or manipulated thin-pool spot price without review.
 - Do not submit a Safe transaction if ownership checks fail.
-- Borrower transactions remain disabled by design until this proposal executes.
+- Borrower transactions must remain disabled for deployed V1 under the current
+  safety decision.
+- Do not activate deployed V1 as a "small pilot": it has no reversible
+  price-disable path, pause, borrow cap or allowlist.
+- Build and audit V2 controls before reconsidering production borrowing.

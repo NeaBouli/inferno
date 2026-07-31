@@ -45,6 +45,9 @@ jobs:
       - name: Verify Hardhat 3 script runtime
         run: npm run test:hardhat-runtime
 
+      - name: Verify LendingVault price tooling
+        run: npm run test:lending-price
+
       - name: Run contract and tooling tests
         run: npm run test:contracts:all
 

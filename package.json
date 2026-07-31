@@ -8,6 +8,7 @@
     "test:contracts:all": "npm run test:contracts && node test/builder/GeneratorEngine.test.js && node test/sdk/sdk.test.js",
     "test:hardhat-config": "node scripts/test-hardhat-network-config.cjs",
     "test:hardhat-runtime": "hardhat run scripts/test-hardhat-runtime.js",
+    "test:lending-price": "node scripts/prepare-lending-price-governance.js --self-test",
     "smoke:benefits": "node scripts/smoke-benefits-network.js",
     "test:benefits-sw": "node scripts/test-benefits-service-worker.js",
     "test:benefits-offline": "node scripts/test-benefits-offline-shell.js",

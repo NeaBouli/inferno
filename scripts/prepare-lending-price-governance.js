@@ -46,6 +46,8 @@ function usage() {
 INFERNO - Prepare LendingVault ifrPriceWei Governance Proposal
 
 Dry-run only. No transaction is sent.
+SAFETY DECISION: Deployed LendingVault V1 must remain disabled. Generated
+calldata and Safe JSON are reference artifacts and must not be submitted.
 
 Usage:
   node scripts/prepare-lending-price-governance.js
@@ -86,6 +88,12 @@ function requiredCollateralWei(ifrAmountBaseUnits, priceWei) {
   return BigInt(BigInt(BigInt(ifrAmountBaseUnits)*BigInt(priceWei))*BigInt(INITIAL_COLLATERAL_PCT))/BigInt(BigInt(IFR_UNIT)*BigInt(100));
 }
 
+function assertBigIntEqual(actual, expected, label) {
+  if (BigInt(actual) !== BigInt(expected)) {
+    throw new Error(`${label} failed: got ${actual.toString()}, expected ${expected.toString()}`);
+  }
+}
+
 function safeTxBuilderJson(governanceData, setPriceData, candidatePriceWei) {
   return {
     version: "1.0",
@@ -93,7 +101,7 @@ function safeTxBuilderJson(governanceData, setPriceData, candidatePriceWei) {
     createdAt: Date.now(),
     meta: {
       name: "IFR LendingVault ifrPriceWei proposal",
-      description: "Queue Governance proposal to call LendingVault.setIFRPrice(uint256).",
+      description: "REFERENCE ONLY - DO NOT SUBMIT. Deployed LendingVault V1 must remain disabled.",
       txBuilderVersion: "1.17.0",
       createdFromSafeAddress: ADDR.TREASURY_SAFE,
       createdFromOwnerAddress: "",
@@ -125,26 +133,30 @@ function safeTxBuilderJson(governanceData, setPriceData, candidatePriceWei) {
 }
 
 function runSelfTest() {
+  let mismatchDetected = false;
+  try {
+    assertBigIntEqual(1n, 2n, "assertion sentinel");
+  } catch (error) {
+    mismatchDetected = error.message.startsWith("assertion sentinel failed:");
+  }
+  if (!mismatchDetected) {
+    throw new Error("assertBigIntEqual failed to reject unequal values");
+  }
+
   const wethReserve = ethers.parseEther("1");
   const ifrReserve = ethers.parseUnits("1000000", IFR_DECIMALS);
   const price = priceFromReserves(wethReserve, ifrReserve);
   const expectedPrice = BigInt('1000000000000');
-  if (!BigInt(price)===BigInt(expectedPrice)) {
-    throw new Error(`price formula failed: got ${price.toString()}, expected ${expectedPrice.toString()}`);
-  }
+  assertBigIntEqual(price, expectedPrice, "price formula");
 
   const collateral = requiredCollateralWei(ethers.parseUnits("10000", IFR_DECIMALS), price);
   const expectedCollateral = ethers.parseEther("0.02");
-  if (!BigInt(collateral)===BigInt(expectedCollateral)) {
-    throw new Error(`collateral formula failed: got ${collateral.toString()}, expected ${expectedCollateral.toString()}`);
-  }
+  assertBigIntEqual(collateral, expectedCollateral, "collateral formula");
 
   const lendingIface = new ethers.Interface(LENDING_ABI);
   const data = lendingIface.encodeFunctionData("setIFRPrice", [price]);
   const decoded = lendingIface.decodeFunctionData("setIFRPrice", data);
-  if (!BigInt(decoded[0])===BigInt(price)) {
-    throw new Error("setIFRPrice calldata roundtrip failed");
-  }
+  assertBigIntEqual(decoded[0], price, "setIFRPrice calldata roundtrip");
 
   console.log("Self-test passed.");
 }
@@ -256,6 +268,9 @@ async function main() {
   console.log("=".repeat(72));
   console.log("INFERNO - LendingVault ifrPriceWei Governance Dry Run");
   console.log("=".repeat(72));
+  console.log("SAFETY: REFERENCE ONLY. DO NOT SUBMIT THIS V1 PAYLOAD.");
+  console.log("Deployed LendingVault V1 must remain disabled with ifrPriceWei = 0.");
+  console.log("");
   console.log(`Network:            Ethereum Mainnet (${network.chainId})`);
   console.log(`LendingVault:       ${ADDR.LENDING_VAULT}`);
   console.log(`Governance:         ${ADDR.GOVERNANCE}`);
@@ -330,6 +345,7 @@ async function main() {
     fs.writeFileSync(outPath, `${JSON.stringify(safeJson, null, 2)}\n`);
     console.log("");
     console.log(`Safe Transaction Builder JSON written: ${outPath}`);
+    console.log("REFERENCE ONLY - DO NOT IMPORT OR SUBMIT THIS V1 PAYLOAD.");
   } else {
     console.log("");
     console.log("Safe Transaction Builder JSON");
