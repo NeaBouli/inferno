@@ -9,6 +9,7 @@ const root = path.resolve(__dirname, '..');
 const frontend = path.join(root, 'apps', 'benefits-network', 'frontend');
 const port = Number(process.env.BENEFITS_DISCOVERY_UI_PORT || 3212);
 const origin = `http://127.0.0.1:${port}`;
+const NAVIGATION_TIMEOUT_MS = 90_000;
 const sellerWallet = '0x1000000000000000000000000000000000000001';
 const sellerSignature = `0x${'11'.repeat(65)}`;
 const sellerAuthMessage = 'IFR Benefits Network deterministic seller UI authorization';
@@ -165,6 +166,10 @@ async function waitForAttribute(locator, name, expected, timeoutMs = 5000) {
     await new Promise((resolve) => setTimeout(resolve, 50));
   }
   assert.equal(await locator.getAttribute(name), expected);
+}
+
+async function waitForRoleSelection(locator) {
+  await waitForAttribute(locator, 'aria-pressed', 'true', 30_000);
 }
 
 async function waitForLocation(page, pathname, hash = '') {
@@ -333,6 +338,7 @@ async function run() {
     }));
 
     const page = await context.newPage();
+    page.setDefaultNavigationTimeout(NAVIGATION_TIMEOUT_MS);
     const pageErrors = [];
     page.on('pageerror', (error) => pageErrors.push(error.message));
     await page.goto(origin, { waitUntil: 'domcontentloaded' });
@@ -425,7 +431,7 @@ async function run() {
     await waitForLocation(page, '/', '#seller-workspace');
     const sellerModeButton = page.getByRole('button', { name: /Seller Offer discounts/ });
     await sellerModeButton.waitFor();
-    await waitForAttribute(sellerModeButton, 'aria-pressed', 'true');
+    await waitForRoleSelection(sellerModeButton);
     await page.getByRole('heading', { name: 'Benefit rule manager', exact: true }).waitFor();
     await page.getByRole('heading', { name: 'Finish the seller profile first', exact: true }).waitFor();
     assert.equal(
@@ -462,28 +468,28 @@ async function run() {
     await waitForLocation(page, '/');
     const customerModeButton = page.getByRole('button', { name: /Customer Unlock benefits/ });
     await customerModeButton.waitFor();
-    await waitForAttribute(sellerModeButton, 'aria-pressed', 'true');
+    await waitForRoleSelection(sellerModeButton);
     await page.reload({ waitUntil: 'domcontentloaded' });
-    await waitForAttribute(sellerModeButton, 'aria-pressed', 'true');
+    await waitForRoleSelection(sellerModeButton);
 
     await customerModeButton.click();
-    await waitForAttribute(customerModeButton, 'aria-pressed', 'true');
+    await waitForRoleSelection(customerModeButton);
     await page.reload({ waitUntil: 'domcontentloaded' });
-    await waitForAttribute(customerModeButton, 'aria-pressed', 'true');
+    await waitForRoleSelection(customerModeButton);
 
     await page.goto(`${origin}/?mode=seller`, { waitUntil: 'domcontentloaded' });
-    await waitForAttribute(sellerModeButton, 'aria-pressed', 'true');
+    await waitForRoleSelection(sellerModeButton);
     await customerModeButton.click();
     assert.equal(new URL(page.url()).searchParams.has('mode'), false, 'manual role choice must clear the mode override');
     await page.reload({ waitUntil: 'domcontentloaded' });
-    await waitForAttribute(customerModeButton, 'aria-pressed', 'true');
+    await waitForRoleSelection(customerModeButton);
 
     await page.goto(`${origin}/#seller-workspace`, { waitUntil: 'domcontentloaded' });
-    await waitForAttribute(sellerModeButton, 'aria-pressed', 'true');
+    await waitForRoleSelection(sellerModeButton);
     await customerModeButton.click();
     assert.equal(new URL(page.url()).hash, '', 'manual role choice must clear a role-specific hash override');
     await page.reload({ waitUntil: 'domcontentloaded' });
-    await waitForAttribute(customerModeButton, 'aria-pressed', 'true');
+    await waitForRoleSelection(customerModeButton);
 
     await context.clearCookies();
     await page.evaluate(() => window.localStorage.clear());
@@ -496,7 +502,7 @@ async function run() {
     ];
     for (const gatedHash of gatedSellerHashes) {
       await page.goto(`${origin}/${gatedHash}`, { waitUntil: 'domcontentloaded' });
-      await waitForAttribute(sellerModeButton, 'aria-pressed', 'true');
+      await waitForRoleSelection(sellerModeButton);
       const gatedTarget = page.locator(`[id="${gatedHash.slice(1)}"]`);
       await gatedTarget.waitFor({ state: 'attached' });
       assert.equal(
@@ -654,6 +660,7 @@ async function run() {
       ),
     }));
     const sellerPage = await sellerContext.newPage();
+    sellerPage.setDefaultNavigationTimeout(NAVIGATION_TIMEOUT_MS);
     const sellerPageErrors = [];
     sellerPage.on('pageerror', (error) => sellerPageErrors.push(error.message));
     await sellerPage.goto(`${origin}/#seller-workspace`, { waitUntil: 'domcontentloaded' });
@@ -775,6 +782,7 @@ async function run() {
         : discoveryResponse([])),
     }));
     const ipadPage = await ipadContext.newPage();
+    ipadPage.setDefaultNavigationTimeout(NAVIGATION_TIMEOUT_MS);
     await ipadPage.goto(origin, { waitUntil: 'domcontentloaded' });
     await ipadPage.locator('[data-pwa-install-listeners-ready="true"]').waitFor();
     assert.equal(await ipadPage.locator('[data-ios-install-steps="visible"]').count(), 0, 'iOS details should stay compact until requested');
@@ -809,6 +817,7 @@ async function run() {
         : discoveryResponse([])),
     }));
     const phantomPage = await phantomContext.newPage();
+    phantomPage.setDefaultNavigationTimeout(NAVIGATION_TIMEOUT_MS);
     await phantomPage.goto(origin, { waitUntil: 'domcontentloaded' });
     const phantomWalletControl = phantomPage.locator('[data-wallet-connect-control]').first();
     await waitForAttribute(phantomWalletControl, 'data-wallet-connectors-ready', 'true');

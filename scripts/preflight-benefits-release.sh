@@ -8,7 +8,7 @@ SDK="$ROOT/apps/sdk"
 MODE="${1:---full}"
 REQUIRE_CLEAN="${BENEFITS_PREFLIGHT_REQUIRE_CLEAN:-1}"
 SERVER_PID=""
-SERVER_LOG="$(mktemp "${TMPDIR:-/tmp}/benefits-preflight-server.XXXXXX.log")"
+SERVER_LOG=""
 PREFLIGHT_DB_NAME=".benefits-preflight-${$}-${RANDOM}.db"
 PREFLIGHT_DB_PATH="$BACKEND/prisma/$PREFLIGHT_DB_NAME"
 
@@ -18,7 +18,9 @@ cleanup() {
     kill "$SERVER_PID" >/dev/null 2>&1 || true
     wait "$SERVER_PID" >/dev/null 2>&1 || true
   fi
-  rm -f "$SERVER_LOG"
+  if [[ -n "$SERVER_LOG" ]]; then
+    rm -f "$SERVER_LOG"
+  fi
   rm -f "$PREFLIGHT_DB_PATH" "$PREFLIGHT_DB_PATH-journal"
 }
 trap cleanup EXIT
@@ -84,6 +86,8 @@ if [[ "$MODE" == "--static" ]]; then
   printf '\n[benefits-preflight] PASS static release evidence gates\n'
   exit 0
 fi
+
+SERVER_LOG="$(mktemp "${TMPDIR:-/tmp}/benefits-preflight-server.XXXXXX")"
 
 for directory in "$ROOT/node_modules" "$FRONTEND/node_modules" "$BACKEND/node_modules" "$SDK/node_modules"; do
   if [[ ! -d "$directory" ]]; then

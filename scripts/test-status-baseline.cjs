@@ -170,4 +170,42 @@ requireText("docs/COINMARKETCAP_SUBMISSION.md", [
   "is not a standalone tracked CMC coin listing",
 ]);
 
+requireText("docs/wiki/index.html", [
+  "35 wiki pages",
+  '<span class="stat-value">17</span>',
+  '<span class="stat-value">35</span>',
+]);
+requireText("docs/index.html", ["Complete wiki with 35 pages"]);
+requireText("docs/wiki/roadmap.html", [
+  "Contributor buys, CommitmentVault locks and LendingVault offers are verified for C1/C2/C3",
+  "52,155,440.952845656 IFR",
+  "V1 borrowing remains intentionally disabled",
+]);
+requireText("docs/wiki/bootstrap.html", [
+  "Historical snapshot 16.06.2026",
+  "Current follow-up 30.07.2026",
+  "52,155,440.952845656 IFR",
+]);
+requireText("docs/wiki/reputation.html", [
+  "Zerion",
+  "IFR-8f9ccb3d-2e3b-4c3c-bda1-5040d80548f6",
+  "not counted as formal audit or trust evidence",
+]);
+requireText("docs/llms.txt", [
+  "Three contributor offers provide 52,155,440.952845656 IFR",
+  "V1 borrowing is intentionally disabled with ifrPriceWei = 0",
+  "Zerion lists the canonical IFR token",
+]);
+requireText("docs/CONTRIBUTOR_RUNBOOK.md", [
+  "Current completion status 30.07.2026",
+  "Next: done",
+  "52,155,440.952845656 IFR",
+  "V1 borrowing remains intentionally disabled with `ifrPriceWei = 0`",
+  "Historical pre-execution snapshot 28.06.2026",
+]);
+requireText("docs/wiki/contributing.html", [
+  "Use ethers v6 syntax with 9 decimals in current packages",
+  'ethers.parseUnits("1000", 9)',
+]);
+
 console.log("[status-baseline] PASS");

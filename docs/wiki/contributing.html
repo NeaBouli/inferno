@@ -587,7 +587,7 @@
       <ul>
         <li>Strict mode enabled &mdash; no implicit <code>any</code>.</li>
         <li>Use Jest or Hardhat Chai matchers for all tests.</li>
-        <li>ethers.js v5 syntax with 9 decimals: <code>ethers.utils.parseUnits("1000", 9)</code>.</li>
+        <li>Use ethers v6 syntax with 9 decimals in current packages: <code>ethers.parseUnits("1000", 9)</code>. Preserve <code>ethers.utils</code> only when maintaining an explicitly legacy static v5 widget.</li>
         <li>All app code lives under <code>apps/</code> with its own <code>package.json</code>.</li>
       </ul>
 
