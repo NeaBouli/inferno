@@ -138,9 +138,18 @@ Submitted 2026-07-30:
   agent. Support reported that it will be back online tomorrow.
 - No human ticket/reference number or requested change is available yet.
 
-Action: wait for the human support response. Do not submit a duplicate or send
-another reminder without a response, requested change or reasonable follow-up
-interval. Submission details remain in
+Resolved and verified 2026-07-31:
+
+- Human support agent Sebastien confirmed that the token logo was added and
+  IFR should now be tracked correctly.
+- Canonical token page:
+  `https://app.zerion.io/tokens/IFR-8f9ccb3d-2e3b-4c3c-bda1-5040d80548f6?inputChain=ethereum&inputFungibleId=eth`
+- A read-only page check confirmed the IFR icon, `Inferno Price (IFR)`,
+  current price information and circulating/total supply data.
+- The reviewed thank-you response was sent after user approval.
+
+Action: no further submission or follow-up is needed. Resume only if the
+token page, metadata or icon regresses. Full submission details remain in
 `docs/ZERION_SUBMISSION_PACK_20260730.md`.
 
 Official source:
@@ -165,5 +174,5 @@ No stable public ERC-20 icon PR path was confirmed for these wallets. Treat them
 4. CoinGecko application response; exact-contract API still says
    `coin not found`.
 5. CMC status once a local `CMC_API_KEY` is available.
-6. Zerion missing-asset request is submitted with the 128px icon and queued
-   for human support review; wait for a response or reference number.
+6. Zerion is live and verified with the 128px icon; monitor only for a
+   metadata or icon regression.
