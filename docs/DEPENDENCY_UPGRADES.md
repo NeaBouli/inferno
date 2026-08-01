@@ -137,6 +137,25 @@ toolchain and do not use `npm audit fix --force`.
   preventing future moderate, high or critical regressions while the
   documented upstream-only low findings remain visible.
 
+## 2026-08-01 Creator Gateway Security Patch
+
+- Creator Gateway remains on Express 4 and now declares `^4.22.2`; this pulls
+  patched `body-parser@1.20.6`, `qs@6.15.3` and
+  `path-to-regexp@0.1.13` without an Express 5 migration.
+- Patched development paths resolve `form-data@4.0.6`, `js-yaml@3.15.1`,
+  `brace-expansion@5.0.9` and `1.1.18`, `picomatch@2.3.2` and `4.0.5`,
+  `@babel/core@7.29.7`, plus `tsx@4.23.1` with `esbuild@0.28.1`.
+- Registry and lockfile integrity values match for both `brace-expansion`
+  lines, `path-to-regexp@0.1.13` and `form-data@4.0.6`. The lockfile contains
+  neither blocked Axios version `0.30.4` nor `1.14.1`.
+- A clean Node 20 installation reports zero production and development audit
+  findings. TypeScript no-emit/build checks and all 41 Creator Gateway tests
+  pass.
+- Creator Gateway CI now blocks every audit severity and runs a deterministic
+  lockfile baseline before TypeScript and Jest. Do not replace this bounded
+  patch with `npm audit fix --force` or mix it with Express 5, googleapis,
+  Jest or ts-jest migrations.
+
 ### Deterministic local networks
 
 `MAINNET_RPC_URL` configures the named `mainnet` HTTP network but does not implicitly fork the
