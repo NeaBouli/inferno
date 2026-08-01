@@ -120,6 +120,23 @@ toolchain and do not use `npm audit fix --force`.
 - The current root audit backlog is limited to transitive upstream packages; no Critical
   finding remains and no force-upgrade or untested override is permitted.
 
+## 2026-08-01 Root Security Patch
+
+- Hardhat was updated from `3.11.1` to `3.12.0`, which replaces vulnerable
+  `adm-zip@0.4.16` with patched `adm-zip@0.6.0`.
+- Mocha's transitive `serialize-javascript` is pinned through npm overrides to
+  patched `7.0.5`. The repository already requires Node.js `>=22.13.0`, above
+  that package's Node.js 20 minimum.
+- The nested `serve-handler` path now resolves patched
+  `brace-expansion@1.1.18`.
+- A clean local installation reports 10 low findings and no moderate, high or
+  critical findings. The remaining Ethers-5 verification-plugin/`elliptic`
+  and Mocha `diff` paths have no current non-breaking upstream fix and remain
+  monitored.
+- Contract and Security workflows enforce `npm audit --audit-level=moderate`,
+  preventing future moderate, high or critical regressions while the
+  documented upstream-only low findings remain visible.
+
 ### Deterministic local networks
 
 `MAINNET_RPC_URL` configures the named `mainnet` HTTP network but does not implicitly fork the

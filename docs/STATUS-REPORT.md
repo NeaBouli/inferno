@@ -1,6 +1,6 @@
 # IFR Project Status Report
 
-**Current engineering baseline:** 29 July 2026
+**Current engineering baseline:** 1 August 2026
 **Branch:** `main`
 **Model:** Community Fair Launch (CFLM) -- no presale
 **Ticker:** $IFR
@@ -12,17 +12,17 @@ professional third-party audit remains pending.
 
 ## Current Engineering Baseline
 
-- Root: Node.js `>=22.13.0`, Ethers `6.17.0`, Hardhat `3.11.1`,
+- Root: Node.js `>=22.13.0`, Ethers `6.17.0`, Hardhat `3.12.0`,
   Chai `6.2.2`, Mocha `11.7.6`, OpenZeppelin Contracts `5.6.x`.
 - Root is ESM with explicit CommonJS boundaries for legacy scripts and
   standalone test packages. Waffle, Ganache and `solidity-coverage` are no
   longer active root dependencies; native Hardhat 3 coverage is used.
-- Latest verified suites on exact HEAD `f350bd44`: contracts `642/642`,
+- Latest published exact-head suites on `ae856a18`: contracts `642/642`,
   Generator Engine `30/30`, IFR SDK `36/36`.
 - Final exact-head CI passed for Contract Tests, Benefits Network, Security
   Audit, Docs Validator and Pages.
-- Root `npm audit`: 21 transitive findings (13 high, 8 low, 0 critical).
-  No forced fix or unverified override is approved.
+- Clean local candidate `npm audit`: 10 transitive low findings, with 0
+  moderate, high or critical findings. No forced fix is approved.
 - Benefits frontend: Next.js `15.5.21`, Wagmi `3.7.x`, Node 22. Benefits
   backend and every active application manifest that depends on Ethers use
   Ethers 6.

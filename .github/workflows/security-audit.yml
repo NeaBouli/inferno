@@ -38,9 +38,9 @@ jobs:
             echo "has_npm=false" >> $GITHUB_OUTPUT
           fi
 
-      - name: npm audit (critical gate)
+      - name: npm audit (moderate gate)
         if: steps.check-npm.outputs.has_npm == 'true'
-        run: npm audit --audit-level=critical
+        run: npm audit --audit-level=moderate
 
       - name: Check for Cargo.toml
         id: check-cargo

@@ -22,24 +22,41 @@ function requireText(relative, phrases) {
 }
 
 const packageJson = JSON.parse(read("package.json"));
+const packageLock = JSON.parse(read("package-lock.json"));
 assert.equal(packageJson.engines?.node, ">=22.13.0");
 assert.equal(packageJson.dependencies?.ethers, "6.17.0");
-assert.equal(packageJson.devDependencies?.hardhat, "3.11.1");
+assert.equal(packageJson.devDependencies?.hardhat, "3.12.0");
+assert.equal(packageJson.overrides?.["serialize-javascript"], "7.0.5");
 assert.equal(packageJson.devDependencies?.chai, "6.2.2");
 assert.equal(packageJson.devDependencies?.mocha, "11.7.6");
+assert.equal(
+  packageJson.scripts?.["test:mocha-serializer"],
+  "mocha --parallel --jobs 2 test/mocha-serializer-compat.test.cjs"
+);
+assert.equal(packageLock.packages?.["node_modules/hardhat"]?.version, "3.12.0");
+assert.equal(packageLock.packages?.["node_modules/adm-zip"]?.version, "0.6.0");
+assert.equal(
+  packageLock.packages?.["node_modules/serialize-javascript"]?.version,
+  "7.0.5"
+);
+assert.equal(
+  packageLock.packages?.["node_modules/serve-handler/node_modules/brace-expansion"]
+    ?.version,
+  "1.1.18"
+);
 
 const currentBaseline = [
-  "**Current engineering baseline:** 29 July 2026",
-  "Hardhat `3.11.1`",
+  "**Current engineering baseline:** 1 August 2026",
+  "Hardhat `3.12.0`",
   "contracts `642/642`",
-  "13 high, 8 low, 0 critical",
+  "10 transitive low findings",
   "## Historical Snapshot — 5 March 2026",
 ];
 requireText("STATUS-REPORT.md", currentBaseline);
 requireText("docs/STATUS-REPORT.md", currentBaseline);
 
 const todo = requireText("internal/operations/TODO.md", [
-  "> Last updated: 2026-07-31 | Branch: main",
+  "> Last updated: 2026-08-01 | Branch: main",
   "CURRENT WATCHLIST — verified 2026-07-31",
   "LendingVault V1 borrow activation policy — keep disabled",
   "V1 cannot set price back to zero",
@@ -59,7 +76,7 @@ const todo = requireText("internal/operations/TODO.md", [
   "Wallet-level Collateral Health Monitor",
   "Dependency modernization — completed 2026-07-29",
   "Ethers 6 / Hardhat 3 / Chai 6 / Node 22 migration",
-  "13 high, 8 low, 0 critical",
+  "10 transitive low findings",
   "Deterministic local Hardhat test network",
   "Technical: WalletConnect v2 + ethers.js v6",
   "*Last updated: 2026-07-31*",
@@ -68,6 +85,7 @@ assert.ok(
   !todo.includes("- [ ] Dependency modernization"),
   "Dependency modernization must not remain open"
 );
+assert.ok(!todo.includes("13 high"), "TODO must not retain stale high-severity count");
 assert.ok(
   !todo.includes("- [ ] Deterministic local Hardhat test network"),
   "Deterministic local Hardhat test network must not remain open"
@@ -82,7 +100,7 @@ assert.ok(
 );
 
 requireText("internal/operations/TODO.html", [
-  "Last updated: 2026-07-31",
+  "Last updated: 2026-08-01",
   "Current Watchlist &mdash; verified 2026-07-31",
   "LendingVault V1 borrow activation policy",
   "V1 cannot set the price back to zero",
@@ -102,14 +120,19 @@ requireText("internal/operations/TODO.html", [
   "Deterministic local Hardhat test network",
   "Submission completed, not approval",
 ]);
+assert.ok(
+  !read("internal/operations/TODO.html").includes("13 high"),
+  "TODO.html must not retain stale high-severity count"
+);
 
 requireText("BACKLOG.md", [
   "**Legacy snapshot updated for closure on 2026-07-29.**",
   "Ethers 6 / Hardhat 3 / Chai 6 / Node 22 Migration",
+  "10 transitive Low-Funde",
 ]);
 requireText("SKYWALKER.md", [
   "**Hinweis 29.07.2026:**",
-  "Hardhat 3.11.1",
+  "Hardhat 3.12.0",
   "lokale Tests forken nicht automatisch",
   "HARDHAT_FORK_BLOCK_NUMBER=<block>",
   "## Historischer Stand (05.03.2026)",
@@ -151,9 +174,9 @@ requireText("docs/ZERION_SUBMISSION_PACK_20260730.md", [
   "Do not submit a duplicate",
 ]);
 requireText("docs/PHASE3_OPEN_ITEMS_STATUS_20260708.md", [
-  "Sections 3 and 4 were reverified on 2026-07-30",
-  "Status verified 2026-07-30: migration completed",
-  "13 high / 8 low / 0 critical",
+  "Section 3 was reverified on 2026-08-01",
+  "Status verified 2026-08-01: migration completed",
+  "0 moderate / 0 high / 0 critical",
   "Status verified 2026-07-30",
   "keep all three external threads under watch without duplicate",
 ]);

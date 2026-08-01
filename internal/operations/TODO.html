@@ -49,7 +49,7 @@
   <div class="container">
     <a href="wiki/roadmap.html" class="back" rel="nofollow">&larr; Roadmap</a>
     <h1>IFR Protocol &mdash; Developer TODO List</h1>
-    <div class="subtitle">Last updated: 2026-07-31 &middot; Branch: main</div>
+    <div class="subtitle">Last updated: 2026-08-01 &middot; Branch: main</div>
 
     <!-- ═══ CURRENT WATCHLIST ═══ -->
     <h2><span class="priority-badge p-critical">WATCH</span> Current Watchlist &mdash; verified 2026-07-31</h2>
@@ -79,7 +79,7 @@
       <li><div class="cb"></div><strong>Blockaid/MetaMask warning retest</strong><br>
         <span style="color:#6b7280;font-size:0.82rem;">Blockaid review is approved. Resume only if a current device still shows a warning, with version, timestamp and screenshot evidence.</span></li>
       <li><div class="cb"></div><strong>Residual dependency audit findings</strong><br>
-        <span style="color:#6b7280;font-size:0.82rem;">21 transitive findings remain (13 high, 8 low, 0 critical). Resume on upstream fixes or a bounded runtime-path remediation; never use <code>npm audit fix --force</code>.</span></li>
+        <span style="color:#6b7280;font-size:0.82rem;">The clean local candidate has 10 transitive low findings (0 moderate/high/critical). Resume on upstream fixes or a bounded runtime-path remediation; never use <code>npm audit fix --force</code>.</span></li>
       <li><div class="cb"></div><strong>CommitmentVault native batch-lock UX</strong><br>
         <span style="color:#6b7280;font-size:0.82rem;">Current self-service works but needs one approval plus multiple lock confirmations. Resume with an audited V2 <code>lockBatch</code>/<code>lockSplit</code> scope and deployment approval.</span></li>
       <li><div class="cb"></div><strong>Global LendingVault liquidation dashboard and Telegram alerts</strong><br>
@@ -89,7 +89,7 @@
     <h2><span class="priority-badge p-done">RECENT</span> Recently Completed</h2>
     <ul>
       <li><div class="cb cb-done">&#x2713;</div><strong>Dependency modernization</strong> &mdash; completed 2026-07-29.<br>
-        <span style="color:#6b7280;font-size:0.82rem;">Root now uses Ethers 6.17, Hardhat 3.11.1, Chai 6 and Node &gt;=22.13. Waffle/Ganache were removed; exact-head CI passed. Residual root audit: 21 transitive findings (13 high, 8 low, 0 critical). Do not run <code>npm audit fix --force</code>.</span></li>
+        <span style="color:#6b7280;font-size:0.82rem;">Root now uses Ethers 6.17, Hardhat 3.12.0, Chai 6 and Node &gt;=22.13. Waffle/Ganache were removed; exact-head CI passed. Residual root audit: 10 transitive low findings (0 moderate/high/critical). Do not run <code>npm audit fix --force</code>.</span></li>
       <li><div class="cb cb-done">&#x2713;</div><strong>Deterministic local Hardhat test network</strong> &mdash; completed 2026-07-29.<br>
         <span style="color:#6b7280;font-size:0.82rem;"><code>MAINNET_RPC_URL</code> configures only the named mainnet network. Local forks require explicit <code>HARDHAT_FORK=true</code> plus a positive pinned <code>HARDHAT_FORK_BLOCK_NUMBER</code>; regression gate: <code>npm run test:hardhat-config</code>.</span></li>
     </ul>
