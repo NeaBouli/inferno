@@ -24,6 +24,8 @@ jobs:
           cache: 'npm'
           cache-dependency-path: apps/ai-copilot/package-lock.json
       - run: npm ci
+      - run: npm run test:dependencies
+      - run: npm audit --audit-level=low
       - run: npx tsc --noEmit
       - run: npm run check:server-imports
       - run: npm run test:surface-ui
