@@ -9,7 +9,8 @@
     "start": "node dist/src/index.js",
     "db:migrate": "npx prisma migrate dev",
     "db:generate": "npx prisma generate",
-    "test": "node scripts/prepare-test-db.mjs && prisma migrate deploy && tsx src/__tests__/points.test.ts"
+    "test": "node scripts/prepare-test-db.mjs && prisma migrate deploy && tsx src/__tests__/points.test.ts",
+    "test:dependencies": "node scripts/test-dependencies.mjs"
   },
   "keywords": [],
   "author": "",
@@ -32,5 +33,11 @@
     "@types/express": "^5.0.6",
     "@types/node": "^25.3.0",
     "typescript": "^5.9.3"
+  },
+  "overrides": {
+    "body-parser": "2.3.0",
+    "esbuild": "0.28.1",
+    "path-to-regexp": "8.4.0",
+    "qs": "6.15.3"
   }
 }

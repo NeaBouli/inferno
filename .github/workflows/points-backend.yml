@@ -34,8 +34,9 @@ jobs:
           cache: 'npm'
           cache-dependency-path: apps/points-backend/package-lock.json
       - run: npm ci
+      - run: npm run test:dependencies
       - run: npx prisma generate
       - run: npx tsc --noEmit
       - run: npm test
       - run: npm audit signatures
-      - run: npm audit --audit-level=critical
+      - run: npm audit --audit-level=low
