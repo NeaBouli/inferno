@@ -9,7 +9,7 @@
 - [x] Bootstrap `finalise()` ausgeführt — 05.06.2026
 - [x] LP Token feeExempt — als Proposal #15 am 08.06.2026 ausgeführt
 - [x] Ethers 6 / Hardhat 3 / Chai 6 / Node 22 Migration — 29.07.2026
-      Rest: 21 transitive npm findings (13 high, 8 low, 0 critical); kein Force-Fix.
+      Rest: 10 transitive Low-Funde (0 moderate/high/critical); kein Force-Fix.
 
 ## 🟡 Nächste Session
 - [ ] .env cleanup (DEPLOYER_PRIVATE_KEY Konsistenz prüfen)

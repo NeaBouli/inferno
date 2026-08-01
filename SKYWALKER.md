@@ -12,9 +12,9 @@
 > Maerz-Handover. Fuer den aktuellen operativen Stand gelten
 > `internal/operations/TODO.md`, `docs/DEPENDENCY_UPGRADES.md` und die lokale
 > append-only `BRIDGE.md`. Aktuelle Root-Baseline: Node `>=22.13.0`, Ethers
-> `6.17.0`, Hardhat `3.11.1`, Chai `6.2.2`; Contract-Suite `642/642`,
-> Generator Engine `30/30`, IFR SDK `36/36`; Root-Audit `13 high / 8 low /
-> 0 critical`.
+> `6.17.0`, Hardhat `3.12.0`, Chai `6.2.2`; Contract-Suite `642/642`,
+> Generator Engine `30/30`, IFR SDK `36/36`; Root-Audit `10 low /
+> 0 moderate / 0 high / 0 critical`.
 
 ---
 
@@ -238,7 +238,7 @@ docs/wiki/
 #### Root Ethers Runtime
 - Root-Tests, Tasks und Hardhat-Skripte verwenden Ethers 6.17 mit nativen `bigint`-Werten.
 - Die frueheren Ethers-v5-Formatter-Patches fuer Alchemy wurden entfernt.
-- Die Root-Toolchain verwendet Hardhat 3.11.1, Chai 6 und Node.js >=22.13.0.
+- Die Root-Toolchain verwendet Hardhat 3.12.0, Chai 6 und Node.js >=22.13.0.
 - Legacy-CommonJS-Tools bleiben durch explizite lokale Paketgrenzen ausfuehrbar.
 
 #### Legacy-Ordner im Repository
@@ -275,9 +275,9 @@ Vesting (12-Monat Cliff), LiquidityReserve (6-Monat Lock), BuybackVault (60-Tag 
 
 ### Zusammenfassung
 
-#### Entwicklungsumgebung (aktualisiert 29.07.2026)
+#### Entwicklungsumgebung (aktualisiert 01.08.2026)
 
-- **Framework:** Hardhat 3.11.1 (Solidity 0.8.20 + 0.8.28,
+- **Framework:** Hardhat 3.12.0 (Solidity 0.8.20 + 0.8.28,
   OpenZeppelin 5.6.x, Chai 6.2.2, Mocha 11.7.6)
 - **Network:** Ethereum Mainnet + Sepolia Testnet (Alchemy RPC)
 - **Frontend:** React + Vite + ethers.js v6

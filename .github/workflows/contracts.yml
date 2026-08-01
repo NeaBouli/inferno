@@ -45,11 +45,14 @@ jobs:
       - name: Verify Hardhat 3 script runtime
         run: npm run test:hardhat-runtime
 
+      - name: Verify Mocha serializer override
+        run: npm run test:mocha-serializer
+
       - name: Verify LendingVault price tooling
         run: npm run test:lending-price
 
       - name: Run contract and tooling tests
         run: npm run test:contracts:all
 
-      - name: Block critical dependency advisories
-        run: npm audit --audit-level=critical
+      - name: Block moderate or higher dependency advisories
+        run: npm audit --audit-level=moderate

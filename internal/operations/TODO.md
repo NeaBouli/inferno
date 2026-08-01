@@ -1,5 +1,5 @@
 # IFR Protocol — Developer TODO List
-> Last updated: 2026-07-31 | Branch: main
+> Last updated: 2026-08-01 | Branch: main
 
 ---
 
@@ -169,8 +169,8 @@ On errors: fix immediately, commit with `seo:` prefix.
       Blockaid review is approved. Resume only if a current device still shows
       a warning; capture wallet/browser version, timestamp and screenshot.
 - [ ] Residual dependency audit findings
-      Root audit after modernization: 21 transitive findings
-      (13 high, 8 low, 0 critical).
+      Clean local root audit: 10 transitive low findings
+      (0 moderate, 0 high, 0 critical).
       Resume trigger: upstream fixes or a bounded runtime-path remediation.
       Never run `npm audit fix --force`.
 - [ ] CommitmentVault native batch-lock UX
@@ -187,9 +187,9 @@ On errors: fix immediately, commit with `seo:` prefix.
 
 - [x] Dependency modernization — completed 2026-07-29
       Docs: docs/DEPENDENCY_UPGRADES.md
-      Root now uses Ethers 6.17, Hardhat 3.11.1, Chai 6 and Node >=22.13.
+      Root now uses Ethers 6.17, Hardhat 3.12.0, Chai 6 and Node >=22.13.
       Waffle/Ganache were removed. Final exact-head CI passed on `f350bd44`.
-      Residual root audit: 21 transitive findings (13 high, 8 low, 0 critical).
+      Residual root audit: 10 transitive low findings (0 moderate/high/critical).
       Do not run `npm audit fix --force`; remaining upstream paths need bounded updates.
 - [x] Deterministic local Hardhat test network — completed 2026-07-29
       A locally set MAINNET_RPC_URL now configures only the named `mainnet`
@@ -295,9 +295,9 @@ On errors: fix immediately, commit with `seo:` prefix.
 - [x] npm audit toolchain migration completed — residual upstream findings tracked
       Link: https://github.com/NeaBouli/inferno/security/dependabot
       Status 29.07.2026: Ethers 6 / Hardhat 3 / Chai 6 / Node 22 migration
-      completed and exact-head CI passed. Current root audit is 21 transitive
-      findings (13 high, 8 low, 0 critical) in upstream Hardhat, Verify, Mocha
-      and Serve paths. Do not run `npm audit fix --force`.
+      completed and exact-head CI passed. The 01.08.2026 local security patch
+      candidate leaves 10 low findings (0 moderate/high/critical) in upstream
+      Verify/Ethers-5 and Mocha paths. Do not run `npm audit fix --force`.
 - [x] Bootstrap public stats: PublicNode RPC fallback + _publicStatsLoaded race guard ✅
 - [x] Recent Votes: loadSavedVotes() on DOMContentLoaded ✅ (bc18c85a)
 - [x] WalletConnect placeholder text removed ✅

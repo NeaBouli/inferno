@@ -1,6 +1,7 @@
 # Phase 3 Open Items Status
 
-Created 2026-07-08. Sections 3 and 4 were reverified on 2026-07-30; other
+Created 2026-07-08. Section 3 was reverified on 2026-08-01 and section 4 on
+2026-07-30; other
 sections retain their dated evidence and are not presented as fresh
 on-chain verification.
 
@@ -40,15 +41,15 @@ Design note added:
 
 ## 3. Dependency Security Backlog
 
-Status verified 2026-07-30: migration completed; upstream audit findings remain.
+Status verified 2026-08-01: migration completed; upstream low-severity findings remain.
 
-- Root now uses Ethers 6.17, Hardhat 3.11.1, Chai 6 and Node `>=22.13.0`.
+- Root now uses Ethers 6.17, Hardhat 3.12.0, Chai 6 and Node `>=22.13.0`.
 - Waffle and Ganache were removed; contract and tooling CI passed on the exact
   published head.
-- Current root `npm audit`: 21 transitive findings
-  (`13 high / 8 low / 0 critical`).
-- Remaining findings are current upstream dependency paths. Do not apply
-  untested overrides or `npm audit fix --force`.
+- Current root `npm audit`: 10 transitive low findings
+  (`0 moderate / 0 high / 0 critical`).
+- Remaining findings are current upstream dependency paths without patched
+  releases. Do not apply untested overrides or `npm audit fix --force`.
 
 Open next step: monitor bounded upstream updates and test each remediation as
 an isolated dependency wave.
