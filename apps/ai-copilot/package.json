@@ -9,6 +9,7 @@
     "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
     "prebuild": "node -e \"try{require('../../scripts/build-wiki-rag.js')}catch(e){console.log('prebuild skipped (wiki-content.json committed)');}\"",
     "check:server-imports": "tsx -e \"import('./src/context/system-prompts.ts')\"",
+    "test:dependencies": "node scripts/test-dependencies.mjs",
     "test:surface-ui": "node scripts/test-surface-ui.cjs",
     "test:surface-context": "tsx scripts/test-surface-context.ts",
     "build": "vite build",
@@ -45,6 +46,9 @@
     "@rollup/rollup-linux-x64-gnu": "^4.59.0"
   },
   "overrides": {
-    "shell-quote": "1.9.0"
+    "shell-quote": "1.9.0",
+    "tsx": {
+      "esbuild": "0.28.1"
+    }
   }
 }
