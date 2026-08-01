@@ -141,6 +141,9 @@ requireText("SKYWALKER.md", [
 requireText("docs/DEPENDENCY_UPGRADES.md", [
   "## Historical Operational Note — 2026-07-08",
   "## 2026-07-29 Hardhat 3 Completion",
+  "## 2026-08-01 Creator Gateway Security Patch",
+  "path-to-regexp@0.1.13",
+  "all 41 Creator Gateway tests",
   "### Deterministic local networks",
   "HARDHAT_FORK_BLOCK_NUMBER=<positive-mainnet-block>",
 ]);
