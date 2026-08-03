@@ -16,6 +16,7 @@ for (const watchedPath of [
   "scripts/test-content-trust.cjs",
   "scripts/test-status-baseline.cjs",
   "scripts/test-docs-workflow.cjs",
+  "tests/browser/**",
   "package.json",
 ]) {
   assert.ok(
@@ -32,6 +33,8 @@ for (const command of [
   "npm run test:wiki-heads",
   "npm run test:surface-routing",
   "npm run test:benefits-docs",
+  "npm run test:wallet-connect",
+  "npm run test:web3-write",
 ]) {
   assert.ok(
     workflow.includes(`run: ${command}`),

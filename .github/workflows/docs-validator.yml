@@ -175,6 +175,9 @@ jobs:
       - name: Run landing/wiki wallet suite
         run: npm run test:wallet-connect
 
+      - name: Run Web3 write-flow suite
+        run: npm run test:web3-write
+
   docs-summary:
     name: Docs Summary
     runs-on: ubuntu-latest
