@@ -790,7 +790,16 @@ footer,
     overflow: hidden !important;
   }
 
+  .layout {
+    grid-template-columns: minmax(0, 1fr) !important;
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
   .main {
+    grid-column: 1 !important;
+    width: 100% !important;
+    min-width: 0 !important;
     padding: 88px 22px 44px !important;
   }
 
@@ -866,8 +875,21 @@ footer,
   #wiki-wallet-bar {
     margin: -88px -22px 24px -22px !important;
     padding: 10px 18px 10px 64px !important;
-    width: auto !important;
-    max-width: none !important;
+    width: calc(100% + 44px) !important;
+    max-width: calc(100% + 44px) !important;
+    gap: 12px !important;
+    box-sizing: border-box !important;
+  }
+
+  #wiki-wallet-bar > a {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  #wiki-wallet-wrap {
+    flex: 0 0 auto;
   }
 
   .sidebar {
