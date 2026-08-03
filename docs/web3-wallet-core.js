@@ -70,6 +70,36 @@ window.IFRWallet = (function() {
     return false;
   }
 
+  async function _ensureMainnetProvider(eth) {
+    if (!eth || typeof eth.request !== "function") {
+      throw new Error("Wallet provider is unavailable.");
+    }
+
+    var chainId = await eth.request({ method: "eth_chainId" });
+    if (String(chainId).toLowerCase() !== CHAIN_ID_HEX) {
+      try {
+        await eth.request({
+          method: "wallet_switchEthereumChain",
+          params: [{ chainId: CHAIN_ID_HEX }]
+        });
+      } catch (switchError) {
+        var rejected = new Error("Switch your wallet to Ethereum Mainnet (chain 1) before continuing.");
+        rejected.code = "WRONG_NETWORK";
+        rejected.cause = switchError;
+        throw rejected;
+      }
+
+      chainId = await eth.request({ method: "eth_chainId" });
+      if (String(chainId).toLowerCase() !== CHAIN_ID_HEX) {
+        var unchanged = new Error("Wallet network did not change. Select Ethereum Mainnet (chain 1) and try again.");
+        unchanged.code = "WRONG_NETWORK";
+        throw unchanged;
+      }
+    }
+
+    return true;
+  }
+
   // ── Wallet Help Modal ───────────────────────────────
   var _walletHelpModalShown = false;
 
@@ -213,29 +243,11 @@ window.IFRWallet = (function() {
     if (!accounts || accounts.length === 0) return null;
     if (_address) return _address; // already connected
 
+    await _ensureMainnetProvider(eth);
     _ethereumProvider = eth;
     _provider = new ethers.providers.Web3Provider(eth, "any");
     _signer = _provider.getSigner();
     _address = accounts[0];
-
-    // Network check — non-fatal
-    try {
-      var network = await _provider.getNetwork();
-      if (network.chainId !== CHAIN_ID) {
-        try {
-          await eth.request({
-            method: "wallet_switchEthereumChain",
-            params: [{ chainId: CHAIN_ID_HEX }]
-          });
-          _provider = new ethers.providers.Web3Provider(eth, "any");
-          _signer = _provider.getSigner();
-        } catch (switchErr) {
-          console.warn("IFRWallet: chain switch rejected, continuing on current chain");
-        }
-      }
-    } catch (netErr) {
-      console.warn("IFRWallet: getNetwork() failed, continuing:", netErr.message);
-    }
 
     localStorage.setItem(SESSION_KEY, _address);
     _attachListeners(eth);
@@ -433,6 +445,10 @@ window.IFRWallet = (function() {
     return _provider || new ethers.providers.JsonRpcProvider(RPC_URL);
   }
   function getWalletConnectUri() { return _wcUri; }
+  async function ensureMainnet() {
+    var eth = _ethereumProvider || _getMetaMaskProvider();
+    return _ensureMainnetProvider(eth);
+  }
 
   // ── Events ────────────────────────────────────────
   function on(event, cb) { _listeners.push({ event: event, cb: cb }); }
@@ -473,6 +489,7 @@ window.IFRWallet = (function() {
     connect: connect, disconnect: disconnect, autoReconnect: autoReconnect,
     isConnected: isConnected, getAddress: getAddress, getShortAddress: getShortAddress,
     getSigner: getSigner, getProvider: getProvider,
+    ensureMainnet: ensureMainnet,
     addToken: addIFRToken,
     on: on, off: off, getDeepLink: getDeepLink, isMobile: isMobile,
     isMobileOrTablet: _isMobileOrTablet,
