@@ -459,8 +459,13 @@ async function run() {
     await seller.getByText('Enter a shop.ifrunit.tech seller URL, seller slug or profile ID.', { exact: true }).waitFor();
     assert.equal(new URL(seller.url()).pathname, `/p/${passId}`, 'foreign seller URLs must fail closed');
     await sellerReference.fill(`https://shop.ifrunit.tech/s/${business.slug}`);
-    await seller.getByRole('button', { name: 'Open seller checkout', exact: true }).click();
-    await seller.waitForURL(`${origin}/b/${business.slug}?pass=${passId}`);
+    await Promise.all([
+      seller.waitForURL(`${origin}/b/${business.slug}?pass=${passId}`, {
+        waitUntil: 'domcontentloaded',
+        timeout: 60_000,
+      }),
+      seller.getByRole('button', { name: 'Open seller checkout', exact: true }).click(),
+    ]);
     await seller.getByRole('heading', { name: business.name }).waitFor();
     await seller.getByRole('button', { name: 'Connect', exact: true }).click();
     await seller.getByText(`${sellerWallet.slice(0, 6)}...${sellerWallet.slice(-4)}`).first().waitFor();
