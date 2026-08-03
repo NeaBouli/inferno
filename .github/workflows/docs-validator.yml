@@ -15,6 +15,8 @@ on:
       - 'scripts/test-docs-workflow.cjs'
       - 'scripts/test-wiki-head-integrity.cjs'
       - 'scripts/test-surface-routing.cjs'
+      - 'tests/browser/**'
+      - 'playwright.config.js'
       - 'package.json'
       - '.github/workflows/docs-validator.yml'
   pull_request:
@@ -31,6 +33,8 @@ on:
       - 'scripts/test-docs-workflow.cjs'
       - 'scripts/test-wiki-head-integrity.cjs'
       - 'scripts/test-surface-routing.cjs'
+      - 'tests/browser/**'
+      - 'playwright.config.js'
       - 'package.json'
       - '.github/workflows/docs-validator.yml'
   schedule:
@@ -151,10 +155,33 @@ jobs:
       - name: Check public surface routing
         run: npm run test:surface-routing
 
+  validate-wallet-browser:
+    name: Wallet Browser Suite
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Run landing/wiki wallet suite
+        run: npm run test:wallet-connect
+
+      - name: Run Web3 write-flow suite
+        run: npm run test:web3-write
+
   docs-summary:
     name: Docs Summary
     runs-on: ubuntu-latest
-    needs: [validate-markdown, validate-json, validate-links, validate-structure]
+    needs: [validate-markdown, validate-json, validate-links, validate-structure, validate-wallet-browser]
     if: always()
     steps:
       - name: Summary
@@ -166,3 +193,12 @@ jobs:
           echo "| JSON Validation | ${{ needs.validate-json.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Internal Links | ${{ needs.validate-links.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Structure | ${{ needs.validate-structure.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Wallet Browser Suite | ${{ needs.validate-wallet-browser.result }} |" >> $GITHUB_STEP_SUMMARY
+          if [[ "${{ needs.validate-markdown.result }}" != "success" ||
+                "${{ needs.validate-json.result }}" != "success" ||
+                "${{ needs.validate-links.result }}" != "success" ||
+                "${{ needs.validate-structure.result }}" != "success" ||
+                "${{ needs.validate-wallet-browser.result }}" != "success" ]]; then
+            echo "One or more documentation checks failed."
+            exit 1
+          fi

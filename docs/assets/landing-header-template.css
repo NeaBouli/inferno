@@ -89,7 +89,7 @@ nav .nav-cta {
 
 nav .nav-cta .btn {
   min-height: 44px !important;
-  display: flex !important;
+  display: flex;
   align-items: center !important;
   justify-content: center !important;
   gap: 9px !important;
