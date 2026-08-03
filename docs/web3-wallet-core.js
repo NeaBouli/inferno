@@ -70,6 +70,53 @@ window.IFRWallet = (function() {
     return false;
   }
 
+  function _isMainnetChainId(chainId) {
+    if (typeof chainId === "number") {
+      return Number.isSafeInteger(chainId) && chainId === CHAIN_ID;
+    }
+    var normalized = String(chainId == null ? "" : chainId).trim().toLowerCase();
+    if (!normalized) return false;
+    var parsed;
+    if (/^0x[0-9a-f]+$/.test(normalized)) {
+      parsed = Number.parseInt(normalized.slice(2), 16);
+    } else if (/^[0-9]+$/.test(normalized)) {
+      parsed = Number(normalized);
+    } else {
+      return false;
+    }
+    return Number.isSafeInteger(parsed) && parsed === CHAIN_ID;
+  }
+
+  async function _ensureMainnetProvider(eth) {
+    if (!eth || typeof eth.request !== "function") {
+      throw new Error("Wallet provider is unavailable.");
+    }
+
+    var chainId = await eth.request({ method: "eth_chainId" });
+    if (!_isMainnetChainId(chainId)) {
+      try {
+        await eth.request({
+          method: "wallet_switchEthereumChain",
+          params: [{ chainId: CHAIN_ID_HEX }]
+        });
+      } catch (switchError) {
+        var rejected = new Error("Switch your wallet to Ethereum Mainnet (chain 1) before continuing.");
+        rejected.code = "WRONG_NETWORK";
+        rejected.cause = switchError;
+        throw rejected;
+      }
+
+      chainId = await eth.request({ method: "eth_chainId" });
+      if (!_isMainnetChainId(chainId)) {
+        var unchanged = new Error("Wallet network did not change. Select Ethereum Mainnet (chain 1) and try again.");
+        unchanged.code = "WRONG_NETWORK";
+        throw unchanged;
+      }
+    }
+
+    return true;
+  }
+
   // ── Wallet Help Modal ───────────────────────────────
   var _walletHelpModalShown = false;
 
@@ -161,12 +208,12 @@ window.IFRWallet = (function() {
         // Listen for WC session events (fires when user approves in wallet app)
         _wcProvider.on("connect", function() {
           if (_wcProvider.accounts && _wcProvider.accounts.length > 0 && !_address) {
-            _finishConnect(_wcProvider, _wcProvider.accounts);
+            _finishConnectSafely(_wcProvider, _wcProvider.accounts);
           }
         });
         _wcProvider.on("session_event", function() {
           if (_wcProvider.accounts && _wcProvider.accounts.length > 0 && !_address) {
-            _finishConnect(_wcProvider, _wcProvider.accounts);
+            _finishConnectSafely(_wcProvider, _wcProvider.accounts);
           }
         });
         _wcProvider.on("display_uri", function(uri) {
@@ -213,34 +260,31 @@ window.IFRWallet = (function() {
     if (!accounts || accounts.length === 0) return null;
     if (_address) return _address; // already connected
 
+    await _ensureMainnetProvider(eth);
     _ethereumProvider = eth;
     _provider = new ethers.providers.Web3Provider(eth, "any");
     _signer = _provider.getSigner();
     _address = accounts[0];
 
-    // Network check — non-fatal
-    try {
-      var network = await _provider.getNetwork();
-      if (network.chainId !== CHAIN_ID) {
-        try {
-          await eth.request({
-            method: "wallet_switchEthereumChain",
-            params: [{ chainId: CHAIN_ID_HEX }]
-          });
-          _provider = new ethers.providers.Web3Provider(eth, "any");
-          _signer = _provider.getSigner();
-        } catch (switchErr) {
-          console.warn("IFRWallet: chain switch rejected, continuing on current chain");
-        }
-      }
-    } catch (netErr) {
-      console.warn("IFRWallet: getNetwork() failed, continuing:", netErr.message);
-    }
-
     localStorage.setItem(SESSION_KEY, _address);
     _attachListeners(eth);
     _emit("connected", _address);
     return _address;
+  }
+
+  function _finishConnectSafely(eth, accounts) {
+    return _finishConnect(eth, accounts).catch(function(error) {
+      if (_wcReconnectTimer) {
+        clearInterval(_wcReconnectTimer);
+        _wcReconnectTimer = null;
+      }
+      try {
+        _emit("error", error);
+      } catch (listenerError) {
+        console.warn("[IFR Web3 Wallet] error listener failed:", listenerError);
+      }
+      return null;
+    });
   }
 
   // ── Connect ───────────────────────────────────────
@@ -363,8 +407,10 @@ window.IFRWallet = (function() {
     // WC persists sessions — if user previously connected via QR,
     // the session may still be alive after page reload or return from wallet app.
     if (_wcProvider && _wcProvider.session && _wcProvider.accounts && _wcProvider.accounts.length > 0) {
-      await _finishConnect(_wcProvider, _wcProvider.accounts);
-      return true;
+      try {
+        await _finishConnect(_wcProvider, _wcProvider.accounts);
+        return true;
+      } catch (e) {}
     }
 
     // Path C: Try loading WC to check for persisted session (lazy)
@@ -392,7 +438,7 @@ window.IFRWallet = (function() {
     if (_address) return; // already connected
     if (!_wcProvider) return;
     if (_wcProvider.session && _wcProvider.accounts && _wcProvider.accounts.length > 0) {
-      _finishConnect(_wcProvider, _wcProvider.accounts);
+      _finishConnectSafely(_wcProvider, _wcProvider.accounts);
     }
   }
 
@@ -433,6 +479,10 @@ window.IFRWallet = (function() {
     return _provider || new ethers.providers.JsonRpcProvider(RPC_URL);
   }
   function getWalletConnectUri() { return _wcUri; }
+  async function ensureMainnet() {
+    var eth = _ethereumProvider || _getMetaMaskProvider();
+    return _ensureMainnetProvider(eth);
+  }
 
   // ── Events ────────────────────────────────────────
   function on(event, cb) { _listeners.push({ event: event, cb: cb }); }
@@ -473,6 +523,7 @@ window.IFRWallet = (function() {
     connect: connect, disconnect: disconnect, autoReconnect: autoReconnect,
     isConnected: isConnected, getAddress: getAddress, getShortAddress: getShortAddress,
     getSigner: getSigner, getProvider: getProvider,
+    ensureMainnet: ensureMainnet,
     addToken: addIFRToken,
     on: on, off: off, getDeepLink: getDeepLink, isMobile: isMobile,
     isMobileOrTablet: _isMobileOrTablet,

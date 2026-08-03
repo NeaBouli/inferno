@@ -28,10 +28,9 @@
   <link rel="manifest" href="/web3-manifest.webmanifest">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="preconnect" href="https://cdn.jsdelivr.net">
   <link rel="dns-prefetch" href="https://eth.llamarpc.com">
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+  <script src="/assets/vendor/ethers-5.7.2.umd.min.js"></script>
   <script src="/web3-wallet-core.js"></script>
   <script src="/assets/ifr-state.js"></script>
   <script type="application/ld+json">
@@ -2475,7 +2474,15 @@
           throw new Error("Wallet scripts are not ready yet.");
         }
 
-        if (IFRWallet.isConnected()) return IFRWallet.getAddress();
+        if (IFRWallet.isConnected()) {
+          try {
+            if (typeof IFRWallet.ensureMainnet === "function") await IFRWallet.ensureMainnet();
+          } catch (error) {
+            if (error && error.code === "WRONG_NETWORK") walletState.textContent = error.message;
+            throw error;
+          }
+          return IFRWallet.getAddress();
+        }
 
         const isMobileConnect = IFRWallet.isMobileOrTablet && IFRWallet.isMobileOrTablet();
         if (isMobileConnect) openWalletDialog(IFRWallet.getWalletConnectUri && IFRWallet.getWalletConnectUri());
@@ -2495,6 +2502,9 @@
           renderState(state);
           closeWalletDialog();
           return address;
+        } catch (error) {
+          if (error && error.code === "WRONG_NETWORK") walletState.textContent = error.message;
+          throw error;
         } finally {
           window.clearTimeout(connectWatchdog);
           setWalletLoading(false);
@@ -3007,7 +3017,7 @@
         if (!currentBorrowState) return;
         const { address, offers, loans, ifrPriceWei, offerCount } = currentBorrowState;
         const priceMissing = ifrPriceWei.isZero();
-        borrowPrice.textContent = priceMissing ? "Not set" : `${formatETH(ifrPriceWei)} / IFR`;
+        borrowPrice.textContent = priceMissing ? "Disabled" : `${formatETH(ifrPriceWei)} / IFR`;
         borrowOfferCount.textContent = `${offers.length} / ${offerCount}`;
 
         borrowOffer.innerHTML = offers.length
@@ -3251,7 +3261,9 @@
             renderState(state);
             closeWalletDialog();
           } catch (error) {
-            if (error && (error.code === 4001 || error.message === "User rejected.")) {
+            if (error && error.code === "WRONG_NETWORK") {
+              walletState.textContent = error.message;
+            } else if (error && (error.code === 4001 || error.message === "User rejected.")) {
               walletState.textContent = "Rejected";
             } else if (error && error.code === -32002) {
               walletState.textContent = "Open wallet";
@@ -3266,12 +3278,14 @@
       });
 
       addTokenButton.addEventListener("click", async () => {
-        if (!window.IFRWallet || !IFRWallet.addIFRToken) return;
+        if (!window.IFRWallet) return;
+        const addToken = IFRWallet.addIFRToken || IFRWallet.addToken;
+        if (!addToken) return;
         try {
           if (!IFRWallet.isConnected()) {
             await IFRWallet.connect();
           }
-          await IFRWallet.addIFRToken();
+          await addToken();
           walletState.textContent = "Token added";
         } catch (error) {
           walletState.textContent = "Token add failed";
