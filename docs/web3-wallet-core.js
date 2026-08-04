@@ -70,13 +70,21 @@ window.IFRWallet = (function() {
     return false;
   }
 
+  function _isMainnetChainId(chainId) {
+    if (typeof chainId === "number") {
+      return Number.isSafeInteger(chainId) && chainId === CHAIN_ID;
+    }
+    var normalized = String(chainId == null ? "" : chainId).trim().toLowerCase();
+    return normalized === CHAIN_ID_HEX || normalized === String(CHAIN_ID);
+  }
+
   async function _ensureMainnetProvider(eth) {
     if (!eth || typeof eth.request !== "function") {
       throw new Error("Wallet provider is unavailable.");
     }
 
     var chainId = await eth.request({ method: "eth_chainId" });
-    if (String(chainId).toLowerCase() !== CHAIN_ID_HEX) {
+    if (!_isMainnetChainId(chainId)) {
       try {
         await eth.request({
           method: "wallet_switchEthereumChain",
@@ -90,7 +98,7 @@ window.IFRWallet = (function() {
       }
 
       chainId = await eth.request({ method: "eth_chainId" });
-      if (String(chainId).toLowerCase() !== CHAIN_ID_HEX) {
+      if (!_isMainnetChainId(chainId)) {
         var unchanged = new Error("Wallet network did not change. Select Ethereum Mainnet (chain 1) and try again.");
         unchanged.code = "WRONG_NETWORK";
         throw unchanged;
