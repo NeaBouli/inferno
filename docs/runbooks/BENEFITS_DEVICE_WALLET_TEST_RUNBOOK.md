@@ -236,6 +236,7 @@ Preferred recording command:
 npm run qa:benefits-record -- \
   --id ios-safari-pwa \
   --status pass \
+  --source physical-device \
   --note "iPadOS Safari install guidance visible; copy/share wallet entry readable." \
   --screenshot-path /Users/gio/Desktop/example.png
 ```
@@ -246,6 +247,7 @@ Preferred evidence object:
 {
   "dateTime": "2026-07-16T18:00:00Z",
   "result": "PASS",
+  "evidenceSource": "physical-device",
   "note": "iPadOS Safari install guidance visible; copy/share wallet entry readable.",
   "screenshotPath": "/Users/gio/Desktop/example.png",
   "businessId": "test-business-id",
@@ -254,11 +256,14 @@ Preferred evidence object:
 ```
 
 Use only test business/session ids. Leave fields out when they do not apply.
+`PASS` is accepted only with `--source physical-device`. Emulator and automated
+evidence may document failures or blockers, but cannot close a physical row.
 
 ## Known Blockers
 
 - `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` is not currently set for the production WalletConnect QR modal.
-- Full live APPROVED -> REDEEMED proof requires an eligible locked customer wallet.
+- Physical APPROVED -> REDEEMED proof requires an eligible locked customer wallet;
+  the local state machine is automated, while its on-chain eligibility read remains mocked.
 - Production capacity must still be checked read-only immediately before every deploy; keep the 4-GB hard deploy floor and never rely on an earlier free-space snapshot.
 
 ## Completion Gate
