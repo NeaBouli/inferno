@@ -73,7 +73,7 @@ const todo = requireText("internal/operations/TODO.md", [
   "both token-balance/accounting differences are 0 IFR",
   "balance-diff inflow accounting",
   "DEFERRED / LATER — resume only when its trigger occurs",
-  "Status verified 2026-07-30: open, REVIEW_REQUIRED",
+  "Status verified 2026-08-04: open, REVIEW_REQUIRED",
   "open, MERGEABLE but BLOCKED",
   "IFRp Commerce App / shop.ifrunit.tech production decisions",
   "Contributor CommitmentVault Locks abgeschlossen",
@@ -120,7 +120,7 @@ requireText("internal/operations/TODO.html", [
   "both token-balance/accounting differences are 0 IFR",
   "balance-diff inflow accounting",
   "Deferred / Waiting &mdash; resume only when the trigger occurs",
-  "Open, review required",
+  "Open and review required",
   "Open, mergeable but blocked",
   "IFRp Commerce App / shop.ifrunit.tech production decisions",
   "Contributor CommitmentVault Locks abgeschlossen",
@@ -163,12 +163,13 @@ requireText("docs/DEPENDENCY_UPGRADES.md", [
   "HARDHAT_FORK_BLOCK_NUMBER=<positive-mainnet-block>",
 ]);
 requireText("docs/WALLET_ICON_DISTRIBUTION_STATUS_20260708.md", [
-  "Last verified: 2026-07-30",
+  "Last verified: 2026-08-04",
   "Open; `REVIEW_REQUIRED`",
   "Open, `MERGEABLE` but `BLOCKED`",
   "there is no",
   "500 TWT",
-  "at least three outside token lists",
+  "exact Ethereum contract on a public token page",
+  "does not currently expose an IFR token image",
   "CoinGecko exact-contract endpoint: `coin not found`",
   "Searching Zerion by the exact IFR contract returns `Nothing was found`",
   "docs/assets/ifr_icon_128.png",
@@ -177,12 +178,13 @@ requireText("docs/WALLET_ICON_DISTRIBUTION_STATUS_20260708.md", [
   "IFR-8f9ccb3d-2e3b-4c3c-bda1-5040d80548f6",
 ]);
 requireText("docs/TOKEN_ICON_DISTRIBUTION.md", [
-  "Last checked: 2026-07-30",
+  "Last checked: 2026-08-04",
   "PR open / review required",
   "Open / blocked",
   "External-data path / no verification form",
   "Not eligible / do not pay",
   "Live / verified",
+  "Token page live / icon missing",
 ]);
 requireText("docs/ZERION_SUBMISSION_PACK_20260730.md", [
   "Status: resolved and live 2026-07-31",
@@ -205,7 +207,7 @@ requireText("docs/COINGECKO_FOLLOWUP_PACK_20260716.md", [
 requireText("docs/COINMARKETCAP_SUBMISSION.md", [
   "GeckoTerminal: live",
   "CoinGecko: application submitted",
-  "`coin not found` as of 2026-07-30",
+  "`coin not found` as of 2026-08-04",
   "submitted as ticket `1390230`",
   "not verified by CoinMarketCap",
   "is not a standalone tracked CMC coin listing",
@@ -229,6 +231,7 @@ requireText("docs/wiki/bootstrap.html", [
 ]);
 requireText("docs/wiki/reputation.html", [
   "Zerion",
+  "Rainbow",
   "IFR-8f9ccb3d-2e3b-4c3c-bda1-5040d80548f6",
   "not counted as formal audit or trust evidence",
 ]);
@@ -236,6 +239,7 @@ requireText("docs/llms.txt", [
   "Three contributor offers provide 52,155,440.952845656 IFR",
   "V1 borrowing is intentionally disabled with ifrPriceWei = 0",
   "Zerion lists the canonical IFR token",
+  "Rainbow resolves the exact Ethereum contract",
 ]);
 requireText("docs/CONTRIBUTOR_RUNBOOK.md", [
   "Current completion status 30.07.2026",
