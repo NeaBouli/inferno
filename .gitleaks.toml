@@ -8,7 +8,11 @@ title = "Inferno Custom Gitleaks Config"
     '''package-lock\.json''',
     '''yarn\.lock''',
     '''artifacts''',
-    '''cache'''
+    '''cache''',
+    # Byte-for-byte npm ethers@5.7.2 UMD bundle. Its numeric constants and
+    # private-key validation fixtures trigger the generic Ethereum-key rule.
+    # tests/browser/web3-write.spec.js pins and verifies the published hash.
+    '''docs/assets/vendor/ethers-5\.7\.2\.umd\.min\.js'''
   ]
   regexes = [
     # Public BootstrapVaultV3 finalise() transaction hash, not key material.
