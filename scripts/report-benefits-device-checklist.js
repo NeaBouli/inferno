@@ -31,7 +31,7 @@ function latestEvidence(item) {
   if (!Array.isArray(item.evidence) || item.evidence.length === 0) return 'no evidence yet';
   const entry = item.evidence[item.evidence.length - 1];
   if (typeof entry === 'string') return entry;
-  const pieces = [entry.result, entry.dateTime, entry.note].filter(Boolean);
+  const pieces = [entry.result, entry.evidenceSource, entry.dateTime, entry.note].filter(Boolean);
   if (entry.businessId) pieces.push(`business=${entry.businessId}`);
   if (entry.sessionId) pieces.push(`session=${entry.sessionId}`);
   if (entry.screenshotPath) pieces.push(`screenshot=${entry.screenshotPath}`);
