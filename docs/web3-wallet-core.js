@@ -75,7 +75,16 @@ window.IFRWallet = (function() {
       return Number.isSafeInteger(chainId) && chainId === CHAIN_ID;
     }
     var normalized = String(chainId == null ? "" : chainId).trim().toLowerCase();
-    return normalized === CHAIN_ID_HEX || normalized === String(CHAIN_ID);
+    if (!normalized) return false;
+    var parsed;
+    if (/^0x[0-9a-f]+$/.test(normalized)) {
+      parsed = Number.parseInt(normalized.slice(2), 16);
+    } else if (/^[0-9]+$/.test(normalized)) {
+      parsed = Number(normalized);
+    } else {
+      return false;
+    }
+    return Number.isSafeInteger(parsed) && parsed === CHAIN_ID;
   }
 
   async function _ensureMainnetProvider(eth) {
@@ -199,12 +208,12 @@ window.IFRWallet = (function() {
         // Listen for WC session events (fires when user approves in wallet app)
         _wcProvider.on("connect", function() {
           if (_wcProvider.accounts && _wcProvider.accounts.length > 0 && !_address) {
-            _finishConnect(_wcProvider, _wcProvider.accounts);
+            _finishConnectSafely(_wcProvider, _wcProvider.accounts);
           }
         });
         _wcProvider.on("session_event", function() {
           if (_wcProvider.accounts && _wcProvider.accounts.length > 0 && !_address) {
-            _finishConnect(_wcProvider, _wcProvider.accounts);
+            _finishConnectSafely(_wcProvider, _wcProvider.accounts);
           }
         });
         _wcProvider.on("display_uri", function(uri) {
@@ -261,6 +270,21 @@ window.IFRWallet = (function() {
     _attachListeners(eth);
     _emit("connected", _address);
     return _address;
+  }
+
+  function _finishConnectSafely(eth, accounts) {
+    return _finishConnect(eth, accounts).catch(function(error) {
+      if (_wcReconnectTimer) {
+        clearInterval(_wcReconnectTimer);
+        _wcReconnectTimer = null;
+      }
+      try {
+        _emit("error", error);
+      } catch (listenerError) {
+        console.warn("[IFR Web3 Wallet] error listener failed:", listenerError);
+      }
+      return null;
+    });
   }
 
   // ── Connect ───────────────────────────────────────
@@ -383,8 +407,10 @@ window.IFRWallet = (function() {
     // WC persists sessions — if user previously connected via QR,
     // the session may still be alive after page reload or return from wallet app.
     if (_wcProvider && _wcProvider.session && _wcProvider.accounts && _wcProvider.accounts.length > 0) {
-      await _finishConnect(_wcProvider, _wcProvider.accounts);
-      return true;
+      try {
+        await _finishConnect(_wcProvider, _wcProvider.accounts);
+        return true;
+      } catch (e) {}
     }
 
     // Path C: Try loading WC to check for persisted session (lazy)
@@ -412,7 +438,7 @@ window.IFRWallet = (function() {
     if (_address) return; // already connected
     if (!_wcProvider) return;
     if (_wcProvider.session && _wcProvider.accounts && _wcProvider.accounts.length > 0) {
-      _finishConnect(_wcProvider, _wcProvider.accounts);
+      _finishConnectSafely(_wcProvider, _wcProvider.accounts);
     }
   }
 

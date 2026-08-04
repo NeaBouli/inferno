@@ -108,7 +108,7 @@ async function newMobilePage(
   });
   const page = await context.newPage();
   const deeplinks = [];
-  await page.route("**/metamask.app.link/**", (route) => {
+  await context.route("**/metamask.app.link/**", (route) => {
     deeplinks.push(route.request().url());
     route.abort();
   });
@@ -279,8 +279,9 @@ test.describe("S5: autoReconnect", () => {
 test.describe("S6: Mobile landing block", () => {
   test("mobile connect shows Desktop-only modal, no deep-link", async ({ browser }) => {
     const { context, page, deeplinks } = await newMobilePage(browser);
-    const assertNoPageErrors = monitorPageErrors(page);
-    await gotoWalletPage(page, "/");
+    try {
+      const assertNoPageErrors = monitorPageErrors(page);
+      await gotoWalletPage(page, "/");
 
     // No injected wallet on this phone
     await page.evaluate(() => { delete window.ethereum; });
@@ -319,9 +320,10 @@ test.describe("S6: Mobile landing block", () => {
     // wallet-core v4.2.1 removed mobile deep-link fallbacks
     await page.waitForTimeout(500);
     expect(deeplinks).toEqual([]);
-    assertNoPageErrors();
-
-    await context.close();
+      assertNoPageErrors();
+    } finally {
+      await context.close();
+    }
   });
 });
 
@@ -342,8 +344,9 @@ test.describe("S7: Mobile wiki block", () => {
         device.viewport,
         device.userAgent
       );
-      const assertNoPageErrors = monitorPageErrors(page);
-      await gotoWalletPage(page, "/wiki/tokenomics.html");
+      try {
+        const assertNoPageErrors = monitorPageErrors(page);
+        await gotoWalletPage(page, "/wiki/tokenomics.html");
 
       await page.evaluate(() => { delete window.ethereum; });
 
@@ -370,9 +373,10 @@ test.describe("S7: Mobile wiki block", () => {
 
       await page.waitForTimeout(500);
       expect(deeplinks).toEqual([]);
-      assertNoPageErrors();
-
-      await context.close();
+        assertNoPageErrors();
+      } finally {
+        await context.close();
+      }
     });
   }
 });

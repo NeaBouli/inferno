@@ -2475,7 +2475,12 @@
         }
 
         if (IFRWallet.isConnected()) {
-          if (typeof IFRWallet.ensureMainnet === "function") await IFRWallet.ensureMainnet();
+          try {
+            if (typeof IFRWallet.ensureMainnet === "function") await IFRWallet.ensureMainnet();
+          } catch (error) {
+            if (error && error.code === "WRONG_NETWORK") walletState.textContent = error.message;
+            throw error;
+          }
           return IFRWallet.getAddress();
         }
 
@@ -2497,6 +2502,9 @@
           renderState(state);
           closeWalletDialog();
           return address;
+        } catch (error) {
+          if (error && error.code === "WRONG_NETWORK") walletState.textContent = error.message;
+          throw error;
         } finally {
           window.clearTimeout(connectWatchdog);
           setWalletLoading(false);
