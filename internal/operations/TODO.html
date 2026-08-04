@@ -69,7 +69,7 @@
       <li><div class="cb"></div><strong>Uniswap Default Token List Issue #2509</strong> &mdash; external maintainer wait.<br>
         <span style="color:#6b7280;font-size:0.82rem;">Resume on maintainer response or new CoinGecko/CMC/listing proof. <a href="https://github.com/Uniswap/default-token-list/issues/2509" target="_blank" rel="noopener">Issue #2509</a></span></li>
       <li><div class="cb"></div><strong>ethereum-lists PR #1036</strong> &mdash; external maintainer wait.<br>
-        <span style="color:#6b7280;font-size:0.82rem;">Open, mergeable but blocked. Resume on maintainer review, CI approval or status change. <a href="https://github.com/ethereum-lists/tokens/pull/1036" target="_blank" rel="noopener">PR #1036</a></span></li>
+        <span style="color:#6b7280;font-size:0.82rem;">Open, mergeable and currently reported as clean by the GitHub API; maintainer review is still pending. Resume on maintainer review, CI approval or status change. <a href="https://github.com/ethereum-lists/tokens/pull/1036" target="_blank" rel="noopener">PR #1036</a></span></li>
       <li><div class="cb"></div><strong>CoinGecko standalone listing</strong> &mdash; application submitted.<br>
         <span style="color:#6b7280;font-size:0.82rem;">Exact-contract API still returns <code>coin not found</code>; GeckoTerminal is live separately. Resume on CoinGecko response or public exact-contract coin page.</span></li>
       <li><div class="cb"></div><strong>CoinMarketCap standard listing</strong> &mdash; ticket pending.<br>
@@ -88,6 +88,8 @@
 
     <h2><span class="priority-badge p-done">RECENT</span> Recently Completed</h2>
     <ul>
+      <li><div class="cb cb-done">&#x2713;</div><strong>Read-only external listing monitor</strong> &mdash; completed 2026-08-04.<br>
+        <span style="color:#6b7280;font-size:0.82rem;"><code>npm run check:listing-status</code> validates both official token lists and reports MetaMask, Uniswap, ethereum-lists, CoinGecko, CMC DexScan and Rainbow. Third-party waiting states remain informational. Runbook: <code>docs/LISTING_MONITOR.md</code>.</span></li>
       <li><div class="cb cb-done">&#x2713;</div><strong>Dependency modernization</strong> &mdash; completed 2026-07-29.<br>
         <span style="color:#6b7280;font-size:0.82rem;">Root now uses Ethers 6.17, Hardhat 3.12.0, Chai 6 and Node &gt;=22.13. Waffle/Ganache were removed; exact-head CI passed. Residual root audit: 10 transitive low findings (0 moderate/high/critical). Do not run <code>npm audit fix --force</code>.</span></li>
       <li><div class="cb cb-done">&#x2713;</div><strong>Deterministic local Hardhat test network</strong> &mdash; completed 2026-07-29.<br>
@@ -401,9 +403,9 @@
       <li><div class="cb cb-done">&#x2713;</div>Ali Copilot: Phase 3 + BuilderRegistry + Governance updated (20.03)</li>
       <li><div class="cb cb-done">&#x2713;</div>Landing Page: IntersectionObserver lazy live data + lazy images + scroll throttle (20.03)</li>
       <li><div class="cb cb-done">&#x2713;</div><span style="text-decoration:line-through;color:#6b7280;">&#x274C; ethereum-lists PR #1010 CLOSED (auto-close 03.06.2026 &mdash; inactivity)</span></li>
-      <li><div class="cb"></div>&#x1F7E1; <strong>ethereum-lists neuer PR #1036</strong> &mdash; submitted 10.06.2026<br>
+      <li><div class="cb cb-done">&#x2713;</div>&#x1F7E1; <strong>ethereum-lists neuer PR #1036</strong> &mdash; submitted 10.06.2026<br>
         <span style="color:#6b7280;font-size:0.82rem;"><a href="https://github.com/ethereum-lists/tokens/pull/1036" target="_blank" rel="noopener">github.com/ethereum-lists/tokens/pull/1036</a><br>
-        JSON: email + chat + telegram + twitter erg&auml;nzt. Wartet auf CI-Approval.</span></li>
+        JSON: email + chat + telegram + twitter erg&auml;nzt. Aktueller Status und Resume-Trigger stehen im kanonischen Deferred-Eintrag; keine separate Trust-Wallet-Einreichung starten.</span></li>
       <li><div class="cb cb-done" style="text-decoration:line-through;color:#6b7280;">&#x2713;</div><span style="text-decoration:line-through;color:#6b7280;">Animated token GIF</span> &mdash; not planned</li>
       <li><div class="cb cb-done">&#x2713;</div>&#x2705; wallet-core.js v1.2 stable (04.04.2026)<br>
         <span style="color:#6b7280;font-size:0.8rem;">MetaMask connect: 30s timeout, accountsChanged re-creates provider/signer, listener guard, clean disconnect, mobile deep-link 2s</span></li>

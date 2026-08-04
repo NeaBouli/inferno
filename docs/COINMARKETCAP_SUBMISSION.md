@@ -78,8 +78,8 @@ Ticker clarity: `IFR` is the on-chain token symbol used by the contract, token l
 ### Tokenomics / Supply
 
 - Initial supply: `1,000,000,000` IFR
-- Current total supply at block `25440410`: `997,769,355.2754488` IFR
-- Burned since genesis: `2,230,644.724551201` IFR
+- Current total supply at block `25682361`: `997,673,879.091903855` IFR
+- Burned since genesis: `2,326,120.908096145` IFR
 - Minting: no mint function
 - Deflation: yes, supply only decreases
 - Transfer mechanics on non-exempt transfers:
@@ -92,16 +92,16 @@ Ticker clarity: `IFR` is the on-chain token symbol used by the contract, token l
 
 ### On-chain Verification Snapshot
 
-Checked on Ethereum Mainnet at block `25440410`:
+Checked on Ethereum Mainnet at block `25682361` (2026-08-04 15:10:47 UTC):
 
 - Token name: `Inferno`
 - Symbol: `IFR`
 - Decimals: `9`
-- Total supply: `997,769,355.2754488`
+- Total supply: `997,673,879.091903855`
 - Owner: `0xc43d48E7FDA576C5022d0670B652A622E8caD041`
 - Uniswap pair fee-exempt: `true`
-- Pool ETH reserve: `0.143261656128757442`
-- Pool IFR reserve: `21,028,676.626442057`
+- Pool ETH reserve: `0.185153585219916653`
+- Pool IFR reserve: `16,282,990.808786243`
 
 ### Additional Context
 
@@ -112,8 +112,9 @@ Checked on Ethereum Mainnet at block `25440410`:
 - CommitmentVault and LendingVault are live on Ethereum Mainnet.
 - Current live protocol locks/offers:
   - IFRLock locked: `2,000` IFR
-  - CommitmentVault locked: `47,942,976.87179437` IFR
-  - LendingVault available: `20,156,940.952845655` IFR
+  - CommitmentVault locked: `47,952,476.871794375` IFR
+  - LendingVault available: `52,155,440.952845656` IFR across 3 offers
+  - LendingVault lent: `0` IFR
 - Token list and logo are hosted on the official domain.
 - The codebase, contracts, docs, and deployment references are public in the GitHub repo.
 
@@ -167,7 +168,9 @@ Use these values in the official request form:
 
 ## Exact CMC Form Values
 
-Use these values for the current CoinMarketCap form.
+These are the canonical values used for ticket `1390230`. Do not submit a
+duplicate form. Revalidate live and supply-dependent fields before replying to
+a CoinMarketCap request for updated evidence.
 
 ### Identity / Request
 
@@ -175,7 +178,7 @@ Use these values for the current CoinMarketCap form.
 - Subject Field: `Inferno - IFR - Add cryptoasset`
 - Terms & Conditions: check / accept.
 - Relationship with the Project: `Founder / core developer / official representative of Inferno Protocol.`
-- Project Launch Date: `05/03/2026 - Inferno token deployed on Ethereum Mainnet. Evidence: https://etherscan.io/address/0x77e99917Eca8539c62F509ED1193ac36580A6e7B#code`
+- Project Launch Date: `2026-03-05 (5 March 2026) - Inferno token deployed on Ethereum Mainnet. Evidence: https://etherscan.io/address/0x77e99917Eca8539c62F509ED1193ac36580A6e7B#code`
 - Project Name: `Inferno`
 - Project Ticker/Symbol: `IFR`
 
@@ -202,13 +205,13 @@ Inferno is a deflationary Ethereum utility token for lock-to-access products, co
 Detailed Project Description:
 
 ```text
-Launched on 05/03/2026, Inferno is an Ethereum Mainnet ERC-20 utility token for the IFR Protocol ecosystem. The token's on-chain symbol is IFR. The project uses $IFRp only as a social cashtag to avoid unrelated ticker collisions on social platforms.
+Launched on 2026-03-05 (5 March 2026), Inferno is an Ethereum Mainnet ERC-20 utility token for the IFR Protocol ecosystem. The token's on-chain symbol is IFR. The project uses $IFRp only as a social cashtag to avoid unrelated ticker collisions on social platforms.
 
 Inferno is designed around deflationary token mechanics and on-chain utility flows. The token has a fixed genesis supply of 1,000,000,000 IFR, uses 9 decimals, and has no mint function. Supply can only decrease. Non-exempt transfers burn 2.5% of the transferred amount and route a 1% protocol pool fee. Certain protocol contracts and the Uniswap V2 pair are fee-exempt where required for correct operation.
 
 The core utility model is lock-to-access. Users can lock IFR in IFRLock to prove on-chain access status for premium features and ecosystem products. The protocol also includes CommitmentVault, where users can create time- or price-conditioned token lock tranches, and LendingVault, where lenders can offer available IFR and borrowers can use ETH collateral in the protocol's lending flow.
 
-Inferno was launched without a presale, VC round, private sale, or IDO. The Bootstrap event finalized on 05/06/2026 and created the live Uniswap V2 IFR/WETH pool. The token contract, governance contract, vaults, and related protocol contracts are verified on Etherscan. Governance actions are controlled by a 48-hour timelock Governance contract owned by the Treasury Safe.
+Inferno was launched without a presale, VC round, private sale, or IDO. The Bootstrap event finalized on 2026-06-05 (5 June 2026) and created the live Uniswap V2 IFR/WETH pool. The token contract, governance contract, vaults, and related protocol contracts are verified on Etherscan. Governance actions are controlled by a 48-hour timelock Governance contract owned by the Treasury Safe.
 
 The project maintains public documentation, token metadata, security documentation, live transparency pages, and open-source code. Official resources include the website at https://ifrunit.tech, documentation at https://ifrunit.tech/wiki/, source code at https://github.com/NeaBouli/inferno, and the verified token contract at https://etherscan.io/token/0x77e99917Eca8539c62F509ED1193ac36580A6e7B.
 ```
@@ -246,8 +249,8 @@ The project maintains public documentation, token metadata, security documentati
 
 ### Supply
 
-- Circulating Supply: `997769355.2754488`
-- Total Supply: `997769355.2754488`
+- Circulating Supply: `Do not reuse the historical total-supply value. A CMC-compatible circulating-supply methodology and reserve-address annex must be reviewed before any update.`
+- Total Supply: `997673879.091903855` (block `25682361`)
 - Max Supply: `1000000000`
 - Total Supply API endpoint: `NA`
 - Circulating Supply API endpoint: `NA`
@@ -255,7 +258,7 @@ The project maintains public documentation, token metadata, security documentati
 Supply note for proof/supporting evidence:
 
 ```text
-Live total supply is available through the official project API at https://copilot-api.ifrunit.tech/api/ifr/supply, but the endpoint returns a JSON object rather than only a raw numerical value. Therefore the CMC supply endpoint field is marked NA, and the exact live supply is provided in the form and proof section.
+Live total supply is available through the official project API at https://copilot-api.ifrunit.tech/api/ifr/supply, but the endpoint returns a JSON object rather than only a raw numerical value. Therefore the CMC total-supply endpoint field is marked NA, and the exact live supply is provided in the form and proof section. Circulating supply must not be assumed equal to total supply: protocol vault, reserve, vesting and lock balances require an address-by-address methodology review before a future CMC update.
 ```
 
 ### Markets / Priority
@@ -281,7 +284,7 @@ Inferno is an open-source, community-driven project. It launched with no presale
 - Traction/Adoption/Partnerships/MVPs/Apps:
 
 ```text
-Inferno has verified Ethereum Mainnet contracts, a live Uniswap V2 IFR/WETH pool, live IFRLock access locks, live CommitmentVault locks, and an active LendingVault offer flow. Current live protocol values include 2,000 IFR locked in IFRLock, 47,942,976.87179437 IFR locked in CommitmentVault, and 20,156,940.952845655 IFR available in LendingVault. The project also operates public documentation, token lists, a transparency page, AI Copilot context, and social automation for the official @IFRtoken account.
+Inferno has verified Ethereum Mainnet contracts, a live Uniswap V2 IFR/WETH pool, live IFRLock access locks, live CommitmentVault locks, and an active LendingVault offer flow. At Ethereum block 25682361, protocol values include 2,000 IFR held in IFRLock, 47,952,476.871794375 IFR locked in CommitmentVault, and 52,155,440.952845656 IFR available across three LendingVault offers, with 0 IFR lent. The project also operates public documentation, token lists, a transparency page, AI Copilot context, and social automation for the official @IFRtoken account.
 ```
 
 - Annex A - Rich List & Reserve Addresses: `NA` for initial submission unless Gio prepares the CMC Google Sheet.
@@ -362,14 +365,15 @@ https://www.geckoterminal.com/eth/pools/0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31
 Live supply API:
 https://copilot-api.ifrunit.tech/api/ifr/supply
 
-Current live supply snapshot at block 25440410:
-Total supply: 997,769,355.2754488 IFR
-Burned since genesis: 2,230,644.724551201 IFR
+Current live supply snapshot at block 25682361 (2026-08-04 15:10:47 UTC):
+Total supply: 997,673,879.091903855 IFR
+Burned since genesis: 2,326,120.908096145 IFR
 
 Protocol utility snapshot:
 IFRLock locked: 2,000 IFR
-CommitmentVault locked: 47,942,976.87179437 IFR
-LendingVault available: 20,156,940.952845655 IFR
+CommitmentVault locked: 47,952,476.871794375 IFR
+LendingVault available: 52,155,440.952845656 IFR across 3 offers
+LendingVault lent: 0 IFR
 ```
 
 - Privacy Notice: check / accept.
