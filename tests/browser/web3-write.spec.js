@@ -257,6 +257,84 @@ test("WalletConnect-style numeric Mainnet chain id connects without a false netw
   await context.close();
 });
 
+test("zero-padded hexadecimal Mainnet chain id connects without a false network error", async ({ browser }) => {
+  const { context, page, writes, pageErrors } = await preparePage(browser, { chainId: "0x01" });
+  await page.goto("/web3/", { waitUntil: "domcontentloaded" });
+  await connect(page);
+  expect(await page.evaluate(() => window.IFRWallet.isConnected())).toBe(true);
+  expect(writes).toEqual([]);
+  expect(pageErrors).toEqual([]);
+  await context.close();
+});
+
+test("persisted WalletConnect wrong-network recovery fails closed without an unhandled rejection", async ({ browser }) => {
+  const context = await browser.newContext({ serviceWorkers: "block" });
+  const pageErrors = [];
+  try {
+    await context.route("https://esm.sh/@walletconnect/ethereum-provider@2.17.3", async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/javascript",
+        headers: { "Access-Control-Allow-Origin": "*" },
+        body: `
+          const listeners = new Map();
+          const provider = {
+            session: { topic: "test-session" },
+            accounts: ["${ACCOUNT}"],
+            enable: async () => ["${ACCOUNT}"],
+            request: async ({ method }) => {
+              if (method === "eth_chainId") return "0xaa36a7";
+              if (method === "wallet_switchEthereumChain") {
+                const error = new Error("User rejected network switch");
+                error.code = 4001;
+                throw error;
+              }
+              return null;
+            },
+            on: (event, listener) => listeners.set(event, listener),
+            removeListener: (event) => listeners.delete(event),
+            disconnect: async () => null,
+          };
+          window.__wcTestEmit = (event) => {
+            const listener = listeners.get(event);
+            if (listener) listener();
+          };
+          export const EthereumProvider = { init: async () => provider };
+        `,
+      });
+    });
+
+    const page = await context.newPage();
+    page.on("pageerror", (error) => pageErrors.push(error.message));
+    await page.goto("/web3/", { waitUntil: "domcontentloaded" });
+    await expect.poll(() => page.evaluate(() => typeof window.IFRWallet)).toBe("object");
+
+    const connectCode = await page.evaluate(async () => {
+      try {
+        await window.IFRWallet.connect();
+        return "NO_ERROR";
+      } catch (error) {
+        return error.code || error.message;
+      }
+    });
+    expect(connectCode).toBe("WRONG_NETWORK");
+
+    await page.evaluate(() => window.__wcTestEmit("connect"));
+    await page.waitForTimeout(100);
+    const recovered = await page.evaluate(async () => {
+      localStorage.setItem("ifr_web3_wallet_connected", "0x3333333333333333333333333333333333333333");
+      return window.IFRWallet.autoReconnect();
+    });
+
+    expect(recovered).toBe(false);
+    expect(await page.evaluate(() => window.IFRWallet.isConnected())).toBe(false);
+    expect(await page.evaluate(() => localStorage.getItem("ifr_web3_wallet_connected"))).toBeNull();
+    expect(pageErrors).toEqual([]);
+  } finally {
+    await context.close();
+  }
+});
+
 test("IFRLock exact approve and typed lock submit only on Mainnet", async ({ browser }) => {
   const { context, page, writes, pageErrors } = await preparePage(browser);
   await page.goto("/web3/?action=access-lock", { waitUntil: "domcontentloaded" });
@@ -323,15 +401,21 @@ test("LendingVault borrowing remains transaction-disabled while price is zero", 
   await context.close();
 });
 
-test("Web3 runtime uses the self-hosted Ethers asset", async ({ page }) => {
-  const externalEthersRequests = [];
-  page.on("request", (request) => {
-    if (/cdn\.jsdelivr\.net\/npm\/ethers/i.test(request.url())) externalEthersRequests.push(request.url());
-  });
-  await page.goto("/web3/", { waitUntil: "domcontentloaded" });
-  await expect.poll(() => page.evaluate(() => typeof window.ethers)).toBe("object");
-  expect(externalEthersRequests).toEqual([]);
-  await expect(page.locator('script[src="/assets/vendor/ethers-5.7.2.umd.min.js"]')).toHaveCount(1);
+test("Web3 runtime uses the self-hosted Ethers asset", async ({ browser }) => {
+  const context = await browser.newContext({ serviceWorkers: "block" });
+  try {
+    const page = await context.newPage();
+    const externalEthersRequests = [];
+    page.on("request", (request) => {
+      if (/cdn\.jsdelivr\.net\/npm\/ethers/i.test(request.url())) externalEthersRequests.push(request.url());
+    });
+    await page.goto("/web3/", { waitUntil: "domcontentloaded" });
+    await expect.poll(() => page.evaluate(() => typeof window.ethers)).toBe("object");
+    expect(externalEthersRequests).toEqual([]);
+    await expect(page.locator('script[src="/assets/vendor/ethers-5.7.2.umd.min.js"]')).toHaveCount(1);
+  } finally {
+    await context.close();
+  }
 });
 
 test("self-hosted Ethers asset matches the published 5.7.2 bundle", () => {
@@ -348,15 +432,15 @@ test("Add IFR to wallet submits the canonical token metadata", async ({ browser 
   await page.locator("[data-add-token]").click();
   await expect(page.locator("[data-wallet-state]").first()).toHaveText("Token added");
   const watchAssets = await page.evaluate(() => window.__web3WatchAssets);
-  expect(watchAssets).toEqual([{
-    type: "ERC20",
-    options: {
-      address: TOKEN,
-      symbol: "IFR",
-      decimals: 9,
-      image: "https://ifrunit.tech/assets/ifr_icon_256.png",
-    },
-  }]);
+  expect(watchAssets).toHaveLength(1);
+  expect(watchAssets[0].type).toBe("ERC20");
+  expect(ethers.getAddress(watchAssets[0].options.address)).toBe(ethers.getAddress(TOKEN));
+  expect({ ...watchAssets[0].options, address: undefined }).toEqual({
+    address: undefined,
+    symbol: "IFR",
+    decimals: 9,
+    image: "https://ifrunit.tech/assets/ifr_icon_256.png",
+  });
   expect(writes).toEqual([]);
   expect(pageErrors).toEqual([]);
   await context.close();
