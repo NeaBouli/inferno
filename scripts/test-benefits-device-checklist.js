@@ -33,6 +33,15 @@ function expectFailure(mutator, message) {
   assert.match(`${result.stdout}${result.stderr}`, new RegExp(message, 'i'));
 }
 
+function evidence(result, evidenceSource = 'physical-device') {
+  return {
+    dateTime: '2026-08-05T12:00:00Z',
+    result,
+    evidenceSource,
+    note: 'Test-only acceptance evidence.',
+  };
+}
+
 try {
   assert.equal(validate(structuredClone(source)).status, 0, 'current device checklist must validate');
 
@@ -76,6 +85,69 @@ try {
     'invalid evidence date must not mutate the checklist',
   );
 
+  const missingSourceBefore = fs.readFileSync(historicalEvidencePath, 'utf8');
+  const missingSourceEvidence = spawnSync(process.execPath, [
+    recorder,
+    '--id', 'ios-safari-pwa',
+    '--status', 'pass',
+    '--note', 'A pass without a physical source must fail.',
+  ], {
+    cwd: root,
+    encoding: 'utf8',
+    env: { ...process.env, BENEFITS_DEVICE_CHECKLIST_PATH: historicalEvidencePath },
+  });
+  assert.notEqual(missingSourceEvidence.status, 0, 'pass evidence without source must fail');
+  assert.match(missingSourceEvidence.stderr, /source.*non-pending/i);
+  assert.equal(
+    fs.readFileSync(historicalEvidencePath, 'utf8'),
+    missingSourceBefore,
+    'missing evidence source must not mutate the checklist',
+  );
+
+  const physicalEvidence = spawnSync(process.execPath, [
+    recorder,
+    '--id', 'ios-safari-pwa',
+    '--status', 'pass',
+    '--source', 'physical-device',
+    '--note', 'Physical test-only acceptance evidence.',
+    '--date-time', '2026-08-05T12:00:00Z',
+  ], {
+    cwd: root,
+    encoding: 'utf8',
+    env: { ...process.env, BENEFITS_DEVICE_CHECKLIST_PATH: historicalEvidencePath },
+  });
+  assert.equal(physicalEvidence.status, 0, physicalEvidence.stderr);
+  const recorded = JSON.parse(fs.readFileSync(historicalEvidencePath, 'utf8'));
+  assert.equal(recorded.matrix[0].status, 'pass');
+  assert.equal(recorded.matrix[0].evidence[0].evidenceSource, 'physical-device');
+  assert.equal(recorded.status, 'open');
+
+  const invalidExistingPath = path.join(tempDir, 'invalid-existing.json');
+  const invalidExisting = structuredClone(source);
+  const invalidExistingItem = invalidExisting.matrix.find(({ id }) => id === 'desktop-metamask-seller');
+  invalidExistingItem.status = 'blocked';
+  invalidExistingItem.evidence = ['legacy evidence without a source'];
+  invalidExisting.status = 'blocked';
+  fs.writeFileSync(invalidExistingPath, `${JSON.stringify(invalidExisting, null, 2)}\n`);
+  const invalidExistingBefore = fs.readFileSync(invalidExistingPath, 'utf8');
+  const invalidExistingRecord = spawnSync(process.execPath, [
+    recorder,
+    '--id', 'ios-safari-pwa',
+    '--status', 'pass',
+    '--source', 'physical-device',
+    '--note', 'A pre-invalid checklist must remain unchanged.',
+  ], {
+    cwd: root,
+    encoding: 'utf8',
+    env: { ...process.env, BENEFITS_DEVICE_CHECKLIST_PATH: invalidExistingPath },
+  });
+  assert.notEqual(invalidExistingRecord.status, 0, 'pre-invalid checklist must fail validation');
+  assert.equal(
+    fs.readFileSync(invalidExistingPath, 'utf8'),
+    invalidExistingBefore,
+    'failed post-mutation validation must not alter the original checklist',
+  );
+
   expectFailure((checklist) => {
     const item = checklist.matrix.find(({ id }) => id === 'desktop-metamask-seller');
     item.capabilities = item.capabilities.filter((capability) => capability !== 'customer-pass-bind');
@@ -89,6 +161,19 @@ try {
     ));
   }, 'primary /p pass');
 
+  for (const phrase of [
+    'iOS/iPadOS wallet-browser customer proof',
+    'Android wallet-browser customer proof',
+    'desktop injected seller wallet',
+    'rejected or ineligible customer proof',
+  ]) {
+    expectFailure((checklist) => {
+      checklist.completionGate = checklist.completionGate.map((item) => (
+        item.includes(phrase) ? 'A different acceptance condition passes.' : item
+      ));
+    }, phrase);
+  }
+
   expectFailure((checklist) => {
     checklist.target = 'https://example.com';
   }, 'canonical');
@@ -98,6 +183,44 @@ try {
     item.status = 'pass';
     item.evidence = ['legacy unstructured evidence'];
   }, 'structured recorder entry');
+
+  expectFailure((checklist) => {
+    const item = checklist.matrix.find(({ id }) => id === 'ios-metamask-customer-proof');
+    item.status = 'pass';
+    item.evidence = [evidence('PASS', 'automated')];
+  }, 'physical-device evidence');
+
+  expectFailure((checklist) => {
+    const item = checklist.matrix.find(({ id }) => id === 'ios-safari-pwa');
+    item.evidence = [evidence('PASS')];
+  }, 'pending but still has evidence');
+
+  expectFailure((checklist) => {
+    const item = checklist.matrix.find(({ id }) => id === 'ios-safari-pwa');
+    item.status = 'blocked';
+    item.evidence = [{ ...evidence('BLOCKED', 'automated'), dateTime: 'not-an-iso-date' }];
+    checklist.status = 'blocked';
+  }, 'valid ISO-8601 timestamp');
+
+  expectFailure((checklist) => {
+    const item = checklist.matrix.find(({ id }) => id === 'ios-safari-pwa');
+    item.status = 'blocked';
+    item.evidence = [{ ...evidence('BLOCKED', 'automated'), note: 'seed phrase captured' }];
+    checklist.status = 'blocked';
+  }, 'sensitive material');
+
+  expectFailure((checklist) => {
+    const item = checklist.matrix.find(({ id }) => id === 'ios-safari-pwa');
+    item.status = 'blocked';
+    item.evidence = [evidence('BLOCKED', 'automated')];
+  }, 'status must be blocked');
+
+  expectFailure((checklist) => {
+    checklist.matrix.forEach((item) => {
+      item.status = 'pass';
+      item.evidence = [evidence('PASS')];
+    });
+  }, 'status must be complete');
 
   console.log('[benefits-device-checklist-test] PASS');
 } finally {

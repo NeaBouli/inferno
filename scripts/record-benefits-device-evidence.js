@@ -9,6 +9,7 @@ const checklistPath = process.env.BENEFITS_DEVICE_CHECKLIST_PATH
   ? path.resolve(process.env.BENEFITS_DEVICE_CHECKLIST_PATH)
   : path.join(repoRoot, 'docs/qa/BENEFITS_DEVICE_WALLET_CHECKLIST.json');
 const validStatuses = new Set(['pass', 'fail', 'blocked', 'pending']);
+const validEvidenceSources = new Set(['physical-device', 'emulator', 'automated']);
 const sensitivePatterns = [
   /private[_ -]?key/i,
   /seed phrase/i,
@@ -21,6 +22,7 @@ function usage() {
   node scripts/record-benefits-device-evidence.js \\
     --id ios-safari-pwa \\
     --status pass \\
+    --source physical-device \\
     --note "iPadOS Safari install guidance visible." \\
     [--screenshot-path /Users/gio/Desktop/example.png] \\
     [--business-id test-business-id] \\
@@ -28,6 +30,7 @@ function usage() {
     [--date-time 2026-07-16T18:00:00Z]
 
 Statuses: pass, fail, blocked, pending.
+Sources: physical-device, emulator, automated. PASS requires physical-device.
 Never include private keys, seed phrases, mnemonics or full personal wallet inventories.`);
 }
 
@@ -66,6 +69,7 @@ function main() {
   const args = parseArgs(process.argv.slice(2));
   const itemId = args.id;
   const status = args.status;
+  const evidenceSource = args.source;
   const note = args.note;
   const dateTime = args['date-time'] || new Date().toISOString();
   const screenshotPath = args['screenshot-path'];
@@ -77,6 +81,12 @@ function main() {
     fail('--id, --status and --note are required');
   }
   if (!validStatuses.has(status)) fail(`--status must be one of ${[...validStatuses].join(', ')}`);
+  if (status !== 'pending' && !validEvidenceSources.has(evidenceSource)) {
+    fail(`--source must be one of ${[...validEvidenceSources].join(', ')} for non-pending evidence`);
+  }
+  if (status === 'pass' && evidenceSource !== 'physical-device') {
+    fail('--status pass requires --source physical-device');
+  }
   assertString(itemId, '--id');
   assertString(note, '--note');
   assertString(dateTime, '--date-time');
@@ -98,6 +108,7 @@ function main() {
     const evidence = {
       dateTime,
       result: status.toUpperCase(),
+      evidenceSource,
       note,
     };
     if (screenshotPath) evidence.screenshotPath = screenshotPath;
@@ -120,16 +131,22 @@ function main() {
     checklist.status = 'open';
   }
 
-  fs.writeFileSync(checklistPath, `${JSON.stringify(checklist, null, 2)}\n`);
+  const pendingPath = `${checklistPath}.${process.pid}.tmp`;
+  fs.writeFileSync(pendingPath, `${JSON.stringify(checklist, null, 2)}\n`);
 
   const validation = spawnSync(process.execPath, [path.join(repoRoot, 'scripts/validate-benefits-device-checklist.js')], {
     cwd: repoRoot,
     encoding: 'utf8',
-    env: { ...process.env, BENEFITS_DEVICE_CHECKLIST_PATH: checklistPath },
+    env: { ...process.env, BENEFITS_DEVICE_CHECKLIST_PATH: pendingPath },
   });
   if (validation.stdout) process.stdout.write(validation.stdout);
   if (validation.stderr) process.stderr.write(validation.stderr);
-  if (validation.status !== 0) process.exit(validation.status || 1);
+  if (validation.status !== 0) {
+    fs.rmSync(pendingPath, { force: true });
+    process.exit(validation.status || 1);
+  }
+
+  fs.renameSync(pendingPath, checklistPath);
 
   console.log(`[benefits-device-record] ${status.toUpperCase()} evidence recorded for ${itemId}`);
 }

@@ -230,6 +230,7 @@ manually:
 npm run qa:benefits-record -- \
   --id ios-safari-pwa \
   --status pass \
+  --source physical-device \
   --note "iPadOS Safari install guidance visible; copy/share wallet entry readable."
 ```
 
@@ -241,6 +242,8 @@ browser test also proves that a Phantom-only `window.phantom.ethereum` provider
 is detected once, selected over the universal fallback and receives the account
 request. These automated checks do not replace a real installed-wallet
 connection, signature and transaction test.
+The recorder therefore accepts `pass` only with `--source physical-device`;
+emulator or automated evidence cannot close a physical matrix row.
 Do not record private keys, seed phrases or personal wallet data in the checklist.
 
 Customer QR pages also write a redacted local browser history entry after a

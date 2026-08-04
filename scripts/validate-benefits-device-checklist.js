@@ -9,6 +9,7 @@ const checklistPath = process.env.BENEFITS_DEVICE_CHECKLIST_PATH
   : path.join(repoRoot, 'docs/qa/BENEFITS_DEVICE_WALLET_CHECKLIST.json');
 const validStatuses = new Set(['open', 'complete', 'blocked']);
 const validItemStatuses = new Set(['pending', 'pass', 'fail', 'blocked']);
+const validEvidenceSources = new Set(['physical-device', 'emulator', 'automated']);
 const requiredMatrixIds = [
   'ios-safari-pwa',
   'ios-metamask-customer-proof',
@@ -90,6 +91,9 @@ function assertNoSensitiveEvidence(value, label) {
 
 function validateEvidence(item) {
   assertArray(item.evidence, `${item.id}.evidence`);
+  if (item.status === 'pending' && item.evidence.length > 0) {
+    fail(`${item.id} is pending but still has evidence`);
+  }
   if (item.status === 'pass' && item.evidence.length === 0) {
     fail(`${item.id} is pass but has no evidence`);
   }
@@ -99,18 +103,19 @@ function validateEvidence(item) {
 
   item.evidence.forEach((entry, index) => {
     const label = `${item.id}.evidence[${index}]`;
-    if (typeof entry === 'string') {
-      assertString(entry, label);
-      assertNoSensitiveEvidence(entry, label);
-      return;
-    }
-
     if (!entry || typeof entry !== 'object' || Array.isArray(entry)) {
-      fail(`${label} must be a string or object`);
+      fail(`${label} must be a structured recorder entry`);
     }
 
     assertString(entry.dateTime, `${label}.dateTime`);
+    if (!/^\d{4}-\d{2}-\d{2}T/.test(entry.dateTime) || !Number.isFinite(Date.parse(entry.dateTime))) {
+      fail(`${label}.dateTime must be a valid ISO-8601 timestamp`);
+    }
     assertString(entry.result, `${label}.result`);
+    assertString(entry.evidenceSource, `${label}.evidenceSource`);
+    if (!validEvidenceSources.has(entry.evidenceSource)) {
+      fail(`${label}.evidenceSource must be one of ${[...validEvidenceSources].join(', ')}`);
+    }
     assertString(entry.note, `${label}.note`);
     if (entry.screenshotPath !== undefined) assertString(entry.screenshotPath, `${label}.screenshotPath`);
     if (entry.businessId !== undefined) assertString(entry.businessId, `${label}.businessId`);
@@ -125,6 +130,9 @@ function validateEvidence(item) {
     }
     if (latest.result.toLowerCase() !== item.status) {
       fail(`${item.id} latest evidence result must match status ${item.status}`);
+    }
+    if (item.status === 'pass' && latest.evidenceSource !== 'physical-device') {
+      fail(`${item.id} pass requires latest physical-device evidence`);
     }
   }
 }
@@ -148,6 +156,9 @@ function validateChecklist(checklist) {
   if (checklist.rules.recordOnlyTestIds !== true) fail('rules.recordOnlyTestIds must be true');
   if (checklist.rules.walletConnectProjectIdRequiredForModal !== true) {
     fail('rules.walletConnectProjectIdRequiredForModal must be true');
+  }
+  if (checklist.rules.physicalPassRequiresDeviceEvidence !== true) {
+    fail('rules.physicalPassRequiresDeviceEvidence must be true');
   }
 
   assertArray(checklist.knownBlockers, 'knownBlockers');
@@ -195,6 +206,17 @@ function validateChecklist(checklist) {
     assertString(item, `completionGate[${index}]`);
     assertNoSensitiveEvidence(item, `completionGate[${index}]`);
   });
+  const requiredGatePhrases = [
+    'iOS/iPadOS wallet-browser customer proof',
+    'Android wallet-browser customer proof',
+    'desktop injected seller wallet',
+    'rejected or ineligible customer proof',
+  ];
+  for (const phrase of requiredGatePhrases) {
+    if (!checklist.completionGate.some((item) => item.includes(phrase))) {
+      fail(`completionGate must require ${phrase}`);
+    }
+  }
   if (!checklist.completionGate.some((item) => (
     item.includes('/p pass') &&
     item.includes('exact seller offer') &&
@@ -204,10 +226,13 @@ function validateChecklist(checklist) {
     fail('completionGate must require the primary /p pass exact-offer redeem and replay path');
   }
 
-  if (checklist.status === 'complete') {
-    for (const item of checklist.matrix) {
-      if (item.status !== 'pass') fail(`checklist is complete but ${item.id} is ${item.status}`);
-    }
+  const expectedStatus = checklist.matrix.every((item) => item.status === 'pass')
+    ? 'complete'
+    : checklist.matrix.some((item) => item.status === 'blocked')
+      ? 'blocked'
+      : 'open';
+  if (checklist.status !== expectedStatus) {
+    fail(`status must be ${expectedStatus} for the current matrix, got ${checklist.status}`);
   }
 }
 
