@@ -141,8 +141,8 @@ On errors: fix immediately, commit with `seo:` prefix.
       Resume trigger: maintainer response or new CoinGecko/CMC/listing proof.
 - [ ] ethereum-lists PR #1036 — external maintainer wait
       PR: https://github.com/ethereum-lists/tokens/pull/1036
-      Status verified 2026-08-04: open, MERGEABLE but BLOCKED, with no
-      submitted review, reported check or maintainer comment.
+      Status verified 2026-08-04: open, MERGEABLE and GitHub API state CLEAN,
+      with no submitted review, reported check or maintainer comment.
       Resume trigger: maintainer review, CI approval or status change.
 - [ ] CoinGecko standalone coin listing — application submitted
       Exact-contract API still returns `coin not found`; GeckoTerminal is live
@@ -186,6 +186,12 @@ On errors: fix immediately, commit with `seo:` prefix.
 
 ## RECENTLY COMPLETED
 
+- [x] Read-only external listing monitor — completed 2026-08-04
+      Commands: `npm run check:listing-status` and
+      `npm run test:listing-monitor`. Validates both official token lists and
+      reports MetaMask, Uniswap, ethereum-lists, CoinGecko, CMC DexScan and
+      Rainbow without treating third-party waiting states as project failures.
+      Runbook: docs/LISTING_MONITOR.md
 - [x] Dependency modernization — completed 2026-07-29
       Docs: docs/DEPENDENCY_UPGRADES.md
       Root now uses Ethers 6.17, Hardhat 3.12.0, Chai 6 and Node >=22.13.
@@ -543,9 +549,9 @@ On errors: fix immediately, commit with `seo:` prefix.
       Phase 2: Telegram alert integration
 
 ### Phase 3 — Uniswap Integration
-- [ ] 🔵 "Buy IFR" button on landing page (after LP is live)
+- [x] ✅ "Buy IFR" button on landing page — live
       Uniswap link with pre-filled token address
-- [ ] 🔵 Live IFR price on landing page
+- [x] ✅ Live IFR price on landing page
       Uniswap TWAP → Hetzner API GET /api/ifr/price → Landing Page
 
 ### Phase 4 — Mobile App (IFR Wallet)
@@ -662,10 +668,11 @@ On errors: fix immediately, commit with `seo:` prefix.
 - [ ] Full JSON-LD Schema.org check on all wiki pages
 - [ ] Verify ChatGPT/Perplexity indexing
 - [x] ❌ ethereum-lists PR #1010 CLOSED (auto-close 03.06.2026 — inactivity)
-- [ ] 🟡 ethereum-lists neuer PR #1036 — submitted 10.06.2026
+- [x] 🟡 ethereum-lists neuer PR #1036 — submitted 10.06.2026
       URL: https://github.com/ethereum-lists/tokens/pull/1036
       JSON: email + chat + telegram + twitter ergänzt
-      Alternativen: Trust Wallet Assets, Uniswap Token List
+      Aktueller Status und Resume-Trigger: siehe kanonischen Eintrag unter
+      `DEFERRED / LATER`; keine separate Trust-Wallet-Einreichung starten.
 
 ### CI/CD
 - [ ] Set up Slither CI
@@ -801,15 +808,12 @@ On errors: fix immediately, commit with `seo:` prefix.
 
 - [x] Apply for CoinGecko listing
       Submission completed by Gio; this does not mean the listing was
-      approved. Rechecked 2026-07-30: exact-contract endpoint returns
+      approved. Rechecked 2026-08-04: exact-contract endpoint returns
       `coin not found`, search returns no IFR coin, while GeckoTerminal remains
       live separately.
-- [ ] Apply for CoinMarketCap listing
-      Submission pack updated 02.07.2026: docs/COINMARKETCAP_SUBMISSION.md
-      Submit via official CMC form: https://coinmarketcap.com/request/
-      Direct form: https://support.coinmarketcap.com/hc/en-us/requests/new?ticket_form_id=360000493112
-      Form choice: 1 - [New Listing] Add cryptoasset
-      Final submit requires Gio browser/session because CMC Cloudflare human verification blocks automation.
+- [x] CoinMarketCap listing request submitted — ticket `1390230`
+      Canonical current status and no-duplicate rule: see `DEFERRED / LATER`.
+      Submission/evidence pack: docs/COINMARKETCAP_SUBMISSION.md
 - [ ] Activate AI Copilot gate (≥1,000 IFR locked)
 - [ ] Telegram wallet whitelist via WalletConnect
 - [ ] LiqRes withdrawal proposal: `setMaxWithdrawPerPeriod(200M)` from 01.09.2026
@@ -988,4 +992,4 @@ Hetzner API endpoints already live: stats, offers, loans/:addr, health/:id, lend
 
 ---
 
-*Last updated: 2026-07-31*
+*Last updated: 2026-08-04*

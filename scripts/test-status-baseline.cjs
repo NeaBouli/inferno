@@ -62,7 +62,7 @@ const todo = requireText("internal/operations/TODO.md", [
   "V1 cannot set price back to zero",
   "DEFERRED / LATER — resume only when its trigger occurs",
   "Status verified 2026-08-04: open, REVIEW_REQUIRED",
-  "open, MERGEABLE but BLOCKED",
+  "open, MERGEABLE and GitHub API state CLEAN",
   "IFRp Commerce App / shop.ifrunit.tech production decisions",
   "Contributor CommitmentVault Locks abgeschlossen",
   "Contributor LendingVault Offers abgeschlossen",
@@ -75,11 +75,12 @@ const todo = requireText("internal/operations/TODO.md", [
   "128px icon",
   "Wallet-level Collateral Health Monitor",
   "Dependency modernization — completed 2026-07-29",
+  "Read-only external listing monitor — completed 2026-08-04",
   "Ethers 6 / Hardhat 3 / Chai 6 / Node 22 migration",
   "10 transitive low findings",
   "Deterministic local Hardhat test network",
   "Technical: WalletConnect v2 + ethers.js v6",
-  "*Last updated: 2026-07-31*",
+  "*Last updated: 2026-08-04*",
 ]);
 assert.ok(
   !todo.includes("- [ ] Dependency modernization"),
@@ -106,7 +107,7 @@ requireText("internal/operations/TODO.html", [
   "V1 cannot set the price back to zero",
   "Deferred / Waiting &mdash; resume only when the trigger occurs",
   "Open and review required",
-  "Open, mergeable but blocked",
+  "Open, mergeable and currently reported as clean",
   "IFRp Commerce App / shop.ifrunit.tech production decisions",
   "Contributor CommitmentVault Locks abgeschlossen",
   "Contributor LendingVault Offers abgeschlossen",
@@ -117,6 +118,7 @@ requireText("internal/operations/TODO.html", [
   "Ticket <code>1390230</code> is submitted",
   "not verified by CoinMarketCap",
   "Dependency modernization</strong> &mdash; completed 2026-07-29",
+  "Read-only external listing monitor</strong> &mdash; completed 2026-08-04",
   "Deterministic local Hardhat test network",
   "Submission completed, not approval",
 ]);
@@ -150,7 +152,7 @@ requireText("docs/DEPENDENCY_UPGRADES.md", [
 requireText("docs/WALLET_ICON_DISTRIBUTION_STATUS_20260708.md", [
   "Last verified: 2026-08-04",
   "Open; `REVIEW_REQUIRED`",
-  "Open, `MERGEABLE` but `BLOCKED`",
+  "Open and `MERGEABLE`; public API state `clean`",
   "there is no",
   "500 TWT",
   "exact Ethereum contract on a public token page",
@@ -165,7 +167,7 @@ requireText("docs/WALLET_ICON_DISTRIBUTION_STATUS_20260708.md", [
 requireText("docs/TOKEN_ICON_DISTRIBUTION.md", [
   "Last checked: 2026-08-04",
   "PR open / review required",
-  "Open / blocked",
+  "Open / review pending",
   "External-data path / no verification form",
   "Not eligible / do not pay",
   "Live / verified",

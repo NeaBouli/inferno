@@ -1,8 +1,21 @@
 # CoinGecko Follow-up Pack - IFR
 
 Prepared: 2026-07-16 09:13 EEST  
+Last rechecked: 2026-08-04 18:14 EEST
 Status: draft only, not sent  
 Scope: exact-contract evidence pack for Inferno / IFR on Ethereum Mainnet
+
+## Recheck - 2026-08-04
+
+- `npm run check:listing-status` completed successfully with both official
+  token-list invariants valid.
+- CoinGecko exact-contract endpoint: HTTP 404, `coin not found`.
+- CoinGecko simple token-price endpoint: HTTP 200 with no IFR price entry.
+- GeckoTerminal continues to recognize the exact IFR contract separately.
+- CoinMarketCap DexScan and Rainbow both resolve the exact IFR contract, but
+  neither is a standalone CoinGecko coin listing.
+- Current project-controlled evidence is ready for one reviewed follow-up to
+  the existing CoinGecko application. Do not submit a duplicate application.
 
 ## Recheck - 2026-07-30
 
