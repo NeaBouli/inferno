@@ -244,6 +244,17 @@ test("wrong-chain rejection fails closed before connected state or writes", asyn
   await context.close();
 });
 
+test("WalletConnect-style numeric Mainnet chain id connects without a false network error", async ({ browser }) => {
+  const { context, page, writes, pageErrors } = await preparePage(browser, { chainId: 1 });
+  await page.goto("/web3/", { waitUntil: "domcontentloaded" });
+  await connect(page);
+  expect(await page.evaluate(() => window.IFRWallet.isConnected())).toBe(true);
+  expect(await page.evaluate(() => window.__web3TestChainId)).toBe(1);
+  expect(writes).toEqual([]);
+  expect(pageErrors).toEqual([]);
+  await context.close();
+});
+
 test("IFRLock exact approve and typed lock submit only on Mainnet", async ({ browser }) => {
   const { context, page, writes, pageErrors } = await preparePage(browser);
   await page.goto("/web3/?action=access-lock", { waitUntil: "domcontentloaded" });
