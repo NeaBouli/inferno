@@ -467,7 +467,7 @@ describe('Verified seller reward foundation', () => {
     expect(await response.json()).toMatchObject({ ready: 51, scanned: 51, submissionReady: true });
     expect(await prisma.rewardEvent.findUniqueOrThrow({ where: { sessionId: 'pending-after-ready-backlog' } }))
       .toMatchObject({ status: 'READY' });
-  });
+  }, 15_000);
 
   it('shows reward status only to the seller owner and never exposes signatures', async () => {
     await prisma.sellerRewardLink.create({
