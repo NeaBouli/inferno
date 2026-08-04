@@ -1,6 +1,8 @@
 // @ts-check
 const { test, expect } = require("@playwright/test");
 const { ethers } = require("ethers");
+const { createHash } = require("node:crypto");
+const { readFileSync } = require("node:fs");
 
 const ACCOUNT = "0x3333333333333333333333333333333333333333";
 const TOKEN = "0x77e99917Eca8539c62F509ED1193ac36580A6e7B";
@@ -330,6 +332,13 @@ test("Web3 runtime uses the self-hosted Ethers asset", async ({ page }) => {
   await expect.poll(() => page.evaluate(() => typeof window.ethers)).toBe("object");
   expect(externalEthersRequests).toEqual([]);
   await expect(page.locator('script[src="/assets/vendor/ethers-5.7.2.umd.min.js"]')).toHaveCount(1);
+});
+
+test("self-hosted Ethers asset matches the published 5.7.2 bundle", () => {
+  const asset = readFileSync("docs/assets/vendor/ethers-5.7.2.umd.min.js");
+  expect(createHash("sha256").update(asset).digest("hex")).toBe(
+    "a66293a6a2bb4dee061a68612be0be3c5c0ab7e4068ab8d98a4a357baf664c73",
+  );
 });
 
 test("Add IFR to wallet submits the canonical token metadata", async ({ browser }) => {
