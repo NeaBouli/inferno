@@ -26,8 +26,8 @@ This note records where IFR token metadata and icon visibility can realistically
 | --- | --- | --- |
 | Etherscan | Live, reputation `Neutral` | `https://etherscan.io/token/0x77e99917Eca8539c62F509ED1193ac36580A6e7B` |
 | Uniswap Default Token List | Open; no maintainer comment; last activity is the project evidence update from 2026-07-08 | `https://github.com/Uniswap/default-token-list/issues/2509` |
-| MetaMask contract metadata | Open; `REVIEW_REQUIRED`; no submitted review or maintainer activity since 2026-07-08; three reported checks successful | `https://github.com/MetaMask/contract-metadata/pull/1858` |
-| ethereum-lists | Open, `MERGEABLE` but `BLOCKED`; no submitted review, reported check, or maintainer comment since the project follow-up on 2026-07-08 | `https://github.com/ethereum-lists/tokens/pull/1036` |
+| MetaMask contract metadata | Open; `REVIEW_REQUIRED`; public API state `unstable`; no submitted review or maintainer activity since 2026-07-08; three reported checks successful | `https://github.com/MetaMask/contract-metadata/pull/1858` |
+| ethereum-lists | Open and `MERGEABLE`; public API state `clean`; no submitted review, reported check, or maintainer comment since the project follow-up on 2026-07-08 | `https://github.com/ethereum-lists/tokens/pull/1036` |
 | Rainbow | Exact-contract token page is live with Inferno name, IFR symbol and price; no visible token image | `https://rainbow.me/token/ethereum/0x77e99917eca8539c62f509ed1193ac36580a6e7b` |
 
 ## Wallet-Specific Reality Check

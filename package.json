@@ -35,6 +35,8 @@
     "test:cex-fee-policy": "node scripts/test-cex-fee-policy.cjs",
     "test:status-baseline": "node scripts/test-status-baseline.cjs",
     "test:functionality-status": "node scripts/test-functionality-status.cjs",
+    "check:listing-status": "node scripts/check-token-listing-status.js",
+    "test:listing-monitor": "node scripts/test-token-listing-status.cjs",
     "test:docs-ci": "node scripts/test-docs-workflow.cjs",
     "test:workflow-triggers": "node scripts/test-workflow-triggers.cjs",
     "test:roadmap-status-sync": "node scripts/test-roadmap-status-sync.cjs",
