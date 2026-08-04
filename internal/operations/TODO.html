@@ -49,10 +49,10 @@
   <div class="container">
     <a href="wiki/roadmap.html" class="back" rel="nofollow">&larr; Roadmap</a>
     <h1>IFR Protocol &mdash; Developer TODO List</h1>
-    <div class="subtitle">Last updated: 2026-08-01 &middot; Branch: main</div>
+    <div class="subtitle">Last updated: 2026-08-04 &middot; Branch: main</div>
 
     <!-- ═══ CURRENT WATCHLIST ═══ -->
-    <h2><span class="priority-badge p-critical">WATCH</span> Current Watchlist &mdash; verified 2026-07-31</h2>
+    <h2><span class="priority-badge p-critical">WATCH</span> Current Watchlist &mdash; verified 2026-08-04</h2>
     <ul>
       <li><div class="cb cb-done">&#x2713;</div><strong>LendingVault V1 borrow activation policy</strong> &mdash; keep disabled.<br>
         <span style="color:#6b7280;font-size:0.82rem;">Decision 2026-07-31: keep <code>ifrPriceWei = 0</code>; do not submit the current Safe JSON. V1 cannot set the price back to zero and has no pause, borrow cap, allowlist or price-freshness check. Reconsider only after an audited, bounded and pausable V2 plus deeper liquidity.</span></li>
@@ -65,7 +65,7 @@
     <h2><span class="priority-badge p-medium">LATER</span> Deferred / Waiting &mdash; resume only when the trigger occurs</h2>
     <ul>
       <li><div class="cb"></div><strong>MetaMask Registry PR #1858</strong> &mdash; external maintainer wait.<br>
-        <span style="color:#6b7280;font-size:0.82rem;">Open, review required, mergeable but blocked. Resume on maintainer review, requested change, workflow approval or status change; do not post another reminder without new evidence. <a href="https://github.com/MetaMask/contract-metadata/pull/1858" target="_blank" rel="noopener">PR #1858</a></span></li>
+        <span style="color:#6b7280;font-size:0.82rem;">Open and review required, with three reported checks successful and no submitted review. Resume on maintainer review, requested change, workflow approval or status change; do not post another reminder without new evidence. <a href="https://github.com/MetaMask/contract-metadata/pull/1858" target="_blank" rel="noopener">PR #1858</a></span></li>
       <li><div class="cb"></div><strong>Uniswap Default Token List Issue #2509</strong> &mdash; external maintainer wait.<br>
         <span style="color:#6b7280;font-size:0.82rem;">Resume on maintainer response or new CoinGecko/CMC/listing proof. <a href="https://github.com/Uniswap/default-token-list/issues/2509" target="_blank" rel="noopener">Issue #2509</a></span></li>
       <li><div class="cb"></div><strong>ethereum-lists PR #1036</strong> &mdash; external maintainer wait.<br>
@@ -75,7 +75,7 @@
       <li><div class="cb"></div><strong>CoinMarketCap standard listing</strong> &mdash; ticket pending.<br>
         <span style="color:#6b7280;font-size:0.82rem;">Ticket <code>1390230</code> is submitted. CMC DexScan is live but marks IFR as <code>not verified by CoinMarketCap</code>; this is not a standalone CMC listing. Resume on CMC response/status change; do not submit a duplicate.</span></li>
       <li><div class="cb"></div><strong>Trust Wallet / Rainbow / Phantom / Zerion visibility</strong><br>
-        <span style="color:#6b7280;font-size:0.82rem;">Trust Wallet waits for CMC, professional audit, activity criteria and explicit fee approval. Phantom waits for CoinGecko/market-data coverage. Rainbow waits for broader upstream-list coverage. Zerion was resolved on 2026-07-31: human support added the canonical 128px icon and enabled IFR tracking. The live token page was verified with IFR icon, Inferno name, price and supply data; resume only on regression.</span></li>
+        <span style="color:#6b7280;font-size:0.82rem;">Trust Wallet waits for CMC, professional audit, activity criteria and explicit fee approval. Phantom waits for CoinGecko/market-data coverage. Rainbow now has a live exact-contract page with Inferno name, IFR symbol and price, but no visible IFR icon; monitor upstream metadata without opening an unsupported direct request. Zerion was resolved on 2026-07-31 with the canonical icon and tracking; resume only on regression.</span></li>
       <li><div class="cb"></div><strong>Blockaid/MetaMask warning retest</strong><br>
         <span style="color:#6b7280;font-size:0.82rem;">Blockaid review is approved. Resume only if a current device still shows a warning, with version, timestamp and screenshot evidence.</span></li>
       <li><div class="cb"></div><strong>Residual dependency audit findings</strong><br>

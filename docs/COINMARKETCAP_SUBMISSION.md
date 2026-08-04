@@ -1,17 +1,20 @@
 # CoinMarketCap Submission Pack — Inferno (IFR)
 
-Updated: 2026-07-30
+Updated: 2026-08-04
 
 ## Status
 
 - GeckoTerminal: live, verified pool URL available.
 - CoinGecko: application submitted, but exact-contract API still returns
-  `coin not found` as of 2026-07-30; no standalone coin listing is confirmed.
+  `coin not found` as of 2026-08-04; no standalone coin listing is confirmed.
 - CoinMarketCap standard listing request: submitted as ticket `1390230`;
   response/approval remains pending.
 - CoinMarketCap DexScan: IFR token and IFR/WETH pool pages are live, but CMC
   explicitly labels IFR as `not verified by CoinMarketCap`. DexScan visibility
   is not a standalone tracked CMC coin listing.
+- The CMC page at `https://coinmarketcap.com/currencies/inferno/` is not IFR
+  Protocol. It belongs to a different `INF` token at another contract and must
+  never be used as IFR listing evidence.
 - DexScan token URL:
   https://dex.coinmarketcap.com/token/ethereum/0x77e99917eca8539c62f509ed1193ac36580a6e7b/
 - Official request URL: https://coinmarketcap.com/request/
