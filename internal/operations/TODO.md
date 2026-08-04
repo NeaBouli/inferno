@@ -1,5 +1,5 @@
 # IFR Protocol — Developer TODO List
-> Last updated: 2026-08-01 | Branch: main
+> Last updated: 2026-08-04 | Branch: main
 
 ---
 
@@ -104,7 +104,7 @@ On errors: fix immediately, commit with `seo:` prefix.
 - [x] MetaMask Mobile: centralized deep-link + pending connect ✅
 - [x] Protocol Plan wiki page created (26 pages) ✅
 
-## CURRENT WATCHLIST — verified 2026-07-31
+## CURRENT WATCHLIST — verified 2026-08-04
 
 - [x] LendingVault V1 borrow activation policy — keep disabled
       Runbook: docs/LENDING_PRICE_GOVERNANCE_RUNBOOK.md
@@ -129,20 +129,19 @@ On errors: fix immediately, commit with `seo:` prefix.
 
 - [ ] MetaMask Registry PR #1858 — external maintainer wait
       PR: https://github.com/MetaMask/contract-metadata/pull/1858
-      Status verified 2026-07-30: open, REVIEW_REQUIRED, no submitted
+      Status verified 2026-08-04: open, REVIEW_REQUIRED, no submitted
       reviews or maintainer activity since the project follow-up on 2026-07-08.
-      The three visible reported checks are successful. GitHub reports the PR
-      as MERGEABLE but BLOCKED.
+      The three reported checks are successful; code-owner review is pending.
       Resume trigger: maintainer review, requested change, workflow approval
       or status change. Do not post another reminder without new evidence.
 - [ ] Uniswap Default Token List Issue #2509 — external maintainer wait
       Issue: https://github.com/Uniswap/default-token-list/issues/2509
-      Status verified 2026-07-30: open with no maintainer comment. Last
+      Status verified 2026-08-04: open with no maintainer comment. Last
       activity remains the project update on 2026-07-08.
       Resume trigger: maintainer response or new CoinGecko/CMC/listing proof.
 - [ ] ethereum-lists PR #1036 — external maintainer wait
       PR: https://github.com/ethereum-lists/tokens/pull/1036
-      Status verified 2026-07-30: open, MERGEABLE but BLOCKED, with no
+      Status verified 2026-08-04: open, MERGEABLE but BLOCKED, with no
       submitted review, reported check or maintainer comment.
       Resume trigger: maintainer review, CI approval or status change.
 - [ ] CoinGecko standalone coin listing — application submitted
@@ -160,7 +159,9 @@ On errors: fix immediately, commit with `seo:` prefix.
       Trust Wallet: resume only after CMC, professional audit and activity
       criteria are met and the non-refundable fee is explicitly approved.
       Phantom: no verification form; resume after CoinGecko/market-data
-      coverage changes. Rainbow: resume after broader upstream-list coverage.
+      coverage changes. Rainbow: exact-contract token page is live with name,
+      symbol and price, but no visible IFR icon; monitor upstream metadata and
+      do not open an unsupported direct request.
       Zerion: resolved 2026-07-31. Human support added the canonical 128px icon
       and enabled IFR tracking. The live Zerion token page was verified with
       IFR icon, Inferno name, price and supply data. Resume only if the token

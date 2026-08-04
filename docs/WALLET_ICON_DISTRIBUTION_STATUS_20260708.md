@@ -1,6 +1,6 @@
 # Wallet Icon Distribution Status
 
-Last verified: 2026-07-30. The filename is retained because this status record
+Last verified: 2026-08-04. The filename is retained because this status record
 was originally created on 2026-07-08.
 
 This note records where IFR token metadata and icon visibility can realistically be pushed next.
@@ -26,8 +26,9 @@ This note records where IFR token metadata and icon visibility can realistically
 | --- | --- | --- |
 | Etherscan | Live, reputation `Neutral` | `https://etherscan.io/token/0x77e99917Eca8539c62F509ED1193ac36580A6e7B` |
 | Uniswap Default Token List | Open; no maintainer comment; last activity is the project evidence update from 2026-07-08 | `https://github.com/Uniswap/default-token-list/issues/2509` |
-| MetaMask contract metadata | Open; `REVIEW_REQUIRED`; `MERGEABLE` but `BLOCKED`; no submitted review or maintainer activity since 2026-07-08; three visible reported checks successful | `https://github.com/MetaMask/contract-metadata/pull/1858` |
+| MetaMask contract metadata | Open; `REVIEW_REQUIRED`; no submitted review or maintainer activity since 2026-07-08; three reported checks successful | `https://github.com/MetaMask/contract-metadata/pull/1858` |
 | ethereum-lists | Open, `MERGEABLE` but `BLOCKED`; no submitted review, reported check, or maintainer comment since the project follow-up on 2026-07-08 | `https://github.com/ethereum-lists/tokens/pull/1036` |
+| Rainbow | Exact-contract token page is live with Inferno name, IFR symbol and price; no visible token image | `https://rainbow.me/token/ethereum/0x77e99917eca8539c62f509ed1193ac36580a6e7b` |
 
 ## Wallet-Specific Reality Check
 
@@ -51,7 +52,7 @@ Practical route for IFR:
    relevant only for a rare incorrect spam/flagging review, not ordinary
    verification.
 
-Verified 2026-07-30:
+Verified 2026-08-04:
 
 - CoinGecko exact-contract endpoint: `coin not found`.
 - CoinGecko search for `Inferno IFR`: empty `coins` array.
@@ -98,18 +99,22 @@ Official sources:
 
 ### Rainbow
 
-Rainbow's current open-source UI says a verified badge means a token has
-appeared on at least three outside token lists. The app bundles a curated
-Rainbow token list that is refreshed from a backend URL supplied through
-Rainbow's private environment; no public direct token-submission route is
-documented. IFR is not present in the currently bundled list.
+Rainbow now resolves IFR's exact Ethereum contract on a public token page. The
+page displays `Inferno`, symbol `IFR`, the correct contract and a live price.
+The rendered page does not currently expose an IFR token image, so discovery
+is live while icon distribution remains incomplete. No public direct
+token-icon submission route is documented.
 
-Practical route:
+Live page verified 2026-08-04:
+
+- `https://rainbow.me/token/ethereum/0x77e99917eca8539c62f509ed1193ac36580a6e7b`
+
+Remaining practical route:
 
 1. Land ethereum-lists PR #1036.
-2. Obtain CoinGecko and CoinMarketCap listings.
+2. Obtain CoinGecko and CoinMarketCap listings so upstream metadata can mature.
 3. Keep the official IFR token lists and explorer metadata consistent.
-4. Do not open an unsupported Rainbow-only PR.
+4. Monitor the missing image; do not open an unsupported Rainbow-only PR.
 
 Official source evidence:
 
