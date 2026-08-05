@@ -172,6 +172,37 @@ async function waitForRoleSelection(locator) {
   await waitForAttribute(locator, 'aria-pressed', 'true', 30_000);
 }
 
+async function verifyMobileNoProviderFallback(page, expectedSurface) {
+  const walletControl = page.locator('[data-wallet-connect-control]').first();
+  await waitForAttribute(walletControl, 'data-wallet-connectors-ready', 'true');
+  await walletControl.getByText(expectedSurface, { exact: true }).waitFor();
+  await walletControl.getByText('No injected provider', { exact: true }).waitFor();
+  await walletControl.getByText('Not connected', { exact: true }).first().waitFor();
+  assert.equal(
+    await walletControl.getByRole('button', { name: 'Disconnect', exact: true }).count(),
+    0,
+    `${expectedSurface} without a provider must not render a connected state`,
+  );
+  await walletControl.getByText('Open in wallet app', { exact: true }).waitFor();
+
+  const expectedHosts = {
+    metamask: 'metamask.app.link',
+    trust: 'link.trustwallet.com',
+    okx: 'web3.okx.com',
+    phantom: 'phantom.app',
+  };
+  for (const [wallet, host] of Object.entries(expectedHosts)) {
+    const link = walletControl.locator(`[data-wallet-launch="${wallet}"]`);
+    await link.waitFor();
+    const href = await link.getAttribute('href');
+    assert.ok(href, `${wallet} fallback must include an href`);
+    const url = new URL(href);
+    assert.equal(url.protocol, 'https:', `${wallet} fallback must use HTTPS`);
+    assert.equal(url.hostname, host, `${wallet} fallback must use its official launch host`);
+    assert.match(decodeURIComponent(decodeURIComponent(href)), /shop\.ifrunit\.tech/);
+  }
+}
+
 async function waitForLocation(page, pathname, hash = '') {
   await page.waitForFunction(
     ({ expectedPathname, expectedHash }) => (
@@ -784,6 +815,7 @@ async function run() {
     const ipadPage = await ipadContext.newPage();
     ipadPage.setDefaultNavigationTimeout(NAVIGATION_TIMEOUT_MS);
     await ipadPage.goto(origin, { waitUntil: 'domcontentloaded' });
+    await verifyMobileNoProviderFallback(ipadPage, 'iPad/iPhone');
     await ipadPage.locator('[data-pwa-install-listeners-ready="true"]').waitFor();
     assert.equal(await ipadPage.locator('[data-ios-install-steps="visible"]').count(), 0, 'iOS details should stay compact until requested');
     const iosInstallButton = ipadPage.getByRole('button', { name: 'Show iPad / iPhone install steps', exact: true });
@@ -803,6 +835,30 @@ async function run() {
       'iPad install help must not cause horizontal overflow',
     );
     await ipadContext.close();
+
+    const androidNoProviderContext = await browser.newContext({
+      ...devices['Galaxy S9+'],
+      serviceWorkers: 'block',
+    });
+    await androidNoProviderContext.route('**/api/**', (route) => route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(route.request().url().includes('/api/ready')
+        ? { status: 'ready', chainId: 1, database: 'ok', rateLimitStore: 'ok' }
+        : discoveryResponse([])),
+    }));
+    const androidNoProviderPage = await androidNoProviderContext.newPage();
+    androidNoProviderPage.setDefaultNavigationTimeout(NAVIGATION_TIMEOUT_MS);
+    await androidNoProviderPage.goto(origin, { waitUntil: 'domcontentloaded' });
+    await verifyMobileNoProviderFallback(androidNoProviderPage, 'Android');
+    assert.equal(
+      await androidNoProviderPage.evaluate(() => (
+        document.documentElement.scrollWidth > document.documentElement.clientWidth
+      )),
+      false,
+      'Android wallet fallback must not cause horizontal overflow',
+    );
+    await androidNoProviderContext.close();
 
     const phantomContext = await browser.newContext({
       ...devices['Galaxy S9+'],
