@@ -6,7 +6,7 @@ import { getMobileWalletLaunches } from '@/lib/walletLaunch';
 import { hasWalletConnectProjectId } from '@/lib/wagmi';
 import { useAvailableWalletConnectors } from '@/hooks/useAvailableWalletConnectors';
 import {
-  selectPreferredWalletConnector,
+  selectBrowserWalletConnector,
   walletConnectionErrorMessage,
   walletConnectorLabel,
 } from '@/lib/walletConnectorSelection.mjs';
@@ -81,9 +81,10 @@ export function WalletConnectControl() {
   }, []);
 
   async function connectInjectedWallet() {
-    const connector = await selectPreferredWalletConnector(connectors) as (typeof connectors)[number] | undefined;
+    setConnectionStatus('');
+    const connector = await selectBrowserWalletConnector(connectors) as (typeof connectors)[number] | undefined;
     if (!connector) {
-      setConnectionStatus('No wallet connector is available in this browser.');
+      setConnectionStatus('No browser wallet was detected. Open this page inside your wallet app, or choose an available wallet connection below.');
       return;
     }
     await connectWallet(connector);
@@ -277,7 +278,7 @@ export function WalletConnectControl() {
             </button>
           </div>
           {copyStatus ? <p className="text-xs font-semibold text-orange-100">{copyStatus}</p> : null}
-          {availableConnectors.length > 1 ? (
+          {availableConnectors.length > 0 ? (
             <details className="rounded-xl border border-orange-200/15 bg-white/[0.04] p-3">
               <summary className="cursor-pointer text-xs font-black uppercase tracking-[0.12em] text-orange-100">
                 Choose wallet connection

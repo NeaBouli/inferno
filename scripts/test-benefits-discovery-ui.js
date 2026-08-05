@@ -385,8 +385,20 @@ async function run() {
     );
     assert.equal(
       await walletControl.getByText('Choose wallet connection', { exact: true }).count(),
-      0,
-      'a single available Coinbase fallback must not render an unnecessary choice menu',
+      1,
+      'a browser without an injected provider must expose its explicit universal wallet choice',
+    );
+    await walletControl.getByText('Choose wallet connection', { exact: true }).click();
+    await walletControl.getByRole('button', { name: 'Coinbase Wallet', exact: true }).waitFor();
+    await walletControl.getByRole('button', { name: 'Connect wallet', exact: true }).click();
+    await walletControl.getByText(
+      'No browser wallet was detected. Open this page inside your wallet app, or choose an available wallet connection below.',
+      { exact: true },
+    ).waitFor();
+    assert.equal(
+      await walletControl.getByRole('button', { name: 'Connect wallet', exact: true }).isEnabled(),
+      true,
+      'no-provider recovery must leave the primary connect action usable',
     );
 
     const offersSection = page.locator('#offers');
@@ -465,6 +477,17 @@ async function run() {
     await waitForRoleSelection(sellerModeButton);
     await page.getByRole('heading', { name: 'Benefit rule manager', exact: true }).waitFor();
     await page.getByRole('heading', { name: 'Finish the seller profile first', exact: true }).waitFor();
+    await page.getByRole('button', { name: 'Connect wallet', exact: true }).click();
+    await page.getByRole('alert').getByText(
+      'No browser wallet was detected. Open this page inside your wallet app, or choose an available wallet connection below.',
+      { exact: true },
+    ).waitFor();
+    assert.equal(
+      await page.getByRole('button', { name: 'Connect wallet', exact: true }).isEnabled(),
+      true,
+      'seller no-provider recovery must not remain stuck in Connecting state',
+    );
+    await page.getByText('Choose wallet', { exact: true }).waitFor();
     assert.equal(
       await page.getByLabel('Accepted lock source', { exact: true }).count(),
       0,

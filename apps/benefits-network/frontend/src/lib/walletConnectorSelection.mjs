@@ -71,6 +71,15 @@ export async function selectPreferredWalletConnector(connectors) {
 }
 
 /**
+ * Primary connect buttons only auto-start a wallet already exposed by the
+ * browser. Universal SDK connectors remain explicit user choices.
+ */
+export async function selectBrowserWalletConnector(connectors) {
+  const available = await listAvailableWalletConnectors(connectors);
+  return available.find(isInjectedWalletConnector);
+}
+
+/**
  * @param {{ id: string, name: string }} connector
  */
 export function walletConnectorLabel(connector) {
