@@ -10,7 +10,7 @@ import { SellerCustomerPassScanner } from '@/components/SellerCustomerPassScanne
 import { useAvailableWalletConnectors } from '@/hooks/useAvailableWalletConnectors';
 import { parseCustomerPassQrPayload } from '@/lib/customerPassLink';
 import {
-  selectPreferredWalletConnector,
+  selectBrowserWalletConnector,
   walletConnectionErrorMessage,
   walletConnectorLabel,
 } from '@/lib/walletConnectorSelection.mjs';
@@ -444,9 +444,9 @@ export function BusinessConsoleClient({ businessId }: { businessId: string }) {
 
   async function connectSellerWallet() {
     setError('');
-    const connector = await selectPreferredWalletConnector(connectors) as (typeof connectors)[number] | undefined;
+    const connector = await selectBrowserWalletConnector(connectors) as (typeof connectors)[number] | undefined;
     if (!connector) {
-      setError('No wallet connector is available in this browser.');
+      setError('No browser wallet was detected. Open this page inside your wallet app, or choose an available wallet connection below.');
       return;
     }
     await connectCheckoutConnector(connector);
@@ -788,7 +788,7 @@ export function BusinessConsoleClient({ businessId }: { businessId: string }) {
                   >
                     {connecting ? 'Connecting...' : 'Connect'}
                   </button>
-                  {availableConnectors.length > 1 ? (
+                  {availableConnectors.length > 0 ? (
                     <details className="text-right">
                       <summary className="cursor-pointer text-xs font-bold text-green-50">Choose wallet</summary>
                       <div className="mt-2 grid gap-2">
