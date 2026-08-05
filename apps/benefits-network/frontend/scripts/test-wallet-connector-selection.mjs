@@ -7,6 +7,7 @@ import { coinbaseWallet } from 'wagmi/connectors/coinbaseWallet';
 import { injected } from 'wagmi/connectors/injected';
 import {
   listAvailableWalletConnectors,
+  selectBrowserWalletConnector,
   selectPreferredWalletConnector,
   walletConnectionErrorMessage,
   walletConnectorLabel,
@@ -40,6 +41,9 @@ assert.equal(await selectPreferredWalletConnector([unavailableInjected, metamask
 assert.equal(await selectPreferredWalletConnector([unavailableInjected, coinbase]), coinbase);
 assert.equal(await selectPreferredWalletConnector([unavailableInjected, walletConnect]), walletConnect);
 assert.equal(await selectPreferredWalletConnector([]), undefined);
+assert.equal(await selectBrowserWalletConnector([metamask, coinbase]), metamask);
+assert.equal(await selectBrowserWalletConnector([unavailableInjected, coinbase]), undefined);
+assert.equal(await selectBrowserWalletConnector([unavailableInjected, walletConnect]), undefined);
 assert.deepEqual(await listAvailableWalletConnectors([unavailableInjected, coinbase]), [coinbase]);
 assert.deepEqual(await listAvailableWalletConnectors([metamask, coinbase]), [metamask, coinbase]);
 assert.deepEqual(await listAvailableWalletConnectors([unavailablePhantom, coinbase]), [coinbase]);
