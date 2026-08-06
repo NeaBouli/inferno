@@ -80,6 +80,17 @@ export async function selectBrowserWalletConnector(connectors) {
 }
 
 /**
+ * Primary actions may open WalletConnect when no wallet is injected, but must
+ * never auto-start an SDK connector that can wait indefinitely without a
+ * visible wallet chooser.
+ */
+export async function selectPrimaryWalletConnector(connectors) {
+  const available = await listAvailableWalletConnectors(connectors);
+  return available.find(isInjectedWalletConnector) ||
+    available.find((connector) => connector.id === 'walletConnect' || connector.type === 'walletConnect');
+}
+
+/**
  * @param {{ id: string, name: string }} connector
  */
 export function walletConnectorLabel(connector) {
