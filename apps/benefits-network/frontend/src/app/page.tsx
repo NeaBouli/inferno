@@ -641,7 +641,9 @@ function SystemReadinessCard() {
         </button>
       </div>
       <p className="mt-3 text-sm leading-6 text-stone-300">
-        Public checks for this app. Browser wallet apps and extensions are active; universal WalletConnect coverage still requires its production project configuration.
+        {hasWalletConnectProjectId
+          ? 'Public checks for this app. Browser wallet apps, extensions and the WalletConnect multi-wallet dialog are active.'
+          : 'Public checks for this app. Browser wallet apps and extensions are active; universal WalletConnect coverage still requires its production project configuration.'}
       </p>
 
       <div className="mt-4 grid gap-2">
