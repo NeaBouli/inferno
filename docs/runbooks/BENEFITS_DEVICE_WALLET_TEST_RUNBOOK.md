@@ -261,7 +261,8 @@ evidence may document failures or blockers, but cannot close a physical row.
 
 ## Known Blockers
 
-- `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` is not currently set for the production WalletConnect QR modal.
+- The production WalletConnect modal and wallet catalog are live as of 2026-08-06;
+  physical QR pairing, connection and signature evidence is still required.
 - Physical APPROVED -> REDEEMED proof requires an eligible locked customer wallet;
   the local state machine is automated, while its on-chain eligibility read remains mocked.
 - Production capacity must still be checked read-only immediately before every deploy; keep the 4-GB hard deploy floor and never rely on an earlier free-space snapshot.
