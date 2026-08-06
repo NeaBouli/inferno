@@ -1,5 +1,10 @@
 import type { Metadata } from 'next';
 import { AppShell } from '@/components/AppShell';
+import { hasValidWalletConnectProjectId } from '@/lib/walletConnectProjectId.mjs';
+
+const hasWalletConnectProjectId = hasValidWalletConnectProjectId(
+  process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID,
+);
 
 export const metadata: Metadata = {
   title: 'Customer & Seller Guide | IFR Benefits',
@@ -167,7 +172,9 @@ export default function GuidePage() {
             <p className="text-xs font-black uppercase tracking-[0.18em] text-green-100/80">Wallet support</p>
             <h2 className="mt-2 text-3xl font-black text-white">Use the wallet your browser exposes.</h2>
             <p className="mt-4 text-sm leading-7 text-stone-300">
-              Production checks browser-injected Ethereum wallets first and falls back to Coinbase Wallet when no injected provider is available. Customer, seller and checkout screens also let you choose an exposed connector explicitly. The full WalletConnect modal for Rainbow, Trust, OKX and similar wallets still needs a production WalletConnect Project ID before it can be enabled without brittle failures.
+              {hasWalletConnectProjectId
+                ? 'Production checks browser-injected Ethereum wallets first, then opens WalletConnect when no injected provider is available. Customer, seller and checkout screens keep WalletConnect and Coinbase Wallet visible as explicit choices for MetaMask, Trust, Rainbow, OKX and hundreds of compatible wallets.'
+                : 'Production checks browser-injected Ethereum wallets first. Customer, seller and checkout screens keep Coinbase Wallet visible as an explicit choice; the full WalletConnect modal for Rainbow, Trust, OKX and similar wallets requires its production WalletConnect Project ID.'}
             </p>
             <p className="mt-3 text-sm leading-7 text-stone-300">
               New users should create or import their wallet inside a trusted wallet app first. The Benefits Network is non-custodial: it never asks for a seed phrase, never stores private keys, and only requests wallet signatures or explicit IFR approve/lock transactions.

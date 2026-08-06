@@ -384,15 +384,14 @@ async function run() {
       'a browser without an injected provider must not offer the unusable injected connector',
     );
     assert.equal(
-      await walletControl.getByText('Choose wallet connection', { exact: true }).count(),
+      await walletControl.getByText('Choose a wallet', { exact: true }).count(),
       1,
       'a browser without an injected provider must expose its explicit universal wallet choice',
     );
-    await walletControl.getByText('Choose wallet connection', { exact: true }).click();
     await walletControl.getByRole('button', { name: 'Coinbase Wallet', exact: true }).waitFor();
     await walletControl.getByRole('button', { name: 'Connect wallet', exact: true }).click();
     await walletControl.getByText(
-      'No browser wallet was detected. Open this page inside your wallet app, or choose an available wallet connection below.',
+      'No browser wallet or WalletConnect session is available. Choose Coinbase Wallet below, or open this page inside your wallet app.',
       { exact: true },
     ).waitFor();
     assert.equal(
@@ -479,7 +478,7 @@ async function run() {
     await page.getByRole('heading', { name: 'Finish the seller profile first', exact: true }).waitFor();
     await page.getByRole('button', { name: 'Connect wallet', exact: true }).click();
     await page.getByRole('alert').getByText(
-      'No browser wallet was detected. Open this page inside your wallet app, or choose an available wallet connection below.',
+      'No browser wallet or WalletConnect session is available. Choose Coinbase Wallet below, or open this page inside your wallet app.',
       { exact: true },
     ).waitFor();
     assert.equal(
@@ -487,7 +486,7 @@ async function run() {
       true,
       'seller no-provider recovery must not remain stuck in Connecting state',
     );
-    await page.getByText('Choose wallet', { exact: true }).waitFor();
+    await page.getByText('Choose a wallet', { exact: true }).waitFor();
     assert.equal(
       await page.getByLabel('Accepted lock source', { exact: true }).count(),
       0,

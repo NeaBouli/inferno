@@ -8,7 +8,7 @@ import { SellerCatalogManager } from '@/components/SellerCatalogManager';
 import { SellerRewardStatus } from '@/components/SellerRewardStatus';
 import { useAvailableWalletConnectors } from '@/hooks/useAvailableWalletConnectors';
 import {
-  selectBrowserWalletConnector,
+  selectPrimaryWalletConnector,
   walletConnectionErrorMessage,
   walletConnectorLabel,
 } from '@/lib/walletConnectorSelection.mjs';
@@ -1466,9 +1466,9 @@ export function SellerRuleBuilder() {
   async function connectSellerWallet() {
     setError('');
     setStatus('');
-    const connector = await selectBrowserWalletConnector(connectors) as (typeof connectors)[number] | undefined;
+    const connector = await selectPrimaryWalletConnector(connectors) as (typeof connectors)[number] | undefined;
     if (!connector) {
-      setError('No browser wallet was detected. Open this page inside your wallet app, or choose an available wallet connection below.');
+      setError('No browser wallet or WalletConnect session is available. Choose Coinbase Wallet below, or open this page inside your wallet app.');
       return;
     }
     await connectSellerConnector(connector);
@@ -1737,9 +1737,9 @@ export function SellerRuleBuilder() {
                 {connecting ? 'Connecting...' : 'Connect wallet'}
               </button>
               {availableConnectors.length > 0 ? (
-                <details className="text-right">
-                  <summary className="cursor-pointer text-xs font-bold text-green-50">Choose wallet</summary>
-                  <div className="mt-2 grid gap-2">
+                <div className="rounded-xl border border-green-200/20 bg-black/15 p-3">
+                  <p className="text-left text-xs font-bold uppercase tracking-[0.12em] text-green-50">Choose a wallet</p>
+                  <div className="mt-2 grid gap-2 sm:grid-cols-2" aria-label="Choose a seller wallet">
                     {availableConnectors.map((availableConnector) => (
                       <button
                         key={availableConnector.uid}
@@ -1752,7 +1752,7 @@ export function SellerRuleBuilder() {
                       </button>
                     ))}
                   </div>
-                </details>
+                </div>
               ) : null}
             </div>
           )}
