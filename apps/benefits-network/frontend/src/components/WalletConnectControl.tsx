@@ -6,7 +6,7 @@ import { getMobileWalletLaunches } from '@/lib/walletLaunch';
 import { hasWalletConnectProjectId } from '@/lib/wagmi';
 import { useAvailableWalletConnectors } from '@/hooks/useAvailableWalletConnectors';
 import {
-  selectBrowserWalletConnector,
+  selectPrimaryWalletConnector,
   walletConnectionErrorMessage,
   walletConnectorLabel,
 } from '@/lib/walletConnectorSelection.mjs';
@@ -80,11 +80,11 @@ export function WalletConnectControl() {
     setEnvironment(getWalletEnvironment());
   }, []);
 
-  async function connectInjectedWallet() {
+  async function connectPrimaryWallet() {
     setConnectionStatus('');
-    const connector = await selectBrowserWalletConnector(connectors) as (typeof connectors)[number] | undefined;
+    const connector = await selectPrimaryWalletConnector(connectors) as (typeof connectors)[number] | undefined;
     if (!connector) {
-      setConnectionStatus('No browser wallet was detected. Open this page inside your wallet app, or choose an available wallet connection below.');
+      setConnectionStatus('No browser wallet or WalletConnect session is available. Choose Coinbase Wallet below, or open this page inside your wallet app.');
       return;
     }
     await connectWallet(connector);
@@ -279,11 +279,11 @@ export function WalletConnectControl() {
           </div>
           {copyStatus ? <p className="text-xs font-semibold text-orange-100">{copyStatus}</p> : null}
           {availableConnectors.length > 0 ? (
-            <details className="rounded-xl border border-orange-200/15 bg-white/[0.04] p-3">
-              <summary className="cursor-pointer text-xs font-black uppercase tracking-[0.12em] text-orange-100">
-                Choose wallet connection
-              </summary>
-              <div className="mt-3 grid gap-2 sm:grid-cols-2" aria-label="Choose a wallet connection">
+            <div className="rounded-xl border border-orange-200/15 bg-white/[0.04] p-3">
+              <p className="text-xs font-black uppercase tracking-[0.12em] text-orange-100">
+                Choose a wallet
+              </p>
+              <div className="mt-3 grid gap-2 sm:grid-cols-2" aria-label="Choose a wallet">
                 {availableConnectors.map((availableConnector) => (
                   <button
                     key={availableConnector.uid}
@@ -296,7 +296,12 @@ export function WalletConnectControl() {
                   </button>
                 ))}
               </div>
-            </details>
+              {hasWalletConnectProjectId ? (
+                <p className="mt-2 text-xs leading-5 text-stone-400">
+                  WalletConnect opens MetaMask, Trust, Rainbow, OKX and other compatible wallets.
+                </p>
+              ) : null}
+            </div>
           ) : null}
           {connectionStatus ? (
             <p role="status" className="text-xs font-semibold leading-5 text-orange-100">
@@ -318,7 +323,7 @@ export function WalletConnectControl() {
         <button
           type="button"
           data-wallet-action="connect"
-          onClick={connectInjectedWallet}
+          onClick={connectPrimaryWallet}
           disabled={isPending || connectors.length === 0}
           className="rounded-2xl bg-orange-300 px-5 py-3 text-sm font-black uppercase tracking-[0.14em] text-stone-950 shadow-xl shadow-orange-950/30 transition hover:bg-orange-200 disabled:cursor-not-allowed disabled:opacity-50"
         >
