@@ -445,3 +445,46 @@ test("Add IFR to wallet submits the canonical token metadata", async ({ browser 
   expect(pageErrors).toEqual([]);
   await context.close();
 });
+
+test("Android 9 stays in browser mode instead of launching an incompatible WebAPK", async ({ browser }) => {
+  const context = await browser.newContext({
+    viewport: { width: 360, height: 640 },
+    userAgent: "Mozilla/5.0 (Linux; Android 9; Mobile) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Mobile Safari/537.36",
+  });
+  const page = await context.newPage();
+  await page.goto("/web3/", { waitUntil: "domcontentloaded" });
+  await page.evaluate(() => {
+    window.__web3LegacyInstallPrompted = false;
+    const event = new Event("beforeinstallprompt");
+    event.prompt = async () => { window.__web3LegacyInstallPrompted = true; };
+    event.userChoice = Promise.resolve({ outcome: "accepted", platform: "web" });
+    window.dispatchEvent(event);
+  });
+  const installButton = page.locator("[data-install-app]:visible").first();
+  await expect(installButton).toHaveText("App requirements");
+  await installButton.click();
+  await expect(page.locator("[data-install-copy]")).toContainText("remains fully usable in this browser tab");
+  expect(await page.evaluate(() => window.__web3LegacyInstallPrompted)).toBe(false);
+  await context.close();
+});
+
+test("Web3 service worker bounds offline navigation before using the cache", () => {
+  const source = readFileSync("docs/web3-sw.js", "utf8");
+  expect(source).toContain('const CACHE_NAME = "ifr-web3-v9"');
+  expect(source).toContain("const NAVIGATION_TIMEOUT_MS = 5000");
+  expect(source).toContain("fetchNavigation(request)");
+});
+
+test("Web3 app shell reloads from the service-worker cache while offline", async ({ browser }) => {
+  const context = await browser.newContext({ serviceWorkers: "allow" });
+  const page = await context.newPage();
+  await page.goto("/web3/", { waitUntil: "networkidle" });
+  await page.evaluate(() => navigator.serviceWorker.ready);
+  await page.reload({ waitUntil: "networkidle" });
+  await expect.poll(() => page.evaluate(() => Boolean(navigator.serviceWorker.controller))).toBe(true);
+  await context.setOffline(true);
+  await page.reload({ waitUntil: "domcontentloaded" });
+  await expect(page.locator("h1")).toContainText("Lock IFR");
+  await context.setOffline(false);
+  await context.close();
+});

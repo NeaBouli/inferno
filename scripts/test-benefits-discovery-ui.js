@@ -882,6 +882,34 @@ async function run() {
     );
     await androidNoProviderContext.close();
 
+    const legacyAndroidContext = await browser.newContext({
+      viewport: { width: 360, height: 640 },
+      userAgent: 'Mozilla/5.0 (Linux; Android 9; Mobile) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Mobile Safari/537.36',
+      serviceWorkers: 'block',
+    });
+    await legacyAndroidContext.route('**/api/**', (route) => route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(route.request().url().includes('/api/ready')
+        ? { status: 'ready', chainId: 1, database: 'ok', rateLimitStore: 'ok' }
+        : discoveryResponse([])),
+    }));
+    const legacyAndroidPage = await legacyAndroidContext.newPage();
+    await legacyAndroidPage.goto(origin, { waitUntil: 'domcontentloaded' });
+    await legacyAndroidPage.locator('[data-pwa-install-listeners-ready="true"]').waitFor();
+    await legacyAndroidPage.evaluate(() => {
+      window.__benefitsLegacyInstallPrompted = false;
+      const event = new Event('beforeinstallprompt');
+      event.prompt = async () => { window.__benefitsLegacyInstallPrompted = true; };
+      event.userChoice = Promise.resolve({ outcome: 'accepted', platform: 'web' });
+      window.dispatchEvent(event);
+    });
+    await legacyAndroidPage.getByText('Browser mode required', { exact: true }).waitFor();
+    await legacyAndroidPage.getByRole('button', { name: 'Use in browser', exact: true }).click();
+    assert.equal(await legacyAndroidPage.evaluate(() => window.__benefitsLegacyInstallPrompted), false, 'Android 9 must not invoke Chrome WebAPK installation');
+    await legacyAndroidPage.getByText(/App installation requires Android 10 or newer/).waitFor();
+    await legacyAndroidContext.close();
+
     const phantomContext = await browser.newContext({
       ...devices['Galaxy S9+'],
       serviceWorkers: 'block',

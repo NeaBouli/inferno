@@ -12,6 +12,7 @@ const precacheAdds = [];
 const deletedCaches = [];
 let responseStatus = 200;
 let networkOnline = true;
+let networkHangs = false;
 
 function cacheKey(key) {
   return typeof key === 'string' ? key : key.url;
@@ -26,16 +27,24 @@ const context = {
   URL,
   Response,
   Promise,
+  AbortController,
+  clearTimeout,
+  setTimeout,
   caches: {
     open: async () => cache,
-    keys: async () => ['ifr-benefits-v21', 'ifr-benefits-v22', 'unrelated-cache'],
+    keys: async () => ['ifr-benefits-v21', 'ifr-benefits-v22', 'ifr-benefits-v23', 'unrelated-cache'],
     delete: async (name) => {
       deletedCaches.push(name);
       return true;
     },
     match: async () => ({ source: 'offline-root' }),
   },
-  fetch: async (request) => {
+  fetch: async (request, options = {}) => {
+    if (networkHangs) {
+      return new Promise((_, reject) => {
+        options.signal.addEventListener('abort', () => reject(new Error('aborted')), { once: true });
+      });
+    }
     if (!networkOnline) throw new Error('offline');
     const url = typeof request === 'string' ? request : request.url;
     if (url === '/' || url === 'https://shop.ifrunit.tech/') {
@@ -98,7 +107,8 @@ async function navigate(url) {
 
 async function main() {
   assert(listeners.has('fetch'), 'service worker must register a fetch handler');
-  assert(source.includes("const CACHE_NAME = 'ifr-benefits-v22'"), 'service worker cache version must be v22');
+  assert(source.includes("const CACHE_NAME = 'ifr-benefits-v23'"), 'service worker cache version must be v23');
+  assert(source.includes('const NAVIGATION_TIMEOUT_MS = 5000'), 'navigation requests must have a bounded network timeout');
   assert(source.includes("'/offline.html'"), 'service worker must precache the branded deep-link fallback');
   assert(source.includes("'/icons/ifr-token-64-v11.png'"), 'service worker must precache the canonical PNG favicon');
   assert(source.includes("'/icons/ifr-token-180-v11.png'"), 'service worker must precache the canonical Apple touch icon');
@@ -107,7 +117,7 @@ async function main() {
   assert(source.includes("'/icons/ifr-token-512-v11.png'"), 'service worker must precache the canonical 512 icon');
   assert(source.includes("'/icons/favicon-v11.ico'"), 'service worker must precache the versioned browser favicon');
   assert(!source.includes("favicon-v4.ico"), 'service worker must not precache the competing ICO favicon');
-  assert(layoutSource.includes("'/sw.js?v=22'"), 'layout must register the current service-worker release');
+  assert(layoutSource.includes("'/sw.js?v=23'"), 'layout must register the current service-worker release');
   assert(source.includes("'/copilot-avatar.jpg'"), 'service worker must precache the Copilot launcher asset');
   assert(layoutSource.includes("updateViaCache:'none'"), 'registration must bypass stale service-worker HTTP caches');
   assert(layoutSource.includes("'controllerchange'"), 'controlled clients must reload after a service-worker update');
@@ -140,7 +150,7 @@ async function main() {
   await activate();
   assert.deepStrictEqual(
     deletedCaches,
-    ['ifr-benefits-v21'],
+    ['ifr-benefits-v21', 'ifr-benefits-v22'],
     'activation must delete only stale IFR Benefits caches and preserve unrelated origin caches'
   );
 
@@ -154,6 +164,13 @@ async function main() {
   responseStatus = 200;
   await navigate('https://shop.ifrunit.tech/');
   assert.deepStrictEqual(cacheWrites, ['/'], 'a successful root response should refresh the offline app shell');
+
+  networkHangs = true;
+  const timeoutStartedAt = Date.now();
+  await navigate('https://shop.ifrunit.tech/guide');
+  const timeoutElapsedMs = Date.now() - timeoutStartedAt;
+  assert(timeoutElapsedMs >= 4500 && timeoutElapsedMs < 7000, `hanging navigation must fall back after the bounded timeout, got ${timeoutElapsedMs}ms`);
+  networkHangs = false;
 
   let apiResponsePromise;
   networkOnline = false;
