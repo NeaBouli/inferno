@@ -2266,6 +2266,11 @@
       function isSafariBrowser() {
         return /^((?!chrome|android|crios|fxios|edgios).)*safari/i.test(navigator.userAgent);
       }
+
+      function isLegacyAndroidPwaUnsupported() {
+        const match = navigator.userAgent.match(/Android\s+(\d+)/i);
+        return Boolean(match && Number(match[1]) <= 9);
+      }
       let deferredInstallPrompt = null;
       let walletConnectUri = "";
       let currentAccessLockState = null;
@@ -3583,16 +3588,25 @@
       function showInstallButtons() {
         if (isStandalone()) return;
         const isiOS = isIOSDevice();
+        const isLegacyAndroid = isLegacyAndroidPwaUnsupported();
         installButtons.forEach((button) => {
           button.hidden = false;
           if (isiOS) button.textContent = "Add to Home Screen";
+          if (isLegacyAndroid) button.textContent = "App requirements";
         });
       }
 
       function openInstallDialog() {
         if (!installDialog) return;
         const isiOS = isIOSDevice();
-        if (isiOS) {
+        if (isLegacyAndroidPwaUnsupported()) {
+          installCopy.textContent = "This Android version cannot reliably start current Chrome-installed web apps. IFR Web3 remains fully usable in this browser tab.";
+          installSteps.innerHTML = [
+            "Keep using https://web3.ifrunit.tech in Chrome.",
+            "Update Android or use a newer device before installing the app.",
+            "Do not install from the Chrome menu on Android 9 or older."
+          ].map((step) => `<li>${step}</li>`).join("");
+        } else if (isiOS) {
           installCopy.textContent = isSafariBrowser()
             ? "iPad Safari installs web apps from the Share menu. This browser cannot open a native install prompt automatically."
             : "On iPad, install IFR Web3 from Safari. Open this page in Safari first, then use the Share menu.";
@@ -3622,6 +3636,11 @@
 
       window.addEventListener("beforeinstallprompt", (event) => {
         event.preventDefault();
+        if (isLegacyAndroidPwaUnsupported()) {
+          deferredInstallPrompt = null;
+          showInstallButtons();
+          return;
+        }
         deferredInstallPrompt = event;
         showInstallButtons();
       });
