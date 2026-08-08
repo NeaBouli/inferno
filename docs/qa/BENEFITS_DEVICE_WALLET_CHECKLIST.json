@@ -2,7 +2,7 @@
   "name": "IFR Benefits Network Device Wallet Acceptance Checklist",
   "target": "https://shop.ifrunit.tech",
   "status": "open",
-  "lastUpdated": "2026-08-06",
+  "lastUpdated": "2026-08-08",
   "rules": {
     "noSecrets": true,
     "recordOnlyTestIds": true,
@@ -70,8 +70,15 @@
         "wallet-launch-fallback",
         "recovery-guidance"
       ],
-      "status": "pending",
-      "evidence": []
+      "status": "pass",
+      "evidence": [
+        {
+          "dateTime": "2026-08-08T21:47:17.956Z",
+          "result": "PASS",
+          "evidenceSource": "physical-device",
+          "note": "Galaxy Tab S4 Android 10 / Chrome 150: live landing and guide render without document overflow; official IFR PWA installs and launches standalone; Copy link returns Link copied, Web Share API is available, and invalid pass/session/seller routes show readable recovery states. Galaxy S7 Android 8 WebAPK incompatibility is separately remediated by browser-mode guidance."
+        }
+      ]
     },
     {
       "id": "android-metamask-customer-proof",

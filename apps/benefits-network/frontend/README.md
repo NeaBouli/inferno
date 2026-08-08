@@ -179,7 +179,8 @@ seller credential.
 
 ## PWA
 
-Installable on iOS and Android. During service-worker installation, the current
+Installable on iOS and supported Android versions. Android 9 and older remain in browser mode
+because current Chrome-generated WebAPKs are not compatible with that runtime. During service-worker installation, the current
 root app shell and its versioned Next.js JavaScript/CSS assets are cached so the
 installed role chooser remains usable offline. Same-origin static assets remain
 cache-first. Offline seller/scanner deep links show a precached branded recovery
