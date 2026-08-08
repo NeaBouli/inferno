@@ -15,7 +15,7 @@ export const metadata: Metadata = {
 const customerSteps = [
   {
     title: 'Install or open the app',
-    body: 'Use shop.ifrunit.tech in the browser, or add it to the home screen on iPhone, iPad or Android when the browser offers PWA install.',
+    body: 'Use shop.ifrunit.tech in the browser, or add it to the home screen on iPhone, iPad or supported Android devices when the browser offers PWA install. Android 9 and older should remain in browser mode.',
   },
   {
     title: 'Connect an Ethereum wallet',
