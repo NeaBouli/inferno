@@ -120,6 +120,17 @@ toolchain and do not use `npm audit fix --force`.
 - The current root audit backlog is limited to transitive upstream packages; no Critical
   finding remains and no force-upgrade or untested override is permitted.
 
+## 2026-08-09 Playwright Compatibility Update
+
+- The isolated browser-test dependency is updated from `@playwright/test@1.58.2` to
+  `@playwright/test@1.61.1`, with matching `playwright` and `playwright-core` lock entries.
+- `1.61.1` is the newest tested release that still installs Chromium on the required macOS
+  12.7.6 x86_64 development host. The current `1.62.1` release rejects that platform, so it
+  is intentionally deferred until the development host operating system is upgraded.
+- Local verification passed all 15 wallet-connect and 11 Web3 write-flow browser tests,
+  routing and documentation gates, the static Benefits preflight, 642 contract tests,
+  30 generator tests and 36 SDK tests. Exact-head Linux CI remains mandatory before merge.
+
 ## 2026-08-01 Root Security Patch
 
 - Hardhat was updated from `3.11.1` to `3.12.0`, which replaces vulnerable
