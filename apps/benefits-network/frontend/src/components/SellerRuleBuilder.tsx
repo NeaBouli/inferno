@@ -1,14 +1,15 @@
 'use client';
 
 import { type KeyboardEvent as ReactKeyboardEvent, useEffect, useMemo, useRef, useState } from 'react';
-import { useAccount, useConnect, useDisconnect, useSignMessage } from 'wagmi';
+import { useConnect, useDisconnect, useSignMessage } from 'wagmi';
 import QRCode from 'react-qr-code';
 import { BusinessLogo } from '@/components/BusinessLogo';
 import { SellerCatalogManager } from '@/components/SellerCatalogManager';
 import { SellerRewardStatus } from '@/components/SellerRewardStatus';
 import { useAvailableWalletConnectors } from '@/hooks/useAvailableWalletConnectors';
+import { useHydratedAccount } from '@/hooks/useHydratedAccount';
 import {
-  selectPrimaryWalletConnector,
+  selectPrimaryAvailableWalletConnector,
   walletConnectionErrorMessage,
   walletConnectorLabel,
 } from '@/lib/walletConnectorSelection.mjs';
@@ -171,11 +172,11 @@ function formatSessionHeldIFR(value: string | null) {
 }
 
 export function SellerRuleBuilder() {
-  const { address, isConnected } = useAccount();
+  const { address, isConnected } = useHydratedAccount();
   const { connectors, connectAsync, isPending: connecting } = useConnect();
   const { disconnect } = useDisconnect();
   const { signMessageAsync } = useSignMessage();
-  const { availableConnectors } = useAvailableWalletConnectors(connectors);
+  const { availableConnectors, resolved: connectorsResolved } = useAvailableWalletConnectors(connectors);
   const [businessId, setBusinessId] = useState('');
   const [businessSlugDraft, setBusinessSlugDraft] = useState('ifr-partner-shop');
   const [adminSecret, setAdminSecret] = useState('');
@@ -1466,7 +1467,11 @@ export function SellerRuleBuilder() {
   async function connectSellerWallet() {
     setError('');
     setStatus('');
-    const connector = await selectPrimaryWalletConnector(connectors) as (typeof connectors)[number] | undefined;
+    if (!connectorsResolved) {
+      setError('Wallet providers are still loading. Try again in a moment.');
+      return;
+    }
+    const connector = selectPrimaryAvailableWalletConnector(availableConnectors) as (typeof connectors)[number] | undefined;
     if (!connector) {
       setError('No browser wallet or WalletConnect session is available. Choose Coinbase Wallet below, or open this page inside your wallet app.');
       return;
@@ -1476,10 +1481,13 @@ export function SellerRuleBuilder() {
 
   async function connectSellerConnector(connector: (typeof connectors)[number]) {
     setError('');
-    setStatus('');
+    const label = walletConnectorLabel(connector);
+    setStatus(`Open ${label} and approve the connection to shop.ifrunit.tech.`);
     try {
       await connectAsync({ connector });
+      setStatus(`Connected with ${label}.`);
     } catch (err) {
+      setStatus('');
       setError(walletConnectionErrorMessage(err));
     }
   }
@@ -1731,15 +1739,15 @@ export function SellerRuleBuilder() {
               <button
                 type="button"
                 onClick={connectSellerWallet}
-                disabled={connecting}
+                disabled={connecting || !connectorsResolved || availableConnectors.length === 0}
                 className="rounded-2xl bg-green-300 px-5 py-3 text-sm font-black uppercase tracking-[0.14em] text-stone-950 shadow-xl shadow-green-950/30 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {connecting ? 'Connecting...' : 'Connect wallet'}
               </button>
               {availableConnectors.length > 0 ? (
                 <div className="rounded-xl border border-green-200/20 bg-black/15 p-3">
-                  <p className="text-left text-xs font-bold uppercase tracking-[0.12em] text-green-50">Choose a wallet</p>
-                  <div className="mt-2 grid gap-2 sm:grid-cols-2" aria-label="Choose a seller wallet">
+                  <p className="text-left text-xs font-bold uppercase tracking-[0.12em] text-green-50">Connect with</p>
+                  <div className="mt-2 grid gap-2 sm:grid-cols-2" aria-label="Connect a seller wallet">
                     {availableConnectors.map((availableConnector) => (
                       <button
                         key={availableConnector.uid}

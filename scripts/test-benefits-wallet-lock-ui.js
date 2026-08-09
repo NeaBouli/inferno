@@ -289,8 +289,17 @@ async function run() {
     await page.goto(`${origin}/#customer-wallet`, { waitUntil: 'domcontentloaded' });
     const walletPanel = page.locator('#customer-wallet');
     await walletPanel.getByText('MetaMask provider', { exact: true }).waitFor();
+    const walletControl = walletPanel.locator('[data-wallet-connect-control]');
+    await walletPanel.locator('[data-wallet-connect-control][data-wallet-connectors-ready="true"]').waitFor({ timeout: 10_000 }).catch(async () => {
+      throw new Error(`Wallet connectors did not resolve. State: ${JSON.stringify(await walletControl.evaluate((element) => ({
+        ready: element.getAttribute('data-wallet-connectors-ready'),
+        ids: element.getAttribute('data-wallet-connector-ids'),
+      })))}`);
+    });
     const connectButton = walletPanel.locator('[data-wallet-action="connect"]');
-    await connectButton.click();
+    if (await connectButton.isVisible()) {
+      await connectButton.click();
+    }
     await page.getByRole('button', { name: 'Disconnect', exact: true }).first().waitFor({ timeout: 10_000 }).catch(async () => {
       throw new Error(`Wallet did not connect. Methods: ${JSON.stringify(await page.evaluate(() => window.__ifrWalletLockMethods || []))}`);
     });

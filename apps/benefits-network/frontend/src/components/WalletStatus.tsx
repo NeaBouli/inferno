@@ -2,13 +2,13 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import {
-  useAccount,
   useBalance,
   useReadContract,
   useSwitchChain,
   useWaitForTransactionReceipt,
   useWriteContract,
 } from 'wagmi';
+import { useHydratedAccount } from '@/hooks/useHydratedAccount';
 import { formatEther, formatUnits, parseUnits } from 'viem';
 import { WalletConnectControl } from '@/components/WalletConnectControl';
 import { SwapRiskNotice } from '@/components/SwapRiskNotice';
@@ -77,7 +77,7 @@ function getTier(lockedRaw?: bigint) {
 }
 
 export function WalletStatus() {
-  const { address, chainId, connector, isConnected } = useAccount();
+  const { address, chainId, connector, isConnected } = useHydratedAccount();
   const [lockAmount, setLockAmount] = useState('1000');
   const [lockMessage, setLockMessage] = useState('');
   const [lockError, setLockError] = useState('');

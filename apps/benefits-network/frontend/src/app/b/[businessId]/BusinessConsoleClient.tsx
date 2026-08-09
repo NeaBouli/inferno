@@ -1,16 +1,17 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useAccount, useConnect, useDisconnect, useSignMessage } from 'wagmi';
+import { useConnect, useDisconnect, useSignMessage } from 'wagmi';
 import QRCode from 'react-qr-code';
 import { AppShell } from '@/components/AppShell';
 import { Countdown } from '@/components/Countdown';
 import { StatusBadge } from '@/components/StatusBadge';
 import { SellerCustomerPassScanner } from '@/components/SellerCustomerPassScanner';
 import { useAvailableWalletConnectors } from '@/hooks/useAvailableWalletConnectors';
+import { useHydratedAccount } from '@/hooks/useHydratedAccount';
 import { parseCustomerPassQrPayload } from '@/lib/customerPassLink';
 import {
-  selectPrimaryWalletConnector,
+  selectPrimaryAvailableWalletConnector,
   walletConnectionErrorMessage,
   walletConnectorLabel,
 } from '@/lib/walletConnectorSelection.mjs';
@@ -34,7 +35,7 @@ import { formatProductPrice } from '@/lib/money';
 import { businessPublicReference } from '@/lib/businessSlug';
 
 export function BusinessConsoleClient({ businessId }: { businessId: string }) {
-  const { address, isConnected } = useAccount();
+  const { address, isConnected } = useHydratedAccount();
   const { connectors, connectAsync, isPending: connecting } = useConnect();
   const { disconnect } = useDisconnect();
   const { signMessageAsync } = useSignMessage();
@@ -54,7 +55,7 @@ export function BusinessConsoleClient({ businessId }: { businessId: string }) {
   const [accessStatus, setAccessStatus] = useState('');
   const [loading, setLoading] = useState(false);
   const [businessLoading, setBusinessLoading] = useState(true);
-  const { availableConnectors } = useAvailableWalletConnectors(connectors);
+  const { availableConnectors, resolved: connectorsResolved } = useAvailableWalletConnectors(connectors);
   const isDone = status && ['REDEEMED', 'EXPIRED', 'REJECTED'].includes(status.status);
   const resolvedBusinessId = business?.id || '';
 
@@ -444,7 +445,11 @@ export function BusinessConsoleClient({ businessId }: { businessId: string }) {
 
   async function connectSellerWallet() {
     setError('');
-    const connector = await selectPrimaryWalletConnector(connectors) as (typeof connectors)[number] | undefined;
+    if (!connectorsResolved) {
+      setError('Wallet providers are still loading. Try again in a moment.');
+      return;
+    }
+    const connector = selectPrimaryAvailableWalletConnector(availableConnectors) as (typeof connectors)[number] | undefined;
     if (!connector) {
       setError('No browser wallet or WalletConnect session is available. Choose Coinbase Wallet below, or open this page inside your wallet app.');
       return;
@@ -454,9 +459,13 @@ export function BusinessConsoleClient({ businessId }: { businessId: string }) {
 
   async function connectCheckoutConnector(connector: (typeof connectors)[number]) {
     setError('');
+    const label = walletConnectorLabel(connector);
+    setAccessStatus(`Open ${label} and approve the connection to shop.ifrunit.tech.`);
     try {
       await connectAsync({ connector });
+      setAccessStatus(`Connected with ${label}.`);
     } catch (err) {
+      setAccessStatus('');
       setError(walletConnectionErrorMessage(err));
     }
   }
@@ -783,15 +792,15 @@ export function BusinessConsoleClient({ businessId }: { businessId: string }) {
                   <button
                     type="button"
                     onClick={connectSellerWallet}
-                    disabled={connecting}
+                    disabled={connecting || !connectorsResolved || availableConnectors.length === 0}
                     className="rounded-xl bg-green-300 px-3 py-2 text-xs font-black uppercase tracking-[0.12em] text-stone-950 transition hover:bg-green-200 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     {connecting ? 'Connecting...' : 'Connect'}
                   </button>
                   {availableConnectors.length > 0 ? (
                     <div className="rounded-xl border border-green-200/20 bg-black/15 p-3">
-                      <p className="text-left text-xs font-bold uppercase tracking-[0.12em] text-green-50">Choose a wallet</p>
-                      <div className="mt-2 grid gap-2 sm:grid-cols-2" aria-label="Choose a checkout wallet">
+                      <p className="text-left text-xs font-bold uppercase tracking-[0.12em] text-green-50">Connect with</p>
+                      <div className="mt-2 grid gap-2 sm:grid-cols-2" aria-label="Connect a checkout wallet">
                         {availableConnectors.map((availableConnector) => (
                           <button
                             key={availableConnector.uid}

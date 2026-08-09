@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useAccount, useSignMessage } from 'wagmi';
+import { useSignMessage } from 'wagmi';
+import { useHydratedAccount } from '@/hooks/useHydratedAccount';
 import {
   SellerAuth,
   SellerRewardStatus as SellerRewardStatusData,
@@ -23,7 +24,7 @@ function shortAddress(value: string | null | undefined) {
 }
 
 export function SellerRewardStatus({ businessId }: { businessId: string }) {
-  const { address, isConnected } = useAccount();
+  const { address, isConnected } = useHydratedAccount();
   const { signMessageAsync } = useSignMessage();
   const [data, setData] = useState<SellerRewardStatusData | null>(null);
   const [loading, setLoading] = useState(false);

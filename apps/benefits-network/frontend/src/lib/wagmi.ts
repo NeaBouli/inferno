@@ -34,6 +34,7 @@ const connectors = [
 export const wagmiConfig = createConfig({
   chains,
   connectors,
+  ssr: true,
   transports: {
     [mainnet.id]: http(),
     [sepolia.id]: http(),

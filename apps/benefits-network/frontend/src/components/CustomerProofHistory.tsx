@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { useAccount, useSignMessage } from 'wagmi';
+import { useSignMessage } from 'wagmi';
+import { useHydratedAccount } from '@/hooks/useHydratedAccount';
 import {
   CustomerProofHistoryItem,
   clearCustomerProofHistory,
@@ -34,7 +35,7 @@ function formatDate(value: string) {
 }
 
 export function CustomerProofHistory() {
-  const { address, isConnected } = useAccount();
+  const { address, isConnected } = useHydratedAccount();
   const { signMessageAsync } = useSignMessage();
   const [items, setItems] = useState<CustomerProofHistoryItem[]>([]);
   const [walletItems, setWalletItems] = useState<CustomerHistoryItem[]>([]);
