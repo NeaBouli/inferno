@@ -97,7 +97,7 @@ jobs:
       DATABASE_URL: file:./test.db
       TEST_REDIS_URL: redis://127.0.0.1:6379
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: actions/setup-node@v5
         with:
           node-version: '22'
@@ -145,7 +145,7 @@ jobs:
       run:
         working-directory: apps/benefits-network/frontend
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: actions/setup-node@v5
         with:
           node-version: '22'
@@ -185,7 +185,7 @@ jobs:
   test-release-evidence-static:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: actions/setup-node@v5
         with:
           node-version: '22'
@@ -194,7 +194,7 @@ jobs:
   test-customer-pass-ui:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: actions/setup-node@v5
         with:
           node-version: '22'
