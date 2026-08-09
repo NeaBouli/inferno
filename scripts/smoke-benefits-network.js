@@ -949,6 +949,7 @@ async function verifyRuleTemplateAuthorization() {
             rulesCount: 0,
             productsCount: 1,
           }],
+          inactiveBusinesses: [],
         }),
       });
       return;
@@ -1393,6 +1394,9 @@ async function verifyPage(contextOptions, label) {
   });
   page.on('response', (response) => {
     const status = response.status();
+    if (status === 403) {
+      errors.push(`HTTP ${status}: ${response.url()}`);
+    }
     if (status >= 500 && !response.url().includes('query=force-error')) {
       errors.push(`HTTP ${status}: ${response.url()}`);
     }
@@ -1564,7 +1568,7 @@ async function verifyPage(contextOptions, label) {
     await expectText(page, 'Wallet entry');
     await expectText(page, 'Wallet diagnostics');
     await expectText(page, 'No injected provider');
-    await expectText(page, 'WalletConnect modal is not configured yet');
+    await expectText(page, 'Multi-wallet ready');
     await expectText(page, 'Copy evidence');
     await expectText(page, 'Share evidence');
     await expectText(page, 'Copy link');
@@ -1786,7 +1790,7 @@ async function verifyPage(contextOptions, label) {
     await page
       .getByPlaceholder('Paste session ID, customer link or checkout receipt')
       .fill('smoke-session-id');
-    await expectText(page, 'Load business');
+    await expectText(page, 'Retry seller profile');
     await expectText(page, 'Seller profile loaded');
     await expectText(page, 'Copy customer link');
     await expectText(page, 'Checkout receipt');
@@ -1877,7 +1881,7 @@ async function verifyPage(contextOptions, label) {
     await expectText(page, 'Proof readiness');
     await expectText(page, 'Load verification');
     await expectText(page, 'QR session loaded');
-    await expectText(page, 'Refresh status');
+    await expectText(page, 'Retry loading verification');
     await expectText(page, 'Customer recovery');
     await expectText(page, 'Need more locked IFR?');
     await expectText(page, 'Customer proof receipt');
