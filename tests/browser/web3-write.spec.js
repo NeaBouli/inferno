@@ -86,15 +86,25 @@ async function installWallet(context, options = {}) {
     const listeners = new Map();
     const transactions = new Map();
     let activeChainId = initialChainId;
+    let activeAccount = account;
+    const requestCounts = {};
 
     Object.defineProperty(window, "__web3TestChainId", { get: () => activeChainId });
+    Object.defineProperty(window, "__web3RequestCounts", { value: requestCounts });
+    Object.defineProperty(window, "__web3Emit", {
+      value: (event, payload) => {
+        if (event === "accountsChanged" && payload && payload[0]) activeAccount = payload[0];
+        for (const listener of listeners.get(event) || []) listener(payload);
+      },
+    });
     Object.defineProperty(window, "__web3WatchAssets", { value: [] });
     Object.defineProperty(window, "ethereum", {
       configurable: true,
       value: {
         isMetaMask: true,
         request: async ({ method, params }) => {
-          if (method === "eth_requestAccounts" || method === "eth_accounts") return [account];
+          requestCounts[method] = (requestCounts[method] || 0) + 1;
+          if (method === "eth_requestAccounts" || method === "eth_accounts") return [activeAccount];
           if (method === "eth_chainId") return activeChainId;
           if (method === "net_version") return String(Number.parseInt(activeChainId, 16));
           if (method === "wallet_switchEthereumChain") {
@@ -262,6 +272,38 @@ test("zero-padded hexadecimal Mainnet chain id connects without a false network 
   await page.goto("/web3/", { waitUntil: "domcontentloaded" });
   await connect(page);
   expect(await page.evaluate(() => window.IFRWallet.isConnected())).toBe(true);
+  expect(writes).toEqual([]);
+  expect(pageErrors).toEqual([]);
+  await context.close();
+});
+
+test("Web3 wallet manager shows connector details, tracks account changes and disconnects", async ({ browser }) => {
+  const { context, page, writes, pageErrors } = await preparePage(browser);
+  await page.goto("/web3/", { waitUntil: "domcontentloaded" });
+  await connect(page);
+
+  await expect(page.locator("[data-wallet-address]")).toHaveText("0x3333...3333");
+  await expect(page.locator("[data-wallet-address]")).toHaveAttribute("title", ACCOUNT);
+  await expect(page.locator("[data-wallet-connector]")).toHaveText("MetaMask");
+  await expect(page.locator("[data-wallet-network]")).toHaveText("Ethereum Mainnet");
+  await expect(page.locator("[data-wallet-disconnect]")).toBeVisible();
+  await expect(page.locator("[data-wallet-copy-address]")).toBeVisible();
+
+  const requestsBefore = await page.evaluate(() => window.__web3RequestCounts.eth_requestAccounts);
+  await page.locator("[data-wallet-connect]").first().click();
+  expect(await page.evaluate(() => window.__web3RequestCounts.eth_requestAccounts)).toBe(requestsBefore);
+
+  const nextAccount = "0x4444444444444444444444444444444444444444";
+  await page.evaluate((address) => window.__web3Emit("accountsChanged", [address]), nextAccount);
+  await expect(page.locator("[data-wallet-address]")).toHaveText("0x4444...4444");
+  await expect(page.locator("[data-wallet-address]")).toHaveAttribute("title", nextAccount);
+
+  await page.locator("[data-wallet-disconnect]").click();
+  await expect(page.locator("[data-wallet-address]")).toHaveText("Not connected");
+  await expect(page.locator("[data-wallet-state]")).toHaveText("Disconnected");
+  await expect(page.locator("[data-wallet-disconnect]")).toBeHidden();
+  await expect(page.locator("[data-wallet-connect]").first()).toHaveText("Connect Wallet");
+  expect(await page.evaluate(() => window.IFRWallet.isConnected())).toBe(false);
   expect(writes).toEqual([]);
   expect(pageErrors).toEqual([]);
   await context.close();

@@ -520,6 +520,16 @@
       word-break: break-word;
     }
 
+    .wallet-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      margin-top: 7px;
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 11px;
+    }
+
     .status-note {
       align-self: end;
       color: var(--mint);
@@ -536,6 +546,10 @@
 
     .panel-actions .btn {
       width: 100%;
+    }
+
+    .panel-actions [hidden] {
+      display: none;
     }
 
     .panel-foot {
@@ -1559,6 +1573,11 @@
               <div>
                 <p class="status-label">Wallet</p>
                 <div class="status-value" data-wallet-address>Not connected</div>
+                <div class="wallet-meta" aria-live="polite">
+                  <span data-wallet-connector>No connector</span>
+                  <span aria-hidden="true">&middot;</span>
+                  <span data-wallet-network>Ethereum Mainnet</span>
+                </div>
               </div>
               <span class="status-note" data-wallet-state>Ready</span>
             </div>
@@ -1599,6 +1618,8 @@
             <button class="btn btn-mint" type="button" data-open-lending>Create offer</button>
             <button class="btn btn-quiet" type="button" data-open-borrow>Borrow IFR</button>
             <button class="btn btn-quiet" type="button" data-add-token>Add IFR to wallet</button>
+            <button class="btn btn-quiet" type="button" data-wallet-copy-address hidden>Copy wallet address</button>
+            <button class="btn btn-quiet" type="button" data-wallet-disconnect hidden>Disconnect wallet</button>
             <a class="btn btn-quiet" href="https://shop.ifrunit.tech/">Use IFR Benefits</a>
             <a class="btn btn-quiet" href="https://www.geckoterminal.com/eth/pools/0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0" target="_blank" rel="noopener">Track pool</a>
           </div>
@@ -2178,6 +2199,10 @@
       const addTokenButton = document.querySelector("[data-add-token]");
       const walletAddress = document.querySelector("[data-wallet-address]");
       const walletState = document.querySelector("[data-wallet-state]");
+      const walletConnector = document.querySelector("[data-wallet-connector]");
+      const walletNetwork = document.querySelector("[data-wallet-network]");
+      const walletCopyAddress = document.querySelector("[data-wallet-copy-address]");
+      const walletDisconnect = document.querySelector("[data-wallet-disconnect]");
       const ifrBalance = document.querySelector("[data-ifr-balance]");
       const accessLockBalance = document.querySelector("[data-access-lock-balance]");
       const accessLockNote = document.querySelector("[data-access-lock-note]");
@@ -2331,10 +2356,13 @@
       }
 
       function setWalletLoading(isLoading) {
+        const connected = Boolean(window.IFRWallet && IFRWallet.isConnected());
         connectButtons.forEach((button) => {
           button.disabled = isLoading;
-          button.textContent = isLoading ? "Connecting..." : (window.IFRWallet && IFRWallet.isConnected() ? "Connected" : "Connect Wallet");
+          button.textContent = isLoading ? "Connecting..." : (connected ? "Wallet connected" : "Connect Wallet");
         });
+        if (walletCopyAddress) walletCopyAddress.hidden = !connected;
+        if (walletDisconnect) walletDisconnect.hidden = !connected;
       }
 
       function setWalletDialogLinks(uri) {
@@ -3203,10 +3231,13 @@
       }
 
       function renderState(state) {
-        if (!state) return;
+        state = state || {};
         if (state.address) {
           walletAddress.textContent = shortAddress(state.address);
+          walletAddress.title = state.address;
           walletState.textContent = "Connected";
+          walletConnector.textContent = (window.IFRWallet && IFRWallet.getConnectionLabel && IFRWallet.getConnectionLabel()) || "Browser wallet";
+          walletNetwork.textContent = "Ethereum Mainnet";
           ifrBalance.textContent = state.ifrBalanceFormatted ? `${state.ifrBalanceFormatted} IFR` : "0 IFR";
           accessLockBalance.textContent = state.lockedFormatted ? `${state.lockedFormatted} IFR` : "0 IFR";
           accessLockNote.textContent = state.isLocked1000 ? "Premium ready" : "Lock needed";
@@ -3219,7 +3250,10 @@
           loadLendingSummary(state.address).catch(() => null);
         } else {
           walletAddress.textContent = "Not connected";
+          walletAddress.removeAttribute("title");
           walletState.textContent = "Ready";
+          walletConnector.textContent = "No connector";
+          walletNetwork.textContent = "Ethereum Mainnet";
           ifrBalance.textContent = "Connect";
           accessLockBalance.textContent = "Connect";
           accessLockNote.textContent = "Access check";
@@ -3227,6 +3261,32 @@
           commitmentNote.textContent = "Tranches";
           lendingSummary.textContent = "Connect";
           lendingSummaryNote.textContent = "Offers";
+        }
+        setWalletLoading(false);
+      }
+
+      let walletLoadSequence = 0;
+
+      function isCurrentWalletState(state) {
+        const currentAddress = window.IFRWallet && IFRWallet.getAddress && IFRWallet.getAddress();
+        return Boolean(
+          state &&
+          currentAddress &&
+          IFRWallet.isConnected() &&
+          state.address &&
+          state.address.toLowerCase() === currentAddress.toLowerCase()
+        );
+      }
+
+      async function loadConnectedWallet(address) {
+        const loadSequence = ++walletLoadSequence;
+        if (!address || !window.IFRState) {
+          renderState(null);
+          return;
+        }
+        const state = await IFRState.load(address);
+        if (loadSequence === walletLoadSequence && isCurrentWalletState(state)) {
+          renderState(state);
         }
       }
 
@@ -3237,11 +3297,10 @@
         }
         try {
           const restored = await IFRWallet.autoReconnect();
-          if (restored) {
-            const state = await IFRState.load(IFRWallet.getAddress());
-            renderState(state);
-          }
-          IFRState.on("stateLoaded", renderState);
+          if (!restored) renderState(null);
+          IFRState.on("stateLoaded", (state) => {
+            if (isCurrentWalletState(state)) renderState(state);
+          });
         } catch (error) {
           walletState.textContent = "Read-only";
         }
@@ -3250,6 +3309,11 @@
       connectButtons.forEach((button) => {
         button.addEventListener("click", async () => {
           if (!window.IFRWallet || !window.IFRState) return;
+          if (IFRWallet.isConnected()) {
+            document.querySelector("#access").scrollIntoView({ behavior: "smooth", block: "center" });
+            if (walletDisconnect) walletDisconnect.focus({ preventScroll: true });
+            return;
+          }
           const isMobileConnect = window.IFRWallet.isMobileOrTablet && IFRWallet.isMobileOrTablet();
           if (isMobileConnect) openWalletDialog(IFRWallet.getWalletConnectUri && IFRWallet.getWalletConnectUri());
           setWalletLoading(true);
@@ -3261,9 +3325,7 @@
             }
           }, isMobileConnect ? 45000 : 15000);
           try {
-            const address = await IFRWallet.connect();
-            const state = await IFRState.load(address);
-            renderState(state);
+            await IFRWallet.connect();
             closeWalletDialog();
           } catch (error) {
             if (error && error.code === "WRONG_NETWORK") {
@@ -3280,6 +3342,25 @@
             setWalletLoading(false);
           }
         });
+      });
+
+      walletCopyAddress.addEventListener("click", async () => {
+        const address = window.IFRWallet && IFRWallet.getAddress && IFRWallet.getAddress();
+        if (!address || !navigator.clipboard) return;
+        try {
+          await navigator.clipboard.writeText(address);
+          walletState.textContent = "Address copied";
+        } catch (_) {
+          walletState.textContent = "Copy failed";
+        }
+      });
+
+      walletDisconnect.addEventListener("click", () => {
+        if (!window.IFRWallet) return;
+        walletLoadSequence += 1;
+        IFRWallet.disconnect();
+        renderState(null);
+        walletState.textContent = "Disconnected";
       });
 
       addTokenButton.addEventListener("click", async () => {
@@ -3687,7 +3768,18 @@
             openWalletDialog(uri);
           }
         });
-        IFRWallet.on("connected", closeWalletDialog);
+        IFRWallet.on("connected", (address) => {
+          closeWalletDialog();
+          loadConnectedWallet(address).catch(() => {
+            walletState.textContent = "Connected · status unavailable";
+          });
+        });
+        IFRWallet.on("accountChanged", (address) => {
+          loadConnectedWallet(address).catch(() => {
+            walletState.textContent = "Account changed · refresh failed";
+          });
+        });
+        IFRWallet.on("disconnected", () => renderState(null));
       }
 
       if ("serviceWorker" in navigator) {

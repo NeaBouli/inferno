@@ -55,6 +55,7 @@ window.IFRWallet = (function() {
   var _wcProvider = null;       // WalletConnect provider instance
   var _wcLoading = null;        // promise guard
   var _wcUri = null;
+  var _connectionLabel = null;
 
   // ── Mobile / Tablet Detection ─────────────────────
   function _isMobile() {
@@ -149,12 +150,38 @@ window.IFRWallet = (function() {
   }
 
   // ── Injected Wallet Detection (EIP-1193 / EIP-5749) ─
+  function _isMetaMaskProvider(provider) {
+    return Boolean(
+      provider &&
+      provider.isMetaMask &&
+      !provider.isExodus &&
+      !provider.isBraveWallet &&
+      !provider.isPhantom &&
+      !provider.isRabby &&
+      !provider.isOkxWallet &&
+      !provider.isOKExWallet
+    );
+  }
+
+  function _getConnectionLabel(provider) {
+    if (!provider) return null;
+    if (provider === _wcProvider) return "WalletConnect";
+    if (_isMetaMaskProvider(provider)) return "MetaMask";
+    if (provider.isCoinbaseWallet) return "Coinbase Wallet";
+    if (provider.isTrust || provider.isTrustWallet) return "Trust Wallet";
+    if (provider.isOkxWallet || provider.isOKExWallet) return "OKX Wallet";
+    if (provider.isPhantom) return "Phantom";
+    if (provider.isRabby) return "Rabby Wallet";
+    if (provider.isBraveWallet) return "Brave Wallet";
+    return "Browser wallet";
+  }
+
   function _getMetaMaskProvider() {
     if (_ethereumProvider) return _ethereumProvider;
 
     if (window.ethereum && window.ethereum.providers && Array.isArray(window.ethereum.providers)) {
       _ethereumProvider = window.ethereum.providers.find(function(p) {
-        return p.isMetaMask;
+        return _isMetaMaskProvider(p);
       }) || window.ethereum.providers[0] || window.ethereum;
     } else if (window.ethereum && window.ethereum.isMetaMask) {
       _ethereumProvider = window.ethereum;
@@ -265,6 +292,7 @@ window.IFRWallet = (function() {
     _provider = new ethers.providers.Web3Provider(eth, "any");
     _signer = _provider.getSigner();
     _address = accounts[0];
+    _connectionLabel = _getConnectionLabel(eth);
 
     localStorage.setItem(SESSION_KEY, _address);
     _attachListeners(eth);
@@ -368,6 +396,7 @@ window.IFRWallet = (function() {
     _signer = null;
     _address = null;
     _ethereumProvider = null;
+    _connectionLabel = null;
     localStorage.removeItem(SESSION_KEY);
     _emit("disconnected", null);
   }
@@ -470,6 +499,7 @@ window.IFRWallet = (function() {
   // ── Getters ───────────────────────────────────────
   function isConnected() { return _address !== null; }
   function getAddress() { return _address; }
+  function getConnectionLabel() { return _connectionLabel; }
   function getSigner() { return _signer; }
   function getShortAddress(addr) {
     var a = addr || _address;
@@ -522,7 +552,7 @@ window.IFRWallet = (function() {
   return {
     connect: connect, disconnect: disconnect, autoReconnect: autoReconnect,
     isConnected: isConnected, getAddress: getAddress, getShortAddress: getShortAddress,
-    getSigner: getSigner, getProvider: getProvider,
+    getSigner: getSigner, getProvider: getProvider, getConnectionLabel: getConnectionLabel,
     ensureMainnet: ensureMainnet,
     addToken: addIFRToken,
     on: on, off: off, getDeepLink: getDeepLink, isMobile: isMobile,

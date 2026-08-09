@@ -1,12 +1,13 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useAccount, useChainId, useConnect, useDisconnect } from 'wagmi';
+import { useChainId, useConnect, useDisconnect } from 'wagmi';
+import { useHydratedAccount } from '@/hooks/useHydratedAccount';
 import { getMobileWalletLaunches } from '@/lib/walletLaunch';
 import { hasWalletConnectProjectId } from '@/lib/wagmi';
 import { useAvailableWalletConnectors } from '@/hooks/useAvailableWalletConnectors';
 import {
-  selectPrimaryWalletConnector,
+  selectPrimaryAvailableWalletConnector,
   walletConnectionErrorMessage,
   walletConnectorLabel,
 } from '@/lib/walletConnectorSelection.mjs';
@@ -61,7 +62,7 @@ const DEFAULT_WALLET_ENVIRONMENT = {
 };
 
 export function WalletConnectControl() {
-  const { address, connector, isConnected } = useAccount();
+  const { address, connector, isConnected } = useHydratedAccount();
   const chainId = useChainId();
   const { connectors, connectAsync, isPending } = useConnect();
   const { disconnect } = useDisconnect();
@@ -82,7 +83,11 @@ export function WalletConnectControl() {
 
   async function connectPrimaryWallet() {
     setConnectionStatus('');
-    const connector = await selectPrimaryWalletConnector(connectors) as (typeof connectors)[number] | undefined;
+    if (!connectorsResolved) {
+      setConnectionStatus('Wallet providers are still loading. Try again in a moment.');
+      return;
+    }
+    const connector = selectPrimaryAvailableWalletConnector(availableConnectors) as (typeof connectors)[number] | undefined;
     if (!connector) {
       setConnectionStatus('No browser wallet or WalletConnect session is available. Choose Coinbase Wallet below, or open this page inside your wallet app.');
       return;
@@ -91,9 +96,11 @@ export function WalletConnectControl() {
   }
 
   async function connectWallet(targetConnector: (typeof connectors)[number]) {
-    setConnectionStatus('');
+    const label = walletConnectorLabel(targetConnector);
+    setConnectionStatus(`Open ${label} and approve the connection to shop.ifrunit.tech.`);
     try {
       await connectAsync({ connector: targetConnector });
+      setConnectionStatus(`Connected with ${label}.`);
     } catch (err) {
       setConnectionStatus(walletConnectionErrorMessage(err));
     }
@@ -231,7 +238,10 @@ export function WalletConnectControl() {
 
       {!isConnected ? (
         <div className="grid gap-3 rounded-2xl border border-white/10 bg-black/20 p-3">
-          <div className="grid grid-cols-2 gap-2 text-[0.68rem] font-black uppercase tracking-[0.12em] text-stone-300 sm:grid-cols-4">
+          <p className="text-xs font-black uppercase tracking-[0.16em] text-stone-400">
+            Supported wallets
+          </p>
+          <div aria-label="Wallets supported through browser providers or WalletConnect" className="grid grid-cols-2 gap-2 text-[0.68rem] font-black uppercase tracking-[0.12em] text-stone-300 sm:grid-cols-4">
             {['MetaMask', 'Coinbase', 'Trust', 'OKX', 'Rainbow', 'Phantom'].map((wallet) => (
               <span key={wallet} className="rounded-full border border-white/10 bg-white/[0.06] px-3 py-2 text-center">
                 {wallet}
@@ -281,9 +291,9 @@ export function WalletConnectControl() {
           {availableConnectors.length > 0 ? (
             <div className="rounded-xl border border-orange-200/15 bg-white/[0.04] p-3">
               <p className="text-xs font-black uppercase tracking-[0.12em] text-orange-100">
-                Choose a wallet
+                Connect with
               </p>
-              <div className="mt-3 grid gap-2 sm:grid-cols-2" aria-label="Choose a wallet">
+              <div className="mt-3 grid gap-2 sm:grid-cols-2" aria-label="Connect with a wallet">
                 {availableConnectors.map((availableConnector) => (
                   <button
                     key={availableConnector.uid}
@@ -324,7 +334,7 @@ export function WalletConnectControl() {
           type="button"
           data-wallet-action="connect"
           onClick={connectPrimaryWallet}
-          disabled={isPending || connectors.length === 0}
+          disabled={isPending || !connectorsResolved || availableConnectors.length === 0}
           className="rounded-2xl bg-orange-300 px-5 py-3 text-sm font-black uppercase tracking-[0.14em] text-stone-950 shadow-xl shadow-orange-950/30 transition hover:bg-orange-200 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {isPending ? 'Connecting...' : 'Connect wallet'}

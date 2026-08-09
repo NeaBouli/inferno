@@ -86,6 +86,14 @@ export async function selectBrowserWalletConnector(connectors) {
  */
 export async function selectPrimaryWalletConnector(connectors) {
   const available = await listAvailableWalletConnectors(connectors);
+  return selectPrimaryAvailableWalletConnector(available);
+}
+
+/**
+ * Select from connectors that were already resolved for this browser.
+ * This avoids a second provider scan between rendering and the user click.
+ */
+export function selectPrimaryAvailableWalletConnector(available) {
   return available.find(isInjectedWalletConnector) ||
     available.find((connector) => connector.id === 'walletConnect' || connector.type === 'walletConnect');
 }
@@ -95,6 +103,7 @@ export async function selectPrimaryWalletConnector(connectors) {
  */
 export function walletConnectorLabel(connector) {
   if (connector.id === 'injected') return 'Browser wallet';
+  if (connector.id === 'metaMask' || connector.id === 'io.metamask') return 'MetaMask';
   if (connector.id === 'coinbaseWalletSDK') return 'Coinbase Wallet';
   if (connector.id === 'walletConnect') return 'WalletConnect';
   return connector.name;
@@ -105,6 +114,12 @@ export function walletConnectorLabel(connector) {
  */
 export function walletConnectionErrorMessage(error) {
   const message = error instanceof Error ? error.message : '';
+  if (/already pending|already processing|resource unavailable|-32002/i.test(message)) {
+    return 'Your wallet already has a connection request open. Open the wallet, finish or reject that request, then try again.';
+  }
+  if (/chain|network|switch/i.test(message) && /rejected|denied|cancel/i.test(message)) {
+    return 'Ethereum Mainnet was not approved in the wallet. Switch to Ethereum Mainnet and try again.';
+  }
   if (/rejected|denied|cancel/i.test(message)) return 'Connection cancelled in the wallet.';
   if (/provider|not found|unavailable|unsupported/i.test(message)) {
     return 'No compatible wallet provider was found. Open this page in your wallet app browser or choose another wallet connection.';

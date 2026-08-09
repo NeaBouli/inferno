@@ -384,7 +384,7 @@ async function run() {
       'a browser without an injected provider must not offer the unusable injected connector',
     );
     assert.equal(
-      await walletControl.getByText('Choose a wallet', { exact: true }).count(),
+      await walletControl.getByText('Connect with', { exact: true }).count(),
       1,
       'a browser without an injected provider must expose its explicit universal wallet choice',
     );
@@ -486,7 +486,7 @@ async function run() {
       true,
       'seller no-provider recovery must not remain stuck in Connecting state',
     );
-    await page.getByText('Choose a wallet', { exact: true }).waitFor();
+    await page.getByText('Connect with', { exact: true }).waitFor();
     assert.equal(
       await page.getByLabel('Accepted lock source', { exact: true }).count(),
       0,
