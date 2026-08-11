@@ -2616,6 +2616,7 @@
         if (!address || !window.ethers || !window.IFRWallet || !IFRWallet.getProvider()) return;
         const { ifrLock } = getContracts(IFRWallet.getProvider());
         const locked = await ifrLock.lockedBalance(address);
+        if (!isCurrentWalletAddress(address)) return;
         accessLockBalance.textContent = formatIFR(locked);
         accessLockNote.textContent = locked.gte(ethers.utils.parseUnits("1000", IFR_DECIMALS)) ? "Premium ready" : "Lock needed";
       }
@@ -2627,6 +2628,7 @@
           commitment.lockedBalance(address),
           commitment.getTrancheCount(address)
         ]);
+        if (!isCurrentWalletAddress(address)) return;
         commitmentBalance.textContent = formatIFR(locked);
         commitmentNote.textContent = count.toNumber() ? `${count.toNumber()} tranches` : "No tranches";
       }
@@ -2664,6 +2666,7 @@
           );
         }
         await Promise.all(loanReads);
+        if (!isCurrentWalletAddress(address)) return;
 
         if (borrowed.gt(0)) {
           lendingSummary.textContent = `${formatIFRCompact(borrowed)} borrowed`;
@@ -3266,27 +3269,75 @@
       }
 
       let walletLoadSequence = 0;
+      let walletLoadingAddress = null;
 
-      function isCurrentWalletState(state) {
+      function isCurrentWalletAddress(address) {
         const currentAddress = window.IFRWallet && IFRWallet.getAddress && IFRWallet.getAddress();
         return Boolean(
-          state &&
+          address &&
           currentAddress &&
           IFRWallet.isConnected() &&
-          state.address &&
-          state.address.toLowerCase() === currentAddress.toLowerCase()
+          address.toLowerCase() === currentAddress.toLowerCase()
         );
+      }
+
+      function isCurrentWalletState(state) {
+        return Boolean(
+          state &&
+          state.address &&
+          isCurrentWalletAddress(state.address)
+        );
+      }
+
+      function hasCompleteWalletState(state) {
+        return Boolean(
+          state &&
+          state.ifrBalanceFormatted != null &&
+          state.lockedFormatted != null
+        );
+      }
+
+      function renderWalletLoadState(address, status, value) {
+        walletAddress.textContent = shortAddress(address);
+        walletAddress.title = address;
+        walletState.textContent = status;
+        walletConnector.textContent = (window.IFRWallet && IFRWallet.getConnectionLabel && IFRWallet.getConnectionLabel()) || "Browser wallet";
+        walletNetwork.textContent = "Ethereum Mainnet";
+        ifrBalance.textContent = value;
+        accessLockBalance.textContent = value;
+        accessLockNote.textContent = "Access check";
+        commitmentBalance.textContent = value;
+        commitmentNote.textContent = "Tranches";
+        lendingSummary.textContent = value;
+        lendingSummaryNote.textContent = "Offers";
+        setWalletLoading(false);
       }
 
       async function loadConnectedWallet(address) {
         const loadSequence = ++walletLoadSequence;
         if (!address || !window.IFRState) {
+          walletLoadingAddress = null;
           renderState(null);
           return;
         }
-        const state = await IFRState.load(address);
-        if (loadSequence === walletLoadSequence && isCurrentWalletState(state)) {
-          renderState(state);
+        walletLoadingAddress = address.toLowerCase();
+        renderWalletLoadState(address, "Loading wallet", "Loading");
+        try {
+          const state = await IFRState.load(address);
+          if (loadSequence === walletLoadSequence && isCurrentWalletState(state)) {
+            walletLoadingAddress = null;
+            if (hasCompleteWalletState(state)) {
+              renderState(state);
+            } else {
+              renderWalletLoadState(address, "Connected · status unavailable", "Unavailable");
+            }
+          }
+        } catch (error) {
+          if (loadSequence === walletLoadSequence && isCurrentWalletAddress(address)) {
+            walletLoadingAddress = null;
+            renderWalletLoadState(address, "Connected · status unavailable", "Unavailable");
+          }
+          throw error;
         }
       }
 
@@ -3299,7 +3350,14 @@
           const restored = await IFRWallet.autoReconnect();
           if (!restored) renderState(null);
           IFRState.on("stateLoaded", (state) => {
-            if (isCurrentWalletState(state)) renderState(state);
+            const stateAddress = state && state.address && state.address.toLowerCase();
+            if (stateAddress && stateAddress === walletLoadingAddress) return;
+            if (!isCurrentWalletState(state)) return;
+            if (hasCompleteWalletState(state)) {
+              renderState(state);
+            } else {
+              renderWalletLoadState(state.address, "Connected · status unavailable", "Unavailable");
+            }
           });
         } catch (error) {
           walletState.textContent = "Read-only";
@@ -3358,6 +3416,7 @@
       walletDisconnect.addEventListener("click", () => {
         if (!window.IFRWallet) return;
         walletLoadSequence += 1;
+        walletLoadingAddress = null;
         IFRWallet.disconnect();
         renderState(null);
         walletState.textContent = "Disconnected";
@@ -3770,16 +3829,16 @@
         });
         IFRWallet.on("connected", (address) => {
           closeWalletDialog();
-          loadConnectedWallet(address).catch(() => {
-            walletState.textContent = "Connected · status unavailable";
-          });
+          loadConnectedWallet(address).catch(() => null);
         });
         IFRWallet.on("accountChanged", (address) => {
-          loadConnectedWallet(address).catch(() => {
-            walletState.textContent = "Account changed · refresh failed";
-          });
+          loadConnectedWallet(address).catch(() => null);
         });
-        IFRWallet.on("disconnected", () => renderState(null));
+        IFRWallet.on("disconnected", () => {
+          walletLoadSequence += 1;
+          walletLoadingAddress = null;
+          renderState(null);
+        });
       }
 
       if ("serviceWorker" in navigator) {

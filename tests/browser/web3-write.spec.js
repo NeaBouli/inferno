@@ -309,6 +309,35 @@ test("Web3 wallet manager shows connector details, tracks account changes and di
   await context.close();
 });
 
+test("failed account refresh clears the previous wallet data", async ({ browser }) => {
+  const { context, page, writes, pageErrors } = await preparePage(browser);
+  await page.goto("/web3/", { waitUntil: "domcontentloaded" });
+  await connect(page);
+  await expect(page.locator("[data-ifr-balance]")).toContainText("IFR");
+
+  const nextAccount = "0x5555555555555555555555555555555555555555";
+  await page.evaluate((address) => {
+    const originalLoad = window.IFRState.load.bind(window.IFRState);
+    window.IFRState.load = (requestedAddress) => (
+      requestedAddress.toLowerCase() === address.toLowerCase()
+        ? Promise.reject(new Error("Test-only account refresh failure"))
+        : originalLoad(requestedAddress)
+    );
+    window.__web3Emit("accountsChanged", [address]);
+  }, nextAccount);
+
+  await expect(page.locator("[data-wallet-address]")).toHaveText("0x5555...5555");
+  await expect(page.locator("[data-wallet-address]")).toHaveAttribute("title", nextAccount);
+  await expect(page.locator("[data-wallet-state]")).toHaveText("Connected · status unavailable");
+  await expect(page.locator("[data-ifr-balance]")).toHaveText("Unavailable");
+  await expect(page.locator("[data-access-lock-balance]")).toHaveText("Unavailable");
+  await expect(page.locator("[data-commitment-balance]")).toHaveText("Unavailable");
+  await expect(page.locator("[data-lending-summary]")).toHaveText("Unavailable");
+  expect(writes).toEqual([]);
+  expect(pageErrors).toEqual([]);
+  await context.close();
+});
+
 test("persisted WalletConnect wrong-network recovery fails closed without an unhandled rejection", async ({ browser }) => {
   const context = await browser.newContext({ serviceWorkers: "block" });
   const pageErrors = [];
@@ -512,9 +541,11 @@ test("Android 9 stays in browser mode instead of launching an incompatible WebAP
 
 test("Web3 service worker bounds offline navigation before using the cache", () => {
   const source = readFileSync("docs/web3-sw.js", "utf8");
-  expect(source).toContain('const CACHE_NAME = "ifr-web3-v9"');
+  expect(source).toContain('const CACHE_NAME = "ifr-web3-v10"');
   expect(source).toContain("const NAVIGATION_TIMEOUT_MS = 5000");
   expect(source).toContain("fetchNavigation(request)");
+  expect(source).toContain("if (response.ok)");
+  expect(source).toContain("event.waitUntil(navigationResponse");
 });
 
 test("Web3 app shell reloads from the service-worker cache while offline", async ({ browser }) => {
