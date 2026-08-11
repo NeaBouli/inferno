@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 const assert = require('node:assert/strict');
-const { spawnSync } = require('node:child_process');
+const { spawn, spawnSync } = require('node:child_process');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
@@ -42,7 +42,22 @@ function evidence(result, evidenceSource = 'physical-device') {
   };
 }
 
-try {
+function recordAsync(checklistPath, args) {
+  return new Promise((resolve) => {
+    const child = spawn(process.execPath, [recorder, ...args], {
+      cwd: root,
+      env: { ...process.env, BENEFITS_DEVICE_CHECKLIST_PATH: checklistPath },
+    });
+    let stdout = '';
+    let stderr = '';
+    child.stdout.on('data', (chunk) => { stdout += chunk; });
+    child.stderr.on('data', (chunk) => { stderr += chunk; });
+    child.on('close', (status) => resolve({ status, stdout, stderr }));
+  });
+}
+
+async function main() {
+  try {
   assert.equal(validate(structuredClone(source)).status, 0, 'current device checklist must validate');
 
   const historicalEvidencePath = path.join(tempDir, 'historical-evidence.json');
@@ -222,7 +237,40 @@ try {
     });
   }, 'status must be complete');
 
+  const concurrentPath = path.join(tempDir, 'concurrent-evidence.json');
+  fs.writeFileSync(concurrentPath, `${JSON.stringify(source, null, 2)}\n`);
+  const [iosRecord, androidRecord] = await Promise.all([
+    recordAsync(concurrentPath, [
+      '--id', 'ios-safari-pwa',
+      '--status', 'blocked',
+      '--source', 'automated',
+      '--note', 'Concurrent iOS test evidence.',
+      '--date-time', '2026-08-06T12:00:00Z',
+    ]),
+    recordAsync(concurrentPath, [
+      '--id', 'android-chrome-pwa',
+      '--status', 'blocked',
+      '--source', 'automated',
+      '--note', 'Concurrent Android test evidence.',
+      '--date-time', '2026-08-06T12:00:01Z',
+    ]),
+  ]);
+  assert.equal(iosRecord.status, 0, iosRecord.stderr);
+  assert.equal(androidRecord.status, 0, androidRecord.stderr);
+  const concurrentChecklist = JSON.parse(fs.readFileSync(concurrentPath, 'utf8'));
+  const iosItem = concurrentChecklist.matrix.find(({ id }) => id === 'ios-safari-pwa');
+  const androidItem = concurrentChecklist.matrix.find(({ id }) => id === 'android-chrome-pwa');
+  assert.equal(iosItem.evidence.at(-1).note, 'Concurrent iOS test evidence.');
+  assert.equal(androidItem.evidence.at(-1).note, 'Concurrent Android test evidence.');
+  assert.equal(concurrentChecklist.status, 'blocked');
+
   console.log('[benefits-device-checklist-test] PASS');
-} finally {
-  fs.rmSync(tempDir, { recursive: true, force: true });
+  } finally {
+    fs.rmSync(tempDir, { recursive: true, force: true });
+  }
 }
+
+main().catch((error) => {
+  console.error(`[benefits-device-checklist-test] FAIL: ${error.message}`);
+  process.exit(1);
+});
