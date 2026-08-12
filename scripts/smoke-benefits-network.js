@@ -407,7 +407,7 @@ async function installEligibilityRpc(page, { rpcError = false, lockedRaw = '1500
     throw new Error(`Unexpected eligibility eth_call selector: ${data.slice(0, 10)}`);
   };
   const rpcMethods = [];
-  await page.route('https://eth.merkle.io/', async (route) => {
+  await page.route('https://ethereum-rpc.publicnode.com/', async (route) => {
     const payload = route.request().postDataJSON();
     rpcMethods.push(payload.method);
     if (payload.method === 'eth_blockNumber') {
