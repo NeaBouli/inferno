@@ -12,7 +12,6 @@ import {
   SellerWorkspaceBoundary,
 } from '@/components/SellerWorkspaceBoundary';
 import { SwapRiskNotice } from '@/components/SwapRiskNotice';
-import { WalletStatus } from '@/components/WalletStatus';
 import { CHAIN_ID } from '@/lib/contracts';
 import { ETHEREUM_GET_ETH_URL } from '@/lib/onboardingLinks';
 import { hasWalletConnectProjectId } from '@/lib/wagmi';
@@ -22,6 +21,22 @@ type CodeMode = 'link' | 'button' | 'api' | 'pos';
 const UNISWAP_IFR_URL = 'https://app.uniswap.org/swap?outputCurrency=0x77e99917Eca8539c62F509ED1193ac36580A6e7B';
 const ROLE_STORAGE_KEY = 'ifr.shop.preferredRole';
 const SELLER_WORKSPACE_LOAD_TIMEOUT_MS = 12_000;
+const WalletStatus = dynamic(
+  () => import('@/components/WalletStatus').then((module) => module.WalletStatus),
+  {
+    loading: () => (
+      <section
+        id="customer-wallet"
+        role="status"
+        className="min-h-[32rem] rounded-[2rem] border border-white/10 bg-white/[0.06] p-5 shadow-2xl shadow-black/30"
+      >
+        <p className="text-xs font-black uppercase tracking-[0.18em] text-orange-200/80">Customer wallet</p>
+        <h2 className="mt-2 text-2xl font-black text-white">Loading wallet tools...</h2>
+        <p className="mt-3 text-sm text-stone-300">Preparing wallet connection and IFR status.</p>
+      </section>
+    ),
+  }
+);
 const SellerRuleBuilder = dynamic(
   async () => {
     let timeout: ReturnType<typeof setTimeout> | undefined;

@@ -110,6 +110,17 @@ export function walletConnectorLabel(connector) {
 }
 
 /**
+ * @param {{ id: string, name: string, type?: string }} connector
+ */
+export function walletConnectionPrompt(connector) {
+  const label = walletConnectorLabel(connector);
+  if (connector.id === 'walletConnect' || connector.type === 'walletConnect') {
+    return 'On another device, use the scanner inside MetaMask, Trust Wallet or OKX. Do not use the normal camera app. On this phone, choose Open in wallet app.';
+  }
+  return `Open ${label} and approve the connection to shop.ifrunit.tech.`;
+}
+
+/**
  * @param {unknown} error
  */
 export function walletConnectionErrorMessage(error) {

@@ -12,6 +12,7 @@ import {
   selectPrimaryWalletConnector,
   selectPreferredWalletConnector,
   walletConnectionErrorMessage,
+  walletConnectionPrompt,
   walletConnectorLabel,
 } from '../src/lib/walletConnectorSelection.mjs';
 import {
@@ -100,6 +101,12 @@ assert.equal(walletConnectorLabel(unavailableInjected), 'Browser wallet');
 assert.equal(walletConnectorLabel(targetedMetamask), 'MetaMask');
 assert.equal(walletConnectorLabel(coinbase), 'Coinbase Wallet');
 assert.equal(walletConnectorLabel(walletConnect), 'WalletConnect');
+assert.match(walletConnectionPrompt(walletConnect), /scanner inside MetaMask/);
+assert.match(walletConnectionPrompt(walletConnect), /Do not use the normal camera app/);
+assert.equal(
+  walletConnectionPrompt(targetedMetamask),
+  'Open MetaMask and approve the connection to shop.ifrunit.tech.',
+);
 assert.equal(walletConnectionErrorMessage(new Error('User rejected request')), 'Connection cancelled in the wallet.');
 assert.match(walletConnectionErrorMessage(new Error('Provider not found')), /wallet provider was found/);
 assert.match(walletConnectionErrorMessage(new Error('Request already pending (-32002)')), /already has a connection request open/);

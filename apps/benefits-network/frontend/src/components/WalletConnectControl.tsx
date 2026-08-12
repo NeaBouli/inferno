@@ -9,6 +9,7 @@ import { useAvailableWalletConnectors } from '@/hooks/useAvailableWalletConnecto
 import {
   selectPrimaryAvailableWalletConnector,
   walletConnectionErrorMessage,
+  walletConnectionPrompt,
   walletConnectorLabel,
 } from '@/lib/walletConnectorSelection.mjs';
 import { detectWalletEnvironment } from '@/lib/walletEnvironment.mjs';
@@ -97,7 +98,7 @@ export function WalletConnectControl() {
 
   async function connectWallet(targetConnector: (typeof connectors)[number]) {
     const label = walletConnectorLabel(targetConnector);
-    setConnectionStatus(`Open ${label} and approve the connection to shop.ifrunit.tech.`);
+    setConnectionStatus(walletConnectionPrompt(targetConnector));
     try {
       await connectAsync({ connector: targetConnector });
       setConnectionStatus(`Connected with ${label}.`);
@@ -308,7 +309,7 @@ export function WalletConnectControl() {
               </div>
               {hasWalletConnectProjectId ? (
                 <p className="mt-2 text-xs leading-5 text-stone-400">
-                  WalletConnect opens MetaMask, Trust, Rainbow, OKX and other compatible wallets.
+                  Scan QR inside your wallet app. On this phone, choose Open in wallet app.
                 </p>
               ) : null}
             </div>
