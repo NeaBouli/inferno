@@ -11,6 +11,7 @@ import { useHydratedAccount } from '@/hooks/useHydratedAccount';
 import {
   selectPrimaryAvailableWalletConnector,
   walletConnectionErrorMessage,
+  walletConnectionPrompt,
   walletConnectorLabel,
 } from '@/lib/walletConnectorSelection.mjs';
 import {
@@ -1482,7 +1483,7 @@ export function SellerRuleBuilder() {
   async function connectSellerConnector(connector: (typeof connectors)[number]) {
     setError('');
     const label = walletConnectorLabel(connector);
-    setStatus(`Open ${label} and approve the connection to shop.ifrunit.tech.`);
+    setStatus(walletConnectionPrompt(connector));
     try {
       await connectAsync({ connector });
       setStatus(`Connected with ${label}.`);

@@ -13,6 +13,7 @@ import { parseCustomerPassQrPayload } from '@/lib/customerPassLink';
 import {
   selectPrimaryAvailableWalletConnector,
   walletConnectionErrorMessage,
+  walletConnectionPrompt,
   walletConnectorLabel,
 } from '@/lib/walletConnectorSelection.mjs';
 import {
@@ -460,7 +461,7 @@ export function BusinessConsoleClient({ businessId }: { businessId: string }) {
   async function connectCheckoutConnector(connector: (typeof connectors)[number]) {
     setError('');
     const label = walletConnectorLabel(connector);
-    setAccessStatus(`Open ${label} and approve the connection to shop.ifrunit.tech.`);
+    setAccessStatus(walletConnectionPrompt(connector));
     try {
       await connectAsync({ connector });
       setAccessStatus(`Connected with ${label}.`);

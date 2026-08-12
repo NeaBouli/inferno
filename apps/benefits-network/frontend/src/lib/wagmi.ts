@@ -10,6 +10,14 @@ const chains = chainId === 1 ? [mainnet] as const : [sepolia] as const;
 const walletConnectProjectId = normalizeWalletConnectProjectId(
   process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID,
 );
+const rpcUrlCandidate = process.env.NEXT_PUBLIC_ETHEREUM_RPC_URL?.trim();
+const configuredRpcUrl = rpcUrlCandidate?.startsWith('https://') ? rpcUrlCandidate : undefined;
+const mainnetRpcUrl = chainId === mainnet.id && configuredRpcUrl
+  ? configuredRpcUrl
+  : 'https://ethereum-rpc.publicnode.com';
+const sepoliaRpcUrl = chainId === sepolia.id && configuredRpcUrl
+  ? configuredRpcUrl
+  : 'https://ethereum-sepolia-rpc.publicnode.com';
 
 export const hasWalletConnectProjectId = Boolean(walletConnectProjectId);
 
@@ -36,7 +44,7 @@ export const wagmiConfig = createConfig({
   connectors,
   ssr: true,
   transports: {
-    [mainnet.id]: http(),
-    [sepolia.id]: http(),
+    [mainnet.id]: http(mainnetRpcUrl),
+    [sepolia.id]: http(sepoliaRpcUrl),
   },
 });
