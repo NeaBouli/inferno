@@ -52,7 +52,7 @@
     "@nomicfoundation/hardhat-mocha": "3.0.21",
     "@nomicfoundation/hardhat-verify": "3.0.21",
     "@playwright/test": "1.61.1",
-    "axe-core": "^4.12.1",
+    "axe-core": "^4.13.0",
     "chai": "6.2.2",
     "dotenv": "^17.3.1",
     "hardhat": "3.12.0",
