@@ -454,12 +454,16 @@ test("wallet chooser is the only initial connect surface on desktop, iPad and An
   const surfaces = [
     { name: "desktop", contextOptions: { viewport: { width: 1280, height: 800 } } },
     { name: "iPad", contextOptions: { viewport: { width: 820, height: 1180 }, userAgent: "Mozilla/5.0 (iPad; CPU OS 17_0 like Mac OS X) AppleWebKit/605.1.15 Safari/604.1", isMobile: true, hasTouch: true } },
-    { name: "Android", contextOptions: { viewport: { width: 412, height: 915 }, userAgent: "Mozilla/5.0 (Linux; Android 13; SM-G973F) AppleWebKit/537.36 Chrome/125 Mobile Safari/537.36", isMobile: true, hasTouch: true } },
+    { name: "Android", contextOptions: { viewport: { width: 360, height: 800 }, userAgent: "Mozilla/5.0 (Linux; Android 13; SM-G973F) AppleWebKit/537.36 Chrome/125 Mobile Safari/537.36", isMobile: true, hasTouch: true } },
   ];
   for (const surface of surfaces) {
     const { context, page, pageErrors } = await preparePage(browser, { contextOptions: surface.contextOptions });
     try {
       await page.goto("/web3/", { waitUntil: "domcontentloaded" });
+      expect(
+        await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth),
+        `${surface.name} should not overflow horizontally`,
+      ).toBe(false);
       await page.locator("[data-wallet-connect]").first().click();
       await expect(page.locator("[data-wallet-chooser]")).toHaveClass(/is-open/);
       await expect(page.locator("[data-wallet-dialog]")).not.toHaveClass(/is-open/);
