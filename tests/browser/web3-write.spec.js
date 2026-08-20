@@ -511,6 +511,17 @@ test("WalletConnect initialization can be retried after a transient loader failu
   }
 });
 
+test("WalletConnect session authorizes ethers message signing", () => {
+  const source = readFileSync("docs/web3-wallet-core.js", "utf8");
+  expect(source).toContain('methods: ["eth_sendTransaction", "personal_sign"]');
+});
+
+test("Web3 connect flow uses the guarded wallet-state loader", () => {
+  const source = readFileSync("docs/web3/index.html", "utf8");
+  expect(source).toContain("await loadConnectedWallet(address);");
+  expect(source).not.toContain("const state = await IFRState.load(address);\n        renderState(state);");
+});
+
 test("persisted WalletConnect wrong-network recovery fails closed without an unhandled rejection", async ({ browser }) => {
   const context = await browser.newContext({ serviceWorkers: "block" });
   const pageErrors = [];
@@ -717,7 +728,7 @@ test("Android 9 stays in browser mode instead of launching an incompatible WebAP
 
 test("Web3 service worker bounds offline navigation before using the cache", () => {
   const source = readFileSync("docs/web3-sw.js", "utf8");
-  expect(source).toContain('const CACHE_NAME = "ifr-web3-v11"');
+  expect(source).toContain('const CACHE_NAME = "ifr-web3-v12"');
   expect(source).toContain("const NAVIGATION_TIMEOUT_MS = 5000");
   expect(source).toContain("fetchNavigation(request)");
   expect(source).toContain('fetch(request, { cache: "no-store", signal: controller.signal })');

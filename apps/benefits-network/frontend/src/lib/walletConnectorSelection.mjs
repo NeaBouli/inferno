@@ -122,14 +122,19 @@ export function walletConnectionPrompt(connector) {
 
 /**
  * @param {unknown} error
+ * @param {{ id: number, name: string }} [targetChain]
  */
-export function walletConnectionErrorMessage(error) {
+export function walletConnectionErrorMessage(
+  error,
+  targetChain = { id: 1, name: 'Ethereum Mainnet' },
+) {
   const message = error instanceof Error ? error.message : '';
   if (/already pending|already processing|resource unavailable|-32002/i.test(message)) {
     return 'Your wallet already has a connection request open. Open the wallet, finish or reject that request, then try again.';
   }
   if (/chain|network|switch/i.test(message) && /rejected|denied|cancel/i.test(message)) {
-    return 'Ethereum Mainnet was not approved in the wallet. Switch to Ethereum Mainnet and try again.';
+    const chainLabel = `${targetChain.name} (chain ${targetChain.id})`;
+    return `${chainLabel} was not approved in the wallet. Switch to ${chainLabel} and try again.`;
   }
   if (/rejected|denied|cancel/i.test(message)) return 'Connection cancelled in the wallet.';
   if (/provider|not found|unavailable|unsupported/i.test(message)) {

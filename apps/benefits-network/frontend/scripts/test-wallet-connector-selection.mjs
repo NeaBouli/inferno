@@ -110,7 +110,14 @@ assert.equal(
 assert.equal(walletConnectionErrorMessage(new Error('User rejected request')), 'Connection cancelled in the wallet.');
 assert.match(walletConnectionErrorMessage(new Error('Provider not found')), /wallet provider was found/);
 assert.match(walletConnectionErrorMessage(new Error('Request already pending (-32002)')), /already has a connection request open/);
-assert.match(walletConnectionErrorMessage(new Error('User rejected network switch')), /Ethereum Mainnet was not approved/);
+assert.match(
+  walletConnectionErrorMessage(new Error('User rejected network switch')),
+  /Ethereum Mainnet \(chain 1\) was not approved/,
+);
+assert.match(
+  walletConnectionErrorMessage(new Error('User rejected network switch'), { id: 11155111, name: 'Sepolia' }),
+  /Sepolia \(chain 11155111\)/,
+);
 assert.equal(walletConnectionErrorMessage(null), 'Wallet connection failed. Open this page in your wallet app browser and try again.');
 assert.equal(hasValidWalletConnectProjectId(undefined), false);
 assert.equal(hasValidWalletConnectProjectId(''), false);

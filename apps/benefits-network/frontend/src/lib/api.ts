@@ -7,8 +7,8 @@ export type VerifiedLockSource = Exclude<LockSource, 'either'>;
 
 async function fetchJSON<T>(url: string, opts?: RequestInit): Promise<T> {
   const res = await fetch(`${API_BASE}${url}`, {
-    headers: { 'Content-Type': 'application/json', ...opts?.headers },
     ...opts,
+    headers: { 'Content-Type': 'application/json', ...opts?.headers },
   });
   if (res.status === 204) return undefined as T;
   const contentType = res.headers.get('content-type') || '';

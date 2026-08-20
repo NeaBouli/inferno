@@ -600,6 +600,30 @@ describe('Verified seller reward foundation', () => {
     });
   });
 
+  it('does not overwrite a revocation that races an admin verification', async () => {
+    await prisma.sellerRewardLink.create({
+      data: { businessId, status: 'APPLIED', builderWallet: owner.address },
+    });
+    mockGetRewardOnChainStatus.mockImplementationOnce(async () => {
+      await prisma.sellerRewardLink.update({
+        where: { businessId },
+        data: { status: 'REVOKED', reason: 'Revoked during verification' },
+      });
+      return chainStatus();
+    });
+
+    const response = await fetch(`${baseUrl()}/api/admin/businesses/${businessId}/rewards/verify`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', authorization: 'Bearer test-secret-12345' },
+      body: JSON.stringify({ partnerId }),
+    });
+    expect(response.status).toBe(409);
+    expect(await prisma.sellerRewardLink.findUniqueOrThrow({ where: { businessId } })).toMatchObject({
+      status: 'REVOKED',
+      reason: 'Revoked during verification',
+    });
+  });
+
   it('keeps disable owner-only, stops outbox creation and queue, and allows a clean re-apply', async () => {
     await prisma.sellerRewardLink.create({
       data: { businessId, status: 'VERIFIED', partnerId, builderWallet: owner.address, verifiedAt: new Date() },
@@ -662,9 +686,37 @@ describe('Verified seller reward foundation', () => {
       .toMatchObject({ status: 'APPLIED', partnerId: null, verifiedAt: null, verificationBlock: null });
   });
 
+  it('keeps an admin-revoked reward link fail-closed until the owner reapplies', async () => {
+    await prisma.sellerRewardLink.create({
+      data: { businessId, status: 'REVOKED', builderWallet: owner.address, reason: 'Revoked by test admin' },
+    });
+    mockGetRewardOnChainStatus.mockClear();
+    const blocked = await fetch(`${baseUrl()}/api/admin/businesses/${businessId}/rewards/verify`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', authorization: 'Bearer test-secret-12345' },
+      body: JSON.stringify({ partnerId }),
+    });
+    expect(blocked.status).toBe(409);
+    expect(await blocked.json()).toMatchObject({
+      error: 'Seller reward link is revoked; a fresh seller application is required',
+    });
+    expect(mockGetRewardOnChainStatus).not.toHaveBeenCalled();
+    expect(await prisma.sellerRewardLink.findUniqueOrThrow({ where: { businessId } }))
+      .toMatchObject({ status: 'REVOKED' });
+
+    const reapplied = await fetch(`${baseUrl()}/api/seller/businesses/${businessId}/rewards/apply`, {
+      method: 'POST',
+      headers: await sellerHeaders(owner, 'rewards:apply', businessId),
+    });
+    expect(reapplied.status).toBe(200);
+    expect(await prisma.sellerRewardLink.findUniqueOrThrow({ where: { businessId } }))
+      .toMatchObject({ status: 'APPLIED' });
+  });
+
   it('requires owner authorization plus a fresh business-bound reward wallet proof', async () => {
     const rewardWallet = ethers.Wallet.createRandom();
     const confirmUrl = `${baseUrl()}/api/seller/businesses/${businessId}/rewards/reward-wallet`;
+    const proofWithoutLink = await rewardWalletProof(rewardWallet, businessId, rewardWallet.address);
 
     // A reward wallet cannot be set before the owner applied.
     const withoutLink = await fetch(confirmUrl, {
@@ -672,10 +724,13 @@ describe('Verified seller reward foundation', () => {
       headers: await sellerHeaders(owner, 'rewards:reward-wallet', businessId, rewardWallet.address.toLowerCase()),
       body: JSON.stringify({
         rewardWallet: rewardWallet.address,
-        ...(await rewardWalletProof(rewardWallet, businessId, rewardWallet.address)),
+        ...proofWithoutLink,
       }),
     });
     expect(withoutLink.status).toBe(404);
+    expect((await prisma.sellerAuthorizationChallenge.findUniqueOrThrow({
+      where: { nonce: proofWithoutLink.rewardWalletNonce },
+    })).consumedAt).toBeNull();
 
     await prisma.sellerRewardLink.create({ data: { businessId, builderWallet: owner.address } });
 

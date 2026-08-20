@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { listAvailableWalletConnectors } from '@/lib/walletConnectorSelection.mjs';
 
 type WalletConnectorCandidate = {
+  uid?: string;
   id: string;
   name: string;
   type?: string;
@@ -13,7 +14,9 @@ export function useAvailableWalletConnectors<T extends WalletConnectorCandidate>
   const [resolved, setResolved] = useState(false);
   const connectorsRef = useRef(connectors);
   connectorsRef.current = connectors;
-  const connectorKey = connectors.map(({ id, name }) => `${id}:${name}`).join('|');
+  const connectorKey = connectors
+    .map(({ uid, id, name, type }) => `${uid ?? ''}:${id}:${type ?? ''}:${name}`)
+    .join('|');
 
   useEffect(() => {
     let active = true;
