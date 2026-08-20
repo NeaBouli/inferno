@@ -618,6 +618,24 @@
       z-index: 160;
     }
 
+    .wallet-option-list {
+      display: grid;
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .wallet-option {
+      width: 100%;
+      justify-content: flex-start;
+    }
+
+    .wallet-option img {
+      width: 22px;
+      height: 22px;
+      border-radius: 4px;
+      object-fit: contain;
+    }
+
     .install-card,
     .wallet-connect-card,
     .protocol-card {
@@ -1307,6 +1325,10 @@
         display: none;
       }
 
+      .nav-actions [data-wallet-header-disconnect]:not([hidden]) {
+        display: inline-flex;
+      }
+
       .hero-grid {
         min-height: auto;
         padding: 46px 0 34px;
@@ -1513,6 +1535,7 @@
       <div class="nav-actions">
         <button class="btn btn-quiet install-button" type="button" data-install-app hidden>Install App</button>
         <a class="btn btn-quiet" href="https://app.uniswap.org/swap?outputCurrency=0x77e99917Eca8539c62F509ED1193ac36580A6e7B" target="_blank" rel="noopener">Buy IFR</a>
+        <button class="btn btn-quiet" type="button" data-wallet-header-disconnect hidden>Disconnect</button>
         <button class="btn btn-primary" type="button" data-wallet-connect>Connect Wallet</button>
       </div>
     </nav>
@@ -1829,6 +1852,17 @@
         <a class="btn btn-mint" href="#" rel="noopener" data-wallet-coinbase>Open Coinbase Wallet</a>
         <button class="btn btn-quiet" type="button" data-wallet-copy>Copy WalletConnect URI</button>
         <button class="btn btn-quiet" type="button" data-wallet-dialog-close>Close</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="wallet-connect-dialog" data-wallet-chooser aria-hidden="true">
+    <div class="wallet-connect-card" role="dialog" aria-modal="true" aria-labelledby="wallet-chooser-title">
+      <h2 id="wallet-chooser-title">Choose a wallet</h2>
+      <p>Select the wallet you want to connect. Connecting requests account access only; it does not sign or send a transaction.</p>
+      <div class="wallet-option-list" data-wallet-chooser-list></div>
+      <div class="wallet-connect-actions">
+        <button class="btn btn-quiet" type="button" data-wallet-chooser-close>Close</button>
       </div>
     </div>
   </div>
@@ -2203,6 +2237,7 @@
       const walletNetwork = document.querySelector("[data-wallet-network]");
       const walletCopyAddress = document.querySelector("[data-wallet-copy-address]");
       const walletDisconnect = document.querySelector("[data-wallet-disconnect]");
+      const walletHeaderDisconnect = document.querySelector("[data-wallet-header-disconnect]");
       const ifrBalance = document.querySelector("[data-ifr-balance]");
       const accessLockBalance = document.querySelector("[data-access-lock-balance]");
       const accessLockNote = document.querySelector("[data-access-lock-note]");
@@ -2222,6 +2257,9 @@
       const walletTrust = document.querySelector("[data-wallet-trust]");
       const walletCoinbase = document.querySelector("[data-wallet-coinbase]");
       const walletCopy = document.querySelector("[data-wallet-copy]");
+      const walletChooser = document.querySelector("[data-wallet-chooser]");
+      const walletChooserList = document.querySelector("[data-wallet-chooser-list]");
+      const walletChooserClose = document.querySelector("[data-wallet-chooser-close]");
       const accessLockDialog = document.querySelector("[data-access-lock-dialog]");
       const accessLockClose = document.querySelector("[data-access-lock-close]");
       const accessLockAmount = document.querySelector("[data-access-lock-amount]");
@@ -2363,6 +2401,7 @@
         });
         if (walletCopyAddress) walletCopyAddress.hidden = !connected;
         if (walletDisconnect) walletDisconnect.hidden = !connected;
+        if (walletHeaderDisconnect) walletHeaderDisconnect.hidden = !connected;
       }
 
       function setWalletDialogLinks(uri) {
@@ -2395,6 +2434,97 @@
         if (!walletDialog) return;
         walletDialog.classList.remove("is-open");
         walletDialog.setAttribute("aria-hidden", "true");
+      }
+
+      let walletChooserCancel = null;
+
+      function closeWalletChooser(cancelSelection = true) {
+        if (!walletChooser) return;
+        walletChooser.classList.remove("is-open");
+        walletChooser.setAttribute("aria-hidden", "true");
+        if (cancelSelection && walletChooserCancel) {
+          const cancel = walletChooserCancel;
+          walletChooserCancel = null;
+          cancel();
+        }
+      }
+
+      function openWalletChooser(wallets, onSelect, onCancel) {
+        walletChooserList.replaceChildren();
+        walletChooserCancel = onCancel;
+        wallets.forEach((wallet) => {
+          const option = document.createElement("button");
+          option.type = "button";
+          option.className = `btn ${wallet.type === "walletconnect" ? "btn-primary" : "btn-quiet"} wallet-option`;
+          option.dataset.walletOption = wallet.id;
+          option.dataset.walletOptionType = wallet.type;
+          if (wallet.icon && wallet.icon.startsWith("data:image/")) {
+            const icon = document.createElement("img");
+            icon.src = wallet.icon;
+            icon.alt = "";
+            option.appendChild(icon);
+          }
+          const label = document.createElement("span");
+          label.textContent = wallet.type === "walletconnect"
+            ? "WalletConnect (QR or another wallet)"
+            : wallet.name;
+          option.appendChild(label);
+          option.addEventListener("click", () => {
+            walletChooserCancel = null;
+            closeWalletChooser(false);
+            onSelect(wallet);
+          });
+          walletChooserList.appendChild(option);
+        });
+        walletChooser.classList.add("is-open");
+        walletChooser.setAttribute("aria-hidden", "false");
+        const firstOption = walletChooserList.querySelector("button");
+        if (firstOption) firstOption.focus();
+      }
+
+      async function runWalletConnect(connectAction, mobileWalletConnect, label) {
+        if (mobileWalletConnect) openWalletDialog(IFRWallet.getWalletConnectUri && IFRWallet.getWalletConnectUri());
+        setWalletLoading(true);
+        walletState.textContent = label || (mobileWalletConnect ? "Open wallet" : "Connecting");
+        const connectWatchdog = window.setTimeout(() => {
+          if (window.IFRWallet && !IFRWallet.isConnected()) {
+            walletState.textContent = mobileWalletConnect ? "Approve in wallet" : "Check wallet";
+            setWalletLoading(false);
+          }
+        }, mobileWalletConnect ? 45000 : 15000);
+        try {
+          const address = await connectAction();
+          closeWalletDialog();
+          return address || null;
+        } catch (error) {
+          if (error && error.code === "WRONG_NETWORK") walletState.textContent = error.message;
+          else if (error && (error.code === 4001 || error.message === "User rejected.")) walletState.textContent = "Rejected";
+          else if (error && error.code === -32002) walletState.textContent = "Open wallet";
+          else walletState.textContent = "Connect failed";
+          return null;
+        } finally {
+          window.clearTimeout(connectWatchdog);
+          setWalletLoading(false);
+        }
+      }
+
+      async function connectWithChooser(label) {
+        if (!window.IFRWallet || typeof IFRWallet.listWallets !== "function") return null;
+        const wallets = await IFRWallet.listWallets();
+        return new Promise((resolve) => {
+          openWalletChooser(wallets, async (wallet) => {
+            const isWalletConnect = wallet.type === "walletconnect";
+            const isMobileWalletConnect = isWalletConnect && IFRWallet.isMobileOrTablet && IFRWallet.isMobileOrTablet();
+            const address = await runWalletConnect(
+              () => isWalletConnect
+                ? IFRWallet.connectWalletConnect()
+                : IFRWallet.connectInjected(wallet.id),
+              isMobileWalletConnect,
+              label
+            );
+            resolve(address);
+          }, () => resolve(null));
+        });
       }
 
       function formatIFR(value) {
@@ -2517,31 +2647,11 @@
           return IFRWallet.getAddress();
         }
 
-        const isMobileConnect = IFRWallet.isMobileOrTablet && IFRWallet.isMobileOrTablet();
-        if (isMobileConnect) openWalletDialog(IFRWallet.getWalletConnectUri && IFRWallet.getWalletConnectUri());
-        setWalletLoading(true);
-        walletState.textContent = label || (isMobileConnect ? "Open wallet" : "Connecting");
-        const connectWatchdog = window.setTimeout(() => {
-          if (window.IFRWallet && !IFRWallet.isConnected()) {
-            walletState.textContent = isMobileConnect ? "Approve in wallet" : "Check wallet";
-            if (isMobileConnect) openWalletDialog(IFRWallet.getWalletConnectUri && IFRWallet.getWalletConnectUri());
-            setWalletLoading(false);
-          }
-        }, isMobileConnect ? 12000 : 8000);
-
-        try {
-          const address = await IFRWallet.connect();
-          const state = await IFRState.load(address);
-          renderState(state);
-          closeWalletDialog();
-          return address;
-        } catch (error) {
-          if (error && error.code === "WRONG_NETWORK") walletState.textContent = error.message;
-          throw error;
-        } finally {
-          window.clearTimeout(connectWatchdog);
-          setWalletLoading(false);
-        }
+        const address = await connectWithChooser(label);
+        if (!address) throw new Error("Wallet connection was not completed.");
+        const state = await IFRState.load(address);
+        renderState(state);
+        return address;
       }
 
       function getContracts(signerOrProvider) {
@@ -3372,33 +3482,7 @@
             if (walletDisconnect) walletDisconnect.focus({ preventScroll: true });
             return;
           }
-          const isMobileConnect = window.IFRWallet.isMobileOrTablet && IFRWallet.isMobileOrTablet();
-          if (isMobileConnect) openWalletDialog(IFRWallet.getWalletConnectUri && IFRWallet.getWalletConnectUri());
-          setWalletLoading(true);
-          walletState.textContent = isMobileConnect ? "Open wallet" : "Connecting";
-          let connectWatchdog = window.setTimeout(() => {
-            if (window.IFRWallet && !IFRWallet.isConnected()) {
-              walletState.textContent = isMobileConnect ? "Approve in wallet" : "Check wallet";
-              setWalletLoading(false);
-            }
-          }, isMobileConnect ? 45000 : 15000);
-          try {
-            await IFRWallet.connect();
-            closeWalletDialog();
-          } catch (error) {
-            if (error && error.code === "WRONG_NETWORK") {
-              walletState.textContent = error.message;
-            } else if (error && (error.code === 4001 || error.message === "User rejected.")) {
-              walletState.textContent = "Rejected";
-            } else if (error && error.code === -32002) {
-              walletState.textContent = "Open wallet";
-            } else {
-              walletState.textContent = "Connect failed";
-            }
-          } finally {
-            window.clearTimeout(connectWatchdog);
-            setWalletLoading(false);
-          }
+          await connectWithChooser();
         });
       });
 
@@ -3421,6 +3505,9 @@
         renderState(null);
         walletState.textContent = "Disconnected";
       });
+      walletHeaderDisconnect.addEventListener("click", () => {
+        walletDisconnect.click();
+      });
 
       addTokenButton.addEventListener("click", async () => {
         if (!window.IFRWallet) return;
@@ -3428,7 +3515,8 @@
         if (!addToken) return;
         try {
           if (!IFRWallet.isConnected()) {
-            await IFRWallet.connect();
+            const address = await connectWithChooser("Connect wallet to add IFR");
+            if (!address) return;
           }
           await addToken();
           walletState.textContent = "Token added";
@@ -3815,6 +3903,10 @@
       walletDialog.addEventListener("click", (event) => {
         if (event.target === walletDialog) closeWalletDialog();
       });
+      walletChooser.addEventListener("click", (event) => {
+        if (event.target === walletChooser) closeWalletChooser();
+      });
+      walletChooserClose.addEventListener("click", () => closeWalletChooser());
       walletCopy.addEventListener("click", async () => {
         if (!walletConnectUri || !navigator.clipboard) return;
         await navigator.clipboard.writeText(walletConnectUri).catch(() => null);

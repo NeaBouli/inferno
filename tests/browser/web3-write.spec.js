@@ -206,7 +206,7 @@ async function installWallet(context, options = {}) {
 }
 
 async function preparePage(browser, options = {}) {
-  const context = await browser.newContext({ serviceWorkers: "block" });
+  const context = await browser.newContext({ serviceWorkers: "block", ...(options.contextOptions || {}) });
   await installWallet(context, options);
   const writes = [];
   const pageErrors = [];
@@ -239,7 +239,15 @@ async function preparePage(browser, options = {}) {
 
 async function connect(page) {
   await page.locator("[data-wallet-connect]").first().click();
+  await page.locator('[data-wallet-option-type="injected"]').first().click();
   await expect(page.locator("[data-wallet-state]").first()).toContainText("Connected", { timeout: 10_000 });
+}
+
+async function selectInjectedWallet(page, name) {
+  const option = name
+    ? page.locator('[data-wallet-option-type="injected"]', { hasText: name })
+    : page.locator('[data-wallet-option-type="injected"]').first();
+  await option.click();
 }
 
 test("wrong-chain rejection fails closed before connected state or writes", async ({ browser }) => {
@@ -249,6 +257,7 @@ test("wrong-chain rejection fails closed before connected state or writes", asyn
   });
   await page.goto("/web3/", { waitUntil: "domcontentloaded" });
   await page.locator("[data-wallet-connect]").first().click();
+  await selectInjectedWallet(page);
   await expect(page.locator("[data-wallet-state]").first()).toContainText("Ethereum Mainnet");
   expect(await page.evaluate(() => window.IFRWallet.isConnected())).toBe(false);
   expect(writes).toEqual([]);
@@ -287,6 +296,7 @@ test("Web3 wallet manager shows connector details, tracks account changes and di
   await expect(page.locator("[data-wallet-connector]")).toHaveText("MetaMask");
   await expect(page.locator("[data-wallet-network]")).toHaveText("Ethereum Mainnet");
   await expect(page.locator("[data-wallet-disconnect]")).toBeVisible();
+  await expect(page.locator("[data-wallet-header-disconnect]")).toBeVisible();
   await expect(page.locator("[data-wallet-copy-address]")).toBeVisible();
 
   const requestsBefore = await page.evaluate(() => window.__web3RequestCounts.eth_requestAccounts);
@@ -298,11 +308,16 @@ test("Web3 wallet manager shows connector details, tracks account changes and di
   await expect(page.locator("[data-wallet-address]")).toHaveText("0x4444...4444");
   await expect(page.locator("[data-wallet-address]")).toHaveAttribute("title", nextAccount);
 
-  await page.locator("[data-wallet-disconnect]").click();
+  await page.locator("[data-wallet-header-disconnect]").click();
   await expect(page.locator("[data-wallet-address]")).toHaveText("Not connected");
   await expect(page.locator("[data-wallet-state]")).toHaveText("Disconnected");
   await expect(page.locator("[data-wallet-disconnect]")).toBeHidden();
   await expect(page.locator("[data-wallet-connect]").first()).toHaveText("Connect Wallet");
+  expect(await page.evaluate(() => window.IFRWallet.isConnected())).toBe(false);
+  expect(await page.evaluate(() => localStorage.getItem("ifr_web3_wallet_connected"))).toBeNull();
+  expect(await page.evaluate(() => sessionStorage.getItem("ifr_web3_wallet_connected"))).toBeNull();
+  await page.reload({ waitUntil: "domcontentloaded" });
+  await expect(page.locator("[data-wallet-address]")).toHaveText("Not connected");
   expect(await page.evaluate(() => window.IFRWallet.isConnected())).toBe(false);
   expect(writes).toEqual([]);
   expect(pageErrors).toEqual([]);
@@ -336,6 +351,160 @@ test("failed account refresh clears the previous wallet data", async ({ browser 
   expect(writes).toEqual([]);
   expect(pageErrors).toEqual([]);
   await context.close();
+});
+
+test("wallet chooser keeps WalletConnect available with zero or multiple injected wallets", async ({ browser }) => {
+  const emptyContext = await browser.newContext({ serviceWorkers: "block" });
+  try {
+    const emptyPage = await emptyContext.newPage();
+    await emptyPage.goto("/web3/", { waitUntil: "domcontentloaded" });
+    await emptyPage.locator("[data-wallet-connect]").first().click();
+    await expect(emptyPage.locator("[data-wallet-option]")).toHaveCount(1);
+    await expect(emptyPage.locator('[data-wallet-option="walletconnect"]')).toBeVisible();
+  } finally {
+    await emptyContext.close();
+  }
+
+  const { context, page, pageErrors } = await preparePage(browser);
+  try {
+    await page.goto("/web3/", { waitUntil: "domcontentloaded" });
+    await page.evaluate(() => {
+      const metaMask = window.ethereum;
+      const coinbase = {
+        isCoinbaseWallet: true,
+        request: (args) => metaMask.request(args),
+        on: (event, listener) => metaMask.on(event, listener),
+        removeListener: (event, listener) => metaMask.removeListener(event, listener),
+      };
+      window.ethereum.providers = [metaMask, coinbase];
+    });
+    await page.locator("[data-wallet-connect]").first().click();
+    await expect(page.locator('[data-wallet-option-type="injected"]')).toHaveCount(2);
+    await expect(page.locator('[data-wallet-option="walletconnect"]')).toBeVisible();
+    expect(pageErrors).toEqual([]);
+  } finally {
+    await context.close();
+  }
+});
+
+test("closing the wallet chooser stays disconnected and requests no account access", async ({ browser }) => {
+  const { context, page, writes, pageErrors } = await preparePage(browser);
+  try {
+    await page.goto("/web3/", { waitUntil: "domcontentloaded" });
+    await page.locator("[data-wallet-connect]").first().click();
+    await expect(page.locator("[data-wallet-chooser]")).toHaveAttribute("aria-hidden", "false");
+    await page.locator("[data-wallet-chooser-close]").click();
+    await expect(page.locator("[data-wallet-chooser]")).toHaveAttribute("aria-hidden", "true");
+    expect(await page.evaluate(() => window.IFRWallet.isConnected())).toBe(false);
+    expect(await page.evaluate(() => window.__web3RequestCounts.eth_requestAccounts ?? 0)).toBe(0);
+    expect(writes).toEqual([]);
+    expect(pageErrors).toEqual([]);
+  } finally {
+    await context.close();
+  }
+});
+
+test("EIP-6963 providers are deduplicated and only the chosen provider requests accounts", async ({ browser }) => {
+  const { context, page, writes, pageErrors } = await preparePage(browser);
+  try {
+    await page.goto("/web3/", { waitUntil: "domcontentloaded" });
+    await page.evaluate(() => {
+      const metaMask = window.ethereum;
+      let rainbowRequests = 0;
+      const rainbow = {
+        request: (args) => {
+          if (args.method === "eth_requestAccounts") rainbowRequests += 1;
+          return metaMask.request(args);
+        },
+        on: (event, listener) => metaMask.on(event, listener),
+        removeListener: (event, listener) => metaMask.removeListener(event, listener),
+      };
+      Object.defineProperty(window, "__rainbowRequests", { get: () => rainbowRequests });
+      window.ethereum.providers = [metaMask, rainbow];
+      const announce = () => window.dispatchEvent(new CustomEvent("eip6963:announceProvider", {
+        detail: {
+          info: {
+            uuid: "rainbow-test-provider",
+            name: "Rainbow Test",
+            icon: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'/%3E",
+            rdns: "me.rainbow",
+          },
+          provider: rainbow,
+        },
+      }));
+      window.addEventListener("eip6963:requestProvider", announce);
+      announce();
+    });
+
+    await page.locator("[data-wallet-connect]").first().click();
+    await expect(page.locator('[data-wallet-option-type="injected"]')).toHaveCount(2);
+    await expect(page.locator('[data-wallet-option-type="injected"]', { hasText: "Rainbow Test" })).toHaveCount(1);
+    await selectInjectedWallet(page, "Rainbow Test");
+    await expect(page.locator("[data-wallet-state]")).toContainText("Connected", { timeout: 10_000 });
+    expect(await page.evaluate(() => window.__rainbowRequests)).toBe(1);
+    expect(await page.evaluate(() => window.__web3RequestCounts.eth_requestAccounts)).toBe(1);
+    expect(writes).toEqual([]);
+    expect(pageErrors).toEqual([]);
+  } finally {
+    await context.close();
+  }
+});
+
+test("wallet chooser is the only initial connect surface on desktop, iPad and Android", async ({ browser }) => {
+  const surfaces = [
+    { name: "desktop", contextOptions: { viewport: { width: 1280, height: 800 } } },
+    { name: "iPad", contextOptions: { viewport: { width: 820, height: 1180 }, userAgent: "Mozilla/5.0 (iPad; CPU OS 17_0 like Mac OS X) AppleWebKit/605.1.15 Safari/604.1", isMobile: true, hasTouch: true } },
+    { name: "Android", contextOptions: { viewport: { width: 412, height: 915 }, userAgent: "Mozilla/5.0 (Linux; Android 13; SM-G973F) AppleWebKit/537.36 Chrome/125 Mobile Safari/537.36", isMobile: true, hasTouch: true } },
+  ];
+  for (const surface of surfaces) {
+    const { context, page, pageErrors } = await preparePage(browser, { contextOptions: surface.contextOptions });
+    try {
+      await page.goto("/web3/", { waitUntil: "domcontentloaded" });
+      await page.locator("[data-wallet-connect]").first().click();
+      await expect(page.locator("[data-wallet-chooser]")).toHaveClass(/is-open/);
+      await expect(page.locator("[data-wallet-dialog]")).not.toHaveClass(/is-open/);
+      await expect(page.locator('[data-wallet-option="walletconnect"]')).toBeVisible();
+      expect(pageErrors, surface.name).toEqual([]);
+    } finally {
+      await context.close();
+    }
+  }
+});
+
+test("WalletConnect initialization can be retried after a transient loader failure", async ({ browser }) => {
+  const context = await browser.newContext({ serviceWorkers: "block" });
+  const warnings = [];
+  try {
+    await context.route("https://esm.sh/@walletconnect/ethereum-provider@2.17.3", async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/javascript",
+        headers: { "Access-Control-Allow-Origin": "*" },
+        body: "export const unavailable = true;",
+      });
+    });
+    const page = await context.newPage();
+    page.on("console", (message) => {
+      if (message.type() === "warning" && message.text().includes("EthereumProvider not found")) warnings.push(message.text());
+    });
+    await page.goto("/web3/", { waitUntil: "domcontentloaded" });
+    const results = await page.evaluate(async () => {
+      const attempts = [];
+      for (let index = 0; index < 2; index += 1) {
+        try {
+          await window.IFRWallet.connectWalletConnect();
+          attempts.push("connected");
+        } catch (error) {
+          attempts.push(error.message);
+        }
+      }
+      return attempts;
+    });
+    expect(results).toEqual(["NO_WALLETCONNECT", "NO_WALLETCONNECT"]);
+    expect(warnings).toHaveLength(2);
+  } finally {
+    await context.close();
+  }
 });
 
 test("persisted WalletConnect wrong-network recovery fails closed without an unhandled rejection", async ({ browser }) => {
@@ -410,6 +579,7 @@ test("IFRLock exact approve and typed lock submit only on Mainnet", async ({ bro
   const { context, page, writes, pageErrors } = await preparePage(browser);
   await page.goto("/web3/?action=access-lock", { waitUntil: "domcontentloaded" });
   await expect(page.locator("[data-access-lock-dialog]")).toHaveClass(/is-open/);
+  await selectInjectedWallet(page);
   await page.locator("[data-access-lock-amount]").fill("1000");
   await page.locator("[data-access-lock-type]").selectOption("premium");
   await page.locator("[data-access-lock-submit]").click();
@@ -426,6 +596,7 @@ test("IFRLock exact approve and typed lock submit only on Mainnet", async ({ bro
 test("existing IFRLock balance can be unlocked without another approval", async ({ browser }) => {
   const { context, page, writes, pageErrors } = await preparePage(browser, { locked: 1000n * UNIT });
   await page.goto("/web3/?action=access-lock", { waitUntil: "domcontentloaded" });
+  await selectInjectedWallet(page);
   await expect(page.locator("[data-access-lock-unlock]")).toBeEnabled();
   await page.locator("[data-access-lock-unlock]").click();
   await expect.poll(() => writes.length, { timeout: 15_000 }).toBe(1);
@@ -464,6 +635,7 @@ test("CommitmentVault time-only and LendingVault offer writes preserve IFR base 
 test("LendingVault borrowing remains transaction-disabled while price is zero", async ({ browser }) => {
   const { context, page, writes, pageErrors } = await preparePage(browser);
   await page.goto("/web3/?action=borrow", { waitUntil: "domcontentloaded" });
+  await selectInjectedWallet(page);
   await expect(page.locator("[data-borrow-price]")).toHaveText("Disabled");
   await expect(page.locator("[data-borrow-submit]")).toBeDisabled();
   await expect(page.locator("[data-borrow-status]")).toContainText("disabled");
