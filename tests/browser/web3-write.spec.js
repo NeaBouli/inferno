@@ -717,9 +717,10 @@ test("Android 9 stays in browser mode instead of launching an incompatible WebAP
 
 test("Web3 service worker bounds offline navigation before using the cache", () => {
   const source = readFileSync("docs/web3-sw.js", "utf8");
-  expect(source).toContain('const CACHE_NAME = "ifr-web3-v10"');
+  expect(source).toContain('const CACHE_NAME = "ifr-web3-v11"');
   expect(source).toContain("const NAVIGATION_TIMEOUT_MS = 5000");
   expect(source).toContain("fetchNavigation(request)");
+  expect(source).toContain('fetch(request, { cache: "no-store", signal: controller.signal })');
   expect(source).toContain("if (response.ok)");
   expect(source).toContain("event.waitUntil(navigationResponse");
 });
