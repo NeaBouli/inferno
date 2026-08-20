@@ -53,6 +53,10 @@ const sellerSteps = [
     body: 'Open /b/:businessId on the counter device. Scan or paste the customer pass, select the intended active rule and sign its one-time binding. Compatible seller-issued QR sessions remain available.',
   },
   {
+    title: 'Keep rewards optional',
+    body: 'Registering a seller profile never enables rewards; they stay off until the owner wallet signs a separate reward application, and an owner-signed disable stops them at any time. Sellers that want a separate standard EVM payout account (StealthX-style setups) prove control of that account with its own fresh signature before governance compares it on-chain; smart-contract wallet proof is not supported yet. Sellers that opt out entirely (VLABS-style setups) simply never apply.',
+  },
+  {
     title: 'Review recent customer checks',
     body: 'Load owner-only session history in pages of 50 to see QR status, masked verified wallet, locked amount and rejection reason, or create a browser-local masked full CSV export.',
   },
@@ -72,6 +76,7 @@ const developerItems = [
   ['Customer proof', 'GET /api/sessions/:id/challenge, then POST /api/attest with the customer signature.'],
   ['Customer history', 'POST /api/customer/history/challenge, sign once, exchange at /authorize, then use the memory-only read token for signer-bound snapshot pages.'],
   ['Redeem', 'Request a one-time sessions:redeem challenge bound to the session ID, sign it, then POST /api/sessions/:id/redeem with x-ifr-nonce.'],
+  ['Seller rewards', 'Rewards are off by default. rewards:apply, rewards:disable and rewards:reward-wallet each use a fresh business-bound nonce; confirming a separate payout wallet also requires that wallet to sign its own one-time proof for the same business and scope.'],
 ];
 
 function StepList({ title, eyebrow, steps }: { title: string; eyebrow: string; steps: typeof customerSteps }) {
@@ -198,7 +203,7 @@ export default function GuidePage() {
               </div>
               <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
                 <strong className="text-white">Seller signatures</strong>
-                <p className="mt-1">Short-lived server-issued messages for profile, rules, session history and redeem actions.</p>
+                <p className="mt-1">Short-lived server-issued messages for profile, rules, session history, redeem and reward opt-in or opt-out actions.</p>
               </div>
             </div>
           </div>

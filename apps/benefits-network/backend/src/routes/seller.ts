@@ -329,6 +329,7 @@ function handleSellerError(err: unknown, res: Response, next: NextFunction) {
     if (
       err.message.includes('must be in the future') ||
       err.message.includes('already the business owner') ||
+      err.message.includes('must differ from the business owner') ||
       err.message.includes('already authorized for checkout') ||
       err.message.includes('cannot be reactivated')
     ) {
@@ -1126,6 +1127,7 @@ router.post('/businesses/:id/rewards/apply', sellerRateLimiter, async (req, res,
         verifiedAt: null,
         lastCheckedAt: null,
         verificationBlock: null,
+        governanceReference: null,
         reason: 'Awaiting BuilderRegistry and PartnerVault governance approval',
       },
     });
@@ -1134,6 +1136,169 @@ router.post('/businesses/:id/rewards/apply', sellerRateLimiter, async (req, res,
     handleSellerError(err, res, next);
   }
 });
+
+router.post('/businesses/:id/rewards/disable', sellerRateLimiter, async (req, res, next) => {
+  try {
+    await requireBusinessOwner(req, 'rewards:disable', req.params.id, req.params.id);
+    const link = await prisma.$transaction(async (tx) => {
+      const existing = await tx.sellerRewardLink.findUnique({ where: { businessId: req.params.id } });
+      if (!existing) throw new Error('Seller reward application not found');
+      const updated = await tx.sellerRewardLink.update({
+        where: { businessId: req.params.id },
+        data: {
+          status: 'DISABLED',
+          partnerId: null,
+          verifiedAt: null,
+          verificationBlock: null,
+          governanceReference: null,
+          reason: 'Disabled by the seller owner; rewards stay off until a fresh owner-signed application',
+        },
+      });
+      // Fail closed: nothing actionable may keep progressing while the seller
+      // has opted out. CONFIRMED rows remain untouched historical records.
+      await tx.rewardEvent.updateMany({
+        where: {
+          businessId: req.params.id,
+          status: { in: ['PENDING', 'READY', 'BLOCKED_CALLER', 'BLOCKED_GOVERNANCE'] },
+        },
+        data: {
+          status: 'BLOCKED_GOVERNANCE',
+          reason: 'Seller rewards disabled by the seller owner; awaiting a fresh verified application',
+        },
+      });
+      return updated;
+    });
+    res.json({ link });
+  } catch (err) {
+    handleSellerError(err, res, next);
+  }
+});
+
+const confirmRewardWalletSchema = z.object({
+  rewardWallet: z.string()
+    .regex(/^0x[a-fA-F0-9]{40}$/)
+    .refine((value) => {
+      try {
+        normalizeAddress(value);
+        return true;
+      } catch {
+        return false;
+      }
+    }, 'Reward wallet must be a valid Ethereum address')
+    .nullable(),
+  rewardWalletSignature: z.string().min(1).optional(),
+  rewardWalletTimestamp: z.string().min(1).optional(),
+  rewardWalletNonce: z.string().min(1).optional(),
+}).strict().superRefine((value, ctx) => {
+  const proofFields = [value.rewardWalletSignature, value.rewardWalletTimestamp, value.rewardWalletNonce];
+  if (value.rewardWallet === null) {
+    if (proofFields.some((field) => field !== undefined)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Clearing the reward wallet takes no wallet proof fields',
+        path: ['rewardWalletSignature'],
+      });
+    }
+    return;
+  }
+  if (proofFields.some((field) => field === undefined)) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'Reward wallet confirmation requires the wallet signature, timestamp and nonce',
+      path: ['rewardWalletSignature'],
+    });
+  }
+});
+
+router.post(
+  '/businesses/:id/rewards/reward-wallet',
+  sellerRateLimiter,
+  validate(confirmRewardWalletSchema),
+  async (req, res, next) => {
+    try {
+      const requestedWallet = req.body.rewardWallet as string | null;
+      // The owner authorization challenge is bound to this exact decision:
+      // the proposed reward wallet, or the explicit return to owner payouts.
+      const scope = requestedWallet ? requestedWallet.toLowerCase() : 'owner-wallet';
+      const owner = await requireBusinessOwner(req, 'rewards:reward-wallet', req.params.id, scope);
+
+      let rewardWallet: string | null = null;
+      if (requestedWallet) {
+        rewardWallet = normalizeAddress(requestedWallet);
+        if (rewardWallet === owner) {
+          throw new Error('Reward wallet must differ from the business owner; clear it to pay the owner wallet');
+        }
+        // Second factor: the proposed reward wallet itself must sign a fresh,
+        // server-issued, business-bound single-use challenge. An address is
+        // never accepted without proof of control.
+        const proofWallet = verifySellerSignature({
+          walletAddress: rewardWallet,
+          signature: String(req.body.rewardWalletSignature),
+          timestamp: String(req.body.rewardWalletTimestamp),
+          action: 'rewards:reward-wallet',
+          businessId: req.params.id,
+          nonce: String(req.body.rewardWalletNonce),
+          scope,
+        });
+        await consumeSellerAuthorizationChallenge(prisma, {
+          nonce: String(req.body.rewardWalletNonce),
+          walletAddress: proofWallet,
+          action: 'rewards:reward-wallet',
+          businessId: req.params.id,
+          scope,
+        });
+      }
+
+      const link = await prisma.$transaction(async (tx) => {
+        const existing = await tx.sellerRewardLink.findUnique({ where: { businessId: req.params.id } });
+        if (!existing) throw new Error('Seller reward application not found');
+        const currentWallet = existing.rewardWallet ? normalizeAddress(existing.rewardWallet) : null;
+        if (currentWallet === rewardWallet) {
+          // Idempotent re-confirmation of the same wallet: no state change
+          // beyond a fresh confirmation timestamp.
+          return tx.sellerRewardLink.update({
+            where: { businessId: req.params.id },
+            data: rewardWallet ? { rewardWalletConfirmedAt: new Date() } : {},
+          });
+        }
+
+        // Any reward wallet change invalidates partner/governance verification
+        // and blocks actionable outbox events fail-closed until governance
+        // re-verifies against the new effective beneficiary. DISABLED stays
+        // disabled; the owner must explicitly re-apply afterwards.
+        const updated = await tx.sellerRewardLink.update({
+          where: { businessId: req.params.id },
+          data: {
+            rewardWallet,
+            rewardWalletConfirmedAt: rewardWallet ? new Date() : null,
+            status: existing.status === 'DISABLED' ? 'DISABLED' : 'APPLIED',
+            partnerId: null,
+            verifiedAt: null,
+            verificationBlock: null,
+            governanceReference: null,
+            reason: rewardWallet
+              ? 'Reward wallet updated; awaiting governance re-verification'
+              : 'Reward wallet cleared to the owner wallet; awaiting governance re-verification',
+          },
+        });
+        await tx.rewardEvent.updateMany({
+          where: {
+            businessId: req.params.id,
+            status: { in: ['PENDING', 'READY', 'BLOCKED_CALLER', 'BLOCKED_GOVERNANCE'] },
+          },
+          data: {
+            status: 'BLOCKED_GOVERNANCE',
+            reason: 'Reward wallet changed; awaiting governance re-verification',
+          },
+        });
+        return updated;
+      });
+      res.json({ link });
+    } catch (err) {
+      handleSellerError(err, res, next);
+    }
+  }
+);
 
 router.get('/businesses/:id/rewards', sellerRateLimiter, async (req, res, next) => {
   setPrivateNoStore(res);
@@ -1148,7 +1313,7 @@ router.get('/businesses/:id/rewards', sellerRateLimiter, async (req, res, next) 
     let onChainError: string | null = null;
     if (link?.partnerId) {
       try {
-        onChain = await getRewardOnChainStatus(owner, link.partnerId);
+        onChain = await getRewardOnChainStatus(owner, link.partnerId, link.rewardWallet);
       } catch {
         onChainError = 'On-chain reward status is temporarily unavailable';
       }

@@ -23,6 +23,8 @@ describe('Seller wallet authorization', () => {
       'products:update',
       'products:delete',
       'rewards:apply',
+      'rewards:disable',
+      'rewards:reward-wallet',
       'rules:create',
       'rules:update',
       'rules:delete',

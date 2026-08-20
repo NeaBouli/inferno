@@ -275,9 +275,11 @@ export interface CheckoutAccess {
 export interface SellerRewardLink {
   id: string;
   businessId: string;
-  status: 'APPLIED' | 'VERIFIED' | 'STALE' | 'REVOKED';
+  status: 'APPLIED' | 'VERIFIED' | 'STALE' | 'REVOKED' | 'DISABLED';
   partnerId: string | null;
   builderWallet: string | null;
+  rewardWallet: string | null;
+  rewardWalletConfirmedAt: string | null;
   requestedAt: string;
   verifiedAt: string | null;
   lastCheckedAt: string | null;
@@ -298,7 +300,9 @@ export interface RewardOnChainStatus {
   partnerExists: boolean;
   partnerActive: boolean;
   beneficiary: string | null;
+  expectedBeneficiary: string;
   beneficiaryMatchesOwner: boolean;
+  beneficiaryMatchesRewardWallet: boolean;
   maxAllocationRaw: string;
   rewardAccruedRaw: string;
   claimedTotalRaw: string;
@@ -733,6 +737,40 @@ export function applyForSellerRewards(businessId: string, auth: SellerAuth) {
   return fetchJSON<{ link: SellerRewardLink }>(`/api/seller/businesses/${businessId}/rewards/apply`, {
     method: 'POST',
     headers: sellerHeaders(auth),
+  });
+}
+
+export function disableSellerRewards(businessId: string, auth: SellerAuth) {
+  return fetchJSON<{ link: SellerRewardLink }>(`/api/seller/businesses/${businessId}/rewards/disable`, {
+    method: 'POST',
+    headers: sellerHeaders(auth),
+  });
+}
+
+export interface SellerRewardWalletProof {
+  signature: string;
+  timestamp: string;
+  nonce: string;
+}
+
+export function confirmSellerRewardWallet(
+  businessId: string,
+  auth: SellerAuth,
+  input: { rewardWallet: string | null; proof?: SellerRewardWalletProof }
+) {
+  return fetchJSON<{ link: SellerRewardLink }>(`/api/seller/businesses/${businessId}/rewards/reward-wallet`, {
+    method: 'POST',
+    headers: sellerHeaders(auth),
+    body: JSON.stringify({
+      rewardWallet: input.rewardWallet,
+      ...(input.proof
+        ? {
+            rewardWalletSignature: input.proof.signature,
+            rewardWalletTimestamp: input.proof.timestamp,
+            rewardWalletNonce: input.proof.nonce,
+          }
+        : {}),
+    }),
   });
 }
 
