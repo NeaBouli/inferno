@@ -2,15 +2,17 @@
   "name": "IFR Benefits Network Device Wallet Acceptance Checklist",
   "target": "https://shop.ifrunit.tech",
   "status": "open",
-  "lastUpdated": "2026-07-26",
+  "lastUpdated": "2026-08-08",
   "rules": {
     "noSecrets": true,
     "recordOnlyTestIds": true,
-    "walletConnectProjectIdRequiredForModal": true
+    "walletConnectProjectIdRequiredForModal": true,
+    "physicalPassRequiresDeviceEvidence": true
   },
   "knownBlockers": [
-    "NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID is not set for the production Wagmi WalletConnect QR connector.",
-    "Full APPROVED -> REDEEMED proof requires an eligible locked customer wallet.",
+    "The production WalletConnect modal and wallet catalog are live; physical QR pairing, connection and signature evidence is still required.",
+    "Physical APPROVED -> REDEEMED proof still requires an eligible locked customer wallet; the local state-machine flow is automated, but its on-chain eligibility read is mocked.",
+    "Automated and emulated results support code verification but never satisfy a physical-device matrix PASS.",
     "Production capacity must be checked read-only immediately before every deploy; do not rely on a previously recorded free-space value."
   ],
   "matrix": [
@@ -68,8 +70,15 @@
         "wallet-launch-fallback",
         "recovery-guidance"
       ],
-      "status": "pending",
-      "evidence": []
+      "status": "pass",
+      "evidence": [
+        {
+          "dateTime": "2026-08-08T21:47:17.956Z",
+          "result": "PASS",
+          "evidenceSource": "physical-device",
+          "note": "Galaxy Tab S4 Android 10 / Chrome 150: live landing and guide render without document overflow; official IFR PWA installs and launches standalone; Copy link returns Link copied, Web Share API is available, and invalid pass/session/seller routes show readable recovery states. Galaxy S7 Android 8 WebAPK incompatibility is separately remediated by browser-mode guidance."
+        }
+      ]
     },
     {
       "id": "android-metamask-customer-proof",

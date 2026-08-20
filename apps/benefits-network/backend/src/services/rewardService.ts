@@ -30,7 +30,9 @@ export interface RewardOnChainStatus {
   partnerExists: boolean;
   partnerActive: boolean;
   beneficiary: string | null;
+  expectedBeneficiary: string;
   beneficiaryMatchesOwner: boolean;
+  beneficiaryMatchesRewardWallet: boolean;
   maxAllocationRaw: string;
   rewardAccruedRaw: string;
   claimedTotalRaw: string;
@@ -66,10 +68,15 @@ export function toIFRBaseUnits(value: string): string {
 
 export async function getRewardOnChainStatus(
   ownerAddress: string,
-  rawPartnerId: string
+  rawPartnerId: string,
+  rewardWallet?: string | null
 ): Promise<RewardOnChainStatus> {
   const addresses = requireRewardConfig();
+  // BuilderRegistry remains bound to the seller owner wallet; the PartnerVault
+  // beneficiary must match the confirmed reward wallet, falling back to the
+  // owner wallet when no separate reward wallet is set.
   const owner = normalizeAddress(ownerAddress);
+  const expectedBeneficiary = rewardWallet ? normalizeAddress(rewardWallet) : owner;
   const partnerId = validatePartnerId(rawPartnerId);
   const provider = new ethers.JsonRpcProvider(config.RPC_URL);
   const partnerVault = new ethers.Contract(addresses.partnerVaultAddress, PARTNER_VAULT_ABI, provider);
@@ -105,9 +112,10 @@ export async function getRewardOnChainStatus(
   const partnerExists = normalizeAddress(partner.beneficiary) !== zero;
   const beneficiary = partnerExists ? normalizeAddress(partner.beneficiary) : null;
   const beneficiaryMatchesOwner = beneficiary === owner;
+  const beneficiaryMatchesRewardWallet = beneficiary === expectedBeneficiary;
   const builderActive = Boolean(builderRegistered && builderInfo.active);
   const verified = networkChainId === config.CHAIN_ID && contractCodeVerified && governanceAligned &&
-    builderActive && partnerExists && partner.active && beneficiaryMatchesOwner;
+    builderActive && partnerExists && partner.active && beneficiaryMatchesRewardWallet;
   const rewardCallerConfigured = Boolean(config.REWARD_CALLER_ADDRESS);
   const submissionReady = verified && rewardCallerConfigured && callerAuthorized;
   let reason: string | null = null;
@@ -117,7 +125,11 @@ export async function getRewardOnChainStatus(
   else if (!builderActive) reason = 'Seller owner is not active in BuilderRegistry';
   else if (!partnerExists) reason = 'PartnerVault partner does not exist';
   else if (!partner.active) reason = 'PartnerVault partner is not active';
-  else if (!beneficiaryMatchesOwner) reason = 'PartnerVault beneficiary does not match seller owner';
+  else if (!beneficiaryMatchesRewardWallet) {
+    reason = rewardWallet
+      ? 'PartnerVault beneficiary does not match the confirmed seller reward wallet'
+      : 'PartnerVault beneficiary does not match seller owner';
+  }
   else if (!rewardCallerConfigured) reason = 'Reward caller is not configured';
   else if (!callerAuthorized) reason = 'Configured reward caller is not authorized by PartnerVault';
 
@@ -134,7 +146,9 @@ export async function getRewardOnChainStatus(
     partnerExists,
     partnerActive: Boolean(partner.active),
     beneficiary,
+    expectedBeneficiary,
     beneficiaryMatchesOwner,
+    beneficiaryMatchesRewardWallet,
     maxAllocationRaw: partner.maxAllocation.toString(),
     rewardAccruedRaw: partner.rewardAccrued.toString(),
     claimedTotalRaw: partner.claimedTotal.toString(),

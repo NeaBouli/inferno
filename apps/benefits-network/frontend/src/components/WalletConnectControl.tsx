@@ -1,13 +1,15 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useAccount, useChainId, useConnect, useDisconnect } from 'wagmi';
+import { useChainId, useConnect, useDisconnect } from 'wagmi';
+import { useHydratedAccount } from '@/hooks/useHydratedAccount';
 import { getMobileWalletLaunches } from '@/lib/walletLaunch';
-import { hasWalletConnectProjectId } from '@/lib/wagmi';
+import { hasWalletConnectProjectId, targetChain } from '@/lib/wagmi';
 import { useAvailableWalletConnectors } from '@/hooks/useAvailableWalletConnectors';
 import {
-  selectPreferredWalletConnector,
+  selectPrimaryAvailableWalletConnector,
   walletConnectionErrorMessage,
+  walletConnectionPrompt,
   walletConnectorLabel,
 } from '@/lib/walletConnectorSelection.mjs';
 import { detectWalletEnvironment } from '@/lib/walletEnvironment.mjs';
@@ -61,7 +63,7 @@ const DEFAULT_WALLET_ENVIRONMENT = {
 };
 
 export function WalletConnectControl() {
-  const { address, connector, isConnected } = useAccount();
+  const { address, connector, isConnected } = useHydratedAccount();
   const chainId = useChainId();
   const { connectors, connectAsync, isPending } = useConnect();
   const { disconnect } = useDisconnect();
@@ -80,21 +82,28 @@ export function WalletConnectControl() {
     setEnvironment(getWalletEnvironment());
   }, []);
 
-  async function connectInjectedWallet() {
-    const connector = await selectPreferredWalletConnector(connectors) as (typeof connectors)[number] | undefined;
+  async function connectPrimaryWallet() {
+    setConnectionStatus('');
+    if (!connectorsResolved) {
+      setConnectionStatus('Wallet providers are still loading. Try again in a moment.');
+      return;
+    }
+    const connector = selectPrimaryAvailableWalletConnector(availableConnectors) as (typeof connectors)[number] | undefined;
     if (!connector) {
-      setConnectionStatus('No wallet connector is available in this browser.');
+      setConnectionStatus('No browser wallet or WalletConnect session is available. Choose Coinbase Wallet below, or open this page inside your wallet app.');
       return;
     }
     await connectWallet(connector);
   }
 
   async function connectWallet(targetConnector: (typeof connectors)[number]) {
-    setConnectionStatus('');
+    const label = walletConnectorLabel(targetConnector);
+    setConnectionStatus(walletConnectionPrompt(targetConnector));
     try {
       await connectAsync({ connector: targetConnector });
+      setConnectionStatus(`Connected with ${label}.`);
     } catch (err) {
-      setConnectionStatus(walletConnectionErrorMessage(err));
+      setConnectionStatus(walletConnectionErrorMessage(err, targetChain));
     }
   }
 
@@ -230,7 +239,10 @@ export function WalletConnectControl() {
 
       {!isConnected ? (
         <div className="grid gap-3 rounded-2xl border border-white/10 bg-black/20 p-3">
-          <div className="grid grid-cols-2 gap-2 text-[0.68rem] font-black uppercase tracking-[0.12em] text-stone-300 sm:grid-cols-4">
+          <p className="text-xs font-black uppercase tracking-[0.16em] text-stone-400">
+            Supported wallets
+          </p>
+          <div aria-label="Wallets supported through browser providers or WalletConnect" className="grid grid-cols-2 gap-2 text-[0.68rem] font-black uppercase tracking-[0.12em] text-stone-300 sm:grid-cols-4">
             {['MetaMask', 'Coinbase', 'Trust', 'OKX', 'Rainbow', 'Phantom'].map((wallet) => (
               <span key={wallet} className="rounded-full border border-white/10 bg-white/[0.06] px-3 py-2 text-center">
                 {wallet}
@@ -256,7 +268,7 @@ export function WalletConnectControl() {
                 ))}
               </div>
               <p className="text-xs leading-5 text-stone-400">
-                Coinbase and Rainbow users can use Share or Copy link, then open it in the wallet browser.
+                On this phone, use one of the buttons above to open the page inside that wallet. Coinbase and Rainbow users can use Share or Copy link, then open it in the wallet browser.
               </p>
             </div>
           ) : null}
@@ -277,12 +289,12 @@ export function WalletConnectControl() {
             </button>
           </div>
           {copyStatus ? <p className="text-xs font-semibold text-orange-100">{copyStatus}</p> : null}
-          {availableConnectors.length > 1 ? (
-            <details className="rounded-xl border border-orange-200/15 bg-white/[0.04] p-3">
-              <summary className="cursor-pointer text-xs font-black uppercase tracking-[0.12em] text-orange-100">
-                Choose wallet connection
-              </summary>
-              <div className="mt-3 grid gap-2 sm:grid-cols-2" aria-label="Choose a wallet connection">
+          {availableConnectors.length > 0 ? (
+            <div className="rounded-xl border border-orange-200/15 bg-white/[0.04] p-3">
+              <p className="text-xs font-black uppercase tracking-[0.12em] text-orange-100">
+                Connect with
+              </p>
+              <div className="mt-3 grid gap-2 sm:grid-cols-2" aria-label="Connect with a wallet">
                 {availableConnectors.map((availableConnector) => (
                   <button
                     key={availableConnector.uid}
@@ -295,7 +307,12 @@ export function WalletConnectControl() {
                   </button>
                 ))}
               </div>
-            </details>
+              {hasWalletConnectProjectId ? (
+                <p className="mt-2 text-xs leading-5 text-stone-400">
+                  WalletConnect is for another device or a wallet scanner. Scan a QR shown on another screen inside the wallet app, never with the normal camera. On this phone, use Open in wallet app above instead of opening a raw wc: link.
+                </p>
+              ) : null}
+            </div>
           ) : null}
           {connectionStatus ? (
             <p role="status" className="text-xs font-semibold leading-5 text-orange-100">
@@ -317,8 +334,8 @@ export function WalletConnectControl() {
         <button
           type="button"
           data-wallet-action="connect"
-          onClick={connectInjectedWallet}
-          disabled={isPending || connectors.length === 0}
+          onClick={connectPrimaryWallet}
+          disabled={isPending || !connectorsResolved || availableConnectors.length === 0}
           className="rounded-2xl bg-orange-300 px-5 py-3 text-sm font-black uppercase tracking-[0.14em] text-stone-950 shadow-xl shadow-orange-950/30 transition hover:bg-orange-200 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {isPending ? 'Connecting...' : 'Connect wallet'}

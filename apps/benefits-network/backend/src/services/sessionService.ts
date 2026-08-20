@@ -789,6 +789,10 @@ export async function redeem(
       });
 
       const rewardLink = business?.rewardLink;
+      // Fail closed: only a VERIFIED link with a bound partnerId creates an
+      // outbox row. APPLIED, STALE, REVOKED and DISABLED (seller opt-out)
+      // links never create reward events, and a missing link keeps the
+      // default rewards-OFF behavior.
       if (rewardLink?.status === 'VERIFIED' && rewardLink.partnerId && session.recoveredAddress && session.lockAmountRaw) {
         const customerWallet = session.recoveredAddress;
         const ownerIsCustomer = Boolean(

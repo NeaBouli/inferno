@@ -18,6 +18,7 @@ const unit = 10n ** decimals;
 const amount = 1000n * unit;
 const zeroEthOnly = process.env.BENEFITS_WALLET_ZERO_ETH_ONLY === '1';
 const wrongChainOnly = process.env.BENEFITS_WALLET_WRONG_CHAIN_ONLY === '1';
+const readFailureOnly = process.env.BENEFITS_WALLET_READ_FAILURE_ONLY === '1';
 const selectors = {
   approve: ethers.id('approve(address,uint256)').slice(0, 10),
   balanceOf: ethers.id('balanceOf(address)').slice(0, 10),
@@ -265,6 +266,9 @@ async function run() {
           to: item.params?.[0]?.to,
           data: item.params?.[0]?.data?.slice(0, 10),
         });
+        if (readFailureOnly && item.method === 'eth_call') {
+          return { jsonrpc: '2.0', id: item.id, error: { code: -32000, message: 'Injected contract read failure' } };
+        }
         try {
           return { jsonrpc: '2.0', id: item.id, result: rpcResult(item, state) };
         } catch (error) {
@@ -289,8 +293,22 @@ async function run() {
     await page.goto(`${origin}/#customer-wallet`, { waitUntil: 'domcontentloaded' });
     const walletPanel = page.locator('#customer-wallet');
     await walletPanel.getByText('MetaMask provider', { exact: true }).waitFor();
+    const walletControl = walletPanel.locator('[data-wallet-connect-control]');
+    await walletPanel.locator('[data-wallet-connect-control][data-wallet-connectors-ready="true"]').waitFor({ timeout: 10_000 }).catch(async () => {
+      throw new Error(`Wallet connectors did not resolve. State: ${JSON.stringify(await walletControl.evaluate((element) => ({
+        ready: element.getAttribute('data-wallet-connectors-ready'),
+        ids: element.getAttribute('data-wallet-connector-ids'),
+      })))}`);
+    });
     const connectButton = walletPanel.locator('[data-wallet-action="connect"]');
-    await connectButton.click();
+    if (await connectButton.isVisible()) {
+      assert.equal(
+        await walletPanel.getByText('Reading...', { exact: false }).count(),
+        0,
+        'disconnected wallet fields must not claim an active read'
+      );
+      await connectButton.click();
+    }
     await page.getByRole('button', { name: 'Disconnect', exact: true }).first().waitFor({ timeout: 10_000 }).catch(async () => {
       throw new Error(`Wallet did not connect. Methods: ${JSON.stringify(await page.evaluate(() => window.__ifrWalletLockMethods || []))}`);
     });
@@ -362,6 +380,21 @@ async function run() {
       );
       assert.deepEqual(pageErrors, []);
       console.log('[benefits-wallet-lock-ui] PASS - zero-ETH recovery is provider-neutral and transaction-free');
+      return;
+    }
+    if (readFailureOnly) {
+      const retry = walletPanel.getByRole('button', { name: 'Retry wallet checks', exact: true });
+      await retry.waitFor({ timeout: 10_000 });
+      await walletPanel.getByText('Unavailable IFR', { exact: true }).first().waitFor();
+      assert.equal(await walletPanel.getByRole('button', { name: 'Approve', exact: true }).isEnabled(), false);
+      assert.equal(await walletPanel.getByRole('button', { name: 'Lock IFR', exact: true }).isEnabled(), false);
+      assert.equal(await walletPanel.getByRole('button', { name: 'Unlock all', exact: true }).isEnabled(), false);
+      assert.equal(await walletPanel.getByRole('button', { name: 'Use max', exact: true }).isEnabled(), false);
+      await retry.click();
+      await retry.waitFor({ timeout: 10_000 });
+      assert.equal(state.transactions.length, 0, 'failed contract reads must never submit a transaction');
+      assert.deepEqual(pageErrors, []);
+      console.log('[benefits-wallet-lock-ui] PASS - contract read failures stay unavailable and fail closed');
       return;
     }
 

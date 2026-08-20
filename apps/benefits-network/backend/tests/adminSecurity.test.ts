@@ -167,6 +167,9 @@ describe('Admin API security baseline', () => {
         requiredLockIFR: 1000,
       },
     });
+    await prisma.sellerRewardLink.create({
+      data: { businessId: business.id, status: 'APPLIED', builderWallet: business.ownerAddress },
+    });
     mockGetRewardOnChainStatus.mockResolvedValue({
       verified: false,
       partnerId: null,

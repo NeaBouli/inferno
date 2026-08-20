@@ -125,14 +125,28 @@ creating a QR so the customer signs different terms than the seller originally p
 or retried worker causes an unauthorized or duplicate PartnerVault reward.
 
 **Mitigation:**
+- Seller registration never enrolls rewards; a missing `SellerRewardLink` keeps rewards off
 - Seller application is not approval and cannot set a PartnerVault ID
+- Admin verification cannot create a missing application and uses an optimistic state check so a concurrent
+  seller disable, owner change or reward-wallet change cannot be overwritten after the chain read
 - Admin verification reads configured-chain bytecode, aligned BuilderRegistry owner / PartnerVault admin,
-  active builder state, active partner state and matching owner/beneficiary before storing `VERIFIED`
+  active builder state for the seller owner, active partner state and a beneficiary matching the effective
+  reward wallet (`rewardWallet ?? ownerAddress`) before storing `VERIFIED`; BuilderRegistry stays owner-bound
+- A separate reward wallet is accepted only with dual proof: a fresh single-use owner signature and a fresh
+  single-use signature by the proposed wallet over server-issued challenges bound to the business and scoped
+  to the exact address; signatures are verified in memory only and never persisted, logged or returned. This
+  EIP-191 flow currently supports standard EVM accounts, not EIP-1271 smart-contract wallets
+- Any reward wallet change or clearing resets the link to `APPLIED`, clears partner/governance state and
+  blocks actionable outbox events fail-closed until governance re-verifies; `CONFIRMED` events stay historical
+- Owner-signed `rewards:disable` blocks outbox creation, queue progression and admin verification until a
+  fresh application
 - Successful redeem creates at most one `PENDING` outbox event in the same transaction; unique session and
   `(customerWallet, partnerId)` constraints mirror PartnerVault anti-double-count semantics
 - Seller-owner and currently active checkout-operator wallets are excluded from the reward outbox
 - Reconciliation repeats all live governance checks and reads `walletRewardClaimed` before marking an event ready
-- Builder removal or partner deactivation marks the local link stale and prevents readiness
+- Reconciliation advances only events bound to the currently verified PartnerVault ID; events from a replaced
+  partner remain blocked until an explicit migration or cancellation decision
+- Builder removal, partner deactivation or beneficiary mismatch marks the local link stale and prevents readiness
 - The Benefits backend contains no private key or transaction signer and never calls `recordLockReward`
 - `READY` is not a reward quote, submission, confirmation or payment; effective BPS, caps and vesting remain on-chain
 

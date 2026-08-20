@@ -65,6 +65,8 @@ is not ready.
 | DELETE | `/api/seller/products/:id` | Owner wallet signature | Soft-archive a product and pause linked rules |
 | GET | `/api/seller/businesses/:id/sessions?limit=50&cursor=...&snapshot=...` | Seller wallet signature | Snapshot-anchored cursor pagination for an owned seller business; maximum 50 rows per request |
 | POST | `/api/seller/businesses/:id/rewards/apply` | Owner wallet signature | Apply for governance review; does not create an on-chain partner |
+| POST | `/api/seller/businesses/:id/rewards/disable` | Owner wallet signature | Disable rewards: blocks new outbox rows and queue progression until a fresh application |
+| POST | `/api/seller/businesses/:id/rewards/reward-wallet` | Owner + reward wallet signatures | Confirm or clear a separate reward payout wallet; any change invalidates verification |
 | GET | `/api/seller/businesses/:id/rewards` | Owner wallet signature | Read local reward events and live PartnerVault vesting/claim status |
 | GET | `/api/seller/businesses/:id/operator-status` | Owner/operator wallet signature | Confirm checkout role for the connected wallet |
 | GET | `/api/seller/businesses/:id/operators` | Owner wallet signature | List checkout operators |
@@ -322,12 +324,42 @@ seller-authorized operational history; public proof status does not expose custo
 
 ## Verified Seller Rewards Foundation
 
-M4 reward support is governance-gated and fail-closed. A seller owner may submit
-an application, but only the admin verification route can bind a `bytes32`
-PartnerVault ID. Verification reads the configured chain and requires deployed
-contract bytecode, matching BuilderRegistry owner / PartnerVault admin, an active
-BuilderRegistry entry, an active PartnerVault partner and a beneficiary equal to
-the seller owner wallet.
+M4 reward support is governance-gated and fail-closed. Seller registration never
+enables rewards: without a `SellerRewardLink` rewards stay off. A seller owner
+may submit a separate owner-signed application, but only the admin verification
+route can bind a `bytes32` PartnerVault ID. The admin route cannot create an
+application and rejects a seller change that races its chain read. Verification reads the configured
+chain and requires deployed contract bytecode, matching BuilderRegistry owner /
+PartnerVault admin, an active BuilderRegistry entry for the seller owner, an
+active PartnerVault partner and a beneficiary equal to the effective reward
+wallet.
+
+The effective reward wallet is the link's confirmed `rewardWallet`, falling back
+to the seller owner wallet when it is `null` (the pre-existing behavior).
+BuilderRegistry membership always remains bound to the seller owner wallet.
+Setting a separate reward wallet requires dual authorization: a fresh
+single-use owner signature plus a fresh single-use signature by the proposed
+reward wallet itself, both over server-issued challenges bound to the business
+and scoped to the exact proposed address. An address is never accepted without
+proof of control, the reward wallet must differ from the owner wallet, and
+signatures are never stored, logged or returned. Any reward wallet change or
+clearing resets the link to `APPLIED`, clears the partner/governance
+verification state and moves actionable outbox events to `BLOCKED_GOVERNANCE`
+until governance re-verifies the new beneficiary; `CONFIRMED` events stay
+untouched historical records. Queue reconciliation only advances events whose
+stored PartnerVault ID still matches the currently verified link. If governance
+replaces the partner ID instead of updating its beneficiary, older events remain
+blocked until an explicit operator migration or cancellation policy is approved.
+The current proof uses EIP-191 recovery and therefore supports standard EVM
+accounts; EIP-1271 smart-contract wallet proof needs a separate reviewed flow.
+
+The owner can also sign `rewards:disable` at any time. A `DISABLED` link blocks
+new reward outbox rows on redeem, blocks queue reconciliation, and cannot be
+verified by the admin route; a fresh owner-signed application returns it to
+`APPLIED` with verification state cleared.
+Disabling does not erase a previously confirmed payout-wallet preference; a
+later application continues to use it unless the owner explicitly clears or
+replaces it before governance verification.
 
 A successful redeem creates a `PENDING` reward outbox row in the same SQLite
 transaction only for a locally verified link. Seller owner and active checkout

@@ -30,6 +30,7 @@ Backend must be running on `localhost:3001` (API proxy via Next.js rewrites).
 BENEFITS_API_INTERNAL_URL=http://localhost:3001
 NEXT_PUBLIC_API_URL=http://localhost:3001
 NEXT_PUBLIC_CHAIN_ID=1
+NEXT_PUBLIC_ETHEREUM_RPC_URL=https://ethereum-rpc.publicnode.com
 NEXT_PUBLIC_IFR_TOKEN_ADDRESS=0x77e99917Eca8539c62F509ED1193ac36580A6e7B
 NEXT_PUBLIC_IFRLOCK_ADDRESS=0x769928aBDfc949D0718d8766a1C2d7dBb63954Eb
 NEXT_PUBLIC_COMMITMENT_VAULT_ADDRESS=0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3
@@ -44,6 +45,8 @@ environment does not update the client bundle. The WalletConnect project ID is
 a public application identifier, not a wallet secret.
 
 The public shop defaults to Ethereum Mainnet. `NEXT_PUBLIC_CHAIN_ID=11155111` can still be used for Sepolia testing if matching testnet contract addresses are supplied.
+
+`NEXT_PUBLIC_ETHEREUM_RPC_URL` selects the public browser RPC embedded at build time. It defaults to PublicNode for the configured Mainnet or Sepolia chain, avoiding Wagmi's rate-limited generic fallback. Production may provide another browser-safe HTTPS RPC, but must pass it as a Docker build argument and allow CORS for `https://shop.ifrunit.tech`.
 
 `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` enables the Wagmi WalletConnect QR connector for compatible mobile wallets only when it is a syntactically valid 32-character hexadecimal Reown project ID. Missing, malformed and placeholder values fail closed to browser-injected Ethereum wallets such as MetaMask and Coinbase Wallet instead of claiming multi-wallet readiness. On iOS/iPadOS and Android, the fallback also exposes official HTTPS wallet-browser launch links for MetaMask, Trust Wallet, OKX and Phantom. Coinbase and Rainbow remain on the injected-provider or Copy/Share path until the WalletConnect project is configured.
 
@@ -179,7 +182,8 @@ seller credential.
 
 ## PWA
 
-Installable on iOS and Android. During service-worker installation, the current
+Installable on iOS and supported Android versions. Android 9 and older remain in browser mode
+because current Chrome-generated WebAPKs are not compatible with that runtime. During service-worker installation, the current
 root app shell and its versioned Next.js JavaScript/CSS assets are cached so the
 installed role chooser remains usable offline. Same-origin static assets remain
 cache-first. Offline seller/scanner deep links show a precached branded recovery

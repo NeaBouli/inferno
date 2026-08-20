@@ -1,4 +1,5 @@
-const CACHE_NAME = 'ifr-benefits-v22';
+const CACHE_NAME = 'ifr-benefits-v23';
+const NAVIGATION_TIMEOUT_MS = 5000;
 const PRECACHE_URLS = [
   '/',
   '/offline.html',
@@ -61,6 +62,13 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
+function fetchNavigation(request) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), NAVIGATION_TIMEOUT_MS);
+  return fetch(request, { signal: controller.signal })
+    .finally(() => clearTimeout(timeout));
+}
+
 self.addEventListener('fetch', (event) => {
   // API responses and page navigations must not be pinned to an old app release.
   const requestUrl = new URL(event.request.url);
@@ -78,7 +86,7 @@ self.addEventListener('fetch', (event) => {
 
   if (event.request.mode === 'navigate') {
     event.respondWith(
-      fetch(event.request)
+      fetchNavigation(event.request)
         .then(async (response) => {
           if (response.ok && requestUrl.origin === self.location.origin && requestUrl.pathname === '/') {
             const cache = await caches.open(CACHE_NAME);

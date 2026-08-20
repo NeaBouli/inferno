@@ -1,7 +1,8 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useAccount, useDisconnect, useSignMessage } from 'wagmi';
+import { useDisconnect, useSignMessage } from 'wagmi';
+import { useHydratedAccount } from '@/hooks/useHydratedAccount';
 import { AppShell } from '@/components/AppShell';
 import { BusinessLogo } from '@/components/BusinessLogo';
 import { Countdown } from '@/components/Countdown';
@@ -19,7 +20,7 @@ const TERMINAL_STATUSES = ['APPROVED', ...CLOSED_STATUSES];
 const UNISWAP_IFR_URL = 'https://app.uniswap.org/swap?outputCurrency=0x77e99917Eca8539c62F509ED1193ac36580A6e7B';
 
 export function CustomerSessionClient({ sessionId }: { sessionId: string }) {
-  const { address, isConnected } = useAccount();
+  const { address, isConnected } = useHydratedAccount();
   const { disconnect } = useDisconnect();
   const { signMessageAsync } = useSignMessage();
   const [status, setStatus] = useState<SessionStatus | null>(null);

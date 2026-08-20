@@ -184,9 +184,17 @@ window.IFRState = (() => {
   function hasAccess(feature) { return _cache && _cache.access && _cache.access[feature] === true; }
 
   // ── Wallet-Events abonnieren ─────────────────────────
-  IFRWallet.on("connected", function(addr) { load(addr); startAutoRefresh(); });
-  IFRWallet.on("disconnected", function() { load(null); stopAutoRefresh(); });
-  IFRWallet.on("accountChanged", function(addr) { load(addr); });
+  IFRWallet.on("connected", function(addr) {
+    window.IFRState.load(addr).catch(function() {});
+    startAutoRefresh();
+  });
+  IFRWallet.on("disconnected", function() {
+    window.IFRState.load(null).catch(function() {});
+    stopAutoRefresh();
+  });
+  IFRWallet.on("accountChanged", function(addr) {
+    window.IFRState.load(addr).catch(function() {});
+  });
 
   return { load: load, getCache: getCache, hasAccess: hasAccess, startAutoRefresh: startAutoRefresh, stopAutoRefresh: stopAutoRefresh, on: on, CONTRACTS: CONTRACTS };
 })();

@@ -273,7 +273,7 @@ those remain production configuration and physical-wallet acceptance gates.
     sellers see wallet ownership, launch status, profile creation and restore there; optional
     discovery fields are collapsed, and catalog/rules/team/history/rewards appear after loading
     the exact profile. The separate non-mutating integration generator remains available with
-    actions disabled until valid identifiers are entered. PWA cache v22 prevents installed devices
+    actions disabled until valid identifiers are entered. PWA cache v23 prevents installed devices
     from retaining the previous expanded mobile entry. Production deployment remains gated by
     tests, exact-head CI, rollback and device smoke.**
 16. User-visible data boundary. **Implemented locally as `/privacy` with a factual data-flow

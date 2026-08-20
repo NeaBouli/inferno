@@ -12,7 +12,6 @@ import {
   SellerWorkspaceBoundary,
 } from '@/components/SellerWorkspaceBoundary';
 import { SwapRiskNotice } from '@/components/SwapRiskNotice';
-import { WalletStatus } from '@/components/WalletStatus';
 import { CHAIN_ID } from '@/lib/contracts';
 import { ETHEREUM_GET_ETH_URL } from '@/lib/onboardingLinks';
 import { hasWalletConnectProjectId } from '@/lib/wagmi';
@@ -22,6 +21,22 @@ type CodeMode = 'link' | 'button' | 'api' | 'pos';
 const UNISWAP_IFR_URL = 'https://app.uniswap.org/swap?outputCurrency=0x77e99917Eca8539c62F509ED1193ac36580A6e7B';
 const ROLE_STORAGE_KEY = 'ifr.shop.preferredRole';
 const SELLER_WORKSPACE_LOAD_TIMEOUT_MS = 12_000;
+const WalletStatus = dynamic(
+  () => import('@/components/WalletStatus').then((module) => module.WalletStatus),
+  {
+    loading: () => (
+      <section
+        id="customer-wallet"
+        role="status"
+        className="min-h-[32rem] rounded-[2rem] border border-white/10 bg-white/[0.06] p-5 shadow-2xl shadow-black/30"
+      >
+        <p className="text-xs font-black uppercase tracking-[0.18em] text-orange-200/80">Customer wallet</p>
+        <h2 className="mt-2 text-2xl font-black text-white">Loading wallet tools...</h2>
+        <p className="mt-3 text-sm text-stone-300">Preparing wallet connection and IFR status.</p>
+      </section>
+    ),
+  }
+);
 const SellerRuleBuilder = dynamic(
   async () => {
     let timeout: ReturnType<typeof setTimeout> | undefined;
@@ -167,7 +182,7 @@ function PwaInstallCard() {
     'Choose Install app or Add to Home Screen.',
   ]);
   const [isStandalone, setIsStandalone] = useState(false);
-  const [platform, setPlatform] = useState<'ios' | 'android' | 'desktop' | 'installed'>('desktop');
+  const [platform, setPlatform] = useState<'ios' | 'android' | 'legacy-android' | 'desktop' | 'installed'>('desktop');
   const [message, setMessage] = useState('Ready for desktop, tablet and smartphone.');
   const [showIosInstallSteps, setShowIosInstallSteps] = useState(false);
   const [installListenersReady, setInstallListenersReady] = useState(false);
@@ -176,6 +191,8 @@ function PwaInstallCard() {
     const ua = window.navigator.userAgent.toLowerCase();
     const isIos = /iphone|ipad|ipod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
     const isAndroid = ua.includes('android');
+    const androidMajor = Number(ua.match(/android\s+(\d+)/)?.[1] ?? 0);
+    const isLegacyAndroid = isAndroid && androidMajor > 0 && androidMajor <= 9;
     const standalone =
       window.matchMedia('(display-mode: standalone)').matches ||
       ('standalone' in window.navigator && Boolean((window.navigator as Navigator & { standalone?: boolean }).standalone));
@@ -196,6 +213,12 @@ function PwaInstallCard() {
         'Choose Add to Home Screen. In Chrome on iPad, open Share first, then Add to Home Screen if iOS offers it.',
         'Open IFR Benefits from the new home-screen icon.',
       ]);
+    } else if (isLegacyAndroid) {
+      setPlatform('legacy-android');
+      setPlatformTitle('Browser mode required');
+      setPlatformHint('This Android version cannot reliably start current Chrome-installed web apps. IFR Benefits remains fully usable in this browser tab.');
+      setInstallSteps(['Keep using shop.ifrunit.tech in Chrome.', 'Update Android or use a newer device before installing the app.', 'Do not install from the Chrome menu on Android 9 or older.']);
+      setMessage('Browser mode is active because this Android version cannot run the current Chrome WebAPK format.');
     } else if (isAndroid) {
       setPlatform('android');
       setPlatformTitle('Android install');
@@ -210,6 +233,10 @@ function PwaInstallCard() {
 
     const handler = (event: Event) => {
       event.preventDefault();
+      if (isLegacyAndroid) {
+        setInstallEvent(null);
+        return;
+      }
       setInstallEvent(event as BeforeInstallPromptEvent);
       setMessage('Ready to install on this device.');
     };
@@ -241,6 +268,10 @@ function PwaInstallCard() {
       setMessage('Use the Share button in the browser toolbar, then choose Add to Home Screen. iOS requires this browser action and does not allow websites to start installation directly.');
       return;
     }
+    if (platform === 'legacy-android') {
+      setMessage('Continue in this browser. App installation requires Android 10 or newer on the tested Chrome path.');
+      return;
+    }
     if (!installEvent) {
       setMessage(platformHint);
       return;
@@ -268,7 +299,7 @@ function PwaInstallCard() {
           </span>
         </div>
       <p className="mt-3 text-sm leading-6 text-stone-700">
-        The same PWA works on desktop, tablet and smartphone. Customers use it for wallet status and QR proofs; sellers use it for rules, scanner links and redemptions.
+        The same PWA works on supported desktop, tablet and smartphone browsers. Customers use it for wallet status and QR proofs; sellers use it for rules, scanner links and redemptions. Android 9 and older stay in browser mode.
       </p>
       <div className="mt-4 rounded-2xl border border-[#d78962]/35 bg-white/70 p-4 text-sm leading-6 text-stone-700 shadow-inner shadow-orange-900/5">
         <div className="flex items-center gap-3">
@@ -301,7 +332,7 @@ function PwaInstallCard() {
         aria-controls={platform === 'ios' ? 'ios-pwa-install-steps' : undefined}
         className="mt-5 w-full rounded-2xl bg-[#b84625] px-5 py-4 text-sm font-black uppercase tracking-[0.16em] text-white shadow-xl shadow-orange-900/30 transition hover:-translate-y-0.5 hover:bg-[#9f351b]"
       >
-        {isStandalone ? 'App installed' : installEvent ? 'Install app' : platform === 'ios' ? showIosInstallSteps ? 'Hide iPad / iPhone steps' : 'Show iPad / iPhone install steps' : 'Show install steps'}
+        {isStandalone ? 'App installed' : installEvent ? 'Install app' : platform === 'ios' ? showIosInstallSteps ? 'Hide iPad / iPhone steps' : 'Show iPad / iPhone install steps' : platform === 'legacy-android' ? 'Use in browser' : 'Show install steps'}
       </button>
       <p aria-live="polite" className="mt-3 text-xs leading-5 text-stone-600">{message}</p>
       </div>
@@ -641,7 +672,9 @@ function SystemReadinessCard() {
         </button>
       </div>
       <p className="mt-3 text-sm leading-6 text-stone-300">
-        Public checks for this app. Browser wallet apps and extensions are active; universal WalletConnect coverage still requires its production project configuration.
+        {hasWalletConnectProjectId
+          ? 'Public checks for this app. Browser wallet apps, extensions and the WalletConnect multi-wallet dialog are active.'
+          : 'Public checks for this app. Browser wallet apps and extensions are active; universal WalletConnect coverage still requires its production project configuration.'}
       </p>
 
       <div className="mt-4 grid gap-2">
