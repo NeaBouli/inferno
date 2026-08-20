@@ -1,7 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { useAccount, useBlockNumber, useReadContract } from 'wagmi';
+import { useBlockNumber, useReadContract } from 'wagmi';
+import { useHydratedAccount } from '@/hooks/useHydratedAccount';
 import type { LockSource } from '@/lib/api';
 import { sumPreviewTimeOnlyTranches } from '@/lib/lockSource';
 import {
@@ -41,7 +42,7 @@ function addressMatches(value: unknown, expected: string): boolean {
 }
 
 export function useIfrLockEligibility(): IfrLockEligibility {
-  const { address, chainId, isConnected } = useAccount();
+  const { address, chainId, isConnected } = useHydratedAccount();
   const canRead = Boolean(
     isConnected &&
     address &&

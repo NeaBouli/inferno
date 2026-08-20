@@ -7,8 +7,12 @@ import { coinbaseWallet } from 'wagmi/connectors/coinbaseWallet';
 import { injected } from 'wagmi/connectors/injected';
 import {
   listAvailableWalletConnectors,
+  selectPrimaryAvailableWalletConnector,
+  selectBrowserWalletConnector,
+  selectPrimaryWalletConnector,
   selectPreferredWalletConnector,
   walletConnectionErrorMessage,
+  walletConnectionPrompt,
   walletConnectorLabel,
 } from '../src/lib/walletConnectorSelection.mjs';
 import {
@@ -26,6 +30,7 @@ const connector = (id, name, provider, type) => ({
 
 const unavailableInjected = connector('injected', 'Injected', undefined, 'injected');
 const metamask = connector('io.metamask', 'MetaMask', { request() {} }, 'injected');
+const targetedMetamask = connector('metaMask', 'MetaMask', metamask.getProvider ? await metamask.getProvider() : undefined, 'injected');
 const coinbase = connector('coinbaseWalletSDK', 'Coinbase Wallet', { request() {} });
 const walletConnect = connector('walletConnect', 'WalletConnect', { request() {} });
 const unavailablePhantom = connector('app.phantom', 'Phantom', undefined, 'injected');
@@ -40,6 +45,16 @@ assert.equal(await selectPreferredWalletConnector([unavailableInjected, metamask
 assert.equal(await selectPreferredWalletConnector([unavailableInjected, coinbase]), coinbase);
 assert.equal(await selectPreferredWalletConnector([unavailableInjected, walletConnect]), walletConnect);
 assert.equal(await selectPreferredWalletConnector([]), undefined);
+assert.equal(await selectBrowserWalletConnector([metamask, coinbase]), metamask);
+assert.equal(await selectBrowserWalletConnector([unavailableInjected, coinbase]), undefined);
+assert.equal(await selectBrowserWalletConnector([unavailableInjected, walletConnect]), undefined);
+assert.equal(await selectPrimaryWalletConnector([metamask, walletConnect, coinbase]), metamask);
+assert.equal(await selectPrimaryWalletConnector([unavailableInjected, walletConnect, coinbase]), walletConnect);
+assert.equal(await selectPrimaryWalletConnector([unavailableInjected, coinbase]), undefined);
+assert.equal(await selectPrimaryWalletConnector([unavailableInjected, trustUniversal, coinbase]), trustUniversal);
+assert.equal(selectPrimaryAvailableWalletConnector([metamask, walletConnect, coinbase]), metamask);
+assert.equal(selectPrimaryAvailableWalletConnector([walletConnect, coinbase]), walletConnect);
+assert.equal(selectPrimaryAvailableWalletConnector([coinbase]), undefined);
 assert.deepEqual(await listAvailableWalletConnectors([unavailableInjected, coinbase]), [coinbase]);
 assert.deepEqual(await listAvailableWalletConnectors([metamask, coinbase]), [metamask, coinbase]);
 assert.deepEqual(await listAvailableWalletConnectors([unavailablePhantom, coinbase]), [coinbase]);
@@ -83,10 +98,26 @@ const throwingInjected = {
 assert.equal(await selectPreferredWalletConnector([throwingInjected, coinbase]), coinbase);
 
 assert.equal(walletConnectorLabel(unavailableInjected), 'Browser wallet');
+assert.equal(walletConnectorLabel(targetedMetamask), 'MetaMask');
 assert.equal(walletConnectorLabel(coinbase), 'Coinbase Wallet');
 assert.equal(walletConnectorLabel(walletConnect), 'WalletConnect');
+assert.match(walletConnectionPrompt(walletConnect), /scanner inside MetaMask/);
+assert.match(walletConnectionPrompt(walletConnect), /Do not use the normal camera app/);
+assert.equal(
+  walletConnectionPrompt(targetedMetamask),
+  'Open MetaMask and approve the connection to shop.ifrunit.tech.',
+);
 assert.equal(walletConnectionErrorMessage(new Error('User rejected request')), 'Connection cancelled in the wallet.');
 assert.match(walletConnectionErrorMessage(new Error('Provider not found')), /wallet provider was found/);
+assert.match(walletConnectionErrorMessage(new Error('Request already pending (-32002)')), /already has a connection request open/);
+assert.match(
+  walletConnectionErrorMessage(new Error('User rejected network switch')),
+  /Ethereum Mainnet \(chain 1\) was not approved/,
+);
+assert.match(
+  walletConnectionErrorMessage(new Error('User rejected network switch'), { id: 11155111, name: 'Sepolia' }),
+  /Sepolia \(chain 11155111\)/,
+);
 assert.equal(walletConnectionErrorMessage(null), 'Wallet connection failed. Open this page in your wallet app browser and try again.');
 assert.equal(hasValidWalletConnectProjectId(undefined), false);
 assert.equal(hasValidWalletConnectProjectId(''), false);

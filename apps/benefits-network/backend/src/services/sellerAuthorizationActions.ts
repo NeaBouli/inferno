@@ -20,6 +20,8 @@ export const MUTATING_SELLER_ACTIONS = [
   'products:update',
   'products:delete',
   'rewards:apply',
+  'rewards:disable',
+  'rewards:reward-wallet',
   'rules:create',
   'rules:update',
   'rules:delete',

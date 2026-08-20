@@ -55,6 +55,33 @@ window.IFRWallet = (function() {
   var _wcProvider = null;       // WalletConnect provider instance
   var _wcLoading = null;        // promise guard
   var _wcUri = null;
+  var _connectionLabel = null;
+  var _announcedProviders = [];
+  var _lastWalletList = [];
+
+  function _rememberAnnouncedProvider(event) {
+    var detail = event && event.detail;
+    if (!detail || !detail.provider || !detail.info) return;
+    var uuid = String(detail.info.uuid || "").trim();
+    var existingIndex = _announcedProviders.findIndex(function(entry) {
+      return (uuid && entry.info.uuid === uuid) || entry.provider === detail.provider;
+    });
+    var entry = {
+      provider: detail.provider,
+      info: {
+        uuid: uuid,
+        name: String(detail.info.name || "").trim().slice(0, 64),
+        icon: typeof detail.info.icon === "string" && detail.info.icon.indexOf("data:image/") === 0
+          ? detail.info.icon
+          : null,
+        rdns: String(detail.info.rdns || "").trim().slice(0, 128)
+      }
+    };
+    if (existingIndex >= 0) _announcedProviders[existingIndex] = entry;
+    else _announcedProviders.push(entry);
+  }
+
+  window.addEventListener("eip6963:announceProvider", _rememberAnnouncedProvider);
 
   // ── Mobile / Tablet Detection ─────────────────────
   function _isMobile() {
@@ -149,12 +176,40 @@ window.IFRWallet = (function() {
   }
 
   // ── Injected Wallet Detection (EIP-1193 / EIP-5749) ─
+  function _isMetaMaskProvider(provider) {
+    return Boolean(
+      provider &&
+      provider.isMetaMask &&
+      !provider.isExodus &&
+      !provider.isBraveWallet &&
+      !provider.isPhantom &&
+      !provider.isRabby &&
+      !provider.isOkxWallet &&
+      !provider.isOKExWallet
+    );
+  }
+
+  function _getConnectionLabel(provider) {
+    if (!provider) return null;
+    if (provider === _wcProvider) return "WalletConnect";
+    var announced = _announcedProviders.find(function(entry) { return entry.provider === provider; });
+    if (announced && announced.info.name) return announced.info.name;
+    if (_isMetaMaskProvider(provider)) return "MetaMask";
+    if (provider.isCoinbaseWallet) return "Coinbase Wallet";
+    if (provider.isTrust || provider.isTrustWallet) return "Trust Wallet";
+    if (provider.isOkxWallet || provider.isOKExWallet) return "OKX Wallet";
+    if (provider.isPhantom) return "Phantom";
+    if (provider.isRabby) return "Rabby Wallet";
+    if (provider.isBraveWallet) return "Brave Wallet";
+    return "Browser wallet";
+  }
+
   function _getMetaMaskProvider() {
     if (_ethereumProvider) return _ethereumProvider;
 
     if (window.ethereum && window.ethereum.providers && Array.isArray(window.ethereum.providers)) {
       _ethereumProvider = window.ethereum.providers.find(function(p) {
-        return p.isMetaMask;
+        return _isMetaMaskProvider(p);
       }) || window.ethereum.providers[0] || window.ethereum;
     } else if (window.ethereum && window.ethereum.isMetaMask) {
       _ethereumProvider = window.ethereum;
@@ -165,10 +220,65 @@ window.IFRWallet = (function() {
     return _ethereumProvider || null;
   }
 
+  function _buildWalletList() {
+    var wallets = [];
+    var seenProviders = [];
+
+    _announcedProviders.forEach(function(entry, index) {
+      if (!entry.provider || seenProviders.indexOf(entry.provider) !== -1) return;
+      seenProviders.push(entry.provider);
+      wallets.push({
+        id: "eip6963:" + (entry.info.uuid || index),
+        type: "injected",
+        name: entry.info.name || _getConnectionLabel(entry.provider),
+        icon: entry.info.icon,
+        rdns: entry.info.rdns || null,
+        provider: entry.provider
+      });
+    });
+
+    var legacyProviders = [];
+    if (window.ethereum && Array.isArray(window.ethereum.providers) && window.ethereum.providers.length > 0) {
+      legacyProviders = window.ethereum.providers.slice();
+    } else if (window.ethereum) {
+      legacyProviders.push(window.ethereum);
+    }
+    legacyProviders.forEach(function(provider, index) {
+      if (!provider || seenProviders.indexOf(provider) !== -1) return;
+      seenProviders.push(provider);
+      wallets.push({
+        id: "legacy:" + index,
+        type: "injected",
+        name: _getConnectionLabel(provider),
+        icon: null,
+        rdns: null,
+        provider: provider
+      });
+    });
+
+    wallets.push({
+      id: "walletconnect",
+      type: "walletconnect",
+      name: "WalletConnect",
+      icon: null,
+      rdns: null,
+      provider: null
+    });
+    _lastWalletList = wallets;
+    return wallets;
+  }
+
+  function listWallets() {
+    try { window.dispatchEvent(new Event("eip6963:requestProvider")); } catch (e) {}
+    return new Promise(function(resolve) {
+      window.setTimeout(function() { resolve(_buildWalletList()); }, 80);
+    });
+  }
+
   // ── WalletConnect v2 Provider (dynamic ESM import) ─
   async function _loadWalletConnect() {
-    if (_wcLoading) return _wcLoading;
     if (_wcProvider) return _wcProvider;
+    if (_wcLoading) return _wcLoading;
 
     _wcLoading = (async function() {
       try {
@@ -180,6 +290,7 @@ window.IFRWallet = (function() {
 
         if (!EthereumProvider) {
           console.warn("[IFR Web3 Wallet] EthereumProvider not found in ESM module");
+          _wcLoading = null;
           return null;
         }
 
@@ -187,9 +298,9 @@ window.IFRWallet = (function() {
           projectId: WC_PROJECT_ID,
           chains: [CHAIN_ID],
           optionalChains: [CHAIN_ID],
-          methods: ["eth_sendTransaction", "eth_signTransaction", "eth_sign", "personal_sign", "eth_signTypedData", "eth_signTypedData_v4"],
+          methods: ["eth_sendTransaction", "personal_sign"],
           events: ["chainChanged", "accountsChanged", "disconnect"],
-          showQrModal: true,
+          showQrModal: !_isMobileOrTablet(),
           rpcMap: { 1: RPC_URL },
           metadata: {
             name: "Inferno Protocol",
@@ -225,6 +336,8 @@ window.IFRWallet = (function() {
         return _wcProvider;
       } catch (e) {
         console.warn("[IFR Web3 Wallet] WalletConnect init failed:", e);
+        _wcProvider = null;
+        _wcLoading = null;
         return null;
       }
     })();
@@ -265,6 +378,7 @@ window.IFRWallet = (function() {
     _provider = new ethers.providers.Web3Provider(eth, "any");
     _signer = _provider.getSigner();
     _address = accounts[0];
+    _connectionLabel = _getConnectionLabel(eth);
 
     localStorage.setItem(SESSION_KEY, _address);
     _attachListeners(eth);
@@ -321,6 +435,31 @@ window.IFRWallet = (function() {
     }
   }
 
+  async function connectInjected(walletId) {
+    var wallet = _lastWalletList.find(function(entry) {
+      return entry.id === walletId && entry.type === "injected";
+    });
+    if (!wallet || !wallet.provider) {
+      await listWallets();
+      wallet = _lastWalletList.find(function(entry) {
+        return entry.id === walletId && entry.type === "injected";
+      });
+    }
+    if (!wallet || !wallet.provider) throw new Error("WALLET_NOT_FOUND");
+    var accounts = await wallet.provider.request({ method: "eth_requestAccounts" });
+    return _finishConnect(wallet.provider, accounts);
+  }
+
+  async function connectWalletConnect() {
+    var wc = await _loadWalletConnect();
+    if (!wc) {
+      _showWalletHelpModal("WalletConnect could not load. Check your connection and try again, or choose a browser wallet.");
+      throw new Error("NO_WALLETCONNECT");
+    }
+    var accounts = await wc.enable();
+    return _finishConnect(wc, accounts);
+  }
+
   // ── Add IFR Token To Wallet (EIP-747) ─────────────
   async function addIFRToken() {
     var eth = _ethereumProvider || _getMetaMaskProvider();
@@ -368,7 +507,9 @@ window.IFRWallet = (function() {
     _signer = null;
     _address = null;
     _ethereumProvider = null;
+    _connectionLabel = null;
     localStorage.removeItem(SESSION_KEY);
+    sessionStorage.removeItem(SESSION_KEY);
     _emit("disconnected", null);
   }
 
@@ -470,6 +611,7 @@ window.IFRWallet = (function() {
   // ── Getters ───────────────────────────────────────
   function isConnected() { return _address !== null; }
   function getAddress() { return _address; }
+  function getConnectionLabel() { return _connectionLabel; }
   function getSigner() { return _signer; }
   function getShortAddress(addr) {
     var a = addr || _address;
@@ -521,8 +663,10 @@ window.IFRWallet = (function() {
 
   return {
     connect: connect, disconnect: disconnect, autoReconnect: autoReconnect,
+    listWallets: listWallets, connectInjected: connectInjected,
+    connectWalletConnect: connectWalletConnect,
     isConnected: isConnected, getAddress: getAddress, getShortAddress: getShortAddress,
-    getSigner: getSigner, getProvider: getProvider,
+    getSigner: getSigner, getProvider: getProvider, getConnectionLabel: getConnectionLabel,
     ensureMainnet: ensureMainnet,
     addToken: addIFRToken,
     on: on, off: off, getDeepLink: getDeepLink, isMobile: isMobile,

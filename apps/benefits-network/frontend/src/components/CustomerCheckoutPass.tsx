@@ -2,10 +2,11 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { useAccount, useSignMessage } from 'wagmi';
+import { useSignMessage } from 'wagmi';
 import QRCode from 'react-qr-code';
 import { Countdown } from '@/components/Countdown';
 import { BusinessLogo } from '@/components/BusinessLogo';
+import { useHydratedAccount } from '@/hooks/useHydratedAccount';
 import {
   CustomerPassControlStatus,
   CustomerPassCreated,
@@ -29,7 +30,7 @@ type StoredPass = CustomerPassCreated & { walletAddress: string };
 type SelectedOffer = { businessId: string; sellerName: string; sellerLogoUrl: string | null; rule: BenefitRule };
 
 export function CustomerCheckoutPass() {
-  const { address, isConnected } = useAccount();
+  const { address, isConnected } = useHydratedAccount();
   const { signMessageAsync } = useSignMessage();
   const searchParams = useSearchParams();
   const [pass, setPass] = useState<StoredPass | null>(null);

@@ -1,4 +1,5 @@
-const CACHE_NAME = "ifr-web3-v8";
+const CACHE_NAME = "ifr-web3-v13";
+const NAVIGATION_TIMEOUT_MS = 5000;
 const PRECACHE_URLS = [
   "/",
   "/web3/",
@@ -30,6 +31,13 @@ self.addEventListener("activate", (event) => {
   );
 });
 
+function fetchNavigation(request) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), NAVIGATION_TIMEOUT_MS);
+  return fetch(request, { cache: "no-store", signal: controller.signal })
+    .finally(() => clearTimeout(timeout));
+}
+
 self.addEventListener("fetch", (event) => {
   const request = event.request;
   if (request.method !== "GET") return;
@@ -38,14 +46,19 @@ self.addEventListener("fetch", (event) => {
   if (url.origin !== self.location.origin) return;
 
   if (request.mode === "navigate") {
-    event.respondWith(
-      fetch(request)
-        .then((response) => {
+    let cacheWrite = Promise.resolve();
+    const navigationResponse = fetchNavigation(request)
+      .then((response) => {
+        if (response.ok) {
           const copy = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put("/", copy));
-          return response;
-        })
-        .catch(() => caches.match("/") || caches.match("/web3/index.html"))
+          cacheWrite = caches.open(CACHE_NAME).then((cache) => cache.put("/", copy));
+        }
+        return response;
+      });
+    event.waitUntil(navigationResponse.then(() => cacheWrite).catch(() => undefined));
+    event.respondWith(
+      navigationResponse
+        .catch(async () => (await caches.match("/")) || caches.match("/web3/index.html"))
     );
     return;
   }

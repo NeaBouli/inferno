@@ -374,57 +374,91 @@ router.post(
     try {
       const business = await prisma.business.findUnique({
         where: { id: req.params.id },
-        select: { id: true, ownerAddress: true, active: true },
+        select: { id: true, ownerAddress: true, active: true, rewardLink: true },
       });
       if (!business?.active || !business.ownerAddress) {
         res.status(404).json({ error: 'Active seller-owned business not found' });
         return;
       }
 
-      const onChain = await getRewardOnChainStatus(business.ownerAddress, req.body.partnerId);
+      if (!business.rewardLink) {
+        res.status(409).json({ error: 'Seller must submit a reward application before governance verification' });
+        return;
+      }
+
+      // Seller and admin opt-outs are sticky until the owner applies again.
+      if (business.rewardLink.status === 'DISABLED') {
+        res.status(409).json({ error: 'Seller rewards are disabled by the seller owner' });
+        return;
+      }
+      if (business.rewardLink.status === 'REVOKED') {
+        res.status(409).json({ error: 'Seller reward link is revoked; a fresh seller application is required' });
+        return;
+      }
+
+      const rewardLinkSnapshot = business.rewardLink;
+      const rewardWallet = rewardLinkSnapshot.rewardWallet ?? null;
+      const onChain = await getRewardOnChainStatus(business.ownerAddress, req.body.partnerId, rewardWallet);
       if (!onChain.verified) {
-        await prisma.$transaction(async (tx) => {
-          await tx.sellerRewardLink.upsert({
-            where: { businessId: business.id },
-            create: {
-              businessId: business.id,
-              status: 'APPLIED',
-              builderWallet: business.ownerAddress,
-              lastCheckedAt: new Date(onChain.checkedAt),
-              verificationBlock: String(onChain.blockNumber),
-              reason: onChain.reason,
-            },
-            update: {
+        const updated = await prisma.$transaction(async (tx) => {
+          const current = await tx.business.findUnique({
+            where: { id: business.id },
+            select: { active: true, ownerAddress: true, rewardLink: true },
+          });
+          const currentLink = current?.rewardLink;
+          if (
+            !current?.active ||
+            current.ownerAddress?.toLowerCase() !== business.ownerAddress?.toLowerCase() ||
+            !currentLink ||
+            currentLink.id !== rewardLinkSnapshot.id ||
+            currentLink.updatedAt.getTime() !== rewardLinkSnapshot.updatedAt.getTime() ||
+            currentLink.status === 'DISABLED' ||
+            currentLink.status === 'REVOKED' ||
+            (currentLink.rewardWallet ?? null) !== rewardWallet
+          ) return null;
+          const link = await tx.sellerRewardLink.update({
+            where: { id: currentLink.id },
+            data: {
               status: 'APPLIED',
               partnerId: null,
               builderWallet: business.ownerAddress,
               verifiedAt: null,
               lastCheckedAt: new Date(onChain.checkedAt),
               verificationBlock: String(onChain.blockNumber),
+              governanceReference: null,
               reason: onChain.reason,
             },
           });
           await recordAdminAudit(tx, req, 'rewards:verify', 409, { type: 'Business', id: business.id });
+          return link;
         });
+        if (!updated) {
+          res.status(409).json({ error: 'Seller reward configuration changed during verification; retry with the current state' });
+          return;
+        }
         res.status(409).json({ error: onChain.reason || 'Seller is not governance verified', onChain });
         return;
       }
 
       const link = await prisma.$transaction(async (tx) => {
-        const verified = await tx.sellerRewardLink.upsert({
-          where: { businessId: business.id },
-          create: {
-            businessId: business.id,
-            status: 'VERIFIED',
-            partnerId: onChain.partnerId,
-            builderWallet: business.ownerAddress,
-            verifiedAt: new Date(onChain.checkedAt),
-            lastCheckedAt: new Date(onChain.checkedAt),
-            verificationBlock: String(onChain.blockNumber),
-            reason: onChain.reason,
-            governanceReference: req.body.governanceReference,
-          },
-          update: {
+        const current = await tx.business.findUnique({
+          where: { id: business.id },
+          select: { active: true, ownerAddress: true, rewardLink: true },
+        });
+        const currentLink = current?.rewardLink;
+        if (
+          !current?.active ||
+          current.ownerAddress?.toLowerCase() !== business.ownerAddress?.toLowerCase() ||
+          !currentLink ||
+          currentLink.id !== rewardLinkSnapshot.id ||
+          currentLink.updatedAt.getTime() !== rewardLinkSnapshot.updatedAt.getTime() ||
+          currentLink.status === 'DISABLED' ||
+          currentLink.status === 'REVOKED' ||
+          (currentLink.rewardWallet ?? null) !== rewardWallet
+        ) return null;
+        const verified = await tx.sellerRewardLink.update({
+          where: { id: currentLink.id },
+          data: {
             status: 'VERIFIED',
             partnerId: onChain.partnerId,
             builderWallet: business.ownerAddress,
@@ -438,6 +472,10 @@ router.post(
         await recordAdminAudit(tx, req, 'rewards:verify', 200, { type: 'Business', id: business.id });
         return verified;
       });
+      if (!link) {
+        res.status(409).json({ error: 'Seller reward configuration changed during verification; retry with the current state' });
+        return;
+      }
       res.json({ link, onChain });
     } catch (err) {
       next(err);
@@ -478,7 +516,7 @@ router.post('/businesses/:id/rewards/queue', adminAuth, async (req, res, next) =
       return;
     }
 
-    const onChain = await getRewardOnChainStatus(business.ownerAddress, link.partnerId);
+    const onChain = await getRewardOnChainStatus(business.ownerAddress, link.partnerId, link.rewardWallet ?? null);
     if (!onChain.verified) {
       await prisma.$transaction(async (tx) => {
         await tx.sellerRewardLink.update({
@@ -509,7 +547,7 @@ router.post('/businesses/:id/rewards/queue', adminAuth, async (req, res, next) =
     const eventSelect = { id: true, customerWallet: true } as const;
     const [readyEvents, actionableEvents] = await Promise.all([
       prisma.rewardEvent.findMany({
-        where: { businessId: business.id, status: 'READY' },
+        where: { businessId: business.id, partnerId: link.partnerId, status: 'READY' },
         orderBy: { createdAt: 'asc' },
         take: 50,
         select: eventSelect,
@@ -517,6 +555,7 @@ router.post('/businesses/:id/rewards/queue', adminAuth, async (req, res, next) =
       prisma.rewardEvent.findMany({
         where: {
           businessId: business.id,
+          partnerId: link.partnerId,
           status: { in: ['PENDING', 'BLOCKED_CALLER', 'BLOCKED_GOVERNANCE'] },
         },
         orderBy: { createdAt: 'asc' },

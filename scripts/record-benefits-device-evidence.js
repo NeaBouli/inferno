@@ -9,6 +9,10 @@ const checklistPath = process.env.BENEFITS_DEVICE_CHECKLIST_PATH
   ? path.resolve(process.env.BENEFITS_DEVICE_CHECKLIST_PATH)
   : path.join(repoRoot, 'docs/qa/BENEFITS_DEVICE_WALLET_CHECKLIST.json');
 const validStatuses = new Set(['pass', 'fail', 'blocked', 'pending']);
+const validEvidenceSources = new Set(['physical-device', 'emulator', 'automated']);
+const lockWaitMs = 15_000;
+const lockRetryMs = 25;
+const staleLockMs = 60_000;
 const sensitivePatterns = [
   /private[_ -]?key/i,
   /seed phrase/i,
@@ -21,6 +25,7 @@ function usage() {
   node scripts/record-benefits-device-evidence.js \\
     --id ios-safari-pwa \\
     --status pass \\
+    --source physical-device \\
     --note "iPadOS Safari install guidance visible." \\
     [--screenshot-path /Users/gio/Desktop/example.png] \\
     [--business-id test-business-id] \\
@@ -28,6 +33,7 @@ function usage() {
     [--date-time 2026-07-16T18:00:00Z]
 
 Statuses: pass, fail, blocked, pending.
+Sources: physical-device, emulator, automated. PASS requires physical-device.
 Never include private keys, seed phrases, mnemonics or full personal wallet inventories.`);
 }
 
@@ -62,10 +68,71 @@ function assertString(value, label) {
   assertSafe(value, label);
 }
 
+function sleep(milliseconds) {
+  Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, milliseconds);
+}
+
+function processIsRunning(pid) {
+  if (!Number.isInteger(pid) || pid <= 0) return false;
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch (error) {
+    return error && error.code === 'EPERM';
+  }
+}
+
+function acquireChecklistLock() {
+  const lockPath = `${checklistPath}.lock`;
+  const deadline = Date.now() + lockWaitMs;
+
+  while (Date.now() < deadline) {
+    let descriptor;
+    try {
+      descriptor = fs.openSync(lockPath, 'wx', 0o600);
+      try {
+        fs.writeFileSync(descriptor, `${process.pid}\n`);
+      } catch (error) {
+        fs.closeSync(descriptor);
+        fs.rmSync(lockPath, { force: true });
+        throw error;
+      }
+      return { descriptor, lockPath };
+    } catch (error) {
+      if (!error || error.code !== 'EEXIST') throw error;
+      try {
+        const ownerText = fs.readFileSync(lockPath, 'utf8').trim();
+        const ownerPid = Number.parseInt(ownerText, 10);
+        const lockAge = Date.now() - fs.statSync(lockPath).mtimeMs;
+        const deadOwner = Number.isInteger(ownerPid) && ownerPid > 0 && !processIsRunning(ownerPid);
+        const malformedStaleLock = (!Number.isInteger(ownerPid) || ownerPid <= 0) && lockAge >= staleLockMs;
+        if (deadOwner || malformedStaleLock) {
+          fs.rmSync(lockPath, { force: true });
+          continue;
+        }
+      } catch (lockReadError) {
+        if (lockReadError && lockReadError.code === 'ENOENT') continue;
+      }
+      sleep(lockRetryMs);
+    }
+  }
+
+  throw new Error(`timed out waiting for checklist lock: ${lockPath}`);
+}
+
+function releaseChecklistLock(lock) {
+  try {
+    fs.closeSync(lock.descriptor);
+  } finally {
+    fs.rmSync(lock.lockPath, { force: true });
+  }
+}
+
 function main() {
   const args = parseArgs(process.argv.slice(2));
   const itemId = args.id;
   const status = args.status;
+  const evidenceSource = args.source;
   const note = args.note;
   const dateTime = args['date-time'] || new Date().toISOString();
   const screenshotPath = args['screenshot-path'];
@@ -77,6 +144,12 @@ function main() {
     fail('--id, --status and --note are required');
   }
   if (!validStatuses.has(status)) fail(`--status must be one of ${[...validStatuses].join(', ')}`);
+  if (status !== 'pending' && !validEvidenceSources.has(evidenceSource)) {
+    fail(`--source must be one of ${[...validEvidenceSources].join(', ')} for non-pending evidence`);
+  }
+  if (status === 'pass' && evidenceSource !== 'physical-device') {
+    fail('--status pass requires --source physical-device');
+  }
   assertString(itemId, '--id');
   assertString(note, '--note');
   assertString(dateTime, '--date-time');
@@ -87,51 +160,69 @@ function main() {
   if (businessId !== undefined) assertString(businessId, '--business-id');
   if (sessionId !== undefined) assertString(sessionId, '--session-id');
 
-  const checklist = JSON.parse(fs.readFileSync(checklistPath, 'utf8'));
-  const item = checklist.matrix.find((entry) => entry.id === itemId);
-  if (!item) fail(`unknown checklist id: ${itemId}`);
+  const lock = acquireChecklistLock();
+  const pendingPath = `${checklistPath}.${process.pid}.tmp`;
+  try {
+    const checklist = JSON.parse(fs.readFileSync(checklistPath, 'utf8'));
+    const item = checklist.matrix.find((entry) => entry.id === itemId);
+    if (!item) throw new Error(`unknown checklist id: ${itemId}`);
 
-  if (status === 'pending') {
-    item.status = 'pending';
-    item.evidence = [];
-  } else {
-    const evidence = {
-      dateTime,
-      result: status.toUpperCase(),
-      note,
-    };
-    if (screenshotPath) evidence.screenshotPath = screenshotPath;
-    if (businessId) evidence.businessId = businessId;
-    if (sessionId) evidence.sessionId = sessionId;
+    if (status === 'pending') {
+      item.status = 'pending';
+      item.evidence = [];
+    } else {
+      const evidence = {
+        dateTime,
+        result: status.toUpperCase(),
+        evidenceSource,
+        note,
+      };
+      if (screenshotPath) evidence.screenshotPath = screenshotPath;
+      if (businessId) evidence.businessId = businessId;
+      if (sessionId) evidence.sessionId = sessionId;
 
-    item.status = status;
-    item.evidence = [...item.evidence, evidence];
+      item.status = status;
+      item.evidence = [...item.evidence, evidence];
+    }
+
+    const evidenceDate = dateTime.slice(0, 10);
+    checklist.lastUpdated = checklist.lastUpdated > evidenceDate
+      ? checklist.lastUpdated
+      : evidenceDate;
+    if (checklist.matrix.every((entry) => entry.status === 'pass')) {
+      checklist.status = 'complete';
+    } else if (checklist.matrix.some((entry) => entry.status === 'blocked')) {
+      checklist.status = 'blocked';
+    } else {
+      checklist.status = 'open';
+    }
+
+    fs.writeFileSync(pendingPath, `${JSON.stringify(checklist, null, 2)}\n`);
+
+    const validation = spawnSync(process.execPath, [path.join(repoRoot, 'scripts/validate-benefits-device-checklist.js')], {
+      cwd: repoRoot,
+      encoding: 'utf8',
+      env: { ...process.env, BENEFITS_DEVICE_CHECKLIST_PATH: pendingPath },
+    });
+    if (validation.stdout) process.stdout.write(validation.stdout);
+    if (validation.stderr) process.stderr.write(validation.stderr);
+    if (validation.status !== 0) {
+      const error = new Error('updated checklist did not pass validation');
+      error.exitCode = validation.status || 1;
+      throw error;
+    }
+
+    fs.renameSync(pendingPath, checklistPath);
+    console.log(`[benefits-device-record] ${status.toUpperCase()} evidence recorded for ${itemId}`);
+  } finally {
+    fs.rmSync(pendingPath, { force: true });
+    releaseChecklistLock(lock);
   }
-
-  const evidenceDate = dateTime.slice(0, 10);
-  checklist.lastUpdated = checklist.lastUpdated > evidenceDate
-    ? checklist.lastUpdated
-    : evidenceDate;
-  if (checklist.matrix.every((entry) => entry.status === 'pass')) {
-    checklist.status = 'complete';
-  } else if (checklist.matrix.some((entry) => entry.status === 'blocked')) {
-    checklist.status = 'blocked';
-  } else {
-    checklist.status = 'open';
-  }
-
-  fs.writeFileSync(checklistPath, `${JSON.stringify(checklist, null, 2)}\n`);
-
-  const validation = spawnSync(process.execPath, [path.join(repoRoot, 'scripts/validate-benefits-device-checklist.js')], {
-    cwd: repoRoot,
-    encoding: 'utf8',
-    env: { ...process.env, BENEFITS_DEVICE_CHECKLIST_PATH: checklistPath },
-  });
-  if (validation.stdout) process.stdout.write(validation.stdout);
-  if (validation.stderr) process.stderr.write(validation.stderr);
-  if (validation.status !== 0) process.exit(validation.status || 1);
-
-  console.log(`[benefits-device-record] ${status.toUpperCase()} evidence recorded for ${itemId}`);
 }
 
-main();
+try {
+  main();
+} catch (error) {
+  console.error(`[benefits-device-record] FAIL: ${error.message}`);
+  process.exitCode = error.exitCode || 1;
+}
