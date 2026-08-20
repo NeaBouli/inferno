@@ -2421,7 +2421,7 @@ export function SellerRuleBuilder() {
       {profileReady ? (
         <>
       <div id="seller-rewards" className="scroll-mt-28">
-        <SellerRewardStatus businessId={businessId} />
+        <SellerRewardStatus businessId={businessId} ownerAddress={selectedBusiness?.ownerAddress ?? null} />
       </div>
 
       {businessId ? (
