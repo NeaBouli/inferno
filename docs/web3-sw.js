@@ -1,4 +1,4 @@
-const CACHE_NAME = "ifr-web3-v10";
+const CACHE_NAME = "ifr-web3-v11";
 const NAVIGATION_TIMEOUT_MS = 5000;
 const PRECACHE_URLS = [
   "/",
@@ -34,7 +34,7 @@ self.addEventListener("activate", (event) => {
 function fetchNavigation(request) {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), NAVIGATION_TIMEOUT_MS);
-  return fetch(request, { signal: controller.signal })
+  return fetch(request, { cache: "no-store", signal: controller.signal })
     .finally(() => clearTimeout(timeout));
 }
 
