@@ -1106,32 +1106,43 @@ router.get('/businesses/:id/sessions', sellerRateLimiter, async (req, res, next)
 router.post('/businesses/:id/rewards/apply', sellerRateLimiter, async (req, res, next) => {
   try {
     const owner = await requireBusinessOwner(req, 'rewards:apply', req.params.id, req.params.id);
-    const existing = await prisma.sellerRewardLink.findUnique({ where: { businessId: req.params.id } });
-    if (existing?.status === 'VERIFIED') {
+    const result = await prisma.$transaction(async (tx) => {
+      // SQLite transactions are deferred. Take the single writer lock before
+      // deriving the next reward-link state from a mutable read.
+      await tx.$executeRaw`
+        UPDATE "SellerRewardLink"
+        SET "businessId" = "businessId"
+        WHERE "businessId" = ${req.params.id}
+      `;
+      const existing = await tx.sellerRewardLink.findUnique({ where: { businessId: req.params.id } });
+      if (existing?.status === 'VERIFIED') return { conflict: true as const };
+      const link = await tx.sellerRewardLink.upsert({
+        where: { businessId: req.params.id },
+        create: {
+          businessId: req.params.id,
+          status: 'APPLIED',
+          builderWallet: owner,
+          reason: 'Awaiting BuilderRegistry and PartnerVault governance approval',
+        },
+        update: {
+          status: 'APPLIED',
+          partnerId: null,
+          builderWallet: owner,
+          requestedAt: new Date(),
+          verifiedAt: null,
+          lastCheckedAt: null,
+          verificationBlock: null,
+          governanceReference: null,
+          reason: 'Awaiting BuilderRegistry and PartnerVault governance approval',
+        },
+      });
+      return { conflict: false as const, existed: Boolean(existing), link };
+    });
+    if (result.conflict) {
       res.status(409).json({ error: 'Seller reward link is already verified' });
       return;
     }
-    const link = await prisma.sellerRewardLink.upsert({
-      where: { businessId: req.params.id },
-      create: {
-        businessId: req.params.id,
-        status: 'APPLIED',
-        builderWallet: owner,
-        reason: 'Awaiting BuilderRegistry and PartnerVault governance approval',
-      },
-      update: {
-        status: 'APPLIED',
-        partnerId: null,
-        builderWallet: owner,
-        requestedAt: new Date(),
-        verifiedAt: null,
-        lastCheckedAt: null,
-        verificationBlock: null,
-        governanceReference: null,
-        reason: 'Awaiting BuilderRegistry and PartnerVault governance approval',
-      },
-    });
-    res.status(existing ? 200 : 201).json({ link });
+    res.status(result.existed ? 200 : 201).json({ link: result.link });
   } catch (err) {
     handleSellerError(err, res, next);
   }
@@ -1141,6 +1152,11 @@ router.post('/businesses/:id/rewards/disable', sellerRateLimiter, async (req, re
   try {
     await requireBusinessOwner(req, 'rewards:disable', req.params.id, req.params.id);
     const link = await prisma.$transaction(async (tx) => {
+      await tx.$executeRaw`
+        UPDATE "SellerRewardLink"
+        SET "businessId" = "businessId"
+        WHERE "businessId" = ${req.params.id}
+      `;
       const existing = await tx.sellerRewardLink.findUnique({ where: { businessId: req.params.id } });
       if (!existing) throw new Error('Seller reward application not found');
       const updated = await tx.sellerRewardLink.update({
@@ -1223,6 +1239,7 @@ router.post(
       const owner = await requireBusinessOwner(req, 'rewards:reward-wallet', req.params.id, scope);
 
       let rewardWallet: string | null = null;
+      let proofWallet: string | null = null;
       if (requestedWallet) {
         rewardWallet = normalizeAddress(requestedWallet);
         if (rewardWallet === owner) {
@@ -1231,7 +1248,7 @@ router.post(
         // Second factor: the proposed reward wallet itself must sign a fresh,
         // server-issued, business-bound single-use challenge. An address is
         // never accepted without proof of control.
-        const proofWallet = verifySellerSignature({
+        proofWallet = verifySellerSignature({
           walletAddress: rewardWallet,
           signature: String(req.body.rewardWalletSignature),
           timestamp: String(req.body.rewardWalletTimestamp),
@@ -1240,16 +1257,34 @@ router.post(
           nonce: String(req.body.rewardWalletNonce),
           scope,
         });
-        await consumeSellerAuthorizationChallenge(prisma, {
-          nonce: String(req.body.rewardWalletNonce),
-          walletAddress: proofWallet,
-          action: 'rewards:reward-wallet',
-          businessId: req.params.id,
-          scope,
-        });
       }
 
       const link = await prisma.$transaction(async (tx) => {
+        const lockedBusiness = await tx.$executeRaw`
+          UPDATE "Business"
+          SET "active" = "active"
+          WHERE "id" = ${req.params.id} AND "active" = 1
+        `;
+        if (lockedBusiness !== 1) throw new Error('Seller-owned business not found');
+        const currentBusiness = await tx.business.findUnique({
+          where: { id: req.params.id },
+          select: { active: true, ownerAddress: true },
+        });
+        if (!currentBusiness?.active || !currentBusiness.ownerAddress) {
+          throw new Error('Seller-owned business not found');
+        }
+        if (normalizeAddress(currentBusiness.ownerAddress) !== owner) {
+          throw new Error('Seller wallet is not the business owner');
+        }
+        if (proofWallet) {
+          await consumeSellerAuthorizationChallenge(tx, {
+            nonce: String(req.body.rewardWalletNonce),
+            walletAddress: proofWallet,
+            action: 'rewards:reward-wallet',
+            businessId: req.params.id,
+            scope,
+          });
+        }
         const existing = await tx.sellerRewardLink.findUnique({ where: { businessId: req.params.id } });
         if (!existing) throw new Error('Seller reward application not found');
         const currentWallet = existing.rewardWallet ? normalizeAddress(existing.rewardWallet) : null;

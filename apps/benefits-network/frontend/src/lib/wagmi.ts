@@ -7,6 +7,7 @@ import { normalizeWalletConnectProjectId } from '@/lib/walletConnectProjectId.mj
 
 const chainId = Number(process.env.NEXT_PUBLIC_CHAIN_ID || 1);
 const chains = chainId === 1 ? [mainnet] as const : [sepolia] as const;
+export const targetChain = chains[0];
 const walletConnectProjectId = normalizeWalletConnectProjectId(
   process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID,
 );

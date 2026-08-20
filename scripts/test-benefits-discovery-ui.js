@@ -895,6 +895,7 @@ async function run() {
         : discoveryResponse([])),
     }));
     const legacyAndroidPage = await legacyAndroidContext.newPage();
+    legacyAndroidPage.setDefaultNavigationTimeout(NAVIGATION_TIMEOUT_MS);
     await legacyAndroidPage.goto(origin, { waitUntil: 'domcontentloaded' });
     await legacyAndroidPage.locator('[data-pwa-install-listeners-ready="true"]').waitFor();
     await legacyAndroidPage.evaluate(() => {

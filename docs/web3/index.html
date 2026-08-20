@@ -2655,8 +2655,7 @@
 
         const address = await connectWithChooser(label);
         if (!address) throw new Error("Wallet connection was not completed.");
-        const state = await IFRState.load(address);
-        renderState(state);
+        await loadConnectedWallet(address);
         return address;
       }
 

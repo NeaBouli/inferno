@@ -8,6 +8,7 @@ import { SellerCatalogManager } from '@/components/SellerCatalogManager';
 import { SellerRewardStatus } from '@/components/SellerRewardStatus';
 import { useAvailableWalletConnectors } from '@/hooks/useAvailableWalletConnectors';
 import { useHydratedAccount } from '@/hooks/useHydratedAccount';
+import { targetChain } from '@/lib/wagmi';
 import {
   selectPrimaryAvailableWalletConnector,
   walletConnectionErrorMessage,
@@ -1489,7 +1490,7 @@ export function SellerRuleBuilder() {
       setStatus(`Connected with ${label}.`);
     } catch (err) {
       setStatus('');
-      setError(walletConnectionErrorMessage(err));
+      setError(walletConnectionErrorMessage(err, targetChain));
     }
   }
 

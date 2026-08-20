@@ -9,6 +9,7 @@ import { StatusBadge } from '@/components/StatusBadge';
 import { SellerCustomerPassScanner } from '@/components/SellerCustomerPassScanner';
 import { useAvailableWalletConnectors } from '@/hooks/useAvailableWalletConnectors';
 import { useHydratedAccount } from '@/hooks/useHydratedAccount';
+import { targetChain } from '@/lib/wagmi';
 import { parseCustomerPassQrPayload } from '@/lib/customerPassLink';
 import {
   selectPrimaryAvailableWalletConnector,
@@ -467,7 +468,7 @@ export function BusinessConsoleClient({ businessId }: { businessId: string }) {
       setAccessStatus(`Connected with ${label}.`);
     } catch (err) {
       setAccessStatus('');
-      setError(walletConnectionErrorMessage(err));
+      setError(walletConnectionErrorMessage(err, targetChain));
     }
   }
 

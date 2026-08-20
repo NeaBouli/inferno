@@ -386,10 +386,13 @@ router.post(
         return;
       }
 
-      // A seller-disabled link is fail-closed: verification must never
-      // silently re-enable rewards the owner has opted out of.
+      // Seller and admin opt-outs are sticky until the owner applies again.
       if (business.rewardLink.status === 'DISABLED') {
         res.status(409).json({ error: 'Seller rewards are disabled by the seller owner' });
+        return;
+      }
+      if (business.rewardLink.status === 'REVOKED') {
+        res.status(409).json({ error: 'Seller reward link is revoked; a fresh seller application is required' });
         return;
       }
 
@@ -410,6 +413,7 @@ router.post(
             currentLink.id !== rewardLinkSnapshot.id ||
             currentLink.updatedAt.getTime() !== rewardLinkSnapshot.updatedAt.getTime() ||
             currentLink.status === 'DISABLED' ||
+            currentLink.status === 'REVOKED' ||
             (currentLink.rewardWallet ?? null) !== rewardWallet
           ) return null;
           const link = await tx.sellerRewardLink.update({
@@ -449,6 +453,7 @@ router.post(
           currentLink.id !== rewardLinkSnapshot.id ||
           currentLink.updatedAt.getTime() !== rewardLinkSnapshot.updatedAt.getTime() ||
           currentLink.status === 'DISABLED' ||
+          currentLink.status === 'REVOKED' ||
           (currentLink.rewardWallet ?? null) !== rewardWallet
         ) return null;
         const verified = await tx.sellerRewardLink.update({

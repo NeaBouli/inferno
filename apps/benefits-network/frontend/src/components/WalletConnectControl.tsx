@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useChainId, useConnect, useDisconnect } from 'wagmi';
 import { useHydratedAccount } from '@/hooks/useHydratedAccount';
 import { getMobileWalletLaunches } from '@/lib/walletLaunch';
-import { hasWalletConnectProjectId } from '@/lib/wagmi';
+import { hasWalletConnectProjectId, targetChain } from '@/lib/wagmi';
 import { useAvailableWalletConnectors } from '@/hooks/useAvailableWalletConnectors';
 import {
   selectPrimaryAvailableWalletConnector,
@@ -103,7 +103,7 @@ export function WalletConnectControl() {
       await connectAsync({ connector: targetConnector });
       setConnectionStatus(`Connected with ${label}.`);
     } catch (err) {
-      setConnectionStatus(walletConnectionErrorMessage(err));
+      setConnectionStatus(walletConnectionErrorMessage(err, targetChain));
     }
   }
 

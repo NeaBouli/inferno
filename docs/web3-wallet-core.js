@@ -298,7 +298,7 @@ window.IFRWallet = (function() {
           projectId: WC_PROJECT_ID,
           chains: [CHAIN_ID],
           optionalChains: [CHAIN_ID],
-          methods: ["eth_sendTransaction"],
+          methods: ["eth_sendTransaction", "personal_sign"],
           events: ["chainChanged", "accountsChanged", "disconnect"],
           showQrModal: !_isMobileOrTablet(),
           rpcMap: { 1: RPC_URL },
