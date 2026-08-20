@@ -289,6 +289,11 @@ test("zero-padded hexadecimal Mainnet chain id connects without a false network 
 test("Web3 wallet manager shows connector details, tracks account changes and disconnects", async ({ browser }) => {
   const { context, page, writes, pageErrors } = await preparePage(browser);
   await page.goto("/web3/", { waitUntil: "domcontentloaded" });
+  expect(await page.locator("[data-wallet-header-disconnect]").evaluate((element) => ({
+    hidden: element.hidden,
+    width: element.getBoundingClientRect().width,
+    height: element.getBoundingClientRect().height,
+  }))).toEqual({ hidden: true, width: 0, height: 0 });
   await connect(page);
 
   await expect(page.locator("[data-wallet-address]")).toHaveText("0x3333...3333");
@@ -312,6 +317,11 @@ test("Web3 wallet manager shows connector details, tracks account changes and di
   await expect(page.locator("[data-wallet-address]")).toHaveText("Not connected");
   await expect(page.locator("[data-wallet-state]")).toHaveText("Disconnected");
   await expect(page.locator("[data-wallet-disconnect]")).toBeHidden();
+  expect(await page.locator("[data-wallet-header-disconnect]").evaluate((element) => ({
+    hidden: element.hidden,
+    width: element.getBoundingClientRect().width,
+    height: element.getBoundingClientRect().height,
+  }))).toEqual({ hidden: true, width: 0, height: 0 });
   await expect(page.locator("[data-wallet-connect]").first()).toHaveText("Connect Wallet");
   expect(await page.evaluate(() => window.IFRWallet.isConnected())).toBe(false);
   expect(await page.evaluate(() => localStorage.getItem("ifr_web3_wallet_connected"))).toBeNull();
@@ -728,7 +738,7 @@ test("Android 9 stays in browser mode instead of launching an incompatible WebAP
 
 test("Web3 service worker bounds offline navigation before using the cache", () => {
   const source = readFileSync("docs/web3-sw.js", "utf8");
-  expect(source).toContain('const CACHE_NAME = "ifr-web3-v12"');
+  expect(source).toContain('const CACHE_NAME = "ifr-web3-v13"');
   expect(source).toContain("const NAVIGATION_TIMEOUT_MS = 5000");
   expect(source).toContain("fetchNavigation(request)");
   expect(source).toContain('fetch(request, { cache: "no-store", signal: controller.signal })');
