@@ -164,6 +164,9 @@ async function expectNoHorizontalOverflow(page, label) {
 
 async function verifyMobileWalletLaunches(page) {
   await expectText(page, 'Open in wallet app');
+  await expectText(page, 'another device or a wallet scanner');
+  await expectText(page, 'never with the normal camera');
+  await expectText(page, 'use Open in wallet app above');
   const expectedHosts = {
     metamask: 'metamask.app.link',
     trust: 'link.trustwallet.com',

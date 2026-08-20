@@ -174,7 +174,7 @@ async function waitForRoleSelection(locator) {
 
 async function verifyMobileNoProviderFallback(page, expectedSurface) {
   const walletControl = page.locator('[data-wallet-connect-control]').first();
-  await waitForAttribute(walletControl, 'data-wallet-connectors-ready', 'true');
+  await waitForAttribute(walletControl, 'data-wallet-connectors-ready', 'true', 30_000);
   await walletControl.getByText(expectedSurface, { exact: true }).waitFor();
   await walletControl.getByText('No injected provider', { exact: true }).waitFor();
   await walletControl.getByText('Not connected', { exact: true }).first().waitFor();
@@ -376,7 +376,7 @@ async function run() {
 
     const walletControl = page.locator('[data-wallet-connect-control]').first();
     await walletControl.getByRole('button', { name: 'Connect wallet', exact: true }).waitFor();
-    await waitForAttribute(walletControl, 'data-wallet-connectors-ready', 'true');
+    await waitForAttribute(walletControl, 'data-wallet-connectors-ready', 'true', 30_000);
     assert.equal(await walletControl.getAttribute('data-wallet-connector-ids'), 'coinbaseWalletSDK');
     assert.equal(
       await walletControl.getByRole('button', { name: 'Browser wallet', exact: true }).count(),

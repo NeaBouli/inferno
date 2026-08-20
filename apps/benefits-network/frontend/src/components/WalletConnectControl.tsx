@@ -268,7 +268,7 @@ export function WalletConnectControl() {
                 ))}
               </div>
               <p className="text-xs leading-5 text-stone-400">
-                Coinbase and Rainbow users can use Share or Copy link, then open it in the wallet browser.
+                On this phone, use one of the buttons above to open the page inside that wallet. Coinbase and Rainbow users can use Share or Copy link, then open it in the wallet browser.
               </p>
             </div>
           ) : null}
@@ -309,7 +309,7 @@ export function WalletConnectControl() {
               </div>
               {hasWalletConnectProjectId ? (
                 <p className="mt-2 text-xs leading-5 text-stone-400">
-                  Scan QR inside your wallet app. On this phone, choose Open in wallet app.
+                  WalletConnect is for another device or a wallet scanner. Scan a QR shown on another screen inside the wallet app, never with the normal camera. On this phone, use Open in wallet app above instead of opening a raw wc: link.
                 </p>
               ) : null}
             </div>

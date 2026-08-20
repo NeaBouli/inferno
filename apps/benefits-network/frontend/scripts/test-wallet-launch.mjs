@@ -11,7 +11,14 @@ import {
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 const manifest = JSON.parse(fs.readFileSync(path.join(scriptDir, '..', 'package.json'), 'utf8'));
+const walletControl = fs.readFileSync(
+  path.join(scriptDir, '..', 'src', 'components', 'WalletConnectControl.tsx'),
+  'utf8',
+);
 assert.equal(manifest.engines?.node, '>=22.6.0 <23');
+assert.match(walletControl, /another device or a wallet scanner/);
+assert.match(walletControl, /never with the normal camera/);
+assert.match(walletControl, /use Open in wallet app above/);
 
 const canonicalOrigin = 'https://shop.ifrunit.tech';
 const safePath = `${canonicalOrigin}/p/test-pass`;
