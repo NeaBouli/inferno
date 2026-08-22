@@ -56,10 +56,13 @@ requireText("STATUS-REPORT.md", currentBaseline);
 requireText("docs/STATUS-REPORT.md", currentBaseline);
 
 const todo = requireText("internal/operations/TODO.md", [
-  "> Last updated: 2026-08-01 | Branch: main",
-  "CURRENT WATCHLIST — verified 2026-07-31",
+  "> Last updated: 2026-08-22 | Branch: main",
+  "CURRENT WATCHLIST — verified 2026-08-22",
   "LendingVault V1 borrow activation policy — keep disabled",
   "V1 cannot set price back to zero",
+  "SEC-VLT-01 — Vault fee-exemption defense in depth",
+  "both token-balance/accounting differences are 0 IFR",
+  "balance-diff inflow accounting",
   "DEFERRED / LATER — resume only when its trigger occurs",
   "Status verified 2026-07-30: open, REVIEW_REQUIRED",
   "open, MERGEABLE but BLOCKED",
@@ -100,10 +103,13 @@ assert.ok(
 );
 
 requireText("internal/operations/TODO.html", [
-  "Last updated: 2026-08-01",
-  "Current Watchlist &mdash; verified 2026-07-31",
+  "Last updated: 2026-08-22",
+  "Current Watchlist &mdash; verified 2026-08-22",
   "LendingVault V1 borrow activation policy",
   "V1 cannot set the price back to zero",
+  "SEC-VLT-01 &mdash; Vault fee-exemption defense in depth",
+  "both token-balance/accounting differences are 0 IFR",
+  "balance-diff inflow accounting",
   "Deferred / Waiting &mdash; resume only when the trigger occurs",
   "Open, review required",
   "Open, mergeable but blocked",

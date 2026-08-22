@@ -1226,6 +1226,11 @@
               <td>Without fee exemption, <code>unlock()</code> fails due to balance mismatch from transfer fees</td>
               <td>IFRLock is set as fee-exempt during deployment; this must not be revoked</td>
             </tr>
+            <tr>
+              <td>CommitmentVault and LendingVault rely on token-side <code>feeExempt</code> status</td>
+              <td>Removing an exemption while V1 holds funds can make nominal accounting diverge from actual token balances</td>
+              <td>Mainnet verification at block 25811214 found both exemptions active and both accounting differences at 0 IFR. Monitoring and negative tests are open; V2 must add balance-diff inflow accounting and runtime guards that fail closed. <a href="https://github.com/NeaBouli/inferno/blob/main/docs/VAULT_FEE_EXEMPT_HARDENING.md" target="_blank" rel="noopener">Technical status</a></td>
+            </tr>
           </tbody>
         </table>
       </div>
