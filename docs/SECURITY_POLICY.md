@@ -60,9 +60,12 @@ and are credited in the Hall of Fame (see SECURITY.md).
 | Audit Type | Status | Result |
 |------------|--------|--------|
 | Slither Static Analysis | Completed | 0 High/Critical |
-| ChatGPT Independent Audit | 7/7 PASS | No critical findings |
-| Professional Audit | Recommended | Code4rena / Sherlock |
-| Contract Tests | 544 total | All passing |
+| Internal repository audits | Completed | Published findings and remediation records |
+| Professional third-party audit | Pending | Independent engagement remains open |
+| Contract Tests | 642 current | Passing in the 22 August 2026 clean audit |
+
+Current browser, application and physical-device evidence is tracked separately
+in [`CURRENT_FUNCTIONALITY_STATUS.md`](CURRENT_FUNCTIONALITY_STATUS.md).
 
 ## Contact
 

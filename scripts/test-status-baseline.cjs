@@ -46,10 +46,12 @@ assert.equal(
 );
 
 const currentBaseline = [
-  "**Current engineering baseline:** 1 August 2026",
+  "**Current engineering baseline:** 22 August 2026",
   "Hardhat `3.12.0`",
   "contracts `642/642`",
-  "10 transitive low findings",
+  "8 low transitive development-tool findings",
+  "Benefits physical device/wallet acceptance remains `1/10`",
+  "LendingVault.ifrPriceWei = 0",
   "## Historical Snapshot — 5 March 2026",
 ];
 requireText("STATUS-REPORT.md", currentBaseline);

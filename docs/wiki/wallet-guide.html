@@ -955,7 +955,7 @@
           <div class="wg-field"><strong>Owner:</strong> Governance</div>
           <div class="wg-field"><strong>feeExempt:</strong> <span class="wg-fee-status wg-fee-yes">&#x2705; Yes</span></div>
           <div class="wg-role-box">
-            <strong>Function:</strong> Receives 1% pool fee from every IFR transfer. Accumulates fees &mdash; NO automatic distribution. Phase 3: BuybackController will route accumulated fees.
+            <strong>Function:</strong> Receives the configured protocol pool-fee flow. FeeRouterV1 is governance-wired to the deployed BuybackController; controller execution remains subject to its on-chain threshold and cooldown rather than an automatic timer.
           </div>
           <div class="wg-field"><strong>Phase:</strong> Accumulating</div>
         </div>
@@ -974,7 +974,7 @@
           <div class="wg-field"><strong>Owner:</strong> Governance</div>
           <div class="wg-field"><strong>feeExempt:</strong> <span class="wg-fee-status wg-fee-yes">&#x2705; Yes</span></div>
           <div class="wg-role-box">
-            <strong>Function:</strong> Will receive IFR from FeeRouterV1 via BuybackController (Phase 3). Auto-refills PartnerVault when below 85% threshold (34M IFR). 70% Operating Pool + 30% SOS Reserve.
+            <strong>Function:</strong> The deployed BuybackController can route its configured distribution after on-chain execution conditions are met. PartnerVault refill behavior remains governed by the deployed controller parameters; it is not an unconditional automatic transfer on every fee.
           </div>
           <div class="wg-field"><strong>Balance:</strong> 0 IFR</div>
           <div class="wg-field"><strong>Phase:</strong> Inactive &mdash; activates Phase 3</div>
