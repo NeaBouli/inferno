@@ -2,11 +2,15 @@
 
 Last updated: March 2026
 
-## Project Status: MAINNET DEPLOYED
+> **Historical inventory:** Static test and application counts below describe
+> an earlier repository snapshot. Current verified capability and test evidence
+> is maintained in `CURRENT_FUNCTIONALITY_STATUS.md`.
 
-All 17 on-chain components deployed, verified, and operational on Ethereum Mainnet. BuybackController deployed 14.04.2026. Landing page, wiki (32 pages), dashboard, and 7 apps live.
+## Historical Project Status: MAINNET DEPLOYED
 
-## On-Chain Contracts (14)
+All 17 on-chain components were documented as deployed and verified in this snapshot. BuybackController deployed 14.04.2026. Current application deployment and acceptance status must be read from the canonical functionality matrix.
+
+## Historical On-Chain Contract Inventory (14)
 
 ### Mainnet (14)
 

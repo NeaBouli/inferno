@@ -4,6 +4,11 @@
 
 # Inferno -- Project Status & Structure
 
+> **Current status (22 August 2026):** This file contains a historical
+> repository inventory whose static counts are retained for traceability. For
+> the verified live capability, application and acceptance matrix, use
+> [`CURRENT_FUNCTIONALITY_STATUS.md`](CURRENT_FUNCTIONALITY_STATUS.md).
+
 ## Legend
 - [x] completed -- code + tests finished, stable
 - [ ] open -- not yet implemented or in progress

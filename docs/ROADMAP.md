@@ -1,5 +1,10 @@
 # Inferno ($IFR) — Roadmap
 
+Current operational capability and acceptance boundaries are maintained in
+[`CURRENT_FUNCTIONALITY_STATUS.md`](CURRENT_FUNCTIONALITY_STATUS.md). Completed
+historical milestones below do not imply that every later production or
+governance activation gate is complete.
+
 ## Phase 1: Foundation & Testnet (Q4 2025 - Q1 2026) — DONE
 
 ### Smart Contracts

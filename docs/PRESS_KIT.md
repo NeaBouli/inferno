@@ -6,6 +6,9 @@ Inferno ($IFR) is a deflationary ERC-20 utility token on Ethereum. Users lock IF
 
 **Model:** Community Fair Launch (CFLM) -- no presale, no VC, no insider allocation.
 
+Current application, Mainnet activation and acceptance status:
+[`CURRENT_FUNCTIONALITY_STATUS.md`](CURRENT_FUNCTIONALITY_STATUS.md).
+
 ## Key Facts
 
 | Metric | Value |
@@ -14,8 +17,9 @@ Inferno ($IFR) is a deflationary ERC-20 utility token on Ethereum. Users lock IF
 | Standard | ERC-20, Ethereum |
 | Decimals | 9 |
 | Initial Supply | 1,000,000,000 IFR |
-| Smart Contracts | 17 on-chain components (all verified) |
-| Tests | 544 (99% coverage) |
+| Current Supply | 997,673,879.091903855 IFR at block 25812380 |
+| Smart Contracts | 17 documented Mainnet components: 14 deployed protocol contracts plus 3 Gnosis Safes; contract source and address evidence is linked from the deployment records |
+| Current test evidence | 642 contract + 30 Generator Engine + 36 SDK legacy tests, plus browser/application release gates |
 | Network | Ethereum Mainnet (deployed 2026-03-05) |
 | Launch Model | Community Fair Launch (CFLM) |
 | Mint Function | None -- supply can only decrease |
@@ -24,7 +28,7 @@ Inferno ($IFR) is a deflationary ERC-20 utility token on Ethereum. Users lock IF
 
 | Category | Share | Amount | Mechanism |
 |----------|-------|--------|-----------|
-| DEX Liquidity | 40% | 400M IFR | Uniswap V2 Pairing |
+| LP Reserve | 40% | 400M IFR genesis allocation | Governance-controlled reserve; not the live pool balance |
 | Liquidity Reserve | 20% | 200M IFR | 6-month lock, 50M/quarter |
 | Team (Vested) | 15% | 150M IFR | 12-month cliff, 36-month linear |
 | Treasury | 15% | 150M IFR | Multisig-controlled |
@@ -33,13 +37,13 @@ Inferno ($IFR) is a deflationary ERC-20 utility token on Ethereum. Users lock IF
 
 ## Deflation Mechanism
 
-Every transfer: -2.5% permanently burned + 1% BuybackVault.
+Every non-exempt transfer: -2.5% permanently burned + 1% routed to the configured protocol pool-fee receiver.
 
 | Fee | Rate | Destination |
 |-----|------|-------------|
 | Sender Burn | 2.0% | Permanently burned (supply decreases) |
 | Recipient Burn | 0.5% | Permanently burned (supply decreases) |
-| Pool Fee | 1.0% | BuybackVault (buyback + burn) |
+| Pool Fee | 1.0% | Configured protocol receiver (currently FeeRouterV1 path) |
 | **Total** | **3.5%** | Hard Cap: 5% max |
 
 ## Lock-to-Access Model

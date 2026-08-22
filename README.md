@@ -18,6 +18,9 @@
 |---|---|
 | Website | [ifrunit.tech](https://ifrunit.tech) |
 | Wiki/Docs | [ifrunit.tech/wiki](https://ifrunit.tech/wiki/index.html) |
+| Web3 App | [web3.ifrunit.tech](https://web3.ifrunit.tech/) |
+| IFR Benefits | [shop.ifrunit.tech](https://shop.ifrunit.tech/) |
+| Current Functionality | [Verified surface and app status](docs/CURRENT_FUNCTIONALITY_STATUS.md) |
 | Whitepaper | [One-Pager](https://ifrunit.tech/wiki/one-pager.html) |
 | Bootstrap | [Bootstrap Event](https://ifrunit.tech/wiki/bootstrap.html) |
 | Security | [Security Audit](https://ifrunit.tech/wiki/security.html) |
@@ -45,8 +48,8 @@ Inferno (IFR) is a deflationary ERC-20 utility token on Ethereum. Every transfer
 | Network | Ethereum Mainnet |
 | Decimals | 9 |
 | Genesis Supply | 1,000,000,000 IFR |
-| Current Supply | ~998.5M (decreasing) |
-| Burned | ~1.5M IFR since March 5, 2026 |
+| Current Supply | ~997.67M (decreasing; verified 22 August 2026) |
+| Burned | ~2.33M IFR since genesis (verified 22 August 2026) |
 | Burn Rate | 2.5% per transfer (permanent) |
 | Default Transfer Fee | 3.5% total (2.5% burn + 1% pool fee; hardcoded cap: 5%) |
 
@@ -95,7 +98,6 @@ with a 1-year cliff. See [Fair Launch Statement](docs/FAIR_LAUNCH.md).
 | LP Token (IFR/WETH) | [`0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0`](https://etherscan.io/address/0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0) — retained in BootstrapVaultV3; Mainnet Team.Finance locker disabled and the vault exposes no LP withdrawal function |
 | CommitmentVault | [`0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3`](https://etherscan.io/address/0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3#code) |
 | BuilderRegistry | [`0xdfe6636DA47F8949330697e1dC5391267CEf0EE3`](https://etherscan.io/address/0xdfe6636DA47F8949330697e1dC5391267CEf0EE3#code) |
-| CommitmentVault | [`0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3`](https://etherscan.io/address/0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3#code) |
 | LendingVault | [`0x974305Ab0EC905172e697271C3d7d385194EB9DF`](https://etherscan.io/address/0x974305Ab0EC905172e697271C3d7d385194EB9DF#code) |
 | BuybackController | [`0x1e0547D50005A4Af66AbD5e6915ebfAA2d711F7c`](https://etherscan.io/address/0x1e0547D50005A4Af66AbD5e6915ebfAA2d711F7c#code) |
 | BootstrapVault V1 | [`0xA820540936d18e1377C39dd9445E5b36F3F1261a`](https://etherscan.io/address/0xA820540936d18e1377C39dd9445E5b36F3F1261a#code) **[DEPRECATED]** |
@@ -146,7 +148,7 @@ The ecosystem is open and permissionless. Any product can integrate IFR Lock.
 | Browser / WalletConnect | 12 | Playwright |
 
 - Historical coverage snapshot: 91% branches / 99% statements for the contract subset recorded in `docs/COVERAGE_REPORT.md`; not a current full-repository coverage claim
-- GitHub Actions CI: Creator Gateway, Points Backend, AI Copilot
+- GitHub Actions CI contains scoped workflows for contracts/tooling, Benefits Network, SDK, Creator Gateway, Points Backend, AI Copilot, dashboards, Telegram bot, wallet prototype, documentation and security checks. Deployment availability is verified separately and must not be inferred from a passing source-validation workflow.
 - Slither security audit: 0 high/critical findings
 - Internal security audit: 0 FAIL, 20 active WARN, 1 fixed, 81 PASS ([full report](docs/SECURITY_AUDIT_SKYWALKER.md))
 - App security review: 12 findings (2 CRITICAL, 5 HIGH — all fixed) ([full report](docs/APP_SECURITY_REVIEW.md))
@@ -174,19 +176,28 @@ All smart contracts are open source and community review is explicitly encourage
 | Creator Gateway | `apps/creator-gateway/` | 3005 | Express + ethers v6 + googleapis + JWT |
 | Benefits Network Backend | `apps/benefits-network/backend/` | 3001 | Express + Prisma + SQLite + ethers v6 |
 | Benefits Network Frontend | `apps/benefits-network/frontend/` | 3000 | Next.js 15 + Tailwind + wagmi v3 (PWA) |
+| Benefits Wallet Prototype | `apps/benefits-wallet-prototype/` | 3012 | Isolated prototype; not used in production |
+| IFR SDK | `apps/sdk/` | — | TypeScript package; tested locally, npm publication pending |
+| Integration Builder Engine | `apps/builder/engine/` | — | Code/config generator; 30 focused tests |
 | Telegram Bot | `apps/telegram/telegram-bot/` | — | Telegraf + ethers v6 + Railway (16 commands, moderation, governance notifier) |
+
+Deployment and acceptance vary by package. The authoritative status for each
+public surface and repository application is the
+[Current Functionality Status](docs/CURRENT_FUNCTIONALITY_STATUS.md).
+`apps/admin-console/` and `apps/investor-web/` are placeholders, not implemented
+applications.
 
 ### Token Dashboard
 
 Token dashboard for monitoring balances, transfers, lock management, and contract status.
 
-**Start:** `cd apps/dashboard && npm install && npm run dev` → http://localhost:5173
+**Start:** `cd apps/dashboard && npm ci && npm run dev` → http://localhost:5173
 
 ### Benefits Network
 
 The IFR Benefits Network lets any business verify on-chain IFR lock status to grant discounts and premium access. QR-based flow — no accounts, no subscriptions.
 
-**Routes:** `/b/:businessId` (merchant console) · `/r/:sessionId` (customer verification)
+**Routes:** `/` (role chooser and wallet/seller workspace) · `/b/:businessIdOrSlug` (seller console) · `/s/:businessIdOrSlug` (public catalog) · `/p/:passId` (customer pass) · `/r/:sessionId` (customer verification) · `/scan` (QR/manual entry) · `/guide` · `/support` · `/privacy`
 
 ### Governance Dashboard
 
@@ -204,7 +215,7 @@ Embedded chat widget with RAG knowledge base — helps users, builders, and deve
 
 **Safety:** Automatic seed phrase / private key detection, instant warnings, source citation tags.
 
-**Start:** `cd apps/ai-copilot && npm install && cp .env.example .env && npm run dev` → http://localhost:5175
+**Start:** `cd apps/ai-copilot && npm ci && cp .env.example .env && npm run dev` → http://localhost:5175
 
 ### Points Backend
 
@@ -216,7 +227,7 @@ SIWE authentication, points tracking, and EIP-712 signed voucher issuance for pr
 
 **Anti-Sybil:** Rate limiting per IP + per wallet + global daily caps.
 
-**Start:** `cd apps/points-backend && npm install && npx prisma migrate dev --name init && npm run dev` → http://localhost:3004
+**Start:** `cd apps/points-backend && npm ci && npx prisma migrate dev --name init && npm run dev` → http://localhost:3004
 
 ## Documentation
 

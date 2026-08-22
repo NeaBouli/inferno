@@ -1,6 +1,6 @@
 # IFR Project Status Report
 
-**Current engineering baseline:** 1 August 2026
+**Current engineering baseline:** 22 August 2026
 **Branch:** `main`
 **Model:** Community Fair Launch (CFLM) -- no presale
 **Ticker:** $IFR
@@ -12,17 +12,28 @@ professional third-party audit remains pending.
 
 ## Current Engineering Baseline
 
+The canonical surface, application and Mainnet capability matrix is
+[`docs/CURRENT_FUNCTIONALITY_STATUS.md`](docs/CURRENT_FUNCTIONALITY_STATUS.md).
+Source presence does not mean that an app is publicly deployed or that a
+governance-gated contract path is active.
+
 - Root: Node.js `>=22.13.0`, Ethers `6.17.0`, Hardhat `3.12.0`,
   Chai `6.2.2`, Mocha `11.7.6`, OpenZeppelin Contracts `5.6.x`.
 - Root is ESM with explicit CommonJS boundaries for legacy scripts and
   standalone test packages. Waffle, Ganache and `solidity-coverage` are no
   longer active root dependencies; native Hardhat 3 coverage is used.
-- Latest published exact-head suites on `ae856a18`: contracts `642/642`,
+- Clean local verification from `8ff557b8`: contracts `642/642`,
   Generator Engine `30/30`, IFR SDK `36/36`.
-- Final exact-head CI passed for Contract Tests, Benefits Network, Security
-  Audit, Docs Validator and Pages.
-- Clean local candidate `npm audit`: 10 transitive low findings, with 0
-  moderate, high or critical findings. No forced fix is approved.
+- Landing/Wiki wallet browser tests `20/20` and Web3 write-path browser tests
+  `23/23` passed. The complete Benefits preflight passed.
+- Benefits physical device/wallet acceptance remains `1/10` passed and `9`
+  pending; this is not represented as complete production acceptance.
+- Mainnet borrowing remains disabled with `LendingVault.ifrPriceWei = 0`.
+  CommitmentVault price-conditioned locks remain disabled with a zero oracle;
+  TIME_ONLY commitments remain operational.
+- Root `npm audit`: 8 low transitive development-tool findings, with 0
+  moderate, high or critical findings. The monitored Elliptic advisory has no
+  available upstream fix in the retained Hardhat verification path.
 - Benefits frontend: Next.js `15.5.21`, Wagmi `3.7.x`, Node 22. Benefits
   backend and every active application manifest that depends on Ethers use
   Ethers 6.

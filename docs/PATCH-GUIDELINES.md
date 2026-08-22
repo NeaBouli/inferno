@@ -98,7 +98,7 @@ For critical-severity bugs in smart contracts:
 
 ## Checklist Before Merge
 
-- [ ] All tests green (`npx hardhat test` — 544 total)
+- [ ] All relevant current test gates from [`CURRENT_FUNCTIONALITY_STATUS.md`](CURRENT_FUNCTIONALITY_STATUS.md) green; run `npm run test:functionality-status` for the cross-surface status gate (do not reuse a historical static count)
 - [ ] Slither clean (no new High/Critical)
 - [ ] README.md updated (if needed)
 - [ ] docs/DOCS.md updated
