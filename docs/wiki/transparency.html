@@ -875,6 +875,21 @@
         <button class="lazy-btn" id="lock-next" type="button">Load next 5</button>
       </div>
 
+      <h2 id="vault-accounting-invariant">Vault Accounting Invariant</h2>
+      <p>CommitmentVault and LendingVault use nominal IFR accounting and therefore depend on their InfernoToken fee exemptions remaining active. This is a documented operational invariant, not an observed Mainnet deficit.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Snapshot</th><th>Fee exempt</th><th>Token balance</th><th>Internal accounting</th><th>Difference</th></tr></thead>
+          <tbody>
+            <tr><td>CommitmentVault<br><small>Block 25811214</small></td><td class="status-ok">TRUE</td><td>47,952,476.871794375 IFR</td><td><code>totalLocked</code>: 47,952,476.871794375 IFR</td><td class="status-ok">0 IFR</td></tr>
+            <tr><td>LendingVault<br><small>Block 25811214</small></td><td class="status-ok">TRUE</td><td>52,155,440.952845656 IFR</td><td><code>totalAvailable + totalLent</code>: 52,155,440.952845656 IFR</td><td class="status-ok">0 IFR</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="callout">
+        <p><strong>Open hardening work:</strong> automated exemption/accounting monitoring and negative regression tests are planned. A future V2 must use balance-diff accounting on inflows and runtime exemption guards that fail closed on affected outgoing flows. <a href="https://github.com/NeaBouli/inferno/blob/main/docs/VAULT_FEE_EXEMPT_HARDENING.md" target="_blank" rel="noopener">Read the technical status and task list.</a></p>
+      </div>
+
       <!-- ===== Token Distribution — Complete Record ===== -->
       <h2 id="token-distribution">Token Distribution &mdash; Complete Record</h2>
 

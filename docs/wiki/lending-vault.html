@@ -978,6 +978,12 @@
         </li>
       </ol>
 
+      <h2>7. Operational Fee-Exemption Invariant</h2>
+      <p>LendingVault V1 records nominal IFR amounts and relies on its InfernoToken <code>feeExempt</code> status remaining active. At Ethereum Mainnet block <code>25811214</code>, the exemption was active and the vault held 52,155,440.952845656 IFR, exactly matching <code>totalAvailable + totalLent</code>; the accounting difference was 0 IFR.</p>
+      <div class="callout-green">
+        <p><strong>Current status:</strong> no live accounting deficit was observed. Automated invariant monitoring and negative regression tests remain open defense-in-depth work. A future V2 must combine balance-diff inflow accounting with runtime exemption guards that fail closed before affected outgoing transfers. <a href="https://github.com/NeaBouli/inferno/blob/main/docs/VAULT_FEE_EXEMPT_HARDENING.md" target="_blank" rel="noopener">Technical status and task list</a>.</p>
+      </div>
+
       <!-- ======================================== -->
       <!-- FAQ -->
       <!-- ======================================== -->
