@@ -640,8 +640,7 @@
     "about": {"@id": "https://ifrunit.tech/#app"}
   }
   </script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"
-  onerror="var s=document.createElement('script');s.src='https://unpkg.com/ethers@5.7.2/dist/ethers.umd.min.js';document.head.appendChild(s);"></script>
+<script src="/assets/vendor/ethers-6.17.0.umd.min.js"></script>
 <script src="../assets/wallet-core.js"></script>
 <script src="../assets/ifr-state.js"></script>
 <script type="application/ld+json">
@@ -1005,7 +1004,7 @@ function lpUpdateUI(state){
     var dropAddr=document.getElementById("lp-drop-addr");if(dropAddr)dropAddr.textContent=addr.slice(0,10)+"..."+addr.slice(-6);
     var dropEth=document.getElementById("lp-drop-eth");if(dropEth)dropEth.textContent=parseFloat(state.ethBalance||"0").toFixed(4)+" ETH";
     var dropIfr=document.getElementById("lp-drop-ifr");
-    if(dropIfr){var ifrAmt=state.ifrBalance&&typeof ethers!=="undefined"?parseFloat(ethers.utils.formatUnits(state.ifrBalance,9)).toLocaleString("en-US",{maximumFractionDigits:0}):"0";dropIfr.textContent=ifrAmt+" IFR"}
+    if(dropIfr){var ifrAmt=state.ifrBalance&&typeof ethers!=="undefined"?parseFloat(ethers.formatUnits(state.ifrBalance,9)).toLocaleString("en-US",{maximumFractionDigits:0}):"0";dropIfr.textContent=ifrAmt+" IFR"}
     var lockDiv=document.getElementById("lp-drop-lock");var noLockDiv=document.getElementById("lp-drop-nolock");
     if(lockDiv)lockDiv.style.display=state.isLocked1000?"":"none";
     if(noLockDiv)noLockDiv.style.display=state.isLocked1000?"none":"";
@@ -1085,7 +1084,7 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
 
   async function loadOnchainMarket() {
     if (typeof ethers === "undefined") throw new Error("ethers.js unavailable");
-    var provider = new ethers.providers.JsonRpcProvider(RPC_URL);
+    var provider = new ethers.JsonRpcProvider(RPC_URL);
     var vault = new ethers.Contract(LV_ADDR, LV_ABI, provider);
     var values = await Promise.all([
       vault.totalAvailable(),
@@ -1095,26 +1094,26 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
       vault.getLoanCount(),
       vault.ifrPriceWei()
     ]);
-    var offerCount = values[3].toNumber();
-    var rate = values[2].toNumber() / 100;
+    var offerCount = Number(values[3]);
+    var rate = Number(values[2]) / 100;
     var stats = {
-      totalAvailable: Number(ethers.utils.formatUnits(values[0], IFR_DECIMALS)),
-      totalLent: Number(ethers.utils.formatUnits(values[1], IFR_DECIMALS)),
+      totalAvailable: Number(ethers.formatUnits(values[0], IFR_DECIMALS)),
+      totalLent: Number(ethers.formatUnits(values[1], IFR_DECIMALS)),
       currentRate: rate,
-      activeLoans: values[4].toNumber(),
+      activeLoans: Number(values[4]),
       offerCount: offerCount,
-      priceSet: !values[5].isZero()
+      priceSet: values[5] !== 0n
     };
     var offers = [];
     for (var i = 0; i < Math.min(offerCount, 50); i++) {
       try {
         var o = await vault.getOffer(i);
-        if (o.active && o.availableIFR.gt(0)) {
+        if (o.active && o.availableIFR > 0n) {
           offers.push({
             id: i,
             lender: o.lender,
-            availableAmount: Number(ethers.utils.formatUnits(o.availableIFR, IFR_DECIMALS)),
-            lentAmount: Number(ethers.utils.formatUnits(o.lentIFR, IFR_DECIMALS)),
+            availableAmount: Number(ethers.formatUnits(o.availableIFR, IFR_DECIMALS)),
+            lentAmount: Number(ethers.formatUnits(o.lentIFR, IFR_DECIMALS)),
             rate: rate
           });
         }

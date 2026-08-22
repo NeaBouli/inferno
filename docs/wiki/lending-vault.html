@@ -640,8 +640,7 @@
     "about": {"@id": "https://ifrunit.tech/#app"}
   }
   </script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"
-  onerror="var s=document.createElement('script');s.src='https://unpkg.com/ethers@5.7.2/dist/ethers.umd.min.js';document.head.appendChild(s);"></script>
+<script src="/assets/vendor/ethers-6.17.0.umd.min.js"></script>
 <script src="../assets/wallet-core.js"></script>
 <script src="../assets/ifr-state.js"></script>
 <script type="application/ld+json">
@@ -1366,7 +1365,7 @@ function lpUpdateUI(state){
     var dropAddr=document.getElementById("lp-drop-addr");if(dropAddr)dropAddr.textContent=addr.slice(0,10)+"..."+addr.slice(-6);
     var dropEth=document.getElementById("lp-drop-eth");if(dropEth)dropEth.textContent=parseFloat(state.ethBalance||"0").toFixed(4)+" ETH";
     var dropIfr=document.getElementById("lp-drop-ifr");
-    if(dropIfr){var ifrAmt=state.ifrBalance&&typeof ethers!=="undefined"?parseFloat(ethers.utils.formatUnits(state.ifrBalance,9)).toLocaleString("en-US",{maximumFractionDigits:0}):"0";dropIfr.textContent=ifrAmt+" IFR"}
+    if(dropIfr){var ifrAmt=state.ifrBalance&&typeof ethers!=="undefined"?parseFloat(ethers.formatUnits(state.ifrBalance,9)).toLocaleString("en-US",{maximumFractionDigits:0}):"0";dropIfr.textContent=ifrAmt+" IFR"}
     var lockDiv=document.getElementById("lp-drop-lock");var noLockDiv=document.getElementById("lp-drop-nolock");
     if(lockDiv)lockDiv.style.display=state.isLocked1000?"":"none";
     if(noLockDiv)noLockDiv.style.display=state.isLocked1000?"none":"";
@@ -1416,12 +1415,12 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
   var lvAddress = null;
   var lvProvider = null;
   var lvSigner = null;
-  var lvBalance = ethers.BigNumber.from(0);
-  var lvAllowance = ethers.BigNumber.from(0);
+  var lvBalance = 0n;
+  var lvAllowance = 0n;
   var lvHasOffer = false;
   var lvOffer = null;
-  var lvRate = ethers.BigNumber.from(200);
-  var lvIfrPriceWei = ethers.BigNumber.from(0);
+  var lvRate = 200n;
+  var lvIfrPriceWei = 0n;
   var lvBorrowOffers = [];
 
   function el(id) { return document.getElementById(id); }
@@ -1430,15 +1429,15 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
     return '<a href="https://etherscan.io/tx/' + hash + '" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline;">' + hash.slice(0, 10) + "..." + hash.slice(-6) + "</a>";
   }
   function formatIFR(value, decimals) {
-    var n = Number(ethers.utils.formatUnits(value || 0, IFR_DECIMALS));
+    var n = Number(ethers.formatUnits(value || 0, IFR_DECIMALS));
     return n.toLocaleString("en-US", { maximumFractionDigits: decimals == null ? 3 : decimals });
   }
   function formatETH(value, decimals) {
-    var n = Number(ethers.utils.formatEther(value || 0));
+    var n = Number(ethers.formatEther(value || 0));
     return n.toLocaleString("en-US", { maximumFractionDigits: decimals == null ? 6 : decimals });
   }
   function formatInput(value) {
-    return ethers.utils.formatUnits(value, IFR_DECIMALS).replace(/\.?0+$/, "");
+    return ethers.formatUnits(value, IFR_DECIMALS).replace(/\.?0+$/, "");
   }
   function normalizeAmount(raw) {
     return String(raw || "").trim().replace(/\s+/g, "").replace(",", ".");
@@ -1448,7 +1447,7 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
       var input = el("lv-offer-amount");
       var raw = normalizeAmount(input && input.value);
       if (!raw || Number(raw) <= 0) return null;
-      return ethers.utils.parseUnits(raw, IFR_DECIMALS);
+      return ethers.parseUnits(raw, IFR_DECIMALS);
     } catch(e) {
       return null;
     }
@@ -1458,7 +1457,7 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
       var input = el("lv-withdraw-amount");
       var raw = normalizeAmount(input && input.value);
       if (!raw || Number(raw) <= 0) return null;
-      return ethers.utils.parseUnits(raw, IFR_DECIMALS);
+      return ethers.parseUnits(raw, IFR_DECIMALS);
     } catch(e) {
       return null;
     }
@@ -1468,20 +1467,20 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
       var input = el("lv-borrow-amount");
       var raw = normalizeAmount(input && input.value);
       if (!raw || Number(raw) <= 0) return null;
-      return ethers.utils.parseUnits(raw, IFR_DECIMALS);
+      return ethers.parseUnits(raw, IFR_DECIMALS);
     } catch(e) {
       return null;
     }
   }
   function oneIFR() {
-    return ethers.BigNumber.from(10).pow(IFR_DECIMALS);
+    return 10n ** BigInt(IFR_DECIMALS);
   }
   function safeWithdrawMax() {
-    if (!lvOffer || !lvOffer.active || !lvOffer.availableIFR) return ethers.BigNumber.from(0);
-    if (lvOffer.lentIFR && lvOffer.lentIFR.isZero()) {
+    if (!lvOffer || !lvOffer.active || !lvOffer.availableIFR) return 0n;
+    if (lvOffer.lentIFR === 0n) {
       var keepAlive = oneIFR();
-      if (lvOffer.availableIFR.lte(keepAlive)) return ethers.BigNumber.from(0);
-      return lvOffer.availableIFR.sub(keepAlive);
+      if (lvOffer.availableIFR <= keepAlive) return 0n;
+      return lvOffer.availableIFR - keepAlive;
     }
     return lvOffer.availableIFR;
   }
@@ -1508,7 +1507,7 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
   function updateLenderGuide() {
     var amount = parseOfferAmountOrNull();
     var hasActiveOffer = !!(lvHasOffer && lvOffer && lvOffer.active);
-    var allowanceCovers = amount ? lvAllowance.gte(amount) : lvAllowance.gt(0);
+    var allowanceCovers = amount ? lvAllowance >= amount : lvAllowance > 0n;
     setGuideStep("lv-step-connect", lvAddress ? "done" : "active");
     setGuideStep("lv-step-amount", "");
     setGuideStep("lv-step-approve", "");
@@ -1536,7 +1535,7 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
       return;
     }
     setGuideStep("lv-step-amount", "done");
-    if (lvBalance.gt(0) && amount.gt(lvBalance)) {
+    if (lvBalance > 0n && amount > lvBalance) {
       setGuideStep("lv-step-approve", "blocked");
       setGuideCta("Amount is too high", "Lower the amount or use max. The amount cannot exceed your free IFR balance.", "Use Max", function() { var b = el("lv-use-max"); if (b) b.click(); });
       return;
@@ -1591,7 +1590,7 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
     var withdrawNoteEl = el("lv-withdraw-note");
     if (!btn) return;
     var amount = parseOfferAmountOrNull();
-    var allowanceCovers = amount ? lvAllowance.gte(amount) : lvAllowance.gt(0);
+    var allowanceCovers = amount ? lvAllowance >= amount : lvAllowance > 0n;
     if (lvHasOffer && lvOffer && lvOffer.active) {
       btn.textContent = allowanceCovers ? "Increase Offer" : "Approve + Increase Offer";
     } else if (lvHasOffer) {
@@ -1599,19 +1598,19 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
     } else {
       btn.textContent = allowanceCovers ? "Create Offer" : "Approve + Create Offer";
     }
-    var hasWithdrawable = !!(lvHasOffer && lvOffer && lvOffer.active && lvOffer.availableIFR && lvOffer.availableIFR.gt(0));
-    var maxWithdraw = hasWithdrawable ? safeWithdrawMax() : ethers.BigNumber.from(0);
+    var hasWithdrawable = !!(lvHasOffer && lvOffer && lvOffer.active && lvOffer.availableIFR && lvOffer.availableIFR > 0n);
+    var maxWithdraw = hasWithdrawable ? safeWithdrawMax() : 0n;
     if (withdrawableEl) withdrawableEl.textContent = hasWithdrawable ? formatIFR(lvOffer.availableIFR, 3) + " IFR" : "0 IFR";
     if (withdrawNoteEl) {
       if (!lvAddress) withdrawNoteEl.textContent = "Connect wallet to see withdraw limits.";
       else if (!hasWithdrawable) withdrawNoteEl.textContent = "No available IFR can be withdrawn from this offer right now.";
-      else if (lvOffer.lentIFR && lvOffer.lentIFR.isZero()) withdrawNoteEl.textContent = "Safe max leaves 1 IFR in the offer. Withdrawing the full amount would deactivate the offer for this wallet.";
+      else if (lvOffer.lentIFR === 0n) withdrawNoteEl.textContent = "Safe max leaves 1 IFR in the offer. Withdrawing the full amount would deactivate the offer for this wallet.";
       else withdrawNoteEl.textContent = "All currently available IFR can be withdrawn; lent IFR remains active until repayment or liquidation.";
     }
-    if (withdrawMaxBtn) withdrawMaxBtn.disabled = !hasWithdrawable || !lvAddress || maxWithdraw.isZero();
+    if (withdrawMaxBtn) withdrawMaxBtn.disabled = !hasWithdrawable || !lvAddress || maxWithdraw === 0n;
     if (withdrawBtn) {
       var withdrawAmount = parseWithdrawAmountOrNull();
-      withdrawBtn.disabled = !hasWithdrawable || !lvAddress || !withdrawAmount || withdrawAmount.gt(maxWithdraw);
+      withdrawBtn.disabled = !hasWithdrawable || !lvAddress || !withdrawAmount || withdrawAmount > maxWithdraw;
     }
     updateLenderGuide();
   }
@@ -1664,14 +1663,14 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
       await ensureMainnet(lvProvider);
       lvProvider = IFRWallet.getProvider();
       lvSigner = IFRWallet.getSigner();
-      lvAddress = ethers.utils.getAddress(IFRWallet.getAddress());
+      lvAddress = ethers.getAddress(IFRWallet.getAddress());
     } else if (window.ethereum && typeof window.ethereum.request === "function") {
       var accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
-      lvProvider = new ethers.providers.Web3Provider(window.ethereum, "any");
+      lvProvider = new ethers.BrowserProvider(window.ethereum, "any");
       await ensureMainnet(lvProvider);
-      lvProvider = new ethers.providers.Web3Provider(window.ethereum, "any");
-      lvSigner = lvProvider.getSigner();
-      lvAddress = ethers.utils.getAddress(accounts[0]);
+      lvProvider = new ethers.BrowserProvider(window.ethereum, "any");
+      lvSigner = await lvProvider.getSigner();
+      lvAddress = ethers.getAddress(accounts[0]);
     } else {
       throw new Error("Please install MetaMask or use the main wallet connector.");
     }
@@ -1731,7 +1730,7 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
         lvOffer = await vault.offers(offerIndex);
       }
 
-      var ethFmt = parseFloat(ethers.utils.formatEther(ethBal)).toFixed(4);
+      var ethFmt = parseFloat(ethers.formatEther(ethBal)).toFixed(4);
 
       el("lv-ifr-balance").textContent = formatIFR(lvBalance, 3) + " IFR";
       el("lv-eth-balance").textContent = ethFmt + " ETH";
@@ -1751,9 +1750,9 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
         el("lv-my-offers").textContent = "This wallet has an inactive offer. Current contract cannot recreate an offer for a wallet with hasOffer=true.";
       } else {
         el("lv-existing-offer").textContent = "No existing offer";
-        if (lvAllowance.gt(0)) {
+        if (lvAllowance > 0n) {
           el("lv-my-offers").innerHTML = "<strong>Approval done, offer pending.</strong><br>Allowance: " + formatIFR(lvAllowance, 3) + " IFR<br>Click <strong>Create Offer</strong> to deposit IFR into LendingVault.";
-          if (!el("lv-offer-amount").value) el("lv-offer-amount").value = formatInput(lvAllowance.gt(lvBalance) ? lvBalance : lvAllowance);
+          if (!el("lv-offer-amount").value) el("lv-offer-amount").value = formatInput(lvAllowance > lvBalance ? lvBalance : lvAllowance);
           setStatus("warn", "<strong>Approval is already confirmed.</strong><br>No LendingVault offer exists yet. Click <strong>Create Offer</strong> once, then confirm the <code>createOffer</code> transaction in MetaMask.");
         } else {
           el("lv-my-offers").textContent = "No lending offer yet.";
@@ -1771,7 +1770,7 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
   // ── Market Data ──────────────────────────────────────
   async function loadMarketData() {
     try {
-      var provider = lvProvider || new ethers.providers.JsonRpcProvider("https://ethereum-rpc.publicnode.com");
+      var provider = lvProvider || new ethers.JsonRpcProvider("https://ethereum-rpc.publicnode.com");
       var vault = new ethers.Contract(LV_ADDR, LV_ABI, provider);
       var values = await Promise.all([
         vault.totalAvailable(),
@@ -1785,9 +1784,9 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
       var rate = values[2];
       lvRate = rate;
       lvIfrPriceWei = values[3];
-      var count = values[4].toNumber();
-      var total = totalAvailable.add(totalLent);
-      var util = total.isZero() ? 0 : Number(totalLent.mul(10000).div(total).toString()) / 100;
+      var count = Number(values[4]);
+      var total = totalAvailable + totalLent;
+      var util = total === 0n ? 0 : Number((totalLent * 10000n) / total) / 100;
       var ratePct = (Number(rate.toString()) / 100).toFixed(2).replace(/\.?0+$/, "") + "%";
 
       el("lv-total-available").textContent = formatIFR(totalAvailable, 3);
@@ -1805,7 +1804,7 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
         var emptyBorrowBtn = el("lv-borrow-btn");
         if (emptyBorrowBtn) {
           emptyBorrowBtn.disabled = true;
-          emptyBorrowBtn.textContent = lvIfrPriceWei.isZero() ? "Borrow Disabled — Price Not Set" : "No Offers Available";
+          emptyBorrowBtn.textContent = lvIfrPriceWei === 0n ? "Borrow Disabled — Price Not Set" : "No Offers Available";
         }
         return;
       }
@@ -1817,7 +1816,7 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
         try {
           var offer = await vault.getOffer(i);
           if (!offer.active) continue;
-          if (!offer.availableIFR.isZero()) lvBorrowOffers.push({ id: i, offer: offer });
+          if (offer.availableIFR !== 0n) lvBorrowOffers.push({ id: i, offer: offer });
           rows.push(
             "<div style='display:flex;justify-content:space-between;gap:12px;border-bottom:1px solid var(--border);padding:8px 0;'>" +
             "<span style='font-family:monospace;color:var(--muted);'>" + shortAddr(offer.lender) + "</span>" +
@@ -1834,7 +1833,7 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
       }
       if (offersEl) offersEl.innerHTML = rows.length ? rows.join("") : "No active offers yet.";
       if (borrowerOffersEl) {
-        var priceNote = lvIfrPriceWei.isZero()
+        var priceNote = lvIfrPriceWei === 0n
           ? "<div style='margin-top:12px;color:#fff7cc;'>Borrow transactions are disabled until Governance sets <code>ifrPriceWei</code> for collateral calculation.</div>"
           : "";
         borrowerOffersEl.innerHTML = borrowerRows.length ? borrowerRows.join("") + priceNote : "No active offers yet.";
@@ -1849,8 +1848,8 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
       }
       var borrowBtn = el("lv-borrow-btn");
       if (borrowBtn) {
-        borrowBtn.disabled = lvIfrPriceWei.isZero() || rows.length === 0;
-        borrowBtn.textContent = lvIfrPriceWei.isZero() ? "Borrow Disabled — Price Not Set" : "Request Loan";
+        borrowBtn.disabled = lvIfrPriceWei === 0n || rows.length === 0;
+        borrowBtn.textContent = lvIfrPriceWei === 0n ? "Borrow Disabled — Price Not Set" : "Request Loan";
       }
       updateLoanPreview();
     } catch(e) {
@@ -1864,17 +1863,17 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
   function selectedOfferAmount() {
     var raw = normalizeAmount(el("lv-offer-amount").value);
     if (!raw || Number(raw) <= 0) throw new Error("Enter an IFR amount greater than 0.");
-    var amount = ethers.utils.parseUnits(raw, IFR_DECIMALS);
-    if (amount.lte(0)) throw new Error("Offer amount is too small.");
-    if (lvBalance.gt(0) && amount.gt(lvBalance)) throw new Error("Amount exceeds your current free IFR balance.");
+    var amount = ethers.parseUnits(raw, IFR_DECIMALS);
+    if (amount <= 0n) throw new Error("Offer amount is too small.");
+    if (lvBalance > 0n && amount > lvBalance) throw new Error("Amount exceeds your current free IFR balance.");
     return amount;
   }
 
   var useHalfBtn = el("lv-use-half");
   if (useHalfBtn) useHalfBtn.addEventListener("click", function(e) {
     e.preventDefault();
-    if (!lvBalance || lvBalance.isZero()) return;
-    el("lv-offer-amount").value = formatInput(lvBalance.div(2));
+    if (!lvBalance || lvBalance === 0n) return;
+    el("lv-offer-amount").value = formatInput(lvBalance / 2n);
     updateOfferActionState();
     updateLenderGuide();
   });
@@ -1882,7 +1881,7 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
   var useMaxBtn = el("lv-use-max");
   if (useMaxBtn) useMaxBtn.addEventListener("click", function(e) {
     e.preventDefault();
-    if (!lvBalance || lvBalance.isZero()) return;
+    if (!lvBalance || lvBalance === 0n) return;
     el("lv-offer-amount").value = formatInput(lvBalance);
     updateOfferActionState();
     updateLenderGuide();
@@ -1898,9 +1897,9 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
   var withdrawMaxBtn = el("lv-withdraw-max");
   if (withdrawMaxBtn) withdrawMaxBtn.addEventListener("click", function(e) {
     e.preventDefault();
-    if (!lvOffer || !lvOffer.active || !lvOffer.availableIFR || lvOffer.availableIFR.isZero()) return;
+    if (!lvOffer || !lvOffer.active || !lvOffer.availableIFR || lvOffer.availableIFR === 0n) return;
     var amount = safeWithdrawMax();
-    if (amount.isZero()) return;
+    if (amount === 0n) return;
     el("lv-withdraw-amount").value = formatInput(amount);
     updateOfferActionState();
   });
@@ -1922,20 +1921,20 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
     var selectedOffer = lvBorrowOffers.find(function(item) { return String(item.id) === String(selectedOfferId); });
     if (!amount) { previewEl.innerHTML = "Enter an amount to see collateral required and total cost."; return; }
     if (!selectedOffer) { previewEl.innerHTML = "Select a live offer first."; return; }
-    if (amount.gt(selectedOffer.offer.availableIFR)) {
+    if (amount > selectedOffer.offer.availableIFR) {
       previewEl.innerHTML = "Amount exceeds this offer's available IFR.";
       return;
     }
-    if (lvIfrPriceWei.isZero()) {
+    if (lvIfrPriceWei === 0n) {
       previewEl.innerHTML = "Borrow transactions are disabled until Governance sets <code>ifrPriceWei</code> for collateral calculation.";
       return;
     }
     var months = Math.ceil(days / 30);
-    var rateBps = lvRate || ethers.BigNumber.from(200);
-    var interest = amount.mul(rateBps).mul(months).div(10000);
-    var totalRepay = amount.add(interest);
+    var rateBps = lvRate || 200n;
+    var interest = (amount * rateBps * BigInt(months)) / 10000n;
+    var totalRepay = amount + interest;
     try {
-      var provider = lvProvider || new ethers.providers.JsonRpcProvider("https://ethereum-rpc.publicnode.com");
+      var provider = lvProvider || new ethers.JsonRpcProvider("https://ethereum-rpc.publicnode.com");
       var vault = new ethers.Contract(LV_ADDR, LV_ABI, provider);
       var collateral = await vault.getRequiredCollateral(amount);
       previewEl.innerHTML =
@@ -1965,7 +1964,7 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
       var token = new ethers.Contract(IFR_TOKEN, IFR_ABI, lvSigner);
       var vault = new ethers.Contract(LV_ADDR, LV_ABI, lvSigner);
 
-      if (lvAllowance.lt(amount)) {
+      if (lvAllowance < amount) {
         setStatus("info", "Approve LendingVault for " + formatIFR(amount, 3) + " IFR in your wallet.");
         var approveTx = await token.approve(LV_ADDR, amount);
         setStatus("info", "Approval submitted: " + txLink(approveTx.hash) + "<br>Waiting for confirmation...");
@@ -2002,8 +2001,8 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
       var amount = parseWithdrawAmountOrNull();
       if (!amount) throw new Error("Enter an IFR amount greater than 0.");
       var maxWithdraw = safeWithdrawMax();
-      if (amount.gt(maxWithdraw)) {
-        if (lvOffer.lentIFR && lvOffer.lentIFR.isZero()) {
+      if (amount > maxWithdraw) {
+        if (lvOffer.lentIFR === 0n) {
           throw new Error("Use a smaller amount. The UI keeps 1 IFR in the offer so this wallet can continue increasing the offer later.");
         }
         throw new Error("Amount exceeds the offer's available, unlent IFR.");
@@ -2040,7 +2039,7 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
     s.style.color = "#fff7cc";
     try {
       if (!lvSigner || !lvAddress) throw new Error("Connect your wallet first.");
-      if (lvIfrPriceWei && lvIfrPriceWei.isZero()) {
+      if (lvIfrPriceWei === 0n) {
         throw new Error("Borrowing is not active yet. LendingVault requires ifrPriceWei for ETH collateral calculation.");
       }
       var selectedOfferId = document.getElementById("lv-borrow-offer") ? document.getElementById("lv-borrow-offer").value : "";
@@ -2049,7 +2048,7 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
       if (selectedOffer.offer.lender.toLowerCase() === lvAddress.toLowerCase()) throw new Error("You cannot borrow from your own offer.");
       var amount = parseBorrowAmountOrNull();
       if (!amount) throw new Error("Enter an IFR amount greater than 0.");
-      if (amount.gt(selectedOffer.offer.availableIFR)) throw new Error("Amount exceeds this offer's available IFR.");
+      if (amount > selectedOffer.offer.availableIFR) throw new Error("Amount exceeds this offer's available IFR.");
       var days = parseInt(document.getElementById("lv-duration").value || "90");
       var vault = new ethers.Contract(LV_ADDR, LV_ABI, lvSigner);
       var collateral = await vault.getRequiredCollateral(amount);
@@ -2074,7 +2073,7 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
         s.innerHTML = e.message || "Borrow transaction failed.";
       }
     } finally {
-      borrowBtn.disabled = lvIfrPriceWei.isZero() || !lvBorrowOffers.length;
+      borrowBtn.disabled = lvIfrPriceWei === 0n || !lvBorrowOffers.length;
     }
   });
 })();
