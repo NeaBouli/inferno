@@ -22,8 +22,8 @@ builder benefits, creator content, and protocol discounts.
 Deflationary + Utility:
 - Every transfer permanently burns 2.5%
 - 1% goes to the configured protocol pool-fee receiver
-- Lock -> tier access (no yield, no risk)
-- PartnerVault pays creator rewards (10% of lock amount)
+- Lock -> tier access without a yield promise; token, contract, market and product-availability risks still apply
+- PartnerVault rewards are currently inactive and require governance registration, allocation and authorized processing; no fixed active reward rate is promised
 
 ## Products
 

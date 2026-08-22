@@ -19,26 +19,40 @@ for (const marker of [
   assert.ok(status.includes(marker), `functionality status missing: ${marker}`);
 }
 
-for (const relative of [
-  "README.md",
-  "STATUS-REPORT.md",
-  "docs/STATUS-REPORT.md",
-  "docs/DOCS.md",
-  "docs/KNOWN-ISSUES.md",
-  "docs/ROADMAP.md",
-  "docs/DEPLOYMENTS.md",
-  "docs/ONE-PAGER.md",
-  "docs/PRESS_KIT.md",
-  "docs/wiki/index.html",
-  "docs/wiki/ecosystem.html",
-  "apps/benefits-network/frontend/src/components/AppShell.tsx",
-  "docs/llms.txt",
-]) {
+const statusLinks = {
+  "README.md": /\[[^\]]+\]\([^)]*CURRENT_FUNCTIONALITY_STATUS\.md[^)]*\)/,
+  "STATUS-REPORT.md": /\[[^\]]+\]\([^)]*CURRENT_FUNCTIONALITY_STATUS\.md[^)]*\)/,
+  "docs/STATUS-REPORT.md": /\[[^\]]+\]\([^)]*CURRENT_FUNCTIONALITY_STATUS\.md[^)]*\)/,
+  "docs/DOCS.md": /\[[^\]]+\]\([^)]*CURRENT_FUNCTIONALITY_STATUS\.md[^)]*\)/,
+  "docs/KNOWN-ISSUES.md": /\[[^\]]+\]\([^)]*CURRENT_FUNCTIONALITY_STATUS\.md[^)]*\)/,
+  "docs/ROADMAP.md": /\[[^\]]+\]\([^)]*CURRENT_FUNCTIONALITY_STATUS\.md[^)]*\)/,
+  "docs/DEPLOYMENTS.md": /\[[^\]]+\]\([^)]*CURRENT_FUNCTIONALITY_STATUS\.md[^)]*\)/,
+  "docs/ONE-PAGER.md": /\[[^\]]+\]\([^)]*CURRENT_FUNCTIONALITY_STATUS\.md[^)]*\)/,
+  "docs/PRESS_KIT.md": /\[[^\]]+\]\([^)]*CURRENT_FUNCTIONALITY_STATUS\.md[^)]*\)/,
+  "docs/wiki/index.html": /href=["'][^"']*CURRENT_FUNCTIONALITY_STATUS\.md["']/,
+  "docs/wiki/ecosystem.html": /href=["'][^"']*CURRENT_FUNCTIONALITY_STATUS\.md["']/,
+  "apps/benefits-network/frontend/src/components/AppShell.tsx": /href=["'][^"']*CURRENT_FUNCTIONALITY_STATUS\.md["']/,
+  "docs/llms.txt": /https:\/\/ifrunit\.tech\/CURRENT_FUNCTIONALITY_STATUS\.md/,
+};
+for (const [relative, linkPattern] of Object.entries(statusLinks)) {
   assert.ok(
-    read(relative).includes("CURRENT_FUNCTIONALITY_STATUS"),
+    linkPattern.test(read(relative)),
     `${relative} must link to the canonical functionality status`
   );
 }
+
+const landing = read("docs/index.html");
+assert.ok(landing.includes("ALL 76 QUESTIONS &amp; ANSWERS"));
+assert.ok(!landing.includes("ALL 61 QUESTIONS &amp; ANSWERS"));
+
+const copilotWiki = read("apps/ai-copilot/src/context/wiki-content.json");
+assert.ok(copilotWiki.includes("Borrowing is disabled while LendingVault.ifrPriceWei = 0"));
+assert.ok(copilotWiki.includes("Future borrower path — currently disabled"));
+assert.ok(!copilotWiki.includes("every step creates buy pressure on Uniswap"));
+
+const onePager = read("docs/ONE-PAGER.md");
+assert.ok(!onePager.includes("no yield, no risk"));
+assert.ok(!onePager.includes("PartnerVault pays creator rewards (10% of lock amount)"));
 
 const currentLendingDocs = [
   "docs/wiki/lending-vault.html",

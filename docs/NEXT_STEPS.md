@@ -1,6 +1,6 @@
 # BuybackController — Next Steps
 
-> Created: 2026-04-14 | Status: Proposal A in Timelock
+> Created: 2026-04-14 | Historical status: Proposal A was in Timelock
 
 > **Archived execution runbook:** Proposals #13 and #14 were executed on
 > 16/18 April 2026. The original steps below are retained as transaction
@@ -8,7 +8,7 @@
 
 ---
 
-## 1. Execute Proposal A: setFeeExempt(BuybackController, true)
+## 1. Historical execution record: Proposal A setFeeExempt(BuybackController, true)
 
 **When:** ~16.04.2026, 07:30 UTC+2 (48h after submission)
 **Who:** Any TreasurySafe signer (3-of-5 already signed)
