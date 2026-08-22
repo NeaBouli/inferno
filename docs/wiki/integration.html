@@ -481,8 +481,7 @@
     "about": {"@id": "https://ifrunit.tech/#app"}
   }
   </script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"
-  onerror="var s=document.createElement('script');s.src='https://unpkg.com/ethers@5.7.2/dist/ethers.umd.min.js';document.head.appendChild(s);"></script>
+<script src="/assets/vendor/ethers-6.17.0.umd.min.js"></script>
 <script src="../assets/wallet-core.js"></script>
 <script src="../assets/ifr-state.js"></script>
 <script type="application/ld+json">
@@ -726,9 +725,9 @@ const LOCK_ABI = [
   "function isLocked(address user, uint256 minAmount) view returns (bool)",
   "function lockedBalance(address user) view returns (uint256)",
 ];
-const MIN_LOCK = ethers.utils.parseUnits("5000", 9); // 5000 IFR minimum
+const MIN_LOCK = ethers.parseUnits("5000", 9); // 5000 IFR minimum
 
-const provider = new ethers.providers.JsonRpcProvider(process.env.RPC_URL);
+const provider = new ethers.JsonRpcProvider(process.env.RPC_URL);
 const lock = new ethers.Contract(LOCK_ADDRESS, LOCK_ABI, provider);
 
 const app = express();
@@ -741,7 +740,7 @@ app.get("/api/license/:wallet", async (req, res) =&gt; {
     res.json({
       wallet,
       premium: isPremium,
-      lockedAmount: ethers.utils.formatUnits(balance, 9),
+      lockedAmount: ethers.formatUnits(balance, 9),
       minRequired: "5000",
     });
   } catch (err) {
@@ -753,7 +752,7 @@ app.listen(3000);</code></pre>
 
       <div class="callout">
         <p>
-          <strong>Note:</strong> The resolver uses ethers v5 syntax. IFR uses 9 decimals (not 18), so always use <code>parseUnits(value, 9)</code> and <code>formatUnits(value, 9)</code>.
+          <strong>Note:</strong> The resolver uses ethers v6 syntax. IFR uses 9 decimals (not 18), so always use <code>parseUnits(value, 9)</code> and <code>formatUnits(value, 9)</code>.
         </p>
       </div>
 
@@ -800,7 +799,7 @@ async function lockIFR(signer, amount) {
   const token = new ethers.Contract(TOKEN_ADDRESS, TOKEN_ABI, signer);
   const lock = new ethers.Contract(LOCK_ADDRESS, LOCK_ABI_FULL, signer);
 
-  const parsedAmount = ethers.utils.parseUnits(amount, 9);
+  const parsedAmount = ethers.parseUnits(amount, 9);
 
   // Step 1: Approve
   const approveTx = await token.approve(LOCK_ADDRESS, parsedAmount);
@@ -829,7 +828,7 @@ async function lockIFR(signer, amount) {
 
       <span class="code-label">lockType &mdash; application tagging</span>
       <pre><code>// Lock with your app's specific tag
-const lockType = ethers.utils.id("myapp_premium"); // bytes32 hash
+const lockType = ethers.id("myapp_premium"); // bytes32 hash
 await lock.lockWithType(amount, lockType);</code></pre>
 
       <div class="callout-green callout">
@@ -1041,7 +1040,7 @@ cast call 0x0Cab0A9440643128540222acC6eF5028736675d3 \
         <strong>Total Builder Pool:</strong> 40M IFR (4% of total supply), managed by the PartnerVault contract on-chain. The remaining 57.9M IFR (6%) is reserved for community grants, bug bounties, and ecosystem development.
       </p>
 
-      <h4>PartnerVault Integration (ethers.js v5)</h4>
+      <h4>PartnerVault Integration (ethers.js v6)</h4>
       <span class="code-label">Query builder rewards and claim</span>
       <pre><code>const VAULT_ADDR = "0xc6eb7714bCb035ebc2D4d9ba7B3762ef7B9d4F7D"; // Ethereum Mainnet
 const VAULT_ABI = [
@@ -1054,7 +1053,7 @@ const vault = new ethers.Contract(VAULT_ADDR, VAULT_ABI, provider);
 
 // Check claimable amount for builder #0
 const amount = await vault.claimable(0);
-console.log("Claimable:", ethers.utils.formatUnits(amount, 9), "IFR");
+console.log("Claimable:", ethers.formatUnits(amount, 9), "IFR");
 
 // Claim vested rewards (requires signer)
 const vaultSigner = vault.connect(signer);
@@ -1065,10 +1064,10 @@ await vaultSigner.claim(0);</code></pre>
            ============================================================ -->
       <h2>12. Full Integration Example</h2>
       <p>
-        Below is a complete ethers.js v5 example showing the full resolver flow &mdash; from contract setup to querying lock status, balance, and lock details for a given wallet.
+        Below is a complete ethers.js v6 example showing the full resolver flow &mdash; from contract setup to querying lock status, balance, and lock details for a given wallet.
       </p>
 
-      <span class="code-label">Full resolver flow &mdash; ethers.js v5</span>
+      <span class="code-label">Full resolver flow &mdash; ethers.js v6</span>
       <pre><code>const { ethers } = require("ethers");
 
 const LOCK_ADDR = "0x769928aBDfc949D0718d8766a1C2d7dBb63954Eb"; // Ethereum Mainnet
@@ -1078,18 +1077,18 @@ const LOCK_ABI = [
   "function lockInfo(address user) view returns (uint256 amount, uint256 lockedAt)",
 ];
 
-const provider = new ethers.providers.JsonRpcProvider(process.env.RPC_URL);
+const provider = new ethers.JsonRpcProvider(process.env.RPC_URL);
 const lock = new ethers.Contract(LOCK_ADDR, LOCK_ABI, provider);
 
 async function checkLicense(wallet) {
-  const minLock = ethers.utils.parseUnits("5000", 9); // 5000 IFR (9 decimals)
+  const minLock = ethers.parseUnits("5000", 9); // 5000 IFR (9 decimals)
   const premium = await lock.isLocked(wallet, minLock);
   const balance = await lock.lockedBalance(wallet);
   const [amount, lockedAt] = await lock.lockInfo(wallet);
   return {
     premium,
-    lockedAmount: ethers.utils.formatUnits(balance, 9),
-    lockedSince: new Date(lockedAt.toNumber() * 1000).toISOString(),
+    lockedAmount: ethers.formatUnits(balance, 9),
+    lockedSince: new Date(Number(lockedAt) * 1000).toISOString(),
   };
 }</code></pre>
 
@@ -1491,7 +1490,7 @@ function lpUpdateUI(state){
     var dropAddr=document.getElementById("lp-drop-addr");if(dropAddr)dropAddr.textContent=addr.slice(0,10)+"..."+addr.slice(-6);
     var dropEth=document.getElementById("lp-drop-eth");if(dropEth)dropEth.textContent=parseFloat(state.ethBalance||"0").toFixed(4)+" ETH";
     var dropIfr=document.getElementById("lp-drop-ifr");
-    if(dropIfr){var ifrAmt=state.ifrBalance&&typeof ethers!=="undefined"?parseFloat(ethers.utils.formatUnits(state.ifrBalance,9)).toLocaleString("en-US",{maximumFractionDigits:0}):"0";dropIfr.textContent=ifrAmt+" IFR"}
+    if(dropIfr){var ifrAmt=state.ifrBalance&&typeof ethers!=="undefined"?parseFloat(ethers.formatUnits(state.ifrBalance,9)).toLocaleString("en-US",{maximumFractionDigits:0}):"0";dropIfr.textContent=ifrAmt+" IFR"}
     var lockDiv=document.getElementById("lp-drop-lock");var noLockDiv=document.getElementById("lp-drop-nolock");
     if(lockDiv)lockDiv.style.display=state.isLocked1000?"":"none";
     if(noLockDiv)noLockDiv.style.display=state.isLocked1000?"none":"";

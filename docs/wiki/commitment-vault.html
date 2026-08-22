@@ -629,8 +629,7 @@
     "about": {"@id": "https://ifrunit.tech/#app"}
   }
   </script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"
-  onerror="var s=document.createElement('script');s.src='https://unpkg.com/ethers@5.7.2/dist/ethers.umd.min.js';document.head.appendChild(s);"></script>
+<script src="/assets/vendor/ethers-6.17.0.umd.min.js"></script>
 <script src="../assets/wallet-core.js"></script>
 <script src="../assets/ifr-state.js"></script>
 <script type="application/ld+json">
@@ -1213,7 +1212,7 @@ function lpUpdateUI(state){
     var dropAddr=document.getElementById("lp-drop-addr");if(dropAddr)dropAddr.textContent=addr.slice(0,10)+"..."+addr.slice(-6);
     var dropEth=document.getElementById("lp-drop-eth");if(dropEth)dropEth.textContent=parseFloat(state.ethBalance||"0").toFixed(4)+" ETH";
     var dropIfr=document.getElementById("lp-drop-ifr");
-    if(dropIfr){var ifrAmt=state.ifrBalance&&typeof ethers!=="undefined"?parseFloat(ethers.utils.formatUnits(state.ifrBalance,9)).toLocaleString("en-US",{maximumFractionDigits:0}):"0";dropIfr.textContent=ifrAmt+" IFR"}
+    if(dropIfr){var ifrAmt=state.ifrBalance&&typeof ethers!=="undefined"?parseFloat(ethers.formatUnits(state.ifrBalance,9)).toLocaleString("en-US",{maximumFractionDigits:0}):"0";dropIfr.textContent=ifrAmt+" IFR"}
     var lockDiv=document.getElementById("lp-drop-lock");var noLockDiv=document.getElementById("lp-drop-nolock");
     if(lockDiv)lockDiv.style.display=state.isLocked1000?"":"none";
     if(noLockDiv)noLockDiv.style.display=state.isLocked1000?"none":"";
@@ -1262,9 +1261,9 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
   var cvProvider = null;
   var cvSigner = null;
   var cvAddress = null;
-  var cvBalance = ethers.BigNumber.from(0);
-  var cvAllowance = ethers.BigNumber.from(0);
-  var cvTrancheCount = ethers.BigNumber.from(0);
+  var cvBalance = 0n;
+  var cvAllowance = 0n;
+  var cvTrancheCount = 0n;
 
   var COND_NAMES = ["Time Only", "Price Only", "Time OR Price", "Time AND Price"];
 
@@ -1274,11 +1273,11 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
     return '<a href="https://etherscan.io/tx/' + hash + '" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline;">' + hash.slice(0, 10) + "..." + hash.slice(-6) + "</a>";
   }
   function formatIFR(value, maxDigits) {
-    var num = Number(ethers.utils.formatUnits(value || 0, IFR_DECIMALS));
+    var num = Number(ethers.formatUnits(value || 0, IFR_DECIMALS));
     return num.toLocaleString("en-US", { maximumFractionDigits: maxDigits == null ? 3 : maxDigits });
   }
   function inputFromBN(value) {
-    return ethers.utils.formatUnits(value, IFR_DECIMALS).replace(/\.?0+$/, "");
+    return ethers.formatUnits(value, IFR_DECIMALS).replace(/\.?0+$/, "");
   }
   function setStatus(kind, message) {
     var statusEl = el("cv-lock-status");
@@ -1298,7 +1297,7 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
   }
   async function ensureMainnet(provider) {
     var net = await provider.getNetwork();
-    if (net.chainId === MAINNET_CHAIN_ID) return;
+    if (Number(net.chainId) === MAINNET_CHAIN_ID) return;
     if (!window.ethereum || typeof window.ethereum.request !== "function") {
       throw new Error("Please switch your wallet to Ethereum Mainnet.");
     }
@@ -1322,14 +1321,14 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
       await ensureMainnet(cvProvider);
       cvProvider = IFRWallet.getProvider();
       cvSigner = IFRWallet.getSigner();
-      cvAddress = ethers.utils.getAddress(IFRWallet.getAddress());
+      cvAddress = ethers.getAddress(IFRWallet.getAddress());
     } else if (window.ethereum && typeof window.ethereum.request === "function") {
       var accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
-      cvProvider = new ethers.providers.Web3Provider(window.ethereum, "any");
+      cvProvider = new ethers.BrowserProvider(window.ethereum, "any");
       await ensureMainnet(cvProvider);
-      cvProvider = new ethers.providers.Web3Provider(window.ethereum, "any");
-      cvSigner = cvProvider.getSigner();
-      cvAddress = ethers.utils.getAddress(accounts[0]);
+      cvProvider = new ethers.BrowserProvider(window.ethereum, "any");
+      cvSigner = await cvProvider.getSigner();
+      cvAddress = ethers.getAddress(accounts[0]);
     } else {
       throw new Error("Please install MetaMask or use the main wallet connector.");
     }
@@ -1408,9 +1407,9 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
   function selectedPlan() {
     var amountValue = (el("cv-amount").value || "").trim();
     if (!amountValue || Number(amountValue) <= 0) throw new Error("Enter an IFR amount greater than 0.");
-    var totalAmount = ethers.utils.parseUnits(amountValue, IFR_DECIMALS);
-    if (totalAmount.lte(0)) throw new Error("Lock amount is too small.");
-    if (cvBalance.gt(0) && totalAmount.gt(cvBalance)) throw new Error("Amount exceeds your current IFR balance.");
+    var totalAmount = ethers.parseUnits(amountValue, IFR_DECIMALS);
+    if (totalAmount <= 0n) throw new Error("Lock amount is too small.");
+    if (cvBalance > 0n && totalAmount > cvBalance) throw new Error("Amount exceeds your current IFR balance.");
 
     var cType = parseInt(el("cv-condition-type").value, 10);
     var needsTime = cType === 0 || cType === 2 || cType === 3;
@@ -1432,15 +1431,15 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
     }
 
     var splitCount = el("cv-split-tranches").checked ? 10 : 1;
-    if (cvTrancheCount.add(splitCount).gt(MAX_TRANCHES)) {
+    if (cvTrancheCount + BigInt(splitCount) > BigInt(MAX_TRANCHES)) {
       throw new Error("This wallet would exceed the 50 tranche limit.");
     }
 
-    var base = totalAmount.div(splitCount);
-    if (base.isZero()) throw new Error("Amount is too small for the selected tranche split.");
+    var base = totalAmount / BigInt(splitCount);
+    if (base === 0n) throw new Error("Amount is too small for the selected tranche split.");
     var amounts = [];
     for (var i = 0; i < splitCount; i++) {
-      amounts.push(i === splitCount - 1 ? totalAmount.sub(base.mul(splitCount - 1)) : base);
+      amounts.push(i === splitCount - 1 ? totalAmount - (base * BigInt(splitCount - 1)) : base);
     }
     return { totalAmount: totalAmount, amounts: amounts, cType: cType, unlockTime: unlockTime, p0Multiplier: p0Multiplier, splitCount: splitCount };
   }
@@ -1484,14 +1483,14 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
   });
   var halfBtn = el("cv-half-btn");
   if (halfBtn) halfBtn.addEventListener("click", function() {
-    if (cvBalance.isZero()) return;
-    el("cv-amount").value = inputFromBN(cvBalance.div(2));
+    if (cvBalance === 0n) return;
+    el("cv-amount").value = inputFromBN(cvBalance / 2n);
     el("cv-split-tranches").checked = true;
     updatePreview();
   });
   var maxBtn = el("cv-max-btn");
   if (maxBtn) maxBtn.addEventListener("click", function() {
-    if (cvBalance.isZero()) return;
+    if (cvBalance === 0n) return;
     el("cv-amount").value = inputFromBN(cvBalance);
     updatePreview();
   });
@@ -1512,11 +1511,11 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
         return cv.isConditionMet(cvAddress, i).catch(function() { return false; });
       }));
       list.innerHTML = tranches.map(function(t, i) {
-        var unlockDate = t.unlockTime && !t.unlockTime.isZero()
-          ? new Date(t.unlockTime.toNumber() * 1000).toISOString().slice(0, 10)
+        var unlockDate = t.unlockTime && t.unlockTime !== 0n
+          ? new Date(Number(t.unlockTime) * 1000).toISOString().slice(0, 10)
           : "Price based";
-        var conditionType = t.cType && t.cType.toNumber ? t.cType.toNumber() : Number(t.cType);
-        var multiplier = t.p0Multiplier && t.p0Multiplier.toNumber ? t.p0Multiplier.toNumber() : Number(t.p0Multiplier || 0);
+        var conditionType = Number(t.cType || 0);
+        var multiplier = Number(t.p0Multiplier || 0);
         var status = t.unlocked ? "Unlocked" : (conditionChecks[i] ? "Unlock ready" : "Locked");
         var badgeClass = t.unlocked ? "cv-badge-unlocked" : "cv-badge-locked";
         var unlockBtn = (!t.unlocked && conditionChecks[i])
@@ -1580,7 +1579,7 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
       var token = new ethers.Contract(IFR_TOKEN, IFR_ABI, cvSigner);
       var cv = new ethers.Contract(CV_ADDR, CV_ABI, cvSigner);
       var currentAllowance = await token.allowance(cvAddress, CV_ADDR);
-      if (currentAllowance.lt(plan.totalAmount)) {
+      if (currentAllowance < plan.totalAmount) {
         setStatus("info", "Step 1 of " + (plan.splitCount + 1) + ": confirm IFR approval in your wallet.");
         var approveTx = await token.approve(CV_ADDR, plan.totalAmount);
         setStatus("info", "Approval submitted: " + explorerTx(approveTx.hash) + "<br>Waiting for confirmation...");

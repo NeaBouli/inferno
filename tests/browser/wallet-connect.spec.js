@@ -191,7 +191,7 @@ test.describe("S3: Multi-wallet detection", () => {
     await gotoWalletPage(page, "/");
 
     const result = await page.evaluate(async (zero32) => {
-      const addr = "0xaa0000000000000000000000000000000000000001";
+      const addr = "0xaa00000000000000000000000000000000000001";
       const mockMM = {
         isMetaMask: true,
         request: async function(req) {
@@ -216,7 +216,7 @@ test.describe("S3: Multi-wallet detection", () => {
       } catch (e) { return "ERROR:" + e.message; }
     }, ZERO32);
 
-    expect(result).toBe("0xaa0000000000000000000000000000000000000001");
+    expect(result).toBe("0xaa00000000000000000000000000000000000001");
     assertNoPageErrors();
   });
 });
@@ -450,6 +450,23 @@ test.describe("S9: Wiki button consistency", () => {
     });
   }
 });
+
+for (const path of [
+  "/wiki/bootstrap.html",
+  "/wiki/commitment-vault.html",
+  "/wiki/lending-vault.html",
+  "/wiki/lending-market.html",
+  "/wiki/transparency.html",
+]) {
+  test(`Ethers 6 runtime initializes and connects on ${path}`, async ({ page }) => {
+    const assertNoPageErrors = monitorPageErrors(page);
+    await page.addInitScript(mockMetaMask(MOCK_ADDR));
+    await gotoWalletPage(page, path);
+    await expect.poll(() => page.evaluate(() => window.ethers.version)).toBe("6.17.0");
+    await expect.poll(() => page.evaluate(() => window.IFRWallet.connect())).toBe(MOCK_ADDR);
+    assertNoPageErrors();
+  });
+}
 
 /* ══════════════════════════════════════════════════════════
    Scenario 10 — Bootstrap: stats + wallet notice

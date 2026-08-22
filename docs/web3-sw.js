@@ -1,4 +1,4 @@
-const CACHE_NAME = "ifr-web3-v13";
+const CACHE_NAME = "ifr-web3-v14";
 const NAVIGATION_TIMEOUT_MS = 5000;
 const PRECACHE_URLS = [
   "/",
@@ -11,7 +11,7 @@ const PRECACHE_URLS = [
   "/assets/inferno-redesign-masthead-opaque.jpg",
   "/assets/inferno-redesign-masthead-opaque@2x.jpg",
   "/web3-wallet-core.js",
-  "/assets/vendor/ethers-5.7.2.umd.min.js",
+  "/assets/vendor/ethers-6.17.0.umd.min.js",
   "/assets/ifr-state.js"
 ];
 

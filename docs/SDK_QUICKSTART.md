@@ -34,7 +34,7 @@ const IFRTOKEN_ABI = [
 
 ---
 
-## 3. Basic Integration (ethers.js v5)
+## 3. Basic Integration (ethers.js v6)
 ```javascript
 import { ethers } from "ethers";
 
@@ -42,7 +42,7 @@ const IFRLOCK_ADDRESS = "0x769928aBDfc949D0718d8766a1C2d7dBb63954Eb"; // Mainnet
 const IFRLOCK_ABI = ["function isLocked(address, uint256) view returns (bool)"];
 
 // Provider (read-only, no wallet needed)
-const provider = new ethers.providers.JsonRpcProvider(
+const provider = new ethers.JsonRpcProvider(
   "https://eth-mainnet.g.alchemy.com/v2/YOUR_KEY"
 );
 
@@ -50,7 +50,7 @@ const ifrLock = new ethers.Contract(IFRLOCK_ADDRESS, IFRLOCK_ABI, provider);
 
 // Check if user has 5,000 IFR locked (Gold Tier)
 async function checkAccess(userWallet) {
-  const minAmount = ethers.utils.parseUnits("5000", 9); // 9 decimals
+  const minAmount = ethers.parseUnits("5000", 9); // 9 decimals
   const hasAccess = await ifrLock.isLocked(userWallet, minAmount);
   return hasAccess;
 }
@@ -65,7 +65,7 @@ import { ethers } from "ethers";
 
 const app = express();
 
-const provider = new ethers.providers.JsonRpcProvider(process.env.RPC_URL);
+const provider = new ethers.JsonRpcProvider(process.env.RPC_URL);
 const ifrLock = new ethers.Contract(
   process.env.IFRLOCK_ADDRESS,
   ["function isLocked(address, uint256) view returns (bool)"],
@@ -76,10 +76,10 @@ const ifrLock = new ethers.Contract(
 export async function requireIFRLock(minIFR = 1000) {
   return async (req, res, next) => {
     const wallet = req.headers["x-wallet-address"];
-    if (!wallet || !ethers.utils.isAddress(wallet)) {
+    if (!wallet || !ethers.isAddress(wallet)) {
       return res.status(401).json({ error: "Valid wallet address required" });
     }
-    const minAmount = ethers.utils.parseUnits(String(minIFR), 9);
+    const minAmount = ethers.parseUnits(String(minIFR), 9);
     const locked = await ifrLock.isLocked(wallet, minAmount);
     if (!locked) {
       return res.status(403).json({
@@ -192,7 +192,7 @@ const TIERS = {
 
 async function getUserTier(wallet) {
   const amount = await ifrLock.lockedAmount(wallet);
-  const ifr = parseFloat(ethers.utils.formatUnits(amount, 9));
+  const ifr = parseFloat(ethers.formatUnits(amount, 9));
 
   if (ifr >= TIERS.platinum.minIFR) return TIERS.platinum;
   if (ifr >= TIERS.gold.minIFR)     return TIERS.gold;
@@ -216,7 +216,7 @@ const signature = await signer.signMessage(message);
 import { ethers } from "ethers";
 
 function verifyWalletOwnership(message, signature, expectedWallet) {
-  const recovered = ethers.utils.verifyMessage(message, signature);
+  const recovered = ethers.verifyMessage(message, signature);
   return recovered.toLowerCase() === expectedWallet.toLowerCase();
 }
 ```
@@ -227,10 +227,10 @@ function verifyWalletOwnership(message, signature, expectedWallet) {
 ```javascript
 async function safeCheckAccess(wallet, minIFR) {
   try {
-    if (!ethers.utils.isAddress(wallet)) {
+    if (!ethers.isAddress(wallet)) {
       return { access: false, error: "Invalid wallet address" };
     }
-    const minAmount = ethers.utils.parseUnits(String(minIFR), 9);
+    const minAmount = ethers.parseUnits(String(minIFR), 9);
     const locked = await ifrLock.isLocked(wallet, minAmount);
     return { access: locked, error: null };
   } catch (err) {

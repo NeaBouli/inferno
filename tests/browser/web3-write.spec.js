@@ -28,6 +28,7 @@ const selectors = {
   lendingPrice: selector("ifrPriceWei()"),
   lendingRate: selector("getInterestRate()"),
   lendingOfferCount: selector("getOfferCount()"),
+  lendingGetOffer: selector("getOffer(uint256)"),
   lendingLoanCount: selector("getLoanCount()"),
 };
 
@@ -69,6 +70,7 @@ async function installWallet(context, options = {}) {
   const chainId = options.chainId || "0x1";
   const rejectSwitch = options.rejectSwitch === true;
   const locked = options.locked || 0n;
+  const availableOffer = options.offerAvailable === true;
   const callResults = {
     [selectors.balanceOf]: uintResult(10_000n * UNIT),
     [selectors.allowance]: uintResult(0n),
@@ -78,7 +80,11 @@ async function installWallet(context, options = {}) {
     [selectors.lendingHasOffer]: uintResult(0n),
     [selectors.lendingPrice]: uintResult(0n),
     [selectors.lendingRate]: uintResult(200n),
-    [selectors.lendingOfferCount]: uintResult(0n),
+    [selectors.lendingOfferCount]: uintResult(availableOffer ? 1n : 0n),
+    [selectors.lendingGetOffer]: coder.encode(
+      ["tuple(address lender,uint256 availableIFR,uint256 lentIFR,bool active)"],
+      [[ACCOUNT, 1000n * UNIT, 0n, availableOffer]],
+    ),
     [selectors.lendingLoanCount]: uintResult(0n),
   };
 
@@ -658,9 +664,11 @@ test("CommitmentVault time-only and LendingVault offer writes preserve IFR base 
 });
 
 test("LendingVault borrowing remains transaction-disabled while price is zero", async ({ browser }) => {
-  const { context, page, writes, pageErrors } = await preparePage(browser);
+  const { context, page, writes, pageErrors } = await preparePage(browser, { offerAvailable: true });
   await page.goto("/web3/?action=borrow", { waitUntil: "domcontentloaded" });
   await selectInjectedWallet(page);
+  await expect(page.locator("[data-borrow-offer] option")).toHaveCount(1);
+  await expect(page.locator("[data-borrow-offer-count]")).toHaveText("1 / 1");
   await expect(page.locator("[data-borrow-price]")).toHaveText("Disabled");
   await expect(page.locator("[data-borrow-submit]")).toBeDisabled();
   await expect(page.locator("[data-borrow-status]")).toContainText("disabled");
@@ -680,16 +688,17 @@ test("Web3 runtime uses the self-hosted Ethers asset", async ({ browser }) => {
     await page.goto("/web3/", { waitUntil: "domcontentloaded" });
     await expect.poll(() => page.evaluate(() => typeof window.ethers)).toBe("object");
     expect(externalEthersRequests).toEqual([]);
-    await expect(page.locator('script[src="/assets/vendor/ethers-5.7.2.umd.min.js"]')).toHaveCount(1);
+    await expect(page.locator('script[src="/assets/vendor/ethers-6.17.0.umd.min.js"]')).toHaveCount(1);
+    await expect.poll(() => page.evaluate(() => window.ethers.version)).toBe("6.17.0");
   } finally {
     await context.close();
   }
 });
 
-test("self-hosted Ethers asset matches the published 5.7.2 bundle", () => {
-  const asset = readFileSync("docs/assets/vendor/ethers-5.7.2.umd.min.js");
+test("self-hosted Ethers asset matches the published 6.17.0 bundle", () => {
+  const asset = readFileSync("docs/assets/vendor/ethers-6.17.0.umd.min.js");
   expect(createHash("sha256").update(asset).digest("hex")).toBe(
-    "a66293a6a2bb4dee061a68612be0be3c5c0ab7e4068ab8d98a4a357baf664c73",
+    "532950515fd29ae9f7a21ceb2b68100815024d7944c3d5a92246d5b900bd703b",
   );
 });
 
@@ -738,7 +747,7 @@ test("Android 9 stays in browser mode instead of launching an incompatible WebAP
 
 test("Web3 service worker bounds offline navigation before using the cache", () => {
   const source = readFileSync("docs/web3-sw.js", "utf8");
-  expect(source).toContain('const CACHE_NAME = "ifr-web3-v13"');
+  expect(source).toContain('const CACHE_NAME = "ifr-web3-v14"');
   expect(source).toContain("const NAVIGATION_TIMEOUT_MS = 5000");
   expect(source).toContain("fetchNavigation(request)");
   expect(source).toContain('fetch(request, { cache: "no-store", signal: controller.signal })');
