@@ -30,7 +30,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="dns-prefetch" href="https://eth.llamarpc.com">
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
-  <script src="/assets/vendor/ethers-5.7.2.umd.min.js"></script>
+  <script src="/assets/vendor/ethers-6.17.0.umd.min.js"></script>
   <script src="/web3-wallet-core.js"></script>
   <script src="/assets/ifr-state.js"></script>
   <script type="application/ld+json">
@@ -2537,7 +2537,7 @@
 
       function formatIFR(value) {
         if (!window.ethers || value == null) return "0 IFR";
-        const formatted = ethers.utils.formatUnits(value, IFR_DECIMALS);
+        const formatted = ethers.formatUnits(value, IFR_DECIMALS);
         const numeric = Number(formatted);
         if (!Number.isFinite(numeric)) return `${formatted} IFR`;
         return `${numeric.toLocaleString("en-US", { maximumFractionDigits: 4 })} IFR`;
@@ -2549,7 +2549,7 @@
 
       function formatIFRCompact(value) {
         if (!window.ethers || value == null) return "0 IFR";
-        const numeric = Number(ethers.utils.formatUnits(value, IFR_DECIMALS));
+        const numeric = Number(ethers.formatUnits(value, IFR_DECIMALS));
         if (!Number.isFinite(numeric)) return formatIFR(value);
         if (numeric >= 1000000) return `${(numeric / 1000000).toLocaleString("en-US", { maximumFractionDigits: 2 })}M IFR`;
         if (numeric >= 1000) return `${(numeric / 1000).toLocaleString("en-US", { maximumFractionDigits: 1 })}K IFR`;
@@ -2557,12 +2557,12 @@
       }
 
       function formatIFRInputValue(value) {
-        return ethers.utils.formatUnits(value, IFR_DECIMALS).replace(/(\.\d*?)0+$/, "$1").replace(/\.$/, "");
+        return ethers.formatUnits(value, IFR_DECIMALS).replace(/(\.\d*?)0+$/, "$1").replace(/\.$/, "");
       }
 
       function formatETH(value) {
         if (!window.ethers || value == null) return "0 ETH";
-        const formatted = ethers.utils.formatEther(value);
+        const formatted = ethers.formatEther(value);
         const numeric = Number(formatted);
         if (!Number.isFinite(numeric)) return `${formatted} ETH`;
         return `${numeric.toLocaleString("en-US", { maximumFractionDigits: 6 })} ETH`;
@@ -2571,13 +2571,13 @@
       function parseETHInput(input) {
         const clean = String(input || "").replace(",", ".").trim();
         if (!clean || Number(clean) <= 0) throw new Error("Enter an ETH amount greater than zero.");
-        return ethers.utils.parseEther(clean);
+        return ethers.parseEther(clean);
       }
 
       function parseIFRInput(input) {
         const clean = String(input || "").replace(",", ".").trim();
         if (!clean || Number(clean) <= 0) throw new Error("Enter an IFR amount greater than zero.");
-        return ethers.utils.parseUnits(clean, IFR_DECIMALS);
+        return ethers.parseUnits(clean, IFR_DECIMALS);
       }
 
       function accessLockErrorMessage(error) {
@@ -2597,7 +2597,7 @@
         if (!accessLockSubmit || !currentAccessLockState) return false;
         accessLockSubmit.textContent = "Approve / Lock";
 
-        if (currentAccessLockState.balance.isZero()) {
+        if (currentAccessLockState.balance === 0n) {
           accessLockSubmit.disabled = true;
           accessLockSubmit.textContent = "No free IFR";
           if (showMessage) {
@@ -2614,7 +2614,7 @@
           return false;
         }
 
-        if (amount.gt(currentAccessLockState.balance)) {
+        if (amount > currentAccessLockState.balance) {
           accessLockSubmit.disabled = true;
           accessLockSubmit.textContent = "Amount exceeds wallet";
           if (showMessage) {
@@ -2624,7 +2624,7 @@
         }
 
         accessLockSubmit.disabled = false;
-        accessLockSubmit.textContent = currentAccessLockState.allowance.lt(amount) ? "Approve / Lock" : "Lock";
+        accessLockSubmit.textContent = currentAccessLockState.allowance < amount ? "Approve / Lock" : "Lock";
         return true;
       }
 
@@ -2719,11 +2719,11 @@
         }
 
         const splitCount = lockSplit && lockSplit.checked ? 10 : 1;
-        const base = totalAmount.div(splitCount);
-        if (base.isZero()) throw new Error("Amount is too small for the selected tranche split.");
+        const base = totalAmount / BigInt(splitCount);
+        if (base === 0n) throw new Error("Amount is too small for the selected tranche split.");
         const amounts = [];
         for (let i = 0; i < splitCount; i++) {
-          amounts.push(i === splitCount - 1 ? totalAmount.sub(base.mul(splitCount - 1)) : base);
+          amounts.push(i === splitCount - 1 ? totalAmount - (base * BigInt(splitCount - 1)) : base);
         }
 
         return { totalAmount, amounts, cType, unlockTime, p0Multiplier, splitCount };
@@ -2735,7 +2735,7 @@
         const locked = await ifrLock.lockedBalance(address);
         if (!isCurrentWalletAddress(address)) return;
         accessLockBalance.textContent = formatIFR(locked);
-        accessLockNote.textContent = locked.gte(ethers.utils.parseUnits("1000", IFR_DECIMALS)) ? "Premium ready" : "Lock needed";
+        accessLockNote.textContent = locked >= ethers.parseUnits("1000", IFR_DECIMALS) ? "Premium ready" : "Lock needed";
       }
 
       async function loadCommitmentSummary(address) {
@@ -2747,7 +2747,7 @@
         ]);
         if (!isCurrentWalletAddress(address)) return;
         commitmentBalance.textContent = formatIFR(locked);
-        commitmentNote.textContent = count.toNumber() ? `${count.toNumber()} tranches` : "No tranches";
+        commitmentNote.textContent = Number(count) ? `${Number(count)} tranches` : "No tranches";
       }
 
       async function loadLendingSummary(address) {
@@ -2758,7 +2758,7 @@
 
         const [hasOffer, loanCountValue] = await Promise.all([
           lending.hasOffer(address).catch(() => false),
-          lending.getLoanCount().catch(() => ethers.BigNumber.from(0))
+          lending.getLoanCount().catch(() => 0n)
         ]);
 
         let offer = null;
@@ -2767,9 +2767,9 @@
           offer = await lending.getOffer(offerId);
         }
 
-        const loanCount = loanCountValue.toNumber();
+        const loanCount = Number(loanCountValue);
         let activeLoans = 0;
-        let borrowed = ethers.BigNumber.from(0);
+        let borrowed = 0n;
         const loanReads = [];
         for (let i = 0; i < Math.min(loanCount, 120); i++) {
           loanReads.push(
@@ -2777,7 +2777,7 @@
               .then((loan) => {
                 if (!loan.active || loan.borrower.toLowerCase() !== address.toLowerCase()) return;
                 activeLoans++;
-                borrowed = borrowed.add(loan.ifrAmount);
+                borrowed = borrowed + loan.ifrAmount;
               })
               .catch(() => null)
           );
@@ -2785,7 +2785,7 @@
         await Promise.all(loanReads);
         if (!isCurrentWalletAddress(address)) return;
 
-        if (borrowed.gt(0)) {
+        if (borrowed > 0n) {
           lendingSummary.textContent = `${formatIFRCompact(borrowed)} borrowed`;
         } else if (offer && offer.active) {
           lendingSummary.textContent = `${formatIFRCompact(offer.availableIFR)} available`;
@@ -2810,24 +2810,24 @@
           ifrLock.lockedBalance(address)
         ]);
 
-        const premiumMinimum = ethers.utils.parseUnits("1000", IFR_DECIMALS);
-        const premiumMissing = locked.gte(premiumMinimum) ? ethers.BigNumber.from(0) : premiumMinimum.sub(locked);
+        const premiumMinimum = ethers.parseUnits("1000", IFR_DECIMALS);
+        const premiumMissing = locked >= premiumMinimum ? 0n : premiumMinimum - locked;
         currentAccessLockState = { address, balance, allowance, locked, premiumMinimum, premiumMissing };
         accessWalletBalance.textContent = formatIFR(balance);
         accessLockTotal.textContent = formatIFR(locked);
         accessLockAllowance.textContent = formatIFR(allowance);
         accessLockBalance.textContent = formatIFR(locked);
-        accessLockNote.textContent = premiumMissing.isZero() ? "Premium ready" : "Lock needed";
+        accessLockNote.textContent = premiumMissing === 0n ? "Premium ready" : "Lock needed";
         if (accessLockPremium) {
-          accessLockPremium.disabled = premiumMissing.isZero();
-          accessLockPremium.textContent = premiumMissing.isZero() ? "Premium ready" : `Lock ${formatIFRShort(premiumMissing)} IFR for Premium`;
+          accessLockPremium.disabled = premiumMissing === 0n;
+          accessLockPremium.textContent = premiumMissing === 0n ? "Premium ready" : `Lock ${formatIFRShort(premiumMissing)} IFR for Premium`;
         }
-        accessLockUnlock.disabled = locked.isZero();
-        if (locked.gte(premiumMinimum) && balance.isZero()) {
+        accessLockUnlock.disabled = locked === 0n;
+        if (locked >= premiumMinimum && balance === 0n) {
           accessLockAmount.value = "";
           accessLockStatus.textContent = "Premium access is ready. This wallet has no free IFR left to lock.";
         } else {
-          accessLockStatus.textContent = locked.isZero() ? "No IFRLock balance yet." : "IFRLock state loaded.";
+          accessLockStatus.textContent = locked === 0n ? "No IFRLock balance yet." : "IFRLock state loaded.";
         }
         syncAccessLockSubmitState(false);
       }
@@ -2836,7 +2836,7 @@
         const address = await ensureWalletReady("Preparing Premium access");
         const provider = IFRWallet.getProvider();
         const { token, ifrLock } = getContracts(provider);
-        const premiumMinimum = ethers.utils.parseUnits("1000", IFR_DECIMALS);
+        const premiumMinimum = ethers.parseUnits("1000", IFR_DECIMALS);
 
         accessLockPremium.disabled = true;
         accessLockStatus.textContent = "Checking Premium access threshold...";
@@ -2845,14 +2845,14 @@
           ifrLock.lockedBalance(address)
         ]);
 
-        if (locked.gte(premiumMinimum)) {
+        if (locked >= premiumMinimum) {
           accessLockStatus.textContent = "Premium access is already ready in IFRLock.";
           await loadAccessLockPanel();
           return;
         }
 
-        const missing = premiumMinimum.sub(locked);
-        if (balance.lt(missing)) {
+        const missing = premiumMinimum - locked;
+        if (balance < missing) {
           accessLockStatus.textContent = `Premium needs ${formatIFR(missing)} more in IFRLock, but this wallet has ${formatIFR(balance)} free.`;
           await loadAccessLockPanel().catch(() => null);
           return;
@@ -2877,10 +2877,10 @@
           token.balanceOf(address),
           token.allowance(address, IFR_LOCK_ADDRESS)
         ]);
-        if (balance.lt(amount)) {
+        if (balance < amount) {
           throw new Error(`This wallet has ${formatIFR(balance)} free, but the lock amount is ${formatIFR(amount)}. Your existing IFRLock balance stays locked and can be unlocked separately.`);
         }
-        if (allowance.lt(amount)) {
+        if (allowance < amount) {
           accessLockStatus.textContent = "Approve IFRLock 0x769928...3954Eb for the exact amount.";
           const approveTx = await token.approve(IFR_LOCK_ADDRESS, amount);
           accessLockStatus.textContent = "Waiting for approval confirmation...";
@@ -2888,7 +2888,7 @@
         }
 
         accessLockStatus.textContent = "Confirm IFRLock transaction in your wallet.";
-        const tx = lockType ? await ifrLock.lockWithType(amount, ethers.utils.formatBytes32String(lockType)) : await ifrLock.lock(amount);
+        const tx = lockType ? await ifrLock.lockWithType(amount, ethers.encodeBytes32String(lockType)) : await ifrLock.lock(amount);
         accessLockStatus.textContent = "Waiting for IFRLock confirmation...";
         await tx.wait();
         accessLockAmount.value = "";
@@ -2920,11 +2920,11 @@
           token.allowance(address, COMMITMENT_VAULT_ADDRESS),
           commitment.lockedBalance(address),
           commitment.getTrancheCount(address),
-          commitment.priceOracle().catch(() => ethers.constants.AddressZero)
+          commitment.priceOracle().catch(() => ethers.ZeroAddress)
         ]);
 
-        const totalTranches = count.toNumber();
-        const priceOracleIsMissing = priceOracle === ethers.constants.AddressZero;
+        const totalTranches = Number(count);
+        const priceOracleIsMissing = priceOracle === ethers.ZeroAddress;
         const trancheReads = [];
         for (let i = 0; i < totalTranches; i++) {
           trancheReads.push(Promise.all([
@@ -2957,9 +2957,9 @@
         }
 
         lockTranches.innerHTML = active.map((item) => {
-          const unlockTimestamp = item.tranche.unlockTime.toNumber();
+          const unlockTimestamp = Number(item.tranche.unlockTime);
           const unlockDate = unlockTimestamp ? new Date(unlockTimestamp * 1000).toLocaleString() : "No time condition";
-          const multiplier = item.tranche.p0Multiplier.toNumber();
+          const multiplier = Number(item.tranche.p0Multiplier);
           const condition = conditionNames[item.tranche.cType] || `Condition ${item.tranche.cType}`;
           const canUnlock = Boolean(item.conditionMet);
           return `
@@ -2985,7 +2985,7 @@
         lockStatus.textContent = "Checking token allowance...";
         const allowance = await token.allowance(address, COMMITMENT_VAULT_ADDRESS);
 
-        if (allowance.lt(plan.totalAmount)) {
+        if (allowance < plan.totalAmount) {
           lockStatus.textContent = "Approve IFR in your wallet, then keep this page open.";
           const approveTx = await token.approve(COMMITMENT_VAULT_ADDRESS, plan.totalAmount);
           lockStatus.textContent = "Waiting for approval confirmation...";
@@ -3040,7 +3040,7 @@
         lendingAvailable.textContent = offer ? formatIFR(offer.availableIFR) : "0 IFR";
         lendingLent.textContent = offer ? formatIFR(offer.lentIFR) : "0 IFR";
         lendingMode.value = offer ? (offer.active ? `Offer #${offerId.toString()} active` : `Offer #${offerId.toString()} closed`) : "No offer yet";
-        lendingWithdraw.disabled = !offer || !offer.active || offer.availableIFR.isZero();
+        lendingWithdraw.disabled = !offer || !offer.active || offer.availableIFR === 0n;
         lendingDeposit.disabled = Boolean(offer && !offer.active);
         lendingStatus.textContent = offer ? "Lending offer loaded." : "No LendingVault offer yet.";
       }
@@ -3055,7 +3055,7 @@
         lendingStatus.textContent = "Checking token allowance...";
         const allowance = await token.allowance(address, LENDING_VAULT_ADDRESS);
 
-        if (allowance.lt(amount)) {
+        if (allowance < amount) {
           lendingStatus.textContent = "Approve IFR in your wallet, then keep this page open.";
           const approveTx = await token.approve(LENDING_VAULT_ADDRESS, amount);
           lendingStatus.textContent = "Waiting for approval confirmation...";
@@ -3101,10 +3101,10 @@
         if (priceMissing) {
           return { label: "Price not set", value: "Collateral ratio unavailable", className: "is-muted" };
         }
-        if (!ratio || ratio.eq(ethers.constants.MaxUint256)) {
+        if (!ratio || ratio === ethers.MaxUint256) {
           return { label: "Safe", value: "No liquidation pressure", className: "" };
         }
-        const pct = ratio.toNumber();
+        const pct = Number(ratio);
         if (pct < 120) {
           return { label: "Liquidation", value: `${pct}% collateral ratio`, className: "is-critical" };
         }
@@ -3117,7 +3117,7 @@
       async function updateBorrowPreview() {
         if (!currentBorrowState) return;
         const offer = selectedBorrowOffer();
-        const priceMissing = currentBorrowState.ifrPriceWei.isZero();
+        const priceMissing = currentBorrowState.ifrPriceWei === 0n;
         borrowSubmit.disabled = true;
 
         if (priceMissing) {
@@ -3147,7 +3147,7 @@
           return;
         }
 
-        if (amount.gt(offer.offer.availableIFR)) {
+        if (amount > offer.offer.availableIFR) {
           borrowCollateral.textContent = "Too high";
           borrowStatus.textContent = "Amount exceeds this offer's available IFR.";
           return;
@@ -3169,7 +3169,7 @@
       function renderBorrowState() {
         if (!currentBorrowState) return;
         const { address, offers, loans, ifrPriceWei, offerCount } = currentBorrowState;
-        const priceMissing = ifrPriceWei.isZero();
+        const priceMissing = ifrPriceWei === 0n;
         borrowPrice.textContent = priceMissing ? "Disabled" : `${formatETH(ifrPriceWei)} / IFR`;
         borrowOfferCount.textContent = `${offers.length} / ${offerCount}`;
 
@@ -3202,7 +3202,7 @@
 
         borrowLoans.innerHTML = loans.length
           ? loans.map((item) => {
-              const repay = item.interest ? item.loan.ifrAmount.add(item.interest) : item.loan.ifrAmount;
+              const repay = item.interest ? item.loan.ifrAmount + item.interest : item.loan.ifrAmount;
               const health = loanHealthState(item.ratio, priceMissing);
               return `
                 <div class="loan-row">
@@ -3236,18 +3236,18 @@
           lending.ifrPriceWei(),
           lending.getOfferCount(),
           lending.getLoanCount(),
-          lending.getInterestRate().catch(() => ethers.BigNumber.from(200))
+          lending.getInterestRate().catch(() => 200n)
         ]);
 
-        const offerCount = offerCountValue.toNumber();
-        const loanCount = loanCountValue.toNumber();
+        const offerCount = Number(offerCountValue);
+        const loanCount = Number(loanCountValue);
         const offers = [];
         const offerReads = [];
         for (let i = 0; i < Math.min(offerCount, 80); i++) {
           offerReads.push(
             lending.getOffer(i)
               .then((offer) => {
-                if (offer.active && !offer.availableIFR.isZero()) offers.push({ id: i, offer });
+                if (offer.active && offer.availableIFR !== 0n) offers.push({ id: i, offer });
               })
               .catch(() => null)
           );
@@ -3262,8 +3262,8 @@
               .then(async (loan) => {
                 if (!loan.active || loan.borrower.toLowerCase() !== address.toLowerCase()) return;
                 const [interest, ratio] = await Promise.all([
-                  lending.calculateInterest(i).catch(() => ethers.BigNumber.from(0)),
-                  lending.getCollateralRatio(i).catch(() => ethers.constants.MaxUint256)
+                  lending.calculateInterest(i).catch(() => 0n),
+                  lending.getCollateralRatio(i).catch(() => ethers.MaxUint256)
                 ]);
                 loans.push({ id: i, loan, interest, ratio });
               })
@@ -3279,7 +3279,7 @@
       async function borrowLendingIFR() {
         await ensureWalletReady("Preparing borrow");
         if (!currentBorrowState) await loadBorrowPanel();
-        if (currentBorrowState.ifrPriceWei.isZero()) {
+        if (currentBorrowState.ifrPriceWei === 0n) {
           throw new Error("Borrowing is disabled until LendingVault ifrPriceWei is set on-chain.");
         }
         const offer = selectedBorrowOffer();
@@ -3289,7 +3289,7 @@
         }
 
         const amount = parseIFRInput(borrowAmount.value);
-        if (amount.gt(offer.offer.availableIFR)) throw new Error("Amount exceeds this offer's available IFR.");
+        if (amount > offer.offer.availableIFR) throw new Error("Amount exceeds this offer's available IFR.");
         const durationDays = Number(borrowDuration.value || "90");
         if (durationDays < 30 || durationDays > 365) throw new Error("Duration must be 30-365 days.");
 
@@ -3317,9 +3317,9 @@
         borrowRepay.disabled = true;
         borrowStatus.textContent = "Calculating IFR repayment amount...";
         const interest = await lending.calculateInterest(loan.id);
-        const repayAmount = loan.loan.ifrAmount.add(interest);
+        const repayAmount = loan.loan.ifrAmount + interest;
         const allowance = await token.allowance(address, LENDING_VAULT_ADDRESS);
-        if (allowance.lt(repayAmount)) {
+        if (allowance < repayAmount) {
           borrowStatus.textContent = `Approve ${formatIFR(repayAmount)} for LendingVault repayment.`;
           const approveTx = await token.approve(LENDING_VAULT_ADDRESS, repayAmount);
           borrowStatus.textContent = "Waiting for repayment approval confirmation...";
@@ -3561,7 +3561,7 @@
       });
       accessLockMax.addEventListener("click", () => {
         if (!currentAccessLockState || !currentAccessLockState.balance) return;
-        if (currentAccessLockState.balance.isZero()) {
+        if (currentAccessLockState.balance === 0n) {
           accessLockAmount.value = "";
           accessLockStatus.textContent = "This wallet has 0 free IFR. Nothing extra can be locked right now.";
           syncAccessLockSubmitState(false);
@@ -3585,8 +3585,8 @@
         } finally {
           await loadAccessLockPanel().catch(() => null);
           if (finalStatus) accessLockStatus.textContent = finalStatus;
-          if (currentAccessLockState && currentAccessLockState.premiumMissing) {
-            accessLockPremium.disabled = currentAccessLockState.premiumMissing.isZero();
+          if (currentAccessLockState && currentAccessLockState.premiumMissing != null) {
+            accessLockPremium.disabled = currentAccessLockState.premiumMissing === 0n;
           } else {
             accessLockPremium.disabled = false;
           }
@@ -3647,7 +3647,7 @@
       });
       lockMax.addEventListener("click", () => {
         if (!currentLockState || !currentLockState.balance) return;
-        lockAmount.value = ethers.utils.formatUnits(currentLockState.balance, IFR_DECIMALS);
+        lockAmount.value = ethers.formatUnits(currentLockState.balance, IFR_DECIMALS);
       });
       lockSubmit.addEventListener("click", async () => {
         try {
@@ -3703,7 +3703,7 @@
       });
       lendingMax.addEventListener("click", () => {
         if (!currentLendingState || !currentLendingState.balance) return;
-        lendingAmount.value = ethers.utils.formatUnits(currentLendingState.balance, IFR_DECIMALS);
+        lendingAmount.value = ethers.formatUnits(currentLendingState.balance, IFR_DECIMALS);
       });
       lendingDeposit.addEventListener("click", async () => {
         try {

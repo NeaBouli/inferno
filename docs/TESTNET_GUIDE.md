@@ -87,7 +87,7 @@ npx hardhat run scripts/check-lock.js --network sepolia
 // check-lock.js (or directly in Node REPL)
 const { ethers } = require("ethers");
 
-const provider = new ethers.providers.JsonRpcProvider(process.env.SEPOLIA_RPC);
+const provider = new ethers.JsonRpcProvider(process.env.SEPOLIA_RPC);
 const ifrLock = new ethers.Contract(
   "0x0Cab0A9440643128540222acC6eF5028736675d3",
   ["function isLocked(address, uint256) view returns (bool)",
@@ -96,13 +96,13 @@ const ifrLock = new ethers.Contract(
 );
 
 const wallet = "0xYOUR_WALLET_ADDRESS";
-const amount = ethers.utils.parseUnits("5000", 9);
+const amount = ethers.parseUnits("5000", 9);
 
 const locked = await ifrLock.isLocked(wallet, amount);
 const total = await ifrLock.lockedAmount(wallet);
 
 console.log("isLocked(5000):", locked);        // true
-console.log("Total locked:", ethers.utils.formatUnits(total, 9), "IFR");
+console.log("Total locked:", ethers.formatUnits(total, 9), "IFR");
 ```
 
 ---
@@ -192,7 +192,7 @@ npx hardhat run scripts/record-lock-reward.js --network sepolia
 ```javascript
 const { ethers } = require("ethers");
 
-const provider = new ethers.providers.JsonRpcProvider(process.env.SEPOLIA_RPC);
+const provider = new ethers.JsonRpcProvider(process.env.SEPOLIA_RPC);
 const feeRouter = new ethers.Contract(
   "0x499289C8Ef49769F4FcFF3ca86D4BD7b55B49aa4",
   [

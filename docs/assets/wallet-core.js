@@ -40,7 +40,7 @@ window.IFRWallet = (function() {
   // esm.sh (default, without ?bundle-deps) works — internal deps resolve individually.
   var WC_ESM_URL = "https://esm.sh/@walletconnect/ethereum-provider@2.17.3";
 
-  var _provider = null;        // ethers Web3Provider (for ifr-state.js compat)
+  var _provider = null;        // ethers BrowserProvider (for ifr-state.js compat)
   var _signer = null;
   var _address = null;
   var _listeners = [];
@@ -203,21 +203,21 @@ window.IFRWallet = (function() {
     if (_address) return _address; // already connected
 
     _ethereumProvider = eth;
-    _provider = new ethers.providers.Web3Provider(eth, "any");
-    _signer = _provider.getSigner();
+    _provider = new ethers.BrowserProvider(eth, "any");
+    _signer = await _provider.getSigner();
     _address = accounts[0];
 
     // Network check — non-fatal
     try {
       var network = await _provider.getNetwork();
-      if (network.chainId !== CHAIN_ID) {
+      if (Number(network.chainId) !== CHAIN_ID) {
         try {
           await eth.request({
             method: "wallet_switchEthereumChain",
             params: [{ chainId: CHAIN_ID_HEX }]
           });
-          _provider = new ethers.providers.Web3Provider(eth, "any");
-          _signer = _provider.getSigner();
+          _provider = new ethers.BrowserProvider(eth, "any");
+          _signer = await _provider.getSigner();
         } catch (switchErr) {
           console.warn("IFRWallet: chain switch rejected, continuing on current chain");
         }
@@ -426,7 +426,7 @@ window.IFRWallet = (function() {
     return a ? ("\u2B24 " + a.slice(0, 6)) : "";
   }
   function getProvider() {
-    return _provider || new ethers.providers.JsonRpcProvider(RPC_URL);
+    return _provider || new ethers.JsonRpcProvider(RPC_URL);
   }
 
   // ── Events ────────────────────────────────────────
@@ -437,12 +437,18 @@ window.IFRWallet = (function() {
   }
 
   // ── Internal Handlers ─────────────────────────────
-  function _onAccountsChanged(accounts) {
+  async function _onAccountsChanged(accounts) {
     if (!accounts || accounts.length === 0) { disconnect(); return; }
     var eth = _ethereumProvider || _getMetaMaskProvider();
-    if (eth) {
-      _provider = new ethers.providers.Web3Provider(eth, "any");
-      _signer = _provider.getSigner();
+    try {
+      if (eth) {
+        _provider = new ethers.BrowserProvider(eth, "any");
+        _signer = await _provider.getSigner();
+      }
+    } catch (error) {
+      console.warn("IFRWallet: account refresh failed:", error.message);
+      disconnect();
+      return;
     }
     _address = accounts[0];
     localStorage.setItem(SESSION_KEY, _address);

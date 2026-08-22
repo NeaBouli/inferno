@@ -497,8 +497,7 @@
     "about": {"@id": "https://ifrunit.tech/#app"}
   }
   </script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"
-  onerror="var s=document.createElement('script');s.src='https://unpkg.com/ethers@5.7.2/dist/ethers.umd.min.js';document.head.appendChild(s);"></script>
+<script src="/assets/vendor/ethers-6.17.0.umd.min.js"></script>
 <script src="../assets/wallet-core.js"></script>
 <script src="../assets/ifr-state.js"></script>
 <script type="application/ld+json">
@@ -828,7 +827,7 @@
 
             <h3>ethers.js Example</h3>
             <div class="code-block">
-                <div class="code-block-header">JavaScript (ethers v5)</div>
+                <div class="code-block-header">JavaScript (ethers v6)</div>
 <pre><span class="keyword">const</span> { ethers } = <span class="function">require</span>(<span class="string">"ethers"</span>);
 
 <span class="keyword">const</span> <span class="const">TOKEN_ADDR</span> = <span class="string">"0x3Bd71947F288d1dd8B21129B1bE4FF16EDd5d1F4"</span>;
@@ -843,7 +842,7 @@
   <span class="string">"function setFeeExempt(address account, bool exempt)"</span>,
 ];
 
-<span class="keyword">const</span> provider = <span class="keyword">new</span> ethers.providers.<span class="function">JsonRpcProvider</span>(RPC_URL);
+<span class="keyword">const</span> provider = <span class="keyword">new</span> ethers.<span class="function">JsonRpcProvider</span>(RPC_URL);
 <span class="keyword">const</span> token = <span class="keyword">new</span> ethers.<span class="function">Contract</span>(<span class="const">TOKEN_ADDR</span>, abi, provider);
 
 <span class="comment">// Read fee rates</span>
@@ -852,13 +851,13 @@
 <span class="keyword">const</span> poolFee   = <span class="keyword">await</span> token.<span class="function">poolFeeBps</span>();       <span class="comment">// 100 = 1.0%</span>
 
 <span class="comment">// Calculate net transfer amount (for 1000 IFR)</span>
-<span class="keyword">const</span> amount = ethers.utils.<span class="function">parseUnits</span>(<span class="string">"1000"</span>, <span class="number">9</span>);
-<span class="keyword">const</span> totalFee = amount.mul(senderBurn.add(recipBurn).add(poolFee)).div(<span class="number">10000</span>);
-<span class="keyword">const</span> netAmount = amount.sub(totalFee);
-console.<span class="function">log</span>(<span class="string">"Net received:"</span>, ethers.utils.<span class="function">formatUnits</span>(netAmount, <span class="number">9</span>), <span class="string">"IFR"</span>);
+<span class="keyword">const</span> amount = ethers.<span class="function">parseUnits</span>(<span class="string">"1000"</span>, <span class="number">9</span>);
+<span class="keyword">const</span> totalFee = (amount * (senderBurn + recipBurn + poolFee)) / <span class="number">10000n</span>;
+<span class="keyword">const</span> netAmount = amount - totalFee;
+console.<span class="function">log</span>(<span class="string">"Net received:"</span>, ethers.<span class="function">formatUnits</span>(netAmount, <span class="number">9</span>), <span class="string">"IFR"</span>);
 
 <span class="comment">// Transfer tokens (signer required)</span>
-<span class="keyword">const</span> signer = provider.<span class="function">getSigner</span>();
+<span class="keyword">const</span> signer = <span class="keyword">await</span> provider.<span class="function">getSigner</span>();
 <span class="keyword">const</span> tokenWithSigner = token.<span class="function">connect</span>(signer);
 <span class="keyword">await</span> tokenWithSigner.<span class="function">transfer</span>(recipientAddr, amount);</pre>
             </div>
@@ -1011,7 +1010,7 @@ console.<span class="function">log</span>(<span class="string">"Net received:"</
 
             <h3>ethers.js Example</h3>
             <div class="code-block">
-                <div class="code-block-header">JavaScript (ethers v5)</div>
+                <div class="code-block-header">JavaScript (ethers v6)</div>
 <pre><span class="keyword">const</span> <span class="const">RESERVE_ADDR</span> = <span class="string">"0xF7E90D0d17f8232365186AA085D26eaEfAf011aF"</span>;
 <span class="keyword">const</span> abi = [
   <span class="string">"function lockEnd() view returns (uint256)"</span>,
@@ -1027,14 +1026,14 @@ console.<span class="function">log</span>(<span class="string">"Net received:"</
 <span class="comment">// Check lock status</span>
 <span class="keyword">const</span> lockEnd = <span class="keyword">await</span> reserve.<span class="function">lockEnd</span>();
 <span class="keyword">const</span> now = Math.<span class="function">floor</span>(Date.<span class="function">now</span>() / <span class="number">1000</span>);
-console.<span class="function">log</span>(<span class="string">"Locked:"</span>, now < lockEnd.<span class="function">toNumber</span>());
+console.<span class="function">log</span>(<span class="string">"Locked:"</span>, now < <span class="function">Number</span>(lockEnd));
 
 <span class="comment">// Check available withdrawal</span>
 <span class="keyword">const</span> available = <span class="keyword">await</span> reserve.<span class="function">availableToWithdraw</span>();
-console.<span class="function">log</span>(<span class="string">"Available:"</span>, ethers.utils.<span class="function">formatUnits</span>(available, <span class="number">9</span>), <span class="string">"IFR"</span>);
+console.<span class="function">log</span>(<span class="string">"Available:"</span>, ethers.<span class="function">formatUnits</span>(available, <span class="number">9</span>), <span class="string">"IFR"</span>);
 
 <span class="comment">// Withdraw (owner only, via governance proposal)</span>
-<span class="keyword">const</span> amount = ethers.utils.<span class="function">parseUnits</span>(<span class="string">"10000000"</span>, <span class="number">9</span>); <span class="comment">// 10M IFR</span>
+<span class="keyword">const</span> amount = ethers.<span class="function">parseUnits</span>(<span class="string">"10000000"</span>, <span class="number">9</span>); <span class="comment">// 10M IFR</span>
 <span class="keyword">await</span> reserve.<span class="function">connect</span>(owner).<span class="function">withdraw</span>(treasuryAddr, amount);</pre>
             </div>
         </div>
@@ -1193,7 +1192,7 @@ console.<span class="function">log</span>(<span class="string">"Available:"</spa
 
             <h3>ethers.js Example</h3>
             <div class="code-block">
-                <div class="code-block-header">JavaScript (ethers v5)</div>
+                <div class="code-block-header">JavaScript (ethers v6)</div>
 <pre><span class="keyword">const</span> <span class="const">VESTING_ADDR</span> = <span class="string">"0xa710f9FE7bf42981E60BE2Fbe7D87Fb3541a3F8B"</span>;
 <span class="keyword">const</span> abi = [
   <span class="string">"function beneficiary() view returns (address)"</span>,
@@ -1212,9 +1211,9 @@ console.<span class="function">log</span>(<span class="string">"Available:"</spa
 <span class="keyword">const</span> releasable = <span class="keyword">await</span> vesting.<span class="function">releasableAmount</span>();
 <span class="keyword">const</span> released = <span class="keyword">await</span> vesting.<span class="function">released</span>();
 
-console.<span class="function">log</span>(<span class="string">"Vested:"</span>, ethers.utils.<span class="function">formatUnits</span>(vested, <span class="number">9</span>), <span class="string">"IFR"</span>);
-console.<span class="function">log</span>(<span class="string">"Releasable:"</span>, ethers.utils.<span class="function">formatUnits</span>(releasable, <span class="number">9</span>), <span class="string">"IFR"</span>);
-console.<span class="function">log</span>(<span class="string">"Released:"</span>, ethers.utils.<span class="function">formatUnits</span>(released, <span class="number">9</span>), <span class="string">"IFR"</span>);
+console.<span class="function">log</span>(<span class="string">"Vested:"</span>, ethers.<span class="function">formatUnits</span>(vested, <span class="number">9</span>), <span class="string">"IFR"</span>);
+console.<span class="function">log</span>(<span class="string">"Releasable:"</span>, ethers.<span class="function">formatUnits</span>(releasable, <span class="number">9</span>), <span class="string">"IFR"</span>);
+console.<span class="function">log</span>(<span class="string">"Released:"</span>, ethers.<span class="function">formatUnits</span>(released, <span class="number">9</span>), <span class="string">"IFR"</span>);
 
 <span class="comment">// Release vested tokens (beneficiary only)</span>
 <span class="keyword">await</span> vesting.<span class="function">connect</span>(beneficiarySigner).<span class="function">release</span>();</pre>
@@ -1391,7 +1390,7 @@ console.<span class="function">log</span>(<span class="string">"Released:"</span
 
             <h3>ethers.js Example</h3>
             <div class="code-block">
-                <div class="code-block-header">JavaScript (ethers v5)</div>
+                <div class="code-block-header">JavaScript (ethers v6)</div>
 <pre><span class="keyword">const</span> <span class="const">VAULT_ADDR</span> = <span class="string">"0xC8ABb9039BEd24f4dBf5Cff09699877D81f0D63C"</span>;
 <span class="keyword">const</span> abi = [
   <span class="string">"function depositETH() payable"</span>,
@@ -1407,7 +1406,7 @@ console.<span class="function">log</span>(<span class="string">"Released:"</span
 
 <span class="comment">// Deposit ETH for future buyback</span>
 <span class="keyword">await</span> vault.<span class="function">connect</span>(signer).<span class="function">depositETH</span>({
-  value: ethers.utils.<span class="function">parseEther</span>(<span class="string">"0.5"</span>),
+  value: ethers.<span class="function">parseEther</span>(<span class="string">"0.5"</span>),
 });
 
 <span class="comment">// Check if buyback is ready</span>
@@ -1416,8 +1415,8 @@ console.<span class="function">log</span>(<span class="string">"Released:"</span
 <span class="keyword">const</span> cd = <span class="keyword">await</span> vault.<span class="function">cooldown</span>();
 <span class="keyword">const</span> now = Math.<span class="function">floor</span>(Date.<span class="function">now</span>() / <span class="number">1000</span>);
 
-<span class="keyword">const</span> isActive = now >= activation.<span class="function">toNumber</span>();
-<span class="keyword">const</span> cooldownPassed = now >= lastBuyback.<span class="function">add</span>(cd).<span class="function">toNumber</span>();
+<span class="keyword">const</span> isActive = now >= <span class="function">Number</span>(activation);
+<span class="keyword">const</span> cooldownPassed = now >= <span class="function">Number</span>(lastBuyback + cd);
 console.<span class="function">log</span>(<span class="string">"Ready:"</span>, isActive && cooldownPassed);
 
 <span class="comment">// Execute buyback (owner only)</span>
@@ -1531,7 +1530,7 @@ console.<span class="function">log</span>(<span class="string">"Ready:"</span>, 
 
             <h3>ethers.js Example</h3>
             <div class="code-block">
-                <div class="code-block-header">JavaScript (ethers v5)</div>
+                <div class="code-block-header">JavaScript (ethers v6)</div>
 <pre><span class="keyword">const</span> <span class="const">BURN_ADDR</span> = <span class="string">"0x6D4582FCac792FD3880e252fC0a585A0c1823e80"</span>;
 <span class="keyword">const</span> abi = [
   <span class="string">"function pendingBurn() view returns (uint256)"</span>,
@@ -1546,11 +1545,11 @@ console.<span class="function">log</span>(<span class="string">"Ready:"</span>, 
 <span class="comment">// Check burn stats</span>
 <span class="keyword">const</span> pending = <span class="keyword">await</span> burnReserve.<span class="function">pendingBurn</span>();
 <span class="keyword">const</span> totalBurned = <span class="keyword">await</span> burnReserve.<span class="function">totalBurned</span>();
-console.<span class="function">log</span>(<span class="string">"Pending burn:"</span>, ethers.utils.<span class="function">formatUnits</span>(pending, <span class="number">9</span>));
-console.<span class="function">log</span>(<span class="string">"Total burned:"</span>, ethers.utils.<span class="function">formatUnits</span>(totalBurned, <span class="number">9</span>));
+console.<span class="function">log</span>(<span class="string">"Pending burn:"</span>, ethers.<span class="function">formatUnits</span>(pending, <span class="number">9</span>));
+console.<span class="function">log</span>(<span class="string">"Total burned:"</span>, ethers.<span class="function">formatUnits</span>(totalBurned, <span class="number">9</span>));
 
 <span class="comment">// Deposit tokens (requires prior token.approve())</span>
-<span class="keyword">const</span> amount = ethers.utils.<span class="function">parseUnits</span>(<span class="string">"100000"</span>, <span class="number">9</span>);
+<span class="keyword">const</span> amount = ethers.<span class="function">parseUnits</span>(<span class="string">"100000"</span>, <span class="number">9</span>);
 <span class="keyword">await</span> token.<span class="function">connect</span>(signer).<span class="function">approve</span>(<span class="const">BURN_ADDR</span>, amount);
 <span class="keyword">await</span> burnReserve.<span class="function">connect</span>(signer).<span class="function">deposit</span>(amount);
 
@@ -1733,7 +1732,7 @@ console.<span class="function">log</span>(<span class="string">"Total burned:"</
 
             <h3>ethers.js Example</h3>
             <div class="code-block">
-                <div class="code-block-header">JavaScript (ethers v5)</div>
+                <div class="code-block-header">JavaScript (ethers v6)</div>
 <pre><span class="keyword">const</span> <span class="const">GOV_ADDR</span> = <span class="string">"0x6050b22E4EAF3f414d1155fBaF30B868e0107017"</span>;
 <span class="keyword">const</span> <span class="const">TOKEN_ADDR</span> = <span class="string">"0x3Bd71947F288d1dd8B21129B1bE4FF16EDd5d1F4"</span>;
 
@@ -1749,14 +1748,14 @@ console.<span class="function">log</span>(<span class="string">"Total burned:"</
 <span class="keyword">const</span> gov = <span class="keyword">new</span> ethers.<span class="function">Contract</span>(<span class="const">GOV_ADDR</span>, govAbi, provider);
 
 <span class="comment">// Create a proposal to update fee rates on InfernoToken</span>
-<span class="keyword">const</span> iface = <span class="keyword">new</span> ethers.utils.<span class="function">Interface</span>([
+<span class="keyword">const</span> iface = <span class="keyword">new</span> ethers.<span class="function">Interface</span>([
   <span class="string">"function setFeeRates(uint256, uint256, uint256)"</span>,
 ]);
 <span class="keyword">const</span> calldata = iface.<span class="function">encodeFunctionData</span>(<span class="string">"setFeeRates"</span>, [<span class="number">150</span>, <span class="number">50</span>, <span class="number">100</span>]);
 
 <span class="keyword">const</span> tx = <span class="keyword">await</span> gov.<span class="function">connect</span>(owner).<span class="function">propose</span>(<span class="const">TOKEN_ADDR</span>, calldata);
 <span class="keyword">const</span> receipt = <span class="keyword">await</span> tx.<span class="function">wait</span>();
-<span class="keyword">const</span> proposalId = receipt.events[<span class="number">0</span>].args.id;
+<span class="keyword">const</span> proposalId = receipt.logs[<span class="number">0</span>].args.id;
 
 <span class="comment">// After delay has passed, execute</span>
 <span class="keyword">await</span> gov.<span class="function">connect</span>(owner).<span class="function">execute</span>(proposalId);
@@ -1931,7 +1930,7 @@ console.<span class="function">log</span>(<span class="string">"Total burned:"</
 
             <h3>ethers.js Example</h3>
             <div class="code-block">
-                <div class="code-block-header">JavaScript (ethers v5)</div>
+                <div class="code-block-header">JavaScript (ethers v6)</div>
 <pre><span class="keyword">const</span> <span class="const">LOCK_ADDR</span> = <span class="string">"0x..."</span>; <span class="comment">// IFRLock deployment address</span>
 <span class="keyword">const</span> <span class="const">TOKEN_ADDR</span> = <span class="string">"0x3Bd71947F288d1dd8B21129B1bE4FF16EDd5d1F4"</span>;
 
@@ -1953,23 +1952,23 @@ console.<span class="function">log</span>(<span class="string">"Total burned:"</
 <span class="keyword">const</span> token = <span class="keyword">new</span> ethers.<span class="function">Contract</span>(<span class="const">TOKEN_ADDR</span>, tokenAbi, provider);
 
 <span class="comment">// Approve and lock 10,000 IFR</span>
-<span class="keyword">const</span> amount = ethers.utils.<span class="function">parseUnits</span>(<span class="string">"10000"</span>, <span class="number">9</span>);
+<span class="keyword">const</span> amount = ethers.<span class="function">parseUnits</span>(<span class="string">"10000"</span>, <span class="number">9</span>);
 <span class="keyword">await</span> token.<span class="function">connect</span>(signer).<span class="function">approve</span>(<span class="const">LOCK_ADDR</span>, amount);
 <span class="keyword">await</span> lockContract.<span class="function">connect</span>(signer).<span class="function">lock</span>(amount);
 
 <span class="comment">// Lock with a specific type (e.g. "premium" access)</span>
-<span class="keyword">const</span> lockType = ethers.utils.<span class="function">id</span>(<span class="string">"premium"</span>); <span class="comment">// keccak256("premium")</span>
+<span class="keyword">const</span> lockType = ethers.<span class="function">id</span>(<span class="string">"premium"</span>); <span class="comment">// keccak256("premium")</span>
 <span class="keyword">await</span> lockContract.<span class="function">connect</span>(signer).<span class="function">lockWithType</span>(amount, lockType);
 
 <span class="comment">// Check if user qualifies (has >= 5000 IFR locked)</span>
-<span class="keyword">const</span> minRequired = ethers.utils.<span class="function">parseUnits</span>(<span class="string">"5000"</span>, <span class="number">9</span>);
+<span class="keyword">const</span> minRequired = ethers.<span class="function">parseUnits</span>(<span class="string">"5000"</span>, <span class="number">9</span>);
 <span class="keyword">const</span> qualifies = <span class="keyword">await</span> lockContract.<span class="function">isLocked</span>(userAddr, minRequired);
 console.<span class="function">log</span>(<span class="string">"Qualifies:"</span>, qualifies);
 
 <span class="comment">// Get lock details</span>
 <span class="keyword">const</span> [lockedAmt, lockedAt] = <span class="keyword">await</span> lockContract.<span class="function">lockInfo</span>(userAddr);
-console.<span class="function">log</span>(<span class="string">"Locked:"</span>, ethers.utils.<span class="function">formatUnits</span>(lockedAmt, <span class="number">9</span>), <span class="string">"IFR"</span>);
-console.<span class="function">log</span>(<span class="string">"Since:"</span>, <span class="keyword">new</span> <span class="function">Date</span>(lockedAt.<span class="function">toNumber</span>() * <span class="number">1000</span>));
+console.<span class="function">log</span>(<span class="string">"Locked:"</span>, ethers.<span class="function">formatUnits</span>(lockedAmt, <span class="number">9</span>), <span class="string">"IFR"</span>);
+console.<span class="function">log</span>(<span class="string">"Since:"</span>, <span class="keyword">new</span> <span class="function">Date</span>(<span class="function">Number</span>(lockedAt) * <span class="number">1000</span>));
 
 <span class="comment">// Unlock all tokens</span>
 <span class="keyword">await</span> lockContract.<span class="function">connect</span>(signer).<span class="function">unlock</span>();</pre>
@@ -2193,7 +2192,7 @@ console.<span class="function">log</span>(<span class="string">"Since:"</span>, 
 
             <h3>ethers.js Example</h3>
             <div class="code-block">
-                <div class="code-block-header">JavaScript (ethers v5)</div>
+                <div class="code-block-header">JavaScript (ethers v6)</div>
 <pre><span class="comment">// Mainnet LP Pair (IFR/WETH) — created by BootstrapVaultV3.finalise() on 05.06.2026</span>
 <span class="keyword">const</span> <span class="const">PAIR_ADDR</span> = <span class="string">"0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0"</span>; <span class="comment">// Ethereum Mainnet</span>
 <span class="keyword">const</span> pairAbi = [
@@ -2520,7 +2519,7 @@ function lpUpdateUI(state){
     var dropAddr=document.getElementById("lp-drop-addr");if(dropAddr)dropAddr.textContent=addr.slice(0,10)+"..."+addr.slice(-6);
     var dropEth=document.getElementById("lp-drop-eth");if(dropEth)dropEth.textContent=parseFloat(state.ethBalance||"0").toFixed(4)+" ETH";
     var dropIfr=document.getElementById("lp-drop-ifr");
-    if(dropIfr){var ifrAmt=state.ifrBalance&&typeof ethers!=="undefined"?parseFloat(ethers.utils.formatUnits(state.ifrBalance,9)).toLocaleString("en-US",{maximumFractionDigits:0}):"0";dropIfr.textContent=ifrAmt+" IFR"}
+    if(dropIfr){var ifrAmt=state.ifrBalance&&typeof ethers!=="undefined"?parseFloat(ethers.formatUnits(state.ifrBalance,9)).toLocaleString("en-US",{maximumFractionDigits:0}):"0";dropIfr.textContent=ifrAmt+" IFR"}
     var lockDiv=document.getElementById("lp-drop-lock");var noLockDiv=document.getElementById("lp-drop-nolock");
     if(lockDiv)lockDiv.style.display=state.isLocked1000?"":"none";
     if(noLockDiv)noLockDiv.style.display=state.isLocked1000?"none":"";

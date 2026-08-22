@@ -16,6 +16,7 @@ on:
       - 'scripts/test-wiki-head-integrity.cjs'
       - 'scripts/test-surface-routing.cjs'
       - 'scripts/test-security-reporting-config.cjs'
+      - 'scripts/check-browser-ethers6.cjs'
       - '.github/ISSUE_TEMPLATE/**'
       - 'tests/browser/**'
       - 'playwright.config.js'
@@ -36,6 +37,7 @@ on:
       - 'scripts/test-wiki-head-integrity.cjs'
       - 'scripts/test-surface-routing.cjs'
       - 'scripts/test-security-reporting-config.cjs'
+      - 'scripts/check-browser-ethers6.cjs'
       - '.github/ISSUE_TEMPLATE/**'
       - 'tests/browser/**'
       - 'playwright.config.js'
@@ -161,6 +163,9 @@ jobs:
 
       - name: Check public surface routing
         run: npm run test:surface-routing
+
+      - name: Check browser Ethers 6 baseline
+        run: npm run test:browser-ethers6
 
   validate-wallet-browser:
     name: Wallet Browser Suite
