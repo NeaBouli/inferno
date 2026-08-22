@@ -5,32 +5,32 @@ Inferno is a deflationary ERC-20 utility token on Ethereum with
 a lock-to-access model. Users lock IFR tokens to gain access to
 builder benefits, creator content, and protocol discounts.
 
-## Key Numbers (Ethereum Mainnet, March 2026)
+## Key Numbers (Ethereum Mainnet, verified 22 August 2026)
 
 | Metric | Value |
 |--------|-------|
-| Total Supply | 1,000,000,000 IFR (fixed, no mint) |
+| Genesis / Current Supply | 1,000,000,000 / 997,673,879.091903855 IFR (no mint) |
 | Burn Rate | 2.5% per transfer |
 | Team Vesting | 150M IFR, 4 years, 1 year cliff |
-| LP Liquidity | 400M IFR (40%) |
-| Protocol Fee | 0.05% (5 bps) |
-| Smart Contract Tests | 544 (99% coverage) |
-| On-Chain Components | 10 deployed + verified on mainnet |
+| LP Reserve | 400M IFR genesis allocation; live pool balance is dynamic |
+| Token Pool Fee | 1% on non-exempt transfers |
+| Current test evidence | 642 contract + 30 Generator Engine + 36 SDK legacy tests, plus browser/application gates |
+| On-Chain Components | 17 documented and verified on Mainnet |
 
 ## Tokenomics
 
 Deflationary + Utility:
 - Every transfer permanently burns 2.5%
-- 1% goes to BuybackVault (strengthens liquidity)
+- 1% goes to the configured protocol pool-fee receiver
 - Lock -> tier access (no yield, no risk)
 - PartnerVault pays creator rewards (10% of lock amount)
 
 ## Products
 
-1. **Benefits Network** -- QR-based discount verification for businesses
+1. **Benefits Network** -- live customer/seller PWA for QR-based benefits; physical wallet/device acceptance remains incomplete
 2. **Creator Gateway** -- YouTube x IFR Lock hybrid access
 3. **AI Copilot** -- Guided onboarding (3 modes: User/Builder/Developer)
-4. **Points System** -- Protocol fee discounts via EIP-712 voucher
+4. **Points System** -- implemented repository service; deployment availability is separate
 5. **Governance Dashboard** -- On-chain proposal management
 
 ## Technology
@@ -44,10 +44,16 @@ Deflationary + Utility:
 
 - [x] Mainnet deployment (17 on-chain components, all verified)
 - [x] Gnosis Safe Multisig deployed
-- [ ] Governance Proposal #0 execution (ETA 2026-03-07)
-- [ ] Uniswap V2 LP creation + LP lock
-- [ ] Ownership transfer -> Governance
+- [x] Governance Proposal #0 executed
+- [x] Uniswap V2 LP created through BootstrapVaultV3 finalization; LP remains in the withdrawal-less vault
+- [x] Applicable ownership transfers to Governance completed
+- [ ] LendingVault borrowing remains disabled pending a separately audited V2/oracle design
+- [ ] CommitmentVault price-conditioned locks remain disabled pending a real oracle path
+- [ ] First Mainnet BuilderRegistry activation and PartnerVault reward allocation
 - [ ] Third-party security audit (Code4rena / Sherlock)
+
+For the complete live matrix, see
+[`CURRENT_FUNCTIONALITY_STATUS.md`](CURRENT_FUNCTIONALITY_STATUS.md).
 
 ## Links
 

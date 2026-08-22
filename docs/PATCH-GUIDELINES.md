@@ -98,7 +98,7 @@ For critical-severity bugs in smart contracts:
 
 ## Checklist Before Merge
 
-- [ ] All tests green (`npx hardhat test` — 544 total)
+- [ ] All relevant current test gates green (do not reuse a historical static count)
 - [ ] Slither clean (no new High/Critical)
 - [ ] README.md updated (if needed)
 - [ ] docs/DOCS.md updated

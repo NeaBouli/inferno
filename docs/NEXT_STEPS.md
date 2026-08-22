@@ -2,6 +2,10 @@
 
 > Created: 2026-04-14 | Status: Proposal A in Timelock
 
+> **Archived execution runbook:** Proposals #13 and #14 were executed on
+> 16/18 April 2026. The original steps below are retained as transaction
+> history and are not current open work. See `CURRENT_FUNCTIONALITY_STATUS.md`.
+
 ---
 
 ## 1. Execute Proposal A: setFeeExempt(BuybackController, true)

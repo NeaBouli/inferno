@@ -46,6 +46,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <a href="https://ifrunit.tech/">IFR Unit</a>
             <a href="https://web3.ifrunit.tech/">Web3</a>
             <a href="https://ifrunit.tech/wiki/">Wiki</a>
+            <a href="https://ifrunit.tech/CURRENT_FUNCTIONALITY_STATUS.md">Current status</a>
             <a href="https://ifrunit.tech/#contracts">Contracts</a>
             <Link href="/support">Support</Link>
             <Link href="/privacy">Privacy &amp; data</Link>

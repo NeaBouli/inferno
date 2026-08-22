@@ -898,10 +898,10 @@
 
       <ul>
         <li><strong>Initial:</strong> 200% ETH collateral required (e.g. 10M IFR worth 1 ETH &rarr; deposit 2 ETH)</li>
-        <li><strong>Warning at 150%:</strong> Margin Call &mdash; builder has 48 hours to top up collateral</li>
-        <li><strong>Liquidation at 120%:</strong> Automatic liquidation &mdash; collateral is seized</li>
+        <li><strong>Warning below 150%:</strong> <code>checkHealth()</code> emits a margin-call warning; V1 does not enforce a 48-hour grace period</li>
+        <li><strong>Liquidation below 120%:</strong> An external caller can execute <code>liquidate()</code>; it is not an automatic timed process</li>
         <li><strong>Liquidator bonus:</strong> 5% of collateral as incentive for liquidators</li>
-        <li><strong>Price reference:</strong> Uniswap TWAP (24h average) &mdash; prevents flash-loan manipulation</li>
+        <li><strong>V1 price reference:</strong> Governance-set <code>ifrPriceWei</code>. Mainnet is intentionally <code>0</code>, so borrowing is disabled. A TWAP/oracle design belongs to a separately audited successor.</li>
       </ul>
 
       <div class="arch-stack">
@@ -914,22 +914,22 @@
         <div class="arch-layer" style="border-color:#fbbf24;">
           <div class="arch-layer-label" style="color:#fbbf24;">Warning</div>
           <div class="arch-layer-title">150% &mdash; Margin Call</div>
-          <div class="arch-layer-desc">Builder is notified. 48 hours to top up.</div>
+          <div class="arch-layer-desc"><code>checkHealth()</code> emits a warning. V1 imposes no timed grace period.</div>
         </div>
         <div class="arch-connector">&darr;</div>
         <div class="arch-layer" style="border-color:#ef4444;">
           <div class="arch-layer-label" style="color:#ef4444;">Liquidation</div>
-          <div class="arch-layer-title">120% &mdash; Automatic Liquidation</div>
-          <div class="arch-layer-desc">Collateral is seized. Liquidator receives 5% bonus.</div>
+          <div class="arch-layer-title">Below 120% &mdash; Callable Liquidation</div>
+          <div class="arch-layer-desc">An external liquidator receives 5%; the remaining ETH collateral goes to the lender.</div>
         </div>
       </div>
 
       <!-- ======================================== -->
       <!-- 5. Warum jeder Default gut ist -->
       <!-- ======================================== -->
-      <h2>5. Why Every Default Benefits the Protocol</h2>
+      <h2>5. Repayment and Default Settlement</h2>
       <p>
-        The system is designed so that <strong>both outcomes</strong> are positive for the IFR price:
+        V1 settles the two outcomes differently. Only a borrower who acquires IFR on a market to repay creates that external market purchase; the contract itself does not force a Uniswap trade.
       </p>
 
       <div class="fee-compare">
@@ -940,14 +940,14 @@
         </div>
         <div class="fee-card good">
           <div class="fee-card-title">Default: Builder does not repay</div>
-          <p>ETH collateral is automatically used to buy IFR on Uniswap.</p>
-          <p><strong>Result:</strong> Buy pressure on Uniswap.</p>
+          <p>An external caller liquidates below 120%. The caller receives 5% of the ETH collateral and the lender receives the remainder.</p>
+          <p><strong>Result:</strong> No automatic IFR purchase or Uniswap swap occurs in V1.</p>
         </div>
       </div>
 
       <div class="callout-green">
         <p>
-          <strong>Core insight:</strong> There is no negative outcome for the IFR token. Repayment = buy pressure. Default = buy pressure. Both paths drive IFR demand through the Uniswap pool. The lending system generates structural, non-speculative buy pressure.
+          <strong>Accounting boundary:</strong> Repayment returns principal to the offer, sends the lender share of interest to the lender and sends protocol interest to the configured <code>protocolFeeReceiver</code> when one is set. V1 does not guarantee an LP route for that receiver.
         </p>
       </div>
 

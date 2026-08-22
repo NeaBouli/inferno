@@ -12,7 +12,7 @@ You are an independent auditor for the Inferno ($IFR) project. Check ALL referen
 
 - **Token:** Inferno ($IFR), ERC-20, 9 Decimals, 1B Supply, deflationary (2.5% burn + 1% pool fee)
 - **Model:** Community Fair Launch (CFLM) — no presale, no VC
-- **On-Chain Components:** 16 on-chain components
+- **Archived March 2026 snapshot:** 16 on-chain components
 - **Tests:** 544 (367 contract + 77 app + 100 vault), all passing
 - **Contracts:**
   1. InfernoToken — `0x3Bd71947F288d1dd8B21129B1bE4FF16EDd5d1F4`
