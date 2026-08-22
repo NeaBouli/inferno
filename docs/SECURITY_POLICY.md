@@ -3,45 +3,41 @@
 ## Responsible Disclosure
 
 We take security seriously. If you find a vulnerability,
-please follow this process — do not post publicly before we
-have responded.
+please follow this process — public issues must NOT contain undisclosed
+security vulnerabilities.
 
 ### Reporting
-- **GitHub:** https://github.com/NeaBouli/inferno/security/advisories
-- **Response Time:** We respond within 48h
+- **GitHub:** https://github.com/NeaBouli/inferno/security/advisories/new
+- **Private Vulnerability Reporting is enabled** for this repository
+- **Response Time:** We aim to respond promptly, but no response time is guaranteed
 - **Language:** English or German
 
-### What we need:
-- Description of the vulnerability
-- Reproduction steps
-- Potential impact
-- Optional: Suggested fix
+### What we need (submitted privately):
+- Description of the vulnerability and its potential **impact**
+- **Affected version/deployment** (commit, tag, or mainnet/testnet deployment)
+- **Reproducible evidence** (reproduction steps, PoC code, transaction references)
+- Optional: **suggested remediation**
 
-## Bug Bounty Framework
+### Duplicates and Known Findings
 
-During the testnet phase, we did not pay monetary bounties.
-Now that mainnet is deployed (2026-03-05), the following applies:
+Duplicates and findings already documented as known issues
+(see AUDIT_BRIEF.md and the Known Design Decisions below)
+are **not new findings**. Please check before reporting.
 
-| Severity | Examples | Recognition |
-|----------|----------|-------------|
-| Critical | Drain of locked tokens, mint bug | Hall of Fame + NFT |
-| High | Governance bypass, replay attack | Hall of Fame |
-| Medium | Parameter manipulation, DoS | Hall of Fame |
-| Low | Info leak, minor logic error | GitHub Credit |
+## Bug Bounty
 
-**Mainnet Bug Bounty:** Active post-launch (details to follow).
-Target: 5-10% of a defined treasury budget for critical findings.
+**There is no bug bounty program.** The earlier testnet-phase and
+post-mainnet bounty plans described in previous versions of this
+document are not in effect. Community security reports are voluntary
+and are credited in the Hall of Fame (see SECURITY.md).
 
 ## Scope
 
 ### In Scope (Mainnet + Sepolia):
-- contracts/token/InfernoToken.sol
-- contracts/lock/IFRLock.sol
-- contracts/partner/PartnerVault.sol
-- contracts/FeeRouterV1.sol
-- contracts/governance/Governance.sol
-- apps/benefits-network/ (Backend + Frontend)
-- apps/points-backend/
+- All first-party smart contracts under `contracts/`, including
+  CommitmentVault and LendingVault
+- First-party production applications and APIs under `apps/`
+- Repository-controlled deployment, CI, and wallet-integration code
 
 ### Out of Scope:
 - Third-party contracts (Uniswap V2, OpenZeppelin)
@@ -71,7 +67,7 @@ Target: 5-10% of a defined treasury budget for critical findings.
 ## Contact
 
 For urgent security issues: GitHub Security Advisory (private)
-For general questions: GitHub Issues (public)
+For general security questions: GitHub Discussions (public, non-sensitive only)
 
 ---
-*As of: March 2026 | Version 1.1*
+*As of: August 2026 | Version 1.2*

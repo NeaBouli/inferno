@@ -148,7 +148,7 @@ The ecosystem is open and permissionless. Any product can integrate IFR Lock.
 - Historical coverage snapshot: 91% branches / 99% statements for the contract subset recorded in `docs/COVERAGE_REPORT.md`; not a current full-repository coverage claim
 - GitHub Actions CI: Creator Gateway, Points Backend, AI Copilot
 - Slither security audit: 0 high/critical findings
-- Internal security audit: 0 FAIL, 12 WARN, 78 PASS ([full report](docs/SECURITY_AUDIT_SKYWALKER.md))
+- Internal security audit: 0 FAIL, 20 active WARN, 1 fixed, 81 PASS ([full report](docs/SECURITY_AUDIT_SKYWALKER.md))
 - App security review: 12 findings (2 CRITICAL, 5 HIGH — all fixed) ([full report](docs/APP_SECURITY_REVIEW.md))
 - **Bootstrap security review (13.03.2026):** BootstrapVaultV3 + InfernoToken + FeeRouterV1 + Governance — 11/14 secure, 3/14 low risk, 0 critical ([full report](audit/BOOTSTRAP_SECURITY_REVIEW_13032026.md))
 - Full Sepolia testnet deployment with verified contracts
@@ -158,9 +158,9 @@ The ecosystem is open and permissionless. Any product can integrate IFR Lock.
 
 All smart contracts are open source and community review is explicitly encouraged.
 
-- **Internal Audit:** [docs/SECURITY_AUDIT_SKYWALKER.md](docs/SECURITY_AUDIT_SKYWALKER.md) — 0 FAIL, 12 WARN, 78 PASS
+- **Internal Audit:** [docs/SECURITY_AUDIT_SKYWALKER.md](docs/SECURITY_AUDIT_SKYWALKER.md) — 0 FAIL, 20 active WARN, 1 fixed, 81 PASS
 - **OKComputer Community Audit (27.07.2026):** [editorial status and original report](docs/community-audits/README.md) — published unchanged with dated corrections; not a professional third-party certification
-- **Submit a Finding:** [GitHub Issues → Security Audit Template](https://github.com/NeaBouli/inferno/issues/new?template=security-audit.md)
+- **Submit a Finding:** [GitHub Private Vulnerability Reporting](https://github.com/NeaBouli/inferno/security/advisories/new)
 - **Security Policy:** [SECURITY.md](SECURITY.md)
 
 ## Applications

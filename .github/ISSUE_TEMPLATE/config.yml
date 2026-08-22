@@ -1,0 +1,12 @@
+blank_issues_enabled: false
+contact_links:
+  - name: "Private Security Report (GitHub Security Advisories)"
+    url: https://github.com/NeaBouli/inferno/security/advisories/new
+    about: >-
+      Report security vulnerabilities privately via Private Vulnerability
+      Reporting. Do NOT open a public issue for undisclosed vulnerabilities.
+  - name: "General Security Discussion"
+    url: https://github.com/NeaBouli/inferno/discussions
+    about: >-
+      Public, non-sensitive security questions and hardening ideas. Never
+      include undisclosed vulnerability details here.
