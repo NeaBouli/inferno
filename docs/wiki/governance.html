@@ -520,8 +520,7 @@
     "about": {"@id": "https://ifrunit.tech/#app"}
   }
   </script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"
-  onerror="var s=document.createElement('script');s.src='https://unpkg.com/ethers@5.7.2/dist/ethers.umd.min.js';document.head.appendChild(s);"></script>
+<script src="/assets/vendor/ethers-6.17.0.umd.min.js"></script>
 <script src="../assets/wallet-core.js"></script>
 <script src="../assets/ifr-state.js"></script>
 <script type="application/ld+json">
@@ -881,14 +880,14 @@
       <!-- ========== 6. Creating a Proposal ========== -->
       <h2>6. Creating a Proposal</h2>
       <p>
-        Use ethers.js (v5) to create a governance proposal. The <code>propose()</code> function takes the target contract address and the encoded calldata:
+        Use ethers.js (v6) to create a governance proposal. The <code>propose()</code> function takes the target contract address and the encoded calldata:
       </p>
 
 <pre><code><span style="color: var(--muted)">// Example: Change fee rates to 1.5% sender burn + 0.5% recipient burn + 1% pool fee</span>
 const governance = new ethers.Contract(GOV_ADDRESS, GOV_ABI, signer);
 
 <span style="color: var(--muted)">// Encode the function call</span>
-const iface = new ethers.utils.Interface([
+const iface = new ethers.Interface([
   "function setFeeRates(uint256,uint256,uint256)"
 ]);
 const calldata = iface.encodeFunctionData("setFeeRates", [150, 50, 100]);
@@ -898,9 +897,9 @@ const tx = await governance.propose(TOKEN_ADDRESS, calldata);
 const receipt = await tx.wait();
 
 <span style="color: var(--muted)">// Get the proposal ID from the event</span>
-const event = receipt.events.find(e => e.event === "ProposalCreated");
+const event = receipt.logs.find(l => l.fragment && l.fragment.name === "ProposalCreated");
 console.log("Proposal ID:", event.args.proposalId.toString());
-console.log("ETA:", new Date(event.args.eta.toNumber() * 1000));</code></pre>
+console.log("ETA:", new Date(Number(event.args.eta) * 1000));</code></pre>
 
       <div class="callout">
         <p>
@@ -959,7 +958,7 @@ console.log("Proposal", proposalId, "cancelled by guardian");</code></pre>
       </ol>
 
 <pre><code><span style="color: var(--muted)">// Example: Change delay from 48h to 72h (259200 seconds)</span>
-const iface = new ethers.utils.Interface(["function setDelay(uint256)"]);
+const iface = new ethers.Interface(["function setDelay(uint256)"]);
 const calldata = iface.encodeFunctionData("setDelay", [259200]);
 
 <span style="color: var(--muted)">// Target is the Governance contract itself</span>
@@ -1854,7 +1853,7 @@ function lpUpdateUI(state){
     var dropAddr=document.getElementById("lp-drop-addr");if(dropAddr)dropAddr.textContent=addr.slice(0,10)+"..."+addr.slice(-6);
     var dropEth=document.getElementById("lp-drop-eth");if(dropEth)dropEth.textContent=parseFloat(state.ethBalance||"0").toFixed(4)+" ETH";
     var dropIfr=document.getElementById("lp-drop-ifr");
-    if(dropIfr){var ifrAmt=state.ifrBalance&&typeof ethers!=="undefined"?parseFloat(ethers.utils.formatUnits(state.ifrBalance,9)).toLocaleString("en-US",{maximumFractionDigits:0}):"0";dropIfr.textContent=ifrAmt+" IFR"}
+    if(dropIfr){var ifrAmt=state.ifrBalance&&typeof ethers!=="undefined"?parseFloat(ethers.formatUnits(state.ifrBalance,9)).toLocaleString("en-US",{maximumFractionDigits:0}):"0";dropIfr.textContent=ifrAmt+" IFR"}
     var lockDiv=document.getElementById("lp-drop-lock");var noLockDiv=document.getElementById("lp-drop-nolock");
     if(lockDiv)lockDiv.style.display=state.isLocked1000?"":"none";
     if(noLockDiv)noLockDiv.style.display=state.isLocked1000?"none":"";

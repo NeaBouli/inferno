@@ -590,8 +590,7 @@
   <meta name="twitter:title" content="FAQ — IFR Inferno Protocol">
   <meta name="twitter:description" content="All your questions about IFR answered — tokenomics, lock mechanism, bootstrap, fees and governance.">
   <meta name="twitter:site" content="@IFRtoken">
-  <meta name="twitter:image" content="https://ifrunit.tech/assets/ifr_icon_256.png"><script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"
-  onerror="var s=document.createElement('script');s.src='https://unpkg.com/ethers@5.7.2/dist/ethers.umd.min.js';document.head.appendChild(s);"></script>
+  <meta name="twitter:image" content="https://ifrunit.tech/assets/ifr_icon_256.png"><script src="/assets/vendor/ethers-6.17.0.umd.min.js"></script>
 <script src="../assets/wallet-core.js"></script>
 <script src="../assets/ifr-state.js"></script>
 <script type="application/ld+json">
@@ -1070,7 +1069,7 @@
   ["function isLocked(address,uint256) view returns (bool)"],
   provider
 );
-const hasLock = await ifrLock.isLocked(walletAddress, ethers.utils.parseUnits("1000", 9));
+const hasLock = await ifrLock.isLocked(walletAddress, ethers.parseUnits("1000", 9));
 // true if wallet has >= 1000 IFR locked</pre>This is a single on-chain call. No API keys, no user databases, no privacy concerns.</div>
         </div>
 
@@ -1086,7 +1085,7 @@ const hasLock = await ifrLock.isLocked(walletAddress, ethers.utils.parseUnits("1
 
         <div class="faq-item">
           <button class="faq-q"><span>What tech stack does the project use?</span><span class="icon">+</span></button>
-          <div class="faq-a">&bull; <strong>Smart contracts</strong>: Solidity 0.8.20, Hardhat 3, OpenZeppelin v5, ethers v6<br>&bull; <strong>Testing</strong>: Chai 6, Hardhat, contract/app/vault suites<br>&bull; <strong>Frontend apps</strong>: React, Next.js, Vite, TypeScript and wagmi/viem where app tooling is used; legacy static wallet widgets use ethers.js v5 and static docs are served through GitHub Pages<br>&bull; <strong>Backend apps</strong>: Express.js, Prisma, SQLite, SIWE authentication and ethers v6<br>&bull; <strong>Infrastructure</strong>: GitHub Pages (docs), Hetzner-hosted APIs at <code>copilot-api.ifrunit.tech</code> and <code>points-api.ifrunit.tech</code>, Ethereum RPC providers</div>
+          <div class="faq-a">&bull; <strong>Smart contracts</strong>: Solidity 0.8.20, Hardhat 3, OpenZeppelin v5, ethers v6<br>&bull; <strong>Testing</strong>: Chai 6, Hardhat, contract/app/vault suites<br>&bull; <strong>Frontend apps</strong>: React, Next.js, Vite, TypeScript and wagmi/viem where app tooling is used; static wallet widgets use pinned self-hosted ethers.js v6 and static docs are served through GitHub Pages<br>&bull; <strong>Backend apps</strong>: Express.js, Prisma, SQLite, SIWE authentication and ethers v6<br>&bull; <strong>Infrastructure</strong>: GitHub Pages (docs), Hetzner-hosted APIs at <code>copilot-api.ifrunit.tech</code> and <code>points-api.ifrunit.tech</code>, Ethereum RPC providers</div>
         </div>
 
         <div class="faq-item">
@@ -1324,7 +1323,7 @@ function lpUpdateUI(state){
     var dropAddr=document.getElementById("lp-drop-addr");if(dropAddr)dropAddr.textContent=addr.slice(0,10)+"..."+addr.slice(-6);
     var dropEth=document.getElementById("lp-drop-eth");if(dropEth)dropEth.textContent=parseFloat(state.ethBalance||"0").toFixed(4)+" ETH";
     var dropIfr=document.getElementById("lp-drop-ifr");
-    if(dropIfr){var ifrAmt=state.ifrBalance&&typeof ethers!=="undefined"?parseFloat(ethers.utils.formatUnits(state.ifrBalance,9)).toLocaleString("en-US",{maximumFractionDigits:0}):"0";dropIfr.textContent=ifrAmt+" IFR"}
+    if(dropIfr){var ifrAmt=state.ifrBalance&&typeof ethers!=="undefined"?parseFloat(ethers.formatUnits(state.ifrBalance,9)).toLocaleString("en-US",{maximumFractionDigits:0}):"0";dropIfr.textContent=ifrAmt+" IFR"}
     var lockDiv=document.getElementById("lp-drop-lock");var noLockDiv=document.getElementById("lp-drop-nolock");
     if(lockDiv)lockDiv.style.display=state.isLocked1000?"":"none";
     if(noLockDiv)noLockDiv.style.display=state.isLocked1000?"none":"";

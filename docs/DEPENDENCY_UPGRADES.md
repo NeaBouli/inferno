@@ -215,3 +215,33 @@ override. `@ethereum-waffle/provider@4.0.5` pins `ganache@7.4.3`, and Ganache bu
 path, so a Ganache override would not close the alert and would create broad unrelated lockfile
 churn. Remove Waffle/Ganache as described above; do not claim the root alert fixed before that
 migration and its full contract-suite evidence exist.
+
+## 2026-08-22 Browser Ethers 6 Completion
+
+- The static browser runtime (landing page, all wiki pages and the Web3 PWA) no
+  longer ships the vendored Ethers 5.7.2 UMD bundle. Every page loads the
+  self-hosted `docs/assets/vendor/ethers-6.17.0.umd.min.js` (SHA-256
+  `532950515fd29ae9f7a21ceb2b68100815024d7944c3d5a92246d5b900bd703b`), a
+  byte-for-byte copy of the pinned root `ethers@6.17.0` npm package. The
+  cdnjs/unpkg Ethers fallbacks and the old 5.7.2 asset were removed, which also
+  retires the browser-side `elliptic@6.5.4` copy that sat outside
+  npm/Dependabot coverage.
+- Runtime code was migrated directly to Ethers 6 without a compatibility shim:
+  `BrowserProvider`/`JsonRpcProvider`, awaited `getSigner()` behind the
+  unchanged synchronous cached `IFRWallet.getSigner()` API, bigint-normalized
+  chain IDs, exact bigint arithmetic for all IFR base-unit values, and the
+  top-level `encodeBytes32String`, `ZeroAddress` and `MaxUint256` exports.
+  ABIs, contract addresses, RPC endpoints, the WalletConnect project ID and the
+  WalletConnect version are unchanged.
+- `docs/web3-sw.js` precaches the v6 bundle under cache `ifr-web3-v14`.
+- A deterministic gate, `npm run test:browser-ethers6`
+  (`scripts/check-browser-ethers6.cjs`), fails on any Ethers 5 loader/reference
+  in browser-executable files, a surviving v5 asset, a hash mismatch of the
+  vendored bundle, or a stale service-worker cache. It is wired into
+  `package.json` and the Docs Validator workflow.
+- Verification: `npm run test:browser-ethers6`, `npm run test:web3-write`
+  (23 tests, including asset SHA-256, v6 script path, `window.ethers.version`
+  6.17.0 and desktop/iPad/Android surfaces), `npm run test:wallet-connect`
+  (20 tests, including Ethers 6 connect checks on all five wallet-active wiki
+  pages), `npm run test:surface-routing`, `npm run test:wiki-heads`,
+  `npm run test:docs-ci` and `git diff --check` all pass.
