@@ -1,6 +1,9 @@
 # ChatGPT Independent Audit Prompt — V4
 
-As of: March 2026 | 16 On-Chain Components | 544 tests | 91% Branch Coverage
+Archived input snapshot: March 2026 | 16 On-Chain Components | 544 tests | 91% Branch Coverage
+
+> This prompt is retained for reproducibility and is not the current audit or
+> functionality baseline. See `docs/CURRENT_FUNCTIONALITY_STATUS.md`.
 
 ## Instructions
 

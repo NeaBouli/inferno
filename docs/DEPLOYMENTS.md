@@ -118,6 +118,12 @@
 ## Ethereum Mainnet
 
 **Datum:** 2026-03-05
+
+> **Current follow-up (22.08.2026):** BootstrapVaultV3 finalized the IFR/WETH
+> pool on 05.06.2026. BuybackController Proposals #13 and #14 and LP-token
+> fee exemption Proposal #15 are executed. See
+> [`CURRENT_FUNCTIONALITY_STATUS.md`](CURRENT_FUNCTIONALITY_STATUS.md) for
+> current activation boundaries.
 **Deployer:** `0x6b36687b0cd4386fb14cf565B67D7862110Fed67`
 **Network:** Ethereum Mainnet (Chain ID: 1)
 
@@ -134,11 +140,21 @@
 | 7 | **FeeRouterV1** | [`0x4807B77B2E25cD055DA42B09BA4d0aF9e580C60a`](https://etherscan.io/address/0x4807B77B2E25cD055DA42B09BA4d0aF9e580C60a#code) | Verified |
 | 8 | **Vesting** | [`0x2694Bc84e8D5251E9E4Ecd4B2Ae3f866d6106271`](https://etherscan.io/address/0x2694Bc84e8D5251E9E4Ecd4B2Ae3f866d6106271#code) | Verified |
 | 9 | **LiquidityReserve** | [`0xdc0309804803b3A105154f6073061E3185018f64`](https://etherscan.io/address/0xdc0309804803b3A105154f6073061E3185018f64#code) | Verified |
-| 10 | ~~BootstrapVault V1~~ | [`0xA820540936d18e1377C39dd9445E5b36F3F1261a`](https://etherscan.io/address/0xA820540936d18e1377C39dd9445E5b36F3F1261a#code) | **DEPRECATED** — finalise() broken, superseded by V3 |
-| 11 | **BootstrapVaultV3** | [`0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141`](https://etherscan.io/address/0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141#code) | Verified |
-| 12 | **BuybackController** | [`0x1e0547D50005A4Af66AbD5e6915ebfAA2d711F7c`](https://etherscan.io/address/0x1e0547D50005A4Af66AbD5e6915ebfAA2d711F7c#code) | Verified |
+| 10 | **BootstrapVaultV3** | [`0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141`](https://etherscan.io/address/0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141#code) | Verified / finalized |
+| 11 | **CommitmentVault** | [`0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3`](https://etherscan.io/address/0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3#code) | Verified |
+| 12 | **LendingVault** | [`0x974305Ab0EC905172e697271C3d7d385194EB9DF`](https://etherscan.io/address/0x974305Ab0EC905172e697271C3d7d385194EB9DF#code) | Verified |
+| 13 | **BuilderRegistry** | [`0xdfe6636DA47F8949330697e1dC5391267CEf0EE3`](https://etherscan.io/address/0xdfe6636DA47F8949330697e1dC5391267CEf0EE3#code) | Verified |
+| 14 | **BuybackController** | [`0x1e0547D50005A4Af66AbD5e6915ebfAA2d711F7c`](https://etherscan.io/address/0x1e0547D50005A4Af66AbD5e6915ebfAA2d711F7c#code) | Verified / governance-wired |
+
+Legacy deployment: ~~BootstrapVault V1~~
+[`0xA820540936d18e1377C39dd9445E5b36F3F1261a`](https://etherscan.io/address/0xA820540936d18e1377C39dd9445E5b36F3F1261a#code)
+is deprecated and superseded by BootstrapVaultV3.
 
 ### Token Distribution (CFLM)
+
+The Treasury and Community rows below preserve the original distribution EOAs.
+Current operational custody uses the documented Gnosis Safes; these historical
+EOAs must not be treated as current treasury or community control addresses.
 
 | Recipient | Amount | Address |
 |-----------|--------|---------|
@@ -153,7 +169,7 @@
 
 | Setting | Value |
 |---------|-------|
-| FeeExempt | Vesting, LiquidityReserve, BuybackVault, BurnReserve, IFRLock, PartnerVault, Treasury, CommitmentVault, LendingVault, BuybackController (pending Proposal A) |
+| FeeExempt | Vesting, LiquidityReserve, BuybackVault, BurnReserve, IFRLock, PartnerVault, Treasury, CommitmentVault, LendingVault, BuybackController and LP Token; the controller and LP exemptions are executed |
 | Deployer FeeExempt | Removed |
 | LiquidityReserve Lock | 180 days |
 | Vesting Cliff | 12 months |
@@ -227,10 +243,11 @@ All ownable contracts transferred to Governance (48h Timelock). Parameter change
 | feeExempt(CommitmentVault) Proposal #11 | **Executed** (06.04.2026) — TreasurySafe 3-of-5 |
 | feeExempt(LendingVault) Proposal #12 | **Executed** (06.04.2026) — TreasurySafe 3-of-5 |
 | BuybackController deployed + verified | **Done** (14.04.2026) — [`0x1e0547D5...`](https://etherscan.io/address/0x1e0547D50005A4Af66AbD5e6915ebfAA2d711F7c#code) — TX [`0x761ee37c...`](https://etherscan.io/tx/0x761ee37c87d528317c5f7da13a2581e037f2fe39c71bfc58ce83a32930391677) |
-| Proposal A: setFeeExempt(BuybackController) | **Pending** — 3/5 signed, 48h Timelock, Execute ~16.04.2026 07:30 UTC+2 |
-| Proposal B: setFeeCollector(BuybackController) | **Waiting** — Submit after Proposal A executed |
-| Create Uniswap V2 LP (400M IFR + ETH) | Pending |
-| Lock LP Tokens (min 12 months) | Pending |
+| Proposal #13: setFeeExempt(BuybackController) | **Executed** (16.04.2026) |
+| Proposal #14: setFeeCollector(BuybackController) | **Executed** (18.04.2026) |
+| Create Uniswap V2 IFR/WETH LP | **Done** via BootstrapVaultV3 `finalise()` (05.06.2026), using 100M IFR + 0.030 ETH |
+| LP custody | **Done** — LP tokens remain in withdrawal-less BootstrapVaultV3; Mainnet Team.Finance path disabled |
+| Proposal #15: setFeeExempt(LP Token) | **Executed** (08.06.2026) |
 | Transfer InfernoToken Ownership to Governance | **Done** (2026-03-05) |
 | Transfer LiquidityReserve Ownership to Governance | **Done** (2026-03-05) |
 | Transfer BurnReserve Ownership to Governance | **Done** (2026-03-05) |

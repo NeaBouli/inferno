@@ -957,6 +957,9 @@
       </div>
 
       <h1>IFR <span class="accent">Ecosystem</span></h1>
+      <div class="callout" id="application-status">
+        <p><strong>Live application status:</strong> <a href="https://web3.ifrunit.tech/">Web3</a> provides wallet selection and direct protocol actions. <a href="https://shop.ifrunit.tech/">IFR Benefits</a> provides the customer/seller PWA and QR benefit flow. See the <a href="https://ifrunit.tech/CURRENT_FUNCTIONALITY_STATUS.md">verified functionality matrix</a> for operational boundaries and real-device acceptance status.</p>
+      </div>
       <p class="subtitle">The Self-Reinforcing Loop</p>
 
       <!-- ======================================== -->
@@ -1046,12 +1049,12 @@
       </div>
 
       <div class="prinzip-card">
-        <h3>Principle 3: Every Action Creates Buy Pressure</h3>
+        <h3>Principle 3: Utility Can Create Demand</h3>
         <ul>
-          <li>Builder borrows &rarr; must repay &rarr; buys on Uniswap</li>
-          <li>Builder cannot repay &rarr; liquidation &rarr; buys on Uniswap</li>
-          <li>User wants discount &rarr; buys IFR to lock</li>
-          <li>Interest &rarr; deeper LP &rarr; stable price</li>
+          <li>A user who needs more IFR for an access threshold may choose to acquire it on a market</li>
+          <li>A borrower may choose to acquire IFR externally for repayment if borrowing is activated in a future audited design</li>
+          <li>V1 liquidation distributes ETH collateral to the liquidator and lender; it performs no automatic Uniswap purchase</li>
+          <li>Protocol interest goes to the configured fee receiver; an LP route is not guaranteed by LendingVault V1</li>
         </ul>
       </div>
 

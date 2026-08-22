@@ -12,6 +12,7 @@ on:
       - 'scripts/test-benefits-doc-consistency.cjs'
       - 'scripts/test-content-trust.cjs'
       - 'scripts/test-status-baseline.cjs'
+      - 'scripts/test-functionality-status.cjs'
       - 'scripts/test-docs-workflow.cjs'
       - 'scripts/test-wiki-head-integrity.cjs'
       - 'scripts/test-surface-routing.cjs'
@@ -33,6 +34,7 @@ on:
       - 'scripts/test-benefits-doc-consistency.cjs'
       - 'scripts/test-content-trust.cjs'
       - 'scripts/test-status-baseline.cjs'
+      - 'scripts/test-functionality-status.cjs'
       - 'scripts/test-docs-workflow.cjs'
       - 'scripts/test-wiki-head-integrity.cjs'
       - 'scripts/test-surface-routing.cjs'
@@ -151,6 +153,9 @@ jobs:
 
       - name: Check current status baseline
         run: npm run test:status-baseline
+
+      - name: Check current functionality matrix
+        run: npm run test:functionality-status
 
       - name: Check Wiki RAG freshness
         run: npm run test:wiki-rag

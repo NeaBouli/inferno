@@ -2,6 +2,10 @@
 ## Projekt: Inferno ($IFR)
 ## Datum: 14.04.2026 (Status aktualisiert 20.07.2026)
 
+> **Historical planning memo:** Its unchecked Proposal A/B actions were
+> completed as Governance Proposals #13 and #14 in April 2026. Use
+> `CURRENT_FUNCTIONALITY_STATUS.md` and `DEPLOYMENTS.md` for current status.
+
 ### Toolchain-Status 20.07.2026
 - Waffle/Ganache-Abhaengigkeiten wurden aus dem Root-Toolchain-Pfad entfernt.
 - Chai-Revert/Event-Matcher laufen ueber `@nomicfoundation/hardhat-chai-matchers` 1.x,
