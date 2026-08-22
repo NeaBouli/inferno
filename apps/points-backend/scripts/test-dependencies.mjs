@@ -7,6 +7,7 @@ const lock = JSON.parse(
 
 const expectedVersions = {
   'body-parser': '2.3.0',
+  'deepmerge-ts': '8.0.2',
   esbuild: '0.28.1',
   'path-to-regexp': '8.4.0',
   qs: '6.15.3',
