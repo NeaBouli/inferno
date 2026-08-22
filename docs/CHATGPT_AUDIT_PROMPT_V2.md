@@ -2,6 +2,12 @@
 
 Copy this entire prompt into a new ChatGPT window (GPT-4). Then paste the contents of the referenced files as context.
 
+> **Archived audit snapshot:** This entire prompt, including its test totals,
+> component counts, contract addresses and requested consistency checks,
+> describes the March 2026 Sepolia-era reference set. It is retained for audit
+> history and must not be used as current Mainnet or repository status. See
+> `CURRENT_FUNCTIONALITY_STATUS.md` for the current verified baseline.
+
 ---
 
 ## Task
@@ -13,8 +19,8 @@ You are an independent auditor for the Inferno ($IFR) project. Check ALL referen
 - **Token:** Inferno ($IFR), ERC-20, 9 Decimals, 1B Supply, deflationary (2.5% burn + 1% pool fee)
 - **Model:** Community Fair Launch (CFLM) — no presale, no VC
 - **Archived March 2026 snapshot:** 16 on-chain components
-- **Tests:** 544 (367 contract + 77 app + 100 vault), all passing
-- **Contracts:**
+- **Archived test snapshot:** 544 (367 contract + 77 app + 100 vault), all passing at that time
+- **Archived contract-address snapshot:**
   1. InfernoToken — `0x3Bd71947F288d1dd8B21129B1bE4FF16EDd5d1F4`
   2. LiquidityReserve — `0xF7E90D0d17f8232365186AA085D26eaEfAf011aF`
   3. Vesting — `0xa710f9FE7bf42981E60BE2Fbe7D87Fb3541a3F8B`

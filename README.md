@@ -148,7 +148,7 @@ The ecosystem is open and permissionless. Any product can integrate IFR Lock.
 | Browser / WalletConnect | 12 | Playwright |
 
 - Historical coverage snapshot: 91% branches / 99% statements for the contract subset recorded in `docs/COVERAGE_REPORT.md`; not a current full-repository coverage claim
-- GitHub Actions CI covers contracts/tooling, Benefits Network, SDK, Creator Gateway, Points Backend, AI Copilot, dashboards, Telegram bot, wallet prototype, documentation, security and Pages deployment gates.
+- GitHub Actions CI contains scoped workflows for contracts/tooling, Benefits Network, SDK, Creator Gateway, Points Backend, AI Copilot, dashboards, Telegram bot, wallet prototype, documentation and security checks. Deployment availability is verified separately and must not be inferred from a passing source-validation workflow.
 - Slither security audit: 0 high/critical findings
 - Internal security audit: 0 FAIL, 20 active WARN, 1 fixed, 81 PASS ([full report](docs/SECURITY_AUDIT_SKYWALKER.md))
 - App security review: 12 findings (2 CRITICAL, 5 HIGH — all fixed) ([full report](docs/APP_SECURITY_REVIEW.md))

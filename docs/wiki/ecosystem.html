@@ -960,14 +960,14 @@
       <div class="callout" id="application-status">
         <p><strong>Live application status:</strong> <a href="https://web3.ifrunit.tech/">Web3</a> provides wallet selection and direct protocol actions. <a href="https://shop.ifrunit.tech/">IFR Benefits</a> provides the customer/seller PWA and QR benefit flow. See the <a href="https://ifrunit.tech/CURRENT_FUNCTIONALITY_STATUS.md">verified functionality matrix</a> for operational boundaries and real-device acceptance status.</p>
       </div>
-      <p class="subtitle">The Self-Reinforcing Loop</p>
+      <p class="subtitle">Current Activity and a Conditional Future Loop</p>
 
       <!-- ======================================== -->
       <!-- 1. Der Kreislauf -->
       <!-- ======================================== -->
-      <h2>1. The Loop</h2>
+      <h2>1. Current and Conditional Flow</h2>
       <p>
-        Every action in the IFR protocol reinforces the loop. Contributors lock, Builders borrow, Users buy &mdash; and every step creates buy pressure on Uniswap.
+        Current Mainnet activity includes contributor commitments, lender offers and user access locks. Borrowing is disabled while <code>LendingVault.ifrPriceWei = 0</code>. The lower part of this diagram is a possible future path only: it requires a separately audited borrowing design and does not guarantee market demand or price growth.
       </p>
 
       <!-- Cycle diagram using styled divs -->
@@ -990,27 +990,27 @@
       <div class="cycle-arrow-down">&darr;</div>
       <div class="cycle-diagram" style="display:flex;flex-wrap:wrap;align-items:center;gap:6px;">
         <div class="cycle-node" style="border-color:#3b82f6;color:#3b82f6;">
-          Builders borrow
-          <small>against ETH collateral</small>
+          Builders may borrow
+          <small>future audited activation</small>
         </div>
         <div class="cycle-arrow">&rarr;</div>
         <div class="cycle-node" style="border-color:#22c55e;color:#22c55e;">
-          Users buy IFR
-          <small>to lock with Builder</small>
+          Users may acquire IFR
+          <small>for an access threshold</small>
         </div>
         <div class="cycle-arrow">&rarr;</div>
         <div class="cycle-node highlight">
-          Buy pressure on Uniswap
+          Potential market demand
         </div>
       </div>
       <div class="cycle-arrow-down">&darr;</div>
       <div class="cycle-diagram" style="display:flex;flex-wrap:wrap;align-items:center;gap:6px;">
         <div class="cycle-node" style="border-color:#22c55e;color:#22c55e;">
-          Price rises
+          Market conditions vary
         </div>
         <div class="cycle-arrow">&rarr;</div>
         <div class="cycle-node">
-          Tranches unlock
+          Time conditions unlock
         </div>
         <div class="cycle-arrow">&rarr;</div>
         <div class="cycle-node">

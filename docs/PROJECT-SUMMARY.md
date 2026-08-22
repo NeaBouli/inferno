@@ -6,11 +6,11 @@ Last updated: March 2026
 > an earlier repository snapshot. Current verified capability and test evidence
 > is maintained in `CURRENT_FUNCTIONALITY_STATUS.md`.
 
-## Project Status: MAINNET DEPLOYED
+## Historical Project Status: MAINNET DEPLOYED
 
 All 17 on-chain components were documented as deployed and verified in this snapshot. BuybackController deployed 14.04.2026. Current application deployment and acceptance status must be read from the canonical functionality matrix.
 
-## On-Chain Contracts (14)
+## Historical On-Chain Contract Inventory (14)
 
 ### Mainnet (14)
 
