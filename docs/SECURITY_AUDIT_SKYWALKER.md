@@ -359,9 +359,9 @@ This audit was conducted internally by Claude Opus 4.6.
 **Community review is explicitly encouraged.**
 
 ### How to Contribute
-- Open a GitHub Issue: [Security Audit Finding template](https://github.com/NeaBouli/inferno/issues/new?template=security-audit.md)
+- Report privately: [GitHub Private Vulnerability Reporting](https://github.com/NeaBouli/inferno/security/advisories/new)
 - Review the contracts in `/contracts/`
-- Reference known issues in this document (W1-W14) to avoid duplicates
+- Reference known issues in this document (W1-W21) to avoid duplicates
 - See [SECURITY.md](../SECURITY.md) for full disclosure policy
 
 ### Known Warnings (W1-W21)

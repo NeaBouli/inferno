@@ -15,6 +15,8 @@ on:
       - 'scripts/test-docs-workflow.cjs'
       - 'scripts/test-wiki-head-integrity.cjs'
       - 'scripts/test-surface-routing.cjs'
+      - 'scripts/test-security-reporting-config.cjs'
+      - '.github/ISSUE_TEMPLATE/**'
       - 'tests/browser/**'
       - 'playwright.config.js'
       - 'package.json'
@@ -33,6 +35,8 @@ on:
       - 'scripts/test-docs-workflow.cjs'
       - 'scripts/test-wiki-head-integrity.cjs'
       - 'scripts/test-surface-routing.cjs'
+      - 'scripts/test-security-reporting-config.cjs'
+      - '.github/ISSUE_TEMPLATE/**'
       - 'tests/browser/**'
       - 'playwright.config.js'
       - 'package.json'
@@ -151,6 +155,9 @@ jobs:
 
       - name: Check Wiki head integrity
         run: npm run test:wiki-heads
+
+      - name: Check security reporting configuration
+        run: npm run test:security-reporting
 
       - name: Check public surface routing
         run: npm run test:surface-routing
