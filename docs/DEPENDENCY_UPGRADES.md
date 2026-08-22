@@ -147,6 +147,17 @@ toolchain and do not use `npm audit fix --force`.
 - Contract and Security workflows enforce `npm audit --audit-level=moderate`,
   preventing future moderate, high or critical regressions while the
   documented upstream-only low findings remain visible.
+- The scheduled Security workflow additionally runs
+  `npm run test:dependency-advisories`. This gate permits only the known
+  `GHSA-848j-6mx2-7j84` chain from `@nomicfoundation/hardhat-verify` through
+  Ethers 5 to `elliptic@6.6.1`, verifies that every affected lockfile package
+  remains development-only, and fails when the advisory set changes or a fix
+  becomes available. Hardhat 3 and the root contract toolchain's direct
+  Ethers 6 dependency are already active; the remaining root-lockfile
+  remediation depends on an upstream Verify release that removes or patches
+  this internal Ethers 5 path. The separately vendored browser bundle used by
+  legacy static pages is outside npm/Dependabot coverage and requires its own
+  wallet-regression migration before it can be removed.
 
 ## 2026-08-01 Creator Gateway Security Patch
 

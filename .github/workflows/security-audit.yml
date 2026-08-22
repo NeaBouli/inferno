@@ -42,6 +42,10 @@ jobs:
         if: steps.check-npm.outputs.has_npm == 'true'
         run: npm audit --audit-level=moderate
 
+      - name: Verify known low-advisory baseline
+        if: steps.check-npm.outputs.has_npm == 'true'
+        run: npm run test:dependency-advisories
+
       - name: Check for Cargo.toml
         id: check-cargo
         run: |
