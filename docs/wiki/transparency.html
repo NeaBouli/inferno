@@ -1422,7 +1422,7 @@
 
       <!-- ===== SECTION 5: Burn Tracker ===== -->
       <h2><span class="live-dot"></span> IFR Burn Tracker</h2>
-      <p>Every transfer burns IFR permanently. No mint function exists &mdash; supply can only decrease.</p>
+      <p>Every standard transfer between non-exempt addresses burns IFR permanently. Verified fee-exempt paths bypass the transfer fee. No mint function exists &mdash; supply can only decrease.</p>
 
       <div class="stats-grid">
         <div class="stat-card">
@@ -1444,7 +1444,7 @@
       </div>
 
       <div class="callout callout-live">
-        <p><strong>Deflation is permanent:</strong> There is no <code>mint()</code> function in the InfernoToken contract. Every transfer applies a 3.5% fee (2% sender burn + 0.5% recipient burn + 1% pool fee). Supply decreases with every transaction.</p>
+        <p><strong>Deflation is permanent:</strong> There is no <code>mint()</code> function in the InfernoToken contract. Every standard transfer between non-exempt addresses applies a 3.5% fee (2% sender burn + 0.5% recipient burn + 1% pool fee). If either endpoint is fee-exempt, the complete fee is bypassed. Supply decreases through non-exempt transfers.</p>
       </div>
 
       <!-- ===== SECTION 6: Governance Status ===== -->

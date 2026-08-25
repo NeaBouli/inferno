@@ -479,7 +479,7 @@
     {
       "@type": "Question",
       "name": "What is IFR and what makes it deflationary?",
-      "acceptedAnswer": {"@type":"Answer","text":"Inferno (IFR) is an ERC-20 utility token on Ethereum with a fixed supply of 1B tokens. Every transfer burns 2.5% and routes 1% to a pool fee. No mint function exists — supply can only decrease."}
+      "acceptedAnswer": {"@type":"Answer","text":"Inferno (IFR) is an ERC-20 utility token on Ethereum with a fixed supply of 1B tokens. Every standard transfer between non-exempt addresses burns 2.5% and routes 1% to a pool fee. No mint function exists — supply can only decrease."}
     },
     {
       "@type": "Question",
@@ -554,7 +554,7 @@
     {
       "@type": "Question",
       "name": "Can governance change the token supply or burn rate?",
-      "acceptedAnswer": {"@type":"Answer","text":"No. The token supply is fixed at 1B IFR — there is no mint function. The 2.5% burn rate can be adjusted by governance within hard bounds defined in the FeeRouter contract. No parameter can be changed instantly — all changes require the 48h Timelock."}
+      "acceptedAnswer": {"@type":"Answer","text":"No. The token supply is fixed at 1B IFR — there is no mint function. The burn and pool-fee split can be adjusted by governance within the InfernoToken hard cap of 5% total. No parameter can be changed instantly — all changes require the 48h Timelock."}
     },
     {
       "@type": "Question",
@@ -575,6 +575,11 @@
       "@type": "Question",
       "name": "What is P0 and why does it matter?",
       "acceptedAnswer": {"@type":"Answer","text":"P0 = Total ETH raised / 100,000,000 IFR. Bootstrap raised 0.030 ETH, so Proposal #16 set P0 to 300,000,000 wei per IFR on 09.06.2026. P0 is immutable once set, but the current contributor execution plan uses TIME_ONLY tranches rather than price-based unlocks."}
+    },
+    {
+      "@type": "Question",
+      "name": "Are transfers to and from centralized exchanges burn-free?",
+      "acceptedAnswer": {"@type":"Answer","text":"The five-member Core Developer and Keyholder Council approved full fee exemption for officially verified CEX operational addresses on 26.08.2026 at 00:17 MET by a 4-1 vote. No CEX address is currently active. Each exact address must prove exchange control and then pass a public TreasurySafe 3-of-5 Governance proposal and 48-hour timelock. Once activated, transfers where that address is sender or recipient have no burn and no pool fee. Internal exchange trades are off-chain and do not invoke the IFR contract."}
     }
   ]
 }
@@ -733,7 +738,7 @@
 
       <h1><span class="accent">Frequently Asked Questions</span></h1>
       <p class="subtitle">
-        Comprehensive answers about IFR &mdash; tokenomics, security, governance, bootstrap, applications, and the road to decentralization. 12 sections, 76 questions.
+        Comprehensive answers about IFR &mdash; tokenomics, security, governance, bootstrap, applications, and the road to decentralization. 12 sections, 77 questions.
       </p>
 
       <!-- Quick Nav -->
@@ -759,7 +764,7 @@
       <div class="faq-section">
         <div class="faq-item">
           <button class="faq-q"><span>What is IFR and what makes it deflationary?</span><span class="icon">+</span></button>
-          <div class="faq-a">Inferno (IFR) is an ERC-20 utility token on Ethereum Mainnet with a fixed genesis supply of 1,000,000,000 tokens and 9 decimals. There is no mint function &mdash; supply can only decrease. Every transfer permanently burns 2.5% (2% sender-side + 0.5% recipient-side) and routes 1% to a pool fee receiver. This makes IFR structurally deflationary: the more it is used, the scarcer it becomes.</div>
+          <div class="faq-a">Inferno (IFR) is an ERC-20 utility token on Ethereum Mainnet with a fixed genesis supply of 1,000,000,000 tokens and 9 decimals. There is no mint function &mdash; supply can only decrease. Every standard transfer between non-exempt addresses permanently burns 2.5% (2% sender-side + 0.5% recipient-side) and routes 1% to a pool fee receiver. Transfers where either endpoint is fee-exempt bypass the complete fee. This makes IFR structurally deflationary while preserving explicitly governed integration paths.</div>
         </div>
 
         <div class="faq-item">
@@ -1080,7 +1085,12 @@ const hasLock = await ifrLock.isLocked(walletAddress, ethers.parseUnits("1000", 
 
         <div class="faq-item">
           <button class="faq-q"><span>Which addresses are fee-exempt?</span><span class="icon">+</span></button>
-          <div class="faq-a">Fee-exempt addresses (verified on-chain as of March 2026):<br><br>&bull; IFRLock: <code>0x769928aBDfc949D0718d8766a1C2d7dBb63954Eb</code><br>&bull; LiquidityReserve: <code>0xdc0309804803b3A105154f6073061E3185018f64</code><br>&bull; BuybackVault: <code>0x670D293e3D65f96171c10DdC8d88B96b0570F812</code><br>&bull; BurnReserve: <code>0xaA1496133B6c274190A2113410B501C5802b6fCF</code><br>&bull; PartnerVault: <code>0xc6eb7714bCb035ebc2D4d9ba7B3762ef7B9d4F7D</code><br>&bull; Vesting: <code>0x2694Bc84e8D5251E9E4Ecd4B2Ae3f866d6106271</code><br><br>BootstrapVaultV3: fee-exempt since Proposal #4 (executed 11.03.2026)<br>&bull; FeeRouterV1: fee-exempt since Proposal #5 (executed 11.03.2026)</div>
+          <div class="faq-a">Active exemptions are public in the InfernoToken <code>feeExempt(address)</code> mapping and include protocol contracts, Governance-controlled safes and the IFR/WETH Uniswap V2 pair. The public <a href="https://ifrunit.tech/wiki/fee-design.html">Fee Design page</a> records the current operational list and proposal history.<br><br>The five-member Core Developer and Keyholder Council approved a CEX fee-exemption policy on 26.08.2026 at 00:17 MET by a 4-1 vote, but <strong>no CEX address is currently active</strong>. Each exchange address requires official verification, proof of control, a TreasurySafe 3-of-5 Governance proposal and the 48-hour timelock before it becomes fee-free.</div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q"><span>Are transfers to and from centralized exchanges burn-free?</span><span class="icon">+</span></button>
+          <div class="faq-a"><strong>Policy approved at 00:17 MET on 26.08.2026 by a 4-1 Council vote; activation is per address.</strong> Once an officially verified CEX operational address has been activated on-chain, transfers where that address is sender or recipient bypass the complete 3.5% fee: no sender burn, recipient burn or pool fee.<br><br>No CEX address is currently active. Every address must first prove exchange control and then pass a public TreasurySafe 3-of-5 Governance proposal plus the 48-hour timelock. Internal exchange trades are off-chain ledger entries and never invoke the IFR token contract. See the <a href="https://ifrunit.tech/wiki/fee-design.html#cex-fee-policy">full public policy and address register</a>.</div>
         </div>
 
         <div class="faq-item">
@@ -1140,7 +1150,7 @@ const hasLock = await ifrLock.isLocked(walletAddress, ethers.parseUnits("1000", 
 
         <div class="faq-item">
           <button class="faq-q"><span>Why the name &ldquo;Inferno&rdquo;?</span><span class="icon">+</span></button>
-          <div class="faq-a">The name references Dante Alighieri's &ldquo;Inferno&rdquo; (first part of the Divine Comedy). Like in Dante's vision, fire purifies what passes through it. With every IFR transaction, 2.5% burns permanently &mdash; what remains is purer, scarcer, stronger. The fire metaphor represents the deflationary mechanism at the heart of the protocol.</div>
+          <div class="faq-a">The name references Dante Alighieri's &ldquo;Inferno&rdquo; (first part of the Divine Comedy). Like in Dante's vision, fire purifies what passes through it. With every standard IFR transfer between non-exempt addresses, 2.5% burns permanently &mdash; what remains is purer, scarcer, stronger. The fire metaphor represents the deflationary mechanism at the heart of the protocol.</div>
         </div>
 
         <div class="faq-item">
@@ -1150,7 +1160,7 @@ const hasLock = await ifrLock.isLocked(walletAddress, ethers.parseUnits("1000", 
 
         <div class="faq-item">
           <button class="faq-q"><span>Where can I buy IFR?</span><span class="icon">+</span></button>
-          <div class="faq-a">&#x2705; IFR is live on <a href="https://app.uniswap.org/swap?outputCurrency=0x77e99917Eca8539c62F509ED1193ac36580A6e7B" target="_blank" rel="noopener">Uniswap V2</a> since 08.06.2026 (Proposal #15 executed &mdash; LP Token feeExempt = TRUE). Set slippage to at least 4% (3.5% fee + AMM slippage). Always verify the official contract address: <code>0x77e99917Eca8539c62F509ED1193ac36580A6e7B</code>. LP Token: <code>0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0</code>. Do not trust links from DMs or unofficial channels.</div>
+          <div class="faq-a">&#x2705; IFR is live on <a href="https://app.uniswap.org/swap?outputCurrency=0x77e99917Eca8539c62F509ED1193ac36580A6e7B" target="_blank" rel="noopener">Uniswap V2</a> since 08.06.2026. Proposal #15 made the IFR/WETH pair fee-exempt, so pair swaps bypass the 3.5% IFR token fee. The router itself is not exempt. Use the current quote and choose execution tolerance for the displayed AMM price impact and market movement; there is no fixed 4% token-fee minimum. Always verify the official contract address: <code>0x77e99917Eca8539c62F509ED1193ac36580A6e7B</code>. LP Token: <code>0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0</code>. Do not trust links from DMs or unofficial channels.</div>
         </div>
 
         <div class="faq-item">
@@ -1188,7 +1198,7 @@ const hasLock = await ifrLock.isLocked(walletAddress, ethers.parseUnits("1000", 
         </div>
         <div class="faq-item">
           <button class="faq-q"><span>Can fee-exempt wallets be abused?</span><span class="icon">+</span></button>
-          <div class="faq-a">All fee-exempt addresses are public and on-chain verifiable. Only protocol contracts are exempt: Vesting, BurnReserve, BootstrapVaultV3, TreasurySafe, CommunitySafe, and Deployer (legacy). No DEX routers or insider wallets have exemptions. Any exemption change requires Governance approval with a 48-hour timelock. You can verify all exempt addresses on <a href="https://etherscan.io/address/0x77e99917Eca8539c62F509ED1193ac36580A6e7B#readContract" target="_blank" rel="noopener">Etherscan</a>.</div>
+          <div class="faq-a">A fee exemption is powerful because every transfer to or from that address bypasses the complete fee. For that reason, all exemptions are public and on-chain verifiable. New CEX exemptions require official address verification, proof of control, TreasurySafe 3-of-5 approval and a public 48-hour Governance timelock. Active addresses are monitored and can be revoked through the same transparent Governance path if their ownership, purpose or security status changes. The IFR/WETH pair is exempt; the Uniswap V2 router is not. Verify any address through the InfernoToken <code>feeExempt(address)</code> read function on <a href="https://etherscan.io/address/0x77e99917Eca8539c62F509ED1193ac36580A6e7B#readContract" target="_blank" rel="noopener">Etherscan</a>.</div>
         </div>
         <div class="faq-item">
           <button class="faq-q"><span>Why does IFR use 9 decimals instead of 18?</span><span class="icon">+</span></button>
@@ -1198,7 +1208,7 @@ const hasLock = await ifrLock.isLocked(walletAddress, ethers.parseUnits("1000", 
 
       <!-- Footer -->
       <footer class="wiki-footer">
-        Inferno (IFR) &mdash; Community Fair Launch Model &mdash; Documentation v2.2 &mdash; 12 sections, 76 Q&amp;A
+        Inferno (IFR) &mdash; Community Fair Launch Model &mdash; Documentation v2.2 &mdash; 12 sections, 77 Q&amp;A
       </footer>
 
     </main>

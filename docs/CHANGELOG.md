@@ -1,5 +1,17 @@
 # Changelog
 
+## 26 August 2026 — Exchange Fee-Exemption Policy
+
+- Five-member Core Developer and Keyholder Council approved full fee
+  exemption by a 4-1 vote at 00:17 MET for transfers to and from officially
+  verified CEX operational addresses.
+- Published the address-verification, TreasurySafe 3-of-5, 48-hour timelock,
+  monitoring and revocation process. No CEX address was active on-chain at
+  publication time.
+- Corrected public Uniswap guidance: the IFR/WETH pair is fee-exempt, the V2
+  router is not, and pair swaps do not require a fixed 4% tolerance for the
+  IFR token fee.
+
 All notable changes to the Inferno ($IFR) project.
 
 ---

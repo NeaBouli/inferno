@@ -42,7 +42,7 @@ for (const [relative, linkPattern] of Object.entries(statusLinks)) {
 }
 
 const landing = read("docs/index.html");
-assert.ok(landing.includes("ALL 76 QUESTIONS &amp; ANSWERS"));
+assert.ok(landing.includes("ALL 77 QUESTIONS &amp; ANSWERS"));
 assert.ok(!landing.includes("ALL 61 QUESTIONS &amp; ANSWERS"));
 
 const copilotWiki = read("apps/ai-copilot/src/context/wiki-content.json");
@@ -113,8 +113,8 @@ assert.ok(
 
 const faq = read("docs/wiki/faq.html");
 const faqCount = (faq.match(/class="faq-item"/g) || []).length;
-assert.equal(faqCount, 76, "Wiki FAQ count changed; update its visible count");
-assert.ok(faq.includes("12 sections, 76 questions."));
-assert.ok(read("docs/index.html").includes("view all 76 questions"));
+assert.equal(faqCount, 77, "Wiki FAQ count changed; update its visible count");
+assert.ok(faq.includes("12 sections, 77 questions."));
+assert.ok(read("docs/index.html").includes("view all 77 questions"));
 
 console.log("[functionality-status] PASS");

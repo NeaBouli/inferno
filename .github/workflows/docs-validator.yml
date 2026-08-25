@@ -151,6 +151,9 @@ jobs:
       - name: Check public content trust
         run: npm run test:content-trust
 
+      - name: Check CEX fee-exemption policy consistency
+        run: npm run test:cex-fee-policy
+
       - name: Check current status baseline
         run: npm run test:status-baseline
 

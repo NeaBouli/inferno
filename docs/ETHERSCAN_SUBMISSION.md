@@ -31,7 +31,7 @@
    Inferno ($IFR) is a deflationary ERC-20 utility token on Ethereum Mainnet (deployed March 5, 2026).
 
    **MECHANICS:**
-   - 2.5% permanent burn on every transfer (2% sender burn + 0.5% recipient burn)
+   - 2.5% permanent burn on each standard transfer between non-exempt addresses (2% sender burn + 0.5% recipient burn)
    - 1% pool fee routed to protocol contracts (FeeRouterV1)
    - No mint function — supply can ONLY decrease
    - Current supply: ~998.5M (from 1B genesis)
@@ -108,7 +108,7 @@ No presale. No private sale. No VC.
 
 ## Burn Events
 
-- **Mechanism:** 2.5% of every transfer permanently burned
+- **Mechanism:** 2.5% of each standard transfer between non-exempt addresses permanently burned
 - **Since deploy (March 5, 2026):** ~1.5M IFR burned
 - **On-chain verifiable:** https://etherscan.io/token/0x77e99917Eca8539c62F509ED1193ac36580A6e7B
 

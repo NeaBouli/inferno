@@ -34,6 +34,15 @@ export function getIFRKnowledge() {
       maxFee: "5.0% (hard cap)",
       partnerPool: "40M IFR (4%)"
     },
+    exchangeFeePolicy: {
+      decision: "Approved on 26 August 2026 at 00:17 MET by a 4-1 vote of the five-member Core Developer and Keyholder Council.",
+      scope: "Transfers where an officially verified and on-chain fee-exempt CEX operational address is sender or recipient bypass the full 3.5% fee: no 2.0% sender burn, no 0.5% recipient burn and no 1.0% pool fee.",
+      currentStatus: "No CEX address is currently fee-exempt on-chain. Policy approval is not the same as address activation.",
+      activation: "Each address requires official exchange verification, proof of control, a public TreasurySafe 3-of-5 Governance proposal, the 48-hour timelock and execution.",
+      internalTrading: "Internal CEX trades are off-chain ledger entries and do not invoke the IFR token contract.",
+      uniswap: "The IFR/WETH Uniswap V2 pair is fee-exempt under Proposal #15; the Uniswap V2 router is not. Pair swaps bypass the IFR token fee, while normal AMM price impact and execution slippage still apply.",
+      policy: "https://ifrunit.tech/EXCHANGE_FEE_EXEMPTION_POLICY.md"
+    },
     aiCopilot: {
       premiumThreshold: "Lock >=1,000 IFR in IFRLock",
       premiumBenefit: "IFR lockers unlock Premium Copilot guidance. After wallet connection and lock verification, the assistant can communicate more personally because it can use wallet balance, lock status, tier, and on-chain context instead of only generic documentation.",
