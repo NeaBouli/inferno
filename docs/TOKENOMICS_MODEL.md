@@ -13,7 +13,7 @@
 
 ## Deflation Mechanism
 
-Every transfer permanently burns 2.5%:
+Every standard transfer between non-exempt addresses permanently burns 2.5%:
 - Transfer: 1,000 IFR
 - Recipient receives: 965 IFR (after 3.5% fee)
 - Burned: 25 IFR (permanent)

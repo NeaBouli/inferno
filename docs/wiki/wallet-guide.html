@@ -811,7 +811,7 @@
           <div class="wg-field"><strong>Owner:</strong> Governance (Timelock)</div>
           <div class="wg-field"><strong>feeExempt:</strong> <span class="wg-fee-status wg-fee-yes">&#x2705; Self (yes)</span></div>
           <div class="wg-role-box">
-            <strong>Function:</strong> The deflationary ERC-20 token. Every transfer applies 3.5% fee: 2% sender burn + 0.5% recipient burn + 1% to FeeRouterV1. No mint function &mdash; supply decreases permanently.
+            <strong>Function:</strong> The deflationary ERC-20 token. Every standard transfer between non-exempt addresses applies a 3.5% fee: 2% sender burn + 0.5% recipient burn + 1% to FeeRouterV1. If either endpoint is fee-exempt, the complete fee is bypassed. No mint function &mdash; supply decreases permanently.
           </div>
           <div class="wg-field"><strong>Phase:</strong> Active since 05.03.2026</div>
         </div>

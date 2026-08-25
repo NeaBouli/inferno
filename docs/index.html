@@ -1292,7 +1292,7 @@
       "@id": "https://ifrunit.tech/#token",
       "name": "Inferno Token",
       "alternateName": "IFR / $IFRp social",
-      "description": "Deflationary ERC-20 utility token on Ethereum Mainnet. 1 billion genesis supply (9 decimals), 3.5% transaction fee split: 2.5% burned and 1% routed as IFR pool fee. Live CommitmentVault locks and LendingVault market flows are available from the official website.",
+      "description": "Deflationary ERC-20 utility token on Ethereum Mainnet. 1 billion genesis supply (9 decimals), with a 3.5% standard non-exempt transfer fee split: 2.5% burned and 1% routed as IFR pool fee. Live CommitmentVault locks and LendingVault market flows are available from the official website.",
       "url": "https://ifrunit.tech",
       "provider": {"@id": "https://ifrunit.tech/#organization"},
       "additionalProperty": [
@@ -1300,8 +1300,8 @@
         {"@type":"PropertyValue","name":"Network","value":"Ethereum Mainnet"},
         {"@type":"PropertyValue","name":"Decimals","value":"9"},
         {"@type":"PropertyValue","name":"Total Supply","value":"1000000000"},
-        {"@type":"PropertyValue","name":"Burn Rate","value":"2.5% of every transfer"},
-        {"@type":"PropertyValue","name":"Pool Fee","value":"1% of every transfer"},
+        {"@type":"PropertyValue","name":"Burn Rate","value":"2.5% of each standard transfer between non-exempt addresses"},
+        {"@type":"PropertyValue","name":"Pool Fee","value":"1% of each standard transfer between non-exempt addresses"},
         {"@type":"PropertyValue","name":"On-chain Symbol","value":"IFR"},
         {"@type":"PropertyValue","name":"Social Cashtag","value":"$IFRp"},
         {"@type":"PropertyValue","name":"CommitmentVault","value":"Live self-service locks on Ethereum Mainnet"},
@@ -1410,8 +1410,8 @@
   <div class="container">
     <div class="reveal">
       <div class="hero-eyebrow"><span class="dot"></span> Deflationary ERC-20 · Ethereum Mainnet · Verified</div>
-      <h1>A token that grows <em>scarcer</em> with every transaction.</h1>
-      <p class="sub">Inferno ($IFRp on socials) is a deflationary utility token. Lock IFR for access across an ecosystem of products without a recurring subscription; access remains active while each product&rsquo;s required IFR stays locked and that integration remains available. Every transfer permanently burns 2.5% of the transferred amount.</p>
+      <h1>A token designed to grow <em>scarcer</em> through standard transfers.</h1>
+      <p class="sub">Inferno ($IFRp on socials) is a deflationary utility token. Lock IFR for access across an ecosystem of products without a recurring subscription; access remains active while each product&rsquo;s required IFR stays locked and that integration remains available. Every standard transfer between non-exempt addresses permanently burns 2.5% of the transferred amount.</p>
       <p class="ticker-note"><strong>On-chain symbol: IFR.</strong> Social cashtag: <strong>$IFRp</strong>. The social cashtag helps avoid unrelated ticker collisions; contracts, token lists, wallets and DEX pools may still display IFR.</p>
       <div class="hero-actions">
         <a class="btn btn-primary" href="#how">Lock IFR for access</a>
@@ -1615,15 +1615,15 @@
     <div class="what-grid">
       <div class="what-text reveal">
         <p class="section-label">What is Inferno</p>
-        <h2 class="section-title">A token that gets scarcer with every transaction</h2>
+        <h2 class="section-title">A token that gets scarcer through standard transfers</h2>
         <blockquote class="dante-quote">
           <p>&bdquo;Like in Dante&rsquo;s Inferno, fire purifies what passes through it.<br>
-          With every transaction, 2.5% burns &mdash; forever.<br>
+          With every standard transfer between non-exempt addresses, 2.5% burns &mdash; forever.<br>
           What remains is purer, scarcer, stronger.<br>
           That is IFR.&ldquo;</p>
         </blockquote>
         <p>
-          Inferno is a <strong>deflationary ERC-20 token</strong> built on Ethereum. Its on-chain symbol is IFR; social posts use $IFRp. Every transfer
+          Inferno is a <strong>deflationary ERC-20 token</strong> built on Ethereum. Its on-chain symbol is IFR; social posts use $IFRp. Every standard transfer between non-exempt addresses
           automatically burns 2.5% of the amount, permanently reducing the total supply. An additional 1%
           goes to the protocol pool.
         </p>
@@ -1840,7 +1840,7 @@ render();
       <p class="section-label">Tokenomics</p>
       <img src="assets/ifr_icon_256.png" alt="IFR Token" class="token-symbol">
       <h2 class="section-title">Designed to be deflationary by default</h2>
-      <p class="section-desc">Every transfer burns tokens permanently. The supply only goes down. No inflation, no minting after launch.</p>
+      <p class="section-desc">Every standard transfer between non-exempt addresses burns tokens permanently. The supply only goes down. No inflation, no minting after launch.</p>
     </div>
     <div class="tokenomics-grid">
       <div class="fee-structure reveal">
@@ -1872,13 +1872,13 @@ render();
         <div class="fair-launch-badge">
           Fair Launch &mdash; No Presale, No VC, Community First
         </div>
-        <div class="reveal" style="margin-top:20px;padding:20px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);max-width:700px;margin-left:auto;margin-right:auto;text-align:center;">
+        <div style="margin-top:20px;padding:20px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);max-width:700px;margin-left:auto;margin-right:auto;text-align:center;">
           <strong style="color:var(--accent);">No Presale. No VC. No IDO.</strong>
           <span style="color:var(--text-muted);margin-left:12px;">Direct Uniswap V2 listing. Team tokens vested 4 years.</span>
           <a href="wiki/fair-launch.html" style="color:var(--accent);margin-left:8px;">→ Fair Launch Statement</a>
         </div>
-        <div class="reveal" style="margin-top:32px;padding:24px;background:#fffaf2;border:1px solid #e4d8c7;border-radius:var(--radius);box-shadow:0 14px 34px rgba(85,65,42,0.08);">
-          <p style="text-align:center;font-size:13px;color:#6f675d;margin-bottom:16px;text-transform:uppercase;letter-spacing:0.05em;">Every Transfer Burns IFR Permanently</p>
+        <div style="margin-top:32px;padding:24px;background:#fffaf2;border:1px solid #e4d8c7;border-radius:var(--radius);box-shadow:0 14px 34px rgba(85,65,42,0.08);">
+          <p style="text-align:center;font-size:13px;color:#6f675d;margin-bottom:16px;text-transform:uppercase;letter-spacing:0.05em;">Every Standard Transfer Burns IFR Permanently</p>
           <div style="display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;font-size:14px;">
             <div style="padding:10px 16px;background:#f4eadb;border:1px solid #ddceb9;border-radius:8px;color:#211c17;font-weight:bold;">10,000 IFR sent</div>
             <div style="color:#8c8273;font-size:20px;">&rarr;</div>
@@ -1889,7 +1889,11 @@ render();
             <div style="padding:10px 16px;background:#eef3f5;border:1px solid #d3dde2;border-radius:8px;color:#4b6473;font-weight:bold;">100 IFR &rarr; pool</div>
           </div>
         </div>
-        <div class="reveal" style="margin-top:18px;padding:18px 20px;background:#fffaf2;border:1px solid #e4d8c7;border-radius:var(--radius);box-shadow:0 14px 34px rgba(85,65,42,0.08);text-align:left;">
+        <div style="margin-top:18px;padding:20px;background:#edf5ef;border:1px solid #b9d1bf;border-left:4px solid #2f6a45;border-radius:var(--radius);color:#243d2e;">
+          <div style="font-size:12px;text-transform:uppercase;letter-spacing:0.05em;font-weight:800;color:#2f6a45;margin-bottom:8px;">Exchange fee policy approved</div>
+          <p style="font-size:14px;line-height:1.6;margin:0;">Approved by the five-member Core Developer and Keyholder Council on 26.08.2026 at 00:17 MET by a 4-1 vote. Transfers to or from an officially verified CEX address become fully burn- and pool-fee-free after that exact address is activated through TreasurySafe 3-of-5 Governance and the 48-hour timelock. <strong>No CEX address is currently active.</strong> Every activation and revocation will be published on-chain and in the public register. <a href="wiki/fee-design.html#cex-fee-policy" style="color:#24563a;font-weight:700;">Read the full policy &rarr;</a></p>
+        </div>
+        <div style="margin-top:18px;padding:18px 20px;background:#fffaf2;border:1px solid #e4d8c7;border-radius:var(--radius);box-shadow:0 14px 34px rgba(85,65,42,0.08);text-align:left;">
           <div style="font-size:12px;color:#6f675d;text-transform:uppercase;letter-spacing:0.05em;font-weight:700;margin-bottom:10px;">Protocol Locked Unlock Paths</div>
           <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:8px 14px;font-size:12px;line-height:1.45;color:#3b3128;">
             <div><strong>LP Reserve Safe:</strong> multisig governed, no automatic unlock.</div>
@@ -2745,7 +2749,7 @@ if (isLocked) {
 
       <p style="text-align:center;color:#888;font-size:0.93rem;margin-bottom:40px;">
       Quick answers about IFR / $IFRp &mdash;
-      <a href="wiki/faq.html" style="color:#ff6600;text-decoration:none;font-weight:700;">view all 76 questions in the full Wiki FAQ &rarr;</a>
+      <a href="wiki/faq.html" style="color:#ff6600;text-decoration:none;font-weight:700;">view all 77 questions in the full Wiki FAQ &rarr;</a>
     </p>
 
     <!-- 2-column accordion grid -->
@@ -2756,7 +2760,7 @@ if (isLocked) {
 
     <!-- CTA -->
     <div style="text-align:center;margin-top:44px;display:flex;flex-direction:column;align-items:center;gap:14px;">
-      <a href="wiki/faq.html" style="display:inline-block;padding:14px 40px;background:linear-gradient(135deg,#ff6600,#cc3300);color:#fff;font-size:0.88rem;letter-spacing:1px;border-radius:6px;text-decoration:none;font-weight:700;">ALL 76 QUESTIONS &amp; ANSWERS &rarr;</a>
+      <a href="wiki/faq.html" style="display:inline-block;padding:14px 40px;background:linear-gradient(135deg,#ff6600,#cc3300);color:#fff;font-size:0.88rem;letter-spacing:1px;border-radius:6px;text-decoration:none;font-weight:700;">ALL 77 QUESTIONS &amp; ANSWERS &rarr;</a>
       <span style="color:#555;font-size:0.82rem;">Tokenomics &middot; Security &middot; Governance &middot; Bootstrap &middot; DAO &middot; Developer FAQ</span>
     </div>
   </div>
@@ -2766,7 +2770,7 @@ if (isLocked) {
 (function(){
   var faqs=[
     {q:"What is IFR / $IFRp and what makes it deflationary?",
-     a:"IFR is the on-chain token symbol. $IFRp is used for social posts. Fixed supply of 1 billion IFR \u2014 no minting ever. Every transfer burns 2.5% of the transferred amount permanently. A buyback loop from protocol fees adds further pressure. Supply can only decrease over time."},
+     a:"IFR is the on-chain token symbol. $IFRp is used for social posts. Fixed supply of 1 billion IFR \u2014 no minting ever. Every standard transfer between non-exempt addresses burns 2.5% of the transferred amount permanently. Verified fee-exempt paths, including the IFR/WETH pair and future activated CEX addresses, bypass the transfer fee. A buyback loop from protocol fees adds further pressure. Supply can only decrease over time."},
     {q:"Can the team rug the liquidity?",
      a:"BootstrapVaultV3 has no admin or LP withdrawal function. Team.Finance was not configured on Mainnet; the LP tokens created by finalise() remain in the vault and are not withdrawable by the team. <a href='wiki/faq.html#rugpull'>Full details \u2192</a>"},
     {q:"What is the lock mechanism?",
