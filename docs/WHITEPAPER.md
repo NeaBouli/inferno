@@ -6,8 +6,8 @@ Core idea: Users lock IFR tokens once and receive premium access to
 builder products without recurring subscription payments. Access remains
 active while the product's required IFR stays locked and that integration
 remains available.
-Every transfer automatically burns 2.5% of tokens permanently.
-The supply decreases with every transaction.
+Every standard transfer between non-exempt addresses automatically burns 2.5%
+of tokens permanently. The supply decreases as those transfers occur.
 
 3 sentences for everyone:
 - For users: Lock once and keep access active while the required IFR remains locked and the product integration remains available.
@@ -41,11 +41,11 @@ And as long as the deposit is in place, you're in.
 
 ## 3. Deflationary Mechanism
 
-Every IFR transfer automatically burns tokens:
+Every standard IFR transfer between non-exempt addresses automatically applies:
 - 2.0% burned from sender (permanent)
 - 0.5% burned from recipient (permanent)
 - 1.0% to protocol pool
-- Total: 3.5% per transfer, of which 2.5% is real permanent burn
+- Total: 3.5% per standard non-exempt transfer, of which 2.5% is real permanent burn
 
 Maximum fee: 5% (enforced in the smart contract, immutable)
 New minting: Impossible (no mint function in the contract)
@@ -62,9 +62,10 @@ while penalizing frequent transferring:
 
 - **Locking = 0% fee**: IFRLock, LiquidityReserve, BuybackVault, BurnReserve,
   and PartnerVault are feeExempt. Lock/unlock operations incur no fees.
-- **Transferring = 3.5% fee**: Every normal transfer burns tokens.
-- **Result**: Those who lock and hold IFR lose nothing. Those who trade
-  constantly lose 3.5% on every transfer.
+- **Standard transferring = 3.5% fee**: Transfers between two non-exempt
+  addresses apply the token fee.
+- **Result**: Those who lock and hold IFR lose nothing. Standard transfers
+  between non-exempt addresses apply the 3.5% fee.
 
 ### Fee-Exempt Addresses
 
@@ -77,12 +78,21 @@ while penalizing frequent transferring:
 | PartnerVault | Yes | Reward payout without loss |
 | FeeRouterV1 | Yes | Fee routing without complication |
 
-### CEX Compatibility
+### Exchange Fee-Exemption Policy
 
-Fee-on-transfer is compatible with centralized exchanges (CEX) but requires
-adaptation: the CEX must check the actually received amount
-(balanceOf after transfer), not the sent amount.
-Integration guide: docs/wiki/fee-design.html
+On 26 August 2026 at 00:17 MET, the five-member Core Developer and Keyholder
+Council approved full fee exemption by a 4-1 vote for transfers to and from officially verified
+centralized-exchange operational addresses. Once an exact CEX address is
+activated through TreasurySafe 3-of-5 Governance and the 48-hour timelock,
+transfers where that address is sender or recipient bypass the entire 3.5%
+fee.
+
+No CEX address is currently active on-chain. Each exchange must first provide
+its exact Ethereum addresses and prove control. Internal exchange trades are
+off-chain ledger movements and never invoke the IFR token contract. The
+public address register and activation process are defined in
+`docs/EXCHANGE_FEE_EXEMPTION_POLICY.md`; integration details remain in
+`docs/wiki/fee-design.html`.
 
 ---
 
@@ -206,7 +216,7 @@ Integration: 5 lines of code. Fully decoupled.
 - Team Vesting: 150,000,000 IFR (15.03%) — 4 years, 0 released
 - Treasury/Community: 169,387,995 IFR (16.97%)
 - PartnerVault: 40,000,000 IFR (4.01%)
-- Burned: 2,000,425+ IFR (0.20%+) — increases with every transfer
+- Burned: 2,000,425+ IFR (0.20%+) — increases with standard non-exempt transfers
 
 ### Deflation in Action
 Since deployment, 2,000,425+ IFR have been permanently destroyed.

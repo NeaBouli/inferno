@@ -128,7 +128,8 @@ governance activation gate is complete.
 - [ ] Cross-protocol integrations
 - [ ] Advanced analytics dashboard
 - [ ] Community grants program
-- [ ] CEX integration support (fee-exempt listings)
+- [x] CEX fee-exemption policy approved (26.08.2026, 00:17 MET, vote 4-1)
+- [ ] Per-exchange address verification and governance activation (no CEX address active yet)
 - [ ] Ecosystem fund
 
 ---
@@ -139,4 +140,4 @@ governance activation gate is complete.
 See [Mainnet Checklist](MAINNET_CHECKLIST.md) for detailed progress.
 
 ---
-*Last updated: 22 August 2026*
+*Last updated: 26 August 2026*

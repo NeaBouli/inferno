@@ -5,19 +5,19 @@
 | Parameter | Value |
 |-----------|-------|
 | Initial Supply | 1,000,000,000 IFR |
-| Burn Rate | 2.5% per transfer |
-| Pool Fee | 1.0% per transfer |
-| Total Transfer Fee | 3.5% |
+| Default Burn Rate | 2.5% per standard transfer between non-exempt addresses |
+| Default Pool Fee | 1.0% per standard transfer between non-exempt addresses |
+| Default Total Transfer Fee | 3.5%; bypassed when either endpoint is fee-exempt |
 | Max Fee Cap | 5.0% (hard-coded) |
 | Decimals | 9 |
 
 ## Deflation Mechanism
 
-Every transfer permanently burns 2.5%:
+Every standard transfer between non-exempt addresses permanently burns 2.5%:
 - Transfer: 1,000 IFR
 - Recipient receives: 965 IFR (after 3.5% fee)
 - Burned: 25 IFR (permanent)
-- Pool: 10 IFR (BuybackVault/BuilderPool)
+- Pool: 10 IFR (routed to FeeRouterV1)
 
 ### Deflation Curve (Simulation)
 

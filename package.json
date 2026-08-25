@@ -32,6 +32,7 @@
     "test:wiki-heads": "node scripts/test-wiki-head-integrity.cjs",
     "test:wiki-rag": "node scripts/build-wiki-rag.js --check",
     "test:content-trust": "node scripts/test-content-trust.cjs",
+    "test:cex-fee-policy": "node scripts/test-cex-fee-policy.cjs",
     "test:status-baseline": "node scripts/test-status-baseline.cjs",
     "test:functionality-status": "node scripts/test-functionality-status.cjs",
     "test:docs-ci": "node scripts/test-docs-workflow.cjs",

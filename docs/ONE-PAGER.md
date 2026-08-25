@@ -20,7 +20,7 @@ builder benefits, creator content, and protocol discounts.
 ## Tokenomics
 
 Deflationary + Utility:
-- Every transfer permanently burns 2.5%
+- Every standard transfer between non-exempt addresses permanently burns 2.5%
 - 1% goes to the configured protocol pool-fee receiver
 - Lock -> tier access without a yield promise; token, contract, market and product-availability risks still apply
 - PartnerVault rewards are currently inactive and require governance registration, allocation and authorized processing; no fixed active reward rate is promised

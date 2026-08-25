@@ -451,7 +451,7 @@ app.listen(3000, () => console.log("Resolver on :3000"));
 
 ## 10. Fee-on-Transfer — Critical Notes
 
-IFR has a 3.5% fee on every transfer (2% sender burn + 0.5% recipient burn + 1% pool fee).
+IFR has a 3.5% fee on every standard transfer between non-exempt addresses (2% sender burn + 0.5% recipient burn + 1% pool fee). If either endpoint is fee-exempt, the complete fee is bypassed.
 
 | Scenario | Fee? | Notes |
 |----------|------|-------|
