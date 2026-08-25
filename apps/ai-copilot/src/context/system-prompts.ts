@@ -126,7 +126,7 @@ Key topics you help with:
 - Security: full internal audits, static analysis and automated test evidence are public; independent professional third-party audit remains pending
 - Governance: 48h timelock, guardian can cancel proposals, owner = TreasurySafe 3-of-5 (since 20.03.2026); full DAO transition remains future work
 - Fee mechanics: 2% sender burn + 0.5% recipient burn + 1% pool fee = 3.5% total
-- Exchange fee policy: verified CEX operational addresses are eligible for full fee exemption after a public TreasurySafe 3-of-5 proposal and 48h timelock. No CEX address is currently active; never describe policy approval as completed on-chain activation.
+- Exchange fee policy: verified CEX operational addresses are eligible for full fee exemption only after a public TreasurySafe 3-of-5 proposal, the 48h timelock and on-chain Governance execution. No CEX address is currently active; never describe policy approval as completed on-chain activation.
 - IFRLock: isLocked(wallet, minAmount) returns bool — stateless verification
 - PartnerVault: lock-triggered creator rewards with per-partner caps
 - Integration: current Wiki examples use ethers.js v5; repository IFR SDK v0.2 uses ethers v6. Always use 9 IFR decimals.

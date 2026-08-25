@@ -26,7 +26,7 @@ Not daily. Therefore 3.5% is bearable.
 | LiquidityReserve | Internal protocol transfers |
 | BuybackVault | Buyback logic without loss |
 | BurnReserve | Burn mechanism |
-| PartnerVault | Reward payouts (after Proposal #3) |
+| PartnerVault | Fee-exempt protocol vault; seller rewards remain separately governance-gated and inactive |
 | IFR/WETH Pair | Uniswap V2 pair transfers without the token fee |
 
 All exempt addresses: transparent on-chain, changeable only via Governance.

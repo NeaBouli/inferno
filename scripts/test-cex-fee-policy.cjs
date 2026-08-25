@@ -2,6 +2,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const assert = require('assert');
 
 const root = path.resolve(__dirname, '..');
 
@@ -74,8 +75,12 @@ const currentPublicSurfaces = [
   'docs/llms.txt',
   'docs/TOKENOMICS_MODEL.md',
   'docs/ONE-PAGER.md',
+  'docs/FEE_DESIGN.md',
+  'docs/ROADMAP.md',
   'docs/web3/index.html',
   'docs/wiki/faq.html',
+  'docs/wiki/fee-design.html',
+  'docs/wiki/roadmap.html',
   'docs/wiki/transparency.html',
   'docs/wiki/protocol-plan.html',
   'docs/wiki/press-kit.html',
@@ -97,9 +102,21 @@ for (const file of currentPublicSurfaces) {
   }
 }
 
+function hasObsoleteSlippageGuidance(source) {
+  return source.split(/\r?\n/).some((line) => {
+    const plain = line.replace(/<[^>]+>/g, ' ');
+    if (/\b(?:no|not)\s+(?:fixed\s+)?4%/i.test(plain)) return false;
+    return /4%[^\n]{0,100}3\.5%[^\n]{0,30}fee/i.test(plain)
+      || /3\.5%[^\n]{0,30}fee[^\n]{0,100}4%[^\n]{0,30}slippage/i.test(plain);
+  });
+}
+
+assert.equal(hasObsoleteSlippageGuidance('Set 4% because of the 3.5% fee.'), true);
+assert.equal(hasObsoleteSlippageGuidance('The 3.5% fee requires 4% slippage.'), true);
+assert.equal(hasObsoleteSlippageGuidance('There is no fixed 4% token-fee minimum.'), false);
+
 for (const file of ['docs/FEE_DESIGN.md', 'docs/wiki/fee-design.html', 'docs/wiki/faq.html']) {
-  const source = read(file);
-  if (/4%[^\n<]{0,80}3\.5% fee/i.test(source)) {
+  if (hasObsoleteSlippageGuidance(read(file))) {
     throw new Error(`${file} still derives a 4% Uniswap slippage setting from the 3.5% token fee`);
   }
 }

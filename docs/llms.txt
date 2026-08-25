@@ -28,9 +28,9 @@ IFR includes an AI Copilot assistant. Free users can ask general protocol questi
 - Genesis Supply: 1,000,000,000 IFR (1 Billion)
 - Current Supply: 997,673,879.091903855 IFR at block 25812380 (~2.326M burned)
 - Decimals: 9
-- Burn Rate: 2.5% per transfer (permanent)
-- Pool Fee: 1.0% per transfer (to protocol)
-- Total Fee: 3.5% (hard cap: 5.0%)
+- Default Burn Rate: 2.5% per standard transfer between non-exempt addresses (permanent)
+- Default Pool Fee: 1.0% per standard transfer between non-exempt addresses (to FeeRouterV1)
+- Default Total Fee: 3.5% per standard transfer between non-exempt addresses (hard cap: 5.0%); fully bypassed when either endpoint is fee-exempt
 - Governance: 48-hour timelock, no instant changes
 - Multisig: All Safes 3-of-5 (5 independent signers)
 - Bootstrap Event: ENDED and finalized on June 5, 2026. Uniswap V2 IFR/WETH liquidity is live.
