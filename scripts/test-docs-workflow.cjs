@@ -10,6 +10,9 @@ const workflow = fs.readFileSync(workflowPath, "utf8");
 
 for (const watchedPath of [
   "docs/**",
+  "internal/operations/TODO.md",
+  "internal/operations/TODO.html",
+  "reports/*.md",
   "apps/ai-copilot/src/context/ifr-knowledge.ts",
   "apps/ai-copilot/src/context/wiki-content.json",
   "scripts/build-wiki-rag.js",
@@ -17,8 +20,11 @@ for (const watchedPath of [
   "scripts/test-status-baseline.cjs",
   "scripts/test-functionality-status.cjs",
   "scripts/test-docs-workflow.cjs",
+  "scripts/test-workflow-triggers.cjs",
+  "scripts/test-roadmap-status-sync.cjs",
   "tests/browser/**",
   "package.json",
+  "package-lock.json",
 ]) {
   assert.ok(
     workflow.includes(`- '${watchedPath}'`),
@@ -28,6 +34,8 @@ for (const watchedPath of [
 
 for (const command of [
   "npm run test:docs-ci",
+  "npm run test:workflow-triggers",
+  "npm run test:roadmap-status-sync",
   "npm run test:content-trust",
   "npm run test:status-baseline",
   "npm run test:functionality-status",

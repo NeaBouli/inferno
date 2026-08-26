@@ -46,9 +46,11 @@ assert.equal(
 );
 
 const currentBaseline = [
-  "**Current engineering baseline:** 22 August 2026",
+  "**Current engineering baseline:** 26 August 2026",
+  "exact-head CI verification through `9782106a`",
   "Hardhat `3.12.0`",
   "contracts `642/642`",
+  "`24/24` passed",
   "8 low transitive development-tool findings",
   "Benefits physical device/wallet acceptance remains `1/10`",
   "LendingVault.ifrPriceWei = 0",
@@ -58,8 +60,8 @@ requireText("STATUS-REPORT.md", currentBaseline);
 requireText("docs/STATUS-REPORT.md", currentBaseline);
 
 const todo = requireText("internal/operations/TODO.md", [
-  "> Last updated: 2026-08-22 | Branch: main",
-  "CURRENT WATCHLIST — verified 2026-08-22",
+  "> Last updated: 2026-08-26 | Branch: main",
+  "CURRENT WATCHLIST — verified 2026-08-26",
   "LendingVault V1 borrow activation policy — keep disabled",
   "V1 cannot set price back to zero",
   "SEC-VLT-01 — Vault fee-exemption defense in depth",
@@ -81,10 +83,10 @@ const todo = requireText("internal/operations/TODO.md", [
   "Wallet-level Collateral Health Monitor",
   "Dependency modernization — completed 2026-07-29",
   "Ethers 6 / Hardhat 3 / Chai 6 / Node 22 migration",
-  "10 transitive low findings",
+  "8 transitive low findings",
   "Deterministic local Hardhat test network",
   "Technical: WalletConnect v2 + ethers.js v6",
-  "*Last updated: 2026-07-31*",
+  "*Last updated: 2026-08-26*",
 ]);
 assert.ok(
   !todo.includes("- [ ] Dependency modernization"),
@@ -105,8 +107,8 @@ assert.ok(
 );
 
 requireText("internal/operations/TODO.html", [
-  "Last updated: 2026-08-22",
-  "Current Watchlist &mdash; verified 2026-08-22",
+  "Last updated: 2026-08-26",
+  "Current Watchlist &mdash; verified 2026-08-26",
   "LendingVault V1 borrow activation policy",
   "V1 cannot set the price back to zero",
   "SEC-VLT-01 &mdash; Vault fee-exemption defense in depth",
@@ -136,7 +138,7 @@ assert.ok(
 requireText("BACKLOG.md", [
   "**Legacy snapshot updated for closure on 2026-07-29.**",
   "Ethers 6 / Hardhat 3 / Chai 6 / Node 22 Migration",
-  "10 transitive Low-Funde",
+  "8 transitive Low-Funde",
 ]);
 requireText("SKYWALKER.md", [
   "**Hinweis 29.07.2026:**",

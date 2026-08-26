@@ -2,6 +2,10 @@
 
 _Last updated: 2026-03-06_
 
+> **Historical snapshot:** The counts and application inventory below describe
+> the repository on 6 March 2026. Use `docs/CURRENT_FUNCTIONALITY_STATUS.md` for
+> the verified current capability and acceptance boundaries.
+
 | File | Status | Notes |
 |------|--------|-------|
 | docs/DOCS.md | OK | Project structure, 578 tests, 17 on-chain components |

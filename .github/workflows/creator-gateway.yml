@@ -1,12 +1,15 @@
 name: Creator Gateway CI
 
 on:
+  workflow_dispatch:
   push:
     paths:
       - 'apps/creator-gateway/**'
+      - '.github/workflows/creator-gateway.yml'
   pull_request:
     paths:
       - 'apps/creator-gateway/**'
+      - '.github/workflows/creator-gateway.yml'
 
 jobs:
   test:

@@ -1,6 +1,6 @@
 # IFR Project Status Report
 
-**Current engineering baseline:** 22 August 2026
+**Current engineering baseline:** 26 August 2026
 **Branch:** `main`
 **Model:** Community Fair Launch (CFLM) -- no presale
 **Ticker:** $IFR
@@ -22,10 +22,10 @@ governance-gated contract path is active.
 - Root is ESM with explicit CommonJS boundaries for legacy scripts and
   standalone test packages. Waffle, Ganache and `solidity-coverage` are no
   longer active root dependencies; native Hardhat 3 coverage is used.
-- Clean local verification from `8ff557b8`: contracts `642/642`,
+- Clean local and exact-head CI verification through `9782106a`: contracts `642/642`,
   Generator Engine `30/30`, IFR SDK `36/36`.
 - Landing/Wiki wallet browser tests `20/20` and Web3 write-path browser tests
-  `23/23` passed. The complete Benefits preflight passed.
+  `24/24` passed. The complete Benefits preflight passed.
 - Benefits physical device/wallet acceptance remains `1/10` passed and `9`
   pending; this is not represented as complete production acceptance.
 - Mainnet borrowing remains disabled with `LendingVault.ifrPriceWei = 0`.
