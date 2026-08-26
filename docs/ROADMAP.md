@@ -1,5 +1,10 @@
 # Inferno ($IFR) — Roadmap
 
+Current operational capability and acceptance boundaries are maintained in
+[`CURRENT_FUNCTIONALITY_STATUS.md`](CURRENT_FUNCTIONALITY_STATUS.md). Completed
+historical milestones below do not imply that every later production or
+governance activation gate is complete.
+
 ## Phase 1: Foundation & Testnet (Q4 2025 - Q1 2026) — DONE
 
 ### Smart Contracts
@@ -81,6 +86,11 @@
       Scope: customer wallet, ETH/IFR swap, IFR locking, QR proof, seller scanner, seller discount rules, and verified seller rewards through PartnerVault after governance approval.
       Current implementation: the live PWA includes seller profile/rule/history flows, customer IFRLock and proof flows, POS helper, owner-managed checkout operators and product catalog. The deployed M4 foundation adds applications, live governance linkage checks, an atomic reward outbox and read-only vesting status; no Mainnet seller/partner or reward caller is active. Remaining scope includes governance activation/submission, embedded-wallet decision and real-device acceptance.
 - [ ] Guarded buyback automation (BuybackVault activation after 60 days)
+- [ ] Vault fee-exemption defense in depth: automated invariant monitoring and
+      negative regression tests for CommitmentVault and LendingVault. A future
+      V2 must combine balance-diff inflow accounting with runtime exemption
+      guards that fail closed. Current Mainnet V1 accounting was healthy at
+      block 25811214. See [hardening status](VAULT_FEE_EXEMPT_HARDENING.md).
 - [ ] Developer SDK publication + complete documentation (local `ifr-sdk` v0.2.0 is
       implemented and its tarball is installed with locked `npm ci` and consumer-tested for
       CommonJS, ESM named-import interoperability and TypeScript on Node.js 20/22;
@@ -118,7 +128,8 @@
 - [ ] Cross-protocol integrations
 - [ ] Advanced analytics dashboard
 - [ ] Community grants program
-- [ ] CEX integration support (fee-exempt listings)
+- [x] CEX fee-exemption policy approved (26.08.2026, 00:17 MET, vote 4-1)
+- [ ] Per-exchange address verification and governance activation (no CEX address active yet)
 - [ ] Ecosystem fund
 
 ---
@@ -129,4 +140,4 @@
 See [Mainnet Checklist](MAINNET_CHECKLIST.md) for detailed progress.
 
 ---
-*Last updated: 28 July 2026*
+*Last updated: 26 August 2026*

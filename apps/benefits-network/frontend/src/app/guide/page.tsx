@@ -1,5 +1,10 @@
 import type { Metadata } from 'next';
 import { AppShell } from '@/components/AppShell';
+import { hasValidWalletConnectProjectId } from '@/lib/walletConnectProjectId.mjs';
+
+const hasWalletConnectProjectId = hasValidWalletConnectProjectId(
+  process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID,
+);
 
 export const metadata: Metadata = {
   title: 'Customer & Seller Guide | IFR Benefits',
@@ -10,7 +15,7 @@ export const metadata: Metadata = {
 const customerSteps = [
   {
     title: 'Install or open the app',
-    body: 'Use shop.ifrunit.tech in the browser, or add it to the home screen on iPhone, iPad or Android when the browser offers PWA install.',
+    body: 'Use shop.ifrunit.tech in the browser, or add it to the home screen on iPhone, iPad or supported Android devices when the browser offers PWA install. Android 9 and older should remain in browser mode.',
   },
   {
     title: 'Connect an Ethereum wallet',
@@ -48,6 +53,10 @@ const sellerSteps = [
     body: 'Open /b/:businessId on the counter device. Scan or paste the customer pass, select the intended active rule and sign its one-time binding. Compatible seller-issued QR sessions remain available.',
   },
   {
+    title: 'Keep rewards optional',
+    body: 'Registering a seller profile never enables rewards; they stay off until the owner wallet signs a separate reward application, and an owner-signed disable stops them at any time. Sellers that want a separate standard EVM payout account (StealthX-style setups) prove control of that account with its own fresh signature before governance compares it on-chain; smart-contract wallet proof is not supported yet. Sellers that opt out entirely (VLABS-style setups) simply never apply.',
+  },
+  {
     title: 'Review recent customer checks',
     body: 'Load owner-only session history in pages of 50 to see QR status, masked verified wallet, locked amount and rejection reason, or create a browser-local masked full CSV export.',
   },
@@ -67,6 +76,7 @@ const developerItems = [
   ['Customer proof', 'GET /api/sessions/:id/challenge, then POST /api/attest with the customer signature.'],
   ['Customer history', 'POST /api/customer/history/challenge, sign once, exchange at /authorize, then use the memory-only read token for signer-bound snapshot pages.'],
   ['Redeem', 'Request a one-time sessions:redeem challenge bound to the session ID, sign it, then POST /api/sessions/:id/redeem with x-ifr-nonce.'],
+  ['Seller rewards', 'Rewards are off by default. rewards:apply, rewards:disable and rewards:reward-wallet each use a fresh business-bound nonce; confirming a separate payout wallet also requires that wallet to sign its own one-time proof for the same business and scope.'],
 ];
 
 function StepList({ title, eyebrow, steps }: { title: string; eyebrow: string; steps: typeof customerSteps }) {
@@ -167,7 +177,9 @@ export default function GuidePage() {
             <p className="text-xs font-black uppercase tracking-[0.18em] text-green-100/80">Wallet support</p>
             <h2 className="mt-2 text-3xl font-black text-white">Use the wallet your browser exposes.</h2>
             <p className="mt-4 text-sm leading-7 text-stone-300">
-              Production checks browser-injected Ethereum wallets first and falls back to Coinbase Wallet when no injected provider is available. Customer, seller and checkout screens also let you choose an exposed connector explicitly. The full WalletConnect modal for Rainbow, Trust, OKX and similar wallets still needs a production WalletConnect Project ID before it can be enabled without brittle failures.
+              {hasWalletConnectProjectId
+                ? 'Production checks browser-injected Ethereum wallets first, then opens WalletConnect when no injected provider is available. Customer, seller and checkout screens keep WalletConnect and Coinbase Wallet visible as explicit choices for MetaMask, Trust, Rainbow, OKX and hundreds of compatible wallets.'
+                : 'Production checks browser-injected Ethereum wallets first. Customer, seller and checkout screens keep Coinbase Wallet visible as an explicit choice; the full WalletConnect modal for Rainbow, Trust, OKX and similar wallets requires its production WalletConnect Project ID.'}
             </p>
             <p className="mt-3 text-sm leading-7 text-stone-300">
               New users should create or import their wallet inside a trusted wallet app first. The Benefits Network is non-custodial: it never asks for a seed phrase, never stores private keys, and only requests wallet signatures or explicit IFR approve/lock transactions.
@@ -191,7 +203,7 @@ export default function GuidePage() {
               </div>
               <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
                 <strong className="text-white">Seller signatures</strong>
-                <p className="mt-1">Short-lived server-issued messages for profile, rules, session history and redeem actions.</p>
+                <p className="mt-1">Short-lived server-issued messages for profile, rules, session history, redeem and reward opt-in or opt-out actions.</p>
               </div>
             </div>
           </div>

@@ -2,13 +2,13 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import {
-  useAccount,
   useBalance,
   useReadContract,
   useSwitchChain,
   useWaitForTransactionReceipt,
   useWriteContract,
 } from 'wagmi';
+import { useHydratedAccount } from '@/hooks/useHydratedAccount';
 import { formatEther, formatUnits, parseUnits } from 'viem';
 import { WalletConnectControl } from '@/components/WalletConnectControl';
 import { SwapRiskNotice } from '@/components/SwapRiskNotice';
@@ -32,7 +32,7 @@ type RecommendedAction = {
   detail: string;
   disabledReason: string;
   externalHref?: string;
-  action?: 'retry-eth' | 'switch-chain';
+  action?: 'retry-wallet' | 'switch-chain';
 };
 
 function walletAssetError(error: unknown) {
@@ -76,8 +76,12 @@ function getTier(lockedRaw?: bigint) {
     .find((tier) => lockedRaw >= BigInt(tier.amount) * BigInt(10) ** BigInt(IFR_DECIMALS)) ?? null;
 }
 
+function formatContractRead(error: boolean, raw?: bigint) {
+  return error ? 'Unavailable' : typeof raw === 'bigint' ? formatIFR(raw) : 'Reading...';
+}
+
 export function WalletStatus() {
-  const { address, chainId, connector, isConnected } = useAccount();
+  const { address, chainId, connector, isConnected } = useHydratedAccount();
   const [lockAmount, setLockAmount] = useState('1000');
   const [lockMessage, setLockMessage] = useState('');
   const [lockError, setLockError] = useState('');
@@ -123,10 +127,22 @@ export function WalletStatus() {
     args: address && IFRLOCK_ADDRESS ? [address, IFRLOCK_ADDRESS] : undefined,
     query: { enabled: Boolean(address && chainReady && IFR_TOKEN_ADDRESS && IFRLOCK_ADDRESS) },
   });
-  const lockedRaw = chainReady ? lockedBalance.data as bigint | undefined : undefined;
-  const allowanceRaw = chainReady ? allowance.data as bigint | undefined : undefined;
-  const ifrRaw = chainReady ? ifrBalance.data as bigint | undefined : undefined;
-  const ethRaw = chainReady ? ethBalance.data?.value : undefined;
+  const contractReadsFailed = Boolean(
+    chainReady && (ifrBalance.isError || lockedBalance.isError || allowance.isError)
+  );
+  const lockedRaw = chainReady && !lockedBalance.isError ? lockedBalance.data as bigint | undefined : undefined;
+  const allowanceRaw = chainReady && !allowance.isError ? allowance.data as bigint | undefined : undefined;
+  const ifrRaw = chainReady && !ifrBalance.isError ? ifrBalance.data as bigint | undefined : undefined;
+  const ethRaw = chainReady && !ethBalance.isError ? ethBalance.data?.value : undefined;
+  const ifrBalanceReady = typeof ifrRaw === 'bigint';
+  const lockedBalanceReady = typeof lockedRaw === 'bigint';
+  const allowanceReady = typeof allowanceRaw === 'bigint';
+  const contractReadsChecking = Boolean(
+    chainReady && !contractReadsFailed && (!ifrBalanceReady || !lockedBalanceReady || !allowanceReady)
+  );
+  const contractReadsReady = Boolean(
+    chainReady && !contractReadsFailed && !contractReadsChecking
+  );
   const amountRaw = useMemo(() => {
     try {
       const normalized = lockAmount.trim().replace(/,/g, '');
@@ -146,6 +162,11 @@ export function WalletStatus() {
   const ethKnownEmpty = Boolean(isConnected && ethBalanceReady && !hasEth);
   const canPayGas = Boolean(chainReady && ethBalanceReady && hasEth);
   const hasContracts = Boolean(IFR_TOKEN_ADDRESS && IFRLOCK_ADDRESS);
+  const readCheckStatus = contractReadsFailed
+    ? 'Check failed'
+    : contractReadsChecking
+      ? 'Checking'
+      : '';
   const amountValid = amountRaw > BigInt(0);
   const hasEnoughIFR = Boolean(ifrRaw && ifrRaw >= amountRaw);
   const hasEnoughAllowance = Boolean(allowanceRaw && allowanceRaw >= amountRaw);
@@ -175,6 +196,19 @@ export function WalletStatus() {
             disabledReason: '',
             action: 'switch-chain',
           }
+        : contractReadsChecking
+          ? {
+              label: 'Reading IFR status',
+              detail: 'Reading IFR balance, lock and allowance from Ethereum.',
+              disabledReason: 'Wait for wallet checks.',
+            }
+          : contractReadsFailed
+            ? {
+                label: 'Retry wallet checks',
+                detail: 'IFR reads failed. Retry before any transaction.',
+                disabledReason: '',
+                action: 'retry-wallet',
+              }
         : ethBalanceChecking
           ? {
               label: 'Checking ETH balance',
@@ -183,10 +217,10 @@ export function WalletStatus() {
             }
           : ethBalanceFailed
             ? {
-                label: 'Retry ETH check',
-                detail: 'The ETH balance could not be read. Retry before approving, locking or unlocking IFR.',
+                label: 'Retry wallet checks',
+                detail: 'ETH could not be read. Retry before any transaction.',
                 disabledReason: '',
-                action: 'retry-eth',
+                action: 'retry-wallet',
               }
             : ethKnownEmpty
               ? {
@@ -227,8 +261,12 @@ export function WalletStatus() {
     ? 'Connect wallet'
     : wrongChain
       ? (CHAIN_ID === 1 ? 'Switch to Ethereum Mainnet' : `Switch to chain ${CHAIN_ID}`)
-      : hasCustomerLock
-        ? 'Ready for checkout'
+      : contractReadsChecking
+          ? 'Reading IFR status'
+          : contractReadsFailed
+            ? 'Check wallet status'
+            : hasCustomerLock
+              ? 'Ready for checkout'
         : ethBalanceChecking
           ? 'Checking ETH balance'
           : ethKnownEmpty
@@ -244,8 +282,12 @@ export function WalletStatus() {
       ? `The connected wallet is on ${chainId ? `chain ${chainId}` : 'an unknown network'}. Contract reads and transactions are disabled until you switch to ${
           CHAIN_ID === 1 ? 'Ethereum Mainnet' : `chain ${CHAIN_ID}`
         }.`
-      : hasCustomerLock
-        ? `Eligible for typical ${MIN_CUSTOMER_LOCK.toLocaleString('en-US')} IFR customer rules. Some sellers may require a higher tier.`
+      : contractReadsChecking
+          ? 'Reading IFR, IFRLock and allowance data from Ethereum Mainnet.'
+          : contractReadsFailed
+            ? 'IFR contract data is unavailable. Retry before any transaction.'
+            : hasCustomerLock
+              ? `Eligible for typical ${MIN_CUSTOMER_LOCK.toLocaleString('en-US')} IFR customer rules. Some sellers may require a higher tier.`
         : ethBalanceChecking
           ? 'Confirming ETH network-fee readiness before enabling wallet transactions.'
           : ethKnownEmpty
@@ -272,11 +314,15 @@ export function WalletStatus() {
     },
     {
       label: 'IFR in wallet',
-      status: wrongChain ? 'Blocked' : hasIFR || hasCustomerLock ? 'Ready' : 'Needed',
+      status: wrongChain
+        ? 'Blocked'
+        : readCheckStatus || (hasIFR || hasCustomerLock ? 'Ready' : 'Needed'),
     },
     {
       label: `${MIN_CUSTOMER_LOCK.toLocaleString('en-US')}+ IFR locked`,
-      status: wrongChain ? 'Blocked' : hasCustomerLock ? 'Ready' : 'Needed',
+      status: wrongChain
+        ? 'Blocked'
+        : readCheckStatus || (hasCustomerLock ? 'Ready' : 'Needed'),
     },
   ];
   const transactionSteps = [
@@ -342,6 +388,12 @@ export function WalletStatus() {
     setLockMessage(`Selected ${amount.toLocaleString('en-US')} IFR tier amount.`);
   }
 
+  function requireContractReads() {
+    if (contractReadsReady) return true;
+    setLockError('Refresh wallet checks before any IFR transaction.');
+    return false;
+  }
+
   async function runRecommendedAction() {
     if (!isConnected || !hasContracts) return;
     if (recommendedAction.action === 'switch-chain') {
@@ -355,9 +407,14 @@ export function WalletStatus() {
       }
       return;
     }
-    if (recommendedAction.action === 'retry-eth') {
+    if (recommendedAction.action === 'retry-wallet') {
       setLockError('');
-      await ethBalance.refetch();
+      await Promise.all([
+        ethBalance.refetch(),
+        ifrBalance.refetch(),
+        lockedBalance.refetch(),
+        allowance.refetch(),
+      ]);
       return;
     }
     if (!ethBalanceReady || ethKnownEmpty || !amountValid) return;
@@ -385,6 +442,7 @@ export function WalletStatus() {
       setLockError(`Switch this wallet to ${CHAIN_ID === 1 ? 'Ethereum Mainnet' : `chain ${CHAIN_ID}`} before approving IFR.`);
       return;
     }
+    if (!requireContractReads()) return;
     if (!amountValid) {
       setLockError('Enter a positive IFR amount.');
       return;
@@ -429,6 +487,7 @@ export function WalletStatus() {
       setLockError(`Switch this wallet to ${CHAIN_ID === 1 ? 'Ethereum Mainnet' : `chain ${CHAIN_ID}`} before locking IFR.`);
       return;
     }
+    if (!requireContractReads()) return;
     if (!amountValid) {
       setLockError('Enter a positive IFR amount.');
       return;
@@ -481,6 +540,7 @@ export function WalletStatus() {
       setLockError(`Switch this wallet to ${CHAIN_ID === 1 ? 'Ethereum Mainnet' : `chain ${CHAIN_ID}`} before unlocking IFR.`);
       return;
     }
+    if (!requireContractReads()) return;
     if (!lockedRaw || lockedRaw === BigInt(0)) {
       setLockError('No IFRLock balance is available to unlock.');
       return;
@@ -578,7 +638,11 @@ export function WalletStatus() {
         <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
           <p className="text-xs uppercase tracking-[0.14em] text-stone-400">IFR balance</p>
           <p className="mt-2 text-lg font-bold">
-            {wrongChain ? '--' : formatIFR(ifrRaw)} IFR
+            {!isConnected || wrongChain
+              ? '--'
+              : ifrBalance.isError
+                ? 'Unavailable'
+                : formatContractRead(false, ifrRaw)} IFR
           </p>
           <p className="mt-1 break-words text-xs text-stone-400">
             {IFR_TOKEN_ADDRESS ? 'ERC-20' : 'Set NEXT_PUBLIC_IFR_TOKEN_ADDRESS'}
@@ -586,13 +650,21 @@ export function WalletStatus() {
         </div>
         <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
           <p className="text-xs uppercase tracking-[0.14em] text-stone-400">IFR locked</p>
-          <p className="mt-2 text-lg font-bold">{wrongChain ? '--' : formatIFR(lockedBalance.data as bigint | undefined)} IFR</p>
-          <p className="mt-1 text-xs text-stone-400">
-            ETH {wrongChain
+          <p className="mt-2 text-lg font-bold">
+            {!isConnected || wrongChain
               ? '--'
-              : ethBalance.data
-                ? Number(formatEther(ethBalance.data.value)).toLocaleString('en-US', { maximumFractionDigits: 5 })
-                : '0'}
+              : lockedBalance.isError
+                ? 'Unavailable'
+                : formatContractRead(false, lockedRaw)} IFR
+          </p>
+          <p className="mt-1 text-xs text-stone-400">
+            ETH {!isConnected || wrongChain
+              ? '--'
+              : ethBalance.isError
+                ? 'Unavailable'
+                : !ethBalanceReady
+                  ? 'Reading...'
+                  : Number(formatEther(ethRaw)).toLocaleString('en-US', { maximumFractionDigits: 5 })}
           </p>
         </div>
       </div>
@@ -694,16 +766,16 @@ export function WalletStatus() {
             <button
               type="button"
               onClick={setMaxLockAmount}
-              disabled={!ifrRaw}
+              disabled={!contractReadsReady || !ifrRaw}
               className="rounded-2xl border border-white/15 px-4 py-3 text-xs font-black uppercase tracking-[0.14em] text-stone-100 transition hover:border-orange-200/60 disabled:cursor-not-allowed disabled:opacity-50"
             >
               Use max
             </button>
           </div>
           <div className="mt-3 grid gap-2 text-xs text-stone-400 sm:grid-cols-3">
-            <p>Allowance: <span className="text-stone-200">{wrongChain ? '--' : formatIFR(allowanceRaw)} IFR</span></p>
-            <p>Available: <span className="text-stone-200">{wrongChain ? '--' : formatIFR(ifrRaw)} IFR</span></p>
-            <p>Locked: <span className="text-stone-200">{wrongChain ? '--' : formatIFR(lockedRaw)} IFR</span></p>
+            <p>Allowance: <span className="text-stone-200">{!isConnected || wrongChain ? '--' : formatContractRead(allowance.isError, allowanceRaw)} IFR</span></p>
+            <p>Available: <span className="text-stone-200">{!isConnected || wrongChain ? '--' : formatContractRead(ifrBalance.isError, ifrRaw)} IFR</span></p>
+            <p>Locked: <span className="text-stone-200">{!isConnected || wrongChain ? '--' : formatContractRead(lockedBalance.isError, lockedRaw)} IFR</span></p>
           </div>
           <div className="mt-4 rounded-2xl border border-orange-200/20 bg-[linear-gradient(145deg,rgba(251,146,60,0.18),rgba(0,0,0,0.22))] p-4">
             <p className="text-xs font-black uppercase tracking-[0.16em] text-orange-200/80">
@@ -744,7 +816,7 @@ export function WalletStatus() {
             <button
               type="button"
               onClick={approveLockAmount}
-              disabled={!isConnected || !amountValid || !canPayGas || txBusy}
+              disabled={!isConnected || !contractReadsReady || !amountValid || !canPayGas || txBusy}
               className="rounded-2xl border border-orange-200/35 px-4 py-3 text-center text-xs font-black uppercase tracking-[0.14em] text-orange-50 transition hover:bg-orange-200/10 disabled:cursor-not-allowed disabled:opacity-50"
             >
               Approve
@@ -752,7 +824,7 @@ export function WalletStatus() {
             <button
               type="button"
               onClick={lockIFR}
-              disabled={!isConnected || !amountValid || !hasEnoughIFR || !hasEnoughAllowance || !canPayGas || txBusy}
+              disabled={!isConnected || !contractReadsReady || !amountValid || !hasEnoughIFR || !hasEnoughAllowance || !canPayGas || txBusy}
               className="rounded-2xl bg-orange-300 px-4 py-3 text-center text-xs font-black uppercase tracking-[0.14em] text-stone-950 shadow-xl shadow-orange-950/25 transition hover:-translate-y-0.5 hover:bg-orange-200 disabled:cursor-not-allowed disabled:opacity-50"
             >
               Lock IFR
@@ -760,7 +832,7 @@ export function WalletStatus() {
             <button
               type="button"
               onClick={unlockAll}
-              disabled={!isConnected || !lockedRaw || lockedRaw === BigInt(0) || !canPayGas || txBusy}
+              disabled={!isConnected || !contractReadsReady || !lockedRaw || lockedRaw === BigInt(0) || !canPayGas || txBusy}
               className="rounded-2xl border border-white/15 px-4 py-3 text-center text-xs font-black uppercase tracking-[0.14em] text-stone-100 transition hover:border-orange-200/60 disabled:cursor-not-allowed disabled:opacity-50"
             >
               Unlock all

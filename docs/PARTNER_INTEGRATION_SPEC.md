@@ -54,7 +54,7 @@ function lockWithType(uint256 amount, bytes32 lockType) external // tagged lock
 function unlock() external                                       // returns all locked tokens
 ```
 
-### Minimal ABI (ethers v5 human-readable)
+### Minimal ABI (ethers v6 human-readable)
 
 ```javascript
 const IFR_LOCK_ABI = [
@@ -75,7 +75,7 @@ const IFR_LOCK_ABI = [
 Builders tag locks with a `bytes32` identifier for analytics:
 
 ```javascript
-const lockType = ethers.utils.id("myapp_premium"); // keccak256 hash → bytes32
+const lockType = ethers.id("myapp_premium"); // keccak256 hash → bytes32
 await lock.lockWithType(amount, lockType);
 ```
 
@@ -108,7 +108,7 @@ struct Partner {
 `bytes32 partnerId` — deterministic identifier, typically `keccak256(abi.encodePacked("partner_name"))`.
 
 ```javascript
-const partnerId = ethers.utils.id("my_partner"); // bytes32
+const partnerId = ethers.id("my_partner"); // bytes32
 ```
 
 ### Admin Functions (via Governance Timelock)
@@ -160,7 +160,7 @@ function totalClaimed() view returns (uint256)
 function yearlyEmitted() view returns (uint256)
 ```
 
-### Full ABI (ethers v5 human-readable)
+### Full ABI (ethers v6 human-readable)
 
 ```javascript
 const PARTNER_VAULT_ABI = [
@@ -322,7 +322,7 @@ The `recordLockReward()` function accepts calls from `admin` (Governance Timeloc
 
 ```javascript
 // Governance proposal calldata:
-const iface = new ethers.utils.Interface([
+const iface = new ethers.Interface([
   "function setAuthorizedCaller(address caller, bool status)",
 ]);
 const calldata = iface.encodeFunctionData("setAuthorizedCaller", [
@@ -337,7 +337,7 @@ const calldata = iface.encodeFunctionData("setAuthorizedCaller", [
 ```javascript
 const { ethers } = require("ethers");
 
-const provider = new ethers.providers.JsonRpcProvider(process.env.RPC_URL);
+const provider = new ethers.JsonRpcProvider(process.env.RPC_URL);
 const wallet = new ethers.Wallet(process.env.BACKEND_PRIVATE_KEY, provider);
 
 const vault = new ethers.Contract(VAULT_ADDRESS, PARTNER_VAULT_ABI, wallet);
@@ -345,7 +345,7 @@ const lock = new ethers.Contract(LOCK_ADDRESS, IFR_LOCK_ABI, provider);
 
 // Listen for lock events
 lock.on("Locked", async (user, amount, lockType) => {
-  const partnerId = ethers.utils.id("mypartner");
+  const partnerId = ethers.id("mypartner");
 
   // Check anti-double-count
   const already = await vault.walletRewardClaimed(user, partnerId);
@@ -354,7 +354,7 @@ lock.on("Locked", async (user, amount, lockType) => {
   // Record reward
   const tx = await vault.recordLockReward(partnerId, amount, user);
   await tx.wait();
-  console.log(`Reward recorded for ${user}: ${ethers.utils.formatUnits(amount, 9)} IFR locked`);
+  console.log(`Reward recorded for ${user}: ${ethers.formatUnits(amount, 9)} IFR locked`);
 });
 ```
 
@@ -365,28 +365,28 @@ lock.on("Locked", async (user, amount, lockType) => {
 ```javascript
 const { ethers } = require("ethers");
 
-const provider = new ethers.providers.JsonRpcProvider(process.env.RPC_URL);
+const provider = new ethers.JsonRpcProvider(process.env.RPC_URL);
 const vault = new ethers.Contract(
   "0x5F12C0bC616e9Ca347D48C33266aA8fe98490A39",
   PARTNER_VAULT_ABI,
   provider
 );
 
-const partnerId = ethers.utils.id("my_partner");
+const partnerId = ethers.id("my_partner");
 
 // Get builder info
 const info = await vault.partners(partnerId);
 console.log("Beneficiary:", info[0]);
-console.log("Max Allocation:", ethers.utils.formatUnits(info[1], 9), "IFR");
-console.log("Milestone Unlocked:", ethers.utils.formatUnits(info[2], 9), "IFR");
-console.log("Reward Accrued:", ethers.utils.formatUnits(info[3], 9), "IFR");
-console.log("Claimed:", ethers.utils.formatUnits(info[4], 9), "IFR");
+console.log("Max Allocation:", ethers.formatUnits(info[1], 9), "IFR");
+console.log("Milestone Unlocked:", ethers.formatUnits(info[2], 9), "IFR");
+console.log("Reward Accrued:", ethers.formatUnits(info[3], 9), "IFR");
+console.log("Claimed:", ethers.formatUnits(info[4], 9), "IFR");
 console.log("Active:", info[8]);
 console.log("Tier:", info[10]);
 
 // Get claimable amount
 const claimable = await vault.claimable(partnerId);
-console.log("Claimable now:", ethers.utils.formatUnits(claimable, 9), "IFR");
+console.log("Claimable now:", ethers.formatUnits(claimable, 9), "IFR");
 
 // Get global stats
 const [rewardBps, annualCap, totalRewarded, yearlyEmitted] = await Promise.all([
@@ -395,10 +395,10 @@ const [rewardBps, annualCap, totalRewarded, yearlyEmitted] = await Promise.all([
   vault.totalRewarded(),
   vault.yearlyEmitted(),
 ]);
-console.log("Reward rate:", rewardBps.toNumber() / 100, "%");
-console.log("Annual cap:", ethers.utils.formatUnits(annualCap, 9), "IFR");
-console.log("Total rewarded:", ethers.utils.formatUnits(totalRewarded, 9), "IFR");
-console.log("Emitted this year:", ethers.utils.formatUnits(yearlyEmitted, 9), "IFR");
+console.log("Reward rate:", Number(rewardBps) / 100, "%");
+console.log("Annual cap:", ethers.formatUnits(annualCap, 9), "IFR");
+console.log("Total rewarded:", ethers.formatUnits(totalRewarded, 9), "IFR");
+console.log("Emitted this year:", ethers.formatUnits(yearlyEmitted, 9), "IFR");
 ```
 
 ---
@@ -416,9 +416,9 @@ const LOCK_ABI = [
   "function isLocked(address user, uint256 minAmount) view returns (bool)",
   "function lockedBalance(address user) view returns (uint256)",
 ];
-const MIN_LOCK = ethers.utils.parseUnits("5000", 9); // 5000 IFR
+const MIN_LOCK = ethers.parseUnits("5000", 9); // 5000 IFR
 
-const provider = new ethers.providers.JsonRpcProvider(process.env.RPC_URL);
+const provider = new ethers.JsonRpcProvider(process.env.RPC_URL);
 const lock = new ethers.Contract(LOCK_ADDRESS, LOCK_ABI, provider);
 
 const app = express();
@@ -426,7 +426,7 @@ const app = express();
 app.get("/api/license/:wallet", async (req, res) => {
   try {
     const wallet = req.params.wallet;
-    if (!ethers.utils.isAddress(wallet)) {
+    if (!ethers.isAddress(wallet)) {
       return res.status(400).json({ error: "invalid address" });
     }
     const [premium, balance] = await Promise.all([
@@ -436,7 +436,7 @@ app.get("/api/license/:wallet", async (req, res) => {
     res.json({
       wallet,
       premium,
-      lockedIFR: ethers.utils.formatUnits(balance, 9),
+      lockedIFR: ethers.formatUnits(balance, 9),
       minRequired: "5000",
     });
   } catch (err) {
@@ -451,7 +451,7 @@ app.listen(3000, () => console.log("Resolver on :3000"));
 
 ## 10. Fee-on-Transfer — Critical Notes
 
-IFR has a 3.5% fee on every transfer (2% sender burn + 0.5% recipient burn + 1% pool fee).
+IFR has a 3.5% fee on every standard transfer between non-exempt addresses (2% sender burn + 0.5% recipient burn + 1% pool fee). If either endpoint is fee-exempt, the complete fee is bypassed.
 
 | Scenario | Fee? | Notes |
 |----------|------|-------|
@@ -493,7 +493,7 @@ event AnnualCapUpdated(uint256 oldCap, uint256 newCap);
 
 ## 12. FeeRouterV1 ABI
 
-### Minimal ABI (ethers v5 human-readable)
+### Minimal ABI (ethers v6 human-readable)
 
 ```javascript
 const FEE_ROUTER_ABI = [
@@ -537,7 +537,7 @@ event Paused(bool status);
 ### Prerequisites
 - Sepolia ETH (from faucet)
 - Test IFR tokens (swap on Uniswap Sepolia or request from team)
-- ethers v5, Node.js
+- ethers v6, Node.js
 
 ### Contract Addresses
 

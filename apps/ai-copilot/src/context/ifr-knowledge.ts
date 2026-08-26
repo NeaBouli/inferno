@@ -27,12 +27,21 @@ export function getIFRKnowledge() {
     },
     tokenomics: {
       genesisSupply: "1,000,000,000 IFR",
-      currentSupply: "~998,500,000 IFR (decreasing — ~1.5M burned)",
+      currentSupply: "997,673,879.091903855 IFR at block 25812380 (decreasing — 2,326,120.908096145 IFR burned from genesis)",
       burnPerTransfer: "2.5% permanent",
       poolFee: "1.0%",
       totalFee: "3.5%",
       maxFee: "5.0% (hard cap)",
       partnerPool: "40M IFR (4%)"
+    },
+    exchangeFeePolicy: {
+      decision: "Approved on 26 August 2026 at 00:17 MET by a 4-1 vote of the five-member Core Developer and Keyholder Council.",
+      scope: "Transfers where an officially verified and on-chain fee-exempt CEX operational address is sender or recipient bypass the full 3.5% fee: no 2.0% sender burn, no 0.5% recipient burn and no 1.0% pool fee.",
+      currentStatus: "No CEX address is currently fee-exempt on-chain. Policy approval is not the same as address activation.",
+      activation: "Each address requires official exchange verification, proof of control, a public TreasurySafe 3-of-5 Governance proposal, the 48-hour timelock and execution.",
+      internalTrading: "Internal CEX trades are off-chain ledger entries and do not invoke the IFR token contract.",
+      uniswap: "The IFR/WETH Uniswap V2 pair is fee-exempt under Proposal #15; the Uniswap V2 router is not. Pair swaps bypass the IFR token fee, while normal AMM price impact and execution slippage still apply.",
+      policy: "https://ifrunit.tech/EXCHANGE_FEE_EXEMPTION_POLICY.md"
     },
     aiCopilot: {
       premiumThreshold: "Lock >=1,000 IFR in IFRLock",
@@ -128,14 +137,14 @@ export function getIFRKnowledge() {
       deployed: "20.03.2026",
       tests: "27/27 passing",
       railwayEndpoints: "GET /api/builders/count, GET /api/builders/check/:address",
-      builders: "#9 StealthX, #11 K-9 Academy, #12 Vendetta, #13 NEXUS GR, #15 ORIGO"
+      builders: "Legacy off-chain directory entries include StealthX, K-9 Academy, Vendetta, NEXUS GR and ORIGO. Mainnet BuilderRegistry currently has 0 registered and 0 active builders."
     },
     phase3: {
       commitmentVault: {
         status: "DEPLOYED — Mainnet 04.04.2026, feeExempt active",
         address: "0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3",
-        description: "Irrevocable token lock until self-chosen condition met. 4 types: time, price, time+price, time OR price.",
-        contributorConfig: "10 tranches x 10M IFR, P0x2 to P0x5000",
+        description: "Irrevocable tranche lock until its condition is met. TIME_ONLY is operational; price, time+price and time OR price fail closed while Mainnet priceOracle is the zero address.",
+        contributorConfig: "C1/C2/C3 use TIME_ONLY tranches; total Mainnet CommitmentVault balance was 47,952,476.871794375 IFR at block 25812380.",
         autoUnlock: "30 days after condition met — anyone can call, tokens always go to original wallet",
         tests: "45/45 passing",
         wiki: "https://ifrunit.tech/wiki/commitment-vault.html",
@@ -146,8 +155,8 @@ export function getIFRKnowledge() {
         address: "0x974305Ab0EC905172e697271C3d7d385194EB9DF",
         description: "Lenders follow a guided 1-5 flow: connect MetaMask, choose amount, approve IFR if needed, createOffer(amount), then verify live market status. Approval alone is not an offer; createOffer is required before borrower and market views show liquidity.",
         interestRate: "2% to 25% based on utilization",
-        collateral: "200% initial, 150% margin call, 120% liquidation",
-        currentMainnetState: "C2 has completed CommitmentVault lock and an active LendingVault offer for 20,156,940.952845656 IFR. Borrow transactions require ifrPriceWei to be set.",
+        collateral: "V1 parameters: 200% initial; checkHealth emits a warning below 150%; an external caller may liquidate below 120%. V1 has no enforced 48-hour grace period.",
+        currentMainnetState: "Three offers provide 52,155,440.952845656 IFR, with 0 IFR lent. Borrowing is intentionally disabled because ifrPriceWei is 0.",
         tests: "55/55 passing",
         wiki: "https://ifrunit.tech/wiki/lending-vault.html",
         apiEndpoints: "GET /api/lending/stats, GET /api/lending/offers, GET /api/lending/loans/:address, GET /api/lending/health/:loanId, GET /api/lending/lender/:address"
@@ -158,8 +167,9 @@ export function getIFRKnowledge() {
         wiki: "https://ifrunit.tech/wiki/lp-strategy.html"
       },
       buybackController: {
-        status: "WRITTEN — 50 tests passing, deploy after LP launch",
-        description: "50% buyback+burn / 50% LP deepening. Permissionless execute() after 24h cooldown.",
+        status: "DEPLOYED — Mainnet 14.04.2026; governance wiring completed through Proposals #13 and #14",
+        address: "0x1e0547D50005A4Af66AbD5e6915ebfAA2d711F7c",
+        description: "Governance-wired controller for guarded distribution. Permissionless execute() remains subject to its on-chain balance threshold and cooldown.",
         tests: "50/50 passing"
       },
       ecosystemWiki: "https://ifrunit.tech/wiki/ecosystem.html"
@@ -257,10 +267,10 @@ export function getIFRKnowledge() {
       },
       layer2: {
         name: "LendingVault",
-        description: "Locked IFR earns ETH yield. " +
-          "Every loan repayment = IFR bought. " +
-          "Every default = collateral buys IFR.",
-        result: "Guaranteed organic buy pressure"
+        description: "Contributors can offer IFR. Borrowing is disabled while ifrPriceWei is 0. " +
+          "If a future borrower acquires IFR externally for repayment that can create market demand, " +
+          "but V1 liquidation only distributes ETH collateral and performs no Uniswap purchase.",
+        result: "No guaranteed buy pressure from V1 liquidation"
       },
       layer3: {
         name: "LP Reserve Safe",
@@ -275,9 +285,9 @@ export function getIFRKnowledge() {
       currentStatus: {
         ethRaised: "0.030 ETH (finalized — Bootstrap ENDED 05.06.2026)",
         endDate: "2026-06-05",
-        contributor1: "Committed to CommitmentVault ✅",
+        contributors: "C1/C2/C3 CommitmentVault locks and three LendingVault offers completed",
         lpToken: "0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0",
-        proposal15: "setFeeExempt(LP Token, true) — Queued, ETA 08.06.2026 09:57 Athen"
+        proposal15: "setFeeExempt(LP Token, true) — executed 08.06.2026"
       }
     },
     safety: {

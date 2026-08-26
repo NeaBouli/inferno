@@ -810,8 +810,7 @@
     "about": {"@id": "https://ifrunit.tech/#app"}
   }
   </script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"
-  onerror="var s=document.createElement('script');s.src='https://unpkg.com/ethers@5.7.2/dist/ethers.umd.min.js';document.head.appendChild(s);"></script>
+<script src="/assets/vendor/ethers-6.17.0.umd.min.js"></script>
 <script src="../assets/wallet-core.js"></script>
 <script src="../assets/ifr-state.js"></script>
 <script type="application/ld+json">
@@ -958,14 +957,17 @@
       </div>
 
       <h1>IFR <span class="accent">Ecosystem</span></h1>
-      <p class="subtitle">The Self-Reinforcing Loop</p>
+      <div class="callout" id="application-status">
+        <p><strong>Live application status:</strong> <a href="https://web3.ifrunit.tech/">Web3</a> provides wallet selection and direct protocol actions. <a href="https://shop.ifrunit.tech/">IFR Benefits</a> provides the customer/seller PWA and QR benefit flow. See the <a href="https://ifrunit.tech/CURRENT_FUNCTIONALITY_STATUS.md">verified functionality matrix</a> for operational boundaries and real-device acceptance status.</p>
+      </div>
+      <p class="subtitle">Current Activity and a Conditional Future Loop</p>
 
       <!-- ======================================== -->
       <!-- 1. Der Kreislauf -->
       <!-- ======================================== -->
-      <h2>1. The Loop</h2>
+      <h2>1. Current and Conditional Flow</h2>
       <p>
-        Every action in the IFR protocol reinforces the loop. Contributors lock, Builders borrow, Users buy &mdash; and every step creates buy pressure on Uniswap.
+        Current Mainnet activity includes contributor commitments, lender offers and user access locks. Borrowing is disabled while <code>LendingVault.ifrPriceWei = 0</code>. The lower part of this diagram is a possible future path only: it requires a separately audited borrowing design and does not guarantee market demand or price growth.
       </p>
 
       <!-- Cycle diagram using styled divs -->
@@ -988,27 +990,27 @@
       <div class="cycle-arrow-down">&darr;</div>
       <div class="cycle-diagram" style="display:flex;flex-wrap:wrap;align-items:center;gap:6px;">
         <div class="cycle-node" style="border-color:#3b82f6;color:#3b82f6;">
-          Builders borrow
-          <small>against ETH collateral</small>
+          Builders may borrow
+          <small>future audited activation</small>
         </div>
         <div class="cycle-arrow">&rarr;</div>
         <div class="cycle-node" style="border-color:#22c55e;color:#22c55e;">
-          Users buy IFR
-          <small>to lock with Builder</small>
+          Users may acquire IFR
+          <small>for an access threshold</small>
         </div>
         <div class="cycle-arrow">&rarr;</div>
         <div class="cycle-node highlight">
-          Buy pressure on Uniswap
+          Potential market demand
         </div>
       </div>
       <div class="cycle-arrow-down">&darr;</div>
       <div class="cycle-diagram" style="display:flex;flex-wrap:wrap;align-items:center;gap:6px;">
         <div class="cycle-node" style="border-color:#22c55e;color:#22c55e;">
-          Price rises
+          Market conditions vary
         </div>
         <div class="cycle-arrow">&rarr;</div>
         <div class="cycle-node">
-          Tranches unlock
+          Time conditions unlock
         </div>
         <div class="cycle-arrow">&rarr;</div>
         <div class="cycle-node">
@@ -1047,12 +1049,12 @@
       </div>
 
       <div class="prinzip-card">
-        <h3>Principle 3: Every Action Creates Buy Pressure</h3>
+        <h3>Principle 3: Utility Can Create Demand</h3>
         <ul>
-          <li>Builder borrows &rarr; must repay &rarr; buys on Uniswap</li>
-          <li>Builder cannot repay &rarr; liquidation &rarr; buys on Uniswap</li>
-          <li>User wants discount &rarr; buys IFR to lock</li>
-          <li>Interest &rarr; deeper LP &rarr; stable price</li>
+          <li>A user who needs more IFR for an access threshold may choose to acquire it on a market</li>
+          <li>A borrower may choose to acquire IFR externally for repayment if borrowing is activated in a future audited design</li>
+          <li>V1 liquidation distributes ETH collateral to the liquidator and lender; it performs no automatic Uniswap purchase</li>
+          <li>Protocol interest goes to the configured fee receiver; an LP route is not guaranteed by LendingVault V1</li>
         </ul>
       </div>
 
@@ -1289,7 +1291,7 @@ function lpUpdateUI(state){
     var dropAddr=document.getElementById("lp-drop-addr");if(dropAddr)dropAddr.textContent=addr.slice(0,10)+"..."+addr.slice(-6);
     var dropEth=document.getElementById("lp-drop-eth");if(dropEth)dropEth.textContent=parseFloat(state.ethBalance||"0").toFixed(4)+" ETH";
     var dropIfr=document.getElementById("lp-drop-ifr");
-    if(dropIfr){var ifrAmt=state.ifrBalance&&typeof ethers!=="undefined"?parseFloat(ethers.utils.formatUnits(state.ifrBalance,9)).toLocaleString("en-US",{maximumFractionDigits:0}):"0";dropIfr.textContent=ifrAmt+" IFR"}
+    if(dropIfr){var ifrAmt=state.ifrBalance&&typeof ethers!=="undefined"?parseFloat(ethers.formatUnits(state.ifrBalance,9)).toLocaleString("en-US",{maximumFractionDigits:0}):"0";dropIfr.textContent=ifrAmt+" IFR"}
     var lockDiv=document.getElementById("lp-drop-lock");var noLockDiv=document.getElementById("lp-drop-nolock");
     if(lockDiv)lockDiv.style.display=state.isLocked1000?"":"none";
     if(noLockDiv)noLockDiv.style.display=state.isLocked1000?"none":"";

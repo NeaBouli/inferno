@@ -28,6 +28,7 @@ const selectors = {
   lendingPrice: selector("ifrPriceWei()"),
   lendingRate: selector("getInterestRate()"),
   lendingOfferCount: selector("getOfferCount()"),
+  lendingGetOffer: selector("getOffer(uint256)"),
   lendingLoanCount: selector("getLoanCount()"),
 };
 
@@ -69,6 +70,7 @@ async function installWallet(context, options = {}) {
   const chainId = options.chainId || "0x1";
   const rejectSwitch = options.rejectSwitch === true;
   const locked = options.locked || 0n;
+  const availableOffer = options.offerAvailable === true;
   const callResults = {
     [selectors.balanceOf]: uintResult(10_000n * UNIT),
     [selectors.allowance]: uintResult(0n),
@@ -78,7 +80,11 @@ async function installWallet(context, options = {}) {
     [selectors.lendingHasOffer]: uintResult(0n),
     [selectors.lendingPrice]: uintResult(0n),
     [selectors.lendingRate]: uintResult(200n),
-    [selectors.lendingOfferCount]: uintResult(0n),
+    [selectors.lendingOfferCount]: uintResult(availableOffer ? 1n : 0n),
+    [selectors.lendingGetOffer]: coder.encode(
+      ["tuple(address lender,uint256 availableIFR,uint256 lentIFR,bool active)"],
+      [[ACCOUNT, 1000n * UNIT, 0n, availableOffer]],
+    ),
     [selectors.lendingLoanCount]: uintResult(0n),
   };
 
@@ -86,15 +92,25 @@ async function installWallet(context, options = {}) {
     const listeners = new Map();
     const transactions = new Map();
     let activeChainId = initialChainId;
+    let activeAccount = account;
+    const requestCounts = {};
 
     Object.defineProperty(window, "__web3TestChainId", { get: () => activeChainId });
+    Object.defineProperty(window, "__web3RequestCounts", { value: requestCounts });
+    Object.defineProperty(window, "__web3Emit", {
+      value: (event, payload) => {
+        if (event === "accountsChanged" && payload && payload[0]) activeAccount = payload[0];
+        for (const listener of listeners.get(event) || []) listener(payload);
+      },
+    });
     Object.defineProperty(window, "__web3WatchAssets", { value: [] });
     Object.defineProperty(window, "ethereum", {
       configurable: true,
       value: {
         isMetaMask: true,
         request: async ({ method, params }) => {
-          if (method === "eth_requestAccounts" || method === "eth_accounts") return [account];
+          requestCounts[method] = (requestCounts[method] || 0) + 1;
+          if (method === "eth_requestAccounts" || method === "eth_accounts") return [activeAccount];
           if (method === "eth_chainId") return activeChainId;
           if (method === "net_version") return String(Number.parseInt(activeChainId, 16));
           if (method === "wallet_switchEthereumChain") {
@@ -196,7 +212,7 @@ async function installWallet(context, options = {}) {
 }
 
 async function preparePage(browser, options = {}) {
-  const context = await browser.newContext({ serviceWorkers: "block" });
+  const context = await browser.newContext({ serviceWorkers: "block", ...(options.contextOptions || {}) });
   await installWallet(context, options);
   const writes = [];
   const pageErrors = [];
@@ -228,8 +244,16 @@ async function preparePage(browser, options = {}) {
 }
 
 async function connect(page) {
-  await page.locator("[data-wallet-connect]").first().click();
+  await page.locator("[data-wallet-connect]:visible").first().click();
+  await page.locator('[data-wallet-option-type="injected"]').first().click();
   await expect(page.locator("[data-wallet-state]").first()).toContainText("Connected", { timeout: 10_000 });
+}
+
+async function selectInjectedWallet(page, name) {
+  const option = name
+    ? page.locator('[data-wallet-option-type="injected"]', { hasText: name })
+    : page.locator('[data-wallet-option-type="injected"]').first();
+  await option.click();
 }
 
 test("wrong-chain rejection fails closed before connected state or writes", async ({ browser }) => {
@@ -239,6 +263,7 @@ test("wrong-chain rejection fails closed before connected state or writes", asyn
   });
   await page.goto("/web3/", { waitUntil: "domcontentloaded" });
   await page.locator("[data-wallet-connect]").first().click();
+  await selectInjectedWallet(page);
   await expect(page.locator("[data-wallet-state]").first()).toContainText("Ethereum Mainnet");
   expect(await page.evaluate(() => window.IFRWallet.isConnected())).toBe(false);
   expect(writes).toEqual([]);
@@ -265,6 +290,313 @@ test("zero-padded hexadecimal Mainnet chain id connects without a false network 
   expect(writes).toEqual([]);
   expect(pageErrors).toEqual([]);
   await context.close();
+});
+
+test("Web3 wallet manager shows connector details, tracks account changes and disconnects", async ({ browser }) => {
+  const { context, page, writes, pageErrors } = await preparePage(browser);
+  await page.goto("/web3/", { waitUntil: "domcontentloaded" });
+  expect(await page.locator("[data-wallet-header-disconnect]").evaluate((element) => ({
+    hidden: element.hidden,
+    width: element.getBoundingClientRect().width,
+    height: element.getBoundingClientRect().height,
+  }))).toEqual({ hidden: true, width: 0, height: 0 });
+  await connect(page);
+
+  await expect(page.locator("[data-wallet-address]")).toHaveText("0x3333...3333");
+  await expect(page.locator("[data-wallet-address]")).toHaveAttribute("title", ACCOUNT);
+  await expect(page.locator("[data-wallet-connector]")).toHaveText("MetaMask");
+  await expect(page.locator("[data-wallet-network]")).toHaveText("Ethereum Mainnet");
+  await expect(page.locator("[data-wallet-disconnect]")).toBeVisible();
+  await expect(page.locator("[data-wallet-header-disconnect]")).toBeVisible();
+  await expect(page.locator("[data-wallet-copy-address]")).toBeVisible();
+
+  const requestsBefore = await page.evaluate(() => window.__web3RequestCounts.eth_requestAccounts);
+  await page.locator("[data-wallet-connect]:visible").first().click();
+  expect(await page.evaluate(() => window.__web3RequestCounts.eth_requestAccounts)).toBe(requestsBefore);
+
+  const nextAccount = "0x4444444444444444444444444444444444444444";
+  await page.evaluate((address) => window.__web3Emit("accountsChanged", [address]), nextAccount);
+  await expect(page.locator("[data-wallet-address]")).toHaveText("0x4444...4444");
+  await expect(page.locator("[data-wallet-address]")).toHaveAttribute("title", nextAccount);
+
+  await page.locator("[data-wallet-header-disconnect]").click();
+  await expect(page.locator("[data-wallet-address]")).toHaveText("Not connected");
+  await expect(page.locator("[data-wallet-state]")).toHaveText("Disconnected");
+  await expect(page.locator("[data-wallet-disconnect]")).toBeHidden();
+  expect(await page.locator("[data-wallet-header-disconnect]").evaluate((element) => ({
+    hidden: element.hidden,
+    width: element.getBoundingClientRect().width,
+    height: element.getBoundingClientRect().height,
+  }))).toEqual({ hidden: true, width: 0, height: 0 });
+  await expect(page.locator("[data-wallet-connect]").first()).toHaveText("Connect Wallet");
+  expect(await page.evaluate(() => window.IFRWallet.isConnected())).toBe(false);
+  expect(await page.evaluate(() => localStorage.getItem("ifr_web3_wallet_connected"))).toBeNull();
+  expect(await page.evaluate(() => sessionStorage.getItem("ifr_web3_wallet_connected"))).toBeNull();
+  await page.reload({ waitUntil: "domcontentloaded" });
+  await expect(page.locator("[data-wallet-address]")).toHaveText("Not connected");
+  expect(await page.evaluate(() => window.IFRWallet.isConnected())).toBe(false);
+  expect(writes).toEqual([]);
+  expect(pageErrors).toEqual([]);
+  await context.close();
+});
+
+test("failed account refresh clears the previous wallet data", async ({ browser }) => {
+  const { context, page, writes, pageErrors } = await preparePage(browser);
+  await page.goto("/web3/", { waitUntil: "domcontentloaded" });
+  await connect(page);
+  await expect(page.locator("[data-ifr-balance]")).toContainText("IFR");
+
+  const nextAccount = "0x5555555555555555555555555555555555555555";
+  await page.evaluate((address) => {
+    const originalLoad = window.IFRState.load.bind(window.IFRState);
+    window.IFRState.load = (requestedAddress) => (
+      requestedAddress.toLowerCase() === address.toLowerCase()
+        ? Promise.reject(new Error("Test-only account refresh failure"))
+        : originalLoad(requestedAddress)
+    );
+    window.__web3Emit("accountsChanged", [address]);
+  }, nextAccount);
+
+  await expect(page.locator("[data-wallet-address]")).toHaveText("0x5555...5555");
+  await expect(page.locator("[data-wallet-address]")).toHaveAttribute("title", nextAccount);
+  await expect(page.locator("[data-wallet-state]")).toHaveText("Connected · status unavailable");
+  await expect(page.locator("[data-ifr-balance]")).toHaveText("Unavailable");
+  await expect(page.locator("[data-access-lock-balance]")).toHaveText("Unavailable");
+  await expect(page.locator("[data-commitment-balance]")).toHaveText("Unavailable");
+  await expect(page.locator("[data-lending-summary]")).toHaveText("Unavailable");
+  expect(writes).toEqual([]);
+  expect(pageErrors).toEqual([]);
+  await context.close();
+});
+
+test("wallet chooser keeps WalletConnect available with zero or multiple injected wallets", async ({ browser }) => {
+  const emptyContext = await browser.newContext({ serviceWorkers: "block" });
+  try {
+    const emptyPage = await emptyContext.newPage();
+    await emptyPage.goto("/web3/", { waitUntil: "domcontentloaded" });
+    await emptyPage.locator("[data-wallet-connect]").first().click();
+    await expect(emptyPage.locator("[data-wallet-option]")).toHaveCount(1);
+    await expect(emptyPage.locator('[data-wallet-option="walletconnect"]')).toBeVisible();
+  } finally {
+    await emptyContext.close();
+  }
+
+  const { context, page, pageErrors } = await preparePage(browser);
+  try {
+    await page.goto("/web3/", { waitUntil: "domcontentloaded" });
+    await page.evaluate(() => {
+      const metaMask = window.ethereum;
+      const coinbase = {
+        isCoinbaseWallet: true,
+        request: (args) => metaMask.request(args),
+        on: (event, listener) => metaMask.on(event, listener),
+        removeListener: (event, listener) => metaMask.removeListener(event, listener),
+      };
+      window.ethereum.providers = [metaMask, coinbase];
+    });
+    await page.locator("[data-wallet-connect]").first().click();
+    await expect(page.locator('[data-wallet-option-type="injected"]')).toHaveCount(2);
+    await expect(page.locator('[data-wallet-option="walletconnect"]')).toBeVisible();
+    expect(pageErrors).toEqual([]);
+  } finally {
+    await context.close();
+  }
+});
+
+test("closing the wallet chooser stays disconnected and requests no account access", async ({ browser }) => {
+  const { context, page, writes, pageErrors } = await preparePage(browser);
+  try {
+    await page.goto("/web3/", { waitUntil: "domcontentloaded" });
+    await page.locator("[data-wallet-connect]").first().click();
+    await expect(page.locator("[data-wallet-chooser]")).toHaveAttribute("aria-hidden", "false");
+    await page.locator("[data-wallet-chooser-close]").click();
+    await expect(page.locator("[data-wallet-chooser]")).toHaveAttribute("aria-hidden", "true");
+    expect(await page.evaluate(() => window.IFRWallet.isConnected())).toBe(false);
+    expect(await page.evaluate(() => window.__web3RequestCounts.eth_requestAccounts ?? 0)).toBe(0);
+    expect(writes).toEqual([]);
+    expect(pageErrors).toEqual([]);
+  } finally {
+    await context.close();
+  }
+});
+
+test("EIP-6963 providers are deduplicated and only the chosen provider requests accounts", async ({ browser }) => {
+  const { context, page, writes, pageErrors } = await preparePage(browser);
+  try {
+    await page.goto("/web3/", { waitUntil: "domcontentloaded" });
+    await page.evaluate(() => {
+      const metaMask = window.ethereum;
+      let rainbowRequests = 0;
+      const rainbow = {
+        request: (args) => {
+          if (args.method === "eth_requestAccounts") rainbowRequests += 1;
+          return metaMask.request(args);
+        },
+        on: (event, listener) => metaMask.on(event, listener),
+        removeListener: (event, listener) => metaMask.removeListener(event, listener),
+      };
+      Object.defineProperty(window, "__rainbowRequests", { get: () => rainbowRequests });
+      window.ethereum.providers = [metaMask, rainbow];
+      const announce = () => window.dispatchEvent(new CustomEvent("eip6963:announceProvider", {
+        detail: {
+          info: {
+            uuid: "rainbow-test-provider",
+            name: "Rainbow Test",
+            icon: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'/%3E",
+            rdns: "me.rainbow",
+          },
+          provider: rainbow,
+        },
+      }));
+      window.addEventListener("eip6963:requestProvider", announce);
+      announce();
+    });
+
+    await page.locator("[data-wallet-connect]").first().click();
+    await expect(page.locator('[data-wallet-option-type="injected"]')).toHaveCount(2);
+    await expect(page.locator('[data-wallet-option-type="injected"]', { hasText: "Rainbow Test" })).toHaveCount(1);
+    await selectInjectedWallet(page, "Rainbow Test");
+    await expect(page.locator("[data-wallet-state]")).toContainText("Connected", { timeout: 10_000 });
+    expect(await page.evaluate(() => window.__rainbowRequests)).toBe(1);
+    expect(await page.evaluate(() => window.__web3RequestCounts.eth_requestAccounts)).toBe(1);
+    expect(writes).toEqual([]);
+    expect(pageErrors).toEqual([]);
+  } finally {
+    await context.close();
+  }
+});
+
+test("wallet chooser is the only initial connect surface on desktop, iPad and Android", async ({ browser }) => {
+  const surfaces = [
+    { name: "desktop", contextOptions: { viewport: { width: 1280, height: 800 } } },
+    { name: "iPad", contextOptions: { viewport: { width: 820, height: 1180 }, userAgent: "Mozilla/5.0 (iPad; CPU OS 17_0 like Mac OS X) AppleWebKit/605.1.15 Safari/604.1", isMobile: true, hasTouch: true } },
+    { name: "Android", contextOptions: { viewport: { width: 360, height: 800 }, userAgent: "Mozilla/5.0 (Linux; Android 13; SM-G973F) AppleWebKit/537.36 Chrome/125 Mobile Safari/537.36", isMobile: true, hasTouch: true } },
+  ];
+  for (const surface of surfaces) {
+    const { context, page, pageErrors } = await preparePage(browser, { contextOptions: surface.contextOptions });
+    try {
+      await page.goto("/web3/", { waitUntil: "domcontentloaded" });
+      expect(
+        await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth),
+        `${surface.name} should not overflow horizontally`,
+      ).toBe(false);
+      await page.locator("[data-wallet-connect]").first().click();
+      await expect(page.locator("[data-wallet-chooser]")).toHaveClass(/is-open/);
+      await expect(page.locator("[data-wallet-dialog]")).not.toHaveClass(/is-open/);
+      await expect(page.locator('[data-wallet-option="walletconnect"]')).toBeVisible();
+      expect(pageErrors, surface.name).toEqual([]);
+    } finally {
+      await context.close();
+    }
+  }
+});
+
+test("Web3 header stays compact and non-overlapping before and after wallet connection", async ({ browser }) => {
+  const surfaces = [
+    { name: "desktop", contextOptions: { viewport: { width: 1280, height: 800 } } },
+    { name: "iPad", contextOptions: { viewport: { width: 820, height: 1180 }, userAgent: "Mozilla/5.0 (iPad; CPU OS 17_0 like Mac OS X) AppleWebKit/605.1.15 Safari/604.1", isMobile: true, hasTouch: true } },
+    { name: "Android", contextOptions: { viewport: { width: 360, height: 800 }, userAgent: "Mozilla/5.0 (Linux; Android 13; SM-G973F) AppleWebKit/537.36 Chrome/125 Mobile Safari/537.36", isMobile: true, hasTouch: true } },
+  ];
+
+  for (const surface of surfaces) {
+    const { context, page, pageErrors } = await preparePage(browser, {
+      contextOptions: surface.contextOptions,
+    });
+    try {
+      await page.goto("/web3/", { waitUntil: "domcontentloaded" });
+      await expect(page.locator('nav[aria-label="Primary navigation"]')).toHaveCount(1);
+
+      const readGeometry = () => page.evaluate(() => {
+        const rect = (selector) => {
+          const element = document.querySelector(selector);
+          const bounds = element.getBoundingClientRect();
+          return { left: bounds.left, right: bounds.right, top: bounds.top, bottom: bounds.bottom };
+        };
+        const header = document.querySelector(".topbar").getBoundingClientRect();
+        return {
+          headerHeight: header.height,
+          brand: rect(".brand"),
+          actions: rect(".nav-actions"),
+          links: rect(".nav-links"),
+          viewportWidth: document.documentElement.clientWidth,
+          scrollWidth: document.documentElement.scrollWidth,
+        };
+      });
+
+      for (const phase of ["disconnected", "connected"]) {
+        if (phase === "connected") await connect(page);
+        if (phase === "disconnected") {
+          await expect(page.locator("[data-wallet-header-connect]")).toBeVisible();
+          await expect(page.locator("[data-wallet-header-disconnect]")).toBeHidden();
+        } else {
+          await expect(page.locator("[data-wallet-header-connect]")).toBeHidden();
+          await expect(page.locator("[data-wallet-header-disconnect]")).toBeVisible();
+        }
+        const geometry = await readGeometry();
+        const overlaps = (left, right) => (
+          left.left < right.right
+          && left.right > right.left
+          && left.top < right.bottom
+          && left.bottom > right.top
+        );
+        expect(geometry.scrollWidth, `${surface.name} ${phase} horizontal overflow`).toBe(geometry.viewportWidth);
+        expect(overlaps(geometry.brand, geometry.actions), `${surface.name} ${phase} brand/actions overlap`).toBe(false);
+        expect(overlaps(geometry.brand, geometry.links), `${surface.name} ${phase} brand/links overlap`).toBe(false);
+        expect(overlaps(geometry.actions, geometry.links), `${surface.name} ${phase} actions/links overlap`).toBe(false);
+        expect(geometry.headerHeight, `${surface.name} ${phase} header is too tall`).toBeLessThanOrEqual(140);
+      }
+      expect(pageErrors, surface.name).toEqual([]);
+    } finally {
+      await context.close();
+    }
+  }
+});
+
+test("WalletConnect initialization can be retried after a transient loader failure", async ({ browser }) => {
+  const context = await browser.newContext({ serviceWorkers: "block" });
+  const warnings = [];
+  try {
+    await context.route("https://esm.sh/@walletconnect/ethereum-provider@2.17.3", async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/javascript",
+        headers: { "Access-Control-Allow-Origin": "*" },
+        body: "export const unavailable = true;",
+      });
+    });
+    const page = await context.newPage();
+    page.on("console", (message) => {
+      if (message.type() === "warning" && message.text().includes("EthereumProvider not found")) warnings.push(message.text());
+    });
+    await page.goto("/web3/", { waitUntil: "domcontentloaded" });
+    const results = await page.evaluate(async () => {
+      const attempts = [];
+      for (let index = 0; index < 2; index += 1) {
+        try {
+          await window.IFRWallet.connectWalletConnect();
+          attempts.push("connected");
+        } catch (error) {
+          attempts.push(error.message);
+        }
+      }
+      return attempts;
+    });
+    expect(results).toEqual(["NO_WALLETCONNECT", "NO_WALLETCONNECT"]);
+    expect(warnings).toHaveLength(2);
+  } finally {
+    await context.close();
+  }
+});
+
+test("WalletConnect session authorizes ethers message signing", () => {
+  const source = readFileSync("docs/web3-wallet-core.js", "utf8");
+  expect(source).toContain('methods: ["eth_sendTransaction", "personal_sign"]');
+});
+
+test("Web3 connect flow uses the guarded wallet-state loader", () => {
+  const source = readFileSync("docs/web3/index.html", "utf8");
+  expect(source).toContain("await loadConnectedWallet(address);");
+  expect(source).not.toContain("const state = await IFRState.load(address);\n        renderState(state);");
 });
 
 test("persisted WalletConnect wrong-network recovery fails closed without an unhandled rejection", async ({ browser }) => {
@@ -339,6 +671,7 @@ test("IFRLock exact approve and typed lock submit only on Mainnet", async ({ bro
   const { context, page, writes, pageErrors } = await preparePage(browser);
   await page.goto("/web3/?action=access-lock", { waitUntil: "domcontentloaded" });
   await expect(page.locator("[data-access-lock-dialog]")).toHaveClass(/is-open/);
+  await selectInjectedWallet(page);
   await page.locator("[data-access-lock-amount]").fill("1000");
   await page.locator("[data-access-lock-type]").selectOption("premium");
   await page.locator("[data-access-lock-submit]").click();
@@ -355,6 +688,7 @@ test("IFRLock exact approve and typed lock submit only on Mainnet", async ({ bro
 test("existing IFRLock balance can be unlocked without another approval", async ({ browser }) => {
   const { context, page, writes, pageErrors } = await preparePage(browser, { locked: 1000n * UNIT });
   await page.goto("/web3/?action=access-lock", { waitUntil: "domcontentloaded" });
+  await selectInjectedWallet(page);
   await expect(page.locator("[data-access-lock-unlock]")).toBeEnabled();
   await page.locator("[data-access-lock-unlock]").click();
   await expect.poll(() => writes.length, { timeout: 15_000 }).toBe(1);
@@ -391,8 +725,11 @@ test("CommitmentVault time-only and LendingVault offer writes preserve IFR base 
 });
 
 test("LendingVault borrowing remains transaction-disabled while price is zero", async ({ browser }) => {
-  const { context, page, writes, pageErrors } = await preparePage(browser);
+  const { context, page, writes, pageErrors } = await preparePage(browser, { offerAvailable: true });
   await page.goto("/web3/?action=borrow", { waitUntil: "domcontentloaded" });
+  await selectInjectedWallet(page);
+  await expect(page.locator("[data-borrow-offer] option")).toHaveCount(1);
+  await expect(page.locator("[data-borrow-offer-count]")).toHaveText("1 / 1");
   await expect(page.locator("[data-borrow-price]")).toHaveText("Disabled");
   await expect(page.locator("[data-borrow-submit]")).toBeDisabled();
   await expect(page.locator("[data-borrow-status]")).toContainText("disabled");
@@ -412,16 +749,17 @@ test("Web3 runtime uses the self-hosted Ethers asset", async ({ browser }) => {
     await page.goto("/web3/", { waitUntil: "domcontentloaded" });
     await expect.poll(() => page.evaluate(() => typeof window.ethers)).toBe("object");
     expect(externalEthersRequests).toEqual([]);
-    await expect(page.locator('script[src="/assets/vendor/ethers-5.7.2.umd.min.js"]')).toHaveCount(1);
+    await expect(page.locator('script[src="/assets/vendor/ethers-6.17.0.umd.min.js"]')).toHaveCount(1);
+    await expect.poll(() => page.evaluate(() => window.ethers.version)).toBe("6.17.0");
   } finally {
     await context.close();
   }
 });
 
-test("self-hosted Ethers asset matches the published 5.7.2 bundle", () => {
-  const asset = readFileSync("docs/assets/vendor/ethers-5.7.2.umd.min.js");
+test("self-hosted Ethers asset matches the published 6.17.0 bundle", () => {
+  const asset = readFileSync("docs/assets/vendor/ethers-6.17.0.umd.min.js");
   expect(createHash("sha256").update(asset).digest("hex")).toBe(
-    "a66293a6a2bb4dee061a68612be0be3c5c0ab7e4068ab8d98a4a357baf664c73",
+    "532950515fd29ae9f7a21ceb2b68100815024d7944c3d5a92246d5b900bd703b",
   );
 });
 
@@ -443,5 +781,51 @@ test("Add IFR to wallet submits the canonical token metadata", async ({ browser 
   });
   expect(writes).toEqual([]);
   expect(pageErrors).toEqual([]);
+  await context.close();
+});
+
+test("Android 9 stays in browser mode instead of launching an incompatible WebAPK", async ({ browser }) => {
+  const context = await browser.newContext({
+    viewport: { width: 360, height: 640 },
+    userAgent: "Mozilla/5.0 (Linux; Android 9; Mobile) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Mobile Safari/537.36",
+  });
+  const page = await context.newPage();
+  await page.goto("/web3/", { waitUntil: "domcontentloaded" });
+  await page.evaluate(() => {
+    window.__web3LegacyInstallPrompted = false;
+    const event = new Event("beforeinstallprompt");
+    event.prompt = async () => { window.__web3LegacyInstallPrompted = true; };
+    event.userChoice = Promise.resolve({ outcome: "accepted", platform: "web" });
+    window.dispatchEvent(event);
+  });
+  const installButton = page.locator("[data-install-app]:visible").first();
+  await expect(installButton).toHaveText("App requirements");
+  await installButton.click();
+  await expect(page.locator("[data-install-copy]")).toContainText("remains fully usable in this browser tab");
+  expect(await page.evaluate(() => window.__web3LegacyInstallPrompted)).toBe(false);
+  await context.close();
+});
+
+test("Web3 service worker bounds offline navigation before using the cache", () => {
+  const source = readFileSync("docs/web3-sw.js", "utf8");
+  expect(source).toContain('const CACHE_NAME = "ifr-web3-v15"');
+  expect(source).toContain("const NAVIGATION_TIMEOUT_MS = 5000");
+  expect(source).toContain("fetchNavigation(request)");
+  expect(source).toContain('fetch(request, { cache: "no-store", signal: controller.signal })');
+  expect(source).toContain("if (response.ok)");
+  expect(source).toContain("event.waitUntil(navigationResponse");
+});
+
+test("Web3 app shell reloads from the service-worker cache while offline", async ({ browser }) => {
+  const context = await browser.newContext({ serviceWorkers: "allow" });
+  const page = await context.newPage();
+  await page.goto("/web3/", { waitUntil: "networkidle" });
+  await page.evaluate(() => navigator.serviceWorker.ready);
+  await page.reload({ waitUntil: "networkidle" });
+  await expect.poll(() => page.evaluate(() => Boolean(navigator.serviceWorker.controller))).toBe(true);
+  await context.setOffline(true);
+  await page.reload({ waitUntil: "domcontentloaded" });
+  await expect(page.locator("h1")).toContainText("Lock IFR");
+  await context.setOffline(false);
   await context.close();
 });

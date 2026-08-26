@@ -510,8 +510,7 @@
     "about": {"@id": "https://ifrunit.tech/#app"}
   }
   </script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"
-  onerror="var s=document.createElement('script');s.src='https://unpkg.com/ethers@5.7.2/dist/ethers.umd.min.js';document.head.appendChild(s);"></script>
+<script src="/assets/vendor/ethers-6.17.0.umd.min.js"></script>
 <script src="../assets/wallet-core.js"></script>
 <script src="../assets/ifr-state.js"></script>
 <script type="application/ld+json">
@@ -756,7 +755,7 @@
 
       <div class="callout callout-green">
         <p>
-          <strong>Result:</strong> 0 FAIL &mdash; 12 WARN &mdash; 78 PASS &mdash;
+          <strong>Result:</strong> 0 FAIL &mdash; 20 active WARN (1 fixed) &mdash; 81 PASS &mdash;
           <a href="https://github.com/NeaBouli/inferno/blob/main/docs/SECURITY_AUDIT_SKYWALKER.md">Full Report</a>
         </p>
       </div>
@@ -806,10 +805,10 @@
           <strong>Community Audit Open</strong>
         </p>
         <p style="margin-bottom: 10px;">
-          All contracts are open source. Security findings welcome via GitHub Issues.
+          All contracts are open source. Security findings are welcome via private vulnerability reporting.
         </p>
         <p>
-          <a href="https://github.com/NeaBouli/inferno/issues/new?template=security-audit.md" style="color: #e67e22; font-weight: 600;">Submit a Finding</a>
+          <a href="https://github.com/NeaBouli/inferno/security/advisories/new" style="color: #e67e22; font-weight: 600;">Report Privately</a>
           &nbsp;|&nbsp;
           <a href="https://github.com/NeaBouli/inferno/blob/main/docs/SECURITY_AUDIT_SKYWALKER.md" style="color: #e67e22; font-weight: 600;">Read Internal Audit</a>
           &nbsp;|&nbsp;
@@ -1226,6 +1225,11 @@
               <td>Without fee exemption, <code>unlock()</code> fails due to balance mismatch from transfer fees</td>
               <td>IFRLock is set as fee-exempt during deployment; this must not be revoked</td>
             </tr>
+            <tr>
+              <td>CommitmentVault and LendingVault rely on token-side <code>feeExempt</code> status</td>
+              <td>Removing an exemption while V1 holds funds can make nominal accounting diverge from actual token balances</td>
+              <td>Mainnet verification at block 25811214 found both exemptions active and both accounting differences at 0 IFR. Monitoring and negative tests are open; V2 must add balance-diff inflow accounting and runtime guards that fail closed. <a href="https://github.com/NeaBouli/inferno/blob/main/docs/VAULT_FEE_EXEMPT_HARDENING.md" target="_blank" rel="noopener">Technical status</a></td>
+            </tr>
           </tbody>
         </table>
       </div>
@@ -1307,7 +1311,7 @@
           <tr><td>PartnerVault</td><td>40,000,000</td><td>4.00%</td></tr>
           <tr><td>Treasury Safe</td><td>0</td><td>0.00%</td></tr>
           <tr><td>Community Safe</td><td>~7,900,000</td><td>0.79%</td></tr>
-          <tr><td>Burned (Deflation)</td><td>~1,500,000+</td><td>~0.15%</td></tr>
+          <tr><td>Burned (Deflation)</td><td>~2,326,121</td><td>~0.23% (22.08.2026 snapshot)</td></tr>
         </tbody>
       </table>
 
@@ -1574,7 +1578,7 @@ function lpUpdateUI(state){
     var dropAddr=document.getElementById("lp-drop-addr");if(dropAddr)dropAddr.textContent=addr.slice(0,10)+"..."+addr.slice(-6);
     var dropEth=document.getElementById("lp-drop-eth");if(dropEth)dropEth.textContent=parseFloat(state.ethBalance||"0").toFixed(4)+" ETH";
     var dropIfr=document.getElementById("lp-drop-ifr");
-    if(dropIfr){var ifrAmt=state.ifrBalance&&typeof ethers!=="undefined"?parseFloat(ethers.utils.formatUnits(state.ifrBalance,9)).toLocaleString("en-US",{maximumFractionDigits:0}):"0";dropIfr.textContent=ifrAmt+" IFR"}
+    if(dropIfr){var ifrAmt=state.ifrBalance&&typeof ethers!=="undefined"?parseFloat(ethers.formatUnits(state.ifrBalance,9)).toLocaleString("en-US",{maximumFractionDigits:0}):"0";dropIfr.textContent=ifrAmt+" IFR"}
     var lockDiv=document.getElementById("lp-drop-lock");var noLockDiv=document.getElementById("lp-drop-nolock");
     if(lockDiv)lockDiv.style.display=state.isLocked1000?"":"none";
     if(noLockDiv)noLockDiv.style.display=state.isLocked1000?"none":"";

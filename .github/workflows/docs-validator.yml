@@ -12,9 +12,13 @@ on:
       - 'scripts/test-benefits-doc-consistency.cjs'
       - 'scripts/test-content-trust.cjs'
       - 'scripts/test-status-baseline.cjs'
+      - 'scripts/test-functionality-status.cjs'
       - 'scripts/test-docs-workflow.cjs'
       - 'scripts/test-wiki-head-integrity.cjs'
       - 'scripts/test-surface-routing.cjs'
+      - 'scripts/test-security-reporting-config.cjs'
+      - 'scripts/check-browser-ethers6.cjs'
+      - '.github/ISSUE_TEMPLATE/**'
       - 'tests/browser/**'
       - 'playwright.config.js'
       - 'package.json'
@@ -30,9 +34,13 @@ on:
       - 'scripts/test-benefits-doc-consistency.cjs'
       - 'scripts/test-content-trust.cjs'
       - 'scripts/test-status-baseline.cjs'
+      - 'scripts/test-functionality-status.cjs'
       - 'scripts/test-docs-workflow.cjs'
       - 'scripts/test-wiki-head-integrity.cjs'
       - 'scripts/test-surface-routing.cjs'
+      - 'scripts/test-security-reporting-config.cjs'
+      - 'scripts/check-browser-ethers6.cjs'
+      - '.github/ISSUE_TEMPLATE/**'
       - 'tests/browser/**'
       - 'playwright.config.js'
       - 'package.json'
@@ -143,8 +151,14 @@ jobs:
       - name: Check public content trust
         run: npm run test:content-trust
 
+      - name: Check CEX fee-exemption policy consistency
+        run: npm run test:cex-fee-policy
+
       - name: Check current status baseline
         run: npm run test:status-baseline
+
+      - name: Check current functionality matrix
+        run: npm run test:functionality-status
 
       - name: Check Wiki RAG freshness
         run: npm run test:wiki-rag
@@ -152,8 +166,14 @@ jobs:
       - name: Check Wiki head integrity
         run: npm run test:wiki-heads
 
+      - name: Check security reporting configuration
+        run: npm run test:security-reporting
+
       - name: Check public surface routing
         run: npm run test:surface-routing
+
+      - name: Check browser Ethers 6 baseline
+        run: npm run test:browser-ethers6
 
   validate-wallet-browser:
     name: Wallet Browser Suite

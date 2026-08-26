@@ -329,6 +329,15 @@ async function waitForServer(child) {
   throw new Error('Timed out waiting for Benefits frontend');
 }
 
+async function waitForEnabled(locator, timeoutMs = 90_000) {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    if (await locator.isEnabled()) return;
+    await new Promise((resolve) => setTimeout(resolve, 100));
+  }
+  assert.equal(await locator.isEnabled(), true, 'Timed out waiting for enabled control');
+}
+
 async function run() {
   const serverOutput = [];
   const server = spawn(process.execPath, [path.join(frontend, 'node_modules', 'next', 'dist', 'bin', 'next'), 'dev', '--hostname', '127.0.0.1', '--port', String(port)], {
@@ -454,8 +463,10 @@ async function run() {
       timeout: 60_000,
     });
     const sellerReference = seller.getByLabel('Seller URL or profile ID', { exact: true });
+    const openSellerCheckout = seller.getByRole('button', { name: 'Open seller checkout', exact: true });
     await sellerReference.fill(`https://attacker.example/b/${business.slug}`);
-    await seller.getByRole('button', { name: 'Open seller checkout', exact: true }).click();
+    await waitForEnabled(openSellerCheckout);
+    await openSellerCheckout.click();
     await seller.getByText('Enter a shop.ifrunit.tech seller URL, seller slug or profile ID.', { exact: true }).waitFor();
     assert.equal(new URL(seller.url()).pathname, `/p/${passId}`, 'foreign seller URLs must fail closed');
     await sellerReference.fill(`https://shop.ifrunit.tech/s/${business.slug}`);
@@ -464,7 +475,7 @@ async function run() {
         waitUntil: 'domcontentloaded',
         timeout: 60_000,
       }),
-      seller.getByRole('button', { name: 'Open seller checkout', exact: true }).click(),
+      openSellerCheckout.click(),
     ]);
     await seller.getByRole('heading', { name: business.name }).waitFor();
     await seller.getByRole('button', { name: 'Connect', exact: true }).click();

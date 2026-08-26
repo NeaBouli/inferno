@@ -50,7 +50,7 @@ const ifr = new ethers.Contract(
 );
 
 const balance = await ifr.balanceOf(userWallet);
-const eligible = balance.gte(ethers.utils.parseUnits(requiredIFR, 9));
+const eligible = balance >= ethers.parseUnits(requiredIFR, 9);
 ```
 
 ## Contract Addresses

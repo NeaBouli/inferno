@@ -71,20 +71,71 @@ export async function selectPreferredWalletConnector(connectors) {
 }
 
 /**
+ * Primary connect buttons only auto-start a wallet already exposed by the
+ * browser. Universal SDK connectors remain explicit user choices.
+ */
+export async function selectBrowserWalletConnector(connectors) {
+  const available = await listAvailableWalletConnectors(connectors);
+  return available.find(isInjectedWalletConnector);
+}
+
+/**
+ * Primary actions may open WalletConnect when no wallet is injected, but must
+ * never auto-start an SDK connector that can wait indefinitely without a
+ * visible wallet chooser.
+ */
+export async function selectPrimaryWalletConnector(connectors) {
+  const available = await listAvailableWalletConnectors(connectors);
+  return selectPrimaryAvailableWalletConnector(available);
+}
+
+/**
+ * Select from connectors that were already resolved for this browser.
+ * This avoids a second provider scan between rendering and the user click.
+ */
+export function selectPrimaryAvailableWalletConnector(available) {
+  return available.find(isInjectedWalletConnector) ||
+    available.find((connector) => connector.id === 'walletConnect' || connector.type === 'walletConnect');
+}
+
+/**
  * @param {{ id: string, name: string }} connector
  */
 export function walletConnectorLabel(connector) {
   if (connector.id === 'injected') return 'Browser wallet';
+  if (connector.id === 'metaMask' || connector.id === 'io.metamask') return 'MetaMask';
   if (connector.id === 'coinbaseWalletSDK') return 'Coinbase Wallet';
   if (connector.id === 'walletConnect') return 'WalletConnect';
   return connector.name;
 }
 
 /**
- * @param {unknown} error
+ * @param {{ id: string, name: string, type?: string }} connector
  */
-export function walletConnectionErrorMessage(error) {
+export function walletConnectionPrompt(connector) {
+  const label = walletConnectorLabel(connector);
+  if (connector.id === 'walletConnect' || connector.type === 'walletConnect') {
+    return 'On another device, use the scanner inside MetaMask, Trust Wallet or OKX. Do not use the normal camera app. On this phone, choose Open in wallet app.';
+  }
+  return `Open ${label} and approve the connection to shop.ifrunit.tech.`;
+}
+
+/**
+ * @param {unknown} error
+ * @param {{ id: number, name: string }} [targetChain]
+ */
+export function walletConnectionErrorMessage(
+  error,
+  targetChain = { id: 1, name: 'Ethereum Mainnet' },
+) {
   const message = error instanceof Error ? error.message : '';
+  if (/already pending|already processing|resource unavailable|-32002/i.test(message)) {
+    return 'Your wallet already has a connection request open. Open the wallet, finish or reject that request, then try again.';
+  }
+  if (/chain|network|switch/i.test(message) && /rejected|denied|cancel/i.test(message)) {
+    const chainLabel = `${targetChain.name} (chain ${targetChain.id})`;
+    return `${chainLabel} was not approved in the wallet. Switch to ${chainLabel} and try again.`;
+  }
   if (/rejected|denied|cancel/i.test(message)) return 'Connection cancelled in the wallet.';
   if (/provider|not found|unavailable|unsupported/i.test(message)) {
     return 'No compatible wallet provider was found. Open this page in your wallet app browser or choose another wallet connection.';

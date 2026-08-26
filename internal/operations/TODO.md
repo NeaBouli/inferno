@@ -1,5 +1,5 @@
 # IFR Protocol — Developer TODO List
-> Last updated: 2026-08-01 | Branch: main
+> Last updated: 2026-08-22 | Branch: main
 
 ---
 
@@ -104,7 +104,7 @@ On errors: fix immediately, commit with `seo:` prefix.
 - [x] MetaMask Mobile: centralized deep-link + pending connect ✅
 - [x] Protocol Plan wiki page created (26 pages) ✅
 
-## CURRENT WATCHLIST — verified 2026-07-31
+## CURRENT WATCHLIST — verified 2026-08-22
 
 - [x] LendingVault V1 borrow activation policy — keep disabled
       Runbook: docs/LENDING_PRICE_GOVERNANCE_RUNBOOK.md
@@ -116,6 +116,14 @@ On errors: fix immediately, commit with `seo:` prefix.
 - [ ] CommitmentVault price-condition locks — V2/PriceLockVault needed
       Design: docs/COMMITMENT_PRICE_LOCK_ORACLE_PATH.md
       Current: time-only locks live; price locks must stay disabled because deployed `_getCurrentPrice()` returns 0.
+- [ ] SEC-VLT-01 — Vault fee-exemption defense in depth
+      Canonical status: docs/VAULT_FEE_EXEMPT_HARDENING.md
+      Verified at Mainnet block 25811214: CommitmentVault and LendingVault are
+      fee-exempt, and both token-balance/accounting differences are 0 IFR.
+      Current V1 is healthy but depends on those exemptions remaining active.
+      Add read-only exemption/accounting monitoring and negative regression
+      tests. For V2, require balance-diff inflow accounting plus explicit
+      runtime exemption guards that fail closed on affected outgoing flows.
 - [ ] IFRp Commerce App / shop.ifrunit.tech production decisions
       Docs: docs/ifrp-commerce-app/MASTER_ARCHITECTURE.md
       Current: role chooser, external-wallet/IFRLock flow, QR proof/redeem,

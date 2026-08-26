@@ -82,12 +82,12 @@ window.IFRState = (() => {
         result.bootstrapStatus = {
           active: status.active,
           finalized: status._finalised,
-          totalETHRaised: ethers.utils.formatEther(totalETHRaised),
-          contributorCount: status.contributorCount.toNumber(),
-          timeRemaining: status.timeRemaining.toNumber(),
-          startTime: startTime.toNumber() * 1000,
-          endTime: endTime.toNumber() * 1000,
-          ifrAllocation: ethers.utils.formatUnits(ifrAllocation, 9),
+          totalETHRaised: ethers.formatEther(totalETHRaised),
+          contributorCount: Number(status.contributorCount),
+          timeRemaining: Number(status.timeRemaining),
+          startTime: Number(startTime) * 1000,
+          endTime: Number(endTime) * 1000,
+          ifrAllocation: ethers.formatUnits(ifrAllocation, 9),
         };
       } catch(e1) {
         console.warn("getBootstrapStatus() failed, trying individual calls:", e1.message);
@@ -99,16 +99,16 @@ window.IFRState = (() => {
           const endTime = await bootstrap.endTime();
           const finalised = await bootstrap.finalised();
           const now = Date.now();
-          const endMs = endTime.toNumber() * 1000;
+          const endMs = Number(endTime) * 1000;
           result.bootstrapStatus = {
             active: !finalised && now < endMs,
             finalized: finalised,
-            totalETHRaised: ethers.utils.formatEther(totalETHRaised),
+            totalETHRaised: ethers.formatEther(totalETHRaised),
             contributorCount: 0,
             timeRemaining: Math.max(0, Math.floor((endMs - now) / 1000)),
-            startTime: startTime.toNumber() * 1000,
+            startTime: Number(startTime) * 1000,
             endTime: endMs,
-            ifrAllocation: ethers.utils.formatUnits(ifrAllocation, 9),
+            ifrAllocation: ethers.formatUnits(ifrAllocation, 9),
           };
         } catch(e2) {
           console.warn("Individual bootstrap calls failed, using defaults:", e2.message);
@@ -129,19 +129,19 @@ window.IFRState = (() => {
     try {
       // ETH Balance
       const ethBal = await provider.getBalance(address);
-      result.ethBalance = ethers.utils.formatEther(ethBal);
+      result.ethBalance = ethers.formatEther(ethBal);
 
       // IFR Token Balance
       const token = new ethers.Contract(CONTRACTS.token, ABI_TOKEN, provider);
       const ifrBal = await token.balanceOf(address);
       result.ifrBalance = ifrBal;
-      result.ifrBalanceFormatted = parseFloat(ethers.utils.formatUnits(ifrBal, 9)).toLocaleString();
+      result.ifrBalanceFormatted = parseFloat(ethers.formatUnits(ifrBal, 9)).toLocaleString();
 
       // Bootstrap Contribution
       const bootstrap = new ethers.Contract(CONTRACTS.bootstrap, ABI_BOOTSTRAP, provider);
       const contrib = await bootstrap.contributions(address);
       result.bootstrapContribution = contrib;
-      result.bootstrapContributionETH = ethers.utils.formatEther(contrib);
+      result.bootstrapContributionETH = ethers.formatEther(contrib);
       result.bootstrapClaimed = await bootstrap.claimed(address);
 
       // IFRLock
@@ -149,8 +149,8 @@ window.IFRState = (() => {
         const lock = new ethers.Contract(CONTRACTS.lock, ABI_LOCK, provider);
         const locked = await lock.lockedBalance(address);
         result.lockedAmount = locked;
-        result.lockedFormatted = parseFloat(ethers.utils.formatUnits(locked, 9)).toLocaleString();
-        result.isLocked1000 = locked.gte(ethers.utils.parseUnits("1000", 9));
+        result.lockedFormatted = parseFloat(ethers.formatUnits(locked, 9)).toLocaleString();
+        result.isLocked1000 = locked >= ethers.parseUnits("1000", 9);
         result.access.copilotPremium = result.isLocked1000;
       }
 
@@ -184,9 +184,17 @@ window.IFRState = (() => {
   function hasAccess(feature) { return _cache && _cache.access && _cache.access[feature] === true; }
 
   // ── Wallet-Events abonnieren ─────────────────────────
-  IFRWallet.on("connected", function(addr) { load(addr); startAutoRefresh(); });
-  IFRWallet.on("disconnected", function() { load(null); stopAutoRefresh(); });
-  IFRWallet.on("accountChanged", function(addr) { load(addr); });
+  IFRWallet.on("connected", function(addr) {
+    window.IFRState.load(addr).catch(function() {});
+    startAutoRefresh();
+  });
+  IFRWallet.on("disconnected", function() {
+    window.IFRState.load(null).catch(function() {});
+    stopAutoRefresh();
+  });
+  IFRWallet.on("accountChanged", function(addr) {
+    window.IFRState.load(addr).catch(function() {});
+  });
 
   return { load: load, getCache: getCache, hasAccess: hasAccess, startAutoRefresh: startAutoRefresh, stopAutoRefresh: stopAutoRefresh, on: on, CONTRACTS: CONTRACTS };
 })();

@@ -432,8 +432,7 @@
     "about": {"@id": "https://ifrunit.tech/#app"}
   }
   </script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"
-  onerror="var s=document.createElement('script');s.src='https://unpkg.com/ethers@5.7.2/dist/ethers.umd.min.js';document.head.appendChild(s);"></script>
+<script src="/assets/vendor/ethers-6.17.0.umd.min.js"></script>
 <script src="../assets/wallet-core.js"></script>
 <script src="../assets/ifr-state.js"></script>
 <script type="application/ld+json">
@@ -581,7 +580,7 @@
 
       <!-- ========== Summary ========== -->
       <div class="callout">
-        <p><strong>Inferno (IFR)</strong> is a deflationary ERC-20 utility token on Ethereum. Every transfer permanently burns tokens, reducing supply over time. Launched via Community Fair Launch Model (CFLM) &mdash; no presale, no VC funding, no private allocation. Users lock IFR on-chain to activate partner-product access while the required amount remains locked and that integration remains available.</p>
+        <p><strong>Inferno (IFR)</strong> is a deflationary ERC-20 utility token on Ethereum. Standard transfers between non-exempt addresses permanently burn tokens, reducing supply over time. Launched via Community Fair Launch Model (CFLM) &mdash; no presale, no VC funding, no private allocation. Users lock IFR on-chain to activate partner-product access while the required amount remains locked and that integration remains available.</p>
       </div>
 
       <!-- ========== Key Facts ========== -->
@@ -617,7 +616,7 @@
           </tr>
           <tr>
             <td>Tests</td>
-            <td>544 total (367 contract + 77 app + 100 vault) &mdash; 99% coverage</td>
+            <td>Historical internal snapshot: 544 checks and 99% Solidity line coverage. Use current CI and functionality status for present evidence.</td>
           </tr>
           <tr>
             <td>Mainnet Launch</td>
@@ -682,7 +681,7 @@
       <!-- ========== Deflation Mechanism ========== -->
       <h2>Deflation Mechanism</h2>
 
-      <p>Every IFR transfer applies the following fees, enforced at the smart contract level:</p>
+      <p>Every standard IFR transfer between non-exempt addresses applies the following fees, enforced at the smart contract level:</p>
 
       <table>
         <thead>
@@ -800,7 +799,7 @@
           </tr>
           <tr>
             <td>Legacy static wiki/landing wallet widgets</td>
-            <td>ethers.js v5</td>
+            <td>ethers.js v6</td>
           </tr>
           <tr>
             <td>Governance UI</td>
@@ -949,7 +948,7 @@
           </tr>
           <tr>
             <td>Security reports</td>
-            <td><a href="https://github.com/NeaBouli/inferno/issues" target="_blank">GitHub Issues</a> &mdash; or via <a href="https://github.com/NeaBouli/inferno/issues" target="_blank">GitHub Issues</a> (preferred)</td>
+            <td><a href="https://github.com/NeaBouli/inferno/security/advisories/new" target="_blank" rel="noopener">GitHub Private Vulnerability Reporting</a></td>
           </tr>
           <tr>
             <td>General</td>
@@ -1070,7 +1069,7 @@ function lpUpdateUI(state){
     var dropAddr=document.getElementById("lp-drop-addr");if(dropAddr)dropAddr.textContent=addr.slice(0,10)+"..."+addr.slice(-6);
     var dropEth=document.getElementById("lp-drop-eth");if(dropEth)dropEth.textContent=parseFloat(state.ethBalance||"0").toFixed(4)+" ETH";
     var dropIfr=document.getElementById("lp-drop-ifr");
-    if(dropIfr){var ifrAmt=state.ifrBalance&&typeof ethers!=="undefined"?parseFloat(ethers.utils.formatUnits(state.ifrBalance,9)).toLocaleString("en-US",{maximumFractionDigits:0}):"0";dropIfr.textContent=ifrAmt+" IFR"}
+    if(dropIfr){var ifrAmt=state.ifrBalance&&typeof ethers!=="undefined"?parseFloat(ethers.formatUnits(state.ifrBalance,9)).toLocaleString("en-US",{maximumFractionDigits:0}):"0";dropIfr.textContent=ifrAmt+" IFR"}
     var lockDiv=document.getElementById("lp-drop-lock");var noLockDiv=document.getElementById("lp-drop-nolock");
     if(lockDiv)lockDiv.style.display=state.isLocked1000?"":"none";
     if(noLockDiv)noLockDiv.style.display=state.isLocked1000?"none":"";

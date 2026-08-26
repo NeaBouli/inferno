@@ -596,8 +596,7 @@
     "about": {"@id": "https://ifrunit.tech/#app"}
   }
   </script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"
-  onerror="var s=document.createElement('script');s.src='https://unpkg.com/ethers@5.7.2/dist/ethers.umd.min.js';document.head.appendChild(s);"></script>
+<script src="/assets/vendor/ethers-6.17.0.umd.min.js"></script>
 <script src="../assets/wallet-core.js"></script>
 <script src="../assets/ifr-state.js"></script>
 <script type="application/ld+json">
@@ -934,7 +933,7 @@ lock.lockWithType(amount, partnerPremium);</code></pre>
       <!-- ======================================== -->
       <h2>6. Code Examples</h2>
       <p>
-        Complete ethers.js v5 examples for interacting with the IFRLock contract. IFR uses 9 decimals (not 18).
+        Complete ethers.js v6 examples for interacting with the IFRLock contract. IFR uses 9 decimals (not 18).
       </p>
 
       <h3>Connect to IFRLock</h3>
@@ -952,13 +951,13 @@ const LOCK_ABI = [
   "function totalLocked() view returns (uint256)"
 ];
 
-const provider = new ethers.providers.JsonRpcProvider(RPC_URL);
+const provider = new ethers.JsonRpcProvider(RPC_URL);
 const signer = new ethers.Wallet(PRIVATE_KEY, provider);
 const lock = new ethers.Contract(LOCK_ADDRESS, LOCK_ABI, signer);</code></pre>
 
       <h3>Lock 10,000 IFR</h3>
 <pre><code>// IFR uses 9 decimals
-const amount = ethers.utils.parseUnits("10000", 9);
+const amount = ethers.parseUnits("10000", 9);
 
 // Step 1: Approve IFRLock to spend tokens
 const token = new ethers.Contract(TOKEN_ADDRESS, TOKEN_ABI, signer);
@@ -973,7 +972,7 @@ console.log("Locked:", lockTx.hash);</code></pre>
 
       <h3>Check Lock Status</h3>
 <pre><code>const userAddress = "0x...";
-const minRequired = ethers.utils.parseUnits("5000", 9);
+const minRequired = ethers.parseUnits("5000", 9);
 
 // Check if user qualifies for premium (>= 5000 IFR locked)
 const isActive = await lock.isLocked(userAddress, minRequired);
@@ -981,12 +980,12 @@ console.log("Premium active:", isActive);
 
 // Get exact locked balance
 const balance = await lock.lockedBalance(userAddress);
-console.log("Locked balance:", ethers.utils.formatUnits(balance, 9), "IFR");
+console.log("Locked balance:", ethers.formatUnits(balance, 9), "IFR");
 
 // Get full lock info
 const [lockedAmount, lockedAt] = await lock.lockInfo(userAddress);
-console.log("Amount:", ethers.utils.formatUnits(lockedAmount, 9), "IFR");
-console.log("Locked at:", new Date(lockedAt.toNumber() * 1000).toISOString());</code></pre>
+console.log("Amount:", ethers.formatUnits(lockedAmount, 9), "IFR");
+console.log("Locked at:", new Date(Number(lockedAt) * 1000).toISOString());</code></pre>
 
       <h3>Unlock All Tokens</h3>
 <pre><code>const unlockTx = await lock.unlock();
@@ -995,7 +994,7 @@ console.log("Unlocked:", unlockTx.hash);
 
 // Verify: balance should be 0
 const remaining = await lock.lockedBalance(signer.address);
-console.log("Remaining locked:", ethers.utils.formatUnits(remaining, 9), "IFR");</code></pre>
+console.log("Remaining locked:", ethers.formatUnits(remaining, 9), "IFR");</code></pre>
 
       <!-- ======================================== -->
       <!-- 7. Security Notes -->
@@ -1256,7 +1255,7 @@ function lpUpdateUI(state){
     var dropAddr=document.getElementById("lp-drop-addr");if(dropAddr)dropAddr.textContent=addr.slice(0,10)+"..."+addr.slice(-6);
     var dropEth=document.getElementById("lp-drop-eth");if(dropEth)dropEth.textContent=parseFloat(state.ethBalance||"0").toFixed(4)+" ETH";
     var dropIfr=document.getElementById("lp-drop-ifr");
-    if(dropIfr){var ifrAmt=state.ifrBalance&&typeof ethers!=="undefined"?parseFloat(ethers.utils.formatUnits(state.ifrBalance,9)).toLocaleString("en-US",{maximumFractionDigits:0}):"0";dropIfr.textContent=ifrAmt+" IFR"}
+    if(dropIfr){var ifrAmt=state.ifrBalance&&typeof ethers!=="undefined"?parseFloat(ethers.formatUnits(state.ifrBalance,9)).toLocaleString("en-US",{maximumFractionDigits:0}):"0";dropIfr.textContent=ifrAmt+" IFR"}
     var lockDiv=document.getElementById("lp-drop-lock");var noLockDiv=document.getElementById("lp-drop-nolock");
     if(lockDiv)lockDiv.style.display=state.isLocked1000?"":"none";
     if(noLockDiv)noLockDiv.style.display=state.isLocked1000?"none":"";

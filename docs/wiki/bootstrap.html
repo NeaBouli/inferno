@@ -635,8 +635,7 @@
     .bw-tx-success { background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.3); color: #22c55e; }
     .bw-tx-error   { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); color: #ef4444; }
   </style>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"
-    onerror="console.error('ethers CDN failed, trying fallback');var s=document.createElement('script');s.src='https://unpkg.com/ethers@5.7.2/dist/ethers.umd.min.js';document.head.appendChild(s);"></script>
+  <script src="/assets/vendor/ethers-6.17.0.umd.min.js"></script>
   <script src="../assets/wallet-core.js"></script>
   <script src="../assets/ifr-state.js"></script>
   <link rel="icon" type="image/png" href="../assets/ifr_icon_64.png">
@@ -1441,7 +1440,7 @@
       <p><strong>Historical snapshot 16.06.2026:</strong> C1/C2/C3 had claimed, but no contributor locks or LendingVault offers existed yet. <strong>Current follow-up 30.07.2026:</strong> all three contributors completed their CommitmentVault locks and LendingVault offers; three offers provide 52,155,440.952845656 IFR, with 0 IFR lent. LendingVault V1 borrowing remains intentionally disabled with <code>ifrPriceWei = 0</code>.</p>
 
       <h4>Layer 2: LendingVault (Organic Buy Pressure)</h4>
-      <p>Locked IFR generates ETH yield via <a href="https://ifrunit.tech/wiki/lending-vault.html">lending</a>. Every loan repayment = IFR bought on Uniswap. Every default = collateral buys IFR automatically. All roads lead to buy pressure.</p>
+      <p>Contributors can offer IFR through <a href="https://ifrunit.tech/wiki/lending-vault.html">LendingVault</a>. Mainnet V1 borrowing remains intentionally disabled while <code>ifrPriceWei = 0</code>. If activated in a future audited design, repayment may require a borrower to acquire IFR externally; V1 liquidation itself performs no Uniswap purchase and instead distributes ETH collateral between the liquidator and lender.</p>
 
       <h4>Layer 3: LP Reserve Safe (Team)</h4>
       <p>400.6M IFR secured in Gnosis Safe 3-of-5. Added <strong>only</strong> by governance-controlled decisions; no automatic reserve addition has executed.</p>
@@ -1651,11 +1650,11 @@ var ConsensusModule = {
     var myContrib = cache ? parseFloat(cache.bootstrapContributionETH || '0') : 0;
     if (myContrib <= 0 && typeof ethers !== 'undefined') {
       try {
-        var rpc = new ethers.providers.JsonRpcProvider('https://ethereum-rpc.publicnode.com');
+        var rpc = new ethers.JsonRpcProvider('https://ethereum-rpc.publicnode.com');
         var vault = new ethers.Contract('0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141',
           ['function contributions(address) view returns (uint256)'], rpc);
         var contrib = await vault.contributions(addr);
-        myContrib = parseFloat(ethers.utils.formatEther(contrib));
+        myContrib = parseFloat(ethers.formatEther(contrib));
       } catch(e) { /* keep myContrib = 0 */ }
     }
     if (myContrib <= 0) {
@@ -1809,11 +1808,11 @@ var ConsensusModule = {
     // Then fetch totalETH from on-chain and re-render with full data
     if (typeof ethers !== 'undefined') {
       try {
-        var rpc = new ethers.providers.JsonRpcProvider('https://ethereum-rpc.publicnode.com');
+        var rpc = new ethers.JsonRpcProvider('https://ethereum-rpc.publicnode.com');
         var vault = new ethers.Contract('0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141',
           ['function totalETHRaised() view returns (uint256)'], rpc);
         vault.totalETHRaised().then(function(total) {
-          self.state.totalETH = parseFloat(ethers.utils.formatEther(total));
+          self.state.totalETH = parseFloat(ethers.formatEther(total));
           self.render();
         }).catch(function() { /* keep previous render */ });
       } catch(e) { /* keep previous render */ }
@@ -2136,7 +2135,7 @@ async function bwContribute() {
   try {
     var signer = IFRWallet.getSigner();
     var vault = new ethers.Contract(BW.VAULT, BW.ABI, signer);
-    var tx = await vault.contribute({ value: ethers.utils.parseEther(amount.toString()) });
+    var tx = await vault.contribute({ value: ethers.parseEther(amount.toString()) });
     bwSetTxStatus("bw-tx-status", "pending", "\u23F3 Waiting for confirmation...", tx.hash);
     await tx.wait();
     bwSetTxStatus("bw-tx-status", "success", "\u2705 Contribution confirmed!", tx.hash);
@@ -2220,17 +2219,17 @@ async function bwRefund() {
   function upd(id,v){var e=document.getElementById(id);if(e)e.textContent=v}
   async function go(){
     try{
-      var p=new ethers.providers.JsonRpcProvider(RPC);
+      var p=new ethers.JsonRpcProvider(RPC);
       var c=new ethers.Contract(VAULT,["function getBootstrapStatus() view returns (bool,bool,uint256,uint256,uint256)"],p);
       var r=await c.getBootstrapStatus();
       var eth=r[2],cnt=r[4];
-      var ethN=parseFloat(ethers.utils.formatEther(eth));
+      var ethN=parseFloat(ethers.formatEther(eth));
       upd("bw-total-eth",ethN>0?ethN.toFixed(4)+" ETH":"0.0000 ETH");
       upd("bw-contributors",cnt.toString());
-      if(eth.gt(0)){
-        var alloc=ethers.utils.parseUnits("200000000",9);
-        var ratio=alloc.mul(ethers.utils.parseEther("1")).div(eth);
-        var ratioN=parseFloat(ethers.utils.formatUnits(ratio,9));
+      if(eth > 0n){
+        var alloc=ethers.parseUnits("200000000",9);
+        var ratio=(alloc * ethers.parseEther("1")) / eth;
+        var ratioN=parseFloat(ethers.formatUnits(ratio,9));
         upd("bw-ifr-per-eth",ratioN>=1e6?(ratioN/1e6).toFixed(3)+"M":ratioN.toFixed(0));
       }else{upd("bw-ifr-per-eth","TBD")}
       window._publicStatsLoaded=true;
@@ -2325,7 +2324,7 @@ function lpUpdateUI(state){
     var dropAddr=document.getElementById("lp-drop-addr");if(dropAddr)dropAddr.textContent=addr.slice(0,10)+"..."+addr.slice(-6);
     var dropEth=document.getElementById("lp-drop-eth");if(dropEth)dropEth.textContent=parseFloat(state.ethBalance||"0").toFixed(4)+" ETH";
     var dropIfr=document.getElementById("lp-drop-ifr");
-    if(dropIfr){var ifrAmt=state.ifrBalance&&typeof ethers!=="undefined"?parseFloat(ethers.utils.formatUnits(state.ifrBalance,9)).toLocaleString("en-US",{maximumFractionDigits:0}):"0";dropIfr.textContent=ifrAmt+" IFR"}
+    if(dropIfr){var ifrAmt=state.ifrBalance&&typeof ethers!=="undefined"?parseFloat(ethers.formatUnits(state.ifrBalance,9)).toLocaleString("en-US",{maximumFractionDigits:0}):"0";dropIfr.textContent=ifrAmt+" IFR"}
     var lockDiv=document.getElementById("lp-drop-lock");var noLockDiv=document.getElementById("lp-drop-nolock");
     if(lockDiv)lockDiv.style.display=state.isLocked1000?"":"none";
     if(noLockDiv)noLockDiv.style.display=state.isLocked1000?"none":"";

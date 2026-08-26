@@ -18,9 +18,10 @@ for (const app of apps) {
   const dockerfile = fs.readFileSync(path.join(appRoot, 'Dockerfile'), 'utf8');
   const baseImages = [...dockerfile.matchAll(/^FROM\s+(node:[^\s]+).*$/gm)].map((match) => match[1]);
 
-  assert.equal(manifest.engines?.node, '>=22 <23', `${app} package engine drifted from Node 22`);
+  const expectedEngine = app === 'frontend' ? '>=22.6.0 <23' : '>=22 <23';
+  assert.equal(manifest.engines?.node, expectedEngine, `${app} package engine drifted from Node 22`);
   assert.equal(manifest.devDependencies?.['@types/node'], '^22.0.0', `${app} Node types drifted`);
-  assert.equal(lock.packages?.['']?.engines?.node, '>=22 <23', `${app} lock engine drifted`);
+  assert.equal(lock.packages?.['']?.engines?.node, expectedEngine, `${app} lock engine drifted`);
   assert.match(lock.packages?.['node_modules/@types/node']?.version || '', /^22\./, `${app} lock has non-22 Node types`);
   assert.ok(baseImages.length >= 3, `${app} Dockerfile is missing expected build stages`);
   assert.ok(baseImages.every((image) => image === 'node:22-alpine'), `${app} Docker stages must all use node:22-alpine`);

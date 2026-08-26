@@ -403,8 +403,7 @@
     "about": {"@id": "https://ifrunit.tech/#app"}
   }
   </script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"
-  onerror="var s=document.createElement('script');s.src='https://unpkg.com/ethers@5.7.2/dist/ethers.umd.min.js';document.head.appendChild(s);"></script>
+<script src="/assets/vendor/ethers-6.17.0.umd.min.js"></script>
 <script src="../assets/wallet-core.js"></script>
 <script src="../assets/ifr-state.js"></script>
 <script type="application/ld+json">
@@ -645,7 +644,7 @@
         <ul style="color:#ccc; margin:0 0 16px 0; padding-left:20px;">
           <li>Test freely on Sepolia &mdash; no real funds required</li>
           <li>All 14 contracts verified on Sepolia Etherscan</li>
-          <li>Responsible disclosure via GitHub Issues</li>
+          <li>Responsible disclosure via GitHub Private Vulnerability Reporting</li>
           <li>Hall of Fame recognition for valid findings</li>
         </ul>
         <p style="color:#9ca3af;font-size:0.85rem;margin-top:8px;">
@@ -653,9 +652,9 @@
         </p>
         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-top:16px;">
           <span style="color:#888; font-size:13px;">Found a vulnerability? Report responsibly and get credited in the Hall of Fame.</span>
-          <a href="https://github.com/NeaBouli/inferno/issues/new?template=security-audit.md"
+          <a href="https://github.com/NeaBouli/inferno/security/advisories/new"
              style="color:#ffc800; font-weight:700; text-decoration:none; border: 1px solid rgba(255,200,0,0.5); padding:8px 20px; border-radius:4px; white-space:nowrap;">
-            &rarr; Submit a Finding
+            &rarr; Report Privately
           </a>
         </div>
       </div>
@@ -785,7 +784,7 @@ npm run dev
       <h2>Community Audit</h2>
       <p>
         All smart contracts are open source. Security findings are welcome via
-        <a href="https://github.com/NeaBouli/inferno/issues/new?template=security-audit.md" target="_blank" rel="noopener">GitHub Issues</a>.
+        <a href="https://github.com/NeaBouli/inferno/security/advisories/new" target="_blank" rel="noopener">GitHub Private Vulnerability Reporting</a>.
         The testnet deployment allows anyone to verify contract behavior without risking real funds.
       </p>
 
@@ -980,7 +979,7 @@ function lpUpdateUI(state){
     var dropAddr=document.getElementById("lp-drop-addr");if(dropAddr)dropAddr.textContent=addr.slice(0,10)+"..."+addr.slice(-6);
     var dropEth=document.getElementById("lp-drop-eth");if(dropEth)dropEth.textContent=parseFloat(state.ethBalance||"0").toFixed(4)+" ETH";
     var dropIfr=document.getElementById("lp-drop-ifr");
-    if(dropIfr){var ifrAmt=state.ifrBalance&&typeof ethers!=="undefined"?parseFloat(ethers.utils.formatUnits(state.ifrBalance,9)).toLocaleString("en-US",{maximumFractionDigits:0}):"0";dropIfr.textContent=ifrAmt+" IFR"}
+    if(dropIfr){var ifrAmt=state.ifrBalance&&typeof ethers!=="undefined"?parseFloat(ethers.formatUnits(state.ifrBalance,9)).toLocaleString("en-US",{maximumFractionDigits:0}):"0";dropIfr.textContent=ifrAmt+" IFR"}
     var lockDiv=document.getElementById("lp-drop-lock");var noLockDiv=document.getElementById("lp-drop-nolock");
     if(lockDiv)lockDiv.style.display=state.isLocked1000?"":"none";
     if(noLockDiv)noLockDiv.style.display=state.isLocked1000?"none":"";

@@ -558,8 +558,7 @@
     "about": {"@id": "https://ifrunit.tech/#app"}
   }
   </script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"
-  onerror="var s=document.createElement('script');s.src='https://unpkg.com/ethers@5.7.2/dist/ethers.umd.min.js';document.head.appendChild(s);"></script>
+<script src="/assets/vendor/ethers-6.17.0.umd.min.js"></script>
 <script src="../assets/wallet-core.js"></script>
 <script src="../assets/ifr-state.js"></script>
 <script type="application/ld+json">
@@ -712,7 +711,7 @@
       <h2 id="overview">1. What is IFR?</h2>
       <p>
         Inferno (IFR) is a deflationary ERC-20 token on Ethereum Mainnet.
-        Every transfer automatically burns 2.5% of the amount &mdash; permanently.
+        Every standard transfer between non-exempt addresses automatically burns 2.5% of the amount &mdash; permanently.
         An additional 1% goes to the protocol fee pool.
         There is no <code>mint()</code> function. Supply can only decrease, never increase.
       </p>
@@ -1090,9 +1089,9 @@
         </div>
       </div>
 
-      <h3>BuybackController (Phase 3)</h3>
+      <h3>BuybackController (Phase 3 &mdash; Deployed)</h3>
       <p>
-        In Phase 3, a BuybackController smart contract will automate BuybackVault distribution.
+        BuybackController was deployed on 14.04.2026 and governance-wired through Proposals #13 and #14. Its permissionless execution remains guarded by the controller's on-chain balance threshold and cooldown; it is not an unconditional timed automation.
         Parameters will be set based on real accumulation data:
       </p>
 
@@ -1255,7 +1254,7 @@
             <span style="background:#3b82f6;color:#fff;font-size:10px;padding:2px 8px;border-radius:10px;font-weight:700;">PHASE 3</span>
             <strong style="font-size:13px;">LendingVault</strong>
           </div>
-          <div style="font-size:12px;color:var(--muted);">IFR lending against ETH collateral (200% initial, margin call 150%, liquidation 120%). Builders borrow IFR for discount programs, must repay by buying on Uniswap &mdash; creating buy pressure. Dynamic interest rates (2-25% based on utilization). TWAP oracle (24h) prevents flash-loan manipulation. Creates self-reinforcing demand loop.</div>
+          <div style="font-size:12px;color:var(--muted);"><strong>Current V1:</strong> lender offers are live, but borrowing is intentionally disabled while <code>ifrPriceWei = 0</code>. V1 uses a governance-set price, emits a warning below 150%, and permits externally called liquidation below 120%; liquidation distributes ETH collateral and performs no Uniswap swap. <strong>Future design:</strong> a separately audited oracle/TWAP path with freshness, pause and cap controls is required before borrowing activation.</div>
         </div>
         <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px;">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
@@ -1432,7 +1431,7 @@ function lpUpdateUI(state){
     var dropAddr=document.getElementById("lp-drop-addr");if(dropAddr)dropAddr.textContent=addr.slice(0,10)+"..."+addr.slice(-6);
     var dropEth=document.getElementById("lp-drop-eth");if(dropEth)dropEth.textContent=parseFloat(state.ethBalance||"0").toFixed(4)+" ETH";
     var dropIfr=document.getElementById("lp-drop-ifr");
-    if(dropIfr){var ifrAmt=state.ifrBalance&&typeof ethers!=="undefined"?parseFloat(ethers.utils.formatUnits(state.ifrBalance,9)).toLocaleString("en-US",{maximumFractionDigits:0}):"0";dropIfr.textContent=ifrAmt+" IFR"}
+    if(dropIfr){var ifrAmt=state.ifrBalance&&typeof ethers!=="undefined"?parseFloat(ethers.formatUnits(state.ifrBalance,9)).toLocaleString("en-US",{maximumFractionDigits:0}):"0";dropIfr.textContent=ifrAmt+" IFR"}
     var lockDiv=document.getElementById("lp-drop-lock");var noLockDiv=document.getElementById("lp-drop-nolock");
     if(lockDiv)lockDiv.style.display=state.isLocked1000?"":"none";
     if(noLockDiv)noLockDiv.style.display=state.isLocked1000?"none":"";

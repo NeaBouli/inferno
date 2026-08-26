@@ -30,7 +30,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="dns-prefetch" href="https://eth.llamarpc.com">
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
-  <script src="/assets/vendor/ethers-5.7.2.umd.min.js"></script>
+  <script src="/assets/vendor/ethers-6.17.0.umd.min.js"></script>
   <script src="/web3-wallet-core.js"></script>
   <script src="/assets/ifr-state.js"></script>
   <script type="application/ld+json">
@@ -91,6 +91,8 @@
     }
 
     * { box-sizing: border-box; }
+
+    [hidden] { display: none !important; }
 
     html {
       background: var(--paper);
@@ -520,6 +522,16 @@
       word-break: break-word;
     }
 
+    .wallet-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      margin-top: 7px;
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 11px;
+    }
+
     .status-note {
       align-self: end;
       color: var(--mint);
@@ -536,6 +548,10 @@
 
     .panel-actions .btn {
       width: 100%;
+    }
+
+    .panel-actions [hidden] {
+      display: none;
     }
 
     .panel-foot {
@@ -602,6 +618,24 @@
 
     .wallet-connect-dialog {
       z-index: 160;
+    }
+
+    .wallet-option-list {
+      display: grid;
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .wallet-option {
+      width: 100%;
+      justify-content: flex-start;
+    }
+
+    .wallet-option img {
+      width: 22px;
+      height: 22px;
+      border-radius: 4px;
+      object-fit: contain;
     }
 
     .install-card,
@@ -1057,6 +1091,7 @@
 
     .builder-copy,
     .contract-stack {
+      min-width: 0;
       border: 1px solid var(--line);
       border-radius: var(--radius);
       background: var(--paper-3);
@@ -1105,6 +1140,7 @@
     }
 
     .contract-row {
+      min-width: 0;
       display: grid;
       grid-template-columns: 1fr auto;
       gap: 14px;
@@ -1115,6 +1151,10 @@
       text-decoration: none;
     }
 
+    .contract-row > span:first-child {
+      min-width: 0;
+    }
+
     .contract-name {
       display: block;
       font-weight: 700;
@@ -1122,7 +1162,7 @@
 
     .contract-address {
       display: block;
-      max-width: 260px;
+      max-width: min(260px, 100%);
       margin-top: 5px;
       overflow: hidden;
       color: var(--muted);
@@ -1225,12 +1265,25 @@
 
       .nav {
         min-height: auto;
-        flex-wrap: wrap;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 10px 16px;
         padding: 12px 0 10px;
       }
 
+      .brand {
+        grid-column: 1;
+        grid-row: 1;
+      }
+
+      .nav-actions {
+        grid-column: 2;
+        grid-row: 1;
+      }
+
       .nav-links {
-        order: 3;
+        grid-column: 1 / -1;
+        grid-row: 2;
         width: 100%;
         justify-content: flex-start;
         gap: 18px;
@@ -1274,9 +1327,28 @@
         width: min(100% - 24px, 1180px);
       }
 
+      .nav {
+        gap: 8px 10px;
+        padding: 10px 0 8px;
+      }
+
+      .brand {
+        min-width: 0;
+        gap: 8px;
+      }
+
+      .brand img {
+        width: 30px;
+        height: 30px;
+      }
+
       .brand-name {
         display: grid;
         gap: 3px;
+      }
+
+      .brand-main {
+        font-size: 13px;
       }
 
       .brand-tags {
@@ -1291,6 +1363,20 @@
 
       .nav-actions .btn-quiet {
         display: none;
+      }
+
+      .nav-actions {
+        gap: 6px;
+      }
+
+      .nav-actions .btn {
+        min-height: 44px;
+        padding: 8px 10px;
+        font-size: 13px;
+      }
+
+      .nav-actions [data-wallet-header-disconnect]:not([hidden]) {
+        display: inline-flex;
       }
 
       .hero-grid {
@@ -1499,7 +1585,8 @@
       <div class="nav-actions">
         <button class="btn btn-quiet install-button" type="button" data-install-app hidden>Install App</button>
         <a class="btn btn-quiet" href="https://app.uniswap.org/swap?outputCurrency=0x77e99917Eca8539c62F509ED1193ac36580A6e7B" target="_blank" rel="noopener">Buy IFR</a>
-        <button class="btn btn-primary" type="button" data-wallet-connect>Connect Wallet</button>
+        <button class="btn btn-quiet" type="button" data-wallet-header-disconnect hidden>Disconnect</button>
+        <button class="btn btn-primary" type="button" data-wallet-connect data-wallet-header-connect>Connect Wallet</button>
       </div>
     </nav>
   </header>
@@ -1510,7 +1597,7 @@
       <div>
         <div class="eyebrow"><span class="pulse"></span> Ethereum Mainnet access layer</div>
         <h1>Lock IFR. <span>Unlock access.</span> Builders earn from real usage.</h1>
-        <p class="hero-copy">Inferno Protocol turns IFR into reusable access infrastructure: holders lock once for product access, builders verify lock status on-chain, and every transfer keeps the token scarcer.</p>
+        <p class="hero-copy">Inferno Protocol turns IFR into reusable access infrastructure: holders lock once for product access, builders verify lock status on-chain, and standard non-exempt transfers reduce supply.</p>
         <div class="hero-actions">
           <button class="btn btn-primary" type="button" data-wallet-connect>Connect Wallet</button>
           <button class="btn btn-mint install-button" type="button" data-install-app hidden>Install App</button>
@@ -1536,7 +1623,7 @@
           </div>
           <div class="trust-pill">
             <span class="trust-label">Transfer</span>
-            <span class="trust-value">2.5% burned</span>
+            <span class="trust-value">2.5% standard burn</span>
           </div>
           <div class="trust-pill">
             <span class="trust-label">Market</span>
@@ -1559,6 +1646,11 @@
               <div>
                 <p class="status-label">Wallet</p>
                 <div class="status-value" data-wallet-address>Not connected</div>
+                <div class="wallet-meta" aria-live="polite">
+                  <span data-wallet-connector>No connector</span>
+                  <span aria-hidden="true">&middot;</span>
+                  <span data-wallet-network>Ethereum Mainnet</span>
+                </div>
               </div>
               <span class="status-note" data-wallet-state>Ready</span>
             </div>
@@ -1599,6 +1691,8 @@
             <button class="btn btn-mint" type="button" data-open-lending>Create offer</button>
             <button class="btn btn-quiet" type="button" data-open-borrow>Borrow IFR</button>
             <button class="btn btn-quiet" type="button" data-add-token>Add IFR to wallet</button>
+            <button class="btn btn-quiet" type="button" data-wallet-copy-address hidden>Copy wallet address</button>
+            <button class="btn btn-quiet" type="button" data-wallet-disconnect hidden>Disconnect wallet</button>
             <a class="btn btn-quiet" href="https://shop.ifrunit.tech/">Use IFR Benefits</a>
             <a class="btn btn-quiet" href="https://www.geckoterminal.com/eth/pools/0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0" target="_blank" rel="noopener">Track pool</a>
           </div>
@@ -1808,6 +1902,17 @@
         <a class="btn btn-mint" href="#" rel="noopener" data-wallet-coinbase>Open Coinbase Wallet</a>
         <button class="btn btn-quiet" type="button" data-wallet-copy>Copy WalletConnect URI</button>
         <button class="btn btn-quiet" type="button" data-wallet-dialog-close>Close</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="wallet-connect-dialog" data-wallet-chooser aria-hidden="true">
+    <div class="wallet-connect-card" role="dialog" aria-modal="true" aria-labelledby="wallet-chooser-title">
+      <h2 id="wallet-chooser-title">Choose a wallet</h2>
+      <p>Select the wallet you want to connect. Connecting requests account access only; it does not sign or send a transaction.</p>
+      <div class="wallet-option-list" data-wallet-chooser-list></div>
+      <div class="wallet-connect-actions">
+        <button class="btn btn-quiet" type="button" data-wallet-chooser-close>Close</button>
       </div>
     </div>
   </div>
@@ -2175,9 +2280,15 @@
       });
 
       const connectButtons = document.querySelectorAll("[data-wallet-connect]");
+      const walletHeaderConnect = document.querySelector("[data-wallet-header-connect]");
       const addTokenButton = document.querySelector("[data-add-token]");
       const walletAddress = document.querySelector("[data-wallet-address]");
       const walletState = document.querySelector("[data-wallet-state]");
+      const walletConnector = document.querySelector("[data-wallet-connector]");
+      const walletNetwork = document.querySelector("[data-wallet-network]");
+      const walletCopyAddress = document.querySelector("[data-wallet-copy-address]");
+      const walletDisconnect = document.querySelector("[data-wallet-disconnect]");
+      const walletHeaderDisconnect = document.querySelector("[data-wallet-header-disconnect]");
       const ifrBalance = document.querySelector("[data-ifr-balance]");
       const accessLockBalance = document.querySelector("[data-access-lock-balance]");
       const accessLockNote = document.querySelector("[data-access-lock-note]");
@@ -2197,6 +2308,9 @@
       const walletTrust = document.querySelector("[data-wallet-trust]");
       const walletCoinbase = document.querySelector("[data-wallet-coinbase]");
       const walletCopy = document.querySelector("[data-wallet-copy]");
+      const walletChooser = document.querySelector("[data-wallet-chooser]");
+      const walletChooserList = document.querySelector("[data-wallet-chooser-list]");
+      const walletChooserClose = document.querySelector("[data-wallet-chooser-close]");
       const accessLockDialog = document.querySelector("[data-access-lock-dialog]");
       const accessLockClose = document.querySelector("[data-access-lock-close]");
       const accessLockAmount = document.querySelector("[data-access-lock-amount]");
@@ -2266,6 +2380,11 @@
       function isSafariBrowser() {
         return /^((?!chrome|android|crios|fxios|edgios).)*safari/i.test(navigator.userAgent);
       }
+
+      function isLegacyAndroidPwaUnsupported() {
+        const match = navigator.userAgent.match(/Android\s+(\d+)/i);
+        return Boolean(match && Number(match[1]) <= 9);
+      }
       let deferredInstallPrompt = null;
       let walletConnectUri = "";
       let currentAccessLockState = null;
@@ -2326,10 +2445,15 @@
       }
 
       function setWalletLoading(isLoading) {
+        const connected = Boolean(window.IFRWallet && IFRWallet.isConnected());
         connectButtons.forEach((button) => {
           button.disabled = isLoading;
-          button.textContent = isLoading ? "Connecting..." : (window.IFRWallet && IFRWallet.isConnected() ? "Connected" : "Connect Wallet");
+          button.textContent = isLoading ? "Connecting..." : (connected ? "Wallet connected" : "Connect Wallet");
         });
+        if (walletCopyAddress) walletCopyAddress.hidden = !connected;
+        if (walletDisconnect) walletDisconnect.hidden = !connected;
+        if (walletHeaderDisconnect) walletHeaderDisconnect.hidden = !connected;
+        if (walletHeaderConnect) walletHeaderConnect.hidden = connected;
       }
 
       function setWalletDialogLinks(uri) {
@@ -2364,9 +2488,100 @@
         walletDialog.setAttribute("aria-hidden", "true");
       }
 
+      let walletChooserCancel = null;
+
+      function closeWalletChooser(cancelSelection = true) {
+        if (!walletChooser) return;
+        walletChooser.classList.remove("is-open");
+        walletChooser.setAttribute("aria-hidden", "true");
+        if (cancelSelection && walletChooserCancel) {
+          const cancel = walletChooserCancel;
+          walletChooserCancel = null;
+          cancel();
+        }
+      }
+
+      function openWalletChooser(wallets, onSelect, onCancel) {
+        walletChooserList.replaceChildren();
+        walletChooserCancel = onCancel;
+        wallets.forEach((wallet) => {
+          const option = document.createElement("button");
+          option.type = "button";
+          option.className = `btn ${wallet.type === "walletconnect" ? "btn-primary" : "btn-quiet"} wallet-option`;
+          option.dataset.walletOption = wallet.id;
+          option.dataset.walletOptionType = wallet.type;
+          if (wallet.icon && wallet.icon.startsWith("data:image/")) {
+            const icon = document.createElement("img");
+            icon.src = wallet.icon;
+            icon.alt = "";
+            option.appendChild(icon);
+          }
+          const label = document.createElement("span");
+          label.textContent = wallet.type === "walletconnect"
+            ? "WalletConnect (QR or another wallet)"
+            : wallet.name;
+          option.appendChild(label);
+          option.addEventListener("click", () => {
+            walletChooserCancel = null;
+            closeWalletChooser(false);
+            onSelect(wallet);
+          });
+          walletChooserList.appendChild(option);
+        });
+        walletChooser.classList.add("is-open");
+        walletChooser.setAttribute("aria-hidden", "false");
+        const firstOption = walletChooserList.querySelector("button");
+        if (firstOption) firstOption.focus();
+      }
+
+      async function runWalletConnect(connectAction, mobileWalletConnect, label) {
+        if (mobileWalletConnect) openWalletDialog(IFRWallet.getWalletConnectUri && IFRWallet.getWalletConnectUri());
+        setWalletLoading(true);
+        walletState.textContent = label || (mobileWalletConnect ? "Open wallet" : "Connecting");
+        const connectWatchdog = window.setTimeout(() => {
+          if (window.IFRWallet && !IFRWallet.isConnected()) {
+            walletState.textContent = mobileWalletConnect ? "Approve in wallet" : "Check wallet";
+            setWalletLoading(false);
+          }
+        }, mobileWalletConnect ? 45000 : 15000);
+        try {
+          const address = await connectAction();
+          closeWalletDialog();
+          return address || null;
+        } catch (error) {
+          if (error && error.code === "WRONG_NETWORK") walletState.textContent = error.message;
+          else if (error && (error.code === 4001 || error.message === "User rejected.")) walletState.textContent = "Rejected";
+          else if (error && error.code === -32002) walletState.textContent = "Open wallet";
+          else walletState.textContent = "Connect failed";
+          return null;
+        } finally {
+          window.clearTimeout(connectWatchdog);
+          setWalletLoading(false);
+        }
+      }
+
+      async function connectWithChooser(label) {
+        if (!window.IFRWallet || typeof IFRWallet.listWallets !== "function") return null;
+        const wallets = await IFRWallet.listWallets();
+        return new Promise((resolve) => {
+          openWalletChooser(wallets, async (wallet) => {
+            const isWalletConnect = wallet.type === "walletconnect";
+            const isMobileWalletConnect = isWalletConnect && IFRWallet.isMobileOrTablet && IFRWallet.isMobileOrTablet();
+            const address = await runWalletConnect(
+              () => isWalletConnect
+                ? IFRWallet.connectWalletConnect()
+                : IFRWallet.connectInjected(wallet.id),
+              isMobileWalletConnect,
+              label
+            );
+            resolve(address);
+          }, () => resolve(null));
+        });
+      }
+
       function formatIFR(value) {
         if (!window.ethers || value == null) return "0 IFR";
-        const formatted = ethers.utils.formatUnits(value, IFR_DECIMALS);
+        const formatted = ethers.formatUnits(value, IFR_DECIMALS);
         const numeric = Number(formatted);
         if (!Number.isFinite(numeric)) return `${formatted} IFR`;
         return `${numeric.toLocaleString("en-US", { maximumFractionDigits: 4 })} IFR`;
@@ -2378,7 +2593,7 @@
 
       function formatIFRCompact(value) {
         if (!window.ethers || value == null) return "0 IFR";
-        const numeric = Number(ethers.utils.formatUnits(value, IFR_DECIMALS));
+        const numeric = Number(ethers.formatUnits(value, IFR_DECIMALS));
         if (!Number.isFinite(numeric)) return formatIFR(value);
         if (numeric >= 1000000) return `${(numeric / 1000000).toLocaleString("en-US", { maximumFractionDigits: 2 })}M IFR`;
         if (numeric >= 1000) return `${(numeric / 1000).toLocaleString("en-US", { maximumFractionDigits: 1 })}K IFR`;
@@ -2386,12 +2601,12 @@
       }
 
       function formatIFRInputValue(value) {
-        return ethers.utils.formatUnits(value, IFR_DECIMALS).replace(/(\.\d*?)0+$/, "$1").replace(/\.$/, "");
+        return ethers.formatUnits(value, IFR_DECIMALS).replace(/(\.\d*?)0+$/, "$1").replace(/\.$/, "");
       }
 
       function formatETH(value) {
         if (!window.ethers || value == null) return "0 ETH";
-        const formatted = ethers.utils.formatEther(value);
+        const formatted = ethers.formatEther(value);
         const numeric = Number(formatted);
         if (!Number.isFinite(numeric)) return `${formatted} ETH`;
         return `${numeric.toLocaleString("en-US", { maximumFractionDigits: 6 })} ETH`;
@@ -2400,13 +2615,13 @@
       function parseETHInput(input) {
         const clean = String(input || "").replace(",", ".").trim();
         if (!clean || Number(clean) <= 0) throw new Error("Enter an ETH amount greater than zero.");
-        return ethers.utils.parseEther(clean);
+        return ethers.parseEther(clean);
       }
 
       function parseIFRInput(input) {
         const clean = String(input || "").replace(",", ".").trim();
         if (!clean || Number(clean) <= 0) throw new Error("Enter an IFR amount greater than zero.");
-        return ethers.utils.parseUnits(clean, IFR_DECIMALS);
+        return ethers.parseUnits(clean, IFR_DECIMALS);
       }
 
       function accessLockErrorMessage(error) {
@@ -2426,7 +2641,7 @@
         if (!accessLockSubmit || !currentAccessLockState) return false;
         accessLockSubmit.textContent = "Approve / Lock";
 
-        if (currentAccessLockState.balance.isZero()) {
+        if (currentAccessLockState.balance === 0n) {
           accessLockSubmit.disabled = true;
           accessLockSubmit.textContent = "No free IFR";
           if (showMessage) {
@@ -2443,7 +2658,7 @@
           return false;
         }
 
-        if (amount.gt(currentAccessLockState.balance)) {
+        if (amount > currentAccessLockState.balance) {
           accessLockSubmit.disabled = true;
           accessLockSubmit.textContent = "Amount exceeds wallet";
           if (showMessage) {
@@ -2453,7 +2668,7 @@
         }
 
         accessLockSubmit.disabled = false;
-        accessLockSubmit.textContent = currentAccessLockState.allowance.lt(amount) ? "Approve / Lock" : "Lock";
+        accessLockSubmit.textContent = currentAccessLockState.allowance < amount ? "Approve / Lock" : "Lock";
         return true;
       }
 
@@ -2484,31 +2699,10 @@
           return IFRWallet.getAddress();
         }
 
-        const isMobileConnect = IFRWallet.isMobileOrTablet && IFRWallet.isMobileOrTablet();
-        if (isMobileConnect) openWalletDialog(IFRWallet.getWalletConnectUri && IFRWallet.getWalletConnectUri());
-        setWalletLoading(true);
-        walletState.textContent = label || (isMobileConnect ? "Open wallet" : "Connecting");
-        const connectWatchdog = window.setTimeout(() => {
-          if (window.IFRWallet && !IFRWallet.isConnected()) {
-            walletState.textContent = isMobileConnect ? "Approve in wallet" : "Check wallet";
-            if (isMobileConnect) openWalletDialog(IFRWallet.getWalletConnectUri && IFRWallet.getWalletConnectUri());
-            setWalletLoading(false);
-          }
-        }, isMobileConnect ? 12000 : 8000);
-
-        try {
-          const address = await IFRWallet.connect();
-          const state = await IFRState.load(address);
-          renderState(state);
-          closeWalletDialog();
-          return address;
-        } catch (error) {
-          if (error && error.code === "WRONG_NETWORK") walletState.textContent = error.message;
-          throw error;
-        } finally {
-          window.clearTimeout(connectWatchdog);
-          setWalletLoading(false);
-        }
+        const address = await connectWithChooser(label);
+        if (!address) throw new Error("Wallet connection was not completed.");
+        await loadConnectedWallet(address);
+        return address;
       }
 
       function getContracts(signerOrProvider) {
@@ -2569,11 +2763,11 @@
         }
 
         const splitCount = lockSplit && lockSplit.checked ? 10 : 1;
-        const base = totalAmount.div(splitCount);
-        if (base.isZero()) throw new Error("Amount is too small for the selected tranche split.");
+        const base = totalAmount / BigInt(splitCount);
+        if (base === 0n) throw new Error("Amount is too small for the selected tranche split.");
         const amounts = [];
         for (let i = 0; i < splitCount; i++) {
-          amounts.push(i === splitCount - 1 ? totalAmount.sub(base.mul(splitCount - 1)) : base);
+          amounts.push(i === splitCount - 1 ? totalAmount - (base * BigInt(splitCount - 1)) : base);
         }
 
         return { totalAmount, amounts, cType, unlockTime, p0Multiplier, splitCount };
@@ -2583,8 +2777,9 @@
         if (!address || !window.ethers || !window.IFRWallet || !IFRWallet.getProvider()) return;
         const { ifrLock } = getContracts(IFRWallet.getProvider());
         const locked = await ifrLock.lockedBalance(address);
+        if (!isCurrentWalletAddress(address)) return;
         accessLockBalance.textContent = formatIFR(locked);
-        accessLockNote.textContent = locked.gte(ethers.utils.parseUnits("1000", IFR_DECIMALS)) ? "Premium ready" : "Lock needed";
+        accessLockNote.textContent = locked >= ethers.parseUnits("1000", IFR_DECIMALS) ? "Premium ready" : "Lock needed";
       }
 
       async function loadCommitmentSummary(address) {
@@ -2594,8 +2789,9 @@
           commitment.lockedBalance(address),
           commitment.getTrancheCount(address)
         ]);
+        if (!isCurrentWalletAddress(address)) return;
         commitmentBalance.textContent = formatIFR(locked);
-        commitmentNote.textContent = count.toNumber() ? `${count.toNumber()} tranches` : "No tranches";
+        commitmentNote.textContent = Number(count) ? `${Number(count)} tranches` : "No tranches";
       }
 
       async function loadLendingSummary(address) {
@@ -2606,7 +2802,7 @@
 
         const [hasOffer, loanCountValue] = await Promise.all([
           lending.hasOffer(address).catch(() => false),
-          lending.getLoanCount().catch(() => ethers.BigNumber.from(0))
+          lending.getLoanCount().catch(() => 0n)
         ]);
 
         let offer = null;
@@ -2615,9 +2811,9 @@
           offer = await lending.getOffer(offerId);
         }
 
-        const loanCount = loanCountValue.toNumber();
+        const loanCount = Number(loanCountValue);
         let activeLoans = 0;
-        let borrowed = ethers.BigNumber.from(0);
+        let borrowed = 0n;
         const loanReads = [];
         for (let i = 0; i < Math.min(loanCount, 120); i++) {
           loanReads.push(
@@ -2625,14 +2821,15 @@
               .then((loan) => {
                 if (!loan.active || loan.borrower.toLowerCase() !== address.toLowerCase()) return;
                 activeLoans++;
-                borrowed = borrowed.add(loan.ifrAmount);
+                borrowed = borrowed + loan.ifrAmount;
               })
               .catch(() => null)
           );
         }
         await Promise.all(loanReads);
+        if (!isCurrentWalletAddress(address)) return;
 
-        if (borrowed.gt(0)) {
+        if (borrowed > 0n) {
           lendingSummary.textContent = `${formatIFRCompact(borrowed)} borrowed`;
         } else if (offer && offer.active) {
           lendingSummary.textContent = `${formatIFRCompact(offer.availableIFR)} available`;
@@ -2657,24 +2854,24 @@
           ifrLock.lockedBalance(address)
         ]);
 
-        const premiumMinimum = ethers.utils.parseUnits("1000", IFR_DECIMALS);
-        const premiumMissing = locked.gte(premiumMinimum) ? ethers.BigNumber.from(0) : premiumMinimum.sub(locked);
+        const premiumMinimum = ethers.parseUnits("1000", IFR_DECIMALS);
+        const premiumMissing = locked >= premiumMinimum ? 0n : premiumMinimum - locked;
         currentAccessLockState = { address, balance, allowance, locked, premiumMinimum, premiumMissing };
         accessWalletBalance.textContent = formatIFR(balance);
         accessLockTotal.textContent = formatIFR(locked);
         accessLockAllowance.textContent = formatIFR(allowance);
         accessLockBalance.textContent = formatIFR(locked);
-        accessLockNote.textContent = premiumMissing.isZero() ? "Premium ready" : "Lock needed";
+        accessLockNote.textContent = premiumMissing === 0n ? "Premium ready" : "Lock needed";
         if (accessLockPremium) {
-          accessLockPremium.disabled = premiumMissing.isZero();
-          accessLockPremium.textContent = premiumMissing.isZero() ? "Premium ready" : `Lock ${formatIFRShort(premiumMissing)} IFR for Premium`;
+          accessLockPremium.disabled = premiumMissing === 0n;
+          accessLockPremium.textContent = premiumMissing === 0n ? "Premium ready" : `Lock ${formatIFRShort(premiumMissing)} IFR for Premium`;
         }
-        accessLockUnlock.disabled = locked.isZero();
-        if (locked.gte(premiumMinimum) && balance.isZero()) {
+        accessLockUnlock.disabled = locked === 0n;
+        if (locked >= premiumMinimum && balance === 0n) {
           accessLockAmount.value = "";
           accessLockStatus.textContent = "Premium access is ready. This wallet has no free IFR left to lock.";
         } else {
-          accessLockStatus.textContent = locked.isZero() ? "No IFRLock balance yet." : "IFRLock state loaded.";
+          accessLockStatus.textContent = locked === 0n ? "No IFRLock balance yet." : "IFRLock state loaded.";
         }
         syncAccessLockSubmitState(false);
       }
@@ -2683,7 +2880,7 @@
         const address = await ensureWalletReady("Preparing Premium access");
         const provider = IFRWallet.getProvider();
         const { token, ifrLock } = getContracts(provider);
-        const premiumMinimum = ethers.utils.parseUnits("1000", IFR_DECIMALS);
+        const premiumMinimum = ethers.parseUnits("1000", IFR_DECIMALS);
 
         accessLockPremium.disabled = true;
         accessLockStatus.textContent = "Checking Premium access threshold...";
@@ -2692,14 +2889,14 @@
           ifrLock.lockedBalance(address)
         ]);
 
-        if (locked.gte(premiumMinimum)) {
+        if (locked >= premiumMinimum) {
           accessLockStatus.textContent = "Premium access is already ready in IFRLock.";
           await loadAccessLockPanel();
           return;
         }
 
-        const missing = premiumMinimum.sub(locked);
-        if (balance.lt(missing)) {
+        const missing = premiumMinimum - locked;
+        if (balance < missing) {
           accessLockStatus.textContent = `Premium needs ${formatIFR(missing)} more in IFRLock, but this wallet has ${formatIFR(balance)} free.`;
           await loadAccessLockPanel().catch(() => null);
           return;
@@ -2724,10 +2921,10 @@
           token.balanceOf(address),
           token.allowance(address, IFR_LOCK_ADDRESS)
         ]);
-        if (balance.lt(amount)) {
+        if (balance < amount) {
           throw new Error(`This wallet has ${formatIFR(balance)} free, but the lock amount is ${formatIFR(amount)}. Your existing IFRLock balance stays locked and can be unlocked separately.`);
         }
-        if (allowance.lt(amount)) {
+        if (allowance < amount) {
           accessLockStatus.textContent = "Approve IFRLock 0x769928...3954Eb for the exact amount.";
           const approveTx = await token.approve(IFR_LOCK_ADDRESS, amount);
           accessLockStatus.textContent = "Waiting for approval confirmation...";
@@ -2735,7 +2932,7 @@
         }
 
         accessLockStatus.textContent = "Confirm IFRLock transaction in your wallet.";
-        const tx = lockType ? await ifrLock.lockWithType(amount, ethers.utils.formatBytes32String(lockType)) : await ifrLock.lock(amount);
+        const tx = lockType ? await ifrLock.lockWithType(amount, ethers.encodeBytes32String(lockType)) : await ifrLock.lock(amount);
         accessLockStatus.textContent = "Waiting for IFRLock confirmation...";
         await tx.wait();
         accessLockAmount.value = "";
@@ -2767,11 +2964,11 @@
           token.allowance(address, COMMITMENT_VAULT_ADDRESS),
           commitment.lockedBalance(address),
           commitment.getTrancheCount(address),
-          commitment.priceOracle().catch(() => ethers.constants.AddressZero)
+          commitment.priceOracle().catch(() => ethers.ZeroAddress)
         ]);
 
-        const totalTranches = count.toNumber();
-        const priceOracleIsMissing = priceOracle === ethers.constants.AddressZero;
+        const totalTranches = Number(count);
+        const priceOracleIsMissing = priceOracle === ethers.ZeroAddress;
         const trancheReads = [];
         for (let i = 0; i < totalTranches; i++) {
           trancheReads.push(Promise.all([
@@ -2804,9 +3001,9 @@
         }
 
         lockTranches.innerHTML = active.map((item) => {
-          const unlockTimestamp = item.tranche.unlockTime.toNumber();
+          const unlockTimestamp = Number(item.tranche.unlockTime);
           const unlockDate = unlockTimestamp ? new Date(unlockTimestamp * 1000).toLocaleString() : "No time condition";
-          const multiplier = item.tranche.p0Multiplier.toNumber();
+          const multiplier = Number(item.tranche.p0Multiplier);
           const condition = conditionNames[item.tranche.cType] || `Condition ${item.tranche.cType}`;
           const canUnlock = Boolean(item.conditionMet);
           return `
@@ -2832,7 +3029,7 @@
         lockStatus.textContent = "Checking token allowance...";
         const allowance = await token.allowance(address, COMMITMENT_VAULT_ADDRESS);
 
-        if (allowance.lt(plan.totalAmount)) {
+        if (allowance < plan.totalAmount) {
           lockStatus.textContent = "Approve IFR in your wallet, then keep this page open.";
           const approveTx = await token.approve(COMMITMENT_VAULT_ADDRESS, plan.totalAmount);
           lockStatus.textContent = "Waiting for approval confirmation...";
@@ -2887,7 +3084,7 @@
         lendingAvailable.textContent = offer ? formatIFR(offer.availableIFR) : "0 IFR";
         lendingLent.textContent = offer ? formatIFR(offer.lentIFR) : "0 IFR";
         lendingMode.value = offer ? (offer.active ? `Offer #${offerId.toString()} active` : `Offer #${offerId.toString()} closed`) : "No offer yet";
-        lendingWithdraw.disabled = !offer || !offer.active || offer.availableIFR.isZero();
+        lendingWithdraw.disabled = !offer || !offer.active || offer.availableIFR === 0n;
         lendingDeposit.disabled = Boolean(offer && !offer.active);
         lendingStatus.textContent = offer ? "Lending offer loaded." : "No LendingVault offer yet.";
       }
@@ -2902,7 +3099,7 @@
         lendingStatus.textContent = "Checking token allowance...";
         const allowance = await token.allowance(address, LENDING_VAULT_ADDRESS);
 
-        if (allowance.lt(amount)) {
+        if (allowance < amount) {
           lendingStatus.textContent = "Approve IFR in your wallet, then keep this page open.";
           const approveTx = await token.approve(LENDING_VAULT_ADDRESS, amount);
           lendingStatus.textContent = "Waiting for approval confirmation...";
@@ -2948,10 +3145,10 @@
         if (priceMissing) {
           return { label: "Price not set", value: "Collateral ratio unavailable", className: "is-muted" };
         }
-        if (!ratio || ratio.eq(ethers.constants.MaxUint256)) {
+        if (!ratio || ratio === ethers.MaxUint256) {
           return { label: "Safe", value: "No liquidation pressure", className: "" };
         }
-        const pct = ratio.toNumber();
+        const pct = Number(ratio);
         if (pct < 120) {
           return { label: "Liquidation", value: `${pct}% collateral ratio`, className: "is-critical" };
         }
@@ -2964,7 +3161,7 @@
       async function updateBorrowPreview() {
         if (!currentBorrowState) return;
         const offer = selectedBorrowOffer();
-        const priceMissing = currentBorrowState.ifrPriceWei.isZero();
+        const priceMissing = currentBorrowState.ifrPriceWei === 0n;
         borrowSubmit.disabled = true;
 
         if (priceMissing) {
@@ -2994,7 +3191,7 @@
           return;
         }
 
-        if (amount.gt(offer.offer.availableIFR)) {
+        if (amount > offer.offer.availableIFR) {
           borrowCollateral.textContent = "Too high";
           borrowStatus.textContent = "Amount exceeds this offer's available IFR.";
           return;
@@ -3016,7 +3213,7 @@
       function renderBorrowState() {
         if (!currentBorrowState) return;
         const { address, offers, loans, ifrPriceWei, offerCount } = currentBorrowState;
-        const priceMissing = ifrPriceWei.isZero();
+        const priceMissing = ifrPriceWei === 0n;
         borrowPrice.textContent = priceMissing ? "Disabled" : `${formatETH(ifrPriceWei)} / IFR`;
         borrowOfferCount.textContent = `${offers.length} / ${offerCount}`;
 
@@ -3049,7 +3246,7 @@
 
         borrowLoans.innerHTML = loans.length
           ? loans.map((item) => {
-              const repay = item.interest ? item.loan.ifrAmount.add(item.interest) : item.loan.ifrAmount;
+              const repay = item.interest ? item.loan.ifrAmount + item.interest : item.loan.ifrAmount;
               const health = loanHealthState(item.ratio, priceMissing);
               return `
                 <div class="loan-row">
@@ -3083,18 +3280,18 @@
           lending.ifrPriceWei(),
           lending.getOfferCount(),
           lending.getLoanCount(),
-          lending.getInterestRate().catch(() => ethers.BigNumber.from(200))
+          lending.getInterestRate().catch(() => 200n)
         ]);
 
-        const offerCount = offerCountValue.toNumber();
-        const loanCount = loanCountValue.toNumber();
+        const offerCount = Number(offerCountValue);
+        const loanCount = Number(loanCountValue);
         const offers = [];
         const offerReads = [];
         for (let i = 0; i < Math.min(offerCount, 80); i++) {
           offerReads.push(
             lending.getOffer(i)
               .then((offer) => {
-                if (offer.active && !offer.availableIFR.isZero()) offers.push({ id: i, offer });
+                if (offer.active && offer.availableIFR !== 0n) offers.push({ id: i, offer });
               })
               .catch(() => null)
           );
@@ -3109,8 +3306,8 @@
               .then(async (loan) => {
                 if (!loan.active || loan.borrower.toLowerCase() !== address.toLowerCase()) return;
                 const [interest, ratio] = await Promise.all([
-                  lending.calculateInterest(i).catch(() => ethers.BigNumber.from(0)),
-                  lending.getCollateralRatio(i).catch(() => ethers.constants.MaxUint256)
+                  lending.calculateInterest(i).catch(() => 0n),
+                  lending.getCollateralRatio(i).catch(() => ethers.MaxUint256)
                 ]);
                 loans.push({ id: i, loan, interest, ratio });
               })
@@ -3126,7 +3323,7 @@
       async function borrowLendingIFR() {
         await ensureWalletReady("Preparing borrow");
         if (!currentBorrowState) await loadBorrowPanel();
-        if (currentBorrowState.ifrPriceWei.isZero()) {
+        if (currentBorrowState.ifrPriceWei === 0n) {
           throw new Error("Borrowing is disabled until LendingVault ifrPriceWei is set on-chain.");
         }
         const offer = selectedBorrowOffer();
@@ -3136,7 +3333,7 @@
         }
 
         const amount = parseIFRInput(borrowAmount.value);
-        if (amount.gt(offer.offer.availableIFR)) throw new Error("Amount exceeds this offer's available IFR.");
+        if (amount > offer.offer.availableIFR) throw new Error("Amount exceeds this offer's available IFR.");
         const durationDays = Number(borrowDuration.value || "90");
         if (durationDays < 30 || durationDays > 365) throw new Error("Duration must be 30-365 days.");
 
@@ -3164,9 +3361,9 @@
         borrowRepay.disabled = true;
         borrowStatus.textContent = "Calculating IFR repayment amount...";
         const interest = await lending.calculateInterest(loan.id);
-        const repayAmount = loan.loan.ifrAmount.add(interest);
+        const repayAmount = loan.loan.ifrAmount + interest;
         const allowance = await token.allowance(address, LENDING_VAULT_ADDRESS);
-        if (allowance.lt(repayAmount)) {
+        if (allowance < repayAmount) {
           borrowStatus.textContent = `Approve ${formatIFR(repayAmount)} for LendingVault repayment.`;
           const approveTx = await token.approve(LENDING_VAULT_ADDRESS, repayAmount);
           borrowStatus.textContent = "Waiting for repayment approval confirmation...";
@@ -3198,10 +3395,13 @@
       }
 
       function renderState(state) {
-        if (!state) return;
+        state = state || {};
         if (state.address) {
           walletAddress.textContent = shortAddress(state.address);
+          walletAddress.title = state.address;
           walletState.textContent = "Connected";
+          walletConnector.textContent = (window.IFRWallet && IFRWallet.getConnectionLabel && IFRWallet.getConnectionLabel()) || "Browser wallet";
+          walletNetwork.textContent = "Ethereum Mainnet";
           ifrBalance.textContent = state.ifrBalanceFormatted ? `${state.ifrBalanceFormatted} IFR` : "0 IFR";
           accessLockBalance.textContent = state.lockedFormatted ? `${state.lockedFormatted} IFR` : "0 IFR";
           accessLockNote.textContent = state.isLocked1000 ? "Premium ready" : "Lock needed";
@@ -3214,7 +3414,10 @@
           loadLendingSummary(state.address).catch(() => null);
         } else {
           walletAddress.textContent = "Not connected";
+          walletAddress.removeAttribute("title");
           walletState.textContent = "Ready";
+          walletConnector.textContent = "No connector";
+          walletNetwork.textContent = "Ethereum Mainnet";
           ifrBalance.textContent = "Connect";
           accessLockBalance.textContent = "Connect";
           accessLockNote.textContent = "Access check";
@@ -3222,6 +3425,80 @@
           commitmentNote.textContent = "Tranches";
           lendingSummary.textContent = "Connect";
           lendingSummaryNote.textContent = "Offers";
+        }
+        setWalletLoading(false);
+      }
+
+      let walletLoadSequence = 0;
+      let walletLoadingAddress = null;
+
+      function isCurrentWalletAddress(address) {
+        const currentAddress = window.IFRWallet && IFRWallet.getAddress && IFRWallet.getAddress();
+        return Boolean(
+          address &&
+          currentAddress &&
+          IFRWallet.isConnected() &&
+          address.toLowerCase() === currentAddress.toLowerCase()
+        );
+      }
+
+      function isCurrentWalletState(state) {
+        return Boolean(
+          state &&
+          state.address &&
+          isCurrentWalletAddress(state.address)
+        );
+      }
+
+      function hasCompleteWalletState(state) {
+        return Boolean(
+          state &&
+          state.ifrBalanceFormatted != null &&
+          state.lockedFormatted != null
+        );
+      }
+
+      function renderWalletLoadState(address, status, value) {
+        walletAddress.textContent = shortAddress(address);
+        walletAddress.title = address;
+        walletState.textContent = status;
+        walletConnector.textContent = (window.IFRWallet && IFRWallet.getConnectionLabel && IFRWallet.getConnectionLabel()) || "Browser wallet";
+        walletNetwork.textContent = "Ethereum Mainnet";
+        ifrBalance.textContent = value;
+        accessLockBalance.textContent = value;
+        accessLockNote.textContent = "Access check";
+        commitmentBalance.textContent = value;
+        commitmentNote.textContent = "Tranches";
+        lendingSummary.textContent = value;
+        lendingSummaryNote.textContent = "Offers";
+        setWalletLoading(false);
+      }
+
+      async function loadConnectedWallet(address) {
+        const loadSequence = ++walletLoadSequence;
+        if (!address || !window.IFRState) {
+          walletLoadingAddress = null;
+          renderState(null);
+          return;
+        }
+        walletLoadingAddress = address.toLowerCase();
+        renderWalletLoadState(address, "Loading wallet", "Loading");
+        try {
+          const state = await IFRState.load(address);
+          if (loadSequence === walletLoadSequence && isCurrentWalletState(state)) {
+            walletLoadingAddress = null;
+            if (hasCompleteWalletState(state)) {
+              renderState(state);
+            } else {
+              renderWalletLoadState(address, "Connected · status unavailable", "Unavailable");
+            }
+          }
+        } catch (error) {
+          if (loadSequence === walletLoadSequence && isCurrentWalletAddress(address)) {
+            walletLoadingAddress = null;
+            renderWalletLoadState(address, "Connected · status unavailable", "Unavailable");
+          }
+          throw error;
         }
       }
 
@@ -3232,11 +3509,17 @@
         }
         try {
           const restored = await IFRWallet.autoReconnect();
-          if (restored) {
-            const state = await IFRState.load(IFRWallet.getAddress());
-            renderState(state);
-          }
-          IFRState.on("stateLoaded", renderState);
+          if (!restored) renderState(null);
+          IFRState.on("stateLoaded", (state) => {
+            const stateAddress = state && state.address && state.address.toLowerCase();
+            if (stateAddress && stateAddress === walletLoadingAddress) return;
+            if (!isCurrentWalletState(state)) return;
+            if (hasCompleteWalletState(state)) {
+              renderState(state);
+            } else {
+              renderWalletLoadState(state.address, "Connected · status unavailable", "Unavailable");
+            }
+          });
         } catch (error) {
           walletState.textContent = "Read-only";
         }
@@ -3245,36 +3528,36 @@
       connectButtons.forEach((button) => {
         button.addEventListener("click", async () => {
           if (!window.IFRWallet || !window.IFRState) return;
-          const isMobileConnect = window.IFRWallet.isMobileOrTablet && IFRWallet.isMobileOrTablet();
-          if (isMobileConnect) openWalletDialog(IFRWallet.getWalletConnectUri && IFRWallet.getWalletConnectUri());
-          setWalletLoading(true);
-          walletState.textContent = isMobileConnect ? "Open wallet" : "Connecting";
-          let connectWatchdog = window.setTimeout(() => {
-            if (window.IFRWallet && !IFRWallet.isConnected()) {
-              walletState.textContent = isMobileConnect ? "Approve in wallet" : "Check wallet";
-              setWalletLoading(false);
-            }
-          }, isMobileConnect ? 45000 : 15000);
-          try {
-            const address = await IFRWallet.connect();
-            const state = await IFRState.load(address);
-            renderState(state);
-            closeWalletDialog();
-          } catch (error) {
-            if (error && error.code === "WRONG_NETWORK") {
-              walletState.textContent = error.message;
-            } else if (error && (error.code === 4001 || error.message === "User rejected.")) {
-              walletState.textContent = "Rejected";
-            } else if (error && error.code === -32002) {
-              walletState.textContent = "Open wallet";
-            } else {
-              walletState.textContent = "Connect failed";
-            }
-          } finally {
-            window.clearTimeout(connectWatchdog);
-            setWalletLoading(false);
+          if (IFRWallet.isConnected()) {
+            document.querySelector("#access").scrollIntoView({ behavior: "smooth", block: "center" });
+            if (walletDisconnect) walletDisconnect.focus({ preventScroll: true });
+            return;
           }
+          await connectWithChooser();
         });
+      });
+
+      walletCopyAddress.addEventListener("click", async () => {
+        const address = window.IFRWallet && IFRWallet.getAddress && IFRWallet.getAddress();
+        if (!address || !navigator.clipboard) return;
+        try {
+          await navigator.clipboard.writeText(address);
+          walletState.textContent = "Address copied";
+        } catch (_) {
+          walletState.textContent = "Copy failed";
+        }
+      });
+
+      walletDisconnect.addEventListener("click", () => {
+        if (!window.IFRWallet) return;
+        walletLoadSequence += 1;
+        walletLoadingAddress = null;
+        IFRWallet.disconnect();
+        renderState(null);
+        walletState.textContent = "Disconnected";
+      });
+      walletHeaderDisconnect.addEventListener("click", () => {
+        walletDisconnect.click();
       });
 
       addTokenButton.addEventListener("click", async () => {
@@ -3283,7 +3566,8 @@
         if (!addToken) return;
         try {
           if (!IFRWallet.isConnected()) {
-            await IFRWallet.connect();
+            const address = await connectWithChooser("Connect wallet to add IFR");
+            if (!address) return;
           }
           await addToken();
           walletState.textContent = "Token added";
@@ -3321,7 +3605,7 @@
       });
       accessLockMax.addEventListener("click", () => {
         if (!currentAccessLockState || !currentAccessLockState.balance) return;
-        if (currentAccessLockState.balance.isZero()) {
+        if (currentAccessLockState.balance === 0n) {
           accessLockAmount.value = "";
           accessLockStatus.textContent = "This wallet has 0 free IFR. Nothing extra can be locked right now.";
           syncAccessLockSubmitState(false);
@@ -3345,8 +3629,8 @@
         } finally {
           await loadAccessLockPanel().catch(() => null);
           if (finalStatus) accessLockStatus.textContent = finalStatus;
-          if (currentAccessLockState && currentAccessLockState.premiumMissing) {
-            accessLockPremium.disabled = currentAccessLockState.premiumMissing.isZero();
+          if (currentAccessLockState && currentAccessLockState.premiumMissing != null) {
+            accessLockPremium.disabled = currentAccessLockState.premiumMissing === 0n;
           } else {
             accessLockPremium.disabled = false;
           }
@@ -3407,7 +3691,7 @@
       });
       lockMax.addEventListener("click", () => {
         if (!currentLockState || !currentLockState.balance) return;
-        lockAmount.value = ethers.utils.formatUnits(currentLockState.balance, IFR_DECIMALS);
+        lockAmount.value = ethers.formatUnits(currentLockState.balance, IFR_DECIMALS);
       });
       lockSubmit.addEventListener("click", async () => {
         try {
@@ -3463,7 +3747,7 @@
       });
       lendingMax.addEventListener("click", () => {
         if (!currentLendingState || !currentLendingState.balance) return;
-        lendingAmount.value = ethers.utils.formatUnits(currentLendingState.balance, IFR_DECIMALS);
+        lendingAmount.value = ethers.formatUnits(currentLendingState.balance, IFR_DECIMALS);
       });
       lendingDeposit.addEventListener("click", async () => {
         try {
@@ -3583,16 +3867,25 @@
       function showInstallButtons() {
         if (isStandalone()) return;
         const isiOS = isIOSDevice();
+        const isLegacyAndroid = isLegacyAndroidPwaUnsupported();
         installButtons.forEach((button) => {
           button.hidden = false;
           if (isiOS) button.textContent = "Add to Home Screen";
+          if (isLegacyAndroid) button.textContent = "App requirements";
         });
       }
 
       function openInstallDialog() {
         if (!installDialog) return;
         const isiOS = isIOSDevice();
-        if (isiOS) {
+        if (isLegacyAndroidPwaUnsupported()) {
+          installCopy.textContent = "This Android version cannot reliably start current Chrome-installed web apps. IFR Web3 remains fully usable in this browser tab.";
+          installSteps.innerHTML = [
+            "Keep using https://web3.ifrunit.tech in Chrome.",
+            "Update Android or use a newer device before installing the app.",
+            "Do not install from the Chrome menu on Android 9 or older."
+          ].map((step) => `<li>${step}</li>`).join("");
+        } else if (isiOS) {
           installCopy.textContent = isSafariBrowser()
             ? "iPad Safari installs web apps from the Share menu. This browser cannot open a native install prompt automatically."
             : "On iPad, install IFR Web3 from Safari. Open this page in Safari first, then use the Share menu.";
@@ -3622,6 +3915,11 @@
 
       window.addEventListener("beforeinstallprompt", (event) => {
         event.preventDefault();
+        if (isLegacyAndroidPwaUnsupported()) {
+          deferredInstallPrompt = null;
+          showInstallButtons();
+          return;
+        }
         deferredInstallPrompt = event;
         showInstallButtons();
       });
@@ -3656,6 +3954,10 @@
       walletDialog.addEventListener("click", (event) => {
         if (event.target === walletDialog) closeWalletDialog();
       });
+      walletChooser.addEventListener("click", (event) => {
+        if (event.target === walletChooser) closeWalletChooser();
+      });
+      walletChooserClose.addEventListener("click", () => closeWalletChooser());
       walletCopy.addEventListener("click", async () => {
         if (!walletConnectUri || !navigator.clipboard) return;
         await navigator.clipboard.writeText(walletConnectUri).catch(() => null);
@@ -3668,7 +3970,18 @@
             openWalletDialog(uri);
           }
         });
-        IFRWallet.on("connected", closeWalletDialog);
+        IFRWallet.on("connected", (address) => {
+          closeWalletDialog();
+          loadConnectedWallet(address).catch(() => null);
+        });
+        IFRWallet.on("accountChanged", (address) => {
+          loadConnectedWallet(address).catch(() => null);
+        });
+        IFRWallet.on("disconnected", () => {
+          walletLoadSequence += 1;
+          walletLoadingAddress = null;
+          renderState(null);
+        });
       }
 
       if ("serviceWorker" in navigator) {

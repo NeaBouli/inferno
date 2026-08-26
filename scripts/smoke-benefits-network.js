@@ -129,7 +129,7 @@ async function verifyHttpSurface() {
   await expectSha256('/icons/icon-512.png', '6f029513ff76f3482418da9792e6f9f3545f0cc18b88740fe1f61db50fbe87f1');
   await fetchOk('/favicon.ico', 'image/x-icon');
   const serviceWorker = await fetchOk('/sw.js', 'javascript');
-  assert((await serviceWorker.text()).includes("ifr-benefits-v22"), 'service worker cache version mismatch');
+  assert((await serviceWorker.text()).includes("ifr-benefits-v23"), 'service worker cache version mismatch');
   log('PWA assets OK');
 
   const auth = await fetchJson('/api/seller/auth-message?action=business:list&businessId=seller');
@@ -164,6 +164,9 @@ async function expectNoHorizontalOverflow(page, label) {
 
 async function verifyMobileWalletLaunches(page) {
   await expectText(page, 'Open in wallet app');
+  await expectText(page, 'another device or a wallet scanner');
+  await expectText(page, 'never with the normal camera');
+  await expectText(page, 'use Open in wallet app above');
   const expectedHosts = {
     metamask: 'metamask.app.link',
     trust: 'link.trustwallet.com',
@@ -407,7 +410,7 @@ async function installEligibilityRpc(page, { rpcError = false, lockedRaw = '1500
     throw new Error(`Unexpected eligibility eth_call selector: ${data.slice(0, 10)}`);
   };
   const rpcMethods = [];
-  await page.route('https://eth.merkle.io/', async (route) => {
+  await page.route('https://ethereum-rpc.publicnode.com/', async (route) => {
     const payload = route.request().postDataJSON();
     rpcMethods.push(payload.method);
     if (payload.method === 'eth_blockNumber') {
@@ -949,6 +952,7 @@ async function verifyRuleTemplateAuthorization() {
             rulesCount: 0,
             productsCount: 1,
           }],
+          inactiveBusinesses: [],
         }),
       });
       return;
@@ -1393,6 +1397,9 @@ async function verifyPage(contextOptions, label) {
   });
   page.on('response', (response) => {
     const status = response.status();
+    if (status === 403) {
+      errors.push(`HTTP ${status}: ${response.url()}`);
+    }
     if (status >= 500 && !response.url().includes('query=force-error')) {
       errors.push(`HTTP ${status}: ${response.url()}`);
     }
@@ -1564,7 +1571,7 @@ async function verifyPage(contextOptions, label) {
     await expectText(page, 'Wallet entry');
     await expectText(page, 'Wallet diagnostics');
     await expectText(page, 'No injected provider');
-    await expectText(page, 'WalletConnect modal is not configured yet');
+    await expectText(page, 'Multi-wallet ready');
     await expectText(page, 'Copy evidence');
     await expectText(page, 'Share evidence');
     await expectText(page, 'Copy link');
@@ -1786,7 +1793,7 @@ async function verifyPage(contextOptions, label) {
     await page
       .getByPlaceholder('Paste session ID, customer link or checkout receipt')
       .fill('smoke-session-id');
-    await expectText(page, 'Load business');
+    await expectText(page, 'Retry seller profile');
     await expectText(page, 'Seller profile loaded');
     await expectText(page, 'Copy customer link');
     await expectText(page, 'Checkout receipt');
@@ -1877,7 +1884,7 @@ async function verifyPage(contextOptions, label) {
     await expectText(page, 'Proof readiness');
     await expectText(page, 'Load verification');
     await expectText(page, 'QR session loaded');
-    await expectText(page, 'Refresh status');
+    await expectText(page, 'Retry loading verification');
     await expectText(page, 'Customer recovery');
     await expectText(page, 'Need more locked IFR?');
     await expectText(page, 'Customer proof receipt');
