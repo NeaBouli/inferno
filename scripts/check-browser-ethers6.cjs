@@ -67,8 +67,8 @@ for (const name of FORWARD_GUIDES) {
 }
 
 const serviceWorker = readFileSync(join(DOCS, "web3-sw.js"), "utf8");
-if (!serviceWorker.includes('const CACHE_NAME = "ifr-web3-v14"')) {
-  errors.push("Web3 service-worker cache was not bumped to v14.");
+if (!serviceWorker.includes('const CACHE_NAME = "ifr-web3-v15"')) {
+  errors.push("Web3 service-worker cache was not bumped to v15.");
 }
 if (!serviceWorker.includes(V6_SRC) || /ethers-5/.test(serviceWorker)) {
   errors.push("Web3 service-worker precache does not exclusively use Ethers 6.");

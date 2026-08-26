@@ -493,14 +493,14 @@ test("wallet chooser is the only initial connect surface on desktop, iPad and An
 
 test("Web3 header stays compact and non-overlapping before and after wallet connection", async ({ browser }) => {
   const surfaces = [
-    { name: "desktop", viewport: { width: 1280, height: 800 } },
-    { name: "iPad", viewport: { width: 820, height: 1180 } },
-    { name: "Android", viewport: { width: 360, height: 800 } },
+    { name: "desktop", contextOptions: { viewport: { width: 1280, height: 800 } } },
+    { name: "iPad", contextOptions: { viewport: { width: 820, height: 1180 }, userAgent: "Mozilla/5.0 (iPad; CPU OS 17_0 like Mac OS X) AppleWebKit/605.1.15 Safari/604.1", isMobile: true, hasTouch: true } },
+    { name: "Android", contextOptions: { viewport: { width: 360, height: 800 }, userAgent: "Mozilla/5.0 (Linux; Android 13; SM-G973F) AppleWebKit/537.36 Chrome/125 Mobile Safari/537.36", isMobile: true, hasTouch: true } },
   ];
 
   for (const surface of surfaces) {
     const { context, page, pageErrors } = await preparePage(browser, {
-      contextOptions: { viewport: surface.viewport },
+      contextOptions: surface.contextOptions,
     });
     try {
       await page.goto("/web3/", { waitUntil: "domcontentloaded" });
@@ -525,6 +525,13 @@ test("Web3 header stays compact and non-overlapping before and after wallet conn
 
       for (const phase of ["disconnected", "connected"]) {
         if (phase === "connected") await connect(page);
+        if (phase === "disconnected") {
+          await expect(page.locator("[data-wallet-header-connect]")).toBeVisible();
+          await expect(page.locator("[data-wallet-header-disconnect]")).toBeHidden();
+        } else {
+          await expect(page.locator("[data-wallet-header-connect]")).toBeHidden();
+          await expect(page.locator("[data-wallet-header-disconnect]")).toBeVisible();
+        }
         const geometry = await readGeometry();
         const overlaps = (left, right) => (
           left.left < right.right
@@ -801,7 +808,7 @@ test("Android 9 stays in browser mode instead of launching an incompatible WebAP
 
 test("Web3 service worker bounds offline navigation before using the cache", () => {
   const source = readFileSync("docs/web3-sw.js", "utf8");
-  expect(source).toContain('const CACHE_NAME = "ifr-web3-v14"');
+  expect(source).toContain('const CACHE_NAME = "ifr-web3-v15"');
   expect(source).toContain("const NAVIGATION_TIMEOUT_MS = 5000");
   expect(source).toContain("fetchNavigation(request)");
   expect(source).toContain('fetch(request, { cache: "no-store", signal: controller.signal })');
