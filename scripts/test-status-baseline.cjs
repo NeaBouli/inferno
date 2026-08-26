@@ -28,7 +28,7 @@ assert.equal(packageJson.dependencies?.ethers, "6.17.0");
 assert.equal(packageJson.devDependencies?.hardhat, "3.12.0");
 assert.equal(packageJson.overrides?.["serialize-javascript"], "7.0.5");
 assert.equal(packageJson.devDependencies?.chai, "6.2.2");
-assert.equal(packageJson.devDependencies?.mocha, "11.7.6");
+assert.equal(packageJson.devDependencies?.mocha, "11.8.0");
 assert.equal(
   packageJson.scripts?.["test:mocha-serializer"],
   "mocha --parallel --jobs 2 test/mocha-serializer-compat.test.cjs"
