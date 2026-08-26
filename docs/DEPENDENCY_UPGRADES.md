@@ -8,8 +8,8 @@
 |----|---------|-----|----|---------|-----------|
 | #2 | actions/setup-node | 4/5/6 | 7 | Erledigt 26.08.2026 | - |
 | #3 | actions/checkout | 4 | 7.0.1 | Erledigt | - |
-| #8 | hardhat | 2.28.6 | 3.11.1 | Erledigt 29.07.2026 | - |
-| #5 | @nomicfoundation/hardhat-verify | 2.1.3 | 3.0.21 | Erledigt 29.07.2026 | - |
+| #8 | hardhat | 2.28.6 | 3.12.0 | Erledigt 29.07.2026 | - |
+| #5 | @nomicfoundation/hardhat-verify | 2.1.3 | 3.0.22 | Erledigt 29.07.2026 | - |
 | #7 | chai | 4.5.0 | 6.2.2 | Erledigt 29.07.2026 | - |
 | #4 | ethers | 5.8.0 | 6.17.0 | Erledigt 29.07.2026 | - |
 
