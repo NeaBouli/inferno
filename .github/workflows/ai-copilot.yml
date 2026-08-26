@@ -1,12 +1,15 @@
 name: AI Copilot CI
 
 on:
+  workflow_dispatch:
   push:
     paths:
       - 'apps/ai-copilot/**'
+      - '.github/workflows/ai-copilot.yml'
   pull_request:
     paths:
       - 'apps/ai-copilot/**'
+      - '.github/workflows/ai-copilot.yml'
 
 permissions:
   contents: read

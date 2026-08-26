@@ -50,7 +50,7 @@ governance activation gate is complete.
 
 ---
 
-## Phase 2: Mainnet Launch (Q1 2026) — IN PROGRESS
+## Phase 2: Mainnet Launch (Q1 2026) — DONE
 
 ### Must Have
 - [x] Gnosis Safe Multisig deployed (3-of-5 active) — `0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b`
@@ -60,13 +60,13 @@ governance activation gate is complete.
 - [x] Etherscan verification (mainnet, all 9 contracts)
 - [x] Ownership transfer to Governance (InfernoToken, LiquidityReserve, BuybackVault, BurnReserve)
 - [x] ~~BootstrapVault V1/V2~~ deprecated; BootstrapVaultV3 deployed and finalized (`0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141`)
-- [x] Governance Proposal #0 submitted (feeExempt BootstrapVault, ETA 07.03.2026)
+- [x] Governance Proposal #0 executed for BootstrapVault V1; V1 was later deprecated
 - [x] Mainnet Uniswap V2 IFR/WETH pool created and bootstrap finalized (05.06.2026)
 - [x] LP custody finalized in BootstrapVaultV3; Mainnet Team.Finance path disabled and no LP withdrawal/recovery function exists
 - [x] Multisig upgraded to 3-of-5 (15.03.2026) — 5 signers on all 3 Safes
-- [ ] Community wallet + team beneficiary addresses finalized
 
-### Should Have
+### Post-Launch Follow-Ups (do not reopen Phase 2)
+- [ ] Community wallet + team beneficiary addresses finalized
 - [ ] Apps deployed (Railway / Vercel)
 - [ ] Dashboard + Governance Dashboard switched to mainnet
 - [ ] First real builder integration live
