@@ -9,7 +9,8 @@ const read = (relative) => fs.readFileSync(path.join(root, relative), "utf8");
 
 const status = read("docs/CURRENT_FUNCTIONALITY_STATUS.md");
 for (const marker of [
-  "**Verified:** 22 August 2026",
+  "**Verified:** 26 August 2026",
+  "**Repository baseline:** `9782106a`",
   "LendingVault.ifrPriceWei = 0",
   "priceOracle` is the zero address",
   "physical device/wallet acceptance matrix is 1/10",

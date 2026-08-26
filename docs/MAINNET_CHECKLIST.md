@@ -31,7 +31,8 @@ These items MUST be completed before public launch:
 - Fee Exemptions: 8 addresses set, deployer removed
 - Ownership Transfer: Done (2026-03-05, 4 contracts → Governance)
 - ~~BootstrapVault V1~~: Deployed + verified (`0xA820540936d18e1377C39dd9445E5b36F3F1261a`) — **DEPRECATED**, use V3: `0x16086d4f7F191047d8A4fFf2090126E12e865A7E`
-- Governance Proposal #0: feeExempt(BootstrapVault V1), ETA 07.03.2026 — **cancelled, V1 deprecated**
+- Governance Proposal #0: feeExempt(BootstrapVault V1) — **executed 07.03.2026; V1 later deprecated**
+  (Correction recorded 26.08.2026; execution TX is documented in `DEPLOYMENTS.md`.)
 - OPEN: LP Pairing, LP Lock, Multisig expansion
 
 ---

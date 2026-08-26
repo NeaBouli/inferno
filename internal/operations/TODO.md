@@ -1,5 +1,5 @@
 # IFR Protocol — Developer TODO List
-> Last updated: 2026-08-22 | Branch: main
+> Last updated: 2026-08-26 | Branch: main
 
 ---
 
@@ -104,7 +104,7 @@ On errors: fix immediately, commit with `seo:` prefix.
 - [x] MetaMask Mobile: centralized deep-link + pending connect ✅
 - [x] Protocol Plan wiki page created (26 pages) ✅
 
-## CURRENT WATCHLIST — verified 2026-08-22
+## CURRENT WATCHLIST — verified 2026-08-26
 
 - [x] LendingVault V1 borrow activation policy — keep disabled
       Runbook: docs/LENDING_PRICE_GOVERNANCE_RUNBOOK.md
@@ -177,7 +177,7 @@ On errors: fix immediately, commit with `seo:` prefix.
       Blockaid review is approved. Resume only if a current device still shows
       a warning; capture wallet/browser version, timestamp and screenshot.
 - [ ] Residual dependency audit findings
-      Clean local root audit: 10 transitive low findings
+      Clean local root audit: 8 transitive low findings
       (0 moderate, 0 high, 0 critical).
       Resume trigger: upstream fixes or a bounded runtime-path remediation.
       Never run `npm audit fix --force`.
@@ -197,7 +197,7 @@ On errors: fix immediately, commit with `seo:` prefix.
       Docs: docs/DEPENDENCY_UPGRADES.md
       Root now uses Ethers 6.17, Hardhat 3.12.0, Chai 6 and Node >=22.13.
       Waffle/Ganache were removed. Final exact-head CI passed on `f350bd44`.
-      Residual root audit: 10 transitive low findings (0 moderate/high/critical).
+      Residual root audit: 8 transitive low findings (0 moderate/high/critical).
       Do not run `npm audit fix --force`; remaining upstream paths need bounded updates.
 - [x] Deterministic local Hardhat test network — completed 2026-07-29
       A locally set MAINNET_RPC_URL now configures only the named `mainnet`
@@ -995,4 +995,4 @@ Hetzner API endpoints already live: stats, offers, loans/:addr, health/:id, lend
 
 ---
 
-*Last updated: 2026-07-31*
+*Last updated: 2026-08-26*
