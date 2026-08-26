@@ -6,6 +6,9 @@ on:
     paths:
       - 'docs/**'
       - '*.md'
+      - 'internal/operations/TODO.md'
+      - 'internal/operations/TODO.html'
+      - 'reports/*.md'
       - 'apps/ai-copilot/src/context/ifr-knowledge.ts'
       - 'apps/ai-copilot/src/context/wiki-content.json'
       - 'scripts/build-wiki-rag.js'
@@ -14,6 +17,8 @@ on:
       - 'scripts/test-status-baseline.cjs'
       - 'scripts/test-functionality-status.cjs'
       - 'scripts/test-docs-workflow.cjs'
+      - 'scripts/test-workflow-triggers.cjs'
+      - 'scripts/test-roadmap-status-sync.cjs'
       - 'scripts/test-wiki-head-integrity.cjs'
       - 'scripts/test-surface-routing.cjs'
       - 'scripts/test-security-reporting-config.cjs'
@@ -22,12 +27,16 @@ on:
       - 'tests/browser/**'
       - 'playwright.config.js'
       - 'package.json'
+      - 'package-lock.json'
       - '.github/workflows/docs-validator.yml'
   pull_request:
     branches: [main, master]
     paths:
       - 'docs/**'
       - '*.md'
+      - 'internal/operations/TODO.md'
+      - 'internal/operations/TODO.html'
+      - 'reports/*.md'
       - 'apps/ai-copilot/src/context/ifr-knowledge.ts'
       - 'apps/ai-copilot/src/context/wiki-content.json'
       - 'scripts/build-wiki-rag.js'
@@ -36,6 +45,8 @@ on:
       - 'scripts/test-status-baseline.cjs'
       - 'scripts/test-functionality-status.cjs'
       - 'scripts/test-docs-workflow.cjs'
+      - 'scripts/test-workflow-triggers.cjs'
+      - 'scripts/test-roadmap-status-sync.cjs'
       - 'scripts/test-wiki-head-integrity.cjs'
       - 'scripts/test-surface-routing.cjs'
       - 'scripts/test-security-reporting-config.cjs'
@@ -44,6 +55,7 @@ on:
       - 'tests/browser/**'
       - 'playwright.config.js'
       - 'package.json'
+      - 'package-lock.json'
       - '.github/workflows/docs-validator.yml'
   schedule:
     - cron: '0 6 * * 1'
@@ -147,6 +159,12 @@ jobs:
 
       - name: Check Docs workflow contract
         run: npm run test:docs-ci
+
+      - name: Check workflow trigger contracts
+        run: npm run test:workflow-triggers
+
+      - name: Check roadmap and status consistency
+        run: npm run test:roadmap-status-sync
 
       - name: Check public content trust
         run: npm run test:content-trust

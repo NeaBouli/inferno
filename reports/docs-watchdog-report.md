@@ -2,6 +2,10 @@
 
 _Last updated: 2026-03-06_
 
+> **Historical snapshot:** This report records the watchdog result from
+> 6 March 2026. It is retained for traceability and is not the current project
+> status. Use `docs/CURRENT_FUNCTIONALITY_STATUS.md` for the current baseline.
+
 ## Current Status
 
 All documentation is up to date following the mainnet deployment on 2026-03-05.

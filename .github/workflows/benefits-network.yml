@@ -38,6 +38,7 @@ on:
       - 'scripts/preflight-benefits-release.sh'
       - 'scripts/validate-benefits-device-checklist.js'
       - 'package.json'
+      - 'package-lock.json'
       - '.github/workflows/benefits-network.yml'
   pull_request:
     paths:
@@ -75,6 +76,7 @@ on:
       - 'scripts/preflight-benefits-release.sh'
       - 'scripts/validate-benefits-device-checklist.js'
       - 'package.json'
+      - 'package-lock.json'
       - '.github/workflows/benefits-network.yml'
 
 permissions:

@@ -1,7 +1,7 @@
 # Current Functionality Status
 
-**Verified:** 22 August 2026  
-**Repository baseline:** `8ff557b8` (`origin/main` when this audit started)  
+**Verified:** 26 August 2026
+**Repository baseline:** `9782106a` (`origin/main` when this sync started)
 **Network:** Ethereum Mainnet
 
 This document is the canonical boundary between implemented, operational and
@@ -43,13 +43,14 @@ Read-only verification at Ethereum block `25812380`:
 
 ## Verification Evidence
 
-The 22 August audit ran from clean lockfile installations and recorded:
+The current baseline combines the 22 August clean-install audit with the green
+exact-head CI and browser verification completed through 26 August:
 
 - Smart contracts: `642/642` passing.
 - Generator Engine: `30/30` passing.
 - IFR SDK legacy suite: `36/36` passing.
 - Landing/Wiki wallet browser suite: `20/20` passing.
-- Web3 write-path browser suite: `23/23` passing.
+- Web3 write-path browser suite: `24/24` passing.
 - Surface routing, wiki head integrity, wiki RAG freshness, content trust,
   status baseline and dependency-advisory checks: passing.
 - Benefits full preflight: frontend/backend dependency audits, TypeScript,
