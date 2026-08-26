@@ -6,8 +6,8 @@
 
 | PR | Package | Von | Zu | Aufwand | Priorität |
 |----|---------|-----|----|---------|-----------|
-| #2 | actions/setup-node | 4 | 6 | Gering | 1 |
-| #3 | actions/checkout | 4 | 6 | Gering | 1 |
+| #2 | actions/setup-node | 4/5/6 | 7 | Erledigt 26.08.2026 | - |
+| #3 | actions/checkout | 4 | 7.0.1 | Erledigt | - |
 | #8 | hardhat | 2.28.6 | 3.11.1 | Erledigt 29.07.2026 | - |
 | #5 | @nomicfoundation/hardhat-verify | 2.1.3 | 3.0.21 | Erledigt 29.07.2026 | - |
 | #7 | chai | 4.5.0 | 6.2.2 | Erledigt 29.07.2026 | - |
@@ -15,9 +15,10 @@
 
 ## Migrationsreihenfolge
 
-1. **#2 + #3 — GitHub Actions v6** — EINFACH
-   - Node.js Runtime-Update, keine Code-Änderungen nötig
-   - Kann sofort gemacht werden
+1. **#2 + #3 — GitHub Actions** — ERLEDIGT
+   - `actions/checkout` ist auf den geprüften v7.0.1-Commit gepinnt.
+   - `actions/setup-node` ist auf den geprüften v7-Commit gepinnt.
+   - Keine beweglichen Major-Tags verbleiben in den aktiven Workflows.
 
 2. **#4 — ethers v6** — ERLEDIGT
    - Alle Root-Tests, Admin-Tasks und Hardhat-/Governance-Skripte auf
@@ -245,3 +246,16 @@ migration and its full contract-suite evidence exist.
   (20 tests, including Ethers 6 connect checks on all five wallet-active wiki
   pages), `npm run test:surface-routing`, `npm run test:wiki-heads`,
   `npm run test:docs-ci` and `git diff --check` all pass.
+
+## 2026-08-26 Maintenance Batch
+
+- `actions/setup-node` was updated across all active workflows to the pinned v7
+  commit `820762786026740c76f36085b0efc47a31fe5020`; no mutable setup-node tag
+  remains.
+- Root development tooling moved to `axe-core@4.13.0`,
+  `@nomicfoundation/hardhat-verify@3.0.22`, `mocha@11.8.0` and
+  `@nomicfoundation/hardhat-mocha@3.1.0`.
+- Playwright remains intentionally pinned at `1.61.1`; `1.62.1` cannot provide
+  the required local Chromium browser on the current macOS 12 test host.
+- The known Low elliptic advisory remains development-only through the
+  Hardhat-Verify Ethers-5 ABI dependency and still has no bounded upstream fix.

@@ -278,7 +278,7 @@ Vesting (12-Monat Cliff), LiquidityReserve (6-Monat Lock), BuybackVault (60-Tag 
 #### Entwicklungsumgebung (aktualisiert 01.08.2026)
 
 - **Framework:** Hardhat 3.12.0 (Solidity 0.8.20 + 0.8.28,
-  OpenZeppelin 5.6.x, Chai 6.2.2, Mocha 11.7.6)
+  OpenZeppelin 5.6.x, Chai 6.2.2, Mocha 11.8.0)
 - **Network:** Ethereum Mainnet + Sepolia Testnet (Alchemy RPC)
 - **Frontend:** React + Vite + ethers.js v6
 - **Root ESM** mit expliziten CommonJS-Untergrenzen fuer Legacy-Skripte und
