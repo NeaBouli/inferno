@@ -244,7 +244,7 @@ async function preparePage(browser, options = {}) {
 }
 
 async function connect(page) {
-  await page.locator("[data-wallet-connect]").first().click();
+  await page.locator("[data-wallet-connect]:visible").first().click();
   await page.locator('[data-wallet-option-type="injected"]').first().click();
   await expect(page.locator("[data-wallet-state]").first()).toContainText("Connected", { timeout: 10_000 });
 }
@@ -311,7 +311,7 @@ test("Web3 wallet manager shows connector details, tracks account changes and di
   await expect(page.locator("[data-wallet-copy-address]")).toBeVisible();
 
   const requestsBefore = await page.evaluate(() => window.__web3RequestCounts.eth_requestAccounts);
-  await page.locator("[data-wallet-connect]").first().click();
+  await page.locator("[data-wallet-connect]:visible").first().click();
   expect(await page.evaluate(() => window.__web3RequestCounts.eth_requestAccounts)).toBe(requestsBefore);
 
   const nextAccount = "0x4444444444444444444444444444444444444444";
@@ -484,6 +484,67 @@ test("wallet chooser is the only initial connect surface on desktop, iPad and An
       await expect(page.locator("[data-wallet-chooser]")).toHaveClass(/is-open/);
       await expect(page.locator("[data-wallet-dialog]")).not.toHaveClass(/is-open/);
       await expect(page.locator('[data-wallet-option="walletconnect"]')).toBeVisible();
+      expect(pageErrors, surface.name).toEqual([]);
+    } finally {
+      await context.close();
+    }
+  }
+});
+
+test("Web3 header stays compact and non-overlapping before and after wallet connection", async ({ browser }) => {
+  const surfaces = [
+    { name: "desktop", contextOptions: { viewport: { width: 1280, height: 800 } } },
+    { name: "iPad", contextOptions: { viewport: { width: 820, height: 1180 }, userAgent: "Mozilla/5.0 (iPad; CPU OS 17_0 like Mac OS X) AppleWebKit/605.1.15 Safari/604.1", isMobile: true, hasTouch: true } },
+    { name: "Android", contextOptions: { viewport: { width: 360, height: 800 }, userAgent: "Mozilla/5.0 (Linux; Android 13; SM-G973F) AppleWebKit/537.36 Chrome/125 Mobile Safari/537.36", isMobile: true, hasTouch: true } },
+  ];
+
+  for (const surface of surfaces) {
+    const { context, page, pageErrors } = await preparePage(browser, {
+      contextOptions: surface.contextOptions,
+    });
+    try {
+      await page.goto("/web3/", { waitUntil: "domcontentloaded" });
+      await expect(page.locator('nav[aria-label="Primary navigation"]')).toHaveCount(1);
+
+      const readGeometry = () => page.evaluate(() => {
+        const rect = (selector) => {
+          const element = document.querySelector(selector);
+          const bounds = element.getBoundingClientRect();
+          return { left: bounds.left, right: bounds.right, top: bounds.top, bottom: bounds.bottom };
+        };
+        const header = document.querySelector(".topbar").getBoundingClientRect();
+        return {
+          headerHeight: header.height,
+          brand: rect(".brand"),
+          actions: rect(".nav-actions"),
+          links: rect(".nav-links"),
+          viewportWidth: document.documentElement.clientWidth,
+          scrollWidth: document.documentElement.scrollWidth,
+        };
+      });
+
+      for (const phase of ["disconnected", "connected"]) {
+        if (phase === "connected") await connect(page);
+        if (phase === "disconnected") {
+          await expect(page.locator("[data-wallet-header-connect]")).toBeVisible();
+          await expect(page.locator("[data-wallet-header-disconnect]")).toBeHidden();
+        } else {
+          await expect(page.locator("[data-wallet-header-connect]")).toBeHidden();
+          await expect(page.locator("[data-wallet-header-disconnect]")).toBeVisible();
+        }
+        const geometry = await readGeometry();
+        const overlaps = (left, right) => (
+          left.left < right.right
+          && left.right > right.left
+          && left.top < right.bottom
+          && left.bottom > right.top
+        );
+        expect(geometry.scrollWidth, `${surface.name} ${phase} horizontal overflow`).toBe(geometry.viewportWidth);
+        expect(overlaps(geometry.brand, geometry.actions), `${surface.name} ${phase} brand/actions overlap`).toBe(false);
+        expect(overlaps(geometry.brand, geometry.links), `${surface.name} ${phase} brand/links overlap`).toBe(false);
+        expect(overlaps(geometry.actions, geometry.links), `${surface.name} ${phase} actions/links overlap`).toBe(false);
+        expect(geometry.headerHeight, `${surface.name} ${phase} header is too tall`).toBeLessThanOrEqual(140);
+      }
       expect(pageErrors, surface.name).toEqual([]);
     } finally {
       await context.close();
@@ -747,7 +808,7 @@ test("Android 9 stays in browser mode instead of launching an incompatible WebAP
 
 test("Web3 service worker bounds offline navigation before using the cache", () => {
   const source = readFileSync("docs/web3-sw.js", "utf8");
-  expect(source).toContain('const CACHE_NAME = "ifr-web3-v14"');
+  expect(source).toContain('const CACHE_NAME = "ifr-web3-v15"');
   expect(source).toContain("const NAVIGATION_TIMEOUT_MS = 5000");
   expect(source).toContain("fetchNavigation(request)");
   expect(source).toContain('fetch(request, { cache: "no-store", signal: controller.signal })');

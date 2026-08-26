@@ -233,14 +233,14 @@ migration and its full contract-suite evidence exist.
   top-level `encodeBytes32String`, `ZeroAddress` and `MaxUint256` exports.
   ABIs, contract addresses, RPC endpoints, the WalletConnect project ID and the
   WalletConnect version are unchanged.
-- `docs/web3-sw.js` precaches the v6 bundle under cache `ifr-web3-v14`.
+- `docs/web3-sw.js` precaches the v6 bundle under cache `ifr-web3-v15`.
 - A deterministic gate, `npm run test:browser-ethers6`
   (`scripts/check-browser-ethers6.cjs`), fails on any Ethers 5 loader/reference
   in browser-executable files, a surviving v5 asset, a hash mismatch of the
   vendored bundle, or a stale service-worker cache. It is wired into
   `package.json` and the Docs Validator workflow.
 - Verification: `npm run test:browser-ethers6`, `npm run test:web3-write`
-  (23 tests, including asset SHA-256, v6 script path, `window.ethers.version`
+  (24 tests, including asset SHA-256, v6 script path, `window.ethers.version`
   6.17.0 and desktop/iPad/Android surfaces), `npm run test:wallet-connect`
   (20 tests, including Ethers 6 connect checks on all five wallet-active wiki
   pages), `npm run test:surface-routing`, `npm run test:wiki-heads`,

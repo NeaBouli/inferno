@@ -1265,12 +1265,25 @@
 
       .nav {
         min-height: auto;
-        flex-wrap: wrap;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 10px 16px;
         padding: 12px 0 10px;
       }
 
+      .brand {
+        grid-column: 1;
+        grid-row: 1;
+      }
+
+      .nav-actions {
+        grid-column: 2;
+        grid-row: 1;
+      }
+
       .nav-links {
-        order: 3;
+        grid-column: 1 / -1;
+        grid-row: 2;
         width: 100%;
         justify-content: flex-start;
         gap: 18px;
@@ -1314,9 +1327,28 @@
         width: min(100% - 24px, 1180px);
       }
 
+      .nav {
+        gap: 8px 10px;
+        padding: 10px 0 8px;
+      }
+
+      .brand {
+        min-width: 0;
+        gap: 8px;
+      }
+
+      .brand img {
+        width: 30px;
+        height: 30px;
+      }
+
       .brand-name {
         display: grid;
         gap: 3px;
+      }
+
+      .brand-main {
+        font-size: 13px;
       }
 
       .brand-tags {
@@ -1331,6 +1363,16 @@
 
       .nav-actions .btn-quiet {
         display: none;
+      }
+
+      .nav-actions {
+        gap: 6px;
+      }
+
+      .nav-actions .btn {
+        min-height: 44px;
+        padding: 8px 10px;
+        font-size: 13px;
       }
 
       .nav-actions [data-wallet-header-disconnect]:not([hidden]) {
@@ -1544,7 +1586,7 @@
         <button class="btn btn-quiet install-button" type="button" data-install-app hidden>Install App</button>
         <a class="btn btn-quiet" href="https://app.uniswap.org/swap?outputCurrency=0x77e99917Eca8539c62F509ED1193ac36580A6e7B" target="_blank" rel="noopener">Buy IFR</a>
         <button class="btn btn-quiet" type="button" data-wallet-header-disconnect hidden>Disconnect</button>
-        <button class="btn btn-primary" type="button" data-wallet-connect>Connect Wallet</button>
+        <button class="btn btn-primary" type="button" data-wallet-connect data-wallet-header-connect>Connect Wallet</button>
       </div>
     </nav>
   </header>
@@ -2238,6 +2280,7 @@
       });
 
       const connectButtons = document.querySelectorAll("[data-wallet-connect]");
+      const walletHeaderConnect = document.querySelector("[data-wallet-header-connect]");
       const addTokenButton = document.querySelector("[data-add-token]");
       const walletAddress = document.querySelector("[data-wallet-address]");
       const walletState = document.querySelector("[data-wallet-state]");
@@ -2410,6 +2453,7 @@
         if (walletCopyAddress) walletCopyAddress.hidden = !connected;
         if (walletDisconnect) walletDisconnect.hidden = !connected;
         if (walletHeaderDisconnect) walletHeaderDisconnect.hidden = !connected;
+        if (walletHeaderConnect) walletHeaderConnect.hidden = connected;
       }
 
       function setWalletDialogLinks(uri) {
