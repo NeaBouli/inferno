@@ -77,6 +77,9 @@ on:
       - 'package.json'
       - '.github/workflows/benefits-network.yml'
 
+permissions:
+  contents: read
+
 jobs:
   test-backend:
     runs-on: ubuntu-latest
