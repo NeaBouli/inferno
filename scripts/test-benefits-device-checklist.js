@@ -60,6 +60,30 @@ async function main() {
   try {
   assert.equal(validate(structuredClone(source)).status, 0, 'current device checklist must validate');
 
+  // Static regression: the retired /api/verification routes must not return in
+  // the backend wiring, the local E2E wrapper or the test guide.
+  for (const relativePath of [
+    'apps/benefits-network/backend/src/index.ts',
+    'apps/benefits-network/backend/scripts/e2e-test.sh',
+    'docs/BENEFITS_NETWORK_TEST.md',
+  ]) {
+    const fileContent = fs.readFileSync(path.join(root, relativePath), 'utf8');
+    for (const removedRoute of ['/api/verification/start', '/api/verification/status']) {
+      assert.ok(
+        !fileContent.includes(removedRoute),
+        `removed route ${removedRoute} referenced in ${relativePath}`,
+      );
+    }
+  }
+  const backendIndex = fs.readFileSync(
+    path.join(root, 'apps/benefits-network/backend/src/index.ts'),
+    'utf8',
+  );
+  assert.ok(
+    !backendIndex.includes('/api/verification'),
+    'backend must not mount removed /api/verification routes',
+  );
+
   const historicalEvidencePath = path.join(tempDir, 'historical-evidence.json');
   fs.writeFileSync(historicalEvidencePath, `${JSON.stringify(source, null, 2)}\n`);
   const historicalEvidence = spawnSync(process.execPath, [
@@ -166,6 +190,16 @@ async function main() {
   expectFailure((checklist) => {
     const item = checklist.matrix.find(({ id }) => id === 'desktop-metamask-seller');
     item.capabilities = item.capabilities.filter((capability) => capability !== 'customer-pass-bind');
+  }, 'missing required capability');
+
+  expectFailure((checklist) => {
+    const item = checklist.matrix.find(({ id }) => id === 'desktop-metamask-seller');
+    item.capabilities = item.capabilities.filter((capability) => capability !== 'wallet-disconnect');
+  }, 'missing required capability');
+
+  expectFailure((checklist) => {
+    const item = checklist.matrix.find(({ id }) => id === 'ios-metamask-customer-proof');
+    item.capabilities = item.capabilities.filter((capability) => capability !== 'reload-reconnect');
   }, 'missing required capability');
 
   expectFailure((checklist) => {

@@ -42,7 +42,7 @@ external device gates are maintained in `docs/BENEFITS_NETWORK_TEST.md`.
 - [ ] Wallet with Lock → APPROVED (requires frontend + wallet signature)
 - [ ] Wallet without Lock → REJECTED (requires frontend + wallet signature)
 
-**Note:** Attest flow (`POST /api/attest`) requires an EIP-712 signature from the wallet. Local API test covers Health + Business + Session. Full QR flow requires frontend.
+**Note:** Attest flow (`POST /api/attest`) requires an EIP-191 `personal_sign` signature from the wallet. Local API test covers Health + Business + Session. Full QR flow requires frontend.
 
 ## Known Issues
 - Sepolia RPC rate limits on Alchemy Free Tier

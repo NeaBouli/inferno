@@ -61,14 +61,14 @@ Use that command only with a deliberately prepared test wallet. Never paste the 
 | Device | Browser / Wallet Surface | Expected Result |
 |---|---|---|
 | iPadOS Safari | `shop.ifrunit.tech` | PWA install guidance is visible; official MetaMask/Trust/OKX/Phantom launch links and Copy/Share are readable. |
-| iPadOS MetaMask in-app browser | `shop.ifrunit.tech` | Customer creates a `/p` pass, reviews the seller-bound offer and signs the exact confirmation. |
+| iPadOS MetaMask in-app browser | `shop.ifrunit.tech` | Customer creates a `/p` pass, reviews the seller-bound offer and signs the exact confirmation; disconnect and reload-reconnect behave per Test Case 2. |
 | iPadOS Coinbase Wallet browser | `shop.ifrunit.tech` | Customer completes the `/p` pass flow or receives a clear connector fallback. |
 | Android Chrome | `shop.ifrunit.tech` | PWA install guidance is visible; official MetaMask/Trust/OKX/Phantom launch links and Copy/Share are readable. |
-| Android MetaMask browser | `shop.ifrunit.tech` | Customer creates a `/p` pass, reviews the seller-bound offer and signs the exact confirmation. |
+| Android MetaMask browser | `shop.ifrunit.tech` | Customer creates a `/p` pass, reviews the seller-bound offer and signs the exact confirmation; disconnect and reload-reconnect behave per Test Case 2. |
 | Android Trust Wallet browser | `shop.ifrunit.tech` | `/p` pass entry works if an Ethereum provider is exposed; otherwise fallback copy/share is clear. |
 | Android OKX Wallet browser | `shop.ifrunit.tech` | `/p` pass entry works if an Ethereum provider is exposed; otherwise fallback copy/share is clear. |
 | Phantom | EVM-capable browser/session | `/p` pass entry works through EIP-6963, `window.ethereum` or the targeted `window.phantom.ethereum` fallback; otherwise the app fails gracefully without claiming a connection. |
-| Desktop Chrome + MetaMask | `shop.ifrunit.tech` | Seller profile, permanent `/s` URL, pass binding, compatible seller QR and redeem signature work. |
+| Desktop Chrome + MetaMask | `shop.ifrunit.tech` | Seller profile, permanent `/s` URL, pass binding, compatible seller QR and redeem signature work; disconnect and reload-reconnect behave per Test Case 2. |
 | Desktop Chrome + Coinbase Wallet extension | `shop.ifrunit.tech` | Wallet entry works or provides a clear fallback. |
 
 WalletConnect modal support remains gated by `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID`. Until that production value is set, success criteria are injected wallet support plus clear mobile wallet-browser fallback. Do not treat a successful wallet-app launch as a successful wallet connection; the injected provider, Ethereum Mainnet, signature and transaction steps must still be tested inside the opened wallet browser.
@@ -103,12 +103,16 @@ Pass criteria:
 7. With a wallet that reports exactly `0 ETH`, confirm `Get ETH for gas` takes priority, the official `https://ethereum.org/get-eth/` guide opens without a wallet request, and Approve/Lock/Unlock stay disabled.
 8. With ETH available, use `Approve IFR`, `Lock IFR` and `Unlock all` inside the Shop wallet panel; confirm balances and transaction feedback refresh without leaving `shop.ifrunit.tech`.
 9. Tap `Buy IFR` and confirm it opens the configured Uniswap path.
+10. Reload the page and confirm the connected wallet session is restored without a new signature prompt.
+11. Tap Disconnect, reload the page again and confirm the wallet stays disconnected, no IFR/IFRLock reads run and no connect prompt claims success.
+12. Connect once more and confirm the wallet panel returns to the connected state.
 
 Pass criteria:
 
 - App does not send tokens.
 - Readiness state is understandable.
 - Lock actions remain in the Shop app; external buy links open without losing the current app context unexpectedly.
+- A reload restores an active session; a disconnected wallet stays disconnected after reload and reconnects only through an explicit connect action.
 
 ### 3. Seller Profile And Rule
 

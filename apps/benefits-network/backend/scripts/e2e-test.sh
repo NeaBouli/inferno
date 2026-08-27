@@ -1,55 +1,43 @@
 #!/bin/bash
-# IFR Benefits Network — E2E Test Script (Sepolia)
+# IFR Benefits Network — Local Full-Stack E2E Wrapper
 # Usage: bash apps/benefits-network/backend/scripts/e2e-test.sh
-set -e
+#
+# This script is a safe wrapper around the canonical local full-stack E2E
+# gate (`npm run test:benefits-fullstack`, implemented by
+# scripts/test-benefits-fullstack-e2e.js). It takes no URL, admin secret or
+# wallet input, uses only loopback servers with a disposable SQLite database
+# and fails closed when it is not run inside a fully installed repository.
+set -euo pipefail
 
-BASE_URL="${BASE_URL:-http://localhost:3001}"
-ADMIN_SECRET="${ADMIN_SECRET:-replace-with-a-long-random-admin-secret}"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/../../../.." && pwd)"
 
-echo "============================================================"
-echo "  IFR Benefits Network — E2E Test"
-echo "============================================================"
-echo "  Base URL: $BASE_URL"
-echo ""
+fail() {
+  echo "ERROR: $1" >&2
+  exit 1
+}
 
-# 1. Health Check
-echo "1. Health Check..."
-curl -sf "$BASE_URL/health" | python3 -m json.tool 2>/dev/null || curl -sf "$BASE_URL/health"
-echo ""
-echo "  OK"
-echo ""
-
-# 2. Admin: Business anlegen
-echo "2. Business anlegen..."
-BIZ=$(curl -sf -X POST "$BASE_URL/api/admin/businesses" \
-  -H "Authorization: Bearer $ADMIN_SECRET" \
-  -H "Content-Type: application/json" \
-  -d '{"name":"E2E Test Business","discountPercent":15,"requiredLockIFR":1000,"tierLabel":"Bronze"}')
-echo "$BIZ" | python3 -m json.tool 2>/dev/null || echo "$BIZ"
-BIZ_ID=$(echo "$BIZ" | python3 -c "import sys,json; print(json.load(sys.stdin)['id'])" 2>/dev/null || echo "unknown")
-echo "  Business ID: $BIZ_ID"
-echo ""
-
-# 3. QR Session starten
-echo "3. QR Session starten..."
-SESSION=$(curl -sf -X POST "$BASE_URL/api/verification/start" \
-  -H "Content-Type: application/json" \
-  -d "{\"businessId\":\"$BIZ_ID\"}")
-echo "$SESSION" | python3 -m json.tool 2>/dev/null || echo "$SESSION"
-SESSION_ID=$(echo "$SESSION" | python3 -c "import sys,json; print(json.load(sys.stdin)['sessionId'])" 2>/dev/null || echo "unknown")
-echo "  Session ID: $SESSION_ID"
-echo ""
-
-# 4. Session Status pruefen
-echo "4. Session Status..."
-curl -sf "$BASE_URL/api/verification/status/$SESSION_ID" | python3 -m json.tool 2>/dev/null || curl -sf "$BASE_URL/api/verification/status/$SESSION_ID"
-echo ""
-echo "  OK"
-echo ""
+[ -f "$REPO_ROOT/package.json" ] \
+  || fail "package.json not found; run this script inside the inferno repository"
+grep -q '"test:benefits-fullstack"' "$REPO_ROOT/package.json" \
+  || fail "package.json has no test:benefits-fullstack gate; repository layout changed"
+[ -f "$REPO_ROOT/scripts/test-benefits-fullstack-e2e.js" ] \
+  || fail "scripts/test-benefits-fullstack-e2e.js is missing"
+command -v node >/dev/null 2>&1 \
+  || fail "node is not installed"
+[ -d "$REPO_ROOT/node_modules" ] \
+  || fail "root dependencies missing; run npm ci at the repository root"
+[ -d "$REPO_ROOT/apps/benefits-network/backend/node_modules" ] \
+  || fail "backend dependencies missing; run npm ci in apps/benefits-network/backend"
+[ -d "$REPO_ROOT/apps/benefits-network/frontend/node_modules" ] \
+  || fail "frontend dependencies missing; run npm ci in apps/benefits-network/frontend"
 
 echo "============================================================"
-echo "  E2E Test abgeschlossen"
+echo "  IFR Benefits Network — Local Full-Stack E2E (loopback only)"
 echo "============================================================"
-echo "  Session $SESSION_ID bereit fuer Wallet-Scan"
-echo "  Frontend: http://localhost:3000/r/$SESSION_ID"
+echo "  Delegating to the canonical gate: npm run test:benefits-fullstack"
+echo "  No external URL, admin secret, real wallet or network target is used."
 echo ""
+
+cd "$REPO_ROOT"
+exec npm run test:benefits-fullstack
