@@ -19,6 +19,7 @@ const amount = 1000n * unit;
 const zeroEthOnly = process.env.BENEFITS_WALLET_ZERO_ETH_ONLY === '1';
 const wrongChainOnly = process.env.BENEFITS_WALLET_WRONG_CHAIN_ONLY === '1';
 const readFailureOnly = process.env.BENEFITS_WALLET_READ_FAILURE_ONLY === '1';
+const reconnectOnly = process.env.BENEFITS_WALLET_RECONNECT_ONLY === '1';
 const selectors = {
   approve: ethers.id('approve(address,uint256)').slice(0, 10),
   balanceOf: ethers.id('balanceOf(address)').slice(0, 10),
@@ -313,6 +314,51 @@ async function run() {
       throw new Error(`Wallet did not connect. Methods: ${JSON.stringify(await page.evaluate(() => window.__ifrWalletLockMethods || []))}`);
     });
     await page.waitForTimeout(2000);
+    if (reconnectOnly) {
+      // connect -> reload -> restored session -> disconnect -> reload stays
+      // disconnected -> reconnect. No transaction is ever submitted.
+      const readySelector = '[data-wallet-connect-control][data-wallet-connectors-ready="true"]';
+      const disconnectButton = walletPanel.getByRole('button', { name: 'Disconnect', exact: true });
+      const shortAddress = `${wallet.slice(0, 6)}...${wallet.slice(-4)}`;
+
+      await page.reload({ waitUntil: 'domcontentloaded' });
+      await walletPanel.locator(readySelector).waitFor({ timeout: 10_000 });
+      await disconnectButton.waitFor({ timeout: 10_000 });
+      await walletPanel.getByText(shortAddress, { exact: true }).first().waitFor();
+      assert.equal(
+        await walletPanel.locator('[data-wallet-action="connect"]').count(),
+        0,
+        'a restored session must not offer a fresh connect action'
+      );
+
+      await disconnectButton.click();
+      const connectButton = walletPanel.locator('[data-wallet-action="connect"]');
+      await connectButton.waitFor({ timeout: 10_000 });
+      const disconnectedReadCount = state.readCalls.length;
+
+      await page.reload({ waitUntil: 'domcontentloaded' });
+      await walletPanel.locator(readySelector).waitFor({ timeout: 10_000 });
+      await page.waitForTimeout(2000);
+      assert.equal(
+        await walletPanel.getByRole('button', { name: 'Disconnect', exact: true }).count(),
+        0,
+        'a disconnected wallet must stay disconnected after reload'
+      );
+      assert.equal(await connectButton.isEnabled(), true, 'reconnect action must be available');
+      assert.equal(
+        state.readCalls.length,
+        disconnectedReadCount,
+        'a disconnected reload must not issue IFR or IFRLock contract reads'
+      );
+
+      await connectButton.click();
+      await disconnectButton.waitFor({ timeout: 10_000 });
+      await walletPanel.getByText(shortAddress, { exact: true }).first().waitFor();
+      assert.equal(state.transactions.length, 0, 'reconnect regression must not submit a transaction');
+      assert.deepEqual(pageErrors, []);
+      console.log('[benefits-wallet-lock-ui] PASS - connect -> reload restores -> disconnect -> reload stays disconnected -> reconnect');
+      return;
+    }
     if (wrongChainOnly) {
       const switchAction = walletPanel.getByRole('button', { name: 'Switch to Ethereum Mainnet', exact: true });
       await switchAction.waitFor();

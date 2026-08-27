@@ -24,14 +24,28 @@ const requiredMatrixIds = [
 ];
 const requiredCapabilitiesById = {
   'ios-safari-pwa': ['pwa-install-guidance', 'wallet-launch-fallback', 'recovery-guidance'],
-  'ios-metamask-customer-proof': ['wallet-connect', 'customer-pass-create', 'exact-offer-confirm', 'readable-result'],
+  'ios-metamask-customer-proof': [
+    'wallet-connect',
+    'wallet-disconnect',
+    'reload-reconnect',
+    'customer-pass-create',
+    'exact-offer-confirm',
+    'readable-result',
+  ],
   'ios-coinbase-customer-proof': [
     'wallet-connect-or-clear-fallback',
     'customer-pass-create-or-clear-fallback',
     'exact-offer-confirm-or-clear-fallback',
   ],
   'android-chrome-pwa': ['pwa-install-guidance', 'wallet-launch-fallback', 'recovery-guidance'],
-  'android-metamask-customer-proof': ['wallet-connect', 'customer-pass-create', 'exact-offer-confirm', 'readable-result'],
+  'android-metamask-customer-proof': [
+    'wallet-connect',
+    'wallet-disconnect',
+    'reload-reconnect',
+    'customer-pass-create',
+    'exact-offer-confirm',
+    'readable-result',
+  ],
   'android-trust-customer-proof': [
     'wallet-connect-or-clear-fallback',
     'customer-pass-create-or-clear-fallback',
@@ -54,6 +68,8 @@ const requiredCapabilitiesById = {
     'customer-pass-bind',
     'seller-issued-qr-compatibility',
     'seller-signed-redeem',
+    'wallet-disconnect',
+    'reload-reconnect',
   ],
   'approved-redeemed-eligible-wallet': [
     'customer-pass-create',
@@ -61,6 +77,8 @@ const requiredCapabilitiesById = {
     'exact-offer-confirm',
     'approved-to-redeemed',
     'replay-blocked',
+    'wallet-disconnect',
+    'reload-reconnect',
   ],
 };
 const suspiciousEvidencePatterns = [

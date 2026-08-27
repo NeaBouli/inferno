@@ -2,7 +2,7 @@
   "name": "IFR Benefits Network Device Wallet Acceptance Checklist",
   "target": "https://shop.ifrunit.tech",
   "status": "open",
-  "lastUpdated": "2026-08-08",
+  "lastUpdated": "2026-08-27",
   "rules": {
     "noSecrets": true,
     "recordOnlyTestIds": true,
@@ -38,6 +38,8 @@
       "path": "Customer creates /p pass, seller binds exact offer, customer confirms and reads result",
       "capabilities": [
         "wallet-connect",
+        "wallet-disconnect",
+        "reload-reconnect",
         "customer-pass-create",
         "exact-offer-confirm",
         "readable-result"
@@ -88,6 +90,8 @@
       "path": "Customer creates /p pass, seller binds exact offer, customer confirms and reads result",
       "capabilities": [
         "wallet-connect",
+        "wallet-disconnect",
+        "reload-reconnect",
         "customer-pass-create",
         "exact-offer-confirm",
         "readable-result"
@@ -149,7 +153,9 @@
         "public-seller-catalog",
         "customer-pass-bind",
         "seller-issued-qr-compatibility",
-        "seller-signed-redeem"
+        "seller-signed-redeem",
+        "wallet-disconnect",
+        "reload-reconnect"
       ],
       "status": "pending",
       "evidence": []
@@ -165,7 +171,9 @@
         "customer-pass-bind",
         "exact-offer-confirm",
         "approved-to-redeemed",
-        "replay-blocked"
+        "replay-blocked",
+        "wallet-disconnect",
+        "reload-reconnect"
       ],
       "status": "pending",
       "evidence": []

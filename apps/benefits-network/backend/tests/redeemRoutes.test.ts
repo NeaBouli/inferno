@@ -405,6 +405,29 @@ describe('Redeem route authorization', () => {
     expect(secondResponse.status).toBe(401);
   });
 
+  it('returns 409 when redeeming an EXPIRED or REJECTED session', async () => {
+    for (const status of ['EXPIRED', 'REJECTED'] as const) {
+      const session = await prisma.session.create({
+        data: {
+          businessId,
+          nonce: ethers.hexlify(ethers.randomBytes(32)).slice(2),
+          expiresAt: new Date(Date.now() + 300_000),
+          status,
+          recoveredAddress: ethers.Wallet.createRandom().address,
+        },
+      });
+      const headers = await sellerHeaders(seller, 'sessions:redeem', session.id);
+
+      const response = await postRedeem(session.id, headers);
+      const body = await response.json() as { error: string };
+
+      expect(response.status).toBe(409);
+      expect(body.error).toContain('cannot redeem');
+      expect(await prisma.session.findUniqueOrThrow({ where: { id: session.id } }))
+        .toMatchObject({ status, redeemedAt: null });
+    }
+  });
+
   it('returns 429 and audits a per-wallet daily redemption limit', async () => {
     const customer = ethers.Wallet.createRandom().address;
     const rule = await prisma.benefitRule.create({

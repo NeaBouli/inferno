@@ -45,7 +45,8 @@ npm ci && npm run dev
 cd apps/benefits-network/frontend
 npm ci && npm run dev
 
-# Run E2E test (new terminal)
+# Run the local full-stack E2E gate (starts its own disposable loopback
+# servers; does not need the dev servers above)
 bash apps/benefits-network/backend/scripts/e2e-test.sh
 ```
 
@@ -73,14 +74,21 @@ bash apps/benefits-network/backend/scripts/e2e-test.sh
 
 ## E2E Test Script
 
-The script (`apps/benefits-network/backend/scripts/e2e-test.sh`) runs automatically:
+The script (`apps/benefits-network/backend/scripts/e2e-test.sh`) is a safe wrapper around the
+canonical local full-stack E2E gate:
 
-1. Health Check (`GET /health`)
-2. Create Business (`POST /api/admin/businesses`)
-3. Start QR Session (`POST /api/sessions`)
-4. Get Challenge (`GET /api/sessions/:id/challenge`)
-5. Submit Attest (`POST /api/attest`)
-6. Check Session Status (`GET /api/sessions/:id`)
+```bash
+bash apps/benefits-network/backend/scripts/e2e-test.sh
+```
+
+It reads no URL, admin secret or wallet input, verifies it is running inside a fully installed
+repository (and fails closed otherwise), then delegates to `npm run test:benefits-fullstack`
+(described below). The retired `/api/verification/*` route flow no longer exists; QR sessions are
+created through `POST /api/sessions` with a seller owner/operator one-time signature, and the
+wrapper never creates businesses, sessions or signatures against a configured backend.
+
+The wrapper has no configuration. The old `BASE_URL` and `ADMIN_SECRET` overrides were removed
+with the retired route flow.
 
 The browser contract test covers the complete recommended two-phase UI flow with isolated
 customer and seller wallet providers and deterministic no-Mainnet API fixtures:
@@ -102,7 +110,9 @@ npm run test:benefits-wallet-ui
 
 It verifies exact 9-decimal approval calldata, IFRLock spender and contract addresses, receipt-
 driven allowance/balance refresh, the `1,000 IFR` access transition, full simple-lock unlock and
-restored balances. No Mainnet transaction or external wallet is used.
+restored balances. A dedicated reconnect mode also proves connect -> reload -> restored session
+-> disconnect -> reload stays disconnected -> reconnect. No Mainnet transaction or external
+wallet is used.
 
 The blocking accessibility gate audits Customer and Seller home modes, guide and QR scanner with
 Axe WCAG 2.0/2.1 A/AA rules on desktop, iPad and Android emulation. Build and start the frontend
@@ -170,13 +180,6 @@ decoding, the actual RPC chain ID, zero-beneficiary fail-closed behavior and rea
 checks. The fixture never submits a transaction or contacts Mainnet.
 CI also runs `npm run test:ethers-v6-lifecycle` without Jest's `--forceExit`, including an RPC
 rejection followed by a successful read to cover provider cleanup on error and success paths.
-
-### Configuration
-
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `BASE_URL` | `http://localhost:3001` | Backend URL |
-| `ADMIN_SECRET` | from `.env` | Admin token for business creation |
 
 ## Read-only Live Smoke
 
@@ -315,6 +318,7 @@ Current route coverage includes `POST /api/sessions/:id/redeem` authorization:
 - wrong seller wallet -> HTTP 403
 - owning seller wallet -> HTTP 200 and `REDEEMED`
 - replaying the same redeem nonce -> HTTP 401
+- redeeming an `EXPIRED` or `REJECTED` session -> HTTP 409, session unchanged
 
 This proves the backend redeem route is seller-owned and one-time at the HTTP
 boundary. A live `APPROVED -> REDEEMED` run with a real locked customer wallet
@@ -369,6 +373,9 @@ publishes the exact IFRLock threshold and benefit for every real offer.
 | POST | `/api/admin/businesses/:id/rules` | Admin | Create seller benefit rule |
 | PATCH | `/api/admin/rules/:id` | Admin | Update or pause rule |
 | DELETE | `/api/admin/rules/:id` | Admin | Delete rule |
+| POST | `/api/admin/businesses/:id/rewards/verify` | Admin | Verify a seller reward application against live governance state |
+| POST | `/api/admin/businesses/:id/rewards/revoke` | Admin | Revoke a seller reward link |
+| POST | `/api/admin/businesses/:id/rewards/queue` | Admin | Queue eligible reward outbox events for a verified seller |
 | GET | `/api/seller/auth-message` | - | Issue a server-time seller wallet challenge |
 | POST | `/api/seller/businesses` | Seller owner signature | Create wallet-owned seller profile |
 | GET | `/api/seller/businesses` | Seller owner signature | List owned active profiles |
@@ -382,6 +389,10 @@ publishes the exact IFRLock threshold and benefit for every real offer.
 | GET | `/api/seller/businesses/:id/operators` | Seller owner signature | List checkout operators |
 | POST | `/api/seller/businesses/:id/operators` | Seller owner signature | Add/reactivate checkout operator |
 | DELETE | `/api/seller/operators/:id` | Seller owner signature | Revoke checkout operator |
+| POST | `/api/seller/businesses/:id/rewards/apply` | Seller owner signature | Apply for seller rewards |
+| POST | `/api/seller/businesses/:id/rewards/disable` | Seller owner signature | Disable seller rewards until a fresh application |
+| POST | `/api/seller/businesses/:id/rewards/reward-wallet` | Owner + reward wallet signature | Set or clear the reward payout wallet |
+| GET | `/api/seller/businesses/:id/rewards` | Seller owner signature | Reward link status, on-chain state and event count |
 | GET | `/api/businesses/:id` | - | Public business info |
 | GET | `/api/businesses/:id/rules` | - | Active public rules |
 | POST | `/api/sessions` | Owner/operator one-time signature | Start QR session, optionally with `benefitRuleId` |
@@ -389,6 +400,17 @@ publishes the exact IFRLock threshold and benefit for every real offer.
 | GET | `/api/sessions/:id/challenge` | - | Signature challenge |
 | POST | `/api/attest` | - | Verify wallet + signature |
 | POST | `/api/sessions/:id/redeem` | Owner/operator signature | Atomically redeem approved session |
+| POST | `/api/passes/challenge` | - | Issue customer pass creation challenge |
+| POST | `/api/passes` | Customer signature | Create customer pass |
+| GET | `/api/passes/:id` | - | Public customer pass state |
+| GET | `/api/passes/:id/control` | Pass control token | Controlled pass state for the originating tab |
+| POST | `/api/passes/:id/bind` | Owner/operator signature | Bind pass to an exact seller offer |
+| POST | `/api/passes/:id/challenge` | Pass control token | Customer exact-offer confirmation challenge |
+| POST | `/api/passes/:id/confirm` | Customer signature + control token | Confirm the exact offer (`APPROVED`/`REJECTED`) |
+| POST | `/api/passes/:id/cancel` | Pass control token | Cancel the pass |
+| POST | `/api/customer/history/challenge` | - | Issue customer history challenge |
+| POST | `/api/customer/history/authorize` | Customer signature | Authorize customer history access |
+| GET | `/api/customer/history` | Customer history token | Paginated customer proof history |
 
 ---
 *As of: July 2026 | Version 1.1*
