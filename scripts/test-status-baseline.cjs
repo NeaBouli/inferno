@@ -60,16 +60,16 @@ requireText("STATUS-REPORT.md", currentBaseline);
 requireText("docs/STATUS-REPORT.md", currentBaseline);
 
 const todo = requireText("internal/operations/TODO.md", [
-  "> Last updated: 2026-08-26 | Branch: main",
-  "CURRENT WATCHLIST — verified 2026-08-26",
+  "> Last updated: 2026-09-02 | Branch: main",
+  "CURRENT WATCHLIST — verified 2026-09-02",
   "LendingVault V1 borrow activation policy — keep disabled",
   "V1 cannot set price back to zero",
   "SEC-VLT-01 — Vault fee-exemption defense in depth",
   "both token-balance/accounting differences are 0 IFR",
   "balance-diff inflow accounting",
   "DEFERRED / LATER — resume only when its trigger occurs",
-  "Status verified 2026-07-30: open, REVIEW_REQUIRED",
-  "open, MERGEABLE but BLOCKED",
+  "Status verified 2026-09-02: open, REVIEW_REQUIRED",
+  "closed unmerged by github-actions[bot]",
   "IFRp Commerce App / shop.ifrunit.tech production decisions",
   "Contributor CommitmentVault Locks abgeschlossen",
   "Contributor LendingVault Offers abgeschlossen",
@@ -86,7 +86,7 @@ const todo = requireText("internal/operations/TODO.md", [
   "8 transitive low findings",
   "Deterministic local Hardhat test network",
   "Technical: WalletConnect v2 + ethers.js v6",
-  "*Last updated: 2026-08-26*",
+  "*Last updated: 2026-09-02*",
 ]);
 assert.ok(
   !todo.includes("- [ ] Dependency modernization"),
@@ -107,8 +107,8 @@ assert.ok(
 );
 
 requireText("internal/operations/TODO.html", [
-  "Last updated: 2026-08-26",
-  "Current Watchlist &mdash; verified 2026-08-26",
+  "Last updated: 2026-09-02",
+  "Current Watchlist &mdash; verified 2026-09-02",
   "LendingVault V1 borrow activation policy",
   "V1 cannot set the price back to zero",
   "SEC-VLT-01 &mdash; Vault fee-exemption defense in depth",
@@ -116,7 +116,7 @@ requireText("internal/operations/TODO.html", [
   "balance-diff inflow accounting",
   "Deferred / Waiting &mdash; resume only when the trigger occurs",
   "Open, review required",
-  "Open, mergeable but blocked",
+  "Closed unmerged by the stale bot",
   "IFRp Commerce App / shop.ifrunit.tech production decisions",
   "Contributor CommitmentVault Locks abgeschlossen",
   "Contributor LendingVault Offers abgeschlossen",
@@ -158,9 +158,9 @@ requireText("docs/DEPENDENCY_UPGRADES.md", [
   "HARDHAT_FORK_BLOCK_NUMBER=<positive-mainnet-block>",
 ]);
 requireText("docs/WALLET_ICON_DISTRIBUTION_STATUS_20260708.md", [
-  "Last verified: 2026-07-30",
+  "Last verified: 2026-09-02",
   "Open; `REVIEW_REQUIRED`",
-  "Open, `MERGEABLE` but `BLOCKED`",
+  "Closed unmerged by `github-actions[bot]`",
   "there is no",
   "500 TWT",
   "at least three outside token lists",
@@ -172,38 +172,43 @@ requireText("docs/WALLET_ICON_DISTRIBUTION_STATUS_20260708.md", [
   "IFR-8f9ccb3d-2e3b-4c3c-bda1-5040d80548f6",
 ]);
 requireText("docs/TOKEN_ICON_DISTRIBUTION.md", [
-  "Last checked: 2026-07-30",
+  "Last checked: 2026-09-02",
   "PR open / review required",
-  "Open / blocked",
+  "Closed by stale bot / unmerged",
   "External-data path / no verification form",
   "Not eligible / do not pay",
-  "Live / verified",
+  "Identity/icon live; price not tracked",
 ]);
 requireText("docs/ZERION_SUBMISSION_PACK_20260730.md", [
   "Status: resolved and live 2026-07-31",
   "docs/assets/ifr_icon_128.png",
   "human support agent Sebastien",
   "IFR-8f9ccb3d-2e3b-4c3c-bda1-5040d80548f6",
-  "Do not submit a duplicate",
+  "Price-Tracking Regression - 2026-09-02",
 ]);
 requireText("docs/PHASE3_OPEN_ITEMS_STATUS_20260708.md", [
   "Section 3 was reverified on 2026-08-01",
   "Status verified 2026-08-01: migration completed",
   "0 moderate / 0 high / 0 critical",
-  "Status verified 2026-07-30",
-  "keep all three external threads under watch without duplicate",
+  "Status verified 2026-09-02",
+  "reopen ethereum-lists #1036",
 ]);
 requireText("docs/COINGECKO_FOLLOWUP_PACK_20260716.md", [
-  "## Recheck - 2026-07-30",
+  "## Recheck - 2026-09-02",
   "CoinGecko coin listing is not yet approved or publicly indexed.",
 ]);
 requireText("docs/COINMARKETCAP_SUBMISSION.md", [
   "GeckoTerminal: live",
   "CoinGecko: application submitted",
-  "`coin not found` as of 2026-07-30",
+  "`coin not found` as of 2026-09-02",
   "submitted as ticket `1390230`",
   "not verified by CoinMarketCap",
   "is not a standalone tracked CMC coin listing",
+]);
+requireText("docs/LISTING_RECOVERY_PACK_20260902.md", [
+  "Status: prepared for review",
+  "ethereum-lists PR #1036 Draft",
+  "Do not comment on MetaMask #1858 or Uniswap #2509 merely to repeat existing",
 ]);
 
 requireText("docs/wiki/index.html", [

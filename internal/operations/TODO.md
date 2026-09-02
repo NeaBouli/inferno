@@ -1,5 +1,5 @@
 # IFR Protocol — Developer TODO List
-> Last updated: 2026-08-26 | Branch: main
+> Last updated: 2026-09-02 | Branch: main
 
 ---
 
@@ -104,7 +104,7 @@ On errors: fix immediately, commit with `seo:` prefix.
 - [x] MetaMask Mobile: centralized deep-link + pending connect ✅
 - [x] Protocol Plan wiki page created (26 pages) ✅
 
-## CURRENT WATCHLIST — verified 2026-08-26
+## CURRENT WATCHLIST — verified 2026-09-02
 
 - [x] LendingVault V1 borrow activation policy — keep disabled
       Runbook: docs/LENDING_PRICE_GOVERNANCE_RUNBOOK.md
@@ -137,7 +137,7 @@ On errors: fix immediately, commit with `seo:` prefix.
 
 - [ ] MetaMask Registry PR #1858 — external maintainer wait
       PR: https://github.com/MetaMask/contract-metadata/pull/1858
-      Status verified 2026-07-30: open, REVIEW_REQUIRED, no submitted
+      Status verified 2026-09-02: open, REVIEW_REQUIRED, no submitted
       reviews or maintainer activity since the project follow-up on 2026-07-08.
       The three visible reported checks are successful. GitHub reports the PR
       as MERGEABLE but BLOCKED.
@@ -145,14 +145,14 @@ On errors: fix immediately, commit with `seo:` prefix.
       or status change. Do not post another reminder without new evidence.
 - [ ] Uniswap Default Token List Issue #2509 — external maintainer wait
       Issue: https://github.com/Uniswap/default-token-list/issues/2509
-      Status verified 2026-07-30: open with no maintainer comment. Last
+      Status verified 2026-09-02: open with no maintainer comment. Last
       activity remains the project update on 2026-07-08.
       Resume trigger: maintainer response or new CoinGecko/CMC/listing proof.
-- [ ] ethereum-lists PR #1036 — external maintainer wait
+- [ ] ethereum-lists PR #1036 — recover after automated stale closure
       PR: https://github.com/ethereum-lists/tokens/pull/1036
-      Status verified 2026-07-30: open, MERGEABLE but BLOCKED, with no
-      submitted review, reported check or maintainer comment.
-      Resume trigger: maintainer review, CI approval or status change.
+      Status verified 2026-09-02: closed unmerged by github-actions[bot] on
+      2026-08-27 after a stale warning. Ask maintainers to reopen it; create one
+      replacement only if reopening is unavailable.
 - [ ] CoinGecko standalone coin listing — application submitted
       Exact-contract API still returns `coin not found`; GeckoTerminal is live
       separately.
@@ -168,11 +168,11 @@ On errors: fix immediately, commit with `seo:` prefix.
       Trust Wallet: resume only after CMC, professional audit and activity
       criteria are met and the non-refundable fee is explicitly approved.
       Phantom: no verification form; resume after CoinGecko/market-data
-      coverage changes. Rainbow: resume after broader upstream-list coverage.
-      Zerion: resolved 2026-07-31. Human support added the canonical 128px icon
-      and enabled IFR tracking. The live Zerion token page was verified with
-      IFR icon, Inferno name, price and supply data. Resume only if the token
-      page or icon regresses.
+      coverage changes. Rainbow resolves the exact IFR identity; broader
+      upstream-list coverage is still needed for badge recognition. Zerion's
+      canonical identity and 128px icon remain live, but its page stated on
+      2026-09-02 that price tracking is unavailable. Continue the existing
+      support conversation; do not submit a duplicate asset request.
 - [ ] Blockaid/MetaMask warning retest
       Blockaid review is approved. Resume only if a current device still shows
       a warning; capture wallet/browser version, timestamp and screenshot.
@@ -669,10 +669,10 @@ On errors: fix immediately, commit with `seo:` prefix.
 - [ ] Full JSON-LD Schema.org check on all wiki pages
 - [ ] Verify ChatGPT/Perplexity indexing
 - [x] ❌ ethereum-lists PR #1010 CLOSED (auto-close 03.06.2026 — inactivity)
-- [ ] 🟡 ethereum-lists neuer PR #1036 — submitted 10.06.2026
+- [ ] 🟡 ethereum-lists PR #1036 — submitted 10.06.2026, stale-closed 27.08.2026
       URL: https://github.com/ethereum-lists/tokens/pull/1036
       JSON: email + chat + telegram + twitter ergänzt
-      Alternativen: Trust Wallet Assets, Uniswap Token List
+      Nächster Schritt: Reopen anfragen; nur falls unmöglich einen Ersatz-PR anlegen
 
 ### CI/CD
 - [ ] Set up Slither CI
@@ -995,4 +995,4 @@ Hetzner API endpoints already live: stats, offers, loans/:addr, health/:id, lend
 
 ---
 
-*Last updated: 2026-08-26*
+*Last updated: 2026-09-02*

@@ -89,5 +89,34 @@ Thank you.
 - After explicit review and approval, a thank-you response was sent to
   Sebastien and appeared as a visible user message.
 
-Next action: none. Do not submit a duplicate. Reopen only if Zerion's token
-page, metadata or icon regresses.
+## Price-Tracking Regression - 2026-09-02
+
+- The canonical token page and official IFR icon remain visible.
+- The page now says: `We don't track the price of this asset.`
+- This is a price-tracking regression or eligibility change, not a missing
+  token/logo submission. Continue the existing support conversation instead
+  of creating a duplicate asset request.
+
+Draft follow-up, not sent:
+
+```text
+Hello Zerion team,
+
+Thank you again for adding the canonical Inferno (IFR) identity and logo. The
+token page and official icon are still visible, but the page now says that
+Zerion does not track the price of this asset:
+
+https://app.zerion.io/tokens/IFR-8f9ccb3d-2e3b-4c3c-bda1-5040d80548f6?inputChain=ethereum&inputFungibleId=eth
+
+Exact Ethereum contract:
+0x77e99917Eca8539c62F509ED1193ac36580A6e7B
+
+Live IFR/WETH market:
+https://www.geckoterminal.com/eth/pools/0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0
+
+Could you please confirm whether price tracking can be restored, or which
+market-data or liquidity requirement is currently missing? This is a follow-up
+to the existing IFR support case, not a duplicate token request.
+
+Thank you.
+```

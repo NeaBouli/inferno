@@ -71,7 +71,8 @@ governance activation gate is complete.
 - [ ] Dashboard + Governance Dashboard switched to mainnet
 - [ ] First real builder integration live
 - [ ] Community announcement (X/Twitter, Discord)
-- [ ] CoinGecko / CoinMarketCap listing application
+- [x] CoinGecko / CoinMarketCap listing applications submitted
+- [ ] CoinGecko canonical listing and CoinMarketCap verification approved
 
 ---
 

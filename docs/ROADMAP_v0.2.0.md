@@ -63,7 +63,7 @@ v0.2.0 is the **Mainnet-Ready Release**. All prerequisites for a secure mainnet 
 | # | Task | Status |
 |---|------|--------|
 | 1 | Start Bug Bounty program (5% Treasury) | Open |
-| 2 | Apply for CoinGecko / CMC Listing | Open |
+| 2 | Apply for CoinGecko / CMC Listing | **Submitted; approval pending** |
 | 3 | Builder Onboarding: First builder integration | Open |
 | 4 | Dashboard: Add mainnet support | Open |
 | 5 | DEPLOYMENTS.md: Enter mainnet addresses | **Done** |
