@@ -56,7 +56,7 @@ an isolated dependency wave.
 
 ## 4. External Listings And Reputation
 
-Status verified 2026-07-30: improved, still waiting on external maintainers.
+Status verified 2026-09-02: improved, still waiting on external maintainers.
 
 - Uniswap Default Token List issue #2509 is still open with no maintainer
   comment. Last activity remains the project update on 2026-07-08 with
@@ -73,18 +73,24 @@ Status verified 2026-07-30: improved, still waiting on external maintainers.
   - `https://github.com/MetaMask/contract-metadata/pull/1858`
 - MetaMask follow-up comment posted on 2026-07-08 because the PR is waiting for code-owner review:
   - `https://github.com/MetaMask/contract-metadata/pull/1858#issuecomment-4912859782`
-- ethereum-lists PR #1036 is open and `MERGEABLE` but `BLOCKED`, with no
-  submitted review, reported check, or maintainer comment:
+- ethereum-lists PR #1036 was closed unmerged by `github-actions[bot]` on
+  2026-08-27 after a stale warning. Reopen it, or create one replacement only
+  if reopening is unavailable:
   - `https://github.com/ethereum-lists/tokens/pull/1036`
 - ethereum-lists follow-up comment posted on 2026-07-08:
   - `https://github.com/ethereum-lists/tokens/pull/1036#issuecomment-4912862731`
 - Wallet icon distribution status is documented:
   - `docs/WALLET_ICON_DISTRIBUTION_STATUS_20260708.md`
-- CMC check script is present, but local `CMC_API_KEY` is not set, so CMC listing status was not queried.
+- CoinGecko's exact-contract endpoint still returns `coin not found`; the
+  existing application needs a status follow-up, not a duplicate submission.
+- CoinMarketCap ticket `1390230` remains the canonical submission. DexScan
+  recognizes IFR but labels it unverified; follow up on the existing ticket.
+- Zerion still shows the canonical token identity and icon, but the live page
+  now says that its price is not tracked.
 
-Open next step: keep all three external threads under watch without duplicate
-comments, answer maintainer feedback when it appears, and run the CMC check
-only with a local key.
+Open next step: reopen ethereum-lists #1036, follow up the existing CoinGecko,
+CoinMarketCap and Zerion requests without duplicates, then use a confirmed
+CoinGecko/CMC listing as material evidence for Phantom, Uniswap and MetaMask.
 
 ## 5. Web3 UX Backlog
 

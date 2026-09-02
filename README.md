@@ -1,8 +1,8 @@
 <p align="center">
-  <img src="https://raw.githubusercontent.com/NeaBouli/inferno/main/docs/assets/ifr_icon_256.png" alt="Inferno $IFR" width="200" />
+  <img src="https://raw.githubusercontent.com/NeaBouli/inferno/main/docs/assets/ifr_icon_256.png" alt="Inferno IFR" width="200" />
 </p>
 
-# Inferno Protocol ($IFR)
+# Inferno Protocol (IFR)
 
 > Deflationary ERC-20 utility token on Ethereum Mainnet.
 > Every transfer burns 2.5% permanently.
@@ -28,6 +28,7 @@
 | Twitter/X | [x.com/IFRtoken](https://x.com/IFRtoken) |
 | Etherscan | [Token Page](https://etherscan.io/token/0x77e99917Eca8539c62F509ED1193ac36580A6e7B) |
 | Token List | [ifrunit.tech/token-list.json](https://ifrunit.tech/token-list.json) |
+| Listing Status | [Wallet and market recognition](docs/TOKEN_ICON_DISTRIBUTION.md) |
 | GitHub | [NeaBouli/inferno](https://github.com/NeaBouli/inferno) |
 
 ---
@@ -44,7 +45,8 @@ Inferno (IFR) is a deflationary ERC-20 utility token on Ethereum. Every transfer
 
 | Property | Value |
 |---|---|
-| Symbol | $IFR |
+| On-chain symbol | IFR |
+| Social cashtag | $IFRp |
 | Network | Ethereum Mainnet |
 | Decimals | 9 |
 | Genesis Supply | 1,000,000,000 IFR |

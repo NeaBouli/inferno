@@ -13,6 +13,15 @@ Scope: exact-contract evidence pack for Inferno / IFR on Ethereum Mainnet
 - GeckoTerminal pool visibility remains a separate product/status and must
   not be described as a standalone CoinGecko coin listing.
 
+## Recheck - 2026-09-02
+
+- The exact-contract endpoint still returns HTTP 404 with `coin not found`.
+- The existing application remains the canonical request; do not create a
+  duplicate.
+- Etherscan reputation is `Neutral`, both official token lists and the
+  GeckoTerminal pool remain live, and the current evidence is ready for a
+  status follow-up.
+
 ## Do Not Send Before Review
 
 This file is a local preparation pack. Do not submit, email, upload, paste into a
@@ -128,7 +137,7 @@ Current public evidence:
 - GeckoTerminal API recognizes the exact token contract:
   `eth_0x77e99917eca8539c62f509ed1193ac36580a6e7b`
 
-As of 2026-07-16, the public CoinGecko contract endpoint still returns `coin
+As of 2026-09-02, the public CoinGecko contract endpoint still returns `coin
 not found` for the exact IFR contract:
 
 `https://api.coingecko.com/api/v3/coins/ethereum/contract/0x77e99917Eca8539c62F509ED1193ac36580A6e7B`

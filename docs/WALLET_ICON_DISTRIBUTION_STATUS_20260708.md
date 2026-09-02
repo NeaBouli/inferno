@@ -1,6 +1,6 @@
 # Wallet Icon Distribution Status
 
-Last verified: 2026-07-30. The filename is retained because this status record
+Last verified: 2026-09-02. The filename is retained because this status record
 was originally created on 2026-07-08.
 
 This note records where IFR token metadata and icon visibility can realistically be pushed next.
@@ -27,7 +27,7 @@ This note records where IFR token metadata and icon visibility can realistically
 | Etherscan | Live, reputation `Neutral` | `https://etherscan.io/token/0x77e99917Eca8539c62F509ED1193ac36580A6e7B` |
 | Uniswap Default Token List | Open; no maintainer comment; last activity is the project evidence update from 2026-07-08 | `https://github.com/Uniswap/default-token-list/issues/2509` |
 | MetaMask contract metadata | Open; `REVIEW_REQUIRED`; `MERGEABLE` but `BLOCKED`; no submitted review or maintainer activity since 2026-07-08; three visible reported checks successful | `https://github.com/MetaMask/contract-metadata/pull/1858` |
-| ethereum-lists | Open, `MERGEABLE` but `BLOCKED`; no submitted review, reported check, or maintainer comment since the project follow-up on 2026-07-08 | `https://github.com/ethereum-lists/tokens/pull/1036` |
+| ethereum-lists | Closed unmerged by `github-actions[bot]` on 2026-08-27 after a stale warning; reopen or replace once, without parallel requests | `https://github.com/ethereum-lists/tokens/pull/1036` |
 
 ## Wallet-Specific Reality Check
 
@@ -99,14 +99,14 @@ Official sources:
 ### Rainbow
 
 Rainbow's current open-source UI says a verified badge means a token has
-appeared on at least three outside token lists. The app bundles a curated
-Rainbow token list that is refreshed from a backend URL supplied through
-Rainbow's private environment; no public direct token-submission route is
-documented. IFR is not present in the currently bundled list.
+appeared on at least three outside token lists. The app resolves the exact IFR
+contract identity, but a verified badge has not been confirmed. Its curated
+list is refreshed through a private backend and no public direct token-
+submission route is documented.
 
 Practical route:
 
-1. Land ethereum-lists PR #1036.
+1. Reopen ethereum-lists PR #1036 or use one replacement if maintainers require it.
 2. Obtain CoinGecko and CoinMarketCap listings.
 3. Keep the official IFR token lists and explorer metadata consistent.
 4. Do not open an unsupported Rainbow-only PR.
@@ -148,8 +148,16 @@ Resolved and verified 2026-07-31:
   current price information and circulating/total supply data.
 - The reviewed thank-you response was sent after user approval.
 
-Action: no further submission or follow-up is needed. Resume only if the
-token page, metadata or icon regresses. Full submission details remain in
+Regression verified 2026-09-02:
+
+- The canonical page and official IFR icon remain visible.
+- The page now explicitly says that Zerion does not track this asset's price.
+- Identity/icon visibility therefore remains live, but price tracking must not
+  be described as live until Zerion restores it or explains the current
+  market-data requirement.
+
+Action: use the prepared support follow-up; do not submit a duplicate asset
+request. Full submission details remain in
 `docs/ZERION_SUBMISSION_PACK_20260730.md`.
 
 Official source:
@@ -170,9 +178,9 @@ No stable public ERC-20 icon PR path was confirmed for these wallets. Treat them
 
 1. MetaMask PR #1858 maintainer response.
 2. Uniswap issue #2509 maintainer response.
-3. ethereum-lists PR #1036 maintainer response.
+3. ethereum-lists PR #1036 reopening or one replacement after automated stale closure.
 4. CoinGecko application response; exact-contract API still says
    `coin not found`.
 5. CMC status once a local `CMC_API_KEY` is available.
-6. Zerion is live and verified with the 128px icon; monitor only for a
-   metadata or icon regression.
+6. Zerion identity/icon remain live, but price tracking is currently absent;
+   follow up through the existing support conversation.

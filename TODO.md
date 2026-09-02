@@ -93,10 +93,8 @@ Stand: 07.04.2026 | Konsolidiert (Claude + Core Dev)
 - [x] ✅ Etherscan resubmission v2 prepared (03.04.2026)
       Template: docs/ETHERSCAN_SUBMISSION.md
       Email: kaspartisan@proton.me (kein info@)
-- [ ] 🔴 Etherscan Token Update resubmittieren
-      Von: kaspartisan@proton.me
-      Template: docs/ETHERSCAN_SUBMISSION.md
-      Guide: https://info.etherscan.com/how-to-update-token-info/
+- [x] ✅ Etherscan Token Update live — offizielles Icon, Reputation `Neutral`
+      Verifiziert am 02.09.2026; erneut nur bei konkreter Metadatenänderung einreichen
 - [x] ✅ README: Team + Tokenomics + Quick Links + Builders (03.04.2026)
 - [x] ✅ one-pager: Whitepaper badge + Team + Contact (03.04.2026)
 - [x] ✅ fair-launch: pseudonymous team section (03.04.2026)
@@ -107,8 +105,10 @@ Stand: 07.04.2026 | Konsolidiert (Claude + Core Dev)
 - [ ] 🔵 Reddit Karma pruefen (r/CryptoMoonShots Minimum)
 
 **⏳ Nach LP live (nach 05.06.2026):**
-- [ ] ⏳ CoinGecko Listing — Token Logo 256x256 PNG bereit
-- [ ] ⏳ CoinMarketCap Listing
+- [x] ✅ CoinGecko Listing-Antrag eingereicht — Token Logo 256x256 PNG bereit
+- [ ] ⏳ CoinGecko Freigabe / kanonische Coin-Seite (bestehenden Antrag nachfassen, kein Duplikat)
+- [x] ✅ CoinMarketCap Listing-Antrag als Ticket 1390230 eingereicht
+- [ ] ⏳ CoinMarketCap Freigabe / Verifizierung (Ticket 1390230 nachfassen, kein Duplikat)
 - [ ] ⏳ DEXTools Profil optimieren (automatisch nach LP)
 - [ ] ⏳ DEXScreener Profil optimieren
 - [ ] ⏳ GeckoTerminal Profil optimieren

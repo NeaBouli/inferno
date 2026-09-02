@@ -1,12 +1,12 @@
 # CoinMarketCap Submission Pack — Inferno (IFR)
 
-Updated: 2026-07-30
+Updated: 2026-09-02
 
 ## Status
 
 - GeckoTerminal: live, verified pool URL available.
 - CoinGecko: application submitted, but exact-contract API still returns
-  `coin not found` as of 2026-07-30; no standalone coin listing is confirmed.
+  `coin not found` as of 2026-09-02; no standalone coin listing is confirmed.
 - CoinMarketCap standard listing request: submitted as ticket `1390230`;
   response/approval remains pending.
 - CoinMarketCap DexScan: IFR token and IFR/WETH pool pages are live, but CMC
@@ -24,6 +24,37 @@ Updated: 2026-07-30
 CoinMarketCap states that the online submission form is the only official way to request listings or updates. Do not use third-party listing agents or unofficial contacts.
 CoinMarketCap discourages duplicate requests. Ticket `1390230` is the
 canonical request; wait for its response.
+
+## Follow-up Status - 2026-09-02
+
+Ticket `1390230` remains the only submission to follow up. The exact IFR
+contract is visible on CMC DexScan but still marked unverified. Use the draft
+below only in the existing ticket or official CMC support flow; do not file a
+second listing request.
+
+```text
+Hello CoinMarketCap team,
+
+I am following up on existing listing request 1390230 for Inferno (IFR) on
+Ethereum Mainnet.
+
+Contract: 0x77e99917Eca8539c62F509ED1193ac36580A6e7B
+Website: https://ifrunit.tech/
+Etherscan: https://etherscan.io/token/0x77e99917Eca8539c62F509ED1193ac36580A6e7B
+Token list: https://ifrunit.tech/token-list.json
+Well-known token list: https://ifrunit.tech/.well-known/token-list.json
+GeckoTerminal pool: https://www.geckoterminal.com/eth/pools/0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0
+CMC DexScan: https://dex.coinmarketcap.com/token/ethereum/0x77e99917eca8539c62f509ed1193ac36580a6e7b/
+
+DexScan recognizes the exact contract, but the page is still marked as not
+verified by CoinMarketCap. Could you please confirm the status of ticket
+1390230 and whether any specific evidence or correction is still required?
+
+IFR is the on-chain symbol. $IFRp is used only as the social cashtag to avoid
+ticker collisions.
+
+Thank you.
+```
 
 ## Copy/Paste Submission
 
