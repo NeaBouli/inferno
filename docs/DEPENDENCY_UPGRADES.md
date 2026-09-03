@@ -259,3 +259,22 @@ migration and its full contract-suite evidence exist.
   the required local Chromium browser on the current macOS 12 test host.
 - The known Low elliptic advisory remains development-only through the
   Hardhat-Verify Ethers-5 ABI dependency and still has no bounded upstream fix.
+
+## 2026-09-04 Registry Advisory Patch
+
+- Newly published advisories are resolved with bounded dependency updates:
+  `browserslist@4.28.7`, `qs@6.16.0`, `fast-uri@3.1.6`,
+  `mysql2@3.23.1` and `postcss-selector-parser@6.1.4`.
+- `qs@6.16.0` is overridden only in Creator Gateway and the Benefits backend,
+  where Express 4 dependency ranges otherwise exclude the patched release.
+  Their request and service suites remain the compatibility gates.
+- The Points backend retains exact overrides for its established dependency
+  baseline, including Prisma's transitive MySQL driver. Its active local
+  datasource remains SQLite; Prisma generation, TypeScript build and the
+  points test suite verify that path.
+- Patch releases already accepted by upstream ranges are updated in lockfiles
+  without adding permanent overrides. This keeps future compatible security
+  updates available.
+- The Benefits wallet prototype's existing WalletConnect/Wagmi advisory chain
+  remains a separate major-migration task. Do not use `npm audit fix --force`
+  to cross that wallet compatibility boundary.
