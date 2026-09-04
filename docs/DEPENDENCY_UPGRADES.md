@@ -280,6 +280,12 @@ migration and its full contract-suite evidence exist.
 - The Benefits wallet prototype's existing WalletConnect/Wagmi advisory chain
   remains a separate major-migration task. Do not use `npm audit fix --force`
   to cross that wallet compatibility boundary.
+- The token dashboard pins transitive `query-string@9.5.1` to remove
+  `GHSA-vcc3-ghjq-m6fr` without forcing the incompatible Wagmi 3 upgrade that
+  npm proposes. WalletConnect 2.21 bundles the affected utility code and does
+  not load `query-string` at runtime; the dashboard dependency gate enforces
+  both `query-string@9.5.1` and `decode-uri-component@0.5.0`, while the full
+  production build remains the compatibility gate.
 
 ## 2026-09-04 Hardhat Maintenance Candidate
 
