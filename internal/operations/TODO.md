@@ -144,24 +144,26 @@ On errors: fix immediately, commit with `seo:` prefix.
 
 - [ ] MetaMask Registry PR #1858 — external maintainer wait
       PR: https://github.com/MetaMask/contract-metadata/pull/1858
-      Status verified 2026-08-04: open, REVIEW_REQUIRED, no submitted
+      Status verified 2026-09-04: open, REVIEW_REQUIRED, no submitted
       reviews or maintainer activity since the project follow-up on 2026-07-08.
       The three reported checks are successful; code-owner review is pending.
       Resume trigger: maintainer review, requested change, workflow approval
       or status change. Do not post another reminder without new evidence.
 - [ ] Uniswap Default Token List Issue #2509 — external maintainer wait
       Issue: https://github.com/Uniswap/default-token-list/issues/2509
-      Status verified 2026-08-04: open with no maintainer comment. Last
+      Status verified 2026-09-04: open with no maintainer comment. Last
       activity remains the project update on 2026-07-08.
       Resume trigger: maintainer response or new CoinGecko/CMC/listing proof.
-- [ ] ethereum-lists PR #1036 — external maintainer wait
-      PR: https://github.com/ethereum-lists/tokens/pull/1036
-      Status verified 2026-08-04: open, MERGEABLE and GitHub API state CLEAN,
-      with no submitted review, reported check or maintainer comment.
+- [ ] ethereum-lists PR #1049 — external maintainer wait
+      PR: https://github.com/ethereum-lists/tokens/pull/1049
+      Status verified 2026-09-04: replacement PR open and BLOCKED, with no
+      submitted review, reported check or maintainer comment. Original PR
+      #1036 was closed stale and now points to this single replacement.
       Resume trigger: maintainer review, CI approval or status change.
 - [ ] CoinGecko standalone coin listing — application submitted
-      Exact-contract API still returns `coin not found`; GeckoTerminal is live
-      separately.
+      Active listing request `CL0309260050` submitted 2026-09-04 and currently
+      pending. Verification post: https://x.com/IFRtoken/status/2095640632739959130
+      Exact-contract API still returns `coin not found`; GeckoTerminal is live separately.
       Resume trigger: CoinGecko response or a public exact-contract coin page.
 - [ ] CoinMarketCap standard listing — ticket pending
       Script: `bash scripts/cmc/check_ifr_listing.sh`
@@ -201,7 +203,7 @@ On errors: fix immediately, commit with `seo:` prefix.
 
 ## RECENTLY COMPLETED
 
-- [x] Read-only external listing monitor — completed 2026-08-04
+- [x] Read-only external listing monitor — completed 2026-09-04
       Commands: `npm run check:listing-status` and
       `npm run test:listing-monitor`. Validates both official token lists and
       reports MetaMask, Uniswap, ethereum-lists, CoinGecko, CMC DexScan and
@@ -683,8 +685,10 @@ On errors: fix immediately, commit with `seo:` prefix.
 - [ ] Full JSON-LD Schema.org check on all wiki pages
 - [ ] Verify ChatGPT/Perplexity indexing
 - [x] ❌ ethereum-lists PR #1010 CLOSED (auto-close 03.06.2026 — inactivity)
-- [x] 🟡 ethereum-lists neuer PR #1036 — submitted 10.06.2026
+- [x] 🟡 ethereum-lists PR #1036 — submitted 10.06.2026, stale-closed
       URL: https://github.com/ethereum-lists/tokens/pull/1036
+      Replacement submitted once as PR #1049 on 02.09.2026:
+      https://github.com/ethereum-lists/tokens/pull/1049
       JSON: email + chat + telegram + twitter ergänzt
       Aktueller Status und Resume-Trigger: siehe kanonischen Eintrag unter
       `DEFERRED / LATER`; keine separate Trust-Wallet-Einreichung starten.
@@ -822,8 +826,8 @@ On errors: fix immediately, commit with `seo:` prefix.
 ## AFTER LP LIVE (after 05.06.2026)
 
 - [x] Apply for CoinGecko listing
-      Submission completed by Gio; this does not mean the listing was
-      approved. Rechecked 2026-08-04: exact-contract endpoint returns
+      Active request `CL0309260050` submitted 2026-09-04; this does not mean
+      the listing was approved. Rechecked 2026-09-04: exact-contract endpoint returns
       `coin not found`, search returns no IFR coin, while GeckoTerminal remains
       live separately.
 - [x] CoinMarketCap listing request submitted — ticket `1390230`

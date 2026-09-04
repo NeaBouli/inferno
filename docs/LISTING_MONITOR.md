@@ -64,7 +64,7 @@ rate-limited, or unreachable states do **not** affect the exit code:
     `mergeable`, `mergeableState`, `updatedAt`, comment counts and `title`.
   - Uniswap `default-token-list` issue 2509 — `state`, `stateReason`,
     `comments`, `updatedAt`, `title`.
-  - ethereum-lists `tokens` PR 1036 — `state`, `merged`, `draft`,
+  - ethereum-lists `tokens` PR 1049 — `state`, `merged`, `draft`,
     `mergeable`, `mergeableState`, `updatedAt`, comment counts and `title`.
   - Statuses: `ok`, `rate_limited` (HTTP 403/429), `unreachable`.
 - **CoinGecko** (no API key; anonymous rate limits apply)

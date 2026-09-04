@@ -15,7 +15,7 @@
  *
  *   External gates (reported as statuses, never fail the command):
  *   - GitHub API: MetaMask/contract-metadata PR 1858,
- *     Uniswap/default-token-list issue 2509, ethereum-lists/tokens PR 1036
+ *     Uniswap/default-token-list issue 2509, ethereum-lists/tokens PR 1049
  *   - CoinGecko exact-contract endpoint and simple token-price endpoint
  *   - CoinMarketCap DexScan exact-contract page reachability + unverified label
  *   - Rainbow exact-contract page reachability + Inferno/IFR identity evidence
@@ -55,10 +55,10 @@ const GITHUB_TARGETS = [
     webUrl: "https://github.com/Uniswap/default-token-list/issues/2509",
   },
   {
-    key: "ethereumListsTokensPr1036",
+    key: "ethereumListsTokensPr1049",
     kind: "pull",
-    apiUrl: "https://api.github.com/repos/ethereum-lists/tokens/pulls/1036",
-    webUrl: "https://github.com/ethereum-lists/tokens/pull/1036",
+    apiUrl: "https://api.github.com/repos/ethereum-lists/tokens/pulls/1049",
+    webUrl: "https://github.com/ethereum-lists/tokens/pull/1049",
   },
 ];
 

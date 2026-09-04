@@ -72,10 +72,10 @@
         <span style="color:#6b7280;font-size:0.82rem;">Open and review required, with three reported checks successful and no submitted review. Resume on maintainer review, requested change, workflow approval or status change; do not post another reminder without new evidence. <a href="https://github.com/MetaMask/contract-metadata/pull/1858" target="_blank" rel="noopener">PR #1858</a></span></li>
       <li><div class="cb"></div><strong>Uniswap Default Token List Issue #2509</strong> &mdash; external maintainer wait.<br>
         <span style="color:#6b7280;font-size:0.82rem;">Resume on maintainer response or new CoinGecko/CMC/listing proof. <a href="https://github.com/Uniswap/default-token-list/issues/2509" target="_blank" rel="noopener">Issue #2509</a></span></li>
-      <li><div class="cb"></div><strong>ethereum-lists PR #1036</strong> &mdash; external maintainer wait.<br>
-        <span style="color:#6b7280;font-size:0.82rem;">Open, mergeable and currently reported as clean by the GitHub API; maintainer review is still pending. Resume on maintainer review, CI approval or status change. <a href="https://github.com/ethereum-lists/tokens/pull/1036" target="_blank" rel="noopener">PR #1036</a></span></li>
+      <li><div class="cb"></div><strong>ethereum-lists PR #1049</strong> &mdash; external maintainer wait.<br>
+        <span style="color:#6b7280;font-size:0.82rem;">The replacement PR is open and blocked with no review or reported check. Original PR #1036 was closed stale and points to this single replacement. Resume on maintainer review, CI approval or status change. <a href="https://github.com/ethereum-lists/tokens/pull/1049" target="_blank" rel="noopener">PR #1049</a></span></li>
       <li><div class="cb"></div><strong>CoinGecko standalone listing</strong> &mdash; application submitted.<br>
-        <span style="color:#6b7280;font-size:0.82rem;">Exact-contract API still returns <code>coin not found</code>; GeckoTerminal is live separately. Resume on CoinGecko response or public exact-contract coin page.</span></li>
+        <span style="color:#6b7280;font-size:0.82rem;">Active request <code>CL0309260050</code> was submitted on 2026-09-04 and is pending. The exact-contract API still returns <code>coin not found</code>; GeckoTerminal is live separately. Resume on CoinGecko response or public exact-contract coin page.</span></li>
       <li><div class="cb"></div><strong>CoinMarketCap standard listing</strong> &mdash; ticket pending.<br>
         <span style="color:#6b7280;font-size:0.82rem;">Ticket <code>1390230</code> is submitted. CMC DexScan is live but marks IFR as <code>not verified by CoinMarketCap</code>; this is not a standalone CMC listing. Resume on CMC response/status change; do not submit a duplicate.</span></li>
       <li><div class="cb"></div><strong>Trust Wallet / Rainbow / Phantom / Zerion visibility</strong><br>
@@ -92,7 +92,7 @@
 
     <h2><span class="priority-badge p-done">RECENT</span> Recently Completed</h2>
     <ul>
-      <li><div class="cb cb-done">&#x2713;</div><strong>Read-only external listing monitor</strong> &mdash; completed 2026-08-04.<br>
+      <li><div class="cb cb-done">&#x2713;</div><strong>Read-only external listing monitor</strong> &mdash; completed 2026-09-04.<br>
         <span style="color:#6b7280;font-size:0.82rem;"><code>npm run check:listing-status</code> validates both official token lists and reports MetaMask, Uniswap, ethereum-lists, CoinGecko, CMC DexScan and Rainbow. Third-party waiting states remain informational. Runbook: <code>docs/LISTING_MONITOR.md</code>.</span></li>
       <li><div class="cb cb-done">&#x2713;</div><strong>Dependency modernization</strong> &mdash; completed 2026-07-29.<br>
         <span style="color:#6b7280;font-size:0.82rem;">Root now uses Ethers 6.17, Hardhat 3.12.0, Chai 6 and Node &gt;=22.13. Waffle/Ganache were removed; exact-head CI passed. Residual root audit: 8 transitive low findings (0 moderate/high/critical). Do not run <code>npm audit fix --force</code>.</span></li>
@@ -373,12 +373,9 @@
     <h3>After LP (05.06.2026+)</h3>
     <ul>
       <li><div class="cb cb-done">&#x2713;</div>CoinGecko Listing submitted<br>
-        <span style="color:#6b7280;font-size:0.82rem;">Submission completed, not approval. Rechecked 2026-07-30: CoinGecko exact-contract API returns <code>coin not found</code> and search has no IFR coin; GeckoTerminal remains live separately.</span></li>
-      <li><div class="cb"></div>CoinMarketCap Listing<br>
-        <span style="color:#6b7280;font-size:0.82rem;">Submission pack updated 02.07.2026: <code>docs/COINMARKETCAP_SUBMISSION.md</code><br>
-        Submit via official CMC form: <code>1 - [New Listing] Add cryptoasset</code><br>
-        Direct form: <code>ticket_form_id=360000493112</code><br>
-        Final submit requires Gio browser/session because CMC Cloudflare human verification blocks automation.</span></li>
+        <span style="color:#6b7280;font-size:0.82rem;">Active request <code>CL0309260050</code> was submitted on 2026-09-04 and remains pending. CoinGecko exact-contract API returns <code>coin not found</code>; GeckoTerminal remains live separately.</span></li>
+      <li><div class="cb cb-done">&#x2713;</div>CoinMarketCap Listing request submitted<br>
+        <span style="color:#6b7280;font-size:0.82rem;">Standard listing ticket <code>1390230</code> is pending. CMC DexScan is live but still marks IFR as not verified by CoinMarketCap; do not submit a duplicate.</span></li>
       <li><div class="cb"></div>DEXTools / DEXScreener / GeckoTerminal / DexGuru</li>
       <li><div class="cb"></div>DeFiLlama / TokenSniffer / GoPlus / De.fi</li>
       <li><div class="cb"></div>Lens Protocol Account</li>
@@ -407,8 +404,8 @@
       <li><div class="cb cb-done">&#x2713;</div>Ali Copilot: Phase 3 + BuilderRegistry + Governance updated (20.03)</li>
       <li><div class="cb cb-done">&#x2713;</div>Landing Page: IntersectionObserver lazy live data + lazy images + scroll throttle (20.03)</li>
       <li><div class="cb cb-done">&#x2713;</div><span style="text-decoration:line-through;color:#6b7280;">&#x274C; ethereum-lists PR #1010 CLOSED (auto-close 03.06.2026 &mdash; inactivity)</span></li>
-      <li><div class="cb cb-done">&#x2713;</div>&#x1F7E1; <strong>ethereum-lists neuer PR #1036</strong> &mdash; submitted 10.06.2026<br>
-        <span style="color:#6b7280;font-size:0.82rem;"><a href="https://github.com/ethereum-lists/tokens/pull/1036" target="_blank" rel="noopener">github.com/ethereum-lists/tokens/pull/1036</a><br>
+      <li><div class="cb cb-done">&#x2713;</div>&#x1F7E1; <strong>ethereum-lists PR #1036</strong> &mdash; submitted 10.06.2026, stale-closed<br>
+        <span style="color:#6b7280;font-size:0.82rem;"><a href="https://github.com/ethereum-lists/tokens/pull/1036" target="_blank" rel="noopener">Original PR #1036</a>; replaced once by <a href="https://github.com/ethereum-lists/tokens/pull/1049" target="_blank" rel="noopener">PR #1049</a> on 02.09.2026.<br>
         JSON: email + chat + telegram + twitter erg&auml;nzt. Aktueller Status und Resume-Trigger stehen im kanonischen Deferred-Eintrag; keine separate Trust-Wallet-Einreichung starten.</span></li>
       <li><div class="cb cb-done" style="text-decoration:line-through;color:#6b7280;">&#x2713;</div><span style="text-decoration:line-through;color:#6b7280;">Animated token GIF</span> &mdash; not planned</li>
       <li><div class="cb cb-done">&#x2713;</div>&#x2705; wallet-core.js v1.2 stable (04.04.2026)<br>

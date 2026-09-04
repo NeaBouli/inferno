@@ -125,7 +125,7 @@ async function testHappyPathPendingExternals() {
   assert.equal(gh.metamaskContractMetadataPr1858.updatedAt, "2026-07-08T08:28:04Z");
   assert.equal(gh.uniswapDefaultTokenListIssue2509.state, "open");
   assert.equal(gh.uniswapDefaultTokenListIssue2509.comments, 3);
-  assert.equal(gh.ethereumListsTokensPr1036.mergeableState, "blocked");
+  assert.equal(gh.ethereumListsTokensPr1049.mergeableState, "blocked");
 
   assert.equal(report.external.coingecko.contract.status, "not_found");
   assert.equal(report.external.coingecko.simplePrice.status, "no_price");
@@ -211,7 +211,7 @@ async function testUnreachableExternalsStillSucceed() {
   assert.equal(report.exitCode, 0, "external outages must not fail the command");
   assert.equal(report.external.github.metamaskContractMetadataPr1858.status, "rate_limited");
   assert.equal(report.external.github.uniswapDefaultTokenListIssue2509.status, "unreachable");
-  assert.equal(report.external.github.ethereumListsTokensPr1036.status, "unreachable");
+  assert.equal(report.external.github.ethereumListsTokensPr1049.status, "unreachable");
   assert.equal(report.external.coingecko.contract.status, "rate_limited");
   assert.equal(report.external.coingecko.simplePrice.status, "unreachable");
   assert.equal(report.external.coinmarketcapDexscan.status, "unreachable");

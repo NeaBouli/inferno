@@ -1,6 +1,6 @@
 # Wallet Icon Distribution Status
 
-Last verified: 2026-08-04. The filename is retained because this status record
+Last verified: 2026-09-04. The filename is retained because this status record
 was originally created on 2026-07-08.
 
 This note records where IFR token metadata and icon visibility can realistically be pushed next.
@@ -27,7 +27,7 @@ This note records where IFR token metadata and icon visibility can realistically
 | Etherscan | Live, reputation `Neutral` | `https://etherscan.io/token/0x77e99917Eca8539c62F509ED1193ac36580A6e7B` |
 | Uniswap Default Token List | Open; no maintainer comment; last activity is the project evidence update from 2026-07-08 | `https://github.com/Uniswap/default-token-list/issues/2509` |
 | MetaMask contract metadata | Open; `REVIEW_REQUIRED`; public API state `unstable`; no submitted review or maintainer activity since 2026-07-08; three reported checks successful | `https://github.com/MetaMask/contract-metadata/pull/1858` |
-| ethereum-lists | Open and `MERGEABLE`; public API state `clean`; no submitted review, reported check, or maintainer comment since the project follow-up on 2026-07-08 | `https://github.com/ethereum-lists/tokens/pull/1036` |
+| ethereum-lists | Replacement PR #1049 is open and `BLOCKED`; no submitted review, reported check, or maintainer comment. Original PR #1036 was closed stale. | `https://github.com/ethereum-lists/tokens/pull/1049` |
 | Rainbow | Exact-contract token page is live with Inferno name, IFR symbol and price; no visible token image | `https://rainbow.me/token/ethereum/0x77e99917eca8539c62f509ed1193ac36580a6e7b` |
 
 ## Wallet-Specific Reality Check
@@ -52,7 +52,7 @@ Practical route for IFR:
    relevant only for a rare incorrect spam/flagging review, not ordinary
    verification.
 
-Verified 2026-08-04:
+Verified 2026-09-04:
 
 - CoinGecko exact-contract endpoint: `coin not found`.
 - CoinGecko search for `Inferno IFR`: empty `coins` array.
@@ -111,7 +111,7 @@ Live page verified 2026-08-04:
 
 Remaining practical route:
 
-1. Land ethereum-lists PR #1036.
+1. Land ethereum-lists replacement PR #1049.
 2. Obtain CoinGecko and CoinMarketCap listings so upstream metadata can mature.
 3. Keep the official IFR token lists and explorer metadata consistent.
 4. Monitor the missing image; do not open an unsupported Rainbow-only PR.
@@ -175,9 +175,10 @@ No stable public ERC-20 icon PR path was confirmed for these wallets. Treat them
 
 1. MetaMask PR #1858 maintainer response.
 2. Uniswap issue #2509 maintainer response.
-3. ethereum-lists PR #1036 maintainer response.
-4. CoinGecko application response; exact-contract API still says
-   `coin not found`.
+3. ethereum-lists PR #1049 maintainer response.
+4. CoinGecko request `CL0309260050` response; exact-contract API still says
+   `coin not found`. The request was submitted on 2026-09-04 and remains
+   pending; GeckoTerminal visibility is separate.
 5. CMC status once a local `CMC_API_KEY` is available.
 6. Zerion is live and verified with the 128px icon; monitor only for a
    metadata or icon regression.

@@ -1,9 +1,19 @@
 # CoinGecko Follow-up Pack - IFR
 
 Prepared: 2026-07-16 09:13 EEST  
-Last rechecked: 2026-08-04 18:14 EEST
-Status: draft only, not sent  
+Last rechecked: 2026-09-04 01:28 EEST
+Status: active listing request submitted; pending review
 Scope: exact-contract evidence pack for Inferno / IFR on Ethereum Mainnet
+
+## Submission - 2026-09-04
+
+- CoinGecko active listing request: `CL0309260050`.
+- Submission state after completion: Pending.
+- Verification post: https://x.com/IFRtoken/status/2095640632739959130
+- GeckoTerminal is already live for the exact IFR contract; it remains a
+  separate product and is not presented as a standalone CoinGecko listing.
+- Do not submit a duplicate. Resume on a CoinGecko response or a public
+  exact-contract coin page.
 
 ## Recheck - 2026-08-04
 
