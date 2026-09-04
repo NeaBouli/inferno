@@ -88,11 +88,13 @@ governance activation gate is complete.
       Scope: customer wallet, ETH/IFR swap, IFR locking, QR proof, seller scanner, seller discount rules, and verified seller rewards through PartnerVault after governance approval.
       Current implementation: the live PWA includes seller profile/rule/history flows, customer IFRLock and proof flows, POS helper, owner-managed checkout operators and product catalog. The deployed M4 foundation adds applications, live governance linkage checks, an atomic reward outbox and read-only vesting status; no Mainnet seller/partner or reward caller is active. Remaining scope includes governance activation/submission, embedded-wallet decision and real-device acceptance.
 - [ ] Guarded buyback automation (BuybackVault activation after 60 days)
-- [ ] Vault fee-exemption defense in depth: automated invariant monitoring and
-      negative regression tests for CommitmentVault and LendingVault. A future
-      V2 must combine balance-diff inflow accounting with runtime exemption
-      guards that fail closed. Current Mainnet V1 accounting was healthy at
-      block 25811214. See [hardening status](VAULT_FEE_EXEMPT_HARDENING.md).
+- [x] Vault V1 fee-exemption defense in depth: automated four-hour invariant
+      monitoring and negative regression tests cover CommitmentVault and
+      LendingVault. Mainnet V1 accounting was healthy at block 25900438.
+      See [hardening status](VAULT_FEE_EXEMPT_HARDENING.md).
+- [ ] Vault V2 hardening: combine balance-diff inflow accounting with runtime
+      exemption guards that fail closed. This requires separate design review,
+      migration planning, tests, audit and governance-approved deployment.
 - [ ] Developer SDK publication + complete documentation (local `ifr-sdk` v0.2.0 is
       implemented and its tarball is installed with locked `npm ci` and consumer-tested for
       CommonJS, ESM named-import interoperability and TypeScript on Node.js 20/22;
