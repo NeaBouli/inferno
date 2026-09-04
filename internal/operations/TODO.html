@@ -60,8 +60,8 @@
         <span style="color:#6b7280;font-size:0.82rem;">Decision 2026-07-31: keep <code>ifrPriceWei = 0</code>; do not submit the current Safe JSON. V1 cannot set the price back to zero and has no pause, borrow cap, allowlist or price-freshness check. Reconsider only after an audited, bounded and pausable V2 plus deeper liquidity.</span></li>
       <li><div class="cb"></div><strong>CommitmentVault price-condition locks</strong> &mdash; V2/PriceLockVault needed.<br>
         <span style="color:#6b7280;font-size:0.82rem;">Time-only locks are live; price locks stay disabled because deployed <code>_getCurrentPrice()</code> returns 0.</span></li>
-      <li><div class="cb"></div><strong>SEC-VLT-01 &mdash; Vault fee-exemption defense in depth</strong><br>
-        <span style="color:#6b7280;font-size:0.82rem;">Verified at Mainnet block <code>25811214</code>: CommitmentVault and LendingVault are fee-exempt, and both token-balance/accounting differences are 0 IFR. Current V1 is healthy but depends on those exemptions remaining active. Add read-only exemption/accounting monitoring and negative regression tests. V2 must combine balance-diff inflow accounting with runtime exemption guards that fail closed on affected outgoing flows. Canonical status: <code>docs/VAULT_FEE_EXEMPT_HARDENING.md</code></span></li>
+      <li><div class="cb cb-done">&#x2713;</div><strong>SEC-VLT-01 &mdash; Vault fee-exemption monitoring and negative tests</strong><br>
+        <span style="color:#6b7280;font-size:0.82rem;">Verified at Mainnet block <code>25900438</code>: both vaults are fee-exempt and fully covered. The read-only four-hour monitor fails closed on a missing exemption or custody deficit; deterministic and contract-level negative regressions cover both vaults. Lending liquid custody is compared with <code>totalAvailable</code>; <code>totalLent</code> is reported separately as a receivable. V2 balance-diff inflow accounting and runtime guards remain future design work. Canonical status: <code>docs/VAULT_FEE_EXEMPT_HARDENING.md</code></span></li>
       <li><div class="cb"></div><strong>IFRp Commerce App / shop.ifrunit.tech production decisions</strong><br>
         <span style="color:#6b7280;font-size:0.82rem;">Core customer/seller, QR, catalog, rules, operator, registry/vault and reward-outbox flows are implemented. Mainnet partner activation, a dedicated authorized reward caller, embedded-wallet decision and real-device acceptance remain open. Docs: <code>docs/ifrp-commerce-app/MASTER_ARCHITECTURE.md</code></span></li>
     </ul>
@@ -292,9 +292,9 @@
 
     <h3>Contracts (Core Dev &mdash; Solidity)</h3>
     <ul>
-      <li><div class="cb cb-done">&#x2713;</div>&#x2705; <code>CommitmentVault.sol</code> &mdash; 4 condition types, auto-unlock 30d, P0 immutable, 45 tests passing (04.04.2026)</li>
+      <li><div class="cb cb-done">&#x2713;</div>&#x2705; <code>CommitmentVault.sol</code> &mdash; 4 condition types, auto-unlock 30d, P0 immutable, 46 tests passing</li>
       <li><div class="cb cb-done">&#x2713;</div>&#x2705; CommitmentVault deployed Mainnet: <code>0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3</code> &mdash; Etherscan verified, UI activated</li>
-      <li><div class="cb cb-done">&#x2713;</div>&#x2705; <code>LendingVault.sol</code> &mdash; utilization interest 2&ndash;25%, 200/150/120% collateral, 50/50 split, 55 tests passing (04.04.2026)</li>
+      <li><div class="cb cb-done">&#x2713;</div>&#x2705; <code>LendingVault.sol</code> &mdash; utilization interest 2&ndash;25%, 200/150/120% collateral, 50/50 split, 56 tests passing</li>
       <li><div class="cb cb-done">&#x2713;</div>&#x2705; LendingVault deployed Mainnet: <code>0x974305Ab0EC905172e697271C3d7d385194EB9DF</code> &mdash; Etherscan verified, UI activated</li>
       <li><div class="cb cb-done">&#x2713;</div>&#x2705; <code>BuybackController.sol</code> &mdash; 50/50 buyback+burn / LP deepening, permissionless execute, 50 tests passing (07.04.2026)</li>
       <li><div class="cb cb-done">&#x2713;</div>&#x2705; Deploy: CommitmentVault &rarr; LendingVault &rarr; BuybackController &mdash; all Mainnet + verified</li>

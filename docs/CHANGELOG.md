@@ -1,5 +1,15 @@
 # Changelog
 
+## 4 September 2026 — Vault Invariant Monitor Candidate
+
+- Added a read-only four-hour Mainnet monitor for CommitmentVault and
+  LendingVault fee exemptions and custody coverage.
+- Corrected the LendingVault invariant: liquid token custody is compared with
+  `totalAvailable`; borrower-held `totalLent` is reported as a receivable.
+- Added deterministic monitor tests and two negative contract regressions,
+  bringing the current contract suite to 644 tests. No contract, transaction
+  or Mainnet state was changed.
+
 ## 4 September 2026 — Hardhat Maintenance Candidate
 
 - Updated the local candidate from Hardhat 3.12.0 to 3.15.0 and

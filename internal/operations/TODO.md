@@ -123,14 +123,14 @@ On errors: fix immediately, commit with `seo:` prefix.
 - [ ] CommitmentVault price-condition locks — V2/PriceLockVault needed
       Design: docs/COMMITMENT_PRICE_LOCK_ORACLE_PATH.md
       Current: time-only locks live; price locks must stay disabled because deployed `_getCurrentPrice()` returns 0.
-- [ ] SEC-VLT-01 — Vault fee-exemption defense in depth
+- [x] SEC-VLT-01 — Vault fee-exemption monitoring and negative tests
       Canonical status: docs/VAULT_FEE_EXEMPT_HARDENING.md
-      Verified at Mainnet block 25811214: CommitmentVault and LendingVault are
-      fee-exempt, and both token-balance/accounting differences are 0 IFR.
-      Current V1 is healthy but depends on those exemptions remaining active.
-      Add read-only exemption/accounting monitoring and negative regression
-      tests. For V2, require balance-diff inflow accounting plus explicit
-      runtime exemption guards that fail closed on affected outgoing flows.
+      Verified at Mainnet block 25900438: both vaults are fee-exempt and fully
+      covered. The read-only four-hour monitor now fails closed on a missing
+      exemption or custody deficit; deterministic and contract-level negative
+      regressions cover both vaults. Lending liquid custody is compared with
+      totalAvailable; totalLent is reported separately as a receivable. V2
+      balance-diff inflow accounting and runtime guards remain future design work.
 - [ ] IFRp Commerce App / shop.ifrunit.tech production decisions
       Docs: docs/ifrp-commerce-app/MASTER_ARCHITECTURE.md
       Current: role chooser, external-wallet/IFRLock flow, QR proof/redeem,
@@ -503,7 +503,7 @@ On errors: fix immediately, commit with `seo:` prefix.
 ### Phase 3 — Contracts (Core Dev — Solidity)
 - [x] ✅ CommitmentVault.sol written + tests (04.04.2026)
       4 condition types (TIME/PRICE/OR/AND), auto-unlock 30d, P0 immutable
-      45 tests passing, ABI exported
+      46 tests passing, ABI exported
       Handover: docs/CORE_DEV_PHASE3.md
 - [x] ✅ CommitmentVault deployed Mainnet (04.04.2026)
       Sepolia: 0xc43d48E7FDA576C5022d0670B652A622E8caD041
@@ -512,7 +512,7 @@ On errors: fix immediately, commit with `seo:` prefix.
 - [x] ✅ LendingVault.sol written + tests (04.04.2026)
       Utilization-based interest (2–25%/month), 200/150/120% collateral
       50/50 interest split, liquidator 5% bonus, top-up collateral
-      55 tests passing, ABI exported
+      56 tests passing, ABI exported
       Handover: docs/CORE_DEV_PHASE3.md
 - [x] ✅ LendingVault deployed Mainnet (04.04.2026)
       Sepolia: 0x769928aBDfc949D0718d8766a1C2d7dBb63954Eb

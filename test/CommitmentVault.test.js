@@ -518,5 +518,20 @@ describe("CommitmentVault", function () {
       // Time met, but price not met (no oracle)
       expect(await vault.isConditionMet(userA.address, 0)).to.be.false;
     });
+
+    it("T46: missing fee exemption creates a detectable custody deficit", async () => {
+      const amount = parse("10000");
+      const now = await getTimestamp();
+      await token.setFeeExempt(vault.target, false);
+      await token.setFeeExempt(userA.address, false);
+      await token.connect(userA).approve(vault.target, amount);
+
+      await vault.connect(userA).lock(amount, 0, now + ONE_DAY, 0);
+
+      expect(await vault.totalLocked()).to.equal(amount);
+      expect(await token.balanceOf(vault.target)).to.equal(parse("9650"));
+      await advanceTime(ONE_DAY + 1);
+      await expect(vault.connect(userA).unlock(userA.address, 0)).to.be.revert(ethers);
+    });
   });
 });

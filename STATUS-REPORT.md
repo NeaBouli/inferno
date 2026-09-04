@@ -1,6 +1,6 @@
 # IFR Project Status Report
 
-**Current engineering baseline:** 26 August 2026
+**Current engineering baseline:** 4 September 2026
 **Branch:** `main`
 **Model:** Community Fair Launch (CFLM) -- no presale
 **Ticker:** $IFR
@@ -17,13 +17,13 @@ The canonical surface, application and Mainnet capability matrix is
 Source presence does not mean that an app is publicly deployed or that a
 governance-gated contract path is active.
 
-- Root: Node.js `>=22.13.0`, Ethers `6.17.0`, Hardhat `3.12.0`,
+- Root: Node.js `>=22.13.0`, Ethers `6.17.0`, Hardhat `3.15.0`,
   Chai `6.2.2`, Mocha `11.8.0`, OpenZeppelin Contracts `5.6.x`.
 - Root is ESM with explicit CommonJS boundaries for legacy scripts and
   standalone test packages. Waffle, Ganache and `solidity-coverage` are no
   longer active root dependencies; native Hardhat 3 coverage is used.
-- Clean local and exact-head CI verification through `9782106a`: contracts `642/642`,
-  Generator Engine `30/30`, IFR SDK `36/36`.
+- Current repository verification: contracts `644/644`, Generator Engine
+  `30/30`, IFR SDK `36/36`.
 - Landing/Wiki wallet browser tests `20/20` and Web3 write-path browser tests
   `24/24` passed. The complete Benefits preflight passed.
 - Benefits physical device/wallet acceptance remains `1/10` passed and `9`

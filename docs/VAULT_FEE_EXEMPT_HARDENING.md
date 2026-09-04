@@ -1,7 +1,7 @@
 # Vault Fee-Exemption Invariant and Hardening Plan
 
-Status: Open defense-in-depth work; no active accounting deficit observed  
-Last verified: 22 August 2026 at Ethereum Mainnet block `25811214`
+Status: Monitoring and negative tests implemented; V2 hardening remains future work
+Last verified: 4 September 2026 at Ethereum Mainnet block `25900438`
 
 ## Current Mainnet State
 
@@ -10,12 +10,12 @@ InfernoToken charges a total transfer fee of 3.5% on non-exempt transfers:
 LendingVault account deposits and withdrawals at their nominal IFR amounts,
 so both contracts rely on their token-side `feeExempt` status remaining active.
 
-The invariant was healthy at block `25811214`:
+The invariant was healthy at block `25900438`:
 
 | Contract | Fee exempt | Token balance | Internal accounting | Difference |
 | --- | --- | ---: | ---: | ---: |
 | CommitmentVault (`0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3`) | `true` | 47,952,476.871794375 IFR | `totalLocked`: 47,952,476.871794375 IFR | 0 IFR |
-| LendingVault (`0x974305Ab0EC905172e697271C3d7d385194EB9DF`) | `true` | 52,155,440.952845656 IFR | `totalAvailable + totalLent`: 52,155,440.952845656 IFR | 0 IFR |
+| LendingVault (`0x974305Ab0EC905172e697271C3d7d385194EB9DF`) | `true` | 52,155,440.952845656 IFR | `totalAvailable`: 52,155,440.952845656 IFR (`totalLent`: 0 IFR) | 0 IFR liquid surplus |
 
 Token: `0x77e99917Eca8539c62F509ED1193ac36580A6e7B`
 
@@ -23,16 +23,30 @@ This snapshot means the reported fee mismatch is not present in the deployed
 Mainnet state. It does not remove the operational dependency: governance must
 not revoke either vault's exemption while V1 holds funds.
 
-## Open Hardening Work
+For LendingVault, the liquid custody invariant is `token balance >=
+totalAvailable`. Outstanding `totalLent` is held by borrowers and is therefore
+a receivable, not part of the vault's liquid token balance. The complete
+principal asset comparison is `token balance + totalLent >= totalAvailable +
+totalLent`, which reduces to the same liquid coverage check. Comparing the
+vault balance directly to `totalAvailable + totalLent` would raise a false
+alarm whenever a legitimate loan is active.
 
-- [ ] Monitor `feeExempt` for CommitmentVault and LendingVault.
-- [ ] Monitor CommitmentVault token balance against `totalLocked`.
-- [ ] Monitor LendingVault token balance against `totalAvailable + totalLent`.
-- [ ] Alert and stop operational execution if an exemption is removed or an
-      accounting difference appears.
-- [ ] Add negative regression tests that remove each exemption and prove the
+## Hardening Work
+
+- [x] Monitor `feeExempt` for CommitmentVault and LendingVault.
+- [x] Monitor CommitmentVault token balance against `totalLocked`.
+- [x] Monitor LendingVault liquid token balance against `totalAvailable`, while
+      reporting `totalLent` separately as a receivable.
+- [x] Fail the scheduled operational check if an exemption is removed or
+      liquid custody falls below accounting.
+- [x] Add negative regression tests that remove each exemption and prove the
       resulting deposit/withdrawal behavior is detected and rejected by the
       operational safety gate.
+
+Implementation: `scripts/check-vault-invariants.js`, deterministic test
+`scripts/test-vault-invariants.cjs`, contract regressions `T46` and `T56`, and
+the read-only scheduled workflow `.github/workflows/vault-invariant-monitor.yml`.
+The monitor has no signer and cannot submit transactions.
 
 ## V2 Design Requirement
 
@@ -56,4 +70,3 @@ there is no urgent migration while the verified invariant remains healthy.
   [#57](https://github.com/NeaBouli/inferno/issues/57),
   [#58](https://github.com/NeaBouli/inferno/issues/58), and
   [#59](https://github.com/NeaBouli/inferno/issues/59)
-

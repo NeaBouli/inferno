@@ -45,6 +45,10 @@ jobs:
         if: steps.check-npm.outputs.has_npm == 'true'
         run: npm audit --audit-level=moderate
 
+      - name: Test vault invariant monitor configuration
+        if: steps.check-npm.outputs.has_npm == 'true'
+        run: npm run test:vault-invariants
+
       - name: Verify known low-advisory baseline
         if: steps.check-npm.outputs.has_npm == 'true'
         run: npm run test:dependency-advisories

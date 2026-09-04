@@ -64,8 +64,8 @@ IFR includes an AI Copilot assistant. Free users can ask general protocol questi
 
 ## Phase 3 Contracts (deployed April 2026)
 
-- CommitmentVault: 0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3 — Live self-service wallet locking. TIME_ONLY is operational. The three price-conditioned types fail closed while Mainnet priceOracle is the zero address. Contributor locks are verified for C1/C2/C3. 45 tests.
-- LendingVault: 0x974305Ab0EC905172e697271C3d7d385194EB9DF — Live guided self-service lender offer flow. Lenders follow 1-5 steps: connect wallet, choose amount, approve IFR if needed, createOffer(amount), verify live market status. Approval alone is not an offer. Three contributor offers provide 52,155,440.952845656 IFR, with 0 IFR lent. V1 borrowing is intentionally disabled with ifrPriceWei = 0; activation requires a separately designed and audited bounded/pausable V2 price path. 55 tests.
+- CommitmentVault: 0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3 — Live self-service wallet locking. TIME_ONLY is operational. The three price-conditioned types fail closed while Mainnet priceOracle is the zero address. Contributor locks are verified for C1/C2/C3. A read-only four-hour monitor checks feeExempt and balance coverage. 46 tests.
+- LendingVault: 0x974305Ab0EC905172e697271C3d7d385194EB9DF — Live guided self-service lender offer flow. Lenders follow 1-5 steps: connect wallet, choose amount, approve IFR if needed, createOffer(amount), verify live market status. Approval alone is not an offer. Three contributor offers provide 52,155,440.952845656 IFR, with 0 IFR lent. A read-only four-hour monitor compares liquid balance with totalAvailable and reports totalLent separately as a receivable. V1 borrowing is intentionally disabled with ifrPriceWei = 0; activation requires a separately designed and audited bounded/pausable V2 price path. 56 tests.
 - BuybackController: 0x1e0547D50005A4Af66AbD5e6915ebfAA2d711F7c — deployed and governance-wired to FeeRouterV1. Execution remains subject to the controller's on-chain thresholds and cooldown.
 
 ## Phase 3 Wiki Pages

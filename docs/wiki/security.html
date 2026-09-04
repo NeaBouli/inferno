@@ -1228,7 +1228,7 @@
             <tr>
               <td>CommitmentVault and LendingVault rely on token-side <code>feeExempt</code> status</td>
               <td>Removing an exemption while V1 holds funds can make nominal accounting diverge from actual token balances</td>
-              <td>Mainnet verification at block 25811214 found both exemptions active and both accounting differences at 0 IFR. Monitoring and negative tests are open; V2 must add balance-diff inflow accounting and runtime guards that fail closed. <a href="https://github.com/NeaBouli/inferno/blob/main/docs/VAULT_FEE_EXEMPT_HARDENING.md" target="_blank" rel="noopener">Technical status</a></td>
+              <td>Mainnet verification at block 25900438 found both exemptions active and both vaults fully covered. A read-only four-hour monitor now fails on a removed exemption or custody deficit, and negative contract regressions cover both vaults. Lending liquid custody is compared with <code>totalAvailable</code>; <code>totalLent</code> is reported as a receivable. V2 must still add balance-diff inflow accounting and runtime guards that fail closed. <a href="https://github.com/NeaBouli/inferno/blob/main/docs/VAULT_FEE_EXEMPT_HARDENING.md" target="_blank" rel="noopener">Technical status</a></td>
             </tr>
           </tbody>
         </table>

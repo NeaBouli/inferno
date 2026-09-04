@@ -43,6 +43,8 @@
     "test:roadmap-status-sync": "node scripts/test-roadmap-status-sync.cjs",
     "test:security-reporting": "node scripts/test-security-reporting-config.cjs",
     "test:gitleaks-config": "node scripts/test-gitleaks-config.cjs",
+    "check:vault-invariants": "node scripts/check-vault-invariants.js",
+    "test:vault-invariants": "node scripts/test-vault-invariants.cjs",
     "ops:benefits-capacity": "scripts/deploy-benefits-network.sh capacity && LIMIT=20 scripts/audit-docker-capacity.sh",
     "qa:benefits-devices": "node scripts/validate-benefits-device-checklist.js",
     "test:benefits-device-checklist": "node scripts/test-benefits-device-checklist.js",
