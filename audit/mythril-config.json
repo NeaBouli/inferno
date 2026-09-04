@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "tool": {
+    "mythril": "0.24.8",
+    "solc": "0.8.28",
+    "solcLinuxAmd64Sha256": "9a0fb7e0db2c0641dbae1c5cc645dc686820c83af516226abb1c0a2f76636f25",
+    "setuptools": "80.10.2"
+  },
+  "analysis": {
+    "executionTimeoutSeconds": 30,
+    "createTimeoutSeconds": 15,
+    "solverTimeoutMs": 10000,
+    "transactionCount": 2,
+    "processTimeoutSeconds": 150,
+    "concurrency": 2,
+    "gatedSeverities": [
+      "Critical",
+      "High",
+      "Medium"
+    ],
+    "informationalSeverities": [
+      "Low"
+    ]
+  },
+  "contracts": [
+    { "source": "contracts/BuilderRegistry.sol", "contract": "BuilderRegistry" },
+    { "source": "contracts/FeeRouterV1.sol", "contract": "FeeRouterV1" },
+    { "source": "contracts/bootstrap/BootstrapVault.sol", "contract": "BootstrapVault" },
+    { "source": "contracts/bootstrap/BootstrapVaultV2.sol", "contract": "BootstrapVaultV2" },
+    { "source": "contracts/bootstrap/BootstrapVaultV3.sol", "contract": "BootstrapVaultV3" },
+    { "source": "contracts/burnreserve/BurnReserve.sol", "contract": "BurnReserve" },
+    { "source": "contracts/buyback/BuybackController.sol", "contract": "BuybackController" },
+    { "source": "contracts/buyback/BuybackVault.sol", "contract": "BuybackVault" },
+    { "source": "contracts/governance/Governance.sol", "contract": "Governance" },
+    { "source": "contracts/library/IFRBuilderVault.sol", "contract": "IFRBuilderVault" },
+    { "source": "contracts/liquidity/LiquidityReserve.sol", "contract": "LiquidityReserve" },
+    { "source": "contracts/lock/IFRLock.sol", "contract": "IFRLock" },
+    { "source": "contracts/partner/PartnerVault.sol", "contract": "PartnerVault" },
+    { "source": "contracts/token/InfernoToken.sol", "contract": "InfernoToken" },
+    { "source": "contracts/vault/CommitmentVault.sol", "contract": "CommitmentVault" },
+    { "source": "contracts/vault/LendingVault.sol", "contract": "LendingVault" },
+    { "source": "contracts/vesting/Vesting.sol", "contract": "Vesting" }
+  ]
+}

@@ -10,6 +10,9 @@ on:
       - 'apps/points-backend/**'
       - '.github/workflows/points-backend.yml'
 
+permissions:
+  contents: read
+
 jobs:
   test:
     runs-on: ubuntu-latest

@@ -1,5 +1,5 @@
 # IFR Protocol — Developer TODO List
-> Last updated: 2026-08-26 | Branch: main
+> Last updated: 2026-09-04 | Branch: main
 
 ---
 
@@ -104,8 +104,15 @@ On errors: fix immediately, commit with `seo:` prefix.
 - [x] MetaMask Mobile: centralized deep-link + pending connect ✅
 - [x] Protocol Plan wiki page created (26 pages) ✅
 
-## CURRENT WATCHLIST — verified 2026-08-26
+## CURRENT WATCHLIST — verified 2026-09-04
 
+- [ ] Hardhat 3.15.0 / hardhat-verify 3.1.0 maintenance candidate
+      Full local contract, Generator Engine and SDK suites pass. The bundled
+      EDR runtime changes from 0.15.0 to 0.19.0 and its native platform
+      packages are now optional dependencies; installs must not omit optional
+      packages. Mainnet verification was not submitted. Exact-head Linux CI
+      remains mandatory before merge. Mocha stays at 11.8.0 until
+      hardhat-mocha supports Mocha 12.
 - [x] LendingVault V1 borrow activation policy — keep disabled
       Runbook: docs/LENDING_PRICE_GOVERNANCE_RUNBOOK.md
       Policy: docs/LENDING_PRICE_POLICY_20260708.md
@@ -116,14 +123,22 @@ On errors: fix immediately, commit with `seo:` prefix.
 - [ ] CommitmentVault price-condition locks — V2/PriceLockVault needed
       Design: docs/COMMITMENT_PRICE_LOCK_ORACLE_PATH.md
       Current: time-only locks live; price locks must stay disabled because deployed `_getCurrentPrice()` returns 0.
-- [ ] SEC-VLT-01 — Vault fee-exemption defense in depth
+- [x] SEC-VLT-01 — Vault fee-exemption monitoring and negative tests
       Canonical status: docs/VAULT_FEE_EXEMPT_HARDENING.md
-      Verified at Mainnet block 25811214: CommitmentVault and LendingVault are
-      fee-exempt, and both token-balance/accounting differences are 0 IFR.
-      Current V1 is healthy but depends on those exemptions remaining active.
-      Add read-only exemption/accounting monitoring and negative regression
-      tests. For V2, require balance-diff inflow accounting plus explicit
-      runtime exemption guards that fail closed on affected outgoing flows.
+      Verified at Mainnet block 25900438: both vaults are fee-exempt and fully
+      covered. The read-only four-hour monitor now fails closed on a missing
+      exemption or custody deficit; deterministic and contract-level negative
+      regressions cover both vaults. Lending liquid custody is compared with
+      totalAvailable; totalLent is reported separately as a receivable. V2
+      balance-diff inflow accounting and runtime guards remain future design work.
+- [x] Recursive Slither CI baseline — local candidate complete
+      All 21 production Solidity sources are compiled directly with pinned
+      Slither 0.11.5 and solc 0.8.28 because Hardhat 3 is not supported by the
+      current crytic-compile adapter. CI fails on every new, changed or stale
+      High fingerprint, and every Critical signal fails immediately. Six High signals are individually classified in
+      audit/slither-high-baseline.json; BuybackController.withdrawIFR() remains
+      a separately gated V2 source-hardening item. Exact-head Linux CI is still
+      required before this candidate can be marked delivered.
 - [ ] IFRp Commerce App / shop.ifrunit.tech production decisions
       Docs: docs/ifrp-commerce-app/MASTER_ARCHITECTURE.md
       Current: role chooser, external-wallet/IFRLock flow, QR proof/redeem,
@@ -137,25 +152,26 @@ On errors: fix immediately, commit with `seo:` prefix.
 
 - [ ] MetaMask Registry PR #1858 — external maintainer wait
       PR: https://github.com/MetaMask/contract-metadata/pull/1858
-      Status verified 2026-07-30: open, REVIEW_REQUIRED, no submitted
+      Status verified 2026-09-04: open, REVIEW_REQUIRED, no submitted
       reviews or maintainer activity since the project follow-up on 2026-07-08.
-      The three visible reported checks are successful. GitHub reports the PR
-      as MERGEABLE but BLOCKED.
+      The three reported checks are successful; code-owner review is pending.
       Resume trigger: maintainer review, requested change, workflow approval
       or status change. Do not post another reminder without new evidence.
 - [ ] Uniswap Default Token List Issue #2509 — external maintainer wait
       Issue: https://github.com/Uniswap/default-token-list/issues/2509
-      Status verified 2026-07-30: open with no maintainer comment. Last
+      Status verified 2026-09-04: open with no maintainer comment. Last
       activity remains the project update on 2026-07-08.
       Resume trigger: maintainer response or new CoinGecko/CMC/listing proof.
-- [ ] ethereum-lists PR #1036 — external maintainer wait
-      PR: https://github.com/ethereum-lists/tokens/pull/1036
-      Status verified 2026-07-30: open, MERGEABLE but BLOCKED, with no
-      submitted review, reported check or maintainer comment.
+- [ ] ethereum-lists PR #1049 — external maintainer wait
+      PR: https://github.com/ethereum-lists/tokens/pull/1049
+      Status verified 2026-09-04: replacement PR open and BLOCKED, with no
+      submitted review, reported check or maintainer comment. Original PR
+      #1036 was closed stale and now points to this single replacement.
       Resume trigger: maintainer review, CI approval or status change.
 - [ ] CoinGecko standalone coin listing — application submitted
-      Exact-contract API still returns `coin not found`; GeckoTerminal is live
-      separately.
+      Active listing request `CL0309260050` submitted 2026-09-04 and currently
+      pending. Verification post: https://x.com/IFRtoken/status/2095640632739959130
+      Exact-contract API still returns `coin not found`; GeckoTerminal is live separately.
       Resume trigger: CoinGecko response or a public exact-contract coin page.
 - [ ] CoinMarketCap standard listing — ticket pending
       Script: `bash scripts/cmc/check_ifr_listing.sh`
@@ -168,7 +184,9 @@ On errors: fix immediately, commit with `seo:` prefix.
       Trust Wallet: resume only after CMC, professional audit and activity
       criteria are met and the non-refundable fee is explicitly approved.
       Phantom: no verification form; resume after CoinGecko/market-data
-      coverage changes. Rainbow: resume after broader upstream-list coverage.
+      coverage changes. Rainbow: exact-contract token page is live with name,
+      symbol and price, but no visible IFR icon; monitor upstream metadata and
+      do not open an unsupported direct request.
       Zerion: resolved 2026-07-31. Human support added the canonical 128px icon
       and enabled IFR tracking. The live Zerion token page was verified with
       IFR icon, Inferno name, price and supply data. Resume only if the token
@@ -193,6 +211,12 @@ On errors: fix immediately, commit with `seo:` prefix.
 
 ## RECENTLY COMPLETED
 
+- [x] Read-only external listing monitor — completed 2026-09-04
+      Commands: `npm run check:listing-status` and
+      `npm run test:listing-monitor`. Validates both official token lists and
+      reports MetaMask, Uniswap, ethereum-lists, CoinGecko, CMC DexScan and
+      Rainbow without treating third-party waiting states as project failures.
+      Runbook: docs/LISTING_MONITOR.md
 - [x] Dependency modernization — completed 2026-07-29
       Docs: docs/DEPENDENCY_UPGRADES.md
       Root now uses Ethers 6.17, Hardhat 3.12.0, Chai 6 and Node >=22.13.
@@ -487,7 +511,7 @@ On errors: fix immediately, commit with `seo:` prefix.
 ### Phase 3 — Contracts (Core Dev — Solidity)
 - [x] ✅ CommitmentVault.sol written + tests (04.04.2026)
       4 condition types (TIME/PRICE/OR/AND), auto-unlock 30d, P0 immutable
-      45 tests passing, ABI exported
+      46 tests passing, ABI exported
       Handover: docs/CORE_DEV_PHASE3.md
 - [x] ✅ CommitmentVault deployed Mainnet (04.04.2026)
       Sepolia: 0xc43d48E7FDA576C5022d0670B652A622E8caD041
@@ -496,7 +520,7 @@ On errors: fix immediately, commit with `seo:` prefix.
 - [x] ✅ LendingVault.sol written + tests (04.04.2026)
       Utilization-based interest (2–25%/month), 200/150/120% collateral
       50/50 interest split, liquidator 5% bonus, top-up collateral
-      55 tests passing, ABI exported
+      56 tests passing, ABI exported
       Handover: docs/CORE_DEV_PHASE3.md
 - [x] ✅ LendingVault deployed Mainnet (04.04.2026)
       Sepolia: 0x769928aBDfc949D0718d8766a1C2d7dBb63954Eb
@@ -550,9 +574,9 @@ On errors: fix immediately, commit with `seo:` prefix.
       Phase 2: Telegram alert integration
 
 ### Phase 3 — Uniswap Integration
-- [ ] 🔵 "Buy IFR" button on landing page (after LP is live)
+- [x] ✅ "Buy IFR" button on landing page — live
       Uniswap link with pre-filled token address
-- [ ] 🔵 Live IFR price on landing page
+- [x] ✅ Live IFR price on landing page
       Uniswap TWAP → Hetzner API GET /api/ifr/price → Landing Page
 
 ### Phase 4 — Mobile App (IFR Wallet)
@@ -666,17 +690,23 @@ On errors: fix immediately, commit with `seo:` prefix.
 - [x] ✅ sitemap.xml: 4 new pages added (20.03.2026)
 - [x] ✅ Ali Copilot: Phase 3 contracts + BuilderRegistry + Governance updated (20.03.2026)
 - [x] ✅ Landing Page: IntersectionObserver for live data + lazy images + scroll throttle (20.03.2026)
-- [ ] Full JSON-LD Schema.org check on all wiki pages
+- [x] Full JSON-LD Schema.org regression check on all 35 tracked Wiki pages
 - [ ] Verify ChatGPT/Perplexity indexing
 - [x] ❌ ethereum-lists PR #1010 CLOSED (auto-close 03.06.2026 — inactivity)
-- [ ] 🟡 ethereum-lists neuer PR #1036 — submitted 10.06.2026
+- [x] 🟡 ethereum-lists PR #1036 — submitted 10.06.2026, stale-closed
       URL: https://github.com/ethereum-lists/tokens/pull/1036
+      Replacement submitted once as PR #1049 on 02.09.2026:
+      https://github.com/ethereum-lists/tokens/pull/1049
       JSON: email + chat + telegram + twitter ergänzt
-      Alternativen: Trust Wallet Assets, Uniswap Token List
+      Aktueller Status und Resume-Trigger: siehe kanonischen Eintrag unter
+      `DEFERRED / LATER`; keine separate Trust-Wallet-Einreichung starten.
 
 ### CI/CD
-- [ ] Set up Slither CI
-- [ ] Set up Mythril CI
+- [x] Pin Security Audit runner, Rust and top-level Cargo/Python/Solidity audit tools with a fail-closed policy test
+- [x] Enforce explicit least-privilege GitHub token scopes across the deliberate 16-workflow inventory, including job-level override rejection
+- [x] Replace non-blocking Markdown lint with pinned baseline regression gate (3,482 historical findings / 2,174 fingerprints; tracked files only)
+- [x] Set up Slither CI candidate (21 production sources; fail-closed High baseline)
+- [x] Set up Mythril CI candidate (17 concrete production contracts; bounded weekly/manual gate; exact-head Linux CI pending)
 - [ ] Coverage badge in README
 - [ ] Recruit 2-3 repo maintainers
 
@@ -807,16 +837,13 @@ On errors: fix immediately, commit with `seo:` prefix.
 ## AFTER LP LIVE (after 05.06.2026)
 
 - [x] Apply for CoinGecko listing
-      Submission completed by Gio; this does not mean the listing was
-      approved. Rechecked 2026-07-30: exact-contract endpoint returns
+      Active request `CL0309260050` submitted 2026-09-04; this does not mean
+      the listing was approved. Rechecked 2026-09-04: exact-contract endpoint returns
       `coin not found`, search returns no IFR coin, while GeckoTerminal remains
       live separately.
-- [ ] Apply for CoinMarketCap listing
-      Submission pack updated 02.07.2026: docs/COINMARKETCAP_SUBMISSION.md
-      Submit via official CMC form: https://coinmarketcap.com/request/
-      Direct form: https://support.coinmarketcap.com/hc/en-us/requests/new?ticket_form_id=360000493112
-      Form choice: 1 - [New Listing] Add cryptoasset
-      Final submit requires Gio browser/session because CMC Cloudflare human verification blocks automation.
+- [x] CoinMarketCap listing request submitted — ticket `1390230`
+      Canonical current status and no-duplicate rule: see `DEFERRED / LATER`.
+      Submission/evidence pack: docs/COINMARKETCAP_SUBMISSION.md
 - [ ] Activate AI Copilot gate (≥1,000 IFR locked)
 - [ ] Telegram wallet whitelist via WalletConnect
 - [ ] LiqRes withdrawal proposal: `setMaxWithdrawPerPeriod(200M)` from 01.09.2026
@@ -995,4 +1022,4 @@ Hetzner API endpoints already live: stats, offers, loans/:addr, health/:id, lend
 
 ---
 
-*Last updated: 2026-08-26*
+*Last updated: 2026-09-04*

@@ -10,6 +10,9 @@ on:
       - 'apps/dashboard/**'
       - '.github/workflows/dashboard.yml'
 
+permissions:
+  contents: read
+
 jobs:
   build:
     runs-on: ubuntu-latest

@@ -12,6 +12,8 @@
 | #5 | @nomicfoundation/hardhat-verify | 2.1.3 | 3.0.22 | Erledigt 29.07.2026 | - |
 | #7 | chai | 4.5.0 | 6.2.2 | Erledigt 29.07.2026 | - |
 | #4 | ethers | 5.8.0 | 6.17.0 | Erledigt 29.07.2026 | - |
+| #74 | hardhat | 3.12.0 | 3.15.0 | Lokal verifiziert 04.09.2026; CI offen | - |
+| #76 | @nomicfoundation/hardhat-verify | 3.0.22 | 3.1.0 | Lokal verifiziert 04.09.2026; CI offen | - |
 
 ## Migrationsreihenfolge
 
@@ -259,3 +261,56 @@ migration and its full contract-suite evidence exist.
   the required local Chromium browser on the current macOS 12 test host.
 - The known Low elliptic advisory remains development-only through the
   Hardhat-Verify Ethers-5 ABI dependency and still has no bounded upstream fix.
+
+## 2026-09-04 Registry Advisory Patch
+
+- Newly published advisories are resolved with bounded dependency updates:
+  `browserslist@4.28.7`, `qs@6.16.0`, `fast-uri@3.1.6`,
+  `mysql2@3.23.1` and `postcss-selector-parser@6.1.4`.
+- `qs@6.16.0` is overridden only in Creator Gateway and the Benefits backend,
+  where Express 4 dependency ranges otherwise exclude the patched release.
+  Their request and service suites remain the compatibility gates.
+- The Points backend retains exact overrides for its established dependency
+  baseline, including Prisma's transitive MySQL driver. Its active local
+  datasource remains SQLite; Prisma generation, TypeScript build and the
+  points test suite verify that path.
+- Patch releases already accepted by upstream ranges are updated in lockfiles
+  without adding permanent overrides. This keeps future compatible security
+  updates available.
+- The Benefits wallet prototype pins transitive `query-string@9.5.1` to remove
+  `GHSA-vcc3-ghjq-m6fr` without forcing an incompatible Wagmi 3 upgrade.
+  `GHSA-528h-pc64-c93x`, published on 2026-09-03, remains temporarily limited
+  to `stream-json@1.9.1` through Coinbase CDP's Solana support
+  (`@coinbase/cdp-core -> @solana/web3.js -> jayson`). The prototype is a
+  browser-only Sepolia evaluation and its production bundle does not contain
+  Jayson or stream-json; a dedicated post-build boundary check enforces that.
+  The dedicated audit baseline fails closed on any different package, path,
+  severity or advisory identity. Replace this narrow exception as soon as
+  Coinbase/Solana/Jayson expose a compatible patched dependency; do not force
+  `stream-json@3`, whose ESM API is incompatible with Jayson 4.
+- The token dashboard pins transitive `query-string@9.5.1` to remove
+  `GHSA-vcc3-ghjq-m6fr` without forcing the incompatible Wagmi 3 upgrade that
+  npm proposes. WalletConnect 2.21 bundles the affected utility code and does
+  not load `query-string` at runtime; the dashboard dependency gate enforces
+  both `query-string@9.5.1` and `decode-uri-component@0.5.0`, while the full
+  production build remains the compatibility gate.
+
+## 2026-09-04 Hardhat Maintenance Candidate
+
+- Root Hardhat is updated from `3.12.0` to `3.15.0`; the verification plugin
+  is updated from `3.0.22` to `3.1.0` in the same bounded toolchain wave.
+- Hardhat 3.15 updates its native EVM runtime (`@nomicfoundation/edr`) from
+  `0.15.0` to `0.19.0`. Contract execution, revert paths and deterministic
+  local-network behavior are therefore covered by the complete contract suite.
+- EDR platform binaries are optional dependencies in the new lockfile. CI and
+  development installs must not use `--omit=optional`, because Hardhat needs
+  the matching native package at runtime.
+- The Verify 3.1 configuration loads and its local task integration is covered;
+  no Mainnet verification request was sent during this maintenance change.
+- Complete local verification passes with 642 contract tests, 30 Generator
+  Engine tests and 36 SDK tests. The root audit remains at eight Low
+  development-only findings and zero Moderate, High or Critical findings.
+- Mocha remains at `11.8.0`. Mocha 12 is not install-compatible with the
+  current `@nomicfoundation/hardhat-mocha@3.1.0` peer range and must wait for
+  upstream plugin support; do not use `--force` or `--legacy-peer-deps`.
+- Exact-head Linux CI remains mandatory before merge.

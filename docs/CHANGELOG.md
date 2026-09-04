@@ -1,5 +1,88 @@
 # Changelog
 
+## 4 September 2026 — Wiki JSON-LD Regression Gate
+
+- Added a fail-closed structured-data check across all tracked Wiki pages.
+- The gate validates JSON syntax, Schema.org context, canonical URL matching,
+  primary page metadata and present BreadcrumbList or FAQPage structures.
+- Repaired incomplete FAQ metadata and copied URL/title metadata on the Open
+  Audit Log and Protocol Plan pages found by the new gate.
+- Wired the check into the Docs Validator JSON job.
+
+## 4 September 2026 — Security Audit Toolchain Pins
+
+- Pinned Security Audit jobs to the reviewed Ubuntu 24.04 runner.
+- Pinned future Cargo and Python audit paths to Rust 1.88.0,
+  `cargo-audit` 0.22.2 with Cargo lock resolution and `pip-audit` 2.10.1.
+- Added a regression test that rejects floating action references, runners or
+  top-level audit tools in the Security Audit workflow.
+
+## 4 September 2026 — CI Token Least Privilege
+
+- Added explicit top-level GitHub token permissions to every workflow.
+- Restricted build, test, documentation and monitoring workflows to
+  `contents: read`; the Security Audit additionally receives
+  `pull-requests: read` for Gitleaks PR commit discovery.
+- Preserved `contents: write` only for the existing Update Stats and
+  Post-Deploy repository update workflows.
+- Added a repository policy test covering a deliberate 16-workflow inventory
+  and rejecting missing, unrelated or job-level token scopes.
+
+## 4 September 2026 — Markdown Lint Regression Gate
+
+- Replaced the floating global Markdownlint install and unconditional
+  `|| true` with exact `markdownlint-cli@0.49.1` project tooling.
+- Restricted analysis to the 179 Markdown files tracked by Git, excluding
+  dependency and build directories by construction.
+- Recorded the 3,482 historical findings as 2,174 line-independent
+  fingerprints. CI now fails on every baseline change so cleanup and new
+  regressions require explicit review instead of being silently ignored.
+
+## 4 September 2026 — Bounded Mythril CI Candidate
+
+- Added a hash-locked, path-scoped/weekly/manual Mythril runner for all 17
+  concrete production contracts with two-transaction,
+  30-second-per-contract symbolic analysis.
+- Made the runner fail closed on process timeouts, malformed reports, missing
+  execution evidence and hidden compiler/tool errors even when Mythril exits
+  with status zero.
+- Hash-locked the complete Python toolchain and pinned the official Linux
+  amd64 solc 0.8.28 artifact digest.
+- Four complete local runs finished in roughly six to seven minutes; all
+  reported zero signals at any severity. This bounded result does not replace an independent
+  professional audit or prove complete state-space coverage.
+
+## 4 September 2026 — Recursive Slither CI Candidate
+
+- Added a pinned direct-solc Slither runner covering all 21 production
+  Solidity sources; mocks and npm dependencies are excluded from the gate.
+- Added a reviewed six-entry High baseline. CI fails closed on every Critical
+  signal and any new, changed or stale High fingerprint rather than hiding
+  detector output.
+- Recorded `BuybackController.withdrawIFR()` return-value handling as a future,
+  separately gated V2 hardening item. No Solidity source or Mainnet state was
+  changed.
+
+## 4 September 2026 — Vault Invariant Monitor Candidate
+
+- Added a read-only four-hour Mainnet monitor for CommitmentVault and
+  LendingVault fee exemptions and custody coverage.
+- Corrected the LendingVault invariant: liquid token custody is compared with
+  `totalAvailable`; borrower-held `totalLent` is reported as a receivable.
+- Added deterministic monitor tests and two negative contract regressions,
+  bringing the current contract suite to 644 tests. No contract, transaction
+  or Mainnet state was changed.
+
+## 4 September 2026 — Hardhat Maintenance Candidate
+
+- Updated the local candidate from Hardhat 3.12.0 to 3.15.0 and
+  hardhat-verify 3.0.22 to 3.1.0.
+- Verified all 642 contract tests, 30 Generator Engine tests and 36 IFR SDK
+  tests against the bundled EDR 0.19 runtime.
+- Kept Mocha at 11.8.0 because hardhat-mocha 3.1.0 does not support Mocha 12.
+- No Mainnet verification or other on-chain action was performed. Exact-head
+  Linux CI remains required before merge.
+
 ## 26 August 2026 — Exchange Fee-Exemption Policy
 
 - Five-member Core Developer and Keyholder Council approved full fee

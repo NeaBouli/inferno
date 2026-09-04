@@ -19,7 +19,7 @@ Current application, Mainnet activation and acceptance status:
 | Initial Supply | 1,000,000,000 IFR |
 | Current Supply | 997,673,879.091903855 IFR at block 25812380 |
 | Smart Contracts | 17 documented Mainnet components: 14 deployed protocol contracts plus 3 Gnosis Safes; contract source and address evidence is linked from the deployment records |
-| Current test evidence | 642 contract + 30 Generator Engine + 36 SDK legacy tests, plus browser/application release gates |
+| Current test evidence | 644 contract + 30 Generator Engine + 36 SDK legacy tests, plus browser/application release gates |
 | Network | Ethereum Mainnet (deployed 2026-03-05) |
 | Launch Model | Community Fair Launch (CFLM) |
 | Mint Function | None -- supply can only decrease |

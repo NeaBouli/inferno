@@ -25,7 +25,8 @@ const packageJson = JSON.parse(read("package.json"));
 const packageLock = JSON.parse(read("package-lock.json"));
 assert.equal(packageJson.engines?.node, ">=22.13.0");
 assert.equal(packageJson.dependencies?.ethers, "6.17.0");
-assert.equal(packageJson.devDependencies?.hardhat, "3.12.0");
+assert.equal(packageJson.devDependencies?.hardhat, "3.15.0");
+assert.equal(packageJson.devDependencies?.["@nomicfoundation/hardhat-verify"], "3.1.0");
 assert.equal(packageJson.overrides?.["serialize-javascript"], "7.0.5");
 assert.equal(packageJson.devDependencies?.chai, "6.2.2");
 assert.equal(packageJson.devDependencies?.mocha, "11.8.0");
@@ -33,7 +34,11 @@ assert.equal(
   packageJson.scripts?.["test:mocha-serializer"],
   "mocha --parallel --jobs 2 test/mocha-serializer-compat.test.cjs"
 );
-assert.equal(packageLock.packages?.["node_modules/hardhat"]?.version, "3.12.0");
+assert.equal(packageLock.packages?.["node_modules/hardhat"]?.version, "3.15.0");
+assert.equal(
+  packageLock.packages?.["node_modules/@nomicfoundation/hardhat-verify"]?.version,
+  "3.1.0"
+);
 assert.equal(packageLock.packages?.["node_modules/adm-zip"]?.version, "0.6.0");
 assert.equal(
   packageLock.packages?.["node_modules/serialize-javascript"]?.version,
@@ -46,10 +51,10 @@ assert.equal(
 );
 
 const currentBaseline = [
-  "**Current engineering baseline:** 26 August 2026",
-  "exact-head CI verification through `9782106a`",
-  "Hardhat `3.12.0`",
-  "contracts `642/642`",
+  "**Current engineering baseline:** 4 September 2026",
+  "Current repository verification",
+  "Hardhat `3.15.0`",
+  "contracts `644/644`",
   "`24/24` passed",
   "8 low transitive development-tool findings",
   "Benefits physical device/wallet acceptance remains `1/10`",
@@ -60,16 +65,18 @@ requireText("STATUS-REPORT.md", currentBaseline);
 requireText("docs/STATUS-REPORT.md", currentBaseline);
 
 const todo = requireText("internal/operations/TODO.md", [
-  "> Last updated: 2026-08-26 | Branch: main",
-  "CURRENT WATCHLIST — verified 2026-08-26",
+  "> Last updated: 2026-09-04 | Branch: main",
+  "CURRENT WATCHLIST — verified 2026-09-04",
   "LendingVault V1 borrow activation policy — keep disabled",
   "V1 cannot set price back to zero",
-  "SEC-VLT-01 — Vault fee-exemption defense in depth",
-  "both token-balance/accounting differences are 0 IFR",
+  "SEC-VLT-01 — Vault fee-exemption monitoring and negative tests",
+  "read-only four-hour monitor now fails closed",
+  "totalLent is reported separately as a receivable",
   "balance-diff inflow accounting",
   "DEFERRED / LATER — resume only when its trigger occurs",
-  "Status verified 2026-07-30: open, REVIEW_REQUIRED",
-  "open, MERGEABLE but BLOCKED",
+  "Status verified 2026-09-04: open, REVIEW_REQUIRED",
+  "ethereum-lists PR #1049",
+  "#1036 was closed stale",
   "IFRp Commerce App / shop.ifrunit.tech production decisions",
   "Contributor CommitmentVault Locks abgeschlossen",
   "Contributor LendingVault Offers abgeschlossen",
@@ -82,11 +89,13 @@ const todo = requireText("internal/operations/TODO.md", [
   "128px icon",
   "Wallet-level Collateral Health Monitor",
   "Dependency modernization — completed 2026-07-29",
+  "Read-only external listing monitor — completed 2026-09-04",
+  "CL0309260050",
   "Ethers 6 / Hardhat 3 / Chai 6 / Node 22 migration",
   "8 transitive low findings",
   "Deterministic local Hardhat test network",
   "Technical: WalletConnect v2 + ethers.js v6",
-  "*Last updated: 2026-08-26*",
+  "*Last updated: 2026-09-04*",
 ]);
 assert.ok(
   !todo.includes("- [ ] Dependency modernization"),
@@ -107,16 +116,17 @@ assert.ok(
 );
 
 requireText("internal/operations/TODO.html", [
-  "Last updated: 2026-08-26",
-  "Current Watchlist &mdash; verified 2026-08-26",
+  "Last updated: 2026-09-04",
+  "Current Watchlist &mdash; verified 2026-09-04",
   "LendingVault V1 borrow activation policy",
   "V1 cannot set the price back to zero",
-  "SEC-VLT-01 &mdash; Vault fee-exemption defense in depth",
-  "both token-balance/accounting differences are 0 IFR",
+  "SEC-VLT-01 &mdash; Vault fee-exemption monitoring and negative tests",
+  "read-only four-hour monitor fails closed",
+  "totalLent</code> is reported separately as a receivable",
   "balance-diff inflow accounting",
   "Deferred / Waiting &mdash; resume only when the trigger occurs",
-  "Open, review required",
-  "Open, mergeable but blocked",
+  "Open and review required",
+  "replacement PR is open and blocked",
   "IFRp Commerce App / shop.ifrunit.tech production decisions",
   "Contributor CommitmentVault Locks abgeschlossen",
   "Contributor LendingVault Offers abgeschlossen",
@@ -127,8 +137,10 @@ requireText("internal/operations/TODO.html", [
   "Ticket <code>1390230</code> is submitted",
   "not verified by CoinMarketCap",
   "Dependency modernization</strong> &mdash; completed 2026-07-29",
+  "Read-only external listing monitor</strong> &mdash; completed 2026-09-04",
+  "CL0309260050",
   "Deterministic local Hardhat test network",
-  "Submission completed, not approval",
+  "remains pending",
 ]);
 assert.ok(
   !read("internal/operations/TODO.html").includes("13 high"),
@@ -141,8 +153,8 @@ requireText("BACKLOG.md", [
   "8 transitive Low-Funde",
 ]);
 requireText("SKYWALKER.md", [
-  "**Hinweis 29.07.2026:**",
-  "Hardhat 3.12.0",
+  "**Hinweis 04.09.2026:**",
+  "Hardhat 3.15.0",
   "lokale Tests forken nicht automatisch",
   "HARDHAT_FORK_BLOCK_NUMBER=<block>",
   "## Historischer Stand (05.03.2026)",
@@ -158,12 +170,13 @@ requireText("docs/DEPENDENCY_UPGRADES.md", [
   "HARDHAT_FORK_BLOCK_NUMBER=<positive-mainnet-block>",
 ]);
 requireText("docs/WALLET_ICON_DISTRIBUTION_STATUS_20260708.md", [
-  "Last verified: 2026-07-30",
+  "Last verified: 2026-09-04",
   "Open; `REVIEW_REQUIRED`",
-  "Open, `MERGEABLE` but `BLOCKED`",
+  "Replacement PR #1049 is open and `BLOCKED`",
   "there is no",
   "500 TWT",
-  "at least three outside token lists",
+  "exact Ethereum contract on a public token page",
+  "does not currently expose an IFR token image",
   "CoinGecko exact-contract endpoint: `coin not found`",
   "Searching Zerion by the exact IFR contract returns `Nothing was found`",
   "docs/assets/ifr_icon_128.png",
@@ -172,12 +185,13 @@ requireText("docs/WALLET_ICON_DISTRIBUTION_STATUS_20260708.md", [
   "IFR-8f9ccb3d-2e3b-4c3c-bda1-5040d80548f6",
 ]);
 requireText("docs/TOKEN_ICON_DISTRIBUTION.md", [
-  "Last checked: 2026-07-30",
+  "Last checked: 2026-09-04",
   "PR open / review required",
-  "Open / blocked",
+  "Replacement open / review pending",
   "External-data path / no verification form",
   "Not eligible / do not pay",
   "Live / verified",
+  "Token page live / icon missing",
 ]);
 requireText("docs/ZERION_SUBMISSION_PACK_20260730.md", [
   "Status: resolved and live 2026-07-31",
@@ -191,16 +205,19 @@ requireText("docs/PHASE3_OPEN_ITEMS_STATUS_20260708.md", [
   "Status verified 2026-08-01: migration completed",
   "0 moderate / 0 high / 0 critical",
   "Status verified 2026-07-30",
-  "keep all three external threads under watch without duplicate",
+  "keep all external threads under watch without duplicate",
 ]);
 requireText("docs/COINGECKO_FOLLOWUP_PACK_20260716.md", [
+  "active listing request submitted; pending review",
+  "CL0309260050",
+  "2095640632739959130",
   "## Recheck - 2026-07-30",
   "CoinGecko coin listing is not yet approved or publicly indexed.",
 ]);
 requireText("docs/COINMARKETCAP_SUBMISSION.md", [
   "GeckoTerminal: live",
-  "CoinGecko: application submitted",
-  "`coin not found` as of 2026-07-30",
+  "CoinGecko: active request `CL0309260050` submitted",
+  "`coin not found` as of 2026-09-04",
   "submitted as ticket `1390230`",
   "not verified by CoinMarketCap",
   "is not a standalone tracked CMC coin listing",
@@ -224,6 +241,7 @@ requireText("docs/wiki/bootstrap.html", [
 ]);
 requireText("docs/wiki/reputation.html", [
   "Zerion",
+  "Rainbow",
   "IFR-8f9ccb3d-2e3b-4c3c-bda1-5040d80548f6",
   "not counted as formal audit or trust evidence",
 ]);
@@ -231,6 +249,7 @@ requireText("docs/llms.txt", [
   "Three contributor offers provide 52,155,440.952845656 IFR",
   "V1 borrowing is intentionally disabled with ifrPriceWei = 0",
   "Zerion lists the canonical IFR token",
+  "Rainbow resolves the exact Ethereum contract",
 ]);
 requireText("docs/CONTRIBUTOR_RUNBOOK.md", [
   "Current completion status 30.07.2026",

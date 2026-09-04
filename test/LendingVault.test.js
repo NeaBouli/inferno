@@ -629,5 +629,18 @@ describe("LendingVault", function () {
 
       expect(await vault.activeLoanCount(borrowerA.address)).to.equal(0);
     });
+
+    it("T56: missing fee exemption creates a detectable liquid deficit", async () => {
+      const amount = parse("10000");
+      await token.setFeeExempt(vault.target, false);
+      await token.setFeeExempt(lenderA.address, false);
+      await token.connect(lenderA).approve(vault.target, amount);
+
+      await vault.connect(lenderA).createOffer(amount);
+
+      expect(await vault.totalAvailable()).to.equal(amount);
+      expect(await token.balanceOf(vault.target)).to.equal(parse("9650"));
+      await expect(vault.connect(lenderA).withdrawOffer(amount)).to.be.revert(ethers);
+    });
   });
 });
