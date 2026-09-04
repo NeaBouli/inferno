@@ -30,6 +30,7 @@ li { margin: 4px 0; }
 <strong>Date:</strong> 10.06.2026<br />
 <strong>Auditor:</strong> Internal Security Review<br />
 <strong>Status:</strong> PASSED - 0 Critical Issues</p>
+<p><strong>Post-report update (04.09.2026):</strong> The Hardhat-project invocation below is no longer compatible with Hardhat 3. The replacement direct-solc runner now analyzes all 21 production Solidity sources recursively. It reports zero unreviewed High signals and six explicitly reviewed High baseline entries, with zero Critical signals reported by the pinned toolchain. The baseline and rationale are maintained in <code>audit/slither-high-baseline.json</code>; the original 10.06.2026 evidence below is preserved as a dated snapshot.</p>
 <hr />
 <h2>Executive Summary</h2>
 <p>This internal security review covered the core IFR Solidity contracts, existing audit artifacts, deployment documentation, and automated test outputs available in the repository. No critical vulnerability was manually confirmed in the reviewed scope. The protocol design is materially protected by immutable deployments, a 48-hour governance timelock, Etherscan verification, fee caps, bounded privileged operations, and contract-specific test suites.</p>

@@ -83,10 +83,38 @@ jobs:
           python -m pip install pip-audit
           find . -maxdepth 3 -name "requirements.txt" -exec pip-audit -r {} \;
 
+  solidity-static-analysis:
+    name: Solidity Static Analysis
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install Solidity dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Install pinned Slither toolchain
+        run: |
+          python3 -m venv .slither-venv
+          .slither-venv/bin/pip install slither-analyzer==0.11.5
+          .slither-venv/bin/solc-select install 0.8.28
+          .slither-venv/bin/solc-select use 0.8.28
+          echo "$PWD/.slither-venv/bin" >> "$GITHUB_PATH"
+
+      - name: Test Slither baseline policy
+        run: npm run test:slither-baseline
+
+      - name: Check for new Slither High signals
+        run: npm run check:slither
+
   security-summary:
     name: Security Summary
     runs-on: ubuntu-latest
-    needs: [secret-scan, dependency-audit]
+    needs: [secret-scan, dependency-audit, solidity-static-analysis]
     if: always()
     steps:
       - name: Summary
@@ -96,3 +124,4 @@ jobs:
           echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
           echo "| Secret Scan | ${{ needs.secret-scan.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Dependencies | ${{ needs.dependency-audit.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Solidity Static Analysis | ${{ needs.solidity-static-analysis.result }} |" >> $GITHUB_STEP_SUMMARY

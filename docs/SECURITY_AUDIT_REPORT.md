@@ -4,6 +4,15 @@
 **Auditor:** Internal Security Review  
 **Status:** PASSED - 0 Critical Issues
 
+> **Post-report update (04.09.2026):** The Hardhat-project invocation below is
+> no longer compatible with Hardhat 3. The replacement direct-solc runner now
+> analyzes all 21 production Solidity sources recursively. It reports zero
+> unreviewed High signals and six explicitly reviewed High baseline entries,
+> with zero Critical signals reported by the pinned toolchain. The baseline and
+> rationale are maintained in `audit/slither-high-baseline.json`; the original
+> 10.06.2026 evidence below is
+> preserved as a dated snapshot.
+
 ---
 
 ## Executive Summary

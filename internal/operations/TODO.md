@@ -131,6 +131,14 @@ On errors: fix immediately, commit with `seo:` prefix.
       regressions cover both vaults. Lending liquid custody is compared with
       totalAvailable; totalLent is reported separately as a receivable. V2
       balance-diff inflow accounting and runtime guards remain future design work.
+- [x] Recursive Slither CI baseline — local candidate complete
+      All 21 production Solidity sources are compiled directly with pinned
+      Slither 0.11.5 and solc 0.8.28 because Hardhat 3 is not supported by the
+      current crytic-compile adapter. CI fails on every new, changed or stale
+      High fingerprint, and every Critical signal fails immediately. Six High signals are individually classified in
+      audit/slither-high-baseline.json; BuybackController.withdrawIFR() remains
+      a separately gated V2 source-hardening item. Exact-head Linux CI is still
+      required before this candidate can be marked delivered.
 - [ ] IFRp Commerce App / shop.ifrunit.tech production decisions
       Docs: docs/ifrp-commerce-app/MASTER_ARCHITECTURE.md
       Current: role chooser, external-wallet/IFRLock flow, QR proof/redeem,
@@ -694,7 +702,7 @@ On errors: fix immediately, commit with `seo:` prefix.
       `DEFERRED / LATER`; keine separate Trust-Wallet-Einreichung starten.
 
 ### CI/CD
-- [ ] Set up Slither CI
+- [x] Set up Slither CI candidate (21 production sources; fail-closed High baseline)
 - [ ] Set up Mythril CI
 - [ ] Coverage badge in README
 - [ ] Recruit 2-3 repo maintainers

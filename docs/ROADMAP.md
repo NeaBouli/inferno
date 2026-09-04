@@ -23,7 +23,8 @@ governance activation gate is complete.
 ### Testing & Security
 - [x] 544 total tests (521 protocol + 57 ecosystem)
 - [x] 91% branch coverage, 99% statement coverage
-- [x] Slither static analysis: 0 high/critical findings
+- [x] Initial scoped Slither remediation: 0 high/critical findings at the time
+- [x] Current recursive Slither CI candidate: 21 production sources, 0 unreviewed High, 6 reviewed High signals baselined
 - [x] Full internal security audits completed, including static analysis and documented findings
 - [x] Community Audit open via GitHub Issues
 

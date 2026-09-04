@@ -1,5 +1,16 @@
 # Changelog
 
+## 4 September 2026 — Recursive Slither CI Candidate
+
+- Added a pinned direct-solc Slither runner covering all 21 production
+  Solidity sources; mocks and npm dependencies are excluded from the gate.
+- Added a reviewed six-entry High baseline. CI fails closed on every Critical
+  signal and any new, changed or stale High fingerprint rather than hiding
+  detector output.
+- Recorded `BuybackController.withdrawIFR()` return-value handling as a future,
+  separately gated V2 hardening item. No Solidity source or Mainnet state was
+  changed.
+
 ## 4 September 2026 — Vault Invariant Monitor Candidate
 
 - Added a read-only four-hour Mainnet monitor for CommitmentVault and

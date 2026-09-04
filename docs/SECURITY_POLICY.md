@@ -59,10 +59,17 @@ and are credited in the Hall of Fame (see SECURITY.md).
 
 | Audit Type | Status | Result |
 |------------|--------|--------|
-| Slither Static Analysis | Completed | 0 High/Critical |
+| Slither Static Analysis | CI candidate | 21 production sources; 0 unreviewed High, 6 reviewed High signals baselined, 0 Critical signals reported by the pinned toolchain |
 | Internal repository audits | Completed | Published findings and remediation records |
 | Professional third-party audit | Pending | Independent engagement remains open |
-| Contract Tests | 642 current | Passing in the 22 August 2026 clean audit |
+| Contract Tests | 644 current | Passing in the 4 September 2026 local integration audit |
+
+The machine-readable Slither baseline is
+[`audit/slither-high-baseline.json`](../audit/slither-high-baseline.json). It
+does not suppress analysis: CI fails if a High signal is new, changes, or
+disappears without an explicit baseline review. One entry, the unchecked
+ERC-20 return value in the already deployed `BuybackController.withdrawIFR()`
+source, is retained as a future V2 hardening item.
 
 Current browser, application and physical-device evidence is tracked separately
 in [`CURRENT_FUNCTIONALITY_STATUS.md`](CURRENT_FUNCTIONALITY_STATUS.md).
