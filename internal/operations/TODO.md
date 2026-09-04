@@ -1,5 +1,5 @@
 # IFR Protocol — Developer TODO List
-> Last updated: 2026-08-26 | Branch: main
+> Last updated: 2026-09-04 | Branch: main
 
 ---
 
@@ -104,8 +104,15 @@ On errors: fix immediately, commit with `seo:` prefix.
 - [x] MetaMask Mobile: centralized deep-link + pending connect ✅
 - [x] Protocol Plan wiki page created (26 pages) ✅
 
-## CURRENT WATCHLIST — verified 2026-08-26
+## CURRENT WATCHLIST — verified 2026-09-04
 
+- [ ] Hardhat 3.15.0 / hardhat-verify 3.1.0 maintenance candidate
+      Full local contract, Generator Engine and SDK suites pass. The bundled
+      EDR runtime changes from 0.15.0 to 0.19.0 and its native platform
+      packages are now optional dependencies; installs must not omit optional
+      packages. Mainnet verification was not submitted. Exact-head Linux CI
+      remains mandatory before merge. Mocha stays at 11.8.0 until
+      hardhat-mocha supports Mocha 12.
 - [x] LendingVault V1 borrow activation policy — keep disabled
       Runbook: docs/LENDING_PRICE_GOVERNANCE_RUNBOOK.md
       Policy: docs/LENDING_PRICE_POLICY_20260708.md
@@ -995,4 +1002,4 @@ Hetzner API endpoints already live: stats, offers, loans/:addr, health/:id, lend
 
 ---
 
-*Last updated: 2026-08-26*
+*Last updated: 2026-09-04*

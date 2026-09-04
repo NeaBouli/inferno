@@ -49,11 +49,13 @@
   <div class="container">
     <a href="wiki/roadmap.html" class="back" rel="nofollow">&larr; Roadmap</a>
     <h1>IFR Protocol &mdash; Developer TODO List</h1>
-    <div class="subtitle">Last updated: 2026-08-26 &middot; Branch: main</div>
+    <div class="subtitle">Last updated: 2026-09-04 &middot; Branch: main</div>
 
     <!-- ═══ CURRENT WATCHLIST ═══ -->
-    <h2><span class="priority-badge p-critical">WATCH</span> Current Watchlist &mdash; verified 2026-08-26</h2>
+    <h2><span class="priority-badge p-critical">WATCH</span> Current Watchlist &mdash; verified 2026-09-04</h2>
     <ul>
+      <li><div class="cb"></div><strong>Hardhat 3.15.0 / hardhat-verify 3.1.0 maintenance candidate</strong><br>
+        <span style="color:#6b7280;font-size:0.82rem;">Full local contract, Generator Engine and SDK suites pass. The bundled EDR runtime changes from 0.15.0 to 0.19.0 and its native platform packages are now optional dependencies; installs must not omit optional packages. No Mainnet verification was submitted. Exact-head Linux CI remains mandatory before merge. Mocha stays at 11.8.0 until hardhat-mocha supports Mocha 12.</span></li>
       <li><div class="cb cb-done">&#x2713;</div><strong>LendingVault V1 borrow activation policy</strong> &mdash; keep disabled.<br>
         <span style="color:#6b7280;font-size:0.82rem;">Decision 2026-07-31: keep <code>ifrPriceWei = 0</code>; do not submit the current Safe JSON. V1 cannot set the price back to zero and has no pause, borrow cap, allowlist or price-freshness check. Reconsider only after an audited, bounded and pausable V2 plus deeper liquidity.</span></li>
       <li><div class="cb"></div><strong>CommitmentVault price-condition locks</strong> &mdash; V2/PriceLockVault needed.<br>

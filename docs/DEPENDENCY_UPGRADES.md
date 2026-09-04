@@ -12,6 +12,8 @@
 | #5 | @nomicfoundation/hardhat-verify | 2.1.3 | 3.0.22 | Erledigt 29.07.2026 | - |
 | #7 | chai | 4.5.0 | 6.2.2 | Erledigt 29.07.2026 | - |
 | #4 | ethers | 5.8.0 | 6.17.0 | Erledigt 29.07.2026 | - |
+| #74 | hardhat | 3.12.0 | 3.15.0 | Lokal verifiziert 04.09.2026; CI offen | - |
+| #76 | @nomicfoundation/hardhat-verify | 3.0.22 | 3.1.0 | Lokal verifiziert 04.09.2026; CI offen | - |
 
 ## Migrationsreihenfolge
 
@@ -278,3 +280,23 @@ migration and its full contract-suite evidence exist.
 - The Benefits wallet prototype's existing WalletConnect/Wagmi advisory chain
   remains a separate major-migration task. Do not use `npm audit fix --force`
   to cross that wallet compatibility boundary.
+
+## 2026-09-04 Hardhat Maintenance Candidate
+
+- Root Hardhat is updated from `3.12.0` to `3.15.0`; the verification plugin
+  is updated from `3.0.22` to `3.1.0` in the same bounded toolchain wave.
+- Hardhat 3.15 updates its native EVM runtime (`@nomicfoundation/edr`) from
+  `0.15.0` to `0.19.0`. Contract execution, revert paths and deterministic
+  local-network behavior are therefore covered by the complete contract suite.
+- EDR platform binaries are optional dependencies in the new lockfile. CI and
+  development installs must not use `--omit=optional`, because Hardhat needs
+  the matching native package at runtime.
+- The Verify 3.1 configuration loads and its local task integration is covered;
+  no Mainnet verification request was sent during this maintenance change.
+- Complete local verification passes with 642 contract tests, 30 Generator
+  Engine tests and 36 SDK tests. The root audit remains at eight Low
+  development-only findings and zero Moderate, High or Critical findings.
+- Mocha remains at `11.8.0`. Mocha 12 is not install-compatible with the
+  current `@nomicfoundation/hardhat-mocha@3.1.0` peer range and must wait for
+  upstream plugin support; do not use `--force` or `--legacy-peer-deps`.
+- Exact-head Linux CI remains mandatory before merge.

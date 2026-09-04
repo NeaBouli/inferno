@@ -1,5 +1,15 @@
 # Changelog
 
+## 4 September 2026 — Hardhat Maintenance Candidate
+
+- Updated the local candidate from Hardhat 3.12.0 to 3.15.0 and
+  hardhat-verify 3.0.22 to 3.1.0.
+- Verified all 642 contract tests, 30 Generator Engine tests and 36 IFR SDK
+  tests against the bundled EDR 0.19 runtime.
+- Kept Mocha at 11.8.0 because hardhat-mocha 3.1.0 does not support Mocha 12.
+- No Mainnet verification or other on-chain action was performed. Exact-head
+  Linux CI remains required before merge.
+
 ## 26 August 2026 — Exchange Fee-Exemption Policy
 
 - Five-member Core Developer and Keyholder Council approved full fee

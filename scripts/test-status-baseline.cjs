@@ -25,7 +25,8 @@ const packageJson = JSON.parse(read("package.json"));
 const packageLock = JSON.parse(read("package-lock.json"));
 assert.equal(packageJson.engines?.node, ">=22.13.0");
 assert.equal(packageJson.dependencies?.ethers, "6.17.0");
-assert.equal(packageJson.devDependencies?.hardhat, "3.12.0");
+assert.equal(packageJson.devDependencies?.hardhat, "3.15.0");
+assert.equal(packageJson.devDependencies?.["@nomicfoundation/hardhat-verify"], "3.1.0");
 assert.equal(packageJson.overrides?.["serialize-javascript"], "7.0.5");
 assert.equal(packageJson.devDependencies?.chai, "6.2.2");
 assert.equal(packageJson.devDependencies?.mocha, "11.8.0");
@@ -33,7 +34,11 @@ assert.equal(
   packageJson.scripts?.["test:mocha-serializer"],
   "mocha --parallel --jobs 2 test/mocha-serializer-compat.test.cjs"
 );
-assert.equal(packageLock.packages?.["node_modules/hardhat"]?.version, "3.12.0");
+assert.equal(packageLock.packages?.["node_modules/hardhat"]?.version, "3.15.0");
+assert.equal(
+  packageLock.packages?.["node_modules/@nomicfoundation/hardhat-verify"]?.version,
+  "3.1.0"
+);
 assert.equal(packageLock.packages?.["node_modules/adm-zip"]?.version, "0.6.0");
 assert.equal(
   packageLock.packages?.["node_modules/serialize-javascript"]?.version,
@@ -60,8 +65,8 @@ requireText("STATUS-REPORT.md", currentBaseline);
 requireText("docs/STATUS-REPORT.md", currentBaseline);
 
 const todo = requireText("internal/operations/TODO.md", [
-  "> Last updated: 2026-08-26 | Branch: main",
-  "CURRENT WATCHLIST — verified 2026-08-26",
+  "> Last updated: 2026-09-04 | Branch: main",
+  "CURRENT WATCHLIST — verified 2026-09-04",
   "LendingVault V1 borrow activation policy — keep disabled",
   "V1 cannot set price back to zero",
   "SEC-VLT-01 — Vault fee-exemption defense in depth",
@@ -86,7 +91,7 @@ const todo = requireText("internal/operations/TODO.md", [
   "8 transitive low findings",
   "Deterministic local Hardhat test network",
   "Technical: WalletConnect v2 + ethers.js v6",
-  "*Last updated: 2026-08-26*",
+  "*Last updated: 2026-09-04*",
 ]);
 assert.ok(
   !todo.includes("- [ ] Dependency modernization"),
@@ -107,8 +112,8 @@ assert.ok(
 );
 
 requireText("internal/operations/TODO.html", [
-  "Last updated: 2026-08-26",
-  "Current Watchlist &mdash; verified 2026-08-26",
+  "Last updated: 2026-09-04",
+  "Current Watchlist &mdash; verified 2026-09-04",
   "LendingVault V1 borrow activation policy",
   "V1 cannot set the price back to zero",
   "SEC-VLT-01 &mdash; Vault fee-exemption defense in depth",
@@ -141,8 +146,8 @@ requireText("BACKLOG.md", [
   "8 transitive Low-Funde",
 ]);
 requireText("SKYWALKER.md", [
-  "**Hinweis 29.07.2026:**",
-  "Hardhat 3.12.0",
+  "**Hinweis 04.09.2026:**",
+  "Hardhat 3.15.0",
   "lokale Tests forken nicht automatisch",
   "HARDHAT_FORK_BLOCK_NUMBER=<block>",
   "## Historischer Stand (05.03.2026)",
