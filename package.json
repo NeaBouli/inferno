@@ -30,6 +30,7 @@
     "test:benefits-docs": "node scripts/test-benefits-doc-consistency.cjs",
     "test:benefits-node-runtime": "node scripts/test-benefits-node-runtime.cjs",
     "test:wiki-heads": "node scripts/test-wiki-head-integrity.cjs",
+    "test:wiki-jsonld": "node scripts/test-wiki-jsonld.cjs",
     "test:wiki-rag": "node scripts/build-wiki-rag.js --check",
     "test:content-trust": "node scripts/test-content-trust.cjs",
     "test:cex-fee-policy": "node scripts/test-cex-fee-policy.cjs",

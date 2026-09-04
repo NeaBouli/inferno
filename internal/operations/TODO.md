@@ -690,7 +690,7 @@ On errors: fix immediately, commit with `seo:` prefix.
 - [x] ✅ sitemap.xml: 4 new pages added (20.03.2026)
 - [x] ✅ Ali Copilot: Phase 3 contracts + BuilderRegistry + Governance updated (20.03.2026)
 - [x] ✅ Landing Page: IntersectionObserver for live data + lazy images + scroll throttle (20.03.2026)
-- [ ] Full JSON-LD Schema.org check on all wiki pages
+- [x] Full JSON-LD Schema.org regression check on all 35 tracked Wiki pages
 - [ ] Verify ChatGPT/Perplexity indexing
 - [x] ❌ ethereum-lists PR #1010 CLOSED (auto-close 03.06.2026 — inactivity)
 - [x] 🟡 ethereum-lists PR #1036 — submitted 10.06.2026, stale-closed

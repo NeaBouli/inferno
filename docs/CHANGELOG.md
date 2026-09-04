@@ -1,5 +1,14 @@
 # Changelog
 
+## 4 September 2026 — Wiki JSON-LD Regression Gate
+
+- Added a fail-closed structured-data check across all tracked Wiki pages.
+- The gate validates JSON syntax, Schema.org context, canonical URL matching,
+  primary page metadata and present BreadcrumbList or FAQPage structures.
+- Repaired incomplete FAQ metadata and copied URL/title metadata on the Open
+  Audit Log and Protocol Plan pages found by the new gate.
+- Wired the check into the Docs Validator JSON job.
+
 ## 4 September 2026 — Security Audit Toolchain Pins
 
 - Pinned Security Audit jobs to the reviewed Ubuntu 24.04 runner.

@@ -215,6 +215,10 @@ pins Rust 1.88.0 plus its Cargo, Python, Slither and Solidity audit tools. A
 repository policy test rejects floating action references, runners and
 top-level audit tools.
 
+All 35 tracked Wiki pages are covered by a fail-closed JSON-LD regression gate
+for syntax, Schema.org context, canonical URLs, primary page metadata and
+present breadcrumb or FAQ structures.
+
 ---
 
 ## Documentation

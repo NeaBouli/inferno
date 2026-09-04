@@ -25,6 +25,7 @@ on:
       - 'scripts/test-workflow-triggers.cjs'
       - 'scripts/test-roadmap-status-sync.cjs'
       - 'scripts/test-wiki-head-integrity.cjs'
+      - 'scripts/test-wiki-jsonld.cjs'
       - 'scripts/test-surface-routing.cjs'
       - 'scripts/test-security-reporting-config.cjs'
       - 'scripts/check-browser-ethers6.cjs'
@@ -112,6 +113,9 @@ jobs:
             fi
           done
           exit $EXIT
+
+      - name: Validate Wiki JSON-LD
+        run: npm run test:wiki-jsonld
 
   validate-links:
     name: Internal Link Check
