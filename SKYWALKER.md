@@ -12,7 +12,7 @@
 > Maerz-Handover. Fuer den aktuellen operativen Stand gelten
 > `internal/operations/TODO.md`, `docs/DEPENDENCY_UPGRADES.md` und die lokale
 > append-only `BRIDGE.md`. Aktuelle Root-Baseline: Node `>=22.13.0`, Ethers
-> `6.17.0`, Hardhat `3.15.0`, Chai `6.2.2`; Contract-Suite `642/642`,
+> `6.17.0`, Hardhat `3.15.0`, Chai `6.2.2`; Contract-Suite `644/644`,
 > Generator Engine `30/30`, IFR SDK `36/36`; Root-Audit `8 low /
 > 0 moderate / 0 high / 0 critical`.
 

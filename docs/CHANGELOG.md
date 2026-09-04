@@ -38,7 +38,7 @@
   fingerprints. CI now fails on every baseline change so cleanup and new
   regressions require explicit review instead of being silently ignored.
 
-## 4 September 2026 — Bounded Mythril CI Candidate
+## 4 September 2026 — Bounded Mythril CI Delivery
 
 - Added a hash-locked, path-scoped/weekly/manual Mythril runner for all 17
   concrete production contracts with two-transaction,
@@ -51,8 +51,9 @@
 - Four complete local runs finished in roughly six to seven minutes; all
   reported zero signals at any severity. This bounded result does not replace an independent
   professional audit or prove complete state-space coverage.
+- Integrated the gate through PR #77 after exact-head and Main Linux CI passed.
 
-## 4 September 2026 — Recursive Slither CI Candidate
+## 4 September 2026 — Recursive Slither CI Delivery
 
 - Added a pinned direct-solc Slither runner covering all 21 production
   Solidity sources; mocks and npm dependencies are excluded from the gate.
@@ -62,8 +63,9 @@
 - Recorded `BuybackController.withdrawIFR()` return-value handling as a future,
   separately gated V2 hardening item. No Solidity source or Mainnet state was
   changed.
+- Integrated the gate through PR #77 after exact-head and Main Linux CI passed.
 
-## 4 September 2026 — Vault Invariant Monitor Candidate
+## 4 September 2026 — Vault Invariant Monitor Delivery
 
 - Added a read-only four-hour Mainnet monitor for CommitmentVault and
   LendingVault fee exemptions and custody coverage.
@@ -72,16 +74,17 @@
 - Added deterministic monitor tests and two negative contract regressions,
   bringing the current contract suite to 644 tests. No contract, transaction
   or Mainnet state was changed.
+- Integrated the monitor through PR #77 after exact-head and Main CI passed.
 
-## 4 September 2026 — Hardhat Maintenance Candidate
+## 4 September 2026 — Hardhat Maintenance Delivery
 
-- Updated the local candidate from Hardhat 3.12.0 to 3.15.0 and
+- Updated Hardhat from 3.12.0 to 3.15.0 and
   hardhat-verify 3.0.22 to 3.1.0.
-- Verified all 642 contract tests, 30 Generator Engine tests and 36 IFR SDK
+- Verified all 644 contract tests, 30 Generator Engine tests and 36 IFR SDK
   tests against the bundled EDR 0.19 runtime.
 - Kept Mocha at 11.8.0 because hardhat-mocha 3.1.0 does not support Mocha 12.
-- No Mainnet verification or other on-chain action was performed. Exact-head
-  Linux CI remains required before merge.
+- Integrated the update through PR #77 after exact-head and Main Linux CI
+  passed. No Mainnet verification or other on-chain action was performed.
 
 ## 26 August 2026 — Exchange Fee-Exemption Policy
 

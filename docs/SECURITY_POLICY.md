@@ -59,8 +59,8 @@ and are credited in the Hall of Fame (see SECURITY.md).
 
 | Audit Type | Status | Result |
 |------------|--------|--------|
-| Slither Static Analysis | CI candidate | 21 production sources; 0 unreviewed High, 6 reviewed High signals baselined, 0 Critical signals reported by the pinned toolchain |
-| Mythril Symbolic Analysis | CI candidate | 17 concrete production contracts; bounded to two transactions and 30 seconds per contract; 0 signals at any severity in the verified local run |
+| Slither Static Analysis | Active CI gate | 21 production sources; 0 unreviewed High, 6 reviewed High signals baselined, 0 Critical signals reported by the pinned toolchain |
+| Mythril Symbolic Analysis | Active CI gate | 17 concrete production contracts; bounded to two transactions and 30 seconds per contract; 0 signals at any severity in the verified local run |
 | Internal repository audits | Completed | Published findings and remediation records |
 | Professional third-party audit | Pending | Independent engagement remains open |
 | Contract Tests | 644 current | Passing in the 4 September 2026 local integration audit |
@@ -72,7 +72,7 @@ disappears without an explicit baseline review. One entry, the unchecked
 ERC-20 return value in the already deployed `BuybackController.withdrawIFR()`
 source, is retained as a future V2 hardening item.
 
-The Mythril candidate is intentionally a separate path-scoped, weekly and
+The Mythril gate is intentionally a separate path-scoped, weekly and
 manual workflow. It uses a hash-locked Python dependency set with Mythril
 0.24.8 and setuptools 80.10.2 plus a repository-pinned SHA-256 for the Linux
 amd64 solc 0.8.28 artifact, rejects hidden

@@ -106,13 +106,14 @@ On errors: fix immediately, commit with `seo:` prefix.
 
 ## CURRENT WATCHLIST — verified 2026-09-04
 
-- [ ] Hardhat 3.15.0 / hardhat-verify 3.1.0 maintenance candidate
-      Full local contract, Generator Engine and SDK suites pass. The bundled
+- [x] Hardhat 3.15.0 / hardhat-verify 3.1.0 maintenance delivered
+      Integrated through PR #77 on 04.09.2026. Full local contract, Generator
+      Engine and SDK suites pass, and exact-head plus Main Linux CI are green.
+      The bundled
       EDR runtime changes from 0.15.0 to 0.19.0 and its native platform
       packages are now optional dependencies; installs must not omit optional
-      packages. Mainnet verification was not submitted. Exact-head Linux CI
-      remains mandatory before merge. Mocha stays at 11.8.0 until
-      hardhat-mocha supports Mocha 12.
+      packages. No Mainnet verification was submitted. Mocha stays at 11.8.0
+      until hardhat-mocha supports Mocha 12.
 - [x] LendingVault V1 borrow activation policy — keep disabled
       Runbook: docs/LENDING_PRICE_GOVERNANCE_RUNBOOK.md
       Policy: docs/LENDING_PRICE_POLICY_20260708.md
@@ -131,14 +132,14 @@ On errors: fix immediately, commit with `seo:` prefix.
       regressions cover both vaults. Lending liquid custody is compared with
       totalAvailable; totalLent is reported separately as a receivable. V2
       balance-diff inflow accounting and runtime guards remain future design work.
-- [x] Recursive Slither CI baseline — local candidate complete
+- [x] Recursive Slither CI baseline — delivered
       All 21 production Solidity sources are compiled directly with pinned
       Slither 0.11.5 and solc 0.8.28 because Hardhat 3 is not supported by the
       current crytic-compile adapter. CI fails on every new, changed or stale
       High fingerprint, and every Critical signal fails immediately. Six High signals are individually classified in
       audit/slither-high-baseline.json; BuybackController.withdrawIFR() remains
-      a separately gated V2 source-hardening item. Exact-head Linux CI is still
-      required before this candidate can be marked delivered.
+      a separately gated V2 source-hardening item. Exact-head and Main Linux CI
+      passed through PR #77 on 04.09.2026.
 - [ ] IFRp Commerce App / shop.ifrunit.tech production decisions
       Docs: docs/ifrp-commerce-app/MASTER_ARCHITECTURE.md
       Current: role chooser, external-wallet/IFRLock flow, QR proof/redeem,
@@ -705,8 +706,8 @@ On errors: fix immediately, commit with `seo:` prefix.
 - [x] Pin Security Audit runner, Rust and top-level Cargo/Python/Solidity audit tools with a fail-closed policy test
 - [x] Enforce explicit least-privilege GitHub token scopes across the deliberate 16-workflow inventory, including job-level override rejection
 - [x] Replace non-blocking Markdown lint with pinned baseline regression gate (3,482 historical findings / 2,174 fingerprints; tracked files only)
-- [x] Set up Slither CI candidate (21 production sources; fail-closed High baseline)
-- [x] Set up Mythril CI candidate (17 concrete production contracts; bounded weekly/manual gate; exact-head Linux CI pending)
+- [x] Set up Slither CI gate (21 production sources; fail-closed High baseline; PR #77 and Main CI green)
+- [x] Set up Mythril CI gate (17 concrete production contracts; bounded weekly/manual gate; PR #77 and Main CI green)
 - [ ] Coverage badge in README
 - [ ] Recruit 2-3 repo maintainers
 
