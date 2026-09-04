@@ -5,21 +5,27 @@ on:
     branches: [main, master, develop, dev]
     paths:
       - 'docs/**'
-      - '*.md'
+      - '**/*.md'
+      - 'audit/markdownlint-baseline.json'
       - 'internal/operations/TODO.md'
       - 'internal/operations/TODO.html'
       - 'reports/*.md'
       - 'apps/ai-copilot/src/context/ifr-knowledge.ts'
       - 'apps/ai-copilot/src/context/wiki-content.json'
       - 'scripts/build-wiki-rag.js'
+      - 'scripts/check-links.js'
+      - 'scripts/test-check-links.cjs'
       - 'scripts/test-benefits-doc-consistency.cjs'
       - 'scripts/test-content-trust.cjs'
       - 'scripts/test-status-baseline.cjs'
       - 'scripts/test-functionality-status.cjs'
       - 'scripts/test-docs-workflow.cjs'
+      - 'scripts/check-markdownlint-baseline.cjs'
+      - 'scripts/test-markdownlint-baseline.cjs'
       - 'scripts/test-workflow-triggers.cjs'
       - 'scripts/test-roadmap-status-sync.cjs'
       - 'scripts/test-wiki-head-integrity.cjs'
+      - 'scripts/test-wiki-jsonld.cjs'
       - 'scripts/test-surface-routing.cjs'
       - 'scripts/test-security-reporting-config.cjs'
       - 'scripts/check-browser-ethers6.cjs'
@@ -33,18 +39,23 @@ on:
     branches: [main, master]
     paths:
       - 'docs/**'
-      - '*.md'
+      - '**/*.md'
+      - 'audit/markdownlint-baseline.json'
       - 'internal/operations/TODO.md'
       - 'internal/operations/TODO.html'
       - 'reports/*.md'
       - 'apps/ai-copilot/src/context/ifr-knowledge.ts'
       - 'apps/ai-copilot/src/context/wiki-content.json'
       - 'scripts/build-wiki-rag.js'
+      - 'scripts/check-links.js'
+      - 'scripts/test-check-links.cjs'
       - 'scripts/test-benefits-doc-consistency.cjs'
       - 'scripts/test-content-trust.cjs'
       - 'scripts/test-status-baseline.cjs'
       - 'scripts/test-functionality-status.cjs'
       - 'scripts/test-docs-workflow.cjs'
+      - 'scripts/check-markdownlint-baseline.cjs'
+      - 'scripts/test-markdownlint-baseline.cjs'
       - 'scripts/test-workflow-triggers.cjs'
       - 'scripts/test-roadmap-status-sync.cjs'
       - 'scripts/test-wiki-head-integrity.cjs'
@@ -60,26 +71,29 @@ on:
   schedule:
     - cron: '0 6 * * 1'
 
+permissions:
+  contents: read
+
 jobs:
   validate-markdown:
     name: Markdown Lint
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Setup Node.js
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
-          node-version: '20'
+          node-version: '22.22.0'
 
-      - name: Install markdownlint-cli
-        run: npm install -g markdownlint-cli
+      - name: Install pinned docs tooling
+        run: npm ci --ignore-scripts
 
-      - name: Lint Markdown files
-        run: |
-          markdownlint '**/*.md' \
-            --disable MD013 MD033 MD041 MD024 MD036 MD040 \
-            || true
+      - name: Test Markdown baseline policy
+        run: npm run test:markdownlint-baseline
+
+      - name: Enforce Markdown baseline
+        run: npm run check:markdownlint
 
   validate-json:
     name: JSON Validation
@@ -100,27 +114,20 @@ jobs:
           done
           exit $EXIT
 
+      - name: Validate Wiki JSON-LD
+        run: npm run test:wiki-jsonld
+
   validate-links:
     name: Internal Link Check
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: '22'
 
-      - name: Check for broken internal doc references
-        run: |
-          EXIT=0
-          for f in docs/*.md; do
-            [ -f "$f" ] || continue
-            # Extract markdown links to local files (not http/https)
-            grep -oP '\[.*?\]\(\K[^)]+' "$f" 2>/dev/null | grep -v '^http' | while read -r link; do
-              # Resolve relative to the file's directory
-              dir=$(dirname "$f")
-              target="$dir/$link"
-              if [ ! -f "$target" ] && [ ! -f "$link" ]; then
-                echo "::warning file=$f::Broken link: $link"
-              fi
-            done
-          done
+      - name: Check internal documentation links
+        run: npm run test:links
 
   validate-structure:
     name: Docs Structure

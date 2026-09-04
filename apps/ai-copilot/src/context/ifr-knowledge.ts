@@ -121,7 +121,8 @@ export function getIFRKnowledge() {
       communitySignerExpansion: "Planned after community voting is live. This is the multisig signer distribution process. Preferred path: keep 3-of-5 now, expand to 4-of-7 using a mixed model (3 core/protocol, 2 contributor/builder, 2 community-elected), then consider 5-of-9 only after one stable term. Selection is not pure whale voting and not pure random selection; it requires eligibility, public nomination, community vote, security review, rotation, and emergency replacement rules. Full plan: https://ifrunit.tech/wiki/community-signer-expansion.html",
       proposals: "#0,#4-#9,#11,#12,#15,#16 executed; #1-#3,#10 cancelled.",
       nextPlanned: "No claim that seller rewards are active: PartnerVault registration and an authorized reward caller require separate governance execution.",
-      feeExempt: "Deployer, TreasurySafe, CommunitySafe, CommitmentVault, LendingVault and LP Token are active fee exemptions."
+      feeExempt: "Deployer, TreasurySafe, CommunitySafe, CommitmentVault, LendingVault and LP Token are active fee exemptions.",
+      vaultInvariantMonitoring: "A read-only four-hour Mainnet monitor fails closed if CommitmentVault or LendingVault loses feeExempt status or liquid custody falls below accounting. CommitmentVault balance is checked against totalLocked. LendingVault balance is checked against totalAvailable; totalLent is a separate borrower-held receivable. At block 25900438 both vaults were fee-exempt and exactly covered. V2 balance-diff accounting and runtime guards remain future work."
     },
     reputation: {
       positioning: "IFR is a utility-first, community-driven ERC-20 protocol built around lock-to-access use cases, builder integrations, lending/locking flows, open-source code, and on-chain transparency. It should not be described as a pure speculation token.",
@@ -144,9 +145,9 @@ export function getIFRKnowledge() {
         status: "DEPLOYED — Mainnet 04.04.2026, feeExempt active",
         address: "0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3",
         description: "Irrevocable tranche lock until its condition is met. TIME_ONLY is operational; price, time+price and time OR price fail closed while Mainnet priceOracle is the zero address.",
-        contributorConfig: "C1/C2/C3 use TIME_ONLY tranches; total Mainnet CommitmentVault balance was 47,952,476.871794375 IFR at block 25812380.",
+        contributorConfig: "C1/C2/C3 use TIME_ONLY tranches; total Mainnet CommitmentVault balance was 47,952,476.871794375 IFR at block 25900438.",
         autoUnlock: "30 days after condition met — anyone can call, tokens always go to original wallet",
-        tests: "45/45 passing",
+        tests: "46/46 passing",
         wiki: "https://ifrunit.tech/wiki/commitment-vault.html",
         apiEndpoints: "GET /api/commitment/tranches/:address, GET /api/commitment/status/:address, GET /api/commitment/p0, GET /api/commitment/leaderboard"
       },
@@ -157,7 +158,7 @@ export function getIFRKnowledge() {
         interestRate: "2% to 25% based on utilization",
         collateral: "V1 parameters: 200% initial; checkHealth emits a warning below 150%; an external caller may liquidate below 120%. V1 has no enforced 48-hour grace period.",
         currentMainnetState: "Three offers provide 52,155,440.952845656 IFR, with 0 IFR lent. Borrowing is intentionally disabled because ifrPriceWei is 0.",
-        tests: "55/55 passing",
+        tests: "56/56 passing",
         wiki: "https://ifrunit.tech/wiki/lending-vault.html",
         apiEndpoints: "GET /api/lending/stats, GET /api/lending/offers, GET /api/lending/loans/:address, GET /api/lending/health/:loanId, GET /api/lending/lender/:address"
       },

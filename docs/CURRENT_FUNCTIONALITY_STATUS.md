@@ -1,7 +1,7 @@
 # Current Functionality Status
 
-**Verified:** 26 August 2026
-**Repository baseline:** `9782106a` (`origin/main` when this sync started)
+**Verified:** 4 September 2026
+**Repository baseline:** current release branch
 **Network:** Ethereum Mainnet
 
 This document is the canonical boundary between implemented, operational and
@@ -43,10 +43,11 @@ Read-only verification at Ethereum block `25812380`:
 
 ## Verification Evidence
 
-The current baseline combines the 22 August clean-install audit with the green
-exact-head CI and browser verification completed through 26 August:
+The current baseline combines clean-install audits, contract tests and the
+browser/application verification retained by the release gates:
 
-- Smart contracts: `642/642` passing.
+- Smart contracts: `644/644` passing, including the CommitmentVault and
+  LendingVault fee-exemption deficit regressions.
 - Generator Engine: `30/30` passing.
 - IFR SDK legacy suite: `36/36` passing.
 - Landing/Wiki wallet browser suite: `20/20` passing.

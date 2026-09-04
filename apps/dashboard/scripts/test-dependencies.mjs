@@ -7,6 +7,8 @@ const lock = JSON.parse(
 
 const minimumVersions = {
   axios: '1.18.0',
+  'decode-uri-component': '0.5.0',
+  'query-string': '9.5.1',
   uuid: '11.1.1',
 };
 

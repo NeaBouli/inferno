@@ -880,13 +880,13 @@
         <table>
           <thead><tr><th>Snapshot</th><th>Fee exempt</th><th>Token balance</th><th>Internal accounting</th><th>Difference</th></tr></thead>
           <tbody>
-            <tr><td>CommitmentVault<br><small>Block 25811214</small></td><td class="status-ok">TRUE</td><td>47,952,476.871794375 IFR</td><td><code>totalLocked</code>: 47,952,476.871794375 IFR</td><td class="status-ok">0 IFR</td></tr>
-            <tr><td>LendingVault<br><small>Block 25811214</small></td><td class="status-ok">TRUE</td><td>52,155,440.952845656 IFR</td><td><code>totalAvailable + totalLent</code>: 52,155,440.952845656 IFR</td><td class="status-ok">0 IFR</td></tr>
+            <tr><td>CommitmentVault<br><small>Block 25900438</small></td><td class="status-ok">TRUE</td><td>47,952,476.871794375 IFR</td><td><code>totalLocked</code>: 47,952,476.871794375 IFR</td><td class="status-ok">0 IFR</td></tr>
+            <tr><td>LendingVault<br><small>Block 25900438</small></td><td class="status-ok">TRUE</td><td>52,155,440.952845656 IFR</td><td><code>totalAvailable</code>: 52,155,440.952845656 IFR<br><code>totalLent</code>: 0 IFR receivable</td><td class="status-ok">0 IFR liquid surplus</td></tr>
           </tbody>
         </table>
       </div>
       <div class="callout">
-        <p><strong>Open hardening work:</strong> automated exemption/accounting monitoring and negative regression tests are planned. A future V2 must use balance-diff accounting on inflows and runtime exemption guards that fail closed on affected outgoing flows. <a href="https://github.com/NeaBouli/inferno/blob/main/docs/VAULT_FEE_EXEMPT_HARDENING.md" target="_blank" rel="noopener">Read the technical status and task list.</a></p>
+        <p><strong>Operational hardening active:</strong> a read-only check runs every four hours and fails on a removed exemption or custody deficit; deterministic and contract-level negative regressions cover both vaults. For LendingVault, liquid custody is correctly compared with <code>totalAvailable</code>, while <code>totalLent</code> is a separately reported receivable. A future V2 must still use balance-diff accounting on inflows and runtime exemption guards that fail closed on affected outgoing flows. <a href="https://github.com/NeaBouli/inferno/blob/main/docs/VAULT_FEE_EXEMPT_HARDENING.md" target="_blank" rel="noopener">Read the technical status and monitor details.</a></p>
       </div>
 
       <!-- ===== Token Distribution — Complete Record ===== -->

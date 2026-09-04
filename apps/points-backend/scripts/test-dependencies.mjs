@@ -9,8 +9,10 @@ const expectedVersions = {
   'body-parser': '2.3.0',
   'deepmerge-ts': '8.0.2',
   esbuild: '0.28.1',
+  'fast-uri': '3.1.6',
+  mysql2: '3.23.1',
   'path-to-regexp': '8.4.0',
-  qs: '6.15.3',
+  qs: '6.16.0',
 };
 
 for (const [name, expected] of Object.entries(expectedVersions)) {

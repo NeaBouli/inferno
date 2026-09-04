@@ -11,6 +11,9 @@ on:
       - 'apps/creator-gateway/**'
       - '.github/workflows/creator-gateway.yml'
 
+permissions:
+  contents: read
+
 jobs:
   test:
     runs-on: ubuntu-latest

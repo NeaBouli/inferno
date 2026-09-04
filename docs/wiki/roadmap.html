@@ -603,7 +603,9 @@
           <li class="check-item">BuybackVault (50/50 split, 60-day activation)</li>
           <li class="check-item">BurnReserve (permanent burn + tracking)</li>
           <li class="check-item">Hardhat test suite (core contracts)</li>
-          <li class="check-item">Slither security audit (0 high/critical)</li>
+          <li class="check-item">Initial scoped Slither remediation (0 high/critical at the time)</li>
+          <li class="check-item">Current recursive Slither gate (21 production sources; 0 unreviewed High; 6 reviewed signals baselined)</li>
+          <li class="check-item">Bounded Mythril gate (17 concrete production contracts; 0 signals in the verified local candidate run)</li>
         </ul>
       </div>
 
@@ -701,7 +703,7 @@
           <li class="check-item"><strong>July 2026:</strong> C1/C2/C3 completed their CommitmentVault locks and LendingVault offers; three offers provide 52,155,440.952845656 IFR, with 0 IFR lent &#x2705;</li>
           <li class="pending-item"><strong>Improvement:</strong> Batch lock UX &mdash; add contract/UI path for one approval plus one split-lock transaction instead of 10 separate lock confirmations</li>
           <li class="pending-item"><strong>Lending V2:</strong> V1 borrowing remains intentionally disabled with <code>ifrPriceWei = 0</code>. Borrowing requires a separately designed and audited V2 with oracle freshness checks, caps, pause controls and dedicated tests.</li>
-          <li class="pending-item"><strong>Vault invariant monitoring:</strong> add automated checks for CommitmentVault and LendingVault fee exemptions and token-balance/accounting equality, plus negative regression tests. Mainnet V1 was healthy with zero accounting difference at block 25811214.</li>
+          <li class="check-item"><strong>Vault invariant monitoring:</strong> read-only four-hour checks and negative regressions are implemented. Mainnet V1 was healthy at block 25900438; CommitmentVault matched <code>totalLocked</code>, while LendingVault liquid custody matched <code>totalAvailable</code> with <code>totalLent = 0</code>. &#x2705;</li>
           <li class="pending-item"><strong>Vault V2 hardening:</strong> use balance-diff accounting for inflows and explicit runtime exemption guards that fail closed on affected outgoing flows. <a href="https://github.com/NeaBouli/inferno/blob/main/docs/VAULT_FEE_EXEMPT_HARDENING.md" target="_blank" rel="noopener" style="color:var(--accent);">Technical status</a></li>
           <li class="check-item"><strong>IFR Benefits App:</strong> live at <a href="https://shop.ifrunit.tech/" target="_blank" rel="noopener" style="color:var(--accent);">shop.ifrunit.tech</a> with customer/seller roles, external wallets, IFRLock or active TIME_ONLY CommitmentVault eligibility, offer discovery with city/region/Online filters, seller profiles/catalog/rules, checkout operators and short-lived QR proof/redeem &#x2705;</li>
           <li class="pending-item"><strong>September 2026:</strong> LiquidityReserve unlock (200M IFR available) &mdash; Governance decides LP addition</li>

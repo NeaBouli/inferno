@@ -14,15 +14,23 @@ title = "Inferno Custom Gitleaks Config"
     # scripts/check-browser-ethers6.cjs pins and verifies the published hash.
     '''docs/assets/vendor/ethers-6\.17\.0\.umd\.min\.js'''
   ]
-  regexes = [
-    # Public BootstrapVaultV3 finalise() transaction hash, not key material.
-    '''0x949848bdd09f4c867a2593afffb0137c7db2c1457d8a8f5ff4428f8ecce69c5f'''
-  ]
-
 [[rules]]
   description = "Ethereum Private Key"
   id = "eth-private-key"
-  regex = '''(?i)(0x[0-9a-fA-F]{64})'''
+  # A bare 32-byte hex value is indistinguishable from a public transaction
+  # hash. Require an explicit private/secret-key label and capture only the
+  # value so full-history scans keep useful signal without flagging calldata.
+  regex = '''(?i)(?:[a-z0-9_-]*(?:private|secret)[_-]?key|private\s+key|secret\s+key|priv[_-]?key|deployer[_-]?key|signer[_-]?key|wallet[_-]?key)\s*(?:=|:|=>)\s*["']?((?:0x)?[0-9a-f]{64})\b'''
+  secretGroup = 1
+  tags = ["key", "ethereum", "crypto"]
+  severity = "CRITICAL"
+
+[[rules]]
+  description = "Raw Ethereum Private Key In Credential File"
+  id = "eth-private-key-credential-file"
+  path = '''(?i)(^|/)(\.env(?:\.[^/]*)?|[^/]+\.(?:key|pem|keystore)|secrets?(?:\.[^/]*)?)$'''
+  regex = '''(?i)\b((?:0x)?[0-9a-f]{64})\b'''
+  secretGroup = 1
   tags = ["key", "ethereum", "crypto"]
   severity = "CRITICAL"
 

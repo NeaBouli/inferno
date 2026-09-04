@@ -978,9 +978,9 @@
       </ol>
 
       <h2>7. Operational Fee-Exemption Invariant</h2>
-      <p>LendingVault V1 records nominal IFR amounts and relies on its InfernoToken <code>feeExempt</code> status remaining active. At Ethereum Mainnet block <code>25811214</code>, the exemption was active and the vault held 52,155,440.952845656 IFR, exactly matching <code>totalAvailable + totalLent</code>; the accounting difference was 0 IFR.</p>
+      <p>LendingVault V1 records nominal IFR amounts and relies on its InfernoToken <code>feeExempt</code> status remaining active. At Ethereum Mainnet block <code>25900438</code>, the exemption was active and the vault held 52,155,440.952845656 IFR, exactly matching <code>totalAvailable</code>; <code>totalLent</code> was 0 IFR and the liquid surplus was 0 IFR. When loans are active, <code>totalLent</code> is held by borrowers and is reported separately as a receivable rather than incorrectly required in liquid vault custody.</p>
       <div class="callout-green">
-        <p><strong>Current status:</strong> no live accounting deficit was observed. Automated invariant monitoring and negative regression tests remain open defense-in-depth work. A future V2 must combine balance-diff inflow accounting with runtime exemption guards that fail closed before affected outgoing transfers. <a href="https://github.com/NeaBouli/inferno/blob/main/docs/VAULT_FEE_EXEMPT_HARDENING.md" target="_blank" rel="noopener">Technical status and task list</a>.</p>
+        <p><strong>Current status:</strong> no live accounting deficit was observed. A read-only check runs every four hours and fails if the exemption is removed or liquid custody falls below <code>totalAvailable</code>; negative regressions cover the resulting offer and withdrawal failure. A future V2 must still combine balance-diff inflow accounting with runtime exemption guards that fail closed before affected outgoing transfers. <a href="https://github.com/NeaBouli/inferno/blob/main/docs/VAULT_FEE_EXEMPT_HARDENING.md" target="_blank" rel="noopener">Technical status and monitor details</a>.</p>
       </div>
 
       <!-- ======================================== -->

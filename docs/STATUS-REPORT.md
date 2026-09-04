@@ -1,6 +1,6 @@
 # IFR Project Status Report
 
-**Current engineering baseline:** 26 August 2026
+**Current engineering baseline:** 4 September 2026
 **Branch:** `main`
 **Model:** Community Fair Launch (CFLM) -- no presale
 **Ticker:** $IFR
@@ -17,13 +17,17 @@ The canonical surface, application and Mainnet capability matrix is
 particular, source presence does not mean that an app is publicly deployed or
 that a governance-gated contract path is active.
 
-- Root: Node.js `>=22.13.0`, Ethers `6.17.0`, Hardhat `3.12.0`,
+- Root: Node.js `>=22.13.0`, Ethers `6.17.0`, Hardhat `3.15.0`,
   Chai `6.2.2`, Mocha `11.8.0`, OpenZeppelin Contracts `5.6.x`.
 - Root is ESM with explicit CommonJS boundaries for legacy scripts and
   standalone test packages. Waffle, Ganache and `solidity-coverage` are no
   longer active root dependencies; native Hardhat 3 coverage is used.
-- Clean local and exact-head CI verification through `9782106a`: contracts `642/642`,
-  Generator Engine `30/30`, IFR SDK `36/36`.
+- Current repository verification: contracts `644/644`, Generator Engine
+  `30/30`, IFR SDK `36/36`.
+- Current local static-analysis candidates: recursive Slither over 21
+  production sources and bounded Mythril symbolic execution over 17 concrete
+  production contracts. Mythril reported zero signals at any severity in the
+  verified local run; exact-head Linux CI is still required.
 - Landing/Wiki wallet browser tests `20/20` and Web3 write-path browser tests
   `24/24` passed. The complete Benefits preflight passed.
 - Benefits physical device/wallet acceptance remains `1/10` passed and `9`
@@ -198,6 +202,22 @@ Sepolia deployment served as the full testnet validation phase prior to mainnet.
 | Points Backend CI | Push/PR to `apps/points-backend/` | prisma generate + tsc + jest (20 tests) |
 | AI Copilot CI | Push/PR to `apps/ai-copilot/` | tsc + build |
 | Benefits Network CI | Push/PR to `apps/benefits-network/` | test-backend + test-frontend |
+| Docs Validator | Markdown/docs push/PR + weekly | pinned Markdown regression baseline + JSON + links + structure + wallet browser suites |
+
+All 16 workflows declare explicit top-level `GITHUB_TOKEN` permissions. Only
+the existing Update Stats and Post-Deploy repository update workflows retain
+`contents: write`; build, test and monitoring workflows are read-only. The
+policy gate also rejects undeclared workflow-inventory changes and job-level
+permission overrides.
+
+The Security Audit workflow additionally fixes its runner at Ubuntu 24.04 and
+pins Rust 1.88.0 plus its Cargo, Python, Slither and Solidity audit tools. A
+repository policy test rejects floating action references, runners and
+top-level audit tools.
+
+All 35 tracked Wiki pages are covered by a fail-closed JSON-LD regression gate
+for syntax, Schema.org context, canonical URLs, primary page metadata and
+present breadcrumb or FAQ structures.
 
 ---
 

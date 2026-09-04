@@ -73,16 +73,18 @@ Status verified 2026-07-30: improved, still waiting on external maintainers.
   - `https://github.com/MetaMask/contract-metadata/pull/1858`
 - MetaMask follow-up comment posted on 2026-07-08 because the PR is waiting for code-owner review:
   - `https://github.com/MetaMask/contract-metadata/pull/1858#issuecomment-4912859782`
-- ethereum-lists PR #1036 is open and `MERGEABLE` but `BLOCKED`, with no
+- ethereum-lists replacement PR #1049 is open but `BLOCKED`, with no
   submitted review, reported check, or maintainer comment:
-  - `https://github.com/ethereum-lists/tokens/pull/1036`
-- ethereum-lists follow-up comment posted on 2026-07-08:
-  - `https://github.com/ethereum-lists/tokens/pull/1036#issuecomment-4912862731`
+  - `https://github.com/ethereum-lists/tokens/pull/1049`
+  - Original PR #1036 was stale-closed and links to this replacement.
+- CoinGecko active listing request `CL0309260050` was submitted on 2026-09-04
+  and remains pending. The exact-contract API still returns `coin not found`;
+  GeckoTerminal visibility is separate.
 - Wallet icon distribution status is documented:
   - `docs/WALLET_ICON_DISTRIBUTION_STATUS_20260708.md`
 - CMC check script is present, but local `CMC_API_KEY` is not set, so CMC listing status was not queried.
 
-Open next step: keep all three external threads under watch without duplicate
+Open next step: keep all external threads under watch without duplicate
 comments, answer maintainer feedback when it appears, and run the CMC check
 only with a local key.
 

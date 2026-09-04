@@ -8,6 +8,8 @@
     "build": "npm run typecheck && vite build",
     "preview": "vite preview --port 4012",
     "typecheck": "tsc --noEmit -p tsconfig.app.json && tsc --noEmit -p tsconfig.node.json",
+    "test:bundle-boundary": "node ../../scripts/check-benefits-wallet-browser-bundle.cjs",
+    "test:dependencies": "node ../../scripts/check-benefits-wallet-advisory-baseline.cjs",
     "test:security": "node scripts/verify-security-boundary.mjs",
     "test": "npm run test:security && npm run build"
   },
@@ -32,6 +34,7 @@
   },
   "overrides": {
     "axios": "1.18.1",
+    "query-string": "9.5.1",
     "uuid@<11.1.1": "11.1.1",
     "ws": "8.21.0"
   }

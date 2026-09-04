@@ -14,7 +14,7 @@ builder benefits, creator content, and protocol discounts.
 | Team Vesting | 150M IFR, 4 years, 1 year cliff |
 | LP Reserve | 400M IFR genesis allocation; live pool balance is dynamic |
 | Token Pool Fee | 1% on non-exempt transfers |
-| Current test evidence | 642 contract + 30 Generator Engine + 36 SDK legacy tests, plus browser/application gates |
+| Current test evidence | 644 contract + 30 Generator Engine + 36 SDK legacy tests, plus browser/application gates |
 | On-Chain Components | 17 documented and verified on Mainnet |
 
 ## Tokenomics

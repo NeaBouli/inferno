@@ -1,6 +1,6 @@
 # IFR Project Status Report
 
-**Current engineering baseline:** 26 August 2026
+**Current engineering baseline:** 4 September 2026
 **Branch:** `main`
 **Model:** Community Fair Launch (CFLM) -- no presale
 **Ticker:** $IFR
@@ -17,13 +17,13 @@ The canonical surface, application and Mainnet capability matrix is
 Source presence does not mean that an app is publicly deployed or that a
 governance-gated contract path is active.
 
-- Root: Node.js `>=22.13.0`, Ethers `6.17.0`, Hardhat `3.12.0`,
+- Root: Node.js `>=22.13.0`, Ethers `6.17.0`, Hardhat `3.15.0`,
   Chai `6.2.2`, Mocha `11.8.0`, OpenZeppelin Contracts `5.6.x`.
 - Root is ESM with explicit CommonJS boundaries for legacy scripts and
   standalone test packages. Waffle, Ganache and `solidity-coverage` are no
   longer active root dependencies; native Hardhat 3 coverage is used.
-- Clean local and exact-head CI verification through `9782106a`: contracts `642/642`,
-  Generator Engine `30/30`, IFR SDK `36/36`.
+- Current repository verification: contracts `644/644`, Generator Engine
+  `30/30`, IFR SDK `36/36`.
 - Landing/Wiki wallet browser tests `20/20` and Web3 write-path browser tests
   `24/24` passed. The complete Benefits preflight passed.
 - Benefits physical device/wallet acceptance remains `1/10` passed and `9`
@@ -182,7 +182,8 @@ Sepolia deployment served as the full testnet validation phase. All contracts we
 
 | Check | Status |
 |-------|--------|
-| Slither v0.11.5 | **PASS** -- 0 High/Critical, 15 fixes, 36 accepted |
+| Slither v0.11.5 | **LOCAL CANDIDATE PASS** -- 21 production sources, 0 unreviewed High, 6 reviewed High signals baselined, 0 Critical signals reported by the pinned toolchain |
+| Mythril v0.24.8 | **LOCAL CANDIDATE PASS** -- bounded symbolic execution of 17 concrete production contracts, 0 signals at any severity; scheduled/manual CI and exact-head Linux validation pending |
 | Historical solidity-coverage snapshot | **99% Stmts, 91% Branch** for the recorded March 2026 contract subset; not current full-repository coverage |
 | 367 Contract Tests | **PASS** -- 0 Failures |
 | Governance Lifecycle | **PASS** -- Proposal #0 + #1 executed via 48h Timelock (Sepolia) |
@@ -236,6 +237,7 @@ Sepolia deployment served as the full testnet validation phase. All contracts we
 | Chai + Waffle | v4 |
 | solidity-coverage | latest |
 | Slither | v0.11.5 |
+| Mythril | v0.24.8 (bounded scheduled analysis candidate) |
 | React | 18 |
 | Vite | latest |
 | Next.js | 14 |

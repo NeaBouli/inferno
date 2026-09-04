@@ -1,0 +1,47 @@
+{
+  "schemaVersion": 1,
+  "scope": "All Solidity sources below contracts/ except contracts/mocks/; npm dependencies are excluded.",
+  "tool": {
+    "slither": "0.11.5",
+    "solc": "0.8.28"
+  },
+  "policy": "CI rejects every Critical signal and fails on every new, changed, or stale High signal. Entries document reviewed static-analysis signals; they are not blanket suppressions or claims that a source pattern is ideal.",
+  "findings": [
+    {
+      "fingerprint": "07da03fb7a075339f351f2ee03017ce19cf0d43c7261d450972e8080148dc05f",
+      "subject": "BootstrapVault.finalise() arbitrary-send-erc20",
+      "classification": "Deprecated deployment / constrained source",
+      "rationale": "BootstrapVault V1 is deprecated. Its immutable ifrSource is constructor-configured, not caller-controlled; BootstrapVaultV3 is the finalized mainnet path."
+    },
+    {
+      "fingerprint": "ded017a4deac8b7ea1df3a5b6ec079af13069c1dfb4c9c855bdf070f5ff48203",
+      "subject": "BuybackController._addLiquidity(uint256) arbitrary-send-eth",
+      "classification": "By-design destination",
+      "rationale": "ETH is intentionally sent through the governance-configured Uniswap router and LP tokens go to the governance-configured lpReceiver. Neither destination is selected by execute() callers."
+    },
+    {
+      "fingerprint": "4460cb71c3700d6e84482269bf94683b376f7cae267c313961fd5bfab31e40b9",
+      "subject": "BuybackController._buybackAndBurn(uint256) arbitrary-send-eth",
+      "classification": "By-design destination",
+      "rationale": "ETH is intentionally sent through the governance-configured Uniswap router and purchased IFR is delivered to the immutable burnReserve. Neither destination is selected by execute() callers."
+    },
+    {
+      "fingerprint": "5d3b722154d346bab0fb4bdc3758047333822e81698a5c56b808cce4d3c3957d",
+      "subject": "BuybackController.execute() reentrancy-eth",
+      "classification": "Constrained signal / V2 hardening",
+      "rationale": "The cooldown timestamp and execution counter are updated before external calls, blocking a nested execute(). The configured router remains an external trust boundary; add an explicit reentrancy guard in any future controller version."
+    },
+    {
+      "fingerprint": "03c75183dbe9c8ba3d9335a853f068aac66f646e0664398e8d14f8f8ad896f78",
+      "subject": "BuybackController.withdrawIFR(address,uint256) unchecked-transfer",
+      "classification": "Confirmed source hardening item",
+      "rationale": "The owner-only emergency path ignores the ERC-20 boolean return. Canonical IFR returns true or reverts, but a future controller should use SafeERC20 or require the returned value."
+    },
+    {
+      "fingerprint": "b1f5bed99beb3845299cdd1aa1f4b5cb7994a5a998b1bbeb1e270c308cea2541",
+      "subject": "LendingVault.liquidate(uint256) arbitrary-send-eth",
+      "classification": "By-design destination",
+      "rationale": "The liquidator bonus is intentionally paid to msg.sender, the permissionless liquidate() caller. The function is nonReentrant and the recipient cannot be chosen independently of the caller."
+    }
+  ]
+}

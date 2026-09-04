@@ -1,0 +1,4 @@
+# Security tooling inputs. Compile with uv pip compile --universal --generate-hashes.
+setuptools==80.10.2
+mythril==0.24.8
+solc-select==1.2.0

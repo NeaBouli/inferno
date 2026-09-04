@@ -149,7 +149,17 @@ The ecosystem is open and permissionless. Any product can integrate IFR Lock.
 
 - Historical coverage snapshot: 91% branches / 99% statements for the contract subset recorded in `docs/COVERAGE_REPORT.md`; not a current full-repository coverage claim
 - GitHub Actions CI contains scoped workflows for contracts/tooling, Benefits Network, SDK, Creator Gateway, Points Backend, AI Copilot, dashboards, Telegram bot, wallet prototype, documentation and security checks. Deployment availability is verified separately and must not be inferred from a passing source-validation workflow.
-- Slither security audit: 0 high/critical findings
+- Slither CI analyzes all 21 production Solidity sources and fails on every
+  Critical signal and every new, changed or stale High signal. The current baseline contains six reviewed
+  signals with an explicit classification and rationale. Under the pinned
+  toolchain there are no unreviewed High signals and no reported Critical
+  signals. See [`audit/slither-high-baseline.json`](audit/slither-high-baseline.json).
+- The complementary Mythril CI candidate performs bounded symbolic execution
+  over all 17 concrete production contracts with pinned Mythril 0.24.8 and
+  solc 0.8.28. The verified local run reported no signals at any severity; the
+  gate fails closed on tool/compiler errors and every Critical, High or Medium
+  signal. It runs for relevant contract/tooling changes, weekly and manually;
+  this is bounded evidence, not a complete execution proof.
 - Internal security audit: 0 FAIL, 20 active WARN, 1 fixed, 81 PASS ([full report](docs/SECURITY_AUDIT_SKYWALKER.md))
 - App security review: 12 findings (2 CRITICAL, 5 HIGH — all fixed) ([full report](docs/APP_SECURITY_REVIEW.md))
 - **Bootstrap security review (13.03.2026):** BootstrapVaultV3 + InfernoToken + FeeRouterV1 + Governance — 11/14 secure, 3/14 low risk, 0 critical ([full report](audit/BOOTSTRAP_SECURITY_REVIEW_13032026.md))

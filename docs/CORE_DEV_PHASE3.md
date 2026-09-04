@@ -13,7 +13,7 @@
 | **File** | `contracts/vault/CommitmentVault.sol` |
 | **Solidity** | ^0.8.20 |
 | **Base** | OpenZeppelin v5 (Ownable, ReentrancyGuard) |
-| **Tests** | 45/45 passing (`test/CommitmentVault.test.js`) |
+| **Tests** | 46/46 passing (`test/CommitmentVault.test.js`) |
 | **ABI** | `abi/CommitmentVault.json` |
 
 ### Features
@@ -109,7 +109,7 @@ constructor(
 | **File** | `contracts/vault/LendingVault.sol` |
 | **Solidity** | ^0.8.20 |
 | **Base** | OpenZeppelin v5 (Ownable, ReentrancyGuard) |
-| **Tests** | 55/55 passing (`test/LendingVault.test.js`) |
+| **Tests** | 56/56 passing (`test/LendingVault.test.js`) |
 | **ABI** | `abi/LendingVault.json` |
 
 ### Features

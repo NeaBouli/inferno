@@ -150,6 +150,7 @@ Contract Addresses (Mainnet):
 Phase 3 (DEPLOYED — April 2026):
 - CommitmentVault: 0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3 — irrevocable lock, 4 condition types, feeExempt active. Wiki: ifrunit.tech/wiki/commitment-vault.html
 - LendingVault: 0x974305Ab0EC905172e697271C3d7d385194EB9DF — IFR lending against ETH collateral, feeExempt active. Wiki: ifrunit.tech/wiki/lending-vault.html
+- Vault safety: a read-only four-hour monitor checks both vault fee exemptions and custody coverage. CommitmentVault balance is compared with totalLocked; LendingVault liquid balance is compared with totalAvailable while totalLent is a borrower-held receivable. Both were exactly covered at Mainnet block 25900438. V2 hardening remains future work.
 - BuybackController: 0x1e0547D50005A4Af66AbD5e6915ebfAA2d711F7c — DEPLOYED 14.04.2026, feeExempt since 16.04.2026 (Proposal #13), feeCollector on FeeRouterV1 since 18.04.2026 (Proposal #14) — 50% buyback+burn / 50% LP deepening, fully active
 - LP Strategy: phased addition, not all 400M at once. Wiki: ifrunit.tech/wiki/lp-strategy.html
 - Ecosystem overview: ifrunit.tech/wiki/ecosystem.html
