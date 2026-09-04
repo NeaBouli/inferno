@@ -154,12 +154,13 @@ The ecosystem is open and permissionless. Any product can integrate IFR Lock.
   signals with an explicit classification and rationale. Under the pinned
   toolchain there are no unreviewed High signals and no reported Critical
   signals. See [`audit/slither-high-baseline.json`](audit/slither-high-baseline.json).
-- The complementary Mythril CI candidate performs bounded symbolic execution
+- The complementary Mythril CI gate performs bounded symbolic execution
   over all 17 concrete production contracts with pinned Mythril 0.24.8 and
   solc 0.8.28. The verified local run reported no signals at any severity; the
   gate fails closed on tool/compiler errors and every Critical, High or Medium
   signal. It runs for relevant contract/tooling changes, weekly and manually;
-  this is bounded evidence, not a complete execution proof.
+  this is bounded evidence, not a complete execution proof. The gate was
+  integrated through PR #77 after exact-head and Main CI passed.
 - Internal security audit: 0 FAIL, 20 active WARN, 1 fixed, 81 PASS ([full report](docs/SECURITY_AUDIT_SKYWALKER.md))
 - App security review: 12 findings (2 CRITICAL, 5 HIGH — all fixed) ([full report](docs/APP_SECURITY_REVIEW.md))
 - **Bootstrap security review (13.03.2026):** BootstrapVaultV3 + InfernoToken + FeeRouterV1 + Governance — 11/14 secure, 3/14 low risk, 0 critical ([full report](audit/BOOTSTRAP_SECURITY_REVIEW_13032026.md))

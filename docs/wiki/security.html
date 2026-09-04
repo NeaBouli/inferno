@@ -696,7 +696,7 @@
 
       <div class="callout callout-green">
         <p>
-          <strong>Current local candidate result:</strong> 21 production sources &mdash; 0 unreviewed High signals, 6 reviewed High signals explicitly baselined, 0 Critical signals reported by the pinned toolchain. The historical initial run recorded 51 detections, 15 fixes and 36 accepted informational or false-positive findings.
+          <strong>Current CI baseline:</strong> 21 production sources &mdash; 0 unreviewed High signals, 6 reviewed High signals explicitly baselined, 0 Critical signals reported by the pinned toolchain. The gate was integrated through PR #77 after exact-head and Main CI passed. The historical initial run recorded 51 detections, 15 fixes and 36 accepted informational or false-positive findings.
         </p>
       </div>
 
@@ -712,7 +712,7 @@
       <h3>Complementary Mythril Analysis</h3>
 
       <p>
-        A separate local CI candidate uses a hash-locked Python dependency set with <strong>Mythril v0.24.8</strong> and setuptools 80.10.2 plus a repository-pinned SHA-256 for the Linux amd64 solc 0.8.28 artifact. It performs bounded symbolic execution of all 17 concrete production contracts. Four complete local runs on 4 September 2026 reported <strong>zero signals at any severity</strong> and completed in roughly six to seven minutes.
+        A separate bounded CI gate uses a hash-locked Python dependency set with <strong>Mythril v0.24.8</strong> and setuptools 80.10.2 plus a repository-pinned SHA-256 for the Linux amd64 solc 0.8.28 artifact. It performs bounded symbolic execution of all 17 concrete production contracts. Four complete local runs on 4 September 2026 reported <strong>zero signals at any severity</strong> and completed in roughly six to seven minutes. The gate was integrated through PR #77 after exact-head and Main CI passed.
       </p>
 
       <div class="callout callout-green">

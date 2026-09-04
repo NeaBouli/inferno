@@ -12,8 +12,9 @@
 | #5 | @nomicfoundation/hardhat-verify | 2.1.3 | 3.0.22 | Erledigt 29.07.2026 | - |
 | #7 | chai | 4.5.0 | 6.2.2 | Erledigt 29.07.2026 | - |
 | #4 | ethers | 5.8.0 | 6.17.0 | Erledigt 29.07.2026 | - |
-| #74 | hardhat | 3.12.0 | 3.15.0 | Lokal verifiziert 04.09.2026; CI offen | - |
-| #76 | @nomicfoundation/hardhat-verify | 3.0.22 | 3.1.0 | Lokal verifiziert 04.09.2026; CI offen | - |
+| #74 | hardhat | 3.12.0 | 3.15.0 | Integriert via #77 am 04.09.2026; Main-CI gruen | - |
+| #75 | mocha | 11.8.0 | 12.0.0 | Ohne Merge geschlossen 04.09.2026; hardhat-mocha Peer inkompatibel | Auf Upstream-Support warten |
+| #76 | @nomicfoundation/hardhat-verify | 3.0.22 | 3.1.0 | Integriert via #77 am 04.09.2026; Main-CI gruen | - |
 
 ## Migrationsreihenfolge
 
@@ -295,7 +296,7 @@ migration and its full contract-suite evidence exist.
   both `query-string@9.5.1` and `decode-uri-component@0.5.0`, while the full
   production build remains the compatibility gate.
 
-## 2026-09-04 Hardhat Maintenance Candidate
+## 2026-09-04 Hardhat Maintenance Delivery
 
 - Root Hardhat is updated from `3.12.0` to `3.15.0`; the verification plugin
   is updated from `3.0.22` to `3.1.0` in the same bounded toolchain wave.
@@ -307,10 +308,11 @@ migration and its full contract-suite evidence exist.
   the matching native package at runtime.
 - The Verify 3.1 configuration loads and its local task integration is covered;
   no Mainnet verification request was sent during this maintenance change.
-- Complete local verification passes with 642 contract tests, 30 Generator
+- Complete local verification passes with 644 contract tests, 30 Generator
   Engine tests and 36 SDK tests. The root audit remains at eight Low
   development-only findings and zero Moderate, High or Critical findings.
 - Mocha remains at `11.8.0`. Mocha 12 is not install-compatible with the
   current `@nomicfoundation/hardhat-mocha@3.1.0` peer range and must wait for
   upstream plugin support; do not use `--force` or `--legacy-peer-deps`.
-- Exact-head Linux CI remains mandatory before merge.
+- The update was integrated through PR #77. Exact-head and Main Linux CI
+  passed on 4 September 2026. No Mainnet verification request was submitted.
