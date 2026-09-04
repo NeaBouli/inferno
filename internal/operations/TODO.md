@@ -702,6 +702,7 @@ On errors: fix immediately, commit with `seo:` prefix.
       `DEFERRED / LATER`; keine separate Trust-Wallet-Einreichung starten.
 
 ### CI/CD
+- [x] Replace non-blocking Markdown lint with pinned baseline regression gate (3,482 historical findings / 2,174 fingerprints; tracked files only)
 - [x] Set up Slither CI candidate (21 production sources; fail-closed High baseline)
 - [x] Set up Mythril CI candidate (17 concrete production contracts; bounded weekly/manual gate; exact-head Linux CI pending)
 - [ ] Coverage badge in README

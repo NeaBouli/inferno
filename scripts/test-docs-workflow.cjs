@@ -10,6 +10,8 @@ const workflow = fs.readFileSync(workflowPath, "utf8");
 
 for (const watchedPath of [
   "docs/**",
+  "**/*.md",
+  "audit/markdownlint-baseline.json",
   "internal/operations/TODO.md",
   "internal/operations/TODO.html",
   "reports/*.md",
@@ -20,6 +22,8 @@ for (const watchedPath of [
   "scripts/test-status-baseline.cjs",
   "scripts/test-functionality-status.cjs",
   "scripts/test-docs-workflow.cjs",
+  "scripts/check-markdownlint-baseline.cjs",
+  "scripts/test-markdownlint-baseline.cjs",
   "scripts/check-links.js",
   "scripts/test-check-links.cjs",
   "scripts/test-workflow-triggers.cjs",
@@ -36,6 +40,8 @@ for (const watchedPath of [
 
 for (const command of [
   "npm run test:docs-ci",
+  "npm run test:markdownlint-baseline",
+  "npm run check:markdownlint",
   "npm run test:links",
   "npm run test:workflow-triggers",
   "npm run test:roadmap-status-sync",

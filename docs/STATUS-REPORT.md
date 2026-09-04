@@ -202,6 +202,7 @@ Sepolia deployment served as the full testnet validation phase prior to mainnet.
 | Points Backend CI | Push/PR to `apps/points-backend/` | prisma generate + tsc + jest (20 tests) |
 | AI Copilot CI | Push/PR to `apps/ai-copilot/` | tsc + build |
 | Benefits Network CI | Push/PR to `apps/benefits-network/` | test-backend + test-frontend |
+| Docs Validator | Markdown/docs push/PR + weekly | pinned Markdown regression baseline + JSON + links + structure + wallet browser suites |
 
 ---
 

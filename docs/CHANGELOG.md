@@ -1,5 +1,15 @@
 # Changelog
 
+## 4 September 2026 — Markdown Lint Regression Gate
+
+- Replaced the floating global Markdownlint install and unconditional
+  `|| true` with exact `markdownlint-cli@0.49.1` project tooling.
+- Restricted analysis to the 179 Markdown files tracked by Git, excluding
+  dependency and build directories by construction.
+- Recorded the 3,482 historical findings as 2,174 line-independent
+  fingerprints. CI now fails on every baseline change so cleanup and new
+  regressions require explicit review instead of being silently ignored.
+
 ## 4 September 2026 — Bounded Mythril CI Candidate
 
 - Added a hash-locked, path-scoped/weekly/manual Mythril runner for all 17

@@ -38,6 +38,8 @@
     "check:listing-status": "node scripts/check-token-listing-status.js",
     "test:listing-monitor": "node scripts/test-token-listing-status.cjs",
     "test:docs-ci": "node scripts/test-docs-workflow.cjs",
+    "check:markdownlint": "node scripts/check-markdownlint-baseline.cjs",
+    "test:markdownlint-baseline": "node scripts/test-markdownlint-baseline.cjs",
     "test:links": "node scripts/test-check-links.cjs && node scripts/check-links.js",
     "test:workflow-triggers": "node scripts/test-workflow-triggers.cjs",
     "test:roadmap-status-sync": "node scripts/test-roadmap-status-sync.cjs",
@@ -73,6 +75,7 @@
     "chai": "6.2.2",
     "dotenv": "^17.3.1",
     "hardhat": "3.15.0",
+    "markdownlint-cli": "0.49.1",
     "mocha": "11.8.0",
     "serve": "^14.2.6"
   },
