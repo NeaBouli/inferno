@@ -210,6 +210,11 @@ the existing Update Stats and Post-Deploy repository update workflows retain
 policy gate also rejects undeclared workflow-inventory changes and job-level
 permission overrides.
 
+The Security Audit workflow additionally fixes its runner at Ubuntu 24.04 and
+pins Rust 1.88.0 plus its Cargo, Python, Slither and Solidity audit tools. A
+repository policy test rejects floating action references, runners and
+top-level audit tools.
+
 ---
 
 ## Documentation

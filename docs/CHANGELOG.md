@@ -1,5 +1,13 @@
 # Changelog
 
+## 4 September 2026 — Security Audit Toolchain Pins
+
+- Pinned Security Audit jobs to the reviewed Ubuntu 24.04 runner.
+- Pinned future Cargo and Python audit paths to Rust 1.88.0,
+  `cargo-audit` 0.22.2 with Cargo lock resolution and `pip-audit` 2.10.1.
+- Added a regression test that rejects floating action references, runners or
+  top-level audit tools in the Security Audit workflow.
+
 ## 4 September 2026 — CI Token Least Privilege
 
 - Added explicit top-level GitHub token permissions to every workflow.

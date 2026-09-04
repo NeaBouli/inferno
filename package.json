@@ -45,6 +45,7 @@
     "test:workflow-permissions": "node scripts/test-workflow-permissions.cjs",
     "test:roadmap-status-sync": "node scripts/test-roadmap-status-sync.cjs",
     "test:security-reporting": "node scripts/test-security-reporting-config.cjs",
+    "test:security-toolchain-pins": "node scripts/test-security-toolchain-pins.cjs",
     "test:gitleaks-config": "node scripts/test-gitleaks-config.cjs",
     "check:slither": "node scripts/check-slither-baseline.cjs",
     "test:slither-baseline": "node scripts/test-slither-baseline.cjs",
