@@ -24,8 +24,8 @@ governance activation gate is complete.
 - [x] 544 total tests (521 protocol + 57 ecosystem)
 - [x] 91% branch coverage, 99% statement coverage
 - [x] Initial scoped Slither remediation: 0 high/critical findings at the time
-- [x] Current recursive Slither CI candidate: 21 production sources, 0 unreviewed High, 6 reviewed High signals baselined
-- [x] Bounded Mythril CI candidate: 17 concrete production contracts, 0 signals in the verified local run; exact-head Linux CI pending
+- [x] Current recursive Slither CI gate: 21 production sources, 0 unreviewed High, 6 reviewed High signals baselined; PR #77 and Main CI green
+- [x] Bounded Mythril CI gate: 17 concrete production contracts, 0 signals in the verified bounded run; PR #77 and Main CI green
 - [x] Full internal security audits completed, including static analysis and documented findings
 - [x] Community Audit open via GitHub Issues
 
