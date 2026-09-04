@@ -1,112 +1,142 @@
 /**
- * Dead Link Checker — scans docs/ for broken internal links.
+ * Internal documentation link checker.
  *
- * Usage: node scripts/check-links.js
- *
- * Checks:
- * - HTML files in docs/ and docs/wiki/ for href/src references
- * - Internal links (relative paths) resolve to existing files
- * - Markdown files in docs/ for [text](path) links to local files
- *
- * Does NOT check external URLs (https://...).
+ * Site-root paths resolve from docs/, while relative Markdown paths may still
+ * reach repository files through ../. External and runtime-generated URLs are
+ * intentionally outside this checker's scope.
  */
 
-const fs = require("fs");
-const path = require("path");
+const fs = require("node:fs");
+const path = require("node:path");
 
-const DOCS_DIR = path.join(__dirname, "..", "docs");
 const ROOT_DIR = path.join(__dirname, "..");
+const DOCS_DIR = path.join(ROOT_DIR, "docs");
 
-let brokenCount = 0;
-let checkedCount = 0;
+function normalizeLocalLink(rawLink) {
+  let link = String(rawLink || "").trim();
+  if (!link || link.startsWith("#") || link.startsWith("//")) return null;
+  if (/^[a-z][a-z\d+.-]*:/i.test(link)) return null;
+  if (/\$\{|{{|}}|<%|%>/.test(link)) return null;
 
-function scanHtmlFile(filePath) {
-  const content = fs.readFileSync(filePath, "utf-8");
-  const dir = path.dirname(filePath);
+  if (link.startsWith("<") && link.endsWith(">")) {
+    link = link.slice(1, -1).trim();
+  }
 
-  // Match href="..." and src="..."
-  const linkRegex = /(?:href|src)=["']([^"'#]+?)["']/g;
+  link = link.replaceAll("&amp;", "&");
+  link = link.split("#", 1)[0].split("?", 1)[0].trim();
+  if (!link) return null;
+
+  try {
+    return decodeURIComponent(link);
+  } catch {
+    return link;
+  }
+}
+
+function resolveLocalTarget(filePath, link, docsDir = DOCS_DIR) {
+  return link.startsWith("/")
+    ? path.resolve(docsDir, `.${link}`)
+    : path.resolve(path.dirname(filePath), link);
+}
+
+function targetExists(targetPath) {
+  if (!fs.existsSync(targetPath)) return false;
+  const stat = fs.statSync(targetPath);
+  if (stat.isFile()) return true;
+  return stat.isDirectory() && fs.existsSync(path.join(targetPath, "index.html"));
+}
+
+function isPathWithin(basePath, targetPath) {
+  const relative = path.relative(basePath, targetPath);
+  return relative === "" || (!relative.startsWith("..") && !path.isAbsolute(relative));
+}
+
+function createState() {
+  return { broken: [], checkedCount: 0 };
+}
+
+function checkLink(filePath, rawLink, state, rootDir, docsDir) {
+  const link = normalizeLocalLink(rawLink);
+  if (!link) return;
+
+  const target = resolveLocalTarget(filePath, link, docsDir);
+  state.checkedCount += 1;
+  const allowedBase = link.startsWith("/") ? docsDir : rootDir;
+  if (!isPathWithin(allowedBase, target) || !targetExists(target)) {
+    state.broken.push({
+      file: path.relative(rootDir, filePath),
+      link: rawLink,
+    });
+  }
+}
+
+function scanHtmlFile(filePath, state, rootDir, docsDir) {
+  const content = fs.readFileSync(filePath, "utf8");
+  const tagRegex = /<[a-z][^>]*>/gi;
+  const linkRegex = /(?:href|src)\s*=\s*["']([^"']+)["']/gi;
+  let tagMatch;
+  while ((tagMatch = tagRegex.exec(content)) !== null) {
+    let linkMatch;
+    linkRegex.lastIndex = 0;
+    while ((linkMatch = linkRegex.exec(tagMatch[0])) !== null) {
+      checkLink(filePath, linkMatch[1], state, rootDir, docsDir);
+    }
+  }
+}
+
+function scanMarkdownFile(filePath, state, rootDir, docsDir) {
+  const content = fs.readFileSync(filePath, "utf8");
+  const linkRegex = /\[(?:[^\]]+)]\(([^)]+)\)/g;
   let match;
-
   while ((match = linkRegex.exec(content)) !== null) {
-    const link = match[1];
-
-    // Skip external URLs, data URIs, mailto, javascript
-    if (
-      link.startsWith("http://") ||
-      link.startsWith("https://") ||
-      link.startsWith("data:") ||
-      link.startsWith("mailto:") ||
-      link.startsWith("javascript:") ||
-      link.startsWith("//")
-    ) {
-      continue;
-    }
-
-    const resolved = path.resolve(dir, link);
-    checkedCount++;
-
-    if (!fs.existsSync(resolved)) {
-      console.log(`  BROKEN: ${path.relative(ROOT_DIR, filePath)} -> ${link}`);
-      brokenCount++;
-    }
+    checkLink(filePath, match[1], state, rootDir, docsDir);
   }
 }
 
-function scanMarkdownFile(filePath) {
-  const content = fs.readFileSync(filePath, "utf-8");
-  const dir = path.dirname(filePath);
-
-  // Match [text](path) but not external URLs
-  const mdLinkRegex = /\[(?:[^\]]+)\]\(([^)#]+?)\)/g;
-  let match;
-
-  while ((match = mdLinkRegex.exec(content)) !== null) {
-    const link = match[1];
-
-    // Skip external URLs
-    if (link.startsWith("http://") || link.startsWith("https://")) {
-      continue;
-    }
-
-    const resolved = path.resolve(dir, link);
-    checkedCount++;
-
-    if (!fs.existsSync(resolved)) {
-      console.log(`  BROKEN: ${path.relative(ROOT_DIR, filePath)} -> ${link}`);
-      brokenCount++;
-    }
-  }
-}
-
-function scanDirectory(dirPath) {
+function scanDirectory(dirPath, state, rootDir, docsDir) {
   if (!fs.existsSync(dirPath)) return;
 
-  const entries = fs.readdirSync(dirPath, { withFileTypes: true });
-
-  for (const entry of entries) {
+  for (const entry of fs.readdirSync(dirPath, { withFileTypes: true })) {
     const fullPath = path.join(dirPath, entry.name);
-
     if (entry.isDirectory()) {
-      // Recurse into subdirectories (wiki/, assets/, etc.)
-      scanDirectory(fullPath);
+      scanDirectory(fullPath, state, rootDir, docsDir);
     } else if (entry.name.endsWith(".html")) {
-      scanHtmlFile(fullPath);
+      scanHtmlFile(fullPath, state, rootDir, docsDir);
     } else if (entry.name.endsWith(".md")) {
-      scanMarkdownFile(fullPath);
+      scanMarkdownFile(fullPath, state, rootDir, docsDir);
     }
   }
 }
 
-console.log("Dead Link Check — scanning docs/\n");
-scanDirectory(DOCS_DIR);
-
-console.log(`\nChecked: ${checkedCount} links`);
-console.log(`Broken:  ${brokenCount}`);
-
-if (brokenCount > 0) {
-  console.log("\nFix the broken links above.");
-  process.exit(1);
-} else {
-  console.log("\nAll links OK.");
+function checkDocumentationLinks({ rootDir = ROOT_DIR, docsDir = DOCS_DIR } = {}) {
+  const state = createState();
+  scanDirectory(docsDir, state, rootDir, docsDir);
+  return state;
 }
+
+function main() {
+  console.log("Internal Link Check - scanning docs/\n");
+  const result = checkDocumentationLinks();
+  for (const broken of result.broken) {
+    console.log(`  BROKEN: ${broken.file} -> ${broken.link}`);
+  }
+  console.log(`\nChecked: ${result.checkedCount} links`);
+  console.log(`Broken:  ${result.broken.length}`);
+
+  if (result.broken.length > 0) {
+    console.log("\nFix the broken links above.");
+    process.exitCode = 1;
+  } else {
+    console.log("\nAll links OK.");
+  }
+}
+
+if (require.main === module) main();
+
+module.exports = {
+  checkDocumentationLinks,
+  normalizeLocalLink,
+  resolveLocalTarget,
+  isPathWithin,
+  targetExists,
+};

@@ -20,6 +20,8 @@ for (const watchedPath of [
   "scripts/test-status-baseline.cjs",
   "scripts/test-functionality-status.cjs",
   "scripts/test-docs-workflow.cjs",
+  "scripts/check-links.js",
+  "scripts/test-check-links.cjs",
   "scripts/test-workflow-triggers.cjs",
   "scripts/test-roadmap-status-sync.cjs",
   "tests/browser/**",
@@ -34,6 +36,7 @@ for (const watchedPath of [
 
 for (const command of [
   "npm run test:docs-ci",
+  "npm run test:links",
   "npm run test:workflow-triggers",
   "npm run test:roadmap-status-sync",
   "npm run test:content-trust",

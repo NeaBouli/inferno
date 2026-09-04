@@ -12,6 +12,8 @@ on:
       - 'apps/ai-copilot/src/context/ifr-knowledge.ts'
       - 'apps/ai-copilot/src/context/wiki-content.json'
       - 'scripts/build-wiki-rag.js'
+      - 'scripts/check-links.js'
+      - 'scripts/test-check-links.cjs'
       - 'scripts/test-benefits-doc-consistency.cjs'
       - 'scripts/test-content-trust.cjs'
       - 'scripts/test-status-baseline.cjs'
@@ -40,6 +42,8 @@ on:
       - 'apps/ai-copilot/src/context/ifr-knowledge.ts'
       - 'apps/ai-copilot/src/context/wiki-content.json'
       - 'scripts/build-wiki-rag.js'
+      - 'scripts/check-links.js'
+      - 'scripts/test-check-links.cjs'
       - 'scripts/test-benefits-doc-consistency.cjs'
       - 'scripts/test-content-trust.cjs'
       - 'scripts/test-status-baseline.cjs'
@@ -105,22 +109,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: '22'
 
-      - name: Check for broken internal doc references
-        run: |
-          EXIT=0
-          for f in docs/*.md; do
-            [ -f "$f" ] || continue
-            # Extract markdown links to local files (not http/https)
-            grep -oP '\[.*?\]\(\K[^)]+' "$f" 2>/dev/null | grep -v '^http' | while read -r link; do
-              # Resolve relative to the file's directory
-              dir=$(dirname "$f")
-              target="$dir/$link"
-              if [ ! -f "$target" ] && [ ! -f "$link" ]; then
-                echo "::warning file=$f::Broken link: $link"
-              fi
-            done
-          done
+      - name: Check internal documentation links
+        run: npm run test:links
 
   validate-structure:
     name: Docs Structure

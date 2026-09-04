@@ -38,6 +38,7 @@
     "check:listing-status": "node scripts/check-token-listing-status.js",
     "test:listing-monitor": "node scripts/test-token-listing-status.cjs",
     "test:docs-ci": "node scripts/test-docs-workflow.cjs",
+    "test:links": "node scripts/test-check-links.cjs && node scripts/check-links.js",
     "test:workflow-triggers": "node scripts/test-workflow-triggers.cjs",
     "test:roadmap-status-sync": "node scripts/test-roadmap-status-sync.cjs",
     "test:security-reporting": "node scripts/test-security-reporting-config.cjs",
