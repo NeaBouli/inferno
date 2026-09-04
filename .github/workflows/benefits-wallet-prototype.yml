@@ -35,5 +35,6 @@ jobs:
           cache: npm
           cache-dependency-path: apps/benefits-wallet-prototype/package-lock.json
       - run: npm ci
-      - run: npm audit --audit-level=moderate
+      - run: node ../../scripts/check-benefits-wallet-advisory-baseline.cjs
       - run: npm test
+      - run: npm run test:bundle-boundary

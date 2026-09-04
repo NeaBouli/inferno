@@ -277,9 +277,17 @@ migration and its full contract-suite evidence exist.
 - Patch releases already accepted by upstream ranges are updated in lockfiles
   without adding permanent overrides. This keeps future compatible security
   updates available.
-- The Benefits wallet prototype's existing WalletConnect/Wagmi advisory chain
-  remains a separate major-migration task. Do not use `npm audit fix --force`
-  to cross that wallet compatibility boundary.
+- The Benefits wallet prototype pins transitive `query-string@9.5.1` to remove
+  `GHSA-vcc3-ghjq-m6fr` without forcing an incompatible Wagmi 3 upgrade.
+  `GHSA-528h-pc64-c93x`, published on 2026-09-03, remains temporarily limited
+  to `stream-json@1.9.1` through Coinbase CDP's Solana support
+  (`@coinbase/cdp-core -> @solana/web3.js -> jayson`). The prototype is a
+  browser-only Sepolia evaluation and its production bundle does not contain
+  Jayson or stream-json; a dedicated post-build boundary check enforces that.
+  The dedicated audit baseline fails closed on any different package, path,
+  severity or advisory identity. Replace this narrow exception as soon as
+  Coinbase/Solana/Jayson expose a compatible patched dependency; do not force
+  `stream-json@3`, whose ESM API is incompatible with Jayson 4.
 - The token dashboard pins transitive `query-string@9.5.1` to remove
   `GHSA-vcc3-ghjq-m6fr` without forcing the incompatible Wagmi 3 upgrade that
   npm proposes. WalletConnect 2.21 bundles the affected utility code and does
