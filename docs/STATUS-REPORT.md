@@ -24,6 +24,10 @@ that a governance-gated contract path is active.
   longer active root dependencies; native Hardhat 3 coverage is used.
 - Current repository verification: contracts `644/644`, Generator Engine
   `30/30`, IFR SDK `36/36`.
+- Current local static-analysis candidates: recursive Slither over 21
+  production sources and bounded Mythril symbolic execution over 17 concrete
+  production contracts. Mythril reported zero signals at any severity in the
+  verified local run; exact-head Linux CI is still required.
 - Landing/Wiki wallet browser tests `20/20` and Web3 write-path browser tests
   `24/24` passed. The complete Benefits preflight passed.
 - Benefits physical device/wallet acceptance remains `1/10` passed and `9`

@@ -703,7 +703,7 @@ On errors: fix immediately, commit with `seo:` prefix.
 
 ### CI/CD
 - [x] Set up Slither CI candidate (21 production sources; fail-closed High baseline)
-- [ ] Set up Mythril CI
+- [x] Set up Mythril CI candidate (17 concrete production contracts; bounded weekly/manual gate; exact-head Linux CI pending)
 - [ ] Coverage badge in README
 - [ ] Recruit 2-3 repo maintainers
 

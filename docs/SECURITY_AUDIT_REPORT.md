@@ -48,9 +48,16 @@ Current automated tooling results must be read precisely: the default `npx hardh
 - Slither v0.11.5 direct command: `slither contracts/ --print human-summary` failed because direct `solc` resolution did not locate OpenZeppelin imports under `node_modules`.
 - Slither v0.11.5 Hardhat-project command: `slither . --print human-summary` compiled and analyzed 77 contracts.
 - Slither Hardhat-project summary: 2,617 source SLOC, 43 source contracts, 5 optimization issues, 117 informational issues, 94 low issues, 43 medium issues, and 9 high issues.
-- Mythril: not installed in the local environment (`myth` and `mythril` commands not found), so no fresh Mythril result is claimed.
+- At the original report run, Mythril was not installed, so the historical report made no Mythril claim. A 4 September 2026 addendum now records a separate bounded local candidate run below.
 
 The Slither Hardhat-project high/medium counts are treated as automated signals requiring detector-level triage. They are not manually confirmed as exploitable Critical or High findings in this report.
+
+#### 4 September 2026 Tooling Addendum
+
+- Mythril 0.24.8 with setuptools 80.10.2 and solc 0.8.28 analyzed all 17 concrete production contracts individually.
+- Each contract was bounded to two transactions and 30 seconds of symbolic execution, with two analyses running concurrently and no on-chain lookup.
+- Four complete local runs finished in roughly six to seven minutes; all reported zero signals at any severity. The latest runs used the hash-locked dependency set and corrected process-tree timeout handling. Compiler resolution, execution metadata and report errors were checked fail-closed.
+- This result is complementary automated evidence only. It is neither exhaustive state-space coverage nor an independent professional audit.
 
 ### Manual Review
 

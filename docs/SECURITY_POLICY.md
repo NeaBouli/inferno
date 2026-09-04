@@ -60,6 +60,7 @@ and are credited in the Hall of Fame (see SECURITY.md).
 | Audit Type | Status | Result |
 |------------|--------|--------|
 | Slither Static Analysis | CI candidate | 21 production sources; 0 unreviewed High, 6 reviewed High signals baselined, 0 Critical signals reported by the pinned toolchain |
+| Mythril Symbolic Analysis | CI candidate | 17 concrete production contracts; bounded to two transactions and 30 seconds per contract; 0 signals at any severity in the verified local run |
 | Internal repository audits | Completed | Published findings and remediation records |
 | Professional third-party audit | Pending | Independent engagement remains open |
 | Contract Tests | 644 current | Passing in the 4 September 2026 local integration audit |
@@ -70,6 +71,14 @@ does not suppress analysis: CI fails if a High signal is new, changes, or
 disappears without an explicit baseline review. One entry, the unchecked
 ERC-20 return value in the already deployed `BuybackController.withdrawIFR()`
 source, is retained as a future V2 hardening item.
+
+The Mythril candidate is intentionally a separate path-scoped, weekly and
+manual workflow. It uses a hash-locked Python dependency set with Mythril
+0.24.8 and setuptools 80.10.2 plus a repository-pinned SHA-256 for the Linux
+amd64 solc 0.8.28 artifact, rejects hidden
+compiler/tool errors even when Mythril exits successfully, and gates every
+Critical, High or Medium signal. Its bounded search is complementary evidence;
+it is not a proof that every state or multi-transaction sequence is safe.
 
 Current browser, application and physical-device evidence is tracked separately
 in [`CURRENT_FUNCTIONALITY_STATUS.md`](CURRENT_FUNCTIONALITY_STATUS.md).

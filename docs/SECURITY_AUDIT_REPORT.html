@@ -113,9 +113,16 @@ li { margin: 4px 0; }
 <li>Slither v0.11.5 direct command: <code>slither contracts/ --print human-summary</code> failed because direct <code>solc</code> resolution did not locate OpenZeppelin imports under <code>node_modules</code>.</li>
 <li>Slither v0.11.5 Hardhat-project command: <code>slither . --print human-summary</code> compiled and analyzed 77 contracts.</li>
 <li>Slither Hardhat-project summary: 2,617 source SLOC, 43 source contracts, 5 optimization issues, 117 informational issues, 94 low issues, 43 medium issues, and 9 high issues.</li>
-<li>Mythril: not installed in the local environment (<code>myth</code> and <code>mythril</code> commands not found), so no fresh Mythril result is claimed.</li>
+<li>At the original report run, Mythril was not installed, so the historical report made no Mythril claim. A 4 September 2026 addendum now records a separate bounded local candidate run below.</li>
 </ul>
 <p>The Slither Hardhat-project high/medium counts are treated as automated signals requiring detector-level triage. They are not manually confirmed as exploitable Critical or High findings in this report.</p>
+<h4>4 September 2026 Tooling Addendum</h4>
+<ul>
+<li>Mythril 0.24.8 with setuptools 80.10.2 and solc 0.8.28 analyzed all 17 concrete production contracts individually.</li>
+<li>Each contract was bounded to two transactions and 30 seconds of symbolic execution, with two analyses running concurrently and no on-chain lookup.</li>
+<li>Four complete local runs finished in roughly six to seven minutes; all reported zero signals at any severity. The latest runs used the hash-locked dependency set and corrected process-tree timeout handling. Compiler resolution, execution metadata and report errors were checked fail-closed.</li>
+<li>This result is complementary automated evidence only. It is neither exhaustive state-space coverage nor an independent professional audit.</li>
+</ul>
 <h3>Manual Review</h3>
 <ul>
 <li>Reentrancy checks across token transfer paths, ETH transfer paths, router calls, and state-update ordering.</li>

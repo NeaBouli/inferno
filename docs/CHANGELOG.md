@@ -1,5 +1,19 @@
 # Changelog
 
+## 4 September 2026 — Bounded Mythril CI Candidate
+
+- Added a hash-locked, path-scoped/weekly/manual Mythril runner for all 17
+  concrete production contracts with two-transaction,
+  30-second-per-contract symbolic analysis.
+- Made the runner fail closed on process timeouts, malformed reports, missing
+  execution evidence and hidden compiler/tool errors even when Mythril exits
+  with status zero.
+- Hash-locked the complete Python toolchain and pinned the official Linux
+  amd64 solc 0.8.28 artifact digest.
+- Four complete local runs finished in roughly six to seven minutes; all
+  reported zero signals at any severity. This bounded result does not replace an independent
+  professional audit or prove complete state-space coverage.
+
 ## 4 September 2026 — Recursive Slither CI Candidate
 
 - Added a pinned direct-solc Slither runner covering all 21 production

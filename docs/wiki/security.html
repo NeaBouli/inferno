@@ -7,7 +7,7 @@
   <link rel="alternate" hreflang="x-default" href="https://ifrunit.tech/wiki/security.html">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Security &mdash; Inferno (IFR) Documentation</title>
-  <meta name="keywords" content="security audit, Slither, test coverage, OpenZeppelin, immutable contracts">
+  <meta name="keywords" content="security audit, Slither, Mythril, test coverage, OpenZeppelin, immutable contracts">
   <meta name="description" content="Full internal IFR Protocol audit record: contract review, static analysis, remediation evidence and automated tests. Independent professional third-party audit pending.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -708,6 +708,18 @@
         <li><strong>Current CI policy:</strong> every Critical signal and every new, changed or stale High fingerprint fails closed</li>
         <li><strong>Current reviewed baseline:</strong> six signals, including one future V2 hardening item for the unchecked ERC-20 return in <code>BuybackController.withdrawIFR()</code></li>
       </ul>
+
+      <h3>Complementary Mythril Analysis</h3>
+
+      <p>
+        A separate local CI candidate uses a hash-locked Python dependency set with <strong>Mythril v0.24.8</strong> and setuptools 80.10.2 plus a repository-pinned SHA-256 for the Linux amd64 solc 0.8.28 artifact. It performs bounded symbolic execution of all 17 concrete production contracts. Four complete local runs on 4 September 2026 reported <strong>zero signals at any severity</strong> and completed in roughly six to seven minutes.
+      </p>
+
+      <div class="callout callout-green">
+        <p>
+          The workflow runs for relevant contract/tooling changes, weekly or on manual request, allows two transactions and 30 seconds of symbolic execution per contract, performs no on-chain lookup, and fails closed on hidden compiler/tool errors or any Critical, High or Medium signal. This is complementary evidence, not exhaustive state-space coverage or a professional third-party audit.
+        </p>
+      </div>
 
       <h3>Fixes Applied</h3>
 
