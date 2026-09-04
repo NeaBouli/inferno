@@ -42,6 +42,7 @@
     "test:markdownlint-baseline": "node scripts/test-markdownlint-baseline.cjs",
     "test:links": "node scripts/test-check-links.cjs && node scripts/check-links.js",
     "test:workflow-triggers": "node scripts/test-workflow-triggers.cjs",
+    "test:workflow-permissions": "node scripts/test-workflow-permissions.cjs",
     "test:roadmap-status-sync": "node scripts/test-roadmap-status-sync.cjs",
     "test:security-reporting": "node scripts/test-security-reporting-config.cjs",
     "test:gitleaks-config": "node scripts/test-gitleaks-config.cjs",

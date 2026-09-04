@@ -70,6 +70,9 @@ on:
   schedule:
     - cron: '0 6 * * 1'
 
+permissions:
+  contents: read
+
 jobs:
   validate-markdown:
     name: Markdown Lint

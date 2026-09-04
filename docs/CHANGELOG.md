@@ -1,5 +1,16 @@
 # Changelog
 
+## 4 September 2026 — CI Token Least Privilege
+
+- Added explicit top-level GitHub token permissions to every workflow.
+- Restricted build, test, documentation and monitoring workflows to
+  `contents: read`; the Security Audit additionally receives
+  `pull-requests: read` for Gitleaks PR commit discovery.
+- Preserved `contents: write` only for the existing Update Stats and
+  Post-Deploy repository update workflows.
+- Added a repository policy test covering a deliberate 16-workflow inventory
+  and rejecting missing, unrelated or job-level token scopes.
+
 ## 4 September 2026 — Markdown Lint Regression Gate
 
 - Replaced the floating global Markdownlint install and unconditional

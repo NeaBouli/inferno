@@ -702,6 +702,7 @@ On errors: fix immediately, commit with `seo:` prefix.
       `DEFERRED / LATER`; keine separate Trust-Wallet-Einreichung starten.
 
 ### CI/CD
+- [x] Enforce explicit least-privilege GitHub token scopes across the deliberate 16-workflow inventory, including job-level override rejection
 - [x] Replace non-blocking Markdown lint with pinned baseline regression gate (3,482 historical findings / 2,174 fingerprints; tracked files only)
 - [x] Set up Slither CI candidate (21 production sources; fail-closed High baseline)
 - [x] Set up Mythril CI candidate (17 concrete production contracts; bounded weekly/manual gate; exact-head Linux CI pending)

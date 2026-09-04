@@ -204,6 +204,12 @@ Sepolia deployment served as the full testnet validation phase prior to mainnet.
 | Benefits Network CI | Push/PR to `apps/benefits-network/` | test-backend + test-frontend |
 | Docs Validator | Markdown/docs push/PR + weekly | pinned Markdown regression baseline + JSON + links + structure + wallet browser suites |
 
+All 16 workflows declare explicit top-level `GITHUB_TOKEN` permissions. Only
+the existing Update Stats and Post-Deploy repository update workflows retain
+`contents: write`; build, test and monitoring workflows are read-only. The
+policy gate also rejects undeclared workflow-inventory changes and job-level
+permission overrides.
+
 ---
 
 ## Documentation
