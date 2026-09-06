@@ -132,6 +132,17 @@ governance activation gate is complete.
       can be one signal among several. Add rotation/term limits and emergency replacement rules before adding signers.
       Full plan: [Community Signer Expansion Plan](GOVERNANCE_SIGNER_EXPANSION_PLAN.md)
 - [ ] Builder token voting rights
+- [ ] Public Council agenda and vote-log portal
+  - Undated exchange-participation agenda is published as a discussion draft:
+    token incentives, eligible funding source/caps and exchange governance
+    participation remain unapproved.
+  - Build only after threat modelling and security review: wallet challenge,
+    EOA and EIP-1271 verification, current signer eligibility snapshot,
+    replay protection and an append-only public result log.
+  - The portal must never custody keys or execute TreasurySafe/Governance
+    actions automatically. Binding execution remains a separate 3-of-5 Safe
+    proposal plus the 48-hour timelock.
+  - Agenda: <https://ifrunit.tech/wiki/governance.html#council-agenda>
 - [ ] Protocol revenue sharing model
 - [ ] Full DAO transition: Admin → Multisig → DAO
 

@@ -4,6 +4,13 @@
 **Project:** Inferno Protocol ($IFR)
 **Date:** 08.03.2026
 
+> **Current status (6 September 2026):** This is a historical Phase 4 concept,
+> not a deployed voting system. Current binding protocol actions use
+> TreasurySafe 3-of-5 and the Governance contract's 48-hour timelock. The bot
+> does not hold a Council private key or execute proposals autonomously.
+> Current agenda items and the planned wallet-authenticated vote log are
+> tracked at <https://ifrunit.tech/wiki/governance.html#council-agenda>.
+
 ---
 
 ## 1. Executive Summary
@@ -182,6 +189,27 @@ A single bot serves both chambers with strict role separation.
 
 This system would be a globally unique integration of Telegram into a deflationary asset and could serve as a blueprint for other communities. The core team retains admin control over all security-relevant processes.
 
+## 8. Current Secure Implementation Direction
+
+The future Council portal supersedes the v1.0 bot-executor assumption above:
+
+- the backend must not hold a Council, Safe or protocol-admin private key;
+- an eligible signer authenticates with a domain-bound, expiring EIP-4361
+  challenge;
+- EOA signatures and Safe smart-account signatures are verified separately,
+  including EIP-1271 support;
+- eligibility is fixed to a block-numbered Council/Safe-owner snapshot for
+  each agenda version;
+- nonces are cryptographically random, single-use and protected against replay;
+- signed ballots or their verifiable hashes are written to an append-only
+  public vote log; and
+- a vote result never executes automatically. Binding action still requires a
+  separate TreasurySafe 3-of-5 proposal and the Governance contract's 48-hour
+  timelock.
+
+Implementation remains blocked on threat modelling, independent security
+review and desktop/mobile multi-wallet acceptance tests.
+
 ---
 
-*As of: 08.03.2026 — IFR Governance Concept v1.0*
+*Original concept: 08.03.2026 — secure direction updated 06.09.2026*

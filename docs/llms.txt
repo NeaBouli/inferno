@@ -19,6 +19,7 @@ IFR includes an AI Copilot assistant. Free users can ask general protocol questi
 - Builder routing: https://ifrunit.tech/wiki/integration.html, https://ifrunit.tech/wiki/business-onboarding.html, https://ifrunit.tech/wiki/ecosystem.html
 - Developer routing: https://ifrunit.tech/wiki/contracts.html, https://ifrunit.tech/wiki/integration.html, https://ifrunit.tech/wiki/wallet-guide.html
 - Community routing: https://ifrunit.tech/wiki/governance.html, https://ifrunit.tech/wiki/community-signer-expansion.html, https://ifrunit.tech/wiki/transparency.html
+- Current Council agenda and planned transparent vote log: https://ifrunit.tech/wiki/governance.html#council-agenda (discussion drafts are not approved votes or spending authority)
 - Important distinction: CommitmentVault and LendingVault Wiki pages are documentation/reference pages; current user-facing Lock IFR and Create offer execution is intended to happen on Web3.
 - Canonical capability status: https://ifrunit.tech/CURRENT_FUNCTIONALITY_STATUS.md
 

@@ -25,7 +25,11 @@ requireText('docs/EXCHANGE_FEE_EXEMPTION_POLICY.md', [
   'TreasurySafe 3-of-5',
   '48-hour timelock',
   'setFeeExempt(exchangeAddress, true)',
-  'No CEX address activated as of 26 August 2026'
+  'No CEX address activated as of 26 August 2026',
+  'Open Council Agenda: Exchange Participation',
+  'These figures are agenda ceilings, not allocations',
+  'no exchange voting seat',
+  'TreasurySafe signer or execution access'
 ]);
 
 requireText('docs/index.html', [
@@ -42,8 +46,45 @@ requireText('docs/wiki/fee-design.html', [
   'approved 26.08.2026 at 00:17 MET by a 4-1 vote',
   'sender or recipient bypasses the complete 3.5% fee',
   'No CEX address is currently fee-exempt on-chain',
-  'The IFR/WETH pair is fee-exempt; the Uniswap V2 router is not'
+  'The IFR/WETH pair is fee-exempt; the Uniswap V2 router is not',
+  'governance.html#council-agenda'
 ]);
+
+requireText('docs/wiki/governance.html', [
+  'id="council-agenda"',
+  'Status: undated discussion draft',
+  'No vote is open, no IFR is allocated',
+  'proposed agenda ceilings, not allocations',
+  'no voting seat and no TreasurySafe signer or execution access',
+  'EIP-1271',
+  'Separate TreasurySafe 3-of-5 action after Timelock',
+  'No key custody, no backend executor and no automatic TreasurySafe/Governance action'
+]);
+
+requireText('docs/social/telegram-council-exchange-agenda.md', [
+  'undated discussion draft',
+  'No vote is open, no IFR is allocated',
+  '0 voting seats and 0 TreasurySafe signer rights',
+  'Social cashtag: $IFRp'
+]);
+
+requireText('docs/GOVERNANCE_CONSTITUTION.md', [
+  'Governance Constitution v1.1',
+  'senderBurnBps',
+  'recipientBurnBps',
+  'TreasurySafe 3-of-5',
+  '4-of-7 community signer expansion is planned, not active'
+]);
+
+for (const obsolete of [
+  'Burn rate, max fee, supply are never changeable',
+  'After ETA: anyone can call `execute()` (permissionless)',
+  '### Owner Multisig (4-of-7)'
+]) {
+  if (read('docs/GOVERNANCE_CONSTITUTION.md').includes(obsolete)) {
+    throw new Error(`docs/GOVERNANCE_CONSTITUTION.md still contains obsolete governance text: ${obsolete}`);
+  }
+}
 
 requireText('docs/wiki/faq.html', [
   'Are transfers to and from centralized exchanges burn-free?',

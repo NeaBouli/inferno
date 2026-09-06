@@ -93,3 +93,44 @@ Canonical contracts:
 - Governance: `0xc43d48E7FDA576C5022d0670B652A622E8caD041`
 - TreasurySafe: `0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b`
 - IFR/WETH Uniswap V2 pair: `0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0`
+
+## Open Council Agenda: Exchange Participation
+
+**Status:** Discussion draft only. No vote date is set, no IFR is allocated,
+and no exchange has Council or TreasurySafe rights.
+
+The Council will consider the following questions separately from the already
+adopted fee-exemption policy:
+
+1. Should a verified exchange receive any IFR incentive at all?
+2. If yes, should it be limited to measurable integration work or a
+   returnable market-making mandate rather than an unrestricted listing fee?
+3. Which pool, cap, milestones, custody controls, reporting duties and
+   clawback terms would apply?
+4. Should exchanges have any governance role, and must that role remain
+   advisory and non-voting?
+
+The initial options for discussion are:
+
+| Option | Source and limit for discussion | Required controls |
+| --- | --- | --- |
+| No token incentive | 0 IFR | Fee exemption may still be considered per verified address under the existing policy |
+| Integration pilot | PartnerVault only when the exchange delivers qualifying, verifiable builder/integration work; proposed ceiling of 500,000 IFR per exchange | Milestones, vesting, public recipient address, conflict disclosure and Governance approval |
+| Liquidity pilot | LiquidityReserve; proposed ceiling of 2,000,000 IFR per exchange and 5,000,000 IFR aggregate per 90-day period | Returnable or escrowed mandate, proportional liquidity plan, reporting, termination/clawback terms, market-impact review and Governance approval |
+
+These figures are agenda ceilings, not allocations. LiquidityReserve currently
+holds 200,000,000 IFR; 50,000,000 IFR is technically withdrawable under the
+current 90-day cap, but 0 IFR has been withdrawn. Availability does not create
+spending authority. PartnerVault is reserved for builder rewards and is only a
+candidate source where an exchange performs genuine qualifying integration
+work.
+
+The security recommendation for the agenda is **no exchange voting seat and no
+TreasurySafe signer or execution access in return for listing, liquidity or
+services**. If external exchange expertise is useful, the Council may consider
+at most two disclosed, non-voting advisory seats with no Safe permissions. Any
+future voting or signer role must use the normal community signer-expansion
+process, independent conflict and security review, and a separate public vote.
+
+The live agenda and future vote log will be maintained at
+<https://ifrunit.tech/wiki/governance.html#council-agenda>.

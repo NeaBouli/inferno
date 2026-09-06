@@ -43,6 +43,13 @@ export function getIFRKnowledge() {
       uniswap: "The IFR/WETH Uniswap V2 pair is fee-exempt under Proposal #15; the Uniswap V2 router is not. Pair swaps bypass the IFR token fee, while normal AMM price impact and execution slippage still apply.",
       policy: "https://ifrunit.tech/EXCHANGE_FEE_EXEMPTION_POLICY.md"
     },
+    councilExchangeAgenda: {
+      status: "Undated discussion draft only. No exchange incentive, IFR allocation, Council seat or TreasurySafe right is approved.",
+      questions: "Council will separately consider no incentive, a capped PartnerVault integration pilot for qualifying work, or a capped returnable LiquidityReserve market-making pilot. Proposed agenda ceilings are 500,000 IFR per exchange for integration work, or 2,000,000 IFR per exchange and 5,000,000 IFR aggregate per 90-day period for a liquidity pilot.",
+      governanceBoundary: "Security recommendation: zero exchange voting seats and zero TreasurySafe signer rights in return for listing or services. At most two disclosed non-voting advisers with no Safe permissions may be discussed. Any signer candidacy must use the independent community signer-expansion process.",
+      votingPortal: "Planned, not live. A future portal may authenticate eligible signer wallets with expiring nonces and EIP-4361, support EOA and EIP-1271 verification, and publish an append-only vote log. It must never custody keys or execute Safe/Governance actions automatically.",
+      agenda: "https://ifrunit.tech/wiki/governance.html#council-agenda"
+    },
     aiCopilot: {
       premiumThreshold: "Lock >=1,000 IFR in IFRLock",
       premiumBenefit: "IFR lockers unlock Premium Copilot guidance. After wallet connection and lock verification, the assistant can communicate more personally because it can use wallet balance, lock status, tier, and on-chain context instead of only generic documentation.",
