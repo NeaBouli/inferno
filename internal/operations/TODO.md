@@ -121,10 +121,10 @@ On errors: fix immediately, commit with `seo:` prefix.
       milestones, disclosures, escrow/clawback and market-impact controls are
       mandatory. No allocation is approved.
 - [ ] Decide exchange governance boundary
-      Recommended baseline: 0 exchange voting seats and 0 TreasurySafe signer
-      rights. Optional discussion: at most two disclosed non-voting advisers
-      with no Safe permissions. Any future signer candidacy must go through
-      the independent community signer-expansion process.
+      Option A: 0 exchange voting seats and 0 TreasurySafe signer rights.
+      Option B: at most two disclosed non-voting advisers with no Safe
+      permissions. Any future signer candidacy must go through the independent
+      community signer-expansion process. Publish no proposer attribution.
 - [ ] Council agenda and vote-log portal (security-gated future block)
       Definition of Ready: threat model; current Safe-owner/council registry
       snapshot; domain-bound expiring nonce; EIP-4361 challenge; EOA and

@@ -1,6 +1,7 @@
 COUNCIL AGENDA — EXCHANGE PARTICIPATION
 
 Status: undated discussion draft. No vote is open, no IFR is allocated, and no exchange has Council or TreasurySafe rights.
+Agenda entries contain no proposer attribution or personal name.
 
 The Council will consider:
 
@@ -11,8 +12,8 @@ The Council will consider:
    • Integration pilot: up to 500,000 IFR per exchange from PartnerVault, only for qualifying verified integration work
    • Liquidity pilot: up to 2,000,000 IFR per exchange and 5,000,000 IFR aggregate per 90-day period from LiquidityReserve, with escrow/return, milestones, reporting and clawback controls
 4. Should exchanges participate in governance?
-   • Recommended baseline: 0 voting seats and 0 TreasurySafe signer rights
-   • Discussion option: at most two disclosed, non-voting advisers with no Safe permissions
+   • Option A: 0 voting seats and 0 TreasurySafe signer rights
+   • Option B: at most two disclosed, non-voting advisers with no Safe permissions
 
 All figures are agenda ceilings, not approved allocations. Any use of IFR would require a separate public decision and the normal TreasurySafe 3-of-5 plus 48-hour Governance path.
 

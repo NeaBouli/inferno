@@ -2,8 +2,8 @@
   "schemaVersion": 2,
   "tool": "markdownlint-cli@0.49.1",
   "disabledRules": ["MD013","MD033","MD041","MD024","MD036","MD040"],
-  "filesScanned": 179,
-  "baselineIssues": 3471,
+  "filesScanned": 180,
+  "baselineIssues": 3472,
   "fingerprints": [
     [".github/ISSUE_TEMPLATE/bug_report.md","MD022","Expected: 1; Actual: 0; Below","## Bug Description","6e754bfe0c2fac07",1],
     [".github/ISSUE_TEMPLATE/bug_report.md","MD022","Expected: 1; Actual: 0; Below","## Environment","cadb5ca79597df18",1],
@@ -1601,6 +1601,7 @@
     ["docs/SESSION_LOG_20260610.md","MD032","","- IFR Token: 0x77e99917Eca8539...","be6382c7240284ea",1],
     ["docs/SESSION_LOG_20260610.md","MD032","","1. Mac neu gestartet → Repo öf...","c59d891ab4b120cc",1],
     ["docs/social/telegram-cex-fee-policy.md","MD034","","https://ifrunit.tech/wiki/fee-...","41ac445817914fdc",1],
+    ["docs/social/telegram-council-exchange-agenda.md","MD034","","https://ifrunit.tech/wiki/gove...","d1119ee6fa55760f",1],
     ["docs/social/x-cashtag-support-ticket.md","MD034","","https://ifrunit.tech","bb4c6919666c2ffe",1],
     ["docs/social/x-cashtag-support-ticket.md","MD034","","https://www.geckoterminal.com/...","df2193a6f0895cad",1],
     ["docs/social/x-cashtag-support-ticket.md","MD034","","https://x.com/IFRtoken","fb3f7eb2ee29ecb8",1],

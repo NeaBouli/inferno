@@ -98,6 +98,7 @@ Canonical contracts:
 
 **Status:** Discussion draft only. No vote date is set, no IFR is allocated,
 and no exchange has Council or TreasurySafe rights.
+Agenda entries intentionally contain no proposer attribution or personal name.
 
 The Council will consider the following questions separately from the already
 adopted fee-exemption policy:
@@ -125,9 +126,8 @@ spending authority. PartnerVault is reserved for builder rewards and is only a
 candidate source where an exchange performs genuine qualifying integration
 work.
 
-The security recommendation for the agenda is **no exchange voting seat and no
-TreasurySafe signer or execution access in return for listing, liquidity or
-services**. If external exchange expertise is useful, the Council may consider
+The governance options include **no exchange voting seat and no TreasurySafe
+signer or execution access in return for listing, liquidity or services**, or
 at most two disclosed, non-voting advisory seats with no Safe permissions. Any
 future voting or signer role must use the normal community signer-expansion
 process, independent conflict and security review, and a separate public vote.

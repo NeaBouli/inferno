@@ -27,9 +27,10 @@ requireText('docs/EXCHANGE_FEE_EXEMPTION_POLICY.md', [
   'setFeeExempt(exchangeAddress, true)',
   'No CEX address activated as of 26 August 2026',
   'Open Council Agenda: Exchange Participation',
+  'no proposer attribution or personal name',
   'These figures are agenda ceilings, not allocations',
   'no exchange voting seat',
-  'TreasurySafe signer or execution access'
+  'signer or execution access in return for listing'
 ]);
 
 requireText('docs/index.html', [
@@ -53,6 +54,7 @@ requireText('docs/wiki/fee-design.html', [
 requireText('docs/wiki/governance.html', [
   'id="council-agenda"',
   'Status: undated discussion draft',
+  'Agenda entries contain no proposer attribution or personal name',
   'No vote is open, no IFR is allocated',
   'proposed agenda ceilings, not allocations',
   'no voting seat and no TreasurySafe signer or execution access',
@@ -63,10 +65,33 @@ requireText('docs/wiki/governance.html', [
 
 requireText('docs/social/telegram-council-exchange-agenda.md', [
   'undated discussion draft',
+  'Agenda entries contain no proposer attribution or personal name',
   'No vote is open, no IFR is allocated',
   '0 voting seats and 0 TreasurySafe signer rights',
   'Social cashtag: $IFRp'
 ]);
+
+for (const forbiddenAttribution of [
+  'Proposed by',
+  'Submitted by',
+  'Author:',
+  'Gio Mario',
+  'Georgios',
+  'Codex',
+  'Kimi',
+  'Claude'
+]) {
+  const agendaSources = {
+    'docs/EXCHANGE_FEE_EXEMPTION_POLICY.md': read('docs/EXCHANGE_FEE_EXEMPTION_POLICY.md').split('## Open Council Agenda:')[1],
+    'docs/wiki/governance.html': read('docs/wiki/governance.html').split('id="council-agenda"')[1].split('id="participating"')[0],
+    'docs/social/telegram-council-exchange-agenda.md': read('docs/social/telegram-council-exchange-agenda.md')
+  };
+  for (const [file, source] of Object.entries(agendaSources)) {
+    if (source.includes(forbiddenAttribution)) {
+      throw new Error(`${file} attributes a Council agenda proposal: ${forbiddenAttribution}`);
+    }
+  }
+}
 
 requireText('docs/GOVERNANCE_CONSTITUTION.md', [
   'Governance Constitution v1.1',

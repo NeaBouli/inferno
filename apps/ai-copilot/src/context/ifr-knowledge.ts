@@ -46,7 +46,7 @@ export function getIFRKnowledge() {
     councilExchangeAgenda: {
       status: "Undated discussion draft only. No exchange incentive, IFR allocation, Council seat or TreasurySafe right is approved.",
       questions: "Council will separately consider no incentive, a capped PartnerVault integration pilot for qualifying work, or a capped returnable LiquidityReserve market-making pilot. Proposed agenda ceilings are 500,000 IFR per exchange for integration work, or 2,000,000 IFR per exchange and 5,000,000 IFR aggregate per 90-day period for a liquidity pilot.",
-      governanceBoundary: "Security recommendation: zero exchange voting seats and zero TreasurySafe signer rights in return for listing or services. At most two disclosed non-voting advisers with no Safe permissions may be discussed. Any signer candidacy must use the independent community signer-expansion process.",
+      governanceBoundary: "Neutral agenda options: zero exchange voting seats and zero TreasurySafe signer rights in return for listing or services, or at most two disclosed non-voting advisers with no Safe permissions. Any signer candidacy must use the independent community signer-expansion process. Agenda entries contain no proposer attribution or personal name.",
       votingPortal: "Planned, not live. A future portal may authenticate eligible signer wallets with expiring nonces and EIP-4361, support EOA and EIP-1271 verification, and publish an append-only vote log. It must never custody keys or execute Safe/Governance actions automatically.",
       agenda: "https://ifrunit.tech/wiki/governance.html#council-agenda"
     },
