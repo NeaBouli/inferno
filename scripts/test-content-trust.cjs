@@ -61,6 +61,11 @@ const required = [
   ["docs/wiki/bootstrap.html", "LP tokens created by <code>finalise()</code> therefore remained in BootstrapVaultV3"],
   ["docs/wiki/fair-launch.html", "12-month cliff + 36-month linear release"],
   ["docs/wiki/faq.html", "37.5M IFR during the first 9 months"],
+  ["docs/wiki/faq.html", "The contract holds IFR, not LP tokens"],
+  ["docs/wiki/transparency.html", "Initial lock ended 01.09.2026"],
+  ["docs/index.html", "Initial lock ended. 200M held; 50M staged cap per 90 days; 0 withdrawn."],
+  ["docs/llms.txt", "50,000,000 IFR per 90-day period is currently withdrawable by Governance, with 0 IFR withdrawn"],
+  ["apps/telegram/telegram-bot/src/services/skywalker.js", "15% Treasury, 6% Community & Grants, 4% PartnerVault"],
 ];
 
 for (const [relative, phrase] of required) {

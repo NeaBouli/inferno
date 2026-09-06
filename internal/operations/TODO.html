@@ -49,11 +49,13 @@
   <div class="container">
     <a href="wiki/roadmap.html" class="back" rel="nofollow">&larr; Roadmap</a>
     <h1>IFR Protocol &mdash; Developer TODO List</h1>
-    <div class="subtitle">Last updated: 2026-09-04 &middot; Branch: main</div>
+    <div class="subtitle">Last updated: 2026-09-06 &middot; Branch: main</div>
 
     <!-- ═══ CURRENT WATCHLIST ═══ -->
-    <h2><span class="priority-badge p-critical">WATCH</span> Current Watchlist &mdash; verified 2026-09-04</h2>
+    <h2><span class="priority-badge p-critical">WATCH</span> Current Watchlist &mdash; verified 2026-09-06</h2>
     <ul>
+      <li><div class="cb"></div><strong>LiquidityReserve post-lock governance decision</strong><br>
+        <span style="color:#6b7280;font-size:0.82rem;">Mainnet block <code>25918433</code>: the initial timelock has ended. All 200M IFR remains held, no IFR has been withdrawn and the current cap makes 50M IFR withdrawable per 90-day period. No LiquidityReserve proposal is pending. Availability is not an automatic LP addition. Any use needs a documented amount, proportional ETH source, price/slippage analysis and execution plan, followed by the normal proposal and 48-hour timelock.</span></li>
       <li><div class="cb cb-done">&#x2713;</div><strong>Hardhat 3.15.0 / hardhat-verify 3.1.0 maintenance delivered</strong><br>
         <span style="color:#6b7280;font-size:0.82rem;">Integrated through PR #77 on 04.09.2026. Full local contract, Generator Engine and SDK suites pass, and exact-head plus Main Linux CI are green. The bundled EDR runtime changes from 0.15.0 to 0.19.0 and its native platform packages are optional dependencies; installs must not omit optional packages. No Mainnet verification was submitted. Mocha stays at 11.8.0 until hardhat-mocha supports Mocha 12.</span></li>
       <li><div class="cb cb-done">&#x2713;</div><strong>LendingVault V1 borrow activation policy</strong> &mdash; keep disabled.<br>
@@ -457,9 +459,8 @@
     <p style="color:#6b7280;font-size:0.82rem;margin:0 0 10px;">400.6M IFR transferred to LP Reserve Safe (Gnosis 3-of-5) on 18.03.2026. Deployer holds 0 IFR.</p>
     <ul>
       <li><div class="cb cb-done">&#x2713;</div>&#x2705; 400,600,000 IFR transferred Deployer &#x2192; LP Reserve Safe (18.03.2026)</li>
-      <li><div class="cb"></div>&#x1F7E1; Phase 2 LP: LP Reserve Safe &#x2192; Uniswap 100M (after 01.09.2026)</li>
-      <li><div class="cb"></div>&#x1F7E1; Phase 3 LP: LP Reserve Safe &#x2192; Uniswap 150M</li>
-      <li><div class="cb"></div>&#x1F535; Verify LP at Team.Finance (12-month lock)</li>
+      <li><div class="cb"></div>&#x1F7E1; Future LP additions require a reviewed Governance decision, proportional ETH and slippage analysis; no date-based automatic transfer is scheduled.</li>
+      <li><div class="cb cb-done">&#x2713;</div>Bootstrap LP custody finalized in BootstrapVaultV3; the Mainnet Team.Finance path is disabled and the vault exposes no LP withdrawal function.</li>
     </ul>
 
     <hr>
@@ -487,8 +488,8 @@
     <!-- ═══ PHASE 2+ ═══ -->
     <h2><span class="priority-badge p-vision">PHASE 2+</span> Later</h2>
     <ul>
-      <li><div class="cb"></div>LiqRes withdrawal (01.09.2026)</li>
-      <li><div class="cb"></div>LP expansion (Phase 2/3)</li>
+      <li><div class="cb cb-done">&#x2713;</div>LiqRes initial lock ended 01.09.2026; 200M IFR held, 0 withdrawn and current limit 50M per 90 days at block 25918433.</li>
+      <li><div class="cb"></div>Governance-paced LP expansion with proportional ETH and reviewed execution plan (Phase 3)</li>
       <li><div class="cb"></div>Creator Rewards / SDK (Phase 3)</li>
       <li><div class="cb"></div>DAO Upgrade (Phase 4)</li>
     </ul>

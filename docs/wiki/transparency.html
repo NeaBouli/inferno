@@ -910,8 +910,8 @@
               <td>LiquidityReserve Contract</td>
               <td>200,000,000</td>
               <td>20%</td>
-              <td>Phase 2 LP expansion reserve. Smart-contract-locked until 01.09.2026. Cannot be accessed before that date.</td>
-              <td class="status-ok">Locked</td>
+              <td>Phase 2/3 reserve. Initial lock ended 01.09.2026; all 200M IFR remains held, with a 50M IFR per 90-day withdrawal cap and 0 IFR withdrawn.</td>
+              <td class="status-ok">Held &middot; staged</td>
             </tr>
             <tr>
               <td>Vesting Contract</td>
@@ -1155,9 +1155,9 @@
             <tr>
               <td><strong>LiquidityReserve</strong></td>
               <td class="address"><a href="https://etherscan.io/address/0xdc0309804803b3A105154f6073061E3185018f64" target="_blank">0xdc03...f64</a></td>
-              <td>Phase 2 LP reserve. Hard-locked until 01.09.2026. NOT used for Bootstrap (Plan B decision 08.03.2026).</td>
+              <td>Phase 2/3 reserve. Initial lock ended 01.09.2026; 200M IFR remains held, 50M IFR is currently available under the 90-day cap, and no withdrawal or LP addition has executed. NOT used for Bootstrap (Plan B decision 08.03.2026).</td>
               <td id="cur-liqres">200,000,000 IFR</td>
-              <td>Smart contract &mdash; time-locked</td>
+              <td>Smart contract &mdash; staged Governance control</td>
             </tr>
             <tr>
               <td><strong>PartnerVault</strong></td>
@@ -1395,7 +1395,7 @@
           </thead>
           <tbody>
             <tr><td>LP Reserve Safe (ex-Deployer)</td><td>400,600,000</td><td>40.06%</td><td>Transferred to LP Reserve Safe 0x5D93... on 18.03.2026</td></tr>
-            <tr><td>LiquidityReserve</td><td>200,000,000</td><td>20.00%</td><td>6-month lock, staged release</td></tr>
+            <tr><td>LiquidityReserve</td><td>200,000,000</td><td>20.00%</td><td>Initial lock ended 01.09.2026; 50M-per-90-day cap; 0 withdrawn</td></tr>
             <tr><td>Vesting (Team)</td><td>150,000,000</td><td>15.00%</td><td>12-month cliff, then 36-month linear release (48 months total)</td></tr>
             <tr><td>Treasury Safe</td><td>0</td><td>0.00%</td><td>144.75M transferred to Bootstrap (Plan B). Balance: 0 IFR.</td></tr>
             <tr><td>Community Safe</td><td>7,900,000</td><td>0.79%</td><td>50M sent to Bootstrap. 7.9M operations reserve remaining.</td></tr>
