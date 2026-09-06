@@ -59,8 +59,31 @@ requireText('docs/wiki/governance.html', [
   'proposed agenda ceilings, not allocations',
   'no voting seat and no TreasurySafe signer or execution access',
   'EIP-1271',
+  'Open and secret ballots are separate modes',
+  'one-time nullifiers',
+  'retain no source IP',
+  'cannot honestly promise that an IP address is never seen',
+  'Future signer onboarding must obtain explicit consent',
   'Separate TreasurySafe 3-of-5 action after Timelock',
   'No key custody, no backend executor and no automatic TreasurySafe/Governance action'
+]);
+
+requireText('docs/GOVERNANCE_SIGNER_EXPANSION_PLAN.md', [
+  'Publication consent',
+  'initials-to-wallet mapping'
+]);
+
+requireText('docs/wiki/community-signer-expansion.html', [
+  'Publication consent',
+  'initials may be linked publicly to the signer wallet',
+  'Safe ownership remains public on-chain regardless'
+]);
+
+requireText('docs/OFFCHAIN_SECURITY.md', [
+  'Council secret-ballot portal is a separate privacy domain',
+  'retain no source IP, user-agent, request body, ballot or',
+  'wallet providers may still process connection',
+  'metadata transiently'
 ]);
 
 requireText('docs/social/telegram-council-exchange-agenda.md', [

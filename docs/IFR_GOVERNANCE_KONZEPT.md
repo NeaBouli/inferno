@@ -201,14 +201,25 @@ The future Council portal supersedes the v1.0 bot-executor assumption above:
 - eligibility is fixed to a block-numbered Council/Safe-owner snapshot for
   each agenda version;
 - nonces are cryptographically random, single-use and protected against replay;
-- signed ballots or their verifiable hashes are written to an append-only
-  public vote log; and
+- ballot mode is fixed as open or secret before voting starts and cannot be
+  changed while the ballot is active;
+- open ballots use an append-only public vote log and disclose a wallet mapping
+  only where it is already public and publication was consented;
+- secret ballots separate eligibility issuance from ballot casting, use
+  anonymous one-time credentials or ZK membership, nullifiers, encrypted
+  ballots and threshold tallying, and publish only turnout, aggregate result
+  and a non-identifying proof;
+- the portal retains no IP, user-agent, request body, wallet telemetry or
+  analytics in application, proxy, error or audit logs, while honestly
+  disclosing transient network/provider processing; and
 - a vote result never executes automatically. Binding action still requires a
   separate TreasurySafe 3-of-5 proposal and the Governance contract's 48-hour
   timelock.
 
-Implementation remains blocked on threat modelling, independent security
-review and desktop/mobile multi-wallet acceptance tests.
+Implementation remains blocked on threat modelling, scheme selection,
+independent cryptography/privacy/security review, verified infrastructure
+retention controls and desktop/mobile multi-wallet acceptance tests. The
+existing Telegram identity-to-wallet mapper is not a secret-ballot transport.
 
 ---
 

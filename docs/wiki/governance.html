@@ -1665,17 +1665,26 @@ await governance.execute(proposalId);</code></pre>
       <div class="callout-green callout">
         <p><strong>Planned, not live.</strong> No Council login or web ballot currently creates a binding vote. The implementation remains a security-gated task block.</p>
       </div>
-      <p>The safe design connects an individual signer wallet, issues a domain-bound expiring EIP-4361 challenge, and checks eligibility against a recorded Council/Safe-owner snapshot. EOA signatures and Safe smart-account signatures require separate verification paths; Safe signatures use EIP-1271. Every nonce is single-use, every ballot is bound to one agenda version, and the public log is append-only and independently auditable.</p>
+      <p>The safe design connects an individual signer wallet, issues a domain-bound expiring EIP-4361 challenge, and checks eligibility against a recorded, block-numbered Council/Safe-owner snapshot. EOA signatures and Safe smart-account signatures require separate verification paths; Safe signatures use EIP-1271. Eligibility fails closed if the snapshot or verification path is unavailable. Every nonce is single-use and every ballot is bound to one immutable agenda version.</p>
+      <p><strong>Open and secret ballots are separate modes.</strong> The mode is published when an agenda opens and cannot be changed while voting is active. An open ballot may publish a wallet and initials only where that mapping is already public and the member has consented; otherwise it publishes initials only. A secret ballot publishes no wallet, initials, individual vote, signature or voter-linked ballot hash. It publishes only the final turnout count, aggregate result and a verification proof after voting closes.</p>
+      <p>Secret voting requires unlinkable eligibility issuance and ballot casting. The planned design therefore separates the service that verifies Council eligibility from the service that accepts an anonymous one-time credential, uses one-time nullifiers to prevent duplicate voting, encrypts ballots for threshold tallying, and exposes only non-identifying commitments and the aggregate proof. The existing Telegram wallet mapper and ordinary SIWE session flow are not suitable for secret ballots.</p>
+      <p><strong>Privacy boundary:</strong> the portal will retain no source IP, user-agent, request body, wallet-provider telemetry or analytics in application, proxy, error or audit logs. No cookies are required for secret voting. Network, hosting, RPC and wallet providers may still process connection metadata transiently; the project cannot honestly promise that an IP address is never seen anywhere on the network path. A production design must document each processor and offer a privacy-preserving access path. With only five eligible members, aggregate turnout or results may still permit social inference even when the cryptographic ballot remains secret.</p>
+      <p>The current Safe owners and their initials-to-address mappings are already public on the <a href="multisig.html">Multisig</a> and <a href="transparency.html">Transparency</a> pages and in on-chain history. Removing a page cannot erase that history. Future signer onboarding must obtain explicit consent before publishing an initials-to-wallet mapping.</p>
       <p>The portal will never request or store a private key, seed phrase or unrestricted signature. It will not submit or execute TreasurySafe transactions. Even a completed Council ballot remains separate from the binding 3-of-5 Safe proposal, public 48-hour Governance timelock and on-chain execution.</p>
 
       <h4>Definition of Ready</h4>
       <ul>
         <li>Threat model and independent security review completed</li>
-        <li>Explicit Council registry and block-numbered Safe-owner eligibility snapshot</li>
+        <li>Explicit Council registry plus a published block number and hash of the Safe-owner eligibility snapshot; no environment or deployer fallback</li>
         <li>Domain, chain, agenda version, nonce and expiry bound into every challenge</li>
         <li>EOA plus EIP-1271 verification, replay/CSRF protection and one ballot per eligible identity</li>
-        <li>Append-only public agenda, amendments, signatures/hashes, tally and final status</li>
+        <li>Open or secret mode fixed before opening; agenda version and mode remain immutable until the ballot closes</li>
+        <li>Open mode: append-only public agenda, consent-aware identity display, ballots, tally and final status</li>
+        <li>Secret mode: independently reviewed anonymous credential or ZK-membership scheme, separated issuance/casting services, one-time nullifiers, encrypted ballots and threshold tally</li>
+        <li>Secret public record limited to turnout, aggregate result, non-identifying commitments/nullifiers and verification proof</li>
+        <li>Verified zero-retention configuration for application, proxy and error logs; no analytics, cookies or Telegram identity linkage; honest third-party metadata disclosure</li>
         <li>Desktop, tablet, Android, iOS, accessibility and multi-wallet acceptance tests</li>
+        <li>Independent cryptography, privacy and infrastructure review before production</li>
         <li>No key custody, no backend executor and no automatic TreasurySafe/Governance action</li>
       </ul>
 

@@ -127,10 +127,26 @@ On errors: fix immediately, commit with `seo:` prefix.
       community signer-expansion process. Publish no proposer attribution.
 - [ ] Council agenda and vote-log portal (security-gated future block)
       Definition of Ready: threat model; current Safe-owner/council registry
-      snapshot; domain-bound expiring nonce; EIP-4361 challenge; EOA and
+      snapshot with published block number and owner-list hash; domain-bound
+      expiring nonce; EIP-4361 challenge; EOA and
       EIP-1271 verification; one ballot per eligible identity; replay and CSRF
-      protection; append-only public log; accessibility/mobile tests; external
-      security review. No private-key custody and no automatic Safe execution.
+      protection; accessibility/mobile tests; independent cryptography,
+      privacy, infrastructure and security review. No private-key custody and
+      no automatic Safe execution.
+      Set open/secret mode before the ballot opens and make mode plus agenda
+      version immutable until close. Open mode may publish wallet plus initials
+      only for an already public mapping with explicit consent; otherwise show
+      initials only. Secret mode publishes only turnout, aggregate result and
+      proof, never wallet, initials, individual vote, signature or linked hash.
+      Secret mode requires separate eligibility-issuance and ballot services,
+      an audited anonymous credential or ZK-membership scheme, one-time
+      nullifiers, encrypted ballots and threshold tallying. Do not reuse the
+      Telegram user-to-wallet map for secret voting.
+      Configure fail-closed eligibility with no environment/deployer fallback.
+      Retain no IP, user-agent, request body, wallet telemetry or analytics in
+      application, proxy, error or audit logs; use no secret-ballot cookies.
+      Document that network, host, RPC and wallet providers may transiently
+      process metadata and verify their production retention controls.
       Do not reuse the current Points SIWE verification unchanged: the portal
       must enforce the expected domain and nonce during verification and add an
       explicit EIP-1271 path. Do not reuse Telegram eligibility conversions
