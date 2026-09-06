@@ -9,6 +9,8 @@ const TEXT = 'COUNCIL AGENDA\n\nOption A: no Safe rights.\nOption B: advisory ro
 test('validates anonymous bounded text', () => {
   assert.doesNotThrow(() => validateText(TEXT));
   assert.throws(() => validateText('Proposed by Alice'), /proposer attribution/);
+  assert.throws(() => validateText('pRoPoSeD bY Alice'), /proposer attribution/);
+  assert.throws(() => validateText('AUTHOR: Alice'), /proposer attribution/);
   assert.throws(() => validateText('x'.repeat(4097)), /4096-character limit/);
 });
 

@@ -56,7 +56,7 @@ a 48-hour timelock period and quorum approval.
 ## Article 3 — Proposal Lifecycle
 
 ### Phase 1: Proposal
-1. Proposer calls `governance.propose(targets, values, calldatas, description)`
+1. Governance owner calls `governance.propose(target, data)`
 2. Proposal appears in timelock queue
 3. ETA = block.timestamp + 48h (minimum)
 4. Status: **PENDING**
@@ -73,8 +73,8 @@ a 48-hour timelock period and quorum approval.
 - Status: **EXECUTED**
 
 ### Phase 4: Rejected/Cancelled Proposals
-- Governance owner or Guardian can call `cancel(proposalId)` while the proposal
-  is pending
+- Governance owner or Guardian can call `cancel(proposalId)` until the proposal
+  executes
 - Cancelled proposals cannot be re-executed
 - Status: **CANCELLED**
 

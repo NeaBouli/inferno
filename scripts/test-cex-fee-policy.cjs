@@ -94,26 +94,43 @@ requireText('docs/social/telegram-council-exchange-agenda.md', [
   'Social cashtag: $IFRp'
 ]);
 
-for (const forbiddenAttribution of [
-  'Proposed by',
-  'Submitted by',
-  'Author:',
-  'Gio Mario',
-  'Georgios',
-  'Codex',
-  'Kimi',
-  'Claude'
-]) {
-  const agendaSources = {
-    'docs/EXCHANGE_FEE_EXEMPTION_POLICY.md': read('docs/EXCHANGE_FEE_EXEMPTION_POLICY.md').split('## Open Council Agenda:')[1],
-    'docs/wiki/governance.html': read('docs/wiki/governance.html').split('id="council-agenda"')[1].split('id="participating"')[0],
-    'docs/social/telegram-council-exchange-agenda.md': read('docs/social/telegram-council-exchange-agenda.md')
-  };
-  for (const [file, source] of Object.entries(agendaSources)) {
-    if (source.includes(forbiddenAttribution)) {
-      throw new Error(`${file} attributes a Council agenda proposal: ${forbiddenAttribution}`);
+const forbiddenAttributionPatterns = [
+  /\b(?:proposed|submitted|prepared|written|authored)\s+by\b/i,
+  /^\s*(?:author|proposer|submitter)\s*:/im,
+  /\bgio mario\b/i,
+  /\bgeorgios\b/i,
+  /\bcodex\b/i,
+  /\bkimi\b/i,
+  /\bclaude\b/i
+];
+
+function assertNoAttribution(file, source) {
+  for (const pattern of forbiddenAttributionPatterns) {
+    if (pattern.test(source)) {
+      throw new Error(`${file} attributes a Council agenda proposal: ${pattern}`);
     }
   }
+}
+
+const agendaSources = {
+  'docs/EXCHANGE_FEE_EXEMPTION_POLICY.md': read('docs/EXCHANGE_FEE_EXEMPTION_POLICY.md').split('## Open Council Agenda:')[1],
+  'docs/wiki/governance.html': read('docs/wiki/governance.html').split('id="council-agenda"')[1].split('id="participating"')[0],
+  'docs/social/telegram-council-exchange-agenda.md': read('docs/social/telegram-council-exchange-agenda.md')
+};
+for (const [file, source] of Object.entries(agendaSources)) {
+  assertNoAttribution(file, source);
+}
+
+for (const fixture of [
+  'pRoPoSeD bY Example Person',
+  'AUTHOR: Example Person',
+  'Prepared by Example Person',
+  'submitted BY Gio Mario'
+]) {
+  assert.throws(
+    () => assertNoAttribution('fixture', fixture),
+    /attributes a Council agenda proposal/
+  );
 }
 
 requireText('docs/GOVERNANCE_CONSTITUTION.md', [
@@ -121,6 +138,8 @@ requireText('docs/GOVERNANCE_CONSTITUTION.md', [
   'senderBurnBps',
   'recipientBurnBps',
   'TreasurySafe 3-of-5',
+  'Governance owner calls `governance.propose(target, data)`',
+  'can call `cancel(proposalId)` until the proposal',
   '4-of-7 community signer expansion is planned, not active'
 ]);
 
