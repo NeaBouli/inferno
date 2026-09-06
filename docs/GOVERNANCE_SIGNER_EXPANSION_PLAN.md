@@ -2,7 +2,7 @@
 
 Status: Planned
 Scope: Future governance and multisig expansion after community voting is live.
-Last updated: 30 June 2026
+Last updated: 6 September 2026
 
 ## Purpose
 
@@ -55,6 +55,9 @@ Minimum requirements before a candidate can be nominated or voted in:
 - Availability: expected response window, for example 24-48 hours.
 - Contact reliability: reachable through an agreed public or semi-public channel.
 - Public acceptance: candidate confirms signer duties and risks.
+- Publication consent: candidate explicitly chooses whether initials may be
+  linked publicly to the signer wallet. Safe ownership and wallet activity are
+  always public on-chain; a website alias mapping is a separate disclosure.
 - Conflict review: no obvious hostile exchange, competitor, exploit history, or compromised-wallet risk.
 - Alignment: locked IFR, long-term holding, verified contributor activity, lender activity, builder activity, or community work.
 - Independence: signer should not be operationally dependent on another signer.
@@ -111,6 +114,8 @@ Recommended before activation:
 - Perform signer onboarding drill on a test Safe.
 - Add signers through Safe transaction.
 - Announce new signer set and threshold publicly.
+- Record each new signer's alias-publication choice before publishing any
+  initials-to-wallet mapping.
 
 ## Stage 3: Mature Community Expansion
 

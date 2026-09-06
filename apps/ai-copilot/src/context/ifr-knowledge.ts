@@ -43,6 +43,13 @@ export function getIFRKnowledge() {
       uniswap: "The IFR/WETH Uniswap V2 pair is fee-exempt under Proposal #15; the Uniswap V2 router is not. Pair swaps bypass the IFR token fee, while normal AMM price impact and execution slippage still apply.",
       policy: "https://ifrunit.tech/EXCHANGE_FEE_EXEMPTION_POLICY.md"
     },
+    councilExchangeAgenda: {
+      status: "Undated discussion draft only. No exchange incentive, IFR allocation, Council seat or TreasurySafe right is approved.",
+      questions: "Council will separately consider no incentive, a capped PartnerVault integration pilot for qualifying work, or a capped returnable LiquidityReserve market-making pilot. Proposed agenda ceilings are 500,000 IFR per exchange for integration work, or 2,000,000 IFR per exchange and 5,000,000 IFR aggregate per 90-day period for a liquidity pilot.",
+      governanceBoundary: "Neutral agenda options: zero exchange voting seats and zero TreasurySafe signer rights in return for listing or services, or at most two disclosed non-voting advisers with no Safe permissions. Any signer candidacy must use the independent community signer-expansion process. Agenda entries contain no proposer attribution or personal name.",
+      votingPortal: "Planned, not live and security-gated. Ballot mode must be fixed before opening. Open mode may disclose consented public wallet/initial mappings; secret mode must unlink eligibility from casting through independently reviewed anonymous credentials or ZK membership, one-time nullifiers, encrypted ballots and threshold tallying, and publish only turnout, aggregate result and proof. Eligibility must use a block-numbered Safe-owner snapshot and fail closed, with EOA/EIP-1271 support. The portal targets zero application/proxy log retention but must disclose transient network-provider metadata processing. It must never custody keys or execute Safe/Governance actions automatically.",
+      agenda: "https://ifrunit.tech/wiki/governance.html#council-agenda"
+    },
     aiCopilot: {
       premiumThreshold: "Lock >=1,000 IFR in IFRLock",
       premiumBenefit: "IFR lockers unlock Premium Copilot guidance. After wallet connection and lock verification, the assistant can communicate more personally because it can use wallet balance, lock status, tier, and on-chain context instead of only generic documentation.",
