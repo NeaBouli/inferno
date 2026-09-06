@@ -66,14 +66,14 @@ Inferno (IFR) is a deflationary ERC-20 utility token on Ethereum. Every transfer
 | Allocation | Share | Amount | Note |
 |-----------|-------|--------|------|
 | DEX Liquidity | 40% | 400M IFR | Held by the LP Reserve Safe (3-of-5) for governance-controlled LP expansion. The Bootstrap pool was created separately with 100M IFR + 0.030 ETH. |
-| Liquidity Reserve | 20% | 200M IFR | Smart-contract-locked until 01.09.2026. Phase 2 LP expansion. NOT used for Bootstrap. |
+| Liquidity Reserve | 20% | 200M IFR | Initial timelock ended 01.09.2026. The contract still holds all 200M IFR; the current withdrawal cap is 50M IFR per 90-day period. No withdrawal or LP deployment has occurred. NOT used for Bootstrap. |
 | Team Vesting | 15% | 150M IFR | 12-month cliff, 36-month linear vesting. 0 tokens available before March 2027. |
 | Treasury | 15% | 150M IFR | Gnosis Safe multisig (0x5ad6193...). 150M committed to Bootstrap. Refills via protocol fees (Phase 3). |
 | Community & Grants | 6% | 60M IFR | Community Safe (57.9M received after burn). 50M → Bootstrap. ~7.9M operational reserve. |
 | Builder Ecosystem | 4% | 40M IFR | PartnerVault contract. Lock-triggered Creator Rewards, milestone vesting. |
 
 BuybackVault and BurnReserve accumulate from the 1% protocol pool fee — not pre-funded genesis allocations.
-Team tokens: 48-month vesting, 12-month cliff. Liquidity reserve: locked until 01.09.2026.
+Team tokens: 48-month vesting, 12-month cliff. Liquidity reserve: initial lock ended 01.09.2026; staged Governance-controlled withdrawals remain unused.
 
 ## Fair Launch
 

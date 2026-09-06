@@ -51,7 +51,7 @@ assert.equal(
 );
 
 const currentBaseline = [
-  "**Current engineering baseline:** 4 September 2026",
+  "**Current engineering baseline:** 6 September 2026",
   "Current repository verification",
   "Hardhat `3.15.0`",
   "contracts `644/644`",
@@ -65,8 +65,11 @@ requireText("STATUS-REPORT.md", currentBaseline);
 requireText("docs/STATUS-REPORT.md", currentBaseline);
 
 const todo = requireText("internal/operations/TODO.md", [
-  "> Last updated: 2026-09-04 | Branch: main",
-  "CURRENT WATCHLIST — verified 2026-09-04",
+  "> Last updated: 2026-09-06 | Branch: main",
+  "CURRENT WATCHLIST — verified 2026-09-06",
+  "LiquidityReserve post-lock governance decision",
+  "All 200M IFR remains held",
+  "cap makes 50M IFR withdrawable per 90-day period",
   "LendingVault V1 borrow activation policy — keep disabled",
   "V1 cannot set price back to zero",
   "SEC-VLT-01 — Vault fee-exemption monitoring and negative tests",
@@ -116,8 +119,10 @@ assert.ok(
 );
 
 requireText("internal/operations/TODO.html", [
-  "Last updated: 2026-09-04",
-  "Current Watchlist &mdash; verified 2026-09-04",
+  "Last updated: 2026-09-06",
+  "Current Watchlist &mdash; verified 2026-09-06",
+  "LiquidityReserve post-lock governance decision",
+  "All 200M IFR remains held",
   "LendingVault V1 borrow activation policy",
   "V1 cannot set the price back to zero",
   "SEC-VLT-01 &mdash; Vault fee-exemption monitoring and negative tests",

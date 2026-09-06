@@ -354,6 +354,7 @@ button[style*="#ff4500"] {
 
 .main {
   max-width: 1120px !important;
+  min-width: 0 !important;
   padding: 52px 64px !important;
   color: var(--ink) !important;
 }

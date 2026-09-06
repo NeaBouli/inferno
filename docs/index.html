@@ -1897,7 +1897,7 @@ render();
           <div style="font-size:12px;color:#6f675d;text-transform:uppercase;letter-spacing:0.05em;font-weight:700;margin-bottom:10px;">Protocol Locked Unlock Paths</div>
           <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:8px 14px;font-size:12px;line-height:1.45;color:#3b3128;">
             <div><strong>LP Reserve Safe:</strong> multisig governed, no automatic unlock.</div>
-            <div><strong>Liquidity Reserve:</strong> locked until 01.09.2026, then staged LP use.</div>
+            <div><strong>Liquidity Reserve:</strong> initial lock ended 01.09.2026; 200M IFR remains held and unused under a 50M-per-90-day cap.</div>
             <div><strong>Team Vesting:</strong> cliff until ~03.2027, then 36-month linear release.</div>
             <div><strong>Builder Vault:</strong> released only via partner milestones and rewards.</div>
           </div>
@@ -1949,7 +1949,7 @@ render();
           <p style="font-size:11px;color:var(--text-muted);margin-top:12px;line-height:1.6;">
             <strong>Protocol contracts:</strong> FeeRouterV1 receives the 1% IFR pool fee. BuybackController handles separate ETH protocol fees and can buy/burn/add LP when funded.<br>
             <strong>Bootstrap (Plan B):</strong> ~200M IFR was funded to BootstrapVaultV3. finalise() used 100M IFR + 0.030 ETH for the Uniswap V2 LP and reserved 100M IFR for contributor claims; all 3 contributors have claimed.<br>
-            <strong>Liquidity Reserve:</strong> Strategically locked until 01.09.2026. Reserved for Phase 2/3 LP expansion. Not used for Bootstrap.
+            <strong>Liquidity Reserve:</strong> Initial timelock ended 01.09.2026. All 200M IFR remains in the contract; up to 50M IFR is currently available under its 90-day cap, but no withdrawal or LP addition has executed. Not used for Bootstrap.
           </p>
         </div>
       </div>
@@ -2048,14 +2048,14 @@ render();
         <div style="background:#111113;border:1px solid #222225;border-radius:8px;padding:14px 16px;">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
             <span style="font-size:13px;font-weight:600;">&#x1F4A7; Liquidity Reserve</span>
-            <span style="font-size:10px;padding:2px 8px;border-radius:10px;background:rgba(146,43,33,0.15);color:#922B21;">Time-Locked &#x1F512;</span>
+            <span style="font-size:10px;padding:2px 8px;border-radius:10px;background:rgba(146,43,33,0.15);color:#922B21;">Staged Governance</span>
           </div>
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
             <a href="https://etherscan.io/address/0xdc0309804803b3A105154f6073061E3185018f64" target="_blank" rel="noopener" style="font-size:11px;font-family:monospace;color:#8a8a96;text-decoration:none;">0xdc030980...8f64</a>
             <button class="copy-btn" data-addr="0xdc0309804803b3A105154f6073061E3185018f64" style="font-size:10px;background:none;border:1px solid #333;color:#8a8a96;border-radius:4px;padding:1px 6px;cursor:pointer;">Copy</button>
           </div>
           <div style="font-size:13px;font-weight:600;color:#922B21;" data-live-key="card-liqres">loading&hellip;</div>
-          <div style="font-size:10px;color:#666;margin-top:2px;">Locked until 01.09.2026. Phase 2 LP expansion.</div>
+          <div style="font-size:10px;color:#666;margin-top:2px;">Initial lock ended. 200M held; 50M staged cap; 0 withdrawn.</div>
         </div>
 
         <div style="background:#111113;border:1px solid #222225;border-radius:8px;padding:14px 16px;">
@@ -2302,7 +2302,7 @@ render();
         <!-- LiquidityReserve -->
         <rect x="150" y="158" width="140" height="42" rx="10" fill="#0d1117" stroke="#a78bfa" stroke-width="1.5" stroke-dasharray="5,3"/>
         <text x="220" y="176" text-anchor="middle" fill="#a78bfa" font-size="11" font-weight="bold">LiqReserve</text>
-        <text x="220" y="192" text-anchor="middle" fill="#9ca3af" font-size="9">200M &middot; locked &rarr; Sep 2026</text>
+        <text x="220" y="192" text-anchor="middle" fill="#9ca3af" font-size="9">200M held &middot; 50M / 90d cap</text>
 
         <!-- Treasury -->
         <rect x="55" y="158" width="110" height="42" rx="10" fill="#0d1117" stroke="#22c55e" stroke-width="1.5"/>

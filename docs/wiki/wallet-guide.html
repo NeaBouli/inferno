@@ -669,7 +669,7 @@
           <div class="wg-field"><strong>Balance:</strong> 400,600,000 IFR</div>
           <div class="wg-field"><strong>Current Role:</strong> LP Reserve for Phase 2 (100M) + Phase 3 (150M) Uniswap expansion. Received from Deployer on 18.03.2026.</div>
           <div class="wg-role-box">
-            <strong>Ecosystem Role:</strong> Holds the full DEX liquidity reserve under multisig control. Phase 2: 100M IFR for Uniswap LP expansion (after 01.09.2026 LiqRes unlock). Phase 3: 150M IFR for additional LP depth. All transfers require 3-of-5 multisig approval.
+            <strong>Ecosystem Role:</strong> Holds the separate DEX liquidity allocation under multisig control. Any LP expansion requires an explicit 3-of-5 decision. The distinct LiquidityReserve below still holds its full 200M IFR and is limited to 50M IFR per 90-day period.
           </div>
           <div class="wg-field"><strong>Access Control:</strong> Gnosis Safe &mdash; 3-of-5 (same signers as Treasury + Community)</div>
         </div>
@@ -880,7 +880,7 @@
         <div class="wg-card">
           <div class="wg-card-head">
             <div class="wg-card-name">&#x1F4A7; LiquidityReserve</div>
-            <span class="wg-badge wg-badge-locked">Time-Locked</span>
+            <span class="wg-badge wg-badge-locked">Staged Governance</span>
           </div>
           <div class="wg-addr-row">
             <span class="wg-addr"><a href="https://etherscan.io/address/0xdc0309804803b3A105154f6073061E3185018f64" target="_blank" class="wg-addr-link">0xdc0309804803b3A105154f6073061E3185018f64</a></span>
@@ -890,9 +890,9 @@
           <div class="wg-field"><strong>Owner:</strong> Governance</div>
           <div class="wg-field"><strong>feeExempt:</strong> <span class="wg-fee-status wg-fee-yes">&#x2705; Yes</span></div>
           <div class="wg-role-box">
-            <strong>Function:</strong> Holds 200M IFR for Phase 2/3 LP expansion. Hard-locked until 01.09.2026. Cannot be accessed before that date by anyone &mdash; including the team.
+            <strong>Function:</strong> Holds 200M IFR for possible Phase 2/3 liquidity use. The initial lock ended 01.09.2026; all 200M IFR remains held. Governance can withdraw at most 50M IFR per 90-day period under the current cap, and no withdrawal has occurred.
           </div>
-          <div class="wg-field"><strong>Phase:</strong> Locked &mdash; unlocks 01.09.2026</div>
+          <div class="wg-field"><strong>Phase:</strong> Staged availability &mdash; 50M IFR current cap, 0 withdrawn, no pending proposal</div>
         </div>
 
         <!-- CONTRACT 6 — Vesting -->
@@ -1059,16 +1059,16 @@
           </div>
         </div>
 
-        <!-- UPCOMING 2 — LiquidityVault.sol -->
+        <!-- HISTORICAL CONCEPT — LiquidityVault.sol -->
         <div class="wg-card wg-card-upcoming">
           <div class="wg-card-head">
             <div class="wg-card-name">&#x1F4A7; LiquidityVault.sol</div>
-            <span class="wg-badge wg-badge-upcoming">Phase 2</span>
+            <span class="wg-badge wg-badge-upcoming">Concept only</span>
           </div>
-          <div class="wg-field"><strong>Purpose:</strong> Phase 2 LP management</div>
-          <div class="wg-field"><strong>Timeline:</strong> After 05.06.2026</div>
+          <div class="wg-field"><strong>Purpose:</strong> Earlier Phase 2 LP-management concept</div>
+          <div class="wg-field"><strong>Timeline:</strong> Not deployed and not scheduled</div>
           <div class="wg-role-box">
-            <strong>Function:</strong> Manages liquidity expansion using the 200M IFR from LiquidityReserve. Controlled by Governance.
+            <strong>Current boundary:</strong> No LiquidityVault contract is deployed. Governance directly controls the existing LiquidityReserve, whose 200M IFR remains held under the 50M-per-90-day cap. Any future manager requires separate design, audit, deployment and Governance approval.
           </div>
         </div>
 
@@ -1206,7 +1206,7 @@
           <line x1="490" y1="82" x2="660" y2="150" stroke="#9ca3af" stroke-width="1" marker-end="url(#arrow-grey)"/>
           <rect x="590" y="140" width="180" height="50" rx="8" fill="none" stroke="#9ca3af" stroke-width="1"/>
           <text x="680" y="160" text-anchor="middle" fill="white" font-size="11" font-weight="600">LiquidityReserve</text>
-          <text x="680" y="178" text-anchor="middle" fill="#9ca3af" font-size="10">200M IFR (locked)</text>
+          <text x="680" y="178" text-anchor="middle" fill="#9ca3af" font-size="10">200M held (50M / 90d cap)</text>
 
           <!-- PartnerVault 40M -->
           <line x1="490" y1="88" x2="660" y2="220" stroke="#22c55e" stroke-width="1" marker-end="url(#arrow-green)"/>

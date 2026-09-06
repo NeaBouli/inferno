@@ -1,6 +1,6 @@
 # Current Functionality Status
 
-**Verified:** 4 September 2026
+**Verified:** 6 September 2026
 **Repository baseline:** current release branch
 **Network:** Ethereum Mainnet
 
@@ -19,11 +19,13 @@ not override this status.
 
 ## Mainnet Capability Snapshot
 
-Read-only verification at Ethereum block `25812380`:
+Base read-only verification at Ethereum block `25812380`; the
+LiquidityReserve row was refreshed at block `25918433`:
 
 | Component | Verified state | Operational meaning |
 |---|---|---|
 | InfernoToken | `997,673,879.091903855 IFR` total supply | Live; supply has decreased from the 1B genesis supply. |
+| LiquidityReserve | Initial timelock ended 01.09.2026; `200,000,000 IFR` held; `50,000,000 IFR` currently withdrawable under the 90-day cap; `0 IFR` withdrawn as verified at block `25918433` | Availability is staged, not an automatic transfer or LP addition. Any use requires Governance proposal, 48-hour timelock and execution; no LiquidityReserve proposal is pending. |
 | IFRLock | `2,000 IFR` locked | Simple refundable access lock is operational. |
 | CommitmentVault | `47,952,476.871794375 IFR` locked; `priceOracle = 0x0` | TIME_ONLY commitments are operational. Price-conditioned commitments fail closed. |
 | LendingVault | 3 offers; `52,155,440.952845656 IFR` available; `0 IFR` lent; `ifrPriceWei = 0` | Lender offer management is operational. Borrowing is intentionally disabled. |

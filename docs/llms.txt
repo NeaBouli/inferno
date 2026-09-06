@@ -42,7 +42,7 @@ IFR includes an AI Copilot assistant. Free users can ask general protocol questi
 
 - LP Reserve Safe: 400,600,000 IFR (40.06%) — Gnosis Safe 3-of-5
 - BootstrapVaultV3: finalized on June 5, 2026 — community price discovery completed
-- LiquidityReserve: 200,000,000 IFR (20%) — Locked until September 2026
+- LiquidityReserve: 200,000,000 IFR (20%) still held after the initial lock ended on September 1, 2026; 50,000,000 IFR per 90-day period is currently withdrawable by Governance, with 0 IFR withdrawn and no automatic LP deployment
 - Vesting (Team): 150,000,000 IFR (15%) — 12-month cliff, then 36-month linear release (48 months total)
 - PartnerVault: 40,000,000 IFR (4%) — Governance-locked builder rewards
 - Community Safe: 7,900,000 IFR (0.79%) — Operations reserve

@@ -487,7 +487,7 @@
     {
       "@type": "Question",
       "name": "What is the total token supply and distribution?",
-      "acceptedAnswer": {"@type":"Answer","text":"1B IFR distributed as: 40% DEX Liquidity, 20% LiquidityReserve (locked until 01.09.2026), 15% Team Vesting (12-month cliff), 15% Treasury Safe, 6% Community & Grants, 4% BuilderVault."}
+      "acceptedAnswer": {"@type":"Answer","text":"1B IFR distributed as: 40% DEX Liquidity, 20% LiquidityReserve (initial lock ended 01.09.2026; 200M IFR still held under a 50M-per-90-day cap), 15% Team Vesting (12-month cliff), 15% Treasury Safe, 6% Community & Grants, 4% BuilderVault."}
     },
     {
       "@type": "Question",
@@ -772,7 +772,7 @@
 
         <div class="faq-item">
           <button class="faq-q"><span>What is the total token supply and distribution?</span><span class="icon">+</span></button>
-          <div class="faq-a">Fixed genesis supply: 1,000,000,000 IFR distributed across 6 buckets at deployment:<br><br>&bull; <strong>40% DEX Liquidity</strong> (400M) &mdash; Uniswap V2 LP<br>&bull; <strong>20% LiquidityReserve</strong> (200M) &mdash; locked until 01.09.2026<br>&bull; <strong>15% Team Vesting</strong> (150M) &mdash; 12-month cliff, 36-month linear vesting<br>&bull; <strong>15% Treasury Safe</strong> (150M) &mdash; Gnosis Safe multisig<br>&bull; <strong>6% Community &amp; Grants</strong> (60M) &mdash; community initiatives<br>&bull; <strong>4% BuilderVault</strong> (40M) &mdash; builder ecosystem rewards<br><br>See <a href="https://ifrunit.tech/wiki/tokenomics.html">Tokenomics</a> for the full breakdown.</div>
+          <div class="faq-a">Fixed genesis supply: 1,000,000,000 IFR distributed across 6 buckets at deployment:<br><br>&bull; <strong>40% DEX Liquidity</strong> (400M) &mdash; governance-controlled LP reserve allocation<br>&bull; <strong>20% LiquidityReserve</strong> (200M) &mdash; initial lock ended 01.09.2026; all 200M remains held under a 50M-per-90-day cap<br>&bull; <strong>15% Team Vesting</strong> (150M) &mdash; 12-month cliff, 36-month linear vesting<br>&bull; <strong>15% Treasury Safe</strong> (150M) &mdash; Gnosis Safe multisig<br>&bull; <strong>6% Community &amp; Grants</strong> (60M) &mdash; community initiatives<br>&bull; <strong>4% BuilderVault</strong> (40M) &mdash; builder ecosystem rewards<br><br>See <a href="https://ifrunit.tech/wiki/tokenomics.html">Tokenomics</a> for the full breakdown.</div>
         </div>
 
         <div class="faq-item">
@@ -792,7 +792,7 @@
 
         <div class="faq-item">
           <button class="faq-q"><span>Can all tokens eventually be burned?</span><span class="icon">+</span></button>
-          <div class="faq-a">Practically impossible. Burns are percentage-based: 2.5% of 1 billion is 25 million, but 2.5% of 1 million is only 25,000. The burn rate slows exponentially (asymptotic behaviour). Additionally: locked tokens do not move (no burn), the Vesting contract holds 150M locked for years, the LiquidityReserve holds 200M locked, and Governance can reduce fee rates if needed. The ecosystem is self-regulating.</div>
+          <div class="faq-a">Practically impossible. Burns are percentage-based: 2.5% of 1 billion is 25 million, but 2.5% of 1 million is only 25,000. The burn rate slows exponentially (asymptotic behaviour). Additionally: locked tokens do not move (no burn), the Vesting contract holds 150M locked for years, the LiquidityReserve still holds 200M under staged Governance controls, and Governance can reduce fee rates if needed. The ecosystem is self-regulating.</div>
         </div>
 
         <div class="faq-item">
@@ -801,8 +801,8 @@
         </div>
 
         <div class="faq-item">
-          <button class="faq-q"><span>When does the LiquidityReserve unlock?</span><span class="icon">+</span></button>
-          <div class="faq-a">The LiquidityReserve (200M IFR) is locked until <strong>01.09.2026</strong>. After that date, the LP tokens can be withdrawn by the owner (Governance contract) for LP expansion. The reserve uses rate limits to prevent sudden large withdrawals. See <a href="https://ifrunit.tech/wiki/transparency.html">Transparency</a> for on-chain verification.</div>
+          <button class="faq-q"><span>What is the current LiquidityReserve status?</span><span class="icon">+</span></button>
+          <div class="faq-a">The initial LiquidityReserve timelock ended on <strong>01.09.2026</strong>. The contract holds IFR, not LP tokens: all 200M IFR remains in the reserve, the current cap permits at most 50M IFR per 90-day period, and 0 IFR has been withdrawn. Availability does not automatically add liquidity. A withdrawal requires a Governance proposal, the 48-hour timelock and execution; any later LP transaction is a separate transparent action. See <a href="https://ifrunit.tech/wiki/transparency.html">Transparency</a> for on-chain verification.</div>
         </div>
       </div>
 
@@ -942,7 +942,7 @@
 
         <div class="faq-item">
           <button class="faq-q"><span>Where does the Bootstrap funding come from?</span><span class="icon">+</span></button>
-          <div class="faq-a">The BootstrapVaultV3 was funded on 11.03.2026 with ~200M IFR from the Treasury Safe (150M) and Community Safe (50M). This is the &ldquo;Plan B&rdquo; approach because the original LiquidityReserve is locked until 01.09.2026 and cannot be used. BootstrapVaultV3 is fee-exempt since Governance Proposal #4 execution (11.03.2026). See <a href="https://ifrunit.tech/wiki/bootstrap.html" >Bootstrap Event</a> for full details.</div>
+          <div class="faq-a">The BootstrapVaultV3 was funded on 11.03.2026 with ~200M IFR from the Treasury Safe (150M) and Community Safe (50M). This was the &ldquo;Plan B&rdquo; approach because the original LiquidityReserve remained locked through the Bootstrap end date and could not be used at that time. BootstrapVaultV3 is fee-exempt since Governance Proposal #4 execution (11.03.2026). See <a href="https://ifrunit.tech/wiki/bootstrap.html" >Bootstrap Event</a> for full details.</div>
         </div>
       </div>
 
