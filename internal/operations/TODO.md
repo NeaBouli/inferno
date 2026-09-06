@@ -1,5 +1,5 @@
 # IFR Protocol — Developer TODO List
-> Last updated: 2026-09-04 | Branch: main
+> Last updated: 2026-09-06 | Branch: main
 
 ---
 
@@ -104,8 +104,16 @@ On errors: fix immediately, commit with `seo:` prefix.
 - [x] MetaMask Mobile: centralized deep-link + pending connect ✅
 - [x] Protocol Plan wiki page created (26 pages) ✅
 
-## CURRENT WATCHLIST — verified 2026-09-04
+## CURRENT WATCHLIST — verified 2026-09-06
 
+- [ ] LiquidityReserve post-lock governance decision
+      Mainnet block 25918433: the initial timelock has ended.
+      All 200M IFR remains held. No IFR has been withdrawn, and the current
+      cap makes 50M IFR withdrawable per 90-day period. No LiquidityReserve
+      proposal is pending.
+      Availability is not an automatic LP addition. Before any use, document
+      the amount, proportional ETH source, price/slippage impact and execution
+      plan, then use the normal proposal plus 48-hour timelock path.
 - [x] Hardhat 3.15.0 / hardhat-verify 3.1.0 maintenance delivered
       Integrated through PR #77 on 04.09.2026. Full local contract, Generator
       Engine and SDK suites pass, and exact-head plus Main Linux CI are green.
@@ -847,7 +855,11 @@ On errors: fix immediately, commit with `seo:` prefix.
       Submission/evidence pack: docs/COINMARKETCAP_SUBMISSION.md
 - [ ] Activate AI Copilot gate (≥1,000 IFR locked)
 - [ ] Telegram wallet whitelist via WalletConnect
-- [ ] LiqRes withdrawal proposal: `setMaxWithdrawPerPeriod(200M)` from 01.09.2026
+- [x] LiqRes initial lock expiry verified after 01.09.2026
+      All 200M IFR remains held and 0 IFR has been withdrawn. The existing
+      limit is 50M IFR per 90 days; do not propose a 200M one-period cap as an
+      assumed follow-up. Any change or withdrawal needs separate review and
+      Governance approval.
 
 ---
 

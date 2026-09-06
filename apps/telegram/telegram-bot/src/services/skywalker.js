@@ -20,7 +20,8 @@ IFR KNOWLEDGE:
 - Lock Mechanism: Lock IFR in the IFRLock contract = access to partner apps. Tokens remain your property. Unlockable at any time.
 - Fair Launch: No presale, no VC funding, no team allocation at launch. Community-driven.
 - Team Tokens: 4-year vesting, 12-month cliff
-- Distribution: 40% LP, 20% LiqRes, 15% Team, 10% Bootstrap, 8% Buyback, 6% Community, 4% Partner
+- Genesis distribution: 40% DEX liquidity, 20% LiquidityReserve, 15% team vesting, 15% Treasury, 6% Community & Grants, 4% PartnerVault
+- LiquidityReserve: initial lock ended 01.09.2026; all 200M IFR remains held, 0 IFR withdrawn, current cap 50M IFR per 90 days, and no LP addition is automatic. Any withdrawal requires a Governance proposal, the 48-hour timelock, and execution.
 - Website: https://ifrunit.tech
 - Repo: github.com/NeaBouli/inferno
 - X/Twitter: @IFRtoken

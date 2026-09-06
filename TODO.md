@@ -233,8 +233,10 @@ Stand: 07.04.2026 | Konsolidiert (Claude + Core Dev)
 
 ## PHASE 2/3 — Spaeter
 
-1. LiqRes Withdrawal: ab 01.09.2026 — `setMaxWithdrawPerPeriod(200M)` Proposal
-2. LP-Erweiterung aus LiqRes (Phase 2/3)
+1. LiqRes post-lock decision: 200M held, 0 withdrawn, current cap 50M per
+   90 days; no proposal pending (verified at block 25918433)
+2. LP-Erweiterung aus LiqRes nur nach dokumentierter Governance-Entscheidung,
+   48h Timelock und separatem LP-Plan mit proportionalem ETH
 3. Creator Rewards / SDK (Phase 3)
 4. DAO Upgrade (Phase 4)
 5. Bug Bounty Programm (Phase 5)
@@ -251,7 +253,7 @@ Stand: 07.04.2026 | Konsolidiert (Claude + Core Dev)
 | BootstrapVault V1 (DEPRECATED) | `0xA820540936d18e1377C39dd9445E5b36F3F1261a` |
 | Treasury Safe | `0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b` |
 | Community Safe | `0xaC5687547B2B21d80F8fd345B51e608d476667C7` |
-| LiquidityReserve (locked bis 01.09.2026) | `0xdc0309804803b3A105154f6073061E3185018f64` |
+| LiquidityReserve (initial lock ended; 200M held) | `0xdc0309804803b3A105154f6073061E3185018f64` |
 
 ## Wichtige Termine
 
@@ -261,9 +263,9 @@ Stand: 07.04.2026 | Konsolidiert (Claude + Core Dev)
 | ✅ 18.03.2026 | Proposals #7/#8/#9 executed — feeExempt Deployer+Safes |
 | 🟡 20.03.2026 07:18 UTC | Proposal #10 execute: setOwner(TreasurySafe) |
 | 05.06.2026 | Bootstrap Ende — finalise() → Uniswap V2 LP |
-| 01.09.2026 | LiqRes Lock-Ende — LP-Erweiterung moeglich |
+| ✅ 01.09.2026 | LiqRes initiales Lock-Ende — staged withdrawal path active; keine automatische LP-Erweiterung |
 
 ---
 
-**Gesamtuebersicht (Stand 17.03.2026):**
+**Historischer Aufgaben-Snapshot (Stand 17.03.2026):**
 KRITISCH: 10 (6 ✅) | HOCH: 10 (9 ✅) | MITTEL: ~50 (30+ ✅) | NIEDRIG: 11 | Phase 2+: 6

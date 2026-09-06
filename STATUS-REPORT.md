@@ -1,6 +1,6 @@
 # IFR Project Status Report
 
-**Current engineering baseline:** 4 September 2026
+**Current engineering baseline:** 6 September 2026
 **Branch:** `main`
 **Model:** Community Fair Launch (CFLM) -- no presale
 **Ticker:** $IFR
@@ -31,6 +31,10 @@ governance-gated contract path is active.
 - Mainnet borrowing remains disabled with `LendingVault.ifrPriceWei = 0`.
   CommitmentVault price-conditioned locks remain disabled with a zero oracle;
   TIME_ONLY commitments remain operational.
+- LiquidityReserve's initial lock ended on 01.09.2026. At block `25918433`,
+  all 200M IFR remained held, 0 IFR had been withdrawn and the current contract
+  cap allowed 50M IFR per 90 days. No reserve proposal was pending and no LP
+  addition occurred automatically.
 - Root `npm audit`: 8 low transitive development-tool findings, with 0
   moderate, high or critical findings. The monitored Elliptic advisory has no
   available upstream fix in the retained Hardhat verification path.

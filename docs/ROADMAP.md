@@ -69,19 +69,32 @@ governance activation gate is complete.
 
 ### Post-Launch Follow-Ups (do not reopen Phase 2)
 - [ ] Community wallet + team beneficiary addresses finalized
-- [ ] Apps deployed (Railway / Vercel)
+- [x] Public Web3, Benefits and AI Copilot surfaces deployed on the current
+      Hetzner stack; source presence for other apps does not imply deployment
 - [ ] Dashboard + Governance Dashboard switched to mainnet
 - [ ] First real builder integration live
-- [ ] Community announcement (X/Twitter, Discord)
-- [ ] CoinGecko / CoinMarketCap listing application
+- [ ] Sustained community reach and independent coverage beyond project-owned
+      X/Telegram channels
+- [x] CoinGecko and CoinMarketCap listing applications submitted; external
+      review/listing remains pending
 
 ---
 
 ## Phase 3: Growth (Q2-Q3 2026)
 
+- [x] LiquidityReserve initial timelock ended on 01.09.2026
+  - Mainnet verification at block `25918433`: all `200M IFR` remains held,
+    `0 IFR` withdrawn and `50M IFR` currently withdrawable under the existing
+    90-day cap. No reserve proposal is pending; availability does not
+    automatically add Uniswap liquidity.
+- [ ] Governance-paced LiquidityReserve use / LP expansion
+  - Any withdrawal requires a Governance proposal, the 48-hour timelock and
+    execution. A separate, reviewed LP action with proportional ETH is then
+    required; no such action has occurred.
 - [ ] Builder Ecosystem expansion (permissionless integration)
 - [ ] Creator Gateway live (YouTube monetization bridge)
-- [ ] Benefits Network live (merchant onboarding)
+- [x] Benefits Network public customer/seller core live; physical device
+      acceptance and governance-controlled reward activation remain open
 - [x] IFRp Commerce App / `shop.ifrunit.tech` customer/seller PWA core live
   - Customer/seller PWA, external-wallet and IFRLock flows, QR proof/redeem, owner-managed staff checkout, product/service catalog and the fail-closed verified-reward foundation are deployed. Real-device wallet acceptance, governance partner activation, authorized reward submission and the embedded-wallet decision remain.
       Master architecture: `docs/ifrp-commerce-app/MASTER_ARCHITECTURE.md`
@@ -144,4 +157,4 @@ governance activation gate is complete.
 See [Mainnet Checklist](MAINNET_CHECKLIST.md) for detailed progress.
 
 ---
-*Last updated: 26 August 2026*
+*Last updated: 6 September 2026*

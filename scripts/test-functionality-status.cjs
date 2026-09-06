@@ -9,7 +9,7 @@ const read = (relative) => fs.readFileSync(path.join(root, relative), "utf8");
 
 const status = read("docs/CURRENT_FUNCTIONALITY_STATUS.md");
 for (const marker of [
-  "**Verified:** 4 September 2026",
+  "**Verified:** 6 September 2026",
   "**Repository baseline:** current release branch",
   "`644/644` passing",
   "LendingVault.ifrPriceWei = 0",
@@ -17,6 +17,10 @@ for (const marker of [
   "physical device/wallet acceptance matrix is 1/10",
   "embedded-wallet package is a prototype only",
   "0 registered and 0 active builders",
+  "Initial timelock ended 01.09.2026",
+  "50,000,000 IFR` currently withdrawable",
+  "0 IFR` withdrawn",
+  "no LiquidityReserve proposal was pending at block `25918433`",
 ]) {
   assert.ok(status.includes(marker), `functionality status missing: ${marker}`);
 }

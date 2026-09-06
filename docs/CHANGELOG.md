@@ -1,5 +1,15 @@
 # Changelog
 
+## 6 September 2026 — LiquidityReserve Post-Lock Status Correction
+
+- Reverified the Mainnet LiquidityReserve after its initial timelock ended:
+  all 200M IFR remains held, 0 IFR has been withdrawn, and the current
+  contract cap permits at most 50M IFR per 90-day period.
+- Confirmed that no LiquidityReserve governance proposal is pending and that
+  the elapsed timelock did not automatically add liquidity to Uniswap.
+- Corrected current Landing, Wiki, roadmap, status and AI Copilot wording while
+  retaining clearly historical bootstrap and changelog statements.
+
 ## 4 September 2026 — Wiki JSON-LD Regression Gate
 
 - Added a fail-closed structured-data check across all tracked Wiki pages.
