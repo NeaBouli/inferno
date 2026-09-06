@@ -114,6 +114,43 @@ On errors: fix immediately, commit with `seo:` prefix.
       Availability is not an automatic LP addition. Before any use, document
       the amount, proportional ETH source, price/slippage impact and execution
       plan, then use the normal proposal plus 48-hour timelock path.
+- [ ] Council exchange-participation agenda (no date; discussion only)
+      Decide separately whether verified exchanges may receive any IFR,
+      whether a 500k PartnerVault integration pilot or a returnable 2M-per-
+      exchange / 5M-aggregate LiquidityReserve pilot is acceptable, and which
+      milestones, disclosures, escrow/clawback and market-impact controls are
+      mandatory. No allocation is approved.
+- [ ] Decide exchange governance boundary
+      Option A: 0 exchange voting seats and 0 TreasurySafe signer rights.
+      Option B: at most two disclosed non-voting advisers with no Safe
+      permissions. Any future signer candidacy must go through the independent
+      community signer-expansion process. Publish no proposer attribution.
+- [ ] Council agenda and vote-log portal (security-gated future block)
+      Definition of Ready: threat model; current Safe-owner/council registry
+      snapshot with published block number and owner-list hash; domain-bound
+      expiring nonce; EIP-4361 challenge; EOA and
+      EIP-1271 verification; one ballot per eligible identity; replay and CSRF
+      protection; accessibility/mobile tests; independent cryptography,
+      privacy, infrastructure and security review. No private-key custody and
+      no automatic Safe execution.
+      Set open/secret mode before the ballot opens and make mode plus agenda
+      version immutable until close. Open mode may publish wallet plus initials
+      only for an already public mapping with explicit consent; otherwise show
+      initials only. Secret mode publishes only turnout, aggregate result and
+      proof, never wallet, initials, individual vote, signature or linked hash.
+      Secret mode requires separate eligibility-issuance and ballot services,
+      an audited anonymous credential or ZK-membership scheme, one-time
+      nullifiers, encrypted ballots and threshold tallying. Do not reuse the
+      Telegram user-to-wallet map for secret voting.
+      Configure fail-closed eligibility with no environment/deployer fallback.
+      Retain no IP, user-agent, request body, wallet telemetry or analytics in
+      application, proxy, error or audit logs; use no secret-ballot cookies.
+      Document that network, host, RPC and wallet providers may transiently
+      process metadata and verify their production retention controls.
+      Do not reuse the current Points SIWE verification unchanged: the portal
+      must enforce the expected domain and nonce during verification and add an
+      explicit EIP-1271 path. Do not reuse Telegram eligibility conversions
+      through JavaScript `number`; compare IFR base units as `bigint`.
 - [x] Hardhat 3.15.0 / hardhat-verify 3.1.0 maintenance delivered
       Integrated through PR #77 on 04.09.2026. Full local contract, Generator
       Engine and SDK suites pass, and exact-head plus Main Linux CI are green.

@@ -25,7 +25,12 @@ requireText('docs/EXCHANGE_FEE_EXEMPTION_POLICY.md', [
   'TreasurySafe 3-of-5',
   '48-hour timelock',
   'setFeeExempt(exchangeAddress, true)',
-  'No CEX address activated as of 26 August 2026'
+  'No CEX address activated as of 26 August 2026',
+  'Open Council Agenda: Exchange Participation',
+  'no proposer attribution or personal name',
+  'These figures are agenda ceilings, not allocations',
+  'no exchange voting seat',
+  'signer or execution access in return for listing'
 ]);
 
 requireText('docs/index.html', [
@@ -42,8 +47,111 @@ requireText('docs/wiki/fee-design.html', [
   'approved 26.08.2026 at 00:17 MET by a 4-1 vote',
   'sender or recipient bypasses the complete 3.5% fee',
   'No CEX address is currently fee-exempt on-chain',
-  'The IFR/WETH pair is fee-exempt; the Uniswap V2 router is not'
+  'The IFR/WETH pair is fee-exempt; the Uniswap V2 router is not',
+  'governance.html#council-agenda'
 ]);
+
+requireText('docs/wiki/governance.html', [
+  'id="council-agenda"',
+  'Status: undated discussion draft',
+  'Agenda entries contain no proposer attribution or personal name',
+  'No vote is open, no IFR is allocated',
+  'proposed agenda ceilings, not allocations',
+  'no voting seat and no TreasurySafe signer or execution access',
+  'EIP-1271',
+  'Open and secret ballots are separate modes',
+  'one-time nullifiers',
+  'retain no source IP',
+  'cannot honestly promise that an IP address is never seen',
+  'Future signer onboarding must obtain explicit consent',
+  'Separate TreasurySafe 3-of-5 action after Timelock',
+  'No key custody, no backend executor and no automatic TreasurySafe/Governance action'
+]);
+
+requireText('docs/GOVERNANCE_SIGNER_EXPANSION_PLAN.md', [
+  'Publication consent',
+  'initials-to-wallet mapping'
+]);
+
+requireText('docs/wiki/community-signer-expansion.html', [
+  'Publication consent',
+  'initials may be linked publicly to the signer wallet',
+  'Safe ownership remains public on-chain regardless'
+]);
+
+requireText('docs/OFFCHAIN_SECURITY.md', [
+  'Council secret-ballot portal is a separate privacy domain',
+  'retain no source IP, user-agent, request body, ballot or',
+  'wallet providers may still process connection',
+  'metadata transiently'
+]);
+
+requireText('docs/social/telegram-council-exchange-agenda.md', [
+  'undated discussion draft',
+  'Agenda entries contain no proposer attribution or personal name',
+  'No vote is open, no IFR is allocated',
+  '0 voting seats and 0 TreasurySafe signer rights',
+  'Social cashtag: $IFRp'
+]);
+
+const forbiddenAttributionPatterns = [
+  /\b(?:proposed|submitted|prepared|written|authored)\s+by\b/i,
+  /^\s*(?:author|proposer|submitter)\s*:/im,
+  /\bgio mario\b/i,
+  /\bgeorgios\b/i,
+  /\bcodex\b/i,
+  /\bkimi\b/i,
+  /\bclaude\b/i
+];
+
+function assertNoAttribution(file, source) {
+  for (const pattern of forbiddenAttributionPatterns) {
+    if (pattern.test(source)) {
+      throw new Error(`${file} attributes a Council agenda proposal: ${pattern}`);
+    }
+  }
+}
+
+const agendaSources = {
+  'docs/EXCHANGE_FEE_EXEMPTION_POLICY.md': read('docs/EXCHANGE_FEE_EXEMPTION_POLICY.md').split('## Open Council Agenda:')[1],
+  'docs/wiki/governance.html': read('docs/wiki/governance.html').split('id="council-agenda"')[1].split('id="participating"')[0],
+  'docs/social/telegram-council-exchange-agenda.md': read('docs/social/telegram-council-exchange-agenda.md')
+};
+for (const [file, source] of Object.entries(agendaSources)) {
+  assertNoAttribution(file, source);
+}
+
+for (const fixture of [
+  'pRoPoSeD bY Example Person',
+  'AUTHOR: Example Person',
+  'Prepared by Example Person',
+  'submitted BY Gio Mario'
+]) {
+  assert.throws(
+    () => assertNoAttribution('fixture', fixture),
+    /attributes a Council agenda proposal/
+  );
+}
+
+requireText('docs/GOVERNANCE_CONSTITUTION.md', [
+  'Governance Constitution v1.1',
+  'senderBurnBps',
+  'recipientBurnBps',
+  'TreasurySafe 3-of-5',
+  'Governance owner calls `governance.propose(target, data)`',
+  'can call `cancel(proposalId)` until the proposal',
+  '4-of-7 community signer expansion is planned, not active'
+]);
+
+for (const obsolete of [
+  'Burn rate, max fee, supply are never changeable',
+  'After ETA: anyone can call `execute()` (permissionless)',
+  '### Owner Multisig (4-of-7)'
+]) {
+  if (read('docs/GOVERNANCE_CONSTITUTION.md').includes(obsolete)) {
+    throw new Error(`docs/GOVERNANCE_CONSTITUTION.md still contains obsolete governance text: ${obsolete}`);
+  }
+}
 
 requireText('docs/wiki/faq.html', [
   'Are transfers to and from centralized exchanges burn-free?',

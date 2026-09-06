@@ -1,4 +1,10 @@
-# Inferno ($IFR) Governance Constitution v1.0
+# Inferno ($IFR) Governance Constitution v1.1
+
+> **Current implementation notice (6 September 2026):** This document describes
+> the present 3-of-5 TreasurySafe control model and the planned expansion path.
+> The deployed contracts are authoritative where an older policy summary
+> differs. Current Council agenda drafts and vote status are public at
+> <https://ifrunit.tech/wiki/governance.html#council-agenda>.
 
 ## Preamble
 The Inferno Governance ensures decentralized control over all
@@ -7,10 +13,15 @@ a 48-hour timelock period and quorum approval.
 
 ## Article 1 — Governance Principles
 1. **Transparency:** All proposals are traceable on-chain
-2. **Time Delay:** 48h timelock for all changes (no bypass)
-3. **Decentralization:** Target 4-of-7 multisig for mainnet
-4. **Immutability of Core Values:** Burn rate, max fee, supply are never changeable
-5. **Guardian Right:** Emergency cancel by guardian multisig
+2. **Time Delay:** Protocol target calls use the Governance proposal and 48h
+   timelock; Governance's own explicitly coded owner/guardian administration
+   remains subject to its deployed access controls
+3. **Decentralization:** TreasurySafe 3-of-5 is active; 4-of-7 is planned only
+   after the public community signer-expansion process
+4. **Core Bounds:** No mint function, fixed 9 decimals, and a hard 5% aggregate
+   fee cap; fee components are governable within that cap
+5. **Guardian Right:** The current Guardian EOA can cancel pending proposals;
+   a separate guardian multisig remains planned
 
 ## Article 2 — Governable Parameters
 
@@ -31,19 +42,21 @@ a 48-hour timelock period and quorum approval.
 | paused | Emergency pause | bool |
 | feeCollector | Fee recipient | any address |
 
-### 2.3 IFRToken (immutable)
-| Parameter | Value | Changeable? |
-|-----------|-------|-------------|
-| totalSupply | 1,000,000,000 IFR | No |
-| burnFeeBps | 250 (2.5%) | No |
-| poolFeeBps | 100 (1.0%) | No |
+### 2.3 IFRToken
+
+| Parameter | Current/default value | Changeable? |
+| --- | --- | --- |
+| genesis supply | 1,000,000,000 IFR | No mint function; circulating supply decreases through burns |
+| senderBurnBps | 200 (2.0%) | Yes, through Governance within aggregate cap |
+| recipientBurnBps | 50 (0.5%) | Yes, through Governance within aggregate cap |
+| poolFeeBps | 100 (1.0%) | Yes, through Governance within aggregate cap |
 | decimals | 9 | No |
-| maxFeeBps | 500 (5.0%) | Hard cap |
+| aggregate fee cap | 500 (5.0%) | Hard contract cap |
 
 ## Article 3 — Proposal Lifecycle
 
 ### Phase 1: Proposal
-1. Proposer calls `governance.propose(targets, values, calldatas, description)`
+1. Governance owner calls `governance.propose(target, data)`
 2. Proposal appears in timelock queue
 3. ETA = block.timestamp + 48h (minimum)
 4. Status: **PENDING**
@@ -54,36 +67,39 @@ a 48-hour timelock period and quorum approval.
 - Status: **QUEUED**
 
 ### Phase 3: Execution
-- After ETA: anyone can call `execute()` (permissionless)
+- After ETA: the Governance owner (currently TreasurySafe 3-of-5) calls
+  `execute()`
 - Before execution: re-verify that the proposal is still relevant
 - Status: **EXECUTED**
 
 ### Phase 4: Rejected/Cancelled Proposals
-- Guardian can cancel at any time: `guardian.cancel(proposalId)`
+- Governance owner or Guardian can call `cancel(proposalId)` until the proposal
+  executes
 - Cancelled proposals cannot be re-executed
 - Status: **CANCELLED**
 
 ## Article 4 — Multisig Structure (Mainnet)
 
-### Owner Multisig (4-of-7)
+### Owner Multisig (3-of-5 active)
 Responsible for: All governance proposals
-- 2 founder wallets (hardware wallet, Ledger)
-- 2 community representatives (elected via Snapshot)
-- 2 builder representatives (first accredited builders)
-- 1 reserve wallet (cold storage, emergency)
 
-### Guardian Multisig
-Responsible for: Emergency cancel only
-- 1 founder wallet
-- 1 independent security reviewer
-- 1 community representative
+- Five current Safe owners, with three confirmations required
+- 4-of-7 community signer expansion is planned, not active
+- New signers require the public eligibility, conflict, security, selection,
+  rotation and emergency-replacement process
+
+### Guardian
+
+The current Guardian is the deployer EOA and has emergency cancellation power;
+it cannot propose or execute. Migration to a separate guardian multisig remains
+planned.
 
 ## Article 5 — Prohibited Governance Actions
 The following actions are technically impossible by contract design:
 - Minting new IFR tokens
-- Increasing the burn rate above 5%
+- Setting aggregate transfer fees above 5%
 - Direct access to locked user tokens
-- Bypassing the 48h timelock
+- Bypassing the 48h delay for calls queued through `Governance.propose()`
 - Changing the token decimals
 
 ## Article 6 — Governance Phases
@@ -102,4 +118,4 @@ The following actions are technically impossible by contract design:
 - Versioning: GOVERNANCE_CONSTITUTION_v{n}.md
 
 ---
-*Version: 1.0 | As of: March 2026 | Network: Ethereum Mainnet (deployed 2026-03-05)*
+*Version: 1.1 | Updated: 6 September 2026 | Network: Ethereum Mainnet*

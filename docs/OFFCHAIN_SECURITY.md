@@ -62,6 +62,15 @@ All admin endpoints must:
 - Never be publicly accessible (IP whitelist or VPN)
 - Log all actions with timestamp
 
+The planned Council secret-ballot portal is a separate privacy domain and must
+not reuse this admin logging policy. Its application, proxy, error and audit
+layers must retain no source IP, user-agent, request body, ballot or
+wallet-linked telemetry. Security evidence is limited to non-identifying
+commitments, one-time nullifiers, aggregate results and verification proofs.
+Hosting, network, RPC and wallet providers may still process connection
+metadata transiently; their behavior and retention controls must be verified
+and disclosed before launch.
+
 ## Secrets Checklist (Mainnet)
 
 - [ ] VoucherSigner Key: Hardware Wallet or HSM
