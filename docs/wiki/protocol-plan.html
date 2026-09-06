@@ -841,12 +841,12 @@
           </div>
           <code style="font-size:11px;color:var(--muted);word-break:break-all;">0xdc0309804803b3A105154f6073061E3185018f64</code>
           <p style="font-size:13px;color:var(--muted);margin:10px 0;">
-            200M IFR (20%) time-locked until 01.09.2026. Smart contract &mdash; no one can access before unlock,
-            not even the team. After unlock, Governance Proposal required to deploy as additional Uniswap liquidity.
+            The initial lock on 200M IFR (20%) ended 01.09.2026. All 200M IFR remains in the smart contract.
+            Governance may withdraw at most 50M IFR per 90-day period under the current cap; no withdrawal or LP deployment has executed.
           </p>
           <div style="display:flex;gap:12px;font-size:12px;">
             <span style="color:#f97316;">200M IFR</span>
-            <span style="color:var(--muted);">Locked until 01.09.2026</span>
+            <span style="color:var(--muted);">Held &middot; 50M / 90-day cap &middot; 0 withdrawn</span>
           </div>
         </div>
 
@@ -1052,7 +1052,7 @@
           </div>
           <div>
             <div style="font-size:11px;color:#3b82f6;font-weight:600;">Phase 2 &mdash; Governance</div>
-            <div style="font-size:12px;color:var(--muted);">After LiqRes unlock (01.09.2026). 100M IFR via Governance Proposal + 48h Timelock. Volume verified off-chain.</div>
+            <div style="font-size:12px;color:var(--muted);">Not scheduled. The initial LiqRes lock ended 01.09.2026, but the current cap is 50M IFR per 90 days. A 100M phase would require at least two periods or a separately proposed cap change, plus Governance proposal, 48h timelock and a distinct LP action.</div>
           </div>
           <div>
             <div style="font-size:11px;color:#8b5cf6;font-weight:600;">Phase 3 &mdash; Flexible</div>
@@ -1201,7 +1201,7 @@
         <table style="width:100%;border-collapse:collapse;font-size:13px;">
           <tr style="border-bottom:1px solid var(--border);"><td style="padding:8px;color:var(--muted);">March 2026</td><td style="padding:8px;">Bootstrap opened &mdash; 200M IFR in vault</td><td style="padding:8px;color:#22c55e;">&#x2705; Done</td></tr>
           <tr style="border-bottom:1px solid var(--border);"><td style="padding:8px;color:var(--muted);">June 2026</td><td style="padding:8px;">Bootstrap finalized &mdash; LP created via finalise()</td><td style="padding:8px;color:#22c55e;">&#x2705; Done</td></tr>
-          <tr style="border-bottom:1px solid var(--border);"><td style="padding:8px;color:var(--muted);">Sep 2026</td><td style="padding:8px;">LiquidityReserve unlock &mdash; 200M IFR available</td><td style="padding:8px;color:var(--muted);">Locked</td></tr>
+          <tr style="border-bottom:1px solid var(--border);"><td style="padding:8px;color:var(--muted);">Sep 2026</td><td style="padding:8px;">Initial LiquidityReserve lock ended &mdash; 200M IFR still held, 50M current staged capacity</td><td style="padding:8px;color:var(--muted);">No withdrawal</td></tr>
           <tr style="border-bottom:1px solid var(--border);"><td style="padding:8px;color:var(--muted);">March 2027</td><td style="padding:8px;">Team Vesting cliff ends &mdash; linear release begins</td><td style="padding:8px;color:var(--muted);">Locked</td></tr>
           <tr><td style="padding:8px;color:var(--muted);">March 2030</td><td style="padding:8px;">Team Vesting fully vested</td><td style="padding:8px;color:var(--muted);">Locked</td></tr>
         </table>

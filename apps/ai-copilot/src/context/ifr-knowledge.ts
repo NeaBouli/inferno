@@ -164,7 +164,7 @@ export function getIFRKnowledge() {
       },
       lpStrategy: {
         description: "Phased LP addition — NOT all 400M at once. Wait for price appreciation = 100M x more efficient.",
-        milestones: "M1: Pool 1 ETH → +50M IFR. M2: Pool 5 ETH → +100M IFR. M3: Sept 2026 LiqRes unlock.",
+        milestones: "M1: Pool 1 ETH → proposed +50M IFR. M2: Pool 5 ETH → proposed +100M IFR. The LiquidityReserve initial lock ended in Sept 2026, but all 200M IFR remains held; only 50M per 90 days is currently withdrawable and no LP addition is automatic.",
         wiki: "https://ifrunit.tech/wiki/lp-strategy.html"
       },
       buybackController: {

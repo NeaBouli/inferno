@@ -860,7 +860,7 @@
 
       <div class="callout">
         <p>
-          <strong>LiquidityReserve (200M IFR)</strong> is smart-contract-locked until 01.09.2026. The Bootstrap period ends approximately 05.06.2026 &mdash; the timing is incompatible. The original plan to fund the Bootstrap from the LiquidityReserve contract is therefore not feasible.
+          <strong>LiquidityReserve (200M IFR)</strong> was smart-contract-locked until 01.09.2026. The Bootstrap period ended on 05.06.2026, so the reserve could not fund the Bootstrap. This historical timing mismatch led to Plan B.
         </p>
         <p style="margin-top: 12px;">
           <strong>Solution (decided 08.03.2026):</strong> Fund the BootstrapVaultV3 directly from the Treasury Safe and Community Safe. No smart-contract lock needs to be broken, no governance override required. The funds are sent as standard ERC-20 transfers (subject to 3.5% fee-on-transfer until feeExempt is set).
@@ -1197,8 +1197,8 @@
           <div class="phase-date">05.06.2026 23:51 UTC &mdash; Block 25254575 &mdash; LP Token: 0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0</div>
         </div>
         <div class="phase-item pending">
-          <div class="phase-label">&#x1F512; LiquidityReserve Unlock</div>
-          <div class="phase-date">01.09.2026 &mdash; 200M IFR available for LP expansion (Governance)</div>
+          <div class="phase-label">LiquidityReserve Initial Lock Ended</div>
+          <div class="phase-date">01.09.2026 &mdash; 200M IFR remains held; 50M IFR current 90-day cap; 0 withdrawn</div>
         </div>
       </div>
 
@@ -1278,8 +1278,8 @@
           </tr>
           <tr>
             <td>From 01.09.2026</td>
-            <td>+200M LiqRes for LP expansion (Governance)</td>
-            <td style="font-weight: 600;">&#x1F512; Locked</td>
+            <td>Up to 50M LiqRes per 90 days, only after Governance action</td>
+            <td style="font-weight: 600;">Held &mdash; no withdrawal</td>
           </tr>
         </tbody>
       </table>
@@ -1447,7 +1447,7 @@
       <ul>
         <li><strong>Milestone 1</strong> (pool 1 ETH): +50M IFR</li>
         <li><strong>Milestone 2</strong> (pool 5 ETH): +100M IFR</li>
-        <li><strong>Milestone 3</strong> (Sept 2026): LiqRes unlock</li>
+        <li><strong>Milestone 3</strong> (Sept 2026): initial LiqRes lock ended; Governance has not proposed or executed a withdrawal</li>
       </ul>
 
       <h3>Why This Works With Low Initial Liquidity</h3>
