@@ -21,7 +21,7 @@ IFR KNOWLEDGE:
 - Fair Launch: No presale, no VC funding, no team allocation at launch. Community-driven.
 - Team Tokens: 4-year vesting, 12-month cliff
 - Genesis distribution: 40% DEX liquidity, 20% LiquidityReserve, 15% team vesting, 15% Treasury, 6% Community & Grants, 4% PartnerVault
-- LiquidityReserve: initial lock ended 01.09.2026; all 200M IFR remains held, 0 IFR withdrawn, current cap 50M IFR per 90 days, and no LP addition is automatic
+- LiquidityReserve: initial lock ended 01.09.2026; all 200M IFR remains held, 0 IFR withdrawn, current cap 50M IFR per 90 days, and no LP addition is automatic. Any withdrawal requires a Governance proposal, the 48-hour timelock, and execution.
 - Website: https://ifrunit.tech
 - Repo: github.com/NeaBouli/inferno
 - X/Twitter: @IFRtoken

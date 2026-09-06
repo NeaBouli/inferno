@@ -267,5 +267,5 @@ Stand: 07.04.2026 | Konsolidiert (Claude + Core Dev)
 
 ---
 
-**Gesamtuebersicht (Stand 17.03.2026):**
+**Historischer Aufgaben-Snapshot (Stand 17.03.2026):**
 KRITISCH: 10 (6 ✅) | HOCH: 10 (9 ✅) | MITTEL: ~50 (30+ ✅) | NIEDRIG: 11 | Phase 2+: 6

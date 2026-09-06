@@ -20,7 +20,7 @@ for (const marker of [
   "Initial timelock ended 01.09.2026",
   "50,000,000 IFR` currently withdrawable",
   "0 IFR` withdrawn",
-  "no LiquidityReserve proposal is pending",
+  "no LiquidityReserve proposal was pending at block `25918433`",
 ]) {
   assert.ok(status.includes(marker), `functionality status missing: ${marker}`);
 }

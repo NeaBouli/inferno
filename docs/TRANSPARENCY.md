@@ -1,6 +1,6 @@
 # Inferno ($IFR) — On-Chain Transparency Report
 
-Last updated: April 2026 | Network: Ethereum Mainnet
+Last updated: 6 September 2026 | Network: Ethereum Mainnet
 
 All data is verifiable on-chain via Etherscan. No hidden wallets, no insider deals.
 
@@ -165,4 +165,4 @@ Or verify directly on Etherscan:
 - [Governance (Timelock)](https://etherscan.io/address/0xc43d48E7FDA576C5022d0670B652A622E8caD041)
 - [PartnerVault](https://etherscan.io/address/0xc6eb7714bCb035ebc2D4d9ba7B3762ef7B9d4F7D)
 
-*All data from Ethereum Mainnet. Last updated: April 2026 | Version 2.1*
+*All data from Ethereum Mainnet. Last updated: 6 September 2026 | Version 2.1*
