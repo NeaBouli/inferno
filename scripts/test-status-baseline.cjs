@@ -39,7 +39,8 @@ assert.equal(
   packageLock.packages?.["node_modules/@nomicfoundation/hardhat-verify"]?.version,
   "3.1.0"
 );
-assert.equal(packageLock.packages?.["node_modules/adm-zip"]?.version, "0.6.0");
+assert.equal(packageLock.packages?.["node_modules/adm-zip"]?.version, "0.6.1");
+assert.equal(packageLock.packages?.["node_modules/js-yaml"]?.version, "4.3.2");
 assert.equal(
   packageLock.packages?.["node_modules/serialize-javascript"]?.version,
   "7.0.5"
