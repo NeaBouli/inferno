@@ -45,6 +45,18 @@ button:disabled { cursor: wait; opacity: .65; }
 .primary:hover { background: #803317; color: white; }
 :focus-visible { outline: 3px solid #28634a; outline-offset: 4px; }
 .notice { border-left: 3px solid #a3411d; padding: 12px 18px; background: #f2eee8; }
+.liquidity-guide .main p.notice { display: block; max-width: none !important; width: 100%; line-height: 1.7; margin: 20px 0; padding: 16px 20px; text-align: left; }
+.liquidity-guide .notice strong { display: inline; }
+.liquidity-guide .main :is(p,li,dd,summary) { overflow-wrap: anywhere; }
+.liquidity-guide .main .calculator { background: #eef2f0 !important; }
+.liquidity-guide .fields { align-items: start; margin: 22px 0; }
+.liquidity-guide .fields p { margin: 10px 0 0; font-size: 14px; line-height: 1.6; }
+.liquidity-guide .main :is(ol,ul) { padding-left: 24px; }
+.liquidity-guide .main li { padding-left: 4px; line-height: 1.7; }
+.liquidity-guide .main dd { padding: 10px 0; line-height: 1.6; }
+.liquidity-guide .main details p { margin-bottom: 0; }
+.liquidity-guide .main > section { background: transparent !important; padding: 32px 0; }
+.liquidity-guide .main .notice { border-radius: 0 4px 4px 0; }
 li { margin-bottom: 12px; }
 dt { font-weight: 700; margin-top: 18px; } dd { margin: 4px 0; }
 #pool-reserves { overflow-wrap: anywhere; }

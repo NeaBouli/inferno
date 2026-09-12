@@ -10,7 +10,19 @@
 .liquidity-gauge [data-status] { min-height: 40px; color: #45584f; }
 .liquidity-gauge .gauge-actions { display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 16px; }
 .liquidity-gauge .gauge-actions a { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 10px 16px; border-radius: 6px; background: #a8421b; color: #fff; font-size: 14px; font-weight: 700; text-decoration: none; }
-.liquidity-gauge button { width: 44px; height: 44px; flex: 0 0 44px; border: 1px solid #708b7d; border-radius: 6px; background: #fff; color: #203c32; font-size: 24px; cursor: pointer; }
-.liquidity-gauge button:disabled { opacity: .5; cursor: wait; }
+.liquidity-gauge .gauge-live { display: inline-flex; align-items: center; gap: 7px; margin-top: 10px; font-size: 12px; font-weight: 700; color: #5c5144; }
+.liquidity-gauge .gauge-live i { width: 8px; height: 8px; border-radius: 50%; background: #9a6a16; }
+.liquidity-gauge[data-state="live"] .gauge-live { color: #225b40; }
+.liquidity-gauge[data-state="live"] .gauge-live i { background: #277949; box-shadow: 0 0 0 3px #27794920; animation: liquidity-live 2s ease-in-out infinite; }
+.liquidity-gauge[data-state="unavailable"] .gauge-live i { background: #8a4239; }
+@keyframes liquidity-live { 50% { opacity: .55; } }
+.liquidity-gauge .gauge-capacity { display: block; font-size: 26px; overflow-wrap: anywhere; }
+.liquidity-gauge .gauge-capacities { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 8px; margin: 18px 0; padding: 12px 0; border-block: 1px solid #c8d3cd; font-size: 12px; }
+.liquidity-gauge .gauge-capacities dd { margin: 4px 0 0; font-weight: 600; overflow-wrap: anywhere; }
+.liquidity-gauge label { display: block; font-size: 13px; margin-bottom: 6px; }
+.liquidity-gauge input { box-sizing: border-box; width: 100%; min-height: 44px; padding: 10px; border: 1px solid #708b7d; border-radius: 4px; background: #fff; color: #203c32; font: inherit; }
+.liquidity-gauge input[aria-invalid="true"] { border-color: #a43829; }
+.liquidity-gauge .gauge-ticks > span { flex: 1; min-width: 0; overflow-wrap: anywhere; }
 .liquidity-gauge :is(a, button):focus-visible { outline: 3px solid #245f48; outline-offset: 3px; }
 @media (prefers-reduced-motion: reduce) { .liquidity-gauge .gauge-needle { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .liquidity-gauge .gauge-live i { animation: none; } }
