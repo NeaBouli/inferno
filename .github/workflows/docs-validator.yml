@@ -11,6 +11,8 @@ on:
       - 'internal/operations/TODO.html'
       - 'reports/*.md'
       - 'apps/ai-copilot/src/context/ifr-knowledge.ts'
+      - 'apps/ai-copilot/server/wiki-rag.ts'
+      - 'scripts/test-liquidity-*'
       - 'apps/ai-copilot/src/context/wiki-content.json'
       - 'scripts/build-wiki-rag.js'
       - 'scripts/check-links.js'
@@ -45,6 +47,8 @@ on:
       - 'internal/operations/TODO.html'
       - 'reports/*.md'
       - 'apps/ai-copilot/src/context/ifr-knowledge.ts'
+      - 'apps/ai-copilot/server/wiki-rag.ts'
+      - 'scripts/test-liquidity-*'
       - 'apps/ai-copilot/src/context/wiki-content.json'
       - 'scripts/build-wiki-rag.js'
       - 'scripts/check-links.js'
@@ -191,6 +195,12 @@ jobs:
       - name: Check Wiki head integrity
         run: npm run test:wiki-heads
 
+      - name: Check read-only liquidity math and integration
+        run: |
+          node scripts/test-liquidity-guide.mjs
+          node scripts/test-liquidity-gauge.mjs
+          node scripts/test-liquidity-integration.cjs
+
       - name: Check security reporting configuration
         run: npm run test:security-reporting
 
@@ -219,6 +229,9 @@ jobs:
 
       - name: Run landing/wiki wallet suite
         run: npm run test:wallet-connect
+
+      - name: Run read-only liquidity browser and wizard suite
+        run: node scripts/test-liquidity-browser.mjs
 
       - name: Run Web3 write-flow suite
         run: npm run test:web3-write

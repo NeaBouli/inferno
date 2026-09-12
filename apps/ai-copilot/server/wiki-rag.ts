@@ -115,7 +115,7 @@ export function buildSystemPrompt(
 
 --- WIKI KNOWLEDGE BASE ---
 The following is extracted from the official IFR Wiki. Use this as your primary source of truth.
-When answering, cite the specific wiki page: "Source: wiki/${relevantDocs[0]?.slug}"
+When answering, cite the source page(s) that actually support each claim, using the wiki/<slug> shown in that document's heading. Do not automatically cite the first document. If no supplied page supports a claim, state that limitation rather than inventing a source.
 
 ${wikiContext}
 --- END WIKI ---`;
@@ -124,13 +124,13 @@ ${wikiContext}
 function selectDocsForMode(mode: string, docs: WikiDoc[]): WikiDoc[] {
   // Priority pages per mode
   const priorities: Record<string, string[]> = {
-    explorer: ["tokenomics", "faq", "fair-launch", "fee-design", "bootstrap", "roadmap"],
-    user: ["lock-mechanism", "tokenomics", "vesting", "faq", "integration", "fair-launch"],
-    dev: ["contracts", "integration", "deployment", "security", "governance", "vesting"],
+    explorer: ["tokenomics", "faq", "liquidity", "fair-launch", "fee-design", "bootstrap", "roadmap"],
+    user: ["lock-mechanism", "liquidity", "tokenomics", "vesting", "faq", "integration", "fair-launch"],
+    dev: ["contracts", "liquidity", "integration", "deployment", "security", "governance", "vesting"],
     // Backwards compatibility
-    customer: ["tokenomics", "faq", "fair-launch", "fee-design", "bootstrap", "roadmap"],
-    partner: ["lock-mechanism", "tokenomics", "vesting", "faq", "integration", "fair-launch"],
-    developer: ["contracts", "integration", "deployment", "security", "governance", "vesting"],
+    customer: ["tokenomics", "faq", "liquidity", "fair-launch", "fee-design", "bootstrap", "roadmap"],
+    partner: ["lock-mechanism", "liquidity", "tokenomics", "vesting", "faq", "integration", "fair-launch"],
+    developer: ["contracts", "liquidity", "integration", "deployment", "security", "governance", "vesting"],
   };
 
   const priorityList = priorities[mode] || priorities.customer;

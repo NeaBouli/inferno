@@ -216,7 +216,17 @@ Read-only governance dashboard for monitoring PartnerVault, proposals, and gener
 
 **Tabs:** Overview · Builders · Timelock Queue · Calldata Generator
 
-**Start:** `cd apps/governance-dashboard && npm run dev` → http://localhost:5174
+**Start:** `cd apps/governance-dashboard && npm run dev` → <http://localhost:5174>
+
+### User-provided IFR / ETH liquidity
+
+The [liquidity guide](docs/wiki/liquidity.html) is discoverable from the landing Quick Start wizard and Wiki navigation. Its read-only calculator verifies Ethereum pool identities, same-block reserves, freshness and the pair's fee exemption before estimating matching ETH using integer IFR amounts (9 decimals).
+
+Below the landing protocol summary, the liquidity gauge displays verified WETH reserves on a 0–1 WETH scale (capped above 1), paired IFR reserves and block time. Its colors indicate reserve size, not safety, returns or a funding target. Stale or unavailable readings hide the needle; refresh is read-only. Scale tests: `node scripts/test-liquidity-gauge.mjs`.
+
+Deposits, LP approvals and withdrawals take place **externally on Uniswap V2**, not inside this site. LP tokens represent a share of current reserves; they are not IFRLock access or automatic Builder rewards. Withdrawal routes through non-exempt intermediaries can incur IFR transfer fees. No return, fixed withdrawal amount or fee-free router path is promised.
+
+Checks: `node scripts/test-liquidity-guide.mjs`, `node scripts/test-liquidity-integration.cjs`, `node scripts/test-liquidity-browser.mjs`. Browser tests use mocked chain data; `RUN_LIVE_POOL=1` adds a public read-only RPC smoke check. No real wallet signing is performed.
 
 ### AI Copilot
 

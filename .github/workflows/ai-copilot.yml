@@ -36,4 +36,5 @@ jobs:
       - run: npm run check:server-imports
       - run: npm run test:surface-ui
       - run: npm run test:surface-context
+      - run: npm run test:liquidity-context
       - run: npm run build

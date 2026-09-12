@@ -316,3 +316,17 @@ migration and its full contract-suite evidence exist.
   upstream plugin support; do not use `--force` or `--legacy-peer-deps`.
 - The update was integrated through PR #77. Exact-head and Main Linux CI
   passed on 4 September 2026. No Mainnet verification request was submitted.
+
+## 2026-09-13 Liquidity Release Security Prerequisites
+
+- Root lockfile: `adm-zip` 0.6.0 to 0.6.1 and `js-yaml` 4.3.1 to 4.3.2.
+  Benefits backend test tooling: `js-yaml` 3.15.1 to 3.15.2.
+- Benefits frontend: Next.js and platform compilers 15.5.21 to 15.5.25;
+  Sharp 0.35.3 to 0.35.4 with matching native libraries. Wallet connector
+  libraries, contract code and application data schemas remain unchanged.
+- These patches address GHSA-vwc7-r8mq-g2x9, GHSA-2883-xcg3-v3hh,
+  GHSA-p293-qw3h-jr36, GHSA-2xp9-vwfh-vxw4 and GHSA-rgj7-g3m4-5g8c.
+  Advisory classification is not evidence that the live service was exploited.
+- Publication requires full Benefits regression, contract tests and exact-head
+  CI. This entry describes the candidate, not proof of production deployment.
+  No audit thresholds or security exceptions have been relaxed.

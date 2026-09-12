@@ -75,6 +75,7 @@ IFR includes an AI Copilot assistant. Free users can ask general protocol questi
 - LendingVault: https://ifrunit.tech/wiki/lending-vault.html
 - Lending Market: https://ifrunit.tech/wiki/lending-market.html
 - LP Strategy: https://ifrunit.tech/wiki/lp-strategy.html
+- Provide IFR / ETH Liquidity: https://ifrunit.tech/wiki/liquidity.html (read-only live ratio calculator and external Uniswap V2 execution guide; not an in-site transaction module)
 - Ecosystem Overview: https://ifrunit.tech/wiki/ecosystem.html
 - Community Signer Expansion Plan: https://ifrunit.tech/wiki/community-signer-expansion.html
 
