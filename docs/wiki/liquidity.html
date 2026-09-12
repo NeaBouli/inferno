@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Provide IFR / ETH Liquidity | Inferno Protocol Wiki</title>
+  <meta name="description" content="Estimate ETH for an IFR liquidity contribution, understand Uniswap V2 LP tokens and risks, and add or remove liquidity through Uniswap.">
+  <link rel="canonical" href="https://ifrunit.tech/wiki/liquidity.html">
+  <link rel="alternate" hreflang="en" href="https://ifrunit.tech/wiki/liquidity.html">
+  <link rel="alternate" hreflang="x-default" href="https://ifrunit.tech/wiki/liquidity.html">
+  <link rel="icon" href="../assets/ifr_icon_256.png">
+  <meta property="og:title" content="Provide IFR / ETH Liquidity">
+  <meta property="og:description" content="Live ratio calculator and a practical Uniswap V2 liquidity guide.">
+  <meta property="og:url" content="https://ifrunit.tech/wiki/liquidity.html">
+  <meta property="og:image" content="https://ifrunit.tech/assets/ifr_icon_256.png">
+  <meta property="og:type" content="website">
+  <link rel="stylesheet" href="../assets/redesign-skin.css">
+  <link rel="stylesheet" href="../assets/liquidity-guide.css">
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"TechArticle","headline":"Provide IFR / ETH liquidity","description":"Read-only liquidity calculator and guide to Uniswap V2 deposits, withdrawals and LP risks.","url":"https://ifrunit.tech/wiki/liquidity.html","isPartOf":{"@id":"https://ifrunit.tech/#website"}}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Inferno","item":"https://ifrunit.tech/"},{"@type":"ListItem","position":2,"name":"Wiki","item":"https://ifrunit.tech/wiki/"},{"@type":"ListItem","position":3,"name":"Provide liquidity","item":"https://ifrunit.tech/wiki/liquidity.html"}]}</script>
+  <script src="../assets/vendor/ethers-6.17.0.umd.min.js" defer></script>
+  <script type="module" src="../assets/liquidity-calculator.mjs"></script>
+</head>
+<body class="liquidity-guide">
+<button class="hamburger" id="hamburger" aria-label="Open navigation" aria-expanded="false" aria-controls="sidebar"><span></span><span></span><span></span></button>
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+<div class="layout">
+<aside class="sidebar" id="sidebar">
+      <a href="https://ifrunit.tech/wiki/index.html" class="sidebar-logo">IFR PROTOCOL</a>
+      <div class="sidebar-subtitle">Documentation</div>
+      <ul class="sidebar-nav">
+        <li><a href="https://ifrunit.tech/wiki/index.html">Home</a></li>
+        <li><a href="https://ifrunit.tech/wiki/one-pager.html">One Pager</a></li>
+        <li><a href="https://ifrunit.tech/wiki/fair-launch.html">Fair Launch</a></li>
+        <li class="nav-divider"></li>
+        <li><a href="https://ifrunit.tech/wiki/tokenomics.html">Tokenomics</a></li>
+        <li><a href="https://ifrunit.tech/wiki/fee-design.html">Fee Design</a></li>
+        <li><a href="https://ifrunit.tech/wiki/lock-mechanism.html">Lock Mechanism</a></li>
+        <li><a href="https://ifrunit.tech/wiki/vesting.html">Vesting Schedule</a></li>
+        <li><a href="https://ifrunit.tech/wiki/protocol-plan.html">Protocol Plan</a></li>
+        <li><a href="https://ifrunit.tech/wiki/contracts.html">Smart Contracts</a></li>
+        <li class="nav-divider"></li>
+        <li><a href="https://ifrunit.tech/wiki/wallet-guide.html">Wallet &amp; Contract Guide</a></li>
+        <li><a href="https://ifrunit.tech/wiki/deployment.html">Deployment</a></li>
+        <li><a href="https://ifrunit.tech/wiki/testnet.html">Testnet</a></li>
+        <li><a href="https://ifrunit.tech/wiki/mainnet-checklist.html">Mainnet Checklist</a></li>
+        <li><a href="https://ifrunit.tech/wiki/bootstrap.html">Bootstrap Event</a></li>
+        <li><a href="https://ifrunit.tech/wiki/roadmap.html">Roadmap</a></li>
+        <li class="nav-divider"></li>
+        <li><a href="https://ifrunit.tech/wiki/commitment-vault.html">CommitmentVault</a></li>
+        <li><a href="https://ifrunit.tech/wiki/lending-vault.html">LendingVault</a></li>
+        <li><a href="https://ifrunit.tech/wiki/lending-market.html">Lending Market</a></li>
+        <li><a href="https://ifrunit.tech/wiki/lp-strategy.html">LP Strategy</a></li>
+        <li><a href="liquidity.html" class="active" aria-current="page">Provide IFR / ETH Liquidity</a></li>
+        <li><a href="https://ifrunit.tech/wiki/ecosystem.html">Ecosystem</a></li>
+        <li class="nav-divider"></li>
+        <li><a href="https://ifrunit.tech/wiki/governance.html">Governance</a></li>
+        <li><a href="https://ifrunit.tech/wiki/dao-governance.html">DAO Governance</a></li>
+        <li><a href="https://ifrunit.tech/wiki/multisig.html">Multisig Policy</a></li>
+        <li><a href="https://ifrunit.tech/wiki/community-signer-expansion.html">Community Signer Expansion</a></li>
+        <li><a href="https://ifrunit.tech/wiki/transparency.html">Transparency</a></li>
+        <li class="nav-divider"></li>
+        <li><a href="https://ifrunit.tech/wiki/faq.html">FAQ</a></li>
+        <li><a href="https://ifrunit.tech/wiki/integration.html">Integration Guide</a></li>
+        <li><a href="https://ifrunit.tech/wiki/business-onboarding.html">Business Onboarding</a></li>
+        <li><a href="https://ifrunit.tech/wiki/agent.html">AI Copilot</a></li>
+        <li><a href="https://ifrunit.tech/wiki/verify.html">Verify Wallet</a></li>
+        <li class="nav-divider"></li>
+        <li><a href="https://ifrunit.tech/wiki/security.html">Security</a></li>
+        <li><a href="https://ifrunit.tech/wiki/contributing.html">Contributing</a></li>
+        <li><a href="https://ifrunit.tech/wiki/press-kit.html">Press Kit</a></li>
+        <li><a href="https://ifrunit.tech/index.html">&larr; Back to Website</a></li>
+      </ul>
+    </aside>
+<main class="main">
+<header class="guide-topbar"><a href="../index.html"><img src="../assets/ifr_icon_256.png" width="28" height="28" alt="Inferno Protocol"> IFR Unit</a><nav aria-label="Applications"><a href="wallet-guide.html">Wallet guide</a><a href="https://web3.ifrunit.tech/">Web3</a><a href="https://shop.ifrunit.tech/">Benefits</a></nav></header>
+    <p class="eyebrow">Ethereum Mainnet / Uniswap V2</p>
+    <h1>Provide IFR / ETH liquidity</h1>
+    <p class="lead">Supply both assets to the existing pool. Receive LP tokens representing your share, and withdraw your share through Uniswap when you choose.</p>
+    <p id="liquidity-summary">This guide and calculator are read-only. Execute deposits and withdrawals only through the official Uniswap V2 interface, with a separate wallet connection. Use unlocked IFR plus ETH for the pool ratio and gas. LP ownership is separate from IFRLock access, lending, Builder rewards and the original Bootstrap LP retained in its vault. Your return is not guaranteed: impermanent loss, slippage, gas and route-dependent transfer fees can reduce it. Never send assets directly to the pair. Fee exemption applies to a transfer endpoint, not automatically to every router hop. No historical ETH estimate is a current quote.</p>
+    <nav class="contents" aria-label="On this page"><a href="#calculator">Calculator</a><a href="#add">Add liquidity</a><a href="#remove">Remove liquidity</a><a href="#risks">Risks</a><a href="#questions">Questions</a></nav>
+    <section id="calculator">
+      <h2>Estimate your contribution</h2>
+      <noscript><p class="notice">JavaScript is disabled. The live calculator is unavailable, but the guide and official Uniswap links below remain available.</p></noscript>
+      <p>No wallet connection is needed here. The calculator reads the public pool; it cannot approve, sign or send a transaction.</p>
+      <div class="calculator">
+        <div class="fields"><div><label for="ifr-amount">IFR to contribute</label><input id="ifr-amount" value="1000000" inputmode="decimal" aria-describedby="amount-help"><p id="amount-help">Use a decimal point, without thousands separators. IFR has 9 decimals.</p></div><div><label for="eth-estimate">Estimated matching ETH</label><output id="eth-estimate" for="ifr-amount" aria-live="polite">Unavailable</output><p>Excludes gas. This is a pool-ratio estimate, not a guaranteed execution quote.</p></div></div>
+        <p id="pool-status" role="status">Waiting for verified pool data...</p>
+        <p id="pool-reserves"></p>
+        <button id="refresh-pool" type="button">Refresh pool</button>
+      </div>
+      <p>The on-chain pair holds WETH (wrapped ETH). Uniswap can wrap native ETH as part of supplying liquidity. The estimate expires after three minutes and is withheld if the pool or its fee exemption cannot be verified.</p>
+      <p class="notice">Public RPC requests go to ethereum-rpc.publicnode.com, which can see connection metadata such as your IP. No wallet address is requested by this calculator.</p>
+      <a class="primary" href="https://app.uniswap.org/positions/create/v2" target="_blank" rel="noopener noreferrer">Open Uniswap V2 to add liquidity &#8599;</a>
+      <p>Opens an external app. Connect your wallet there and select Ethereum, ETH and the exact IFR contract below. Your Wiki wallet session is not transferred.</p>
+    </section>
+    <section>
+      <h2>Verify the assets</h2>
+      <dl><dt>IFR token · Ethereum · 9 decimals</dt><dd><a href="https://etherscan.io/token/0x77e99917Eca8539c62F509ED1193ac36580A6e7B" target="_blank" rel="noopener noreferrer">0x77e99917Eca8539c62F509ED1193ac36580A6e7B</a></dd><dt>Existing IFR / WETH V2 pair</dt><dd><a href="https://etherscan.io/address/0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0" target="_blank" rel="noopener noreferrer">0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0</a></dd></dl>
+      <p>On-chain symbol: <strong>IFR</strong>. Social cashtag: <strong>$IFRp</strong>. Do not select another token solely because its symbol matches.</p>
+    </section>
+    <section id="add"><h2>Add liquidity, step by step</h2><ol>
+      <li>Keep unlocked IFR and enough ETH for both the contribution and network fees. IFR in an access lock, commitment or lending offer is not automatically available.</li>
+      <li>Open the official Uniswap app, connect the intended wallet and select Ethereum and a <strong>V2</strong> position. Do not create a different V3 or V4 pool for this guide.</li>
+      <li>Select ETH and import IFR using the verified token address above. Enter one amount; review the matching amount calculated by Uniswap using its current quote.</li>
+      <li>Review the price ratio, slippage, network cost and recipient. A larger tolerance is not a remedy for an unexpected error. Start with an amount whose risks you understand.</li>
+      <li>If required, approve only the intended IFR allowance for the verified Uniswap spender. Review the actual wallet request; never approve an unfamiliar spender or share a recovery phrase.</li>
+      <li>Confirm the liquidity transaction separately. Wait for a successful receipt, then verify the V2 position and LP-token balance. An approval alone has not added liquidity.</li>
+    </ol><p class="notice"><strong>Never send IFR or ETH directly to the pool address.</strong> Use the liquidity workflow. Direct transfers may not mint LP tokens and can lose funds.</p></section>
+    <section id="remove"><h2>Remove liquidity</h2><p>Open <a href="https://app.uniswap.org/positions" target="_blank" rel="noopener noreferrer">your Uniswap positions</a> with the wallet holding the LP tokens. Select the Ethereum V2 position, choose the portion to remove, review minimum amounts and fees, then complete any required LP approval and removal confirmation.</p><p>If the position is missing, check the network, wallet and V2 filter, and use Uniswap's pool import option if available. Keep ETH for gas. Confirm the receipt and returned balances before repeating an action.</p><p>You receive your share of the pool's <strong>current</strong> assets, not necessarily the quantities originally supplied. Transferring or locking your LP tokens transfers or restricts control of this withdrawal right.</p><p class="notice"><strong>Withdrawal route matters:</strong> native-ETH withdrawal can send IFR from the pair to a router and then to you. If neither endpoint of the router-to-wallet transfer is exempt, that hop incurs the IFR transfer fee even when the pair itself is exempt. Receiving WETH directly from the pair is a different route. Review Uniswap's actual route and net amounts; this guide does not promise every removal is fee-free or compatible with every router method.</p></section>
+    <section id="risks"><h2>Understand the trade-offs</h2><ul>
+      <li><strong>Trading fees, not a promised yield:</strong> V2 trading fees accrue within the pool. Your return depends on trading activity, your share, price movements and costs.</li>
+      <li><strong>Impermanent loss:</strong> your position can be worth less than simply holding the two assets. Withdrawal can realize that difference.</li>
+      <li><strong>Thin liquidity:</strong> prices can move sharply and pool ratios can be manipulated. This calculator is not an oracle or fair-value appraisal.</li>
+      <li><strong>Execution risks:</strong> slippage, MEV, malicious approvals, smart-contract defects and network fees can cause losses. No amount or return is guaranteed.</li>
+      <li><strong>Fee exemption:</strong> the calculator checks the pair's current IFR exemption. An exemption is address-specific and can change through governance; do not assume every exchange, router or ordinary transfer is exempt.</li>
+    </ul><p>Providing liquidity is not a donation to Treasury, an IFRLock access lock, a CommitmentVault lock, a LendingVault offer or automatic eligibility for Builder rewards. Uniswap trading fees and the IFR protocol transfer pool fee are different mechanisms.</p></section>
+    <section id="questions"><h2>Common questions</h2>
+      <details><summary>I have 30 million IFR. Must I contribute all of it?</summary><p>No. Decide how much ETH and IFR you can expose to liquidity-provider risk. The calculator accepts any positive amount; it does not recommend investing your entire balance. Refresh the ratio immediately before using Uniswap.</p></details>
+      <details><summary>Does adding liquidity raise the IFR price?</summary><p>A balanced contribution primarily increases pool depth; it does not by itself materially change the reserve ratio. Buying IFR first is a separate trade that can move the price.</p></details>
+      <details><summary>Why is the estimate unavailable?</summary><p>The RPC may be unavailable, the latest block may be stale, the pool may be empty or identity/exemption verification may have failed. No historical estimate is substituted. Refresh or independently inspect the official Uniswap pool.</p></details>
+      <details><summary>Can I use a phone or tablet?</summary><p>Yes, this read-only page adapts to mobile screens. The actual connection and transaction happen in Uniswap with a supported wallet. For cross-device pairing, scan a WalletConnect QR code with the wallet's scanner, not an ordinary camera.</p></details>
+      <details><summary>My transaction failed. Should I retry?</summary><p>Check its receipt and wallet balances first. A pending transaction is not a failed one. Check ETH for gas, available IFR, allowance and the current quote. Do not increase slippage or submit again blindly.</p></details>
+    </section>
+    <section id="gauge"><h2>Reading the landing liquidity gauge</h2><p>The gauge shows the verified pool's WETH reserve, not total USD liquidity. The fixed display scale runs from 0 to 1 WETH and caps the needle above 1; the numeric reserve remains uncapped. Red, yellow and green indicate increasing reserves only. They are not a safety score, return forecast, recommended deposit or Council funding target. The companion IFR reserve and block time use the same snapshot. Readings expire after three minutes; an unavailable reading has no needle. Refresh before making any decision.</p></section>
+    <section><h2>Further reading</h2><ul><li><a href="https://support.uniswap.org/hc/en-us/articles/20915582427917-How-to-add-a-new-liquidity-position-to-Uniswap-v2" target="_blank" rel="noopener noreferrer">Uniswap: adding a V2 position</a></li><li><a href="https://developers.uniswap.org/docs/protocols/v2/concepts/understanding-returns" target="_blank" rel="noopener noreferrer">Uniswap: understanding LP returns</a></li><li><a href="lp-strategy.html">Protocol LP strategy and governance</a></li><li><a href="fee-design.html">IFR fee design</a></li><li><a href="wallet-guide.html">Wallet and contract guide</a></li></ul></section>
+  <footer class="wiki-footer">Inferno Protocol · On-chain IFR · Social $IFRp <a href="index.html">Wiki</a> <a href="../index.html">IFR Unit</a></footer>
+</main>
+</div>
+<script src="../assets/liquidity-navigation.js" defer></script>
+</body>
+</html>

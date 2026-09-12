@@ -1,0 +1,16 @@
+.liquidity-gauge { margin-top: 22px; padding: 22px 24px; border: 1px solid #c8d3cd; border-radius: 8px; background: #f5f8f6; color: #203c32; text-align: center; }
+.liquidity-gauge h2 { margin: 0; font-size: 21px; line-height: 1.3; letter-spacing: 0; }
+.liquidity-gauge p { margin: 9px 0; font-size: 13px; line-height: 1.5; letter-spacing: 0; overflow-wrap: anywhere; }
+.liquidity-gauge .gauge-dial { position: relative; width: min(100%, 260px); aspect-ratio: 2; margin: 18px auto 0; overflow: hidden; }
+.liquidity-gauge .gauge-dial::before { content: ''; position: absolute; inset: 0; height: 200%; border-radius: 50%; background: conic-gradient(from 270deg, #be343b 0deg, #e7b747 90deg, #25835b 180deg, transparent 180deg); mask: radial-gradient(circle, transparent 58%, #000 59%, #000 70%, transparent 71%); }
+.liquidity-gauge .gauge-needle { position: absolute; bottom: 0; left: calc(50% - 2px); width: 4px; height: 83%; background: #203c32; transform-origin: bottom center; border-radius: 4px; transition: transform .5s ease; }
+.liquidity-gauge .gauge-dial::after { content: ''; position: absolute; bottom: -7px; left: calc(50% - 8px); width: 16px; height: 16px; border-radius: 50%; background: #203c32; }
+.liquidity-gauge .gauge-ticks { display: flex; justify-content: space-between; max-width: 280px; margin: 8px auto 16px; font-size: 12px; font-variant-numeric: tabular-nums; }
+.liquidity-gauge [data-reserve] { display: block; font-size: 20px; font-weight: 700; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.liquidity-gauge [data-status] { min-height: 40px; color: #45584f; }
+.liquidity-gauge .gauge-actions { display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 16px; }
+.liquidity-gauge .gauge-actions a { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 10px 16px; border-radius: 6px; background: #a8421b; color: #fff; font-size: 14px; font-weight: 700; text-decoration: none; }
+.liquidity-gauge button { width: 44px; height: 44px; flex: 0 0 44px; border: 1px solid #708b7d; border-radius: 6px; background: #fff; color: #203c32; font-size: 24px; cursor: pointer; }
+.liquidity-gauge button:disabled { opacity: .5; cursor: wait; }
+.liquidity-gauge :is(a, button):focus-visible { outline: 3px solid #245f48; outline-offset: 3px; }
+@media (prefers-reduced-motion: reduce) { .liquidity-gauge .gauge-needle { transition: none; } }
