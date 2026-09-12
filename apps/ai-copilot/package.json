@@ -12,6 +12,7 @@
     "test:dependencies": "node scripts/test-dependencies.mjs",
     "test:surface-ui": "node scripts/test-surface-ui.cjs",
     "test:surface-context": "tsx scripts/test-surface-context.ts",
+    "test:liquidity-context": "node --import tsx scripts/test-liquidity-context.ts",
     "build": "vite build",
     "preview": "vite preview",
     "start": "tsx server/index.ts"

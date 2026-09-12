@@ -479,6 +479,8 @@
   "description": "Answers about the IFR token, fees, locks, governance, security, liquidity and protocol access.",
   "url": "https://ifrunit.tech/wiki/faq.html",
   "mainEntity": [
+    {"@type":"Question","name":"Can a holder contribute IFR and ETH to the pool?","acceptedAnswer":{"@type":"Answer","text":"Yes. Use the existing Ethereum Uniswap V2 pool through the official Uniswap interface. The Wiki liquidity calculator is read-only; approvals and deposits require a separate wallet connection on Uniswap."}},
+    {"@type":"Question","name":"Is adding or removing liquidity always burn-free?","acceptedAnswer":{"@type":"Answer","text":"No blanket guarantee. Exemption is checked per transfer endpoint. A native-ETH removal may route IFR through a non-exempt router, and router-to-wallet transfers can incur the IFR fee. Review the actual route and net amounts."}},
     {
       "@type": "Question",
       "name": "What is IFR and what makes it deflationary?",
@@ -670,6 +672,7 @@
         <li><a href="https://ifrunit.tech/wiki/lending-vault.html">LendingVault</a></li>
         <li><a href="https://ifrunit.tech/wiki/lending-market.html">Lending Market</a></li>
         <li><a href="https://ifrunit.tech/wiki/lp-strategy.html">LP Strategy</a></li>
+        <li><a href="liquidity.html">Provide IFR / ETH Liquidity</a></li>
         <li><a href="https://ifrunit.tech/wiki/ecosystem.html">Ecosystem</a></li>
         <li class="nav-divider"></li>
         <li><a href="https://ifrunit.tech/wiki/governance.html">Governance</a></li>
@@ -741,7 +744,7 @@
 
       <h1><span class="accent">Frequently Asked Questions</span></h1>
       <p class="subtitle">
-        Comprehensive answers about IFR &mdash; tokenomics, security, governance, bootstrap, applications, and the road to decentralization. 12 sections, 77 questions.
+        Comprehensive answers about IFR &mdash; tokenomics, liquidity provision, security, governance, bootstrap, applications, and the road to decentralization. 82 questions.
       </p>
 
       <!-- Quick Nav -->
@@ -752,6 +755,7 @@
           <a href="#security">Security &amp; Audit</a>
           <a href="#governance">Governance</a>
           <a href="#bootstrap">Bootstrap &amp; Liquidity</a>
+          <a href="#user-liquidity">Providing / Removing Liquidity</a>
           <a href="#rugpull">Is This a Scam?</a>
           <a href="#vesting">Vesting &amp; Team</a>
           <a href="#dao">DAO &amp; Roadmap</a>
@@ -1193,6 +1197,15 @@ const hasLock = await ifrLock.isLocked(walletAddress, ethers.parseUnits("1000", 
       </div>
 
       <!-- Security Audit FAQ (added 2026-04-04) -->
+      <h2 id="user-liquidity">Providing and Removing Liquidity</h2>
+      <div class="faq-section">
+        <div class="faq-item"><button class="faq-q"><span>Can a holder contribute IFR and ETH to the pool?</span><span class="icon">+</span></button><div class="faq-a">Yes. Supply both assets to the existing Ethereum Uniswap V2 pool using the official Uniswap interface. Our <a href="liquidity.html#calculator">read-only calculator</a> estimates matching ETH from verified reserves. It does not connect a wallet or execute a deposit. Connect separately on Uniswap; an approval alone is not a liquidity contribution.</div></div>
+        <div class="faq-item"><button class="faq-q"><span>What do I receive, and can I withdraw?</span><span class="icon">+</span></button><div class="faq-a">LP tokens represent your share of current pool assets and accrued trading fees. The wallet holding them can use Uniswap to remove its share. Your LP tokens are distinct from the original Bootstrap LP held in BootstrapVaultV3, and from IFRLock access, lending or automatic Builder rewards. See the <a href="liquidity.html#remove">withdrawal guide</a>.</div></div>
+        <div class="faq-item"><button class="faq-q"><span>Is adding or removing liquidity always burn-free?</span><span class="icon">+</span></button><div class="faq-a">No blanket guarantee. The calculator checks the pair exemption, but each transfer hop matters. A native-ETH removal may route IFR through a non-exempt router; router-to-user transfers can incur the IFR fee when neither endpoint is exempt. Review the actual route, minimum amounts and net received assets. Do not send assets directly to the pair.</div></div>
+        <div class="faq-item"><button class="faq-q"><span>How much should I contribute, and is yield guaranteed?</span><span class="icon">+</span></button><div class="faq-a">No return or principal is guaranteed. Your ETH budget, gas and loss tolerance constrain the amount; having 30M IFR is not a reason to contribute all of it. Price changes, impermanent loss, slippage and fees can make LP performance worse than holding. A balanced deposit increases depth, not the reserve price ratio by itself. Read the <a href="liquidity.html#risks">risk explanation</a>.</div></div>
+        <div class="faq-item"><button class="faq-q"><span>Why does the liquidity calculator show unavailable?</span><span class="icon">+</span></button><div class="faq-a">It withholds estimates if public RPC data is stale, empty or unverified, including failed identity or fee-exemption checks. Refresh or independently inspect Uniswap; no fixed historical quote is substituted. Keep ETH for gas, use the exact IFR contract and verify the receipt before retrying a transaction.</div></div>
+      </div>
+
       <h2 style="margin-top:2rem;">Security Audit Details</h2>
       <div class="faq-section">
         <div class="faq-item">
@@ -1211,7 +1224,7 @@ const hasLock = await ifrLock.isLocked(walletAddress, ethers.parseUnits("1000", 
 
       <!-- Footer -->
       <footer class="wiki-footer">
-        Inferno (IFR) &mdash; Community Fair Launch Model &mdash; Documentation v2.2 &mdash; 12 sections, 77 Q&amp;A
+        Inferno (IFR) &mdash; Community Fair Launch Model &mdash; Documentation v2.2 &mdash; 82 Q&amp;A
       </footer>
 
     </main>

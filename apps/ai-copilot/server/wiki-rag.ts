@@ -124,13 +124,13 @@ ${wikiContext}
 function selectDocsForMode(mode: string, docs: WikiDoc[]): WikiDoc[] {
   // Priority pages per mode
   const priorities: Record<string, string[]> = {
-    explorer: ["tokenomics", "faq", "fair-launch", "fee-design", "bootstrap", "roadmap"],
-    user: ["lock-mechanism", "tokenomics", "vesting", "faq", "integration", "fair-launch"],
-    dev: ["contracts", "integration", "deployment", "security", "governance", "vesting"],
+    explorer: ["tokenomics", "faq", "liquidity", "fair-launch", "fee-design", "bootstrap", "roadmap"],
+    user: ["lock-mechanism", "liquidity", "tokenomics", "vesting", "faq", "integration", "fair-launch"],
+    dev: ["contracts", "liquidity", "integration", "deployment", "security", "governance", "vesting"],
     // Backwards compatibility
-    customer: ["tokenomics", "faq", "fair-launch", "fee-design", "bootstrap", "roadmap"],
-    partner: ["lock-mechanism", "tokenomics", "vesting", "faq", "integration", "fair-launch"],
-    developer: ["contracts", "integration", "deployment", "security", "governance", "vesting"],
+    customer: ["tokenomics", "faq", "liquidity", "fair-launch", "fee-design", "bootstrap", "roadmap"],
+    partner: ["lock-mechanism", "liquidity", "tokenomics", "vesting", "faq", "integration", "fair-launch"],
+    developer: ["contracts", "liquidity", "integration", "deployment", "security", "governance", "vesting"],
   };
 
   const priorityList = priorities[mode] || priorities.customer;
