@@ -12,6 +12,16 @@ function getBootstrapStatus(): string {
 
 export function getIFRKnowledge() {
   return {
+    userProvidedLiquidity: {
+      guide: "https://ifrunit.tech/wiki/liquidity.html",
+      gauge: "Landing pool gauge shows only the canonical pool WETH reserve, scale 0 to 1 WETH capped above 1. Red/yellow/green encode reserve size, not safety, returns, a funding target or an investment recommendation. Stale or unverifiable data shows unavailable. Read block/time, not color alone.",
+      tools: "Read-only IFR/ETH ratio calculator. Fresh same-block public reserves, token identities and pool fee exemption must verify. IFR has 9 decimals; quotes expire after 3 minutes. Never invent live reserves, APR or a matching ETH amount from historical examples.",
+      execution: "Guide only: wallet connection, exact approvals and add/remove transactions occur separately on official Uniswap V2, Ethereum. Approval alone is not a deposit. Never send assets directly to the pair or claim our site executes LP transactions.",
+      ownership: "New user LP tokens belong to their recipient and represent a share of current pool reserves. Distinct from original Bootstrap LP held in BootstrapVaultV3, IFRLock access, CommitmentVault, LendingVault and Builder reward eligibility.",
+      risks: "No guaranteed return or principal. Explain impermanent loss, slippage, thin-pool manipulation, MEV, gas and approval risks. Retain ETH for gas; never recommend all of a holder's IFR or a fixed slippage tolerance.",
+      withdrawal: "Removing returns current reserve composition, not original amounts. Native ETH removal may route IFR pair-to-router-to-user; the second hop may be taxed if both endpoints are non-exempt. Pair exemption does not imply every router hop is free. Verify route and net received amounts on Uniswap.",
+      support: "Use wallet's scanner for WalletConnect pairing, not a normal camera. For stale/RPC failures show unavailable; retry or inspect Uniswap. Check receipts, network and LP ownership before retrying. Refer users to the guide for verified public contract links.",
+    },
     contracts: {
       token: "0x77e99917Eca8539c62F509ED1193ac36580A6e7B",
       ifrLock: "0x769928aBDfc949D0718d8766a1C2d7dBb63954Eb",

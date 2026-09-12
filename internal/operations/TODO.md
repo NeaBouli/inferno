@@ -214,14 +214,19 @@ On errors: fix immediately, commit with `seo:` prefix.
       submitted review, reported check or maintainer comment. Original PR
       #1036 was closed stale and now points to this single replacement.
       Resume trigger: maintainer review, CI approval or status change.
-- [ ] CoinGecko standalone coin listing — application submitted
-      Active listing request `CL0309260050` submitted 2026-09-04 and currently
-      pending. Verification post: https://x.com/IFRtoken/status/2095640632739959130
+- [ ] CoinGecko standalone coin listing — traction / resubmission preparation
+      Request `CL0309260050` submitted 2026-09-04; rejected for insufficient
+      organic traction. Local status reconciled 2026-09-08. Prepare updated
+      evidence for 2026-09-19; no automatic resubmission or approval claimed.
+      Verification post: <https://x.com/IFRtoken/status/2095640632739959130>
       Exact-contract API still returns `coin not found`; GeckoTerminal is live separately.
       Resume trigger: CoinGecko response or a public exact-contract coin page.
 - [ ] CoinMarketCap standard listing — ticket pending
       Script: `bash scripts/cmc/check_ifr_listing.sh`
-      Ticket `1390230` is submitted. CMC DexScan is live but marks IFR as
+      Current follow-up ticket `1453378` replaces the waiting state of `1390230`.
+      Response 2026-09-08: free review has no guaranteed ETA; no further
+      evidence requested. Weekly reminder; no paid priority or duplicate filing.
+      CMC DexScan is live but marks IFR as
       `not verified by CoinMarketCap`; this is not a standalone CMC listing.
       Resume trigger: CMC response or verification/status change. Do not
       submit a duplicate and never commit or paste an API key.
@@ -1072,4 +1077,11 @@ Hetzner API endpoints already live: stats, offers, loans/:addr, health/:id, lend
 
 ---
 
-*Last updated: 2026-09-04*
+*Last updated: 2026-09-09*
+
+### Read-only liquidity guide integration (INFERNO-LP-INTEGRATION-02)
+
+- Local implementation: Wiki shell and navigation, first-step landing wizard, FAQs, README, sitemap/LLM index and Copilot knowledge/RAG. Transactions remain external on Uniswap V2; no connector changes or automatic LP rewards.
+- Verification: integer quote and fail-closed tests, responsive navigation/wizard browser tests, six-mode Copilot context checks and documentation/build gates. Final evidence is recorded in the local Bridge.
+- [ ] Publish the scoped liquidity candidate through PR/exact-head CI after approval; preserve unrelated local readiness work and private follow-up drafts.
+- [ ] Deploy approved documentation and Copilot artifacts, then verify live navigation, fresh calculator data and chat guidance. No direct LP execution is authorized by this item.

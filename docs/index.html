@@ -1314,6 +1314,8 @@
 }
 </script>
 <script src="/assets/vendor/ethers-6.17.0.umd.min.js"></script>
+<link rel="stylesheet" href="/assets/liquidity-gauge.css">
+<script type="module" src="/assets/liquidity-gauge.mjs"></script>
 <script src="assets/wallet-core.js?v=20260708-readable-mobile-modal"></script>
 <script src="assets/ifr-state.js"></script>
   <link rel="stylesheet" href="assets/redesign-skin.css">
@@ -1437,6 +1439,21 @@
         <div class="ledger-row"><span class="k">On-chain components</span><span class="v">17</span></div>
         <div class="ledger-row"><span class="k">Owner</span><span class="v">Governance · 48h timelock</span></div>
       </div>
+      <section class="liquidity-gauge" id="liquidity-gauge" aria-labelledby="liquidity-gauge-title">
+        <h2 id="liquidity-gauge-title">Pool liquidity</h2>
+        <p>Uniswap V2 · IFR / WETH · Ethereum</p>
+        <div class="gauge-dial" aria-hidden="true"><span class="gauge-needle" data-needle hidden></span></div>
+        <div class="gauge-ticks" aria-hidden="true"><span>0</span><span>0.5</span><span>1+ WETH</span></div>
+        <strong data-reserve>Unavailable</strong>
+        <p data-details></p>
+        <p data-status role="status">Current pool data requires JavaScript and a public Ethereum RPC connection.</p>
+        <p>WETH reserve only. Display scale: 0–1 WETH, capped above 1. Colors indicate reserve size, not safety, returns or a funding target.</p>
+        <div class="gauge-actions">
+          <a href="wiki/liquidity.html">Provide liquidity &rarr;</a>
+          <button type="button" aria-label="Refresh pool liquidity" title="Refresh pool liquidity">&#x21bb;</button>
+        </div>
+        <p><a href="wiki/liquidity.html#risks">LP risks and fees</a> · Read-only public RPC; no wallet connection.</p>
+      </section>
     </div>
   </div>
 </header>
@@ -1682,6 +1699,7 @@ var hist=[],cur="start";
 var S={
 start:{q:"What brings you here today?",sub:"Choose what fits you best:",s:1,t:2,o:[
 {i:"&#x1F4B0;",t:"Buy / Invest in IFR",d:"Bootstrap ENDED — buy IFR on Uniswap V2",n:"buy"},
+{i:"&#x1F4A7;",t:"Provide IFR / ETH liquidity",d:"Estimate a contribution, understand LP risks, or remove a position",n:"liquidity"},
 {i:"&#x1F512;",t:"Lock IFR",d:"Choose simple refundable access or an advanced CommitmentVault lock",n:"lock"},
 {i:"&#x1F4F2;",t:"Use IFR Benefits",d:"Discover offers, present or scan a checkout QR, or configure seller benefits",n:"benefits"},
 {i:"&#x1F6E0;&#xFE0F;",t:"Build with IFR",d:"Integrate IFR access into your product",n:"build"},
@@ -1693,6 +1711,12 @@ start:{q:"What brings you here today?",sub:"Choose what fits you best:",s:1,t:2,
 buy:{q:"Do you already have a crypto wallet?",sub:"This tells us where to start:",s:2,t:2,o:[
 {i:"&#x2705;",t:"Yes \u2014 I have MetaMask",d:"Buy IFR on Uniswap V2 \u2014 Bootstrap ENDED, LP is live",a:"https://app.uniswap.org/swap?outputCurrency=0x77e99917Eca8539c62F509ED1193ac36580A6e7B",h:1},
 {i:"&#x1F195;",t:"No \u2014 I am new to crypto",d:"We guide you from zero to IFR holder",a:"wizard/buy.html"}
+]},
+liquidity:{q:"What would you like to do with liquidity?",sub:"Read-only tools here; approvals and transactions happen on Uniswap, not this website:",s:2,t:2,o:[
+{i:"&#x1F9EE;",t:"Calculate matching ETH",d:"Enter IFR and read a fresh, verified pool-ratio estimate",a:"wiki/liquidity.html#calculator",h:1},
+{i:"&#x2795;",t:"Add liquidity",d:"Prepare IFR and ETH, review risks, then continue to Uniswap V2",a:"wiki/liquidity.html#add"},
+{i:"&#x2796;",t:"Remove liquidity",d:"Understand LP ownership, fees and withdrawal steps",a:"wiki/liquidity.html#remove"},
+{i:"&#x1F4D6;",t:"Understand fees and risks",d:"LP tokens, impermanent loss and the difference from IFR access locks",a:"wiki/liquidity.html#risks"}
 ]},
 lock:{q:"How do you want to lock IFR?",sub:"Live wallet actions run in the Web3 app; the Wiki remains the reference guide:",s:2,t:2,o:[
 {i:"&#x1F513;",t:"Simple access lock",d:"Refundable IFRLock access: approve, lock, check Premium status, or unlock all",a:"https://web3.ifrunit.tech/?action=access-lock#access",h:1},
@@ -1754,7 +1778,7 @@ research:{q:"What are you looking for?",sub:"We have everything documented:",s:2
 {i:"&#x1F50D;",t:"Security Audits",d:"Full internal audits, static analysis and open reports",a:"wiki/open-audit.html"},
 {i:"&#x1F4CA;",t:"Tokenomics Deep Dive",d:"Supply, allocation, burn mechanics",a:"wiki/tokenomics.html"},
 {i:"&#x1F4F0;",t:"Press Kit",d:"Logos, facts, quotes for media",a:"wiki/press-kit.html"},
-{i:"&#x1F4D6;",t:"Full Documentation",d:"Complete wiki with 35 pages",a:"wiki/index.html"}
+{i:"&#x1F4D6;",t:"Full Documentation",d:"Complete wiki with 36 pages",a:"wiki/index.html"}
 ]}
 };
 function render(){
@@ -2749,7 +2773,7 @@ if (isLocked) {
 
       <p style="text-align:center;color:#888;font-size:0.93rem;margin-bottom:40px;">
       Quick answers about IFR / $IFRp &mdash;
-      <a href="wiki/faq.html" style="color:#ff6600;text-decoration:none;font-weight:700;">view all 77 questions in the full Wiki FAQ &rarr;</a>
+      <a href="wiki/faq.html" style="color:#ff6600;text-decoration:none;font-weight:700;">view all 82 questions in the full Wiki FAQ &rarr;</a>
     </p>
 
     <!-- 2-column accordion grid -->
@@ -2760,7 +2784,7 @@ if (isLocked) {
 
     <!-- CTA -->
     <div style="text-align:center;margin-top:44px;display:flex;flex-direction:column;align-items:center;gap:14px;">
-      <a href="wiki/faq.html" style="display:inline-block;padding:14px 40px;background:linear-gradient(135deg,#ff6600,#cc3300);color:#fff;font-size:0.88rem;letter-spacing:1px;border-radius:6px;text-decoration:none;font-weight:700;">ALL 77 QUESTIONS &amp; ANSWERS &rarr;</a>
+      <a href="wiki/faq.html" style="display:inline-block;padding:14px 40px;background:linear-gradient(135deg,#ff6600,#cc3300);color:#fff;font-size:0.88rem;letter-spacing:1px;border-radius:6px;text-decoration:none;font-weight:700;">ALL 82 QUESTIONS &amp; ANSWERS &rarr;</a>
       <span style="color:#555;font-size:0.82rem;">Tokenomics &middot; Security &middot; Governance &middot; Bootstrap &middot; DAO &middot; Developer FAQ</span>
     </div>
   </div>
@@ -2769,6 +2793,8 @@ if (isLocked) {
 <script>
 (function(){
   var faqs=[
+    {q:"Can I provide IFR and ETH liquidity myself?",a:"Yes. Use the existing Ethereum Uniswap V2 pool. Our <a href='wiki/liquidity.html'>liquidity guide and live calculator</a> help you prepare; connect and confirm separately on Uniswap. An approval alone does not add liquidity."},
+    {q:"Are my LP tokens locked, and is a return guaranteed?",a:"Your own LP tokens represent your share of the current pool and can be used to remove liquidity if you hold them. They are separate from the original Bootstrap LP held in its vault, IFRLock access and Builder rewards. Returns are not guaranteed; price changes, fees and impermanent loss can cause losses. <a href='wiki/liquidity.html#risks'>LP risks</a>."},
     {q:"What is IFR / $IFRp and what makes it deflationary?",
      a:"IFR is the on-chain token symbol. $IFRp is used for social posts. Fixed supply of 1 billion IFR \u2014 no minting ever. Every standard transfer between non-exempt addresses burns 2.5% of the transferred amount permanently. Verified fee-exempt paths, including the IFR/WETH pair and future activated CEX addresses, bypass the transfer fee. A buyback loop from protocol fees adds further pressure. Supply can only decrease over time."},
     {q:"Can the team rug the liquidity?",

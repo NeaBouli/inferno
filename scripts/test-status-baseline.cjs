@@ -87,7 +87,10 @@ const todo = requireText("internal/operations/TODO.md", [
   "52,155,440.952845656 IFR",
   "CommitmentVault native batch-lock UX",
   "Global LendingVault liquidation dashboard and Telegram alerts",
-  "Ticket `1390230` is submitted",
+  "Current follow-up ticket `1453378`",
+  "free review has no guaranteed ETA",
+  "rejected for insufficient",
+  "2026-09-19",
   "not verified by CoinMarketCap",
   "128px icon",
   "Wallet-level Collateral Health Monitor",
@@ -98,7 +101,7 @@ const todo = requireText("internal/operations/TODO.md", [
   "8 transitive low findings",
   "Deterministic local Hardhat test network",
   "Technical: WalletConnect v2 + ethers.js v6",
-  "*Last updated: 2026-09-04*",
+  "*Last updated: 2026-09-09*",
 ]);
 assert.ok(
   !todo.includes("- [ ] Dependency modernization"),
@@ -139,7 +142,10 @@ requireText("internal/operations/TODO.html", [
   "52,155,440.952845656 IFR",
   "CommitmentVault native batch-lock UX",
   "Global LendingVault liquidation dashboard and Telegram alerts",
-  "Ticket <code>1390230</code> is submitted",
+  "Current follow-up ticket <code>1453378</code>",
+  "free review has no guaranteed ETA",
+  "rejected for insufficient organic traction",
+  "2026-09-19",
   "not verified by CoinMarketCap",
   "Dependency modernization</strong> &mdash; completed 2026-07-29",
   "Read-only external listing monitor</strong> &mdash; completed 2026-09-04",
@@ -229,11 +235,11 @@ requireText("docs/COINMARKETCAP_SUBMISSION.md", [
 ]);
 
 requireText("docs/wiki/index.html", [
-  "35 wiki pages",
+  "36 wiki pages",
   '<span class="stat-value">17</span>',
-  '<span class="stat-value">35</span>',
+  '<span class="stat-value">36</span>',
 ]);
-requireText("docs/index.html", ["Complete wiki with 35 pages"]);
+requireText("docs/index.html", ["Complete wiki with 36 pages"]);
 requireText("docs/wiki/roadmap.html", [
   "Contributor buys, CommitmentVault locks and LendingVault offers are verified for C1/C2/C3",
   "52,155,440.952845656 IFR",
