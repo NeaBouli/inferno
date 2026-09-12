@@ -104,10 +104,15 @@ try {
     assert.equal(await gauge.locator('[data-needle]').evaluate(el => el.hidden), true);
     await gauge.locator('[data-buy]').fill('0.1');
     assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
-    const ledgerBox = await page.locator('.hero-ledger-stack .ledger').boundingBox();
-    const gaugeBox = await gauge.boundingBox();
-    assert.ok(gaugeBox, 'gauge visible at every viewport');
-    if (ledgerBox) assert.ok(gaugeBox.y >= ledgerBox.y + ledgerBox.height, 'gauge below protocol ledger');
+    // Read both rectangles in one frame: their shared reveal animation can move
+    // between separate browser round trips after input focus scrolls the page.
+    const placement = await page.evaluate(() => {
+      const ledger = document.querySelector('.hero-ledger-stack .ledger').getBoundingClientRect();
+      const dial = document.querySelector('#liquidity-gauge').getBoundingClientRect();
+      return { visible: dial.width > 0 && dial.height > 0, below: ledger.height === 0 || dial.top >= ledger.bottom };
+    });
+    assert.ok(placement.visible, 'gauge visible at every viewport');
+    assert.ok(placement.below, 'gauge below protocol ledger');
     await gauge.scrollIntoViewIfNeeded();
     await gauge.screenshot({ path: `/tmp/ifr-gauge-${width}.png` });
     await page.clock.fastForward(60000);
