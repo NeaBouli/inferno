@@ -109,10 +109,13 @@ try {
     const placement = await page.evaluate(() => {
       const ledger = document.querySelector('.hero-ledger-stack .ledger').getBoundingClientRect();
       const dial = document.querySelector('#liquidity-gauge').getBoundingClientRect();
-      return { visible: dial.width > 0 && dial.height > 0, below: ledger.height === 0 || dial.top >= ledger.bottom };
+      const intro = document.querySelector('#hero .container > .reveal').getBoundingClientRect();
+      return { visible: dial.width > 0 && dial.height > 0, below: (ledger.height === 0 || dial.top >= ledger.bottom) && dial.top >= intro.bottom, wide: dial.width > innerWidth * .65, height: dial.height };
     });
     assert.ok(placement.visible, 'gauge visible at every viewport');
     assert.ok(placement.below, 'gauge below protocol ledger');
+    assert.ok(placement.wide, 'gauge spans hero width rather than ledger column');
+    if (width === 1440) assert.ok(placement.height < 560, 'desktop liquidity area stays horizontal and compact');
     await gauge.scrollIntoViewIfNeeded();
     await gauge.screenshot({ path: `/tmp/ifr-gauge-${width}.png` });
     await page.clock.fastForward(60000);
