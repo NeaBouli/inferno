@@ -12,6 +12,11 @@ async function main() {
   assert(governance.includes('Splitting an amount into multiple locks must not increase its total weight'));
   assert(!governance.includes('1 lock = 1 vote'));
   assert(!governance.includes('With only five eligible members'));
+  const rag = JSON.parse(fs.readFileSync(path.resolve(root, '../apps/ai-copilot/src/context/wiki-content.json'), 'utf8'));
+  const summary = rag.find(entry => entry.slug === 'governance').content;
+  for (const state of ['Pending', 'Executable', 'Executed', 'Cancelled']) assert(summary.includes(state));
+  assert(!summary.endsWith('...'));
+  assert(summary.length <= 2000);
   const server = http.createServer((req, res) => {
     const file = path.resolve(root, '.' + new URL(req.url, 'http://localhost').pathname);
     if (!file.startsWith(root + path.sep) || !fs.existsSync(file) || !fs.statSync(file).isFile()) {
