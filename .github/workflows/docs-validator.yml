@@ -233,6 +233,9 @@ jobs:
       - name: Run read-only liquidity browser and wizard suite
         run: node scripts/test-liquidity-browser.mjs
 
+      - name: Run governance disclosure and deep-link suite
+        run: node scripts/test-governance-navigation.cjs
+
       - name: Run Web3 write-flow suite
         run: npm run test:web3-write
 
