@@ -550,6 +550,8 @@
 }
   </script>
   <link rel="stylesheet" href="../assets/redesign-skin.css">
+  <link rel="stylesheet" href="../assets/governance-navigation.css">
+  <script src="../assets/governance-navigation.js" defer></script>
 </head>
 <body>
 
@@ -667,6 +669,22 @@
         Timelock-based on-chain governance for the Inferno token &mdash; proposals, roles, parameter changes, and emergency controls.
       </p>
 
+      <section class="governance-overview" data-rag-summary aria-label="Governance status">
+        <p><strong>Live:</strong> Safe-controlled Governance and timelock execution. <strong>Discussion:</strong> EX-01 and EX-02, no ballot scheduled. <strong>Planned:</strong> Council web voting and the Phase 4 DAO.</p>
+        <nav class="governance-jumps" aria-label="Governance sections">
+          <a href="#council-agenda">Current Council agenda</a>
+          <a href="#governance-procedure">Proposal procedure</a>
+          <a href="#mainnet-record">Mainnet record</a>
+          <a href="#sepolia-history">Testnet archive</a>
+          <a href="#dao-roadmap">DAO plans</a>
+          <a href="#council-privacy">Voting privacy</a>
+        </nav>
+        <p>The Council portal is not live. An agenda discussion is not a vote, a funding allocation or permission to execute a transaction.</p>
+        <p>On-chain proposals progress from Pending to Executable after the timelock, then Executed; the guardian can cancel an eligible proposal, making it Cancelled. Proposed voting weights are one vote per eligible Council member and eligible locked-IFR weight for the Forum, subject to ratification. Open and secret voting modes require independent security and privacy review. Network anonymity is not guaranteed. Full procedure, historical records and privacy requirements: <a href="https://ifrunit.tech/wiki/governance.html">https://ifrunit.tech/wiki/governance.html</a>.</p>
+      </section>
+
+      <details class="governance-section" id="governance-procedure">
+        <summary>Proposal procedure, timelock and roles</summary>
       <!-- ========== 1. Overview ========== -->
       <h2>1. Overview</h2>
       <p>
@@ -977,7 +995,10 @@ await governance.execute(proposalId);</code></pre>
       </div>
 
       <!-- ========== 10. Mainnet Governance Proposals ========== -->
-      <h2>10. Mainnet Governance Proposals</h2>
+      </details>
+      <details class="governance-section" id="mainnet-record">
+        <summary>Mainnet proposals and execution record</summary>
+      <h2>Mainnet Governance Proposals</h2>
       <p>
         Governance proposals submitted on the Ethereum Mainnet deployment (<code>0xc43d48E7FDA576C5022d0670B652A622E8caD041</code>):
       </p>
@@ -1182,7 +1203,10 @@ await governance.execute(proposalId);</code></pre>
       </div>
 
       <!-- ========== 11. Historical Proposals (Sepolia) ========== -->
-      <h2>11. Historical Proposals (Sepolia)</h2>
+      </details>
+      <details class="governance-section" id="sepolia-history">
+        <summary>Historical proposals: Sepolia testnet archive</summary>
+      <h2>Historical Proposals (Sepolia)</h2>
       <p>
         Below are the governance proposals that have been submitted on the Sepolia testnet deployment:
       </p>
@@ -1309,7 +1333,10 @@ await governance.execute(proposalId);</code></pre>
       </ul>
 
       <!-- ========== 12. Current Governance Model ========== -->
-      <h2>12. Current Governance Model</h2>
+      </details>
+      <details class="governance-section" id="governance-model">
+        <summary>Current governance and transition options</summary>
+      <h2>Current Governance Model</h2>
       <p>
         Inferno currently operates under an <strong>Admin + Timelock</strong> governance model. This is a deliberate choice for the early phase of the protocol.
       </p>
@@ -1356,7 +1383,7 @@ await governance.execute(proposalId);</code></pre>
       </div>
 
       <!-- ========== 12. Future: Governance Roadmap ========== -->
-      <h2>12. Future: Governance Roadmap</h2>
+      <h2>Future: Governance Roadmap</h2>
       <p>
         Governance will evolve in clearly defined phases, each building on the trust and battle-testing of the previous one:
       </p>
@@ -1463,7 +1490,10 @@ await governance.execute(proposalId);</code></pre>
       </div>
 
       <!-- ========== 13. PartnerVault Governance Features ========== -->
-      <h2>13. PartnerVault Governance Features</h2>
+      </details>
+      <details class="governance-section" id="governance-integrations">
+        <summary>PartnerVault controls and governance dashboard</summary>
+      <h2>PartnerVault Governance Features</h2>
       <p>
         The PartnerVault contract introduces additional governance-controlled mechanisms beyond basic parameter changes.
       </p>
@@ -1497,7 +1527,7 @@ await governance.execute(proposalId);</code></pre>
       </p>
 
       <!-- ========== 14. Governance Dashboard ========== -->
-      <h2>14. Governance Dashboard</h2>
+      <h2>Governance Dashboard</h2>
       <p>
         A read-only React dashboard for on-chain governance monitoring is available at
         <code>apps/governance-dashboard/</code>. Run locally:
@@ -1518,7 +1548,17 @@ await governance.execute(proposalId);</code></pre>
       </div>
 
       <!-- ========== 12. Phase 4 — Full DAO Roadmap ========== -->
-      <h2 id="dao-roadmap">12. Phase 4 &mdash; Full DAO Roadmap</h2>
+      </details>
+      <details class="governance-section" id="dao-plans">
+        <summary>Phase 4 plans: DAO, Council and Forum</summary>
+      <h2 id="dao-roadmap">Phase 4 &mdash; Full DAO Roadmap</h2>
+      <p><strong>Draft, not an active voting system.</strong> The Council portal is a separate security-gated milestone within this direction, not a replacement for Safe execution. The proposed model below separates Council membership from Forum token weight. It is not an approved production voting rule. Quorum, thresholds, fees and timing below are draft parameters pending ratification and tests.</p>
+      <h3>Proposed voting-weight clarification</h3>
+      <ul>
+        <li><strong>Council:</strong> one vote per eligible member in a fixed membership snapshot, independent of token holdings or the number of wallets controlled. Binding Safe execution remains separate.</li>
+        <li><strong>Forum:</strong> voting weight based on eligible locked IFR at a fixed snapshot, not one vote per lock or wallet. Splitting an amount into multiple locks must not increase its total weight.</li>
+        <li><strong>Before ratification:</strong> define eligible lock contracts, snapshot and lock-duration requirements, delegation, duplicate-count prevention, quorum and concentration safeguards. No automatic activation follows from this proposal.</li>
+      </ul>
 
       <h3>Prerequisites for Phase 4</h3>
       <ul>
@@ -1531,7 +1571,7 @@ await governance.execute(proposalId);</code></pre>
       <h3>Token-Voting Mechanism</h3>
       <p>
         In full DAO mode, IFR lockers vote on proposals.
-        Voting power = locked IFR amount (not wallet balance).
+        Proposed Forum voting power = eligible locked IFR at the agreed snapshot (not wallet balance). Final eligibility and safeguards require ratification.
       </p>
 
       <table>
@@ -1570,7 +1610,7 @@ await governance.execute(proposalId);</code></pre>
       </table>
 
       <!-- ========== 13. Two-Chamber DAO Design ========== -->
-      <h2 id="two-chamber">13. Two-Chamber DAO Design (Phase 4)</h2>
+      <h2 id="two-chamber">Two-Chamber DAO Design (Phase 4)</h2>
 
       <div class="callout" style="background:rgba(249,115,22,0.08);border:1px solid rgba(249,115,22,0.3);border-radius:12px;padding:20px;margin-bottom:24px;">
         <p style="margin:0;"><strong>Note:</strong> The two-chamber model described below is the planned Phase 4 architecture. It is <strong>not yet deployed</strong>. Current governance uses the single-owner Timelock described above.</p>
@@ -1595,7 +1635,7 @@ await governance.execute(proposalId);</code></pre>
           <h4 style="color:#f97316;margin:0 0 8px;">&#x1F3DB;&#xFE0F; Chamber 2: The Forum</h4>
           <p style="margin:0 0 12px;font-size:0.9rem;">Community innovation layer. Token-weighted proposals. Spam protection via <code>IFRSpamProtection.sol</code>.</p>
           <ul style="font-size:0.85rem;margin:0;padding-left:20px;">
-            <li>Any IFR holder (1 lock = 1 vote)</li>
+            <li>Proposed: eligible locked-IFR voting weight, subject to ratification</li>
             <li>10 IFR spam protection per proposal</li>
             <li>Top proposals &rarr; on-chain execution</li>
           </ul>
@@ -1609,7 +1649,7 @@ await governance.execute(proposalId);</code></pre>
         </thead>
         <tbody>
           <tr><td>Submit Proposal</td><td>Signer only</td><td>Any IFR holder (10 IFR fee)</td></tr>
-          <tr><td>Vote</td><td>Signer (signature)</td><td>Any IFR holder (1 lock = 1 vote)</td></tr>
+          <tr><td>Vote (proposed)</td><td>One vote per eligible Council member</td><td>Eligible locked-IFR weight at a fixed snapshot; subject to ratification</td></tr>
           <tr><td>Execute</td><td>Separate TreasurySafe 3-of-5 action after Timelock</td><td>Separate Safe/Governance action after consensus</td></tr>
           <tr><td>Cancel</td><td>Guardian role</td><td>Downvote &gt; 50%</td></tr>
           <tr><td>Fee</td><td>None</td><td>10 IFR (refunded if successful)</td></tr>
@@ -1629,7 +1669,9 @@ await governance.execute(proposalId);</code></pre>
       </table>
 
       <!-- ========== 14. Council Agenda ========== -->
-      <h2 id="council-agenda">14. Council Agenda &amp; Vote Log</h2>
+      </details>
+      <section class="governance-agenda" aria-labelledby="council-agenda">
+      <h2 id="council-agenda">Council Agenda &amp; Vote Log</h2>
 
       <div class="callout" style="background:rgba(249,115,22,0.08);border:1px solid rgba(249,115,22,0.35);border-radius:8px;padding:20px;margin-bottom:24px;">
         <p style="margin:0;"><strong>Status: undated discussion draft.</strong> No vote is open, no IFR is allocated, and no exchange has Council membership or TreasurySafe permissions. Publishing an agenda item does not authorize spending or an on-chain action. Agenda entries contain no proposer attribution or personal name.</p>
@@ -1653,6 +1695,8 @@ await governance.execute(proposalId);</code></pre>
       <p><strong>Option A:</strong> exchanges receive no voting seat and no TreasurySafe signer or execution access in return for listing, liquidity or services. This avoids custody concentration, conflicts of interest and governance capture.</p>
       <p><strong>Option B:</strong> at most two publicly disclosed, non-voting exchange advisers with no Safe permissions. Any future voting or signer candidacy must follow the same independent eligibility, conflict, security, community-selection and rotation process described in the <a href="community-signer-expansion.html">Community Signer Expansion Plan</a>. It requires a separate public decision and must never be bundled with a commercial exchange agreement.</p>
 
+      <details class="governance-section" id="council-vote-record">
+      <summary>Agenda status and results</summary>
       <h3>Public Vote Log</h3>
       <table>
         <thead><tr><th>Agenda ID</th><th>Subject</th><th>Date</th><th>State</th><th>Result / execution</th></tr></thead>
@@ -1662,14 +1706,18 @@ await governance.execute(proposalId);</code></pre>
         </tbody>
       </table>
 
+      </details>
       <h3>Planned Council Voting Portal</h3>
       <div class="callout-green callout">
         <p><strong>Planned, not live.</strong> No Council login or web ballot currently creates a binding vote. The implementation remains a security-gated task block.</p>
       </div>
+      <details class="governance-section" id="council-privacy">
+      <summary>Voting modes, privacy boundaries and release requirements</summary>
+      <p><strong>Privacy requirements, not a certification:</strong> the following describes a planned system. Network-level anonymity is not guaranteed. For general background on connection metadata and privacy, see <a href="https://ethereum.org/roadmap/privacy/" target="_blank" rel="noopener noreferrer">Ethereum's privacy roadmap</a>.</p>
       <p>The safe design connects an individual signer wallet, issues a domain-bound expiring EIP-4361 challenge, and checks eligibility against a recorded, block-numbered Council/Safe-owner snapshot. EOA signatures and Safe smart-account signatures require separate verification paths; Safe signatures use EIP-1271. Eligibility fails closed if the snapshot or verification path is unavailable. Every nonce is single-use and every ballot is bound to one immutable agenda version.</p>
       <p><strong>Open and secret ballots are separate modes.</strong> The mode is published when an agenda opens and cannot be changed while voting is active. An open ballot may publish a wallet and initials only where that mapping is already public and the member has consented; otherwise it publishes initials only. A secret ballot publishes no wallet, initials, individual vote, signature or voter-linked ballot hash. It publishes only the final turnout count, aggregate result and a verification proof after voting closes.</p>
       <p>Secret voting requires unlinkable eligibility issuance and ballot casting. The planned design therefore separates the service that verifies Council eligibility from the service that accepts an anonymous one-time credential, uses one-time nullifiers to prevent duplicate voting, encrypts ballots for threshold tallying, and exposes only non-identifying commitments and the aggregate proof. The existing Telegram wallet mapper and ordinary SIWE session flow are not suitable for secret ballots.</p>
-      <p><strong>Privacy boundary:</strong> the portal will retain no source IP, user-agent, request body, wallet-provider telemetry or analytics in application, proxy, error or audit logs. No cookies are required for secret voting. Network, hosting, RPC and wallet providers may still process connection metadata transiently; the project cannot honestly promise that an IP address is never seen anywhere on the network path. A production design must document each processor and offer a privacy-preserving access path. With only five eligible members, aggregate turnout or results may still permit social inference even when the cryptographic ballot remains secret.</p>
+      <p><strong>Privacy boundary:</strong> the planned portal must retain no source IP, user-agent, request body, wallet-provider telemetry or analytics in application, proxy, error or audit logs. This is a release requirement, not a verified property of a deployed service. No cookies are required for the planned secret-voting mode. Network, hosting, RPC and wallet providers may still process connection metadata; the project cannot honestly promise that an IP address is never seen anywhere on the network path. A production design must document each processor and offer a privacy-preserving access path.</p>
       <p>The current Safe owners and their initials-to-address mappings are already public on the <a href="multisig.html">Multisig</a> and <a href="transparency.html">Transparency</a> pages and in on-chain history. Removing a page cannot erase that history. Future signer onboarding must obtain explicit consent before publishing an initials-to-wallet mapping.</p>
       <p>The portal will never request or store a private key, seed phrase or unrestricted signature. It will not submit or execute TreasurySafe transactions. Even a completed Council ballot remains separate from the binding 3-of-5 Safe proposal, public 48-hour Governance timelock and on-chain execution.</p>
 
@@ -1689,6 +1737,10 @@ await governance.execute(proposalId);</code></pre>
         <li>No key custody, no backend executor and no automatic TreasurySafe/Governance action</li>
       </ul>
 
+      </details>
+      </section>
+      <details class="governance-section" id="governance-participation">
+      <summary>Telegram participation and planned commands</summary>
       <!-- ── PARTICIPATING IN GOVERNANCE ─────────────── -->
       <div id="participating" style="margin-top:48px;">
         <h2>Participating in Governance</h2>
@@ -1703,7 +1755,7 @@ await governance.execute(proposalId);</code></pre>
 
         <!-- Telegram Bot Commands -->
         <h3>Telegram Bot Commands</h3>
-        <p style="color:#9ca3af;">All governance interactions happen via the IFR Telegram Bot in <a href="https://t.me/IFR_token" style="color:#f97316;">@IFR Community</a>. No gas required for voting &mdash; only for on-chain execution.</p>
+        <p style="color:#9ca3af;">Telegram community access is separate from Council ballots and on-chain execution. The command list below includes planned Phase 4 voting commands, not a live web ballot. The <a href="https://t.me/IFR_token" style="color:#f97316;">@IFR Community</a> bot's identity mapping must not be reused for secret Council voting.</p>
 
         <table style="width:100%;border-collapse:collapse;margin:16px 0;">
           <thead>
@@ -1803,6 +1855,7 @@ await governance.execute(proposalId);</code></pre>
         </table>
       </div>
 
+      </details>
       <!-- Footer -->
       <footer class="wiki-footer">
         Inferno (IFR) &mdash; Community Fair Launch Model &mdash; Documentation v1.0

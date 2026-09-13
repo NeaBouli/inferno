@@ -218,6 +218,10 @@ Read-only governance dashboard for monitoring PartnerVault, proposals, and gener
 
 **Start:** `cd apps/governance-dashboard && npm run dev` → <http://localhost:5174>
 
+### Council agenda and voting plans
+
+The [Council agenda](docs/wiki/governance.html#council-agenda) separates current discussion drafts from the proposal procedure and historical records. The web voting portal is planned, not live; open and secret ballots require separate security and privacy acceptance. Network-level IP non-correlation is not guaranteed. Voting-weight alternatives remain unratified, and a ballot does not authorize or execute a Safe transaction. See the [Phase 4 roadmap](docs/wiki/roadmap.html) and [privacy requirements](docs/wiki/governance.html#council-privacy).
+
 ### User-provided IFR / ETH liquidity
 
 The [liquidity guide](docs/wiki/liquidity.html) is discoverable from the landing Quick Start wizard and Wiki navigation. Its read-only calculator verifies Ethereum pool identities, same-block reserves, freshness and the pair's fee exemption before estimating matching ETH using integer IFR amounts (9 decimals).
