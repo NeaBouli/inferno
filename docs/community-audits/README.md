@@ -47,3 +47,23 @@ Open high-risk recommendations involving immutable contracts, lending,
 governance or Mainnet roles are not implemented directly from this report.
 They require separate architecture, tests, independent review and an
 authorized governance process.
+
+## Collateral Web3 Open Audits — Web3 Integration Audit — 14 September 2026
+
+- Original report:
+  [CWA_IFR_Web3_Integration_Audit_2026-09-14.md](CWA_IFR_Web3_Integration_Audit_2026-09-14.md)
+- Original SHA-256:
+  `5bf20c4ba92d8214f10e139f5f99b98b5276eda556bd086686aa5d15ee1465ee`
+- Publication status: preserved unchanged as delivered
+- Review type: independent AI-assisted functional/wiring audit (Kimi K2,
+  `web3-integration-audit` skill): selector-level ABI verification (31/31 match),
+  the repo's own Playwright suites reproduced locally (44/44), the benefits
+  `test:benefits-*` battery (13/13 with documented preconditions), configuration
+  review of both wallet layers
+- Certification status: not a formal certification
+
+Result summary: verdict WORKS — 0 Critical / 0 High / 1 Medium / 2 Low /
+2 Informational (CWA-46…CWA-50). Key finding: copilot-api decodes the
+LendingVault `Loan` struct with a shifted ABI (CWA-46, dormant while zero loans
+exist). WalletConnect, chain enforcement, approval discipline and decimals
+handling verified correct.
