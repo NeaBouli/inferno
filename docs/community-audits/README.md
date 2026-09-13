@@ -75,7 +75,7 @@ era-source diff). No new vulnerability in deployed contract logic.
 - Original report:
   [CWA_IFR_Surfaces_Supplement_2026-09-14.md](CWA_IFR_Surfaces_Supplement_2026-09-14.md)
 - Original SHA-256:
-  `91092379f4677c48dc1e6ce0387753dd7a0ca425a7dce4989808f9fc5aa97408`
+  `492a37de8ae32e0640ad8ccb90e8a5a8ff73961288e0f47961b13d8caa336f3b`
 - Publication status: preserved unchanged as delivered
 - Review type: independent AI-assisted static source review (Kimi K2 with an
   independent review pass) of creator-gateway, Telegram bot, Benefits backend,
@@ -83,7 +83,7 @@ era-source diff). No new vulnerability in deployed contract logic.
   no dynamic testing, no live-deployment probing
 - Certification status: not a formal certification
 
-Result summary: 2 High / 6 Medium / 8 Low / 2 Informational (CWA-28…CWA-45).
+Result summary: 2 High / 5 Medium / 8 Low / 3 Informational (CWA-28…CWA-45).
 The two High findings are both in creator-gateway (attacker-chosen JWT wallet
 claim via legacy `/auth/wallet` and via the Google OAuth flow); exploitability
 depends on the service's deployment status, which was not publicly observable.
