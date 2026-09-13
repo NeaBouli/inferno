@@ -15,7 +15,10 @@ for (const file of fs.readdirSync(path.join(root, 'docs/wiki')).filter(x => x.en
 }
 const landing = read('docs/index.html');
 assert.match(landing, /id="liquidity-gauge"/);
-assert.match(landing, /not safety, returns or a funding target/);
+assert.match(landing, /not safety or guaranteed returns/);
+assert.match(landing, /Updates every 60 seconds/);
+assert.match(landing, /data-buy/);
+assert.match(landing, /0.30% V2/);
 assert.match(landing, /t:"Provide IFR \/ ETH liquidity"[^\n]+n:"liquidity"/);
 for (const anchor of ['calculator', 'add', 'remove', 'risks']) assert.ok(landing.includes('wiki/liquidity.html#' + anchor));
 assert.match(read('docs/wiki/faq.html'), /id="user-liquidity"/);

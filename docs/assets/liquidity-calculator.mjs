@@ -16,11 +16,14 @@ export function units(value, decimals) {
   const text = value.toString().padStart(decimals + 1, '0');
   return text.slice(0, -decimals) + '.' + text.slice(-decimals).replace(/0+$/, '').padEnd(1, '0');
 }
-export async function readPool(ethers) {
+export async function readPool(ethers, signal) {
   const request = new ethers.FetchRequest('https://ethereum-rpc.publicnode.com');
   request.timeout = 10000;
   const rpc = new ethers.JsonRpcProvider(request);
+  const abort = () => rpc.destroy();
+  signal?.addEventListener('abort', abort, { once: true });
   try {
+    if (signal?.aborted) throw new Error('Cancelled');
     if ((await rpc.getNetwork()).chainId !== 1n) throw new Error('Wrong network.');
     const block = await rpc.getBlock('latest');
     if (!block || Math.abs(Date.now() / 1000 - block.timestamp) > 180) throw new Error('RPC block is stale.');
@@ -32,7 +35,7 @@ export async function readPool(ethers) {
     if (!exempt) throw new Error('Pool fee exemption is not active; this calculator cannot provide a reliable deposit estimate.');
     quote(1n, reserves[0], reserves[1]);
     return { ifr: reserves[0], eth: reserves[1], block: block.number, timestamp: block.timestamp };
-  } finally { rpc.destroy(); }
+  } finally { signal?.removeEventListener('abort', abort); rpc.destroy(); }
 }
 if (typeof document !== 'undefined' && document.getElementById('ifr-amount')) {
   const input = document.getElementById('ifr-amount');
