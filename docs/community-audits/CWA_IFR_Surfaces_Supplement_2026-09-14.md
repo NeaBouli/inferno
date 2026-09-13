@@ -29,7 +29,7 @@ contains the two most serious findings of this supplement: both the legacy `/aut
 endpoint and the Google OAuth flow issue JWTs whose `walletAddress` claim is fully
 attacker-chosen — a complete bypass of the "lock ≥ 1,000 IFR" entitlement gate, as-coded.
 
-**New findings: 2 High · 6 Medium · 8 Low · 2 Informational (CWA-28 … CWA-45)**
+**New findings: 2 High · 5 Medium · 8 Low · 3 Informational (CWA-28 … CWA-45)**
 
 ## 2. Findings
 
