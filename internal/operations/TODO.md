@@ -109,7 +109,7 @@ On errors: fix immediately, commit with `seo:` prefix.
 ### Reconciled checkpoint — 2026-09-13
 
 - [x] Liquidity guide, wizard/FAQ/knowledge integration and horizontal live depth gauge published through PR #84, #85 and #86. Latest release: `26a62cefa0da88e8e4e4306e4e9f7cf5d5b5a3a7`; exact-main CI and live checks passed. Transactions remain on Uniswap.
-- [x] Dependency triage recorded in `DEPENDENCY_TRIAGE_20260913.md`: root 8 low package findings; GitHub cross-module inventory 1 high / 9 medium alerts. Counts are scoped observations, not proof of runtime exploitability.
+- [x] Dependency triage recorded in `DEPENDENCY_TRIAGE_20260913.md`: root 8 low package findings; GitHub full inventory 1 high / 9 medium / 1 low alerts. Counts are scoped observations, not proof of runtime exploitability.
 - [ ] Remediate Creator Gateway js-yaml, dashboard/prototype hono; separately resolve stream-json and Mythril compatibility. Do not force major overrides.
 - [ ] Review maintenance PR #81 / #82 / #83 with their complete test gates; add scheduled dependency inventory coverage.
 - [ ] Complete physical-device acceptance: current report remains 1/10 PASS, 9 pending. Bind future evidence to tested release; never relabel emulation as physical evidence.
