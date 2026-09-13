@@ -21,9 +21,9 @@ function checkLinks(text = '', entities = []) {
 function checkMessage(text = '') {
   // Match solicitations, not mentions in questions or safety warnings.
   const patterns = [
-    /^\s*(?:please\s+)?(?:send|share|enter|submit)\s+(?:me\s+)?(?:your\s+)?(?:seed\s*phrase|private\s*key|mnemonic)\b/im,
-    /^\s*(?:we\s+(?:offer|promise)\s+)?guaranteed\s+(?:profit|returns?|roi)\b/im,
-    /^\s*(?:claim|get)\s+(?:your\s+)?free\s+(?:airdrop|eth|btc|tokens?)\b/im,
+    /(?:^|[,;:!?])\s*(?:please\s+)?(?:send|share|enter|submit)\s+(?:me\s+)?(?:your\s+)?(?:seed\s*phrase|private\s*key|mnemonic)\b/im,
+    /(?:^|[,;:!?])\s*(?:we\s+(?:offer|promise)\s+)?guaranteed\s+(?:profit|returns?|roi)\b/im,
+    /(?:^|[,;:!?])\s*(?:claim|get)\s+(?:your\s+)?free\s+(?:airdrop|eth|btc|tokens?)\b/im,
   ];
   const isSpam = patterns.some(p => p.test(text));
   return { isSpam, reason: isSpam ? 'solicitation' : null };
@@ -31,7 +31,9 @@ function checkMessage(text = '') {
 
 function checkImpersonation(user) {
   const name = `${user?.first_name || ''} ${user?.last_name || ''} ${user?.username || ''}`;
-  return /\b(ifr|inferno)\b/i.test(name) && /\b(admin|support|official)\b/i.test(name);
+  const normalized = name.replace(/[_-]+/g, ' ');
+  return (/\b(ifr|inferno)\b/i.test(normalized) && /\b(admin|support|official)\b/i.test(normalized))
+    || /\b(?:(?:ifr|inferno)(?:admin|support|official)|(?:admin|support|official)(?:ifr|inferno))\b/i.test(normalized);
 }
 
 function moderationMiddleware({ now = Date.now } = {}) {
