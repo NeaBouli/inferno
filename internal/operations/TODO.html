@@ -49,7 +49,16 @@
   <div class="container">
     <a href="wiki/roadmap.html" class="back" rel="nofollow">&larr; Roadmap</a>
     <h1>IFR Protocol &mdash; Developer TODO List</h1>
-    <div class="subtitle">Last updated: 2026-09-06 &middot; Branch: main</div>
+    <div class="subtitle">Last updated: 2026-09-13 &middot; Branch: main</div>
+    <h2>Reconciled checkpoint &mdash; 2026-09-13</h2>
+    <ul>
+      <li><strong>Completed:</strong> Liquidity guide, wizard/FAQ/knowledge and horizontal live depth gauge published via PR #84/#85/#86; main <code>26a62cefa0da88e8e4e4306e4e9f7cf5d5b5a3a7</code>, CI and live checks passed. Execution stays on Uniswap.</li>
+      <li><strong>Triaged:</strong> <a href="DEPENDENCY_TRIAGE_20260913.md">Dependency inventory</a>: root 8 low package findings; complete GitHub alerts 1 high / 9 medium / 1 low. Not a runtime-exploit or repo-wide clean certification.</li>
+      <li><strong>Open:</strong> Gateway js-yaml and dashboard/prototype hono remediation; separate stream-json and Mythril compatibility; maintenance PR #81/#82/#83 and scheduled audit coverage.</li>
+      <li><strong>Open:</strong> Physical matrix 1/10 PASS, 9 pending. Bind evidence to tested release; separately review unpublished strict QA completion gate. No simulated physical passes.</li>
+      <li><strong>Open:</strong> IFRcontent remains a separate proprietary Inferno-family follow-up; architecture foundation exists, implementation and acceptance pending. No private design belongs here.</li>
+    </ul>
+    <p>Older dated entries retain historical scope; this checkpoint supersedes release status, not unverified chain or listing observations.</p>
 
     <!-- ═══ CURRENT WATCHLIST ═══ -->
     <h2><span class="priority-badge p-critical">WATCH</span> Current Watchlist &mdash; verified 2026-09-06</h2>
@@ -95,7 +104,7 @@
       <li><div class="cb"></div><strong>Blockaid/MetaMask warning retest</strong><br>
         <span style="color:#6b7280;font-size:0.82rem;">Blockaid review is approved. Resume only if a current device still shows a warning, with version, timestamp and screenshot evidence.</span></li>
       <li><div class="cb"></div><strong>Residual dependency audit findings</strong><br>
-        <span style="color:#6b7280;font-size:0.82rem;">The clean local candidate has 8 transitive low findings (0 moderate/high/critical). Resume on upstream fixes or a bounded runtime-path remediation; never use <code>npm audit fix --force</code>.</span></li>
+        <span style="color:#6b7280;font-size:0.82rem;">Root-only audit verified 2026-09-13: 8 transitive low findings (0 moderate/high/critical). Other manifests have separate open alerts; see DEPENDENCY_TRIAGE_20260913.md. Not a repo-wide zero-high claim. Never use <code>npm audit fix --force</code>.</span></li>
       <li><div class="cb"></div><strong>CommitmentVault native batch-lock UX</strong><br>
         <span style="color:#6b7280;font-size:0.82rem;">Current self-service works but needs one approval plus multiple lock confirmations. Resume with an audited V2 <code>lockBatch</code>/<code>lockSplit</code> scope and deployment approval.</span></li>
       <li><div class="cb"></div><strong>Global LendingVault liquidation dashboard and Telegram alerts</strong><br>
