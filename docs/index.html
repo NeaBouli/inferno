@@ -1314,8 +1314,8 @@
 }
 </script>
 <script src="/assets/vendor/ethers-6.17.0.umd.min.js"></script>
-<link rel="stylesheet" href="/assets/liquidity-gauge.css">
-<script type="module" src="/assets/liquidity-gauge.mjs"></script>
+<link rel="stylesheet" href="/assets/liquidity-gauge.css?v=depth1">
+<script type="module" src="/assets/liquidity-gauge.mjs?v=depth1"></script>
 <script src="assets/wallet-core.js?v=20260708-readable-mobile-modal"></script>
 <script src="assets/ifr-state.js"></script>
   <link rel="stylesheet" href="assets/redesign-skin.css">
@@ -1440,17 +1440,27 @@
         <div class="ledger-row"><span class="k">Owner</span><span class="v">Governance · 48h timelock</span></div>
       </div>
       <section class="liquidity-gauge" id="liquidity-gauge" aria-labelledby="liquidity-gauge-title">
-        <h2 id="liquidity-gauge-title">Pool liquidity</h2>
+        <h2 id="liquidity-gauge-title">Liquidity depth</h2>
+        <span class="gauge-live"><i aria-hidden="true"></i><span data-live>Updating</span></span>
         <p>Uniswap V2 · IFR / WETH · Ethereum</p>
+        <p>Buy capacity at 1% curve impact</p>
+        <strong class="gauge-capacity" data-capacity>--</strong>
+        <dl class="gauge-capacities"><div><dt>0.5%</dt><dd data-cap="50">--</dd></div><div><dt>2%</dt><dd data-cap="200">--</dd></div><div><dt>5%</dt><dd data-cap="500">--</dd></div></dl>
+        <label for="liquidity-buy">Your example buy (ETH, wrapped to WETH)</label>
+        <input id="liquidity-buy" data-buy inputmode="decimal" value="0.1" aria-describedby="liquidity-impact">
+        <p id="liquidity-impact" data-impact>--</p>
         <div class="gauge-dial" aria-hidden="true"><span class="gauge-needle" data-needle hidden></span></div>
-        <div class="gauge-ticks" aria-hidden="true"><span>0</span><span>0.5</span><span>1+ WETH</span></div>
+        <div class="gauge-ticks" aria-hidden="true"><span>0</span><span data-mid>--</span><span data-end>--</span></div>
+        <p data-target>--</p>
+        <p data-missing>--</p>
+        <p>Current pool reserves</p>
         <strong data-reserve>Unavailable</strong>
         <p data-details></p>
         <p data-status role="status">Current pool data requires JavaScript and a public Ethereum RPC connection.</p>
-        <p>WETH reserve only. Display scale: 0–1 WETH, capped above 1. Colors indicate reserve size, not safety, returns or a funding target.</p>
+        <p>Updates every 60 seconds. Dial: current WETH reserve versus the amount needed for your example buy at 1% curve impact. Colors show increasing coverage, not safety or guaranteed returns. Only the right endpoint means the scenario is met.</p>
+        <p>Model includes the 0.30% V2 input fee separately from curve impact. Gas, interface fees and route-dependent IFR fees are excluded. Pair exemption must be verified. Not an execution quote.</p>
         <div class="gauge-actions">
           <a href="wiki/liquidity.html">Provide liquidity &rarr;</a>
-          <button type="button" aria-label="Refresh pool liquidity" title="Refresh pool liquidity">&#x21bb;</button>
         </div>
         <p><a href="wiki/liquidity.html#risks">LP risks and fees</a> · Read-only public RPC; no wallet connection.</p>
       </section>

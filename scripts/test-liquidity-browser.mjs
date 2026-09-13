@@ -86,6 +86,7 @@ try {
     await page.route('**/liquidity-calculator.mjs', route => route.fulfill({ contentType: 'text/javascript', body: `
       export const units = (v,d) => String(v / 10n ** BigInt(d)) + '.' + String(v % 10n ** BigInt(d)).padStart(d,'0').replace(/0+$/,'');
       export async function readPool() {
+        window.gaugeReads = (window.gaugeReads || 0) + 1;
         if(window.gaugeOffline) throw new Error('Offline');
         if(window.gaugeHang) await new Promise(resolve => { window.resolveGauge = resolve; });
         return { eth:250000000000000000n, ifr:1000000000000000n, block:123, timestamp:Math.floor(Date.now()/1000) };
@@ -94,28 +95,42 @@ try {
     const gauge = page.locator('#liquidity-gauge');
     await page.waitForFunction(() => document.querySelector('[data-reserve]').textContent === '0.25 WETH');
     assert.equal(await gauge.locator('[data-needle]').evaluate(el => el.hidden), false);
-    assert.equal(await gauge.locator('[data-needle]').evaluate(el => el.style.transform), 'rotate(-45deg)');
+    assert.equal(await gauge.locator('[data-live]').textContent(), 'Live');
+    assert.equal(await gauge.locator('button').count(), 0);
+    assert.match(await gauge.locator('[data-target]').textContent(), /9.8703 WETH/);
+    await gauge.locator('[data-buy]').fill('0.001');
+    assert.equal(await gauge.locator('[data-needle]').evaluate(el => el.style.transform), 'rotate(90deg)');
+    await gauge.locator('[data-buy]').fill('0');
+    assert.equal(await gauge.locator('[data-needle]').evaluate(el => el.hidden), true);
+    await gauge.locator('[data-buy]').fill('0.1');
     assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
-    const ledgerBox = await page.locator('.hero-ledger-stack .ledger').boundingBox();
-    const gaugeBox = await gauge.boundingBox();
-    assert.ok(gaugeBox, 'gauge visible at every viewport');
-    if (ledgerBox) assert.ok(gaugeBox.y >= ledgerBox.y + ledgerBox.height, 'gauge below protocol ledger');
+    // Read both rectangles in one frame: their shared reveal animation can move
+    // between separate browser round trips after input focus scrolls the page.
+    const placement = await page.evaluate(() => {
+      const ledger = document.querySelector('.hero-ledger-stack .ledger').getBoundingClientRect();
+      const dial = document.querySelector('#liquidity-gauge').getBoundingClientRect();
+      return { visible: dial.width > 0 && dial.height > 0, below: ledger.height === 0 || dial.top >= ledger.bottom };
+    });
+    assert.ok(placement.visible, 'gauge visible at every viewport');
+    assert.ok(placement.below, 'gauge below protocol ledger');
     await gauge.scrollIntoViewIfNeeded();
     await gauge.screenshot({ path: `/tmp/ifr-gauge-${width}.png` });
-    await page.clock.fastForward(190000);
-    assert.equal(await gauge.locator('[data-reserve]').textContent(), 'Unavailable');
-    assert.equal(await gauge.locator('[data-needle]').evaluate(el => el.hidden), true);
+    await page.clock.fastForward(60000);
+    await page.waitForFunction(() => document.querySelector('[data-live]').textContent === 'Live');
     await page.evaluate(() => { window.gaugeOffline = true; });
-    await gauge.locator('button').click();
+    await page.clock.fastForward(60000);
     await page.waitForFunction(() => document.querySelector('[data-status]').textContent.includes('could not be verified'));
     await page.evaluate(() => { window.gaugeOffline = false; window.gaugeHang = true; });
-    await gauge.locator('button').click();
+    await page.clock.fastForward(60000);
     await page.clock.fastForward(16000);
-    assert.equal(await gauge.locator('button').isEnabled(), true);
+    assert.equal(await gauge.locator('[data-live]').textContent(), 'Unavailable');
     assert.match(await gauge.locator('[data-status]').textContent(), /timed out/);
+    const timedOutReads = await page.evaluate(() => window.gaugeReads);
+    await page.clock.fastForward(60000);
+    assert.equal(await page.evaluate(() => window.gaugeReads), timedOutReads, 'no overlapping read while old request remains pending');
     await page.evaluate(() => { window.gaugeHang = false; window.resolveGauge(); });
     assert.equal(await gauge.locator('[data-reserve]').textContent(), 'Unavailable', 'late response remains rejected');
-    await gauge.locator('button').click();
+    await page.clock.fastForward(60000);
     await page.waitForFunction(() => document.querySelector('[data-reserve]').textContent === '0.25 WETH');
     assert.equal(await gauge.locator('.gauge-actions a').getAttribute('href'), 'wiki/liquidity.html');
     await page.close();
