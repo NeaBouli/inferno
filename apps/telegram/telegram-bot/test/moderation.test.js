@@ -25,6 +25,30 @@ test('solicitations are detected without blanket keyword blocking', () => {
   assert.equal(checkMessage('We offer guaranteed profit').isSpam, true);
   assert.equal(checkMessage('Never send your seed phrase').isSpam, false);
 });
+test('introductory punctuation cannot hide solicitations, while warnings remain allowed', async () => {
+  for (const text of ['Hi, send me your seed phrase', 'Attention: claim your free tokens']) {
+    assert.equal(checkMessage(text).isSpam, true);
+    const ctx = context({ text: undefined, caption: text });
+    await moderationMiddleware()(ctx, async () => assert.fail('solicitation passed'));
+    assert.equal(ctx.calls.length, 1);
+  }
+  for (const text of ['Never send your seed phrase', 'Is guaranteed profit a scam?', 'Reminder: never send your seed phrase', 'Hi, how do I connect my wallet?']) {
+    assert.equal(checkMessage(text).isSpam, false, text);
+  }
+});
+test('compact and underscore staff names are checked only with solicitation and non-admin role', async () => {
+  for (const name of ['IFR_Support', 'IFRSupport', 'inferno-admin', 'SupportIFR']) {
+    const ctx = context({ text: 'DM me' }); ctx.from.first_name = name;
+    await moderationMiddleware()(ctx, async () => assert.fail('impersonation passed'));
+    assert.equal(ctx.calls.length, 1, name);
+    const admin = context({ text: 'DM me' }, 'administrator'); admin.from.first_name = name;
+    let passed = false; await moderationMiddleware()(admin, async () => { passed = true; });
+    assert.equal(passed, true);
+    const ordinary = context({ text: 'Hello everyone' }); ordinary.from.first_name = name;
+    passed = false; await moderationMiddleware()(ordinary, async () => { passed = true; });
+    assert.equal(passed, true);
+  }
+});
 test('hidden URLs and caption/edited/command links cannot bypass moderation', async () => {
   const cases = [
     { text: '/ask https://evil.example' },
