@@ -4,7 +4,7 @@
 
 ## Summary
 
-GitHub reports ten open alerts: one high and nine medium. The root npm audit independently reports eight low package findings, all from the existing elliptic chain, with no moderate/high/critical findings. These are different scopes, not contradictory results. No dependency, credential, runtime or production configuration was changed in this triage. Live exploitability has not been established or ruled out for the affected app paths.
+The paginated GitHub inventory reports eleven open alerts: one high, nine medium and one low (elliptic #21). The root npm audit independently reports eight low package findings, all from that existing elliptic chain, with no moderate/high/critical findings. Advisory counts and affected-package counts are different scopes, not contradictory results. No dependency, credential, runtime or production configuration was changed in this triage. Live exploitability has not been established or ruled out for the affected app paths.
 
 ## Findings by domain
 
@@ -39,7 +39,7 @@ GitHub reports ten open alerts: one high and nine medium. The root npm audit ind
 
 ## Verification and limits
 
-- Compared all ten GitHub alerts with tracked package/version/parent records and workflow scopes.
+- Compared all eleven open GitHub alerts with tracked package/version/parent records and workflow scopes using state=open and pagination. The initial default page missed the older low alert; the complete inventory above supersedes it.
 - Existing physical-device reporter remains 1/10 PASS, 9 pending; its exit 0 validates the report, not full physical acceptance. Build-bound evidence and strict completion remain separate tasks.
 - Kimi review attempted through the configured wrapper; failed before work with EMFILE. No independent review claimed.
 - No secrets, device identifiers, wallet proofs or private architecture included. No credential rotation, signature, transaction or production action performed.
