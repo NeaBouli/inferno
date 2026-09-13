@@ -96,7 +96,11 @@ function main() {
       .replace(/\s*[—–-]\s*\$IFR.*$/i, "")
       .trim();
 
-    const content = stripHtml(html);
+    const summaryMatch = html.match(/<section\b[^>]*\bdata-rag-summary\b[^>]*>([\s\S]*?)<\/section>/i);
+    const content = stripHtml(summaryMatch ? summaryMatch[1] : html);
+    if (summaryMatch && content.length > 2000) {
+      throw new Error(`${file}: explicit RAG summary exceeds 2000 characters`);
+    }
 
     // Skip empty or very short pages
     if (content.length < 50) {

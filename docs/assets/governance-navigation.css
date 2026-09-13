@@ -1,0 +1,20 @@
+.governance-overview { border-block: 1px solid #c9c8c3; padding: 16px 0; margin-bottom: 24px; }
+.governance-jumps { display: flex; flex-wrap: wrap; gap: 12px 24px; margin: 16px 0; }
+.governance-jumps a { color: #24563a; font-weight: 600; text-decoration: underline; }
+.governance-section { border-bottom: 1px solid #c9c8c3; padding: 16px 0; min-width: 0; }
+.governance-section > summary { cursor: pointer; color: #272b28; font-size: 18px; font-weight: 700; line-height: 1.5; }
+.governance-section[open] > summary { margin-bottom: 24px; }
+.governance-section :is(p, li, td) { line-height: 1.65; }
+.governance-section table, .governance-agenda table { display: block; overflow-x: auto; max-width: 100%; }
+.governance-section :is(th, td), .governance-agenda :is(th, td) { min-width: 140px; overflow-wrap: normal; word-break: normal; letter-spacing: 0; }
+.governance-agenda :is(th, td):last-child { min-width: 260px; }
+.governance-agenda { margin: 32px 0; }
+.governance-agenda h3 { margin-top: 28px; }
+.governance-section, .governance-agenda { overflow-wrap: anywhere; }
+.main :is([id], summary) { scroll-margin-top: 120px; }
+.governance-section summary:focus-visible, .governance-jumps a:focus-visible { outline: 3px solid #24563a; outline-offset: 5px; }
+@media (max-width: 600px) {
+  .governance-section > summary { font-size: 16px; }
+  .governance-section div[style*="grid-template-columns:1fr 1fr"] { grid-template-columns: 1fr !important; }
+}
+@media print { .governance-section::details-content { display: contents; } }
