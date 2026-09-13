@@ -53,7 +53,7 @@ state in both directions (overstatements *and* unreported improvements).
 | Documentation & claims consistency | WARN | I: cluster (11 entries) |
 | Governance & centralization | PASS w/ findings | covered above |
 
-Totals: **0 Critical · 1 High (dormant) · 7 Medium · 12 Low · Informational cluster**
+Totals: **0 Critical · 1 High (dormant) · 6 Medium · 12 Low · Informational cluster**
 
 ## 2. Scope and Methodology
 
@@ -142,7 +142,8 @@ None.
   `setIFRPrice(X)`:
   1. If X is set far below market: `requiredCollateral = amount * X * 200 / 1e11` collapses —
      borrowing the entire `totalAvailable` (**52,155,440.95 IFR**, verified) costs dust ETH
-     (at X = 1 wei: ≈ 1,043 wei of collateral). One transaction drains the vault.
+     (at X = 1 wei: ≈ 104,310,881 wei of collateral — 52,155,440.952845656e9 × 200 / 1e11 —
+     still dust against any real reserve). One transaction drains the vault.
   2. If X is set far above market: every existing loan's collateral ratio collapses →
      permissionless `liquidate()` hands all borrower collateral to liquidator (5%) and lender.
   Mitigations today: 48h timelock (public visibility), guardian cancel, the 4-hour CI invariant
@@ -590,8 +591,12 @@ price mechanism (do not activate as-is), one real accounting dead-end (FeeRouter
 young off-chain components (points/voucher auth hardening), and a documentation layer whose
 numbers drift in both directions — overstated in places (tier tables, "audited" wording, stale
 supply/fee tables) and *understated* in others (BuybackController ownership migration, Vesting
-fee exemption, W18 fix). None of the findings puts user funds at risk in the current
-configuration.
+fee exemption, W18 fix). With one qualification, none of the findings puts user funds at risk in
+the current configuration: locks newly created through the externally callable
+`CommitmentVault.lock()` with `PRICE_ONLY` or `TIME_AND_PRICE` may be unrecoverable while the
+oracle remains zero, because `isConditionMet()` cannot succeed and neither `unlock()` nor the
+permissionless auto-unlock can release them (CWA-03). The existing TIME_ONLY baseline tranches
+(47,952,476.87 IFR) are unaffected.
 
 ## 12. Disclaimer
 

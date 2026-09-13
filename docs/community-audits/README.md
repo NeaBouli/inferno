@@ -52,9 +52,16 @@ authorized governance process.
 
 - Original report:
   [CWA_IFR_Protocol_Audit_2026-09-14.md](CWA_IFR_Protocol_Audit_2026-09-14.md)
-- Original SHA-256:
+- Original SHA-256 (as delivered):
   `86d9ef68f270df799436f0207146d1430817737f7f64f51a26d1a6a335dfce0b`
-- Publication status: preserved unchanged as delivered
+- Current SHA-256 (after the corrections noted below):
+  `a0d5b454e91a790af174bbfc29c823c08c3766591ffc8265cf7c5c1cd74e2e96`
+- Publication status: corrected 2026-09-14 after independent PR review — three
+  factual fixes, no change to any finding classification or severity:
+  (1) CWA-01 collateral example figure (≈104,310,881 wei at X = 1 wei);
+  (2) totals summary states 6 Medium, matching the classified CWA-02…CWA-07;
+  (3) conclusion now qualifies the no-funds-at-risk statement for new
+  price-conditioned CommitmentVault locks (CWA-03).
 - Review type: independent AI-assisted full-scope security review (Kimi K2,
   executed with the project's `collateral-web3-audit` skill); read-only
   evidence at repo commit `eb538a355001b042b343bfb19221af2407a96e63` and
@@ -64,7 +71,7 @@ authorized governance process.
   factual or technical conclusion.
 
 Result summary: 0 Critical, 1 High (dormant LendingVault single-price
-activation risk; currently fail-closed and verified on-chain), 7 Medium,
+activation risk; currently fail-closed and verified on-chain), 6 Medium,
 12 Low, plus a documentation-drift cluster. Known-issues register (W1–W21,
 OPS) verified item by item; several documentation values diverge from chain
 state in both directions and are listed in the report's §6.
