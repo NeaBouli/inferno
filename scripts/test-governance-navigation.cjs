@@ -6,6 +6,12 @@ const { chromium } = require('@playwright/test');
 
 async function main() {
   const root = path.resolve(__dirname, '../docs');
+  const governance = fs.readFileSync(path.join(root, 'wiki/governance.html'), 'utf8');
+  assert(governance.includes('https://ethereum.org/roadmap/privacy/'));
+  assert(governance.includes('one vote per eligible member'));
+  assert(governance.includes('Splitting an amount into multiple locks must not increase its total weight'));
+  assert(!governance.includes('1 lock = 1 vote'));
+  assert(!governance.includes('With only five eligible members'));
   const server = http.createServer((req, res) => {
     const file = path.resolve(root, '.' + new URL(req.url, 'http://localhost').pathname);
     if (!file.startsWith(root + path.sep) || !fs.existsSync(file) || !fs.statSync(file).isFile()) {

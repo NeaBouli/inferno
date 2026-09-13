@@ -1551,7 +1551,13 @@ await governance.execute(proposalId);</code></pre>
       <details class="governance-section" id="dao-plans">
         <summary>Phase 4 plans: DAO, Council and Forum</summary>
       <h2 id="dao-roadmap">Phase 4 &mdash; Full DAO Roadmap</h2>
-      <p><strong>Draft, not an active voting system.</strong> The Council portal is a separate security-gated milestone within this direction, not a replacement for Safe execution. The token-weighted and one-lock-one-vote variants below are unresolved design alternatives; neither is an approved production voting rule. Quorum, thresholds, fees and timing below are draft parameters pending ratification and tests.</p>
+      <p><strong>Draft, not an active voting system.</strong> The Council portal is a separate security-gated milestone within this direction, not a replacement for Safe execution. The proposed model below separates Council membership from Forum token weight. It is not an approved production voting rule. Quorum, thresholds, fees and timing below are draft parameters pending ratification and tests.</p>
+      <h3>Proposed voting-weight clarification</h3>
+      <ul>
+        <li><strong>Council:</strong> one vote per eligible member in a fixed membership snapshot, independent of token holdings or the number of wallets controlled. Binding Safe execution remains separate.</li>
+        <li><strong>Forum:</strong> voting weight based on eligible locked IFR at a fixed snapshot, not one vote per lock or wallet. Splitting an amount into multiple locks must not increase its total weight.</li>
+        <li><strong>Before ratification:</strong> define eligible lock contracts, snapshot and lock-duration requirements, delegation, duplicate-count prevention, quorum and concentration safeguards. No automatic activation follows from this proposal.</li>
+      </ul>
 
       <h3>Prerequisites for Phase 4</h3>
       <ul>
@@ -1564,7 +1570,7 @@ await governance.execute(proposalId);</code></pre>
       <h3>Token-Voting Mechanism</h3>
       <p>
         In full DAO mode, IFR lockers vote on proposals.
-        Voting power = locked IFR amount (not wallet balance).
+        Proposed Forum voting power = eligible locked IFR at the agreed snapshot (not wallet balance). Final eligibility and safeguards require ratification.
       </p>
 
       <table>
@@ -1628,7 +1634,7 @@ await governance.execute(proposalId);</code></pre>
           <h4 style="color:#f97316;margin:0 0 8px;">&#x1F3DB;&#xFE0F; Chamber 2: The Forum</h4>
           <p style="margin:0 0 12px;font-size:0.9rem;">Community innovation layer. Token-weighted proposals. Spam protection via <code>IFRSpamProtection.sol</code>.</p>
           <ul style="font-size:0.85rem;margin:0;padding-left:20px;">
-            <li>Any IFR holder (1 lock = 1 vote)</li>
+            <li>Proposed: eligible locked-IFR voting weight, subject to ratification</li>
             <li>10 IFR spam protection per proposal</li>
             <li>Top proposals &rarr; on-chain execution</li>
           </ul>
@@ -1642,7 +1648,7 @@ await governance.execute(proposalId);</code></pre>
         </thead>
         <tbody>
           <tr><td>Submit Proposal</td><td>Signer only</td><td>Any IFR holder (10 IFR fee)</td></tr>
-          <tr><td>Vote</td><td>Signer (signature)</td><td>Any IFR holder (1 lock = 1 vote)</td></tr>
+          <tr><td>Vote (proposed)</td><td>One vote per eligible Council member</td><td>Eligible locked-IFR weight at a fixed snapshot; subject to ratification</td></tr>
           <tr><td>Execute</td><td>Separate TreasurySafe 3-of-5 action after Timelock</td><td>Separate Safe/Governance action after consensus</td></tr>
           <tr><td>Cancel</td><td>Guardian role</td><td>Downvote &gt; 50%</td></tr>
           <tr><td>Fee</td><td>None</td><td>10 IFR (refunded if successful)</td></tr>
@@ -1706,11 +1712,11 @@ await governance.execute(proposalId);</code></pre>
       </div>
       <details class="governance-section" id="council-privacy">
       <summary>Voting modes, privacy boundaries and release requirements</summary>
-      <p><strong>No anonymity certification:</strong> the following is a design requirement, not evidence of a deployed zero-log system. IP visibility and timing correlation cannot be ruled out across hosting, RPC, wallet providers or the wider network. Even aggregate results from five members can reveal individual choices by inference.</p>
+      <p><strong>Privacy requirements, not a certification:</strong> the following describes a planned system. Network-level anonymity is not guaranteed. For general background on connection metadata and privacy, see <a href="https://ethereum.org/roadmap/privacy/" target="_blank" rel="noopener noreferrer">Ethereum's privacy roadmap</a>.</p>
       <p>The safe design connects an individual signer wallet, issues a domain-bound expiring EIP-4361 challenge, and checks eligibility against a recorded, block-numbered Council/Safe-owner snapshot. EOA signatures and Safe smart-account signatures require separate verification paths; Safe signatures use EIP-1271. Eligibility fails closed if the snapshot or verification path is unavailable. Every nonce is single-use and every ballot is bound to one immutable agenda version.</p>
       <p><strong>Open and secret ballots are separate modes.</strong> The mode is published when an agenda opens and cannot be changed while voting is active. An open ballot may publish a wallet and initials only where that mapping is already public and the member has consented; otherwise it publishes initials only. A secret ballot publishes no wallet, initials, individual vote, signature or voter-linked ballot hash. It publishes only the final turnout count, aggregate result and a verification proof after voting closes.</p>
       <p>Secret voting requires unlinkable eligibility issuance and ballot casting. The planned design therefore separates the service that verifies Council eligibility from the service that accepts an anonymous one-time credential, uses one-time nullifiers to prevent duplicate voting, encrypts ballots for threshold tallying, and exposes only non-identifying commitments and the aggregate proof. The existing Telegram wallet mapper and ordinary SIWE session flow are not suitable for secret ballots.</p>
-      <p><strong>Privacy boundary:</strong> the portal will retain no source IP, user-agent, request body, wallet-provider telemetry or analytics in application, proxy, error or audit logs. No cookies are required for secret voting. Network, hosting, RPC and wallet providers may still process connection metadata transiently; the project cannot honestly promise that an IP address is never seen anywhere on the network path. A production design must document each processor and offer a privacy-preserving access path. With only five eligible members, aggregate turnout or results may still permit social inference even when the cryptographic ballot remains secret.</p>
+      <p><strong>Privacy boundary:</strong> the planned portal must retain no source IP, user-agent, request body, wallet-provider telemetry or analytics in application, proxy, error or audit logs. This is a release requirement, not a verified property of a deployed service. No cookies are required for the planned secret-voting mode. Network, hosting, RPC and wallet providers may still process connection metadata; the project cannot honestly promise that an IP address is never seen anywhere on the network path. A production design must document each processor and offer a privacy-preserving access path.</p>
       <p>The current Safe owners and their initials-to-address mappings are already public on the <a href="multisig.html">Multisig</a> and <a href="transparency.html">Transparency</a> pages and in on-chain history. Removing a page cannot erase that history. Future signer onboarding must obtain explicit consent before publishing an initials-to-wallet mapping.</p>
       <p>The portal will never request or store a private key, seed phrase or unrestricted signature. It will not submit or execute TreasurySafe transactions. Even a completed Council ballot remains separate from the binding 3-of-5 Safe proposal, public 48-hour Governance timelock and on-chain execution.</p>
 
