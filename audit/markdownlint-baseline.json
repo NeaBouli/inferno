@@ -2,8 +2,8 @@
   "schemaVersion": 2,
   "tool": "markdownlint-cli@0.49.1",
   "disabledRules": ["MD013","MD033","MD041","MD024","MD036","MD040"],
-  "filesScanned": 180,
-  "baselineIssues": 3470,
+  "filesScanned": 181,
+  "baselineIssues": 3469,
   "fingerprints": [
     [".github/ISSUE_TEMPLATE/bug_report.md","MD022","Expected: 1; Actual: 0; Below","## Bug Description","6e754bfe0c2fac07",1],
     [".github/ISSUE_TEMPLATE/bug_report.md","MD022","Expected: 1; Actual: 0; Below","## Environment","cadb5ca79597df18",1],
@@ -1896,7 +1896,6 @@
     ["docs/YOUTUBE_INTEGRATION.md","MD032","","- YouTube Channel Membership (...","c98f403b2a21c552",1],
     ["docs/YOUTUBE_INTEGRATION.md","MD032","","1. **Creator Gateway** (Docker...","e69ebbff97cb684f",1],
     ["internal/operations/TODO.md","MD022","Expected: 1; Actual: 0; Above","### Lending Market UI (Phase 3+ — after LP Launch)","a61859f0f2807d05",1],
-    ["internal/operations/TODO.md","MD022","Expected: 1; Actual: 0; Below","# IFR Protocol — Developer TODO List","16e44f2d16ab0dc5",1],
     ["internal/operations/TODO.md","MD022","Expected: 1; Actual: 0; Below","### Ali Copilot","165e8243697abd0d",1],
     ["internal/operations/TODO.md","MD022","Expected: 1; Actual: 0; Below","### Ali Copilot","ad70416926c27579",1],
     ["internal/operations/TODO.md","MD022","Expected: 1; Actual: 0; Below","### Ali Copilot","b7002112a92d261a",1],
