@@ -550,6 +550,8 @@
 }
   </script>
   <link rel="stylesheet" href="../assets/redesign-skin.css">
+  <link rel="stylesheet" href="../assets/governance-navigation.css">
+  <script src="../assets/governance-navigation.js" defer></script>
 </head>
 <body>
 
@@ -667,6 +669,21 @@
         Timelock-based on-chain governance for the Inferno token &mdash; proposals, roles, parameter changes, and emergency controls.
       </p>
 
+      <section class="governance-overview" aria-label="Governance status">
+        <p><strong>Live:</strong> Safe-controlled Governance and timelock execution. <strong>Discussion:</strong> EX-01 and EX-02, no ballot scheduled. <strong>Planned:</strong> Council web voting and the Phase 4 DAO.</p>
+        <nav class="governance-jumps" aria-label="Governance sections">
+          <a href="#council-agenda">Current Council agenda</a>
+          <a href="#governance-procedure">Proposal procedure</a>
+          <a href="#mainnet-record">Mainnet record</a>
+          <a href="#sepolia-history">Testnet archive</a>
+          <a href="#dao-roadmap">DAO plans</a>
+          <a href="#council-privacy">Voting privacy</a>
+        </nav>
+        <p>The Council portal is not live. An agenda discussion is not a vote, a funding allocation or permission to execute a transaction.</p>
+      </section>
+
+      <details class="governance-section" id="governance-procedure">
+        <summary>Proposal procedure, timelock and roles</summary>
       <!-- ========== 1. Overview ========== -->
       <h2>1. Overview</h2>
       <p>
@@ -977,7 +994,10 @@ await governance.execute(proposalId);</code></pre>
       </div>
 
       <!-- ========== 10. Mainnet Governance Proposals ========== -->
-      <h2>10. Mainnet Governance Proposals</h2>
+      </details>
+      <details class="governance-section" id="mainnet-record">
+        <summary>Mainnet proposals and execution record</summary>
+      <h2>Mainnet Governance Proposals</h2>
       <p>
         Governance proposals submitted on the Ethereum Mainnet deployment (<code>0xc43d48E7FDA576C5022d0670B652A622E8caD041</code>):
       </p>
@@ -1182,7 +1202,10 @@ await governance.execute(proposalId);</code></pre>
       </div>
 
       <!-- ========== 11. Historical Proposals (Sepolia) ========== -->
-      <h2>11. Historical Proposals (Sepolia)</h2>
+      </details>
+      <details class="governance-section" id="sepolia-history">
+        <summary>Historical proposals: Sepolia testnet archive</summary>
+      <h2>Historical Proposals (Sepolia)</h2>
       <p>
         Below are the governance proposals that have been submitted on the Sepolia testnet deployment:
       </p>
@@ -1309,7 +1332,10 @@ await governance.execute(proposalId);</code></pre>
       </ul>
 
       <!-- ========== 12. Current Governance Model ========== -->
-      <h2>12. Current Governance Model</h2>
+      </details>
+      <details class="governance-section" id="governance-model">
+        <summary>Current governance and transition options</summary>
+      <h2>Current Governance Model</h2>
       <p>
         Inferno currently operates under an <strong>Admin + Timelock</strong> governance model. This is a deliberate choice for the early phase of the protocol.
       </p>
@@ -1356,7 +1382,7 @@ await governance.execute(proposalId);</code></pre>
       </div>
 
       <!-- ========== 12. Future: Governance Roadmap ========== -->
-      <h2>12. Future: Governance Roadmap</h2>
+      <h2>Future: Governance Roadmap</h2>
       <p>
         Governance will evolve in clearly defined phases, each building on the trust and battle-testing of the previous one:
       </p>
@@ -1463,7 +1489,10 @@ await governance.execute(proposalId);</code></pre>
       </div>
 
       <!-- ========== 13. PartnerVault Governance Features ========== -->
-      <h2>13. PartnerVault Governance Features</h2>
+      </details>
+      <details class="governance-section" id="governance-integrations">
+        <summary>PartnerVault controls and governance dashboard</summary>
+      <h2>PartnerVault Governance Features</h2>
       <p>
         The PartnerVault contract introduces additional governance-controlled mechanisms beyond basic parameter changes.
       </p>
@@ -1497,7 +1526,7 @@ await governance.execute(proposalId);</code></pre>
       </p>
 
       <!-- ========== 14. Governance Dashboard ========== -->
-      <h2>14. Governance Dashboard</h2>
+      <h2>Governance Dashboard</h2>
       <p>
         A read-only React dashboard for on-chain governance monitoring is available at
         <code>apps/governance-dashboard/</code>. Run locally:
@@ -1518,7 +1547,11 @@ await governance.execute(proposalId);</code></pre>
       </div>
 
       <!-- ========== 12. Phase 4 — Full DAO Roadmap ========== -->
-      <h2 id="dao-roadmap">12. Phase 4 &mdash; Full DAO Roadmap</h2>
+      </details>
+      <details class="governance-section" id="dao-plans">
+        <summary>Phase 4 plans: DAO, Council and Forum</summary>
+      <h2 id="dao-roadmap">Phase 4 &mdash; Full DAO Roadmap</h2>
+      <p><strong>Draft, not an active voting system.</strong> The Council portal is a separate security-gated milestone within this direction, not a replacement for Safe execution. The token-weighted and one-lock-one-vote variants below are unresolved design alternatives; neither is an approved production voting rule. Quorum, thresholds, fees and timing below are draft parameters pending ratification and tests.</p>
 
       <h3>Prerequisites for Phase 4</h3>
       <ul>
@@ -1570,7 +1603,7 @@ await governance.execute(proposalId);</code></pre>
       </table>
 
       <!-- ========== 13. Two-Chamber DAO Design ========== -->
-      <h2 id="two-chamber">13. Two-Chamber DAO Design (Phase 4)</h2>
+      <h2 id="two-chamber">Two-Chamber DAO Design (Phase 4)</h2>
 
       <div class="callout" style="background:rgba(249,115,22,0.08);border:1px solid rgba(249,115,22,0.3);border-radius:12px;padding:20px;margin-bottom:24px;">
         <p style="margin:0;"><strong>Note:</strong> The two-chamber model described below is the planned Phase 4 architecture. It is <strong>not yet deployed</strong>. Current governance uses the single-owner Timelock described above.</p>
@@ -1629,7 +1662,9 @@ await governance.execute(proposalId);</code></pre>
       </table>
 
       <!-- ========== 14. Council Agenda ========== -->
-      <h2 id="council-agenda">14. Council Agenda &amp; Vote Log</h2>
+      </details>
+      <section class="governance-agenda" aria-labelledby="council-agenda">
+      <h2 id="council-agenda">Council Agenda &amp; Vote Log</h2>
 
       <div class="callout" style="background:rgba(249,115,22,0.08);border:1px solid rgba(249,115,22,0.35);border-radius:8px;padding:20px;margin-bottom:24px;">
         <p style="margin:0;"><strong>Status: undated discussion draft.</strong> No vote is open, no IFR is allocated, and no exchange has Council membership or TreasurySafe permissions. Publishing an agenda item does not authorize spending or an on-chain action. Agenda entries contain no proposer attribution or personal name.</p>
@@ -1653,6 +1688,8 @@ await governance.execute(proposalId);</code></pre>
       <p><strong>Option A:</strong> exchanges receive no voting seat and no TreasurySafe signer or execution access in return for listing, liquidity or services. This avoids custody concentration, conflicts of interest and governance capture.</p>
       <p><strong>Option B:</strong> at most two publicly disclosed, non-voting exchange advisers with no Safe permissions. Any future voting or signer candidacy must follow the same independent eligibility, conflict, security, community-selection and rotation process described in the <a href="community-signer-expansion.html">Community Signer Expansion Plan</a>. It requires a separate public decision and must never be bundled with a commercial exchange agreement.</p>
 
+      <details class="governance-section" id="council-vote-record">
+      <summary>Agenda status and results</summary>
       <h3>Public Vote Log</h3>
       <table>
         <thead><tr><th>Agenda ID</th><th>Subject</th><th>Date</th><th>State</th><th>Result / execution</th></tr></thead>
@@ -1662,10 +1699,14 @@ await governance.execute(proposalId);</code></pre>
         </tbody>
       </table>
 
+      </details>
       <h3>Planned Council Voting Portal</h3>
       <div class="callout-green callout">
         <p><strong>Planned, not live.</strong> No Council login or web ballot currently creates a binding vote. The implementation remains a security-gated task block.</p>
       </div>
+      <details class="governance-section" id="council-privacy">
+      <summary>Voting modes, privacy boundaries and release requirements</summary>
+      <p><strong>No anonymity certification:</strong> the following is a design requirement, not evidence of a deployed zero-log system. IP visibility and timing correlation cannot be ruled out across hosting, RPC, wallet providers or the wider network. Even aggregate results from five members can reveal individual choices by inference.</p>
       <p>The safe design connects an individual signer wallet, issues a domain-bound expiring EIP-4361 challenge, and checks eligibility against a recorded, block-numbered Council/Safe-owner snapshot. EOA signatures and Safe smart-account signatures require separate verification paths; Safe signatures use EIP-1271. Eligibility fails closed if the snapshot or verification path is unavailable. Every nonce is single-use and every ballot is bound to one immutable agenda version.</p>
       <p><strong>Open and secret ballots are separate modes.</strong> The mode is published when an agenda opens and cannot be changed while voting is active. An open ballot may publish a wallet and initials only where that mapping is already public and the member has consented; otherwise it publishes initials only. A secret ballot publishes no wallet, initials, individual vote, signature or voter-linked ballot hash. It publishes only the final turnout count, aggregate result and a verification proof after voting closes.</p>
       <p>Secret voting requires unlinkable eligibility issuance and ballot casting. The planned design therefore separates the service that verifies Council eligibility from the service that accepts an anonymous one-time credential, uses one-time nullifiers to prevent duplicate voting, encrypts ballots for threshold tallying, and exposes only non-identifying commitments and the aggregate proof. The existing Telegram wallet mapper and ordinary SIWE session flow are not suitable for secret ballots.</p>
@@ -1689,6 +1730,10 @@ await governance.execute(proposalId);</code></pre>
         <li>No key custody, no backend executor and no automatic TreasurySafe/Governance action</li>
       </ul>
 
+      </details>
+      </section>
+      <details class="governance-section" id="governance-participation">
+      <summary>Telegram participation and planned commands</summary>
       <!-- ── PARTICIPATING IN GOVERNANCE ─────────────── -->
       <div id="participating" style="margin-top:48px;">
         <h2>Participating in Governance</h2>
@@ -1703,7 +1748,7 @@ await governance.execute(proposalId);</code></pre>
 
         <!-- Telegram Bot Commands -->
         <h3>Telegram Bot Commands</h3>
-        <p style="color:#9ca3af;">All governance interactions happen via the IFR Telegram Bot in <a href="https://t.me/IFR_token" style="color:#f97316;">@IFR Community</a>. No gas required for voting &mdash; only for on-chain execution.</p>
+        <p style="color:#9ca3af;">Telegram community access is separate from Council ballots and on-chain execution. The command list below includes planned Phase 4 voting commands, not a live web ballot. The <a href="https://t.me/IFR_token" style="color:#f97316;">@IFR Community</a> bot's identity mapping must not be reused for secret Council voting.</p>
 
         <table style="width:100%;border-collapse:collapse;margin:16px 0;">
           <thead>
@@ -1803,6 +1848,7 @@ await governance.execute(proposalId);</code></pre>
         </table>
       </div>
 
+      </details>
       <!-- Footer -->
       <footer class="wiki-footer">
         Inferno (IFR) &mdash; Community Fair Launch Model &mdash; Documentation v1.0
