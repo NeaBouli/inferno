@@ -47,3 +47,22 @@ Open high-risk recommendations involving immutable contracts, lending,
 governance or Mainnet roles are not implemented directly from this report.
 They require separate architecture, tests, independent review and an
 authorized governance process.
+
+## Collateral Web3 Open Audits — README Audit — 14 September 2026
+
+- Original report:
+  [CWA_IFR_README_Audit_2026-09-14.md](CWA_IFR_README_Audit_2026-09-14.md)
+- Original SHA-256:
+  `fe1a233884665f4a03ef9bd3e28d7a1d3e8daa4652a3c799f62cc3ef014fe590`
+- Publication status: preserved unchanged as delivered
+- Review type: independent AI-assisted claim-by-claim consistency review of the
+  repository README against pinned chain state (block 25971217), reproduced tool
+  runs, and source review at commit `eb538a355001b042b343bfb19221af2407a96e63`
+- Certification status: not a formal certification
+
+Result summary: 0 Critical / 0 High / 2 Medium / 1 Low / 3 Informational
+(CWA-51…CWA-56). Key findings: allocation-table custody rows diverge from chain
+state (Treasury Safe holds 0 IFR; aggregation into LP Reserve Safe undocumented
+in the README), and the "BuybackVault/BurnReserve accumulate from the 1% pool
+fee" sentence contradicts chain reality (see CWA-02). The README's dated-snapshot
+and disclaimer patterns are exemplary and were verified as honest.
