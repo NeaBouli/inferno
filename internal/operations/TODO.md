@@ -1,5 +1,5 @@
 # IFR Protocol — Developer TODO List
-> Last updated: 2026-09-06 | Branch: main
+> Last updated: 2026-09-13 | Branch: main
 
 ---
 
@@ -105,6 +105,18 @@ On errors: fix immediately, commit with `seo:` prefix.
 - [x] Protocol Plan wiki page created (26 pages) ✅
 
 ## CURRENT WATCHLIST — verified 2026-09-06
+
+### Reconciled checkpoint — 2026-09-13
+
+- [x] Liquidity guide, wizard/FAQ/knowledge integration and horizontal live depth gauge published through PR #84, #85 and #86. Latest release: `26a62cefa0da88e8e4e4306e4e9f7cf5d5b5a3a7`; exact-main CI and live checks passed. Transactions remain on Uniswap.
+- [x] Dependency triage recorded in `DEPENDENCY_TRIAGE_20260913.md`: root 8 low package findings; GitHub cross-module inventory 1 high / 9 medium alerts. Counts are scoped observations, not proof of runtime exploitability.
+- [ ] Remediate Creator Gateway js-yaml, dashboard/prototype hono; separately resolve stream-json and Mythril compatibility. Do not force major overrides.
+- [ ] Review maintenance PR #81 / #82 / #83 with their complete test gates; add scheduled dependency inventory coverage.
+- [ ] Complete physical-device acceptance: current report remains 1/10 PASS, 9 pending. Bind future evidence to tested release; never relabel emulation as physical evidence.
+- [ ] Integrate the separately prepared local strict QA completion gate after review; preserve its unpublished changes.
+- [ ] IFRcontent remains an open, separate proprietary Inferno-family follow-up. Architecture foundation exists; application implementation and acceptance remain open. Do not publish its private design in this repository.
+
+Older dated entries below retain their historical scope; this checkpoint supersedes release status, not unverified on-chain or listing observations.
 
 - [ ] LiquidityReserve post-lock governance decision
       Mainnet block 25918433: the initial timelock has ended.
@@ -246,8 +258,9 @@ On errors: fix immediately, commit with `seo:` prefix.
       Blockaid review is approved. Resume only if a current device still shows
       a warning; capture wallet/browser version, timestamp and screenshot.
 - [ ] Residual dependency audit findings
-      Clean local root audit: 8 transitive low findings
-      (0 moderate, 0 high, 0 critical).
+      Root-only audit verified 2026-09-13: 8 transitive low findings
+      (0 moderate, 0 high, 0 critical). Other manifests have separate open
+      alerts; see DEPENDENCY_TRIAGE_20260913.md. This is not a repo-wide zero-high claim.
       Resume trigger: upstream fixes or a bounded runtime-path remediation.
       Never run `npm audit fix --force`.
 - [ ] CommitmentVault native batch-lock UX
@@ -1077,11 +1090,11 @@ Hetzner API endpoints already live: stats, offers, loans/:addr, health/:id, lend
 
 ---
 
-*Last updated: 2026-09-09*
+*Last updated: 2026-09-13*
 
 ### Read-only liquidity guide integration (INFERNO-LP-INTEGRATION-02)
 
 - Local implementation: Wiki shell and navigation, first-step landing wizard, FAQs, README, sitemap/LLM index and Copilot knowledge/RAG. Transactions remain external on Uniswap V2; no connector changes or automatic LP rewards.
 - Verification: integer quote and fail-closed tests, responsive navigation/wizard browser tests, six-mode Copilot context checks and documentation/build gates. Final evidence is recorded in the local Bridge.
-- [ ] Publish the scoped liquidity candidate through PR/exact-head CI after approval; preserve unrelated local readiness work and private follow-up drafts.
-- [ ] Deploy approved documentation and Copilot artifacts, then verify live navigation, fresh calculator data and chat guidance. No direct LP execution is authorized by this item.
+- [x] Published via PR #84, followed by dynamic depth #85 and horizontal layout #86; exact-head and main checks passed. Unrelated local readiness work and private drafts were excluded.
+- [x] Documentation and Copilot deployed and live navigation/calculator verified. No direct LP execution; no wallet transactions were performed by these releases.

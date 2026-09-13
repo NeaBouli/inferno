@@ -66,7 +66,10 @@ requireText("STATUS-REPORT.md", currentBaseline);
 requireText("docs/STATUS-REPORT.md", currentBaseline);
 
 const todo = requireText("internal/operations/TODO.md", [
-  "> Last updated: 2026-09-06 | Branch: main",
+  "> Last updated: 2026-09-13 | Branch: main",
+  "Reconciled checkpoint — 2026-09-13",
+  "DEPENDENCY_TRIAGE_20260913.md",
+  "1/10 PASS, 9 pending",
   "CURRENT WATCHLIST — verified 2026-09-06",
   "LiquidityReserve post-lock governance decision",
   "All 200M IFR remains held",
@@ -102,7 +105,7 @@ const todo = requireText("internal/operations/TODO.md", [
   "8 transitive low findings",
   "Deterministic local Hardhat test network",
   "Technical: WalletConnect v2 + ethers.js v6",
-  "*Last updated: 2026-09-09*",
+  "*Last updated: 2026-09-13*",
 ]);
 assert.ok(
   !todo.includes("- [ ] Dependency modernization"),
@@ -123,7 +126,10 @@ assert.ok(
 );
 
 requireText("internal/operations/TODO.html", [
-  "Last updated: 2026-09-06",
+  "Last updated: 2026-09-13",
+  "Reconciled checkpoint &mdash; 2026-09-13",
+  "DEPENDENCY_TRIAGE_20260913.md",
+  "1/10 PASS, 9 pending",
   "Current Watchlist &mdash; verified 2026-09-06",
   "LiquidityReserve post-lock governance decision",
   "All 200M IFR remains held",
