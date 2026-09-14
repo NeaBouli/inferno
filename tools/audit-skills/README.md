@@ -30,3 +30,7 @@ block-pinned on-chain state audit. Includes the evidence rules (baseline pinning
 AI-assisted (Kimi K2), applied 2026-09-13/14 against commit `eb538a35` and mainnet block
 25971217. The skills encode the project inventory as of that date — re-verify before reuse, the
 chain and docs move.
+### `ai-readiness-audit/`
+AI-readiness audit in two halves: the project's own copilot (knowledge-path map, completeness
+against the canonical fact set, retrieval trust chain, safety rails) and the external
+AI/search anchor layer (robots, sitemaps, llms.txt/ai.txt, JSON-LD, meta/canonical per host).
