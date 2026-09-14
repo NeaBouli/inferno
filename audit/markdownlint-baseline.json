@@ -2,7 +2,7 @@
   "schemaVersion": 2,
   "tool": "markdownlint-cli@0.49.1",
   "disabledRules": ["MD013","MD033","MD041","MD024","MD036","MD040"],
-  "filesScanned": 200,
+  "filesScanned": 196,
   "baselineIssues": 3796,
   "fingerprints": [
     [".github/ISSUE_TEMPLATE/bug_report.md","MD022","Expected: 1; Actual: 0; Below","## Bug Description","6e754bfe0c2fac07",1],
