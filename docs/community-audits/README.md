@@ -185,3 +185,28 @@ protocol-plan buyback section (describes machinery that does not exist), a
 wrong-network Sepolia address column on the contracts page, the transparency
 supply table (rows sum to ~80% against a 100% total), and the lp-strategy
 page's liquidity arithmetic.
+## Collateral Web3 Open Audits — AI Readiness Audit — 14 September 2026
+
+- Original report:
+  [CWA_IFR_AI_Readiness_Audit_2026-09-14.md](CWA_IFR_AI_Readiness_Audit_2026-09-14.md)
+- Original SHA-256:
+  `e1c5c23f710791dfd847546bcce6ae1da35a2b741df92d14fefc83dcda520d16`
+- Publication status: preserved unchanged as delivered
+- Review type: independent AI-assisted AI-readiness audit (Kimi K2,
+  `ai-readiness-audit` skill) of the IFR Copilot knowledge path (static knowledge,
+  local wiki RAG, live wiki fetch, safety rails, endpoint answer sources) and the
+  external AI/search anchor layer (robots.txt, sitemap.xml, llms.txt, ai.txt,
+  JSON-LD, meta/canonical) on apex, web3 and shop — at commit
+  `e8cf1ece8c40c0fa19f18344fe25593304ef5c26`, chain baseline block 25974493,
+  live anchor checks 2026-09-14
+- Certification status: not a formal certification
+
+Result summary: verdict READY w/ gaps — 0 Critical / 0 High / 4 Medium / 3 Low /
+1 Informational (CWA-75…CWA-82). Copilot core knowledge verified accurate; key
+findings: live-wiki fetch wipes last-good cache on failure and refetches inside
+every chat request (CWA-75), off-origin `.html` links are followed into the
+system prompt (CWA-76), the bot teaches a tier table contradicting its own API
+(CWA-77), and the advertised premium on-chain-context feature is not implemented
+(CWA-78). The anchor layer is strong: llms.txt/ai.txt/robots/sitemap on all
+hosts, explicit AI-crawler policy, complete sitemap (39/39), valid JSON-LD on
+38/39 pages; defects listed in CWA-81.
