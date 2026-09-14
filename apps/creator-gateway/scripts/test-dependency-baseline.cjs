@@ -15,7 +15,7 @@ const expectedVersions = {
   'node_modules/qs': '6.16.0',
   'node_modules/path-to-regexp': '0.1.13',
   'node_modules/form-data': '4.0.6',
-  'node_modules/js-yaml': '3.15.1',
+  'node_modules/js-yaml': '3.15.2',
   'node_modules/brace-expansion': '5.0.9',
   'node_modules/test-exclude/node_modules/brace-expansion': '1.1.18',
   'node_modules/picomatch': '2.3.2',

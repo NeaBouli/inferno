@@ -48,6 +48,97 @@ governance or Mainnet roles are not implemented directly from this report.
 They require separate architecture, tests, independent review and an
 authorized governance process.
 
+## Collateral Web3 Open Audits — 14 September 2026
+
+- Original report:
+  [CWA_IFR_Protocol_Audit_2026-09-14.md](CWA_IFR_Protocol_Audit_2026-09-14.md)
+- Original SHA-256 (as delivered):
+  `86d9ef68f270df799436f0207146d1430817737f7f64f51a26d1a6a335dfce0b`
+- Current SHA-256 (after the corrections noted below):
+  `a0d5b454e91a790af174bbfc29c823c08c3766591ffc8265cf7c5c1cd74e2e96`
+- Publication status: corrected 2026-09-14 after independent PR review — three
+  factual fixes, no change to any finding classification or severity:
+  (1) CWA-01 collateral example figure (≈104,310,881 wei at X = 1 wei);
+  (2) totals summary states 6 Medium, matching the classified CWA-02…CWA-07;
+  (3) conclusion now qualifies the no-funds-at-risk statement for new
+  price-conditioned CommitmentVault locks (CWA-03).
+- Review type: independent AI-assisted full-scope security review (Kimi K2,
+  executed with the project's `collateral-web3-audit` skill); read-only
+  evidence at repo commit `eb538a355001b042b343bfb19221af2407a96e63` and
+  Ethereum mainnet block 25971217
+- Certification status: first external review of the project; not a formal
+  certification. Publication does not mean that IFR Protocol accepts every
+  factual or technical conclusion.
+
+Result summary: 0 Critical, 1 High (dormant LendingVault single-price
+activation risk; currently fail-closed and verified on-chain), 6 Medium,
+12 Low, plus a documentation-drift cluster. Known-issues register (W1–W21,
+OPS) verified item by item; several documentation values diverge from chain
+state in both directions and are listed in the report's §6.
+
+Remediation of report findings follows the normal governance path: timelock
+proposals, tests, and independent review per finding. No finding is
+implemented directly from this report.
+
+## Collateral Web3 Open Audits — Contract Deep Audit — 14 September 2026
+
+- Original report:
+  [CWA_IFR_Contracts_Deep_Audit_2026-09-14.md](CWA_IFR_Contracts_Deep_Audit_2026-09-14.md)
+- Original SHA-256:
+  `ef301821fa2e1bb4afe361c956c541f29e8be5cee574130a7b54399870d7802d`
+- Fuzz harness (evidence artifact):
+  [CWA_IFR_DeepAudit_FuzzHarness_2026-09-14.t.sol](CWA_IFR_DeepAudit_FuzzHarness_2026-09-14.t.sol)
+  · SHA-256 `5f155ef0c5a8898ce32efda99c6d62a7489f6c28a5a70b5779f10840a472f933`
+- Publication status: preserved unchanged as delivered
+- Review type: independent AI-assisted deep audit (Kimi K2,
+  `web3-contract-deep-audit` skill): reproduced Slither/Mythril gates locally,
+  Foundry invariant fuzzing (14/14), bytecode-vs-source comparison, dual-explorer
+  verification sweep, block-pinned chain reads (block 25971217)
+- Certification status: not a formal certification
+
+Result summary: 0 Critical / 0 High / 1 Medium / 1 Low / 2 Informational.
+Key correction: W1 (Governance `setOwner`) and W3 (BuybackVault `setParams`
+bounds) are fixed in repository source only — the deployed mainnet bytecode
+predates both fixes (proven by live probe, bytecode diff, commit diff, and
+era-source diff). No new vulnerability in deployed contract logic.
+
+## Collateral Web3 Open Audits — Surfaces Supplement — 14 September 2026
+
+- Original report:
+  [CWA_IFR_Surfaces_Supplement_2026-09-14.md](CWA_IFR_Surfaces_Supplement_2026-09-14.md)
+- Original SHA-256:
+  `492a37de8ae32e0640ad8ccb90e8a5a8ff73961288e0f47961b13d8caa336f3b`
+- Publication status: preserved unchanged as delivered
+- Review type: independent AI-assisted static source review (Kimi K2 with an
+  independent review pass) of creator-gateway, Telegram bot, Benefits backend,
+  SDK and dashboards at commit `eb538a355001b042b343bfb19221af2407a96e63`;
+  no dynamic testing, no live-deployment probing
+- Certification status: not a formal certification
+
+Result summary: 2 High / 5 Medium / 8 Low / 3 Informational (CWA-28…CWA-45).
+The two High findings are both in creator-gateway (attacker-chosen JWT wallet
+claim via legacy `/auth/wallet` and via the Google OAuth flow); exploitability
+depends on the service's deployment status, which was not publicly observable.
+
+## Collateral Web3 Open Audits — README Audit — 14 September 2026
+
+- Original report:
+  [CWA_IFR_README_Audit_2026-09-14.md](CWA_IFR_README_Audit_2026-09-14.md)
+- Original SHA-256:
+  `fe1a233884665f4a03ef9bd3e28d7a1d3e8daa4652a3c799f62cc3ef014fe590`
+- Publication status: preserved unchanged as delivered
+- Review type: independent AI-assisted claim-by-claim consistency review of the
+  repository README against pinned chain state (block 25971217), reproduced tool
+  runs, and source review at commit `eb538a355001b042b343bfb19221af2407a96e63`
+- Certification status: not a formal certification
+
+Result summary: 0 Critical / 0 High / 2 Medium / 1 Low / 3 Informational
+(CWA-51…CWA-56). Key findings: allocation-table custody rows diverge from chain
+state (Treasury Safe holds 0 IFR; aggregation into LP Reserve Safe undocumented
+in the README), and the "BuybackVault/BurnReserve accumulate from the 1% pool
+fee" sentence contradicts chain reality (see CWA-02). The README's dated-snapshot
+and disclaimer patterns are exemplary and were verified as honest.
+
 ## Collateral Web3 Open Audits — Web3 Integration Audit — 14 September 2026
 
 - Original report:
