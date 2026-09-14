@@ -159,6 +159,32 @@ LendingVault `Loan` struct with a shifted ABI (CWA-46, dormant while zero loans
 exist). WalletConnect, chain enforcement, approval discipline and decimals
 handling verified correct.
 
+## Collateral Web3 Open Audits — Content Coherence Audit — 14 September 2026
+
+- Original report:
+  [CWA_IFR_Content_Coherence_Audit_2026-09-14.md](CWA_IFR_Content_Coherence_Audit_2026-09-14.md)
+- Original SHA-256:
+  `859946780fea9595d388bfa1185f9f43b8baad27934bf176d7d595cff9080b48`
+- Link/structure integrity script (evidence artifact):
+  [CWA_IFR_ContentCoherence_LinkCheck_2026-09-14.py](CWA_IFR_ContentCoherence_LinkCheck_2026-09-14.py)
+  · SHA-256 `65879186c5f9951a93c9764b5045770a8e99ff682e5195c9385f79e670983b39`
+- Publication status: preserved unchanged as delivered
+- Review type: independent AI-assisted editorial coherence audit (Kimi K2,
+  `web3-content-coherence-audit` skill) of all public content pages — landing,
+  wallet dApp copy, all 36 wiki pages, Benefits Network PWA copy — ~500
+  extracted claims verified against block-pinned chain reads (block 25974493)
+  and source at commit `e8cf1ece8c40c0fa19f18344fe25593304ef5c26` (content
+  pages byte-identical to audit baseline `eb538a35`)
+- Certification status: not a formal certification
+
+Result summary: 0 Critical / 0 High / 11 Medium / 6 Low / 1 Informational
+(CWA-57…CWA-74). Every contract address on every page verified correct; the
+shop copy is fully accurate (83/83 claims). Defects concentrate in governance
+history (proposal #1/#3/#6 log entries contradicted by chain-decode), the
+protocol-plan buyback section (describes machinery that does not exist), a
+wrong-network Sepolia address column on the contracts page, the transparency
+supply table (rows sum to ~80% against a 100% total), and the lp-strategy
+page's liquidity arithmetic.
 ## Collateral Web3 Open Audits — AI Readiness Audit — 14 September 2026
 
 - Original report:

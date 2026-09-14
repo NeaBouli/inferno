@@ -5,6 +5,7 @@
 **Scope:** 10 contracts, 1880 SLOC, Solidity 0.8.20
 **Extended:** 2026-03-03 — BootstrapVault.sol added
 **Extended:** 2026-03-04 — W15-W21 from ChatGPT Audit V5, W16 fixed
+**Corrected:** 2026-09-14 — W1/W3 deployment status (CWA-25/CWA-26): fixes exist in source but are not deployed on mainnet
 **Method:** Line-by-line manual review, 10 check categories (A-J)
 **Severity:** PASS (no issue) | WARN (design risk, low/informational) | FAIL (critical/high)
 
@@ -71,7 +72,7 @@
 | E) DoS | PASS | No loops. |
 | F) Centralization | WARN | Owner has full proposal power over any contract. Single point of failure if key is compromised. Guardian can cancel but not propose. |
 | G) Fee Edge Cases | PASS | N/A — Governance doesn't handle tokens. |
-| H) Timelock Bypass | FIXED | `setOwner()` now uses `onlySelf` modifier (fixed 20.03.2026), meaning ownership transfer must go through the governance proposal timelock. Previously was `onlyOwner` (immediate), which was a single-point-of-failure risk. Owner is now TreasurySafe 3-of-5. |
+| H) Timelock Bypass | PARTIAL — fixed in source, not deployed | Source fix 20.03.2026 (commit `67065174`): `setOwner()` uses `onlySelf`, so ownership transfer would go through the governance timelock. However, the deployed Governance predates this fix — the live contract still has `setOwner` callable directly by the owner (verified 2026-09-14 by CWA deep audit via live probe, bytecode diff, and era-source diff; CWA-25). Residual risk is bounded: owner is TreasurySafe 3-of-5, so any `setOwner` call requires 3-of-5 signatures, and all other parameter paths remain timelocked. Correction: redeploy or migrate only via governance decision. |
 | I) feeExempt | PASS | N/A. |
 | J) Owner Privileges | WARN | Can propose ANY calldata to ANY target contract. Can change owner immediately. Can change guardian immediately. Full control gated only by 48h timelock for execution. |
 
@@ -258,9 +259,9 @@ function setFeeCollector(address newCollector) external onlyGovernance {
 
 | # | Contract | Check | Finding | Recommendation |
 |---|----------|-------|---------|----------------|
-| W1 | Governance | H | `setOwner()` bypasses timelock — owner can transfer control immediately | Migrate owner to multisig before mainnet. Already planned. |
+| W1 | Governance | H | `setOwner()` bypasses timelock — owner can transfer control immediately | Migrate owner to multisig before mainnet. Already planned. **Deployment status (2026-09-14, CWA-25):** source fixed in `67065174` (`onlyOwner` → `onlySelf`), but the live Governance predates the fix and still has owner-callable `setOwner`. Bounded by TreasurySafe 3-of-5 ownership; redeploy is a governance decision. |
 | W2 | Governance | F | Single owner key controls all proposals. Key compromise = protocol compromise. | Gnosis Safe 2-of-4 minimum. Then 4-of-7 for mainnet. |
-| W3 | BuybackVault | C | `setParams` has no bounds on `burnShareBps`, `slippageBps`, `cooldown`. Invalid values cause DoS. | Add validation: `burnShareBps <= 10000`, `slippageBps <= 5000`, `cooldown >= 60`, `_router != address(0)`. |
+| W3 | BuybackVault | C | `setParams` has no bounds on `burnShareBps`, `slippageBps`, `cooldown`. Invalid values cause DoS. | Add validation: `burnShareBps <= 10000`, `slippageBps <= 5000`, `cooldown >= 60`, `_router != address(0)`. **Deployment status (2026-09-14, CWA-26):** the bounding `require`s exist in current source but postdate the deployment — the live BuybackVault lacks them. Impact limited because `setParams` is governance-timelocked; fix lands with the next BuybackVault redeploy, if any. |
 | W4 | BuybackVault | D | Uniswap swap in `executeBuyback` is MEV-vulnerable. Sandwich attacks extract value within slippage tolerance. | Use private mempool (Flashbots Protect) for buyback transactions on mainnet. |
 | W13 | BootstrapVault | D | `addLiquidityETH` with `amountTokenMin=0` exploitable if IFR/WETH pair pre-exists with manipulated ratio. No on-chain check. | Add `require(getPair(ifrToken, weth) == address(0), "pair exists")` before LP creation. Or verify pair freshness off-chain as pre-deploy step. |
 | W15 | Governance | B | `setGuardian()` is not timelocked — owner can replace guardian immediately, removing the cancel safeguard before executing a malicious proposal. | Route setGuardian through the timelock (`onlySelf`) like `setDelay()`. |
