@@ -183,6 +183,9 @@ jobs:
       - name: Check CEX fee-exemption policy consistency
         run: npm run test:cex-fee-policy
 
+      - name: Check wiki sidebar nav consistency
+        run: npm run test:wiki-nav
+
       - name: Check current status baseline
         run: npm run test:status-baseline
 
