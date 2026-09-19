@@ -12,6 +12,15 @@ function getBootstrapStatus(): string {
 
 export function getIFRKnowledge() {
   return {
+    audits: {
+      status: "The seven Collateral Web3 Open Audits reports cover CWA-01 through CWA-82. Publication is not remediation: at the 2026-09-19 checkpoint, 0 findings are fixed and verified, 11 are governance or owner gated, 2 are accepted or monitored, 58 are open actionable, and 11 are informational.",
+      register: "https://github.com/NeaBouli/inferno/blob/main/docs/community-audits/CWA_REMEDIATION_REGISTER.md",
+      july2026Status: "The unchanged 27 July community audit is paired with an evidence-backed register: 8 fixed and verified, 6 partially remediated, 1 outdated snapshot corrected, 3 governance or future-version gated, 2 accepted or monitored, and 3 open actionable. Historical red or high-severity labels are not proof that an item remains open today.",
+      july2026Register: "https://github.com/NeaBouli/inferno/blob/main/docs/community-audits/JULY_2026_REMEDIATION_REGISTER.md",
+      pdf: "https://github.com/NeaBouli/inferno/raw/main/docs/community-audits/IFR_Protocol_CWA_Consolidated_Audit_Report_2026-09-14.pdf",
+      tests: "Current canonical evidence: contracts 644/644, Generator Engine 30/30, IFR SDK 36/36, Landing/Wiki browser 20/20, Web3 browser 24/24. Benefits physical device/wallet acceptance remains 1/10.",
+      boundary: "These are community audit records, not a professional third-party certification. Never imply that an open finding is remediated without the register's required integration and verification evidence."
+    },
     userProvidedLiquidity: {
       guide: "https://ifrunit.tech/wiki/liquidity.html",
       gauge: "Landing liquidity depth uses verified canonical pool reserves and refreshes every 60 seconds when visible. Shows ETH buy capacity at 0.5/1/2/5% curve-only impact. For input A, reserve R, x=0.997*A: impact=x/(R+x). Capacity at p is R*p/((1-p)*0.997). User input sets the required reserve for 1% and proportional ETH+IFR top-up; dial compares actual reserve to this dynamic requirement. 0.1 ETH is an editable example, not a recommended trade. No universal ideal liquidity or safety promise. V2 0.30% input fee is separate from displayed curve impact; gas/interface/route-dependent token fees excluded. Not the same as slippage or an all-in execution quote. LIVE means fresh verified snapshot; stale/error hides estimates. No fixed 1 WETH target.",
@@ -61,9 +70,9 @@ export function getIFRKnowledge() {
       agenda: "https://ifrunit.tech/wiki/governance.html#council-agenda"
     },
     aiCopilot: {
-      premiumThreshold: "Lock >=1,000 IFR in IFRLock",
-      premiumBenefit: "IFR lockers unlock Premium Copilot guidance. After wallet connection and lock verification, the assistant can communicate more personally because it can use wallet balance, lock status, tier, and on-chain context instead of only generic documentation.",
-      safety: "The assistant never needs private keys or seed phrases. Lock verification is read from on-chain state."
+      premiumThreshold: "The current standalone IFR check API uses Basic >=500 IFR, Premium >=2,000 IFR and Pro >=10,000 IFR. A separate 1,000-IFR lock claim remains under CWA-77 reconciliation and must not be presented as the same tier table.",
+      premiumBenefit: "The current /api/chat path provides general and surface-specific guidance. It does not inject verified wallet balance, lock status or tier into chat; wallet-specific state must be checked in the signed Web3 interfaces or direct chain reads.",
+      safety: "The assistant never needs private keys or seed phrases. It cannot sign or submit wallet transactions."
     },
     web3Access: {
       primaryUrl: "https://web3.ifrunit.tech/",
@@ -132,7 +141,7 @@ export function getIFRKnowledge() {
       timelockDelay: "48 hours",
       owner: "TreasurySafe 3-of-5 (since 20.03.2026)",
       guardian: "Deployer EOA — can cancel proposals",
-      noInstantChanges: true,
+      noInstantChanges: "Governance proposals use the 48-hour timelock. Guardian rotation through setGuardian is the documented untimelocked exception.",
       daoPhase: "Full DAO transition remains planned; current governance is TreasurySafe 3-of-5 plus the 48-hour timelock",
       multisig: "3-of-5 on all Safes (Treasury, Community, LP Reserve) — 5 signers: A.K./M.G./A.M./Y.K./A.P.",
       communitySignerExpansion: "Planned after community voting is live. This is the multisig signer distribution process. Preferred path: keep 3-of-5 now, expand to 4-of-7 using a mixed model (3 core/protocol, 2 contributor/builder, 2 community-elected), then consider 5-of-9 only after one stable term. Selection is not pure whale voting and not pure random selection; it requires eligibility, public nomination, community vote, security review, rotation, and emergency replacement rules. Full plan: https://ifrunit.tech/wiki/community-signer-expansion.html",
@@ -150,10 +159,10 @@ export function getIFRKnowledge() {
     },
     builderRegistry: {
       mainnet: "0xdfe6636DA47F8949330697e1dC5391267CEf0EE3",
-      sepolia: "0x77e99917Eca8539c62F509ED1193ac36580A6e7B",
+      sepolia: "Use the verified testnet deployment register; do not reuse the mainnet IFR token address as BuilderRegistry.",
       owner: "Governance (TreasurySafe 3-of-5)",
       deployed: "20.03.2026",
-      tests: "27/27 passing",
+      tests: "30/30 Generator Engine tests passing",
       railwayEndpoints: "GET /api/builders/count, GET /api/builders/check/:address",
       builders: "Legacy off-chain directory entries include StealthX, K-9 Academy, Vendetta, NEXUS GR and ORIGO. Mainnet BuilderRegistry currently has 0 registered and 0 active builders."
     },
@@ -180,8 +189,8 @@ export function getIFRKnowledge() {
         apiEndpoints: "GET /api/lending/stats, GET /api/lending/offers, GET /api/lending/loans/:address, GET /api/lending/health/:loanId, GET /api/lending/lender/:address"
       },
       lpStrategy: {
-        description: "Phased LP addition — NOT all 400M at once. Wait for price appreciation = 100M x more efficient.",
-        milestones: "M1: Pool 1 ETH → proposed +50M IFR. M2: Pool 5 ETH → proposed +100M IFR. The LiquidityReserve initial lock ended in Sept 2026, but all 200M IFR remains held; only 50M per 90 days is currently withdrawable and no LP addition is automatic.",
+        description: "Any LP addition must be evaluated from current constant-product reserves, price impact, governance limits and an explicit matched IFR/ETH contribution. There is no universal 1 WETH target or fixed efficiency multiplier.",
+        milestones: "The LiquidityReserve initial lock ended in Sept 2026, but all 200M IFR remains held; only 50M per 90 days is currently withdrawable and no LP addition is automatic. Any use requires Governance proposal, timelock and execution.",
         wiki: "https://ifrunit.tech/wiki/lp-strategy.html"
       },
       buybackController: {

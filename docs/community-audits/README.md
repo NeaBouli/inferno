@@ -5,15 +5,49 @@ members. Community audits are published for transparency. They are not
 professional third-party certifications, and publication does not mean that
 IFR Protocol accepts every factual, legal, economic or technical conclusion.
 
+## Current CWA remediation status
+
+The September Collateral Web3 Open Audits series covers **CWA-01…CWA-82**.
+Publication and remediation are separate: at the current repository baseline,
+no CWA finding has both an integrated remediation and the required verification
+evidence. The authoritative status is maintained in the
+[finding-by-finding remediation register](CWA_REMEDIATION_REGISTER.md).
+
+- Disposition: **0 fixed and verified / 11 governance or owner gated / 2
+  accepted or monitored / 58 open actionable / 11 informational**.
+- Corrected severity aggregate: **0 Critical / 3 High / 29 Medium / 34 Low /
+  16 Informational**.
+- [Download the consolidated 55-page CWA report
+  (PDF)](IFR_Protocol_CWA_Consolidated_Audit_Report_2026-09-14.pdf).
+- Corrected PDF SHA-256:
+  `c174d7dccd1233e45d79fc09f8974470c19b12b6346690f583484c6764a3605d`.
+
+The PDF and two source-report summaries contain an explicit editorial
+correction dated 19 September 2026. It fixes aggregate arithmetic only: CWA-64
+was already labeled Low, and CWA-25…CWA-27 contain one Informational finding.
+No finding text, severity label or technical conclusion was changed.
+
 ## OKComputer Community Audit — 27 July 2026
 
 - Original report:
   [IFR_Protocol_Audit_2026-07-27.md](IFR_Protocol_Audit_2026-07-27.md)
+- Current finding status:
+  [JULY_2026_REMEDIATION_REGISTER.md](JULY_2026_REMEDIATION_REGISTER.md)
 - Original SHA-256:
   `ec7f99b0b74c51e04091727a0b69f49f67c36409a52c9ea7b55ba545b6b3e375`
 - Publication status: preserved unchanged as submitted
 - Review type: community-submitted project and security review
 - Certification status: not an independent professional third-party audit
+
+### Current status — 19 September 2026
+
+The maintained register normalizes the report into 23 traceable findings. The
+current evidence-backed disposition is **8 fixed and verified / 6 partially
+remediated / 1 corrected outdated snapshot / 3 governance or future-version
+gated / 2 accepted or monitored / 3 open actionable**. Severity colors in the
+unchanged report describe the dated audit assessment, not current remediation
+status. Every later status change must carry integrated evidence and pass the
+register's CI guard.
 
 ### Editorial status note — 28 July 2026
 
@@ -86,17 +120,20 @@ implemented directly from this report.
   [CWA_IFR_Contracts_Deep_Audit_2026-09-14.md](CWA_IFR_Contracts_Deep_Audit_2026-09-14.md)
 - Original SHA-256:
   `ef301821fa2e1bb4afe361c956c541f29e8be5cee574130a7b54399870d7802d`
+- Current SHA-256 after the disclosed aggregate correction:
+  `ff16962322b59ea596eeacee48955e1e60918edb7837da6cc5cc68cc357588a3`
 - Fuzz harness (evidence artifact):
   [CWA_IFR_DeepAudit_FuzzHarness_2026-09-14.t.sol](CWA_IFR_DeepAudit_FuzzHarness_2026-09-14.t.sol)
   · SHA-256 `5f155ef0c5a8898ce32efda99c6d62a7489f6c28a5a70b5779f10840a472f933`
-- Publication status: preserved unchanged as delivered
+- Publication status: editorial aggregate correction on 2026-09-19; finding
+  text, labels and conclusions unchanged
 - Review type: independent AI-assisted deep audit (Kimi K2,
   `web3-contract-deep-audit` skill): reproduced Slither/Mythril gates locally,
   Foundry invariant fuzzing (14/14), bytecode-vs-source comparison, dual-explorer
   verification sweep, block-pinned chain reads (block 25971217)
 - Certification status: not a formal certification
 
-Result summary: 0 Critical / 0 High / 1 Medium / 1 Low / 2 Informational.
+Result summary: 0 Critical / 0 High / 1 Medium / 1 Low / 1 Informational.
 Key correction: W1 (Governance `setOwner`) and W3 (BuybackVault `setParams`
 bounds) are fixed in repository source only — the deployed mainnet bytecode
 predates both fixes (proven by live probe, bytecode diff, commit diff, and
@@ -165,10 +202,13 @@ handling verified correct.
   [CWA_IFR_Content_Coherence_Audit_2026-09-14.md](CWA_IFR_Content_Coherence_Audit_2026-09-14.md)
 - Original SHA-256:
   `859946780fea9595d388bfa1185f9f43b8baad27934bf176d7d595cff9080b48`
+- Current SHA-256 after the disclosed aggregate correction:
+  `78c884bd1f79c7cb6f31f35100420324c6ea864558b1ea41e33ac21370ee3902`
 - Link/structure integrity script (evidence artifact):
   [CWA_IFR_ContentCoherence_LinkCheck_2026-09-14.py](CWA_IFR_ContentCoherence_LinkCheck_2026-09-14.py)
   · SHA-256 `65879186c5f9951a93c9764b5045770a8e99ff682e5195c9385f79e670983b39`
-- Publication status: preserved unchanged as delivered
+- Publication status: editorial aggregate correction on 2026-09-19; finding
+  text, labels and conclusions unchanged
 - Review type: independent AI-assisted editorial coherence audit (Kimi K2,
   `web3-content-coherence-audit` skill) of all public content pages — landing,
   wallet dApp copy, all 36 wiki pages, Benefits Network PWA copy — ~500
@@ -177,7 +217,7 @@ handling verified correct.
   pages byte-identical to audit baseline `eb538a35`)
 - Certification status: not a formal certification
 
-Result summary: 0 Critical / 0 High / 11 Medium / 6 Low / 1 Informational
+Result summary: 0 Critical / 0 High / 10 Medium / 7 Low / 1 Informational
 (CWA-57…CWA-74). Every contract address on every page verified correct; the
 shop copy is fully accurate (83/83 claims). Defects concentrate in governance
 history (proposal #1/#3/#6 log entries contradicted by chain-decode), the

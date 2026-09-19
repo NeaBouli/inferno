@@ -10,6 +10,11 @@ Mythril 0.24.8 · solc 0.8.20 (`a1b79de6`) / 0.8.28
 `CWA_IFR_Surfaces_Supplement_2026-09-14.md` (remaining app surfaces, CWA-28+)
 **Report version:** 1.0
 
+> **Editorial correction — 2026-09-19:** the original summary counted two
+> Informational findings although this report registers CWA-25…CWA-27 as one
+> Medium, one Low and one Informational finding. The aggregate below is
+> corrected; no finding text, severity label or technical conclusion changed.
+
 This document is the contract-focused deep audit: proof-grade verification of the 14 deployed
 mainnet contracts. Where the full-scope audit reviewed behavior, this audit proves it — with
 reproduced tool runs, fuzzed invariants, bytecode comparison against deployed code, and
@@ -34,7 +39,7 @@ record currently says "fixed" where the chain says "not deployed".
 
 No new vulnerability was found in the deployed contract logic itself.
 
-**Result: 0 Critical · 0 High · 1 Medium · 1 Low · 2 Informational** (this document's new
+**Result: 0 Critical · 0 High · 1 Medium · 1 Low · 1 Informational** (this document's new
 findings; register continues from the full-scope audit)
 
 ## 2. Scope, baselines, tooling

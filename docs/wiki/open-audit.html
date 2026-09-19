@@ -684,10 +684,10 @@
           <tr style="border-bottom:1px solid #222225"><td style="padding:6px">2.5% burn + 1% protocol fee per transfer</td><td style="color:#3fb950;text-align:right;padding:6px">Verified</td></tr>
           <tr style="border-bottom:1px solid #222225"><td style="padding:6px">Fixed supply 1B IFR, no mint post-launch</td><td style="color:#3fb950;text-align:right;padding:6px">Verified</td></tr>
           <tr style="border-bottom:1px solid #222225"><td style="padding:6px">Fair launch, no presale, no VC</td><td style="color:#3fb950;text-align:right;padding:6px">Verified</td></tr>
-          <tr style="border-bottom:1px solid #222225"><td style="padding:6px">17 on-chain components (13 + 3 Safes)</td><td style="color:#3fb950;text-align:right;padding:6px">Verified</td></tr>
+          <tr style="border-bottom:1px solid #222225"><td style="padding:6px">17 on-chain components (14 contracts + 3 Safes)</td><td style="color:#3fb950;text-align:right;padding:6px">Verified</td></tr>
           <tr style="border-bottom:1px solid #222225"><td style="padding:6px">Static analysis and automated test snapshot</td><td style="color:#3fb950;text-align:right;padding:6px">Internally reviewed</td></tr>
-          <tr style="border-bottom:1px solid #222225"><td style="padding:6px">Phase 3: CommitmentVault + LendingVault</td><td style="color:#3fb950;text-align:right;padding:6px">Verified</td></tr>
-          <tr><td style="padding:6px">Phase 4: Two-Chamber DAO, 48h timelock</td><td style="color:#3fb950;text-align:right;padding:6px">Verified</td></tr>
+          <tr style="border-bottom:1px solid #222225"><td style="padding:6px">Phase 3: CommitmentVault + LendingVault deployed; activation boundaries documented</td><td style="color:#3fb950;text-align:right;padding:6px">Verified with limits</td></tr>
+          <tr><td style="padding:6px">Phase 4: Two-Chamber DAO contracts</td><td style="color:#fbbf24;text-align:right;padding:6px">Planned &mdash; not deployed</td></tr>
         </table>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
           <a href="https://github.com/NeaBouli/inferno/blob/main/audit/GROK_AUDIT_07042026.md" target="_blank" style="background:#ff4500;color:#000;padding:8px 20px;border-radius:8px;text-decoration:none;font-weight:700;font-size:0.85rem">Read Full Audit (MD)</a>
@@ -721,13 +721,43 @@
           Publication does not endorse every conclusion. Legal statements are not legal advice, and
           this community submission is not a professional third-party security certification.
         </p>
+        <p style="color:#c9d1d9;font-size:0.9rem;margin:0 0 14px">
+          Current evidence-backed status: <strong>8 fixed and verified</strong>, 6 partially
+          remediated, 1 outdated snapshot corrected, 3 governance or future-version gated,
+          2 accepted or monitored and 3 open actionable. Red severity labels in the unchanged
+          report describe the 27 July snapshot; they do not by themselves mean a finding is
+          still open today.
+        </p>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <a href="https://ifrunit.tech/community-audits/README.md" target="_blank" rel="noopener" style="background:#3f6f60;color:#fff;padding:8px 20px;border-radius:8px;text-decoration:none;font-weight:700;font-size:0.85rem">Read Status &amp; Corrections</a>
+          <a href="https://ifrunit.tech/community-audits/JULY_2026_REMEDIATION_REGISTER.md" target="_blank" rel="noopener" style="background:#3f6f60;color:#fff;padding:8px 20px;border-radius:8px;text-decoration:none;font-weight:700;font-size:0.85rem">Open Finding Status</a>
+          <a href="https://ifrunit.tech/community-audits/README.md" target="_blank" rel="noopener" style="border:1px solid #3f6f60;color:#d7e8e1;padding:8px 20px;border-radius:8px;text-decoration:none;font-size:0.85rem">Audit Index &amp; Hash</a>
           <a href="https://ifrunit.tech/community-audits/IFR_Protocol_Audit_2026-07-27.md" target="_blank" rel="noopener" style="border:1px solid #3f6f60;color:#d7e8e1;padding:8px 20px;border-radius:8px;text-decoration:none;font-size:0.85rem">Read Original Report</a>
         </div>
       </div>
 
-      <h2>4. Independent Audit Status</h2>
+      <h2>4. Collateral Web3 Open Audits &mdash; 14 September 2026</h2>
+      <div style="border:1px solid #365a78;border-left:4px solid #58a6ff;border-radius:12px;padding:24px;margin-bottom:16px;background:#111113">
+        <h3 style="margin:0 0 4px;font-size:1rem;color:#e8e8ed">CWA-01&hellip;CWA-82 &middot; Seven-report community audit series</h3>
+        <div style="color:#8a8a96;font-size:0.85rem;margin-bottom:10px">Repository, contracts, applications, public content and AI-readiness &middot; Dated, reproducible evidence &middot; Not a professional certification</div>
+        <p style="color:#c9d1d9;font-size:0.9rem;margin:0 0 12px">
+          The complete series is public with report hashes and a consolidated PDF. Publication is
+          not remediation. At the 19 September checkpoint, <strong>0 findings are fixed and
+          verified</strong>; 11 require Governance or owner action, 2 are accepted or monitored,
+          58 remain directly actionable and 11 are informational.
+        </p>
+        <p style="color:#8a8a96;font-size:0.9rem;margin:0 0 14px">
+          The corrected aggregate is 0 Critical, 3 High, 29 Medium, 34 Low and 16 Informational.
+          The PDF discloses the arithmetic correction; no individual finding text or severity
+          label was changed.
+        </p>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <a href="https://ifrunit.tech/community-audits/CWA_REMEDIATION_REGISTER.md" target="_blank" rel="noopener" style="background:#58a6ff;color:#07111d;padding:8px 20px;border-radius:8px;text-decoration:none;font-weight:700;font-size:0.85rem">Open Remediation Register</a>
+          <a href="https://ifrunit.tech/community-audits/IFR_Protocol_CWA_Consolidated_Audit_Report_2026-09-14.pdf" target="_blank" rel="noopener" style="border:1px solid #58a6ff;color:#b9dcff;padding:8px 20px;border-radius:8px;text-decoration:none;font-size:0.85rem">Download Consolidated PDF</a>
+          <a href="https://ifrunit.tech/community-audits/README.md" target="_blank" rel="noopener" style="border:1px solid #365a78;color:#b9dcff;padding:8px 20px;border-radius:8px;text-decoration:none;font-size:0.85rem">Reports &amp; Hashes</a>
+        </div>
+      </div>
+
+      <h2>5. Independent Audit Status</h2>
       <div style="border:1px dashed #222225;border-radius:12px;padding:24px;color:#8a8a96;font-size:0.9rem;margin-bottom:24px">
         <strong style="color:#e8e8ed">Professional Third-Party Audit</strong> (Code4rena / Sherlock / Cyfrin)<br>
         Not completed yet. It remains required before any claim of independent professional certification and before activating higher-risk lending functionality.<br><br>
