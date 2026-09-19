@@ -48,18 +48,22 @@ Provider: **SQLite** (`file:./data/production.db`) — kein separater DB-Server 
 
 ```env
 DATABASE_URL=file:/data/production.db
+NODE_ENV=production
 JWT_SECRET=<generate: openssl rand -hex 32>
-VOUCHER_SIGNER_PRIVATE_KEY=0x<EOA private key für EIP-712 Voucher-Signing>
+VOUCHER_SIGNER_PRIVATE_KEY=0x<dedicated least-privilege EIP-712 signer>
 FEE_ROUTER_ADDRESS=0x499289C8Ef49769F4FcFF3ca86D4BD7b55B49aa4
 CHAIN_ID=1
+RPC_URL=https://<server-managed-mainnet-rpc>
+IFR_LOCK_ADDRESS=0x769928aBDfc949D0718d8766a1C2d7dBb63954Eb
+SIWE_ALLOWED_ORIGINS=https://ifrunit.tech,https://www.ifrunit.tech
 PORT=3004
 ADMIN_SECRET=<generate: openssl rand -hex 32>
 ALLOWED_ORIGINS=https://ifrunit.tech,https://www.ifrunit.tech
 CAPTCHA_SECRET=<Cloudflare Turnstile Secret — optional, ohne=deaktiviert>
 ```
 
-Fehlt noch: `VOUCHER_SIGNER_PRIVATE_KEY` — neues EOA generieren oder Deployer-Wallet verwenden.
-Wichtig: dieser Key signiert nur Vouchers, hält keine Funds.
+`VOUCHER_SIGNER_PRIVATE_KEY` muss außerhalb von Git als eigener Least-Privilege-Key
+bereitgestellt werden. Niemals einen Deployer- oder Safe-Owner-Key wiederverwenden.
 
 ## Hetzner Setup Steps
 
@@ -102,10 +106,14 @@ rsync -az --exclude='node_modules' --exclude='dist' \
 ```bash
 ssh hetzner "cat > /opt/inferno/.env.points-backend << 'EOF'
 DATABASE_URL=file:/data/production.db
+NODE_ENV=production
 JWT_SECRET=$(openssl rand -hex 32)
 VOUCHER_SIGNER_PRIVATE_KEY=0x<key>
 FEE_ROUTER_ADDRESS=0x499289C8Ef49769F4FcFF3ca86D4BD7b55B49aa4
 CHAIN_ID=1
+RPC_URL=https://<server-managed-mainnet-rpc>
+IFR_LOCK_ADDRESS=0x769928aBDfc949D0718d8766a1C2d7dBb63954Eb
+SIWE_ALLOWED_ORIGINS=https://ifrunit.tech,https://www.ifrunit.tech
 PORT=3004
 ADMIN_SECRET=$(openssl rand -hex 32)
 ALLOWED_ORIGINS=https://ifrunit.tech,https://www.ifrunit.tech

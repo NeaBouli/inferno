@@ -3,6 +3,7 @@ import { SiweMessage, generateNonce } from "siwe";
 import { prisma } from "../db.js";
 import { createToken } from "../middleware/auth.js";
 import { siweVerifyLimit } from "../middleware/rate-limit.js";
+import { isAllowedSiweContext, pointsSecurityConfig } from "../config/security.js";
 
 const router = Router();
 
@@ -35,20 +36,38 @@ router.post("/siwe/verify", siweVerifyLimit, async (req: Request, res: Response)
 
   try {
     const siweMessage = new SiweMessage(message);
-    const result = await siweMessage.verify({ signature });
+    const nonce = siweMessage.nonce;
+    const expiresAt = nonceStore.get(nonce);
+    if (!expiresAt || expiresAt <= Date.now()) {
+      nonceStore.delete(nonce);
+      res.status(401).json({ error: "Invalid or expired nonce" });
+      return;
+    }
+
+    if (!isAllowedSiweContext(
+      siweMessage.domain,
+      siweMessage.uri,
+      siweMessage.chainId,
+      pointsSecurityConfig,
+    )) {
+      nonceStore.delete(nonce);
+      res.status(401).json({ error: "SIWE context is not allowed" });
+      return;
+    }
+
+    // Consume before asynchronous verification so concurrent replays cannot share a nonce.
+    nonceStore.delete(nonce);
+
+    const result = await siweMessage.verify({
+      signature,
+      domain: siweMessage.domain,
+      nonce,
+    });
 
     if (!result.success) {
       res.status(401).json({ error: "Invalid SIWE signature" });
       return;
     }
-
-    // Verify nonce was issued by us
-    const nonce = siweMessage.nonce;
-    if (!nonceStore.has(nonce)) {
-      res.status(401).json({ error: "Invalid or expired nonce" });
-      return;
-    }
-    nonceStore.delete(nonce);
 
     const address = siweMessage.address.toLowerCase();
 
