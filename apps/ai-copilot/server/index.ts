@@ -7,6 +7,7 @@ import { existsSync, readFileSync, writeFileSync } from "fs";
 import { SYSTEM_PROMPTS } from "../src/context/system-prompts.js";
 import { loadWikiDocs, buildSystemPrompt, WikiDoc } from "./wiki-rag.js";
 import { buildSurfaceContext, normalizeCopilotSurface } from "./surface-context.js";
+import { toJsonSafeUint32 } from "./json-values.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -1088,7 +1089,7 @@ app.get("/api/ifr/price", async (_req, res) => {
         ifr: ifrReserve,
       },
       ifrPerEth: ethReserve > 0 ? ifrReserve / ethReserve : null,
-      blockTimestampLast: reserves.blockTimestampLast,
+      blockTimestampLast: toJsonSafeUint32(reserves.blockTimestampLast),
       message: price ? "Live IFR/WETH spot price from Uniswap V2 reserves" : "Uniswap LP reserves not available yet",
       cachedAt: new Date().toISOString(),
     };
