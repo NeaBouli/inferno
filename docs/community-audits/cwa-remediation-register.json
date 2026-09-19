@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-09-19",
-  "baseline": "564a7c4504c8da7a24a302204f4fd5e39d1abece",
+  "updatedAt": "2026-09-20",
+  "baseline": "a8e80c7eda74218f45d079cce4b43537423a9b54",
   "statusDefinitions": {
     "fixed_and_verified": "A remediation is merged and covered by current verification evidence.",
     "governance_or_owner_gated": "The next action requires governance, a repository owner setting, key custody work or a future contract version.",
@@ -10,10 +10,10 @@
     "informational_no_action": "The item records methodology, context or an optional improvement and has no required remediation."
   },
   "expectedDispositionTotals": {
-    "fixed_and_verified": 17,
+    "fixed_and_verified": 19,
     "governance_or_owner_gated": 11,
     "documented_accepted_or_monitored": 2,
-    "open_actionable": 41,
+    "open_actionable": 39,
     "informational_no_action": 11
   },
   "expectedSeverityTotals": {
@@ -52,8 +52,8 @@
     {"id":"CWA-01","severity":"High","title":"LendingVault activation price risk","disposition":"governance_or_owner_gated","owner":"Governance and contract engineering","nextAction":"Keep borrowing disabled; specify and audit a bounded, fresh price path with borrow caps and emergency controls before activation.","verification":"Oracle and cap regression tests, independent review, governed activation and post-execution chain checks.","source":"CWA_IFR_Protocol_Audit_2026-09-14.md"},
     {"id":"CWA-02","severity":"Medium","title":"FeeRouterV1 IFR fees are stranded","disposition":"governance_or_owner_gated","owner":"Governance and contract engineering","nextAction":"Choose and publish an explicit sink policy or route future pool fees to a governed recoverable receiver in a future contract path.","verification":"Proposal tests, receiver accounting tests and post-execution balance checks.","source":"CWA_IFR_Protocol_Audit_2026-09-14.md"},
     {"id":"CWA-03","severity":"Medium","title":"CommitmentVault price-conditioned locks cannot unlock","disposition":"governance_or_owner_gated","owner":"Governance and contract engineering","nextAction":"Keep price-conditioned locks disabled and design a lock guard or governed rescue path for a future version.","verification":"Negative lock tests, recovery tests, independent review and governed deployment evidence.","source":"CWA_IFR_Protocol_Audit_2026-09-14.md"},
-    {"id":"CWA-04","severity":"Medium","title":"Points SIWE verification lacks domain binding","disposition":"open_actionable","owner":"Points backend","nextAction":"Bind SIWE verification to the configured domain, origin and chain and reject mismatches.","verification":"Cross-domain replay regression tests and the complete points-backend suite.","source":"CWA_IFR_Protocol_Audit_2026-09-14.md"},
-    {"id":"CWA-05","severity":"Medium","title":"Points lock proof defaults to Sepolia","disposition":"open_actionable","owner":"Points backend","nextAction":"Remove unsafe network defaults and fail closed when the mainnet RPC, chain or IFRLock address is missing.","verification":"Missing-env, wrong-chain and exact-mainnet configuration tests.","source":"CWA_IFR_Protocol_Audit_2026-09-14.md"},
+    {"id":"CWA-04","severity":"Medium","title":"Points SIWE verification lacks domain binding","disposition":"fixed_and_verified","owner":"Points backend","nextAction":"Keep SIWE domain, URI origin, configured chain and server-issued nonce checks coupled as authentication evolves.","verification":"PR #107 / a8e80c7e; Points 54/54; exact-head and exact-main CI; live Points health after the fail-closed deployment.","source":"CWA_IFR_Protocol_Audit_2026-09-14.md"},
+    {"id":"CWA-05","severity":"Medium","title":"Points lock proof defaults to Sepolia","disposition":"fixed_and_verified","owner":"Points backend","nextAction":"Keep production pinned to Ethereum mainnet, the server-managed HTTPS RPC and the canonical IFRLock, with the startup bytecode probe enabled.","verification":"PR #107 / a8e80c7e; fail-closed configuration tests; live chain 1 and canonical IFRLock bytecode probe; Points env mode 0600.","source":"CWA_IFR_Protocol_Audit_2026-09-14.md"},
     {"id":"CWA-06","severity":"Medium","title":"Voucher signer overlaps a Safe owner key","disposition":"governance_or_owner_gated","owner":"Key custody owner","nextAction":"Rotate voucher signing to a dedicated least-privilege hot key outside the Safe signer set.","verification":"Signer separation evidence and a successful non-production voucher verification drill.","source":"CWA_IFR_Protocol_Audit_2026-09-14.md"},
     {"id":"CWA-07","severity":"Medium","title":"Branch protection does not enforce advertised gates","disposition":"governance_or_owner_gated","owner":"Repository owner","nextAction":"Require the canonical CI checks on main and enable enforcement for administrators.","verification":"Read-only branch-protection API evidence showing required checks and admin enforcement.","source":"CWA_IFR_Protocol_Audit_2026-09-14.md"},
     {"id":"CWA-08","severity":"Low","title":"LendingVault pre-activation configuration gaps","disposition":"governance_or_owner_gated","owner":"Governance and future contract engineering","nextAction":"Set a valid fee receiver and address collateral-return and loan-expiry behavior before any borrow activation or redeploy.","verification":"Full lending lifecycle, expiry, receiver and hostile-recipient regression tests.","source":"CWA_IFR_Protocol_Audit_2026-09-14.md"},
