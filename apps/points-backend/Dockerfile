@@ -4,7 +4,7 @@ RUN apk add --no-cache python3 make g++
 COPY package.json package-lock.json ./
 RUN npm ci
 COPY . .
-RUN npx prisma generate && npx tsc && npm prune --omit=dev
+RUN DATABASE_URL=file:./build.db npx prisma generate && npx tsc && npm prune --omit=dev
 
 FROM node:22-alpine AS runner
 WORKDIR /app
