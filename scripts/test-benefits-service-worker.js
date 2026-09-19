@@ -82,6 +82,93 @@ function sha256(filePath) {
   return crypto.createHash('sha256').update(fs.readFileSync(filePath)).digest('hex');
 }
 
+function extractRegistrationScript() {
+  const match = layoutSource.match(/__html:\s*`([^`]*)`/);
+  assert(match, 'layout must contain an inline service-worker registration script');
+  assert(match[1].includes('serviceWorker'), 'inline registration script must target service workers');
+  return match[1];
+}
+
+function createSessionStorage({ fail = false } = {}) {
+  const entries = new Map();
+  const ensureAvailable = () => {
+    if (fail) throw new Error('session storage unavailable');
+  };
+
+  return {
+    getItem(key) {
+      ensureAvailable();
+      return entries.has(key) ? entries.get(key) : null;
+    },
+    removeItem(key) {
+      ensureAvailable();
+      entries.delete(key);
+    },
+    setItem(key, value) {
+      ensureAvailable();
+      entries.set(key, String(value));
+    },
+  };
+}
+
+function createRegistrationHarness(registrationScript, { controller = null, storage = createSessionStorage() } = {}) {
+  const controllerChangeHandlers = [];
+  const loadHandlers = [];
+  const registrations = [];
+  let registrationUpdateCalls = 0;
+  let reloads = 0;
+
+  const serviceWorker = {
+    controller,
+    addEventListener(name, handler) {
+      if (name === 'controllerchange') controllerChangeHandlers.push(handler);
+    },
+    register(scriptUrl, options) {
+      registrations.push({ options, scriptUrl });
+      return Promise.resolve({
+        update() {
+          registrationUpdateCalls += 1;
+          return Promise.resolve();
+        },
+      });
+    },
+  };
+
+  vm.runInNewContext(registrationScript, {
+    navigator: { serviceWorker },
+    window: {
+      addEventListener(name, handler) {
+        if (name === 'load') loadHandlers.push(handler);
+      },
+      location: {
+        reload() {
+          reloads += 1;
+        },
+      },
+      sessionStorage: storage,
+    },
+  }, { filename: 'benefits-sw-registration.js' });
+
+  return {
+    fireControllerChange(nextController) {
+      serviceWorker.controller = nextController;
+      controllerChangeHandlers.forEach((handler) => handler());
+    },
+    fireLoad() {
+      loadHandlers.forEach((handler) => handler());
+    },
+    get registrationUpdateCalls() {
+      return registrationUpdateCalls;
+    },
+    get registrations() {
+      return registrations;
+    },
+    get reloads() {
+      return reloads;
+    },
+  };
+}
+
 vm.runInNewContext(source, context, { filename: 'sw.js' });
 
 async function install() {
@@ -106,6 +193,8 @@ async function navigate(url) {
 }
 
 async function main() {
+  const registrationScript = extractRegistrationScript();
+
   assert(listeners.has('fetch'), 'service worker must register a fetch handler');
   assert(source.includes("const CACHE_NAME = 'ifr-benefits-v23'"), 'service worker cache version must be v23');
   assert(source.includes('const NAVIGATION_TIMEOUT_MS = 5000'), 'navigation requests must have a bounded network timeout');
@@ -121,6 +210,7 @@ async function main() {
   assert(source.includes("'/copilot-avatar.jpg'"), 'service worker must precache the Copilot launcher asset');
   assert(layoutSource.includes("updateViaCache:'none'"), 'registration must bypass stale service-worker HTTP caches');
   assert(layoutSource.includes("'controllerchange'"), 'controlled clients must reload after a service-worker update');
+  assert(!registrationScript.includes('.update('), 'registration must not force a service-worker update on every page load');
   assert.strictEqual(
     sha256(path.join(publicIcons, 'ifr-token-64-v11.png')),
     sha256(path.join(canonicalAssets, 'ifr_icon_64.png')),
@@ -136,6 +226,53 @@ async function main() {
     sha256(path.join(publicIcons, 'favicon-v11.ico')),
     'root favicon and versioned favicon must remain byte-identical'
   );
+
+  const firstInstall = createRegistrationHarness(registrationScript);
+  firstInstall.fireLoad();
+  firstInstall.fireControllerChange({ scriptURL: 'https://shop.ifrunit.tech/sw.js?v=23' });
+  assert.strictEqual(firstInstall.registrations.length, 1, 'first install must register the service worker once');
+  assert.strictEqual(firstInstall.registrations[0].scriptUrl, '/sw.js?v=23', 'registration must use the current release');
+  assert.strictEqual(
+    firstInstall.registrations[0].options.updateViaCache,
+    'none',
+    'registration must bypass stale service-worker HTTP caches'
+  );
+  assert.strictEqual(firstInstall.registrationUpdateCalls, 0, 'registration must rely on normal browser update checks');
+  assert.strictEqual(firstInstall.reloads, 0, 'first install must not reload when the service worker claims the page');
+
+  const sharedStorage = createSessionStorage();
+  const controlledPage = createRegistrationHarness(registrationScript, {
+    controller: { scriptURL: 'https://shop.ifrunit.tech/sw.js?v=22' },
+    storage: sharedStorage,
+  });
+  controlledPage.fireControllerChange({ scriptURL: 'https://shop.ifrunit.tech/sw.js?v=23' });
+  controlledPage.fireControllerChange({ scriptURL: 'https://shop.ifrunit.tech/sw.js?v=23' });
+  controlledPage.fireControllerChange(null);
+  assert.strictEqual(controlledPage.reloads, 1, 'one service-worker release may trigger at most one reload per session');
+
+  const reloadedPage = createRegistrationHarness(registrationScript, {
+    controller: { scriptURL: 'https://shop.ifrunit.tech/sw.js?v=23' },
+    storage: sharedStorage,
+  });
+  reloadedPage.fireControllerChange({ scriptURL: 'https://shop.ifrunit.tech/sw.js?v=23' });
+  assert.strictEqual(reloadedPage.reloads, 0, 'the same service-worker release must not reload again after page re-execution');
+
+  const nextReleasePage = createRegistrationHarness(registrationScript, {
+    controller: { scriptURL: 'https://shop.ifrunit.tech/sw.js?v=23' },
+    storage: sharedStorage,
+  });
+  nextReleasePage.fireControllerChange({ scriptURL: 'https://shop.ifrunit.tech/sw.js?v=24' });
+  assert.strictEqual(nextReleasePage.reloads, 1, 'a different service-worker URL must receive its own single reload allowance');
+
+  const storageFailure = createRegistrationHarness(registrationScript, {
+    controller: { scriptURL: 'https://shop.ifrunit.tech/sw.js?v=22' },
+    storage: createSessionStorage({ fail: true }),
+  });
+  storageFailure.fireLoad();
+  storageFailure.fireControllerChange({ scriptURL: 'https://shop.ifrunit.tech/sw.js?v=23' });
+  storageFailure.fireControllerChange({ scriptURL: 'https://shop.ifrunit.tech/sw.js?v=23' });
+  assert.strictEqual(storageFailure.registrations.length, 1, 'storage failure must not prevent service-worker registration');
+  assert.strictEqual(storageFailure.reloads, 0, 'storage failure must fail safe without automatic reloads');
 
   await install();
   assert(!precacheAdds.includes('/'), 'root document must be fetched explicitly to discover its build assets');
