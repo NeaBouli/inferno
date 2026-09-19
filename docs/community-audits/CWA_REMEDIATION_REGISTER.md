@@ -32,6 +32,8 @@ the original summary arithmetic; no individual finding text or severity label ch
 
 - [Download the consolidated CWA report (PDF)](IFR_Protocol_CWA_Consolidated_Audit_Report_2026-09-14.pdf)
 - PDF SHA-256: `c174d7dccd1233e45d79fc09f8974470c19b12b6346690f583484c6764a3605d`
+- Corrected contract deep-audit SHA-256: `ff16962322b59ea596eeacee48955e1e60918edb7837da6cc5cc68cc357588a3`
+- Corrected content-coherence-audit SHA-256: `78c884bd1f79c7cb6f31f35100420324c6ea864558b1ea41e33ac21370ee3902`
 - [Audit series index](README.md)
 - [Current functionality and test evidence](../CURRENT_FUNCTIONALITY_STATUS.md)
 
