@@ -192,6 +192,9 @@ jobs:
       - name: Check current functionality matrix
         run: npm run test:functionality-status
 
+      - name: Check CWA remediation register and public audit evidence
+        run: npm run test:cwa-register
+
       - name: Check Wiki RAG freshness
         run: npm run test:wiki-rag
 

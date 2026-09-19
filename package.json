@@ -36,6 +36,8 @@
     "test:cex-fee-policy": "node scripts/test-cex-fee-policy.cjs",
     "test:status-baseline": "node scripts/test-status-baseline.cjs",
     "test:functionality-status": "node scripts/test-functionality-status.cjs",
+    "build:cwa-register": "node scripts/check-cwa-remediation-register.cjs --write",
+    "test:cwa-register": "node scripts/check-cwa-remediation-register.cjs",
     "check:listing-status": "node scripts/check-token-listing-status.js",
     "test:listing-monitor": "node scripts/test-token-listing-status.cjs",
     "test:docs-ci": "node scripts/test-docs-workflow.cjs",
