@@ -786,7 +786,7 @@
           <strong>Lock</strong> &mdash; User calls <code>lock(amount)</code>. Tokens transfer from user to contract. A <code>LockData</code> struct is stored on-chain.
         </li>
         <li>
-          <strong>Record</strong> &mdash; Contract records the lock: <code>amount</code> (accumulates across multiple lock calls) and <code>lockedAt</code> (block timestamp of the first lock).
+          <strong>Record</strong> &mdash; Contract records the lock: <code>amount</code> accumulates across calls, while <code>lockedAt</code> is overwritten with the timestamp of the latest increase.
         </li>
         <li>
           <strong>Query</strong> &mdash; Applications call <code>isLocked(user, minAmount)</code> to check whether the user qualifies for premium access.
@@ -833,7 +833,7 @@
           </tr>
           <tr>
             <td><code>lockWithType(uint256 amount, bytes32 lockType)</code></td>
-            <td>Lock with an app-specific tag. Functionally identical to <code>lock()</code> but stores a <code>lockType</code> for resolver metadata.</td>
+            <td>Lock with an app-specific <code>bytes32</code> tag emitted in the <code>Locked</code> event. The tag is not stored in the lock record; resolvers that need it must index the event.</td>
           </tr>
           <tr>
             <td><code>unlock()</code></td>

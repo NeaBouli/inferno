@@ -68,7 +68,7 @@ Inferno (IFR) is a deflationary ERC-20 utility token on Ethereum. Every transfer
 | DEX Liquidity | 40% | 400M IFR | Held by the LP Reserve Safe (3-of-5) for governance-controlled LP expansion. The Bootstrap pool was created separately with 100M IFR + 0.030 ETH. |
 | Liquidity Reserve | 20% | 200M IFR | Initial timelock ended 01.09.2026. The contract still holds all 200M IFR; the current withdrawal cap is 50M IFR per 90-day period. No withdrawal or LP deployment has occurred. NOT used for Bootstrap. |
 | Team Vesting | 15% | 150M IFR | 12-month cliff, 36-month linear vesting. 0 tokens available before March 2027. |
-| Treasury | 15% | 150M IFR | Gnosis Safe multisig (0x5ad6193...). 150M committed to Bootstrap. Refills via protocol fees (Phase 3). |
+| Treasury | 15% | 150M IFR | Gnosis Safe multisig (0x5ad6193...). Funded Bootstrap through 144.75M IFR initial funding plus a 5.25M IFR top-up. No automatic refill path is deployed. |
 | Community & Grants | 6% | 60M IFR | Community Safe (57.9M received after burn). 50M → Bootstrap. ~7.9M operational reserve. |
 | Builder Ecosystem | 4% | 40M IFR | PartnerVault contract. Lock-triggered Creator Rewards, milestone vesting. |
 
@@ -178,8 +178,8 @@ scope and limitations.
 All smart contracts are open source and community review is explicitly encouraged.
 
 - **Internal Audit:** [docs/SECURITY_AUDIT_SKYWALKER.md](docs/SECURITY_AUDIT_SKYWALKER.md) — 0 FAIL, 20 active WARN, 1 fixed, 81 PASS
-- **OKComputer Community Audit (27.07.2026):** [current finding-by-finding status](docs/community-audits/JULY_2026_REMEDIATION_REGISTER.md) · [unchanged original and provenance](docs/community-audits/README.md) — 8 fixed and verified, 6 partially remediated, 1 outdated snapshot corrected, 3 governance/future-version gated, 2 accepted or monitored and 3 open actionable; not a professional third-party certification
-- **Collateral Web3 Open Audits (14.09.2026):** [seven reports and provenance](docs/community-audits/README.md) · [CWA-01…CWA-82 remediation register](docs/community-audits/CWA_REMEDIATION_REGISTER.md) · [consolidated PDF](docs/community-audits/IFR_Protocol_CWA_Consolidated_Audit_Report_2026-09-14.pdf) — 0 fixed and verified at the current baseline; 58 findings remain directly actionable
+- **OKComputer Community Audit (27.07.2026):** [current finding-by-finding status](docs/community-audits/JULY_2026_REMEDIATION_REGISTER.md) · [unchanged original and provenance](docs/community-audits/README.md) — 9 fixed and verified, 5 partially remediated, 1 outdated snapshot corrected, 3 governance/future-version gated, 2 accepted or monitored and 3 open actionable; not a professional third-party certification
+- **Collateral Web3 Open Audits (14.09.2026):** [seven reports and provenance](docs/community-audits/README.md) · [CWA-01…CWA-82 remediation register](docs/community-audits/CWA_REMEDIATION_REGISTER.md) · [consolidated PDF](docs/community-audits/IFR_Protocol_CWA_Consolidated_Audit_Report_2026-09-14.pdf) — 17 fixed and verified; 41 findings remain directly actionable
 - **Submit a Finding:** [GitHub Private Vulnerability Reporting](https://github.com/NeaBouli/inferno/security/advisories/new)
 - **Security Policy:** [SECURITY.md](SECURITY.md)
 

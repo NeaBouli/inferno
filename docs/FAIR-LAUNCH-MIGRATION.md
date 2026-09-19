@@ -3,6 +3,10 @@
 **Date:** 2026-02-15
 **Status:** COMPLETED -- Migration executed on mainnet 2026-03-05
 
+> **Current-state note:** The migration removed the temporary Deployer exemption as
+> documented below. Executed Governance Proposal #7 later re-enabled the Deployer EOA on
+> 18.03.2026; it remains an active, publicly disclosed governance-controlled exception.
+
 ---
 
 ## 1. Strategy Change
@@ -202,9 +206,10 @@ Step 8/8  Remove deployer feeExempt
 | Treasury Multisig | Yes | Operational transfers |
 | BuybackVault | Yes | Buyback mechanism |
 | BurnReserve | Yes | Burn mechanism |
-| Deployer | Yes -> No | Temporary for distribution, then removed |
+| Deployer | Yes -> No at migration; later Yes under Proposal #7 | Temporary for distribution, removed, then governance re-enabled it on 18.03.2026 |
 
-**Important:** Deployer feeExempt is explicitly removed in Step 8 (`setFeeExempt(deployer, false)`).
+**Historical migration action:** Step 8 removed Deployer feeExempt through
+`setFeeExempt(deployer, false)`. Executed Proposal #7 subsequently restored the exemption.
 
 ---
 

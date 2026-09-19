@@ -13,9 +13,9 @@ function getBootstrapStatus(): string {
 export function getIFRKnowledge() {
   return {
     audits: {
-      status: "The seven Collateral Web3 Open Audits reports cover CWA-01 through CWA-82. Publication is not remediation: at the 2026-09-19 checkpoint, 0 findings are fixed and verified, 11 are governance or owner gated, 2 are accepted or monitored, 58 are open actionable, and 11 are informational.",
+      status: "The seven Collateral Web3 Open Audits reports cover CWA-01 through CWA-82. At the 2026-09-19 remediation checkpoint, 17 findings are fixed and verified, 11 are governance or owner gated, 2 are accepted or monitored, 41 are open actionable, and 11 are informational.",
       register: "https://github.com/NeaBouli/inferno/blob/main/docs/community-audits/CWA_REMEDIATION_REGISTER.md",
-      july2026Status: "The unchanged 27 July community audit is paired with an evidence-backed register: 8 fixed and verified, 6 partially remediated, 1 outdated snapshot corrected, 3 governance or future-version gated, 2 accepted or monitored, and 3 open actionable. Historical red or high-severity labels are not proof that an item remains open today.",
+      july2026Status: "The unchanged 27 July community audit is paired with an evidence-backed register: 9 fixed and verified, 5 partially remediated, 1 outdated snapshot corrected, 3 governance or future-version gated, 2 accepted or monitored, and 3 open actionable. Historical red or high-severity labels are not proof that an item remains open today.",
       july2026Register: "https://github.com/NeaBouli/inferno/blob/main/docs/community-audits/JULY_2026_REMEDIATION_REGISTER.md",
       pdf: "https://github.com/NeaBouli/inferno/raw/main/docs/community-audits/IFR_Protocol_CWA_Consolidated_Audit_Report_2026-09-14.pdf",
       tests: "Current canonical evidence: contracts 644/644, Generator Engine 30/30, IFR SDK 36/36, Landing/Wiki browser 20/20, Web3 browser 24/24. Benefits physical device/wallet acceptance remains 1/10.",
@@ -262,7 +262,7 @@ export function getIFRKnowledge() {
       startDate: "07.03.2026 (on-chain startTime) — ENDED 05.06.2026",
       endDate: "05.06.2026 23:51 UTC (finalise() executed on-chain)",
       vault: "0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141",
-      funded: "200M IFR (funded March 11, 2026 via Plan B)",
+      funded: "200M IFR (194.75M received March 11 and 5.25M Treasury top-up completed funding March 15, 2026 via Plan B)",
       totalETHRaised: "0.030 ETH (finalized)",
       lpToken: "0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0",
       finaliseTx: "0x949848bdd09f4c867a2593afffb0137c7db2c1457d8a8f5ff4428f8ecce69c5f",

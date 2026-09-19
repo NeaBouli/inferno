@@ -967,7 +967,7 @@
         <li>
           <span class="badge-done">Done</span>
           <span class="item-text">
-            <strong>FeeRouterV1.sol</strong> &mdash; governance = Governance, feeCollector = Treasury &mdash;
+            <strong>FeeRouterV1.sol</strong> &mdash; governance = Governance, feeCollector = BuybackController (Proposal #14, executed 18.04.2026) &mdash;
             <a href="https://etherscan.io/address/0x4807B77B2E25cD055DA42B09BA4d0aF9e580C60a#code" target="_blank"><code class="address">0x4807B77B2E25cD055DA42B09BA4d0aF9e580C60a</code></a>
             &mdash; Etherscan verified
           </span>
@@ -1030,11 +1030,11 @@
         </li>
         <li>
           <span class="badge-done">Done</span>
-          <span class="item-text"><code>setFeeExempt(BootstrapVaultV3, true)</code> &mdash; Proposal #4 executed 11.03.2026 (<a href="https://etherscan.io/tx/0xdb1590bf" target="_blank">TX</a>)</span>
+          <span class="item-text"><code>setFeeExempt(BootstrapVaultV3, true)</code> &mdash; Proposal #4 executed 11.03.2026</span>
         </li>
         <li>
           <span class="badge-done">Done</span>
-          <span class="item-text"><code>setFeeExempt(FeeRouterV1, true)</code> &mdash; Proposal #5 executed 11.03.2026 (<a href="https://etherscan.io/tx/0x1c885fbe" target="_blank">TX</a>)</span>
+          <span class="item-text"><code>setFeeExempt(FeeRouterV1, true)</code> &mdash; Proposal #5 executed 11.03.2026</span>
         </li>
       </ul>
 
@@ -1090,7 +1090,7 @@
       </table>
 
       <div class="callout-green callout">
-        <p><strong>Total check:</strong> 400 + 200 + 150 + 150 + 57.9 + 40 = <strong>997,900,000 IFR distributed</strong> (2.1M burned on Community EOA &rarr; Safe transfer). Deployer feeExempt removed after distribution.</p>
+        <p><strong>Total check:</strong> 400 + 200 + 150 + 150 + 57.9 + 40 = <strong>997,900,000 IFR distributed</strong> (2.1M burned on Community EOA &rarr; Safe transfer). The Deployer exemption was removed after distribution and later re-enabled by executed Proposal #7 on 18.03.2026; it remains an active disclosed exception.</p>
       </div>
 
       <h3>Step 6 &mdash; Uniswap V2 LP</h3>
@@ -1120,8 +1120,8 @@
           <span class="item-text">Deploy swap adapter and whitelist (<code>setAdapter</code>)</span>
         </li>
         <li>
-          <span class="badge-pending">Pending</span>
-          <span class="item-text">Set voucher signer address (Points Backend key)</span>
+          <span class="badge-done">Done</span>
+          <span class="item-text">Voucher signer configured; operational key separation remains tracked separately</span>
         </li>
         <li>
           <span class="badge-pending">Pending</span>

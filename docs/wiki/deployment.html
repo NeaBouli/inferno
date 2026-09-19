@@ -729,8 +729,12 @@
       <div class="step">
         <div class="step-number">10</div>
         <div class="step-content">
-          <div class="step-title">Remove deployer feeExempt</div>
-          <div class="step-desc">Deployer fee exemption is revoked. All transfers now subject to the standard fee structure.</div>
+          <div class="step-title">Review deployer feeExempt state</div>
+          <div class="step-desc">
+            The Deployer exemption was re-enabled by executed Governance Proposal #7 and remains
+            an active, disclosed governance-controlled exception. Do not describe it as revoked
+            unless a later executed proposal changes the live <code>feeExempt(address)</code> state.
+          </div>
         </div>
       </div>
 
@@ -909,8 +913,8 @@
               <td><span class="badge badge-done">Done</span></td>
             </tr>
             <tr>
-              <td>Governance Proposal #1 executed (setFeeExempt IFRLock)</td>
-              <td><span class="badge badge-done">Done</span></td>
+              <td>Governance Proposal #1: <code>setFeeExempt(Vesting, true)</code></td>
+              <td><span class="badge" style="background:#ef4444;">Cancelled 10.03.2026</span></td>
             </tr>
             <tr>
               <td>PartnerVault v2 deployed + verified (<code>0x5F12...490A39</code>)</td>
@@ -921,8 +925,8 @@
               <td><span class="badge badge-done">Done</span></td>
             </tr>
             <tr>
-              <td>Governance Proposal #3 (setFeeExempt new PartnerVault)</td>
-              <td><span class="badge badge-done">Done &mdash; Executed 26.02.2026</span></td>
+              <td>Governance Proposal #3: <code>setFeeExempt(BootstrapVaultV3, true)</code></td>
+              <td><span class="badge" style="background:#ef4444;">Cancelled 10.03.2026 &mdash; replaced by #4</span></td>
             </tr>
             <tr>
               <td>1.4M IFR Top-up to PartnerVault v2</td>
@@ -936,10 +940,10 @@
         </table>
 
         <div class="info-box note" style="margin-top: 20px;">
-          <strong>Proposal #3 — Executed 26.02.2026</strong><br>
-          <code>setFeeExempt(PartnerVault v2, true)</code> executed via Governance Timelock.<br>
-          1.4M IFR Top-up completed — PartnerVault now holds 40,000,000 IFR (4%).<br>
-          TX: <code>0x3f28690a...57de6e8</code>
+          <strong>Proposal history correction</strong><br>
+          Mainnet Proposal #3 targeted <code>setFeeExempt(BootstrapVaultV3, true)</code>
+          and was cancelled on 10.03.2026. Proposal #4 later executed that action.
+          The PartnerVault funding history is separate from this mainnet proposal ledger.
         </div>
       </div>
 

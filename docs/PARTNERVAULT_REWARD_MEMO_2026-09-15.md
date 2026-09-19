@@ -7,6 +7,13 @@
 > **Status:** Diskussionsvorlage, keine Anlageempfehlung
 >
 > *Provenienz: Eingereicht als Diskussionsdokument über Collateral Web3 Open Audits; wörtlich übernommen, lediglich Chat-Formatierung normalisiert. Begleitende technische Verifikation der Contract-Fakten siehe PR-Beschreibung.*
+>
+> **Aktueller redaktioneller Hinweis:** Abschnitt 2.3 gibt eine zum Einreichungszeitpunkt
+> öffentlich beschriebene Refill-Annahme wieder. Die spätere CWA-59-Prüfung hat bestätigt,
+> dass der deployte BuybackController keinen PartnerVault-Refill, keinen 70/30-Split und
+> keinen SOS-Reserve-Pfad implementiert. Der Originaltext bleibt als historische
+> Diskussionsgrundlage erhalten; der aktuelle Status steht im
+> [CWA remediation register](community-audits/CWA_REMEDIATION_REGISTER.md#finding-by-finding-register).
 
 ## 1. Zweck dieses Papiers
 

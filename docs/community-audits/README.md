@@ -8,13 +8,13 @@ IFR Protocol accepts every factual, legal, economic or technical conclusion.
 ## Current CWA remediation status
 
 The September Collateral Web3 Open Audits series covers **CWA-01…CWA-82**.
-Publication and remediation are separate: at the current repository baseline,
-no CWA finding has both an integrated remediation and the required verification
-evidence. The authoritative status is maintained in the
+Publication and remediation are separate. Seventeen content-coherence findings
+now have integrated corrections and dedicated verification evidence. The
+authoritative status is maintained in the
 [finding-by-finding remediation register](CWA_REMEDIATION_REGISTER.md).
 
-- Disposition: **0 fixed and verified / 11 governance or owner gated / 2
-  accepted or monitored / 58 open actionable / 11 informational**.
+- Disposition: **17 fixed and verified / 11 governance or owner gated / 2
+  accepted or monitored / 41 open actionable / 11 informational**.
 - Corrected severity aggregate: **0 Critical / 3 High / 29 Medium / 34 Low /
   16 Informational**.
 - [Download the consolidated 55-page CWA report
@@ -42,7 +42,7 @@ No finding text, severity label or technical conclusion was changed.
 ### Current status — 19 September 2026
 
 The maintained register normalizes the report into 23 traceable findings. The
-current evidence-backed disposition is **8 fixed and verified / 6 partially
+current evidence-backed disposition is **9 fixed and verified / 5 partially
 remediated / 1 corrected outdated snapshot / 3 governance or future-version
 gated / 2 accepted or monitored / 3 open actionable**. Severity colors in the
 unchanged report describe the dated audit assessment, not current remediation

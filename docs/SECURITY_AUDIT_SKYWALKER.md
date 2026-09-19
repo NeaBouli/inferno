@@ -6,6 +6,7 @@
 **Extended:** 2026-03-03 — BootstrapVault.sol added
 **Extended:** 2026-03-04 — W15-W21 from ChatGPT Audit V5, W16 fixed
 **Corrected:** 2026-09-14 — W1/W3 deployment status (CWA-25/CWA-26): fixes exist in source but are not deployed on mainnet
+**Corrected:** 2026-09-20 — W18 is not current: the Vesting source exposes guardian-only `transferGuardian(address)` and the deployed mainnet bytecode contains selector `0x091954cd`; the original immutable-guardian statement is retained below as a struck-through historical finding
 **Method:** Line-by-line manual review, 10 check categories (A-J)
 **Severity:** PASS (no issue) | WARN (design risk, low/informational) | FAIL (critical/high)
 
@@ -267,7 +268,7 @@ function setFeeCollector(address newCollector) external onlyGovernance {
 | W15 | Governance | B | `setGuardian()` is not timelocked — owner can replace guardian immediately, removing the cancel safeguard before executing a malicious proposal. | Route setGuardian through the timelock (`onlySelf`) like `setDelay()`. |
 | W16 | BuybackVault | E | ~~`pendingExpectedOut` accumulated at deposit time could be manipulated to force DoS on `executeBuyback()`.~~ **FIXED** — minOut now computed fresh via `getAmountsOut()` at execution time. | Fixed in commit (W16 fix). |
 | W17 | BootstrapVault | G | LP tokens locked with `withdrawer=address(this)` but contract has no `unlockLP()` function. LP tokens are permanently stranded after lock period expires. | Accept (LP remains locked forever = stronger trust guarantee) or add governance-gated `reclaimLP()`. |
-| W18 | Vesting | F | `guardian` is immutable — cannot be rotated. If guardian key is compromised, attacker can permanently pause releases. | Accept for v1 (already deployed). Consider `setGuardian` in v2. |
+| W18 | Vesting | F | ~~`guardian` is immutable — cannot be rotated.~~ **CORRECTED 20.09.2026:** `transferGuardian(address)` exists and is restricted to the current guardian. | No remediation required for the stated finding; continue protecting and monitoring the guardian key. |
 | W21 | System-wide | F | `feeExempt` is an operational dependency (not enforced in contract constructors). If a Governance proposal revokes feeExempt on IFRLock or PartnerVault, user funds become trapped (unlock/claim returns less than locked). | Document as governance invariant. Consider on-chain enforcement: IFRLock constructor could `require(token.isFeeExempt(address(this)))`. |
 
 ### Low / Informational

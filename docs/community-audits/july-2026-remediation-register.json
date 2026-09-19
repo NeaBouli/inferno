@@ -15,8 +15,8 @@
     "open_actionable": "Repository, hosting or product work remains directly actionable."
   },
   "expectedStatusTotals": {
-    "fixed_and_verified": 8,
-    "partially_remediated": 6,
+    "fixed_and_verified": 9,
+    "partially_remediated": 5,
     "corrected_outdated_snapshot": 1,
     "governance_or_future_version_gated": 3,
     "documented_accepted_or_monitored": 2,
@@ -200,13 +200,14 @@
       "severity": "Medium",
       "title": "Cross-surface numeric and narrative drift",
       "sourceSection": "4.7",
-      "status": "partially_remediated",
-      "currentAssessment": "Burn, vesting, component and current test claims now have CI guards, but the September content audit still identifies a larger documentation-drift backlog.",
-      "remainingAction": "Resolve the CWA-57 through CWA-74 content findings against chain/source truth and update their public register entries with proof.",
-      "verification": "Content-trust, status-baseline, cross-surface routing/link tests and finding-specific chain evidence.",
+      "status": "fixed_and_verified",
+      "currentAssessment": "The CWA-57 through CWA-73 content-drift findings are corrected against contract, route and block-pinned chain evidence; CWA-74 is informational.",
+      "remainingAction": "Retain the dedicated CWA content-coherence guard and update dated values only with matching evidence.",
+      "verification": "CWA content-coherence, content-trust, status-baseline, cross-surface routing/link tests and block-pinned supply evidence.",
       "evidence": [
         {"path": "scripts/test-content-trust.cjs", "marker": "incorrect burn claim"},
-        {"path": "docs/community-audits/cwa-remediation-register.json", "marker": "CWA-57"}
+        {"path": "docs/community-audits/cwa-remediation-register.json", "marker": "CWA-57"},
+        {"path": "scripts/test-cwa-content-coherence.cjs", "marker": "CWA-57...CWA-73"}
       ]
     },
     {

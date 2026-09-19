@@ -38,6 +38,7 @@
     "test:functionality-status": "node scripts/test-functionality-status.cjs",
     "build:cwa-register": "node scripts/check-cwa-remediation-register.cjs --write",
     "test:cwa-register": "node scripts/check-cwa-remediation-register.cjs",
+    "test:cwa-content": "node scripts/test-cwa-content-coherence.cjs",
     "build:july-audit-register": "node scripts/check-july-audit-remediation-register.cjs --write",
     "test:july-audit-register": "node scripts/check-july-audit-remediation-register.cjs",
     "check:listing-status": "node scripts/check-token-listing-status.js",

@@ -118,7 +118,8 @@ constructor(
   - 0–25% util → 2%, 26–50% → 3%, 51–75% → 5%, 76–90% → 8%, 91–99% → 15%, 100% → 25%
 - **Collateral thresholds:** 200% initial, 150% margin call, 120% liquidation
 - **Liquidator bonus:** 5% of collateral
-- **Interest split:** 50% lender, 50% protocol (Uniswap LP or BurnReserve)
+- **Interest split:** 50% lender, 50% configured `protocolFeeReceiver`; V1 does not
+  route funds automatically to Uniswap or BurnReserve
 - **Loan duration:** 30–365 days, minimum 1 month interest
 - **MAX_LOANS_PER_BORROWER = 10** (gas safety)
 - **Top-up collateral** for margin calls
@@ -134,7 +135,7 @@ constructor(
 - [ ] Deploy to Mainnet
 - [x] Governance Proposal: `setFeeExempt(LendingVault, true)` — Executed 06.04.2026
 - [ ] Governance Proposal: `setIFRPrice(value)` (initial price)
-- [ ] Set protocolFeeReceiver (BurnReserve or LP address)
+- [ ] Set `protocolFeeReceiver` only after Governance publishes the receiver policy
 
 ### Deploy Steps
 
@@ -214,8 +215,8 @@ Example: 1 IFR = 0.000001 ETH → ifrPriceWei = 1e12
 - [ ] Deploy to Sepolia
 - [ ] Security audit
 - [ ] Deploy to Mainnet
-- [ ] Governance Proposal: `setFeeExempt(BuybackController, true)`
-- [ ] Governance Proposal: FeeRouterV1 → `setPoolFeeReceiver(BuybackController)`
+- [x] Governance Proposal #13: `setFeeExempt(BuybackController, true)` executed 16.04.2026
+- [x] Governance Proposal #14: FeeRouterV1 `setFeeCollector(BuybackController)` executed 18.04.2026
 
 ### Deploy Steps (AFTER LP Launch)
 
@@ -234,8 +235,8 @@ npx hardhat verify --network sepolia <ADDRESS> \
 npx hardhat run scripts/deploy-buyback-controller.js --network mainnet
 
 # 5. Governance Proposals (in order):
-#    - Proposal A: setFeeExempt(BuybackController, true)
-#    - Proposal B: setPoolFeeReceiver(BuybackController)
+#    - Proposal A: setFeeExempt(BuybackController, true) [executed]
+#    - Proposal B: setFeeCollector(BuybackController) [executed]
 
 # 6. Railway Cron Job (24h):
 #    node scripts/trigger-buyback.js
@@ -258,7 +259,8 @@ constructor(
 
 1. **Deploy ONLY after Bootstrap finalise() + Uniswap LP is live**
 2. **Set feeExempt BEFORE activating** — otherwise buyback swaps lose 3.5% to fees
-3. **setPoolFeeReceiver** redirects 1% pool fees from current receiver → BuybackController
+3. **setFeeCollector** routes native ETH fees charged by FeeRouter swaps to BuybackController;
+   it does not move IFR transfer-pool fees already held by FeeRouterV1
 4. **Railway cron:** Call `execute()` every 24h (permissionless, anyone can call)
 5. **LP tokens** go to `lpReceiver` (TreasurySafe) — not locked in controller
 
