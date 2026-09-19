@@ -1,9 +1,7 @@
 import { Response, NextFunction } from "express";
 import { ethers } from "ethers";
 import { AuthRequest } from "./auth.js";
-
-const RPC_URL = process.env.SEPOLIA_RPC_URL || "https://rpc.sepolia.org";
-const IFR_LOCK_ADDRESS = process.env.IFR_LOCK_ADDRESS || "0x0Cab0A9440643128540222acC6eF5028736675d3";
+import { canSkipLockProof, pointsSecurityConfig } from "../config/security.js";
 
 const IFR_LOCK_ABI = [
   "function isLocked(address wallet, uint256 minAmount) view returns (bool)",
@@ -22,7 +20,7 @@ const CACHE_TTL = 5 * 60 * 1000;
  */
 export async function requireLockProof(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
   // Allow bypassing lock proof in test environments (no RPC available)
-  if (process.env.SKIP_LOCK_PROOF === "true" && process.env.NODE_ENV !== "production") {
+  if (canSkipLockProof()) {
     next();
     return;
   }
@@ -44,9 +42,17 @@ export async function requireLockProof(req: AuthRequest, res: Response, next: Ne
     return;
   }
 
-  const provider = new ethers.JsonRpcProvider(RPC_URL);
+  const provider = new ethers.JsonRpcProvider(
+    pointsSecurityConfig.rpcUrl,
+    pointsSecurityConfig.chainId,
+    { staticNetwork: true },
+  );
   try {
-    const lockContract = new ethers.Contract(IFR_LOCK_ADDRESS, IFR_LOCK_ABI, provider);
+    const lockContract = new ethers.Contract(
+      pointsSecurityConfig.ifrLockAddress,
+      IFR_LOCK_ABI,
+      provider,
+    );
     const isLocked: boolean = await lockContract.isLocked(wallet, MIN_LOCK_AMOUNT);
 
     lockCache.set(wallet, { locked: isLocked, ts: Date.now() });

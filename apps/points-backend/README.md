@@ -14,9 +14,9 @@ Points system for Inferno ($IFR) — SIWE authentication, points events, and EIP
 
 ```bash
 cd apps/points-backend
-npm install
+npm ci
 cp .env.example .env
-# Edit .env — set JWT_SECRET and VOUCHER_SIGNER_PRIVATE_KEY
+# Edit .env — set every required mainnet, SIWE and signing value
 npx prisma migrate dev --name init
 npm run dev
 ```
@@ -48,8 +48,8 @@ Server runs on http://localhost:3004
 
 ## Rate Limits
 
-- 10 requests per IP per minute (general)
-- 1 SIWE verify per IP per hour
+- 60 requests per IP per minute (general)
+- 5 SIWE verifies per IP per hour
 - 1 voucher per wallet per day
 - 100 vouchers global daily cap
 
@@ -57,6 +57,8 @@ Server runs on http://localhost:3004
 
 - JWT tokens expire after 24h
 - SIWE nonces expire after 5 minutes
+- SIWE signatures are bound to configured origins and chain ID
+- Lock proof startup fails closed if the RPC chain or IFRLock contract is wrong
 - EIP-712 voucher signatures are verifiable on-chain
 - Voucher signer private key stays server-side (`.env`)
 - Rate limiting on all sensitive endpoints
@@ -65,7 +67,7 @@ Server runs on http://localhost:3004
 
 - Node.js + Express + TypeScript
 - Prisma + SQLite
-- ethers.js v5 (EIP-712 signing)
+- ethers.js v6 (EIP-712 signing and lock proof)
 - siwe (Sign-In with Ethereum)
 - jose (JWT)
 
@@ -74,9 +76,14 @@ Server runs on http://localhost:3004
 | Variable | Description |
 |----------|-------------|
 | DATABASE_URL | Prisma SQLite path (default: `file:./dev.db`) |
+| NODE_ENV | Use `production` for deployed instances; omitted values are treated as production-safe |
 | JWT_SECRET | Secret for JWT signing |
 | VOUCHER_SIGNER_PRIVATE_KEY | Private key for EIP-712 voucher signing |
 | FEE_ROUTER_ADDRESS | FeeRouter contract address (for EIP-712 domain) |
-| CHAIN_ID | Chain ID (default: 11155111 = Sepolia) |
+| CHAIN_ID | Required chain ID; production accepts Ethereum mainnet (`1`) only |
+| RPC_URL | Required RPC endpoint; production startup verifies its chain ID |
+| IFR_LOCK_ADDRESS | Required IFRLock address; production accepts the canonical mainnet contract only |
+| SIWE_ALLOWED_ORIGINS | Comma-separated exact origins allowed in signed SIWE messages |
+| ALLOWED_ORIGINS | Comma-separated HTTP CORS origins |
 | PORT | Server port (default: 3004) |
 | ADMIN_SECRET | Admin API secret (reserved) |
