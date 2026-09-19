@@ -1,21 +1,21 @@
 # CWA-01...CWA-82 Remediation Register
 
-**Updated:** 2026-09-19
-**Repository baseline:** `564a7c4504c8da7a24a302204f4fd5e39d1abece`
+**Updated:** 2026-09-20
+**Repository baseline:** `a8e80c7eda74218f45d079cce4b43537423a9b54`
 
 This is the authoritative public status register for the seven Collateral Web3 Open
 Audits reports. Publishing a finding does not mean it has been remediated. A finding
 moves to **Fixed and verified** only after its change is integrated and the required
-verification evidence passes. 17 findings currently meet that standard.
+verification evidence passes. 19 findings currently meet that standard.
 
 ## Status Summary
 
 | Disposition | Count | Meaning |
 | --- | ---: | --- |
-| Fixed and verified | 17 | A remediation is merged and covered by current verification evidence. |
+| Fixed and verified | 19 | A remediation is merged and covered by current verification evidence. |
 | Governance or owner gated | 11 | The next action requires governance, a repository owner setting, key custody work or a future contract version. |
 | Accepted or monitored | 2 | The condition is explicitly accepted for the current dormant configuration and must be reviewed before activation or redeployment. |
-| Open actionable | 41 | Repository, documentation or operations work remains and can be handled without an on-chain governance action. |
+| Open actionable | 39 | Repository, documentation or operations work remains and can be handled without an on-chain governance action. |
 | Informational, no action | 11 | The item records methodology, context or an optional improvement and has no required remediation. |
 
 | Severity | Count |
@@ -58,8 +58,8 @@ do not convert an open audit finding into a verified fix.
 | **CWA-01** LendingVault activation price risk | High | Governance or owner gated | Governance and contract engineering | Keep borrowing disabled; specify and audit a bounded, fresh price path with borrow caps and emergency controls before activation. | Oracle and cap regression tests, independent review, governed activation and post-execution chain checks. | [Report](CWA_IFR_Protocol_Audit_2026-09-14.md) |
 | **CWA-02** FeeRouterV1 IFR fees are stranded | Medium | Governance or owner gated | Governance and contract engineering | Choose and publish an explicit sink policy or route future pool fees to a governed recoverable receiver in a future contract path. | Proposal tests, receiver accounting tests and post-execution balance checks. | [Report](CWA_IFR_Protocol_Audit_2026-09-14.md) |
 | **CWA-03** CommitmentVault price-conditioned locks cannot unlock | Medium | Governance or owner gated | Governance and contract engineering | Keep price-conditioned locks disabled and design a lock guard or governed rescue path for a future version. | Negative lock tests, recovery tests, independent review and governed deployment evidence. | [Report](CWA_IFR_Protocol_Audit_2026-09-14.md) |
-| **CWA-04** Points SIWE verification lacks domain binding | Medium | Open actionable | Points backend | Bind SIWE verification to the configured domain, origin and chain and reject mismatches. | Cross-domain replay regression tests and the complete points-backend suite. | [Report](CWA_IFR_Protocol_Audit_2026-09-14.md) |
-| **CWA-05** Points lock proof defaults to Sepolia | Medium | Open actionable | Points backend | Remove unsafe network defaults and fail closed when the mainnet RPC, chain or IFRLock address is missing. | Missing-env, wrong-chain and exact-mainnet configuration tests. | [Report](CWA_IFR_Protocol_Audit_2026-09-14.md) |
+| **CWA-04** Points SIWE verification lacks domain binding | Medium | Fixed and verified | Points backend | Keep SIWE domain, URI origin, configured chain and server-issued nonce checks coupled as authentication evolves. | PR #107 / a8e80c7e; Points 54/54; exact-head and exact-main CI; live Points health after the fail-closed deployment. | [Report](CWA_IFR_Protocol_Audit_2026-09-14.md) |
+| **CWA-05** Points lock proof defaults to Sepolia | Medium | Fixed and verified | Points backend | Keep production pinned to Ethereum mainnet, the server-managed HTTPS RPC and the canonical IFRLock, with the startup bytecode probe enabled. | PR #107 / a8e80c7e; fail-closed configuration tests; live chain 1 and canonical IFRLock bytecode probe; Points env mode 0600. | [Report](CWA_IFR_Protocol_Audit_2026-09-14.md) |
 | **CWA-06** Voucher signer overlaps a Safe owner key | Medium | Governance or owner gated | Key custody owner | Rotate voucher signing to a dedicated least-privilege hot key outside the Safe signer set. | Signer separation evidence and a successful non-production voucher verification drill. | [Report](CWA_IFR_Protocol_Audit_2026-09-14.md) |
 | **CWA-07** Branch protection does not enforce advertised gates | Medium | Governance or owner gated | Repository owner | Require the canonical CI checks on main and enable enforcement for administrators. | Read-only branch-protection API evidence showing required checks and admin enforcement. | [Report](CWA_IFR_Protocol_Audit_2026-09-14.md) |
 | **CWA-08** LendingVault pre-activation configuration gaps | Low | Governance or owner gated | Governance and future contract engineering | Set a valid fee receiver and address collateral-return and loan-expiry behavior before any borrow activation or redeploy. | Full lending lifecycle, expiry, receiver and hostile-recipient regression tests. | [Report](CWA_IFR_Protocol_Audit_2026-09-14.md) |
