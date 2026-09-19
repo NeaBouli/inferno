@@ -1,5 +1,7 @@
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { loadWikiDocs, buildSystemPrompt } from '../server/wiki-rag';
+import { toJsonSafeUint32 } from '../server/json-values';
 import { getIFRKnowledge } from '../src/context/ifr-knowledge';
 const docs = loadWikiDocs('../../../docs/wiki');
 for (const mode of ['explorer', 'user', 'dev', 'customer', 'partner', 'developer']) {
@@ -14,4 +16,15 @@ const knowledge = getIFRKnowledge().userProvidedLiquidity;
 assert.ok(knowledge.guide.endsWith('/wiki/liquidity.html'));
 assert.ok(knowledge.execution.includes('Approval alone is not a deposit'));
 assert.ok(knowledge.withdrawal.includes('second hop may be taxed'));
+const blockTimestampLast = toJsonSafeUint32(1_795_000_000n);
+assert.equal(blockTimestampLast, 1_795_000_000);
+assert.doesNotThrow(() => JSON.stringify({ blockTimestampLast }));
+assert.equal(toJsonSafeUint32(0n), 0);
+assert.equal(toJsonSafeUint32(0xffffffffn), 0xffffffff);
+assert.throws(() => toJsonSafeUint32(-1n), RangeError);
+assert.throws(() => toJsonSafeUint32(0x1_0000_0000n), RangeError);
+assert.throws(() => toJsonSafeUint32(1.5), RangeError);
+assert.throws(() => toJsonSafeUint32(Number.NaN), RangeError);
+const serverSource = readFileSync(new URL('../server/index.ts', import.meta.url), 'utf8');
+assert.ok(serverSource.includes('blockTimestampLast: toJsonSafeUint32(reserves.blockTimestampLast)'));
 console.log('PASS: liquidity context is present across all six Copilot modes; no model calls');
