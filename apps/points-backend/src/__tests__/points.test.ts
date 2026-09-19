@@ -6,6 +6,13 @@ import { createToken } from "../middleware/auth.js";
 import { POINTS_CONFIG } from "../config/points.js";
 import { getSignerAddress } from "../services/voucher-signer.js";
 import { ethers } from "ethers";
+import { SiweMessage } from "siwe";
+import {
+  canSkipLockProof,
+  MAINNET_IFR_LOCK_ADDRESS,
+  loadPointsSecurityConfig,
+  verifyLockProofRuntime,
+} from "../config/security.js";
 
 let server: Server;
 let baseUrl: string;
@@ -43,8 +50,144 @@ function assert(condition: boolean, name: string) {
   }
 }
 
+async function assertRejects(operation: () => Promise<unknown>, name: string) {
+  try {
+    await operation();
+    assert(false, name);
+  } catch {
+    assert(true, name);
+  }
+}
+
+async function issueNonce(): Promise<string> {
+  const { status, data } = await api("POST", "/auth/siwe/nonce");
+  assert(status === 200, "nonce returns 200");
+  assert(typeof data.nonce === "string" && data.nonce.length > 0, "nonce is a non-empty string");
+  return data.nonce as string;
+}
+
+async function signedSiweMessage(
+  wallet: { address: string; signMessage(message: string): Promise<string> },
+  nonce: string,
+  domain: string,
+  uri: string,
+  chainId: number,
+): Promise<{ message: string; signature: string }> {
+  const message = new SiweMessage({
+    domain,
+    address: wallet.address,
+    statement: "Sign in to IFR Points",
+    uri,
+    version: "1",
+    chainId,
+    nonce,
+  }).prepareMessage();
+  return { message, signature: await wallet.signMessage(message) };
+}
+
 async function run() {
   console.log("\n🔥 Points Backend Tests\n");
+
+  console.log("Security configuration:");
+  const productionConfig = loadPointsSecurityConfig({
+    NODE_ENV: "production",
+    CHAIN_ID: "1",
+    RPC_URL: "https://mainnet.example",
+    IFR_LOCK_ADDRESS: MAINNET_IFR_LOCK_ADDRESS,
+    SIWE_ALLOWED_ORIGINS: "https://ifrunit.tech,https://www.ifrunit.tech",
+  });
+  assert(productionConfig.chainId === 1, "production config accepts mainnet chain");
+  assert(productionConfig.siweAllowedOrigins.size === 2, "production config parses SIWE origins");
+  assertRejects(
+    async () => loadPointsSecurityConfig({ NODE_ENV: "production", CHAIN_ID: "1" }),
+    "production config rejects missing RPC and contract values",
+  );
+  assertRejects(
+    async () => loadPointsSecurityConfig({
+      NODE_ENV: "production",
+      CHAIN_ID: "11155111",
+      RPC_URL: "https://sepolia.example",
+      IFR_LOCK_ADDRESS: MAINNET_IFR_LOCK_ADDRESS,
+      SIWE_ALLOWED_ORIGINS: "https://ifrunit.tech",
+    }),
+    "production config rejects non-mainnet chain",
+  );
+  assertRejects(
+    async () => loadPointsSecurityConfig({
+      NODE_ENV: "production",
+      CHAIN_ID: "1",
+      RPC_URL: "https://mainnet.example",
+      IFR_LOCK_ADDRESS: "0x0000000000000000000000000000000000000001",
+      SIWE_ALLOWED_ORIGINS: "https://ifrunit.tech",
+    }),
+    "production config rejects a non-canonical IFRLock",
+  );
+  assertRejects(
+    async () => loadPointsSecurityConfig({
+      CHAIN_ID: "11155111",
+      RPC_URL: "https://sepolia.example",
+      IFR_LOCK_ADDRESS: "0x0000000000000000000000000000000000000001",
+      SIWE_ALLOWED_ORIGINS: "https://ifrunit.tech",
+    }),
+    "unset NODE_ENV still rejects a non-mainnet configuration",
+  );
+  assertRejects(
+    async () => loadPointsSecurityConfig({
+      NODE_ENV: "production",
+      CHAIN_ID: "1",
+      RPC_URL: "https://mainnet.example",
+      IFR_LOCK_ADDRESS: MAINNET_IFR_LOCK_ADDRESS,
+      SIWE_ALLOWED_ORIGINS: "http://ifrunit.tech",
+    }),
+    "production config rejects non-HTTPS SIWE origins",
+  );
+  assertRejects(
+    async () => loadPointsSecurityConfig({
+      NODE_ENV: "production",
+      CHAIN_ID: "1",
+      RPC_URL: "http://mainnet.example",
+      IFR_LOCK_ADDRESS: MAINNET_IFR_LOCK_ADDRESS,
+      SIWE_ALLOWED_ORIGINS: "https://ifrunit.tech",
+    }),
+    "production config rejects a remote plaintext RPC",
+  );
+  const loopbackProductionConfig = loadPointsSecurityConfig({
+    NODE_ENV: "production",
+    CHAIN_ID: "1",
+    RPC_URL: "http://127.0.0.1:8545",
+    IFR_LOCK_ADDRESS: MAINNET_IFR_LOCK_ADDRESS,
+    SIWE_ALLOWED_ORIGINS: "https://ifrunit.tech",
+  });
+  assert(loopbackProductionConfig.isProduction, "production permits loopback RPC transport");
+  const developmentConfig = loadPointsSecurityConfig({
+    NODE_ENV: "development",
+    CHAIN_ID: "11155111",
+    RPC_URL: "https://sepolia.example",
+    IFR_LOCK_ADDRESS: "0x0000000000000000000000000000000000000001",
+    SIWE_ALLOWED_ORIGINS: "http://localhost:3004",
+  });
+  assert(developmentConfig.chainId === 11155111, "explicit development network remains supported");
+  assert(!canSkipLockProof(productionConfig, "true"), "production lock proof cannot be bypassed");
+  assert(canSkipLockProof(developmentConfig, "true"), "explicit development may bypass lock proof");
+  await verifyLockProofRuntime(productionConfig, async () => ({
+    chainId: 1n,
+    contractCode: "0x6000",
+  }));
+  assert(true, "runtime verification accepts mainnet RPC with deployed contract code");
+  await assertRejects(
+    () => verifyLockProofRuntime(productionConfig, async () => ({
+      chainId: 11155111n,
+      contractCode: "0x6000",
+    })),
+    "runtime verification rejects RPC chain mismatch",
+  );
+  await assertRejects(
+    () => verifyLockProofRuntime(productionConfig, async () => ({
+      chainId: 1n,
+      contractCode: "0x",
+    })),
+    "runtime verification rejects missing IFRLock bytecode",
+  );
 
   server = app.listen(0, "127.0.0.1");
   await new Promise<void>((resolve, reject) => {
@@ -72,10 +215,56 @@ async function run() {
 
   // ---- SIWE Nonce ----
   console.log("\nSIWE Nonce:");
+  const siweWallet = ethers.Wallet.createRandom();
+  const validSiwe = await signedSiweMessage(
+    siweWallet,
+    await issueNonce(),
+    "localhost:3004",
+    "http://localhost:3004",
+    11155111,
+  );
   {
-    const { status, data } = await api("POST", "/auth/siwe/nonce");
-    assert(status === 200, "nonce returns 200");
-    assert(typeof data.nonce === "string" && (data.nonce as string).length > 0, "nonce is a non-empty string");
+    const results = await Promise.all([
+      api("POST", "/auth/siwe/verify", validSiwe),
+      api("POST", "/auth/siwe/verify", validSiwe),
+    ]);
+    const statuses = results.map(({ status }) => status).sort();
+    assert(statuses[0] === 200 && statuses[1] === 401, "concurrent SIWE nonce replay is rejected");
+    const success = results.find(({ status }) => status === 200);
+    assert(success?.data.wallet === siweWallet.address.toLowerCase(), "SIWE response binds the signed wallet");
+  }
+  {
+    const signed = await signedSiweMessage(
+      siweWallet,
+      await issueNonce(),
+      "evil.example",
+      "https://evil.example",
+      11155111,
+    );
+    const { status } = await api("POST", "/auth/siwe/verify", signed);
+    assert(status === 401, "foreign SIWE domain is rejected");
+  }
+  {
+    const signed = await signedSiweMessage(
+      siweWallet,
+      await issueNonce(),
+      "localhost:3004",
+      "https://evil.example",
+      11155111,
+    );
+    const { status } = await api("POST", "/auth/siwe/verify", signed);
+    assert(status === 401, "foreign SIWE URI origin is rejected");
+  }
+  {
+    const signed = await signedSiweMessage(
+      siweWallet,
+      await issueNonce(),
+      "localhost:3004",
+      "http://localhost:3004",
+      1,
+    );
+    const { status } = await api("POST", "/auth/siwe/verify", signed);
+    assert(status === 401, "wrong SIWE chain is rejected");
   }
 
   // ---- Auth Required ----

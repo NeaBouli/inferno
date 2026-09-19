@@ -45,6 +45,81 @@ jobs:
       - run: npm audit --audit-level=low
       - name: Build production image
         run: docker build -t inferno-points-backend:ci .
+      - name: Verify production image fails closed on unsafe configuration
+        run: |
+          set -euo pipefail
+          missing_rpc_log="$(mktemp)"
+          unsafe_chain_log="$(mktemp)"
+          missing_jwt_log="$(mktemp)"
+          trap 'rm -f "$missing_rpc_log" "$unsafe_chain_log" "$missing_jwt_log"' EXIT
+
+          if docker run --rm \
+            --network none \
+            --tmpfs /data:rw,uid=1001,gid=1001 \
+            -e DATABASE_URL=file:/data/ci.db \
+            -e JWT_SECRET \
+            -e VOUCHER_SIGNER_PRIVATE_KEY \
+            -e FEE_ROUTER_ADDRESS \
+            -e CHAIN_ID=1 \
+            -e IFR_LOCK_ADDRESS=0x769928aBDfc949D0718d8766a1C2d7dBb63954Eb \
+            -e SIWE_ALLOWED_ORIGINS=https://ifrunit.tech \
+            -e PORT \
+            -e ADMIN_SECRET \
+            -e NODE_ENV=production \
+            inferno-points-backend:ci >"$missing_rpc_log" 2>&1; then
+            echo "::error::Production image started without RPC_URL"
+            exit 1
+          fi
+          if ! grep -q '\[security\] RPC_URL is required' "$missing_rpc_log"; then
+            cat "$missing_rpc_log"
+            echo "::error::Production image failed for an unexpected reason"
+            exit 1
+          fi
+
+          if docker run --rm \
+            --network none \
+            --tmpfs /data:rw,uid=1001,gid=1001 \
+            -e DATABASE_URL=file:/data/ci.db \
+            -e JWT_SECRET \
+            -e VOUCHER_SIGNER_PRIVATE_KEY \
+            -e FEE_ROUTER_ADDRESS \
+            -e CHAIN_ID=11155111 \
+            -e RPC_URL=https://sepolia.example \
+            -e IFR_LOCK_ADDRESS=0x0000000000000000000000000000000000000001 \
+            -e SIWE_ALLOWED_ORIGINS=https://ifrunit.tech \
+            -e PORT \
+            -e ADMIN_SECRET \
+            inferno-points-backend:ci >"$unsafe_chain_log" 2>&1; then
+            echo "::error::Production-safe default accepted a non-mainnet configuration"
+            exit 1
+          fi
+          if ! grep -q '\[security\] production CHAIN_ID must be 1' "$unsafe_chain_log"; then
+            cat "$unsafe_chain_log"
+            echo "::error::Unsafe-chain image failed for an unexpected reason"
+            exit 1
+          fi
+
+          if docker run --rm \
+            --network none \
+            --tmpfs /data:rw,uid=1001,gid=1001 \
+            -e DATABASE_URL=file:/data/ci.db \
+            -e VOUCHER_SIGNER_PRIVATE_KEY \
+            -e FEE_ROUTER_ADDRESS \
+            -e CHAIN_ID=1 \
+            -e RPC_URL=https://mainnet.example \
+            -e IFR_LOCK_ADDRESS=0x769928aBDfc949D0718d8766a1C2d7dBb63954Eb \
+            -e SIWE_ALLOWED_ORIGINS=https://ifrunit.tech \
+            -e PORT \
+            -e ADMIN_SECRET \
+            inferno-points-backend:ci >"$missing_jwt_log" 2>&1; then
+            echo "::error::Production-safe default started without JWT_SECRET"
+            exit 1
+          fi
+          if ! grep -q 'JWT_SECRET is required in production-safe mode' "$missing_jwt_log"; then
+            cat "$missing_jwt_log"
+            echo "::error::Missing-JWT image failed for an unexpected reason"
+            exit 1
+          fi
       - name: Smoke production image
         run: |
           set -euo pipefail

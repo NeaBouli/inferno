@@ -9,7 +9,7 @@
     "start": "node dist/src/index.js",
     "db:migrate": "npx prisma migrate dev",
     "db:generate": "npx prisma generate",
-    "test": "node scripts/prepare-test-db.mjs && prisma migrate deploy && tsx src/__tests__/points.test.ts",
+    "test": "NODE_ENV=test DATABASE_URL=file:./test.db node scripts/prepare-test-db.mjs && NODE_ENV=test DATABASE_URL=file:./test.db prisma migrate deploy && NODE_ENV=test DATABASE_URL=file:./test.db tsx src/__tests__/points.test.ts",
     "test:dependencies": "node scripts/test-dependencies.mjs"
   },
   "keywords": [],
