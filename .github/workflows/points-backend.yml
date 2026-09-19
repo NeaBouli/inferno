@@ -43,3 +43,41 @@ jobs:
       - run: npm test
       - run: npm audit signatures
       - run: npm audit --audit-level=low
+      - name: Build production image
+        run: docker build -t inferno-points-backend:ci .
+      - name: Smoke production image
+        run: |
+          set -euo pipefail
+          cleanup() {
+            docker rm -f inferno-points-backend-ci >/dev/null 2>&1 || true
+          }
+          trap cleanup EXIT
+
+          docker run -d \
+            --name inferno-points-backend-ci \
+            --network none \
+            --tmpfs /data:rw,uid=1001,gid=1001 \
+            -e DATABASE_URL=file:/data/ci.db \
+            -e JWT_SECRET \
+            -e VOUCHER_SIGNER_PRIVATE_KEY \
+            -e FEE_ROUTER_ADDRESS \
+            -e CHAIN_ID \
+            -e PORT \
+            -e ADMIN_SECRET \
+            -e NODE_ENV=test \
+            -e SKIP_LOCK_PROOF=true \
+            inferno-points-backend:ci
+
+          for attempt in $(seq 1 30); do
+            if docker exec inferno-points-backend-ci \
+              wget -q -O- http://127.0.0.1:3004/health | grep -q '"status":"ok"'; then
+              exit 0
+            fi
+            if [ "$(docker inspect -f '{{.State.Running}}' inferno-points-backend-ci 2>/dev/null || echo false)" != "true" ]; then
+              break
+            fi
+            sleep 1
+          done
+
+          docker logs inferno-points-backend-ci || true
+          exit 1

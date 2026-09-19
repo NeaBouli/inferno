@@ -1,7 +1,10 @@
 node_modules
-src
-*.ts
-!*.d.ts
+dist
+coverage
+src/__tests__
+src/generated
+*.db*
+**/*.db*
 .env
 .env.*
-coverage
+**/.env*
