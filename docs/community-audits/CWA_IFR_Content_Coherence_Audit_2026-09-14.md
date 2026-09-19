@@ -12,6 +12,11 @@ surfaces supplement (CWA-28…45), Web3 integration audit (CWA-46…50), README 
 **Method skill:** `web3-content-coherence-audit` (this audit is its reference application)
 **Report version:** 1.0
 
+> **Editorial correction — 2026-09-19:** the original summary counted CWA-64
+> as Medium although its published finding label is Low. The aggregate below
+> now follows all 18 individual labels; no finding text, severity label or
+> technical conclusion changed.
+
 Scope: every public content page served from the repo — landing `docs/index.html`,
 `docs/builder.html`, the wallet dApp copy of `docs/web3/index.html`, all **36** wiki pages
 (`docs/wiki/*.html`), and the customer-facing copy of the Benefits Network PWA
@@ -26,7 +31,7 @@ out against chain; the shop copy is fully accurate (83/83 claims verified). The 
 concentrate where pages describe *history* (proposal logs, funding tables) and *mechanisms not
 yet live* (buyback, vouchers, lending yield) — plus one systematic wrong-network address column.
 
-**Findings: 0 Critical · 0 High · 11 Medium · 6 Low · 1 Informational (CWA-57 … CWA-74)**
+**Findings: 0 Critical · 0 High · 10 Medium · 7 Low · 1 Informational (CWA-57 … CWA-74)**
 
 No finding is live-exploitable or moves funds; the audit target here is the *public record*.
 Nothing in this report changes any CWA-01…56 severity. Two proposed agent findings were

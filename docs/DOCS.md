@@ -223,7 +223,7 @@ inferno/
 |--------|-------|
 | Contracts | 11 (+ 5 Mocks) |
 | Solidity LOC | 1,950 |
-| Tests | 521 protocol (367 contract + 27 BuilderRegistry + 77 app + 50 bootstrap) + 57 ecosystem (23 verify + 12 vote + 10 bot + 12 browser) = 544 total |
+| Tests | Current evidence: 644 contract + 30 Generator Engine + 36 SDK tests, plus dedicated browser/application gates. Historical mixed-suite totals remain dated snapshots. |
 | Branch Coverage | 91% |
 | Test LOC | 2,402 |
 | Deploy Script | 232 LOC, 9 Steps |

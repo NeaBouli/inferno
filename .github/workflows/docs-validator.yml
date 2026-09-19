@@ -21,6 +21,8 @@ on:
       - 'scripts/test-content-trust.cjs'
       - 'scripts/test-status-baseline.cjs'
       - 'scripts/test-functionality-status.cjs'
+      - 'scripts/check-cwa-remediation-register.cjs'
+      - 'scripts/check-july-audit-remediation-register.cjs'
       - 'scripts/test-docs-workflow.cjs'
       - 'scripts/check-markdownlint-baseline.cjs'
       - 'scripts/test-markdownlint-baseline.cjs'
@@ -57,6 +59,8 @@ on:
       - 'scripts/test-content-trust.cjs'
       - 'scripts/test-status-baseline.cjs'
       - 'scripts/test-functionality-status.cjs'
+      - 'scripts/check-cwa-remediation-register.cjs'
+      - 'scripts/check-july-audit-remediation-register.cjs'
       - 'scripts/test-docs-workflow.cjs'
       - 'scripts/check-markdownlint-baseline.cjs'
       - 'scripts/test-markdownlint-baseline.cjs'
@@ -191,6 +195,12 @@ jobs:
 
       - name: Check current functionality matrix
         run: npm run test:functionality-status
+
+      - name: Check CWA remediation register and public audit evidence
+        run: npm run test:cwa-register
+
+      - name: Check July community-audit remediation status
+        run: npm run test:july-audit-register
 
       - name: Check Wiki RAG freshness
         run: npm run test:wiki-rag

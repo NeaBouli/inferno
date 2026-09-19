@@ -131,7 +131,13 @@ The ecosystem is open and permissionless. Any product can integrate IFR Lock.
 
 **Automated test evidence** — current exact results are recorded by CI and release preflights. The tables below preserve an older internal inventory and must not be read as a current deduplicated total.
 
+**Current canonical matrix:** contracts **644/644**, Generator Engine **30/30**,
+IFR SDK **36/36**, Landing/Wiki browser **20/20**, Web3 browser **24/24**.
+See [Current Functionality Status](docs/CURRENT_FUNCTIONALITY_STATUS.md) for
+scope and limitations.
+
 ### Protocol Tests — 521
+
 | Suite | Count | Framework |
 |---|---|---|
 | Smart Contracts | 367 | Hardhat/Mocha |
@@ -172,7 +178,8 @@ The ecosystem is open and permissionless. Any product can integrate IFR Lock.
 All smart contracts are open source and community review is explicitly encouraged.
 
 - **Internal Audit:** [docs/SECURITY_AUDIT_SKYWALKER.md](docs/SECURITY_AUDIT_SKYWALKER.md) — 0 FAIL, 20 active WARN, 1 fixed, 81 PASS
-- **OKComputer Community Audit (27.07.2026):** [editorial status and original report](docs/community-audits/README.md) — published unchanged with dated corrections; not a professional third-party certification
+- **OKComputer Community Audit (27.07.2026):** [current finding-by-finding status](docs/community-audits/JULY_2026_REMEDIATION_REGISTER.md) · [unchanged original and provenance](docs/community-audits/README.md) — 8 fixed and verified, 6 partially remediated, 1 outdated snapshot corrected, 3 governance/future-version gated, 2 accepted or monitored and 3 open actionable; not a professional third-party certification
+- **Collateral Web3 Open Audits (14.09.2026):** [seven reports and provenance](docs/community-audits/README.md) · [CWA-01…CWA-82 remediation register](docs/community-audits/CWA_REMEDIATION_REGISTER.md) · [consolidated PDF](docs/community-audits/IFR_Protocol_CWA_Consolidated_Audit_Report_2026-09-14.pdf) — 0 fixed and verified at the current baseline; 58 findings remain directly actionable
 - **Submit a Finding:** [GitHub Private Vulnerability Reporting](https://github.com/NeaBouli/inferno/security/advisories/new)
 - **Security Policy:** [SECURITY.md](SECURITY.md)
 
@@ -266,7 +273,9 @@ SIWE authentication, points tracking, and EIP-712 signed voucher issuance for pr
 - [Builder Integration Spec](docs/PARTNER_INTEGRATION_SPEC.md) — Technical spec: IFRLock + PartnerVault ABI, Rewards, Algo Throttle
 - [Mainnet Checklist](docs/MAINNET_CHECKLIST.md) — Deployment order, verification, post-deploy
 - [Security Audit Brief](docs/AUDIT_BRIEF.md) — Scope, audit areas, auditor recommendations
-- [OKComputer Community Audit](docs/community-audits/README.md) — Editorial status, source hash and unchanged report submitted on 27.07.2026
+- [OKComputer Community Audit Status](docs/community-audits/JULY_2026_REMEDIATION_REGISTER.md) — Current evidence-backed status for all 23 normalized findings; original report remains unchanged
+- [CWA Remediation Register](docs/community-audits/CWA_REMEDIATION_REGISTER.md) — Authoritative CWA-01…CWA-82 status, ownership, next action and verification requirement
+- [CWA Consolidated PDF](docs/community-audits/IFR_Protocol_CWA_Consolidated_Audit_Report_2026-09-14.pdf) — Seven-report community audit series with disclosed aggregate correction
 - [Multisig Setup Guide](docs/MULTISIG_SETUP.md) — Gnosis Safe, signer structure, ownership transfer
 - [Whitepaper / One-Pager](docs/WHITEPAPER.md) — Project overview for builders & investors
 - [Creator Gateway Spec](docs/CREATOR_GATEWAY.md) — YouTube Hybrid Model, Docker Quickstart, Entitlement Engine

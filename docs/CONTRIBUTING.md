@@ -58,9 +58,10 @@ Commit prefixes:
 ## Smart Contract Changes
 
 For Solidity changes:
+
 1. Deploy a new contract version (never patch in-place)
 2. Governance Proposal for migration (48h Timelock)
-3. Tests: `npx hardhat test` (all 544 must pass)
+3. Tests: `npm run test:contracts` (all 644 current contract tests must pass)
 4. Coverage: `npx hardhat coverage` (>80% Branch Coverage)
 5. Update documentation
 

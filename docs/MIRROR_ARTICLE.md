@@ -16,7 +16,7 @@ We spent months building before launching. The result:
 
 - 14 smart contracts on Ethereum Mainnet
 - Historical launch snapshot: 544 automated checks (91% branch coverage at that review point)
-- Current clean evidence: 642 contract tests plus dedicated SDK, browser and application release gates
+- Current clean evidence: 644 contract tests plus dedicated SDK, browser and application release gates
 - Slither static analysis: 0 critical findings
 - 48-hour governance timelock on all parameter changes
 - No mint function — supply only decreases
