@@ -32,6 +32,16 @@
     "benefitsPhysicalDevices": "1/10"
   },
   "artifacts": {
+    "sourceReports": {
+      "contractDeepAudit": {
+        "path": "CWA_IFR_Contracts_Deep_Audit_2026-09-14.md",
+        "sha256": "ff16962322b59ea596eeacee48955e1e60918edb7837da6cc5cc68cc357588a3"
+      },
+      "contentCoherenceAudit": {
+        "path": "CWA_IFR_Content_Coherence_Audit_2026-09-14.md",
+        "sha256": "78c884bd1f79c7cb6f31f35100420324c6ea864558b1ea41e33ac21370ee3902"
+      }
+    },
     "consolidatedPdf": {
       "path": "IFR_Protocol_CWA_Consolidated_Audit_Report_2026-09-14.pdf",
       "sha256": "c174d7dccd1233e45d79fc09f8974470c19b12b6346690f583484c6764a3605d",

@@ -74,6 +74,30 @@ assert.ok(fs.existsSync(pdfPath), `missing consolidated PDF: ${pdf.path}`);
 const pdfHash = crypto.createHash("sha256").update(fs.readFileSync(pdfPath)).digest("hex");
 assert.equal(pdfHash, pdf.sha256, "consolidated PDF hash changed without register update");
 
+const auditIndex = fs.readFileSync(path.join(auditDir, "README.md"), "utf8");
+for (const report of Object.values(register.artifacts.sourceReports)) {
+  const reportPath = path.join(auditDir, report.path);
+  assert.ok(fs.existsSync(reportPath), `missing CWA source report: ${report.path}`);
+  const reportHash = crypto
+    .createHash("sha256")
+    .update(fs.readFileSync(reportPath))
+    .digest("hex");
+  assert.equal(reportHash, report.sha256, `${report.path} hash changed without register update`);
+
+  const reportLink = `[${report.path}](${report.path})`;
+  const sectionStart = auditIndex.indexOf(reportLink);
+  assert.notEqual(sectionStart, -1, `audit index missing source report link: ${report.path}`);
+  const nextSection = auditIndex.indexOf("\n## ", sectionStart);
+  const reportSection = auditIndex.slice(
+    sectionStart,
+    nextSection === -1 ? auditIndex.length : nextSection
+  );
+  assert.ok(
+    reportSection.includes(report.sha256),
+    `audit index current hash differs for ${report.path}`
+  );
+}
+
 const markdown = renderMarkdown(register);
 if (writeMode) {
   fs.writeFileSync(markdownPath, markdown);
@@ -207,6 +231,8 @@ function renderMarkdown(data) {
     "",
     "- [Download the consolidated CWA report (PDF)](IFR_Protocol_CWA_Consolidated_Audit_Report_2026-09-14.pdf)",
     `- PDF SHA-256: \`${data.artifacts.consolidatedPdf.sha256}\``,
+    `- Corrected contract deep-audit SHA-256: \`${data.artifacts.sourceReports.contractDeepAudit.sha256}\``,
+    `- Corrected content-coherence-audit SHA-256: \`${data.artifacts.sourceReports.contentCoherenceAudit.sha256}\``,
     "- [Audit series index](README.md)",
     "- [Current functionality and test evidence](../CURRENT_FUNCTIONALITY_STATUS.md)",
     "",
